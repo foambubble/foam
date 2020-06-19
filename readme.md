@@ -1,3 +1,3 @@
 ## Brain
 
-This is the [readme]() of my brain.
+This is a collection of [random thoughts].

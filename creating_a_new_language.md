@@ -1,6 +1,6 @@
 ## Creating a new language
 
-What if we created a new language that made ergonomic
+What if we created a new language that made it more ergonomic to use VS Code as a Foam workspace
 
 - Based on markdown
 - Could leverage mdx?

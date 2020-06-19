@@ -1,74 +1,93 @@
 # Foam
 
-_I want to build a second brain, but I also want to own my brain._
+ > _When you want to build a second brain, and you also want to own your own brain._
   
-## Faux Roam
+**Foam** is a personal knowledge management and sharing system inspired by [Roam Research](https://roamresearch.com/), built on [Visual Studio Code](https://code.visualstudio.com/) and [GitHub](https://github.com/).
 
-Roam Research is cool, but it's a proprietary, non-free tool. I'm sure that in the future, Roam will develop a killer feature on top of the knowledge graph they're building, but for the time being it's a **glorified text editor** with good keyboard shortcuts and two-way linking between documents.
+You can use **Foam** for organising research, taking notes, writing long-form content and publishing it to the web (or keeping it private, if you prefer). You can use it to build a [second brain](https://www.buildingasecondbrain.com/) or a [Zettelkasten](https://zettelkasten.de/posts/overview/).
 
-Enter Foam, a Roamlike focused work environment built in VSCode.
+**Foam** is free, open source, and extremely extensible to suit your personal workflow. You own the information you create with Foam, and you're free to share it and collaborate on it with anyone you want.
 
-See also:
-- Thoughts on [Branding](branding.md)
-- Should I [create a new language](creating_a_new_language.md)
-- Would be cool to [publish pages](publishing_pages.md)
-- [Random thoughts](random_thoughts.md) and feature ideas
-- 
-## Pros over Roam
+Fun fact: This documentation was researched, written and published usign **Foam**.
 
-- Free and free, easily migrateable hosting (Git)
-- Customise your editor (colors, plugins, keyboard shortcuts, etc)
-- Use Git history to get more context on what you were working on when
-  -  Add metadata like "Raw thoughts", or "Meeting with John"
-  -  Roll back changes
-- CMD+P to navigate between files
-- Full freedom to write free content, embedded code samples with syntax highlighting
-- Run code with Code Runner, Jupyter Notebooks etc
+## Table of Contents
+- [Foam](#foam)
+  - [Table of Contents](#table-of-contents)
+  - [What's in a Foam?](#whats-in-a-foam)
+  - [Why Foam instead of Roam?](#why-foam-instead-of-roam)
+  - [Features](#features)
+  - [Getting started](#getting-started)
+  - [Future plans](#future-plans)
+  - [Thanks and attribution](#thanks-and-attribution)
 
-## What can we already do without any custom code?
+## What's in a Foam?
 
-- [x] Light editor theme
-- [x] Markdown All In One plugin set
-  - [x] File name autocompletiong for links
-  - [x] List indentation
-  - [x] Keyboard shortcuts
-  - [x] Checklists (alt-c)
-  - [x] Cmd+Click file name to navigate to it
-- [x] Using GitLens hover annotations to remember when changes were made
-  - [ ] Maybe do something cool with [gitlens modes](https://github.com/eamodio/vscode-gitlens/tree/master/#modes-)
-- [x] Git automator
-  - [x] Cmd+Shift+A to add all files
-  - [x] Cmd+Shift+Z to push all commits
-  - [ ] Automatic commit messages (TODO, see Git Automator readme)
+Like the soapy suds it's named after, **Foam** is mostly air. The current version of Foam was created with **zero lines of code**, built instead on the shoulders of giants.
 
-## How to make my setup usable for others without code
-- [ ] Template workspace/repo to clone
-  - [ ] GitHub has a feature for this
-- [ ] Comes with a `.vscode/settings.json`
-  - [ ] Recommended plugins
-    - [ ] Markdown all in one
-    - [ ] Some editor theme
-    - [ ] Git Lens
-    - [ ] Git Automator
-  - [ ] Custom shortcuts (if possible in workspace?)
+The core of **Foam** is an opinionated VS Code [workspace settings file](.vscode/settings.json) that glues together recommended Code Extensions, custom settings and key bindings, optimised for writing and navigating information.
 
-## Missing Roam features
+Foam helps you to:
 
-Some things I would have to write code for
+- Write rich markdown documents
+- Create links between documents with the help of auto-complete
+- Navigate between linked documents with a single click
+- Generate tables of content and update them automatically
+- Easily create and manage lists and check lists
+- Keep track of the context and evolution of your thoughts by bringing.
+- Easily push code to a git repository
 
-### Big features
+To back up, collaborate on and share your content between devices, Foam pairs well with [GitHub](http://github.com/). 
 
-- Unlinked references and back links from other pages (this is a big one)
-  - Could be implemented as a terminal view of sort, run a language server in the background and show them in the "output" tab like you show test results in jest
-- Automatically create a new page when referencing an unknown file
-  - This support could be added to MD All in one
-- Knowledge graph visualiser
-  - Trivial to build once graph is assembled
+To publish your content, you can set it up to publish to GitHub pages with a single click, or any website hosting platform like [Netlify](http://netlify.com/) or [Vercel](vercel).
 
-### Minor UX things
+## Why Foam instead of Roam?
 
-- [ ] Can't just call it `Some page`, must be some_page.md
-- [ ] Should be easier to reference for a file in workspace without `[]()`, for example just [filename] (no extensions needed, workspace can treat extensionless files as Foam files)
-- [ ] Renaming/moving documents requires to rename all references
-  - [ ] Could probably be automated
+I've been using [Roam Research](https://roamresearch.com/) for a while, and I've been impressed by its ability to improve the quality and productivity of my thinking.
 
+However, Roam comes with a few downsides:
+- You don't own your own data (unless you keep backups).
+- Roam is an early-stage startup, and I don't want to build my knowledge-gathering practices on something that may not be around in a few years.
+- You're locked to paying $15/month for a tool that you're ideally using [for the rest of your life](https://zettelkasten.de/posts/how-many-zettelkasten/).
+- As slick as it is, it can't compete with the customisability of VS Code.
+- As of June 2020, the app is still slow, buggy and sometimes loses information when editing offline.
+
+**Foam** implements many ([but not all](roam_comparison.md)) of Roam's features inside VS Code, providing access to:
+
+- Full power of VS Code, such as
+  - Powerful keyboard navigation (or even [vim mode](https://marketplace.visualstudio.com/items?itemName=vscodevim.vim))
+  - Multiple windows, tabs and panes
+  - Embed executable code to your Bubbles with CodeRunner or Jupyter Notebooks
+  - Snippets, macros, 
+  - If there's an [extension](https://marketplace.visualstudio.com/vscode) for it, you can use it.
+- Free, low lock-in hosting in any Git repository
+  - Keep history or the evolution of your thoughts
+  - Store any type of file to your knowledge base
+  - Host entire websites and web apps inside of your published Foam site!
+- Ability to customise everything about your environment (colors, fonts, keyboard shortcuts, etc.)
+
+## Features
+
+**Foam** doesn't have features in the traditional sense. Out of the box, you have access to all features of VS Code and all the [recommended extensions](#thanks-and-attribution) you choose to install, but it's up to you to discover what you can do with it!
+
+Head over to [Recipes](recipes.md) for some useful patterns and ideas, and [contribute your own tips](contributing.md)!
+
+## Getting started
+
+1. [Install VS Code](https://code.visualstudio.com/) (available on Linux, Mac and Windows)
+
+## Future plans
+
+In order to implement a [further features](roam_comparison.md) like back links and unlinked references, it may be necessary to implement our own VS Code extension, syntax and language server.
+
+Read our [Contibuting guide](contributing.md) for how to help improve Foam.
+
+## Thanks and attribution
+
+**Foam** is built by [Jani Eväkallio](https://github.com/jevakallio) ([@jevakallio](https://twitter.com/jevakallio)) and [all contributors](https://github.com/jevakallio/Foam/graphs/contributors).
+
+**Foam** was inspired by [Roam Research](https://roamresearch.com/).
+
+**Foam** wouldn't be possible without [Visual Studio Code](https://code.visualstudio.com/) and [GitHub](https://github.com/), and relies heavily on these fantastic open source extensions and all their contributors:
+- [Git Lens](https://marketplace.visualstudio.com/items?itemName=eamodio.gitlens)
+- [Git Automator](https://marketplace.visualstudio.com/items?itemName=ivangabriele.vscode-git-add-and-commit)
+- [Markdown All In One](https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one)

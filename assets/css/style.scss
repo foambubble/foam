@@ -5,14 +5,14 @@
 
 .markdown-body {
   max-width: 800px;
+  font-family: Constantia, "Lucida Bright", Lucidabright, "Lucida Serif", Lucida,
+    "DejaVu Serif", "Bitstream Vera Serif", "Liberation Serif", Georgia, serif;
+  font-size: 18px;
 }
 
+.markdown-body,
 .markdown-body p {
-  line-height: 1.7em;
-}
-
-li a:visited {
-  color: purple;
+  line-height: 1.8em;
 }
 
 input.task-list-item-checkbox {

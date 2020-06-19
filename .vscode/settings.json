@@ -1,0 +1,11 @@
+{
+  "editor.minimap.enabled": false,
+  //"editor.fontFamily": "Libre Baskerville, Menlo, Monaco, 'Courier New', monospace",
+  "editor.fontLigatures": true,
+  "editor.wrappingIndent": "indent",
+  "editor.overviewRulerBorder": false,
+  //"editor.codeLens": false,
+  "editor.lineHeight": 24,
+  "workbench.colorTheme": "Gray Matter Light",
+  "cSpell.language": "en-GB"
+}

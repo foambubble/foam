@@ -3,7 +3,7 @@
 
 @import "{{ site.theme }}";
 .markdown-body {
-  max-width: 580px;
+  max-width: 700px;
   font-family: Palatino, Cambria, Georgia, Times, "Times New Roman", serif;
 }
 .markdown-body p {
@@ -19,4 +19,8 @@
 
 li a:visited {
   color: purple;
+}
+
+input.task-list-item-checkbox {
+  margin-right: 6px;
 }

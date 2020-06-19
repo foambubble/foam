@@ -1,3 +1,3 @@
 ## Brain
 
-This is a collection of [random thoughts](random thoughts.md).
+This is a collection of [random thoughts](random_thoughts.md).

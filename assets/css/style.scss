@@ -5,16 +5,23 @@
 
 .markdown-body {
   max-width: 800px;
-  font-family: Constantia, "Lucida Bright", Lucidabright, "Lucida Serif", Lucida,
-    "DejaVu Serif", "Bitstream Vera Serif", "Liberation Serif", Georgia, serif;
-  font-size: 18px;
 }
 
 .markdown-body,
 .markdown-body p {
+  font-size: 16px;
   line-height: 1.8em;
 }
 
 input.task-list-item-checkbox {
   margin-right: 4px;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5 {
+  font-family: Constantia, "Lucida Bright", Lucidabright, "Lucida Serif", Lucida,
+    "DejaVu Serif", "Bitstream Vera Serif", "Liberation Serif", Georgia, serif;
 }

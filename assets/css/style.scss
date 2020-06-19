@@ -1,0 +1,22 @@
+---
+---
+
+@import "{{ site.theme }}";
+.markdown-body {
+  max-width: 580px;
+  font-family: Palatino, Cambria, Georgia, Times, "Times New Roman", serif;
+}
+.markdown-body p {
+  line-height: 1.8em;
+}
+.markdown-body ul {
+  list-style: none;
+  padding-left: 0.5em;
+}
+.markdown-body ul li::before {
+  content: "– ";
+}
+
+li a:visited {
+  color: purple;
+}

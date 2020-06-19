@@ -1,12 +1,6 @@
 # Foam
 
 _I want to build a second brain, but I also want to own my brain._
-
-See also:
-- Thoughts on [Branding](branding.md)
-- Should I [create a new language](creating_a_new_language.md)
-- Would be cool to [publish pages](publishing_pages.md)
-- [Random thoughts](random_thoughts.md) and feature ideas
   
 ## Faux Roam
 
@@ -14,6 +8,12 @@ Roam Research is cool, but it's a proprietary, non-free tool. I'm sure that in t
 
 Enter Foam, a Roamlike focused work environment built in VSCode.
 
+See also:
+- Thoughts on [Branding](branding.md)
+- Should I [create a new language](creating_a_new_language.md)
+- Would be cool to [publish pages](publishing_pages.md)
+- [Random thoughts](random_thoughts.md) and feature ideas
+- 
 ## Pros over Roam
 
 - Free and free, easily migrateable hosting (Git)
@@ -43,6 +43,7 @@ Enter Foam, a Roamlike focused work environment built in VSCode.
 
 ## How to make my setup usable for others without code
 - [ ] Template workspace/repo to clone
+  - [ ] GitHub has a feature for this
 - [ ] Comes with a `.vscode/settings.json`
   - [ ] Recommended plugins
     - [ ] Markdown all in one

@@ -1,6 +1,4 @@
 ## Random thoughts
 
-- I wish this was a markdown file.
-- Auto bullets
-- You should [read me](readme.md), or continue here for [other thoughts](other.md).
-- Random change
+- Could build/use a generic mobile app that can edit markdown in a GitHub repo
+- Build a custom action toolbar

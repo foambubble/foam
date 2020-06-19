@@ -2,4 +2,4 @@
 
 - I wish this was a markdown file.
 - Auto bullets
-- You should [](readme.md), or continue here for (other thoughts)[other.md].
+- You should [read me](readme.md), or continue here for [other thoughts](other.md).

@@ -3,20 +3,12 @@
 
 @import "{{ site.theme }}";
 
-/*
 .markdown-body {
-  max-width: 700px;
-  font-family: Palatino, Cambria, Georgia, Times, "Times New Roman", serif;
+  max-width: 800px;
 }
+
 .markdown-body p {
   line-height: 1.8em;
-}
-.markdown-body ul {
-  list-style: none;
-  padding-left: 0.5em;
-}
-.markdown-body ul li::before {
-  content: "– ";
 }
 
 li a:visited {
@@ -24,6 +16,6 @@ li a:visited {
 }
 
 input.task-list-item-checkbox {
-  margin-right: 6px;
+  margin-right: 4px;
 }
 */

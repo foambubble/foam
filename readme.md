@@ -34,7 +34,7 @@ Foam helps you to:
 - Navigate between linked documents with a single click
 - Generate tables of content and update them automatically
 - Easily create and manage lists and check lists
-- Keep track of the context and evolution of your thoughts by bringing.
+- Keep track of the context and evolution of your thoughts by bring.
 - Easily push code to a git repository
 
 To back up, collaborate on and share your content between devices, Foam pairs well with [GitHub](http://github.com/). 
@@ -52,6 +52,8 @@ However, Roam comes with a few downsides:
 - As slick as it is, it can't compete with the customisability of VS Code.
 - As of June 2020, the app is still slow, buggy and sometimes loses information when editing offline.
 
+I built **Foam** because I wanted to build my personal knowledge repository using tools I feel the most comfortable in, while keeping the ownership of my own data. 
+
 **Foam** implements many ([but not all](roam_comparison.md)) of Roam's features inside VS Code, providing access to:
 
 - Full power of VS Code, such as
@@ -60,11 +62,12 @@ However, Roam comes with a few downsides:
   - Embed executable code to your Bubbles with CodeRunner or Jupyter Notebooks
   - Snippets, macros, 
   - If there's an [extension](https://marketplace.visualstudio.com/vscode) for it, you can use it.
+- Ability to customise everything about your environment (colors, fonts, keyboard shortcuts, etc.)
 - Free, low lock-in hosting in any Git repository
   - Keep history or the evolution of your thoughts
   - Store any type of file to your knowledge base
   - Host entire websites and web apps inside of your published Foam site!
-- Ability to customise everything about your environment (colors, fonts, keyboard shortcuts, etc.)
+- Easy publishing workflow for sharing your knowledge with others.
 
 ## Features
 

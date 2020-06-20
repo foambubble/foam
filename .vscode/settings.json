@@ -1,5 +1,5 @@
 {
-  "editor.minimap.enabled": true,
+  "editor.minimap.enabled": false,
   "editor.fontLigatures": true,
   "editor.wrappingIndent": "indent",
   "editor.overviewRulerBorder": false,

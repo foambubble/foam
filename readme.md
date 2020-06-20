@@ -4,7 +4,13 @@
   
 **Foam** is a personal knowledge management and sharing system inspired by [Roam Research](https://roamresearch.com/), built on [Visual Studio Code](https://code.visualstudio.com/) and [GitHub](https://github.com/).
 
-You can use **Foam** for organising research, taking notes, writing long-form content and publishing it to the web (or keeping it private, if you prefer). You can use it to build a [second brain](https://www.buildingasecondbrain.com/) or a [Zettelkasten](https://zettelkasten.de/posts/overview/).
+You can use **Foam** for organising research, taking notes, writing long-form content and publishing it to the web (or keeping it private, if you prefer). 
+
+**Foam** can help you whether you want to build a [second brain](https://www.buildingasecondbrain.com/) or a [Zettelkasten](https://zettelkasten.de/posts/overview/), or you just want to [GTD](https://gettingthingsdone.com/what-is-gtd/). Whether you're following a methodology or going with the flow, to get most of Foam, follow these rules:
+
+1. Create a single **Foam** workspace for all your knowledge and research.
+2. Write your thoughts in markdown documents (I like to call the **Bubbles**, but that might be more than a little twee). These documents should be atomic: Put things that belong together into a single document, and limit its content to that single topic. ([source](https://zettelkasten.de/posts/overview/#principles">https://zettelkasten.de/posts/overview/#principles))
+3. Use Foam's shortcuts and autocompletions to link your thoughts together with Markdown links navigate between.
 
 **Foam** is free, open source, and extremely extensible to suit your personal workflow. You own the information you create with Foam, and you're free to share it and collaborate on it with anyone you want.
 
@@ -99,7 +105,7 @@ To learn more about **Foam**, read the [Recipes](recipes.md).
 
 The current version of Foam is essentially a functional prototype. I am using it as my personal thinking tool, and I hope others will too. 
 
-In order to support [further Roam features](roam_comparison.md) such as back links and unlinked references it may be necessary to implement our own VS Code extension, syntax and language server.
+However, it doesn't yet fully support the Zettelkasten method. In order to support [further features](roam_comparison.md) such as back links between Bubbles, it may be necessary to implement our own VS Code extension, syntax and language server.
 
 Read our [Contibuting guide](contributing.md) for how to help improve Foam, and open [GitHub issues](https://github.com/jevakallio/foam/issues) to give us feedback and ideas for new features.
 
@@ -107,7 +113,7 @@ Read our [Contibuting guide](contributing.md) for how to help improve Foam, and 
 
 **Foam** is built by [Jani Eväkallio](https://github.com/jevakallio) ([@jevakallio](https://twitter.com/jevakallio)) and [all contributors](https://github.com/jevakallio/Foam/graphs/contributors).
 
-**Foam** was inspired by [Roam Research](https://roamresearch.com/).
+**Foam** was inspired by [Roam Research](https://roamresearch.com/) and the [Zettelkasten methodology](https://zettelkasten.de/posts/overview)
 
 **Foam** wouldn't be possible without [Visual Studio Code](https://code.visualstudio.com/) and [GitHub](https://github.com/), and relies heavily on these fantastic open source extensions and all their contributors:
 - [Git Lens](https://marketplace.visualstudio.com/items?itemName=eamodio.gitlens)

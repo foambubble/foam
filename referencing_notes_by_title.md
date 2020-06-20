@@ -1,0 +1,24 @@
+# Referencing notes by title
+
+- Currently we reference notes with `[Description](desription.md)` syntax.
+  - Pros
+    - Supported by all static site generators
+    - Supported by Markdown All in One
+  - Cons
+    - Unergonomic to write
+    - Knowing file name should not be important
+    - Makes [Unlinked references](unlinked_references.md) harder
+    - Makes [Renaming references](renaming_notes.md) harder
+- Possible syntaxes
+  - `[Title of page]`
+    - Pro: Already supported by Markdown and GH Pages publishing
+    - Con: Possibly syntactically ambiguous
+  - `[[Title of page]]`
+    - Pros: Roam format, syntactically more specific
+    - Cons: Not valid Markdown?
+  - Keep current syntax, but automate linking, e.g. a snippet/shortcut to:
+    - Insert `[]()` (opens file autocompletion)
+    - Once file is chosen in `()`, populate the description in `[]` automatically from page tite
+    - Pros: Compatible with Markdown All in One
+    - Cons: Not as sleek as other options
+- Can [MDX](https://github.com/mdx-js/mdx) help us here?

@@ -1,8 +1,9 @@
+# Todo
 
-# TODO
+- [ ] Roadmap
+- [ ] Vision
 
 ## What can we already do without any custom code?
-
 - [x] Light editor theme
 - [x] Markdown All In One plugin set
   - [x] File name autocompletiong for links
@@ -18,12 +19,12 @@
   - [ ] Automatic commit messages (TODO, see Git Automator readme)
 
 ## How to make my setup usable for others without code
-- [ ] Template workspace/repo to clone
-  - [ ] GitHub has a feature for this
-- [ ] Comes with a `.vscode/settings.json`
-  - [ ] Recommended plugins
-    - [ ] Markdown all in one
-    - [ ] Some editor theme
-    - [ ] Git Lens
-    - [ ] Git Automator
-  - [ ] Custom shortcuts (if possible in workspace?)
+- [x] Template workspace/repo to clone
+  - [x] GitHub has a feature for this
+- [x] Comes with a `.vscode/settings.json`
+  - [x] Recommended plugins
+    - [x] Markdown all in one
+    - [x] Some editor theme
+    - [x] Git Lens
+    - [x] Git Automator
+  - [x] Custom shortcuts (if possible in workspace?)

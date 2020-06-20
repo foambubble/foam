@@ -1,3 +1,3 @@
-## Contributing
+# Contributing
 
-TODO
+This is the contributing guide.

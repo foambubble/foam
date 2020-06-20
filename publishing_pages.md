@@ -1,4 +1,4 @@
-## Publishing pages
+# Publishing pages
 
 Would be cool if Foam pages could be published. Some ideas here. 
 
@@ -8,6 +8,6 @@ Would be cool if Foam pages could be published. Some ideas here.
     - [ ] Public by default, and `@private` annotations
     - [ ] Private by default, and `@public` annotations
     - [ ] Only public `/public` folder, just move a document there, no annotation needed
-    - [ ] More granular access control? Email someone a link with a hash?
+    - [ ] More granular access control? Email someone a link with a hash? [Testing](testing.md )
 
 

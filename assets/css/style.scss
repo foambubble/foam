@@ -3,6 +3,10 @@
 
 @import "{{ site.theme }}";
 
+a {
+  color: #3300ff;
+}
+
 .markdown-body {
   max-width: 800px;
   font-size: 16px;

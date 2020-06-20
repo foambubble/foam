@@ -26,6 +26,8 @@ Fun fact: This documentation was researched, written and published using **Foam*
 
 **Foam** is a tool that supports creating relationships between thoughts and information to help you think better.
 
+![Short video of Foam in use](assets/images/readme-demo.gif).
+
 Whether you want to build a [Second Brain](https://www.buildingasecondbrain.com/) or a [Zettelkasten](https://zettelkasten.de/posts/overview/), or you want to [GTD](https://gettingthingsdone.com/what-is-gtd/) or just go with the flow, **Foam** can help you organise your thoughts if you follow these simple rules:
 
 1. [Create a single **Foam** workspace](https://github.com/foambubble/foam-template/generate) for all your knowledge and research.

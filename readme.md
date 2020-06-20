@@ -32,7 +32,7 @@ Whether you want to build a [Second Brain](https://www.buildingasecondbrain.com/
 2. Write your thoughts in markdown documents (I like to call them **Bubbles**, but that might be more than a little twee). These documents should be atomic: Put things that belong together into a single document, and limit its content to that single topic. ([source](https://zettelkasten.de/posts/overview/#principles))
 3. Use Foam's shortcuts and autocompletions to link your thoughts together with Markdown links, and navigate between to explore your knowledge graph.
 
-Foam is a like a bathtub: What you get out of it depends on what you put into it.
+Foam is a like a bathtub: _What you get out of it depends on what you put into it._
 
 ## What's in a Foam?
 
@@ -42,12 +42,11 @@ The core of **Foam** are VS Code workspace settings that glue together recommend
 
 Foam helps you to:
 
-- Write rich markdown documents
+- Focus on writing
 - Create links between documents with the help of auto-complete
 - Navigate between linked documents with a single click
 - Generate tables of content and update them automatically
 - Easily create and manage lists and check lists
-- Keep track of the context and evolution of your thoughts by bring.
 - Easily push code to a git repository
 
 To back up, collaborate on and share your content between devices, Foam pairs well with [GitHub](http://github.com/). 
@@ -92,7 +91,7 @@ Head over to [Recipes](recipes.md) for some useful patterns and ideas, and [cont
 
 These instructions assume you have a GitHub account, and you have Visual Studio Code installed.
 
-1. [Create a GitHub repository from foam-template](https://github.com/jevakallio/foam-template/generate)
+1. [Create a GitHub repository from foam-template](https://github.com/foambubble/foam-template/generate)
 2. Clone the repository and open it in VS Code
 3. When prompted to install recommended extensions, click **Install all** (or **Show Recommendations** if you want to review and install them one by one)
 
@@ -110,15 +109,15 @@ To learn more about **Foam**, read the [Recipes](recipes.md).
 
 ## Future plans
 
-The current version of Foam is essentially a functional prototype. I am using it as my personal thinking tool, and I hope others will too. 
+The current version of Foam is essentially a functional prototype. I am using it as my personal thinking tool in order to learn how to best use it, and I hope others will too.
 
 However, it doesn't yet fully support the Zettelkasten method. In order to support [further features](roam_comparison.md) such as back links between Bubbles, it may be necessary to implement our own VS Code extension, syntax and language server.
 
-Read our [Contibuting guide](contributing.md) for how to help improve Foam, and open [GitHub issues](https://github.com/jevakallio/foam/issues) to give us feedback and ideas for new features.
+Read our [Contibuting guide](contributing.md) for how to help improve Foam, and open [GitHub issues](https://github.com/foambubble/foam/issues) to give us feedback and ideas for new features.
 
 ## Thanks and attribution
 
-**Foam** is built by [Jani Eväkallio](https://github.com/jevakallio) ([@jevakallio](https://twitter.com/jevakallio)) and [all contributors](https://github.com/jevakallio/Foam/graphs/contributors).
+**Foam** is built by [Jani Eväkallio](https://github.com/jevakallio) ([@jevakallio](https://twitter.com/jevakallio)) and [all contributors](https://github.com/foambubble/foam/graphs/contributors).
 
 **Foam** was inspired by [Roam Research](https://roamresearch.com/) and the [Zettelkasten methodology](https://zettelkasten.de/posts/overview)
 

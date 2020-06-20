@@ -59,8 +59,8 @@ I built, and want to continue developing, **Foam** because I wanted to manage my
 - Full power of VS Code, such as
   - Powerful keyboard navigation (or even [vim mode](https://marketplace.visualstudio.com/items?itemName=vscodevim.vim))
   - Multiple windows, tabs and panes
-  - Embed executable code to your Bubbles with CodeRunner or Jupyter Notebooks
-  - Snippets, macros, 
+  - Embed executable code to your Foam Bubbles with CodeRunner or Jupyter Notebooks
+  - Snippets for common tasks
   - If there's an [extension](https://marketplace.visualstudio.com/vscode) for it, you can use it.
 - Ability to customise everything about your environment (colors, fonts, keyboard shortcuts, etc.)
 - Free, low lock-in hosting in any Git repository

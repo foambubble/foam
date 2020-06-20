@@ -1,6 +1,6 @@
 # Foam
 
- > _When you want to build a second brain, and you also want to own your own brain._
+ > _When you want to build a second brain, but you also want to own your own brain._
   
 **Foam** is a personal knowledge management and sharing system inspired by [Roam Research](https://roamresearch.com/), built on [Visual Studio Code](https://code.visualstudio.com/) and [GitHub](https://github.com/).
 
@@ -25,7 +25,7 @@ Fun fact: This documentation was researched, written and published usign **Foam*
 
 Like the soapy suds it's named after, **Foam** is mostly air. The current version of Foam was created with **zero lines of code**, built instead on the shoulders of giants.
 
-The core of **Foam** is an opinionated VS Code [workspace settings file](.vscode/settings.json) that glues together recommended Code Extensions, custom settings and key bindings, optimised for writing and navigating information.
+The core of **Foam** are VS Code workspace settings that glue together recommended Code Extensions, custom settings and key bindings, optimised for writing and navigating information.
 
 Foam helps you to:
 
@@ -52,7 +52,7 @@ However, Roam comes with a few downsides:
 - As slick as it is, it can't compete with the customisability of VS Code.
 - As of June 2020, the app is still slow, buggy and sometimes loses information when editing offline.
 
-I built **Foam** because I wanted to build my personal knowledge repository using tools I feel the most comfortable in, while keeping the ownership of my own data. 
+I built, and want to continue developing, **Foam** because I wanted to manage my personal knowledge repository using tools I feel the most comfortable with, while keeping the ownership of my own data. 
 
 **Foam** implements many ([but not all](roam_comparison.md)) of Roam's features inside VS Code, providing access to:
 
@@ -97,9 +97,11 @@ To learn more about **Foam**, read the [Recipes](recipes.md).
 
 ## Future plans
 
-In order to implement a [further features](roam_comparison.md) like back links and unlinked references, it may be necessary to implement our own VS Code extension, syntax and language server.
+The current version of Foam is essentially a functional prototype. I am using it as my personal thinking tool, and I hope others will too. 
 
-Read our [Contibuting guide](contributing.md) for how to help improve Foam.
+In order to support [further Roam features](roam_comparison.md) such as back links and unlinked references it may be necessary to implement our own VS Code extension, syntax and language server.
+
+Read our [Contibuting guide](contributing.md) for how to help improve Foam, and open [GitHub issues](https://github.com/jevakallio/foam/issues) to give us feedback and ideas for new features.
 
 ## Thanks and attribution
 

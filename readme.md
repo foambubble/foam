@@ -8,7 +8,7 @@ You can use **Foam** for organising research, taking notes, writing long-form co
 
 **Foam** is free, open source, and extremely extensible to suit your personal workflow. You own the information you create with Foam, and you're free to share it and collaborate on it with anyone you want.
 
-Fun fact: This documentation was researched, written and published usign **Foam**.
+Fun fact: This documentation was researched, written and published using **Foam**.
 
 ## Table of Contents
 - [Foam](#foam)
@@ -29,7 +29,7 @@ Fun fact: This documentation was researched, written and published usign **Foam*
 Whether you want to build a [Second Brain](https://www.buildingasecondbrain.com/) or a [Zettelkasten](https://zettelkasten.de/posts/overview/), or you want to [GTD](https://gettingthingsdone.com/what-is-gtd/) or just go with the flow, **Foam** can help you organise your thoughts if you follow these simple rules:
 
 1. Create a single **Foam** workspace for all your knowledge and research.
-2. Write your thoughts in markdown documents (I like to call the **Bubbles**, but that might be more than a little twee). These documents should be atomic: Put things that belong together into a single document, and limit its content to that single topic. ([source](https://zettelkasten.de/posts/overview/#principles">https://zettelkasten.de/posts/overview/#principles))
+2. Write your thoughts in markdown documents (I like to call them **Bubbles**, but that might be more than a little twee). These documents should be atomic: Put things that belong together into a single document, and limit its content to that single topic. ([source](https://zettelkasten.de/posts/overview/#principles))
 3. Use Foam's shortcuts and autocompletions to link your thoughts together with Markdown links, and navigate between to explore your knowledge graph.
 
 Foam is a like a bathtub: What you get out of it depends on what you put into it.

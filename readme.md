@@ -19,6 +19,7 @@ Fun fact: This documentation was researched, written and published usign **Foam*
   - [Getting started](#getting-started)
   - [Future plans](#future-plans)
   - [Thanks and attribution](#thanks-and-attribution)
+  - [License](#license)
 
 ## What's in a Foam?
 
@@ -73,7 +74,23 @@ Head over to [Recipes](recipes.md) for some useful patterns and ideas, and [cont
 
 ## Getting started
 
-1. [Install VS Code](https://code.visualstudio.com/) (available on Linux, Mac and Windows)
+These instructions assume you have a GitHub account, and you have Visual Studio Code installed.
+
+1. [Create a GitHub repository from foam-template](https://github.com/jevakallio/foam-template/generate)
+2. Clone the repository and open it in VS Code
+3. When prompted to install recommended extensions, click **Install all** (or **Show Recommendations** if you want to review and install them one by one)
+
+After setting up the repository, open [.vscode/settings.json](.vscode/settings.json) and edit, add or remove any settings you'd like for your Foam workspace.
+
+After making changes, sync the back to your git repository either:
+- Using the GitLens UI
+- Using GitAutomator commands
+    - `Cmd`+`Shift`+`Z` to stage the current file and commit it, or
+    - `Cmd`+`Shift`+`A` to stage all edited files and commit them, and finally
+    - `Cmd`+`Shift`+`X` to push all commits
+- Whatever way you prefer. It's your Foam!
+
+To learn more about **Foam**, read the [Recipes](recipes.md).
 
 ## Future plans
 
@@ -91,3 +108,7 @@ Read our [Contibuting guide](contributing.md) for how to help improve Foam.
 - [Git Lens](https://marketplace.visualstudio.com/items?itemName=eamodio.gitlens)
 - [Git Automator](https://marketplace.visualstudio.com/items?itemName=ivangabriele.vscode-git-add-and-commit)
 - [Markdown All In One](https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one)
+
+## License
+
+Foam is licensed under the [MIT license](license).

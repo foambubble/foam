@@ -16,6 +16,11 @@
   - `[[Title of page]]`
     - Pros: Roam format, syntactically more specific
     - Cons: Not valid Markdown?
+    - Trialling [VS Code Markdown Notes](https://marketplace.visualstudio.com/items?itemName=kortina.vscode-markdown-notes)
+      - Read also: https://kortina.nyc/essays/suping-up-vs-code-as-a-markdown-notebook/
+      - This works, also supports backlinks
+      - Breaks GitHub page generation
+  - `[[title_of_page.md]]
   - Keep current syntax, but automate linking, e.g. a snippet/shortcut to:
     - Insert `[]()` (opens file autocompletion)
     - Once file is chosen in `()`, populate the description in `[]` automatically from page tite

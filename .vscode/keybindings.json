@@ -1,0 +1,8 @@
+// This file does not get automatically applied
+// @TODO: Make it work or document how to copy to user keybindings
+[
+  {
+    "key": "cmd+shift+n",
+    "command": "vscodeMarkdownNotes.newNote"
+  }
+]

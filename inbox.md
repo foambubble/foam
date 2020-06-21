@@ -1,0 +1,16 @@
+# Inbox
+
+Uncategorised thoughts
+
+- Foam is a work in progress
+  - [Roadmap](roadmap.md) shows some of the features I think we could build
+  - I'm far more excited about all the things we haven't even thought of yet
+    - Learning from others' experience and integrating good ideas and tools into my own workflow
+- Foam should tick at the same frequency as your brain, and the Foam graph you build should match the mental model you have in your head, making navigation effortless.
+- In ways, Wallet was the first iteration of Foam-like environment
+- Should we support directories?
+  - Some tools might get more complicated to build
+  - The pressure to categorize and create hierachies can become distracting
+  - Is there value in folderizing?
+- This readme repo is in some ways the Foam project's on Foam! It should be more collaborative.
+- Could we do publish-related settings as a pre-push git hook, e.g. generating footnote labels

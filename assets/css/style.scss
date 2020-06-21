@@ -49,3 +49,26 @@ blockquote {
   font-family: Constantia, "Lucida Bright", Lucidabright, "Lucida Serif", Lucida,
     "DejaVu Serif", "Bitstream Vera Serif", "Liberation Serif", Georgia, serif;
 }
+
+// For links that have titles, display link title instead of
+// dom node content, so e.g. wiki-link becomes "Wiki link"
+//
+// These titles are read from Markdown references as follows:
+// wiki-link: wiki-link "Wiki link"
+.markdown-body {
+  a[title] {
+    font-size: 0;
+  }
+
+  a[title]:after {
+    content: attr(title);
+    font-size: initial;
+
+    // Fade the surrounding brackets
+    outline-width: 4px;
+    outline-style: solid;
+
+    // @TODO: This should be same as theme background color:
+    outline-color: rgba(255, 255, 255, 0.8);
+  }
+}

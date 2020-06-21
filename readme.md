@@ -137,6 +137,9 @@ Read our [[contributing]] for how to help improve Foam, and open [GitHub issues]
 Foam is licensed under the [MIT license](license).
 
 //: # (BEGIN generated link references for markdown compatibility)
+
 [recipes]: recipes "Recipes"
+
 [contributing]: contributing "Contributing"
+
 //: # (END generated link references)

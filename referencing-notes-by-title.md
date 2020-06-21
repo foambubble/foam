@@ -7,8 +7,8 @@
   - Cons
     - Unergonomic to write
     - Knowing file name should not be important
-    - Makes [Unlinked references](unlinked_references.md) harder
-    - Makes [Renaming references](renaming_notes.md) harder
+    - Makes [[unlinked-references]] harder
+    - Makes [[renaming-files]] harder
 - Possible syntaxes
   - `[Title of page]`
     - Pro: Already supported by Markdown and GH Pages publishing
@@ -27,3 +27,8 @@
     - Pros: Compatible with Markdown All in One
     - Cons: Not as sleek as other options
 - Can [MDX](https://github.com/mdx-js/mdx) help us here?
+
+//: # (BEGIN generated link references for markdown compatibility)
+unlinked-references: unlinked-references "Unlinked references"
+renaming-files: renaming-files "Renaming files"
+//: # (END generated link references)

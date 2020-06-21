@@ -3,7 +3,7 @@
 Uncategorised thoughts
 
 - Foam is a work in progress
-  - [Roadmap](roadmap.md) shows some of the features I think we could build
+  - [[roadmap]] shows some of the features I think we could build
   - I'm far more excited about all the things we haven't even thought of yet
     - Learning from others' experience and integrating good ideas and tools into my own workflow
 - Foam should tick at the same frequency as your brain, and the Foam graph you build should match the mental model you have in your head, making navigation effortless.
@@ -14,3 +14,7 @@ Uncategorised thoughts
   - Is there value in folderizing?
 - This readme repo is in some ways the Foam project's on Foam! It should be more collaborative.
 - Could we do publish-related settings as a pre-push git hook, e.g. generating footnote labels
+
+//: # (BEGIN generated link references for markdown compatibility)
+roadmap: roadmap "Roadmap"
+//: # (END generated link references)

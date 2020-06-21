@@ -2,28 +2,42 @@
 
 The below Foam roadmap is ~approximately prioritised. We don't need to work on things in this exact order, but generally items closer to the top are higher priority than items towards the bottom.
 
-Some of these items can be achieved by combining existing tools, but others may require us to build bespoke software solutions. See [Build vs Assemble](build-vs-assemble.md) to understand tradeoffs between these approaches.
+Some of these items can be achieved by combining existing tools, but others may require us to build bespoke software solutions. See [[build-vs-assemble]] to understand tradeoffs between these approaches.
 
-- [x] Support [Backlinking](backlinking.md) (VS Code Markdown Notes)
-- [x] Support [Referencing notes by title](referencing_notes_by_title.md) (VS Code Markdown Notes)
-- [ ] Support [Unlinked references](unlinked_references.md)
-- [ ] Support [Graph visualisation](graph_visualization.md)
-- [ ] Support automatic [Daily notes](daily_notes.md)
-- [x] Create [new files](new_files.md) on click (VS Code Markdown Notes)
-- [ ] Support [renaming files](renaming_files.md)
+- [x] Support [[backlinking]] (VS Code Markdown Notes)
+- [x] Support [[referencing-notes-by-title]] (VS Code Markdown Notes)
+- [ ] Support [[unlinked-references]]
+- [ ] Support [[graph-visualization]]
+- [ ] Support automatic [[daily-notes]]
+- [x] Create [[new-files]] on click (VS Code Markdown Notes)
+- [ ] Support [[renaming-files]]
 - [ ] Improve keyboard navigation between files
 - [ ] Improve and document default workspace settings
 - [ ] Support `@TODO` `@REVIEW` etc annotations to collect lists
-  - [ ] Or implement with [Backlinking](backlinking.md) and [Referencing notes by title](referencing_notes_by_title.md)
-- [ ] Improve [Git integration](git_integration.md) 
-- [ ] Harmonise [Key bindings](key_bindings.md)
+  - [ ] Or implement with [[backlinking]] and [[referencing-notes-by-title.md]]
+- [ ] Improve [[git-integration]]
+- [ ] Harmonise [[key-bindings]]
 - [ ] Support more granular publishing permissions
   - [ ] Private and public pages
-  - [ ] Share pr  ivate pages to "anyone with a link"
+  - [ ] Share pr ivate pages to "anyone with a link"
 - [ ] Support multi-user git repository flows for shared Foams
 - [ ] Support Patches/PRs from outside contributors
 - [ ] Implement a toolbar
-- [ ] Support [Real-time collaboration](real_time_collaboration.md)
+- [ ] Support [[real-time-collaboration.md]]
 - [ ] Support editing via mobile
 - [ ] Web interface
 
+//: # (BEGIN generated link references for markdown compatibility)
+build-vs-assemble: build-vs-assemble "Build vs Assemble"
+backlinking: backlinking "Backlinking"
+referencing-notes-by-title: referencing-notes-by-title "Referencing notes by title"
+unlinked-references: unlinked-references "Unlinked references"
+graph-visualization: graph-visualization "Graph visualization"
+daily-notes: daily-notes "Daily notes"
+new-files: new-files "New files"
+renaming-files: renaming-files "Renaming files"
+referencing-notes-by-title.md: referencing-notes-by-title "Referencing notes by title"
+git-integration: git-integration "Git integration"
+key-bindings: key-bindings "Key Bindings"
+real-time-collaboration.md: real-time-collaboration "Real-time Collaboration"
+//: # (END generated link references)

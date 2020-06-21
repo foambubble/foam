@@ -10,7 +10,7 @@ Over time, Roam may build features Foam won't or can't support (APIs, real time 
   - Could be implemented as a terminal view of sort, run a language server in the background and show them in the "output" tab like you show test results in jest
 - Automatically create a new page when referencing an unknown file
   - This support could be added to MD All in one
-- Granular [publishing](publishing_pages.md) permissions
+- Granular [[publishing-pages]] permissions
   - Publish per page
   - Invite-only bubbles
 - Knowledge graph visualiser
@@ -23,3 +23,6 @@ Over time, Roam may build features Foam won't or can't support (APIs, real time 
 - Renaming/moving documents requires to rename all references
   - Could probably be automated
 
+//: # (BEGIN generated link references for markdown compatibility)
+publishing-pages: publishing-pages "Publishing pages"
+//: # (END generated link references)

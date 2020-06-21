@@ -1,6 +1,7 @@
 # Principles
 
 ## Table of Contents
+
 - [Principles](#principles)
   - [Table of Contents](#table-of-contents)
   - [Foam enables you to do your best thinking](#foam-enables-you-to-do-your-best-thinking)
@@ -13,8 +14,8 @@
 
 - **Foam works for you, you don't work for Foam.** You should be able to focus on your work and not fight against Foam, or having to perform fiddly operations or maintenance jobs to keep Foam happy.
 - **Foam is not a package deal.** You must be able to adopt only the parts of Foam that you want. There must be no tight coupling between Foam's features.
-- **Foam is a starting point**  You must be able to customise how foam looks and feels, and combine it with other tools you find helpful in your personal workflow.
-- **Foam is not a philosophy.** Whether you use a methodology like Zettelkasten is up to you. You should be able to use Foam without joining a cult. 
+- **Foam is a starting point** You must be able to customise how foam looks and feels, and combine it with other tools you find helpful in your personal workflow.
+- **Foam is not a philosophy.** Whether you use a methodology like Zettelkasten is up to you. You should be able to use Foam without joining a cult.
 
 ## Foam wants you to own your thoughts
 
@@ -29,9 +30,8 @@ This principle may seem like it contradicts [Foam wants you to own your thoughts
 > [...] environments that build walls around good ideas tend to be less innovative in the long run than more open-ended environments. Good ideas may not want to be free, but they do want to connect, fuse, recombine. —_Steven Johnson, Where Good Ideas Come From_
 
 - **Foam should make it easy to publish your knowledge graph.** With zero code, you should be able to make your graph public to the world. You should have full control over how it looks, feels, and where it's hosted.
-- **Foam should make it easy to collaborate on ideas.** Foam should allow you to work closely together with your collaborators, and accept feedback, input and improvements from others. _(Work in progress, see [Roadmap](roadmap.md))_.
-- **Foam should make it easy to publish what you choose.** Foam should double as a low-barrier blog/publishing platform, so you can share content to an audience without inviting them to intrude on your entire workspace. _(Work in progress, see [Roadmap](roadmap.md))_.
-
+- **Foam should make it easy to collaborate on ideas.** Foam should allow you to work closely together with your collaborators, and accept feedback, input and improvements from others. _(Work in progress, see [[roadmap]]_.
+- **Foam should make it easy to publish what you choose.** Foam should double as a low-barrier blog/publishing platform, so you can share content to an audience without inviting them to intrude on your entire workspace. _(Work in progress, see [[roadmap]]_.
 
 ## Foam allows people to collaborate in discovering better ways to work, together.
 
@@ -45,4 +45,9 @@ While Foam uses tools popular among computer programmers, Foam should be inclusi
 
 - **Foam embraces the hacker mindset.** The target audience for Foam are people who look for creative ways to improve their ability to collect and organise information.
 - **Foam is not just for programmers.** If you're a programmer, feel free to write scripts and extensions to support your own workflow, and publish them for others to use, but the out of the box Foam experience should not require you to know how to do so. You should, however, be curious and open to adopting new tools that are unfamiliar to you, and evaluate whether they could work for you.
-- **Foam is for everyone** As a foam user, you support everyone's quest for knowledge and self-improvement, not only your own, or folks' who look like you. All participants in Foam repositories, discussion forums, physical and virtual meeting spaces etc are expected to respect each other as described in our [Code of Conduct](code_of_conduct.md). _Foam is not for is toxic tech bros._
+- **Foam is for everyone** As a foam user, you support everyone's quest for knowledge and self-improvement, not only your own, or folks' who look like you. All participants in Foam repositories, discussion forums, physical and virtual meeting spaces etc are expected to respect each other as described in our [[code-of-conduct]]. _Foam is not for is toxic tech bros._
+
+//: # (BEGIN generated link references for markdown compatibility)
+roadmap: roadmap "Roadmap"
+code-of-conduct: code-of-conduct "Code of Conduct"
+//: # (END generated link references)

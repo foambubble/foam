@@ -12,5 +12,5 @@ Overall, we should strive to build big things from small things. Focused, intero
 However, there becomes a point where we may benefit from implementing a centralised solution, e.g. a syntax, an extension or perhaps a VSCode language server. As much as possible, we should allow users to operate in a decentralised manner.
 
 //: # (BEGIN generated link references for markdown compatibility)
-referencing-notes-by-title: referencing-notes-by-title "Referencing notes by title"
+[referencing-notes-by-title]: referencing-notes-by-title "Referencing notes by title"
 //: # (END generated link references)

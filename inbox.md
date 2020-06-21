@@ -16,5 +16,5 @@ Uncategorised thoughts
 - Could we do publish-related settings as a pre-push git hook, e.g. generating footnote labels
 
 //: # (BEGIN generated link references for markdown compatibility)
-roadmap: roadmap "Roadmap"
+[roadmap]: roadmap "Roadmap"
 //: # (END generated link references)

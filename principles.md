@@ -48,6 +48,6 @@ While Foam uses tools popular among computer programmers, Foam should be inclusi
 - **Foam is for everyone** As a foam user, you support everyone's quest for knowledge and self-improvement, not only your own, or folks' who look like you. All participants in Foam repositories, discussion forums, physical and virtual meeting spaces etc are expected to respect each other as described in our [[code-of-conduct]]. _Foam is not for is toxic tech bros._
 
 //: # (BEGIN generated link references for markdown compatibility)
-roadmap: roadmap "Roadmap"
-code-of-conduct: code-of-conduct "Code of Conduct"
+[roadmap]: roadmap "Roadmap"
+[code-of-conduct]: code-of-conduct "Code of Conduct"
 //: # (END generated link references)

@@ -29,6 +29,6 @@
 - Can [MDX](https://github.com/mdx-js/mdx) help us here?
 
 //: # (BEGIN generated link references for markdown compatibility)
-unlinked-references: unlinked-references "Unlinked references"
-renaming-files: renaming-files "Renaming files"
+[unlinked-references]: unlinked-references "Unlinked references"
+[renaming-files]: renaming-files "Renaming files"
 //: # (END generated link references)

@@ -24,5 +24,5 @@ Over time, Roam may build features Foam won't or can't support (APIs, real time 
   - Could probably be automated
 
 //: # (BEGIN generated link references for markdown compatibility)
-publishing-pages: publishing-pages "Publishing pages"
+[publishing-pages]: publishing-pages "Publishing pages"
 //: # (END generated link references)

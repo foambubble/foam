@@ -28,16 +28,16 @@ Some of these items can be achieved by combining existing tools, but others may 
 - [ ] Web interface
 
 //: # (BEGIN generated link references for markdown compatibility)
-build-vs-assemble: build-vs-assemble "Build vs Assemble"
-backlinking: backlinking "Backlinking"
-referencing-notes-by-title: referencing-notes-by-title "Referencing notes by title"
-unlinked-references: unlinked-references "Unlinked references"
-graph-visualization: graph-visualization "Graph visualization"
-daily-notes: daily-notes "Daily notes"
-new-files: new-files "New files"
-renaming-files: renaming-files "Renaming files"
-referencing-notes-by-title.md: referencing-notes-by-title "Referencing notes by title"
-git-integration: git-integration "Git integration"
-key-bindings: key-bindings "Key Bindings"
-real-time-collaboration.md: real-time-collaboration "Real-time Collaboration"
+[build-vs-assemble]: build-vs-assemble "Build vs Assemble"
+[backlinking]: backlinking "Backlinking"
+[referencing-notes-by-title]: referencing-notes-by-title "Referencing notes by title"
+[unlinked-references]: unlinked-references "Unlinked references"
+[graph-visualization]: graph-visualization "Graph visualization"
+[daily-notes]: daily-notes "Daily notes"
+[new-files]: new-files "New files"
+[renaming-files]: renaming-files "Renaming files"
+[referencing-notes-by-title.md]: referencing-notes-by-title "Referencing notes by title"
+[git-integration]: git-integration "Git integration"
+[key-bindings]: key-bindings "Key Bindings"
+[real-time-collaboration.md]: real-time-collaboration "Real-time Collaboration"
 //: # (END generated link references)

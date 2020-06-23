@@ -3,7 +3,6 @@
 Uncategorised thoughts
 
 - Foam is a work in progress
-  - [[contributing]]
   - [[roadmap]] shows some of the features I think we could build
   - I'm far more excited about all the things we haven't even thought of yet
     - Learning from others' experience and integrating good ideas and tools into my own workflow

@@ -1,7 +1,5 @@
 # Testing
 
-[Random](random_thoughts.md)
-
 [[roam-comparison.md]]
 
 This is cool [[roadmap.md]]

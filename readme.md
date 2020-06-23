@@ -8,8 +8,6 @@ You can use **Foam** for organising your research, keeping re-discoverable notes
 
 **Foam** is free, open source, and extremely extensible to suit your personal workflow. You own the information you create with Foam, and you're free to share it and collaborate on it with anyone you want.
 
-Fun fact: This documentation was researched, written and published using **Foam**.
-
 ## Table of Contents
 
 - [Foam](#foam)
@@ -33,7 +31,7 @@ Whether you want to build a [Second Brain](https://www.buildingasecondbrain.com/
 1. [Create a single **Foam** workspace](https://github.com/foambubble/foam-template/generate) for all your knowledge and research.
 2. Write your thoughts in markdown documents (I like to call them **Bubbles**, but that might be more than a little twee). These documents should be atomic: Put things that belong together into a single document, and limit its content to that single topic. ([source](https://zettelkasten.de/posts/overview/#principles))
 3. Use Foam's shortcuts and autocompletions to link your thoughts together with `[[wiki-links]]`, and navigate between them to explore your knowledge graph.
-4. Explore your **Foam** workspace using a [[graph-visualisation]], and discover relationships betweeh your thoughts with the use of [[backlinking]].
+4. Get an overview of your **Foam** workspace using a [[graph-visualisation]], and discover relationships between your thoughts with the use of [[backlinking]].
 
 Foam is a like a bathtub: _What you get out of it depends on what you put into it._
 
@@ -45,18 +43,20 @@ Like the soapy suds it's named after, **Foam** is mostly air.
 2. To back up, collaborate on and share your content between devices, Foam pairs well with [GitHub](http://github.com/).
 3. To publish your content, you can set it up to publish to GitHub pages with zero code and zero config, or to any website hosting platform like [Netlify](http://netlify.com/) or [Vercel](vercel).
 
+> **Fun fact**: This documentation was researched, written and published using **Foam**.
+
 ## Features
 
 **Foam** doesn't have features in the traditional sense. Out of the box, you have access to all features of VS Code and all the [[recommended-extensions]] you choose to install, but it's up to you to discover what you can do with it!
 
-**Foam** is currently about "10% ready" compared to all the features I've thoughts of, but I've only thought of ~1% of the features it could have.
+**Foam** is currently about "10% ready" compared to all the features I've thought of, but I've only thought of ~1% of the features it could have, and I'm excited to learn from others.
 
 - Head over to [[recipes]] for some useful patterns and ideas
 - Check out [[roadmap]] to see what's in the plans
 
 ## Getting started
 
-> ⚠️ Foam is still in preview. Expect the first use experience to be a little rough.
+> ⚠️ Foam is still in preview. Expect the experience to be a little rough.
 
 These instructions assume you have a GitHub account, and you have Visual Studio Code installed.
 

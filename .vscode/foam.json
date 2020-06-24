@@ -1,0 +1,4 @@
+{
+  "purpose": "this file exists to tell the foam-vscode plugin that it's currently in a foam workspace",
+  "future": "we may use this for custom configuration"
+}

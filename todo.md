@@ -2,19 +2,20 @@
 
 ## Pre-launch checklist
 
-- [ ] Rewrite readme
-- [ ] Create a few recipes
-  - [ ] Markdown editing scenarios (stubs)
-  - [ ] Git scenaros (stubs)
-  - [ ] Backlinks
-    - [ ] Todo/review lists
-    - [ ] Indexes
+- [x] Rewrite readme
+- [x] Create a few recipes
+  - [x] Markdown editing scenarios (stubs)
+  - [x] Git scenaros (stubs)
+  - [x] Backlinks
+    - [x] Todo/review lists
+    - [x] Indexes
     - [ ] Daily notes
   - [ ] Graphs
-  - [ ] Fake-autolinking references
-- [ ] Fix and publish wikilink generator
+  - [x] Fake-autolinking references
+- [x] Fix and publish wikilink generator
 - [ ] Fix or document broken link search
   - [ ] Can after::content be nade readable?
+- [ ] Private pages with underscore
 - [ ] Reorganise files
 - [x] Rename contribution guide
 

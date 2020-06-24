@@ -1,6 +1,10 @@
 # Recipes
 
-> ℹ️ Many of these documents are stubs. Help wanted! See our [[contribution-guide]] for more information
+> 👋 **Help wanted!**
+>
+> This list is a work in progress and many of these documents are stubs.
+>
+> See [[contribution-guide]] for more information.
 
 - Linking
   - Creating relationships with [[wiki-links]]
@@ -13,8 +17,10 @@
 - Markdown [[todo]] (In the meantime, see [Markdown All In One](https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one) documentation)
   - Table of Contents
   - Checklists
-  - Markdown preview
+  - Markdown live preview
   - More...
+- Focus [[todo]]
+  - Use VS Code Zen mode (`Cmd` + `K`, `Z`)
 - Publishing pages
   - Publish to [[github-pages]]
   - Make the site your own by [[customising-styles]].
@@ -23,9 +29,9 @@
   - Quick commits with [[git-integration]]
   - More... [[todo]]
 - Collaboration [[todo]]
-  - Team access
-  - Accept patches
-  - Live share
+  - Give your team push access to your GitHub repo
+  - Accept patches via GitHub PRs
+  - Real-time collaboration via Live share
 - Creative ideas
   - **Contributions wanted**. See [[contribution-guide]].
 

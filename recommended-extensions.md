@@ -1,1 +1,11 @@
 # Recommended Extensions
+
+These extensions defined in `.vscode/extensions.json` are automatically installed when you accept the workspace's recommended extensions.
+
+This list is subject to change. Especially the Git ones.
+
+- [Markdown Notes](https://marketplace.visualstudio.com/items?itemName=kortina.vscode-markdown-notes)
+- [Markdown Links](https://marketplace.visualstudio.com/items?itemName=tchayen.markdown-links)
+- [Markdown All In One](https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one)
+- [Git Lens](https://marketplace.visualstudio.com/items?itemName=eamodio.gitlens)
+- [Git Automator](https://marketplace.visualstudio.com/items?itemName=ivangabriele.vscode-git-add-and-commit)

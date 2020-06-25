@@ -9,8 +9,8 @@ Foam is open to contributions of any kind, including but not limited to code, do
 - Read about our [[principles]] to understand Foam's philosophy and direction
 - Read and act in accordance of our [[code-of-conduct]].
 - Feel free to open [GitHub issues](https://github.com/foambubble/foam/issues) to give me feedback and ideas for new features.
-- Submit improvements as pull requests:
-  - Documentation and [[recipes]] at [foambubble/foam](https://github.com/foambubble/foam
+- Submit improvements as pull requests in the following repositories:
+  - Documentation and [[recipes]] at [foambubble/foam](https://github.com/foambubble/foam)
   - To the starter template at [foambubble/foam-template](https://github.com/foambubble/foam)
   - To the core VSCode plugin at [foambubble/foam-vscode](https://github.com/foambubble/foam)
   - To future Foam automations at [foambubble/foam-workspace/manager](https://github.com/foambubble/foam) (though at the moment this is probably too early to contribute to, as there's no architecture in place)

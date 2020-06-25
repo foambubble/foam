@@ -1,0 +1,12 @@
+---
+layout: default
+---
+
+{{ content }}
+
+<script type="text/javascript">
+  // Hack: Replace page-link with "Page Title"
+  document.querySelectorAll(".markdown-body a[title]").forEach((a) => {
+    a.innerText = a.title;
+  });
+</script>

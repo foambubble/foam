@@ -1,6 +1,7 @@
 # Known Issues
 
 - [[graph-visualisation]] does not detect with wiki-links ([Markdown Links](https://marketplace.visualstudio.com/items?itemName=tchayen.markdown-links))
+- Aggressive autocompletion in Markdown files. You can turn `editor.quickSuggestions` off in [.vscode/settings.json].
 - Reference link lists have multiple issues ([Foam for VSCode](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode))
   - Reference lists don't update in the background when other files are changed
   - Notes don't get removed from reference lists when notes are deleted/renamed

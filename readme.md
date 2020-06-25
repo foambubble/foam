@@ -1,12 +1,12 @@
 # Foam
 
-> _When you want to build a second brain, but you also want to own your own brain._
-
 **Foam** is a personal knowledge management and sharing system inspired by [Roam Research](https://roamresearch.com/), built on [Visual Studio Code](https://code.visualstudio.com/) and [GitHub](https://github.com/).
 
 You can use **Foam** for organising your research, keeping re-discoverable notes, writing long-form content and, optionally, publishing it to the web.
 
-**Foam** is free, open source, and extremely extensible to suit your personal workflow. You own the information you create with Foam, and you're free to share it and collaborate on it with anyone you want.
+**Foam** is free, open source, and extremely extensible to suit your personal workflow. You own the information you create with Foam, and you're free to share it, and collaborate on it with anyone you want.
+
+> **In a rush?** You _could_ jump to [Getting started](#getting-started), but I highly recommend reading the introductory sections first. **Foam** isn't obvious.
 
 ## Table of Contents
 
@@ -14,9 +14,9 @@ You can use **Foam** for organising your research, keeping re-discoverable notes
   - [Table of Contents](#table-of-contents)
   - [How do I use Foam?](#how-do-i-use-foam)
   - [What's in a Foam?](#whats-in-a-foam)
-  - [Features](#features)
   - [Getting started](#getting-started)
-  - [Future plans](#future-plans)
+  - [Features](#features)
+  - [Call To Adventure](#call-to-adventure)
   - [Thanks and attribution](#thanks-and-attribution)
   - [License](#license)
 
@@ -24,14 +24,14 @@ You can use **Foam** for organising your research, keeping re-discoverable notes
 
 **Foam** is a tool that supports creating relationships between thoughts and information to help you think better.
 
-![Short video of Foam in use](assets/images/readme-demo.gif).
+![Short video of Foam in use](assets/images/foam-navigation-demo.gif).
 
 Whether you want to build a [Second Brain](https://www.buildingasecondbrain.com/) or a [Zettelkasten](https://zettelkasten.de/posts/overview/), write a book, or just get better at long-term learning, **Foam** can help you organise your thoughts if you follow these simple rules:
 
 1. [Create a single **Foam** workspace](https://github.com/foambubble/foam-template/generate) for all your knowledge and research.
 2. Write your thoughts in markdown documents (I like to call them **Bubbles**, but that might be more than a little twee). These documents should be atomic: Put things that belong together into a single document, and limit its content to that single topic. ([source](https://zettelkasten.de/posts/overview/#principles))
 3. Use Foam's shortcuts and autocompletions to link your thoughts together with `[[wiki-links]]`, and navigate between them to explore your knowledge graph.
-4. Get an overview of your **Foam** workspace using a [[graph-visualisation]], and discover relationships between your thoughts with the use of [[backlinking]].
+4. Get an overview of your **Foam** workspace using a [[graph-visualisation]] (⚠️ WIP), and discover relationships between your thoughts with the use of [[backlinking]].
 
 Foam is a like a bathtub: _What you get out of it depends on what you put into it._
 
@@ -39,20 +39,11 @@ Foam is a like a bathtub: _What you get out of it depends on what you put into i
 
 Like the soapy suds it's named after, **Foam** is mostly air.
 
-1. The editing experience of **Foam** is powered by VS Code, enhanced by workspace settings that glue together recommended Code Extensions and preferences optimised for writing and navigating information.
+1. The editing experience of **Foam** is powered by VS Code, enhanced by workspace settings that glue together [[recommended-extensions]] and preferences optimised for writing and navigating information.
 2. To back up, collaborate on and share your content between devices, Foam pairs well with [GitHub](http://github.com/).
 3. To publish your content, you can set it up to publish to GitHub pages with zero code and zero config, or to any website hosting platform like [Netlify](http://netlify.com/) or [Vercel](vercel).
 
 > **Fun fact**: This documentation was researched, written and published using **Foam**.
-
-## Features
-
-**Foam** doesn't have features in the traditional sense. Out of the box, you have access to all features of VS Code and all the [[recommended-extensions]] you choose to install, but it's up to you to discover what you can do with it!
-
-**Foam** is currently about "10% ready" compared to all the features I've thought of, but I've only thought of ~1% of the features it could have, and I'm excited to learn from others.
-
-- Head over to [[recipes]] for some useful patterns and ideas
-- Check out [[roadmap]] to see what's in the plans
 
 ## Getting started
 
@@ -70,17 +61,26 @@ To learn more about how to use **Foam**, read the [[recipes]].
 
 There are [[known-issues]], and I'm sure, many unknown issues! Please [report them on GitHub](http://github.com/foambubble/foam/issues)!
 
-## Future plans
+## Features
 
-The current version of Foam is essentially a highly functional prototype. I am using it as my personal thinking tool in order to learn how to best use it, and I hope others will too.
+**Foam** doesn't have features in the traditional sense. Out of the box, you have access to all features of VS Code and all the [[recommended-extensions]] you choose to install, but it's up to you to discover what you can do with it!
 
-See:
+Head over to [[recipes]] for some useful patterns and ideas, and
 
-- [[roadmap]] for current plans
-- [[principles]] to understand Foam's philosophy and direction
-- [[contribution-guide]] guide to learn how to participate.
+## Call To Adventure
 
-Feel free to open [GitHub issues](https://github.com/foambubble/foam/issues) to give us feedback and ideas for new features.
+The goal of **Foam** is to be your personal companion on your quest for knowledge.
+
+It's is currently about "10% ready" relative to all the features I've thought of, but I've only thought of ~1% of the features it could have, and I'm excited to learn from others.
+
+I am using it as my personal thinking tool. By making it public, I hope to learn from others not only how to improve Foam, but also to improve how I learn and manage information.
+
+If that sounds like something you're interested in, I'd love to have you along on the journey.
+
+- Check out [[roadmap]] to see what's in the plans
+- Read about our [[principles]] to understand Foam's philosophy and direction
+- Read the [[contribution-guide]] guide to learn how to participate.
+- Feel free to open [GitHub issues](https://github.com/foambubble/foam/issues) to give me feedback and ideas for new features.
 
 ## Thanks and attribution
 

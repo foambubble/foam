@@ -14,9 +14,9 @@
   - [x] Fake-autolinking references
 - [x] Fix and publish wikilink generator
 - [ ] Fix or document broken link search
-  - [ ] Can after::content be nade readable?
-- [ ] Private pages with underscore
-- [ ] Reorganise files
+  - [ ] Can after::content be made readable?
+- [ ] Document how to use private pages with underscore
+- [x] Reorganise files
 - [x] Rename contribution guide
 
 See backlinks for Pages that annotate [[todo]].

@@ -33,10 +33,10 @@ img[src*="demo"] {
   box-shadow: 4px 4px 16px 0px rgba(50, 50, 50, 0.1);
 }
 
-@media only screen and (min-width: 900px) {
+@media only screen and (min-width: 1170px) {
   img[src*="demo"] {
-    max-width: 1100px;
-    margin-left: -10%;
+    max-width: 130%;
+    margin-left: -15%;
   }
 }
 

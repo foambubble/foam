@@ -2,6 +2,8 @@
 
 Uncategorised thoughts
 
+- Release notes
+- Automatic update
 - Foam is a work in progress
   - [[roadmap]] shows some of the features I think we could build
   - I'm far more excited about all the things we haven't even thought of yet

@@ -21,6 +21,9 @@
     // [[wiki-links]], backlinking etc
     "kortina.vscode-markdown-notes",
 
+    // Graph visualizer
+    "tchayen.markdown-links",
+
     // Understated grayscale theme (light and dark variants)
     "philipbe.theme-gray-matter"
   ]

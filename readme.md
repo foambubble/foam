@@ -3,7 +3,7 @@
 </blockquote>
 
 <blockquote class="github-only">
-  👉 This is an early stage project under rapid development. For updates, watch this repository or follow <a href="https://twitter.com/jevakallio" target="_blank">@jevakallio</a> on Twitter.
+  👉 This is an early stage project under rapid development. For updates follow <a href="https://twitter.com/jevakallio" target="_blank">@jevakallio</a> on Twitter.
 </blockquote>
 
 # Foam

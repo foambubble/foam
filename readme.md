@@ -1,4 +1,4 @@
-<blockquote class="foam-github-warning">
+<blockquote class="github-only">
     👋 <b>Hello friend!</b> Looks like you're reading this page on GitHub, which means some of the links may not work correctly. Please go to the <a href="https://foambubble.github.io/foam">rendered Foam Workspace</a> for an improved experience!
 </blockquote>
 

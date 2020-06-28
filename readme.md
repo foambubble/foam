@@ -1,3 +1,7 @@
+<blockquote class="foam-github-warning">
+    👋 <b>Hello friend!</b> Looks like you're reading this page on GitHub, which means some of the links may not work correctly. Please go to the <a href="https://foambubble.github.io/foam">rendered Foam Workspace</a> for an improved experience!
+</blockquote>
+
 # Foam
 
 **Foam** is a personal knowledge management and sharing system inspired by [Roam Research](https://roamresearch.com/), built on [Visual Studio Code](https://code.visualstudio.com/) and [GitHub](https://github.com/).

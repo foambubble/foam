@@ -9,4 +9,8 @@ layout: default
   document.querySelectorAll(".markdown-body a[title]").forEach((a) => {
     a.innerText = a.title;
   });
+
+  document.querySelectorAll(".github-only").forEach((el) => {
+    el.remove();
+  });
 </script>

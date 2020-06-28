@@ -13,4 +13,9 @@ layout: default
   document.querySelectorAll(".github-only").forEach((el) => {
     el.remove();
   });
+
+  var duplicateHeading = document.querySelector("h1:not(#foam)");
+  if (duplicateHeading && duplicateHeading.remove) {
+    duplicateHeading.remove();
+  }
 </script>

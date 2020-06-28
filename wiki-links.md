@@ -13,7 +13,9 @@ The [Foam for VSCode](https://marketplace.visualstudio.com/items?itemName=foam.f
 
 > \*\*TL;DR; [workaround](#workaround) in the end.
 
-If you click any of the wiki-links on GitHub web UI (such as the `README.md` of a project), you'll notice that the links break with a 404 error. At the time of writing (June 28 2020) this is a known, but unsolved error. To understand why this is the case, we need to understand what we are trading off.
+If you click any of the wiki-links on GitHub web UI (such as the `README.md` of a project), you'll notice that the links break with a 404 error.
+
+At the time of writing (June 28 2020) this is a known, but unsolved error. To understand why this is the case, we need to understand what we are trading off.
 
 If you look at link references the bottom of any Foam workspace file that uses wiki-links, you should see an automatically generated list of references that look as follows:
 

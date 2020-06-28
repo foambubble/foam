@@ -32,7 +32,7 @@ You can use **Foam** for organising your research, keeping re-discoverable notes
 
 **Foam** is a tool that supports creating relationships between thoughts and information to help you think better.
 
-![Short video of Foam in use](assets/images/foam-navigation-demo.gif)
+![Foam kitchen sink, showing a few of the key features](assets/images/foam-features-dark-mode-demo.png)
 
 Whether you want to build a [Second Brain](https://www.buildingasecondbrain.com/) or a [Zettelkasten](https://zettelkasten.de/posts/overview/), write a book, or just get better at long-term learning, **Foam** can help you organise your thoughts if you follow these simple rules:
 
@@ -73,7 +73,9 @@ There are [[known-issues]], and I'm sure, many unknown issues! Please [report th
 
 **Foam** doesn't have features in the traditional sense. Out of the box, you have access to all features of VS Code and all the [[recommended-extensions]] you choose to install, but it's up to you to discover what you can do with it!
 
-Head over to [[recipes]] for some useful patterns and ideas, and
+![Short video of Foam in use](assets/images/foam-navigation-demo.gif)
+
+Head over to [[recipes]] for some useful patterns and ideas!
 
 ## Call To Adventure
 

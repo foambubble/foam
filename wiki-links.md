@@ -11,7 +11,7 @@ The [Foam for VSCode](https://marketplace.visualstudio.com/items?itemName=foam.f
 
 ## Why don't `[[wiki-links]]` work on GitHub
 
-> \*\*TL;DR; [workaround](#workaround) in the end.
+> **TL;DR;** [workaround](#workaround) in the end.
 
 If you click any of the wiki-links on GitHub web UI (such as the `README.md` of a project), you'll notice that the links break with a 404 error.
 
@@ -53,9 +53,11 @@ I'm sure there's an elegant-ish solution out there. Ideas and suggestions welcom
 
 ## Workaround
 
-For the time being, you can use regular `[markdown links](markdown=link.md)` syntax.
+For the time being, you can use regular `[markdown links](markdown-link.md)` syntax.
 
-**Pros:** This will work on all platforms.
+**Pros:**
+
+- This will work on all platforms.
 
 **Cons:**
 

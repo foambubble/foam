@@ -42,7 +42,7 @@ Whether you want to build a [Second Brain](https://www.buildingasecondbrain.com/
 1. [Create a single **Foam** workspace](https://github.com/foambubble/foam-template/generate) for all your knowledge and research.
 2. Write your thoughts in markdown documents (I like to call them **Bubbles**, but that might be more than a little twee). These documents should be atomic: Put things that belong together into a single document, and limit its content to that single topic. ([source](https://zettelkasten.de/posts/overview/#principles))
 3. Use Foam's shortcuts and autocompletions to link your thoughts together with `[[wiki-links]]`, and navigate between them to explore your knowledge graph.
-4. Get an overview of your **Foam** workspace using a [[graph-visualisation]] (⚠️ WIP), and discover relationships between your thoughts with the use of [[backlinking]].
+4. Get an overview of your **Foam** workspace using a [[graph-visualisation](graph-visualisation.md)] (⚠️ WIP), and discover relationships between your thoughts with the use of [[backlinking](backlinking.md)].
 
 Foam is a like a bathtub: _What you get out of it depends on what you put into it._
 
@@ -50,7 +50,7 @@ Foam is a like a bathtub: _What you get out of it depends on what you put into i
 
 Like the soapy suds it's named after, **Foam** is mostly air.
 
-1. The editing experience of **Foam** is powered by VS Code, enhanced by workspace settings that glue together [[recommended-extensions]] and preferences optimised for writing and navigating information.
+1. The editing experience of **Foam** is powered by VS Code, enhanced by workspace settings that glue together [[recommended-extensions](recommended-extensions.md)] and preferences optimised for writing and navigating information.
 2. To back up, collaborate on and share your content between devices, Foam pairs well with [GitHub](http://github.com/).
 3. To publish your content, you can set it up to publish to [GitHub Pages](https://pages.github.com/) with zero code and zero config, or to any website hosting platform like [Netlify](http://netlify.com/) or [Vercel](https://vercel.com).
 
@@ -68,17 +68,17 @@ These instructions assume you have a GitHub account, and you have Visual Studio 
 
 After setting up the repository, open [.vscode/settings.json](.vscode/settings.json) and edit, add or remove any settings you'd like for your Foam workspace.
 
-To learn more about how to use **Foam**, read the [[recipes]].
+To learn more about how to use **Foam**, read the [[recipes](recipes.md)].
 
-There are [[known-issues]], and I'm sure, many unknown issues! Please [report them on GitHub](http://github.com/foambubble/foam/issues)!
+There are [[known-issues](known-issues.md)], and I'm sure, many unknown issues! Please [report them on GitHub](http://github.com/foambubble/foam/issues)!
 
 ## Features
 
-**Foam** doesn't have features in the traditional sense. Out of the box, you have access to all features of VS Code and all the [[recommended-extensions]] you choose to install, but it's up to you to discover what you can do with it!
+**Foam** doesn't have features in the traditional sense. Out of the box, you have access to all features of VS Code and all the [[recommended-extensions](recommended-extensions.md)] you choose to install, but it's up to you to discover what you can do with it!
 
 ![Short video of Foam in use](assets/images/foam-navigation-demo.gif)
 
-Head over to [[recipes]] for some useful patterns and ideas!
+Head over to [[recipes](recipes.md)] for some useful patterns and ideas!
 
 ## Call To Adventure
 
@@ -90,9 +90,9 @@ I am using it as my personal thinking tool. By making it public, I hope to learn
 
 If that sounds like something you're interested in, I'd love to have you along on the journey.
 
-- Check out [[roadmap]] to see what's in the plans
-- Read about our [[principles]] to understand Foam's philosophy and direction
-- Read the [[contribution-guide]] guide to learn how to participate.
+- Check out [[roadmap](roadmap.md)] to see what's in the plans
+- Read about our [[principles](principles.md)] to understand Foam's philosophy and direction
+- Read the [[contribution-guide](contribution-guide.md)] guide to learn how to participate.
 - Feel free to open [GitHub issues](https://github.com/foambubble/foam/issues) to give me feedback and ideas for new features.
 
 ## Thanks and attribution
@@ -101,7 +101,7 @@ If that sounds like something you're interested in, I'd love to have you along o
 
 **Foam** was inspired by [Roam Research](https://roamresearch.com/) and the [Zettelkasten methodology](https://zettelkasten.de/posts/overview)
 
-**Foam** wouldn't be possible without [Visual Studio Code](https://code.visualstudio.com/) and [GitHub](https://github.com/), and relies heavily on our fantastic open source [[recommended-extensions]] and all their contributors:
+**Foam** wouldn't be possible without [Visual Studio Code](https://code.visualstudio.com/) and [GitHub](https://github.com/), and relies heavily on our fantastic open source [[recommended-extensions](recommended-extensions.md)] and all their contributors:
 
 ## License
 

@@ -8,7 +8,10 @@ Some of these items can be achieved by combining existing tools, but others may 
 - [ ] Support [[unlinked-references]]
 - [ ] Support automatic [[daily-notes]]
 - [ ] Support [[renaming-files]]
-- [ ] Automation for updating references, cleanup tasks etc.
+- [ ] Migrating content to Foam
+  - [ ] Automation for updating references, cleanup tasks etc.
+  - [ ] Migration documentation/tools from Roam
+  - [ ] Migration from other tools
 - [ ] Improve and document default workspace settings
 - [ ] Improve [[git-integration]]
   - [ ] Better support multi-user git repository flows for shared Foams

@@ -54,7 +54,7 @@ Like the soapy suds it's named after, **Foam** is mostly air.
 
 These instructions assume you have a GitHub account, and you have Visual Studio Code installed.
 
-1. Use the [foam-template](https://github.com/foambubble/foam-template/generate) project to generate a new repository. If you're logged into GitHub, you can just hit this button:
+1. Use the [foam-template project](https://github.com/foambubble/foam-template) to generate a new repository. If you're logged into GitHub, you can just hit this button:
 
    <a class="github-button" href="https://github.com/foambubble/foam-template/generate" data-icon="octicon-repo-template" data-size="large" aria-label="Use this template foambubble/foam-template on GitHub">Use this template</a>
 

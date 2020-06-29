@@ -4,8 +4,10 @@ Foam enables you to Link pages together using `[[file-name]]` annotations with t
 
 - Both `[[file-name]]` and `[[file-name.md]]` work
 - Type `[[` and start typing a file name for autocompletion.
-- `Cmd` + `Click` on file name to navigate to file
+- `Cmd` + `Click` on file name to navigate to file (`F12` also works while your cursor is on the file name)
 - `Cmd` + `Click` on non-existent file to create that file in the workspace.
+
+> If the `F12` shortcut feels unnatural you can rebind it at File > Preferences > Keyboard Shortcuts by searching for `editor.action.revealDefinition`.
 
 The [Foam for VSCode](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode) extension automatically generates [markdown link reference definitions](https://spec.commonmark.org/0.29/#link-reference-definitions) at the bottom of the file to make wiki-links compatible with Markdown tools and parsers
 

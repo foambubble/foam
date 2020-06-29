@@ -6,11 +6,9 @@ There are (too) many ways to commit your changes to source control:
 - Using GitLens (included in Foam for inline blame)
 - Whatever way you like to do it (CLI?)
 
-The quick and easy way is to use [Git Automator](https://marketplace.visualstudio.com/items?itemName=ivangabriele.vscode-git-add-and-commit):
+The quick and easy way is to use the Git: Commit All command after editing files. The default Foam workspace settings will stage & sync all of your changes to the remote:
 
-- `Cmd` + `Shift` + `A` to stage and commit all files
-- `Cmd` + `Shift` + `Z` to commit current file
-- `Cmd` + `Shift` + `X` to push all changes to remote repository
+- `Cmd` + `P` (`Ctrl` + `Shift` + `P` for Windows), execute `Git: Commit All`
 
 This could be improved. [[todo]] [[good-first-task]]
 

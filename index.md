@@ -8,7 +8,7 @@ You can use **Foam** for organising your research, keeping re-discoverable notes
 
 <div class="website-only">
     <a class="github-button" href="https://github.com/foambubble/foam" data-icon="octicon-star" data-size="large" data-show-count="true" aria-label="Star foambubble/foam on GitHub">Star</a> 
-    <a class="github-button" href="https://github.com/foambubble/foam-template/generate" data-icon="octicon-repo-template" data-size="large" aria-label="Use this template foambubble/foam-template on GitHub">Use this template</a>
+    <a class="github-button" href="https://github.com/foambubble/foam-template" data-icon="octicon-repo-template" data-size="large" aria-label="Use this template foambubble/foam-template on GitHub">Use this template</a>
 </div>
 
 ## Table of Contents
@@ -31,7 +31,7 @@ You can use **Foam** for organising your research, keeping re-discoverable notes
 
 Whether you want to build a [Second Brain](https://www.buildingasecondbrain.com/) or a [Zettelkasten](https://zettelkasten.de/posts/overview/), write a book, or just get better at long-term learning, **Foam** can help you organise your thoughts if you follow these simple rules:
 
-1. [Create a single **Foam** workspace](https://github.com/foambubble/foam-template/generate) for all your knowledge and research.
+1. Create a single **Foam** workspace for all your knowledge and research following the [Getting started](#getting-started) guide.
 2. Write your thoughts in markdown documents (I like to call them **Bubbles**, but that might be more than a little twee). These documents should be atomic: Put things that belong together into a single document, and limit its content to that single topic. ([source](https://zettelkasten.de/posts/overview/#principles))
 3. Use Foam's shortcuts and autocompletions to link your thoughts together with `[[wiki-links]]`, and navigate between them to explore your knowledge graph.
 4. Get an overview of your **Foam** workspace using a [[graph-visualisation]] (⚠️ WIP), and discover relationships between your thoughts with the use of [[backlinking]].
@@ -54,11 +54,17 @@ Like the soapy suds it's named after, **Foam** is mostly air.
 
 These instructions assume you have a GitHub account, and you have Visual Studio Code installed.
 
-1. [Create a GitHub repository from foam-template](https://github.com/foambubble/foam-template/generate). If you want to keep your thoughts to yourself, remember to set the repository private.
-2. Clone the repository and open it in VS Code.
+1. Use the [foam-template](https://github.com/foambubble/foam-template/generate) project to generate a new repository. If you're logged into GitHub, you can just hit this button:
+
+   <a class="github-button" href="https://github.com/foambubble/foam-template/generate" data-icon="octicon-repo-template" data-size="large" aria-label="Use this template foambubble/foam-template on GitHub">Use this template</a>
+
+   (If you want to keep your thoughts to yourself, remember to set the repository private, or if you don't want to use GitHub to host your workspace at all, choose **Download as ZIP** instead of **Use this template**
+
+2. [Clone the repository locally](https://help.github.com/en/github/creating-cloning-and-archiving-repositories/cloning-a-repository) and open it in VS Code.
+
 3. When prompted to install recommended extensions, click **Install all** (or **Show Recommendations** if you want to review and install them one by one)
 
-After setting up the repository, open [.vscode/settings.json](.vscode/settings.json) and edit, add or remove any settings you'd like for your Foam workspace.
+After setting up the repository, open `.vscode/settings.json` and edit, add or remove any settings you'd like for your Foam workspace.
 
 To learn more about how to use **Foam**, read the [[recipes]].
 

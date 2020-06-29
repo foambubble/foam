@@ -9,5 +9,7 @@
   "[markdown]": {
     "editor.quickSuggestions": true
   },
-  "cSpell.language": "en-GB"
+  "cSpell.language": "en-GB",
+  "git.enableSmartCommit": true,
+  "git.postCommitCommand": "sync"
 }

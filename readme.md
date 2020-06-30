@@ -1,3 +1,5 @@
+Language:  English | [中文简体](readme-cn.md) 
+
 <p class="github-only">
     👋 <b>Hello friend! Looks like you're reading this page on GitHub. Please go to the 👉<a href="https://foambubble.github.io/foam">rendered Foam Workspace</a> for an improved experience! </b>
 </p>

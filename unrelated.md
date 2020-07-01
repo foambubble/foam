@@ -1,5 +1,0 @@
-# Unrelated
-
-- Quick
-- Bullet
-- Points

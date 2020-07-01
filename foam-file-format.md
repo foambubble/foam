@@ -8,6 +8,7 @@ Here are a few specific constraints, mainly because our tooling is a bit fragmen
   - This will be used as document title.
 - **File name should not contain spaces,** e.g. `foam-file-format.md` is a valid name, but `Foam File Format.md` is not.
   - This is a temporary limitation and will be lifted in future versions.
+  - Technically this actually works already, but may have some edge cases you don't want to deal with if you can avoid it.
 - **File name should have extension `.md` or `.markdown`**
   - This is a temporary limitation and will be lifted in future versions. 
   - At least `.mdx` will be supported, but ideally we'll support any file that you can map to `Markdown` language mode in VS Code

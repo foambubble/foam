@@ -6,6 +6,10 @@ Features belong on the [[roadmap]].
   - [ ] Isolate tasks for MLH fellows
 - [ ] Create better structure for Recipes
 - [ ] Connect to folks at GitHub
+- [ ] Learn more about VS Code Extension APIs
+  - [ ] Workspace fs/events
+  - [ ] Reloading changes from outside vscode
+  - [ ] Expanding, editable snippets
 
 
 

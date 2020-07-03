@@ -4,10 +4,10 @@
 Guides, tips and strategies for getting the most out of your Foam workspace!
 
 - [Contribute](#contribute)
-- [Structure](#structure)
-- [Write](#write)
+- [Take smart notes](#take-smart-notes)
 - [Discover](#discover)
 - [Organise](#organise)
+- [Write](#write)
 - [Version control](#version-control)
 - [Collaborate](#collaborate)
 - [Publish](#publish)
@@ -18,12 +18,20 @@ Guides, tips and strategies for getting the most out of your Foam workspace!
 ## Contribute
 
 - Start by reading [[contribution-guide]]
-- Here's [[how-to-write-recipes]]
+- If you discover features not listed here, we'd love to have them! [[how-to-write-recipes]].
 
-## Structure
+## Take smart notes
 
 - Introduction to Zettelkasten [[todo]]
+  
+## Discover
+- Explore your notes using [[graph-visualisation]]
+- Discover relationships with [[backlinking]]
+- Simulating [[unlinked-references]]
 
+## Organise
+- Using [[backlinking]] for [[reference-lists]].
+  
 ## Write
 - Link documents with [[wiki-links]]
 - Use shortcuts for [[creating-new-notes]]
@@ -35,20 +43,11 @@ Guides, tips and strategies for getting the most out of your Foam workspace!
   - _More..._
 - VS Code Advanced Features [[todo]] [[good-first-task]]
   - Focus with Zen Mode
-  
-## Discover
-- Explore your notes using [[graph-visualisation]]
-- Discover relationships with [[backlinking]]
-- Simulating [[unlinked-references]]
 
-## Organise
-- Using [[backlinking]] for [[reference-lists]].
-  
 ## Version control
 
 - Quick commits with [[git-integration]]
 - Sync your GitHub repo automatically [[todo]].
-
 
 ## Collaborate
 

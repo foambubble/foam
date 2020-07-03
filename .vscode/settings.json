@@ -1,7 +1,6 @@
 {
   "files.autoSave": "onFocusChange",
   "editor.minimap.enabled": false,
-  "editor.fontLigatures": true,
   "editor.wrappingIndent": "indent",
   "editor.overviewRulerBorder": false,
   "editor.lineHeight": 24,

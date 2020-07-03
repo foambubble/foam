@@ -1,46 +1,52 @@
+<!-- omit in toc -->
 # Recipes
 
-- [Recipes](#recipes)
-  - [Contribute](#contribute)
-  - [Write](#write)
-  - [Discover](#discover)
-  - [Organise](#organise)
-  - [Version control](#version-control)
-  - [Collaborate](#collaborate)
-  - [Publish](#publish)
-  - [Workflow](#workflow)
-  - [Creative ideas](#creative-ideas)
-  - [Other](#other)
+Guides, tips and strategies for getting the most out of your Foam workspace!
+
+- [Contribute](#contribute)
+- [Structure](#structure)
+- [Write](#write)
+- [Discover](#discover)
+- [Organise](#organise)
+- [Version control](#version-control)
+- [Collaborate](#collaborate)
+- [Publish](#publish)
+- [Workflow](#workflow)
+- [Creative ideas](#creative-ideas)
+- [Other](#other)
   
 ## Contribute
 
-- **Start by reading [[contribution-guide]]**
-- **Here's [[how-to-write-recipes]]**
+- Start by reading [[contribution-guide]]
+- Here's [[how-to-write-recipes]]
 
+## Structure
+
+- Introduction to Zettelkasten [[todo]]
 
 ## Write
-- **Link documents with [[wiki-links]]**
-- **Use shortcuts for [[creating-new-notes]]**
-- **Draw [[diagrams-in-markdown]]**
+- Link documents with [[wiki-links]]
+- Use shortcuts for [[creating-new-notes]]
+- Draw [[diagrams-in-markdown]]
 - [Markdown All-in-One](https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one) features [[todo]] [[good-first-task]]
   - Manage checklists 
   - Automatic Table of Contents
   - Live preview markdown
-  - More...
+  - _More..._
 - VS Code Advanced Features [[todo]] [[good-first-task]]
   - Focus with Zen Mode
   
 ## Discover
-- **Explore your notes using [[graph-visualisation]]**
-- **Discover relationships with [[backlinking]]**
-- **Simulating [[unlinked-references]]**
+- Explore your notes using [[graph-visualisation]]
+- Discover relationships with [[backlinking]]
+- Simulating [[unlinked-references]]
 
 ## Organise
-- **Using [[backlinking]] for [[reference-lists]].**
+- Using [[backlinking]] for [[reference-lists]].
   
 ## Version control
 
-- **Quick commits with [[git-integration]]**
+- Quick commits with [[git-integration]]
 - Sync your GitHub repo automatically [[todo]].
 
 
@@ -53,8 +59,8 @@
 
 ## Publish
 
-- **Publish to [[github-pages]]**
-- **Make the site your own by [[customising-styles]].**
+- Publish to [[github-pages]]
+- Make the site your own by [[customising-styles]].
 - Host your own website [[todo]]
  
  ## Workflow

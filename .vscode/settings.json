@@ -7,7 +7,7 @@
   "editor.lineHeight": 24,
   "workbench.colorTheme": "Gray Matter Light",
   "[markdown]": {
-    "editor.quickSuggestions": true
+    "editor.quickSuggestions": false
   },
   "cSpell.language": "en-GB",
   "git.enableSmartCommit": true,

@@ -1,6 +1,6 @@
 # Graph visualisation
 
-`Cmd` + `P` (`Ctrl` + `Shift` + `P` for Windows), type `Show graph`.
+`Shift` + `Cmd` + `P` (`Ctrl` + `Shift` + `P` for Windows), type `Show graph`.
 
 (Depends on [Markdown Links](https://marketplace.visualstudio.com/items?itemName=tchayen.markdown-links).)
 

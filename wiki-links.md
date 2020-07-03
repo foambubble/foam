@@ -1,9 +1,5 @@
 # Wiki Links
 
-> Required extensions:
-> - [Markdown Notes](https://marketplace.visualstudio.com/items?itemName=kortina.vscode-markdown-notes) (core functionality)
-> - [Foam for VSCode](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode) (for Markdown compatibility)
-
 Foam enables you to Link pages together using `[[file-name]]` annotations.
 
 - Both `[[file-name]]` and `[[file-name.md]]` work
@@ -13,6 +9,10 @@ Foam enables you to Link pages together using `[[file-name]]` annotations.
 
 > If the `F12` shortcut feels unnatural you can rebind it at File > Preferences > Keyboard Shortcuts by searching for `editor.action.revealDefinition`.
 
+## Required extensions
+
+ - [Markdown Notes](https://marketplace.visualstudio.com/items?itemName=kortina.vscode-markdown-notes) (core functionality)
+ - [Foam for VSCode](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode) (for Markdown compatibility)
 ## Markdown compatibility
 
 The [Foam for VSCode](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode) extension automatically generates [markdown link reference definitions](https://spec.commonmark.org/0.29/#link-reference-definitions) at the bottom of the file to make wiki-links compatible with Markdown tools and parsers.

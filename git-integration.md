@@ -8,7 +8,7 @@ There are (too) many ways to commit your changes to source control:
 
 The quick and easy way is to use the Git: Commit All command after editing files. The default Foam workspace settings will stage & sync all of your changes to the remote:
 
-- `Shift` + `Cmd` + `P` (`Ctrl` + `Shift` + `P` for Windows), execute `Git: Commit All`
+- `Cmd` + `Shift` + `P` (`Ctrl` + `Shift` + `P` for Windows), execute `Git: Commit All`
 
 This could be improved. [[todo]] [[good-first-task]]
 

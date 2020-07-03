@@ -13,6 +13,7 @@ Foam enables you to Link pages together using `[[file-name]]` annotations.
 
  - [Markdown Notes](https://marketplace.visualstudio.com/items?itemName=kortina.vscode-markdown-notes) (core functionality)
  - [Foam for VSCode](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode) (for Markdown compatibility)
+
 ## Markdown compatibility
 
 The [Foam for VSCode](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode) extension automatically generates [markdown link reference definitions](https://spec.commonmark.org/0.29/#link-reference-definitions) at the bottom of the file to make wiki-links compatible with Markdown tools and parsers.

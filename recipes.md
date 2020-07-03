@@ -9,8 +9,8 @@ Guides, tips and strategies for getting the most out of your Foam workspace!
 - [Organise](#organise)
 - [Write](#write)
 - [Version control](#version-control)
-- [Collaborate](#collaborate)
 - [Publish](#publish)
+- [Collaborate](#collaborate)
 - [Workflow](#workflow)
 - [Creative ideas](#creative-ideas)
 - [Other](#other)
@@ -49,26 +49,25 @@ Guides, tips and strategies for getting the most out of your Foam workspace!
 - Quick commits with [[git-integration]]
 - Sync your GitHub repo automatically [[todo]].
 
-## Collaborate
-
-- Give your team push access to your GitHub repo [[todo]]
-- Real-time collaboration via VS Code Live Share [[todo]]
-- Accept patches via GitHub PRs [[todo]]
-
-
 ## Publish
 
 - Publish to [[github-pages]]
 - Make the site your own by [[customising-styles]].
 - Host your own website [[todo]]
+
+## Collaborate
+
+- Give your team push access to your GitHub repo [[todo]]
+- Real-time collaboration via VS Code Live Share [[todo]]
+- Accept patches via GitHub PRs [[todo]]
  
- ## Workflow
+## Workflow
 
 Workflow recipes wanted!
 
 _See [[contribution-guide]] and [[how-to-write-recipes]]._
 
- ## Creative ideas
+## Creative ideas
 
 Creative ideas welcome! 
 

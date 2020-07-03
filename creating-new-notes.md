@@ -1,7 +1,7 @@
 # Creating New Notes
 
 - Write out a new `[[wiki-link]]` and `Cmd` + `Click` to create a new file.
-- `Cmd` + `P` (`Ctrl` + `Shift` + `P` for Windows), execute `New Note` from [VS Code Markdown Notes](<(https://marketplace.visualstudio.com/items?itemName=kortina.vscode-markdown-notes)>) and enter a **Title Case Name** to create `title-case-name.md`
+- `Shift` + `Cmd` + `P` (`Ctrl` + `Shift` + `P` for Windows), execute `New Note` from [VS Code Markdown Notes](<(https://marketplace.visualstudio.com/items?itemName=kortina.vscode-markdown-notes)>) and enter a **Title Case Name** to create `title-case-name.md`
   - Add a keyboard binding to make creating new notes easier.
 - You shouldn't worry too much about categorising your notes. You can always [[search-for-notes]], and explore them using the [[graph-visualisation]].
 

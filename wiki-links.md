@@ -1,6 +1,10 @@
 # Wiki Links
 
-Foam enables you to Link pages together using `[[file-name]]` annotations with the help of [VS Code Markdown Notes](https://marketplace.visualstudio.com/items?itemName=kortina.vscode-markdown-notes) extension.
+> Required extensions:
+> - [Markdown Notes](https://marketplace.visualstudio.com/items?itemName=kortina.vscode-markdown-notes) (core functionality)
+> - [Foam for VSCode](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode) (for Markdown compatibility)
+
+Foam enables you to Link pages together using `[[file-name]]` annotations.
 
 - Both `[[file-name]]` and `[[file-name.md]]` work
 - Type `[[` and start typing a file name for autocompletion.
@@ -9,7 +13,18 @@ Foam enables you to Link pages together using `[[file-name]]` annotations with t
 
 > If the `F12` shortcut feels unnatural you can rebind it at File > Preferences > Keyboard Shortcuts by searching for `editor.action.revealDefinition`.
 
-The [Foam for VSCode](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode) extension automatically generates [markdown link reference definitions](https://spec.commonmark.org/0.29/#link-reference-definitions) at the bottom of the file to make wiki-links compatible with Markdown tools and parsers
+## Markdown compatibility
+
+The [Foam for VSCode](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode) extension automatically generates [markdown link reference definitions](https://spec.commonmark.org/0.29/#link-reference-definitions) at the bottom of the file to make wiki-links compatible with Markdown tools and parsers.
+
+If you look at link references the bottom of any Foam workspace file that uses wiki-links, you should see an automatically generated list of references that look as follows:
+
+```markdown
+[wiki-links]: wiki-links "Wiki Links"
+[other-page]: other-page "Other Page"
+```
+
+These exist to make `[[wiki-links]]` compatible with Markdown-consuming tools such as static site generators, VS Code plugins etc. 
 
 ## Why don't `[[wiki-links]]` work on GitHub
 
@@ -19,14 +34,7 @@ If you click any of the wiki-links on GitHub web UI (such as the `README.md` of 
 
 At the time of writing (June 28 2020) this is a known, but unsolved error. To understand why this is the case, we need to understand what we are trading off.
 
-If you look at link references the bottom of any Foam workspace file that uses wiki-links, you should see an automatically generated list of references that look as follows:
-
-```markdown
-[wiki-links]: wiki-links "Wiki Links"
-[other-page]: other-page "Other Page"
-```
-
-These exist to make `[[wiki-links]]` compatible with Markdown-consuming tools such as static site generators, VS Code plugins etc. So, why don't they work on GitHub?
+So, why don't they work on GitHub?
 
 The three components of a [link reference definitions](https://spec.commonmark.org/0.29/#link-reference-definitions) are:
 
@@ -53,9 +61,9 @@ An acceptable solution may include one where we don't generate link reference de
 
 I'm sure there's an elegant-ish solution out there. Ideas and suggestions welcome that the [tracking issue on GitHub](https://github.com/foambubble/foam/issues/16)
 
-## Workaround
+### Workaround
 
-For the time being, you can use regular `[markdown links](markdown-link.md)` syntax.
+For the time being, you can use relative `[markdown links](markdown-link.md)` syntax.
 
 **Pros:**
 
@@ -66,7 +74,7 @@ For the time being, you can use regular `[markdown links](markdown-link.md)` syn
 - It will break the Markdown Notes [[backlinking]] support
 - Less convenient to write
 
-## Read more:
+## Read more
 
 - [[foam-file-format]]
 

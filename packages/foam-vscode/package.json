@@ -3,7 +3,7 @@
   "displayName": "Foam for VSCode (Wikilinks to Markdown)",
   "description": "Generate markdown reference lists from wikilinks in a workspace",
   "author": "Jani Eväkallio",
-  "repository": "https://github.com/foambubble/foam-vscode",
+  "repository": "https://github.com/foambubble/foam",
   "version": "0.1.7",
   "license": "MIT",
   "publisher": "foam",

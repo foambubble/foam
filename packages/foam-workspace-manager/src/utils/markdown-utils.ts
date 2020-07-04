@@ -2,7 +2,6 @@
  * Adapted from vscode-markdown/src/util.ts
  * https://github.com/yzhang-gh/vscode-markdown/blob/master/src/util.ts
  */
-'use strict';
 
 export const REGEX_FENCED_CODE_BLOCK = /^( {0,3}|\t)```[^`\r\n]*$[\w\W]+?^( {0,3}|\t)``` *$/gm;
 

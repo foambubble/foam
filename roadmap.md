@@ -10,9 +10,9 @@ Items that are already being worked on. Roadmap items in this stage should have 
 
 ## High priority
 
-Items we plan on working next. Items in this stage should **not** have an owner, but should have enough specification work that they can be picked up and worked on without seeking consensus.
+Items we plan on working next. Items in this stage should **not** have an owner, but should have enough specification work done that they can be picked up and worked on without having to seek consensus.
 
-You should not pick up work in this category without having a plan on how long the implementation should approximately take.
+If you want to pick up work in this category, you should have a plan on how long the implementation will approximately take so we don't block progress by sitting on high priority issues.
 
 - (Empty list)
 

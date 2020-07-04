@@ -1,0 +1,23 @@
+---
+layout: default
+---
+
+<script async defer src="https://buttons.github.io/buttons.js"></script>
+
+{{ content }}
+
+<script type="text/javascript">
+  // Hack: Replace page-link with "Page Title"
+  document.querySelectorAll(".markdown-body a[title]").forEach((a) => {
+    a.innerText = a.title;
+  });
+
+  document.querySelectorAll(".github-only").forEach((el) => {
+    el.remove();
+  });
+
+  var duplicateHeading = document.querySelector("h1:not(#foam)");
+  if (duplicateHeading && duplicateHeading.remove) {
+    duplicateHeading.remove();
+  }
+</script>

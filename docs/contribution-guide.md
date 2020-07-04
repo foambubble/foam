@@ -11,8 +11,8 @@ Foam is open to contributions of any kind, including but not limited to code, do
 - Feel free to open [GitHub issues](https://github.com/foambubble/foam/issues) to give me feedback and ideas for new features.
 - Foam code and documentation live in the monorepo at [foambubble/foam](https://github.com/foambubble/foam/)
   - [/docs](https://github.com/foambubble/foam/docs): documentation and [[recipes]]  
-  - [/packages/foam-vscode](https://github.com/foambubble/foam/packages/foam-vscode): the core VSCode plugin
-  - [/packages/foam-workspace-manager](https://github.com/foambubble/foam/packages/foam-workspace-manager): Foam workspace automations 
+  - [/packages/foam-vscode](https://github.com/foambubble/foam/tree/master/packages/foam-vscode): the core VSCode plugin
+  - [/packages/foam-workspace-manager](https://github.com/foambubble/foam/tree/master/packages/foam-workspace-manager): Foam workspace automations 
 - Exceptions to the monorepo are:
   - The starter template at [foambubble/foam-template](https://github.com/foambubble/)
   - All other [[recommended-extensions]] live in their respective GitHub repos.

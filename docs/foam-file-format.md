@@ -13,7 +13,7 @@ Here are a few specific constraints, mainly because our tooling is a bit fragmen
   - This is a temporary limitation and will be lifted in future versions. 
   - At least `.mdx` will be supported, but ideally we'll support any file that you can map to `Markdown` language mode in VS Code
 - **In addition to normal Markdown Links syntax you can use `[[media-wiki]]` links.** 
-  - When you do, the [foam-vscode](https://github.com/foambubble/foam/packages/foam-vscode) extension will automatically generate [Markdown Link Reference Definitions](https://spec.commonmark.org/0.29/#link-reference-definitions) at the bottom of the file.
+  - When you do, the [foam-vscode](https://github.com/foambubble/foam/tree/master/packages/foam-vscode) extension will automatically generate [Markdown Link Reference Definitions](https://spec.commonmark.org/0.29/#link-reference-definitions) at the bottom of the file.
     - Here's an example: 
       - [[wiki-links]]
       - [[github-pages]]

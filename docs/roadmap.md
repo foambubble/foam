@@ -20,7 +20,7 @@ If you want to pick up work in this category, you should have a plan on how long
 
 Everything else, categorised into themes. Just because something is on this list doesn't mean it'll get done. If you're interested in working on items in this category, check the [[contribution-guide]] for how to get started.
 
-If a roadmap item is a stub, **consider** opening a [GitHub issue](https://github.com/foambubble/foam/issues) to start a conversation to avoid situations where the implementation does not fit long term vision and roadmap. _Note that this is optional. The only centralised governance in Foam is to decide what ends up in the official [template](https://github.com/foambubble/foam-template), [documentation](https://github.com/foambubble/foam) and [extension](https://github.com/foambubble/foam-vscode). You are free to build whatever you want for yourself, and we'd love if you shared it with us, but you are by no means obligated to do so!_
+If a roadmap item is a stub, **consider** opening a [GitHub issue](https://github.com/foambubble/foam/issues) to start a conversation to avoid situations where the implementation does not fit long term vision and roadmap. _Note that this is optional. The only centralised governance in Foam is to decide what ends up in the official [template](https://github.com/foambubble/foam-template), [documentation](https://github.com/foambubble/foam) and [extension](https://github.com/foambubble/foam/packages/foam-vscode). You are free to build whatever you want for yourself, and we'd love if you shared it with us, but you are by no means obligated to do so!_
 
 **When creating GitHub issues to discuss roadmap items, link them here.**
 

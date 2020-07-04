@@ -6,8 +6,6 @@
 
 > ⚠️ foam-vscode is extremely early stage software. Use at your own peril.
 
-> 👀 See [foam-vscode/issues](https://github.com/foambubble/foam-vscode/issues) for known issues.
-
 ## Quick getting started
 
 You really, _really_, **really** should read [Foam documentation](https://foambubble.github.io/foam), but if you can't be bothered, this is how to get started:

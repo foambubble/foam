@@ -56,7 +56,7 @@ So as you can see, we've prioritised GitHub Pages over GitHub Web U for the time
 Ideally, we'd like a solution that works with both, but I haven't thought of it yet. Ideas include:
 
 - **Writing a better static side generator that works with `file-name.md` link targets.** This is on the [[roadmap]], but for the time being GitHub Pages support is as must-have.
-- **Adding a configuration setting to generate `file-name.md` link targets.** This is fine and I would accept this contribution to [foam-vscode](https://github.com/foambubble/foam-vscode), but it doesn't solve the core problem.
+- **Adding a configuration setting to generate `file-name.md` link targets.** This is fine and I would accept this contribution to [foam-vscode](https://github.com/foambubble/foam/packages/foam-vscode), but it doesn't solve the core problem.
 
 An acceptable solution may include one where we don't generate link reference definitions at all, but if we do, ideally, we'd like to generate `file-name.md` links since those are more standards compatible for different markdown tools.
 

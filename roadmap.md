@@ -5,12 +5,15 @@ The below Foam roadmap is ~approximately prioritised. We don't need to work on t
 Some of these items can be achieved by combining existing tools, but others may require us to build bespoke software solutions. See [[build-vs-assemble]] to understand tradeoffs between these approaches.
 
 - [ ] Fixing [[known-issues]]
+- [ ] Implement background janitor that ensures all files are correctly linked and updated, not only active editor
 - [ ] Support [[unlinked-references]]
 - [ ] Support automatic [[daily-notes]]
 - [ ] Support [[renaming-files]]
+- [ ] Support block references using [CodeLens API](https://code.visualstudio.com/blogs/2017/02/12/code-lens-roundup)
 - [ ] Migrating content to Foam
   - [ ] Automation for updating references, cleanup tasks etc.
   - [ ] Migration documentation/tools from Roam
+  - [ ] Migration documentation/tools from Obsidian [foambubble/foam#46](https://github.com/foambubble/foam/issues/46)
   - [ ] Migration from other tools
 - [ ] Improve and document default workspace settings
 - [ ] Improve [[git-integration]]

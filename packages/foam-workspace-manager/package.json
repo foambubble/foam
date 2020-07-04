@@ -31,6 +31,7 @@
   },
   "name": "foam-workspace-manager",
   "author": "Jani Eväkallio",
+  "repository": "https://github.com/foambubble/foam",
   "module": "dist/foam-workspace-manager.esm.js",
   "devDependencies": {
     "husky": "^4.2.5",

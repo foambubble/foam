@@ -1,4 +1,4 @@
-# Renaming files (stub)
+# Linking between Published Workspaces (stub)
 
 **[[todo]] This [[roadmap]] item needs more specification work.** 
 

@@ -6,7 +6,11 @@
   "editor.lineHeight": 24,
   "workbench.colorTheme": "Gray Matter Light",
   "[markdown]": {
-    "editor.quickSuggestions": false
+    "editor.quickSuggestions": {
+      "other": true,
+      "comments": false,
+      "strings": false
+    }
   },
   "cSpell.language": "en-GB",
   "git.enableSmartCommit": true,

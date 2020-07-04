@@ -1,4 +1,4 @@
-# Renaming files (stub)
+# MDX by Default(stub)
 
 **[[todo]] This [[roadmap]] item needs more specification work.** 
 

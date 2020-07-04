@@ -1,4 +1,4 @@
-# Renaming files (stub)
+# Git Flows for Teams (stub)
 
 **[[todo]] This [[roadmap]] item needs more specification work.** 
 

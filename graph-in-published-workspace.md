@@ -1,4 +1,4 @@
-# Renaming files (stub)
+# Graph in Published Workspace (stub)
 
 **[[todo]] This [[roadmap]] item needs more specification work.** 
 

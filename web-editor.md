@@ -1,4 +1,4 @@
-# Renaming files (stub)
+# Web Editor (stub)
 
 **[[todo]] This [[roadmap]] item needs more specification work.** 
 

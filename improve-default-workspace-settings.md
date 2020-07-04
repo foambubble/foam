@@ -1,4 +1,4 @@
-# Renaming files (stub)
+# Improve Default Workspace Settings (stub)
 
 **[[todo]] This [[roadmap]] item needs more specification work.** 
 

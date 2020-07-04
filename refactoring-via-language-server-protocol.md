@@ -1,4 +1,4 @@
-# Renaming files (stub)
+# Refactoring via Language Server Protocol (stub)
 
 **[[todo]] This [[roadmap]] item needs more specification work.** 
 

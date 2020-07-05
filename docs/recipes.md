@@ -71,6 +71,8 @@ _See [[contribution-guide]] and [[how-to-write-recipes]]._
 
 Creative ideas welcome! 
 
+- Support [Anki](https://apps.ankiweb.net/) cards from notes like [Remnote](https://www.remnote.io/) [[todo]]
+
 _See [[contribution-guide]] and [[how-to-write-recipes]]._
 
 ## Other

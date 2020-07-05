@@ -1,0 +1,40 @@
+// A launch configuration that compiles the extension and then opens it inside a new window
+// Use IntelliSense to learn about possible attributes.
+// Hover to view descriptions of existing attributes.
+// For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+             // This task is also defined in packages/foam-vscode/.vscode/launch.json
+             // for when running separately outside of the monorepo environment
+			"name": "Run Extension",
+            "type": "extensionHost",
+			"request": "launch",
+			"runtimeExecutable": "${execPath}",
+			"args": [
+				"--extensionDevelopmentPath=${workspaceFolder}/packages/foam-vscode"
+			],
+			"outFiles": [
+				"${workspaceFolder}/packages/foam-vscode/out/**/*.js"
+			],
+			"preLaunchTask": "Build foam-vscode"
+		},
+		{
+            // This task is also defined in packages/foam-vscode/.vscode/launch.json
+            // for when running separately outside of the monorepo environment
+			"name": "Extension Tests",
+			"type": "extensionHost",
+			"request": "launch",
+			"runtimeExecutable": "${execPath}",
+			"args": [
+				"--extensionDevelopmentPath=${workspaceFolder}/packages/foam-vscode",
+				"--extensionTestsPath=${workspaceFolder}/packages/foam-vscode/out/test/suite/index"
+			],
+			"outFiles": [
+				"${workspaceFolder}/packages/foam-vscode/out/test/**/*.js"
+			],
+			"preLaunchTask": "${defaultBuildTask}"
+		}
+	]
+}

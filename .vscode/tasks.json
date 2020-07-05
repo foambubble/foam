@@ -1,0 +1,24 @@
+// See https://go.microsoft.com/fwlink/?LinkId=733558
+// for the documentation about the tasks.json format
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+            // This task is also defined in packages/foam-vscode/.vscode/tasks.json
+            // for when running separately outside of the monorepo environment
+            "type": "npm",
+            "script": "watch",
+            "label": "Build foam-vscode",
+            "path": "${workspaceFolder}/packages/foam-vscode/",
+            "problemMatcher": "$tsc-watch",
+			"isBackground": true,
+			"presentation": {
+				"reveal": "never"
+			},
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
+		}
+	]
+}

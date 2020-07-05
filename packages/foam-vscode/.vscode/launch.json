@@ -6,6 +6,8 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
+			// This task is also defined in ${workspaceFolder}/.vscode/launch.json
+            // for when running in a monorepo environment
 			"name": "Run Extension",
 			"type": "extensionHost",
 			"request": "launch",
@@ -19,6 +21,8 @@
 			"preLaunchTask": "${defaultBuildTask}"
 		},
 		{
+			// This task is also defined in ${workspaceFolder}/.vscode/launch.json
+            // for when running in a monorepo environment
 			"name": "Extension Tests",
 			"type": "extensionHost",
 			"request": "launch",

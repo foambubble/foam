@@ -1,0 +1,15 @@
+// Place your settings in this file to overwrite default and user settings.
+{
+    "files.exclude": {
+        // set these to true to hide folders with the compiled JS files,
+        "packages/**/out": false,
+        "packages/**/dist": false
+    },
+    "search.exclude": {
+        // set this to false to include compiled JS folders in search results
+        "packages/**/out": true, 
+        "packages/**/dist": true
+    },
+    // Turn off tsc task auto detection since we have the necessary tasks as npm scripts
+    "typescript.tsc.autoDetect": "off"
+}

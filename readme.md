@@ -23,7 +23,7 @@ Whether you want to build a [Second Brain](https://www.buildingasecondbrain.com/
 3. Use Foam's shortcuts and autocompletions to link your thoughts together with `[[wiki-links]]`, and navigate between them to explore your knowledge graph.
 4. Get an overview of your **Foam** workspace using the [[Graph Visualisation](https://foambubble.github.io/foam/graph-visualisation)], and discover relationships between your thoughts with the use of [[Backlinking](https://foambubble.github.io/foam/backlinking)].
 
-![Foam kitchen sink, showing a few of the key features](assets/images/foam-features-dark-mode-demo.png)
+![Foam kitchen sink, showing a few of the key features](docs/assets/images/foam-features-dark-mode-demo.png)
 
 Foam is a like a bathtub: _What you get out of it depends on what you put into it._
 

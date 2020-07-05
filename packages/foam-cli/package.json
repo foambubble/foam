@@ -15,17 +15,12 @@
   },
   "devDependencies": {
     "@oclif/dev-cli": "^1",
-    "@oclif/test": "^1",
-    "@types/chai": "^4",
-    "@types/mocha": "^5",
     "@types/node": "^10",
     "chai": "^4",
     "eslint": "^5.13",
     "eslint-config-oclif": "^3.1",
     "eslint-config-oclif-typescript": "^0.1",
     "globby": "^10",
-    "mocha": "^5",
-    "nyc": "^14",
     "ts-node": "^8",
     "typescript": "^3.3"
   },

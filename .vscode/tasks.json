@@ -9,15 +9,13 @@
             "type": "npm",
             "script": "watch",
             "label": "Build foam-vscode",
-            "path": "${workspaceFolder}/packages/foam-vscode/",
+            "path": "packages/foam-vscode",
             "problemMatcher": "$tsc-watch",
 			"isBackground": true,
 			"presentation": {
-				"reveal": "never"
-			},
-			"group": {
-				"kind": "build",
-				"isDefault": true
+				"reveal": "silent",
+				"revealProblems": "onProblem",
+				"focus": true
 			}
 		}
 	]

@@ -34,7 +34,7 @@
 			"outFiles": [
 				"${workspaceFolder}/packages/foam-vscode/out/test/**/*.js"
 			],
-			"preLaunchTask": "${defaultBuildTask}"
+			"preLaunchTask": "Build foam-vscode"
 		}
 	]
 }

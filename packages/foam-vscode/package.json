@@ -27,10 +27,14 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "yarn run compile",
+    "vscode:prepublish": "yarn npm-install && yarn run compile",
     "compile": "tsc -p ./",
     "lint": "eslint src --ext ts",
-    "watch": "tsc -watch -p ./"
+    "watch": "tsc -watch -p ./",
+    "npm-install": "rimraf node_modules && npm i",
+    "npm-cleanup": "rimraf package-lock.json node_modules && yarn",
+    "package-extension": "npx vsce package && yarn npm-cleanup",
+    "publish-extension": "npx vsce publish && yarn npm-cleanup"
   },
   "devDependencies": {
     "@types/glob": "^7.1.1",
@@ -40,6 +44,7 @@
     "@typescript-eslint/parser": "^2.30.0",
     "eslint": "^6.8.0",
     "glob": "^7.1.6",
+    "rimraf": "^3.0.2",
     "typescript": "^3.8.3",
     "vscode-test": "^1.3.0"
   },

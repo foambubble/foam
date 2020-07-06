@@ -1,6 +1,6 @@
 # Github Pages
 
-- The [Foam template](https://github.com/foambubble/foam-template) is **GitHub Pages** ready, all you have to do is [turn it on in your repository settings](<(https://guides.github.com/features/pages/)>).
+- The [Foam template](https://github.com/foambubble/foam-template) is **GitHub Pages** ready, all you have to do is [turn it on in your repository settings](https://guides.github.com/features/pages/).
 - The default GitHub Pages template is called [Primer](https://github.com/pages-themes/primer). See Primer docs for how to customise html layouts and templates.
 - GitHub Pages is built on [Jekyll](https://jekyllrb.com/), so it supports things like permalinks, front matter metadata etc.
 

@@ -41,7 +41,7 @@ If you're interested in contributing to the VS Code extension (aka `foam-vscode`
 
    `yarn workspace foam-workspace-manager build`
 4. Now we'll use the launch configuration defined at [`.vscode/launch.json`](https://github.com/foambubble/foam/blob/master/.vscode/launch.json) to start a new extension host of VS Code. From the root, or the `foam-vscode` workspace, press f5.
-5. In the new extension host of VS Code that launched, open a Foam workspace (e.g. your personal one, or a test-specific one created from foam-template). This is strictly not necessary, but the extension won't auto-run unless it's in a workspace with a `.vscode/foam`.json file.
+5. In the new extension host of VS Code that launched, open a Foam workspace (e.g. your personal one, or a test-specific one created from foam-template). This is strictly not necessary, but the extension won't auto-run unless it's in a workspace with a `.vscode/foam.json` file.
 6. Test a command to make sure it's working as expected. Open the Command Palette (Ctrl/Cmd + Shift + P) and select "Foam: Update Markdown Reference List". If you see no errors, it's good to go!
 
 ### Tutorial: Adding a New Command

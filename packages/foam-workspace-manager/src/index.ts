@@ -1,1 +1,1 @@
-export { WorkspaceManager } from './WorkspaceManager';
+export { WorkspaceManager, Note, NoteWithLinks } from './WorkspaceManager';

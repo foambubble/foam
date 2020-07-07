@@ -86,7 +86,7 @@ Head over to [[recipes]] for some useful patterns and ideas!
 
 The goal of **Foam** is to be your personal companion on your quest for knowledge.
 
-It's is currently about "10% ready" relative to all the features I've thought of, but I've only thought of ~1% of the features it could have, and I'm excited to learn from others.
+It's currently about "10% ready" relative to all the features I've thought of, but I've only thought of ~1% of the features it could have, and I'm excited to learn from others.
 
 I am using it as my personal thinking tool. By making it public, I hope to learn from others not only how to improve Foam, but also to improve how I learn and manage information.
 

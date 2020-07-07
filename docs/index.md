@@ -13,7 +13,6 @@ You can use **Foam** for organising your research, keeping re-discoverable notes
 <div class="website-only">
     <a class="github-button" href="https://github.com/foambubble/foam" data-icon="octicon-star" data-size="large" data-show-count="true" aria-label="Star foambubble/foam on GitHub">Star</a> 
     <a class="github-button" href="https://github.com/foambubble/foam-template" data-icon="octicon-repo-template" data-size="large" aria-label="Use this template foambubble/foam-template on GitHub">Use this template</a>
-      <a class="github-button discord-button" href="https://discord.gg/rtdZKgj" data-icon="octicon-comment" data-size="large" aria-label="Join Foam community on Discord">Join Foam Discord</a>
 </div>
 
 ## Table of Contents

@@ -1,5 +1,5 @@
 import {Command, flags} from '@oclif/command'
-
+import { WorkspaceManager } from 'foam-workspace-manager';
 export default class Hello extends Command {
   static description = 'describe the command here'
 
@@ -21,11 +21,24 @@ hello world from ./src/hello.ts!
 
   async run() {
     const {args, flags} = this.parse(Hello)
-
     const name = flags.name ?? 'world'
-    this.log(`hello ${name} from ./src/commands/hello.ts`)
-    if (args.file && flags.force) {
-      this.log(`you input --force and --file: ${args.file}`)
-    }
+
+    const wm = new WorkspaceManager('./foo');
+    wm.addNoteFromMarkdown('page-a.md', `
+# Page A
+## Section
+- [[page-b]]
+- [[page-c]];
+    `);
+
+    wm.addNoteFromMarkdown('page-a.md', `
+# Page B
+This references [[page-a]]`);
+
+    console.log(wm.getNoteWithLinks('page-a'));
+
+
+
+
   }
 }

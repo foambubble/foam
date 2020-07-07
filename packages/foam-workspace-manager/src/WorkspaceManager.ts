@@ -9,7 +9,7 @@ import {
 type ID = string;
 type Index = Map<ID, Set<ID>>;
 
-interface Note {
+export interface Note {
   /**
    * Base name of the file without extension, e.g. wiki-link
    */
@@ -21,7 +21,7 @@ interface Note {
   markdown: string; // do we need this?
 }
 
-interface NoteWithLinks extends Note {
+export interface NoteWithLinks extends Note {
   /**
    * Notes referenced from this note (wikilinks)
    */

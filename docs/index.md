@@ -6,9 +6,14 @@ You can use **Foam** for organising your research, keeping re-discoverable notes
 
 **Foam** is free, open source, and extremely extensible to suit your personal workflow. You own the information you create with Foam, and you're free to share it, and collaborate on it with anyone you want.
 
+<p class="announcement">
+  <b>New!</b> Join <a href="https://discord.gg/rtdZKgj" target="_blank">Foam community Discord</a> for users and contributors!
+</p>
+
 <div class="website-only">
     <a class="github-button" href="https://github.com/foambubble/foam" data-icon="octicon-star" data-size="large" data-show-count="true" aria-label="Star foambubble/foam on GitHub">Star</a> 
     <a class="github-button" href="https://github.com/foambubble/foam-template" data-icon="octicon-repo-template" data-size="large" aria-label="Use this template foambubble/foam-template on GitHub">Use this template</a>
+      <a class="github-button discord-button" href="https://discord.gg/rtdZKgj" data-icon="octicon-comment-discussion" aria-label="Join Foam community on Discord">Join Foam Discord</a>
 </div>
 
 ## Table of Contents

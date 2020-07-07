@@ -68,3 +68,10 @@ OPTIONS
 
 _See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v3.1.0/src/commands/help.ts)_
 <!-- commandsstop -->
+
+## Development
+
+- Run `yarn` somewhere in workspace (ideally root, see [yarn workspace docs](https://classic.yarnpkg.com/en/docs/workspaces/)
+  - This will automatically symlink all package directories so you're using the local copy
+- In `packages/foam-workspace-manager`, run `yarn start` to rebuild the library on every change
+- In `packages/foam-cli`, make changes and run with `yarn run cli`. This should use latest workspace manager changes.

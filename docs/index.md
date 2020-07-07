@@ -47,7 +47,7 @@ Foam is a like a bathtub: _What you get out of it depends on what you put into i
 
 Like the soapy suds it's named after, **Foam** is mostly air.
 
-1. The editing experience of **Foam** is powered by VS Code, enhanced by workspace settings that glue together [[recommended-extensions]] and preferences optimised for writing and navigating information.
+1. The editing experience of **Foam** is powered by VS Code, enhanced by workspace settings that glue it together [[recommended-extensions]] and preferences optimised for writing and navigating information.
 2. To back up, collaborate on and share your content between devices, Foam pairs well with [GitHub](http://github.com/).
 3. To publish your content, you can set it up to publish to [GitHub Pages](https://pages.github.com/) with zero code and zero config, or to any website hosting platform like [Netlify](http://netlify.com/) or [Vercel](https://vercel.com).
 
@@ -87,7 +87,7 @@ Head over to [[recipes]] for some useful patterns and ideas!
 
 The goal of **Foam** is to be your personal companion on your quest for knowledge.
 
-It's is currently about "10% ready" relative to all the features I've thought of, but I've only thought of ~1% of the features it could have, and I'm excited to learn from others.
+It's currently about "10% ready" relative to all the features I've thought of, but I've only thought of ~1% of the features it could have, and I'm excited to learn from others.
 
 I am using it as my personal thinking tool. By making it public, I hope to learn from others not only how to improve Foam, but also to improve how I learn and manage information.
 

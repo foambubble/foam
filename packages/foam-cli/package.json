@@ -11,6 +11,7 @@
     "@oclif/command": "^1",
     "@oclif/config": "^1",
     "@oclif/plugin-help": "^3",
+    "foam-workspace-manager": "^0.1.1",
     "tslib": "^1"
   },
   "devDependencies": {
@@ -48,6 +49,7 @@
   },
   "repository": "foambubble/foam",
   "scripts": {
+    "cli": "./bin/run",
     "postpack": "rm -f oclif.manifest.json",
     "posttest": "eslint . --ext .ts --config .eslintrc",
     "prepack": "rm -rf lib && tsc -b && oclif-dev manifest && oclif-dev readme",

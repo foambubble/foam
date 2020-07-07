@@ -7,7 +7,7 @@ This feature is open for discussion at [foambubble/foam#54](https://github.com/f
 ## Must have
 
 - Should exist as part of [foam-vscode](https://github.com/foambubble/foam/tree/master/packages/foam-vscode) extension 
-- A new command "Foam: Create New Note", which creates new file and focuses into it
+- A new command "Foam: Open Daily Note", which creates new file and focuses into it, or opens the existing file for today if it exists already.
   - File should have a Level 1 `# Heading`
 - Extension should define a hotkey for it (TBD? What do other apps do?)
 

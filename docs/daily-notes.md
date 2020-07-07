@@ -2,6 +2,8 @@
 
 The idea is to make it easier for people to be able to create Daily notes.
 
+This feature is open for discussion at [foambubble/foam#54](https://github.com/foambubble/foam/issues/54).
+
 ## Must have
 
 - Should exist as part of [foam-vscode](https://github.com/foambubble/foam/tree/master/packages/foam-vscode) extension 

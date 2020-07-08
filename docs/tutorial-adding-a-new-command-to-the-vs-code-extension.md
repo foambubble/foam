@@ -1,4 +1,4 @@
-# Tutorial Adding a New Command to the VS Code Extension
+# Tutorial: Adding a New Command to the VS Code Extension
 
 This tutorial will walk you through adding a new command to the VS Code extension.
 
@@ -66,4 +66,3 @@ This is still a work in progress. We've opted for [Jest](https://jestjs.io/) as 
 When you start the extension development host, the local version of the extension "shadows" or overrides any installed versions of the package with the same ID. So when you F5/start the extension host, you should always be running the local version, plus any other extensions your workspace/vscode is configured to run.
 
 As far as we know, you can't run the "shadowed" base install while running the local extension
-

@@ -17,6 +17,12 @@ const pageC = `
 # Page C
 `;
 
+const updatedPageC = `
+# Page C
+[[page-a]]
+[[page-b]]
+`;
+
 describe('WorkspaceManager', () => {
   it('links things correctly when added in order', () => {
     const ws = new WorkspaceManager('dir/');
@@ -55,14 +61,7 @@ describe('WorkspaceManager', () => {
     const before = ws.getNoteWithLinks('page-a');
 
     // change document
-    ws.addNoteFromMarkdown(
-      'page-c.md',
-      `
-      # Page C
-      [[page-a]]
-      [[page-b]]
-    `
-    );
+    ws.addNoteFromMarkdown('page-c.md', updatedPageC);
 
     const after = ws.getNoteWithLinks('page-a');
 

@@ -40,7 +40,9 @@
     "typescript": "^3.9.5"
   },
   "dependencies": {
+    "@types/graphlib": "^2.1.6",
     "@types/lodash": "^4.14.157",
+    "graphlib": "^2.1.8",
     "lodash": "^4.17.15",
     "remark-parse": "^8.0.2",
     "remark-wiki-link": "^0.0.4",

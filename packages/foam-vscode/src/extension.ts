@@ -4,6 +4,7 @@
  */
 "use strict";
 
+import { uniq } from 'lodash'
 import {
   CancellationToken,
   CodeLens,
@@ -21,6 +22,7 @@ import {
   Position,
 } from "vscode";
 
+import { createMarkdownReferences } from 'foam-workspace-manager'
 import { basename, dirname, relative } from "path";
 import * as ws from "./workspace";
 
@@ -126,41 +128,10 @@ async function generateReferenceList(doc: TextDocument): Promise<string[]> {
   const id = dropExtension(basename(filePath));
 
   // @todo fix hack
-  await ws.ready;
+  const foam = await ws.ready;
 
-  // update file in index for future reference
-  // @todo should probably be an update method instead
-  // so we can prune existing references
-  ws.manager.addNoteFromMarkdown(filePath, doc.getText());
-
-  // find note by id
-  const note = ws.manager.getNoteWithLinks(id);
-
-  if (note.linkedNotes.length === 0) {
-    return [];
-  }
-
-  const references = [];
-
-  for (const link of note.linkedNotes) {
-    const relativePath = relative(dirname(filePath), link.absolutePath);
-    if (relativePath) {
-      const relativePathWithoutExtension = dropExtension(relativePath);
-
-      // [wiki-link-text]: wiki-link "Page title"
-      references.push(
-        `[${link.id}]: ${relativePathWithoutExtension} "${link.title}"`
-      );
-    }
-  }
-
-  references.sort()
-
-  // for (const backlink of note.backlinks) {
-  //   references.push(
-  //     `[backlink:${backlink.id}]: ${backlink.filename} "${backlink.title}"`
-  //   );
-  // }
+  const references = uniq(createMarkdownReferences(foam, id)
+    .map(link => `[${link.linkText}]: ${link.wikiLink} "${link.pageTitle}"`))
 
   return [REFERENCE_HEADER, ...references, REFERENCE_FOOTER];
 }

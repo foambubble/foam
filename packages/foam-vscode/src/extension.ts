@@ -154,6 +154,8 @@ async function generateReferenceList(doc: TextDocument): Promise<string[]> {
     }
   }
 
+  references.sort()
+
   // for (const backlink of note.backlinks) {
   //   references.push(
   //     `[backlink:${backlink.id}]: ${backlink.filename} "${backlink.title}"`

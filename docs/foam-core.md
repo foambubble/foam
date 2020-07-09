@@ -18,6 +18,7 @@
   - Title, headings, lists, paragraphs, images, links, data.
   - This can power advanced search features (e.g. showing entire context of paragraph in back links, find all documents)
 
+Ideally, `foam-core` will be generic enough that in can be used by third parties to build their own tools that operate on markdown directories.
 
 ## Technical requirements
 
@@ -36,6 +37,7 @@
 - We should not take on platform-specific dependencies
   - Should work in any JS environment
 - Written in TypeScript (preferably tsdx)
+- Published to NPM
 
 ## Use cases
 

@@ -4,7 +4,7 @@ import wikiLinkPlugin from 'remark-wiki-link';
 import visit, { CONTINUE, EXIT } from 'unist-util-visit';
 import { Node, Parent } from 'unist';
 import * as path from 'path';
-import { BubbleLink, Bubble, Foam } from '../core';
+import { FoamLink, Bubble, Foam } from '../core';
 
 // @ts-expect-error
 export function readWorkspaceFile(filename: string): string {
@@ -34,7 +34,7 @@ export function createBubbleFromMarkdown(uri: string, markdown: string): Bubble 
     }
     return title === id ? CONTINUE : EXIT;
   })
-  const links: BubbleLink[] = []
+  const links: FoamLink[] = []
   visit(tree, node => {
     if (node.type === 'wikiLink') {
       links.push({
@@ -55,7 +55,7 @@ interface MarkdownReference {
 
 export function createMarkdownReferences(foam: Foam, bubbleId: string): MarkdownReference[] {
   const source = foam.getBubble(bubbleId)
-  return source.getForwardLinks()
+  return foam.getForwardLinks(bubbleId)
     .map(link => {
       const target = foam.getBubble(link.to)
       const relativePath = path.relative(path.dirname(source.path), target.path);

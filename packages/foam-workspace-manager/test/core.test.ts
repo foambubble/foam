@@ -14,7 +14,7 @@ describe('Foam graph', () => {
   it('Detects forward links', () => {
     const foam = new Foam()
     foam.setBubble(new Bubble('page-a', 'page-a', [], '/page-a.md', ''))
-    foam.setBubble(new Bubble('page-b', 'page-b', [{from: 'page-b', to: 'page-a', text: 'go'}], '/page-b.md', ''))
+    foam.setBubble(new Bubble('page-b', 'page-b', [{to: 'page-a', text: 'go'}], '/page-b.md', ''))
     foam.setBubble(new Bubble('page-c', 'page-c', [], '/page-c.md', ''))
 
     expect(foam.getForwardLinks('page-b').map(link => link.to).sort()).toEqual(['page-a'])
@@ -23,7 +23,7 @@ describe('Foam graph', () => {
   it('Detects backlinks', () => {
     const foam = new Foam()
     foam.setBubble(new Bubble('page-a', 'page-a', [], '/page-a.md', ''))
-    foam.setBubble(new Bubble('page-b', 'page-b', [{from: 'page-b', to: 'page-a', text: 'go'}], '/page-b.md', ''))
+    foam.setBubble(new Bubble('page-b', 'page-b', [{to: 'page-a', text: 'go'}], '/page-b.md', ''))
     foam.setBubble(new Bubble('page-c', 'page-c', [], '/page-c.md', ''))
 
     expect(foam.getBacklinks('page-a').map(link => link.from).sort()).toEqual(['page-b'])
@@ -40,14 +40,14 @@ describe('Foam graph', () => {
   it('Updates links when modifying bubble', () => {
     const foam = new Foam()
     foam.setBubble(new Bubble('page-a', 'page-a', [], '/page-a.md', ''))
-    foam.setBubble(new Bubble('page-b', 'page-b', [{from: 'page-b', to: 'page-a', text: 'go'}], '/page-b.md', ''))
+    foam.setBubble(new Bubble('page-b', 'page-b', [{to: 'page-a', text: 'go'}], '/page-b.md', ''))
     foam.setBubble(new Bubble('page-c', 'page-c', [], '/page-c.md', ''))
 
     expect(foam.getForwardLinks('page-b').map(link => link.to).sort()).toEqual(['page-a'])
     expect(foam.getBacklinks('page-a').map(link => link.from).sort()).toEqual(['page-b'])
     expect(foam.getBacklinks('page-c').map(link => link.from).sort()).toEqual([])
 
-    foam.setBubble(new Bubble('page-b', 'page-b', [{from: 'page-b', to: 'page-c', text: 'go'}], '/path-2b.md', ''))
+    foam.setBubble(new Bubble('page-b', 'page-b', [{to: 'page-c', text: 'go'}], '/path-2b.md', ''))
 
     expect(foam.getForwardLinks('page-b').map(link => link.to).sort()).toEqual(['page-c'])
     expect(foam.getBacklinks('page-a').map(link => link.from).sort()).toEqual([])

@@ -8,8 +8,12 @@ At the moment, you can drag the explorer pane to your bottom pane, and either sh
 
 In the future we'll want to improve this feature by
 
-- Providing more context around back link reference
 - [[materialized-backlinks]]
+- Providing more context around back link reference
+  - Could be done by tweaking Markdown Notes slightly. Maybe a user setting?
+- Make back links editable using [VS Code Search Editors](https://code.visualstudio.com/updates/v1_43#_search-editors)
+  - [Suggested by @Jash on Discord](https://discordapp.com/channels/729975036148056075/729978910363746315/730999992419876956)
+
 
 
 

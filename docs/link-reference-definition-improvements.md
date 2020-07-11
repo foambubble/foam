@@ -64,7 +64,7 @@ Problem space in essence:
 The potential solution:
 
 - For edit-time
-  - Make edit-time link reference definition generation optional (via user settings and maybe even "off" by default, so that the user wouldn't typically see the auto-generated section in the file at all if it's really not needed)
+  - Make edit-time link reference definition generation optional via user settings. They should be on by default, and generating valid markdown links with a relative path to a `.md` file.
   - Make format of the link reference definition configurable (whether to include '.md' or not)
   - Out of recommended extensions, currently only "markdown links" doesn't support them (?). However even its [code](https://github.com/tchayen/markdown-links/blob/master/src/parsing.ts#L25) seems to include wikilink parser, so it might just be a bug?
   - If user really want's to use an extension that requires "plain links", they can set the setting "on" and work as in current Foam

@@ -22,7 +22,7 @@ import {
   Position,
 } from "vscode";
 
-import { createMarkdownReferences } from 'foam-workspace-manager'
+import { createMarkdownReferences } from '@foam/core'
 import { basename, dirname, relative } from "path";
 import * as ws from "./workspace";
 

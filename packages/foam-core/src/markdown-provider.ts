@@ -4,14 +4,9 @@ import wikiLinkPlugin from 'remark-wiki-link';
 import visit, { CONTINUE, EXIT } from 'unist-util-visit';
 import { Node, Parent } from 'unist';
 import * as path from 'path';
-import { Link, Note, NoteGraph } from '../core';
+import { Link, Note, NoteGraph } from './core';
+import { dropExtension } from './utils';
 
-// @ts-expect-error
-export function readWorkspaceFile(filename: string): string {
-  throw new Error('Not implemented');
-}
-
-// pipeline cache
 let processor: unified.Processor | null = null;
 
 function parse(markdown: string): Node {
@@ -70,34 +65,3 @@ export function createMarkdownReferences(notes: NoteGraph, noteId: string): Mark
     })
     .sort()
 }
-
-function dropExtension(path: string): string {
-  const parts = path.split(".");
-  parts.pop();
-  return parts.join(".");
-}
-
-export function parseNoteTitleFromMarkdown(markdown: string): string | null {
-  let title: string | null = null;
-  const tree = parse(markdown);
-  visit(tree, node => {
-    if (node.type === 'heading' && node.depth === 1) {
-      title = ((node as Parent)!.children[0].value as string) || null;
-    }
-    return title === null;
-  });
-  return title;
-}
-
-export function parseNoteLinksFromMarkdown(markdown: string): string[] {
-  let links: string[] = [];
-  const tree = parse(markdown);
-  visit(tree, node => {
-    if (node.type === 'wikiLink') {
-      links.push(node.value as string);
-    }
-  });
-  return links;
-}
-
-

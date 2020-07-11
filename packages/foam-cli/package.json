@@ -1,5 +1,5 @@
 {
-  "name": "foam-cli",
+  "name": "@foam/cli",
   "description": "Foam CLI",
   "version": "0.1.0",
   "author": "Jani Eväkallio @jevakallio",
@@ -11,7 +11,6 @@
     "@oclif/command": "^1",
     "@oclif/config": "^1",
     "@oclif/plugin-help": "^3",
-    "foam-workspace-manager": "^0.1.1",
     "tslib": "^1"
   },
   "devDependencies": {
@@ -23,7 +22,11 @@
     "eslint-config-oclif-typescript": "^0.1",
     "globby": "^10",
     "ts-node": "^8",
-    "typescript": "^3.3"
+    "typescript": "^3.3",
+    "@foam/core": "^0.1.1"
+  },
+  "peerDependencies": {
+    "@foam/core": "^0.1.1"
   },
   "engines": {
     "node": ">=8.0.0"

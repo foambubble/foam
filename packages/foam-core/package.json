@@ -1,0 +1,35 @@
+{
+  "name": "@foam/core",
+  "author": "Jani Eväkallio",
+  "repository": "https://github.com/foambubble/foam",
+  "version": "0.1.1",
+  "license": "MIT",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "start": "tsdx watch",
+    "build": "tsdx build",
+    "test": "tsdx test",
+    "lint": "tsdx lint",
+    "prepare": "tsdx build"
+  },
+  "devDependencies": {
+    "@types/graphlib": "^2.1.6",
+    "@types/lodash": "^4.14.157",
+    "husky": "^4.2.5",
+    "tsdx": "^0.13.2",
+    "tslib": "^2.0.0",
+    "typescript": "^3.9.5"
+  },
+  "dependencies": {
+    "graphlib": "^2.1.8",
+    "lodash": "^4.17.15",
+    "remark-parse": "^8.0.2",
+    "remark-wiki-link": "^0.0.4",
+    "unified": "^9.0.0",
+    "unist-util-visit": "^2.0.2"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts"
+}

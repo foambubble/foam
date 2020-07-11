@@ -1,5 +1,5 @@
 import {Command, flags} from '@oclif/command'
-import { WorkspaceManager } from 'foam-workspace-manager';
+import { NoteGraph } from '@foam/core';
 export default class Hello extends Command {
   static description = 'describe the command here'
 
@@ -23,7 +23,7 @@ hello world from ./src/hello.ts!
     const {args, flags} = this.parse(Hello)
     const name = flags.name ?? 'world'
 
-    const wm = new WorkspaceManager('./foo');
+    const wm = new NoteGraph();
     wm.addNoteFromMarkdown('page-a.md', `
 # Page A
 ## Section

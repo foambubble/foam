@@ -149,7 +149,7 @@ async function generateReferenceList(doc: TextDocument): Promise<string[]> {
 
       // [wiki-link-text]: wiki-link "Page title"
       references.push(
-        `[${link.id}]: ${relativePathWithoutExtension} "${link.title}"`
+        `[${link.original}]: ${relativePathWithoutExtension} "${link.title}"`
       );
     }
   }
@@ -158,7 +158,7 @@ async function generateReferenceList(doc: TextDocument): Promise<string[]> {
 
   // for (const backlink of note.backlinks) {
   //   references.push(
-  //     `[backlink:${backlink.id}]: ${backlink.filename} "${backlink.title}"`
+  //     `[backlink:${backlink.original}]: ${backlink.filename} "${backlink.title}"`
   //   );
   // }
 

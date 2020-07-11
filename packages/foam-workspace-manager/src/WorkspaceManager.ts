@@ -13,7 +13,8 @@ export interface Note {
   /**
    * Base name of the file without extension, e.g. wiki-link
    */
-  id: ID;
+  original: ID;
+  clean: string;
   title: string;
   filename: string;
   extension: string;
@@ -65,7 +66,7 @@ export class WorkspaceManager {
 
   constructor(path: string, notes: Note[] = []) {
     this.path = path;
-    this.notes = new Map<ID, Note>(notes.map(note => [note.id, note]));
+    this.notes = new Map<ID, Note>(notes.map(note => [note.clean, note]));
   }
 
   public getNoteWithLinks(id: ID): NoteWithLinks | null {
@@ -104,16 +105,27 @@ export class WorkspaceManager {
     );
   }
 
+  public cleanPath (path: string): string {
+    const slug = '-'; //perhaps a config would be a better choice;
+    return path
+      .replace(/[!"\#$%&'()*+,\-./:;<=>?@\[\\\]^_‘{|}~\s]+/gi, slug)
+      .toLowerCase() // lower
+      .replace(/[-_－＿ ]*$/g, ''); // removing trailing slug chars
+  }
+  
   public addNoteFromMarkdown(absolutePath: string, markdown: string): Note {
     // parse markdown
     const filename = basename(absolutePath);
+
     const parts = filename.split('.');
     const extension = parts.pop()!;
-    const id = parts.join('.');
+    const original = parts.join('.')
+    const clean = this.cleanPath(original);
     const title = parseNoteTitleFromMarkdown(markdown);
     const note: Note = {
-      id,
-      title: title || id,
+      clean,
+      original,
+      title: title || original,
       filename,
       absolutePath,
       extension,
@@ -125,19 +137,24 @@ export class WorkspaceManager {
   }
 
   public addNote(note: Note): Note {
-    const linkIds = parseNoteLinksFromMarkdown(note.markdown);
+    const linkIds = parseNoteLinksFromMarkdown(note.markdown).map(v => {
+      return {
+        original: v, 
+        clean: this.cleanPath(v)
+      }
+    });
 
-    this.notes.set(note.id, note);
+    this.notes.set(note.clean, note);
 
     if (linkIds.length > 0) {
       let linksFromNote = getOrInitializeIndexForId(
         this.linksFromNoteById,
-        note.id
+        note.clean
       );
 
-      for (const id of linkIds) {
-        linksFromNote.add(id);
-        getOrInitializeIndexForId(this.linksBackToNoteById, id).add(note.id);
+      for (const link of linkIds) {
+        linksFromNote.add(link.clean);
+        getOrInitializeIndexForId(this.linksBackToNoteById, link.clean).add(note.clean);
       }
     }
 

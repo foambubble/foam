@@ -1,57 +1,57 @@
-import { Foam, Bubble } from '../src/core'
-import { createBubbleFromMarkdown } from '../src/utils/utils'
+import { NoteGraph, Note } from '../src/core'
+import { createNoteFromMarkdown } from '../src/utils/utils'
 
-describe('Foam graph', () => {
-  it('Adds bubbles to foam', () => {
-    const foam = new Foam()
-    foam.setBubble(new Bubble('page-a', 'page-a', [], '/page-a.md', ''))
-    foam.setBubble(new Bubble('page-b', 'page-b', [], '/page-b.md', ''))
-    foam.setBubble(new Bubble('page-c', 'page-c', [], '/page-c.md', ''))
+describe('Note graph', () => {
+  it('Adds notes to graph', () => {
+    const graph = new NoteGraph()
+    graph.setNote(new Note('page-a', 'page-a', [], '/page-a.md', ''))
+    graph.setNote(new Note('page-b', 'page-b', [], '/page-b.md', ''))
+    graph.setNote(new Note('page-c', 'page-c', [], '/page-c.md', ''))
 
-    expect(foam.getBubbles().map(n => n.id).sort()).toEqual(['page-a', 'page-b', 'page-c'])
+    expect(graph.getNotes().map(n => n.id).sort()).toEqual(['page-a', 'page-b', 'page-c'])
   })
 
   it('Detects forward links', () => {
-    const foam = new Foam()
-    foam.setBubble(new Bubble('page-a', 'page-a', [], '/page-a.md', ''))
-    foam.setBubble(new Bubble('page-b', 'page-b', [{to: 'page-a', text: 'go'}], '/page-b.md', ''))
-    foam.setBubble(new Bubble('page-c', 'page-c', [], '/page-c.md', ''))
+    const graph = new NoteGraph()
+    graph.setNote(new Note('page-a', 'page-a', [], '/page-a.md', ''))
+    graph.setNote(new Note('page-b', 'page-b', [{to: 'page-a', text: 'go'}], '/page-b.md', ''))
+    graph.setNote(new Note('page-c', 'page-c', [], '/page-c.md', ''))
 
-    expect(foam.getForwardLinks('page-b').map(link => link.to).sort()).toEqual(['page-a'])
+    expect(graph.getForwardLinks('page-b').map(link => link.to).sort()).toEqual(['page-a'])
   })
 
   it('Detects backlinks', () => {
-    const foam = new Foam()
-    foam.setBubble(new Bubble('page-a', 'page-a', [], '/page-a.md', ''))
-    foam.setBubble(new Bubble('page-b', 'page-b', [{to: 'page-a', text: 'go'}], '/page-b.md', ''))
-    foam.setBubble(new Bubble('page-c', 'page-c', [], '/page-c.md', ''))
+    const graph = new NoteGraph()
+    graph.setNote(new Note('page-a', 'page-a', [], '/page-a.md', ''))
+    graph.setNote(new Note('page-b', 'page-b', [{to: 'page-a', text: 'go'}], '/page-b.md', ''))
+    graph.setNote(new Note('page-c', 'page-c', [], '/page-c.md', ''))
 
-    expect(foam.getBacklinks('page-a').map(link => link.from).sort()).toEqual(['page-b'])
+    expect(graph.getBacklinks('page-a').map(link => link.from).sort()).toEqual(['page-b'])
   })
 
   it('Fails when accessing non-existing node', () => {
     expect(() => {
-      const foam = new Foam()
-      foam.setBubble(new Bubble('page-a', 'page-a', [], '/path-b.md', ''))
-      foam.getBubble('non-existing')
+      const graph = new NoteGraph()
+      graph.setNote(new Note('page-a', 'page-a', [], '/path-b.md', ''))
+      graph.getNote('non-existing')
     }).toThrow()
   })
 
-  it('Updates links when modifying bubble', () => {
-    const foam = new Foam()
-    foam.setBubble(new Bubble('page-a', 'page-a', [], '/page-a.md', ''))
-    foam.setBubble(new Bubble('page-b', 'page-b', [{to: 'page-a', text: 'go'}], '/page-b.md', ''))
-    foam.setBubble(new Bubble('page-c', 'page-c', [], '/page-c.md', ''))
+  it('Updates links when modifying note', () => {
+    const graph = new NoteGraph()
+    graph.setNote(new Note('page-a', 'page-a', [], '/page-a.md', ''))
+    graph.setNote(new Note('page-b', 'page-b', [{to: 'page-a', text: 'go'}], '/page-b.md', ''))
+    graph.setNote(new Note('page-c', 'page-c', [], '/page-c.md', ''))
 
-    expect(foam.getForwardLinks('page-b').map(link => link.to).sort()).toEqual(['page-a'])
-    expect(foam.getBacklinks('page-a').map(link => link.from).sort()).toEqual(['page-b'])
-    expect(foam.getBacklinks('page-c').map(link => link.from).sort()).toEqual([])
+    expect(graph.getForwardLinks('page-b').map(link => link.to).sort()).toEqual(['page-a'])
+    expect(graph.getBacklinks('page-a').map(link => link.from).sort()).toEqual(['page-b'])
+    expect(graph.getBacklinks('page-c').map(link => link.from).sort()).toEqual([])
 
-    foam.setBubble(new Bubble('page-b', 'page-b', [{to: 'page-c', text: 'go'}], '/path-2b.md', ''))
+    graph.setNote(new Note('page-b', 'page-b', [{to: 'page-c', text: 'go'}], '/path-2b.md', ''))
 
-    expect(foam.getForwardLinks('page-b').map(link => link.to).sort()).toEqual(['page-c'])
-    expect(foam.getBacklinks('page-a').map(link => link.from).sort()).toEqual([])
-    expect(foam.getBacklinks('page-c').map(link => link.from).sort()).toEqual(['page-b'])
+    expect(graph.getForwardLinks('page-b').map(link => link.to).sort()).toEqual(['page-c'])
+    expect(graph.getBacklinks('page-a').map(link => link.from).sort()).toEqual([])
+    expect(graph.getBacklinks('page-c').map(link => link.from).sort()).toEqual(['page-b'])
   })
 
 })
@@ -75,22 +75,22 @@ const pageC = `
 `;
 
 describe('Markdown loader', () => {
-  it('Converts markdown to bubbles', () => {
-    const foam = new Foam()
-    foam.setBubble(createBubbleFromMarkdown('page-a', pageA))
-    foam.setBubble(createBubbleFromMarkdown('page-b', pageB))
-    foam.setBubble(createBubbleFromMarkdown('page-c', pageC))
+  it('Converts markdown to notes', () => {
+    const graph = new NoteGraph()
+    graph.setNote(createNoteFromMarkdown('page-a', pageA))
+    graph.setNote(createNoteFromMarkdown('page-b', pageB))
+    graph.setNote(createNoteFromMarkdown('page-c', pageC))
 
-    expect(foam.getBubbles().map(n => n.id).sort()).toEqual(['page-a', 'page-b', 'page-c'])
+    expect(graph.getNotes().map(n => n.id).sort()).toEqual(['page-a', 'page-b', 'page-c'])
   })
 
   it('Parses wikilinks correctly', () => {
-    const foam = new Foam()
-    foam.setBubble(createBubbleFromMarkdown('page-a', pageA))
-    foam.setBubble(createBubbleFromMarkdown('page-b', pageB))
-    foam.setBubble(createBubbleFromMarkdown('page-c', pageC))
+    const graph = new NoteGraph()
+    graph.setNote(createNoteFromMarkdown('page-a', pageA))
+    graph.setNote(createNoteFromMarkdown('page-b', pageB))
+    graph.setNote(createNoteFromMarkdown('page-c', pageC))
 
-    expect(foam.getBacklinks('page-b').map(link => link.from)).toEqual(['page-a'])
-    expect(foam.getForwardLinks('page-a').map(link => link.to)).toEqual(['page-b', 'page-c'])
+    expect(graph.getBacklinks('page-b').map(link => link.from)).toEqual(['page-a'])
+    expect(graph.getForwardLinks('page-a').map(link => link.to)).toEqual(['page-b', 'page-c'])
   })
 })

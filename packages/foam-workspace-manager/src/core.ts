@@ -3,26 +3,26 @@ import { Graph, Edge } from 'graphlib'
 
 type ID = string
 
-export interface FoamLink {
+export interface Link {
   from: ID
   to: ID
   text: string
 }
 
-export interface OutLink {
+export interface NoteLink {
   to: ID
   text: string
 }
 
 
-export class Bubble {
+export class Note {
   public id: ID
   public title: string
   public source: string
   public path: string
-  public links: OutLink[]
+  public links: NoteLink[]
 
-  constructor(id: ID, title: string, links: OutLink[], path: string, source: string) {
+  constructor(id: ID, title: string, links: NoteLink[], path: string, source: string) {
     this.id = id
     this.title = title
     this.source = source
@@ -32,55 +32,55 @@ export class Bubble {
 }
 
 
-export class Foam {
+export class NoteGraph {
   private graph: Graph
 
   constructor() {
     this.graph = new Graph()
   }
 
-  public setBubble(bubble: Bubble) {
-    if (this.graph.hasNode(bubble.id)) {
-      (this.graph.outEdges(bubble.id) || []).forEach(edge => {
+  public setNote(note: Note) {
+    if (this.graph.hasNode(note.id)) {
+      (this.graph.outEdges(note.id) || []).forEach(edge => {
         this.graph.removeEdge(edge)
       })
     }
-    this.graph.setNode(bubble.id, bubble)
-    bubble.links.forEach(link => {
-      this.graph.setEdge(bubble.id, link.to, link.text)
+    this.graph.setNode(note.id, note)
+    note.links.forEach(link => {
+      this.graph.setEdge(note.id, link.to, link.text)
     })
   }
 
-  public getBubbles(): Bubble[] {
+  public getNotes(): Note[] {
     return this.graph.nodes()
       .map(id => this.graph.node(id))
   }
 
-  public getBubble(bubbleId: ID): Bubble {
-    if (this.graph.hasNode(bubbleId)) {
-      return this.graph.node(bubbleId)
+  public getNote(noteId: ID): Note {
+    if (this.graph.hasNode(noteId)) {
+      return this.graph.node(noteId)
     }
-    throw new Error(`Bubble with ID [${bubbleId}] not found`)
+    throw new Error(`Note with ID [${noteId}] not found`)
   }
 
-  public getAllLinks(bubbleId: ID): FoamLink[] {
-    return (this.graph.nodeEdges(bubbleId) || [])
-      .map(edge => convertEdgeToBubbleLink(edge))
+  public getAllLinks(noteId: ID): Link[] {
+    return (this.graph.nodeEdges(noteId) || [])
+      .map(edge => convertEdgeToLink(edge))
   }
 
-  public getForwardLinks(bubbleId: ID): FoamLink[] {
-    return (this.graph.outEdges(bubbleId) || [])
-      .map(edge => convertEdgeToBubbleLink(edge))
+  public getForwardLinks(noteId: ID): Link[] {
+    return (this.graph.outEdges(noteId) || [])
+      .map(edge => convertEdgeToLink(edge))
   }
 
-  public getBacklinks(bubbleId: ID): FoamLink[] {
-    return (this.graph.inEdges(bubbleId) || [])
-      .map(edge => convertEdgeToBubbleLink(edge))
+  public getBacklinks(noteId: ID): Link[] {
+    return (this.graph.inEdges(noteId) || [])
+      .map(edge => convertEdgeToLink(edge))
   }
 }
 
 
-const convertEdgeToBubbleLink = (edge: Edge): FoamLink => ({
+const convertEdgeToLink = (edge: Edge): Link => ({
   from: edge.v,
   to: edge.w,
   text: edge.name || edge.w,

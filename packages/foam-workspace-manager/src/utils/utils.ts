@@ -4,7 +4,7 @@ import wikiLinkPlugin from 'remark-wiki-link';
 import visit, { CONTINUE, EXIT } from 'unist-util-visit';
 import { Node, Parent } from 'unist';
 import * as path from 'path';
-import { FoamLink, Bubble, Foam } from '../core';
+import { Link, Note, NoteGraph } from '../core';
 
 // @ts-expect-error
 export function readWorkspaceFile(filename: string): string {
@@ -23,7 +23,7 @@ function parse(markdown: string): Node {
   return processor.parse(markdown);
 }
 
-export function createBubbleFromMarkdown(uri: string, markdown: string): Bubble {
+export function createNoteFromMarkdown(uri: string, markdown: string): Note {
   const filename = path.basename(uri);
   const id = path.parse(filename).name;
   const tree = parse(markdown)
@@ -34,7 +34,7 @@ export function createBubbleFromMarkdown(uri: string, markdown: string): Bubble 
     }
     return title === id ? CONTINUE : EXIT;
   })
-  const links: FoamLink[] = []
+  const links: Link[] = []
   visit(tree, node => {
     if (node.type === 'wikiLink') {
       links.push({
@@ -44,7 +44,7 @@ export function createBubbleFromMarkdown(uri: string, markdown: string): Bubble 
       });
     }
   });
-  return new Bubble(id, title, links, uri, markdown)
+  return new Note(id, title, links, uri, markdown)
 }
 
 interface MarkdownReference {
@@ -53,11 +53,11 @@ interface MarkdownReference {
   pageTitle: string
 }
 
-export function createMarkdownReferences(foam: Foam, bubbleId: string): MarkdownReference[] {
-  const source = foam.getBubble(bubbleId)
-  return foam.getForwardLinks(bubbleId)
+export function createMarkdownReferences(notes: NoteGraph, noteId: string): MarkdownReference[] {
+  const source = notes.getNote(noteId)
+  return notes.getForwardLinks(noteId)
     .map(link => {
-      const target = foam.getBubble(link.to)
+      const target = notes.getNote(link.to)
       const relativePath = path.relative(path.dirname(source.path), target.path);
       const relativePathWithoutExtension = dropExtension(relativePath);
 

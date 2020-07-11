@@ -6,8 +6,13 @@
   "author": "Jani Eväkallio <jani.evakallio@gmail.com>",
   "license": "MIT",
   "private": "true",
-  "workspaces": ["packages/*"],
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "watch": "yarn workspace foam-vscode watch"
+  },
+  "devDependencies": {
+    "all-contributors-cli": "^6.16.1"
   }
 }

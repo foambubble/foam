@@ -69,6 +69,9 @@ The potential solution:
   - Out of recommended extensions, currently only "markdown links" doesn't support them (?). However even its [code](https://github.com/tchayen/markdown-links/blob/master/src/parsing.ts#L25) seems to include wikilink parser, so it might just be a bug?
   - If user really want's to use an extension that requires "plain links", they can set the setting "on" and work as in current Foam
 - For build-time
+  - To satisfy mutually incompatible constraints between GitHub UI, VSCode UI, and GitHub Pages, we should add a pre-processing/build step for pushing to GitHub Pages. 
+    - This would be a GitHub action (or a local script, ran via foam-cli) that outputs publish-friendly markdown format for static site generators and other publishing tools
+    - This build step should be pluggable, so that other transformations could be ran during it
   - Have publish targets defined in settings, that support both turning the link reference definitions on/off and defining their format (.md or not)
   - With Foam repo, just use edit-time link reference definitions with '.md' extension - this makes the links work in the Github UI
   - Have publish target defined for Github pages, that doesn't use '.md' extension, but still has the link reference definitions. Generate the output into gh-pages branch (or separate repo) with automation.

@@ -36,6 +36,7 @@ Guides, tips and strategies for getting the most out of your Foam workspace!
 - Link documents with [[wiki-links]]
 - Use shortcuts for [[creating-new-notes]]
 - Draw [[diagrams-in-markdown]]
+- Prettify your links, [[automatically-expand-urls-to-well-titled-links]]
 - [Markdown All-in-One](https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one) features [[todo]] [[good-first-task]]
   - Manage checklists 
   - Automatic Table of Contents

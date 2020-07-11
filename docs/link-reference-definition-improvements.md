@@ -76,12 +76,12 @@ The potential solution:
     {
       "foam": {
         "publish": [
-          {"Gitlab Mirror": { "linkDefRefs": "withExtension" }},
-          {"GitHub Pages": { "linkDefRefs": "withoutExtension" }},
-          {"My Amazing PDF book": { "linkDefRefs": "off" }}
+          {"Gitlab Mirror": { "linkRefDefs": "withExtension" }},
+          {"GitHub Pages": { "linkRefDefs": "withoutExtension" }},
+          {"My Amazing PDF book": { "linkRefDefs": "off" }}
         ],
         "edit": {
-          "linkDefRefs": "off",
+          "linkRefDefs": "off",
         }
       }
     }

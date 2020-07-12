@@ -1,16 +1,14 @@
-# Foam
-
-<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-16-orange.svg?style=flat-square)](#contributors-)
-<!-- ALL-CONTRIBUTORS-BADGE:END -->
-
 👋 **Hello friend! Looks like you're reading this page on GitHub. Please go to the 👉[rendered Foam Workspace](https://foambubble.github.io/foam) for an improved experience!**
 
 
 👀*This is an early stage project under rapid development. For updates follow [@jevakallio](https://twitter.com/jevakallio) on Twitter, or join the [Foam community Discord](https://discord.gg/rtdZKgj)! 💬*
 
 
-----------
+# Foam
+
+<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+[![All Contributors](https://img.shields.io/badge/all_contributors-16-orange.svg?style=flat-square)](#contributors-)
+<!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 **Foam** is a personal knowledge management and sharing system inspired by [Roam Research](https://roamresearch.com/), built on [Visual Studio Code](https://code.visualstudio.com/) and [GitHub](https://github.com/).
 

@@ -1,11 +1,9 @@
 <p class="github-only">
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-16-orange.svg?style=flat-square)](#contributors-)
+<a href="#contributors-"><img src="https://img.shields.io/badge/all_contributors-16-orange.svg?style=flat-square" alt="All Contributors"/></a>
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
-<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-0-orange.svg?style=flat-square)](#contributors-)
-<!-- ALL-CONTRIBUTORS-BADGE:END -->
-    👋 <b>Hello friend! Looks like you're reading this page on GitHub. Please go to the 👉<a href="https://foambubble.github.io/foam">rendered Foam Workspace</a> for an improved experience! </b>
+
+👋 <b>Hello friend! Looks like you're reading this page on GitHub. Please go to the 👉<a href="https://foambubble.github.io/foam">rendered Foam Workspace</a> for an improved experience! </b>
 </p>
 
 <p class="github-only">

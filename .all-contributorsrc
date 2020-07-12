@@ -158,7 +158,17 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "sauravkhdoolia",
+      "name": "Saurav Khdoolia",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/34188267?v=4",
+      "profile": "http://sauravk.vision",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
-  "contributorsPerLine": 7
+  "contributorsPerLine": 7,
+  "skipCi": true
 }

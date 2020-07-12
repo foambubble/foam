@@ -1,19 +1,4 @@
-import {
-  CancellationToken,
-  CodeLens,
-  CodeLensProvider,
-  commands,
-  EndOfLine,
-  ExtensionContext,
-  languages,
-  Range,
-  TextEditor,
-  TextDocument,
-  TextDocumentWillSaveEvent,
-  window,
-  workspace,
-  Position
-} from "vscode";
+import { EndOfLine, Range, TextDocument, window, Position } from "vscode";
 
 export const docConfig = { tab: "  ", eol: "\r\n" };
 

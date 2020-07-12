@@ -1,5 +1,4 @@
 import * as fs from "fs";
-import { basename } from "path";
 import { workspace } from "vscode";
 import { NoteGraph, createNoteFromMarkdown } from "foam-core";
 

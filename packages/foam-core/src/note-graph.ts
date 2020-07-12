@@ -1,6 +1,6 @@
 import { Graph, Edge } from 'graphlib';
 
-type ID = string;
+export type ID = string;
 
 export interface Link {
   from: ID;

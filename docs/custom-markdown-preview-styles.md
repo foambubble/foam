@@ -1,4 +1,4 @@
-# Customizing Markdown Styles
+# Custom Markdown Preview Styles
 
 Visual Studio Code allows you to use your own CSS in the Markdown preview tab.
 

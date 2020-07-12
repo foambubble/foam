@@ -42,7 +42,7 @@
 			"name": "Workspace Manager tests",
 			"program": "${workspaceFolder}/node_modules/tsdx/dist/index.js",
 			"args": ["test"],
-			"cwd": "${workspaceFolder}/packages/foam-workspace-manager",
+			"cwd": "${workspaceFolder}/packages/foam-core",
 			"internalConsoleOptions": "openOnSessionStart"
 		}
 	]

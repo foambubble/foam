@@ -1,6 +1,8 @@
 {
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "module": "commonjs",
+    "moduleResolution": "node",
     "target": "es6",
     "outDir": "out",
     "lib": ["es6"],
@@ -12,5 +14,9 @@
     // "noFallthroughCasesInSwitch": true, /* Report errors for fallthrough cases in switch statement. */
     // "noUnusedParameters": true,  /* Report errors on unused parameters. */
   },
-  "exclude": ["node_modules", ".vscode-test"]
+  "include": ["src"],
+  "exclude": ["node_modules", ".vscode-test"],
+  "references": [{
+    "path": "../foam-core/tsconfig.json"
+  }]
 }

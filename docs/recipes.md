@@ -37,6 +37,7 @@ Guides, tips and strategies for getting the most out of your Foam workspace!
 - Use shortcuts for [[creating-new-notes]]
 - Draw [[diagrams-in-markdown]]
 - Prettify your links, [[automatically-expand-urls-to-well-titled-links]]
+- Style your environment with [[custom-markdown-preview-styles]]
 - [Markdown All-in-One](https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one) features [[todo]] [[good-first-task]]
   - Manage checklists 
   - Automatic Table of Contents
@@ -93,8 +94,9 @@ _See [[contribution-guide]] and [[how-to-write-recipes]]._
 [wiki-links]: wiki-links "Wiki Links"
 [creating-new-notes]: creating-new-notes "Creating New Notes"
 [diagrams-in-markdown]: diagrams-in-markdown "Diagrams in Markdown"
-[good-first-task]: good-first-task "Good First Task"
 [automatically-expand-urls-to-well-titled-links]: automatically-expand-urls-to-well-titled-links "Automatically Expand URLs to Well-Titled Links"
+[custom-markdown-preview-styles]: custom-markdown-preview-styles "Custom Markdown Preview Styles"
+[good-first-task]: good-first-task "Good First Task"
 [git-integration]: git-integration "Git integration"
 [github-pages]: github-pages "Github Pages"
 [customising-styles]: customising-styles "Customising Styles"

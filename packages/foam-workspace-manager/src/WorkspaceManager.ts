@@ -7,14 +7,18 @@ import {
 } from './utils/utils';
 
 type ID = string;
-type Index = Map<ID, Set<ID>>;
 
-export interface Note {
+export interface ILooseFilename {
   /**
-   * Base name of the file without extension, e.g. wiki-link
+   * Base name of the file without extension, e.g. `Zoë File`
    */
-  original: ID;
-  clean: string;
+  original: ID,
+  /**
+   * Cleaned version of the file, removing accents, casing, slugs, e.g. `zoe-file`
+   */
+  clean: string
+}
+export interface Note extends LooseFilename {
   title: string;
   filename: string;
   extension: string;
@@ -26,13 +30,29 @@ export interface NoteWithLinks extends Note {
   /**
    * Notes referenced from this note (wikilinks)
    */
-  linkedNotes: Note[];
+  linkedNotes: LooseFilename[];
 
   /**
    * Notes that reference this note (backlinks) */
-  backlinks: Note[];
+  backlinks: LooseFilename[];
 }
-
+export class LooseFilename implements ILooseFilename {
+  original: ID;
+  clean: string;
+  constructor(original: string) {
+    this.original = original;
+    this.clean = LooseFilename.cleanPath(original)
+  }
+  public static cleanPath (path: string): string {
+    const slug = '-'; //perhaps a config would be a better choice;
+    return path
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "") //Remove accents
+      .replace(/[!"\#$%&'()*+,\-./:;<=>?@\[\\\]^_‘{|}~\s]+/gi, slug) //Normalise slugs
+      .toLowerCase() // lower
+      .replace(/[-_－＿ ]*$/g, ''); // removing trailing slug chars
+  }
+}
+/*
 function getOrInitializeIndexForId(index: Index, id: ID): Set<ID> {
   let links: Set<ID>;
   if (index.has(id)) {
@@ -43,6 +63,7 @@ function getOrInitializeIndexForId(index: Index, id: ID): Set<ID> {
 
   return links;
 }
+*/
 
 export class WorkspaceManager {
   /**
@@ -50,48 +71,32 @@ export class WorkspaceManager {
    */
   path: string;
   /**
-   * Note metadata for files in this workspace, keyed by id
+   * Note metadata for files in this workspace
    */
-  notes: Map<ID, Note> = new Map();
+  notes: Array<NoteWithLinks> = new Array();
 
-  /**
-   * Link index A->B
-   */
-  linksFromNoteById: Index = new Map();
-
-  /**
-   * Reverse backlinks B->A
-   */
-  linksBackToNoteById: Index = new Map();
-
-  constructor(path: string, notes: Note[] = []) {
+  constructor(path: string, notes: NoteWithLinks[] = []) {
     this.path = path;
-    this.notes = new Map<ID, Note>(notes.map(note => [note.clean, note]));
+    this.notes = notes;
   }
-
-  public getNoteWithLinks(id: ID): NoteWithLinks | null {
-    const note = this.notes.get(id);
-    if (!note) {
-      return null;
+  public findBestMatchIndex(file: LooseFilename): number {
+    let index = this.notes.findIndex(v => v.original === file.original);
+    if (index === -1) {
+      index = this.notes.findIndex(v => v.clean === file.clean)
     }
+    return index;
+  }
+  public findBestMatch (file: LooseFilename): NoteWithLinks | null {
+    return this.notes[this.findBestMatchIndex(file)];
+  }
+  public getNoteWithLinks(id: ID): NoteWithLinks | null {
+    const file = new LooseFilename(id);
 
-    const linkedNotes = Array.from(
-      getOrInitializeIndexForId(this.linksFromNoteById, id)
-    )
-      .map(id => this.notes.get(id))
-      .filter(Boolean) as Note[];
+    this.associateAllForwardLinks();
+    this.associateAllBacklinks();
 
-    const backlinks = Array.from(
-      getOrInitializeIndexForId(this.linksBackToNoteById, id)
-    )
-      .map(id => this.notes.get(id))
-      .filter(Boolean) as Note[];
-
-    return {
-      ...note,
-      linkedNotes,
-      backlinks,
-    };
+    return this.findBestMatch(file)!;
+    
   }
 
   /**
@@ -105,13 +110,7 @@ export class WorkspaceManager {
     );
   }
 
-  public cleanPath (path: string): string {
-    const slug = '-'; //perhaps a config would be a better choice;
-    return path
-      .replace(/[!"\#$%&'()*+,\-./:;<=>?@\[\\\]^_‘{|}~\s]+/gi, slug)
-      .toLowerCase() // lower
-      .replace(/[-_－＿ ]*$/g, ''); // removing trailing slug chars
-  }
+  
   
   public addNoteFromMarkdown(absolutePath: string, markdown: string): Note {
     // parse markdown
@@ -119,48 +118,74 @@ export class WorkspaceManager {
 
     const parts = filename.split('.');
     const extension = parts.pop()!;
-    const original = parts.join('.')
-    const clean = this.cleanPath(original);
+    const file = new LooseFilename(parts.join('.'))
+    
     const title = parseNoteTitleFromMarkdown(markdown);
-    const note: Note = {
-      clean,
-      original,
-      title: title || original,
+    const note: NoteWithLinks = {
+      ...file,
+      title: title || file.original,
       filename,
       absolutePath,
       extension,
       markdown,
+      linkedNotes: [],
+      backlinks: [],
     };
 
+    this.addOrUpdateNote(note);
     // extract linksTo
-    return this.addNote(note);
-  }
-
-  public addNote(note: Note): Note {
-    const linkIds = parseNoteLinksFromMarkdown(note.markdown).map(v => {
-      return {
-        original: v, 
-        clean: this.cleanPath(v)
-      }
-    });
-
-    this.notes.set(note.clean, note);
-
-    if (linkIds.length > 0) {
-      let linksFromNote = getOrInitializeIndexForId(
-        this.linksFromNoteById,
-        note.clean
-      );
-
-      for (const link of linkIds) {
-        linksFromNote.add(link.clean);
-        getOrInitializeIndexForId(this.linksBackToNoteById, link.clean).add(note.clean);
-      }
-    }
-
     return note;
   }
-
+  public reparseBacklinks(file: LooseFilename) {
+    this.notes = this.notes.map(note => {
+      note.backlinks = this.getBacklinksToThisFile(file)
+      return note;
+    })
+  }
+  public associateAllForwardLinks() {
+    this.notes = this.notes.map(note => {
+      note.linkedNotes = this.associateForwardlinks(note)
+      return note;
+    });
+  }
+  public associateForwardlinks(note: Note) : LooseFilename[] {
+    return parseNoteLinksFromMarkdown(note.markdown)
+      .map(v => new LooseFilename(v))
+      .map(v => this.findBestMatch(v))
+      .filter(v => !!v)
+      .map(v => {
+        return {
+          original: v!.original,
+          clean: v!.clean
+        }
+      });
+  }
+  
+  public associateAllBacklinks() {
+    this.notes = this.notes.map(note => {
+      note.backlinks = this.getBacklinksToThisFile(note)
+      return note;
+    });
+  }
+  public getBacklinksToThisFile(file: LooseFilename) : LooseFilename[] {
+    let arr:LooseFilename[] = [];
+    this.notes.forEach(note => {
+      if(note.linkedNotes.some(v => file.clean == v.clean)) {
+        arr.push(note)
+      }
+    })
+    return arr;
+  }
+  
+  public addOrUpdateNote(note: NoteWithLinks) {
+    let index = this.notes.findIndex(v=> v.original === note.original);
+    if(index !== -1) {
+      this.notes[index] = note;
+    } else {
+      this.notes.push(note);
+    }
+  }
+  
   /*
   // Clearly I'm too tired to do this right now
   public removeNote(a: ID): Note | null {

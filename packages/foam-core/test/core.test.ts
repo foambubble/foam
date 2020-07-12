@@ -67,6 +67,20 @@ describe('Note graph', () => {
     }).toThrow();
   });
 
+  it('Allows adding edges to non-existing documents', () => {
+    const graph = new NoteGraph();
+    graph.setNote(
+      new Note(
+        'page-a',
+        'page-a',
+        [{ to: 'non-existing', text: 'does not exist' }],
+        '/path-b.md',
+        ''
+      )
+    );
+    expect(graph.getNote('non-existing')).toBeUndefined();
+  });
+
   it('Updates links when modifying note', () => {
     const graph = new NoteGraph();
     graph.setNote(new Note('page-a', 'page-a', [], '/page-a.md', ''));

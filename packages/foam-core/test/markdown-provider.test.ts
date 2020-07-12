@@ -6,7 +6,7 @@ const pageA = `
 
 ## Section
 - [[page-b]]
-- [[page-c]];
+- [[page-c]]
 `;
 
 const pageB = `

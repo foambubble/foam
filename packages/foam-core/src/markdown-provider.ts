@@ -49,14 +49,34 @@ interface MarkdownReference {
 }
 
 export function createMarkdownReferences(
-  notes: NoteGraph,
+  graph: NoteGraph,
   noteId: string
 ): MarkdownReference[] {
-  const source = notes.getNote(noteId);
-  return notes
+  const source = graph.getNote(noteId);
+
+  // Should never occur since we're already in a file,
+  // but better safe than sorry.
+  if (!source) {
+    console.warn(
+      `Note ${noteId} was not added to NoteGraph before attempting to generate markdown reference list`
+    );
+    return [];
+  }
+
+  return graph
     .getForwardLinks(noteId)
     .map(link => {
-      const target = notes.getNote(link.to);
+      const target = graph.getNote(link.to);
+
+      // We are dropping links to non-existent notes here,
+      // but int the future we may want to surface these too
+      if (!target) {
+        console.log(
+          `Link '${link.to}' in '${noteId}' points to a non-existing note.`
+        );
+        return null;
+      }
+
       const relativePath = path.relative(
         path.dirname(source.path),
         target.path
@@ -70,5 +90,6 @@ export function createMarkdownReferences(
         pageTitle: target.title,
       };
     })
-    .sort();
+    .filter(Boolean)
+    .sort() as MarkdownReference[];
 }

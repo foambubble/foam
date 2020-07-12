@@ -147,7 +147,6 @@ async function generateReferenceList(doc: TextDocument): Promise<string[]> {
   );
 
   if (references.length) {
-    // references.sort();
     return [REFERENCE_HEADER, ...references, REFERENCE_FOOTER];
   }
 

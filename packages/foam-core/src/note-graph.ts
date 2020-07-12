@@ -58,7 +58,7 @@ export class NoteGraph {
     return this.graph.nodes().map(id => this.graph.node(id));
   }
 
-  public getNote(noteId: ID): Note {
+  public getNote(noteId: ID): Note | void {
     if (this.graph.hasNode(noteId)) {
       return this.graph.node(noteId);
     }

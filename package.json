@@ -13,7 +13,8 @@
     "watch": "yarn workspace foam-vscode watch"
   },
   "devDependencies": {
-    "all-contributors-cli": "^6.16.1"
+    "all-contributors-cli": "^6.16.1",
+    "lerna": "^3.22.1"
   },
   "engines": {
     "node": ">=10"

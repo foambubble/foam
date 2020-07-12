@@ -1,4 +1,4 @@
-import { EndOfLine, Range, TextDocument, window, Position } from "vscode";
+import { EndOfLine, Range, TextDocument, window, Position, TextEditor } from "vscode";
 
 export const docConfig = { tab: "  ", eol: "\r\n" };
 
@@ -24,6 +24,10 @@ export function loadDocConfig() {
   } else {
     docConfig.tab = "\t";
   }
+}
+
+export function isMdEditor(editor: TextEditor) {
+  return editor && editor.document && editor.document.languageId === "markdown";
 }
 
 export function detectGeneratedCode(

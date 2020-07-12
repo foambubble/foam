@@ -1,5 +1,11 @@
 # foam-vscode
 
+[![Version](https://vsmarketplacebadge.apphb.com/version/foam.foam-vscode.svg)](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode)
+[![Downloads](https://img.shields.io/visual-studio-marketplace/d/foam.foam-vscode)](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode)
+[![Installs](https://img.shields.io/visual-studio-marketplace/i/foam.foam-vscode)](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode)
+[![Ratings](https://img.shields.io/visual-studio-marketplace/r/foam.foam-vscode)](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode)
+
+
 **foam-vscode** is the VS Code extension for [Foam](https://foambubble.github.io/foam).
 
 > ℹ️ foam-vscode doesn't do much on it's own. To learn how to use it, read [Foam documentation](https://foambubble.github.io/foam) and the [Getting started](https://foambubble.github.io/foam/#getting-started) guide.

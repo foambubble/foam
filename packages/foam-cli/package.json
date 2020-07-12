@@ -1,7 +1,7 @@
 {
   "name": "foam-cli",
   "description": "Foam CLI",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": "Jani Eväkallio @jevakallio",
   "bin": {
     "foam": "./bin/run"
@@ -23,10 +23,10 @@
     "globby": "^10",
     "ts-node": "^8",
     "typescript": "^3.3",
-    "foam-core": "^0.1.1"
+    "foam-core": "^0.2.0"
   },
   "peerDependencies": {
-    "foam-core": "^0.1.1"
+    "foam-core": "^0.2.0"
   },
   "engines": {
     "node": ">=8.0.0"

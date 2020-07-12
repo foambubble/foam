@@ -4,6 +4,22 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.2.0] - 2020-07-12
+
+Improvements:
+
+- Order link references alphabetically to cause smaller diffs
+- Remove link references when links are removed
+- Documentation improvements
+
+Underneath, everything has changed:
+
+- Published from [Foam monorepo](https://github.com/foambubble/foam)
+- Rewrote markdown parsing to use unifiedjs AST
+- Rewrote workspace index to user graphlib graph data structures
+
+These changes will enable to make more robust and ambitious releases more frequently 🎉
+
 ## [0.1.7] - 2020-07-04
 
 - Support paths to files in subdirectories
@@ -19,7 +35,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 ## [0.1.4] - 2020-06-25
 
 - Fix flaky reference block replacement logic that would occasionally leave
-trailing fragments in the end of the document ([#3](https://github.com/foambubble/foam-vscode/issues/3))
+  trailing fragments in the end of the document ([#3](https://github.com/foambubble/foam-vscode/issues/3))
 
 ## 0.1.3 - 2020-06-25
 

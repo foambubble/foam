@@ -19,7 +19,7 @@ $ npm install -g foam-cli
 $ foam COMMAND
 running command...
 $ foam (-v|--version|version)
-foam-cli/0.1.0 darwin-x64 node-v12.18.0
+foam-cli/0.2.0-alpha.0 darwin-x64 node-v12.18.0
 $ foam --help [COMMAND]
 USAGE
   $ foam COMMAND
@@ -49,7 +49,7 @@ EXAMPLE
   hello world from ./src/hello.ts!
 ```
 
-_See code: [src/commands/hello.ts](https://github.com/foambubble/foam/blob/v0.1.0/src/commands/hello.ts)_
+_See code: [src/commands/hello.ts](https://github.com/foambubble/foam/blob/v0.2.0-alpha.0/src/commands/hello.ts)_
 
 ## `foam help [COMMAND]`
 

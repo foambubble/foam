@@ -20,10 +20,10 @@
     "eslint": "^5.13",
     "eslint-config-oclif": "^3.1",
     "eslint-config-oclif-typescript": "^0.1",
+    "foam-core": "^0.2.0",
     "globby": "^10",
     "ts-node": "^8",
-    "typescript": "^3.3",
-    "foam-core": "^0.2.0"
+    "typescript": "^3.3"
   },
   "peerDependencies": {
     "foam-core": "^0.2.0"

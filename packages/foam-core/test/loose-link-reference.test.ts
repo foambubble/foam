@@ -1,17 +1,16 @@
-import { LooseLinkReference } from '../src/note-graph';
-
+import {LooseLinkReference} from '../src/LooseLinkReference'
 describe('LooseLinkReference', () => {
-    it('Will match based on different use of accents', () => {
+    it('Will match based on different use of accents, punctuation and capitalization differences', () => {
         const listOfFiles = [
-            new LooseLinkReference('zoë')
+            new LooseLinkReference('Zoë File')
         ];
 
         expect(
             LooseLinkReference.findBestMatch(
                 listOfFiles, 
-                new LooseLinkReference('zoe')
+                new LooseLinkReference('zoe-file')
             ).original
-        ).toEqual('zoë');
+        ).toEqual('Zoë File');
     });
 
     it('Will match against exactly matches in preference of loose matches', () => {

@@ -146,7 +146,12 @@ async function generateReferenceList(doc: TextDocument): Promise<string[]> {
     )
   );
 
-  return [REFERENCE_HEADER, ...references, REFERENCE_FOOTER];
+  if (references.length) {
+    // references.sort();
+    return [REFERENCE_HEADER, ...references, REFERENCE_FOOTER];
+  }
+
+  return [];
 }
 
 /**

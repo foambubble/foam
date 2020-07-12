@@ -12,14 +12,14 @@ import {
   TextDocumentWillSaveEvent,
   window,
   workspace,
-  Position,
+  Position
 } from "vscode";
 
 export const docConfig = { tab: "  ", eol: "\r\n" };
 
 export const mdDocSelector = [
   { language: "markdown", scheme: "file" },
-  { language: "markdown", scheme: "untitled" },
+  { language: "markdown", scheme: "untitled" }
 ];
 
 export function loadDocConfig() {
@@ -41,16 +41,20 @@ export function loadDocConfig() {
   }
 }
 
-export function detectGeneratedCode(fullText: string, header: string, footer: string): {range: Range | null, lines: string[]} {
-  const lines = fullText.split(docConfig.eol)
+export function detectGeneratedCode(
+  fullText: string,
+  header: string,
+  footer: string
+): { range: Range | null; lines: string[] } {
+  const lines = fullText.split(docConfig.eol);
 
-  const headerLine = lines.findIndex(line => line === header)
-  const footerLine = lines.findIndex(line => line === footer)
+  const headerLine = lines.findIndex(line => line === header);
+  const footerLine = lines.findIndex(line => line === footer);
 
   if (headerLine < 0 || headerLine >= footerLine) {
     return {
       range: null,
-      lines: [],
+      lines: []
     };
   }
 
@@ -59,8 +63,8 @@ export function detectGeneratedCode(fullText: string, header: string, footer: st
       new Position(headerLine, 0),
       new Position(footerLine, lines[footerLine].length + 1)
     ),
-    lines: lines.slice(headerLine + 1, footerLine + 1),
-  }
+    lines: lines.slice(headerLine + 1, footerLine + 1)
+  };
 }
 
 export function hasEmptyTrailing(doc: TextDocument): boolean {

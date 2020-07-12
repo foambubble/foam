@@ -4,7 +4,7 @@
  */
 "use strict";
 
-import { uniq } from 'lodash'
+import { uniq } from "lodash";
 import {
   CancellationToken,
   CodeLens,
@@ -19,13 +19,13 @@ import {
   TextDocumentWillSaveEvent,
   window,
   workspace,
-  Position,
+  Position
 } from "vscode";
 
-import { createMarkdownReferences, createNoteFromMarkdown } from 'foam-core'
+import { createMarkdownReferences, createNoteFromMarkdown } from "foam-core";
 import { basename, dirname, relative } from "path";
 import * as ws from "./workspace";
-import { config } from 'process';
+import { config } from "process";
 
 /**
  * Workspace config
@@ -33,7 +33,7 @@ import { config } from 'process';
 const docConfig = { tab: "  ", eol: "\r\n" };
 const mdDocSelector = [
   { language: "markdown", scheme: "file" },
-  { language: "markdown", scheme: "untitled" },
+  { language: "markdown", scheme: "untitled" }
 ];
 
 function loadDocConfig() {
@@ -67,9 +67,9 @@ export function activate(context: ExtensionContext) {
       ),
       workspace.onWillSaveTextDocument(e => {
         if (e.document.languageId === "markdown") {
-          foam.setNote(createNoteFromMarkdown(
-            e.document.fileName, e.document.getText()
-          ));
+          foam.setNote(
+            createNoteFromMarkdown(e.document.fileName, e.document.getText())
+          );
           e.waitUntil(updateReferenceList());
         }
       }),
@@ -78,7 +78,7 @@ export function activate(context: ExtensionContext) {
         new WikilinkReferenceCodeLensProvider()
       )
     );
-  })
+  });
 }
 
 async function createReferenceList() {
@@ -89,7 +89,7 @@ async function createReferenceList() {
 
   let refs = await generateReferenceList(editor.document);
   if (refs && refs.length) {
-    await editor.edit(function (editBuilder) {
+    await editor.edit(function(editBuilder) {
       if (editor) {
         const spacing = hasEmptyTrailing
           ? docConfig.eol
@@ -126,7 +126,7 @@ async function updateReferenceList() {
       ? ""
       : docConfig.eol;
 
-    await editor.edit((editBuilder) => {
+    await editor.edit(editBuilder => {
       editBuilder.replace(range, spacing + refs.join(docConfig.eol));
     });
   }
@@ -140,8 +140,11 @@ async function generateReferenceList(doc: TextDocument): Promise<string[]> {
   // @todo fix hack
   const foam = await ws.ready;
 
-  const references = uniq(createMarkdownReferences(foam, id)
-    .map(link => `[${link.linkText}]: ${link.wikiLink} "${link.pageTitle}"`))
+  const references = uniq(
+    createMarkdownReferences(foam, id).map(
+      link => `[${link.linkText}]: ${link.wikiLink} "${link.pageTitle}"`
+    )
+  );
 
   return [REFERENCE_HEADER, ...references, REFERENCE_FOOTER];
 }
@@ -206,7 +209,7 @@ class WikilinkReferenceCodeLensProvider implements CodeLensProvider {
       return [];
     }
 
-    return generateReferenceList(document).then((refs) => {
+    return generateReferenceList(document).then(refs => {
       const oldRefs = getText(range).replace(/\r?\n|\r/g, docConfig.eol);
       const newRefs = refs.join(docConfig.eol);
 
@@ -216,8 +219,8 @@ class WikilinkReferenceCodeLensProvider implements CodeLensProvider {
         new CodeLens(range, {
           arguments: [],
           title: `Link references (${status})`,
-          command: "",
-        }),
+          command: ""
+        })
       ];
     });
   }

@@ -126,6 +126,9 @@ If that sounds like something you're interested in, I'd love to have you along o
   <tr>
     <td align="center"><a href="https://styfle.dev/"><img src="https://avatars1.githubusercontent.com/u/229881?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Steven</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=styfle" title="Documentation">📖</a></td>
     <td align="center"><a href="https://github.com/Georift"><img src="https://avatars2.githubusercontent.com/u/859430?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Tim</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=Georift" title="Documentation">📖</a></td>
+    <td align="center"><a href="https://github.com/sauravkhdoolia"><img src="https://avatars1.githubusercontent.com/u/34188267?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Saurav Khdoolia</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=sauravkhdoolia" title="Documentation">📖</a></td>
+    <td align="center"><a href="https://anku.netlify.com/"><img src="https://avatars1.githubusercontent.com/u/22813027?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Ankit Tiwari</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=anku255" title="Documentation">📖</a> <a href="https://github.com/foambubble/foam/commits?author=anku255" title="Tests">⚠️</a></td>
+    <td align="center"><a href="https://github.com/ayushbaweja"><img src="https://avatars1.githubusercontent.com/u/44344063?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Ayush Baweja</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=ayushbaweja" title="Documentation">📖</a></td>
   </tr>
 </table>
 

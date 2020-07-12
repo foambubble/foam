@@ -158,6 +158,34 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "sauravkhdoolia",
+      "name": "Saurav Khdoolia",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/34188267?v=4",
+      "profile": "https://github.com/sauravkhdoolia",
+      "contributions": [
+        "doc"
+      ]
+    },
+    {
+      "login": "anku255",
+      "name": "Ankit Tiwari",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/22813027?v=4",
+      "profile": "https://anku.netlify.com/",
+      "contributions": [
+        "doc",
+        "test"
+      ]
+    },
+    {
+      "login": "ayushbaweja",
+      "name": "Ayush Baweja",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/44344063?v=4",
+      "profile": "https://github.com/ayushbaweja",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7

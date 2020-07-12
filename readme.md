@@ -1,16 +1,13 @@
-<p class="github-only">
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
 [![All Contributors](https://img.shields.io/badge/all_contributors-16-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
-<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-0-orange.svg?style=flat-square)](#contributors-)
-<!-- ALL-CONTRIBUTORS-BADGE:END -->
-    👋 <b>Hello friend! Looks like you're reading this page on GitHub. Please go to the 👉<a href="https://foambubble.github.io/foam">rendered Foam Workspace</a> for an improved experience! </b>
-</p>
 
-<p class="github-only">
-   👀<i>This is an early stage project under rapid development. For updates follow <a href="https://twitter.com/jevakallio" target="_blank">@jevakallio</a> on Twitter, or join the <a href="https://discord.gg/rtdZKgj" target="_blank">Foam community Discord</a>! 💬</i>
-</p>
+
+👋 <b>Hello friend! Looks like you're reading this page on GitHub. Please go to the 👉<a href="https://foambubble.github.io/foam">rendered Foam Workspace</a> for an improved experience! </b>
+
+
+👀<i>This is an early stage project under rapid development. For updates follow <a href="https://twitter.com/jevakallio" target="_blank">@jevakallio</a> on Twitter, or join the <a href="https://discord.gg/rtdZKgj" target="_blank">Foam community Discord</a>! 💬</i>
+
 
 # Foam
 

@@ -12,7 +12,7 @@ Foam is open to contributions of any kind, including but not limited to code, do
 - Foam code and documentation live in the monorepo at [foambubble/foam](https://github.com/foambubble/foam/)
   - [/docs](https://github.com/foambubble/foam/docs): documentation and [[recipes]]
   - [/packages/foam-vscode](https://github.com/foambubble/foam/tree/master/packages/foam-vscode): the core VSCode plugin
-  - [/packages/foam-workspace-manager](https://github.com/foambubble/foam/tree/master/packages/foam-workspace-manager): Foam workspace automations
+  - [/packages/foam-core](https://github.com/foambubble/foam/tree/master/packages/foam-core): powers the core functionality in Foam across all platforms
 - Exceptions to the monorepo are:
   - The starter template at [foambubble/foam-template](https://github.com/foambubble/)
   - All other [[recommended-extensions]] live in their respective GitHub repos.
@@ -29,9 +29,9 @@ If you're interested in contributing to the VS Code extension (aka `foam-vscode`
 
    `yarn install`
 
-3. This project uses [Yarn workspaces](https://classic.yarnpkg.com/en/docs/workspaces/).`foam-vscode` relies on `foam-workspace-manager`. This means we need to compile it before we do any extension development. From the root, run the command:
+3. This project uses [Yarn workspaces](https://classic.yarnpkg.com/en/docs/workspaces/).`foam-vscode` relies on `foam-core`. This means we need to compile it before we do any extension development. From the root, run the command:
 
-   `yarn workspace foam-workspace-manager build`
+   `yarn workspace foam-core build`
 
 4. Now we'll use the launch configuration defined at [`.vscode/launch.json`](https://github.com/foambubble/foam/blob/master/.vscode/launch.json) to start a new extension host of VS Code. From the root, or the `foam-vscode` workspace, press f5.
 5. In the new extension host of VS Code that launched, open a Foam workspace (e.g. your personal one, or a test-specific one created from foam-template). This is strictly not necessary, but the extension won't auto-run unless it's in a workspace with a `.vscode/foam.json` file.

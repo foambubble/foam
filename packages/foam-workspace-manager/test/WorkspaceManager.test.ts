@@ -45,7 +45,7 @@ describe('WorkspaceManager', () => {
     expect(note!.backlinks.map(n => n.clean)).toEqual(['page-b']);
   });
 
-  it('links things correctly when the original file has different capitalization', () => {
+  it('links things correctly when the original file has different capitalisation', () => {
     const ws = new WorkspaceManager('dir/');
 
     const original = `Link to [[new-file]]`;
@@ -75,7 +75,7 @@ describe('WorkspaceManager', () => {
     expect(note!.linkedNotes.map(n => n.clean)).toEqual(['new-file']);
   });
 
-  it('Links with a lose accent match', () => {
+  it('links with a loose accent match', () => {
     const ws = new WorkspaceManager('dir/');
 
     ws.addNoteFromMarkdown('original.md', `Link to [[Zoë]]`);
@@ -87,7 +87,7 @@ describe('WorkspaceManager', () => {
     expect(note!.linkedNotes.map(n => n.clean)).toEqual(['zoe']);
   });
 
-  it('Links to the most specific match', () => {
+  it('links to the most specific match', () => {
     const ws = new WorkspaceManager('dir/');
 
     ws.addNoteFromMarkdown('original.md', `Link to [[Zoë]]`);
@@ -100,7 +100,24 @@ describe('WorkspaceManager', () => {
     expect(note!.linkedNotes.map(n => n.original)).toEqual(['Zoë']);
   });
 
-  it('Backlinks with a lose accent match', () => {
+  it('backlinks with a specific accent match', () => {
+    const ws = new WorkspaceManager('dir/');
+
+    ws.addNoteFromMarkdown('original.md', `Link to [[Zoë]]`);
+    ws.addNoteFromMarkdown('zoe.md', `# LooseZoe`);
+    ws.addNoteFromMarkdown('Zoë.md', `# SpecificZoë`);
+    
+    const loose = ws.getNoteWithLinks('zoe');
+    const specific = ws.getNoteWithLinks('Zoë');
+
+    expect(specific!.title).toEqual('SpecificZoë');
+    expect(loose!.title).toEqual('LooseZoe');
+    expect(specific!.backlinks.map(n => n.clean)).toEqual(['original']);
+    expect(loose!.backlinks.map(n => n.clean)).toEqual([]);
+
+  });
+
+  it('backlinks with a loose accent match', () => {
     const ws = new WorkspaceManager('dir/');
 
     ws.addNoteFromMarkdown('original.md', `Link to [[Zoë]]`);
@@ -163,7 +180,7 @@ describe('WorkspaceManager', () => {
     expect(before).not.toEqual(after);
     expect(after).toEqual(['has-link', 'add-link']);
   });
-  /*
+  
   it('updates links correctly when page is removed', () => {
     const ws = new WorkspaceManager('dir/');
 
@@ -176,10 +193,9 @@ describe('WorkspaceManager', () => {
 
     const note = ws.getNoteWithLinks('page-a');
 
-    console.log(note);
     expect(note).not.toBeNull();
-    expect(note!.linkedNotes.map(n => n.id)).toEqual(['page-b']);
-    expect(note!.backlinks.map(n => n.id)).toEqual(['page-b']);
+    expect(note!.linkedNotes.map(n => n.clean)).toEqual(['page-b']);
+    expect(note!.backlinks.map(n => n.clean)).toEqual(['page-b']);
   });
-  */
+  
 });

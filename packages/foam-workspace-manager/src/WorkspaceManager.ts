@@ -169,30 +169,13 @@ export class WorkspaceManager {
     }
   }
 
-  /*
-  // Clearly I'm too tired to do this right now
-  public removeNote(a: ID): Note | null {
-    let note = this.notes.get(a);
+  
+  public removeNote(note: ID) {
     if (!note) {
       return null;
     }
-
-    // find references from this note to others
-    let linksFromNote = getOrInitializeIndexForId(this.linksFromNoteById, a);
-
-    // remove the index
-    this.linksFromNoteById.delete(a);
-
-    // find all notes that reference the note we are deleting
-    for (const b in linksFromNote) {
-      const backlinks = getOrInitializeIndexForId(this.linksBackToNoteById, b);
-      if (backlinks.has(a)) {
-        // @todo, trigger event?
-        backlinks.delete(a);
-      }
-    }
-
-    return note;
+    this.notes = this.notes.filter(v => v.original !== note);
+    return true;
   }
   
 
@@ -200,5 +183,4 @@ export class WorkspaceManager {
   public renameNote(note: Note, newFilename: string) {
     throw new Error('Not implemented');
   }
-  */
 }

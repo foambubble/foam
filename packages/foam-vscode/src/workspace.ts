@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import { basename } from "path";
 import { workspace } from "vscode";
-import { NoteGraph, createNoteFromMarkdown } from "@foam/core";
+import { NoteGraph, createNoteFromMarkdown } from "foam-core";
 
 // build initial index
 export const ready = (async () => {

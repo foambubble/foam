@@ -1,5 +1,5 @@
 import {Command, flags} from '@oclif/command'
-import { NoteGraph } from '@foam/core';
+import { NoteGraph } from 'foam-core';
 export default class Hello extends Command {
   static description = 'describe the command here'
 
@@ -23,19 +23,19 @@ hello world from ./src/hello.ts!
     const {args, flags} = this.parse(Hello)
     const name = flags.name ?? 'world'
 
-    const wm = new NoteGraph();
-    wm.addNoteFromMarkdown('page-a.md', `
-# Page A
-## Section
-- [[page-b]]
-- [[page-c]];
-    `);
+//     const wm = new NoteGraph();
+//     wm.addNoteFromMarkdown('page-a.md', `
+// # Page A
+// ## Section
+// - [[page-b]]
+// - [[page-c]];
+//     `);
 
-    wm.addNoteFromMarkdown('page-a.md', `
-# Page B
-This references [[page-a]]`);
+//     wm.addNoteFromMarkdown('page-a.md', `
+// # Page B
+// This references [[page-a]]`);
 
-    console.log(wm.getNoteWithLinks('page-a'));
+//     console.log(wm.getNoteWithLinks('page-a'));
 
 
 

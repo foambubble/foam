@@ -72,25 +72,49 @@ The potential solution:
     - This would be a GitHub action (or a local script, ran via foam-cli) that outputs publish-friendly markdown format for static site generators and other publishing tools
     - This build step should be pluggable, so that other transformations could be ran during it
   - Have publish targets defined in settings, that support both turning the link reference definitions on/off and defining their format (.md or not). Example draft (including also edit-time aspect):
-    ```json
+    ```typescript
+    // settings json:
     {
       "foam": {
         "publish": [
-          {"Gitlab Mirror": { "linkRefDefs": "withExtension" }},
-          {"GitHub Pages": { "linkRefDefs": "withoutExtension" }},
-          {"My Amazing PDF book": { "linkRefDefs": "off" }}
+          {"Gitlab Mirror": {
+            "wikiLinks": true,
+            "linkRefDefs": "withExtensions"
+          }},
+          {"GitHub Pages": { 
+            "wikiLinks": true,
+            "linkRefDefs": "withoutExtensions"
+          }},
+          {"Blog": { 
+            "wikiLinks": true,
+            "linkRefDefs": "off"
+          }},
+          // the following would cause inline-transpilation
+          {"My Amazing PDF book": {
+            "wikiLinks": false
+          }}
         ],
         "edit": {
-          "linkRefDefs": "off",
+          "linkRefDefs": "off"
         }
       }
     }
+    
+    // type definition
+    enum LinkRefDefs {
+      WithExtensions,
+      WithoutExtensions,
+      Off
+    }
+
     ```
   - With Foam repo, just use edit-time link reference definitions with '.md' extension - this makes the links work in the Github UI
   - Have publish target defined for Github pages, that doesn't use '.md' extension, but still has the link reference definitions. Generate the output into gh-pages branch (or separate repo) with automation.
     - This naturally requires first removing the existing link reference definitions during the build
 - Other
   - To clean up the search results, remove link reference definition section guards (assuming that these are not defined by the markdown spec). Use unifiedjs parse trees to identify if there's missing (or surplus) definitions (check if they are identified properly by the library), and just add the needed definitions to the bottom of the file (without guards) AND remove them if they are not needed (anywhere from the file).
+
+Note that the proposal above supports both (build-time) inline transpilation of wikilinks as well as creation reference definitions. Depending on the direction of Foam, also only one of them could be selected. In that case the other could be implemented at later point of time.
 
 ## Links
 

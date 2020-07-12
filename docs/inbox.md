@@ -1,12 +1,16 @@
 # Inbox
 
-Uncategorised thoughts
+Uncategorised thoughts, to be added
 
 - Release notes
 - Automatic updates
 - Markdown Preview
   - It's possible to customise the markdown preview styling. **Maybe make it use local foam workspace styles for live preview of the site??**
     - See: https://marketplace.visualstudio.com/items?itemName=bierner.markdown-preview-github-styles
+- Use VS Code [CodeTour](https://marketplace.visualstudio.com/items?itemName=vsls-contrib.codetour) for onboarding
+- Investigate other similar extensions:
+  - [Unotes](https://marketplace.visualstudio.com/items?itemName=ryanmcalister.Unotes)
+  - [vscode-memo](https://github.com/svsool/vscode-memo)
 - Foam as a (VS Code) language
   - Syntax highlighting
   - Autocompletion

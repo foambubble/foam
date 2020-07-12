@@ -1,4 +1,4 @@
-import { NoteGraph, Note } from '../src/core'
+import { NoteGraph, Note } from '../src/note-graph'
 
 describe('Note graph', () => {
   it('Adds notes to graph', () => {

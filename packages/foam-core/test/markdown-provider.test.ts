@@ -1,5 +1,5 @@
 import { createNoteFromMarkdown } from "../src/markdown-provider";
-import { NoteGraph } from "../src/core";
+import { NoteGraph } from "../src/note-graph";
 
 const pageA = `
 # Page A

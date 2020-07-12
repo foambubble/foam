@@ -4,7 +4,7 @@ import wikiLinkPlugin from 'remark-wiki-link';
 import visit, { CONTINUE, EXIT } from 'unist-util-visit';
 import { Node, Parent } from 'unist';
 import * as path from 'path';
-import { Link, Note, NoteGraph } from './core';
+import { Link, Note, NoteGraph } from './note-graph';
 import { dropExtension } from './utils';
 
 let processor: unified.Processor | null = null;

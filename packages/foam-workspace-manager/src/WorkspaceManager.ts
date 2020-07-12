@@ -52,18 +52,6 @@ export class LooseFilename implements ILooseFilename {
       .replace(/[-_－＿ ]*$/g, ''); // removing trailing slug chars
   }
 }
-/*
-function getOrInitializeIndexForId(index: Index, id: ID): Set<ID> {
-  let links: Set<ID>;
-  if (index.has(id)) {
-    links = index.get(id)!;
-  } else {
-    index.set(id, (links = new Set<ID>()));
-  }
-
-  return links;
-}
-*/
 
 export class WorkspaceManager {
   /**
@@ -136,12 +124,7 @@ export class WorkspaceManager {
     // extract linksTo
     return note;
   }
-  public reparseBacklinks(file: LooseFilename) {
-    this.notes = this.notes.map(note => {
-      note.backlinks = this.getBacklinksToThisFile(file)
-      return note;
-    })
-  }
+
   public associateAllForwardLinks() {
     this.notes = this.notes.map(note => {
       note.linkedNotes = this.associateForwardlinks(note)
@@ -185,7 +168,7 @@ export class WorkspaceManager {
       this.notes.push(note);
     }
   }
-  
+
   /*
   // Clearly I'm too tired to do this right now
   public removeNote(a: ID): Note | null {

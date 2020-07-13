@@ -1,4 +1,5 @@
 import { Graph, Edge } from 'graphlib';
+import { Position } from 'unist';
 
 type ID = string;
 
@@ -11,6 +12,7 @@ export interface Link {
 export interface NoteLink {
   to: ID;
   text: string;
+  position: Position;
 }
 
 export class Note {

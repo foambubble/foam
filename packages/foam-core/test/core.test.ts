@@ -1,5 +1,10 @@
 import { NoteGraph, Note } from '../src/note-graph';
 
+const position = {
+  start: { line: 0, column: 0},
+  end: { line: 0, column: 0}
+};
+
 describe('Note graph', () => {
   it('Adds notes to graph', () => {
     const graph = new NoteGraph();
@@ -22,7 +27,7 @@ describe('Note graph', () => {
       new Note(
         'page-b',
         'page-b',
-        [{ to: 'page-a', text: 'go' }],
+        [{ to: 'page-a', text: 'go', position }],
         '/page-b.md',
         ''
       )
@@ -44,7 +49,7 @@ describe('Note graph', () => {
       new Note(
         'page-b',
         'page-b',
-        [{ to: 'page-a', text: 'go' }],
+        [{ to: 'page-a', text: 'go', position }],
         '/page-b.md',
         ''
       )
@@ -73,7 +78,7 @@ describe('Note graph', () => {
       new Note(
         'page-a',
         'page-a',
-        [{ to: 'non-existing', text: 'does not exist' }],
+        [{ to: 'non-existing', text: 'does not exist', position }],
         '/path-b.md',
         ''
       )
@@ -88,7 +93,7 @@ describe('Note graph', () => {
       new Note(
         'page-b',
         'page-b',
-        [{ to: 'page-a', text: 'go' }],
+        [{ to: 'page-a', text: 'go', position }],
         '/page-b.md',
         ''
       )
@@ -118,7 +123,7 @@ describe('Note graph', () => {
       new Note(
         'page-b',
         'page-b',
-        [{ to: 'page-c', text: 'go' }],
+        [{ to: 'page-c', text: 'go', position }],
         '/path-2b.md',
         ''
       )

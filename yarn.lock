@@ -4749,18 +4749,6 @@ flush-write-stream@^1.0.0:
     inherits "^2.0.3"
     readable-stream "^2.3.6"
 
-foam-core@0.2.0-alpha.0:
-  version "0.2.0-alpha.0"
-  resolved "https://registry.yarnpkg.com/foam-core/-/foam-core-0.2.0-alpha.0.tgz#41377dd1280aca370f4ef046d6e4b27fadd9a35a"
-  integrity sha512-PNqRsDJILU233WJuooyo/pxXT3G7gSeH/omD2b7AmJvGtHGhuX7csY32iwmWoh1aVoGN5pAhSW4wM/CX45MgFw==
-  dependencies:
-    graphlib "^2.1.8"
-    lodash "^4.17.15"
-    remark-parse "^8.0.2"
-    remark-wiki-link "^0.0.4"
-    unified "^9.0.0"
-    unist-util-visit "^2.0.2"
-
 for-in@^1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/for-in/-/for-in-1.0.2.tgz#81068d295a8142ec0ac726c6e2200c30fb6d5e80"
@@ -9692,7 +9680,7 @@ typedarray@^0.0.6:
   resolved "https://registry.yarnpkg.com/typedarray/-/typedarray-0.0.6.tgz#867ac74e3864187b1d3d47d996a78ec5c8830777"
   integrity sha1-hnrHTjhkGHsdPUfZlqeOxciDB3c=
 
-typescript@^3.3, typescript@^3.7.3, typescript@^3.8.3, typescript@^3.9.5:
+typescript@^3.3, typescript@^3.7.3, typescript@^3.8.3, typescript@^3.9.5, typescript@^3.9.6:
   version "3.9.6"
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-3.9.6.tgz#8f3e0198a34c3ae17091b35571d3afd31999365a"
   integrity sha512-Pspx3oKAPJtjNwE92YS05HQoY7z2SFyOpHo9MqJor3BXAGNaPUs83CuVp9VISFkSjyRfiTpmKuAYGJB7S7hOxw==

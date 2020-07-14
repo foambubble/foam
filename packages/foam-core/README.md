@@ -1,6 +1,6 @@
-# Foam Workspace Manager
+# Foam Core
 
-Repository for tooling user for managing Foam workspaces
+Repository for tooling used by the other modules
 
 ## Local Development
 

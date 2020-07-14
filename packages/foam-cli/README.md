@@ -19,7 +19,7 @@ $ npm install -g foam-cli
 $ foam COMMAND
 running command...
 $ foam (-v|--version|version)
-foam-cli/0.1.0 darwin-x64 node-v12.18.0
+foam-cli/0.2.0 darwin-x64 node-v12.18.0
 $ foam --help [COMMAND]
 USAGE
   $ foam COMMAND
@@ -49,7 +49,7 @@ EXAMPLE
   hello world from ./src/hello.ts!
 ```
 
-_See code: [src/commands/hello.ts](https://github.com/foambubble/foam/blob/v0.1.0/src/commands/hello.ts)_
+_See code: [src/commands/hello.ts](https://github.com/foambubble/foam/blob/v0.2.0/src/commands/hello.ts)_
 
 ## `foam help [COMMAND]`
 
@@ -73,5 +73,5 @@ _See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v3.1.0
 
 - Run `yarn` somewhere in workspace (ideally root, see [yarn workspace docs](https://classic.yarnpkg.com/en/docs/workspaces/)
   - This will automatically symlink all package directories so you're using the local copy
-- In `packages/foam-workspace-manager`, run `yarn start` to rebuild the library on every change
+- In `packages/foam-core`, run `yarn start` to rebuild the library on every change
 - In `packages/foam-cli`, make changes and run with `yarn run cli`. This should use latest workspace manager changes.

@@ -1,6 +1,6 @@
 {
   "name": "foam",
-  "version": "0.0.1",
+  "version": "0.2.0",
   "description": "Foam",
   "repository": "git@github.com:foambubble/foam.git",
   "author": "Jani Eväkallio <jani.evakallio@gmail.com>",
@@ -13,6 +13,21 @@
     "watch": "yarn workspace foam-vscode watch"
   },
   "devDependencies": {
-    "all-contributors-cli": "^6.16.1"
+    "all-contributors-cli": "^6.16.1",
+    "lerna": "^3.22.1"
+  },
+  "engines": {
+    "node": ">=10"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "tsdx lint"
+    }
+  },
+  "prettier": {
+    "printWidth": 80,
+    "semi": true,
+    "singleQuote": true,
+    "trailingComma": "es5"
   }
 }

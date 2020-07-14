@@ -1,0 +1,30 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "include": ["src", "types"],
+  "compilerOptions": {
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    // to override config from tsconfig.base.json
+    "outDir": "dist",
+    "rootDir": "./src",
+    // for references
+    "baseUrl": "src",
+    "lib": ["esnext"],
+
+    "module": "esnext",
+    "importHelpers": true,
+    "sourceMap": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "moduleResolution": "node",
+    "esModuleInterop": true
+    // "paths": {
+    //   "*": ["src/*", "node_modules/*"]
+    // },
+    // "jsx": "react",
+  },
+}

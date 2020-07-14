@@ -13,7 +13,6 @@ export function dropExtension(path: string): string {
   return parts.join('.');
 }
 
-
 /**
  * 
  * @param filename 

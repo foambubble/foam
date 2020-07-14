@@ -1,3 +1,7 @@
+---
+layout: mathjax
+---
+
 # Math Support
 
 The published pages don't support math formulas by default. To enable this feature, you can add the following code snippet to the end of `_layouts/page.html`:

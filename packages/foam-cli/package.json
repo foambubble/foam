@@ -11,6 +11,7 @@
     "@oclif/command": "^1",
     "@oclif/config": "^1",
     "@oclif/plugin-help": "^3",
+    "ora": "^4.0.4",
     "tslib": "^1"
   },
   "devDependencies": {

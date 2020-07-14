@@ -1,4 +1,5 @@
-import { Command, flags } from '@oclif/command'
+import { Command, flags } from '@oclif/command';
+import * as ora from 'ora';
 import { initializeNoteGraph, generateLinkReferences, generateHeading, getKebabCaseFileName } from 'foam-core';
 import * as path from 'path';
 import { applyTextEdit } from '../utils/apply-text-edit';
@@ -22,6 +23,8 @@ Successfully generated link references and heading!
   static args = [{ name: 'workspacePath' }]
 
   async run() {
+    const spinner = ora('Reading Files').start();
+
     const { args, flags } = this.parse(Janitor)
 
     const { workspacePath = './' } = args;
@@ -31,6 +34,9 @@ Successfully generated link references and heading!
     const graph = await initializeNoteGraph(foamWorkspaceDir);
 
     const notes = graph.getNotes();
+
+    spinner.succeed();
+    spinner.text = 'Generating link definitions'
 
     const fileWritePromises = notes.map(note => {
       // Get edits
@@ -51,6 +57,9 @@ Successfully generated link references and heading!
       return null;
     })
 
+    spinner.succeed();
+    spinner.text = 'Renaming files';
+
     // Kebab case file names
     await Promise.all(notes.map(note => {
       const kebabCasedFileName = getKebabCaseFileName(note.title);
@@ -61,14 +70,9 @@ Successfully generated link references and heading!
     }))
 
 
-
-    // TODO: Add a loader
-
     await Promise.all(fileWritePromises);
 
-
-    // Improve the message (also show changed files??)
-    // Use Chalk
-    this.log('Successfully generated link references and heading!')
+    spinner.succeed();
+    spinner.succeed('Done!');
   }
 }

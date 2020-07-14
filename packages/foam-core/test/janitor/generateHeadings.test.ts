@@ -1,7 +1,7 @@
 import * as path from 'path';
 import { NoteGraph, Note } from '../../src/note-graph';
 import { generateHeading } from '../../src/janitor';
-import { initializeNoteGraph } from '../../src/utils';
+import { initializeNoteGraph } from '../../src/initializeNoteGraph';
 
 describe('generateHeadings', () => {
   let _graph: NoteGraph;

@@ -5,7 +5,7 @@
 "use strict";
 
 import * as fs from "fs";
-import { workspace, ExtensionContext } from "vscode";
+import { workspace, ExtensionContext, window, EndOfLine } from "vscode";
 
 import { createNoteFromMarkdown, createFoam, FoamConfig } from "foam-core";
 import { features } from "./features";
@@ -26,7 +26,8 @@ const bootstrap = async (config: FoamConfig) => {
       .map(f => {
         return fs.promises.readFile(f.fsPath).then(data => {
           const markdown = (data || "").toString();
-          foam.notes.setNote(createNoteFromMarkdown(f.fsPath, markdown));
+          const eol = window.activeTextEditor?.document?.eol === EndOfLine.CRLF ? "\r\n" : "\n";
+          foam.notes.setNote(createNoteFromMarkdown(f.fsPath, markdown, eol));
         });
       })
   );

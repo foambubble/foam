@@ -28,6 +28,7 @@ export class Note {
   public source: string;
   public path: string;
   public end: Point;
+  public eol: string;
   public links: NoteLink[];
   public definitions: NoteLinkDefinition[];
 
@@ -38,7 +39,8 @@ export class Note {
     definitions: NoteLinkDefinition[],
     end: Point,
     path: string,
-    source: string
+    source: string,
+    eol: string
   ) {
     this.id = id;
     this.title = title;
@@ -47,6 +49,7 @@ export class Note {
     this.links = links;
     this.definitions = definitions;
     this.end = end;
+    this.eol = eol;
   }
 }
 

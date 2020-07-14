@@ -22,9 +22,9 @@ const pageC = `
 describe('Markdown loader', () => {
   it('Converts markdown to notes', () => {
     const graph = new NoteGraph();
-    graph.setNote(createNoteFromMarkdown('page-a', pageA));
-    graph.setNote(createNoteFromMarkdown('page-b', pageB));
-    graph.setNote(createNoteFromMarkdown('page-c', pageC));
+    graph.setNote(createNoteFromMarkdown('page-a', pageA, '\n'));
+    graph.setNote(createNoteFromMarkdown('page-b', pageB, '\n'));
+    graph.setNote(createNoteFromMarkdown('page-c', pageC, '\n'));
 
     expect(
       graph
@@ -36,9 +36,9 @@ describe('Markdown loader', () => {
 
   it('Parses wikilinks correctly', () => {
     const graph = new NoteGraph();
-    graph.setNote(createNoteFromMarkdown('page-a', pageA));
-    graph.setNote(createNoteFromMarkdown('page-b', pageB));
-    graph.setNote(createNoteFromMarkdown('page-c', pageC));
+    graph.setNote(createNoteFromMarkdown('page-a', pageA, '\n'));
+    graph.setNote(createNoteFromMarkdown('page-b', pageB, '\n'));
+    graph.setNote(createNoteFromMarkdown('page-c', pageC, '\n'));
 
     expect(graph.getBacklinks('page-b').map(link => link.from)).toEqual([
       'page-a',

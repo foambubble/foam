@@ -18,7 +18,7 @@ function parse(markdown: string): Node {
   return processor.parse(markdown);
 }
 
-export function createNoteFromMarkdown(uri: string, markdown: string): Note {
+export function createNoteFromMarkdown(uri: string, markdown: string, eol: string): Note {
   const filename = path.basename(uri);
   const id = path.parse(filename).name;
   const tree = parse(markdown);
@@ -52,7 +52,7 @@ export function createNoteFromMarkdown(uri: string, markdown: string): Note {
 
   const end = tree.position!.end;
 
-  return new Note(id, title, links, definitions, end, uri, markdown);
+  return new Note(id, title, links, definitions, end, uri, markdown, eol);
 }
 
 export function stringifyMarkdownLinkReferenceDefinition(

@@ -2,6 +2,8 @@
 import glob from 'glob';
 import { promisify } from 'util';
 import fs from 'fs';
+import os from 'os';
+import detectNewline from 'detect-newline';
 import { NoteGraph } from './note-graph';
 import { createNoteFromMarkdown } from './markdown-provider';
 
@@ -18,7 +20,8 @@ export const initializeNoteGraph = async (aboluteDir: string) => {
     (await files).map(f => {
       return fs.promises.readFile(f).then(data => {
         const markdown = (data || '').toString();
-        graph.setNote(createNoteFromMarkdown(f, markdown));
+        const eol = detectNewline(markdown) || os.EOL;
+        graph.setNote(createNoteFromMarkdown(f, markdown, eol));
       });
     })
   );

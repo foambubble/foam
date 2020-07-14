@@ -42,7 +42,7 @@ const feature: FoamFeature = {
       workspace.onWillSaveTextDocument(e => {
         if (e.document.languageId === "markdown") {
           foam.notes.setNote(
-            createNoteFromMarkdown(e.document.fileName, e.document.getText())
+            createNoteFromMarkdown(e.document.fileName, e.document.getText(), docConfig.eol)
           );
           e.waitUntil(updateReferenceList(foam.notes));
         }
@@ -66,7 +66,7 @@ async function createReferenceList(foam: NoteGraph) {
 
   let refs = await generateReferenceList(foam, editor.document);
   if (refs && refs.length) {
-    await editor.edit(function(editBuilder) {
+    await editor.edit(function (editBuilder) {
       if (editor) {
         const spacing = hasEmptyTrailing
           ? docConfig.eol

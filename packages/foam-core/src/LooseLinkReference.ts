@@ -9,7 +9,12 @@ export interface ILooseLinkReference {
      * Cleaned version of the file, removing accents, casing, slugs, e.g. `zoe-file`
      */
     clean: string;
-  }
+}
+
+export interface IMatchResult extends ILooseLinkReference {
+    title: string;
+}
+
 export class LooseLinkReference implements ILooseLinkReference {
   original: ID;
   clean: string;

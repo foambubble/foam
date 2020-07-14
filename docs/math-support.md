@@ -18,7 +18,7 @@ The published pages don't support math formulas by default. To enable this featu
 
 ```
 ---
-layout: home
+layout: page
 ---
 
 # Your normal title here

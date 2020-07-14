@@ -1,9 +1,10 @@
+import { Position } from 'unist';
 import { Note, NoteGraph } from '../index';
 import {
   createMarkdownReferences,
   stringifyMarkdownLinkReferenceDefinition,
 } from '../markdown-provider';
-import { Position } from 'unist';
+import { getHeadingFromFileName } from '../utils'
 
 export interface TextEdit {
   range: Position;
@@ -35,7 +36,7 @@ export const generateLinkReferences = (note: Note, ng: NoteGraph): TextEdit | nu
 
     const oldRefrences = note.definitions.map(stringifyMarkdownLinkReferenceDefinition).join('\n');
 
-    if(oldRefrences === newReferences){
+    if (oldRefrences === newReferences) {
       return null;
     }
 
@@ -50,35 +51,17 @@ export const generateLinkReferences = (note: Note, ng: NoteGraph): TextEdit | nu
   }
 };
 
-// const generateHeadings = (noteId: string, ng: any) => {
-//   // get the Note
+export const generateHeading = (note: Note): TextEdit | null => {
 
-//   const note = ng.getNote(noteId);
+  if (note.title) {
+    return null;
+  }
 
-//   const markdown = fs.readFileSync(note.path, { encoding: 'utf-8' });
-
-//   const tree = parse(markdown);
-
-//   const heading = getHeading(note.title);
-
-//   let headingExists = false;
-
-//   visit(tree, (node: any) => {
-//     if (node.type === 'heading' && node.depth === 1) {
-//       // Do nothing
-//       headingExists = true;
-//       return EXIT;
-//     }
-//     return CONTINUE;
-//   });
-
-//   const textEdit = {
-//     range: {
-//       start: { line: 0, character: 0 },
-//       end: { line: 0, character: heading.length },
-//     },
-//     newText: heading,
-//   };
-
-//   return headingExists ? null : textEdit;
-// };
+  return {
+    newText: `${getHeadingFromFileName(note.id)}\n`,
+    range: {
+      start: { line: 0, column: 0, offset: 0 },
+      end: { line: 0, column: 0, offset: 0 }
+    }
+  }
+};

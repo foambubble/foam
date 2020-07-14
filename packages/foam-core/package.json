@@ -17,6 +17,7 @@
   "devDependencies": {
     "@types/graphlib": "^2.1.6",
     "@types/lodash": "^4.14.157",
+    "glob": "^7.1.6",
     "husky": "^4.2.5",
     "tsdx": "^0.13.2",
     "tslib": "^2.0.0",

@@ -186,7 +186,17 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "TaiChi-IO",
+      "name": "TaiChi-IO",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/65092992?v=4",
+      "profile": "https://github.com/TaiChi-IO",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
-  "contributorsPerLine": 7
+  "contributorsPerLine": 7,
+  "skipCi": true
 }

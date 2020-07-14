@@ -73,38 +73,50 @@ The potential solution:
     - This build step should be pluggable, so that other transformations could be ran during it
   - Have publish targets defined in settings, that support both turning the link reference definitions on/off and defining their format (.md or not). Example draft (including also edit-time aspect):
     ```typescript
-    // settings json:
+    // settings json
+    // see enumerations below for explanations on values
     {
       "foam": {
         "publish": [
-          {"Gitlab Mirror": {
-            "wikiLinks": true,
-            "linkRefDefs": "withExtensions"
-          }},
-          {"GitHub Pages": { 
-            "wikiLinks": true,
-            "linkRefDefs": "withoutExtensions"
-          }},
-          {"Blog": { 
-            "wikiLinks": true,
-            "linkRefDefs": "off"
-          }},
-          // the following would cause inline-transpilation
-          {"My Amazing PDF book": {
-            "wikiLinks": false
-          }}
+          {
+            "name": "Gitlab Mirror",     // name of the publish target
+            "linkTranspilation": "Off",
+            "linkReferenceDefinitions": "withExtensions"
+          },
+          {
+            "name": "GitHub Pages",
+            "linkTranspilation": "Off",
+            "linkReferenceDefinitions": "withoutExtensions"
+          },
+          {
+            "name": "Blog",
+            "linkTranspilation": "Off",
+            "linkReferenceDefinitions": "Off"
+          },
+          {
+            "name": "My Amazing PDF book",
+            "linkTranspilation": "WikiLinksToMarkdown"
+          }
         ],
         "edit": {
-          "linkRefDefs": "off"
+          "linkReferenceDefinitions": "Off"
         }
       }
     }
+
+    // Defines if and how links in markdown files are somehow converted (in-place) during build time
+    // Note that this enumeration is not valid edit-time, since we (probably) don't want to change text like this while user is editing it
+    enum LinkTranspilation {
+      Off,                   // links are not transpiled
+      WikiLinksToMarkdown,   // links using wiki-format [[link]] are converted to normal md links: [link](./some/file.md)
+                             // if this is set, not link reference definitions are generated (not needed)
+    }
     
-    // type definition
-    enum LinkRefDefs {
-      WithExtensions,
-      WithoutExtensions,
-      Off
+    // Defines if and how link reference definition section is generated
+    enum LinkReferenceDefinitions {
+      Off,               // link reference definitions are not generated
+      WithExtensions,    // link reference definitions contain .md (or similar) file extensions
+      WithoutExtensions  // link reference definitions do not contain file extenions
     }
 
     ```
@@ -115,6 +127,8 @@ The potential solution:
   - To clean up the search results, remove link reference definition section guards (assuming that these are not defined by the markdown spec). Use unifiedjs parse trees to identify if there's missing (or surplus) definitions (check if they are identified properly by the library), and just add the needed definitions to the bottom of the file (without guards) AND remove them if they are not needed (anywhere from the file).
 
 Note that the proposal above supports both (build-time) inline transpilation of wikilinks as well as creation reference definitions. Depending on the direction of Foam, also only one of them could be selected. In that case the other could be implemented at later point of time.
+
+UI-wise, the publish targets could be picked in some similar fashion as the run/debug targets in vscode by implementing a separate panel, or maybe through command execution (CTRL+SHIFT+P) - not yet defined at this point.
 
 ## Links
 

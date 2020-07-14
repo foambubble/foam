@@ -10,7 +10,7 @@ describe('generateLinkReferences', () => {
   });
 
   it('initialised test graph correctly', () => {
-    expect(_graph.getNotes().length).toEqual(4);
+    expect(_graph.getNotes().length).toEqual(5);
   });
 
   it('should add link references to a file that does not have them', () => {
@@ -41,9 +41,65 @@ describe('generateLinkReferences', () => {
     expect(actual!.newText).toEqual(expected.newText);
   });
 
-  it('should remove link definitions from a file that has them, if no links are present', () => {});
+  it('should remove link definitions from a file that has them, if no links are present', () => {
+    const note = _graph.getNote('second-document') as Note;
+    
+    const expected = {
+      newText: "",
+      range: {
+        start: {
+          line: 7,
+          column: 1,
+          offset: 105,
+        },
+        end: {
+          line: 9,
+          column: 43,
+          offset: 269,
+        },
+      },
+    };
+    
+    const actual = generateLinkReferences(note!, _graph);
 
-  it('should update link definitions if they are present but changed', () => {});
+    expect(actual!.range.start).toEqual(expected.range.start);
+    expect(actual!.range.end).toEqual(expected.range.end);
+    expect(actual!.newText).toEqual(expected.newText);
+  });
 
-  it('should not cause any changes if link reference definitions were up to date', () => {});
+  it('should update link definitions if they are present but changed', () => {
+    const note = _graph.getNote('first-document') as Note;
+    
+    const expected = {
+      newText: `[file-without-title]: file-without-title "file-without-title"`,
+      range: {
+        start: {
+          line: 5,
+          column: 1,
+          offset: 42,
+        },
+        end: {
+          line: 7,
+          column: 43,
+          offset: 209,
+        },
+      },
+    };
+    
+    const actual = generateLinkReferences(note!, _graph);
+
+    expect(actual!.range.start).toEqual(expected.range.start);
+    expect(actual!.range.end).toEqual(expected.range.end);
+    expect(actual!.newText).toEqual(expected.newText);
+  });
+
+  it('should not cause any changes if link reference definitions were up to date', () => {
+    const note = _graph.getNote('third-document') as Note;
+    
+    const expected = null;
+    
+    const actual = generateLinkReferences(note!, _graph);
+
+    expect(actual).toEqual(expected);
+  });
 });

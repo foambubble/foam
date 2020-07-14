@@ -10,7 +10,7 @@ describe('generateLinkReferences', () => {
   });
 
   it('initialised test graph correctly', () => {
-    expect(_graph.getNotes().length).toEqual(4);
+    expect(_graph.getNotes().length).toEqual(5);
   });
 
   it('should add link references to a file that does not have them', () => {
@@ -65,7 +65,6 @@ describe('generateLinkReferences', () => {
     expect(actual!.range.start).toEqual(expected.range.start);
     expect(actual!.range.end).toEqual(expected.range.end);
     expect(actual!.newText).toEqual(expected.newText);
-
   });
 
   it('should update link definitions if they are present but changed', () => {
@@ -94,5 +93,13 @@ describe('generateLinkReferences', () => {
     expect(actual!.newText).toEqual(expected.newText);
   });
 
-  it('should not cause any changes if link reference definitions were up to date', () => {});
+  it('should not cause any changes if link reference definitions were up to date', () => {
+    const note = _graph.getNote('third-document') as Note;
+    
+    const expected = null;
+    
+    const actual = generateLinkReferences(note!, _graph);
+
+    expect(actual).toEqual(expected);
+  });
 });

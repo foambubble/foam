@@ -32,6 +32,13 @@ export const generateLinkReferences = (note: Note, ng: NoteGraph): TextEdit | nu
   } else {
     const first = note.definitions[0];
     const last = note.definitions[note.definitions.length - 1];
+
+    const oldRefrences = note.definitions.map(stringifyMarkdownLinkReferenceDefinition).join('\n');
+
+    if(oldRefrences === newReferences){
+      return null;
+    }
+
     return {
       // @todo: do we need to ensure new lines?
       newText: `${newReferences}`,

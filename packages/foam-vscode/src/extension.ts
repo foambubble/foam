@@ -11,10 +11,10 @@ import { createNoteFromMarkdown, createFoam, FoamConfig } from "foam-core";
 import { features } from "./features";
 
 export function activate(context: ExtensionContext) {
-  const foamPromise = bootstrap(getConfig())
+  const foamPromise = bootstrap(getConfig());
   features.forEach(f => {
     f.activate(context, foamPromise);
-  })
+  });
 }
 
 const bootstrap = async (config: FoamConfig) => {
@@ -34,8 +34,5 @@ const bootstrap = async (config: FoamConfig) => {
 };
 
 const getConfig = () => {
-  return {}
-}
-
-
-
+  return {};
+};

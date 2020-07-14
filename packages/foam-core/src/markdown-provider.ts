@@ -4,7 +4,7 @@ import wikiLinkPlugin from 'remark-wiki-link';
 import visit, { CONTINUE, EXIT } from 'unist-util-visit';
 import { Node, Parent } from 'unist';
 import * as path from 'path';
-import { Link, Note, NoteGraph } from './note-graph';
+import { Note, NoteLink, NoteGraph } from './note-graph';
 import { dropExtension } from './utils';
 
 let processor: unified.Processor | null = null;
@@ -29,13 +29,13 @@ export function createNoteFromMarkdown(uri: string, markdown: string): Note {
     }
     return title === id ? CONTINUE : EXIT;
   });
-  const links: Link[] = [];
+  const links: NoteLink[] = [];
   visit(tree, node => {
     if (node.type === 'wikiLink') {
       links.push({
-        from: id,
         to: node.value as string,
         text: node.value as string,
+        position: node.position!
       });
     }
   });

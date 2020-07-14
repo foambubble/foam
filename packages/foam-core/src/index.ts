@@ -6,6 +6,8 @@ export {
   stringifyMarkdownLinkReferenceDefinition,
 } from './markdown-provider';
 
+export { TextEdit } from './janitor'
+
 export { NoteGraph, Note, NoteLink };
 
 export interface FoamConfig {

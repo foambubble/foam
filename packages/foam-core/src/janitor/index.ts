@@ -5,7 +5,7 @@ import {
 } from '../markdown-provider';
 import { Position } from 'unist';
 
-interface TextEdit {
+export interface TextEdit {
   range: Position;
   newText: string;
 }
@@ -19,7 +19,7 @@ export const generateLinkReferences = (note: Note, ng: NoteGraph): TextEdit | nu
     if (newReferences.length === 0) {
       return null;
     }
-    
+
     // @todo: how to abstract new line?
     const padding = note.end.column === 1 ? '\n' : '\n\n';
     return {

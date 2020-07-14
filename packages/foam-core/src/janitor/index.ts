@@ -4,6 +4,7 @@ import {
   stringifyMarkdownLinkReferenceDefinition,
 } from '../markdown-provider';
 import { Position } from 'unist';
+import { getHeadingFromFileName } from '../utils';
 
 interface TextEdit {
   range: Position;
@@ -50,35 +51,17 @@ export const generateLinkReferences = (note: Note, ng: NoteGraph): TextEdit | nu
   }
 };
 
-// const generateHeadings = (noteId: string, ng: any) => {
-//   // get the Note
+export const generateHeading = (note: Note): TextEdit | null => {
+  // Note: This may not work if the heading is same as the file name
+  if (note.title !== note.id) {
+    return null;
+  }
 
-//   const note = ng.getNote(noteId);
-
-//   const markdown = fs.readFileSync(note.path, { encoding: 'utf-8' });
-
-//   const tree = parse(markdown);
-
-//   const heading = getHeading(note.title);
-
-//   let headingExists = false;
-
-//   visit(tree, (node: any) => {
-//     if (node.type === 'heading' && node.depth === 1) {
-//       // Do nothing
-//       headingExists = true;
-//       return EXIT;
-//     }
-//     return CONTINUE;
-//   });
-
-//   const textEdit = {
-//     range: {
-//       start: { line: 0, character: 0 },
-//       end: { line: 0, character: heading.length },
-//     },
-//     newText: heading,
-//   };
-
-//   return headingExists ? null : textEdit;
-// };
+  return {
+    newText: `# ${getHeadingFromFileName(note.id)}\n\n`,
+    range: {
+      start: { line: 0, column: 0, offset: 0 },
+      end: { line: 0, column: 0, offset: 0 }
+    }
+  }
+};

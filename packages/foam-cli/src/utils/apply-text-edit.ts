@@ -12,8 +12,7 @@ export const applyTextEdit = (text: string, textEdit: TextEdit): string => {
   const endOffset = textEdit.range.end.offset || 0;
   const deleteCount = endOffset - startOffset;
 
-  // TODO: Figure out where to add this newline 
-  const textToAppend = `\n${textEdit.newText}`;
+  const textToAppend = `${textEdit.newText}`;
   characters.splice(startOffset, deleteCount, textToAppend);
   return characters.join('');
 } 

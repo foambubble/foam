@@ -52,13 +52,13 @@ export const generateLinkReferences = (note: Note, ng: NoteGraph): TextEdit | nu
 };
 
 export const generateHeading = (note: Note): TextEdit | null => {
-
-  if (note.title) {
+  // Note: This may not work if the heading is same as the file name
+  if (note.title !== note.id) {
     return null;
   }
 
   return {
-    newText: `${getHeadingFromFileName(note.id)}\n`,
+    newText: `# ${getHeadingFromFileName(note.id)}\n\n`,
     range: {
       start: { line: 0, column: 0, offset: 0 },
       end: { line: 0, column: 0, offset: 0 }

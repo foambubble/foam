@@ -11,7 +11,7 @@ export default class Janitor extends Command {
 
   static examples = [
     `$ foam-cli janitor path-to-foam-workspace
-Sucessfully generated link references and heading!
+Successfully generated link references and heading!
 `,
   ]
 
@@ -33,18 +33,19 @@ Sucessfully generated link references and heading!
     const notes = graph.getNotes();
 
     const fileWritePromises = notes.map(note => {
-      // Generate Heading 
+      // Get edits
       const heading = generateHeading(note);
+      const definitions = generateLinkReferences(note, graph);
 
-      const fileWithHeading = heading ? applyTextEdit(note.source, heading) : note.source;
 
-      // Generate Link References
-      const linkRefTextEdits = generateLinkReferences(note, graph);
+      // apply Edits
+      let file = note.source;
+      file = heading ? applyTextEdit(file, heading) : file;
+      file = definitions ? applyTextEdit(file, definitions) : file;
 
-      const fileWithLinkReferences = linkRefTextEdits ? applyTextEdit(fileWithHeading, linkRefTextEdits) : fileWithHeading;
 
-      if (fileWithHeading || fileWithLinkReferences) {
-        return writeFileToDisk(note.path, fileWithLinkReferences);
+      if (heading || definitions) {
+        return writeFileToDisk(note.path, file);
       }
 
       return null;
@@ -68,6 +69,6 @@ Sucessfully generated link references and heading!
 
     // Improve the message (also show changed files??)
     // Use Chalk
-    this.log('Succfully generated link references and heading!')
+    this.log('Successfully generated link references and heading!')
   }
 }

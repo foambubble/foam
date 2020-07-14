@@ -24,6 +24,7 @@
     "typescript": "^3.9.5"
   },
   "dependencies": {
+    "dashify": "^2.0.0",
     "graphlib": "^2.1.8",
     "lodash": "^4.17.15",
     "remark-parse": "^8.0.2",

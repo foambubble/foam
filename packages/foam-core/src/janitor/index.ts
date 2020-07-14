@@ -1,4 +1,5 @@
 import { Position } from 'unist';
+import dashify from 'dashify';
 import { Note, NoteGraph } from '../index';
 import {
   createMarkdownReferences,
@@ -65,3 +66,15 @@ export const generateHeading = (note: Note): TextEdit | null => {
     }
   }
 };
+
+/**
+ * 
+ * @param fileName 
+ * @returns null if file name is already in kebab case otherise returns 
+ * the kebab cased file name
+ */
+export const getKebabCaseFileName = (fileName: string) => {
+  // NOTE: dashify will also rename camelCase filename
+  const kebabCasedFileName = dashify(fileName);
+  return kebabCasedFileName === fileName ? null : kebabCasedFileName;
+}

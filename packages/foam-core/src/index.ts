@@ -6,7 +6,7 @@ export {
   stringifyMarkdownLinkReferenceDefinition,
 } from './markdown-provider';
 
-export { TextEdit, generateHeading, generateLinkReferences } from './janitor'
+export { TextEdit, generateHeading, generateLinkReferences, getKebabCaseFileName } from './janitor'
 
 export { initializeNoteGraph } from './utils'
 

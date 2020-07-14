@@ -68,7 +68,31 @@ describe('generateLinkReferences', () => {
 
   });
 
-  it('should update link definitions if they are present but changed', () => {});
+  it('should update link definitions if they are present but changed', () => {
+    const note = _graph.getNote('first-document') as Note;
+    
+    const expected = {
+      newText: `[file-without-title]: file-without-title "file-without-title"`,
+      range: {
+        start: {
+          line: 5,
+          column: 1,
+          offset: 42,
+        },
+        end: {
+          line: 7,
+          column: 43,
+          offset: 209,
+        },
+      },
+    };
+    
+    const actual = generateLinkReferences(note!, _graph);
+
+    expect(actual!.range.start).toEqual(expected.range.start);
+    expect(actual!.range.end).toEqual(expected.range.end);
+    expect(actual!.newText).toEqual(expected.newText);
+  });
 
   it('should not cause any changes if link reference definitions were up to date', () => {});
 });

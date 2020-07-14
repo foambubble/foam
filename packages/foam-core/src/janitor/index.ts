@@ -22,8 +22,7 @@ export const generateLinkReferences = (note: Note, ng: NoteGraph): TextEdit | nu
       return null;
     }
 
-    // @todo: how to abstract new line?
-    const padding = note.end.column === 1 ? '\n' : '\n\n';
+    const padding = note.end.column === 1 ? note.eol : `${note.eol}${note.eol}`;
     return {
       newText: `${padding}${newReferences}`,
       range: {
@@ -35,7 +34,7 @@ export const generateLinkReferences = (note: Note, ng: NoteGraph): TextEdit | nu
     const first = note.definitions[0];
     const last = note.definitions[note.definitions.length - 1];
 
-    const oldRefrences = note.definitions.map(stringifyMarkdownLinkReferenceDefinition).join('\n');
+    const oldRefrences = note.definitions.map(stringifyMarkdownLinkReferenceDefinition).join(note.eol);
 
     if (oldRefrences === newReferences) {
       return null;
@@ -59,7 +58,7 @@ export const generateHeading = (note: Note): TextEdit | null => {
   }
 
   return {
-    newText: `# ${getHeadingFromFileName(note.id)}\n\n`,
+    newText: `# ${getHeadingFromFileName(note.id)}${note.eol}${note.eol}`,
     range: {
       start: { line: 0, column: 0, offset: 0 },
       end: { line: 0, column: 0, offset: 0 }

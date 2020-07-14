@@ -4,7 +4,7 @@ import wikiLinkPlugin from 'remark-wiki-link';
 import visit, { CONTINUE, EXIT } from 'unist-util-visit';
 import { Node, Parent } from 'unist';
 import * as path from 'path';
-import { Note, NoteLink, NoteGraph } from './note-graph';
+import { Note, NoteLink, NoteLinkDefinition, NoteGraph } from './note-graph';
 import { dropExtension } from './utils';
 
 let processor: unified.Processor | null = null;
@@ -30,28 +30,45 @@ export function createNoteFromMarkdown(uri: string, markdown: string): Note {
     return title === id ? CONTINUE : EXIT;
   });
   const links: NoteLink[] = [];
+  const definitions: NoteLinkDefinition[] = [];
   visit(tree, node => {
     if (node.type === 'wikiLink') {
       links.push({
         to: node.value as string,
         text: node.value as string,
-        position: node.position!
+        position: node.position!,
+      });
+    }
+
+    if (node.type === 'definition') {
+      definitions.push({
+        label: node.label as string,
+        url: node.url as string,
+        title: node.title as string,
+        position: node.position,
       });
     }
   });
-  return new Note(id, title, links, uri, markdown);
+
+  const end = tree.position!.end;
+
+  return new Note(id, title, links, definitions, end, uri, markdown);
 }
 
-interface MarkdownReference {
-  linkText: string;
-  wikiLink: string;
-  pageTitle: string;
-}
+export function stringifyMarkdownLinkReferenceDefinition(
+  definition: NoteLinkDefinition
+) {
+  let text = `[${definition.label}]: ${definition.url}`;
+  if (definition.title) {
+    text = `${text} "${definition.title}"`;
+  }
 
+  return text;
+}
 export function createMarkdownReferences(
   graph: NoteGraph,
   noteId: string
-): MarkdownReference[] {
+): NoteLinkDefinition[] {
   const source = graph.getNote(noteId);
 
   // Should never occur since we're already in a file,
@@ -85,11 +102,11 @@ export function createMarkdownReferences(
 
       // [wiki-link-text]: wiki-link "Page title"
       return {
-        linkText: link.to,
-        wikiLink: relativePathWithoutExtension,
-        pageTitle: target.title,
+        label: link.to,
+        url: relativePathWithoutExtension,
+        title: target.title,
       };
     })
     .filter(Boolean)
-    .sort() as MarkdownReference[];
+    .sort() as NoteLinkDefinition[];
 }

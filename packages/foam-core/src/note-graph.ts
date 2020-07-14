@@ -1,5 +1,5 @@
 import { Graph, Edge } from 'graphlib';
-import { Position } from 'unist';
+import { Position, Point } from 'unist';
 
 type ID = string;
 
@@ -15,17 +15,28 @@ export interface NoteLink {
   position: Position;
 }
 
+export interface NoteLinkDefinition {
+  label: string;
+  url: string;
+  title?: string;
+  position?: Position;
+}
+
 export class Note {
   public id: ID;
   public title: string;
   public source: string;
   public path: string;
+  public end: Point;
   public links: NoteLink[];
+  public definitions: NoteLinkDefinition[];
 
   constructor(
     id: ID,
     title: string,
     links: NoteLink[],
+    definitions: NoteLinkDefinition[],
+    end: Point,
     path: string,
     source: string
   ) {
@@ -34,6 +45,8 @@ export class Note {
     this.source = source;
     this.path = path;
     this.links = links;
+    this.definitions = definitions;
+    this.end = end;
   }
 }
 

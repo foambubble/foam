@@ -12,7 +12,8 @@
     "@oclif/config": "^1",
     "@oclif/plugin-help": "^3",
     "ora": "^4.0.4",
-    "tslib": "^1"
+    "tslib": "^1",
+    "foam-core": "^0.2.0"
   },
   "devDependencies": {
     "@babel/core": "^7.10.4",

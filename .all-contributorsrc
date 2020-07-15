@@ -222,6 +222,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "francishamel",
+      "name": "Francis Hamel",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/36383308?v=4",
+      "profile": "https://github.com/francishamel",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,

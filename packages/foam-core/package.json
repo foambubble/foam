@@ -18,7 +18,6 @@
     "@types/dashify": "^1.0.0",
     "@types/graphlib": "^2.1.6",
     "@types/lodash": "^4.14.157",
-    "glob": "^7.1.6",
     "husky": "^4.2.5",
     "tsdx": "^0.13.2",
     "tslib": "^2.0.0",
@@ -27,6 +26,7 @@
   "dependencies": {
     "dashify": "^2.0.0",
     "detect-newline": "^3.1.0",
+    "glob": "^7.1.6",
     "graphlib": "^2.1.8",
     "lodash": "^4.17.15",
     "remark-parse": "^8.0.2",

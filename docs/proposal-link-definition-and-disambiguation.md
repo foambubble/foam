@@ -14,6 +14,8 @@
 Let's say we have two documents in the workspace with the same title "Some Title"
 
 - We would have autocompletion base on title of the document
+  - Each autocompletion entry could be in format:
+    **Document title** - *path/to/document.md*
   - This generates a link (typically a title, but could also have e.g. `:2` to disambiguate multiple links in the same file)
   - The label doesn't matter, it could be used as a display label. We'll just auto-generate something sensible. Could even be a user setting.
 - They would look like this:

@@ -1,6 +1,6 @@
-# Gitlab Pages
+# GitLab Pages
 
-You don't have to use Github to serve Foam pages. You can also use Gitlab.
+You don't have to use GitHub to serve Foam pages. You can also use GitLab.
 
 ## Setup a project
 
@@ -49,4 +49,3 @@ No when you go to CI / CD > Pipelines you should see the code running
 - *Conversion error: Jekyll::Converters::Scss encountered an error while converting* You need to reference a theme.
 - *Pages are running in CI/CD, but I only ever see `test`, and never deploy* - Perhaps you've renamed the main branch (from master) - check the settings in `.gitlab-ci.yml` and ensure the deploy command is running to the branch you expect it to.
 - *I deployed, but my .msdfiles don't seem to be being converted into .html files* - You need a gem that Github installs by default - check `gem "jekyll-optional-front-matter"` appears in the `Gemfile`
-

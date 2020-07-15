@@ -30,8 +30,6 @@ Successfully generated link references and heading!
 
     const { workspacePath = './' } = args;
 
-    // const foamWorkspaceDir = path.join(__dirname, workspacePath);
-
     if (fs.existsSync(workspacePath) && fs.lstatSync(workspacePath).isDirectory()) {
       const graph = await initializeNoteGraph(workspacePath);
 
@@ -44,6 +42,10 @@ Successfully generated link references and heading!
       spinner.text = 'Generating link definitions'
 
       const fileWritePromises = notes.map(note => {
+        if(!note) {
+          return null;
+        }
+
         // Get edits
         const heading = generateHeading(note);
         const definitions = generateLinkReferences(note, graph);
@@ -67,6 +69,9 @@ Successfully generated link references and heading!
 
       // Kebab case file names
       await Promise.all(notes.map(note => {
+        if(!note) {
+          return null;
+        }
         const kebabCasedFileName = getKebabCaseFileName(note.title);
         if (kebabCasedFileName) {
           return renameFile(note.path, kebabCasedFileName);

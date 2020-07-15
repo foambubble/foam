@@ -136,6 +136,7 @@ If that sounds like something you're interested in, I'd love to have you along o
   </tr>
   <tr>
     <td align="center"><a href="https://sanketdg.github.io"><img src="https://avatars3.githubusercontent.com/u/8980971?v=4" width="60px;" alt=""/><br /><sub><b>Sanket Dasgupta</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=SanketDG" title="Documentation">📖</a></td>
+    <td align="center"><a href="https://github.com/nstafie"><img src="https://avatars1.githubusercontent.com/u/10801854?v=4" width="60px;" alt=""/><br /><sub><b>Nicholas Stafie</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=nstafie" title="Documentation">📖</a></td>
   </tr>
 </table>
 

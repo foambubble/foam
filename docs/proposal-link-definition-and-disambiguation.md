@@ -3,7 +3,7 @@
 ## Current status
 
 - We generate link ref defs from wiki-links inline
-- Wiki links are expected to be the full source of truth, but we don't have enough infomration to conclusively disambiguate
+- Wiki links are expected to be the full source of truth, but we don't have enough information to conclusively disambiguate
 
 ## Solution
 

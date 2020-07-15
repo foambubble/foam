@@ -55,6 +55,7 @@ Guides, tips and strategies for getting the most out of your Foam workspace!
 ## Publish
 
 - Publish to [[github-pages]]
+- Publish to [[gitlab-pages]]
 - Publish your site with [[eleventy-and-netlify]]
 - Make the site your own by [[customising-styles]].
 - Math support [[math-support]]

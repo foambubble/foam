@@ -213,6 +213,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "nstafie",
+      "name": "Nicholas Stafie",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/10801854?v=4",
+      "profile": "https://github.com/nstafie",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,

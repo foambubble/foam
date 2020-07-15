@@ -8,7 +8,7 @@ You don't have to use GitHub to serve Foam pages. You can also use GitLab.
 
 Generate a solution using the [Foam template].
 
-Change the remote to Gitlab, or copy all the files into a new gitlab repo.
+Change the remote to GitLab, or copy all the files into a new GitLab repo.
 
 ### Add a _config.yaml
 Add another file to the root directory (the one with `readme.md` in it) called `_config.yaml` (no extension) 

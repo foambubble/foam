@@ -89,7 +89,7 @@ export function createMarkdownReferences(
       // but int the future we may want to surface these too
       if (!target) {
         console.log(
-          `Link '${link.to}' in '${noteId}' points to a non-existing note.`
+          `Warning: Link '${link.to}' in '${noteId}' points to a non-existing note.`
         );
         return null;
       }
@@ -102,7 +102,7 @@ export function createMarkdownReferences(
 
       // [wiki-link-text]: wiki-link "Page title"
       return {
-        label: link.to,
+        label: link.text,
         url: relativePathWithoutExtension,
         title: target.title,
       };

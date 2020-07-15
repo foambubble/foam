@@ -13,6 +13,10 @@ export interface TextEdit {
 }
 
 export const generateLinkReferences = (note: Note, ng: NoteGraph): TextEdit | null => {
+  if(!note) {
+    return null;
+  }
+
   const newReferences = createMarkdownReferences(ng, note.id).map(
     stringifyMarkdownLinkReferenceDefinition
   ).join('\n');
@@ -52,6 +56,9 @@ export const generateLinkReferences = (note: Note, ng: NoteGraph): TextEdit | nu
 };
 
 export const generateHeading = (note: Note): TextEdit | null => {
+  if(!note) {
+    return null;
+  }
   // Note: This may not work if the heading is same as the file name
   if (note.title !== note.id) {
     return null;

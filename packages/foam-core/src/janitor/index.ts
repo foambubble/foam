@@ -1,5 +1,5 @@
 import { Position } from 'unist';
-import dashify from 'dashify';
+import GithubSlugger from 'github-slugger';
 import { Note, NoteGraph } from '../index';
 import {
   createMarkdownReferences,
@@ -7,13 +7,15 @@ import {
 } from '../markdown-provider';
 import { getHeadingFromFileName } from '../utils'
 
+const slugger = new GithubSlugger()
+
 export interface TextEdit {
   range: Position;
   newText: string;
 }
 
 export const generateLinkReferences = (note: Note, ng: NoteGraph): TextEdit | null => {
-  if(!note) {
+  if (!note) {
     return null;
   }
 
@@ -56,7 +58,7 @@ export const generateLinkReferences = (note: Note, ng: NoteGraph): TextEdit | nu
 };
 
 export const generateHeading = (note: Note): TextEdit | null => {
-  if(!note) {
+  if (!note) {
     return null;
   }
   // Note: This may not work if the heading is same as the file name
@@ -80,7 +82,6 @@ export const generateHeading = (note: Note): TextEdit | null => {
  * the kebab cased file name
  */
 export const getKebabCaseFileName = (fileName: string) => {
-  // NOTE: dashify will also rename camelCase filename
-  const kebabCasedFileName = dashify(fileName);
+  const kebabCasedFileName = slugger.slug(fileName);
   return kebabCasedFileName === fileName ? null : kebabCasedFileName;
 }

@@ -69,7 +69,7 @@ Successfully generated link references and heading!
       await Promise.all(notes.map(note => {
         const kebabCasedFileName = getKebabCaseFileName(note.title);
         if (kebabCasedFileName) {
-          return renameFile(note.path, getKebabCaseFileName(note.title)!);
+          return renameFile(note.path, kebabCasedFileName);
         }
         return null;
       }))

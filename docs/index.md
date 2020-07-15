@@ -134,6 +134,9 @@ If that sounds like something you're interested in, I'd love to have you along o
     <td align="center"><a href="https://github.com/TaiChi-IO"><img src="https://avatars3.githubusercontent.com/u/65092992?v=4" width="60px;" alt=""/><br /><sub><b>TaiChi-IO</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=TaiChi-IO" title="Documentation">📖</a></td>
     <td align="center"><a href="https://github.com/juanfrank77"><img src="https://avatars1.githubusercontent.com/u/12146882?v=4" width="60px;" alt=""/><br /><sub><b>Juan F Gonzalez </b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=juanfrank77" title="Documentation">📖</a></td>
   </tr>
+  <tr>
+    <td align="center"><a href="https://sanketdg.github.io"><img src="https://avatars3.githubusercontent.com/u/8980971?v=4" width="60px;" alt=""/><br /><sub><b>Sanket Dasgupta</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=SanketDG" title="Documentation">📖</a></td>
+  </tr>
 </table>
 
 <!-- markdownlint-enable -->

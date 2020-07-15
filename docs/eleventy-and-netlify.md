@@ -12,6 +12,6 @@ When you're ready to publish, import the GitHub repository you created with **fo
 
 Once that's done, all you have to do is make changes to your workspace in VS COde and push them to the main branch on GitHub. Netlify will recognize the changes, deploy them automatically and give you a link where your Foam is published.
 
-That's it! Y
+That's it!
 
-ou can now see it online and use that link to share it with your friends, so that they can see it too.
+You can now see it online and use that link to share it with your friends, so that they can see it too.

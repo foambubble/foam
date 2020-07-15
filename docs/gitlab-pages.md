@@ -38,10 +38,10 @@ Commit the file and push it to gitlab.
 
 ## Setup CI/CD
 
-From the project home in gitlab click `Set up CI/CD`
-Choose `Jekyll` as your template from the template dropdown
-Click `commit`
-No when you go to CI / CD > Pipelines you should see the code running
+1. From the project home in GitLab click `Set up CI/CD`
+2. Choose `Jekyll` as your template from the template dropdown
+3. Click `commit`
+4. Now when you go to CI / CD > Pipelines, you should see the code running
 
 ## Troubleshooting
 

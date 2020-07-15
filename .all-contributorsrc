@@ -231,6 +231,16 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "digiguru",
+      "name": "digiguru",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/619436?v=4",
+      "profile": "http://digiguru.co.uk",
+      "contributions": [
+        "code",
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,

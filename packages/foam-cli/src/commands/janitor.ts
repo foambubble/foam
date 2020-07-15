@@ -40,7 +40,7 @@ Successfully generated link references and heading!
       spinner.succeed();
       spinner.text = 'Generating link definitions'
 
-      const fileWritePromises = await Promise.all(notes.map(note => {
+      const fileWritePromises = notes.map(note => {
         if(!note) {
           return null;
         }
@@ -61,7 +61,7 @@ Successfully generated link references and heading!
         }
 
         return null;
-      }))
+      })
 
       await Promise.all(fileWritePromises);
 

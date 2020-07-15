@@ -38,7 +38,7 @@ Successfully generated link references and heading!
       spinner.text = `${notes.filter(note => note !== undefined).length} files found`;
 
       // Kebab case file names
-      const fileRename = await Promise.all(notes.map(note => {
+      const fileRename = notes.map(note => {
         if(!note) {
           return null;
         }
@@ -48,7 +48,7 @@ Successfully generated link references and heading!
           return renameFile(note.path, kebabCasedFileName);
         }
         return null;
-      }))
+      })
 
       await Promise.all(fileRename);
 

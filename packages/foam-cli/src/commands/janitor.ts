@@ -5,6 +5,7 @@ import * as path from 'path';
 import { applyTextEdit } from '../utils/apply-text-edit';
 import { writeFileToDisk } from '../utils/write-file-to-disk';
 import { renameFile } from '../utils/rename-file';
+import * as fs from 'fs'
 
 
 export default class Janitor extends Command {
@@ -29,50 +30,58 @@ Successfully generated link references and heading!
 
     const { workspacePath = './' } = args;
 
-    const foamWorkspaceDir = path.join(__dirname, workspacePath);
+    // const foamWorkspaceDir = path.join(__dirname, workspacePath);
 
-    const graph = await initializeNoteGraph(foamWorkspaceDir);
+    if (fs.existsSync(workspacePath) && fs.lstatSync(workspacePath).isDirectory()) {
+      const graph = await initializeNoteGraph(workspacePath);
 
-    const notes = graph.getNotes();
+      const notes = graph.getNotes();
 
-    spinner.succeed();
-    spinner.text = 'Generating link definitions'
+      spinner.succeed();
+      spinner.text = `${notes.length} files found`;
 
-    const fileWritePromises = notes.map(note => {
-      // Get edits
-      const heading = generateHeading(note);
-      const definitions = generateLinkReferences(note, graph);
+      spinner.succeed();
+      spinner.text = 'Generating link definitions'
 
-
-      // apply Edits
-      let file = note.source;
-      file = heading ? applyTextEdit(file, heading) : file;
-      file = definitions ? applyTextEdit(file, definitions) : file;
+      const fileWritePromises = notes.map(note => {
+        // Get edits
+        const heading = generateHeading(note);
+        const definitions = generateLinkReferences(note, graph);
 
 
-      if (heading || definitions) {
-        return writeFileToDisk(note.path, file);
-      }
-
-      return null;
-    })
-
-    spinner.succeed();
-    spinner.text = 'Renaming files';
-
-    // Kebab case file names
-    await Promise.all(notes.map(note => {
-      const kebabCasedFileName = getKebabCaseFileName(note.title);
-      if (kebabCasedFileName) {
-        return renameFile(note.path, getKebabCaseFileName(note.title));
-      }
-      return null;
-    }))
+        // apply Edits
+        let file = note.source;
+        file = heading ? applyTextEdit(file, heading) : file;
+        file = definitions ? applyTextEdit(file, definitions) : file;
 
 
-    await Promise.all(fileWritePromises);
+        if (heading || definitions) {
+          return writeFileToDisk(note.path, file);
+        }
 
-    spinner.succeed();
-    spinner.succeed('Done!');
+        return null;
+      })
+
+      spinner.succeed();
+      spinner.text = 'Renaming files';
+
+      // Kebab case file names
+      await Promise.all(notes.map(note => {
+        const kebabCasedFileName = getKebabCaseFileName(note.title);
+        if (kebabCasedFileName) {
+          return renameFile(note.path, getKebabCaseFileName(note.title)!);
+        }
+        return null;
+      }))
+
+
+      await Promise.all(fileWritePromises);
+
+      spinner.succeed();
+      spinner.succeed('Done!');
+    }
+    else {
+      spinner.fail('Directory does not exist!');
+    }
   }
 }

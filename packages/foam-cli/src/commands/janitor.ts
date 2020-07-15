@@ -37,39 +37,17 @@ Successfully generated link references and heading!
       spinner.succeed();
       spinner.text = `${notes.filter(note => note !== undefined).length} files found`;
 
-      // Kebab case file names
-      const fileRename = await Promise.all(notes.map(note => {
-        if(!note) {
-          return null;
-        }
-
-        const kebabCasedFileName = getKebabCaseFileName(note.title);
-        if (kebabCasedFileName) {
-          return renameFile(note.path, kebabCasedFileName);
-        }
-        return null;
-      }))
-
-      await Promise.all(fileRename);
-
-      spinner.succeed();
-      spinner.text = 'Renaming files';
-
-      const graph_updated = await initializeNoteGraph(workspacePath);
-
-      const notes_updated = graph_updated.getNotes();
-
       spinner.succeed();
       spinner.text = 'Generating link definitions'
 
-      const fileWritePromises = await Promise.all(notes_updated.map(note => {
+      const fileWritePromises = await Promise.all(notes.map(note => {
         if(!note) {
           return null;
         }
 
         // Get edits
         const heading = generateHeading(note);
-        const definitions = generateLinkReferences(note, graph_updated);
+        const definitions = generateLinkReferences(note, graph);
 
 
         // apply Edits

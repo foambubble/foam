@@ -4,8 +4,6 @@ import GithubSlugger from 'github-slugger';
 
 type ID = string;
 
-const slugger = new GithubSlugger()
-
 export interface Link {
   from: ID;
   to: ID;
@@ -71,6 +69,7 @@ export class NoteGraph {
     }
     this.graph.setNode(note.id, note);
     note.links.forEach(link => {
+      const slugger = new GithubSlugger();
       this.graph.setEdge(note.id, slugger.slug(link.to), link.text);
     });
   }

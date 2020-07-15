@@ -3,7 +3,9 @@
 ## Current status
 
 - We generate link ref defs from wiki-links inline
-- Wiki links are expected to be the full source of truth, but we don't have enough information to conclusively disambiguate
+- Wiki links are expected to be the full source of truth, but we don't have enough information to conclusively disambiguate between files 
+  - that have the same file name (in different directories)
+  - that have the same title (if autocompletion is by title)
 
 ## Solution
 

@@ -1,8 +1,10 @@
 import { Graph, Edge } from 'graphlib';
 import { Position, Point } from 'unist';
-import dashify from 'dashify';
+import GithubSlugger from 'github-slugger';
 
 type ID = string;
+
+const slugger = new GithubSlugger()
 
 export interface Link {
   from: ID;
@@ -69,7 +71,7 @@ export class NoteGraph {
     }
     this.graph.setNode(note.id, note);
     note.links.forEach(link => {
-      this.graph.setEdge(note.id, dashify(link.to), link.text);
+      this.graph.setEdge(note.id, slugger.slug(link.to), link.text);
     });
   }
 

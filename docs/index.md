@@ -66,6 +66,8 @@ These instructions assume you have a GitHub account, and you have Visual Studio 
 
 2. [Clone the repository locally](https://help.github.com/en/github/creating-cloning-and-archiving-repositories/cloning-a-repository) and open it in VS Code.
 
+    ⚠️ *Open the repository as a folder. In VS Code, opening a workspace refers to [multi-root workspaces](https://code.visualstudio.com/docs/editor/multi-root-workspaces).*
+
 3. When prompted to install recommended extensions, click **Install all** (or **Show Recommendations** if you want to review and install them one by one)
 
 After setting up the repository, open `.vscode/settings.json` and edit, add or remove any settings you'd like for your Foam workspace.

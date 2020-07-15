@@ -4,7 +4,7 @@ You don't have to use GitHub to serve Foam pages. You can also use GitLab.
 
 ## Setup a project
 
-### Generate the directory from github
+### Generate the directory from GitHub
 
 Generate a solution using the [Foam template].
 

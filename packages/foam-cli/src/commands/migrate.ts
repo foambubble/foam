@@ -7,11 +7,11 @@ import { renameFile } from '../utils/rename-file';
 import * as fs from 'fs'
 
 
-export default class Janitor extends Command {
-  static description = 'Updates link references and heading across all the markdown files in the given workspaces';
+export default class Migrate extends Command {
+  static description = 'Updates file names, link references and heading across all the markdown files in the given workspaces';
 
   static examples = [
-    `$ foam-cli janitor path-to-foam-workspace
+    `$ foam-cli migrate path-to-foam-workspace
 Successfully generated link references and heading!
 `,
   ]
@@ -25,7 +25,7 @@ Successfully generated link references and heading!
   async run() {
     const spinner = ora('Reading Files').start();
 
-    const { args, flags } = this.parse(Janitor)
+    const { args, flags } = this.parse(Migrate)
 
     const { workspacePath = './' } = args;
 

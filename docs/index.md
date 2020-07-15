@@ -62,9 +62,11 @@ These instructions assume you have a GitHub account, and you have Visual Studio 
 
    <a class="github-button" href="https://github.com/foambubble/foam-template/generate" data-icon="octicon-repo-template" data-size="large" aria-label="Use this template foambubble/foam-template on GitHub">Use this template</a>
 
-   (If you want to keep your thoughts to yourself, remember to set the repository private, or if you don't want to use GitHub to host your workspace at all, choose **Download as ZIP** instead of **Use this template**.)
+   *If you want to keep your thoughts to yourself, remember to set the repository private, or if you don't want to use GitHub to host your workspace at all, choose **Download as ZIP** instead of **Use this template**.*
 
 2. [Clone the repository locally](https://help.github.com/en/github/creating-cloning-and-archiving-repositories/cloning-a-repository) and open it in VS Code.
+
+    *Open the repository as a folder using the `File > Open...` menu item. In VS Code, "open workspace" refers to [multi-root workspaces](https://code.visualstudio.com/docs/editor/multi-root-workspaces).*
 
 3. When prompted to install recommended extensions, click **Install all** (or **Show Recommendations** if you want to review and install them one by one)
 

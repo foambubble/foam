@@ -5,7 +5,6 @@ import visit, { CONTINUE, EXIT } from 'unist-util-visit';
 import { Node, Parent } from 'unist';
 import * as path from 'path';
 import { Note, NoteLink, NoteGraph } from './note-graph';
-import { dropExtension } from './utils';
 
 let processor: unified.Processor | null = null;
 
@@ -81,12 +80,11 @@ export function createMarkdownReferences(
         path.dirname(source.path),
         target.path
       );
-      const relativePathWithoutExtension = dropExtension(relativePath);
 
-      // [wiki-link-text]: wiki-link "Page title"
+      // [wiki-link-text]: path/to/file.md "Page title"
       return {
         linkText: link.to,
-        wikiLink: relativePathWithoutExtension,
+        wikiLink: relativePath,
         pageTitle: target.title,
       };
     })

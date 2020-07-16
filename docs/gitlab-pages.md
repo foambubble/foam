@@ -32,7 +32,7 @@ source "https://rubygems.org"
 gem "jekyll"
 gem "jekyll-theme-minimal"
 gem "jekyll-optional-front-matter"
-``` 
+```
 
 Commit the file and push it to gitlab.
 

@@ -3,9 +3,7 @@ import * as ora from 'ora';
 import { initializeNoteGraph, generateLinkReferences, generateHeading, getKebabCaseFileName } from 'foam-core';
 import { applyTextEdit } from '../utils/apply-text-edit';
 import { writeFileToDisk } from '../utils/write-file-to-disk';
-import { renameFile } from '../utils/rename-file';
-import * as fs from 'fs'
-
+import { isValidDirectory } from '../utils';
 
 export default class Janitor extends Command {
   static description = 'Updates link references and heading across all the markdown files in the given workspaces';
@@ -29,22 +27,23 @@ Successfully generated link references and heading!
 
     const { workspacePath = './' } = args;
 
-    if (fs.existsSync(workspacePath) && fs.lstatSync(workspacePath).isDirectory()) {
+    if (isValidDirectory(workspacePath)) {
       const graph = await initializeNoteGraph(workspacePath);
 
-      const notes = graph.getNotes();
+      const notes = graph.getNotes().filter(Boolean); // removes undefined notes
 
       spinner.succeed();
-      spinner.text = `${notes.filter(note => note !== undefined).length} files found`;
-
+      spinner.text = `${notes.length} files found`;
       spinner.succeed();
-      spinner.text = 'Generating link definitions'
+
+      // exit early if no files found. 
+      if (notes.length === 0) {
+        this.exit();
+      }
+
+      spinner.text = 'Generating link definitions';
 
       const fileWritePromises = notes.map(note => {
-        if(!note) {
-          return null;
-        }
-
         // Get edits
         const heading = generateHeading(note);
         const definitions = generateLinkReferences(note, graph);

@@ -4,9 +4,9 @@ import { initializeNoteGraph, generateLinkReferences, generateHeading, getKebabC
 import { applyTextEdit } from '../utils/apply-text-edit';
 import { writeFileToDisk } from '../utils/write-file-to-disk';
 import { renameFile } from '../utils/rename-file';
-import * as fs from 'fs'
+import { isValidDirectory } from '../utils';
 
-
+// @todo: Refactor 'migrate' and 'janitor' commands and avoid repeatition
 export default class Migrate extends Command {
   static description = 'Updates file names, link references and heading across all the markdown files in the given workspaces';
 
@@ -29,20 +29,22 @@ Successfully generated link references and heading!
 
     const { workspacePath = './' } = args;
 
-    if (fs.existsSync(workspacePath) && fs.lstatSync(workspacePath).isDirectory()) {
-      const graph = await initializeNoteGraph(workspacePath);
+    if (isValidDirectory(workspacePath)) {
+      let graph = await initializeNoteGraph(workspacePath);
 
-      const notes = graph.getNotes();
+      let notes = graph.getNotes().filter(Boolean); // removes undefined notes
 
       spinner.succeed();
-      spinner.text = `${notes.filter(note => note !== undefined).length} files found`;
+      spinner.text = `${notes.length} files found`;
+      spinner.succeed();
+
+      // exit early if no files found. 
+      if (notes.length === 0) {
+        this.exit();
+      }
 
       // Kebab case file names
       const fileRename = notes.map(note => {
-        if(!note) {
-          return null;
-        }
-
         const kebabCasedFileName = getKebabCaseFileName(note.title);
         if (kebabCasedFileName) {
           return renameFile(note.path, kebabCasedFileName);
@@ -52,24 +54,20 @@ Successfully generated link references and heading!
 
       await Promise.all(fileRename);
 
-      spinner.succeed();
       spinner.text = 'Renaming files';
 
-      const graph_updated = await initializeNoteGraph(workspacePath);
+      // Reinitialize the graph after renaming files
+      graph = await initializeNoteGraph(workspacePath);
 
-      const notes_updated = graph_updated.getNotes();
+      notes = graph.getNotes().filter(Boolean); // remove undefined notes
 
       spinner.succeed();
       spinner.text = 'Generating link definitions'
 
-      const fileWritePromises = await Promise.all(notes_updated.map(note => {
-        if(!note) {
-          return null;
-        }
-
+      const fileWritePromises = await Promise.all(notes.map(note => {
         // Get edits
         const heading = generateHeading(note);
-        const definitions = generateLinkReferences(note, graph_updated);
+        const definitions = generateLinkReferences(note, graph);
 
 
         // apply Edits

@@ -9,11 +9,11 @@ import { createNoteFromMarkdown } from './markdown-provider';
 
 const findAllFiles = promisify(glob);
 
-export const initializeNoteGraph = async (aboluteDir: string) => {
-  // remove trailing slash from aboluteDir if exists
-  if (aboluteDir.substr(-1) == '/') aboluteDir = aboluteDir.slice(0, -1);
+export const initializeNoteGraph = async (workspacePath: string) => {
+  // remove trailing slash from workspacePath if exists
+  if (workspacePath.substr(-1) == '/') workspacePath = workspacePath.slice(0, -1);
 
-  const files = await findAllFiles(`${aboluteDir}/**/*.md`, {});
+  const files = await findAllFiles(`${workspacePath}/**/*.md`, {});
 
   const graph = new NoteGraph();
   await Promise.all(

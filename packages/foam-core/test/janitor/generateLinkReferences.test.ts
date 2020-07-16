@@ -1,7 +1,7 @@
 import * as path from 'path';
 import { NoteGraph, Note } from '../../src/note-graph';
 import { generateLinkReferences } from '../../src/janitor';
-import { initializeNoteGraph } from '../../src/initializeNoteGraph';
+import { initializeNoteGraph } from '../../src/initialize-note-graph';
 
 describe('generateLinkReferences', () => {
   let _graph: NoteGraph;

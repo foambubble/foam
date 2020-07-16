@@ -3,7 +3,6 @@
 Uncategorised thoughts, to be added
 
 - Release notes
-- Automatic updates
 - Markdown Preview
   - It's possible to customise the markdown preview styling. **Maybe make it use local foam workspace styles for live preview of the site??**
     - See: https://marketplace.visualstudio.com/items?itemName=bierner.markdown-preview-github-styles
@@ -11,10 +10,14 @@ Uncategorised thoughts, to be added
 - Investigate other similar extensions:
   - [Unotes](https://marketplace.visualstudio.com/items?itemName=ryanmcalister.Unotes)
   - [vscode-memo](https://github.com/svsool/vscode-memo)
+  - [gistpad wiki](https://github.com/jevakallio/gistpad/tree/master/src/repos/wiki)
+- Developer documentation
+  - GistPad has a good vs code contrib primer: https://github.com/jevakallio/gistpad/blob/master/CONTRIBUTING.md  
+- VS Code Notebooks API
+  - https://code.visualstudio.com/api/extension-guides/notebook
+- Snippets in template
 - Foam as a (VS Code) language
   - Syntax highlighting
-  - Autocompletion
-    - Get rid of mediawiki links in favor of write time tooling
   - Snippets
 - Future architecture
   - Could we do publish-related settings as a pre-push git hook, e.g. generating footnote labels

@@ -8,7 +8,7 @@ export {
 
 export { TextEdit, generateHeading, generateLinkReferences, getKebabCaseFileName } from './janitor'
 
-export { initializeNoteGraph } from './initializeNoteGraph'
+export { initializeNoteGraph } from './initialize-note-graph'
 
 export { NoteGraph, Note, NoteLink };
 

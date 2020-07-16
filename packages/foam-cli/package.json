@@ -12,6 +12,7 @@
     "@oclif/config": "^1",
     "@oclif/plugin-help": "^3",
     "chalk": "^4.1.0",
+    "foam-core": "^0.2.0",
     "ora": "^4.0.4",
     "tslib": "^1"
   },
@@ -29,6 +30,7 @@
     "foam-core": "^0.2.0",
     "globby": "^10",
     "jest": "^26.1.0",
+    "mock-fs": "^4.12.0",
     "ts-node": "^8",
     "typescript": "^3.3"
   },

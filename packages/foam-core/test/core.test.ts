@@ -6,18 +6,19 @@ const position = {
 };
 
 const documentEnd = position.end;
+const eol = '\n';
 
 describe('Note graph', () => {
   it('Adds notes to graph', () => {
     const graph = new NoteGraph();
     graph.setNote(
-      new Note('page-a', 'page-a', [], [], documentEnd, '/page-a.md', '')
+      new Note('page-a', 'page-a', [], [], documentEnd, eol, '/page-a.md', '')
     );
     graph.setNote(
-      new Note('page-b', 'page-b', [], [], documentEnd, '/page-b.md', '')
+      new Note('page-b', 'page-b', [], [], documentEnd, eol, '/page-b.md', '')
     );
     graph.setNote(
-      new Note('page-c', 'page-c', [], [], documentEnd, '/page-c.md', '')
+      new Note('page-c', 'page-c', [], [], documentEnd, eol, '/page-c.md', '')
     );
 
     expect(
@@ -31,7 +32,7 @@ describe('Note graph', () => {
   it('Detects forward links', () => {
     const graph = new NoteGraph();
     graph.setNote(
-      new Note('page-a', 'page-a', [], [], documentEnd, '/page-a.md', '')
+      new Note('page-a', 'page-a', [], [], documentEnd, eol, '/page-a.md', '')
     );
     graph.setNote(
       new Note(
@@ -40,12 +41,13 @@ describe('Note graph', () => {
         [{ to: 'page-a', text: 'go', position }],
         [],
         documentEnd,
+        eol,
         '/page-b.md',
         ''
       )
     );
     graph.setNote(
-      new Note('page-c', 'page-c', [], [], documentEnd, '/page-c.md', '')
+      new Note('page-c', 'page-c', [], [], documentEnd, eol, '/page-c.md', '')
     );
 
     expect(
@@ -59,7 +61,7 @@ describe('Note graph', () => {
   it('Detects backlinks', () => {
     const graph = new NoteGraph();
     graph.setNote(
-      new Note('page-a', 'page-a', [], [], documentEnd, '/page-a.md', '')
+      new Note('page-a', 'page-a', [], [], documentEnd, eol, '/page-a.md', '')
     );
     graph.setNote(
       new Note(
@@ -68,12 +70,13 @@ describe('Note graph', () => {
         [{ to: 'page-a', text: 'go', position }],
         [],
         documentEnd,
+        eol,
         '/page-b.md',
         ''
       )
     );
     graph.setNote(
-      new Note('page-c', 'page-c', [], [], documentEnd, '/page-c.md', '')
+      new Note('page-c', 'page-c', [], [], documentEnd, eol, '/page-c.md', '')
     );
 
     expect(
@@ -88,7 +91,7 @@ describe('Note graph', () => {
     expect(() => {
       const graph = new NoteGraph();
       graph.setNote(
-        new Note('page-a', 'page-a', [], [], documentEnd, '/path-b.md', '')
+        new Note('page-a', 'page-a', [], [], documentEnd, eol, '/path-b.md', '')
       );
       graph.getNote('non-existing');
     }).toThrow();
@@ -103,6 +106,7 @@ describe('Note graph', () => {
         [{ to: 'non-existing', text: 'does not exist', position }],
         [],
         documentEnd,
+        eol,
         '/path-b.md',
         ''
       )
@@ -113,7 +117,7 @@ describe('Note graph', () => {
   it('Updates links when modifying note', () => {
     const graph = new NoteGraph();
     graph.setNote(
-      new Note('page-a', 'page-a', [], [], documentEnd, '/page-a.md', '')
+      new Note('page-a', 'page-a', [], [], documentEnd, eol, '/page-a.md', '')
     );
     graph.setNote(
       new Note(
@@ -122,12 +126,13 @@ describe('Note graph', () => {
         [{ to: 'page-a', text: 'go', position }],
         [],
         documentEnd,
+        eol,
         '/page-b.md',
         ''
       )
     );
     graph.setNote(
-      new Note('page-c', 'page-c', [], [], documentEnd, '/page-c.md', '')
+      new Note('page-c', 'page-c', [], [], documentEnd, eol, '/page-c.md', '')
     );
 
     expect(
@@ -156,6 +161,7 @@ describe('Note graph', () => {
         [{ to: 'page-c', text: 'go', position }],
         [],
         documentEnd,
+        eol,
         '/path-2b.md',
         ''
       )

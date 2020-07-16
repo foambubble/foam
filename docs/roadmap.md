@@ -42,6 +42,8 @@ If a roadmap item is a stub, **consider** opening a [GitHub issue](https://githu
 - [[materialized-backlinks]]
 - [[automatic-git-syncing]]
 - [[git-flows-for-teams]]
+- [[user-settings]]
+- [[link-reference-definitions]]
 
 ### Publishing
 

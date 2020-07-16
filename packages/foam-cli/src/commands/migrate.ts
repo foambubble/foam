@@ -3,13 +3,15 @@ import * as ora from 'ora';
 import { initializeNoteGraph, generateLinkReferences, generateHeading, getKebabCaseFileName } from 'foam-core';
 import { applyTextEdit } from '../utils/apply-text-edit';
 import { writeFileToDisk } from '../utils/write-file-to-disk';
+import { renameFile } from '../utils/rename-file';
 import { isValidDirectory } from '../utils';
 
-export default class Janitor extends Command {
-  static description = 'Updates link references and heading across all the markdown files in the given workspaces';
+// @todo: Refactor 'migrate' and 'janitor' commands and avoid repeatition
+export default class Migrate extends Command {
+  static description = 'Updates file names, link references and heading across all the markdown files in the given workspaces';
 
   static examples = [
-    `$ foam-cli janitor path-to-foam-workspace
+    `$ foam-cli migrate path-to-foam-workspace
 Successfully generated link references and heading!
 `,
   ]
@@ -23,14 +25,14 @@ Successfully generated link references and heading!
   async run() {
     const spinner = ora('Reading Files').start();
 
-    const { args, flags } = this.parse(Janitor)
+    const { args, flags } = this.parse(Migrate)
 
     const { workspacePath = './' } = args;
 
     if (isValidDirectory(workspacePath)) {
-      const graph = await initializeNoteGraph(workspacePath);
+      let graph = await initializeNoteGraph(workspacePath);
 
-      const notes = graph.getNotes().filter(Boolean); // removes undefined notes
+      let notes = graph.getNotes().filter(Boolean); // removes undefined notes
 
       spinner.succeed();
       spinner.text = `${notes.length} files found`;
@@ -41,9 +43,28 @@ Successfully generated link references and heading!
         this.exit();
       }
 
-      spinner.text = 'Generating link definitions';
+      // Kebab case file names
+      const fileRename = notes.map(note => {
+        const kebabCasedFileName = getKebabCaseFileName(note.title);
+        if (kebabCasedFileName) {
+          return renameFile(note.path, kebabCasedFileName);
+        }
+        return null;
+      })
 
-      const fileWritePromises = notes.map(note => {
+      await Promise.all(fileRename);
+
+      spinner.text = 'Renaming files';
+
+      // Reinitialize the graph after renaming files
+      graph = await initializeNoteGraph(workspacePath);
+
+      notes = graph.getNotes().filter(Boolean); // remove undefined notes
+
+      spinner.succeed();
+      spinner.text = 'Generating link definitions'
+
+      const fileWritePromises = await Promise.all(notes.map(note => {
         // Get edits
         const heading = generateHeading(note);
         const definitions = generateLinkReferences(note, graph);
@@ -60,7 +81,7 @@ Successfully generated link references and heading!
         }
 
         return null;
-      })
+      }))
 
       await Promise.all(fileWritePromises);
 

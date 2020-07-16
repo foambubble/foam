@@ -1,22 +1,24 @@
 
 import { writeFileToDisk } from '../src/utils/write-file-to-disk'
 import * as fs from 'fs';
-import * as path from 'path';
+import mockFS from 'mock-fs';
 
-// TODO: Mock fs
 describe('writeFileToDisk', () => {
-  const fileUri = path.join(__dirname, 'test-file.md');
+  const fileUri = './test-file.md';
+
+  beforeAll(() => {
+    mockFS({ [fileUri]: 'content in the existing file' });
+  })
 
   afterAll(() => {
     fs.unlinkSync(fileUri);
+    mockFS.restore();
   })
 
   it('should overrwrite existing file in the disk with the new data', async () => {
-    const existingData = `content in the existing file`;
-    const newData = `content in the new file`;
-    fs.writeFileSync(fileUri, existingData);
-    await writeFileToDisk(fileUri, newData);
+    const expected = `content in the new file`;
+    await writeFileToDisk(fileUri, expected);
     const actual = fs.readFileSync(fileUri, { encoding: 'utf8' });
-    expect(actual).toBe(newData);
+    expect(actual).toBe(expected);
   });
 })

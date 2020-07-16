@@ -4,20 +4,17 @@ It would be good to have some shared terminology to talk about Foam concepts. So
 
 Here's some ideas, these are open for discussion.
 
-## Foam (project)
+## Foam, the software project
 
 The set of tools and ideas collected in this organisation.
 
-## Foam workspace
+## (Your) Foam
 
-The directory/repository where you keep all your documents.
+The directory/repository where you keep all your notes.
+
+Also happens to sound quite a lot like Home. Funny, that.
 
 ## Bubble
 
-Individual Foam document, written in Markdown.
+Individual Foam note, written in Markdown.
 
-## Foam blog
-
-When you use Foam to publish content to an audience.
-
-_Better ideas welcome._

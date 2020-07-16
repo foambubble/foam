@@ -59,7 +59,7 @@ Successfully generated link references and heading!
           return writeFileToDisk(note.path, file);
         }
 
-        return null;
+        return Promise.resolve(null);
       })
 
       await Promise.all(fileWritePromises);

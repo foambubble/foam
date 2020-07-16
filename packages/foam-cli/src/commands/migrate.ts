@@ -49,7 +49,7 @@ Successfully generated link references and heading!
         if (kebabCasedFileName) {
           return renameFile(note.path, kebabCasedFileName);
         }
-        return null;
+        return Promise.resolve(null);
       })
 
       await Promise.all(fileRename);
@@ -80,7 +80,7 @@ Successfully generated link references and heading!
           return writeFileToDisk(note.path, file);
         }
 
-        return null;
+        return Promise.resolve(null);
       }))
 
       await Promise.all(fileWritePromises);

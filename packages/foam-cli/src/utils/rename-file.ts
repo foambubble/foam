@@ -1,4 +1,5 @@
-import * as fs from 'fs'
+import * as fs from 'fs';
+import * as path from 'path';
 
 /**
  * 
@@ -6,9 +7,9 @@ import * as fs from 'fs'
  * @param newFileName  "new file name" without the extension
  */
 export const renameFile = async (fileUri: string, newFileName: string) => {
-  const fileName = fileUri.split('/').pop();
-  const extension = fileName?.split('.').pop();
-  const newFileUri = fileUri.replace(`${fileName}`, `${newFileName}.${extension}`);
+  const dirName = path.dirname(fileUri);
+  const extension = path.extname(fileUri);
+  const newFileUri = path.join(dirName, `${newFileName}${extension}`);
 
   return fs.promises.rename(fileUri, newFileUri);
 }

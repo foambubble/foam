@@ -57,8 +57,7 @@ export default class Publish extends Command {
 
     await this.execWithSpinner(`git add -A`, 'Staging changes...');
     await this.execWithSpinner(`git commit -m "${message}"`, 'Creating a commit...');
-    await this.execWithSpinner(`git push ${remote} ${branch}`, "Pushing Changes...");
-    await this.execWithSpinner(`yarn run deploy`, 'Publishing...');
+    await this.execWithSpinner(`git push ${remote} ${branch}`, "Publishing...");
     await this.printPublishInfo(remote);
   }
 }

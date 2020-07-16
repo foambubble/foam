@@ -3,6 +3,8 @@ import { renameFile } from '../src/utils/rename-file'
 import * as fs from 'fs';
 import mockFS from 'mock-fs';
 
+const doesFileExist = (path) => fs.promises.access(path).then(() => true).catch(() => false);
+
 describe('renameFile', () => {
 
   const fileUri = './test/oldFileName.md';
@@ -16,10 +18,11 @@ describe('renameFile', () => {
   });
 
   it('should rename existing file', async () => {
-    expect(fs.existsSync(fileUri)).toBe(true);
+    expect(await doesFileExist(fileUri)).toBe(true);
+
     renameFile(fileUri, 'new-file-name');
 
-    expect(fs.existsSync(fileUri)).toBe(false);
-    expect(fs.existsSync('./test/new-file-name.md')).toBe(true);
+    expect(await doesFileExist(fileUri)).toBe(false);
+    expect(await doesFileExist('./test/new-file-name.md')).toBe(true);
   });
 });

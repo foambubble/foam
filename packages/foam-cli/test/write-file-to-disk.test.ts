@@ -18,7 +18,7 @@ describe('writeFileToDisk', () => {
   it('should overrwrite existing file in the disk with the new data', async () => {
     const expected = `content in the new file`;
     await writeFileToDisk(fileUri, expected);
-    const actual = fs.readFileSync(fileUri, { encoding: 'utf8' });
+    const actual = await fs.promises.readFile(fileUri, { encoding: 'utf8' });
     expect(actual).toBe(expected);
   });
 })

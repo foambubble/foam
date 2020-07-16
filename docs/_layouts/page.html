@@ -1,21 +1,5 @@
 ---
-layout: default
+layout: foam
 ---
 
 {{ content }}
-
-<script type="text/javascript">
-  // Hack: Replace page-link with "Page Title"
-  document
-    .querySelectorAll(".markdown-body a[title]:not([href^=http])")
-    .forEach((a) => {
-      a.innerText = a.title;
-      if (a.href.endsWith('.md') || a.href.endsWith('.markdown')) {
-        a.href = a.href.split('.').slice(0, -1).join('.');
-      }
-    });
-
-  document.querySelectorAll(".github-only").forEach((el) => {
-    el.remove();
-  });
-</script>

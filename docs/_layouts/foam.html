@@ -1,0 +1,32 @@
+---
+layout: default
+---
+
+<script type="text/javascript">
+var MD_EXT = ['.md', '.markdown', '.mdown', '.mkdn', '.mkd', '.mdwn', '.mdtxt', '.mdtext', '.text', '.Rmd'];
+function normalizeMdLink(link) {
+  var url = new URL(link);
+  var mdFileExt = MD_EXT.find(ext => url.pathname.endsWith(ext));
+  if (mdFileExt) {
+    url.pathname = url.pathname.slice(0, mdFileExt.length * -1);
+  }
+  return url.toString();
+}
+
+window.addEventListener('DOMContentLoaded', (event) => {
+  // Hack: Replace page-link with "Page Title"
+  document
+    .querySelectorAll(".markdown-body a[title]:not([href^=http])")
+    .forEach((a) => {
+      a.innerText = a.title;
+      a.href = normalizeMdLink(a.href);
+    });
+
+  document.querySelectorAll(".github-only").forEach((el) => {
+    el.remove();
+  });
+});
+</script>
+
+
+{{ content }}

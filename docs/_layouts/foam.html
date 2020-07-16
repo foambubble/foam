@@ -3,7 +3,7 @@ layout: default
 ---
 
 <script type="text/javascript">
-var MD_EXT = ['.md', '.markdown', '.mdown', '.mkdn', '.mkd', '.mdwn', '.mdtxt', '.mdtext', '.text', '.Rmd'];
+var MD_EXT = ['.md', '.markdown', '.mdx', '.mdown', '.mkdn', '.mkd', '.mdwn', '.mdtxt', '.mdtext', '.text', '.Rmd'];
 function normalizeMdLink(link) {
   var url = new URL(link);
   var mdFileExt = MD_EXT.find(ext => url.pathname.endsWith(ext));

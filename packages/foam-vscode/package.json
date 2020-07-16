@@ -15,7 +15,8 @@
   ],
   "activationEvents": [
     "workspaceContains:.vscode/foam.json",
-    "onCommand:foam-vscode.update-wikilinks"
+    "onCommand:foam-vscode.update-wikilinks",
+    "onCommand:foam-vscode.open-daily-note"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -23,6 +24,49 @@
       {
         "command": "foam-vscode.update-wikilinks",
         "title": "Foam: Update Markdown Reference List"
+      },
+      {
+        "command": "foam-vscode.open-daily-note",
+        "title": "Foam: Open Daily Note"
+      }
+    ],
+    "configuration": {
+      "title": "Foam",
+      "properties": {
+        "foam.openDailyNote.fileExtension": {
+          "type": "string",
+          "scope": "resource",
+          "default": "md"
+        },
+        "foam.openDailyNote.filenameFormat": {
+          "type": "string",
+          "default": "isoDate",
+          "markdownDescription": "Specifies how the daily note filename is formatted. See the [dateformat docs](https://www.npmjs.com/package/dateformat) for valid formats",
+          "scope": "resource"
+        },
+        "foam.openDailyNote.titleFormat": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null,
+          "markdownDescription": "Specifies how the daily note title is formatted. Will default to the filename format if set to null. See the [dateformat docs](https://www.npmjs.com/package/dateformat) for valid formats",
+          "scope": "resource"
+        },
+        "foam.openDailyNote.directory": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null,
+          "description": "The directory into which daily notes should be created. Defaults to the workspace root."
+        }
+      }
+    },
+    "keybindings": [
+      {
+        "command": "foam-vscode.open-daily-note",
+        "key": "alt+d"
       }
     ]
   },
@@ -37,6 +81,7 @@
     "publish-extension": "npx vsce publish && yarn npm-cleanup"
   },
   "devDependencies": {
+    "@types/dateformat": "^3.0.1",
     "@types/glob": "^7.1.1",
     "@types/node": "^13.11.0",
     "@types/vscode": "^1.45.1",
@@ -49,6 +94,7 @@
     "vscode-test": "^1.3.0"
   },
   "dependencies": {
+    "dateformat": "^3.0.3",
     "foam-core": "^0.2.0"
   }
 }

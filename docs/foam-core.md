@@ -20,7 +20,7 @@
   - Can be either [[wiki-links]] or relative `[markdown](links.md)` style
   - We need to know about the edges (connections) as well as nodes
     - What link points to what other file, etc.
-    - Needs to have the exact link text, e.g. even if `[[some-page]]` or `[[some-page.md]]` or `[[Some Page]]` point to the same document (`./some-page.md`), we need to know which format was used, so link reference definitions can be generated correctly
+    - Needs to have the exact link text, e.g. even if `[[some-page]]` or `[[some-page.md]]` or `[[Some Page]]` point to the same document (`./some-page.md`), we need to know which format was used, so [[link-reference-definitions]] can be generated correctly
 - Treat each file as semi-structured data
   - Title, headings, lists, paragraphs, images, links, data, code
   - Also, possible Foam-specific meta stuff, like "backlinks" or "block references".
@@ -61,7 +61,7 @@ Here are some example use cases that the core should support. They don't need to
 
 - Adding and editing page content
   - [[materialized-backlinks]]
-  - [[wiki-links]] reference definitions
+  - [[link-reference-definitions]] for [[wiki-links]]
   - [Frontmatter](https://jekyllrb.com/docs/front-matter/)
 - Finding all documents with `#tag`
 - Finding all documents with instances of `[[link]]`

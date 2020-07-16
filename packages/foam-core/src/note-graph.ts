@@ -85,6 +85,13 @@ export class NoteGraph {
     throw new Error(`Note with ID [${noteId}] not found`);
   }
 
+  // Note: This is temporary until we figure out how to put 
+  // position inside Link (needed for linting)
+  public getNoteLinks(noteId: ID): NoteLink[] {
+    const note = this.getNote(noteId);
+    return note ? note.links : [];
+  }
+
   public getAllLinks(noteId: ID): Link[] {
     return (this.graph.nodeEdges(noteId) || []).map(edge =>
       convertEdgeToLink(edge, this.graph)

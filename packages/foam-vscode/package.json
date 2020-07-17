@@ -33,6 +33,15 @@
     "configuration": {
       "title": "Foam",
       "properties": {
+        "foam.edit.linkReferenceDefinitions": {
+          "type": "string",
+          "default": "withoutExtensions",
+          "enum": ["withExtensions", "withoutExtensions"],
+          "enumDescriptions": [
+            "Include extension in wikilinks paths",
+            "Remove extension in wikilink paths"
+          ]
+        },
         "foam.openDailyNote.fileExtension": {
           "type": "string",
           "scope": "resource",

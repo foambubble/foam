@@ -5,6 +5,7 @@ import visit, { CONTINUE, EXIT } from 'unist-util-visit';
 import { Node, Parent } from 'unist';
 import * as path from 'path';
 import { Note, NoteLink, NoteGraph } from './note-graph';
+import { dropExtension } from './utils';
 
 let processor: unified.Processor | null = null;
 
@@ -49,7 +50,8 @@ interface MarkdownReference {
 
 export function createMarkdownReferences(
   graph: NoteGraph,
-  noteId: string
+  noteId: string,
+  includeExtension: boolean,
 ): MarkdownReference[] {
   const source = graph.getNote(noteId);
 
@@ -81,10 +83,14 @@ export function createMarkdownReferences(
         target.path
       );
 
+      const pathToNote = includeExtension
+        ? relativePath
+        : dropExtension(relativePath)
+
       // [wiki-link-text]: path/to/file.md "Page title"
       return {
         linkText: link.to,
-        wikiLink: relativePath,
+        wikiLink: pathToNote,
         pageTitle: target.title,
       };
     })

@@ -97,13 +97,24 @@ async function updateReferenceList(foam: NoteGraph) {
   }
 }
 
+enum LinkReferenceDefinitionsSetting {
+  withExtensions = "withExtensions",
+  withoutExtensions = "withoutExtensions",
+}
+
 async function generateReferenceList(foam: NoteGraph, doc: TextDocument): Promise<string[]> {
   const filePath = doc.fileName;
 
   const id = dropExtension(basename(filePath));
 
+  const linkDefinitionSetting: LinkReferenceDefinitionsSetting = workspace
+    .getConfiguration("foam.edit")
+    .get<LinkReferenceDefinitionsSetting>("linkReferenceDefinitions")
+      ?? LinkReferenceDefinitionsSetting.withoutExtensions;
+
+  const includeExtensions = linkDefinitionSetting === LinkReferenceDefinitionsSetting.withExtensions;
   const references = uniq(
-    createMarkdownReferences(foam, id).map(
+    createMarkdownReferences(foam, id, includeExtensions).map(
       link => `[${link.linkText}]: ${link.wikiLink} "${link.pageTitle}"`
     )
   );

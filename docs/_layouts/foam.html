@@ -1,0 +1,35 @@
+---
+layout: default
+---
+
+<script type="text/javascript">
+// NOTE: this should be in sync with the settings/usage in the vscode extension
+// atm it's just a wide superset of md extensions to cover a wide range of cases
+var MD_EXT = ['.md', '.markdown', '.mdx', '.mdown', '.mkdn', '.mkd', '.mdwn', '.mdtxt', '.mdtext', '.text', '.Rmd'];
+function normalizeMdLink(link) {
+  var url = new URL(link);
+  var mdFileExt = MD_EXT.find(ext => url.pathname.endsWith(ext));
+  if (mdFileExt) {
+    url.pathname = url.pathname.slice(0, mdFileExt.length * -1);
+  }
+  return url.toString();
+}
+
+window.addEventListener('DOMContentLoaded', (event) => {
+  document
+    .querySelectorAll(".markdown-body a[title]:not([href^=http])")
+    .forEach((a) => {
+      // Hack: Replace page-link with "Page Title"...
+      a.innerText = a.title;
+      // ...and normalize the links to allow html pages navigation
+      a.href = normalizeMdLink(a.href);
+    });
+
+  document.querySelectorAll(".github-only").forEach((el) => {
+    el.remove();
+  });
+});
+</script>
+
+
+{{ content }}

@@ -5,11 +5,13 @@ import {
   WorkspaceConfiguration,
   ExtensionContext,
   commands,
+  Selection,
 } from "vscode";
 import { dirname, join } from "path";
 import dateFormat = require("dateformat");
 import fs = require("fs");
 import { FoamFeature } from "../types";
+import { docConfig } from '../utils';
 
 const feature: FoamFeature = {
   activate: async (context: ExtensionContext) => {
@@ -69,7 +71,7 @@ async function createDailyNoteIfNotExists(
 
   await fs.promises.writeFile(
     dailyNotePath,
-    `# ${dateFormat(currentDate, titleFormat, false)}\r\n`
+    `# ${dateFormat(currentDate, titleFormat, false)}${docConfig.eol}${docConfig.eol}`
   );
 }
 
@@ -83,7 +85,10 @@ async function createDailyNoteDirectoryIfNotExists(dailyNotePath: string) {
 
 async function focusDailyNote(dailyNotePath: string) {
   const document = await workspace.openTextDocument(Uri.parse(dailyNotePath));
-  window.showTextDocument(document);
+  const editor = await window.showTextDocument(document);
+  // Move the cursor to line 2 (0 indexed)
+  const { range } = editor.document.lineAt(2);
+  editor.selection = new Selection(range.start, range.end);
 }
 
 async function pathExists(path: string) {

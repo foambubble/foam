@@ -1,5 +1,5 @@
 import { createNoteFromMarkdown, createMarkdownReferences } from '../src/markdown-provider';
-import { NoteGraph } from '../src/note-graph';
+import { NoteGraph, Note } from '../src/note-graph';
 
 const pageA = `
 # Page A
@@ -17,6 +17,10 @@ This references [[page-a]]`;
 const pageC = `
 # Page C
 `;
+
+const pageD = `
+This file has no heading.
+`
 
 describe('Markdown loader', () => {
   it('Converts markdown to notes', () => {
@@ -48,6 +52,24 @@ describe('Markdown loader', () => {
     ]);
   });
 });
+
+describe('Note Title', () => {
+  it('should initialize note title if heading exists', () => {
+    const graph = new NoteGraph();
+    graph.setNote(createNoteFromMarkdown('page-a', pageA));
+
+    const pageANoteTitle = (graph.getNote('page-a') as Note).title;
+    expect(pageANoteTitle).toBe('Page A');
+  });
+
+  it('should not initialize note title if heading does not exist', () => {
+    const graph = new NoteGraph();
+    graph.setNote(createNoteFromMarkdown('page-d', pageD));
+
+    const pageANoteTitle = (graph.getNote('page-d') as Note).title;
+    expect(pageANoteTitle).toBe(null);
+  });
+})
 
 describe('wikilinks definitions', () => {
   it('can include or not the extension', () => {

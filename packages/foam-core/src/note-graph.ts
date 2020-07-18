@@ -17,14 +17,14 @@ export interface NoteLink {
 
 export class Note {
   public id: ID;
-  public title: string;
+  public title: string | null;
   public source: string;
   public path: string;
   public links: NoteLink[];
 
   constructor(
     id: ID,
-    title: string,
+    title: string | null,
     links: NoteLink[],
     path: string,
     source: string

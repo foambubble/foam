@@ -10,7 +10,7 @@ To start using GistPad for your Foam-based knowledge base, simply perform the fo
 
 1. Download the [GistPad extension](https://aka.ms/gistpad) and then re-start Visual Studio Code
 
-1. Run the `GistPad: Sign In` command, and provide a GitHub token that includes the `repo` scope (and optionally `gist` and `delete_repo` scope, if you'd like to use GistPad for managing your GitHub content more holistically)
+1. Run the `GistPad: Sign In` command, and provide a [GitHub token](https://github.com/settings/tokens/new) that includes the `repo` scope (and optionally `gist` and `delete_repo` scope, if you'd like to use GistPad for managing your GitHub content more holistically)
 
 1. Run the `GistPad: Manage Repository` command and select the `Create repo from template...` or `Create private repo from template...` depending on your preference
 

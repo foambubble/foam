@@ -42,7 +42,7 @@ You can view a page's backlinks using either of the following techniques:
 
 1. Expanding the file's node in the `Repositories` tree, since it's child nodes will represent backlinks. This makes it easy to browse your pages and their backlinks in a single hierachical view.
 
-1. Opening a file, and then viewing it's baclinks list at the bottom of the editor view. This makes it easy to read a page and then see its backlinks in a contextually rich way.
+1. Opening a file, and then viewing it's backlinks list at the bottom of the editor view. This makes it easy to read a page and then see its backlinks in a contextually rich way.
 
 ## Daily Pages
 

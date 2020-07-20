@@ -68,9 +68,7 @@ Guides, tips and strategies for getting the most out of your Foam workspace!
 
 ## Workflow
 
-Workflow recipes wanted!
-
-_See [[contribution-guide]] and [[how-to-write-recipes]]._
+- Capture notes from Drafts app on iOS [[capture-notes-with-drafts-pro]]
 
 ## Creative ideas
 
@@ -83,8 +81,6 @@ _See [[contribution-guide]] and [[how-to-write-recipes]]._
 ## Other
 
 Thought of a recipe but don't see a category for them? Add them here and we'll organise them once we detect a theme.
-
-- capture notes from Drafts app on iOS [[capture-notes-with-drafts-pro]]
 
 _See [[contribution-guide]] and [[how-to-write-recipes]]._
 

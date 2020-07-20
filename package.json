@@ -10,7 +10,10 @@
     "packages/*"
   ],
   "scripts": {
-    "watch": "yarn workspace foam-vscode watch"
+    "watch:vscode": "yarn workspace foam-vscode watch",
+    "build:core": "yarn workspace foam-core build",
+    "watch:core": "yarn workspace foam-core start",
+    "test:core": "yarn workspace foam-core test"
   },
   "devDependencies": {
     "all-contributors-cli": "^6.16.1",

@@ -1,6 +1,11 @@
 import { Command, flags } from '@oclif/command';
 import * as ora from 'ora';
-import { initializeNoteGraph, generateLinkReferences, generateHeading, getKebabCaseFileName } from 'foam-core';
+import {
+  initializeNoteGraph,
+  generateLinkReferences,
+  generateHeading,
+  getKebabCaseFileName,
+} from 'foam-core';
 import { applyTextEdit } from '../utils/apply-text-edit';
 import { writeFileToDisk } from '../utils/write-file-to-disk';
 import { renameFile } from '../utils/rename-file';
@@ -8,24 +13,25 @@ import { isValidDirectory } from '../utils';
 
 // @todo: Refactor 'migrate' and 'janitor' commands and avoid repeatition
 export default class Migrate extends Command {
-  static description = 'Updates file names, link references and heading across all the markdown files in the given workspaces';
+  static description =
+    'Updates file names, link references and heading across all the markdown files in the given workspaces';
 
   static examples = [
     `$ foam-cli migrate path-to-foam-workspace
 Successfully generated link references and heading!
 `,
-  ]
+  ];
 
   static flags = {
     help: flags.help({ char: 'h' }),
-  }
+  };
 
-  static args = [{ name: 'workspacePath' }]
+  static args = [{ name: 'workspacePath' }];
 
   async run() {
     const spinner = ora('Reading Files').start();
 
-    const { args, flags } = this.parse(Migrate)
+    const { args, flags } = this.parse(Migrate);
 
     const { workspacePath = './' } = args;
 
@@ -38,7 +44,7 @@ Successfully generated link references and heading!
       spinner.text = `${notes.length} files found`;
       spinner.succeed();
 
-      // exit early if no files found. 
+      // exit early if no files found.
       if (notes.length === 0) {
         this.exit();
       }
@@ -50,7 +56,7 @@ Successfully generated link references and heading!
           return renameFile(note.path, kebabCasedFileName);
         }
         return Promise.resolve(null);
-      })
+      });
 
       await Promise.all(fileRename);
 
@@ -62,33 +68,32 @@ Successfully generated link references and heading!
       notes = graph.getNotes().filter(Boolean); // remove undefined notes
 
       spinner.succeed();
-      spinner.text = 'Generating link definitions'
+      spinner.text = 'Generating link definitions';
 
-      const fileWritePromises = await Promise.all(notes.map(note => {
-        // Get edits
-        const heading = generateHeading(note);
-        const definitions = generateLinkReferences(note, graph);
+      const fileWritePromises = await Promise.all(
+        notes.map(note => {
+          // Get edits
+          const heading = generateHeading(note);
+          const definitions = generateLinkReferences(note, graph);
 
+          // apply Edits
+          let file = note.source;
+          file = heading ? applyTextEdit(file, heading) : file;
+          file = definitions ? applyTextEdit(file, definitions) : file;
 
-        // apply Edits
-        let file = note.source;
-        file = heading ? applyTextEdit(file, heading) : file;
-        file = definitions ? applyTextEdit(file, definitions) : file;
+          if (heading || definitions) {
+            return writeFileToDisk(note.path, file);
+          }
 
-
-        if (heading || definitions) {
-          return writeFileToDisk(note.path, file);
-        }
-
-        return Promise.resolve(null);
-      }))
+          return Promise.resolve(null);
+        })
+      );
 
       await Promise.all(fileWritePromises);
 
       spinner.succeed();
       spinner.succeed('Done!');
-    }
-    else {
+    } else {
       spinner.fail('Directory does not exist!');
     }
   }

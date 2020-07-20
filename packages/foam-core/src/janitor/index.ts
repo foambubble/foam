@@ -5,23 +5,26 @@ import {
   createMarkdownReferences,
   stringifyMarkdownLinkReferenceDefinition,
 } from '../markdown-provider';
-import { getHeadingFromFileName } from '../utils'
+import { getHeadingFromFileName } from '../utils';
 
-const slugger = new GithubSlugger()
+const slugger = new GithubSlugger();
 
 export interface TextEdit {
   range: Position;
   newText: string;
 }
 
-export const generateLinkReferences = (note: Note, ng: NoteGraph): TextEdit | null => {
+export const generateLinkReferences = (
+  note: Note,
+  ng: NoteGraph
+): TextEdit | null => {
   if (!note) {
     return null;
   }
 
-  const newReferences = createMarkdownReferences(ng, note.id).map(
-    stringifyMarkdownLinkReferenceDefinition
-  ).join('\n');
+  const newReferences = createMarkdownReferences(ng, note.id)
+    .map(stringifyMarkdownLinkReferenceDefinition)
+    .join('\n');
 
   if (note.definitions.length === 0) {
     if (newReferences.length === 0) {
@@ -40,7 +43,9 @@ export const generateLinkReferences = (note: Note, ng: NoteGraph): TextEdit | nu
     const first = note.definitions[0];
     const last = note.definitions[note.definitions.length - 1];
 
-    const oldRefrences = note.definitions.map(stringifyMarkdownLinkReferenceDefinition).join(note.eol);
+    const oldRefrences = note.definitions
+      .map(stringifyMarkdownLinkReferenceDefinition)
+      .join(note.eol);
 
     if (oldRefrences === newReferences) {
       return null;
@@ -70,18 +75,18 @@ export const generateHeading = (note: Note): TextEdit | null => {
     newText: `# ${getHeadingFromFileName(note.id)}${note.eol}${note.eol}`,
     range: {
       start: { line: 0, column: 0, offset: 0 },
-      end: { line: 0, column: 0, offset: 0 }
-    }
-  }
+      end: { line: 0, column: 0, offset: 0 },
+    },
+  };
 };
 
 /**
- * 
- * @param fileName 
- * @returns null if file name is already in kebab case otherise returns 
+ *
+ * @param fileName
+ * @returns null if file name is already in kebab case otherise returns
  * the kebab cased file name
  */
 export const getKebabCaseFileName = (fileName: string) => {
   const kebabCasedFileName = slugger.slug(fileName);
   return kebabCasedFileName === fileName ? null : kebabCasedFileName;
-}
+};

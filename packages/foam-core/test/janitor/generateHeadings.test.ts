@@ -29,14 +29,13 @@ describe('generateHeadings', () => {
           offset: 0,
         },
       },
-    }
+    };
 
     const actual = generateHeading(note!);
 
     expect(actual!.range.start).toEqual(expected.range.start);
     expect(actual!.range.end).toEqual(expected.range.end);
     expect(actual!.newText).toEqual(expected.newText);
-
   });
 
   it('should not cause any changes to a file that does heading', () => {
@@ -47,7 +46,5 @@ describe('generateHeadings', () => {
     const actual = generateHeading(note!);
 
     expect(actual).toEqual(expected);
-
-  })
-
+  });
 });

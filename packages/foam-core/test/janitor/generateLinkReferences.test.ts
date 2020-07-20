@@ -46,7 +46,7 @@ describe('generateLinkReferences', () => {
     const note = _graph.getNote('second-document') as Note;
 
     const expected = {
-      newText: "",
+      newText: '',
       range: {
         start: {
           line: 7,

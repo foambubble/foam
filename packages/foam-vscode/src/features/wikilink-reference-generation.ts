@@ -42,7 +42,11 @@ const feature: FoamFeature = {
       workspace.onWillSaveTextDocument(e => {
         if (e.document.languageId === "markdown") {
           foam.notes.setNote(
-            createNoteFromMarkdown(e.document.fileName, e.document.getText(), docConfig.eol)
+            createNoteFromMarkdown(
+              e.document.fileName,
+              e.document.getText(),
+              docConfig.eol
+            )
           );
           e.waitUntil(updateReferenceList(foam.notes));
         }
@@ -66,7 +70,7 @@ async function createReferenceList(foam: NoteGraph) {
 
   let refs = await generateReferenceList(foam, editor.document);
   if (refs && refs.length) {
-    await editor.edit(function (editBuilder) {
+    await editor.edit(function(editBuilder) {
       if (editor) {
         const spacing = hasEmptyTrailing
           ? docConfig.eol
@@ -111,7 +115,7 @@ async function updateReferenceList(foam: NoteGraph) {
 
 enum LinkReferenceDefinitionsSetting {
   withExtensions = "withExtensions",
-  withoutExtensions = "withoutExtensions",
+  withoutExtensions = "withoutExtensions"
 }
 
 async function generateReferenceList(
@@ -122,12 +126,14 @@ async function generateReferenceList(
 
   const id = dropExtension(basename(filePath));
 
-  const linkDefinitionSetting: LinkReferenceDefinitionsSetting = workspace
-    .getConfiguration("foam.edit")
-    .get<LinkReferenceDefinitionsSetting>("linkReferenceDefinitions")
-      ?? LinkReferenceDefinitionsSetting.withoutExtensions;
+  const linkDefinitionSetting: LinkReferenceDefinitionsSetting =
+    workspace
+      .getConfiguration("foam.edit")
+      .get<LinkReferenceDefinitionsSetting>("linkReferenceDefinitions") ??
+    LinkReferenceDefinitionsSetting.withoutExtensions;
 
-  const includeExtensions = linkDefinitionSetting === LinkReferenceDefinitionsSetting.withExtensions;
+  const includeExtensions =
+    linkDefinitionSetting === LinkReferenceDefinitionsSetting.withExtensions;
   const references = uniq(
     createMarkdownReferences(foam, id, includeExtensions).map(
       stringifyMarkdownLinkReferenceDefinition

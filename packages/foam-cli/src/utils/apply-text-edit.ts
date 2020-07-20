@@ -1,9 +1,9 @@
 import { TextEdit } from 'foam-core';
 
 /**
- * 
+ *
  * @param text text on which the textEdit will be applied
- * @param textEdit 
+ * @param textEdit
  * @returns {string} text with the applied textEdit
  */
 export const applyTextEdit = (text: string, textEdit: TextEdit): string => {
@@ -15,4 +15,4 @@ export const applyTextEdit = (text: string, textEdit: TextEdit): string => {
   const textToAppend = `${textEdit.newText}`;
   characters.splice(startOffset, deleteCount, textToAppend);
   return characters.join('');
-} 
+};

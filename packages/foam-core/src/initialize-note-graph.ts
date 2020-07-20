@@ -1,4 +1,3 @@
-
 import glob from 'glob';
 import { promisify } from 'util';
 import fs from 'fs';
@@ -11,7 +10,8 @@ const findAllFiles = promisify(glob);
 
 export const initializeNoteGraph = async (workspacePath: string) => {
   // remove trailing slash from workspacePath if exists
-  if (workspacePath.substr(-1) == '/') workspacePath = workspacePath.slice(0, -1);
+  if (workspacePath.substr(-1) == '/')
+    workspacePath = workspacePath.slice(0, -1);
 
   const files = await findAllFiles(`${workspacePath}/**/*.md`, {});
 
@@ -27,4 +27,4 @@ export const initializeNoteGraph = async (workspacePath: string) => {
   );
 
   return graph;
-}
+};

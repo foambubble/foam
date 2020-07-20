@@ -1,16 +1,18 @@
-
-import { renameFile } from '../src/utils/rename-file'
+import { renameFile } from '../src/utils/rename-file';
 import * as fs from 'fs';
 import mockFS from 'mock-fs';
 
-const doesFileExist = (path) => fs.promises.access(path).then(() => true).catch(() => false);
+const doesFileExist = path =>
+  fs.promises
+    .access(path)
+    .then(() => true)
+    .catch(() => false);
 
 describe('renameFile', () => {
-
   const fileUri = './test/oldFileName.md';
 
   beforeAll(() => {
-    mockFS({ [fileUri]: '' })
+    mockFS({ [fileUri]: '' });
   });
 
   afterAll(() => {

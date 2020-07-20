@@ -67,7 +67,8 @@ export function stringifyMarkdownLinkReferenceDefinition(
 }
 export function createMarkdownReferences(
   graph: NoteGraph,
-  noteId: string
+  noteId: string,
+  includeExtension: boolean,
 ): NoteLinkDefinition[] {
   const source = graph.getNote(noteId);
 
@@ -98,12 +99,15 @@ export function createMarkdownReferences(
         path.dirname(source.path),
         target.path
       );
-      const relativePathWithoutExtension = dropExtension(relativePath);
 
-      // [wiki-link-text]: wiki-link "Page title"
+      const pathToNote = includeExtension
+        ? relativePath
+        : dropExtension(relativePath)
+
+      // [wiki-link-text]: path/to/file.md "Page title"
       return {
         label: link.text,
-        url: relativePathWithoutExtension,
+        url: pathToNote,
         title: target.title,
       };
     })

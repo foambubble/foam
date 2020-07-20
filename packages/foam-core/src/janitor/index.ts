@@ -43,11 +43,11 @@ export const generateLinkReferences = (
     const first = note.definitions[0];
     const last = note.definitions[note.definitions.length - 1];
 
-    const oldRefrences = note.definitions
+    const oldReferences = note.definitions
       .map(stringifyMarkdownLinkReferenceDefinition)
       .join(note.eol);
 
-    if (oldRefrences === newReferences) {
+    if (oldReferences === newReferences) {
       return null;
     }
 

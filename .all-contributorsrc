@@ -241,6 +241,15 @@
         "code",
         "doc"
       ]
+    },
+    {
+      "login": "chirag-singhal",
+      "name": "CHIRAG SINGHAL",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/42653703?v=4",
+      "profile": "https://github.com/chirag-singhal",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,

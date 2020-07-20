@@ -49,8 +49,8 @@ Guides, tips and strategies for getting the most out of your Foam workspace!
 
 ## Version control
 
-- Store your workspace in an auto-synced GitHub repo [[gistpad]]
-- Quick commits with [[git-integration]]
+- Quick commits with VS Code's built in [[git-integration]]
+- Store your workspace in an auto-synced GitHub repo with [[gistpad]]
 - Sync your GitHub repo automatically [[todo]].
 
 ## Publish

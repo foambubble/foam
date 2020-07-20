@@ -18,7 +18,11 @@ function parse(markdown: string): Node {
   return processor.parse(markdown);
 }
 
-export function createNoteFromMarkdown(uri: string, markdown: string, eol: string): Note {
+export function createNoteFromMarkdown(
+  uri: string,
+  markdown: string,
+  eol: string
+): Note {
   const filename = path.basename(uri);
   const id = path.parse(filename).name;
   const tree = parse(markdown);
@@ -68,7 +72,7 @@ export function stringifyMarkdownLinkReferenceDefinition(
 export function createMarkdownReferences(
   graph: NoteGraph,
   noteId: string,
-  includeExtension: boolean,
+  includeExtension: boolean
 ): NoteLinkDefinition[] {
   const source = graph.getNote(noteId);
 
@@ -102,7 +106,7 @@ export function createMarkdownReferences(
 
       const pathToNote = includeExtension
         ? relativePath
-        : dropExtension(relativePath)
+        : dropExtension(relativePath);
 
       // [wiki-link-text]: path/to/file.md "Page title"
       return {

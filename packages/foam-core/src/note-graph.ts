@@ -105,7 +105,7 @@ export class NoteGraph {
 }
 
 const convertEdgeToLink = (edge: Edge, graph: Graph): Link => ({
-    from: edge.v,
-    to: edge.w,
-    text: graph.edge(edge.v, edge.w),
+  from: edge.v,
+  to: edge.w,
+  text: graph.edge(edge.v, edge.w),
 });

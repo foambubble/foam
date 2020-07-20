@@ -26,12 +26,12 @@ export function createNoteFromMarkdown(
   const filename = path.basename(uri);
   const id = path.parse(filename).name;
   const tree = parse(markdown);
-  let title = id;
+  let title: string | null = null;
   visit(tree, node => {
     if (node.type === 'heading' && node.depth === 1) {
       title = ((node as Parent)!.children[0].value as string) || title;
     }
-    return title === id ? CONTINUE : EXIT;
+    return title === null ? CONTINUE : EXIT;
   });
   const links: NoteLink[] = [];
   const definitions: NoteLinkDefinition[] = [];
@@ -112,7 +112,7 @@ export function createMarkdownReferences(
       return {
         label: link.text,
         url: pathToNote,
-        title: target.title,
+        title: target.title || target.id,
       };
     })
     .filter(Boolean)

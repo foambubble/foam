@@ -25,7 +25,7 @@ export interface NoteLinkDefinition {
 
 export class Note {
   public id: ID;
-  public title: string;
+  public title: string | null;
   public source: string;
   public path: string;
   public end: Point;
@@ -35,7 +35,7 @@ export class Note {
 
   constructor(
     id: ID,
-    title: string,
+    title: string | null,
     links: NoteLink[],
     definitions: NoteLinkDefinition[],
     end: Point,

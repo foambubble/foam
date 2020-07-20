@@ -9,6 +9,8 @@ import { getHeadingFromFileName } from '../utils';
 
 const slugger = new GithubSlugger();
 
+const INCLUDE_EXTENSION__HARD_CODED_READ_FROM_PROJECT_SETTINGS_FILE = false;
+
 export interface TextEdit {
   range: Position;
   newText: string;
@@ -22,7 +24,11 @@ export const generateLinkReferences = (
     return null;
   }
 
-  const newReferences = createMarkdownReferences(ng, note.id)
+  const newReferences = createMarkdownReferences(
+    ng,
+    note.id,
+    INCLUDE_EXTENSION__HARD_CODED_READ_FROM_PROJECT_SETTINGS_FILE
+  )
     .map(stringifyMarkdownLinkReferenceDefinition)
     .join('\n');
 

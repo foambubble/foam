@@ -186,7 +186,81 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "TaiChi-IO",
+      "name": "TaiChi-IO",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/65092992?v=4",
+      "profile": "https://github.com/TaiChi-IO",
+      "contributions": [
+        "doc"
+      ]
+    },
+    {
+      "login": "juanfrank77",
+      "name": "Juan F Gonzalez ",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/12146882?v=4",
+      "profile": "https://github.com/juanfrank77",
+      "contributions": [
+        "doc"
+      ]
+    },
+    {
+      "login": "SanketDG",
+      "name": "Sanket Dasgupta",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/8980971?v=4",
+      "profile": "https://sanketdg.github.io",
+      "contributions": [
+        "doc"
+      ]
+    },
+    {
+      "login": "nstafie",
+      "name": "Nicholas Stafie",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/10801854?v=4",
+      "profile": "https://github.com/nstafie",
+      "contributions": [
+        "doc"
+      ]
+    },
+    {
+      "login": "francishamel",
+      "name": "Francis Hamel",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/36383308?v=4",
+      "profile": "https://github.com/francishamel",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "digiguru",
+      "name": "digiguru",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/619436?v=4",
+      "profile": "http://digiguru.co.uk",
+      "contributions": [
+        "code",
+        "doc"
+      ]
+    },
+    {
+      "login": "chirag-singhal",
+      "name": "CHIRAG SINGHAL",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/42653703?v=4",
+      "profile": "https://github.com/chirag-singhal",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "lostintangent",
+      "name": "Jonathan Carter",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/116461?v=4",
+      "profile": "https://github.com/lostintangent",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
-  "contributorsPerLine": 7
+  "contributorsPerLine": 7,
+  "skipCi": true
 }

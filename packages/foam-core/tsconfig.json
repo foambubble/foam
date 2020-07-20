@@ -1,6 +1,9 @@
 {
   "extends": "../../tsconfig.base.json",
-  "include": ["src", "types"],
+  "include": [
+    "src",
+    "types"
+  ],
   "compilerOptions": {
     "composite": true,
     "declaration": true,
@@ -10,13 +13,14 @@
     "rootDir": "./src",
     // for references
     "baseUrl": "src",
-    "lib": ["esnext"],
-
+    "lib": [
+      "esnext"
+    ],
     "module": "esnext",
     "importHelpers": true,
     "sourceMap": true,
     "strict": true,
-    "noUnusedLocals": true,
+    // "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,

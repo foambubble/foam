@@ -1,11 +1,25 @@
 import { NoteGraph, Note } from '../src/note-graph';
 
+const position = {
+  start: { line: 0, column: 0 },
+  end: { line: 0, column: 0 },
+};
+
+const documentEnd = position.end;
+const eol = '\n';
+
 describe('Note graph', () => {
   it('Adds notes to graph', () => {
     const graph = new NoteGraph();
-    graph.setNote(new Note('page-a', 'page-a', [], '/page-a.md', ''));
-    graph.setNote(new Note('page-b', 'page-b', [], '/page-b.md', ''));
-    graph.setNote(new Note('page-c', 'page-c', [], '/page-c.md', ''));
+    graph.setNote(
+      new Note('page-a', 'page-a', [], [], documentEnd, eol, '/page-a.md', '')
+    );
+    graph.setNote(
+      new Note('page-b', 'page-b', [], [], documentEnd, eol, '/page-b.md', '')
+    );
+    graph.setNote(
+      new Note('page-c', 'page-c', [], [], documentEnd, eol, '/page-c.md', '')
+    );
 
     expect(
       graph
@@ -17,17 +31,24 @@ describe('Note graph', () => {
 
   it('Detects forward links', () => {
     const graph = new NoteGraph();
-    graph.setNote(new Note('page-a', 'page-a', [], '/page-a.md', ''));
+    graph.setNote(
+      new Note('page-a', 'page-a', [], [], documentEnd, eol, '/page-a.md', '')
+    );
     graph.setNote(
       new Note(
         'page-b',
         'page-b',
-        [{ to: 'page-a', text: 'go' }],
+        [{ to: 'page-a', text: 'go', position }],
+        [],
+        documentEnd,
+        eol,
         '/page-b.md',
         ''
       )
     );
-    graph.setNote(new Note('page-c', 'page-c', [], '/page-c.md', ''));
+    graph.setNote(
+      new Note('page-c', 'page-c', [], [], documentEnd, eol, '/page-c.md', '')
+    );
 
     expect(
       graph
@@ -39,17 +60,24 @@ describe('Note graph', () => {
 
   it('Detects backlinks', () => {
     const graph = new NoteGraph();
-    graph.setNote(new Note('page-a', 'page-a', [], '/page-a.md', ''));
+    graph.setNote(
+      new Note('page-a', 'page-a', [], [], documentEnd, eol, '/page-a.md', '')
+    );
     graph.setNote(
       new Note(
         'page-b',
         'page-b',
-        [{ to: 'page-a', text: 'go' }],
+        [{ to: 'page-a', text: 'go', position }],
+        [],
+        documentEnd,
+        eol,
         '/page-b.md',
         ''
       )
     );
-    graph.setNote(new Note('page-c', 'page-c', [], '/page-c.md', ''));
+    graph.setNote(
+      new Note('page-c', 'page-c', [], [], documentEnd, eol, '/page-c.md', '')
+    );
 
     expect(
       graph
@@ -62,7 +90,9 @@ describe('Note graph', () => {
   it('Fails when accessing non-existing node', () => {
     expect(() => {
       const graph = new NoteGraph();
-      graph.setNote(new Note('page-a', 'page-a', [], '/path-b.md', ''));
+      graph.setNote(
+        new Note('page-a', 'page-a', [], [], documentEnd, eol, '/path-b.md', '')
+      );
       graph.getNote('non-existing');
     }).toThrow();
   });
@@ -73,7 +103,10 @@ describe('Note graph', () => {
       new Note(
         'page-a',
         'page-a',
-        [{ to: 'non-existing', text: 'does not exist' }],
+        [{ to: 'non-existing', text: 'does not exist', position }],
+        [],
+        documentEnd,
+        eol,
         '/path-b.md',
         ''
       )
@@ -83,17 +116,24 @@ describe('Note graph', () => {
 
   it('Updates links when modifying note', () => {
     const graph = new NoteGraph();
-    graph.setNote(new Note('page-a', 'page-a', [], '/page-a.md', ''));
+    graph.setNote(
+      new Note('page-a', 'page-a', [], [], documentEnd, eol, '/page-a.md', '')
+    );
     graph.setNote(
       new Note(
         'page-b',
         'page-b',
-        [{ to: 'page-a', text: 'go' }],
+        [{ to: 'page-a', text: 'go', position }],
+        [],
+        documentEnd,
+        eol,
         '/page-b.md',
         ''
       )
     );
-    graph.setNote(new Note('page-c', 'page-c', [], '/page-c.md', ''));
+    graph.setNote(
+      new Note('page-c', 'page-c', [], [], documentEnd, eol, '/page-c.md', '')
+    );
 
     expect(
       graph
@@ -118,7 +158,10 @@ describe('Note graph', () => {
       new Note(
         'page-b',
         'page-b',
-        [{ to: 'page-c', text: 'go' }],
+        [{ to: 'page-c', text: 'go', position }],
+        [],
+        documentEnd,
+        eol,
         '/path-2b.md',
         ''
       )

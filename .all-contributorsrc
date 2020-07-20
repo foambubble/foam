@@ -250,6 +250,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "lostintangent",
+      "name": "Jonathan Carter",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/116461?v=4",
+      "profile": "https://github.com/lostintangent",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,

@@ -72,8 +72,8 @@ export const generateHeading = (note: Note): TextEdit | null => {
   if (!note) {
     return null;
   }
-  // Note: This may not work if the heading is same as the file name
-  if (note.title !== note.id) {
+
+  if (note.title) {
     return null;
   }
 

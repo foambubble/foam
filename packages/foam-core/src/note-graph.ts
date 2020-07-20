@@ -1,5 +1,6 @@
 import { Graph, Edge } from 'graphlib';
-import { Position } from 'unist';
+import { Position, Point } from 'unist';
+import GithubSlugger from 'github-slugger';
 
 type ID = string;
 
@@ -15,25 +16,41 @@ export interface NoteLink {
   position: Position;
 }
 
+export interface NoteLinkDefinition {
+  label: string;
+  url: string;
+  title?: string;
+  position?: Position;
+}
+
 export class Note {
   public id: ID;
   public title: string;
   public source: string;
   public path: string;
+  public end: Point;
+  public eol: string;
   public links: NoteLink[];
+  public definitions: NoteLinkDefinition[];
 
   constructor(
     id: ID,
     title: string,
     links: NoteLink[],
+    definitions: NoteLinkDefinition[],
+    end: Point,
     path: string,
-    source: string
+    source: string,
+    eol: string
   ) {
     this.id = id;
     this.title = title;
     this.source = source;
     this.path = path;
     this.links = links;
+    this.definitions = definitions;
+    this.end = end;
+    this.eol = eol;
   }
 }
 
@@ -52,7 +69,8 @@ export class NoteGraph {
     }
     this.graph.setNode(note.id, note);
     note.links.forEach(link => {
-      this.graph.setEdge(note.id, link.to, link.text);
+      const slugger = new GithubSlugger();
+      this.graph.setEdge(note.id, slugger.slug(link.to), link.text);
     });
   }
 
@@ -69,25 +87,25 @@ export class NoteGraph {
 
   public getAllLinks(noteId: ID): Link[] {
     return (this.graph.nodeEdges(noteId) || []).map(edge =>
-      convertEdgeToLink(edge)
+      convertEdgeToLink(edge, this.graph)
     );
   }
 
   public getForwardLinks(noteId: ID): Link[] {
     return (this.graph.outEdges(noteId) || []).map(edge =>
-      convertEdgeToLink(edge)
+      convertEdgeToLink(edge, this.graph)
     );
   }
 
   public getBacklinks(noteId: ID): Link[] {
     return (this.graph.inEdges(noteId) || []).map(edge =>
-      convertEdgeToLink(edge)
+      convertEdgeToLink(edge, this.graph)
     );
   }
 }
 
-const convertEdgeToLink = (edge: Edge): Link => ({
+const convertEdgeToLink = (edge: Edge, graph: Graph): Link => ({
   from: edge.v,
   to: edge.w,
-  text: edge.name || edge.w,
+  text: graph.edge(edge.v, edge.w),
 });

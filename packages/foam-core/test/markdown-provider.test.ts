@@ -1,4 +1,7 @@
-import { createNoteFromMarkdown, createMarkdownReferences } from '../src/markdown-provider';
+import {
+  createNoteFromMarkdown,
+  createMarkdownReferences,
+} from '../src/markdown-provider';
 import { NoteGraph } from '../src/note-graph';
 
 const pageA = `
@@ -18,12 +21,13 @@ const pageC = `
 # Page C
 `;
 
+// @todo: Add tests for definitions
 describe('Markdown loader', () => {
   it('Converts markdown to notes', () => {
     const graph = new NoteGraph();
-    graph.setNote(createNoteFromMarkdown('page-a', pageA));
-    graph.setNote(createNoteFromMarkdown('page-b', pageB));
-    graph.setNote(createNoteFromMarkdown('page-c', pageC));
+    graph.setNote(createNoteFromMarkdown('page-a', pageA, '\n'));
+    graph.setNote(createNoteFromMarkdown('page-b', pageB, '\n'));
+    graph.setNote(createNoteFromMarkdown('page-c', pageC, '\n'));
 
     expect(
       graph
@@ -35,9 +39,9 @@ describe('Markdown loader', () => {
 
   it('Parses wikilinks correctly', () => {
     const graph = new NoteGraph();
-    graph.setNote(createNoteFromMarkdown('page-a', pageA));
-    graph.setNote(createNoteFromMarkdown('page-b', pageB));
-    graph.setNote(createNoteFromMarkdown('page-c', pageC));
+    graph.setNote(createNoteFromMarkdown('page-a', pageA, '\n'));
+    graph.setNote(createNoteFromMarkdown('page-b', pageB, '\n'));
+    graph.setNote(createNoteFromMarkdown('page-c', pageC, '\n'));
 
     expect(graph.getBacklinks('page-b').map(link => link.from)).toEqual([
       'page-a',
@@ -50,32 +54,45 @@ describe('Markdown loader', () => {
 });
 
 describe('wikilinks definitions', () => {
-  it('can include or not the extension', () => {
+  it('can generate links without file extension when includeExtension = false', () => {
     const graph = new NoteGraph();
-    const noteA = createNoteFromMarkdown('dir1/page-a.md', pageA)
-    const noteB = createNoteFromMarkdown('dir1/page-b.md', pageB)
-    const noteC = createNoteFromMarkdown('dir1/page-c.md', pageC)
+    const noteA = createNoteFromMarkdown('dir1/page-a.md', pageA, '\n');
+    const noteB = createNoteFromMarkdown('dir1/page-b.md', pageB, '\n');
+    const noteC = createNoteFromMarkdown('dir1/page-c.md', pageC, '\n');
     graph.setNote(noteA);
     graph.setNote(noteB);
     graph.setNote(noteC);
 
-    const noExtRefs = createMarkdownReferences(graph, noteA.id, false)
-    expect(noExtRefs.map(r => r.wikiLink)).toEqual(['page-b', 'page-c'])
+    const noExtRefs = createMarkdownReferences(graph, noteA.id, false);
+    expect(noExtRefs.map(r => r.url)).toEqual(['page-b', 'page-c']);
+  });
 
-    const extRefs = createMarkdownReferences(graph, noteA.id, true)
-    expect(extRefs.map(r => r.wikiLink)).toEqual(['page-b.md', 'page-c.md'])
+  it('can generate links with file extension when includeExtension = true', () => {
+    const graph = new NoteGraph();
+    const noteA = createNoteFromMarkdown('dir1/page-a.md', pageA, '\n');
+    const noteB = createNoteFromMarkdown('dir1/page-b.md', pageB, '\n');
+    const noteC = createNoteFromMarkdown('dir1/page-c.md', pageC, '\n');
+    graph.setNote(noteA);
+    graph.setNote(noteB);
+    graph.setNote(noteC);
+
+    const extRefs = createMarkdownReferences(graph, noteA.id, true);
+    expect(extRefs.map(r => r.url)).toEqual(['page-b.md', 'page-c.md']);
   });
 
   it('use relative paths', () => {
     const graph = new NoteGraph();
-    const noteA = createNoteFromMarkdown('dir1/page-a.md', pageA)
-    const noteB = createNoteFromMarkdown('dir2/page-b.md', pageB)
-    const noteC = createNoteFromMarkdown('dir3/page-c.md', pageC)
+    const noteA = createNoteFromMarkdown('dir1/page-a.md', pageA, '\n');
+    const noteB = createNoteFromMarkdown('dir2/page-b.md', pageB, '\n');
+    const noteC = createNoteFromMarkdown('dir3/page-c.md', pageC, '\n');
     graph.setNote(noteA);
     graph.setNote(noteB);
     graph.setNote(noteC);
 
-    const extRefs = createMarkdownReferences(graph, noteA.id, true)
-    expect(extRefs.map(r => r.wikiLink)).toEqual(['../dir2/page-b.md', '../dir3/page-c.md'])
+    const extRefs = createMarkdownReferences(graph, noteA.id, true);
+    expect(extRefs.map(r => r.url)).toEqual([
+      '../dir2/page-b.md',
+      '../dir3/page-c.md',
+    ]);
   });
-})
+});

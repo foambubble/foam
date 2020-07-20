@@ -11,17 +11,25 @@
     "@oclif/command": "^1",
     "@oclif/config": "^1",
     "@oclif/plugin-help": "^3",
+    "foam-core": "^0.2.0",
+    "ora": "^4.0.4",
     "tslib": "^1"
   },
   "devDependencies": {
+    "@babel/core": "^7.10.4",
+    "@babel/preset-env": "^7.10.4",
+    "@babel/preset-typescript": "^7.10.4",
     "@oclif/dev-cli": "^1",
     "@types/node": "^10",
+    "babel-jest": "^26.1.0",
     "chai": "^4",
     "eslint": "^5.13",
     "eslint-config-oclif": "^3.1",
     "eslint-config-oclif-typescript": "^0.1",
     "foam-core": "^0.2.0",
     "globby": "^10",
+    "jest": "^26.1.0",
+    "mock-fs": "^4.12.0",
     "ts-node": "^8",
     "typescript": "^3.3"
   },
@@ -54,9 +62,8 @@
   "scripts": {
     "cli": "./bin/run",
     "postpack": "rm -f oclif.manifest.json",
-    "posttest": "eslint . --ext .ts --config .eslintrc",
     "prepack": "rm -rf lib && tsc -b && oclif-dev manifest && oclif-dev readme",
-    "test": "nyc --extension .ts mocha --forbid-only \"test/**/*.test.ts\"",
+    "test": "jest",
     "version": "oclif-dev readme && git add README.md"
   },
   "types": "lib/index.d.ts"

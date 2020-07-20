@@ -4,7 +4,7 @@ import wikiLinkPlugin from 'remark-wiki-link';
 import visit, { CONTINUE, EXIT } from 'unist-util-visit';
 import { Node, Parent } from 'unist';
 import * as path from 'path';
-import { Note, NoteLink, NoteGraph } from './note-graph';
+import { Note, NoteLink, NoteLinkDefinition, NoteGraph } from './note-graph';
 import { dropExtension } from './utils';
 
 let processor: unified.Processor | null = null;
@@ -18,7 +18,11 @@ function parse(markdown: string): Node {
   return processor.parse(markdown);
 }
 
-export function createNoteFromMarkdown(uri: string, markdown: string): Note {
+export function createNoteFromMarkdown(
+  uri: string,
+  markdown: string,
+  eol: string
+): Note {
   const filename = path.basename(uri);
   const id = path.parse(filename).name;
   const tree = parse(markdown);
@@ -30,29 +34,46 @@ export function createNoteFromMarkdown(uri: string, markdown: string): Note {
     return title === id ? CONTINUE : EXIT;
   });
   const links: NoteLink[] = [];
+  const definitions: NoteLinkDefinition[] = [];
   visit(tree, node => {
     if (node.type === 'wikiLink') {
       links.push({
         to: node.value as string,
         text: node.value as string,
-        position: node.position!
+        position: node.position!,
+      });
+    }
+
+    if (node.type === 'definition') {
+      definitions.push({
+        label: node.label as string,
+        url: node.url as string,
+        title: node.title as string,
+        position: node.position,
       });
     }
   });
-  return new Note(id, title, links, uri, markdown);
+
+  const end = tree.position!.end;
+
+  return new Note(id, title, links, definitions, end, uri, markdown, eol);
 }
 
-interface MarkdownReference {
-  linkText: string;
-  wikiLink: string;
-  pageTitle: string;
-}
+export function stringifyMarkdownLinkReferenceDefinition(
+  definition: NoteLinkDefinition
+) {
+  let text = `[${definition.label}]: ${definition.url}`;
+  if (definition.title) {
+    text = `${text} "${definition.title}"`;
+  }
 
+  return text;
+}
 export function createMarkdownReferences(
   graph: NoteGraph,
   noteId: string,
-  includeExtension: boolean,
-): MarkdownReference[] {
+  includeExtension: boolean
+): NoteLinkDefinition[] {
   const source = graph.getNote(noteId);
 
   // Should never occur since we're already in a file,
@@ -73,7 +94,7 @@ export function createMarkdownReferences(
       // but int the future we may want to surface these too
       if (!target) {
         console.log(
-          `Link '${link.to}' in '${noteId}' points to a non-existing note.`
+          `Warning: Link '${link.to}' in '${noteId}' points to a non-existing note.`
         );
         return null;
       }
@@ -85,15 +106,15 @@ export function createMarkdownReferences(
 
       const pathToNote = includeExtension
         ? relativePath
-        : dropExtension(relativePath)
+        : dropExtension(relativePath);
 
       // [wiki-link-text]: path/to/file.md "Page title"
       return {
-        linkText: link.to,
-        wikiLink: pathToNote,
-        pageTitle: target.title,
+        label: link.text,
+        url: pathToNote,
+        title: target.title,
       };
     })
     .filter(Boolean)
-    .sort() as MarkdownReference[];
+    .sort() as NoteLinkDefinition[];
 }

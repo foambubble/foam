@@ -9,6 +9,48 @@ Foam enables you to Link pages together using `[[file-name]]` annotations (i.e. 
 
 > If the `F12` shortcut feels unnatural you can rebind it at File > Preferences > Keyboard Shortcuts by searching for `editor.action.revealDefinition`.
 
+## Filenaming Specification
+
+Foam is designed to be flexible to your workflow. As a result it will try to do th best thing when you link to documents.
+
+For example:
+
+If there was only one file in the solution called `first-file.md`, and you added the following markdown:
+
+```markdown
+Here is a link to [[another file]]
+```
+
+You now have a link to a file that doesn't exist. If you `ctrl-click` the link it wil automatically generate `another-file.md`.
+
+Now you edit the first file more and amend the line ...
+
+```markdown
+Here is a link to [[another file]] and [[Another File]]
+```
+Foam decides that loosley matched files also count, so it will assume you meant `another-file.md` was the correct file to match.
+
+However there are instances that the user may want separate versions of the same file with captialisation differences. This being a special case has to be opted in by manually creating a file `Another File.md`. Foam will know that there is a more specific version of the file, and match that instead of loosley matching.
+
+The logic is as follows...
+
+``` Markdown
+[[New File]]
+```
+
+
+```mermaid
+graph TD
+  id1([`New File.md` exists in this directory?]) --> exit1(Use `New File.md`)
+  id2([`new-file.md` exists in this directory?]) --> exit2(Use `new-file.md`)
+  id3([Any file that matches `new-file.md` after being slugified in this directory?]) --> exit3(Use the unslugged file)
+  id4([`New File.md` exists in the root directory?]) --> exit4(Use `New File.md` in the root)
+  id5([`new-file.md` exists in the root directory?]) --> exit5(Use `new-file.md` in the root)
+  id6([Any file that matches `new-file.md` after being slugified in this directory?]) --> exit6(Use the unslugged file in the root)
+  exit7(Create a new file in the current directorty called `New File.md`)
+  id1 --> id2 --> id3 --> id4 --> id5 --> id6 --> exit7
+```
+
 ## Required extensions
 
  - [Markdown Notes](https://marketplace.visualstudio.com/items?itemName=kortina.vscode-markdown-notes) (core functionality)

@@ -259,6 +259,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "synesthesia",
+      "name": "Julian Elve",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/181399?v=4",
+      "profile": "https://www.synesthesia.co.uk",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,

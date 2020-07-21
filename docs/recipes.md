@@ -106,7 +106,7 @@ _See [[contribution-guide]] and [[how-to-write-recipes]]._
 [github-pages]: github-pages "Github Pages"
 [gitlab-pages]: gitlab-pages "GitLab Pages"
 [eleventy-and-netlify]: eleventy-and-netlify "Eleventy and Netlify"
-[azure-devops-wiki]: azure-devops-wiki "Azure Devops Wiki"
+[azure-devops-wiki]: azure-devops-wiki "Azure DevOps Wiki"
 [customising-styles]: customising-styles "Customising Styles"
 [math-support]: math-support "Math Support"
 [capture-notes-with-drafts-pro]: capture-notes-with-drafts-pro "Capture Notes With Drafts Pro"

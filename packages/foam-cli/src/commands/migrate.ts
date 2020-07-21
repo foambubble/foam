@@ -51,9 +51,11 @@ Successfully generated link references and heading!
 
       // Kebab case file names
       const fileRename = notes.map(note => {
-        const kebabCasedFileName = getKebabCaseFileName(note.title);
-        if (kebabCasedFileName) {
-          return renameFile(note.path, kebabCasedFileName);
+        if (note.title != null) {
+          const kebabCasedFileName = getKebabCaseFileName(note.title);
+          if (kebabCasedFileName) {
+            return renameFile(note.path, kebabCasedFileName);
+          }
         }
         return Promise.resolve(null);
       });

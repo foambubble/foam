@@ -8,10 +8,11 @@
     "dist"
   ],
   "scripts": {
-    "start": "tsdx watch",
+    "clean": "rimraf dist",
     "build": "tsdx build",
     "test": "tsdx test",
     "lint": "tsdx lint",
+    "watch": "tsdx watch",
     "prepare": "tsdx build"
   },
   "devDependencies": {

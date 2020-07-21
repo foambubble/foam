@@ -60,10 +60,13 @@
   },
   "repository": "foambubble/foam",
   "scripts": {
+    "clean": "rimraf tmp",
+    "build": "tsc -b",
+    "test": "jest",
+    "lint": "echo Missing lint task in CLI package",
     "cli": "./bin/run",
     "postpack": "rm -f oclif.manifest.json",
     "prepack": "rm -rf lib && tsc -b && oclif-dev manifest && oclif-dev readme",
-    "test": "jest",
     "version": "oclif-dev readme && git add README.md"
   },
   "types": "lib/index.d.ts"

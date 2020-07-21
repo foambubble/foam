@@ -13,7 +13,12 @@
     "watch:vscode": "yarn workspace foam-vscode watch",
     "build:core": "yarn workspace foam-core build",
     "watch:core": "yarn workspace foam-core start",
-    "test:core": "yarn workspace foam-core test"
+    "test:core": "yarn workspace foam-core test",
+    "clean": "lerna run clean",
+    "build": "lerna run build",
+    "test": "lerna run test",
+    "lint": "lerna run lint",
+    "watch": "lerna run watch --concurrency 20 --stream"
   },
   "devDependencies": {
     "all-contributors-cli": "^6.16.1",

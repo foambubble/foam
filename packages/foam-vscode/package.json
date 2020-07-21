@@ -80,10 +80,12 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "yarn npm-install && yarn run compile",
-    "compile": "tsc -p ./",
+    "clean": "rimraf out",
+    "build": "tsc -p ./",
+    "test": "echo No tests in VSCode extensions yet",
     "lint": "eslint src --ext ts",
     "watch": "tsc -watch -p ./",
+    "vscode:prepublish": "yarn npm-install && yarn run compile",
     "npm-install": "rimraf node_modules && npm i",
     "npm-cleanup": "rimraf package-lock.json node_modules && yarn",
     "package-extension": "npx vsce package && yarn npm-cleanup",

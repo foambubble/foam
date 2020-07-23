@@ -10,7 +10,7 @@ With this template you can
 
 When you're ready to publish, import the GitHub repository you created with **foam-eleventy-template** into your Netlify account. (Create one if you don't have it already.)
 
-Once that's done, all you have to do is make changes to your workspace in VS COde and push them to the main branch on GitHub. Netlify will recognize the changes, deploy them automatically and give you a link where your Foam is published.
+Once that's done, all you have to do is make changes to your workspace in VS Code and push them to the main branch on GitHub. Netlify will recognize the changes, deploy them automatically and give you a link where your Foam is published.
 
 
 That's it!

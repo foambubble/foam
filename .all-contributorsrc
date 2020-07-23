@@ -268,6 +268,17 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "thomaskoppelaar",
+      "name": "Thomas Koppelaar",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/36331365?v=4",
+      "profile": "https://github.com/thomaskoppelaar",
+      "contributions": [
+        "question",
+        "code",
+        "userTesting"
+      ]
     }
   ],
   "contributorsPerLine": 7,

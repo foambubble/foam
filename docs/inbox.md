@@ -11,6 +11,10 @@ Uncategorised thoughts, to be added
   - [Unotes](https://marketplace.visualstudio.com/items?itemName=ryanmcalister.Unotes)
   - [vscode-memo](https://github.com/svsool/vscode-memo)
   - [gistpad wiki](https://github.com/jevakallio/gistpad/tree/master/src/repos/wiki)
+- Open in Foam
+  - When you want to open a Foam published website in your own VS Code, we could have a "Open in Foam" link that opens the link in VS Code via a url binding (if possible), downloads the github repo locally, and opens it as a Foam workspace.
+  - Every Foam could have a different theme even in the editor, so you'll see it like they see it
+    - UI and layout design of your workspace can become a thing
 - Developer documentation
   - GistPad has a good vs code contrib primer: https://github.com/jevakallio/gistpad/blob/master/CONTRIBUTING.md  
 - VS Code Notebooks API

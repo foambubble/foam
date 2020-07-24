@@ -8,14 +8,9 @@ The following recipe is written with the assumption that you already have an [Az
 
 ## Setup a Foam workspace
 
-Generate a Foam workspace using the [foam-template project](https://github.com/foambubble/foam-template). Change the remote to git repository in Azure DevOps, or copy all the files into a new Azure DevOps git repository.
-
-Define which document will be the wiki default page. To do that, create file with name `.order` in workspace root folder, with first line being document filename without `.md` extension. For project created from template, file would look like this:
-
-```
-readme
-```
-Push repository to remote in Azure DevOps.
+1. Generate a Foam workspace using the [foam-template project](https://github.com/foambubble/foam-template). 
+2. Change the remote to a git repository in Azure DevOps, or copy all the files into a new Azure DevOps git repository.
+3. Define which document will be the wiki default page. To do that, create a file called `.order` in the Foam workspace root folder, with first line being the document filename without `.md` extension. For a project created from the Foam template, the file would look like this:
 
 ## Publish repository to a wiki
 

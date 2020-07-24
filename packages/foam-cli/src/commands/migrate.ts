@@ -5,8 +5,8 @@ import {
   generateLinkReferences,
   generateHeading,
   getKebabCaseFileName,
+  applyTextEdit
 } from 'foam-core';
-import { applyTextEdit } from '../utils/apply-text-edit';
 import { writeFileToDisk } from '../utils/write-file-to-disk';
 import { renameFile } from '../utils/rename-file';
 import { isValidDirectory } from '../utils';

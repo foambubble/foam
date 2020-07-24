@@ -26,7 +26,6 @@ export const bootstrap = async (config: FoamConfig) => {
       .map(f => {
         return workspace.openTextDocument(f.fsPath).then(data => {
           const markdown = (data.getText() || "").toString();
-          console.log(markdown);
           const eol = window.activeTextEditor?.document?.eol === EndOfLine.CRLF ? "\r\n" : "\n";
           foam.notes.setNote(createNoteFromMarkdown(f.fsPath, markdown, eol));
         });

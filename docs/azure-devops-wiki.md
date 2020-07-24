@@ -4,7 +4,7 @@ Publish your Foam workspace as an Azure DevOps wiki.
 
 [Azure DevOps](https://azure.microsoft.com/en-us/services/devops/) is Microsoft's collaboration software for software development teams, formerly known as Team Foundation Server (TFS) and Visual Studio Team Services. It is available as an on-premise or SaaS version. The following recipe was tested with the SaaS version, but should work the same way for the on-premise.
 
-Following recipe is written in assumption that you already have Azure DevOps project.
+The following recipe is written with the assumption that you already have an [Azure DevOps](https://azure.microsoft.com/en-us/services/devops/) project.
 
 ## Setup a Foam workspace
 

@@ -70,7 +70,7 @@ async function createReferenceList(foam: NoteGraph) {
 
   let refs = await generateReferenceList(foam, editor.document);
   if (refs && refs.length) {
-    await editor.edit(function(editBuilder) {
+    await editor.edit(function (editBuilder) {
       if (editor) {
         const spacing = hasEmptyTrailing
           ? docConfig.eol

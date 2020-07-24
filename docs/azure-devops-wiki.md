@@ -14,10 +14,17 @@ The following recipe is written with the assumption that you already have an [Az
 
 ## Publish repository to a wiki
 
-Process is better described in [Azure DevOps documentation](https://docs.microsoft.com/en-us/azure/devops/project/wiki/publish-repo-to-wiki). Navigate to your Azure DevOps project in web browser, choose **Overview** > **Wiki**. If you don't have wikis for your project, choose **Publish code as a wiki** on welcome page. Choose repository with your Foam workspace, branch (usually `master`), folder (for workspace created from foam-template it is `/`), and wiki name, and press **Publish**.
 
-Published workspace would look like this
+1. Navigate to your Azure DevOps project in a web browser.
+2. Choose **Overview** > **Wiki**. If you don't have wikis for your project, choose **Publish code as a wiki** on welcome page. 
+3. Choose repository with your Foam workspace, branch (usually `master` or `main`), folder (for workspace created from foam-template it is `/`), and wiki name, and press **Publish**.
+
+A published workspace looks like this:
 
 ![Azure DevOps wiki](assets/images/azure-devops-wiki-demo.png)
 
-There is default TOC pane to the left of the wiki content. Here are listed all directories that present in Foam workspace, and all wiki pages. Pages names are derived from files names, and they are listed in alphabetical order. You may reorder pages by adding filenames without `.md` extension to `.order` file. Note that first entry in `.order` file defines wiki's home page.
+There is default table of contents pane to the left of the wiki content. Here, you'll find a list of all directories that are present in your Foam workspace, and all wiki pages. Page names are derived from files names, and they are listed in alphabetical order. You may reorder pages by adding filenames without `.md` extension to `.order` file. 
+
+_Note that first entry in `.order` file defines wiki's home page._
+
+For more information, read the [Azure DevOps documentation](https://docs.microsoft.com/en-us/azure/devops/project/wiki/publish-repo-to-wiki). 

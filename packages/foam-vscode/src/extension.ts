@@ -17,15 +17,16 @@ export function activate(context: ExtensionContext) {
   });
 }
 
-const bootstrap = async (config: FoamConfig) => {
+export const bootstrap = async (config: FoamConfig) => {
   const files = await workspace.findFiles("**/*");
   const foam = createFoam(config);
   await Promise.all(
     files
       .filter(f => f.scheme === "file" && f.path.match(/\.(md|mdx|markdown)/i))
       .map(f => {
-        return fs.promises.readFile(f.fsPath).then(data => {
-          const markdown = (data || "").toString();
+        return workspace.openTextDocument(f.fsPath).then(data => {
+          const markdown = (data.getText() || "").toString();
+          console.log(markdown);
           const eol = window.activeTextEditor?.document?.eol === EndOfLine.CRLF ? "\r\n" : "\n";
           foam.notes.setNote(createNoteFromMarkdown(f.fsPath, markdown, eol));
         });
@@ -34,6 +35,6 @@ const bootstrap = async (config: FoamConfig) => {
   return foam;
 };
 
-const getConfig = () => {
+export const getConfig = () => {
   return {};
 };

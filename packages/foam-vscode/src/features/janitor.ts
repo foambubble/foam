@@ -5,6 +5,9 @@ import {
   ExtensionContext,
   commands,
   Position,
+  TextEdit,
+  Selection,
+  Range
 } from "vscode";
 import fs = require("fs");
 import { FoamFeature } from "../types";
@@ -13,7 +16,6 @@ import {
   generateHeading,
   Foam,
   Note,
-  TextEdit,
   applyTextEdit
 } from 'foam-core';
 
@@ -35,61 +37,69 @@ const feature: FoamFeature = {
 };
 
 async function janitor(foam: Foam) {
-  const notes = foam.notes.getNotes();
+  const notes = foam.notes.getNotes().filter(Boolean);
 
   const dirtyEditors = window.visibleTextEditors.filter(editor => editor.document.isDirty);
   const dirtyEditorsFileName = dirtyEditors.map(editor => editor.document.fileName);
 
-  const dirtyNotes: Note[] = [];
-  const nonDirtyNotes: Note[] = [];
+  const dirtyNotes: Note[] = notes.filter(note => dirtyEditorsFileName.includes(note.path));
+  const nonDirtyNotes: Note[] = notes.filter(note => !dirtyEditorsFileName.includes(note.path));
 
-  notes.forEach(note => {
-    if (dirtyEditorsFileName.includes(note.path)) {
-      dirtyNotes.push(note);
-    } else {
-      nonDirtyNotes.push(note);
-    }
-  });
-
+  console.log(nonDirtyNotes, dirtyNotes);
 
   // Apply Text Edits to Non Dirty Notes using fs module just like CLI
 
-  // const fileWritePromises = dirtyNotes.map(note => {
-  //   // get edits
-  //   const heading = generateHeading(note);
-  //   let definitions = generateLinkReferences(note, foam.notes);
+  const fileWritePromises = nonDirtyNotes.map(note => {
+     // get edits
+     const heading = generateHeading(note);
+     let definitions = generateLinkReferences(note, foam.notes);
 
-  //   // apply Edits
-  //   let text = note.source;
-  //   text = heading ? applyTextEdit(text, heading) : text;
-  //   text = definitions ? applyTextEdit(text, definitions) : text;
+     // apply Edits
+     let text = note.source;
+     text = heading ? applyTextEdit(text, heading) : text;
+     text = definitions ? applyTextEdit(text, definitions) : text;
 
-  //   return fs.promises.writeFile(note.path, text);
-  // });
+     return fs.promises.writeFile(note.path, text);
+   });
 
-  // await Promise.all(fileWritePromises);
+   await Promise.all(fileWritePromises);
 
 
   // Handle dirty editors 
 
 
-  // dirtyEditors.map(async editor => {
-  //   let text = editor.document.getText(); // This includes unsaved changes as well
+   dirtyEditors.map(async editor => {
+     let text = editor.document.getText(); // This includes unsaved changes as well
 
-  //   const note = dirtyNotes.find(n => n.path === editor.document.fileName);
-  //   note.source = text; // There may be a better of doing this..
+     const note = dirtyNotes.find(n => n.path === editor.document.fileName);
+     note.source = text; // There may be a better of doing this..
+     foam.notes.setNote(note);
 
+     // Get edits
+     const heading = generateHeading(note);
+     let definitions = generateLinkReferences(note, foam.notes);
 
-  //   // Get edits
-  //   const heading = generateHeading(note);
-  //   let definitions = generateLinkReferences(note, foam.notes);
+     console.log(heading);
+     // apply Edits
+     editor.edit(editBuilder => {
+       if(heading) {
+        const start = new Position(heading.range.start.line, heading.range.start.column);
+        console.log(start, heading.newText);
+        editBuilder.insert(start, heading.newText);
+      }
+      if(definitions) {
+        const start = new Position(definitions.range.start.line - 1, definitions.range.start.column);
+        const end = new Position(definitions.range.end.line - 1, definitions.range.end.column);
+        const range = new Range(start, end);
+        editBuilder.replace(range, definitions!.newText);
+      }
+     });
 
-  //   // apply Edits
-  //   text = heading ? applyTextEdit(text, heading) : text;
-  //   text = definitions ? applyTextEdit(text, definitions) : text;
+     // Use editor.edit API to apply the text edit
 
-  //   // Use editor.edit API to apply the text edit
-  // });
+     
+
+    });
 }
 
 

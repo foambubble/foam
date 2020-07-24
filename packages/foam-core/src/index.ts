@@ -13,6 +13,8 @@ export {
   getKebabCaseFileName,
 } from './janitor';
 
+export { applyTextEdit } from './janitor/apply-text-edit'
+
 export { initializeNoteGraph } from './initialize-note-graph';
 
 export { NoteGraph, Note, NoteLink };

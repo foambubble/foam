@@ -10,7 +10,7 @@ The default keyboard shortcut for "Open Daily Note" is `alt`+`d`. This can be ov
 
 ## Configuration
 
-By default, Daily notes will be created in a file called `yyyy-mm-dd.md` in the workspace root, with a heading `yyyy-mm-dd`. 
+By default, Daily Notes will be created in a file called `yyyy-mm-dd.md` in the workspace root, with a heading `yyyy-mm-dd`. 
 
 These settings can be overridden in your workspace or global `.vscode/settings.json` file, using the [**dateformat** date masking syntax](https://github.com/felixge/node-dateformat#mask-options):
 
@@ -44,5 +44,4 @@ If you want this behaviour now, you can use the excellent [Auto Run Command](htt
     }
   ],
 ```
-
 

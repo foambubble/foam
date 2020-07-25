@@ -70,8 +70,9 @@ If a roadmap item is a stub, **consider** opening a [GitHub issue](https://githu
   - Discussion: [foam#55](https://github.com/foambubble/foam/issues/55)
 - [[migrating-from-obsidian]]
   - Discussion: [foam#46](https://github.com/foambubble/foam/issues/46)
+- [[Migrating from OneNote (stub)]]
+  - Discussion: [foam#151](https://github.com/foambubble/foam/issues/151)
 - _Migration from other tools..._
-
 ### integration
 - _Integrations to third party tools_...
   

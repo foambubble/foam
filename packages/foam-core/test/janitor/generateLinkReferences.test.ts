@@ -37,7 +37,7 @@ describe('generateLinkReferences', () => {
       },
     };
 
-    const actual = generateLinkReferences(note!, _graph);
+    const actual = generateLinkReferences(note!, _graph, false);
 
     expect(actual!.range.start).toEqual(expected.range.start);
     expect(actual!.range.end).toEqual(expected.range.end);
@@ -63,7 +63,7 @@ describe('generateLinkReferences', () => {
       },
     };
 
-    const actual = generateLinkReferences(note!, _graph);
+    const actual = generateLinkReferences(note!, _graph, false);
 
     expect(actual!.range.start).toEqual(expected.range.start);
     expect(actual!.range.end).toEqual(expected.range.end);
@@ -91,7 +91,7 @@ describe('generateLinkReferences', () => {
       },
     };
 
-    const actual = generateLinkReferences(note!, _graph);
+    const actual = generateLinkReferences(note!, _graph, false);
 
     expect(actual!.range.start).toEqual(expected.range.start);
     expect(actual!.range.end).toEqual(expected.range.end);
@@ -103,7 +103,7 @@ describe('generateLinkReferences', () => {
 
     const expected = null;
 
-    const actual = generateLinkReferences(note!, _graph);
+    const actual = generateLinkReferences(note!, _graph, false);
 
     expect(actual).toEqual(expected);
   });

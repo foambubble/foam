@@ -4,6 +4,18 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.3.0] - 2020-07-25
+
+New features:
+
+- [Daily Notes](https://foambubble.github.io/foam/daily-notes) 
+- [Janitor](https://foambubble.github.io/foam/workspace-janitor) for updating headings and link references across your workspace
+
+Fixes and improvements: 
+
+- [Configuration setting for generating link reference definitions with file extension](https://foambubble.github.io/foam/link-reference-definitions#configuration) to support standard markdown tools, such as GitHub web UI
+- [Improvements to how new notes are indexed](https://github.com/foambubble/foam/pull/156)
+
 ## [0.2.0] - 2020-07-12
 
 Improvements:

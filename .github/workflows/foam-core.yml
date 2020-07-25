@@ -1,0 +1,25 @@
+name: Test foam-core
+
+on:
+  pull_request:
+    paths:
+      - 'packages/foam-core/**'
+  push:
+    paths:
+      - 'packages/foam-core/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-node@v1
+
+      - name: Install dependencies
+        run: yarn
+
+      - name: Lint foam-core
+        run: yarn workspace foam-core lint
+
+      - name: Test foam-core
+        run: yarn workspace foam-core test

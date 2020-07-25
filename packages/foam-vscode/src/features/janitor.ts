@@ -17,6 +17,7 @@ import {
 } from "foam-core";
 
 import { bootstrap, getConfig } from "../extension";
+import { includeExtensions } from "../settings";
 
 const feature: FoamFeature = {
   activate: async (context: ExtensionContext, _foamPromise: Promise<Foam>) => {
@@ -87,7 +88,11 @@ async function runJanitor() {
       updatedHeadingCount += 1;
     }
 
-    let definitions = generateLinkReferences(note, foam.notes);
+    let definitions = generateLinkReferences(
+      note,
+      foam.notes,
+      includeExtensions()
+    );
     if (definitions) {
       updatedDefinitionListCount += 1;
     }
@@ -118,7 +123,11 @@ async function runJanitor() {
 
     // Get edits
     const heading = generateHeading(note);
-    let definitions = generateLinkReferences(note, foam.notes);
+    let definitions = generateLinkReferences(
+      note,
+      foam.notes,
+      includeExtensions()
+    );
 
     if (heading || definitions) {
       // Apply Edits

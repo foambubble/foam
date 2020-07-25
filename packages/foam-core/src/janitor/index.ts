@@ -14,8 +14,6 @@ import { getHeadingFromFileName } from '../utils';
 
 const slugger = new GithubSlugger();
 
-const INCLUDE_EXTENSION__HARD_CODED_READ_FROM_PROJECT_SETTINGS_FILE = false;
-
 export interface TextEdit {
   range: Position;
   newText: string;
@@ -23,7 +21,8 @@ export interface TextEdit {
 
 export const generateLinkReferences = (
   note: Note,
-  ng: NoteGraph
+  ng: NoteGraph,
+  includeExtensions: boolean
 ): TextEdit | null => {
   if (!note) {
     return null;
@@ -32,7 +31,7 @@ export const generateLinkReferences = (
   const markdownReferences = createMarkdownReferences(
     ng,
     note.id,
-    INCLUDE_EXTENSION__HARD_CODED_READ_FROM_PROJECT_SETTINGS_FILE
+    includeExtensions
   );
 
   const newReferences =

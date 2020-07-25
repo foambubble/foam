@@ -71,7 +71,7 @@ function getFoamDefinitions(
   // (last one first)
   for (const def of defs.reverse()) {
     // if this definition is more than 2 lines above the
-    // previous one below it (or file end), that means we 
+    // previous one below it (or file end), that means we
     // have exited the trailing definition block, and should bail
     const start = def.position!.start.line;
     if (start < previousLine - 2) {

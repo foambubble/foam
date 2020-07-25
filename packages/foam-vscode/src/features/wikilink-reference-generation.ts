@@ -33,6 +33,7 @@ import {
   dropExtension
 } from "../utils";
 import { FoamFeature } from "../types";
+import { includeExtensions } from "../settings";
 
 const feature: FoamFeature = {
   activate: async (context: ExtensionContext, foamPromise: Promise<Foam>) => {
@@ -112,10 +113,6 @@ async function updateReferenceList(foam: NoteGraph) {
   }
 }
 
-enum LinkReferenceDefinitionsSetting {
-  withExtensions = "withExtensions",
-  withoutExtensions = "withoutExtensions"
-}
 
 async function generateReferenceList(
   foam: NoteGraph,
@@ -125,16 +122,8 @@ async function generateReferenceList(
 
   const id = dropExtension(basename(filePath));
 
-  const linkDefinitionSetting: LinkReferenceDefinitionsSetting =
-    workspace
-      .getConfiguration("foam.edit")
-      .get<LinkReferenceDefinitionsSetting>("linkReferenceDefinitions") ??
-    LinkReferenceDefinitionsSetting.withoutExtensions;
-
-  const includeExtensions =
-    linkDefinitionSetting === LinkReferenceDefinitionsSetting.withExtensions;
   const references = uniq(
-    createMarkdownReferences(foam, id, includeExtensions).map(
+    createMarkdownReferences(foam, id, includeExtensions()).map(
       stringifyMarkdownLinkReferenceDefinition
     )
   );

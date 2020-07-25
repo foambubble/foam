@@ -6,7 +6,7 @@ Automatically create a Daily Note by executing the "Foam: Open Daily Note" comma
 
 ## Keyboard shortcut
 
-The default keyboard shortcut for "Open Daily Note" is `alt`+`d`. This can be overridden using [VS Code Keybindings editor](https://code.visualstudio.com/docs/getstarted/keybindings).
+The default keyboard shortcut for "Open Daily Note" is `alt`+`d`. This can be overridden using the [VS Code Keybindings editor](https://code.visualstudio.com/docs/getstarted/keybindings).
 
 ## Configuration
 
@@ -44,4 +44,3 @@ If you want this behaviour now, you can use the excellent [Auto Run Command](htt
     }
   ],
 ```
-

@@ -38,19 +38,15 @@ import { includeExtensions } from "../settings";
 const feature: FoamFeature = {
   activate: async (context: ExtensionContext, foamPromise: Promise<Foam>) => {
     const foam = await foamPromise;
+
     context.subscriptions.push(
       commands.registerCommand("foam-vscode.update-wikilinks", () =>
         updateReferenceList(foam.notes)
       ),
+
       workspace.onWillSaveTextDocument(e => {
         if (e.document.languageId === "markdown") {
-          foam.notes.setNote(
-            createNoteFromMarkdown(
-              e.document.fileName,
-              e.document.getText(),
-              docConfig.eol
-            )
-          );
+          updateDocumentInNoteGraph(foam, e.document);
           e.waitUntil(updateReferenceList(foam.notes));
         }
       }),
@@ -59,11 +55,30 @@ const feature: FoamFeature = {
         new WikilinkReferenceCodeLensProvider(foam.notes)
       )
     );
+
+    // when a file is created as a result of peekDefinition
+    // action on a wikilink, add definition update references
+    foam.notes.unstable_onNoteAdded(e => {
+      let editor = window.activeTextEditor;
+      if (!editor || !isMdEditor(editor)) {
+        return;
+      }
+
+      updateDocumentInNoteGraph(foam, editor.document);
+      updateReferenceList(foam.notes);
+    });
   }
 };
 
+function updateDocumentInNoteGraph(foam: Foam, document: TextDocument) {
+  foam.notes.setNote(
+    createNoteFromMarkdown(document.fileName, document.getText(), docConfig.eol)
+  );
+}
+
 async function createReferenceList(foam: NoteGraph) {
   let editor = window.activeTextEditor;
+
   if (!editor || !isMdEditor(editor)) {
     return;
   }

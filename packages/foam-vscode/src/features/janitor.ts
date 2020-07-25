@@ -16,20 +16,21 @@ import {
   Note
 } from "foam-core";
 
-import { bootstrap, getConfig } from "../extension";
 import { includeExtensions } from "../settings";
 
 const feature: FoamFeature = {
-  activate: async (context: ExtensionContext, _foamPromise: Promise<Foam>) => {
+  activate: async (context: ExtensionContext, foamPromise: Promise<Foam>) => {
     context.subscriptions.push(
-      commands.registerCommand("foam-vscode.janitor", janitor)
+      commands.registerCommand("foam-vscode.janitor", async () =>
+        janitor(await foamPromise)
+      )
     );
   }
 };
 
-async function janitor() {
+async function janitor(foam: Foam) {
   try {
-    const outcome = await runJanitor();
+    const outcome = await runJanitor(foam);
     if (outcome.processedFileCount === 0) {
       window.showInformationMessage(
         "Foam Janitor didn't file any notes to clean up"
@@ -50,8 +51,7 @@ async function janitor() {
   }
 }
 
-async function runJanitor() {
-  const foam = await bootstrap(getConfig());
+async function runJanitor(foam: Foam) {
   const notes = foam.notes.getNotes().filter(Boolean);
 
   let processedFileCount = 0;

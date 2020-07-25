@@ -1,6 +1,7 @@
 import { Graph, Edge } from 'graphlib';
 import { Position, Point } from 'unist';
 import GithubSlugger from 'github-slugger';
+import { EventEmitter } from 'events';
 
 type ID = string;
 
@@ -54,24 +55,32 @@ export class Note {
   }
 }
 
+export type NoteGraphEventHandler = (e: { note: Note }) => void;
+
 export class NoteGraph {
   private graph: Graph;
+  private events: EventEmitter;
 
   constructor() {
     this.graph = new Graph();
+    this.events = new EventEmitter();
   }
 
   public setNote(note: Note) {
-    if (this.graph.hasNode(note.id)) {
+    const noteExists = this.graph.hasNode(note.id);
+    if (noteExists) {
       (this.graph.outEdges(note.id) || []).forEach(edge => {
         this.graph.removeEdge(edge);
       });
     }
+
     this.graph.setNode(note.id, note);
     note.links.forEach(link => {
       const slugger = new GithubSlugger();
       this.graph.setEdge(note.id, slugger.slug(link.to), link.text);
     });
+
+    this.events.emit(noteExists ? 'update' : 'add', { note });
   }
 
   public getNotes(): Note[] {
@@ -101,6 +110,23 @@ export class NoteGraph {
     return (this.graph.inEdges(noteId) || []).map(edge =>
       convertEdgeToLink(edge, this.graph)
     );
+  }
+
+  public unstable_onNoteAdded(callback: NoteGraphEventHandler) {
+    this.events.addListener('add', callback);
+  }
+
+  public unstable_onNoteUpdated(callback: NoteGraphEventHandler) {
+    this.events.addListener('update', callback);
+  }
+
+  public unstable_removeEventListener(callback: NoteGraphEventHandler) {
+    this.events.removeListener('add', callback);
+    this.events.removeListener('update', callback);
+  }
+
+  public dispose() {
+    this.events.removeAllListeners();
   }
 }
 

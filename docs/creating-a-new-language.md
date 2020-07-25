@@ -1,3 +1,5 @@
+# Creating a New Language
+
 ## Creating a new language
 
 What if we created a new language that made it more ergonomic to use VS Code as a Foam workspace

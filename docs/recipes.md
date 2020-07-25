@@ -97,7 +97,7 @@ _See [[contribution-guide]] and [[how-to-write-recipes]]._
 [reference-lists]: reference-lists "Reference Lists"
 [wiki-links]: wiki-links "Wiki Links"
 [creating-new-notes]: creating-new-notes "Creating New Notes"
-[daily-notes]: daily-notes "Daily Notes"
+[daily-notes]: daily-notes "Daily notes"
 [diagrams-in-markdown]: diagrams-in-markdown "Diagrams in Markdown"
 [automatically-expand-urls-to-well-titled-links]: automatically-expand-urls-to-well-titled-links "Automatically Expand URLs to Well-Titled Links"
 [custom-markdown-preview-styles]: custom-markdown-preview-styles "Custom Markdown Preview Styles"

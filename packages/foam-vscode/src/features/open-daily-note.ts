@@ -5,11 +5,13 @@ import {
   WorkspaceConfiguration,
   ExtensionContext,
   commands,
+  Selection,
 } from "vscode";
 import { dirname, join } from "path";
 import dateFormat = require("dateformat");
 import fs = require("fs");
 import { FoamFeature } from "../types";
+import { docConfig } from '../utils';
 
 const feature: FoamFeature = {
   activate: async (context: ExtensionContext) => {
@@ -25,8 +27,8 @@ async function openDailyNote() {
 
   const dailyNotePath = getDailyNotePath(foamConfiguration, currentDate);
 
-  createDailyNoteIfNotExists(foamConfiguration, dailyNotePath, currentDate);
-  await focusDailyNote(dailyNotePath);
+  const isNew = await createDailyNoteIfNotExists(foamConfiguration, dailyNotePath, currentDate);
+  await focusDailyNote(dailyNotePath, isNew);
 }
 
 function getDailyNotePath(configuration: WorkspaceConfiguration, date: Date) {
@@ -56,9 +58,9 @@ async function createDailyNoteIfNotExists(
   configuration: WorkspaceConfiguration,
   dailyNotePath: string,
   currentDate: Date
-) {
+ ) {
   if (await pathExists(dailyNotePath)) {
-    return;
+    return false;
   }
 
   createDailyNoteDirectoryIfNotExists(dailyNotePath);
@@ -69,8 +71,10 @@ async function createDailyNoteIfNotExists(
 
   await fs.promises.writeFile(
     dailyNotePath,
-    `# ${dateFormat(currentDate, titleFormat, false)}\r\n`
+    `# ${dateFormat(currentDate, titleFormat, false)}${docConfig.eol}${docConfig.eol}`
   );
+
+  return true;
 }
 
 async function createDailyNoteDirectoryIfNotExists(dailyNotePath: string) {
@@ -81,9 +85,16 @@ async function createDailyNoteDirectoryIfNotExists(dailyNotePath: string) {
   }
 }
 
-async function focusDailyNote(dailyNotePath: string) {
+async function focusDailyNote(dailyNotePath: string, isNewNote: boolean) {
   const document = await workspace.openTextDocument(Uri.parse(dailyNotePath));
-  window.showTextDocument(document);
+  const editor = await window.showTextDocument(document);
+
+  // Move the cursor to end of the file
+  if (isNewNote) {
+    const { lineCount } = editor.document;
+    const { range } = editor.document.lineAt(lineCount - 1);
+    editor.selection = new Selection(range.end, range.end);
+  }
 }
 
 async function pathExists(path: string) {

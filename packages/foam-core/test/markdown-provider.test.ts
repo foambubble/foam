@@ -23,7 +23,7 @@ const pageC = `
 
 const pageD = `
 This file has no heading.
-`
+`;
 
 describe('Markdown loader', () => {
   it('Converts markdown to notes', () => {
@@ -72,7 +72,7 @@ describe('Note Title', () => {
     const pageANoteTitle = (graph.getNote('page-d') as Note).title;
     expect(pageANoteTitle).toBe(null);
   });
-})
+});
 
 describe('wikilinks definitions', () => {
   it('can generate links without file extension when includeExtension = false', () => {

@@ -1,6 +1,11 @@
 import { Position } from 'unist';
 import GithubSlugger from 'github-slugger';
-import { Note, NoteGraph } from '../index';
+import {
+  Note,
+  NoteGraph,
+  LINK_REFERENCE_DEFINITION_HEADER,
+  LINK_REFERENCE_DEFINITION_FOOTER,
+} from '../index';
 import {
   createMarkdownReferences,
   stringifyMarkdownLinkReferenceDefinition,
@@ -24,13 +29,20 @@ export const generateLinkReferences = (
     return null;
   }
 
-  const newReferences = createMarkdownReferences(
+  const markdownReferences = createMarkdownReferences(
     ng,
     note.id,
     INCLUDE_EXTENSION__HARD_CODED_READ_FROM_PROJECT_SETTINGS_FILE
-  )
-    .map(stringifyMarkdownLinkReferenceDefinition)
-    .join('\n');
+  );
+
+  const newReferences =
+    markdownReferences.length === 0
+      ? ''
+      : [
+          LINK_REFERENCE_DEFINITION_HEADER,
+          ...markdownReferences.map(stringifyMarkdownLinkReferenceDefinition),
+          LINK_REFERENCE_DEFINITION_FOOTER,
+        ].join('\n');
 
   if (note.definitions.length === 0) {
     if (newReferences.length === 0) {

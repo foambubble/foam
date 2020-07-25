@@ -32,7 +32,7 @@
       },
       {
         "command": "foam-vscode.janitor",
-        "title": "Foam: Run Janitor"
+        "title": "Foam: Run Janitor (Experimental)"
       }
     ],
     "configuration": {

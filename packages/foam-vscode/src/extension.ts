@@ -81,6 +81,6 @@ const bootstrap = async (config: FoamConfig) => {
   return foam;
 };
 
-const getConfig = () => {
+export const getConfig = () => {
   return {};
 };

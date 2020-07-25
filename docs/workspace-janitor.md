@@ -1,69 +1,40 @@
-# Workspace Janitor
+# Janitor
 
-## What is it?
+To store your personal knowledge graph in markdown files instead of a database, we need some additional tooling to create and maintain relationships with notes.
 
-To store your personal knowledge graph in markdown files instead of a database, we need some additional tooling to create and maintain:
+**Foam Janitor** (inspired by Andy Matuschak's [note-link-janitor](https://github.com/andymatuschak/note-link-janitor)) helps you migrate existing notes to Foam, and maintain your Foam's health over time.
 
-- Relationships between notes
-  - link references for [[wiki-links]]/markdown compatibility
-  - [[materialized-backlinks]]
-  - etc.
-- Format and structure of each note (e.g. title)
-- Renaming and refactoring files and directories
-- Linting related functionality
-  - File names
-  - Note links
-  - Zettelkasten linking
-- Visibility for orphaned notes
+Currently, Foam's Janitor helps you to:
+- Ensure your [[link-reference-definitions]] are up to date
+- Ensure every document has a well-formatted title (required for Markdown Links, Markdown Notes, and Foam Gatsby Template compatibility)
 
-This is necessary:
+In the future, Janitor can help you with
+- Updating [[materialized-backlinks]]
+- Lint, format and structure notes
+- Rename and move notes around while keeping their references up to date.
 
-- When migrating to Foam
-- To maintain your workspace health over long period of time
+## Using Janitor from VS Code (Experimental)
 
-## Problem
+Execute the "Foam: Run Janitor" command from the command palette.
 
-Currently, the VS Code extension is very naive, and only updates the currently active editor. This isn't sufficient, because:
+![Foam Janitor demo](assets/images/foam-janitor-demo.gif)
 
-- For e.g. [[materialized-backlinks]] to work, files need to update in the background.
-  - Separation of clean vs generated workspace for publishing?
-  - Support for standard markdown tools
-    - Output to a /build directory
-    - Would have to implement a custom previewer
-    - [[todo]] **Janne Ojanaho! Write a short proposal for this.**
-- If VS Code extension bugs our or is not ran, the workspace can lead in an inconsistent state
-- In collaboration scenarios, two people may change the same file, causing incomplete updates
-- If someone pushes changes from outside VS Code (Obsidian, Git Journal, etc.) links aren't updated
+## Using Janitor from command line (Experimental)
 
-## Proposal
+> ⚠️ Improvements to this documentation are welcome!
 
-Implement a note janitor (working title, named after Andy Matuschak's [note-link-janitor](https://github.com/andymatuschak/note-link-janitor)), which ensures all files are correctly linked and updated, no matter how changes happen.
+The Janitor can be installed from [NPM](https://www.npmjs.com/) and executed as a standalone CLI tool:
 
-Janitor should be runnable:
+```sh
+> npm install -g foam-cli
+> foam janitor path/to/workspace
+```
 
-- From VS Code
-  - Replaces the existing logic in extension.ts
-  - In theory, we could do this using the [VS Code Tasks](https://code.visualstudio.com/docs/editor/tasks), exposing it from foam-vscode with a [TaskProvider](https://code.visualstudio.com/api/extension-guides/task-provider)
-  - It's not clear to me whether modifying the file in the active VS Code buffer from a background task is problematic for e.g. focus/selection management. I think this is how e.g. Prettier works, but not sure if there's some special case for the active editor.
-  - VS Code provides its own workspace watching functionality. Not sure it would be beneficial to use this over just chokidar-style file watching in the background
-- As a pre-push Git Hook (is this a good idea?) to ensure we send fully formed note graphs, even if you had to do some editing outside vs code
-- As a GitHub Action (for incoming changes via PRs and other apps like GitJournal)
-  - Run the "build" and push back to master/gh-pages
-- As a NPM script/dependency for any other purpose
+You can run the Janitor as a git hook on every commit to ensure your workspace links are up to date. This can be especially helpful if you edit your markdown documents from other apps. 
 
-## Software architecture
-
-- It's not really clear to me whether the workspace janitor should be its own package, or if the Janitor should just be the [[cli]] package, or the [[foam-core]] package.
-- Ideally the janitor should be lightweight so installing it on CI is quick
-- It would be cool if it didn't have many weird node-specific dependencies, maybe it could be even ran INSIDE a mobile application?
-- We don't want to pollute foam-core, but janitor might actually get quite diverse in use cases.
-
-Decoupling things like the core janitor API from the CLI API would help potentially with situations where we might want to have a separate file watcher strategy for CLI and active VS Code workspaces (see above).
+You can also run the Janitor from a GitHub action to ensure that all changes coming to your workspace are up to date. This can be useful when editing your Foam notes from mobile (i.e. via [GitJournal](https://gitjournal.io)), or your Foam has multiple contributors and you want to ensure that all changes are correctly integrated.
 
 [//begin]: # "Autogenerated link references for markdown compatibility"
-[wiki-links]: wiki-links "Wiki Links"
+[link-reference-definitions]: link-reference-definitions "Link Reference Definitions"
 [materialized-backlinks]: materialized-backlinks "Materialized Backlinks (stub)"
-[cli]: cli "Command Line Interface"
-[foam-core]: foam-core "Foam Core"
-[todo]: todo "Todo"
 [//end]: # "Autogenerated link references"

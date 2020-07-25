@@ -2,7 +2,7 @@ import unified from 'unified';
 import markdownParse from 'remark-parse';
 import wikiLinkPlugin from 'remark-wiki-link';
 import visit, { CONTINUE, EXIT } from 'unist-util-visit';
-import { Node, Parent } from 'unist';
+import { Node, Parent, Point } from 'unist';
 import * as path from 'path';
 import { Note, NoteLink, NoteLinkDefinition, NoteGraph } from './note-graph';
 import { dropExtension } from './utils';
@@ -34,7 +34,7 @@ export function createNoteFromMarkdown(
     return title === null ? CONTINUE : EXIT;
   });
   const links: NoteLink[] = [];
-  const definitions: NoteLinkDefinition[] = [];
+  const linkDefinitions: NoteLinkDefinition[] = [];
   visit(tree, node => {
     if (node.type === 'wikiLink') {
       links.push({
@@ -45,7 +45,7 @@ export function createNoteFromMarkdown(
     }
 
     if (node.type === 'definition') {
-      definitions.push({
+      linkDefinitions.push({
         label: node.label as string,
         url: node.url as string,
         title: node.title as string,
@@ -55,8 +55,34 @@ export function createNoteFromMarkdown(
   });
 
   const end = tree.position!.end;
+  const definitions = getFoamDefinitions(linkDefinitions, end);
 
   return new Note(id, title, links, definitions, end, uri, markdown, eol);
+}
+
+function getFoamDefinitions(
+  defs: NoteLinkDefinition[],
+  fileEndPoint: Point
+): NoteLinkDefinition[] {
+  let previousLine = fileEndPoint.line;
+  let foamDefinitions = [];
+
+  // walk through each definition in reverse order
+  // (last one first)
+  for (const def of defs.reverse()) {
+    // if this definition is more than 2 lines above the
+    // previous one below it (or file end), that means we
+    // have exited the trailing definition block, and should bail
+    const start = def.position!.start.line;
+    if (start < previousLine - 2) {
+      break;
+    }
+
+    foamDefinitions.unshift(def);
+    previousLine = def.position!.end.line;
+  }
+
+  return foamDefinitions;
 }
 
 export function stringifyMarkdownLinkReferenceDefinition(

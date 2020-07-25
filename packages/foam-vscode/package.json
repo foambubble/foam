@@ -16,7 +16,8 @@
   "activationEvents": [
     "workspaceContains:.vscode/foam.json",
     "onCommand:foam-vscode.update-wikilinks",
-    "onCommand:foam-vscode.open-daily-note"
+    "onCommand:foam-vscode.open-daily-note",
+    "onCommand:foam-vscode.janitor"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -28,6 +29,10 @@
       {
         "command": "foam-vscode.open-daily-note",
         "title": "Foam: Open Daily Note"
+      },
+      {
+        "command": "foam-vscode.janitor",
+        "title": "Foam: Run Janitor (Experimental)"
       }
     ],
     "configuration": {
@@ -36,7 +41,10 @@
         "foam.edit.linkReferenceDefinitions": {
           "type": "string",
           "default": "withoutExtensions",
-          "enum": ["withExtensions", "withoutExtensions"],
+          "enum": [
+            "withExtensions",
+            "withoutExtensions"
+          ],
           "enumDescriptions": [
             "Include extension in wikilinks paths",
             "Remove extension in wikilink paths"

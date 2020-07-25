@@ -1,6 +1,11 @@
 import { Position } from 'unist';
 import GithubSlugger from 'github-slugger';
-import { Note, NoteGraph } from '../index';
+import {
+  Note,
+  NoteGraph,
+  LINK_REFERENCE_DEFINITION_HEADER,
+  LINK_REFERENCE_DEFINITION_FOOTER,
+} from '../index';
 import {
   createMarkdownReferences,
   stringifyMarkdownLinkReferenceDefinition,
@@ -9,8 +14,6 @@ import { getHeadingFromFileName } from '../utils';
 
 const slugger = new GithubSlugger();
 
-const INCLUDE_EXTENSION__HARD_CODED_READ_FROM_PROJECT_SETTINGS_FILE = false;
-
 export interface TextEdit {
   range: Position;
   newText: string;
@@ -18,19 +21,27 @@ export interface TextEdit {
 
 export const generateLinkReferences = (
   note: Note,
-  ng: NoteGraph
+  ng: NoteGraph,
+  includeExtensions: boolean
 ): TextEdit | null => {
   if (!note) {
     return null;
   }
 
-  const newReferences = createMarkdownReferences(
+  const markdownReferences = createMarkdownReferences(
     ng,
     note.id,
-    INCLUDE_EXTENSION__HARD_CODED_READ_FROM_PROJECT_SETTINGS_FILE
-  )
-    .map(stringifyMarkdownLinkReferenceDefinition)
-    .join('\n');
+    includeExtensions
+  );
+
+  const newReferences =
+    markdownReferences.length === 0
+      ? ''
+      : [
+          LINK_REFERENCE_DEFINITION_HEADER,
+          ...markdownReferences.map(stringifyMarkdownLinkReferenceDefinition),
+          LINK_REFERENCE_DEFINITION_FOOTER,
+        ].join(note.eol);
 
   if (note.definitions.length === 0) {
     if (newReferences.length === 0) {

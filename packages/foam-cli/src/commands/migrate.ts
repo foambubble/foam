@@ -5,8 +5,8 @@ import {
   generateLinkReferences,
   generateHeading,
   getKebabCaseFileName,
+  applyTextEdit
 } from 'foam-core';
-import { applyTextEdit } from '../utils/apply-text-edit';
 import { writeFileToDisk } from '../utils/write-file-to-disk';
 import { renameFile } from '../utils/rename-file';
 import { isValidDirectory } from '../utils';
@@ -23,6 +23,10 @@ Successfully generated link references and heading!
   ];
 
   static flags = {
+    'without-extensions': flags.boolean({
+      char: 'w',
+      description: 'generate link reference definitions without extensions (for legacy support)'
+    }),
     help: flags.help({ char: 'h' }),
   };
 
@@ -76,7 +80,7 @@ Successfully generated link references and heading!
         notes.map(note => {
           // Get edits
           const heading = generateHeading(note);
-          const definitions = generateLinkReferences(note, graph);
+          const definitions = generateLinkReferences(note, graph, !flags['without-extensions']);
 
           // apply Edits
           let file = note.source;

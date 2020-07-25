@@ -13,9 +13,16 @@ export {
   getKebabCaseFileName,
 } from './janitor';
 
+export { applyTextEdit } from './janitor/apply-text-edit';
+
 export { initializeNoteGraph } from './initialize-note-graph';
 
 export { NoteGraph, Note, NoteLink };
+
+export {
+  LINK_REFERENCE_DEFINITION_HEADER,
+  LINK_REFERENCE_DEFINITION_FOOTER,
+} from './definitions';
 
 export interface FoamConfig {
   // TODO

@@ -1,0 +1,25 @@
+name: Test foam-cli
+
+on:
+  pull_request:
+    paths:
+      - 'packages/foam-cli/**'
+  push:
+    paths:
+      - 'packages/foam-cli/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-node@v1
+
+      - name: Install dependencies
+        run: yarn
+
+      # - name: Lint foam-lint
+      #   run: yarn workspace foam-cli lint
+
+      - name: Test foam-cli
+        run: yarn workspace foam-cli test

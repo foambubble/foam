@@ -1,4 +1,4 @@
-import { applyTextEdit } from '../src/utils/apply-text-edit';
+import { applyTextEdit } from '../../src/janitor/apply-text-edit';
 
 describe('applyTextEdit', () => {
   it('should return text with applied TextEdit in the end of the string', () => {

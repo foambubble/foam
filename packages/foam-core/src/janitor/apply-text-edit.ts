@@ -1,4 +1,4 @@
-import { TextEdit } from 'foam-core';
+import { TextEdit } from '../index';
 
 /**
  *

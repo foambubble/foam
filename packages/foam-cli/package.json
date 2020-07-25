@@ -11,7 +11,7 @@
     "@oclif/command": "^1",
     "@oclif/config": "^1",
     "@oclif/plugin-help": "^3",
-    "foam-core": "^0.2.0",
+    "foam-core": "^0.3.0",
     "ora": "^4.0.4",
     "tslib": "^1"
   },
@@ -26,7 +26,6 @@
     "eslint": "^5.13",
     "eslint-config-oclif": "^3.1",
     "eslint-config-oclif-typescript": "^0.1",
-    "foam-core": "^0.2.0",
     "globby": "^10",
     "jest": "^26.1.0",
     "mock-fs": "^4.12.0",

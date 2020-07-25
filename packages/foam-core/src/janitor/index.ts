@@ -41,7 +41,7 @@ export const generateLinkReferences = (
           LINK_REFERENCE_DEFINITION_HEADER,
           ...markdownReferences.map(stringifyMarkdownLinkReferenceDefinition),
           LINK_REFERENCE_DEFINITION_FOOTER,
-        ].join('\n');
+        ].join(note.eol);
 
   if (note.definitions.length === 0) {
     if (newReferences.length === 0) {

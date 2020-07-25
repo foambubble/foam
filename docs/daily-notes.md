@@ -1,6 +1,6 @@
 # Daily notes
 
-Automatically create a Daily Note by executing the "Foam: Open Daily Note" command . If a daily note for today's date already exists, the command opens the existing note.
+Automatically create a Daily Note by executing the "Foam: Open Daily Note" command. If a Daily Note for today's date already exists, the command opens the existing note.
 
 ![Daily note feature in action](assets/images/daily-note.gif)
 
@@ -44,6 +44,5 @@ If you want this behaviour now, you can use the excellent [Auto Run Command](htt
     }
   ],
 ```
-
 
 

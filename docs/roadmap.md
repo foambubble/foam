@@ -35,7 +35,6 @@ If a roadmap item is a stub, **consider** opening a [GitHub issue](https://githu
 
 - [[renaming-files]]
 - [[unlinked-references]]
-- [[daily-notes]]
 - [[block-references]]
 - [[improved-backlinking]]
   - UX: [[make-backlinks-more-prominent]]
@@ -93,12 +92,14 @@ If a roadmap item is a stub, **consider** opening a [GitHub issue](https://githu
 [foam-file-format]: foam-file-format "Foam File Format"
 [renaming-files]: renaming-files "Renaming files (stub)"
 [unlinked-references]: unlinked-references "Unlinked references (stub)"
-[daily-notes]: daily-notes "Daily notes"
 [block-references]: block-references "Block References (stub)"
 [improved-backlinking]: improved-backlinking "Improved Backlinking (stub)"
+[make-backlinks-more-prominent]: make-backlinks-more-prominent "Make Backlinks More Prominent"
 [materialized-backlinks]: materialized-backlinks "Materialized Backlinks (stub)"
 [automatic-git-syncing]: automatic-git-syncing "Automatic Git Syncing (stub)"
 [git-flows-for-teams]: git-flows-for-teams "Git Flows for Teams (stub)"
+[user-settings]: user-settings "User Settings (stub)"
+[link-reference-definitions]: link-reference-definitions "Link Reference Definitions"
 [officially-support-alternative-templates]: officially-support-alternative-templates "Officially Support Alternative Templates (stub)"
 [improved-static-site-generation]: improved-static-site-generation "Improved Static Site Generation (stub)"
 [mdx-by-default]: mdx-by-default "MDX by Default(stub)"

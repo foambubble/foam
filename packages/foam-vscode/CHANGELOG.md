@@ -4,6 +4,12 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.3.1] - 2020-07-26
+
+Fixes and improvements:
+
+- Fix [Daily Notes](https://foambubble.github.io/foam/daily-notes) command on Windows.
+
 ## [0.3.0] - 2020-07-25
 
 New features:

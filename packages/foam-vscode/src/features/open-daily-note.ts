@@ -86,7 +86,7 @@ async function createDailyNoteDirectoryIfNotExists(dailyNotePath: string) {
 }
 
 async function focusDailyNote(dailyNotePath: string, isNewNote: boolean) {
-  const document = await workspace.openTextDocument(Uri.parse(dailyNotePath));
+  const document = await workspace.openTextDocument(Uri.file(dailyNotePath));
   const editor = await window.showTextDocument(document);
 
   // Move the cursor to end of the file

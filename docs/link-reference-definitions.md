@@ -41,7 +41,26 @@ You can override this setting in your Foam workspace's `settings.json`:
 - `"foam.edit.linkReferenceDefinitions": "withoutExtensions"` (default)
 - `"foam.edit.linkReferenceDefinitions": "withExtensions"`
 
-After changing the setting in your workspace, you can run the [[workspace-janitor]] command to convert all existing definitions.  
+### Ignoring files
+
+Sometimes, you may want to ignore certain files or folders, so that Foam doesn't generate link reference definitions to them. 
+
+For instance, if you're using a local instance of [Jekyll](https://jekyllrb.com/), you may find that it writes copies of each `.md` file into a `_site` directory, which may lead to Foam generating references to them instead of the original source notes.
+
+You can ignore the `_site` directory by adding the following to your `.vscode/settings.json`:
+
+```json
+  "files.exclude": {
+    "**/_site": true
+  },
+  "files.watcherExclude": {
+    "**/_site": true
+  },
+```
+
+After changing the setting in your workspace, you can run the [[workspace-janitor]] command to convert all existing definitions. 
+
+[[Todo]] _Implement a `foam.eclude
 
 ## Future improvements
 

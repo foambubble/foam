@@ -41,6 +41,20 @@ You can override this setting in your Foam workspace's `settings.json`:
 - `"foam.edit.linkReferenceDefinitions": "withoutExtensions"` (default)
 - `"foam.edit.linkReferenceDefinitions": "withExtensions"`
 
+### Jekyll
+
+Jekyll generates a `_site` directory which inteferes with how Foam generates references. Ignore the `_site` directory by adding the
+following to your `.vscode/settings.json`:
+
+```json
+  "files.watcherExclude": {
+    "**/_site": true
+  },
+  "files.exclude": {
+    "**/_site": true
+  }
+```
+
 After changing the setting in your workspace, you can run the [[workspace-janitor]] command to convert all existing definitions.  
 
 ## Future improvements

@@ -8,7 +8,7 @@ Foam relies heavily on our [[recommended-extensions]], and each extension has sl
 
 - Name your files in `lower-dash-case.md`. 
   - Read on: [How to name your files](#how-to-name-your-files)
-- Use [[wiki-links]] that match the file name exactly, without file extension: `[[lower-dash-case]`]
+- Use [[wiki-links]] that match the file name exactly, without file extension: `[[lower-dash-case]]`
   - Read on: [How to format your links](#how-to-format-your-links)
   - Read on: [How to autocomplete your links correctly](#how-to-autocomplete-your-links-correctly)
 - Ensure every file has a `# Heading` element

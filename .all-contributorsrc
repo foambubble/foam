@@ -288,6 +288,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "johnlindquist",
+      "name": "John Lindquist",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/36073?v=4",
+      "profile": "http://johnlindquist.com",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,

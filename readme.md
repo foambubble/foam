@@ -20,7 +20,7 @@ You can use **Foam** for organising your research, keeping re-discoverable notes
 
 Whether you want to build a [Second Brain](https://www.buildingasecondbrain.com/) or a [Zettelkasten](https://zettelkasten.de/posts/overview/), write a book, or just get better at long-term learning, **Foam** can help you organise your thoughts if you follow these simple rules:
 
-1. Create a single **Foam** workspace for all your knowledge and research following the [Getting started](https://foambubble.github.io/foam#getting-started) guide .
+1. Create a single **Foam** workspace for all your knowledge and research following the [Getting started](https://foambubble.github.io/foam#getting-started) guide.
 2. Write your thoughts in markdown documents (I like to call them **Bubbles**, but that might be more than a little twee). These documents should be atomic: Put things that belong together into a single document, and limit its content to that single topic. ([source](https://zettelkasten.de/posts/overview/#principles))
 3. Use Foam's shortcuts and autocompletions to link your thoughts together with `[[wiki-links]]`, and navigate between them to explore your knowledge graph.
 4. Get an overview of your **Foam** workspace using the [[Graph Visualisation](https://foambubble.github.io/foam/graph-visualisation)], and discover relationships between your thoughts with the use of [[Backlinking](https://foambubble.github.io/foam/backlinking)].

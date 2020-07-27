@@ -33,7 +33,7 @@ Guides, tips and strategies for getting the most out of your Foam workspace!
 - Using [[backlinking]] for [[reference-lists]].
 
 ## Write
-- Link documents with [[wiki-links]]
+- Link documents with [[wiki-links]], using Foam's [[link-formatting-and-autocompletion]].
 - Use shortcuts for [[creating-new-notes]]
 - Instantly create and access your [[daily-notes]]
 - Draw [[diagrams-in-markdown]]
@@ -96,6 +96,7 @@ _See [[contribution-guide]] and [[how-to-write-recipes]]._
 [unlinked-references]: unlinked-references "Unlinked references (stub)"
 [reference-lists]: reference-lists "Reference Lists"
 [wiki-links]: wiki-links "Wiki Links"
+[link-formatting-and-autocompletion]: link-formatting-and-autocompletion "Link Formatting and Autocompletion"
 [creating-new-notes]: creating-new-notes "Creating New Notes"
 [daily-notes]: daily-notes "Daily notes"
 [diagrams-in-markdown]: diagrams-in-markdown "Diagrams in Markdown"

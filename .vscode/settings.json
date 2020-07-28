@@ -1,7 +1,8 @@
 // Place your settings in this file to overwrite default and user settings.
-{
+{   
     "files.exclude": {
         // set these to true to hide folders with the compiled JS files,
+        "**/node_modules": true,
         "packages/**/out": false,
         "packages/**/dist": false
     },

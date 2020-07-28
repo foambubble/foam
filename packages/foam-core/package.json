@@ -9,11 +9,11 @@
   ],
   "scripts": {
     "clean": "rimraf dist",
-    "build": "tsdx build",
-    "test": "tsdx test",
-    "lint": "tsdx lint",
-    "watch": "tsdx watch",
-    "prepare": "tsdx build"
+    "build": "npx tsdx build",
+    "test": "npx tsdx test",
+    "lint": "npx tsdx lint",
+    "watch": "npx tsdx watch",
+    "prepare": "npx tsdx build"
   },
   "devDependencies": {
     "@types/github-slugger": "^1.3.0",

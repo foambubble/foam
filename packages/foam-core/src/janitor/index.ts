@@ -1,12 +1,9 @@
 import { Position } from 'unist';
 import GithubSlugger from 'github-slugger';
+import { Note, NoteGraph } from '../note-graph';
 import {
-  Note,
-  NoteGraph
-} from '../note-graph';
-import { 
   LINK_REFERENCE_DEFINITION_HEADER,
-  LINK_REFERENCE_DEFINITION_FOOTER
+  LINK_REFERENCE_DEFINITION_FOOTER,
 } from '../definitions';
 import {
   createMarkdownReferences,

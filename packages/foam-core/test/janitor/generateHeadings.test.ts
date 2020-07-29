@@ -18,13 +18,13 @@ describe('generateHeadings', () => {
 `,
       range: {
         start: {
-          line: 0,
-          column: 0,
+          line: 1,
+          column: 1,
           offset: 0,
         },
         end: {
-          line: 0,
-          column: 0,
+          line: 1,
+          column: 1,
           offset: 0,
         },
       },

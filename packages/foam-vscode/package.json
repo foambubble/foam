@@ -88,11 +88,12 @@
     ]
   },
   "scripts": {
-    "clean": "rimraf out",
     "build": "tsc -p ./",
     "test": "echo No tests in VSCode extensions yet",
     "lint": "eslint src --ext ts",
-    "watch": "tsc -watch -p ./",
+    "clean": "tsc --build ./tsconfig.json ../foam-core/tsconfig.json --clean",
+    "watch": "tsc --build ./tsconfig.json ../foam-core/tsconfig.json --watch",
+    "vscode:start-debugging": "yarn clean && yarn watch",
     "vscode:prepublish": "yarn npm-install && yarn run build",
     "npm-install": "rimraf node_modules && npm i",
     "npm-cleanup": "rimraf package-lock.json node_modules && yarn",

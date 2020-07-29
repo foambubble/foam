@@ -1,22 +1,16 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "module": "commonjs",
     "moduleResolution": "node",
-    "target": "es6",
+    "esModuleInterop": true,
     "outDir": "out",
     "lib": ["es6"],
     "sourceMap": true,
-    "rootDir": "src",
-    "strict": false /* enable all strict type-checking options */
-    /* Additional Checks */
-    // "noImplicitReturns": true, /* Report error when not all code paths in function return a value. */
-    // "noFallthroughCasesInSwitch": true, /* Report errors for fallthrough cases in switch statement. */
-    // "noUnusedParameters": true,  /* Report errors on unused parameters. */
+    "strict": false
   },
   "include": ["src"],
   "exclude": ["node_modules", ".vscode-test"],
   "references": [{
-    "path": "../foam-core/tsconfig.json"
+    "path": "../foam-core"
   }]
 }

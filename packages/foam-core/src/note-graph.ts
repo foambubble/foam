@@ -30,6 +30,7 @@ export class Note {
   public title: string | null;
   public source: string;
   public path: string;
+  public start: Point;
   public end: Point;
   public eol: string;
   public links: NoteLink[];
@@ -41,6 +42,7 @@ export class Note {
     title: string | null,
     links: NoteLink[],
     definitions: NoteLinkDefinition[],
+    start: Point,
     end: Point,
     path: string,
     source: string,
@@ -53,6 +55,7 @@ export class Note {
     this.path = path;
     this.links = links;
     this.definitions = definitions;
+    this.start = start;
     this.end = end;
     this.eol = eol;
   }

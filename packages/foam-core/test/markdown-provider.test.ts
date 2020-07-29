@@ -102,6 +102,7 @@ describe('frontmatter', () => {
     };
 
     const actual: any = (graph.getNote('page-e') as Note).frontmatter;
+
     expect(actual.title).toBe(expected.title);
     expect(actual.date).toBe(expected.date);
   });

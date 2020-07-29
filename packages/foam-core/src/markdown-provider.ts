@@ -41,9 +41,12 @@ export function createNoteFromMarkdown(
   const links: NoteLink[] = [];
   const linkDefinitions: NoteLinkDefinition[] = [];
   let frontmatter: any = null;
+  let start: Point = { line: 0, column: 0, offset: 0 }; // start position of the note
   visit(tree, node => {
     if (node.type === "yaml") {
       frontmatter = parseYAML(node.value as string);
+      // Update the start position of the note by exluding the metadata
+      start = { line: node.position!.end.line! + 1, column: 0, offset: node.position!.end.offset! + 1 };
     }
 
     if (node.type === 'wikiLink') {
@@ -64,12 +67,13 @@ export function createNoteFromMarkdown(
     }
   });
 
-  // update title from the frontmatter if it exists
+  // Give precendence to the title from the frontmatter if it exists
   title = frontmatter?.title ?? title;
+
   const end = tree.position!.end;
   const definitions = getFoamDefinitions(linkDefinitions, end);
 
-  return new Note(id, frontmatter, title, links, definitions, end, uri, markdown, eol);
+  return new Note(id, frontmatter, title, links, definitions, start, end, uri, markdown, eol);
 }
 
 function getFoamDefinitions(

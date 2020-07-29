@@ -1,7 +1,7 @@
 import { NoteGraph, Note } from '../src/note-graph';
 
 const position = {
-  start: { line: 0, column: 0 },
+  start: { line: 1, column: 1 },
   end: { line: 0, column: 0 },
 };
 

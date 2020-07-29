@@ -1,34 +1,29 @@
 {
   "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": "src",
+    "composite": true,
+    "esModuleInterop": true,
+    "importHelpers": true,
+
+    // commonjs module format is used so that the incremental
+    // tsc build-mode ran during development can replace individual
+    // files (as opposed to generate the .cjs.development.js bundle.
+    //
+    // this is overridden in tsconfig.build.json for distribution
+    "module": "commonjs",
+
+    "moduleResolution": "node",
+    "outDir": "dist",
+    "rootDir": "./src",
+    "sourceMap": true,
+    "strict": true,
+    "lib": [
+      "esnext"
+    ]
+  },
   "include": [
     "src",
     "types"
-  ],
-  "compilerOptions": {
-    "composite": true,
-    "declaration": true,
-    "declarationMap": true,
-    // to override config from tsconfig.base.json
-    "outDir": "dist",
-    "rootDir": "./src",
-    // for references
-    "baseUrl": "src",
-    "lib": [
-      "esnext"
-    ],
-    "module": "esnext",
-    "importHelpers": true,
-    "sourceMap": true,
-    "strict": true,
-    // "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "moduleResolution": "node",
-    "esModuleInterop": true
-    // "paths": {
-    //   "*": ["src/*", "node_modules/*"]
-    // },
-    // "jsx": "react",
-  },
+  ]
 }

@@ -84,7 +84,7 @@ async function runJanitor(foam: Foam) {
 
     let heading = generateHeading(note);
     if (heading) {
-      console.log("fs.write heading " + note.path + " " + note.title);
+      console.log("fs.write heading " + note.path + " " + note.id);
       updatedHeadingCount += 1;
     }
 
@@ -149,14 +149,14 @@ async function runJanitor(foam: Foam) {
         }
 
         if (heading) {
-          console.log("editor.write heading " + note.title);
+          console.log("editor.write heading " + note.id);
 
           updatedHeadingCount += 1;
           const start = new Position(
-            heading.range.start.line,
-            heading.range.start.column
+            heading.range.start.line - 1,
+            heading.range.start.column - 1
           );
-          editBuilder.insert(start, heading.newText);
+          editBuilder.replace(start, heading.newText);
         }
       });
     }

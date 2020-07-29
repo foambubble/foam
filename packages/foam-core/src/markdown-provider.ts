@@ -41,12 +41,16 @@ export function createNoteFromMarkdown(
   const links: NoteLink[] = [];
   const linkDefinitions: NoteLinkDefinition[] = [];
   let frontmatter: any = null;
-  let start: Point = { line: 0, column: 0, offset: 0 }; // start position of the note
+  let start: Point = { line: 1, column: 1, offset: 0 }; // start position of the note
   visit(tree, node => {
-    if (node.type === "yaml") {
+    if (node.type === 'yaml') {
       frontmatter = parseYAML(node.value as string);
       // Update the start position of the note by exluding the metadata
-      start = { line: node.position!.end.line! + 1, column: 0, offset: node.position!.end.offset! + 1 };
+      start = {
+        line: node.position!.end.line! + 1,
+        column: 1,
+        offset: node.position!.end.offset! + 1,
+      };
     }
 
     if (node.type === 'wikiLink') {
@@ -73,7 +77,18 @@ export function createNoteFromMarkdown(
   const end = tree.position!.end;
   const definitions = getFoamDefinitions(linkDefinitions, end);
 
-  return new Note(id, frontmatter, title, links, definitions, start, end, uri, markdown, eol);
+  return new Note(
+    id,
+    frontmatter,
+    title,
+    links,
+    definitions,
+    start,
+    end,
+    uri,
+    markdown,
+    eol
+  );
 }
 
 function getFoamDefinitions(

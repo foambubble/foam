@@ -10,7 +10,7 @@
     "packages/*"
   ],
   "scripts": {
-    "watch:vscode": "yarn workspace foam-vscode watch",
+    "start:vscode": "yarn workspace foam-vscode vscode:start-debugging",
     "build:core": "yarn workspace foam-core build",
     "watch:core": "yarn workspace foam-core start",
     "test:core": "yarn workspace foam-core test",

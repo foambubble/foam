@@ -4,11 +4,11 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "Build foam",
+			"label": "watch: foam-vscode",
 			"type": "npm",
-			"script": "build",
-			"problemMatcher": "$tsc",
-			"isBackground": false,
+			"script": "start:vscode",
+			"problemMatcher": "$tsc-watch",
+			"isBackground": true,
 			"presentation": {
 				"reveal": "always"
 			},
@@ -16,6 +16,16 @@
 				"kind": "build",
 				"isDefault": true
 			}
+		},
+		{
+			"label": "test: all packages",
+			"type": "npm",
+			"script": "test",
+			"problemMatcher": [],
+			"group": {
+				"kind": "test",
+				"isDefault": true
+			},
 		}
 	]
 }

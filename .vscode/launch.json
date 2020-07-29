@@ -6,7 +6,6 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			// NOTE: Remember to synchronize this with the "No Build"-variant!
 			"name": "Run VSCode Extension",
 			"type": "extensionHost",
 			"request": "launch",
@@ -19,8 +18,11 @@
 			],
 			"preLaunchTask": "${defaultBuildTask}"
 		},
+
+		// @NOTE: This task is broken. VSCode e2e tests are currently disabled
+		// due to incompability of jest and mocha inside a typescript monorepo
+		// Contributions to fix this are welcome!
 		{
-			// NOTE: Remember to synchronize this with the "No Build"-variant!
 			"name": "Test VSCode Extension",
 			"type": "extensionHost",
 			"request": "launch",
@@ -33,54 +35,6 @@
 				"${workspaceFolder}/packages/foam-vscode/out/test/**/*.js"
 			],
 			"preLaunchTask": "${defaultBuildTask}"
-		},
-		{
-			// NOTE: Remember to synchronize this with the "No Build"-variant!
-			"name": "Test Core",
-			"type": "node",
-			"request": "launch",
-			"program": "${workspaceFolder}/node_modules/tsdx/dist/index.js",
-			"args": ["test"],
-			"cwd": "${workspaceFolder}/packages/foam-core",
-			"internalConsoleOptions": "openOnSessionStart",
-			"preLaunchTask": "${defaultBuildTask}"
-		},
-		{
-			// NOTE: Remember to synchronize this with the default-variant!
-			"name": "Run VSCode Extension (No Build)",
-			"type": "extensionHost",
-			"request": "launch",
-			"runtimeExecutable": "${execPath}",
-			"args": [
-				"--extensionDevelopmentPath=${workspaceFolder}/packages/foam-vscode"
-			],
-			"outFiles": [
-				"${workspaceFolder}/packages/foam-vscode/out/**/*.js"
-			]
-		},
-		{
-			// NOTE: Remember to synchronize this with the default-variant!
-			"name": "Test VSCode Extension (No Build)",
-			"type": "extensionHost",
-			"request": "launch",
-			"runtimeExecutable": "${execPath}",
-			"args": [
-				"--extensionDevelopmentPath=${workspaceFolder}/packages/foam-vscode",
-				"--extensionTestsPath=${workspaceFolder}/packages/foam-vscode/out/test/suite/index"
-			],
-			"outFiles": [
-				"${workspaceFolder}/packages/foam-vscode/out/test/**/*.js"
-			]
-		},
-		{
-			// NOTE: Remember to synchronize this with the default-variant!
-			"name": "Test Core (No Build)",
-			"type": "node",
-			"request": "launch",
-			"program": "${workspaceFolder}/node_modules/tsdx/dist/index.js",
-			"args": ["test"],
-			"cwd": "${workspaceFolder}/packages/foam-core",
-			"internalConsoleOptions": "openOnSessionStart"
 		}
 	]
 }

@@ -7,7 +7,7 @@
 # Foam
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-33-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-34-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 **Foam** is a personal knowledge management and sharing system inspired by [Roam Research](https://roamresearch.com/), built on [Visual Studio Code](https://code.visualstudio.com/) and [GitHub](https://github.com/).
@@ -99,6 +99,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="http://johnlindquist.com"><img src="https://avatars0.githubusercontent.com/u/36073?v=4" width="60px;" alt=""/><br /><sub><b>John Lindquist</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=johnlindquist" title="Documentation">📖</a></td>
     <td align="center"><a href="https://ashwin.run/"><img src="https://avatars2.githubusercontent.com/u/1689183?v=4" width="60px;" alt=""/><br /><sub><b>Ashwin Ramaswami</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=epicfaace" title="Documentation">📖</a></td>
     <td align="center"><a href="https://github.com/Klaudioz"><img src="https://avatars1.githubusercontent.com/u/632625?v=4" width="60px;" alt=""/><br /><sub><b>Claudio Canales</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=Klaudioz" title="Documentation">📖</a></td>
+    <td align="center"><a href="https://github.com/vitaly-pevgonen"><img src="https://avatars0.githubusercontent.com/u/6272738?v=4" width="60px;" alt=""/><br /><sub><b>vitaly-pevgonen</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=vitaly-pevgonen" title="Documentation">📖</a></td>
   </tr>
 </table>
 

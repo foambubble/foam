@@ -324,6 +324,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "dshemetov",
+      "name": "Dmitry Shemetov",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/1810426?v=4",
+      "profile": "https://dshemetov.github.io",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,

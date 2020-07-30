@@ -63,7 +63,7 @@
     "build": "tsc -b",
     "test": "jest",
     "lint": "echo Missing lint task in CLI package",
-    "cli": "./bin/run",
+    "cli": "yarn build && ./bin/run",
     "postpack": "rm -f oclif.manifest.json",
     "prepack": "rm -rf lib && tsc -b && oclif-dev manifest && oclif-dev readme",
     "version": "oclif-dev readme && git add README.md"

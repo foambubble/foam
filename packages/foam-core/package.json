@@ -9,9 +9,9 @@
   ],
   "scripts": {
     "clean": "rimraf dist",
-    "build": "tsdx build",
+    "build": "tsdx build --tsconfig ./tsconfig.build.json",
     "test": "tsdx test",
-    "lint": "tsdx lint",
+    "lint": "tsdx lint src test",
     "watch": "tsdx watch",
     "prepare": "tsdx build"
   },

@@ -6,10 +6,8 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-             // This task is also defined in packages/foam-vscode/.vscode/launch.json
-             // for when running separately outside of the monorepo environment
-			"name": "Run Extension",
-            "type": "extensionHost",
+			"name": "Run VSCode Extension",
+			"type": "extensionHost",
 			"request": "launch",
 			"runtimeExecutable": "${execPath}",
 			"args": [
@@ -18,12 +16,14 @@
 			"outFiles": [
 				"${workspaceFolder}/packages/foam-vscode/out/**/*.js"
 			],
-			"preLaunchTask": "Build foam-vscode"
+			"preLaunchTask": "${defaultBuildTask}"
 		},
+
+		// @NOTE: This task is broken. VSCode e2e tests are currently disabled
+		// due to incompability of jest and mocha inside a typescript monorepo
+		// Contributions to fix this are welcome!
 		{
-            // This task is also defined in packages/foam-vscode/.vscode/launch.json
-            // for when running separately outside of the monorepo environment
-			"name": "Extension Tests",
+			"name": "Test VSCode Extension",
 			"type": "extensionHost",
 			"request": "launch",
 			"runtimeExecutable": "${execPath}",
@@ -34,16 +34,17 @@
 			"outFiles": [
 				"${workspaceFolder}/packages/foam-vscode/out/test/**/*.js"
 			],
-			"preLaunchTask": "Build foam-vscode"
+			"preLaunchTask": "${defaultBuildTask}"
 		},
 		{
+			"name": "Test Core",
 			"type": "node",
 			"request": "launch",
-			"name": "Workspace Manager tests",
 			"program": "${workspaceFolder}/node_modules/tsdx/dist/index.js",
 			"args": ["test"],
 			"cwd": "${workspaceFolder}/packages/foam-core",
-			"internalConsoleOptions": "openOnSessionStart"
+			"internalConsoleOptions": "openOnSessionStart",
+			"preLaunchTask": "${defaultBuildTask}"
 		}
 	]
 }

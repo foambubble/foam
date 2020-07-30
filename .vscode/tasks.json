@@ -4,19 +4,28 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-            // This task is also defined in packages/foam-vscode/.vscode/tasks.json
-            // for when running separately outside of the monorepo environment
-            "type": "npm",
-            "script": "watch",
-            "label": "Build foam-vscode",
-            "path": "packages/foam-vscode",
-            "problemMatcher": "$tsc-watch",
+			"label": "watch: foam-vscode",
+			"type": "npm",
+			"script": "start:vscode",
+			"problemMatcher": "$tsc-watch",
 			"isBackground": true,
 			"presentation": {
-				"reveal": "silent",
-				"revealProblems": "onProblem",
-				"focus": true
+				"reveal": "always"
+			},
+			"group": {
+				"kind": "build",
+				"isDefault": true
 			}
+		},
+		{
+			"label": "test: all packages",
+			"type": "npm",
+			"script": "test",
+			"problemMatcher": [],
+			"group": {
+				"kind": "test",
+				"isDefault": true
+			},
 		}
 	]
 }

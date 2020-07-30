@@ -35,6 +35,16 @@
 				"${workspaceFolder}/packages/foam-vscode/out/test/**/*.js"
 			],
 			"preLaunchTask": "${defaultBuildTask}"
+		},
+		{
+			"name": "Test Core",
+			"type": "node",
+			"request": "launch",
+			"program": "${workspaceFolder}/node_modules/tsdx/dist/index.js",
+			"args": ["test"],
+			"cwd": "${workspaceFolder}/packages/foam-core",
+			"internalConsoleOptions": "openOnSessionStart",
+			"preLaunchTask": "${defaultBuildTask}"
 		}
 	]
 }

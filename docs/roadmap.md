@@ -65,14 +65,18 @@ If a roadmap item is a stub, **consider** opening a [GitHub issue](https://githu
 
 ### Migration
 
+The community is working on a number of automated scripts to help you migrate to Foam. The main work of developing such a method involves exporting your notes, converting them to the Markdown format, and then making sure that the links between notes (if you had those) still work.
+
 - [[migrating-from-roam]]
   - Discussion: [foam#55](https://github.com/foambubble/foam/issues/55)
 - [[migrating-from-obsidian]]
   - Discussion: [foam#46](https://github.com/foambubble/foam/issues/46)
-- [[Migrating from OneNote (stub)]]
+- [[Migrating from OneNote]]
   - Discussion: [foam#151](https://github.com/foambubble/foam/issues/151)
 - _Migration from other tools..._
-### integration
+
+### Integration
+
 - _Integrations to third party tools_...
   
 ### Wild ideas

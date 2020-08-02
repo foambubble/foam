@@ -74,6 +74,8 @@ After setting up the repository, open `.vscode/settings.json` and edit, add or r
 
 To learn more about how to use **Foam**, read the [[recipes]].
 
+Getting stuck in the setup? Read the [[frequently-asked-questions]].
+
 There are [[known-issues]], and I'm sure, many unknown issues! Please [report them on GitHub](http://github.com/foambubble/foam/issues)!
 
 ## Features
@@ -171,6 +173,7 @@ Foam is licensed under the [MIT license](license).
 [backlinking]: backlinking "Backlinking"
 [recommended-extensions]: recommended-extensions "Recommended Extensions"
 [recipes]: recipes "Recipes"
+[frequently-asked-questions]: frequently-asked-questions "Frequently Asked Questions"
 [known-issues]: known-issues "Known Issues"
 [roadmap]: roadmap "Roadmap"
 [principles]: principles "Principles"

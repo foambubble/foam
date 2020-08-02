@@ -88,11 +88,14 @@ export const generateHeading = (note: Note): TextEdit | null => {
     return null;
   }
 
-  const doesNewLineExistAfterFrontmatter =
-    note.start.line !== 1 &&
+  const frontmatterExists = note.start.line !== 1;
+
+  const newLineExistsAfterFrontmatter =
+    frontmatterExists &&
     note.source.split(note.eol)[note.start.line - 1].length === 0;
-  const paddingStart = note.frontmatter ? note.eol : '';
-  const paddingEnd = doesNewLineExistAfterFrontmatter
+
+  const paddingStart = frontmatterExists ? note.eol : '';
+  const paddingEnd = newLineExistsAfterFrontmatter
     ? note.eol
     : `${note.eol}${note.eol}`;
 

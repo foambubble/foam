@@ -40,7 +40,7 @@ export function createNoteFromMarkdown(
 
   const links: NoteLink[] = [];
   const linkDefinitions: NoteLinkDefinition[] = [];
-  let frontmatter: any = null;
+  let frontmatter: any = {};
   let start: Point = { line: 1, column: 1, offset: 0 }; // start position of the note
   visit(tree, node => {
     if (node.type === 'yaml') {
@@ -72,7 +72,7 @@ export function createNoteFromMarkdown(
   });
 
   // Give precendence to the title from the frontmatter if it exists
-  title = frontmatter?.title ?? title;
+  title = frontmatter.title ?? title;
 
   const end = tree.position!.end;
   const definitions = getFoamDefinitions(linkDefinitions, end);

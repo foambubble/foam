@@ -15,7 +15,7 @@ describe('Note graph', () => {
     graph.setNote(
       new Note(
         'page-a',
-        null,
+        {},
         'page-a',
         [],
         [],
@@ -29,7 +29,7 @@ describe('Note graph', () => {
     graph.setNote(
       new Note(
         'page-b',
-        null,
+        {},
         'page-b',
         [],
         [],
@@ -43,7 +43,7 @@ describe('Note graph', () => {
     graph.setNote(
       new Note(
         'page-c',
-        null,
+        {},
         'page-c',
         [],
         [],
@@ -68,7 +68,7 @@ describe('Note graph', () => {
     graph.setNote(
       new Note(
         'page-a',
-        null,
+        {},
         'page-a',
         [],
         [],
@@ -82,7 +82,7 @@ describe('Note graph', () => {
     graph.setNote(
       new Note(
         'page-b',
-        null,
+        {},
         'page-b',
         [{ to: 'page-a', text: 'go', position }],
         [],
@@ -96,7 +96,7 @@ describe('Note graph', () => {
     graph.setNote(
       new Note(
         'page-c',
-        null,
+        {},
         'page-c',
         [],
         [],
@@ -121,7 +121,7 @@ describe('Note graph', () => {
     graph.setNote(
       new Note(
         'page-a',
-        null,
+        {},
         'page-a',
         [],
         [],
@@ -135,7 +135,7 @@ describe('Note graph', () => {
     graph.setNote(
       new Note(
         'page-b',
-        null,
+        {},
         'page-b',
         [{ to: 'page-a', text: 'go', position }],
         [],
@@ -149,7 +149,7 @@ describe('Note graph', () => {
     graph.setNote(
       new Note(
         'page-c',
-        null,
+        {},
         'page-c',
         [],
         [],
@@ -175,7 +175,7 @@ describe('Note graph', () => {
       graph.setNote(
         new Note(
           'page-a',
-          null,
+          {},
           'page-a',
           [],
           [],
@@ -195,7 +195,7 @@ describe('Note graph', () => {
     graph.setNote(
       new Note(
         'page-a',
-        null,
+        {},
         'page-a',
         [{ to: 'non-existing', text: 'does not exist', position }],
         [],
@@ -214,7 +214,7 @@ describe('Note graph', () => {
     graph.setNote(
       new Note(
         'page-a',
-        null,
+        {},
         'page-a',
         [],
         [],
@@ -228,7 +228,7 @@ describe('Note graph', () => {
     graph.setNote(
       new Note(
         'page-b',
-        null,
+        {},
         'page-b',
         [{ to: 'page-a', text: 'go', position }],
         [],
@@ -242,7 +242,7 @@ describe('Note graph', () => {
     graph.setNote(
       new Note(
         'page-c',
-        null,
+        {},
         'page-c',
         [],
         [],
@@ -276,7 +276,7 @@ describe('Note graph', () => {
     graph.setNote(
       new Note(
         'page-b',
-        null,
+        {},
         'page-b',
         [{ to: 'page-c', text: 'go', position }],
         [],

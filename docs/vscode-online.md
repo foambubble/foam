@@ -23,7 +23,7 @@ It is possible to host an instance of Visual Studio Code in the cloud and have a
 - If you want to change the password, run in the webconsole: `nano /etc/code-server/pass` and put the new password.
 - Next, you need to restart the code-server running: `systemctl restart code-server`
 
-## Get VSIX foam file from GitHub
+## Get VSIX foam file
 - Go to https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode and get the link in: Download Extension to the right.
 - In the console run: 
 - `cd /home/coder`

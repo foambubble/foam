@@ -154,6 +154,9 @@ If that sounds like something you're interested in, I'd love to have you along o
     <td align="center"><a href="https://github.com/vitaly-pevgonen"><img src="https://avatars0.githubusercontent.com/u/6272738?v=4" width="60px;" alt=""/><br /><sub><b>vitaly-pevgonen</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=vitaly-pevgonen" title="Documentation">📖</a></td>
     <td align="center"><a href="https://dshemetov.github.io"><img src="https://avatars0.githubusercontent.com/u/1810426?v=4" width="60px;" alt=""/><br /><sub><b>Dmitry Shemetov</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=dshemetov" title="Documentation">📖</a></td>
   </tr>
+  <tr>
+    <td align="center"><a href="https://github.com/hooncp"><img src="https://avatars1.githubusercontent.com/u/48883554?v=4" width="60px;" alt=""/><br /><sub><b>hooncp</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=hooncp" title="Documentation">📖</a></td>
+  </tr>
 </table>
 
 <!-- markdownlint-enable -->

@@ -3,9 +3,9 @@
 > ⚠️ Foam is still in preview. Expect the experience to be a little rough.
 
 - [Frequently Asked Questions](#frequently-asked-questions)
-  - [Links/Graphs/BackLinks doesn't work. How do I enable it?](#linksgraphsbacklinks-doesnt-work-how-do-i-enable-it)
+  - [Links/Graphs/BackLinks don't work. How do I enable them?](#linksgraphsbacklinks-dont-work-how-do-i-enable-them)
 
-## Links/Graphs/BackLinks doesn't work. How do I enable it?
+## Links/Graphs/BackLinks don't work. How do I enable them?
 
 - Ensure that you have all the [[recommended-extensions]] installed in Visual Studio Code
 - Reload Visual Studio Code by running `Cmd` + `Shift` + `P` (`Ctrl` + `Shift` + `P` for Windows), type "reload" and run the **Developer: Reload Window** command to for the updated extensions take effect

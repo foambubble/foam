@@ -62,6 +62,7 @@ Guides, tips and strategies for getting the most out of your Foam workspace!
 - Publish to [[azure-devops-wiki]]
 - Make the site your own by [[customising-styles]].
 - Math support [[math-support]]
+- Publish to [[vscode-online]] hosted in DigitalOcean.
 
 ## Collaborate
 

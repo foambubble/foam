@@ -24,7 +24,7 @@ It is possible to host an instance of Visual Studio Code in the cloud and have a
 
 ### Accesing
 - Put the IP Address in the browser and the the password.
-- Follow the Foam installation steps: [Foam](https://foambubble.github.io/foam/#getting-started) and get your notes from Git.
+- To install foam go to the UI, and use: "Install from VSIX"
 
 ### Extra
 - If you want to use your own domain, go to droplets, select the code-server droplet and go to the right, select more and "Add a domain"

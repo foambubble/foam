@@ -63,7 +63,4 @@ While you are pushing changes to GitHub, you won't see the wiki updated if you d
  ```
  6. You can then push to both repositories by: `git push origin master` or a single one using: `git push github master` or `git push azure master`
   
-
-
-
 For more information, read the [Azure DevOps documentation](https://docs.microsoft.com/en-us/azure/devops/project/wiki/publish-repo-to-wiki). 

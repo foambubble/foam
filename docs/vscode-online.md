@@ -8,7 +8,7 @@ It is possible to host an instance of Visual Studio Code in the cloud and have a
 - Extra requirements: Needed a domain and a certificate to have a url like: https://foam.yourdomain.com/
 
 ### Create the droplet
-- Go to: Droplets, push button: "Create Droplet" and over Choose and image go to marketplace and select: "code-server"
+- Go to: Droplets, push button: "Create Droplet" and over Choose an image, go to marketplace and select: "code-server"
 - Next choose plan: Basic, 5/mo (If it's too slow for you, choose or change the droplet to 10/mo)
 - Choose a datacenter region (Use the closer to your place)
 - Create root password
@@ -24,7 +24,7 @@ It is possible to host an instance of Visual Studio Code in the cloud and have a
 - Next, you need to restart the code-server running: `systemctl restart code-server`
 
 ## Get VSIX foam file from GitHub
-- Go to https://github.com/foambubble/foam-vscode/releases and do right click over the Foam last version zip file to copy the link address
+- Go to https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode and get the link in: Download Extension to the right.
 - In the console run: 
 - `cd /home/coder`
 - `wget <clipboard_URL>`

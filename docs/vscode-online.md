@@ -1,6 +1,6 @@
 # VSCode online
 
-It is possible to host an instance of Visual Studio Code in the cloud and have an URL with all your files (protectd with a password), being able to use it in any browser and device.
+It is possible to host an instance of Visual Studio Code in the cloud and have an URL with all your files (protected with a password), being able to use it in any browser and device.
 
 ## Foam with DigitalOcean
 

@@ -1,4 +1,3 @@
-import { NoteGraph, NoteLinkDefinition, NoteInfo } from '../src/note-graph';
 import { uriToSlug, hashURI, getUriViaRelative } from '../src/utils';
 
 describe('URI utils', () => {

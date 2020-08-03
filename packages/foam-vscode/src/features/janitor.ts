@@ -18,6 +18,7 @@ import {
 } from "foam-core";
 
 import { includeExtensions } from "../settings";
+import { astPositionToVsCodePosition } from "../utils";
 
 const feature: FoamFeature = {
   activate: async (context: ExtensionContext, foamPromise: Promise<Foam>) => {
@@ -142,24 +143,16 @@ async function runJanitor(foam: Foam) {
         // before heading, since inserting a heading changes line numbers below
         if (definitions) {
           updatedDefinitionListCount += 1;
-          const start = new Position(
-            definitions.range.start.line - 1,
-            definitions.range.start.column
-          );
-          const end = new Position(
-            definitions.range.end.line - 1,
-            definitions.range.end.column
-          );
+          const start = astPositionToVsCodePosition(definitions.range.start);
+          const end = astPositionToVsCodePosition(definitions.range.end);
+
           const range = new Range(start, end);
           editBuilder.replace(range, definitions!.newText);
         }
 
         if (heading) {
           updatedHeadingCount += 1;
-          const start = new Position(
-            heading.range.start.line - 1,
-            heading.range.start.column - 1
-          );
+          const start = astPositionToVsCodePosition(heading.range.start);
           editBuilder.replace(start, heading.newText);
         }
       });

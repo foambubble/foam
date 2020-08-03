@@ -129,7 +129,7 @@ export class NoteGraph {
 
   public getNote(query: NoteQuery): Note | null {
     const noteId = this.getNoteId(query);
-    return noteId ? this.graph.node(noteId) : null;
+    return noteId ? this.graph.node(noteId) ?? null : null;
   }
 
   public getAllLinks(query: NoteQuery): Connection[] {

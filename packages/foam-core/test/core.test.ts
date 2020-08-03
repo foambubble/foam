@@ -158,3 +158,64 @@ describe('Note graph', () => {
     ).toEqual(['page-b']);
   });
 });
+
+describe('Graph querying', () => {
+  it('can find notes by id', () => {
+    const graph = new NoteGraph();
+    const note = graph.setNote(createTestNote({ uri: '/page-a.md' }));
+    expect(graph.getNote({ id: note.id })!.source.uri).toEqual('/page-a.md');
+  });
+
+  it('returns null if no note is found', () => {
+    const graph = new NoteGraph();
+    graph.setNote(createTestNote({ uri: '/page-a.md' }));
+    expect(graph.getNote({ id: 'non-existing' })).toBeNull();
+    expect(graph.getNote({ slug: 'non-existing' })).toBeNull();
+    expect(graph.getNote({ title: 'non-existing' })).toBeNull();
+    expect(graph.getNote({ uri: 'non-existing' })).toBeNull();
+  });
+
+  it('finds the note by uri', () => {
+    const graph = new NoteGraph();
+    const note = graph.setNote(createTestNote({ uri: '/page-a.md' }));
+    expect(graph.getNote({ uri: '/page-a.md' })!.source.uri).toEqual(
+      '/page-a.md'
+    );
+  });
+
+  it('finds the note by slug', () => {
+    const graph = new NoteGraph();
+    const note = graph.setNote(createTestNote({ uri: '/page-a.md' }));
+    expect(graph.getNote({ slug: note.slug })!.source.uri).toEqual(
+      '/page-a.md'
+    );
+  });
+
+  it('finds a note by slug when there is more than one', () => {
+    const graph = new NoteGraph();
+    graph.setNote(createTestNote({ uri: '/dir1/page-a.md' }));
+    graph.setNote(createTestNote({ uri: '/dir2/page-a.md' }));
+    expect(graph.getNote({ slug: 'page-a' })).toBeTruthy();
+  });
+
+  it('finds a note by title', () => {
+    const graph = new NoteGraph();
+    graph.setNote(
+      createTestNote({ uri: '/dir1/page-a.md', title: 'My Title' })
+    );
+    expect(graph.getNote({ title: 'My Title' })!.source.uri).toEqual(
+      '/dir1/page-a.md'
+    );
+  });
+
+  it('finds a note by title when there are several', () => {
+    const graph = new NoteGraph();
+    graph.setNote(
+      createTestNote({ uri: '/dir1/page-a.md', title: 'My Title' })
+    );
+    graph.setNote(
+      createTestNote({ uri: '/dir3/page-b.md', title: 'My Title' })
+    );
+    expect(graph.getNote({ title: 'My Title' })).toBeTruthy();
+  });
+});

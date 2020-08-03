@@ -1,4 +1,4 @@
-import { NoteGraph, Note } from '../src/note-graph';
+import { NoteGraph, Note, NoteLinkDefinition, NoteInfo } from '../src/note-graph';
 
 const position = {
   start: { line: 1, column: 1 },
@@ -9,302 +9,133 @@ const documentStart = position.start;
 const documentEnd = position.end;
 const eol = '\n';
 
+const createTestNote = (params: {uri: string, title?: string, definitions?: NoteLinkDefinition[], links?: {slug: string}[], text?: string}): NoteInfo => {
+  return {
+    properties: {},
+    title: params.title ?? null,
+    definitions: params.definitions ?? [],
+    links: params.links
+      ? params.links.map(link => ({
+          type: 'wikilink',
+          slug: link.slug,
+          position: position,
+          text: 'link text',
+        }))
+      : [],
+    source: {
+      eol: eol,
+      end: documentEnd,
+      contentStart: documentStart,
+      uri: params.uri,
+      text: params.text ?? '',
+    },
+  }
+}
+
 describe('Note graph', () => {
   it('Adds notes to graph', () => {
     const graph = new NoteGraph();
-    graph.setNote(
-      new Note(
-        'page-a',
-        {},
-        'page-a',
-        [],
-        [],
-        documentStart,
-        documentEnd,
-        eol,
-        '/page-a.md',
-        ''
-      )
-    );
-    graph.setNote(
-      new Note(
-        'page-b',
-        {},
-        'page-b',
-        [],
-        [],
-        documentStart,
-        documentEnd,
-        eol,
-        '/page-b.md',
-        ''
-      )
-    );
-    graph.setNote(
-      new Note(
-        'page-c',
-        {},
-        'page-c',
-        [],
-        [],
-        documentStart,
-        documentEnd,
-        eol,
-        '/page-c.md',
-        ''
-      )
-    );
+    graph.setNote(createTestNote({uri: '/page-a.md'}));
+    graph.setNote(createTestNote({uri: '/page-b.md'}));
+    graph.setNote(createTestNote({uri: '/page-c.md'}));
 
     expect(
-      graph
-        .getNotes()
-        .map(n => n.id)
-        .sort()
+      graph.getNotes().map(n => n.slug).sort()
     ).toEqual(['page-a', 'page-b', 'page-c']);
   });
 
   it('Detects forward links', () => {
     const graph = new NoteGraph();
-    graph.setNote(
-      new Note(
-        'page-a',
-        {},
-        'page-a',
-        [],
-        [],
-        documentStart,
-        documentEnd,
-        eol,
-        '/page-a.md',
-        ''
-      )
-    );
-    graph.setNote(
-      new Note(
-        'page-b',
-        {},
-        'page-b',
-        [{ to: 'page-a', text: 'go', position }],
-        [],
-        documentStart,
-        documentEnd,
-        eol,
-        '/page-b.md',
-        ''
-      )
-    );
-    graph.setNote(
-      new Note(
-        'page-c',
-        {},
-        'page-c',
-        [],
-        [],
-        documentStart,
-        documentEnd,
-        eol,
-        '/page-c.md',
-        ''
-      )
-    );
+    graph.setNote(createTestNote({uri: '/page-a.md'}));
+    graph.setNote(createTestNote({
+        uri: '/page-b.md',
+        links: [{ slug: 'page-a' }],
+      }));
+    graph.setNote(createTestNote({uri: '/page-c.md'}));
 
     expect(
-      graph
-        .getForwardLinks('page-b')
-        .map(link => link.to)
-        .sort()
+      graph.getForwardLinks({slug: 'page-b'}).map(
+        link => graph.getNote({id: link.to})!.slug
+      )
     ).toEqual(['page-a']);
   });
 
   it('Detects backlinks', () => {
     const graph = new NoteGraph();
-    graph.setNote(
-      new Note(
-        'page-a',
-        {},
-        'page-a',
-        [],
-        [],
-        documentStart,
-        documentEnd,
-        eol,
-        '/page-a.md',
-        ''
-      )
-    );
-    graph.setNote(
-      new Note(
-        'page-b',
-        {},
-        'page-b',
-        [{ to: 'page-a', text: 'go', position }],
-        [],
-        documentStart,
-        documentEnd,
-        eol,
-        '/page-b.md',
-        ''
-      )
-    );
-    graph.setNote(
-      new Note(
-        'page-c',
-        {},
-        'page-c',
-        [],
-        [],
-        documentStart,
-        documentEnd,
-        eol,
-        '/page-c.md',
-        ''
-      )
-    );
+    graph.setNote(createTestNote({uri: '/page-a.md'}));
+    graph.setNote(createTestNote({
+        uri: '/page-b.md',
+        links: [{ slug: 'page-a' }],
+      }));
+    graph.setNote(createTestNote({uri: '/page-c.md'}));
 
     expect(
-      graph
-        .getBacklinks('page-a')
-        .map(link => link.from)
-        .sort()
+      graph.getBacklinks({slug: 'page-a'}).map(
+        link => graph.getNote({id: link.from})!.slug
+      )
     ).toEqual(['page-b']);
   });
 
-  it('Fails when accessing non-existing node', () => {
-    expect(() => {
-      const graph = new NoteGraph();
-      graph.setNote(
-        new Note(
-          'page-a',
-          {},
-          'page-a',
-          [],
-          [],
-          documentStart,
-          documentEnd,
-          eol,
-          '/path-b.md',
-          ''
-        )
-      );
-      graph.getNote('non-existing');
-    }).toThrow();
+  it('Returns null when accessing non-existing node', () => {
+    const graph = new NoteGraph();
+    graph.setNote(createTestNote({uri: 'page-a'}));
+    expect(graph.getNote({slug: 'non-existing'})).toBeNull();
   });
 
   it('Allows adding edges to non-existing documents', () => {
     const graph = new NoteGraph();
-    graph.setNote(
-      new Note(
-        'page-a',
-        {},
-        'page-a',
-        [{ to: 'non-existing', text: 'does not exist', position }],
-        [],
-        documentStart,
-        documentEnd,
-        eol,
-        '/path-b.md',
-        ''
-      )
-    );
-    expect(graph.getNote('non-existing')).toBeUndefined();
+    graph.setNote(createTestNote({
+        uri: '/page-a.md',
+        links: [{ slug: 'non-existing' }],
+      }));
+
+    expect(graph.getNote({slug: 'non-existing'})).toBeNull();
   });
 
   it('Updates links when modifying note', () => {
     const graph = new NoteGraph();
-    graph.setNote(
-      new Note(
-        'page-a',
-        {},
-        'page-a',
-        [],
-        [],
-        documentStart,
-        documentEnd,
-        eol,
-        '/page-a.md',
-        ''
-      )
-    );
-    graph.setNote(
-      new Note(
-        'page-b',
-        {},
-        'page-b',
-        [{ to: 'page-a', text: 'go', position }],
-        [],
-        documentStart,
-        documentEnd,
-        eol,
-        '/page-b.md',
-        ''
-      )
-    );
-    graph.setNote(
-      new Note(
-        'page-c',
-        {},
-        'page-c',
-        [],
-        [],
-        documentStart,
-        documentEnd,
-        eol,
-        '/page-c.md',
-        ''
-      )
-    );
+    graph.setNote(createTestNote({uri: '/page-a.md'}));
+    graph.setNote(createTestNote({
+        uri: '/page-b.md',
+        links: [{ slug: 'page-a' }],
+      }));
+    graph.setNote(createTestNote({uri: '/page-c.md'}));
 
     expect(
-      graph
-        .getForwardLinks('page-b')
-        .map(link => link.to)
-        .sort()
+      graph.getForwardLinks({slug: 'page-b'}).map(
+        link => graph.getNote({id: link.to})?.slug
+      )
     ).toEqual(['page-a']);
     expect(
-      graph
-        .getBacklinks('page-a')
-        .map(link => link.from)
-        .sort()
+      graph.getBacklinks({slug: 'page-a'}).map(
+        link => graph.getNote({id: link.from})?.slug
+      )
     ).toEqual(['page-b']);
     expect(
-      graph
-        .getBacklinks('page-c')
-        .map(link => link.from)
-        .sort()
+      graph.getBacklinks({slug: 'page-c'}).map(
+        link => graph.getNote({id: link.from})?.slug
+      )
     ).toEqual([]);
 
-    graph.setNote(
-      new Note(
-        'page-b',
-        {},
-        'page-b',
-        [{ to: 'page-c', text: 'go', position }],
-        [],
-        documentStart,
-        documentEnd,
-        eol,
-        '/path-2b.md',
-        ''
-      )
-    );
+    graph.setNote(createTestNote({
+      uri: '/page-b.md',
+      links: [{ slug: 'page-c' }],
+    }))
 
     expect(
-      graph
-        .getForwardLinks('page-b')
-        .map(link => link.to)
-        .sort()
+      graph.getForwardLinks({slug: 'page-b'}).map(
+        link => graph.getNote({id: link.to})?.slug
+      )
     ).toEqual(['page-c']);
     expect(
-      graph
-        .getBacklinks('page-a')
-        .map(link => link.from)
-        .sort()
+      graph.getBacklinks({slug: 'page-a'}).map(
+        link => graph.getNote({id: link.from})?.slug
+      )
     ).toEqual([]);
     expect(
-      graph
-        .getBacklinks('page-c')
-        .map(link => link.from)
-        .sort()
+      graph.getBacklinks({slug: 'page-c'}).map(
+        link => graph.getNote({id: link.from})?.slug
+      )
     ).toEqual(['page-b']);
   });
 });

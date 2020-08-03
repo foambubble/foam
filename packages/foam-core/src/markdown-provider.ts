@@ -6,8 +6,9 @@ import { parse as parseYAML } from 'yaml';
 import visit, { CONTINUE, EXIT } from 'unist-util-visit';
 import { Node, Parent, Point } from 'unist';
 import * as path from 'path';
-import { Note, NoteLink, NoteLinkDefinition, NoteGraph } from './note-graph';
+import { Note, NoteLink, NoteLinkDefinition, NoteGraph, NoteInfo } from './note-graph';
 import { dropExtension } from './utils';
+import { ID } from 'types';
 
 let processor: unified.Processor | null = null;
 
@@ -25,9 +26,7 @@ export function createNoteFromMarkdown(
   uri: string,
   markdown: string,
   eol: string
-): Note {
-  const filename = path.basename(uri);
-  const id = path.parse(filename).name;
+): NoteInfo {
   const tree = parse(markdown);
   let title: string | null = null;
 
@@ -55,7 +54,8 @@ export function createNoteFromMarkdown(
 
     if (node.type === 'wikiLink') {
       links.push({
-        to: node.value as string,
+        type: 'wikilink',
+        slug: node.value as string,
         text: node.value as string,
         position: node.position!,
       });
@@ -77,18 +77,19 @@ export function createNoteFromMarkdown(
   const end = tree.position!.end;
   const definitions = getFoamDefinitions(linkDefinitions, end);
 
-  return new Note(
-    id,
-    frontmatter,
-    title,
-    links,
-    definitions,
-    start,
-    end,
-    uri,
-    markdown,
-    eol
-  );
+  return {
+    properties: frontmatter,
+    title: title,
+    links: links,
+    definitions: definitions,
+    source: {
+      uri: uri,
+      text: markdown,
+      contentStart: start,
+      end: end,
+      eol: eol,
+    },
+  }
 }
 
 function getFoamDefinitions(
@@ -128,10 +129,10 @@ export function stringifyMarkdownLinkReferenceDefinition(
 }
 export function createMarkdownReferences(
   graph: NoteGraph,
-  noteId: string,
+  noteId: ID,
   includeExtension: boolean
 ): NoteLinkDefinition[] {
-  const source = graph.getNote(noteId);
+  const source = graph.getNote({id: noteId});
 
   // Should never occur since we're already in a file,
   // but better safe than sorry.
@@ -143,9 +144,12 @@ export function createMarkdownReferences(
   }
 
   return graph
-    .getForwardLinks(noteId)
+    .getForwardLinks({id: noteId})
     .map(link => {
-      const target = graph.getNote(link.to);
+      // TODO: this is a bit of hack.
+      // if we don't find the target by ID we search the graph by slug
+      const target = graph.getNote({id: link.to})
+        ?? graph.getNote({slug: link.link.slug});
 
       // We are dropping links to non-existent notes here,
       // but int the future we may want to surface these too
@@ -157,8 +161,8 @@ export function createMarkdownReferences(
       }
 
       const relativePath = path.relative(
-        path.dirname(source.path),
-        target.path
+        path.dirname(source.source.uri),
+        target.source.uri
       );
 
       const pathToNote = includeExtension
@@ -167,9 +171,9 @@ export function createMarkdownReferences(
 
       // [wiki-link-text]: path/to/file.md "Page title"
       return {
-        label: link.text,
+        label: link.link.text,
         url: pathToNote,
-        title: target.title || target.id,
+        title: target.title || target.slug,
       };
     })
     .filter(Boolean)

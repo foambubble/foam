@@ -58,7 +58,7 @@ Successfully generated link references and heading!
         if (note.title != null) {
           const kebabCasedFileName = getKebabCaseFileName(note.title);
           if (kebabCasedFileName) {
-            return renameFile(note.path, kebabCasedFileName);
+            return renameFile(note.source.uri, kebabCasedFileName);
           }
         }
         return Promise.resolve(null);
@@ -83,12 +83,12 @@ Successfully generated link references and heading!
           const definitions = generateLinkReferences(note, graph, !flags['without-extensions']);
 
           // apply Edits
-          let file = note.source;
+          let file = note.source.text;
           file = heading ? applyTextEdit(file, heading) : file;
           file = definitions ? applyTextEdit(file, definitions) : file;
 
           if (heading || definitions) {
-            return writeFileToDisk(note.path, file);
+            return writeFileToDisk(note.source.uri, file);
           }
 
           return Promise.resolve(null);

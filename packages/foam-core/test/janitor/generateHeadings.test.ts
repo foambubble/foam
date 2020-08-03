@@ -11,7 +11,7 @@ describe('generateHeadings', () => {
   });
 
   it('should add heading to a file that does not have them', () => {
-    const note = _graph.getNote('file-without-title') as Note;
+    const note = _graph.getNote({slug: 'file-without-title'}) as Note;
     const expected = {
       newText: `# File without Title
 
@@ -38,12 +38,7 @@ describe('generateHeadings', () => {
   });
 
   it('should not cause any changes to a file that has a heading', () => {
-    const note = _graph.getNote('index') as Note;
-
-    const expected = null;
-
-    const actual = generateHeading(note!);
-
-    expect(actual).toEqual(expected);
+    const note = _graph.getNote({slug: 'index'}) as Note;
+    expect(generateHeading(note!)).toBeNull();
   });
 });

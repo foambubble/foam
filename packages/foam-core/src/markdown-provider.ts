@@ -48,7 +48,7 @@ export function createNoteFromMarkdown(
   let start: Point = { line: 1, column: 1, offset: 0 }; // start position of the note
   visit(tree, node => {
     if (node.type === 'yaml') {
-      frontmatter = parseYAML(node.value as string);
+      frontmatter = parseYAML(node.value as string) ?? {}; // parseYAML returns null if the frontmatter is emtpy
       // Update the start position of the note by exluding the metadata
       start = {
         line: node.position!.end.line! + 1,

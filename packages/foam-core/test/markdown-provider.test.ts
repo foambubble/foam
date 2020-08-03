@@ -34,6 +34,13 @@ date: 20-12-12
 # Other Note Title
 `;
 
+const pageF = `
+---
+---
+
+# Empty Frontmatter
+`;
+
 describe('Markdown loader', () => {
   it('Converts markdown to notes', () => {
     const graph = new NoteGraph();
@@ -108,6 +115,17 @@ describe('frontmatter', () => {
 
     expect(actual.title).toBe(expected.title);
     expect(actual.date).toBe(expected.date);
+  });
+
+  it('should parse empty frontmatter', () => {
+    const graph = new NoteGraph();
+    graph.setNote(createNoteFromMarkdown('page-f', pageF, '\n'));
+
+    const expected = {};
+
+    const actual: any = (graph.getNote('page-f') as Note).frontmatter;
+
+    expect(actual).toEqual(expected);
   });
 });
 

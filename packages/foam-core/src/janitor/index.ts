@@ -87,11 +87,22 @@ export const generateHeading = (note: Note): TextEdit | null => {
     return null;
   }
 
+  const frontmatterExists = note.start.line !== 1;
+
+  const newLineExistsAfterFrontmatter =
+    frontmatterExists &&
+    note.source.split(note.eol)[note.start.line - 1].length === 0;
+
+  const paddingStart = frontmatterExists ? note.eol : '';
+  const paddingEnd = newLineExistsAfterFrontmatter
+    ? note.eol
+    : `${note.eol}${note.eol}`;
+
   return {
-    newText: `# ${getHeadingFromFileName(note.id)}${note.eol}${note.eol}`,
+    newText: `${paddingStart}# ${getHeadingFromFileName(note.id)}${paddingEnd}`,
     range: {
-      start: { line: 0, column: 0, offset: 0 },
-      end: { line: 0, column: 0, offset: 0 },
+      start: note.start,
+      end: note.start,
     },
   };
 };

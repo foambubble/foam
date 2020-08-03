@@ -4,7 +4,8 @@ import {
   ExtensionContext,
   commands,
   Position,
-  Range
+  Range,
+  ProgressLocation
 } from "vscode";
 import fs = require("fs");
 import { FoamFeature } from "../types";
@@ -30,18 +31,29 @@ const feature: FoamFeature = {
 
 async function janitor(foam: Foam) {
   try {
-    const outcome = await runJanitor(foam);
-    if (outcome.processedFileCount === 0) {
-      window.showInformationMessage(
-        "Foam Janitor didn't file any notes to clean up"
+    const noOfFiles = foam.notes.getNotes().filter(Boolean).length;
+
+    if (noOfFiles === 0) {
+      return window.showInformationMessage(
+        "Foam Janitor didn't find any notes to clean up."
       );
-    } else if (!outcome.changedAnyFiles) {
+    }
+
+    const outcome = await window.withProgress(
+      {
+        location: ProgressLocation.Notification,
+        title: `Running Foam Janitor across ${noOfFiles} files!`
+      },
+      () => runJanitor(foam)
+    );
+
+    if (!outcome.changedAnyFiles) {
       window.showInformationMessage(
-        `Foam Janitor checked ${outcome.processedFileCount} files, and found nothing to clean up!`
+        `Foam Janitor checked ${noOfFiles} files, and found nothing to clean up!`
       );
     } else {
       window.showInformationMessage(
-        `Foam Janitor checked ${outcome.processedFileCount} files and updated ${outcome.updatedDefinitionListCount} out-of-date definition lists and added ${outcome.updatedHeadingCount} missing headings. Please check the changes before committing them into version control!`
+        `Foam Janitor checked ${noOfFiles} files and updated ${outcome.updatedDefinitionListCount} out-of-date definition lists and added ${outcome.updatedHeadingCount} missing headings. Please check the changes before committing them into version control!`
       );
     }
   } catch (e) {
@@ -54,7 +66,6 @@ async function janitor(foam: Foam) {
 async function runJanitor(foam: Foam) {
   const notes = foam.notes.getNotes().filter(Boolean);
 
-  let processedFileCount = 0;
   let updatedHeadingCount = 0;
   let updatedDefinitionListCount = 0;
 
@@ -80,11 +91,8 @@ async function runJanitor(foam: Foam) {
   // Apply Text Edits to Non Dirty Notes using fs module just like CLI
 
   const fileWritePromises = nonDirtyNotes.map(note => {
-    processedFileCount += 1;
-
     let heading = generateHeading(note);
     if (heading) {
-      console.log("fs.write heading " + note.path + " " + note.title);
       updatedHeadingCount += 1;
     }
 
@@ -116,8 +124,6 @@ async function runJanitor(foam: Foam) {
   // Handle dirty editors in serial, as VSCode only allows
   // edits to be applied to active text editors
   for (const doc of dirtyTextDocuments) {
-    processedFileCount += 1;
-
     const editor = await window.showTextDocument(doc);
     const note = dirtyNotes.find(n => n.path === editor.document.fileName);
 
@@ -149,14 +155,12 @@ async function runJanitor(foam: Foam) {
         }
 
         if (heading) {
-          console.log("editor.write heading " + note.title);
-
           updatedHeadingCount += 1;
           const start = new Position(
-            heading.range.start.line,
-            heading.range.start.column
+            heading.range.start.line - 1,
+            heading.range.start.column - 1
           );
-          editBuilder.insert(start, heading.newText);
+          editBuilder.replace(start, heading.newText);
         }
       });
     }
@@ -165,7 +169,6 @@ async function runJanitor(foam: Foam) {
   return {
     updatedHeadingCount,
     updatedDefinitionListCount,
-    processedFileCount,
     changedAnyFiles: updatedHeadingCount + updatedDefinitionListCount
   };
 }

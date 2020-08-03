@@ -25,6 +25,15 @@ const pageD = `
 This file has no heading.
 `;
 
+const pageE = `
+---
+title: Note Title
+date: 20-12-12
+---
+
+# Other Note Title
+`;
+
 describe('Markdown loader', () => {
   it('Converts markdown to notes', () => {
     const graph = new NoteGraph();
@@ -71,6 +80,31 @@ describe('Note Title', () => {
 
     const pageANoteTitle = (graph.getNote('page-d') as Note).title;
     expect(pageANoteTitle).toBe(null);
+  });
+
+  it('should give precedence to frontmatter title over other headings', () => {
+    const graph = new NoteGraph();
+    graph.setNote(createNoteFromMarkdown('page-e', pageE, '\n'));
+
+    const pageENoteTitle = (graph.getNote('page-e') as Note).title;
+    expect(pageENoteTitle).toBe('Note Title');
+  });
+});
+
+describe('frontmatter', () => {
+  it('should parse yaml frontmatter', () => {
+    const graph = new NoteGraph();
+    graph.setNote(createNoteFromMarkdown('page-e', pageE, '\n'));
+
+    const expected = {
+      title: 'Note Title',
+      date: '20-12-12',
+    };
+
+    const actual: any = (graph.getNote('page-e') as Note).frontmatter;
+
+    expect(actual.title).toBe(expected.title);
+    expect(actual.date).toBe(expected.date);
   });
 });
 

@@ -1,6 +1,8 @@
 import unified from 'unified';
 import markdownParse from 'remark-parse';
 import wikiLinkPlugin from 'remark-wiki-link';
+import frontmatterPlugin from 'remark-frontmatter';
+import { parse as parseYAML } from 'yaml';
 import visit, { CONTINUE, EXIT } from 'unist-util-visit';
 import { Node, Parent, Point } from 'unist';
 import * as path from 'path';
@@ -14,6 +16,7 @@ function parse(markdown: string): Node {
     processor ||
     unified()
       .use(markdownParse, { gfm: true })
+      .use(frontmatterPlugin, ['yaml'])
       .use(wikiLinkPlugin);
   return processor.parse(markdown);
 }
@@ -27,15 +30,29 @@ export function createNoteFromMarkdown(
   const id = path.parse(filename).name;
   const tree = parse(markdown);
   let title: string | null = null;
+
   visit(tree, node => {
     if (node.type === 'heading' && node.depth === 1) {
       title = ((node as Parent)!.children[0].value as string) || title;
     }
     return title === null ? CONTINUE : EXIT;
   });
+
   const links: NoteLink[] = [];
   const linkDefinitions: NoteLinkDefinition[] = [];
+  let frontmatter: any = {};
+  let start: Point = { line: 1, column: 1, offset: 0 }; // start position of the note
   visit(tree, node => {
+    if (node.type === 'yaml') {
+      frontmatter = parseYAML(node.value as string);
+      // Update the start position of the note by exluding the metadata
+      start = {
+        line: node.position!.end.line! + 1,
+        column: 1,
+        offset: node.position!.end.offset! + 1,
+      };
+    }
+
     if (node.type === 'wikiLink') {
       links.push({
         to: node.value as string,
@@ -54,10 +71,24 @@ export function createNoteFromMarkdown(
     }
   });
 
+  // Give precendence to the title from the frontmatter if it exists
+  title = frontmatter.title ?? title;
+
   const end = tree.position!.end;
   const definitions = getFoamDefinitions(linkDefinitions, end);
 
-  return new Note(id, title, links, definitions, end, uri, markdown, eol);
+  return new Note(
+    id,
+    frontmatter,
+    title,
+    links,
+    definitions,
+    start,
+    end,
+    uri,
+    markdown,
+    eol
+  );
 }
 
 function getFoamDefinitions(

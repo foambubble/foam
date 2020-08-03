@@ -26,9 +26,11 @@ export interface NoteLinkDefinition {
 
 export class Note {
   public id: ID;
+  public frontmatter: object;
   public title: string | null;
   public source: string;
   public path: string;
+  public start: Point;
   public end: Point;
   public eol: string;
   public links: NoteLink[];
@@ -36,20 +38,24 @@ export class Note {
 
   constructor(
     id: ID,
+    frontmatter: object,
     title: string | null,
     links: NoteLink[],
     definitions: NoteLinkDefinition[],
+    start: Point,
     end: Point,
     path: string,
     source: string,
     eol: string
   ) {
     this.id = id;
+    this.frontmatter = frontmatter;
     this.title = title;
     this.source = source;
     this.path = path;
     this.links = links;
     this.definitions = definitions;
+    this.start = start;
     this.end = end;
     this.eol = eol;
   }

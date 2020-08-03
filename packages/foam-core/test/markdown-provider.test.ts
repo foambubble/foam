@@ -56,12 +56,14 @@ describe('Markdown loader', () => {
     graph.setNote(createNoteFromMarkdown('/page-c.md', pageC, '\n'));
 
     expect(
-      graph.getBacklinks({slug: 'page-b'})
-        .map(link => graph.getNote({id: link.from})!.slug)
+      graph
+        .getBacklinks({ slug: 'page-b' })
+        .map(link => graph.getNote({ id: link.from })!.slug)
     ).toEqual(['page-a']);
     expect(
-      graph.getForwardLinks({slug: 'page-a'})
-        .map(link => graph.getNote({id: link.to})!.slug)
+      graph
+        .getForwardLinks({ slug: 'page-a' })
+        .map(link => graph.getNote({ id: link.to })!.slug)
     ).toEqual(['page-b', 'page-c']);
   });
 });
@@ -71,7 +73,7 @@ describe('Note Title', () => {
     const graph = new NoteGraph();
     graph.setNote(createNoteFromMarkdown('/page-a.md', pageA, '\n'));
 
-    const pageANoteTitle = graph.getNote({slug: 'page-a'})!.title;
+    const pageANoteTitle = graph.getNote({ slug: 'page-a' })!.title;
     expect(pageANoteTitle).toBe('Page A');
   });
 
@@ -79,7 +81,7 @@ describe('Note Title', () => {
     const graph = new NoteGraph();
     graph.setNote(createNoteFromMarkdown('/page-d.md', pageD, '\n'));
 
-    const pageANoteTitle = graph.getNote({slug: 'page-d'})!.title;
+    const pageANoteTitle = graph.getNote({ slug: 'page-d' })!.title;
     expect(pageANoteTitle).toBe(null);
   });
 
@@ -87,7 +89,7 @@ describe('Note Title', () => {
     const graph = new NoteGraph();
     graph.setNote(createNoteFromMarkdown('/page-e.md', pageE, '\n'));
 
-    const pageENoteTitle = graph.getNote({slug: 'page-e'})!.title;
+    const pageENoteTitle = graph.getNote({ slug: 'page-e' })!.title;
     expect(pageENoteTitle).toBe('Note Title');
   });
 });
@@ -102,7 +104,7 @@ describe('frontmatter', () => {
       date: '20-12-12',
     };
 
-    const actual: any = graph.getNote({slug: 'page-e'})!.properties;
+    const actual: any = graph.getNote({ slug: 'page-e' })!.properties;
 
     expect(actual.title).toBe(expected.title);
     expect(actual.date).toBe(expected.date);
@@ -115,12 +117,8 @@ describe('wikilinks definitions', () => {
     const noteA = graph.setNote(
       createNoteFromMarkdown('/dir1/page-a.md', pageA, '\n')
     );
-    const noteB = graph.setNote(
-      createNoteFromMarkdown('/dir1/page-b.md', pageB, '\n')
-    );
-    const noteC = graph.setNote(
-      createNoteFromMarkdown('/dir1/page-c.md', pageC, '\n')
-    );
+    graph.setNote(createNoteFromMarkdown('/dir1/page-b.md', pageB, '\n'));
+    graph.setNote(createNoteFromMarkdown('/dir1/page-c.md', pageC, '\n'));
 
     const noExtRefs = createMarkdownReferences(graph, noteA.id, false);
     expect(noExtRefs.map(r => r.url)).toEqual(['page-b', 'page-c']);
@@ -131,12 +129,8 @@ describe('wikilinks definitions', () => {
     const noteA = graph.setNote(
       createNoteFromMarkdown('/dir1/page-a.md', pageA, '\n')
     );
-    const noteB = graph.setNote(
-      createNoteFromMarkdown('/dir1/page-b.md', pageB, '\n')
-    );
-    const noteC = graph.setNote(
-      createNoteFromMarkdown('/dir1/page-c.md', pageC, '\n')
-    );
+    graph.setNote(createNoteFromMarkdown('/dir1/page-b.md', pageB, '\n'));
+    graph.setNote(createNoteFromMarkdown('/dir1/page-c.md', pageC, '\n'));
 
     const extRefs = createMarkdownReferences(graph, noteA.id, true);
     expect(extRefs.map(r => r.url)).toEqual(['page-b.md', 'page-c.md']);
@@ -147,12 +141,8 @@ describe('wikilinks definitions', () => {
     const noteA = graph.setNote(
       createNoteFromMarkdown('/dir1/page-a.md', pageA, '\n')
     );
-    const noteB = graph.setNote(
-      createNoteFromMarkdown('/dir2/page-b.md', pageB, '\n')
-    );
-    const noteC = graph.setNote(
-      createNoteFromMarkdown('/dir3/page-c.md', pageC, '\n')
-    );
+    graph.setNote(createNoteFromMarkdown('/dir2/page-b.md', pageB, '\n'));
+    graph.setNote(createNoteFromMarkdown('/dir3/page-c.md', pageC, '\n'));
 
     const extRefs = createMarkdownReferences(graph, noteA.id, true);
     expect(extRefs.map(r => r.url)).toEqual([

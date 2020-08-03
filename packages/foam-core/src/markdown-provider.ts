@@ -6,7 +6,12 @@ import { parse as parseYAML } from 'yaml';
 import visit, { CONTINUE, EXIT } from 'unist-util-visit';
 import { Node, Parent, Point } from 'unist';
 import * as path from 'path';
-import { Note, NoteLink, NoteLinkDefinition, NoteGraph, NoteInfo } from './note-graph';
+import {
+  NoteLink,
+  NoteLinkDefinition,
+  NoteGraph,
+  NoteInfo,
+} from './note-graph';
 import { dropExtension } from './utils';
 import { ID } from 'types';
 
@@ -89,7 +94,7 @@ export function createNoteFromMarkdown(
       end: end,
       eol: eol,
     },
-  }
+  };
 }
 
 function getFoamDefinitions(
@@ -132,7 +137,7 @@ export function createMarkdownReferences(
   noteId: ID,
   includeExtension: boolean
 ): NoteLinkDefinition[] {
-  const source = graph.getNote({id: noteId});
+  const source = graph.getNote({ id: noteId });
 
   // Should never occur since we're already in a file,
   // but better safe than sorry.
@@ -144,12 +149,13 @@ export function createMarkdownReferences(
   }
 
   return graph
-    .getForwardLinks({id: noteId})
+    .getForwardLinks({ id: noteId })
     .map(link => {
       // TODO: this is a bit of hack.
       // if we don't find the target by ID we search the graph by slug
-      const target = graph.getNote({id: link.to})
-        ?? graph.getNote({slug: link.link.slug});
+      const target =
+        graph.getNote({ id: link.to }) ??
+        graph.getNote({ slug: link.link.slug });
 
       // We are dropping links to non-existent notes here,
       // but int the future we may want to surface these too

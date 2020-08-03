@@ -47,7 +47,10 @@ export const generateLinkReferences = (
       return null;
     }
 
-    const padding = note.source.end.column === 1 ? note.source.eol : `${note.source.eol}${note.source.eol}`;
+    const padding =
+      note.source.end.column === 1
+        ? note.source.eol
+        : `${note.source.eol}${note.source.eol}`;
     return {
       newText: `${padding}${newReferences}`,
       range: {
@@ -91,7 +94,8 @@ export const generateHeading = (note: Note): TextEdit | null => {
 
   const newLineExistsAfterFrontmatter =
     frontmatterExists &&
-    note.source.text.split(note.source.eol)[note.source.contentStart.line - 1].length === 0;
+    note.source.text.split(note.source.eol)[note.source.contentStart.line - 1]
+      .length === 0;
 
   const paddingStart = frontmatterExists ? note.source.eol : '';
   const paddingEnd = newLineExistsAfterFrontmatter
@@ -99,7 +103,9 @@ export const generateHeading = (note: Note): TextEdit | null => {
     : `${note.source.eol}${note.source.eol}`;
 
   return {
-    newText: `${paddingStart}# ${getHeadingFromFileName(note.slug)}${paddingEnd}`,
+    newText: `${paddingStart}# ${getHeadingFromFileName(
+      note.slug
+    )}${paddingEnd}`,
     range: {
       start: note.source.contentStart,
       end: note.source.contentStart,

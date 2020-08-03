@@ -119,11 +119,11 @@ describe('frontmatter', () => {
 
   it('should parse empty frontmatter', () => {
     const graph = new NoteGraph();
-    graph.setNote(createNoteFromMarkdown('page-f', pageF, '\n'));
+    graph.setNote(createNoteFromMarkdown('/page-f.md', pageF, '\n'));
 
     const expected = {};
 
-    const actual: any = (graph.getNote('page-f') as Note).frontmatter;
+    const actual = graph.getNote({ slug: 'page-f' })!.properties;
 
     expect(actual).toEqual(expected);
   });

@@ -11,14 +11,7 @@ export const hash = (text: string) =>
     .digest('hex');
 
 export const uriToSlug = (noteUri: URI): string => {
-  // TODO hack don't merge with this
-  const filename = noteUri
-    .split('/')
-    .slice(-1)[0]
-    .split('.')
-    .slice(0, -1)
-    .join('.');
-  return GithubSlugger.slug(filename);
+  return GithubSlugger.slug(path.parse(noteUri).name);
 };
 
 export const hashURI = (uri: URI): ID => {
@@ -29,9 +22,11 @@ export const getUriViaRelative = (
   reference: URI,
   relativeSlug: string
 ): URI => {
-  const slug = relativeSlug.endsWith('.md') // TODO hack
-    ? relativeSlug
-    : `${relativeSlug}.md`;
+  // if no extension is provided, use the same extension as the source file
+  const slug =
+    path.extname(relativeSlug) !== ''
+      ? relativeSlug
+      : `${relativeSlug}${path.extname(reference)}`;
   return path.normalize(path.join(path.dirname(reference), slug));
 };
 

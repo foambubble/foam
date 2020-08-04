@@ -2,7 +2,7 @@ import { NoteGraph, NoteLinkDefinition, NoteInfo } from '../src/note-graph';
 
 const position = {
   start: { line: 1, column: 1 },
-  end: { line: 0, column: 0 },
+  end: { line: 1, column: 1 },
 };
 
 const documentStart = position.start;

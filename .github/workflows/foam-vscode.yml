@@ -20,8 +20,8 @@ jobs:
 
       - name: Lint foam-vscode
         run: yarn workspace foam-vscode lint
-      # - name: Test foam-vscode
-      #   run: yarn workspace foam-vscode test
+      - name: Test foam-vscode
+        run: yarn workspace foam-vscode test
       # - name: Publish foam-vscode
       #   if: github.ref == 'refs/heads/master'
       #   run: yarn workspace foam-vscode publish-extension

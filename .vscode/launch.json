@@ -6,6 +6,32 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
+			"type": "node",
+			"name": "vscode-jest-tests",
+			"request": "launch",
+			"runtimeArgs": ["workspace", "foam-core", "run", "test"], // ${yarnWorkspaceName} is what we're missing
+			"args": [
+					"--runInBand"
+			],
+			"runtimeExecutable": "yarn",
+			"console": "integratedTerminal",
+			"internalConsoleOptions": "neverOpen",
+			"disableOptimisticBPs": true,
+	},
+		{
+			"name": "Debug Jest Tests",
+			"type": "node",
+			"request": "launch",
+			"runtimeArgs": [
+				"--inspect-brk",
+				"${workspaceRoot}/node_modules/.bin/tsdx",
+				"test",
+			],
+			"console": "integratedTerminal",
+			"cwd": "${workspaceFolder}/packages/foam-core",
+			"internalConsoleOptions": "neverOpen"
+	},
+		{
 			"name": "Run VSCode Extension",
 			"type": "extensionHost",
 			"request": "launch",

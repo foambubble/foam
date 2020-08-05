@@ -1,21 +1,24 @@
-import { Graph, Edge } from 'graphlib';
-import { Position, Point } from 'unist';
-import GithubSlugger from 'github-slugger';
+import { Graph } from 'graphlib';
 import { EventEmitter } from 'events';
+import { Position, Point, URI, ID } from './types';
+import { hashURI, computeRelativeURI } from './utils';
 
-type ID = string;
-
-export interface Link {
-  from: ID;
-  to: ID;
+export interface NoteSource {
+  uri: URI;
   text: string;
+  contentStart: Point;
+  end: Point;
+  eol: string;
 }
 
-export interface NoteLink {
-  to: ID;
-  text: string;
+export interface WikiLink {
+  type: 'wikilink';
+  slug: string;
   position: Position;
 }
+
+// at the moment we only model wikilink
+export type NoteLink = WikiLink;
 
 export interface NoteLinkDefinition {
   label: string;
@@ -24,97 +27,104 @@ export interface NoteLinkDefinition {
   position?: Position;
 }
 
-export class Note {
-  public id: ID;
-  public frontmatter: object;
-  public title: string | null;
-  public source: string;
-  public path: string;
-  public start: Point;
-  public end: Point;
-  public eol: string;
-  public links: NoteLink[];
-  public definitions: NoteLinkDefinition[];
-
-  constructor(
-    id: ID,
-    frontmatter: object,
-    title: string | null,
-    links: NoteLink[],
-    definitions: NoteLinkDefinition[],
-    start: Point,
-    end: Point,
-    path: string,
-    source: string,
-    eol: string
-  ) {
-    this.id = id;
-    this.frontmatter = frontmatter;
-    this.title = title;
-    this.source = source;
-    this.path = path;
-    this.links = links;
-    this.definitions = definitions;
-    this.start = start;
-    this.end = end;
-    this.eol = eol;
-  }
+export interface Note {
+  title: string | null;
+  slug: string; // note: this slug is not necessarily unique
+  properties: object;
+  // sections: NoteSection[]
+  // tags: NoteTag[]
+  links: NoteLink[];
+  definitions: NoteLinkDefinition[];
+  source: NoteSource;
 }
 
-export type NoteGraphEventHandler = (e: { note: Note }) => void;
+export type GraphNote = Note & {
+  id: ID;
+};
+
+export interface GraphConnection {
+  from: ID;
+  to: ID;
+  link: NoteLink;
+}
+
+export type NoteGraphEventHandler = (e: { note: GraphNote }) => void;
+
+export type NotesQuery = { slug: string } | { title: string };
 
 export class NoteGraph {
   private graph: Graph;
   private events: EventEmitter;
+  private createIdFromURI: (uri: URI) => ID;
 
   constructor() {
     this.graph = new Graph();
     this.events = new EventEmitter();
+    this.createIdFromURI = hashURI;
   }
 
-  public setNote(note: Note) {
-    const noteExists = this.graph.hasNode(note.id);
+  public setNote(note: Note): GraphNote {
+    const id = this.createIdFromURI(note.source.uri);
+    const noteExists = this.graph.hasNode(id);
     if (noteExists) {
-      (this.graph.outEdges(note.id) || []).forEach(edge => {
+      (this.graph.outEdges(id) || []).forEach(edge => {
         this.graph.removeEdge(edge);
       });
     }
-
-    this.graph.setNode(note.id, note);
+    const graphNote: GraphNote = {
+      ...note,
+      id: id,
+    };
+    this.graph.setNode(id, graphNote);
     note.links.forEach(link => {
-      const slugger = new GithubSlugger();
-      this.graph.setEdge(note.id, slugger.slug(link.to), link.text);
+      const relativePath =
+        note.definitions.find(def => def.label === link.slug)?.url ?? link.slug;
+      const targetPath = computeRelativeURI(note.source.uri, relativePath);
+      const targetId = this.createIdFromURI(targetPath);
+      const connection: GraphConnection = {
+        from: graphNote.id,
+        to: targetId,
+        link: link,
+      };
+      this.graph.setEdge(graphNote.id, targetId, connection);
     });
-
-    this.events.emit(noteExists ? 'update' : 'add', { note });
+    this.events.emit(noteExists ? 'update' : 'add', { note: graphNote });
+    return graphNote;
   }
 
-  public getNotes(): Note[] {
-    return this.graph.nodes().map(id => this.graph.node(id));
+  public getNotes(query?: NotesQuery): GraphNote[] {
+    // prettier-ignore
+    const filterFn =
+      query == null ? (note: Note | null) => note != null
+        : 'slug' in query ? (note: Note | null) => note?.slug === query.slug
+        : 'title' in query ? (note: Note | null) => note?.title === query.title
+        : (note: Note | null) => note != null;
+
+    return this.graph
+      .nodes()
+      .map(id => this.graph.node(id))
+      .filter(filterFn);
   }
 
-  public getNote(noteId: ID): Note | void {
-    if (this.graph.hasNode(noteId)) {
-      return this.graph.node(noteId);
-    }
-    throw new Error(`Note with ID [${noteId}] not found`);
+  public getNote(noteId: ID): GraphNote | null {
+    return this.graph.node(noteId) ?? null;
   }
 
-  public getAllLinks(noteId: ID): Link[] {
+  public getAllLinks(noteId: ID): GraphConnection[] {
     return (this.graph.nodeEdges(noteId) || []).map(edge =>
-      convertEdgeToLink(edge, this.graph)
+      this.graph.edge(edge.v, edge.w)
     );
   }
 
-  public getForwardLinks(noteId: ID): Link[] {
+  public getForwardLinks(noteId: ID): GraphConnection[] {
     return (this.graph.outEdges(noteId) || []).map(edge =>
-      convertEdgeToLink(edge, this.graph)
+      this.graph.edge(edge.v, edge.w)
     );
   }
 
-  public getBacklinks(noteId: ID): Link[] {
+  public getBacklinks(noteId: ID): GraphConnection[] {
     return (this.graph.inEdges(noteId) || []).map(edge =>
-      convertEdgeToLink(edge, this.graph)
+      this.graph.edge(edge.v, edge.w)
     );
   }
 
@@ -135,9 +145,3 @@ export class NoteGraph {
     this.events.removeAllListeners();
   }
 }
-
-const convertEdgeToLink = (edge: Edge, graph: Graph): Link => ({
-  from: edge.v,
-  to: edge.w,
-  text: graph.edge(edge.v, edge.w),
-});

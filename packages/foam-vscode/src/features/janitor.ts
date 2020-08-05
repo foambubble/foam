@@ -3,7 +3,6 @@ import {
   workspace,
   ExtensionContext,
   commands,
-  Position,
   Range,
   ProgressLocation
 } from "vscode";
@@ -13,11 +12,11 @@ import {
   applyTextEdit,
   generateLinkReferences,
   generateHeading,
-  Foam,
-  Note
+  Foam
 } from "foam-core";
 
 import { includeExtensions } from "../settings";
+import { astPositionToVsCodePosition } from "../utils";
 
 const feature: FoamFeature = {
   activate: async (context: ExtensionContext, foamPromise: Promise<Foam>) => {
@@ -80,12 +79,12 @@ async function runJanitor(foam: Foam) {
     dirtyTextDocument => dirtyTextDocument.fileName
   );
 
-  const dirtyNotes: Note[] = notes.filter(note =>
-    dirtyEditorsFileName.includes(note.path)
+  const dirtyNotes = notes.filter(note =>
+    dirtyEditorsFileName.includes(note.source.uri)
   );
 
-  const nonDirtyNotes: Note[] = notes.filter(
-    note => !dirtyEditorsFileName.includes(note.path)
+  const nonDirtyNotes = notes.filter(
+    note => !dirtyEditorsFileName.includes(note.source.uri)
   );
 
   // Apply Text Edits to Non Dirty Notes using fs module just like CLI
@@ -112,11 +111,11 @@ async function runJanitor(foam: Foam) {
     // Apply Edits
     // Note: The ordering matters. Definitions need to be inserted
     // before heading, since inserting a heading changes line numbers below
-    let text = note.source;
+    let text = note.source.text;
     text = definitions ? applyTextEdit(text, definitions) : text;
     text = heading ? applyTextEdit(text, heading) : text;
 
-    return fs.promises.writeFile(note.path, text);
+    return fs.promises.writeFile(note.source.uri, text);
   });
 
   await Promise.all(fileWritePromises);
@@ -125,7 +124,9 @@ async function runJanitor(foam: Foam) {
   // edits to be applied to active text editors
   for (const doc of dirtyTextDocuments) {
     const editor = await window.showTextDocument(doc);
-    const note = dirtyNotes.find(n => n.path === editor.document.fileName);
+    const note = dirtyNotes.find(
+      n => n.source.uri === editor.document.fileName
+    );
 
     // Get edits
     const heading = generateHeading(note);
@@ -142,24 +143,16 @@ async function runJanitor(foam: Foam) {
         // before heading, since inserting a heading changes line numbers below
         if (definitions) {
           updatedDefinitionListCount += 1;
-          const start = new Position(
-            definitions.range.start.line - 1,
-            definitions.range.start.column
-          );
-          const end = new Position(
-            definitions.range.end.line - 1,
-            definitions.range.end.column
-          );
+          const start = astPositionToVsCodePosition(definitions.range.start);
+          const end = astPositionToVsCodePosition(definitions.range.end);
+
           const range = new Range(start, end);
           editBuilder.replace(range, definitions!.newText);
         }
 
         if (heading) {
           updatedHeadingCount += 1;
-          const start = new Position(
-            heading.range.start.line - 1,
-            heading.range.start.column - 1
-          );
+          const start = astPositionToVsCodePosition(heading.range.start);
           editBuilder.replace(start, heading.newText);
         }
       });

@@ -6,8 +6,9 @@ import { parse as parseYAML } from 'yaml';
 import visit, { CONTINUE, EXIT } from 'unist-util-visit';
 import { Node, Parent, Point } from 'unist';
 import * as path from 'path';
-import { Note, NoteLink, NoteLinkDefinition, NoteGraph } from './note-graph';
-import { dropExtension } from './utils';
+import { NoteLink, NoteLinkDefinition, NoteGraph, Note } from './note-graph';
+import { dropExtension, uriToSlug } from './utils';
+import { ID } from './types';
 
 let processor: unified.Processor | null = null;
 
@@ -26,8 +27,6 @@ export function createNoteFromMarkdown(
   markdown: string,
   eol: string
 ): Note {
-  const filename = path.basename(uri);
-  const id = path.parse(filename).name;
   const tree = parse(markdown);
   let title: string | null = null;
 
@@ -44,7 +43,7 @@ export function createNoteFromMarkdown(
   let start: Point = { line: 1, column: 1, offset: 0 }; // start position of the note
   visit(tree, node => {
     if (node.type === 'yaml') {
-      frontmatter = parseYAML(node.value as string);
+      frontmatter = parseYAML(node.value as string) ?? {}; // parseYAML returns null if the frontmatter is empty
       // Update the start position of the note by exluding the metadata
       start = {
         line: node.position!.end.line! + 1,
@@ -55,8 +54,8 @@ export function createNoteFromMarkdown(
 
     if (node.type === 'wikiLink') {
       links.push({
-        to: node.value as string,
-        text: node.value as string,
+        type: 'wikilink',
+        slug: node.value as string,
         position: node.position!,
       });
     }
@@ -77,18 +76,20 @@ export function createNoteFromMarkdown(
   const end = tree.position!.end;
   const definitions = getFoamDefinitions(linkDefinitions, end);
 
-  return new Note(
-    id,
-    frontmatter,
-    title,
-    links,
-    definitions,
-    start,
-    end,
-    uri,
-    markdown,
-    eol
-  );
+  return {
+    properties: frontmatter,
+    slug: uriToSlug(uri),
+    title: title,
+    links: links,
+    definitions: definitions,
+    source: {
+      uri: uri,
+      text: markdown,
+      contentStart: start,
+      end: end,
+      eol: eol,
+    },
+  };
 }
 
 function getFoamDefinitions(
@@ -128,7 +129,7 @@ export function stringifyMarkdownLinkReferenceDefinition(
 }
 export function createMarkdownReferences(
   graph: NoteGraph,
-  noteId: string,
+  noteId: ID,
   includeExtension: boolean
 ): NoteLinkDefinition[] {
   const source = graph.getNote(noteId);
@@ -145,8 +146,17 @@ export function createMarkdownReferences(
   return graph
     .getForwardLinks(noteId)
     .map(link => {
-      const target = graph.getNote(link.to);
-
+      let target = graph.getNote(link.to);
+      // if we don't find the target by ID we search the graph by slug
+      if (!target) {
+        const candidates = graph.getNotes({ slug: link.link.slug });
+        if (candidates.length > 1) {
+          console.log(
+            `Warning: Slug ${link.link.slug} matches ${candidates.length} documents. Picking one.`
+          );
+        }
+        target = candidates.length > 0 ? candidates[0] : null;
+      }
       // We are dropping links to non-existent notes here,
       // but int the future we may want to surface these too
       if (!target) {
@@ -157,8 +167,8 @@ export function createMarkdownReferences(
       }
 
       const relativePath = path.relative(
-        path.dirname(source.path),
-        target.path
+        path.dirname(source.source.uri),
+        target.source.uri
       );
 
       const pathToNote = includeExtension
@@ -167,9 +177,9 @@ export function createMarkdownReferences(
 
       // [wiki-link-text]: path/to/file.md "Page title"
       return {
-        label: link.text,
+        label: link.link.slug,
         url: pathToNote,
-        title: target.title || target.id,
+        title: target.title || target.slug,
       };
     })
     .filter(Boolean)

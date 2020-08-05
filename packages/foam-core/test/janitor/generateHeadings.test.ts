@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { NoteGraph, Note } from '../../src/note-graph';
+import { NoteGraph } from '../../src/note-graph';
 import { generateHeading } from '../../src/janitor';
 import { initializeNoteGraph } from '../../src/initialize-note-graph';
 
@@ -11,7 +11,7 @@ describe('generateHeadings', () => {
   });
 
   it('should add heading to a file that does not have them', () => {
-    const note = _graph.getNote('file-without-title') as Note;
+    const note = _graph.getNotes({ slug: 'file-without-title' })[0];
     const expected = {
       newText: `# File without Title
 
@@ -30,7 +30,7 @@ describe('generateHeadings', () => {
       },
     };
 
-    const actual = generateHeading(note!);
+    const actual = generateHeading(note);
 
     expect(actual!.range.start).toEqual(expected.range.start);
     expect(actual!.range.end).toEqual(expected.range.end);
@@ -38,12 +38,7 @@ describe('generateHeadings', () => {
   });
 
   it('should not cause any changes to a file that has a heading', () => {
-    const note = _graph.getNote('index') as Note;
-
-    const expected = null;
-
-    const actual = generateHeading(note!);
-
-    expect(actual).toEqual(expected);
+    const note = _graph.getNotes({ slug: 'index' })[0];
+    expect(generateHeading(note)).toBeNull();
   });
 });

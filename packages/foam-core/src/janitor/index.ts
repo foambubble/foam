@@ -1,6 +1,6 @@
 import { Position } from 'unist';
 import GithubSlugger from 'github-slugger';
-import { Note, NoteGraph } from '../note-graph';
+import { Note, GraphNote, NoteGraph } from '../note-graph';
 import {
   LINK_REFERENCE_DEFINITION_HEADER,
   LINK_REFERENCE_DEFINITION_FOOTER,
@@ -19,7 +19,7 @@ export interface TextEdit {
 }
 
 export const generateLinkReferences = (
-  note: Note,
+  note: GraphNote,
   ng: NoteGraph,
   includeExtensions: boolean
 ): TextEdit | null => {
@@ -40,19 +40,22 @@ export const generateLinkReferences = (
           LINK_REFERENCE_DEFINITION_HEADER,
           ...markdownReferences.map(stringifyMarkdownLinkReferenceDefinition),
           LINK_REFERENCE_DEFINITION_FOOTER,
-        ].join(note.eol);
+        ].join(note.source.eol);
 
   if (note.definitions.length === 0) {
     if (newReferences.length === 0) {
       return null;
     }
 
-    const padding = note.end.column === 1 ? note.eol : `${note.eol}${note.eol}`;
+    const padding =
+      note.source.end.column === 1
+        ? note.source.eol
+        : `${note.source.eol}${note.source.eol}`;
     return {
       newText: `${padding}${newReferences}`,
       range: {
-        start: note.end,
-        end: note.end,
+        start: note.source.end,
+        end: note.source.end,
       },
     };
   } else {
@@ -61,7 +64,7 @@ export const generateLinkReferences = (
 
     const oldReferences = note.definitions
       .map(stringifyMarkdownLinkReferenceDefinition)
-      .join(note.eol);
+      .join(note.source.eol);
 
     if (oldReferences === newReferences) {
       return null;
@@ -87,22 +90,25 @@ export const generateHeading = (note: Note): TextEdit | null => {
     return null;
   }
 
-  const frontmatterExists = note.start.line !== 1;
+  const frontmatterExists = note.source.contentStart.line !== 1;
 
   const newLineExistsAfterFrontmatter =
     frontmatterExists &&
-    note.source.split(note.eol)[note.start.line - 1].length === 0;
+    note.source.text.split(note.source.eol)[note.source.contentStart.line - 1]
+      .length === 0;
 
-  const paddingStart = frontmatterExists ? note.eol : '';
+  const paddingStart = frontmatterExists ? note.source.eol : '';
   const paddingEnd = newLineExistsAfterFrontmatter
-    ? note.eol
-    : `${note.eol}${note.eol}`;
+    ? note.source.eol
+    : `${note.source.eol}${note.source.eol}`;
 
   return {
-    newText: `${paddingStart}# ${getHeadingFromFileName(note.id)}${paddingEnd}`,
+    newText: `${paddingStart}# ${getHeadingFromFileName(
+      note.slug
+    )}${paddingEnd}`,
     range: {
-      start: note.start,
-      end: note.start,
+      start: note.source.contentStart,
+      end: note.source.contentStart,
     },
   };
 };

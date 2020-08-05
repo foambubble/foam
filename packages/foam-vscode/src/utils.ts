@@ -1,4 +1,17 @@
-import { EndOfLine, Range, TextDocument, window, Position, TextEditor } from "vscode";
+import {
+  EndOfLine,
+  Range,
+  TextDocument,
+  window,
+  Position,
+  TextEditor
+} from "vscode";
+
+interface Point {
+  line: number;
+  column: number;
+  offset?: number;
+}
 
 export const docConfig = { tab: "  ", eol: "\r\n" };
 
@@ -69,3 +82,12 @@ export function dropExtension(path: string): string {
   parts.pop();
   return parts.join(".");
 }
+
+/**
+ *
+ * @param point ast position (1-indexed)
+ * @returns VSCode position  (0-indexed)
+ */
+export const astPositionToVsCodePosition = (point: Point): Position => {
+  return new Position(point.line - 1, point.column - 1);
+};

@@ -43,6 +43,7 @@ If a roadmap item is a stub, **consider** opening a [GitHub issue](https://githu
 - [[git-flows-for-teams]]
 - [[user-settings]]
 - [[link-reference-definitions]]
+- [[predefined-user-snippets]]
 
 ### Publishing
 
@@ -104,6 +105,7 @@ The community is working on a number of automated scripts to help you migrate to
 [git-flows-for-teams]: git-flows-for-teams "Git Flows for Teams (stub)"
 [user-settings]: user-settings "User Settings (stub)"
 [link-reference-definitions]: link-reference-definitions "Link Reference Definitions"
+[predefined-user-snippets]: predefined-user-snippets "Pre-defined User Snippets"
 [officially-support-alternative-templates]: officially-support-alternative-templates "Officially Support Alternative Templates (stub)"
 [improved-static-site-generation]: improved-static-site-generation "Improved Static Site Generation (stub)"
 [mdx-by-default]: mdx-by-default "MDX by Default(stub)"

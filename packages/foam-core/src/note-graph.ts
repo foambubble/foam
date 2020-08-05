@@ -107,31 +107,25 @@ export class NoteGraph {
   }
 
   public getNote(noteId: ID): GraphNote | null {
-    return noteId ? this.graph.node(noteId) ?? null : null;
+    return this.graph.node(noteId) ?? null;
   }
 
   public getAllLinks(noteId: ID): GraphConnection[] {
-    return noteId != null
-      ? (this.graph.nodeEdges(noteId) || []).map(edge =>
-          this.graph.edge(edge.v, edge.w)
-        )
-      : [];
+    return (this.graph.nodeEdges(noteId) || []).map(edge =>
+      this.graph.edge(edge.v, edge.w)
+    );
   }
 
   public getForwardLinks(noteId: ID): GraphConnection[] {
-    return noteId != null
-      ? (this.graph.outEdges(noteId) || []).map(edge =>
-          this.graph.edge(edge.v, edge.w)
-        )
-      : [];
+    return (this.graph.outEdges(noteId) || []).map(edge =>
+      this.graph.edge(edge.v, edge.w)
+    );
   }
 
   public getBacklinks(noteId: ID): GraphConnection[] {
-    return noteId != null
-      ? (this.graph.inEdges(noteId) || []).map(edge =>
-          this.graph.edge(edge.v, edge.w)
-        )
-      : [];
+    return (this.graph.inEdges(noteId) || []).map(edge =>
+      this.graph.edge(edge.v, edge.w)
+    );
   }
 
   public unstable_onNoteAdded(callback: NoteGraphEventHandler) {

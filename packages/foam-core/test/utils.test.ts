@@ -1,4 +1,4 @@
-import { uriToSlug, hashURI, computeRelativeUri } from '../src/utils';
+import { uriToSlug, hashURI, computeRelativeURI } from '../src/utils';
 
 describe('URI utils', () => {
   it('supports various cases', () => {
@@ -19,11 +19,11 @@ describe('URI utils', () => {
   });
 
   it('computes a relative uri using a slug', () => {
-    expect(computeRelativeUri('/my/file.md', '../hello.md')).toEqual(
+    expect(computeRelativeURI('/my/file.md', '../hello.md')).toEqual(
       '/hello.md'
     );
-    expect(computeRelativeUri('/my/file.md', '../hello')).toEqual('/hello.md');
-    expect(computeRelativeUri('/my/file.markdown', '../hello')).toEqual(
+    expect(computeRelativeURI('/my/file.md', '../hello')).toEqual('/hello.md');
+    expect(computeRelativeURI('/my/file.markdown', '../hello')).toEqual(
       '/hello.markdown'
     );
   });

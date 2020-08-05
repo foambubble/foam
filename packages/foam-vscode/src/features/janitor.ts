@@ -3,7 +3,6 @@ import {
   workspace,
   ExtensionContext,
   commands,
-  Position,
   Range,
   ProgressLocation
 } from "vscode";
@@ -13,8 +12,7 @@ import {
   applyTextEdit,
   generateLinkReferences,
   generateHeading,
-  Foam,
-  Note
+  Foam
 } from "foam-core";
 
 import { includeExtensions } from "../settings";

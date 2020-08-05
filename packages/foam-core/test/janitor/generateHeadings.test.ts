@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { NoteGraph, Note } from '../../src/note-graph';
+import { NoteGraph } from '../../src/note-graph';
 import { generateHeading } from '../../src/janitor';
 import { initializeNoteGraph } from '../../src/initialize-note-graph';
 

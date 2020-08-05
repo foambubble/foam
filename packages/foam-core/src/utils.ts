@@ -18,7 +18,7 @@ export const hashURI = (uri: URI): ID => {
   return hash(path.normalize(uri));
 };
 
-export const computeRelativeUri = (
+export const computeRelativeURI = (
   reference: URI,
   relativeSlug: string
 ): URI => {

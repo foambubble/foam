@@ -1,7 +1,7 @@
 import { Graph } from 'graphlib';
 import { EventEmitter } from 'events';
 import { Position, Point, URI, ID } from './types';
-import { uriToSlug, hashURI, computeRelativeUri } from './utils';
+import { hashURI, computeRelativeURI } from './utils';
 
 export interface NoteSource {
   uri: URI;
@@ -79,7 +79,7 @@ export class NoteGraph {
     note.links.forEach(link => {
       const relativePath =
         note.definitions.find(def => def.label === link.slug)?.url ?? link.slug;
-      const targetPath = computeRelativeUri(note.source.uri, relativePath);
+      const targetPath = computeRelativeURI(note.source.uri, relativePath);
       const targetId = this.createIdFromURI(targetPath);
       const connection: GraphConnection = {
         from: graphNote.id,

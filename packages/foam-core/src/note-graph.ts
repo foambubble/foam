@@ -1,7 +1,7 @@
 import { Graph } from 'graphlib';
 import { EventEmitter } from 'events';
 import { Position, Point, URI, ID } from './types';
-import { uriToSlug, hashURI, getUriViaRelative } from './utils';
+import { uriToSlug, hashURI, computeRelativeUri } from './utils';
 
 export interface NoteSource {
   uri: URI;
@@ -13,33 +13,12 @@ export interface NoteSource {
 
 export interface WikiLink {
   type: 'wikilink';
-  text: string;
   slug: string;
   position: Position;
 }
 
+// at the moment we only model wikilink
 export type NoteLink = WikiLink;
-
-export interface NoteInfo {
-  title: string | null;
-  properties: object;
-  // sections: NoteSection[]
-  // tags: NoteTag[]
-  links: NoteLink[];
-  definitions: NoteLinkDefinition[];
-  source: NoteSource;
-}
-
-export type Note = NoteInfo & {
-  id: ID;
-  slug: string; // note: this slug is not necessarily unique
-};
-
-export interface Connection {
-  from: ID;
-  to: ID;
-  link: NoteLink;
-}
 
 export interface NoteLinkDefinition {
   label: string;
@@ -48,14 +27,30 @@ export interface NoteLinkDefinition {
   position?: Position;
 }
 
-export type NoteGraphEventHandler = (e: { note: Note }) => void;
+export interface Note {
+  title: string | null;
+  slug: string; // note: this slug is not necessarily unique
+  properties: object;
+  // sections: NoteSection[]
+  // tags: NoteTag[]
+  links: NoteLink[];
+  definitions: NoteLinkDefinition[];
+  source: NoteSource;
+}
 
-export type NoteQuery = {
-  id?: ID;
-  slug?: string;
-  uri?: URI;
-  title?: string;
+export type GraphNote = Note & {
+  id: ID;
 };
+
+export interface GraphConnection {
+  from: ID;
+  to: ID;
+  link: NoteLink;
+}
+
+export type NoteGraphEventHandler = (e: { note: GraphNote }) => void;
+
+export type NotesQuery = { slug: string } | { title: string };
 
 export class NoteGraph {
   private graph: Graph;
@@ -68,27 +63,25 @@ export class NoteGraph {
     this.createIdFromURI = hashURI;
   }
 
-  public setNote(note: NoteInfo) {
+  public setNote(note: Note): GraphNote {
     const id = this.createIdFromURI(note.source.uri);
-    const slug = uriToSlug(note.source.uri);
     const noteExists = this.graph.hasNode(id);
     if (noteExists) {
       (this.graph.outEdges(id) || []).forEach(edge => {
         this.graph.removeEdge(edge);
       });
     }
-    const graphNote: Note = {
+    const graphNote: GraphNote = {
       ...note,
       id: id,
-      slug: slug,
     };
     this.graph.setNode(id, graphNote);
     note.links.forEach(link => {
       const relativePath =
         note.definitions.find(def => def.label === link.slug)?.url ?? link.slug;
-      const targetPath = getUriViaRelative(note.source.uri, relativePath);
+      const targetPath = computeRelativeUri(note.source.uri, relativePath);
       const targetId = this.createIdFromURI(targetPath);
-      const connection: Connection = {
+      const connection: GraphConnection = {
         from: graphNote.id,
         to: targetId,
         link: link,
@@ -99,41 +92,25 @@ export class NoteGraph {
     return graphNote;
   }
 
-  public getNotes(): Note[] {
+  public getNotes(query?: NotesQuery): GraphNote[] {
+    // prettier-ignore
+    const filterFn =
+      query == null ? (note: Note | null) => note != null
+        : 'slug' in query ? (note: Note | null) => note?.slug === query.slug
+        : 'title' in query ? (note: Note | null) => note?.title === query.title
+        : (note: Note | null) => note != null;
+
     return this.graph
       .nodes()
       .map(id => this.graph.node(id))
-      .filter(Boolean);
+      .filter(filterFn);
   }
 
-  public getNoteId(query: NoteQuery): ID | null {
-    if (query.id) {
-      return query.id;
-    }
-    const searchFn = query.uri
-      ? (note: Note | null) => note?.source.uri === query.uri
-      : query.slug
-      ? (note: Note | null) => note?.slug === query.slug
-      : query.title
-      ? (note: Note | null) => note?.title === query.title
-      : null;
-    if (searchFn) {
-      const foundId = this.graph.nodes().find(nodeId => {
-        const note = this.graph.node(nodeId);
-        return searchFn(note);
-      });
-      return foundId ?? null;
-    }
-    return null;
-  }
-
-  public getNote(query: NoteQuery): Note | null {
-    const noteId = this.getNoteId(query);
+  public getNote(noteId: ID): GraphNote | null {
     return noteId ? this.graph.node(noteId) ?? null : null;
   }
 
-  public getAllLinks(query: NoteQuery): Connection[] {
-    const noteId = this.getNoteId(query);
+  public getAllLinks(noteId: ID): GraphConnection[] {
     return noteId != null
       ? (this.graph.nodeEdges(noteId) || []).map(edge =>
           this.graph.edge(edge.v, edge.w)
@@ -141,8 +118,7 @@ export class NoteGraph {
       : [];
   }
 
-  public getForwardLinks(query: NoteQuery): Connection[] {
-    const noteId = this.getNoteId(query);
+  public getForwardLinks(noteId: ID): GraphConnection[] {
     return noteId != null
       ? (this.graph.outEdges(noteId) || []).map(edge =>
           this.graph.edge(edge.v, edge.w)
@@ -150,8 +126,7 @@ export class NoteGraph {
       : [];
   }
 
-  public getBacklinks(query: NoteQuery): Connection[] {
-    const noteId = this.getNoteId(query);
+  public getBacklinks(noteId: ID): GraphConnection[] {
     return noteId != null
       ? (this.graph.inEdges(noteId) || []).map(edge =>
           this.graph.edge(edge.v, edge.w)

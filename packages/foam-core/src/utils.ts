@@ -6,7 +6,7 @@ import { URI, ID } from 'types';
 
 export const hash = (text: string) =>
   crypto
-    .createHash('md5')
+    .createHash('sha1')
     .update(text)
     .digest('hex');
 
@@ -18,7 +18,7 @@ export const hashURI = (uri: URI): ID => {
   return hash(path.normalize(uri));
 };
 
-export const getUriViaRelative = (
+export const computeRelativeUri = (
   reference: URI,
   relativeSlug: string
 ): URI => {

@@ -81,11 +81,11 @@ async function runJanitor(foam: Foam) {
     dirtyTextDocument => dirtyTextDocument.fileName
   );
 
-  const dirtyNotes: Note[] = notes.filter(note =>
+  const dirtyNotes = notes.filter(note =>
     dirtyEditorsFileName.includes(note.source.uri)
   );
 
-  const nonDirtyNotes: Note[] = notes.filter(
+  const nonDirtyNotes = notes.filter(
     note => !dirtyEditorsFileName.includes(note.source.uri)
   );
 
@@ -126,7 +126,9 @@ async function runJanitor(foam: Foam) {
   // edits to be applied to active text editors
   for (const doc of dirtyTextDocuments) {
     const editor = await window.showTextDocument(doc);
-    const note = dirtyNotes.find(n => n.source.uri === editor.document.fileName);
+    const note = dirtyNotes.find(
+      n => n.source.uri === editor.document.fileName
+    );
 
     // Get edits
     const heading = generateHeading(note);

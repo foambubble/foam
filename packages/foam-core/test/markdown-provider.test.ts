@@ -58,19 +58,19 @@ describe('Markdown loader', () => {
 
   it('Parses wikilinks correctly', () => {
     const graph = new NoteGraph();
-    graph.setNote(createNoteFromMarkdown('/page-a.md', pageA, '\n'));
-    graph.setNote(createNoteFromMarkdown('/page-b.md', pageB, '\n'));
+    const noteA = graph.setNote(
+      createNoteFromMarkdown('/page-a.md', pageA, '\n')
+    );
+    const noteB = graph.setNote(
+      createNoteFromMarkdown('/page-b.md', pageB, '\n')
+    );
     graph.setNote(createNoteFromMarkdown('/page-c.md', pageC, '\n'));
 
     expect(
-      graph
-        .getBacklinks({ slug: 'page-b' })
-        .map(link => graph.getNote({ id: link.from })!.slug)
+      graph.getBacklinks(noteB.id).map(link => graph.getNote(link.from)!.slug)
     ).toEqual(['page-a']);
     expect(
-      graph
-        .getForwardLinks({ slug: 'page-a' })
-        .map(link => graph.getNote({ id: link.to })!.slug)
+      graph.getForwardLinks(noteA.id).map(link => graph.getNote(link.to)!.slug)
     ).toEqual(['page-b', 'page-c']);
   });
 });
@@ -78,25 +78,31 @@ describe('Markdown loader', () => {
 describe('Note Title', () => {
   it('should initialize note title if heading exists', () => {
     const graph = new NoteGraph();
-    graph.setNote(createNoteFromMarkdown('/page-a.md', pageA, '\n'));
+    const note = graph.setNote(
+      createNoteFromMarkdown('/page-a.md', pageA, '\n')
+    );
 
-    const pageANoteTitle = graph.getNote({ slug: 'page-a' })!.title;
+    const pageANoteTitle = graph.getNote(note.id)!.title;
     expect(pageANoteTitle).toBe('Page A');
   });
 
   it('should not initialize note title if heading does not exist', () => {
     const graph = new NoteGraph();
-    graph.setNote(createNoteFromMarkdown('/page-d.md', pageD, '\n'));
+    const note = graph.setNote(
+      createNoteFromMarkdown('/page-d.md', pageD, '\n')
+    );
 
-    const pageANoteTitle = graph.getNote({ slug: 'page-d' })!.title;
+    const pageANoteTitle = graph.getNote(note.id)!.title;
     expect(pageANoteTitle).toBe(null);
   });
 
   it('should give precedence to frontmatter title over other headings', () => {
     const graph = new NoteGraph();
-    graph.setNote(createNoteFromMarkdown('/page-e.md', pageE, '\n'));
+    const note = graph.setNote(
+      createNoteFromMarkdown('/page-e.md', pageE, '\n')
+    );
 
-    const pageENoteTitle = graph.getNote({ slug: 'page-e' })!.title;
+    const pageENoteTitle = graph.getNote(note.id)!.title;
     expect(pageENoteTitle).toBe('Note Title');
   });
 });
@@ -104,14 +110,16 @@ describe('Note Title', () => {
 describe('frontmatter', () => {
   it('should parse yaml frontmatter', () => {
     const graph = new NoteGraph();
-    graph.setNote(createNoteFromMarkdown('/page-e.md', pageE, '\n'));
+    const note = graph.setNote(
+      createNoteFromMarkdown('/page-e.md', pageE, '\n')
+    );
 
     const expected = {
       title: 'Note Title',
       date: '20-12-12',
     };
 
-    const actual: any = graph.getNote({ slug: 'page-e' })!.properties;
+    const actual: any = graph.getNote(note.id)!.properties;
 
     expect(actual.title).toBe(expected.title);
     expect(actual.date).toBe(expected.date);
@@ -119,11 +127,13 @@ describe('frontmatter', () => {
 
   it('should parse empty frontmatter', () => {
     const graph = new NoteGraph();
-    graph.setNote(createNoteFromMarkdown('/page-f.md', pageF, '\n'));
+    const note = graph.setNote(
+      createNoteFromMarkdown('/page-f.md', pageF, '\n')
+    );
 
     const expected = {};
 
-    const actual = graph.getNote({ slug: 'page-f' })!.properties;
+    const actual = graph.getNote(note.id)!.properties;
 
     expect(actual).toEqual(expected);
   });

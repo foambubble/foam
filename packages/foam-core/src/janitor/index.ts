@@ -1,6 +1,6 @@
 import { Position } from 'unist';
 import GithubSlugger from 'github-slugger';
-import { Note, NoteGraph } from '../note-graph';
+import { Note, GraphNote, NoteGraph } from '../note-graph';
 import {
   LINK_REFERENCE_DEFINITION_HEADER,
   LINK_REFERENCE_DEFINITION_FOOTER,
@@ -19,7 +19,7 @@ export interface TextEdit {
 }
 
 export const generateLinkReferences = (
-  note: Note,
+  note: GraphNote,
   ng: NoteGraph,
   includeExtensions: boolean
 ): TextEdit | null => {

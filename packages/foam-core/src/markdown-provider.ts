@@ -6,14 +6,9 @@ import { parse as parseYAML } from 'yaml';
 import visit, { CONTINUE, EXIT } from 'unist-util-visit';
 import { Node, Parent, Point } from 'unist';
 import * as path from 'path';
-import {
-  NoteLink,
-  NoteLinkDefinition,
-  NoteGraph,
-  NoteInfo,
-} from './note-graph';
-import { dropExtension } from './utils';
-import { ID } from 'types';
+import { NoteLink, NoteLinkDefinition, NoteGraph, Note } from './note-graph';
+import { dropExtension, uriToSlug } from './utils';
+import { ID } from './types';
 
 let processor: unified.Processor | null = null;
 
@@ -31,7 +26,7 @@ export function createNoteFromMarkdown(
   uri: string,
   markdown: string,
   eol: string
-): NoteInfo {
+): Note {
   const tree = parse(markdown);
   let title: string | null = null;
 
@@ -61,7 +56,6 @@ export function createNoteFromMarkdown(
       links.push({
         type: 'wikilink',
         slug: node.value as string,
-        text: node.value as string,
         position: node.position!,
       });
     }
@@ -84,6 +78,7 @@ export function createNoteFromMarkdown(
 
   return {
     properties: frontmatter,
+    slug: uriToSlug(uri),
     title: title,
     links: links,
     definitions: definitions,
@@ -137,7 +132,7 @@ export function createMarkdownReferences(
   noteId: ID,
   includeExtension: boolean
 ): NoteLinkDefinition[] {
-  const source = graph.getNote({ id: noteId });
+  const source = graph.getNote(noteId);
 
   // Should never occur since we're already in a file,
   // but better safe than sorry.
@@ -149,14 +144,19 @@ export function createMarkdownReferences(
   }
 
   return graph
-    .getForwardLinks({ id: noteId })
+    .getForwardLinks(noteId)
     .map(link => {
-      // TODO: this is a bit of hack.
+      let target = graph.getNote(link.to);
       // if we don't find the target by ID we search the graph by slug
-      const target =
-        graph.getNote({ id: link.to }) ??
-        graph.getNote({ slug: link.link.slug });
-
+      if (!target) {
+        const candidates = graph.getNotes({ slug: link.link.slug });
+        if (candidates.length > 1) {
+          console.log(
+            `Warning: Slug ${link.link.slug} matches ${candidates.length} documents. Picking one.`
+          );
+        }
+        target = candidates.length > 0 ? candidates[0] : null;
+      }
       // We are dropping links to non-existent notes here,
       // but int the future we may want to surface these too
       if (!target) {
@@ -177,7 +177,7 @@ export function createMarkdownReferences(
 
       // [wiki-link-text]: path/to/file.md "Page title"
       return {
-        label: link.link.text,
+        label: link.link.slug,
         url: pathToNote,
         title: target.title || target.slug,
       };

@@ -36,7 +36,7 @@ This principle may seem like it contradicts [Foam wants you to own your thoughts
 ## Foam allows people to collaborate in discovering better ways to work, together.
 
 - **Foam is a collection of ideas.** Foam was released to the public not to share the few good ideas in it, but to learn many good ideas from others. As you improve your own workflow, share your work on your own Foam blog.
-- **Foam is open for contributions.** If you use a tool or workflow that you like that fits these principles, please contribute them back to the Foam template as [[recipes]], [[recommended-extensions]] or documentation in [this workspace](httpsL//github,com/foambubble/foam). See also: [[roadmap]] and [[contribution-guide]].
+- **Foam is open for contributions.** If you use a tool or workflow that you like that fits these principles, please contribute them back to the Foam template as [[recipes]], [[recommended-extensions]] or documentation in [this workspace](https://github.com/foambubble/foam). See also: [[roadmap]] and [[contribution-guide]].
 - **Foam is open source.** Feel free to fork it, improve it and remix it. Just don't sell it, as per our [license](license).
 - **Foam is not Roam.** This project was inspired by Roam Research, but we're not limited by what Roam does. No idea is too big (though if it doesn't fit with Foam's core workflow, we might make it a [[recipes]] page instead).
 

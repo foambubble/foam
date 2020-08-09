@@ -135,7 +135,7 @@ async function generateReferenceList(
 ): Promise<string[]> {
   const filePath = doc.fileName;
 
-  const id = dropExtension(basename(filePath));
+  const id = foam.createIdFromURI(filePath);
 
   const references = uniq(
     createMarkdownReferences(foam, id, includeExtensions()).map(

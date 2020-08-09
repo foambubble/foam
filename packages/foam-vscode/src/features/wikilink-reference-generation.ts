@@ -85,7 +85,7 @@ async function createReferenceList(foam: NoteGraph) {
 
   let refs = await generateReferenceList(foam, editor.document);
   if (refs && refs.length) {
-    await editor.edit(function (editBuilder) {
+    await editor.edit(function(editBuilder) {
       if (editor) {
         const spacing = hasEmptyTrailing
           ? docConfig.eol
@@ -128,14 +128,15 @@ async function updateReferenceList(foam: NoteGraph) {
   }
 }
 
-
 async function generateReferenceList(
   foam: NoteGraph,
   doc: TextDocument
 ): Promise<string[]> {
   const filePath = doc.fileName;
 
-  const id = foam.createIdFromURI(filePath);
+  const note = foam.getNoteByURI(filePath);
+
+  const id = note?.id ?? "";
 
   const references = uniq(
     createMarkdownReferences(foam, id, includeExtensions()).map(

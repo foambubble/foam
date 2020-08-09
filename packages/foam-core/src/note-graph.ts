@@ -55,7 +55,7 @@ export type NotesQuery = { slug: string } | { title: string };
 export class NoteGraph {
   private graph: Graph;
   private events: EventEmitter;
-  
+
   public createIdFromURI: (uri: URI) => ID;
 
   constructor() {

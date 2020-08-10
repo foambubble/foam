@@ -136,10 +136,17 @@ async function generateReferenceList(
 
   const note = foam.getNoteByURI(filePath);
 
-  const id = note?.id ?? "";
+  // Should never happen as `doc` is usually given by `editor.document`, which
+  // binds to an opened note. 
+  if (!note) {
+    console.warn(
+      `Can't find note for URI ${filePath} before attempting to generate its markdown reference list`
+    );
+    return [];
+  }
 
   const references = uniq(
-    createMarkdownReferences(foam, id, includeExtensions()).map(
+    createMarkdownReferences(foam, note.id, includeExtensions()).map(
       stringifyMarkdownLinkReferenceDefinition
     )
   );

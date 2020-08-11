@@ -110,6 +110,10 @@ export class NoteGraph {
     return this.graph.node(noteId) ?? null;
   }
 
+  public getNoteByURI(uri: URI): GraphNote | null {
+    return this.getNote(this.createIdFromURI(uri));
+  }
+
   public getAllLinks(noteId: ID): GraphConnection[] {
     return (this.graph.nodeEdges(noteId) || []).map(edge =>
       this.graph.edge(edge.v, edge.w)

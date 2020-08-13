@@ -41,4 +41,22 @@ describe('generateHeadings', () => {
     const note = _graph.getNotes({ slug: 'index' })[0];
     expect(generateHeading(note)).toBeNull();
   });
+
+  it('should generate heading when the file only contains frontmatter', () => {
+    const note = _graph.getNotes({ slug: 'file-with-only-frontmatter' })[0];
+
+    const expected = {
+      newText: '\n# File with only Frontmatter\n\n',
+      range: {
+        start: { line: 4, column: 1, offset: 60 },
+        end: { line: 4, column: 1, offset: 60 },
+      },
+    };
+
+    const actual = generateHeading(note);
+
+    expect(actual!.range.start).toEqual(expected.range.start);
+    expect(actual!.range.end).toEqual(expected.range.end);
+    expect(actual!.newText).toEqual(expected.newText);
+  });
 });

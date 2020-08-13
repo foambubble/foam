@@ -18,6 +18,9 @@ The published pages don't support math formulas by default. To enable this featu
 </script>
 ```
 
+This uses the [MathJax](https://www.mathjax.org/) library to render anything delimited by ```$``` (customizable in the snippet above) pairs to inline math and ```$$``` to blocks of math (like a html div tag) using with the AMS-LaTeX dialect embedded within MathJax. There are other dialects of LaTeX (instead of AMS) various groups of people may wish to use and other JavaScript rendering libraries. A good possible task might be how to tie in usage of KaTeX insteax of MathJax, since it it may be preferable under some conditions (particularily if someone has a many math expressions in one markdown page), because of KaTeX's lazy loading async rendering nature. 
+
+
 Example of inline math: $e^{i \pi}+1=0$  
 Example of displayed math:  
 

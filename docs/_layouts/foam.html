@@ -19,10 +19,20 @@ window.addEventListener('DOMContentLoaded', (event) => {
   document
     .querySelectorAll(".markdown-body a[title]:not([href^=http])")
     .forEach((a) => {
-      // Hack: Replace page-link with "Page Title"...
-      a.innerText = a.title;
-      // ...and normalize the links to allow html pages navigation
-      a.href = normalizeMdLink(a.href);
+      // filter to only wiki-links
+      var prev = a.previousSibling;
+      var next = a.nextSibling;
+      if (
+        prev instanceof Text && prev.textContent.endsWith('[') && 
+        next instanceof Text && next.textContent.startsWith(']')
+      ) {
+
+        // replace page-link with "Page Title"...
+        a.innerText = a.title;
+
+        // ...and normalize the links to allow html pages navigation
+        a.href = normalizeMdLink(a.href);
+      }
     });
 
   document.querySelectorAll(".github-only").forEach((el) => {

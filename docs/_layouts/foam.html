@@ -26,7 +26,14 @@ window.addEventListener('DOMContentLoaded', (event) => {
         prev instanceof Text && prev.textContent.endsWith('[') && 
         next instanceof Text && next.textContent.startsWith(']')
       ) {
+        
+        // remove surrounding brackets
+        prev.textContent = prev.textContent.slice(0, -1);
+        next.textContent = next.textContent.slice(1);
 
+        // add CSS list for styling
+        a.classList.add('wikilink');
+        
         // replace page-link with "Page Title"...
         a.innerText = a.title;
 

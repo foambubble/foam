@@ -11,7 +11,7 @@ describe('generateLinkReferences', () => {
   });
 
   it('initialised test graph correctly', () => {
-    expect(_graph.getNotes().length).toEqual(5);
+    expect(_graph.getNotes().length).toEqual(6);
   });
 
   it('should add link references to a file that does not have them', () => {

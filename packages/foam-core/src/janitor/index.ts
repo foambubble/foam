@@ -61,7 +61,6 @@ export const generateLinkReferences = (
   } else {
     const first = note.definitions[0];
     const last = note.definitions[note.definitions.length - 1];
-
     const oldReferences = note.definitions
       .map(stringifyMarkdownLinkReferenceDefinition)
       .join(note.source.eol);
@@ -92,10 +91,13 @@ export const generateHeading = (note: Note): TextEdit | null => {
 
   const frontmatterExists = note.source.contentStart.line !== 1;
 
-  const newLineExistsAfterFrontmatter =
-    frontmatterExists &&
-    note.source.text.split(note.source.eol)[note.source.contentStart.line - 1]
-      .length === 0;
+  let newLineExistsAfterFrontmatter = false;
+  if (frontmatterExists) {
+    const lines = note.source.text.split(note.source.eol);
+    const index = note.source.contentStart.line - 1;
+    const line = lines[index];
+    newLineExistsAfterFrontmatter = line === '';
+  }
 
   const paddingStart = frontmatterExists ? note.source.eol : '';
   const paddingEnd = newLineExistsAfterFrontmatter

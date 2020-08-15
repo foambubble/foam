@@ -47,6 +47,9 @@ Guides, tips and strategies for getting the most out of your Foam workspace!
   - _More..._
 - VS Code Advanced Features [[todo]] [[good-first-task]]
   - Focus with Zen Mode
+- Custom [[note-macros]]
+  - Create custom note macros (Weekly, Monthly)
+  - Automatic insertion of snippets is planned
 
 ## Version control
 
@@ -104,6 +107,7 @@ _See [[contribution-guide]] and [[how-to-write-recipes]]._
 [custom-markdown-preview-styles]: custom-markdown-preview-styles "Custom Markdown Preview Styles"
 [images-from-your-clipboard]: images-from-your-clipboard "Images from your Clipboard"
 [good-first-task]: good-first-task "Good First Task"
+[note-macros]: note-macros "Custom Note Macros"
 [git-integration]: git-integration "Git integration"
 [gistpad]: gistpad "GistPad"
 [github-pages]: github-pages "Github Pages"

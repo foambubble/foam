@@ -58,7 +58,7 @@ async function janitor(foam: Foam) {
   } catch (e) {
     window.showErrorMessage(`Foam Janitor attempted to clean your workspace but ran into an error. Please check that we didn't break anything before committing any changes to version control, and pass the following error message to the Foam team on GitHub issues:
     ${e.message}
-    ${e.stackTrace}`);
+    ${e.stack}`);
   }
 }
 

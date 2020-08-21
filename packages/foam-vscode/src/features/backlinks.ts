@@ -125,10 +125,7 @@ export class BacklinkTreeItem extends vscode.TreeItem {
     public readonly resource: Resource,
     public readonly link: ResourceLink
   ) {
-    super(
-      link.type === 'wikilink' ? link.slug : link.label,
-      vscode.TreeItemCollapsibleState.None
-    );
+    super(link.label, vscode.TreeItemCollapsibleState.None);
     this.label = `${link.range.start.line}: ${this.label}`;
     this.command = {
       command: 'vscode.open',

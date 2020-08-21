@@ -14,6 +14,7 @@ import {
   ResourceLink,
   WikiLink,
   ResourceParser,
+  NoteSource,
 } from './model/note';
 import { Position } from './model/position';
 import { Range } from './model/range';
@@ -31,9 +32,11 @@ import { ResourceProvider } from 'model/provider';
 import { IDataStore, FileDataStore, IMatcher } from './services/datastore';
 import { IDisposable } from 'common/lifecycle';
 
+const ALIAS_DIVIDER_CHAR = '|';
+
 export interface ParserPlugin {
   name?: string;
-  visit?: (node: Node, note: Resource) => void;
+  visit?: (node: Node, note: Resource, noteSource: NoteSource) => void;
   onDidInitializeParser?: (parser: unified.Processor) => void;
   onWillParseMarkdown?: (markdown: string) => string;
   onWillVisitTree?: (tree: Node, note: Resource) => void;
@@ -121,7 +124,7 @@ export class MarkdownResourceProvider implements ResourceProvider {
     switch (link.type) {
       case 'wikilink':
         const definitionUri = resource.definitions.find(
-          def => def.label === link.slug
+          def => def.label === link.target
         )?.url;
         if (isSome(definitionUri)) {
           const definedUri = URI.resolve(definitionUri, resource.uri);
@@ -130,8 +133,8 @@ export class MarkdownResourceProvider implements ResourceProvider {
             URI.placeholder(definedUri.path);
         } else {
           targetUri =
-            workspace.find(link.slug, resource.uri)?.uri ??
-            URI.placeholder(link.slug);
+            workspace.find(link.target, resource.uri)?.uri ??
+            URI.placeholder(link.target);
         }
         break;
 
@@ -197,12 +200,28 @@ const titlePlugin: ParserPlugin = {
 
 const wikilinkPlugin: ParserPlugin = {
   name: 'wikilink',
-  visit: (node, note) => {
+  visit: (node, note, noteSource) => {
     if (node.type === 'wikiLink') {
+      const text = node.value as string;
+      const alias = node.data?.alias as string;
+      const literalContent = noteSource.text.substring(
+        node.position!.start.offset!,
+        node.position!.end.offset!
+      );
+
+      const hasAlias =
+        literalContent !== text && literalContent.includes(ALIAS_DIVIDER_CHAR);
       note.links.push({
         type: 'wikilink',
-        slug: node.value as string,
-        target: node.value as string,
+        rawText: literalContent,
+        label: hasAlias
+          ? alias.trim()
+          : literalContent.substring(2, literalContent.length - 2),
+        target: hasAlias
+          ? literalContent
+              .substring(2, literalContent.indexOf(ALIAS_DIVIDER_CHAR))
+              .trim()
+          : text.trim(),
         range: astPositionToFoamRange(node.position!),
       });
     }
@@ -259,7 +278,7 @@ export function createMarkdownParser(
   const parser = unified()
     .use(markdownParse, { gfm: true })
     .use(frontmatterPlugin, ['yaml'])
-    .use(wikiLinkPlugin);
+    .use(wikiLinkPlugin, { aliasDivider: ALIAS_DIVIDER_CHAR });
 
   const plugins = [
     titlePlugin,
@@ -307,6 +326,13 @@ export function createMarkdownParser(
         },
       };
 
+      var noteSource: NoteSource = {
+        text: markdown,
+        contentStart: astPointToFoamPosition(tree.position!.start),
+        end: astPointToFoamPosition(tree.position!.end),
+        eol: eol,
+      };
+
       plugins.forEach(plugin => {
         try {
           plugin.onWillVisitTree?.(tree, note);
@@ -342,7 +368,7 @@ export function createMarkdownParser(
 
         for (let i = 0, len = plugins.length; i < len; i++) {
           try {
-            plugins[i].visit?.(node, note);
+            plugins[i].visit?.(node, note, noteSource);
           } catch (e) {
             handleError(plugins[i], 'visit', uri, e);
           }
@@ -431,7 +457,14 @@ export function createMarkdownReferences(
         : dropExtension(relativePath);
 
       // [wiki-link-text]: path/to/file.md "Page title"
-      return { label: link.slug, url: pathToNote, title: target.title };
+      return {
+        label:
+          link.rawText.indexOf('[[') > -1
+            ? link.rawText.substring(2, link.rawText.length - 2)
+            : link.rawText || link.label,
+        url: pathToNote,
+        title: target.title,
+      };
     })
     .filter(isSome)
     .sort();

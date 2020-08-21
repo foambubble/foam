@@ -165,7 +165,7 @@ export function createMarkdownReferences(
 
   const forwardLinks = graph.getForwardLinks(noteId);
 
-  // Try to generate a definition for each [[link]] in the note. 
+  // Try to generate a definition for each [[link]] in the note.
   //
   // A note may have multiple [[link]] expressions to the same target
   // note with different aliases.s
@@ -175,7 +175,6 @@ export function createMarkdownReferences(
   return (
     note.links
       .map(linkExpression => {
-
         // find the link between this and other document
         const link = forwardLinks.find(
           note => note.link.slug === linkExpression.slug

@@ -14,7 +14,7 @@ export interface NoteSource {
 export interface WikiLink {
   type: 'wikilink';
   slug: string;
-  alias: string | null,
+  alias: string | null;
   literalContent: string;
   position: Position;
 }

@@ -38,6 +38,11 @@
     "configuration": {
       "title": "Foam",
       "properties": {
+        "foam.edit.linkReferenceEnabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Specifies whether to automatically add Link References upon saving. Defaults to true."
+        },
         "foam.edit.linkReferenceDefinitions": {
           "type": "string",
           "default": "withoutExtensions",

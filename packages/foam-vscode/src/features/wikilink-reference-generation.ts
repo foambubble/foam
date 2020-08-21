@@ -45,7 +45,7 @@ const feature: FoamFeature = {
       ),
 
       workspace.onWillSaveTextDocument(e => {
-        if (e.document.languageId === "markdown") {
+        if (e.document.languageId === "markdown" && workspace.getConfiguration("foam.edit").get("linkReferenceEnabled")) {
           updateDocumentInNoteGraph(foam, e.document);
           e.waitUntil(updateReferenceList(foam.notes));
         }

@@ -112,6 +112,9 @@ async function runJanitor(foam: Foam) {
     // Note: The ordering matters. Definitions need to be inserted
     // before heading, since inserting a heading changes line numbers below
     let text = note.source.text;
+    if (!workspace.getConfiguration("files.insertFinalNewLine")) {
+      text += "\n"
+    }
     text = definitions ? applyTextEdit(text, definitions) : text;
     text = heading ? applyTextEdit(text, heading) : text;
 

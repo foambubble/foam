@@ -63,7 +63,7 @@ async function createDailyNoteIfNotExists(
     return false;
   }
 
-  createDailyNoteDirectoryIfNotExists(dailyNotePath);
+  await createDailyNoteDirectoryIfNotExists(dailyNotePath);
 
   const titleFormat: string =
     configuration.get("openDailyNote.titleFormat") ??

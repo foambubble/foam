@@ -19,7 +19,7 @@ import { includeExtensions } from "../settings";
 import { astPositionToVsCodePosition } from "../utils";
 
 const feature: FoamFeature = {
-  activate: async (context: ExtensionContext, foamPromise: Promise<Foam>) => {
+  activate: (context: ExtensionContext, foamPromise: Promise<Foam>) => {
     context.subscriptions.push(
       commands.registerCommand("foam-vscode.janitor", async () =>
         janitor(await foamPromise)

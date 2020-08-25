@@ -115,7 +115,7 @@ async function updateReferenceList(foam: NoteGraph) {
   if (!range) {
     await createReferenceList(foam);
   } else {
-    const refs = await generateReferenceList(foam, doc);
+    const refs = generateReferenceList(foam, doc);
 
     // references must always be preceded by an empty line
     const spacing = doc.lineAt(range.start.line - 1).isEmptyOrWhitespace
@@ -128,10 +128,10 @@ async function updateReferenceList(foam: NoteGraph) {
   }
 }
 
-async function generateReferenceList(
+function generateReferenceList(
   foam: NoteGraph,
   doc: TextDocument
-): Promise<string[]> {
+): string[] {
   const filePath = doc.fileName;
 
   const note = foam.getNoteByURI(filePath);

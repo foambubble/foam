@@ -210,20 +210,19 @@ class WikilinkReferenceCodeLensProvider implements CodeLensProvider {
       return [];
     }
 
-    return generateReferenceList(this.foam, document).then(refs => {
-      const oldRefs = getText(range).replace(/\r?\n|\r/g, docConfig.eol);
-      const newRefs = refs.join(docConfig.eol);
+    const refs = generateReferenceList(this.foam, document);
+    const oldRefs = getText(range).replace(/\r?\n|\r/g, docConfig.eol);
+    const newRefs = refs.join(docConfig.eol);
 
-      let status = oldRefs === newRefs ? "up to date" : "out of date";
+    let status = oldRefs === newRefs ? "up to date" : "out of date";
 
-      return [
-        new CodeLens(range, {
-          arguments: [],
-          title: `Link references (${status})`,
-          command: ""
-        })
-      ];
-    });
+    return [
+      new CodeLens(range, {
+        arguments: [],
+        title: `Link references (${status})`,
+        command: ""
+      })
+    ];
   }
 }
 

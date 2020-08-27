@@ -97,8 +97,8 @@ async function focusDailyNote(dailyNotePath: string, isNewNote: boolean) {
   }
 }
 
-async function pathExists(path: string) {
-  return await fs.promises
+function pathExists(path: string) {
+  return fs.promises
     .access(path, fs.constants.F_OK)
     .then(() => true)
     .catch(() => false);

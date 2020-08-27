@@ -157,6 +157,7 @@ If that sounds like something you're interested in, I'd love to have you along o
   <tr>
     <td align="center"><a href="https://github.com/hooncp"><img src="https://avatars1.githubusercontent.com/u/48883554?v=4" width="60px;" alt=""/><br /><sub><b>hooncp</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=hooncp" title="Documentation">📖</a></td>
     <td align="center"><a href="http://rt-canada.ca"><img src="https://avatars1.githubusercontent.com/u/13721239?v=4" width="60px;" alt=""/><br /><sub><b>Martin Laws</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=martinlaws" title="Documentation">📖</a></td>
+    <td align="center"><a href="http://seanksmith.me"><img src="https://avatars3.githubusercontent.com/u/2085441?v=4" width="60px;" alt=""/><br /><sub><b>Sean K Smith</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=sksmith" title="Code">💻</a></td>
   </tr>
 </table>
 

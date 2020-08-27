@@ -351,6 +351,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "sksmith",
+      "name": "Sean K Smith",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/2085441?v=4",
+      "profile": "http://seanksmith.me",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,

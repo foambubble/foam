@@ -14,7 +14,7 @@ import { FoamFeature } from "../types";
 import { docConfig } from '../utils';
 
 const feature: FoamFeature = {
-  activate: async (context: ExtensionContext) => {
+  activate: (context: ExtensionContext) => {
     context.subscriptions.push(
       commands.registerCommand("foam-vscode.open-daily-note", openDailyNote)
     );
@@ -63,7 +63,7 @@ async function createDailyNoteIfNotExists(
     return false;
   }
 
-  createDailyNoteDirectoryIfNotExists(dailyNotePath);
+  await createDailyNoteDirectoryIfNotExists(dailyNotePath);
 
   const titleFormat: string =
     configuration.get("openDailyNote.titleFormat") ??
@@ -97,7 +97,7 @@ async function focusDailyNote(dailyNotePath: string, isNewNote: boolean) {
   }
 }
 
-async function pathExists(path: string) {
+function pathExists(path: string) {
   return fs.promises
     .access(path, fs.constants.F_OK)
     .then(() => true)

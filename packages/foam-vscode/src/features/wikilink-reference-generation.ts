@@ -115,7 +115,7 @@ async function updateReferenceList(foam: NoteGraph) {
   if (!range) {
     await createReferenceList(foam);
   } else {
-    const refs = await generateReferenceList(foam, doc);
+    const refs = generateReferenceList(foam, doc);
 
     // references must always be preceded by an empty line
     const spacing = doc.lineAt(range.start.line - 1).isEmptyOrWhitespace
@@ -128,10 +128,10 @@ async function updateReferenceList(foam: NoteGraph) {
   }
 }
 
-async function generateReferenceList(
+function generateReferenceList(
   foam: NoteGraph,
   doc: TextDocument
-): Promise<string[]> {
+): string[] {
   const filePath = doc.fileName;
 
   const note = foam.getNoteByURI(filePath);
@@ -210,20 +210,19 @@ class WikilinkReferenceCodeLensProvider implements CodeLensProvider {
       return [];
     }
 
-    return generateReferenceList(this.foam, document).then(refs => {
-      const oldRefs = getText(range).replace(/\r?\n|\r/g, docConfig.eol);
-      const newRefs = refs.join(docConfig.eol);
+    const refs = generateReferenceList(this.foam, document);
+    const oldRefs = getText(range).replace(/\r?\n|\r/g, docConfig.eol);
+    const newRefs = refs.join(docConfig.eol);
 
-      let status = oldRefs === newRefs ? "up to date" : "out of date";
+    let status = oldRefs === newRefs ? "up to date" : "out of date";
 
-      return [
-        new CodeLens(range, {
-          arguments: [],
-          title: `Link references (${status})`,
-          command: ""
-        })
-      ];
-    });
+    return [
+      new CodeLens(range, {
+        arguments: [],
+        title: `Link references (${status})`,
+        command: ""
+      })
+    ];
   }
 }
 

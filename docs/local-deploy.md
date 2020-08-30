@@ -3,7 +3,7 @@
 
 Recipe for building your GitHub Pages site locally to preview and test changes to your site.
 
-! **Disclaimer**: This Recipe is more suited for "tech savy" foam users since it requires the usage of the command line.
+! **Disclaimer**: This Recipe is more suited for "tech-savvy" foam users since it requires the usage of the command line.
 
 # Prerequisites
 - Install [Jekyll](https://jekyllrb.com/docs/installation/)
@@ -18,9 +18,6 @@ Recipe for building your GitHub Pages site locally to preview and test changes t
 # Instructions
 - Open the command line
 - Navigate into your foam folder
-- Switch to the github pages branch (if you do not have one create it):
-    - switch: `git checkout gh-pages`
-    - create: `git checkout -b gh-pages`
 - Initialize Bundler: `bundle init`
 - Configure Bundler install path ([optional](https://jekyllrb.com/tutorials/using-jekyll-with-bundler/#configure-bundler-install-path)): `bundle config set --local path 'vendor/bundle'`
 - Add to the Gemfile:

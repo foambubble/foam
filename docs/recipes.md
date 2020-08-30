@@ -55,7 +55,7 @@ Guides, tips and strategies for getting the most out of your Foam workspace!
 - Sync your GitHub repo automatically [[todo]].
 
 ## Publish
-
+- Local testing using [[jekyll]]
 - Publish to [[github-pages]]
 - Publish to [[gitlab-pages]]
 - Publish your site with [[eleventy-and-netlify]]
@@ -106,6 +106,7 @@ _See [[contribution-guide]] and [[how-to-write-recipes]]._
 [good-first-task]: good-first-task "Good First Task"
 [git-integration]: git-integration "Git integration"
 [gistpad]: gistpad "GistPad"
+[jekyll]: local-deploy "jekyll"
 [github-pages]: github-pages "Github Pages"
 [gitlab-pages]: gitlab-pages "GitLab Pages"
 [eleventy-and-netlify]: eleventy-and-netlify "Eleventy and Netlify"

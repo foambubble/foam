@@ -33,9 +33,6 @@ Recipe for building your GitHub Pages site locally to preview and test changes t
 
 # TL;DR
 ```
-git clone https://github.com/IvoLeist/foam-gatsby-template.git
-cd foam-gatsby-template
-git checkout jekyll
 bundle install
 bundle exec jekyll serve
 ```

@@ -1,0 +1,49 @@
+# official tutorial 
+# mkdocs-material: https://squidfunk.github.io/mkdocs-material/
+# mkdocs: https://www.mkdocs.org/user-guide/configuration/
+
+site_name: Foam-document
+theme:
+  name: material
+  features:
+    - navigation.expand 
+    - tabs 
+markdown_extensions: 
+  - attr_list # https://squidfunk.github.io/mkdocs-material/reference/images/
+  - pymdownx.tabbed  # https://squidfunk.github.io/mkdocs-material/reference/content-tabs/
+  - nl2br # newline-to-break 
+  - toc:
+      permalink: '#' # heading anchor 
+  - admonition
+  - codehilite:
+      guess_lang: false
+      linenums: false
+  - footnotes
+  - meta
+  - def_list
+  - pymdownx.arithmatex
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.critic
+  - pymdownx.details
+  # - pymdownx.emoji:
+      # emoji_generator: !!python/name:pymdownx.emoji.to_png
+  - pymdownx.inlinehilite
+  - pymdownx.magiclink
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences
+  - pymdownx.tasklist
+  - pymdownx.tilde
+plugins:
+  - search
+  - roamlinks 
+    #- autolinks 
+  - exclude:
+      glob:
+        - "*.tmp"
+        - "*.pdf"
+        - "*.gz"
+      regex:
+        - '.*\.(tmp|bin|tar)$'

@@ -360,6 +360,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "kneely",
+      "name": "Kevin Neely",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/37545028?v=4",
+      "profile": "https://www.linkedin.com/in/kevin-neely/",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,

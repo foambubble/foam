@@ -1,6 +1,6 @@
 # Diagrams in Markdown
 
-We have to alternative recipes for displaying diagrams in markdown:
+We have two alternative recipes for displaying diagrams in markdown:
 
 - [Mermaid](#mermaid)
 - [Draw.io](#drawio)

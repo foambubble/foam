@@ -62,7 +62,9 @@ Guides, tips and strategies for getting the most out of your Foam workspace!
 - Publish to [[azure-devops-wiki]]
 - Publish to [[vercel]]
 - Make the site your own by [[customising-styles]].
-- Math support [[math-support]] or [[katex-math-rendering]]
+- Render math symbols, by either
+  - adding client-side [[math-support]] to the default [[github-pages]] site
+  - adding a custom Jekyll plugin to support [[katex-math-rendering]]
 
 ## Collaborate
 

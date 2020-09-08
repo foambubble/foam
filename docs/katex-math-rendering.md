@@ -1,12 +1,12 @@
 # Katex Math Rendering
 
-Apart from using the method mentioned in [[math-support]], we can also use KaTeX to render our math equations in foam. The caveat is: we can't rely on GitHub Pages to host and deploy our website anymore, because the plugin we'll be using to let Jekyll support KaTeX doesn't play well together with GitHub Pages.
+Apart from using the method mentioned in [[math-support]], we can also use KaTeX to render our math equations in Foam. The caveat is: we can't rely on GitHub Pages to host and deploy our website anymore, because the plugin we'll be using to let Jekyll support KaTeX doesn't play well together with GitHub Pages.
 
-The alternative solution is to using [[vercel]] for building and publishing our website, so before you start integrating KaTeX into your foam project, please follow the instructions to host your foam workspace on [[vercel]] first.
+The alternative solution is to using [[vercel]] for building and publishing our website, so before you start integrating KaTeX into your Foam project, please follow the instructions to host your Foam workspace on [[vercel]] first.
 
 ## Adding required plugins
 
-Add the plugin `jekyll-katex` to your foam workspace's `_config.yml` and `Gemfile` if you haven't done so already. For detailed instructions, please refer to the `#Adding a _config.yml` and `#Adding a Gemfile` in [[vercel]].
+Add the plugin `jekyll-katex` to your Foam workspace's `_config.yml` and `Gemfile` if you haven't done so already. For detailed instructions, please refer to the `#Adding a _config.yml` and `#Adding a Gemfile` in [[vercel]].
 
 ## Loading KaTeX JS and CSS
 
@@ -48,7 +48,7 @@ In our case, we'll be using the latter tag to wrap our {% raw %}`{{ content }}`{
 
 ## Render equations in Foam's homepage as well
 
-You may have noticed that we only made modifications to the template `_layouts/page.html`, which means that `_layouts/home.html` won't have KaTeX support. If you wan't to render math in foam's home page, you'll need to make the same modifications to `_layouts/home.html` as well.
+You may have noticed that we only made modifications to the template `_layouts/page.html`, which means that `_layouts/home.html` won't have KaTeX support. If you wan't to render math in Foam's home page, you'll need to make the same modifications to `_layouts/home.html` as well.
 
 Finally, if all goes well, then our site hosted on Vercel will support rendering math equations with KaTeX after commiting these changes to GitHub. Here's a demo of the default template with KaTeX support: [Foam Template with KaTeX support](https://foam-template.vercel.app/).
 

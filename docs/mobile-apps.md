@@ -14,9 +14,11 @@ This Roadmap item discusses existing assembled solutions, and some thoughts on f
 - Provides functionality to edit, create, and browser markdown files.
 - Support journal mode, todo lists, and free writing
 - Syncs to GitHub repo
+- Supports Wiki Links
+- Supports Backlinks
+- Developer is happy to prioritize Foam compatibility
 
 #### Cons
-- Doesn't support [[wiki-links]] **(deal breaker, but support [coming soon](https://twitter.com/GitJournal_io/status/1280194357296062466))**
 - Doesn't generate link reference lists (but this is ok, since [[workspace-janitor]] as a GitHub action can solve this)
 - Not as sleek as Apple/Google notes, some keyboard state glitching on Android, etc.
 - Lack of control over roadmap. Established product with a paid plan, so may not be open to Foam-supportive changes and additions that don't benefit most users.

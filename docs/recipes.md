@@ -36,6 +36,7 @@ Guides, tips and strategies for getting the most out of your Foam workspace!
 - Link documents with [[wiki-links]], using Foam's [[link-formatting-and-autocompletion]].
 - Use shortcuts for [[creating-new-notes]]
 - Instantly create and access your [[daily-notes]]
+- Use custom [[note-macros]] to create weekly, monthly etc. notes
 - Draw [[diagrams-in-markdown]]
 - Prettify your links, [[automatically-expand-urls-to-well-titled-links]]
 - Style your environment with [[custom-markdown-preview-styles]]
@@ -104,6 +105,7 @@ _See [[contribution-guide]] and [[how-to-write-recipes]]._
 [custom-markdown-preview-styles]: custom-markdown-preview-styles "Custom Markdown Preview Styles"
 [images-from-your-clipboard]: images-from-your-clipboard "Images from your Clipboard"
 [good-first-task]: good-first-task "Good First Task"
+[note-macros]: note-macros "Custom Note Macros"
 [git-integration]: git-integration "Git integration"
 [gistpad]: gistpad "GistPad"
 [github-pages]: github-pages "Github Pages"

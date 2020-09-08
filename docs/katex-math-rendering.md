@@ -42,7 +42,7 @@ In our case, we'll be using the latter tag to wrap our `{{ content }}`. Wrap `{{
 <!-- _layouts/page.html -->
 
 <!-- ... -->
-{% raw %}{% katexmm %} {{ content }} {% endkatexmm %}{% endraw %}
+{% katexmm %} {{ content }} {% endkatexmm %}
 <!-- ... -->
 ```
 

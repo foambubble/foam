@@ -87,7 +87,7 @@ async function createReferenceList(foam: NoteGraph) {
   if (refs && refs.length) {
     await editor.edit(function(editBuilder) {
       if (editor) {
-        const spacing = hasEmptyTrailing
+        const spacing = hasEmptyTrailing(editor.document)
           ? docConfig.eol
           : docConfig.eol + docConfig.eol;
 
@@ -128,16 +128,13 @@ async function updateReferenceList(foam: NoteGraph) {
   }
 }
 
-function generateReferenceList(
-  foam: NoteGraph,
-  doc: TextDocument
-): string[] {
+function generateReferenceList(foam: NoteGraph, doc: TextDocument): string[] {
   const filePath = doc.fileName;
 
   const note = foam.getNoteByURI(filePath);
 
   // Should never happen as `doc` is usually given by `editor.document`, which
-  // binds to an opened note. 
+  // binds to an opened note.
   if (!note) {
     console.warn(
       `Can't find note for URI ${filePath} before attempting to generate its markdown reference list`

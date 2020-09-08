@@ -175,7 +175,8 @@
       "profile": "https://anku.netlify.com/",
       "contributions": [
         "doc",
-        "test"
+        "test",
+        "code"
       ]
     },
     {

@@ -36,6 +36,7 @@ Guides, tips and strategies for getting the most out of your Foam workspace!
 - Link documents with [[wiki-links]], using Foam's [[link-formatting-and-autocompletion]].
 - Use shortcuts for [[creating-new-notes]]
 - Instantly create and access your [[daily-notes]]
+- Use custom [[note-macros]] to create weekly, monthly etc. notes
 - Draw [[diagrams-in-markdown]]
 - Prettify your links, [[automatically-expand-urls-to-well-titled-links]]
 - Style your environment with [[custom-markdown-preview-styles]]
@@ -47,9 +48,6 @@ Guides, tips and strategies for getting the most out of your Foam workspace!
   - _More..._
 - VS Code Advanced Features [[todo]] [[good-first-task]]
   - Focus with Zen Mode
-- Custom [[note-macros]]
-  - Create custom note macros (Weekly, Monthly)
-  - Automatic insertion of snippets is planned
 
 ## Version control
 

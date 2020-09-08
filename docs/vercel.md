@@ -16,9 +16,7 @@ First, we'll need to add a `_config.yml` at the root directory. This is the Jeky
 
 ```yaml
 # _config.yml
-
 title: Foam
-
 # All the plugins we will be installing now that we won't be using GitHub Pages
 plugins:
   - jekyll-katex  # optional
@@ -39,7 +37,7 @@ The `theme` specifies a theme for our deployed Jekyll website. The default GitHu
 
 The `plugins` specifies a list of Jekyll plugins that we will be installing in the next section. As we won't be using GitHub Pages, we'll need to install these plugins that GitHub Pages installs for us under the hood.
 
-_If you want to use LaTeX rendered with KaTeX (which is what the plugin `jekyll-katex` does), you can specify it here. And yes, one of the benefits of deploying with Vercel is that we can use KaTeX to render LaTeX! - [[katex-math-rendering]]_
+_If you want to use LaTeX rendered with KaTeX (which is what the plugin `jekyll-katex` does), you can specify it here. And yes, one of the benefits of deploying with Vercel is that we can use KaTeX to render LaTeX! More on: [[katex-math-rendering]]_
 
 ### Adding a `Gemfile`
 
@@ -49,9 +47,7 @@ In our `Gemfile`, we need to specify our Ruby packages:
 
 ```ruby
 # Gemfile
-
 source "https://rubygems.org"
-
 gem "jekyll"
 gem "kramdown-parser-gfm"
 gem "jekyll-theme-primer"

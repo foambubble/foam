@@ -36,13 +36,13 @@ The plugin `jekyll-katex` focuses on rendering:
 - Single math equations wrapped inside `katex` liquid tags like {% raw %}`{% katex %} ... {% endkatex %}`{% endraw %}.
 - Or multiple math equations in paragraphs wrapped inside {% raw %}`{% katexmm %} ... {% endkatexmm %}`{% endraw %}.
 
-In our case, we'll be using the latter tag to wrap our `{{ content }}`. Wrap `{{ content }}` in the liquid tags inside `_layouts/page.html` like so:
+In our case, we'll be using the latter tag to wrap our `{% raw %}{{ content }}{% endraw %}`. Wrap `{% raw %}{{ content }}{% endraw %}` in the liquid tags inside `_layouts/page.html` like so:
 
 ```html
 <!-- _layouts/page.html -->
 
 <!-- ... -->
-{% raw %}{% katexmm %}{% endraw %} {{ content }} {% raw %}{% endkatexmm %}{% endraw %}
+{% raw %}{% katexmm %} {{ content }} {% endkatexmm %}{% endraw %}
 <!-- ... -->
 ```
 

@@ -397,6 +397,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "spencerwooo",
+      "name": "Spencer Woo",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/32114380?v=4",
+      "profile": "https://spencerwoo.com",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,

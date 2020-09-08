@@ -163,6 +163,9 @@ If that sounds like something you're interested in, I'd love to have you along o
     <td align="center"><a href="http://vhanda.in"><img src="https://avatars2.githubusercontent.com/u/426467?v=4" width="60px;" alt=""/><br /><sub><b>Vishesh Handa</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=vHanda" title="Documentation">📖</a></td>
     <td align="center"><a href="http://www.linkedin.com/in/heroichitesh"><img src="https://avatars3.githubusercontent.com/u/37622734?v=4" width="60px;" alt=""/><br /><sub><b>Hitesh Kumar</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=HeroicHitesh" title="Documentation">📖</a></td>
   </tr>
+  <tr>
+    <td align="center"><a href="https://spencerwoo.com"><img src="https://avatars2.githubusercontent.com/u/32114380?v=4" width="60px;" alt=""/><br /><sub><b>Spencer Woo</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=spencerwooo" title="Documentation">📖</a></td>
+  </tr>
 </table>
 
 <!-- markdownlint-enable -->

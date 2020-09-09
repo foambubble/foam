@@ -32,8 +32,14 @@ export function activate(context: ExtensionContext) {
   });
 }
 
-export function deactivate() {
+export async function deactivate(): Promise<void> {
   workspaceWatcher?.dispose();
+
+  // call all deactivate functions and if any of them
+  // return promises, wait for their completion
+  await Promise.all(features.map(
+    f => (f.deactivate && f.deactivate()) || Promise.resolve()
+  ));
 }
 
 function isLocalMarkdownFile(uri: Uri) {
@@ -69,7 +75,7 @@ const bootstrap = async (config: FoamConfig) => {
     true,
     true
   );
-  
+
   workspaceWatcher.onDidCreate(uri => {
     if (isLocalMarkdownFile(uri)) {
       addFile(uri).then(() => {

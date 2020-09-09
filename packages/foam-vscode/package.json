@@ -91,8 +91,8 @@
     "build": "tsc -p ./",
     "test": "jest",
     "lint": "eslint src --ext ts",
-    "clean": "tsc --build ./tsconfig.json ../foam-core/tsconfig.json --clean",
-    "watch": "tsc --build ./tsconfig.json ../foam-core/tsconfig.json --watch",
+    "clean": "tsc --build ./tsconfig.json ../foam-core/tsconfig.json ../foam-language-server/tsconfig.json --clean",
+    "watch": "tsc --build ./tsconfig.json ../foam-core/tsconfig.json ../foam-language-server/tsconfig.json --watch",
     "vscode:start-debugging": "yarn clean && yarn watch",
     "vscode:prepublish": "yarn npm-install && yarn run build",
     "npm-install": "rimraf node_modules && npm i",
@@ -120,6 +120,7 @@
   },
   "dependencies": {
     "dateformat": "^3.0.3",
-    "foam-core": "0.3.0"
+    "foam-core": "0.3.0",
+    "vscode-languageclient": "^6.1.3"
   }
 }

@@ -71,6 +71,25 @@
 			"cwd": "${workspaceFolder}/packages/foam-core",
 			"internalConsoleOptions": "openOnSessionStart",
 			"preLaunchTask": "${defaultBuildTask}"
+		},
+		{
+			"name": "Debug Language Server",
+			"type": "node",
+			"request": "attach",
+			"port": 6009,
+			// large timeout to account for typescript watch startup time
+			"timeout": 30000,
+			"restart": true,
+			"trace": true,
+			"localRoot": "${workspaceFolder}/packages/foam-language-server/src/",
+			"remoteRoot": "${workspaceFolder}/packages/foam-language-server/dist/",
+			"outFiles": ["${workspaceFolder}/packages/foam-language-server/dist/**/*.js"]
+		},
+	],
+	"compounds": [
+		{
+			"name": "Run Extension & Debug LSP",
+			"configurations": ["Run VSCode Extension", "Debug Language Server"]
 		}
 	]
 }

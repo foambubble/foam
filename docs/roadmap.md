@@ -74,6 +74,7 @@ The community is working on a number of automated scripts to help you migrate to
   - Discussion: [foam#46](https://github.com/foambubble/foam/issues/46)
 - [[migrating-from-onenote]]
   - Discussion: [foam#151](https://github.com/foambubble/foam/issues/151)
+- [[migrating-from-bear]]
 - _Migration from other tools..._
 
 ### Integration

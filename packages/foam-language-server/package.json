@@ -1,0 +1,29 @@
+{
+  "name": "foam-language-server",
+  "author": "Jani Eväkallio",
+  "repository": "https://github.com/foambubble/foam",
+  "version": "0.3.0",
+  "license": "MIT",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "clean": "rimraf dist",
+    "build": "tsdx build --tsconfig ./tsconfig.build.json",
+    "test": "tsdx test",
+    "lint": "tsdx lint src test",
+    "watch": "tsdx watch",
+    "prepare": "npm run build"
+  },
+  "devDependencies": {
+    "tsdx": "^0.13.2",
+    "tslib": "^2.0.0",
+    "typescript": "^3.9.5"
+  },
+  "dependencies": {
+    "foam-core": "^0.3.0",
+    "vscode-languageserver": "^6.1.1"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts"
+}

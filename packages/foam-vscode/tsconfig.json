@@ -12,5 +12,7 @@
   "exclude": ["node_modules", ".vscode-test"],
   "references": [{
     "path": "../foam-core"
+  }, {
+    "path": "../foam-language-server"
   }]
 }

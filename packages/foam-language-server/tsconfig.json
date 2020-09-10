@@ -1,0 +1,31 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": "src",
+    "composite": true,
+    "esModuleInterop": true,
+    "importHelpers": true,
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "outDir": "dist",
+    "rootDir": "./src",
+    "strict": true,
+    "lib": [
+      "esnext"
+    ],
+
+    // @NOTE regarding inlineSourceMap:
+    //
+    // Preferrably we would use "sourceMap": true to generate
+    // *.map.js files instead of inline base64 encoded source maps,
+    // however for some reason the VSCode Node debugger looks
+    // for source maps in the src/ directory instead of dist/ directory,
+    // causing the VSCode debugging experience to break.
+    "inlineSourceMap": true,
+  },
+  "include": ["src"],
+  "exclude": ["node_modules"],
+  "references": [{
+    "path": "../foam-core"
+  }]
+}

@@ -23,7 +23,7 @@
     // causing the VSCode debugging experience to break.
     "inlineSourceMap": true,
   },
-  "include": ["src"],
+  "include": ["src", "types"],
   "exclude": ["node_modules"],
   "references": [{
     "path": "../foam-core"

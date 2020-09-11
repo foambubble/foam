@@ -21,8 +21,12 @@
     "typescript": "^3.9.5"
   },
   "dependencies": {
+    "file-uri-to-path": "^2.0.0",
     "foam-core": "^0.3.0",
-    "vscode-languageserver": "^6.1.1"
+    "remark-stringify": "^8.1.1",
+    "short-hash": "^1.0.0",
+    "vscode-languageserver": "^6.1.1",
+    "vscode-languageserver-textdocument": "^1.0.1"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts"

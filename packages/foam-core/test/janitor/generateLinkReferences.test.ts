@@ -1,13 +1,16 @@
 import * as path from 'path';
-import { NoteGraph } from '../../src/note-graph';
+import { NoteGraphAPI } from '../../src/note-graph';
 import { generateLinkReferences } from '../../src/janitor';
-import { initializeNoteGraph } from '../../src/initialize-note-graph';
+import { bootstrap } from '../../src/bootstrap';
+import { createConfigFromFolders } from '../../src/config';
 
 describe('generateLinkReferences', () => {
-  let _graph: NoteGraph;
+  let _graph: NoteGraphAPI;
 
   beforeAll(async () => {
-    _graph = await initializeNoteGraph(path.join(__dirname, '../__scaffold__'));
+    _graph = await bootstrap(
+      createConfigFromFolders([path.join(__dirname, '../__scaffold__')])
+    ).then(foam => foam.notes);
   });
 
   it('initialised test graph correctly', () => {

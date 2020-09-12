@@ -2,6 +2,7 @@ import { Graph } from 'graphlib';
 import { EventEmitter } from 'events';
 import { Position, Point, URI, ID } from './types';
 import { hashURI, computeRelativeURI } from './utils';
+import { FoamPlugin } from 'plugins';
 
 export interface NoteSource {
   uri: URI;
@@ -30,7 +31,7 @@ export interface NoteLinkDefinition {
 export interface Note {
   title: string | null;
   slug: string; // note: this slug is not necessarily unique
-  properties: object;
+  properties: any;
   // sections: NoteSection[]
   // tags: NoteTag[]
   links: NoteLink[];
@@ -52,7 +53,28 @@ export type NoteGraphEventHandler = (e: { note: GraphNote }) => void;
 
 export type NotesQuery = { slug: string } | { title: string };
 
-export class NoteGraph {
+
+export interface NoteGraphAPI {
+  setNote(note: Note): GraphNote;
+  getNotes(query?: NotesQuery): GraphNote[];
+  getNote(noteId: ID): GraphNote | null;
+  getNoteByURI(uri: URI): GraphNote | null;
+  getAllLinks(noteId: ID): GraphConnection[];
+  getForwardLinks(noteId: ID): GraphConnection[];
+  getBacklinks(noteId: ID): GraphConnection[];
+  unstable_onNoteAdded(callback: NoteGraphEventHandler): void;
+  unstable_onNoteUpdated(callback: NoteGraphEventHandler): void;
+  unstable_removeEventListener(callback: NoteGraphEventHandler): void;
+}
+
+export type Middleware = (next: NoteGraphAPI) => Partial<NoteGraphAPI>;
+
+export const createGraph = (middlewares: Middleware[]): NoteGraphAPI => {
+  const graph: NoteGraphAPI = new NoteGraph();
+  return middlewares.reduce((acc, m) => backfill(acc, m), graph);
+};
+
+export class NoteGraph implements NoteGraphAPI {
   private graph: Graph;
   private events: EventEmitter;
   private createIdFromURI: (uri: URI) => ID;
@@ -149,3 +171,19 @@ export class NoteGraph {
     this.events.removeAllListeners();
   }
 }
+
+const backfill = (next: NoteGraphAPI, middleware: Middleware): NoteGraphAPI => {
+  const m = middleware(next);
+  return {
+    setNote: m.setNote || next.setNote,
+    getNotes: m.getNotes || next.getNotes,
+    getNote: m.getNote || next.getNote,
+    getNoteByURI: m.getNoteByURI || next.getNoteByURI,
+    getAllLinks: m.getAllLinks || next.getAllLinks,
+    getForwardLinks: m.getForwardLinks || next.getForwardLinks,
+    getBacklinks: m.getBacklinks || next.getBacklinks,
+    unstable_onNoteAdded: next.unstable_onNoteAdded,
+    unstable_onNoteUpdated: next.unstable_onNoteUpdated,
+    unstable_removeEventListener: next.unstable_removeEventListener,
+  };
+};

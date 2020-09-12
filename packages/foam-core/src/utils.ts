@@ -4,6 +4,10 @@ import { titleCase } from 'title-case';
 import GithubSlugger from 'github-slugger';
 import { URI, ID } from 'types';
 
+export function isNotNull<T>(p: T | null): p is T {
+  return p != null;
+}
+
 export const hash = (text: string) =>
   crypto
     .createHash('sha1')

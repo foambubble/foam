@@ -4,6 +4,7 @@
  */
 "use strict";
 
+import path from "path";
 import * as fs from "fs";
 import {
   workspace,
@@ -16,9 +17,10 @@ import {
 
 import {
   createNoteFromMarkdown,
-  createFoam,
+  bootstrap as foamBootstrap,
   FoamConfig,
-  Foam
+  Foam,
+  createConfigFromFolders
 } from "foam-core";
 
 import { features } from "./features";
@@ -26,7 +28,7 @@ import { features } from "./features";
 let workspaceWatcher: FileSystemWatcher | null = null;
 
 export function activate(context: ExtensionContext) {
-  const foamPromise = bootstrap(getConfig());
+  const foamPromise = bootstrap();
   features.forEach(f => {
     f.activate(context, foamPromise);
   });
@@ -56,9 +58,10 @@ async function registerFile(foam: Foam, localUri: Uri) {
   return note;
 }
 
-const bootstrap = async (config: FoamConfig) => {
+const bootstrap = async () => {
   const files = await workspace.findFiles("**/*");
-  const foam = createFoam(config);
+  const config: FoamConfig = getConfig();
+  const foam = await foamBootstrap(config);
   const addFile = (uri: Uri) => registerFile(foam, uri);
 
   await Promise.all(files.filter(isLocalMarkdownFile).map(addFile));
@@ -69,7 +72,7 @@ const bootstrap = async (config: FoamConfig) => {
     true,
     true
   );
-  
+
   workspaceWatcher.onDidCreate(uri => {
     if (isLocalMarkdownFile(uri)) {
       addFile(uri).then(() => {
@@ -81,6 +84,12 @@ const bootstrap = async (config: FoamConfig) => {
   return foam;
 };
 
-export const getConfig = () => {
-  return {};
+export const getConfig = (): FoamConfig => {
+  const foamFolders = workspace.workspaceFolders
+    .filter(dir =>
+      fs.statSync(path.join(dir.uri.fsPath, ".foam")).isDirectory()
+    )
+    .map(dir => dir.uri.fsPath);
+
+  return createConfigFromFolders(foamFolders);
 };

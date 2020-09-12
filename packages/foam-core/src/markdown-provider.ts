@@ -6,7 +6,7 @@ import { parse as parseYAML } from 'yaml';
 import visit, { CONTINUE, EXIT } from 'unist-util-visit';
 import { Node, Parent, Point } from 'unist';
 import * as path from 'path';
-import { NoteLink, NoteLinkDefinition, NoteGraph, Note } from './note-graph';
+import { NoteLink, NoteLinkDefinition, NoteGraphAPI, Note } from './note-graph';
 import { dropExtension, uriToSlug } from './utils';
 import { ID } from './types';
 
@@ -128,7 +128,7 @@ export function stringifyMarkdownLinkReferenceDefinition(
   return text;
 }
 export function createMarkdownReferences(
-  graph: NoteGraph,
+  graph: NoteGraphAPI,
   noteId: ID,
   includeExtension: boolean
 ): NoteLinkDefinition[] {

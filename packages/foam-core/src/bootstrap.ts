@@ -3,7 +3,7 @@ import { promisify } from 'util';
 import fs from 'fs';
 import os from 'os';
 import detectNewline from 'detect-newline';
-import { NoteGraph, createGraph, NoteGraphAPI } from './note-graph';
+import { createGraph, NoteGraphAPI } from './note-graph';
 import { createNoteFromMarkdown } from './markdown-provider';
 import { FoamConfig } from './index';
 import { loadPlugins } from './plugins';

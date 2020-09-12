@@ -2,7 +2,6 @@ import { Graph } from 'graphlib';
 import { EventEmitter } from 'events';
 import { Position, Point, URI, ID } from './types';
 import { hashURI, computeRelativeURI } from './utils';
-import { FoamPlugin } from 'plugins';
 
 export interface NoteSource {
   uri: URI;
@@ -52,7 +51,6 @@ export interface GraphConnection {
 export type NoteGraphEventHandler = (e: { note: GraphNote }) => void;
 
 export type NotesQuery = { slug: string } | { title: string };
-
 
 export interface NoteGraphAPI {
   setNote(note: Note): GraphNote;

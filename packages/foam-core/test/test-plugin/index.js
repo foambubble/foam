@@ -5,7 +5,6 @@ const middleware = next => ({
   },
 });
 
-
 module.exports = {
   name: 'Test Plugin',
   graphMiddleware: middleware,

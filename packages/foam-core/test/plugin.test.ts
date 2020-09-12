@@ -1,7 +1,5 @@
 import path from 'path';
 import { loadPlugins } from '../src/plugins';
-import { NoteGraph } from '../src/note-graph';
-import { createTestNote } from './core.test';
 
 describe('Foam plugins', () => {
   it('can load', async () => {

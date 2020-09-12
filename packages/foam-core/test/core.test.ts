@@ -173,7 +173,7 @@ describe('Graph querying', () => {
 
   it('finds a note by title', () => {
     const graph = new NoteGraph();
-    const note = graph.setNote(
+    graph.setNote(
       createTestNote({ uri: '/dir1/page-a.md', title: 'My Title' })
     );
     expect(graph.getNotes({ title: 'My Title' }).length).toEqual(1);

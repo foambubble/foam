@@ -1,7 +1,7 @@
-import { NoteGraph, Note, NoteLink, NoteGraphAPI } from './note-graph';
+import { Note, NoteLink } from './types';
+import { NoteGraph, NoteGraphAPI } from './note-graph';
 
 export {
-  createNoteFromMarkdown,
   createMarkdownReferences,
   stringifyMarkdownLinkReferenceDefinition,
 } from './markdown-provider';
@@ -34,4 +34,5 @@ export interface FoamConfig {
 export interface Foam {
   notes: NoteGraphAPI;
   config: FoamConfig;
+  parse: (uri: string, text: string, eol: string) => Note;
 }

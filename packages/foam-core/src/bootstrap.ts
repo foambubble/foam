@@ -4,20 +4,25 @@ import fs from 'fs';
 import os from 'os';
 import detectNewline from 'detect-newline';
 import { createGraph, NoteGraphAPI } from './note-graph';
-import { createNoteFromMarkdown } from './markdown-provider';
-import { FoamConfig } from './index';
+import { createMarkdownParser } from './markdown-provider';
+import { FoamConfig, Foam } from './index';
 import { loadPlugins } from './plugins';
 import { isNotNull } from './utils';
+import { NoteParser } from 'types';
 
 const findAllFiles = promisify(glob);
 
-const loadNoteGraph = (graph: NoteGraphAPI, files: string[]) => {
+const loadNoteGraph = (
+  graph: NoteGraphAPI,
+  parser: NoteParser,
+  files: string[]
+) => {
   return Promise.all(
     files.map(f => {
       return fs.promises.readFile(f).then(data => {
         const markdown = (data || '').toString();
         const eol = detectNewline(markdown) || os.EOL;
-        graph.setNote(createNoteFromMarkdown(f, markdown, eol));
+        graph.setNote(parser.parse(f, markdown, eol));
       });
     })
   ).then(() => graph);
@@ -28,7 +33,9 @@ export const bootstrap = async (config: FoamConfig) => {
   const middlewares = plugins
     .map(p => p.graphMiddleware || null)
     .filter(isNotNull);
+  const parserPlugins = plugins.map(p => p.parser || null).filter(isNotNull);
 
+  const parser = createMarkdownParser(parserPlugins);
   const files = await Promise.all(
     config.foamFolders.map(folder => {
       if (folder.substr(-1) === '/') {
@@ -40,11 +47,13 @@ export const bootstrap = async (config: FoamConfig) => {
 
   const graph = await loadNoteGraph(
     createGraph(middlewares),
+    parser,
     ([] as string[]).concat(...files)
   );
 
   return {
     notes: graph,
     config: config,
-  };
+    parse: parser.parse,
+  } as Foam;
 };

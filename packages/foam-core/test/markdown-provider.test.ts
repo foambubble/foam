@@ -1,8 +1,9 @@
 import {
-  createNoteFromMarkdown,
+  createMarkdownParser,
   createMarkdownReferences,
 } from '../src/markdown-provider';
 import { NoteGraph } from '../src/note-graph';
+import { ParserPlugin } from '../src/plugins';
 
 const pageA = `
 # Page A
@@ -40,6 +41,8 @@ const pageF = `
 
 # Empty Frontmatter
 `;
+
+const createNoteFromMarkdown = createMarkdownParser([]).parse;
 
 describe('Markdown loader', () => {
   it('Converts markdown to notes', () => {
@@ -177,5 +180,37 @@ describe('wikilinks definitions', () => {
       '../dir2/page-b.md',
       '../dir3/page-c.md',
     ]);
+  });
+});
+
+describe('parser plugins', () => {
+  const testPlugin: ParserPlugin = {
+    visit: (node, note) => {
+      if (node.type === 'heading') {
+        note.properties.hasHeading = true;
+      }
+    },
+  };
+  const parser = createMarkdownParser([testPlugin]);
+
+  it('can augment the parsing of the file', async () => {
+    const note1 = parser.parse(
+      '/path/to/a',
+      `
+This is a test note without headings.
+But with some content.
+`,
+      '\n'
+    );
+    expect(note1.properties.hasHeading).toBeUndefined();
+
+    const note2 = parser.parse(
+      '/path/to/a',
+      `
+# This is a note with header
+and some content`,
+      '\n'
+    );
+    expect(note2.properties.hasHeading).toBeTruthy();
   });
 });

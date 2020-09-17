@@ -16,7 +16,6 @@ import {
 import {
   createMarkdownReferences,
   stringifyMarkdownLinkReferenceDefinition,
-  createNoteFromMarkdown,
   NoteGraphAPI,
   Foam,
   LINK_REFERENCE_DEFINITION_HEADER,
@@ -70,7 +69,7 @@ const feature: FoamFeature = {
 
 function updateDocumentInNoteGraph(foam: Foam, document: TextDocument) {
   foam.notes.setNote(
-    createNoteFromMarkdown(document.fileName, document.getText(), docConfig.eol)
+    foam.parse(document.fileName, document.getText(), docConfig.eol)
   );
 }
 

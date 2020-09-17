@@ -1,9 +1,5 @@
-import {
-  NoteGraph,
-  NoteLinkDefinition,
-  Note,
-  createGraph,
-} from '../src/note-graph';
+import { NoteGraph, createGraph } from '../src/note-graph';
+import { NoteLinkDefinition, Note } from '../src/types';
 import { uriToSlug } from '../src/utils';
 
 const position = {

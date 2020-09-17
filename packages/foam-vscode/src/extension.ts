@@ -16,7 +16,6 @@ import {
 } from "vscode";
 
 import {
-  createNoteFromMarkdown,
   bootstrap as foamBootstrap,
   FoamConfig,
   Foam,
@@ -51,7 +50,7 @@ async function registerFile(foam: Foam, localUri: Uri) {
   // create note
   const eol =
     window.activeTextEditor?.document?.eol === EndOfLine.CRLF ? "\r\n" : "\n";
-  const note = createNoteFromMarkdown(path, markdown, eol);
+  const note = foam.parse(path, markdown, eol);
 
   // add to graph
   foam.notes.setNote(note);

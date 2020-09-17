@@ -1,42 +1,7 @@
 import { Graph } from 'graphlib';
 import { EventEmitter } from 'events';
-import { Position, Point, URI, ID } from './types';
+import { URI, ID, Note, NoteLink } from './types';
 import { hashURI, computeRelativeURI } from './utils';
-
-export interface NoteSource {
-  uri: URI;
-  text: string;
-  contentStart: Point;
-  end: Point;
-  eol: string;
-}
-
-export interface WikiLink {
-  type: 'wikilink';
-  slug: string;
-  position: Position;
-}
-
-// at the moment we only model wikilink
-export type NoteLink = WikiLink;
-
-export interface NoteLinkDefinition {
-  label: string;
-  url: string;
-  title?: string;
-  position?: Position;
-}
-
-export interface Note {
-  title: string | null;
-  slug: string; // note: this slug is not necessarily unique
-  properties: any;
-  // sections: NoteSection[]
-  // tags: NoteTag[]
-  links: NoteLink[];
-  definitions: NoteLinkDefinition[];
-  source: NoteSource;
-}
 
 export type GraphNote = Note & {
   id: ID;

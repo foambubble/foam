@@ -27,10 +27,14 @@ import { features } from "./features";
 let workspaceWatcher: FileSystemWatcher | null = null;
 
 export function activate(context: ExtensionContext) {
-  const foamPromise = bootstrap();
-  features.forEach(f => {
-    f.activate(context, foamPromise);
-  });
+  try {
+    const foamPromise = bootstrap();
+    features.forEach(f => {
+      f.activate(context, foamPromise);
+    });
+  } catch (e) {
+    console.log("An error occurred while bootstrapping Foam", e);
+  }
 }
 
 export function deactivate() {
@@ -84,10 +88,11 @@ const bootstrap = async () => {
 };
 
 export const getConfig = (): FoamConfig => {
-  const foamFolders = workspace.workspaceFolders
-    .filter(dir =>
-      fs.statSync(path.join(dir.uri.fsPath, ".foam")).isDirectory()
-    )
+  const foamFolders = workspace
+    .workspaceFolders!.filter(dir => {
+      const foamPath = path.join(dir.uri.fsPath, ".foam");
+      return fs.existsSync(foamPath) && fs.statSync(foamPath).isDirectory();
+    })
     .map(dir => dir.uri.fsPath);
 
   return createConfigFromFolders(foamFolders);

@@ -8,7 +8,7 @@ import { createMarkdownParser } from './markdown-provider';
 import { FoamConfig, Foam } from './index';
 import { loadPlugins } from './plugins';
 import { isNotNull } from './utils';
-import { NoteParser } from 'types';
+import { NoteParser } from './types';
 
 const findAllFiles = promisify(glob);
 

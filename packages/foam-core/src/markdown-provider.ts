@@ -10,7 +10,7 @@ import { NoteGraphAPI } from './note-graph';
 import { NoteLink, NoteLinkDefinition, Note, NoteParser } from './types';
 import { dropExtension, uriToSlug } from './utils';
 import { ID } from './types';
-import { ParserPlugin } from 'plugins';
+import { ParserPlugin } from './plugins';
 
 const yamlPlugin: ParserPlugin = {
   visit: (node: Node, note: Note): void => {

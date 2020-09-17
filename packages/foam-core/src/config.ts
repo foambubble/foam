@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { FoamConfig } from 'index';
+import { FoamConfig } from './index';
 
 export const createConfigFromFolders = (foamFolders: string[]): FoamConfig => {
   return {
@@ -8,7 +8,9 @@ export const createConfigFromFolders = (foamFolders: string[]): FoamConfig => {
       .map(root => path.join(root, '.foam', 'plugins'))
       .reduce((acc, pluginDir) => {
         try {
-          const content = fs.readdirSync(pluginDir);
+          const content = fs
+            .readdirSync(pluginDir)
+            .map(dir => path.join(pluginDir, dir));
           return [...acc, ...content.filter(c => fs.statSync(c).isDirectory())];
         } catch {
           return acc;

@@ -2,7 +2,7 @@ import path from 'path';
 import crypto from 'crypto';
 import { titleCase } from 'title-case';
 import GithubSlugger from 'github-slugger';
-import { URI, ID } from 'types';
+import { URI, ID } from './types';
 
 export function isNotNull<T>(p: T | null): p is T {
   return p != null;

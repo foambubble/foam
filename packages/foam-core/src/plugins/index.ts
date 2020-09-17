@@ -3,7 +3,7 @@ import path from 'path';
 import { Node } from 'unist';
 import { isNotNull } from '../utils';
 import { NoteGraphEventHandler, Middleware } from '../note-graph';
-import { Note } from 'types';
+import { Note } from '../types';
 
 export interface FoamPlugin {
   name: string;

@@ -163,7 +163,7 @@ function generateReferenceList(
  * Find the range of existing reference list
  * @param doc
  */
-function detectReferenceListRange(doc: TextDocument): Range {
+function detectReferenceListRange(doc: TextDocument): Range | null {
   const fullText = doc.getText();
 
   const headerIndex = fullText.indexOf(LINK_REFERENCE_DEFINITION_HEADER);

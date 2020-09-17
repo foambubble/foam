@@ -145,8 +145,8 @@ const backfill = (next: NoteGraphAPI, middleware: Middleware): NoteGraphAPI => {
     getAllLinks: m.getAllLinks || next.getAllLinks,
     getForwardLinks: m.getForwardLinks || next.getForwardLinks,
     getBacklinks: m.getBacklinks || next.getBacklinks,
-    unstable_onNoteAdded: next.unstable_onNoteAdded,
-    unstable_onNoteUpdated: next.unstable_onNoteUpdated,
-    unstable_removeEventListener: next.unstable_removeEventListener,
+    unstable_onNoteAdded: next.unstable_onNoteAdded.bind(next),
+    unstable_onNoteUpdated: next.unstable_onNoteUpdated.bind(next),
+    unstable_removeEventListener: next.unstable_removeEventListener.bind(next),
   };
 };

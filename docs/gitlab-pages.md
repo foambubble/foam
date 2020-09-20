@@ -18,6 +18,9 @@ title: My Awesome Foam Project
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "/" # the base hostname & protocol for your site
 theme: jekyll-theme-minimal
+plugins:
+  - jekyll-optional-front-matter
+
 ```
 
 You can choose a theme if you want from places like [Jekyll Themes](https://jekyllthemes.io/)

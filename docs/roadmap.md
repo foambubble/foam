@@ -27,6 +27,7 @@ If a roadmap item is a stub, **consider** opening a [GitHub issue](https://githu
 ### Known issues
 
 - [[improve-default-workspace-settings]]
+  - Discussion: [foam#270](https://github.com/foambubble/foam/issues/270)
 - Improve [[git-integration]]
 - Fix [[wiki-links]] compatibility issues
 - Simplify [[foam-file-format]]

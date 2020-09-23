@@ -46,6 +46,6 @@ You can view a page's backlinks using either of the following techniques:
 
 ## Daily Pages
 
-In addition to create arbitrary pages, you can also use GistPad for journaling or capturing [daily notes](https://github.com/vsls-contrib/gistpad#daily-pages). Simply click the calendar icon in the `Repositories` tree, which will open up the page that represents today. If the page doesn't already exist, then it will be created in the workspace before being opened.
+In addition to creating arbitrary pages, you can use GistPad for journaling or capturing [daily notes](https://github.com/vsls-contrib/gistpad#daily-pages). Simply click the calendar icon in the `Repositories` tree, which will open up the page that represents today. If the page doesn't already exist, then it will be created in the workspace before being opened.
 
 <img width="700px" src="https://user-images.githubusercontent.com/116461/87234721-b356cc00-c388-11ea-946a-e7f9c92258a6.png" />

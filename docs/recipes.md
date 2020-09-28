@@ -41,6 +41,7 @@ Guides, tips and strategies for getting the most out of your Foam workspace!
 - Prettify your links, [[automatically-expand-urls-to-well-titled-links]]
 - Style your environment with [[custom-markdown-preview-styles]]
 - Paste and link [[images-from-your-clipboard]]
+- [[shows-image-preview-on-hover]]
 - [Markdown All-in-One](https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one) features [[todo]] [[good-first-task]]
   - Manage checklists
   - Automatic Table of Contents

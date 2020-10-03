@@ -17,7 +17,8 @@
     "workspaceContains:.vscode/foam.json",
     "onCommand:foam-vscode.update-wikilinks",
     "onCommand:foam-vscode.open-daily-note",
-    "onCommand:foam-vscode.janitor"
+    "onCommand:foam-vscode.janitor",
+    "onCommand:foam-vscode.copy-without-brackets"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -33,6 +34,10 @@
       {
         "command": "foam-vscode.janitor",
         "title": "Foam: Run Janitor (Experimental)"
+      },
+      {
+        "command": "foam-vscode.copy-without-brackets",
+        "title": "Foam: Copy To Clipboard Without Brackets"
       }
     ],
     "configuration": {

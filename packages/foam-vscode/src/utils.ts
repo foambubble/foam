@@ -91,3 +91,35 @@ export function dropExtension(path: string): string {
 export const astPositionToVsCodePosition = (point: Point): Position => {
   return new Position(point.line - 1, point.column - 1);
 };
+
+/**
+ * Used for the "Copy to Clipboard Without Brackets" command
+ *
+ */
+export function removeBrackets(s: string): string {
+  // take in the string, split on space
+  const stringSplitBySpace = s.split(" ");
+
+  // loop through words
+  const modifiedWords = stringSplitBySpace.map(currentWord => {
+    if (currentWord.includes("[[")) {
+      let word = currentWord.replace(/(\[\[)/g, "");
+      word = word.replace(/(\]\])/g, "");
+      word = word.replace(/(.mdx|.md|.markdown)/g, "");
+      word = word.replace(/[-]/g, " ");
+
+      // now capitalize every word
+      const modifiedWord = word
+        .split(" ")
+        .map(word => word[0].toUpperCase() + word.substring(1))
+        .join(" ");
+
+      return modifiedWord;
+    }
+
+    return currentWord;
+  });
+
+  return modifiedWords.join(" ");
+}
+

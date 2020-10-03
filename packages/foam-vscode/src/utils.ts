@@ -103,23 +103,36 @@ export function removeBrackets(s: string): string {
   // loop through words
   const modifiedWords = stringSplitBySpace.map(currentWord => {
     if (currentWord.includes("[[")) {
+
+      // all of these transformations will turn this "[[you-are-awesome]]"
+      // to this "you are awesome"
       let word = currentWord.replace(/(\[\[)/g, "");
       word = word.replace(/(\]\])/g, "");
       word = word.replace(/(.mdx|.md|.markdown)/g, "");
       word = word.replace(/[-]/g, " ");
 
-      // now capitalize every word
-      const modifiedWord = word
-        .split(" ")
-        .map(word => word[0].toUpperCase() + word.substring(1))
-        .join(" ");
+      // then we titlecase the word so "you are awesome"
+      // becomes "You Are Awesome"
+      const titleCasedWord = toTitleCase(word);
 
-      return modifiedWord;
+      return titleCasedWord;
     }
 
     return currentWord;
   });
 
   return modifiedWords.join(" ");
+}
+
+/**
+ * Takes in a string and returns it titlecased
+ *
+ * @example toTitleCase("hello world") -> "Hello World"
+ */
+export function toTitleCase(word: string): string {
+  return word
+        .split(" ")
+        .map(word => word[0].toUpperCase() + word.substring(1))
+        .join(" ");
 }
 

@@ -1,7 +1,7 @@
 // @note: This will fail due to utils importing 'vscode'
 // which needs to be mocked in the jest test environment.
 // See: https://github.com/microsoft/vscode-test/issues/37
-import { dropExtension, removeBrackets } from '../src/utils';
+import { dropExtension, removeBrackets, toTitleCase } from '../src/utils';
 
 describe("dropExtension", () => {
   test("returns file name without extension", () => {
@@ -44,6 +44,21 @@ describe("removeBrackets", () => {
     const input = "I am reading this as part of the [[book-club]] put on by [[egghead]] folks (Lauro).";
     const actual = removeBrackets(input);
     const expected = "I am reading this as part of the Book Club put on by Egghead folks (Lauro).";
+    expect(actual).toEqual(expected);
+  });
+});
+
+describe("toTitleCase", () => {
+  it("title cases a word", () => {
+    const input = "look at this really long sentence but I am calling it a word";
+    const actual = toTitleCase(input);
+    const expected = "Look At This Really Long Sentence But I Am Calling It A Word";
+    expect(actual).toEqual(expected);
+  });
+  it("works on one word", () => {
+    const input = "word";
+    const actual = toTitleCase(input);
+    const expected = "Word";
     expect(actual).toEqual(expected);
   });
 });

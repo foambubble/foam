@@ -40,4 +40,10 @@ describe("removeBrackets", () => {
     const expected = "hello world 2020 07 21";
     expect(actual).toEqual(expected);
   });
+  it("removes brackets for more than one word", () => {
+    const input = "I am reading this as part of the [[book-club]] put on by [[egghead]] folks (Lauro).";
+    const actual = removeBrackets(input);
+    const expected = "I am reading this as part of the Book Club put on by Egghead folks (Lauro).";
+    expect(actual).toEqual(expected);
+  });
 });

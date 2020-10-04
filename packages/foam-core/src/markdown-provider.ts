@@ -13,9 +13,12 @@ import { ID } from './types';
 import { ParserPlugin } from './plugins';
 
 const yamlPlugin: ParserPlugin = {
-  visit: (node: Node, note: Note): void => {
+  visit: (node, note) => {
     if (node.type === 'yaml') {
-      note.properties = parseYAML(node.value as string) ?? {};
+      note.properties = {
+        ...note.properties,
+        ...(parseYAML(node.value as string) ?? {}),
+      };
       // Give precendence to the title from the frontmatter if it exists
       note.title = note.properties.title ?? note.title;
       // Update the start position of the note by exluding the metadata
@@ -29,7 +32,7 @@ const yamlPlugin: ParserPlugin = {
 };
 
 const titlePlugin: ParserPlugin = {
-  visit: (node: Node, note: Note): void => {
+  visit: (node, note) => {
     if (note.title == null && node.type === 'heading' && node.depth === 1) {
       note.title =
         ((node as Parent)!.children[0].value as string) || note.title;
@@ -38,7 +41,7 @@ const titlePlugin: ParserPlugin = {
 };
 
 const wikilinkPlugin: ParserPlugin = {
-  visit: (node: Node, note: Note): void => {
+  visit: (node, note) => {
     if (node.type === 'wikiLink') {
       note.links.push({
         type: 'wikilink',
@@ -50,7 +53,7 @@ const wikilinkPlugin: ParserPlugin = {
 };
 
 const definitionsPlugin: ParserPlugin = {
-  visit: (node: Node, note: Note): void => {
+  visit: (node, note) => {
     if (node.type === 'definition') {
       note.definitions.push({
         label: node.label as string,
@@ -60,6 +63,9 @@ const definitionsPlugin: ParserPlugin = {
       });
     }
   },
+  onDidVisitTree: (tree, note) => {
+    note.definitions = getFoamDefinitions(note.definitions, note.source.end);
+  },
 };
 
 export function createMarkdownParser(extraPlugins: ParserPlugin[]): NoteParser {
@@ -67,7 +73,6 @@ export function createMarkdownParser(extraPlugins: ParserPlugin[]): NoteParser {
     .use(markdownParse, { gfm: true })
     .use(frontmatterPlugin, ['yaml'])
     .use(wikiLinkPlugin);
-  // plugin.onDidInitializeParser(parser)
 
   const plugins = [
     yamlPlugin,
@@ -76,9 +81,14 @@ export function createMarkdownParser(extraPlugins: ParserPlugin[]): NoteParser {
     definitionsPlugin,
     ...extraPlugins,
   ];
+
+  plugins.forEach(plugin => plugin.onDidInitializeParser?.(parser));
+
   return {
     parse: (uri: string, markdown: string, eol: string): Note => {
-      // markdown = plugin.onWillParseMarkdown(markdown)
+      markdown = plugins.reduce((acc, plugin) => {
+        return plugin.onWillParseMarkdown?.(acc) || acc;
+      }, markdown);
       const tree = parser.parse(markdown);
 
       var note: Note = {
@@ -96,14 +106,13 @@ export function createMarkdownParser(extraPlugins: ParserPlugin[]): NoteParser {
         },
       };
 
-      // plugin.onWillVisitTree(tree, note)
+      plugins.forEach(plugin => plugin.onWillVisitTree?.(tree, note));
       visit(tree, node => {
         for (let i = 0, len = plugins.length; i < len; i++) {
           plugins[i].visit?.(node, note);
         }
       });
-      // plugin.onDidVisitTree(tree, note) (the next line would go here)
-      note.definitions = getFoamDefinitions(note.definitions, note.source.end);
+      plugins.forEach(plugin => plugin.onDidVisitTree?.(tree, note));
 
       return note;
     },

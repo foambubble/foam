@@ -2,20 +2,23 @@ import * as fs from 'fs';
 import path from 'path';
 import { Node } from 'unist';
 import { isNotNull } from '../utils';
-import { NoteGraphEventHandler, Middleware } from '../note-graph';
+import { Middleware } from '../note-graph';
 import { Note } from '../types';
+import unified from 'unified';
 
 export interface FoamPlugin {
   name: string;
   description?: string;
-  graphMiddleware: Middleware;
-  parser: ParserPlugin;
-  unstable_onNoteAdded: NoteGraphEventHandler;
-  unstable_onNoteUpdated: NoteGraphEventHandler;
+  graphMiddleware?: Middleware;
+  parser?: ParserPlugin;
 }
 
 export interface ParserPlugin {
   visit?: (node: Node, note: Note) => void;
+  onDidInitializeParser?: (parser: unified.Processor) => void;
+  onWillParseMarkdown?: (markdown: string) => string;
+  onWillVisitTree?: (tree: Node, note: Note) => void;
+  onDidVisitTree?: (tree: Node, note: Note) => void;
 }
 
 export async function loadPlugins(pluginDirs: string[]): Promise<FoamPlugin[]> {

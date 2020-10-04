@@ -15,7 +15,7 @@ describe('Foam plugins', () => {
     const plugins = await loadPlugins([path.join(__dirname, 'test-plugin')]);
     const middleware = plugins[0].graphMiddleware;
     expect(middleware).not.toBeUndefined();
-    const graph = createGraph([middleware]);
+    const graph = createGraph([middleware!]);
     const note = graph.setNote(createTestNote({ uri: '/path/to/note.md' }));
     expect(note.properties['injectedByMiddleware']).toBeTruthy();
   });
@@ -24,7 +24,7 @@ describe('Foam plugins', () => {
     const plugins = await loadPlugins([path.join(__dirname, 'test-plugin')]);
     const parserPlugin = plugins[0].parser;
     expect(parserPlugin).not.toBeUndefined();
-    const parser = createMarkdownParser([parserPlugin]);
+    const parser = createMarkdownParser([parserPlugin!]);
 
     const note = parser.parse(
       '/path/to/a',

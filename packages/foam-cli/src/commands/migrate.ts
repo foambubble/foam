@@ -1,5 +1,5 @@
 import { Command, flags } from '@oclif/command';
-import * as ora from 'ora';
+import ora from 'ora';
 import {
   bootstrap,
   createConfigFromFolders,

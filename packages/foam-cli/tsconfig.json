@@ -6,6 +6,7 @@
     "outDir": "lib",
     "rootDir": "src",
     "strict": true,
+    "esModuleInterop": true,
     "target": "es2017"
   },
   "include": [

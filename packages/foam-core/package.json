@@ -12,7 +12,7 @@
     "build": "tsdx build --tsconfig ./tsconfig.build.json",
     "test": "tsdx test",
     "lint": "tsdx lint src test",
-    "watch": "tsdx watch",
+    "start": "tsdx watch --tsconfig ./tsconfig.build.json",
     "prepare": "tsdx build"
   },
   "devDependencies": {

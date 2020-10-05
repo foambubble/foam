@@ -12,7 +12,7 @@
   "scripts": {
     "start:vscode": "yarn workspace foam-vscode start",
     "build:core": "yarn workspace foam-core build",
-    "watch:core": "yarn workspace foam-core start",
+    "start:core": "yarn workspace foam-core start",
     "test:core": "yarn workspace foam-core test",
     "clean": "lerna run clean",
     "build": "lerna run build",

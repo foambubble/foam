@@ -91,3 +91,48 @@ export function dropExtension(path: string): string {
 export const astPositionToVsCodePosition = (point: Point): Position => {
   return new Position(point.line - 1, point.column - 1);
 };
+
+/**
+ * Used for the "Copy to Clipboard Without Brackets" command
+ *
+ */
+export function removeBrackets(s: string): string {
+  // take in the string, split on space
+  const stringSplitBySpace = s.split(" ");
+
+  // loop through words
+  const modifiedWords = stringSplitBySpace.map(currentWord => {
+    if (currentWord.includes("[[")) {
+
+      // all of these transformations will turn this "[[you-are-awesome]]"
+      // to this "you are awesome"
+      let word = currentWord.replace(/(\[\[)/g, "");
+      word = word.replace(/(\]\])/g, "");
+      word = word.replace(/(.mdx|.md|.markdown)/g, "");
+      word = word.replace(/[-]/g, " ");
+
+      // then we titlecase the word so "you are awesome"
+      // becomes "You Are Awesome"
+      const titleCasedWord = toTitleCase(word);
+
+      return titleCasedWord;
+    }
+
+    return currentWord;
+  });
+
+  return modifiedWords.join(" ");
+}
+
+/**
+ * Takes in a string and returns it titlecased
+ *
+ * @example toTitleCase("hello world") -> "Hello World"
+ */
+export function toTitleCase(word: string): string {
+  return word
+        .split(" ")
+        .map(word => word[0].toUpperCase() + word.substring(1))
+        .join(" ");
+}
+

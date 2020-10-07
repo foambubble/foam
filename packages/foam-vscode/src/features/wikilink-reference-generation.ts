@@ -30,7 +30,10 @@ import {
   getText
 } from "../utils";
 import { FoamFeature } from "../types";
-import { includeExtensions } from "../settings";
+import {
+  getWikilinkDefinitionSetting,
+  LinkReferenceDefinitionsSetting
+} from "../settings";
 
 const feature: FoamFeature = {
   activate: async (context: ExtensionContext, foamPromise: Promise<Foam>) => {
@@ -129,6 +132,12 @@ function generateReferenceList(
   foam: NoteGraphAPI,
   doc: TextDocument
 ): string[] {
+  const wikilinkSetting = getWikilinkDefinitionSetting();
+
+  if (wikilinkSetting === LinkReferenceDefinitionsSetting.off) {
+    return [];
+  }
+
   const filePath = doc.fileName;
 
   const note = foam.getNoteByURI(filePath);
@@ -143,9 +152,11 @@ function generateReferenceList(
   }
 
   const references = uniq(
-    createMarkdownReferences(foam, note.id, includeExtensions()).map(
-      stringifyMarkdownLinkReferenceDefinition
-    )
+    createMarkdownReferences(
+      foam,
+      note.id,
+      wikilinkSetting === LinkReferenceDefinitionsSetting.withExtensions
+    ).map(stringifyMarkdownLinkReferenceDefinition)
   );
 
   if (references.length) {

@@ -5,6 +5,7 @@
   "editor.overviewRulerBorder": false,
   "editor.lineHeight": 24,
   "workbench.colorTheme": "Gray Matter Light",
+  "foam.edit.linkReferenceDefinitions": "withExtensions",
   "vscodeMarkdownNotes.noteCompletionConvention": "noExtension",
   "[markdown]": {
     "editor.quickSuggestions": {

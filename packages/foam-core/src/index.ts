@@ -1,6 +1,8 @@
 import { Note, NoteLink } from './types';
 import { NoteGraph, NoteGraphAPI } from './note-graph';
-export { FoamConfig } from 'config';
+import { FoamConfig } from './config';
+
+export { FoamConfig };
 
 export {
   createMarkdownReferences,

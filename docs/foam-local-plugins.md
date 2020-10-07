@@ -2,6 +2,11 @@
 
 Foam can use workspace plugins to provide customization for users.
 
+## ATTENTION
+
+This feature is experimental and its API subject to change.
+**Local plugins can execute arbitrary code on your machine** - ensure you trust the content of the repo.
+
 ## Goal
 
 Here are some of the things that we could enable with local plugins in Foam:
@@ -10,9 +15,33 @@ Here are some of the things that we could enable with local plugins in Foam:
 - add a new CLI command to support some internal use case or automate import/export
 - extend the VSCode experience to support one's own workflow, e.g. weekly note, templates, extra panels, foam model derived TOC, ... all without having to write/deploy a VSCode extension
 
+## How to enable local plugins
+
+Plugins can execute arbitrary code on the client's machine.
+For this reason this feature is disabled by default, and needs to be explicitly enabled.
+
+To enable the feature:
+- create a `~/.foam/config.json` file
+- add the following content to the file
+```
+{
+	"experimental": {
+		"localPlugins": {
+			"enabled": true
+		}
+	}
+}
+```
+
+For security reasons this setting can only be defined in the user settings file.
+(otherwise a malicious repo could set it via its `./foam/config.json`)
+
+- [[todo]] an additional security mechanism would involve having an explicit list of whitelisted repo paths where plugins are allowed. This would provide finer grain control over when to enable or disable the feature.
+
+
 ## Technical approach
 
-When Foam is loaded it will:
+When Foam is loaded it will check whether the experimental local plugin feature is enabled, and in such case it will:
 - check `.foam/plugins` directory.
 	- each directory in there is considered a plugin
 	- the layout of each directory is

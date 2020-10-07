@@ -29,7 +29,7 @@ const loadNoteGraph = (
 };
 
 export const bootstrap = async (config: FoamConfig) => {
-  const plugins = await loadPlugins(config.pluginPaths);
+  const plugins = await loadPlugins(config);
   const middlewares = plugins
     .map(p => p.graphMiddleware || null)
     .filter(isNotNull);
@@ -37,7 +37,7 @@ export const bootstrap = async (config: FoamConfig) => {
 
   const parser = createMarkdownParser(parserPlugins);
   const files = await Promise.all(
-    config.foamFolders.map(folder => {
+    config.workspaceFolders.map(folder => {
       if (folder.substr(-1) === '/') {
         folder = folder.slice(0, -1);
       }

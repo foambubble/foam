@@ -8,9 +8,10 @@ describe('generateHeadings', () => {
   let _graph: NoteGraphAPI;
 
   beforeAll(async () => {
-    _graph = await bootstrap(
+    const foam = await bootstrap(
       createConfigFromFolders([path.join(__dirname, '../__scaffold__')])
-    ).then(foam => foam.notes);
+    );
+    _graph = foam.notes;
   });
 
   it('should add heading to a file that does not have them', () => {

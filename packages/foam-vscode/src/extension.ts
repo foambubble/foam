@@ -88,12 +88,12 @@ const bootstrap = async () => {
 };
 
 export const getConfig = (): FoamConfig => {
-  const foamFolders = workspace
+  const workspaceFolders = workspace
     .workspaceFolders!.filter(dir => {
       const foamPath = path.join(dir.uri.fsPath, ".foam");
       return fs.existsSync(foamPath) && fs.statSync(foamPath).isDirectory();
     })
     .map(dir => dir.uri.fsPath);
 
-  return createConfigFromFolders(foamFolders);
+  return createConfigFromFolders(workspaceFolders);
 };

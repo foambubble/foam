@@ -1,5 +1,6 @@
 import { Note, NoteLink } from './types';
 import { NoteGraph, NoteGraphAPI } from './note-graph';
+export { FoamConfig } from 'config';
 
 export {
   createMarkdownReferences,
@@ -25,11 +26,6 @@ export {
   LINK_REFERENCE_DEFINITION_HEADER,
   LINK_REFERENCE_DEFINITION_FOOTER,
 } from './definitions';
-
-export interface FoamConfig {
-  pluginPaths: string[];
-  foamFolders: string[];
-}
 
 export interface Foam {
   notes: NoteGraphAPI;

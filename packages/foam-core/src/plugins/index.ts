@@ -5,6 +5,7 @@ import { isNotNull } from '../utils';
 import { Middleware } from '../note-graph';
 import { Note } from '../types';
 import unified from 'unified';
+import { FoamConfig } from '../config';
 
 export interface FoamPlugin {
   name: string;
@@ -21,7 +22,22 @@ export interface ParserPlugin {
   onDidVisitTree?: (tree: Node, note: Note) => void;
 }
 
-export async function loadPlugins(pluginDirs: string[]): Promise<FoamPlugin[]> {
+export interface PluginConfig {
+  enabled?: boolean;
+  pluginFolders?: string[];
+}
+
+export const SETTINGS_PATH = 'experimental.localPlugins';
+
+export async function loadPlugins(config: FoamConfig): Promise<FoamPlugin[]> {
+  const pluginConfig = config.get<PluginConfig>(SETTINGS_PATH, {});
+  const isFeatureEnabled = pluginConfig.enabled ?? false;
+  if (!isFeatureEnabled) {
+    return [];
+  }
+  const pluginDirs: string[] =
+    pluginConfig.pluginFolders ?? findPluginDirs(config.workspaceFolders);
+
   const plugins = await Promise.all(
     pluginDirs
       .filter(dir => fs.statSync(dir).isDirectory)
@@ -38,6 +54,21 @@ export async function loadPlugins(pluginDirs: string[]): Promise<FoamPlugin[]> {
       })
   );
   return plugins.filter(isNotNull);
+}
+
+function findPluginDirs(workspaceFolders: string[]) {
+  return workspaceFolders
+    .map(root => path.join(root, '.foam', 'plugins'))
+    .reduce((acc, pluginDir) => {
+      try {
+        const content = fs
+          .readdirSync(pluginDir)
+          .map(dir => path.join(pluginDir, dir));
+        return [...acc, ...content.filter(c => fs.statSync(c).isDirectory())];
+      } catch {
+        return acc;
+      }
+    }, [] as string[]);
 }
 
 function validate(plugin: any): FoamPlugin {

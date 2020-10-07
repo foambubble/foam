@@ -48,11 +48,13 @@
           "default": "withoutExtensions",
           "enum": [
             "withExtensions",
-            "withoutExtensions"
+            "withoutExtensions",
+            "off"
           ],
           "enumDescriptions": [
             "Include extension in wikilinks paths",
-            "Remove extension in wikilink paths"
+            "Remove extension in wikilink paths",
+            "Disable wikilink definitions generation"
           ]
         },
         "foam.openDailyNote.fileExtension": {

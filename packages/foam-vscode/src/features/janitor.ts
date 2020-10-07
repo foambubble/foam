@@ -15,7 +15,10 @@ import {
   Foam
 } from "foam-core";
 
-import { includeExtensions } from "../settings";
+import {
+  getWikilinkDefinitionSetting,
+  LinkReferenceDefinitionsSetting
+} from "../settings";
 import { astPositionToVsCodePosition } from "../utils";
 
 const feature: FoamFeature = {
@@ -89,6 +92,8 @@ async function runJanitor(foam: Foam) {
     note => !dirtyEditorsFileName.includes(note.source.uri)
   );
 
+  const wikilinkSetting = getWikilinkDefinitionSetting();
+
   // Apply Text Edits to Non Dirty Notes using fs module just like CLI
 
   const fileWritePromises = nonDirtyNotes.map(note => {
@@ -97,11 +102,14 @@ async function runJanitor(foam: Foam) {
       updatedHeadingCount += 1;
     }
 
-    let definitions = generateLinkReferences(
-      note,
-      foam.notes,
-      includeExtensions()
-    );
+    let definitions =
+      wikilinkSetting === LinkReferenceDefinitionsSetting.off
+        ? null
+        : generateLinkReferences(
+            note,
+            foam.notes,
+            wikilinkSetting === LinkReferenceDefinitionsSetting.withExtensions
+          );
     if (definitions) {
       updatedDefinitionListCount += 1;
     }
@@ -132,11 +140,14 @@ async function runJanitor(foam: Foam) {
 
     // Get edits
     const heading = generateHeading(note);
-    let definitions = generateLinkReferences(
-      note,
-      foam.notes,
-      includeExtensions()
-    );
+    let definitions =
+      wikilinkSetting === LinkReferenceDefinitionsSetting.off
+        ? null
+        : generateLinkReferences(
+            note,
+            foam.notes,
+            wikilinkSetting === LinkReferenceDefinitionsSetting.withExtensions
+          );
 
     if (heading || definitions) {
       // Apply Edits

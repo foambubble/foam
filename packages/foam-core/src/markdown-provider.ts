@@ -35,7 +35,7 @@ const titlePlugin: ParserPlugin = {
   visit: (node, note) => {
     if (note.title == null && node.type === 'heading' && node.depth === 1) {
       note.title =
-        ((node as Parent)!.children[0].value as string) || note.title;
+        ((node as Parent)!.children?.[0]?.value as string) || note.title;
     }
   },
 };

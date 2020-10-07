@@ -108,6 +108,19 @@ describe('Note Title', () => {
     const pageENoteTitle = graph.getNote(note.id)!.title;
     expect(pageENoteTitle).toBe('Note Title');
   });
+
+  it('should not break on empty titles (see #276)', () => {
+    const note = createNoteFromMarkdown(
+      '/page-e.md',
+      `
+#
+
+this note has an empty title line
+    `,
+      '\n'
+    );
+    expect(note.title).toBeNull();
+  });
 });
 
 describe('frontmatter', () => {

@@ -6,88 +6,115 @@ import { parse as parseYAML } from 'yaml';
 import visit, { CONTINUE, EXIT } from 'unist-util-visit';
 import { Node, Parent, Point } from 'unist';
 import * as path from 'path';
-import { NoteLink, NoteLinkDefinition, NoteGraph, Note } from './note-graph';
+import { NoteGraphAPI } from './note-graph';
+import { NoteLink, NoteLinkDefinition, Note, NoteParser } from './types';
 import { dropExtension, uriToSlug } from './utils';
 import { ID } from './types';
+import { ParserPlugin } from './plugins';
 
-let processor: unified.Processor | null = null;
-
-function parse(markdown: string): Node {
-  processor =
-    processor ||
-    unified()
-      .use(markdownParse, { gfm: true })
-      .use(frontmatterPlugin, ['yaml'])
-      .use(wikiLinkPlugin);
-  return processor.parse(markdown);
-}
-
-export function createNoteFromMarkdown(
-  uri: string,
-  markdown: string,
-  eol: string
-): Note {
-  const tree = parse(markdown);
-  let title: string | null = null;
-
-  visit(tree, node => {
-    if (node.type === 'heading' && node.depth === 1) {
-      title = ((node as Parent)!.children[0].value as string) || title;
-    }
-    return title === null ? CONTINUE : EXIT;
-  });
-
-  const links: NoteLink[] = [];
-  const linkDefinitions: NoteLinkDefinition[] = [];
-  let frontmatter: any = {};
-  let start: Point = { line: 1, column: 1, offset: 0 }; // start position of the note
-  visit(tree, node => {
+const yamlPlugin: ParserPlugin = {
+  visit: (node, note) => {
     if (node.type === 'yaml') {
-      frontmatter = parseYAML(node.value as string) ?? {}; // parseYAML returns null if the frontmatter is empty
+      note.properties = {
+        ...note.properties,
+        ...(parseYAML(node.value as string) ?? {}),
+      };
+      // Give precendence to the title from the frontmatter if it exists
+      note.title = note.properties.title ?? note.title;
       // Update the start position of the note by exluding the metadata
-      start = {
+      note.source.contentStart = {
         line: node.position!.end.line! + 1,
         column: 1,
         offset: node.position!.end.offset! + 1,
       };
     }
+  },
+};
 
+const titlePlugin: ParserPlugin = {
+  visit: (node, note) => {
+    if (note.title == null && node.type === 'heading' && node.depth === 1) {
+      note.title =
+        ((node as Parent)!.children[0].value as string) || note.title;
+    }
+  },
+};
+
+const wikilinkPlugin: ParserPlugin = {
+  visit: (node, note) => {
     if (node.type === 'wikiLink') {
-      links.push({
+      note.links.push({
         type: 'wikilink',
         slug: node.value as string,
         position: node.position!,
       });
     }
+  },
+};
 
+const definitionsPlugin: ParserPlugin = {
+  visit: (node, note) => {
     if (node.type === 'definition') {
-      linkDefinitions.push({
+      note.definitions.push({
         label: node.label as string,
         url: node.url as string,
         title: node.title as string,
         position: node.position,
       });
     }
-  });
+  },
+  onDidVisitTree: (tree, note) => {
+    note.definitions = getFoamDefinitions(note.definitions, note.source.end);
+  },
+};
 
-  // Give precendence to the title from the frontmatter if it exists
-  title = frontmatter.title ?? title;
+export function createMarkdownParser(extraPlugins: ParserPlugin[]): NoteParser {
+  const parser = unified()
+    .use(markdownParse, { gfm: true })
+    .use(frontmatterPlugin, ['yaml'])
+    .use(wikiLinkPlugin);
 
-  const end = tree.position!.end;
-  const definitions = getFoamDefinitions(linkDefinitions, end);
+  const plugins = [
+    yamlPlugin,
+    titlePlugin,
+    wikilinkPlugin,
+    definitionsPlugin,
+    ...extraPlugins,
+  ];
+
+  plugins.forEach(plugin => plugin.onDidInitializeParser?.(parser));
 
   return {
-    properties: frontmatter,
-    slug: uriToSlug(uri),
-    title: title,
-    links: links,
-    definitions: definitions,
-    source: {
-      uri: uri,
-      text: markdown,
-      contentStart: start,
-      end: end,
-      eol: eol,
+    parse: (uri: string, markdown: string, eol: string): Note => {
+      markdown = plugins.reduce((acc, plugin) => {
+        return plugin.onWillParseMarkdown?.(acc) || acc;
+      }, markdown);
+      const tree = parser.parse(markdown);
+
+      var note: Note = {
+        slug: uriToSlug(uri),
+        properties: {},
+        title: null,
+        links: [],
+        definitions: [],
+        source: {
+          uri: uri,
+          text: markdown,
+          contentStart: tree.position!.start,
+          end: tree.position!.end,
+          eol: eol,
+        },
+      };
+
+      plugins.forEach(plugin => plugin.onWillVisitTree?.(tree, note));
+      visit(tree, node => {
+        for (let i = 0, len = plugins.length; i < len; i++) {
+          plugins[i].visit?.(node, note);
+        }
+      });
+      plugins.forEach(plugin => plugin.onDidVisitTree?.(tree, note));
+
+      return note;
     },
   };
 }
@@ -128,7 +155,7 @@ export function stringifyMarkdownLinkReferenceDefinition(
   return text;
 }
 export function createMarkdownReferences(
-  graph: NoteGraph,
+  graph: NoteGraphAPI,
   noteId: ID,
   includeExtension: boolean
 ): NoteLinkDefinition[] {

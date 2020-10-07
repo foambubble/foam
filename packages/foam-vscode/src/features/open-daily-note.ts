@@ -5,11 +5,11 @@ import {
   WorkspaceConfiguration,
   ExtensionContext,
   commands,
-  Selection,
+  Selection
 } from "vscode";
 import { dirname, join } from "path";
-import dateFormat = require("dateformat");
-import fs = require("fs");
+import dateFormat from "dateformat";
+import * as fs from "fs";
 import { FoamFeature } from "../types";
 import { docConfig } from '../utils';
 

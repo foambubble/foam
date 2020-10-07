@@ -2,7 +2,11 @@ import path from 'path';
 import crypto from 'crypto';
 import { titleCase } from 'title-case';
 import GithubSlugger from 'github-slugger';
-import { URI, ID } from 'types';
+import { URI, ID } from './types';
+
+export function isNotNull<T>(value: T | null): value is T {
+  return value != null;
+}
 
 export const hash = (text: string) =>
   crypto

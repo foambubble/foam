@@ -1,10 +1,11 @@
 import { Command, flags } from '@oclif/command';
-import * as ora from 'ora';
+import ora from 'ora';
 import {
-  initializeNoteGraph,
+  bootstrap,
+  createConfigFromFolders,
   generateLinkReferences,
   generateHeading,
-  applyTextEdit
+  applyTextEdit,
 } from 'foam-core';
 import { writeFileToDisk } from '../utils/write-file-to-disk';
 import { isValidDirectory } from '../utils';
@@ -21,7 +22,8 @@ export default class Janitor extends Command {
   static flags = {
     'without-extensions': flags.boolean({
       char: 'w',
-      description: 'generate link reference definitions without extensions (for legacy support)'
+      description:
+        'generate link reference definitions without extensions (for legacy support)',
     }),
     help: flags.help({ char: 'h' }),
   };
@@ -36,7 +38,8 @@ export default class Janitor extends Command {
     const { workspacePath = './' } = args;
 
     if (isValidDirectory(workspacePath)) {
-      const graph = await initializeNoteGraph(workspacePath);
+      const graph = (await bootstrap(createConfigFromFolders(workspacePath)))
+        .notes;
 
       const notes = graph.getNotes().filter(Boolean); // removes undefined notes
 
@@ -54,7 +57,11 @@ export default class Janitor extends Command {
       const fileWritePromises = notes.map(note => {
         // Get edits
         const heading = generateHeading(note);
-        const definitions = generateLinkReferences(note, graph, !flags['without-extensions']);
+        const definitions = generateLinkReferences(
+          note,
+          graph,
+          !flags['without-extensions']
+        );
 
         // apply Edits
         let file = note.source.text;

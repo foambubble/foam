@@ -1,42 +1,7 @@
 import { Graph } from 'graphlib';
 import { EventEmitter } from 'events';
-import { Position, Point, URI, ID } from './types';
+import { URI, ID, Note, NoteLink } from './types';
 import { hashURI, computeRelativeURI } from './utils';
-
-export interface NoteSource {
-  uri: URI;
-  text: string;
-  contentStart: Point;
-  end: Point;
-  eol: string;
-}
-
-export interface WikiLink {
-  type: 'wikilink';
-  slug: string;
-  position: Position;
-}
-
-// at the moment we only model wikilink
-export type NoteLink = WikiLink;
-
-export interface NoteLinkDefinition {
-  label: string;
-  url: string;
-  title?: string;
-  position?: Position;
-}
-
-export interface Note {
-  title: string | null;
-  slug: string; // note: this slug is not necessarily unique
-  properties: object;
-  // sections: NoteSection[]
-  // tags: NoteTag[]
-  links: NoteLink[];
-  definitions: NoteLinkDefinition[];
-  source: NoteSource;
-}
 
 export type GraphNote = Note & {
   id: ID;
@@ -52,7 +17,27 @@ export type NoteGraphEventHandler = (e: { note: GraphNote }) => void;
 
 export type NotesQuery = { slug: string } | { title: string };
 
-export class NoteGraph {
+export interface NoteGraphAPI {
+  setNote(note: Note): GraphNote;
+  getNotes(query?: NotesQuery): GraphNote[];
+  getNote(noteId: ID): GraphNote | null;
+  getNoteByURI(uri: URI): GraphNote | null;
+  getAllLinks(noteId: ID): GraphConnection[];
+  getForwardLinks(noteId: ID): GraphConnection[];
+  getBacklinks(noteId: ID): GraphConnection[];
+  unstable_onNoteAdded(callback: NoteGraphEventHandler): void;
+  unstable_onNoteUpdated(callback: NoteGraphEventHandler): void;
+  unstable_removeEventListener(callback: NoteGraphEventHandler): void;
+}
+
+export type Middleware = (next: NoteGraphAPI) => Partial<NoteGraphAPI>;
+
+export const createGraph = (middlewares: Middleware[]): NoteGraphAPI => {
+  const graph: NoteGraphAPI = new NoteGraph();
+  return middlewares.reduce((acc, m) => backfill(acc, m), graph);
+};
+
+export class NoteGraph implements NoteGraphAPI {
   private graph: Graph;
   private events: EventEmitter;
   private createIdFromURI: (uri: URI) => ID;
@@ -149,3 +134,19 @@ export class NoteGraph {
     this.events.removeAllListeners();
   }
 }
+
+const backfill = (next: NoteGraphAPI, middleware: Middleware): NoteGraphAPI => {
+  const m = middleware(next);
+  return {
+    setNote: m.setNote || next.setNote,
+    getNotes: m.getNotes || next.getNotes,
+    getNote: m.getNote || next.getNote,
+    getNoteByURI: m.getNoteByURI || next.getNoteByURI,
+    getAllLinks: m.getAllLinks || next.getAllLinks,
+    getForwardLinks: m.getForwardLinks || next.getForwardLinks,
+    getBacklinks: m.getBacklinks || next.getBacklinks,
+    unstable_onNoteAdded: next.unstable_onNoteAdded.bind(next),
+    unstable_onNoteUpdated: next.unstable_onNoteUpdated.bind(next),
+    unstable_removeEventListener: next.unstable_removeEventListener.bind(next),
+  };
+};

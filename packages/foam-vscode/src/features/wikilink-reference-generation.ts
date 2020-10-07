@@ -16,21 +16,18 @@ import {
 import {
   createMarkdownReferences,
   stringifyMarkdownLinkReferenceDefinition,
-  createNoteFromMarkdown,
-  NoteGraph,
+  NoteGraphAPI,
   Foam,
   LINK_REFERENCE_DEFINITION_HEADER,
   LINK_REFERENCE_DEFINITION_FOOTER
 } from "foam-core";
-import { basename } from "path";
 import {
   hasEmptyTrailing,
   docConfig,
   loadDocConfig,
   isMdEditor,
   mdDocSelector,
-  getText,
-  dropExtension
+  getText
 } from "../utils";
 import { FoamFeature } from "../types";
 import { includeExtensions } from "../settings";
@@ -72,11 +69,11 @@ const feature: FoamFeature = {
 
 function updateDocumentInNoteGraph(foam: Foam, document: TextDocument) {
   foam.notes.setNote(
-    createNoteFromMarkdown(document.fileName, document.getText(), docConfig.eol)
+    foam.parse(document.fileName, document.getText(), docConfig.eol)
   );
 }
 
-async function createReferenceList(foam: NoteGraph) {
+async function createReferenceList(foam: NoteGraphAPI) {
   let editor = window.activeTextEditor;
 
   if (!editor || !isMdEditor(editor)) {
@@ -100,7 +97,7 @@ async function createReferenceList(foam: NoteGraph) {
   }
 }
 
-async function updateReferenceList(foam: NoteGraph) {
+async function updateReferenceList(foam: NoteGraphAPI) {
   const editor = window.activeTextEditor;
 
   if (!editor || !isMdEditor(editor)) {
@@ -128,7 +125,10 @@ async function updateReferenceList(foam: NoteGraph) {
   }
 }
 
-function generateReferenceList(foam: NoteGraph, doc: TextDocument): string[] {
+function generateReferenceList(
+  foam: NoteGraphAPI,
+  doc: TextDocument
+): string[] {
   const filePath = doc.fileName;
 
   const note = foam.getNoteByURI(filePath);
@@ -163,7 +163,7 @@ function generateReferenceList(foam: NoteGraph, doc: TextDocument): string[] {
  * Find the range of existing reference list
  * @param doc
  */
-function detectReferenceListRange(doc: TextDocument): Range {
+function detectReferenceListRange(doc: TextDocument): Range | null {
   const fullText = doc.getText();
 
   const headerIndex = fullText.indexOf(LINK_REFERENCE_DEFINITION_HEADER);
@@ -190,9 +190,9 @@ function detectReferenceListRange(doc: TextDocument): Range {
 }
 
 class WikilinkReferenceCodeLensProvider implements CodeLensProvider {
-  private foam: NoteGraph;
+  private foam: NoteGraphAPI;
 
-  constructor(foam: NoteGraph) {
+  constructor(foam: NoteGraphAPI) {
     this.foam = foam;
   }
 

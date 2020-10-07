@@ -1,13 +1,17 @@
 import * as path from 'path';
-import { NoteGraph } from '../../src/note-graph';
+import { NoteGraphAPI } from '../../src/note-graph';
 import { generateHeading } from '../../src/janitor';
-import { initializeNoteGraph } from '../../src/initialize-note-graph';
+import { bootstrap } from '../../src/bootstrap';
+import { createConfigFromFolders } from '../../src/config';
 
 describe('generateHeadings', () => {
-  let _graph: NoteGraph;
+  let _graph: NoteGraphAPI;
 
   beforeAll(async () => {
-    _graph = await initializeNoteGraph(path.join(__dirname, '../__scaffold__'));
+    const foam = await bootstrap(
+      createConfigFromFolders([path.join(__dirname, '../__scaffold__')])
+    );
+    _graph = foam.notes;
   });
 
   it('should add heading to a file that does not have them', () => {

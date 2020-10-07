@@ -6,7 +6,7 @@ import {
   Range,
   ProgressLocation
 } from "vscode";
-import fs = require("fs");
+import * as fs from "fs";
 import { FoamFeature } from "../types";
 import {
   applyTextEdit,
@@ -56,9 +56,11 @@ async function janitor(foam: Foam) {
       );
     }
   } catch (e) {
-    window.showErrorMessage(`Foam Janitor attempted to clean your workspace but ran into an error. Please check that we didn't break anything before committing any changes to version control, and pass the following error message to the Foam team on GitHub issues:
+    window.showErrorMessage(
+      `Foam Janitor attempted to clean your workspace but ran into an error. Please check that we didn't break anything before committing any changes to version control, and pass the following error message to the Foam team on GitHub issues:
     ${e.message}
-    ${e.stack}`);
+    ${e.stack}`
+    );
   }
 }
 
@@ -126,7 +128,7 @@ async function runJanitor(foam: Foam) {
     const editor = await window.showTextDocument(doc);
     const note = dirtyNotes.find(
       n => n.source.uri === editor.document.fileName
-    );
+    )!;
 
     // Get edits
     const heading = generateHeading(note);

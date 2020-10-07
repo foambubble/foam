@@ -1,4 +1,5 @@
-import { NoteGraph, NoteLinkDefinition, Note } from '../src/note-graph';
+import { NoteGraph, createGraph } from '../src/note-graph';
+import { NoteLinkDefinition, Note } from '../src/types';
 import { uriToSlug } from '../src/utils';
 
 const position = {
@@ -10,7 +11,7 @@ const documentStart = position.start;
 const documentEnd = position.end;
 const eol = '\n';
 
-const createTestNote = (params: {
+export const createTestNote = (params: {
   uri: string;
   title?: string;
   definitions?: NoteLinkDefinition[];
@@ -168,7 +169,7 @@ describe('Graph querying', () => {
 
   it('finds a note by title', () => {
     const graph = new NoteGraph();
-    const note = graph.setNote(
+    graph.setNote(
       createTestNote({ uri: '/dir1/page-a.md', title: 'My Title' })
     );
     expect(graph.getNotes({ title: 'My Title' }).length).toEqual(1);
@@ -183,5 +184,24 @@ describe('Graph querying', () => {
       createTestNote({ uri: '/dir3/page-b.md', title: 'My Title' })
     );
     expect(graph.getNotes({ title: 'My Title' }).length).toEqual(2);
+  });
+});
+
+describe('graph middleware', () => {
+  it('can intercept calls to the graph', async () => {
+    const graph = createGraph([
+      next => ({
+        setNote: note => {
+          note.properties = {
+            injected: true,
+          };
+          return next.setNote(note);
+        },
+      }),
+    ]);
+    const note = createTestNote({ uri: '/dir1/page-a.md', title: 'My Title' });
+    expect(note.properties['injected']).toBeUndefined();
+    const res = graph.setNote(note);
+    expect(res.properties['injected']).toBeTruthy();
   });
 });

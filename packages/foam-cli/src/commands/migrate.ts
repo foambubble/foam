@@ -1,11 +1,12 @@
 import { Command, flags } from '@oclif/command';
-import * as ora from 'ora';
+import ora from 'ora';
 import {
-  initializeNoteGraph,
+  bootstrap,
+  createConfigFromFolders,
   generateLinkReferences,
   generateHeading,
   getKebabCaseFileName,
-  applyTextEdit
+  applyTextEdit,
 } from 'foam-core';
 import { writeFileToDisk } from '../utils/write-file-to-disk';
 import { renameFile } from '../utils/rename-file';
@@ -25,7 +26,8 @@ Successfully generated link references and heading!
   static flags = {
     'without-extensions': flags.boolean({
       char: 'w',
-      description: 'generate link reference definitions without extensions (for legacy support)'
+      description:
+        'generate link reference definitions without extensions (for legacy support)',
     }),
     help: flags.help({ char: 'h' }),
   };
@@ -38,9 +40,10 @@ Successfully generated link references and heading!
     const { args, flags } = this.parse(Migrate);
 
     const { workspacePath = './' } = args;
+    const config = createConfigFromFolders(workspacePath);
 
     if (isValidDirectory(workspacePath)) {
-      let graph = await initializeNoteGraph(workspacePath);
+      let graph = (await bootstrap(config)).notes;
 
       let notes = graph.getNotes().filter(Boolean); // removes undefined notes
 
@@ -69,7 +72,7 @@ Successfully generated link references and heading!
       spinner.text = 'Renaming files';
 
       // Reinitialize the graph after renaming files
-      graph = await initializeNoteGraph(workspacePath);
+      graph = (await bootstrap(config)).notes;
 
       notes = graph.getNotes().filter(Boolean); // remove undefined notes
 
@@ -80,7 +83,11 @@ Successfully generated link references and heading!
         notes.map(note => {
           // Get edits
           const heading = generateHeading(note);
-          const definitions = generateLinkReferences(note, graph, !flags['without-extensions']);
+          const definitions = generateLinkReferences(
+            note,
+            graph,
+            !flags['without-extensions']
+          );
 
           // apply Edits
           let file = note.source.text;

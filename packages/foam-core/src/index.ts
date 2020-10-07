@@ -1,7 +1,10 @@
-import { NoteGraph, Note, NoteLink } from './note-graph';
+import { Note, NoteLink } from './types';
+import { NoteGraph, NoteGraphAPI } from './note-graph';
+import { FoamConfig } from './config';
+
+export { FoamConfig };
 
 export {
-  createNoteFromMarkdown,
   createMarkdownReferences,
   stringifyMarkdownLinkReferenceDefinition,
 } from './markdown-provider';
@@ -15,25 +18,19 @@ export {
 
 export { applyTextEdit } from './janitor/apply-text-edit';
 
-export { initializeNoteGraph } from './initialize-note-graph';
+export { createConfigFromFolders } from './config';
 
-export { NoteGraph, Note, NoteLink };
+export { bootstrap } from './bootstrap';
+
+export { NoteGraph, NoteGraphAPI, Note, NoteLink };
 
 export {
   LINK_REFERENCE_DEFINITION_HEADER,
   LINK_REFERENCE_DEFINITION_FOOTER,
 } from './definitions';
 
-export interface FoamConfig {
-  // TODO
-}
-
 export interface Foam {
-  notes: NoteGraph;
-  // config: FoamConfig
+  notes: NoteGraphAPI;
+  config: FoamConfig;
+  parse: (uri: string, text: string, eol: string) => Note;
 }
-
-export const createFoam = (config: FoamConfig) => ({
-  notes: new NoteGraph(),
-  config: config,
-});

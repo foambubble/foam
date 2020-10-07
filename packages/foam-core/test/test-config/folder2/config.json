@@ -1,0 +1,8 @@
+{
+  "feature1": {
+    "setting1": {
+      "value": false,
+      "value2": "hello"
+    }
+  }
+}

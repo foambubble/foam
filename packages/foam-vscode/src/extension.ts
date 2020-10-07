@@ -4,6 +4,7 @@
  */
 "use strict";
 
+import path from "path";
 import * as fs from "fs";
 import {
   workspace,
@@ -15,10 +16,10 @@ import {
 } from "vscode";
 
 import {
-  createNoteFromMarkdown,
-  createFoam,
+  bootstrap as foamBootstrap,
   FoamConfig,
-  Foam
+  Foam,
+  createConfigFromFolders
 } from "foam-core";
 
 import { features } from "./features";
@@ -26,10 +27,14 @@ import { features } from "./features";
 let workspaceWatcher: FileSystemWatcher | null = null;
 
 export function activate(context: ExtensionContext) {
-  const foamPromise = bootstrap(getConfig());
-  features.forEach(f => {
-    f.activate(context, foamPromise);
-  });
+  try {
+    const foamPromise = bootstrap();
+    features.forEach(f => {
+      f.activate(context, foamPromise);
+    });
+  } catch (e) {
+    console.log("An error occurred while bootstrapping Foam", e);
+  }
 }
 
 export function deactivate() {
@@ -49,16 +54,17 @@ async function registerFile(foam: Foam, localUri: Uri) {
   // create note
   const eol =
     window.activeTextEditor?.document?.eol === EndOfLine.CRLF ? "\r\n" : "\n";
-  const note = createNoteFromMarkdown(path, markdown, eol);
+  const note = foam.parse(path, markdown, eol);
 
   // add to graph
   foam.notes.setNote(note);
   return note;
 }
 
-const bootstrap = async (config: FoamConfig) => {
+const bootstrap = async () => {
   const files = await workspace.findFiles("**/*");
-  const foam = createFoam(config);
+  const config: FoamConfig = getConfig();
+  const foam = await foamBootstrap(config);
   const addFile = (uri: Uri) => registerFile(foam, uri);
 
   await Promise.all(files.filter(isLocalMarkdownFile).map(addFile));
@@ -69,7 +75,7 @@ const bootstrap = async (config: FoamConfig) => {
     true,
     true
   );
-  
+
   workspaceWatcher.onDidCreate(uri => {
     if (isLocalMarkdownFile(uri)) {
       addFile(uri).then(() => {
@@ -81,6 +87,13 @@ const bootstrap = async (config: FoamConfig) => {
   return foam;
 };
 
-export const getConfig = () => {
-  return {};
+export const getConfig = (): FoamConfig => {
+  const workspaceFolders = workspace
+    .workspaceFolders!.filter(dir => {
+      const foamPath = path.join(dir.uri.fsPath, ".foam");
+      return fs.existsSync(foamPath) && fs.statSync(foamPath).isDirectory();
+    })
+    .map(dir => dir.uri.fsPath);
+
+  return createConfigFromFolders(workspaceFolders);
 };

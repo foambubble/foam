@@ -1,9 +1,9 @@
 # Eleventy and Netlify
 
-You can use [foam-eleventy-template](https://github.com/juanfrank77/foam-eleventy-template) to generate a static site with [Eleventy](https://www.11ty.dev/), and host it online on [Netlify](https://www.netlify.com/). 
+You can use [foam-eleventy-template](https://github.com/juanfrank77/foam-eleventy-template) to generate a static site with [Eleventy](https://www.11ty.dev/), and host it online on [Netlify](https://www.netlify.com/).
 
 With this template you can
-- Have control over what to publish and what to keep private 
+- Have control over what to publish and what to keep private
 - Customize the styling of the site to your own liking
 
 ## Publishing your foam

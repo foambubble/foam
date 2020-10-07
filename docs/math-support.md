@@ -18,9 +18,9 @@ Published Foam pages don't support math formulas by default. To enable this feat
 </script>
 ```
 
-This approach uses the [MathJax](https://www.mathjax.org/) library to render anything delimited by ```$``` (customizable in the snippet above) pairs to inline math and ```$$``` to blocks of math (like a html div tag) using with the AMS-LaTeX dialect embedded within MathJax. 
+This approach uses the [MathJax](https://www.mathjax.org/) library to render anything delimited by ```$``` (customizable in the snippet above) pairs to inline math and ```$$``` to blocks of math (like a html div tag) using with the AMS-LaTeX dialect embedded within MathJax.
 
-Example of inline math using `$...$`: 
+Example of inline math using `$...$`:
 
 `$e^{i \pi}+1=0$`, becomes $e^{i \pi}+1=0$
 
@@ -30,7 +30,7 @@ Example of a math block using `$$...$$`:
 
 Becomes:
 
-$$ f_{\mathbf{X}}\left(x_{1}, \ldots, x_{k}\right)=\frac{\exp \left(-\frac{1}{2}(\mathbf{x}-\boldsymbol{\mu})^{\mathrm{T}} \mathbf{\Sigma}^{-1}(\mathbf{x}-\boldsymbol{\mu})\right)}{\sqrt{(2 \pi)^{k}|\mathbf{\Sigma}|}} $$  
+$$ f_{\mathbf{X}}\left(x_{1}, \ldots, x_{k}\right)=\frac{\exp \left(-\frac{1}{2}(\mathbf{x}-\boldsymbol{\mu})^{\mathrm{T}} \mathbf{\Sigma}^{-1}(\mathbf{x}-\boldsymbol{\mu})\right)}{\sqrt{(2 \pi)^{k}|\mathbf{\Sigma}|}} $$
 
 ## Alternative approaches
 

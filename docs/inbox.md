@@ -16,7 +16,7 @@ Uncategorised thoughts, to be added
   - Every Foam could have a different theme even in the editor, so you'll see it like they see it
     - UI and layout design of your workspace can become a thing
 - Developer documentation
-  - GistPad has a good vs code contrib primer: https://github.com/jevakallio/gistpad/blob/master/CONTRIBUTING.md  
+  - GistPad has a good vs code contrib primer: https://github.com/jevakallio/gistpad/blob/master/CONTRIBUTING.md
 - VS Code Notebooks API
   - https://code.visualstudio.com/api/extension-guides/notebook
 - Snippets in template

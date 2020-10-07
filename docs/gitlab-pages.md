@@ -11,7 +11,7 @@ Generate a solution using the [Foam template].
 Change the remote to GitLab, or copy all the files into a new GitLab repo.
 
 ### Add a _config.yaml
-Add another file to the root directory (the one with `readme.md` in it) called `_config.yaml` (no extension) 
+Add another file to the root directory (the one with `readme.md` in it) called `_config.yaml` (no extension)
 
 ```yaml
 title: My Awesome Foam Project
@@ -42,7 +42,7 @@ source "https://rubygems.org"
 gem "jekyll"
 gem "jekyll-theme-minimal"
 gem "jekyll-optional-front-matter"
-``` 
+```
 
 Commit the file and push it to gitlab.
 

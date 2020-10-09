@@ -3,11 +3,11 @@ import markdownParse from 'remark-parse';
 import wikiLinkPlugin from 'remark-wiki-link';
 import frontmatterPlugin from 'remark-frontmatter';
 import { parse as parseYAML } from 'yaml';
-import visit, { CONTINUE, EXIT } from 'unist-util-visit';
-import { Node, Parent, Point } from 'unist';
+import visit from 'unist-util-visit';
+import { Parent, Point } from 'unist';
 import * as path from 'path';
 import { NoteGraphAPI } from './note-graph';
-import { NoteLink, NoteLinkDefinition, Note, NoteParser } from './types';
+import { NoteLinkDefinition, Note, NoteParser } from './types';
 import { dropExtension, uriToSlug } from './utils';
 import { ID } from './types';
 import { ParserPlugin } from './plugins';
@@ -35,7 +35,7 @@ const titlePlugin: ParserPlugin = {
   visit: (node, note) => {
     if (note.title == null && node.type === 'heading' && node.depth === 1) {
       note.title =
-        ((node as Parent)!.children[0].value as string) || note.title;
+        ((node as Parent)!.children?.[0]?.value as string) || note.title;
     }
   },
 };

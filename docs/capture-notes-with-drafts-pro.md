@@ -70,7 +70,7 @@ const base = 'https://api.github.com';
 
 
 const posttime = new Date();
-const title = draft.title;  
+const title = draft.title;
 const txt = draft.processTemplate("[[line|3..]]");
 const mergedTags = [...draft.tags, ...requiredTags];
 const slugbase = title.toLowerCase().replace(/\s/g, "-");

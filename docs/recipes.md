@@ -23,6 +23,7 @@ Guides, tips and strategies for getting the most out of your Foam workspace!
 ## Take smart notes
 
 - Introduction to Zettelkasten [[todo]]
+- Clip webpages with [[web-clipper]]
 
 ## Discover
 - Explore your notes using [[graph-visualisation]]
@@ -96,6 +97,7 @@ _See [[contribution-guide]] and [[how-to-write-recipes]]._
 [contribution-guide]: contribution-guide.md "Contribution Guide"
 [how-to-write-recipes]: how-to-write-recipes.md "How to Write Recipes"
 [todo]: todo.md "Todo"
+[web-clipper]: web-clipper.md "Web Clipper"
 [graph-visualisation]: graph-visualisation.md "Graph visualisation"
 [backlinking]: backlinking.md "Backlinking"
 [unlinked-references]: unlinked-references.md "Unlinked references (stub)"

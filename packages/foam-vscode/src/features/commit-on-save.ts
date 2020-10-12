@@ -6,6 +6,9 @@ import { promisify } from 'util';
 
 const execP = promisify(exec);
 let latestCommitTime;
+let latestSyncTime;
+let commitInterval = 10; // replace with configuration
+let syncInterval = 60 * 5;
 
 const feature: FoamFeature = {
   activate: (context: ExtensionContext) => {
@@ -56,30 +59,42 @@ async function commitOnSave (document: TextDocument) {
   const branchCmd = await execP(`git branch -r --contains ${latestCommitHash}`, { cwd: repo.rootUri.path });
   const branch = branchCmd.stdout.trim().split('\n');
 
-  // todo: also add check for new commit interval using latestCommitTime
   if (
     branch.length === 0 // latest commit isn't pushed
     && filesInStage.length === 1 // only one file in stage
     && filesInLatestCommit.length === 1 // only one file in latest commit
     && filesInStage[0] === filesInLatestCommit[0] // files are same
+    && isDatesInSameInterval(new Date(), latestCommitTime, commitInterval) // check if latest commit included in time interval
   ) {
     amend = true;
   }
 
-
   await repo.commit(`${(new Date).toLocaleTimeString()}`, { amend });
   // write commit time
   latestCommitTime = new Date();
+
+  if (!isDatesInSameInterval(new Date(), latestSyncTime, syncInterval)) {
+  const pullCmd = await execP(`git pull`, { cwd: repo.rootUri.path });
+  console.info('pull', pullCmd);
+  const pushCmd = await execP(`git push`, { cwd: repo.rootUri.path });
+  console.info('push', pushCmd);
+
+    // write latest sync time
+    latestSyncTime = new Date();
+  }
 }
 
 /**
- * @param d1
- * @param d2
+ * @param date new date
+ * @param prevDate latest date
  * @param diffence in seconds
  */
-function isDateIsLargerBy(d1: Date, d2: Date, diffence: number): boolean {
+function isDatesInSameInterval(date: Date, prevDate: Date, interval: number): boolean {
+  if (!date || !prevDate) {
+    return false;
+  }
   const getSeconds = (date: Date): number => +((date.getTime() / 1000).toFixed(0));
-  return (getSeconds(d1) - getSeconds(d2)) > diffence;
+  return (getSeconds(date) - getSeconds(prevDate)) <= interval;
 }
 
 export default feature;

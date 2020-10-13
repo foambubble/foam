@@ -18,11 +18,16 @@
     "onCommand:foam-vscode.update-wikilinks",
     "onCommand:foam-vscode.open-daily-note",
     "onCommand:foam-vscode.janitor",
-    "onCommand:foam-vscode.copy-without-brackets"
+    "onCommand:foam-vscode.copy-without-brackets",
+    "onCommand:foam-vscode.show-graph"
   ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
+      {
+        "command": "foam-vscode.show-graph",
+        "title": "Foam: Show graph"
+      },
       {
         "command": "foam-vscode.update-wikilinks",
         "title": "Foam: Update Markdown Reference List"
@@ -128,9 +133,11 @@
     "jest": "^26.2.2",
     "rimraf": "^3.0.2",
     "typescript": "^3.8.3",
+		"vscode-codicons": "0.0.12",
     "vscode-test": "^1.3.0"
   },
   "dependencies": {
+    "@antv/g6": "^3.8.1",
     "dateformat": "^3.0.3",
     "foam-core": "0.3.0"
   }

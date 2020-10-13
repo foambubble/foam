@@ -45,7 +45,7 @@ export class NoteGraph implements NoteGraphAPI {
   constructor() {
     this.graph = new Graph();
     this.events = new EventEmitter();
-    this.createIdFromURI = hashURI;
+    this.createIdFromURI = (uri) => uri;
   }
 
   public setNote(note: Note): GraphNote {

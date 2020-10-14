@@ -61,9 +61,12 @@ Guides, tips and strategies for getting the most out of your Foam workspace!
 
 - Publish to [[github-pages]]
 - Publish to [[gitlab-pages]]
-- Publish your site with [[eleventy-and-netlify]]
 - Publish to [[azure-devops-wiki]]
 - Publish to [[vercel]]
+- Publish your site using community templates
+  - [[eleventy-and-netlify]] by [@juanfrank77](https://github.com/juanfrank77)
+  - [foam-gatsby-template](https://github.com/mathieudutour/foam-gatsby-template) by [@mathieudutour](https://github.com/mathieudutour)
+  - [foamy-nextjs](https://github.com/yenly/foamy-nextjs) by [@yenly](https://github.com/yenly)
 - Make the site your own by [[customising-styles]].
 - Render math symbols, by either
   - adding client-side [[math-support]] to the default [[github-pages]] site

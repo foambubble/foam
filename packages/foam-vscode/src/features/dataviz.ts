@@ -26,6 +26,7 @@ const feature: FoamFeature = {
       foam.notes.getNotes().forEach(n => {
         graph.nodes.push({
           id: n.id,
+          type: 'note',
           uri: n.source.uri,
           title: path.basename(n.source.uri),
           nOutLinks: foam.notes.getForwardLinks(n.id).length,
@@ -35,6 +36,7 @@ const feature: FoamFeature = {
           if (foam.notes.getNote(link.to) == null) {
             graph.nodes.push({
               id: link.to,
+              type: 'nonExistingNote',
               uri: 'orphan',
               title: link.link.slug,
               nInLinks: 0,
@@ -96,11 +98,11 @@ async function getWebviewContent(
       codiconsFontUri.toString()
     );
 
-  // Basic templating. Will replace {{someScript.js}} with the
+  // Basic templating. Will replace the script paths with the
   // appropriate webview URI.
-  const filled = textWithVariables.replace(/\{\{.*\}\}/g, (match) => {
-    const fileName = match.slice(2, -2).trim();
-    return webviewUri(fileName);
+  const filled = textWithVariables.replace(/<script data-replace src="([^"]+")/g, (match) => {
+    const fileName = match.slice("<script data-replace src=\"".length, -1).trim();
+    return "<script src=\"" + webviewUri(fileName) + "\"";
   });
 
   return filled;

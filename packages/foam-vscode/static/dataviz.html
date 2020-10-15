@@ -2,19 +2,25 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <link rel="stylesheet" href="{{main.css}}" />
+    <!-- <link rel="stylesheet" href="{{main.css}}" />
     <link rel="stylesheet" href="${graphStylesPath}" />
     <link rel="stylesheet" href="${styleUri}" />
-    <link rel="stylesheet" href="${codiconsUri}" />
+    <link rel="stylesheet" href="${codiconsUri}" /> -->
 
-    <script src="{{g6.min.js}}"></script>
-    <script src="{{d3.v6.min.js}}"></script>
+    <script data-replace src="./g6.min.js"></script>
+    <script data-replace src="./d3.v6.min.js"></script>
+    <script data-replace src="./force-graph.1.34.1.min.js"></script>
+
   </head>
   <body>
-    <div class="buttons">
-      <div class="icon"><i class="codicon codicon-account"></i> account</div>
-    </div>
     <div id="graph" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0;"></div>
-    <script src="${graphPath}"></script>
+    <!-- To test the graph locally in a broswer:
+      1. copy the json data object received in the message payload
+      2. paste the content in test-data.js
+      3. uncomment the next <script ...> line
+      4. open this file in a browser
+    -->
+    <script src="./test-data.js"></script>
+    <script data-replace src="./graphs/default/graph.js"></script>
   </body>
 </html>

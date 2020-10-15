@@ -1,7 +1,7 @@
 import { Graph } from 'graphlib';
 import { EventEmitter } from 'events';
 import { URI, ID, Note, NoteLink } from './types';
-import { hashURI, computeRelativeURI } from './utils';
+import { computeRelativeURI } from './utils';
 
 export type GraphNote = Note & {
   id: ID;
@@ -45,7 +45,7 @@ export class NoteGraph implements NoteGraphAPI {
   constructor() {
     this.graph = new Graph();
     this.events = new EventEmitter();
-    this.createIdFromURI = (uri) => uri;
+    this.createIdFromURI = uri => uri;
   }
 
   public setNote(note: Note): GraphNote {

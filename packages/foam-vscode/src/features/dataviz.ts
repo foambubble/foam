@@ -5,59 +5,59 @@ import { Foam } from "foam-core";
 import { TextDecoder } from "util";
 
 const feature: FoamFeature = {
-  activate: async (context: vscode.ExtensionContext, foamPromise: Promise<Foam>) => {
+  activate: (context: vscode.ExtensionContext, foamPromise: Promise<Foam>) => {
     vscode.commands.registerCommand("foam-vscode.show-graph", async () => {
-      const foam = await foamPromise
+      const foam = await foamPromise;
       const panel = vscode.window.createWebviewPanel(
         "foam-graph",
         "Foam Graph",
         vscode.ViewColumn.Two,
         {
           enableScripts: true,
-          retainContextWhenHidden: true,
+          retainContextWhenHidden: true
         }
       );
 
       const graph = {
         nodes: [],
-        edges: [],
+        edges: []
       };
 
       foam.notes.getNotes().forEach(n => {
         graph.nodes.push({
           id: n.id,
-          type: 'note',
+          type: "note",
           uri: n.source.uri,
           title: path.basename(n.source.uri),
           nOutLinks: foam.notes.getForwardLinks(n.id).length,
-          nInLinks: foam.notes.getBacklinks(n.id).length,
-        })
+          nInLinks: foam.notes.getBacklinks(n.id).length
+        });
         foam.notes.getForwardLinks(n.id).forEach(link => {
           if (foam.notes.getNote(link.to) == null) {
             graph.nodes.push({
               id: link.to,
-              type: 'nonExistingNote',
-              uri: 'orphan',
+              type: "nonExistingNote",
+              uri: "orphan",
               title: link.link.slug,
               nInLinks: 0,
-              nOutLinks: 0,
-            })
+              nOutLinks: 0
+            });
           }
           graph.edges.push({
             source: link.from,
-            target: link.to,
-          })
-        })
-      })
+            target: link.to
+          });
+        });
+      });
 
       panel.webview.html = await getWebviewContent(context, panel);
 
       panel.webview.postMessage({
         type: "refresh",
-        payload: graph,
+        payload: graph
       });
-    })
-  },
+    });
+  }
 };
 
 async function getWebviewContent(
@@ -108,4 +108,4 @@ async function getWebviewContent(
   return filled;
 }
 
-export default feature
+export default feature;

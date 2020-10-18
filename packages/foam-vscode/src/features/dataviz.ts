@@ -29,7 +29,7 @@ const feature: FoamFeature = {
           id: n.id,
           type: "note",
           uri: n.source.uri,
-          title: path.basename(n.source.uri),
+          title: n.title,
           nOutLinks: foam.notes.getForwardLinks(n.id).length,
           nInLinks: foam.notes.getBacklinks(n.id).length
         });

@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import { FoamFeature } from "../types";
+import { isNone } from "../utils";
 import { Foam } from "foam-core";
 import { TextDecoder } from "util";
 
@@ -33,7 +34,7 @@ const feature: FoamFeature = {
           nInLinks: foam.notes.getBacklinks(n.id).length
         });
         foam.notes.getForwardLinks(n.id).forEach(link => {
-          if (foam.notes.getNote(link.to) == null) {
+          if (isNone(foam.notes.getNote(link.to))) {
             graph.nodes.push({
               id: link.to,
               type: "nonExistingNote",
@@ -51,6 +52,22 @@ const feature: FoamFeature = {
       });
 
       panel.webview.html = await getWebviewContent(context, panel);
+
+      panel.webview.onDidReceiveMessage(
+        (message) => {
+          if (message.type === "selected") {
+            const noteId = message.payload
+            const noteUri = foam.notes.getNote(noteId).source.uri
+            const openPath = vscode.Uri.file(noteUri);
+
+            vscode.workspace.openTextDocument(openPath).then((doc) => {
+              vscode.window.showTextDocument(doc, vscode.ViewColumn.One);
+            });
+          }
+        },
+        undefined,
+        context.subscriptions
+      );
 
       panel.webview.postMessage({
         type: "refresh",

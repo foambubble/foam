@@ -10,7 +10,7 @@ import dateFormat from "dateformat";
 import * as fs from "fs";
 import { docConfig } from "./utils";
 
-async function openDatedNote(date?: Date) {
+async function openDailyNoteFor(date?: Date) {
   const foamConfiguration = workspace.getConfiguration("foam");
   const currentDate = date !== undefined ? date : new Date();
 
@@ -98,4 +98,4 @@ function pathExists(path: string) {
     .catch(() => false);
 }
 
-export { openDatedNote, getDailyNoteFileName };
+export { openDailyNoteFor, getDailyNoteFileName };

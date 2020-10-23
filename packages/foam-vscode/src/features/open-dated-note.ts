@@ -6,13 +6,11 @@ import {
   CompletionItemProvider,
   CompletionItem,
   CompletionItemKind,
-  Range,
-  Position
+  CompletionList
 } from "vscode";
 import { getDailyNoteFileName, openDailyNoteFor } from "../dated-notes";
 import { LinkReferenceDefinitionsSetting } from "../settings";
 import { FoamFeature } from "../types";
-import { astPositionToVsCodePosition } from "../utils";
 
 interface DateSnippet {
   snippet: string;
@@ -62,8 +60,8 @@ const computedSnippets: ((number: number) => DateSnippet)[] = [
   (days: number) => {
     const today = new Date();
     return {
-      detail: "Insert a link to tomorrow's daily note",
-      snippet: `/${days}d`,
+      detail: `Insert a date ${days} day(s) from now`,
+      snippet: `/+${days}d`,
       date: new Date(
         today.getFullYear(),
         today.getMonth(),
@@ -74,12 +72,24 @@ const computedSnippets: ((number: number) => DateSnippet)[] = [
   (weeks: number) => {
     const today = new Date();
     return {
-      detail: "Insert a link to tomorrow's daily note",
-      snippet: `/${weeks}w`,
+      detail: `Insert a date ${weeks} week(s) from now`,
+      snippet: `/+${weeks}w`,
       date: new Date(
         today.getFullYear(),
         today.getMonth(),
         today.getDate() + 7 * weeks
+      )
+    };
+  },
+  (years: number) => {
+    const today = new Date();
+    return {
+      detail: `Insert a date ${years} year(s) from now`,
+      snippet: `/+${years}y`,
+      date: new Date(
+        today.getFullYear() + years,
+        today.getMonth(),
+        today.getDate()
       )
     };
   }
@@ -111,33 +121,53 @@ const completions: CompletionItemProvider = {
 
 const computedCompletions: CompletionItemProvider = {
   provideCompletionItems: (document, position, token, context) => {
-    const offsetPosition = document.offsetAt(position) - 1;
-    const number = document.getText().charAt(offsetPosition);
-    const range = document.getWordRangeAtPosition(
-      position,
-      /~!@#$%^&*()-=[{]}\|;:'",.<>?/
-    );
-    const completionItems = computedSnippets.map(item => {
-      const { snippet, detail, date } = item(parseInt(number));
-      const completionItem = new CompletionItem(
-        snippet,
-        CompletionItemKind.Snippet
+    return new Promise((resolve, reject) => {
+      const offsetPosition = document.offsetAt(position) - 1;
+      const number = document.getText().charAt(offsetPosition);
+      const range = document.getWordRangeAtPosition(position, /_-\s/);
+      if (isNaN(+number)) {
+        return resolve(
+          new CompletionList(
+            [
+              new CompletionItem(
+                document.getText(range),
+                CompletionItemKind.Snippet
+              )
+            ],
+            true
+          )
+        );
+      }
+      const completionItems = computedSnippets.map(item => {
+        const { snippet, detail, date } = item(parseInt(number));
+        const completionItem = new CompletionItem(
+          snippet,
+          CompletionItemKind.Snippet
+        );
+        completionItem.range = range;
+        completionItem.insertText = getDailyNoteLink(
+          date,
+          foamConfig.get("openDailyNote.fileExtension"),
+          foamConfig.get("edit.linkReferenceDefinitions")
+        );
+        completionItem.detail = `${completionItem.insertText} - ${detail}`;
+        completionItem.command = {
+          command: "foam-vscode.open-dated-note",
+          title: "Open a note for the given date",
+          arguments: [date]
+        };
+        return completionItem;
+      });
+      return resolve(
+        new CompletionList(
+          [
+            new CompletionItem("/+", CompletionItemKind.Snippet),
+            ...completionItems
+          ],
+          true
+        )
       );
-      completionItem.range = range;
-      completionItem.insertText = getDailyNoteLink(
-        date,
-        foamConfig.get("openDailyNote.fileExtension"),
-        foamConfig.get("edit.linkReferenceDefinitions")
-      );
-      completionItem.detail = `${completionItem.insertText}`;
-      completionItem.command = {
-        command: "foam-vscode.open-dated-note",
-        title: "Open a note for the given date",
-        arguments: [date]
-      };
-      return completionItem;
     });
-    return completionItems;
   }
 };
 
@@ -152,7 +182,8 @@ const feature: FoamFeature = {
     languages.registerCompletionItemProvider(
       "markdown",
       computedCompletions,
-      "/"
+      "/",
+      "+"
     );
   }
 };

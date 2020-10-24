@@ -23,6 +23,8 @@ These settings can be overridden in your workspace or global `.vscode/settings.j
 
 The above configuration would create a file `journal/note-2020-07-25.mdx`, with the heading `Journal Entry, Sunday, July 25`.
 
+Specifying a sub-directory for daily notes in this way will prevent them from appearing in the graph visualisation.
+
 ## Daily Note Templates
 
 In the future, Foam may provide a functionality for specifying a template for new Daily Notes and other types of documents.

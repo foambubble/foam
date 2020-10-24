@@ -18,11 +18,55 @@ interface DateSnippet {
   detail: string;
 }
 
+const daysOfWeek = [
+  { day: "sunday", index: 0 },
+  { day: "monday", index: 1 },
+  { day: "tuesday", index: 2 },
+  { day: "wednesday", index: 3 },
+  { day: "thursday", index: 4 },
+  { day: "friday", index: 5 },
+  { day: "saturday", index: 6 }
+];
+
 const foamConfig = workspace.getConfiguration("foam");
 const foamExtension = foamConfig.get("openDailyNote.fileExtension");
 const foamLinkReferenceDefinitions = foamConfig.get(
   "edit.linkReferenceDefinitions"
 );
+
+const generateDayOfWeekSnippets = (): DateSnippet[] => {
+  const getTarget = (day: number) => {
+    const target = new Date();
+    const currentDay = target.getDay();
+    const distance = (day + 7 - currentDay) % 7;
+    target.setDate(target.getDate() + distance);
+    return target;
+  };
+  const snippets = daysOfWeek.map(({ day, index }) => {
+    const target = getTarget(index);
+    return {
+      date: target,
+      detail: `Get a daily note link for ${day}`,
+      snippet: `/${day}`
+    };
+  });
+  return snippets;
+};
+
+const createCompletionItem = ({ snippet, date, detail }: DateSnippet) => {
+  const completionItem = new CompletionItem(
+    snippet,
+    CompletionItemKind.Snippet
+  );
+  completionItem.insertText = getDailyNoteLink(date);
+  completionItem.detail = `${completionItem.insertText} - ${detail}`;
+  completionItem.command = {
+    command: "foam-vscode.open-dated-note",
+    title: "Open a note for the given date",
+    arguments: [date]
+  };
+  return completionItem;
+};
 
 const getDailyNoteLink = (date: Date) => {
   let name = getDailyNoteFileName(foamConfig, date);
@@ -109,21 +153,10 @@ const computedSnippets: ((number: number) => DateSnippet)[] = [
 
 const completions: CompletionItemProvider = {
   provideCompletionItems: (_document, _position, _token, _context) => {
-    const completionItems = snippets.map(item => {
-      const { snippet, date, detail } = item();
-      const completionItem = new CompletionItem(
-        snippet,
-        CompletionItemKind.Snippet
-      );
-      completionItem.insertText = getDailyNoteLink(date);
-      completionItem.detail = `${completionItem.insertText} - ${detail}`;
-      completionItem.command = {
-        command: "foam-vscode.open-dated-note",
-        title: "Open a note for the given date",
-        arguments: [date]
-      };
-      return completionItem;
-    });
+    const completionItems = [
+      ...snippets.map(item => createCompletionItem(item())),
+      ...generateDayOfWeekSnippets().map(item => createCompletionItem(item))
+    ];
     return completionItems;
   }
 };
@@ -135,19 +168,8 @@ const computedCompletions: CompletionItemProvider = {
     const matches = snippetString.match(/(\d+)/);
     const number: string = matches ? matches[0] : "1";
     const completionItems = computedSnippets.map(item => {
-      const { snippet, detail, date } = item(parseInt(number));
-      const completionItem = new CompletionItem(
-        snippet,
-        CompletionItemKind.Snippet
-      );
+      const completionItem = createCompletionItem(item(parseInt(number)));
       completionItem.range = range;
-      completionItem.insertText = getDailyNoteLink(date);
-      completionItem.detail = `${completionItem.insertText} - ${detail}`;
-      completionItem.command = {
-        command: "foam-vscode.open-dated-note",
-        title: "Open a note for the given date",
-        arguments: [date]
-      };
       return completionItem;
     });
     // We still want the list to be treated as "incomplete", because the user may add another number

@@ -122,18 +122,15 @@ const completions: CompletionItemProvider = {
 const computedCompletions: CompletionItemProvider = {
   provideCompletionItems: (document, position, token, context) => {
     return new Promise((resolve, reject) => {
-      const offsetPosition = document.offsetAt(position) - 1;
-      const number = document.getText().charAt(offsetPosition);
-      const range = document.getWordRangeAtPosition(position, /_-\s/);
-      if (isNaN(+number)) {
+      document.offsetAt(position);
+      const range = document.getWordRangeAtPosition(position);
+      const snippetString = document.getText(range);
+      const matches = snippetString.match(/(\d+)/);
+      const number = matches ? matches[0] : undefined;
+      if (number === undefined) {
         return resolve(
           new CompletionList(
-            [
-              new CompletionItem(
-                document.getText(range),
-                CompletionItemKind.Snippet
-              )
-            ],
+            [new CompletionItem(snippetString, CompletionItemKind.Snippet)],
             true
           )
         );
@@ -182,8 +179,7 @@ const feature: FoamFeature = {
     languages.registerCompletionItemProvider(
       "markdown",
       computedCompletions,
-      "/",
-      "+"
+      "/"
     );
   }
 };

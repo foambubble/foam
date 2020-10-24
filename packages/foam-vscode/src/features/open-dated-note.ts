@@ -11,6 +11,7 @@ import {
 import { getDailyNoteFileName, openDailyNoteFor } from "../dated-notes";
 import { LinkReferenceDefinitionsSetting } from "../settings";
 import { FoamFeature } from "../types";
+import { astPositionToVsCodePosition } from "../utils";
 
 interface DateSnippet {
   snippet: string;
@@ -123,7 +124,7 @@ const computedCompletions: CompletionItemProvider = {
   provideCompletionItems: (document, position, token, context) => {
     return new Promise((resolve, reject) => {
       // Convert the current position to a range, so that we can see what the user has typed
-      const range = document.getWordRangeAtPosition(position);
+      const range = document.getWordRangeAtPosition(position, /\S+/);
       // Now get what the user has typed. If we don't have a number yet, we still want VS Code to keep "listening"
       const snippetString = document.getText(range);
       // Try get a number out of the current snippet string
@@ -184,7 +185,8 @@ const feature: FoamFeature = {
     languages.registerCompletionItemProvider(
       "markdown",
       computedCompletions,
-      "/"
+      "/",
+      "+"
     );
   }
 };

@@ -122,11 +122,14 @@ const completions: CompletionItemProvider = {
 const computedCompletions: CompletionItemProvider = {
   provideCompletionItems: (document, position, token, context) => {
     return new Promise((resolve, reject) => {
-      document.offsetAt(position);
+      // Convert the current position to a range, so that we can see what the user has typed
       const range = document.getWordRangeAtPosition(position);
+      // Now get what the user has typed. If we don't have a number yet, we still want VS Code to keep "listening"
       const snippetString = document.getText(range);
+      // Try get a number out of the current snippet string
       const matches = snippetString.match(/(\d+)/);
       const number = matches ? matches[0] : undefined;
+      // If we haven't got a number, we return an incomplete list because we want VS Code to keep generating this list
       if (number === undefined) {
         return resolve(
           new CompletionList(
@@ -135,6 +138,7 @@ const computedCompletions: CompletionItemProvider = {
           )
         );
       }
+      // Now if we get here, we have a number we can work with. Lets build a list of possible snippets
       const completionItems = computedSnippets.map(item => {
         const { snippet, detail, date } = item(parseInt(number));
         const completionItem = new CompletionItem(
@@ -155,6 +159,7 @@ const computedCompletions: CompletionItemProvider = {
         };
         return completionItem;
       });
+      // We still want the list to be treated as "incomplete", because the user may add another number
       return resolve(
         new CompletionList(
           [

@@ -1,4 +1,3 @@
-import { SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS } from "constants";
 import {
   workspace,
   ExtensionContext,
@@ -12,7 +11,6 @@ import {
 import { getDailyNoteFileName, openDailyNoteFor } from "../dated-notes";
 import { LinkReferenceDefinitionsSetting } from "../settings";
 import { FoamFeature } from "../types";
-import { astPositionToVsCodePosition } from "../utils";
 
 interface DateSnippet {
   snippet: string;

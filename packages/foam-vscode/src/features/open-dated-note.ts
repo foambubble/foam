@@ -97,6 +97,14 @@ const snippets: (() => DateSnippet)[] = [
       snippet: "/tomorrow",
       date: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1)
     };
+  },
+  () => {
+    const today = new Date();
+    return {
+      detail: "Insert a link to yesterday's daily note",
+      snippet: "/yesterday",
+      date: new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1)
+    };
   }
 ];
 

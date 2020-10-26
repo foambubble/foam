@@ -21,7 +21,7 @@ async function openDailyNoteFor(date?: Date) {
     dailyNotePath,
     currentDate
   );
-  await focusDailyNote(dailyNotePath, isNew);
+  await focusNote(dailyNotePath, isNew);
 }
 function getDailyNotePath(configuration: WorkspaceConfiguration, date: Date) {
   const rootDirectory = workspace.workspaceFolders[0].uri.fsPath;
@@ -79,8 +79,8 @@ async function createDailyNoteDirectoryIfNotExists(dailyNotePath: string) {
   }
 }
 
-async function focusDailyNote(dailyNotePath: string, isNewNote: boolean) {
-  const document = await workspace.openTextDocument(Uri.file(dailyNotePath));
+async function focusNote(notePath: string, isNewNote: boolean) {
+  const document = await workspace.openTextDocument(Uri.file(notePath));
   const editor = await window.showTextDocument(document);
 
   // Move the cursor to end of the file

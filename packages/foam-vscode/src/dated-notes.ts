@@ -8,7 +8,7 @@ import {
 import { dirname, join } from "path";
 import dateFormat from "dateformat";
 import * as fs from "fs";
-import { docConfig } from "./utils";
+import { docConfig, pathExists } from "./utils";
 
 async function openDailyNoteFor(date?: Date) {
   const foamConfiguration = workspace.getConfiguration("foam");
@@ -89,13 +89,6 @@ async function focusNote(notePath: string, isNewNote: boolean) {
     const { range } = editor.document.lineAt(lineCount - 1);
     editor.selection = new Selection(range.end, range.end);
   }
-}
-
-function pathExists(path: string) {
-  return fs.promises
-    .access(path, fs.constants.F_OK)
-    .then(() => true)
-    .catch(() => false);
 }
 
 export { openDailyNoteFor, getDailyNoteFileName };

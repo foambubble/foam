@@ -33,6 +33,7 @@ const foamExtension = foamConfig.get("openDailyNote.fileExtension");
 const foamLinkReferenceDefinitions = foamConfig.get(
   "edit.linkReferenceDefinitions"
 );
+const foamNavigateOnSelect = foamConfig.get("snippets.navigateOnSelect");
 
 const generateDayOfWeekSnippets = (): DateSnippet[] => {
   const getTarget = (day: number) => {
@@ -60,11 +61,13 @@ const createCompletionItem = ({ snippet, date, detail }: DateSnippet) => {
   );
   completionItem.insertText = getDailyNoteLink(date);
   completionItem.detail = `${completionItem.insertText} - ${detail}`;
-  completionItem.command = {
-    command: "foam-vscode.open-dated-note",
-    title: "Open a note for the given date",
-    arguments: [date]
-  };
+  if (foamNavigateOnSelect) {
+    completionItem.command = {
+      command: "foam-vscode.open-dated-note",
+      title: "Open a note for the given date",
+      arguments: [date]
+    };
+  }
   return completionItem;
 };
 

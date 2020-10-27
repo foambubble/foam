@@ -84,6 +84,11 @@
           ],
           "default": null,
           "description": "The directory into which daily notes should be created. Defaults to the workspace root."
+        },
+        "foam.snippets.navigateOnSelect": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether or not to navigate to the target daily note when a daily note snippet is selected."
         }
       }
     },

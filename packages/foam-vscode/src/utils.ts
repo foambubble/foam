@@ -6,6 +6,7 @@ import {
   Position,
   TextEditor
 } from "vscode";
+import * as fs from "fs";
 
 interface Point {
   line: number;
@@ -103,7 +104,6 @@ export function removeBrackets(s: string): string {
   // loop through words
   const modifiedWords = stringSplitBySpace.map(currentWord => {
     if (currentWord.includes("[[")) {
-
       // all of these transformations will turn this "[[you-are-awesome]]"
       // to this "you are awesome"
       let word = currentWord.replace(/(\[\[)/g, "");
@@ -131,8 +131,19 @@ export function removeBrackets(s: string): string {
  */
 export function toTitleCase(word: string): string {
   return word
-        .split(" ")
-        .map(word => word[0].toUpperCase() + word.substring(1))
-        .join(" ");
+    .split(" ")
+    .map(word => word[0].toUpperCase() + word.substring(1))
+    .join(" ");
 }
 
+/**
+ * Verify the given path exists in the file system
+ *
+ * @param path The path to verify
+ */
+export function pathExists(path: string) {
+  return fs.promises
+    .access(path, fs.constants.F_OK)
+    .then(() => true)
+    .catch(() => false);
+}

@@ -13,7 +13,7 @@
     "test": "tsdx test",
     "lint": "tsdx lint src test",
     "watch": "tsdx watch",
-    "prepare": "tsdx build"
+    "prepare": "tsdx build --tsconfig ./tsconfig.build.json"
   },
   "devDependencies": {
     "@types/github-slugger": "^1.3.0",

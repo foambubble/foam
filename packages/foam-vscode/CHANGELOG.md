@@ -4,6 +4,29 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.4.0] - 2020-10-28
+
+New features:
+
+- Added `Foam: Show Graph` command
+- Added date snippets (/+1d, ...) to create wikilinks to dates in daily note format
+- Added `Foam: Copy to Clipboard without brackets` command
+
+Improvements:
+
+- Added new option to not generate wikilink definitions `foam.edit.linkReferenceDefinitions`: `off`
+
+Bug Fixes:
+
+- Daily note could be created before the daily note directory (#232)
+- Fix issue with janitor crashing when file is only frontmatter (#222)
+- Fix link references spacing when there is no trailing newline (#236)
+
+New experimental features:
+
+- Introduced [foam local plugins](https://foambubble.github.io/foam/foam-local-plugins)
+
+
 ## [0.3.1] - 2020-07-26
 
 Fixes and improvements:
@@ -14,10 +37,10 @@ Fixes and improvements:
 
 New features:
 
-- [Daily Notes](https://foambubble.github.io/foam/daily-notes) 
+- [Daily Notes](https://foambubble.github.io/foam/daily-notes)
 - [Janitor](https://foambubble.github.io/foam/workspace-janitor) for updating headings and link references across your workspace
 
-Fixes and improvements: 
+Fixes and improvements:
 
 - [Configuration setting for generating link reference definitions with file extension](https://foambubble.github.io/foam/link-reference-definitions#configuration) to support standard markdown tools, such as GitHub web UI
 - [Improvements to how new notes are indexed](https://github.com/foambubble/foam/pull/156)

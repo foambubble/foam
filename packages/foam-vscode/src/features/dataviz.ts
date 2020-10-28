@@ -41,37 +41,41 @@ function updateGraph(panel: vscode.WebviewPanel, foam: Foam) {
 
 function generateGraphData(foam: Foam) {
   const graph = {
-    nodes: [],
-    edges: []
+    nodes: {},
+    edges: new Set(),
   };
 
   foam.notes.getNotes().forEach(n => {
-    graph.nodes.push({
+    const links = foam.notes.getForwardLinks(n.id)
+    graph.nodes[n.id] = {
       id: n.id,
       type: "note",
       uri: n.source.uri,
       title: n.title,
-      nOutLinks: foam.notes.getForwardLinks(n.id).length,
-      nInLinks: foam.notes.getBacklinks(n.id).length
-    });
-    foam.notes.getForwardLinks(n.id).forEach(link => {
-      if (isNone(foam.notes.getNote(link.to))) {
-        graph.nodes.push({
+      nOutLinks: links.length,
+      nInLinks: graph.nodes[n.id]?.nInLinks ?? 0,
+    };
+    links.forEach(link => {
+      if (!(link.to in graph.nodes)) {
+        graph.nodes[link.to] = {
           id: link.to,
           type: "nonExistingNote",
           uri: "orphan",
           title: link.link.slug,
-          nInLinks: 0,
-          nOutLinks: 0
-        });
+          nOutLinks: graph.nodes[n.id]?.nOutLinks ?? 0,
+          nInLinks: graph.nodes[n.id]?.nInLinks + 1 ?? 0
+        };
       }
-      graph.edges.push({
+      graph.edges.add({
         source: link.from,
         target: link.to
       });
     });
   });
-  return graph
+  return {
+    nodes: Array.from(Object.values(graph.nodes)),
+    edges: Array.from(graph.edges),
+  }
 }
 
 async function createGraphPanel(foam: Foam, context: vscode.ExtensionContext) {

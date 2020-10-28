@@ -55,8 +55,8 @@ function generateGraphData(foam: Foam) {
           type: "nonExistingNote",
           uri: "orphan",
           title: link.link.slug,
-          nOutLinks: graph.nodes[n.id]?.nOutLinks ?? 0,
-          nInLinks: graph.nodes[n.id]?.nInLinks + 1 ?? 0
+          nOutLinks: graph.nodes[link.to]?.nOutLinks ?? 0,
+          nInLinks: graph.nodes[link.to]?.nInLinks + 1 ?? 0
         };
       }
       graph.edges.add({

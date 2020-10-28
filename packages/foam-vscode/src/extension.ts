@@ -23,6 +23,7 @@ import {
 } from "foam-core";
 
 import { features } from "./features";
+import { getIgnoredFilesSetting } from "./settings";
 
 let workspaceWatcher: FileSystemWatcher | null = null;
 
@@ -61,8 +62,51 @@ async function registerFile(foam: Foam, localUri: Uri) {
   return note;
 }
 
+/**
+ * Tests if a file is not ignored
+ * @param root the workspace root folder
+ * @param ignoredPaths the list of ignored paths
+ * @param file the file to be tested
+ */
+function isNotIgnored(root: string, ignoredPaths: string[], file: string) {
+  if (!ignoredPaths) {
+    return true;
+  }
+  const path = file.substring(root.length); // maybe discard the /
+  let notIgnored = true;
+  for (const ignored of ignoredPaths) {
+    notIgnored = notIgnored && !path.startsWith(ignored);
+    if (!notIgnored) {
+      // short circuit the loop
+      return false;
+    }
+  }
+  return true;
+}
+
+function filterIgnoredFiles(files: Uri[]) : Uri[] {
+  if (!workspace.workspaceFolders) {
+    return files;
+  }
+
+  const root = workspace.workspaceFolders[0].uri.path;
+  if (!root) {
+    return files;
+  }
+
+  const excludedPaths = getIgnoredFilesSetting();
+  if (!excludedPaths) {
+    return files;
+  }
+
+  const res = files.filter(v => {
+    return isNotIgnored(root, excludedPaths, v.path);
+  });
+  return res;
+}
+
 const bootstrap = async () => {
-  const files = await workspace.findFiles("**/*");
+  const files = await workspace.findFiles("**/*").then(filterIgnoredFiles);
   const config: FoamConfig = getConfig();
   const foam = await foamBootstrap(config);
   const addFile = (uri: Uri) => registerFile(foam, uri);

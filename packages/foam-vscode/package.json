@@ -48,6 +48,13 @@
     "configuration": {
       "title": "Foam",
       "properties": {
+        "foam.files.ignore": {
+          "type": [
+            "array"
+          ],
+          "default": [],
+          "description": "List of files/folders Foam should ignore. Paths are relative to the workspace root."
+        },
         "foam.edit.linkReferenceDefinitions": {
           "type": "string",
           "default": "withoutExtensions",

@@ -21,7 +21,7 @@ const style = {
   backgroundColor: "#202020",
   node: {
     note: "#277da1",
-    nonExistingNote: "#577590",
+    nonExistingNote: "#545454",
     attachment: "#43aa8b",
     externalResource: "#f8961e",
     tag: "#f3722c",
@@ -156,7 +156,7 @@ function getNodeState(node, model) {
 }
 
 function getLinkState(link, model) {
-  return model.focusLinks.size === 0
+  return model.focusNodes.size === 0
     ? "regular"
     : model.focusLinks.has(link)
       ? "highlighted"

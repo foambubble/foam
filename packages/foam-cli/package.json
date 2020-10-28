@@ -33,7 +33,7 @@
     "typescript": "^3.3"
   },
   "peerDependencies": {
-    "foam-core": "^0.2.0"
+    "foam-core": "*"
   },
   "engines": {
     "node": ">=8.0.0"

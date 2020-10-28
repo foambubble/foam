@@ -40,7 +40,7 @@ const titlePlugin: ParserPlugin = {
   },
   onDidVisitTree: (tree, note) => {
     if (note.title == null) {
-      note.title = path.parse(note.source.uri).name
+      note.title = path.parse(note.source.uri).name;
     }
   },
 };

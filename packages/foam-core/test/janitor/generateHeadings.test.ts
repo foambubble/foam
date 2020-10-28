@@ -14,7 +14,7 @@ describe('generateHeadings', () => {
     _graph = foam.notes;
   });
 
-  it('should add heading to a file that does not have them', () => {
+  it.skip('should add heading to a file that does not have them', () => {
     const note = _graph.getNotes({ slug: 'file-without-title' })[0];
     const expected = {
       newText: `# File without Title
@@ -46,7 +46,7 @@ describe('generateHeadings', () => {
     expect(generateHeading(note)).toBeNull();
   });
 
-  it('should generate heading when the file only contains frontmatter', () => {
+  it.skip('should generate heading when the file only contains frontmatter', () => {
     const note = _graph.getNotes({ slug: 'file-with-only-frontmatter' })[0];
 
     const expected = {

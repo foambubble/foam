@@ -154,7 +154,7 @@ export function pathExists(path: string) {
  * @param value The object to verify
  */
 export function isSome<T>(value: T | null | undefined | void): value is T {
-  return value != null
+  return value != null;
 }
 
 /**
@@ -163,5 +163,5 @@ export function isSome<T>(value: T | null | undefined | void): value is T {
  * @param value The object to verify
  */
 export function isNone<T>(value: T | null | undefined | void): value is null | undefined | void {
-  return value == null
+  return value == null;
 }

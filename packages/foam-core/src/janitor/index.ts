@@ -86,6 +86,12 @@ export const generateHeading = (note: Note): TextEdit | null => {
     return null;
   }
 
+  // TODO now the note.title defaults to file name at parsing time, so this check
+  // doesn't work anymore. Decide:
+  // - whether do we actually want to continue generate the headings
+  // - whether it should be under a config option
+  // A possible approach would be around having a `sections` field in the note, and inspect
+  // it to see if there is an h1 title. Alternatively parse directly the markdown in this function.
   if (note.title) {
     return null;
   }

@@ -147,3 +147,21 @@ export function pathExists(path: string) {
     .then(() => true)
     .catch(() => false);
 }
+
+/**
+ * Verify the given object is defined
+ *
+ * @param value The object to verify
+ */
+export function isSome<T>(value: T | null | undefined | void): value is T {
+  return value != null;
+}
+
+/**
+ * Verify the given object is not defined
+ *
+ * @param value The object to verify
+ */
+export function isNone<T>(value: T | null | undefined | void): value is null | undefined | void {
+  return value == null;
+}

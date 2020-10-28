@@ -1,8 +1,7 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import { FoamFeature } from "../types";
-import { isNone } from "../utils";
-import { Foam, Note } from "foam-core";
+import { Foam } from "foam-core";
 import { TextDecoder } from "util";
 
 const feature: FoamFeature = {
@@ -10,12 +9,6 @@ const feature: FoamFeature = {
     vscode.commands.registerCommand("foam-vscode.show-graph", async () => {
       const foam = await foamPromise;
       const panel = await createGraphPanel(foam, context)
-
-      const graph = generateGraphData(foam)
-      panel.webview.postMessage({
-        type: "refresh",
-        payload: graph
-      });
 
       const onNoteAdded = _ => {
         updateGraph(panel, foam)

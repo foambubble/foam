@@ -90,9 +90,19 @@
           "default": null,
           "description": "The directory into which daily notes should be created. Defaults to the workspace root."
         },
-        "foam.snippets.navigateOnSelect": {
-          "type": "boolean",
-          "default": false,
+        "foam.dateSnippets.afterCompletion": {
+          "type": "string",
+          "default": "createNote",
+          "enum": [
+            "noop",
+            "createNote",
+            "navigateToNote"
+          ],
+          "enumDescriptions": [
+            "Nothing happens after selecting the completion item",
+            "The note is created following your daily note settings if it does not exist, but no navigation takes place",
+            "Navigates to the note, creating it following your daily note settings if it does not exist"
+          ],
           "description": "Whether or not to navigate to the target daily note when a daily note snippet is selected."
         }
       }

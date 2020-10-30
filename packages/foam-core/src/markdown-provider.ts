@@ -8,19 +8,24 @@ import { Parent, Point } from 'unist';
 import * as path from 'path';
 import { NoteGraphAPI } from './note-graph';
 import { NoteLinkDefinition, Note, NoteParser } from './types';
-import { dropExtension, uriToSlug, extractHashtags, extractTagsFromProp } from './utils';
+import {
+  dropExtension,
+  uriToSlug,
+  extractHashtags,
+  extractTagsFromProp,
+} from './utils';
 import { ID } from './types';
 import { ParserPlugin } from './plugins';
 
 const tagsPlugin: ParserPlugin = {
   onWillVisitTree: (tree, note) => {
-    note.tags = extractHashtags(note.source.text)
+    note.tags = extractHashtags(note.source.text);
   },
   onDidFindProperties: (props, note) => {
-    const yamlTags = extractTagsFromProp(props.tags)
-    yamlTags.forEach(tag => note.tags.add(tag))
+    const yamlTags = extractTagsFromProp(props.tags);
+    yamlTags.forEach(tag => note.tags.add(tag));
   },
-}
+};
 
 const titlePlugin: ParserPlugin = {
   visit: (node, note) => {

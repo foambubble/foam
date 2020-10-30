@@ -59,4 +59,3 @@ export function dropExtension(path: string): string {
 export const getHeadingFromFileName = (filename: string): string => {
   return titleCase(filename.replace(/[^\w\s]/gi, ' '));
 };
-

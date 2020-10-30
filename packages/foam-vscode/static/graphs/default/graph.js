@@ -9,10 +9,10 @@ try {
         const data = message.payload;
         createWebGLGraph(data, vscode);
         break;
-      }
-    });
+    }
+  });
 } catch {
-  console.log("VSCode not detected")
+  console.log("VSCode not detected");
 }
 
 const CONTAINER_ID = "graph";
@@ -29,19 +29,29 @@ const style = {
   },
   link: {
     highlighted: "#f9c74f",
-    regular: "#277da1",
-  },
+    regular: "#277da1"
+  }
 };
 
-const sizeScale = d3.scaleLinear()
-  .domain([0, 30]).range([4, 10])
+const sizeScale = d3
+  .scaleLinear()
+  .domain([0, 30])
+  .range([2, 6])
   .clamp(true);
 
-function createWebGLGraph(data, channel) {
-  data = convertData(data)
-  let model = updateModel(null, null)
+const labelAlpha = d3
+  .scaleLinear()
+  .domain([1.7, 4])
+  .range([0, 1])
+  .clamp(true);
 
-  const elem = document.getElementById(CONTAINER_ID)
+const globalFontSize = 12;
+
+function createWebGLGraph(data, channel) {
+  data = convertData(data);
+  let model = updateModel(null, null);
+
+  const elem = document.getElementById(CONTAINER_ID);
   const myGraph = ForceGraph();
   myGraph(elem)
     .graphData(data)
@@ -49,14 +59,17 @@ function createWebGLGraph(data, channel) {
     .linkHoverPrecision(8)
     .d3Force("x", d3.forceX())
     .d3Force("y", d3.forceY())
+    .d3Force("collide", d3.forceCollide(myGraph.nodeRelSize()))
     .linkDirectionalParticles(1)
-    .linkDirectionalParticleWidth(
-      link => getLinkState(link, model) === "highlighted" ? 2 : 0
+    .linkDirectionalParticleWidth(link =>
+      getLinkState(link, model) === "highlighted" ? 1 : 0
     )
     .nodeVal(node => sizeScale(node.nInLinks + node.nOutLinks))
-    .nodeCanvasObject((node, ctx) => {
+    .nodeLabel("")
+    .nodeCanvasObject((node, ctx, globalScale) => {
       const size = sizeScale(node.nInLinks + node.nOutLinks);
-      const { fill, border } = getNodeColor(node, model)
+      const fontSize = globalFontSize / globalScale;
+      const { fill, border } = getNodeColor(node, model);
       ctx.beginPath();
       ctx.arc(node.x, node.y, size + 0.5, 0, 2 * Math.PI, false);
       ctx.fillStyle = border;
@@ -67,22 +80,30 @@ function createWebGLGraph(data, channel) {
       ctx.fillStyle = fill;
       ctx.fill();
       ctx.closePath();
+
+      ctx.font = `${fontSize}px Sans-Serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "top";
+      let textColor = d3.rgb(fill);
+      textColor.opacity = labelAlpha(globalScale);
+      ctx.fillStyle = textColor;
+      ctx.fillText(node.name, node.x, node.y + size + 1);
     })
     .linkColor(link => getLinkColor(link, model))
     .onNodeHover(node => {
-      model = updateModel(model.selectedNode, node)
+      model = updateModel(model.selectedNode, node);
     })
     .onNodeClick((node, event) => {
       if (event.getModifierState("Control") || event.getModifierState("Meta")) {
         channel.postMessage({
           type: "selected",
-          payload: node.id,
+          payload: node.id
         });
       }
-      model = updateModel(node, model.hoverNode)
+      model = updateModel(node, model.hoverNode);
     })
     .onBackgroundClick(e => {
-      model = updateModel(null, model.hoverNode)
+      model = updateModel(null, model.hoverNode);
     });
 }
 
@@ -92,7 +113,7 @@ function convertData(raw) {
       ...n,
       name: n.title,
       neighbors: [],
-      links: [],
+      links: []
     })),
     links: raw.edges
   };
@@ -114,34 +135,34 @@ function convertData(raw) {
     a.links.push(link);
     b.links.push(link);
   });
-  return data
+  return data;
 }
 
 function getNodeColor(node, model) {
   const typeFill = style.node[node.type || "unknown"];
   switch (getNodeState(node, model)) {
     case "regular":
-      return { fill: typeFill, border: typeFill}
+      return { fill: typeFill, border: typeFill };
     case "lessened":
       const darker = d3.hsl(typeFill).darker(3);
-      return { fill: darker, border: darker}
+      return { fill: darker, border: darker };
     case "highlighted":
-      return { fill: typeFill, border: "#f9c74f"}
+      return { fill: typeFill, border: "#f9c74f" };
     default:
-      throw new Error("Unknown type for node", node)
+      throw new Error("Unknown type for node", node);
   }
 }
 
 function getLinkColor(link, model) {
-  switch(getLinkState(link, model)) {
-  case "regular":
-    return style.link.regular
-  case "highlighted":
-    return style.link.highlighted
-  case "lessened":
-    return d3.hsl(style.link.regular).darker(3);
-  default:
-    throw new Error("Unknown type for link", link)
+  switch (getLinkState(link, model)) {
+    case "regular":
+      return style.link.regular;
+    case "highlighted":
+      return style.link.highlighted;
+    case "lessened":
+      return d3.hsl(style.link.regular).darker(3);
+    default:
+      throw new Error("Unknown type for link", link);
   }
 }
 
@@ -149,23 +170,23 @@ function getNodeState(node, model) {
   return model.selectedNode?.id === node.id || model.hoverNode?.id === node.id
     ? "highlighted"
     : model.focusNodes.size === 0
-      ? "regular"
-      : model.focusNodes.has(node)
-        ? "regular"
-        : "lessened";
+    ? "regular"
+    : model.focusNodes.has(node)
+    ? "regular"
+    : "lessened";
 }
 
 function getLinkState(link, model) {
   return model.focusNodes.size === 0
     ? "regular"
     : model.focusLinks.has(link)
-      ? "highlighted"
-      : "lessened";
+    ? "highlighted"
+    : "lessened";
 }
 
 function updateModel(selectedNode, hoverNode) {
-  const focusNodes = new Set()
-  const focusLinks = new Set()
+  const focusNodes = new Set();
+  const focusLinks = new Set();
   if (hoverNode) {
     focusNodes.add(hoverNode);
     hoverNode.neighbors.forEach(neighbor => focusNodes.add(neighbor));
@@ -180,10 +201,9 @@ function updateModel(selectedNode, hoverNode) {
     focusNodes: focusNodes,
     focusLinks: focusLinks,
     selectedNode: selectedNode,
-    hoverNode: hoverNode,
-  }
+    hoverNode: hoverNode
+  };
 }
-
 
 // For testing
 window.onload = () => {

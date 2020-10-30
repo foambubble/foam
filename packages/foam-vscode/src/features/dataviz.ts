@@ -1,38 +1,31 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import { FoamFeature } from "../types";
-import { isNone } from "../utils";
-import { Foam, Note } from "foam-core";
+import { Foam } from "foam-core";
 import { TextDecoder } from "util";
 
 const feature: FoamFeature = {
   activate: (context: vscode.ExtensionContext, foamPromise: Promise<Foam>) => {
     vscode.commands.registerCommand("foam-vscode.show-graph", async () => {
       const foam = await foamPromise;
-      const panel = await createGraphPanel(foam, context)
-
-      const graph = generateGraphData(foam)
-      panel.webview.postMessage({
-        type: "refresh",
-        payload: graph
-      });
+      const panel = await createGraphPanel(foam, context);
 
       const onNoteAdded = _ => {
-        updateGraph(panel, foam)
-      }
+        updateGraph(panel, foam);
+      };
 
-      foam.notes.unstable_onNoteAdded(onNoteAdded)
+      foam.notes.unstable_onNoteAdded(onNoteAdded);
       panel.onDidDispose(() => {
-        foam.notes.unstable_removeEventListener(onNoteAdded)
+        foam.notes.unstable_removeEventListener(onNoteAdded);
       });
 
-      updateGraph(panel, foam)
+      updateGraph(panel, foam);
     });
   }
 };
 
 function updateGraph(panel: vscode.WebviewPanel, foam: Foam) {
-  const graph = generateGraphData(foam)
+  const graph = generateGraphData(foam);
   panel.webview.postMessage({
     type: "refresh",
     payload: graph
@@ -42,18 +35,18 @@ function updateGraph(panel: vscode.WebviewPanel, foam: Foam) {
 function generateGraphData(foam: Foam) {
   const graph = {
     nodes: {},
-    edges: new Set(),
+    edges: new Set()
   };
 
   foam.notes.getNotes().forEach(n => {
-    const links = foam.notes.getForwardLinks(n.id)
+    const links = foam.notes.getForwardLinks(n.id);
     graph.nodes[n.id] = {
       id: n.id,
       type: "note",
       uri: n.source.uri,
       title: n.title,
       nOutLinks: links.length,
-      nInLinks: graph.nodes[n.id]?.nInLinks ?? 0,
+      nInLinks: graph.nodes[n.id]?.nInLinks ?? 0
     };
     links.forEach(link => {
       if (!(link.to in graph.nodes)) {
@@ -62,8 +55,8 @@ function generateGraphData(foam: Foam) {
           type: "nonExistingNote",
           uri: "orphan",
           title: link.link.slug,
-          nOutLinks: graph.nodes[n.id]?.nOutLinks ?? 0,
-          nInLinks: graph.nodes[n.id]?.nInLinks + 1 ?? 0
+          nOutLinks: graph.nodes[link.to]?.nOutLinks ?? 0,
+          nInLinks: graph.nodes[link.to]?.nInLinks + 1 ?? 0
         };
       }
       graph.edges.add({
@@ -74,8 +67,8 @@ function generateGraphData(foam: Foam) {
   });
   return {
     nodes: Array.from(Object.values(graph.nodes)),
-    edges: Array.from(graph.edges),
-  }
+    edges: Array.from(graph.edges)
+  };
 }
 
 async function createGraphPanel(foam: Foam, context: vscode.ExtensionContext) {
@@ -89,17 +82,16 @@ async function createGraphPanel(foam: Foam, context: vscode.ExtensionContext) {
     }
   );
 
-
   panel.webview.html = await getWebviewContent(context, panel);
 
   panel.webview.onDidReceiveMessage(
-    (message) => {
+    message => {
       if (message.type === "selected") {
-        const noteId = message.payload
-        const noteUri = foam.notes.getNote(noteId).source.uri
+        const noteId = message.payload;
+        const noteUri = foam.notes.getNote(noteId).source.uri;
         const openPath = vscode.Uri.file(noteUri);
 
-        vscode.workspace.openTextDocument(openPath).then((doc) => {
+        vscode.workspace.openTextDocument(openPath).then(doc => {
           vscode.window.showTextDocument(doc, vscode.ViewColumn.One);
         });
       }
@@ -108,7 +100,7 @@ async function createGraphPanel(foam: Foam, context: vscode.ExtensionContext) {
     context.subscriptions
   );
 
-  return panel
+  return panel;
 }
 
 async function getWebviewContent(
@@ -127,8 +119,6 @@ async function getWebviewContent(
         vscode.Uri.file(path.join(context.extensionPath, "static", fileName))
       )
       .toString();
-  const codiconsUri = panel.webview.asWebviewUri(vscode.Uri.joinPath(context.extensionUri, 'node_modules', 'vscode-codicons', 'dist', 'codicon.css'));
-  const codiconsFontUri = panel.webview.asWebviewUri(vscode.Uri.joinPath(context.extensionUri, 'node_modules', 'vscode-codicons', 'dist', 'codicon.ttf'));
 
   const graphDirectory = path.join("graphs", "default");
   const textWithVariables = text
@@ -139,22 +129,19 @@ async function getWebviewContent(
     .replace(
       "${graphStylesPath}",
       "{{" + path.join(graphDirectory, "graph.css") + "}}"
-    )
-    .replace(
-      "${styleUri}",
-      codiconsUri.toString()
-    )
-    .replace(
-      "${codiconsUri}",
-      codiconsFontUri.toString()
     );
 
   // Basic templating. Will replace the script paths with the
   // appropriate webview URI.
-  const filled = textWithVariables.replace(/<script data-replace src="([^"]+")/g, (match) => {
-    const fileName = match.slice("<script data-replace src=\"".length, -1).trim();
-    return "<script src=\"" + webviewUri(fileName) + "\"";
-  });
+  const filled = textWithVariables.replace(
+    /<script data-replace src="([^"]+")/g,
+    match => {
+      const fileName = match
+        .slice('<script data-replace src="'.length, -1)
+        .trim();
+      return '<script src="' + webviewUri(fileName) + '"';
+    }
+  );
 
   return filled;
 }

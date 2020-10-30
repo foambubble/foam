@@ -119,24 +119,6 @@ async function getWebviewContent(
         vscode.Uri.file(path.join(context.extensionPath, "static", fileName))
       )
       .toString();
-  const codiconsUri = panel.webview.asWebviewUri(
-    vscode.Uri.joinPath(
-      context.extensionUri,
-      "node_modules",
-      "vscode-codicons",
-      "dist",
-      "codicon.css"
-    )
-  );
-  const codiconsFontUri = panel.webview.asWebviewUri(
-    vscode.Uri.joinPath(
-      context.extensionUri,
-      "node_modules",
-      "vscode-codicons",
-      "dist",
-      "codicon.ttf"
-    )
-  );
 
   const graphDirectory = path.join("graphs", "default");
   const textWithVariables = text
@@ -147,9 +129,7 @@ async function getWebviewContent(
     .replace(
       "${graphStylesPath}",
       "{{" + path.join(graphDirectory, "graph.css") + "}}"
-    )
-    .replace("${styleUri}", codiconsUri.toString())
-    .replace("${codiconsUri}", codiconsFontUri.toString());
+    );
 
   // Basic templating. Will replace the script paths with the
   // appropriate webview URI.

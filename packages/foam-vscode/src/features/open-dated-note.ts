@@ -8,7 +8,12 @@ import {
   CompletionItemKind,
   CompletionList
 } from "vscode";
-import { getDailyNoteFileName, openDailyNoteFor } from "../dated-notes";
+import {
+  createDailyNoteIfNotExists,
+  getDailyNoteFileName,
+  openDailyNoteFor,
+  getDailyNotePath
+} from "../dated-notes";
 import { LinkReferenceDefinitionsSetting } from "../settings";
 import { FoamFeature } from "../types";
 
@@ -27,13 +32,15 @@ const daysOfWeek = [
   { day: "friday", index: 5 },
   { day: "saturday", index: 6 }
 ];
-
+type AfterCompletionOptions = "noop" | "createNote" | "navigateToNote";
 const foamConfig = workspace.getConfiguration("foam");
 const foamExtension = foamConfig.get("openDailyNote.fileExtension");
 const foamLinkReferenceDefinitions = foamConfig.get(
   "edit.linkReferenceDefinitions"
 );
-const foamNavigateOnSelect = foamConfig.get("snippets.navigateOnSelect");
+const foamNavigateOnSelect: AfterCompletionOptions = foamConfig.get(
+  "dateSnippets.afterCompletion"
+);
 
 const generateDayOfWeekSnippets = (): DateSnippet[] => {
   const getTarget = (day: number) => {
@@ -61,7 +68,7 @@ const createCompletionItem = ({ snippet, date, detail }: DateSnippet) => {
   );
   completionItem.insertText = getDailyNoteLink(date);
   completionItem.detail = `${completionItem.insertText} - ${detail}`;
-  if (foamNavigateOnSelect) {
+  if (foamNavigateOnSelect !== "noop") {
     completionItem.command = {
       command: "foam-vscode.open-dated-note",
       title: "Open a note for the given date",
@@ -188,11 +195,24 @@ const computedCompletions: CompletionItemProvider = {
   }
 };
 
+const datedNoteCommand = (date: Date) => {
+  if (foamNavigateOnSelect === "navigateToNote") {
+    return openDailyNoteFor(date);
+  }
+  if (foamNavigateOnSelect === "createNote") {
+    return createDailyNoteIfNotExists(
+      foamConfig,
+      getDailyNotePath(foamConfig, date),
+      date
+    );
+  }
+};
+
 const feature: FoamFeature = {
   activate: (context: ExtensionContext) => {
     context.subscriptions.push(
       commands.registerCommand("foam-vscode.open-dated-note", date =>
-        openDailyNoteFor(date)
+        datedNoteCommand(date)
       )
     );
     languages.registerCompletionItemProvider("markdown", completions, "/");

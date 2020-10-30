@@ -91,4 +91,9 @@ async function focusNote(notePath: string, isNewNote: boolean) {
   }
 }
 
-export { openDailyNoteFor, getDailyNoteFileName };
+export {
+  openDailyNoteFor,
+  getDailyNoteFileName,
+  createDailyNoteIfNotExists,
+  getDailyNotePath
+};

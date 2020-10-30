@@ -2,7 +2,8 @@ import path from 'path';
 import crypto from 'crypto';
 import { titleCase } from 'title-case';
 import GithubSlugger from 'github-slugger';
-import { URI, ID } from './types';
+import { URI, ID } from '../types';
+export { extractHashtags, extractTagsFromProp } from './hashtags';
 
 export function isNotNull<T>(value: T | null): value is T {
   return value != null;
@@ -58,3 +59,4 @@ export function dropExtension(path: string): string {
 export const getHeadingFromFileName = (filename: string): string => {
   return titleCase(filename.replace(/[^\w\s]/gi, ' '));
 };
+

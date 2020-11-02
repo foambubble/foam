@@ -52,7 +52,10 @@
           "type": [
             "array"
           ],
-          "default": [],
+          "default": [
+            ".vscode/*",
+            "_layouts/*"
+          ],
           "description": "List of files/folders Foam should ignore. Paths are relative to the workspace root."
         },
         "foam.edit.linkReferenceDefinitions": {

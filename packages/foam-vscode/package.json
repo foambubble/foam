@@ -15,6 +15,7 @@
   ],
   "activationEvents": [
     "workspaceContains:.vscode/foam.json",
+		"onView:foam-vscode.tags-explorer",
     "onCommand:foam-vscode.update-wikilinks",
     "onCommand:foam-vscode.open-daily-note",
     "onCommand:foam-vscode.janitor",
@@ -23,6 +24,16 @@
   ],
   "main": "./out/extension.js",
   "contributes": {
+    "views": {
+			"explorer": [
+				{
+					"id": "foam-vscode.tags-explorer",
+					"name": "Tag Explorer",
+					"icon": "media/dep.svg",
+					"contextualTitle": "Tags Explorer"
+				}
+      ]
+    },
     "commands": [
       {
         "command": "foam-vscode.show-graph",

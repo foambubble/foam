@@ -1,4 +1,9 @@
-import { uriToSlug, hashURI, computeRelativeURI, extractHashtags } from '../src/utils';
+import {
+  uriToSlug,
+  hashURI,
+  computeRelativeURI,
+  extractHashtags,
+} from '../src/utils';
 
 describe('URI utils', () => {
   it('supports various cases', () => {
@@ -31,15 +36,31 @@ describe('URI utils', () => {
 
 describe('hashtag extraction', () => {
   it('works with simple strings', () => {
-    expect(extractHashtags('hello #world on #this planet'))
-      .toEqual(new Set(['world', 'this']))
+    expect(extractHashtags('hello #world on #this planet')).toEqual(
+      new Set(['world', 'this'])
+    );
   });
   it('works with tags at beginning or end of text', () => {
-    expect(extractHashtags('#hello world on this #planet'))
-      .toEqual(new Set(['hello', 'planet']))
+    expect(extractHashtags('#hello world on this #planet')).toEqual(
+      new Set(['hello', 'planet'])
+    );
   });
   it('supports _ and -', () => {
-    expect(extractHashtags('#hello-world on #this_planet'))
-      .toEqual(new Set(['hello-world', 'this_planet']))
+    expect(extractHashtags('#hello-world on #this_planet')).toEqual(
+      new Set(['hello-world', 'this_planet'])
+    );
   });
-})
+  it('ignores tags that only have numbers in text', () => {
+    expect(
+      extractHashtags('this #123 tag should be ignore, but not #123four')
+    ).toEqual(new Set(['123four']));
+  });
+
+  it('ignores hashes in urls', () => {
+    expect(
+      extractHashtags(
+        'https://site.com/#section https://site.com/home#section2'
+      )
+    ).toEqual(new Set());
+  });
+});

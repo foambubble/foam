@@ -40,7 +40,7 @@ Successfully generated link references and heading!
     const { args, flags } = this.parse(Migrate);
 
     const { workspacePath = './' } = args;
-    const config = createConfigFromFolders(workspacePath);
+    const config = createConfigFromFolders([workspacePath]);
 
     if (isValidDirectory(workspacePath)) {
       let graph = (await bootstrap(config)).notes;

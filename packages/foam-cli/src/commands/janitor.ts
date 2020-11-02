@@ -38,7 +38,7 @@ export default class Janitor extends Command {
     const { workspacePath = './' } = args;
 
     if (isValidDirectory(workspacePath)) {
-      const graph = (await bootstrap(createConfigFromFolders(workspacePath)))
+      const graph = (await bootstrap(createConfigFromFolders([workspacePath])))
         .notes;
 
       const notes = graph.getNotes().filter(Boolean); // removes undefined notes

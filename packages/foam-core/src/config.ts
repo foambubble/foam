@@ -23,8 +23,11 @@ export const createConfigFromObject = (
 };
 
 export const createConfigFromFolders = (
-  workspaceFolders: string[]
+  workspaceFolders: string[] | string
 ): FoamConfig => {
+  if (!Array.isArray(workspaceFolders)) {
+    workspaceFolders = [workspaceFolders];
+  }
   const workspaceConfig: any = workspaceFolders.reduce(
     (acc, f) => merge(acc, parseConfig(`${f}/config.json`)),
     {}

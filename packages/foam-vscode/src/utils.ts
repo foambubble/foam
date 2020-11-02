@@ -6,6 +6,7 @@ import {
   Position,
   TextEditor
 } from "vscode";
+import * as fs from "fs";
 
 interface Point {
   line: number;
@@ -103,7 +104,6 @@ export function removeBrackets(s: string): string {
   // loop through words
   const modifiedWords = stringSplitBySpace.map(currentWord => {
     if (currentWord.includes("[[")) {
-
       // all of these transformations will turn this "[[you-are-awesome]]"
       // to this "you are awesome"
       let word = currentWord.replace(/(\[\[)/g, "");
@@ -131,8 +131,37 @@ export function removeBrackets(s: string): string {
  */
 export function toTitleCase(word: string): string {
   return word
-        .split(" ")
-        .map(word => word[0].toUpperCase() + word.substring(1))
-        .join(" ");
+    .split(" ")
+    .map(word => word[0].toUpperCase() + word.substring(1))
+    .join(" ");
 }
 
+/**
+ * Verify the given path exists in the file system
+ *
+ * @param path The path to verify
+ */
+export function pathExists(path: string) {
+  return fs.promises
+    .access(path, fs.constants.F_OK)
+    .then(() => true)
+    .catch(() => false);
+}
+
+/**
+ * Verify the given object is defined
+ *
+ * @param value The object to verify
+ */
+export function isSome<T>(value: T | null | undefined | void): value is T {
+  return value != null;
+}
+
+/**
+ * Verify the given object is not defined
+ *
+ * @param value The object to verify
+ */
+export function isNone<T>(value: T | null | undefined | void): value is null | undefined | void {
+  return value == null;
+}

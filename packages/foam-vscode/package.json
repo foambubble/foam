@@ -4,7 +4,7 @@
   "description": "Generate markdown reference lists from wikilinks in a workspace",
   "author": "Jani Eväkallio",
   "repository": "https://github.com/foambubble/foam",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "license": "MIT",
   "publisher": "foam",
   "engines": {
@@ -18,11 +18,16 @@
     "onCommand:foam-vscode.update-wikilinks",
     "onCommand:foam-vscode.open-daily-note",
     "onCommand:foam-vscode.janitor",
-    "onCommand:foam-vscode.copy-without-brackets"
+    "onCommand:foam-vscode.copy-without-brackets",
+    "onCommand:foam-vscode.show-graph"
   ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
+      {
+        "command": "foam-vscode.show-graph",
+        "title": "Foam: Show graph"
+      },
       {
         "command": "foam-vscode.update-wikilinks",
         "title": "Foam: Update Markdown Reference List"
@@ -84,6 +89,21 @@
           ],
           "default": null,
           "description": "The directory into which daily notes should be created. Defaults to the workspace root."
+        },
+        "foam.dateSnippets.afterCompletion": {
+          "type": "string",
+          "default": "createNote",
+          "enum": [
+            "noop",
+            "createNote",
+            "navigateToNote"
+          ],
+          "enumDescriptions": [
+            "Nothing happens after selecting the completion item",
+            "The note is created following your daily note settings if it does not exist, but no navigation takes place",
+            "Navigates to the note, creating it following your daily note settings if it does not exist"
+          ],
+          "description": "Whether or not to navigate to the target daily note when a daily note snippet is selected."
         }
       }
     },
@@ -127,6 +147,6 @@
   },
   "dependencies": {
     "dateformat": "^3.0.3",
-    "foam-core": "0.3.0"
+    "foam-core": "^0.4.0"
   }
 }

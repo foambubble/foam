@@ -16,7 +16,7 @@ The following example:
   [wiki-links]: wiki-links "Wiki Links"
   [github-pages]: github-pages "Github Pages"
   ```
-You can open the [raw markdown](https://raw.githubusercontent.com/foambubble/foam/master/foam-file-format.md) to see them at the bottom of this file
+You can open the [raw markdown](https://foambubble.github.io/foam/foam-file-format.md) to see them at the bottom of this file
 
 ## Specification
 

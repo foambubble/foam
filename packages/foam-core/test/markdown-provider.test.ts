@@ -89,14 +89,14 @@ describe('Note Title', () => {
     expect(pageANoteTitle).toBe('Page A');
   });
 
-  it('should not initialize note title if heading does not exist', () => {
+  it('should default to file name if heading does not exist', () => {
     const graph = new NoteGraph();
     const note = graph.setNote(
       createNoteFromMarkdown('/page-d.md', pageD, '\n')
     );
 
     const pageANoteTitle = graph.getNote(note.id)!.title;
-    expect(pageANoteTitle).toBe(null);
+    expect(pageANoteTitle).toEqual('page-d');
   });
 
   it('should give precedence to frontmatter title over other headings', () => {
@@ -111,7 +111,7 @@ describe('Note Title', () => {
 
   it('should not break on empty titles (see #276)', () => {
     const note = createNoteFromMarkdown(
-      '/page-e.md',
+      '/Hello Page.md',
       `
 #
 
@@ -119,7 +119,7 @@ this note has an empty title line
     `,
       '\n'
     );
-    expect(note.title).toBeNull();
+    expect(note.title).toEqual('Hello Page');
   });
 });
 

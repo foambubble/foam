@@ -48,6 +48,16 @@
     "configuration": {
       "title": "Foam",
       "properties": {
+        "foam.files.ignore": {
+          "type": [
+            "array"
+          ],
+          "default": [
+            ".vscode/*",
+            "_layouts/*"
+          ],
+          "description": "Specifies the list of globs that will be ignored by Foam (e.g. they will not be considered when creating the graph)."
+        },
         "foam.edit.linkReferenceDefinitions": {
           "type": "string",
           "default": "withoutExtensions",

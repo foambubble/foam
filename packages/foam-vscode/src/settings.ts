@@ -14,3 +14,7 @@ export function getWikilinkDefinitionSetting(): LinkReferenceDefinitionsSetting 
       LinkReferenceDefinitionsSetting.withoutExtensions
     );
 }
+
+export function getIgnoredFilesSetting(): string[] {
+  return workspace.getConfiguration("foam.files").get("ignore")
+}

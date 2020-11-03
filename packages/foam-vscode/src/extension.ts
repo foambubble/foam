@@ -23,6 +23,7 @@ import {
 } from "foam-core";
 
 import { features } from "./features";
+import { getIgnoredFilesSetting } from "./settings";
 
 let workspaceWatcher: FileSystemWatcher | null = null;
 
@@ -61,8 +62,22 @@ async function registerFile(foam: Foam, localUri: Uri) {
   return note;
 }
 
+async function filterIgnored(files: Uri[]) {
+  const excludedPaths = getIgnoredFilesSetting();
+  const includedFiles: Map<String, Uri> = new Map();
+  for (const included of files) {
+    includedFiles.set(included.fsPath, included);
+  }
+  for (const excluded of excludedPaths) {
+    for (const file of await workspace.findFiles(excluded)) {
+      includedFiles.delete(file.fsPath);
+    }
+  }
+  return [...includedFiles.values()];
+}
+
 const bootstrap = async () => {
-  const files = await workspace.findFiles("**/*");
+  const files = await workspace.findFiles("**/*").then(filterIgnored);
   const config: FoamConfig = getConfig();
   const foam = await foamBootstrap(config);
   const addFile = (uri: Uri) => registerFile(foam, uri);

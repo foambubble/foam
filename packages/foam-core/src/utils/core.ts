@@ -14,6 +14,10 @@ export function isNone<T>(
   return value == null;
 }
 
+export function isNumeric(value: string): boolean {
+  return /-?\d+$/.test(value);
+}
+
 export const hash = (text: string) =>
   crypto
     .createHash('sha1')

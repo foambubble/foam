@@ -59,9 +59,7 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
       const tags: Tag[] = Object.entries(this._tags).map(
         ([tag, noteIds]) => new Tag(tag, noteIds)
       );
-      return Promise.resolve(
-        tags.sort((a, b) => b.noteIds.length - a.noteIds.length)
-      );
+      return Promise.resolve(tags.sort((a, b) => a.tag.localeCompare(b.tag)));
     }
   }
 }

@@ -56,11 +56,23 @@ describe('hashtag extraction', () => {
     ).toEqual(new Set(['123four']));
   });
 
-  it('ignores hashes in urls', () => {
+  it('ignores hashes in plain text urls and links', () => {
     expect(
-      extractHashtags(
-        'https://site.com/#section https://site.com/home#section2'
-      )
+      extractHashtags(`
+        test text with url https://site.com/#section1 https://site.com/home#section2 and
+        https://site.com/home/#section3a
+        [link](https://site.com/#section4) with [link2](https://site.com/home#section5) #control
+        hello world
+      `)
+    ).toEqual(new Set(['control']));
+  });
+
+  it('ignores hashes in links to sections', () => {
+    expect(
+      extractHashtags(`
+      this is a wikilink to [[#section1]] in the file and a [[link#section2]] in another
+      this is a [link](#section3) to a section
+      `)
     ).toEqual(new Set());
   });
 });

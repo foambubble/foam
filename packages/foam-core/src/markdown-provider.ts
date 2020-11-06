@@ -4,7 +4,7 @@ import wikiLinkPlugin from 'remark-wiki-link';
 import frontmatterPlugin from 'remark-frontmatter';
 import { parse as parseYAML } from 'yaml';
 import visit from 'unist-util-visit';
-import { Parent, Point, Position } from 'unist';
+import { Parent, Point } from 'unist';
 import * as path from 'path';
 import { NoteGraphAPI } from './note-graph';
 import { NoteLinkDefinition, Note, NoteParser } from './types';

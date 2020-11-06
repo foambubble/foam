@@ -35,7 +35,7 @@ export interface Note {
   slug: string; // note: this slug is not necessarily unique
   properties: any;
   // sections: NoteSection[]
-  // tags: NoteTag[]
+  tags: Set<string>;
   links: NoteLink[];
   definitions: NoteLinkDefinition[];
   source: NoteSource;

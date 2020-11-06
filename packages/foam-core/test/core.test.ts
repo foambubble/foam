@@ -23,6 +23,7 @@ export const createTestNote = (params: {
     title: params.title ?? null,
     slug: uriToSlug(params.uri),
     definitions: params.definitions ?? [],
+    tags: new Set(),
     links: params.links
       ? params.links.map(link => ({
           type: 'wikilink',

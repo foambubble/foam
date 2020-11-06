@@ -196,6 +196,54 @@ describe('wikilinks definitions', () => {
   });
 });
 
+describe('tags plugin', () => {
+  it('can find tags in the text of the note', () => {
+    const noteA = createNoteFromMarkdown(
+      '/dir1/page-a.md',
+      `
+# this is a heading
+this is some #text that includes #tags we #care-about.
+    `,
+      '\n'
+    );
+    expect(noteA.tags).toEqual(new Set(['text', 'tags', 'care-about']));
+  });
+
+  it('can find tags as text in yaml', () => {
+    const noteA = createNoteFromMarkdown(
+      '/dir1/page-a.md',
+      `
+---
+tags: hello, world  this_is_good
+---
+# this is a heading
+this is some #text that includes #tags we #care-about.
+    `,
+      '\n'
+    );
+    expect(noteA.tags).toEqual(
+      new Set(['text', 'tags', 'care-about', 'hello', 'world', 'this_is_good'])
+    );
+  });
+
+  it('can find tags as array in yaml', () => {
+    const noteA = createNoteFromMarkdown(
+      '/dir1/page-a.md',
+      `
+---
+tags: [hello, world,  this_is_good]
+---
+# this is a heading
+this is some #text that includes #tags we #care-about.
+    `,
+      '\n'
+    );
+    expect(noteA.tags).toEqual(
+      new Set(['text', 'tags', 'care-about', 'hello', 'world', 'this_is_good'])
+    );
+  });
+});
+
 describe('parser plugins', () => {
   const testPlugin: ParserPlugin = {
     visit: (node, note) => {

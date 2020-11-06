@@ -8,26 +8,22 @@ import { Parent, Point } from 'unist';
 import * as path from 'path';
 import { NoteGraphAPI } from './note-graph';
 import { NoteLinkDefinition, Note, NoteParser } from './types';
-import { dropExtension, uriToSlug } from './utils';
+import {
+  dropExtension,
+  uriToSlug,
+  extractHashtags,
+  extractTagsFromProp,
+} from './utils';
 import { ID } from './types';
 import { ParserPlugin } from './plugins';
 
-const yamlPlugin: ParserPlugin = {
-  visit: (node, note) => {
-    if (node.type === 'yaml') {
-      note.properties = {
-        ...note.properties,
-        ...(parseYAML(node.value as string) ?? {}),
-      };
-      // Give precendence to the title from the frontmatter if it exists
-      note.title = note.properties.title ?? note.title;
-      // Update the start position of the note by exluding the metadata
-      note.source.contentStart = {
-        line: node.position!.end.line! + 1,
-        column: 1,
-        offset: node.position!.end.offset! + 1,
-      };
-    }
+const tagsPlugin: ParserPlugin = {
+  onWillVisitTree: (tree, note) => {
+    note.tags = extractHashtags(note.source.text);
+  },
+  onDidFindProperties: (props, note) => {
+    const yamlTags = extractTagsFromProp(props.tags);
+    yamlTags.forEach(tag => note.tags.add(tag));
   },
 };
 
@@ -37,6 +33,10 @@ const titlePlugin: ParserPlugin = {
       note.title =
         ((node as Parent)!.children?.[0]?.value as string) || note.title;
     }
+  },
+  onDidFindProperties: (props, note) => {
+    // Give precendence to the title from the frontmatter if it exists
+    note.title = props.title ?? note.title;
   },
   onDidVisitTree: (tree, note) => {
     if (note.title == null) {
@@ -80,10 +80,10 @@ export function createMarkdownParser(extraPlugins: ParserPlugin[]): NoteParser {
     .use(wikiLinkPlugin);
 
   const plugins = [
-    yamlPlugin,
     titlePlugin,
     wikilinkPlugin,
     definitionsPlugin,
+    tagsPlugin,
     ...extraPlugins,
   ];
 
@@ -100,6 +100,7 @@ export function createMarkdownParser(extraPlugins: ParserPlugin[]): NoteParser {
         slug: uriToSlug(uri),
         properties: {},
         title: null,
+        tags: new Set(),
         links: [],
         definitions: [],
         source: {
@@ -113,6 +114,26 @@ export function createMarkdownParser(extraPlugins: ParserPlugin[]): NoteParser {
 
       plugins.forEach(plugin => plugin.onWillVisitTree?.(tree, note));
       visit(tree, node => {
+        if (node.type === 'yaml') {
+          const props = parseYAML(node.value as string) ?? {};
+          note.properties = {
+            ...note.properties,
+            ...props,
+          };
+          // Give precendence to the title from the frontmatter if it exists
+          note.title = note.properties.title ?? note.title;
+          // Update the start position of the note by exluding the metadata
+          note.source.contentStart = {
+            line: node.position!.end.line! + 1,
+            column: 1,
+            offset: node.position!.end.offset! + 1,
+          };
+
+          for (let i = 0, len = plugins.length; i < len; i++) {
+            plugins[i].onDidFindProperties?.(props, note);
+          }
+        }
+
         for (let i = 0, len = plugins.length; i < len; i++) {
           plugins[i].visit?.(node, note);
         }

@@ -20,6 +20,7 @@ export interface ParserPlugin {
   onWillParseMarkdown?: (markdown: string) => string;
   onWillVisitTree?: (tree: Node, note: Note) => void;
   onDidVisitTree?: (tree: Node, note: Note) => void;
+  onDidFindProperties?: (properties: any, note: Note) => void;
 }
 
 export interface PluginConfig {

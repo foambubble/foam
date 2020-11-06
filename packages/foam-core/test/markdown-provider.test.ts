@@ -22,26 +22,6 @@ const pageC = `
 # Page C
 `;
 
-const pageD = `
-This file has no heading.
-`;
-
-const pageE = `
----
-title: Note Title
-date: 20-12-12
----
-
-# Other Note Title
-`;
-
-const pageF = `
----
----
-
-# Empty Frontmatter
-`;
-
 const createNoteFromMarkdown = createMarkdownParser([]).parse;
 
 describe('Markdown loader', () => {
@@ -92,7 +72,13 @@ describe('Note Title', () => {
   it('should default to file name if heading does not exist', () => {
     const graph = new NoteGraph();
     const note = graph.setNote(
-      createNoteFromMarkdown('/page-d.md', pageD, '\n')
+      createNoteFromMarkdown(
+        '/page-d.md',
+        `
+This file has no heading.
+      `,
+        '\n'
+      )
     );
 
     const pageANoteTitle = graph.getNote(note.id)!.title;
@@ -102,7 +88,18 @@ describe('Note Title', () => {
   it('should give precedence to frontmatter title over other headings', () => {
     const graph = new NoteGraph();
     const note = graph.setNote(
-      createNoteFromMarkdown('/page-e.md', pageE, '\n')
+      createNoteFromMarkdown(
+        '/page-e.md',
+        `
+---
+title: Note Title
+date: 20-12-12
+---
+
+# Other Note Title
+      `,
+        '\n'
+      )
     );
 
     const pageENoteTitle = graph.getNote(note.id)!.title;
@@ -127,7 +124,17 @@ describe('frontmatter', () => {
   it('should parse yaml frontmatter', () => {
     const graph = new NoteGraph();
     const note = graph.setNote(
-      createNoteFromMarkdown('/page-e.md', pageE, '\n')
+      createNoteFromMarkdown(
+        '/page-e.md',
+        `
+---
+title: Note Title
+date: 20-12-12
+---
+
+# Other Note Title`,
+        '\n'
+      )
     );
 
     const expected = {
@@ -144,7 +151,40 @@ describe('frontmatter', () => {
   it('should parse empty frontmatter', () => {
     const graph = new NoteGraph();
     const note = graph.setNote(
-      createNoteFromMarkdown('/page-f.md', pageF, '\n')
+      createNoteFromMarkdown(
+        '/page-f.md',
+        `
+---
+---
+
+# Empty Frontmatter
+`,
+        '\n'
+      )
+    );
+
+    const expected = {};
+
+    const actual = graph.getNote(note.id)!.properties;
+
+    expect(actual).toEqual(expected);
+  });
+
+  it('should not fail when there are issues with parsing frontmatter', () => {
+    const graph = new NoteGraph();
+    const note = graph.setNote(
+      createNoteFromMarkdown(
+        '/page-f.md',
+        `
+---
+title: - one
+ - two
+ - #
+---
+
+`,
+        '\n'
+      )
     );
 
     const expected = {};

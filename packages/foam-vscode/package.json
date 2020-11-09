@@ -4,7 +4,7 @@
   "description": "Generate markdown reference lists from wikilinks in a workspace",
   "author": "Jani Eväkallio",
   "repository": "https://github.com/foambubble/foam",
-  "version": "0.4.0",
+  "version": "0.5.0-alpha.0",
   "license": "MIT",
   "publisher": "foam",
   "engines": {
@@ -15,7 +15,7 @@
   ],
   "activationEvents": [
     "workspaceContains:.vscode/foam.json",
-		"onView:foam-vscode.tags-explorer",
+    "onView:foam-vscode.tags-explorer",
     "onCommand:foam-vscode.update-wikilinks",
     "onCommand:foam-vscode.open-daily-note",
     "onCommand:foam-vscode.janitor",
@@ -25,13 +25,13 @@
   "main": "./out/extension.js",
   "contributes": {
     "views": {
-			"explorer": [
-				{
-					"id": "foam-vscode.tags-explorer",
-					"name": "Tag Explorer",
-					"icon": "media/dep.svg",
-					"contextualTitle": "Tags Explorer"
-				}
+      "explorer": [
+        {
+          "id": "foam-vscode.tags-explorer",
+          "name": "Tag Explorer",
+          "icon": "media/dep.svg",
+          "contextualTitle": "Tags Explorer"
+        }
       ]
     },
     "commands": [
@@ -168,6 +168,6 @@
   },
   "dependencies": {
     "dateformat": "^3.0.3",
-    "foam-core": "^0.4.0"
+    "foam-core": "^0.5.0-alpha.0"
   }
 }

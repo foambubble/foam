@@ -8,7 +8,7 @@ import {
 import { dirname, join } from "path";
 import dateFormat from "dateformat";
 import * as fs from "fs";
-import { docConfig, pathExists } from "./utils";
+import { docConfig, focusNote, pathExists } from "./utils";
 
 async function openDailyNoteFor(date?: Date) {
   const foamConfiguration = workspace.getConfiguration("foam");
@@ -76,18 +76,6 @@ async function createDailyNoteDirectoryIfNotExists(dailyNotePath: string) {
 
   if (!(await pathExists(dailyNoteDirectory))) {
     await fs.promises.mkdir(dailyNoteDirectory, { recursive: true });
-  }
-}
-
-async function focusNote(notePath: string, isNewNote: boolean) {
-  const document = await workspace.openTextDocument(Uri.file(notePath));
-  const editor = await window.showTextDocument(document);
-
-  // Move the cursor to end of the file
-  if (isNewNote) {
-    const { lineCount } = editor.document;
-    const { range } = editor.document.lineAt(lineCount - 1);
-    editor.selection = new Selection(range.end, range.end);
   }
 }
 

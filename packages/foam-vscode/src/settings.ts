@@ -16,5 +16,5 @@ export function getWikilinkDefinitionSetting(): LinkReferenceDefinitionsSetting 
 }
 
 export function getIgnoredFilesSetting(): string[] {
-  return workspace.getConfiguration("foam.files").get("ignore")
+  return workspace.getConfiguration("foam.files").get("ignore");
 }

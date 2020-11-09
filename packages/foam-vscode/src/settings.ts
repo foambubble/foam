@@ -18,3 +18,7 @@ export function getWikilinkDefinitionSetting(): LinkReferenceDefinitionsSetting 
 export function getIgnoredFilesSetting(): string[] {
   return workspace.getConfiguration("foam.files").get("ignore")
 }
+
+export function getTitleMaxLength(): number {
+  return workspace.getConfiguration("foam.graph").get("titleMaxLength")
+}

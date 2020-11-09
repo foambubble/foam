@@ -3,6 +3,7 @@ import * as path from "path";
 import { FoamFeature } from "../types";
 import { Foam } from "foam-core";
 import { TextDecoder } from "util";
+import { getTitleMaxLength } from "../settings";
 
 const feature: FoamFeature = {
   activate: (context: vscode.ExtensionContext, foamPromise: Promise<Foam>) => {
@@ -44,7 +45,7 @@ function generateGraphData(foam: Foam) {
       id: n.id,
       type: "note",
       uri: n.source.uri,
-      title: n.title,
+      title: cutTitle(n.title),
       nOutLinks: links.length,
       nInLinks: graph.nodes[n.id]?.nInLinks ?? 0
     };
@@ -69,6 +70,14 @@ function generateGraphData(foam: Foam) {
     nodes: Array.from(Object.values(graph.nodes)),
     edges: Array.from(graph.edges)
   };
+}
+
+function cutTitle(title: string): string {
+  const maxLen = getTitleMaxLength();
+  if (maxLen > 0 && title.length > maxLen) {
+    return title.substring(0, maxLen).concat("...");
+  }
+  return title;
 }
 
 async function createGraphPanel(foam: Foam, context: vscode.ExtensionContext) {

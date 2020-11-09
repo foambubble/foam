@@ -2,7 +2,7 @@
   "name": "foam-core",
   "author": "Jani Eväkallio",
   "repository": "https://github.com/foambubble/foam",
-  "version": "0.5.0-alpha.0",
+  "version": "0.5.0-alpha.2",
   "license": "MIT",
   "files": [
     "dist"

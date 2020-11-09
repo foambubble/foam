@@ -126,6 +126,11 @@
             "Navigates to the note, creating it following your daily note settings if it does not exist"
           ],
           "description": "Whether or not to navigate to the target daily note when a daily note snippet is selected."
+        },
+        "foam.graph.titleMaxLength": {
+          "type": "number",
+          "default": 24,
+          "description": "The maximum title length before being abbreviated. Set to 0 or less to disable."
         }
       }
     },

@@ -1,4 +1,4 @@
-👀*This is an early stage project under rapid development. For updates follow [@jevakallio](https://twitter.com/jevakallio) on Twitter, or join the [Foam community Discord](https://discord.gg/rtdZKgj)! 💬*
+👀*This is an early stage project under rapid development. For updates join the [Foam community Discord](https://discord.gg/rtdZKgj)! 💬*
 
 
 # Foam

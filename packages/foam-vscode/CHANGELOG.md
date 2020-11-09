@@ -4,6 +4,18 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.5.0] - 2020-11-09
+
+New features:
+- Added tags panel (#311)
+
+Fixes and Improvements:
+- Date snippets now support configurable completion actions (#307 - thanks @ingalless)
+- Graph now show note titles when zooming in (#310)
+- New `foam.files.ignore` setting to exclude globs from being processed by Foam (#304 - thanks @jmg-duarte)
+- Errors in YAML parsing no longer causes foam to crash (#320)
+- Fixed error in CLI command janitor & migrate (#312 - thanks @hikerpig)
+
 ## [0.4.0] - 2020-10-28
 
 New features:

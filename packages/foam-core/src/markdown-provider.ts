@@ -18,6 +18,7 @@ import { ID } from './types';
 import { ParserPlugin } from './plugins';
 
 const tagsPlugin: ParserPlugin = {
+  name: 'tags',
   onWillVisitTree: (tree, note) => {
     note.tags = extractHashtags(note.source.text);
   },
@@ -28,6 +29,7 @@ const tagsPlugin: ParserPlugin = {
 };
 
 const titlePlugin: ParserPlugin = {
+  name: 'title',
   visit: (node, note) => {
     if (note.title == null && node.type === 'heading' && node.depth === 1) {
       note.title =
@@ -46,6 +48,7 @@ const titlePlugin: ParserPlugin = {
 };
 
 const wikilinkPlugin: ParserPlugin = {
+  name: 'wikilink',
   visit: (node, note) => {
     if (node.type === 'wikiLink') {
       note.links.push({
@@ -58,6 +61,7 @@ const wikilinkPlugin: ParserPlugin = {
 };
 
 const definitionsPlugin: ParserPlugin = {
+  name: 'definitions',
   visit: (node, note) => {
     if (node.type === 'definition') {
       note.definitions.push({
@@ -71,6 +75,19 @@ const definitionsPlugin: ParserPlugin = {
   onDidVisitTree: (tree, note) => {
     note.definitions = getFoamDefinitions(note.definitions, note.source.end);
   },
+};
+
+const handleError = (
+  plugin: ParserPlugin,
+  fnName: string,
+  uri: string | undefined,
+  e: Error
+): void => {
+  const name = plugin.name || '';
+  console.warn(
+    `Error while executing [${fnName}] in plugin [${name}] for file [${uri}]`,
+    e
+  );
 };
 
 export function createMarkdownParser(extraPlugins: ParserPlugin[]): NoteParser {
@@ -87,12 +104,23 @@ export function createMarkdownParser(extraPlugins: ParserPlugin[]): NoteParser {
     ...extraPlugins,
   ];
 
-  plugins.forEach(plugin => plugin.onDidInitializeParser?.(parser));
+  plugins.forEach(plugin => {
+    try {
+      plugin.onDidInitializeParser?.(parser);
+    } catch (e) {
+      handleError(plugin, 'onDidInitializeParser', undefined, e);
+    }
+  });
 
   return {
     parse: (uri: string, markdown: string, eol: string): Note => {
       markdown = plugins.reduce((acc, plugin) => {
-        return plugin.onWillParseMarkdown?.(acc) || acc;
+        try {
+          return plugin.onWillParseMarkdown?.(acc) || acc;
+        } catch (e) {
+          handleError(plugin, 'onWillParseMarkdown', uri, e);
+          return acc;
+        }
       }, markdown);
       const tree = parser.parse(markdown);
 
@@ -112,34 +140,57 @@ export function createMarkdownParser(extraPlugins: ParserPlugin[]): NoteParser {
         },
       };
 
-      plugins.forEach(plugin => plugin.onWillVisitTree?.(tree, note));
+      plugins.forEach(plugin => {
+        try {
+          plugin.onWillVisitTree?.(tree, note);
+        } catch (e) {
+          handleError(plugin, 'onWillVisitTree', uri, e);
+        }
+      });
       visit(tree, node => {
         if (node.type === 'yaml') {
-          const props = parseYAML(node.value as string) ?? {};
-          note.properties = {
-            ...note.properties,
-            ...props,
-          };
-          // Give precendence to the title from the frontmatter if it exists
-          note.title = note.properties.title ?? note.title;
-          // Update the start position of the note by exluding the metadata
-          note.source.contentStart = {
-            line: node.position!.end.line! + 1,
-            column: 1,
-            offset: node.position!.end.offset! + 1,
-          };
+          try {
+            const yamlProperties = parseYAML(node.value as string) ?? {};
+            note.properties = {
+              ...note.properties,
+              ...yamlProperties,
+            };
+            // Give precendence to the title from the frontmatter if it exists
+            note.title = note.properties.title ?? note.title;
+            // Update the start position of the note by exluding the metadata
+            note.source.contentStart = {
+              line: node.position!.end.line! + 1,
+              column: 1,
+              offset: node.position!.end.offset! + 1,
+            };
 
-          for (let i = 0, len = plugins.length; i < len; i++) {
-            plugins[i].onDidFindProperties?.(props, note);
+            for (let i = 0, len = plugins.length; i < len; i++) {
+              try {
+                plugins[i].onDidFindProperties?.(yamlProperties, note);
+              } catch (e) {
+                handleError(plugins[i], 'onDidFindProperties', uri, e);
+              }
+            }
+          } catch (e) {
+            console.warn(`Error while parsing YAML for [${uri}]`, e);
           }
         }
 
         for (let i = 0, len = plugins.length; i < len; i++) {
-          plugins[i].visit?.(node, note);
+          try {
+            plugins[i].visit?.(node, note);
+          } catch (e) {
+            handleError(plugins[i], 'visit', uri, e);
+          }
         }
       });
-      plugins.forEach(plugin => plugin.onDidVisitTree?.(tree, note));
-
+      plugins.forEach(plugin => {
+        try {
+          plugin.onDidVisitTree?.(tree, note);
+        } catch (e) {
+          handleError(plugin, 'onDidVisitTree', uri, e);
+        }
+      });
       return note;
     },
   };

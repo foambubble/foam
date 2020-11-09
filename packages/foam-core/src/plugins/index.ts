@@ -15,6 +15,7 @@ export interface FoamPlugin {
 }
 
 export interface ParserPlugin {
+  name?: string;
   visit?: (node: Node, note: Note) => void;
   onDidInitializeParser?: (parser: unified.Processor) => void;
   onWillParseMarkdown?: (markdown: string) => string;

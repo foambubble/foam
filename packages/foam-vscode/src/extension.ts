@@ -46,6 +46,12 @@ function isLocalMarkdownFile(uri: Uri) {
   return uri.scheme === "file" && uri.path.match(/\.(md|mdx|markdown)/i);
 }
 
+async function registerFiles(foam: Foam, localUri: Iterable<Uri>) {
+  for (const uri of localUri) {
+    registerFile(foam, uri)
+  }
+}
+
 async function registerFile(foam: Foam, localUri: Uri) {
   // read file from disk (async)
   const path = localUri.fsPath;
@@ -62,27 +68,26 @@ async function registerFile(foam: Foam, localUri: Uri) {
   return note;
 }
 
-async function filterIgnored(files: Uri[]) {
+async function filterAndRegister(foam:Foam, files: Uri[]) {
   const excludedPaths = getIgnoredFilesSetting();
   const includedFiles: Map<String, Uri> = new Map();
   for (const included of files) {
-    includedFiles.set(included.fsPath, included);
+    if (isLocalMarkdownFile(included)) {
+      includedFiles.set(included.fsPath, included);
+    }
   }
   for (const excluded of excludedPaths) {
     for (const file of await workspace.findFiles(excluded)) {
       includedFiles.delete(file.fsPath);
     }
   }
-  return [...includedFiles.values()];
+  registerFiles(foam, includedFiles.values());
 }
 
 const bootstrap = async () => {
-  const files = await workspace.findFiles("**/*").then(filterIgnored);
   const config: FoamConfig = getConfig();
   const foam = await foamBootstrap(config);
-  const addFile = (uri: Uri) => registerFile(foam, uri);
-
-  await Promise.all(files.filter(isLocalMarkdownFile).map(addFile));
+  await workspace.findFiles("**/*").then((files) => filterAndRegister(foam, files));
 
   workspaceWatcher = workspace.createFileSystemWatcher(
     "**/*",
@@ -93,7 +98,7 @@ const bootstrap = async () => {
 
   workspaceWatcher.onDidCreate(uri => {
     if (isLocalMarkdownFile(uri)) {
-      addFile(uri).then(() => {
+      registerFile(foam, uri).then(() => {
         console.log(`Added ${uri} to workspace`);
       });
     }

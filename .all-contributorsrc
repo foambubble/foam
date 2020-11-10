@@ -434,6 +434,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "hikerpig",
+      "name": "hikerpig",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/2259688?v=4",
+      "profile": "https://www.hikerpig.cn",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,

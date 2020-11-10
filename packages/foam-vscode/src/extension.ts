@@ -69,9 +69,10 @@ async function registerFile(foam: Foam, localUri: Uri) {
 }
 
 /**
- * Filter the files according to:
- * 1. Extension (currently `.md`, `.mdx`, `.markdown`).
- * 2. Excluded globs set by the user in `foam.files.ignore`.
+ * Filter the files and register them in the Foam object.
+ * Filtering is done according to:
+ * 1. Extension (currently `.md`, `.mdx`, `.markdown`)
+ * 2. Excluded globs set by the user in `foam.files.ignore`
  * @param foam the Foam object.
  * @param files the list of files to be filtered and registered.
  */

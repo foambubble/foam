@@ -4,16 +4,15 @@ import {
   ExtensionContext,
   workspace,
   Uri,
-  SnippetString,
-  Location,
-  Position
+  SnippetString
 } from "vscode";
-import * as fs from "fs";
 import * as path from "path";
 import { FoamFeature } from "../types";
 import GithubSlugger from "github-slugger";
 import { TextEncoder } from "util";
 import { focusNote } from "../utils";
+
+const templatesDir = `${workspace.workspaceFolders[0].uri.fsPath}/.foam/templates`;
 
 async function getTemplates(): Promise<string[]> {
   const templates = await workspace.findFiles(".foam/templates/**.md");
@@ -48,11 +47,8 @@ const feature: FoamFeature = {
             folder,
             `${new GithubSlugger().slug(title)}.md`
           );
-
           const templateText = await workspace.fs.readFile(
-            Uri.file(
-              `${workspace.workspaceFolders[0].uri.fsPath}/.foam/templates/${selectedTemplate}`
-            )
+            Uri.file(`${templatesDir}/${selectedTemplate}`)
           );
           const snippet = new SnippetString(templateText.toString());
           await workspace.fs.writeFile(

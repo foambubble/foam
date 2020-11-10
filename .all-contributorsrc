@@ -452,6 +452,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "tristansokol",
+      "name": "Tristan Sokol",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/867661?v=4",
+      "profile": "http://www.tristansokol.com",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,

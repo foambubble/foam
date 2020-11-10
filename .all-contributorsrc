@@ -443,6 +443,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "Sigfried",
+      "name": "Sigfried Gold",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/1586931?v=4",
+      "profile": "http://sigfried.org",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,

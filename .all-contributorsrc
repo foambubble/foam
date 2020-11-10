@@ -425,6 +425,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "yenly",
+      "name": "Yenly",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/6759658?v=4",
+      "profile": "https://www.yenly.wtf",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,

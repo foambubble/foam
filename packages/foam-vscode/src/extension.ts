@@ -48,7 +48,7 @@ function isLocalMarkdownFile(uri: Uri) {
 
 async function registerFiles(foam: Foam, localUri: Iterable<Uri>) {
   for (const uri of localUri) {
-    registerFile(foam, uri)
+    registerFile(foam, uri);
   }
 }
 
@@ -68,8 +68,15 @@ async function registerFile(foam: Foam, localUri: Uri) {
   return note;
 }
 
-async function filterAndRegister(foam:Foam, files: Uri[]) {
-  const excludedPaths = getIgnoredFilesSetting();
+/**
+ * Filter the files according to:
+ * 1. Extension (currently `.md`, `.mdx`, `.markdown`).
+ * 2. Excluded globs set by the user in `foam.files.ignore`.
+ * @param foam the Foam object.
+ * @param files the list of files to be filtered and registered.
+ */
+async function filterAndRegister(foam: Foam, files: Uri[]) {
+  const excludedPaths: string[] = getIgnoredFilesSetting();
   const includedFiles: Map<String, Uri> = new Map();
   for (const included of files) {
     if (isLocalMarkdownFile(included)) {
@@ -86,8 +93,10 @@ async function filterAndRegister(foam:Foam, files: Uri[]) {
 
 const bootstrap = async () => {
   const config: FoamConfig = getConfig();
-  const foam = await foamBootstrap(config);
-  await workspace.findFiles("**/*").then((files) => filterAndRegister(foam, files));
+  const foam: Foam = await foamBootstrap(config);
+  await workspace
+    .findFiles("**/*")
+    .then(files => filterAndRegister(foam, files));
 
   workspaceWatcher = workspace.createFileSystemWatcher(
     "**/*",

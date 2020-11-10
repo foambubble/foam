@@ -488,6 +488,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "jbn",
+      "name": "John B Nelson",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/78835?v=4",
+      "profile": "https://generativist.substack.com/",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,

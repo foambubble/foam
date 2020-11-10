@@ -416,6 +416,15 @@
         "code",
         "doc"
       ]
+    },
+    {
+      "login": "jmg-duarte",
+      "name": "José Duarte",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/15343819?v=4",
+      "profile": "http://jmg-duarte.github.io",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,

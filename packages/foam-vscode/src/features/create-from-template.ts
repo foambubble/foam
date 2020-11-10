@@ -1,4 +1,13 @@
-import { window, commands, ExtensionContext, workspace, Uri } from "vscode";
+import {
+  window,
+  commands,
+  ExtensionContext,
+  workspace,
+  Uri,
+  SnippetString,
+  Location,
+  Position
+} from "vscode";
 import * as fs from "fs";
 import * as path from "path";
 import { FoamFeature } from "../types";
@@ -9,7 +18,7 @@ import { focusNote } from "../utils";
 async function getTemplates(): Promise<string[]> {
   const templates = await workspace.findFiles(".foam/templates/**.md");
   // parse title, not whole file!
-  return templates.map(val => fs.readFileSync(val.fsPath).toString());
+  return templates.map(template => path.basename(template.fsPath));
 }
 
 const feature: FoamFeature = {
@@ -31,17 +40,27 @@ const feature: FoamFeature = {
           });
           const title = await window.showInputBox({
             prompt: `Enter the Title Case name for the new note`,
-            value: ``
+            value: ``,
+            validateInput: value =>
+              value.length ? undefined : "Please enter a value!"
           });
           const targetFile = path.join(
             folder,
             `${new GithubSlugger().slug(title)}.md`
           );
+
+          const templateText = await workspace.fs.readFile(
+            Uri.file(
+              `${workspace.workspaceFolders[0].uri.fsPath}/.foam/templates/${selectedTemplate}`
+            )
+          );
+          const snippet = new SnippetString(templateText.toString());
           await workspace.fs.writeFile(
             Uri.file(targetFile),
-            new TextEncoder().encode(selectedTemplate)
+            new TextEncoder().encode("")
           );
           await focusNote(targetFile, true);
+          await window.activeTextEditor.insertSnippet(snippet);
         }
       )
     );

@@ -176,6 +176,7 @@ If that sounds like something you're interested in, I'd love to have you along o
     <td align="center"><a href="https://umbrellait.com"><img src="https://avatars0.githubusercontent.com/u/49779373?v=4" width="60px;" alt=""/><br /><sub><b>Danil Rodin</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=umbrellait-danil-rodin" title="Documentation">📖</a></td>
     <td align="center"><a href="https://www.linkedin.com/in/scottjoewilliams/"><img src="https://avatars1.githubusercontent.com/u/2026866?v=4" width="60px;" alt=""/><br /><sub><b>Scott Williams</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=scott-joe" title="Documentation">📖</a></td>
     <td align="center"><a href="https://jackiexiao.github.io/blog"><img src="https://avatars2.githubusercontent.com/u/18050469?v=4" width="60px;" alt=""/><br /><sub><b>jackiexiao</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=Jackiexiao" title="Documentation">📖</a></td>
+    <td align="center"><a href="https://generativist.substack.com/"><img src="https://avatars3.githubusercontent.com/u/78835?v=4" width="60px;" alt=""/><br /><sub><b>John B Nelson</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=jbn" title="Documentation">📖</a></td>
   </tr>
 </table>
 

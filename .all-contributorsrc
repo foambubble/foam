@@ -470,6 +470,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "scott-joe",
+      "name": "Scott Williams",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/2026866?v=4",
+      "profile": "https://www.linkedin.com/in/scottjoewilliams/",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,

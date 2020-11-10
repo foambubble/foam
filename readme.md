@@ -4,7 +4,7 @@
 # Foam
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-48-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-49-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 **Foam** is a personal knowledge management and sharing system inspired by [Roam Research](https://roamresearch.com/), built on [Visual Studio Code](https://code.visualstudio.com/) and [GitHub](https://github.com/).
@@ -118,6 +118,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://www.yenly.wtf"><img src="https://avatars1.githubusercontent.com/u/6759658?v=4" width="60px;" alt=""/><br /><sub><b>Yenly</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=yenly" title="Documentation">📖</a></td>
     <td align="center"><a href="https://www.hikerpig.cn"><img src="https://avatars1.githubusercontent.com/u/2259688?v=4" width="60px;" alt=""/><br /><sub><b>hikerpig</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=hikerpig" title="Code">💻</a></td>
     <td align="center"><a href="http://sigfried.org"><img src="https://avatars1.githubusercontent.com/u/1586931?v=4" width="60px;" alt=""/><br /><sub><b>Sigfried Gold</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=Sigfried" title="Documentation">📖</a></td>
+    <td align="center"><a href="http://www.tristansokol.com"><img src="https://avatars3.githubusercontent.com/u/867661?v=4" width="60px;" alt=""/><br /><sub><b>Tristan Sokol</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=tristansokol" title="Code">💻</a></td>
   </tr>
 </table>
 

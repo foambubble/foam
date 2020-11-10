@@ -406,6 +406,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "ingalless",
+      "name": "ingalless",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/22981941?v=4",
+      "profile": "https://ingalless.com",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,

@@ -15,7 +15,7 @@ There are many other templates which also support publish your foam workspace to
     * [demo-website](https://jackiexiao.github.io/foam/)
 * foam-jekyll-template
     * [repo](https://github.com/hikerpig/foam-jekyll-template)
-    * [demo-website](https://blog.hikerpig.cn/wiki/)
+    * [demo-website](https://wiki.hikerpig.cn/)
 
 [[todo]] [[good-first-task]] Improve this documentation
 

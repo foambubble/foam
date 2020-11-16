@@ -8,7 +8,6 @@ import {
 } from "vscode";
 import * as path from "path";
 import { FoamFeature } from "../types";
-import GithubSlugger from "github-slugger";
 import { TextEncoder } from "util";
 import { focusNote } from "../utils";
 
@@ -25,7 +24,7 @@ const feature: FoamFeature = {
     context.subscriptions.push(
       commands.registerCommand(
         "foam-vscode.create-note-from-template",
-        async (context: ExtensionContext) => {
+        async () => {
           const templates = await getTemplates();
           const activeFile = window.activeTextEditor?.document?.fileName;
           const currentDir =
@@ -37,16 +36,18 @@ const feature: FoamFeature = {
             prompt: `Where should the template be created?`,
             value: currentDir
           });
-          const title = await window.showInputBox({
-            prompt: `Enter the Title Case name for the new note`,
+
+          let filename = await window.showInputBox({
+            prompt: `Enter the filename for the new note`,
             value: ``,
             validateInput: value =>
               value.length ? undefined : "Please enter a value!"
           });
-          const targetFile = path.join(
-            folder,
-            `${new GithubSlugger().slug(title)}.md`
-          );
+          filename = path.extname(filename).length
+            ? filename
+            : `${filename}.md`;
+          const targetFile = path.join(folder, filename);
+
           const templateText = await workspace.fs.readFile(
             Uri.file(`${templatesDir}/${selectedTemplate}`)
           );

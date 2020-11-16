@@ -171,12 +171,12 @@ export function isNone<T>(
   return value == null;
 }
 
-export async function focusNote(notePath: string, isNewNote: boolean) {
+export async function focusNote(notePath: string, moveCursorToEnd: boolean) {
   const document = await workspace.openTextDocument(Uri.file(notePath));
   const editor = await window.showTextDocument(document);
 
   // Move the cursor to end of the file
-  if (isNewNote) {
+  if (moveCursorToEnd) {
     const { lineCount } = editor.document;
     const { range } = editor.document.lineAt(lineCount - 1);
     editor.selection = new Selection(range.end, range.end);

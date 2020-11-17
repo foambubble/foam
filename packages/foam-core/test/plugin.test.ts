@@ -5,7 +5,7 @@ import { createGraph } from '../src/note-graph';
 import { createTestNote } from './core.test';
 import { FoamConfig, createConfigFromObject } from '../src/config';
 
-const config: FoamConfig = createConfigFromObject([], {
+const config: FoamConfig = createConfigFromObject([], [], [], {
   experimental: {
     localPlugins: {
       enabled: true,
@@ -16,10 +16,10 @@ const config: FoamConfig = createConfigFromObject([], {
 
 describe('Foam plugins', () => {
   it('will not load if feature is not explicitly enabled', async () => {
-    let plugins = await loadPlugins(createConfigFromObject([], {}));
+    let plugins = await loadPlugins(createConfigFromObject([], [], [], {}));
     expect(plugins.length).toEqual(0);
     plugins = await loadPlugins(
-      createConfigFromObject([], {
+      createConfigFromObject([], [], [], {
         experimental: {
           localPlugins: {},
         },
@@ -27,7 +27,7 @@ describe('Foam plugins', () => {
     );
     expect(plugins.length).toEqual(0);
     plugins = await loadPlugins(
-      createConfigFromObject([], {
+      createConfigFromObject([], [], [], {
         experimental: {
           localPlugins: {
             enabled: false,
@@ -63,8 +63,7 @@ describe('Foam plugins', () => {
       '/path/to/a',
       `
 # This is a note with header
-and some content`,
-      '\n'
+and some content`
     );
     expect(note.properties.hasHeading).toBeTruthy();
   });

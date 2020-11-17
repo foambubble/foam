@@ -42,5 +42,5 @@ export interface Note {
 }
 
 export interface NoteParser {
-  parse: (uri: string, text: string, eol: string) => Note;
+  parse: (uri: string, text: string) => Note;
 }

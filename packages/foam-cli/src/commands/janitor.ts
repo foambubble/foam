@@ -6,6 +6,8 @@ import {
   generateLinkReferences,
   generateHeading,
   applyTextEdit,
+  Services,
+  FileDataStore,
 } from 'foam-core';
 import { writeFileToDisk } from '../utils/write-file-to-disk';
 import { isValidDirectory } from '../utils';
@@ -38,8 +40,12 @@ export default class Janitor extends Command {
     const { workspacePath = './' } = args;
 
     if (isValidDirectory(workspacePath)) {
-      const graph = (await bootstrap(createConfigFromFolders([workspacePath])))
-        .notes;
+      const config = createConfigFromFolders([workspacePath]);
+      const services: Services = {
+        logger: console,
+        dataStore: new FileDataStore(config),
+      };
+      const graph = (await bootstrap(config, services)).notes;
 
       const notes = graph.getNotes().filter(Boolean); // removes undefined notes
 

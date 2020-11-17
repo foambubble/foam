@@ -1,6 +1,5 @@
 import * as vscode from "vscode";
 import { FoamFeature } from "../../types";
-import * as path from "path";
 import { Foam, Note } from "foam-core";
 
 const feature: FoamFeature = {
@@ -8,12 +7,15 @@ const feature: FoamFeature = {
     context: vscode.ExtensionContext,
     foamPromise: Promise<Foam>
   ) => {
+    const foam = await foamPromise;
+    const provider = new TagsProvider(foam);
     context.subscriptions.push(
       vscode.window.registerTreeDataProvider(
         "foam-vscode.tags-explorer",
-        new TagsProvider(await foamPromise)
+        provider
       )
     );
+    foam.notes.unstable_onNoteUpdated(() => provider.refresh());
   }
 };
 
@@ -24,20 +26,34 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
   private _onDidChangeTreeData: vscode.EventEmitter<TagTreeItem | undefined | void> = new vscode.EventEmitter<TagTreeItem | undefined | void>();
   // prettier-ignore
   readonly onDidChangeTreeData: vscode.Event<TagTreeItem | undefined | void> = this._onDidChangeTreeData.event;
-  private _tags: { [key: string]: string[] };
+
+  private tags: {
+    tag: string;
+    noteIds: string[];
+  }[];
 
   constructor(private foam: Foam) {
-    this._tags = foam.notes.getNotes().reduce((acc, note) => {
+    this.computeTags();
+  }
+
+  refresh(): void {
+    this.computeTags();
+    this._onDidChangeTreeData.fire();
+  }
+
+  private computeTags() {
+    const rawTags: {
+      [key: string]: string[];
+    } = this.foam.notes.getNotes().reduce((acc, note) => {
       note.tags.forEach(tag => {
         acc[tag] = acc[tag] ?? [];
         acc[tag].push(note.id);
       });
       return acc;
     }, {});
-  }
-
-  refresh(): void {
-    this._onDidChangeTreeData.fire();
+    this.tags = Object.entries(rawTags)
+      .map(([tag, noteIds]) => ({ tag, noteIds }))
+      .sort((a, b) => a.tag.localeCompare(b.tag));
   }
 
   getTreeItem(element: TagTreeItem): vscode.TreeItem {
@@ -56,8 +72,8 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
       ]);
     }
     if (!element) {
-      const tags: Tag[] = Object.entries(this._tags).map(
-        ([tag, noteIds]) => new Tag(tag, noteIds)
+      const tags: Tag[] = this.tags.map(
+        ({ tag, noteIds }) => new Tag(tag, noteIds)
       );
       return Promise.resolve(tags.sort((a, b) => a.tag.localeCompare(b.tag)));
     }

@@ -1,14 +1,15 @@
 import { Note, NoteLink, URI } from './types';
 import { NoteGraph, NoteGraphAPI } from './note-graph';
 import { FoamConfig } from './config';
-export { FoamConfig };
 import { IDataStore, FileDataStore } from './services/datastore';
+import { ILogger } from './services/logger';
+
 export { IDataStore, FileDataStore };
 export { IDataStoreWatcher } from './services/datastore';
-import { ILogger } from './services/logger';
 export { ILogger };
 export { IDisposable, isDisposable } from './common/lifecycle';
 export { Event, Emitter } from './common/event';
+export { FoamConfig };
 
 export {
   createMarkdownReferences,

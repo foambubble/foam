@@ -94,7 +94,7 @@ export class FileDataStore implements IDataStore, IDisposable {
       includeGlobs.push(
         ...config.includeGlobs.map(glob => {
           if (glob.endsWith('*')) {
-            glob = `${glob}\.(md|mdx|markdown)`;
+            glob = `${glob}\\.(md|mdx|markdown)`;
           }
           return withFolder(glob);
         })

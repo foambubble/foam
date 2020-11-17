@@ -14,7 +14,7 @@ import {
   combinedDisposable,
   DisposableStore,
 } from './lifecycle';
-import { LinkedList } from './linkedlist';
+import { LinkedList } from './linkedList';
 
 /**
  * To an event a function with one or zero parameters

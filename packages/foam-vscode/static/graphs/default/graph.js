@@ -37,14 +37,14 @@ const style = {
   },
   link: {
     highlighted: "#f9c74f",
-    regular: "#277da1"
+    regular: "#055171"
   }
 };
 
 const sizeScale = d3
   .scaleLinear()
   .domain([0, 30])
-  .range([2, 6])
+  .range([1, 3])
   .clamp(true);
 
 const labelAlpha = d3
@@ -69,6 +69,7 @@ function createWebGLGraph(data, channel) {
     .d3Force("x", d3.forceX())
     .d3Force("y", d3.forceY())
     .d3Force("collide", d3.forceCollide(myGraph.nodeRelSize()))
+    .linkWidth(0.5)
     .linkDirectionalParticles(1)
     .linkDirectionalParticleWidth(link =>
       getLinkState(link, model) === "highlighted" ? 1 : 0

@@ -13,6 +13,7 @@ import {
   uriToSlug,
   extractHashtags,
   extractTagsFromProp,
+  nameToSlug,
 } from './utils';
 import { ID } from './types';
 import { ParserPlugin } from './plugins';
@@ -53,7 +54,7 @@ const wikilinkPlugin: ParserPlugin = {
     if (node.type === 'wikiLink') {
       note.links.push({
         type: 'wikilink',
-        slug: node.value as string,
+        slug: nameToSlug(node.value as string),
         position: node.position!,
       });
     }

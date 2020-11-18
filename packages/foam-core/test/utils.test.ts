@@ -1,5 +1,6 @@
 import {
   uriToSlug,
+  nameToSlug,
   hashURI,
   computeRelativeURI,
   extractHashtags,
@@ -12,6 +13,13 @@ describe('URI utils', () => {
     expect(uriToSlug('another/relative/path.md')).toEqual('path');
     expect(uriToSlug('no-directory.markdown')).toEqual('no-directory');
     expect(uriToSlug('many.dots.name.markdown')).toEqual('manydotsname');
+  });
+
+  it('converts a name to a slug', () => {
+    expect(nameToSlug('this.has.dots')).toEqual('thishasdots');
+    expect(nameToSlug('title')).toEqual('title');
+    expect(nameToSlug('this is a title')).toEqual('this-is-a-title');
+    expect(nameToSlug('this is a title/slug')).toEqual('this-is-a-titleslug');
   });
 
   it('normalizes URI before hashing', () => {

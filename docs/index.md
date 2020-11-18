@@ -165,6 +165,20 @@ If that sounds like something you're interested in, I'd love to have you along o
   </tr>
   <tr>
     <td align="center"><a href="https://spencerwoo.com"><img src="https://avatars2.githubusercontent.com/u/32114380?v=4" width="60px;" alt=""/><br /><sub><b>Spencer Woo</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=spencerwooo" title="Documentation">📖</a></td>
+    <td align="center"><a href="https://ingalless.com"><img src="https://avatars3.githubusercontent.com/u/22981941?v=4" width="60px;" alt=""/><br /><sub><b>ingalless</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=ingalless" title="Code">💻</a> <a href="https://github.com/foambubble/foam/commits?author=ingalless" title="Documentation">📖</a></td>
+    <td align="center"><a href="http://jmg-duarte.github.io"><img src="https://avatars2.githubusercontent.com/u/15343819?v=4" width="60px;" alt=""/><br /><sub><b>José Duarte</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=jmg-duarte" title="Code">💻</a></td>
+    <td align="center"><a href="https://www.yenly.wtf"><img src="https://avatars1.githubusercontent.com/u/6759658?v=4" width="60px;" alt=""/><br /><sub><b>Yenly</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=yenly" title="Documentation">📖</a></td>
+    <td align="center"><a href="https://www.hikerpig.cn"><img src="https://avatars1.githubusercontent.com/u/2259688?v=4" width="60px;" alt=""/><br /><sub><b>hikerpig</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=hikerpig" title="Code">💻</a></td>
+    <td align="center"><a href="http://sigfried.org"><img src="https://avatars1.githubusercontent.com/u/1586931?v=4" width="60px;" alt=""/><br /><sub><b>Sigfried Gold</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=Sigfried" title="Documentation">📖</a></td>
+    <td align="center"><a href="http://www.tristansokol.com"><img src="https://avatars3.githubusercontent.com/u/867661?v=4" width="60px;" alt=""/><br /><sub><b>Tristan Sokol</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=tristansokol" title="Code">💻</a></td>
+  </tr>
+  <tr>
+    <td align="center"><a href="https://umbrellait.com"><img src="https://avatars0.githubusercontent.com/u/49779373?v=4" width="60px;" alt=""/><br /><sub><b>Danil Rodin</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=umbrellait-danil-rodin" title="Documentation">📖</a></td>
+    <td align="center"><a href="https://www.linkedin.com/in/scottjoewilliams/"><img src="https://avatars1.githubusercontent.com/u/2026866?v=4" width="60px;" alt=""/><br /><sub><b>Scott Williams</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=scott-joe" title="Documentation">📖</a></td>
+    <td align="center"><a href="https://jackiexiao.github.io/blog"><img src="https://avatars2.githubusercontent.com/u/18050469?v=4" width="60px;" alt=""/><br /><sub><b>jackiexiao</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=Jackiexiao" title="Documentation">📖</a></td>
+    <td align="center"><a href="https://generativist.substack.com/"><img src="https://avatars3.githubusercontent.com/u/78835?v=4" width="60px;" alt=""/><br /><sub><b>John B Nelson</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=jbn" title="Documentation">📖</a></td>
+    <td align="center"><a href="https://github.com/asifm"><img src="https://avatars2.githubusercontent.com/u/3958387?v=4" width="60px;" alt=""/><br /><sub><b>Asif Mehedi</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=asifm" title="Documentation">📖</a></td>
+    <td align="center"><a href="https://github.com/litanlitudan"><img src="https://avatars2.githubusercontent.com/u/4970420?v=4" width="60px;" alt=""/><br /><sub><b>Tan Li</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=litanlitudan" title="Code">💻</a></td>
   </tr>
 </table>
 

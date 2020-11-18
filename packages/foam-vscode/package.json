@@ -3,13 +3,18 @@
   "displayName": "Foam for VSCode (Wikilinks to Markdown)",
   "description": "Generate markdown reference lists from wikilinks in a workspace",
   "author": "Jani Eväkallio",
-  "repository": "https://github.com/foambubble/foam",
+  "repository": {
+    "url": "https://github.com/foambubble/foam",
+    "type": "git"
+  },
+  "homepage": "https://github.com/foambubble/foam",
   "version": "0.5.0",
   "license": "MIT",
   "publisher": "foam",
   "engines": {
     "vscode": "^1.45.1"
   },
+  "icon": "icon/FOAM_ICON_256.png",
   "categories": [
     "Other"
   ],
@@ -68,10 +73,11 @@
             "array"
           ],
           "default": [
-            ".vscode/*",
-            "_layouts/*"
+            ".vscode/**/*",
+            "_layouts/**/*",
+            "_site/**/*"
           ],
-          "description": "Specifies the list of globs that will be ignored by Foam (e.g. they will not be considered when creating the graph)."
+          "description": "Specifies the list of globs that will be ignored by Foam (e.g. they will not be considered when creating the graph). To ignore the all the content of a given folder, use `<folderName>/**/*`"
         },
         "foam.edit.linkReferenceDefinitions": {
           "type": "string",
@@ -129,6 +135,11 @@
             "Navigates to the note, creating it following your daily note settings if it does not exist"
           ],
           "description": "Whether or not to navigate to the target daily note when a daily note snippet is selected."
+        },
+        "foam.graph.titleMaxLength": {
+          "type": "number",
+          "default": 24,
+          "description": "The maximum title length before being abbreviated. Set to 0 or less to disable."
         }
       }
     },

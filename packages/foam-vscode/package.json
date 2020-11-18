@@ -4,7 +4,7 @@
   "description": "Generate markdown reference lists from wikilinks in a workspace",
   "author": "Jani Eväkallio",
   "repository": {
-    "url":"https://github.com/foambubble/foam",
+    "url": "https://github.com/foambubble/foam",
     "type": "git"
   },
   "homepage": "https://github.com/foambubble/foam",
@@ -14,7 +14,7 @@
   "engines": {
     "vscode": "^1.45.1"
   },
-  "icon": "../../icon/FOAM_ICON_256.png",
+  "icon": "icon/FOAM_ICON_256.png",
   "categories": [
     "Other"
   ],

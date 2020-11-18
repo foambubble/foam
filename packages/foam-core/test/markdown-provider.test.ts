@@ -11,6 +11,8 @@ const pageA = `
 ## Section
 - [[page-b]]
 - [[page-c]]
+- [[Page D]]
+- [[page e]]
 `;
 
 const pageB = `
@@ -22,6 +24,14 @@ const pageC = `
 # Page C
 `;
 
+const pageD = `
+# Page D
+`;
+
+const pageE = `
+# Page E
+`;
+
 const createNoteFromMarkdown = createMarkdownParser([]).parse;
 
 describe('Markdown loader', () => {
@@ -30,13 +40,15 @@ describe('Markdown loader', () => {
     graph.setNote(createNoteFromMarkdown('/page-a.md', pageA, '\n'));
     graph.setNote(createNoteFromMarkdown('/page-b.md', pageB, '\n'));
     graph.setNote(createNoteFromMarkdown('/page-c.md', pageC, '\n'));
+    graph.setNote(createNoteFromMarkdown('/page-d.md', pageD, '\n'));
+    graph.setNote(createNoteFromMarkdown('/page-e.md', pageE, '\n'));
 
     expect(
       graph
         .getNotes()
         .map(n => n.slug)
         .sort()
-    ).toEqual(['page-a', 'page-b', 'page-c']);
+    ).toEqual(['page-a', 'page-b', 'page-c', 'page-d', 'page-e']);
   });
 
   it('Parses wikilinks correctly', () => {
@@ -48,13 +60,15 @@ describe('Markdown loader', () => {
       createNoteFromMarkdown('/page-b.md', pageB, '\n')
     );
     graph.setNote(createNoteFromMarkdown('/page-c.md', pageC, '\n'));
+    graph.setNote(createNoteFromMarkdown('/page-d.md', pageD, '\n'));
+    graph.setNote(createNoteFromMarkdown('/page-e.md', pageE, '\n'));
 
     expect(
       graph.getBacklinks(noteB.id).map(link => graph.getNote(link.from)!.slug)
     ).toEqual(['page-a']);
     expect(
       graph.getForwardLinks(noteA.id).map(link => graph.getNote(link.to)!.slug)
-    ).toEqual(['page-b', 'page-c']);
+    ).toEqual(['page-b', 'page-c', 'page-d', 'page-e']);
   });
 });
 

@@ -9,10 +9,18 @@ try {
         const data = message.payload;
         createWebGLGraph(data, vscode);
         break;
+      case "selected":
+        const noteId = message.payload;
+        const node = myGraph.graphData().nodes.find(node => node.id === noteId);
+        if (node) {
+          myGraph.centerAt(node.x, node.y, 300).zoom(3, 300);
+          model = updateModel(node, null);
+        }
+        break;
     }
   });
 } catch {
-  console.log("VSCode not detected");
+  console.log("VsCode not detected");
 }
 
 const CONTAINER_ID = "graph";
@@ -29,30 +37,31 @@ const style = {
   },
   link: {
     highlighted: "#f9c74f",
-    regular: "#277da1"
+    regular: "#055171"
   }
 };
 
 const sizeScale = d3
   .scaleLinear()
   .domain([0, 30])
-  .range([2, 6])
+  .range([1, 3])
   .clamp(true);
 
 const labelAlpha = d3
   .scaleLinear()
-  .domain([1.7, 4])
+  .domain([1.2, 2])
   .range([0, 1])
   .clamp(true);
 
 const globalFontSize = 12;
 
+const myGraph = ForceGraph();
+let model = updateModel(null, null);
+
 function createWebGLGraph(data, channel) {
   data = convertData(data);
-  let model = updateModel(null, null);
 
   const elem = document.getElementById(CONTAINER_ID);
-  const myGraph = ForceGraph();
   myGraph(elem)
     .graphData(data)
     .backgroundColor(style.backgroundColor)
@@ -60,6 +69,7 @@ function createWebGLGraph(data, channel) {
     .d3Force("x", d3.forceX())
     .d3Force("y", d3.forceY())
     .d3Force("collide", d3.forceCollide(myGraph.nodeRelSize()))
+    .linkWidth(0.5)
     .linkDirectionalParticles(1)
     .linkDirectionalParticleWidth(link =>
       getLinkState(link, model) === "highlighted" ? 1 : 0
@@ -85,7 +95,10 @@ function createWebGLGraph(data, channel) {
       ctx.textAlign = "center";
       ctx.textBaseline = "top";
       let textColor = d3.rgb(fill);
-      textColor.opacity = labelAlpha(globalScale);
+      textColor.opacity =
+        getNodeState(node, model) === "highlighted"
+          ? 1
+          : labelAlpha(globalScale);
       ctx.fillStyle = textColor;
       ctx.fillText(node.name, node.x, node.y + size + 1);
     })

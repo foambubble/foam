@@ -41,7 +41,7 @@ const sizeScale = d3
 
 const labelAlpha = d3
   .scaleLinear()
-  .domain([1.7, 4])
+  .domain([1.2, 2])
   .range([0, 1])
   .clamp(true);
 
@@ -85,7 +85,10 @@ function createWebGLGraph(data, channel) {
       ctx.textAlign = "center";
       ctx.textBaseline = "top";
       let textColor = d3.rgb(fill);
-      textColor.opacity = labelAlpha(globalScale);
+      textColor.opacity =
+        getNodeState(node, model) === "highlighted"
+          ? 1
+          : labelAlpha(globalScale);
       ctx.fillStyle = textColor;
       ctx.fillText(node.name, node.x, node.y + size + 1);
     })

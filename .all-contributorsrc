@@ -506,6 +506,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "litanlitudan",
+      "name": "Tan Li",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/4970420?v=4",
+      "profile": "https://github.com/litanlitudan",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,

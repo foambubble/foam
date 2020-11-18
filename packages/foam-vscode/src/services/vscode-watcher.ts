@@ -1,7 +1,7 @@
 import { IDisposable, Emitter, URI, IDataStoreWatcher } from "foam-core";
 import { FileSystemWatcher } from "vscode";
 
-export class VscodeBaseWatcher implements IDataStoreWatcher, IDisposable {
+export class VsCodeBasedWatcher implements IDataStoreWatcher, IDisposable {
   onDidChangeEmitter = new Emitter<URI>();
   onDidCreateEmitter = new Emitter<URI>();
   onDidDeleteEmitter = new Emitter<URI>();

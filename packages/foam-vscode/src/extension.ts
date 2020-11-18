@@ -12,7 +12,7 @@ import {
 } from "foam-core";
 
 import { features } from "./features";
-import { VscodeBaseWatcher } from "./services/vscode-watcher";
+import { VsCodeBasedWatcher } from "./services/vscode-watcher";
 import { getConfigFromVscode } from "./services/config";
 
 let foam: Foam | null = null;
@@ -22,7 +22,7 @@ export async function activate(context: ExtensionContext) {
     const config: FoamConfig = getConfigFromVscode();
     const dataStore = new FileDataStore(
       config,
-      new VscodeBaseWatcher(workspace.createFileSystemWatcher("**/*"))
+      new VsCodeBasedWatcher(workspace.createFileSystemWatcher("**/*"))
     );
     const services: Services = {
       logger: console,

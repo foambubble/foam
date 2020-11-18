@@ -9,10 +9,18 @@ try {
         const data = message.payload;
         createWebGLGraph(data, vscode);
         break;
+      case "selected":
+        const noteId = message.payload;
+        const node = myGraph.graphData().nodes.find(node => node.id === noteId);
+        if (node) {
+          myGraph.centerAt(node.x, node.y, 300).zoom(3, 300);
+          model = updateModel(node, null);
+        }
+        break;
     }
   });
 } catch {
-  console.log("VSCode not detected");
+  console.log("VsCode not detected");
 }
 
 const CONTAINER_ID = "graph";
@@ -47,12 +55,13 @@ const labelAlpha = d3
 
 const globalFontSize = 12;
 
+const myGraph = ForceGraph();
+let model = updateModel(null, null);
+
 function createWebGLGraph(data, channel) {
   data = convertData(data);
-  let model = updateModel(null, null);
 
   const elem = document.getElementById(CONTAINER_ID);
-  const myGraph = ForceGraph();
   myGraph(elem)
     .graphData(data)
     .backgroundColor(style.backgroundColor)

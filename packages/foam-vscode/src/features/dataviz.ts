@@ -4,6 +4,7 @@ import { FoamFeature } from "../types";
 import { Foam } from "foam-core";
 import { TextDecoder } from "util";
 import { getTitleMaxLength } from "../settings";
+import { isSome } from "../utils";
 
 const feature: FoamFeature = {
   activate: (context: vscode.ExtensionContext, foamPromise: Promise<Foam>) => {
@@ -20,6 +21,17 @@ const feature: FoamFeature = {
         foam.notes.unstable_removeEventListener(onNoteAdded);
       });
 
+      vscode.window.onDidChangeActiveTextEditor(e => {
+        if (e.document.uri.scheme === "file") {
+          const note = foam.notes.getNoteByURI(e.document.uri.fsPath);
+          if (isSome(note)) {
+            panel.webview.postMessage({
+              type: "selected",
+              payload: note.id
+            });
+          }
+        }
+      });
       updateGraph(panel, foam);
     });
   }

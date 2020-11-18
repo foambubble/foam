@@ -4,7 +4,10 @@ import {
   TextDocument,
   window,
   Position,
-  TextEditor
+  TextEditor,
+  workspace,
+  Uri,
+  Selection
 } from "vscode";
 import * as fs from "fs";
 
@@ -162,6 +165,20 @@ export function isSome<T>(value: T | null | undefined | void): value is T {
  *
  * @param value The object to verify
  */
-export function isNone<T>(value: T | null | undefined | void): value is null | undefined | void {
+export function isNone<T>(
+  value: T | null | undefined | void
+): value is null | undefined | void {
   return value == null;
+}
+
+export async function focusNote(notePath: string, moveCursorToEnd: boolean) {
+  const document = await workspace.openTextDocument(Uri.file(notePath));
+  const editor = await window.showTextDocument(document);
+
+  // Move the cursor to end of the file
+  if (moveCursorToEnd) {
+    const { lineCount } = editor.document;
+    const { range } = editor.document.lineAt(lineCount - 1);
+    editor.selection = new Selection(range.end, range.end);
+  }
 }

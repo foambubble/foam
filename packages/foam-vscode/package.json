@@ -59,6 +59,10 @@
       {
         "command": "foam-vscode.copy-without-brackets",
         "title": "Foam: Copy To Clipboard Without Brackets"
+      },
+      {
+        "command": "foam-vscode.create-note-from-template",
+        "title": "Foam: Create New Note From Template"
       }
     ],
     "configuration": {

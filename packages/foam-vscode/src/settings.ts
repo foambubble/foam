@@ -17,10 +17,10 @@ export function getWikilinkDefinitionSetting(): LinkReferenceDefinitionsSetting 
 
 /** Retrieve the list of file ignoring globs. */
 export function getIgnoredFilesSetting(): string[] {
-  return workspace.getConfiguration("foam.files").get("ignore")
+  return workspace.getConfiguration("foam.files").get("ignore");
 }
 
 /** Retrieves the maximum length for a Graph node title. */
 export function getTitleMaxLength(): number {
-  return workspace.getConfiguration("foam.graph").get("titleMaxLength")
+  return workspace.getConfiguration("foam.graph").get("titleMaxLength");
 }

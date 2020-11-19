@@ -5,7 +5,6 @@ import { IDataStore, FileDataStore } from './services/datastore';
 import { ILogger } from './services/logger';
 
 export { IDataStore, FileDataStore };
-export { IDataStoreWatcher } from './services/datastore';
 export { ILogger };
 export { IDisposable, isDisposable } from './common/lifecycle';
 export { Event, Emitter } from './common/event';

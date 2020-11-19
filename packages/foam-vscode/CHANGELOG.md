@@ -4,6 +4,19 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.6.0] - 2020-11-19
+
+New features:
+- Added command to create notes from templates (#115 - Thanks @ingalless)
+
+Fixes and Improvements:
+- Foam model: Fixed bug that prevented wikilinks from being slugified (#323 - thanks @SanketDG)
+- Editor: Improvements in defaults for ignored files setting (thanks @jmg-duarte)
+- Dataviz: Centering of the graph on note displayed in active editor (#319)
+- Dataviz: Improved graph styling
+- Dataviz: Added setting to cap the length of labels in the graph (thanks @jmg-duarte)
+- Misc: Fixed problem with packaging icon in extension (#350 - thanks @litanlitudan)
+
 ## [0.5.0] - 2020-11-09
 
 New features:

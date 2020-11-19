@@ -4,7 +4,6 @@ import micromatch from 'micromatch';
 import fs from 'fs';
 import { Event, Emitter } from '../common/event';
 import { URI } from '../types';
-import { IDisposable, isDisposable } from '../common/lifecycle';
 import { FoamConfig } from '../config';
 
 const findAllFiles = promisify(glob);
@@ -24,6 +23,18 @@ export interface IDataStore {
   read: (uri: URI) => Promise<string>;
 
   /**
+   * Returns whether the given URI is a match in
+   * this data store
+   */
+  isMatch: (uri: URI) => boolean;
+
+  /**
+   * Filters a list of URIs based on whether they are a match
+   * in this data store
+   */
+  match: (uris: URI[]) => string[];
+
+  /**
    * An event which fires on file creation.
    */
   onDidCreate: Event<URI>;
@@ -40,51 +51,21 @@ export interface IDataStore {
 }
 
 /**
- * Monitor a data store for changes in its content
- */
-export interface IDataStoreWatcher {
-  /**
-   * Emitter that drives the data store onDidCreate event
-   */
-  onDidCreateEmitter: Emitter<URI>;
-  /**
-   * Emitter that drives the data store onDidChange event
-   */
-  onDidChangeEmitter: Emitter<URI>;
-  /**
-   * Emitter that drives the data store onDidDelete event
-   */
-  onDidDeleteEmitter: Emitter<URI>;
-}
-
-/**
- * Dummy datastore watcher that will never trigger an event
- */
-export const NoopDatastoreWatcher: IDataStoreWatcher = {
-  onDidCreateEmitter: new Emitter<URI>(),
-  onDidChangeEmitter: new Emitter<URI>(),
-  onDidDeleteEmitter: new Emitter<URI>(),
-};
-
-/**
  * File system based data store
  */
-export class FileDataStore implements IDataStore, IDisposable {
-  onDidCreate: Event<URI>;
-  onDidChange: Event<URI>;
-  onDidDelete: Event<URI>;
-  isMatch: (uri: URI) => boolean;
-  match: (uris: URI[]) => string[];
+export class FileDataStore implements IDataStore {
+  readonly onDidChangeEmitter = new Emitter<URI>();
+  readonly onDidCreateEmitter = new Emitter<URI>();
+  readonly onDidDeleteEmitter = new Emitter<URI>();
+  readonly onDidCreate: Event<URI> = this.onDidCreateEmitter.event;
+  readonly onDidChange: Event<URI> = this.onDidChangeEmitter.event;
+  readonly onDidDelete: Event<URI> = this.onDidDeleteEmitter.event;
+  readonly isMatch: (uri: URI) => boolean;
+  readonly match: (uris: URI[]) => string[];
 
   private _folders: readonly string[];
-  private _watcher: IDataStoreWatcher;
 
-  constructor(config: FoamConfig, watcher?: IDataStoreWatcher) {
-    watcher = watcher ?? NoopDatastoreWatcher;
-    this.onDidCreate = watcher.onDidCreateEmitter.event;
-    this.onDidChange = watcher.onDidChangeEmitter.event;
-    this.onDidDelete = watcher.onDidDeleteEmitter.event;
-    this._watcher = watcher;
+  constructor(config: FoamConfig) {
     this._folders = config.workspaceFolders;
 
     let includeGlobs: string[] = [];
@@ -124,12 +105,6 @@ export class FileDataStore implements IDataStore, IDisposable {
 
   async read(uri: URI) {
     return (await fs.promises.readFile(uri)).toString();
-  }
-
-  dispose(): void {
-    if (isDisposable(this._watcher)) {
-      this._watcher.dispose();
-    }
   }
 }
 

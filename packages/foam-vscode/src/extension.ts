@@ -12,7 +12,6 @@ import {
 } from "foam-core";
 
 import { features } from "./features";
-import { VsCodeBasedWatcher } from "./services/vscode-watcher";
 import { getConfigFromVscode } from "./services/config";
 
 let foam: Foam | null = null;
@@ -20,10 +19,25 @@ let foam: Foam | null = null;
 export async function activate(context: ExtensionContext) {
   try {
     const config: FoamConfig = getConfigFromVscode();
-    const dataStore = new FileDataStore(
-      config,
-      new VsCodeBasedWatcher(workspace.createFileSystemWatcher("**/*"))
-    );
+    const dataStore = new FileDataStore(config);
+
+    const watcher = workspace.createFileSystemWatcher("**/*");
+    watcher.onDidCreate(uri => {
+      if (dataStore.isMatch(uri.fsPath)) {
+        dataStore.onDidCreateEmitter.fire(uri.fsPath);
+      }
+    });
+    watcher.onDidChange(uri => {
+      if (dataStore.isMatch(uri.fsPath)) {
+        dataStore.onDidChangeEmitter.fire(uri.fsPath);
+      }
+    });
+    watcher.onDidDelete(uri => {
+      if (dataStore.isMatch(uri.fsPath)) {
+        dataStore.onDidDeleteEmitter.fire(uri.fsPath);
+      }
+    });
+
     const services: Services = {
       logger: console,
       dataStore: dataStore

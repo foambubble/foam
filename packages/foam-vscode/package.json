@@ -161,7 +161,8 @@
     "npm-install": "rimraf node_modules && npm i",
     "npm-cleanup": "rimraf package-lock.json node_modules && yarn",
     "package-extension": "npx vsce package && yarn npm-cleanup",
-    "publish-extension": "npx vsce publish && yarn npm-cleanup"
+    "install-extension": "code --install-extension ./foam-vscode-$npm_package_version.vsix",
+    "publish-extension": "npx vsce publish --packagePath foam-vscode-$npm_package_version.vsix && yarn npm-cleanup"
   },
   "devDependencies": {
     "@babel/core": "^7.11.0",

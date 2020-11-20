@@ -1,43 +1,16 @@
-try {
-  const vscode = acquireVsCodeApi();
-
-  window.addEventListener("message", event => {
-    const message = event.data;
-
-    switch (message.type) {
-      case "refresh":
-        const data = message.payload;
-        createWebGLGraph(data, vscode);
-        break;
-      case "selected":
-        const noteId = message.payload;
-        const node = myGraph.graphData().nodes.find(node => node.id === noteId);
-        if (node) {
-          myGraph.centerAt(node.x, node.y, 300).zoom(3, 300);
-          model = updateModel(node, null);
-        }
-        break;
-    }
-  });
-} catch {
-  console.log("VsCode not detected");
-}
-
 const CONTAINER_ID = "graph";
 
+function getStyle(name) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name);
+}
+
 const style = {
-  backgroundColor: "#202020",
+  background: getStyle(`--vscode-panel-background`),
+  fontSize: parseInt(getStyle(`--vscode-font-size`)),
+  highlightedForeground: getStyle("--vscode-list-highlightForeground"),
   node: {
-    note: "#277da1",
-    nonExistingNote: "#545454",
-    attachment: "#43aa8b",
-    externalResource: "#f8961e",
-    tag: "#f3722c",
-    unknown: "#f94144"
-  },
-  link: {
-    highlighted: "#f9c74f",
-    regular: "#055171"
+    note: getStyle("--vscode-editor-foreground"),
+    nonExistingNote: getStyle("--vscode-list-deemphasizedForeground")
   }
 };
 
@@ -53,18 +26,41 @@ const labelAlpha = d3
   .range([0, 1])
   .clamp(true);
 
-const globalFontSize = 12;
-
 const myGraph = ForceGraph();
+window.graph = myGraph;
 let model = updateModel(null, null);
+window.model = model;
+
+try {
+  const vscode = acquireVsCodeApi();
+
+  window.addEventListener("message", event => {
+    const message = event.data;
+
+    switch (message.type) {
+      case "refresh":
+        const data = convertData(message.payload);
+        createWebGLGraph(data, vscode);
+        myGraph.graphData(data);
+        break;
+      case "selected":
+        const noteId = message.payload;
+        const node = myGraph.graphData().nodes.find(node => node.id === noteId);
+        if (node) {
+          myGraph.centerAt(node.x, node.y, 300).zoom(3, 300);
+          model = updateModel(node, null);
+        }
+        break;
+    }
+  });
+} catch {
+  console.log("VsCode not detected");
+}
 
 function createWebGLGraph(data, channel) {
-  data = convertData(data);
-
   const elem = document.getElementById(CONTAINER_ID);
   myGraph(elem)
-    .graphData(data)
-    .backgroundColor(style.backgroundColor)
+    .backgroundColor(style.background)
     .linkHoverPrecision(8)
     .d3Force("x", d3.forceX())
     .d3Force("y", d3.forceY())
@@ -78,7 +74,7 @@ function createWebGLGraph(data, channel) {
     .nodeLabel("")
     .nodeCanvasObject((node, ctx, globalScale) => {
       const size = sizeScale(node.nInLinks + node.nOutLinks);
-      const fontSize = globalFontSize / globalScale;
+      const fontSize = style.fontSize / globalScale;
       const { fill, border } = getNodeColor(node, model);
       ctx.beginPath();
       ctx.arc(node.x, node.y, size + 0.5, 0, 2 * Math.PI, false);
@@ -160,7 +156,10 @@ function getNodeColor(node, model) {
       const darker = d3.hsl(typeFill).darker(3);
       return { fill: darker, border: darker };
     case "highlighted":
-      return { fill: typeFill, border: "#f9c74f" };
+      return {
+        fill: typeFill,
+        border: style.highlightedForeground
+      };
     default:
       throw new Error("Unknown type for node", node);
   }
@@ -169,11 +168,11 @@ function getNodeColor(node, model) {
 function getLinkColor(link, model) {
   switch (getLinkState(link, model)) {
     case "regular":
-      return style.link.regular;
+      return d3.hsl(style.node.note).darker(3);
     case "highlighted":
-      return style.link.highlighted;
+      return style.highlightedForeground;
     case "lessened":
-      return d3.hsl(style.link.regular).darker(3);
+      return d3.hsl(style.node.note).darker(4);
     default:
       throw new Error("Unknown type for link", link);
   }
@@ -221,8 +220,11 @@ function updateModel(selectedNode, hoverNode) {
 // For testing
 window.onload = () => {
   if (window.data) {
-    createWebGLGraph(window.data, {
+    const graphData = convertData(window.data);
+    window.graphData = graphData;
+    createWebGLGraph(graphData, {
       postMessage: message => console.log("message", message)
     });
+    myGraph.graphData(data);
   }
 };

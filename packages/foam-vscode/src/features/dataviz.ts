@@ -12,12 +12,16 @@ const feature: FoamFeature = {
       const foam = await foamPromise;
       const panel = await createGraphPanel(foam, context);
 
-      const onNoteAdded = _ => {
+      const onFoamChanged = _ => {
         updateGraph(panel, foam);
       };
 
-      const noteAddedListener = foam.notes.onDidAddNote(onNoteAdded);
-      panel.onDidDispose(() => noteAddedListener.dispose());
+      const noteAddedListener = foam.notes.onDidAddNote(onFoamChanged);
+      const noteUpdatedListener = foam.notes.onDidUpdateNote(onFoamChanged);
+      panel.onDidDispose(() => {
+        noteAddedListener.dispose();
+        noteUpdatedListener.dispose();
+      });
 
       vscode.window.onDidChangeActiveTextEditor(e => {
         if (e.document.uri.scheme === "file") {

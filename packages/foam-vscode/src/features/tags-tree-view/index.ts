@@ -86,7 +86,7 @@ export class Tag extends vscode.TreeItem {
   constructor(public readonly tag: string, public readonly noteIds: string[]) {
     super(tag, vscode.TreeItemCollapsibleState.Collapsed);
     this.description = `${this.noteIds.length} reference${
-      this.noteIds.length != 1 ? "s" : ""
+      this.noteIds.length !== 1 ? "s" : ""
     }`;
     this.tooltip = this.description;
   }

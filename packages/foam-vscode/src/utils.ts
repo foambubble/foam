@@ -157,7 +157,8 @@ export function pathExists(path: string) {
  * @param value The object to verify
  */
 export function isSome<T>(value: T | null | undefined | void): value is T {
-  return value != null;
+  //
+  return value != null; // eslint-disable-line
 }
 
 /**
@@ -168,7 +169,7 @@ export function isSome<T>(value: T | null | undefined | void): value is T {
 export function isNone<T>(
   value: T | null | undefined | void
 ): value is null | undefined | void {
-  return value == null;
+  return value == null; // eslint-disable-line
 }
 
 export async function focusNote(notePath: string, moveCursorToEnd: boolean) {

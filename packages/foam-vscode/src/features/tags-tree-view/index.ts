@@ -15,7 +15,7 @@ const feature: FoamFeature = {
         provider
       )
     );
-    foam.notes.unstable_onNoteUpdated(() => provider.refresh());
+    foam.notes.onDidUpdateNote(() => provider.refresh());
   }
 };
 

@@ -16,10 +16,8 @@ const feature: FoamFeature = {
         updateGraph(panel, foam);
       };
 
-      foam.notes.unstable_onNoteAdded(onNoteAdded);
-      panel.onDidDispose(() => {
-        foam.notes.unstable_removeEventListener(onNoteAdded);
-      });
+      const noteAddedListener = foam.notes.onDidAddNote(onNoteAdded);
+      panel.onDidDispose(() => noteAddedListener.dispose());
 
       vscode.window.onDidChangeActiveTextEditor(e => {
         if (e.document.uri.scheme === "file") {

@@ -37,11 +37,11 @@ const createNoteFromMarkdown = createMarkdownParser([]).parse;
 describe('Markdown loader', () => {
   it('Converts markdown to notes', () => {
     const graph = new NoteGraph();
-    graph.setNote(createNoteFromMarkdown('/page-a.md', pageA, '\n'));
-    graph.setNote(createNoteFromMarkdown('/page-b.md', pageB, '\n'));
-    graph.setNote(createNoteFromMarkdown('/page-c.md', pageC, '\n'));
-    graph.setNote(createNoteFromMarkdown('/page-d.md', pageD, '\n'));
-    graph.setNote(createNoteFromMarkdown('/page-e.md', pageE, '\n'));
+    graph.setNote(createNoteFromMarkdown('/page-a.md', pageA));
+    graph.setNote(createNoteFromMarkdown('/page-b.md', pageB));
+    graph.setNote(createNoteFromMarkdown('/page-c.md', pageC));
+    graph.setNote(createNoteFromMarkdown('/page-d.md', pageD));
+    graph.setNote(createNoteFromMarkdown('/page-e.md', pageE));
 
     expect(
       graph
@@ -53,15 +53,11 @@ describe('Markdown loader', () => {
 
   it('Parses wikilinks correctly', () => {
     const graph = new NoteGraph();
-    const noteA = graph.setNote(
-      createNoteFromMarkdown('/page-a.md', pageA, '\n')
-    );
-    const noteB = graph.setNote(
-      createNoteFromMarkdown('/page-b.md', pageB, '\n')
-    );
-    graph.setNote(createNoteFromMarkdown('/page-c.md', pageC, '\n'));
-    graph.setNote(createNoteFromMarkdown('/page-d.md', pageD, '\n'));
-    graph.setNote(createNoteFromMarkdown('/page-e.md', pageE, '\n'));
+    const noteA = graph.setNote(createNoteFromMarkdown('/page-a.md', pageA));
+    const noteB = graph.setNote(createNoteFromMarkdown('/page-b.md', pageB));
+    graph.setNote(createNoteFromMarkdown('/page-c.md', pageC));
+    graph.setNote(createNoteFromMarkdown('/page-d.md', pageD));
+    graph.setNote(createNoteFromMarkdown('/page-e.md', pageE));
 
     expect(
       graph.getBacklinks(noteB.id).map(link => graph.getNote(link.from)!.slug)
@@ -75,9 +71,7 @@ describe('Markdown loader', () => {
 describe('Note Title', () => {
   it('should initialize note title if heading exists', () => {
     const graph = new NoteGraph();
-    const note = graph.setNote(
-      createNoteFromMarkdown('/page-a.md', pageA, '\n')
-    );
+    const note = graph.setNote(createNoteFromMarkdown('/page-a.md', pageA));
 
     const pageANoteTitle = graph.getNote(note.id)!.title;
     expect(pageANoteTitle).toBe('Page A');
@@ -90,8 +84,7 @@ describe('Note Title', () => {
         '/page-d.md',
         `
 This file has no heading.
-      `,
-        '\n'
+      `
       )
     );
 
@@ -111,8 +104,7 @@ date: 20-12-12
 ---
 
 # Other Note Title
-      `,
-        '\n'
+      `
       )
     );
 
@@ -127,8 +119,7 @@ date: 20-12-12
 #
 
 this note has an empty title line
-    `,
-      '\n'
+    `
     );
     expect(note.title).toEqual('Hello Page');
   });
@@ -146,8 +137,7 @@ title: Note Title
 date: 20-12-12
 ---
 
-# Other Note Title`,
-        '\n'
+# Other Note Title`
       )
     );
 
@@ -172,8 +162,7 @@ date: 20-12-12
 ---
 
 # Empty Frontmatter
-`,
-        '\n'
+`
       )
     );
 
@@ -196,8 +185,7 @@ title: - one
  - #
 ---
 
-`,
-        '\n'
+`
       )
     );
 
@@ -213,10 +201,10 @@ describe('wikilinks definitions', () => {
   it('can generate links without file extension when includeExtension = false', () => {
     const graph = new NoteGraph();
     const noteA = graph.setNote(
-      createNoteFromMarkdown('/dir1/page-a.md', pageA, '\n')
+      createNoteFromMarkdown('/dir1/page-a.md', pageA)
     );
-    graph.setNote(createNoteFromMarkdown('/dir1/page-b.md', pageB, '\n'));
-    graph.setNote(createNoteFromMarkdown('/dir1/page-c.md', pageC, '\n'));
+    graph.setNote(createNoteFromMarkdown('/dir1/page-b.md', pageB));
+    graph.setNote(createNoteFromMarkdown('/dir1/page-c.md', pageC));
 
     const noExtRefs = createMarkdownReferences(graph, noteA.id, false);
     expect(noExtRefs.map(r => r.url)).toEqual(['page-b', 'page-c']);
@@ -225,10 +213,10 @@ describe('wikilinks definitions', () => {
   it('can generate links with file extension when includeExtension = true', () => {
     const graph = new NoteGraph();
     const noteA = graph.setNote(
-      createNoteFromMarkdown('/dir1/page-a.md', pageA, '\n')
+      createNoteFromMarkdown('/dir1/page-a.md', pageA)
     );
-    graph.setNote(createNoteFromMarkdown('/dir1/page-b.md', pageB, '\n'));
-    graph.setNote(createNoteFromMarkdown('/dir1/page-c.md', pageC, '\n'));
+    graph.setNote(createNoteFromMarkdown('/dir1/page-b.md', pageB));
+    graph.setNote(createNoteFromMarkdown('/dir1/page-c.md', pageC));
 
     const extRefs = createMarkdownReferences(graph, noteA.id, true);
     expect(extRefs.map(r => r.url)).toEqual(['page-b.md', 'page-c.md']);
@@ -237,10 +225,10 @@ describe('wikilinks definitions', () => {
   it('use relative paths', () => {
     const graph = new NoteGraph();
     const noteA = graph.setNote(
-      createNoteFromMarkdown('/dir1/page-a.md', pageA, '\n')
+      createNoteFromMarkdown('/dir1/page-a.md', pageA)
     );
-    graph.setNote(createNoteFromMarkdown('/dir2/page-b.md', pageB, '\n'));
-    graph.setNote(createNoteFromMarkdown('/dir3/page-c.md', pageC, '\n'));
+    graph.setNote(createNoteFromMarkdown('/dir2/page-b.md', pageB));
+    graph.setNote(createNoteFromMarkdown('/dir3/page-c.md', pageC));
 
     const extRefs = createMarkdownReferences(graph, noteA.id, true);
     expect(extRefs.map(r => r.url)).toEqual([
@@ -257,8 +245,7 @@ describe('tags plugin', () => {
       `
 # this is a heading
 this is some #text that includes #tags we #care-about.
-    `,
-      '\n'
+    `
     );
     expect(noteA.tags).toEqual(new Set(['text', 'tags', 'care-about']));
   });
@@ -272,8 +259,7 @@ tags: hello, world  this_is_good
 ---
 # this is a heading
 this is some #text that includes #tags we #care-about.
-    `,
-      '\n'
+    `
     );
     expect(noteA.tags).toEqual(
       new Set(['text', 'tags', 'care-about', 'hello', 'world', 'this_is_good'])
@@ -289,8 +275,7 @@ tags: [hello, world,  this_is_good]
 ---
 # this is a heading
 this is some #text that includes #tags we #care-about.
-    `,
-      '\n'
+    `
     );
     expect(noteA.tags).toEqual(
       new Set(['text', 'tags', 'care-about', 'hello', 'world', 'this_is_good'])
@@ -314,8 +299,7 @@ describe('parser plugins', () => {
       `
 This is a test note without headings.
 But with some content.
-`,
-      '\n'
+`
     );
     expect(note1.properties.hasHeading).toBeUndefined();
 
@@ -323,8 +307,7 @@ But with some content.
       '/path/to/a',
       `
 # This is a note with header
-and some content`,
-      '\n'
+and some content`
     );
     expect(note2.properties.hasHeading).toBeTruthy();
   });

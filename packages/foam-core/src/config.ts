@@ -3,16 +3,26 @@ import { merge } from 'lodash';
 
 export interface FoamConfig {
   workspaceFolders: string[];
+  includeGlobs: string[];
+  ignoreGlobs: string[];
   get<T>(path: string): T | undefined;
   get<T>(path: string, defaultValue: T): T;
 }
 
+const DEFAULT_INCLUDES = ['**/*'];
+
+const DEFAULT_IGNORES = ['**/node_modules/**'];
+
 export const createConfigFromObject = (
   workspaceFolders: string[],
+  include: string[],
+  ignore: string[],
   settings: any
 ) => {
   const config: FoamConfig = {
     workspaceFolders: workspaceFolders,
+    includeGlobs: include,
+    ignoreGlobs: ignore,
     get: <T>(path: string, defaultValue?: T) => {
       const tokens = path.split('.');
       const value = tokens.reduce((acc, t) => acc?.[t], settings);
@@ -23,7 +33,11 @@ export const createConfigFromObject = (
 };
 
 export const createConfigFromFolders = (
-  workspaceFolders: string[] | string
+  workspaceFolders: string[] | string,
+  options: {
+    include?: string[];
+    ignore?: string[];
+  } = {}
 ): FoamConfig => {
   if (!Array.isArray(workspaceFolders)) {
     workspaceFolders = [workspaceFolders];
@@ -42,7 +56,12 @@ export const createConfigFromFolders = (
 
   const settings = merge(workspaceConfig, userConfig);
 
-  return createConfigFromObject(workspaceFolders, settings);
+  return createConfigFromObject(
+    workspaceFolders,
+    options.include ?? DEFAULT_INCLUDES,
+    options.ignore ?? DEFAULT_IGNORES,
+    settings
+  );
 };
 
 const parseConfig = (path: string) => {

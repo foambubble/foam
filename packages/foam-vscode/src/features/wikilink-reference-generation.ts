@@ -58,7 +58,7 @@ const feature: FoamFeature = {
 
     // when a file is created as a result of peekDefinition
     // action on a wikilink, add definition update references
-    foam.notes.unstable_onNoteAdded(e => {
+    foam.notes.onDidAddNote(_ => {
       let editor = window.activeTextEditor;
       if (!editor || !isMdEditor(editor)) {
         return;

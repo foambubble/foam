@@ -7,6 +7,8 @@ import {
   generateHeading,
   getKebabCaseFileName,
   applyTextEdit,
+  Services,
+  FileDataStore,
 } from 'foam-core';
 import { writeFileToDisk } from '../utils/write-file-to-disk';
 import { renameFile } from '../utils/rename-file';
@@ -43,7 +45,11 @@ Successfully generated link references and heading!
     const config = createConfigFromFolders([workspacePath]);
 
     if (isValidDirectory(workspacePath)) {
-      let graph = (await bootstrap(config)).notes;
+      const services: Services = {
+        logger: console,
+        dataStore: new FileDataStore(config),
+      };
+      let graph = (await bootstrap(config, services)).notes;
 
       let notes = graph.getNotes().filter(Boolean); // removes undefined notes
 
@@ -72,7 +78,7 @@ Successfully generated link references and heading!
       spinner.text = 'Renaming files';
 
       // Reinitialize the graph after renaming files
-      graph = (await bootstrap(config)).notes;
+      graph = (await bootstrap(config, services)).notes;
 
       notes = graph.getNotes().filter(Boolean); // remove undefined notes
 

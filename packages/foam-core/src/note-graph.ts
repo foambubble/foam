@@ -1,7 +1,7 @@
 import { Graph } from 'graphlib';
-import { EventEmitter } from 'events';
 import { URI, ID, Note, NoteLink } from './types';
 import { computeRelativeURI } from './utils';
+import { Event, Emitter } from './common/event';
 
 export type GraphNote = Note & {
   id: ID;
@@ -25,9 +25,9 @@ export interface NoteGraphAPI {
   getAllLinks(noteId: ID): GraphConnection[];
   getForwardLinks(noteId: ID): GraphConnection[];
   getBacklinks(noteId: ID): GraphConnection[];
-  unstable_onNoteAdded(callback: NoteGraphEventHandler): void;
-  unstable_onNoteUpdated(callback: NoteGraphEventHandler): void;
-  unstable_removeEventListener(callback: NoteGraphEventHandler): void;
+  onDidAddNote: Event<GraphNote>;
+  onDidUpdateNote: Event<GraphNote>;
+  onDidRemoveNote: Event<GraphNote>;
 }
 
 export type Middleware = (next: NoteGraphAPI) => Partial<NoteGraphAPI>;
@@ -38,13 +38,21 @@ export const createGraph = (middlewares: Middleware[]): NoteGraphAPI => {
 };
 
 export class NoteGraph implements NoteGraphAPI {
+  onDidAddNote: Event<GraphNote>;
+  onDidUpdateNote: Event<GraphNote>;
+  onDidRemoveNote: Event<GraphNote>;
+
   private graph: Graph;
-  private events: EventEmitter;
   private createIdFromURI: (uri: URI) => ID;
+  private onDidAddNoteEmitter = new Emitter<GraphNote>();
+  private onDidUpdateNoteEmitter = new Emitter<GraphNote>();
+  private onDidRemoveNoteEmitter = new Emitter<GraphNote>();
 
   constructor() {
     this.graph = new Graph();
-    this.events = new EventEmitter();
+    this.onDidAddNote = this.onDidAddNoteEmitter.event;
+    this.onDidUpdateNote = this.onDidUpdateNoteEmitter.event;
+    this.onDidRemoveNote = this.onDidRemoveNoteEmitter.event;
     this.createIdFromURI = uri => uri;
   }
 
@@ -73,7 +81,9 @@ export class NoteGraph implements NoteGraphAPI {
       };
       this.graph.setEdge(graphNote.id, targetId, connection);
     });
-    this.events.emit(noteExists ? 'update' : 'add', { note: graphNote });
+    noteExists
+      ? this.onDidUpdateNoteEmitter.fire(graphNote)
+      : this.onDidAddNoteEmitter.fire(graphNote);
     return graphNote;
   }
 
@@ -117,21 +127,10 @@ export class NoteGraph implements NoteGraphAPI {
     );
   }
 
-  public unstable_onNoteAdded(callback: NoteGraphEventHandler) {
-    this.events.addListener('add', callback);
-  }
-
-  public unstable_onNoteUpdated(callback: NoteGraphEventHandler) {
-    this.events.addListener('update', callback);
-  }
-
-  public unstable_removeEventListener(callback: NoteGraphEventHandler) {
-    this.events.removeListener('add', callback);
-    this.events.removeListener('update', callback);
-  }
-
   public dispose() {
-    this.events.removeAllListeners();
+    this.onDidAddNoteEmitter.dispose();
+    this.onDidUpdateNoteEmitter.dispose();
+    this.onDidRemoveNoteEmitter.dispose();
   }
 }
 
@@ -145,8 +144,8 @@ const backfill = (next: NoteGraphAPI, middleware: Middleware): NoteGraphAPI => {
     getAllLinks: m.getAllLinks || next.getAllLinks,
     getForwardLinks: m.getForwardLinks || next.getForwardLinks,
     getBacklinks: m.getBacklinks || next.getBacklinks,
-    unstable_onNoteAdded: next.unstable_onNoteAdded.bind(next),
-    unstable_onNoteUpdated: next.unstable_onNoteUpdated.bind(next),
-    unstable_removeEventListener: next.unstable_removeEventListener.bind(next),
+    onDidAddNote: next.onDidAddNote,
+    onDidUpdateNote: next.onDidUpdateNote,
+    onDidRemoveNote: next.onDidRemoveNote,
   };
 };

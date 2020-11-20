@@ -3,14 +3,21 @@ import { NoteGraphAPI } from '../../src/note-graph';
 import { generateLinkReferences } from '../../src/janitor';
 import { bootstrap } from '../../src/bootstrap';
 import { createConfigFromFolders } from '../../src/config';
+import { Services } from '../../src';
+import { FileDataStore } from '../../src/services/datastore';
 
 describe('generateLinkReferences', () => {
   let _graph: NoteGraphAPI;
 
   beforeAll(async () => {
-    _graph = await bootstrap(
-      createConfigFromFolders([path.join(__dirname, '../__scaffold__')])
-    ).then(foam => foam.notes);
+    const config = createConfigFromFolders([
+      path.join(__dirname, '../__scaffold__'),
+    ]);
+    const services: Services = {
+      dataStore: new FileDataStore(config),
+      logger: console,
+    };
+    _graph = await bootstrap(config, services).then(foam => foam.notes);
   });
 
   it('initialised test graph correctly', () => {

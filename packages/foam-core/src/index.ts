@@ -1,7 +1,13 @@
-import { Note, NoteLink } from './types';
+import { Note, NoteLink, URI } from './types';
 import { NoteGraph, NoteGraphAPI } from './note-graph';
 import { FoamConfig } from './config';
+import { IDataStore, FileDataStore } from './services/datastore';
+import { ILogger } from './services/logger';
 
+export { IDataStore, FileDataStore };
+export { ILogger };
+export { IDisposable, isDisposable } from './common/lifecycle';
+export { Event, Emitter } from './common/event';
 export { FoamConfig };
 
 export {
@@ -22,15 +28,20 @@ export { createConfigFromFolders } from './config';
 
 export { bootstrap } from './bootstrap';
 
-export { NoteGraph, NoteGraphAPI, Note, NoteLink };
+export { NoteGraph, NoteGraphAPI, Note, NoteLink, URI };
 
 export {
   LINK_REFERENCE_DEFINITION_HEADER,
   LINK_REFERENCE_DEFINITION_FOOTER,
 } from './definitions';
 
+export interface Services {
+  dataStore: IDataStore;
+  logger: ILogger;
+}
+
 export interface Foam {
   notes: NoteGraphAPI;
   config: FoamConfig;
-  parse: (uri: string, text: string, eol: string) => Note;
+  parse: (uri: URI, text: string, eol: string) => Note;
 }

@@ -34,7 +34,6 @@ const feature: FoamFeature = {
           }
         }
       });
-      updateGraph(panel, foam);
     });
   }
 };
@@ -81,8 +80,8 @@ function generateGraphData(foam: Foam) {
     });
   });
   return {
-    nodes: Array.from(Object.values(graph.nodes)),
-    edges: Array.from(graph.edges)
+    nodes: graph.nodes,
+    links: Array.from(graph.edges)
   };
 }
 
@@ -109,14 +108,20 @@ async function createGraphPanel(foam: Foam, context: vscode.ExtensionContext) {
 
   panel.webview.onDidReceiveMessage(
     message => {
-      if (message.type === "selected") {
-        const noteId = message.payload;
-        const noteUri = foam.notes.getNote(noteId).source.uri;
-        const openPath = vscode.Uri.file(noteUri);
+      switch (message.type) {
+        case "ready":
+          updateGraph(panel, foam);
+          break;
 
-        vscode.workspace.openTextDocument(openPath).then(doc => {
-          vscode.window.showTextDocument(doc, vscode.ViewColumn.One);
-        });
+        case "selected":
+          const noteId = message.payload;
+          const noteUri = foam.notes.getNote(noteId).source.uri;
+          const openPath = vscode.Uri.file(noteUri);
+
+          vscode.workspace.openTextDocument(openPath).then(doc => {
+            vscode.window.showTextDocument(doc, vscode.ViewColumn.One);
+          });
+          break;
       }
     },
     undefined,

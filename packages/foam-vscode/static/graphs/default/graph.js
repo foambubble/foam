@@ -36,40 +36,82 @@ const labelAlpha = d3
   .range([0, 1])
   .clamp(true);
 
+let model = {
+  selectedNode: null,
+  hoverNode: null,
+  focusNodes: new Set(),
+  focusLinks: new Set(),
+  nodeInfo: {},
+  data: {
+    nodes: [],
+    links: []
+  }
+};
 const myGraph = ForceGraph();
-window.graph = myGraph;
-let model = updateModel(null, null);
-window.model = model;
 
-try {
-  const vscode = acquireVsCodeApi();
+function update(patch) {
+  // Apply the patch function to the model..
+  patch(model);
+  // ..then compute the derived state
 
-  window.addEventListener("message", event => {
-    const message = event.data;
-
-    switch (message.type) {
-      case "refresh":
-        const data = convertData(message.payload);
-        createWebGLGraph(data, vscode);
-        myGraph.graphData(data);
-        break;
-      case "selected":
-        const noteId = message.payload;
-        const node = myGraph.graphData().nodes.find(node => node.id === noteId);
-        if (node) {
-          myGraph.centerAt(node.x, node.y, 300).zoom(3, 300);
-          model = updateModel(node, null);
-        }
-        break;
-    }
-  });
-} catch {
-  console.log("VsCode not detected");
+  // compute highlighted elements
+  const focusNodes = new Set();
+  const focusLinks = new Set();
+  if (model.hoverNode) {
+    focusNodes.add(model.hoverNode);
+    const info = model.nodeInfo[model.hoverNode];
+    info.neighbors.forEach(neighborId => focusNodes.add(neighborId));
+    info.links.forEach(link => focusLinks.add(link));
+  }
+  if (model.selectedNode) {
+    focusNodes.add(model.selectedNode);
+    const info = model.nodeInfo[model.selectedNode];
+    info.neighbors.forEach(neighborId => focusNodes.add(neighborId));
+    info.links.forEach(link => focusLinks.add(link));
+  }
+  model.focusNodes = focusNodes;
+  model.focusLinks = focusLinks;
 }
 
-function createWebGLGraph(data, channel) {
+const Actions = {
+  refresh: graphInfo =>
+    update(m => {
+      m.nodeInfo = graphInfo.nodes;
+      const links = graphInfo.links;
+
+      // compute graph delta, for smooth transitions we need to mutate objects in-place
+      const remaining = new Set(Object.keys(m.nodeInfo));
+      m.data.nodes.forEach((node, index, object) => {
+        if (remaining.has(node.id)) {
+          remaining.delete(node.id);
+        } else {
+          object.splice(index, 1); // delete the element
+        }
+      });
+      remaining.forEach(nodeId => {
+        m.data.nodes.push({
+          id: nodeId
+        });
+      });
+      m.data.links = links; // links can be swapped out without problem
+
+      // annoying we need to call this function, but I haven't found a good workaround
+      myGraph.graphData(m.data);
+    }),
+  selectNode: nodeId =>
+    update(m => {
+      m.selectedNode = nodeId;
+    }),
+  highlightNode: nodeId =>
+    update(m => {
+      m.hoverNode = nodeId;
+    })
+};
+
+function createWebGLGraph(channel) {
   const elem = document.getElementById(CONTAINER_ID);
   myGraph(elem)
+    .graphData(model.data)
     .backgroundColor(style.background)
     .linkHoverPrecision(8)
     .d3Force("x", d3.forceX())
@@ -80,37 +122,31 @@ function createWebGLGraph(data, channel) {
     .linkDirectionalParticleWidth(link =>
       getLinkState(link, model) === "highlighted" ? 1 : 0
     )
-    .nodeVal(node => sizeScale(node.nInLinks + node.nOutLinks))
+    .nodeVal(node => {
+      const info = model.nodeInfo[node.id];
+      return sizeScale(info.nInLinks + info.nOutLinks);
+    })
     .nodeLabel("")
     .nodeCanvasObject((node, ctx, globalScale) => {
-      const size = sizeScale(node.nInLinks + node.nOutLinks);
+      const info = model.nodeInfo[node.id];
+      const size = sizeScale(info.nInLinks + info.nOutLinks);
+      const { fill, border } = getNodeColor(node.id, model);
       const fontSize = style.fontSize / globalScale;
-      const { fill, border } = getNodeColor(node, model);
-      ctx.beginPath();
-      ctx.arc(node.x, node.y, size + 0.5, 0, 2 * Math.PI, false);
-      ctx.fillStyle = border;
-      ctx.fill();
-      ctx.closePath();
-      ctx.beginPath();
-      ctx.arc(node.x, node.y, size, 0, 2 * Math.PI, false);
-      ctx.fillStyle = fill;
-      ctx.fill();
-      ctx.closePath();
-
-      ctx.font = `${fontSize}px Sans-Serif`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "top";
       let textColor = d3.rgb(fill);
       textColor.opacity =
-        getNodeState(node, model) === "highlighted"
+        getNodeState(node.id, model) === "highlighted"
           ? 1
           : labelAlpha(globalScale);
-      ctx.fillStyle = textColor;
-      ctx.fillText(node.name, node.x, node.y + size + 1);
+      const label = info.title;
+
+      Draw(ctx)
+        .circle(node.x, node.y, size + 0.5, border)
+        .circle(node.x, node.y, size, fill)
+        .text(label, node.x, node.y + size + 1, fontSize, textColor);
     })
     .linkColor(link => getLinkColor(link, model))
     .onNodeHover(node => {
-      model = updateModel(model.selectedNode, node);
+      Actions.highlightNode(node?.id);
     })
     .onNodeClick((node, event) => {
       if (event.getModifierState("Control") || event.getModifierState("Meta")) {
@@ -119,47 +155,33 @@ function createWebGLGraph(data, channel) {
           payload: node.id
         });
       }
-      model = updateModel(node, model.hoverNode);
+      Actions.selectNode(node.id);
     })
     .onBackgroundClick(e => {
-      model = updateModel(null, model.hoverNode);
+      Actions.selectNode(null);
     });
 }
 
-function convertData(raw) {
-  data = {
-    nodes: raw.nodes.map(n => ({
-      ...n,
-      name: n.title,
-      neighbors: [],
-      links: []
-    })),
-    links: raw.edges
-  };
-
-  const nodeIdToIndex = data.nodes.reduce((acc, node, idx) => {
-    acc[node.id] = idx;
-    return acc;
-  }, {});
+function augmentGraphInfo(data) {
+  Object.values(data.nodes).forEach(node => {
+    node.neighbors = [];
+    node.links = [];
+  });
   data.links.forEach(link => {
-    const a = data.nodes[nodeIdToIndex[link.source]];
-    const b = data.nodes[nodeIdToIndex[link.target]];
-    !a.neighbors && (a.neighbors = []);
-    !b.neighbors && (b.neighbors = []);
-    a.neighbors.push(b);
-    b.neighbors.push(a);
-
-    !a.links && (a.links = []);
-    !b.links && (b.links = []);
+    const a = data.nodes[link.source];
+    const b = data.nodes[link.target];
+    a.neighbors.push(b.id);
+    b.neighbors.push(a.id);
     a.links.push(link);
     b.links.push(link);
   });
   return data;
 }
 
-function getNodeColor(node, model) {
-  const typeFill = style.node[node.type || "unknown"];
-  switch (getNodeState(node, model)) {
+function getNodeColor(nodeId, model) {
+  const info = model.nodeInfo[nodeId];
+  const typeFill = style.node[info.type || "unknown"];
+  switch (getNodeState(nodeId, model)) {
     case "regular":
       return { fill: typeFill, border: typeFill };
     case "lessened":
@@ -171,14 +193,14 @@ function getNodeColor(node, model) {
         border: style.highlightedForeground
       };
     default:
-      throw new Error("Unknown type for node", node);
+      throw new Error("Unknown type for node", nodeId);
   }
 }
 
 function getLinkColor(link, model) {
   switch (getLinkState(link, model)) {
     case "regular":
-      return d3.hsl(style.node.note).darker(3);
+      return d3.hsl(style.node.note).darker(2);
     case "highlighted":
       return style.highlightedForeground;
     case "lessened":
@@ -188,12 +210,12 @@ function getLinkColor(link, model) {
   }
 }
 
-function getNodeState(node, model) {
-  return model.selectedNode?.id === node.id || model.hoverNode?.id === node.id
+function getNodeState(nodeId, model) {
+  return model.selectedNode === nodeId || model.hoverNode === nodeId
     ? "highlighted"
     : model.focusNodes.size === 0
     ? "regular"
-    : model.focusNodes.has(node)
+    : model.focusNodes.has(nodeId)
     ? "regular"
     : "lessened";
 }
@@ -206,35 +228,65 @@ function getLinkState(link, model) {
     : "lessened";
 }
 
-function updateModel(selectedNode, hoverNode) {
-  const focusNodes = new Set();
-  const focusLinks = new Set();
-  if (hoverNode) {
-    focusNodes.add(hoverNode);
-    hoverNode.neighbors.forEach(neighbor => focusNodes.add(neighbor));
-    hoverNode.links.forEach(link => focusLinks.add(link));
+const Draw = ctx => ({
+  circle: function(x, y, radius, color) {
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, 2 * Math.PI, false);
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.closePath();
+    return this;
+  },
+  text: function(text, x, y, size, color) {
+    ctx.font = `${size}px Sans-Serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    ctx.fillStyle = color;
+    ctx.fillText(text, x, y);
+    return this;
   }
-  if (selectedNode) {
-    focusNodes.add(selectedNode);
-    selectedNode.neighbors.forEach(neighbor => focusNodes.add(neighbor));
-    selectedNode.links.forEach(link => focusLinks.add(link));
-  }
-  return {
-    focusNodes: focusNodes,
-    focusLinks: focusLinks,
-    selectedNode: selectedNode,
-    hoverNode: hoverNode
+});
+
+// init the app
+try {
+  const vscode = acquireVsCodeApi();
+  createWebGLGraph(vscode);
+
+  window.onload = () => {
+    vscode.postMessage({
+      type: "ready"
+    });
   };
+  window.addEventListener("message", event => {
+    const message = event.data;
+
+    switch (message.type) {
+      case "refresh":
+        const data = augmentGraphInfo(message.payload);
+        Actions.refresh(data);
+        break;
+      case "selected":
+        const noteId = message.payload;
+        const node = myGraph.graphData().nodes.find(node => node.id === noteId);
+        if (node) {
+          myGraph.centerAt(node.x, node.y, 300).zoom(3, 300);
+          Actions.selectNode(noteId);
+        }
+        break;
+    }
+  });
+} catch {
+  console.log("VsCode not detected");
 }
 
 // For testing
-window.onload = () => {
-  if (window.data) {
-    const graphData = convertData(window.data);
-    window.graphData = graphData;
-    createWebGLGraph(graphData, {
+if (window.data) {
+  console.log("Test mode");
+  window.onload = () => {
+    createWebGLGraph({
       postMessage: message => console.log("message", message)
     });
-    myGraph.graphData(data);
-  }
-};
+    const graphData = augmentGraphInfo(window.data);
+    Actions.refresh(graphData);
+  };
+}

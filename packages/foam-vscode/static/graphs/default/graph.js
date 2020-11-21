@@ -47,7 +47,7 @@ let model = {
     links: []
   }
 };
-const myGraph = ForceGraph();
+const graph = ForceGraph();
 
 function update(patch) {
   // Apply the patch function to the model..
@@ -96,7 +96,7 @@ const Actions = {
       m.data.links = links; // links can be swapped out without problem
 
       // annoying we need to call this function, but I haven't found a good workaround
-      myGraph.graphData(m.data);
+      graph.graphData(m.data);
     }),
   selectNode: nodeId =>
     update(m => {
@@ -108,28 +108,23 @@ const Actions = {
     })
 };
 
-function createWebGLGraph(channel) {
+function initDataviz(channel) {
   const elem = document.getElementById(CONTAINER_ID);
-  myGraph(elem)
+  graph(elem)
     .graphData(model.data)
     .backgroundColor(style.background)
     .linkHoverPrecision(8)
     .d3Force("x", d3.forceX())
     .d3Force("y", d3.forceY())
-    .d3Force("collide", d3.forceCollide(myGraph.nodeRelSize()))
+    .d3Force("collide", d3.forceCollide(graph.nodeRelSize()))
     .linkWidth(0.5)
     .linkDirectionalParticles(1)
     .linkDirectionalParticleWidth(link =>
       getLinkState(link, model) === "highlighted" ? 1 : 0
     )
-    .nodeVal(node => {
-      const info = model.nodeInfo[node.id];
-      return sizeScale(info.nInLinks + info.nOutLinks);
-    })
-    .nodeLabel("")
     .nodeCanvasObject((node, ctx, globalScale) => {
       const info = model.nodeInfo[node.id];
-      const size = sizeScale(info.nInLinks + info.nOutLinks);
+      const size = sizeScale(info.neighbors.length);
       const { fill, border } = getNodeColor(node.id, model);
       const fontSize = style.fontSize / globalScale;
       let textColor = d3.rgb(fill);
@@ -151,7 +146,7 @@ function createWebGLGraph(channel) {
     .onNodeClick((node, event) => {
       if (event.getModifierState("Control") || event.getModifierState("Meta")) {
         channel.postMessage({
-          type: "selected",
+          type: "webviewDidSelectNode",
           payload: node.id
         });
       }
@@ -250,26 +245,28 @@ const Draw = ctx => ({
 // init the app
 try {
   const vscode = acquireVsCodeApi();
-  createWebGLGraph(vscode);
 
   window.onload = () => {
+    initDataviz(vscode);
+    console.log("ready");
     vscode.postMessage({
-      type: "ready"
+      type: "webviewDidLoad"
     });
   };
   window.addEventListener("message", event => {
     const message = event.data;
 
     switch (message.type) {
-      case "refresh":
-        const data = augmentGraphInfo(message.payload);
-        Actions.refresh(data);
+      case "didUpdateGraphData":
+        const graphData = augmentGraphInfo(message.payload);
+        console.log("didUpdateGraphData", graphData);
+        Actions.refresh(graphData);
         break;
-      case "selected":
+      case "didSelectNote":
         const noteId = message.payload;
-        const node = myGraph.graphData().nodes.find(node => node.id === noteId);
+        const node = graph.graphData().nodes.find(node => node.id === noteId);
         if (node) {
-          myGraph.centerAt(node.x, node.y, 300).zoom(3, 300);
+          graph.centerAt(node.x, node.y, 300).zoom(3, 300);
           Actions.selectNode(noteId);
         }
         break;
@@ -282,8 +279,10 @@ try {
 // For testing
 if (window.data) {
   console.log("Test mode");
+  window.model = model;
+  window.graph = graph;
   window.onload = () => {
-    createWebGLGraph({
+    initDataviz({
       postMessage: message => console.log("message", message)
     });
     const graphData = augmentGraphInfo(window.data);

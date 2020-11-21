@@ -28,7 +28,7 @@ const feature: FoamFeature = {
           const note = foam.notes.getNoteByURI(e.document.uri.fsPath);
           if (isSome(note)) {
             panel.webview.postMessage({
-              type: "selected",
+              type: "didSelectNote",
               payload: note.id
             });
           }
@@ -41,7 +41,7 @@ const feature: FoamFeature = {
 function updateGraph(panel: vscode.WebviewPanel, foam: Foam) {
   const graph = generateGraphData(foam);
   panel.webview.postMessage({
-    type: "refresh",
+    type: "didUpdateGraphData",
     payload: graph
   });
 }
@@ -58,19 +58,15 @@ function generateGraphData(foam: Foam) {
       id: n.id,
       type: "note",
       uri: n.source.uri,
-      title: cutTitle(n.title),
-      nOutLinks: links.length,
-      nInLinks: graph.nodes[n.id]?.nInLinks ?? 0
+      title: cutTitle(n.title)
     };
     links.forEach(link => {
       if (!(link.to in graph.nodes)) {
         graph.nodes[link.to] = {
           id: link.to,
           type: "nonExistingNote",
-          uri: "orphan",
-          title: link.link.slug,
-          nOutLinks: graph.nodes[link.to]?.nOutLinks ?? 0,
-          nInLinks: graph.nodes[link.to]?.nInLinks + 1 ?? 0
+          uri: `virtual:${link.to}`,
+          title: link.link.slug
         };
       }
       graph.edges.add({
@@ -109,11 +105,11 @@ async function createGraphPanel(foam: Foam, context: vscode.ExtensionContext) {
   panel.webview.onDidReceiveMessage(
     message => {
       switch (message.type) {
-        case "ready":
+        case "webviewDidLoad":
           updateGraph(panel, foam);
           break;
 
-        case "selected":
+        case "webviewDidSelectNode":
           const noteId = message.payload;
           const noteUri = foam.notes.getNote(noteId).source.uri;
           const openPath = vscode.Uri.file(noteUri);

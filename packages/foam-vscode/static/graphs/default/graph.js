@@ -1,16 +1,26 @@
 const CONTAINER_ID = "graph";
 
-function getStyle(name) {
-  return getComputedStyle(document.documentElement).getPropertyValue(name);
+function getStyle(name, fallback) {
+  return (
+    getComputedStyle(document.documentElement).getPropertyValue(name) ||
+    fallback
+  );
 }
 
 const style = {
-  background: getStyle(`--vscode-panel-background`),
-  fontSize: parseInt(getStyle(`--vscode-font-size`)),
-  highlightedForeground: getStyle("--vscode-list-highlightForeground"),
+  background: getStyle(`--vscode-panel-background`, "#202020"),
+  fontSize: parseInt(getStyle(`--vscode-font-size`, 12)),
+  highlightedForeground: getStyle(
+    "--vscode-list-highlightForeground",
+    "#f9c74f"
+  ),
   node: {
-    note: getStyle("--vscode-editor-foreground"),
-    nonExistingNote: getStyle("--vscode-list-deemphasizedForeground")
+    note: getStyle("--vscode-editor-foreground", "#277da1"),
+    nonExistingNote: getStyle(
+      "--vscode-list-deemphasizedForeground",
+      "#545454"
+    ),
+    unknown: getStyle("--vscode-editor-foreground", "#f94144")
   }
 };
 

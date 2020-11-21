@@ -37,7 +37,7 @@ const labelAlpha = d3
   .clamp(true);
 
 let model = {
-  selectedNode: null,
+  selectedNodes: new Set(),
   hoverNode: null,
   focusNodes: new Set(),
   focusLinks: new Set(),
@@ -63,11 +63,13 @@ function update(patch) {
     info.neighbors.forEach(neighborId => focusNodes.add(neighborId));
     info.links.forEach(link => focusLinks.add(link));
   }
-  if (model.selectedNode) {
-    focusNodes.add(model.selectedNode);
-    const info = model.nodeInfo[model.selectedNode];
-    info.neighbors.forEach(neighborId => focusNodes.add(neighborId));
-    info.links.forEach(link => focusLinks.add(link));
+  if (model.selectedNodes) {
+    model.selectedNodes.forEach(nodeId => {
+      focusNodes.add(nodeId);
+      const info = model.nodeInfo[nodeId];
+      info.neighbors.forEach(neighborId => focusNodes.add(neighborId));
+      info.links.forEach(link => focusLinks.add(link));
+    });
   }
   model.focusNodes = focusNodes;
   model.focusLinks = focusLinks;
@@ -98,9 +100,14 @@ const Actions = {
       // annoying we need to call this function, but I haven't found a good workaround
       graph.graphData(m.data);
     }),
-  selectNode: nodeId =>
+  selectNode: (nodeId, isAppend) =>
     update(m => {
-      m.selectedNode = nodeId;
+      if (!isAppend) {
+        m.selectedNodes.clear();
+      }
+      if (nodeId != null) {
+        m.selectedNodes.add(nodeId);
+      }
     }),
   highlightNode: nodeId =>
     update(m => {
@@ -150,10 +157,10 @@ function initDataviz(channel) {
           payload: node.id
         });
       }
-      Actions.selectNode(node.id);
+      Actions.selectNode(node.id, event.getModifierState("Shift"));
     })
-    .onBackgroundClick(e => {
-      Actions.selectNode(null);
+    .onBackgroundClick(event => {
+      Actions.selectNode(null, event.getModifierState("Shift"));
     });
 }
 
@@ -206,7 +213,7 @@ function getLinkColor(link, model) {
 }
 
 function getNodeState(nodeId, model) {
-  return model.selectedNode === nodeId || model.hoverNode === nodeId
+  return model.selectedNodes.has(nodeId) || model.hoverNode === nodeId
     ? "highlighted"
     : model.focusNodes.size === 0
     ? "regular"

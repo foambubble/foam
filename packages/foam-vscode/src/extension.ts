@@ -1,6 +1,6 @@
 "use strict";
 
-import { workspace, ExtensionContext } from "vscode";
+import { workspace, ExtensionContext, window } from "vscode";
 
 import {
   bootstrap,
@@ -51,6 +51,9 @@ export async function activate(context: ExtensionContext) {
     foam = await foamPromise;
   } catch (e) {
     console.log("An error occurred while bootstrapping Foam", e);
+    window.showErrorMessage(
+      `An error occurred while bootstrapping Foam. ${e.stack}`
+    );
   }
 }
 

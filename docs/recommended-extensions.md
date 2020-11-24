@@ -10,3 +10,16 @@ This list is subject to change. Especially the Git ones.
 - [Markdown All In One](https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one)
 - [Git Lens](https://marketplace.visualstudio.com/items?itemName=eamodio.gitlens)
 
+
+## Extensions For Additional Features
+
+These extensions are not (yet?) defined in `.vscode/extensions.json`, but have been used by others and shown to play nice with Foam.
+
+- [Emojisense](https://marketplace.visualstudio.com/items?itemName=bierner.emojisense)
+- [Markdown Emoji](https://marketplace.visualstudio.com/items?itemName=bierner.markdown-emoji) (adds `:smile:` syntax, works with emojisense to provide autocomplete for this syntax)
+- [Mermaid Support for Preview](https://marketplace.visualstudio.com/items?itemName=bierner.markdown-mermaid)
+- [Mermaid Markdown Syntax Highlighting](https://marketplace.visualstudio.com/items?itemName=bpruitt-goddard.mermaid-markdown-syntax-highlighting)
+- [Paste Image](https://marketplace.visualstudio.com/items?itemName=mushan.vscode-paste-image)
+- [VSCode PDF Viewing](https://marketplace.visualstudio.com/items?itemName=tomoki1207.pdf)
+- [Markdown Extended](https://marketplace.visualstudio.com/items?itemName=jebbs.markdown-extended) (with `kbd` option disabled, `kbd` turns wiki-links into non-clickable buttons)
+- [GitDoc](https://marketplace.visualstudio.com/items?itemName=vsls-contrib.gitdoc) (easy version management via git auto commits)

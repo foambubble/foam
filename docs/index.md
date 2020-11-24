@@ -179,6 +179,7 @@ If that sounds like something you're interested in, I'd love to have you along o
     <td align="center"><a href="https://generativist.substack.com/"><img src="https://avatars3.githubusercontent.com/u/78835?v=4" width="60px;" alt=""/><br /><sub><b>John B Nelson</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=jbn" title="Documentation">📖</a></td>
     <td align="center"><a href="https://github.com/asifm"><img src="https://avatars2.githubusercontent.com/u/3958387?v=4" width="60px;" alt=""/><br /><sub><b>Asif Mehedi</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=asifm" title="Documentation">📖</a></td>
     <td align="center"><a href="https://github.com/litanlitudan"><img src="https://avatars2.githubusercontent.com/u/4970420?v=4" width="60px;" alt=""/><br /><sub><b>Tan Li</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=litanlitudan" title="Code">💻</a></td>
+    <td align="center"><a href="http://shaunagordon.com"><img src="https://avatars1.githubusercontent.com/u/579361?v=4" width="60px;" alt=""/><br /><sub><b>Shauna Gordon</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=ShaunaGordon" title="Documentation">📖</a></td>
   </tr>
 </table>
 

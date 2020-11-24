@@ -22,3 +22,4 @@ These extensions are not (yet?) defined in `.vscode/extensions.json`, but have b
 - [Paste Image](https://marketplace.visualstudio.com/items?itemName=mushan.vscode-paste-image)
 - [VSCode PDF Viewing](https://marketplace.visualstudio.com/items?itemName=tomoki1207.pdf)
 - [Markdown Extended](https://marketplace.visualstudio.com/items?itemName=jebbs.markdown-extended) (with `kbd` option disabled, `kbd` turns wiki-links into non-clickable buttons)
+- [GitDoc](https://marketplace.visualstudio.com/items?itemName=vsls-contrib.gitdoc) (easy version management via git auto commits)

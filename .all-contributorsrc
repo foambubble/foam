@@ -516,6 +516,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "ShaunaGordon",
+      "name": "Shauna Gordon",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/579361?v=4",
+      "profile": "http://shaunagordon.com",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,

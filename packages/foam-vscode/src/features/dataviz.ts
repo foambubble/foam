@@ -12,25 +12,28 @@ const feature: FoamFeature = {
       const foam = await foamPromise;
       const panel = await createGraphPanel(foam, context);
 
-      const onNoteAdded = _ => {
+      const onFoamChanged = _ => {
         updateGraph(panel, foam);
       };
 
-      const noteAddedListener = foam.notes.onDidAddNote(onNoteAdded);
-      panel.onDidDispose(() => noteAddedListener.dispose());
+      const noteAddedListener = foam.notes.onDidAddNote(onFoamChanged);
+      const noteUpdatedListener = foam.notes.onDidUpdateNote(onFoamChanged);
+      panel.onDidDispose(() => {
+        noteAddedListener.dispose();
+        noteUpdatedListener.dispose();
+      });
 
       vscode.window.onDidChangeActiveTextEditor(e => {
         if (e.document.uri.scheme === "file") {
           const note = foam.notes.getNoteByURI(e.document.uri.fsPath);
           if (isSome(note)) {
             panel.webview.postMessage({
-              type: "selected",
+              type: "didSelectNote",
               payload: note.id
             });
           }
         }
       });
-      updateGraph(panel, foam);
     });
   }
 };
@@ -38,7 +41,7 @@ const feature: FoamFeature = {
 function updateGraph(panel: vscode.WebviewPanel, foam: Foam) {
   const graph = generateGraphData(foam);
   panel.webview.postMessage({
-    type: "refresh",
+    type: "didUpdateGraphData",
     payload: graph
   });
 }
@@ -55,19 +58,15 @@ function generateGraphData(foam: Foam) {
       id: n.id,
       type: "note",
       uri: n.source.uri,
-      title: cutTitle(n.title),
-      nOutLinks: links.length,
-      nInLinks: graph.nodes[n.id]?.nInLinks ?? 0
+      title: cutTitle(n.title)
     };
     links.forEach(link => {
       if (!(link.to in graph.nodes)) {
         graph.nodes[link.to] = {
           id: link.to,
           type: "nonExistingNote",
-          uri: "orphan",
-          title: link.link.slug,
-          nOutLinks: graph.nodes[link.to]?.nOutLinks ?? 0,
-          nInLinks: graph.nodes[link.to]?.nInLinks + 1 ?? 0
+          uri: `virtual:${link.to}`,
+          title: link.link.slug
         };
       }
       graph.edges.add({
@@ -77,8 +76,8 @@ function generateGraphData(foam: Foam) {
     });
   });
   return {
-    nodes: Array.from(Object.values(graph.nodes)),
-    edges: Array.from(graph.edges)
+    nodes: graph.nodes,
+    links: Array.from(graph.edges)
   };
 }
 
@@ -105,14 +104,20 @@ async function createGraphPanel(foam: Foam, context: vscode.ExtensionContext) {
 
   panel.webview.onDidReceiveMessage(
     message => {
-      if (message.type === "selected") {
-        const noteId = message.payload;
-        const noteUri = foam.notes.getNote(noteId).source.uri;
-        const openPath = vscode.Uri.file(noteUri);
+      switch (message.type) {
+        case "webviewDidLoad":
+          updateGraph(panel, foam);
+          break;
 
-        vscode.workspace.openTextDocument(openPath).then(doc => {
-          vscode.window.showTextDocument(doc, vscode.ViewColumn.One);
-        });
+        case "webviewDidSelectNode":
+          const noteId = message.payload;
+          const noteUri = foam.notes.getNote(noteId).source.uri;
+          const openPath = vscode.Uri.file(noteUri);
+
+          vscode.workspace.openTextDocument(openPath).then(doc => {
+            vscode.window.showTextDocument(doc, vscode.ViewColumn.One);
+          });
+          break;
       }
     },
     undefined,

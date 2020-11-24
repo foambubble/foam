@@ -7,9 +7,15 @@
     },
     "search.exclude": {
         // set this to false to include compiled JS folders in search results
-        "packages/**/out": true, 
+        "packages/**/out": true,
         "packages/**/dist": true
     },
     // Turn off tsc task auto detection since we have the necessary tasks as npm scripts
-    "typescript.tsc.autoDetect": "off"
+    "typescript.tsc.autoDetect": "off",
+    "foam.files.ignore": [
+        "**/.vscode/**/*",
+        "**/_layouts/**/*",
+        "**/_site/**/*",
+        "**/node_modules/**/*"
+    ]
 }

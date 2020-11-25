@@ -3,7 +3,7 @@ import { NoteGraphAPI } from '../../src/note-graph';
 import { generateLinkReferences } from '../../src/janitor';
 import { bootstrap } from '../../src/bootstrap';
 import { createConfigFromFolders } from '../../src/config';
-import { Services } from '../../src';
+import { Services, consoleLogger } from '../../src';
 import { FileDataStore } from '../../src/services/datastore';
 
 describe('generateLinkReferences', () => {
@@ -15,7 +15,7 @@ describe('generateLinkReferences', () => {
     ]);
     const services: Services = {
       dataStore: new FileDataStore(config),
-      logger: console,
+      logger: consoleLogger,
     };
     _graph = await bootstrap(config, services).then(foam => foam.notes);
   });

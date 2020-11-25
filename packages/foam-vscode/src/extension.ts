@@ -18,8 +18,8 @@ import { createLoggerForVsCode, exposeLogger } from "./services/logging";
 let foam: Foam | null = null;
 
 export async function activate(context: ExtensionContext) {
+  const logger = createLoggerForVsCode();
   try {
-    const logger = createLoggerForVsCode();
     exposeLogger(context, logger);
     logger.info("Starting Foam");
 
@@ -56,7 +56,7 @@ export async function activate(context: ExtensionContext) {
     foam = await foamPromise;
     logger.info(`Loaded ${foam.notes.getNotes().length} notes`);
   } catch (e) {
-    console.log("An error occurred while bootstrapping Foam", e);
+    logger.error("An error occurred while bootstrapping Foam", e);
     window.showErrorMessage(
       `An error occurred while bootstrapping Foam. ${e.stack}`
     );

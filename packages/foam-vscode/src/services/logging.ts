@@ -32,7 +32,11 @@ export const createLoggerForVsCode = (): VsCodeLogger => {
       );
     }
     params.forEach(param => {
-      channel.appendLine(JSON.stringify(param, null, 2));
+      if (param?.stack) {
+        channel.appendLine(JSON.stringify(param.stack, null, 2));
+      } else {
+        channel.appendLine(JSON.stringify(param, null, 2));
+      }
     });
   };
 

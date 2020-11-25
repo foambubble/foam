@@ -4,6 +4,16 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.7.0] - 2020-11-25
+
+New Features:
+- Foam stays in sync with changes in notes
+- Dataviz: Added multiple selection in graph (shift+click on node)
+
+Fixes and Improvements:
+- Dataviz: Graph uses VSCode theme colors
+- Reporting: Errors occurring during foam bootstrap are now reported for easier debugging
+
 ## [0.6.0] - 2020-11-19
 
 New features:

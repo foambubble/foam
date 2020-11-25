@@ -13,13 +13,18 @@ import {
 
 import { features } from "./features";
 import { getConfigFromVscode } from "./services/config";
+import { createLoggerForVsCode, exposeLogger } from "./services/logging";
 
 let foam: Foam | null = null;
 
 export async function activate(context: ExtensionContext) {
   try {
+    const logger = createLoggerForVsCode();
+    exposeLogger(context, logger);
+    logger.info("Starting Foam");
+
     const config: FoamConfig = getConfigFromVscode();
-    const dataStore = new FileDataStore(config);
+    const dataStore = new FileDataStore(config, logger);
 
     const watcher = workspace.createFileSystemWatcher("**/*");
     watcher.onDidCreate(uri => {
@@ -39,7 +44,7 @@ export async function activate(context: ExtensionContext) {
     });
 
     const services: Services = {
-      logger: console,
+      logger: logger,
       dataStore: dataStore
     };
     const foamPromise: Promise<Foam> = bootstrap(config, services);
@@ -49,6 +54,7 @@ export async function activate(context: ExtensionContext) {
     });
 
     foam = await foamPromise;
+    logger.info(`Loaded ${foam.notes.getNotes().length} notes`);
   } catch (e) {
     console.log("An error occurred while bootstrapping Foam", e);
     window.showErrorMessage(

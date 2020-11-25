@@ -41,6 +41,10 @@
     },
     "commands": [
       {
+        "command": "foam-vscode.set-log-level",
+        "title": "Foam: Set log level"
+      },
+      {
         "command": "foam-vscode.show-graph",
         "title": "Foam: Show graph"
       },

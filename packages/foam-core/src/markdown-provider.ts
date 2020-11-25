@@ -19,6 +19,7 @@ import {
 } from './utils';
 import { ID } from './types';
 import { ParserPlugin } from './plugins';
+import { ILogger, consoleLogger } from 'services/logger';
 
 const tagsPlugin: ParserPlugin = {
   name: 'tags',
@@ -80,25 +81,29 @@ const definitionsPlugin: ParserPlugin = {
   },
 };
 
-const handleError = (
+const createHandler = (logger: ILogger) => (
   plugin: ParserPlugin,
   fnName: string,
   uri: string | undefined,
   e: Error
 ): void => {
   const name = plugin.name || '';
-  console.warn(
+  logger.warn(
     `Error while executing [${fnName}] in plugin [${name}] for file [${uri}]`,
     e
   );
 };
 
-export function createMarkdownParser(extraPlugins: ParserPlugin[]): NoteParser {
+export function createMarkdownParser(
+  extraPlugins: ParserPlugin[],
+  logger: ILogger = consoleLogger
+): NoteParser {
   const parser = unified()
     .use(markdownParse, { gfm: true })
     .use(frontmatterPlugin, ['yaml'])
     .use(wikiLinkPlugin);
 
+  const handleError = createHandler(logger);
   const plugins = [
     titlePlugin,
     wikilinkPlugin,
@@ -117,6 +122,7 @@ export function createMarkdownParser(extraPlugins: ParserPlugin[]): NoteParser {
 
   const foamParser: NoteParser = {
     parse: (uri: string, markdown: string): Note => {
+      logger.debug('Parsing:', uri);
       markdown = plugins.reduce((acc, plugin) => {
         try {
           return plugin.onWillParseMarkdown?.(acc) || acc;
@@ -176,7 +182,7 @@ export function createMarkdownParser(extraPlugins: ParserPlugin[]): NoteParser {
               }
             }
           } catch (e) {
-            console.warn(`Error while parsing YAML for [${uri}]`, e);
+            logger.warn(`Error while parsing YAML for [${uri}]`, e);
           }
         }
 
@@ -195,6 +201,7 @@ export function createMarkdownParser(extraPlugins: ParserPlugin[]): NoteParser {
           handleError(plugin, 'onDidVisitTree', uri, e);
         }
       });
+      logger.debug('Result:', note);
       return note;
     },
   };

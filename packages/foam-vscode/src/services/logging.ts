@@ -1,57 +1,43 @@
 import { window, commands, ExtensionContext } from "vscode";
-import { ILogger, IDisposable } from "foam-core";
+import { ILogger, IDisposable, createLogger } from "foam-core";
 import { getFoamLoggerLevel } from "../settings";
 
 enum LogLevel {
-  OFF = 0,
-  DEBUG = 1,
-  INFO = 2,
-  WARN = 3,
-  ERROR = 4
+  off = 0,
+  debug = 1,
+  info = 2,
+  warn = 3,
+  error = 4
 }
 
 export interface VsCodeLogger extends ILogger, IDisposable {
   show();
-  getLevel(): LogLevel;
-  setLevel(level: LogLevel): void;
 }
 
 export const createLoggerForVsCode = (): VsCodeLogger => {
+  let startLogLevel = LogLevel[getFoamLoggerLevel() ?? LogLevel.debug];
   const channel = window.createOutputChannel("Foam");
-  let currentLogLevel = LogLevel[getFoamLoggerLevel() ?? LogLevel.DEBUG];
+  channel.appendLine("Foam Logging: " + LogLevel[startLogLevel]);
 
-  channel.appendLine("Foam Logging: " + LogLevel[currentLogLevel]);
-
-  const logger = (level: LogLevel) => (message?: any, ...params: any[]) => {
-    if (level < currentLogLevel) {
-      return;
-    }
+  const baseLogger = createLogger((level, message, ...params) => {
     if (message) {
       channel.appendLine(
         `[${LogLevel[level]} - ${new Date().toLocaleTimeString()}] ${message}`
       );
     }
-    params.forEach(param => {
+    params?.forEach(param => {
       if (param?.stack) {
         channel.appendLine(JSON.stringify(param.stack, null, 2));
       } else {
         channel.appendLine(JSON.stringify(param, null, 2));
       }
     });
-  };
+  }, startLogLevel);
 
   return {
-    log: logger(LogLevel.INFO),
-    debug: logger(LogLevel.DEBUG),
-    info: logger(LogLevel.INFO),
-    warn: logger(LogLevel.WARN),
-    error: logger(LogLevel.ERROR),
+    ...baseLogger,
     show: () => {
       channel.show();
-    },
-    getLevel: () => currentLogLevel,
-    setLevel: level => {
-      currentLogLevel = level;
     },
     dispose: () => {
       channel.dispose();
@@ -66,10 +52,10 @@ export const exposeLogger = (
   context.subscriptions.push(
     commands.registerCommand("foam-vscode.set-log-level", async () => {
       const items = [
-        LogLevel.DEBUG,
-        LogLevel.INFO,
-        LogLevel.WARN,
-        LogLevel.ERROR
+        LogLevel.debug,
+        LogLevel.info,
+        LogLevel.warn,
+        LogLevel.error
       ];
       const level = await window.showQuickPick(
         items.map(item => ({

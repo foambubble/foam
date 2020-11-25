@@ -86,13 +86,13 @@
         },
         "foam.logging.level": {
           "type": "string",
-          "default": "INFO",
+          "default": "info",
           "enum": [
-            "OFF",
-            "DEBUG",
-            "INFO",
-            "WARN",
-            "ERROR"
+            "off",
+            "debug",
+            "info",
+            "warn",
+            "error"
           ]
         },
         "foam.edit.linkReferenceDefinitions": {

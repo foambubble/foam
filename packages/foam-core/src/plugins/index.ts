@@ -6,6 +6,7 @@ import { Middleware } from '../note-graph';
 import { Note } from '../types';
 import unified from 'unified';
 import { FoamConfig } from '../config';
+import { ILogger, consoleLogger } from 'services/logger';
 
 export interface FoamPlugin {
   name: string;
@@ -31,7 +32,10 @@ export interface PluginConfig {
 
 export const SETTINGS_PATH = 'experimental.localPlugins';
 
-export async function loadPlugins(config: FoamConfig): Promise<FoamPlugin[]> {
+export async function loadPlugins(
+  config: FoamConfig,
+  logger: ILogger = consoleLogger
+): Promise<FoamPlugin[]> {
   const pluginConfig = config.get<PluginConfig>(SETTINGS_PATH, {});
   const isFeatureEnabled = pluginConfig.enabled ?? false;
   if (!isFeatureEnabled) {
@@ -47,10 +51,11 @@ export async function loadPlugins(config: FoamConfig): Promise<FoamPlugin[]> {
         try {
           const pluginFile = path.join(dir, 'index.js');
           fs.accessSync(pluginFile);
+          logger.info(`Found plugin at [${pluginFile}]. Loading..`);
           const plugin = validate(await import(pluginFile));
           return plugin;
         } catch (e) {
-          console.error(`Error while loading plugin at [${dir}] - skipping`, e);
+          logger.error(`Error while loading plugin at [${dir}] - skipping`, e);
           return null;
         }
       })

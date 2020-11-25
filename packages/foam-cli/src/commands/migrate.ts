@@ -9,6 +9,7 @@ import {
   applyTextEdit,
   Services,
   FileDataStore,
+  consoleLogger,
 } from 'foam-core';
 import { writeFileToDisk } from '../utils/write-file-to-disk';
 import { renameFile } from '../utils/rename-file';
@@ -46,7 +47,7 @@ Successfully generated link references and heading!
 
     if (isValidDirectory(workspacePath)) {
       const services: Services = {
-        logger: console,
+        logger: consoleLogger,
         dataStore: new FileDataStore(config),
       };
       let graph = (await bootstrap(config, services)).notes;

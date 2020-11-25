@@ -1,28 +1,20 @@
 import { window, commands, ExtensionContext } from "vscode";
-import { ILogger, IDisposable, createLogger } from "foam-core";
+import { ILogger, IDisposable, createLogger, LogLevel } from "foam-core";
 import { getFoamLoggerLevel } from "../settings";
-
-enum LogLevel {
-  off = 0,
-  debug = 1,
-  info = 2,
-  warn = 3,
-  error = 4
-}
 
 export interface VsCodeLogger extends ILogger, IDisposable {
   show();
 }
 
 export const createLoggerForVsCode = (): VsCodeLogger => {
-  let startLogLevel = LogLevel[getFoamLoggerLevel() ?? LogLevel.debug];
+  const startLogLevel: LogLevel = getFoamLoggerLevel();
   const channel = window.createOutputChannel("Foam");
-  channel.appendLine("Foam Logging: " + LogLevel[startLogLevel]);
+  channel.appendLine("Foam Logging: " + startLogLevel);
 
   const baseLogger = createLogger((level, message, ...params) => {
     if (message) {
       channel.appendLine(
-        `[${LogLevel[level]} - ${new Date().toLocaleTimeString()}] ${message}`
+        `[${level} - ${new Date().toLocaleTimeString()}] ${message}`
       );
     }
     params?.forEach(param => {
@@ -51,19 +43,14 @@ export const exposeLogger = (
 ): void => {
   context.subscriptions.push(
     commands.registerCommand("foam-vscode.set-log-level", async () => {
-      const items = [
-        LogLevel.debug,
-        LogLevel.info,
-        LogLevel.warn,
-        LogLevel.error
-      ];
+      const items: LogLevel[] = ["debug", "info", "warn", "error"];
       const level = await window.showQuickPick(
         items.map(item => ({
-          label: LogLevel[item],
+          label: item,
           description: item === logger.getLevel() && "Current"
         }))
       );
-      logger.setLevel(LogLevel[level.label]);
+      logger.setLevel(level.label);
     })
   );
 };

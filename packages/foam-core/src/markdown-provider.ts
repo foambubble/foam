@@ -19,7 +19,7 @@ import {
 } from './utils';
 import { ID } from './types';
 import { ParserPlugin } from './plugins';
-import { ILogger, consoleLogger } from 'services/logger';
+import { ILogger, consoleLogger } from './services/logger';
 
 const tagsPlugin: ParserPlugin = {
   name: 'tags',

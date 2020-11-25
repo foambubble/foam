@@ -8,17 +8,11 @@ export interface ILogger {
   setLevel(level: LogLevel): void;
 }
 
-export enum LogLevel {
-  off = 0,
-  debug = 1,
-  info = 2,
-  warn = 3,
-  error = 4,
-}
+export type LogLevel = 'off' | 'debug' | 'info' | 'warn' | 'error';
 
 export const createLogger = (
   log: (level: LogLevel, message?: any, ...params: any[]) => void,
-  startLevel: LogLevel = LogLevel.info
+  startLevel: LogLevel = 'info'
 ): ILogger => {
   let currentLogLevel = startLevel;
 
@@ -33,11 +27,11 @@ export const createLogger = (
   };
 
   return {
-    log: (m, ...p) => checkAndLog(LogLevel.info, m, ...p),
-    debug: (m, ...p) => checkAndLog(LogLevel.debug, m, ...p),
-    info: (m, ...p) => checkAndLog(LogLevel.info, m, ...p),
-    warn: (m, ...p) => checkAndLog(LogLevel.warn, m, ...p),
-    error: (m, ...p) => checkAndLog(LogLevel.error, m, ...p),
+    log: (m, ...p) => checkAndLog('info', m, ...p),
+    debug: (m, ...p) => checkAndLog('debug', m, ...p),
+    info: (m, ...p) => checkAndLog('info', m, ...p),
+    warn: (m, ...p) => checkAndLog('warn', m, ...p),
+    error: (m, ...p) => checkAndLog('error', m, ...p),
     getLevel: () => currentLogLevel,
     setLevel: level => {
       currentLogLevel = level;
@@ -47,16 +41,8 @@ export const createLogger = (
 
 export const consoleLogger: ILogger = createLogger(
   (level, message, ...params) => {
-    const fn =
-      level === LogLevel.debug
-        ? console.debug
-        : level === LogLevel.info
-        ? console.info
-        : level === LogLevel.warn
-        ? console.warn
-        : level === LogLevel.error
-        ? console.error
-        : console.log;
-    fn(message, params);
+    if (level != 'off') {
+      console[level](message, params);
+    }
   }
 );

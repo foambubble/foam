@@ -1,5 +1,4 @@
 import { isSome, isNumeric } from './core';
-import matchAll from 'string.prototype.matchall';
 
 const HASHTAG_REGEX = /(^|[ ])#([\w_-]+\b)/gm;
 const WORD_REGEX = /(^|[ ])([\w_-]+\b)/gm;
@@ -7,7 +6,7 @@ const WORD_REGEX = /(^|[ ])([\w_-]+\b)/gm;
 export const extractHashtags = (text: string): Set<string> => {
   return isSome(text)
     ? new Set(
-        Array.from(matchAll(text, HASHTAG_REGEX))
+        Array.from([...text.matchAll(HASHTAG_REGEX)])
           .map(m => m[2].trim())
           .filter(tag => !isNumeric(tag))
       )
@@ -17,6 +16,6 @@ export const extractHashtags = (text: string): Set<string> => {
 export const extractTagsFromProp = (prop: string | string[]): Set<string> => {
   const text = Array.isArray(prop) ? prop.join(' ') : prop;
   return isSome(text)
-    ? new Set(Array.from(matchAll(text, WORD_REGEX)).map(m => m[2].trim()))
+    ? new Set(Array.from(text.matchAll(WORD_REGEX)).map(m => m[2].trim()))
     : new Set();
 };

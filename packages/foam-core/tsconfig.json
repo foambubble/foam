@@ -20,7 +20,7 @@
     "sourceMap": true,
     "strict": true,
     "lib": [
-      "ES2019"
+      "ES2019", "es2020.string"
     ]
   },
   "include": [

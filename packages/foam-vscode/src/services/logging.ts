@@ -1,5 +1,6 @@
 import { window, commands, ExtensionContext } from "vscode";
 import { ILogger, IDisposable } from "foam-core";
+import { getFoamLoggerLevel } from "../settings";
 
 enum LogLevel {
   OFF = 0,
@@ -17,7 +18,9 @@ export interface VsCodeLogger extends ILogger, IDisposable {
 
 export const createLoggerForVsCode = (): VsCodeLogger => {
   const channel = window.createOutputChannel("Foam");
-  let currentLogLevel = LogLevel.INFO;
+  let currentLogLevel = LogLevel[getFoamLoggerLevel() ?? LogLevel.DEBUG];
+
+  channel.appendLine("Foam Logging: " + LogLevel[currentLogLevel]);
 
   const logger = (level: LogLevel) => (message?: any, ...params: any[]) => {
     if (level < currentLogLevel) {

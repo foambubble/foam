@@ -24,3 +24,7 @@ export function getIgnoredFilesSetting(): string[] {
 export function getTitleMaxLength(): number {
   return workspace.getConfiguration("foam.graph").get("titleMaxLength");
 }
+
+export function getFoamLoggerLevel(): string {
+  return workspace.getConfiguration("foam.logging").get("level");
+}

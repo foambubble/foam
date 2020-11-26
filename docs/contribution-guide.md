@@ -34,7 +34,7 @@ If you're interested in contributing, this short guide will help you get things 
 
 3. This project uses [Yarn workspaces](https://classic.yarnpkg.com/en/docs/workspaces/). `foam-vscode` relies on `foam-core`. This means we need to compile it before we do any extension development. From the root, run the command:
 
-   `yarn workspace build`
+   `yarn build`
 
 You should now be ready to start working!
 
@@ -44,7 +44,7 @@ This guide assumes you read the previous instructions and you're set up to work 
 
 1. Now we'll use the launch configuration defined at [`.vscode/launch.json`](https://github.com/foambubble/foam/blob/master/.vscode/launch.json) to start a new extension host of VS Code. From the root, or the `foam-vscode` workspace, press f5.
 
-2. In the new extension host of VS Code that launched, open a Foam workspace (e.g. your personal one, or a test-specific one created from foam-template). This is strictly not necessary, but the extension won't auto-run unless it's in a workspace with a `.vscode/foam.json` file.
+2. In the new extension host of VS Code that launched, open a Foam workspace (e.g. your personal one, or a test-specific one created from [foam-template](https://github.com/foambubble/foam-template)). This is strictly not necessary, but the extension won't auto-run unless it's in a workspace with a `.vscode/foam.json` file.
 
 3. Test a command to make sure it's working as expected. Open the Command Palette (Ctrl/Cmd + Shift + P) and select "Foam: Update Markdown Reference List". If you see no errors, it's good to go!
 

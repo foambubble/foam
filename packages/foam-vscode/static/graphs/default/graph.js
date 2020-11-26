@@ -283,6 +283,10 @@ try {
   console.log("VsCode not detected");
 }
 
+window.addEventListener("resize", () => {
+  graph.width(window.innerWidth).height(window.innerHeight);
+});
+
 // For testing
 if (window.data) {
   console.log("Test mode");

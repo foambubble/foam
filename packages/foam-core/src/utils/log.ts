@@ -31,16 +31,16 @@ export abstract class BaseLogger implements ILogger {
   }
 
   debug(message?: any, ...params: any[]): void {
-    this.doLog('debug', message, params);
+    this.doLog('debug', message, ...params);
   }
   info(message?: any, ...params: any[]): void {
-    this.doLog('info', message, params);
+    this.doLog('info', message, ...params);
   }
   warn(message?: any, ...params: any[]): void {
-    this.doLog('warn', message, params);
+    this.doLog('warn', message, ...params);
   }
   error(message?: any, ...params: any[]): void {
-    this.doLog('error', message, params);
+    this.doLog('error', message, ...params);
   }
   getLevel(): LogLevel {
     return this.level;

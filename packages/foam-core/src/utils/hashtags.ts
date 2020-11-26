@@ -6,9 +6,9 @@ const WORD_REGEX = /(^|[ ])([\w_-]+\b)/gm;
 export const extractHashtags = (text: string): Set<string> => {
   return isSome(text)
     ? new Set(
-        Array.from([...text.matchAll(HASHTAG_REGEX)])
-          .map(m => m[2].trim())
-          .filter(tag => !isNumeric(tag))
+        Array.from(text.matchAll(HASHTAG_REGEX), m => m[2].trim()).filter(
+          tag => !isNumeric(tag)
+        )
       )
     : new Set();
 };

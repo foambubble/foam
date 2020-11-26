@@ -66,7 +66,7 @@ function generateGraphData(foam: Foam) {
           id: link.to,
           type: "nonExistingNote",
           uri: `virtual:${link.to}`,
-          title: link.link.slug
+          title: cutTitle(link.link.slug)
         };
       }
       graph.edges.add({

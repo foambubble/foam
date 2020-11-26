@@ -14,7 +14,7 @@ export class VsCodeOutputLogger extends BaseLogger implements VsCodeLogger {
     this.channel.appendLine("Foam Logging: " + getFoamLoggerLevel());
   }
 
-  log(lvl: Exclude<LogLevel, "off">, msg?: any, ...extra: any[]): void {
+  log(lvl: LogLevel, msg?: any, ...extra: any[]): void {
     if (msg) {
       this.channel.appendLine(
         `[${lvl} - ${new Date().toLocaleTimeString()}] ${msg}`

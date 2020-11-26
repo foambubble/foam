@@ -3,11 +3,12 @@ export interface ILogger {
   info(message?: any, ...params: any[]): void;
   warn(message?: any, ...params: any[]): void;
   error(message?: any, ...params: any[]): void;
-  getLevel(): LogLevel;
-  setLevel(level: LogLevel): void;
+  getLevel(): LogLevelThreshold;
+  setLevel(level: LogLevelThreshold): void;
 }
 
-export type LogLevel = 'off' | 'debug' | 'info' | 'warn' | 'error';
+export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+export type LogLevelThreshold = LogLevel | 'off';
 
 export abstract class BaseLogger implements ILogger {
   private static severity = {
@@ -17,12 +18,12 @@ export abstract class BaseLogger implements ILogger {
     error: 4,
   };
 
-  constructor(private level: LogLevel = 'info') {}
+  constructor(private level: LogLevelThreshold = 'info') {}
 
-  abstract log(lvl: Exclude<LogLevel, 'off'>, msg?: any, ...extra: any[]): void;
+  abstract log(lvl: LogLevel, msg?: any, ...extra: any[]): void;
 
   doLog(msgLevel: LogLevel, message?: any, ...params: any[]): void {
-    if (this.level === 'off' || msgLevel === 'off') {
+    if (this.level === 'off') {
       return;
     }
     if (BaseLogger.severity[msgLevel] >= BaseLogger.severity[this.level]) {
@@ -42,22 +43,22 @@ export abstract class BaseLogger implements ILogger {
   error(message?: any, ...params: any[]): void {
     this.doLog('error', message, ...params);
   }
-  getLevel(): LogLevel {
+  getLevel(): LogLevelThreshold {
     return this.level;
   }
-  setLevel(level: LogLevel): void {
+  setLevel(level: LogLevelThreshold): void {
     this.level = level;
   }
 }
 
 export class ConsoleLogger extends BaseLogger {
-  log(level: Exclude<LogLevel, 'off'>, msg?: string, ...params: any[]): void {
+  log(level: LogLevel, msg?: string, ...params: any[]): void {
     console[level](`[${level}] ${msg}`, ...params);
   }
 }
 
 export class NoOpLogger extends BaseLogger {
-  log(_l: Exclude<LogLevel, 'off'>, _m?: string, ..._p: any[]): void {}
+  log(_l: LogLevel, _m?: string, ..._p: any[]): void {}
 }
 
 export class Logger {
@@ -73,10 +74,10 @@ export class Logger {
   static error(message?: any, ...params: any[]): void {
     Logger.defaultLogger.error(message, ...params);
   }
-  static getLevel(): LogLevel {
+  static getLevel(): LogLevelThreshold {
     return Logger.defaultLogger.getLevel();
   }
-  static setLevel(level: LogLevel): void {
+  static setLevel(level: LogLevelThreshold): void {
     Logger.defaultLogger.setLevel(level);
   }
 

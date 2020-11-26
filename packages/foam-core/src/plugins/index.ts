@@ -6,7 +6,7 @@ import { Middleware } from '../note-graph';
 import { Note } from '../types';
 import unified from 'unified';
 import { FoamConfig } from '../config';
-import { ILogger, Logger } from '../services/logger';
+import { Logger } from '../utils/log';
 
 export interface FoamPlugin {
   name: string;

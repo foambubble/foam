@@ -5,7 +5,7 @@ import fs from 'fs';
 import { Event, Emitter } from '../common/event';
 import { URI } from '../types';
 import { FoamConfig } from '../config';
-import { Logger } from './logger';
+import { Logger } from '../utils/log';
 
 const findAllFiles = promisify(glob);
 

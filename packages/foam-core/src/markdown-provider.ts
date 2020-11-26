@@ -19,7 +19,7 @@ import {
 } from './utils';
 import { ID } from './types';
 import { ParserPlugin } from './plugins';
-import { Logger } from './services/logger';
+import { Logger } from './utils/log';
 
 const tagsPlugin: ParserPlugin = {
   name: 'tags',

@@ -8,23 +8,26 @@ import {
   Foam,
   FileDataStore,
   Services,
-  isDisposable
+  isDisposable,
+  Logger
 } from "foam-core";
 
 import { features } from "./features";
 import { getConfigFromVscode } from "./services/config";
-import { createLoggerForVsCode, exposeLogger } from "./services/logging";
+import { VsCodeOutputLogger, exposeLogger } from "./services/logging";
 
 let foam: Foam | null = null;
 
 export async function activate(context: ExtensionContext) {
-  const logger = createLoggerForVsCode();
+  const logger = new VsCodeOutputLogger();
+  Logger.setDefaultLogger(logger);
+  exposeLogger(context, logger);
+
   try {
-    exposeLogger(context, logger);
-    logger.info("Starting Foam");
+    Logger.info("Starting Foam");
 
     const config: FoamConfig = getConfigFromVscode();
-    const dataStore = new FileDataStore(config, logger);
+    const dataStore = new FileDataStore(config);
 
     const watcher = workspace.createFileSystemWatcher("**/*");
     watcher.onDidCreate(uri => {
@@ -44,7 +47,6 @@ export async function activate(context: ExtensionContext) {
     });
 
     const services: Services = {
-      logger: logger,
       dataStore: dataStore
     };
     const foamPromise: Promise<Foam> = bootstrap(config, services);
@@ -54,9 +56,9 @@ export async function activate(context: ExtensionContext) {
     });
 
     foam = await foamPromise;
-    logger.info(`Loaded ${foam.notes.getNotes().length} notes`);
+    Logger.info(`Loaded ${foam.notes.getNotes().length} notes`);
   } catch (e) {
-    logger.error("An error occurred while bootstrapping Foam", e);
+    Logger.error("An error occurred while bootstrapping Foam", e);
     window.showErrorMessage(
       `An error occurred while bootstrapping Foam. ${e.stack}`
     );

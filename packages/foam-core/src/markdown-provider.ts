@@ -19,7 +19,7 @@ import {
 } from './utils';
 import { ID } from './types';
 import { ParserPlugin } from './plugins';
-import { ILogger, consoleLogger } from './services/logger';
+import { Logger } from './services/logger';
 
 const tagsPlugin: ParserPlugin = {
   name: 'tags',
@@ -81,29 +81,25 @@ const definitionsPlugin: ParserPlugin = {
   },
 };
 
-const createHandler = (logger: ILogger) => (
+const handleError = (
   plugin: ParserPlugin,
   fnName: string,
   uri: string | undefined,
   e: Error
 ): void => {
   const name = plugin.name || '';
-  logger.warn(
+  Logger.warn(
     `Error while executing [${fnName}] in plugin [${name}] for file [${uri}]`,
     e
   );
 };
 
-export function createMarkdownParser(
-  extraPlugins: ParserPlugin[],
-  logger: ILogger = consoleLogger
-): NoteParser {
+export function createMarkdownParser(extraPlugins: ParserPlugin[]): NoteParser {
   const parser = unified()
     .use(markdownParse, { gfm: true })
     .use(frontmatterPlugin, ['yaml'])
     .use(wikiLinkPlugin);
 
-  const handleError = createHandler(logger);
   const plugins = [
     titlePlugin,
     wikilinkPlugin,
@@ -122,7 +118,7 @@ export function createMarkdownParser(
 
   const foamParser: NoteParser = {
     parse: (uri: string, markdown: string): Note => {
-      logger.debug('Parsing:', uri);
+      Logger.debug('Parsing:', uri);
       markdown = plugins.reduce((acc, plugin) => {
         try {
           return plugin.onWillParseMarkdown?.(acc) || acc;
@@ -182,7 +178,7 @@ export function createMarkdownParser(
               }
             }
           } catch (e) {
-            logger.warn(`Error while parsing YAML for [${uri}]`, e);
+            Logger.warn(`Error while parsing YAML for [${uri}]`, e);
           }
         }
 
@@ -201,7 +197,7 @@ export function createMarkdownParser(
           handleError(plugin, 'onDidVisitTree', uri, e);
         }
       });
-      logger.debug('Result:', note);
+      Logger.debug('Result:', note);
       return note;
     },
   };
@@ -267,7 +263,7 @@ export function createMarkdownReferences(
       if (!target) {
         const candidates = graph.getNotes({ slug: link.link.slug });
         if (candidates.length > 1) {
-          console.log(
+          Logger.info(
             `Warning: Slug ${link.link.slug} matches ${candidates.length} documents. Picking one.`
           );
         }
@@ -276,7 +272,7 @@ export function createMarkdownReferences(
       // We are dropping links to non-existent notes here,
       // but int the future we may want to surface these too
       if (!target) {
-        console.log(
+        Logger.info(
           `Warning: Link '${link.to}' in '${noteId}' points to a non-existing note.`
         );
         return null;

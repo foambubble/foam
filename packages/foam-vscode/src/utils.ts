@@ -10,6 +10,7 @@ import {
   Selection
 } from "vscode";
 import * as fs from "fs";
+import { Logger } from "foam-core";
 
 interface Point {
   line: number;
@@ -28,7 +29,7 @@ export function loadDocConfig() {
   // Load workspace config
   let activeEditor = window.activeTextEditor;
   if (!activeEditor) {
-    console.log("Failed to load config, no active editor");
+    Logger.debug("Failed to load config, no active editor");
     return;
   }
 

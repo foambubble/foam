@@ -6,10 +6,10 @@ import { isSome } from './utils';
 import { isDisposable } from './common/lifecycle';
 
 export const bootstrap = async (config: FoamConfig, services: Services) => {
-  const plugins = await loadPlugins(config, services.logger);
+  const plugins = await loadPlugins(config);
 
   const parserPlugins = plugins.map(p => p.parser).filter(isSome);
-  const parser = createMarkdownParser(parserPlugins, services.logger);
+  const parser = createMarkdownParser(parserPlugins);
 
   const graphMiddlewares = plugins.map(p => p.graphMiddleware).filter(isSome);
   const graph = createGraph(graphMiddlewares);

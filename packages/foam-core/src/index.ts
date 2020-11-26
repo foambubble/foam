@@ -6,7 +6,7 @@ import { ILogger } from './services/logger';
 
 export { IDataStore, FileDataStore };
 export { ILogger };
-export { createLogger, LogLevel, consoleLogger } from './services/logger';
+export { LogLevel, Logger, BaseLogger } from './services/logger';
 export { IDisposable, isDisposable } from './common/lifecycle';
 export { Event, Emitter } from './common/event';
 export { FoamConfig };
@@ -38,7 +38,6 @@ export {
 
 export interface Services {
   dataStore: IDataStore;
-  logger: ILogger;
 }
 
 export interface Foam {

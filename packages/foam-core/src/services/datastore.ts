@@ -5,7 +5,7 @@ import fs from 'fs';
 import { Event, Emitter } from '../common/event';
 import { URI } from '../types';
 import { FoamConfig } from '../config';
-import { ILogger, consoleLogger } from './logger';
+import { Logger } from './logger';
 
 const findAllFiles = promisify(glob);
 
@@ -66,7 +66,7 @@ export class FileDataStore implements IDataStore {
 
   private _folders: readonly string[];
 
-  constructor(config: FoamConfig, logger: ILogger = consoleLogger) {
+  constructor(config: FoamConfig) {
     this._folders = config.workspaceFolders;
 
     let includeGlobs: string[] = [];
@@ -84,7 +84,7 @@ export class FileDataStore implements IDataStore {
       ignoreGlobs.push(...config.ignoreGlobs.map(withFolder));
     });
 
-    logger.debug('Glob patterns', {
+    Logger.debug('Glob patterns', {
       includeGlobs,
       ignoreGlobs,
     });

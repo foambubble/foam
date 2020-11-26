@@ -1,25 +1,28 @@
+---
+tags: todo, good-first-task
+---
 # Contribution Guide
+Foam is open to contributions of any kind, including but not limited to code, documentation, ideas, and feedback.
+This guide aims to help guide new and seasoned contributors getting around the Foam codebase.
 
-> [[todo]] [[good-first-task]] This contribution guide itself could be improved 😅
+## Getting Up To Speed
+Before you start contributing we recommend that you read the following links:
 
-Foam is open to contributions of any kind, including but not limited to code, documentation, ideas, and feedback. Here are some general tips on how to get started on contributing to Foam:
+- [[principles]] - This document describes the guiding principles behind Foam.
+- [[code-of-conduct]] - Rules we hope every contributor aims to follow, allowing everyone to participate in our community!
 
-- Use Foam for yourself, figure out what could be improved.
-- Check out [[roadmap]] to see what's already in the plans. I have thoughts about how to implement some of these, but open to ideas and code contributions!
-- Read about our [[principles]] to understand Foam's philosophy and direction
-- Read and act in accordance with our [[code-of-conduct]].
-- Feel free to open [GitHub issues](https://github.com/foambubble/foam/issues) to give me feedback and ideas for new features.
-- Foam code and documentation live in the monorepo at [foambubble/foam](https://github.com/foambubble/foam/)
-  - [/docs](https://github.com/foambubble/foam/docs): documentation and [[recipes]]
-  - [/packages/foam-vscode](https://github.com/foambubble/foam/tree/master/packages/foam-vscode): the core VSCode plugin
-  - [/packages/foam-core](https://github.com/foambubble/foam/tree/master/packages/foam-core): powers the core functionality in Foam across all platforms
-- Exceptions to the monorepo are:
-  - The starter template at [foambubble/foam-template](https://github.com/foambubble/)
-  - All other [[recommended-extensions]] live in their respective GitHub repos.
+## Diving In
+We understand that diving in an unfamiliar codebase may seem scary,
+to make it easier for new contributors we provide some resources:
+- [[roadmap]] - You can read our roadmap to see what is coming to Foam, many of these are open to suggestions!
+- [[architecture]] - This document describes the architecture of Foam and how the repository is structured.
 
-## Contributing to the VS Code Extension
+You can also see [existing issues](https://github.com/foambubble/foam/issues) and help out!
+Finally, the easiest way to help, is to use it and provide feedback by [submitting issues](https://github.com/foambubble/foam/issues/new/choose) or participating in the [Foam Community Discord](https://discord.gg/rtdZKgj)!
 
-If you're interested in contributing to the VS Code extension (aka `foam-vscode`), this guide will help you get things set up locally.
+## Contributing
+
+If you're interested in contributing, this short guide will help you get things set up locally.
 
 1. Clone the repo locally:
 
@@ -29,25 +32,36 @@ If you're interested in contributing to the VS Code extension (aka `foam-vscode`
 
    `yarn install`
 
-3. This project uses [Yarn workspaces](https://classic.yarnpkg.com/en/docs/workspaces/).`foam-vscode` relies on `foam-core`. This means we need to compile it before we do any extension development. From the root, run the command:
+3. This project uses [Yarn workspaces](https://classic.yarnpkg.com/en/docs/workspaces/). `foam-vscode` relies on `foam-core`. This means we need to compile it before we do any extension development. From the root, run the command:
 
-   `yarn workspace foam-core build`
+   `yarn build`
 
-4. Now we'll use the launch configuration defined at [`.vscode/launch.json`](https://github.com/foambubble/foam/blob/master/.vscode/launch.json) to start a new extension host of VS Code. From the root, or the `foam-vscode` workspace, press f5.
-5. In the new extension host of VS Code that launched, open a Foam workspace (e.g. your personal one, or a test-specific one created from foam-template). This is strictly not necessary, but the extension won't auto-run unless it's in a workspace with a `.vscode/foam.json` file.
-6. Test a command to make sure it's working as expected. Open the Command Palette (Ctrl/Cmd + Shift + P) and select "Foam: Update Markdown Reference List". If you see no errors, it's good to go!
+You should now be ready to start working!
+
+### The VS Code Extension
+
+This guide assumes you read the previous instructions and you're set up to work on Foam.
+
+1. Now we'll use the launch configuration defined at [`.vscode/launch.json`](https://github.com/foambubble/foam/blob/master/.vscode/launch.json) to start a new extension host of VS Code. From the root, or the `foam-vscode` workspace, press f5.
+
+2. In the new extension host of VS Code that launched, open a Foam workspace (e.g. your personal one, or a test-specific one created from [foam-template](https://github.com/foambubble/foam-template)). This is strictly not necessary, but the extension won't auto-run unless it's in a workspace with a `.vscode/foam.json` file.
+
+3. Test a command to make sure it's working as expected. Open the Command Palette (Ctrl/Cmd + Shift + P) and select "Foam: Update Markdown Reference List". If you see no errors, it's good to go!
 
 For more resources related to the VS Code Extension, check out the links below:
 
 - [[tutorial-adding-a-new-command-to-the-vs-code-extension]]
 
+---
+
+Feel free to modify and submit a PR if this guide is out-of-date or contains errors!
+
+---
+
 [//begin]: # "Autogenerated link references for markdown compatibility"
-[todo]: todo.md "Todo"
-[good-first-task]: good-first-task.md "Good First Task"
-[roadmap]: roadmap.md "Roadmap"
 [principles]: principles.md "Principles"
 [code-of-conduct]: code-of-conduct.md "Code of Conduct"
-[recipes]: recipes.md "Recipes"
-[recommended-extensions]: recommended-extensions.md "Recommended Extensions"
+[roadmap]: roadmap.md "Roadmap"
+[architecture]: architecture.md "Architecture"
 [tutorial-adding-a-new-command-to-the-vs-code-extension]: tutorial-adding-a-new-command-to-the-vs-code-extension.md "Tutorial: Adding a New Command to the VS Code Extension"
 [//end]: # "Autogenerated link references"

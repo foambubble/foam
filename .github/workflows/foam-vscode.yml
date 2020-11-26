@@ -1,6 +1,9 @@
 name: Test foam-vscode
 
 on:
+  pull_request:
+    paths:
+      - 'packages/foam-vscode/**'
   push:
     paths:
       - 'packages/foam-vscode/**'

@@ -1,6 +1,9 @@
 name: Test foam-cli
 
 on:
+  pull_request:
+    paths:
+      - 'packages/foam-cli/**'
   push:
     paths:
       - 'packages/foam-cli/**'

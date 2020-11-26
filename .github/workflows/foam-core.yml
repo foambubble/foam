@@ -1,6 +1,9 @@
 name: Test foam-core
 
 on:
+  pull_request:
+    paths:
+      - 'packages/foam-core/**'
   push:
     paths:
       - 'packages/foam-core/**'

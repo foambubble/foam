@@ -1,6 +1,6 @@
 import { Graph } from 'graphlib';
 import { URI, ID, Note, NoteLink } from './types';
-import { computeRelativeURI } from './utils';
+import { computeRelativeURI, nameToSlug } from './utils';
 import { Event, Emitter } from './common/event';
 
 export type GraphNote = Note & {
@@ -91,7 +91,7 @@ export class NoteGraph implements NoteGraphAPI {
     // prettier-ignore
     const filterFn =
       query == null ? (note: Note | null) => note != null
-        : 'slug' in query ? (note: Note | null) => note?.slug === query.slug
+        : 'slug' in query ? (note: Note | null) => [nameToSlug(query.slug), query.slug].includes(note?.slug as string)
         : 'title' in query ? (note: Note | null) => note?.title === query.title
         : (note: Note | null) => note != null;
 

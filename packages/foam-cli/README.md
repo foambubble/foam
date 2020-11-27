@@ -19,7 +19,7 @@ $ npm install -g foam-cli
 $ foam COMMAND
 running command...
 $ foam (-v|--version|version)
-foam-cli/0.7.0 darwin-x64 node-v12.18.2
+foam-cli/0.7.1-alpha.0 darwin-x64 node-v12.18.2
 $ foam --help [COMMAND]
 USAGE
   $ foam COMMAND
@@ -29,6 +29,8 @@ USAGE
 # Commands
 <!-- commands -->
 * [`foam help [COMMAND]`](#foam-help-command)
+* [`foam janitor [WORKSPACEPATH]`](#foam-janitor-workspacepath)
+* [`foam migrate [WORKSPACEPATH]`](#foam-migrate-workspacepath)
 
 ## `foam help [COMMAND]`
 
@@ -46,6 +48,43 @@ OPTIONS
 ```
 
 _See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v3.1.0/src/commands/help.ts)_
+
+## `foam janitor [WORKSPACEPATH]`
+
+Updates link references and heading across all the markdown files in the given workspaces
+
+```
+USAGE
+  $ foam janitor [WORKSPACEPATH]
+
+OPTIONS
+  -h, --help                show CLI help
+  -w, --without-extensions  generate link reference definitions without extensions (for legacy support)
+
+EXAMPLE
+  $ foam-cli janitor path-to-foam-workspace
+```
+
+_See code: [src/commands/janitor.ts](https://github.com/foambubble/foam/blob/v0.7.1-alpha.0/src/commands/janitor.ts)_
+
+## `foam migrate [WORKSPACEPATH]`
+
+Updates file names, link references and heading across all the markdown files in the given workspaces
+
+```
+USAGE
+  $ foam migrate [WORKSPACEPATH]
+
+OPTIONS
+  -h, --help                show CLI help
+  -w, --without-extensions  generate link reference definitions without extensions (for legacy support)
+
+EXAMPLE
+  $ foam-cli migrate path-to-foam-workspace
+  Successfully generated link references and heading!
+```
+
+_See code: [src/commands/migrate.ts](https://github.com/foambubble/foam/blob/v0.7.1-alpha.0/src/commands/migrate.ts)_
 <!-- commandsstop -->
 
 ## Development

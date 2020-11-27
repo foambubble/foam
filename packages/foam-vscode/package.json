@@ -8,7 +8,7 @@
     "type": "git"
   },
   "homepage": "https://github.com/foambubble/foam",
-  "version": "0.7.0",
+  "version": "0.7.1-alpha.0",
   "license": "MIT",
   "publisher": "foam",
   "engines": {
@@ -200,6 +200,6 @@
   },
   "dependencies": {
     "dateformat": "^3.0.3",
-    "foam-core": "^0.7.0"
+    "foam-core": "^0.7.1-alpha.0"
   }
 }

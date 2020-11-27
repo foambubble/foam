@@ -4,6 +4,16 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.7.1] - 2020-11-27
+
+New Feature:
+- Foam logging can now be inspected in VsCode Output panel (#377)
+
+Fixes and Improvements:
+- Foam model: Fixed bug in tags parsing (#382)
+- Dataviz: Graph canvas now resizes with window (#383, #375)
+- Dataviz: Limit label length for placeholder nodes (#381)
+
 ## [0.7.0] - 2020-11-25
 
 New Features:

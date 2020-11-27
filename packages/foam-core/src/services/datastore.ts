@@ -5,6 +5,7 @@ import fs from 'fs';
 import { Event, Emitter } from '../common/event';
 import { URI } from '../types';
 import { FoamConfig } from '../config';
+import { Logger } from '../utils/log';
 
 const findAllFiles = promisify(glob);
 
@@ -83,6 +84,10 @@ export class FileDataStore implements IDataStore {
       ignoreGlobs.push(...config.ignoreGlobs.map(withFolder));
     });
 
+    Logger.debug('Glob patterns', {
+      includeGlobs,
+      ignoreGlobs,
+    });
     this.match = (files: URI[]) => {
       return micromatch(files, includeGlobs, {
         ignore: ignoreGlobs,

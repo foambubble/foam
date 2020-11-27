@@ -46,7 +46,6 @@ Successfully generated link references and heading!
 
     if (isValidDirectory(workspacePath)) {
       const services: Services = {
-        logger: console,
         dataStore: new FileDataStore(config),
       };
       let graph = (await bootstrap(config, services)).notes;

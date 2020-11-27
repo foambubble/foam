@@ -15,7 +15,6 @@ describe('generateLinkReferences', () => {
     ]);
     const services: Services = {
       dataStore: new FileDataStore(config),
-      logger: console,
     };
     _graph = await bootstrap(config, services).then(foam => foam.notes);
   });

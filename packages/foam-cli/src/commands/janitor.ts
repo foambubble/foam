@@ -42,7 +42,6 @@ export default class Janitor extends Command {
     if (isValidDirectory(workspacePath)) {
       const config = createConfigFromFolders([workspacePath]);
       const services: Services = {
-        logger: console,
         dataStore: new FileDataStore(config),
       };
       const graph = (await bootstrap(config, services)).notes;

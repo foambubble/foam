@@ -41,6 +41,10 @@
     },
     "commands": [
       {
+        "command": "foam-vscode.set-log-level",
+        "title": "Foam: Set log level"
+      },
+      {
         "command": "foam-vscode.show-graph",
         "title": "Foam: Show graph"
       },
@@ -79,6 +83,17 @@
             "**/node_modules/**/*"
           ],
           "description": "Specifies the list of globs that will be ignored by Foam (e.g. they will not be considered when creating the graph). To ignore the all the content of a given folder, use `<folderName>/**/*`"
+        },
+        "foam.logging.level": {
+          "type": "string",
+          "default": "info",
+          "enum": [
+            "off",
+            "debug",
+            "info",
+            "warn",
+            "error"
+          ]
         },
         "foam.edit.linkReferenceDefinitions": {
           "type": "string",

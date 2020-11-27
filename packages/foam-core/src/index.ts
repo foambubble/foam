@@ -2,10 +2,11 @@ import { Note, NoteLink, URI } from './types';
 import { NoteGraph, NoteGraphAPI } from './note-graph';
 import { FoamConfig } from './config';
 import { IDataStore, FileDataStore } from './services/datastore';
-import { ILogger } from './services/logger';
+import { ILogger } from './utils/log';
 
 export { IDataStore, FileDataStore };
 export { ILogger };
+export { LogLevel, LogLevelThreshold, Logger, BaseLogger } from './utils/log';
 export { IDisposable, isDisposable } from './common/lifecycle';
 export { Event, Emitter } from './common/event';
 export { FoamConfig };
@@ -37,7 +38,6 @@ export {
 
 export interface Services {
   dataStore: IDataStore;
-  logger: ILogger;
 }
 
 export interface Foam {

@@ -22,6 +22,10 @@ jobs:
 
       - name: Lint foam-vscode
         run: yarn workspace foam-vscode lint
+
+      - name: Build foam-core
+        run: yarn workspace foam-core build
+
       - name: Test foam-vscode
         run: yarn workspace foam-vscode test
       # - name: Publish foam-vscode

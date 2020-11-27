@@ -1,4 +1,5 @@
 import { workspace } from "vscode";
+import { LogLevel } from "foam-core";
 
 export enum LinkReferenceDefinitionsSetting {
   withExtensions = "withExtensions",
@@ -23,4 +24,8 @@ export function getIgnoredFilesSetting(): string[] {
 /** Retrieves the maximum length for a Graph node title. */
 export function getTitleMaxLength(): number {
   return workspace.getConfiguration("foam.graph").get("titleMaxLength");
+}
+
+export function getFoamLoggerLevel(): LogLevel {
+  return workspace.getConfiguration("foam.logging").get("level") ?? "info";
 }

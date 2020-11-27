@@ -14,7 +14,6 @@ describe('generateHeadings', () => {
     ]);
     const services: Services = {
       dataStore: new FileDataStore(config),
-      logger: console,
     };
     const foam = await bootstrap(config, services);
     _graph = foam.notes;

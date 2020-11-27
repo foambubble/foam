@@ -19,6 +19,7 @@ import {
 } from './utils';
 import { ID } from './types';
 import { ParserPlugin } from './plugins';
+import { Logger } from './utils/log';
 
 const tagsPlugin: ParserPlugin = {
   name: 'tags',
@@ -87,7 +88,7 @@ const handleError = (
   e: Error
 ): void => {
   const name = plugin.name || '';
-  console.warn(
+  Logger.warn(
     `Error while executing [${fnName}] in plugin [${name}] for file [${uri}]`,
     e
   );
@@ -117,6 +118,7 @@ export function createMarkdownParser(extraPlugins: ParserPlugin[]): NoteParser {
 
   const foamParser: NoteParser = {
     parse: (uri: string, markdown: string): Note => {
+      Logger.debug('Parsing:', uri);
       markdown = plugins.reduce((acc, plugin) => {
         try {
           return plugin.onWillParseMarkdown?.(acc) || acc;
@@ -176,7 +178,7 @@ export function createMarkdownParser(extraPlugins: ParserPlugin[]): NoteParser {
               }
             }
           } catch (e) {
-            console.warn(`Error while parsing YAML for [${uri}]`, e);
+            Logger.warn(`Error while parsing YAML for [${uri}]`, e);
           }
         }
 
@@ -195,6 +197,7 @@ export function createMarkdownParser(extraPlugins: ParserPlugin[]): NoteParser {
           handleError(plugin, 'onDidVisitTree', uri, e);
         }
       });
+      Logger.debug('Result:', note);
       return note;
     },
   };
@@ -260,7 +263,7 @@ export function createMarkdownReferences(
       if (!target) {
         const candidates = graph.getNotes({ slug: link.link.slug });
         if (candidates.length > 1) {
-          console.log(
+          Logger.info(
             `Warning: Slug ${link.link.slug} matches ${candidates.length} documents. Picking one.`
           );
         }
@@ -269,7 +272,7 @@ export function createMarkdownReferences(
       // We are dropping links to non-existent notes here,
       // but int the future we may want to surface these too
       if (!target) {
-        console.log(
+        Logger.info(
           `Warning: Link '${link.to}' in '${noteId}' points to a non-existing note.`
         );
         return null;

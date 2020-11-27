@@ -1,32 +1,21 @@
 ---
 name: Bug report
 about: Create a report to help us be foamier
-labels: bug, awaiting triage
-title: [BUG]
+labels: bug
 ---
 
-**Describe the bug**
+<!-- Check in the VSCode extension tab. -->
+- Foam version:
+
+**Summary**
 <!-- A clear and concise description of what the bug is.-->
 
-**Affected package**
-<!-- Its ok if you don't know! -->
-- [ ] `foam-cli`
-- [ ] `foam-core`
-- [ ] `foam-vscode`
-- [ ] `other/meta/???`
+**Steps to reproduce**
+1.
+2.
 
-**To Reproduce**
-<!-- Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error -->
+Does this issue occur on the [foam template](https://github.com/foambubble/foam-template) repo? Yes/No
 
-**Expected behavior**
-<!-- A clear and concise description of what you expected to happen. -->
-
-**Screenshots**
-<!-- If applicable, add screenshots to help explain your problem. -->
-
-**Additional context**
+**Additional information**
 <!-- Add any other context about the problem here. -->
+*Feel free to attach a screenshot and/or include a zip with a minimal repo to reproduce the issue*

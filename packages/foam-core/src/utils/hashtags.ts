@@ -1,4 +1,4 @@
-import { isSome, isNumeric } from './core';
+import { isSome } from './core';
 const HASHTAG_REGEX = /(^|[ ])#([\w_-]*[a-zA-Z][\w_-]*\b)/gm;
 const WORD_REGEX = /(^|[ ])([\w_-]*[a-zA-Z][\w_-]*\b)/gm;
 

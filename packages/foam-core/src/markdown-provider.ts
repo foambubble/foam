@@ -15,7 +15,6 @@ import {
   uriToSlug,
   extractHashtags,
   extractTagsFromProp,
-  nameToSlug,
 } from './utils';
 import { ID } from './types';
 import { ParserPlugin } from './plugins';

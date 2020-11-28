@@ -56,8 +56,8 @@ describe('Markdown loader', () => {
     const noteA = graph.setNote(createNoteFromMarkdown('/page-a.md', pageA));
     const noteB = graph.setNote(createNoteFromMarkdown('/page-b.md', pageB));
     graph.setNote(createNoteFromMarkdown('/page-c.md', pageC));
-    graph.setNote(createNoteFromMarkdown('/page-d.md', pageD));
-    graph.setNote(createNoteFromMarkdown('/page-e.md', pageE));
+    graph.setNote(createNoteFromMarkdown('/Page D.md', pageD));
+    graph.setNote(createNoteFromMarkdown('/page e.md', pageE));
 
     expect(
       graph.getBacklinks(noteB.id).map(link => graph.getNote(link.from)!.slug)

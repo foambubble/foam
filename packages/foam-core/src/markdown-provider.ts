@@ -57,7 +57,7 @@ const wikilinkPlugin: ParserPlugin = {
     if (node.type === 'wikiLink') {
       note.links.push({
         type: 'wikilink',
-        slug: nameToSlug(node.value as string),
+        slug: node.value as string,
         position: node.position!,
       });
     }

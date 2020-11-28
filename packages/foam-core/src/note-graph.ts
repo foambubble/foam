@@ -1,6 +1,6 @@
 import { Graph } from 'graphlib';
 import { URI, ID, Note, NoteLink } from './types';
-import { computeRelativeURI, nameToSlug } from './utils';
+import { computeRelativeURI, nameToSlug, isSome } from './utils';
 import { Event, Emitter } from './common/event';
 
 export type GraphNote = Note & {
@@ -19,6 +19,7 @@ export type NotesQuery = { slug: string } | { title: string };
 
 export interface NoteGraphAPI {
   setNote(note: Note): GraphNote;
+  deleteNote(noteId: ID): GraphNote | null;
   getNotes(query?: NotesQuery): GraphNote[];
   getNote(noteId: ID): GraphNote | null;
   getNoteByURI(uri: URI): GraphNote | null;
@@ -58,12 +59,7 @@ export class NoteGraph implements NoteGraphAPI {
 
   public setNote(note: Note): GraphNote {
     const id = this.createIdFromURI(note.source.uri);
-    const noteExists = this.graph.hasNode(id);
-    if (noteExists) {
-      (this.graph.outEdges(id) || []).forEach(edge => {
-        this.graph.removeEdge(edge);
-      });
-    }
+    const oldNote = this.doDelete(id, false);
     const graphNote: GraphNote = {
       ...note,
       id: id,
@@ -81,10 +77,26 @@ export class NoteGraph implements NoteGraphAPI {
       };
       this.graph.setEdge(graphNote.id, targetId, connection);
     });
-    noteExists
+    isSome(oldNote)
       ? this.onDidUpdateNoteEmitter.fire(graphNote)
       : this.onDidAddNoteEmitter.fire(graphNote);
     return graphNote;
+  }
+
+  public deleteNote(noteId: ID): GraphNote | null {
+    return this.doDelete(noteId, true);
+  }
+
+  private doDelete(noteId: ID, fireEvent: boolean): GraphNote | null {
+    const note = this.getNote(noteId);
+    if (isSome(note)) {
+      this.graph.removeNode(noteId);
+      (this.graph.outEdges(noteId) || []).forEach(edge => {
+        this.graph.removeEdge(edge);
+      });
+      fireEvent && this.onDidRemoveNoteEmitter.fire(note);
+    }
+    return note;
   }
 
   public getNotes(query?: NotesQuery): GraphNote[] {
@@ -138,6 +150,7 @@ const backfill = (next: NoteGraphAPI, middleware: Middleware): NoteGraphAPI => {
   const m = middleware(next);
   return {
     setNote: m.setNote || next.setNote,
+    deleteNote: m.deleteNote || next.deleteNote,
     getNotes: m.getNotes || next.getNotes,
     getNote: m.getNote || next.getNote,
     getNoteByURI: m.getNoteByURI || next.getNoteByURI,

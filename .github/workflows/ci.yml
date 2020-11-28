@@ -29,11 +29,9 @@ jobs:
     name: Build and Test
     strategy:
       matrix:
-        # os: [macos-10.15, ubuntu-18.04, windows-2019] add windows-2019 after fixing tests for it
-        os: [macos-10.15, ubuntu-18.04]
+        os: [macos-10.15, ubuntu-18.04] # add windows-2019 after fixing tests for it
     runs-on: ${{ matrix.os }}
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != 'foambubble/foam'
-    needs: [build]
     env:
       OS: ${{ matrix.os }}
     steps:

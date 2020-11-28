@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - '**'
+  # The following will also make the workflow run on all PRs, internal and external.
+  # This would create duplicate runs, that we are skipping by adding the "if" to the jobs below.
+  # See https://github.community/t/duplicate-checks-on-push-and-pull-request-simultaneous-event/18012
+  pull_request:
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-18.04
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != 'foambubble/foam'
+    steps:
+      - uses: actions/checkout@v1
+      - name: Setup Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: '12'
+      - name: Install Dependencies
+        run: yarn
+      - name: Check Lint Rules
+        run: yarn lint
+
+  test:
+    name: Build and Test
+    strategy:
+      matrix:
+        os: [macos-10.15, ubuntu-18.04] # add windows-2019 after fixing tests for it
+    runs-on: ${{ matrix.os }}
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != 'foambubble/foam'
+    env:
+      OS: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v1
+      - name: Setup Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: '12'
+      - name: Install Dependencies
+        run: yarn
+      - name: Build Packages
+        run: yarn build
+      - name: Run Tests
+        run: yarn test

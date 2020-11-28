@@ -18,9 +18,11 @@ const feature: FoamFeature = {
 
       const noteAddedListener = foam.notes.onDidAddNote(onFoamChanged);
       const noteUpdatedListener = foam.notes.onDidUpdateNote(onFoamChanged);
+      const noteDeletedListener = foam.notes.onDidDeleteNote(onFoamChanged);
       panel.onDidDispose(() => {
         noteAddedListener.dispose();
         noteUpdatedListener.dispose();
+        noteDeletedListener.dispose();
       });
 
       vscode.window.onDidChangeActiveTextEditor(e => {

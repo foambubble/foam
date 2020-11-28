@@ -188,6 +188,93 @@ describe('Graph querying', () => {
   });
 });
 
+describe('graph events', () => {
+  it('fires "add" event when adding a new note', () => {
+    const graph = new NoteGraph();
+    const callback = jest.fn();
+    const listener = graph.onDidAddNote(callback);
+    graph.setNote(
+      createTestNote({ uri: '/dir1/page-a.md', title: 'My Title' })
+    );
+    expect(callback).toHaveBeenCalledTimes(1);
+    listener.dispose();
+  });
+  it('fires "updated" event when changing an existing note', () => {
+    const graph = new NoteGraph();
+    const callback = jest.fn();
+    const listener = graph.onDidUpdateNote(callback);
+    graph.setNote(
+      createTestNote({ uri: '/dir1/page-a.md', title: 'My Title' })
+    );
+    graph.setNote(
+      createTestNote({ uri: '/dir1/page-a.md', title: 'Another title' })
+    );
+    expect(callback).toHaveBeenCalledTimes(1);
+    listener.dispose();
+  });
+  it('fires "delete" event when removing a note', () => {
+    const graph = new NoteGraph();
+    const callback = jest.fn();
+    const listener = graph.onDidDeleteNote(callback);
+    const note = graph.setNote(
+      createTestNote({ uri: '/dir1/page-a.md', title: 'My Title' })
+    );
+    graph.deleteNote(note.id);
+    expect(callback).toHaveBeenCalledTimes(1);
+    listener.dispose();
+  });
+  it('does not fire "delete" event when removing a non-existing note', () => {
+    const graph = new NoteGraph();
+    const callback = jest.fn();
+    const listener = graph.onDidDeleteNote(callback);
+    const note = graph.setNote(
+      createTestNote({ uri: '/dir1/page-a.md', title: 'My Title' })
+    );
+    graph.deleteNote('non-existing-note');
+    expect(callback).toHaveBeenCalledTimes(0);
+    listener.dispose();
+  });
+  it('happy lifecycle', () => {
+    const graph = new NoteGraph();
+    const addCallback = jest.fn();
+    const updateCallback = jest.fn();
+    const deleteCallback = jest.fn();
+    const listeners = [
+      graph.onDidAddNote(addCallback),
+      graph.onDidUpdateNote(updateCallback),
+      graph.onDidDeleteNote(deleteCallback),
+    ];
+
+    const note = graph.setNote(
+      createTestNote({ uri: '/dir1/page-a.md', title: 'My Title' })
+    );
+    expect(addCallback).toHaveBeenCalledTimes(1);
+    expect(updateCallback).toHaveBeenCalledTimes(0);
+    expect(deleteCallback).toHaveBeenCalledTimes(0);
+
+    graph.setNote(
+      createTestNote({ uri: '/dir1/page-a.md', title: 'Another Title' })
+    );
+    expect(addCallback).toHaveBeenCalledTimes(1);
+    expect(updateCallback).toHaveBeenCalledTimes(1);
+    expect(deleteCallback).toHaveBeenCalledTimes(0);
+
+    graph.setNote(
+      createTestNote({ uri: '/dir1/page-a.md', title: 'Yet Another Title' })
+    );
+    expect(addCallback).toHaveBeenCalledTimes(1);
+    expect(updateCallback).toHaveBeenCalledTimes(2);
+    expect(deleteCallback).toHaveBeenCalledTimes(0);
+
+    graph.deleteNote(note.id);
+    expect(addCallback).toHaveBeenCalledTimes(1);
+    expect(updateCallback).toHaveBeenCalledTimes(2);
+    expect(deleteCallback).toHaveBeenCalledTimes(1);
+
+    listeners.forEach(l => l.dispose());
+  });
+});
+
 describe('graph middleware', () => {
   it('can intercept calls to the graph', async () => {
     const graph = createGraph([

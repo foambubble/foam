@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+
+jobs:
+  build:
+    name: Run Build
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v1
+      - name: Setup Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: '12'
+      - name: Install Dependencies
+        run: yarn
+      - name: Build Packages
+        run: yarn build
+
+  lint:
+    name: Run Linter
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v1
+      - name: Setup Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: '12'
+      - name: Install Dependencies
+        run: yarn
+      - name: Check Lint Rules
+        run: yarn lint
+
+  tests:
+    name: Run Tests
+    strategy:
+      matrix:
+        os: [macos-10.15, ubuntu-18.04, windows-2019]
+    runs-on: ${{ matrix.os }}
+    needs: [build]
+    env:
+      OS: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v1
+      - name: Setup Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: '12'
+      - name: Install Dependencies
+        run: yarn
+      - name: Build Packages
+        run: yarn build
+      - name: Run Tests
+        run: yarn test

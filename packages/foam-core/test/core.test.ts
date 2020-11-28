@@ -223,6 +223,17 @@ describe('graph events', () => {
     expect(callback).toHaveBeenCalledTimes(1);
     listener.dispose();
   });
+  it('does not fire "delete" event when removing a non-existing note', () => {
+    const graph = new NoteGraph();
+    const callback = jest.fn();
+    const listener = graph.onDidRemoveNote(callback);
+    const note = graph.setNote(
+      createTestNote({ uri: '/dir1/page-a.md', title: 'My Title' })
+    );
+    graph.deleteNote('non-existing-note');
+    expect(callback).toHaveBeenCalledTimes(0);
+    listener.dispose();
+  });
   it('happy lifecycle', () => {
     const graph = new NoteGraph();
     const addCallback = jest.fn();

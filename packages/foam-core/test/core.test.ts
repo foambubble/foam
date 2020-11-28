@@ -215,7 +215,7 @@ describe('graph events', () => {
   it('fires "delete" event when removing a note', () => {
     const graph = new NoteGraph();
     const callback = jest.fn();
-    const listener = graph.onDidRemoveNote(callback);
+    const listener = graph.onDidDeleteNote(callback);
     const note = graph.setNote(
       createTestNote({ uri: '/dir1/page-a.md', title: 'My Title' })
     );
@@ -226,7 +226,7 @@ describe('graph events', () => {
   it('does not fire "delete" event when removing a non-existing note', () => {
     const graph = new NoteGraph();
     const callback = jest.fn();
-    const listener = graph.onDidRemoveNote(callback);
+    const listener = graph.onDidDeleteNote(callback);
     const note = graph.setNote(
       createTestNote({ uri: '/dir1/page-a.md', title: 'My Title' })
     );
@@ -242,7 +242,7 @@ describe('graph events', () => {
     const listeners = [
       graph.onDidAddNote(addCallback),
       graph.onDidUpdateNote(updateCallback),
-      graph.onDidRemoveNote(deleteCallback),
+      graph.onDidDeleteNote(deleteCallback),
     ];
 
     const note = graph.setNote(

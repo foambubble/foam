@@ -28,7 +28,7 @@ export interface NoteGraphAPI {
   getBacklinks(noteId: ID): GraphConnection[];
   onDidAddNote: Event<GraphNote>;
   onDidUpdateNote: Event<GraphNote>;
-  onDidRemoveNote: Event<GraphNote>;
+  onDidDeleteNote: Event<GraphNote>;
 }
 
 export type Middleware = (next: NoteGraphAPI) => Partial<NoteGraphAPI>;
@@ -41,19 +41,19 @@ export const createGraph = (middlewares: Middleware[]): NoteGraphAPI => {
 export class NoteGraph implements NoteGraphAPI {
   onDidAddNote: Event<GraphNote>;
   onDidUpdateNote: Event<GraphNote>;
-  onDidRemoveNote: Event<GraphNote>;
+  onDidDeleteNote: Event<GraphNote>;
 
   private graph: Graph;
   private createIdFromURI: (uri: URI) => ID;
   private onDidAddNoteEmitter = new Emitter<GraphNote>();
   private onDidUpdateNoteEmitter = new Emitter<GraphNote>();
-  private onDidRemoveNoteEmitter = new Emitter<GraphNote>();
+  private onDidDeleteEmitter = new Emitter<GraphNote>();
 
   constructor() {
     this.graph = new Graph();
     this.onDidAddNote = this.onDidAddNoteEmitter.event;
     this.onDidUpdateNote = this.onDidUpdateNoteEmitter.event;
-    this.onDidRemoveNote = this.onDidRemoveNoteEmitter.event;
+    this.onDidDeleteNote = this.onDidDeleteEmitter.event;
     this.createIdFromURI = uri => uri;
   }
 
@@ -94,7 +94,7 @@ export class NoteGraph implements NoteGraphAPI {
       (this.graph.outEdges(noteId) || []).forEach(edge => {
         this.graph.removeEdge(edge);
       });
-      fireEvent && this.onDidRemoveNoteEmitter.fire(note);
+      fireEvent && this.onDidDeleteEmitter.fire(note);
     }
     return note;
   }
@@ -142,7 +142,7 @@ export class NoteGraph implements NoteGraphAPI {
   public dispose() {
     this.onDidAddNoteEmitter.dispose();
     this.onDidUpdateNoteEmitter.dispose();
-    this.onDidRemoveNoteEmitter.dispose();
+    this.onDidDeleteEmitter.dispose();
   }
 }
 
@@ -159,6 +159,6 @@ const backfill = (next: NoteGraphAPI, middleware: Middleware): NoteGraphAPI => {
     getBacklinks: m.getBacklinks || next.getBacklinks,
     onDidAddNote: next.onDidAddNote,
     onDidUpdateNote: next.onDidUpdateNote,
-    onDidRemoveNote: next.onDidRemoveNote,
+    onDidDeleteNote: next.onDidDeleteNote,
   };
 };

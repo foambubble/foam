@@ -4,12 +4,16 @@ on:
   push:
     branches:
       - '**'
+  # The following will also make the workflow run on all PRs, internal and external.
+  # This would create duplicate runs, that we are skipping by adding the "if" to the jobs below.
+  # See https://github.community/t/duplicate-checks-on-push-and-pull-request-simultaneous-event/18012
   pull_request:
 
 jobs:
   build:
     name: Run Build
     runs-on: ubuntu-18.04
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != 'foambubble/foam'
     steps:
       - uses: actions/checkout@v1
       - name: Setup Node
@@ -24,6 +28,7 @@ jobs:
   lint:
     name: Run Linter
     runs-on: ubuntu-18.04
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != 'foambubble/foam'
     steps:
       - uses: actions/checkout@v1
       - name: Setup Node
@@ -41,6 +46,7 @@ jobs:
       matrix:
         os: [macos-10.15, ubuntu-18.04, windows-2019]
     runs-on: ${{ matrix.os }}
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != 'foambubble/foam'
     needs: [build]
     env:
       OS: ${{ matrix.os }}

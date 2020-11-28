@@ -10,23 +10,8 @@ on:
   pull_request:
 
 jobs:
-  build:
-    name: Run Build
-    runs-on: ubuntu-18.04
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != 'foambubble/foam'
-    steps:
-      - uses: actions/checkout@v1
-      - name: Setup Node
-        uses: actions/setup-node@v1
-        with:
-          node-version: '12'
-      - name: Install Dependencies
-        run: yarn
-      - name: Build Packages
-        run: yarn build
-
   lint:
-    name: Run Linter
+    name: Lint
     runs-on: ubuntu-18.04
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != 'foambubble/foam'
     steps:
@@ -40,8 +25,8 @@ jobs:
       - name: Check Lint Rules
         run: yarn lint
 
-  tests:
-    name: Run Tests
+  test:
+    name: Build and Test
     strategy:
       matrix:
         os: [macos-10.15, ubuntu-18.04, windows-2019]

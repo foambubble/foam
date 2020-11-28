@@ -4,6 +4,12 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.7.2] - 2020-11-27
+
+Fixes and Improvements:
+- Dataviz: Sync note deletion
+- Foam model: Fix to wikilink format (#386 - thanks @SanketDG)
+
 ## [0.7.1] - 2020-11-27
 
 New Feature:

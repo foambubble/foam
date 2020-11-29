@@ -31,18 +31,18 @@ export async function activate(context: ExtensionContext) {
 
     const watcher = workspace.createFileSystemWatcher("**/*");
     watcher.onDidCreate(uri => {
-      if (dataStore.isMatch(uri.path)) {
-        dataStore.onDidCreateEmitter.fire(uri.path);
+      if (dataStore.isMatch(uri)) {
+        dataStore.onDidCreateEmitter.fire(uri);
       }
     });
     watcher.onDidChange(uri => {
-      if (dataStore.isMatch(uri.path)) {
-        dataStore.onDidChangeEmitter.fire(uri.path);
+      if (dataStore.isMatch(uri)) {
+        dataStore.onDidChangeEmitter.fire(uri);
       }
     });
     watcher.onDidDelete(uri => {
-      if (dataStore.isMatch(uri.path)) {
-        dataStore.onDidDeleteEmitter.fire(uri.path);
+      if (dataStore.isMatch(uri)) {
+        dataStore.onDidDeleteEmitter.fire(uri);
       }
     });
 

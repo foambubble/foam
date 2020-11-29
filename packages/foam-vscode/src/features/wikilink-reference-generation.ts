@@ -72,7 +72,7 @@ const feature: FoamFeature = {
 
 function updateDocumentInNoteGraph(foam: Foam, document: TextDocument) {
   foam.notes.setNote(
-    foam.parse(document.fileName, document.getText(), docConfig.eol)
+    foam.parse(document.uri, document.getText(), docConfig.eol)
   );
 }
 
@@ -138,15 +138,13 @@ function generateReferenceList(
     return [];
   }
 
-  const filePath = doc.fileName;
-
-  const note = foam.getNoteByURI(filePath);
+  const note = foam.getNoteByURI(doc.uri);
 
   // Should never happen as `doc` is usually given by `editor.document`, which
   // binds to an opened note.
   if (!note) {
     console.warn(
-      `Can't find note for URI ${filePath} before attempting to generate its markdown reference list`
+      `Can't find note for URI ${doc.uri.path} before attempting to generate its markdown reference list`
     );
     return [];
   }

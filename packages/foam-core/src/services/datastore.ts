@@ -3,7 +3,7 @@ import { promisify } from 'util';
 import micromatch from 'micromatch';
 import fs from 'fs';
 import { Event, Emitter } from '../common/event';
-import { URI } from '../types';
+import { URI } from '../common/uri';
 import { FoamConfig } from '../config';
 import { Logger } from '../utils/log';
 
@@ -33,7 +33,7 @@ export interface IDataStore {
    * Filters a list of URIs based on whether they are a match
    * in this data store
    */
-  match: (uris: URI[]) => string[];
+  match: (uris: URI[]) => URI[];
 
   /**
    * An event which fires on file creation.
@@ -62,7 +62,7 @@ export class FileDataStore implements IDataStore {
   readonly onDidChange: Event<URI> = this.onDidChangeEmitter.event;
   readonly onDidDelete: Event<URI> = this.onDidDeleteEmitter.event;
   readonly isMatch: (uri: URI) => boolean;
-  readonly match: (uris: URI[]) => string[];
+  readonly match: (uris: URI[]) => URI[];
 
   private _folders: readonly string[];
 
@@ -89,10 +89,14 @@ export class FileDataStore implements IDataStore {
       ignoreGlobs,
     });
     this.match = (files: URI[]) => {
-      return micromatch(files, includeGlobs, {
-        ignore: ignoreGlobs,
-        nocase: true,
-      });
+      return micromatch(
+        files.map(f => f.path),
+        includeGlobs,
+        {
+          ignore: ignoreGlobs,
+          nocase: true,
+        }
+      ).map(URI.file);
     };
     this.isMatch = uri => this.match([uri]).length > 0;
   }
@@ -100,8 +104,9 @@ export class FileDataStore implements IDataStore {
   async listFiles() {
     const files = (
       await Promise.all(
-        this._folders.map(folder => {
-          return findAllFiles(folderPlusGlob(folder)('**/*'));
+        this._folders.map(async folder => {
+          const res = await findAllFiles(folderPlusGlob(folder)('**/*'));
+          return res.map(URI.file);
         })
       )
     ).flat();
@@ -109,7 +114,7 @@ export class FileDataStore implements IDataStore {
   }
 
   async read(uri: URI) {
-    return (await fs.promises.readFile(uri)).toString();
+    return (await fs.promises.readFile(uri.fsPath)).toString();
   }
 }
 

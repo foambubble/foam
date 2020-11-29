@@ -1,6 +1,10 @@
 import { NoteGraph, createGraph } from '../src/note-graph';
 import { NoteLinkDefinition, Note } from '../src/types';
 import { uriToSlug } from '../src/utils';
+import { URI } from '../src/common/uri';
+import { Logger } from '../src/utils/log';
+
+Logger.setLevel('error');
 
 const position = {
   start: { line: 1, column: 1 },
@@ -21,7 +25,7 @@ export const createTestNote = (params: {
   return {
     properties: {},
     title: params.title ?? null,
-    slug: uriToSlug(params.uri),
+    slug: uriToSlug(URI.file(params.uri)),
     definitions: params.definitions ?? [],
     tags: new Set(),
     links: params.links
@@ -36,7 +40,7 @@ export const createTestNote = (params: {
       eol: eol,
       end: documentEnd,
       contentStart: documentStart,
-      uri: params.uri,
+      uri: URI.file(params.uri),
       text: params.text ?? '',
     },
   };

@@ -1,4 +1,7 @@
 import { applyTextEdit } from '../../src/janitor/apply-text-edit';
+import { Logger } from '../../src/utils/log';
+
+Logger.setLevel('error');
 
 describe('applyTextEdit', () => {
   it('should return text with applied TextEdit in the end of the string', () => {

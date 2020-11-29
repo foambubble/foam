@@ -5,6 +5,9 @@ import { bootstrap } from '../../src/bootstrap';
 import { createConfigFromFolders } from '../../src/config';
 import { Services } from '../../src';
 import { FileDataStore } from '../../src/services/datastore';
+import { Logger } from '../../src/utils/log';
+
+Logger.setLevel('error');
 
 describe('generateHeadings', () => {
   let _graph: NoteGraphAPI;

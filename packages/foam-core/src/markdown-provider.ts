@@ -7,18 +7,14 @@ import visit from 'unist-util-visit';
 import { Parent, Point } from 'unist';
 import detectNewline from 'detect-newline';
 import os from 'os';
-import * as path from 'path';
 import { NoteGraphAPI } from './note-graph';
 import { NoteLinkDefinition, Note, NoteParser } from './types';
-import {
-  dropExtension,
-  uriToSlug,
-  extractHashtags,
-  extractTagsFromProp,
-} from './utils';
+import { dropExtension, extractHashtags, extractTagsFromProp } from './utils';
+import { uriToSlug, computeRelativePath, getBasename } from './utils/uri';
 import { ID } from './types';
 import { ParserPlugin } from './plugins';
 import { Logger } from './utils/log';
+import { URI } from './common/uri';
 
 const tagsPlugin: ParserPlugin = {
   name: 'tags',
@@ -45,7 +41,7 @@ const titlePlugin: ParserPlugin = {
   },
   onDidVisitTree: (tree, note) => {
     if (note.title == null) {
-      note.title = path.parse(note.source.uri).name;
+      note.title = getBasename(note.source.uri);
     }
   },
 };
@@ -83,12 +79,12 @@ const definitionsPlugin: ParserPlugin = {
 const handleError = (
   plugin: ParserPlugin,
   fnName: string,
-  uri: string | undefined,
+  uri: URI | undefined,
   e: Error
 ): void => {
   const name = plugin.name || '';
   Logger.warn(
-    `Error while executing [${fnName}] in plugin [${name}] for file [${uri}]`,
+    `Error while executing [${fnName}] in plugin [${name}] for file [${uri?.path}]`,
     e
   );
 };
@@ -116,7 +112,7 @@ export function createMarkdownParser(extraPlugins: ParserPlugin[]): NoteParser {
   });
 
   const foamParser: NoteParser = {
-    parse: (uri: string, markdown: string): Note => {
+    parse: (uri: URI, markdown: string): Note => {
       Logger.debug('Parsing:', uri);
       markdown = plugins.reduce((acc, plugin) => {
         try {
@@ -277,8 +273,8 @@ export function createMarkdownReferences(
         return null;
       }
 
-      const relativePath = path.relative(
-        path.dirname(source.source.uri),
+      const relativePath = computeRelativePath(
+        source.source.uri,
         target.source.uri
       );
 

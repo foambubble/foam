@@ -1,10 +1,11 @@
-import path from 'path';
+import { posix } from 'path';
 import GithubSlugger from 'github-slugger';
-import { URI, ID } from '../types';
+import { ID } from '../types';
 import { hash } from './core';
+import { URI } from '../common/uri';
 
 export const uriToSlug = (noteUri: URI): string => {
-  return GithubSlugger.slug(path.parse(noteUri).name);
+  return GithubSlugger.slug(posix.parse(noteUri.path).name);
 };
 
 export const nameToSlug = (noteName: string): string => {
@@ -12,8 +13,15 @@ export const nameToSlug = (noteName: string): string => {
 };
 
 export const hashURI = (uri: URI): ID => {
-  return hash(path.normalize(uri));
+  return hash(posix.normalize(uri.path));
 };
+
+export const computeRelativePath = (source: URI, target: URI): string => {
+  const relativePath = posix.relative(posix.dirname(source.path), target.path);
+  return relativePath;
+};
+
+export const getBasename = (uri: URI) => posix.parse(uri.path).name;
 
 export const computeRelativeURI = (
   reference: URI,
@@ -21,8 +29,10 @@ export const computeRelativeURI = (
 ): URI => {
   // if no extension is provided, use the same extension as the source file
   const slug =
-    path.extname(relativeSlug) !== ''
+    posix.extname(relativeSlug) !== ''
       ? relativeSlug
-      : `${relativeSlug}${path.extname(reference)}`;
-  return path.normalize(path.join(path.dirname(reference), slug));
+      : `${relativeSlug}${posix.extname(reference.path)}`;
+  return reference.with({
+    path: posix.join(posix.dirname(reference.path), slug),
+  });
 };

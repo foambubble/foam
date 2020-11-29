@@ -1,5 +1,6 @@
 import { Graph } from 'graphlib';
-import { URI, ID, Note, NoteLink } from './types';
+import { URI } from './common/uri';
+import { ID, Note, NoteLink } from './types';
 import { computeRelativeURI, nameToSlug, isSome } from './utils';
 import { Event, Emitter } from './common/event';
 
@@ -54,7 +55,7 @@ export class NoteGraph implements NoteGraphAPI {
     this.onDidAddNote = this.onDidAddNoteEmitter.event;
     this.onDidUpdateNote = this.onDidUpdateNoteEmitter.event;
     this.onDidDeleteNote = this.onDidDeleteEmitter.event;
-    this.createIdFromURI = uri => uri;
+    this.createIdFromURI = uri => uri.path;
   }
 
   public setNote(note: Note): GraphNote {

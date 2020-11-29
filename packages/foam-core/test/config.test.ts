@@ -1,7 +1,11 @@
 import * as path from 'path';
 import { createConfigFromFolders } from '../src/config';
+import { Logger } from '../src/utils/log';
+
+Logger.setLevel('error');
 
 const testFolder = path.join(__dirname, 'test-config');
+
 describe('Foam configuration', () => {
   it('can read settings from config.json', () => {
     const config = createConfigFromFolders([path.join(testFolder, 'folder1')]);

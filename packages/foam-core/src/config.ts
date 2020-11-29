@@ -1,5 +1,6 @@
 import { readFileSync } from 'fs';
 import { merge } from 'lodash';
+import { Logger } from './utils/log';
 
 export interface FoamConfig {
   workspaceFolders: string[];
@@ -68,6 +69,6 @@ const parseConfig = (path: string) => {
   try {
     return JSON.parse(readFileSync(path, 'utf8'));
   } catch {
-    console.warn('Could not read configuration from ' + path);
+    Logger.debug('Could not read configuration from ' + path);
   }
 };

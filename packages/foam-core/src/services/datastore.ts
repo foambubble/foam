@@ -84,7 +84,7 @@ export class FileDataStore implements IDataStore {
       ignoreGlobs.push(...config.ignoreGlobs.map(withFolder));
     });
 
-    Logger.debug('Glob patterns', {
+    Logger.info('Glob patterns', {
       includeGlobs,
       ignoreGlobs,
     });

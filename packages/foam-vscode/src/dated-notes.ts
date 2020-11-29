@@ -24,7 +24,7 @@ async function openDailyNoteFor(date?: Date) {
   await focusNote(dailyNotePath, isNew);
 }
 function getDailyNotePath(configuration: WorkspaceConfiguration, date: Date) {
-  const rootDirectory = workspace.workspaceFolders[0].uri.fsPath;
+  const rootDirectory = workspace.workspaceFolders[0].uri.path;
   const dailyNoteDirectory: string =
     configuration.get("openDailyNote.directory") ?? ".";
   const dailyNoteFilename = getDailyNoteFileName(configuration, date);

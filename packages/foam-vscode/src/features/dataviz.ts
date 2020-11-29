@@ -27,7 +27,7 @@ const feature: FoamFeature = {
 
       vscode.window.onDidChangeActiveTextEditor(e => {
         if (e.document.uri.scheme === "file") {
-          const note = foam.notes.getNoteByURI(e.document.uri.fsPath);
+          const note = foam.notes.getNoteByURI(e.document.uri.path);
           if (isSome(note)) {
             panel.webview.postMessage({
               type: "didSelectNote",

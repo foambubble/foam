@@ -11,12 +11,12 @@ import { FoamFeature } from "../types";
 import { TextEncoder } from "util";
 import { focusNote } from "../utils";
 
-const templatesDir = `${workspace.workspaceFolders[0].uri.fsPath}/.foam/templates`;
+const templatesDir = `${workspace.workspaceFolders[0].uri.path}/.foam/templates`;
 
 async function getTemplates(): Promise<string[]> {
   const templates = await workspace.findFiles(".foam/templates/**.md");
   // parse title, not whole file!
-  return templates.map(template => path.basename(template.fsPath));
+  return templates.map(template => path.basename(template.path));
 }
 
 const feature: FoamFeature = {
@@ -30,7 +30,7 @@ const feature: FoamFeature = {
           const currentDir =
             activeFile !== undefined
               ? path.dirname(activeFile)
-              : workspace.workspaceFolders[0].uri.fsPath;
+              : workspace.workspaceFolders[0].uri.path;
           const selectedTemplate = await window.showQuickPick(templates);
           const folder = await window.showInputBox({
             prompt: `Where should the template be created?`,

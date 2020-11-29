@@ -7,6 +7,7 @@ import { Note } from '../types';
 import unified from 'unified';
 import { FoamConfig } from '../config';
 import { Logger } from '../utils/log';
+import { URI } from '../common/uri';
 
 export interface FoamPlugin {
   name: string;
@@ -38,15 +39,16 @@ export async function loadPlugins(config: FoamConfig): Promise<FoamPlugin[]> {
   if (!isFeatureEnabled) {
     return [];
   }
-  const pluginDirs: string[] =
-    pluginConfig.pluginFolders ?? findPluginDirs(config.workspaceFolders);
+  const pluginDirs: URI[] =
+    pluginConfig.pluginFolders?.map(URI.file) ??
+    findPluginDirs(config.workspaceFolders);
 
   const plugins = await Promise.all(
     pluginDirs
-      .filter(dir => fs.statSync(dir).isDirectory)
+      .filter(dir => fs.statSync(dir.fsPath).isDirectory)
       .map(async dir => {
         try {
-          const pluginFile = path.join(dir, 'index.js');
+          const pluginFile = path.join(dir.fsPath, 'index.js');
           fs.accessSync(pluginFile);
           Logger.info(`Found plugin at [${pluginFile}]. Loading..`);
           const plugin = validate(await import(pluginFile));
@@ -60,19 +62,22 @@ export async function loadPlugins(config: FoamConfig): Promise<FoamPlugin[]> {
   return plugins.filter(isNotNull);
 }
 
-function findPluginDirs(workspaceFolders: string[]) {
+function findPluginDirs(workspaceFolders: URI[]) {
   return workspaceFolders
-    .map(root => path.join(root, '.foam', 'plugins'))
+    .map(root => URI.joinPath(root, '.foam', 'plugins'))
     .reduce((acc, pluginDir) => {
       try {
         const content = fs
-          .readdirSync(pluginDir)
-          .map(dir => path.join(pluginDir, dir));
-        return [...acc, ...content.filter(c => fs.statSync(c).isDirectory())];
+          .readdirSync(pluginDir.fsPath)
+          .map(dir => URI.joinPath(pluginDir, dir));
+        return [
+          ...acc,
+          ...content.filter(c => fs.statSync(c.fsPath).isDirectory()),
+        ];
       } catch {
         return acc;
       }
-    }, [] as string[]);
+    }, [] as URI[]);
 }
 
 function validate(plugin: any): FoamPlugin {

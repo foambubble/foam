@@ -6,7 +6,7 @@ import { getIgnoredFilesSetting } from "../settings";
 // not be dependent on vscode but at the moment it's convenient
 // to leverage it
 export const getConfigFromVscode = (): FoamConfig => {
-  const workspaceFolders = workspace.workspaceFolders.map(dir => dir.uri.path);
+  const workspaceFolders = workspace.workspaceFolders.map(dir => dir.uri);
   const excludeGlobs: string[] = getIgnoredFilesSetting();
 
   return createConfigFromFolders(workspaceFolders, {

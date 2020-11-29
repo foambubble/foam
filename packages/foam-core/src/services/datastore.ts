@@ -67,11 +67,11 @@ export class FileDataStore implements IDataStore {
   private _folders: readonly string[];
 
   constructor(config: FoamConfig) {
-    this._folders = config.workspaceFolders;
+    this._folders = config.workspaceFolders.map(f => f.path);
 
     let includeGlobs: string[] = [];
     let ignoreGlobs: string[] = [];
-    config.workspaceFolders.forEach(folder => {
+    this._folders.forEach(folder => {
       const withFolder = folderPlusGlob(folder);
       includeGlobs.push(
         ...config.includeGlobs.map(glob => {

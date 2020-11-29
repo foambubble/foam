@@ -8,6 +8,7 @@ import {
   applyTextEdit,
   Services,
   FileDataStore,
+  URI,
 } from 'foam-core';
 import { writeFileToDisk } from '../utils/write-file-to-disk';
 import { isValidDirectory } from '../utils';
@@ -40,7 +41,7 @@ export default class Janitor extends Command {
     const { workspacePath = './' } = args;
 
     if (isValidDirectory(workspacePath)) {
-      const config = createConfigFromFolders([workspacePath]);
+      const config = createConfigFromFolders([URI.file(workspacePath)]);
       const services: Services = {
         dataStore: new FileDataStore(config),
       };

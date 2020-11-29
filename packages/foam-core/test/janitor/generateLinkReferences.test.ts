@@ -1,4 +1,3 @@
-import * as path from 'path';
 import { NoteGraphAPI } from '../../src/note-graph';
 import { generateLinkReferences } from '../../src/janitor';
 import { bootstrap } from '../../src/bootstrap';
@@ -6,6 +5,7 @@ import { createConfigFromFolders } from '../../src/config';
 import { Services } from '../../src';
 import { FileDataStore } from '../../src/services/datastore';
 import { Logger } from '../../src/utils/log';
+import { URI } from '../../src/common/uri';
 
 Logger.setLevel('error');
 
@@ -14,7 +14,7 @@ describe('generateLinkReferences', () => {
 
   beforeAll(async () => {
     const config = createConfigFromFolders([
-      path.join(__dirname, '../__scaffold__'),
+      URI.joinPath(URI.file(__dirname), '..', '__scaffold__'),
     ]);
     const services: Services = {
       dataStore: new FileDataStore(config),

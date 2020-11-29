@@ -67,8 +67,10 @@ export class FileDataStore implements IDataStore {
   private _folders: readonly string[];
 
   constructor(config: FoamConfig) {
-    this._folders = config.workspaceFolders.map(f => f.path);
-
+    this._folders = config.workspaceFolders.map(f =>
+      f.fsPath.replace(/\\\\/g, '/')
+    );
+    Logger.info('Workspace folders: ', this._folders);
     let includeGlobs: string[] = [];
     let ignoreGlobs: string[] = [];
     this._folders.forEach(folder => {

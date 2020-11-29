@@ -109,14 +109,14 @@ export class URI implements UriComponents {
       return false;
     }
     return (
-      typeof (<URI>thing).authority === 'string' &&
-      typeof (<URI>thing).fragment === 'string' &&
-      typeof (<URI>thing).path === 'string' &&
-      typeof (<URI>thing).query === 'string' &&
-      typeof (<URI>thing).scheme === 'string' &&
-      typeof (<URI>thing).fsPath === 'function' &&
-      typeof (<URI>thing).with === 'function' &&
-      typeof (<URI>thing).toString === 'function'
+      typeof (thing as URI).authority === 'string' &&
+      typeof (thing as URI).fragment === 'string' &&
+      typeof (thing as URI).path === 'string' &&
+      typeof (thing as URI).query === 'string' &&
+      typeof (thing as URI).scheme === 'string' &&
+      typeof (thing as URI).fsPath === 'function' &&
+      typeof (thing as URI).with === 'function' &&
+      typeof (thing as URI).toString === 'function'
     );
   }
 
@@ -425,10 +425,10 @@ export class URI implements UriComponents {
       return data;
     } else {
       const result = new Uri(data);
-      result._formatted = (<UriState>data).external;
+      result._formatted = (data as UriState).external;
       result._fsPath =
-        (<UriState>data)._sep === _pathSepMarker
-          ? (<UriState>data).fsPath
+        (data as UriState)._sep === _pathSepMarker
+          ? (data as UriState).fsPath
           : null;
       return result;
     }
@@ -477,9 +477,9 @@ class Uri extends URI {
   }
 
   toJSON(): UriComponents {
-    const res = <UriState>{
+    const res = {
       $mid: 1,
-    };
+    } as UriState;
     // cached state
     if (this._fsPath) {
       res.fsPath = this._fsPath;

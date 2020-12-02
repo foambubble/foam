@@ -59,7 +59,7 @@ export class NoteGraph implements NoteGraphAPI {
 
   public setNote(note: Note): GraphNote {
     const id = this.createIdFromURI(note.source.uri);
-    const oldNote = this.doDelete(id, false);
+    const oldNote = this.getNote(id);
     const graphNote: GraphNote = {
       ...note,
       id: id,

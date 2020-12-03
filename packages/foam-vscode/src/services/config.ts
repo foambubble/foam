@@ -7,9 +7,9 @@ import { getIgnoredFilesSetting } from "../settings";
 // to leverage it
 export const getConfigFromVscode = (): FoamConfig => {
   const workspaceFolders = workspace.workspaceFolders.map(dir => dir.uri);
-  const excludeGlobs: string[] = getIgnoredFilesSetting();
+  const excludeGlobs = getIgnoredFilesSetting();
 
   return createConfigFromFolders(workspaceFolders, {
-    ignore: excludeGlobs
+    ignore: excludeGlobs.map(g => g.toString())
   });
 };

@@ -1,4 +1,4 @@
-import { workspace } from "vscode";
+import { workspace, GlobPattern } from "vscode";
 import { LogLevel } from "foam-core";
 
 export enum LinkReferenceDefinitionsSetting {
@@ -17,8 +17,11 @@ export function getWikilinkDefinitionSetting(): LinkReferenceDefinitionsSetting 
 }
 
 /** Retrieve the list of file ignoring globs. */
-export function getIgnoredFilesSetting(): string[] {
-  return workspace.getConfiguration("foam.files").get("ignore");
+export function getIgnoredFilesSetting(): GlobPattern[] {
+  return [
+    ...workspace.getConfiguration().get("foam.files.ignore", []),
+    ...Object.keys(workspace.getConfiguration().get("files.exclude", {}))
+  ];
 }
 
 /** Retrieves the maximum length for a Graph node title. */

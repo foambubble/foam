@@ -1,12 +1,10 @@
 "use strict";
 
-import { workspace, ExtensionContext, window } from "vscode";
-
+import { workspace, ExtensionContext, window, Uri } from "vscode";
 import {
   bootstrap,
   FoamConfig,
   Foam,
-  FileDataStore,
   Services,
   isDisposable,
   Logger
@@ -15,8 +13,7 @@ import {
 import { features } from "./features";
 import { getConfigFromVscode } from "./services/config";
 import { VsCodeOutputLogger, exposeLogger } from "./services/logging";
-
-let foam: Foam | null = null;
+import { VsCodeDataStore } from "./services/datastore";
 
 export async function activate(context: ExtensionContext) {
   const logger = new VsCodeOutputLogger();
@@ -27,25 +24,7 @@ export async function activate(context: ExtensionContext) {
     Logger.info("Starting Foam");
 
     const config: FoamConfig = getConfigFromVscode();
-    const dataStore = new FileDataStore(config);
-
-    const watcher = workspace.createFileSystemWatcher("**/*");
-    watcher.onDidCreate(uri => {
-      if (dataStore.isMatch(uri)) {
-        dataStore.onDidCreateEmitter.fire(uri);
-      }
-    });
-    watcher.onDidChange(uri => {
-      if (dataStore.isMatch(uri)) {
-        dataStore.onDidChangeEmitter.fire(uri);
-      }
-    });
-    watcher.onDidDelete(uri => {
-      if (dataStore.isMatch(uri)) {
-        dataStore.onDidDeleteEmitter.fire(uri);
-      }
-    });
-
+    const dataStore = new VsCodeDataStore(config);
     const services: Services = {
       dataStore: dataStore
     };
@@ -55,18 +34,14 @@ export async function activate(context: ExtensionContext) {
       f.activate(context, foamPromise);
     });
 
-    foam = await foamPromise;
+    const foam = await foamPromise;
     Logger.info(`Loaded ${foam.notes.getNotes().length} notes`);
+
+    context.subscriptions.push(dataStore);
   } catch (e) {
     Logger.error("An error occurred while bootstrapping Foam", e);
     window.showErrorMessage(
       `An error occurred while bootstrapping Foam. ${e.stack}`
     );
-  }
-}
-
-export function deactivate() {
-  if (isDisposable(foam)) {
-    foam?.dispose();
   }
 }

@@ -30,12 +30,6 @@ export interface IDataStore {
   isMatch: (uri: URI) => boolean;
 
   /**
-   * Filters a list of URIs based on whether they are a match
-   * in this data store
-   */
-  match: (uris: URI[]) => URI[];
-
-  /**
    * An event which fires on file creation.
    */
   onDidCreate: Event<URI>;
@@ -62,9 +56,9 @@ export class FileDataStore implements IDataStore {
   readonly onDidChange: Event<URI> = this.onDidChangeEmitter.event;
   readonly onDidDelete: Event<URI> = this.onDidDeleteEmitter.event;
   readonly isMatch: (uri: URI) => boolean;
-  readonly match: (uris: URI[]) => URI[];
 
   private _folders: readonly string[];
+  private match: (uris: URI[]) => URI[];
 
   constructor(config: FoamConfig) {
     this._folders = config.workspaceFolders.map(f =>

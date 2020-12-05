@@ -1,4 +1,4 @@
-# Git integration
+# Git Integration
 
 There are (too) many ways to commit your changes to source control:
 

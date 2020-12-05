@@ -20,6 +20,13 @@ async function getTemplates(): Promise<string[]> {
 
 async function createNoteFromTemplate(): Promise<void> {
   const templates = await getTemplates();
+  if (templates.length === 0) {
+    window.showWarningMessage(
+      "No templates found! Creating a template instead..."
+    );
+    commands.executeCommand("foam-vscode.create-new-template");
+    return;
+  }
   const activeFile = window.activeTextEditor?.document?.fileName;
   const currentDir =
     activeFile !== undefined
@@ -67,7 +74,7 @@ async function createNewTemplate(): Promise<void> {
     defaultFileName
   );
   const filename = await window.showInputBox({
-    prompt: `Enter the filename for the new note`,
+    prompt: `Enter the filename for the new template`,
     value: templatesDir,
     valueSelection: [
       templatesDir.length - defaultFileName.length,
@@ -76,6 +83,10 @@ async function createNewTemplate(): Promise<void> {
     validateInput: value =>
       value.length ? undefined : 'Please enter a value!',
   });
+  if (filename === undefined) {
+    return;
+  }
+
   await workspace.fs.writeFile(
     Uri.file(filename),
     new TextEncoder().encode('')

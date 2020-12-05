@@ -17,6 +17,7 @@
     "vscode:package-extension": "yarn workspace foam-vscode package-extension",
     "vscode:install-extension": "yarn workspace foam-vscode install-extension",
     "vscode:publish-extension": "yarn workspace foam-vscode publish-extension",
+    "reset": "yarn clean && yarn build && yarn test",
     "clean": "lerna run clean",
     "build": "lerna run build",
     "test": "lerna run test",

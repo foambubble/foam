@@ -20,7 +20,7 @@
     "en"
   ],
   "spellright.documentTypes": [
-    "latex",
+    "markdown",
     "plaintext"
   ],
   "files.exclude": {

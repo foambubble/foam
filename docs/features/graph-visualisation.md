@@ -1,4 +1,4 @@
-# Graph visualisation
+# Graph Visualisation
 
 Foam comes with a graph visualisation.
 The graph will:
@@ -13,5 +13,4 @@ The extension doesn't use the Foam model, so discrepancies might arise, but it's
 
 - Use the `Markdown Links: Show Graph` command to see the graph
 ![Demo of graph visualiser](../assets/images/foam-navigation-demo.gif)
-
 

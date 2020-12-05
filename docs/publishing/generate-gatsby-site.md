@@ -2,7 +2,7 @@
 
 You can use [foam-gatsby-template](https://github.com/mathieudutour/foam-gatsby-template) to generate a static site to host it online on Github or [Vercel](https://vercel.com).
 
-## Publishing your foam to Github pages
+## Publishing your foam to GitHub pages
 It comes configured with Github actions to auto deploy to Github pages when changes are pushed to your main branch.
 
 ## Publishing your foam to Vercel
@@ -20,6 +20,5 @@ Log into your Vercel account. (Create one if you don't have it already.)
 Import your project. Select `_layouts/public` as your root directory and click **Continue**. Then name your project and click **Deploy**.
 
 That's it!
-
 
 

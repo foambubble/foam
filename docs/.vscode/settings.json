@@ -4,7 +4,6 @@
   "editor.wrappingIndent": "indent",
   "editor.overviewRulerBorder": false,
   "editor.lineHeight": 24,
-  "workbench.colorTheme": "Gray Matter Light",
   "foam.edit.linkReferenceDefinitions": "withExtensions",
   "vscodeMarkdownNotes.noteCompletionConvention": "noExtension",
   "[markdown]": {
@@ -16,5 +15,15 @@
   },
   "cSpell.language": "en-GB",
   "git.enableSmartCommit": true,
-  "git.postCommitCommand": "sync"
+  "git.postCommitCommand": "sync",
+  "spellright.language": [
+    "en"
+  ],
+  "spellright.documentTypes": [
+    "markdown",
+    "plaintext"
+  ],
+  "files.exclude": {
+    "_site/**": true
+  }
 }

@@ -20,6 +20,13 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: '12'
+      - name: Restore Dependencies
+        uses: actions/cache@v2
+        with:
+          path: |
+            node_modules
+            */*/node_modules
+          key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
       - name: Install Dependencies
         run: yarn
       - name: Check Lint Rules
@@ -40,6 +47,13 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: '12'
+      - name: Restore Dependencies
+        uses: actions/cache@v2
+        with:
+          path: |
+            node_modules
+            */*/node_modules
+          key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
       - name: Install Dependencies
         run: yarn
       - name: Build Packages

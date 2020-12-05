@@ -15,14 +15,8 @@ Uncategorised thoughts, to be added
   - When you want to open a Foam published website in your own VS Code, we could have a "Open in Foam" link that opens the link in VS Code via a url binding (if possible), downloads the github repo locally, and opens it as a Foam workspace.
   - Every Foam could have a different theme even in the editor, so you'll see it like they see it
     - UI and layout design of your workspace can become a thing
-- Developer documentation
-  - GistPad has a good vs code contrib primer: https://github.com/jevakallio/gistpad/blob/master/CONTRIBUTING.md
 - VS Code Notebooks API
   - https://code.visualstudio.com/api/extension-guides/notebook
-- Snippets in template
-- Foam as a (VS Code) language
-  - Syntax highlighting
-  - Snippets
 - Future architecture
   - Could we do publish-related settings as a pre-push git hook, e.g. generating footnote labels
   - Running them on Github Actions to edit stuff as it comes in
@@ -36,13 +30,6 @@ Uncategorised thoughts, to be added
 - Should support Netlify deploys out of the box
 - Foam should tick at the same frequency as your brain, and the Foam graph you build should match the mental model you have in your head, making navigation effortless.
   - Maps have persistent topologies. As the graph grows, you should be able to visualise where an idea belongs. Maybe a literal map? And island? A DeckGL visualisation?
-- Write about the history and process of Foam
-  - In ways, Wallet was the first iteration of Foam-like environment
-- Should we support directories?
-  - Some tools might get more complicated to build
-  - The pressure to categorize and create hierachies can become distracting
-  - Is there value in folderizing?
-  - Use case: Writing docs in a codebase
 
 Testing: This file is served from the /docs directory.
 

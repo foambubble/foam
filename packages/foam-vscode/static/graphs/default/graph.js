@@ -98,9 +98,9 @@ const Actions = {
       m.data.links = links; // links can be swapped out without problem
 
       // check that selected/hovered nodes are still valid (see #397)
-      m.hoverNode = remaining.has(m.hoverNode) ? m.hoverNode : null;
+      m.hoverNode = m.nodeInfo[m.hoverNode] != null ? m.hoverNode : null;
       m.selectedNodes = new Set(
-        Array.from(m.selectedNodes).filter(nId => remaining.has(nId))
+        Array.from(m.selectedNodes).filter(nId => m.nodeInfo[nId] != null)
       );
 
       // annoying we need to call this function, but I haven't found a good workaround

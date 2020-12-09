@@ -144,6 +144,13 @@ describe('Note graph', () => {
     expect(
       graph.getBacklinks(noteC.id).map(link => graph.getNote(link.from)?.slug)
     ).toEqual(['page-b']);
+
+    // Tests #393: page-a should not lose its links when updated
+    graph.setNote(createTestNote({ title: "Test-C", uri: '/page-c.md' }));
+    expect(
+      graph.getBacklinks(noteC.id).map(link => graph.getNote(link.from)?.slug)
+    ).toEqual(['page-b']);
+
   });
 });
 

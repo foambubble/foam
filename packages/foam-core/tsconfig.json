@@ -6,7 +6,6 @@
     "esModuleInterop": true,
     "importHelpers": true,
     "downlevelIteration": true,
-    "target": "es2019",
     // commonjs module format is used so that the incremental
     // tsc build-mode ran during development can replace individual
     // files (as opposed to generate the .cjs.development.js bundle.

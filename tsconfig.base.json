@@ -4,6 +4,8 @@
     "declaration": true,
     "declarationMap": true,
     "baseUrl": ".",
+    "module": "commonjs",
+    "target": "ES2019",
     "paths": {
       "foam-core": ["./packages/foam-core/src"],
       "foam-cli": ["./packages/foam-cli/src"],

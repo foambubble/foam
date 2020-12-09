@@ -130,7 +130,7 @@ function initDataviz(channel) {
     .d3Force("x", d3.forceX())
     .d3Force("y", d3.forceY())
     .d3Force("collide", d3.forceCollide(graph.nodeRelSize()))
-    .linkWidth(0.5)
+    .linkWidth(0.2)
     .linkDirectionalParticles(1)
     .linkDirectionalParticleWidth(link =>
       getLinkState(link, model) === "highlighted" ? 1 : 0

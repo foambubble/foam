@@ -93,8 +93,11 @@ export class NoteGraph implements NoteGraphAPI {
   private doDelete(noteId: ID, fireEvent: boolean): GraphNote | null {
     const note = this.getNote(noteId);
     if (isSome(note)) {
-      this.graph.removeNode(noteId);
-      this.removeForwardLinks(noteId);
+      if (this.getBacklinks(noteId).length >= 1) {
+        this.graph.setNode(noteId, null); // Changes node to the "no file" style
+      } else {
+        this.graph.removeNode(noteId);
+      }
       fireEvent && this.onDidDeleteEmitter.fire(note);
     }
     return note;

@@ -9,7 +9,7 @@ function getStyle(name, fallback) {
 
 const style = {
   background: getStyle(`--vscode-panel-background`, "#202020"),
-  fontSize: parseInt(getStyle(`--vscode-font-size`, 12)),
+  fontSize: parseInt(getStyle(`--vscode-font-size`, 12)) - 2,
   highlightedForeground: getStyle(
     "--vscode-list-highlightForeground",
     "#f9c74f"
@@ -27,7 +27,7 @@ const style = {
 const sizeScale = d3
   .scaleLinear()
   .domain([0, 30])
-  .range([1, 3])
+  .range([0.5, 2])
   .clamp(true);
 
 const labelAlpha = d3
@@ -142,7 +142,7 @@ function initDataviz(channel) {
       const label = info.title;
 
       Draw(ctx)
-        .circle(node.x, node.y, size + 0.5, border)
+        .circle(node.x, node.y, size + 0.2, border)
         .circle(node.x, node.y, size, fill)
         .text(label, node.x, node.y + size + 1, fontSize, textColor);
     })

@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import { FoamFeature } from "../types";
-import { Foam } from "foam-core";
+import { Foam, Logger } from "foam-core";
 import { TextDecoder } from "util";
 import { getTitleMaxLength } from "../settings";
 import { isSome } from "../utils";
@@ -119,6 +119,10 @@ async function createGraphPanel(foam: Foam, context: vscode.ExtensionContext) {
           vscode.workspace.openTextDocument(openPath).then(doc => {
             vscode.window.showTextDocument(doc, vscode.ViewColumn.One);
           });
+          break;
+
+        case "error":
+          Logger.error("An error occurred in the graph view", message.payload);
           break;
       }
     },

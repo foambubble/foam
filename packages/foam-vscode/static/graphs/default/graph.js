@@ -266,6 +266,19 @@ try {
       type: "webviewDidLoad"
     });
   };
+  window.addEventListener("error", error => {
+    vscode.postMessage({
+      type: "error",
+      payload: {
+        message: error.message,
+        filename: error.filename,
+        lineno: error.lineno,
+        colno: error.colno,
+        error: error.error
+      }
+    });
+  });
+
   window.addEventListener("message", event => {
     const message = event.data;
 

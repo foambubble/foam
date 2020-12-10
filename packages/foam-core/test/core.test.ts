@@ -165,17 +165,23 @@ describe('Note graph', () => {
         links: [{ slug: 'page-a' }],
       })
     );
-    const noteC = graph.setNote(createTestNote({ 
-      uri: '/page-c.md',
-      links: [{ slug: 'page-a' }],
-    }));
+    const noteC = graph.setNote(
+      createTestNote({
+        uri: '/page-c.md',
+        links: [{ slug: 'page-a' }],
+      })
+    );
 
     graph.deleteNote(noteA.id);
-    expect(graph.getForwardLinks(noteB.id).map(link => link?.link?.slug)).toEqual(['page-a']);
+    expect(
+      graph.getForwardLinks(noteB.id).map(link => link?.link?.slug)
+    ).toEqual(['page-a']);
     expect(graph.getNote(noteA.id)).toBeNull();
-   
+
     graph.deleteNote(noteC.id);
-    expect(graph.getForwardLinks(noteC.id).map(link => link?.link?.slug)).toEqual([]);
+    expect(
+      graph.getForwardLinks(noteC.id).map(link => link?.link?.slug)
+    ).toEqual([]);
     expect(graph.getNotes().map(note => note.slug)).toEqual(['page-b']);
   });
 });

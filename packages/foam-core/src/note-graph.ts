@@ -59,7 +59,10 @@ export class NoteGraph implements NoteGraphAPI {
 
   public setNote(note: Note): GraphNote {
     const id = this.createIdFromURI(note.source.uri);
-    const oldNote = this.doDelete(id, false);
+    const oldNote = this.getNote(id);
+    if (isSome(oldNote)) {
+      this.removeForwardLinks(id);
+    }
     const graphNote: GraphNote = {
       ...note,
       id: id,
@@ -90,10 +93,11 @@ export class NoteGraph implements NoteGraphAPI {
   private doDelete(noteId: ID, fireEvent: boolean): GraphNote | null {
     const note = this.getNote(noteId);
     if (isSome(note)) {
-      this.graph.removeNode(noteId);
-      (this.graph.outEdges(noteId) || []).forEach(edge => {
-        this.graph.removeEdge(edge);
-      });
+      if (this.getBacklinks(noteId).length >= 1) {
+        this.graph.setNode(noteId, null); // Changes node to the "no file" style
+      } else {
+        this.graph.removeNode(noteId);
+      }
       fireEvent && this.onDidDeleteEmitter.fire(note);
     }
     return note;
@@ -131,6 +135,12 @@ export class NoteGraph implements NoteGraphAPI {
     return (this.graph.outEdges(noteId) || []).map(edge =>
       this.graph.edge(edge.v, edge.w)
     );
+  }
+
+  public removeForwardLinks(noteId: ID) {
+    (this.graph.outEdges(noteId) || []).forEach(edge => {
+      this.graph.removeEdge(edge);
+    });
   }
 
   public getBacklinks(noteId: ID): GraphConnection[] {

@@ -144,6 +144,45 @@ describe('Note graph', () => {
     expect(
       graph.getBacklinks(noteC.id).map(link => graph.getNote(link.from)?.slug)
     ).toEqual(['page-b']);
+
+    // Tests #393: page-a should not lose its links when updated
+    graph.setNote(createTestNote({ title: 'Test-C', uri: '/page-c.md' }));
+    expect(
+      graph.getBacklinks(noteC.id).map(link => graph.getNote(link.from)?.slug)
+    ).toEqual(['page-b']);
+  });
+
+  it('Updates the graph properly when deleting a note', () => {
+    // B should still link out to A after A is deleted. (#393)
+    // C links out to A, like B, but should no longer link out once deleted.
+    // Ensure B is only remaining note after A + C are deleted.
+    const graph = new NoteGraph();
+
+    const noteA = graph.setNote(createTestNote({ uri: '/page-a.md' }));
+    const noteB = graph.setNote(
+      createTestNote({
+        uri: '/page-b.md',
+        links: [{ slug: 'page-a' }],
+      })
+    );
+    const noteC = graph.setNote(
+      createTestNote({
+        uri: '/page-c.md',
+        links: [{ slug: 'page-a' }],
+      })
+    );
+
+    graph.deleteNote(noteA.id);
+    expect(
+      graph.getForwardLinks(noteB.id).map(link => link?.link?.slug)
+    ).toEqual(['page-a']);
+    expect(graph.getNote(noteA.id)).toBeNull();
+
+    graph.deleteNote(noteC.id);
+    expect(
+      graph.getForwardLinks(noteC.id).map(link => link?.link?.slug)
+    ).toEqual([]);
+    expect(graph.getNotes().map(note => note.slug)).toEqual(['page-b']);
   });
 });
 

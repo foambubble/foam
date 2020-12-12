@@ -4,6 +4,14 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.7.2] - 2020-12-13
+
+Fixes and Improvements:
+- Foam model: fix to link references on node update/deletion (#393 - thanks @AndrewNatoli)
+- Dataviz: fix hover/selection (#401)
+- Dataviz: improved logging
+- Dataviz: style tweaks for better readability
+
 ## [0.7.2] - 2020-11-27
 
 Fixes and Improvements:

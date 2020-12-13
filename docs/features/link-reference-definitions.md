@@ -29,7 +29,7 @@ The three components of a link reference definition are `[link-label]: link-targ
 
 ## Configuration
 
-You can choose to generate link reference definitions with or without file extensions, depending on the target. As a rule of thumb:
+You can choose to generate link reference definitions with or without file extensions, depending on the target, or to disable the generation altogether. As a rule of thumb:
 
 - Links with file extensions work better with standard markdown-based tools, such as GitHub web UI.
 - Links without file extensions work better with certain web publishing tools that treat links as literal urls and don't transform them automatically, such as the standard GitHub pages installation.
@@ -40,6 +40,7 @@ You can override this setting in your Foam workspace's `settings.json`:
 
 - `"foam.edit.linkReferenceDefinitions": "withoutExtensions"` (default)
 - `"foam.edit.linkReferenceDefinitions": "withExtensions"`
+- `"foam.edit.linkReferenceDefinitions": "off"`
 
 ### Ignoring files
 

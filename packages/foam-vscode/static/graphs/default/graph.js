@@ -137,6 +137,10 @@ function initDataviz(channel) {
     )
     .nodeCanvasObject((node, ctx, globalScale) => {
       const info = model.nodeInfo[node.id];
+      if (info == null) {
+        console.error(`Could not find info for node ${node.id} - skipping`);
+        return;
+      }
       const size = sizeScale(info.neighbors.length);
       const { fill, border } = getNodeColor(node.id, model);
       const fontSize = style.fontSize / globalScale;

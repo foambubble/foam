@@ -19,9 +19,11 @@ export const bootstrap = async (config: FoamConfig, services: Services) => {
   await Promise.all(
     files.map(async uri => {
       Logger.info('Found: ' + uri);
-      const content = await services.dataStore.read(uri);
-      if (isSome(content)) {
-        graph.setNote(parser.parse(uri, content));
+      if (uri.path.endsWith('md')) {
+        const content = await services.dataStore.read(uri);
+        if (isSome(content)) {
+          graph.setNote(parser.parse(uri, content));
+        }
       }
     })
   );

@@ -1,12 +1,19 @@
-import { IDataStore, Event, URI, FoamConfig, IDisposable } from "foam-core";
+import {
+  IDataStore,
+  Event,
+  URI,
+  FoamConfig,
+  IDisposable,
+  Logger
+} from "foam-core";
 import { workspace, FileSystemWatcher, EventEmitter } from "vscode";
 import { TextDecoder } from "util";
 import { isSome } from "../utils";
 
 export class VsCodeDataStore implements IDataStore, IDisposable {
-  onDidCreateEmitter: EventEmitter<URI>;
-  onDidChangeEmitter: EventEmitter<URI>;
-  onDidDeleteEmitter: EventEmitter<URI>;
+  onDidCreateEmitter = new EventEmitter<URI>();
+  onDidChangeEmitter = new EventEmitter<URI>();
+  onDidDeleteEmitter = new EventEmitter<URI>();
   onDidCreate: Event<URI> = this.onDidCreateEmitter.event;
   onDidChange: Event<URI> = this.onDidChangeEmitter.event;
   onDidDelete: Event<URI> = this.onDidDeleteEmitter.event;
@@ -19,16 +26,19 @@ export class VsCodeDataStore implements IDataStore, IDisposable {
     this.watcher.onDidCreate(async uri => {
       await this.listFiles();
       if (this.isMatch(uri)) {
+        Logger.info("Created: ", uri);
         this.onDidCreateEmitter.fire(uri);
       }
     });
     this.watcher.onDidChange(uri => {
       if (this.isMatch(uri)) {
+        Logger.info("Updated: ", uri);
         this.onDidChangeEmitter.fire(uri);
       }
     });
     this.watcher.onDidDelete(uri => {
       if (this.isMatch(uri)) {
+        Logger.info("Deleted: ", uri);
         this.files = this.files.filter(f => f.path !== uri.path);
         this.onDidDeleteEmitter.fire(uri);
       }

@@ -37,7 +37,7 @@ export async function activate(context: ExtensionContext) {
     const foam = await foamPromise;
     Logger.info(`Loaded ${foam.notes.getNotes().length} notes`);
 
-    context.subscriptions.push(dataStore);
+    context.subscriptions.push(dataStore, foam);
   } catch (e) {
     Logger.error("An error occurred while bootstrapping Foam", e);
     window.showErrorMessage(

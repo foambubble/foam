@@ -4,6 +4,10 @@ import {
 } from '../src/markdown-provider';
 import { NoteGraph } from '../src/note-graph';
 import { ParserPlugin } from '../src/plugins';
+import { URI } from '../src/common/uri';
+import { Logger } from '../src/utils/log';
+
+Logger.setLevel('error');
 
 const pageA = `
 # Page A
@@ -32,7 +36,8 @@ const pageE = `
 # Page E
 `;
 
-const createNoteFromMarkdown = createMarkdownParser([]).parse;
+const createNoteFromMarkdown = (path: string, content: string) =>
+  createMarkdownParser([]).parse(URI.file(path), content);
 
 describe('Markdown loader', () => {
   it('Converts markdown to notes', () => {
@@ -295,7 +300,7 @@ describe('parser plugins', () => {
 
   it('can augment the parsing of the file', async () => {
     const note1 = parser.parse(
-      '/path/to/a',
+      URI.file('/path/to/a'),
       `
 This is a test note without headings.
 But with some content.
@@ -304,7 +309,7 @@ But with some content.
     expect(note1.properties.hasHeading).toBeUndefined();
 
     const note2 = parser.parse(
-      '/path/to/a',
+      URI.file('/path/to/a'),
       `
 # This is a note with header
 and some content`

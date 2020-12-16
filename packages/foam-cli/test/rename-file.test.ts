@@ -1,6 +1,7 @@
 import { renameFile } from '../src/utils/rename-file';
 import * as fs from 'fs';
 import mockFS from 'mock-fs';
+import { URI } from 'foam-core';
 
 const doesFileExist = path =>
   fs.promises
@@ -9,10 +10,10 @@ const doesFileExist = path =>
     .catch(() => false);
 
 describe('renameFile', () => {
-  const fileUri = './test/oldFileName.md';
+  const fileUri = URI.file('/test/oldFileName.md');
 
   beforeAll(() => {
-    mockFS({ [fileUri]: '' });
+    mockFS({ [fileUri.fsPath]: '' });
   });
 
   afterAll(() => {
@@ -20,11 +21,11 @@ describe('renameFile', () => {
   });
 
   it('should rename existing file', async () => {
-    expect(await doesFileExist(fileUri)).toBe(true);
+    expect(await doesFileExist(fileUri.fsPath)).toBe(true);
 
     renameFile(fileUri, 'new-file-name');
 
-    expect(await doesFileExist(fileUri)).toBe(false);
-    expect(await doesFileExist('./test/new-file-name.md')).toBe(true);
+    expect(await doesFileExist(fileUri.fsPath)).toBe(false);
+    expect(await doesFileExist('/test/new-file-name.md')).toBe(true);
   });
 });

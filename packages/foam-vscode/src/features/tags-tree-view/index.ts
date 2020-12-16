@@ -123,9 +123,9 @@ export class TagReference extends vscode.TreeItem {
   constructor(tag: string, note: Note) {
     super(note.title, vscode.TreeItemCollapsibleState.None);
     this.title = note.title;
-    this.description = note.source.uri;
+    this.description = note.source.uri.path;
     this.tooltip = this.description;
-    const resourceUri = vscode.Uri.file(note.source.uri);
+    const resourceUri = note.source.uri;
     let selection: vscode.Range | null = null;
     // TODO move search fn to core
     const lines = note.source.text.split(/\r?\n/);

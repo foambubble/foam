@@ -3,11 +3,30 @@ import { promisify } from 'util';
 import micromatch from 'micromatch';
 import fs from 'fs';
 import { Event, Emitter } from '../common/event';
-import { URI } from '../types';
+import { URI } from '../common/uri';
 import { FoamConfig } from '../config';
 import { Logger } from '../utils/log';
+import { isSome } from '../utils';
+import { IDisposable } from '../common/lifecycle';
 
 const findAllFiles = promisify(glob);
+
+export interface IWatcher {
+  /**
+   * An event which fires on file creation.
+   */
+  onDidCreate: Event<URI>;
+
+  /**
+   * An event which fires on file change.
+   */
+  onDidChange: Event<URI>;
+
+  /**
+   * An event which fires on file deletion.
+   */
+  onDidDelete: Event<URI>;
+}
 
 /**
  * Represents a source of files and content
@@ -30,12 +49,6 @@ export interface IDataStore {
   isMatch: (uri: URI) => boolean;
 
   /**
-   * Filters a list of URIs based on whether they are a match
-   * in this data store
-   */
-  match: (uris: URI[]) => string[];
-
-  /**
    * An event which fires on file creation.
    */
   onDidCreate: Event<URI>;
@@ -54,26 +67,28 @@ export interface IDataStore {
 /**
  * File system based data store
  */
-export class FileDataStore implements IDataStore {
+export class FileDataStore implements IDataStore, IDisposable {
   readonly onDidChangeEmitter = new Emitter<URI>();
   readonly onDidCreateEmitter = new Emitter<URI>();
   readonly onDidDeleteEmitter = new Emitter<URI>();
   readonly onDidCreate: Event<URI> = this.onDidCreateEmitter.event;
   readonly onDidChange: Event<URI> = this.onDidChangeEmitter.event;
   readonly onDidDelete: Event<URI> = this.onDidDeleteEmitter.event;
-  readonly isMatch: (uri: URI) => boolean;
-  readonly match: (uris: URI[]) => string[];
 
   private _folders: readonly string[];
+  private _includeGlobs: string[] = [];
+  private _ignoreGlobs: string[] = [];
+  private _disposables: IDisposable[] = [];
 
-  constructor(config: FoamConfig) {
-    this._folders = config.workspaceFolders;
+  constructor(config: FoamConfig, watcher?: IWatcher) {
+    this._folders = config.workspaceFolders.map(f =>
+      f.fsPath.replace(/\\/g, '/')
+    );
+    Logger.info('Workspace folders: ', this._folders);
 
-    let includeGlobs: string[] = [];
-    let ignoreGlobs: string[] = [];
-    config.workspaceFolders.forEach(folder => {
+    this._folders.forEach(folder => {
       const withFolder = folderPlusGlob(folder);
-      includeGlobs.push(
+      this._includeGlobs.push(
         ...config.includeGlobs.map(glob => {
           if (glob.endsWith('*')) {
             glob = `${glob}\\.(md|mdx|markdown)`;
@@ -81,27 +96,59 @@ export class FileDataStore implements IDataStore {
           return withFolder(glob);
         })
       );
-      ignoreGlobs.push(...config.ignoreGlobs.map(withFolder));
+      this._ignoreGlobs.push(...config.ignoreGlobs.map(withFolder));
+    });
+    Logger.info('Glob patterns', {
+      includeGlobs: this._includeGlobs,
+      ignoreGlobs: this._ignoreGlobs,
     });
 
-    Logger.debug('Glob patterns', {
-      includeGlobs,
-      ignoreGlobs,
-    });
-    this.match = (files: URI[]) => {
-      return micromatch(files, includeGlobs, {
-        ignore: ignoreGlobs,
+    if (isSome(watcher)) {
+      this._disposables.push(
+        watcher.onDidCreate(async uri => {
+          if (this.isMatch(uri)) {
+            Logger.info(`Created: ${uri.path}`);
+            this.onDidCreateEmitter.fire(uri);
+          }
+        }),
+        watcher.onDidChange(uri => {
+          if (this.isMatch(uri)) {
+            Logger.info(`Updated: ${uri.path}`);
+            this.onDidChangeEmitter.fire(uri);
+          }
+        }),
+        watcher.onDidDelete(uri => {
+          if (this.isMatch(uri)) {
+            Logger.info(`Deleted: ${uri.path}`);
+            this.onDidDeleteEmitter.fire(uri);
+          }
+        })
+      );
+    }
+  }
+
+  match(files: URI[]) {
+    const matches = micromatch(
+      files.map(f => f.fsPath),
+      this._includeGlobs,
+      {
+        ignore: this._ignoreGlobs,
         nocase: true,
-      });
-    };
-    this.isMatch = uri => this.match([uri]).length > 0;
+      }
+    );
+    return matches.map(URI.file);
+  }
+
+  isMatch(uri: URI) {
+    return this.match([uri]).length > 0;
   }
 
   async listFiles() {
     const files = (
       await Promise.all(
-        this._folders.map(folder => {
-          return findAllFiles(folderPlusGlob(folder)('**/*'));
+        this._folders.map(async folder => {
+          const res = await findAllFiles(folderPlusGlob(folder)('**/*'));
+          return res.map(URI.file);
         })
       )
     ).flat();
@@ -109,7 +156,11 @@ export class FileDataStore implements IDataStore {
   }
 
   async read(uri: URI) {
-    return (await fs.promises.readFile(uri)).toString();
+    return (await fs.promises.readFile(uri.fsPath)).toString();
+  }
+
+  dispose() {
+    this._disposables.forEach(d => d.dispose());
   }
 }
 

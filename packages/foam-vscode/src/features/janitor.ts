@@ -81,15 +81,15 @@ async function runJanitor(foam: Foam) {
   );
 
   const dirtyEditorsFileName = dirtyTextDocuments.map(
-    dirtyTextDocument => dirtyTextDocument.fileName
+    dirtyTextDocument => dirtyTextDocument.uri.path
   );
 
   const dirtyNotes = notes.filter(note =>
-    dirtyEditorsFileName.includes(note.source.uri)
+    dirtyEditorsFileName.includes(note.source.uri.path)
   );
 
   const nonDirtyNotes = notes.filter(
-    note => !dirtyEditorsFileName.includes(note.source.uri)
+    note => !dirtyEditorsFileName.includes(note.source.uri.path)
   );
 
   const wikilinkSetting = getWikilinkDefinitionSetting();
@@ -125,7 +125,7 @@ async function runJanitor(foam: Foam) {
     text = definitions ? applyTextEdit(text, definitions) : text;
     text = heading ? applyTextEdit(text, heading) : text;
 
-    return fs.promises.writeFile(note.source.uri, text);
+    return fs.promises.writeFile(note.source.uri.path, text);
   });
 
   await Promise.all(fileWritePromises);
@@ -135,7 +135,7 @@ async function runJanitor(foam: Foam) {
   for (const doc of dirtyTextDocuments) {
     const editor = await window.showTextDocument(doc);
     const note = dirtyNotes.find(
-      n => n.source.uri === editor.document.fileName
+      n => n.source.uri.path === editor.document.uri.path
     )!;
 
     // Get edits

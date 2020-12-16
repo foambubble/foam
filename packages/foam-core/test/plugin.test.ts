@@ -4,6 +4,10 @@ import { createMarkdownParser } from '../src/markdown-provider';
 import { createGraph } from '../src/note-graph';
 import { createTestNote } from './core.test';
 import { FoamConfig, createConfigFromObject } from '../src/config';
+import { URI } from '../src/common/uri';
+import { Logger } from '../src/utils/log';
+
+Logger.setLevel('error');
 
 const config: FoamConfig = createConfigFromObject([], [], [], {
   experimental: {
@@ -60,7 +64,7 @@ describe('Foam plugins', () => {
     const parser = createMarkdownParser([parserPlugin!]);
 
     const note = parser.parse(
-      '/path/to/a',
+      URI.file('/path/to/a'),
       `
 # This is a note with header
 and some content`

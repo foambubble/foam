@@ -1,15 +1,18 @@
-import { Note, NoteLink, URI } from './types';
+import { Note, NoteLink } from './types';
+import { URI } from './common/uri';
 import { NoteGraph, NoteGraphAPI } from './note-graph';
 import { FoamConfig } from './config';
 import { IDataStore, FileDataStore } from './services/datastore';
 import { ILogger } from './utils/log';
+import { IDisposable, isDisposable } from './common/lifecycle';
 
 export { IDataStore, FileDataStore };
 export { ILogger };
 export { LogLevel, LogLevelThreshold, Logger, BaseLogger } from './utils/log';
-export { IDisposable, isDisposable } from './common/lifecycle';
 export { Event, Emitter } from './common/event';
 export { FoamConfig };
+
+export { IDisposable, isDisposable };
 
 export {
   createMarkdownReferences,
@@ -40,7 +43,7 @@ export interface Services {
   dataStore: IDataStore;
 }
 
-export interface Foam {
+export interface Foam extends IDisposable {
   notes: NoteGraphAPI;
   config: FoamConfig;
   parse: (uri: URI, text: string, eol: string) => Note;

@@ -1,8 +1,10 @@
 import { readFileSync } from 'fs';
 import { merge } from 'lodash';
+import { Logger } from './utils/log';
+import { URI } from './common/uri';
 
 export interface FoamConfig {
-  workspaceFolders: string[];
+  workspaceFolders: URI[];
   includeGlobs: string[];
   ignoreGlobs: string[];
   get<T>(path: string): T | undefined;
@@ -14,7 +16,7 @@ const DEFAULT_INCLUDES = ['**/*'];
 const DEFAULT_IGNORES = ['**/node_modules/**'];
 
 export const createConfigFromObject = (
-  workspaceFolders: string[],
+  workspaceFolders: URI[],
   include: string[],
   ignore: string[],
   settings: any
@@ -33,7 +35,7 @@ export const createConfigFromObject = (
 };
 
 export const createConfigFromFolders = (
-  workspaceFolders: string[] | string,
+  workspaceFolders: URI[] | URI,
   options: {
     include?: string[];
     ignore?: string[];
@@ -43,7 +45,7 @@ export const createConfigFromFolders = (
     workspaceFolders = [workspaceFolders];
   }
   const workspaceConfig: any = workspaceFolders.reduce(
-    (acc, f) => merge(acc, parseConfig(`${f}/config.json`)),
+    (acc, f) => merge(acc, parseConfig(URI.joinPath(f, 'config.json'))),
     {}
   );
   // For security reasons local plugins can only be
@@ -52,7 +54,7 @@ export const createConfigFromFolders = (
     delete workspaceConfig['experimental']['localPlugins'];
   }
 
-  const userConfig = parseConfig(`~/.foam/config.json`);
+  const userConfig = parseConfig(URI.file(`~/.foam/config.json`));
 
   const settings = merge(workspaceConfig, userConfig);
 
@@ -64,10 +66,10 @@ export const createConfigFromFolders = (
   );
 };
 
-const parseConfig = (path: string) => {
+const parseConfig = (path: URI) => {
   try {
-    return JSON.parse(readFileSync(path, 'utf8'));
+    return JSON.parse(readFileSync(path.fsPath, 'utf8'));
   } catch {
-    console.warn('Could not read configuration from ' + path);
+    Logger.debug('Could not read configuration from ' + path);
   }
 };

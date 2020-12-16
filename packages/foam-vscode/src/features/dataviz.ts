@@ -27,7 +27,7 @@ const feature: FoamFeature = {
 
       vscode.window.onDidChangeActiveTextEditor(e => {
         if (e.document.uri.scheme === "file") {
-          const note = foam.notes.getNoteByURI(e.document.uri.fsPath);
+          const note = foam.notes.getNoteByURI(e.document.uri);
           if (isSome(note)) {
             panel.webview.postMessage({
               type: "didSelectNote",
@@ -113,8 +113,7 @@ async function createGraphPanel(foam: Foam, context: vscode.ExtensionContext) {
 
         case "webviewDidSelectNode":
           const noteId = message.payload;
-          const noteUri = foam.notes.getNote(noteId).source.uri;
-          const openPath = vscode.Uri.file(noteUri);
+          const openPath = foam.notes.getNote(noteId).source.uri;
 
           vscode.workspace.openTextDocument(openPath).then(doc => {
             vscode.window.showTextDocument(doc, vscode.ViewColumn.One);

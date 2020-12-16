@@ -1,10 +1,16 @@
-import * as path from 'path';
 import { createConfigFromFolders } from '../src/config';
+import { Logger } from '../src/utils/log';
+import { URI } from '../src/common/uri';
 
-const testFolder = path.join(__dirname, 'test-config');
+Logger.setLevel('error');
+
+const testFolder = URI.joinPath(URI.file(__dirname), 'test-config');
+
 describe('Foam configuration', () => {
   it('can read settings from config.json', () => {
-    const config = createConfigFromFolders([path.join(testFolder, 'folder1')]);
+    const config = createConfigFromFolders([
+      URI.joinPath(testFolder, 'folder1'),
+    ]);
     expect(config.get('feature1.setting1.value')).toBeTruthy();
     expect(config.get('feature2.value')).toEqual(12);
 
@@ -14,8 +20,8 @@ describe('Foam configuration', () => {
 
   it('can merge settings from multiple foam folders', () => {
     const config = createConfigFromFolders([
-      path.join(testFolder, 'folder1'),
-      path.join(testFolder, 'folder2'),
+      URI.joinPath(testFolder, 'folder1'),
+      URI.joinPath(testFolder, 'folder2'),
     ]);
 
     // override value
@@ -31,7 +37,7 @@ describe('Foam configuration', () => {
 
   it('cannot activate local plugins from workspace config', () => {
     const config = createConfigFromFolders([
-      path.join(testFolder, 'enable-plugins'),
+      URI.joinPath(testFolder, 'enable-plugins'),
     ]);
     expect(config.get('experimental.localPlugins.enabled')).toBeUndefined();
   });

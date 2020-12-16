@@ -170,7 +170,7 @@
     "build": "tsc -p ./",
     "test": "jest",
     "lint": "eslint src --ext ts",
-    "clean": "tsc --build ./tsconfig.json ../foam-core/tsconfig.json --clean",
+    "clean": "rimraf out",
     "watch": "tsc --build ./tsconfig.json ../foam-core/tsconfig.json --watch",
     "vscode:start-debugging": "yarn clean && yarn watch",
     "vscode:prepublish": "yarn npm-install && yarn run build",

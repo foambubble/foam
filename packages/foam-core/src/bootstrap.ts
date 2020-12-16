@@ -4,6 +4,7 @@ import { FoamConfig, Foam, Services } from './index';
 import { loadPlugins } from './plugins';
 import { isSome } from './utils';
 import { isDisposable } from './common/lifecycle';
+import { Logger } from './utils/log';
 
 export const bootstrap = async (config: FoamConfig, services: Services) => {
   const plugins = await loadPlugins(config);
@@ -17,9 +18,12 @@ export const bootstrap = async (config: FoamConfig, services: Services) => {
   const files = await services.dataStore.listFiles();
   await Promise.all(
     files.map(async uri => {
-      const content = await services.dataStore.read(uri);
-      if (isSome(content)) {
-        graph.setNote(parser.parse(uri, content));
+      Logger.info('Found: ' + uri);
+      if (uri.path.endsWith('md')) {
+        const content = await services.dataStore.read(uri);
+        if (isSome(content)) {
+          graph.setNote(parser.parse(uri, content));
+        }
       }
     })
   );

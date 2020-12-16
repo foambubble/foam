@@ -6,8 +6,8 @@ import {
   FoamConfig,
   Foam,
   Services,
-  isDisposable,
-  Logger
+  Logger,
+  FileDataStore
 } from "foam-core";
 
 import { features } from "./features";
@@ -24,7 +24,9 @@ export async function activate(context: ExtensionContext) {
     Logger.info("Starting Foam");
 
     const config: FoamConfig = getConfigFromVscode();
-    const dataStore = new VsCodeDataStore(config);
+    const watcher = workspace.createFileSystemWatcher("**/*");
+    const dataStore = new FileDataStore(config, watcher);
+
     const services: Services = {
       dataStore: dataStore
     };
@@ -37,7 +39,7 @@ export async function activate(context: ExtensionContext) {
     const foam = await foamPromise;
     Logger.info(`Loaded ${foam.notes.getNotes().length} notes`);
 
-    context.subscriptions.push(dataStore, foam);
+    context.subscriptions.push(dataStore, foam, watcher);
   } catch (e) {
     Logger.error("An error occurred while bootstrapping Foam", e);
     window.showErrorMessage(

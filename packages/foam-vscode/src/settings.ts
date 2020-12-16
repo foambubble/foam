@@ -1,5 +1,5 @@
 import { workspace } from "vscode";
-import { LogLevel } from "foam-core";
+import { LogLevel } from "./core/utils/log";
 
 export enum LinkReferenceDefinitionsSetting {
   withExtensions = "withExtensions",

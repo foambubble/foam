@@ -8,18 +8,15 @@ import {
 } from "vscode";
 import * as fs from "fs";
 import { FoamFeature } from "../types";
-import {
-  applyTextEdit,
-  generateLinkReferences,
-  generateHeading,
-  Foam
-} from "foam-core";
 
 import {
   getWikilinkDefinitionSetting,
   LinkReferenceDefinitionsSetting
 } from "../settings";
 import { astPositionToVsCodePosition } from "../utils";
+import { Foam } from "../core/types";
+import { generateHeading, generateLinkReferences } from "../core/janitor";
+import { applyTextEdit } from "../core/janitor/apply-text-edit";
 
 const feature: FoamFeature = {
   activate: (context: ExtensionContext, foamPromise: Promise<Foam>) => {

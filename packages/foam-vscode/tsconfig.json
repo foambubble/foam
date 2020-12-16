@@ -4,7 +4,9 @@
     "moduleResolution": "node",
     "esModuleInterop": true,
     "outDir": "out",
-    "lib": ["es6"],
+    "lib": [
+      "ES2019", "es2020.string"
+    ],
     "sourceMap": true,
     "strict": false,
     "downlevelIteration": true

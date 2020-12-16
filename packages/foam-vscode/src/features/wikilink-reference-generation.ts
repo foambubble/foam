@@ -14,14 +14,6 @@ import {
 } from "vscode";
 
 import {
-  createMarkdownReferences,
-  stringifyMarkdownLinkReferenceDefinition,
-  NoteGraphAPI,
-  Foam,
-  LINK_REFERENCE_DEFINITION_HEADER,
-  LINK_REFERENCE_DEFINITION_FOOTER
-} from "foam-core";
-import {
   hasEmptyTrailing,
   docConfig,
   loadDocConfig,
@@ -34,6 +26,10 @@ import {
   getWikilinkDefinitionSetting,
   LinkReferenceDefinitionsSetting
 } from "../settings";
+import { Foam } from "../core/types";
+import { NoteGraphAPI } from "../core/note-graph";
+import { createMarkdownReferences, stringifyMarkdownLinkReferenceDefinition } from "../core/markdown-provider";
+import { LINK_REFERENCE_DEFINITION_HEADER, LINK_REFERENCE_DEFINITION_FOOTER } from "../core/definitions";
 
 const feature: FoamFeature = {
   activate: async (context: ExtensionContext, foamPromise: Promise<Foam>) => {

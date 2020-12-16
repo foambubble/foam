@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { FoamFeature } from "../../types";
-import { Foam, Note } from "foam-core";
+import { Foam, Note } from "../../core/types";
 
 const feature: FoamFeature = {
   activate: async (

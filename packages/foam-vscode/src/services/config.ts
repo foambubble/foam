@@ -1,6 +1,6 @@
 import { workspace } from "vscode";
-import { FoamConfig, createConfigFromFolders } from "foam-core";
 import { getIgnoredFilesSetting } from "../settings";
+import { FoamConfig, createConfigFromFolders } from "../core/config";
 
 // TODO this is still to be improved - foam config should
 // not be dependent on vscode but at the moment it's convenient

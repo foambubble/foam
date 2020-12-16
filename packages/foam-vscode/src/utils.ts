@@ -10,7 +10,7 @@ import {
   Selection
 } from "vscode";
 import * as fs from "fs";
-import { Logger } from "foam-core";
+import { Logger } from "./core/utils/log";
 
 interface Point {
   line: number;

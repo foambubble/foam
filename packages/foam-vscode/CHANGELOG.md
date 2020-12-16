@@ -4,7 +4,12 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-## [0.7.2] - 2020-12-13
+## [0.7.4] - 2020-12-16
+
+Fixes and Improvement:
+- Fixed a bug that was causing Foam to not work correctly in Windows (#391)
+
+## [0.7.3] - 2020-12-13
 
 Fixes and Improvements:
 - Foam model: fix to link references on node update/deletion (#393 - thanks @AndrewNatoli)

@@ -62,7 +62,7 @@ export class FileDataStore implements IDataStore {
 
   constructor(config: FoamConfig) {
     this._folders = config.workspaceFolders.map(f =>
-      f.fsPath.replace(/\\\\/g, '/')
+      f.fsPath.replace(/\\/g, '/')
     );
     Logger.info('Workspace folders: ', this._folders);
     let includeGlobs: string[] = [];
@@ -85,14 +85,15 @@ export class FileDataStore implements IDataStore {
       ignoreGlobs,
     });
     this.match = (files: URI[]) => {
-      return micromatch(
-        files.map(f => f.path),
+      const matches = micromatch(
+        files.map(f => f.fsPath),
         includeGlobs,
         {
           ignore: ignoreGlobs,
           nocase: true,
         }
-      ).map(URI.file);
+      );
+      return matches.map(URI.file);
     };
     this.isMatch = uri => this.match([uri]).length > 0;
   }

@@ -1,3 +1,4 @@
+import * as path from 'path';
 import { NoteGraphAPI } from '../../src/note-graph';
 import { generateHeading } from '../../src/janitor';
 import { bootstrap } from '../../src/bootstrap';
@@ -13,7 +14,7 @@ describe('generateHeadings', () => {
   let _graph: NoteGraphAPI;
   beforeAll(async () => {
     const config = createConfigFromFolders([
-      URI.joinPath(URI.file(__dirname), '..', '__scaffold__'),
+      URI.file(path.join(__dirname, '..', '__scaffold__')),
     ]);
     const services: Services = {
       dataStore: new FileDataStore(config),

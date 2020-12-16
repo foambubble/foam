@@ -4,11 +4,11 @@ import { NoteGraph, NoteGraphAPI } from './note-graph';
 import { FoamConfig } from './config';
 import { IDataStore, FileDataStore } from './services/datastore';
 import { ILogger } from './utils/log';
+import { IDisposable, isDisposable } from './common/lifecycle';
 
 export { IDataStore, FileDataStore };
 export { ILogger };
 export { LogLevel, LogLevelThreshold, Logger, BaseLogger } from './utils/log';
-import { IDisposable, isDisposable } from './common/lifecycle';
 export { Event, Emitter } from './common/event';
 export { FoamConfig };
 

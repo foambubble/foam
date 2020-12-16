@@ -3,7 +3,7 @@ import { Logger } from '../src/utils/log';
 import { URI } from '../src/common/uri';
 import { FileDataStore } from '../src';
 
-Logger.setLevel('debug');
+Logger.setLevel('error');
 
 const testFolder = URI.joinPath(URI.file(__dirname), 'test-datastore');
 
@@ -58,9 +58,15 @@ describe('Datastore', () => {
 });
 
 function toStringSet(uris: URI[]) {
-  return new Set(uris.map(uri => uri.path));
+  return new Set(uris.map(uri => uri.path.toLocaleLowerCase()));
 }
 
 function makeAbsolute(files: string[]) {
-  return new Set(files.map(f => URI.joinPath(testFolder, f).path));
+  return new Set(
+    files.map(f =>
+      URI.joinPath(testFolder, f)
+        .path.toLocaleLowerCase()
+        .replace(/\\/g, '/')
+    )
+  );
 }

@@ -105,7 +105,7 @@ async function createGraphPanel(foam: Foam, context: vscode.ExtensionContext) {
   panel.webview.html = await getWebviewContent(context, panel);
 
   panel.webview.onDidReceiveMessage(
-    message => {
+    async message => {
       switch (message.type) {
         case "webviewDidLoad":
           updateGraph(panel, foam);
@@ -113,11 +113,12 @@ async function createGraphPanel(foam: Foam, context: vscode.ExtensionContext) {
 
         case "webviewDidSelectNode":
           const noteId = message.payload;
-          const openPath = foam.notes.getNote(noteId).source.uri;
+          const selectedNote = foam.notes.getNote(noteId);
 
-          vscode.workspace.openTextDocument(openPath).then(doc => {
-            vscode.window.showTextDocument(doc, vscode.ViewColumn.One);
-          });
+          const doc = await vscode.workspace.openTextDocument(
+            selectedNote.source.uri.path // vscode doesn't recognize the URI directly
+          );
+          vscode.window.showTextDocument(doc, vscode.ViewColumn.One);
           break;
 
         case "error":

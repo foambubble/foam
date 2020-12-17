@@ -1,5 +1,5 @@
 import { NoteGraph, createGraph } from '../src/model/note-graph';
-import { NoteLinkDefinition, Note } from '../src/types';
+import { NoteLinkDefinition, Note } from '../src/model/note';
 import { uriToSlug } from '../src/utils';
 import { URI } from '../src/common/uri';
 import { Logger } from '../src/utils/log';
@@ -15,6 +15,13 @@ const documentStart = position.start;
 const documentEnd = position.end;
 const eol = '\n';
 
+/**
+ * Turns a string into a URI
+ * The goal of this function is to make sure we are consistent in the
+ * way we generate URIs (and therefore IDs) across the tests
+ */
+export const strToUri = URI.file;
+
 export const createTestNote = (params: {
   uri: string;
   title?: string;
@@ -23,9 +30,10 @@ export const createTestNote = (params: {
   text?: string;
 }): Note => {
   return {
+    uri: strToUri(params.uri),
     properties: {},
     title: params.title ?? null,
-    slug: uriToSlug(URI.file(params.uri)),
+    slug: uriToSlug(strToUri(params.uri)),
     definitions: params.definitions ?? [],
     tags: new Set(),
     links: params.links
@@ -40,7 +48,6 @@ export const createTestNote = (params: {
       eol: eol,
       end: documentEnd,
       contentStart: documentStart,
-      uri: URI.file(params.uri),
       text: params.text ?? '',
     },
   };
@@ -73,7 +80,7 @@ describe('Note graph', () => {
     graph.setNote(createTestNote({ uri: '/page-c.md' }));
 
     expect(
-      graph.getForwardLinks(noteB.id).map(link => graph.getNote(link.to)!.slug)
+      graph.getForwardLinks(noteB.uri).map(link => graph.getNote(link.to)!.slug)
     ).toEqual(['page-a']);
   });
 
@@ -89,14 +96,14 @@ describe('Note graph', () => {
     graph.setNote(createTestNote({ uri: '/page-c.md' }));
 
     expect(
-      graph.getBacklinks(noteA.id).map(link => graph.getNote(link.from)!.slug)
+      graph.getBacklinks(noteA.uri).map(link => graph.getNote(link.from)!.slug)
     ).toEqual(['page-b']);
   });
 
   it('Returns null when accessing non-existing node', () => {
     const graph = new NoteGraph();
     graph.setNote(createTestNote({ uri: 'page-a' }));
-    expect(graph.getNote('non-existing')).toBeNull();
+    expect(graph.getNote(strToUri('non-existing'))).toBeNull();
   });
 
   it('Allows adding edges to non-existing documents', () => {
@@ -108,7 +115,7 @@ describe('Note graph', () => {
       })
     );
 
-    expect(graph.getNote('non-existing')).toBeNull();
+    expect(graph.getNote(strToUri('non-existing'))).toBeNull();
   });
 
   it('Updates links when modifying note', () => {
@@ -123,13 +130,13 @@ describe('Note graph', () => {
     const noteC = graph.setNote(createTestNote({ uri: '/page-c.md' }));
 
     expect(
-      graph.getForwardLinks(noteB.id).map(link => graph.getNote(link.to)?.slug)
+      graph.getForwardLinks(noteB.uri).map(link => graph.getNote(link.to)?.slug)
     ).toEqual(['page-a']);
     expect(
-      graph.getBacklinks(noteA.id).map(link => graph.getNote(link.from)?.slug)
+      graph.getBacklinks(noteA.uri).map(link => graph.getNote(link.from)?.slug)
     ).toEqual(['page-b']);
     expect(
-      graph.getBacklinks(noteC.id).map(link => graph.getNote(link.from)?.slug)
+      graph.getBacklinks(noteC.uri).map(link => graph.getNote(link.from)?.slug)
     ).toEqual([]);
 
     graph.setNote(
@@ -140,19 +147,19 @@ describe('Note graph', () => {
     );
 
     expect(
-      graph.getForwardLinks(noteB.id).map(link => graph.getNote(link.to)?.slug)
+      graph.getForwardLinks(noteB.uri).map(link => graph.getNote(link.to)?.slug)
     ).toEqual(['page-c']);
     expect(
-      graph.getBacklinks(noteA.id).map(link => graph.getNote(link.from)?.slug)
+      graph.getBacklinks(noteA.uri).map(link => graph.getNote(link.from)?.slug)
     ).toEqual([]);
     expect(
-      graph.getBacklinks(noteC.id).map(link => graph.getNote(link.from)?.slug)
+      graph.getBacklinks(noteC.uri).map(link => graph.getNote(link.from)?.slug)
     ).toEqual(['page-b']);
 
     // Tests #393: page-a should not lose its links when updated
     graph.setNote(createTestNote({ title: 'Test-C', uri: '/page-c.md' }));
     expect(
-      graph.getBacklinks(noteC.id).map(link => graph.getNote(link.from)?.slug)
+      graph.getBacklinks(noteC.uri).map(link => graph.getNote(link.from)?.slug)
     ).toEqual(['page-b']);
   });
 
@@ -176,15 +183,15 @@ describe('Note graph', () => {
       })
     );
 
-    graph.deleteNote(noteA.id);
+    graph.deleteNote(noteA.uri);
     expect(
-      graph.getForwardLinks(noteB.id).map(link => link?.link?.slug)
+      graph.getForwardLinks(noteB.uri).map(link => link?.link?.slug)
     ).toEqual(['page-a']);
-    expect(graph.getNote(noteA.id)).toBeNull();
+    expect(graph.getNote(noteA.uri)).toBeNull();
 
-    graph.deleteNote(noteC.id);
+    graph.deleteNote(noteC.uri);
     expect(
-      graph.getForwardLinks(noteC.id).map(link => link?.link?.slug)
+      graph.getForwardLinks(noteC.uri).map(link => link?.link?.slug)
     ).toEqual([]);
     expect(graph.getNotes().map(note => note.slug)).toEqual(['page-b']);
   });
@@ -262,7 +269,7 @@ describe('graph events', () => {
     const note = graph.setNote(
       createTestNote({ uri: '/dir1/page-a.md', title: 'My Title' })
     );
-    graph.deleteNote(note.id);
+    graph.deleteNote(note.uri);
     expect(callback).toHaveBeenCalledTimes(1);
     listener.dispose();
   });
@@ -273,7 +280,7 @@ describe('graph events', () => {
     const note = graph.setNote(
       createTestNote({ uri: '/dir1/page-a.md', title: 'My Title' })
     );
-    graph.deleteNote('non-existing-note');
+    graph.deleteNote(strToUri('non-existing-note'));
     expect(callback).toHaveBeenCalledTimes(0);
     listener.dispose();
   });
@@ -309,7 +316,7 @@ describe('graph events', () => {
     expect(updateCallback).toHaveBeenCalledTimes(2);
     expect(deleteCallback).toHaveBeenCalledTimes(0);
 
-    graph.deleteNote(note.id);
+    graph.deleteNote(note.uri);
     expect(addCallback).toHaveBeenCalledTimes(1);
     expect(updateCallback).toHaveBeenCalledTimes(2);
     expect(deleteCallback).toHaveBeenCalledTimes(1);

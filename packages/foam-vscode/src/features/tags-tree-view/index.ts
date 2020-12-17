@@ -29,7 +29,7 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
 
   private tags: {
     tag: string;
-    noteIds: string[];
+    noteUris: vscode.Uri[];
   }[];
 
   constructor(private foam: Foam) {
@@ -43,16 +43,16 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
 
   private computeTags() {
     const rawTags: {
-      [key: string]: string[];
+      [key: string]: vscode.Uri[];
     } = this.foam.notes.getNotes().reduce((acc, note) => {
       note.tags.forEach(tag => {
         acc[tag] = acc[tag] ?? [];
-        acc[tag].push(note.id);
+        acc[tag].push(note.uri);
       });
       return acc;
     }, {});
     this.tags = Object.entries(rawTags)
-      .map(([tag, noteIds]) => ({ tag, noteIds }))
+      .map(([tag, noteUris]) => ({ tag, noteUris }))
       .sort((a, b) => a.tag.localeCompare(b.tag));
   }
 
@@ -62,7 +62,7 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
 
   getChildren(element?: Tag): Thenable<TagTreeItem[]> {
     if (element) {
-      const references: TagReference[] = element.noteIds.map(id => {
+      const references: TagReference[] = element.noteUris.map(id => {
         const note = this.foam.notes.getNote(id);
         return new TagReference(element.tag, note);
       });
@@ -73,7 +73,7 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
     }
     if (!element) {
       const tags: Tag[] = this.tags.map(
-        ({ tag, noteIds }) => new Tag(tag, noteIds)
+        ({ tag, noteUris }) => new Tag(tag, noteUris)
       );
       return Promise.resolve(tags.sort((a, b) => a.tag.localeCompare(b.tag)));
     }
@@ -83,10 +83,13 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
 type TagTreeItem = Tag | TagReference | TagSearch;
 
 export class Tag extends vscode.TreeItem {
-  constructor(public readonly tag: string, public readonly noteIds: string[]) {
+  constructor(
+    public readonly tag: string,
+    public readonly noteUris: vscode.Uri[]
+  ) {
     super(tag, vscode.TreeItemCollapsibleState.Collapsed);
-    this.description = `${this.noteIds.length} reference${
-      this.noteIds.length !== 1 ? "s" : ""
+    this.description = `${this.noteUris.length} reference${
+      this.noteUris.length !== 1 ? "s" : ""
     }`;
     this.tooltip = this.description;
   }
@@ -123,9 +126,9 @@ export class TagReference extends vscode.TreeItem {
   constructor(tag: string, note: Note) {
     super(note.title, vscode.TreeItemCollapsibleState.None);
     this.title = note.title;
-    this.description = note.source.uri.path;
+    this.description = note.uri.path;
     this.tooltip = this.description;
-    const resourceUri = note.source.uri;
+    const resourceUri = note.uri;
     let selection: vscode.Range | null = null;
     // TODO move search fn to core
     const lines = note.source.text.split(/\r?\n/);

@@ -1,35 +1,30 @@
 import { Graph } from 'graphlib';
-import { URI } from './common/uri';
-import { ID, Note, NoteLink } from './types';
-import { computeRelativeURI, nameToSlug, isSome } from './utils';
-import { Event, Emitter } from './common/event';
-
-export type GraphNote = Note & {
-  id: ID;
-};
+import { URI } from '../common/uri';
+import { Note, NoteLink } from '../model/note';
+import { computeRelativeURI, nameToSlug, isSome } from '../utils';
+import { Event, Emitter } from '../common/event';
 
 export interface GraphConnection {
-  from: ID;
-  to: ID;
+  from: URI;
+  to: URI;
   link: NoteLink;
 }
 
-export type NoteGraphEventHandler = (e: { note: GraphNote }) => void;
+export type NoteGraphEventHandler = (e: { note: Note }) => void;
 
 export type NotesQuery = { slug: string } | { title: string };
 
 export interface NoteGraphAPI {
-  setNote(note: Note): GraphNote;
-  deleteNote(noteId: ID): GraphNote | null;
-  getNotes(query?: NotesQuery): GraphNote[];
-  getNote(noteId: ID): GraphNote | null;
-  getNoteByURI(uri: URI): GraphNote | null;
-  getAllLinks(noteId: ID): GraphConnection[];
-  getForwardLinks(noteId: ID): GraphConnection[];
-  getBacklinks(noteId: ID): GraphConnection[];
-  onDidAddNote: Event<GraphNote>;
-  onDidUpdateNote: Event<GraphNote>;
-  onDidDeleteNote: Event<GraphNote>;
+  setNote(note: Note): Note;
+  deleteNote(noteUri: URI): Note | null;
+  getNotes(query?: NotesQuery): Note[];
+  getNote(noteUri: URI): Note | null;
+  getAllLinks(noteUri: URI): GraphConnection[];
+  getForwardLinks(noteUri: URI): GraphConnection[];
+  getBacklinks(noteUri: URI): GraphConnection[];
+  onDidAddNote: Event<Note>;
+  onDidUpdateNote: Event<Note>;
+  onDidDeleteNote: Event<Note>;
 }
 
 export type Middleware = (next: NoteGraphAPI) => Partial<NoteGraphAPI>;
@@ -39,47 +34,48 @@ export const createGraph = (middlewares: Middleware[]): NoteGraphAPI => {
   return middlewares.reduce((acc, m) => backfill(acc, m), graph);
 };
 
+const uriToId = (uri: URI) => uri.path;
+
 export class NoteGraph implements NoteGraphAPI {
-  onDidAddNote: Event<GraphNote>;
-  onDidUpdateNote: Event<GraphNote>;
-  onDidDeleteNote: Event<GraphNote>;
+  onDidAddNote: Event<Note>;
+  onDidUpdateNote: Event<Note>;
+  onDidDeleteNote: Event<Note>;
 
   private graph: Graph;
-  private createIdFromURI: (uri: URI) => ID;
-  private onDidAddNoteEmitter = new Emitter<GraphNote>();
-  private onDidUpdateNoteEmitter = new Emitter<GraphNote>();
-  private onDidDeleteEmitter = new Emitter<GraphNote>();
+  private onDidAddNoteEmitter = new Emitter<Note>();
+  private onDidUpdateNoteEmitter = new Emitter<Note>();
+  private onDidDeleteEmitter = new Emitter<Note>();
 
   constructor() {
     this.graph = new Graph();
     this.onDidAddNote = this.onDidAddNoteEmitter.event;
     this.onDidUpdateNote = this.onDidUpdateNoteEmitter.event;
     this.onDidDeleteNote = this.onDidDeleteEmitter.event;
-    this.createIdFromURI = uri => uri.path;
   }
 
-  public setNote(note: Note): GraphNote {
-    const id = this.createIdFromURI(note.source.uri);
-    const oldNote = this.getNote(id);
+  public setNote(note: Note): Note {
+    const oldNote = this.getNote(note.uri);
     if (isSome(oldNote)) {
-      this.removeForwardLinks(id);
+      this.removeForwardLinks(note.uri);
     }
-    const graphNote: GraphNote = {
+    const graphNote: Note = {
       ...note,
-      id: id,
     };
-    this.graph.setNode(id, graphNote);
+    this.graph.setNode(uriToId(note.uri), graphNote);
     note.links.forEach(link => {
       const relativePath =
         note.definitions.find(def => def.label === link.slug)?.url ?? link.slug;
-      const targetPath = computeRelativeURI(note.source.uri, relativePath);
-      const targetId = this.createIdFromURI(targetPath);
+      const targetUri = computeRelativeURI(note.uri, relativePath);
       const connection: GraphConnection = {
-        from: graphNote.id,
-        to: targetId,
+        from: graphNote.uri,
+        to: targetUri,
         link: link,
       };
-      this.graph.setEdge(graphNote.id, targetId, connection);
+      this.graph.setEdge(
+        uriToId(graphNote.uri),
+        uriToId(targetUri),
+        connection
+      );
     });
     isSome(oldNote)
       ? this.onDidUpdateNoteEmitter.fire(graphNote)
@@ -87,24 +83,24 @@ export class NoteGraph implements NoteGraphAPI {
     return graphNote;
   }
 
-  public deleteNote(noteId: ID): GraphNote | null {
-    return this.doDelete(noteId, true);
+  public deleteNote(noteUri: URI): Note | null {
+    return this.doDelete(noteUri, true);
   }
 
-  private doDelete(noteId: ID, fireEvent: boolean): GraphNote | null {
-    const note = this.getNote(noteId);
+  private doDelete(noteUri: URI, fireEvent: boolean): Note | null {
+    const note = this.getNote(noteUri);
     if (isSome(note)) {
-      if (this.getBacklinks(noteId).length >= 1) {
-        this.graph.setNode(noteId, null); // Changes node to the "no file" style
+      if (this.getBacklinks(noteUri).length >= 1) {
+        this.graph.setNode(uriToId(noteUri), null); // Changes node to the "no file" style
       } else {
-        this.graph.removeNode(noteId);
+        this.graph.removeNode(uriToId(noteUri));
       }
       fireEvent && this.onDidDeleteEmitter.fire(note);
     }
     return note;
   }
 
-  public getNotes(query?: NotesQuery): GraphNote[] {
+  public getNotes(query?: NotesQuery): Note[] {
     // prettier-ignore
     const filterFn =
       query == null ? (note: Note | null) => note != null
@@ -118,34 +114,30 @@ export class NoteGraph implements NoteGraphAPI {
       .filter(filterFn);
   }
 
-  public getNote(noteId: ID): GraphNote | null {
-    return this.graph.node(noteId) ?? null;
+  public getNote(noteUri: URI): Note | null {
+    return this.graph.node(uriToId(noteUri)) ?? null;
   }
 
-  public getNoteByURI(uri: URI): GraphNote | null {
-    return this.getNote(this.createIdFromURI(uri));
-  }
-
-  public getAllLinks(noteId: ID): GraphConnection[] {
-    return (this.graph.nodeEdges(noteId) || []).map(edge =>
+  public getAllLinks(noteUri: URI): GraphConnection[] {
+    return (this.graph.nodeEdges(uriToId(noteUri)) || []).map(edge =>
       this.graph.edge(edge.v, edge.w)
     );
   }
 
-  public getForwardLinks(noteId: ID): GraphConnection[] {
-    return (this.graph.outEdges(noteId) || []).map(edge =>
+  public getForwardLinks(noteUri: URI): GraphConnection[] {
+    return (this.graph.outEdges(uriToId(noteUri)) || []).map(edge =>
       this.graph.edge(edge.v, edge.w)
     );
   }
 
-  public removeForwardLinks(noteId: ID) {
-    (this.graph.outEdges(noteId) || []).forEach(edge => {
+  public removeForwardLinks(noteUri: URI) {
+    (this.graph.outEdges(uriToId(noteUri)) || []).forEach(edge => {
       this.graph.removeEdge(edge);
     });
   }
 
-  public getBacklinks(noteId: ID): GraphConnection[] {
-    return (this.graph.inEdges(noteId) || []).map(edge =>
+  public getBacklinks(noteUri: URI): GraphConnection[] {
+    return (this.graph.inEdges(uriToId(noteUri)) || []).map(edge =>
       this.graph.edge(edge.v, edge.w)
     );
   }
@@ -164,7 +156,6 @@ const backfill = (next: NoteGraphAPI, middleware: Middleware): NoteGraphAPI => {
     deleteNote: m.deleteNote || next.deleteNote,
     getNotes: m.getNotes || next.getNotes,
     getNote: m.getNote || next.getNote,
-    getNoteByURI: m.getNoteByURI || next.getNoteByURI,
     getAllLinks: m.getAllLinks || next.getAllLinks,
     getForwardLinks: m.getForwardLinks || next.getForwardLinks,
     getBacklinks: m.getBacklinks || next.getBacklinks,

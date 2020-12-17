@@ -1,9 +1,8 @@
 import * as path from 'path';
-import { NoteGraphAPI, GraphNote } from '../../src/model/note-graph';
 import { generateLinkReferences } from '../../src/janitor';
 import { bootstrap } from '../../src/bootstrap';
 import { createConfigFromFolders } from '../../src/config';
-import { Services } from '../../src';
+import { Services, Note, NoteGraphAPI } from '../../src';
 import { FileDataStore } from '../../src/services/datastore';
 import { Logger } from '../../src/utils/log';
 import { URI } from '../../src/common/uri';
@@ -136,7 +135,7 @@ describe('generateLinkReferences', () => {
  * @param note the note we are adjusting for
  * @param text starting text, using a \n line separator
  */
-function textForNote(note: GraphNote, text: string): string {
+function textForNote(note: Note, text: string): string {
   return text.split('\n').join(note.source.eol);
 }
 
@@ -149,7 +148,7 @@ function textForNote(note: GraphNote, text: string): string {
  * @param pos starting position
  */
 function pointForNote(
-  note: GraphNote,
+  note: Note,
   pos: { line: number; column: number; offset: number }
 ) {
   const rows = pos.line - 1;

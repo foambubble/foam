@@ -1,13 +1,8 @@
-// this file can't simply be .d.ts because the TS compiler wouldn't copy it to the dist directory
-// see https://stackoverflow.com/questions/56018167/typescript-does-not-copy-d-ts-files-to-build
 import { Position, Point } from 'unist';
-import { URI } from './common/uri';
+import { URI } from '../common/uri';
 export { Position, Point };
 
-export type ID = string;
-
 export interface NoteSource {
-  uri: URI;
   text: string;
   contentStart: Point;
   end: Point;
@@ -31,6 +26,7 @@ export interface NoteLinkDefinition {
 }
 
 export interface Note {
+  uri: URI;
   title: string | null;
   slug: string; // note: this slug is not necessarily unique
   properties: any;

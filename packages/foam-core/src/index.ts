@@ -1,4 +1,4 @@
-import { Note, NoteLink } from './types';
+import { Note, NoteLink } from './model/note';
 import { URI } from './common/uri';
 import { NoteGraph, NoteGraphAPI } from './model/note-graph';
 import { FoamConfig } from './config';

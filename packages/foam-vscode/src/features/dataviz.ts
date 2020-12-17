@@ -27,11 +27,11 @@ const feature: FoamFeature = {
 
       vscode.window.onDidChangeActiveTextEditor(e => {
         if (e.document.uri.scheme === "file") {
-          const note = foam.notes.getNoteByURI(e.document.uri);
+          const note = foam.notes.getNote(e.document.uri);
           if (isSome(note)) {
             panel.webview.postMessage({
               type: "didSelectNote",
-              payload: note.id
+              payload: note.uri.path
             });
           }
         }
@@ -55,16 +55,16 @@ function generateGraphData(foam: Foam) {
   };
 
   foam.notes.getNotes().forEach(n => {
-    const links = foam.notes.getForwardLinks(n.id);
-    graph.nodes[n.id] = {
-      id: n.id,
+    const links = foam.notes.getForwardLinks(n.uri);
+    graph.nodes[n.uri.path] = {
+      id: n.uri.path,
       type: "note",
-      uri: n.source.uri,
+      uri: n.uri,
       title: cutTitle(n.title)
     };
     links.forEach(link => {
-      if (!(link.to in graph.nodes)) {
-        graph.nodes[link.to] = {
+      if (!(link.to.path in graph.nodes)) {
+        graph.nodes[link.to.path] = {
           id: link.to,
           type: "nonExistingNote",
           uri: `virtual:${link.to}`,
@@ -72,8 +72,8 @@ function generateGraphData(foam: Foam) {
         };
       }
       graph.edges.add({
-        source: link.from,
-        target: link.to
+        source: link.from.path,
+        target: link.to.path
       });
     });
   });
@@ -112,11 +112,11 @@ async function createGraphPanel(foam: Foam, context: vscode.ExtensionContext) {
           break;
 
         case "webviewDidSelectNode":
-          const noteId = message.payload;
-          const selectedNote = foam.notes.getNote(noteId);
+          const noteUri = vscode.Uri.parse(message.payload);
+          const selectedNote = foam.notes.getNote(noteUri);
 
           const doc = await vscode.workspace.openTextDocument(
-            selectedNote.source.uri.path // vscode doesn't recognize the URI directly
+            selectedNote.uri.path // vscode doesn't recognize the URI directly
           );
           vscode.window.showTextDocument(doc, vscode.ViewColumn.One);
           break;

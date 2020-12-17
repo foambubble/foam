@@ -7,11 +7,10 @@ import visit from 'unist-util-visit';
 import { Parent, Point } from 'unist';
 import detectNewline from 'detect-newline';
 import os from 'os';
-import { NoteGraphAPI } from './note-graph';
-import { NoteLinkDefinition, Note, NoteParser } from './types';
+import { NoteGraphAPI } from './model/note-graph';
+import { NoteLinkDefinition, Note, NoteParser } from './model/note';
 import { dropExtension, extractHashtags, extractTagsFromProp } from './utils';
 import { uriToSlug, computeRelativePath, getBasename } from './utils/uri';
-import { ID } from './types';
 import { ParserPlugin } from './plugins';
 import { Logger } from './utils/log';
 import { URI } from './common/uri';
@@ -41,7 +40,7 @@ const titlePlugin: ParserPlugin = {
   },
   onDidVisitTree: (tree, note) => {
     if (note.title == null) {
-      note.title = getBasename(note.source.uri);
+      note.title = getBasename(note.uri);
     }
   },
 };
@@ -126,6 +125,7 @@ export function createMarkdownParser(extraPlugins: ParserPlugin[]): NoteParser {
       const eol = detectNewline(markdown) || os.EOL;
 
       var note: Note = {
+        uri: uri,
         slug: uriToSlug(uri),
         properties: {},
         title: null,
@@ -133,7 +133,6 @@ export function createMarkdownParser(extraPlugins: ParserPlugin[]): NoteParser {
         links: [],
         definitions: [],
         source: {
-          uri: uri,
           text: markdown,
           contentStart: tree.position!.start,
           end: tree.position!.end,
@@ -236,22 +235,22 @@ export function stringifyMarkdownLinkReferenceDefinition(
 }
 export function createMarkdownReferences(
   graph: NoteGraphAPI,
-  noteId: ID,
+  noteUri: URI,
   includeExtension: boolean
 ): NoteLinkDefinition[] {
-  const source = graph.getNote(noteId);
+  const source = graph.getNote(noteUri);
 
   // Should never occur since we're already in a file,
   // but better safe than sorry.
   if (!source) {
     console.warn(
-      `Note ${noteId} was not added to NoteGraph before attempting to generate markdown reference list`
+      `Note ${noteUri} was not added to NoteGraph before attempting to generate markdown reference list`
     );
     return [];
   }
 
   return graph
-    .getForwardLinks(noteId)
+    .getForwardLinks(noteUri)
     .map(link => {
       let target = graph.getNote(link.to);
       // if we don't find the target by ID we search the graph by slug
@@ -268,15 +267,12 @@ export function createMarkdownReferences(
       // but int the future we may want to surface these too
       if (!target) {
         Logger.info(
-          `Warning: Link '${link.to}' in '${noteId}' points to a non-existing note.`
+          `Warning: Link '${link.to}' in '${noteUri}' points to a non-existing note.`
         );
         return null;
       }
 
-      const relativePath = computeRelativePath(
-        source.source.uri,
-        target.source.uri
-      );
+      const relativePath = computeRelativePath(source.uri, target.uri);
 
       const pathToNote = includeExtension
         ? relativePath

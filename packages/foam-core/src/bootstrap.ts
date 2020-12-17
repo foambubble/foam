@@ -1,4 +1,4 @@
-import { createGraph } from './note-graph';
+import { createGraph } from './model/note-graph';
 import { createMarkdownParser } from './markdown-provider';
 import { FoamConfig, Foam, Services } from './index';
 import { loadPlugins } from './plugins';
@@ -37,8 +37,7 @@ export const bootstrap = async (config: FoamConfig, services: Services) => {
     graph.setNote(await parser.parse(uri, content));
   });
   services.dataStore.onDidDelete(async uri => {
-    const note = graph.getNoteByURI(uri);
-    note && graph.deleteNote(note.id);
+    graph.deleteNote(uri);
   });
 
   return {

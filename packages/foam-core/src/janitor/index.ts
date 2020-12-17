@@ -1,7 +1,7 @@
 import { Position } from 'unist';
 import GithubSlugger from 'github-slugger';
-import { GraphNote, NoteGraphAPI } from '../model/note-graph';
-import { Note } from '../types';
+import { NoteGraphAPI } from '../model/note-graph';
+import { Note } from '../model/note';
 import {
   createMarkdownReferences,
   stringifyMarkdownLinkReferenceDefinition,
@@ -19,7 +19,7 @@ export interface TextEdit {
 }
 
 export const generateLinkReferences = (
-  note: GraphNote,
+  note: Note,
   ng: NoteGraphAPI,
   includeExtensions: boolean
 ): TextEdit | null => {
@@ -29,7 +29,7 @@ export const generateLinkReferences = (
 
   const markdownReferences = createMarkdownReferences(
     ng,
-    note.id,
+    note.uri,
     includeExtensions
   );
 

@@ -1,6 +1,5 @@
 import { posix } from 'path';
 import GithubSlugger from 'github-slugger';
-import { ID } from '../types';
 import { hash } from './core';
 import { URI } from '../common/uri';
 
@@ -12,7 +11,7 @@ export const nameToSlug = (noteName: string): string => {
   return GithubSlugger.slug(noteName);
 };
 
-export const hashURI = (uri: URI): ID => {
+export const hashURI = (uri: URI): string => {
   return hash(posix.normalize(uri.path));
 };
 

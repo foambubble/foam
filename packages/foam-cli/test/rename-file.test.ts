@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import mockFS from 'mock-fs';
 import { URI } from 'foam-core';
 
-const doesFileExist = path =>
+const doesFileExist = (path: string) =>
   fs.promises
     .access(path)
     .then(() => true)

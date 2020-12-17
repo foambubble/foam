@@ -2,7 +2,7 @@ import {
   createMarkdownParser,
   createMarkdownReferences,
 } from '../src/markdown-provider';
-import { NoteGraph } from '../src/note-graph';
+import { NoteGraph } from '../src/model/note-graph';
 import { ParserPlugin } from '../src/plugins';
 import { URI } from '../src/common/uri';
 import { Logger } from '../src/utils/log';

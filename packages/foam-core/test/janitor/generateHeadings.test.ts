@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { NoteGraphAPI } from '../../src/note-graph';
+import { NoteGraphAPI } from '../../src/model/note-graph';
 import { generateHeading } from '../../src/janitor';
 import { bootstrap } from '../../src/bootstrap';
 import { createConfigFromFolders } from '../../src/config';

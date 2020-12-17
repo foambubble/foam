@@ -1,4 +1,4 @@
-import { NoteGraph, createGraph } from '../src/note-graph';
+import { NoteGraph, createGraph } from '../src/model/note-graph';
 import { NoteLinkDefinition, Note } from '../src/types';
 import { uriToSlug } from '../src/utils';
 import { URI } from '../src/common/uri';

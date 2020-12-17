@@ -1,6 +1,6 @@
 import { Position } from 'unist';
 import GithubSlugger from 'github-slugger';
-import { GraphNote, NoteGraphAPI } from '../note-graph';
+import { GraphNote, NoteGraphAPI } from '../model/note-graph';
 import { Note } from '../types';
 import {
   createMarkdownReferences,

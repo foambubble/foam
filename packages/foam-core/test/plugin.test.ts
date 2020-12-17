@@ -1,7 +1,7 @@
 import path from 'path';
 import { loadPlugins } from '../src/plugins';
 import { createMarkdownParser } from '../src/markdown-provider';
-import { createGraph } from '../src/note-graph';
+import { createGraph } from '../src/model/note-graph';
 import { createTestNote } from './core.test';
 import { FoamConfig, createConfigFromObject } from '../src/config';
 import { URI } from '../src/common/uri';

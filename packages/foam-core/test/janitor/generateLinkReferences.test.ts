@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { NoteGraphAPI, GraphNote } from '../../src/note-graph';
+import { NoteGraphAPI, GraphNote } from '../../src/model/note-graph';
 import { generateLinkReferences } from '../../src/janitor';
 import { bootstrap } from '../../src/bootstrap';
 import { createConfigFromFolders } from '../../src/config';

@@ -126,7 +126,6 @@ export function createMarkdownParser(extraPlugins: ParserPlugin[]): NoteParser {
 
       var note: Note = {
         uri: uri,
-        slug: uriToSlug(uri),
         properties: {},
         title: null,
         tags: new Set(),
@@ -282,7 +281,7 @@ export function createMarkdownReferences(
       return {
         label: link.link.slug,
         url: pathToNote,
-        title: target.title || target.slug,
+        title: target.title || uriToSlug(target.uri),
       };
     })
     .filter(Boolean)

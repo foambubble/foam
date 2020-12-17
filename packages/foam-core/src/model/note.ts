@@ -28,7 +28,6 @@ export interface NoteLinkDefinition {
 export interface Note {
   uri: URI;
   title: string | null;
-  slug: string; // note: this slug is not necessarily unique
   properties: any;
   // sections: NoteSection[]
   tags: Set<string>;

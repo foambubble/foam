@@ -6,6 +6,7 @@ import { NoteGraph } from '../src/model/note-graph';
 import { ParserPlugin } from '../src/plugins';
 import { URI } from '../src/common/uri';
 import { Logger } from '../src/utils/log';
+import { uriToSlug } from '../src/utils';
 
 Logger.setLevel('error');
 
@@ -51,7 +52,8 @@ describe('Markdown loader', () => {
     expect(
       graph
         .getNotes()
-        .map(n => n.slug)
+        .map(n => n.uri)
+        .map(uriToSlug)
         .sort()
     ).toEqual(['page-a', 'page-b', 'page-c', 'page-d', 'page-e']);
   });
@@ -65,10 +67,16 @@ describe('Markdown loader', () => {
     graph.setNote(createNoteFromMarkdown('/page e.md', pageE));
 
     expect(
-      graph.getBacklinks(noteB.uri).map(link => graph.getNote(link.from)!.slug)
+      graph
+        .getBacklinks(noteB.uri)
+        .map(link => graph.getNote(link.from)!.uri)
+        .map(uriToSlug)
     ).toEqual(['page-a']);
     expect(
-      graph.getForwardLinks(noteA.uri).map(link => graph.getNote(link.to)!.slug)
+      graph
+        .getForwardLinks(noteA.uri)
+        .map(link => graph.getNote(link.to)!.uri)
+        .map(uriToSlug)
     ).toEqual(['page-b', 'page-c', 'page-d', 'page-e']);
   });
 });

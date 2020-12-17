@@ -1,7 +1,7 @@
 import { Graph } from 'graphlib';
 import { URI } from '../common/uri';
 import { Note, NoteLink } from '../model/note';
-import { computeRelativeURI, nameToSlug, isSome } from '../utils';
+import { computeRelativeURI, nameToSlug, isSome, uriToSlug } from '../utils';
 import { Event, Emitter } from '../common/event';
 
 export interface GraphConnection {
@@ -104,7 +104,7 @@ export class NoteGraph implements NoteGraphAPI {
     // prettier-ignore
     const filterFn =
       query == null ? (note: Note | null) => note != null
-        : 'slug' in query ? (note: Note | null) => [nameToSlug(query.slug), query.slug].includes(note?.slug as string)
+        : 'slug' in query ? (note: Note | null) => note && [nameToSlug(query.slug), query.slug].includes(uriToSlug(note.uri))
         : 'title' in query ? (note: Note | null) => note?.title === query.title
         : (note: Note | null) => note != null;
 

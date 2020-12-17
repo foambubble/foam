@@ -33,7 +33,6 @@ export const createTestNote = (params: {
     uri: strToUri(params.uri),
     properties: {},
     title: params.title ?? null,
-    slug: uriToSlug(strToUri(params.uri)),
     definitions: params.definitions ?? [],
     tags: new Set(),
     links: params.links
@@ -63,7 +62,7 @@ describe('Note graph', () => {
     expect(
       graph
         .getNotes()
-        .map(n => n.slug)
+        .map(n => uriToSlug(n.uri))
         .sort()
     ).toEqual(['page-a', 'page-b', 'page-c']);
   });
@@ -80,7 +79,10 @@ describe('Note graph', () => {
     graph.setNote(createTestNote({ uri: '/page-c.md' }));
 
     expect(
-      graph.getForwardLinks(noteB.uri).map(link => graph.getNote(link.to)!.slug)
+      graph
+        .getForwardLinks(noteB.uri)
+        .map(link => graph.getNote(link.to)!.uri)
+        .map(uriToSlug)
     ).toEqual(['page-a']);
   });
 
@@ -96,7 +98,10 @@ describe('Note graph', () => {
     graph.setNote(createTestNote({ uri: '/page-c.md' }));
 
     expect(
-      graph.getBacklinks(noteA.uri).map(link => graph.getNote(link.from)!.slug)
+      graph
+        .getBacklinks(noteA.uri)
+        .map(link => graph.getNote(link.from)!.uri)
+        .map(uriToSlug)
     ).toEqual(['page-b']);
   });
 
@@ -130,13 +135,22 @@ describe('Note graph', () => {
     const noteC = graph.setNote(createTestNote({ uri: '/page-c.md' }));
 
     expect(
-      graph.getForwardLinks(noteB.uri).map(link => graph.getNote(link.to)?.slug)
+      graph
+        .getForwardLinks(noteB.uri)
+        .map(link => graph.getNote(link.to)!.uri)
+        .map(uriToSlug)
     ).toEqual(['page-a']);
     expect(
-      graph.getBacklinks(noteA.uri).map(link => graph.getNote(link.from)?.slug)
+      graph
+        .getBacklinks(noteA.uri)
+        .map(link => graph.getNote(link.from)!.uri)
+        .map(uriToSlug)
     ).toEqual(['page-b']);
     expect(
-      graph.getBacklinks(noteC.uri).map(link => graph.getNote(link.from)?.slug)
+      graph
+        .getBacklinks(noteC.uri)
+        .map(link => graph.getNote(link.from)!.uri)
+        .map(uriToSlug)
     ).toEqual([]);
 
     graph.setNote(
@@ -147,19 +161,31 @@ describe('Note graph', () => {
     );
 
     expect(
-      graph.getForwardLinks(noteB.uri).map(link => graph.getNote(link.to)?.slug)
+      graph
+        .getForwardLinks(noteB.uri)
+        .map(link => graph.getNote(link.to)!.uri)
+        .map(uriToSlug)
     ).toEqual(['page-c']);
     expect(
-      graph.getBacklinks(noteA.uri).map(link => graph.getNote(link.from)?.slug)
+      graph
+        .getBacklinks(noteA.uri)
+        .map(link => graph.getNote(link.from)!.uri)
+        .map(uriToSlug)
     ).toEqual([]);
     expect(
-      graph.getBacklinks(noteC.uri).map(link => graph.getNote(link.from)?.slug)
+      graph
+        .getBacklinks(noteC.uri)
+        .map(link => graph.getNote(link.from)!.uri)
+        .map(uriToSlug)
     ).toEqual(['page-b']);
 
     // Tests #393: page-a should not lose its links when updated
     graph.setNote(createTestNote({ title: 'Test-C', uri: '/page-c.md' }));
     expect(
-      graph.getBacklinks(noteC.uri).map(link => graph.getNote(link.from)?.slug)
+      graph
+        .getBacklinks(noteC.uri)
+        .map(link => graph.getNote(link.from)!.uri)
+        .map(uriToSlug)
     ).toEqual(['page-b']);
   });
 
@@ -193,7 +219,12 @@ describe('Note graph', () => {
     expect(
       graph.getForwardLinks(noteC.uri).map(link => link?.link?.slug)
     ).toEqual([]);
-    expect(graph.getNotes().map(note => note.slug)).toEqual(['page-b']);
+    expect(
+      graph
+        .getNotes()
+        .map(note => note.uri)
+        .map(uriToSlug)
+    ).toEqual(['page-b']);
   });
 });
 
@@ -208,7 +239,7 @@ describe('Graph querying', () => {
   it('finds the note by slug', () => {
     const graph = new NoteGraph();
     const note = graph.setNote(createTestNote({ uri: '/page-a.md' }));
-    expect(graph.getNotes({ slug: note.slug }).length).toEqual(1);
+    expect(graph.getNotes({ slug: uriToSlug(note.uri) }).length).toEqual(1);
   });
 
   it('finds a note by slug when there is more than one', () => {

@@ -526,6 +526,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "MCluck90",
+      "name": "Mike Cluck",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/1753801?v=4",
+      "profile": "https://mcluck.tech",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,

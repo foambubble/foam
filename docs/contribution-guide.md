@@ -37,6 +37,16 @@ If you're interested in contributing, this short guide will help you get things 
 
 You should now be ready to start working!
 
+### Testing
+
+Code needs to come with tests.
+We use the following convention in Foam:
+- *.test.ts are unit tests 
+- *.spec.ts are integration tests
+
+Also, note that tests in `foam-core` and `foam-cli` live in the `test` directory.
+Tests in `foam-vscode` live alongside the code in `src`.
+
 ### The VS Code Extension
 
 This guide assumes you read the previous instructions and you're set up to work on Foam.

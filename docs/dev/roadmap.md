@@ -87,7 +87,7 @@ The community is working on a number of automated scripts to help you migrate to
 [build-vs-assemble]: build-vs-assemble.md "Build vs Assemble"
 [recipes]: ../recipes/recipes.md "Recipes"
 [contribution-guide]: ../contribution-guide.md "Contribution Guide"
-[git-integration]: ../features/git-integration.md "Git integration"
+[git-integration]: ../features/git-integration.md "Git Integration"
 [wiki-links]: ../wiki-links.md "Wiki Links"
 [foam-file-format]: foam-file-format.md "Foam File Format"
 [unlinked-references]: unlinked-references.md "Unlinked references (stub)"

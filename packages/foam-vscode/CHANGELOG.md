@@ -4,6 +4,10 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.7.6] - 2020-12-20
+
+Fixes and Improvement:
+- Fixed  "Janitor" command issue in Windows (#410)
 
 ## [0.7.5] - 2020-12-17
 

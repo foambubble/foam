@@ -35,9 +35,6 @@ const daysOfWeek = [
 type AfterCompletionOptions = "noop" | "createNote" | "navigateToNote";
 const foamConfig = workspace.getConfiguration("foam");
 const foamExtension = foamConfig.get("openDailyNote.fileExtension");
-const foamLinkReferenceDefinitions = foamConfig.get(
-  "edit.linkReferenceDefinitions"
-);
 const foamNavigateOnSelect: AfterCompletionOptions = foamConfig.get(
   "dateSnippets.afterCompletion"
 );
@@ -79,6 +76,9 @@ const createCompletionItem = ({ snippet, date, detail }: DateSnippet) => {
 };
 
 const getDailyNoteLink = (date: Date) => {
+  const foamLinkReferenceDefinitions = foamConfig.get(
+    "edit.linkReferenceDefinitions"
+  );
   let name = getDailyNoteFileName(foamConfig, date);
   if (
     foamLinkReferenceDefinitions ===

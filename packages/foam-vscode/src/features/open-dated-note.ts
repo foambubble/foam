@@ -15,7 +15,6 @@ import {
   openDailyNoteFor,
   getDailyNotePath
 } from "../dated-notes";
-import { LinkReferenceDefinitionsSetting } from "../settings";
 import { FoamFeature } from "../types";
 
 interface DateSnippet {
@@ -35,10 +34,6 @@ const daysOfWeek = [
 ];
 type AfterCompletionOptions = "noop" | "createNote" | "navigateToNote";
 const foamConfig = workspace.getConfiguration("foam");
-const foamExtension = foamConfig.get("openDailyNote.fileExtension");
-const foamLinkReferenceDefinitions = foamConfig.get(
-  "edit.linkReferenceDefinitions"
-);
 const foamNavigateOnSelect: AfterCompletionOptions = foamConfig.get(
   "dateSnippets.afterCompletion"
 );
@@ -80,14 +75,9 @@ const createCompletionItem = ({ snippet, date, detail }: DateSnippet) => {
 };
 
 const getDailyNoteLink = (date: Date) => {
-  let name = getDailyNoteFileName(foamConfig, date);
-  if (
-    foamLinkReferenceDefinitions ===
-    LinkReferenceDefinitionsSetting.withoutExtensions
-  ) {
-    name = name.replace(`.${foamExtension}`, "");
-  }
-  return `[[${name}]]`;
+  const foamExtension = foamConfig.get("openDailyNote.fileExtension");
+  const name = getDailyNoteFileName(foamConfig, date);
+  return `[[${name.replace(`.${foamExtension}`, "")}]]`;
 };
 
 const snippets: (() => DateSnippet)[] = [

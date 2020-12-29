@@ -6,7 +6,8 @@ import {
   CompletionItemProvider,
   CompletionItem,
   CompletionItemKind,
-  CompletionList
+  CompletionList,
+  CompletionTriggerKind
 } from "vscode";
 import {
   createDailyNoteIfNotExists,
@@ -171,6 +172,12 @@ const computedSnippets: ((number: number) => DateSnippet)[] = [
 
 const completions: CompletionItemProvider = {
   provideCompletionItems: (_document, _position, _token, _context) => {
+    if (_context.triggerKind === CompletionTriggerKind.Invoke) {
+      // if completion was triggered without trigger character then we return [] to fallback
+      // to vscode word-based suggestions (see https://github.com/foambubble/foam/pull/417)
+      return [];
+    }
+
     const completionItems = [
       ...snippets.map(item => createCompletionItem(item())),
       ...generateDayOfWeekSnippets().map(item => createCompletionItem(item))
@@ -181,6 +188,12 @@ const completions: CompletionItemProvider = {
 
 const computedCompletions: CompletionItemProvider = {
   provideCompletionItems: (document, position, _token, _context) => {
+    if (_context.triggerKind === CompletionTriggerKind.Invoke) {
+      // if completion was triggered without trigger character then we return [] to fallback
+      // to vscode word-based suggestions (see https://github.com/foambubble/foam/pull/417)
+      return [];
+    }
+
     const range = document.getWordRangeAtPosition(position, /\S+/);
     const snippetString = document.getText(range);
     const matches = snippetString.match(/(\d+)/);

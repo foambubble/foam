@@ -535,6 +535,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "bpugh",
+      "name": "Brandon Pugh",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/684781?v=4",
+      "profile": "http://brandonpugh.com",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,

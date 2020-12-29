@@ -180,6 +180,7 @@ If that sounds like something you're interested in, I'd love to have you along o
   </tr>
   <tr>
     <td align="center"><a href="https://mcluck.tech"><img src="https://avatars1.githubusercontent.com/u/1753801?v=4" width="60px;" alt=""/><br /><sub><b>Mike Cluck</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=MCluck90" title="Code">💻</a></td>
+    <td align="center"><a href="http://brandonpugh.com"><img src="https://avatars1.githubusercontent.com/u/684781?v=4" width="60px;" alt=""/><br /><sub><b>Brandon Pugh</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=bpugh" title="Code">💻</a></td>
   </tr>
 </table>
 

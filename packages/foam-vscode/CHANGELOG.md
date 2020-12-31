@@ -4,19 +4,25 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.7.7] - 2020-12-31
+
+Fixes and Improvements:
+- Fixed word-based-suggestions (#415 #417 - thanks @bpugh!)
+- Date snippets use standard wikilink syntax (#416 - thanks @MCluck90!)
+
 ## [0.7.6] - 2020-12-20
 
-Fixes and Improvement:
+Fixes and Improvements:
 - Fixed  "Janitor" command issue in Windows (#410)
 
 ## [0.7.5] - 2020-12-17
 
-Fixes and Improvement:
+Fixes and Improvements:
 - Fixed  "Open Daily Note" command issue in Windows (#407)
 
 ## [0.7.4] - 2020-12-16
 
-Fixes and Improvement:
+Fixes and Improvements:
 - Fixed a bug that was causing Foam to not work correctly in Windows (#391)
 
 ## [0.7.3] - 2020-12-13

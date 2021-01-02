@@ -544,6 +544,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "themaxdavitt",
+      "name": "Max Davitt",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/27709025?v=4",
+      "profile": "https://max.davitt.me",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,

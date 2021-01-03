@@ -36,7 +36,7 @@ export const bootstrap = async (config: FoamConfig, services: Services) => {
     const content = await services.dataStore.read(uri);
     graph.setNote(await parser.parse(uri, content));
   });
-  services.dataStore.onDidDelete(async uri => {
+  services.dataStore.onDidDelete(uri => {
     graph.deleteNote(uri);
   });
 

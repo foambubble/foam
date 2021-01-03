@@ -138,7 +138,7 @@ function generateReferenceList(
     return [];
   }
 
-  const note = foam.getNoteByURI(doc.uri);
+  const note = foam.getNote(doc.uri);
 
   // Should never happen as `doc` is usually given by `editor.document`, which
   // binds to an opened note.
@@ -152,7 +152,7 @@ function generateReferenceList(
   const references = uniq(
     createMarkdownReferences(
       foam,
-      note.id,
+      note.uri,
       wikilinkSetting === LinkReferenceDefinitionsSetting.withExtensions
     ).map(stringifyMarkdownLinkReferenceDefinition)
   );

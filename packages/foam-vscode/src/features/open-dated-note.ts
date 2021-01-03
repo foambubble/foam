@@ -6,7 +6,8 @@ import {
   CompletionItemProvider,
   CompletionItem,
   CompletionItemKind,
-  CompletionList
+  CompletionList,
+  CompletionTriggerKind
 } from "vscode";
 import {
   createDailyNoteIfNotExists,
@@ -14,7 +15,6 @@ import {
   openDailyNoteFor,
   getDailyNotePath
 } from "../dated-notes";
-import { LinkReferenceDefinitionsSetting } from "../settings";
 import { FoamFeature } from "../types";
 
 interface DateSnippet {
@@ -34,10 +34,6 @@ const daysOfWeek = [
 ];
 type AfterCompletionOptions = "noop" | "createNote" | "navigateToNote";
 const foamConfig = workspace.getConfiguration("foam");
-const foamExtension = foamConfig.get("openDailyNote.fileExtension");
-const foamLinkReferenceDefinitions = foamConfig.get(
-  "edit.linkReferenceDefinitions"
-);
 const foamNavigateOnSelect: AfterCompletionOptions = foamConfig.get(
   "dateSnippets.afterCompletion"
 );
@@ -79,14 +75,9 @@ const createCompletionItem = ({ snippet, date, detail }: DateSnippet) => {
 };
 
 const getDailyNoteLink = (date: Date) => {
-  let name = getDailyNoteFileName(foamConfig, date);
-  if (
-    foamLinkReferenceDefinitions ===
-    LinkReferenceDefinitionsSetting.withoutExtensions
-  ) {
-    name = name.replace(`.${foamExtension}`, "");
-  }
-  return `[[${name}]]`;
+  const foamExtension = foamConfig.get("openDailyNote.fileExtension");
+  const name = getDailyNoteFileName(foamConfig, date);
+  return `[[${name.replace(`.${foamExtension}`, "")}]]`;
 };
 
 const snippets: (() => DateSnippet)[] = [
@@ -171,6 +162,12 @@ const computedSnippets: ((number: number) => DateSnippet)[] = [
 
 const completions: CompletionItemProvider = {
   provideCompletionItems: (_document, _position, _token, _context) => {
+    if (_context.triggerKind === CompletionTriggerKind.Invoke) {
+      // if completion was triggered without trigger character then we return [] to fallback
+      // to vscode word-based suggestions (see https://github.com/foambubble/foam/pull/417)
+      return [];
+    }
+
     const completionItems = [
       ...snippets.map(item => createCompletionItem(item())),
       ...generateDayOfWeekSnippets().map(item => createCompletionItem(item))
@@ -181,6 +178,12 @@ const completions: CompletionItemProvider = {
 
 const computedCompletions: CompletionItemProvider = {
   provideCompletionItems: (document, position, _token, _context) => {
+    if (_context.triggerKind === CompletionTriggerKind.Invoke) {
+      // if completion was triggered without trigger character then we return [] to fallback
+      // to vscode word-based suggestions (see https://github.com/foambubble/foam/pull/417)
+      return [];
+    }
+
     const range = document.getWordRangeAtPosition(position, /\S+/);
     const snippetString = document.getText(range);
     const matches = snippetString.match(/(\d+)/);

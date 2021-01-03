@@ -17,5 +17,8 @@
         "**/_layouts/**/*",
         "**/_site/**/*",
         "**/node_modules/**/*"
-    ]
+    ],
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "prettier.requireConfig": true
 }

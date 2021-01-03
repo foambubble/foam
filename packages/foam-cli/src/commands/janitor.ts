@@ -75,7 +75,7 @@ export default class Janitor extends Command {
         file = definitions ? applyTextEdit(file, definitions) : file;
 
         if (heading || definitions) {
-          return writeFileToDisk(note.source.uri, file);
+          return writeFileToDisk(note.uri, file);
         }
 
         return Promise.resolve(null);

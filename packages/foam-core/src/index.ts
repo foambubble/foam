@@ -1,6 +1,6 @@
-import { Note, NoteLink } from './types';
+import { Note, NoteLink } from './model/note';
 import { URI } from './common/uri';
-import { NoteGraph, NoteGraphAPI } from './note-graph';
+import { NoteGraph, NoteGraphAPI } from './model/note-graph';
 import { FoamConfig } from './config';
 import { IDataStore, FileDataStore } from './services/datastore';
 import { ILogger } from './utils/log';
@@ -24,6 +24,8 @@ export {
   generateHeading,
   generateLinkReferences,
   getKebabCaseFileName,
+  LINK_REFERENCE_DEFINITION_HEADER,
+  LINK_REFERENCE_DEFINITION_FOOTER,
 } from './janitor';
 
 export { applyTextEdit } from './janitor/apply-text-edit';
@@ -33,11 +35,6 @@ export { createConfigFromFolders } from './config';
 export { bootstrap } from './bootstrap';
 
 export { NoteGraph, NoteGraphAPI, Note, NoteLink, URI };
-
-export {
-  LINK_REFERENCE_DEFINITION_HEADER,
-  LINK_REFERENCE_DEFINITION_FOOTER,
-} from './definitions';
 
 export interface Services {
   dataStore: IDataStore;

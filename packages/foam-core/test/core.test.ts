@@ -308,7 +308,7 @@ describe('graph events', () => {
     const graph = new NoteGraph();
     const callback = jest.fn();
     const listener = graph.onDidDeleteNote(callback);
-    const note = graph.setNote(
+    graph.setNote(
       createTestNote({ uri: '/dir1/page-a.md', title: 'My Title' })
     );
     graph.deleteNote(strToUri('non-existing-note'));
@@ -357,7 +357,7 @@ describe('graph events', () => {
 });
 
 describe('graph middleware', () => {
-  it('can intercept calls to the graph', async () => {
+  it('can intercept calls to the graph', () => {
     const graph = createGraph([
       next => ({
         setNote: note => {

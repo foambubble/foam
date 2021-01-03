@@ -4,6 +4,7 @@ node_modules
 *.tsbuildinfo
 *.vsix
 *.log
+out
 dist
 docs/_site
 docs/.sass-cache

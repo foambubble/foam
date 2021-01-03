@@ -105,7 +105,7 @@ export class FileDataStore implements IDataStore, IDisposable {
 
     if (isSome(watcher)) {
       this._disposables.push(
-        watcher.onDidCreate(async uri => {
+        watcher.onDidCreate(uri => {
           if (this.isMatch(uri)) {
             Logger.info(`Created: ${uri.path}`);
             this.onDidCreateEmitter.fire(uri);

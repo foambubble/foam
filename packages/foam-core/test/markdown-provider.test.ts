@@ -306,7 +306,7 @@ describe('parser plugins', () => {
   };
   const parser = createMarkdownParser([testPlugin]);
 
-  it('can augment the parsing of the file', async () => {
+  it('can augment the parsing of the file', () => {
     const note1 = parser.parse(
       URI.file('/path/to/a'),
       `

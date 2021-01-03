@@ -2,10 +2,11 @@ import {
   createMarkdownParser,
   createMarkdownReferences,
 } from '../src/markdown-provider';
-import { NoteGraph } from '../src/note-graph';
+import { NoteGraph } from '../src/model/note-graph';
 import { ParserPlugin } from '../src/plugins';
 import { URI } from '../src/common/uri';
 import { Logger } from '../src/utils/log';
+import { uriToSlug } from '../src/utils';
 
 Logger.setLevel('error');
 
@@ -51,7 +52,8 @@ describe('Markdown loader', () => {
     expect(
       graph
         .getNotes()
-        .map(n => n.slug)
+        .map(n => n.uri)
+        .map(uriToSlug)
         .sort()
     ).toEqual(['page-a', 'page-b', 'page-c', 'page-d', 'page-e']);
   });
@@ -65,10 +67,16 @@ describe('Markdown loader', () => {
     graph.setNote(createNoteFromMarkdown('/page e.md', pageE));
 
     expect(
-      graph.getBacklinks(noteB.id).map(link => graph.getNote(link.from)!.slug)
+      graph
+        .getBacklinks(noteB.uri)
+        .map(link => graph.getNote(link.from)!.uri)
+        .map(uriToSlug)
     ).toEqual(['page-a']);
     expect(
-      graph.getForwardLinks(noteA.id).map(link => graph.getNote(link.to)!.slug)
+      graph
+        .getForwardLinks(noteA.uri)
+        .map(link => graph.getNote(link.to)!.uri)
+        .map(uriToSlug)
     ).toEqual(['page-b', 'page-c', 'page-d', 'page-e']);
   });
 });
@@ -78,7 +86,7 @@ describe('Note Title', () => {
     const graph = new NoteGraph();
     const note = graph.setNote(createNoteFromMarkdown('/page-a.md', pageA));
 
-    const pageANoteTitle = graph.getNote(note.id)!.title;
+    const pageANoteTitle = graph.getNote(note.uri)!.title;
     expect(pageANoteTitle).toBe('Page A');
   });
 
@@ -93,7 +101,7 @@ This file has no heading.
       )
     );
 
-    const pageANoteTitle = graph.getNote(note.id)!.title;
+    const pageANoteTitle = graph.getNote(note.uri)!.title;
     expect(pageANoteTitle).toEqual('page-d');
   });
 
@@ -113,7 +121,7 @@ date: 20-12-12
       )
     );
 
-    const pageENoteTitle = graph.getNote(note.id)!.title;
+    const pageENoteTitle = graph.getNote(note.uri)!.title;
     expect(pageENoteTitle).toBe('Note Title');
   });
 
@@ -151,7 +159,7 @@ date: 20-12-12
       date: '20-12-12',
     };
 
-    const actual: any = graph.getNote(note.id)!.properties;
+    const actual: any = graph.getNote(note.uri)!.properties;
 
     expect(actual.title).toBe(expected.title);
     expect(actual.date).toBe(expected.date);
@@ -173,7 +181,7 @@ date: 20-12-12
 
     const expected = {};
 
-    const actual = graph.getNote(note.id)!.properties;
+    const actual = graph.getNote(note.uri)!.properties;
 
     expect(actual).toEqual(expected);
   });
@@ -196,7 +204,7 @@ title: - one
 
     const expected = {};
 
-    const actual = graph.getNote(note.id)!.properties;
+    const actual = graph.getNote(note.uri)!.properties;
 
     expect(actual).toEqual(expected);
   });
@@ -211,7 +219,7 @@ describe('wikilinks definitions', () => {
     graph.setNote(createNoteFromMarkdown('/dir1/page-b.md', pageB));
     graph.setNote(createNoteFromMarkdown('/dir1/page-c.md', pageC));
 
-    const noExtRefs = createMarkdownReferences(graph, noteA.id, false);
+    const noExtRefs = createMarkdownReferences(graph, noteA.uri, false);
     expect(noExtRefs.map(r => r.url)).toEqual(['page-b', 'page-c']);
   });
 
@@ -223,7 +231,7 @@ describe('wikilinks definitions', () => {
     graph.setNote(createNoteFromMarkdown('/dir1/page-b.md', pageB));
     graph.setNote(createNoteFromMarkdown('/dir1/page-c.md', pageC));
 
-    const extRefs = createMarkdownReferences(graph, noteA.id, true);
+    const extRefs = createMarkdownReferences(graph, noteA.uri, true);
     expect(extRefs.map(r => r.url)).toEqual(['page-b.md', 'page-c.md']);
   });
 
@@ -235,7 +243,7 @@ describe('wikilinks definitions', () => {
     graph.setNote(createNoteFromMarkdown('/dir2/page-b.md', pageB));
     graph.setNote(createNoteFromMarkdown('/dir3/page-c.md', pageC));
 
-    const extRefs = createMarkdownReferences(graph, noteA.id, true);
+    const extRefs = createMarkdownReferences(graph, noteA.uri, true);
     expect(extRefs.map(r => r.url)).toEqual([
       '../dir2/page-b.md',
       '../dir3/page-c.md',

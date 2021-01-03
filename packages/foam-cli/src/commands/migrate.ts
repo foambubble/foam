@@ -66,7 +66,7 @@ Successfully generated link references and heading!
         if (note.title != null) {
           const kebabCasedFileName = getKebabCaseFileName(note.title);
           if (kebabCasedFileName) {
-            return renameFile(note.source.uri, kebabCasedFileName);
+            return renameFile(note.uri, kebabCasedFileName);
           }
         }
         return Promise.resolve(null);
@@ -100,7 +100,7 @@ Successfully generated link references and heading!
           file = definitions ? applyTextEdit(file, definitions) : file;
 
           if (heading || definitions) {
-            return writeFileToDisk(note.source.uri, file);
+            return writeFileToDisk(note.uri, file);
           }
 
           return Promise.resolve(null);

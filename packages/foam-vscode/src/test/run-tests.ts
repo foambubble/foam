@@ -1,5 +1,6 @@
 import * as path from "path";
-
+import fs from "fs";
+import os from "os";
 import { runTests } from "vscode-test";
 
 async function main() {
@@ -12,11 +13,13 @@ async function main() {
     // Passed to --extensionTestsPath
     const extensionTestsPath = path.resolve(__dirname, "./suite");
 
+    const tmpWorkspaceDir = fs.mkdtempSync(path.join(os.tmpdir(), "foam-"));
+
     // Download VS Code, unzip it and run the integration test
     await runTests({
       extensionDevelopmentPath,
       extensionTestsPath,
-      launchArgs: ["--disable-extensions"],
+      launchArgs: [tmpWorkspaceDir, "--disable-extensions"],
     });
   } catch (err) {
     console.error("Failed to run tests");

@@ -182,6 +182,7 @@ If that sounds like something you're interested in, I'd love to have you along o
     <td align="center"><a href="https://mcluck.tech"><img src="https://avatars1.githubusercontent.com/u/1753801?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Mike Cluck</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=MCluck90" title="Code">💻</a></td>
     <td align="center"><a href="http://brandonpugh.com"><img src="https://avatars1.githubusercontent.com/u/684781?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Brandon Pugh</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=bpugh" title="Code">💻</a></td>
     <td align="center"><a href="https://max.davitt.me"><img src="https://avatars1.githubusercontent.com/u/27709025?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Max Davitt</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=themaxdavitt" title="Documentation">📖</a></td>
+    <td align="center"><a href="http://briananglin.me"><img src="https://avatars3.githubusercontent.com/u/2637602?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Brian Anglin</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=anglinb" title="Documentation">📖</a></td>
   </tr>
 </table>
 

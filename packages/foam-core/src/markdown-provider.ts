@@ -74,12 +74,15 @@ const wikilinkPlugin: ParserPlugin = {
     }
     if (node.type === 'link') {
       const targetUri = (node as any).url;
-      const label = getTextFromChildren(node);
-      note.links.push({
-        type: 'link',
-        target: targetUri,
-        label: label,
-      });
+      const uri = URI.parse(targetUri);
+      if (uri.scheme === 'file') {
+        const label = getTextFromChildren(node);
+        note.links.push({
+          type: 'link',
+          target: targetUri,
+          label: label,
+        });
+      }
     }
   },
 };

@@ -59,24 +59,20 @@ describe('Markdown loader', () => {
     ).toEqual(['page-a', 'page-b', 'page-c', 'page-d', 'page-e']);
   });
 
-  it('Parses external links correctly', () => {
+  it('Ingores external links', () => {
     const note = createNoteFromMarkdown(
       '/path/to/page-a.md',
       `
 this is a [link to google](https://www.google.com)
 `
     );
-    expect(note.links.length).toEqual(1);
-    const link = note.links[0] as DirectLink;
-    expect(link.type).toEqual('link');
-    expect(link.label).toEqual('link to google');
-    expect(link.target).toEqual('https://www.google.com');
+    expect(note.links.length).toEqual(0);
   });
 
-  it('Parses relative internal links correctly', () => {
+  it('Parses internal links correctly', () => {
     const note = createNoteFromMarkdown(
       '/path/to/page-a.md',
-      'this is a relative [link to page b](../doc/page-b.md)'
+      'this is a [link to page b](../doc/page-b.md)'
     );
     expect(note.links.length).toEqual(1);
     const link = note.links[0] as DirectLink;
@@ -88,13 +84,13 @@ this is a [link to google](https://www.google.com)
   it('Parses links that have formatting in label', () => {
     const note = createNoteFromMarkdown(
       '/path/to/page-a.md',
-      'this is [**link** with __formatting__](https://github.com/)'
+      'this is [**link** with __formatting__](../doc/page-b.md)'
     );
     expect(note.links.length).toEqual(1);
     const link = note.links[0] as DirectLink;
     expect(link.type).toEqual('link');
     expect(link.label).toEqual('link with formatting');
-    expect(link.target).toEqual('https://github.com/');
+    expect(link.target).toEqual('../doc/page-b.md');
   });
 
   it('Parses wikilinks correctly', () => {

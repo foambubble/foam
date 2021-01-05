@@ -69,6 +69,16 @@ this is a [link to google](https://www.google.com)
     expect(note.links.length).toEqual(0);
   });
 
+  it('Ignores references to sections in the same file', () => {
+    const note = createNoteFromMarkdown(
+      '/path/to/page-a.md',
+      `
+this is a [link to intro](#introduction)
+`
+    );
+    expect(note.links.length).toEqual(0);
+  });
+
   it('Parses internal links correctly', () => {
     const note = createNoteFromMarkdown(
       '/path/to/page-a.md',

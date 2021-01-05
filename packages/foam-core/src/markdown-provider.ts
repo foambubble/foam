@@ -11,7 +11,12 @@ import os from 'os';
 import { NoteGraphAPI } from './model/note-graph';
 import { NoteLinkDefinition, Note, NoteParser } from './model/note';
 import { dropExtension, extractHashtags, extractTagsFromProp } from './utils';
-import { uriToSlug, computeRelativePath, getBasename } from './utils/uri';
+import {
+  uriToSlug,
+  computeRelativePath,
+  getBasename,
+  parseUri,
+} from './utils/uri';
 import { ParserPlugin } from './plugins';
 import { Logger } from './utils/log';
 import { URI } from './common/uri';
@@ -74,15 +79,16 @@ const wikilinkPlugin: ParserPlugin = {
     }
     if (node.type === 'link') {
       const targetUri = (node as any).url;
-      const uri = URI.parse(targetUri);
-      if (uri.scheme === 'file') {
-        const label = getTextFromChildren(node);
-        note.links.push({
-          type: 'link',
-          target: targetUri,
-          label: label,
-        });
+      const uri = parseUri(note.uri, targetUri);
+      if (uri.scheme !== 'file' || uri.path === note.uri.path) {
+        return;
       }
+      const label = getTextFromChildren(node);
+      note.links.push({
+        type: 'link',
+        target: targetUri,
+        label: label,
+      });
     }
   },
 };

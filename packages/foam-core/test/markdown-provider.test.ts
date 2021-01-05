@@ -2,6 +2,7 @@ import {
   createMarkdownParser,
   createMarkdownReferences,
 } from '../src/markdown-provider';
+import { DirectLink } from '../src/model/note';
 import { NoteGraph } from '../src/model/note-graph';
 import { ParserPlugin } from '../src/plugins';
 import { URI } from '../src/common/uri';
@@ -56,6 +57,32 @@ describe('Markdown loader', () => {
         .map(uriToSlug)
         .sort()
     ).toEqual(['page-a', 'page-b', 'page-c', 'page-d', 'page-e']);
+  });
+
+  it('Parses external links correctly', () => {
+    const note = createNoteFromMarkdown(
+      '/path/to/page-a.md',
+      `
+this is a [link to google](https://www.google.com)
+`
+    );
+    expect(note.links.length).toEqual(1);
+    const link = note.links[0] as DirectLink;
+    expect(link.type).toEqual('link');
+    expect(link.label).toEqual('link to google');
+    expect(link.target).toEqual('https://www.google.com');
+  });
+
+  it('Parses relative internal links correctly', () => {
+    const note = createNoteFromMarkdown(
+      '/path/to/page-a.md',
+      'this is a relative [link to page b](../doc/page-b.md)'
+    );
+    expect(note.links.length).toEqual(1);
+    const link = note.links[0] as DirectLink;
+    expect(link.type).toEqual('link');
+    expect(link.label).toEqual('link to page b');
+    expect(link.target).toEqual('../doc/page-b.md');
   });
 
   it('Parses wikilinks correctly', () => {

@@ -15,8 +15,13 @@ export interface WikiLink {
   position: Position;
 }
 
-// at the moment we only model wikilink
-export type NoteLink = WikiLink;
+export interface DirectLink {
+  type: 'link';
+  label: string;
+  target: string;
+}
+
+export type NoteLink = WikiLink | DirectLink;
 
 export interface NoteLinkDefinition {
   label: string;

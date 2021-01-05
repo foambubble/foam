@@ -10,7 +10,12 @@ import os from 'os';
 import { NoteGraphAPI } from './model/note-graph';
 import { NoteLinkDefinition, Note, NoteParser } from './model/note';
 import { dropExtension, extractHashtags, extractTagsFromProp } from './utils';
-import { uriToSlug, computeRelativePath, getBasename } from './utils/uri';
+import {
+  uriToSlug,
+  computeRelativePath,
+  getBasename,
+  parseUri,
+} from './utils/uri';
 import { ParserPlugin } from './plugins';
 import { Logger } from './utils/log';
 import { URI } from './common/uri';
@@ -53,6 +58,15 @@ const wikilinkPlugin: ParserPlugin = {
         type: 'wikilink',
         slug: node.value as string,
         position: node.position!,
+      });
+    }
+    if (node.type === 'link') {
+      const targetUri = (node as any).url;
+      const label = (node as any).children[0].value;
+      note.links.push({
+        type: 'link',
+        target: targetUri,
+        label: label,
       });
     }
   },
@@ -251,6 +265,9 @@ export function createMarkdownReferences(
   return graph
     .getForwardLinks(noteUri)
     .map(link => {
+      if (link.link.type !== 'wikilink') {
+        return null;
+      }
       let target = graph.getNote(link.to);
       // if we don't find the target by ID we search the graph by slug
       if (!target) {

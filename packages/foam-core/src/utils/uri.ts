@@ -47,7 +47,13 @@ export const computeRelativeURI = (
 export const parseUri = (reference: URI, value: string): URI => {
   let uri = URI.parse(value);
   if (uri.scheme === 'file' && !value.startsWith('/')) {
-    uri = computeRelativeURI(reference, value);
+    const [path, fragment] = value.split('#');
+    uri = path.length > 0 ? computeRelativeURI(reference, path) : reference;
+    if (fragment) {
+      uri = uri.with({
+        fragment: fragment,
+      });
+    }
   }
   return uri;
 };

@@ -4,6 +4,7 @@ import {
   hashURI,
   computeRelativeURI,
   extractHashtags,
+  parseUri,
 } from '../src/utils';
 import { URI } from '../src/common/uri';
 import { Logger } from '../src/utils/log';
@@ -49,6 +50,27 @@ describe('URI utils', () => {
     expect(
       computeRelativeURI(URI.file('/my/file.markdown'), '../hello')
     ).toEqual(URI.file('/hello.markdown'));
+  });
+
+  describe('URI parsing', () => {
+    const base = URI.file('/path/to/file.md');
+    test.each([
+      ['https://www.google.com', URI.parse('https://www.google.com')],
+      ['/path/to/a/file.md', URI.file('/path/to/a/file.md')],
+      ['../relative/file.md', URI.file('/path/relative/file.md')],
+      ['#section', base.with({ fragment: 'section' })],
+      [
+        '../relative/file.md#section',
+        URI.parse('file:/path/relative/file.md#section'),
+      ],
+    ])('URI Parsing (%s) - %s', (input, exp) => {
+      const result = parseUri(base, input);
+      expect(result.scheme).toEqual(exp.scheme);
+      expect(result.authority).toEqual(exp.authority);
+      expect(result.path).toEqual(exp.path);
+      expect(result.query).toEqual(exp.query);
+      expect(result.fragment).toEqual(exp.fragment);
+    });
   });
 });
 

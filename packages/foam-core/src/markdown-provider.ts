@@ -11,15 +11,26 @@ import os from 'os';
 import { NoteGraphAPI } from './model/note-graph';
 import { NoteLinkDefinition, Note, NoteParser } from './model/note';
 import { dropExtension, extractHashtags, extractTagsFromProp } from './utils';
-import {
-  uriToSlug,
-  computeRelativePath,
-  getBasename,
-  parseUri,
-} from './utils/uri';
+import { uriToSlug, computeRelativePath, getBasename } from './utils/uri';
 import { ParserPlugin } from './plugins';
 import { Logger } from './utils/log';
 import { URI } from './common/uri';
+
+/**
+ * Traverses all the children of the given node, extracts
+ * the text from them, and returns it concatenated.
+ *
+ * @param root the node from which to start collecting text
+ */
+const getTextFromChildren = (root: Node): string => {
+  let text = '';
+  visit(root, 'text', node => {
+    if (node.type === 'text') {
+      text = text + node.value;
+    }
+  });
+  return text;
+};
 
 const tagsPlugin: ParserPlugin = {
   name: 'tags',
@@ -49,16 +60,6 @@ const titlePlugin: ParserPlugin = {
       note.title = getBasename(note.uri);
     }
   },
-};
-
-const getTextFromChildren = (root: Node): string => {
-  let text = '';
-  visit(root, 'text', node => {
-    if (node.type === 'text') {
-      text = text + node.value;
-    }
-  });
-  return text;
 };
 
 const wikilinkPlugin: ParserPlugin = {

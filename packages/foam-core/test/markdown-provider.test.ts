@@ -85,6 +85,18 @@ this is a [link to google](https://www.google.com)
     expect(link.target).toEqual('../doc/page-b.md');
   });
 
+  it('Parses links that have formatting in label', () => {
+    const note = createNoteFromMarkdown(
+      '/path/to/page-a.md',
+      'this is [**link** with __formatting__](https://github.com/)'
+    );
+    expect(note.links.length).toEqual(1);
+    const link = note.links[0] as DirectLink;
+    expect(link.type).toEqual('link');
+    expect(link.label).toEqual('link with formatting');
+    expect(link.target).toEqual('https://github.com/');
+  });
+
   it('Parses wikilinks correctly', () => {
     const graph = new NoteGraph();
     const noteA = graph.setNote(createNoteFromMarkdown('/page-a.md', pageA));

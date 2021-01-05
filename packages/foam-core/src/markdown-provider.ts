@@ -1,3 +1,4 @@
+import { Node } from 'unist';
 import unified from 'unified';
 import markdownParse from 'remark-parse';
 import wikiLinkPlugin from 'remark-wiki-link';
@@ -50,6 +51,16 @@ const titlePlugin: ParserPlugin = {
   },
 };
 
+const getTextFromChildren = (root: Node): string => {
+  let text = '';
+  visit(root, 'text', node => {
+    if (node.type === 'text') {
+      text = text + node.value;
+    }
+  });
+  return text;
+};
+
 const wikilinkPlugin: ParserPlugin = {
   name: 'wikilink',
   visit: (node, note) => {
@@ -62,7 +73,7 @@ const wikilinkPlugin: ParserPlugin = {
     }
     if (node.type === 'link') {
       const targetUri = (node as any).url;
-      const label = (node as any).children[0].value;
+      const label = getTextFromChildren(node);
       note.links.push({
         type: 'link',
         target: targetUri,

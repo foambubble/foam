@@ -82,7 +82,7 @@ A #recipe is a guide, tip or strategy for getting the most out of your Foam work
 ## Workflow
 
 - Capture notes from Drafts app on iOS [[capture-notes-with-drafts-pro]]
-- Capture notes from iOS Shortcuts [[capture-notes-with-shortcuts-and-github-actions.md]]
+- Capture notes from iOS Shortcuts [[capture-notes-with-shortcuts-and-github-actions]]
 
 ## Creative ideas
 

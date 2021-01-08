@@ -118,7 +118,6 @@ async function createGraphPanel(foam: Foam, context: vscode.ExtensionContext) {
           const noteUri = vscode.Uri.parse(message.payload);
           const selectedNote = foam.notes.getNote(noteUri);
 
-          const doc = await vscode.workspace.openTextDocument(
           if (isSome(selectedNote)) {
             const doc = await vscode.workspace.openTextDocument(
               selectedNote.uri.path // vscode doesn't recognize the URI directly

@@ -15,8 +15,43 @@ const templatesDir = `${workspace.workspaceFolders[0].uri.path}/.foam/templates`
 
 async function getTemplates(): Promise<string[]> {
   const templates = await workspace.findFiles('.foam/templates/**.md');
-  // parse title, not whole file!
-  return templates.map(template => path.basename(template.path));
+  return templates.map(template => path.basename(template.fsPath));
+}
+
+async function createNoteFromTemplate(): Promise<void> {
+  const templates = await getTemplates();
+  const activeFile = window.activeTextEditor?.document?.fileName;
+  const currentDir =
+    activeFile !== undefined
+      ? path.dirname(activeFile)
+      : workspace.workspaceFolders[0].uri.fsPath;
+  const selectedTemplate = await window.showQuickPick(templates);
+  const defaultFileName = 'new-note.md';
+  const defaultDir = `${currentDir}${path.sep}${defaultFileName}`;
+  const filename = await window.showInputBox({
+    prompt: `Enter the filename for the new note`,
+    value: defaultDir,
+    valueSelection: [
+      defaultDir.length - defaultFileName.length,
+      defaultDir.length - 3,
+    ],
+    validateInput: value =>
+      value.length ? undefined : 'Please enter a value!',
+  });
+  if (filename === undefined) {
+    return;
+  }
+
+  const templateText = await workspace.fs.readFile(
+    Uri.file(`${templatesDir}/${selectedTemplate}`)
+  );
+  const snippet = new SnippetString(templateText.toString());
+  await workspace.fs.writeFile(
+    Uri.file(filename),
+    new TextEncoder().encode('')
+  );
+  await focusNote(filename, true);
+  await window.activeTextEditor.insertSnippet(snippet);
 }
 
 const feature: FoamFeature = {
@@ -24,41 +59,7 @@ const feature: FoamFeature = {
     context.subscriptions.push(
       commands.registerCommand(
         'foam-vscode.create-note-from-template',
-        async () => {
-          const templates = await getTemplates();
-          const activeFile = window.activeTextEditor?.document?.fileName;
-          const currentDir =
-            activeFile !== undefined
-              ? path.dirname(activeFile)
-              : workspace.workspaceFolders[0].uri.path;
-          const selectedTemplate = await window.showQuickPick(templates);
-          const folder = await window.showInputBox({
-            prompt: `Where should the template be created?`,
-            value: currentDir,
-          });
-
-          let filename = await window.showInputBox({
-            prompt: `Enter the filename for the new note`,
-            value: ``,
-            validateInput: value =>
-              value.length ? undefined : 'Please enter a value!',
-          });
-          filename = path.extname(filename).length
-            ? filename
-            : `${filename}.md`;
-          const targetFile = path.join(folder, filename);
-
-          const templateText = await workspace.fs.readFile(
-            Uri.file(`${templatesDir}/${selectedTemplate}`)
-          );
-          const snippet = new SnippetString(templateText.toString());
-          await workspace.fs.writeFile(
-            Uri.file(targetFile),
-            new TextEncoder().encode('')
-          );
-          await focusNote(targetFile, true);
-          await window.activeTextEditor.insertSnippet(snippet);
-        }
+        createNoteFromTemplate
       )
     );
   },

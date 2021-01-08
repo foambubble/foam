@@ -58,12 +58,43 @@ async function createNoteFromTemplate(): Promise<void> {
   await window.activeTextEditor.insertSnippet(snippet);
 }
 
+async function createNewTemplate(): Promise<void> {
+  const defaultFileName = 'new-template.md';
+  const templatesDir = path.join(
+    workspace.workspaceFolders[0].uri.fsPath,
+    '.foam',
+    'templates',
+    defaultFileName
+  );
+  const filename = await window.showInputBox({
+    prompt: `Enter the filename for the new note`,
+    value: templatesDir,
+    valueSelection: [
+      templatesDir.length - defaultFileName.length,
+      templatesDir.length - 3,
+    ],
+    validateInput: value =>
+      value.length ? undefined : 'Please enter a value!',
+  });
+  await workspace.fs.writeFile(
+    Uri.file(filename),
+    new TextEncoder().encode('')
+  );
+  await focusNote(filename, true);
+}
+
 const feature: FoamFeature = {
   activate: (context: ExtensionContext) => {
     context.subscriptions.push(
       commands.registerCommand(
         'foam-vscode.create-note-from-template',
         createNoteFromTemplate
+      )
+    );
+    context.subscriptions.push(
+      commands.registerCommand(
+        'foam-vscode.create-new-template',
+        createNewTemplate
       )
     );
   },

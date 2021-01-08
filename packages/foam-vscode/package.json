@@ -121,6 +121,10 @@
         "command": "foam-vscode.group-orphans-off",
         "title": "Foam: Don't Group Orphans",
         "icon": "$(list-flat)"
+      },
+      {
+        "command": "foam-vscode.create-new-template",
+        "title": "Foam: Create New Template"
       }
     ],
     "configuration": {

@@ -26,7 +26,7 @@ export const createTestNote = (params: {
   uri: string;
   title?: string;
   definitions?: NoteLinkDefinition[];
-  links?: { slug: string }[];
+  links?: Array<{ slug: string } | { to: string }>;
   text?: string;
 }): Note => {
   return {
@@ -36,12 +36,20 @@ export const createTestNote = (params: {
     definitions: params.definitions ?? [],
     tags: new Set(),
     links: params.links
-      ? params.links.map(link => ({
-          type: 'wikilink',
-          slug: link.slug,
-          position: position,
-          text: 'link text',
-        }))
+      ? params.links.map(link =>
+          'slug' in link
+            ? {
+                type: 'wikilink',
+                slug: link.slug,
+                position: position,
+                text: 'link text',
+              }
+            : {
+                type: 'link',
+                target: link.to,
+                label: 'link text',
+              }
+        )
       : [],
     source: {
       eol: eol,
@@ -105,6 +113,39 @@ describe('Note graph', () => {
     ).toEqual(['page-b']);
   });
 
+  it('Detects backlinks of direct links', () => {
+    const graph = new NoteGraph();
+
+    const noteA = createTestNote({
+      uri: '/path/to/page-a.md',
+    });
+    // connected via absolute path
+    const noteB = createTestNote({
+      uri: '/page-b.md',
+      links: [{ to: noteA.uri.path }],
+    });
+    // connected via relative path
+    const noteC = createTestNote({
+      uri: '/path/docs/page-c.md',
+      links: [{ to: '../to/page-a.md' }],
+    });
+    // not connected - wrong path
+    const noteD = createTestNote({
+      uri: '/path/docs/page-d.md',
+      links: [{ to: '../to/another/page-a.md' }],
+    });
+    graph.setNote(noteA);
+    graph.setNote(noteB);
+    graph.setNote(noteC);
+    graph.setNote(noteD);
+
+    expect(
+      graph
+        .getBacklinks(noteA.uri)
+        .map(link => graph.getNote(link.from)!.uri)
+        .map(uriToSlug)
+    ).toEqual(['page-b', 'page-c']);
+  });
   it('Returns null when accessing non-existing node', () => {
     const graph = new NoteGraph();
     graph.setNote(createTestNote({ uri: 'page-a' }));
@@ -211,13 +252,13 @@ describe('Note graph', () => {
 
     graph.deleteNote(noteA.uri);
     expect(
-      graph.getForwardLinks(noteB.uri).map(link => link?.link?.slug)
+      graph.getForwardLinks(noteB.uri).map(link => (link as any)?.link?.slug)
     ).toEqual(['page-a']);
     expect(graph.getNote(noteA.uri)).toBeNull();
 
     graph.deleteNote(noteC.uri);
     expect(
-      graph.getForwardLinks(noteC.uri).map(link => link?.link?.slug)
+      graph.getForwardLinks(noteC.uri).map(link => (link as any)?.link?.slug)
     ).toEqual([]);
     expect(
       graph

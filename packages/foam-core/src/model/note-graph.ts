@@ -1,7 +1,13 @@
 import { Graph } from 'graphlib';
 import { URI } from '../common/uri';
 import { Note, NoteLink } from '../model/note';
-import { computeRelativeURI, nameToSlug, isSome, uriToSlug } from '../utils';
+import {
+  computeRelativeURI,
+  nameToSlug,
+  isSome,
+  uriToSlug,
+  parseUri,
+} from '../utils';
 import { Event, Emitter } from '../common/event';
 
 export interface GraphConnection {
@@ -58,29 +64,28 @@ export class NoteGraph implements NoteGraphAPI {
     if (isSome(oldNote)) {
       this.removeForwardLinks(note.uri);
     }
-    const graphNote: Note = {
-      ...note,
-    };
-    this.graph.setNode(uriToId(note.uri), graphNote);
+    this.graph.setNode(uriToId(note.uri), note);
     note.links.forEach(link => {
-      const relativePath =
-        note.definitions.find(def => def.label === link.slug)?.url ?? link.slug;
-      const targetUri = computeRelativeURI(note.uri, relativePath);
+      let targetUri = null;
+      if (link.type === 'wikilink') {
+        const definitionUri = note.definitions.find(
+          def => def.label === link.slug
+        )?.url;
+        targetUri = computeRelativeURI(note.uri, definitionUri ?? link.slug);
+      } else {
+        targetUri = parseUri(note.uri, link.target);
+      }
       const connection: GraphConnection = {
-        from: graphNote.uri,
+        from: note.uri,
         to: targetUri,
         link: link,
       };
-      this.graph.setEdge(
-        uriToId(graphNote.uri),
-        uriToId(targetUri),
-        connection
-      );
+      this.graph.setEdge(uriToId(note.uri), uriToId(targetUri), connection);
     });
     isSome(oldNote)
-      ? this.onDidUpdateNoteEmitter.fire(graphNote)
-      : this.onDidAddNoteEmitter.fire(graphNote);
-    return graphNote;
+      ? this.onDidUpdateNoteEmitter.fire(note)
+      : this.onDidAddNoteEmitter.fire(note);
+    return note;
   }
 
   public deleteNote(noteUri: URI): Note | null {

@@ -68,7 +68,10 @@ function generateGraphData(foam: Foam) {
           id: link.to,
           type: "nonExistingNote",
           uri: `virtual:${link.to}`,
-          title: cutTitle(link.link.slug)
+          title:
+            "slug" in link.link
+              ? cutTitle(link.link.slug)
+              : cutTitle(link.link.label)
         };
       }
       graph.edges.add({
@@ -115,10 +118,12 @@ async function createGraphPanel(foam: Foam, context: vscode.ExtensionContext) {
           const noteUri = vscode.Uri.parse(message.payload);
           const selectedNote = foam.notes.getNote(noteUri);
 
-          const doc = await vscode.workspace.openTextDocument(
-            selectedNote.uri.path // vscode doesn't recognize the URI directly
-          );
-          vscode.window.showTextDocument(doc, vscode.ViewColumn.One);
+          if (isSome(selectedNote)) {
+            const doc = await vscode.workspace.openTextDocument(
+              selectedNote.uri.path // vscode doesn't recognize the URI directly
+            );
+            vscode.window.showTextDocument(doc, vscode.ViewColumn.One);
+          }
           break;
 
         case "error":

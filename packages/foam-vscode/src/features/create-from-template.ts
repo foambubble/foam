@@ -26,6 +26,10 @@ async function createNoteFromTemplate(): Promise<void> {
       ? path.dirname(activeFile)
       : workspace.workspaceFolders[0].uri.fsPath;
   const selectedTemplate = await window.showQuickPick(templates);
+  if (selectedTemplate === undefined) {
+    return;
+  }
+
   const defaultFileName = 'new-note.md';
   const defaultDir = `${currentDir}${path.sep}${defaultFileName}`;
   const filename = await window.showInputBox({

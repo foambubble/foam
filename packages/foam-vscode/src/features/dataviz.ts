@@ -3,7 +3,7 @@ import * as path from "path";
 import { FoamFeature } from "../types";
 import { Foam, Logger } from "foam-core";
 import { TextDecoder } from "util";
-import { getTitleMaxLength } from "../settings";
+import { getGraphStyle, getTitleMaxLength } from "../settings";
 import { isSome } from "../utils";
 
 const feature: FoamFeature = {
@@ -110,6 +110,15 @@ async function createGraphPanel(foam: Foam, context: vscode.ExtensionContext) {
   panel.webview.onDidReceiveMessage(
     async message => {
       switch (message.type) {
+        case "webviewStyleRequest":
+          const style = getGraphStyle();
+          console.log(style)
+          panel.webview.postMessage({
+            type: "graphStyle",
+            payload: style,
+          });
+          break;
+
         case "webviewDidLoad":
           updateGraph(panel, foam);
           break;

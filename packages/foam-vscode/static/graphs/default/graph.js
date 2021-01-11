@@ -1,28 +1,64 @@
 const CONTAINER_ID = "graph";
 
-function getStyle(name, fallback) {
-  return (
-    getComputedStyle(document.documentElement).getPropertyValue(name) ||
-    fallback
-  );
-}
-
-const style = {
-  background: getStyle(`--vscode-panel-background`, "#202020"),
-  fontSize: parseInt(getStyle(`--vscode-font-size`, 12)) - 2,
-  highlightedForeground: getStyle(
-    "--vscode-list-highlightForeground",
-    "#f9c74f"
-  ),
+/** The style fallback. This values should only be set when all else failed. */
+const styleFallback = {
+  background: "#202020",
+  fontSize: 12,
+  highlightedForeground: "#f9c74f",
   node: {
-    note: getStyle("--vscode-editor-foreground", "#277da1"),
-    nonExistingNote: getStyle(
-      "--vscode-list-deemphasizedForeground",
-      "#545454"
-    ),
-    unknown: getStyle("--vscode-editor-foreground", "#f94144")
+    note: "#277da1",
+    nonExistingNote: "#545454",
+    unknown: "#f94144"
   }
 };
+
+/** The style object.
+ * It is global to cope with the previous usage,
+ * it tries to be set using VSCode values,
+ * in the case it fails, use the fallback style values.
+ */
+let style = {
+  background: getStyle(`--vscode-panel-background`)
+    ?? styleFallback.background,
+  fontSize: parseInt(getStyle(`--vscode-font-size`) ?? styleFallback.fontSize) - 2,
+  highlightedForeground: getStyle("--vscode-list-highlightForeground")
+    ?? styleFallback.highlightedForeground,
+  node: {
+    note: getStyle("--vscode-editor-foreground")
+      ?? styleFallback.node.note,
+    nonExistingNote: getStyle("--vscode-list-deemphasizedForeground")
+      ?? styleFallback.node.nonExistingNote,
+    unknown: getStyle("--vscode-editor-foreground")
+      ?? styleFallback.node.unknown
+  }
+}
+
+function getStyle(name) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name);
+}
+
+function updateStyle(newStyle) {
+  if (!newStyle) {
+    return;
+  }
+  let node = style.node;
+  if (newStyle.node !== undefined
+    && newStyle.node !== null
+    && JSON.stringify(newStyle.node) !== JSON.stringify({})
+  ) {
+    node = {
+      note: newStyle.node.note ?? style.node.note,
+      nonExistingNote: newStyle.node.nonExistingNote ?? style.node.nonExistingNote,
+      unknown: newStyle.node.unknown ?? style.node.unknown,
+    }
+  }
+  style = {
+    background: newStyle.background ?? style.background,
+    fontSize: newStyle.fontSize ?? style.fontSize,
+    highlightedForeground: newStyle.highlightedForeground ?? style.highlightedForeground,
+    node: node,
+  }
+}
 
 const sizeScale = d3
   .scaleLinear()
@@ -264,12 +300,12 @@ try {
   const vscode = acquireVsCodeApi();
 
   window.onload = () => {
-    initDataviz(vscode);
-    console.log("ready");
+    console.log("post webviewStyleRequest");
     vscode.postMessage({
-      type: "webviewDidLoad"
+      type: "webviewStyleRequest",
     });
   };
+
   window.addEventListener("error", error => {
     vscode.postMessage({
       type: "error",
@@ -300,6 +336,15 @@ try {
           Actions.selectNode(noteId);
         }
         break;
+      case "graphStyle":
+        const style = message.payload;
+        updateStyle(style);
+        console.log("received graphStyle message");
+        initDataviz(vscode);
+        console.log("ready");
+        vscode.postMessage({
+          type: "webviewDidLoad"
+        });
     }
   });
 } catch {

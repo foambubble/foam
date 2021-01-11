@@ -160,16 +160,7 @@
         "foam.graph.customStyle": {
           "type": "object",
           "description": "Custom graph styling settings.",
-          "default": {
-            "background": "#202020",
-            "fontSize": 12,
-            "highlightedForeground": "#f9c74f",
-            "node": {
-              "note": "#277da1",
-              "nonExistingNote": "#545454",
-              "unknown": "#f94144"
-            }
-          }
+          "default": {}
         }
       }
     },

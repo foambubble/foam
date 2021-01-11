@@ -26,7 +26,12 @@ export function getIgnoredFilesSetting(): GlobPattern[] {
 
 /** Retrieves the maximum length for a Graph node title. */
 export function getTitleMaxLength(): number {
-  return workspace.getConfiguration("foam.graph").get("titleMaxLength");
+  return workspace.getConfiguration('foam.graph').get('titleMaxLength');
+}
+
+/** Retrive the graph's style object */
+export function getGraphStyle(): object {
+  return workspace.getConfiguration('foam.graph').get('customStyle');
 }
 
 export function getFoamLoggerLevel(): LogLevel {

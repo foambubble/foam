@@ -156,6 +156,20 @@
           "type": "number",
           "default": 24,
           "description": "The maximum title length before being abbreviated. Set to 0 or less to disable."
+        },
+        "foam.graph.customStyle": {
+          "type": "object",
+          "description": "Custom graph styling settings.",
+          "default": {
+            "background": "#202020",
+            "fontSize": 12,
+            "highlightedForeground": "#f9c74f",
+            "node": {
+              "note": "#277da1",
+              "nonExistingNote": "#545454",
+              "unknown": "#f94144"
+            }
+          }
         }
       }
     },

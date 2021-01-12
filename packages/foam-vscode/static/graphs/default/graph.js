@@ -12,45 +12,8 @@ const styleFallback = {
   }
 };
 
-/** The style object.
- * It is global to cope with the previous usage,
- * it tries to be set using VSCode values,
- * in the case it fails, use the fallback style values.
- */
-let style = {
-  background: getStyle(`--vscode-panel-background`)
-    ?? styleFallback.background,
-  fontSize: parseInt(getStyle(`--vscode-font-size`) ?? styleFallback.fontSize) - 2,
-  highlightedForeground: getStyle("--vscode-list-highlightForeground")
-    ?? styleFallback.highlightedForeground,
-  node: {
-    note: getStyle("--vscode-editor-foreground")
-      ?? styleFallback.node.note,
-    nonExistingNote: getStyle("--vscode-list-deemphasizedForeground")
-      ?? styleFallback.node.nonExistingNote,
-    unknown: getStyle("--vscode-editor-foreground")
-      ?? styleFallback.node.unknown
-  }
-}
-
 function getStyle(name) {
   return getComputedStyle(document.documentElement).getPropertyValue(name);
-}
-
-function updateStyle(newStyle) {
-  if (!newStyle) {
-    return;
-  }
-  style = {
-    background: newStyle.background ?? style.background,
-    fontSize: newStyle.fontSize ?? style.fontSize,
-    highlightedForeground: newStyle.highlightedForeground ?? style.highlightedForeground,
-    node: {
-      note: newStyle.node?.note ?? style.node.note,
-      nonExistingNote: newStyle.node?.nonExistingNote ?? style.node.nonExistingNote,
-      unknown: newStyle.node?.unknown ?? style.node.unknown,
-    },
-  }
 }
 
 const sizeScale = d3
@@ -74,6 +37,25 @@ let model = {
   data: {
     nodes: [],
     links: []
+  },
+  /** The style property.
+   * It tries to be set using VSCode values,
+   * in the case it fails, use the fallback style values.
+   */
+  style: {
+    background: getStyle(`--vscode-panel-background`)
+      ?? styleFallback.background,
+    fontSize: parseInt(getStyle(`--vscode-font-size`) ?? styleFallback.fontSize) - 2,
+    highlightedForeground: getStyle("--vscode-list-highlightForeground")
+      ?? styleFallback.highlightedForeground,
+    node: {
+      note: getStyle("--vscode-editor-foreground")
+        ?? styleFallback.node.note,
+      nonExistingNote: getStyle("--vscode-list-deemphasizedForeground")
+        ?? styleFallback.node.nonExistingNote,
+      unknown: getStyle("--vscode-editor-foreground")
+        ?? styleFallback.node.unknown
+    }
   }
 };
 const graph = ForceGraph();
@@ -147,11 +129,32 @@ const Actions = {
   highlightNode: nodeId =>
     update(m => {
       m.hoverNode = nodeId;
-    })
+    }),
+  /** Applies a new style to the graph,
+   * missing elements are set to their existing values.
+   *
+   * @param {*} newStyle the style to be applied
+   */
+  updateStyle: newStyle => {
+    if (!newStyle) {
+      return;
+    }
+    model.style = {
+      background: newStyle.background ?? model.style.background,
+      fontSize: newStyle.fontSize ?? model.style.fontSize,
+      highlightedForeground: newStyle.highlightedForeground ?? model.style.highlightedForeground,
+      node: {
+        note: newStyle.node?.note ?? model.style.node.note,
+        nonExistingNote: newStyle.node?.nonExistingNote ?? model.style.node.nonExistingNote,
+        unknown: newStyle.node?.unknown ?? model.style.node.unknown,
+      },
+    }
+  }
 };
 
 function initDataviz(channel) {
   const elem = document.getElementById(CONTAINER_ID);
+  const style = model.style;
   graph(elem)
     .graphData(model.data)
     .backgroundColor(style.background)
@@ -221,6 +224,7 @@ function augmentGraphInfo(data) {
 
 function getNodeColor(nodeId, model) {
   const info = model.nodeInfo[nodeId];
+  const style = model.style;
   const typeFill = style.node[info.type || "unknown"];
   switch (getNodeState(nodeId, model)) {
     case "regular":
@@ -239,6 +243,7 @@ function getNodeColor(nodeId, model) {
 }
 
 function getLinkColor(link, model) {
+  const style = model.style;
   switch (getLinkState(link, model)) {
     case "regular":
       return d3.hsl(style.node.note).darker(2);
@@ -313,7 +318,6 @@ try {
 
   window.addEventListener("message", event => {
     const message = event.data;
-
     switch (message.type) {
       case "didUpdateGraphData":
         const graphData = augmentGraphInfo(message.payload);
@@ -330,7 +334,7 @@ try {
         break;
       case "didUpdateStyle":
         const style = message.payload;
-        updateStyle(style);
+        Actions.updateStyle(style);
         initDataviz(vscode);
         console.log("ready");
         vscode.postMessage({

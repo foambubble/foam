@@ -293,7 +293,6 @@ try {
   const vscode = acquireVsCodeApi();
 
   window.onload = () => {
-    console.log("post webviewStyleRequest");
     vscode.postMessage({
       type: "webviewStyleRequest",
     });
@@ -332,7 +331,6 @@ try {
       case "graphStyle":
         const style = message.payload;
         updateStyle(style);
-        console.log("received graphStyle message");
         initDataviz(vscode);
         console.log("ready");
         vscode.postMessage({

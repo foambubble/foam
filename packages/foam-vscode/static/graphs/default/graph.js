@@ -328,7 +328,7 @@ try {
           Actions.selectNode(noteId);
         }
         break;
-      case "graphStyle":
+      case "didUpdateStyle":
         const style = message.payload;
         updateStyle(style);
         initDataviz(vscode);

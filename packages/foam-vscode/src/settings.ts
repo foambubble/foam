@@ -31,7 +31,7 @@ export function getTitleMaxLength(): number {
 
 /** Retrive the graph's style object */
 export function getGraphStyle(): object {
-  return workspace.getConfiguration('foam.graph').get('customStyle');
+  return workspace.getConfiguration('foam.graph').get('style');
 }
 
 export function getFoamLoggerLevel(): LogLevel {

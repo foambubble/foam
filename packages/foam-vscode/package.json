@@ -157,9 +157,9 @@
           "default": 24,
           "description": "The maximum title length before being abbreviated. Set to 0 or less to disable."
         },
-        "foam.graph.customStyle": {
+        "foam.graph.style": {
           "type": "object",
-          "description": "Custom graph styling settings.",
+          "description": "Graph styling settings.",
           "default": {}
         }
       }

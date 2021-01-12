@@ -31,6 +31,7 @@ This will also install `Foam for VSCode`, but if you already have it installed, 
 - See how your notes are connected via a graph with the `Foam: Show Graph` command
 - Tag your notes and navigate them with the Tag Explorer
 - Make your notes navigable both in GitHub UI as well as GitHub Pages
+- Explore your knowledge base with the `Foam: Open Random Note` command
 
 ## Requirements
 

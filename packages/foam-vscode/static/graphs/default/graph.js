@@ -340,6 +340,7 @@ try {
         vscode.postMessage({
           type: "webviewDidLoad"
         });
+        break;
     }
   });
 } catch {

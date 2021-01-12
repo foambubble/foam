@@ -13,6 +13,12 @@ const feature: FoamFeature = {
           .getNotes()
           .map(note => note.uri.path)
           .filter(notePath => notePath !== currentFile);
+        if (notes.length === 0) {
+          window.showInformationMessage(
+            'Could not find another note to open. If you believe this is a bug, please file an issue.'
+          );
+          return;
+        }
         const randomNote = notes[Math.floor(Math.random() * notes.length)];
         focusNote(randomNote, false);
       })

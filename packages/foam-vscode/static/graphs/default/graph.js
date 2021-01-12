@@ -140,24 +140,35 @@ const Actions = {
       return;
     }
     model.style = {
-      background: newStyle.background ?? model.style.background,
-      fontSize: newStyle.fontSize ?? model.style.fontSize,
-      highlightedForeground: newStyle.highlightedForeground ?? model.style.highlightedForeground,
+      background: newStyle.background
+        ?? getStyle(`--vscode-panel-background`)
+        ?? styleFallback.background,
+      fontSize: newStyle.fontSize
+        ?? parseInt(getStyle(`--vscode-font-size`) ?? styleFallback.fontSize) - 2,
+      highlightedForeground: newStyle.highlightedForeground
+        ?? getStyle("--vscode-list-highlightForeground")
+        ?? styleFallback.highlightedForeground,
       node: {
-        note: newStyle.node?.note ?? model.style.node.note,
-        nonExistingNote: newStyle.node?.nonExistingNote ?? model.style.node.nonExistingNote,
-        unknown: newStyle.node?.unknown ?? model.style.node.unknown,
+        note: newStyle.node?.note
+          ?? getStyle("--vscode-editor-foreground")
+          ?? styleFallback.node.note,
+        nonExistingNote: newStyle.node?.nonExistingNote
+          ?? getStyle("--vscode-list-deemphasizedForeground")
+          ?? styleFallback.node.nonExistingNote,
+        unknown: newStyle.node?.unknown
+          ?? getStyle("--vscode-editor-foreground")
+          ?? styleFallback.node.unknow,
       },
-    }
+    };
+    graph.backgroundColor(model.style.background);
   }
 };
 
 function initDataviz(channel) {
   const elem = document.getElementById(CONTAINER_ID);
-  const style = model.style;
   graph(elem)
     .graphData(model.data)
-    .backgroundColor(style.background)
+    .backgroundColor(model.style.background)
     .linkHoverPrecision(8)
     .d3Force("x", d3.forceX())
     .d3Force("y", d3.forceY())
@@ -175,7 +186,7 @@ function initDataviz(channel) {
       }
       const size = sizeScale(info.neighbors.length);
       const { fill, border } = getNodeColor(node.id, model);
-      const fontSize = style.fontSize / globalScale;
+      const fontSize = model.style.fontSize / globalScale;
       let textColor = d3.rgb(fill);
       textColor.opacity =
         getNodeState(node.id, model) === "highlighted"
@@ -298,8 +309,10 @@ try {
   const vscode = acquireVsCodeApi();
 
   window.onload = () => {
+    initDataviz(vscode);
+    console.log("ready");
     vscode.postMessage({
-      type: "webviewStyleRequest",
+      type: "webviewDidLoad"
     });
   };
 
@@ -335,11 +348,6 @@ try {
       case "didUpdateStyle":
         const style = message.payload;
         Actions.updateStyle(style);
-        initDataviz(vscode);
-        console.log("ready");
-        vscode.postMessage({
-          type: "webviewDidLoad"
-        });
         break;
     }
   });

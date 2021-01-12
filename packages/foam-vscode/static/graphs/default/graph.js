@@ -41,22 +41,15 @@ function updateStyle(newStyle) {
   if (!newStyle) {
     return;
   }
-  let node = style.node;
-  if (newStyle.node !== undefined
-    && newStyle.node !== null
-    && JSON.stringify(newStyle.node) !== JSON.stringify({})
-  ) {
-    node = {
-      note: newStyle.node.note ?? style.node.note,
-      nonExistingNote: newStyle.node.nonExistingNote ?? style.node.nonExistingNote,
-      unknown: newStyle.node.unknown ?? style.node.unknown,
-    }
-  }
   style = {
     background: newStyle.background ?? style.background,
     fontSize: newStyle.fontSize ?? style.fontSize,
     highlightedForeground: newStyle.highlightedForeground ?? style.highlightedForeground,
-    node: node,
+    node: {
+      note: newStyle.node?.note ?? style.node.note,
+      nonExistingNote: newStyle.node?.nonExistingNote ?? style.node.nonExistingNote,
+      unknown: newStyle.node?.unknown ?? style.node.unknown,
+    },
   }
 }
 

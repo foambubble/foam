@@ -23,6 +23,7 @@
     "onView:foam-vscode.tags-explorer",
     "onCommand:foam-vscode.update-wikilinks",
     "onCommand:foam-vscode.open-daily-note",
+    "onCommand:foam-vscode.open-random-note",
     "onCommand:foam-vscode.janitor",
     "onCommand:foam-vscode.copy-without-brackets",
     "onCommand:foam-vscode.show-graph"
@@ -55,6 +56,10 @@
       {
         "command": "foam-vscode.open-daily-note",
         "title": "Foam: Open Daily Note"
+      },
+      {
+        "command": "foam-vscode.open-random-note",
+        "title": "Foam: Open Random Note"
       },
       {
         "command": "foam-vscode.janitor",

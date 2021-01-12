@@ -9,18 +9,21 @@ const feature: FoamFeature = {
       commands.registerCommand('foam-vscode.open-random-note', async () => {
         const foam = await foamPromise;
         const currentFile = window.activeTextEditor?.document.uri.path;
-        const notes = foam.notes
-          .getNotes()
-          .map(note => note.uri.path)
-          .filter(notePath => notePath !== currentFile);
-        if (notes.length === 0) {
+        const notes = foam.notes.getNotes().map(note => note.uri.path);
+
+        let randomNoteIndex = Math.floor(Math.random() * notes.length);
+        if (notes[randomNoteIndex] === currentFile) {
+          notes.splice(randomNoteIndex, 1);
+          randomNoteIndex = Math.floor(Math.random() * notes.length);
+        }
+
+        if (notes.length > 0) {
+          focusNote(notes[randomNoteIndex], false);
+        } else {
           window.showInformationMessage(
             'Could not find another note to open. If you believe this is a bug, please file an issue.'
           );
-          return;
         }
-        const randomNote = notes[Math.floor(Math.random() * notes.length)];
-        focusNote(randomNote, false);
       })
     );
   },

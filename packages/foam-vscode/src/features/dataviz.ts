@@ -9,7 +9,7 @@ import { isSome } from "../utils";
 const feature: FoamFeature = {
   activate: (context: vscode.ExtensionContext, foamPromise: Promise<Foam>) => {
     let panel: vscode.WebviewPanel | undefined = undefined;
-    vscode.workspace.onDidChangeConfiguration(async event => {
+    vscode.workspace.onDidChangeConfiguration(event => {
       if (event.affectsConfiguration('foam.graph.style')) {
         const style = getGraphStyle();
         panel.webview.postMessage({

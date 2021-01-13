@@ -1,17 +1,17 @@
-import { workspace, GlobPattern } from "vscode";
-import { LogLevel } from "foam-core";
+import { workspace, GlobPattern } from 'vscode';
+import { LogLevel } from 'foam-core';
 
 export enum LinkReferenceDefinitionsSetting {
-  withExtensions = "withExtensions",
-  withoutExtensions = "withoutExtensions",
-  off = "off"
+  withExtensions = 'withExtensions',
+  withoutExtensions = 'withoutExtensions',
+  off = 'off',
 }
 
 export function getWikilinkDefinitionSetting(): LinkReferenceDefinitionsSetting {
   return workspace
-    .getConfiguration("foam.edit")
+    .getConfiguration('foam.edit')
     .get<LinkReferenceDefinitionsSetting>(
-      "linkReferenceDefinitions",
+      'linkReferenceDefinitions',
       LinkReferenceDefinitionsSetting.withoutExtensions
     );
 }
@@ -19,8 +19,8 @@ export function getWikilinkDefinitionSetting(): LinkReferenceDefinitionsSetting 
 /** Retrieve the list of file ignoring globs. */
 export function getIgnoredFilesSetting(): GlobPattern[] {
   return [
-    ...workspace.getConfiguration().get("foam.files.ignore", []),
-    ...Object.keys(workspace.getConfiguration().get("files.exclude", {}))
+    ...workspace.getConfiguration().get('foam.files.ignore', []),
+    ...Object.keys(workspace.getConfiguration().get('files.exclude', {})),
   ];
 }
 
@@ -35,5 +35,5 @@ export function getGraphStyle(): object {
 }
 
 export function getFoamLoggerLevel(): LogLevel {
-  return workspace.getConfiguration("foam.logging").get("level") ?? "info";
+  return workspace.getConfiguration('foam.logging').get('level') ?? 'info';
 }

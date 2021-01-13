@@ -159,7 +159,7 @@
         },
         "foam.graph.style": {
           "type": "object",
-          "description": "Graph styling settings.",
+          "description": "Custom graph styling settings. An example is present in the documentation.",
           "default": {}
         }
       }

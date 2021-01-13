@@ -121,14 +121,6 @@ async function createGraphPanel(foam: Foam, context: vscode.ExtensionContext) {
   panel.webview.onDidReceiveMessage(
     async message => {
       switch (message.type) {
-        case "webviewStyleRequest":
-          const style = getGraphStyle();
-          panel.webview.postMessage({
-            type: "didUpdateStyle",
-            payload: style,
-          });
-          break;
-
         case "webviewDidLoad":
           const styles = getGraphStyle();
           panel.webview.postMessage({

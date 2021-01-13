@@ -1,28 +1,20 @@
 const CONTAINER_ID = "graph";
 
-function getStyle(name, fallback) {
-  return (
-    getComputedStyle(document.documentElement).getPropertyValue(name) ||
-    fallback
-  );
-}
-
-const style = {
-  background: getStyle(`--vscode-panel-background`, "#202020"),
-  fontSize: parseInt(getStyle(`--vscode-font-size`, 12)) - 2,
-  highlightedForeground: getStyle(
-    "--vscode-list-highlightForeground",
-    "#f9c74f"
-  ),
+/** The style fallback. This values should only be set when all else failed. */
+const styleFallback = {
+  background: "#202020",
+  fontSize: 12,
+  highlightedForeground: "#f9c74f",
   node: {
-    note: getStyle("--vscode-editor-foreground", "#277da1"),
-    nonExistingNote: getStyle(
-      "--vscode-list-deemphasizedForeground",
-      "#545454"
-    ),
-    unknown: getStyle("--vscode-editor-foreground", "#f94144")
+    note: "#277da1",
+    placeholder: "#545454",
+    unknown: "#f94144"
   }
 };
+
+function getStyle(name) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name);
+}
 
 const sizeScale = d3
   .scaleLinear()
@@ -45,6 +37,25 @@ let model = {
   data: {
     nodes: [],
     links: []
+  },
+  /** The style property.
+   * It tries to be set using VSCode values,
+   * in the case it fails, use the fallback style values.
+   */
+  style: {
+    background: getStyle(`--vscode-panel-background`)
+      ?? styleFallback.background,
+    fontSize: parseInt(getStyle(`--vscode-font-size`) ?? styleFallback.fontSize) - 2,
+    highlightedForeground: getStyle("--vscode-list-highlightForeground")
+      ?? styleFallback.highlightedForeground,
+    node: {
+      note: getStyle("--vscode-editor-foreground")
+        ?? styleFallback.node.note,
+      placeholder: getStyle("--vscode-list-deemphasizedForeground")
+        ?? styleFallback.node.placeholder,
+      unknown: getStyle("--vscode-editor-foreground")
+        ?? styleFallback.node.unknown
+    }
   }
 };
 const graph = ForceGraph();
@@ -118,14 +129,46 @@ const Actions = {
   highlightNode: nodeId =>
     update(m => {
       m.hoverNode = nodeId;
-    })
+    }),
+  /** Applies a new style to the graph,
+   * missing elements are set to their existing values.
+   *
+   * @param {*} newStyle the style to be applied
+   */
+  updateStyle: newStyle => {
+    if (!newStyle) {
+      return;
+    }
+    model.style = {
+      background: newStyle.background
+        ?? getStyle(`--vscode-panel-background`)
+        ?? styleFallback.background,
+      fontSize: newStyle.fontSize
+        ?? parseInt(getStyle(`--vscode-font-size`) ?? styleFallback.fontSize) - 2,
+      highlightedForeground: newStyle.highlightedForeground
+        ?? getStyle("--vscode-list-highlightForeground")
+        ?? styleFallback.highlightedForeground,
+      node: {
+        note: newStyle.node?.note
+          ?? getStyle("--vscode-editor-foreground")
+          ?? styleFallback.node.note,
+        placeholder: newStyle.node?.placeholder
+          ?? getStyle("--vscode-list-deemphasizedForeground")
+          ?? styleFallback.node.placeholder,
+        unknown: newStyle.node?.unknown
+          ?? getStyle("--vscode-editor-foreground")
+          ?? styleFallback.node.unknow,
+      },
+    };
+    graph.backgroundColor(model.style.background);
+  }
 };
 
 function initDataviz(channel) {
   const elem = document.getElementById(CONTAINER_ID);
   graph(elem)
     .graphData(model.data)
-    .backgroundColor(style.background)
+    .backgroundColor(model.style.background)
     .linkHoverPrecision(8)
     .d3Force("x", d3.forceX())
     .d3Force("y", d3.forceY())
@@ -143,7 +186,7 @@ function initDataviz(channel) {
       }
       const size = sizeScale(info.neighbors.length);
       const { fill, border } = getNodeColor(node.id, model);
-      const fontSize = style.fontSize / globalScale;
+      const fontSize = model.style.fontSize / globalScale;
       let textColor = d3.rgb(fill);
       textColor.opacity =
         getNodeState(node.id, model) === "highlighted"
@@ -192,6 +235,7 @@ function augmentGraphInfo(data) {
 
 function getNodeColor(nodeId, model) {
   const info = model.nodeInfo[nodeId];
+  const style = model.style;
   const typeFill = style.node[info.type || "unknown"];
   switch (getNodeState(nodeId, model)) {
     case "regular":
@@ -210,6 +254,7 @@ function getNodeColor(nodeId, model) {
 }
 
 function getLinkColor(link, model) {
+  const style = model.style;
   switch (getLinkState(link, model)) {
     case "regular":
       return d3.hsl(style.node.note).darker(2);
@@ -270,6 +315,7 @@ try {
       type: "webviewDidLoad"
     });
   };
+
   window.addEventListener("error", error => {
     vscode.postMessage({
       type: "error",
@@ -285,7 +331,6 @@ try {
 
   window.addEventListener("message", event => {
     const message = event.data;
-
     switch (message.type) {
       case "didUpdateGraphData":
         const graphData = augmentGraphInfo(message.payload);
@@ -299,6 +344,10 @@ try {
           graph.centerAt(node.x, node.y, 300).zoom(3, 300);
           Actions.selectNode(noteId);
         }
+        break;
+      case "didUpdateStyle":
+        const style = message.payload;
+        Actions.updateStyle(style);
         break;
     }
   });

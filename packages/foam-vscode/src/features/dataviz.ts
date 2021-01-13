@@ -3,15 +3,25 @@ import * as path from "path";
 import { FoamFeature } from "../types";
 import { Foam, Logger } from "foam-core";
 import { TextDecoder } from "util";
-import { getTitleMaxLength } from "../settings";
+import { getGraphStyle, getTitleMaxLength } from "../settings";
 import { isSome } from "../utils";
 
 const feature: FoamFeature = {
   activate: (context: vscode.ExtensionContext, foamPromise: Promise<Foam>) => {
+    let panel: vscode.WebviewPanel | undefined = undefined;
+    vscode.workspace.onDidChangeConfiguration(event => {
+      if (event.affectsConfiguration('foam.graph.style')) {
+        const style = getGraphStyle();
+        panel.webview.postMessage({
+          type: 'didUpdateStyle',
+          payload: style,
+        });
+      }
+    });
+
     vscode.commands.registerCommand("foam-vscode.show-graph", async () => {
       const foam = await foamPromise;
-      const panel = await createGraphPanel(foam, context);
-
+      panel = await createGraphPanel(foam, context);
       const onFoamChanged = _ => {
         updateGraph(panel, foam);
       };
@@ -23,6 +33,7 @@ const feature: FoamFeature = {
         noteAddedListener.dispose();
         noteUpdatedListener.dispose();
         noteDeletedListener.dispose();
+        panel = undefined;
       });
 
       vscode.window.onDidChangeActiveTextEditor(e => {
@@ -66,7 +77,7 @@ function generateGraphData(foam: Foam) {
       if (!(link.to.path in graph.nodes)) {
         graph.nodes[link.to.path] = {
           id: link.to,
-          type: "nonExistingNote",
+          type: "placeholder",
           uri: `virtual:${link.to}`,
           title:
             "slug" in link.link
@@ -111,6 +122,11 @@ async function createGraphPanel(foam: Foam, context: vscode.ExtensionContext) {
     async message => {
       switch (message.type) {
         case "webviewDidLoad":
+          const styles = getGraphStyle();
+          panel.webview.postMessage({
+            type: 'didUpdateStyle',
+            payload: styles,
+          });
           updateGraph(panel, foam);
           break;
 

@@ -7,11 +7,11 @@ import { getGraphStyle, getTitleMaxLength } from "../settings";
 import { isSome } from "../utils";
 
 const feature: FoamFeature = {
-  activate: async (context: vscode.ExtensionContext, foamPromise: Promise<Foam>) => {
-    const foam = await foamPromise;
-    const panel = await createGraphPanel(foam, context);
+  activate: (context: vscode.ExtensionContext, foamPromise: Promise<Foam>) => {
 
     vscode.workspace.onDidChangeConfiguration(async event => {
+      const foam = await foamPromise;
+      const panel = await createGraphPanel(foam, context);
       if (event.affectsConfiguration('foam.graph.style')) {
         const style = getGraphStyle();
         panel.webview.postMessage({
@@ -22,6 +22,8 @@ const feature: FoamFeature = {
     });
 
     vscode.commands.registerCommand("foam-vscode.show-graph", async () => {
+      const foam = await foamPromise;
+      const panel = await createGraphPanel(foam, context);
       const onFoamChanged = _ => {
         updateGraph(panel, foam);
       };

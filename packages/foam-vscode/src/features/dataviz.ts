@@ -8,10 +8,8 @@ import { isSome } from "../utils";
 
 const feature: FoamFeature = {
   activate: (context: vscode.ExtensionContext, foamPromise: Promise<Foam>) => {
-
+    let panel: vscode.WebviewPanel | undefined = undefined;
     vscode.workspace.onDidChangeConfiguration(async event => {
-      const foam = await foamPromise;
-      const panel = await createGraphPanel(foam, context);
       if (event.affectsConfiguration('foam.graph.style')) {
         const style = getGraphStyle();
         panel.webview.postMessage({
@@ -23,7 +21,7 @@ const feature: FoamFeature = {
 
     vscode.commands.registerCommand("foam-vscode.show-graph", async () => {
       const foam = await foamPromise;
-      const panel = await createGraphPanel(foam, context);
+      panel = await createGraphPanel(foam, context);
       const onFoamChanged = _ => {
         updateGraph(panel, foam);
       };
@@ -35,6 +33,7 @@ const feature: FoamFeature = {
         noteAddedListener.dispose();
         noteUpdatedListener.dispose();
         noteDeletedListener.dispose();
+        panel = undefined;
       });
 
       vscode.window.onDidChangeActiveTextEditor(e => {

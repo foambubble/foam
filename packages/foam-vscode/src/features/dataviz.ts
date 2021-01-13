@@ -77,7 +77,7 @@ function generateGraphData(foam: Foam) {
       if (!(link.to.path in graph.nodes)) {
         graph.nodes[link.to.path] = {
           id: link.to,
-          type: "nonExistingNote",
+          type: "placeholder",
           uri: `virtual:${link.to}`,
           title:
             "slug" in link.link

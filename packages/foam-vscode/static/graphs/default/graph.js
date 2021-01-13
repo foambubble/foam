@@ -7,7 +7,7 @@ const styleFallback = {
   highlightedForeground: "#f9c74f",
   node: {
     note: "#277da1",
-    nonExistingNote: "#545454",
+    placeholder: "#545454",
     unknown: "#f94144"
   }
 };
@@ -51,8 +51,8 @@ let model = {
     node: {
       note: getStyle("--vscode-editor-foreground")
         ?? styleFallback.node.note,
-      nonExistingNote: getStyle("--vscode-list-deemphasizedForeground")
-        ?? styleFallback.node.nonExistingNote,
+      placeholder: getStyle("--vscode-list-deemphasizedForeground")
+        ?? styleFallback.node.placeholder,
       unknown: getStyle("--vscode-editor-foreground")
         ?? styleFallback.node.unknown
     }
@@ -152,9 +152,9 @@ const Actions = {
         note: newStyle.node?.note
           ?? getStyle("--vscode-editor-foreground")
           ?? styleFallback.node.note,
-        nonExistingNote: newStyle.node?.nonExistingNote
+        placeholder: newStyle.node?.placeholder
           ?? getStyle("--vscode-list-deemphasizedForeground")
-          ?? styleFallback.node.nonExistingNote,
+          ?? styleFallback.node.placeholder,
         unknown: newStyle.node?.unknown
           ?? getStyle("--vscode-editor-foreground")
           ?? styleFallback.node.unknow,

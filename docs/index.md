@@ -76,7 +76,7 @@ To learn more about how to use **Foam**, read the [[recipes]].
 
 Getting stuck in the setup? Read the [[frequently-asked-questions]].
 
-There are [[known-issues]], and I'm sure, many unknown issues! Please [report them on GitHub](http://github.com/foambubble/foam/issues)!
+Check our [issues on GitHub](http://github.com/foambubble/foam/issues) if you get stuck on something, and create a new one if something doesn't seem right!
 
 ## Features
 

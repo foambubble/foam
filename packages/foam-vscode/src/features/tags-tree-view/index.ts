@@ -1,6 +1,6 @@
-import * as vscode from "vscode";
-import { FoamFeature } from "../../types";
-import { Foam, Note } from "foam-core";
+import * as vscode from 'vscode';
+import { FoamFeature } from '../../types';
+import { Foam, Note } from 'foam-core';
 
 const feature: FoamFeature = {
   activate: async (
@@ -11,12 +11,12 @@ const feature: FoamFeature = {
     const provider = new TagsProvider(foam);
     context.subscriptions.push(
       vscode.window.registerTreeDataProvider(
-        "foam-vscode.tags-explorer",
+        'foam-vscode.tags-explorer',
         provider
       )
     );
     foam.notes.onDidUpdateNote(() => provider.refresh());
-  }
+  },
 };
 
 export default feature;
@@ -68,7 +68,7 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
       });
       return Promise.resolve([
         new TagSearch(element.tag),
-        ...references.sort((a, b) => a.title.localeCompare(b.title))
+        ...references.sort((a, b) => a.title.localeCompare(b.title)),
       ]);
     }
     if (!element) {
@@ -89,13 +89,13 @@ export class Tag extends vscode.TreeItem {
   ) {
     super(tag, vscode.TreeItemCollapsibleState.Collapsed);
     this.description = `${this.noteUris.length} reference${
-      this.noteUris.length !== 1 ? "s" : ""
+      this.noteUris.length !== 1 ? 's' : ''
     }`;
     this.tooltip = this.description;
   }
 
-  iconPath = new vscode.ThemeIcon("symbol-number");
-  contextValue = "tag";
+  iconPath = new vscode.ThemeIcon('symbol-number');
+  contextValue = 'tag';
 }
 
 export class TagSearch extends vscode.TreeItem {
@@ -104,21 +104,21 @@ export class TagSearch extends vscode.TreeItem {
     const searchString = `#${tag}`;
     this.tooltip = `Search ${searchString} in workspace`;
     this.command = {
-      command: "workbench.action.findInFiles",
+      command: 'workbench.action.findInFiles',
       arguments: [
         {
           query: searchString,
           triggerSearch: true,
           matchWholeWord: true,
-          isCaseSensitive: true
-        }
+          isCaseSensitive: true,
+        },
       ],
-      title: "Search"
+      title: 'Search',
     };
   }
 
-  iconPath = new vscode.ThemeIcon("search");
-  contextValue = "tag-search";
+  iconPath = new vscode.ThemeIcon('search');
+  contextValue = 'tag-search';
 }
 
 export class TagReference extends vscode.TreeItem {
@@ -142,18 +142,18 @@ export class TagReference extends vscode.TreeItem {
     // TODO I like about this showing the git state of the note, but I don't like the md icon
     this.resourceUri = resourceUri;
     this.command = {
-      command: "vscode.open",
+      command: 'vscode.open',
       arguments: [
         resourceUri,
         {
           preview: true,
-          selection: selection
-        }
+          selection: selection,
+        },
       ],
-      title: "Open File"
+      title: 'Open File',
     };
   }
 
-  iconPath = new vscode.ThemeIcon("note");
-  contextValue = "reference";
+  iconPath = new vscode.ThemeIcon('note');
+  contextValue = 'reference';
 }

@@ -1,15 +1,15 @@
-const CONTAINER_ID = "graph";
+const CONTAINER_ID = 'graph';
 
 /** The style fallback. This values should only be set when all else failed. */
 const styleFallback = {
-  background: "#202020",
+  background: '#202020',
   fontSize: 12,
-  highlightedForeground: "#f9c74f",
+  highlightedForeground: '#f9c74f',
   node: {
-    note: "#277da1",
-    placeholder: "#545454",
-    unknown: "#f94144"
-  }
+    note: '#277da1',
+    placeholder: '#545454',
+    unknown: '#f94144',
+  },
 };
 
 function getStyle(name) {
@@ -36,27 +36,29 @@ let model = {
   nodeInfo: {},
   data: {
     nodes: [],
-    links: []
+    links: [],
   },
   /** The style property.
    * It tries to be set using VSCode values,
    * in the case it fails, use the fallback style values.
    */
   style: {
-    background: getStyle(`--vscode-panel-background`)
-      ?? styleFallback.background,
-    fontSize: parseInt(getStyle(`--vscode-font-size`) ?? styleFallback.fontSize) - 2,
-    highlightedForeground: getStyle("--vscode-list-highlightForeground")
-      ?? styleFallback.highlightedForeground,
+    background:
+      getStyle(`--vscode-panel-background`) ?? styleFallback.background,
+    fontSize:
+      parseInt(getStyle(`--vscode-font-size`) ?? styleFallback.fontSize) - 2,
+    highlightedForeground:
+      getStyle('--vscode-list-highlightForeground') ??
+      styleFallback.highlightedForeground,
     node: {
-      note: getStyle("--vscode-editor-foreground")
-        ?? styleFallback.node.note,
-      placeholder: getStyle("--vscode-list-deemphasizedForeground")
-        ?? styleFallback.node.placeholder,
-      unknown: getStyle("--vscode-editor-foreground")
-        ?? styleFallback.node.unknown
-    }
-  }
+      note: getStyle('--vscode-editor-foreground') ?? styleFallback.node.note,
+      placeholder:
+        getStyle('--vscode-list-deemphasizedForeground') ??
+        styleFallback.node.placeholder,
+      unknown:
+        getStyle('--vscode-editor-foreground') ?? styleFallback.node.unknown,
+    },
+  },
 };
 const graph = ForceGraph();
 
@@ -103,7 +105,7 @@ const Actions = {
       });
       remaining.forEach(nodeId => {
         m.data.nodes.push({
-          id: nodeId
+          id: nodeId,
         });
       });
       m.data.links = links; // links can be swapped out without problem
@@ -140,28 +142,34 @@ const Actions = {
       return;
     }
     model.style = {
-      background: newStyle.background
-        ?? getStyle(`--vscode-panel-background`)
-        ?? styleFallback.background,
-      fontSize: newStyle.fontSize
-        ?? parseInt(getStyle(`--vscode-font-size`) ?? styleFallback.fontSize) - 2,
-      highlightedForeground: newStyle.highlightedForeground
-        ?? getStyle("--vscode-list-highlightForeground")
-        ?? styleFallback.highlightedForeground,
+      background:
+        newStyle.background ??
+        getStyle(`--vscode-panel-background`) ??
+        styleFallback.background,
+      fontSize:
+        newStyle.fontSize ??
+        parseInt(getStyle(`--vscode-font-size`) ?? styleFallback.fontSize) - 2,
+      highlightedForeground:
+        newStyle.highlightedForeground ??
+        getStyle('--vscode-list-highlightForeground') ??
+        styleFallback.highlightedForeground,
       node: {
-        note: newStyle.node?.note
-          ?? getStyle("--vscode-editor-foreground")
-          ?? styleFallback.node.note,
-        placeholder: newStyle.node?.placeholder
-          ?? getStyle("--vscode-list-deemphasizedForeground")
-          ?? styleFallback.node.placeholder,
-        unknown: newStyle.node?.unknown
-          ?? getStyle("--vscode-editor-foreground")
-          ?? styleFallback.node.unknow,
+        note:
+          newStyle.node?.note ??
+          getStyle('--vscode-editor-foreground') ??
+          styleFallback.node.note,
+        placeholder:
+          newStyle.node?.placeholder ??
+          getStyle('--vscode-list-deemphasizedForeground') ??
+          styleFallback.node.placeholder,
+        unknown:
+          newStyle.node?.unknown ??
+          getStyle('--vscode-editor-foreground') ??
+          styleFallback.node.unknow,
       },
     };
     graph.backgroundColor(model.style.background);
-  }
+  },
 };
 
 function initDataviz(channel) {
@@ -170,13 +178,13 @@ function initDataviz(channel) {
     .graphData(model.data)
     .backgroundColor(model.style.background)
     .linkHoverPrecision(8)
-    .d3Force("x", d3.forceX())
-    .d3Force("y", d3.forceY())
-    .d3Force("collide", d3.forceCollide(graph.nodeRelSize()))
+    .d3Force('x', d3.forceX())
+    .d3Force('y', d3.forceY())
+    .d3Force('collide', d3.forceCollide(graph.nodeRelSize()))
     .linkWidth(0.2)
     .linkDirectionalParticles(1)
     .linkDirectionalParticleWidth(link =>
-      getLinkState(link, model) === "highlighted" ? 1 : 0
+      getLinkState(link, model) === 'highlighted' ? 1 : 0
     )
     .nodeCanvasObject((node, ctx, globalScale) => {
       const info = model.nodeInfo[node.id];
@@ -189,7 +197,7 @@ function initDataviz(channel) {
       const fontSize = model.style.fontSize / globalScale;
       let textColor = d3.rgb(fill);
       textColor.opacity =
-        getNodeState(node.id, model) === "highlighted"
+        getNodeState(node.id, model) === 'highlighted'
           ? 1
           : labelAlpha(globalScale);
       const label = info.title;
@@ -204,16 +212,16 @@ function initDataviz(channel) {
       Actions.highlightNode(node?.id);
     })
     .onNodeClick((node, event) => {
-      if (event.getModifierState("Control") || event.getModifierState("Meta")) {
+      if (event.getModifierState('Control') || event.getModifierState('Meta')) {
         channel.postMessage({
-          type: "webviewDidSelectNode",
-          payload: node.id
+          type: 'webviewDidSelectNode',
+          payload: node.id,
         });
       }
-      Actions.selectNode(node.id, event.getModifierState("Shift"));
+      Actions.selectNode(node.id, event.getModifierState('Shift'));
     })
     .onBackgroundClick(event => {
-      Actions.selectNode(null, event.getModifierState("Shift"));
+      Actions.selectNode(null, event.getModifierState('Shift'));
     });
 }
 
@@ -236,53 +244,53 @@ function augmentGraphInfo(data) {
 function getNodeColor(nodeId, model) {
   const info = model.nodeInfo[nodeId];
   const style = model.style;
-  const typeFill = style.node[info.type || "unknown"];
+  const typeFill = style.node[info.type || 'unknown'];
   switch (getNodeState(nodeId, model)) {
-    case "regular":
+    case 'regular':
       return { fill: typeFill, border: typeFill };
-    case "lessened":
+    case 'lessened':
       const darker = d3.hsl(typeFill).darker(3);
       return { fill: darker, border: darker };
-    case "highlighted":
+    case 'highlighted':
       return {
         fill: typeFill,
-        border: style.highlightedForeground
+        border: style.highlightedForeground,
       };
     default:
-      throw new Error("Unknown type for node", nodeId);
+      throw new Error('Unknown type for node', nodeId);
   }
 }
 
 function getLinkColor(link, model) {
   const style = model.style;
   switch (getLinkState(link, model)) {
-    case "regular":
+    case 'regular':
       return d3.hsl(style.node.note).darker(2);
-    case "highlighted":
+    case 'highlighted':
       return style.highlightedForeground;
-    case "lessened":
+    case 'lessened':
       return d3.hsl(style.node.note).darker(4);
     default:
-      throw new Error("Unknown type for link", link);
+      throw new Error('Unknown type for link', link);
   }
 }
 
 function getNodeState(nodeId, model) {
   return model.selectedNodes.has(nodeId) || model.hoverNode === nodeId
-    ? "highlighted"
+    ? 'highlighted'
     : model.focusNodes.size === 0
-    ? "regular"
+    ? 'regular'
     : model.focusNodes.has(nodeId)
-    ? "regular"
-    : "lessened";
+    ? 'regular'
+    : 'lessened';
 }
 
 function getLinkState(link, model) {
   return model.focusNodes.size === 0
-    ? "regular"
+    ? 'regular'
     : model.focusLinks.has(link)
-    ? "highlighted"
-    : "lessened";
+    ? 'highlighted'
+    : 'lessened';
 }
 
 const Draw = ctx => ({
@@ -296,12 +304,12 @@ const Draw = ctx => ({
   },
   text: function(text, x, y, size, color) {
     ctx.font = `${size}px Sans-Serif`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "top";
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
     ctx.fillStyle = color;
     ctx.fillText(text, x, y);
     return this;
-  }
+  },
 });
 
 // init the app
@@ -310,34 +318,34 @@ try {
 
   window.onload = () => {
     initDataviz(vscode);
-    console.log("ready");
+    console.log('ready');
     vscode.postMessage({
-      type: "webviewDidLoad"
+      type: 'webviewDidLoad',
     });
   };
 
-  window.addEventListener("error", error => {
+  window.addEventListener('error', error => {
     vscode.postMessage({
-      type: "error",
+      type: 'error',
       payload: {
         message: error.message,
         filename: error.filename,
         lineno: error.lineno,
         colno: error.colno,
-        error: error.error
-      }
+        error: error.error,
+      },
     });
   });
 
-  window.addEventListener("message", event => {
+  window.addEventListener('message', event => {
     const message = event.data;
     switch (message.type) {
-      case "didUpdateGraphData":
+      case 'didUpdateGraphData':
         const graphData = augmentGraphInfo(message.payload);
-        console.log("didUpdateGraphData", graphData);
+        console.log('didUpdateGraphData', graphData);
         Actions.refresh(graphData);
         break;
-      case "didSelectNote":
+      case 'didSelectNote':
         const noteId = message.payload;
         const node = graph.graphData().nodes.find(node => node.id === noteId);
         if (node) {
@@ -345,28 +353,28 @@ try {
           Actions.selectNode(noteId);
         }
         break;
-      case "didUpdateStyle":
+      case 'didUpdateStyle':
         const style = message.payload;
         Actions.updateStyle(style);
         break;
     }
   });
 } catch {
-  console.log("VsCode not detected");
+  console.log('VsCode not detected');
 }
 
-window.addEventListener("resize", () => {
+window.addEventListener('resize', () => {
   graph.width(window.innerWidth).height(window.innerHeight);
 });
 
 // For testing
 if (window.data) {
-  console.log("Test mode");
+  console.log('Test mode');
   window.model = model;
   window.graph = graph;
   window.onload = () => {
     initDataviz({
-      postMessage: message => console.log("message", message)
+      postMessage: message => console.log('message', message),
     });
     const graphData = augmentGraphInfo(window.data);
     Actions.refresh(graphData);

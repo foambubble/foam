@@ -4,17 +4,17 @@ import {
   ExtensionContext,
   workspace,
   Uri,
-  SnippetString
-} from "vscode";
-import * as path from "path";
-import { FoamFeature } from "../types";
-import { TextEncoder } from "util";
-import { focusNote } from "../utils";
+  SnippetString,
+} from 'vscode';
+import * as path from 'path';
+import { FoamFeature } from '../types';
+import { TextEncoder } from 'util';
+import { focusNote } from '../utils';
 
 const templatesDir = `${workspace.workspaceFolders[0].uri.path}/.foam/templates`;
 
 async function getTemplates(): Promise<string[]> {
-  const templates = await workspace.findFiles(".foam/templates/**.md");
+  const templates = await workspace.findFiles('.foam/templates/**.md');
   // parse title, not whole file!
   return templates.map(template => path.basename(template.path));
 }
@@ -23,7 +23,7 @@ const feature: FoamFeature = {
   activate: (context: ExtensionContext) => {
     context.subscriptions.push(
       commands.registerCommand(
-        "foam-vscode.create-note-from-template",
+        'foam-vscode.create-note-from-template',
         async () => {
           const templates = await getTemplates();
           const activeFile = window.activeTextEditor?.document?.fileName;
@@ -34,14 +34,14 @@ const feature: FoamFeature = {
           const selectedTemplate = await window.showQuickPick(templates);
           const folder = await window.showInputBox({
             prompt: `Where should the template be created?`,
-            value: currentDir
+            value: currentDir,
           });
 
           let filename = await window.showInputBox({
             prompt: `Enter the filename for the new note`,
             value: ``,
             validateInput: value =>
-              value.length ? undefined : "Please enter a value!"
+              value.length ? undefined : 'Please enter a value!',
           });
           filename = path.extname(filename).length
             ? filename
@@ -54,14 +54,14 @@ const feature: FoamFeature = {
           const snippet = new SnippetString(templateText.toString());
           await workspace.fs.writeFile(
             Uri.file(targetFile),
-            new TextEncoder().encode("")
+            new TextEncoder().encode('')
           );
           await focusNote(targetFile, true);
           await window.activeTextEditor.insertSnippet(snippet);
         }
       )
     );
-  }
+  },
 };
 
 export default feature;

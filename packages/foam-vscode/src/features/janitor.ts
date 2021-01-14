@@ -4,31 +4,31 @@ import {
   ExtensionContext,
   commands,
   Range,
-  ProgressLocation
-} from "vscode";
-import * as fs from "fs";
-import { FoamFeature } from "../types";
+  ProgressLocation,
+} from 'vscode';
+import * as fs from 'fs';
+import { FoamFeature } from '../types';
 import {
   applyTextEdit,
   generateLinkReferences,
   generateHeading,
-  Foam
-} from "foam-core";
+  Foam,
+} from 'foam-core';
 
 import {
   getWikilinkDefinitionSetting,
-  LinkReferenceDefinitionsSetting
-} from "../settings";
-import { astPositionToVsCodePosition } from "../utils";
+  LinkReferenceDefinitionsSetting,
+} from '../settings';
+import { astPositionToVsCodePosition } from '../utils';
 
 const feature: FoamFeature = {
   activate: (context: ExtensionContext, foamPromise: Promise<Foam>) => {
     context.subscriptions.push(
-      commands.registerCommand("foam-vscode.janitor", async () =>
+      commands.registerCommand('foam-vscode.janitor', async () =>
         janitor(await foamPromise)
       )
     );
-  }
+  },
 };
 
 async function janitor(foam: Foam) {
@@ -44,7 +44,7 @@ async function janitor(foam: Foam) {
     const outcome = await window.withProgress(
       {
         location: ProgressLocation.Notification,
-        title: `Running Foam Janitor across ${noOfFiles} files!`
+        title: `Running Foam Janitor across ${noOfFiles} files!`,
       },
       () => runJanitor(foam)
     );
@@ -75,8 +75,8 @@ async function runJanitor(foam: Foam) {
 
   const dirtyTextDocuments = workspace.textDocuments.filter(
     textDocument =>
-      (textDocument.languageId === "markdown" ||
-        textDocument.languageId === "mdx") &&
+      (textDocument.languageId === 'markdown' ||
+        textDocument.languageId === 'mdx') &&
       textDocument.isDirty
   );
 
@@ -151,6 +151,7 @@ async function runJanitor(foam: Foam) {
 
     if (heading || definitions) {
       // Apply Edits
+      /* eslint-disable */
       await editor.edit(editBuilder => {
         // Note: The ordering matters. Definitions need to be inserted
         // before heading, since inserting a heading changes line numbers below
@@ -169,13 +170,14 @@ async function runJanitor(foam: Foam) {
           editBuilder.replace(start, heading.newText);
         }
       });
+      /* eslint-enable */
     }
   }
 
   return {
     updatedHeadingCount,
     updatedDefinitionListCount,
-    changedAnyFiles: updatedHeadingCount + updatedDefinitionListCount
+    changedAnyFiles: updatedHeadingCount + updatedDefinitionListCount,
   };
 }
 

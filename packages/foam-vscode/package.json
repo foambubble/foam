@@ -2,7 +2,6 @@
   "name": "foam-vscode",
   "displayName": "Foam for VSCode (Wikilinks to Markdown)",
   "description": "Generate markdown reference lists from wikilinks in a workspace",
-  "author": "Jani Eväkallio",
   "repository": {
     "url": "https://github.com/foambubble/foam",
     "type": "git"
@@ -180,7 +179,7 @@
     "build": "tsc -p ./",
     "pretest": "yarn build",
     "test": "node ./out/test/run-tests.js",
-    "lint": "eslint src --ext ts",
+    "lint": "tsdx lint",
     "clean": "rimraf out",
     "watch": "tsc --build ./tsconfig.json ../foam-core/tsconfig.json --watch",
     "vscode:start-debugging": "yarn clean && yarn watch",

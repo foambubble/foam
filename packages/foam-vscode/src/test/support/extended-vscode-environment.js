@@ -1,5 +1,5 @@
 // Based on https://github.com/svsool/vscode-memo/blob/master/src/test/env/ExtendedVscodeEnvironment.js
-const VscodeEnvironment = require("jest-environment-vscode");
+const VscodeEnvironment = require('jest-environment-vscode');
 
 class ExtendedVscodeEnvironment extends VscodeEnvironment {
   async setup() {

@@ -1,4 +1,4 @@
-import { uniq } from "lodash";
+import { uniq } from 'lodash';
 import {
   CancellationToken,
   CodeLens,
@@ -10,8 +10,8 @@ import {
   TextDocument,
   window,
   workspace,
-  Position
-} from "vscode";
+  Position,
+} from 'vscode';
 
 import {
   createMarkdownReferences,
@@ -19,33 +19,33 @@ import {
   NoteGraphAPI,
   Foam,
   LINK_REFERENCE_DEFINITION_HEADER,
-  LINK_REFERENCE_DEFINITION_FOOTER
-} from "foam-core";
+  LINK_REFERENCE_DEFINITION_FOOTER,
+} from 'foam-core';
 import {
   hasEmptyTrailing,
   docConfig,
   loadDocConfig,
   isMdEditor,
   mdDocSelector,
-  getText
-} from "../utils";
-import { FoamFeature } from "../types";
+  getText,
+} from '../utils';
+import { FoamFeature } from '../types';
 import {
   getWikilinkDefinitionSetting,
-  LinkReferenceDefinitionsSetting
-} from "../settings";
+  LinkReferenceDefinitionsSetting,
+} from '../settings';
 
 const feature: FoamFeature = {
   activate: async (context: ExtensionContext, foamPromise: Promise<Foam>) => {
     const foam = await foamPromise;
 
     context.subscriptions.push(
-      commands.registerCommand("foam-vscode.update-wikilinks", () =>
+      commands.registerCommand('foam-vscode.update-wikilinks', () =>
         updateReferenceList(foam.notes)
       ),
 
       workspace.onWillSaveTextDocument(e => {
-        if (e.document.languageId === "markdown") {
+        if (e.document.languageId === 'markdown') {
           updateDocumentInNoteGraph(foam, e.document);
           e.waitUntil(updateReferenceList(foam.notes));
         }
@@ -67,7 +67,7 @@ const feature: FoamFeature = {
       updateDocumentInNoteGraph(foam, editor.document);
       updateReferenceList(foam.notes);
     });
-  }
+  },
 };
 
 function updateDocumentInNoteGraph(foam: Foam, document: TextDocument) {
@@ -119,7 +119,7 @@ async function updateReferenceList(foam: NoteGraphAPI) {
 
     // references must always be preceded by an empty line
     const spacing = doc.lineAt(range.start.line - 1).isEmptyOrWhitespace
-      ? ""
+      ? ''
       : docConfig.eol;
 
     await editor.edit(editBuilder => {
@@ -161,7 +161,7 @@ function generateReferenceList(
     return [
       LINK_REFERENCE_DEFINITION_HEADER,
       ...references,
-      LINK_REFERENCE_DEFINITION_FOOTER
+      LINK_REFERENCE_DEFINITION_FOOTER,
     ];
   }
 
@@ -220,14 +220,14 @@ class WikilinkReferenceCodeLensProvider implements CodeLensProvider {
     const oldRefs = getText(range).replace(/\r?\n|\r/g, docConfig.eol);
     const newRefs = refs.join(docConfig.eol);
 
-    let status = oldRefs === newRefs ? "up to date" : "out of date";
+    let status = oldRefs === newRefs ? 'up to date' : 'out of date';
 
     return [
       new CodeLens(range, {
         arguments: [],
         title: `Link references (${status})`,
-        command: ""
-      })
+        command: '',
+      }),
     ];
   }
 }

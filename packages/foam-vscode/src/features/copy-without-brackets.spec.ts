@@ -1,12 +1,4 @@
-import {
-  env,
-  window,
-  Uri,
-  workspace,
-  Position,
-  Selection,
-  commands,
-} from 'vscode';
+import { env, window, Uri, Position, Selection, commands } from 'vscode';
 import * as vscode from 'vscode';
 
 describe('copyWithoutBrackets', () => {

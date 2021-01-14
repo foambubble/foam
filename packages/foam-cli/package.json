@@ -2,7 +2,6 @@
   "name": "foam-cli",
   "description": "Foam CLI",
   "version": "0.7.4",
-  "author": "Jani Eväkallio @jevakallio",
   "bin": {
     "foam": "./bin/run"
   },

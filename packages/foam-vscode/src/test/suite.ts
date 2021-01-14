@@ -9,10 +9,10 @@
  *   and so on..
  */
 
-import path from "path";
-import { runCLI } from "@jest/core";
+import path from 'path';
+import { runCLI } from '@jest/core';
 
-const rootDir = path.resolve(__dirname, "../..");
+const rootDir = path.resolve(__dirname, '../..');
 
 export function run(): Promise<void> {
   process.stdout.write = (buffer: string) => {
@@ -23,25 +23,25 @@ export function run(): Promise<void> {
     console.error(buffer);
     return true;
   };
-  process.env.FORCE_COLOR = "1";
-  process.env.NODE_ENV = "test";
+  process.env.FORCE_COLOR = '1';
+  process.env.NODE_ENV = 'test';
 
   return new Promise(async (resolve, reject) => {
     try {
       const { results } = await runCLI(
         {
           rootDir,
-          roots: ["<rootDir>/src"],
-          transform: JSON.stringify({ "^.+\\.ts$": "ts-jest" }),
+          roots: ['<rootDir>/src'],
+          transform: JSON.stringify({ '^.+\\.ts$': 'ts-jest' }),
           runInBand: true,
-          testRegex: "\\.(test|spec)\\.ts$",
+          testRegex: '\\.(test|spec)\\.ts$',
           testEnvironment:
-            "<rootDir>/src/test/support/extended-vscode-environment.js",
-          setupFiles: ["<rootDir>/src/test/support/jest-setup.ts"],
-          setupFilesAfterEnv: ["jest-extended"],
+            '<rootDir>/src/test/support/extended-vscode-environment.js',
+          setupFiles: ['<rootDir>/src/test/support/jest-setup.ts'],
+          setupFilesAfterEnv: ['jest-extended'],
           globals: JSON.stringify({
-            "ts-jest": {
-              tsconfig: path.resolve(rootDir, "./tsconfig.json"),
+            'ts-jest': {
+              tsconfig: path.resolve(rootDir, './tsconfig.json'),
             },
           }),
           testTimeout: 20000,

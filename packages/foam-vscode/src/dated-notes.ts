@@ -1,17 +1,11 @@
-import {
-  Selection,
-  Uri,
-  window,
-  workspace,
-  WorkspaceConfiguration
-} from "vscode";
-import { dirname, join } from "path";
-import dateFormat from "dateformat";
-import * as fs from "fs";
-import { docConfig, focusNote, pathExists } from "./utils";
+import { workspace, WorkspaceConfiguration } from 'vscode';
+import { dirname, join } from 'path';
+import dateFormat from 'dateformat';
+import * as fs from 'fs';
+import { docConfig, focusNote, pathExists } from './utils';
 
 async function openDailyNoteFor(date?: Date) {
-  const foamConfiguration = workspace.getConfiguration("foam");
+  const foamConfiguration = workspace.getConfiguration('foam');
   const currentDate = date !== undefined ? date : new Date();
 
   const dailyNotePath = getDailyNotePath(foamConfiguration, currentDate);
@@ -26,7 +20,7 @@ async function openDailyNoteFor(date?: Date) {
 function getDailyNotePath(configuration: WorkspaceConfiguration, date: Date) {
   const rootDirectory = workspace.workspaceFolders[0].uri.fsPath;
   const dailyNoteDirectory: string =
-    configuration.get("openDailyNote.directory") ?? ".";
+    configuration.get('openDailyNote.directory') ?? '.';
   const dailyNoteFilename = getDailyNoteFileName(configuration, date);
 
   return join(rootDirectory, dailyNoteDirectory, dailyNoteFilename);
@@ -37,10 +31,10 @@ function getDailyNoteFileName(
   date: Date
 ): string {
   const filenameFormat: string = configuration.get(
-    "openDailyNote.filenameFormat"
+    'openDailyNote.filenameFormat'
   );
   const fileExtension: string = configuration.get(
-    "openDailyNote.fileExtension"
+    'openDailyNote.fileExtension'
   );
 
   return `${dateFormat(date, filenameFormat, false)}.${fileExtension}`;
@@ -58,8 +52,8 @@ async function createDailyNoteIfNotExists(
   await createDailyNoteDirectoryIfNotExists(dailyNotePath);
 
   const titleFormat: string =
-    configuration.get("openDailyNote.titleFormat") ??
-    configuration.get("openDailyNote.filenameFormat");
+    configuration.get('openDailyNote.titleFormat') ??
+    configuration.get('openDailyNote.filenameFormat');
 
   await fs.promises.writeFile(
     dailyNotePath,
@@ -83,5 +77,5 @@ export {
   openDailyNoteFor,
   getDailyNoteFileName,
   createDailyNoteIfNotExists,
-  getDailyNotePath
+  getDailyNotePath,
 };

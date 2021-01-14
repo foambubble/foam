@@ -1,17 +1,17 @@
-import { window, commands, ExtensionContext } from "vscode";
-import { ILogger, IDisposable, LogLevel, BaseLogger } from "foam-core";
-import { getFoamLoggerLevel } from "../settings";
+import { window, commands, ExtensionContext } from 'vscode';
+import { ILogger, IDisposable, LogLevel, BaseLogger } from 'foam-core';
+import { getFoamLoggerLevel } from '../settings';
 
 export interface VsCodeLogger extends ILogger, IDisposable {
   show();
 }
 
 export class VsCodeOutputLogger extends BaseLogger implements VsCodeLogger {
-  private channel = window.createOutputChannel("Foam");
+  private channel = window.createOutputChannel('Foam');
 
   constructor() {
     super(getFoamLoggerLevel());
-    this.channel.appendLine("Foam Logging: " + getFoamLoggerLevel());
+    this.channel.appendLine('Foam Logging: ' + getFoamLoggerLevel());
   }
 
   log(lvl: LogLevel, msg?: any, ...extra: any[]): void {
@@ -42,12 +42,12 @@ export const exposeLogger = (
   logger: VsCodeLogger
 ): void => {
   context.subscriptions.push(
-    commands.registerCommand("foam-vscode.set-log-level", async () => {
-      const items: LogLevel[] = ["debug", "info", "warn", "error"];
+    commands.registerCommand('foam-vscode.set-log-level', async () => {
+      const items: LogLevel[] = ['debug', 'info', 'warn', 'error'];
       const level = await window.showQuickPick(
         items.map(item => ({
           label: item,
-          description: item === logger.getLevel() && "Current"
+          description: item === logger.getLevel() && 'Current',
         }))
       );
       logger.setLevel(level.label);

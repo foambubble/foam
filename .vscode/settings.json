@@ -1,24 +1,25 @@
 // Place your settings in this file to overwrite default and user settings.
 {
-    "files.exclude": {
-        // set these to true to hide folders with the compiled JS files,
-        "packages/**/out": false,
-        "packages/**/dist": false
-    },
-    "search.exclude": {
-        // set this to false to include compiled JS folders in search results
-        "packages/**/out": true,
-        "packages/**/dist": true
-    },
-    // Turn off tsc task auto detection since we have the necessary tasks as npm scripts
-    "typescript.tsc.autoDetect": "off",
-    "foam.files.ignore": [
-        "**/.vscode/**/*",
-        "**/_layouts/**/*",
-        "**/_site/**/*",
-        "**/node_modules/**/*"
-    ],
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
-    // "editor.formatOnSave": true,
-    "prettier.requireConfig": true
+  "files.exclude": {
+    // set these to true to hide folders with the compiled JS files,
+    "packages/**/out": false,
+    "packages/**/dist": false
+  },
+  "search.exclude": {
+    // set this to false to include compiled JS folders in search results
+    "packages/**/out": true,
+    "packages/**/dist": true
+  },
+  // Turn off tsc task auto detection since we have the necessary tasks as npm scripts
+  "typescript.tsc.autoDetect": "off",
+  "foam.files.ignore": [
+    "**/.vscode/**/*",
+    "**/_layouts/**/*",
+    "**/_site/**/*",
+    "**/node_modules/**/*"
+  ],
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "prettier.requireConfig": true,
+  "editor.formatOnSave": true,
+  "jest.debugCodeLens.showWhenTestStateIn": ["fail", "unknown", "pass"]
 }

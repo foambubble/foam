@@ -7,15 +7,15 @@ import {
   CompletionItem,
   CompletionItemKind,
   CompletionList,
-  CompletionTriggerKind
-} from "vscode";
+  CompletionTriggerKind,
+} from 'vscode';
 import {
   createDailyNoteIfNotExists,
   getDailyNoteFileName,
   openDailyNoteFor,
-  getDailyNotePath
-} from "../dated-notes";
-import { FoamFeature } from "../types";
+  getDailyNotePath,
+} from '../dated-notes';
+import { FoamFeature } from '../types';
 
 interface DateSnippet {
   snippet: string;
@@ -24,18 +24,18 @@ interface DateSnippet {
 }
 
 const daysOfWeek = [
-  { day: "sunday", index: 0 },
-  { day: "monday", index: 1 },
-  { day: "tuesday", index: 2 },
-  { day: "wednesday", index: 3 },
-  { day: "thursday", index: 4 },
-  { day: "friday", index: 5 },
-  { day: "saturday", index: 6 }
+  { day: 'sunday', index: 0 },
+  { day: 'monday', index: 1 },
+  { day: 'tuesday', index: 2 },
+  { day: 'wednesday', index: 3 },
+  { day: 'thursday', index: 4 },
+  { day: 'friday', index: 5 },
+  { day: 'saturday', index: 6 },
 ];
-type AfterCompletionOptions = "noop" | "createNote" | "navigateToNote";
-const foamConfig = workspace.getConfiguration("foam");
+type AfterCompletionOptions = 'noop' | 'createNote' | 'navigateToNote';
+const foamConfig = workspace.getConfiguration('foam');
 const foamNavigateOnSelect: AfterCompletionOptions = foamConfig.get(
-  "dateSnippets.afterCompletion"
+  'dateSnippets.afterCompletion'
 );
 
 const generateDayOfWeekSnippets = (): DateSnippet[] => {
@@ -51,7 +51,7 @@ const generateDayOfWeekSnippets = (): DateSnippet[] => {
     return {
       date: target,
       detail: `Get a daily note link for ${day}`,
-      snippet: `/${day}`
+      snippet: `/${day}`,
     };
   });
   return snippets;
@@ -64,49 +64,57 @@ const createCompletionItem = ({ snippet, date, detail }: DateSnippet) => {
   );
   completionItem.insertText = getDailyNoteLink(date);
   completionItem.detail = `${completionItem.insertText} - ${detail}`;
-  if (foamNavigateOnSelect !== "noop") {
+  if (foamNavigateOnSelect !== 'noop') {
     completionItem.command = {
-      command: "foam-vscode.open-dated-note",
-      title: "Open a note for the given date",
-      arguments: [date]
+      command: 'foam-vscode.open-dated-note',
+      title: 'Open a note for the given date',
+      arguments: [date],
     };
   }
   return completionItem;
 };
 
 const getDailyNoteLink = (date: Date) => {
-  const foamExtension = foamConfig.get("openDailyNote.fileExtension");
+  const foamExtension = foamConfig.get('openDailyNote.fileExtension');
   const name = getDailyNoteFileName(foamConfig, date);
-  return `[[${name.replace(`.${foamExtension}`, "")}]]`;
+  return `[[${name.replace(`.${foamExtension}`, '')}]]`;
 };
 
 const snippets: (() => DateSnippet)[] = [
   () => ({
     detail: "Insert a link to today's daily note",
-    snippet: "/day",
-    date: new Date()
+    snippet: '/day',
+    date: new Date(),
   }),
   () => ({
     detail: "Insert a link to today's daily note",
-    snippet: "/today",
-    date: new Date()
+    snippet: '/today',
+    date: new Date(),
   }),
   () => {
     const today = new Date();
     return {
       detail: "Insert a link to tomorrow's daily note",
-      snippet: "/tomorrow",
-      date: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1)
+      snippet: '/tomorrow',
+      date: new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        today.getDate() + 1
+      ),
     };
   },
   () => {
     const today = new Date();
     return {
       detail: "Insert a link to yesterday's daily note",
-      snippet: "/yesterday",
-      date: new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1)
+      snippet: '/yesterday',
+      date: new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        today.getDate() - 1
+      ),
     };
-  }
+  },
 ];
 
 const computedSnippets: ((number: number) => DateSnippet)[] = [
@@ -119,7 +127,7 @@ const computedSnippets: ((number: number) => DateSnippet)[] = [
         today.getFullYear(),
         today.getMonth(),
         today.getDate() + days
-      )
+      ),
     };
   },
   (weeks: number) => {
@@ -131,7 +139,7 @@ const computedSnippets: ((number: number) => DateSnippet)[] = [
         today.getFullYear(),
         today.getMonth(),
         today.getDate() + 7 * weeks
-      )
+      ),
     };
   },
   (months: number) => {
@@ -143,7 +151,7 @@ const computedSnippets: ((number: number) => DateSnippet)[] = [
         today.getFullYear(),
         today.getMonth() + months,
         today.getDate()
-      )
+      ),
     };
   },
   (years: number) => {
@@ -155,9 +163,9 @@ const computedSnippets: ((number: number) => DateSnippet)[] = [
         today.getFullYear() + years,
         today.getMonth(),
         today.getDate()
-      )
+      ),
     };
-  }
+  },
 ];
 
 const completions: CompletionItemProvider = {
@@ -170,10 +178,10 @@ const completions: CompletionItemProvider = {
 
     const completionItems = [
       ...snippets.map(item => createCompletionItem(item())),
-      ...generateDayOfWeekSnippets().map(item => createCompletionItem(item))
+      ...generateDayOfWeekSnippets().map(item => createCompletionItem(item)),
     ];
     return completionItems;
-  }
+  },
 };
 
 const computedCompletions: CompletionItemProvider = {
@@ -187,7 +195,7 @@ const computedCompletions: CompletionItemProvider = {
     const range = document.getWordRangeAtPosition(position, /\S+/);
     const snippetString = document.getText(range);
     const matches = snippetString.match(/(\d+)/);
-    const number: string = matches ? matches[0] : "1";
+    const number: string = matches ? matches[0] : '1';
     const completionItems = computedSnippets.map(item => {
       const completionItem = createCompletionItem(item(parseInt(number)));
       completionItem.range = range;
@@ -195,14 +203,14 @@ const computedCompletions: CompletionItemProvider = {
     });
     // We still want the list to be treated as "incomplete", because the user may add another number
     return new CompletionList(completionItems, true);
-  }
+  },
 };
 
 const datedNoteCommand = (date: Date) => {
-  if (foamNavigateOnSelect === "navigateToNote") {
+  if (foamNavigateOnSelect === 'navigateToNote') {
     return openDailyNoteFor(date);
   }
-  if (foamNavigateOnSelect === "createNote") {
+  if (foamNavigateOnSelect === 'createNote') {
     return createDailyNoteIfNotExists(
       foamConfig,
       getDailyNotePath(foamConfig, date),
@@ -214,18 +222,18 @@ const datedNoteCommand = (date: Date) => {
 const feature: FoamFeature = {
   activate: (context: ExtensionContext) => {
     context.subscriptions.push(
-      commands.registerCommand("foam-vscode.open-dated-note", date =>
+      commands.registerCommand('foam-vscode.open-dated-note', date =>
         datedNoteCommand(date)
       )
     );
-    languages.registerCompletionItemProvider("markdown", completions, "/");
+    languages.registerCompletionItemProvider('markdown', completions, '/');
     languages.registerCompletionItemProvider(
-      "markdown",
+      'markdown',
       computedCompletions,
-      "/",
-      "+"
+      '/',
+      '+'
     );
-  }
+  },
 };
 
 export default feature;

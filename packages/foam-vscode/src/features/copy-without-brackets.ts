@@ -1,21 +1,19 @@
-import {
-  window,
-  env,
-  ExtensionContext,
-  commands,
-} from "vscode";
-import { FoamFeature } from "../types";
-import { removeBrackets } from "../utils";
+import { window, env, ExtensionContext, commands } from 'vscode';
+import { FoamFeature } from '../types';
+import { removeBrackets } from '../utils';
 
 const feature: FoamFeature = {
   activate: (context: ExtensionContext) => {
     context.subscriptions.push(
-      commands.registerCommand("foam-vscode.copy-without-brackets", copyWithoutBrackets)
+      commands.registerCommand(
+        'foam-vscode.copy-without-brackets',
+        copyWithoutBrackets
+      )
     );
   },
 };
 
-async function copyWithoutBrackets () {
+async function copyWithoutBrackets() {
   // Get the active text editor
   const editor = window.activeTextEditor;
 

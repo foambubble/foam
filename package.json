@@ -3,7 +3,6 @@
   "version": "0.2.0",
   "description": "Foam",
   "repository": "git@github.com:foambubble/foam.git",
-  "author": "Jani Eväkallio <jani.evakallio@gmail.com>",
   "license": "MIT",
   "private": "true",
   "workspaces": [

@@ -8,7 +8,6 @@ const styleFallback = {
   node: {
     note: '#277da1',
     placeholder: '#545454',
-    unknown: '#f94144',
   },
 };
 
@@ -28,6 +27,21 @@ const labelAlpha = d3
   .range([0, 1])
   .clamp(true);
 
+const defaultStyle = {
+  background: getStyle(`--vscode-panel-background`) ?? styleFallback.background,
+  fontSize:
+    parseInt(getStyle(`--vscode-font-size`) ?? styleFallback.fontSize) - 2,
+  highlightedForeground:
+    getStyle('--vscode-list-highlightForeground') ??
+    styleFallback.highlightedForeground,
+  node: {
+    note: getStyle('--vscode-editor-foreground') ?? styleFallback.node.note,
+    placeholder:
+      getStyle('--vscode-list-deemphasizedForeground') ??
+      styleFallback.node.placeholder,
+  },
+};
+
 let model = {
   selectedNodes: new Set(),
   hoverNode: null,
@@ -42,23 +56,7 @@ let model = {
    * It tries to be set using VSCode values,
    * in the case it fails, use the fallback style values.
    */
-  style: {
-    background:
-      getStyle(`--vscode-panel-background`) ?? styleFallback.background,
-    fontSize:
-      parseInt(getStyle(`--vscode-font-size`) ?? styleFallback.fontSize) - 2,
-    highlightedForeground:
-      getStyle('--vscode-list-highlightForeground') ??
-      styleFallback.highlightedForeground,
-    node: {
-      note: getStyle('--vscode-editor-foreground') ?? styleFallback.node.note,
-      placeholder:
-        getStyle('--vscode-list-deemphasizedForeground') ??
-        styleFallback.node.placeholder,
-      unknown:
-        getStyle('--vscode-editor-foreground') ?? styleFallback.node.unknown,
-    },
-  },
+  style: defaultStyle,
 };
 const graph = ForceGraph();
 
@@ -142,30 +140,11 @@ const Actions = {
       return;
     }
     model.style = {
-      background:
-        newStyle.background ??
-        getStyle(`--vscode-panel-background`) ??
-        styleFallback.background,
-      fontSize:
-        newStyle.fontSize ??
-        parseInt(getStyle(`--vscode-font-size`) ?? styleFallback.fontSize) - 2,
-      highlightedForeground:
-        newStyle.highlightedForeground ??
-        getStyle('--vscode-list-highlightForeground') ??
-        styleFallback.highlightedForeground,
+      ...defaultStyle,
+      ...newStyle,
       node: {
-        note:
-          newStyle.node?.note ??
-          getStyle('--vscode-editor-foreground') ??
-          styleFallback.node.note,
-        placeholder:
-          newStyle.node?.placeholder ??
-          getStyle('--vscode-list-deemphasizedForeground') ??
-          styleFallback.node.placeholder,
-        unknown:
-          newStyle.node?.unknown ??
-          getStyle('--vscode-editor-foreground') ??
-          styleFallback.node.unknow,
+        ...defaultStyle.node,
+        ...newStyle.node,
       },
     };
     graph.backgroundColor(model.style.background);
@@ -244,7 +223,7 @@ function augmentGraphInfo(data) {
 function getNodeColor(nodeId, model) {
   const info = model.nodeInfo[nodeId];
   const style = model.style;
-  const typeFill = style.node[info.type || 'unknown'];
+  const typeFill = style.node[info.type ?? 'note'] ?? style.node['note'];
   switch (getNodeState(nodeId, model)) {
     case 'regular':
       return { fill: typeFill, border: typeFill };

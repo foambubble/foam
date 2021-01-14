@@ -22,9 +22,35 @@ A sample configuration object is provided below:
 "node": {
     "note": "#277da1",
     "placeholder": "#545454",
-    "unknown": "#f94144"
 }
 ```
+
+### Style nodes by type
+It is possible to customize the style of a node based on the `type` property in the YAML frontmatter of the corresponding document.
+
+For example the following `backlinking.md` note:
+
+```
+---
+type: feature
+---
+# Backlinking
+
+...
+```
+
+And the following `settings.json`:
+```json
+"foam.graph.style": {
+    "node": {
+        "feature": "red",
+    }
+}
+```
+
+Will result in the following graph:
+
+![Style node by type](../assets/images/style-node-by-type.png)
 
 ### Markdown Links
 Another extension that provides a great graph visualisation is [Markdown Links](https://marketplace.visualstudio.com/items?itemName=tchayen.markdown-links).
@@ -32,3 +58,5 @@ The extension doesn't use the Foam model, so discrepancies might arise, but it's
 
 - Use the `Markdown Links: Show Graph` command to see the graph
 ![Demo of graph visualiser](../assets/images/foam-navigation-demo.gif)
+
+

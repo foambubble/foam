@@ -76,7 +76,7 @@ function generateGraphData(foam: Foam) {
     const links = foam.notes.getForwardLinks(n.uri);
     graph.nodes[n.uri.path] = {
       id: n.uri.path,
-      type: 'note',
+      type: n.properties.type ?? 'note',
       uri: n.uri,
       title: cutTitle(n.title),
     };

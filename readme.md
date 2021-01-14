@@ -38,6 +38,8 @@ Quick links to next documentation sections
 - [Call To Adventure](https://foambubble.github.io/foam#call-to-adventure)
 - [Thanks and attribution](https://foambubble.github.io/foam#thanks-and-attribution)
 
+You can also browse the [docs folder](https://github.com/foambubble/foam/tree/master/docs).
+
 ## License
 
 Foam is licensed under the [MIT license](LICENSE).

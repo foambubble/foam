@@ -1,6 +1,4 @@
-'use strict';
-
-import { workspace, ExtensionContext, window, Uri } from 'vscode';
+import { workspace, ExtensionContext, window } from 'vscode';
 import {
   bootstrap,
   FoamConfig,

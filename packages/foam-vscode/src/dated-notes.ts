@@ -1,10 +1,4 @@
-import {
-  Selection,
-  Uri,
-  window,
-  workspace,
-  WorkspaceConfiguration,
-} from 'vscode';
+import { workspace, WorkspaceConfiguration } from 'vscode';
 import { dirname, join } from 'path';
 import dateFormat from 'dateformat';
 import * as fs from 'fs';

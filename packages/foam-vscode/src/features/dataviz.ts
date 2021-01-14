@@ -181,11 +181,11 @@ async function getWebviewContent(
   const graphDirectory = path.join('graphs', 'default');
   const textWithVariables = text
     .replace(
-      '${graphPath}',
+      '${graphPath}', // eslint-disable-line
       '{{' + path.join(graphDirectory, 'graph.js') + '}}'
     )
     .replace(
-      '${graphStylesPath}',
+      '${graphStylesPath}', // eslint-disable-line
       '{{' + path.join(graphDirectory, 'graph.css') + '}}'
     );
 

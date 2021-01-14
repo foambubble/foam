@@ -6,7 +6,7 @@ If you're interested in working on it, please start a conversation in [GitHub is
 
 ## Notes
 
-One of Roam's big features is the ability to find all instances of a reference, create a page for it and update all the references to link to the new page.
+One of Foam's big features is the ability to find all instances of a reference, create a page for it and update all the references to link to the new page.
 
 Implementing this is on the [[roadmap]], but for the time being you can achieve similar things by:
 

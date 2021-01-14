@@ -20,33 +20,40 @@ const feature: FoamFeature = {
     });
 
     vscode.commands.registerCommand("foam-vscode.show-graph", async () => {
-      const foam = await foamPromise;
-      panel = await createGraphPanel(foam, context);
-      const onFoamChanged = _ => {
-        updateGraph(panel, foam);
-      };
+      if (panel) {
+        const columnToShowIn = vscode.window.activeTextEditor
+        ? vscode.window.activeTextEditor.viewColumn
+        : undefined;
+        panel.reveal(columnToShowIn);
+      } else {
+        const foam = await foamPromise;
+        panel = await createGraphPanel(foam, context);
+        const onFoamChanged = _ => {
+          updateGraph(panel, foam);
+        };
 
-      const noteAddedListener = foam.notes.onDidAddNote(onFoamChanged);
-      const noteUpdatedListener = foam.notes.onDidUpdateNote(onFoamChanged);
-      const noteDeletedListener = foam.notes.onDidDeleteNote(onFoamChanged);
-      panel.onDidDispose(() => {
-        noteAddedListener.dispose();
-        noteUpdatedListener.dispose();
-        noteDeletedListener.dispose();
-        panel = undefined;
-      });
+        const noteAddedListener = foam.notes.onDidAddNote(onFoamChanged);
+        const noteUpdatedListener = foam.notes.onDidUpdateNote(onFoamChanged);
+        const noteDeletedListener = foam.notes.onDidDeleteNote(onFoamChanged);
+        panel.onDidDispose(() => {
+          noteAddedListener.dispose();
+          noteUpdatedListener.dispose();
+          noteDeletedListener.dispose();
+          panel = undefined;
+        });
 
-      vscode.window.onDidChangeActiveTextEditor(e => {
-        if (e.document.uri.scheme === "file") {
-          const note = foam.notes.getNote(e.document.uri);
-          if (isSome(note)) {
-            panel.webview.postMessage({
-              type: "didSelectNote",
-              payload: note.uri.path
-            });
+        vscode.window.onDidChangeActiveTextEditor(e => {
+          if (e.document.uri.scheme === "file") {
+            const note = foam.notes.getNote(e.document.uri);
+            if (isSome(note)) {
+              panel.webview.postMessage({
+                type: "didSelectNote",
+                payload: note.uri.path
+              });
+            }
           }
-        }
-      });
+        });
+      }
     });
   }
 };

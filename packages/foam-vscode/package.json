@@ -7,7 +7,7 @@
     "type": "git"
   },
   "homepage": "https://github.com/foambubble/foam",
-  "version": "0.7.7",
+  "version": "0.8.0-alpha.0",
   "license": "MIT",
   "publisher": "foam",
   "engines": {
@@ -208,13 +208,13 @@
     "jest": "^26.2.2",
     "jest-environment-vscode": "^1.0.0",
     "jest-extended": "^0.11.5",
-    "ts-jest": "^26.4.4",
     "rimraf": "^3.0.2",
+    "ts-jest": "^26.4.4",
     "typescript": "^3.8.3",
     "vscode-test": "^1.3.0"
   },
   "dependencies": {
     "dateformat": "^3.0.3",
-    "foam-core": "^0.7.4"
+    "foam-core": "^0.8.0-alpha.0"
   }
 }

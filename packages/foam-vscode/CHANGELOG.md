@@ -4,6 +4,17 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.8.0] - 2021-01-15
+
+Features:
+- Model: Now direct links are included in the Foam model (#433)
+- Commaands: Added `Open random note` command (#440 - thanks @MCluck90)
+- Dataviz: Added graph style override from VsCode theme (#438 - thanks @jmg-duarte)
+- Dataviz: Added graph style customization based on note type (#449)
+
+Fixes and Improvements:
+- Various improvements and fixes in documentation (thanks @anglinb, @themaxdavitt, @elswork)
+
 ## [0.7.7] - 2020-12-31
 
 Fixes and Improvements:

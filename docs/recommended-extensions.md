@@ -18,7 +18,6 @@ These extensions are not (yet?) defined in `.vscode/extensions.json`, but have b
 - [Markdown Emoji](https://marketplace.visualstudio.com/items?itemName=bierner.markdown-emoji) (adds `:smile:` syntax, works with emojisense to provide autocomplete for this syntax)
 - [Mermaid Support for Preview](https://marketplace.visualstudio.com/items?itemName=bierner.markdown-mermaid)
 - [Mermaid Markdown Syntax Highlighting](https://marketplace.visualstudio.com/items?itemName=bpruitt-goddard.mermaid-markdown-syntax-highlighting)
-- [Paste Image](https://marketplace.visualstudio.com/items?itemName=mushan.vscode-paste-image)
 - [VSCode PDF Viewing](https://marketplace.visualstudio.com/items?itemName=tomoki1207.pdf)
 - [Git Lens](https://marketplace.visualstudio.com/items?itemName=eamodio.gitlens)
 - [Markdown Extended](https://marketplace.visualstudio.com/items?itemName=jebbs.markdown-extended) (with `kbd` option disabled, `kbd` turns wiki-links into non-clickable buttons)

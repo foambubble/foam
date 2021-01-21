@@ -8,7 +8,7 @@
 
 > ⚠️ This is an early stage software. Use at your own peril.
 
-> You can join the Foam Community on the [Foam Discord](https://discord.gg/EKFyMrVNZ9)
+> You can join the Foam Community on the [Foam Discord](https://discord.gg/rtdZKgj)
 
 [Foam](https://foambubble.github.io/foam) is a note-taking tool that lives within VsCode, which means you can pair it with your favorite extensions for a great editing experience.
 

@@ -7,6 +7,7 @@ import openDatedNote from './open-dated-note';
 import tagsExplorer from './tags-tree-view';
 import createFromTemplate from './create-from-template';
 import openRandomNote from './open-random-note';
+import orphans from './orphans';
 import { FoamFeature } from '../types';
 
 export const features: FoamFeature[] = [
@@ -19,4 +20,5 @@ export const features: FoamFeature[] = [
   copyWithoutBrackets,
   openDatedNote,
   createFromTemplate,
+  orphans,
 ];

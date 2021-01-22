@@ -23,6 +23,7 @@
     "onCommand:foam-vscode.update-wikilinks",
     "onCommand:foam-vscode.open-daily-note",
     "onCommand:foam-vscode.open-random-note",
+    "onCommand:foam-vscode.orphans",
     "onCommand:foam-vscode.janitor",
     "onCommand:foam-vscode.copy-without-brackets",
     "onCommand:foam-vscode.show-graph"
@@ -59,6 +60,10 @@
       {
         "command": "foam-vscode.open-random-note",
         "title": "Foam: Open Random Note"
+      },
+      {
+        "command": "foam-vscode.orphans",
+        "title": "Foam: Orphans"
       },
       {
         "command": "foam-vscode.janitor",
@@ -140,6 +145,39 @@
           ],
           "default": null,
           "description": "The directory into which daily notes should be created. Defaults to the workspace root."
+        },
+        "foam.orphans.path": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null,
+          "markdownDescription": "The directory into which the orphans report should be created. If not specified, will open a dialog instead.",
+          "scope": "resource"
+        },
+        "foam.orphans.exclude": {
+          "type": [
+            "array"
+          ],
+          "default": [],
+          "markdownDescription": "Directories to exclude from the orphans report.",
+          "scope": "resource"
+        },
+        "foam.orphans.groupBy": {
+          "type": [
+            "string"
+          ],
+          "enum": [
+            "off",
+            "folder"
+          ],
+          "enumDescriptions": [
+            "Disable grouping",
+            "Group by folder"
+          ],
+          "default": "folder",
+          "markdownDescription": "Group orphans report entries by.",
+          "scope": "resource"
         },
         "foam.dateSnippets.afterCompletion": {
           "type": "string",

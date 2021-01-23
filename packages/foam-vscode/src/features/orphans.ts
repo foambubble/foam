@@ -1,6 +1,7 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { Foam, Note } from 'foam-core';
+import micromatch from 'micromatch';
 import {
   getOrphansConfig,
   OrphansConfig,
@@ -69,7 +70,7 @@ class OrphansProvider implements vscode.TreeDataProvider<OrphanTreeItem> {
       .filter(note => {
         const p = note.uri.path.replace(this.root, '');
         const { dir } = path.parse(p);
-        return !this.exclude.includes(dir);
+        return !micromatch.isMatch(dir, this.exclude);
       })
       .sort((a, b) => a.title.localeCompare(b.title));
   }

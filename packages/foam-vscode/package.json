@@ -268,6 +268,7 @@
   },
   "dependencies": {
     "dateformat": "^3.0.3",
-    "foam-core": "^0.8.0"
+    "foam-core": "^0.8.0",
+    "micromatch": "^4.0.2"
   }
 }

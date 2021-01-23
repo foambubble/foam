@@ -41,14 +41,12 @@ export function getFoamLoggerLevel(): LogLevel {
 /** Retrieve the orphans configuration */
 export function getOrphansConfig(): OrphansConfig {
   const orphansConfig = workspace.getConfiguration('foam.orphans');
-  const path: string | undefined = orphansConfig.get('path');
   const exclude: string[] = orphansConfig.get('exclude');
   const groupBy: string = orphansConfig.get('groupBy');
-  return { path, exclude, groupBy };
+  return { exclude, groupBy };
 }
 
 export interface OrphansConfig {
-  path?: string;
   exclude: string[];
   groupBy: string;
 }

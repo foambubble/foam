@@ -23,7 +23,6 @@
     "onCommand:foam-vscode.update-wikilinks",
     "onCommand:foam-vscode.open-daily-note",
     "onCommand:foam-vscode.open-random-note",
-    "onCommand:foam-vscode.orphans",
     "onCommand:foam-vscode.janitor",
     "onCommand:foam-vscode.copy-without-brackets",
     "onCommand:foam-vscode.show-graph"
@@ -37,6 +36,12 @@
           "name": "Tag Explorer",
           "icon": "media/dep.svg",
           "contextualTitle": "Tags Explorer"
+        },
+        {
+          "id": "foam-vscode.orphans",
+          "name": "Orphans",
+          "icon": "media/dep.svg",
+          "contextualTitle": "Orphans"
         }
       ]
     },
@@ -60,10 +65,6 @@
       {
         "command": "foam-vscode.open-random-note",
         "title": "Foam: Open Random Note"
-      },
-      {
-        "command": "foam-vscode.orphans",
-        "title": "Foam: Orphans"
       },
       {
         "command": "foam-vscode.janitor",
@@ -145,15 +146,6 @@
           ],
           "default": null,
           "description": "The directory into which daily notes should be created. Defaults to the workspace root."
-        },
-        "foam.orphans.path": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "default": null,
-          "markdownDescription": "The directory into which the orphans report should be created. If not specified, will open a dialog instead.",
-          "scope": "resource"
         },
         "foam.orphans.exclude": {
           "type": [

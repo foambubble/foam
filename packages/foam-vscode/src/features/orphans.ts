@@ -1,17 +1,8 @@
-import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { Foam } from 'foam-core';
+import { Foam, Note } from 'foam-core';
 import { getOrphansConfig, OrphansConfig } from '../settings';
-import { focusNote } from '../utils';
 import { FoamFeature } from '../types';
-
-const ORPHANS_FILENAME = 'orphans';
-const ORPHANS_EXTENSION = '.md';
-const ORPHANS_TITLE = 'Orphans';
-
-// TODO: path option?
-// TODO: other than markdown for dialog?
 
 const feature: FoamFeature = {
   activate: async (
@@ -19,93 +10,121 @@ const feature: FoamFeature = {
     foamPromise: Promise<Foam>
   ) => {
     const foam = await foamPromise;
-    const root = vscode.workspace.workspaceFolders[0].uri.fsPath;
     const config = getOrphansConfig();
-    const orphansReportPath = path.join(
-      root,
-      `${ORPHANS_FILENAME}${ORPHANS_EXTENSION}`
-    );
+    const provider = new OrphansProvider(foam, config);
 
     context.subscriptions.push(
-      vscode.commands.registerCommand('foam-vscode.orphans', async () => {
-        const orphansPaths = getOrphansPaths(foam, root, config);
-        const report = getOrphansReport(orphansPaths, config);
-
-        await fs.promises.writeFile(orphansReportPath, report);
-        await focusNote(orphansReportPath, false);
-      })
+      vscode.window.registerTreeDataProvider('foam-vscode.orphans', provider)
     );
+
+    foam.notes.onDidUpdateNote(() => provider.refresh());
   },
 };
 
-function getOrphansReport(paths: string[], config: OrphansConfig) {
-  const content = getOrphansReportContent(paths, config);
-  return `# ${ORPHANS_TITLE}\n\n${content}`;
-}
-
-function getOrphansReportContent(
-  paths: string[],
-  config: OrphansConfig
-): string {
-  if (config.groupBy === 'folder') {
-    return getOrphansByDirectoryReport(paths);
-  }
-
-  return paths
-    .map(p => path.parse(p).name)
-    .sort((a, b) => a.localeCompare(b))
-    .map(name => `- [[${name}]]`)
-    .join('\n');
-}
-
-function getOrphansPaths(
-  foam: Foam,
-  root: string,
-  config: OrphansConfig
-): string[] {
-  const excludePaths = config.exclude.map(d => path.normalize(`/${d}`));
-
-  return foam.notes
-    .getNotes()
-    .filter(note => {
-      const forwardLinks = foam.notes.getForwardLinks(note.uri);
-      const backlinks = foam.notes
-        .getBacklinks(note.uri)
-        .map(b => path.parse(b.from.path).name);
-      // If the note is linked to by `orphans`, we want to conserve it
-      if (backlinks.includes(ORPHANS_FILENAME)) {
-        return true;
-      }
-      return !forwardLinks.length && !backlinks.length;
-    })
-    .map(note => note.uri.path.replace(root, ''))
-    .filter(p => {
-      const { dir, name } = path.parse(p);
-      return !excludePaths.includes(dir) && name !== ORPHANS_FILENAME;
-    });
-}
-
-function getOrphansByDirectoryReport(paths: string[]): string {
-  const grouped: { [key: string]: string[] } = {};
-  for (const p of paths) {
-    const { dir, name } = path.parse(p);
-    if (grouped[dir]) {
-      grouped[dir].push(name);
-    } else {
-      grouped[dir] = [name];
-    }
-  }
-
-  return Object.entries(grouped)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([directory, names]) => {
-      const sortedNames = names
-        .sort((a, b) => a.localeCompare(b))
-        .map(name => `- [[${name}]]`)
-        .join('\n');
-      return `## \`${directory}\`\n\n${sortedNames}`;
-    })
-    .join('\n\n');
-}
-
 export default feature;
+
+class OrphansProvider implements vscode.TreeDataProvider<OrphanTreeItem> {
+  // prettier-ignore
+  private _onDidChangeTreeData: vscode.EventEmitter<OrphanTreeItem | undefined | void> = new vscode.EventEmitter<OrphanTreeItem | undefined | void>();
+  // prettier-ignore
+  readonly onDidChangeTreeData: vscode.Event<OrphanTreeItem | undefined | void> = this._onDidChangeTreeData.event;
+
+  private orphans: Note[] = [];
+  private exclude: string[] = [];
+  private root = vscode.workspace.workspaceFolders[0].uri.fsPath;
+
+  constructor(private foam: Foam, private config: OrphansConfig) {
+    this.exclude = config.exclude.map(d => path.normalize(`/${d}`));
+    this.computeOrphans();
+  }
+
+  refresh(): void {
+    this.computeOrphans();
+    this._onDidChangeTreeData.fire();
+  }
+
+  private computeOrphans() {
+    this.orphans = this.foam.notes
+      .getNotes()
+      .filter(note => !this.foam.notes.getAllLinks(note.uri).length)
+      .filter(note => {
+        const p = note.uri.path.replace(this.root, '');
+        const { dir } = path.parse(p);
+        return !this.exclude.includes(dir);
+      })
+      .sort((a, b) => a.title.localeCompare(b.title));
+  }
+
+  private getOrphansByDirectory(): OrphansByDirectory {
+    const orphans: OrphansByDirectory = {};
+    for (const orphan of this.orphans) {
+      const p = orphan.uri.path.replace(this.root, '');
+      const { dir } = path.parse(p);
+
+      if (orphans[dir]) {
+        orphans[dir].push(orphan);
+      } else {
+        orphans[dir] = [orphan];
+      }
+    }
+
+    for (const k in orphans) {
+      orphans[k].sort((a, b) => a.title.localeCompare(b.title));
+    }
+
+    return orphans;
+  }
+
+  getTreeItem(item: OrphanTreeItem): vscode.TreeItem {
+    return item;
+  }
+
+  getChildren(directory?: Directory): Thenable<OrphanTreeItem[]> {
+    if (!directory && this.config.groupBy === 'folder') {
+      const directories = Object.entries(this.getOrphansByDirectory())
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([dir, orphans]) => new Directory(dir, orphans));
+      return Promise.resolve(directories);
+    }
+
+    if (directory) {
+      const orphans = directory.notes.map(o => new Orphan(o));
+      return Promise.resolve(orphans);
+    }
+
+    const orphans = this.orphans.map(o => new Orphan(o));
+    return Promise.resolve(orphans);
+  }
+}
+
+type OrphansByDirectory = { [key: string]: Note[] };
+
+type OrphanTreeItem = Orphan | Directory;
+
+class Orphan extends vscode.TreeItem {
+  constructor(public readonly note: Note) {
+    super(note.title, vscode.TreeItemCollapsibleState.None);
+    this.description = note.uri.path;
+    this.tooltip = this.description;
+    this.command = {
+      command: 'vscode.open',
+      title: 'Open File',
+      arguments: [note.uri],
+    };
+  }
+
+  iconPath = new vscode.ThemeIcon('note');
+  contextValue = 'orphan';
+}
+
+class Directory extends vscode.TreeItem {
+  constructor(public readonly dir: string, public readonly notes: Note[]) {
+    super(dir, vscode.TreeItemCollapsibleState.Collapsed);
+    const s = this.notes.length > 1 ? 's' : '';
+    this.description = `${this.notes.length} orphan${s}`;
+    this.tooltip = this.description;
+  }
+
+  iconPath = new vscode.ThemeIcon('folder');
+  contextValue = 'directory';
+}

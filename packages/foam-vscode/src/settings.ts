@@ -42,11 +42,16 @@ export function getFoamLoggerLevel(): LogLevel {
 export function getOrphansConfig(): OrphansConfig {
   const orphansConfig = workspace.getConfiguration('foam.orphans');
   const exclude: string[] = orphansConfig.get('exclude');
-  const groupBy: string = orphansConfig.get('groupBy');
+  const groupBy: OrphansConfigGroupBy = orphansConfig.get('groupBy');
   return { exclude, groupBy };
 }
 
 export interface OrphansConfig {
   exclude: string[];
-  groupBy: string;
+  groupBy: OrphansConfigGroupBy;
+}
+
+export enum OrphansConfigGroupBy {
+  Folder = 'folder',
+  Off = 'off',
 }

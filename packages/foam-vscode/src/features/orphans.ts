@@ -1,7 +1,11 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { Foam, Note } from 'foam-core';
-import { getOrphansConfig, OrphansConfig } from '../settings';
+import {
+  getOrphansConfig,
+  OrphansConfig,
+  OrphansConfigGroupBy,
+} from '../settings';
 import { FoamFeature } from '../types';
 
 const feature: FoamFeature = {
@@ -14,7 +18,11 @@ const feature: FoamFeature = {
     const provider = new OrphansProvider(foam, config);
 
     context.subscriptions.push(
-      vscode.window.registerTreeDataProvider('foam-vscode.orphans', provider)
+      vscode.window.registerTreeDataProvider('foam-vscode.orphans', provider),
+      vscode.commands.registerCommand(
+        'foam-vscode.toggle-orphans-groupby',
+        () => provider.toggleGroupBy()
+      )
     );
 
     foam.notes.onDidUpdateNote(() => provider.refresh());
@@ -31,16 +39,27 @@ class OrphansProvider implements vscode.TreeDataProvider<OrphanTreeItem> {
 
   private orphans: Note[] = [];
   private exclude: string[] = [];
-  private root = vscode.workspace.workspaceFolders[0].uri.fsPath;
+  private groupBy: OrphansConfigGroupBy = OrphansConfigGroupBy.Folder;
+  private root = vscode.workspace.workspaceFolders[0].uri.path;
 
   constructor(private foam: Foam, private config: OrphansConfig) {
     this.exclude = config.exclude.map(d => path.normalize(`/${d}`));
+    this.groupBy = config.groupBy;
     this.computeOrphans();
   }
 
   refresh(): void {
     this.computeOrphans();
     this._onDidChangeTreeData.fire();
+  }
+
+  toggleGroupBy(): void {
+    this.groupBy =
+      this.groupBy === OrphansConfigGroupBy.Folder
+        ? OrphansConfigGroupBy.Off
+        : OrphansConfigGroupBy.Folder;
+
+    this.refresh();
   }
 
   private computeOrphans() {
@@ -80,7 +99,7 @@ class OrphansProvider implements vscode.TreeDataProvider<OrphanTreeItem> {
   }
 
   getChildren(directory?: Directory): Thenable<OrphanTreeItem[]> {
-    if (!directory && this.config.groupBy === 'folder') {
+    if (!directory && this.groupBy === OrphansConfigGroupBy.Folder) {
       const directories = Object.entries(this.getOrphansByDirectory())
         .sort(([a], [b]) => a.localeCompare(b))
         .map(([dir, orphans]) => new Directory(dir, orphans));

@@ -45,6 +45,21 @@
         }
       ]
     },
+    "viewsWelcome": [
+      {
+        "view": "foam-vscode.orphans",
+        "contents": "No orphans found. Notes that have no backlinks nor links will show here."
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "foam-vscode.toggle-orphans-groupby",
+          "when": "view == foam-vscode.orphans",
+          "group": "navigation"
+        }
+      ]
+    },
     "commands": [
       {
         "command": "foam-vscode.set-log-level",
@@ -77,6 +92,14 @@
       {
         "command": "foam-vscode.create-note-from-template",
         "title": "Foam: Create New Note From Template"
+      },
+      {
+        "command": "foam-vscode.toggle-orphans-groupby",
+        "title": "Foam: Toggle Orphans Group By",
+        "icon": {
+          "light": "static/icons/light/circle.svg",
+          "dark": "static/icons/dark/circle.svg"
+        }
       }
     ],
     "configuration": {

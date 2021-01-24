@@ -54,14 +54,23 @@
     "menus": {
       "view/title": [
         {
-          "command": "foam-vscode.toggle-orphans-groupby",
-          "when": "view == foam-vscode.orphans",
+          "command": "foam-vscode.group-orphans-by-folder",
+          "when": "view == foam-vscode.orphans && foam-vscode.orphans-grouped-by-folder == false",
+          "group": "navigation"
+        },
+        {
+          "command": "foam-vscode.group-orphans-off",
+          "when": "view == foam-vscode.orphans && foam-vscode.orphans-grouped-by-folder == true",
           "group": "navigation"
         }
       ],
       "commandPalette": [
         {
-          "command": "foam-vscode.toggle-orphans-groupby",
+          "command": "foam-vscode.group-orphans-by-folder",
+          "when": "false"
+        },
+        {
+          "command": "foam-vscode.group-orphans-off",
           "when": "false"
         }
       ]
@@ -100,12 +109,14 @@
         "title": "Foam: Create New Note From Template"
       },
       {
-        "command": "foam-vscode.toggle-orphans-groupby",
-        "title": "Foam: Toggle Orphans Group By",
-        "icon": {
-          "light": "static/icons/light/circle.svg",
-          "dark": "static/icons/dark/circle.svg"
-        }
+        "command": "foam-vscode.group-orphans-by-folder",
+        "title": "Foam: Group Orphans By Folder",
+        "icon": "$(list-tree)"
+      },
+      {
+        "command": "foam-vscode.group-orphans-off",
+        "title": "Foam: Don't Group Orphans",
+        "icon": "$(list-flat)"
       }
     ],
     "configuration": {

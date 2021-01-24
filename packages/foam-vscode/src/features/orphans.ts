@@ -21,8 +21,11 @@ const feature: FoamFeature = {
     context.subscriptions.push(
       vscode.window.registerTreeDataProvider('foam-vscode.orphans', provider),
       vscode.commands.registerCommand(
-        'foam-vscode.toggle-orphans-groupby',
-        () => provider.toggleGroupBy()
+        'foam-vscode.group-orphans-by-folder',
+        () => provider.setGroupBy(OrphansConfigGroupBy.Folder)
+      ),
+      vscode.commands.registerCommand('foam-vscode.group-orphans-off', () =>
+        provider.setGroupBy(OrphansConfigGroupBy.Off)
       )
     );
 
@@ -46,7 +49,22 @@ class OrphansProvider implements vscode.TreeDataProvider<OrphanTreeItem> {
   constructor(private foam: Foam, config: OrphansConfig) {
     this.exclude = config.exclude.map(d => path.normalize(`/${d}`));
     this.groupBy = config.groupBy;
+    this.setContext();
     this.computeOrphans();
+  }
+
+  setGroupBy(groupBy: OrphansConfigGroupBy): void {
+    this.groupBy = groupBy;
+    this.setContext();
+    this.refresh();
+  }
+
+  private setContext(): void {
+    vscode.commands.executeCommand(
+      'setContext',
+      'foam-vscode.orphans-grouped-by-folder',
+      this.groupBy === OrphansConfigGroupBy.Folder
+    );
   }
 
   refresh(): void {
@@ -54,16 +72,28 @@ class OrphansProvider implements vscode.TreeDataProvider<OrphanTreeItem> {
     this._onDidChangeTreeData.fire();
   }
 
-  toggleGroupBy(): void {
-    this.groupBy =
-      this.groupBy === OrphansConfigGroupBy.Folder
-        ? OrphansConfigGroupBy.Off
-        : OrphansConfigGroupBy.Folder;
-
-    this.refresh();
+  getTreeItem(item: OrphanTreeItem): vscode.TreeItem {
+    return item;
   }
 
-  private computeOrphans() {
+  getChildren(directory?: Directory): Thenable<OrphanTreeItem[]> {
+    if (!directory && this.groupBy === OrphansConfigGroupBy.Folder) {
+      const directories = Object.entries(this.getOrphansByDirectory())
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([dir, orphans]) => new Directory(dir, orphans));
+      return Promise.resolve(directories);
+    }
+
+    if (directory) {
+      const orphans = directory.notes.map(o => new Orphan(o));
+      return Promise.resolve(orphans);
+    }
+
+    const orphans = this.orphans.map(o => new Orphan(o));
+    return Promise.resolve(orphans);
+  }
+
+  private computeOrphans(): void {
     this.orphans = this.foam.notes
       .getNotes()
       .filter(note => !this.foam.notes.getAllLinks(note.uri).length)
@@ -93,27 +123,6 @@ class OrphansProvider implements vscode.TreeDataProvider<OrphanTreeItem> {
     }
 
     return orphans;
-  }
-
-  getTreeItem(item: OrphanTreeItem): vscode.TreeItem {
-    return item;
-  }
-
-  getChildren(directory?: Directory): Thenable<OrphanTreeItem[]> {
-    if (!directory && this.groupBy === OrphansConfigGroupBy.Folder) {
-      const directories = Object.entries(this.getOrphansByDirectory())
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([dir, orphans]) => new Directory(dir, orphans));
-      return Promise.resolve(directories);
-    }
-
-    if (directory) {
-      const orphans = directory.notes.map(o => new Orphan(o));
-      return Promise.resolve(orphans);
-    }
-
-    const orphans = this.orphans.map(o => new Orphan(o));
-    return Promise.resolve(orphans);
   }
 }
 

@@ -43,7 +43,7 @@ class OrphansProvider implements vscode.TreeDataProvider<OrphanTreeItem> {
   private groupBy: OrphansConfigGroupBy = OrphansConfigGroupBy.Folder;
   private root = vscode.workspace.workspaceFolders[0].uri.path;
 
-  constructor(private foam: Foam, private config: OrphansConfig) {
+  constructor(private foam: Foam, config: OrphansConfig) {
     this.exclude = config.exclude.map(d => path.normalize(`/${d}`));
     this.groupBy = config.groupBy;
     this.computeOrphans();

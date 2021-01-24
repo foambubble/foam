@@ -58,6 +58,12 @@
           "when": "view == foam-vscode.orphans",
           "group": "navigation"
         }
+      ],
+      "commandPalette": [
+        {
+          "command": "foam-vscode.toggle-orphans-groupby",
+          "when": "false"
+        }
       ]
     },
     "commands": [
@@ -175,7 +181,7 @@
             "array"
           ],
           "default": [],
-          "markdownDescription": "Directories to exclude from the orphans report.",
+          "markdownDescription": "Specifies the list of glob patterns that will be excluded from the orphans report.",
           "scope": "resource"
         },
         "foam.orphans.groupBy": {

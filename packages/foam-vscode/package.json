@@ -48,7 +48,7 @@
     "viewsWelcome": [
       {
         "view": "foam-vscode.orphans",
-        "contents": "No orphans found. Notes that have no backlinks nor links will show here."
+        "contents": "No orphans found. Notes that have no backlinks nor links will show up here."
       }
     ],
     "menus": {

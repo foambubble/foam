@@ -37,6 +37,9 @@ A #recipe is a guide, tip or strategy for getting the most out of your Foam work
 - Link documents with [[wiki-links]].
 - Use shortcuts for [[creating-new-notes]]
 - Instantly create and access your [[daily-notes]]
+- Add and explore [[tags]]
+- Create [[note-templates]]
+- Find [[orphans]]
 - Use custom [[note-macros]] to create weekly, monthly etc. notes
 - Draw [[diagrams-in-markdown]]
 - Prettify your links, [[automatically-expand-urls-to-well-titled-links]]
@@ -109,6 +112,9 @@ _See [[contribution-guide]] and [[how-to-write-recipes]]._
 [wiki-links]: ../wiki-links.md "Wiki Links"
 [creating-new-notes]: ../features/creating-new-notes.md "Creating New Notes"
 [daily-notes]: ../features/daily-notes.md "Daily notes"
+[tags]: ../features/tags.md "Tags"
+[note-templates]: ../features/note-templates.md "Note Templates"
+[orphans]: ../features/orphans.md "Orphans"
 [note-macros]: note-macros.md "Custom Note Macros"
 [diagrams-in-markdown]: diagrams-in-markdown.md "Diagrams in Markdown"
 [automatically-expand-urls-to-well-titled-links]: automatically-expand-urls-to-well-titled-links.md "Automatically Expand URLs to Well-Titled Links"

@@ -34,7 +34,8 @@ const feature: FoamFeature = {
 
 export default feature;
 
-class OrphansProvider implements vscode.TreeDataProvider<OrphanTreeItem> {
+export class OrphansProvider
+  implements vscode.TreeDataProvider<OrphanTreeItem> {
   // prettier-ignore
   private _onDidChangeTreeData: vscode.EventEmitter<OrphanTreeItem | undefined | void> = new vscode.EventEmitter<OrphanTreeItem | undefined | void>();
   // prettier-ignore
@@ -145,7 +146,7 @@ class Orphan extends vscode.TreeItem {
   contextValue = 'orphan';
 }
 
-class Directory extends vscode.TreeItem {
+export class Directory extends vscode.TreeItem {
   constructor(public readonly dir: string, public readonly notes: Note[]) {
     super(dir, vscode.TreeItemCollapsibleState.Collapsed);
     const s = this.notes.length > 1 ? 's' : '';

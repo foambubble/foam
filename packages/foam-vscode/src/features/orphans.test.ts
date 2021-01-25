@@ -1,26 +1,28 @@
-import * as vscode from 'vscode';
 import { OrphansProvider, Directory } from './orphans';
 import { OrphansConfig, OrphansConfigGroupBy } from '../settings';
 
 describe('orphans', () => {
   // Rough mocks of NoteGraphAPI
   const orphanA = {
-    uri: { path: '/path/orphan-a.md' },
+    uri: { fsPath: '/path/orphan-a.md', path: '/path/orphan-a.md' },
     title: 'Orphan A',
     links: [],
   };
   const orphanB = {
-    uri: { path: '/path-bis/orphan-b.md' },
+    uri: { fsPath: '/path-bis/orphan-b.md', path: '/path-bis/orphan-b.md' },
     title: 'Orphan B',
     links: [],
   };
   const orphanC = {
-    uri: { path: '/path-exclude/orphan-c.md' },
+    uri: {
+      fsPath: '/path-exclude/orphan-c.md',
+      path: '/path-exclude/orphan-c.md',
+    },
     title: 'Orphan C',
     links: [],
   };
   const notOrphanNote = {
-    uri: { path: '/path/not-orphan.md' },
+    uri: { fsPath: '/path/not-orphan.md', path: '/path/not-orphan.md' },
     title: 'Not-Orphan',
     links: [{ from: '', to: '' }],
   };
@@ -30,11 +32,11 @@ describe('orphans', () => {
       getNotes: () => notes,
       getAllLinks: (uri: { path: string }) => {
         switch (uri.path) {
-          case orphanA.uri.path:
+          case orphanA.uri.fsPath:
             return orphanA.links;
-          case orphanB.uri.path:
+          case orphanB.uri.fsPath:
             return orphanB.links;
-          case orphanC.uri.path:
+          case orphanC.uri.fsPath:
             return orphanC.links;
           default:
             return notOrphanNote.links;

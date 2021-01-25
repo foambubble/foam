@@ -44,7 +44,7 @@ export class OrphansProvider
   private orphans: Note[] = [];
   private exclude: string[] = [];
   private groupBy: OrphansConfigGroupBy = OrphansConfigGroupBy.Folder;
-  private root = vscode.workspace.workspaceFolders[0].uri.path;
+  private root = vscode.workspace.workspaceFolders[0].uri.fsPath;
 
   constructor(private foam: Foam, config: OrphansConfig) {
     this.exclude = config.exclude.map(d => path.normalize(`/${d}`));
@@ -98,7 +98,7 @@ export class OrphansProvider
       .getNotes()
       .filter(note => !this.foam.notes.getAllLinks(note.uri).length)
       .filter(note => {
-        const p = note.uri.path.replace(this.root, '');
+        const p = note.uri.fsPath.replace(this.root, '');
         const { dir } = path.parse(p);
         return !micromatch.isMatch(dir, this.exclude);
       })
@@ -108,7 +108,7 @@ export class OrphansProvider
   private getOrphansByDirectory(): OrphansByDirectory {
     const orphans: OrphansByDirectory = {};
     for (const orphan of this.orphans) {
-      const p = orphan.uri.path.replace(this.root, '');
+      const p = orphan.uri.fsPath.replace(this.root, '');
       const { dir } = path.parse(p);
 
       if (orphans[dir]) {

@@ -47,7 +47,7 @@ export class OrphansProvider
   private root = vscode.workspace.workspaceFolders[0].uri.fsPath;
 
   constructor(private foam: Foam, config: OrphansConfig) {
-    this.exclude = config.exclude.map(d => path.normalize(`/${d}`));
+    this.exclude = config.exclude.map(d => this.slashes(d));
     this.groupBy = config.groupBy;
     this.setContext();
     this.computeOrphans();
@@ -100,7 +100,7 @@ export class OrphansProvider
       .filter(note => {
         const p = note.uri.fsPath.replace(this.root, '');
         const { dir } = path.parse(p);
-        return !micromatch.isMatch(dir, this.exclude);
+        return !micromatch.isMatch(this.slashes(dir), this.exclude);
       })
       .sort((a, b) => a.title.localeCompare(b.title));
   }
@@ -123,6 +123,10 @@ export class OrphansProvider
     }
 
     return orphans;
+  }
+
+  private slashes(str: string): string {
+    return str.replace(/\\/g, '/');
   }
 }
 

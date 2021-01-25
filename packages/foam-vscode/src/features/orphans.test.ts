@@ -47,7 +47,7 @@ describe('orphans', () => {
 
   // Mock config
   const config: OrphansConfig = {
-    exclude: ['path-exclude'],
+    exclude: ['/path-exclude/**/*'],
     groupBy: OrphansConfigGroupBy.Folder,
   };
 

@@ -1,5 +1,5 @@
-import { OrphansProvider, Directory } from './orphans';
-import { OrphansConfig, OrphansConfigGroupBy } from '../settings';
+import { OrphansProvider, Directory, OrphansProviderConfig } from './orphans';
+import { OrphansConfigGroupBy } from '../settings';
 
 describe('orphans', () => {
   // Rough mocks of NoteGraphAPI
@@ -46,9 +46,10 @@ describe('orphans', () => {
   } as any;
 
   // Mock config
-  const config: OrphansConfig = {
-    exclude: ['/path-exclude/**/*'],
+  const config: OrphansProviderConfig = {
+    exclude: ['path-exclude/**/*'],
     groupBy: OrphansConfigGroupBy.Folder,
+    workspacesFsPaths: [''],
   };
 
   it('should return the orphans as a folder tree', async () => {

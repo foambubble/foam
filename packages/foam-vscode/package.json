@@ -192,7 +192,7 @@
             "array"
           ],
           "default": [],
-          "markdownDescription": "Specifies the list of glob patterns matching directories that will be excluded from the orphans report.",
+          "markdownDescription": "Specifies the list of glob patterns that will be excluded from the orphans report. To ignore the all the content of a given folder, use `**<folderName>/**/*`",
           "scope": "resource"
         },
         "foam.orphans.groupBy": {

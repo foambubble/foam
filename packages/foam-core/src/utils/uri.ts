@@ -64,3 +64,7 @@ export const placeholderUri = (key: string): URI => {
     path: key,
   });
 };
+
+export const isPlaceholder = (uri: URI): boolean => {
+  return uri.scheme === 'placeholder';
+};

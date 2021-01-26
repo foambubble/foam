@@ -7,6 +7,7 @@ import {
   isNone,
   parseUri,
   placeholderUri,
+  isPlaceholder,
 } from '../utils';
 import { Event, Emitter } from '../common/event';
 import { Connection, FoamGraph, createFromWorkspace } from './graph';
@@ -51,6 +52,7 @@ export class FoamWorkspace implements IDisposable {
   resolveLinks = FoamWorkspace.resolveLinks.bind(null, this);
   getLinks = FoamWorkspace.getLinks.bind(null, this);
   getBacklinks = FoamWorkspace.getBacklinks.bind(null, this);
+  getAllConnections = FoamWorkspace.getAllConnections.bind(null, this);
   getConnections = FoamWorkspace.getConnections.bind(null, this);
   set = FoamWorkspace.set.bind(null, this);
   exists = FoamWorkspace.exists.bind(null, this);
@@ -90,6 +92,13 @@ export class FoamWorkspace implements IDisposable {
         targetUri = parseUri(note.uri, link.target);
         break;
     }
+    if (isPlaceholder(targetUri)) {
+      // we can only add placeholders when links are being resolved
+      workspace = FoamWorkspace.set(workspace, {
+        type: 'placeholder',
+        uri: targetUri,
+      });
+    }
     return targetUri;
   }
 
@@ -101,6 +110,10 @@ export class FoamWorkspace implements IDisposable {
     workspace.graph.dispose();
     workspace.graph = graph;
     return workspace;
+  }
+
+  public static getAllConnections(workspace: FoamWorkspace): Connection[] {
+    return FoamGraph.getAllConnections(workspace.graph);
   }
 
   public static getConnections(

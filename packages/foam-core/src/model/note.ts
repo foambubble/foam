@@ -39,6 +39,10 @@ export interface Attachment extends BaseResource {
   type: 'attachment';
 }
 
+export interface Placeholder extends BaseResource {
+  type: 'placeholder';
+}
+
 export interface Note extends BaseResource {
   type: 'note';
   title: string | null;
@@ -50,7 +54,7 @@ export interface Note extends BaseResource {
   source: NoteSource;
 }
 
-export type Resource = Note | Attachment;
+export type Resource = Note | Attachment | Placeholder;
 
 export interface NoteParser {
   parse: (uri: URI, text: string) => Note;

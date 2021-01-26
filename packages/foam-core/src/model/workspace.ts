@@ -8,7 +8,9 @@ import {
   parseUri,
   placeholderUri,
 } from '../utils';
-// import { Event, Emitter } from '../common/event';
+import { Event, Emitter } from '../common/event';
+import { Connection, FoamGraph, createFromWorkspace } from './graph';
+import { IDisposable } from 'index';
 
 export function getReferenceType(
   reference: URI | string
@@ -33,24 +35,17 @@ function normalizeKey(pathValue: string) {
   return path.parse(pathValue).name;
 }
 
-export type Connection = {
-  source: URI;
-  target: URI;
-};
+export class FoamWorkspace implements IDisposable {
+  private onDidAddEmitter = new Emitter<Resource>();
+  private onDidUpdateEmitter = new Emitter<{ old: Resource; new: Resource }>();
+  private onDidDeleteEmitter = new Emitter<Resource>();
+  onDidAdd = this.onDidAddEmitter.event;
+  onDidUpdate = this.onDidUpdateEmitter.event;
+  onDidDelete = this.onDidDeleteEmitter.event;
 
-export class FoamWorkspace {
-  private resourcesByName: { [key: string]: string[] }; // resource basename => resource uri
-  private resources: { [key: string]: Resource };
-
-  private links: { [key: string]: Connection[] }; // source uri => target uri
-  private backlinks: { [key: string]: Connection[] }; // target uri => source uri
-
-  constructor() {
-    this.resources = {};
-    this.resourcesByName = {};
-    this.links = {};
-    this.backlinks = {};
-  }
+  private resourcesByName: { [key: string]: string[] } = {}; // resource basename => resource uri
+  private resources: { [key: string]: Resource } = {};
+  private graph: FoamGraph = new FoamGraph();
 
   resolveLink = FoamWorkspace.resolveLink.bind(null, this);
   resolveLinks = FoamWorkspace.resolveLinks.bind(null, this);
@@ -64,11 +59,18 @@ export class FoamWorkspace {
   find = FoamWorkspace.find.bind(null, this);
   delete = FoamWorkspace.delete.bind(null, this);
 
+  dispose(): void {
+    this.onDidAddEmitter.dispose();
+    this.onDidDeleteEmitter.dispose();
+    this.onDidUpdateEmitter.dispose();
+    this.graph.dispose();
+  }
+
   public static resolveLink(
     workspace: FoamWorkspace,
     note: Note,
     link: NoteLink
-  ) {
+  ): URI {
     let targetUri: URI | null = null;
     switch (link.type) {
       case 'wikilink':
@@ -76,10 +78,11 @@ export class FoamWorkspace {
           def => def.label === link.slug
         )?.url;
         if (isSome(definitionUri)) {
-          targetUri = computeRelativeURI(note.uri, definitionUri);
+          targetUri = parseUri(note.uri, definitionUri);
         } else {
           targetUri =
-            FoamWorkspace.find(workspace, link.slug, note.uri)?.uri ?? null;
+            FoamWorkspace.find(workspace, link.slug, note.uri)?.uri ??
+            placeholderUri(link.slug);
         }
         break;
 
@@ -90,30 +93,13 @@ export class FoamWorkspace {
     return targetUri;
   }
 
-  public static resolveLinks(workspace: FoamWorkspace): FoamWorkspace {
-    workspace.links = {};
-    workspace.backlinks = {};
-    Object.values(workspace.resources).forEach(note => {
-      // prettier-ignore
-      note.type === 'note' && note.links.forEach(link => {
-        const targetUri =
-          FoamWorkspace.resolveLink(workspace, note, link) ??
-          placeholderUri(link.target);
-
-        const source = note.uri.path;
-        const target = targetUri.path;
-
-        const connection = {
-          source: note.uri,
-          target: targetUri,
-        };
-
-        workspace.links[source] = workspace.links[source] ?? [];
-        workspace.links[source].push(connection);
-        workspace.backlinks[target] = workspace.backlinks[target] ?? [];
-        workspace.backlinks[target].push(connection);
-      });
-    });
+  public static resolveLinks(
+    workspace: FoamWorkspace,
+    keepMonitoring: boolean = false
+  ): FoamWorkspace {
+    const graph = createFromWorkspace(workspace, keepMonitoring);
+    workspace.graph.dispose();
+    workspace.graph = graph;
     return workspace;
   }
 
@@ -121,25 +107,29 @@ export class FoamWorkspace {
     workspace: FoamWorkspace,
     uri: URI
   ): Connection[] {
-    return [...workspace.links[uri.path], ...workspace.backlinks[uri.path]];
+    return FoamGraph.getConnections(workspace.graph, uri);
   }
 
   public static getLinks(workspace: FoamWorkspace, uri: URI): URI[] {
-    return workspace.links[uri.path]?.map(c => c.target) ?? [];
+    return FoamGraph.getLinks(workspace.graph, uri);
   }
 
   public static getBacklinks(workspace: FoamWorkspace, uri: URI): URI[] {
-    return workspace.backlinks[uri.path]?.map(c => c.source) ?? [];
+    return FoamGraph.getBacklinks(workspace.graph, uri);
   }
 
   public static set(
     workspace: FoamWorkspace,
     resource: Resource
   ): FoamWorkspace {
+    const old = FoamWorkspace.find(workspace, resource.uri);
     workspace.resources[resource.uri.path] = resource;
     const name = normalizeKey(resource.uri.path);
     workspace.resourcesByName[name] = workspace.resourcesByName[name] ?? [];
     workspace.resourcesByName[name].push(resource.uri.path);
+    isSome(old)
+      ? workspace.onDidUpdateEmitter.fire({ old: old, new: resource })
+      : workspace.onDidAddEmitter.fire(resource);
     return workspace;
   }
 
@@ -208,6 +198,7 @@ export class FoamWorkspace {
   public static delete(workspace: FoamWorkspace, uri: URI): Resource | null {
     const deleted = workspace.resources[uri.path];
     delete workspace.resources[uri.path];
+    isSome(deleted) && workspace.onDidDeleteEmitter.fire(deleted);
     return deleted ?? null;
   }
 }

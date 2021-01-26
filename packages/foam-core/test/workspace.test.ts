@@ -2,6 +2,7 @@ import { FoamWorkspace, getReferenceType } from '../src/model/workspace';
 import { Logger } from '../src/utils/log';
 import { createTestNote, createAttachment } from './core.test';
 import { URI } from '../src/common/uri';
+import { placeholderUri } from '../src/utils';
 
 Logger.setLevel('error');
 
@@ -157,51 +158,6 @@ describe('Notes workspace', () => {
     expect(ws.find(uri)).toBeNull();
     expect(() => ws.get(uri)).toThrow();
   });
-
-  it('Update links when modifying note', () => {
-    const noteA = createTestNote({
-      uri: '/path/to/page-a.md',
-      links: [{ slug: 'page-b' }],
-    });
-    const noteB = createTestNote({
-      uri: '/path/to/another/page-b.md',
-      links: [{ slug: 'page-c' }],
-    });
-    const noteC = createTestNote({
-      uri: '/path/to/more/page-c.md',
-    });
-    const ws = new FoamWorkspace();
-    ws.set(noteA)
-      .set(noteB)
-      .set(noteC)
-      .resolveLinks();
-
-    expect(ws.getLinks(noteA.uri)).toEqual([noteB.uri]);
-    expect(ws.getBacklinks(noteB.uri)).toEqual([noteA.uri]);
-    expect(ws.getBacklinks(noteC.uri)).toEqual([noteB.uri]);
-
-    // update the note
-    const noteABis = createTestNote({
-      uri: '/path/to/page-a.md',
-      links: [{ slug: 'page-c' }],
-    });
-    ws.set(noteABis);
-    expect(ws.getLinks(noteA.uri)).toEqual([noteB.uri]);
-    expect(ws.getBacklinks(noteB.uri)).toEqual([noteA.uri]);
-    expect(ws.getBacklinks(noteC.uri)).toEqual([noteB.uri]);
-
-    // recompute the links
-    ws.resolveLinks();
-    expect(ws.getLinks(noteA.uri)).toEqual([noteC.uri]);
-    expect(ws.getBacklinks(noteB.uri)).toEqual([]);
-    expect(
-      ws
-        .getBacklinks(noteC.uri)
-        .map(link => link.path)
-        .sort()
-    ).toEqual(['/path/to/another/page-b.md', '/path/to/page-a.md']);
-  });
-
   it('Supports attachments', () => {
     const noteA = createTestNote({
       uri: '/path/to/page-a.md',
@@ -266,5 +222,102 @@ describe('Notes workspace', () => {
       .resolveLinks();
 
     expect(ws.getLinks(noteA.uri)).toEqual([attachmentABis.uri]);
+  });
+});
+
+describe('Updating workspace happy path', () => {
+  it('Update links when modifying note', () => {
+    const noteA = createTestNote({
+      uri: '/path/to/page-a.md',
+      links: [{ slug: 'page-b' }],
+    });
+    const noteB = createTestNote({
+      uri: '/path/to/another/page-b.md',
+      links: [{ slug: 'page-c' }],
+    });
+    const noteC = createTestNote({
+      uri: '/path/to/more/page-c.md',
+    });
+    const ws = new FoamWorkspace();
+    ws.set(noteA)
+      .set(noteB)
+      .set(noteC)
+      .resolveLinks();
+
+    expect(ws.getLinks(noteA.uri)).toEqual([noteB.uri]);
+    expect(ws.getBacklinks(noteB.uri)).toEqual([noteA.uri]);
+    expect(ws.getBacklinks(noteC.uri)).toEqual([noteB.uri]);
+
+    // update the note
+    const noteABis = createTestNote({
+      uri: '/path/to/page-a.md',
+      links: [{ slug: 'page-c' }],
+    });
+    ws.set(noteABis);
+    // change is not propagated immediately
+    expect(ws.getLinks(noteA.uri)).toEqual([noteB.uri]);
+    expect(ws.getBacklinks(noteB.uri)).toEqual([noteA.uri]);
+    expect(ws.getBacklinks(noteC.uri)).toEqual([noteB.uri]);
+
+    // recompute the links
+    ws.resolveLinks();
+    expect(ws.getLinks(noteA.uri)).toEqual([noteC.uri]);
+    expect(ws.getBacklinks(noteB.uri)).toEqual([]);
+    expect(
+      ws
+        .getBacklinks(noteC.uri)
+        .map(link => link.path)
+        .sort()
+    ).toEqual(['/path/to/another/page-b.md', '/path/to/page-a.md']);
+  });
+
+  it('Removing target note should produce placeholder', () => {
+    const noteA = createTestNote({
+      uri: '/path/to/page-a.md',
+      links: [{ slug: 'page-b' }],
+    });
+    const noteB = createTestNote({
+      uri: '/path/to/another/page-b.md',
+    });
+    const ws = new FoamWorkspace();
+    ws.set(noteA)
+      .set(noteB)
+      .resolveLinks();
+
+    expect(ws.getLinks(noteA.uri)).toEqual([noteB.uri]);
+    expect(ws.getBacklinks(noteB.uri)).toEqual([noteA.uri]);
+    expect(ws.get(noteB.uri).type).toEqual('note');
+
+    // remove note-b
+    ws.delete(noteB.uri);
+    ws.resolveLinks();
+
+    expect(() => ws.get(noteB.uri)).toThrow();
+    expect(ws.get(placeholderUri('page-b')).type).toEqual('placeholder');
+  });
+
+  it('Adding note should replace placeholder', () => {
+    const noteA = createTestNote({
+      uri: '/path/to/page-a.md',
+      links: [{ slug: 'page-b' }],
+    });
+    const ws = new FoamWorkspace();
+    ws.set(noteA)
+      .set({ type: 'placeholder', uri: placeholderUri('page-b') })
+      .resolveLinks();
+
+    expect(ws.getLinks(noteA.uri)).toEqual([placeholderUri('page-b')]);
+    expect(ws.get(placeholderUri('page-b')).type).toEqual('placeholder');
+
+    // add note-b
+    const noteB = createTestNote({
+      uri: '/path/to/another/page-b.md',
+    });
+
+    ws.set(noteB);
+    ws.resolveLinks();
+
+    // expect(() => ws.get(placeholderUri('page-b'))).toThrow();  TODO
+    expect(ws.get(noteB.uri).type).toEqual('note');
   });
 });

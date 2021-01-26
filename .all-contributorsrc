@@ -571,6 +571,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "leonhfr",
+      "name": "léon h",
+      "avatar_url": "https://avatars.githubusercontent.com/u/19996318?v=4",
+      "profile": "http://leonh.fr/",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,

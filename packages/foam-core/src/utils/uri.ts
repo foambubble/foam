@@ -57,3 +57,10 @@ export const parseUri = (reference: URI, value: string): URI => {
   }
   return uri;
 };
+
+export const placeholderUri = (key: string): URI => {
+  return URI.from({
+    scheme: 'placeholder',
+    path: key,
+  });
+};

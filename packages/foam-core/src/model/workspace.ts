@@ -1,6 +1,6 @@
 import * as path from 'path';
 import { URI } from '../common/uri';
-import { Note, NoteLink } from '../model/note';
+import { Resource, NoteLink, Note } from '../model/note';
 import {
   computeRelativeURI,
   isSome,
@@ -30,8 +30,7 @@ function normalizePath(pathValue: string) {
 }
 
 function normalizeKey(pathValue: string) {
-  const { ext, base } = path.parse(pathValue);
-  return ext.length > 0 ? base : base + '.md';
+  return path.parse(pathValue).name;
 }
 
 export type Connection = {
@@ -40,17 +39,15 @@ export type Connection = {
 };
 
 export class FoamWorkspace {
-  private notesByName: { [key: string]: string[] }; // note basename => note uri
-  private notes: { [key: string]: Note };
-  private attachments: Set<string>;
+  private resourcesByName: { [key: string]: string[] }; // resource basename => resource uri
+  private resources: { [key: string]: Resource };
 
   private links: { [key: string]: Connection[] }; // source uri => target uri
   private backlinks: { [key: string]: Connection[] }; // target uri => source uri
 
   constructor() {
-    this.notes = {};
-    this.notesByName = {};
-    this.attachments = new Set();
+    this.resources = {};
+    this.resourcesByName = {};
     this.links = {};
     this.backlinks = {};
   }
@@ -60,13 +57,12 @@ export class FoamWorkspace {
   getLinks = FoamWorkspace.getLinks.bind(null, this);
   getBacklinks = FoamWorkspace.getBacklinks.bind(null, this);
   getConnections = FoamWorkspace.getConnections.bind(null, this);
-  addAttachment = FoamWorkspace.addAttachment.bind(null, this);
-  setNote = FoamWorkspace.setNote.bind(null, this);
-  noteExists = FoamWorkspace.noteExists.bind(null, this);
-  getNotes = FoamWorkspace.getNotes.bind(null, this);
-  getNote = FoamWorkspace.getNote.bind(null, this);
-  findNote = FoamWorkspace.findNote.bind(null, this);
-  deleteNote = FoamWorkspace.deleteNote.bind(null, this);
+  set = FoamWorkspace.set.bind(null, this);
+  exists = FoamWorkspace.exists.bind(null, this);
+  list = FoamWorkspace.list.bind(null, this);
+  get = FoamWorkspace.get.bind(null, this);
+  find = FoamWorkspace.find.bind(null, this);
+  delete = FoamWorkspace.delete.bind(null, this);
 
   public static resolveLink(
     workspace: FoamWorkspace,
@@ -83,7 +79,7 @@ export class FoamWorkspace {
           targetUri = computeRelativeURI(note.uri, definitionUri);
         } else {
           targetUri =
-            FoamWorkspace.findNote(workspace, link.slug, note.uri)?.uri ?? null;
+            FoamWorkspace.find(workspace, link.slug, note.uri)?.uri ?? null;
         }
         break;
 
@@ -97,8 +93,9 @@ export class FoamWorkspace {
   public static resolveLinks(workspace: FoamWorkspace): FoamWorkspace {
     workspace.links = {};
     workspace.backlinks = {};
-    Object.values(workspace.notes).forEach(note => {
-      note.links.forEach(link => {
+    Object.values(workspace.resources).forEach(note => {
+      // prettier-ignore
+      note.type === 'note' && note.links.forEach(link => {
         const targetUri =
           FoamWorkspace.resolveLink(workspace, note, link) ??
           placeholderUri(link.target);
@@ -135,80 +132,82 @@ export class FoamWorkspace {
     return workspace.backlinks[uri.path]?.map(c => c.source) ?? [];
   }
 
-  public static addAttachment(
+  public static set(
     workspace: FoamWorkspace,
-    uri: URI
+    resource: Resource
   ): FoamWorkspace {
-    workspace.attachments.add(uri.path);
+    workspace.resources[resource.uri.path] = resource;
+    const name = normalizeKey(resource.uri.path);
+    workspace.resourcesByName[name] = workspace.resourcesByName[name] ?? [];
+    workspace.resourcesByName[name].push(resource.uri.path);
     return workspace;
   }
 
-  public static setNote(workspace: FoamWorkspace, note: Note): FoamWorkspace {
-    workspace.notes[note.uri.path] = note;
-    const name = normalizeKey(note.uri.path);
-    workspace.notesByName[name] = workspace.notesByName[name] ?? [];
-    workspace.notesByName[name].push(note.uri.path);
-    return workspace;
+  public static exists(workspace: FoamWorkspace, uri: URI): boolean {
+    return isSome(workspace.resources[uri.path]);
   }
 
-  public static noteExists(workspace: FoamWorkspace, uri: URI): boolean {
-    return isSome(workspace.notes[uri.path]);
+  public static list(workspace: FoamWorkspace): Resource[] {
+    return Object.values(workspace.resources);
   }
 
-  public static getNotes(workspace: FoamWorkspace): Note[] {
-    return Object.values(workspace.notes);
-  }
-
-  public static getNote(workspace: FoamWorkspace, uri: URI): Note {
-    const note = FoamWorkspace.findNote(workspace, uri);
+  public static get(workspace: FoamWorkspace, uri: URI): Resource {
+    const note = FoamWorkspace.find(workspace, uri);
     if (isSome(note)) {
       return note;
     } else {
-      throw new Error('Note not found: ' + uri.path);
+      throw new Error('Resource not found: ' + uri.path);
     }
   }
 
-  public static findNote(
+  public static find(
     workspace: FoamWorkspace,
-    noteId: URI | string,
+    resourceId: URI | string,
     reference?: URI
-  ): Note | null {
-    const refType = getReferenceType(noteId);
+  ): Resource | null {
+    const refType = getReferenceType(resourceId);
     switch (refType) {
       case 'uri':
-        const uri = noteId as URI;
-        return FoamWorkspace.noteExists(workspace, uri)
-          ? workspace.notes[uri.path]
+        const uri = resourceId as URI;
+        return FoamWorkspace.exists(workspace, uri)
+          ? workspace.resources[uri.path]
           : null;
 
       case 'key':
-        const key = normalizeKey(noteId as string);
-        const notePath = workspace.notesByName[key]?.[0] ?? null;
-        return workspace.notes[notePath];
+        const key = normalizeKey(resourceId as string);
+        const paths = workspace.resourcesByName[key];
+        if (isNone(paths) || paths.length === 0) {
+          return null;
+        }
+        // prettier-ignore
+        const sortedPaths = paths.length === 1
+          ? paths
+          : paths.sort((a, b) => a.localeCompare(b));
+        return workspace.resources[sortedPaths[0]];
 
       case 'absolute-path':
-        const path = normalizePath(noteId as string);
-        return workspace.notes[path];
+        const path = normalizePath(resourceId as string);
+        return workspace.resources[path];
 
       case 'relative-path':
         if (isNone(reference)) {
           throw new Error(
             'Cannot find note defined by relative path without reference note: ' +
-              noteId
+              resourceId
           );
         }
-        const relativePath = noteId as string;
+        const relativePath = resourceId as string;
         const targetUri = computeRelativeURI(reference, relativePath);
-        return workspace.notes[targetUri.path];
+        return workspace.resources[targetUri.path];
 
       default:
         throw new Error('Unexpected reference type: ' + refType);
     }
   }
 
-  public static deleteNote(workspace: FoamWorkspace, uri: URI): Note | null {
-    const deleted = workspace.notes[uri.path];
-    delete workspace.notes[uri.path];
+  public static delete(workspace: FoamWorkspace, uri: URI): Resource | null {
+    const deleted = workspace.resources[uri.path];
+    delete workspace.resources[uri.path];
     return deleted ?? null;
   }
 }

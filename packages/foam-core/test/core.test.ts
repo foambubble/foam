@@ -1,5 +1,5 @@
 import { NoteGraph, createGraph } from '../src/model/note-graph';
-import { NoteLinkDefinition, Note } from '../src/model/note';
+import { NoteLinkDefinition, Note, Attachment } from '../src/model/note';
 import { uriToSlug } from '../src/utils';
 import { URI } from '../src/common/uri';
 import { Logger } from '../src/utils/log';
@@ -22,6 +22,13 @@ const eol = '\n';
  */
 export const strToUri = URI.file;
 
+export const createAttachment = (params: { uri: string }): Attachment => {
+  return {
+    uri: strToUri(params.uri),
+    type: 'attachment',
+  };
+};
+
 export const createTestNote = (params: {
   uri: string;
   title?: string;
@@ -31,6 +38,7 @@ export const createTestNote = (params: {
 }): Note => {
   return {
     uri: strToUri(params.uri),
+    type: 'note',
     properties: {},
     title: params.title ?? null,
     definitions: params.definitions ?? [],
@@ -41,6 +49,7 @@ export const createTestNote = (params: {
             ? {
                 type: 'wikilink',
                 slug: link.slug,
+                target: link.slug,
                 position: position,
                 text: 'link text',
               }

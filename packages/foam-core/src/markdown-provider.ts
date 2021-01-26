@@ -74,6 +74,7 @@ const wikilinkPlugin: ParserPlugin = {
       note.links.push({
         type: 'wikilink',
         slug: node.value as string,
+        target: node.value as string,
         position: node.position!,
       });
     }
@@ -161,6 +162,7 @@ export function createMarkdownParser(extraPlugins: ParserPlugin[]): NoteParser {
 
       var note: Note = {
         uri: uri,
+        type: 'note',
         properties: {},
         title: null,
         tags: new Set(),

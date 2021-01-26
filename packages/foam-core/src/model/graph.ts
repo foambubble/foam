@@ -154,6 +154,10 @@ export class FoamGraph implements IDisposable {
     return graph;
   }
 
+  public static getAllConnections(graph: FoamGraph): Connection[] {
+    return Object.values(graph.links).flat();
+  }
+
   public static getConnections(graph: FoamGraph, uri: URI): Connection[] {
     return [...graph.links[uri.path], ...graph.backlinks[uri.path]];
   }

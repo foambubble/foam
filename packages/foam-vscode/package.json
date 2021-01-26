@@ -36,6 +36,42 @@
           "name": "Tag Explorer",
           "icon": "media/dep.svg",
           "contextualTitle": "Tags Explorer"
+        },
+        {
+          "id": "foam-vscode.orphans",
+          "name": "Orphans",
+          "icon": "media/dep.svg",
+          "contextualTitle": "Orphans"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "foam-vscode.orphans",
+        "contents": "No orphans found. Notes that have no backlinks nor links will show up here."
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "foam-vscode.group-orphans-by-folder",
+          "when": "view == foam-vscode.orphans && foam-vscode.orphans-grouped-by-folder == false",
+          "group": "navigation"
+        },
+        {
+          "command": "foam-vscode.group-orphans-off",
+          "when": "view == foam-vscode.orphans && foam-vscode.orphans-grouped-by-folder == true",
+          "group": "navigation"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "foam-vscode.group-orphans-by-folder",
+          "when": "false"
+        },
+        {
+          "command": "foam-vscode.group-orphans-off",
+          "when": "false"
         }
       ]
     },
@@ -71,6 +107,16 @@
       {
         "command": "foam-vscode.create-note-from-template",
         "title": "Foam: Create New Note From Template"
+      },
+      {
+        "command": "foam-vscode.group-orphans-by-folder",
+        "title": "Foam: Group Orphans By Folder",
+        "icon": "$(list-tree)"
+      },
+      {
+        "command": "foam-vscode.group-orphans-off",
+        "title": "Foam: Don't Group Orphans",
+        "icon": "$(list-flat)"
       }
     ],
     "configuration": {
@@ -140,6 +186,30 @@
           ],
           "default": null,
           "description": "The directory into which daily notes should be created. Defaults to the workspace root."
+        },
+        "foam.orphans.exclude": {
+          "type": [
+            "array"
+          ],
+          "default": [],
+          "markdownDescription": "Specifies the list of glob patterns that will be excluded from the orphans report. To ignore the all the content of a given folder, use `**<folderName>/**/*`",
+          "scope": "resource"
+        },
+        "foam.orphans.groupBy": {
+          "type": [
+            "string"
+          ],
+          "enum": [
+            "off",
+            "folder"
+          ],
+          "enumDescriptions": [
+            "Disable grouping",
+            "Group by folder"
+          ],
+          "default": "folder",
+          "markdownDescription": "Group orphans report entries by.",
+          "scope": "resource"
         },
         "foam.dateSnippets.afterCompletion": {
           "type": "string",
@@ -215,6 +285,7 @@
   },
   "dependencies": {
     "dateformat": "^3.0.3",
-    "foam-core": "^0.8.0"
+    "foam-core": "^0.8.0",
+    "micromatch": "^4.0.2"
   }
 }

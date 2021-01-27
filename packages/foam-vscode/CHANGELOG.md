@@ -4,6 +4,11 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.9.0] - 2021-01-27
+
+Features:
+- Panel: Added orphan panel (#457 - thanks @leonhfr)
+
 ## [0.8.0] - 2021-01-15
 
 Features:

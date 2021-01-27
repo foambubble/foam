@@ -19,7 +19,7 @@ $ npm install -g foam-cli
 $ foam COMMAND
 running command...
 $ foam (-v|--version|version)
-foam-cli/0.8.0 darwin-x64 node-v12.18.2
+foam-cli/0.9.0 darwin-x64 node-v12.18.2
 $ foam --help [COMMAND]
 USAGE
   $ foam COMMAND
@@ -65,7 +65,7 @@ EXAMPLE
   $ foam-cli janitor path-to-foam-workspace
 ```
 
-_See code: [src/commands/janitor.ts](https://github.com/foambubble/foam/blob/v0.8.0/src/commands/janitor.ts)_
+_See code: [src/commands/janitor.ts](https://github.com/foambubble/foam/blob/v0.9.0/src/commands/janitor.ts)_
 
 ## `foam migrate [WORKSPACEPATH]`
 
@@ -84,7 +84,7 @@ EXAMPLE
   Successfully generated link references and heading!
 ```
 
-_See code: [src/commands/migrate.ts](https://github.com/foambubble/foam/blob/v0.8.0/src/commands/migrate.ts)_
+_See code: [src/commands/migrate.ts](https://github.com/foambubble/foam/blob/v0.9.0/src/commands/migrate.ts)_
 <!-- commandsstop -->
 
 ## Development

@@ -1,7 +1,7 @@
 {
   "name": "foam-cli",
   "description": "Foam CLI",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "bin": {
     "foam": "./bin/run"
   },
@@ -10,7 +10,7 @@
     "@oclif/command": "^1",
     "@oclif/config": "^1",
     "@oclif/plugin-help": "^3",
-    "foam-core": "^0.8.0",
+    "foam-core": "^0.9.0",
     "ora": "^4.0.4",
     "tslib": "^1"
   },

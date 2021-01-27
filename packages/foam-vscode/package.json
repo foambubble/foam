@@ -47,6 +47,10 @@
     },
     "viewsWelcome": [
       {
+        "view": "foam-vscode.tags-explorer",
+        "contents": "No tags found. Notes that contain tags will show up here. You may add tags to a note with a hashtag (#tag) or by adding a tag list to the front matter (tags: tag1, tag2)."
+      },
+      {
         "view": "foam-vscode.orphans",
         "contents": "No orphans found. Notes that have no backlinks nor links will show up here."
       }

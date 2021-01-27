@@ -29,14 +29,12 @@ describe('createFromTemplate', () => {
       );
 
       window.showInputBox = jest.fn(() => {
-        return Promise.resolve(template)
+        return Promise.resolve(template);
       });
 
       await commands.executeCommand('foam-vscode.create-new-template');
 
-      const file = await workspace.fs.readFile(
-        Uri.file(template)
-      )
+      const file = await workspace.fs.readFile(Uri.file(template));
       expect(window.showInputBox).toHaveBeenCalled();
       expect(file).toBeDefined();
       await workspace.fs.delete(Uri.file(template));
@@ -52,7 +50,7 @@ describe('createFromTemplate', () => {
       );
       window.showInputBox = jest.fn(() => {
         return Promise.resolve(undefined);
-      })
+      });
 
       await commands.executeCommand('foam-vscode.create-new-template');
 
@@ -61,5 +59,5 @@ describe('createFromTemplate', () => {
         Uri.file(template)
       )).rejects.toThrow();
     });
-  })
+  });
 });

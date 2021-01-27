@@ -12,9 +12,6 @@ https://github.com/microsoft/vscode-test/issues/37#issuecomment-584744386
 
 const vscode = {
     // Add values and methods as needed for tests
-
-    // Keep env the same, no need to mock this.
-    env: env
 };
 
 module.exports = vscode;

@@ -17,7 +17,7 @@ to make it easier for new contributors we provide some resources:
 - [[architecture]] - This document describes the architecture of Foam and how the repository is structured.
 
 You can also see [existing issues](https://github.com/foambubble/foam/issues) and help out!
-Finally, the easiest way to help, is to use it and provide feedback by [submitting issues](https://github.com/foambubble/foam/issues/new/choose) or participating in the [Foam Community Discord](https://discord.gg/rtdZKgj)!
+Finally, the easiest way to help, is to use it and provide feedback by [submitting issues](https://github.com/foambubble/foam/issues/new/choose) or participating in the [Foam Community Discord](https://foambubble.github.io/join-discord/g)!
 
 ## Contributing
 
@@ -41,7 +41,7 @@ You should now be ready to start working!
 
 Code needs to come with tests.
 We use the following convention in Foam:
-- *.test.ts are unit tests 
+- *.test.ts are unit tests
 - *.spec.ts are integration tests
 
 Also, note that tests in `foam-core` and `foam-cli` live in the `test` directory.

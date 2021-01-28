@@ -32,7 +32,9 @@ const feature: FoamFeature = {
       vscode.commands.registerCommand('foam-vscode.group-orphans-off', () =>
         provider.setGroupBy(OrphansConfigGroupBy.Off)
       ),
-      foam.notes.onDidUpdateNote(() => provider.refresh())
+      foam.notes.onDidAddNote(() => provider.refresh()),
+      foam.notes.onDidUpdateNote(() => provider.refresh()),
+      foam.notes.onDidDeleteNote(() => provider.refresh())
     );
   },
 };

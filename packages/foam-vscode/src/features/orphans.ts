@@ -8,6 +8,7 @@ import {
   OrphansConfigGroupBy,
 } from '../settings';
 import { FoamFeature } from '../types';
+import { getNoteTooltip, getContainsTooltip } from '../utils';
 
 const feature: FoamFeature = {
   activate: async (
@@ -161,7 +162,7 @@ class Orphan extends vscode.TreeItem {
   constructor(public readonly note: Note) {
     super(note.title, vscode.TreeItemCollapsibleState.None);
     this.description = note.uri.path;
-    this.tooltip = this.description;
+    this.tooltip = getNoteTooltip(note);
     this.command = {
       command: 'vscode.open',
       title: 'Open File',
@@ -178,7 +179,7 @@ export class Directory extends vscode.TreeItem {
     super(dir, vscode.TreeItemCollapsibleState.Collapsed);
     const s = this.notes.length > 1 ? 's' : '';
     this.description = `${this.notes.length} orphan${s}`;
-    this.tooltip = this.description;
+    this.tooltip = getContainsTooltip(notes);
   }
 
   iconPath = new vscode.ThemeIcon('folder');

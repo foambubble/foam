@@ -8,9 +8,13 @@ import {
   workspace,
   Uri,
   Selection,
+  MarkdownString,
+  version,
 } from 'vscode';
 import * as fs from 'fs';
-import { Logger } from 'foam-core';
+import { Logger, Note } from 'foam-core';
+import matter from 'gray-matter';
+import removeMarkdown from 'remove-markdown';
 
 interface Point {
   line: number;
@@ -183,4 +187,56 @@ export async function focusNote(notePath: string, moveCursorToEnd: boolean) {
     const { range } = editor.document.lineAt(lineCount - 1);
     editor.selection = new Selection(range.end, range.end);
   }
+}
+
+export function getContainsTooltip(notes: Note[]): string {
+  const titles = notes.map(n => n.title).slice(0, 5);
+  return `Contains "${titles.join('", "')}"`;
+}
+
+/**
+ * Depending on the current vscode version, returns a MarkdownString of the
+ * note content casted as string or returns a simple string
+ * MarkdownString is only available from 1.52.1 onwards
+ * https://code.visualstudio.com/updates/v1_52#_markdown-tree-tooltip-api
+ * @param note A Foam Note
+ */
+export function getNoteTooltip(note: Note): string {
+  const STABLE_MARKDOWN_STRING_API_VERSION = '1.52.1';
+
+  if (version >= STABLE_MARKDOWN_STRING_API_VERSION) {
+    return formatMarkdownTooltip(note) as any;
+  }
+
+  return formatSimpleTooltip(note);
+}
+
+export function formatMarkdownTooltip(note: Note): MarkdownString {
+  const LINES_LIMIT = 15;
+  const markdown = firstNLines(stripFrontMatter(note.source.text), LINES_LIMIT);
+  return new MarkdownString(markdown);
+}
+
+export function formatSimpleTooltip(note: Note): string {
+  const WORDS_LIMIT = 30;
+  const words = removeMarkdown(stripFrontMatter(note.source.text))
+    .replace(/\r?\n|\r/g, ' ')
+    .replace(/\s+/g, ' ')
+    .replace(note.title, '')
+    .split(' ');
+  const extract = words.slice(0, WORDS_LIMIT).join(' ');
+  const ellipsis = words.length > WORDS_LIMIT ? '...' : '';
+  return `${extract}${ellipsis}`;
+}
+
+export function firstNLines(markdown: string, n: number): string {
+  return markdown
+    .replace(/\r\n/g, '\n')
+    .split('\n')
+    .slice(0, n)
+    .join('\n');
+}
+
+export function stripFrontMatter(markdown: string): string {
+  return matter(markdown).content.trim();
 }

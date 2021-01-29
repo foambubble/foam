@@ -1,11 +1,13 @@
 # Generate a site using Gatsby
 
+## Using foam-gatsby-template
+
 You can use [foam-gatsby-template](https://github.com/mathieudutour/foam-gatsby-template) to generate a static site to host it online on Github or [Vercel](https://vercel.com).
 
-## Publishing your foam to GitHub pages
+### Publishing your foam to GitHub pages
 It comes configured with Github actions to auto deploy to Github pages when changes are pushed to your main branch.
 
-## Publishing your foam to Vercel
+### Publishing your foam to Vercel
 
 When you're ready to publish, run a local build.
 ```bash
@@ -21,4 +23,6 @@ Import your project. Select `_layouts/public` as your root directory and click *
 
 That's it!
 
+## Using foam-template-gatsby-kb
 
+You can use another template [foam-template-gatsby-kb](https://github.com/hikerpig/foam-template-gatsby-kb), and host it on [Vercel](https://vercel.com) or [Netlify](https://www.netlify.com/).

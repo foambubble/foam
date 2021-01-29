@@ -53,11 +53,16 @@ export class FoamWorkspace implements IDisposable {
   /**
    * Resources by key / slug
    */
-  private resourcesByName: { [key: string]: string[] } = {}; // resource basename => resource uri
+  private resourcesByName: { [key: string]: string[] } = {};
   /**
    * Resources by URI
    */
   private resources: { [key: string]: Resource } = {};
+  /**
+   * Placehoders by key / slug / value
+   */
+  private placeholders: { [key: string]: Resource } = {};
+
   /**
    * Maps the connections starting from a URI
    */
@@ -150,13 +155,22 @@ export class FoamWorkspace implements IDisposable {
     return targetUri;
   }
 
+  /**
+   * Computes all the links in the workspace, connecting notes and
+   * creating placeholders.
+   *
+   * @param workspace the target workspace
+   * @param keepMonitoring whether to recompute the links when the workspace changes
+   * @returns the resolved workspace
+   */
   public static resolveLinks(
     workspace: FoamWorkspace,
     keepMonitoring: boolean = false
   ): FoamWorkspace {
     workspace.links = {};
     workspace.backlinks = {};
-    // TODO here we should also clean the placeholders
+    workspace.placeholders = {};
+
     workspace = Object.values(workspace.list()).reduce(
       (w, resource) => FoamWorkspace.addLinksForResource(w, resource),
       workspace
@@ -204,6 +218,10 @@ export class FoamWorkspace implements IDisposable {
     workspace: FoamWorkspace,
     resource: Resource
   ): FoamWorkspace {
+    if (resource.type === 'placeholder') {
+      workspace.placeholders[resource.uri.path] = resource;
+      return workspace;
+    }
     const old = FoamWorkspace.find(workspace, resource.uri);
     workspace.resources[resource.uri.path] = resource;
     const name = normalizeKey(resource.uri.path);
@@ -220,7 +238,10 @@ export class FoamWorkspace implements IDisposable {
   }
 
   public static list(workspace: FoamWorkspace): Resource[] {
-    return Object.values(workspace.resources);
+    return [
+      ...Object.values(workspace.resources),
+      ...Object.values(workspace.placeholders),
+    ];
   }
 
   public static get(workspace: FoamWorkspace, uri: URI): Resource {
@@ -241,13 +262,20 @@ export class FoamWorkspace implements IDisposable {
     switch (refType) {
       case 'uri':
         const uri = resourceId as URI;
-        return FoamWorkspace.exists(workspace, uri)
-          ? workspace.resources[uri.path]
-          : null;
+        if (uri.scheme === 'placeholder') {
+          return uri.path in workspace.placeholders
+            ? { type: 'placeholder', uri: uri }
+            : null;
+        } else {
+          return FoamWorkspace.exists(workspace, uri)
+            ? workspace.resources[uri.path]
+            : null;
+        }
 
       case 'key':
         const key = normalizeKey(resourceId as string);
-        const paths = workspace.resourcesByName[key];
+        const paths =
+          workspace.resourcesByName[key] ?? workspace.placeholders[key];
         if (isNone(paths) || paths.length === 0) {
           return null;
         }
@@ -259,7 +287,7 @@ export class FoamWorkspace implements IDisposable {
 
       case 'absolute-path':
         const path = normalizePath(resourceId as string);
-        return workspace.resources[path];
+        return workspace.resources[path] ?? workspace.placeholders[path];
 
       case 'relative-path':
         if (isNone(reference)) {
@@ -270,7 +298,10 @@ export class FoamWorkspace implements IDisposable {
         }
         const relativePath = resourceId as string;
         const targetUri = computeRelativeURI(reference, relativePath);
-        return workspace.resources[targetUri.path];
+        return (
+          workspace.resources[targetUri.path] ??
+          workspace.placeholders[relativePath]
+        );
 
       default:
         throw new Error('Unexpected reference type: ' + refType);

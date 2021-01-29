@@ -39,6 +39,20 @@ describe('Notes workspace', () => {
     ).toEqual(['/page-a.md', '/page-b.md', '/page-c.md']);
   });
 
+  it('Listing resources includes notes, attachments and placeholders', () => {
+    const ws = new FoamWorkspace();
+    ws.set(createTestNote({ uri: '/page-a.md' }));
+    ws.set(createAttachment({ uri: '/file.pdf' }));
+    ws.set({ type: 'placeholder', uri: placeholderUri('place-holder') });
+
+    expect(
+      ws
+        .list()
+        .map(n => n.uri.path)
+        .sort()
+    ).toEqual(['/file.pdf', '/page-a.md', 'place-holder']);
+  });
+
   it('Detects outbound wikilinks', () => {
     const noteA = createTestNote({
       uri: '/path/to/page-a.md',
@@ -317,7 +331,7 @@ describe('Updating workspace happy path', () => {
     ws.set(noteB);
     ws.resolveLinks();
 
-    // expect(() => ws.get(placeholderUri('page-b'))).toThrow();  TODO
+    expect(() => ws.get(placeholderUri('page-b'))).toThrow();
     expect(ws.get(noteB.uri).type).toEqual('note');
   });
 });

@@ -21,15 +21,5 @@
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "prettier.requireConfig": true,
   "editor.formatOnSave": true,
-  "jest.debugCodeLens.showWhenTestStateIn": [
-    "fail",
-    "unknown",
-    "pass"
-  ],
-  "cSpell.words": [
-    "exluding",
-    "frontmatter",
-    "precendence",
-    "unist"
-  ]
+  "jest.debugCodeLens.showWhenTestStateIn": ["fail", "unknown", "pass"]
 }

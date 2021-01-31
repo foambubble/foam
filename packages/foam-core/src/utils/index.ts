@@ -1,5 +1,4 @@
 import { titleCase } from 'title-case';
-// export { extractHashtags, extractTagsFromProp } from './hashtags';
 export { TagExtractor } from './hashtags';
 export * from './uri';
 export * from './core';

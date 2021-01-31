@@ -113,12 +113,6 @@ const handleError = (
   );
 };
 
-// const tagging = new TagExtractor();
-
-// const tagsPlugin: ParserPlugin = {
-
-// };
-
 export function createMarkdownParser(
   extraPlugins: ParserPlugin[],
   config: FoamConfig

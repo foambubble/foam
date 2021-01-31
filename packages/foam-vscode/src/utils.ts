@@ -12,7 +12,7 @@ import {
   version,
 } from 'vscode';
 import * as fs from 'fs';
-import { Logger, Note } from 'foam-core';
+import { Logger } from 'foam-core';
 import matter from 'gray-matter';
 import removeMarkdown from 'remove-markdown';
 
@@ -257,7 +257,7 @@ export function stripFrontMatter(markdown: string): string {
 
 export function stripImages(markdown: string): string {
   return markdown.replace(
-    /!\[(.*)\]\([\-\/\\\.A-Za-z]*\)/gi,
+    /!\[(.*)\]\([-/\\.A-Za-z]*\)/gi,
     '$1'.length ? '[Image: $1]' : ''
   );
 }

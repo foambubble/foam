@@ -1,26 +1,25 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { Foam, FileDataStore, Note, URI } from 'foam-core';
+import { Foam, IDataStore, Note, URI } from 'foam-core';
 import micromatch from 'micromatch';
 import {
   getOrphansConfig,
   OrphansConfig,
   OrphansConfigGroupBy,
 } from '../settings';
-import { FoamFeature } from '../types';
+import { FoamFeature, FoamExtensionContext } from '../types';
 import { getNoteTooltip, getContainsTooltip } from '../utils';
 
 const feature: FoamFeature = {
   activate: async (
-    context: vscode.ExtensionContext,
-    foamPromise: Promise<Foam>,
-    dataStore: FileDataStore
+    context: FoamExtensionContext,
+    foamPromise: Promise<Foam>
   ) => {
     const foam = await foamPromise;
     const workspacesFsPaths = vscode.workspace.workspaceFolders.map(
       dir => dir.uri.fsPath
     );
-    const provider = new OrphansProvider(foam, dataStore, {
+    const provider = new OrphansProvider(foam, context.dataStore, {
       ...getOrphansConfig(),
       workspacesFsPaths,
     });
@@ -57,7 +56,7 @@ export class OrphansProvider
 
   constructor(
     private foam: Foam,
-    private dataStore: FileDataStore,
+    private dataStore: IDataStore,
     config: OrphansProviderConfig
   ) {
     this.groupBy = config.groupBy;

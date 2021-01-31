@@ -1,16 +1,15 @@
 import * as vscode from 'vscode';
-import { Foam, Note, FileDataStore } from 'foam-core';
-import { FoamFeature } from '../../types';
+import { Foam, Note, IDataStore } from 'foam-core';
+import { FoamFeature, FoamExtensionContext } from '../../types';
 import { getNoteTooltip, getContainsTooltip } from '../../utils';
 
 const feature: FoamFeature = {
   activate: async (
-    context: vscode.ExtensionContext,
-    foamPromise: Promise<Foam>,
-    dataStore: FileDataStore
+    context: FoamExtensionContext,
+    foamPromise: Promise<Foam>
   ) => {
     const foam = await foamPromise;
-    const provider = new TagsProvider(foam, dataStore);
+    const provider = new TagsProvider(foam, context.dataStore);
     context.subscriptions.push(
       vscode.window.registerTreeDataProvider(
         'foam-vscode.tags-explorer',
@@ -34,7 +33,7 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
     notes: TagMetadata[];
   }[];
 
-  constructor(private foam: Foam, private dataStore: FileDataStore) {
+  constructor(private foam: Foam, private dataStore: IDataStore) {
     this.computeTags();
   }
 

@@ -8,9 +8,11 @@ const testFolder = URI.joinPath(URI.file(__dirname), 'test-config');
 
 describe('Foam configuration', () => {
   it('can read settings from config.json', () => {
-    const config = createConfigFromFolders([
-      URI.joinPath(testFolder, 'folder1'),
-    ]);
+    const config = createConfigFromFolders(
+      [URI.joinPath(testFolder, 'folder1')],
+      {},
+      false
+    );
     expect(config.get('feature1.setting1.value')).toBeTruthy();
     expect(config.get('feature2.value')).toEqual(12);
 
@@ -19,10 +21,14 @@ describe('Foam configuration', () => {
   });
 
   it('can merge settings from multiple foam folders', () => {
-    const config = createConfigFromFolders([
-      URI.joinPath(testFolder, 'folder1'),
-      URI.joinPath(testFolder, 'folder2'),
-    ]);
+    const config = createConfigFromFolders(
+      [
+        URI.joinPath(testFolder, 'folder1'),
+        URI.joinPath(testFolder, 'folder2'),
+      ],
+      {},
+      false
+    );
 
     // override value
     expect(config.get('feature1.setting1.value')).toBe(false);
@@ -36,9 +42,11 @@ describe('Foam configuration', () => {
   });
 
   it('cannot activate local plugins from workspace config', () => {
-    const config = createConfigFromFolders([
-      URI.joinPath(testFolder, 'enable-plugins'),
-    ]);
+    const config = createConfigFromFolders(
+      [URI.joinPath(testFolder, 'enable-plugins')],
+      {},
+      false
+    );
     expect(config.get('experimental.localPlugins.enabled')).toBeUndefined();
   });
 });

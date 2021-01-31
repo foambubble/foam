@@ -13,9 +13,11 @@ describe('generateLinkReferences', () => {
   let _graph: NoteGraphAPI;
 
   beforeAll(async () => {
-    const config = createConfigFromFolders([
-      URI.file(path.join(__dirname, '..', '__scaffold__')),
-    ]);
+    const config = createConfigFromFolders(
+      [URI.file(path.join(__dirname, '..', '__scaffold__'))],
+      {},
+      false
+    );
     const services: Services = {
       dataStore: new FileDataStore(config),
     };

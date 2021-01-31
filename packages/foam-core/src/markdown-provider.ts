@@ -20,7 +20,7 @@ import {
 import { ParserPlugin } from './plugins';
 import { Logger } from './utils/log';
 import { URI } from './common/uri';
-import { FoamConfig } from 'index';
+import { FoamConfig } from './config';
 
 /**
  * Traverses all the children of the given node, extracts

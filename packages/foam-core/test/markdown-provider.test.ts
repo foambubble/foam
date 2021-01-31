@@ -8,6 +8,7 @@ import { ParserPlugin } from '../src/plugins';
 import { URI } from '../src/common/uri';
 import { Logger } from '../src/utils/log';
 import { uriToSlug } from '../src/utils';
+import { FoamConfig } from '../src/config';
 
 Logger.setLevel('error');
 
@@ -38,8 +39,20 @@ const pageE = `
 # Page E
 `;
 
-const createNoteFromMarkdown = (path: string, content: string) =>
-  createMarkdownParser([]).parse(URI.file(path), content);
+const createNoteFromMarkdown = (path: string, content: string) => {
+  const config: FoamConfig = {
+    workspaceFolders: [URI.from({ scheme: '' })],
+    includeGlobs: [''],
+    ignoreGlobs: [''],
+    numericTaggingEnabled: false,
+    get: <T>(path: string, defaultValue?: T) => {
+      const tokens = path.split('.');
+      const value = tokens.reduce((acc, t) => acc?.[t], {});
+      return value ?? defaultValue;
+    },
+  };
+  return createMarkdownParser([], config).parse(URI.file(path), content);
+};
 
 describe('Markdown loader', () => {
   it('Converts markdown to notes', () => {

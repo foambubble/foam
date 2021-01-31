@@ -10,7 +10,7 @@ export const bootstrap = async (config: FoamConfig, services: Services) => {
   const plugins = await loadPlugins(config);
 
   const parserPlugins = plugins.map(p => p.parser).filter(isSome);
-  const parser = createMarkdownParser(parserPlugins);
+  const parser = createMarkdownParser(parserPlugins, config);
 
   const graphMiddlewares = plugins.map(p => p.graphMiddleware).filter(isSome);
   const graph = createGraph(graphMiddlewares);

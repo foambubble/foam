@@ -10,7 +10,7 @@ import detectNewline from 'detect-newline';
 import os from 'os';
 import { NoteGraphAPI } from './model/note-graph';
 import { NoteLinkDefinition, Note, NoteParser } from './model/note';
-import { dropExtension, extractHashtags, extractTagsFromProp } from './utils';
+import { dropExtension, TagExtractor } from './utils';
 import {
   uriToSlug,
   computeRelativePath,
@@ -20,6 +20,7 @@ import {
 import { ParserPlugin } from './plugins';
 import { Logger } from './utils/log';
 import { URI } from './common/uri';
+import { FoamConfig } from 'index';
 
 /**
  * Traverses all the children of the given node, extracts
@@ -35,17 +36,6 @@ const getTextFromChildren = (root: Node): string => {
     }
   });
   return text;
-};
-
-const tagsPlugin: ParserPlugin = {
-  name: 'tags',
-  onWillVisitTree: (tree, note) => {
-    note.tags = extractHashtags(note.source.text);
-  },
-  onDidFindProperties: (props, note) => {
-    const yamlTags = extractTagsFromProp(props.tags);
-    yamlTags.forEach(tag => note.tags.add(tag));
-  },
 };
 
 const titlePlugin: ParserPlugin = {
@@ -123,11 +113,22 @@ const handleError = (
   );
 };
 
-export function createMarkdownParser(extraPlugins: ParserPlugin[]): NoteParser {
+// const tagging = new TagExtractor();
+
+// const tagsPlugin: ParserPlugin = {
+
+// };
+
+export function createMarkdownParser(
+  extraPlugins: ParserPlugin[],
+  config: FoamConfig
+): NoteParser {
   const parser = unified()
     .use(markdownParse, { gfm: true })
     .use(frontmatterPlugin, ['yaml'])
     .use(wikiLinkPlugin);
+
+  const tagsPlugin = new TagExtractor(config);
 
   const plugins = [
     titlePlugin,

@@ -239,6 +239,11 @@
           "type": "object",
           "description": "Custom graph styling settings. An example is present in the documentation.",
           "default": {}
+        },
+        "foam.tags.includeNumbers": {
+          "type": "boolean",
+          "description": "Index solely numeric tags e.g. #2021",
+          "default": false
         }
       }
     },

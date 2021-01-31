@@ -7,6 +7,7 @@ export interface FoamConfig {
   workspaceFolders: URI[];
   includeGlobs: string[];
   ignoreGlobs: string[];
+  numericTaggingEnabled: boolean;
   get<T>(path: string): T | undefined;
   get<T>(path: string, defaultValue: T): T;
 }
@@ -19,12 +20,14 @@ export const createConfigFromObject = (
   workspaceFolders: URI[],
   include: string[],
   ignore: string[],
-  settings: any
+  settings: any,
+  numericTaggingEnabled: boolean
 ) => {
   const config: FoamConfig = {
     workspaceFolders: workspaceFolders,
     includeGlobs: include,
     ignoreGlobs: ignore,
+    numericTaggingEnabled,
     get: <T>(path: string, defaultValue?: T) => {
       const tokens = path.split('.');
       const value = tokens.reduce((acc, t) => acc?.[t], settings);
@@ -39,7 +42,8 @@ export const createConfigFromFolders = (
   options: {
     include?: string[];
     ignore?: string[];
-  } = {}
+  } = {},
+  numericTaggingEnabled: boolean
 ): FoamConfig => {
   if (!Array.isArray(workspaceFolders)) {
     workspaceFolders = [workspaceFolders];
@@ -62,7 +66,8 @@ export const createConfigFromFolders = (
     workspaceFolders,
     options.include ?? DEFAULT_INCLUDES,
     options.ignore ?? DEFAULT_IGNORES,
-    settings
+    settings,
+    numericTaggingEnabled
   );
 };
 

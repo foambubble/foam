@@ -12,7 +12,8 @@ function makeConfig(params: { include: string[]; ignore: string[] }) {
     [testFolder],
     params.include,
     params.ignore,
-    {}
+    {},
+    false
   );
 }
 

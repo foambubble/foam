@@ -9,35 +9,55 @@ import { Logger } from '../src/utils/log';
 
 Logger.setLevel('error');
 
-const config: FoamConfig = createConfigFromObject([], [], [], {
-  experimental: {
-    localPlugins: {
-      enabled: true,
-      pluginFolders: [path.join(__dirname, 'test-plugin')],
+const config: FoamConfig = createConfigFromObject(
+  [],
+  [],
+  [],
+  {
+    experimental: {
+      localPlugins: {
+        enabled: true,
+        pluginFolders: [path.join(__dirname, 'test-plugin')],
+      },
     },
   },
-});
+  false
+);
 
 describe('Foam plugins', () => {
   it('will not load if feature is not explicitly enabled', async () => {
-    let plugins = await loadPlugins(createConfigFromObject([], [], [], {}));
-    expect(plugins.length).toEqual(0);
-    plugins = await loadPlugins(
-      createConfigFromObject([], [], [], {
-        experimental: {
-          localPlugins: {},
-        },
-      })
+    let plugins = await loadPlugins(
+      createConfigFromObject([], [], [], {}, false)
     );
     expect(plugins.length).toEqual(0);
     plugins = await loadPlugins(
-      createConfigFromObject([], [], [], {
-        experimental: {
-          localPlugins: {
-            enabled: false,
+      createConfigFromObject(
+        [],
+        [],
+        [],
+        {
+          experimental: {
+            localPlugins: {},
           },
         },
-      })
+        false
+      )
+    );
+    expect(plugins.length).toEqual(0);
+    plugins = await loadPlugins(
+      createConfigFromObject(
+        [],
+        [],
+        [],
+        {
+          experimental: {
+            localPlugins: {
+              enabled: false,
+            },
+          },
+        },
+        false
+      )
     );
     expect(plugins.length).toEqual(0);
   });
@@ -61,7 +81,7 @@ describe('Foam plugins', () => {
     const plugins = await loadPlugins(config);
     const parserPlugin = plugins[0].parser;
     expect(parserPlugin).not.toBeUndefined();
-    const parser = createMarkdownParser([parserPlugin!]);
+    const parser = createMarkdownParser([parserPlugin!], config);
 
     const note = parser.parse(
       URI.file('/path/to/a'),

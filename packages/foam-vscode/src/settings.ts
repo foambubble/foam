@@ -24,6 +24,10 @@ export function getIgnoredFilesSetting(): GlobPattern[] {
   ];
 }
 
+export function getNumericTaggingEnabled(): boolean {
+  return workspace.getConfiguration('foam.tags').get('includeNumbers');
+}
+
 /** Retrieves the maximum length for a Graph node title. */
 export function getTitleMaxLength(): number {
   return workspace.getConfiguration('foam.graph').get('titleMaxLength');

@@ -82,9 +82,7 @@ describe('hashtag extraction', () => {
     ignoreGlobs: [''],
     numericTaggingEnabled: false,
     get: <T>(path: string, defaultValue?: T) => {
-      const tokens = path.split('.');
-      const value = tokens.reduce((acc, t) => acc?.[t], {});
-      return value ?? defaultValue;
+      return defaultValue;
     },
   };
   const tagging = new TagExtractor(config);

@@ -46,9 +46,7 @@ const createNoteFromMarkdown = (path: string, content: string) => {
     ignoreGlobs: [''],
     numericTaggingEnabled: false,
     get: <T>(path: string, defaultValue?: T) => {
-      const tokens = path.split('.');
-      const value = tokens.reduce((acc, t) => acc?.[t], {});
-      return value ?? defaultValue;
+      return defaultValue;
     },
   };
   return createMarkdownParser([], config).parse(URI.file(path), content);
@@ -362,7 +360,16 @@ describe('parser plugins', () => {
       }
     },
   };
-  const parser = createMarkdownParser([testPlugin]);
+  const config: FoamConfig = {
+    workspaceFolders: [URI.from({ scheme: '' })],
+    includeGlobs: [''],
+    ignoreGlobs: [''],
+    numericTaggingEnabled: false,
+    get: <T>(path: string, defaultValue?: T) => {
+      return defaultValue;
+    },
+  };
+  const parser = createMarkdownParser([testPlugin], config);
 
   it('can augment the parsing of the file', () => {
     const note1 = parser.parse(

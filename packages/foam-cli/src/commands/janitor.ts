@@ -41,7 +41,11 @@ export default class Janitor extends Command {
     const { workspacePath = './' } = args;
 
     if (isValidDirectory(workspacePath)) {
-      const config = createConfigFromFolders([URI.file(workspacePath)]);
+      const config = createConfigFromFolders(
+        [URI.file(workspacePath)],
+        {},
+        false
+      );
       const services: Services = {
         dataStore: new FileDataStore(config),
       };

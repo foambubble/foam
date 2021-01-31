@@ -42,7 +42,7 @@ Successfully generated link references and heading!
     const { args, flags } = this.parse(Migrate);
 
     const { workspacePath = './' } = args;
-    const config = createConfigFromFolders([workspacePath]);
+    const config = createConfigFromFolders([workspacePath], {}, false);
 
     if (isValidDirectory(workspacePath)) {
       const services: Services = {

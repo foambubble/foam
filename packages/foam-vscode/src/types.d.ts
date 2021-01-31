@@ -1,6 +1,10 @@
 import { ExtensionContext } from 'vscode';
-import { Foam } from 'foam-core';
+import { Foam, FileDataStore } from 'foam-core';
 
 export interface FoamFeature {
-  activate: (context: ExtensionContext, foamPromise: Promise<Foam>) => void;
+  activate: (
+    context: ExtensionContext,
+    foamPromise: Promise<Foam>,
+    dataStore: FileDataStore
+  ) => void;
 }

@@ -44,6 +44,7 @@ describe('orphans', () => {
       },
     },
   } as any;
+  const dataStore = { read: () => '' } as any;
 
   // Mock config
   const config: OrphansProviderConfig = {
@@ -53,7 +54,7 @@ describe('orphans', () => {
   };
 
   it('should return the orphans as a folder tree', async () => {
-    const provider = new OrphansProvider(foam, config);
+    const provider = new OrphansProvider(foam, dataStore, config);
     const result = await provider.getChildren();
     expect(result).toMatchObject([
       {
@@ -72,7 +73,7 @@ describe('orphans', () => {
   });
 
   it('should return the orphans in a directory', async () => {
-    const provider = new OrphansProvider(foam, config);
+    const provider = new OrphansProvider(foam, dataStore, config);
     const directory = new Directory('/path', [orphanA as any]);
     const result = await provider.getChildren(directory);
     expect(result).toMatchObject([
@@ -87,7 +88,7 @@ describe('orphans', () => {
 
   it('should return the flattened orphans', async () => {
     const mockConfig = { ...config, groupBy: OrphansConfigGroupBy.Off };
-    const provider = new OrphansProvider(foam, mockConfig);
+    const provider = new OrphansProvider(foam, dataStore, mockConfig);
     const result = await provider.getChildren();
     expect(result).toMatchObject([
       {
@@ -107,7 +108,7 @@ describe('orphans', () => {
 
   it('should return the orphans without exclusion', async () => {
     const mockConfig = { ...config, exclude: [] };
-    const provider = new OrphansProvider(foam, mockConfig);
+    const provider = new OrphansProvider(foam, dataStore, mockConfig);
     const result = await provider.getChildren();
     expect(result).toMatchObject([
       expect.anything(),

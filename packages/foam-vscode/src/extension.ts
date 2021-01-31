@@ -30,7 +30,7 @@ export async function activate(context: ExtensionContext) {
     const foamPromise: Promise<Foam> = bootstrap(config, services);
 
     features.forEach(f => {
-      f.activate(context, foamPromise);
+      f.activate(context, foamPromise, dataStore);
     });
 
     const foam = await foamPromise;

@@ -189,9 +189,10 @@ export async function focusNote(notePath: string, moveCursorToEnd: boolean) {
   }
 }
 
-export function getContainsTooltip(notes: Note[]): string {
-  const titles = notes.map(n => n.title).slice(0, 5);
-  return `Contains "${titles.join('", "')}"`;
+export function getContainsTooltip(titles: string[]): string {
+  const TITLES_LIMIT = 5;
+  const ellipsis = titles.length > TITLES_LIMIT ? ',...' : '';
+  return `Contains "${titles.slice(0, TITLES_LIMIT).join('", "')}"${ellipsis}`;
 }
 
 /**
@@ -201,42 +202,62 @@ export function getContainsTooltip(notes: Note[]): string {
  * https://code.visualstudio.com/updates/v1_52#_markdown-tree-tooltip-api
  * @param note A Foam Note
  */
-export function getNoteTooltip(note: Note): string {
+export function getNoteTooltip(content: string): string {
   const STABLE_MARKDOWN_STRING_API_VERSION = '1.52.1';
+  const strippedContent = stripFrontMatter(stripImages(content));
 
   if (version >= STABLE_MARKDOWN_STRING_API_VERSION) {
-    return formatMarkdownTooltip(note) as any;
+    return formatMarkdownTooltip(strippedContent) as any;
   }
 
-  return formatSimpleTooltip(note);
+  return formatSimpleTooltip(strippedContent);
 }
 
-export function formatMarkdownTooltip(note: Note): MarkdownString {
-  const LINES_LIMIT = 15;
-  const markdown = firstNLines(stripFrontMatter(note.source.text), LINES_LIMIT);
-  return new MarkdownString(markdown);
+export function formatMarkdownTooltip(content: string): MarkdownString {
+  const LINES_LIMIT = 16;
+  const { excerpt, lines } = getExcerpt(content, LINES_LIMIT);
+  const totalLines = content.split('\n').length;
+  const diffLines = totalLines - lines;
+  const ellipsis = diffLines > 0 ? `\n\n[...] *(+ ${diffLines} lines)*` : '';
+  return new MarkdownString(`${excerpt}${ellipsis}`);
 }
 
-export function formatSimpleTooltip(note: Note): string {
-  const WORDS_LIMIT = 30;
-  const words = removeMarkdown(stripFrontMatter(note.source.text))
+export function formatSimpleTooltip(content: string): string {
+  const CHARACTERS_LIMIT = 200;
+  const flatContent = removeMarkdown(content)
     .replace(/\r?\n|\r/g, ' ')
-    .replace(/\s+/g, ' ')
-    .replace(note.title, '')
-    .split(' ');
-  const extract = words.slice(0, WORDS_LIMIT).join(' ');
-  const ellipsis = words.length > WORDS_LIMIT ? '...' : '';
+    .replace(/\s+/g, ' ');
+  const extract = flatContent.substr(0, CHARACTERS_LIMIT);
+  const ellipsis = flatContent.length > CHARACTERS_LIMIT ? '...' : '';
   return `${extract}${ellipsis}`;
 }
 
-export function firstNLines(markdown: string, n: number): string {
-  return markdown
-    .replace(/\r\n/g, '\n')
-    .split('\n')
-    .slice(0, n)
-    .join('\n');
+export function getExcerpt(
+  markdown: string,
+  maxLines: number
+): { excerpt: string; lines: number } {
+  const OFFSET_LINES_LIMIT = 5;
+  const paragraphs = markdown.replace(/\r\n/g, '\n').split('\n\n');
+  const excerpt: string[] = [];
+  let lines = 0;
+  for (const paragraph of paragraphs) {
+    const n = paragraph.split('\n').length;
+    if (lines > maxLines || lines + n - maxLines > OFFSET_LINES_LIMIT) {
+      break;
+    }
+    excerpt.push(paragraph);
+    lines = lines + n + 1;
+  }
+  return { excerpt: excerpt.join('\n\n'), lines };
 }
 
 export function stripFrontMatter(markdown: string): string {
   return matter(markdown).content.trim();
+}
+
+export function stripImages(markdown: string): string {
+  return markdown.replace(
+    /!\[(.*)\]\([\-\/\\\.A-Za-z]*\)/gi,
+    '$1'.length ? '[Image: $1]' : ''
+  );
 }

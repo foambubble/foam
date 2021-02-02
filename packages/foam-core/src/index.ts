@@ -1,10 +1,10 @@
 import { Note, NoteLink } from './model/note';
 import { URI } from './common/uri';
-import { NoteGraph, NoteGraphAPI } from './model/note-graph';
 import { FoamConfig } from './config';
 import { IDataStore, FileDataStore } from './services/datastore';
 import { ILogger } from './utils/log';
 import { IDisposable, isDisposable } from './common/lifecycle';
+import { FoamWorkspace } from './model/workspace';
 
 export { IDataStore, FileDataStore };
 export { ILogger };
@@ -34,15 +34,15 @@ export { createConfigFromFolders } from './config';
 
 export { bootstrap } from './bootstrap';
 
-export { NoteGraph, NoteGraphAPI, Note, NoteLink, URI };
+export { Note, NoteLink, URI, FoamWorkspace };
 
 export interface Services {
   dataStore: IDataStore;
 }
 
 export interface Foam extends IDisposable {
-  notes: NoteGraphAPI;
   services: Services;
+  workspace: FoamWorkspace;
   config: FoamConfig;
   parse: (uri: URI, text: string, eol: string) => Note;
 }

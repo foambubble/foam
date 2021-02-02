@@ -9,7 +9,7 @@ const feature: FoamFeature = {
       commands.registerCommand('foam-vscode.open-random-note', async () => {
         const foam = await foamPromise;
         const currentFile = window.activeTextEditor?.document.uri.path;
-        const notes = foam.notes.getNotes();
+        const notes = foam.workspace.list();
         if (notes.length <= 1) {
           window.showInformationMessage(
             'Could not find another note to open. If you believe this is a bug, please file an issue.'

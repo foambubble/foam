@@ -1,5 +1,6 @@
 import { Position, Point } from 'unist';
 import { URI } from '../common/uri';
+import { getBasename } from '../utils';
 export { Position, Point };
 
 export interface NoteSource {
@@ -59,3 +60,13 @@ export type Resource = Note | Attachment | Placeholder;
 export interface NoteParser {
   parse: (uri: URI, text: string) => Note;
 }
+
+export const isWikilink = (link: NoteLink): link is WikiLink => {
+  return link.type === 'wikilink';
+};
+
+export const getTitle = (resource: Resource): string => {
+  return resource.type === 'note'
+    ? resource.title ?? getBasename(resource.uri)
+    : getBasename(resource.uri);
+};

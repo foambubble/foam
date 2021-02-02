@@ -172,13 +172,13 @@ export class FoamWorkspace implements IDisposable {
     workspace.placeholders = {};
 
     workspace = Object.values(workspace.list()).reduce(
-      (w, resource) => FoamWorkspace.addLinksForResource(w, resource),
+      (w, resource) => FoamWorkspace.resolveResource(w, resource),
       workspace
     );
     if (keepMonitoring) {
       workspace.disposables.push(
         workspace.onDidAdd(resource => {
-          FoamWorkspace.addLinksForResource(workspace, resource);
+          FoamWorkspace.resolveResource(workspace, resource);
         }),
         workspace.onDidUpdate(change => {
           FoamWorkspace.updateLinksForResource(
@@ -315,10 +315,7 @@ export class FoamWorkspace implements IDisposable {
     return deleted ?? null;
   }
 
-  private static addLinksForResource(
-    workspace: FoamWorkspace,
-    resource: Resource
-  ) {
+  public static resolveResource(workspace: FoamWorkspace, resource: Resource) {
     // prettier-ignore
     resource.type === 'note' && resource.links.forEach(link => {
       const targetUri = FoamWorkspace.resolveLink(workspace, resource, link)

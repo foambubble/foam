@@ -1,14 +1,15 @@
 import * as vscode from 'vscode';
-import { FoamFeature } from '../../types';
-import { Foam, Note } from 'foam-core';
+import { Foam, Note, IDataStore } from 'foam-core';
+import { FoamFeature, FoamExtensionContext } from '../../types';
+import { getNoteTooltip, getContainsTooltip } from '../../utils';
 
 const feature: FoamFeature = {
   activate: async (
-    context: vscode.ExtensionContext,
+    context: FoamExtensionContext,
     foamPromise: Promise<Foam>
   ) => {
     const foam = await foamPromise;
-    const provider = new TagsProvider(foam);
+    const provider = new TagsProvider(foam, context.dataStore);
     context.subscriptions.push(
       vscode.window.registerTreeDataProvider(
         'foam-vscode.tags-explorer',
@@ -29,10 +30,10 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
 
   private tags: {
     tag: string;
-    noteUris: vscode.Uri[];
+    notes: TagMetadata[];
   }[];
 
-  constructor(private foam: Foam) {
+  constructor(private foam: Foam, private dataStore: IDataStore) {
     this.computeTags();
   }
 
@@ -43,16 +44,18 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
 
   private computeTags() {
     const rawTags: {
-      [key: string]: vscode.Uri[];
-    } = this.foam.notes.getNotes().reduce((acc, note) => {
-      note.tags.forEach(tag => {
-        acc[tag] = acc[tag] ?? [];
-        acc[tag].push(note.uri);
-      });
-      return acc;
-    }, {});
+      [key: string]: TagMetadata[];
+    } = this.foam.notes
+      .getNotes()
+      .reduce((acc: { [key: string]: TagMetadata[] }, note) => {
+        note.tags.forEach(tag => {
+          acc[tag] = acc[tag] ?? [];
+          acc[tag].push({ title: note.title, uri: note.uri });
+        });
+        return acc;
+      }, {});
     this.tags = Object.entries(rawTags)
-      .map(([tag, noteUris]) => ({ tag, noteUris }))
+      .map(([tag, notes]) => ({ tag, notes }))
       .sort((a, b) => a.tag.localeCompare(b.tag));
   }
 
@@ -62,8 +65,8 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
 
   getChildren(element?: Tag): Thenable<TagTreeItem[]> {
     if (element) {
-      const references: TagReference[] = element.noteUris.map(id => {
-        const note = this.foam.notes.getNote(id);
+      const references: TagReference[] = element.notes.map(({ uri }) => {
+        const note = this.foam.notes.getNote(uri);
         return new TagReference(element.tag, note);
       });
       return Promise.resolve([
@@ -73,25 +76,35 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
     }
     if (!element) {
       const tags: Tag[] = this.tags.map(
-        ({ tag, noteUris }) => new Tag(tag, noteUris)
+        ({ tag, notes }) => new Tag(tag, notes)
       );
       return Promise.resolve(tags.sort((a, b) => a.tag.localeCompare(b.tag)));
     }
+  }
+
+  async resolveTreeItem(item: TagTreeItem): Promise<TagTreeItem> {
+    if (item instanceof TagReference) {
+      const content = await this.dataStore.read(item.note.uri);
+      item.tooltip = getNoteTooltip(content);
+    }
+    return item;
   }
 }
 
 type TagTreeItem = Tag | TagReference | TagSearch;
 
+type TagMetadata = { title: string; uri: vscode.Uri };
+
 export class Tag extends vscode.TreeItem {
   constructor(
     public readonly tag: string,
-    public readonly noteUris: vscode.Uri[]
+    public readonly notes: TagMetadata[]
   ) {
     super(tag, vscode.TreeItemCollapsibleState.Collapsed);
-    this.description = `${this.noteUris.length} reference${
-      this.noteUris.length !== 1 ? 's' : ''
+    this.description = `${this.notes.length} reference${
+      this.notes.length !== 1 ? 's' : ''
     }`;
-    this.tooltip = this.description;
+    this.tooltip = getContainsTooltip(this.notes.map(n => n.title));
   }
 
   iconPath = new vscode.ThemeIcon('symbol-number');
@@ -123,11 +136,11 @@ export class TagSearch extends vscode.TreeItem {
 
 export class TagReference extends vscode.TreeItem {
   public readonly title: string;
-  constructor(tag: string, note: Note) {
+  constructor(public readonly tag: string, public readonly note: Note) {
     super(note.title, vscode.TreeItemCollapsibleState.None);
     this.title = note.title;
     this.description = note.uri.path;
-    this.tooltip = this.description;
+    this.tooltip = undefined;
     const resourceUri = note.uri;
     let selection: vscode.Range | null = null;
     // TODO move search fn to core
@@ -139,8 +152,6 @@ export class TagReference extends vscode.TreeItem {
         break;
       }
     }
-    // TODO I like about this showing the git state of the note, but I don't like the md icon
-    this.resourceUri = resourceUri;
     this.command = {
       command: 'vscode.open',
       arguments: [

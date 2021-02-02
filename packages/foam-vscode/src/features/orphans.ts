@@ -1,24 +1,25 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { Foam, Note, URI } from 'foam-core';
+import { Foam, IDataStore, Note, URI } from 'foam-core';
 import micromatch from 'micromatch';
 import {
   getOrphansConfig,
   OrphansConfig,
   OrphansConfigGroupBy,
 } from '../settings';
-import { FoamFeature } from '../types';
+import { FoamFeature, FoamExtensionContext } from '../types';
+import { getNoteTooltip, getContainsTooltip } from '../utils';
 
 const feature: FoamFeature = {
   activate: async (
-    context: vscode.ExtensionContext,
+    context: FoamExtensionContext,
     foamPromise: Promise<Foam>
   ) => {
     const foam = await foamPromise;
     const workspacesFsPaths = vscode.workspace.workspaceFolders.map(
       dir => dir.uri.fsPath
     );
-    const provider = new OrphansProvider(foam, {
+    const provider = new OrphansProvider(foam, context.dataStore, {
       ...getOrphansConfig(),
       workspacesFsPaths,
     });
@@ -53,7 +54,11 @@ export class OrphansProvider
   private orphans: Note[] = [];
   private root = vscode.workspace.workspaceFolders[0].uri.fsPath;
 
-  constructor(private foam: Foam, config: OrphansProviderConfig) {
+  constructor(
+    private foam: Foam,
+    private dataStore: IDataStore,
+    config: OrphansProviderConfig
+  ) {
     this.groupBy = config.groupBy;
     this.exclude = this.getGlobs(config.workspacesFsPaths, config.exclude);
     this.setContext();
@@ -98,6 +103,14 @@ export class OrphansProvider
 
     const orphans = this.orphans.map(o => new Orphan(o));
     return Promise.resolve(orphans);
+  }
+
+  async resolveTreeItem(item: OrphanTreeItem): Promise<OrphanTreeItem> {
+    if (item instanceof Orphan) {
+      const content = await this.dataStore.read(item.note.uri);
+      item.tooltip = getNoteTooltip(content);
+    }
+    return item;
   }
 
   private computeOrphans(): void {
@@ -161,7 +174,7 @@ class Orphan extends vscode.TreeItem {
   constructor(public readonly note: Note) {
     super(note.title, vscode.TreeItemCollapsibleState.None);
     this.description = note.uri.path;
-    this.tooltip = this.description;
+    this.tooltip = undefined;
     this.command = {
       command: 'vscode.open',
       title: 'Open File',
@@ -178,7 +191,8 @@ export class Directory extends vscode.TreeItem {
     super(dir, vscode.TreeItemCollapsibleState.Collapsed);
     const s = this.notes.length > 1 ? 's' : '';
     this.description = `${this.notes.length} orphan${s}`;
-    this.tooltip = this.description;
+    const titles = this.notes.map(n => n.title);
+    this.tooltip = getContainsTooltip(titles);
   }
 
   iconPath = new vscode.ThemeIcon('folder');

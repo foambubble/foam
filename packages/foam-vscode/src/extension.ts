@@ -27,10 +27,14 @@ export async function activate(context: ExtensionContext) {
     const services: Services = {
       dataStore: dataStore,
     };
+    const foamContext = {
+      ...context,
+      dataStore,
+    };
     const foamPromise: Promise<Foam> = bootstrap(config, services);
 
     features.forEach(f => {
-      f.activate(context, foamPromise);
+      f.activate(foamContext, foamPromise);
     });
 
     const foam = await foamPromise;

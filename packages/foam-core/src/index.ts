@@ -1,4 +1,4 @@
-import { Note, NoteLink } from './model/note';
+import { Resource, Note, NoteLink, isNote } from './model/note';
 import { URI } from './common/uri';
 import { FoamConfig } from './config';
 import { IDataStore, FileDataStore } from './services/datastore';
@@ -34,7 +34,7 @@ export { createConfigFromFolders } from './config';
 
 export { bootstrap } from './bootstrap';
 
-export { Note, NoteLink, URI, FoamWorkspace };
+export { Resource, Note, NoteLink, URI, FoamWorkspace, isNote };
 
 export interface Services {
   dataStore: IDataStore;

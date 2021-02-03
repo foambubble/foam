@@ -70,3 +70,7 @@ export const getTitle = (resource: Resource): string => {
     ? resource.title ?? getBasename(resource.uri)
     : getBasename(resource.uri);
 };
+
+export const isNote = (resource: Resource): resource is Note => {
+  return resource.type === 'note';
+};

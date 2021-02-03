@@ -9,6 +9,7 @@ import {
   Services,
   FileDataStore,
   URI,
+  isNote,
 } from 'foam-core';
 import { writeFileToDisk } from '../utils/write-file-to-disk';
 import { isValidDirectory } from '../utils';
@@ -45,9 +46,9 @@ export default class Janitor extends Command {
       const services: Services = {
         dataStore: new FileDataStore(config),
       };
-      const graph = (await bootstrap(config, services)).notes;
+      const workspace = (await bootstrap(config, services)).workspace;
 
-      const notes = graph.getNotes().filter(Boolean); // removes undefined notes
+      const notes = workspace.list().filter(isNote);
 
       spinner.succeed();
       spinner.text = `${notes.length} files found`;
@@ -65,7 +66,7 @@ export default class Janitor extends Command {
         const heading = generateHeading(note);
         const definitions = generateLinkReferences(
           note,
-          graph,
+          workspace,
           !flags['without-extensions']
         );
 

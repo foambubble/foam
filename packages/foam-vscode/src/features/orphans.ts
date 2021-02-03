@@ -8,7 +8,7 @@ import {
   OrphansConfigGroupBy,
 } from '../settings';
 import { FoamFeature } from '../types';
-import { getNoteTooltip, getContainsTooltip } from '../utils';
+import { getNoteTooltip, getContainsTooltip, isNote } from '../utils';
 
 const feature: FoamFeature = {
   activate: async (
@@ -33,9 +33,9 @@ const feature: FoamFeature = {
       vscode.commands.registerCommand('foam-vscode.group-orphans-off', () =>
         provider.setGroupBy(OrphansConfigGroupBy.Off)
       ),
-      foam.notes.onDidAddNote(() => provider.refresh()),
-      foam.notes.onDidUpdateNote(() => provider.refresh()),
-      foam.notes.onDidDeleteNote(() => provider.refresh())
+      foam.workspace.onDidAdd(() => provider.refresh()),
+      foam.workspace.onDidUpdate(() => provider.refresh()),
+      foam.workspace.onDidDelete(() => provider.refresh())
     );
   },
 };
@@ -114,9 +114,10 @@ export class OrphansProvider
   }
 
   private computeOrphans(): void {
-    this.orphans = this.foam.notes
-      .getNotes()
-      .filter(note => !this.foam.notes.getAllLinks(note.uri).length)
+    this.orphans = this.foam.workspace
+      .list()
+      .filter(isNote)
+      .filter(note => !this.foam.workspace.getConnections(note.uri).length)
       .filter(note => !this.isMatch(note.uri))
       .sort((a, b) => a.title.localeCompare(b.title));
   }

@@ -12,7 +12,7 @@ import {
   isPlaceholder,
 } from '../utils';
 import { Emitter } from '../common/event';
-import { IDisposable } from 'index';
+import { IDisposable } from '../index';
 
 export type Connection = {
   source: URI;

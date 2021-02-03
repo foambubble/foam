@@ -20,8 +20,7 @@ import {
   getWikilinkDefinitionSetting,
   LinkReferenceDefinitionsSetting,
 } from '../settings';
-import { astPositionToVsCodePosition } from '../utils';
-import { Resource } from 'packages/foam-core/src/model/note';
+import { astPositionToVsCodePosition, isNote } from '../utils';
 
 const feature: FoamFeature = {
   activate: (context: ExtensionContext, foamPromise: Promise<Foam>) => {
@@ -68,10 +67,6 @@ async function janitor(foam: Foam) {
     );
   }
 }
-
-const isNote = (resource: Resource): resource is Note => {
-  return resource.type === 'note';
-};
 
 async function runJanitor(foam: Foam) {
   const notes: Note[] = foam.workspace.list().filter(isNote);

@@ -12,7 +12,7 @@ import {
   version,
 } from 'vscode';
 import * as fs from 'fs';
-import { Logger } from 'foam-core';
+import { Logger, Resource, Note } from 'foam-core';
 import matter from 'gray-matter';
 import removeMarkdown from 'remove-markdown';
 
@@ -261,3 +261,7 @@ export function stripImages(markdown: string): string {
     '$1'.length ? '[Image: $1]' : ''
   );
 }
+
+export const isNote = (resource: Resource): resource is Note => {
+  return resource.type === 'note';
+};

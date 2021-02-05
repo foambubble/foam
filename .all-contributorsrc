@@ -580,6 +580,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "njnygaard",
+      "name": "Nikhil Nygaard",
+      "avatar_url": "https://avatars.githubusercontent.com/u/4606342?v=4",
+      "profile": "https://nygaard.site",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,

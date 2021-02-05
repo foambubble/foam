@@ -1,4 +1,3 @@
-import { env } from 'vscode';
 /*
 Note: this is needed in order to test certain parts
 of functionality of `foam-vscode`

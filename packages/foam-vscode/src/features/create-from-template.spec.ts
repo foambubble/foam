@@ -19,8 +19,8 @@ describe('createFromTemplate', () => {
     afterEach(async () => {
       jest.clearAllMocks();
       await workspace.fs.delete(Uri.file('.foam/templates/'), {
-        recursive: true
-      })
+        recursive: true,
+      });
     });
 
     it('should create a new template', async () => {

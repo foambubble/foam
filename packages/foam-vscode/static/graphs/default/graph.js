@@ -4,6 +4,8 @@ const CONTAINER_ID = 'graph';
 const styleFallback = {
   background: '#202020',
   fontSize: 12,
+  foreground: '#e0e0e0',
+  lineWidth: 0.2,
   highlightedForeground: '#f9c74f',
   node: {
     note: '#277da1',
@@ -31,6 +33,10 @@ const defaultStyle = {
   background: getStyle(`--vscode-panel-background`) ?? styleFallback.background,
   fontSize:
     parseInt(getStyle(`--vscode-font-size`) ?? styleFallback.fontSize) - 2,
+  foreground:
+    getStyle('--vscode-list-deemphasizedForeground') ??
+    styleFallback.foreground,
+  lineWidth: styleFallback.lineWidth,
   highlightedForeground:
     getStyle('--vscode-list-highlightForeground') ??
     styleFallback.highlightedForeground,
@@ -160,10 +166,17 @@ function initDataviz(channel) {
     .d3Force('x', d3.forceX())
     .d3Force('y', d3.forceY())
     .d3Force('collide', d3.forceCollide(graph.nodeRelSize()))
-    .linkWidth(0.2)
+    .linkWidth(
+      () => parseFloat(model.style.lineWidth) || styleFallback.lineWidth
+    )
     .linkDirectionalParticles(1)
     .linkDirectionalParticleWidth(link =>
-      getLinkState(link, model) === 'highlighted' ? 1 : 0
+      getLinkState(link, model) === 'highlighted'
+        ? Math.max(
+            1.0,
+            parseFloat(model.style.lineWidth) || styleFallback.lineWidth
+          )
+        : 0
     )
     .nodeCanvasObject((node, ctx, globalScale) => {
       const info = model.nodeInfo[node.id];
@@ -174,7 +187,7 @@ function initDataviz(channel) {
       const size = sizeScale(info.neighbors.length);
       const { fill, border } = getNodeColor(node.id, model);
       const fontSize = model.style.fontSize / globalScale;
-      let textColor = d3.rgb(fill);
+      let textColor = fill.toString();
       textColor.opacity =
         getNodeState(node.id, model) === 'highlighted'
           ? 1
@@ -212,8 +225,11 @@ function augmentGraphInfo(data) {
   data.links.forEach(link => {
     const a = data.nodes[link.source];
     const b = data.nodes[link.target];
-    a.neighbors.push(b.id);
-    b.neighbors.push(a.id);
+    // Workaround: nodes of type placeholder have mixed up id and uri
+    if (b.type == 'placeholder') a.neighbors.push(b.id.path);
+    else a.neighbors.push(b.id);
+    if (a.type == 'placeholder') b.neighbors.push(a.id.path);
+    else b.neighbors.push(a.id);
     a.links.push(link);
     b.links.push(link);
   });
@@ -223,17 +239,19 @@ function augmentGraphInfo(data) {
 function getNodeColor(nodeId, model) {
   const info = model.nodeInfo[nodeId];
   const style = model.style;
-  const typeFill = style.node[info.type ?? 'note'] ?? style.node['note'];
+  const typeFill = d3.rgb(
+    style.node[info.type ?? 'note'] ?? style.node['note']
+  );
   switch (getNodeState(nodeId, model)) {
     case 'regular':
       return { fill: typeFill, border: typeFill };
     case 'lessened':
-      const darker = d3.hsl(typeFill).darker(3);
-      return { fill: darker, border: darker };
+      const transparent = d3.rgb(typeFill).copy({ opacity: 0.5 });
+      return { fill: transparent, border: transparent };
     case 'highlighted':
       return {
         fill: typeFill,
-        border: style.highlightedForeground,
+        border: d3.rgb(style.highlightedForeground),
       };
     default:
       throw new Error('Unknown type for node', nodeId);
@@ -244,11 +262,11 @@ function getLinkColor(link, model) {
   const style = model.style;
   switch (getLinkState(link, model)) {
     case 'regular':
-      return d3.hsl(style.node.note).darker(2);
+      return style.foreground;
     case 'highlighted':
       return style.highlightedForeground;
     case 'lessened':
-      return d3.hsl(style.node.note).darker(4);
+      return d3.hsl(style.foreground).copy({ opacity: 0.5 });
     default:
       throw new Error('Unknown type for link', link);
   }

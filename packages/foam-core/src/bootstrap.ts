@@ -44,6 +44,7 @@ export const bootstrap = async (config: FoamConfig, services: Services) => {
     notes: graph,
     config: config,
     parse: parser.parse,
+    services: services,
     dispose: () => {
       isDisposable(services.dataStore) && services.dataStore.dispose();
     },

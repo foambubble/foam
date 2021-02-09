@@ -1,15 +1,15 @@
 import * as vscode from 'vscode';
 import { Foam, Note, IDataStore } from 'foam-core';
-import { FoamFeature, FoamExtensionContext } from '../../types';
+import { FoamFeature } from '../../types';
 import { getNoteTooltip, getContainsTooltip } from '../../utils';
 
 const feature: FoamFeature = {
   activate: async (
-    context: FoamExtensionContext,
+    context: vscode.ExtensionContext,
     foamPromise: Promise<Foam>
   ) => {
     const foam = await foamPromise;
-    const provider = new TagsProvider(foam, context.dataStore);
+    const provider = new TagsProvider(foam, foam.services.dataStore);
     context.subscriptions.push(
       vscode.window.registerTreeDataProvider(
         'foam-vscode.tags-explorer',

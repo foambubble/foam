@@ -42,6 +42,7 @@ export interface Services {
 
 export interface Foam extends IDisposable {
   notes: NoteGraphAPI;
+  services: Services;
   config: FoamConfig;
   parse: (uri: URI, text: string, eol: string) => Note;
 }

@@ -7,19 +7,19 @@ import {
   OrphansConfig,
   OrphansConfigGroupBy,
 } from '../settings';
-import { FoamFeature, FoamExtensionContext } from '../types';
+import { FoamFeature } from '../types';
 import { getNoteTooltip, getContainsTooltip } from '../utils';
 
 const feature: FoamFeature = {
   activate: async (
-    context: FoamExtensionContext,
+    context: vscode.ExtensionContext,
     foamPromise: Promise<Foam>
   ) => {
     const foam = await foamPromise;
     const workspacesFsPaths = vscode.workspace.workspaceFolders.map(
       dir => dir.uri.fsPath
     );
-    const provider = new OrphansProvider(foam, context.dataStore, {
+    const provider = new OrphansProvider(foam, foam.services.dataStore, {
       ...getOrphansConfig(),
       workspacesFsPaths,
     });

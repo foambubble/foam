@@ -20,6 +20,12 @@ async function main() {
       extensionDevelopmentPath,
       extensionTestsPath,
       launchArgs: [tmpWorkspaceDir, '--disable-extensions'],
+      // Running the tests with vscode 1.53.0 is causing issues in `suite.ts:23`,
+      // which is causing a stack overflow, possibly due to a recursive callback.
+      // Also see https://github.com/foambubble/foam/pull/479#issuecomment-774167127
+      // Forcing the version to 1.52.0 solves the problem.
+      // TODO: to review, further investigate, and roll back this workaround.
+      version: '1.52.0',
     });
   } catch (err) {
     console.error('Failed to run tests');

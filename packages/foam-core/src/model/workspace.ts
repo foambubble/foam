@@ -203,7 +203,10 @@ export class FoamWorkspace implements IDisposable {
     workspace: FoamWorkspace,
     uri: URI
   ): Connection[] {
-    return [...workspace.links[uri.path], ...workspace.backlinks[uri.path]];
+    return [
+      ...(workspace.links[uri.path] || []),
+      ...(workspace.backlinks[uri.path] || []),
+    ];
   }
 
   public static getLinks(workspace: FoamWorkspace, uri: URI): URI[] {

@@ -1,6 +1,6 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { Foam, IDataStore, Note, URI } from 'foam-core';
+import { Foam, IDataStore, Note, URI, FoamWorkspace } from 'foam-core';
 import micromatch from 'micromatch';
 import {
   getOrphansConfig,
@@ -19,10 +19,14 @@ const feature: FoamFeature = {
     const workspacesFsPaths = vscode.workspace.workspaceFolders.map(
       dir => dir.uri.fsPath
     );
-    const provider = new OrphansProvider(foam, foam.services.dataStore, {
-      ...getOrphansConfig(),
-      workspacesFsPaths,
-    });
+    const provider = new OrphansProvider(
+      foam.workspace,
+      foam.services.dataStore,
+      {
+        ...getOrphansConfig(),
+        workspacesFsPaths,
+      }
+    );
 
     context.subscriptions.push(
       vscode.window.registerTreeDataProvider('foam-vscode.orphans', provider),
@@ -55,7 +59,7 @@ export class OrphansProvider
   private root = vscode.workspace.workspaceFolders[0].uri.fsPath;
 
   constructor(
-    private foam: Foam,
+    private workspace: FoamWorkspace,
     private dataStore: IDataStore,
     config: OrphansProviderConfig
   ) {
@@ -114,10 +118,10 @@ export class OrphansProvider
   }
 
   private computeOrphans(): void {
-    this.orphans = this.foam.workspace
+    this.orphans = this.workspace
       .list()
       .filter(isNote)
-      .filter(note => !this.foam.workspace.getConnections(note.uri).length)
+      .filter(note => this.workspace.getConnections(note.uri).length === 0)
       .filter(note => !this.isMatch(note.uri))
       .sort((a, b) => a.title.localeCompare(b.title));
   }

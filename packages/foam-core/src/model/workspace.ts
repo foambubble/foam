@@ -133,7 +133,7 @@ export class FoamWorkspace implements IDisposable {
           def => def.label === link.slug
         )?.url;
         if (isSome(definitionUri)) {
-          targetUri = parseUri(note.uri, definitionUri);
+          targetUri = parseUri(note.uri, definitionUri!);
         } else {
           targetUri =
             FoamWorkspace.find(workspace, link.slug, note.uri)?.uri ??
@@ -142,9 +142,12 @@ export class FoamWorkspace implements IDisposable {
         break;
 
       case 'link':
-        targetUri = parseUri(note.uri, link.target);
+        targetUri =
+          FoamWorkspace.find(workspace, link.target, note.uri)?.uri ??
+          placeholderUri(link.target);
         break;
     }
+
     if (isPlaceholder(targetUri)) {
       // we can only add placeholders when links are being resolved
       workspace = FoamWorkspace.set(workspace, {
@@ -277,10 +280,9 @@ export class FoamWorkspace implements IDisposable {
 
       case 'key':
         const key = normalizeKey(resourceId as string);
-        const paths =
-          workspace.resourcesByName[key] ?? workspace.placeholders[key];
+        const paths = workspace.resourcesByName[key];
         if (isNone(paths) || paths.length === 0) {
-          return null;
+          return workspace.placeholders[key] ?? null;
         }
         // prettier-ignore
         const sortedPaths = paths.length === 1

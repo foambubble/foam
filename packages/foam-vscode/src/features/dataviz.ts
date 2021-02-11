@@ -86,7 +86,6 @@ function generateGraphData(foam: Foam) {
     graph.edges.add({
       source: c.source.path,
       target: c.target.path,
-      placeholder: true,
     });
   });
 

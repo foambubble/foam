@@ -16,8 +16,8 @@ export const bootstrap = async (config: FoamConfig, services: Services) => {
   const graphMiddlewares = plugins.map(p => p.graphMiddleware).filter(isSome);
   // TODO to implement for FoamWorkspace
   // const graph = createGraph(graphMiddlewares);
-  const workspace = new FoamWorkspace();
 
+  const workspace = new FoamWorkspace();
   const files = await services.dataStore.listFiles();
   await Promise.all(
     files.map(async uri => {
@@ -30,6 +30,7 @@ export const bootstrap = async (config: FoamConfig, services: Services) => {
       }
     })
   );
+  workspace.resolveLinks(true);
 
   services.dataStore.onDidChange(async uri => {
     const content = await services.dataStore.read(uri);

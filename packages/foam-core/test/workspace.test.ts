@@ -355,7 +355,9 @@ describe('Updating workspace happy path', () => {
     ws.resolveLinks();
 
     expect(() => ws.get(noteB.uri)).toThrow();
-    expect(ws.get(placeholderUri('page-b')).type).toEqual('placeholder');
+    expect(ws.get(placeholderUri('/path/to/another/page-b.md')).type).toEqual(
+      'placeholder'
+    );
   });
 
   it('Adding note should replace placeholder for direct links', () => {

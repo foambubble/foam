@@ -56,7 +56,7 @@ export class OrphansProvider
   private groupBy: OrphansConfigGroupBy = OrphansConfigGroupBy.Folder;
   private exclude: string[] = [];
   private orphans: Note[] = [];
-  private root = vscode.workspace.workspaceFolders[0].uri.fsPath;
+  private root = vscode.workspace.workspaceFolders[0].uri.path;
 
   constructor(
     private workspace: FoamWorkspace,
@@ -149,7 +149,7 @@ export class OrphansProvider
   private getOrphansByDirectory(): OrphansByDirectory {
     const orphans: OrphansByDirectory = {};
     for (const orphan of this.orphans) {
-      const p = orphan.uri.fsPath.replace(this.root, '');
+      const p = orphan.uri.path.replace(this.root, '');
       const { dir } = path.parse(p);
 
       if (orphans[dir]) {

@@ -68,6 +68,6 @@ export const createTestNote = (params: {
   };
 };
 
-// describe('Core test', () => {
-//   it('is happy', () => {});
-// });
+describe('Test utils', () => {
+  it('are happy', () => {});
+});

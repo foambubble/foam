@@ -160,6 +160,23 @@ describe('Notes workspace', () => {
     ]);
   });
 
+  it('Resolves wikilink referencing more than one note', () => {
+    const noteA = createTestNote({
+      uri: '/path/to/page-a.md',
+      links: [{ slug: 'page-b' }],
+    });
+    const noteB1 = createTestNote({ uri: '/path/to/another/page-b.md' });
+    const noteB2 = createTestNote({ uri: '/path/to/more/page-b.md' });
+
+    const ws = new FoamWorkspace();
+    ws.set(noteA)
+      .set(noteB1)
+      .set(noteB2)
+      .resolveLinks();
+
+    expect(ws.getLinks(noteA.uri)).toEqual([noteB1.uri]);
+  });
+
   it('Fails if getting non-existing note', () => {
     const noteA = createTestNote({
       uri: '/path/to/page-a.md',

@@ -161,7 +161,9 @@ export function pathExists(path: string) {
  *
  * @param value The object to verify
  */
-export function isSome<T>(value: T | null | undefined | void): value is T {
+export function isSome<T>(
+  value: T | null | undefined | void
+): value is NonNullable<T> {
   //
   return value != null; // eslint-disable-line
 }

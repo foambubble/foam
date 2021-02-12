@@ -4,7 +4,9 @@ export function isNotNull<T>(value: T | null): value is T {
   return value != null;
 }
 
-export function isSome<T>(value: T | null | undefined | void): value is T {
+export function isSome<T>(
+  value: T | null | undefined | void
+): value is NonNullable<T> {
   return value != null;
 }
 

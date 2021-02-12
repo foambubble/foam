@@ -177,6 +177,25 @@ describe('Notes workspace', () => {
     expect(ws.getLinks(noteA.uri)).toEqual([noteB1.uri]);
   });
 
+  it('Resolves path wikilink in case of name conflict', () => {
+    const noteA = createTestNote({
+      uri: '/path/to/page-a.md',
+      links: [{ slug: './more/page-b' }, { slug: 'yet/page-b' }],
+    });
+    const noteB1 = createTestNote({ uri: '/path/to/another/page-b.md' });
+    const noteB2 = createTestNote({ uri: '/path/to/more/page-b.md' });
+    const noteB3 = createTestNote({ uri: '/path/to/yet/page-b.md' });
+
+    const ws = new FoamWorkspace();
+    ws.set(noteA)
+      .set(noteB1)
+      .set(noteB2)
+      .set(noteB3)
+      .resolveLinks();
+
+    expect(ws.getLinks(noteA.uri)).toEqual([noteB2.uri, noteB3.uri]);
+  });
+
   it('Fails if getting non-existing note', () => {
     const noteA = createTestNote({
       uri: '/path/to/page-a.md',

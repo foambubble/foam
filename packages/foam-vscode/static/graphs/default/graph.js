@@ -4,8 +4,9 @@ const CONTAINER_ID = 'graph';
 const styleFallback = {
   background: '#202020',
   fontSize: 12,
-  foreground: '#e0e0e0',
+  lineColor: '#e0e0e0',
   lineWidth: 0.2,
+  particleWidth: 1.0,
   highlightedForeground: '#f9c74f',
   node: {
     note: '#277da1',
@@ -33,10 +34,10 @@ const defaultStyle = {
   background: getStyle(`--vscode-panel-background`) ?? styleFallback.background,
   fontSize:
     parseInt(getStyle(`--vscode-font-size`) ?? styleFallback.fontSize) - 2,
-  foreground:
-    getStyle('--vscode-list-deemphasizedForeground') ??
-    styleFallback.foreground,
-  lineWidth: styleFallback.lineWidth,
+  lineColor:
+    getStyle('--vscode-list-deemphasizedForeground') ?? styleFallback.lineColor,
+  lineWidth: parseFloat(styleFallback.lineWidth),
+  particleWidth: parseFloat(styleFallback.particleWidth),
   highlightedForeground:
     getStyle('--vscode-list-highlightForeground') ??
     styleFallback.highlightedForeground,
@@ -166,17 +167,10 @@ function initDataviz(channel) {
     .d3Force('x', d3.forceX())
     .d3Force('y', d3.forceY())
     .d3Force('collide', d3.forceCollide(graph.nodeRelSize()))
-    .linkWidth(
-      () => parseFloat(model.style.lineWidth) || styleFallback.lineWidth
-    )
+    .linkWidth(() => model.style.lineWidth || styleFallback.lineWidth)
     .linkDirectionalParticles(1)
-    .linkDirectionalParticleWidth(link =>
-      getLinkState(link, model) === 'highlighted'
-        ? Math.max(
-            1.0,
-            parseFloat(model.style.lineWidth) || styleFallback.lineWidth
-          )
-        : 0
+    .linkDirectionalParticleWidth(
+      () => model.style.particleWidth || styleFallback.particleWidth
     )
     .nodeCanvasObject((node, ctx, globalScale) => {
       const info = model.nodeInfo[node.id];
@@ -225,11 +219,8 @@ function augmentGraphInfo(data) {
   data.links.forEach(link => {
     const a = data.nodes[link.source];
     const b = data.nodes[link.target];
-    // Workaround: nodes of type placeholder have mixed up id and uri
-    if (b.type == 'placeholder') a.neighbors.push(b.id.path);
-    else a.neighbors.push(b.id);
-    if (a.type == 'placeholder') b.neighbors.push(a.id.path);
-    else b.neighbors.push(a.id);
+    a.neighbors.push(b.id);
+    b.neighbors.push(a.id);
     a.links.push(link);
     b.links.push(link);
   });
@@ -262,11 +253,11 @@ function getLinkColor(link, model) {
   const style = model.style;
   switch (getLinkState(link, model)) {
     case 'regular':
-      return style.foreground;
+      return style.lineColor;
     case 'highlighted':
       return style.highlightedForeground;
     case 'lessened':
-      return d3.hsl(style.foreground).copy({ opacity: 0.5 });
+      return d3.hsl(style.lineColor).copy({ opacity: 0.5 });
     default:
       throw new Error('Unknown type for link', link);
   }

@@ -1,4 +1,3 @@
-import { createGraph } from './model/note-graph';
 import { createMarkdownParser } from './markdown-provider';
 import { FoamConfig, Foam, Services } from './index';
 import { loadPlugins } from './plugins';
@@ -12,10 +11,6 @@ export const bootstrap = async (config: FoamConfig, services: Services) => {
 
   const parserPlugins = plugins.map(p => p.parser).filter(isSome);
   const parser = createMarkdownParser(parserPlugins);
-
-  const graphMiddlewares = plugins.map(p => p.graphMiddleware).filter(isSome);
-  // TODO to implement for FoamWorkspace
-  // const graph = createGraph(graphMiddlewares);
 
   const workspace = new FoamWorkspace();
   const files = await services.dataStore.listFiles();

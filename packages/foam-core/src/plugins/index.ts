@@ -2,7 +2,6 @@ import * as fs from 'fs';
 import path from 'path';
 import { Node } from 'unist';
 import { isNotNull } from '../utils';
-import { Middleware } from '../model/note-graph';
 import { Note } from '../model/note';
 import unified from 'unified';
 import { FoamConfig } from '../config';
@@ -12,7 +11,6 @@ import { URI } from '../common/uri';
 export interface FoamPlugin {
   name: string;
   description?: string;
-  graphMiddleware?: Middleware;
   parser?: ParserPlugin;
 }
 

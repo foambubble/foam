@@ -33,14 +33,17 @@ export function getReferenceType(
   return isAbsPath ? 'absolute-path' : 'relative-path';
 }
 
-function normalizePath(pathValue: string) {
+const pathToResourceId = (pathValue: string) => {
   const { ext } = path.parse(pathValue);
   return ext.length > 0 ? pathValue : pathValue + '.md';
-}
+};
+const uriToResourceId = (uri: URI) => pathToResourceId(uri.path);
 
-function normalizeKey(pathValue: string) {
-  return path.parse(pathValue).name;
-}
+const pathToResourceName = (pathValue: string) => path.parse(pathValue).name;
+const uriToResourceName = (uri: URI) => pathToResourceName(uri.path);
+
+const pathToPlaceholderId = (value: string) => value;
+const uriToPlaceholderId = (uri: URI) => pathToPlaceholderId(uri.path);
 
 export class FoamWorkspace implements IDisposable {
   private onDidAddEmitter = new Emitter<Resource>();
@@ -225,14 +228,15 @@ export class FoamWorkspace implements IDisposable {
     resource: Resource
   ): FoamWorkspace {
     if (resource.type === 'placeholder') {
-      workspace.placeholders[resource.uri.path] = resource;
+      workspace.placeholders[uriToPlaceholderId(resource.uri)] = resource;
       return workspace;
     }
+    const id = uriToResourceId(resource.uri);
     const old = FoamWorkspace.find(workspace, resource.uri);
-    workspace.resources[resource.uri.path] = resource;
-    const name = normalizeKey(resource.uri.path);
+    const name = uriToResourceName(resource.uri);
+    workspace.resources[id] = resource;
     workspace.resourcesByName[name] = workspace.resourcesByName[name] ?? [];
-    workspace.resourcesByName[name].push(resource.uri.path);
+    workspace.resourcesByName[name].push(id);
     isSome(old)
       ? workspace.onDidUpdateEmitter.fire({ old: old, new: resource })
       : workspace.onDidAddEmitter.fire(resource);
@@ -240,7 +244,7 @@ export class FoamWorkspace implements IDisposable {
   }
 
   public static exists(workspace: FoamWorkspace, uri: URI): boolean {
-    return isSome(workspace.resources[uri.path]);
+    return isSome(workspace.resources[uriToResourceId(uri)]);
   }
 
   public static list(workspace: FoamWorkspace): Resource[] {
@@ -274,15 +278,16 @@ export class FoamWorkspace implements IDisposable {
             : null;
         } else {
           return FoamWorkspace.exists(workspace, uri)
-            ? workspace.resources[uri.path]
+            ? workspace.resources[uriToResourceId(uri)]
             : null;
         }
 
       case 'key':
-        const key = normalizeKey(resourceId as string);
-        const paths = workspace.resourcesByName[key];
+        const name = pathToResourceName(resourceId as string);
+        const paths = workspace.resourcesByName[name];
         if (isNone(paths) || paths.length === 0) {
-          return workspace.placeholders[key] ?? null;
+          const placeholderId = pathToPlaceholderId(resourceId as string);
+          return workspace.placeholders[placeholderId] ?? null;
         }
         // prettier-ignore
         const sortedPaths = paths.length === 1
@@ -291,8 +296,11 @@ export class FoamWorkspace implements IDisposable {
         return workspace.resources[sortedPaths[0]];
 
       case 'absolute-path':
-        const path = normalizePath(resourceId as string);
-        return workspace.resources[path] ?? workspace.placeholders[path];
+        const resourceUri = URI.file(resourceId as string);
+        return (
+          workspace.resources[uriToResourceId(resourceUri)] ??
+          workspace.placeholders[uriToPlaceholderId(resourceUri)]
+        );
 
       case 'relative-path':
         if (isNone(reference)) {
@@ -304,8 +312,8 @@ export class FoamWorkspace implements IDisposable {
         const relativePath = resourceId as string;
         const targetUri = computeRelativeURI(reference, relativePath);
         return (
-          workspace.resources[targetUri.path] ??
-          workspace.placeholders[relativePath]
+          workspace.resources[uriToResourceId(targetUri)] ??
+          workspace.placeholders[pathToPlaceholderId(resourceId as string)]
         );
 
       default:
@@ -314,8 +322,9 @@ export class FoamWorkspace implements IDisposable {
   }
 
   public static delete(workspace: FoamWorkspace, uri: URI): Resource | null {
-    const deleted = workspace.resources[uri.path];
-    delete workspace.resources[uri.path];
+    const id = uriToResourceId(uri);
+    const deleted = workspace.resources[id];
+    delete workspace.resources[id];
     isSome(deleted) && workspace.onDidDeleteEmitter.fire(deleted);
     return deleted ?? null;
   }

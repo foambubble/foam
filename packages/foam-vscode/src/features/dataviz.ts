@@ -83,7 +83,7 @@ function generateGraphData(foam: Foam) {
     links.forEach(link => {
       if (!(link.to.path in graph.nodes)) {
         graph.nodes[link.to.path] = {
-          id: link.to,
+          id: link.to.path,
           type: 'placeholder',
           uri: `virtual:${link.to}`,
           title:

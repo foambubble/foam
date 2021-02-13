@@ -4,7 +4,6 @@ const CONTAINER_ID = 'graph';
 const styleFallback = {
   background: '#202020',
   fontSize: 12,
-  lineColor: '#e0e0e0',
   lineWidth: 0.2,
   particleWidth: 1.0,
   highlightedForeground: '#f9c74f',
@@ -34,7 +33,7 @@ const defaultStyle = {
   background: getStyle(`--vscode-panel-background`) ?? styleFallback.background,
   fontSize:
     parseInt(getStyle(`--vscode-font-size`) ?? styleFallback.fontSize) - 2,
-  lineColor: getStyle('--vscode-editor-foreground') ?? styleFallback.lineColor,
+  lineColor: getStyle('--vscode-editor-foreground') ?? styleFallback.node.note,
   lineWidth: parseFloat(styleFallback.lineWidth),
   particleWidth: parseFloat(styleFallback.particleWidth),
   highlightedForeground:

@@ -34,8 +34,7 @@ const defaultStyle = {
   background: getStyle(`--vscode-panel-background`) ?? styleFallback.background,
   fontSize:
     parseInt(getStyle(`--vscode-font-size`) ?? styleFallback.fontSize) - 2,
-  lineColor:
-    getStyle('--vscode-list-deemphasizedForeground') ?? styleFallback.lineColor,
+  lineColor: getStyle('--vscode-editor-foreground') ?? styleFallback.lineColor,
   lineWidth: parseFloat(styleFallback.lineWidth),
   particleWidth: parseFloat(styleFallback.particleWidth),
   highlightedForeground:
@@ -169,8 +168,10 @@ function initDataviz(channel) {
     .d3Force('collide', d3.forceCollide(graph.nodeRelSize()))
     .linkWidth(() => model.style.lineWidth || styleFallback.lineWidth)
     .linkDirectionalParticles(1)
-    .linkDirectionalParticleWidth(
-      () => model.style.particleWidth || styleFallback.particleWidth
+    .linkDirectionalParticleWidth(link =>
+      getLinkState(link, model) === 'highlighted'
+        ? model.style.particleWidth || styleFallback.particleWidth
+        : 0
     )
     .nodeCanvasObject((node, ctx, globalScale) => {
       const info = model.nodeInfo[node.id];

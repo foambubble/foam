@@ -33,7 +33,6 @@ const defaultStyle = {
   background: getStyle(`--vscode-panel-background`) ?? styleFallback.background,
   fontSize:
     parseInt(getStyle(`--vscode-font-size`) ?? styleFallback.fontSize) - 2,
-  lineColor: getStyle('--vscode-editor-foreground') ?? styleFallback.node.note,
   lineWidth: parseFloat(styleFallback.lineWidth),
   particleWidth: parseFloat(styleFallback.particleWidth),
   highlightedForeground:
@@ -253,11 +252,15 @@ function getLinkColor(link, model) {
   const style = model.style;
   switch (getLinkState(link, model)) {
     case 'regular':
-      return style.lineColor;
+      return (
+        style.lineColor || d3.hsl(style.node['note']).copy({ opacity: 0.8 })
+      );
     case 'highlighted':
       return style.highlightedForeground;
     case 'lessened':
-      return d3.hsl(style.lineColor).copy({ opacity: 0.5 });
+      return style.lineColor
+        ? d3.hsl(style.lineColor).copy({ opacity: 0.5 })
+        : d3.hsl(style.node['note']).copy({ opacity: 0.4 });
     default:
       throw new Error('Unknown type for link', link);
   }

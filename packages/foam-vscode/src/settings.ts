@@ -55,3 +55,21 @@ export enum OrphansConfigGroupBy {
   Folder = 'folder',
   Off = 'off',
 }
+
+/** Retrieve the blank notes configuration */
+export function getBlankNotesConfig(): BlankNotesConfig {
+  const blankNoteConfig = workspace.getConfiguration('foam.blankNotes');
+  const exclude: string[] = blankNoteConfig.get('exclude');
+  const groupBy: BlankNotesConfigGroupBy = blankNoteConfig.get('groupBy');
+  return { exclude, groupBy };
+}
+
+export interface BlankNotesConfig {
+  exclude: string[];
+  groupBy: BlankNotesConfigGroupBy;
+}
+
+export enum BlankNotesConfigGroupBy {
+  Folder = 'folder',
+  Off = 'off',
+}

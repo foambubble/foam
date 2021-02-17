@@ -1,9 +1,10 @@
 const CONTAINER_ID = 'graph';
 
-/** The style fallback. This values should only be set when all else failed. */
+/** The style fallback. These values should only be used when all else fails. */
 const styleFallback = {
   background: '#202020',
   fontSize: 12,
+  lineColor: '#277da1',
   lineWidth: 0.2,
   particleWidth: 1.0,
   highlightedForeground: '#f9c74f',
@@ -33,6 +34,7 @@ const defaultStyle = {
   background: getStyle(`--vscode-panel-background`) ?? styleFallback.background,
   fontSize:
     parseInt(getStyle(`--vscode-font-size`) ?? styleFallback.fontSize) - 2,
+  lineColor: getStyle('--vscode-editor-foreground') ?? styleFallback.lineColor,
   lineWidth: parseFloat(styleFallback.lineWidth),
   particleWidth: parseFloat(styleFallback.particleWidth),
   highlightedForeground:
@@ -146,6 +148,7 @@ const Actions = {
     model.style = {
       ...defaultStyle,
       ...newStyle,
+      lineColor: newStyle.lineColor || ( newStyle.node && newStyle.node.note ) || defaultStyle.lineColor,
       node: {
         ...defaultStyle.node,
         ...newStyle.node,
@@ -252,15 +255,11 @@ function getLinkColor(link, model) {
   const style = model.style;
   switch (getLinkState(link, model)) {
     case 'regular':
-      return (
-        style.lineColor || d3.hsl(style.node['note']).copy({ opacity: 0.8 })
-      );
+      return style.lineColor;
     case 'highlighted':
       return style.highlightedForeground;
     case 'lessened':
-      return style.lineColor
-        ? d3.hsl(style.lineColor).copy({ opacity: 0.5 })
-        : d3.hsl(style.node['note']).copy({ opacity: 0.4 });
+      return d3.hsl(style.lineColor).copy({ opacity: 0.5 });
     default:
       throw new Error('Unknown type for link', link);
   }

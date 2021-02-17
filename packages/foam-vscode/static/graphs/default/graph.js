@@ -148,7 +148,10 @@ const Actions = {
     model.style = {
       ...defaultStyle,
       ...newStyle,
-      lineColor: newStyle.lineColor || ( newStyle.node && newStyle.node.note ) || defaultStyle.lineColor,
+      lineColor:
+        newStyle.lineColor ||
+        (newStyle.node && newStyle.node.note) ||
+        defaultStyle.lineColor,
       node: {
         ...defaultStyle.node,
         ...newStyle.node,
@@ -183,17 +186,18 @@ function initDataviz(channel) {
       const size = sizeScale(info.neighbors.length);
       const { fill, border } = getNodeColor(node.id, model);
       const fontSize = model.style.fontSize / globalScale;
-      let textColor = fill.toString();
-      textColor.opacity =
-        getNodeState(node.id, model) === 'highlighted'
-          ? 1
-          : labelAlpha(globalScale);
+      const textColor = fill.copy({
+        opacity:
+          getNodeState(node.id, model) === 'highlighted'
+            ? 1
+            : labelAlpha(globalScale),
+      });
       const label = info.title;
 
       Draw(ctx)
         .circle(node.x, node.y, size + 0.2, border)
         .circle(node.x, node.y, size, fill)
-        .text(label, node.x, node.y + size + 1, fontSize, textColor);
+        .text(label, node.x, node.y + size + 1, fontSize, textColor.toString());
     })
     .linkColor(link => getLinkColor(link, model))
     .onNodeHover(node => {

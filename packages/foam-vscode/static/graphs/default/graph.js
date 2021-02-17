@@ -1,9 +1,12 @@
 const CONTAINER_ID = 'graph';
 
-/** The style fallback. This values should only be set when all else failed. */
+/** The style fallback. These values should only be used when all else fails. */
 const styleFallback = {
   background: '#202020',
   fontSize: 12,
+  lineColor: '#277da1',
+  lineWidth: 0.2,
+  particleWidth: 1.0,
   highlightedForeground: '#f9c74f',
   node: {
     note: '#277da1',
@@ -31,6 +34,9 @@ const defaultStyle = {
   background: getStyle(`--vscode-panel-background`) ?? styleFallback.background,
   fontSize:
     parseInt(getStyle(`--vscode-font-size`) ?? styleFallback.fontSize) - 2,
+  lineColor: getStyle('--vscode-editor-foreground') ?? styleFallback.lineColor,
+  lineWidth: parseFloat(styleFallback.lineWidth),
+  particleWidth: parseFloat(styleFallback.particleWidth),
   highlightedForeground:
     getStyle('--vscode-list-highlightForeground') ??
     styleFallback.highlightedForeground,
@@ -142,6 +148,7 @@ const Actions = {
     model.style = {
       ...defaultStyle,
       ...newStyle,
+      lineColor: newStyle.lineColor || ( newStyle.node && newStyle.node.note ) || defaultStyle.lineColor,
       node: {
         ...defaultStyle.node,
         ...newStyle.node,
@@ -160,10 +167,12 @@ function initDataviz(channel) {
     .d3Force('x', d3.forceX())
     .d3Force('y', d3.forceY())
     .d3Force('collide', d3.forceCollide(graph.nodeRelSize()))
-    .linkWidth(0.2)
+    .linkWidth(() => model.style.lineWidth || styleFallback.lineWidth)
     .linkDirectionalParticles(1)
     .linkDirectionalParticleWidth(link =>
-      getLinkState(link, model) === 'highlighted' ? 1 : 0
+      getLinkState(link, model) === 'highlighted'
+        ? model.style.particleWidth || styleFallback.particleWidth
+        : 0
     )
     .nodeCanvasObject((node, ctx, globalScale) => {
       const info = model.nodeInfo[node.id];
@@ -174,7 +183,7 @@ function initDataviz(channel) {
       const size = sizeScale(info.neighbors.length);
       const { fill, border } = getNodeColor(node.id, model);
       const fontSize = model.style.fontSize / globalScale;
-      let textColor = d3.rgb(fill);
+      let textColor = fill.toString();
       textColor.opacity =
         getNodeState(node.id, model) === 'highlighted'
           ? 1
@@ -223,17 +232,19 @@ function augmentGraphInfo(data) {
 function getNodeColor(nodeId, model) {
   const info = model.nodeInfo[nodeId];
   const style = model.style;
-  const typeFill = style.node[info.type ?? 'note'] ?? style.node['note'];
+  const typeFill = d3.rgb(
+    style.node[info.type ?? 'note'] ?? style.node['note']
+  );
   switch (getNodeState(nodeId, model)) {
     case 'regular':
       return { fill: typeFill, border: typeFill };
     case 'lessened':
-      const darker = d3.hsl(typeFill).darker(3);
-      return { fill: darker, border: darker };
+      const transparent = d3.rgb(typeFill).copy({ opacity: 0.5 });
+      return { fill: transparent, border: transparent };
     case 'highlighted':
       return {
         fill: typeFill,
-        border: style.highlightedForeground,
+        border: d3.rgb(style.highlightedForeground),
       };
     default:
       throw new Error('Unknown type for node', nodeId);
@@ -244,11 +255,11 @@ function getLinkColor(link, model) {
   const style = model.style;
   switch (getLinkState(link, model)) {
     case 'regular':
-      return d3.hsl(style.node.note).darker(2);
+      return style.lineColor;
     case 'highlighted':
       return style.highlightedForeground;
     case 'lessened':
-      return d3.hsl(style.node.note).darker(4);
+      return d3.hsl(style.lineColor).copy({ opacity: 0.5 });
     default:
       throw new Error('Unknown type for link', link);
   }

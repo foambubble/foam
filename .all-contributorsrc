@@ -589,6 +589,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "nitwit-se",
+      "name": "Mark Dixon",
+      "avatar_url": "https://avatars.githubusercontent.com/u/1382124?v=4",
+      "profile": "http://www.nitwit.se",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,

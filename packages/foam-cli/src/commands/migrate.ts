@@ -9,6 +9,7 @@ import {
   applyTextEdit,
   Services,
   FileDataStore,
+  isNote,
 } from 'foam-core';
 import { writeFileToDisk } from '../utils/write-file-to-disk';
 import { renameFile } from '../utils/rename-file';
@@ -48,9 +49,9 @@ Successfully generated link references and heading!
       const services: Services = {
         dataStore: new FileDataStore(config),
       };
-      let graph = (await bootstrap(config, services)).notes;
+      let workspace = (await bootstrap(config, services)).workspace;
 
-      let notes = graph.getNotes().filter(Boolean); // removes undefined notes
+      let notes = workspace.list().filter(isNote);
 
       spinner.succeed();
       spinner.text = `${notes.length} files found`;
@@ -77,9 +78,9 @@ Successfully generated link references and heading!
       spinner.text = 'Renaming files';
 
       // Reinitialize the graph after renaming files
-      graph = (await bootstrap(config, services)).notes;
+      workspace = (await bootstrap(config, services)).workspace;
 
-      notes = graph.getNotes().filter(Boolean); // remove undefined notes
+      notes = workspace.list().filter(isNote);
 
       spinner.succeed();
       spinner.text = 'Generating link definitions';
@@ -90,7 +91,7 @@ Successfully generated link references and heading!
           const heading = generateHeading(note);
           const definitions = generateLinkReferences(
             note,
-            graph,
+            workspace,
             !flags['without-extensions']
           );
 

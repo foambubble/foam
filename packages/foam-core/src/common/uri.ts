@@ -113,10 +113,10 @@ export class URI implements UriComponents {
       typeof (thing as URI).fragment === 'string' &&
       typeof (thing as URI).path === 'string' &&
       typeof (thing as URI).query === 'string' &&
-      typeof (thing as URI).scheme === 'string' &&
-      typeof (thing as URI).fsPath === 'function' &&
-      typeof (thing as URI).with === 'function' &&
-      typeof (thing as URI).toString === 'function'
+      typeof (thing as URI).scheme === 'string'
+      // typeof (thing as URI).fsPath === 'function' &&
+      // typeof (thing as URI).with === 'function' &&
+      // typeof (thing as URI).toString === 'function'
     );
   }
 

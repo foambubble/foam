@@ -1,7 +1,6 @@
 import path from 'path';
 import { loadPlugins } from '../src/plugins';
 import { createMarkdownParser } from '../src/markdown-provider';
-import { createGraph } from '../src/model/note-graph';
 import { createTestNote } from './core.test';
 import { FoamConfig, createConfigFromObject } from '../src/config';
 import { URI } from '../src/common/uri';
@@ -46,15 +45,6 @@ describe('Foam plugins', () => {
     const plugins = await loadPlugins(config);
     expect(plugins.length).toEqual(1);
     expect(plugins[0].name).toEqual('Test Plugin');
-  });
-
-  it('supports graph middleware', async () => {
-    const plugins = await loadPlugins(config);
-    const middleware = plugins[0].graphMiddleware;
-    expect(middleware).not.toBeUndefined();
-    const graph = createGraph([middleware!]);
-    const note = graph.setNote(createTestNote({ uri: '/path/to/note.md' }));
-    expect(note.properties['injectedByMiddleware']).toBeTruthy();
   });
 
   it('supports parser extension', async () => {

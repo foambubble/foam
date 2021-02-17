@@ -1,49 +1,35 @@
 import { OrphansProvider, Directory, OrphansProviderConfig } from './orphans';
 import { OrphansConfigGroupBy } from '../settings';
+import { FoamWorkspace } from 'foam-core';
+import { createTestNote } from '../test/test-utils';
 
 describe('orphans', () => {
-  // Rough mocks of NoteGraphAPI
-  const orphanA = {
-    uri: { fsPath: '/path/orphan-a.md', path: '/path/orphan-a.md' },
+  const orphanA = createTestNote({
+    uri: '/path/orphan-a.md',
     title: 'Orphan A',
-    links: [],
-  };
-  const orphanB = {
-    uri: { fsPath: '/path-bis/orphan-b.md', path: '/path-bis/orphan-b.md' },
+  });
+  const orphanB = createTestNote({
+    uri: '/path-bis/orphan-b.md',
     title: 'Orphan B',
-    links: [],
-  };
-  const orphanC = {
-    uri: {
-      fsPath: '/path-exclude/orphan-c.md',
-      path: '/path-exclude/orphan-c.md',
-    },
+  });
+  const orphanC = createTestNote({
+    uri: '/path-exclude/orphan-c.md',
     title: 'Orphan C',
-    links: [],
-  };
-  const notOrphanNote = {
-    uri: { fsPath: '/path/not-orphan.md', path: '/path/not-orphan.md' },
-    title: 'Not-Orphan',
-    links: [{ from: '', to: '' }],
-  };
-  const notes = [orphanA, orphanB, orphanC, notOrphanNote];
-  const foam = {
-    notes: {
-      getNotes: () => notes,
-      getAllLinks: (uri: { path: string }) => {
-        switch (uri.path) {
-          case orphanA.uri.fsPath:
-            return orphanA.links;
-          case orphanB.uri.fsPath:
-            return orphanB.links;
-          case orphanC.uri.fsPath:
-            return orphanC.links;
-          default:
-            return notOrphanNote.links;
-        }
-      },
-    },
-  } as any;
+  });
+
+  const workspace = new FoamWorkspace()
+    .set(orphanA)
+    .set(orphanB)
+    .set(orphanC)
+    .set(createTestNote({ uri: '/path/non-orphan-1.md' }))
+    .set(
+      createTestNote({
+        uri: '/path/non-orphan-2.md',
+        links: [{ slug: 'non-orphan-1' }],
+      })
+    )
+    .resolveLinks();
+
   const dataStore = { read: () => '' } as any;
 
   // Mock config
@@ -54,7 +40,7 @@ describe('orphans', () => {
   };
 
   it('should return the orphans as a folder tree', async () => {
-    const provider = new OrphansProvider(foam, dataStore, config);
+    const provider = new OrphansProvider(workspace, dataStore, config);
     const result = await provider.getChildren();
     expect(result).toMatchObject([
       {
@@ -73,7 +59,7 @@ describe('orphans', () => {
   });
 
   it('should return the orphans in a directory', async () => {
-    const provider = new OrphansProvider(foam, dataStore, config);
+    const provider = new OrphansProvider(workspace, dataStore, config);
     const directory = new Directory('/path', [orphanA as any]);
     const result = await provider.getChildren(directory);
     expect(result).toMatchObject([
@@ -88,7 +74,7 @@ describe('orphans', () => {
 
   it('should return the flattened orphans', async () => {
     const mockConfig = { ...config, groupBy: OrphansConfigGroupBy.Off };
-    const provider = new OrphansProvider(foam, dataStore, mockConfig);
+    const provider = new OrphansProvider(workspace, dataStore, mockConfig);
     const result = await provider.getChildren();
     expect(result).toMatchObject([
       {
@@ -108,7 +94,7 @@ describe('orphans', () => {
 
   it('should return the orphans without exclusion', async () => {
     const mockConfig = { ...config, exclude: [] };
-    const provider = new OrphansProvider(foam, dataStore, mockConfig);
+    const provider = new OrphansProvider(workspace, dataStore, mockConfig);
     const result = await provider.getChildren();
     expect(result).toMatchObject([
       expect.anything(),

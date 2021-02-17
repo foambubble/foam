@@ -2,15 +2,21 @@ import * as path from 'path';
 import { generateLinkReferences } from '../../src/janitor';
 import { bootstrap } from '../../src/bootstrap';
 import { createConfigFromFolders } from '../../src/config';
-import { Services, Note, NoteGraphAPI } from '../../src';
+import { Services, Note } from '../../src';
 import { FileDataStore } from '../../src/services/datastore';
 import { Logger } from '../../src/utils/log';
 import { URI } from '../../src/common/uri';
+import { FoamWorkspace } from '../../src/model/workspace';
+import { Resource } from '../../src/model/note';
+import { getBasename } from '../../src/utils';
 
 Logger.setLevel('error');
 
 describe('generateLinkReferences', () => {
-  let _graph: NoteGraphAPI;
+  let _workspace: FoamWorkspace;
+  const findBySlug = (slug: string): Note => {
+    return _workspace.list().find(res => getBasename(res.uri) === slug) as Note;
+  };
 
   beforeAll(async () => {
     const config = createConfigFromFolders([
@@ -19,15 +25,15 @@ describe('generateLinkReferences', () => {
     const services: Services = {
       dataStore: new FileDataStore(config),
     };
-    _graph = await bootstrap(config, services).then(foam => foam.notes);
+    _workspace = await bootstrap(config, services).then(foam => foam.workspace);
   });
 
   it('initialised test graph correctly', () => {
-    expect(_graph.getNotes().length).toEqual(6);
+    expect(_workspace.list().length).toEqual(6);
   });
 
   it('should add link references to a file that does not have them', () => {
-    const note = _graph.getNotes({ slug: 'index' })[0];
+    const note = findBySlug('index');
     const expected = {
       newText: textForNote(
         note,
@@ -52,7 +58,7 @@ describe('generateLinkReferences', () => {
       },
     };
 
-    const actual = generateLinkReferences(note, _graph, false);
+    const actual = generateLinkReferences(note, _workspace, false);
 
     expect(actual!.range.start).toEqual(expected.range.start);
     expect(actual!.range.end).toEqual(expected.range.end);
@@ -60,7 +66,7 @@ describe('generateLinkReferences', () => {
   });
 
   it('should remove link definitions from a file that has them, if no links are present', () => {
-    const note = _graph.getNotes({ slug: 'second-document' })[0];
+    const note = findBySlug('second-document');
 
     const expected = {
       newText: '',
@@ -78,7 +84,7 @@ describe('generateLinkReferences', () => {
       },
     };
 
-    const actual = generateLinkReferences(note, _graph, false);
+    const actual = generateLinkReferences(note, _workspace, false);
 
     expect(actual!.range.start).toEqual(expected.range.start);
     expect(actual!.range.end).toEqual(expected.range.end);
@@ -86,7 +92,7 @@ describe('generateLinkReferences', () => {
   });
 
   it('should update link definitions if they are present but changed', () => {
-    const note = _graph.getNotes({ slug: 'first-document' })[0];
+    const note = findBySlug('first-document');
 
     const expected = {
       newText: textForNote(
@@ -109,7 +115,7 @@ describe('generateLinkReferences', () => {
       },
     };
 
-    const actual = generateLinkReferences(note, _graph, false);
+    const actual = generateLinkReferences(note, _workspace, false);
 
     expect(actual!.range.start).toEqual(expected.range.start);
     expect(actual!.range.end).toEqual(expected.range.end);
@@ -117,11 +123,11 @@ describe('generateLinkReferences', () => {
   });
 
   it('should not cause any changes if link reference definitions were up to date', () => {
-    const note = _graph.getNotes({ slug: 'third-document' })[0];
+    const note = findBySlug('third-document');
 
     const expected = null;
 
-    const actual = generateLinkReferences(note, _graph, false);
+    const actual = generateLinkReferences(note, _workspace, false);
 
     expect(actual).toEqual(expected);
   });

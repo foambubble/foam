@@ -1,9 +1,7 @@
-import { NoteLinkDefinition, Note, Attachment } from '../src/model/note';
-import { uriToSlug } from '../src/utils';
-import { URI } from '../src/common/uri';
-import { Logger } from '../src/utils/log';
+// TODO: this file has some utility functions also present in foam-core testing
+// they should be consolidated
 
-Logger.setLevel('error');
+import { URI, Attachment, NoteLinkDefinition, Note } from 'foam-core';
 
 const position = {
   start: { line: 1, column: 1 },
@@ -67,7 +65,3 @@ export const createTestNote = (params: {
     },
   };
 };
-
-describe('Test utils', () => {
-  it('are happy', () => {});
-});

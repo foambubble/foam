@@ -34,7 +34,7 @@ export async function activate(context: ExtensionContext) {
     });
 
     const foam = await foamPromise;
-    Logger.info(`Loaded ${foam.notes.getNotes().length} notes`);
+    Logger.info(`Loaded ${foam.workspace.list().length} notes`);
 
     context.subscriptions.push(dataStore, foam, watcher);
   } catch (e) {

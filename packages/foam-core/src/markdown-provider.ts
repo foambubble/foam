@@ -8,18 +8,25 @@ import visit from 'unist-util-visit';
 import { Parent, Point } from 'unist';
 import detectNewline from 'detect-newline';
 import os from 'os';
-import { NoteGraphAPI } from './model/note-graph';
-import { NoteLinkDefinition, Note, NoteParser } from './model/note';
-import { dropExtension, extractHashtags, extractTagsFromProp } from './utils';
 import {
-  uriToSlug,
-  computeRelativePath,
-  getBasename,
-  parseUri,
-} from './utils/uri';
+  NoteLinkDefinition,
+  Note,
+  NoteParser,
+  isWikilink,
+  getTitle,
+} from './model/note';
+import {
+  dropExtension,
+  extractHashtags,
+  extractTagsFromProp,
+  isNone,
+  isSome,
+} from './utils';
+import { computeRelativePath, getBasename, parseUri } from './utils/uri';
 import { ParserPlugin } from './plugins';
 import { Logger } from './utils/log';
 import { URI } from './common/uri';
+import { FoamWorkspace } from './model/workspace';
 
 /**
  * Traverses all the children of the given node, extracts
@@ -74,6 +81,7 @@ const wikilinkPlugin: ParserPlugin = {
       note.links.push({
         type: 'wikilink',
         slug: node.value as string,
+        target: node.value as string,
         position: node.position!,
       });
     }
@@ -161,6 +169,7 @@ export function createMarkdownParser(extraPlugins: ParserPlugin[]): NoteParser {
 
       var note: Note = {
         uri: uri,
+        type: 'note',
         properties: {},
         title: null,
         tags: new Set(),
@@ -268,60 +277,41 @@ export function stringifyMarkdownLinkReferenceDefinition(
   return text;
 }
 export function createMarkdownReferences(
-  graph: NoteGraphAPI,
+  workspace: FoamWorkspace,
   noteUri: URI,
   includeExtension: boolean
 ): NoteLinkDefinition[] {
-  const source = graph.getNote(noteUri);
-
+  const source = workspace.find(noteUri);
   // Should never occur since we're already in a file,
-  // but better safe than sorry.
-  if (!source) {
+  if (source?.type !== 'note') {
     console.warn(
-      `Note ${noteUri} was not added to NoteGraph before attempting to generate markdown reference list`
+      `Note ${noteUri} note found in workspace when attempting to generate markdown reference list`
     );
     return [];
   }
 
-  return graph
-    .getForwardLinks(noteUri)
+  return source.links
+    .filter(isWikilink)
     .map(link => {
-      if (link.link.type !== 'wikilink') {
+      const targetUri = workspace.resolveLink(source, link);
+      const target = workspace.find(targetUri);
+      if (isNone(target)) {
+        Logger.warn(`Link ${targetUri} in ${noteUri} is not valid.`);
         return null;
       }
-      let target = graph.getNote(link.to);
-      // if we don't find the target by ID we search the graph by slug
-      if (!target) {
-        const candidates = graph.getNotes({ slug: link.link.slug });
-        if (candidates.length > 1) {
-          Logger.info(
-            `Warning: Slug ${link.link.slug} matches ${candidates.length} documents. Picking one.`
-          );
-        }
-        target = candidates.length > 0 ? candidates[0] : null;
-      }
-      // We are dropping links to non-existent notes here,
-      // but int the future we may want to surface these too
-      if (!target) {
-        Logger.info(
-          `Warning: Link '${link.to}' in '${noteUri}' points to a non-existing note.`
-        );
+      if (target.type === 'placeholder') {
+        // no need to create definitions for placeholders
         return null;
       }
 
-      const relativePath = computeRelativePath(source.uri, target.uri);
-
+      const relativePath = computeRelativePath(noteUri, target.uri);
       const pathToNote = includeExtension
         ? relativePath
         : dropExtension(relativePath);
 
       // [wiki-link-text]: path/to/file.md "Page title"
-      return {
-        label: link.link.slug,
-        url: pathToNote,
-        title: target.title || uriToSlug(target.uri),
-      };
+      return { label: link.slug, url: pathToNote, title: getTitle(target) };
     })
-    .filter(Boolean)
-    .sort() as NoteLinkDefinition[];
+    .filter(isSome)
+    .sort();
 }

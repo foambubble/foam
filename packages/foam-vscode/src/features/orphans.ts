@@ -1,6 +1,6 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { Foam, IDataStore, Note, URI } from 'foam-core';
+import { Foam, IDataStore, Note, URI, FoamWorkspace } from 'foam-core';
 import micromatch from 'micromatch';
 import {
   getOrphansConfig,
@@ -8,7 +8,7 @@ import {
   OrphansConfigGroupBy,
 } from '../settings';
 import { FoamFeature } from '../types';
-import { getNoteTooltip, getContainsTooltip } from '../utils';
+import { getNoteTooltip, getContainsTooltip, isNote } from '../utils';
 
 const feature: FoamFeature = {
   activate: async (
@@ -19,10 +19,14 @@ const feature: FoamFeature = {
     const workspacesFsPaths = vscode.workspace.workspaceFolders.map(
       dir => dir.uri.fsPath
     );
-    const provider = new OrphansProvider(foam, foam.services.dataStore, {
-      ...getOrphansConfig(),
-      workspacesFsPaths,
-    });
+    const provider = new OrphansProvider(
+      foam.workspace,
+      foam.services.dataStore,
+      {
+        ...getOrphansConfig(),
+        workspacesFsPaths,
+      }
+    );
 
     context.subscriptions.push(
       vscode.window.registerTreeDataProvider('foam-vscode.orphans', provider),
@@ -33,9 +37,9 @@ const feature: FoamFeature = {
       vscode.commands.registerCommand('foam-vscode.group-orphans-off', () =>
         provider.setGroupBy(OrphansConfigGroupBy.Off)
       ),
-      foam.notes.onDidAddNote(() => provider.refresh()),
-      foam.notes.onDidUpdateNote(() => provider.refresh()),
-      foam.notes.onDidDeleteNote(() => provider.refresh())
+      foam.workspace.onDidAdd(() => provider.refresh()),
+      foam.workspace.onDidUpdate(() => provider.refresh()),
+      foam.workspace.onDidDelete(() => provider.refresh())
     );
   },
 };
@@ -52,10 +56,10 @@ export class OrphansProvider
   private groupBy: OrphansConfigGroupBy = OrphansConfigGroupBy.Folder;
   private exclude: string[] = [];
   private orphans: Note[] = [];
-  private root = vscode.workspace.workspaceFolders[0].uri.fsPath;
+  private root = vscode.workspace.workspaceFolders[0].uri.path;
 
   constructor(
-    private foam: Foam,
+    private workspace: FoamWorkspace,
     private dataStore: IDataStore,
     config: OrphansProviderConfig
   ) {
@@ -114,9 +118,10 @@ export class OrphansProvider
   }
 
   private computeOrphans(): void {
-    this.orphans = this.foam.notes
-      .getNotes()
-      .filter(note => !this.foam.notes.getAllLinks(note.uri).length)
+    this.orphans = this.workspace
+      .list()
+      .filter(isNote)
+      .filter(note => this.workspace.getConnections(note.uri).length === 0)
       .filter(note => !this.isMatch(note.uri))
       .sort((a, b) => a.title.localeCompare(b.title));
   }
@@ -144,7 +149,7 @@ export class OrphansProvider
   private getOrphansByDirectory(): OrphansByDirectory {
     const orphans: OrphansByDirectory = {};
     for (const orphan of this.orphans) {
-      const p = orphan.uri.fsPath.replace(this.root, '');
+      const p = orphan.uri.path.replace(this.root, '');
       const { dir } = path.parse(p);
 
       if (orphans[dir]) {

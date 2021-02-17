@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { Foam, Note, IDataStore } from 'foam-core';
 import { FoamFeature } from '../../types';
-import { getNoteTooltip, getContainsTooltip } from '../../utils';
+import { getNoteTooltip, getContainsTooltip, isNote } from '../../utils';
 
 const feature: FoamFeature = {
   activate: async (
@@ -16,7 +16,9 @@ const feature: FoamFeature = {
         provider
       )
     );
-    foam.notes.onDidUpdateNote(() => provider.refresh());
+    foam.workspace.onDidUpdate(() => provider.refresh());
+    foam.workspace.onDidAdd(() => provider.refresh());
+    foam.workspace.onDidDelete(() => provider.refresh());
   },
 };
 
@@ -45,8 +47,9 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
   private computeTags() {
     const rawTags: {
       [key: string]: TagMetadata[];
-    } = this.foam.notes
-      .getNotes()
+    } = this.foam.workspace
+      .list()
+      .filter(isNote)
       .reduce((acc: { [key: string]: TagMetadata[] }, note) => {
         note.tags.forEach(tag => {
           acc[tag] = acc[tag] ?? [];
@@ -65,10 +68,11 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
 
   getChildren(element?: Tag): Thenable<TagTreeItem[]> {
     if (element) {
-      const references: TagReference[] = element.notes.map(({ uri }) => {
-        const note = this.foam.notes.getNote(uri);
-        return new TagReference(element.tag, note);
-      });
+      const references: TagReference[] = element.notes
+        .map(({ uri }) => this.foam.workspace.get(uri))
+        .filter(isNote)
+        .map(note => new TagReference(element.tag, note));
+
       return Promise.resolve([
         new TagSearch(element.tag),
         ...references.sort((a, b) => a.title.localeCompare(b.title)),

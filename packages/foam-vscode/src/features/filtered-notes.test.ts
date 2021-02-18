@@ -103,13 +103,13 @@ describe('filteredNotes', () => {
       {
         collapsibleState: 0,
         label: matchingNote1.title,
-        description: matchingNote1.uri.fsPath,
+        description: '/path/ABC.md',
         command: { command: 'vscode.open' },
       },
       {
         collapsibleState: 0,
         label: matchingNote2.title,
-        description: matchingNote2.uri.fsPath,
+        description: '/path-bis/XYZ.md',
         command: { command: 'vscode.open' },
       },
     ]);

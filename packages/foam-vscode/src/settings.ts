@@ -39,37 +39,27 @@ export function getFoamLoggerLevel(): LogLevel {
 }
 
 /** Retrieve the orphans configuration */
-export function getOrphansConfig(): OrphansConfig {
+export function getOrphansConfig(): FilteredNotesConfig {
   const orphansConfig = workspace.getConfiguration('foam.orphans');
   const exclude: string[] = orphansConfig.get('exclude');
-  const groupBy: OrphansConfigGroupBy = orphansConfig.get('groupBy');
+  const groupBy: FilteredNotesConfigGroupBy = orphansConfig.get('groupBy');
   return { exclude, groupBy };
-}
-
-export interface OrphansConfig {
-  exclude: string[];
-  groupBy: OrphansConfigGroupBy;
-}
-
-export enum OrphansConfigGroupBy {
-  Folder = 'folder',
-  Off = 'off',
 }
 
 /** Retrieve the blank notes configuration */
-export function getBlankNotesConfig(): BlankNotesConfig {
+export function getBlankNotesConfig(): FilteredNotesConfig {
   const blankNoteConfig = workspace.getConfiguration('foam.blankNotes');
   const exclude: string[] = blankNoteConfig.get('exclude');
-  const groupBy: BlankNotesConfigGroupBy = blankNoteConfig.get('groupBy');
+  const groupBy: FilteredNotesConfigGroupBy = blankNoteConfig.get('groupBy');
   return { exclude, groupBy };
 }
 
-export interface BlankNotesConfig {
+export interface FilteredNotesConfig {
   exclude: string[];
-  groupBy: BlankNotesConfigGroupBy;
+  groupBy: FilteredNotesConfigGroupBy;
 }
 
-export enum BlankNotesConfigGroupBy {
+export enum FilteredNotesConfigGroupBy {
   Folder = 'folder',
   Off = 'off',
 }

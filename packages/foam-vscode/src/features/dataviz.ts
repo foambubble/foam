@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { FoamFeature } from '../types';
-import { Foam, Logger, FoamWorkspace } from 'foam-core';
+import { Foam, Logger } from 'foam-core';
 import { TextDecoder } from 'util';
 import { getGraphStyle, getTitleMaxLength } from '../settings';
 import { isSome } from '../utils';

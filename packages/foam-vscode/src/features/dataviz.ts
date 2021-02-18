@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { FoamFeature } from '../types';
-import { Foam, Logger } from 'foam-core';
+import { Foam, Logger, FoamWorkspace } from 'foam-core';
 import { TextDecoder } from 'util';
 import { getGraphStyle, getTitleMaxLength } from '../settings';
 import { isSome } from '../utils';
@@ -32,9 +32,9 @@ const feature: FoamFeature = {
           updateGraph(panel, foam);
         };
 
-        const noteAddedListener = foam.notes.onDidAddNote(onFoamChanged);
-        const noteUpdatedListener = foam.notes.onDidUpdateNote(onFoamChanged);
-        const noteDeletedListener = foam.notes.onDidDeleteNote(onFoamChanged);
+        const noteAddedListener = foam.workspace.onDidAdd(onFoamChanged);
+        const noteUpdatedListener = foam.workspace.onDidUpdate(onFoamChanged);
+        const noteDeletedListener = foam.workspace.onDidDelete(onFoamChanged);
         panel.onDidDispose(() => {
           noteAddedListener.dispose();
           noteUpdatedListener.dispose();
@@ -44,7 +44,7 @@ const feature: FoamFeature = {
 
         vscode.window.onDidChangeActiveTextEditor(e => {
           if (e.document.uri.scheme === 'file') {
-            const note = foam.notes.getNote(e.document.uri);
+            const note = foam.workspace.get(e.document.uri);
             if (isSome(note)) {
               panel.webview.postMessage({
                 type: 'didSelectNote',
@@ -72,32 +72,23 @@ function generateGraphData(foam: Foam) {
     edges: new Set(),
   };
 
-  foam.notes.getNotes().forEach(n => {
-    const links = foam.notes.getForwardLinks(n.uri);
+  foam.workspace.list().forEach(n => {
+    const type = n.type === 'note' ? n.properties.type ?? 'note' : n.type;
+    const title = n.type === 'note' ? n.title : path.basename(n.uri.path);
     graph.nodes[n.uri.path] = {
       id: n.uri.path,
-      type: n.properties.type ?? 'note',
+      type: type,
       uri: n.uri,
-      title: cutTitle(n.title),
+      title: cutTitle(title),
     };
-    links.forEach(link => {
-      if (!(link.to.path in graph.nodes)) {
-        graph.nodes[link.to.path] = {
-          id: link.to.path,
-          type: 'placeholder',
-          uri: `virtual:${link.to}`,
-          title:
-            'slug' in link.link
-              ? cutTitle(link.link.slug)
-              : cutTitle(link.link.label),
-        };
-      }
-      graph.edges.add({
-        source: link.from.path,
-        target: link.to.path,
-      });
+  });
+  foam.workspace.getAllConnections().forEach(c => {
+    graph.edges.add({
+      source: c.source.path,
+      target: c.target.path,
     });
   });
+
   return {
     nodes: graph.nodes,
     links: Array.from(graph.edges),
@@ -139,7 +130,7 @@ async function createGraphPanel(foam: Foam, context: vscode.ExtensionContext) {
 
         case 'webviewDidSelectNode':
           const noteUri = vscode.Uri.parse(message.payload);
-          const selectedNote = foam.notes.getNote(noteUri);
+          const selectedNote = foam.workspace.get(noteUri);
 
           if (isSome(selectedNote)) {
             const doc = await vscode.workspace.openTextDocument(

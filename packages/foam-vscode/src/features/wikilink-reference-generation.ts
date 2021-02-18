@@ -16,7 +16,7 @@ import {
 import {
   createMarkdownReferences,
   stringifyMarkdownLinkReferenceDefinition,
-  NoteGraphAPI,
+  FoamWorkspace,
   Foam,
   LINK_REFERENCE_DEFINITION_HEADER,
   LINK_REFERENCE_DEFINITION_FOOTER,
@@ -41,42 +41,42 @@ const feature: FoamFeature = {
 
     context.subscriptions.push(
       commands.registerCommand('foam-vscode.update-wikilinks', () =>
-        updateReferenceList(foam.notes)
+        updateReferenceList(foam.workspace)
       ),
 
       workspace.onWillSaveTextDocument(e => {
         if (e.document.languageId === 'markdown') {
           updateDocumentInNoteGraph(foam, e.document);
-          e.waitUntil(updateReferenceList(foam.notes));
+          e.waitUntil(updateReferenceList(foam.workspace));
         }
       }),
       languages.registerCodeLensProvider(
         mdDocSelector,
-        new WikilinkReferenceCodeLensProvider(foam.notes)
+        new WikilinkReferenceCodeLensProvider(foam.workspace)
       )
     );
 
     // when a file is created as a result of peekDefinition
     // action on a wikilink, add definition update references
-    foam.notes.onDidAddNote(_ => {
+    foam.workspace.onDidAdd(_ => {
       let editor = window.activeTextEditor;
       if (!editor || !isMdEditor(editor)) {
         return;
       }
 
       updateDocumentInNoteGraph(foam, editor.document);
-      updateReferenceList(foam.notes);
+      updateReferenceList(foam.workspace);
     });
   },
 };
 
 function updateDocumentInNoteGraph(foam: Foam, document: TextDocument) {
-  foam.notes.setNote(
+  foam.workspace.set(
     foam.parse(document.uri, document.getText(), docConfig.eol)
   );
 }
 
-async function createReferenceList(foam: NoteGraphAPI) {
+async function createReferenceList(foam: FoamWorkspace) {
   let editor = window.activeTextEditor;
 
   if (!editor || !isMdEditor(editor)) {
@@ -100,7 +100,7 @@ async function createReferenceList(foam: NoteGraphAPI) {
   }
 }
 
-async function updateReferenceList(foam: NoteGraphAPI) {
+async function updateReferenceList(foam: FoamWorkspace) {
   const editor = window.activeTextEditor;
 
   if (!editor || !isMdEditor(editor)) {
@@ -129,7 +129,7 @@ async function updateReferenceList(foam: NoteGraphAPI) {
 }
 
 function generateReferenceList(
-  foam: NoteGraphAPI,
+  foam: FoamWorkspace,
   doc: TextDocument
 ): string[] {
   const wikilinkSetting = getWikilinkDefinitionSetting();
@@ -138,7 +138,7 @@ function generateReferenceList(
     return [];
   }
 
-  const note = foam.getNote(doc.uri);
+  const note = foam.get(doc.uri);
 
   // Should never happen as `doc` is usually given by `editor.document`, which
   // binds to an opened note.
@@ -199,9 +199,9 @@ function detectReferenceListRange(doc: TextDocument): Range | null {
 }
 
 class WikilinkReferenceCodeLensProvider implements CodeLensProvider {
-  private foam: NoteGraphAPI;
+  private foam: FoamWorkspace;
 
-  constructor(foam: NoteGraphAPI) {
+  constructor(foam: FoamWorkspace) {
     this.foam = foam;
   }
 

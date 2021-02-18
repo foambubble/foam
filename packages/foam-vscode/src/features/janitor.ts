@@ -13,13 +13,14 @@ import {
   generateLinkReferences,
   generateHeading,
   Foam,
+  Note,
 } from 'foam-core';
 
 import {
   getWikilinkDefinitionSetting,
   LinkReferenceDefinitionsSetting,
 } from '../settings';
-import { astPositionToVsCodePosition } from '../utils';
+import { astPositionToVsCodePosition, isNote } from '../utils';
 
 const feature: FoamFeature = {
   activate: (context: ExtensionContext, foamPromise: Promise<Foam>) => {
@@ -33,7 +34,7 @@ const feature: FoamFeature = {
 
 async function janitor(foam: Foam) {
   try {
-    const noOfFiles = foam.notes.getNotes().filter(Boolean).length;
+    const noOfFiles = foam.workspace.list().filter(Boolean).length;
 
     if (noOfFiles === 0) {
       return window.showInformationMessage(
@@ -68,7 +69,7 @@ async function janitor(foam: Foam) {
 }
 
 async function runJanitor(foam: Foam) {
-  const notes = foam.notes.getNotes().filter(Boolean);
+  const notes: Note[] = foam.workspace.list().filter(isNote);
 
   let updatedHeadingCount = 0;
   let updatedDefinitionListCount = 0;
@@ -107,7 +108,7 @@ async function runJanitor(foam: Foam) {
         ? null
         : generateLinkReferences(
             note,
-            foam.notes,
+            foam.workspace,
             wikilinkSetting === LinkReferenceDefinitionsSetting.withExtensions
           );
     if (definitions) {
@@ -145,7 +146,7 @@ async function runJanitor(foam: Foam) {
         ? null
         : generateLinkReferences(
             note,
-            foam.notes,
+            foam.workspace,
             wikilinkSetting === LinkReferenceDefinitionsSetting.withExtensions
           );
 

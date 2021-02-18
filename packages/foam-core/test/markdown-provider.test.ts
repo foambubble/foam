@@ -3,11 +3,11 @@ import {
   createMarkdownReferences,
 } from '../src/markdown-provider';
 import { DirectLink } from '../src/model/note';
-import { NoteGraph } from '../src/model/note-graph';
 import { ParserPlugin } from '../src/plugins';
 import { URI } from '../src/common/uri';
 import { Logger } from '../src/utils/log';
 import { uriToSlug } from '../src/utils';
+import { FoamWorkspace } from '../src/model/workspace';
 
 Logger.setLevel('error');
 
@@ -43,16 +43,16 @@ const createNoteFromMarkdown = (path: string, content: string) =>
 
 describe('Markdown loader', () => {
   it('Converts markdown to notes', () => {
-    const graph = new NoteGraph();
-    graph.setNote(createNoteFromMarkdown('/page-a.md', pageA));
-    graph.setNote(createNoteFromMarkdown('/page-b.md', pageB));
-    graph.setNote(createNoteFromMarkdown('/page-c.md', pageC));
-    graph.setNote(createNoteFromMarkdown('/page-d.md', pageD));
-    graph.setNote(createNoteFromMarkdown('/page-e.md', pageE));
+    const workspace = new FoamWorkspace();
+    workspace.set(createNoteFromMarkdown('/page-a.md', pageA));
+    workspace.set(createNoteFromMarkdown('/page-b.md', pageB));
+    workspace.set(createNoteFromMarkdown('/page-c.md', pageC));
+    workspace.set(createNoteFromMarkdown('/page-d.md', pageD));
+    workspace.set(createNoteFromMarkdown('/page-e.md', pageE));
 
     expect(
-      graph
-        .getNotes()
+      workspace
+        .list()
         .map(n => n.uri)
         .map(uriToSlug)
         .sort()
@@ -104,58 +104,58 @@ this is a [link to intro](#introduction)
   });
 
   it('Parses wikilinks correctly', () => {
-    const graph = new NoteGraph();
-    const noteA = graph.setNote(createNoteFromMarkdown('/page-a.md', pageA));
-    const noteB = graph.setNote(createNoteFromMarkdown('/page-b.md', pageB));
-    graph.setNote(createNoteFromMarkdown('/page-c.md', pageC));
-    graph.setNote(createNoteFromMarkdown('/Page D.md', pageD));
-    graph.setNote(createNoteFromMarkdown('/page e.md', pageE));
+    const workspace = new FoamWorkspace();
+    const noteA = createNoteFromMarkdown('/page-a.md', pageA);
+    const noteB = createNoteFromMarkdown('/page-b.md', pageB);
+    const noteC = createNoteFromMarkdown('/page-c.md', pageC);
+    const noteD = createNoteFromMarkdown('/Page D.md', pageD);
+    const noteE = createNoteFromMarkdown('/page e.md', pageE);
 
-    expect(
-      graph
-        .getBacklinks(noteB.uri)
-        .map(link => graph.getNote(link.from)!.uri)
-        .map(uriToSlug)
-    ).toEqual(['page-a']);
-    expect(
-      graph
-        .getForwardLinks(noteA.uri)
-        .map(link => graph.getNote(link.to)!.uri)
-        .map(uriToSlug)
-    ).toEqual(['page-b', 'page-c', 'page-d', 'page-e']);
+    workspace
+      .set(noteA)
+      .set(noteB)
+      .set(noteC)
+      .set(noteD)
+      .set(noteE)
+      .resolveLinks();
+
+    expect(workspace.getBacklinks(noteB.uri)).toEqual([noteA.uri]);
+    expect(workspace.getLinks(noteA.uri)).toEqual([
+      noteB.uri,
+      noteC.uri,
+      noteD.uri,
+      noteE.uri,
+    ]);
   });
 });
 
 describe('Note Title', () => {
   it('should initialize note title if heading exists', () => {
-    const graph = new NoteGraph();
-    const note = graph.setNote(createNoteFromMarkdown('/page-a.md', pageA));
-
-    const pageANoteTitle = graph.getNote(note.uri)!.title;
-    expect(pageANoteTitle).toBe('Page A');
+    const note = createNoteFromMarkdown(
+      '/page-a.md',
+      `
+# Page A
+this note has a title
+    `
+    );
+    expect(note.title).toBe('Page A');
   });
 
   it('should default to file name if heading does not exist', () => {
-    const graph = new NoteGraph();
-    const note = graph.setNote(
-      createNoteFromMarkdown(
-        '/page-d.md',
-        `
+    const note = createNoteFromMarkdown(
+      '/page-d.md',
+      `
 This file has no heading.
       `
-      )
     );
 
-    const pageANoteTitle = graph.getNote(note.uri)!.title;
-    expect(pageANoteTitle).toEqual('page-d');
+    expect(note.title).toEqual('page-d');
   });
 
   it('should give precedence to frontmatter title over other headings', () => {
-    const graph = new NoteGraph();
-    const note = graph.setNote(
-      createNoteFromMarkdown(
-        '/page-e.md',
-        `
+    const note = createNoteFromMarkdown(
+      '/page-e.md',
+      `
 ---
 title: Note Title
 date: 20-12-12
@@ -163,11 +163,9 @@ date: 20-12-12
 
 # Other Note Title
       `
-      )
     );
 
-    const pageENoteTitle = graph.getNote(note.uri)!.title;
-    expect(pageENoteTitle).toBe('Note Title');
+    expect(note.title).toBe('Note Title');
   });
 
   it('should not break on empty titles (see #276)', () => {
@@ -185,58 +183,40 @@ this note has an empty title line
 
 describe('frontmatter', () => {
   it('should parse yaml frontmatter', () => {
-    const graph = new NoteGraph();
-    const note = graph.setNote(
-      createNoteFromMarkdown(
-        '/page-e.md',
-        `
+    const note = createNoteFromMarkdown(
+      '/page-e.md',
+      `
 ---
 title: Note Title
 date: 20-12-12
 ---
 
 # Other Note Title`
-      )
     );
 
-    const expected = {
-      title: 'Note Title',
-      date: '20-12-12',
-    };
-
-    const actual: any = graph.getNote(note.uri)!.properties;
-
-    expect(actual.title).toBe(expected.title);
-    expect(actual.date).toBe(expected.date);
+    expect(note.properties.title).toBe('Note Title');
+    expect(note.properties.date).toBe('20-12-12');
   });
 
   it('should parse empty frontmatter', () => {
-    const graph = new NoteGraph();
-    const note = graph.setNote(
-      createNoteFromMarkdown(
-        '/page-f.md',
-        `
+    const workspace = new FoamWorkspace();
+    const note = createNoteFromMarkdown(
+      '/page-f.md',
+      `
 ---
 ---
 
 # Empty Frontmatter
 `
-      )
     );
 
-    const expected = {};
-
-    const actual = graph.getNote(note.uri)!.properties;
-
-    expect(actual).toEqual(expected);
+    expect(note.properties).toEqual({});
   });
 
   it('should not fail when there are issues with parsing frontmatter', () => {
-    const graph = new NoteGraph();
-    const note = graph.setNote(
-      createNoteFromMarkdown(
-        '/page-f.md',
-        `
+    const note = createNoteFromMarkdown(
+      '/page-f.md',
+      `
 ---
 title: - one
  - two
@@ -244,51 +224,46 @@ title: - one
 ---
 
 `
-      )
     );
 
-    const expected = {};
-
-    const actual = graph.getNote(note.uri)!.properties;
-
-    expect(actual).toEqual(expected);
+    expect(note.properties).toEqual({});
   });
 });
 
 describe('wikilinks definitions', () => {
   it('can generate links without file extension when includeExtension = false', () => {
-    const graph = new NoteGraph();
-    const noteA = graph.setNote(
-      createNoteFromMarkdown('/dir1/page-a.md', pageA)
-    );
-    graph.setNote(createNoteFromMarkdown('/dir1/page-b.md', pageB));
-    graph.setNote(createNoteFromMarkdown('/dir1/page-c.md', pageC));
+    const workspace = new FoamWorkspace();
+    const noteA = createNoteFromMarkdown('/dir1/page-a.md', pageA);
+    workspace
+      .set(noteA)
+      .set(createNoteFromMarkdown('/dir1/page-b.md', pageB))
+      .set(createNoteFromMarkdown('/dir1/page-c.md', pageC));
 
-    const noExtRefs = createMarkdownReferences(graph, noteA.uri, false);
+    const noExtRefs = createMarkdownReferences(workspace, noteA.uri, false);
     expect(noExtRefs.map(r => r.url)).toEqual(['page-b', 'page-c']);
   });
 
   it('can generate links with file extension when includeExtension = true', () => {
-    const graph = new NoteGraph();
-    const noteA = graph.setNote(
-      createNoteFromMarkdown('/dir1/page-a.md', pageA)
-    );
-    graph.setNote(createNoteFromMarkdown('/dir1/page-b.md', pageB));
-    graph.setNote(createNoteFromMarkdown('/dir1/page-c.md', pageC));
+    const workspace = new FoamWorkspace();
+    const noteA = createNoteFromMarkdown('/dir1/page-a.md', pageA);
+    workspace
+      .set(noteA)
+      .set(createNoteFromMarkdown('/dir1/page-b.md', pageB))
+      .set(createNoteFromMarkdown('/dir1/page-c.md', pageC));
 
-    const extRefs = createMarkdownReferences(graph, noteA.uri, true);
+    const extRefs = createMarkdownReferences(workspace, noteA.uri, true);
     expect(extRefs.map(r => r.url)).toEqual(['page-b.md', 'page-c.md']);
   });
 
   it('use relative paths', () => {
-    const graph = new NoteGraph();
-    const noteA = graph.setNote(
-      createNoteFromMarkdown('/dir1/page-a.md', pageA)
-    );
-    graph.setNote(createNoteFromMarkdown('/dir2/page-b.md', pageB));
-    graph.setNote(createNoteFromMarkdown('/dir3/page-c.md', pageC));
+    const workspace = new FoamWorkspace();
+    const noteA = createNoteFromMarkdown('/dir1/page-a.md', pageA);
+    workspace
+      .set(noteA)
+      .set(createNoteFromMarkdown('/dir2/page-b.md', pageB))
+      .set(createNoteFromMarkdown('/dir3/page-c.md', pageC));
 
-    const extRefs = createMarkdownReferences(graph, noteA.uri, true);
+    const extRefs = createMarkdownReferences(workspace, noteA.uri, true);
     expect(extRefs.map(r => r.url)).toEqual([
       '../dir2/page-b.md',
       '../dir3/page-c.md',

@@ -1,17 +1,22 @@
 import * as path from 'path';
-import { NoteGraphAPI } from '../../src/model/note-graph';
 import { generateHeading } from '../../src/janitor';
 import { bootstrap } from '../../src/bootstrap';
 import { createConfigFromFolders } from '../../src/config';
-import { Services } from '../../src';
+import { Services, Note } from '../../src';
 import { URI } from '../../src/common/uri';
 import { FileDataStore } from '../../src/services/datastore';
 import { Logger } from '../../src/utils/log';
+import { FoamWorkspace } from '../../src/model/workspace';
+import { getBasename } from '../../src/utils';
 
 Logger.setLevel('error');
 
 describe('generateHeadings', () => {
-  let _graph: NoteGraphAPI;
+  let _workspace: FoamWorkspace;
+  const findBySlug = (slug: string): Note => {
+    return _workspace.list().find(res => getBasename(res.uri) === slug) as Note;
+  };
+
   beforeAll(async () => {
     const config = createConfigFromFolders([
       URI.file(path.join(__dirname, '..', '__scaffold__')),
@@ -20,11 +25,11 @@ describe('generateHeadings', () => {
       dataStore: new FileDataStore(config),
     };
     const foam = await bootstrap(config, services);
-    _graph = foam.notes;
+    _workspace = foam.workspace;
   });
 
   it.skip('should add heading to a file that does not have them', () => {
-    const note = _graph.getNotes({ slug: 'file-without-title' })[0];
+    const note = findBySlug('file-without-title');
     const expected = {
       newText: `# File without Title
 
@@ -51,12 +56,12 @@ describe('generateHeadings', () => {
   });
 
   it('should not cause any changes to a file that has a heading', () => {
-    const note = _graph.getNotes({ slug: 'index' })[0];
+    const note = findBySlug('index');
     expect(generateHeading(note)).toBeNull();
   });
 
   it.skip('should generate heading when the file only contains frontmatter', () => {
-    const note = _graph.getNotes({ slug: 'file-with-only-frontmatter' })[0];
+    const note = findBySlug('file-with-only-frontmatter');
 
     const expected = {
       newText: '\n# File with only Frontmatter\n\n',

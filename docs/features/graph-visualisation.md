@@ -20,6 +20,9 @@ A sample configuration object is provided below:
 "foam.graph.style": {
     "background": "#202020",
     "fontSize": 12,
+    "lineColor": "#277da1",
+    "lineWidth": 0.2,
+    "particleWidth": 1.0,
     "highlightedForeground": "#f9c74f",
     "node": {
         "note": "#277da1",

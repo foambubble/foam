@@ -2,6 +2,7 @@
 const VscodeEnvironment = require('jest-environment-vscode');
 const vscode = require('vscode');
 
+const initialVscode = vscode;
 class ExtendedVscodeEnvironment extends VscodeEnvironment {
   async setup() {
     await super.setup();
@@ -14,7 +15,7 @@ class ExtendedVscodeEnvironment extends VscodeEnvironment {
     this.global.vscode = vscode;
   }
   async teardown() {
-    this.global.vscode = {};
+    this.global.vscode = initialVscode;
     await super.teardown();
   }
 }

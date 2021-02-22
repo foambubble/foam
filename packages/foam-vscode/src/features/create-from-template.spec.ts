@@ -8,19 +8,21 @@ describe('createFromTemplate', () => {
     });
 
     it('offers to create template when none are available', async () => {
-      const spy = jest.spyOn(window, 'showQuickPick').mockImplementationOnce(jest.fn(() => Promise.resolve(undefined)));
+      const spy = jest
+        .spyOn(window, 'showQuickPick')
+        .mockImplementationOnce(jest.fn(() => Promise.resolve(undefined)));
 
       await commands.executeCommand('foam-vscode.create-note-from-template');
 
-      expect(spy).toBeCalledWith(['Yes', 'No'], { placeHolder: 'No templates available. Would you like to create one instead?' });
+      expect(spy).toBeCalledWith(['Yes', 'No'], {
+        placeHolder:
+          'No templates available. Would you like to create one instead?',
+      });
     });
   });
   describe('create-new-template', () => {
-    afterEach(async () => {
+    afterEach(() => {
       jest.clearAllMocks();
-      await workspace.fs.delete(Uri.file('.foam/templates/'), {
-        recursive: true,
-      });
     });
 
     it('should create a new template', async () => {
@@ -57,9 +59,7 @@ describe('createFromTemplate', () => {
       await commands.executeCommand('foam-vscode.create-new-template');
 
       expect(window.showInputBox).toHaveBeenCalled();
-      await expect(workspace.fs.readFile(
-        Uri.file(template)
-      )).rejects.toThrow();
+      await expect(workspace.fs.readFile(Uri.file(template))).rejects.toThrow();
     });
   });
 });

@@ -3,16 +3,20 @@ import {
   commands,
   ExtensionContext,
   workspace,
-  Uri,
   SnippetString,
 } from 'vscode';
+import { URI } from 'foam-core';
 import * as path from 'path';
 import { FoamFeature } from '../types';
 import { TextEncoder } from 'util';
 import { focusNote } from '../utils';
 
-const templatesDir = `${workspace.workspaceFolders[0].uri.fsPath}/.foam/templates`;
-const firstTemplateContent = `# Your new template!
+const templatesDir = URI.joinPath(
+  workspace.workspaceFolders[0].uri,
+  '.foam',
+  'templates'
+);
+const templateContent = `# New template
 
 Templates are inserted the same ways snippets are.
 This means you get access to [all these good features!](https://code.visualstudio.com/docs/editor/userdefinedsnippets#_snippet-syntax).
@@ -27,7 +31,7 @@ To create a note from this template, run the 'Foam: Create new note from templat
 
 async function getTemplates(): Promise<string[]> {
   const templates = await workspace.findFiles('.foam/templates/**.md');
-  return templates.map(template => path.basename(template.fsPath));
+  return templates.map(template => path.basename(template.path));
 }
 
 async function offerToCreateTemplate(): Promise<void> {
@@ -46,24 +50,24 @@ async function createNoteFromTemplate(): Promise<void> {
   if (templates.length === 0) {
     return offerToCreateTemplate();
   }
-  const activeFile = window.activeTextEditor?.document?.fileName;
+  const activeFile = window.activeTextEditor?.document?.uri.path;
   const currentDir =
     activeFile !== undefined
-      ? path.dirname(activeFile)
-      : workspace.workspaceFolders[0].uri.fsPath;
+      ? URI.parse(path.dirname(activeFile))
+      : workspace.workspaceFolders[0].uri;
   const selectedTemplate = await window.showQuickPick(templates);
   if (selectedTemplate === undefined) {
     return;
   }
 
   const defaultFileName = 'new-note.md';
-  const defaultDir = `${currentDir}${path.sep}${defaultFileName}`;
+  const defaultDir = URI.joinPath(currentDir, defaultFileName);
   const filename = await window.showInputBox({
     prompt: `Enter the filename for the new note`,
-    value: defaultDir,
+    value: defaultDir.fsPath,
     valueSelection: [
-      defaultDir.length - defaultFileName.length,
-      defaultDir.length - 3,
+      defaultDir.fsPath.length - defaultFileName.length,
+      defaultDir.fsPath.length - 3,
     ],
     validateInput: value =>
       value.length ? undefined : 'Please enter a value!',
@@ -73,11 +77,11 @@ async function createNoteFromTemplate(): Promise<void> {
   }
 
   const templateText = await workspace.fs.readFile(
-    Uri.file(`${templatesDir}/${selectedTemplate}`)
+    URI.joinPath(templatesDir, selectedTemplate)
   );
   const snippet = new SnippetString(templateText.toString());
   await workspace.fs.writeFile(
-    Uri.file(filename),
+    URI.file(filename),
     new TextEncoder().encode('')
   );
   await focusNote(filename, true);
@@ -85,20 +89,19 @@ async function createNoteFromTemplate(): Promise<void> {
 }
 
 async function createNewTemplate(): Promise<void> {
-  const isFirstTemplate = (await getTemplates()).length === 0;
   const defaultFileName = 'new-template.md';
-  const templatesDir = path.join(
-    workspace.workspaceFolders[0].uri.fsPath,
+  const defaultTemplate = URI.joinPath(
+    workspace.workspaceFolders[0].uri,
     '.foam',
     'templates',
     defaultFileName
   );
   const filename = await window.showInputBox({
     prompt: `Enter the filename for the new template`,
-    value: templatesDir,
+    value: defaultTemplate.fsPath,
     valueSelection: [
-      templatesDir.length - defaultFileName.length,
-      templatesDir.length - 3,
+      defaultTemplate.fsPath.length - defaultFileName.length,
+      defaultTemplate.fsPath.length - 3,
     ],
     validateInput: value =>
       value.length ? undefined : 'Please enter a value!',
@@ -107,10 +110,9 @@ async function createNewTemplate(): Promise<void> {
     return;
   }
 
-  const template = isFirstTemplate ? firstTemplateContent : '';
   await workspace.fs.writeFile(
-    Uri.file(filename),
-    new TextEncoder().encode(template)
+    URI.file(filename),
+    new TextEncoder().encode(templateContent)
   );
   await focusNote(filename, false);
 }

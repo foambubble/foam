@@ -3,6 +3,7 @@ import { Foam, Note } from 'foam-core';
 import { FilteredNotesConfigGroupBy, getBlankNotesConfig } from '../settings';
 import { FoamFeature } from '../types';
 import { FilteredNotesProvider } from './filtered-notes';
+import { not } from 'micromatch';
 
 const feature: FoamFeature = {
   activate: async (
@@ -47,5 +48,32 @@ const feature: FoamFeature = {
 export default feature;
 
 export function isBlank(note: Note) {
-  return note.source.text.trim().split('\n').length <= 1;
+  if (!note.source.text) {
+    return true;
+  }
+
+  const trimmedText = note.source.text.trim();
+  const lines = trimmedText.split('\n').map(line => line.trim());
+  const noLines = lines.length == 0;
+  console.log(lines);
+  console.log('nolines', noLines);
+  if (noLines) {
+    return true;
+  }
+
+  if (lines.length == 1) {
+    const onlyLineIsEmpty = lines[0].length === 0;
+
+    if (onlyLineIsEmpty) {
+      return true;
+    }
+
+    const onlyLineIsTitle = !!/^#.*/gm.exec(lines[0]);
+
+    if (onlyLineIsTitle) {
+      return true;
+    }
+  }
+
+  return false;
 }

@@ -56,4 +56,15 @@ describe('isBlank', () => {
       )
     ).toBeFalsy();
   });
+
+  it('should return false when there is at least one line of non-text content', () => {
+    expect(
+      isBlank(
+        createTestNote({
+          uri: '',
+          text: 'A line that is not the title\n',
+        })
+      )
+    ).toBeFalsy();
+  });
 });

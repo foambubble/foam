@@ -1,10 +1,35 @@
-import { createTestNote } from '../test/test-utils';
-import { isBlank } from './blank-notes';
+import {
+  createAttachment,
+  createPlaceholder,
+  createTestNote,
+} from '../test/test-utils';
+import { isPlaceholderResource } from './placeholders';
 
-describe('isBlank', () => {
+describe('isPlaceholderResource', () => {
+  it('should return true when a placeholder', () => {
+    expect(
+      isPlaceholderResource(
+        createPlaceholder({
+          uri: '',
+        })
+      )
+    ).toBeTruthy();
+  });
+
   it('should return true when an empty note is provided', () => {
     expect(
-      isBlank(
+      isPlaceholderResource(
+        createTestNote({
+          uri: '',
+          text: '',
+        })
+      )
+    ).toBeTruthy();
+  });
+
+  it('should return true when an empty note is provided', () => {
+    expect(
+      isPlaceholderResource(
         createTestNote({
           uri: '',
           text: '',
@@ -15,7 +40,7 @@ describe('isBlank', () => {
 
   it('should return true when a note containing only whitespace is provided', () => {
     expect(
-      isBlank(
+      isPlaceholderResource(
         createTestNote({
           uri: '',
           text: ' \n\t\n\t  ',
@@ -26,7 +51,7 @@ describe('isBlank', () => {
 
   it('should return true when a note containing only a title is provided', () => {
     expect(
-      isBlank(
+      isPlaceholderResource(
         createTestNote({
           uri: '',
           text: '# Title',
@@ -37,7 +62,7 @@ describe('isBlank', () => {
 
   it('should return true when a note containing a title followed by whitespace is provided', () => {
     expect(
-      isBlank(
+      isPlaceholderResource(
         createTestNote({
           uri: '',
           text: '# Title \n\t\n \t \n  ',
@@ -48,7 +73,7 @@ describe('isBlank', () => {
 
   it('should return false when there is more than one line containing more than just whitespace', () => {
     expect(
-      isBlank(
+      isPlaceholderResource(
         createTestNote({
           uri: '',
           text: '# Title\nA line that is not the title\nAnother line',
@@ -59,10 +84,20 @@ describe('isBlank', () => {
 
   it('should return false when there is at least one line of non-text content', () => {
     expect(
-      isBlank(
+      isPlaceholderResource(
         createTestNote({
           uri: '',
           text: 'A line that is not the title\n',
+        })
+      )
+    ).toBeFalsy();
+  });
+
+  it('should return false when an attachment is provided', () => {
+    expect(
+      isPlaceholderResource(
+        createAttachment({
+          uri: '',
         })
       )
     ).toBeFalsy();

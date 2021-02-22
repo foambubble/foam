@@ -8,7 +8,8 @@ import tagsExplorer from './tags-tree-view';
 import createFromTemplate from './create-from-template';
 import openRandomNote from './open-random-note';
 import orphans from './orphans';
-import blankNotes from './blank-notes';
+import placeholders from './placeholders';
+import filteredResources from './filtered-resources';
 import { FoamFeature } from '../types';
 
 export const features: FoamFeature[] = [
@@ -22,5 +23,6 @@ export const features: FoamFeature[] = [
   openDatedNote,
   createFromTemplate,
   orphans,
-  blankNotes,
+  placeholders,
+  filteredResources,
 ];

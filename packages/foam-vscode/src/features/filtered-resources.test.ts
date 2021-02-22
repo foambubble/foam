@@ -1,15 +1,15 @@
-import { FoamWorkspace, Note } from 'foam-core';
-import { FilteredNotesConfigGroupBy } from '../settings';
+import { FoamWorkspace, getTitle, Resource } from 'foam-core';
+import { FilteredResourcesConfigGroupBy } from '../settings';
 import { createTestNote } from '../test/test-utils';
 import {
   Directory,
-  FilteredNotesProvider,
-  FilteredNotesProviderConfig,
-} from './filtered-notes';
+  FilteredResourcesProvider,
+  FilteredResourcesProviderConfig,
+} from './filtered-resources';
 
-describe('filteredNotes', () => {
-  const isMatch = (note: Note) => {
-    return note.title.length === 3;
+describe('filteredResources', () => {
+  const isMatch = (resource: Resource) => {
+    return getTitle(resource).length === 3;
   };
   const matchingNote1 = createTestNote({ uri: '/path/ABC.md', title: 'ABC' });
   const matchingNote2 = createTestNote({
@@ -35,14 +35,14 @@ describe('filteredNotes', () => {
   const dataStore = { read: () => '' } as any;
 
   // Mock config
-  const config: FilteredNotesProviderConfig = {
+  const config: FilteredResourcesProviderConfig = {
     exclude: ['path-exclude/**/*'],
-    groupBy: FilteredNotesConfigGroupBy.Folder,
+    groupBy: FilteredResourcesConfigGroupBy.Folder,
     workspacesFsPaths: [''],
   };
 
   it('should return the filtered notes as a folder tree', async () => {
-    const provider = new FilteredNotesProvider(
+    const provider = new FilteredResourcesProvider(
       workspace,
       dataStore,
       'length3',
@@ -56,19 +56,19 @@ describe('filteredNotes', () => {
         collapsibleState: 1,
         label: '/path',
         description: '1 note',
-        notes: [{ title: matchingNote1.title }],
+        resources: [{ title: matchingNote1.title }],
       },
       {
         collapsibleState: 1,
         label: '/path-bis',
         description: '1 note',
-        notes: [{ title: matchingNote2.title }],
+        resources: [{ title: matchingNote2.title }],
       },
     ]);
   });
 
   it('should return the filtered notes in a directory', async () => {
-    const provider = new FilteredNotesProvider(
+    const provider = new FilteredResourcesProvider(
       workspace,
       dataStore,
       'length3',
@@ -89,8 +89,11 @@ describe('filteredNotes', () => {
   });
 
   it('should return the flattened filtered notes', async () => {
-    const mockConfig = { ...config, groupBy: FilteredNotesConfigGroupBy.Off };
-    const provider = new FilteredNotesProvider(
+    const mockConfig = {
+      ...config,
+      groupBy: FilteredResourcesConfigGroupBy.Off,
+    };
+    const provider = new FilteredResourcesProvider(
       workspace,
       dataStore,
       'length3',
@@ -117,7 +120,7 @@ describe('filteredNotes', () => {
 
   it('should return the filtered notes without exclusion', async () => {
     const mockConfig = { ...config, exclude: [] };
-    const provider = new FilteredNotesProvider(
+    const provider = new FilteredResourcesProvider(
       workspace,
       dataStore,
       'length3',
@@ -133,14 +136,14 @@ describe('filteredNotes', () => {
         collapsibleState: 1,
         label: '/path-exclude',
         description: '1 note',
-        notes: [{ title: excludedPathNote.title }],
+        resources: [{ title: excludedPathNote.title }],
       },
     ]);
   });
 
   it('should dynamically set the description', async () => {
     const description = 'test description';
-    const provider = new FilteredNotesProvider(
+    const provider = new FilteredResourcesProvider(
       workspace,
       dataStore,
       'length3',
@@ -154,13 +157,13 @@ describe('filteredNotes', () => {
         collapsibleState: 1,
         label: '/path',
         description: `1 ${description}`,
-        notes: expect.anything(),
+        resources: expect.anything(),
       },
       {
         collapsibleState: 1,
         label: '/path-bis',
         description: `1 ${description}`,
-        notes: expect.anything(),
+        resources: expect.anything(),
       },
     ]);
   });

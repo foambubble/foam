@@ -44,10 +44,10 @@
           "contextualTitle": "Orphans"
         },
         {
-          "id": "foam-vscode.blank-notes",
-          "name": "Blank Notes",
+          "id": "foam-vscode.placeholders",
+          "name": "Placeholders",
           "icon": "media/dep.svg",
-          "contextualTitle": "Blank Notes"
+          "contextualTitle": "Placeholders"
         }
       ]
     },
@@ -61,7 +61,7 @@
         "contents": "No orphans found. Notes that have no backlinks nor links will show up here."
       },
       {
-        "view": "foam-vscode.blank-notes",
+        "view": "foam-vscode.placeholders",
         "contents": "No blank notes found. Notes that have no content will show up here."
       }
     ],
@@ -78,13 +78,13 @@
           "group": "navigation"
         },
         {
-          "command": "foam-vscode.group-blank-notes-by-folder",
-          "when": "view == foam-vscode.blank-notes && foam-vscode.blank-notes-grouped-by-folder == false",
+          "command": "foam-vscode.group-placeholders-by-folder",
+          "when": "view == foam-vscode.placeholders && foam-vscode.placeholders-grouped-by-folder == false",
           "group": "navigation"
         },
         {
-          "command": "foam-vscode.group-blank-notes-off",
-          "when": "view == foam-vscode.blank-notes && foam-vscode.blank-notes-grouped-by-folder == true",
+          "command": "foam-vscode.group-placeholders-off",
+          "when": "view == foam-vscode.placeholders && foam-vscode.placeholders-grouped-by-folder == true",
           "group": "navigation"
         }
       ],
@@ -98,11 +98,11 @@
           "when": "false"
         },
         {
-          "command": "foam-vscode.group-blank-notes-by-folder",
+          "command": "foam-vscode.group-placeholders-by-folder",
           "when": "false"
         },
         {
-          "command": "foam-vscode.group-blank-notes-off",
+          "command": "foam-vscode.group-placeholders-off",
           "when": "false"
         }
       ]
@@ -141,6 +141,10 @@
         "title": "Foam: Create New Note From Template"
       },
       {
+        "command": "foam-vscode.open-placeholder-note",
+        "title": "Foam: Open Placeholder Note"
+      },
+      {
         "command": "foam-vscode.group-orphans-by-folder",
         "title": "Foam: Group Orphans By Folder",
         "icon": "$(list-tree)"
@@ -151,13 +155,13 @@
         "icon": "$(list-flat)"
       },
       {
-        "command": "foam-vscode.group-blank-notes-by-folder",
-        "title": "Foam: Group Blank Notes By Folder",
+        "command": "foam-vscode.group-placeholders-by-folder",
+        "title": "Foam: Group Placeholders By Folder",
         "icon": "$(list-tree)"
       },
       {
-        "command": "foam-vscode.group-blank-notes-off",
-        "title": "Foam: Don't Group Blank Notes",
+        "command": "foam-vscode.group-placeholders-off",
+        "title": "Foam: Don't Group Placeholders",
         "icon": "$(list-flat)"
       }
     ],
@@ -253,15 +257,15 @@
           "markdownDescription": "Group orphans report entries by.",
           "scope": "resource"
         },
-        "foam.blankNotes.exclude": {
+        "foam.placeholders.exclude": {
           "type": [
             "array"
           ],
           "default": [],
-          "markdownDescription": "Specifies the list of glob patterns that will be excluded from the blankNotes report. To ignore the all the content of a given folder, use `**<folderName>/**/*`",
+          "markdownDescription": "Specifies the list of glob patterns that will be excluded from the placeholders report. To ignore the all the content of a given folder, use `**<folderName>/**/*`",
           "scope": "resource"
         },
-        "foam.blankNotes.groupBy": {
+        "foam.placeholders.groupBy": {
           "type": [
             "string"
           ],

@@ -6,6 +6,9 @@ import {
   NoteLink,
   isNote,
   NoteLinkDefinition,
+  isPlaceholder,
+  isAttachment,
+  getTitle,
 } from './model/note';
 import { URI } from './common/uri';
 import { FoamConfig } from './config';
@@ -52,6 +55,9 @@ export {
   FoamWorkspace,
   NoteLinkDefinition,
   isNote,
+  isPlaceholder,
+  isAttachment,
+  getTitle,
 };
 
 export interface Services {

@@ -27,6 +27,11 @@ jobs:
             node_modules
             */*/node_modules
           key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+      - name: Restore VS Code
+        uses: actions/cache@v2
+        with:
+          path: packages/foam-vscode/.vscode-test
+          key: ${{ runner.os }}-${{ hashFiles('packages/foam-vscode/src/test/run-tests.ts') }}
       - name: Install Dependencies
         run: yarn
       - name: Check Lint Rules

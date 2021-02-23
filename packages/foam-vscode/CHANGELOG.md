@@ -4,6 +4,13 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.10.1] - 2021-02-23
+
+Fixes and Improvements:
+
+- Model: fixed consolidation of model after change events
+- Dataviz: improved consolidation of graph
+
 ## [0.10.0] - 2021-02-18
 
 Features:

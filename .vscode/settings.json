@@ -21,5 +21,6 @@
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "prettier.requireConfig": true,
   "editor.formatOnSave": true,
+  "editor.tabSize": 2,
   "jest.debugCodeLens.showWhenTestStateIn": ["fail", "unknown", "pass"]
 }

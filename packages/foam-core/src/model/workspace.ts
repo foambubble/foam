@@ -346,8 +346,8 @@ export class FoamWorkspace implements IDisposable {
       delete workspace.links[resource.uri.path];
       // prettier-ignore
       resource.links.forEach(link => {
-        const targetUri = FoamWorkspace.resolveLink(workspace, resource, link)
-        workspace = FoamWorkspace.connect(workspace, resource.uri, targetUri)
+        const targetUri = FoamWorkspace.resolveLink(workspace, resource, link);
+        workspace = FoamWorkspace.connect(workspace, resource.uri, targetUri);
       });
     }
     return workspace;

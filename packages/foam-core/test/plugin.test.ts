@@ -1,7 +1,6 @@
 import path from 'path';
 import { loadPlugins } from '../src/plugins';
 import { createMarkdownParser } from '../src/markdown-provider';
-import { createTestNote } from './core.test';
 import { FoamConfig, createConfigFromObject } from '../src/config';
 import { URI } from '../src/common/uri';
 import { Logger } from '../src/utils/log';

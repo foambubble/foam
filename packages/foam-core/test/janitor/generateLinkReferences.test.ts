@@ -7,7 +7,6 @@ import { FileDataStore } from '../../src/services/datastore';
 import { Logger } from '../../src/utils/log';
 import { URI } from '../../src/common/uri';
 import { FoamWorkspace } from '../../src/model/workspace';
-import { Resource } from '../../src/model/note';
 import { getBasename } from '../../src/utils';
 
 Logger.setLevel('error');

@@ -199,7 +199,6 @@ date: 20-12-12
   });
 
   it('should parse empty frontmatter', () => {
-    const workspace = new FoamWorkspace();
     const note = createNoteFromMarkdown(
       '/page-f.md',
       `

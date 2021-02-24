@@ -162,8 +162,6 @@ export class FilteredResourcesProvider
       exclude.push(...globs.map(g => `${folder}/${g}`));
     }
 
-    console.log(exclude);
-
     return exclude;
   }
 

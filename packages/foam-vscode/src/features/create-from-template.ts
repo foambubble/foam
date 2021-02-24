@@ -10,23 +10,30 @@ import * as path from 'path';
 import { FoamFeature } from '../types';
 import { TextEncoder } from 'util';
 import { focusNote } from '../utils';
+import { existsSync } from 'fs';
 
 const templatesDir = URI.joinPath(
   workspace.workspaceFolders[0].uri,
   '.foam',
   'templates'
 );
-const templateContent = `# New template
+const templateContent = `# \${1:$TM_FILENAME_BASE}
 
-Templates are inserted the same ways snippets are.
-This means you get access to [all these good features!](https://code.visualstudio.com/docs/editor/userdefinedsnippets#_snippet-syntax).
-For example, check out some tabstops in the below list:
+Welcome to Foam templates.
 
-- $1
-- $2
-- $3
+What you see in the heading is a placeholder
+- it allows you to quickly move through positions of the new note by pressing TAB, e.g. to easily fill fields
+- a placeholder optionally has a default value, which can be some text or, as in this case, a [variables](https://code.visualstudio.com/docs/editor/userdefinedsnippets#_variables)
+  - when landing on a placeholder, the default value is already selected so you can easily replace it
+- a placeholder can define a list of values, e.g.: \${2|one,two,three|}
+- you can use variables even outside of placeholders, here is today's date: \${CURRENT_YEAR}/\${CURRENT_MONTH}/\${CURRENT_DATE}
 
-To create a note from this template, run the 'Foam: Create new note from template' command.
+For a full list of features see [the VS Code snippets page](https://code.visualstudio.com/docs/editor/userdefinedsnippets#_snippet-syntax).
+
+## To get started
+
+1. edit this file to create the shape new notes from this template will look like
+2. create a note from this template by running the 'Foam: Create new note from template' command
 `;
 
 async function getTemplates(): Promise<string[]> {
@@ -70,7 +77,11 @@ async function createNoteFromTemplate(): Promise<void> {
       defaultDir.fsPath.length - 3,
     ],
     validateInput: value =>
-      value.length ? undefined : 'Please enter a value!',
+      value.trim().length === 0
+        ? 'Please enter a value'
+        : existsSync(value)
+        ? 'File already exists'
+        : undefined,
   });
   if (filename === undefined) {
     return;

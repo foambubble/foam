@@ -25,7 +25,9 @@
     "onCommand:foam-vscode.open-random-note",
     "onCommand:foam-vscode.janitor",
     "onCommand:foam-vscode.copy-without-brackets",
-    "onCommand:foam-vscode.show-graph"
+    "onCommand:foam-vscode.show-graph",
+    "onCommand:foam-vscode.create-new-template",
+    "onCommand:foam-vscode.create-note-from-template"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -121,6 +123,10 @@
         "command": "foam-vscode.group-orphans-off",
         "title": "Foam: Don't Group Orphans",
         "icon": "$(list-flat)"
+      },
+      {
+        "command": "foam-vscode.create-new-template",
+        "title": "Foam: Create New Template"
       }
     ],
     "configuration": {

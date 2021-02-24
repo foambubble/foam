@@ -115,7 +115,11 @@ async function createNewTemplate(): Promise<void> {
       defaultTemplate.fsPath.length - 3,
     ],
     validateInput: value =>
-      value.length ? undefined : 'Please enter a value!',
+      value.trim().length === 0
+        ? 'Please enter a value'
+        : existsSync(value)
+        ? 'File already exists'
+        : undefined,
   });
   if (filename === undefined) {
     return;

@@ -99,15 +99,20 @@ const Actions = {
       const links = graphInfo.links;
 
       // compute graph delta, for smooth transitions we need to mutate objects in-place
-      const remaining = new Set(Object.keys(m.nodeInfo));
-      m.data.nodes.forEach((node, index, object) => {
-        if (remaining.has(node.id)) {
-          remaining.delete(node.id);
+      const nodeIdsToAdd = new Set(Object.keys(m.nodeInfo));
+      const nodeIndexesToRemove = new Set();
+      m.data.nodes.forEach((node, index) => {
+        if (nodeIdsToAdd.has(node.id)) {
+          nodeIdsToAdd.delete(node.id);
         } else {
-          object.splice(index, 1); // delete the element
+          nodeIndexesToRemove.add(index);
         }
       });
-      remaining.forEach(nodeId => {
+      // apply the delta
+      nodeIndexesToRemove.forEach(index => {
+        m.data.nodes.splice(index, 1); // delete the element
+      });
+      nodeIdsToAdd.forEach(nodeId => {
         m.data.nodes.push({
           id: nodeId,
         });

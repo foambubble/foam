@@ -1,5 +1,4 @@
 import { NoteLinkDefinition, Note, Attachment } from '../src/model/note';
-import { uriToSlug } from '../src/utils';
 import { URI } from '../src/common/uri';
 import { Logger } from '../src/utils/log';
 

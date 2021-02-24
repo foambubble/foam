@@ -10,8 +10,8 @@ const feature: FoamFeature = {
     foamPromise: Promise<Foam>
   ) => {
     const foam = await foamPromise;
-    const workspacesFsPaths = vscode.workspace.workspaceFolders.map(
-      dir => dir.uri.fsPath
+    const workspacesURIs = vscode.workspace.workspaceFolders.map(
+      dir => dir.uri
     );
     const provider = new FilteredResourcesProvider(
       foam.workspace,
@@ -21,7 +21,7 @@ const feature: FoamFeature = {
       (resource: Resource) => isOrphan(foam.workspace, resource),
       {
         ...getOrphansConfig(),
-        workspacesFsPaths,
+        workspacesURIs,
       }
     );
 

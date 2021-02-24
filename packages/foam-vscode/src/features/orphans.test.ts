@@ -1,8 +1,3 @@
-// import { OrphansProvider, Directory, OrphansProviderConfig } from './orphans';
-// import { OrphansConfigGroupBy } from '../settings';
-// import { FoamWorkspace } from 'foam-core';
-// import { createTestNote } from '../test/test-utils';
-
 import { FoamWorkspace } from 'foam-core';
 import { createTestNote } from '../test/test-utils';
 import { isOrphan } from './orphans';

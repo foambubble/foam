@@ -1,6 +1,6 @@
 import { FoamWorkspace, getTitle, Resource } from 'foam-core';
 import { FilteredResourcesConfigGroupBy } from '../settings';
-import { createTestNote } from '../test/test-utils';
+import { createTestNote, strToUri } from '../test/test-utils';
 import {
   Directory,
   FilteredResourcesProvider,
@@ -38,7 +38,7 @@ describe('filteredResources', () => {
   const config: FilteredResourcesProviderConfig = {
     exclude: ['path-exclude/**/*'],
     groupBy: FilteredResourcesConfigGroupBy.Folder,
-    workspacesFsPaths: [''],
+    workspacesURIs: [strToUri('')],
   };
 
   it('should return the filtered notes as a folder tree', async () => {

@@ -75,7 +75,7 @@ export class FilteredResourcesProvider
     config: FilteredResourcesProviderConfig
   ) {
     this.groupBy = config.groupBy;
-    this.exclude = this.getGlobs(config.workspacesFsPaths, config.exclude);
+    this.exclude = this.getGlobs(config.workspacesURIs, config.exclude);
     this.setContext();
     this.computeFilteredResources();
   }
@@ -149,18 +149,20 @@ export class FilteredResourcesProvider
     return micromatch.isMatch(uri.fsPath, this.exclude);
   }
 
-  private getGlobs(fsPaths: string[], globs: string[]): string[] {
+  private getGlobs(fsURI: URI[], globs: string[]): string[] {
     globs = globs.map(glob => (glob.startsWith('/') ? glob.slice(1) : glob));
 
     const exclude: string[] = [];
 
-    for (const fsPath of fsPaths) {
-      let folder = fsPath.replace(/\\/g, '/');
+    for (const fsPath of fsURI) {
+      let folder = fsPath.path.replace(/\\/g, '/');
       if (folder.substr(-1) === '/') {
         folder = folder.slice(0, -1);
       }
       exclude.push(...globs.map(g => `${folder}/${g}`));
     }
+
+    console.log(exclude);
 
     return exclude;
   }
@@ -194,7 +196,7 @@ export class FilteredResourcesProvider
 
 export interface FilteredResourcesProviderConfig
   extends FilteredResourcesConfig {
-  workspacesFsPaths: string[];
+  workspacesURIs: URI[];
   includeLinks?: boolean;
 }
 

@@ -13,8 +13,8 @@ const feature: FoamFeature = {
     foamPromise: Promise<Foam>
   ) => {
     const foam = await foamPromise;
-    const workspacesFsPaths = vscode.workspace.workspaceFolders.map(
-      dir => dir.uri.fsPath
+    const workspacesURIs = vscode.workspace.workspaceFolders.map(
+      dir => dir.uri
     );
     const provider = new FilteredResourcesProvider(
       foam.workspace,
@@ -24,7 +24,7 @@ const feature: FoamFeature = {
       isPlaceholderResource,
       {
         ...getPlaceholdersConfig(),
-        workspacesFsPaths,
+        workspacesURIs,
       }
     );
 
@@ -71,35 +71,14 @@ export function isPlaceholderResource(resource: Resource) {
   }
 
   if (isNote(resource)) {
-    // A note with no source text is blank
-    if (!resource.source.text) {
-      return true;
-    }
+    const contentLines = resource.source.text
+      .trim()
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0)
+      .filter(line => !line.startsWith('#'));
 
-    const trimmedText = resource.source.text.trim();
-    const lines = trimmedText.split('\n').map(line => line.trim());
-    const noLines = lines.length === 0;
-
-    // A note with no lines of content is blank
-    if (noLines) {
-      return true;
-    }
-
-    if (lines.length === 1) {
-      const onlyLineIsEmpty = lines[0].length === 0;
-
-      // A note where the only line is empty is blank
-      if (onlyLineIsEmpty) {
-        return true;
-      }
-
-      const onlyLineIsTitle = !!/^#.*/gm.exec(lines[0]);
-
-      // A note where the only line is a title is blank
-      if (onlyLineIsTitle) {
-        return true;
-      }
-    }
+    return contentLines.length === 0;
   }
 
   return false;

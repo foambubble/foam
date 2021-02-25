@@ -29,18 +29,9 @@ const feature: FoamFeature = {
         provider
       ),
       ...provider.commands,
-      foam.workspace.onDidAdd(() => {
-        provider.refresh();
-        foam.workspace.resolveLinks();
-      }),
-      foam.workspace.onDidUpdate(() => {
-        provider.refresh();
-        foam.workspace.resolveLinks();
-      }),
-      foam.workspace.onDidDelete(() => {
-        provider.refresh();
-        foam.workspace.resolveLinks();
-      })
+      foam.workspace.onDidAdd(provider.refresh),
+      foam.workspace.onDidUpdate(provider.refresh),
+      foam.workspace.onDidDelete(provider.refresh)
     );
   },
 };

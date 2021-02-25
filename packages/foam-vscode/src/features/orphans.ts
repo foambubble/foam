@@ -27,7 +27,10 @@ const feature: FoamFeature = {
 
     context.subscriptions.push(
       vscode.window.registerTreeDataProvider('foam-vscode.orphans', provider),
-      ...provider.commands
+      ...provider.commands,
+      foam.workspace.onDidAdd(provider.refresh),
+      foam.workspace.onDidUpdate(provider.refresh),
+      foam.workspace.onDidDelete(provider.refresh)
     );
   },
 };

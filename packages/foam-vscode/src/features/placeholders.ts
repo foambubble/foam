@@ -1,11 +1,8 @@
 import * as vscode from 'vscode';
-import { Foam, Resource, isNote, isPlaceholder, isAttachment } from 'foam-core';
-import {
-  FilteredResourcesConfigGroupBy,
-  getPlaceholdersConfig,
-} from '../settings';
+import { Foam, Resource, isNote, isPlaceholder } from 'foam-core';
+import { getPlaceholdersConfig } from '../settings';
 import { FoamFeature } from '../types';
-import { FilteredResourcesProvider } from './filtered-resources';
+import { GroupedResourcesTreeDataProvider } from '../utils/grouped-resources-tree-data-provider';
 
 const feature: FoamFeature = {
   activate: async (
@@ -16,16 +13,14 @@ const feature: FoamFeature = {
     const workspacesURIs = vscode.workspace.workspaceFolders.map(
       dir => dir.uri
     );
-    const provider = new FilteredResourcesProvider(
+    const provider = new GroupedResourcesTreeDataProvider(
       foam.workspace,
       foam.services.dataStore,
       'placeholders',
       'placeholder',
       isPlaceholderResource,
-      {
-        ...getPlaceholdersConfig(),
-        workspacesURIs,
-      }
+      getPlaceholdersConfig(),
+      workspacesURIs
     );
 
     context.subscriptions.push(
@@ -33,14 +28,7 @@ const feature: FoamFeature = {
         'foam-vscode.placeholders',
         provider
       ),
-      vscode.commands.registerCommand(
-        'foam-vscode.group-placeholders-by-folder',
-        () => provider.setGroupBy(FilteredResourcesConfigGroupBy.Folder)
-      ),
-      vscode.commands.registerCommand(
-        'foam-vscode.group-placeholders-off',
-        () => provider.setGroupBy(FilteredResourcesConfigGroupBy.Off)
-      ),
+      ...provider.commands,
       foam.workspace.onDidAdd(() => {
         provider.refresh();
         foam.workspace.resolveLinks();
@@ -60,11 +48,6 @@ const feature: FoamFeature = {
 export default feature;
 
 export function isPlaceholderResource(resource: Resource) {
-  if (isAttachment(resource)) {
-    // We don't want to include attachments in this view, so we filter them out
-    return false;
-  }
-
   if (isPlaceholder(resource)) {
     // A placeholder is, by default, blank
     return true;

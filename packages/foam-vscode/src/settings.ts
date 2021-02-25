@@ -39,27 +39,27 @@ export function getFoamLoggerLevel(): LogLevel {
 }
 
 /** Retrieve the orphans configuration */
-export function getOrphansConfig(): FilteredResourcesConfig {
+export function getOrphansConfig(): GroupedResourcesConfig {
   const orphansConfig = workspace.getConfiguration('foam.orphans');
   const exclude: string[] = orphansConfig.get('exclude');
-  const groupBy: FilteredResourcesConfigGroupBy = orphansConfig.get('groupBy');
+  const groupBy: GroupedResoucesConfigGroupBy = orphansConfig.get('groupBy');
   return { exclude, groupBy };
 }
 
 /** Retrieve the placeholders configuration */
-export function getPlaceholdersConfig(): FilteredResourcesConfig {
+export function getPlaceholdersConfig(): GroupedResourcesConfig {
   const placeholderCfg = workspace.getConfiguration('foam.placeholders');
   const exclude: string[] = placeholderCfg.get('exclude');
-  const groupBy: FilteredResourcesConfigGroupBy = placeholderCfg.get('groupBy');
+  const groupBy: GroupedResoucesConfigGroupBy = placeholderCfg.get('groupBy');
   return { exclude, groupBy };
 }
 
-export interface FilteredResourcesConfig {
+export interface GroupedResourcesConfig {
   exclude: string[];
-  groupBy: FilteredResourcesConfigGroupBy;
+  groupBy: GroupedResoucesConfigGroupBy;
 }
 
-export enum FilteredResourcesConfigGroupBy {
+export enum GroupedResoucesConfigGroupBy {
   Folder = 'folder',
   Off = 'off',
 }

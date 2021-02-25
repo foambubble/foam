@@ -1,11 +1,13 @@
 import { FoamWorkspace, getTitle, Resource } from 'foam-core';
-import { FilteredResourcesConfigGroupBy } from '../settings';
+import {
+  GroupedResoucesConfigGroupBy,
+  GroupedResourcesConfig,
+} from '../settings';
 import { createTestNote, strToUri } from '../test/test-utils';
 import {
-  Directory,
-  FilteredResourcesProvider,
-  FilteredResourcesProviderConfig,
-} from './filtered-resources';
+  DirectoryTreeItem,
+  GroupedResourcesTreeDataProvider,
+} from './grouped-resources-tree-data-provider';
 
 describe('filteredResources', () => {
   const isMatch = (resource: Resource) => {
@@ -35,20 +37,20 @@ describe('filteredResources', () => {
   const dataStore = { read: () => '' } as any;
 
   // Mock config
-  const config: FilteredResourcesProviderConfig = {
+  const config: GroupedResourcesConfig = {
     exclude: ['path-exclude/**/*'],
-    groupBy: FilteredResourcesConfigGroupBy.Folder,
-    workspacesURIs: [strToUri('')],
+    groupBy: GroupedResoucesConfigGroupBy.Folder,
   };
 
   it('should return the filtered notes as a folder tree', async () => {
-    const provider = new FilteredResourcesProvider(
+    const provider = new GroupedResourcesTreeDataProvider(
       workspace,
       dataStore,
       'length3',
       'note',
       isMatch,
-      config
+      config,
+      [strToUri('')]
     );
     const result = await provider.getChildren();
     expect(result).toMatchObject([
@@ -68,15 +70,20 @@ describe('filteredResources', () => {
   });
 
   it('should return the filtered notes in a directory', async () => {
-    const provider = new FilteredResourcesProvider(
+    const provider = new GroupedResourcesTreeDataProvider(
       workspace,
       dataStore,
       'length3',
       'note',
       isMatch,
-      config
+      config,
+      [strToUri('')]
     );
-    const directory = new Directory('/path', [matchingNote1 as any], 'note');
+    const directory = new DirectoryTreeItem(
+      '/path',
+      [matchingNote1 as any],
+      'note'
+    );
     const result = await provider.getChildren(directory);
     expect(result).toMatchObject([
       {
@@ -91,15 +98,16 @@ describe('filteredResources', () => {
   it('should return the flattened filtered notes', async () => {
     const mockConfig = {
       ...config,
-      groupBy: FilteredResourcesConfigGroupBy.Off,
+      groupBy: GroupedResoucesConfigGroupBy.Off,
     };
-    const provider = new FilteredResourcesProvider(
+    const provider = new GroupedResourcesTreeDataProvider(
       workspace,
       dataStore,
       'length3',
       'note',
       isMatch,
-      mockConfig
+      mockConfig,
+      [strToUri('')]
     );
     const result = await provider.getChildren();
     expect(result).toMatchObject([
@@ -120,13 +128,14 @@ describe('filteredResources', () => {
 
   it('should return the filtered notes without exclusion', async () => {
     const mockConfig = { ...config, exclude: [] };
-    const provider = new FilteredResourcesProvider(
+    const provider = new GroupedResourcesTreeDataProvider(
       workspace,
       dataStore,
       'length3',
       'note',
       isMatch,
-      mockConfig
+      mockConfig,
+      [strToUri('')]
     );
     const result = await provider.getChildren();
     expect(result).toMatchObject([
@@ -143,13 +152,14 @@ describe('filteredResources', () => {
 
   it('should dynamically set the description', async () => {
     const description = 'test description';
-    const provider = new FilteredResourcesProvider(
+    const provider = new GroupedResourcesTreeDataProvider(
       workspace,
       dataStore,
       'length3',
       description,
       isMatch,
-      config
+      config,
+      [strToUri('')]
     );
     const result = await provider.getChildren();
     expect(result).toMatchObject([

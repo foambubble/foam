@@ -4,6 +4,12 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.10.2] - 2021-02-24
+
+Fixes and Improvements:
+
+- Templates: improved the flow of creating a new note from a template
+
 ## [0.10.1] - 2021-02-23
 
 Fixes and Improvements:

@@ -9,7 +9,7 @@ import {
   GroupedResourcesTreeDataProvider,
 } from './grouped-resources-tree-data-provider';
 
-describe('filteredResources', () => {
+describe('GroupedResourcesTreeDataProvider', () => {
   const isMatch = (resource: Resource) => {
     return getTitle(resource).length === 3;
   };
@@ -42,7 +42,7 @@ describe('filteredResources', () => {
     groupBy: GroupedResoucesConfigGroupBy.Folder,
   };
 
-  it('should return the filtered notes as a folder tree', async () => {
+  it('should return the grouped resources as a folder tree', async () => {
     const provider = new GroupedResourcesTreeDataProvider(
       workspace,
       dataStore,
@@ -69,7 +69,7 @@ describe('filteredResources', () => {
     ]);
   });
 
-  it('should return the filtered notes in a directory', async () => {
+  it('should return the grouped resources in a directory', async () => {
     const provider = new GroupedResourcesTreeDataProvider(
       workspace,
       dataStore,
@@ -95,7 +95,7 @@ describe('filteredResources', () => {
     ]);
   });
 
-  it('should return the flattened filtered notes', async () => {
+  it('should return the flattened resources', async () => {
     const mockConfig = {
       ...config,
       groupBy: GroupedResoucesConfigGroupBy.Off,
@@ -126,7 +126,7 @@ describe('filteredResources', () => {
     ]);
   });
 
-  it('should return the filtered notes without exclusion', async () => {
+  it('should return the grouped resources without exclusion', async () => {
     const mockConfig = { ...config, exclude: [] };
     const provider = new GroupedResourcesTreeDataProvider(
       workspace,

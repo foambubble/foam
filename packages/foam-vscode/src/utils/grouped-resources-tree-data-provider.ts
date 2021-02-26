@@ -96,7 +96,7 @@ export class GroupedResourcesTreeDataProvider
     this.groupBy = config.groupBy;
     this.exclude = this.getGlobs(workspaceUris, config.exclude);
     this.setContext();
-    this.computeFilteredResources();
+    this.computeResources();
   }
 
   public get commands() {
@@ -127,7 +127,7 @@ export class GroupedResourcesTreeDataProvider
   }
 
   refresh(): void {
-    this.computeFilteredResources();
+    this.computeResources();
     this._onDidChangeTreeData.fire();
   }
 
@@ -139,7 +139,7 @@ export class GroupedResourcesTreeDataProvider
     directory?: DirectoryTreeItem
   ): Thenable<GroupedResourceTreeItem[]> {
     if (!directory && this.groupBy === GroupedResoucesConfigGroupBy.Folder) {
-      const directories = Object.entries(this.getFilteredResourcesByDirectory())
+      const directories = Object.entries(this.getGroupedResourcesByDirectory())
         .sort(([a], [b]) => a.localeCompare(b))
         .map(
           ([dir, resources]) =>
@@ -171,7 +171,7 @@ export class GroupedResourcesTreeDataProvider
     return item;
   }
 
-  private computeFilteredResources(): void {
+  private computeResources(): void {
     this.resources = this.workspace
       .list()
       .filter(this.filterPredicate)
@@ -199,7 +199,7 @@ export class GroupedResourcesTreeDataProvider
     return exclude;
   }
 
-  private getFilteredResourcesByDirectory(): ResourceByDirectory {
+  private getGroupedResourcesByDirectory(): ResourceByDirectory {
     const resourcesByDirectory: ResourceByDirectory = {};
     for (const resource of this.resources) {
       const p = resource.uri.path.replace(this.root, '');

@@ -31,7 +31,7 @@ In the meantime, you can use [VS Code Snippets](https://code.visualstudio.com/do
 
 ## Roam-style Automatic Daily Notes
 
-Foam may provides an option for automatically opening your Daily Note when you open your Foam workspace. Specifying the following configuration in your `.vscode/settings.json`:
+Foam provides an option for automatically opening your Daily Note when you open your Foam workspace. You can enable it by specifying the following configuration in your `.vscode/settings.json`:
 
 ```json
 {

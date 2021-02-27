@@ -52,6 +52,19 @@ describe('Notes workspace', () => {
         .sort()
     ).toEqual(['/file.pdf', '/page-a.md', 'place-holder']);
   });
+
+  it('Fails if getting non-existing note', () => {
+    const noteA = createTestNote({
+      uri: '/path/to/page-a.md',
+    });
+    const ws = new FoamWorkspace();
+    ws.set(noteA);
+
+    const uri = URI.file('/path/to/another/page-b.md');
+    expect(ws.exists(uri)).toBeFalsy();
+    expect(ws.find(uri)).toBeNull();
+    expect(() => ws.get(uri)).toThrow();
+  });
 });
 
 describe('Wikilinks', () => {
@@ -291,7 +304,7 @@ describe('markdown direct links', () => {
 });
 
 describe('Placeholders', () => {
-  it('Treat direct links to non-existing files as placeholders', () => {
+  it('Treats direct links to non-existing files as placeholders', () => {
     const ws = new FoamWorkspace();
     const noteA = createTestNote({
       uri: '/somewhere/from/page-a.md',
@@ -348,19 +361,6 @@ describe('Placeholders', () => {
       source: noteA.uri,
       target: placeholderUri('/path/to/page-c.md'),
     });
-  });
-
-  it('Fails if getting non-existing note', () => {
-    const noteA = createTestNote({
-      uri: '/path/to/page-a.md',
-    });
-    const ws = new FoamWorkspace();
-    ws.set(noteA);
-
-    const uri = URI.file('/path/to/another/page-b.md');
-    expect(ws.exists(uri)).toBeFalsy();
-    expect(ws.find(uri)).toBeNull();
-    expect(() => ws.get(uri)).toThrow();
   });
 });
 

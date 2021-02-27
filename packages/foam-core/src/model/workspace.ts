@@ -129,14 +129,17 @@ export class FoamWorkspace implements IDisposable {
     note: Note,
     link: NoteLink
   ): URI {
-    let targetUri: URI | null = null;
+    let targetUri: URI | undefined;
     switch (link.type) {
       case 'wikilink':
         const definitionUri = note.definitions.find(
           def => def.label === link.slug
         )?.url;
         if (isSome(definitionUri)) {
-          targetUri = parseUri(note.uri, definitionUri!);
+          const definedUri = parseUri(note.uri, definitionUri);
+          targetUri =
+            FoamWorkspace.find(workspace, definedUri, note.uri)?.uri ??
+            placeholderUri(definedUri.path);
         } else {
           targetUri =
             FoamWorkspace.find(workspace, link.slug, note.uri)?.uri ??
@@ -147,7 +150,7 @@ export class FoamWorkspace implements IDisposable {
       case 'link':
         targetUri =
           FoamWorkspace.find(workspace, link.target, note.uri)?.uri ??
-          placeholderUri(link.target);
+          placeholderUri(parseUri(note.uri, link.target).path);
         break;
     }
 

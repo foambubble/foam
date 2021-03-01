@@ -4,6 +4,13 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.10.3] - 2021-03-01
+
+Fixes and Improvements:
+
+- Model: fixed wikilink resolution when using link definitions
+- Templates: improved validation during template creation
+
 ## [0.10.2] - 2021-02-24
 
 Fixes and Improvements:

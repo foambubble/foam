@@ -1,7 +1,7 @@
 {
   "name": "foam-core",
   "repository": "https://github.com/foambubble/foam",
-  "version": "0.10.1",
+  "version": "0.10.3",
   "license": "MIT",
   "files": [
     "dist"

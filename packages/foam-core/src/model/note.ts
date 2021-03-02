@@ -74,3 +74,11 @@ export const getTitle = (resource: Resource): string => {
 export const isNote = (resource: Resource): resource is Note => {
   return resource.type === 'note';
 };
+
+export const isPlaceholder = (resource: Resource): resource is Placeholder => {
+  return resource.type === 'placeholder';
+};
+
+export const isAttachment = (resource: Resource): resource is Attachment => {
+  return resource.type === 'attachment';
+};

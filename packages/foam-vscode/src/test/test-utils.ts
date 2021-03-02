@@ -1,7 +1,13 @@
 // TODO: this file has some utility functions also present in foam-core testing
 // they should be consolidated
 
-import { URI, Attachment, NoteLinkDefinition, Note } from 'foam-core';
+import {
+  URI,
+  Attachment,
+  NoteLinkDefinition,
+  Note,
+  Placeholder,
+} from 'foam-core';
 
 const position = {
   start: { line: 1, column: 1 },
@@ -18,6 +24,13 @@ const eol = '\n';
  * way we generate URIs (and therefore IDs) across the tests
  */
 export const strToUri = URI.file;
+
+export const createPlaceholder = (params: { uri: string }): Placeholder => {
+  return {
+    uri: strToUri(params.uri),
+    type: 'placeholder',
+  };
+};
 
 export const createAttachment = (params: { uri: string }): Attachment => {
   return {

@@ -189,6 +189,7 @@ If that sounds like something you're interested in, I'd love to have you along o
   </tr>
   <tr>
     <td align="center"><a href="http://www.nitwit.se"><img src="https://avatars.githubusercontent.com/u/1382124?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Mark Dixon</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=nitwit-se" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/joeltjames"><img src="https://avatars.githubusercontent.com/u/3732400?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Joel James</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=joeltjames" title="Code">💻</a></td>
   </tr>
 </table>
 

@@ -598,6 +598,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "joeltjames",
+      "name": "Joel James",
+      "avatar_url": "https://avatars.githubusercontent.com/u/3732400?v=4",
+      "profile": "https://github.com/joeltjames",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,

@@ -161,7 +161,7 @@ export class GroupedResourcesTreeDataProvider
     return Promise.resolve(resources);
   }
 
-  async resolveTreeItem(
+  resolveTreeItem(
     item: GroupedResourceTreeItem
   ): Promise<GroupedResourceTreeItem> {
     return item.resolveTreeItem();
@@ -293,7 +293,7 @@ export class DirectoryTreeItem extends vscode.TreeItem {
   iconPath = new vscode.ThemeIcon('folder');
   contextValue = 'directory';
 
-  async resolveTreeItem(): Promise<GroupedResourceTreeItem> {
-    return this;
+  resolveTreeItem(): Promise<GroupedResourceTreeItem> {
+    return Promise.resolve(this);
   }
 }

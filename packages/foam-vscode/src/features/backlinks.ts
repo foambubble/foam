@@ -22,10 +22,6 @@ const feature: FoamFeature = {
   ) => {
     const foam = await foamPromise;
 
-    const workspacesURIs = vscode.workspace.workspaceFolders.map(
-      dir => dir.uri
-    );
-
     const provider = new BacklinksTreeDataProvider(
       foam.workspace,
       foam.services.dataStore
@@ -111,7 +107,6 @@ export class BacklinksTreeDataProvider
       b => b.source.path
     );
 
-    // TODO sort links by line
     const resources = Object.keys(backlinksByResourcePath)
       .map(res => backlinksByResourcePath[res][0].source)
       .map(uri => this.workspace.get(uri))
@@ -132,9 +127,7 @@ export class BacklinksTreeDataProvider
     return Promise.resolve(resources);
   }
 
-  async resolveTreeItem(
-    item: BacklinkPanelTreeItem
-  ): Promise<BacklinkPanelTreeItem> {
+  resolveTreeItem(item: BacklinkPanelTreeItem): Promise<BacklinkPanelTreeItem> {
     return item.resolveTreeItem();
   }
 }
@@ -166,8 +159,8 @@ export class BacklinkTreeItem extends vscode.TreeItem {
     };
   }
 
-  async resolveTreeItem(): Promise<BacklinkTreeItem> {
-    return this;
+  resolveTreeItem(): Promise<BacklinkTreeItem> {
+    return Promise.resolve(this);
   }
 }
 

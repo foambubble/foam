@@ -93,6 +93,28 @@ describe('Workspace links', () => {
       },
     ]);
   });
+  it('Supports removing a single link amongst several between two resources', () => {
+    const noteA = createTestNote({
+      uri: '/path/to/note-a.md',
+    });
+    const noteB = createTestNote({
+      uri: '/note-b.md',
+      links: [{ to: noteA.uri.path }, { to: noteA.uri.path }],
+    });
+    const ws = new FoamWorkspace();
+    ws.set(noteA)
+      .set(noteB)
+      .resolveLinks(true);
+
+    expect(ws.getBacklinks(noteA.uri).length).toEqual(2);
+
+    const noteBBis = createTestNote({
+      uri: '/note-b.md',
+      links: [{ to: noteA.uri.path }],
+    });
+    ws.set(noteBBis);
+    expect(ws.getBacklinks(noteA.uri).length).toEqual(1);
+  });
 });
 
 describe('Wikilinks', () => {

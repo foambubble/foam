@@ -1,5 +1,5 @@
-import { commands, workspace, window } from 'vscode';
-import { URI, FoamWorkspace, IDataStore, Resource, Note } from 'foam-core';
+import { workspace, window } from 'vscode';
+import { URI, FoamWorkspace, IDataStore } from 'foam-core';
 import {
   cleanWorkspace,
   closeEditors,
@@ -122,23 +122,23 @@ describe('Backlinks panel', () => {
     expect(notes.length).toEqual(2);
 
     const noteD = createTestNote({
-      uri: '/note-d.md',
+      root: rootUri,
+      uri: './note-d.md',
     });
     ws.set(noteD);
     notes = (await provider.getChildren()) as ResourceTreeItem[];
     expect(notes.length).toEqual(2);
 
     const noteDBis = createTestNote({
-      uri: '/note-d.md',
+      root: rootUri,
+      uri: './note-d.md',
       links: [{ slug: 'note-a' }],
     });
     ws.set(noteDBis);
     notes = (await provider.getChildren()) as ResourceTreeItem[];
     expect(notes.length).toEqual(3);
-    expect(notes.map(n => n.resource.uri)).toEqual([
-      noteB.uri,
-      noteC.uri,
-      noteD.uri,
-    ]);
+    expect(notes.map(n => n.resource.uri.path)).toEqual(
+      [noteB.uri, noteC.uri, noteD.uri].map(uri => uri.path)
+    );
   });
 });

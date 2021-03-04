@@ -36,9 +36,9 @@
       "explorer": [
         {
           "id": "foam-vscode.backlinks",
-          "name": "Foam Backlinks",
+          "name": "Backlinks",
           "icon": "media/dep.svg",
-          "contextualTitle": "Foam Backlinks"
+          "contextualTitle": "Backlinks"
         },
         {
           "id": "foam-vscode.tags-explorer",

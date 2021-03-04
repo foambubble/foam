@@ -119,8 +119,10 @@ this is a [link to intro](#introduction)
       .set(noteE)
       .resolveLinks();
 
-    expect(workspace.getBacklinks(noteB.uri)).toEqual([noteA.uri]);
-    expect(workspace.getLinks(noteA.uri)).toEqual([
+    expect(workspace.getBacklinks(noteB.uri).map(l => l.source)).toEqual([
+      noteA.uri,
+    ]);
+    expect(workspace.getLinks(noteA.uri).map(l => l.target)).toEqual([
       noteB.uri,
       noteC.uri,
       noteD.uri,

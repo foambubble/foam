@@ -2,7 +2,7 @@ import { diff } from 'fast-array-diff';
 import { isEqual } from 'lodash';
 import * as path from 'path';
 import { URI } from '../common/uri';
-import { Resource, NoteLink, Note } from '../model/note';
+import { Resource, NoteLink, Note, Point, Position } from '../model/note';
 import {
   computeRelativeURI,
   isSome,
@@ -10,6 +10,7 @@ import {
   parseUri,
   placeholderUri,
   isPlaceholder,
+  isSameUri,
 } from '../utils';
 import { Emitter } from '../common/event';
 import { IDisposable } from '../index';
@@ -17,6 +18,7 @@ import { IDisposable } from '../index';
 export type Connection = {
   source: URI;
   target: URI;
+  link: NoteLink;
 };
 
 export function getReferenceType(
@@ -221,12 +223,12 @@ export class FoamWorkspace implements IDisposable {
     ];
   }
 
-  public static getLinks(workspace: FoamWorkspace, uri: URI): URI[] {
-    return workspace.links[uri.path]?.map(c => c.target) ?? [];
+  public static getLinks(workspace: FoamWorkspace, uri: URI): Connection[] {
+    return workspace.links[uri.path] ?? [];
   }
 
-  public static getBacklinks(workspace: FoamWorkspace, uri: URI): URI[] {
-    return workspace.backlinks[uri.path]?.map(c => c.source) ?? [];
+  public static getBacklinks(workspace: FoamWorkspace, uri: URI): Connection[] {
+    return workspace.backlinks[uri.path] ?? [];
   }
 
   public static set(
@@ -350,7 +352,7 @@ export class FoamWorkspace implements IDisposable {
       // prettier-ignore
       resource.links.forEach(link => {
         const targetUri = FoamWorkspace.resolveLink(workspace, resource, link);
-        workspace = FoamWorkspace.connect(workspace, resource.uri, targetUri);
+        workspace = FoamWorkspace.connect(workspace, resource.uri, targetUri, link);
       });
     }
     return workspace;
@@ -374,11 +376,11 @@ export class FoamWorkspace implements IDisposable {
       const patch = diff(oldResource.links, newResource.links, isEqual);
       workspace = patch.removed.reduce((ws, link) => {
         const target = ws.resolveLink(oldResource, link);
-        return FoamWorkspace.disconnect(ws, oldResource.uri, target);
+        return FoamWorkspace.disconnect(ws, oldResource.uri, target, link);
       }, workspace);
       workspace = patch.added.reduce((ws, link) => {
         const target = ws.resolveLink(newResource, link);
-        return FoamWorkspace.connect(ws, newResource.uri, target);
+        return FoamWorkspace.connect(ws, newResource.uri, target, link);
       }, workspace);
     }
     return workspace;
@@ -414,7 +416,8 @@ export class FoamWorkspace implements IDisposable {
     const resourcesPointedByDeletedNote = workspace.links[uri.path] ?? [];
     delete workspace.links[uri.path];
     workspace = resourcesPointedByDeletedNote.reduce(
-      (ws, link) => FoamWorkspace.disconnect(ws, uri, link.target),
+      (ws, connection) =>
+        FoamWorkspace.disconnect(ws, uri, connection.target, connection.link),
       workspace
     );
 
@@ -428,11 +431,13 @@ export class FoamWorkspace implements IDisposable {
     return workspace;
   }
 
-  private static connect(workspace: FoamWorkspace, source: URI, target: URI) {
-    const connection = {
-      source: source,
-      target: target,
-    };
+  private static connect(
+    workspace: FoamWorkspace,
+    source: URI,
+    target: URI,
+    link: NoteLink
+  ) {
+    const connection = { source, target, link };
 
     workspace.links[source.path] = workspace.links[source.path] ?? [];
     workspace.links[source.path].push(connection);
@@ -442,19 +447,36 @@ export class FoamWorkspace implements IDisposable {
     return workspace;
   }
 
+  /**
+   * Removes a connection, or all connections, between the source and
+   * target resources
+   *
+   * @param workspace the Foam workspace
+   * @param source the source resource
+   * @param target the target resource
+   * @param link the link reference, or `true` to remove all links
+   * @returns the updated Foam workspace
+   */
   private static disconnect(
     workspace: FoamWorkspace,
     source: URI,
-    target: URI
+    target: URI,
+    link: NoteLink | true
   ) {
+    const connectionsToKeep =
+      link === true
+        ? (c: Connection) =>
+            !isSameUri(source, c.source) || !isSameUri(target, c.target)
+        : (c: Connection) => !isSameConnection({ source, target, link }, c);
+
     workspace.links[source.path] = workspace.links[source.path]?.filter(
-      c => c.source.path !== source.path || c.target.path !== target.path
+      connectionsToKeep
     );
     if (workspace.links[source.path].length === 0) {
       delete workspace.links[source.path];
     }
     workspace.backlinks[target.path] = workspace.backlinks[target.path]?.filter(
-      c => c.source.path !== source.path || c.target.path !== target.path
+      connectionsToKeep
     );
     if (workspace.backlinks[target.path].length === 0) {
       delete workspace.backlinks[target.path];
@@ -465,3 +487,19 @@ export class FoamWorkspace implements IDisposable {
     return workspace;
   }
 }
+
+// TODO move these utility fns to appropriate places
+
+const isSameConnection = (a: Connection, b: Connection) =>
+  isSameUri(a.source, b.source) &&
+  isSameUri(a.target, b.target) &&
+  isSameLink(a.link, b.link);
+
+const isSameLink = (a: NoteLink, b: NoteLink) =>
+  a.type === b.type && isSamePosition(a.position, b.position);
+
+const isSamePosition = (a: Position, b: Position) =>
+  isSamePoint(a.start, b.start) && isSamePoint(a.end, b.end);
+
+const isSamePoint = (a: Point, b: Point) =>
+  a.column === b.column && a.line === b.line;

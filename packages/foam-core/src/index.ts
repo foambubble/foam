@@ -22,6 +22,7 @@ export { ILogger };
 export { LogLevel, LogLevelThreshold, Logger, BaseLogger } from './utils/log';
 export { Event, Emitter } from './common/event';
 export { FoamConfig };
+export { isSameUri, parseUri } from './utils/uri';
 
 export { IDisposable, isDisposable };
 

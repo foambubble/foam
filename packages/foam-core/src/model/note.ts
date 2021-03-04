@@ -21,6 +21,7 @@ export interface DirectLink {
   type: 'link';
   label: string;
   target: string;
+  position: Position;
 }
 
 export type NoteLink = WikiLink | DirectLink;

@@ -234,7 +234,7 @@ export class ResourceTreeItem extends vscode.TreeItem {
   ) {
     super(getTitle(resource), collapsibleState);
     this.contextValue = 'resource';
-    this.description = vscode.workspace.asRelativePath(resource.uri);
+    this.description = vscode.workspace.asRelativePath(resource.uri.path);
     this.tooltip = undefined;
     if (isPlaceholder(resource)) {
       this.command = {

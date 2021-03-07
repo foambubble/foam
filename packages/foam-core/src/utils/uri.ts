@@ -68,3 +68,10 @@ export const placeholderUri = (key: string): URI => {
 export const isPlaceholder = (uri: URI): boolean => {
   return uri.scheme === 'placeholder';
 };
+
+export const isSameUri = (a: URI, b: URI) =>
+  a.authority === b.authority &&
+  a.scheme === b.scheme &&
+  a.path === b.path && // Note we don't use fsPath for sameness
+  a.fragment === b.fragment &&
+  a.query === b.query;

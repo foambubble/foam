@@ -150,25 +150,21 @@ export class GroupedResourcesTreeDataProvider
 
     if (directory) {
       const resources = directory.resources.map(
-        o => new ResourceTreeItem(o, this.resourceName)
+        o => new ResourceTreeItem(o, this.dataStore)
       );
       return Promise.resolve(resources);
     }
 
     const resources = this.resources.map(
-      o => new ResourceTreeItem(o, this.resourceName)
+      o => new ResourceTreeItem(o, this.dataStore)
     );
     return Promise.resolve(resources);
   }
 
-  async resolveTreeItem(
+  resolveTreeItem(
     item: GroupedResourceTreeItem
   ): Promise<GroupedResourceTreeItem> {
-    if (item instanceof ResourceTreeItem) {
-      const content = await this.dataStore.read(item.resource.uri);
-      item.tooltip = getNoteTooltip(content);
-    }
-    return item;
+    return item.resolveTreeItem();
   }
 
   private computeResources(): void {
@@ -230,10 +226,18 @@ type ResourceByDirectory = { [key: string]: Resource[] };
 
 type GroupedResourceTreeItem = ResourceTreeItem | DirectoryTreeItem;
 
-class ResourceTreeItem extends vscode.TreeItem {
-  constructor(public readonly resource: Resource, itemLabel: string) {
-    super(getTitle(resource), vscode.TreeItemCollapsibleState.None);
-    this.description = resource.uri.path;
+export class ResourceTreeItem extends vscode.TreeItem {
+  constructor(
+    public readonly resource: Resource,
+    private readonly dataStore: IDataStore,
+    collapsibleState = vscode.TreeItemCollapsibleState.None
+  ) {
+    super(getTitle(resource), collapsibleState);
+    this.contextValue = 'resource';
+    this.description = resource.uri.path.replace(
+      vscode.workspace.getWorkspaceFolder(resource.uri)?.uri.path,
+      ''
+    );
     this.tooltip = undefined;
     if (isPlaceholder(resource)) {
       this.command = {
@@ -248,7 +252,6 @@ class ResourceTreeItem extends vscode.TreeItem {
         arguments: [resource.uri],
       };
     }
-    this.contextValue = itemLabel;
 
     let iconStr: string;
     switch (this.resource.type) {
@@ -264,6 +267,16 @@ class ResourceTreeItem extends vscode.TreeItem {
         break;
     }
     this.iconPath = new vscode.ThemeIcon(iconStr);
+  }
+
+  async resolveTreeItem(): Promise<ResourceTreeItem> {
+    if (this instanceof ResourceTreeItem) {
+      const content = await this.dataStore?.read(this.resource.uri);
+      this.tooltip = content
+        ? getNoteTooltip(content)
+        : getTitle(this.resource);
+    }
+    return this;
   }
 }
 
@@ -282,4 +295,8 @@ export class DirectoryTreeItem extends vscode.TreeItem {
 
   iconPath = new vscode.ThemeIcon('folder');
   contextValue = 'directory';
+
+  resolveTreeItem(): Promise<GroupedResourceTreeItem> {
+    return Promise.resolve(this);
+  }
 }

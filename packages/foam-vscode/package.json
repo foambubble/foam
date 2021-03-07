@@ -35,6 +35,12 @@
     "views": {
       "explorer": [
         {
+          "id": "foam-vscode.backlinks",
+          "name": "Backlinks",
+          "icon": "media/dep.svg",
+          "contextualTitle": "Backlinks"
+        },
+        {
           "id": "foam-vscode.tags-explorer",
           "name": "Tag Explorer",
           "icon": "media/dep.svg",
@@ -58,6 +64,10 @@
       {
         "view": "foam-vscode.tags-explorer",
         "contents": "No tags found. Notes that contain tags will show up here. You may add tags to a note with a hashtag (#tag) or by adding a tag list to the front matter (tags: tag1, tag2)."
+      },
+      {
+        "view": "foam-vscode.backlinks",
+        "contents": "No backlinks found for selected resource."
       },
       {
         "view": "foam-vscode.orphans",

@@ -51,11 +51,11 @@ export class BacklinksTreeDataProvider
   // prettier-ignore
   private _onDidChangeTreeDataEmitter = new vscode.EventEmitter<BacklinkPanelTreeItem | undefined | void>();
   readonly onDidChangeTreeData = this._onDidChangeTreeDataEmitter.event;
-  private readonly getNoteContent: (uri: URI) => Promise<string>;
 
-  constructor(private workspace: FoamWorkspace, private dataStore: IDataStore) {
-    this.getNoteContent = (uri: URI) => dataStore.read(uri);
-  }
+  constructor(
+    private workspace: FoamWorkspace,
+    private dataStore: IDataStore
+  ) {}
 
   refresh(): void {
     this._onDidChangeTreeDataEmitter.fire();

@@ -607,6 +607,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "ryo33",
+      "name": "Hashiguchi Ryo",
+      "avatar_url": "https://avatars.githubusercontent.com/u/8780513?v=4",
+      "profile": "https://www.ryo33.com",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,

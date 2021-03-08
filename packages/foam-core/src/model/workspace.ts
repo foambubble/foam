@@ -90,7 +90,7 @@ export class FoamWorkspace implements IDisposable {
   get(uri: URI) {
     return FoamWorkspace.get(this, uri);
   }
-  find(uri: URI) {
+  find(uri: URI | string) {
     return FoamWorkspace.find(this, uri);
   }
   set(resource: Resource) {
@@ -312,10 +312,7 @@ export class FoamWorkspace implements IDisposable {
 
       case 'relative-path':
         if (isNone(reference)) {
-          throw new Error(
-            'Cannot find note defined by relative path without reference note: ' +
-              resourceId
-          );
+          return null;
         }
         const relativePath = resourceId as string;
         const targetUri = computeRelativeURI(reference, relativePath);

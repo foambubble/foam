@@ -191,11 +191,14 @@ function initDataviz(channel) {
       const size = sizeScale(info.neighbors.length);
       const { fill, border } = getNodeColor(node.id, model);
       const fontSize = model.style.fontSize / globalScale;
+      const nodeState = getNodeState(node.id, model);
       const textColor = fill.copy({
         opacity:
-          getNodeState(node.id, model) === 'highlighted'
+          nodeState === 'regular'
+            ? labelAlpha(globalScale)
+            : nodeState === 'highlighted'
             ? 1
-            : labelAlpha(globalScale),
+            : Math.min(labelAlpha(globalScale), fill.opacity),
       });
       const label = info.title;
 

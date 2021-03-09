@@ -22,5 +22,10 @@
   "prettier.requireConfig": true,
   "editor.formatOnSave": true,
   "editor.tabSize": 2,
-  "jest.debugCodeLens.showWhenTestStateIn": ["fail", "unknown", "pass"]
+  "jest.debugCodeLens.showWhenTestStateIn": [
+    "fail",
+    "unknown",
+    "pass"
+  ],
+  "gitdoc.enabled": false
 }

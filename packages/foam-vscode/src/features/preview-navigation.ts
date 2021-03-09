@@ -28,9 +28,6 @@ const feature: FoamFeature = {
                   return `<a class='foam-attachment-link' title='attachment' href='${resource.uri.fsPath}'>${wikilink}</a>`;
                 case 'placeholder':
                   return getPlaceholderLink(wikilink);
-                default:
-                  const _: never = resource;
-                  return getPlaceholderLink(wikilink);
               }
             } catch (e) {
               Logger.error(

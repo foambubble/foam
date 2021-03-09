@@ -4,6 +4,17 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.11.0] - 2021-03-09
+
+Features:
+
+- Placeholders Panel: quickly see which placeholders and empty notes are in the workspace (#493 - thanks @joeltjames)
+- Backlinks panel: now a Foam model powered backlinks panel (#514)
+
+Fixes and Improvements:
+
+- Dataviz: fixed graph node highlighting (#516, #517)
+
 ## [0.10.3] - 2021-03-01
 
 Fixes and Improvements:

@@ -1,8 +1,8 @@
 .foam-placeholder-link {
   color: red;
+  cursor: default;
 }
 
 .foam-note-link,
 .foam-attachment-link {
-  color: blue;
 }

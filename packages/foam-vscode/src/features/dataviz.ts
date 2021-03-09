@@ -156,41 +156,26 @@ async function getWebviewContent(
   context: vscode.ExtensionContext,
   panel: vscode.WebviewPanel
 ) {
-  const webviewPath = vscode.Uri.file(
-    path.join(context.extensionPath, 'static', 'dataviz.html')
-  );
-  const file = await vscode.workspace.fs.readFile(webviewPath);
-  const text = new TextDecoder('utf-8').decode(file);
+  const datavizPath = [context.extensionPath, 'static', 'dataviz'];
 
-  const webviewUri = (fileName: string) =>
-    panel.webview
-      .asWebviewUri(
-        vscode.Uri.file(path.join(context.extensionPath, 'static', fileName))
-      )
-      .toString();
-
-  const graphDirectory = path.join('graphs', 'default');
-  const textWithVariables = text
-    .replace(
-      '${graphPath}', // eslint-disable-line
-      '{{' + path.join(graphDirectory, 'graph.js') + '}}'
-    )
-    .replace(
-      '${graphStylesPath}', // eslint-disable-line
-      '{{' + path.join(graphDirectory, 'graph.css') + '}}'
+  const getWebviewUri = (fileName: string) =>
+    panel.webview.asWebviewUri(
+      vscode.Uri.file(path.join(...datavizPath, fileName))
     );
 
-  // Basic templating. Will replace the script paths with the
-  // appropriate webview URI.
-  const filled = textWithVariables.replace(
-    /<script data-replace src="([^"]+")/g,
-    match => {
+  const indexHtml = await vscode.workspace.fs.readFile(
+    vscode.Uri.file(path.join(...datavizPath, 'index.html'))
+  );
+
+  // Replace the script paths with the appropriate webview URI.
+  const filled = new TextDecoder('utf-8')
+    .decode(indexHtml)
+    .replace(/<script data-replace src="([^"]+")/g, match => {
       const fileName = match
         .slice('<script data-replace src="'.length, -1)
         .trim();
-      return '<script src="' + webviewUri(fileName) + '"';
-    }
-  );
+      return '<script src="' + getWebviewUri(fileName).toString() + '"';
+    });
 
   return filled;
 }

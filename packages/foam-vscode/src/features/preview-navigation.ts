@@ -19,19 +19,25 @@ const feature: FoamFeature = {
             try {
               const resource = foam.workspace.find(wikilink);
               if (resource == null) {
-                return getInvalidLink(wikilink);
+                return getPlaceholderLink(wikilink);
               }
               switch (resource.type) {
                 case 'note':
-                  return `<a title='${resource.title}' href='${resource.uri.fsPath}'>${wikilink}</a>`;
+                  return `<a class='foam-note-link' title='${resource.title}' href='${resource.uri.fsPath}'>${wikilink}</a>`;
                 case 'attachment':
-                  return `<a title='attachment' href='${resource.uri.fsPath}'>${wikilink}</a>`;
+                  return `<a class='foam-attachment-link' title='attachment' href='${resource.uri.fsPath}'>${wikilink}</a>`;
                 case 'placeholder':
-                  return getInvalidLink(wikilink);
+                  return getPlaceholderLink(wikilink);
+                default:
+                  const _: never = resource;
+                  return getPlaceholderLink(wikilink);
               }
             } catch (e) {
-              Logger.error('Error while creating links in Preview panel', e);
-              return getInvalidLink(wikilink);
+              Logger.error(
+                `Error while creating link for [[${wikilink}]] in Preview panel`,
+                e
+              );
+              return getPlaceholderLink(wikilink);
             }
           },
         });
@@ -40,7 +46,7 @@ const feature: FoamFeature = {
   },
 };
 
-const getInvalidLink = (content: string) =>
-  `<span style='color:red;'>${content}</span>`;
+const getPlaceholderLink = (content: string) =>
+  `<span class='foam-placeholder-link'>${content}</span>`;
 
 export default feature;

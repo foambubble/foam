@@ -3,7 +3,7 @@
  * We use the following convention in Foam:
  * - *.test.ts are unit tests
  *   they might still rely on vscode API and hence will be run in this environment, but
- *   are fundamentally about testing functions in isolations
+ *   are fundamentally about testing functions in isolation
  * - *.spec.ts are integration tests
  *   they will make direct use of the vscode API to be invoked as commands, create editors,
  *   and so on..

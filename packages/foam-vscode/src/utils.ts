@@ -6,7 +6,6 @@ import {
   Position,
   TextEditor,
   workspace,
-  Uri,
   Selection,
   MarkdownString,
   version,
@@ -15,6 +14,8 @@ import * as fs from 'fs';
 import { Logger, Resource, Note } from 'foam-core';
 import matter from 'gray-matter';
 import removeMarkdown from 'remove-markdown';
+import { URI } from 'foam-core';
+import { posix } from 'path';
 
 interface Point {
   line: number;
@@ -145,13 +146,22 @@ export function toTitleCase(word: string): string {
 }
 
 /**
+ * Get a URI that represents the dirname of a URI
+ *
+ * @param uri The URI to get the dirname from
+ */
+export function getDirname(uri: URI): URI {
+  return URI.file(posix.parse(uri.path).dir);
+}
+
+/**
  * Verify the given path exists in the file system
  *
  * @param path The path to verify
  */
-export function pathExists(path: string) {
+export function pathExists(path: URI) {
   return fs.promises
-    .access(path, fs.constants.F_OK)
+    .access(path.fsPath, fs.constants.F_OK)
     .then(() => true)
     .catch(() => false);
 }
@@ -179,8 +189,8 @@ export function isNone<T>(
   return value == null; // eslint-disable-line
 }
 
-export async function focusNote(notePath: string, moveCursorToEnd: boolean) {
-  const document = await workspace.openTextDocument(Uri.file(notePath));
+export async function focusNote(notePath: URI, moveCursorToEnd: boolean) {
+  const document = await workspace.openTextDocument(notePath);
   const editor = await window.showTextDocument(document);
 
   // Move the cursor to end of the file

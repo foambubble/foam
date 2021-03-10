@@ -22,7 +22,7 @@ const feature: FoamFeature = {
           randomNoteIndex = (randomNoteIndex + 1) % notes.length;
         }
 
-        focusNote(notes[randomNoteIndex].uri.path, false);
+        focusNote(notes[randomNoteIndex].uri, false);
       })
     );
   },

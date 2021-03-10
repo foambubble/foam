@@ -1,8 +1,8 @@
 import { workspace, WorkspaceConfiguration } from 'vscode';
-import { dirname, join } from 'path';
 import dateFormat from 'dateformat';
 import * as fs from 'fs';
-import { docConfig, focusNote, pathExists } from './utils';
+import { docConfig, focusNote, getDirname, pathExists } from './utils';
+import { URI } from 'foam-core';
 
 async function openDailyNoteFor(date?: Date) {
   const foamConfiguration = workspace.getConfiguration('foam');
@@ -17,13 +17,16 @@ async function openDailyNoteFor(date?: Date) {
   );
   await focusNote(dailyNotePath, isNew);
 }
-function getDailyNotePath(configuration: WorkspaceConfiguration, date: Date) {
-  const rootDirectory = workspace.workspaceFolders[0].uri.fsPath;
+
+function getDailyNotePath(
+  configuration: WorkspaceConfiguration,
+  date: Date
+): URI {
+  const rootDirectory = workspace.workspaceFolders[0].uri;
   const dailyNoteDirectory: string =
     configuration.get('openDailyNote.directory') ?? '.';
   const dailyNoteFilename = getDailyNoteFileName(configuration, date);
-
-  return join(rootDirectory, dailyNoteDirectory, dailyNoteFilename);
+  return URI.joinPath(rootDirectory, dailyNoteDirectory, dailyNoteFilename);
 }
 
 function getDailyNoteFileName(
@@ -42,7 +45,7 @@ function getDailyNoteFileName(
 
 async function createDailyNoteIfNotExists(
   configuration: WorkspaceConfiguration,
-  dailyNotePath: string,
+  dailyNotePath: URI,
   currentDate: Date
 ) {
   if (await pathExists(dailyNotePath)) {
@@ -56,7 +59,7 @@ async function createDailyNoteIfNotExists(
     configuration.get('openDailyNote.filenameFormat');
 
   await fs.promises.writeFile(
-    dailyNotePath,
+    dailyNotePath.fsPath,
     `# ${dateFormat(currentDate, titleFormat, false)}${docConfig.eol}${
       docConfig.eol
     }`
@@ -65,11 +68,11 @@ async function createDailyNoteIfNotExists(
   return true;
 }
 
-async function createDailyNoteDirectoryIfNotExists(dailyNotePath: string) {
-  const dailyNoteDirectory = dirname(dailyNotePath);
+async function createDailyNoteDirectoryIfNotExists(dailyNotePath: URI) {
+  const dailyNoteDirectory = getDirname(dailyNotePath);
 
   if (!(await pathExists(dailyNoteDirectory))) {
-    await fs.promises.mkdir(dailyNoteDirectory, { recursive: true });
+    await fs.promises.mkdir(dailyNoteDirectory.fsPath, { recursive: true });
   }
 }
 

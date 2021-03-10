@@ -1,8 +1,6 @@
-<div align="center">
-  <img src="packages/foam-vscode/icon/FOAM_ICON_256.png" width="150" />
+<img src="packages/foam-vscode/icon/FOAM_ICON_256.png" width="100" align="right"/>
 
-  <h1>Foam</h1>
-</div>
+# Foam
 
 👀*This is an early stage project under rapid development. For updates join the [Foam community Discord](https://foambubble.github.io/join-discord/g)! 💬*
 

@@ -222,6 +222,11 @@
             "Disable wikilink definitions generation"
           ]
         },
+        "foam.openDailyNote.onStartup": {
+          "type": "boolean",
+          "scope": "resource",
+          "default": false
+        },
         "foam.openDailyNote.fileExtension": {
           "type": "string",
           "scope": "resource",

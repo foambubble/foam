@@ -1,6 +1,7 @@
 import { workspace, WorkspaceConfiguration } from 'vscode';
 import dateFormat from 'dateformat';
 import * as fs from 'fs';
+import { isAbsolute } from 'path';
 import { docConfig, focusNote, getDirname, pathExists } from './utils';
 import { URI } from 'foam-core';
 
@@ -22,11 +23,19 @@ function getDailyNotePath(
   configuration: WorkspaceConfiguration,
   date: Date
 ): URI {
-  const rootDirectory = workspace.workspaceFolders[0].uri;
   const dailyNoteDirectory: string =
     configuration.get('openDailyNote.directory') ?? '.';
   const dailyNoteFilename = getDailyNoteFileName(configuration, date);
-  return URI.joinPath(rootDirectory, dailyNoteDirectory, dailyNoteFilename);
+
+  if (isAbsolute(dailyNoteDirectory)) {
+    return URI.joinPath(URI.file(dailyNoteDirectory), dailyNoteFilename);
+  } else {
+    return URI.joinPath(
+      workspace.workspaceFolders[0].uri,
+      dailyNoteDirectory,
+      dailyNoteFilename
+    );
+  }
 }
 
 function getDailyNoteFileName(

@@ -20,6 +20,7 @@ import { FoamWorkspace } from './model/workspace';
 export { IDataStore, FileDataStore };
 export { ILogger };
 export { LogLevel, LogLevelThreshold, Logger, BaseLogger } from './utils/log';
+export * as uris from './utils/uri'
 export { Event, Emitter } from './common/event';
 export { FoamConfig };
 export { isSameUri, parseUri } from './utils/uri';
@@ -69,5 +70,5 @@ export interface Foam extends IDisposable {
   services: Services;
   workspace: FoamWorkspace;
   config: FoamConfig;
-  parse: (uri: URI, text: string, eol: string) => Note;
+  parse: (uri: URI, text: string) => Note;
 }

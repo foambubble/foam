@@ -16,11 +16,12 @@ import { IDataStore, FileDataStore } from './services/datastore';
 import { ILogger } from './utils/log';
 import { IDisposable, isDisposable } from './common/lifecycle';
 import { FoamWorkspace } from './model/workspace';
+import * as uris from './utils/uri';
 
 export { IDataStore, FileDataStore };
 export { ILogger };
+export { uris };
 export { LogLevel, LogLevelThreshold, Logger, BaseLogger } from './utils/log';
-export * as uris from './utils/uri'
 export { Event, Emitter } from './common/event';
 export { FoamConfig };
 export { isSameUri, parseUri } from './utils/uri';

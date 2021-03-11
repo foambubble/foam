@@ -71,9 +71,7 @@ const feature: FoamFeature = {
 };
 
 function updateDocumentInNoteGraph(foam: Foam, document: TextDocument) {
-  foam.workspace.set(
-    foam.parse(document.uri, document.getText(), docConfig.eol)
-  );
+  foam.workspace.set(foam.parse(document.uri, document.getText()));
 }
 
 async function createReferenceList(foam: FoamWorkspace) {

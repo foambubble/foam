@@ -616,6 +616,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "movermeyer",
+      "name": "Michael Overmeyer",
+      "avatar_url": "https://avatars.githubusercontent.com/u/1459385?v=4",
+      "profile": "https://movermeyer.com",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,

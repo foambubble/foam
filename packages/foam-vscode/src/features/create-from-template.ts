@@ -91,11 +91,9 @@ async function createNoteFromTemplate(): Promise<void> {
     URI.joinPath(templatesDir, selectedTemplate)
   );
   const snippet = new SnippetString(templateText.toString());
-  await workspace.fs.writeFile(
-    URI.file(filename),
-    new TextEncoder().encode('')
-  );
-  await focusNote(filename, true);
+  const filenameURI = URI.file(filename);
+  await workspace.fs.writeFile(filenameURI, new TextEncoder().encode(''));
+  await focusNote(filenameURI, true);
   await window.activeTextEditor.insertSnippet(snippet);
 }
 
@@ -125,11 +123,12 @@ async function createNewTemplate(): Promise<void> {
     return;
   }
 
+  const filenameURI = URI.file(filename);
   await workspace.fs.writeFile(
-    URI.file(filename),
+    filenameURI,
     new TextEncoder().encode(templateContent)
   );
-  await focusNote(filename, false);
+  await focusNote(filenameURI, false);
 }
 
 const feature: FoamFeature = {

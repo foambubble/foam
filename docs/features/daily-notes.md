@@ -14,8 +14,8 @@ By default, Daily Notes will be created in a file called `yyyy-mm-dd.md` in the 
 
 These settings can be overridden in your workspace or global `.vscode/settings.json` file, using the [**dateformat** date masking syntax](https://github.com/felixge/node-dateformat#mask-options):
 
-```json
-  "foam.openDailyNote.directory": "journal",
+```jsonc
+  "foam.openDailyNote.directory": "journal", // a relative directory path will get appended to the workspace root. An absolute directory path will be used unmodified.
   "foam.openDailyNote.filenameFormat": "'daily-note'-yyyy-mm-dd",
   "foam.openDailyNote.fileExtension": "mdx",
   "foam.openDailyNote.titleFormat": "'Journal Entry, ' dddd, mmmm d",

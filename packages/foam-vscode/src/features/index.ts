@@ -11,6 +11,7 @@ import orphans from './orphans';
 import placeholders from './placeholders';
 import backlinks from './backlinks';
 import utilityCommands from './utility-commands';
+import previewNavigation from './preview-navigation';
 import { FoamFeature } from '../types';
 
 export const features: FoamFeature[] = [
@@ -27,4 +28,5 @@ export const features: FoamFeature[] = [
   placeholders,
   backlinks,
   utilityCommands,
+  previewNavigation,
 ];

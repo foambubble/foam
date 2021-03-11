@@ -1,6 +1,7 @@
 import { NoteLinkDefinition, Note, Attachment } from '../src/model/note';
 import { URI } from '../src/common/uri';
 import { Logger } from '../src/utils/log';
+import { parseUri } from '../src/utils';
 
 Logger.setLevel('error');
 
@@ -37,7 +38,7 @@ export const createTestNote = (params: {
 }): Note => {
   const root = params.root ?? URI.file('/');
   return {
-    uri: strToUri(params.uri),
+    uri: parseUri(root, params.uri),
     type: 'note',
     properties: {},
     title: params.title ?? null,

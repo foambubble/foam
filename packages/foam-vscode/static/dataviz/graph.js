@@ -251,7 +251,7 @@ function getNodeColor(nodeId, model) {
     case 'regular':
       return { fill: typeFill, border: typeFill };
     case 'lessened':
-      const transparent = d3.rgb(typeFill).copy({ opacity: 0.3 });
+      const transparent = d3.rgb(typeFill).copy({ opacity: 0.05 });
       return { fill: transparent, border: transparent };
     case 'highlighted':
       return {

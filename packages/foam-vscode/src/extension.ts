@@ -29,14 +29,22 @@ export async function activate(context: ExtensionContext) {
     };
     const foamPromise: Promise<Foam> = bootstrap(config, services);
 
-    features.forEach(f => {
-      f.activate(context, foamPromise);
-    });
+    const resPromises = features.map(f => f.activate(context, foamPromise));
 
     const foam = await foamPromise;
     Logger.info(`Loaded ${foam.workspace.list().length} notes`);
 
     context.subscriptions.push(dataStore, foam, watcher);
+
+    const res = (await Promise.all(resPromises)).filter(r => r != null);
+
+    return {
+      extendMarkdownIt: (md: markdownit) => {
+        return res.reduce((acc: markdownit, r: any) => {
+          return r.extendMarkdownIt ? r.extendMarkdownIt(acc) : acc;
+        }, md);
+      },
+    };
   } catch (e) {
     Logger.error('An error occurred while bootstrapping Foam', e);
     window.showErrorMessage(

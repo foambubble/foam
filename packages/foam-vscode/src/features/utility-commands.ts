@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { FoamFeature } from '../types';
 import { commands } from 'vscode';
 import { URI } from 'foam-core';
-import { createNoteFromPlacehoder, isSome } from '../utils';
+import { createNoteFromPlacehoder, focusNote, isSome } from '../utils';
 
 export const OPEN_COMMAND = {
   command: 'foam-vscode.open-resource',
@@ -31,15 +31,15 @@ const feature: FoamFeature = {
               return vscode.commands.executeCommand('vscode.open', resource);
 
             case 'placeholder':
-              const materializedPlaceholder = await createNoteFromPlacehoder(
-                resource
-              );
+              const newNote = await createNoteFromPlacehoder(resource);
 
-              if (isSome(materializedPlaceholder)) {
-                await vscode.window.showTextDocument(materializedPlaceholder, {
-                  preserveFocus: false,
-                  preview: false,
-                });
+              if (isSome(newNote)) {
+                const title = resource.path.split('/').slice(-1);
+                const snippet = new vscode.SnippetString(
+                  '# ${1:' + title + '}\n\n$0'
+                );
+                await focusNote(newNote, true);
+                await vscode.window.activeTextEditor.insertSnippet(snippet);
               }
               return;
 

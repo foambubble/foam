@@ -304,10 +304,7 @@ export const createNoteFromPlacehoder = async (
 
   if (isSome(basedir)) {
     const target = uris.placeholderToResourceUri(basedir, placeholder);
-    await workspace.fs.writeFile(
-      target,
-      new TextEncoder().encode(`# ${placeholder.path.split('/').slice(-1)}`)
-    );
+    await workspace.fs.writeFile(target, new TextEncoder().encode(''));
     return target;
   }
   return null;

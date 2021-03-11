@@ -9,6 +9,7 @@ import {
   Selection,
   MarkdownString,
   version,
+  Uri,
 } from 'vscode';
 import { Position as AstPosition, Point } from 'unist';
 import * as fs from 'fs';

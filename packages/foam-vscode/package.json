@@ -158,8 +158,8 @@
         "title": "Foam: Create New Note From Template"
       },
       {
-        "command": "foam-vscode.open-placeholder-note",
-        "title": "Foam: Open Placeholder Note"
+        "command": "foam-vscode.open-resource",
+        "title": "Foam: Open Resource"
       },
       {
         "command": "foam-vscode.group-orphans-by-folder",

@@ -1,39 +1,52 @@
 import * as vscode from 'vscode';
-import * as fs from 'fs';
-import { dirname, join } from 'path';
 import { FoamFeature } from '../types';
 import { commands } from 'vscode';
+import { URI } from 'foam-core';
+import { createNoteFromPlacehoder, isSome } from '../utils';
 
-export const OPEN_PLACEHOLDER_NOTE_COMMAND = {
-  command: 'foam-vscode.open-placeholder-note',
-  title: 'Foam: Open Placeholder Note',
+export const OPEN_COMMAND = {
+  command: 'foam-vscode.open-resource',
+  title: 'Foam: Open Resource',
+  asURI: (resource: vscode.Uri) =>
+    URI.from({
+      scheme: 'command',
+      path: OPEN_COMMAND.command,
+      query: encodeURIComponent(
+        JSON.stringify({
+          resource: resource,
+        })
+      ),
+    }),
 };
 
 const feature: FoamFeature = {
   activate: (context: vscode.ExtensionContext) => {
     context.subscriptions.push(
       commands.registerCommand(
-        OPEN_PLACEHOLDER_NOTE_COMMAND.command,
-        async (uri: vscode.Uri) => {
-          let dir: string;
+        OPEN_COMMAND.command,
+        async (params: { resource: vscode.Uri }) => {
+          const { resource } = params;
+          switch (resource.scheme) {
+            case 'file':
+              return vscode.commands.executeCommand('vscode.open', resource);
 
-          if (vscode.workspace.workspaceFolders) {
-            dir = vscode.workspace.workspaceFolders[0].uri.fsPath.toString();
-          }
+            case 'placeholder':
+              const materializedPlaceholder = await createNoteFromPlacehoder(
+                resource
+              );
 
-          if (!dir) {
-            const activeFile = vscode.window.activeTextEditor?.document;
-            dir = activeFile ? dirname(activeFile.uri.fsPath) : null;
-          }
+              if (isSome(materializedPlaceholder)) {
+                await vscode.window.showTextDocument(materializedPlaceholder, {
+                  preserveFocus: false,
+                  preview: false,
+                });
+              }
+              return;
 
-          if (dir) {
-            const path = join(dir, `${uri.path}.md`);
-            await fs.promises.writeFile(path, `# ${uri.path}`);
-            const ur = vscode.Uri.file(path);
-            await vscode.window.showTextDocument(ur, {
-              preserveFocus: false,
-              preview: false,
-            });
+            case 'attachment':
+              return vscode.window.showInformationMessage(
+                'Opening attachments is not supported yet'
+              );
           }
         }
       )

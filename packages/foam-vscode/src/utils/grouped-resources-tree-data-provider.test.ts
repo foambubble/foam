@@ -1,4 +1,5 @@
 import { FoamWorkspace, getTitle, Resource } from 'foam-core';
+import { OPEN_COMMAND } from '../features/utility-commands';
 import {
   GroupedResoucesConfigGroupBy,
   GroupedResourcesConfig,
@@ -90,7 +91,7 @@ describe('GroupedResourcesTreeDataProvider', () => {
         collapsibleState: 0,
         label: 'ABC',
         description: '/path/ABC.md',
-        command: { command: 'vscode.open' },
+        command: { command: OPEN_COMMAND.command },
       },
     ]);
   });
@@ -115,13 +116,13 @@ describe('GroupedResourcesTreeDataProvider', () => {
         collapsibleState: 0,
         label: matchingNote1.title,
         description: '/path/ABC.md',
-        command: { command: 'vscode.open' },
+        command: { command: OPEN_COMMAND.command },
       },
       {
         collapsibleState: 0,
         label: matchingNote2.title,
         description: '/path-bis/XYZ.md',
-        command: { command: 'vscode.open' },
+        command: { command: OPEN_COMMAND.command },
       },
     ]);
   });

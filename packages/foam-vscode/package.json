@@ -121,6 +121,10 @@
         {
           "command": "foam-vscode.group-placeholders-off",
           "when": "false"
+        },
+        {
+          "command": "foam-vscode.open-resource",
+          "when": "false"
         }
       ]
     },

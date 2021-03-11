@@ -239,23 +239,15 @@ export class ResourceTreeItem extends vscode.TreeItem {
       ''
     );
     this.tooltip = undefined;
-    if (isPlaceholder(resource)) {
-      this.command = {
-        command: OPEN_COMMAND.command,
-        title: OPEN_COMMAND.title,
-        arguments: [
-          {
-            resource: resource.uri,
-          },
-        ],
-      };
-    } else {
-      this.command = {
-        command: 'vscode.open',
-        title: 'Open File',
-        arguments: [resource.uri],
-      };
-    }
+    this.command = {
+      command: OPEN_COMMAND.command,
+      title: OPEN_COMMAND.title,
+      arguments: [
+        {
+          resource: resource.uri,
+        },
+      ],
+    };
 
     let iconStr: string;
     switch (this.resource.type) {

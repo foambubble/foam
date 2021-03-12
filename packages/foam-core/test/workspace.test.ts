@@ -114,6 +114,8 @@ describe('Workspace links', () => {
     });
     ws.set(noteBBis);
     expect(ws.getBacklinks(noteA.uri).length).toEqual(1);
+
+    ws.dispose();
   });
 });
 
@@ -661,6 +663,7 @@ describe('Monitoring of workspace state', () => {
         .map(link => link.source.path)
         .sort()
     ).toEqual(['/path/to/another/page-b.md', '/path/to/page-a.md']);
+    ws.dispose();
   });
 
   it('Removing target note should produce placeholder for wikilinks', () => {
@@ -685,6 +688,7 @@ describe('Monitoring of workspace state', () => {
 
     expect(() => ws.get(noteB.uri)).toThrow();
     expect(ws.get(placeholderUri('page-b')).type).toEqual('placeholder');
+    ws.dispose();
   });
 
   it('Adding note should replace placeholder for wikilinks', () => {
@@ -709,6 +713,7 @@ describe('Monitoring of workspace state', () => {
 
     expect(() => ws.get(placeholderUri('page-b'))).toThrow();
     expect(ws.get(noteB.uri).type).toEqual('note');
+    ws.dispose();
   });
 
   it('Removing target note should produce placeholder for direct links', () => {
@@ -735,6 +740,7 @@ describe('Monitoring of workspace state', () => {
     expect(ws.get(placeholderUri('/path/to/another/page-b.md')).type).toEqual(
       'placeholder'
     );
+    ws.dispose();
   });
 
   it('Adding note should replace placeholder for direct links', () => {
@@ -761,6 +767,7 @@ describe('Monitoring of workspace state', () => {
 
     expect(() => ws.get(placeholderUri('page-b'))).toThrow();
     expect(ws.get(noteB.uri).type).toEqual('note');
+    ws.dispose();
   });
 
   it('removing link to placeholder should remove placeholder', () => {
@@ -783,5 +790,6 @@ describe('Monitoring of workspace state', () => {
     expect(() =>
       ws.get(placeholderUri('/path/to/another/page-b.md'))
     ).toThrow();
+    ws.dispose();
   });
 });

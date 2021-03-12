@@ -9,6 +9,7 @@ import {
   isPlaceholder,
   isAttachment,
   getTitle,
+  NoteParser,
 } from './model/note';
 import { URI } from './common/uri';
 import { FoamConfig } from './config';
@@ -31,6 +32,7 @@ export { IDisposable, isDisposable };
 export {
   createMarkdownReferences,
   stringifyMarkdownLinkReferenceDefinition,
+  createMarkdownParser,
 } from './markdown-provider';
 
 export {
@@ -57,6 +59,7 @@ export {
   URI,
   FoamWorkspace,
   NoteLinkDefinition,
+  NoteParser,
   isNote,
   isPlaceholder,
   isAttachment,
@@ -65,6 +68,7 @@ export {
 
 export interface Services {
   dataStore: IDataStore;
+  parser: NoteParser;
 }
 
 export interface Foam extends IDisposable {

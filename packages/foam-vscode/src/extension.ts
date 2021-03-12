@@ -24,10 +24,7 @@ export async function activate(context: ExtensionContext) {
     const watcher = workspace.createFileSystemWatcher('**/*');
     const dataStore = new FileDataStore(config, watcher);
 
-    const services: Services = {
-      dataStore: dataStore,
-    };
-    const foamPromise: Promise<Foam> = bootstrap(config, services);
+    const foamPromise: Promise<Foam> = bootstrap(config, dataStore);
 
     const resPromises = features.map(f => f.activate(context, foamPromise));
 

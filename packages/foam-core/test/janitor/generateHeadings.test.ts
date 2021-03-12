@@ -21,10 +21,7 @@ describe('generateHeadings', () => {
     const config = createConfigFromFolders([
       URI.file(path.join(__dirname, '..', '__scaffold__')),
     ]);
-    const services: Services = {
-      dataStore: new FileDataStore(config),
-    };
-    const foam = await bootstrap(config, services);
+    const foam = await bootstrap(config, new FileDataStore(config));
     _workspace = foam.workspace;
   });
 

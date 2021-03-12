@@ -21,10 +21,9 @@ describe('generateLinkReferences', () => {
     const config = createConfigFromFolders([
       URI.file(path.join(__dirname, '..', '__scaffold__')),
     ]);
-    const services: Services = {
-      dataStore: new FileDataStore(config),
-    };
-    _workspace = await bootstrap(config, services).then(foam => foam.workspace);
+    _workspace = await bootstrap(config, new FileDataStore(config)).then(
+      foam => foam.workspace
+    );
   });
 
   it('initialised test graph correctly', () => {

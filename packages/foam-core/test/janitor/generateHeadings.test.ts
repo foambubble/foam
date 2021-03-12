@@ -2,7 +2,7 @@ import * as path from 'path';
 import { generateHeading } from '../../src/janitor';
 import { bootstrap } from '../../src/bootstrap';
 import { createConfigFromFolders } from '../../src/config';
-import { Services, Note } from '../../src';
+import { Note } from '../../src';
 import { URI } from '../../src/common/uri';
 import { FileDataStore } from '../../src/services/datastore';
 import { Logger } from '../../src/utils/log';

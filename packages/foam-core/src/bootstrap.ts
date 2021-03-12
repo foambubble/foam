@@ -1,5 +1,5 @@
 import { createMarkdownParser } from './markdown-provider';
-import { FoamConfig, Foam, Services, IDataStore } from './index';
+import { FoamConfig, Foam, IDataStore } from './index';
 import { loadPlugins } from './plugins';
 import { isSome } from './utils';
 import { Logger } from './utils/log';

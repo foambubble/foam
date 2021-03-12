@@ -124,7 +124,7 @@ export const randomString = (len = 5) =>
  *
  * @param content the file content
  * @param path relative file path
- * @returns an object containing the URI and the content of the file created
+ * @returns an object containing various information about the file created
  */
 export const createFile = async (content: string, filepath?: string) => {
   const rootUri = vscode.workspace.workspaceFolders[0].uri;

@@ -10,7 +10,6 @@ import { LinkProvider } from './document-link-provider';
 import { OPEN_COMMAND } from './utility-commands';
 
 describe('Document links provider', () => {
-  const rootUri = vscode.workspace.workspaceFolders[0].uri;
   const parser = createMarkdownParser([]);
 
   beforeAll(async () => {

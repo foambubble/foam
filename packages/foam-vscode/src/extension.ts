@@ -1,12 +1,5 @@
 import { workspace, ExtensionContext, window } from 'vscode';
-import {
-  bootstrap,
-  FoamConfig,
-  Foam,
-  Services,
-  Logger,
-  FileDataStore,
-} from 'foam-core';
+import { bootstrap, FoamConfig, Foam, Logger, FileDataStore } from 'foam-core';
 
 import { features } from './features';
 import { getConfigFromVscode } from './services/config';

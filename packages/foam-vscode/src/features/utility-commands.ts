@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
 import { FoamFeature } from '../types';
 import { commands } from 'vscode';
-import { URI } from 'foam-core';
 import { createNoteFromPlacehoder, focusNote, isSome } from '../utils';
 
 export const OPEN_COMMAND = {

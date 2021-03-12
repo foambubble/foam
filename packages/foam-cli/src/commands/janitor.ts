@@ -6,7 +6,6 @@ import {
   generateLinkReferences,
   generateHeading,
   applyTextEdit,
-  Services,
   FileDataStore,
   URI,
   isNote,

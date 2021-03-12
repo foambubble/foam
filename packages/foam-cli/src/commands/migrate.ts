@@ -7,7 +7,6 @@ import {
   generateHeading,
   getKebabCaseFileName,
   applyTextEdit,
-  Services,
   FileDataStore,
   isNote,
 } from 'foam-core';

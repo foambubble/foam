@@ -17,7 +17,10 @@ describe('Backlinks panel', () => {
     await createNote(noteB);
     await createNote(noteC);
   });
-  afterAll(cleanWorkspace);
+  afterAll(async () => {
+    ws.dispose();
+    await cleanWorkspace();
+  });
 
   const rootUri = workspace.workspaceFolders[0].uri;
   const ws = new FoamWorkspace();

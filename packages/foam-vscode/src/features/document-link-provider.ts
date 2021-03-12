@@ -31,7 +31,7 @@ const feature: FoamFeature = {
       if (!activeEditor) {
         return;
       }
-      const note = foam.parse(
+      const note = foam.services.parser.parse(
         activeEditor.document.uri,
         activeEditor.document.getText()
       );

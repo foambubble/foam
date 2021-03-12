@@ -75,5 +75,4 @@ export interface Foam extends IDisposable {
   services: Services;
   workspace: FoamWorkspace;
   config: FoamConfig;
-  parse: (uri: URI, text: string) => Note;
 }

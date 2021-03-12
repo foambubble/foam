@@ -43,7 +43,6 @@ export const bootstrap = async (config: FoamConfig, dataStore: IDataStore) => {
   return {
     workspace: workspace,
     config: config,
-    parse: parser.parse,
     services: {
       dataStore,
       parser,

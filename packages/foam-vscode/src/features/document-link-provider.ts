@@ -1,6 +1,6 @@
 import { debounce } from 'lodash';
 import * as vscode from 'vscode';
-import { Foam, uris } from 'foam-core';
+import { Foam, FoamWorkspace, NoteParser, uris } from 'foam-core';
 import { FoamFeature } from '../types';
 import { isNote, mdDocSelector, astPositionToVsCodeRange } from '../utils';
 import { OPEN_COMMAND } from './utility-commands';
@@ -57,7 +57,7 @@ const feature: FoamFeature = {
       // Link Provider
       vscode.languages.registerDocumentLinkProvider(
         mdDocSelector,
-        new LinkProvider(await foamPromise)
+        new LinkProvider(foam.workspace, foam.services.parser)
       ),
       // Decorations for links
       linkDecoration,
@@ -78,20 +78,20 @@ const feature: FoamFeature = {
 };
 
 export class LinkProvider implements vscode.DocumentLinkProvider {
-  constructor(private foam: Foam) {}
+  constructor(private workspace: FoamWorkspace, private parser: NoteParser) {}
 
   public provideDocumentLinks(
     document: vscode.TextDocument
   ): vscode.DocumentLink[] {
-    const resource = this.foam.parse(document.uri, document.getText());
+    const resource = this.parser.parse(document.uri, document.getText());
 
     if (isNote(resource)) {
       return resource.links.map(link => {
-        const target = this.foam.workspace.resolveLink(resource, link);
-
+        const target = this.workspace.resolveLink(resource, link);
+        const command = OPEN_COMMAND.asURI(target);
         const documentLink = new vscode.DocumentLink(
           astPositionToVsCodeRange(link.position),
-          OPEN_COMMAND.asURI(target)
+          command
         );
         documentLink.tooltip = uris.isPlaceholder(target)
           ? `Create note for '${target.path}'`

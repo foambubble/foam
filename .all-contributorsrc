@@ -625,6 +625,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "derrickqin",
+      "name": "Derrick Qin",
+      "avatar_url": "https://avatars.githubusercontent.com/u/3038111?v=4",
+      "profile": "https://github.com/derrickqin",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,

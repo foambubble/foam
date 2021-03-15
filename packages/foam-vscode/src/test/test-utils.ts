@@ -101,9 +101,38 @@ export const cleanWorkspace = async () => {
 export const wait = (ms: number) =>
   new Promise(resolve => setTimeout(resolve, ms));
 
+export const showInEditor = async (uri: URI) => {
+  const doc = await vscode.workspace.openTextDocument(uri);
+  const editor = await vscode.window.showTextDocument(doc);
+  return { doc, editor };
+};
+
 export const closeEditors = async () => {
   await vscode.commands.executeCommand('workbench.action.closeAllEditors');
   await wait(100);
+};
+
+const chars = 'abcdefghijklmnopqrstuvwyxzABCDEFGHIJKLMNOPQRSTUVWYXZ1234567890';
+export const randomString = (len = 5) =>
+  new Array(len)
+    .fill('')
+    .map(() => chars.charAt(Math.floor(Math.random() * chars.length)))
+    .join('');
+
+/**
+ * Creates a file with a some content.
+ *
+ * @param content the file content
+ * @param path relative file path
+ * @returns an object containing various information about the file created
+ */
+export const createFile = async (content: string, filepath?: string) => {
+  const rootUri = vscode.workspace.workspaceFolders[0].uri;
+  filepath = filepath ?? randomString() + '.md';
+  const uri = vscode.Uri.joinPath(rootUri, filepath);
+  const filenameComponents = path.parse(uri.fsPath);
+  await vscode.workspace.fs.writeFile(uri, new TextEncoder().encode(content));
+  return { uri, content, ...filenameComponents };
 };
 
 export const createNote = (r: Note) => {

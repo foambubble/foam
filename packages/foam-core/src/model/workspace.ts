@@ -466,15 +466,13 @@ export class FoamWorkspace implements IDisposable {
             !isSameUri(source, c.source) || !isSameUri(target, c.target)
         : (c: Connection) => !isSameConnection({ source, target, link }, c);
 
-    workspace.links[source.path] = workspace.links[source.path]?.filter(
-      connectionsToKeep
-    );
+    workspace.links[source.path] =
+      workspace.links[source.path]?.filter(connectionsToKeep) ?? [];
     if (workspace.links[source.path].length === 0) {
       delete workspace.links[source.path];
     }
-    workspace.backlinks[target.path] = workspace.backlinks[target.path]?.filter(
-      connectionsToKeep
-    );
+    workspace.backlinks[target.path] =
+      workspace.backlinks[target.path]?.filter(connectionsToKeep) ?? [];
     if (workspace.backlinks[target.path].length === 0) {
       delete workspace.backlinks[target.path];
       if (isPlaceholder(target)) {

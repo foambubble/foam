@@ -1,24 +1,23 @@
 import { createMarkdownParser } from './markdown-provider';
-import { FoamConfig, Foam, Services } from './index';
+import { FoamConfig, Foam, IDataStore } from './index';
 import { loadPlugins } from './plugins';
 import { isSome } from './utils';
-import { isDisposable } from './common/lifecycle';
 import { Logger } from './utils/log';
 import { FoamWorkspace } from './model/workspace';
 
-export const bootstrap = async (config: FoamConfig, services: Services) => {
+export const bootstrap = async (config: FoamConfig, dataStore: IDataStore) => {
   const plugins = await loadPlugins(config);
 
   const parserPlugins = plugins.map(p => p.parser).filter(isSome);
   const parser = createMarkdownParser(parserPlugins);
 
   const workspace = new FoamWorkspace();
-  const files = await services.dataStore.listFiles();
+  const files = await dataStore.listFiles();
   await Promise.all(
     files.map(async uri => {
       Logger.info('Found: ' + uri);
       if (uri.path.endsWith('md')) {
-        const content = await services.dataStore.read(uri);
+        const content = await dataStore.read(uri);
         if (isSome(content)) {
           workspace.set(parser.parse(uri, content));
         }
@@ -27,25 +26,30 @@ export const bootstrap = async (config: FoamConfig, services: Services) => {
   );
   workspace.resolveLinks(true);
 
-  services.dataStore.onDidChange(async uri => {
-    const content = await services.dataStore.read(uri);
-    workspace.set(await parser.parse(uri, content));
-  });
-  services.dataStore.onDidCreate(async uri => {
-    const content = await services.dataStore.read(uri);
-    workspace.set(await parser.parse(uri, content));
-  });
-  services.dataStore.onDidDelete(uri => {
-    workspace.delete(uri);
-  });
+  const listeners = [
+    dataStore.onDidChange(async uri => {
+      const content = await dataStore.read(uri);
+      workspace.set(await parser.parse(uri, content));
+    }),
+    dataStore.onDidCreate(async uri => {
+      const content = await dataStore.read(uri);
+      workspace.set(await parser.parse(uri, content));
+    }),
+    dataStore.onDidDelete(uri => {
+      workspace.delete(uri);
+    }),
+  ];
 
   return {
     workspace: workspace,
     config: config,
-    parse: parser.parse,
-    services: services,
+    services: {
+      dataStore,
+      parser,
+    },
     dispose: () => {
-      isDisposable(services.dataStore) && services.dataStore.dispose();
+      listeners.forEach(l => l.dispose());
+      workspace.dispose();
     },
   } as Foam;
 };

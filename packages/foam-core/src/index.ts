@@ -9,6 +9,7 @@ import {
   isPlaceholder,
   isAttachment,
   getTitle,
+  NoteParser,
 } from './model/note';
 import { URI } from './common/uri';
 import { FoamConfig } from './config';
@@ -16,9 +17,11 @@ import { IDataStore, FileDataStore } from './services/datastore';
 import { ILogger } from './utils/log';
 import { IDisposable, isDisposable } from './common/lifecycle';
 import { FoamWorkspace } from './model/workspace';
+import * as uris from './utils/uri';
 
 export { IDataStore, FileDataStore };
 export { ILogger };
+export { uris };
 export { LogLevel, LogLevelThreshold, Logger, BaseLogger } from './utils/log';
 export { Event, Emitter } from './common/event';
 export { FoamConfig };
@@ -29,6 +32,7 @@ export { IDisposable, isDisposable };
 export {
   createMarkdownReferences,
   stringifyMarkdownLinkReferenceDefinition,
+  createMarkdownParser,
 } from './markdown-provider';
 
 export {
@@ -55,6 +59,7 @@ export {
   URI,
   FoamWorkspace,
   NoteLinkDefinition,
+  NoteParser,
   isNote,
   isPlaceholder,
   isAttachment,
@@ -63,11 +68,11 @@ export {
 
 export interface Services {
   dataStore: IDataStore;
+  parser: NoteParser;
 }
 
 export interface Foam extends IDisposable {
   services: Services;
   workspace: FoamWorkspace;
   config: FoamConfig;
-  parse: (uri: URI, text: string, eol: string) => Note;
 }

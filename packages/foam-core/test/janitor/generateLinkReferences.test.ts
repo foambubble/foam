@@ -2,7 +2,7 @@ import * as path from 'path';
 import { generateLinkReferences } from '../../src/janitor';
 import { bootstrap } from '../../src/bootstrap';
 import { createConfigFromFolders } from '../../src/config';
-import { Services, Note } from '../../src';
+import { Note } from '../../src';
 import { FileDataStore } from '../../src/services/datastore';
 import { Logger } from '../../src/utils/log';
 import { URI } from '../../src/common/uri';
@@ -21,10 +21,9 @@ describe('generateLinkReferences', () => {
     const config = createConfigFromFolders([
       URI.file(path.join(__dirname, '..', '__scaffold__')),
     ]);
-    const services: Services = {
-      dataStore: new FileDataStore(config),
-    };
-    _workspace = await bootstrap(config, services).then(foam => foam.workspace);
+    _workspace = await bootstrap(config, new FileDataStore(config)).then(
+      foam => foam.workspace
+    );
   });
 
   it('initialised test graph correctly', () => {

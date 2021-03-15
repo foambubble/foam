@@ -8,6 +8,7 @@ import {
 } from '../test/test-utils';
 import { BacklinksTreeDataProvider, BacklinkTreeItem } from './backlinks';
 import { ResourceTreeItem } from '../utils/grouped-resources-tree-data-provider';
+import { OPEN_COMMAND } from './utility-commands';
 
 describe('Backlinks panel', () => {
   beforeAll(async () => {
@@ -16,7 +17,10 @@ describe('Backlinks panel', () => {
     await createNote(noteB);
     await createNote(noteC);
   });
-  afterAll(cleanWorkspace);
+  afterAll(async () => {
+    ws.dispose();
+    await cleanWorkspace();
+  });
 
   const rootUri = workspace.workspaceFolders[0].uri;
   const ws = new FoamWorkspace();
@@ -94,8 +98,8 @@ describe('Backlinks panel', () => {
     provider.target = noteA.uri;
     const notes = (await provider.getChildren()) as ResourceTreeItem[];
     expect(notes[0].command).toMatchObject({
-      command: 'vscode.open',
-      arguments: expect.arrayContaining([noteB.uri]),
+      command: OPEN_COMMAND.command,
+      arguments: [expect.objectContaining({ resource: noteB.uri })],
     });
   });
   it('navigates to document with link selection if clicking on backlink', async () => {

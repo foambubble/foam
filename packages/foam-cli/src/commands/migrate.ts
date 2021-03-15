@@ -7,7 +7,6 @@ import {
   generateHeading,
   getKebabCaseFileName,
   applyTextEdit,
-  Services,
   FileDataStore,
   isNote,
 } from 'foam-core';
@@ -46,10 +45,8 @@ Successfully generated link references and heading!
     const config = createConfigFromFolders([workspacePath]);
 
     if (isValidDirectory(workspacePath)) {
-      const services: Services = {
-        dataStore: new FileDataStore(config),
-      };
-      let workspace = (await bootstrap(config, services)).workspace;
+      const dataStore = new FileDataStore(config);
+      let workspace = (await bootstrap(config, dataStore)).workspace;
 
       let notes = workspace.list().filter(isNote);
 
@@ -78,7 +75,7 @@ Successfully generated link references and heading!
       spinner.text = 'Renaming files';
 
       // Reinitialize the graph after renaming files
-      workspace = (await bootstrap(config, services)).workspace;
+      workspace = (await bootstrap(config, dataStore)).workspace;
 
       notes = workspace.list().filter(isNote);
 

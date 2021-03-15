@@ -1,12 +1,5 @@
 import { workspace, ExtensionContext, window } from 'vscode';
-import {
-  bootstrap,
-  FoamConfig,
-  Foam,
-  Services,
-  Logger,
-  FileDataStore,
-} from 'foam-core';
+import { bootstrap, FoamConfig, Foam, Logger, FileDataStore } from 'foam-core';
 
 import { features } from './features';
 import { getConfigFromVscode } from './services/config';
@@ -24,10 +17,7 @@ export async function activate(context: ExtensionContext) {
     const watcher = workspace.createFileSystemWatcher('**/*');
     const dataStore = new FileDataStore(config, watcher);
 
-    const services: Services = {
-      dataStore: dataStore,
-    };
-    const foamPromise: Promise<Foam> = bootstrap(config, services);
+    const foamPromise: Promise<Foam> = bootstrap(config, dataStore);
 
     const resPromises = features.map(f => f.activate(context, foamPromise));
 

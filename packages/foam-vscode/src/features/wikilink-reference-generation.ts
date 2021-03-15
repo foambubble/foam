@@ -72,7 +72,7 @@ const feature: FoamFeature = {
 
 function updateDocumentInNoteGraph(foam: Foam, document: TextDocument) {
   foam.workspace.set(
-    foam.parse(document.uri, document.getText(), docConfig.eol)
+    foam.services.parser.parse(document.uri, document.getText())
   );
 }
 

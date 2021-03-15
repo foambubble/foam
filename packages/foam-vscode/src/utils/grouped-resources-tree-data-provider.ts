@@ -1,20 +1,13 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
-import {
-  IDataStore,
-  URI,
-  FoamWorkspace,
-  Resource,
-  isPlaceholder,
-  getTitle,
-} from 'foam-core';
+import { IDataStore, URI, FoamWorkspace, Resource, getTitle } from 'foam-core';
 import micromatch from 'micromatch';
 import {
   GroupedResourcesConfig,
   GroupedResoucesConfigGroupBy,
 } from '../settings';
 import { getContainsTooltip, getNoteTooltip } from '../utils';
-import { OPEN_PLACEHOLDER_NOTE_COMMAND } from '../features/utility-commands';
+import { OPEN_COMMAND } from '../features/utility-commands';
 
 /**
  * Provides the ability to expose a TreeDataExplorerView in VSCode. This class will
@@ -239,19 +232,15 @@ export class ResourceTreeItem extends vscode.TreeItem {
       ''
     );
     this.tooltip = undefined;
-    if (isPlaceholder(resource)) {
-      this.command = {
-        command: OPEN_PLACEHOLDER_NOTE_COMMAND.command,
-        title: OPEN_PLACEHOLDER_NOTE_COMMAND.title,
-        arguments: [resource.uri],
-      };
-    } else {
-      this.command = {
-        command: 'vscode.open',
-        title: 'Open File',
-        arguments: [resource.uri],
-      };
-    }
+    this.command = {
+      command: OPEN_COMMAND.command,
+      title: OPEN_COMMAND.title,
+      arguments: [
+        {
+          resource: resource.uri,
+        },
+      ],
+    };
 
     let iconStr: string;
     switch (this.resource.type) {

@@ -20,7 +20,7 @@ import {
   getWikilinkDefinitionSetting,
   LinkReferenceDefinitionsSetting,
 } from '../settings';
-import { astPointToVsCodePosition, isNote } from '../utils';
+import { isNote } from '../utils';
 
 const feature: FoamFeature = {
   activate: (context: ExtensionContext, foamPromise: Promise<Foam>) => {
@@ -158,8 +158,8 @@ async function runJanitor(foam: Foam) {
         // before heading, since inserting a heading changes line numbers below
         if (definitions) {
           updatedDefinitionListCount += 1;
-          const start = astPointToVsCodePosition(definitions.range.start);
-          const end = astPointToVsCodePosition(definitions.range.end);
+          const start = definitions.range.start;
+          const end = definitions.range.end;
 
           const range = new Range(start, end);
           editBuilder.replace(range, definitions!.newText);
@@ -167,7 +167,7 @@ async function runJanitor(foam: Foam) {
 
         if (heading) {
           updatedHeadingCount += 1;
-          const start = astPointToVsCodePosition(heading.range.start);
+          const start = heading.range.start;
           editBuilder.replace(start, heading.newText);
         }
       });

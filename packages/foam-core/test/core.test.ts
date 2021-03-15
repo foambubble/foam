@@ -1,4 +1,11 @@
-import { NoteLinkDefinition, Note, Attachment } from '../src/model/note';
+import path from 'path';
+import {
+  NoteLinkDefinition,
+  Note,
+  Attachment,
+  Position,
+  Range,
+} from '../src/model/note';
 import { URI } from '../src/common/uri';
 import { Logger } from '../src/utils/log';
 import { parseUri } from '../src/utils';
@@ -6,8 +13,8 @@ import { parseUri } from '../src/utils';
 Logger.setLevel('error');
 
 const position = {
-  start: { line: 1, column: 1 },
-  end: { line: 1, column: 1 },
+  start: new Position(0, 0),
+  end: new Position(0, 100),
 };
 
 const documentStart = position.start;
@@ -41,31 +48,28 @@ export const createTestNote = (params: {
     uri: parseUri(root, params.uri),
     type: 'note',
     properties: {},
-    title: params.title ?? null,
+    title: params.title ?? path.parse(strToUri(params.uri).path).base,
     definitions: params.definitions ?? [],
     tags: new Set(),
     links: params.links
       ? params.links.map((link, index) => {
-          const pos = {
-            start: {
-              line: position.start.line + index,
-              column: position.start.column,
-            },
-            end: position.end,
-          };
+          const range = new Range(
+            new Position(position.start.line + index, position.start.character),
+            new Position(position.start.line + index, position.end.character)
+          );
           return 'slug' in link
             ? {
                 type: 'wikilink',
                 slug: link.slug,
                 target: link.slug,
-                position: pos,
+                range: range,
                 text: 'link text',
               }
             : {
                 type: 'link',
                 target: link.to,
                 label: 'link text',
-                position: pos,
+                range: range,
               };
         })
       : [],

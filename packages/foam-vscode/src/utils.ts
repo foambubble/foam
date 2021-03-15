@@ -90,26 +90,6 @@ export function dropExtension(path: string): string {
 }
 
 /**
- * Converts the 1-index Point object into the VS Code 0-index Position object
- * @param point ast Point (1-indexed)
- * @returns VSCode Position  (0-indexed)
- */
-export const astPointToVsCodePosition = (point: Point): Position => {
-  return new Position(point.line - 1, point.column - 1);
-};
-
-/**
- * Converts the 1-index Position object into the VS Code 0-index Range object
- * @param position an ast Position object (1-indexed)
- * @returns VSCode Range  (0-indexed)
- */
-export const astPositionToVsCodeRange = (pos: AstPosition): Range =>
-  new Range(
-    new Position(pos.start.line - 1, pos.start.column - 1),
-    new Position(pos.end.line - 1, pos.end.column - 1)
-  );
-
-/**
  * Used for the "Copy to Clipboard Without Brackets" command
  *
  */

@@ -1,6 +1,6 @@
 import { Position, Point } from 'unist';
 import { URI } from '../common/uri';
-import { getBasename } from '../utils';
+import { getBasename } from '../utils/uri';
 export { Position, Point };
 
 export interface NoteSource {

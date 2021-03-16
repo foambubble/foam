@@ -7,7 +7,7 @@ import { URI } from '../../src/common/uri';
 import { FileDataStore } from '../../src/services/datastore';
 import { Logger } from '../../src/utils/log';
 import { FoamWorkspace } from '../../src/model/workspace';
-import { getBasename } from '../../src/utils';
+import { getBasename } from '../../src/utils/uri';
 
 Logger.setLevel('error');
 

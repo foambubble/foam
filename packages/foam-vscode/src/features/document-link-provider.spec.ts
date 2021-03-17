@@ -17,7 +17,7 @@ describe('Document links provider', () => {
   });
 
   afterAll(async () => {
-    await cleanWorkspace;
+    await cleanWorkspace();
   });
 
   beforeEach(async () => {

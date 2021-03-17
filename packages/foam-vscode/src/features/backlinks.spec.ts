@@ -82,7 +82,7 @@ describe('Backlinks panel', () => {
       noteC.uri.path,
     ]);
   });
-  it('shows references in position order', async () => {
+  it('shows references in range order', async () => {
     provider.target = noteA.uri;
     const notes = (await provider.getChildren()) as ResourceTreeItem[];
     const linksFromB = (await provider.getChildren(
@@ -90,7 +90,7 @@ describe('Backlinks panel', () => {
     )) as BacklinkTreeItem[];
     expect(linksFromB.map(l => l.link)).toEqual(
       noteB.links.sort(
-        (a, b) => a.position.start.column - b.position.start.column
+        (a, b) => a.range.start.character - b.range.start.character
       )
     );
   });

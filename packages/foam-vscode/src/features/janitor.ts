@@ -14,13 +14,15 @@ import {
   generateHeading,
   Foam,
   Note,
+  ranges,
 } from 'foam-core';
 
 import {
   getWikilinkDefinitionSetting,
   LinkReferenceDefinitionsSetting,
 } from '../settings';
-import { astPointToVsCodePosition, isNote } from '../utils';
+import { isNote } from '../utils';
+import { toVsCodePosition, toVsCodeRange } from '../utils/vsc-utils';
 
 const feature: FoamFeature = {
   activate: (context: ExtensionContext, foamPromise: Promise<Foam>) => {
@@ -158,17 +160,17 @@ async function runJanitor(foam: Foam) {
         // before heading, since inserting a heading changes line numbers below
         if (definitions) {
           updatedDefinitionListCount += 1;
-          const start = astPointToVsCodePosition(definitions.range.start);
-          const end = astPointToVsCodePosition(definitions.range.end);
+          const start = definitions.range.start;
+          const end = definitions.range.end;
 
-          const range = new Range(start, end);
-          editBuilder.replace(range, definitions!.newText);
+          const range = ranges.createFromPosition(start, end);
+          editBuilder.replace(toVsCodeRange(range), definitions!.newText);
         }
 
         if (heading) {
           updatedHeadingCount += 1;
-          const start = astPointToVsCodePosition(heading.range.start);
-          editBuilder.replace(start, heading.newText);
+          const start = heading.range.start;
+          editBuilder.replace(toVsCodePosition(start), heading.newText);
         }
       });
       /* eslint-enable */

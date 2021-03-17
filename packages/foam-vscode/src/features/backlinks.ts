@@ -9,6 +9,7 @@ import {
   Resource,
   isSameUri,
   URI,
+  Range,
 } from 'foam-core';
 import { getNoteTooltip } from '../utils';
 import { FoamFeature } from '../types';
@@ -42,8 +43,8 @@ const feature: FoamFeature = {
 };
 export default feature;
 
-const isBefore = (a: Position, b: Position) =>
-  a.start.column - b.start.column || a.start.line - b.start.line;
+const isBefore = (a: Range, b: Range) =>
+  a.start.line - b.start.line || a.start.character - b.start.character;
 
 export class BacklinksTreeDataProvider
   implements vscode.TreeDataProvider<BacklinkPanelTreeItem> {
@@ -81,14 +82,15 @@ export class BacklinksTreeDataProvider
           .map(async link => {
             const item = new BacklinkTreeItem(resource, link);
             const lines = (await this.dataStore.read(resource.uri)).split('\n');
-            if (link.position.start.line < lines.length) {
-              const line = lines[link.position.start.line - 1];
-              let start = Math.max(0, link.position.start.column - 15);
+            if (link.range.start.line < lines.length) {
+              const line = lines[link.range.start.line];
+              let start = Math.max(0, link.range.start.character - 15);
               const ellipsis = start === 0 ? '' : '...';
 
-              item.label = `${
-                link.position.start.line
-              }: ${ellipsis}${line.substr(start, 300)}`;
+              item.label = `${link.range.start.line}: ${ellipsis}${line.substr(
+                start,
+                300
+              )}`;
               item.tooltip = getNoteTooltip(line);
             }
             return item;
@@ -115,7 +117,7 @@ export class BacklinksTreeDataProvider
       .map(note => {
         const connections = backlinksByResourcePath[
           note.uri.path
-        ].sort((a, b) => isBefore(a.link.position, b.link.position));
+        ].sort((a, b) => isBefore(a.link.range, b.link.range));
         const item = new ResourceTreeItem(
           note,
           this.dataStore,
@@ -141,20 +143,10 @@ export class BacklinkTreeItem extends vscode.TreeItem {
       link.type === 'wikilink' ? link.slug : link.label,
       vscode.TreeItemCollapsibleState.None
     );
-    this.label = `${link.position.start.line}: ${this.label}`;
-    const range: vscode.Range = new vscode.Range(
-      new vscode.Position(
-        link.position.start.line - 1,
-        link.position.start.column - 1
-      ),
-      new vscode.Position(
-        link.position.end.line - 1,
-        link.position.end.column - 1
-      )
-    );
+    this.label = `${link.range.start.line}: ${this.label}`;
     this.command = {
       command: 'vscode.open',
-      arguments: [resource.uri, { selection: range }],
+      arguments: [resource.uri, { selection: link.range }],
       title: 'Go to link',
     };
   }

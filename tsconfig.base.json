@@ -8,7 +8,6 @@
     "target": "ES2019",
     "paths": {
       "foam-core": ["./packages/foam-core/src"],
-      "foam-cli": ["./packages/foam-cli/src"],
       "foam-vscode": ["./packages/foam-vscode/src"]
     }
   }

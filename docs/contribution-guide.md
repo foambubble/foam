@@ -44,7 +44,7 @@ We use the following convention in Foam:
 - *.test.ts are unit tests
 - *.spec.ts are integration tests
 
-Also, note that tests in `foam-core` and `foam-cli` live in the `test` directory.
+Also, note that tests in `foam-core` live in the `test` directory.
 Tests in `foam-vscode` live alongside the code in `src`.
 
 ### The VS Code Extension

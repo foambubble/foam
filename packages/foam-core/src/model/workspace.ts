@@ -332,9 +332,8 @@ export class FoamWorkspace implements IDisposable {
     delete workspace.resources[id];
 
     const name = uriToResourceName(uri);
-    workspace.resourcesByName[name] = workspace.resourcesByName[name].filter(
-      resId => resId !== id
-    );
+    workspace.resourcesByName[name] =
+      workspace.resourcesByName[name]?.filter(resId => resId !== id) ?? [];
     if (workspace.resourcesByName[name].length === 0) {
       delete workspace.resourcesByName[name];
     }

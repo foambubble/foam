@@ -1,6 +1,6 @@
-import { Position } from 'unist';
 import GithubSlugger from 'github-slugger';
-import { Note, Range } from '../model/note';
+import { Note } from '../model/note';
+import { Range, createFromPosition } from '../model/range';
 import {
   createMarkdownReferences,
   stringifyMarkdownLinkReferenceDefinition,
@@ -53,7 +53,7 @@ export const generateLinkReferences = (
         : `${note.source.eol}${note.source.eol}`;
     return {
       newText: `${padding}${newReferences}`,
-      range: new Range(note.source.end, note.source.end),
+      range: createFromPosition(note.source.end, note.source.end),
     };
   } else {
     const first = note.definitions[0];
@@ -69,7 +69,7 @@ export const generateLinkReferences = (
     return {
       // @todo: do we need to ensure new lines?
       newText: `${newReferences}`,
-      range: new Range(first.range!.start, last.range!.end),
+      range: createFromPosition(first.range!.start, last.range!.end),
     };
   }
 };
@@ -108,7 +108,10 @@ export const generateHeading = (note: Note): TextEdit | null => {
     newText: `${paddingStart}# ${getHeadingFromFileName(
       uriToSlug(note.uri)
     )}${paddingEnd}`,
-    range: new Range(note.source.contentStart, note.source.contentStart),
+    range: createFromPosition(
+      note.source.contentStart,
+      note.source.contentStart
+    ),
   };
 };
 

@@ -14,6 +14,7 @@ import {
   generateHeading,
   Foam,
   Note,
+  ranges,
 } from 'foam-core';
 
 import {
@@ -21,6 +22,7 @@ import {
   LinkReferenceDefinitionsSetting,
 } from '../settings';
 import { isNote } from '../utils';
+import { toVsCodePosition, toVsCodeRange } from '../utils/vsc-utils';
 
 const feature: FoamFeature = {
   activate: (context: ExtensionContext, foamPromise: Promise<Foam>) => {
@@ -161,14 +163,14 @@ async function runJanitor(foam: Foam) {
           const start = definitions.range.start;
           const end = definitions.range.end;
 
-          const range = new Range(start, end);
-          editBuilder.replace(range, definitions!.newText);
+          const range = ranges.createFromPosition(start, end);
+          editBuilder.replace(toVsCodeRange(range), definitions!.newText);
         }
 
         if (heading) {
           updatedHeadingCount += 1;
           const start = heading.range.start;
-          editBuilder.replace(start, heading.newText);
+          editBuilder.replace(toVsCodePosition(start), heading.newText);
         }
       });
       /* eslint-enable */

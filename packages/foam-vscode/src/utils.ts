@@ -11,7 +11,6 @@ import {
   version,
   Uri,
 } from 'vscode';
-import { Position as AstPosition, Point } from 'unist';
 import * as fs from 'fs';
 import { Logger, Resource, Note, uris, URI } from 'foam-core';
 import matter from 'gray-matter';

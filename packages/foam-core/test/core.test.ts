@@ -1,21 +1,13 @@
 import path from 'path';
-import {
-  NoteLinkDefinition,
-  Note,
-  Attachment,
-  Position,
-  Range,
-} from '../src/model/note';
+import { NoteLinkDefinition, Note, Attachment } from '../src/model/note';
+import * as ranges from '../src/model/range';
 import { URI } from '../src/common/uri';
 import { Logger } from '../src/utils/log';
 import { parseUri } from '../src/utils';
 
 Logger.setLevel('error');
 
-const position = {
-  start: new Position(0, 0),
-  end: new Position(0, 100),
-};
+const position = ranges.create(0, 0, 0, 100);
 
 const documentStart = position.start;
 const documentEnd = position.end;
@@ -53,9 +45,11 @@ export const createTestNote = (params: {
     tags: new Set(),
     links: params.links
       ? params.links.map((link, index) => {
-          const range = new Range(
-            new Position(position.start.line + index, position.start.character),
-            new Position(position.start.line + index, position.end.character)
+          const range = ranges.create(
+            position.start.line + index,
+            position.start.character,
+            position.start.line + index,
+            position.end.character
           );
           return 'slug' in link
             ? {

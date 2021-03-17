@@ -1,6 +1,6 @@
 import os from 'os';
 import detectNewline from 'detect-newline';
-import { Position } from 'model/note';
+import { Position } from '../model/position';
 import { TextEdit } from '../index';
 
 /**

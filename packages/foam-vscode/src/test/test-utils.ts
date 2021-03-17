@@ -10,15 +10,11 @@ import {
   Note,
   Placeholder,
   parseUri,
-  Range,
-  Position,
+  ranges,
 } from 'foam-core';
 import { TextEncoder } from 'util';
 
-const position = {
-  start: new Position(0, 0),
-  end: new Position(0, 100),
-};
+const position = ranges.create(0, 0, 0, 100);
 
 const documentStart = position.start;
 const documentEnd = position.end;
@@ -63,9 +59,11 @@ export const createTestNote = (params: {
     tags: new Set(),
     links: params.links
       ? params.links.map((link, index) => {
-          const range = new Range(
-            new Position(position.start.line + index, position.start.character),
-            new Position(position.start.line + index, position.end.character)
+          const range = ranges.create(
+            position.start.line + index,
+            position.start.character,
+            position.start.line + index,
+            position.end.character
           );
           return 'slug' in link
             ? {

@@ -8,7 +8,7 @@ import { FileDataStore } from '../../src/services/datastore';
 import { Logger } from '../../src/utils/log';
 import { FoamWorkspace } from '../../src/model/workspace';
 import { getBasename } from '../../src/utils/uri';
-import { Range } from '../../src/model/note';
+import * as ranges from '../../src/model/range';
 
 Logger.setLevel('error');
 
@@ -32,7 +32,7 @@ describe('generateHeadings', () => {
       newText: `# File without Title
 
 `,
-      range: new Range(0, 0, 0, 0),
+      range: ranges.create(0, 0, 0, 0),
     };
 
     const actual = generateHeading(note);
@@ -52,7 +52,7 @@ describe('generateHeadings', () => {
 
     const expected = {
       newText: '\n# File with only Frontmatter\n\n',
-      range: new Range(3, 0, 3, 0),
+      range: ranges.create(3, 0, 3, 0),
     };
 
     const actual = generateHeading(note);

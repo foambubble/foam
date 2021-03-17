@@ -2,7 +2,8 @@ import { diff } from 'fast-array-diff';
 import { isEqual } from 'lodash';
 import * as path from 'path';
 import { URI } from '../common/uri';
-import { Resource, NoteLink, Note } from '../model/note';
+import { Resource, NoteLink, Note } from './note';
+import * as ranges from './range';
 import {
   computeRelativeURI,
   isSome,
@@ -490,4 +491,4 @@ const isSameConnection = (a: Connection, b: Connection) =>
   isSameLink(a.link, b.link);
 
 const isSameLink = (a: NoteLink, b: NoteLink) =>
-  a.type === b.type && a.range.isEqual(b.range);
+  a.type === b.type && ranges.isEqual(a.range, b.range);

@@ -2,7 +2,6 @@ import { posix } from 'path';
 import GithubSlugger from 'github-slugger';
 import { hash } from './core';
 import { URI } from '../common/uri';
-import { platform } from 'os';
 
 export const uriToSlug = (noteUri: URI): string => {
   return GithubSlugger.slug(posix.parse(noteUri.path).name);
@@ -17,16 +16,11 @@ export const hashURI = (uri: URI): string => {
 };
 
 export const computeRelativePath = (source: URI, target: URI): string => {
-  const relativePath = posix.relative(
-    posix.dirname(normalizeDriveLetter(source.path)),
-    normalizeDriveLetter(target.path)
-  );
+  const relativePath = posix.relative(posix.dirname(source.path), target.path);
   return relativePath;
 };
 
 export const getBasename = (uri: URI) => posix.parse(uri.path).name;
-
-export const getDir = (uri: URI) => URI.file(posix.dirname(uri.path));
 
 export const computeRelativeURI = (
   reference: URI,
@@ -71,39 +65,6 @@ export const placeholderUri = (key: string): URI => {
   });
 };
 
-/**
- * Uses a placeholder URI, and a reference directory, to generate
- * the URI of the corresponding resource
- *
- * @param placeholderUri the placeholder URI
- * @param basedir the dir to be used as reference
- * @returns the target resource URI
- */
-export const placeholderToResourceUri = (
-  basedir: URI,
-  placeholderUri: URI
-): URI => {
-  const tokens = placeholderUri.path.split('/');
-  const path = tokens.slice(0, -1);
-  const filename = tokens.slice(-1);
-  return URI.joinPath(basedir, ...path, `${filename}.md`);
-};
-
 export const isPlaceholder = (uri: URI): boolean => {
   return uri.scheme === 'placeholder';
 };
-
-function normalizeDriveLetter(path: string): string {
-  if (platform() !== 'win32') {
-    return path;
-  }
-
-  return path.replace(/^\/([a-zA-Z]):/, g => g.toLowerCase());
-}
-
-export const isSameUri = (a: URI, b: URI) =>
-  a.authority === b.authority &&
-  a.scheme === b.scheme &&
-  a.path === b.path && // Note we don't use fsPath for sameness
-  a.fragment === b.fragment &&
-  a.query === b.query;

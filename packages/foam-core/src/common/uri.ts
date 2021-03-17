@@ -84,6 +84,14 @@ const _empty = '';
 const _slash = '/';
 const _regexp = /^(([^:/?#]+?):)?(\/\/([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?/;
 
+function _normalizeDriveLetter(path: string): string {
+  if (!isWindows) {
+    return path;
+  }
+
+  return path.replace(/^\/([a-zA-Z]):/, g => g.toLowerCase());
+}
+
 /**
  * Uniform Resource Identifier (URI) http://tools.ietf.org/html/rfc3986.
  * This class is a simple parser which creates the basic component parts
@@ -332,7 +340,7 @@ export class URI implements UriComponents {
     // on other systems bwd-slashes are valid
     // filename character, eg /f\oo/ba\r.txt
     if (isWindows) {
-      path = path.replace(/\\/g, _slash);
+      path = _normalizeDriveLetter(path.replace(/\\/g, _slash));
     }
 
     // check for authority as used in UNC shares

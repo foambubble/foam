@@ -98,7 +98,7 @@ function _normalizeDriveLetter(path: string): string {
     return path;
   }
 
-  return path.replace(/^[\/\\]?([A-Z]):/, g => g.toLowerCase());
+  return path.replace(/^[/\\]?([A-Z]):/, g => g.toLowerCase());
 }
 
 /**

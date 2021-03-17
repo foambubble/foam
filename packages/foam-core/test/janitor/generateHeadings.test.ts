@@ -2,12 +2,12 @@ import * as path from 'path';
 import { generateHeading } from '../../src/janitor';
 import { bootstrap } from '../../src/bootstrap';
 import { createConfigFromFolders } from '../../src/config';
-import { Services, Note } from '../../src';
+import { Note } from '../../src';
 import { URI } from '../../src/common/uri';
 import { FileDataStore } from '../../src/services/datastore';
 import { Logger } from '../../src/utils/log';
 import { FoamWorkspace } from '../../src/model/workspace';
-import { getBasename } from '../../src/utils';
+import { getBasename } from '../../src/utils/uri';
 
 Logger.setLevel('error');
 
@@ -21,10 +21,7 @@ describe('generateHeadings', () => {
     const config = createConfigFromFolders([
       URI.file(path.join(__dirname, '..', '__scaffold__')),
     ]);
-    const services: Services = {
-      dataStore: new FileDataStore(config),
-    };
-    const foam = await bootstrap(config, services);
+    const foam = await bootstrap(config, new FileDataStore(config));
     _workspace = foam.workspace;
   });
 

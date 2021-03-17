@@ -2,12 +2,13 @@
   "name": "foam-vscode",
   "displayName": "Foam for VSCode (Wikilinks to Markdown)",
   "description": "Generate markdown reference lists from wikilinks in a workspace",
+  "private": true,
   "repository": {
     "url": "https://github.com/foambubble/foam",
     "type": "git"
   },
   "homepage": "https://github.com/foambubble/foam",
-  "version": "0.10.2",
+  "version": "0.11.0",
   "license": "MIT",
   "publisher": "foam",
   "engines": {
@@ -31,8 +32,18 @@
   ],
   "main": "./out/extension.js",
   "contributes": {
+    "markdown.markdownItPlugins": true,
+    "markdown.previewStyles": [
+      "./static/preview/style.css"
+    ],
     "views": {
       "explorer": [
+        {
+          "id": "foam-vscode.backlinks",
+          "name": "Backlinks",
+          "icon": "media/dep.svg",
+          "contextualTitle": "Backlinks"
+        },
         {
           "id": "foam-vscode.tags-explorer",
           "name": "Tag Explorer",
@@ -44,6 +55,12 @@
           "name": "Orphans",
           "icon": "media/dep.svg",
           "contextualTitle": "Orphans"
+        },
+        {
+          "id": "foam-vscode.placeholders",
+          "name": "Placeholders",
+          "icon": "media/dep.svg",
+          "contextualTitle": "Placeholders"
         }
       ]
     },
@@ -53,8 +70,16 @@
         "contents": "No tags found. Notes that contain tags will show up here. You may add tags to a note with a hashtag (#tag) or by adding a tag list to the front matter (tags: tag1, tag2)."
       },
       {
+        "view": "foam-vscode.backlinks",
+        "contents": "No backlinks found for selected resource."
+      },
+      {
         "view": "foam-vscode.orphans",
         "contents": "No orphans found. Notes that have no backlinks nor links will show up here."
+      },
+      {
+        "view": "foam-vscode.placeholders",
+        "contents": "No placeholders found. Pending links and notes without content will show up here."
       }
     ],
     "menus": {
@@ -68,6 +93,16 @@
           "command": "foam-vscode.group-orphans-off",
           "when": "view == foam-vscode.orphans && foam-vscode.orphans-grouped-by-folder == true",
           "group": "navigation"
+        },
+        {
+          "command": "foam-vscode.group-placeholders-by-folder",
+          "when": "view == foam-vscode.placeholders && foam-vscode.placeholders-grouped-by-folder == false",
+          "group": "navigation"
+        },
+        {
+          "command": "foam-vscode.group-placeholders-off",
+          "when": "view == foam-vscode.placeholders && foam-vscode.placeholders-grouped-by-folder == true",
+          "group": "navigation"
         }
       ],
       "commandPalette": [
@@ -77,6 +112,18 @@
         },
         {
           "command": "foam-vscode.group-orphans-off",
+          "when": "false"
+        },
+        {
+          "command": "foam-vscode.group-placeholders-by-folder",
+          "when": "false"
+        },
+        {
+          "command": "foam-vscode.group-placeholders-off",
+          "when": "false"
+        },
+        {
+          "command": "foam-vscode.open-resource",
           "when": "false"
         }
       ]
@@ -115,6 +162,10 @@
         "title": "Foam: Create New Note From Template"
       },
       {
+        "command": "foam-vscode.open-resource",
+        "title": "Foam: Open Resource"
+      },
+      {
         "command": "foam-vscode.group-orphans-by-folder",
         "title": "Foam: Group Orphans By Folder",
         "icon": "$(list-tree)"
@@ -122,6 +173,16 @@
       {
         "command": "foam-vscode.group-orphans-off",
         "title": "Foam: Don't Group Orphans",
+        "icon": "$(list-flat)"
+      },
+      {
+        "command": "foam-vscode.group-placeholders-by-folder",
+        "title": "Foam: Group Placeholders By Folder",
+        "icon": "$(list-tree)"
+      },
+      {
+        "command": "foam-vscode.group-placeholders-off",
+        "title": "Foam: Don't Group Placeholders",
         "icon": "$(list-flat)"
       },
       {
@@ -168,6 +229,11 @@
             "Remove extension in wikilink paths",
             "Disable wikilink definitions generation"
           ]
+        },
+        "foam.openDailyNote.onStartup": {
+          "type": "boolean",
+          "scope": "resource",
+          "default": false
         },
         "foam.openDailyNote.fileExtension": {
           "type": "string",
@@ -219,6 +285,30 @@
           ],
           "default": "folder",
           "markdownDescription": "Group orphans report entries by.",
+          "scope": "resource"
+        },
+        "foam.placeholders.exclude": {
+          "type": [
+            "array"
+          ],
+          "default": [],
+          "markdownDescription": "Specifies the list of glob patterns that will be excluded from the placeholders report. To ignore the all the content of a given folder, use `**<folderName>/**/*`",
+          "scope": "resource"
+        },
+        "foam.placeholders.groupBy": {
+          "type": [
+            "string"
+          ],
+          "enum": [
+            "off",
+            "folder"
+          ],
+          "enumDescriptions": [
+            "Disable grouping",
+            "Group by folder"
+          ],
+          "default": "folder",
+          "markdownDescription": "Group blank note report entries by.",
           "scope": "resource"
         },
         "foam.dateSnippets.afterCompletion": {
@@ -278,6 +368,7 @@
     "@babel/preset-typescript": "^7.10.4",
     "@types/dateformat": "^3.0.1",
     "@types/glob": "^7.1.1",
+    "@types/markdown-it": "^12.0.1",
     "@types/node": "^13.11.0",
     "@types/remove-markdown": "^0.1.1",
     "@types/vscode": "^1.47.1",
@@ -289,6 +380,7 @@
     "jest": "^26.2.2",
     "jest-environment-vscode": "^1.0.0",
     "jest-extended": "^0.11.5",
+    "markdown-it": "^12.0.4",
     "rimraf": "^3.0.2",
     "ts-jest": "^26.4.4",
     "typescript": "^3.8.3",
@@ -296,8 +388,9 @@
   },
   "dependencies": {
     "dateformat": "^3.0.3",
-    "foam-core": "^0.10.1",
+    "foam-core": "^0.11.0",
     "gray-matter": "^4.0.2",
+    "markdown-it-regex": "^0.2.0",
     "micromatch": "^4.0.2",
     "remove-markdown": "^0.3.0"
   }

@@ -1,6 +1,7 @@
 import { NoteLinkDefinition, Note, Attachment } from '../src/model/note';
 import { URI } from '../src/common/uri';
 import { Logger } from '../src/utils/log';
+import { parseUri } from '../src/utils';
 
 Logger.setLevel('error');
 
@@ -33,30 +34,40 @@ export const createTestNote = (params: {
   definitions?: NoteLinkDefinition[];
   links?: Array<{ slug: string } | { to: string }>;
   text?: string;
+  root?: URI;
 }): Note => {
+  const root = params.root ?? URI.file('/');
   return {
-    uri: strToUri(params.uri),
+    uri: parseUri(root, params.uri),
     type: 'note',
     properties: {},
     title: params.title ?? null,
     definitions: params.definitions ?? [],
     tags: new Set(),
     links: params.links
-      ? params.links.map(link =>
-          'slug' in link
+      ? params.links.map((link, index) => {
+          const pos = {
+            start: {
+              line: position.start.line + index,
+              column: position.start.column,
+            },
+            end: position.end,
+          };
+          return 'slug' in link
             ? {
                 type: 'wikilink',
                 slug: link.slug,
                 target: link.slug,
-                position: position,
+                position: pos,
                 text: 'link text',
               }
             : {
                 type: 'link',
                 target: link.to,
                 label: 'link text',
-              }
-        )
+                position: pos,
+              };
+        })
       : [],
     source: {
       eol: eol,

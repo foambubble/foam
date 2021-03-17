@@ -1,12 +1,5 @@
 import { workspace, ExtensionContext, window } from 'vscode';
-import {
-  bootstrap,
-  FoamConfig,
-  Foam,
-  Services,
-  Logger,
-  FileDataStore,
-} from 'foam-core';
+import { bootstrap, FoamConfig, Foam, Logger, FileDataStore } from 'foam-core';
 
 import { features } from './features';
 import { getConfigFromVscode } from './services/config';
@@ -24,19 +17,24 @@ export async function activate(context: ExtensionContext) {
     const watcher = workspace.createFileSystemWatcher('**/*');
     const dataStore = new FileDataStore(config, watcher);
 
-    const services: Services = {
-      dataStore: dataStore,
-    };
-    const foamPromise: Promise<Foam> = bootstrap(config, services);
+    const foamPromise: Promise<Foam> = bootstrap(config, dataStore);
 
-    features.forEach(f => {
-      f.activate(context, foamPromise);
-    });
+    const resPromises = features.map(f => f.activate(context, foamPromise));
 
     const foam = await foamPromise;
     Logger.info(`Loaded ${foam.workspace.list().length} notes`);
 
     context.subscriptions.push(dataStore, foam, watcher);
+
+    const res = (await Promise.all(resPromises)).filter(r => r != null);
+
+    return {
+      extendMarkdownIt: (md: markdownit) => {
+        return res.reduce((acc: markdownit, r: any) => {
+          return r.extendMarkdownIt ? r.extendMarkdownIt(acc) : acc;
+        }, md);
+      },
+    };
   } catch (e) {
     Logger.error('An error occurred while bootstrapping Foam', e);
     window.showErrorMessage(

@@ -8,6 +8,11 @@ import tagsExplorer from './tags-tree-view';
 import createFromTemplate from './create-from-template';
 import openRandomNote from './open-random-note';
 import orphans from './orphans';
+import placeholders from './placeholders';
+import backlinks from './backlinks';
+import utilityCommands from './utility-commands';
+import documentLinkProvider from './document-link-provider';
+import previewNavigation from './preview-navigation';
 import { FoamFeature } from '../types';
 
 export const features: FoamFeature[] = [
@@ -21,4 +26,9 @@ export const features: FoamFeature[] = [
   openDatedNote,
   createFromTemplate,
   orphans,
+  placeholders,
+  backlinks,
+  documentLinkProvider,
+  utilityCommands,
+  previewNavigation,
 ];

@@ -4,12 +4,21 @@
 // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
 {
 	"version": "0.2.0",
+  "inputs": [
+    {
+      "id": "packageName",
+      "type": "pickString",
+      "description": "Select the package in which this test is located",
+      "options": ["foam-core", "foam-vscode"],
+      "default": "foam-core"
+    }
+  ],
 	"configurations": [
 		{
 			"type": "node",
 			"name": "vscode-jest-tests",
 			"request": "launch",
-			"runtimeArgs": ["workspace", "foam-core", "run", "test"], // ${yarnWorkspaceName} is what we're missing
+			"runtimeArgs": ["workspace", "${input:packageName}", "run", "test"], // ${yarnWorkspaceName} is what we're missing
 			"args": [
 					"--runInBand"
 			],

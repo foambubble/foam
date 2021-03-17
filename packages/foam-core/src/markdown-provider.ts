@@ -96,6 +96,7 @@ const wikilinkPlugin: ParserPlugin = {
         type: 'link',
         target: targetUri,
         label: label,
+        position: node.position!,
       });
     }
   },

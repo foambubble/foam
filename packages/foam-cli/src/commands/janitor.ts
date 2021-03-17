@@ -6,7 +6,6 @@ import {
   generateLinkReferences,
   generateHeading,
   applyTextEdit,
-  Services,
   FileDataStore,
   URI,
   isNote,
@@ -43,10 +42,8 @@ export default class Janitor extends Command {
 
     if (isValidDirectory(workspacePath)) {
       const config = createConfigFromFolders([URI.file(workspacePath)]);
-      const services: Services = {
-        dataStore: new FileDataStore(config),
-      };
-      const workspace = (await bootstrap(config, services)).workspace;
+      const workspace = (await bootstrap(config, new FileDataStore(config)))
+        .workspace;
 
       const notes = workspace.list().filter(isNote);
 

@@ -1,6 +1,6 @@
 import { Position, Point } from 'unist';
 import { URI } from '../common/uri';
-import { getBasename } from '../utils';
+import { getBasename } from '../utils/uri';
 export { Position, Point };
 
 export interface NoteSource {
@@ -21,6 +21,7 @@ export interface DirectLink {
   type: 'link';
   label: string;
   target: string;
+  position: Position;
 }
 
 export type NoteLink = WikiLink | DirectLink;
@@ -73,4 +74,12 @@ export const getTitle = (resource: Resource): string => {
 
 export const isNote = (resource: Resource): resource is Note => {
   return resource.type === 'note';
+};
+
+export const isPlaceholder = (resource: Resource): resource is Placeholder => {
+  return resource.type === 'placeholder';
+};
+
+export const isAttachment = (resource: Resource): resource is Attachment => {
+  return resource.type === 'attachment';
 };

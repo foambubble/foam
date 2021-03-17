@@ -84,12 +84,21 @@ const _empty = '';
 const _slash = '/';
 const _regexp = /^(([^:/?#]+?):)?(\/\/([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?/;
 
+/**
+ * On Windows, normalize drive letters in any paths that look like these to lower cased drive letters:
+ *
+ * C:\path\test -> c:\path\test
+ * /C:/path/test -> /c:/path/test
+ *
+ * @param path
+ * @returns
+ */
 function _normalizeDriveLetter(path: string): string {
   if (!isWindows) {
     return path;
   }
 
-  return path.replace(/^\/([a-zA-Z]):/, g => g.toLowerCase());
+  return path.replace(/^[\/\\]?([A-Z]):/, g => g.toLowerCase());
 }
 
 /**

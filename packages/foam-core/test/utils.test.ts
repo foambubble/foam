@@ -52,6 +52,27 @@ describe('URI utils', () => {
     ).toEqual(URI.file('/hello.markdown'));
   });
 
+  it('ignores drive letter when parsing file paths on Windows', () => {
+    // Clear module cache in jest
+    jest.resetModules();
+
+    // Mock the platform
+    jest.doMock('../src/common/platform', () => {
+      const original = jest.requireActual('../src/common/platform');
+      return {
+        ...original,
+        isWindows: true,
+      };
+    });
+
+    // Require the URI module with the platform, scoped for this test only
+    const URI = require('../src/common/uri').URI;
+    expect(URI.file('c:\\test\\path')).toEqual(URI.file('C:\\test\\path'));
+
+    // Unmock the platform module
+    jest.unmock('../src/common/platform');
+  });
+
   describe('URI parsing', () => {
     const base = URI.file('/path/to/file.md');
     test.each([

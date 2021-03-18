@@ -7,7 +7,9 @@ const feature: FoamFeature = {
     context.subscriptions.push(
       commands.registerCommand('foam-vscode.open-daily-note', openDailyNoteFor)
     );
-    if (workspace.getConfiguration('foam.openDailyNote.onStartup')) {
+    if (
+      workspace.getConfiguration('foam').get('openDailyNote.onStartup', false)
+    ) {
       commands.executeCommand('foam-vscode.open-daily-note');
     }
   },

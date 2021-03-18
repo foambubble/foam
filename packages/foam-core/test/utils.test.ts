@@ -1,70 +1,7 @@
-import {
-  uriToSlug,
-  uriToHash,
-  computeRelativeURI,
-  parseWithReference,
-} from '../src/model/uri';
 import { extractHashtags } from '../src/utils';
-import * as uris from '../src/model/uri';
 import { Logger } from '../src/utils/log';
 
 Logger.setLevel('error');
-
-describe('URI utils', () => {
-  it('supports various cases', () => {
-    expect(uriToSlug(uris.file('/this/is/a/path.md'))).toEqual('path');
-    expect(uriToSlug(uris.file('../a/relative/path.md'))).toEqual('path');
-    expect(uriToSlug(uris.file('another/relative/path.md'))).toEqual('path');
-    expect(uriToSlug(uris.file('no-directory.markdown'))).toEqual(
-      'no-directory'
-    );
-    expect(uriToSlug(uris.file('many.dots.name.markdown'))).toEqual(
-      'manydotsname'
-    );
-  });
-
-  it('normalizes URI before hashing', () => {
-    expect(uriToHash(uris.file('/this/is/a/path.md'))).toEqual(
-      uriToHash(uris.file('/this/has/../is/a/path.md'))
-    );
-    expect(uriToHash(uris.file('this/is/a/path.md'))).toEqual(
-      uriToHash(uris.file('this/has/../is/a/path.md'))
-    );
-  });
-
-  it('computes a relative uri using a slug', () => {
-    expect(computeRelativeURI(uris.file('/my/file.md'), '../hello.md')).toEqual(
-      uris.file('/hello.md')
-    );
-    expect(computeRelativeURI(uris.file('/my/file.md'), '../hello')).toEqual(
-      uris.file('/hello.md')
-    );
-    expect(
-      computeRelativeURI(uris.file('/my/file.markdown'), '../hello')
-    ).toEqual(uris.file('/hello.markdown'));
-  });
-
-  describe('URI parsing', () => {
-    const base = uris.file('/path/to/file.md');
-    test.each([
-      ['https://www.google.com', uris.parse('https://www.google.com')],
-      ['/path/to/a/file.md', uris.file('/path/to/a/file.md')],
-      ['../relative/file.md', uris.file('/path/relative/file.md')],
-      ['#section', uris.from(base, { fragment: 'section' })],
-      [
-        '../relative/file.md#section',
-        uris.parse('file:/path/relative/file.md#section'),
-      ],
-    ])('URI Parsing (%s) - %s', (input, exp) => {
-      const result = parseWithReference(input, base);
-      expect(result.scheme).toEqual(exp.scheme);
-      expect(result.authority).toEqual(exp.authority);
-      expect(result.path).toEqual(exp.path);
-      expect(result.query).toEqual(exp.query);
-      expect(result.fragment).toEqual(exp.fragment);
-    });
-  });
-});
 
 describe('hashtag extraction', () => {
   it('works with simple strings', () => {

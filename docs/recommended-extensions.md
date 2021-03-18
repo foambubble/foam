@@ -22,3 +22,4 @@ These extensions are not (yet?) defined in `.vscode/extensions.json`, but have b
 - [Git Lens](https://marketplace.visualstudio.com/items?itemName=eamodio.gitlens)
 - [Markdown Extended](https://marketplace.visualstudio.com/items?itemName=jebbs.markdown-extended) (with `kbd` option disabled, `kbd` turns wiki-links into non-clickable buttons)
 - [GitDoc](https://marketplace.visualstudio.com/items?itemName=vsls-contrib.gitdoc) (easy version management via git auto commits)
+- [Markdown Footnotes](https://marketplace.visualstudio.com/items?itemName=bierner.markdown-footnotes) (Adds [^footnote] syntax support to VS Code's built-in markdown preview)

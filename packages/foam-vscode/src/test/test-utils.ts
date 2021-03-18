@@ -9,10 +9,11 @@ import {
   NoteLinkDefinition,
   Note,
   Placeholder,
-  parseUri,
+  uris,
   ranges,
 } from 'foam-core';
 import { TextEncoder } from 'util';
+import { toVsCodeUri } from '../utils/vsc-utils';
 
 const position = ranges.create(0, 0, 0, 100);
 
@@ -25,7 +26,7 @@ const eol = '\n';
  * The goal of this function is to make sure we are consistent in the
  * way we generate URIs (and therefore IDs) across the tests
  */
-export const strToUri = URI.file;
+export const strToUri = uris.file;
 
 export const createPlaceholder = (params: { uri: string }): Placeholder => {
   return {
@@ -49,9 +50,9 @@ export const createTestNote = (params: {
   text?: string;
   root?: URI;
 }): Note => {
-  const root = params.root ?? URI.file('/');
+  const root = params.root ?? uris.file('/');
   return {
-    uri: parseUri(root, params.uri),
+    uri: uris.parseWithReference(params.uri, root),
     type: 'note',
     properties: {},
     title: params.title ?? path.parse(strToUri(params.uri).path).base,
@@ -99,7 +100,7 @@ export const wait = (ms: number) =>
   new Promise(resolve => setTimeout(resolve, ms));
 
 export const showInEditor = async (uri: URI) => {
-  const doc = await vscode.workspace.openTextDocument(uri);
+  const doc = await vscode.workspace.openTextDocument(toVsCodeUri(uri));
   const editor = await vscode.window.showTextDocument(doc);
   return { doc, editor };
 };
@@ -143,7 +144,7 @@ export const createNote = (r: Note) => {
   last line.
 `;
   return vscode.workspace.fs.writeFile(
-    r.uri,
+    toVsCodeUri(r.uri),
     new TextEncoder().encode(content)
   );
 };

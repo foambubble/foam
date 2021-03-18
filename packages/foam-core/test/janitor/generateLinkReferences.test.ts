@@ -5,9 +5,9 @@ import { createConfigFromFolders } from '../../src/config';
 import { Note, ranges } from '../../src';
 import { FileDataStore } from '../../src/services/datastore';
 import { Logger } from '../../src/utils/log';
-import { URI } from '../../src/common/uri';
+import * as uris from '../../src/model/uri';
 import { FoamWorkspace } from '../../src/model/workspace';
-import { getBasename } from '../../src/utils/uri';
+import { getBasename } from '../../src/model/uri';
 
 Logger.setLevel('error');
 
@@ -19,7 +19,7 @@ describe('generateLinkReferences', () => {
 
   beforeAll(async () => {
     const config = createConfigFromFolders([
-      URI.file(path.join(__dirname, '..', '__scaffold__')),
+      uris.file(path.join(__dirname, '..', '__scaffold__')),
     ]);
     _workspace = await bootstrap(config, new FileDataStore(config)).then(
       foam => foam.workspace

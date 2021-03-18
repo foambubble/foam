@@ -1,6 +1,5 @@
 import { titleCase } from 'title-case';
 export { extractHashtags, extractTagsFromProp } from './hashtags';
-export * from './uri';
 export * from './core';
 
 export function dropExtension(path: string): string {

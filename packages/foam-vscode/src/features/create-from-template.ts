@@ -4,15 +4,15 @@ import {
   ExtensionContext,
   workspace,
   SnippetString,
+  Uri,
 } from 'vscode';
-import { URI } from 'foam-core';
 import * as path from 'path';
 import { FoamFeature } from '../types';
 import { TextEncoder } from 'util';
 import { focusNote } from '../utils';
 import { existsSync } from 'fs';
 
-const templatesDir = URI.joinPath(
+const templatesDir = Uri.joinPath(
   workspace.workspaceFolders[0].uri,
   '.foam',
   'templates'
@@ -60,7 +60,7 @@ async function createNoteFromTemplate(): Promise<void> {
   const activeFile = window.activeTextEditor?.document?.uri.path;
   const currentDir =
     activeFile !== undefined
-      ? URI.parse(path.dirname(activeFile))
+      ? Uri.parse(path.dirname(activeFile))
       : workspace.workspaceFolders[0].uri;
   const selectedTemplate = await window.showQuickPick(templates, {
     placeHolder: 'Select a template to use.',
@@ -70,7 +70,7 @@ async function createNoteFromTemplate(): Promise<void> {
   }
 
   const defaultFileName = 'new-note.md';
-  const defaultDir = URI.joinPath(currentDir, defaultFileName);
+  const defaultDir = Uri.joinPath(currentDir, defaultFileName);
   const filename = await window.showInputBox({
     prompt: `Enter the filename for the new note`,
     value: defaultDir.fsPath,
@@ -90,10 +90,10 @@ async function createNoteFromTemplate(): Promise<void> {
   }
 
   const templateText = await workspace.fs.readFile(
-    URI.joinPath(templatesDir, selectedTemplate)
+    Uri.joinPath(templatesDir, selectedTemplate)
   );
   const snippet = new SnippetString(templateText.toString());
-  const filenameURI = URI.file(filename);
+  const filenameURI = Uri.file(filename);
   await workspace.fs.writeFile(filenameURI, new TextEncoder().encode(''));
   await focusNote(filenameURI, true);
   await window.activeTextEditor.insertSnippet(snippet);
@@ -101,7 +101,7 @@ async function createNoteFromTemplate(): Promise<void> {
 
 async function createNewTemplate(): Promise<void> {
   const defaultFileName = 'new-template.md';
-  const defaultTemplate = URI.joinPath(
+  const defaultTemplate = Uri.joinPath(
     workspace.workspaceFolders[0].uri,
     '.foam',
     'templates',
@@ -125,7 +125,7 @@ async function createNewTemplate(): Promise<void> {
     return;
   }
 
-  const filenameURI = URI.file(filename);
+  const filenameURI = Uri.file(filename);
   await workspace.fs.writeFile(
     filenameURI,
     new TextEncoder().encode(templateContent)

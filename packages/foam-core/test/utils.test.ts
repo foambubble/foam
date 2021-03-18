@@ -1,70 +1,62 @@
 import {
   uriToSlug,
-  nameToSlug,
-  hashURI,
+  uriToHash,
   computeRelativeURI,
-  extractHashtags,
-  parseUri,
-} from '../src/utils';
-import { URI } from '../src/common/uri';
+  parseWithReference,
+} from '../src/model/uri';
+import { extractHashtags } from '../src/utils';
+import * as uris from '../src/model/uri';
 import { Logger } from '../src/utils/log';
 
 Logger.setLevel('error');
 
 describe('URI utils', () => {
   it('supports various cases', () => {
-    expect(uriToSlug(URI.file('/this/is/a/path.md'))).toEqual('path');
-    expect(uriToSlug(URI.file('../a/relative/path.md'))).toEqual('path');
-    expect(uriToSlug(URI.file('another/relative/path.md'))).toEqual('path');
-    expect(uriToSlug(URI.file('no-directory.markdown'))).toEqual(
+    expect(uriToSlug(uris.file('/this/is/a/path.md'))).toEqual('path');
+    expect(uriToSlug(uris.file('../a/relative/path.md'))).toEqual('path');
+    expect(uriToSlug(uris.file('another/relative/path.md'))).toEqual('path');
+    expect(uriToSlug(uris.file('no-directory.markdown'))).toEqual(
       'no-directory'
     );
-    expect(uriToSlug(URI.file('many.dots.name.markdown'))).toEqual(
+    expect(uriToSlug(uris.file('many.dots.name.markdown'))).toEqual(
       'manydotsname'
     );
   });
 
-  it('converts a name to a slug', () => {
-    expect(nameToSlug('this.has.dots')).toEqual('thishasdots');
-    expect(nameToSlug('title')).toEqual('title');
-    expect(nameToSlug('this is a title')).toEqual('this-is-a-title');
-    expect(nameToSlug('this is a title/slug')).toEqual('this-is-a-titleslug');
-  });
-
   it('normalizes URI before hashing', () => {
-    expect(hashURI(URI.file('/this/is/a/path.md'))).toEqual(
-      hashURI(URI.file('/this/has/../is/a/path.md'))
+    expect(uriToHash(uris.file('/this/is/a/path.md'))).toEqual(
+      uriToHash(uris.file('/this/has/../is/a/path.md'))
     );
-    expect(hashURI(URI.file('this/is/a/path.md'))).toEqual(
-      hashURI(URI.file('this/has/../is/a/path.md'))
+    expect(uriToHash(uris.file('this/is/a/path.md'))).toEqual(
+      uriToHash(uris.file('this/has/../is/a/path.md'))
     );
   });
 
   it('computes a relative uri using a slug', () => {
-    expect(computeRelativeURI(URI.file('/my/file.md'), '../hello.md')).toEqual(
-      URI.file('/hello.md')
+    expect(computeRelativeURI(uris.file('/my/file.md'), '../hello.md')).toEqual(
+      uris.file('/hello.md')
     );
-    expect(computeRelativeURI(URI.file('/my/file.md'), '../hello')).toEqual(
-      URI.file('/hello.md')
+    expect(computeRelativeURI(uris.file('/my/file.md'), '../hello')).toEqual(
+      uris.file('/hello.md')
     );
     expect(
-      computeRelativeURI(URI.file('/my/file.markdown'), '../hello')
-    ).toEqual(URI.file('/hello.markdown'));
+      computeRelativeURI(uris.file('/my/file.markdown'), '../hello')
+    ).toEqual(uris.file('/hello.markdown'));
   });
 
   describe('URI parsing', () => {
-    const base = URI.file('/path/to/file.md');
+    const base = uris.file('/path/to/file.md');
     test.each([
-      ['https://www.google.com', URI.parse('https://www.google.com')],
-      ['/path/to/a/file.md', URI.file('/path/to/a/file.md')],
-      ['../relative/file.md', URI.file('/path/relative/file.md')],
-      ['#section', base.with({ fragment: 'section' })],
+      ['https://www.google.com', uris.parse('https://www.google.com')],
+      ['/path/to/a/file.md', uris.file('/path/to/a/file.md')],
+      ['../relative/file.md', uris.file('/path/relative/file.md')],
+      ['#section', uris.from(base, { fragment: 'section' })],
       [
         '../relative/file.md#section',
-        URI.parse('file:/path/relative/file.md#section'),
+        uris.parse('file:/path/relative/file.md#section'),
       ],
     ])('URI Parsing (%s) - %s', (input, exp) => {
-      const result = parseUri(base, input);
+      const result = parseWithReference(input, base);
       expect(result.scheme).toEqual(exp.scheme);
       expect(result.authority).toEqual(exp.authority);
       expect(result.path).toEqual(exp.path);

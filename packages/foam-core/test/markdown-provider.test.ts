@@ -4,9 +4,9 @@ import {
 } from '../src/markdown-provider';
 import { DirectLink } from '../src/model/note';
 import { ParserPlugin } from '../src/plugins';
-import { URI } from '../src/common/uri';
+import * as uris from '../src/model/uri';
 import { Logger } from '../src/utils/log';
-import { uriToSlug } from '../src/utils';
+import { uriToSlug } from '../src/model/uri';
 import { FoamWorkspace } from '../src/model/workspace';
 
 Logger.setLevel('error');
@@ -39,7 +39,7 @@ const pageE = `
 `;
 
 const createNoteFromMarkdown = (path: string, content: string) =>
-  createMarkdownParser([]).parse(URI.file(path), content);
+  createMarkdownParser([]).parse(uris.file(path), content);
 
 describe('Markdown loader', () => {
   it('Converts markdown to notes', () => {
@@ -329,7 +329,7 @@ describe('parser plugins', () => {
 
   it('can augment the parsing of the file', () => {
     const note1 = parser.parse(
-      URI.file('/path/to/a'),
+      uris.file('/path/to/a'),
       `
 This is a test note without headings.
 But with some content.
@@ -338,7 +338,7 @@ But with some content.
     expect(note1.properties.hasHeading).toBeUndefined();
 
     const note2 = parser.parse(
-      URI.file('/path/to/a'),
+      uris.file('/path/to/a'),
       `
 # This is a note with header
 and some content`

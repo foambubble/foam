@@ -1,9 +1,9 @@
 import path from 'path';
 import { NoteLinkDefinition, Note, Attachment } from '../src/model/note';
 import * as ranges from '../src/model/range';
-import { URI } from '../src/common/uri';
+import { URI } from '../src/model/uri';
+import * as uris from '../src/model/uri';
 import { Logger } from '../src/utils/log';
-import { parseUri } from '../src/utils';
 
 Logger.setLevel('error');
 
@@ -18,7 +18,7 @@ const eol = '\n';
  * The goal of this function is to make sure we are consistent in the
  * way we generate URIs (and therefore IDs) across the tests
  */
-export const strToUri = URI.file;
+export const strToUri = uris.file;
 
 export const createAttachment = (params: { uri: string }): Attachment => {
   return {
@@ -35,9 +35,9 @@ export const createTestNote = (params: {
   text?: string;
   root?: URI;
 }): Note => {
-  const root = params.root ?? URI.file('/');
+  const root = params.root ?? uris.file('/');
   return {
-    uri: parseUri(root, params.uri),
+    uri: uris.parseWithReference(params.uri, root),
     type: 'note',
     properties: {},
     title: params.title ?? path.parse(strToUri(params.uri).path).base,

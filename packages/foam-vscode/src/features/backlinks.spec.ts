@@ -1,5 +1,5 @@
 import { workspace, window } from 'vscode';
-import { URI, FoamWorkspace, IDataStore } from 'foam-core';
+import { URI, FoamWorkspace, IDataStore, uris } from 'foam-core';
 import {
   cleanWorkspace,
   closeEditors,
@@ -9,6 +9,7 @@ import {
 import { BacklinksTreeDataProvider, BacklinkTreeItem } from './backlinks';
 import { ResourceTreeItem } from '../utils/grouped-resources-tree-data-provider';
 import { OPEN_COMMAND } from './utility-commands';
+import { toVsCodeUri } from '../utils/vsc-utils';
 
 describe('Backlinks panel', () => {
   beforeAll(async () => {
@@ -60,12 +61,12 @@ describe('Backlinks panel', () => {
   // Skipping these as still figuring out how to interact with the provider
   // running in the test instance of VS Code
   it.skip('does not target excluded files', async () => {
-    provider.target = URI.file('/excluded-file.txt');
+    provider.target = uris.file('/excluded-file.txt');
     expect(await provider.getChildren()).toEqual([]);
   });
   it.skip('targets active editor', async () => {
-    const docA = await workspace.openTextDocument(noteA.uri);
-    const docB = await workspace.openTextDocument(noteB.uri);
+    const docA = await workspace.openTextDocument(toVsCodeUri(noteA.uri));
+    const docB = await workspace.openTextDocument(toVsCodeUri(noteB.uri));
 
     await window.showTextDocument(docA);
     expect(provider.target).toEqual(noteA.uri);

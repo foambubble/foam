@@ -3,11 +3,11 @@ import { generateHeading } from '../../src/janitor';
 import { bootstrap } from '../../src/bootstrap';
 import { createConfigFromFolders } from '../../src/config';
 import { Note } from '../../src';
-import { URI } from '../../src/common/uri';
+import * as uris from '../../src/model/uri';
 import { FileDataStore } from '../../src/services/datastore';
 import { Logger } from '../../src/utils/log';
 import { FoamWorkspace } from '../../src/model/workspace';
-import { getBasename } from '../../src/utils/uri';
+import { getBasename } from '../../src/model/uri';
 import * as ranges from '../../src/model/range';
 
 Logger.setLevel('error');
@@ -20,7 +20,7 @@ describe('generateHeadings', () => {
 
   beforeAll(async () => {
     const config = createConfigFromFolders([
-      URI.file(path.join(__dirname, '..', '__scaffold__')),
+      uris.file(path.join(__dirname, '..', '__scaffold__')),
     ]);
     const foam = await bootstrap(config, new FileDataStore(config));
     _workspace = foam.workspace;

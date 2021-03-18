@@ -24,10 +24,14 @@ import {
   isNone,
   isSome,
 } from './utils';
-import { computeRelativePath, getBasename, parseUri } from './utils/uri';
+import {
+  computeUrisRelativePath,
+  getBasename,
+  parseWithReference,
+} from './model/uri';
 import { ParserPlugin } from './plugins';
 import { Logger } from './utils/log';
-import { URI } from './common/uri';
+import { URI } from './model/uri';
 import { FoamWorkspace } from './model/workspace';
 
 /**
@@ -89,7 +93,7 @@ const wikilinkPlugin: ParserPlugin = {
     }
     if (node.type === 'link') {
       const targetUri = (node as any).url;
-      const uri = parseUri(note.uri, targetUri);
+      const uri = parseWithReference(targetUri, note.uri);
       if (uri.scheme !== 'file' || uri.path === note.uri.path) {
         return;
       }
@@ -306,7 +310,7 @@ export function createMarkdownReferences(
         return null;
       }
 
-      const relativePath = computeRelativePath(noteUri, target.uri);
+      const relativePath = computeUrisRelativePath(noteUri, target.uri);
       const pathToNote = includeExtension
         ? relativePath
         : dropExtension(relativePath);

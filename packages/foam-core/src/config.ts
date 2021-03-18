@@ -1,7 +1,7 @@
 import { readFileSync } from 'fs';
 import { merge } from 'lodash';
 import { Logger } from './utils/log';
-import { URI } from './common/uri';
+import { URI, file, toFsPath, joinPath } from './model/uri';
 
 export interface FoamConfig {
   workspaceFolders: URI[];
@@ -45,7 +45,7 @@ export const createConfigFromFolders = (
     workspaceFolders = [workspaceFolders];
   }
   const workspaceConfig: any = workspaceFolders.reduce(
-    (acc, f) => merge(acc, parseConfig(URI.joinPath(f, 'config.json'))),
+    (acc, f) => merge(acc, parseConfig(joinPath(f, 'config.json'))),
     {}
   );
   // For security reasons local plugins can only be
@@ -54,7 +54,7 @@ export const createConfigFromFolders = (
     delete workspaceConfig['experimental']['localPlugins'];
   }
 
-  const userConfig = parseConfig(URI.file(`~/.foam/config.json`));
+  const userConfig = parseConfig(file(`~/.foam/config.json`));
 
   const settings = merge(workspaceConfig, userConfig);
 
@@ -68,7 +68,7 @@ export const createConfigFromFolders = (
 
 const parseConfig = (path: URI) => {
   try {
-    return JSON.parse(readFileSync(path.fsPath, 'utf8'));
+    return JSON.parse(readFileSync(toFsPath(path), 'utf8'));
   } catch {
     Logger.debug('Could not read configuration from ' + path);
   }

@@ -1,5 +1,4 @@
-import { URI } from '../common/uri';
-import { getBasename } from '../utils/uri';
+import { URI, getBasename } from './uri';
 import { Position } from './position';
 import { Range } from './range';
 

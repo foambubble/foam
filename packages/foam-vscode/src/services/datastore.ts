@@ -9,6 +9,7 @@ import {
 import { workspace, FileSystemWatcher, EventEmitter } from 'vscode';
 import { TextDecoder } from 'util';
 import { isSome } from '../utils';
+import { toVsCodeUri } from '../utils/vsc-utils';
 
 export class VsCodeDataStore implements IDataStore, IDisposable {
   onDidCreateEmitter = new EventEmitter<URI>();
@@ -59,7 +60,9 @@ export class VsCodeDataStore implements IDataStore, IDisposable {
   }
 
   async read(uri: URI): Promise<string> {
-    return new TextDecoder().decode(await workspace.fs.readFile(uri));
+    return new TextDecoder().decode(
+      await workspace.fs.readFile(toVsCodeUri(uri))
+    );
   }
 
   dispose(): void {

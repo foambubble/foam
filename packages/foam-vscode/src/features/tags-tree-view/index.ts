@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { Foam, Note, IDataStore } from 'foam-core';
+import { Foam, Note, IDataStore, uris } from 'foam-core';
 import { FoamFeature } from '../../types';
 import { getNoteTooltip, getContainsTooltip, isNote } from '../../utils';
 
@@ -97,7 +97,7 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
 
 type TagTreeItem = Tag | TagReference | TagSearch;
 
-type TagMetadata = { title: string; uri: vscode.Uri };
+type TagMetadata = { title: string; uri: uris.URI };
 
 export class Tag extends vscode.TreeItem {
   constructor(

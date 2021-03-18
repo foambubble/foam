@@ -1,6 +1,13 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { IDataStore, URI, FoamWorkspace, Resource, getTitle } from 'foam-core';
+import {
+  IDataStore,
+  URI,
+  FoamWorkspace,
+  Resource,
+  getTitle,
+  uris,
+} from 'foam-core';
 import micromatch from 'micromatch';
 import {
   GroupedResourcesConfig,
@@ -8,6 +15,7 @@ import {
 } from '../settings';
 import { getContainsTooltip, getNoteTooltip } from '../utils';
 import { OPEN_COMMAND } from '../features/utility-commands';
+import { toVsCodeUri } from './vsc-utils';
 
 /**
  * Provides the ability to expose a TreeDataExplorerView in VSCode. This class will
@@ -169,7 +177,7 @@ export class GroupedResourcesTreeDataProvider
   }
 
   private isMatch(uri: URI) {
-    return micromatch.isMatch(uri.fsPath, this.exclude);
+    return micromatch.isMatch(uris.toFsPath(uri), this.exclude);
   }
 
   private getGlobs(fsURI: URI[], globs: string[]): string[] {
@@ -228,7 +236,7 @@ export class ResourceTreeItem extends vscode.TreeItem {
     super(getTitle(resource), collapsibleState);
     this.contextValue = 'resource';
     this.description = resource.uri.path.replace(
-      vscode.workspace.getWorkspaceFolder(resource.uri)?.uri.path,
+      vscode.workspace.getWorkspaceFolder(toVsCodeUri(resource.uri))?.uri.path,
       ''
     );
     this.tooltip = undefined;

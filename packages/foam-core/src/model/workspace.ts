@@ -1,18 +1,19 @@
 import { diff } from 'fast-array-diff';
 import { isEqual } from 'lodash';
 import * as path from 'path';
-import { URI } from '../common/uri';
 import { Resource, NoteLink, Note } from './note';
 import * as ranges from './range';
 import {
+  URI,
+  isUri,
   computeRelativeURI,
-  isSome,
-  isNone,
-  parseUri,
-  placeholderUri,
+  parseWithReference,
+  placeholder,
+  file,
   isPlaceholder,
-  isSameUri,
-} from '../utils';
+  isEqual as isEqualUri,
+} from './uri';
+import { isSome, isNone } from '../utils';
 import { Emitter } from '../common/event';
 import { IDisposable } from '../index';
 
@@ -25,7 +26,7 @@ export type Connection = {
 export function getReferenceType(
   reference: URI | string
 ): 'uri' | 'absolute-path' | 'relative-path' | 'key' {
-  if (URI.isUri(reference)) {
+  if (isUri(reference)) {
     return 'uri';
   }
   const isPath = reference.split('/').length > 1;
@@ -139,21 +140,21 @@ export class FoamWorkspace implements IDisposable {
           def => def.label === link.slug
         )?.url;
         if (isSome(definitionUri)) {
-          const definedUri = parseUri(note.uri, definitionUri);
+          const definedUri = parseWithReference(definitionUri, note.uri);
           targetUri =
             FoamWorkspace.find(workspace, definedUri, note.uri)?.uri ??
-            placeholderUri(definedUri.path);
+            placeholder(definedUri.path);
         } else {
           targetUri =
             FoamWorkspace.find(workspace, link.slug, note.uri)?.uri ??
-            placeholderUri(link.slug);
+            placeholder(link.slug);
         }
         break;
 
       case 'link':
         targetUri =
           FoamWorkspace.find(workspace, link.target, note.uri)?.uri ??
-          placeholderUri(parseUri(note.uri, link.target).path);
+          placeholder(parseWithReference(link.target, note.uri).path);
         break;
     }
 
@@ -305,7 +306,7 @@ export class FoamWorkspace implements IDisposable {
         return workspace.resources[sortedPaths[0]];
 
       case 'absolute-path':
-        const resourceUri = URI.file(resourceId as string);
+        const resourceUri = file(resourceId as string);
         return (
           workspace.resources[uriToResourceId(resourceUri)] ??
           workspace.placeholders[uriToPlaceholderId(resourceUri)]
@@ -463,7 +464,7 @@ export class FoamWorkspace implements IDisposable {
     const connectionsToKeep =
       link === true
         ? (c: Connection) =>
-            !isSameUri(source, c.source) || !isSameUri(target, c.target)
+            !isEqualUri(source, c.source) || !isEqualUri(target, c.target)
         : (c: Connection) => !isSameConnection({ source, target, link }, c);
 
     workspace.links[source.path] =
@@ -486,8 +487,8 @@ export class FoamWorkspace implements IDisposable {
 // TODO move these utility fns to appropriate places
 
 const isSameConnection = (a: Connection, b: Connection) =>
-  isSameUri(a.source, b.source) &&
-  isSameUri(a.target, b.target) &&
+  isEqualUri(a.source, b.source) &&
+  isEqualUri(a.target, b.target) &&
   isSameLink(a.link, b.link);
 
 const isSameLink = (a: NoteLink, b: NoteLink) =>

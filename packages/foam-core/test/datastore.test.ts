@@ -1,11 +1,11 @@
 import { createConfigFromObject } from '../src/config';
 import { Logger } from '../src/utils/log';
-import { URI } from '../src/common/uri';
+import * as uris from '../src/model/uri';
 import { FileDataStore } from '../src';
 
 Logger.setLevel('error');
 
-const testFolder = URI.joinPath(URI.file(__dirname), 'test-datastore');
+const testFolder = uris.joinPath(uris.file(__dirname), 'test-datastore');
 
 function makeConfig(params: { include: string[]; ignore: string[] }) {
   return createConfigFromObject(
@@ -57,14 +57,15 @@ describe('Datastore', () => {
   });
 });
 
-function toStringSet(uris: URI[]) {
+function toStringSet(uris: uris.URI[]) {
   return new Set(uris.map(uri => uri.path.toLocaleLowerCase()));
 }
 
 function makeAbsolute(files: string[]) {
   return new Set(
     files.map(f =>
-      URI.joinPath(testFolder, f)
+      uris
+        .joinPath(testFolder, f)
         .path.toLocaleLowerCase()
         .replace(/\\/g, '/')
     )

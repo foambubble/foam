@@ -2,8 +2,9 @@ import { debounce } from 'lodash';
 import * as vscode from 'vscode';
 import { Foam, FoamWorkspace, NoteParser, uris } from 'foam-core';
 import { FoamFeature } from '../types';
-import { isNote, mdDocSelector, astPositionToVsCodeRange } from '../utils';
+import { isNote, mdDocSelector } from '../utils';
 import { OPEN_COMMAND } from './utility-commands';
+import { toVsCodeRange } from '../utils/vsc-utils';
 
 const linkDecoration = vscode.window.createTextEditorDecorationType({
   rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
@@ -40,9 +41,9 @@ const feature: FoamFeature = {
       note.links.forEach(link => {
         const linkUri = foam.workspace.resolveLink(note, link);
         if (linkUri.scheme === 'placeholder') {
-          placeholderRanges.push(astPositionToVsCodeRange(link.position));
+          placeholderRanges.push(link.range);
         } else {
-          linkRanges.push(astPositionToVsCodeRange(link.position));
+          linkRanges.push(link.range);
         }
       });
       activeEditor.setDecorations(linkDecoration, linkRanges);
@@ -90,7 +91,7 @@ export class LinkProvider implements vscode.DocumentLinkProvider {
         const target = this.workspace.resolveLink(resource, link);
         const command = OPEN_COMMAND.asURI(target);
         const documentLink = new vscode.DocumentLink(
-          astPositionToVsCodeRange(link.position),
+          toVsCodeRange(link.range),
           command
         );
         documentLink.tooltip = uris.isPlaceholder(target)

@@ -1,4 +1,4 @@
-import { Node } from 'unist';
+import { Node, Position as AstPosition } from 'unist';
 import unified from 'unified';
 import markdownParse from 'remark-parse';
 import wikiLinkPlugin from 'remark-wiki-link';
@@ -15,6 +15,8 @@ import {
   isWikilink,
   getTitle,
 } from './model/note';
+import { Position, create as createPos } from './model/position';
+import { Range, create as createRange } from './model/range';
 import {
   dropExtension,
   extractHashtags,
@@ -82,7 +84,7 @@ const wikilinkPlugin: ParserPlugin = {
         type: 'wikilink',
         slug: node.value as string,
         target: node.value as string,
-        position: node.position!,
+        range: astPositionToFoamRange(node.position!),
       });
     }
     if (node.type === 'link') {
@@ -96,7 +98,7 @@ const wikilinkPlugin: ParserPlugin = {
         type: 'link',
         target: targetUri,
         label: label,
-        position: node.position!,
+        range: astPositionToFoamRange(node.position!),
       });
     }
   },
@@ -110,7 +112,7 @@ const definitionsPlugin: ParserPlugin = {
         label: node.label as string,
         url: node.url as string,
         title: node.title as string,
-        position: node.position,
+        range: astPositionToFoamRange(node.position!),
       });
     }
   },
@@ -178,8 +180,8 @@ export function createMarkdownParser(extraPlugins: ParserPlugin[]): NoteParser {
         definitions: [],
         source: {
           text: markdown,
-          contentStart: tree.position!.start,
-          end: tree.position!.end,
+          contentStart: astPointToFoamPosition(tree.position!.start),
+          end: astPointToFoamPosition(tree.position!.end),
           eol: eol,
         },
       };
@@ -202,11 +204,10 @@ export function createMarkdownParser(extraPlugins: ParserPlugin[]): NoteParser {
             // Give precendence to the title from the frontmatter if it exists
             note.title = note.properties.title ?? note.title;
             // Update the start position of the note by exluding the metadata
-            note.source.contentStart = {
-              line: node.position!.end.line! + 1,
-              column: 1,
-              offset: node.position!.end.offset! + 1,
-            };
+            note.source.contentStart = createPos(
+              node.position!.end.line! + 2,
+              0
+            );
 
             for (let i = 0, len = plugins.length; i < len; i++) {
               try {
@@ -244,7 +245,7 @@ export function createMarkdownParser(extraPlugins: ParserPlugin[]): NoteParser {
 
 function getFoamDefinitions(
   defs: NoteLinkDefinition[],
-  fileEndPoint: Point
+  fileEndPoint: Position
 ): NoteLinkDefinition[] {
   let previousLine = fileEndPoint.line;
   let foamDefinitions = [];
@@ -255,13 +256,13 @@ function getFoamDefinitions(
     // if this definition is more than 2 lines above the
     // previous one below it (or file end), that means we
     // have exited the trailing definition block, and should bail
-    const start = def.position!.start.line;
+    const start = def.range!.start.line;
     if (start < previousLine - 2) {
       break;
     }
 
     foamDefinitions.unshift(def);
-    previousLine = def.position!.end.line;
+    previousLine = def.range!.end.line;
   }
 
   return foamDefinitions;
@@ -316,3 +317,25 @@ export function createMarkdownReferences(
     .filter(isSome)
     .sort();
 }
+
+/**
+ * Converts the 1-index Point object into the VS Code 0-index Position object
+ * @param point ast Point (1-indexed)
+ * @returns Foam Position  (0-indexed)
+ */
+const astPointToFoamPosition = (point: Point): Position => {
+  return createPos(point.line - 1, point.column - 1);
+};
+
+/**
+ * Converts the 1-index Position object into the VS Code 0-index Range object
+ * @param position an ast Position object (1-indexed)
+ * @returns Foam Range  (0-indexed)
+ */
+const astPositionToFoamRange = (pos: AstPosition): Range =>
+  createRange(
+    pos.start.line - 1,
+    pos.start.column - 1,
+    pos.end.line - 1,
+    pos.end.column - 1
+  );

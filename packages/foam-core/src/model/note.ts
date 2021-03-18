@@ -1,12 +1,12 @@
-import { Position, Point } from 'unist';
 import { URI } from '../common/uri';
 import { getBasename } from '../utils/uri';
-export { Position, Point };
+import { Position } from './position';
+import { Range } from './range';
 
 export interface NoteSource {
   text: string;
-  contentStart: Point;
-  end: Point;
+  contentStart: Position;
+  end: Position;
   eol: string;
 }
 
@@ -14,14 +14,14 @@ export interface WikiLink {
   type: 'wikilink';
   slug: string;
   target: string;
-  position: Position;
+  range: Range;
 }
 
 export interface DirectLink {
   type: 'link';
   label: string;
   target: string;
-  position: Position;
+  range: Range;
 }
 
 export type NoteLink = WikiLink | DirectLink;
@@ -30,7 +30,7 @@ export interface NoteLinkDefinition {
   label: string;
   url: string;
   title?: string;
-  position?: Position;
+  range?: Range;
 }
 
 export interface BaseResource {

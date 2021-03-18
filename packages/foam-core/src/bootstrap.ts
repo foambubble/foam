@@ -3,6 +3,7 @@ import { FoamConfig, Foam, IDataStore } from './index';
 import { loadPlugins } from './plugins';
 import { isSome } from './utils';
 import { Logger } from './utils/log';
+import { isMarkdownFile } from './utils/uri';
 import { FoamWorkspace } from './model/workspace';
 
 export const bootstrap = async (config: FoamConfig, dataStore: IDataStore) => {
@@ -16,7 +17,7 @@ export const bootstrap = async (config: FoamConfig, dataStore: IDataStore) => {
   await Promise.all(
     files.map(async uri => {
       Logger.info('Found: ' + uri);
-      if (uri.path.endsWith('md')) {
+      if (isMarkdownFile(uri)) {
         const content = await dataStore.read(uri);
         if (isSome(content)) {
           workspace.set(parser.parse(uri, content));

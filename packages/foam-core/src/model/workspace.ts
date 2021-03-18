@@ -2,7 +2,8 @@ import { diff } from 'fast-array-diff';
 import { isEqual } from 'lodash';
 import * as path from 'path';
 import { URI } from '../common/uri';
-import { Resource, NoteLink, Note, Point, Position } from '../model/note';
+import { Resource, NoteLink, Note } from './note';
+import * as ranges from './range';
 import {
   computeRelativeURI,
   isSome,
@@ -332,9 +333,8 @@ export class FoamWorkspace implements IDisposable {
     delete workspace.resources[id];
 
     const name = uriToResourceName(uri);
-    workspace.resourcesByName[name] = workspace.resourcesByName[name].filter(
-      resId => resId !== id
-    );
+    workspace.resourcesByName[name] =
+      workspace.resourcesByName[name]?.filter(resId => resId !== id) ?? [];
     if (workspace.resourcesByName[name].length === 0) {
       delete workspace.resourcesByName[name];
     }
@@ -491,10 +491,4 @@ const isSameConnection = (a: Connection, b: Connection) =>
   isSameLink(a.link, b.link);
 
 const isSameLink = (a: NoteLink, b: NoteLink) =>
-  a.type === b.type && isSamePosition(a.position, b.position);
-
-const isSamePosition = (a: Position, b: Position) =>
-  isSamePoint(a.start, b.start) && isSamePoint(a.end, b.end);
-
-const isSamePoint = (a: Point, b: Point) =>
-  a.column === b.column && a.line === b.line;
+  a.type === b.type && ranges.isEqual(a.range, b.range);

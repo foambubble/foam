@@ -2,6 +2,7 @@ import { posix } from 'path';
 import GithubSlugger from 'github-slugger';
 import { hash } from './core';
 import { URI } from '../common/uri';
+import { statSync } from 'fs';
 
 export const uriToSlug = (noteUri: URI): string => {
   return GithubSlugger.slug(posix.parse(noteUri.path).name);
@@ -95,3 +96,7 @@ export const isSameUri = (a: URI, b: URI) =>
   a.path === b.path && // Note we don't use fsPath for sameness
   a.fragment === b.fragment &&
   a.query === b.query;
+
+export const isMarkdownFile = (uri: URI): boolean => {
+  return uri.path.endsWith('md') && statSync(uri.fsPath).isFile();
+};

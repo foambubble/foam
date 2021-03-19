@@ -1,4 +1,5 @@
 import { URI } from '../src/model/uri';
+import { uriToSlug } from '../src/utils/slug';
 
 describe('Foam URIs', () => {
   describe('URI parsing', () => {
@@ -13,7 +14,7 @@ describe('Foam URIs', () => {
         URI.parse('file:/path/relative/file.md#section'),
       ],
     ])('URI Parsing (%s) - %s', (input, exp) => {
-      const result = URI.parseWithReference(input, base);
+      const result = URI.resolve(input, base);
       expect(result.scheme).toEqual(exp.scheme);
       expect(result.authority).toEqual(exp.authority);
       expect(result.path).toEqual(exp.path);
@@ -22,23 +23,14 @@ describe('Foam URIs', () => {
     });
   });
   it('supports various cases', () => {
-    expect(URI.uriToSlug(URI.file('/this/is/a/path.md'))).toEqual('path');
-    expect(URI.uriToSlug(URI.file('../a/relative/path.md'))).toEqual('path');
-    expect(URI.uriToSlug(URI.file('another/relative/path.md'))).toEqual('path');
-    expect(URI.uriToSlug(URI.file('no-directory.markdown'))).toEqual(
+    expect(uriToSlug(URI.file('/this/is/a/path.md'))).toEqual('path');
+    expect(uriToSlug(URI.file('../a/relative/path.md'))).toEqual('path');
+    expect(uriToSlug(URI.file('another/relative/path.md'))).toEqual('path');
+    expect(uriToSlug(URI.file('no-directory.markdown'))).toEqual(
       'no-directory'
     );
-    expect(URI.uriToSlug(URI.file('many.dots.name.markdown'))).toEqual(
+    expect(uriToSlug(URI.file('many.dots.name.markdown'))).toEqual(
       'manydotsname'
-    );
-  });
-
-  it('normalizes URI before hashing', () => {
-    expect(URI.uriToHash(URI.file('/this/is/a/path.md'))).toEqual(
-      URI.uriToHash(URI.file('/this/has/../is/a/path.md'))
-    );
-    expect(URI.uriToHash(URI.file('this/is/a/path.md'))).toEqual(
-      URI.uriToHash(URI.file('this/has/../is/a/path.md'))
     );
   });
 
@@ -55,7 +47,7 @@ describe('Foam URIs', () => {
   });
 
   it('ignores drive letter when parsing file paths on Windows', () => {
-    const relativePath = URI.computeUrisRelativePath(
+    const relativePath = URI.relativePath(
       URI.file('C:\\this\\is\\quite\\a\\path.md'),
       URI.file('c:\\this\\is\\another\\path.md')
     );

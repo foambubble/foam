@@ -88,7 +88,7 @@ const wikilinkPlugin: ParserPlugin = {
     }
     if (node.type === 'link') {
       const targetUri = (node as any).url;
-      const uri = URI.parseWithReference(targetUri, note.uri);
+      const uri = URI.resolve(targetUri, note.uri);
       if (uri.scheme !== 'file' || uri.path === note.uri.path) {
         return;
       }
@@ -305,7 +305,7 @@ export function createMarkdownReferences(
         return null;
       }
 
-      const relativePath = URI.computeUrisRelativePath(noteUri, target.uri);
+      const relativePath = URI.relativePath(noteUri, target.uri);
       const pathToNote = includeExtension
         ? relativePath
         : dropExtension(relativePath);

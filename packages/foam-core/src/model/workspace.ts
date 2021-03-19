@@ -131,7 +131,7 @@ export class FoamWorkspace implements IDisposable {
           def => def.label === link.slug
         )?.url;
         if (isSome(definitionUri)) {
-          const definedUri = URI.parseWithReference(definitionUri, note.uri);
+          const definedUri = URI.resolve(definitionUri, note.uri);
           targetUri =
             FoamWorkspace.find(workspace, definedUri, note.uri)?.uri ??
             URI.placeholder(definedUri.path);
@@ -145,7 +145,7 @@ export class FoamWorkspace implements IDisposable {
       case 'link':
         targetUri =
           FoamWorkspace.find(workspace, link.target, note.uri)?.uri ??
-          URI.placeholder(URI.parseWithReference(link.target, note.uri).path);
+          URI.placeholder(URI.resolve(link.target, note.uri).path);
         break;
     }
 

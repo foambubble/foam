@@ -5,6 +5,7 @@ import {
 import { DirectLink } from '../src/model/note';
 import { ParserPlugin } from '../src/plugins';
 import { Logger } from '../src/utils/log';
+import { uriToSlug } from '../src/utils/slug';
 import { URI } from '../src/model/uri';
 import { FoamWorkspace } from '../src/model/workspace';
 
@@ -53,7 +54,7 @@ describe('Markdown loader', () => {
       workspace
         .list()
         .map(n => n.uri)
-        .map(URI.uriToSlug)
+        .map(uriToSlug)
         .sort()
     ).toEqual(['page-a', 'page-b', 'page-c', 'page-d', 'page-e']);
   });

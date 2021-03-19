@@ -2,8 +2,6 @@
 // See LICENSE for details
 
 import * as paths from 'path';
-import GithubSlugger from 'github-slugger';
-import { hash } from '../utils/core';
 import { statSync } from 'fs';
 import { CharCode } from '../common/charCode';
 import { isWindows } from '../common/platform';
@@ -70,7 +68,7 @@ export abstract class URI {
    * @returns the URI from the given value. In case of a relative path, the URI will take into account
    * the reference from which it is computed
    */
-  static parseWithReference(value: string, reference: URI): URI {
+  static resolve(value: string, reference: URI): URI {
     let uri = URI.parse(value);
     if (uri.scheme === 'file' && !value.startsWith('/')) {
       const [path, fragment] = value.split('#');
@@ -131,7 +129,7 @@ export abstract class URI {
     });
   }
 
-  static computeUrisRelativePath(source: URI, target: URI): string {
+  static relativePath(source: URI, target: URI): string {
     const relativePath = posix.relative(
       posix.dirname(source.path),
       target.path
@@ -184,14 +182,6 @@ export abstract class URI {
       newPath = paths.posix.join(uri.path, ...pathFragment);
     }
     return URI.create({ ...uri, path: newPath });
-  }
-
-  static uriToSlug(uri: URI): string {
-    return GithubSlugger.slug(posix.parse(uri.path).name);
-  }
-
-  static uriToHash(uri: URI): string {
-    return hash(posix.normalize(uri.path));
   }
 
   static toFsPath(uri: URI, keepDriveLetterCasing = true): string {
@@ -250,7 +240,7 @@ export abstract class URI {
     return (
       a.authority === b.authority &&
       a.scheme === b.scheme &&
-      a.path === b.path && // Note we don't use fsPath for sameness
+      a.path === b.path &&
       a.fragment === b.fragment &&
       a.query === b.query
     );

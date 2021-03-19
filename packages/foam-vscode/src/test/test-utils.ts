@@ -51,7 +51,7 @@ export const createTestNote = (params: {
 }): Note => {
   const root = params.root ?? URI.file('/');
   return {
-    uri: URI.parseWithReference(params.uri, root),
+    uri: URI.resolve(params.uri, root),
     type: 'note',
     properties: {},
     title: params.title ?? path.parse(strToUri(params.uri).path).base,

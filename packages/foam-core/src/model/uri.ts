@@ -1,5 +1,5 @@
-// Some code coming from
-// https://github.com/microsoft/vscode/tree/master/src/vs/base/common/uri.ts
+// Some code in this file coming from https://github.com/microsoft/vscode/
+// See LICENSE for details
 
 import * as paths from 'path';
 import GithubSlugger from 'github-slugger';

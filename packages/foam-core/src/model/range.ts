@@ -1,3 +1,6 @@
+// Some code in this file coming from https://github.com/microsoft/vscode/
+// See LICENSE for details
+
 import { Position } from './position';
 import * as pos from './position';
 

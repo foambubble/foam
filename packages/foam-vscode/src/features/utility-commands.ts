@@ -2,14 +2,14 @@ import * as vscode from 'vscode';
 import { FoamFeature } from '../types';
 import { commands } from 'vscode';
 import { createNoteFromPlacehoder, focusNote, isSome } from '../utils';
-import { uris } from 'foam-core';
+import { URI } from 'foam-core';
 import { toVsCodeUri } from '../utils/vsc-utils';
 
 export const OPEN_COMMAND = {
   command: 'foam-vscode.open-resource',
   title: 'Foam: Open Resource',
 
-  execute: async (params: { resource: uris.URI }) => {
+  execute: async (params: { resource: URI }) => {
     const { resource } = params;
     switch (resource.scheme) {
       case 'file':
@@ -38,10 +38,10 @@ export const OPEN_COMMAND = {
     }
   },
 
-  asURI: (resource: uris.URI) =>
+  asURI: (resource: URI) =>
     vscode.Uri.parse(
       `command:${OPEN_COMMAND.command}?${encodeURIComponent(
-        JSON.stringify({ resource: uris.from(resource) })
+        JSON.stringify({ resource: URI.create(resource) })
       )}`
     ),
 };

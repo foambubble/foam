@@ -24,11 +24,6 @@ import {
   isNone,
   isSome,
 } from './utils';
-import {
-  computeUrisRelativePath,
-  getBasename,
-  parseWithReference,
-} from './model/uri';
 import { ParserPlugin } from './plugins';
 import { Logger } from './utils/log';
 import { URI } from './model/uri';
@@ -75,7 +70,7 @@ const titlePlugin: ParserPlugin = {
   },
   onDidVisitTree: (tree, note) => {
     if (note.title == null) {
-      note.title = getBasename(note.uri);
+      note.title = URI.getBasename(note.uri);
     }
   },
 };
@@ -93,7 +88,7 @@ const wikilinkPlugin: ParserPlugin = {
     }
     if (node.type === 'link') {
       const targetUri = (node as any).url;
-      const uri = parseWithReference(targetUri, note.uri);
+      const uri = URI.parseWithReference(targetUri, note.uri);
       if (uri.scheme !== 'file' || uri.path === note.uri.path) {
         return;
       }
@@ -310,7 +305,7 @@ export function createMarkdownReferences(
         return null;
       }
 
-      const relativePath = computeUrisRelativePath(noteUri, target.uri);
+      const relativePath = URI.computeUrisRelativePath(noteUri, target.uri);
       const pathToNote = includeExtension
         ? relativePath
         : dropExtension(relativePath);

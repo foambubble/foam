@@ -15,7 +15,7 @@ import {
   Foam,
   Note,
   ranges,
-  uris,
+  URI,
 } from 'foam-core';
 
 import {
@@ -89,11 +89,11 @@ async function runJanitor(foam: Foam) {
   );
 
   const dirtyNotes = notes.filter(note =>
-    dirtyEditorsFileName.includes(uris.toFsPath(note.uri))
+    dirtyEditorsFileName.includes(URI.toFsPath(note.uri))
   );
 
   const nonDirtyNotes = notes.filter(
-    note => !dirtyEditorsFileName.includes(uris.toFsPath(note.uri))
+    note => !dirtyEditorsFileName.includes(URI.toFsPath(note.uri))
   );
 
   const wikilinkSetting = getWikilinkDefinitionSetting();
@@ -129,7 +129,7 @@ async function runJanitor(foam: Foam) {
     text = definitions ? applyTextEdit(text, definitions) : text;
     text = heading ? applyTextEdit(text, heading) : text;
 
-    return fs.promises.writeFile(uris.toFsPath(note.uri), text);
+    return fs.promises.writeFile(URI.toFsPath(note.uri), text);
   });
 
   await Promise.all(fileWritePromises);
@@ -139,7 +139,7 @@ async function runJanitor(foam: Foam) {
   for (const doc of dirtyTextDocuments) {
     const editor = await window.showTextDocument(doc);
     const note = dirtyNotes.find(
-      n => uris.toFsPath(n.uri) === editor.document.uri.fsPath
+      n => URI.toFsPath(n.uri) === editor.document.uri.fsPath
     )!;
 
     // Get edits

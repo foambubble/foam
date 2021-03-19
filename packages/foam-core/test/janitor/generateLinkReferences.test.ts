@@ -5,21 +5,22 @@ import { createConfigFromFolders } from '../../src/config';
 import { Note, ranges } from '../../src';
 import { FileDataStore } from '../../src/services/datastore';
 import { Logger } from '../../src/utils/log';
-import * as uris from '../../src/model/uri';
 import { FoamWorkspace } from '../../src/model/workspace';
-import { getBasename } from '../../src/model/uri';
+import { URI } from '../../src/model/uri';
 
 Logger.setLevel('error');
 
 describe('generateLinkReferences', () => {
   let _workspace: FoamWorkspace;
   const findBySlug = (slug: string): Note => {
-    return _workspace.list().find(res => getBasename(res.uri) === slug) as Note;
+    return _workspace
+      .list()
+      .find(res => URI.getBasename(res.uri) === slug) as Note;
   };
 
   beforeAll(async () => {
     const config = createConfigFromFolders([
-      uris.file(path.join(__dirname, '..', '__scaffold__')),
+      URI.file(path.join(__dirname, '..', '__scaffold__')),
     ]);
     _workspace = await bootstrap(config, new FileDataStore(config)).then(
       foam => foam.workspace

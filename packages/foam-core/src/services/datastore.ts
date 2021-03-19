@@ -4,7 +4,6 @@ import micromatch from 'micromatch';
 import fs from 'fs';
 import { Event, Emitter } from '../common/event';
 import { URI } from '../model/uri';
-import * as uris from '../model/uri';
 import { FoamConfig } from '../config';
 import { Logger } from '../utils/log';
 import { isSome } from '../utils';
@@ -83,7 +82,7 @@ export class FileDataStore implements IDataStore, IDisposable {
 
   constructor(config: FoamConfig, watcher?: IWatcher) {
     this._folders = config.workspaceFolders.map(f =>
-      uris.toFsPath(f).replace(/\\/g, '/')
+      URI.toFsPath(f).replace(/\\/g, '/')
     );
     Logger.info('Workspace folders: ', this._folders);
 
@@ -130,14 +129,14 @@ export class FileDataStore implements IDataStore, IDisposable {
 
   match(files: URI[]) {
     const matches = micromatch(
-      files.map(f => uris.toFsPath(f)),
+      files.map(f => URI.toFsPath(f)),
       this._includeGlobs,
       {
         ignore: this._ignoreGlobs,
         nocase: true,
       }
     );
-    return matches.map(uris.file);
+    return matches.map(URI.file);
   }
 
   isMatch(uri: URI) {
@@ -149,7 +148,7 @@ export class FileDataStore implements IDataStore, IDisposable {
       await Promise.all(
         this._folders.map(async folder => {
           const res = await findAllFiles(folderPlusGlob(folder)('**/*'));
-          return res.map(uris.file);
+          return res.map(URI.file);
         })
       )
     ).flat();
@@ -157,7 +156,7 @@ export class FileDataStore implements IDataStore, IDisposable {
   }
 
   async read(uri: URI) {
-    return (await fs.promises.readFile(uris.toFsPath(uri))).toString();
+    return (await fs.promises.readFile(URI.toFsPath(uri))).toString();
   }
 
   dispose() {

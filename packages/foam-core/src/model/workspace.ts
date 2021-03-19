@@ -3,16 +3,7 @@ import { isEqual } from 'lodash';
 import * as path from 'path';
 import { Resource, NoteLink, Note } from './note';
 import * as ranges from './range';
-import {
-  URI,
-  isUri,
-  computeRelativeURI,
-  parseWithReference,
-  placeholder,
-  file,
-  isPlaceholder,
-  isEqual as isEqualUri,
-} from './uri';
+import { URI } from './uri';
 import { isSome, isNone } from '../utils';
 import { Emitter } from '../common/event';
 import { IDisposable } from '../index';
@@ -26,7 +17,7 @@ export type Connection = {
 export function getReferenceType(
   reference: URI | string
 ): 'uri' | 'absolute-path' | 'relative-path' | 'key' {
-  if (isUri(reference)) {
+  if (URI.isUri(reference)) {
     return 'uri';
   }
   const isPath = reference.split('/').length > 1;
@@ -140,25 +131,25 @@ export class FoamWorkspace implements IDisposable {
           def => def.label === link.slug
         )?.url;
         if (isSome(definitionUri)) {
-          const definedUri = parseWithReference(definitionUri, note.uri);
+          const definedUri = URI.parseWithReference(definitionUri, note.uri);
           targetUri =
             FoamWorkspace.find(workspace, definedUri, note.uri)?.uri ??
-            placeholder(definedUri.path);
+            URI.placeholder(definedUri.path);
         } else {
           targetUri =
             FoamWorkspace.find(workspace, link.slug, note.uri)?.uri ??
-            placeholder(link.slug);
+            URI.placeholder(link.slug);
         }
         break;
 
       case 'link':
         targetUri =
           FoamWorkspace.find(workspace, link.target, note.uri)?.uri ??
-          placeholder(parseWithReference(link.target, note.uri).path);
+          URI.placeholder(URI.parseWithReference(link.target, note.uri).path);
         break;
     }
 
-    if (isPlaceholder(targetUri)) {
+    if (URI.isPlaceholder(targetUri)) {
       // we can only add placeholders when links are being resolved
       workspace = FoamWorkspace.set(workspace, {
         type: 'placeholder',
@@ -306,7 +297,7 @@ export class FoamWorkspace implements IDisposable {
         return workspace.resources[sortedPaths[0]];
 
       case 'absolute-path':
-        const resourceUri = file(resourceId as string);
+        const resourceUri = URI.file(resourceId as string);
         return (
           workspace.resources[uriToResourceId(resourceUri)] ??
           workspace.placeholders[uriToPlaceholderId(resourceUri)]
@@ -317,7 +308,7 @@ export class FoamWorkspace implements IDisposable {
           return null;
         }
         const relativePath = resourceId as string;
-        const targetUri = computeRelativeURI(reference, relativePath);
+        const targetUri = URI.computeRelativeURI(reference, relativePath);
         return (
           workspace.resources[uriToResourceId(targetUri)] ??
           workspace.placeholders[pathToPlaceholderId(resourceId as string)]
@@ -464,7 +455,7 @@ export class FoamWorkspace implements IDisposable {
     const connectionsToKeep =
       link === true
         ? (c: Connection) =>
-            !isEqualUri(source, c.source) || !isEqualUri(target, c.target)
+            !URI.isEqual(source, c.source) || !URI.isEqual(target, c.target)
         : (c: Connection) => !isSameConnection({ source, target, link }, c);
 
     workspace.links[source.path] =
@@ -476,7 +467,7 @@ export class FoamWorkspace implements IDisposable {
       workspace.backlinks[target.path]?.filter(connectionsToKeep) ?? [];
     if (workspace.backlinks[target.path].length === 0) {
       delete workspace.backlinks[target.path];
-      if (isPlaceholder(target)) {
+      if (URI.isPlaceholder(target)) {
         delete workspace.placeholders[uriToPlaceholderId(target)];
       }
     }
@@ -487,8 +478,8 @@ export class FoamWorkspace implements IDisposable {
 // TODO move these utility fns to appropriate places
 
 const isSameConnection = (a: Connection, b: Connection) =>
-  isEqualUri(a.source, b.source) &&
-  isEqualUri(a.target, b.target) &&
+  URI.isEqual(a.source, b.source) &&
+  URI.isEqual(a.target, b.target) &&
   isSameLink(a.link, b.link);
 
 const isSameLink = (a: NoteLink, b: NoteLink) =>

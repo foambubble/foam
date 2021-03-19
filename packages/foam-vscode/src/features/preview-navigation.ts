@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import markdownItRegex from 'markdown-it-regex';
-import { Foam, FoamWorkspace, Logger, uris } from 'foam-core';
+import { Foam, FoamWorkspace, Logger, URI } from 'foam-core';
 import { FoamFeature } from '../types';
 
 const feature: FoamFeature = {
@@ -34,9 +34,9 @@ export const markdownItWithFoamLinks = (
           case 'note':
             return `<a class='foam-note-link' title='${
               resource.title
-            }' href='${uris.toFsPath(resource.uri)}'>${wikilink}</a>`;
+            }' href='${URI.toFsPath(resource.uri)}'>${wikilink}</a>`;
           case 'attachment':
-            return `<a class='foam-attachment-link' title='attachment' href='${uris.toFsPath(
+            return `<a class='foam-attachment-link' title='attachment' href='${URI.toFsPath(
               resource.uri
             )}'>${wikilink}</a>`;
           case 'placeholder':

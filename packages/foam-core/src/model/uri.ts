@@ -37,268 +37,228 @@ const _empty = '';
 const _slash = '/';
 const _regexp = /^(([^:/?#]+?):)?(\/\/([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?/;
 
-export const create = (
-  scheme: string,
-  authority: string,
-  path: string,
-  query: string,
-  fragment: string
-): URI => ({
-  scheme,
-  authority,
-  path,
-  query,
-  fragment,
-});
-
-export const parse = (value: string): URI => {
-  const match = _regexp.exec(value);
-  if (!match) {
-    return create(_empty, _empty, _empty, _empty, _empty);
+export abstract class URI {
+  static create(from: Partial<URI>): URI {
+    return {
+      scheme: from.scheme ?? _empty,
+      authority: from.authority ?? _empty,
+      path: from.path ?? _empty,
+      query: from.query ?? _empty,
+      fragment: from.fragment ?? _empty,
+    };
   }
-  return create(
-    match[2] || 'file',
-    percentDecode(match[4] || _empty),
-    percentDecode(match[5] || _empty),
-    percentDecode(match[7] || _empty),
-    percentDecode(match[9] || _empty)
-  );
-};
 
-/**
- * Parses a URI from value, taking into consideration possible relative paths.
- *
- * @param reference the URI to use as reference in case value is a relative path
- * @param value the value to parse for a URI
- * @returns the URI from the given value. In case of a relative path, the URI will take into account
- * the reference from which it is computed
- */
-export const parseWithReference = (value: string, reference: URI): URI => {
-  let uri = parse(value);
-  if (uri.scheme === 'file' && !value.startsWith('/')) {
-    const [path, fragment] = value.split('#');
-    uri = path.length > 0 ? computeRelativeURI(reference, path) : reference;
-    if (fragment) {
-      uri = from(uri, {
-        fragment: fragment,
-      });
+  static parse(value: string): URI {
+    const match = _regexp.exec(value);
+    if (!match) {
+      return URI.create({});
     }
-  }
-  return uri;
-};
-
-export const computeRelativeURI = (
-  reference: URI,
-  relativeSlug: string
-): URI => {
-  // if no extension is provided, use the same extension as the source file
-  const slug =
-    posix.extname(relativeSlug) !== ''
-      ? relativeSlug
-      : `${relativeSlug}${posix.extname(reference.path)}`;
-  return from(reference, {
-    path: posix.join(posix.dirname(reference.path), slug),
-  });
-};
-
-export const file = (path: string): URI => {
-  let authority = _empty;
-
-  // normalize to fwd-slashes on windows,
-  // on other systems bwd-slashes are valid
-  // filename character, eg /f\oo/ba\r.txt
-  if (isWindows) {
-    path = path.replace(/\\/g, _slash);
+    return URI.create({
+      scheme: match[2] || 'file',
+      authority: percentDecode(match[4] ?? _empty),
+      path: percentDecode(match[5] ?? _empty),
+      query: percentDecode(match[7] ?? _empty),
+      fragment: percentDecode(match[9] ?? _empty),
+    });
   }
 
-  // check for authority as used in UNC shares
-  // or use the path as given
-  if (path[0] === _slash && path[1] === _slash) {
-    const idx = path.indexOf(_slash, 2);
-    if (idx === -1) {
-      authority = path.substring(2);
-      path = _slash;
+  /**
+   * Parses a URI from value, taking into consideration possible relative paths.
+   *
+   * @param reference the URI to use as reference in case value is a relative path
+   * @param value the value to parse for a URI
+   * @returns the URI from the given value. In case of a relative path, the URI will take into account
+   * the reference from which it is computed
+   */
+  static parseWithReference(value: string, reference: URI): URI {
+    let uri = URI.parse(value);
+    if (uri.scheme === 'file' && !value.startsWith('/')) {
+      const [path, fragment] = value.split('#');
+      uri =
+        path.length > 0 ? URI.computeRelativeURI(reference, path) : reference;
+      if (fragment) {
+        uri = URI.create({
+          ...uri,
+          fragment: fragment,
+        });
+      }
+    }
+    return uri;
+  }
+
+  static computeRelativeURI(reference: URI, relativeSlug: string): URI {
+    // if no extension is provided, use the same extension as the source file
+    const slug =
+      posix.extname(relativeSlug) !== ''
+        ? relativeSlug
+        : `${relativeSlug}${posix.extname(reference.path)}`;
+    return URI.create({
+      ...reference,
+      path: posix.join(posix.dirname(reference.path), slug),
+    });
+  }
+
+  static file(path: string): URI {
+    let authority = _empty;
+
+    // normalize to fwd-slashes on windows,
+    // on other systems bwd-slashes are valid
+    // filename character, eg /f\oo/ba\r.txt
+    if (isWindows) {
+      path = path.replace(/\\/g, _slash);
+    }
+
+    // check for authority as used in UNC shares
+    // or use the path as given
+    if (path[0] === _slash && path[1] === _slash) {
+      const idx = path.indexOf(_slash, 2);
+      if (idx === -1) {
+        authority = path.substring(2);
+        path = _slash;
+      } else {
+        authority = path.substring(2, idx);
+        path = path.substring(idx) || _slash;
+      }
+    }
+
+    return URI.create({ scheme: 'file', authority, path });
+  }
+
+  static placeholder(key: string): URI {
+    return URI.create({
+      scheme: 'placeholder',
+      path: key,
+    });
+  }
+
+  static computeUrisRelativePath(source: URI, target: URI): string {
+    const relativePath = posix.relative(
+      posix.dirname(source.path),
+      target.path
+    );
+    return relativePath;
+  }
+
+  static getBasename(uri: URI) {
+    return posix.parse(uri.path).name;
+  }
+
+  static getDir(uri: URI) {
+    return URI.file(posix.dirname(uri.path));
+  }
+
+  /**
+   * Uses a placeholder URI, and a reference directory, to generate
+   * the URI of the corresponding resource
+   *
+   * @param placeholderUri the placeholder URI
+   * @param basedir the dir to be used as reference
+   * @returns the target resource URI
+   */
+  static createResourceUriFromPlaceholder(
+    basedir: URI,
+    placeholderUri: URI
+  ): URI {
+    const tokens = placeholderUri.path.split('/');
+    const path = tokens.slice(0, -1);
+    const filename = tokens.slice(-1);
+    return URI.joinPath(basedir, ...path, `${filename}.md`);
+  }
+
+  /**
+   * Join a URI path with path fragments and normalizes the resulting path.
+   *
+   * @param uri The input URI.
+   * @param pathFragment The path fragment to add to the URI path.
+   * @returns The resulting URI.
+   */
+  static joinPath(uri: URI, ...pathFragment: string[]): URI {
+    if (!uri.path) {
+      throw new Error(`[UriError]: cannot call joinPath on URI without path`);
+    }
+    let newPath: string;
+    if (isWindows && uri.scheme === 'file') {
+      newPath = URI.file(paths.win32.join(URI.toFsPath(uri), ...pathFragment))
+        .path;
     } else {
-      authority = path.substring(2, idx);
-      path = path.substring(idx) || _slash;
+      newPath = paths.posix.join(uri.path, ...pathFragment);
     }
+    return URI.create({ ...uri, path: newPath });
   }
 
-  return create('file', authority, path, _empty, _empty);
-};
-
-export const placeholder = (key: string): URI => {
-  return {
-    scheme: 'placeholder',
-    authority: '',
-    path: key,
-    query: '',
-    fragment: '',
-  };
-};
-
-export const from = (
-  uri: URI,
-  change?: {
-    scheme?: string | null;
-    authority?: string | null;
-    path?: string | null;
-    query?: string | null;
-    fragment?: string | null;
+  static uriToSlug(uri: URI): string {
+    return GithubSlugger.slug(posix.parse(uri.path).name);
   }
-): URI => {
-  change = change ?? {};
-  const scheme =
-    change.scheme === undefined
-      ? uri.scheme
-      : change.scheme === null
-      ? _empty
-      : change.scheme;
 
-  const authority =
-    change.authority === undefined
-      ? uri.authority
-      : change.authority === null
-      ? _empty
-      : change.authority;
-
-  const path =
-    change.path === undefined
-      ? uri.path
-      : change.path === null
-      ? _empty
-      : change.path;
-
-  const query =
-    change.query === undefined
-      ? uri.query
-      : change.query === null
-      ? _empty
-      : change.query;
-
-  const fragment =
-    change.fragment === undefined
-      ? uri.fragment
-      : change.fragment === null
-      ? _empty
-      : change.fragment;
-
-  return { scheme, authority, path, query, fragment };
-};
-
-export const computeUrisRelativePath = (source: URI, target: URI): string => {
-  const relativePath = posix.relative(posix.dirname(source.path), target.path);
-  return relativePath;
-};
-
-export const getBasename = (uri: URI) => posix.parse(uri.path).name;
-
-export const getDir = (uri: URI) => file(posix.dirname(uri.path));
-
-/**
- * Uses a placeholder URI, and a reference directory, to generate
- * the URI of the corresponding resource
- *
- * @param placeholderUri the placeholder URI
- * @param basedir the dir to be used as reference
- * @returns the target resource URI
- */
-export const createResourceUriFromPlaceholder = (
-  basedir: URI,
-  placeholderUri: URI
-): URI => {
-  const tokens = placeholderUri.path.split('/');
-  const path = tokens.slice(0, -1);
-  const filename = tokens.slice(-1);
-  return joinPath(basedir, ...path, `${filename}.md`);
-};
-
-/**
- * Join a URI path with path fragments and normalizes the resulting path.
- *
- * @param uri The input URI.
- * @param pathFragment The path fragment to add to the URI path.
- * @returns The resulting URI.
- */
-export const joinPath = (uri: URI, ...pathFragment: string[]): URI => {
-  if (!uri.path) {
-    throw new Error(`[UriError]: cannot call joinPath on URI without path`);
+  static uriToHash(uri: URI): string {
+    return hash(posix.normalize(uri.path));
   }
-  let newPath: string;
-  if (isWindows && uri.scheme === 'file') {
-    newPath = file(paths.win32.join(toFsPath(uri), ...pathFragment)).path;
-  } else {
-    newPath = paths.posix.join(uri.path, ...pathFragment);
-  }
-  return from(uri, { path: newPath });
-};
 
-export const uriToSlug = (uri: URI): string => {
-  return GithubSlugger.slug(posix.parse(uri.path).name);
-};
-
-export const uriToHash = (uri: URI): string => {
-  return hash(posix.normalize(uri.path));
-};
-
-export function toFsPath(uri: URI, keepDriveLetterCasing = true): string {
-  let value: string;
-  if (uri.authority && uri.path.length > 1 && uri.scheme === 'file') {
-    // unc path: file://shares/c$/far/boo
-    value = `//${uri.authority}${uri.path}`;
-  } else if (
-    uri.path.charCodeAt(0) === CharCode.Slash &&
-    ((uri.path.charCodeAt(1) >= CharCode.A &&
-      uri.path.charCodeAt(1) <= CharCode.Z) ||
-      (uri.path.charCodeAt(1) >= CharCode.a &&
-        uri.path.charCodeAt(1) <= CharCode.z)) &&
-    uri.path.charCodeAt(2) === CharCode.Colon
-  ) {
-    if (!keepDriveLetterCasing) {
-      // windows drive letter: file:///c:/far/boo
-      value = uri.path[1].toLowerCase() + uri.path.substr(2);
+  static toFsPath(uri: URI, keepDriveLetterCasing = true): string {
+    let value: string;
+    if (uri.authority && uri.path.length > 1 && uri.scheme === 'file') {
+      // unc path: file://shares/c$/far/boo
+      value = `//${uri.authority}${uri.path}`;
+    } else if (
+      uri.path.charCodeAt(0) === CharCode.Slash &&
+      ((uri.path.charCodeAt(1) >= CharCode.A &&
+        uri.path.charCodeAt(1) <= CharCode.Z) ||
+        (uri.path.charCodeAt(1) >= CharCode.a &&
+          uri.path.charCodeAt(1) <= CharCode.z)) &&
+      uri.path.charCodeAt(2) === CharCode.Colon
+    ) {
+      if (!keepDriveLetterCasing) {
+        // windows drive letter: file:///c:/far/boo
+        value = uri.path[1].toLowerCase() + uri.path.substr(2);
+      } else {
+        value = uri.path.substr(1);
+      }
     } else {
-      value = uri.path.substr(1);
+      // other path
+      value = uri.path;
     }
-  } else {
-    // other path
-    value = uri.path;
+    if (isWindows) {
+      value = value.replace(/\//g, '\\');
+    }
+    return value;
   }
-  if (isWindows) {
-    value = value.replace(/\//g, '\\');
+
+  static toString(uri: URI): string {
+    return encode(uri, false);
   }
-  return value;
+
+  // --- utility
+
+  static isUri(thing: any): thing is URI {
+    if (!thing) {
+      return false;
+    }
+    return (
+      typeof (thing as URI).authority === 'string' &&
+      typeof (thing as URI).fragment === 'string' &&
+      typeof (thing as URI).path === 'string' &&
+      typeof (thing as URI).query === 'string' &&
+      typeof (thing as URI).scheme === 'string'
+    );
+  }
+
+  static isPlaceholder(uri: URI): boolean {
+    return uri.scheme === 'placeholder';
+  }
+
+  static isEqual(a: URI, b: URI): boolean {
+    return (
+      a.authority === b.authority &&
+      a.scheme === b.scheme &&
+      a.path === b.path && // Note we don't use fsPath for sameness
+      a.fragment === b.fragment &&
+      a.query === b.query
+    );
+  }
+  static isMarkdownFile(uri: URI): boolean {
+    return uri.path.endsWith('md') && statSync(URI.toFsPath(uri)).isFile();
+  }
 }
-
-export const toString = (uri: URI): string => encode(uri, false);
-
-// --- utility
-
-export const isUri = (thing: any): thing is URI => {
-  if (!thing) {
-    return false;
-  }
-  return (
-    typeof (thing as URI).authority === 'string' &&
-    typeof (thing as URI).fragment === 'string' &&
-    typeof (thing as URI).path === 'string' &&
-    typeof (thing as URI).query === 'string' &&
-    typeof (thing as URI).scheme === 'string'
-  );
-};
-
-export const isPlaceholder = (uri: URI): boolean =>
-  uri.scheme === 'placeholder';
-
-export const isEqual = (a: URI, b: URI) =>
-  a.authority === b.authority &&
-  a.scheme === b.scheme &&
-  a.path === b.path && // Note we don't use fsPath for sameness
-  a.fragment === b.fragment &&
-  a.query === b.query;
-
-export const isMarkdownFile = (uri: URI): boolean =>
-  uri.path.endsWith('md') && statSync(toFsPath(uri)).isFile();
 
 // --- encode / decode
 

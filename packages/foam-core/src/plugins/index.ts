@@ -6,7 +6,7 @@ import { Note } from '../model/note';
 import unified from 'unified';
 import { FoamConfig } from '../config';
 import { Logger } from '../utils/log';
-import { URI, file, toFsPath, joinPath } from '../model/uri';
+import { URI } from '../model/uri';
 
 export interface FoamPlugin {
   name: string;
@@ -38,15 +38,15 @@ export async function loadPlugins(config: FoamConfig): Promise<FoamPlugin[]> {
     return [];
   }
   const pluginDirs: URI[] =
-    pluginConfig.pluginFolders?.map(file) ??
+    pluginConfig.pluginFolders?.map(URI.file) ??
     findPluginDirs(config.workspaceFolders);
 
   const plugins = await Promise.all(
     pluginDirs
-      .filter(dir => fs.statSync(toFsPath(dir)).isDirectory)
+      .filter(dir => fs.statSync(URI.toFsPath(dir)).isDirectory)
       .map(async dir => {
         try {
-          const pluginFile = path.join(toFsPath(dir), 'index.js');
+          const pluginFile = path.join(URI.toFsPath(dir), 'index.js');
           fs.accessSync(pluginFile);
           Logger.info(`Found plugin at [${pluginFile}]. Loading..`);
           const plugin = validate(await import(pluginFile));
@@ -62,15 +62,15 @@ export async function loadPlugins(config: FoamConfig): Promise<FoamPlugin[]> {
 
 function findPluginDirs(workspaceFolders: URI[]) {
   return workspaceFolders
-    .map(root => joinPath(root, '.foam', 'plugins'))
+    .map(root => URI.joinPath(root, '.foam', 'plugins'))
     .reduce((acc, pluginDir) => {
       try {
         const content = fs
-          .readdirSync(toFsPath(pluginDir))
-          .map(dir => joinPath(pluginDir, dir));
+          .readdirSync(URI.toFsPath(pluginDir))
+          .map(dir => URI.joinPath(pluginDir, dir));
         return [
           ...acc,
-          ...content.filter(c => fs.statSync(toFsPath(c)).isDirectory()),
+          ...content.filter(c => fs.statSync(URI.toFsPath(c)).isDirectory()),
         ];
       } catch {
         return acc;

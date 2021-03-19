@@ -1,19 +1,19 @@
-import * as uris from '../src/model/uri';
+import { URI } from '../src/model/uri';
 
 describe('Foam URIs', () => {
   describe('URI parsing', () => {
-    const base = uris.file('/path/to/file.md');
+    const base = URI.file('/path/to/file.md');
     test.each([
-      ['https://www.google.com', uris.parse('https://www.google.com')],
-      ['/path/to/a/file.md', uris.file('/path/to/a/file.md')],
-      ['../relative/file.md', uris.file('/path/relative/file.md')],
-      ['#section', uris.from(base, { fragment: 'section' })],
+      ['https://www.google.com', URI.parse('https://www.google.com')],
+      ['/path/to/a/file.md', URI.file('/path/to/a/file.md')],
+      ['../relative/file.md', URI.file('/path/relative/file.md')],
+      ['#section', URI.create({ ...base, fragment: 'section' })],
       [
         '../relative/file.md#section',
-        uris.parse('file:/path/relative/file.md#section'),
+        URI.parse('file:/path/relative/file.md#section'),
       ],
     ])('URI Parsing (%s) - %s', (input, exp) => {
-      const result = uris.parseWithReference(input, base);
+      const result = URI.parseWithReference(input, base);
       expect(result.scheme).toEqual(exp.scheme);
       expect(result.authority).toEqual(exp.authority);
       expect(result.path).toEqual(exp.path);
@@ -22,58 +22,43 @@ describe('Foam URIs', () => {
     });
   });
   it('supports various cases', () => {
-    expect(uris.uriToSlug(uris.file('/this/is/a/path.md'))).toEqual('path');
-    expect(uris.uriToSlug(uris.file('../a/relative/path.md'))).toEqual('path');
-    expect(uris.uriToSlug(uris.file('another/relative/path.md'))).toEqual(
-      'path'
-    );
-    expect(uris.uriToSlug(uris.file('no-directory.markdown'))).toEqual(
+    expect(URI.uriToSlug(URI.file('/this/is/a/path.md'))).toEqual('path');
+    expect(URI.uriToSlug(URI.file('../a/relative/path.md'))).toEqual('path');
+    expect(URI.uriToSlug(URI.file('another/relative/path.md'))).toEqual('path');
+    expect(URI.uriToSlug(URI.file('no-directory.markdown'))).toEqual(
       'no-directory'
     );
-    expect(uris.uriToSlug(uris.file('many.dots.name.markdown'))).toEqual(
+    expect(URI.uriToSlug(URI.file('many.dots.name.markdown'))).toEqual(
       'manydotsname'
     );
   });
 
   it('normalizes URI before hashing', () => {
-    expect(uris.uriToHash(uris.file('/this/is/a/path.md'))).toEqual(
-      uris.uriToHash(uris.file('/this/has/../is/a/path.md'))
+    expect(URI.uriToHash(URI.file('/this/is/a/path.md'))).toEqual(
+      URI.uriToHash(URI.file('/this/has/../is/a/path.md'))
     );
-    expect(uris.uriToHash(uris.file('this/is/a/path.md'))).toEqual(
-      uris.uriToHash(uris.file('this/has/../is/a/path.md'))
+    expect(URI.uriToHash(URI.file('this/is/a/path.md'))).toEqual(
+      URI.uriToHash(URI.file('this/has/../is/a/path.md'))
     );
   });
 
   it('computes a relative uri using a slug', () => {
     expect(
-      uris.computeRelativeURI(uris.file('/my/file.md'), '../hello.md')
-    ).toEqual(uris.file('/hello.md'));
+      URI.computeRelativeURI(URI.file('/my/file.md'), '../hello.md')
+    ).toEqual(URI.file('/hello.md'));
+    expect(URI.computeRelativeURI(URI.file('/my/file.md'), '../hello')).toEqual(
+      URI.file('/hello.md')
+    );
     expect(
-      uris.computeRelativeURI(uris.file('/my/file.md'), '../hello')
-    ).toEqual(uris.file('/hello.md'));
-    expect(
-      uris.computeRelativeURI(uris.file('/my/file.markdown'), '../hello')
-    ).toEqual(uris.file('/hello.markdown'));
+      URI.computeRelativeURI(URI.file('/my/file.markdown'), '../hello')
+    ).toEqual(URI.file('/hello.markdown'));
   });
 
   it('ignores drive letter when parsing file paths on Windows', () => {
-    // Clear module cache in jest
-    jest.resetModules();
-
-    // Mock the platform
-    jest.doMock('../src/common/platform', () => {
-      const original = jest.requireActual('../src/common/platform');
-      return {
-        ...original,
-        isWindows: true,
-      };
-    });
-
-    // Require the URI module with the platform, scoped for this test only
-    const file = require('../src/model/uri').file;
-    expect(file('c:\\test\\path')).toEqual(file('C:\\test\\path'));
-
-    // Unmock the platform module
-    jest.unmock('../src/common/platform');
+    const relativePath = URI.computeUrisRelativePath(
+      URI.file('C:\\this\\is\\quite\\a\\path.md'),
+      URI.file('c:\\this\\is\\another\\path.md')
+    );
+    expect(relativePath).toEqual('../../another/path.md');
   });
 });

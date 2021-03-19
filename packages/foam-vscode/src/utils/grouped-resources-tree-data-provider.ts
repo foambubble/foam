@@ -1,13 +1,6 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
-import {
-  IDataStore,
-  URI,
-  FoamWorkspace,
-  Resource,
-  getTitle,
-  uris,
-} from 'foam-core';
+import { IDataStore, URI, FoamWorkspace, Resource, getTitle } from 'foam-core';
 import micromatch from 'micromatch';
 import {
   GroupedResourcesConfig,
@@ -177,7 +170,7 @@ export class GroupedResourcesTreeDataProvider
   }
 
   private isMatch(uri: URI) {
-    return micromatch.isMatch(uris.toFsPath(uri), this.exclude);
+    return micromatch.isMatch(URI.toFsPath(uri), this.exclude);
   }
 
   private getGlobs(fsURI: URI[], globs: string[]): string[] {

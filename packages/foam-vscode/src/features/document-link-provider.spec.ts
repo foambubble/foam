@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { FoamWorkspace, createMarkdownParser, uris } from 'foam-core';
+import { FoamWorkspace, createMarkdownParser, URI } from 'foam-core';
 import {
   cleanWorkspace,
   closeEditors,
@@ -100,7 +100,7 @@ describe('Document links provider', () => {
 
     expect(links.length).toEqual(1);
     expect(links[0].target).toEqual(
-      OPEN_COMMAND.asURI(toVsCodeUri(uris.placeholder('a placeholder')))
+      OPEN_COMMAND.asURI(toVsCodeUri(URI.placeholder('a placeholder')))
     );
     expect(links[0].range).toEqual(new vscode.Range(0, 18, 0, 35));
   });

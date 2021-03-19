@@ -9,7 +9,6 @@ import {
   Resource,
   URI,
   Range,
-  uris,
 } from 'foam-core';
 import { getNoteTooltip } from '../utils';
 import { FoamFeature } from '../types';
@@ -76,7 +75,7 @@ export class BacklinksTreeDataProvider
       const backlinkRefs = Promise.all(
         resource.links
           .filter(link =>
-            uris.isEqual(this.workspace.resolveLink(resource, link), uri)
+            URI.isEqual(this.workspace.resolveLink(resource, link), uri)
           )
           .map(async link => {
             const item = new BacklinkTreeItem(resource, link);
@@ -106,7 +105,7 @@ export class BacklinksTreeDataProvider
     const backlinksByResourcePath = groupBy(
       this.workspace
         .getConnections(uri)
-        .filter(c => uris.isEqual(c.target, uri)),
+        .filter(c => URI.isEqual(c.target, uri)),
       b => b.source.path
     );
 

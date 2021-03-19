@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { Foam, FoamWorkspace, NoteParser, uris } from 'foam-core';
+import { Foam, FoamWorkspace, NoteParser, URI } from 'foam-core';
 import { FoamFeature } from '../types';
 import { isNote, mdDocSelector } from '../utils';
 import { OPEN_COMMAND } from './utility-commands';
@@ -37,9 +37,9 @@ export class LinkProvider implements vscode.DocumentLinkProvider {
           toVsCodeRange(link.range),
           command
         );
-        documentLink.tooltip = uris.isPlaceholder(target)
+        documentLink.tooltip = URI.isPlaceholder(target)
           ? `Create note for '${target.path}'`
-          : `Go to ${uris.toFsPath(target)}`;
+          : `Go to ${URI.toFsPath(target)}`;
         return documentLink;
       });
     }

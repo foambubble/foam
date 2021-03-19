@@ -2,7 +2,7 @@ import path from 'path';
 import { loadPlugins } from '../src/plugins';
 import { createMarkdownParser } from '../src/markdown-provider';
 import { FoamConfig, createConfigFromObject } from '../src/config';
-import * as uris from '../src/model/uri';
+import { URI } from '../src/model/uri';
 import { Logger } from '../src/utils/log';
 
 Logger.setLevel('error');
@@ -53,7 +53,7 @@ describe('Foam plugins', () => {
     const parser = createMarkdownParser([parserPlugin!]);
 
     const note = parser.parse(
-      uris.file('/path/to/a'),
+      URI.file('/path/to/a'),
       `
 # This is a note with header
 and some content`

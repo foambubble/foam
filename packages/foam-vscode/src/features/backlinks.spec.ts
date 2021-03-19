@@ -1,5 +1,5 @@
 import { workspace, window } from 'vscode';
-import { URI, FoamWorkspace, IDataStore, uris } from 'foam-core';
+import { URI, FoamWorkspace, IDataStore } from 'foam-core';
 import {
   cleanWorkspace,
   closeEditors,
@@ -61,7 +61,7 @@ describe('Backlinks panel', () => {
   // Skipping these as still figuring out how to interact with the provider
   // running in the test instance of VS Code
   it.skip('does not target excluded files', async () => {
-    provider.target = uris.file('/excluded-file.txt');
+    provider.target = URI.file('/excluded-file.txt');
     expect(await provider.getChildren()).toEqual([]);
   });
   it.skip('targets active editor', async () => {

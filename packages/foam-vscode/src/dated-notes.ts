@@ -3,7 +3,7 @@ import dateFormat from 'dateformat';
 import * as fs from 'fs';
 import { isAbsolute } from 'path';
 import { docConfig, focusNote, pathExists } from './utils';
-import { uris, URI } from 'foam-core';
+import { URI } from 'foam-core';
 
 async function openDailyNoteFor(date?: Date) {
   const foamConfiguration = workspace.getConfiguration('foam');
@@ -28,9 +28,9 @@ function getDailyNotePath(
   const dailyNoteFilename = getDailyNoteFileName(configuration, date);
 
   if (isAbsolute(dailyNoteDirectory)) {
-    return uris.joinPath(Uri.file(dailyNoteDirectory), dailyNoteFilename);
+    return URI.joinPath(Uri.file(dailyNoteDirectory), dailyNoteFilename);
   } else {
-    return uris.joinPath(
+    return URI.joinPath(
       workspace.workspaceFolders[0].uri,
       dailyNoteDirectory,
       dailyNoteFilename
@@ -68,7 +68,7 @@ async function createDailyNoteIfNotExists(
     configuration.get('openDailyNote.filenameFormat');
 
   await fs.promises.writeFile(
-    uris.toFsPath(dailyNotePath),
+    URI.toFsPath(dailyNotePath),
     `# ${dateFormat(currentDate, titleFormat, false)}${docConfig.eol}${
       docConfig.eol
     }`
@@ -78,10 +78,10 @@ async function createDailyNoteIfNotExists(
 }
 
 async function createDailyNoteDirectoryIfNotExists(dailyNotePath: URI) {
-  const dailyNoteDirectory = uris.getDir(dailyNotePath);
+  const dailyNoteDirectory = URI.getDir(dailyNotePath);
 
   if (!(await pathExists(dailyNoteDirectory))) {
-    await fs.promises.mkdir(uris.toFsPath(dailyNoteDirectory), {
+    await fs.promises.mkdir(URI.toFsPath(dailyNoteDirectory), {
       recursive: true,
     });
   }

@@ -12,7 +12,7 @@ import {
   Uri,
 } from 'vscode';
 import * as fs from 'fs';
-import { Logger, Resource, Note, uris, URI } from 'foam-core';
+import { Logger, Resource, Note, URI } from 'foam-core';
 import matter from 'gray-matter';
 import removeMarkdown from 'remove-markdown';
 import { TextEncoder } from 'util';
@@ -139,7 +139,7 @@ export function toTitleCase(word: string): string {
  */
 export function pathExists(path: URI) {
   return fs.promises
-    .access(uris.toFsPath(path), fs.constants.F_OK)
+    .access(URI.toFsPath(path), fs.constants.F_OK)
     .then(() => true)
     .catch(() => false);
 }
@@ -264,18 +264,18 @@ export const isNote = (resource: Resource): resource is Note => {
  * if the Uri was not a placeholder or no reference directory could be found
  */
 export const createNoteFromPlacehoder = async (
-  placeholder: uris.URI
+  placeholder: URI
 ): Promise<Uri | null> => {
   const basedir =
     workspace.workspaceFolders.length > 0
       ? workspace.workspaceFolders[0].uri
       : window.activeTextEditor?.document.uri
-      ? uris.getDir(window.activeTextEditor!.document.uri)
+      ? URI.getDir(window.activeTextEditor!.document.uri)
       : null;
 
   if (isSome(basedir)) {
     const target = toVsCodeUri(
-      uris.createResourceUriFromPlaceholder(basedir, placeholder)
+      URI.createResourceUriFromPlaceholder(basedir, placeholder)
     );
     await workspace.fs.writeFile(target, new TextEncoder().encode(''));
     return target;

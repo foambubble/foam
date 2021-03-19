@@ -19,11 +19,10 @@ import { ILogger } from './utils/log';
 import { IDisposable, isDisposable } from './common/lifecycle';
 import { FoamWorkspace } from './model/workspace';
 import { URI } from './model/uri';
-import * as uris from './model/uri';
 import * as positions from './model/position';
 import * as ranges from './model/range';
 
-export { uris, positions, ranges };
+export { positions, ranges };
 export { IDataStore, FileDataStore };
 export { ILogger };
 export { LogLevel, LogLevelThreshold, Logger, BaseLogger } from './utils/log';

@@ -45,12 +45,4 @@ describe('Foam URIs', () => {
       URI.computeRelativeURI(URI.file('/my/file.markdown'), '../hello')
     ).toEqual(URI.file('/hello.markdown'));
   });
-
-  it('ignores drive letter when parsing file paths on Windows', () => {
-    const relativePath = URI.relativePath(
-      URI.file('C:\\this\\is\\quite\\a\\path.md'),
-      URI.file('c:\\this\\is\\another\\path.md')
-    );
-    expect(relativePath).toEqual('../../another/path.md');
-  });
 });

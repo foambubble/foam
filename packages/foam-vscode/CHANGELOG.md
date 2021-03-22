@@ -4,6 +4,19 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.12.0] - 2021-03-22
+
+Features:
+
+- Launch daily note on startup (#501 - thanks @ingalles)
+- Allow absolute directory in daily notes (#482 - thanks @movermeyer)
+- Navigate wikilinks in Preview even without link definitions (#521)
+- Workspace navigation (links and wikilinks) powered by Foam (#524)
+
+Fixes and Improvements:
+
+- Ignore directories that have .md extension (#533 - thanks @movermeyer)
+
 ## [0.11.0] - 2021-03-09
 
 Features:

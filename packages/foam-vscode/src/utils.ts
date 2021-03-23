@@ -16,8 +16,10 @@ import { Logger, Resource, Note, URI } from 'foam-core';
 import matter from 'gray-matter';
 import removeMarkdown from 'remove-markdown';
 import { TextEncoder } from 'util';
-import { posix } from 'path';
+import os from 'os';
 import { toVsCodeUri } from './utils/vsc-utils';
+
+export const isWindows = os.platform() === 'win32';
 
 export const docConfig = { tab: '  ', eol: '\r\n' };
 

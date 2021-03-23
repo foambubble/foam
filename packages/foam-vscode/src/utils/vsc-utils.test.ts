@@ -3,8 +3,8 @@ import { workspace, Uri } from 'vscode';
 import { URI } from 'foam-core';
 import { fromVsCodeUri, toVsCodeUri } from './vsc-utils';
 
-describe.skip('uri conversion', () => {
-  it('uses drive letter casing in windows', () => {
+describe('uri conversion', () => {
+  it.skip('uses drive letter casing in windows #488 #507', () => {
     if (os.platform() === 'win32') {
       const uri = workspace.workspaceFolders[0].uri;
       const isDriveUppercase =
@@ -21,8 +21,9 @@ describe.skip('uri conversion', () => {
   });
 
   it('is consistent when converting from VS Code to Foam URI', () => {
-    const uri = workspace.workspaceFolders[0].uri;
-    expect(toVsCodeUri(fromVsCodeUri(uri))).toEqual(uri);
+    const vsUri = workspace.workspaceFolders[0].uri;
+    const fUri = fromVsCodeUri(vsUri);
+    expect(toVsCodeUri(fUri)).toEqual(expect.objectContaining(fUri));
   });
 
   it('is consistent when converting from Foam to VS Code URI', () => {

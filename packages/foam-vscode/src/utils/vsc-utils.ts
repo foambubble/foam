@@ -13,4 +13,4 @@ export const toVsCodeRange = (r: FoamRange): Range =>
 
 export const toVsCodeUri = (u: FoamURI): Uri => Uri.parse(FoamURI.toString(u));
 
-export const fromVsCodeUri = (u: Uri): FoamURI => FoamURI.create(u);
+export const fromVsCodeUri = (u: Uri): FoamURI => FoamURI.parse(u.toString());

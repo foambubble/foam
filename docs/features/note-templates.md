@@ -14,4 +14,14 @@ To create a note from a template, execute the `Foam: Create New Note From Templa
 
 _Theme: Ayu Light_
 
+### Variables
+
 Templates can use all the variables available in [VS Code Snippets](https://code.visualstudio.com/docs/editor/userdefinedsnippets#_variables).
+
+In addition, you can also use variables provided by Foam:
+
+| Name         | Description                                                                         |
+| ------------ | ----------------------------------------------------------------------------------- |
+| `FOAM_TITLE` | The title of the note. If used, Foam will prompt you to enter a title for the note. |
+
+**Note:** neither the defaulting feature (eg. `${variable:default}`) nor the format feature (eg. `${variable/(.*)/${1:/upcase}/}`) (available to other variables) are available for these Foam-provided variables.

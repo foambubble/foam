@@ -23,7 +23,7 @@ Welcome to Foam templates.
 
 What you see in the heading is a placeholder
 - it allows you to quickly move through positions of the new note by pressing TAB, e.g. to easily fill fields
-- a placeholder optionally has a default value, which can be some text or, as in this case, a [variables](https://code.visualstudio.com/docs/editor/userdefinedsnippets#_variables)
+- a placeholder optionally has a default value, which can be some text or, as in this case, a [variable](https://code.visualstudio.com/docs/editor/userdefinedsnippets#_variables)
   - when landing on a placeholder, the default value is already selected so you can easily replace it
 - a placeholder can define a list of values, e.g.: \${2|one,two,three|}
 - you can use variables even outside of placeholders, here is today's date: \${CURRENT_YEAR}/\${CURRENT_MONTH}/\${CURRENT_DATE}
@@ -52,6 +52,58 @@ async function offerToCreateTemplate(): Promise<void> {
   }
 }
 
+function findFoamVariables(templateText: string): string[] {
+  const regex = /\$(FOAM_[_a-zA-Z0-9]*)|\${(FOAM_[[_a-zA-Z0-9]*)}/g;
+  var matches = [];
+  const output: string[] = [];
+  while ((matches = regex.exec(templateText))) {
+    output.push(matches[1] || matches[2]);
+  }
+  const uniqVariables = [...new Set(output)];
+  return uniqVariables;
+}
+
+function getFoamTitle() {
+  return window.showInputBox({
+    prompt: `Enter a title for the new note`,
+    value: 'Title of my New Note',
+    validateInput: value =>
+      value.trim().length === 0 ? 'Please enter a title' : undefined,
+  });
+}
+
+function resolveFoamVariable(variable: string) {
+  if (variable === 'FOAM_TITLE') {
+    return getFoamTitle();
+  } else {
+    return Promise.resolve(variable);
+  }
+}
+
+function resolveFoamVariables(variables: string[]) {
+  const promises = variables.map(async variable =>
+    Promise.resolve([variable, await resolveFoamVariable(variable)])
+  );
+  return Promise.all(promises);
+}
+
+export async function substituteFoamVariables(templateText: string) {
+  const variables = findFoamVariables(templateText);
+  const results = await resolveFoamVariables(variables);
+
+  const valueByName = new Map<string, string>();
+  results.forEach(result => {
+    valueByName.set(result[0], result[1]);
+  });
+
+  variables.forEach(variable => {
+    const regex = new RegExp(`\\\${${variable}}|\\$${variable}`, 'g');
+    templateText = templateText.replace(regex, valueByName.get(variable));
+  });
+
+  return templateText;
+}
+
 async function createNoteFromTemplate(): Promise<void> {
   const templates = await getTemplates();
   if (templates.length === 0) {
@@ -68,6 +120,12 @@ async function createNoteFromTemplate(): Promise<void> {
   if (selectedTemplate === undefined) {
     return;
   }
+
+  const templateText = await workspace.fs.readFile(
+    Uri.joinPath(templatesDir, selectedTemplate)
+  );
+  const subbedText = await substituteFoamVariables(templateText.toString());
+  const snippet = new SnippetString(subbedText);
 
   const defaultFileName = 'new-note.md';
   const defaultDir = Uri.joinPath(currentDir, defaultFileName);
@@ -89,10 +147,6 @@ async function createNoteFromTemplate(): Promise<void> {
     return;
   }
 
-  const templateText = await workspace.fs.readFile(
-    Uri.joinPath(templatesDir, selectedTemplate)
-  );
-  const snippet = new SnippetString(templateText.toString());
   const filenameURI = Uri.file(filename);
   await workspace.fs.writeFile(filenameURI, new TextEncoder().encode(''));
   await focusNote(filenameURI, true);

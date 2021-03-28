@@ -62,7 +62,9 @@ async function createNoteFromTemplate(): Promise<void> {
     activeFile !== undefined
       ? URI.parse(path.dirname(activeFile))
       : workspace.workspaceFolders[0].uri;
-  const selectedTemplate = await window.showQuickPick(templates);
+  const selectedTemplate = await window.showQuickPick(templates, {
+    placeHolder: 'Select a template to use.',
+  });
   if (selectedTemplate === undefined) {
     return;
   }

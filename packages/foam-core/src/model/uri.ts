@@ -103,7 +103,7 @@ export abstract class URI {
     // on other systems bwd-slashes are valid
     // filename character, eg /f\oo/ba\r.txt
     if (isWindows) {
-      path = path.replace(/\\/g, _slash);
+      path = `/${path.replace(/\\/g, _slash)}`;
     }
 
     // check for authority as used in UNC shares

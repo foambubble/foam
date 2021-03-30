@@ -13,6 +13,7 @@ import backlinks from './backlinks';
 import utilityCommands from './utility-commands';
 import documentLinkProvider from './document-link-provider';
 import previewNavigation from './preview-navigation';
+import completionProvider from './link-completion';
 import linkDecorations from './document-decorator';
 import { FoamFeature } from '../types';
 
@@ -33,4 +34,5 @@ export const features: FoamFeature[] = [
   utilityCommands,
   linkDecorations,
   previewNavigation,
+  completionProvider,
 ];

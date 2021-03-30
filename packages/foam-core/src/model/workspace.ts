@@ -148,14 +148,6 @@ export class FoamWorkspace implements IDisposable {
           URI.placeholder(URI.resolve(link.target, note.uri).path);
         break;
     }
-
-    if (URI.isPlaceholder(targetUri)) {
-      // we can only add placeholders when links are being resolved
-      workspace = FoamWorkspace.set(workspace, {
-        type: 'placeholder',
-        uri: targetUri,
-      });
-    }
     return targetUri;
   }
 
@@ -426,6 +418,13 @@ export class FoamWorkspace implements IDisposable {
     target: URI,
     link: NoteLink
   ) {
+    if (URI.isPlaceholder(target)) {
+      // we can only add placeholders when links are being resolved
+      workspace = FoamWorkspace.set(workspace, {
+        type: 'placeholder',
+        uri: target,
+      });
+    }
     const connection = { source, target, link };
 
     workspace.links[source.path] = workspace.links[source.path] ?? [];

@@ -19,7 +19,7 @@ const feature: FoamFeature = {
   },
 };
 
-class CompletionProvider
+export class CompletionProvider
   implements vscode.CompletionItemProvider<vscode.CompletionItem> {
   constructor(private ws: FoamWorkspace) {}
 

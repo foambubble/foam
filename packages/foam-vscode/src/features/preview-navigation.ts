@@ -23,7 +23,7 @@ export const markdownItWithFoamLinks = (
 ) => {
   return md.use(markdownItRegex, {
     name: 'connect-wikilinks',
-    regex: /\[\[([^\[\]]+?)\]\]/,
+    regex: /\[\[([^[\]]+?)\]\]/,
     replace: (wikilink: string) => {
       try {
         const resource = workspace.find(wikilink);

@@ -1,4 +1,4 @@
-import { Position, Range, Uri, workspace } from 'vscode';
+import { Position, Range, Uri } from 'vscode';
 import {
   Position as FoamPosition,
   Range as FoamRange,

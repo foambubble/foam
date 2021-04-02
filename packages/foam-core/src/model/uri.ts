@@ -33,7 +33,7 @@ export interface URI {
 const { posix } = paths;
 const _empty = '';
 const _slash = '/';
-const _regexp = /^(([^:/?#]+?):)?(\/\/([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?/;
+const _regexp = /^(([^:/?#]{2,}?):)?(\/\/([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?/;
 
 export abstract class URI {
   static create(from: Partial<URI>): URI {

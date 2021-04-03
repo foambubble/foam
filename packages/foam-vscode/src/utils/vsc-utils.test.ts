@@ -22,6 +22,23 @@ describe('uri conversion', () => {
     }
   });
 
+  it('correctly parses file paths', () => {
+    const test = workspace.workspaceFolders[0].uri;
+    const uri = URI.file(test.fsPath);
+    expect(uri).toEqual(
+      URI.create({
+        scheme: 'file',
+        path: test.path,
+      })
+    );
+  });
+
+  it('creates a proper string representation for file uris', () => {
+    const test = workspace.workspaceFolders[0].uri;
+    const uri = URI.file(test.fsPath);
+    expect(URI.toString(uri)).toEqual(test.toString());
+  });
+
   it('is consistent when converting from VS Code to Foam URI', () => {
     const vsUri = workspace.workspaceFolders[0].uri;
     const fUri = fromVsCodeUri(vsUri);

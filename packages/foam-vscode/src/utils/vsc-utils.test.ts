@@ -29,7 +29,15 @@ describe('uri conversion', () => {
   });
 
   it('is consistent when converting from Foam to VS Code URI', () => {
-    const uri = URI.file(workspace.workspaceFolders[0].uri.fsPath);
-    expect(fromVsCodeUri(toVsCodeUri(uri))).toEqual(uri);
+    const test = workspace.workspaceFolders[0].uri;
+    const uri = URI.file(test.fsPath);
+    const fUri = toVsCodeUri(uri);
+    expect(fUri).toEqual(
+      expect.objectContaining({
+        scheme: 'file',
+        path: test.path,
+      })
+    );
+    expect(fromVsCodeUri(fUri)).toEqual(uri);
   });
 });

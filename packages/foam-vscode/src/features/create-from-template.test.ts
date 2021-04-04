@@ -2,7 +2,7 @@ import { window } from 'vscode';
 import { substituteFoamVariables } from './create-from-template';
 
 describe('substituteFoamVariables', () => {
-  test('Does nothing if no Foam-specific variables are used', async () => {
+  test('Does nothing if no Foam-specific variables are used', () => {
     const input = `
       # \${AnotherVariable} <-- Unrelated to foam
       # \${AnotherVariable:default_value} <-- Unrelated to foam
@@ -11,10 +11,11 @@ describe('substituteFoamVariables', () => {
       # #CURRENT_YEAR-\${CURRENT_MONTH}-$CURRENT_DAY <-- Unrelated to foam
     `;
 
-    expect(await substituteFoamVariables(input)).toEqual(input);
+    const givenValues = new Map<string, string>();
+    expect(substituteFoamVariables(input, givenValues)).toEqual(input);
   });
 
-  test('Resolves FOAM_TITLE', async () => {
+  test('Resolves FOAM_TITLE', () => {
     const input = `
       # $FOAM_TITLE <-- The title goes here
       # \${FOAM_TITLE} <-- and also here
@@ -31,6 +32,7 @@ describe('substituteFoamVariables', () => {
       # My note title <-- and also here
     `;
 
-    expect(await substituteFoamVariables(input)).toEqual(expected);
+    const givenValues = new Map<string, string>();
+    expect(substituteFoamVariables(input, givenValues)).toEqual(expected);
   });
 });

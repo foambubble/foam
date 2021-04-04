@@ -72,7 +72,10 @@ function getFoamTitle() {
   });
 }
 
-function resolveFoamVariable(variable: string) {
+function resolveFoamVariable(
+  variable: string,
+  givenValues: Map<string, string>
+) {
   if (variable === 'FOAM_TITLE') {
     return getFoamTitle();
   } else {
@@ -80,25 +83,32 @@ function resolveFoamVariable(variable: string) {
   }
 }
 
-function resolveFoamVariables(variables: string[]) {
+async function resolveFoamVariables(
+  variables: string[],
+  givenValues: Map<string, string>
+) {
   const promises = variables.map(async variable =>
-    Promise.resolve([variable, await resolveFoamVariable(variable)])
+    Promise.resolve([
+      variable,
+      await resolveFoamVariable(variable, givenValues),
+    ])
   );
-  return Promise.all(promises);
-}
 
-export async function substituteFoamVariables(templateText: string) {
-  const variables = findFoamVariables(templateText);
-  const results = await resolveFoamVariables(variables);
-
+  const results = await Promise.all(promises);
   const valueByName = new Map<string, string>();
   results.forEach(result => {
     valueByName.set(result[0], result[1]);
   });
+  return valueByName;
+}
 
-  variables.forEach(variable => {
+export function substituteFoamVariables(
+  templateText: string,
+  givenValues: Map<string, string>
+) {
+  givenValues.forEach((value, variable) => {
     const regex = new RegExp(`\\\${${variable}}|\\$${variable}`, 'g');
-    templateText = templateText.replace(regex, valueByName.get(variable));
+    templateText = templateText.replace(regex, value);
   });
 
   return templateText;
@@ -124,7 +134,14 @@ async function createNoteFromTemplate(): Promise<void> {
   const templateText = await workspace.fs.readFile(
     Uri.joinPath(templatesDir, selectedTemplate)
   );
-  const subbedText = await substituteFoamVariables(templateText.toString());
+
+  const givenValues = new Map<string, string>();
+  const variables = findFoamVariables(templateText.toString());
+  const results = await resolveFoamVariables(variables, givenValues);
+  const subbedText = await substituteFoamVariables(
+    templateText.toString(),
+    results
+  );
   const snippet = new SnippetString(subbedText);
 
   const defaultFileName = 'new-note.md';

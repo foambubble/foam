@@ -643,6 +643,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "RobinKing",
+      "name": "Robin King",
+      "avatar_url": "https://avatars.githubusercontent.com/u/1583193?v=4",
+      "profile": "http://robincn.com",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,

@@ -10,7 +10,6 @@ import {
   Note,
   Placeholder,
   ranges,
-  uris,
 } from 'foam-core';
 import { TextEncoder } from 'util';
 import { toVsCodeUri } from '../utils/vsc-utils';
@@ -30,7 +29,7 @@ export const strToUri = URI.file;
 
 export const createPlaceholder = (key: string): Placeholder => {
   return {
-    uri: uris.placeholderUri(key),
+    uri: URI.placeholder(key),
     type: 'placeholder',
   };
 };

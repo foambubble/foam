@@ -1,7 +1,8 @@
 import * as vscode from 'vscode';
-import { Foam, FoamWorkspace, uris, isNote } from 'foam-core';
+import { Foam, FoamWorkspace, URI, isNote } from 'foam-core';
 import { FoamFeature } from '../types';
 import { getNoteTooltip, mdDocSelector } from '../utils';
+import { toVsCodeUri } from '../utils/vsc-utils';
 
 const feature: FoamFeature = {
   activate: async (
@@ -39,7 +40,7 @@ export class CompletionProvider
 
     const results = this.ws.list().map(resource => {
       const uri = resource.uri;
-      if (uris.isPlaceholder(uri)) {
+      if (URI.isPlaceholder(uri)) {
         return new vscode.CompletionItem(
           uri.path,
           vscode.CompletionItemKind.Interface
@@ -47,10 +48,10 @@ export class CompletionProvider
       }
 
       const item = new vscode.CompletionItem(
-        vscode.workspace.asRelativePath(resource.uri),
+        vscode.workspace.asRelativePath(toVsCodeUri(resource.uri)),
         vscode.CompletionItemKind.File
       );
-      item.insertText = uris.getBasename(resource.uri);
+      item.insertText = URI.getBasename(resource.uri);
       item.documentation =
         isNote(resource) && getNoteTooltip(resource.source.text);
 

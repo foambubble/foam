@@ -95,6 +95,16 @@ describe('hashtag extraction', () => {
       extractHashtags('this #123 tag should be ignore, but not #123four')
     ).toEqual(new Set(['123four']));
   });
+  it('supports unicode letters like Chinese charaters', () => {
+    expect(
+      extractHashtags(`
+        this #tag_with_unicode_letters_汉字, pure Chinese tag like #纯中文标签 and 
+        other mixed tags like #标签1 #123四 should work
+      `)
+    ).toEqual(
+      new Set(['tag_with_unicode_letters_汉字', '纯中文标签', '标签1', '123四'])
+    );
+  });
 
   it('ignores hashes in plain text urls and links', () => {
     expect(

@@ -20,8 +20,9 @@ Templates can use all the variables available in [VS Code Snippets](https://code
 
 In addition, you can also use variables provided by Foam:
 
-| Name         | Description                                                                         |
-| ------------ | ----------------------------------------------------------------------------------- |
-| `FOAM_TITLE` | The title of the note. If used, Foam will prompt you to enter a title for the note. |
+| Name              | Description                                                                                                                                                                                                                                                                                                                        |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `FOAM_TITLE`      | The title of the note. If used, Foam will prompt you to enter a title for the note.                                                                                                                                                                                                                                                |
+| `FOAM_TITLE_SLUG` | The "slug-ified" version of `FOAM_TITLE`, suitable for use in a filepath. If used, Foam will prompt you to enter a title for the note. For example, if the value provided to `FOAM_TITLE` was `Living in a dream world`, then `FOAM_TITLE_SLUG` will be `living-in-a-dream-world`. Note that it does not include a file extension. |
 
 **Note:** neither the defaulting feature (eg. `${variable:default}`) nor the format feature (eg. `${variable/(.*)/${1:/upcase}/}`) (available to other variables) are available for these Foam-provided variables.

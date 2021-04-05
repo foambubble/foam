@@ -6,6 +6,7 @@ import {
   SnippetString,
   Uri,
 } from 'vscode';
+import GithubSlugger from 'github-slugger';
 import * as path from 'path';
 import { FoamFeature } from '../types';
 import { TextEncoder } from 'util';
@@ -63,7 +64,7 @@ function findFoamVariables(templateText: string): string[] {
   return uniqVariables;
 }
 
-function getFoamTitle() {
+function resolveFoamTitle(givenValues: Map<string, string>) {
   return window.showInputBox({
     prompt: `Enter a title for the new note`,
     value: 'Title of my New Note',
@@ -72,33 +73,55 @@ function getFoamTitle() {
   });
 }
 
-function resolveFoamVariable(
-  variable: string,
+async function resolveFoamTitleSlug(
+  resolver: Resolver,
   givenValues: Map<string, string>
 ) {
-  if (variable === 'FOAM_TITLE') {
-    return getFoamTitle();
-  } else {
-    return Promise.resolve(variable);
+  const slugger = new GithubSlugger();
+  const foamTitle = await resolver.resolve('FOAM_TITLE', givenValues);
+  return Promise.resolve(slugger.slug(foamTitle));
+}
+
+class Resolver {
+  promises = new Map<string, Thenable<string>>();
+
+  resolve(name: string, givenValues: Map<string, string>): Thenable<string> {
+    if (givenValues.has(name)) {
+      this.promises.set(name, Promise.resolve(givenValues.get(name)));
+    } else if (!this.promises.has(name)) {
+      switch (name) {
+        case 'FOAM_TITLE':
+          this.promises.set(name, resolveFoamTitle(givenValues));
+          break;
+        case 'FOAM_TITLE_SLUG':
+          this.promises.set(name, resolveFoamTitleSlug(this, givenValues));
+          break;
+        default:
+          this.promises.set(name, Promise.resolve(name));
+          break;
+      }
+    }
+    const result = this.promises.get(name);
+    return result;
   }
 }
 
-async function resolveFoamVariables(
+export async function resolveFoamVariables(
   variables: string[],
   givenValues: Map<string, string>
 ) {
+  const resolver = new Resolver();
   const promises = variables.map(async variable =>
-    Promise.resolve([
-      variable,
-      await resolveFoamVariable(variable, givenValues),
-    ])
+    Promise.resolve([variable, await resolver.resolve(variable, givenValues)])
   );
 
   const results = await Promise.all(promises);
+
   const valueByName = new Map<string, string>();
-  results.forEach(result => {
-    valueByName.set(result[0], result[1]);
+  results.forEach(([variable, value]) => {
+    valueByName.set(variable, value);
   });
+
   return valueByName;
 }
 
@@ -107,8 +130,11 @@ export function substituteFoamVariables(
   givenValues: Map<string, string>
 ) {
   givenValues.forEach((value, variable) => {
-    const regex = new RegExp(`\\\${${variable}}|\\$${variable}`, 'g');
-    templateText = templateText.replace(regex, value);
+    const regex = new RegExp(
+      `\\\${${variable}}|\\$${variable}([^_a-zA-Z0-9]|$)`,
+      'g'
+    );
+    templateText = templateText.replace(regex, `${value}$1`);
   });
 
   return templateText;
@@ -137,14 +163,25 @@ async function createNoteFromTemplate(): Promise<void> {
 
   const givenValues = new Map<string, string>();
   const variables = findFoamVariables(templateText.toString());
-  const results = await resolveFoamVariables(variables, givenValues);
-  const subbedText = await substituteFoamVariables(
+
+  // Always resolve FOAM_TITLE_SLUG if we have FOAM_TITLE
+  // We can use it to pre-populate the filepath.
+  if (
+    (variables.includes('FOAM_TITLE') || givenValues.has('FOAM_TITLE')) &&
+    !variables.includes('FOAM_TITLE_SLUG')
+  ) {
+    variables.push('FOAM_TITLE_SLUG');
+  }
+
+  const resolvedValues = await resolveFoamVariables(variables, givenValues);
+  const subbedText = substituteFoamVariables(
     templateText.toString(),
-    results
+    resolvedValues
   );
   const snippet = new SnippetString(subbedText);
 
-  const defaultFileName = 'new-note.md';
+  const defaultSlug = resolvedValues.get('FOAM_TITLE_SLUG') || 'New Note';
+  const defaultFileName = `${defaultSlug}.md`;
   const defaultDir = Uri.joinPath(currentDir, defaultFileName);
   const filename = await window.showInputBox({
     prompt: `Enter the filename for the new note`,

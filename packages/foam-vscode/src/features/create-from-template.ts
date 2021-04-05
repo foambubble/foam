@@ -63,7 +63,7 @@ function findFoamVariables(templateText: string): string[] {
   return uniqVariables;
 }
 
-function getFoamTitle() {
+function resolveFoamTitle() {
   return window.showInputBox({
     prompt: `Enter a title for the new note`,
     value: 'Title of my New Note',
@@ -71,34 +71,43 @@ function getFoamTitle() {
       value.trim().length === 0 ? 'Please enter a title' : undefined,
   });
 }
+class Resolver {
+  promises = new Map<string, Thenable<string>>();
 
-function resolveFoamVariable(
-  variable: string,
-  givenValues: Map<string, string>
-) {
-  if (variable === 'FOAM_TITLE') {
-    return getFoamTitle();
-  } else {
-    return Promise.resolve(variable);
+  resolve(name: string, givenValues: Map<string, string>): Thenable<string> {
+    if (givenValues.has(name)) {
+      this.promises.set(name, Promise.resolve(givenValues.get(name)));
+    } else if (!this.promises.has(name)) {
+      switch (name) {
+        case 'FOAM_TITLE':
+          this.promises.set(name, resolveFoamTitle());
+          break;
+        default:
+          this.promises.set(name, Promise.resolve(name));
+          break;
+      }
+    }
+    const result = this.promises.get(name);
+    return result;
   }
 }
 
-async function resolveFoamVariables(
+export async function resolveFoamVariables(
   variables: string[],
   givenValues: Map<string, string>
 ) {
+  const resolver = new Resolver();
   const promises = variables.map(async variable =>
-    Promise.resolve([
-      variable,
-      await resolveFoamVariable(variable, givenValues),
-    ])
+    Promise.resolve([variable, await resolver.resolve(variable, givenValues)])
   );
 
   const results = await Promise.all(promises);
+
   const valueByName = new Map<string, string>();
-  results.forEach(result => {
-    valueByName.set(result[0], result[1]);
+  results.forEach(([variable, value]) => {
+    valueByName.set(variable, value);
   });
+
   return valueByName;
 }
 
@@ -107,8 +116,18 @@ export function substituteFoamVariables(
   givenValues: Map<string, string>
 ) {
   givenValues.forEach((value, variable) => {
-    const regex = new RegExp(`\\\${${variable}}|\\$${variable}`, 'g');
-    templateText = templateText.replace(regex, value);
+    const regex = new RegExp(
+      // Matches a limited subset of the the TextMate variable syntax:
+      //  ${VARIABLE}  OR   $VARIABLE
+      `\\\${${variable}}|\\$${variable}([^A-Za-z0-9_]|$)`,
+      // The latter is more complicated, since it needs to avoid replacing
+      // longer variable names with the values of variables that are
+      // substrings of the longer ones (e.g. `$FOO` and `$FOOBAR`. If you
+      // replace $FOO first, and aren't careful, you replace the first
+      // characters of `$FOOBAR`)
+      'g' // 'g' => Global replacement (i.e. not just the first instance)
+    );
+    templateText = templateText.replace(regex, `${value}$1`);
   });
 
   return templateText;
@@ -137,10 +156,11 @@ async function createNoteFromTemplate(): Promise<void> {
 
   const givenValues = new Map<string, string>();
   const variables = findFoamVariables(templateText.toString());
-  const results = await resolveFoamVariables(variables, givenValues);
-  const subbedText = await substituteFoamVariables(
+
+  const resolvedValues = await resolveFoamVariables(variables, givenValues);
+  const subbedText = substituteFoamVariables(
     templateText.toString(),
-    results
+    resolvedValues
   );
   const snippet = new SnippetString(subbedText);
 

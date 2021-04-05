@@ -7,14 +7,12 @@ import {
   isNote,
   NoteLink,
   Resource,
-  isSameUri,
   URI,
   Range,
 } from 'foam-core';
 import { getNoteTooltip } from '../utils';
 import { FoamFeature } from '../types';
 import { ResourceTreeItem } from '../utils/grouped-resources-tree-data-provider';
-import { Position } from 'unist';
 
 const feature: FoamFeature = {
   activate: async (
@@ -77,7 +75,7 @@ export class BacklinksTreeDataProvider
       const backlinkRefs = Promise.all(
         resource.links
           .filter(link =>
-            isSameUri(this.workspace.resolveLink(resource, link), uri)
+            URI.isEqual(this.workspace.resolveLink(resource, link), uri)
           )
           .map(async link => {
             const item = new BacklinkTreeItem(resource, link);
@@ -105,7 +103,9 @@ export class BacklinksTreeDataProvider
     }
 
     const backlinksByResourcePath = groupBy(
-      this.workspace.getConnections(uri).filter(c => isSameUri(c.target, uri)),
+      this.workspace
+        .getConnections(uri)
+        .filter(c => URI.isEqual(c.target, uri)),
       b => b.source.path
     );
 

@@ -1,5 +1,5 @@
 import MarkdownIt from 'markdown-it';
-import { FoamWorkspace } from 'foam-core';
+import { FoamWorkspace, URI } from 'foam-core';
 import { createPlaceholder, createTestNote } from '../test/test-utils';
 import { markdownItWithFoamLinks } from './preview-navigation';
 
@@ -16,7 +16,9 @@ describe('Link generation in preview', () => {
 
   it('generates a link to a note', () => {
     expect(md.render(`[[note-a]]`)).toEqual(
-      `<p><a class='foam-note-link' title='${noteA.title}' href='${noteA.uri.fsPath}'>note-a</a></p>\n`
+      `<p><a class='foam-note-link' title='${noteA.title}' href='${URI.toFsPath(
+        noteA.uri
+      )}'>note-a</a></p>\n`
     );
   });
 

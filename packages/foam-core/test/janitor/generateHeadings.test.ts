@@ -3,11 +3,10 @@ import { generateHeading } from '../../src/janitor';
 import { bootstrap } from '../../src/bootstrap';
 import { createConfigFromFolders } from '../../src/config';
 import { Note } from '../../src';
-import { URI } from '../../src/common/uri';
 import { FileDataStore } from '../../src/services/datastore';
 import { Logger } from '../../src/utils/log';
 import { FoamWorkspace } from '../../src/model/workspace';
-import { getBasename } from '../../src/utils/uri';
+import { URI } from '../../src/model/uri';
 import * as ranges from '../../src/model/range';
 
 Logger.setLevel('error');
@@ -15,7 +14,9 @@ Logger.setLevel('error');
 describe('generateHeadings', () => {
   let _workspace: FoamWorkspace;
   const findBySlug = (slug: string): Note => {
-    return _workspace.list().find(res => getBasename(res.uri) === slug) as Note;
+    return _workspace
+      .list()
+      .find(res => URI.getBasename(res.uri) === slug) as Note;
   };
 
   beforeAll(async () => {

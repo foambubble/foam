@@ -1,6 +1,6 @@
 import { createConfigFromObject } from '../src/config';
 import { Logger } from '../src/utils/log';
-import { URI } from '../src/common/uri';
+import { URI } from '../src/model/uri';
 import { FileDataStore } from '../src';
 
 Logger.setLevel('error');
@@ -57,8 +57,8 @@ describe('Datastore', () => {
   });
 });
 
-function toStringSet(uris: URI[]) {
-  return new Set(uris.map(uri => uri.path.toLocaleLowerCase()));
+function toStringSet(URI: URI[]) {
+  return new Set(URI.map(uri => uri.path.toLocaleLowerCase()));
 }
 
 function makeAbsolute(files: string[]) {

@@ -9,6 +9,7 @@ import {
 import { BacklinksTreeDataProvider, BacklinkTreeItem } from './backlinks';
 import { ResourceTreeItem } from '../utils/grouped-resources-tree-data-provider';
 import { OPEN_COMMAND } from './utility-commands';
+import { toVsCodeUri } from '../utils/vsc-utils';
 
 describe('Backlinks panel', () => {
   beforeAll(async () => {
@@ -64,8 +65,8 @@ describe('Backlinks panel', () => {
     expect(await provider.getChildren()).toEqual([]);
   });
   it.skip('targets active editor', async () => {
-    const docA = await workspace.openTextDocument(noteA.uri);
-    const docB = await workspace.openTextDocument(noteB.uri);
+    const docA = await workspace.openTextDocument(toVsCodeUri(noteA.uri));
+    const docB = await workspace.openTextDocument(toVsCodeUri(noteB.uri));
 
     await window.showTextDocument(docA);
     expect(provider.target).toEqual(noteA.uri);

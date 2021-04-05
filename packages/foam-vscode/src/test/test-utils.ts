@@ -9,10 +9,10 @@ import {
   NoteLinkDefinition,
   Note,
   Placeholder,
-  parseUri,
   ranges,
 } from 'foam-core';
 import { TextEncoder } from 'util';
+import { toVsCodeUri } from '../utils/vsc-utils';
 
 const position = ranges.create(0, 0, 0, 100);
 
@@ -51,7 +51,7 @@ export const createTestNote = (params: {
 }): Note => {
   const root = params.root ?? URI.file('/');
   return {
-    uri: parseUri(root, params.uri),
+    uri: URI.resolve(params.uri, root),
     type: 'note',
     properties: {},
     title: params.title ?? path.parse(strToUri(params.uri).path).base,
@@ -99,7 +99,7 @@ export const wait = (ms: number) =>
   new Promise(resolve => setTimeout(resolve, ms));
 
 export const showInEditor = async (uri: URI) => {
-  const doc = await vscode.workspace.openTextDocument(uri);
+  const doc = await vscode.workspace.openTextDocument(toVsCodeUri(uri));
   const editor = await vscode.window.showTextDocument(doc);
   return { doc, editor };
 };
@@ -143,7 +143,7 @@ export const createNote = (r: Note) => {
   last line.
 `;
   return vscode.workspace.fs.writeFile(
-    r.uri,
+    toVsCodeUri(r.uri),
     new TextEncoder().encode(content)
   );
 };

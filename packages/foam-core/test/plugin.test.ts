@@ -2,7 +2,7 @@ import path from 'path';
 import { loadPlugins } from '../src/plugins';
 import { createMarkdownParser } from '../src/markdown-provider';
 import { FoamConfig, createConfigFromObject } from '../src/config';
-import { URI } from '../src/common/uri';
+import { URI } from '../src/model/uri';
 import { Logger } from '../src/utils/log';
 
 Logger.setLevel('error');

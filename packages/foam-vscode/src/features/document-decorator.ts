@@ -1,6 +1,6 @@
 import { debounce } from 'lodash';
 import * as vscode from 'vscode';
-import { Foam, FoamWorkspace, NoteParser, uris } from 'foam-core';
+import { Foam, FoamWorkspace, NoteParser, URI } from 'foam-core';
 import { FoamFeature } from '../types';
 import {
   ConfigurationMonitor,
@@ -36,7 +36,7 @@ const updateDecorations = (
   let placeholderRanges = [];
   note.links.forEach(link => {
     const linkUri = workspace.resolveLink(note, link);
-    if (uris.isPlaceholder(linkUri)) {
+    if (URI.isPlaceholder(linkUri)) {
       placeholderRanges.push(link.range);
     } else {
       linkRanges.push(link.range);

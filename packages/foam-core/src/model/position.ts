@@ -1,3 +1,6 @@
+// Some code in this file coming from https://github.com/microsoft/vscode/
+// See LICENSE for details
+
 export interface Position {
   line: number;
   character: number;

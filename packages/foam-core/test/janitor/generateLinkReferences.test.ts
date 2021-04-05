@@ -5,16 +5,17 @@ import { createConfigFromFolders } from '../../src/config';
 import { Note, ranges } from '../../src';
 import { FileDataStore } from '../../src/services/datastore';
 import { Logger } from '../../src/utils/log';
-import { URI } from '../../src/common/uri';
 import { FoamWorkspace } from '../../src/model/workspace';
-import { getBasename } from '../../src/utils/uri';
+import { URI } from '../../src/model/uri';
 
 Logger.setLevel('error');
 
 describe('generateLinkReferences', () => {
   let _workspace: FoamWorkspace;
   const findBySlug = (slug: string): Note => {
-    return _workspace.list().find(res => getBasename(res.uri) === slug) as Note;
+    return _workspace
+      .list()
+      .find(res => URI.getBasename(res.uri) === slug) as Note;
   };
 
   beforeAll(async () => {

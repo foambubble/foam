@@ -1,7 +1,7 @@
 import { readFileSync } from 'fs';
 import { merge } from 'lodash';
 import { Logger } from './utils/log';
-import { URI } from './common/uri';
+import { URI } from './model/uri';
 
 export interface FoamConfig {
   workspaceFolders: URI[];
@@ -68,7 +68,7 @@ export const createConfigFromFolders = (
 
 const parseConfig = (path: URI) => {
   try {
-    return JSON.parse(readFileSync(path.fsPath, 'utf8'));
+    return JSON.parse(readFileSync(URI.toFsPath(path), 'utf8'));
   } catch {
     Logger.debug('Could not read configuration from ' + path);
   }

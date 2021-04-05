@@ -1,6 +1,6 @@
 import { createConfigFromFolders } from '../src/config';
 import { Logger } from '../src/utils/log';
-import { URI } from '../src/common/uri';
+import { URI } from '../src/model/uri';
 
 Logger.setLevel('error');
 

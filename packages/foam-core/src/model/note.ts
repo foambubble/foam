@@ -1,5 +1,4 @@
-import { URI } from '../common/uri';
-import { getBasename } from '../utils/uri';
+import { URI } from './uri';
 import { Position } from './position';
 import { Range } from './range';
 
@@ -68,8 +67,8 @@ export const isWikilink = (link: NoteLink): link is WikiLink => {
 
 export const getTitle = (resource: Resource): string => {
   return resource.type === 'note'
-    ? resource.title ?? getBasename(resource.uri)
-    : getBasename(resource.uri);
+    ? resource.title ?? URI.getBasename(resource.uri)
+    : URI.getBasename(resource.uri);
 };
 
 export const isNote = (resource: Resource): resource is Note => {

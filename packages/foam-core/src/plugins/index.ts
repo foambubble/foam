@@ -6,7 +6,7 @@ import { Note } from '../model/note';
 import unified from 'unified';
 import { FoamConfig } from '../config';
 import { Logger } from '../utils/log';
-import { URI } from '../common/uri';
+import { URI } from '../model/uri';
 
 export interface FoamPlugin {
   name: string;
@@ -43,10 +43,10 @@ export async function loadPlugins(config: FoamConfig): Promise<FoamPlugin[]> {
 
   const plugins = await Promise.all(
     pluginDirs
-      .filter(dir => fs.statSync(dir.fsPath).isDirectory)
+      .filter(dir => fs.statSync(URI.toFsPath(dir)).isDirectory)
       .map(async dir => {
         try {
-          const pluginFile = path.join(dir.fsPath, 'index.js');
+          const pluginFile = path.join(URI.toFsPath(dir), 'index.js');
           fs.accessSync(pluginFile);
           Logger.info(`Found plugin at [${pluginFile}]. Loading..`);
           const plugin = validate(await import(pluginFile));
@@ -66,11 +66,11 @@ function findPluginDirs(workspaceFolders: URI[]) {
     .reduce((acc, pluginDir) => {
       try {
         const content = fs
-          .readdirSync(pluginDir.fsPath)
+          .readdirSync(URI.toFsPath(pluginDir))
           .map(dir => URI.joinPath(pluginDir, dir));
         return [
           ...acc,
-          ...content.filter(c => fs.statSync(c.fsPath).isDirectory()),
+          ...content.filter(c => fs.statSync(URI.toFsPath(c)).isDirectory()),
         ];
       } catch {
         return acc;

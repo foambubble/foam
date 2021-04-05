@@ -4,9 +4,9 @@ import {
 } from '../src/markdown-provider';
 import { DirectLink } from '../src/model/note';
 import { ParserPlugin } from '../src/plugins';
-import { URI } from '../src/common/uri';
 import { Logger } from '../src/utils/log';
-import { uriToSlug } from '../src/utils';
+import { uriToSlug } from '../src/utils/slug';
+import { URI } from '../src/model/uri';
 import { FoamWorkspace } from '../src/model/workspace';
 
 Logger.setLevel('error');

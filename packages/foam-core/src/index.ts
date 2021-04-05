@@ -13,23 +13,21 @@ import {
 } from './model/note';
 import { Position } from './model/position';
 import { Range } from './model/range';
-import { URI } from './common/uri';
 import { FoamConfig } from './config';
 import { IDataStore, FileDataStore } from './services/datastore';
 import { ILogger } from './utils/log';
 import { IDisposable, isDisposable } from './common/lifecycle';
 import { FoamWorkspace } from './model/workspace';
-import * as uris from './utils/uri';
+import { URI } from './model/uri';
 import * as positions from './model/position';
 import * as ranges from './model/range';
 
-export { uris, positions, ranges };
+export { positions, ranges };
 export { IDataStore, FileDataStore };
 export { ILogger };
 export { LogLevel, LogLevelThreshold, Logger, BaseLogger } from './utils/log';
 export { Event, Emitter } from './common/event';
 export { FoamConfig };
-export { isSameUri, parseUri } from './utils/uri';
 
 export { IDisposable, isDisposable };
 

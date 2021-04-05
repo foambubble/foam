@@ -12,11 +12,14 @@ import {
   Uri,
 } from 'vscode';
 import * as fs from 'fs';
-import { Logger, Resource, Note, uris, URI } from 'foam-core';
+import { Logger, Resource, Note, URI } from 'foam-core';
 import matter from 'gray-matter';
 import removeMarkdown from 'remove-markdown';
 import { TextEncoder } from 'util';
-import { posix } from 'path';
+import os from 'os';
+import { toVsCodeUri } from './utils/vsc-utils';
+
+export const isWindows = os.platform() === 'win32';
 
 export const docConfig = { tab: '  ', eol: '\r\n' };
 
@@ -132,22 +135,13 @@ export function toTitleCase(word: string): string {
 }
 
 /**
- * Get a URI that represents the dirname of a URI
- *
- * @param uri The URI to get the dirname from
- */
-export function getDirname(uri: URI): URI {
-  return URI.file(posix.parse(uri.path).dir);
-}
-
-/**
  * Verify the given path exists in the file system
  *
  * @param path The path to verify
  */
 export function pathExists(path: URI) {
   return fs.promises
-    .access(path.fsPath, fs.constants.F_OK)
+    .access(URI.toFsPath(path), fs.constants.F_OK)
     .then(() => true)
     .catch(() => false);
 }
@@ -176,7 +170,7 @@ export function isNone<T>(
 }
 
 export async function focusNote(notePath: URI, moveCursorToEnd: boolean) {
-  const document = await workspace.openTextDocument(notePath);
+  const document = await workspace.openTextDocument(toVsCodeUri(notePath));
   const editor = await window.showTextDocument(document);
 
   // Move the cursor to end of the file
@@ -272,17 +266,19 @@ export const isNote = (resource: Resource): resource is Note => {
  * if the Uri was not a placeholder or no reference directory could be found
  */
 export const createNoteFromPlacehoder = async (
-  placeholder: Uri
+  placeholder: URI
 ): Promise<Uri | null> => {
   const basedir =
     workspace.workspaceFolders.length > 0
       ? workspace.workspaceFolders[0].uri
       : window.activeTextEditor?.document.uri
-      ? uris.getDir(window.activeTextEditor!.document.uri)
+      ? URI.getDir(window.activeTextEditor!.document.uri)
       : null;
 
   if (isSome(basedir)) {
-    const target = uris.placeholderToResourceUri(basedir, placeholder);
+    const target = toVsCodeUri(
+      URI.createResourceUriFromPlaceholder(basedir, placeholder)
+    );
     await workspace.fs.writeFile(target, new TextEncoder().encode(''));
     return target;
   }

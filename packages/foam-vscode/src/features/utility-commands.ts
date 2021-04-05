@@ -2,16 +2,21 @@ import * as vscode from 'vscode';
 import { FoamFeature } from '../types';
 import { commands } from 'vscode';
 import { createNoteFromPlacehoder, focusNote, isSome } from '../utils';
+import { URI } from 'foam-core';
+import { toVsCodeUri } from '../utils/vsc-utils';
 
 export const OPEN_COMMAND = {
   command: 'foam-vscode.open-resource',
   title: 'Foam: Open Resource',
 
-  execute: async (params: { resource: vscode.Uri }) => {
+  execute: async (params: { resource: URI }) => {
     const { resource } = params;
     switch (resource.scheme) {
       case 'file':
-        return vscode.commands.executeCommand('vscode.open', resource);
+        return vscode.commands.executeCommand(
+          'vscode.open',
+          toVsCodeUri(resource)
+        );
 
       case 'placeholder':
         const newNote = await createNoteFromPlacehoder(resource);
@@ -33,10 +38,10 @@ export const OPEN_COMMAND = {
     }
   },
 
-  asURI: (resource: vscode.Uri) =>
+  asURI: (resource: URI) =>
     vscode.Uri.parse(
       `command:${OPEN_COMMAND.command}?${encodeURIComponent(
-        JSON.stringify({ resource: resource })
+        JSON.stringify({ resource: URI.create(resource) })
       )}`
     ),
 };

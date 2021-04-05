@@ -1,8 +1,7 @@
 import { FoamWorkspace, getReferenceType } from '../src/model/workspace';
 import { Logger } from '../src/utils/log';
 import { createTestNote, createAttachment } from './core.test';
-import { URI } from '../src/common/uri';
-import { placeholderUri } from '../src/utils';
+import { URI } from '../src/model/uri';
 
 Logger.setLevel('error');
 
@@ -43,7 +42,7 @@ describe('Workspace resources', () => {
     const ws = new FoamWorkspace();
     ws.set(createTestNote({ uri: '/page-a.md' }));
     ws.set(createAttachment({ uri: '/file.pdf' }));
-    ws.set({ type: 'placeholder', uri: placeholderUri('place-holder') });
+    ws.set({ type: 'placeholder', uri: URI.placeholder('place-holder') });
 
     expect(
       ws
@@ -396,12 +395,12 @@ describe('Placeholders', () => {
 
     expect(ws.getAllConnections()[0]).toEqual({
       source: noteA.uri,
-      target: placeholderUri('/somewhere/page-b.md'),
+      target: URI.placeholder('/somewhere/page-b.md'),
       link: expect.objectContaining({ type: 'link' }),
     });
     expect(ws.getAllConnections()[1]).toEqual({
       source: noteA.uri,
-      target: placeholderUri('/path/to/page-c.md'),
+      target: URI.placeholder('/path/to/page-c.md'),
       link: expect.objectContaining({ type: 'link' }),
     });
   });
@@ -416,7 +415,7 @@ describe('Placeholders', () => {
 
     expect(ws.getAllConnections()[0]).toEqual({
       source: noteA.uri,
-      target: placeholderUri('page-b'),
+      target: URI.placeholder('page-b'),
       link: expect.objectContaining({ type: 'wikilink' }),
     });
   });
@@ -440,12 +439,12 @@ describe('Placeholders', () => {
 
     expect(ws.getAllConnections()[0]).toEqual({
       source: noteA.uri,
-      target: placeholderUri('/somewhere/page-b.md'),
+      target: URI.placeholder('/somewhere/page-b.md'),
       link: expect.objectContaining({ type: 'wikilink' }),
     });
     expect(ws.getAllConnections()[1]).toEqual({
       source: noteA.uri,
-      target: placeholderUri('/path/to/page-c.md'),
+      target: URI.placeholder('/path/to/page-c.md'),
       link: expect.objectContaining({ type: 'wikilink' }),
     });
   });
@@ -519,7 +518,7 @@ describe('Updating workspace happy path', () => {
     ws.resolveLinks();
 
     expect(() => ws.get(noteB.uri)).toThrow();
-    expect(ws.get(placeholderUri('page-b')).type).toEqual('placeholder');
+    expect(ws.get(URI.placeholder('page-b')).type).toEqual('placeholder');
   });
 
   it('Adding note should replace placeholder for wikilinks', () => {
@@ -531,9 +530,9 @@ describe('Updating workspace happy path', () => {
     ws.set(noteA).resolveLinks();
 
     expect(ws.getLinks(noteA.uri).map(l => l.target)).toEqual([
-      placeholderUri('page-b'),
+      URI.placeholder('page-b'),
     ]);
-    expect(ws.get(placeholderUri('page-b')).type).toEqual('placeholder');
+    expect(ws.get(URI.placeholder('page-b')).type).toEqual('placeholder');
 
     // add note-b
     const noteB = createTestNote({
@@ -543,7 +542,7 @@ describe('Updating workspace happy path', () => {
     ws.set(noteB);
     ws.resolveLinks();
 
-    expect(() => ws.get(placeholderUri('page-b'))).toThrow();
+    expect(() => ws.get(URI.placeholder('page-b'))).toThrow();
     expect(ws.get(noteB.uri).type).toEqual('note');
   });
 
@@ -569,7 +568,7 @@ describe('Updating workspace happy path', () => {
     ws.resolveLinks();
 
     expect(() => ws.get(noteB.uri)).toThrow();
-    expect(ws.get(placeholderUri('/path/to/another/page-b.md')).type).toEqual(
+    expect(ws.get(URI.placeholder('/path/to/another/page-b.md')).type).toEqual(
       'placeholder'
     );
   });
@@ -583,9 +582,9 @@ describe('Updating workspace happy path', () => {
     ws.set(noteA).resolveLinks();
 
     expect(ws.getLinks(noteA.uri).map(l => l.target)).toEqual([
-      placeholderUri('/path/to/another/page-b.md'),
+      URI.placeholder('/path/to/another/page-b.md'),
     ]);
-    expect(ws.get(placeholderUri('/path/to/another/page-b.md')).type).toEqual(
+    expect(ws.get(URI.placeholder('/path/to/another/page-b.md')).type).toEqual(
       'placeholder'
     );
 
@@ -597,7 +596,7 @@ describe('Updating workspace happy path', () => {
     ws.set(noteB);
     ws.resolveLinks();
 
-    expect(() => ws.get(placeholderUri('page-b'))).toThrow();
+    expect(() => ws.get(URI.placeholder('page-b'))).toThrow();
     expect(ws.get(noteB.uri).type).toEqual('note');
   });
 
@@ -608,7 +607,7 @@ describe('Updating workspace happy path', () => {
     });
     const ws = new FoamWorkspace();
     ws.set(noteA).resolveLinks();
-    expect(ws.get(placeholderUri('/path/to/another/page-b.md')).type).toEqual(
+    expect(ws.get(URI.placeholder('/path/to/another/page-b.md')).type).toEqual(
       'placeholder'
     );
 
@@ -620,7 +619,7 @@ describe('Updating workspace happy path', () => {
     ws.set(noteABis).resolveLinks();
 
     expect(() =>
-      ws.get(placeholderUri('/path/to/another/page-b.md'))
+      ws.get(URI.placeholder('/path/to/another/page-b.md'))
     ).toThrow();
   });
 });
@@ -687,7 +686,7 @@ describe('Monitoring of workspace state', () => {
     ws.delete(noteB.uri);
 
     expect(() => ws.get(noteB.uri)).toThrow();
-    expect(ws.get(placeholderUri('page-b')).type).toEqual('placeholder');
+    expect(ws.get(URI.placeholder('page-b')).type).toEqual('placeholder');
     ws.dispose();
   });
 
@@ -700,9 +699,9 @@ describe('Monitoring of workspace state', () => {
     ws.set(noteA).resolveLinks(true);
 
     expect(ws.getLinks(noteA.uri).map(l => l.target)).toEqual([
-      placeholderUri('page-b'),
+      URI.placeholder('page-b'),
     ]);
-    expect(ws.get(placeholderUri('page-b')).type).toEqual('placeholder');
+    expect(ws.get(URI.placeholder('page-b')).type).toEqual('placeholder');
 
     // add note-b
     const noteB = createTestNote({
@@ -711,7 +710,7 @@ describe('Monitoring of workspace state', () => {
 
     ws.set(noteB);
 
-    expect(() => ws.get(placeholderUri('page-b'))).toThrow();
+    expect(() => ws.get(URI.placeholder('page-b'))).toThrow();
     expect(ws.get(noteB.uri).type).toEqual('note');
     ws.dispose();
   });
@@ -737,7 +736,7 @@ describe('Monitoring of workspace state', () => {
     ws.delete(noteB.uri);
 
     expect(() => ws.get(noteB.uri)).toThrow();
-    expect(ws.get(placeholderUri('/path/to/another/page-b.md')).type).toEqual(
+    expect(ws.get(URI.placeholder('/path/to/another/page-b.md')).type).toEqual(
       'placeholder'
     );
     ws.dispose();
@@ -752,9 +751,9 @@ describe('Monitoring of workspace state', () => {
     ws.set(noteA).resolveLinks(true);
 
     expect(ws.getLinks(noteA.uri).map(l => l.target)).toEqual([
-      placeholderUri('/path/to/another/page-b.md'),
+      URI.placeholder('/path/to/another/page-b.md'),
     ]);
-    expect(ws.get(placeholderUri('/path/to/another/page-b.md')).type).toEqual(
+    expect(ws.get(URI.placeholder('/path/to/another/page-b.md')).type).toEqual(
       'placeholder'
     );
 
@@ -765,7 +764,7 @@ describe('Monitoring of workspace state', () => {
 
     ws.set(noteB);
 
-    expect(() => ws.get(placeholderUri('page-b'))).toThrow();
+    expect(() => ws.get(URI.placeholder('page-b'))).toThrow();
     expect(ws.get(noteB.uri).type).toEqual('note');
     ws.dispose();
   });
@@ -777,7 +776,7 @@ describe('Monitoring of workspace state', () => {
     });
     const ws = new FoamWorkspace();
     ws.set(noteA).resolveLinks(true);
-    expect(ws.get(placeholderUri('/path/to/another/page-b.md')).type).toEqual(
+    expect(ws.get(URI.placeholder('/path/to/another/page-b.md')).type).toEqual(
       'placeholder'
     );
 
@@ -788,7 +787,7 @@ describe('Monitoring of workspace state', () => {
     });
     ws.set(noteABis);
     expect(() =>
-      ws.get(placeholderUri('/path/to/another/page-b.md'))
+      ws.get(URI.placeholder('/path/to/another/page-b.md'))
     ).toThrow();
     ws.dispose();
   });

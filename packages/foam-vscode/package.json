@@ -230,6 +230,12 @@
             "Disable wikilink definitions generation"
           ]
         },
+        "foam.decorations.links.enable": {
+          "description": "Enable decorations for links",
+          "type": "boolean",
+          "scope": "resource",
+          "default": false
+        },
         "foam.openDailyNote.onStartup": {
           "type": "boolean",
           "scope": "resource",

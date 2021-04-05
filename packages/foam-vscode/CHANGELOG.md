@@ -4,6 +4,13 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.12.1] - 2021-04-05
+
+Fixes and Improvements:
+
+- Link decorations are now optional (#558)
+- Improved UX when creating notes from templates (#550 - thanks @movermeyer)
+
 ## [0.12.0] - 2021-03-22
 
 Features:

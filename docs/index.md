@@ -194,6 +194,7 @@ If that sounds like something you're interested in, I'd love to have you along o
     <td align="center"><a href="https://movermeyer.com"><img src="https://avatars.githubusercontent.com/u/1459385?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Michael Overmeyer</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=movermeyer" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/derrickqin"><img src="https://avatars.githubusercontent.com/u/3038111?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Derrick Qin</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=derrickqin" title="Documentation">📖</a></td>
     <td align="center"><a href="https://www.linkedin.com/in/zomars/"><img src="https://avatars.githubusercontent.com/u/3504472?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Omar López</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=zomars" title="Documentation">📖</a></td>
+    <td align="center"><a href="http://robincn.com"><img src="https://avatars.githubusercontent.com/u/1583193?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Robin King</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=RobinKing" title="Code">💻</a></td>
   </tr>
 </table>
 

@@ -3,7 +3,6 @@ import {
   workspace,
   ExtensionContext,
   commands,
-  Range,
   ProgressLocation,
 } from 'vscode';
 import * as fs from 'fs';

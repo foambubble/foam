@@ -13,7 +13,7 @@ import {
   generateHeading,
   Foam,
   Note,
-  ranges,
+  Range,
   URI,
 } from 'foam-core';
 
@@ -163,7 +163,7 @@ async function runJanitor(foam: Foam) {
           const start = definitions.range.start;
           const end = definitions.range.end;
 
-          const range = ranges.createFromPosition(start, end);
+          const range = Range.createFromPosition(start, end);
           editBuilder.replace(toVsCodeRange(range), definitions!.newText);
         }
 

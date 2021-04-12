@@ -11,18 +11,15 @@ import {
   getTitle,
   NoteParser,
 } from './model/note';
-import { Position } from './model/position';
-import { Range } from './model/range';
 import { FoamConfig } from './config';
 import { IDataStore, FileDataStore } from './services/datastore';
 import { ILogger } from './utils/log';
 import { IDisposable, isDisposable } from './common/lifecycle';
 import { FoamWorkspace } from './model/workspace';
 import { URI } from './model/uri';
-import * as positions from './model/position';
-import * as ranges from './model/range';
 
-export { positions, ranges };
+export { Position } from './model/position';
+export { Range } from './model/range';
 export { IDataStore, FileDataStore };
 export { ILogger };
 export { LogLevel, LogLevelThreshold, Logger, BaseLogger } from './utils/log';
@@ -57,8 +54,6 @@ export {
   Attachment,
   Placeholder,
   Note,
-  Position,
-  Range,
   NoteLink,
   URI,
   FoamWorkspace,

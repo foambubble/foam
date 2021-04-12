@@ -15,8 +15,8 @@ import {
   isWikilink,
   getTitle,
 } from './model/note';
-import { Position, create as createPos } from './model/position';
-import { Range, create as createRange } from './model/range';
+import { Position } from './model/position';
+import { Range } from './model/range';
 import {
   dropExtension,
   extractHashtags,
@@ -203,7 +203,7 @@ export function createMarkdownParser(extraPlugins: ParserPlugin[]): NoteParser {
             // Give precendence to the title from the frontmatter if it exists
             note.title = note.properties.title ?? note.title;
             // Update the start position of the note by exluding the metadata
-            note.source.contentStart = createPos(
+            note.source.contentStart = Position.create(
               node.position!.end.line! + 2,
               0
             );
@@ -323,7 +323,7 @@ export function createMarkdownReferences(
  * @returns Foam Position  (0-indexed)
  */
 const astPointToFoamPosition = (point: Point): Position => {
-  return createPos(point.line - 1, point.column - 1);
+  return Position.create(point.line - 1, point.column - 1);
 };
 
 /**
@@ -332,7 +332,7 @@ const astPointToFoamPosition = (point: Point): Position => {
  * @returns Foam Range  (0-indexed)
  */
 const astPositionToFoamRange = (pos: AstPosition): Range =>
-  createRange(
+  Range.create(
     pos.start.line - 1,
     pos.start.column - 1,
     pos.end.line - 1,

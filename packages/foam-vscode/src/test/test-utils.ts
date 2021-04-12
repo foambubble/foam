@@ -9,12 +9,12 @@ import {
   NoteLinkDefinition,
   Note,
   Placeholder,
-  ranges,
+  Range,
 } from 'foam-core';
 import { TextEncoder } from 'util';
 import { toVsCodeUri } from '../utils/vsc-utils';
 
-const position = ranges.create(0, 0, 0, 100);
+const position = Range.create(0, 0, 0, 100);
 
 const documentStart = position.start;
 const documentEnd = position.end;
@@ -59,7 +59,7 @@ export const createTestNote = (params: {
     tags: new Set(),
     links: params.links
       ? params.links.map((link, index) => {
-          const range = ranges.create(
+          const range = Range.create(
             position.start.line + index,
             position.start.character,
             position.start.line + index,

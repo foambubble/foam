@@ -1,7 +1,12 @@
 import * as vscode from 'vscode';
 import { Foam, Note, IDataStore, URI } from 'foam-core';
 import { FoamFeature } from '../../types';
-import { getNoteTooltip, getContainsTooltip, isNote } from '../../utils';
+import {
+  getNoteTooltip,
+  getContainsTooltip,
+  isNote,
+  isSome,
+} from '../../utils';
 
 const feature: FoamFeature = {
   activate: async (
@@ -89,7 +94,9 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
   async resolveTreeItem(item: TagTreeItem): Promise<TagTreeItem> {
     if (item instanceof TagReference) {
       const content = await this.dataStore.read(item.note.uri);
-      item.tooltip = getNoteTooltip(content);
+      if (isSome(content)) {
+        item.tooltip = getNoteTooltip(content);
+      }
     }
     return item;
   }

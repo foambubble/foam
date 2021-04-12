@@ -6,7 +6,7 @@ import {
   GroupedResourcesConfig,
   GroupedResoucesConfigGroupBy,
 } from '../settings';
-import { getContainsTooltip, getNoteTooltip } from '../utils';
+import { getContainsTooltip, getNoteTooltip, isSome } from '../utils';
 import { OPEN_COMMAND } from '../features/utility-commands';
 import { toVsCodeUri } from './vsc-utils';
 
@@ -262,7 +262,7 @@ export class ResourceTreeItem extends vscode.TreeItem {
   async resolveTreeItem(): Promise<ResourceTreeItem> {
     if (this instanceof ResourceTreeItem) {
       const content = await this.dataStore?.read(this.resource.uri);
-      this.tooltip = content
+      this.tooltip = isSome(content)
         ? getNoteTooltip(content)
         : getTitle(this.resource);
     }

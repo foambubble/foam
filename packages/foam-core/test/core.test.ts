@@ -1,12 +1,12 @@
 import path from 'path';
 import { NoteLinkDefinition, Note, Attachment } from '../src/model/note';
-import * as ranges from '../src/model/range';
+import { Range } from '../src/model/range';
 import { URI } from '../src/model/uri';
 import { Logger } from '../src/utils/log';
 
 Logger.setLevel('error');
 
-const position = ranges.create(0, 0, 0, 100);
+const position = Range.create(0, 0, 0, 100);
 
 const documentStart = position.start;
 const documentEnd = position.end;
@@ -44,7 +44,7 @@ export const createTestNote = (params: {
     tags: new Set(),
     links: params.links
       ? params.links.map((link, index) => {
-          const range = ranges.create(
+          const range = Range.create(
             position.start.line + index,
             position.start.character,
             position.start.line + index,

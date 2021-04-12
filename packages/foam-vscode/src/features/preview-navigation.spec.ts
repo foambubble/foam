@@ -8,9 +8,7 @@ describe('Link generation in preview', () => {
     uri: 'note-a.md',
     title: 'My note title',
   });
-  const placeholder = createPlaceholder({
-    uri: 'placeholder',
-  });
+  const placeholder = createPlaceholder('placeholder');
   const ws = new FoamWorkspace().set(noteA).set(placeholder);
   const md = markdownItWithFoamLinks(MarkdownIt(), ws);
 

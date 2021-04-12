@@ -27,9 +27,9 @@ const eol = '\n';
  */
 export const strToUri = URI.file;
 
-export const createPlaceholder = (params: { uri: string }): Placeholder => {
+export const createPlaceholder = (key: string): Placeholder => {
   return {
-    uri: strToUri(params.uri),
+    uri: URI.placeholder(key),
     type: 'placeholder',
   };
 };

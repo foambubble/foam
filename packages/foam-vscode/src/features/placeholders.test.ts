@@ -7,13 +7,7 @@ import { isPlaceholderResource } from './placeholders';
 
 describe('isPlaceholderResource', () => {
   it('should return true when a placeholder', () => {
-    expect(
-      isPlaceholderResource(
-        createPlaceholder({
-          uri: '',
-        })
-      )
-    ).toBeTruthy();
+    expect(isPlaceholderResource(createPlaceholder(''))).toBeTruthy();
   });
 
   it('should return true when an empty note is provided', () => {

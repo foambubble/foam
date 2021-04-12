@@ -4,7 +4,6 @@ import {
   cleanWorkspace,
   closeEditors,
   createFile,
-  createPlaceholder,
   createTestNote,
   showInEditor,
 } from '../test/test-utils';
@@ -29,9 +28,9 @@ describe('Link Completion', () => {
       createTestNote({
         root,
         uri: 'path/to/file.md',
+        links: [{ slug: 'placeholder text' }],
       })
     )
-    .set(createPlaceholder('placeholder text'))
     .resolveLinks();
 
   beforeAll(async () => {

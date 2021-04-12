@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { FoamWorkspace, createMarkdownParser } from 'foam-core';
+import { FoamWorkspace } from 'foam-core';
 import {
   cleanWorkspace,
   closeEditors,
@@ -11,7 +11,6 @@ import {
 import { CompletionProvider } from './link-completion';
 
 describe('Link Completion', () => {
-  const parser = createMarkdownParser([]);
   const root = vscode.workspace.workspaceFolders[0].uri;
   const ws = new FoamWorkspace();
   ws.set(

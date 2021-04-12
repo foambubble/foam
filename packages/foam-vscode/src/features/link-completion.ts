@@ -32,6 +32,7 @@ export class CompletionProvider
       .lineAt(position)
       .text.substr(0, position.character);
 
+    // eslint-disable-next-line no-useless-escape
     const requiresAutocomplete = cursorPrefix.match(/\[\[([^\[\]]*?)/);
 
     if (!requiresAutocomplete) {

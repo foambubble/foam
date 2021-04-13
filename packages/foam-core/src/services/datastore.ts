@@ -161,7 +161,9 @@ export class FileDataStore implements IDataStore, IDisposable {
     try {
       return (await fs.promises.readFile(URI.toFsPath(uri))).toString();
     } catch (e) {
-      Logger.error(`onDidCreate: error while reading uri: ${uri.path} - ${e}`);
+      Logger.error(
+        `FileDataStore: error while reading uri: ${uri.path} - ${e}`
+      );
       return null;
     }
   }

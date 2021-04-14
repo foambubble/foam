@@ -39,8 +39,10 @@ export interface IDataStore {
 
   /**
    * Read the content of the file from the store
+   *
+   * Returns `null` in case of errors while reading
    */
-  read: (uri: URI) => Promise<string>;
+  read: (uri: URI) => Promise<string | null>;
 
   /**
    * Returns whether the given URI is a match in
@@ -156,7 +158,14 @@ export class FileDataStore implements IDataStore, IDisposable {
   }
 
   async read(uri: URI) {
-    return (await fs.promises.readFile(URI.toFsPath(uri))).toString();
+    try {
+      return (await fs.promises.readFile(URI.toFsPath(uri))).toString();
+    } catch (e) {
+      Logger.error(
+        `FileDataStore: error while reading uri: ${uri.path} - ${e}`
+      );
+      return null;
+    }
   }
 
   dispose() {

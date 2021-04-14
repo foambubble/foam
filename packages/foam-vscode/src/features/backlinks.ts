@@ -79,7 +79,9 @@ export class BacklinksTreeDataProvider
           )
           .map(async link => {
             const item = new BacklinkTreeItem(resource, link);
-            const lines = (await this.dataStore.read(resource.uri)).split('\n');
+            const lines = (
+              (await this.dataStore.read(resource.uri)) ?? ''
+            ).split('\n');
             if (link.range.start.line < lines.length) {
               const line = lines[link.range.start.line];
               let start = Math.max(0, link.range.start.character - 15);

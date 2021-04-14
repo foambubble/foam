@@ -30,11 +30,11 @@ export const bootstrap = async (config: FoamConfig, dataStore: IDataStore) => {
   const listeners = [
     dataStore.onDidChange(async uri => {
       const content = await dataStore.read(uri);
-      workspace.set(await parser.parse(uri, content));
+      isSome(content) && workspace.set(await parser.parse(uri, content));
     }),
     dataStore.onDidCreate(async uri => {
       const content = await dataStore.read(uri);
-      workspace.set(await parser.parse(uri, content));
+      isSome(content) && workspace.set(await parser.parse(uri, content));
     }),
     dataStore.onDidDelete(uri => {
       workspace.delete(uri);

@@ -4,12 +4,17 @@ import { FoamFeature } from '../types';
 import { isNote, mdDocSelector } from '../utils';
 import { OPEN_COMMAND } from './utility-commands';
 import { toVsCodeRange, toVsCodeUri } from '../utils/vsc-utils';
+import { getFoamVsCodeConfig } from '../services/config';
 
 const feature: FoamFeature = {
   activate: async (
     context: vscode.ExtensionContext,
     foamPromise: Promise<Foam>
   ) => {
+    if (!getFoamVsCodeConfig('links.navigation.enable')) {
+      return;
+    }
+
     const foam = await foamPromise;
 
     context.subscriptions.push(

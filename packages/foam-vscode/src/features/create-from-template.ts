@@ -127,7 +127,7 @@ async function createNoteFromTemplate(): Promise<void> {
   const subbedText = await substituteFoamVariables(templateText.toString());
   const snippet = new SnippetString(subbedText);
 
-  const defaultFileName = 'new-note.md';
+  const defaultFileName = 'New Note.md';
   const defaultDir = Uri.joinPath(currentDir, defaultFileName);
   const filename = await window.showInputBox({
     prompt: `Enter the filename for the new note`,

@@ -4,6 +4,19 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.13.0] - 2021-04-19
+
+Features:
+
+- Wikilink completion (#554)
+
+Fixes and Improvements:
+
+- fixed link navigation on path with spaces (#542)
+- support for Chinese characters in tags (#567 - thanks @RobinKing)
+- added support for `FOAM_TITLE` in templates (#549 - thanks @movermeyer)
+- added configuration to enable/disable link navigation (#584)
+
 ## [0.12.1] - 2021-04-05
 
 Fixes and Improvements:

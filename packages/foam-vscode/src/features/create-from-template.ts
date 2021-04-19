@@ -63,7 +63,7 @@ function findFoamVariables(templateText: string): string[] {
   return uniqVariables;
 }
 
-function getFoamTitle() {
+function resolveFoamTitle() {
   return window.showInputBox({
     prompt: `Enter a title for the new note`,
     value: 'Title of my New Note',
@@ -71,34 +71,63 @@ function getFoamTitle() {
       value.trim().length === 0 ? 'Please enter a title' : undefined,
   });
 }
+class Resolver {
+  promises = new Map<string, Thenable<string>>();
 
-function resolveFoamVariable(variable: string) {
-  if (variable === 'FOAM_TITLE') {
-    return getFoamTitle();
-  } else {
-    return Promise.resolve(variable);
+  resolve(name: string, givenValues: Map<string, string>): Thenable<string> {
+    if (givenValues.has(name)) {
+      this.promises.set(name, Promise.resolve(givenValues.get(name)));
+    } else if (!this.promises.has(name)) {
+      switch (name) {
+        case 'FOAM_TITLE':
+          this.promises.set(name, resolveFoamTitle());
+          break;
+        default:
+          this.promises.set(name, Promise.resolve(name));
+          break;
+      }
+    }
+    const result = this.promises.get(name);
+    return result;
   }
 }
 
-function resolveFoamVariables(variables: string[]) {
+export async function resolveFoamVariables(
+  variables: string[],
+  givenValues: Map<string, string>
+) {
+  const resolver = new Resolver();
   const promises = variables.map(async variable =>
-    Promise.resolve([variable, await resolveFoamVariable(variable)])
+    Promise.resolve([variable, await resolver.resolve(variable, givenValues)])
   );
-  return Promise.all(promises);
-}
 
-export async function substituteFoamVariables(templateText: string) {
-  const variables = findFoamVariables(templateText);
-  const results = await resolveFoamVariables(variables);
+  const results = await Promise.all(promises);
 
   const valueByName = new Map<string, string>();
-  results.forEach(result => {
-    valueByName.set(result[0], result[1]);
+  results.forEach(([variable, value]) => {
+    valueByName.set(variable, value);
   });
 
-  variables.forEach(variable => {
-    const regex = new RegExp(`\\\${${variable}}|\\$${variable}`, 'g');
-    templateText = templateText.replace(regex, valueByName.get(variable));
+  return valueByName;
+}
+
+export function substituteFoamVariables(
+  templateText: string,
+  givenValues: Map<string, string>
+) {
+  givenValues.forEach((value, variable) => {
+    const regex = new RegExp(
+      // Matches a limited subset of the the TextMate variable syntax:
+      //  ${VARIABLE}  OR   $VARIABLE
+      `\\\${${variable}}|\\$${variable}([^A-Za-z0-9_]|$)`,
+      // The latter is more complicated, since it needs to avoid replacing
+      // longer variable names with the values of variables that are
+      // substrings of the longer ones (e.g. `$FOO` and `$FOOBAR`. If you
+      // replace $FOO first, and aren't careful, you replace the first
+      // characters of `$FOOBAR`)
+      'g' // 'g' => Global replacement (i.e. not just the first instance)
+    );
+    templateText = templateText.replace(regex, `${value}$1`);
   });
 
   return templateText;
@@ -124,10 +153,19 @@ async function createNoteFromTemplate(): Promise<void> {
   const templateText = await workspace.fs.readFile(
     Uri.joinPath(templatesDir, selectedTemplate)
   );
-  const subbedText = await substituteFoamVariables(templateText.toString());
+
+  const givenValues = new Map<string, string>();
+  const variables = findFoamVariables(templateText.toString());
+
+  const resolvedValues = await resolveFoamVariables(variables, givenValues);
+  const subbedText = substituteFoamVariables(
+    templateText.toString(),
+    resolvedValues
+  );
   const snippet = new SnippetString(subbedText);
 
-  const defaultFileName = 'new-note.md';
+  const defaultSlug = resolvedValues.get('FOAM_TITLE') || 'New Note';
+  const defaultFileName = `${defaultSlug}.md`;
   const defaultDir = Uri.joinPath(currentDir, defaultFileName);
   const filename = await window.showInputBox({
     prompt: `Enter the filename for the new note`,

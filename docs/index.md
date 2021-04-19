@@ -196,6 +196,9 @@ If that sounds like something you're interested in, I'd love to have you along o
     <td align="center"><a href="https://www.linkedin.com/in/zomars/"><img src="https://avatars.githubusercontent.com/u/3504472?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Omar López</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=zomars" title="Documentation">📖</a></td>
     <td align="center"><a href="http://robincn.com"><img src="https://avatars.githubusercontent.com/u/1583193?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Robin King</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=RobinKing" title="Code">💻</a></td>
   </tr>
+  <tr>
+    <td align="center"><a href="http://twitter.com/deegovee"><img src="https://avatars.githubusercontent.com/u/4730170?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Dheepak </b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=dheepakg" title="Documentation">📖</a></td>
+  </tr>
 </table>
 
 <!-- markdownlint-restore -->

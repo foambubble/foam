@@ -116,13 +116,13 @@ this is a [link to intro](#introduction)
       .set(noteB)
       .set(noteC)
       .set(noteD)
-      .set(noteE)
-      .resolveLinks();
+      .set(noteE);
+    const graph = workspace.resolveLinks();
 
-    expect(workspace.getBacklinks(noteB.uri).map(l => l.source)).toEqual([
+    expect(graph.getBacklinks(noteB.uri).map(l => l.source)).toEqual([
       noteA.uri,
     ]);
-    expect(workspace.getLinks(noteA.uri).map(l => l.target)).toEqual([
+    expect(graph.getLinks(noteA.uri).map(l => l.target)).toEqual([
       noteB.uri,
       noteC.uri,
       noteD.uri,

@@ -1,7 +1,7 @@
 import { diff } from 'fast-array-diff';
 import { isEqual } from 'lodash';
 import * as path from 'path';
-import { Resource, NoteLink, Note } from './note';
+import { Resource, NoteLink, isNote } from './note';
 import { Range } from './range';
 import { URI } from './uri';
 import { isSome, isNone } from '../utils';
@@ -40,6 +40,195 @@ const uriToResourceName = (uri: URI) => pathToResourceName(uri.path);
 const pathToPlaceholderId = (value: string) => value;
 const uriToPlaceholderId = (uri: URI) => pathToPlaceholderId(uri.path);
 
+export class FoamGraph implements IDisposable {
+  /**
+   * Placehoders by key / slug / value
+   */
+  public readonly placeholders: { [key: string]: Resource } = {};
+  /**
+   * Maps the connections starting from a URI
+   */
+  public readonly links: { [key: string]: Connection[] } = {};
+  /**
+   * Maps the connections arriving to a URI
+   */
+  public readonly backlinks: { [key: string]: Connection[] } = {};
+
+  /**
+   * List of disposables to destroy with the workspace
+   */
+  private disposables: IDisposable[] = [];
+
+  constructor(private readonly workspace: FoamWorkspace) {}
+
+  public contains(uri: URI): boolean {
+    return this.getConnections(uri).length > 0;
+  }
+
+  public getAllConnections(): Connection[] {
+    return Object.values(this.links).flat();
+  }
+
+  public getConnections(uri: URI): Connection[] {
+    return [
+      ...(this.links[uri.path] || []),
+      ...(this.backlinks[uri.path] || []),
+    ];
+  }
+
+  public getLinks(uri: URI): Connection[] {
+    return this.links[uri.path] ?? [];
+  }
+
+  public getBacklinks(uri: URI): Connection[] {
+    return this.backlinks[uri.path] ?? [];
+  }
+
+  public static fromWorkspace(
+    workspace: FoamWorkspace,
+    keepMonitoring: boolean = false
+  ): FoamGraph {
+    let graph = new FoamGraph(workspace);
+
+    Object.values(workspace.list()).forEach(resource =>
+      graph.resolveResource(resource)
+    );
+    if (keepMonitoring) {
+      graph.disposables.push(
+        workspace.onDidAdd(resource => {
+          graph.updateLinksRelatedToAddedResource(resource);
+        }),
+        workspace.onDidUpdate(change => {
+          graph.updateLinksForResource(change.old, change.new);
+        }),
+        workspace.onDidDelete(resource => {
+          graph.updateLinksRelatedToDeletedResource(resource);
+        })
+      );
+    }
+    return graph;
+  }
+
+  private updateLinksRelatedToAddedResource(resource: Resource) {
+    // check if any existing connection can be filled by new resource
+    const name = uriToResourceName(resource.uri);
+    if (name in this.placeholders) {
+      const placeholder = this.placeholders[name];
+      delete this.placeholders[name];
+      const resourcesToUpdate = this.backlinks[placeholder.uri.path] ?? [];
+      resourcesToUpdate.forEach(res =>
+        this.resolveResource(this.workspace.get(res.source))
+      );
+    }
+
+    // resolve the resource
+    this.resolveResource(resource);
+  }
+
+  private updateLinksForResource(oldResource: Resource, newResource: Resource) {
+    if (oldResource.uri.path !== newResource.uri.path) {
+      throw new Error(
+        'Unexpected State: update should only be called on same resource ' +
+          {
+            old: oldResource,
+            new: newResource,
+          }
+      );
+    }
+    if (oldResource.type === 'note' && newResource.type === 'note') {
+      const patch = diff(oldResource.links, newResource.links, isEqual);
+      patch.removed.forEach(link => {
+        const target = this.workspace.resolveLink(oldResource, link);
+        return this.disconnect(oldResource.uri, target, link);
+      }, this);
+      patch.added.forEach(link => {
+        const target = this.workspace.resolveLink(newResource, link);
+        return this.connect(newResource.uri, target, link);
+      }, this);
+    }
+    return this;
+  }
+
+  private updateLinksRelatedToDeletedResource(resource: Resource) {
+    const uri = resource.uri;
+
+    // remove forward links from old resource
+    const resourcesPointedByDeletedNote = this.links[uri.path] ?? [];
+    delete this.links[uri.path];
+    resourcesPointedByDeletedNote.forEach(connection =>
+      this.disconnect(uri, connection.target, connection.link)
+    );
+
+    // recompute previous links to old resource
+    const notesPointingToDeletedResource = this.backlinks[uri.path] ?? [];
+    delete this.backlinks[uri.path];
+    notesPointingToDeletedResource.forEach(link =>
+      this.resolveResource(this.workspace.get(link.source))
+    );
+    return this;
+  }
+
+  private connect(source: URI, target: URI, link: NoteLink) {
+    const connection = { source, target, link };
+
+    this.links[source.path] = this.links[source.path] ?? [];
+    this.links[source.path].push(connection);
+    this.backlinks[target.path] = this.backlinks[target.path] ?? [];
+    this.backlinks[target.path].push(connection);
+
+    return this;
+  }
+
+  /**
+   * Removes a connection, or all connections, between the source and
+   * target resources
+   *
+   * @param workspace the Foam workspace
+   * @param source the source resource
+   * @param target the target resource
+   * @param link the link reference, or `true` to remove all links
+   * @returns the updated Foam workspace
+   */
+  private disconnect(source: URI, target: URI, link: NoteLink | true) {
+    const connectionsToKeep =
+      link === true
+        ? (c: Connection) =>
+            !URI.isEqual(source, c.source) || !URI.isEqual(target, c.target)
+        : (c: Connection) => !isSameConnection({ source, target, link }, c);
+
+    this.links[source.path] =
+      this.links[source.path]?.filter(connectionsToKeep) ?? [];
+    if (this.links[source.path].length === 0) {
+      delete this.links[source.path];
+    }
+    this.backlinks[target.path] =
+      this.backlinks[target.path]?.filter(connectionsToKeep) ?? [];
+    if (this.backlinks[target.path].length === 0) {
+      delete this.backlinks[target.path];
+      if (URI.isPlaceholder(target)) {
+        delete this.placeholders[uriToPlaceholderId(target)];
+      }
+    }
+    return this;
+  }
+
+  public resolveResource(resource: Resource) {
+    delete this.links[resource.uri.path];
+    // prettier-ignore
+    const links = isNote(resource) ? resource.links : []
+    links.forEach(link => {
+      const targetUri = this.workspace.resolveLink(resource, link);
+      this.connect(resource.uri, targetUri, link);
+    });
+    return this;
+  }
+
+  public dispose(): void {
+    this.disposables.forEach(d => d.dispose());
+    this.disposables = [];
+  }
+}
+
 export class FoamWorkspace implements IDisposable {
   private onDidAddEmitter = new Emitter<Resource>();
   private onDidUpdateEmitter = new Emitter<{ old: Resource; new: Resource }>();
@@ -56,99 +245,89 @@ export class FoamWorkspace implements IDisposable {
    * Resources by URI
    */
   private resources: { [key: string]: Resource } = {};
-  /**
-   * Placehoders by key / slug / value
-   */
-  private placeholders: { [key: string]: Resource } = {};
 
-  /**
-   * Maps the connections starting from a URI
-   */
-  private links: { [key: string]: Connection[] } = {};
-  /**
-   * Maps the connections arriving to a URI
-   */
-  private backlinks: { [key: string]: Connection[] } = {};
-  /**
-   * List of disposables to destroy with the workspace
-   */
-  disposables: IDisposable[] = [];
-
-  exists(uri: URI) {
-    return FoamWorkspace.exists(this, uri);
-  }
-  list() {
-    return FoamWorkspace.list(this);
-  }
-  get(uri: URI) {
-    return FoamWorkspace.get(this, uri);
-  }
-  find(uri: URI | string) {
-    return FoamWorkspace.find(this, uri);
-  }
   set(resource: Resource) {
-    return FoamWorkspace.set(this, resource);
+    const id = uriToResourceId(resource.uri);
+    const old = this.find(resource.uri);
+    const name = uriToResourceName(resource.uri);
+    this.resources[id] = resource;
+    this.resourcesByName[name] = this.resourcesByName[name] ?? [];
+    this.resourcesByName[name].push(id);
+    isSome(old)
+      ? this.onDidUpdateEmitter.fire({ old: old, new: resource })
+      : this.onDidAddEmitter.fire(resource);
+    return this;
   }
+
   delete(uri: URI) {
-    return FoamWorkspace.delete(this, uri);
-  }
+    const id = uriToResourceId(uri);
+    const deleted = this.resources[id];
+    delete this.resources[id];
 
-  resolveLink(note: Note, link: NoteLink) {
-    return FoamWorkspace.resolveLink(this, note, link);
-  }
-  resolveLinks(keepMonitoring: boolean = false) {
-    return FoamWorkspace.resolveLinks(this, keepMonitoring);
-  }
-  getAllConnections() {
-    return FoamWorkspace.getAllConnections(this);
-  }
-  getConnections(uri: URI) {
-    return FoamWorkspace.getConnections(this, uri);
-  }
-  getLinks(uri: URI) {
-    return FoamWorkspace.getLinks(this, uri);
-  }
-  getBacklinks(uri: URI) {
-    return FoamWorkspace.getBacklinks(this, uri);
-  }
-
-  dispose(): void {
-    this.onDidAddEmitter.dispose();
-    this.onDidDeleteEmitter.dispose();
-    this.onDidUpdateEmitter.dispose();
-    this.disposables.forEach(d => d.dispose());
-  }
-
-  public static resolveLink(
-    workspace: FoamWorkspace,
-    note: Note,
-    link: NoteLink
-  ): URI {
-    let targetUri: URI | undefined;
-    switch (link.type) {
-      case 'wikilink':
-        const definitionUri = note.definitions.find(
-          def => def.label === link.slug
-        )?.url;
-        if (isSome(definitionUri)) {
-          const definedUri = URI.resolve(definitionUri, note.uri);
-          targetUri =
-            FoamWorkspace.find(workspace, definedUri, note.uri)?.uri ??
-            URI.placeholder(definedUri.path);
-        } else {
-          targetUri =
-            FoamWorkspace.find(workspace, link.slug, note.uri)?.uri ??
-            URI.placeholder(link.slug);
-        }
-        break;
-
-      case 'link':
-        targetUri =
-          FoamWorkspace.find(workspace, link.target, note.uri)?.uri ??
-          URI.placeholder(URI.resolve(link.target, note.uri).path);
-        break;
+    const name = uriToResourceName(uri);
+    this.resourcesByName[name] =
+      this.resourcesByName[name]?.filter(resId => resId !== id) ?? [];
+    if (this.resourcesByName[name].length === 0) {
+      delete this.resourcesByName[name];
     }
-    return targetUri;
+
+    isSome(deleted) && this.onDidDeleteEmitter.fire(deleted);
+    return deleted ?? null;
+  }
+
+  public exists(uri: URI): boolean {
+    return (
+      !URI.isPlaceholder(uri) && isSome(this.resources[uriToResourceId(uri)])
+    );
+  }
+
+  public list(): Resource[] {
+    return Object.values(this.resources);
+  }
+
+  public get(uri: URI): Resource {
+    const note = this.find(uri);
+    if (isSome(note)) {
+      return note;
+    } else {
+      throw new Error('Resource not found: ' + uri.path);
+    }
+  }
+
+  public find(resourceId: URI | string, reference?: URI): Resource | null {
+    const refType = getReferenceType(resourceId);
+    switch (refType) {
+      case 'uri':
+        const uri = resourceId as URI;
+        return this.exists(uri) ? this.resources[uriToResourceId(uri)] : null;
+
+      case 'key':
+        const name = pathToResourceName(resourceId as string);
+        const paths = this.resourcesByName[name];
+        if (isNone(paths) || paths.length === 0) {
+          return null;
+        }
+        // prettier-ignore
+        const sortedPaths = paths.length === 1
+          ? paths
+          : paths.sort((a, b) => a.localeCompare(b));
+        return this.resources[sortedPaths[0]];
+
+      case 'absolute-path':
+        const resourceUri = URI.file(resourceId as string);
+        return this.resources[uriToResourceId(resourceUri)] ?? null;
+
+      case 'relative-path':
+        if (isNone(reference)) {
+          return null;
+        }
+        const relativePath = resourceId as string;
+        const targetUri = URI.computeRelativeURI(reference, relativePath);
+        return this.resources[uriToResourceId(targetUri)] ?? null;
+
+      default:
+        throw new Error('Unexpected reference type: ' + refType);
+    }
   }
 
   /**
@@ -159,318 +338,42 @@ export class FoamWorkspace implements IDisposable {
    * @param keepMonitoring whether to recompute the links when the workspace changes
    * @returns the resolved workspace
    */
-  public static resolveLinks(
-    workspace: FoamWorkspace,
-    keepMonitoring: boolean = false
-  ): FoamWorkspace {
-    workspace.links = {};
-    workspace.backlinks = {};
-    workspace.placeholders = {};
-
-    workspace = Object.values(workspace.list()).reduce(
-      (w, resource) => FoamWorkspace.resolveResource(w, resource),
-      workspace
-    );
-    if (keepMonitoring) {
-      workspace.disposables.push(
-        workspace.onDidAdd(resource => {
-          FoamWorkspace.updateLinksRelatedToAddedResource(workspace, resource);
-        }),
-        workspace.onDidUpdate(change => {
-          FoamWorkspace.updateLinksForResource(
-            workspace,
-            change.old,
-            change.new
-          );
-        }),
-        workspace.onDidDelete(resource => {
-          FoamWorkspace.updateLinksRelatedToDeletedResource(
-            workspace,
-            resource
-          );
-        })
-      );
-    }
-    return workspace;
+  public resolveLinks(keepMonitoring: boolean = false): FoamGraph {
+    return FoamGraph.fromWorkspace(this, keepMonitoring);
   }
 
-  public static getAllConnections(workspace: FoamWorkspace): Connection[] {
-    return Object.values(workspace.links).flat();
-  }
-
-  public static getConnections(
-    workspace: FoamWorkspace,
-    uri: URI
-  ): Connection[] {
-    return [
-      ...(workspace.links[uri.path] || []),
-      ...(workspace.backlinks[uri.path] || []),
-    ];
-  }
-
-  public static getLinks(workspace: FoamWorkspace, uri: URI): Connection[] {
-    return workspace.links[uri.path] ?? [];
-  }
-
-  public static getBacklinks(workspace: FoamWorkspace, uri: URI): Connection[] {
-    return workspace.backlinks[uri.path] ?? [];
-  }
-
-  public static set(
-    workspace: FoamWorkspace,
-    resource: Resource
-  ): FoamWorkspace {
-    if (resource.type === 'placeholder') {
-      workspace.placeholders[uriToPlaceholderId(resource.uri)] = resource;
-      return workspace;
-    }
-    const id = uriToResourceId(resource.uri);
-    const old = FoamWorkspace.find(workspace, resource.uri);
-    const name = uriToResourceName(resource.uri);
-    workspace.resources[id] = resource;
-    workspace.resourcesByName[name] = workspace.resourcesByName[name] ?? [];
-    workspace.resourcesByName[name].push(id);
-    isSome(old)
-      ? workspace.onDidUpdateEmitter.fire({ old: old, new: resource })
-      : workspace.onDidAddEmitter.fire(resource);
-    return workspace;
-  }
-
-  public static exists(workspace: FoamWorkspace, uri: URI): boolean {
-    return isSome(workspace.resources[uriToResourceId(uri)]);
-  }
-
-  public static list(workspace: FoamWorkspace): Resource[] {
-    return [
-      ...Object.values(workspace.resources),
-      ...Object.values(workspace.placeholders),
-    ];
-  }
-
-  public static get(workspace: FoamWorkspace, uri: URI): Resource {
-    const note = FoamWorkspace.find(workspace, uri);
-    if (isSome(note)) {
-      return note;
-    } else {
-      throw new Error('Resource not found: ' + uri.path);
-    }
-  }
-
-  public static find(
-    workspace: FoamWorkspace,
-    resourceId: URI | string,
-    reference?: URI
-  ): Resource | null {
-    const refType = getReferenceType(resourceId);
-    switch (refType) {
-      case 'uri':
-        const uri = resourceId as URI;
-        if (uri.scheme === 'placeholder') {
-          return uri.path in workspace.placeholders
-            ? { type: 'placeholder', uri: uri }
-            : null;
+  public resolveLink(resource: Resource, link: NoteLink): URI {
+    let targetUri: URI | undefined;
+    switch (link.type) {
+      case 'wikilink':
+        const definitionUri = isNote(resource)
+          ? resource.definitions.find(def => def.label === link.slug)?.url
+          : null;
+        if (isSome(definitionUri)) {
+          const definedUri = URI.resolve(definitionUri, resource.uri);
+          targetUri =
+            this.find(definedUri, resource.uri)?.uri ??
+            URI.placeholder(definedUri.path);
         } else {
-          return FoamWorkspace.exists(workspace, uri)
-            ? workspace.resources[uriToResourceId(uri)]
-            : null;
+          targetUri =
+            this.find(link.slug, resource.uri)?.uri ??
+            URI.placeholder(link.slug);
         }
+        break;
 
-      case 'key':
-        const name = pathToResourceName(resourceId as string);
-        const paths = workspace.resourcesByName[name];
-        if (isNone(paths) || paths.length === 0) {
-          const placeholderId = pathToPlaceholderId(resourceId as string);
-          return workspace.placeholders[placeholderId] ?? null;
-        }
-        // prettier-ignore
-        const sortedPaths = paths.length === 1
-          ? paths
-          : paths.sort((a, b) => a.localeCompare(b));
-        return workspace.resources[sortedPaths[0]];
-
-      case 'absolute-path':
-        const resourceUri = URI.file(resourceId as string);
-        return (
-          workspace.resources[uriToResourceId(resourceUri)] ??
-          workspace.placeholders[uriToPlaceholderId(resourceUri)]
-        );
-
-      case 'relative-path':
-        if (isNone(reference)) {
-          return null;
-        }
-        const relativePath = resourceId as string;
-        const targetUri = URI.computeRelativeURI(reference, relativePath);
-        return (
-          workspace.resources[uriToResourceId(targetUri)] ??
-          workspace.placeholders[pathToPlaceholderId(resourceId as string)]
-        );
-
-      default:
-        throw new Error('Unexpected reference type: ' + refType);
+      case 'link':
+        targetUri =
+          this.find(link.target, resource.uri)?.uri ??
+          URI.placeholder(URI.resolve(link.target, resource.uri).path);
+        break;
     }
+    return targetUri;
   }
 
-  public static delete(workspace: FoamWorkspace, uri: URI): Resource | null {
-    const id = uriToResourceId(uri);
-    const deleted = workspace.resources[id];
-    delete workspace.resources[id];
-
-    const name = uriToResourceName(uri);
-    workspace.resourcesByName[name] =
-      workspace.resourcesByName[name]?.filter(resId => resId !== id) ?? [];
-    if (workspace.resourcesByName[name].length === 0) {
-      delete workspace.resourcesByName[name];
-    }
-
-    isSome(deleted) && workspace.onDidDeleteEmitter.fire(deleted);
-    return deleted ?? null;
-  }
-
-  public static resolveResource(workspace: FoamWorkspace, resource: Resource) {
-    if (resource.type === 'note') {
-      delete workspace.links[resource.uri.path];
-      // prettier-ignore
-      resource.links.forEach(link => {
-        const targetUri = FoamWorkspace.resolveLink(workspace, resource, link);
-        workspace = FoamWorkspace.connect(workspace, resource.uri, targetUri, link);
-      });
-    }
-    return workspace;
-  }
-
-  private static updateLinksForResource(
-    workspace: FoamWorkspace,
-    oldResource: Resource,
-    newResource: Resource
-  ) {
-    if (oldResource.uri.path !== newResource.uri.path) {
-      throw new Error(
-        'Unexpected State: update should only be called on same resource ' +
-          {
-            old: oldResource,
-            new: newResource,
-          }
-      );
-    }
-    if (oldResource.type === 'note' && newResource.type === 'note') {
-      const patch = diff(oldResource.links, newResource.links, isEqual);
-      workspace = patch.removed.reduce((ws, link) => {
-        const target = ws.resolveLink(oldResource, link);
-        return FoamWorkspace.disconnect(ws, oldResource.uri, target, link);
-      }, workspace);
-      workspace = patch.added.reduce((ws, link) => {
-        const target = ws.resolveLink(newResource, link);
-        return FoamWorkspace.connect(ws, newResource.uri, target, link);
-      }, workspace);
-    }
-    return workspace;
-  }
-
-  private static updateLinksRelatedToAddedResource(
-    workspace: FoamWorkspace,
-    resource: Resource
-  ) {
-    // check if any existing connection can be filled by new resource
-    const name = uriToResourceName(resource.uri);
-    if (name in workspace.placeholders) {
-      const placeholder = workspace.placeholders[name];
-      delete workspace.placeholders[name];
-      const resourcesToUpdate = workspace.backlinks[placeholder.uri.path] ?? [];
-      workspace = resourcesToUpdate.reduce(
-        (ws, res) => FoamWorkspace.resolveResource(ws, ws.get(res.source)),
-        workspace
-      );
-    }
-
-    // resolve the resource
-    workspace = FoamWorkspace.resolveResource(workspace, resource);
-  }
-
-  private static updateLinksRelatedToDeletedResource(
-    workspace: FoamWorkspace,
-    resource: Resource
-  ) {
-    const uri = resource.uri;
-
-    // remove forward links from old resource
-    const resourcesPointedByDeletedNote = workspace.links[uri.path] ?? [];
-    delete workspace.links[uri.path];
-    workspace = resourcesPointedByDeletedNote.reduce(
-      (ws, connection) =>
-        FoamWorkspace.disconnect(ws, uri, connection.target, connection.link),
-      workspace
-    );
-
-    // recompute previous links to old resource
-    const notesPointingToDeletedResource = workspace.backlinks[uri.path] ?? [];
-    delete workspace.backlinks[uri.path];
-    workspace = notesPointingToDeletedResource.reduce(
-      (ws, link) => FoamWorkspace.resolveResource(ws, ws.get(link.source)),
-      workspace
-    );
-    return workspace;
-  }
-
-  private static connect(
-    workspace: FoamWorkspace,
-    source: URI,
-    target: URI,
-    link: NoteLink
-  ) {
-    if (URI.isPlaceholder(target)) {
-      // we can only add placeholders when links are being resolved
-      workspace = FoamWorkspace.set(workspace, {
-        type: 'placeholder',
-        uri: target,
-      });
-    }
-    const connection = { source, target, link };
-
-    workspace.links[source.path] = workspace.links[source.path] ?? [];
-    workspace.links[source.path].push(connection);
-    workspace.backlinks[target.path] = workspace.backlinks[target.path] ?? [];
-    workspace.backlinks[target.path].push(connection);
-
-    return workspace;
-  }
-
-  /**
-   * Removes a connection, or all connections, between the source and
-   * target resources
-   *
-   * @param workspace the Foam workspace
-   * @param source the source resource
-   * @param target the target resource
-   * @param link the link reference, or `true` to remove all links
-   * @returns the updated Foam workspace
-   */
-  private static disconnect(
-    workspace: FoamWorkspace,
-    source: URI,
-    target: URI,
-    link: NoteLink | true
-  ) {
-    const connectionsToKeep =
-      link === true
-        ? (c: Connection) =>
-            !URI.isEqual(source, c.source) || !URI.isEqual(target, c.target)
-        : (c: Connection) => !isSameConnection({ source, target, link }, c);
-
-    workspace.links[source.path] =
-      workspace.links[source.path]?.filter(connectionsToKeep) ?? [];
-    if (workspace.links[source.path].length === 0) {
-      delete workspace.links[source.path];
-    }
-    workspace.backlinks[target.path] =
-      workspace.backlinks[target.path]?.filter(connectionsToKeep) ?? [];
-    if (workspace.backlinks[target.path].length === 0) {
-      delete workspace.backlinks[target.path];
-      if (URI.isPlaceholder(target)) {
-        delete workspace.placeholders[uriToPlaceholderId(target)];
-      }
-    }
-    return workspace;
+  public dispose(): void {
+    this.onDidAddEmitter.dispose();
+    this.onDidDeleteEmitter.dispose();
+    this.onDidUpdateEmitter.dispose();
   }
 }
 

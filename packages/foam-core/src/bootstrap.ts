@@ -29,7 +29,7 @@ export const bootstrap = async (config: FoamConfig, dataStore: IDataStore) => {
 
   await Promise.all(
     files.map(async uri => {
-      Logger.info('Found: ' + uri);
+      Logger.info('Found: ' + URI.toString(uri));
       if (URI.isMarkdownFile(uri)) {
         const content = await dataStore.read(uri);
         if (isSome(content)) {

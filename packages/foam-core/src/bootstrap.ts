@@ -5,15 +5,28 @@ import { isSome } from './utils';
 import { Logger } from './utils/log';
 import { URI } from './model/uri';
 import { FoamWorkspace } from './model/workspace';
+import { Matcher, folderPlusGlob } from './services/datastore';
+import glob from 'glob';
+import { promisify } from 'util';
+
+const findAllFiles = promisify(glob);
 
 export const bootstrap = async (config: FoamConfig, dataStore: IDataStore) => {
   const plugins = await loadPlugins(config);
 
   const parserPlugins = plugins.map(p => p.parser).filter(isSome);
   const parser = createMarkdownParser(parserPlugins);
-
+  const matcher = new Matcher(config);
   const workspace = new FoamWorkspace();
-  const files = await dataStore.listFiles();
+
+  const filesByFolder = await Promise.all(
+    matcher.folders.map(async folder => {
+      const res = await findAllFiles(folderPlusGlob(folder)('**/*'));
+      return res.map(URI.file);
+    })
+  );
+  const files = matcher.match(filesByFolder.flat());
+
   await Promise.all(
     files.map(async uri => {
       Logger.info('Found: ' + uri);
@@ -25,31 +38,18 @@ export const bootstrap = async (config: FoamConfig, dataStore: IDataStore) => {
       }
     })
   );
-  workspace.resolveLinks(true);
-
-  const listeners = [
-    dataStore.onDidChange(async uri => {
-      const content = await dataStore.read(uri);
-      isSome(content) && workspace.set(await parser.parse(uri, content));
-    }),
-    dataStore.onDidCreate(async uri => {
-      const content = await dataStore.read(uri);
-      isSome(content) && workspace.set(await parser.parse(uri, content));
-    }),
-    dataStore.onDidDelete(uri => {
-      workspace.delete(uri);
-    }),
-  ];
+  const graph = workspace.resolveLinks(true);
 
   return {
     workspace: workspace,
+    graph: graph,
     config: config,
     services: {
       dataStore,
       parser,
+      matcher,
     },
     dispose: () => {
-      listeners.forEach(l => l.dispose());
       workspace.dispose();
     },
   } as Foam;

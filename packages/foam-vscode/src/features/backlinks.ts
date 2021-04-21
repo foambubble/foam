@@ -3,16 +3,18 @@ import { groupBy } from 'lodash';
 import {
   Foam,
   FoamWorkspace,
-  IDataStore,
   isNote,
   NoteLink,
   Resource,
   URI,
   Range,
+  IMatcher,
+  IDataStore,
 } from 'foam-core';
 import { getNoteTooltip } from '../utils';
 import { FoamFeature } from '../types';
 import { ResourceTreeItem } from '../utils/grouped-resources-tree-data-provider';
+import { FoamGraph } from 'packages/foam-core/src/model/workspace';
 
 const feature: FoamFeature = {
   activate: async (
@@ -23,6 +25,8 @@ const feature: FoamFeature = {
 
     const provider = new BacklinksTreeDataProvider(
       foam.workspace,
+      foam.graph,
+      foam.services.matcher,
       foam.services.dataStore
     );
 
@@ -53,6 +57,8 @@ export class BacklinksTreeDataProvider
 
   constructor(
     private workspace: FoamWorkspace,
+    private graph: FoamGraph,
+    private matcher: IMatcher,
     private dataStore: IDataStore
   ) {}
 
@@ -100,14 +106,12 @@ export class BacklinksTreeDataProvider
       return backlinkRefs;
     }
 
-    if (!uri || !this.dataStore.isMatch(uri)) {
+    if (!uri || !this.matcher.isMatch(uri)) {
       return Promise.resolve([]);
     }
 
     const backlinksByResourcePath = groupBy(
-      this.workspace
-        .getConnections(uri)
-        .filter(c => URI.isEqual(c.target, uri)),
+      this.graph.getConnections(uri).filter(c => URI.isEqual(c.target, uri)),
       b => b.source.path
     );
 

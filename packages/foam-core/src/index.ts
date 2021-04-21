@@ -12,15 +12,20 @@ import {
   NoteParser,
 } from './model/note';
 import { FoamConfig } from './config';
-import { IDataStore, FileDataStore } from './services/datastore';
+import {
+  IDataStore,
+  FileDataStore,
+  Matcher,
+  IMatcher,
+} from './services/datastore';
 import { ILogger } from './utils/log';
 import { IDisposable, isDisposable } from './common/lifecycle';
-import { FoamWorkspace } from './model/workspace';
+import { FoamGraph, FoamWorkspace } from './model/workspace';
 import { URI } from './model/uri';
 
 export { Position } from './model/position';
 export { Range } from './model/range';
-export { IDataStore, FileDataStore };
+export { IDataStore, FileDataStore, Matcher, IMatcher };
 export { ILogger };
 export { LogLevel, LogLevelThreshold, Logger, BaseLogger } from './utils/log';
 export { Event, Emitter } from './common/event';
@@ -68,10 +73,12 @@ export {
 export interface Services {
   dataStore: IDataStore;
   parser: NoteParser;
+  matcher: IMatcher;
 }
 
 export interface Foam extends IDisposable {
   services: Services;
   workspace: FoamWorkspace;
+  graph: FoamGraph;
   config: FoamConfig;
 }

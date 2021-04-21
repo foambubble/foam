@@ -294,7 +294,7 @@ export function createMarkdownReferences(
   return source.links
     .filter(isWikilink)
     .map(link => {
-      const targetUri = FoamWorkspace.resolveLink(workspace, source, link);
+      const targetUri = workspace.resolveLink(source, link);
       const target = workspace.find(targetUri);
       if (isNone(target)) {
         Logger.warn(`Link ${targetUri} in ${noteUri} is not valid.`);

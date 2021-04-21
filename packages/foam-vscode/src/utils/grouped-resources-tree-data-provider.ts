@@ -1,6 +1,13 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { IDataStore, URI, FoamWorkspace, Resource, getTitle } from 'foam-core';
+import {
+  URI,
+  FoamWorkspace,
+  Resource,
+  getTitle,
+  IMatcher,
+  IDataStore,
+} from 'foam-core';
 import micromatch from 'micromatch';
 import {
   GroupedResourcesConfig,
@@ -70,7 +77,7 @@ export class GroupedResourcesTreeDataProvider
     );
     ```
    * @param {FoamWorkspace} workspace
-   * @param {IDataStore} dataStore
+   * @param {Matcher} matcher
    * @param {string} providerId A **unique** providerId, this will be used to generate necessary commands within the provider.
    * @param {string} resourceName A display name used in the explorer view
    * @param {(resource: Resource, index: number) => boolean} filterPredicate A filter function called on each Resource within the workspace

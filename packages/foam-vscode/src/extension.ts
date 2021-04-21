@@ -4,6 +4,7 @@ import { bootstrap, FoamConfig, Foam, Logger, FileDataStore } from 'foam-core';
 import { features } from './features';
 import { getConfigFromVscode } from './services/config';
 import { VsCodeOutputLogger, exposeLogger } from './services/logging';
+import { isSome } from './utils';
 
 export async function activate(context: ExtensionContext) {
   const logger = new VsCodeOutputLogger();
@@ -14,17 +15,39 @@ export async function activate(context: ExtensionContext) {
     Logger.info('Starting Foam');
 
     const config: FoamConfig = getConfigFromVscode();
-    const watcher = workspace.createFileSystemWatcher('**/*');
-    const dataStore = new FileDataStore(config, watcher);
-
+    const dataStore = new FileDataStore();
     const foamPromise: Promise<Foam> = bootstrap(config, dataStore);
 
     const resPromises = features.map(f => f.activate(context, foamPromise));
 
     const foam = await foamPromise;
+    const { parser, matcher } = foam.services;
+
     Logger.info(`Loaded ${foam.workspace.list().length} notes`);
 
-    context.subscriptions.push(dataStore, foam, watcher);
+    const watcher = workspace.createFileSystemWatcher('**/*');
+
+    context.subscriptions.push(
+      foam,
+      watcher,
+      watcher.onDidChange(async uri => {
+        if (matcher.isMatch(uri)) {
+          const content = await dataStore.read(uri);
+          isSome(content) &&
+            foam.workspace.set(await parser.parse(uri, content));
+        }
+      }),
+      watcher.onDidCreate(async uri => {
+        if (matcher.isMatch(uri)) {
+          const content = await dataStore.read(uri);
+          isSome(content) &&
+            foam.workspace.set(await parser.parse(uri, content));
+        }
+      }),
+      watcher.onDidDelete(async uri => {
+        matcher.isMatch(uri) && foam.workspace.delete(uri);
+      })
+    );
 
     const res = (await Promise.all(resPromises)).filter(r => r != null);
 

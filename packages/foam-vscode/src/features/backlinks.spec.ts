@@ -1,5 +1,5 @@
 import { workspace, window } from 'vscode';
-import { URI, FoamWorkspace, IDataStore } from 'foam-core';
+import { URI, FoamWorkspace, IDataStore, Matcher, IMatcher } from 'foam-core';
 import {
   cleanWorkspace,
   closeEditors,
@@ -19,18 +19,22 @@ describe('Backlinks panel', () => {
     await createNote(noteC);
   });
   afterAll(async () => {
+    graph.dispose();
     ws.dispose();
     await cleanWorkspace();
   });
 
   const rootUri = workspace.workspaceFolders[0].uri;
   const ws = new FoamWorkspace();
-  const dataStore = {
+  const dataStore: IDataStore = {
     read: uri => {
       return Promise.resolve('');
     },
+  };
+  const matcher: IMatcher = {
+    match: uris => uris.filter(matcher.isMatch),
     isMatch: uri => uri.path.endsWith('.md'),
-  } as IDataStore;
+  };
 
   const noteA = createTestNote({
     root: rootUri,
@@ -48,10 +52,10 @@ describe('Backlinks panel', () => {
   });
   ws.set(noteA)
     .set(noteB)
-    .set(noteC)
-    .resolveLinks(true);
+    .set(noteC);
+  const graph = ws.resolveLinks(true);
 
-  const provider = new BacklinksTreeDataProvider(ws, dataStore);
+  const provider = new BacklinksTreeDataProvider(ws, graph, matcher, dataStore);
 
   beforeEach(async () => {
     await closeEditors();

@@ -82,7 +82,7 @@ function generateGraphData(foam: Foam) {
       title: cutTitle(title),
     };
   });
-  foam.workspace.getAllConnections().forEach(c => {
+  foam.graph.getAllConnections().forEach(c => {
     graph.edges.add({
       source: c.source.path,
       target: c.target.path,

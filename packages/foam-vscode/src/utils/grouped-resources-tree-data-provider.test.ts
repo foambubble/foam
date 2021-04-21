@@ -32,8 +32,8 @@ describe('GroupedResourcesTreeDataProvider', () => {
     .set(matchingNote1)
     .set(matchingNote2)
     .set(excludedPathNote)
-    .set(notMatchingNote)
-    .resolveLinks();
+    .set(notMatchingNote);
+  const graph = workspace.resolveLinks();
 
   const dataStore = { read: () => '' } as any;
 

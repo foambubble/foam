@@ -42,18 +42,17 @@ describe('Workspace resources', () => {
     ).toEqual(['/page-a.md', '/page-b.md', '/page-c.md']);
   });
 
-  it('Listing resources includes notes, attachments and placeholders', () => {
+  it('Listing resources includes notes and attachments', () => {
     const ws = new FoamWorkspace();
     ws.set(createTestNote({ uri: '/page-a.md' }));
     ws.set(createAttachment({ uri: '/file.pdf' }));
-    ws.set({ type: 'placeholder', uri: URI.placeholder('place-holder') });
 
     expect(
       ws
         .list()
         .map(n => n.uri.path)
         .sort()
-    ).toEqual(['/file.pdf', '/page-a.md', 'place-holder']);
+    ).toEqual(['/file.pdf', '/page-a.md']);
   });
 
   it('Fails if getting non-existing note', () => {
@@ -70,7 +69,27 @@ describe('Workspace resources', () => {
   });
 });
 
-describe('Workspace links', () => {
+describe('Graph', () => {
+  it('contains notes and placeholders', () => {
+    const ws = new FoamWorkspace();
+    ws.set(
+      createTestNote({
+        uri: '/page-a.md',
+        links: [{ slug: 'placeholder-link' }],
+      })
+    );
+    ws.set(createAttachment({ uri: '/file.pdf' }));
+
+    const graph = FoamGraph.fromWorkspace(ws);
+
+    expect(
+      graph
+        .getAllNodes()
+        .map(uri => uri.path)
+        .sort()
+    ).toEqual(['/file.pdf', '/page-a.md', 'placeholder-link']);
+  });
+
   it('Supports multiple connections between the same resources', () => {
     const noteA = createTestNote({
       uri: '/path/to/note-a.md',

@@ -44,7 +44,7 @@ export class FoamGraph implements IDisposable {
   /**
    * Placehoders by key / slug / value
    */
-  public readonly placeholders: { [key: string]: Resource } = {};
+  public readonly placeholders: { [key: string]: URI } = {};
   /**
    * Maps the connections starting from a URI
    */
@@ -63,6 +63,13 @@ export class FoamGraph implements IDisposable {
 
   public contains(uri: URI): boolean {
     return this.getConnections(uri).length > 0;
+  }
+
+  public getAllNodes(): URI[] {
+    return [
+      ...Object.values(this.placeholders),
+      ...this.workspace.list().map(r => r.uri),
+    ];
   }
 
   public getAllConnections(): Connection[] {
@@ -115,7 +122,7 @@ export class FoamGraph implements IDisposable {
     if (name in this.placeholders) {
       const placeholder = this.placeholders[name];
       delete this.placeholders[name];
-      const resourcesToUpdate = this.backlinks[placeholder.uri.path] ?? [];
+      const resourcesToUpdate = this.backlinks[placeholder.path] ?? [];
       resourcesToUpdate.forEach(res =>
         this.resolveResource(this.workspace.get(res.source))
       );

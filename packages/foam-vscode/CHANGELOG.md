@@ -4,6 +4,12 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.13.1] - 2021-04-21
+
+Fixes and Improvements:
+
+- fixed bug in Windows when running `Open Daily Note` command (#591 - Thanks @RobinKing)
+
 ## [0.13.0] - 2021-04-19
 
 Features:

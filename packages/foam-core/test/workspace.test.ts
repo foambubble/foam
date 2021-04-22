@@ -1,8 +1,5 @@
-import {
-  FoamGraph,
-  FoamWorkspace,
-  getReferenceType,
-} from '../src/model/workspace';
+import { FoamWorkspace, getReferenceType } from '../src/model/workspace';
+import { FoamGraph } from '../src/model/graph';
 import { Logger } from '../src/utils/log';
 import { createTestNote, createAttachment } from './core.test';
 import { URI } from '../src/model/uri';

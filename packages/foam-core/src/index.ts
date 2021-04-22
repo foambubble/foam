@@ -20,7 +20,8 @@ import {
 } from './services/datastore';
 import { ILogger } from './utils/log';
 import { IDisposable, isDisposable } from './common/lifecycle';
-import { FoamGraph, FoamWorkspace } from './model/workspace';
+import { FoamWorkspace } from './model/workspace';
+import { FoamGraph } from '../src/model/graph';
 import { URI } from './model/uri';
 
 export { Position } from './model/position';
@@ -62,6 +63,7 @@ export {
   NoteLink,
   URI,
   FoamWorkspace,
+  FoamGraph,
   NoteLinkDefinition,
   NoteParser,
   isNote,

@@ -183,6 +183,9 @@ export class FoamGraph implements IDisposable {
     this.backlinks[target.path] = this.backlinks[target.path] ?? [];
     this.backlinks[target.path].push(connection);
 
+    if (URI.isPlaceholder(target)) {
+      this.placeholders[uriToPlaceholderId(target)] = target;
+    }
     return this;
   }
 

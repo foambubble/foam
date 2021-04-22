@@ -22,7 +22,7 @@ describe('generateLinkReferences', () => {
     const config = createConfigFromFolders([
       URI.file(path.join(__dirname, '..', '__scaffold__')),
     ]);
-    _workspace = await bootstrap(config, new FileDataStore(config)).then(
+    _workspace = await bootstrap(config, new FileDataStore()).then(
       foam => foam.workspace
     );
   });

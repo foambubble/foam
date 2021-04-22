@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { Foam, Resource, isNote, isPlaceholder } from 'foam-core';
+import { Foam, Resource } from 'foam-core';
 import { getPlaceholdersConfig } from '../settings';
 import { FoamFeature } from '../types';
 import { GroupedResourcesTreeDataProvider } from '../utils/grouped-resources-tree-data-provider';
@@ -39,21 +39,17 @@ const feature: FoamFeature = {
 export default feature;
 
 export function isPlaceholderResource(resource: Resource) {
-  if (isPlaceholder(resource)) {
-    // A placeholder is, by default, blank
-    return true;
-  }
+  // TODO: add support for placeholders (via graph)
+  // if (isPlaceholder(resource)) {
+  //   return true;
+  // }
 
-  if (isNote(resource)) {
-    const contentLines = resource.source.text
-      .trim()
-      .split('\n')
-      .map(line => line.trim())
-      .filter(line => line.length > 0)
-      .filter(line => !line.startsWith('#'));
+  const contentLines = resource.source.text
+    .trim()
+    .split('\n')
+    .map(line => line.trim())
+    .filter(line => line.length > 0)
+    .filter(line => !line.startsWith('#'));
 
-    return contentLines.length === 0;
-  }
-
-  return false;
+  return contentLines.length === 0;
 }

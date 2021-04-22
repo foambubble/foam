@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { Foam, FoamWorkspace, URI, isNote, FoamGraph } from 'foam-core';
+import { Foam, FoamWorkspace, URI, FoamGraph } from 'foam-core';
 import { FoamFeature } from '../types';
 import { getNoteTooltip, mdDocSelector } from '../utils';
 import { toVsCodeUri } from '../utils/vsc-utils';
@@ -46,8 +46,7 @@ export class CompletionProvider
         vscode.CompletionItemKind.File
       );
       item.insertText = URI.getBasename(resource.uri);
-      item.documentation =
-        isNote(resource) && getNoteTooltip(resource.source.text);
+      item.documentation = getNoteTooltip(resource.source.text);
 
       return item;
     });

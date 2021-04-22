@@ -1,5 +1,5 @@
 import path from 'path';
-import { NoteLinkDefinition, Note, Attachment } from '../src/model/note';
+import { NoteLinkDefinition, Resource } from '../src/model/note';
 import { Range } from '../src/model/range';
 import { URI } from '../src/model/uri';
 import { Logger } from '../src/utils/log';
@@ -19,13 +19,6 @@ const eol = '\n';
  */
 export const strToUri = URI.file;
 
-export const createAttachment = (params: { uri: string }): Attachment => {
-  return {
-    uri: strToUri(params.uri),
-    type: 'attachment',
-  };
-};
-
 export const createTestNote = (params: {
   uri: string;
   title?: string;
@@ -33,7 +26,7 @@ export const createTestNote = (params: {
   links?: Array<{ slug: string } | { to: string }>;
   text?: string;
   root?: URI;
-}): Note => {
+}): Resource => {
   const root = params.root ?? URI.file('/');
   return {
     uri: URI.resolve(params.uri, root),

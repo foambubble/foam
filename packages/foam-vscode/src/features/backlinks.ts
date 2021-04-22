@@ -4,7 +4,6 @@ import {
   Foam,
   FoamWorkspace,
   FoamGraph,
-  isNote,
   NoteLink,
   Resource,
   URI,
@@ -74,9 +73,6 @@ export class BacklinksTreeDataProvider
     const uri = this.target;
     if (item) {
       const resource = item.resource;
-      if (!isNote(resource)) {
-        return Promise.resolve([]);
-      }
 
       const backlinkRefs = Promise.all(
         resource.links
@@ -118,7 +114,6 @@ export class BacklinksTreeDataProvider
     const resources = Object.keys(backlinksByResourcePath)
       .map(res => backlinksByResourcePath[res][0].source)
       .map(uri => this.workspace.get(uri))
-      .filter(isNote)
       .sort((a, b) => a.title.localeCompare(b.title))
       .map(note => {
         const connections = backlinksByResourcePath[

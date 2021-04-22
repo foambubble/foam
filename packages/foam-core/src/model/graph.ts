@@ -1,7 +1,6 @@
 import { diff } from 'fast-array-diff';
 import { isEqual } from 'lodash';
-import * as path from 'path';
-import { Resource, NoteLink, isNote } from './note';
+import { Resource, NoteLink } from './note';
 import { URI } from './uri';
 import { IDisposable } from '../index';
 import { FoamWorkspace, uriToResourceName } from './workspace';
@@ -201,8 +200,7 @@ export class FoamGraph implements IDisposable {
   public resolveResource(resource: Resource) {
     delete this.links[resource.uri.path];
     // prettier-ignore
-    const links = isNote(resource) ? resource.links : []
-    links.forEach(link => {
+    resource.links.forEach(link => {
       const targetUri = this.workspace.resolveLink(resource, link);
       this.connect(resource.uri, targetUri, link);
     });

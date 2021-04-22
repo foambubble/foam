@@ -1,14 +1,8 @@
-import {
-  createAttachment,
-  createPlaceholder,
-  createTestNote,
-} from '../test/test-utils';
+import { createTestNote } from '../test/test-utils';
 import { isPlaceholderResource } from './placeholders';
 
 describe('isPlaceholderResource', () => {
-  it('should return true when a placeholder', () => {
-    expect(isPlaceholderResource(createPlaceholder(''))).toBeTruthy();
-  });
+  it.todo('should return true when a placeholder');
 
   it('should return true when an empty note is provided', () => {
     expect(
@@ -82,16 +76,6 @@ describe('isPlaceholderResource', () => {
         createTestNote({
           uri: '',
           text: 'A line that is not the title\n',
-        })
-      )
-    ).toBeFalsy();
-  });
-
-  it('should return false when an attachment is provided', () => {
-    expect(
-      isPlaceholderResource(
-        createAttachment({
-          uri: '',
         })
       )
     ).toBeFalsy();

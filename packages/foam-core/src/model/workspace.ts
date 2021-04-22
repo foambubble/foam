@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { Resource, NoteLink, isNote } from './note';
+import { Resource, NoteLink } from './note';
 import { URI } from './uri';
 import { isSome, isNone } from '../utils';
 import { Emitter } from '../common/event';
@@ -146,9 +146,9 @@ export class FoamWorkspace implements IDisposable {
     let targetUri: URI | undefined;
     switch (link.type) {
       case 'wikilink':
-        const definitionUri = isNote(resource)
-          ? resource.definitions.find(def => def.label === link.slug)?.url
-          : null;
+        const definitionUri = resource.definitions.find(
+          def => def.label === link.slug
+        )?.url;
         if (isSome(definitionUri)) {
           const definedUri = URI.resolve(definitionUri, resource.uri);
           targetUri =

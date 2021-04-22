@@ -1,15 +1,9 @@
 import {
   Resource,
-  Attachment,
-  Placeholder,
-  Note,
   NoteLink,
-  isNote,
   NoteLinkDefinition,
-  isPlaceholder,
-  isAttachment,
   getTitle,
-  NoteParser,
+  ResourceParser,
 } from './model/note';
 import { FoamConfig } from './config';
 import {
@@ -57,24 +51,18 @@ export { bootstrap } from './bootstrap';
 
 export {
   Resource,
-  Attachment,
-  Placeholder,
-  Note,
   NoteLink,
   URI,
   FoamWorkspace,
   FoamGraph,
   NoteLinkDefinition,
-  NoteParser,
-  isNote,
-  isPlaceholder,
-  isAttachment,
+  ResourceParser,
   getTitle,
 };
 
 export interface Services {
   dataStore: IDataStore;
-  parser: NoteParser;
+  parser: ResourceParser;
   matcher: IMatcher;
 }
 

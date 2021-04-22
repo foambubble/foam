@@ -1,12 +1,7 @@
 import * as vscode from 'vscode';
-import { Foam, Note, IDataStore, URI } from 'foam-core';
+import { Foam, Resource, IDataStore, URI } from 'foam-core';
 import { FoamFeature } from '../../types';
-import {
-  getNoteTooltip,
-  getContainsTooltip,
-  isNote,
-  isSome,
-} from '../../utils';
+import { getNoteTooltip, getContainsTooltip, isSome } from '../../utils';
 
 const feature: FoamFeature = {
   activate: async (
@@ -54,7 +49,6 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
       [key: string]: TagMetadata[];
     } = this.foam.workspace
       .list()
-      .filter(isNote)
       .reduce((acc: { [key: string]: TagMetadata[] }, note) => {
         note.tags.forEach(tag => {
           acc[tag] = acc[tag] ?? [];
@@ -75,7 +69,6 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
     if (element) {
       const references: TagReference[] = element.notes
         .map(({ uri }) => this.foam.workspace.get(uri))
-        .filter(isNote)
         .map(note => new TagReference(element.tag, note));
 
       return Promise.resolve([
@@ -147,7 +140,7 @@ export class TagSearch extends vscode.TreeItem {
 
 export class TagReference extends vscode.TreeItem {
   public readonly title: string;
-  constructor(public readonly tag: string, public readonly note: Note) {
+  constructor(public readonly tag: string, public readonly note: Resource) {
     super(note.title, vscode.TreeItemCollapsibleState.None);
     this.title = note.title;
     this.description = note.uri.path;

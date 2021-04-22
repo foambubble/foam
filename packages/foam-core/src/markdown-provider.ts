@@ -10,9 +10,10 @@ import detectNewline from 'detect-newline';
 import os from 'os';
 import {
   NoteLinkDefinition,
-  Note,
-  NoteParser,
-  isWikilink,
+  Resource,
+  NoteLink,
+  WikiLink,
+  ResourceParser,
   getTitle,
 } from './model/note';
 import { Position } from './model/position';
@@ -59,7 +60,7 @@ const tagsPlugin: ParserPlugin = {
 const titlePlugin: ParserPlugin = {
   name: 'title',
   visit: (node, note) => {
-    if (note.title == null && node.type === 'heading' && node.depth === 1) {
+    if (note.title == '' && node.type === 'heading' && node.depth === 1) {
       note.title =
         ((node as Parent)!.children?.[0]?.value as string) || note.title;
     }
@@ -69,7 +70,7 @@ const titlePlugin: ParserPlugin = {
     note.title = props.title ?? note.title;
   },
   onDidVisitTree: (tree, note) => {
-    if (note.title == null) {
+    if (note.title == '') {
       note.title = URI.getBasename(note.uri);
     }
   },
@@ -133,7 +134,9 @@ const handleError = (
   );
 };
 
-export function createMarkdownParser(extraPlugins: ParserPlugin[]): NoteParser {
+export function createMarkdownParser(
+  extraPlugins: ParserPlugin[]
+): ResourceParser {
   const parser = unified()
     .use(markdownParse, { gfm: true })
     .use(frontmatterPlugin, ['yaml'])
@@ -155,8 +158,8 @@ export function createMarkdownParser(extraPlugins: ParserPlugin[]): NoteParser {
     }
   });
 
-  const foamParser: NoteParser = {
-    parse: (uri: URI, markdown: string): Note => {
+  const foamParser: ResourceParser = {
+    parse: (uri: URI, markdown: string): Resource => {
       Logger.debug('Parsing:', uri);
       markdown = plugins.reduce((acc, plugin) => {
         try {
@@ -169,11 +172,11 @@ export function createMarkdownParser(extraPlugins: ParserPlugin[]): NoteParser {
       const tree = parser.parse(markdown);
       const eol = detectNewline(markdown) || os.EOL;
 
-      var note: Note = {
+      var note: Resource = {
         uri: uri,
         type: 'note',
         properties: {},
-        title: null,
+        title: '',
         tags: new Set(),
         links: [],
         definitions: [],
@@ -338,3 +341,7 @@ const astPositionToFoamRange = (pos: AstPosition): Range =>
     pos.end.line - 1,
     pos.end.column - 1
   );
+
+const isWikilink = (link: NoteLink): link is WikiLink => {
+  return link.type === 'wikilink';
+};

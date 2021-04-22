@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { Foam, isNote, FoamGraph, Resource } from 'foam-core';
+import { Foam, FoamGraph, Resource } from 'foam-core';
 import { getOrphansConfig } from '../settings';
 import { FoamFeature } from '../types';
 import { GroupedResourcesTreeDataProvider } from '../utils/grouped-resources-tree-data-provider';
@@ -37,9 +37,5 @@ const feature: FoamFeature = {
 export default feature;
 
 export function isOrphan(graph: FoamGraph, resource: Resource) {
-  if (isNote(resource)) {
-    return graph.getConnections(resource.uri).length === 0;
-  } else {
-    return false;
-  }
+  return graph.getConnections(resource.uri).length === 0;
 }

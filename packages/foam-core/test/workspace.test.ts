@@ -1,7 +1,7 @@
 import { FoamWorkspace, getReferenceType } from '../src/model/workspace';
 import { FoamGraph } from '../src/model/graph';
 import { Logger } from '../src/utils/log';
-import { createTestNote, createAttachment } from './core.test';
+import { createTestNote } from './core.test';
 import { URI } from '../src/model/uri';
 
 Logger.setLevel('error');
@@ -39,10 +39,10 @@ describe('Workspace resources', () => {
     ).toEqual(['/page-a.md', '/page-b.md', '/page-c.md']);
   });
 
-  it('Listing resources includes notes and attachments', () => {
+  it('Listing resources includes all notes', () => {
     const ws = new FoamWorkspace();
     ws.set(createTestNote({ uri: '/page-a.md' }));
-    ws.set(createAttachment({ uri: '/file.pdf' }));
+    ws.set(createTestNote({ uri: '/file.pdf' }));
 
     expect(
       ws
@@ -75,7 +75,7 @@ describe('Graph', () => {
         links: [{ slug: 'placeholder-link' }],
       })
     );
-    ws.set(createAttachment({ uri: '/file.pdf' }));
+    ws.set(createTestNote({ uri: '/file.pdf' }));
 
     const graph = FoamGraph.fromWorkspace(ws);
 
@@ -287,10 +287,10 @@ describe('Wikilinks', () => {
         { slug: 'attachment-b' },
       ],
     });
-    const attachmentA = createAttachment({
+    const attachmentA = createTestNote({
       uri: '/path/to/more/attachment-a.pdf',
     });
-    const attachmentB = createAttachment({
+    const attachmentB = createTestNote({
       uri: '/path/to/more/attachment-b.pdf',
     });
     const ws = new FoamWorkspace();
@@ -312,10 +312,10 @@ describe('Wikilinks', () => {
       uri: '/path/to/page-a.md',
       links: [{ slug: 'attachment-a' }],
     });
-    const attachmentA = createAttachment({
+    const attachmentA = createTestNote({
       uri: '/path/to/more/attachment-a.pdf',
     });
-    const attachmentABis = createAttachment({
+    const attachmentABis = createTestNote({
       uri: '/path/to/attachment-a.pdf',
     });
     const ws = new FoamWorkspace();
@@ -334,10 +334,10 @@ describe('Wikilinks', () => {
       uri: '/path/to/page-a.md',
       links: [{ slug: 'attachment-a' }],
     });
-    const attachmentA = createAttachment({
+    const attachmentA = createTestNote({
       uri: '/path/to/more/attachment-a.pdf',
     });
-    const attachmentABis = createAttachment({
+    const attachmentABis = createTestNote({
       uri: '/path/to/attachment-a.pdf',
     });
     const ws = new FoamWorkspace();

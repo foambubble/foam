@@ -1,4 +1,4 @@
-import { FoamWorkspace, getTitle, Resource } from 'foam-core';
+import { FoamWorkspace, Resource } from 'foam-core';
 import { OPEN_COMMAND } from '../features/utility-commands';
 import {
   GroupedResoucesConfigGroupBy,
@@ -12,7 +12,7 @@ import {
 
 describe('GroupedResourcesTreeDataProvider', () => {
   const isMatch = (resource: Resource) => {
-    return getTitle(resource).length === 3;
+    return resource.title.length === 3;
   };
   const matchingNote1 = createTestNote({ uri: '/path/ABC.md', title: 'ABC' });
   const matchingNote2 = createTestNote({

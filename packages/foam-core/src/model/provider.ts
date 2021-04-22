@@ -2,7 +2,7 @@ import { NoteLink, URI } from 'index';
 import { Resource } from './note';
 import { FoamWorkspace } from './workspace';
 
-export interface Provider {
+export interface ResourceProvider {
   match: (uri: URI) => boolean;
   fetch: (uri: URI) => Promise<Resource>;
   resolveLink: (

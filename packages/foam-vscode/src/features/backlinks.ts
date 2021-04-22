@@ -114,7 +114,7 @@ export class BacklinksTreeDataProvider
     const resources = Object.keys(backlinksByResourcePath)
       .map(res => backlinksByResourcePath[res][0].source)
       .map(uri => this.workspace.get(uri))
-      .sort((a, b) => a.title.localeCompare(b.title))
+      .sort(Resource.sortByTitle)
       .map(note => {
         const connections = backlinksByResourcePath[
           note.uri.path

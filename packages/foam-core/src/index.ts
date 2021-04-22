@@ -2,7 +2,6 @@ import {
   Resource,
   NoteLink,
   NoteLinkDefinition,
-  getTitle,
   ResourceParser,
 } from './model/note';
 import { FoamConfig } from './config';
@@ -25,7 +24,7 @@ export { ILogger };
 export { LogLevel, LogLevelThreshold, Logger, BaseLogger } from './utils/log';
 export { Event, Emitter } from './common/event';
 export { FoamConfig };
-
+export { ResourceProvider } from './model/provider';
 export { IDisposable, isDisposable };
 
 export {
@@ -57,7 +56,6 @@ export {
   FoamGraph,
   NoteLinkDefinition,
   ResourceParser,
-  getTitle,
 };
 
 export interface Services {

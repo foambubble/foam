@@ -14,7 +14,6 @@ import {
   NoteLink,
   WikiLink,
   ResourceParser,
-  getTitle,
 } from './model/note';
 import { Position } from './model/position';
 import { Range } from './model/range';
@@ -314,7 +313,7 @@ export function createMarkdownReferences(
         : dropExtension(relativePath);
 
       // [wiki-link-text]: path/to/file.md "Page title"
-      return { label: link.slug, url: pathToNote, title: getTitle(target) };
+      return { label: link.slug, url: pathToNote, title: target.title };
     })
     .filter(isSome)
     .sort();

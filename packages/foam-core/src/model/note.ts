@@ -52,8 +52,8 @@ export interface ResourceParser {
   parse: (uri: URI, text: string) => Resource;
 }
 
-export const getTitle = (resource: Resource): string => {
-  return resource.type === 'note'
-    ? resource.title ?? URI.getBasename(resource.uri)
-    : URI.getBasename(resource.uri);
-};
+export abstract class Resource {
+  public static sortByTitle(a: Resource, b: Resource) {
+    return a.title.localeCompare(b.title);
+  }
+}

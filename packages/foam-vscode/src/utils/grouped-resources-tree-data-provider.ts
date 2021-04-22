@@ -1,13 +1,6 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
-import {
-  URI,
-  FoamWorkspace,
-  Resource,
-  getTitle,
-  IMatcher,
-  IDataStore,
-} from 'foam-core';
+import { URI, FoamWorkspace, Resource, IMatcher, IDataStore } from 'foam-core';
 import micromatch from 'micromatch';
 import {
   GroupedResourcesConfig,
@@ -173,7 +166,7 @@ export class GroupedResourcesTreeDataProvider
       .list()
       .filter(this.filterPredicate)
       .filter(resource => !this.isMatch(resource.uri))
-      .sort(this.sort);
+      .sort(Resource.sortByTitle);
   }
 
   private isMatch(uri: URI) {
@@ -210,33 +203,29 @@ export class GroupedResourcesTreeDataProvider
     }
 
     for (const k in resourcesByDirectory) {
-      resourcesByDirectory[k].sort(this.sort);
+      resourcesByDirectory[k].sort(Resource.sortByTitle);
     }
 
     return resourcesByDirectory;
-  }
-
-  private sort(a: Resource, b: Resource) {
-    const titleA = getTitle(a);
-    const titleB = getTitle(b);
-    return titleA.localeCompare(titleB);
   }
 }
 
 type ResourceByDirectory = { [key: string]: Resource[] };
 
-type GroupedResourceTreeItem = ResourceTreeItem | DirectoryTreeItem;
+type GroupedResourceTreeItem = UriTreeItem | DirectoryTreeItem;
 
-export class ResourceTreeItem extends vscode.TreeItem {
+export class UriTreeItem extends vscode.TreeItem {
   constructor(
-    public readonly resource: Resource,
-    private readonly dataStore: IDataStore,
-    collapsibleState = vscode.TreeItemCollapsibleState.None
+    public readonly uri: URI,
+    options: {
+      collapsibleState?: vscode.TreeItemCollapsibleState;
+      icon?: string;
+      title?: string;
+    } = {}
   ) {
-    super(getTitle(resource), collapsibleState);
-    this.contextValue = 'resource';
-    this.description = resource.uri.path.replace(
-      vscode.workspace.getWorkspaceFolder(toVsCodeUri(resource.uri))?.uri.path,
+    super(options?.title ?? URI.getBasename(uri), options.collapsibleState);
+    this.description = uri.path.replace(
+      vscode.workspace.getWorkspaceFolder(toVsCodeUri(uri))?.uri.path,
       ''
     );
     this.tooltip = undefined;
@@ -245,33 +234,38 @@ export class ResourceTreeItem extends vscode.TreeItem {
       title: OPEN_COMMAND.title,
       arguments: [
         {
-          resource: resource.uri,
+          resource: uri,
         },
       ],
     };
+    this.iconPath = new vscode.ThemeIcon(options.icon ?? 'new-file');
+  }
 
-    let iconStr: string;
-    switch (this.resource.type) {
-      case 'attachment':
-        iconStr = 'file-media';
-        break;
-      case 'placeholder':
-        iconStr = 'new-file';
-        break;
-      case 'note':
-      default:
-        iconStr = 'note';
-        break;
-    }
-    this.iconPath = new vscode.ThemeIcon(iconStr);
+  resolveTreeItem(): Promise<GroupedResourceTreeItem> {
+    return Promise.resolve(this);
+  }
+}
+
+export class ResourceTreeItem extends UriTreeItem {
+  constructor(
+    public readonly resource: Resource,
+    private readonly dataStore: IDataStore,
+    collapsibleState = vscode.TreeItemCollapsibleState.None
+  ) {
+    super(resource.uri, {
+      title: resource.title,
+      icon: 'note', // TODO should use FoamResourceProvider
+      collapsibleState,
+    });
+    this.contextValue = 'resource';
   }
 
   async resolveTreeItem(): Promise<ResourceTreeItem> {
     if (this instanceof ResourceTreeItem) {
       const content = await this.dataStore?.read(this.resource.uri);
       this.tooltip = isSome(content)
-        ? getNoteTooltip(content)
-        : getTitle(this.resource);
+        ? getNoteTooltip(content) // TODO this should use the FoamResourceProvider
+        : this.resource.title;
     }
     return this;
   }
@@ -286,7 +280,7 @@ export class DirectoryTreeItem extends vscode.TreeItem {
     super(dir || 'Not Created', vscode.TreeItemCollapsibleState.Collapsed);
     const s = this.resources.length > 1 ? 's' : '';
     this.description = `${this.resources.length} ${itemLabel}${s}`;
-    const titles = this.resources.map(getTitle);
+    const titles = this.resources.map(r => r.title);
     this.tooltip = getContainsTooltip(titles);
   }
 

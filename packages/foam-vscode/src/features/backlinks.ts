@@ -3,6 +3,7 @@ import { groupBy } from 'lodash';
 import {
   Foam,
   FoamWorkspace,
+  FoamGraph,
   isNote,
   NoteLink,
   Resource,
@@ -14,7 +15,6 @@ import {
 import { getNoteTooltip } from '../utils';
 import { FoamFeature } from '../types';
 import { ResourceTreeItem } from '../utils/grouped-resources-tree-data-provider';
-import { FoamGraph } from 'packages/foam-core/src/model/workspace';
 
 const feature: FoamFeature = {
   activate: async (

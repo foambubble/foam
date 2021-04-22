@@ -1,9 +1,8 @@
 import * as vscode from 'vscode';
-import { Foam, isNote, Resource } from 'foam-core';
+import { Foam, isNote, FoamGraph, Resource } from 'foam-core';
 import { getOrphansConfig } from '../settings';
 import { FoamFeature } from '../types';
 import { GroupedResourcesTreeDataProvider } from '../utils/grouped-resources-tree-data-provider';
-import { FoamGraph } from 'packages/foam-core/src/model/workspace';
 
 const feature: FoamFeature = {
   activate: async (

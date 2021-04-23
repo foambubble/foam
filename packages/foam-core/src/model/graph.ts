@@ -1,6 +1,6 @@
 import { diff } from 'fast-array-diff';
 import { isEqual } from 'lodash';
-import { Resource, NoteLink } from './note';
+import { Resource, ResourceLink } from './note';
 import { URI } from './uri';
 import { IDisposable } from '../index';
 import { FoamWorkspace, uriToResourceName } from './workspace';
@@ -9,7 +9,7 @@ import { Range } from './range';
 export type Connection = {
   source: URI;
   target: URI;
-  link: NoteLink;
+  link: ResourceLink;
 };
 
 const pathToPlaceholderId = (value: string) => value;
@@ -150,7 +150,7 @@ export class FoamGraph implements IDisposable {
     return this;
   }
 
-  private connect(source: URI, target: URI, link: NoteLink) {
+  private connect(source: URI, target: URI, link: ResourceLink) {
     const connection = { source, target, link };
 
     this.links[source.path] = this.links[source.path] ?? [];
@@ -174,7 +174,7 @@ export class FoamGraph implements IDisposable {
    * @param link the link reference, or `true` to remove all links
    * @returns the updated Foam workspace
    */
-  private disconnect(source: URI, target: URI, link: NoteLink | true) {
+  private disconnect(source: URI, target: URI, link: ResourceLink | true) {
     const connectionsToKeep =
       link === true
         ? (c: Connection) =>
@@ -220,5 +220,5 @@ const isSameConnection = (a: Connection, b: Connection) =>
   URI.isEqual(a.target, b.target) &&
   isSameLink(a.link, b.link);
 
-const isSameLink = (a: NoteLink, b: NoteLink) =>
+const isSameLink = (a: ResourceLink, b: ResourceLink) =>
   a.type === b.type && Range.isEqual(a.range, b.range);

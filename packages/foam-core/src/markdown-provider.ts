@@ -11,7 +11,7 @@ import os from 'os';
 import {
   NoteLinkDefinition,
   Resource,
-  NoteLink,
+  ResourceLink,
   WikiLink,
   ResourceParser,
 } from './model/note';
@@ -341,6 +341,6 @@ const astPositionToFoamRange = (pos: AstPosition): Range =>
     pos.end.column - 1
   );
 
-const isWikilink = (link: NoteLink): link is WikiLink => {
+const isWikilink = (link: ResourceLink): link is WikiLink => {
   return link.type === 'wikilink';
 };

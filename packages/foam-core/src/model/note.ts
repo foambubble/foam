@@ -23,9 +23,7 @@ export interface DirectLink {
   range: Range;
 }
 
-export type NoteLink = WikiLink | DirectLink;
-
-export type ResourceLink = NoteLink;
+export type ResourceLink = WikiLink | DirectLink;
 
 export interface NoteLinkDefinition {
   label: string;

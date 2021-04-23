@@ -1,6 +1,6 @@
 import {
   Resource,
-  NoteLink,
+  ResourceLink,
   NoteLinkDefinition,
   ResourceParser,
 } from './model/note';
@@ -50,7 +50,7 @@ export { bootstrap } from './bootstrap';
 
 export {
   Resource,
-  NoteLink,
+  ResourceLink,
   URI,
   FoamWorkspace,
   FoamGraph,

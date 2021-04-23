@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { Resource, NoteLink } from './note';
+import { Resource, ResourceLink } from './note';
 import { URI } from './uri';
 import { isSome, isNone } from '../utils';
 import { Emitter } from '../common/event';
@@ -142,7 +142,7 @@ export class FoamWorkspace implements IDisposable {
     return FoamGraph.fromWorkspace(this, keepMonitoring);
   }
 
-  public resolveLink(resource: Resource, link: NoteLink): URI {
+  public resolveLink(resource: Resource, link: ResourceLink): URI {
     let targetUri: URI | undefined;
     switch (link.type) {
       case 'wikilink':

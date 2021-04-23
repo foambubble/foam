@@ -1,4 +1,4 @@
-import { NoteLink, URI } from 'index';
+import { ResourceLink, URI } from 'index';
 import { Resource } from './note';
 import { FoamWorkspace } from './workspace';
 
@@ -8,6 +8,6 @@ export interface ResourceProvider {
   resolveLink: (
     workspace: FoamWorkspace,
     resource: Resource,
-    link: NoteLink
+    link: ResourceLink
   ) => URI;
 }

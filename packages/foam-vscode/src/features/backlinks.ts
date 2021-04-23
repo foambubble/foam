@@ -4,7 +4,7 @@ import {
   Foam,
   FoamWorkspace,
   FoamGraph,
-  NoteLink,
+  ResourceLink,
   Resource,
   URI,
   Range,
@@ -138,7 +138,7 @@ export class BacklinksTreeDataProvider
 export class BacklinkTreeItem extends vscode.TreeItem {
   constructor(
     public readonly resource: Resource,
-    public readonly link: NoteLink
+    public readonly link: ResourceLink
   ) {
     super(
       link.type === 'wikilink' ? link.slug : link.label,

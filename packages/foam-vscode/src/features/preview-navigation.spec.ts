@@ -1,7 +1,10 @@
 import MarkdownIt from 'markdown-it';
 import { FoamWorkspace, URI } from 'foam-core';
 import { createPlaceholder, createTestNote } from '../test/test-utils';
-import { markdownItWithFoamLinks } from './preview-navigation';
+import {
+  markdownItWithFoamLinks,
+  markdownItWithFoamTags,
+} from './preview-navigation';
 
 describe('Link generation in preview', () => {
   const noteA = createTestNote({
@@ -29,6 +32,21 @@ describe('Link generation in preview', () => {
   it('generates a placeholder link to an unknown slug', () => {
     expect(md.render(`[[random-text]]`)).toEqual(
       `<p><a class='foam-placeholder-link' title="Link to non-existing resource" href="javascript:void(0);">random-text</a></p>\n`
+    );
+  });
+});
+
+describe('Stylable tag generation in preview', () => {
+  const noteB = createTestNote({
+    uri: 'note-b.md',
+    title: 'Note B',
+  });
+  const ws = new FoamWorkspace().set(noteB);
+  const md = markdownItWithFoamTags(MarkdownIt(), ws);
+
+  it('transforms a string containing multiple tags to a stylable html element', () => {
+    expect(md.render(`Lorem #ipsum dolor #sit`)).toMatch(
+      `<p>Lorem <span class='foam-tag'>#ipsum</span> dolor <span class='foam-tag'>#sit</span></p>`
     );
   });
 });

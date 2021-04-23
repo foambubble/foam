@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import markdownItRegex from 'markdown-it-regex';
 import { Foam, FoamWorkspace, Logger, URI } from 'foam-core';
 import { FoamFeature } from '../types';
+import _ from 'underscore';
 
 const feature: FoamFeature = {
   activate: async (
@@ -11,8 +12,13 @@ const feature: FoamFeature = {
     const foam = await foamPromise;
 
     return {
-      extendMarkdownIt: (md: markdownit) =>
-        markdownItWithFoamLinks(md, foam.workspace),
+      extendMarkdownIt: (md: markdownit) => {
+        const markdownItExtends = _.compose(
+          markdownItWithFoamLinks,
+          markdownItWithFoamTags
+        );
+        return markdownItExtends(md, foam.workspace);
+      },
     };
   },
 };
@@ -55,5 +61,32 @@ export const markdownItWithFoamLinks = (
 
 const getPlaceholderLink = (content: string) =>
   `<a class='foam-placeholder-link' title="Link to non-existing resource" href="javascript:void(0);">${content}</a>`;
+
+export const markdownItWithFoamTags = (
+  md: markdownit,
+  workspace: FoamWorkspace
+) => {
+  return md.use(markdownItRegex, {
+    name: 'foam-tags',
+    regex: /(#\w+)/,
+    replace: (tag: string) => {
+      try {
+        const resource = workspace.find(tag);
+        if (resource == null) {
+          return getFoamTag(tag);
+        }
+      } catch (e) {
+        Logger.error(
+          `Error while creating link for ${tag} in Preview panel`,
+          e
+        );
+        return getFoamTag(tag);
+      }
+    },
+  });
+};
+
+const getFoamTag = (content: string) =>
+  `<span class='foam-tag'>${content}</span>`;
 
 export default feature;

@@ -6,3 +6,7 @@
 .foam-note-link,
 .foam-attachment-link {
 }
+
+.foam-tag {
+  color: var(--vscode-editorLineNumber-foreground)
+}

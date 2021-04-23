@@ -1,5 +1,5 @@
 import { workspace, window } from 'vscode';
-import { URI, FoamWorkspace, IDataStore, Matcher, IMatcher } from 'foam-core';
+import { URI, FoamWorkspace, IDataStore, IMatcher, FoamGraph } from 'foam-core';
 import {
   cleanWorkspace,
   closeEditors,
@@ -53,7 +53,7 @@ describe('Backlinks panel', () => {
   ws.set(noteA)
     .set(noteB)
     .set(noteC);
-  const graph = ws.resolveLinks(true);
+  const graph = FoamGraph.fromWorkspace(ws);
 
   const provider = new BacklinksTreeDataProvider(ws, graph, matcher, dataStore);
 

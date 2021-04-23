@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { FoamWorkspace } from 'foam-core';
+import { FoamGraph, FoamWorkspace } from 'foam-core';
 import {
   cleanWorkspace,
   closeEditors,
@@ -31,7 +31,7 @@ describe('Link Completion', () => {
         links: [{ slug: 'placeholder text' }],
       })
     );
-  const graph = ws.resolveLinks();
+  const graph = FoamGraph.fromWorkspace(ws);
 
   beforeAll(async () => {
     await cleanWorkspace();

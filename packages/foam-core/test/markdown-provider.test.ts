@@ -8,6 +8,7 @@ import { Logger } from '../src/utils/log';
 import { uriToSlug } from '../src/utils/slug';
 import { URI } from '../src/model/uri';
 import { FoamWorkspace } from '../src/model/workspace';
+import { FoamGraph } from '../src/model/graph';
 
 Logger.setLevel('error');
 
@@ -117,7 +118,7 @@ this is a [link to intro](#introduction)
       .set(noteC)
       .set(noteD)
       .set(noteE);
-    const graph = workspace.resolveLinks();
+    const graph = FoamGraph.fromWorkspace(workspace);
 
     expect(graph.getBacklinks(noteB.uri).map(l => l.source)).toEqual([
       noteA.uri,

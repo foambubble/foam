@@ -1,4 +1,4 @@
-import { FoamWorkspace } from 'foam-core';
+import { FoamGraph, FoamWorkspace } from 'foam-core';
 import { createTestNote } from '../test/test-utils';
 import { isOrphan } from './orphans';
 
@@ -20,7 +20,7 @@ const workspace = new FoamWorkspace()
   .set(orphanA)
   .set(nonOrphan1)
   .set(nonOrphan2);
-const graph = workspace.resolveLinks();
+const graph = FoamGraph.fromWorkspace(workspace);
 
 describe('isOrphan', () => {
   it('should return true when a note with no connections is provided', () => {

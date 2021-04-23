@@ -130,18 +130,6 @@ export class FoamWorkspace implements IDisposable {
     }
   }
 
-  /**
-   * Computes all the links in the workspace, connecting notes and
-   * creating placeholders.
-   *
-   * @param workspace the target workspace
-   * @param keepMonitoring whether to recompute the links when the workspace changes
-   * @returns the resolved workspace
-   */
-  public resolveLinks(keepMonitoring: boolean = false): FoamGraph {
-    return FoamGraph.fromWorkspace(this, keepMonitoring);
-  }
-
   public resolveLink(resource: Resource, link: ResourceLink): URI {
     let targetUri: URI | undefined;
     switch (link.type) {

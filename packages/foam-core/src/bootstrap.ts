@@ -1,5 +1,5 @@
 import { createMarkdownParser } from './markdown-provider';
-import { FoamConfig, Foam, IDataStore } from './index';
+import { FoamConfig, Foam, IDataStore, FoamGraph } from './index';
 import { loadPlugins } from './plugins';
 import { isSome } from './utils';
 import { Logger } from './utils/log';
@@ -38,7 +38,7 @@ export const bootstrap = async (config: FoamConfig, dataStore: IDataStore) => {
       }
     })
   );
-  const graph = workspace.resolveLinks(true);
+  const graph = FoamGraph.fromWorkspace(workspace, true);
 
   return {
     workspace: workspace,

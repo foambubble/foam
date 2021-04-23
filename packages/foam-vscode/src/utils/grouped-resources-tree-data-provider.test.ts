@@ -38,7 +38,7 @@ describe('GroupedResourcesTreeDataProvider', () => {
     .set(matchingNote2)
     .set(excludedPathNote)
     .set(notMatchingNote);
-  const graph = workspace.resolveLinks();
+  const graph = FoamGraph.fromWorkspace(workspace);
 
   const dataStore = { read: () => '' } as any;
 

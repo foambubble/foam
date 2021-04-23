@@ -66,6 +66,14 @@ export class FoamGraph implements IDisposable {
     return this.backlinks[uri.path] ?? [];
   }
 
+  /**
+   * Computes all the links in the workspace, connecting notes and
+   * creating placeholders.
+   *
+   * @param workspace the target workspace
+   * @param keepMonitoring whether to recompute the links when the workspace changes
+   * @returns the FoamGraph
+   */
   public static fromWorkspace(
     workspace: FoamWorkspace,
     keepMonitoring: boolean = false

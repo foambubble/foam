@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { Foam, Resource } from 'foam-core';
+import { Foam, FoamWorkspace, Resource, URI } from 'foam-core';
 import { getPlaceholdersConfig } from '../settings';
 import { FoamFeature } from '../types';
 import { GroupedResourcesTreeDataProvider } from '../utils/grouped-resources-tree-data-provider';
@@ -15,10 +15,11 @@ const feature: FoamFeature = {
     );
     const provider = new GroupedResourcesTreeDataProvider(
       foam.workspace,
+      foam.graph,
       foam.services.dataStore,
       'placeholders',
       'placeholder',
-      isPlaceholderResource,
+      (uri, _i, _g, workspace) => isPlaceholderResource(uri, workspace),
       getPlaceholdersConfig(),
       workspacesURIs
     );
@@ -38,18 +39,19 @@ const feature: FoamFeature = {
 
 export default feature;
 
-export function isPlaceholderResource(resource: Resource) {
-  // TODO: add support for placeholders (via graph)
-  // if (isPlaceholder(resource)) {
-  //   return true;
-  // }
+export function isPlaceholderResource(uri: URI, workspace: FoamWorkspace) {
+  if (URI.isPlaceholder(uri)) {
+    return true;
+  }
 
-  const contentLines = resource.source.text
-    .trim()
-    .split('\n')
-    .map(line => line.trim())
-    .filter(line => line.length > 0)
-    .filter(line => !line.startsWith('#'));
+  const resource = workspace.find(uri);
+  const contentLines =
+    resource?.source.text
+      .trim()
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0)
+      .filter(line => !line.startsWith('#')) ?? '';
 
   return contentLines.length === 0;
 }

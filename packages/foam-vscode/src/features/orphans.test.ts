@@ -19,14 +19,14 @@ const nonOrphan2 = createTestNote({
 const workspace = new FoamWorkspace()
   .set(orphanA)
   .set(nonOrphan1)
-  .set(nonOrphan2)
-  .resolveLinks();
+  .set(nonOrphan2);
+const graph = workspace.resolveLinks();
 
 describe('isOrphan', () => {
   it('should return true when a note with no connections is provided', () => {
-    expect(isOrphan(workspace, orphanA)).toBeTruthy();
+    expect(isOrphan(orphanA.uri, graph)).toBeTruthy();
   });
   it('should return false when a note with connections is provided', () => {
-    expect(isOrphan(workspace, nonOrphan1)).toBeFalsy();
+    expect(isOrphan(nonOrphan1.uri, graph)).toBeFalsy();
   });
 });

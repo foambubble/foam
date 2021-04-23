@@ -1,12 +1,19 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { URI, FoamWorkspace, Resource, IMatcher, IDataStore } from 'foam-core';
+import {
+  URI,
+  FoamWorkspace,
+  Resource,
+  IMatcher,
+  IDataStore,
+  FoamGraph,
+} from 'foam-core';
 import micromatch from 'micromatch';
 import {
   GroupedResourcesConfig,
   GroupedResoucesConfigGroupBy,
 } from '../settings';
-import { getContainsTooltip, getNoteTooltip, isSome } from '../utils';
+import { getContainsTooltip, getNoteTooltip, isSome, isNone } from '../utils';
 import { OPEN_COMMAND } from '../features/utility-commands';
 import { toVsCodeUri } from './vsc-utils';
 
@@ -46,7 +53,7 @@ export class GroupedResourcesTreeDataProvider
   // prettier-ignore
   private groupBy: GroupedResoucesConfigGroupBy = GroupedResoucesConfigGroupBy.Folder;
   private exclude: string[] = [];
-  private resources: Resource[] = [];
+  private resources: Array<Resource | URI> = [];
   private root = vscode.workspace.workspaceFolders[0].uri.path;
 
   /**
@@ -69,7 +76,7 @@ export class GroupedResourcesTreeDataProvider
        ...provider.commands,
     );
     ```
-   * @param {FoamWorkspace} workspace
+   * @param {FoamGraph} graph
    * @param {Matcher} matcher
    * @param {string} providerId A **unique** providerId, this will be used to generate necessary commands within the provider.
    * @param {string} resourceName A display name used in the explorer view
@@ -80,10 +87,16 @@ export class GroupedResourcesTreeDataProvider
    */
   constructor(
     private workspace: FoamWorkspace,
+    private graph: FoamGraph,
     private dataStore: IDataStore,
     private providerId: string,
     private resourceName: string,
-    private filterPredicate: (resource: Resource, index: number) => boolean,
+    private filterPredicate: (
+      resource: URI,
+      index: number,
+      graph: FoamGraph,
+      workspace: FoamWorkspace
+    ) => boolean,
     config: GroupedResourcesConfig,
     workspaceUris: URI[]
   ) {
@@ -132,7 +145,10 @@ export class GroupedResourcesTreeDataProvider
   getChildren(
     directory?: DirectoryTreeItem
   ): Thenable<GroupedResourceTreeItem[]> {
-    if (!directory && this.groupBy === GroupedResoucesConfigGroupBy.Folder) {
+    if (
+      this.groupBy === GroupedResoucesConfigGroupBy.Folder &&
+      isNone(directory)
+    ) {
       const directories = Object.entries(this.getGroupedResourcesByDirectory())
         .sort(([a], [b]) => a.localeCompare(b))
         .map(
@@ -142,17 +158,14 @@ export class GroupedResourcesTreeDataProvider
       return Promise.resolve(directories);
     }
 
-    if (directory) {
-      const resources = directory.resources.map(
-        o => new ResourceTreeItem(o, this.dataStore)
-      );
-      return Promise.resolve(resources);
-    }
+    const resources = isSome(directory) ? directory.resources : this.resources;
 
-    const resources = this.resources.map(
-      o => new ResourceTreeItem(o, this.dataStore)
+    const items = resources.map(item =>
+      item instanceof Resource
+        ? new ResourceTreeItem(item, this.dataStore)
+        : new UriTreeItem(item)
     );
-    return Promise.resolve(resources);
+    return Promise.resolve(items);
   }
 
   resolveTreeItem(
@@ -162,11 +175,13 @@ export class GroupedResourcesTreeDataProvider
   }
 
   private computeResources(): void {
-    this.resources = this.workspace
-      .list()
-      .filter(this.filterPredicate)
-      .filter(resource => !this.isMatch(resource.uri))
-      .sort(Resource.sortByTitle);
+    this.resources = this.graph
+      .getAllNodes()
+      .filter((uri, index) =>
+        this.filterPredicate(uri, index, this.graph, this.workspace)
+      )
+      .filter(uri => !this.isMatch(uri))
+      .sort(this.sort);
   }
 
   private isMatch(uri: URI) {
@@ -192,7 +207,8 @@ export class GroupedResourcesTreeDataProvider
   private getGroupedResourcesByDirectory(): ResourceByDirectory {
     const resourcesByDirectory: ResourceByDirectory = {};
     for (const resource of this.resources) {
-      const p = resource.uri.path.replace(this.root, '');
+      const uri = resource instanceof Resource ? resource.uri : resource;
+      const p = uri.path.replace(this.root, '');
       const { dir } = path.parse(p);
 
       if (resourcesByDirectory[dir]) {
@@ -203,14 +219,20 @@ export class GroupedResourcesTreeDataProvider
     }
 
     for (const k in resourcesByDirectory) {
-      resourcesByDirectory[k].sort(Resource.sortByTitle);
+      resourcesByDirectory[k].sort(this.sort);
     }
 
     return resourcesByDirectory;
   }
+
+  sort(a: URI | Resource, b: URI | Resource) {
+    const titleA = a instanceof Resource ? a.title : URI.getBasename(a);
+    const titleB = b instanceof Resource ? b.title : URI.getBasename(b);
+    return titleA.toLocaleLowerCase().localeCompare(titleB.toLocaleLowerCase());
+  }
 }
 
-type ResourceByDirectory = { [key: string]: Resource[] };
+type ResourceByDirectory = { [key: string]: Array<Resource | URI> };
 
 type GroupedResourceTreeItem = UriTreeItem | DirectoryTreeItem;
 
@@ -274,13 +296,15 @@ export class ResourceTreeItem extends UriTreeItem {
 export class DirectoryTreeItem extends vscode.TreeItem {
   constructor(
     public readonly dir: string,
-    public readonly resources: Resource[],
+    public readonly resources: Array<Resource | URI>,
     itemLabel: string
   ) {
     super(dir || 'Not Created', vscode.TreeItemCollapsibleState.Collapsed);
     const s = this.resources.length > 1 ? 's' : '';
     this.description = `${this.resources.length} ${itemLabel}${s}`;
-    const titles = this.resources.map(r => r.title);
+    const titles = this.resources.map(r =>
+      r instanceof Resource ? r.title : URI.getBasename(r)
+    );
     this.tooltip = getContainsTooltip(titles);
   }
 

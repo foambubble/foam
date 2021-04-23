@@ -1,10 +1,12 @@
+import { IDisposable } from 'common/lifecycle';
 import { ResourceLink, URI } from 'index';
 import { Resource } from './note';
 import { FoamWorkspace } from './workspace';
 
-export interface ResourceProvider {
+export interface ResourceProvider extends IDisposable {
+  init: (workspace: FoamWorkspace) => Promise<void>;
   match: (uri: URI) => boolean;
-  fetch: (uri: URI) => Promise<Resource>;
+  fetch: (uri: URI) => Promise<Resource | null>;
   resolveLink: (
     workspace: FoamWorkspace,
     resource: Resource,

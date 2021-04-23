@@ -28,6 +28,120 @@ import { ParserPlugin } from './plugins';
 import { Logger } from './utils/log';
 import { URI } from './model/uri';
 import { FoamWorkspace } from './model/workspace';
+import { ResourceProvider } from 'model/provider';
+import { FoamConfig, IDataStore } from 'index';
+import { Matcher, folderPlusGlob, FileDataStore } from './services/datastore';
+import glob from 'glob';
+import { promisify } from 'util';
+import { IDisposable } from 'common/lifecycle';
+
+const findAllFiles = promisify(glob);
+
+export class MarkdownResourceProvider implements ResourceProvider {
+  private disposables: IDisposable[] = [];
+  private dataStore: IDataStore;
+
+  constructor(
+    private readonly config: FoamConfig,
+    private readonly watcherInit?: (triggers: {
+      onDidChange: (uri: URI) => void;
+      onDidCreate: (uri: URI) => void;
+      onDidDelete: (uri: URI) => void;
+    }) => IDisposable[],
+    private readonly parser: ResourceParser = createMarkdownParser([])
+  ) {
+    this.dataStore = new FileDataStore();
+  }
+
+  async init(workspace: FoamWorkspace) {
+    const matcher = new Matcher(this.config);
+    const filesByFolder = await Promise.all(
+      matcher.folders.map(async folder => {
+        const res = await findAllFiles(folderPlusGlob(folder)('**/*'));
+        return res.map(URI.file);
+      })
+    );
+    const files = matcher.match(filesByFolder.flat());
+
+    await Promise.all(
+      files.map(async uri => {
+        Logger.info('Found: ' + URI.toString(uri));
+        if (this.match(uri)) {
+          const content = await this.dataStore.read(uri);
+          if (isSome(content)) {
+            workspace.set(this.parser.parse(uri, content));
+          }
+        }
+      })
+    );
+
+    this.disposables =
+      this.watcherInit?.({
+        onDidChange: async uri => {
+          if (matcher.isMatch(uri)) {
+            const content = await this.dataStore.read(uri);
+            isSome(content) &&
+              workspace.set(await this.parser.parse(uri, content));
+          }
+        },
+        onDidCreate: async uri => {
+          if (matcher.isMatch(uri)) {
+            const content = await this.dataStore.read(uri);
+            isSome(content) &&
+              workspace.set(await this.parser.parse(uri, content));
+          }
+        },
+        onDidDelete: async uri => {
+          matcher.isMatch(uri) && workspace.delete(uri);
+        },
+      }) ?? [];
+  }
+
+  match(uri: URI) {
+    return URI.isMarkdownFile(uri);
+  }
+
+  async fetch(uri: URI) {
+    const content = await this.dataStore.read(uri);
+    return isSome(content) ? this.parser.parse(uri, content) : null;
+  }
+
+  resolveLink(
+    workspace: FoamWorkspace,
+    resource: Resource,
+    link: ResourceLink
+  ) {
+    let targetUri: URI | undefined;
+    switch (link.type) {
+      case 'wikilink':
+        const definitionUri = resource.definitions.find(
+          def => def.label === link.slug
+        )?.url;
+        if (isSome(definitionUri)) {
+          const definedUri = URI.resolve(definitionUri, resource.uri);
+          targetUri =
+            workspace.find(definedUri, resource.uri)?.uri ??
+            URI.placeholder(definedUri.path);
+        } else {
+          targetUri =
+            workspace.find(link.slug, resource.uri)?.uri ??
+            URI.placeholder(link.slug);
+        }
+        break;
+
+      case 'link':
+        targetUri =
+          workspace.find(link.target, resource.uri)?.uri ??
+          URI.placeholder(URI.resolve(link.target, resource.uri).path);
+        break;
+    }
+    return targetUri;
+  }
+
+  dispose() {
+    this.disposables.forEach(d => d.dispose());
+  }
+}
 
 /**
  * Traverses all the children of the given node, extracts

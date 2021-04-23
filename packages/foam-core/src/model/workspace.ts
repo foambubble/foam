@@ -5,6 +5,7 @@ import { isSome, isNone } from '../utils';
 import { Emitter } from '../common/event';
 import { IDisposable } from '../index';
 import { FoamGraph } from './graph';
+import { ResourceProvider } from './provider';
 
 export function getReferenceType(
   reference: URI | string
@@ -37,6 +38,8 @@ export class FoamWorkspace implements IDisposable {
   onDidUpdate = this.onDidUpdateEmitter.event;
   onDidDelete = this.onDidDeleteEmitter.event;
 
+  private providers: ResourceProvider[] = [];
+
   /**
    * Resources by key / slug
    */
@@ -45,6 +48,11 @@ export class FoamWorkspace implements IDisposable {
    * Resources by URI
    */
   private resources: { [key: string]: Resource } = {};
+
+  registerProvider(provider: ResourceProvider) {
+    this.providers.push(provider);
+    provider.init(this);
+  }
 
   set(resource: Resource) {
     const id = uriToResourceId(resource.uri);

@@ -31,6 +31,7 @@ export {
   createMarkdownReferences,
   stringifyMarkdownLinkReferenceDefinition,
   createMarkdownParser,
+  MarkdownResourceProvider,
 } from './markdown-provider';
 
 export {

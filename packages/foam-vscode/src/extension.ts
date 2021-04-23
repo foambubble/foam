@@ -7,6 +7,7 @@ import {
   FileDataStore,
   MarkdownResourceProvider,
   ResourceProvider,
+  Matcher,
 } from 'foam-core';
 
 import { features } from './features';
@@ -14,7 +15,12 @@ import { getConfigFromVscode } from './services/config';
 import { VsCodeOutputLogger, exposeLogger } from './services/logging';
 
 function createMarkdownProvider(config: FoamConfig): ResourceProvider {
-  const provider = new MarkdownResourceProvider(config, triggers => {
+  const matcher = new Matcher(
+    config.workspaceFolders,
+    config.includeGlobs,
+    config.ignoreGlobs
+  );
+  const provider = new MarkdownResourceProvider(matcher, triggers => {
     const watcher = workspace.createFileSystemWatcher('**/*');
     return [
       watcher.onDidChange(triggers.onDidChange),

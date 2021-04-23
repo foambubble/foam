@@ -1,5 +1,8 @@
 import path from 'path';
+import { FoamWorkspace } from '../src';
 import { NoteLinkDefinition, Resource } from '../src/model/note';
+import { IDataStore, Matcher } from '../src/services/datastore';
+import { MarkdownResourceProvider } from '../src/markdown-provider';
 import { Range } from '../src/model/range';
 import { URI } from '../src/model/uri';
 import { Logger } from '../src/utils/log';
@@ -18,6 +21,24 @@ const eol = '\n';
  * way we generate URIs (and therefore IDs) across the tests
  */
 export const strToUri = URI.file;
+
+export const noOpDataStore = (): IDataStore => ({
+  read: _ => Promise.resolve(''),
+  list: _ => Promise.resolve([]),
+});
+
+export const createTestWorkspace = () => {
+  const workspace = new FoamWorkspace();
+  const matcher = new Matcher([URI.file('/')], ['**/*']);
+  const provider = new MarkdownResourceProvider(
+    matcher,
+    undefined,
+    undefined,
+    noOpDataStore()
+  );
+  workspace.registerProvider(provider);
+  return workspace;
+};
 
 export const createTestNote = (params: {
   uri: string;

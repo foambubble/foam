@@ -11,7 +11,7 @@ import {
   IMatcher,
   IDataStore,
 } from 'foam-core';
-import { getNoteTooltip } from '../utils';
+import { getNoteTooltip, isNone } from '../utils';
 import { FoamFeature } from '../types';
 import { ResourceTreeItem } from '../utils/grouped-resources-tree-data-provider';
 
@@ -22,12 +22,7 @@ const feature: FoamFeature = {
   ) => {
     const foam = await foamPromise;
 
-    const provider = new BacklinksTreeDataProvider(
-      foam.workspace,
-      foam.graph,
-      foam.services.matcher,
-      foam.services.dataStore
-    );
+    const provider = new BacklinksTreeDataProvider(foam.workspace, foam.graph);
 
     vscode.window.onDidChangeActiveTextEditor(async () => {
       provider.target = vscode.window.activeTextEditor?.document.uri;
@@ -54,12 +49,7 @@ export class BacklinksTreeDataProvider
   private _onDidChangeTreeDataEmitter = new vscode.EventEmitter<BacklinkPanelTreeItem | undefined | void>();
   readonly onDidChangeTreeData = this._onDidChangeTreeDataEmitter.event;
 
-  constructor(
-    private workspace: FoamWorkspace,
-    private graph: FoamGraph,
-    private matcher: IMatcher,
-    private dataStore: IDataStore
-  ) {}
+  constructor(private workspace: FoamWorkspace, private graph: FoamGraph) {}
 
   refresh(): void {
     this._onDidChangeTreeDataEmitter.fire();
@@ -82,7 +72,7 @@ export class BacklinksTreeDataProvider
           .map(async link => {
             const item = new BacklinkTreeItem(resource, link);
             const lines = (
-              (await this.dataStore.read(resource.uri)) ?? ''
+              (await this.workspace.read(resource.uri)) ?? ''
             ).split('\n');
             if (link.range.start.line < lines.length) {
               const line = lines[link.range.start.line];
@@ -102,7 +92,7 @@ export class BacklinksTreeDataProvider
       return backlinkRefs;
     }
 
-    if (!uri || !this.matcher.isMatch(uri)) {
+    if (isNone(uri) || isNone(this.workspace.find(uri))) {
       return Promise.resolve([]);
     }
 
@@ -121,7 +111,7 @@ export class BacklinksTreeDataProvider
         ].sort((a, b) => isBefore(a.link.range, b.link.range));
         const item = new ResourceTreeItem(
           note,
-          this.dataStore,
+          this.workspace,
           vscode.TreeItemCollapsibleState.Expanded
         );
         item.description = `(${connections.length}) ${item.description}`;

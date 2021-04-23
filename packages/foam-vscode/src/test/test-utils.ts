@@ -3,7 +3,15 @@
 
 import * as vscode from 'vscode';
 import path from 'path';
-import { URI, NoteLinkDefinition, Resource, Range } from 'foam-core';
+import {
+  URI,
+  NoteLinkDefinition,
+  Resource,
+  Range,
+  FoamWorkspace,
+  Matcher,
+  MarkdownResourceProvider,
+} from 'foam-core';
 import { TextEncoder } from 'util';
 import { toVsCodeUri } from '../utils/vsc-utils';
 
@@ -19,6 +27,17 @@ const eol = '\n';
  * way we generate URIs (and therefore IDs) across the tests
  */
 export const strToUri = URI.file;
+
+export const createTestWorkspace = () => {
+  const workspace = new FoamWorkspace();
+  const matcher = new Matcher([URI.file('/')], ['**/*']);
+  const provider = new MarkdownResourceProvider(matcher, undefined, undefined, {
+    read: _ => Promise.resolve(''),
+    list: _ => Promise.resolve([]),
+  });
+  workspace.registerProvider(provider);
+  return workspace;
+};
 
 export const createTestNote = (params: {
   uri: string;

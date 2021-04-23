@@ -1,5 +1,5 @@
 import { FoamGraph, FoamWorkspace } from 'foam-core';
-import { createTestNote } from '../test/test-utils';
+import { createTestNote, createTestWorkspace } from '../test/test-utils';
 import { isOrphan } from './orphans';
 
 const orphanA = createTestNote({
@@ -16,7 +16,7 @@ const nonOrphan2 = createTestNote({
   links: [{ slug: 'non-orphan-1' }],
 });
 
-const workspace = new FoamWorkspace()
+const workspace = createTestWorkspace()
   .set(orphanA)
   .set(nonOrphan1)
   .set(nonOrphan2);

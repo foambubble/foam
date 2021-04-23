@@ -88,7 +88,6 @@ export class GroupedResourcesTreeDataProvider
   constructor(
     private workspace: FoamWorkspace,
     private graph: FoamGraph,
-    private dataStore: IDataStore,
     private providerId: string,
     private resourceName: string,
     private filterPredicate: (
@@ -162,7 +161,7 @@ export class GroupedResourcesTreeDataProvider
 
     const items = resources.map(item =>
       Resource.isResource(item)
-        ? new ResourceTreeItem(item, this.dataStore)
+        ? new ResourceTreeItem(item, this.workspace)
         : new UriTreeItem(item)
     );
     return Promise.resolve(items);
@@ -273,7 +272,7 @@ export class UriTreeItem extends vscode.TreeItem {
 export class ResourceTreeItem extends UriTreeItem {
   constructor(
     public readonly resource: Resource,
-    private readonly dataStore: IDataStore,
+    private readonly workspace: FoamWorkspace,
     collapsibleState = vscode.TreeItemCollapsibleState.None
   ) {
     super(resource.uri, {
@@ -286,7 +285,7 @@ export class ResourceTreeItem extends UriTreeItem {
 
   async resolveTreeItem(): Promise<ResourceTreeItem> {
     if (this instanceof ResourceTreeItem) {
-      const content = await this.dataStore?.read(this.resource.uri);
+      const content = await this.workspace.read(this.resource.uri);
       this.tooltip = isSome(content)
         ? getNoteTooltip(content) // TODO this should use the FoamResourceProvider
         : this.resource.title;

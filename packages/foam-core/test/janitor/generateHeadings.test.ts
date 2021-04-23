@@ -3,11 +3,12 @@ import { generateHeading } from '../../src/janitor';
 import { bootstrap } from '../../src/bootstrap';
 import { createConfigFromFolders } from '../../src/config';
 import { Resource } from '../../src/model/note';
-import { FileDataStore } from '../../src/services/datastore';
+import { FileDataStore, Matcher } from '../../src/services/datastore';
 import { Logger } from '../../src/utils/log';
 import { FoamWorkspace } from '../../src/model/workspace';
 import { URI } from '../../src/model/uri';
 import { Range } from '../../src/model/range';
+import { MarkdownResourceProvider } from '../../src';
 
 Logger.setLevel('error');
 
@@ -25,6 +26,15 @@ describe('generateHeadings', () => {
     ]);
     const foam = await bootstrap(config, new FileDataStore());
     _workspace = foam.workspace;
+    _workspace.registerProvider(
+      new MarkdownResourceProvider(
+        new Matcher(
+          config.workspaceFolders,
+          config.includeGlobs,
+          config.ignoreGlobs
+        )
+      )
+    );
   });
 
   it.skip('should add heading to a file that does not have them', () => {

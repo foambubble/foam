@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { Foam, Resource, IDataStore, URI } from 'foam-core';
+import { Foam, Resource, URI, FoamWorkspace } from 'foam-core';
 import { FoamFeature } from '../../types';
 import { getNoteTooltip, getContainsTooltip, isSome } from '../../utils';
 
@@ -9,7 +9,7 @@ const feature: FoamFeature = {
     foamPromise: Promise<Foam>
   ) => {
     const foam = await foamPromise;
-    const provider = new TagsProvider(foam, foam.services.dataStore);
+    const provider = new TagsProvider(foam, foam.workspace);
     context.subscriptions.push(
       vscode.window.registerTreeDataProvider(
         'foam-vscode.tags-explorer',
@@ -35,7 +35,7 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
     notes: TagMetadata[];
   }[];
 
-  constructor(private foam: Foam, private dataStore: IDataStore) {
+  constructor(private foam: Foam, private workspace: FoamWorkspace) {
     this.computeTags();
   }
 
@@ -86,7 +86,7 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
 
   async resolveTreeItem(item: TagTreeItem): Promise<TagTreeItem> {
     if (item instanceof TagReference) {
-      const content = await this.dataStore.read(item.note.uri);
+      const content = await this.workspace.read(item.note.uri);
       if (isSome(content)) {
         item.tooltip = getNoteTooltip(content);
       }

@@ -7,8 +7,8 @@ import { ParserPlugin } from '../src/plugins';
 import { Logger } from '../src/utils/log';
 import { uriToSlug } from '../src/utils/slug';
 import { URI } from '../src/model/uri';
-import { FoamWorkspace } from '../src/model/workspace';
 import { FoamGraph } from '../src/model/graph';
+import { createTestWorkspace } from './core.test';
 
 Logger.setLevel('error');
 
@@ -44,7 +44,7 @@ const createNoteFromMarkdown = (path: string, content: string) =>
 
 describe('Markdown loader', () => {
   it('Converts markdown to notes', () => {
-    const workspace = new FoamWorkspace();
+    const workspace = createTestWorkspace();
     workspace.set(createNoteFromMarkdown('/page-a.md', pageA));
     workspace.set(createNoteFromMarkdown('/page-b.md', pageB));
     workspace.set(createNoteFromMarkdown('/page-c.md', pageC));
@@ -105,7 +105,7 @@ this is a [link to intro](#introduction)
   });
 
   it('Parses wikilinks correctly', () => {
-    const workspace = new FoamWorkspace();
+    const workspace = createTestWorkspace();
     const noteA = createNoteFromMarkdown('/page-a.md', pageA);
     const noteB = createNoteFromMarkdown('/page-b.md', pageB);
     const noteC = createNoteFromMarkdown('/page-c.md', pageC);
@@ -234,7 +234,7 @@ title: - one
 
 describe('wikilinks definitions', () => {
   it('can generate links without file extension when includeExtension = false', () => {
-    const workspace = new FoamWorkspace();
+    const workspace = createTestWorkspace();
     const noteA = createNoteFromMarkdown('/dir1/page-a.md', pageA);
     workspace
       .set(noteA)
@@ -246,7 +246,7 @@ describe('wikilinks definitions', () => {
   });
 
   it('can generate links with file extension when includeExtension = true', () => {
-    const workspace = new FoamWorkspace();
+    const workspace = createTestWorkspace();
     const noteA = createNoteFromMarkdown('/dir1/page-a.md', pageA);
     workspace
       .set(noteA)
@@ -258,7 +258,7 @@ describe('wikilinks definitions', () => {
   });
 
   it('use relative paths', () => {
-    const workspace = new FoamWorkspace();
+    const workspace = createTestWorkspace();
     const noteA = createNoteFromMarkdown('/dir1/page-a.md', pageA);
     workspace
       .set(noteA)

@@ -5,7 +5,11 @@ import { Matcher } from './services/datastore';
 
 export const bootstrap = async (config: FoamConfig, dataStore: IDataStore) => {
   const parser = createMarkdownParser([]);
-  const matcher = new Matcher(config);
+  const matcher = new Matcher(
+    config.workspaceFolders,
+    config.includeGlobs,
+    config.ignoreGlobs
+  );
   const workspace = new FoamWorkspace();
   const graph = FoamGraph.fromWorkspace(workspace, true);
 

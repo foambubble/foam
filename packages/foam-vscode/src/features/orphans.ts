@@ -18,7 +18,6 @@ const feature: FoamFeature = {
     const provider = new GroupedResourcesTreeDataProvider(
       foam.workspace,
       foam.graph,
-      foam.services.dataStore,
       'orphans',
       'orphan',
       (uri: URI, _index: number, graph: FoamGraph) => isOrphan(uri, graph),

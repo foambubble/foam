@@ -4,6 +4,7 @@ import {
   cleanWorkspace,
   closeEditors,
   createFile,
+  createTestWorkspace,
   showInEditor,
 } from '../test/test-utils';
 import { LinkProvider } from './document-link-provider';
@@ -54,7 +55,9 @@ describe('Document links provider', () => {
     const fileA = await createFile(`this is a link to [[${fileB.name}]].`);
     const noteA = parser.parse(fileA.uri, fileA.content);
     const noteB = parser.parse(fileB.uri, fileB.content);
-    const ws = new FoamWorkspace().set(noteA).set(noteB);
+    const ws = createTestWorkspace()
+      .set(noteA)
+      .set(noteB);
 
     const { doc } = await showInEditor(noteA.uri);
     const provider = new LinkProvider(ws, parser);
@@ -70,7 +73,7 @@ describe('Document links provider', () => {
     const fileA = await createFile(
       `this is a link to [a file](./${fileB.base}).`
     );
-    const ws = new FoamWorkspace()
+    const ws = createTestWorkspace()
       .set(parser.parse(fileA.uri, fileA.content))
       .set(parser.parse(fileB.uri, fileB.content));
 

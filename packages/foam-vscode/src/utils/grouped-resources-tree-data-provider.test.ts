@@ -52,7 +52,6 @@ describe('GroupedResourcesTreeDataProvider', () => {
     const provider = new GroupedResourcesTreeDataProvider(
       workspace,
       graph,
-      dataStore,
       'length3',
       'note',
       isMatch,
@@ -80,7 +79,6 @@ describe('GroupedResourcesTreeDataProvider', () => {
     const provider = new GroupedResourcesTreeDataProvider(
       workspace,
       graph,
-      dataStore,
       'length3',
       'note',
       isMatch,
@@ -111,7 +109,6 @@ describe('GroupedResourcesTreeDataProvider', () => {
     const provider = new GroupedResourcesTreeDataProvider(
       workspace,
       graph,
-      dataStore,
       'length3',
       'note',
       isMatch,
@@ -140,7 +137,6 @@ describe('GroupedResourcesTreeDataProvider', () => {
     const provider = new GroupedResourcesTreeDataProvider(
       workspace,
       graph,
-      dataStore,
       'length3',
       'note',
       isMatch,
@@ -165,7 +161,6 @@ describe('GroupedResourcesTreeDataProvider', () => {
     const provider = new GroupedResourcesTreeDataProvider(
       workspace,
       graph,
-      dataStore,
       'length3',
       description,
       isMatch,

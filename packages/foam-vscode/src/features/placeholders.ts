@@ -16,7 +16,6 @@ const feature: FoamFeature = {
     const provider = new GroupedResourcesTreeDataProvider(
       foam.workspace,
       foam.graph,
-      foam.services.dataStore,
       'placeholders',
       'placeholder',
       (uri, _i, _g, workspace) => isPlaceholderResource(uri, workspace),

@@ -2,12 +2,13 @@ import * as path from 'path';
 import { generateLinkReferences } from '../../src/janitor';
 import { bootstrap } from '../../src/bootstrap';
 import { createConfigFromFolders } from '../../src/config';
-import { FileDataStore } from '../../src/services/datastore';
+import { FileDataStore, Matcher } from '../../src/services/datastore';
 import { Logger } from '../../src/utils/log';
 import { FoamWorkspace } from '../../src/model/workspace';
 import { URI } from '../../src/model/uri';
 import { Resource } from '../../src/model/note';
 import { Range } from '../../src/model/range';
+import { MarkdownResourceProvider } from '../../src';
 
 Logger.setLevel('error');
 
@@ -25,6 +26,15 @@ describe('generateLinkReferences', () => {
     ]);
     _workspace = await bootstrap(config, new FileDataStore()).then(
       foam => foam.workspace
+    );
+    await _workspace.registerProvider(
+      new MarkdownResourceProvider(
+        new Matcher(
+          config.workspaceFolders,
+          config.includeGlobs,
+          config.ignoreGlobs
+        )
+      )
     );
   });
 

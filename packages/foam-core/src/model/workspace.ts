@@ -51,7 +51,7 @@ export class FoamWorkspace implements IDisposable {
 
   registerProvider(provider: ResourceProvider) {
     this.providers.push(provider);
-    provider.init(this);
+    return provider.init(this);
   }
 
   set(resource: Resource) {
@@ -139,31 +139,16 @@ export class FoamWorkspace implements IDisposable {
   }
 
   public resolveLink(resource: Resource, link: ResourceLink): URI {
-    let targetUri: URI | undefined;
-    switch (link.type) {
-      case 'wikilink':
-        const definitionUri = resource.definitions.find(
-          def => def.label === link.slug
-        )?.url;
-        if (isSome(definitionUri)) {
-          const definedUri = URI.resolve(definitionUri, resource.uri);
-          targetUri =
-            this.find(definedUri, resource.uri)?.uri ??
-            URI.placeholder(definedUri.path);
-        } else {
-          targetUri =
-            this.find(link.slug, resource.uri)?.uri ??
-            URI.placeholder(link.slug);
-        }
-        break;
+    // TODO add tests
+    const provider = this.providers.find(p => p.match(resource.uri));
+    return isSome(provider)
+      ? provider.resolveLink(this, resource, link)
+      : URI.placeholder(link.target);
+  }
 
-      case 'link':
-        targetUri =
-          this.find(link.target, resource.uri)?.uri ??
-          URI.placeholder(URI.resolve(link.target, resource.uri).path);
-        break;
-    }
-    return targetUri;
+  public read(uri: URI): Promise<string | null> {
+    const provider = this.providers.find(p => p.match(uri));
+    return isSome(provider) ? provider.read(uri) : Promise.resolve(null);
   }
 
   public dispose(): void {

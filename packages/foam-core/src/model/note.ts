@@ -56,4 +56,18 @@ export abstract class Resource {
   public static sortByTitle(a: Resource, b: Resource) {
     return a.title.localeCompare(b.title);
   }
+
+  public static isResource(thing: any): thing is Resource {
+    if (!thing) {
+      return false;
+    }
+    return (
+      URI.isUri((thing as Resource).uri) &&
+      typeof (thing as Resource).title === 'string' &&
+      typeof (thing as Resource).type === 'string' &&
+      typeof (thing as Resource).properties === 'object' &&
+      typeof (thing as Resource).tags === 'object' &&
+      typeof (thing as Resource).links === 'object'
+    );
+  }
 }

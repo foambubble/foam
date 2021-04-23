@@ -161,7 +161,7 @@ export class GroupedResourcesTreeDataProvider
     const resources = isSome(directory) ? directory.resources : this.resources;
 
     const items = resources.map(item =>
-      item instanceof Resource
+      Resource.isResource(item)
         ? new ResourceTreeItem(item, this.dataStore)
         : new UriTreeItem(item)
     );
@@ -181,6 +181,8 @@ export class GroupedResourcesTreeDataProvider
         this.filterPredicate(uri, index, this.graph, this.workspace)
       )
       .filter(uri => !this.isMatch(uri))
+      .map(uri => (URI.isPlaceholder(uri) ? uri : this.workspace.find(uri)))
+      .filter(isSome)
       .sort(this.sort);
   }
 
@@ -207,7 +209,7 @@ export class GroupedResourcesTreeDataProvider
   private getGroupedResourcesByDirectory(): ResourceByDirectory {
     const resourcesByDirectory: ResourceByDirectory = {};
     for (const resource of this.resources) {
-      const uri = resource instanceof Resource ? resource.uri : resource;
+      const uri = Resource.isResource(resource) ? resource.uri : resource;
       const p = uri.path.replace(this.root, '');
       const { dir } = path.parse(p);
 
@@ -226,8 +228,8 @@ export class GroupedResourcesTreeDataProvider
   }
 
   sort(a: URI | Resource, b: URI | Resource) {
-    const titleA = a instanceof Resource ? a.title : URI.getBasename(a);
-    const titleB = b instanceof Resource ? b.title : URI.getBasename(b);
+    const titleA = Resource.isResource(a) ? a.title : URI.getBasename(a);
+    const titleB = Resource.isResource(b) ? b.title : URI.getBasename(b);
     return titleA.toLocaleLowerCase().localeCompare(titleB.toLocaleLowerCase());
   }
 }
@@ -303,7 +305,7 @@ export class DirectoryTreeItem extends vscode.TreeItem {
     const s = this.resources.length > 1 ? 's' : '';
     this.description = `${this.resources.length} ${itemLabel}${s}`;
     const titles = this.resources.map(r =>
-      r instanceof Resource ? r.title : URI.getBasename(r)
+      Resource.isResource(r) ? r.title : URI.getBasename(r)
     );
     this.tooltip = getContainsTooltip(titles);
   }

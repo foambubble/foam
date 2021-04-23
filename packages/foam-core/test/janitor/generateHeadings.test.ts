@@ -2,7 +2,7 @@ import * as path from 'path';
 import { generateHeading } from '../../src/janitor';
 import { bootstrap } from '../../src/bootstrap';
 import { createConfigFromFolders } from '../../src/config';
-import { Note } from '../../src';
+import { Resource } from '../../src/model/note';
 import { FileDataStore } from '../../src/services/datastore';
 import { Logger } from '../../src/utils/log';
 import { FoamWorkspace } from '../../src/model/workspace';
@@ -13,10 +13,10 @@ Logger.setLevel('error');
 
 describe('generateHeadings', () => {
   let _workspace: FoamWorkspace;
-  const findBySlug = (slug: string): Note => {
+  const findBySlug = (slug: string): Resource => {
     return _workspace
       .list()
-      .find(res => URI.getBasename(res.uri) === slug) as Note;
+      .find(res => URI.getBasename(res.uri) === slug) as Resource;
   };
 
   beforeAll(async () => {

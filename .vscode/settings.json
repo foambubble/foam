@@ -27,5 +27,7 @@
     "unknown",
     "pass"
   ],
-  "gitdoc.enabled": false
+  "gitdoc.enabled": false,
+  "jest.autoEnable": false,
+  "jest.runAllTestsFirst": false
 }

@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import markdownItRegex from 'markdown-it-regex';
 import { Foam, FoamWorkspace, Logger, URI } from 'foam-core';
 import { FoamFeature } from '../types';
-import _ from 'underscore';
+import fp from 'lodash/fp';
 
 const feature: FoamFeature = {
   activate: async (
@@ -13,7 +13,7 @@ const feature: FoamFeature = {
 
     return {
       extendMarkdownIt: (md: markdownit) => {
-        const markdownItExtends = _.compose(
+        const markdownItExtends = fp.compose(
           markdownItWithFoamLinks,
           markdownItWithFoamTags
         );

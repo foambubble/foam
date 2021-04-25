@@ -261,7 +261,7 @@ export function stripImages(markdown: string): string {
  * @returns the Uri of the created note, or `null`
  * if the Uri was not a placeholder or no reference directory could be found
  */
-export const createNoteFromPlacehoder = async (
+export const createNoteFromPlaceholder = async (
   placeholder: URI
 ): Promise<Uri | null> => {
   const basedir =

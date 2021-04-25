@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { FoamFeature } from '../types';
 import { commands } from 'vscode';
-import { createNoteFromPlacehoder, focusNote, isSome } from '../utils';
+import { createNoteFromPlaceholder, focusNote, isSome } from '../utils';
 import { URI } from 'foam-core';
 import { toVsCodeUri } from '../utils/vsc-utils';
 
@@ -16,7 +16,7 @@ export const OPEN_COMMAND = {
         return vscode.commands.executeCommand('vscode.open', toVsCodeUri(uri));
 
       case 'placeholder':
-        const newNote = await createNoteFromPlacehoder(uri);
+        const newNote = await createNoteFromPlaceholder(uri);
 
         if (isSome(newNote)) {
           const title = uri.path.split('/').slice(-1);

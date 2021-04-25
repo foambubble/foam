@@ -56,6 +56,3 @@ in `keybindings.json` (Code|File > Preferences > Keyboard Shortcuts) add binding
 If you have any issues or questions please look at the [README.md](https://github.com/kneely/note-macros#note-macros) on the [note-macros](https://github.com/kneely/note-macros) GitHub.
 
 If you run into any issues that are not fixed by referring to the README or feature requests please open an [issue](https://github.com/kneely/note-macros/issues).
-
-
-

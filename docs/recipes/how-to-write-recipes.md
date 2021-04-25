@@ -3,6 +3,7 @@
 This is an example of how to structure a Recipe. The first paragraph or two should explain the purpose of the recipe succinctly, including why it's useful, if that's not obvious.
 
 Recipes are intended to document:
+
 - How to use Foam's basic features
 - Power user pro-tips
 - Useful customisations of the default Foam environment
@@ -10,8 +11,8 @@ Recipes are intended to document:
 
 ## Required Extensions
 
- - **[Hacker Typer](https://marketplace.visualstudio.com/items?itemName=jevakallio.vscode-hacker-typer)** (not really required for this recipe, just an example)
- - [Foam for VSCode](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode) (installed by default)
+- **[Hacker Typer](https://marketplace.visualstudio.com/items?itemName=jevakallio.vscode-hacker-typer)** (not really required for this recipe, just an example)
+- [Foam for VSCode](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode) (installed by default)
 
 The first section should be a bulleted list of extensions required to use this recipe. At a minimum, this section should list all additional, non-standard extensions.
 

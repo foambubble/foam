@@ -5,7 +5,7 @@ Uncategorised thoughts, to be added
 - Release notes
 - Markdown Preview
   - It's possible to customise the markdown preview styling. **Maybe make it use local foam workspace styles for live preview of the site??**
-    - See: https://marketplace.visualstudio.com/items?itemName=bierner.markdown-preview-github-styles
+    - See: <https://marketplace.visualstudio.com/items?itemName=bierner.markdown-preview-github-styles>
 - Use VS Code [CodeTour](https://marketplace.visualstudio.com/items?itemName=vsls-contrib.codetour) for onboarding
 - Investigate other similar extensions:
   - [Unotes](https://marketplace.visualstudio.com/items?itemName=ryanmcalister.Unotes)
@@ -16,7 +16,7 @@ Uncategorised thoughts, to be added
   - Every Foam could have a different theme even in the editor, so you'll see it like they see it
     - UI and layout design of your workspace can become a thing
 - VS Code Notebooks API
-  - https://code.visualstudio.com/api/extension-guides/notebook
+  - <https://code.visualstudio.com/api/extension-guides/notebook>
 - Future architecture
   - Could we do publish-related settings as a pre-push git hook, e.g. generating footnote labels
   - Running them on Github Actions to edit stuff as it comes in
@@ -32,5 +32,3 @@ Uncategorised thoughts, to be added
   - Maps have persistent topologies. As the graph grows, you should be able to visualise where an idea belongs. Maybe a literal map? And island? A DeckGL visualisation?
 
 Testing: This file is served from the /docs directory.
-
-

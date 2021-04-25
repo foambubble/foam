@@ -28,11 +28,11 @@ To enable the feature:
 
 ```
 {
-	"experimental": {
-		"localPlugins": {
-			"enabled": true
-		}
-	}
+ "experimental": {
+  "localPlugins": {
+   "enabled": true
+  }
+ }
 }
 ```
 

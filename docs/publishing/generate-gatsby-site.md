@@ -5,11 +5,13 @@
 You can use [foam-gatsby-template](https://github.com/mathieudutour/foam-gatsby-template) to generate a static site to host it online on Github or [Vercel](https://vercel.com).
 
 ### Publishing your foam to GitHub pages
+
 It comes configured with Github actions to auto deploy to Github pages when changes are pushed to your main branch.
 
 ### Publishing your foam to Vercel
 
 When you're ready to publish, run a local build.
+
 ```bash
 cd _layouts
 npm run build

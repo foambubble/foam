@@ -72,6 +72,7 @@ The potential solution:
     - This would be a GitHub action (or a local script, ran via foam-cli) that outputs publish-friendly markdown format for static site generators and other publishing tools
     - This build step should be pluggable, so that other transformations could be ran during it
   - Have publish targets defined in settings, that support both turning the link reference definitions on/off and defining their format (.md or not). Example draft (including also edit-time aspect):
+
     ```typescript
     // settings json
     // see enumerations below for explanations on values
@@ -120,6 +121,7 @@ The potential solution:
     }
 
     ```
+
   - With Foam repo, just use edit-time link reference definitions with '.md' extension - this makes the links work in the Github UI
   - Have publish target defined for Github pages, that doesn't use '.md' extension, but still has the link reference definitions. Generate the output into gh-pages branch (or separate repo) with automation.
     - This naturally requires first removing the existing link reference definitions during the build

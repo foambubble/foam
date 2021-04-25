@@ -42,6 +42,7 @@ The current capabilities of templates is limited in some important ways. This do
 Creating of new notes in Foam is too cumbersome and slow. Despite their power, Foam templates can currently only be used in very limited scenarios.
 
 This proposal aims to address these issues by streamlining note creation and by allowing templates to be used everywhere.
+
 ## Limitations of current templating
 
 ### Too much friction to create a new note
@@ -162,14 +163,16 @@ This would open use the template found at `.foam/templates/new-note.md` to creat
 #### Case 1: `.foam/templates/new-note.md` doesn't exist
 
 If `.foam/templates/new-note.md` doesn't exist, it behaves the same as `Markdown Notes: New Note`:
-  * it would ask for a title and create the note in the current directory. It would open a note with the note containing the title.
+
+* it would ask for a title and create the note in the current directory. It would open a note with the note containing the title.
 
 **Note:** this would use an implicit default template, making use of the `${title}` variable.
 
 #### Case 2: `.foam/templates/new-note.md` exists
 
 If `.foam/templates/new-note.md` exists:
-  * it asks for the note title and creates the note in the current directory
+
+* it asks for the note title and creates the note in the current directory
 
 **Progress:** At this point, we have a faster way to create new notes from templates.
 

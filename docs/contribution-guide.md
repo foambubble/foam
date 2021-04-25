@@ -2,18 +2,22 @@
 tags: todo, good-first-task
 ---
 # Contribution Guide
+
 Foam is open to contributions of any kind, including but not limited to code, documentation, ideas, and feedback.
 This guide aims to help guide new and seasoned contributors getting around the Foam codebase.
 
 ## Getting Up To Speed
+
 Before you start contributing we recommend that you read the following links:
 
 - [[principles]] - This document describes the guiding principles behind Foam.
 - [[code-of-conduct]] - Rules we hope every contributor aims to follow, allowing everyone to participate in our community!
 
 ## Diving In
+
 We understand that diving in an unfamiliar codebase may seem scary,
 to make it easier for new contributors we provide some resources:
+
 - [[architecture]] - This document describes the architecture of Foam and how the repository is structured.
 
 You can also see [existing issues](https://github.com/foambubble/foam/issues) and help out!
@@ -41,6 +45,7 @@ You should now be ready to start working!
 
 Code needs to come with tests.
 We use the following convention in Foam:
+
 - *.test.ts are unit tests
 - *.spec.ts are integration tests
 

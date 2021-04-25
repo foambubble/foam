@@ -15,8 +15,7 @@ With this #recipe you can create notes on your iOS device, which will automatica
 
 ## Instructions
 
-
-1. Setup the [`foam-capture-action`]() in your GitHub Repository, to be triggered by "Workflow dispatch" events. 
+1. Setup the [`foam-capture-action`]() in your GitHub Repository, to be triggered by "Workflow dispatch" events.
 
 ```
 name: Manually triggered workflow
@@ -26,14 +25,14 @@ on:
       data:
         description: 'What information to put in the knowledge base.'
         required: true
-        
+
 jobs:
   store_data:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@master
     - uses: anglinb/foam-capture-action@main
-      with: 
+      with:
         capture: ${{ github.event.inputs.data }}
     - run: |
         git config --local user.email "example@gmail.com"
@@ -44,14 +43,16 @@ jobs:
 
 2. In GitHub [create a Personal Access Token](https://github.com/settings/tokens) and give it `repo` scope - make a note of the token
 3. Run this command to find your `workflow-id` to be used in the Shortcut.
+
 ```bash
 curl \
   -H "Accept: application/vnd.github.v3+json" \
   -H "Authorization: Bearer <GITHUB_TOKEN>" \
     https://api.github.com/repos/<owner>/<repository>/actions/workflows
 ```
+
 4. Copy this [Shortcut](https://www.icloud.com/shortcuts/57d2ed90c40e43a5badcc174ebfaaf1d) to your iOS devices and edit the contents of the last step, `GetContentsOfURL`
    - Make sure you update the URL of the shortcut step with the `owner`, `repository`, `workflow-id` (from the previous step)
-   - Make sure you update the headers of the shortcut step, replaceing `[GITHUB_TOKEN]` with your Personal Access Token (from step 2) 
+   - Make sure you update the headers of the shortcut step, replaceing `[GITHUB_TOKEN]` with your Personal Access Token (from step 2)
 
 5. Run the shortcut & celebrate! ✨ (You should see a GitHub Action run start and the text you entered show up in `inbox.md` in your repository.)

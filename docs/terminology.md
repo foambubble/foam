@@ -17,4 +17,3 @@ Also happens to sound quite a lot like Home. Funny, that.
 ## Bubble
 
 Individual Foam note, written in Markdown.
-

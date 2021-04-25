@@ -6,11 +6,13 @@ tags: architecture
 This document aims to provide a quick overview of the Foam architecture!
 
 Foam code and documentation live in the monorepo at [foambubble/foam](https://github.com/foambubble/foam/).
+
 - [/docs](https://github.com/foambubble/foam/tree/master/docs): documentation and [[recipes]].
 - [/packages/foam-core](https://github.com/foambubble/foam/tree/master/packages/foam-core) - Powers the core functionality in Foam across all platforms.
 - [/packages/foam-vscode](https://github.com/foambubble/foam/tree/master/packages/foam-vscode) - The core VSCode plugin.
 
 Exceptions to the monorepo are:
+
 - The starter template at [foambubble/foam-template](https://github.com/foambubble/)
 - All other [[recommended-extensions]] live in their respective GitHub repos.
 - [foam-cli](https://github.com/foambubble/foam-cli) - The Foam CLI tool.

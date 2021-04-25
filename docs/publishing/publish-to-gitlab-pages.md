@@ -11,6 +11,7 @@ Generate a solution using the [Foam template].
 Change the remote to GitLab, or copy all the files into a new GitLab repo.
 
 ### Add a _config.yaml
+
 Add another file to the root directory (the one with `readme.md` in it) called `_config.yaml` (no extension)
 
 ```yaml

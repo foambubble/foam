@@ -119,7 +119,7 @@ export function substituteFoamVariables(
     const regex = new RegExp(
       // Matches a limited subset of the the TextMate variable syntax:
       //  ${VARIABLE}  OR   $VARIABLE
-      `\\\${${variable}}|\\$${variable}([^A-Za-z0-9_]|$)`,
+      `\\\${${variable}}|\\$${variable}(\\\W|$)`,
       // The latter is more complicated, since it needs to avoid replacing
       // longer variable names with the values of variables that are
       // substrings of the longer ones (e.g. `$FOO` and `$FOOBAR`. If you

@@ -17,6 +17,10 @@ const templatesDir = Uri.joinPath(
   '.foam',
   'templates'
 );
+
+const defaultTemplateDefaultText: string = '# ${FOAM_TITLE}'; // eslint-disable-line no-template-curly-in-string
+const defaultTemplateUri = Uri.joinPath(templatesDir, 'new-note.md');
+
 const templateContent = `# \${1:$TM_FILENAME_BASE}
 
 Welcome to Foam templates.
@@ -33,7 +37,7 @@ For a full list of features see [the VS Code snippets page](https://code.visuals
 ## To get started
 
 1. edit this file to create the shape new notes from this template will look like
-2. create a note from this template by running the 'Foam: Create new note from template' command
+2. create a note from this template by running the \`Foam: Create New Note From Template\` command
 `;
 
 async function getTemplates(): Promise<string[]> {
@@ -119,7 +123,7 @@ export function substituteFoamVariables(
     const regex = new RegExp(
       // Matches a limited subset of the the TextMate variable syntax:
       //  ${VARIABLE}  OR   $VARIABLE
-      `\\\${${variable}}|\\$${variable}(\\\W|$)`,
+      `\\\${${variable}}|\\$${variable}(\\W|$)`,
       // The latter is more complicated, since it needs to avoid replacing
       // longer variable names with the values of variables that are
       // substrings of the longer ones (e.g. `$FOO` and `$FOOBAR`. If you
@@ -133,27 +137,39 @@ export function substituteFoamVariables(
   return templateText;
 }
 
-async function createNoteFromTemplate(): Promise<void> {
+async function askUserForTemplate() {
   const templates = await getTemplates();
   if (templates.length === 0) {
     return offerToCreateTemplate();
   }
-  const activeFile = window.activeTextEditor?.document?.uri.path;
-  const currentDir =
-    activeFile !== undefined
-      ? Uri.parse(path.dirname(activeFile))
-      : workspace.workspaceFolders[0].uri;
-  const selectedTemplate = await window.showQuickPick(templates, {
+  return await window.showQuickPick(templates, {
     placeHolder: 'Select a template to use.',
   });
-  if (selectedTemplate === undefined) {
-    return;
-  }
+}
 
-  const templateText = await workspace.fs.readFile(
-    Uri.joinPath(templatesDir, selectedTemplate)
-  );
+async function askUserForFilepathConfirmation(
+  defaultFilepath: Uri,
+  defaultFilename: string
+) {
+  return await window.showInputBox({
+    prompt: `Enter the filename for the new note`,
+    value: defaultFilepath.fsPath,
+    valueSelection: [
+      defaultFilepath.fsPath.length - defaultFilename.length,
+      defaultFilepath.fsPath.length - 3,
+    ],
+    validateInput: value =>
+      value.trim().length === 0
+        ? 'Please enter a value'
+        : existsSync(value)
+        ? 'File already exists'
+        : undefined,
+  });
+}
 
+async function resolveFoamTemplateVariables(
+  templateText: string
+): Promise<[Map<string, string>, SnippetString]> {
   const givenValues = new Map<string, string>();
   const variables = findFoamVariables(templateText.toString());
 
@@ -163,47 +179,95 @@ async function createNoteFromTemplate(): Promise<void> {
     resolvedValues
   );
   const snippet = new SnippetString(subbedText);
+  return [resolvedValues, snippet];
+}
+
+async function writeTemplate(templateSnippet: SnippetString, filepath: Uri) {
+  await workspace.fs.writeFile(filepath, new TextEncoder().encode(''));
+  await focusNote(filepath, true);
+  await window.activeTextEditor.insertSnippet(templateSnippet);
+}
+
+function currentDirectoryFilepath(filename: string) {
+  const activeFile = window.activeTextEditor?.document?.uri.path;
+  const currentDir =
+    activeFile !== undefined
+      ? Uri.parse(path.dirname(activeFile))
+      : workspace.workspaceFolders[0].uri;
+
+  return Uri.joinPath(currentDir, filename);
+}
+
+async function createNoteFromDefaultTemplate(): Promise<void> {
+  const templateUri = defaultTemplateUri;
+  const templateText = existsSync(templateUri.fsPath)
+    ? await workspace.fs.readFile(templateUri).then(bytes => bytes.toString())
+    : defaultTemplateDefaultText;
+
+  const [resolvedValues, templateSnippet] = await resolveFoamTemplateVariables(
+    templateText
+  );
 
   const defaultSlug = resolvedValues.get('FOAM_TITLE') || 'New Note';
-  const defaultFileName = `${defaultSlug}.md`;
-  const defaultDir = Uri.joinPath(currentDir, defaultFileName);
-  const filename = await window.showInputBox({
-    prompt: `Enter the filename for the new note`,
-    value: defaultDir.fsPath,
-    valueSelection: [
-      defaultDir.fsPath.length - defaultFileName.length,
-      defaultDir.fsPath.length - 3,
-    ],
-    validateInput: value =>
-      value.trim().length === 0
-        ? 'Please enter a value'
-        : existsSync(value)
-        ? 'File already exists'
-        : undefined,
-  });
-  if (filename === undefined) {
+  const defaultFilename = `${defaultSlug}.md`;
+  const defaultFilepath = currentDirectoryFilepath(defaultFilename);
+
+  let filepath = defaultFilepath;
+  if (existsSync(filepath.fsPath)) {
+    const newFilepath = await askUserForFilepathConfirmation(
+      defaultFilepath,
+      defaultFilename
+    );
+
+    if (newFilepath === undefined) {
+      return;
+    }
+    filepath = Uri.file(newFilepath);
+  }
+  await writeTemplate(templateSnippet, filepath);
+}
+
+async function createNoteFromTemplate(
+  templateFilename?: string
+): Promise<void> {
+  const selectedTemplate = await askUserForTemplate();
+  if (selectedTemplate === undefined) {
     return;
   }
+  templateFilename = selectedTemplate as string;
+  const templateUri = Uri.joinPath(templatesDir, templateFilename);
+  const templateText = await workspace.fs
+    .readFile(templateUri)
+    .then(bytes => bytes.toString());
 
-  const filenameURI = Uri.file(filename);
-  await workspace.fs.writeFile(filenameURI, new TextEncoder().encode(''));
-  await focusNote(filenameURI, true);
-  await window.activeTextEditor.insertSnippet(snippet);
+  const [resolvedValues, templateSnippet] = await resolveFoamTemplateVariables(
+    templateText
+  );
+
+  const defaultSlug = resolvedValues.get('FOAM_TITLE') || 'New Note';
+  const defaultFilename = `${defaultSlug}.md`;
+  const defaultFilepath = currentDirectoryFilepath(defaultFilename);
+
+  const filepath = await askUserForFilepathConfirmation(
+    defaultFilepath,
+    defaultFilename
+  );
+
+  if (filepath === undefined) {
+    return;
+  }
+  const filepathURI = Uri.file(filepath);
+  await writeTemplate(templateSnippet, filepathURI);
 }
 
 async function createNewTemplate(): Promise<void> {
-  const defaultFileName = 'new-template.md';
-  const defaultTemplate = Uri.joinPath(
-    workspace.workspaceFolders[0].uri,
-    '.foam',
-    'templates',
-    defaultFileName
-  );
+  const defaultFilename = 'new-template.md';
+  const defaultTemplate = Uri.joinPath(templatesDir, defaultFilename);
   const filename = await window.showInputBox({
     prompt: `Enter the filename for the new template`,
     value: defaultTemplate.fsPath,
     valueSelection: [
-      defaultTemplate.fsPath.length - defaultFileName.length,
+      defaultTemplate.fsPath.length - defaultFilename.length,
       defaultTemplate.fsPath.length - 3,
     ],
     validateInput: value =>
@@ -231,6 +295,12 @@ const feature: FoamFeature = {
       commands.registerCommand(
         'foam-vscode.create-note-from-template',
         createNoteFromTemplate
+      )
+    );
+    context.subscriptions.push(
+      commands.registerCommand(
+        'foam-vscode.create-note-from-default-template',
+        createNoteFromDefaultTemplate
       )
     );
     context.subscriptions.push(

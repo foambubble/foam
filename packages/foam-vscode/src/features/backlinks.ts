@@ -8,8 +8,6 @@ import {
   Resource,
   URI,
   Range,
-  IMatcher,
-  IDataStore,
 } from 'foam-core';
 import { getNoteTooltip, isNone } from '../utils';
 import { FoamFeature } from '../types';

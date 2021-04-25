@@ -1,13 +1,6 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
-import {
-  URI,
-  FoamWorkspace,
-  Resource,
-  IMatcher,
-  IDataStore,
-  FoamGraph,
-} from 'foam-core';
+import { URI, FoamWorkspace, Resource, FoamGraph } from 'foam-core';
 import micromatch from 'micromatch';
 import {
   GroupedResourcesConfig,

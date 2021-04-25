@@ -3,7 +3,7 @@ import { FoamConfig, Foam, IDataStore, FoamGraph } from './index';
 import { FoamWorkspace } from './model/workspace';
 import { Matcher } from './services/datastore';
 
-export const bootstrap = async (config: FoamConfig, dataStore: IDataStore) => {
+export const bootstrap = (config: FoamConfig, dataStore: IDataStore) => {
   const parser = createMarkdownParser([]);
   const matcher = new Matcher(
     config.workspaceFolders,

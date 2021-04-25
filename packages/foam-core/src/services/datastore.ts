@@ -50,9 +50,9 @@ export class Matcher implements IMatcher {
       const withFolder = folderPlusGlob(folder);
       this.include.push(
         ...include.map(glob => {
-          if (glob.endsWith('*')) {
-            glob = `${glob}\\.{md,mdx,markdown}`;
-          }
+          // if (glob.endsWith('*')) {
+          //   glob = `${glob}\\.{md,mdx,markdown}`;
+          // }
           return withFolder(glob);
         })
       );

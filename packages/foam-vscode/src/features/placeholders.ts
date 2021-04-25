@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { Foam, FoamWorkspace, Resource, URI } from 'foam-core';
+import { Foam, FoamWorkspace, URI } from 'foam-core';
 import { getPlaceholdersConfig } from '../settings';
 import { FoamFeature } from '../types';
 import { GroupedResourcesTreeDataProvider } from '../utils/grouped-resources-tree-data-provider';

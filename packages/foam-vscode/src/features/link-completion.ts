@@ -40,7 +40,6 @@ export class CompletionProvider
     }
 
     const resources = this.ws.list().map(resource => {
-      const uri = resource.uri;
       const item = new vscode.CompletionItem(
         vscode.workspace.asRelativePath(toVsCodeUri(resource.uri)),
         vscode.CompletionItemKind.File

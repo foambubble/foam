@@ -48,7 +48,7 @@ export class MarkdownResourceProvider implements ResourceProvider {
 
   async init(workspace: FoamWorkspace) {
     const filesByFolder = await Promise.all(
-      this.matcher.include.map(async glob => this.dataStore.list(glob))
+      this.matcher.include.map(glob => this.dataStore.list(glob))
     );
     const files = this.matcher.match(filesByFolder.flat());
 
@@ -80,7 +80,7 @@ export class MarkdownResourceProvider implements ResourceProvider {
               workspace.set(await this.parser.parse(uri, content));
           }
         },
-        onDidDelete: async uri => {
+        onDidDelete: uri => {
           this.matcher.isMatch(uri) && workspace.delete(uri);
         },
       }) ?? [];
@@ -166,7 +166,7 @@ const tagsPlugin: ParserPlugin = {
 const titlePlugin: ParserPlugin = {
   name: 'title',
   visit: (node, note) => {
-    if (note.title == '' && node.type === 'heading' && node.depth === 1) {
+    if (note.title === '' && node.type === 'heading' && node.depth === 1) {
       note.title =
         ((node as Parent)!.children?.[0]?.value as string) || note.title;
     }
@@ -176,7 +176,7 @@ const titlePlugin: ParserPlugin = {
     note.title = props.title ?? note.title;
   },
   onDidVisitTree: (tree, note) => {
-    if (note.title == '') {
+    if (note.title === '') {
       note.title = URI.getBasename(note.uri);
     }
   },

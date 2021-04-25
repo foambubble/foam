@@ -1,4 +1,4 @@
-import { FoamGraph, FoamWorkspace, Resource, URI } from 'foam-core';
+import { FoamGraph, FoamWorkspace, URI } from 'foam-core';
 import { OPEN_COMMAND } from '../features/utility-commands';
 import {
   GroupedResoucesConfigGroupBy,

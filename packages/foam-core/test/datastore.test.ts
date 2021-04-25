@@ -1,72 +1,82 @@
 import { createConfigFromObject } from '../src/config';
 import { Logger } from '../src/utils/log';
 import { URI } from '../src/model/uri';
-import { FileDataStore } from '../src';
+import { FileDataStore, Matcher } from '../src';
+import { match } from 'micromatch';
 
 Logger.setLevel('error');
 
 const testFolder = URI.joinPath(URI.file(__dirname), 'test-datastore');
 
-function makeConfig(params: { include: string[]; ignore: string[] }) {
-  return createConfigFromObject(
-    [testFolder],
-    params.include,
-    params.ignore,
-    {}
-  );
-}
-
-describe.skip('Datastore', () => {
-  it('defaults to including nothing and exclude nothing', async () => {
-    // const ds = new FileDataStore(
-    //   makeConfig({
-    //     include: [],
-    //     ignore: [],
-    //   })
-    // );
-    // expect(await ds.listFiles()).toHaveLength(0);
+describe('Matcher', () => {
+  it('generates globs with the base dir provided', () => {
+    const matcher = new Matcher([testFolder], ['*'], []);
+    expect(matcher.folders).toEqual([URI.toFsPath(testFolder)]);
+    expect(matcher.include).toEqual([URI.toFsPath(testFolder) + '/*']);
   });
 
-  it('returns only markdown files', async () => {
-    // const ds = new FileDataStore(
-    //   makeConfig({
-    //     include: ['**/*'],
-    //     ignore: [],
-    //   })
-    // );
-    // const res = toStringSet(await ds.listFiles());
-    // expect(res).toEqual(
-    //   makeAbsolute([
-    //     '/file-a.md',
-    //     '/info/file-b.md',
-    //     '/docs/file-in-nm.md',
-    //     '/info/docs/file-in-sub-nm.md',
-    //   ])
-    // );
+  it('defaults to including everything and excluding nothing', () => {
+    const matcher = new Matcher([testFolder]);
+    expect(matcher.exclude).toEqual([]);
+    expect(matcher.include).toEqual([URI.toFsPath(testFolder) + '/**/*']);
   });
 
-  it('supports excludes', async () => {
-    // const ds = new FileDataStore(
-    //   makeConfig({
-    //     include: ['**/*'],
-    //     ignore: ['**/docs/**'],
-    //   })
-    // );
-    // const res = toStringSet(await ds.listFiles());
-    // expect(res).toEqual(makeAbsolute(['/file-a.md', '/info/file-b.md']));
+  it('supports multiple includes', () => {
+    const matcher = new Matcher([testFolder], ['g1', 'g2'], []);
+    expect(matcher.exclude).toEqual([]);
+    expect(matcher.include).toEqual([
+      URI.toFsPath(testFolder) + '/g1',
+      URI.toFsPath(testFolder) + '/g2',
+    ]);
+  });
+
+  it('has a match method to filter strings', () => {
+    const matcher = new Matcher([testFolder], ['*.md'], []);
+    const files = [
+      URI.joinPath(testFolder, 'file1.md'),
+      URI.joinPath(testFolder, 'file2.md'),
+      URI.joinPath(testFolder, 'file3.mdx'),
+      URI.joinPath(testFolder, 'sub/file4.md'),
+    ];
+    expect(matcher.match(files)).toEqual([
+      URI.joinPath(testFolder, 'file1.md'),
+      URI.joinPath(testFolder, 'file2.md'),
+    ]);
+  });
+
+  it('has a isMatch method to see whether a file is matched or not', () => {
+    const matcher = new Matcher([testFolder], ['*.md'], []);
+    const files = [
+      URI.joinPath(testFolder, 'file1.md'),
+      URI.joinPath(testFolder, 'file2.md'),
+      URI.joinPath(testFolder, 'file3.mdx'),
+      URI.joinPath(testFolder, 'sub/file4.md'),
+    ];
+    expect(matcher.isMatch(files[0])).toEqual(true);
+    expect(matcher.isMatch(files[1])).toEqual(true);
+    expect(matcher.isMatch(files[2])).toEqual(false);
+    expect(matcher.isMatch(files[3])).toEqual(false);
+  });
+
+  it('ignores files in the exclude list', () => {
+    const matcher = new Matcher([testFolder], ['*.md'], ['file1.*']);
+    const files = [
+      URI.joinPath(testFolder, 'file1.md'),
+      URI.joinPath(testFolder, 'file2.md'),
+      URI.joinPath(testFolder, 'file3.mdx'),
+      URI.joinPath(testFolder, 'sub/file4.md'),
+    ];
+    expect(matcher.isMatch(files[0])).toEqual(false);
+    expect(matcher.isMatch(files[1])).toEqual(true);
+    expect(matcher.isMatch(files[2])).toEqual(false);
+    expect(matcher.isMatch(files[3])).toEqual(false);
   });
 });
 
-function toStringSet(URI: URI[]) {
-  return new Set(URI.map(uri => uri.path.toLocaleLowerCase()));
-}
-
-function makeAbsolute(files: string[]) {
-  return new Set(
-    files.map(f =>
-      URI.joinPath(testFolder, f)
-        .path.toLocaleLowerCase()
-        .replace(/\\/g, '/')
-    )
-  );
-}
+describe('Datastore', () => {
+  it('uses the matcher to get the file list', async () => {
+    const matcher = new Matcher([testFolder], ['**/*.md'], []);
+    const ds = new FileDataStore();
+    expect((await ds.list(matcher.include[0])).length).toEqual(4);
+  });
+});

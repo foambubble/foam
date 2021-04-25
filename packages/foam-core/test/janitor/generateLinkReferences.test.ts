@@ -10,7 +10,7 @@ import { Resource } from '../../src/model/note';
 import { Range } from '../../src/model/range';
 import { MarkdownResourceProvider } from '../../src';
 
-Logger.setLevel('error');
+Logger.setLevel('info');
 
 describe('generateLinkReferences', () => {
   let _workspace: FoamWorkspace;

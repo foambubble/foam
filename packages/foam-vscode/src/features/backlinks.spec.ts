@@ -1,5 +1,5 @@
 import { workspace, window } from 'vscode';
-import { URI, FoamWorkspace, IDataStore, IMatcher, FoamGraph } from 'foam-core';
+import { URI, FoamGraph } from 'foam-core';
 import {
   cleanWorkspace,
   closeEditors,

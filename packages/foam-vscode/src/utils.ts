@@ -12,7 +12,7 @@ import {
   Uri,
 } from 'vscode';
 import * as fs from 'fs';
-import { Logger, Resource, URI } from 'foam-core';
+import { Logger, URI } from 'foam-core';
 import matter from 'gray-matter';
 import removeMarkdown from 'remove-markdown';
 import { TextEncoder } from 'util';

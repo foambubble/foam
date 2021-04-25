@@ -4,7 +4,6 @@ import { URI } from './uri';
 import { isSome, isNone } from '../utils';
 import { Emitter } from '../common/event';
 import { IDisposable } from '../index';
-import { FoamGraph } from './graph';
 import { ResourceProvider } from './provider';
 
 export function getReferenceType(

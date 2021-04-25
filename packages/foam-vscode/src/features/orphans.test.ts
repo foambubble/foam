@@ -1,4 +1,4 @@
-import { FoamGraph, FoamWorkspace } from 'foam-core';
+import { FoamGraph } from 'foam-core';
 import { createTestNote, createTestWorkspace } from '../test/test-utils';
 import { isOrphan } from './orphans';
 

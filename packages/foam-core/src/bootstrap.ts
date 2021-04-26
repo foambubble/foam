@@ -28,5 +28,5 @@ export const bootstrap = (config: FoamConfig, dataStore: IDataStore) => {
     },
   };
 
-  return foam;
+  return Promise.resolve(foam);
 };

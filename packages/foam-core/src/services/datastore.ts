@@ -4,6 +4,7 @@ import { URI } from '../model/uri';
 import { Logger } from '../utils/log';
 import glob from 'glob';
 import { promisify } from 'util';
+import { isWindows } from '../common/platform';
 
 const findAllFiles = promisify(glob);
 export interface IMatcher {
@@ -33,6 +34,18 @@ export interface IMatcher {
   exclude: string[];
 }
 
+/**
+ * The matcher requires the path to be in unix format, so if we are in windows
+ * we convert the fs path on the way in and out
+ */
+export const toMatcherPathFormat = isWindows
+  ? (uri: URI) => URI.toFsPath(uri).replace(/\\/g, '/')
+  : (uri: URI) => URI.toFsPath(uri);
+
+export const toFsPath = isWindows
+  ? (path: string): string => path.replace(/\//g, '\\')
+  : (path: string): string => path;
+
 export class Matcher implements IMatcher {
   public readonly folders: string[];
   public readonly include: string[] = [];
@@ -43,7 +56,7 @@ export class Matcher implements IMatcher {
     include: string[] = ['**/*'],
     exclude: string[] = []
   ) {
-    this.folders = baseFolders.map(f => URI.toFsPath(f).replace(/\\/g, '/'));
+    this.folders = baseFolders.map(toMatcherPathFormat);
     Logger.info('Workspace folders: ', this.folders);
 
     this.folders.forEach(folder => {
@@ -71,6 +84,7 @@ export class Matcher implements IMatcher {
       {
         ignore: this.exclude,
         nocase: true,
+        format: toFsPath,
       }
     );
     return matches.map(URI.file);

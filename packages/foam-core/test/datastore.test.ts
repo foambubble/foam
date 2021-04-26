@@ -1,6 +1,7 @@
 import { Logger } from '../src/utils/log';
 import { URI } from '../src/model/uri';
 import { FileDataStore, Matcher } from '../src';
+import { toMatcherPathFormat } from '../src/services/datastore';
 
 Logger.setLevel('error');
 
@@ -9,22 +10,26 @@ const testFolder = URI.joinPath(URI.file(__dirname), 'test-datastore');
 describe('Matcher', () => {
   it('generates globs with the base dir provided', () => {
     const matcher = new Matcher([testFolder], ['*'], []);
-    expect(matcher.folders).toEqual([testFolder.path]);
-    expect(matcher.include).toEqual([testFolder.path + '/*']);
+    expect(matcher.folders).toEqual([toMatcherPathFormat(testFolder)]);
+    expect(matcher.include).toEqual([
+      toMatcherPathFormat(URI.joinPath(testFolder, '*')),
+    ]);
   });
 
   it('defaults to including everything and excluding nothing', () => {
     const matcher = new Matcher([testFolder]);
     expect(matcher.exclude).toEqual([]);
-    expect(matcher.include).toEqual([testFolder.path + '/**/*']);
+    expect(matcher.include).toEqual([
+      toMatcherPathFormat(URI.joinPath(testFolder, '**', '*')),
+    ]);
   });
 
   it('supports multiple includes', () => {
     const matcher = new Matcher([testFolder], ['g1', 'g2'], []);
     expect(matcher.exclude).toEqual([]);
     expect(matcher.include).toEqual([
-      testFolder.path + '/g1',
-      testFolder.path + '/g2',
+      toMatcherPathFormat(URI.joinPath(testFolder, 'g1')),
+      toMatcherPathFormat(URI.joinPath(testFolder, 'g2')),
     ]);
   });
 
@@ -34,7 +39,7 @@ describe('Matcher', () => {
       URI.joinPath(testFolder, 'file1.md'),
       URI.joinPath(testFolder, 'file2.md'),
       URI.joinPath(testFolder, 'file3.mdx'),
-      URI.joinPath(testFolder, 'sub/file4.md'),
+      URI.joinPath(testFolder, 'sub', 'file4.md'),
     ];
     expect(matcher.match(files)).toEqual([
       URI.joinPath(testFolder, 'file1.md'),
@@ -48,7 +53,7 @@ describe('Matcher', () => {
       URI.joinPath(testFolder, 'file1.md'),
       URI.joinPath(testFolder, 'file2.md'),
       URI.joinPath(testFolder, 'file3.mdx'),
-      URI.joinPath(testFolder, 'sub/file4.md'),
+      URI.joinPath(testFolder, 'sub', 'file4.md'),
     ];
     expect(matcher.isMatch(files[0])).toEqual(true);
     expect(matcher.isMatch(files[1])).toEqual(true);
@@ -62,7 +67,7 @@ describe('Matcher', () => {
       URI.joinPath(testFolder, 'file1.md'),
       URI.joinPath(testFolder, 'file2.md'),
       URI.joinPath(testFolder, 'file3.mdx'),
-      URI.joinPath(testFolder, 'sub/file4.md'),
+      URI.joinPath(testFolder, 'sub', 'file4.md'),
     ];
     expect(matcher.isMatch(files[0])).toEqual(false);
     expect(matcher.isMatch(files[1])).toEqual(true);

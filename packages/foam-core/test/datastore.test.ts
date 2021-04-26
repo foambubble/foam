@@ -1,8 +1,6 @@
-import { createConfigFromObject } from '../src/config';
 import { Logger } from '../src/utils/log';
 import { URI } from '../src/model/uri';
 import { FileDataStore, Matcher } from '../src';
-import { match } from 'micromatch';
 
 Logger.setLevel('error');
 
@@ -11,22 +9,22 @@ const testFolder = URI.joinPath(URI.file(__dirname), 'test-datastore');
 describe('Matcher', () => {
   it('generates globs with the base dir provided', () => {
     const matcher = new Matcher([testFolder], ['*'], []);
-    expect(matcher.folders).toEqual([URI.toFsPath(testFolder)]);
-    expect(matcher.include).toEqual([URI.toFsPath(testFolder) + '/*']);
+    expect(matcher.folders).toEqual([testFolder.path]);
+    expect(matcher.include).toEqual([testFolder.path + '/*']);
   });
 
   it('defaults to including everything and excluding nothing', () => {
     const matcher = new Matcher([testFolder]);
     expect(matcher.exclude).toEqual([]);
-    expect(matcher.include).toEqual([URI.toFsPath(testFolder) + '/**/*']);
+    expect(matcher.include).toEqual([testFolder.path + '/**/*']);
   });
 
   it('supports multiple includes', () => {
     const matcher = new Matcher([testFolder], ['g1', 'g2'], []);
     expect(matcher.exclude).toEqual([]);
     expect(matcher.include).toEqual([
-      URI.toFsPath(testFolder) + '/g1',
-      URI.toFsPath(testFolder) + '/g2',
+      testFolder.path + '/g1',
+      testFolder.path + '/g2',
     ]);
   });
 

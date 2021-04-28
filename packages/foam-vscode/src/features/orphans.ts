@@ -1,8 +1,12 @@
 import * as vscode from 'vscode';
-import { FoamGraph, URI } from 'foam-core';
+import { Resource, URI } from 'foam-core';
 import { getOrphansConfig } from '../settings';
 import { FoamFeature } from '../types';
-import { GroupedResourcesTreeDataProvider } from '../utils/grouped-resources-tree-data-provider';
+import {
+  GroupedResourcesTreeDataProvider,
+  ResourceTreeItem,
+  UriTreeItem,
+} from '../utils/grouped-resources-tree-data-provider';
 import { VsCodeAwareFoam } from '../utils/vsc-utils';
 
 const feature: FoamFeature = {
@@ -17,11 +21,16 @@ const feature: FoamFeature = {
     );
 
     const provider = new GroupedResourcesTreeDataProvider(
-      foam.workspace,
-      foam.graph,
       'orphans',
       'orphan',
-      (uri: URI, _index: number, graph: FoamGraph) => isOrphan(uri, graph),
+      () =>
+        foam.graph
+          .getAllNodes()
+          .filter(uri => foam.graph.getConnections(uri).length === 0),
+      uri =>
+        URI.isPlaceholder(uri)
+          ? new UriTreeItem(uri)
+          : new ResourceTreeItem(foam.workspace.find(uri), foam.workspace),
       getOrphansConfig(),
       workspacesURIs
     );
@@ -36,7 +45,3 @@ const feature: FoamFeature = {
   },
 };
 export default feature;
-
-export function isOrphan(uri: URI, graph: FoamGraph) {
-  return graph.getConnections(uri).length === 0;
-}

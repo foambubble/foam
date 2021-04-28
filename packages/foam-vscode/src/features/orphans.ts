@@ -1,13 +1,14 @@
 import * as vscode from 'vscode';
-import { Foam, FoamGraph, URI } from 'foam-core';
+import { FoamGraph, URI } from 'foam-core';
 import { getOrphansConfig } from '../settings';
 import { FoamFeature } from '../types';
 import { GroupedResourcesTreeDataProvider } from '../utils/grouped-resources-tree-data-provider';
+import { VsCodeAwareFoam } from '../utils/vsc-utils';
 
 const feature: FoamFeature = {
   activate: async (
     context: vscode.ExtensionContext,
-    foamPromise: Promise<Foam>
+    foamPromise: Promise<VsCodeAwareFoam>
   ) => {
     const foam = await foamPromise;
 

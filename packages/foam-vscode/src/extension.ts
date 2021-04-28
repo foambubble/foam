@@ -2,25 +2,27 @@ import { workspace, ExtensionContext, window } from 'vscode';
 import {
   bootstrap,
   FoamConfig,
-  Foam,
   Logger,
   FileDataStore,
-  MarkdownResourceProvider,
-  ResourceProvider,
   Matcher,
 } from 'foam-core';
 
 import { features } from './features';
 import { getConfigFromVscode } from './services/config';
 import { VsCodeOutputLogger, exposeLogger } from './services/logging';
+import {
+  VsCodeAwareFoamProvider,
+  VsCodeFoamMarkdownProvider,
+} from './services/provider';
+import { create, VsCodeAwareFoam } from './utils/vsc-utils';
 
-function createMarkdownProvider(config: FoamConfig): ResourceProvider {
+function createMarkdownProvider(config: FoamConfig): VsCodeAwareFoamProvider {
   const matcher = new Matcher(
     config.workspaceFolders,
     config.includeGlobs,
     config.ignoreGlobs
   );
-  const provider = new MarkdownResourceProvider(matcher, triggers => {
+  const provider = new VsCodeFoamMarkdownProvider(matcher, triggers => {
     const watcher = workspace.createFileSystemWatcher('**/*');
     return [
       watcher.onDidChange(triggers.onDidChange),
@@ -40,18 +42,19 @@ export async function activate(context: ExtensionContext) {
   try {
     Logger.info('Starting Foam');
 
+    // Prepare Foam
     const config: FoamConfig = getConfigFromVscode();
     const dataStore = new FileDataStore();
-    const foamPromise: Promise<Foam> = bootstrap(config, dataStore);
+    const coreFoam = bootstrap(config, dataStore);
 
+    const markdownProvider = createMarkdownProvider(config);
+    const foamPromise = create(coreFoam, [markdownProvider]);
+
+    // Load the features
     const resPromises = features.map(f => f.activate(context, foamPromise));
 
     const foam = await foamPromise;
-
     Logger.info(`Loaded ${foam.workspace.list().length} notes`);
-
-    const markdownProvider = createMarkdownProvider(config);
-    foam.workspace.registerProvider(markdownProvider);
     context.subscriptions.push(foam, markdownProvider);
 
     const res = (await Promise.all(resPromises)).filter(r => r != null);

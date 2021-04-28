@@ -20,11 +20,11 @@ describe('generateHeadings', () => {
       .find(res => URI.getBasename(res.uri) === slug) as Resource;
   };
 
-  beforeAll(async () => {
+  beforeAll(() => {
     const config = createConfigFromFolders([
       URI.file(path.join(__dirname, '..', '__scaffold__')),
     ]);
-    const foam = await bootstrap(config, new FileDataStore());
+    const foam = bootstrap(config, new FileDataStore());
     _workspace = foam.workspace;
     _workspace.registerProvider(
       new MarkdownResourceProvider(

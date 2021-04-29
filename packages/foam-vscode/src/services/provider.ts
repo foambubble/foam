@@ -30,6 +30,6 @@ export class VsCodeFoamMarkdownProvider extends MarkdownResourceProvider
   }
 
   getTreeItemIcon(resource: Resource): string {
-    throw new Error('Method not implemented.');
+    return 'note';
   }
 }

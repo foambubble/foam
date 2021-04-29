@@ -1,10 +1,10 @@
 import * as path from 'path';
-import { Resource, NoteLink, isNote } from './note';
+import { Resource, ResourceLink } from './note';
 import { URI } from './uri';
 import { isSome, isNone } from '../utils';
 import { Emitter } from '../common/event';
 import { IDisposable } from '../index';
-import { FoamGraph } from './graph';
+import { ResourceProvider } from './provider';
 
 export function getReferenceType(
   reference: URI | string
@@ -37,6 +37,8 @@ export class FoamWorkspace implements IDisposable {
   onDidUpdate = this.onDidUpdateEmitter.event;
   onDidDelete = this.onDidDeleteEmitter.event;
 
+  private providers: ResourceProvider[] = [];
+
   /**
    * Resources by key / slug
    */
@@ -45,6 +47,11 @@ export class FoamWorkspace implements IDisposable {
    * Resources by URI
    */
   private resources: { [key: string]: Resource } = {};
+
+  registerProvider(provider: ResourceProvider) {
+    this.providers.push(provider);
+    return provider.init(this);
+  }
 
   set(resource: Resource) {
     const id = uriToResourceId(resource.uri);
@@ -130,44 +137,23 @@ export class FoamWorkspace implements IDisposable {
     }
   }
 
-  /**
-   * Computes all the links in the workspace, connecting notes and
-   * creating placeholders.
-   *
-   * @param workspace the target workspace
-   * @param keepMonitoring whether to recompute the links when the workspace changes
-   * @returns the resolved workspace
-   */
-  public resolveLinks(keepMonitoring: boolean = false): FoamGraph {
-    return FoamGraph.fromWorkspace(this, keepMonitoring);
+  public resolveLink(resource: Resource, link: ResourceLink): URI {
+    // TODO add tests
+    const provider = this.providers.find(p => p.match(resource.uri));
+    return (
+      provider?.resolveLink(this, resource, link) ??
+      URI.placeholder(link.target)
+    );
   }
 
-  public resolveLink(resource: Resource, link: NoteLink): URI {
-    let targetUri: URI | undefined;
-    switch (link.type) {
-      case 'wikilink':
-        const definitionUri = isNote(resource)
-          ? resource.definitions.find(def => def.label === link.slug)?.url
-          : null;
-        if (isSome(definitionUri)) {
-          const definedUri = URI.resolve(definitionUri, resource.uri);
-          targetUri =
-            this.find(definedUri, resource.uri)?.uri ??
-            URI.placeholder(definedUri.path);
-        } else {
-          targetUri =
-            this.find(link.slug, resource.uri)?.uri ??
-            URI.placeholder(link.slug);
-        }
-        break;
+  public read(uri: URI): Promise<string | null> {
+    const provider = this.providers.find(p => p.match(uri));
+    return provider?.read(uri) ?? Promise.resolve(null);
+  }
 
-      case 'link':
-        targetUri =
-          this.find(link.target, resource.uri)?.uri ??
-          URI.placeholder(URI.resolve(link.target, resource.uri).path);
-        break;
-    }
-    return targetUri;
+  public readAsMarkdown(uri: URI): Promise<string | null> {
+    const provider = this.providers.find(p => p.match(uri));
+    return provider?.readAsMarkdown(uri) ?? Promise.resolve(null);
   }
 
   public dispose(): void {

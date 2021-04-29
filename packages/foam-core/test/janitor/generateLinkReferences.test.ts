@@ -2,29 +2,37 @@ import * as path from 'path';
 import { generateLinkReferences } from '../../src/janitor';
 import { bootstrap } from '../../src/bootstrap';
 import { createConfigFromFolders } from '../../src/config';
-import { Note, Range } from '../../src';
-import { FileDataStore } from '../../src/services/datastore';
+import { FileDataStore, Matcher } from '../../src/services/datastore';
 import { Logger } from '../../src/utils/log';
 import { FoamWorkspace } from '../../src/model/workspace';
 import { URI } from '../../src/model/uri';
+import { Resource } from '../../src/model/note';
+import { Range } from '../../src/model/range';
+import { MarkdownResourceProvider } from '../../src';
 
-Logger.setLevel('error');
+Logger.setLevel('info');
 
 describe('generateLinkReferences', () => {
   let _workspace: FoamWorkspace;
-  const findBySlug = (slug: string): Note => {
+  const findBySlug = (slug: string): Resource => {
     return _workspace
       .list()
-      .find(res => URI.getBasename(res.uri) === slug) as Note;
+      .find(res => URI.getBasename(res.uri) === slug) as Resource;
   };
 
   beforeAll(async () => {
     const config = createConfigFromFolders([
       URI.file(path.join(__dirname, '..', '__scaffold__')),
     ]);
-    _workspace = await bootstrap(config, new FileDataStore()).then(
-      foam => foam.workspace
+    const mdProvider = new MarkdownResourceProvider(
+      new Matcher(
+        config.workspaceFolders,
+        config.includeGlobs,
+        config.ignoreGlobs
+      )
     );
+    const foam = await bootstrap(config, new FileDataStore(), [mdProvider]);
+    _workspace = foam.workspace;
   });
 
   it('initialised test graph correctly', () => {
@@ -107,6 +115,6 @@ describe('generateLinkReferences', () => {
  * @param note the note we are adjusting for
  * @param text starting text, using a \n line separator
  */
-function textForNote(note: Note, text: string): string {
+function textForNote(note: Resource, text: string): string {
   return text.split('\n').join(note.source.eol);
 }

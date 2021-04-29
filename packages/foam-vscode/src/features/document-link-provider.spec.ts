@@ -4,6 +4,7 @@ import {
   cleanWorkspace,
   closeEditors,
   createFile,
+  createTestWorkspace,
   showInEditor,
 } from '../test/test-utils';
 import { LinkProvider } from './document-link-provider';
@@ -26,9 +27,8 @@ describe('Document links provider', () => {
   });
 
   it('should not return any link for empty documents', async () => {
-    const ws = new FoamWorkspace();
     const { uri, content } = await createFile('');
-    ws.set(parser.parse(uri, content)).resolveLinks();
+    const ws = new FoamWorkspace().set(parser.parse(uri, content));
 
     const doc = await vscode.workspace.openTextDocument(uri);
     const provider = new LinkProvider(ws, parser);
@@ -38,11 +38,10 @@ describe('Document links provider', () => {
   });
 
   it('should not return any link for documents without links', async () => {
-    const ws = new FoamWorkspace();
     const { uri, content } = await createFile(
       'This is some content without links'
     );
-    ws.set(parser.parse(uri, content)).resolveLinks();
+    const ws = new FoamWorkspace().set(parser.parse(uri, content));
 
     const doc = await vscode.workspace.openTextDocument(uri);
     const provider = new LinkProvider(ws, parser);
@@ -52,14 +51,13 @@ describe('Document links provider', () => {
   });
 
   it('should support wikilinks', async () => {
-    const ws = new FoamWorkspace();
     const fileB = await createFile('# File B');
     const fileA = await createFile(`this is a link to [[${fileB.name}]].`);
     const noteA = parser.parse(fileA.uri, fileA.content);
     const noteB = parser.parse(fileB.uri, fileB.content);
-    ws.set(noteA)
-      .set(noteB)
-      .resolveLinks();
+    const ws = createTestWorkspace()
+      .set(noteA)
+      .set(noteB);
 
     const { doc } = await showInEditor(noteA.uri);
     const provider = new LinkProvider(ws, parser);
@@ -71,14 +69,13 @@ describe('Document links provider', () => {
   });
 
   it('should support regular links', async () => {
-    const ws = new FoamWorkspace();
     const fileB = await createFile('# File B');
     const fileA = await createFile(
       `this is a link to [a file](./${fileB.base}).`
     );
-    ws.set(parser.parse(fileA.uri, fileA.content))
-      .set(parser.parse(fileB.uri, fileB.content))
-      .resolveLinks();
+    const ws = createTestWorkspace()
+      .set(parser.parse(fileA.uri, fileA.content))
+      .set(parser.parse(fileB.uri, fileB.content));
 
     const { doc } = await showInEditor(fileA.uri);
     const provider = new LinkProvider(ws, parser);
@@ -90,9 +87,8 @@ describe('Document links provider', () => {
   });
 
   it('should support placeholders', async () => {
-    const ws = new FoamWorkspace();
     const fileA = await createFile(`this is a link to [[a placeholder]].`);
-    ws.set(parser.parse(fileA.uri, fileA.content)).resolveLinks();
+    const ws = new FoamWorkspace().set(parser.parse(fileA.uri, fileA.content));
 
     const { doc } = await showInEditor(fileA.uri);
     const provider = new LinkProvider(ws, parser);

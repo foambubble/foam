@@ -74,7 +74,8 @@ export const isElectronSandboxed = isElectronRenderer && nodeProcess?.sandboxed;
 // Web environment
 if (typeof navigator === 'object' && !isElectronRenderer) {
   _userAgent = navigator.userAgent;
-  _isWindows = _userAgent.indexOf('Windows') >= 0;
+  _isWindows =
+    _userAgent.indexOf('Windows') >= 0 || _userAgent.indexOf('win32') >= 0;
   _isMacintosh = _userAgent.indexOf('Macintosh') >= 0;
   _isIOS =
     (_userAgent.indexOf('Macintosh') >= 0 ||

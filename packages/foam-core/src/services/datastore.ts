@@ -1,51 +1,90 @@
-import glob from 'glob';
 import micromatch from 'micromatch';
 import fs from 'fs';
 import { URI } from '../model/uri';
-import { FoamConfig } from '../config';
 import { Logger } from '../utils/log';
+import glob from 'glob';
+import { promisify } from 'util';
+import { isWindows } from '../common/platform';
 
+const findAllFiles = promisify(glob);
 export interface IMatcher {
+  /**
+   * Filters the given list of URIs, keepin only the ones that
+   * are matched by this Matcher
+   *
+   * @param files the URIs to check
+   */
   match(files: URI[]): URI[];
+
+  /**
+   * Returns whether this URI is matched by this Matcher
+   *
+   * @param uri the URI to check
+   */
   isMatch(uri: URI): boolean;
+
+  /**
+   * The include globs
+   */
+  include: string[];
+
+  /**
+   * The exclude lobs
+   */
+  exclude: string[];
 }
 
-export class Matcher implements IMatcher {
-  folders: readonly string[];
-  private _includeGlobs: string[] = [];
-  private _ignoreGlobs: string[] = [];
+/**
+ * The matcher requires the path to be in unix format, so if we are in windows
+ * we convert the fs path on the way in and out
+ */
+export const toMatcherPathFormat = isWindows
+  ? (uri: URI) => URI.toFsPath(uri).replace(/\\/g, '/')
+  : (uri: URI) => URI.toFsPath(uri);
 
-  constructor(config: FoamConfig) {
-    this.folders = config.workspaceFolders.map(f =>
-      URI.toFsPath(f).replace(/\\/g, '/')
-    );
+export const toFsPath = isWindows
+  ? (path: string): string => path.replace(/\//g, '\\')
+  : (path: string): string => path;
+
+export class Matcher implements IMatcher {
+  public readonly folders: string[];
+  public readonly include: string[] = [];
+  public readonly exclude: string[] = [];
+
+  constructor(
+    baseFolders: URI[],
+    include: string[] = ['**/*'],
+    exclude: string[] = []
+  ) {
+    this.folders = baseFolders.map(toMatcherPathFormat);
     Logger.info('Workspace folders: ', this.folders);
 
     this.folders.forEach(folder => {
       const withFolder = folderPlusGlob(folder);
-      this._includeGlobs.push(
-        ...config.includeGlobs.map(glob => {
-          if (glob.endsWith('*')) {
-            glob = `${glob}\\.(md|mdx|markdown)`;
-          }
+      this.include.push(
+        ...include.map(glob => {
+          // if (glob.endsWith('*')) {
+          //   glob = `${glob}\\.{md,mdx,markdown}`;
+          // }
           return withFolder(glob);
         })
       );
-      this._ignoreGlobs.push(...config.ignoreGlobs.map(withFolder));
+      this.exclude.push(...exclude.map(withFolder));
     });
     Logger.info('Glob patterns', {
-      includeGlobs: this._includeGlobs,
-      ignoreGlobs: this._ignoreGlobs,
+      includeGlobs: this.include,
+      ignoreGlobs: this.exclude,
     });
   }
 
   match(files: URI[]) {
     const matches = micromatch(
       files.map(f => URI.toFsPath(f)),
-      this._includeGlobs,
+      this.include,
       {
-        ignore: this._ignoreGlobs,
+        ignore: this.exclude,
         nocase: true,
+        format: toFsPath,
       }
     );
     return matches.map(URI.file);
@@ -61,6 +100,12 @@ export class Matcher implements IMatcher {
  */
 export interface IDataStore {
   /**
+   * List the files matching the given glob from the
+   * store
+   */
+  list: (glob: string) => Promise<URI[]>;
+
+  /**
    * Read the content of the file from the store
    *
    * Returns `null` in case of errors while reading
@@ -72,6 +117,11 @@ export interface IDataStore {
  * File system based data store
  */
 export class FileDataStore implements IDataStore {
+  async list(glob: string): Promise<URI[]> {
+    const res = await findAllFiles(glob);
+    return res.map(URI.file);
+  }
+
   async read(uri: URI) {
     try {
       return (await fs.promises.readFile(URI.toFsPath(uri))).toString();

@@ -2,7 +2,6 @@
 // See LICENSE for details
 
 import * as paths from 'path';
-import { statSync } from 'fs';
 import { CharCode } from '../common/charCode';
 import { isWindows } from '../common/platform';
 
@@ -250,7 +249,7 @@ export abstract class URI {
     );
   }
   static isMarkdownFile(uri: URI): boolean {
-    return uri.path.endsWith('md') && statSync(URI.toFsPath(uri)).isFile();
+    return uri.path.endsWith('md');
   }
 }
 

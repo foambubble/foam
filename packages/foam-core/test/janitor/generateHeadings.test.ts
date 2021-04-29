@@ -2,28 +2,36 @@ import * as path from 'path';
 import { generateHeading } from '../../src/janitor';
 import { bootstrap } from '../../src/bootstrap';
 import { createConfigFromFolders } from '../../src/config';
-import { Note } from '../../src';
-import { FileDataStore } from '../../src/services/datastore';
+import { Resource } from '../../src/model/note';
+import { FileDataStore, Matcher } from '../../src/services/datastore';
 import { Logger } from '../../src/utils/log';
 import { FoamWorkspace } from '../../src/model/workspace';
 import { URI } from '../../src/model/uri';
 import { Range } from '../../src/model/range';
+import { MarkdownResourceProvider } from '../../src';
 
 Logger.setLevel('error');
 
 describe('generateHeadings', () => {
   let _workspace: FoamWorkspace;
-  const findBySlug = (slug: string): Note => {
+  const findBySlug = (slug: string): Resource => {
     return _workspace
       .list()
-      .find(res => URI.getBasename(res.uri) === slug) as Note;
+      .find(res => URI.getBasename(res.uri) === slug) as Resource;
   };
 
   beforeAll(async () => {
     const config = createConfigFromFolders([
       URI.file(path.join(__dirname, '..', '__scaffold__')),
     ]);
-    const foam = await bootstrap(config, new FileDataStore());
+    const mdProvider = new MarkdownResourceProvider(
+      new Matcher(
+        config.workspaceFolders,
+        config.includeGlobs,
+        config.ignoreGlobs
+      )
+    );
+    const foam = await bootstrap(config, new FileDataStore(), [mdProvider]);
     _workspace = foam.workspace;
   });
 

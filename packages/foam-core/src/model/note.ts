@@ -23,7 +23,7 @@ export interface DirectLink {
   range: Range;
 }
 
-export type NoteLink = WikiLink | DirectLink;
+export type ResourceLink = WikiLink | DirectLink;
 
 export interface NoteLinkDefinition {
   label: string;
@@ -32,53 +32,40 @@ export interface NoteLinkDefinition {
   range?: Range;
 }
 
-export interface BaseResource {
+export interface Resource {
   uri: URI;
-}
-
-export interface Attachment extends BaseResource {
-  type: 'attachment';
-}
-
-export interface Placeholder extends BaseResource {
-  type: 'placeholder';
-}
-
-export interface Note extends BaseResource {
-  type: 'note';
-  title: string | null;
+  type: string;
+  title: string;
   properties: any;
   // sections: NoteSection[]
   tags: Set<string>;
-  links: NoteLink[];
+  links: ResourceLink[];
+
+  // TODO to remove
   definitions: NoteLinkDefinition[];
   source: NoteSource;
 }
 
-export type Resource = Note | Attachment | Placeholder;
-
-export interface NoteParser {
-  parse: (uri: URI, text: string) => Note;
+export interface ResourceParser {
+  parse: (uri: URI, text: string) => Resource;
 }
 
-export const isWikilink = (link: NoteLink): link is WikiLink => {
-  return link.type === 'wikilink';
-};
+export abstract class Resource {
+  public static sortByTitle(a: Resource, b: Resource) {
+    return a.title.localeCompare(b.title);
+  }
 
-export const getTitle = (resource: Resource): string => {
-  return resource.type === 'note'
-    ? resource.title ?? URI.getBasename(resource.uri)
-    : URI.getBasename(resource.uri);
-};
-
-export const isNote = (resource: Resource): resource is Note => {
-  return resource.type === 'note';
-};
-
-export const isPlaceholder = (resource: Resource): resource is Placeholder => {
-  return resource.type === 'placeholder';
-};
-
-export const isAttachment = (resource: Resource): resource is Attachment => {
-  return resource.type === 'attachment';
-};
+  public static isResource(thing: any): thing is Resource {
+    if (!thing) {
+      return false;
+    }
+    return (
+      URI.isUri((thing as Resource).uri) &&
+      typeof (thing as Resource).title === 'string' &&
+      typeof (thing as Resource).type === 'string' &&
+      typeof (thing as Resource).properties === 'object' &&
+      typeof (thing as Resource).tags === 'object' &&
+      typeof (thing as Resource).links === 'object'
+    );
+  }
+}

@@ -1,15 +1,8 @@
 import {
   Resource,
-  Attachment,
-  Placeholder,
-  Note,
-  NoteLink,
-  isNote,
+  ResourceLink,
   NoteLinkDefinition,
-  isPlaceholder,
-  isAttachment,
-  getTitle,
-  NoteParser,
+  ResourceParser,
 } from './model/note';
 import { FoamConfig } from './config';
 import {
@@ -31,13 +24,14 @@ export { ILogger };
 export { LogLevel, LogLevelThreshold, Logger, BaseLogger } from './utils/log';
 export { Event, Emitter } from './common/event';
 export { FoamConfig };
-
+export { ResourceProvider } from './model/provider';
 export { IDisposable, isDisposable };
 
 export {
   createMarkdownReferences,
   stringifyMarkdownLinkReferenceDefinition,
   createMarkdownParser,
+  MarkdownResourceProvider,
 } from './markdown-provider';
 
 export {
@@ -57,24 +51,17 @@ export { bootstrap } from './bootstrap';
 
 export {
   Resource,
-  Attachment,
-  Placeholder,
-  Note,
-  NoteLink,
+  ResourceLink,
   URI,
   FoamWorkspace,
   FoamGraph,
   NoteLinkDefinition,
-  NoteParser,
-  isNote,
-  isPlaceholder,
-  isAttachment,
-  getTitle,
+  ResourceParser,
 };
 
 export interface Services {
   dataStore: IDataStore;
-  parser: NoteParser;
+  parser: ResourceParser;
   matcher: IMatcher;
 }
 

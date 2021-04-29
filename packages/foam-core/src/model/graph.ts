@@ -1,7 +1,6 @@
 import { diff } from 'fast-array-diff';
 import { isEqual } from 'lodash';
-import * as path from 'path';
-import { Resource, NoteLink, isNote } from './note';
+import { Resource, ResourceLink } from './note';
 import { URI } from './uri';
 import { IDisposable } from '../index';
 import { FoamWorkspace, uriToResourceName } from './workspace';
@@ -10,7 +9,7 @@ import { Range } from './range';
 export type Connection = {
   source: URI;
   target: URI;
-  link: NoteLink;
+  link: ResourceLink;
 };
 
 const pathToPlaceholderId = (value: string) => value;
@@ -67,6 +66,14 @@ export class FoamGraph implements IDisposable {
     return this.backlinks[uri.path] ?? [];
   }
 
+  /**
+   * Computes all the links in the workspace, connecting notes and
+   * creating placeholders.
+   *
+   * @param workspace the target workspace
+   * @param keepMonitoring whether to recompute the links when the workspace changes
+   * @returns the FoamGraph
+   */
   public static fromWorkspace(
     workspace: FoamWorkspace,
     keepMonitoring: boolean = false
@@ -151,7 +158,7 @@ export class FoamGraph implements IDisposable {
     return this;
   }
 
-  private connect(source: URI, target: URI, link: NoteLink) {
+  private connect(source: URI, target: URI, link: ResourceLink) {
     const connection = { source, target, link };
 
     this.links[source.path] = this.links[source.path] ?? [];
@@ -175,7 +182,7 @@ export class FoamGraph implements IDisposable {
    * @param link the link reference, or `true` to remove all links
    * @returns the updated Foam workspace
    */
-  private disconnect(source: URI, target: URI, link: NoteLink | true) {
+  private disconnect(source: URI, target: URI, link: ResourceLink | true) {
     const connectionsToKeep =
       link === true
         ? (c: Connection) =>
@@ -201,8 +208,7 @@ export class FoamGraph implements IDisposable {
   public resolveResource(resource: Resource) {
     delete this.links[resource.uri.path];
     // prettier-ignore
-    const links = isNote(resource) ? resource.links : []
-    links.forEach(link => {
+    resource.links.forEach(link => {
       const targetUri = this.workspace.resolveLink(resource, link);
       this.connect(resource.uri, targetUri, link);
     });
@@ -222,5 +228,5 @@ const isSameConnection = (a: Connection, b: Connection) =>
   URI.isEqual(a.target, b.target) &&
   isSameLink(a.link, b.link);
 
-const isSameLink = (a: NoteLink, b: NoteLink) =>
+const isSameLink = (a: ResourceLink, b: ResourceLink) =>
   a.type === b.type && Range.isEqual(a.range, b.range);

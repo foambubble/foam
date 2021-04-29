@@ -1,7 +1,7 @@
-import { FoamWorkspace, getReferenceType } from '../src/model/workspace';
+import { getReferenceType } from '../src/model/workspace';
 import { FoamGraph } from '../src/model/graph';
 import { Logger } from '../src/utils/log';
-import { createTestNote, createAttachment } from './core.test';
+import { createTestNote, createTestWorkspace } from './core.test';
 import { URI } from '../src/model/uri';
 
 Logger.setLevel('error');
@@ -26,7 +26,7 @@ describe('Reference types', () => {
 
 describe('Workspace resources', () => {
   it('Adds notes to workspace', () => {
-    const ws = new FoamWorkspace();
+    const ws = createTestWorkspace();
     ws.set(createTestNote({ uri: '/page-a.md' }));
     ws.set(createTestNote({ uri: '/page-b.md' }));
     ws.set(createTestNote({ uri: '/page-c.md' }));
@@ -39,10 +39,10 @@ describe('Workspace resources', () => {
     ).toEqual(['/page-a.md', '/page-b.md', '/page-c.md']);
   });
 
-  it('Listing resources includes notes and attachments', () => {
-    const ws = new FoamWorkspace();
+  it('Listing resources includes all notes', () => {
+    const ws = createTestWorkspace();
     ws.set(createTestNote({ uri: '/page-a.md' }));
-    ws.set(createAttachment({ uri: '/file.pdf' }));
+    ws.set(createTestNote({ uri: '/file.pdf' }));
 
     expect(
       ws
@@ -56,7 +56,7 @@ describe('Workspace resources', () => {
     const noteA = createTestNote({
       uri: '/path/to/page-a.md',
     });
-    const ws = new FoamWorkspace();
+    const ws = createTestWorkspace();
     ws.set(noteA);
 
     const uri = URI.file('/path/to/another/page-b.md');
@@ -68,14 +68,14 @@ describe('Workspace resources', () => {
 
 describe('Graph', () => {
   it('contains notes and placeholders', () => {
-    const ws = new FoamWorkspace();
+    const ws = createTestWorkspace();
     ws.set(
       createTestNote({
         uri: '/page-a.md',
         links: [{ slug: 'placeholder-link' }],
       })
     );
-    ws.set(createAttachment({ uri: '/file.pdf' }));
+    ws.set(createTestNote({ uri: '/file.pdf' }));
 
     const graph = FoamGraph.fromWorkspace(ws);
 
@@ -95,7 +95,9 @@ describe('Graph', () => {
       uri: '/note-b.md',
       links: [{ to: noteA.uri.path }, { to: noteA.uri.path }],
     });
-    const ws = new FoamWorkspace().set(noteA).set(noteB);
+    const ws = createTestWorkspace()
+      .set(noteA)
+      .set(noteB);
     const graph = FoamGraph.fromWorkspace(ws);
     expect(graph.getBacklinks(noteA.uri)).toEqual([
       {
@@ -118,7 +120,9 @@ describe('Graph', () => {
       uri: '/note-b.md',
       links: [{ to: noteA.uri.path }, { to: noteA.uri.path }],
     });
-    const ws = new FoamWorkspace().set(noteA).set(noteB);
+    const ws = createTestWorkspace()
+      .set(noteA)
+      .set(noteB);
     const graph = FoamGraph.fromWorkspace(ws, true);
 
     expect(graph.getBacklinks(noteA.uri).length).toEqual(2);
@@ -152,7 +156,7 @@ describe('Wikilinks', () => {
         { slug: 'placeholder-test' },
       ],
     });
-    const ws = new FoamWorkspace()
+    const ws = createTestWorkspace()
       .set(noteA)
       .set(createTestNote({ uri: '/somewhere/page-b.md' }))
       .set(createTestNote({ uri: '/path/another/page-c.md' }))
@@ -179,7 +183,7 @@ describe('Wikilinks', () => {
       uri: '/path/to/page-a.md',
       links: [{ slug: 'page-b' }],
     });
-    const ws = new FoamWorkspace()
+    const ws = createTestWorkspace()
       .set(noteA)
       .set(
         createTestNote({
@@ -210,7 +214,7 @@ describe('Wikilinks', () => {
   });
 
   it('Uses wikilink definitions when available to resolve target', () => {
-    const ws = new FoamWorkspace();
+    const ws = createTestWorkspace();
     const noteA = createTestNote({
       uri: '/somewhere/from/page-a.md',
       links: [{ slug: 'page-b' }],
@@ -240,7 +244,7 @@ describe('Wikilinks', () => {
     const noteB1 = createTestNote({ uri: '/path/to/another/page-b.md' });
     const noteB2 = createTestNote({ uri: '/path/to/more/page-b.md' });
 
-    const ws = new FoamWorkspace();
+    const ws = createTestWorkspace();
     ws.set(noteA)
       .set(noteB1)
       .set(noteB2);
@@ -264,7 +268,7 @@ describe('Wikilinks', () => {
     const noteB2 = createTestNote({ uri: '/path/to/more/page-b.md' });
     const noteB3 = createTestNote({ uri: '/path/to/yet/page-b.md' });
 
-    const ws = new FoamWorkspace();
+    const ws = createTestWorkspace();
     ws.set(noteA)
       .set(noteB1)
       .set(noteB2)
@@ -287,13 +291,13 @@ describe('Wikilinks', () => {
         { slug: 'attachment-b' },
       ],
     });
-    const attachmentA = createAttachment({
+    const attachmentA = createTestNote({
       uri: '/path/to/more/attachment-a.pdf',
     });
-    const attachmentB = createAttachment({
+    const attachmentB = createTestNote({
       uri: '/path/to/more/attachment-b.pdf',
     });
-    const ws = new FoamWorkspace();
+    const ws = createTestWorkspace();
     ws.set(noteA)
       .set(attachmentA)
       .set(attachmentB);
@@ -312,13 +316,13 @@ describe('Wikilinks', () => {
       uri: '/path/to/page-a.md',
       links: [{ slug: 'attachment-a' }],
     });
-    const attachmentA = createAttachment({
+    const attachmentA = createTestNote({
       uri: '/path/to/more/attachment-a.pdf',
     });
-    const attachmentABis = createAttachment({
+    const attachmentABis = createTestNote({
       uri: '/path/to/attachment-a.pdf',
     });
-    const ws = new FoamWorkspace();
+    const ws = createTestWorkspace();
     ws.set(noteA)
       .set(attachmentA)
       .set(attachmentABis);
@@ -334,13 +338,13 @@ describe('Wikilinks', () => {
       uri: '/path/to/page-a.md',
       links: [{ slug: 'attachment-a' }],
     });
-    const attachmentA = createAttachment({
+    const attachmentA = createTestNote({
       uri: '/path/to/more/attachment-a.pdf',
     });
-    const attachmentABis = createAttachment({
+    const attachmentABis = createTestNote({
       uri: '/path/to/attachment-a.pdf',
     });
-    const ws = new FoamWorkspace();
+    const ws = createTestWorkspace();
     ws.set(noteA)
       .set(attachmentABis)
       .set(attachmentA);
@@ -365,7 +369,7 @@ describe('markdown direct links', () => {
     const noteC = createTestNote({
       uri: '/path/to/more/page-c.md',
     });
-    const ws = new FoamWorkspace();
+    const ws = createTestWorkspace();
     ws.set(noteA)
       .set(noteB)
       .set(noteC);
@@ -404,7 +408,7 @@ describe('markdown direct links', () => {
 
 describe('Placeholders', () => {
   it('Treats direct links to non-existing files as placeholders', () => {
-    const ws = new FoamWorkspace();
+    const ws = createTestWorkspace();
     const noteA = createTestNote({
       uri: '/somewhere/from/page-a.md',
       links: [{ to: '../page-b.md' }, { to: '/path/to/page-c.md' }],
@@ -425,7 +429,7 @@ describe('Placeholders', () => {
   });
 
   it('Treats wikilinks without matching file as placeholders', () => {
-    const ws = new FoamWorkspace();
+    const ws = createTestWorkspace();
     const noteA = createTestNote({
       uri: '/somewhere/page-a.md',
       links: [{ slug: 'page-b' }],
@@ -440,7 +444,7 @@ describe('Placeholders', () => {
     });
   });
   it('Treats wikilink with definition to non-existing file as placeholders', () => {
-    const ws = new FoamWorkspace();
+    const ws = createTestWorkspace();
     const noteA = createTestNote({
       uri: '/somewhere/page-a.md',
       links: [{ slug: 'page-b' }, { slug: 'page-c' }],
@@ -484,7 +488,7 @@ describe('Updating workspace happy path', () => {
     const noteC = createTestNote({
       uri: '/path/to/more/page-c.md',
     });
-    const ws = new FoamWorkspace();
+    const ws = createTestWorkspace();
     ws.set(noteA)
       .set(noteB)
       .set(noteC);
@@ -533,7 +537,7 @@ describe('Updating workspace happy path', () => {
     const noteB = createTestNote({
       uri: '/path/to/another/page-b.md',
     });
-    const ws = new FoamWorkspace();
+    const ws = createTestWorkspace();
     ws.set(noteA).set(noteB);
     const graph = FoamGraph.fromWorkspace(ws);
 
@@ -556,7 +560,7 @@ describe('Updating workspace happy path', () => {
       uri: '/path/to/page-a.md',
       links: [{ slug: 'page-b' }],
     });
-    const ws = new FoamWorkspace();
+    const ws = createTestWorkspace();
     ws.set(noteA);
     const graph = FoamGraph.fromWorkspace(ws);
 
@@ -585,7 +589,7 @@ describe('Updating workspace happy path', () => {
     const noteB = createTestNote({
       uri: '/path/to/another/page-b.md',
     });
-    const ws = new FoamWorkspace();
+    const ws = createTestWorkspace();
     ws.set(noteA).set(noteB);
     const graph = FoamGraph.fromWorkspace(ws);
 
@@ -610,7 +614,7 @@ describe('Updating workspace happy path', () => {
       uri: '/path/to/page-a.md',
       links: [{ to: '/path/to/another/page-b.md' }],
     });
-    const ws = new FoamWorkspace();
+    const ws = createTestWorkspace();
     ws.set(noteA);
     const graph = FoamGraph.fromWorkspace(ws);
 
@@ -638,7 +642,7 @@ describe('Updating workspace happy path', () => {
       uri: '/path/to/page-a.md',
       links: [{ to: '/path/to/another/page-b.md' }],
     });
-    const ws = new FoamWorkspace().set(noteA);
+    const ws = createTestWorkspace().set(noteA);
     const graph = FoamGraph.fromWorkspace(ws);
     expect(
       graph.contains(URI.placeholder('/path/to/another/page-b.md'))
@@ -671,7 +675,7 @@ describe('Monitoring of workspace state', () => {
     const noteC = createTestNote({
       uri: '/path/to/more/page-c.md',
     });
-    const ws = new FoamWorkspace();
+    const ws = createTestWorkspace();
     ws.set(noteA)
       .set(noteB)
       .set(noteC);
@@ -712,7 +716,7 @@ describe('Monitoring of workspace state', () => {
     const noteB = createTestNote({
       uri: '/path/to/another/page-b.md',
     });
-    const ws = new FoamWorkspace();
+    const ws = createTestWorkspace();
     ws.set(noteA).set(noteB);
     const graph = FoamGraph.fromWorkspace(ws, true);
 
@@ -735,7 +739,7 @@ describe('Monitoring of workspace state', () => {
       uri: '/path/to/page-a.md',
       links: [{ slug: 'page-b' }],
     });
-    const ws = new FoamWorkspace();
+    const ws = createTestWorkspace();
     ws.set(noteA);
     const graph = FoamGraph.fromWorkspace(ws, true);
 
@@ -764,7 +768,7 @@ describe('Monitoring of workspace state', () => {
     const noteB = createTestNote({
       uri: '/path/to/another/page-b.md',
     });
-    const ws = new FoamWorkspace();
+    const ws = createTestWorkspace();
     ws.set(noteA).set(noteB);
     const graph = FoamGraph.fromWorkspace(ws, true);
 
@@ -790,7 +794,7 @@ describe('Monitoring of workspace state', () => {
       uri: '/path/to/page-a.md',
       links: [{ to: '/path/to/another/page-b.md' }],
     });
-    const ws = new FoamWorkspace();
+    const ws = createTestWorkspace();
     ws.set(noteA);
     const graph = FoamGraph.fromWorkspace(ws, true);
 
@@ -819,7 +823,7 @@ describe('Monitoring of workspace state', () => {
       uri: '/path/to/page-a.md',
       links: [{ to: '/path/to/another/page-b.md' }],
     });
-    const ws = new FoamWorkspace();
+    const ws = createTestWorkspace();
     ws.set(noteA);
     const graph = FoamGraph.fromWorkspace(ws, true);
     expect(

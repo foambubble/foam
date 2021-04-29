@@ -68,13 +68,13 @@ describe('GroupedResourcesTreeDataProvider', () => {
         collapsibleState: 1,
         label: '/path',
         description: '1 note',
-        resources: [{ title: matchingNote1.title }],
+        children: [new UriTreeItem(matchingNote1.uri)],
       },
       {
         collapsibleState: 1,
         label: '/path-bis',
         description: '1 note',
-        resources: [{ title: matchingNote2.title }],
+        children: [new UriTreeItem(matchingNote2.uri)],
       },
     ]);
   });
@@ -94,7 +94,7 @@ describe('GroupedResourcesTreeDataProvider', () => {
     );
     const directory = new DirectoryTreeItem(
       '/path',
-      [matchingNote1 as any],
+      [new UriTreeItem(matchingNote1.uri)],
       'note'
     );
     const result = await provider.getChildren(directory);
@@ -164,7 +164,7 @@ describe('GroupedResourcesTreeDataProvider', () => {
         collapsibleState: 1,
         label: '/path-exclude',
         description: '1 note',
-        resources: [{ title: excludedPathNote.title }],
+        children: [new UriTreeItem(excludedPathNote.uri)],
       },
     ]);
   });

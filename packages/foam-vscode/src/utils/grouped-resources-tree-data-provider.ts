@@ -241,12 +241,11 @@ export class ResourceTreeItem extends UriTreeItem {
   constructor(
     public readonly resource: Resource,
     private readonly workspace: FoamWorkspace,
-    icon = 'note',
     collapsibleState = vscode.TreeItemCollapsibleState.None
   ) {
     super(resource.uri, {
       title: resource.title,
-      icon: icon,
+      icon: 'note',
       collapsibleState,
     });
     this.contextValue = 'resource';

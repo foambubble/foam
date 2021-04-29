@@ -20,21 +20,19 @@ describe('generateHeadings', () => {
       .find(res => URI.getBasename(res.uri) === slug) as Resource;
   };
 
-  beforeAll(() => {
+  beforeAll(async () => {
     const config = createConfigFromFolders([
       URI.file(path.join(__dirname, '..', '__scaffold__')),
     ]);
-    const foam = bootstrap(config, new FileDataStore());
-    _workspace = foam.workspace;
-    _workspace.registerProvider(
-      new MarkdownResourceProvider(
-        new Matcher(
-          config.workspaceFolders,
-          config.includeGlobs,
-          config.ignoreGlobs
-        )
+    const mdProvider = new MarkdownResourceProvider(
+      new Matcher(
+        config.workspaceFolders,
+        config.includeGlobs,
+        config.ignoreGlobs
       )
     );
+    const foam = await bootstrap(config, new FileDataStore(), [mdProvider]);
+    _workspace = foam.workspace;
   });
 
   it.skip('should add heading to a file that does not have them', () => {

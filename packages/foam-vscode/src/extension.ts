@@ -5,24 +5,21 @@ import {
   Logger,
   FileDataStore,
   Matcher,
+  MarkdownResourceProvider,
+  ResourceProvider,
 } from 'foam-core';
 
 import { features } from './features';
 import { getConfigFromVscode } from './services/config';
 import { VsCodeOutputLogger, exposeLogger } from './services/logging';
-import {
-  VsCodeAwareFoamProvider,
-  VsCodeFoamMarkdownProvider,
-} from './services/provider';
-import { create, VsCodeAwareFoam } from './utils/vsc-utils';
 
-function createMarkdownProvider(config: FoamConfig): VsCodeAwareFoamProvider {
+function createMarkdownProvider(config: FoamConfig): ResourceProvider {
   const matcher = new Matcher(
     config.workspaceFolders,
     config.includeGlobs,
     config.ignoreGlobs
   );
-  const provider = new VsCodeFoamMarkdownProvider(matcher, triggers => {
+  const provider = new MarkdownResourceProvider(matcher, triggers => {
     const watcher = workspace.createFileSystemWatcher('**/*');
     return [
       watcher.onDidChange(triggers.onDidChange),
@@ -45,10 +42,8 @@ export async function activate(context: ExtensionContext) {
     // Prepare Foam
     const config: FoamConfig = getConfigFromVscode();
     const dataStore = new FileDataStore();
-    const coreFoam = bootstrap(config, dataStore);
-
     const markdownProvider = createMarkdownProvider(config);
-    const foamPromise = create(coreFoam, [markdownProvider]);
+    const foamPromise = bootstrap(config, dataStore, [markdownProvider]);
 
     // Load the features
     const resPromises = features.map(f => f.activate(context, foamPromise));

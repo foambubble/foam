@@ -24,16 +24,15 @@ describe('generateLinkReferences', () => {
     const config = createConfigFromFolders([
       URI.file(path.join(__dirname, '..', '__scaffold__')),
     ]);
-    _workspace = bootstrap(config, new FileDataStore()).workspace;
-    await _workspace.registerProvider(
-      new MarkdownResourceProvider(
-        new Matcher(
-          config.workspaceFolders,
-          config.includeGlobs,
-          config.ignoreGlobs
-        )
+    const mdProvider = new MarkdownResourceProvider(
+      new Matcher(
+        config.workspaceFolders,
+        config.includeGlobs,
+        config.ignoreGlobs
       )
     );
+    const foam = await bootstrap(config, new FileDataStore(), [mdProvider]);
+    _workspace = foam.workspace;
   });
 
   it('initialised test graph correctly', () => {

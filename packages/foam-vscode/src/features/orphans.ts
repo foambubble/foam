@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { FoamGraph, URI } from 'foam-core';
+import { Foam, FoamGraph, URI } from 'foam-core';
 import { getOrphansConfig } from '../settings';
 import { FoamFeature } from '../types';
 import {
@@ -7,12 +7,11 @@ import {
   ResourceTreeItem,
   UriTreeItem,
 } from '../utils/grouped-resources-tree-data-provider';
-import { VsCodeAwareFoam } from '../utils/vsc-utils';
 
 const feature: FoamFeature = {
   activate: async (
     context: vscode.ExtensionContext,
-    foamPromise: Promise<VsCodeAwareFoam>
+    foamPromise: Promise<Foam>
   ) => {
     const foam = await foamPromise;
 
@@ -31,12 +30,7 @@ const feature: FoamFeature = {
           return new UriTreeItem(uri);
         }
         const resource = foam.workspace.find(uri);
-        return new ResourceTreeItem(
-          resource,
-          foam.workspace,
-          foam.getTreeItemIcon(resource),
-          undefined
-        );
+        return new ResourceTreeItem(resource, foam.workspace);
       }
     );
 

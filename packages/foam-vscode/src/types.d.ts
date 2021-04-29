@@ -1,9 +1,9 @@
+import { Foam } from 'foam-core';
 import { ExtensionContext } from 'vscode';
-import { VsCodeAwareFoam } from './utils/vsc-utils';
 
 export interface FoamFeature {
   activate: (
     context: ExtensionContext,
-    foamPromise: Promise<VsCodeAwareFoam>
+    foamPromise: Promise<Foam>
   ) => Promise<any> | void;
 }

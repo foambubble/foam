@@ -107,7 +107,6 @@ export class BacklinksTreeDataProvider
         const item = new ResourceTreeItem(
           note,
           this.workspace,
-          'note',
           vscode.TreeItemCollapsibleState.Expanded
         );
         item.description = `(${connections.length}) ${item.description}`;

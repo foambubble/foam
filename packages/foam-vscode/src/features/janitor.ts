@@ -70,7 +70,9 @@ async function janitor(foam: Foam) {
 }
 
 async function runJanitor(foam: Foam) {
-  const notes: Resource[] = foam.workspace.list();
+  const notes: Resource[] = foam.workspace
+    .list()
+    .filter(r => URI.isMarkdownFile(r.uri));
 
   let updatedHeadingCount = 0;
   let updatedDefinitionListCount = 0;

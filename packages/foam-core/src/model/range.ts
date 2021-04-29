@@ -65,4 +65,8 @@ export abstract class Range {
       Position.isEqual(r1.start, r2.start) && Position.isEqual(r1.end, r2.end)
     );
   }
+
+  static isBefore(a: Range, b: Range): number {
+    return a.start.line - b.start.line || a.start.character - b.start.character;
+  }
 }

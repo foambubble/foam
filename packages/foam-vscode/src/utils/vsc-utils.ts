@@ -5,13 +5,11 @@ import {
   Range as FoamRange,
   Resource,
   URI as FoamURI,
-  bootstrap as coreBootstrap,
 } from 'foam-core';
 import { VsCodeAwareFoamProvider } from '../services/provider';
 
 export interface VsCodeAwareFoam extends Foam {
   registerProvider(provider: VsCodeAwareFoamProvider): Promise<void>;
-  getResourceTooltip(resource: Resource): Promise<string>;
   getTreeItemIcon(resource: Resource): string;
 }
 
@@ -26,16 +24,6 @@ export const create = (
     registerProvider: (provider: VsCodeAwareFoamProvider): Promise<void> => {
       providers.push(provider);
       return foam.workspace.registerProvider(provider);
-    },
-
-    /**
-     * Returns a VS Code compatible (markdown) string which will be used
-     * as tooltip for a resource
-     * @param resource the target resource
-     */
-    getResourceTooltip: (resource: Resource): Promise<string> => {
-      const provider = providers.find(p => p.match(resource.uri));
-      return provider?.getResourceTooltip(resource) ?? Promise.resolve('');
     },
 
     getTreeItemIcon: (resource: Resource): string => {

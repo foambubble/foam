@@ -37,9 +37,6 @@ const feature: FoamFeature = {
 };
 export default feature;
 
-const isBefore = (a: Range, b: Range) =>
-  a.start.line - b.start.line || a.start.character - b.start.character;
-
 export class BacklinksTreeDataProvider
   implements vscode.TreeDataProvider<BacklinkPanelTreeItem> {
   public target?: URI = undefined;
@@ -106,10 +103,11 @@ export class BacklinksTreeDataProvider
       .map(note => {
         const connections = backlinksByResourcePath[
           note.uri.path
-        ].sort((a, b) => isBefore(a.link.range, b.link.range));
+        ].sort((a, b) => Range.isBefore(a.link.range, b.link.range));
         const item = new ResourceTreeItem(
           note,
           this.workspace,
+          'note',
           vscode.TreeItemCollapsibleState.Expanded
         );
         item.description = `(${connections.length}) ${item.description}`;

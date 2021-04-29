@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { Foam, FoamWorkspace, Resource, URI } from 'foam-core';
+import { FoamWorkspace, URI } from 'foam-core';
 import { getPlaceholdersConfig } from '../settings';
 import { FoamFeature } from '../types';
 import {
@@ -7,11 +7,12 @@ import {
   ResourceTreeItem,
   UriTreeItem,
 } from '../utils/grouped-resources-tree-data-provider';
+import { VsCodeAwareFoam } from '../utils/vsc-utils';
 
 const feature: FoamFeature = {
   activate: async (
     context: vscode.ExtensionContext,
-    foamPromise: Promise<Foam>
+    foamPromise: Promise<VsCodeAwareFoam>
   ) => {
     const foam = await foamPromise;
     const workspacesURIs = vscode.workspace.workspaceFolders.map(
@@ -20,16 +21,24 @@ const feature: FoamFeature = {
     const provider = new GroupedResourcesTreeDataProvider(
       'placeholders',
       'placeholder',
+      getPlaceholdersConfig(),
+      workspacesURIs,
       () =>
         foam.graph
           .getAllNodes()
           .filter(uri => isPlaceholderResource(uri, foam.workspace)),
-      uri =>
-        URI.isPlaceholder(uri)
-          ? new UriTreeItem(uri)
-          : new ResourceTreeItem(foam.workspace.find(uri), foam.workspace),
-      getPlaceholdersConfig(),
-      workspacesURIs
+      uri => {
+        if (URI.isPlaceholder(uri)) {
+          return new UriTreeItem(uri);
+        }
+        const resource = foam.workspace.find(uri);
+        return new ResourceTreeItem(
+          resource,
+          foam.workspace,
+          foam.getTreeItemIcon(resource),
+          undefined
+        );
+      }
     );
 
     context.subscriptions.push(

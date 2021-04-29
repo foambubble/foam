@@ -140,14 +140,20 @@ export class FoamWorkspace implements IDisposable {
   public resolveLink(resource: Resource, link: ResourceLink): URI {
     // TODO add tests
     const provider = this.providers.find(p => p.match(resource.uri));
-    return isSome(provider)
-      ? provider.resolveLink(this, resource, link)
-      : URI.placeholder(link.target);
+    return (
+      provider?.resolveLink(this, resource, link) ??
+      URI.placeholder(link.target)
+    );
   }
 
   public read(uri: URI): Promise<string | null> {
     const provider = this.providers.find(p => p.match(uri));
-    return isSome(provider) ? provider.read(uri) : Promise.resolve(null);
+    return provider?.read(uri) ?? Promise.resolve(null);
+  }
+
+  public readAsMarkdown(uri: URI): Promise<string | null> {
+    const provider = this.providers.find(p => p.match(uri));
+    return provider?.readAsMarkdown(uri) ?? Promise.resolve(null);
   }
 
   public dispose(): void {

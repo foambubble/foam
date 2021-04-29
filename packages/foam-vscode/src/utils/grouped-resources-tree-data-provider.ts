@@ -80,10 +80,10 @@ export class GroupedResourcesTreeDataProvider
   constructor(
     private providerId: string,
     private resourceName: string,
-    private computeResources: () => Array<URI>,
-    private createTreeItem: (item: URI) => GroupedResourceTreeItem,
     config: GroupedResourcesConfig,
-    workspaceUris: URI[]
+    workspaceUris: URI[],
+    private computeResources: () => Array<URI>,
+    private createTreeItem: (item: URI) => GroupedResourceTreeItem
   ) {
     this.groupBy = config.groupBy;
     this.exclude = this.getGlobs(workspaceUris, config.exclude);
@@ -241,11 +241,12 @@ export class ResourceTreeItem extends UriTreeItem {
   constructor(
     public readonly resource: Resource,
     private readonly workspace: FoamWorkspace,
+    icon = 'note',
     collapsibleState = vscode.TreeItemCollapsibleState.None
   ) {
     super(resource.uri, {
       title: resource.title,
-      icon: 'note', // TODO should use FoamResourceProvider
+      icon: icon,
       collapsibleState,
     });
     this.contextValue = 'resource';
@@ -253,9 +254,9 @@ export class ResourceTreeItem extends UriTreeItem {
 
   async resolveTreeItem(): Promise<ResourceTreeItem> {
     if (this instanceof ResourceTreeItem) {
-      const content = await this.workspace.read(this.resource.uri);
+      const content = await this.workspace.readAsMarkdown(this.resource.uri);
       this.tooltip = isSome(content)
-        ? getNoteTooltip(content) // TODO this should use the FoamResourceProvider
+        ? getNoteTooltip(content)
         : this.resource.title;
     }
     return this;

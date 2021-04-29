@@ -94,6 +94,10 @@ export class MarkdownResourceProvider implements ResourceProvider {
     return this.dataStore.read(uri);
   }
 
+  readAsMarkdown(uri: URI): Promise<string | null> {
+    return this.dataStore.read(uri);
+  }
+
   async fetch(uri: URI) {
     const content = await this.read(uri);
     return isSome(content) ? this.parser.parse(uri, content) : null;

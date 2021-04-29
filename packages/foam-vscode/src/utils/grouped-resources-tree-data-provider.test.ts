@@ -8,6 +8,7 @@ import { createTestNote, strToUri } from '../test/test-utils';
 import {
   DirectoryTreeItem,
   GroupedResourcesTreeDataProvider,
+  UriTreeItem,
 } from './grouped-resources-tree-data-provider';
 
 describe('GroupedResourcesTreeDataProvider', () => {
@@ -50,13 +51,16 @@ describe('GroupedResourcesTreeDataProvider', () => {
 
   it('should return the grouped resources as a folder tree', async () => {
     const provider = new GroupedResourcesTreeDataProvider(
-      workspace,
-      graph,
       'length3',
       'note',
-      isMatch,
       config,
-      [strToUri('')]
+      [strToUri('')],
+      () =>
+        workspace
+          .list()
+          .filter(r => r.title.length === 3)
+          .map(r => r.uri),
+      uri => new UriTreeItem(uri)
     );
     const result = await provider.getChildren();
     expect(result).toMatchObject([
@@ -77,13 +81,16 @@ describe('GroupedResourcesTreeDataProvider', () => {
 
   it('should return the grouped resources in a directory', async () => {
     const provider = new GroupedResourcesTreeDataProvider(
-      workspace,
-      graph,
       'length3',
       'note',
-      isMatch,
       config,
-      [strToUri('')]
+      [strToUri('')],
+      () =>
+        workspace
+          .list()
+          .filter(r => r.title.length === 3)
+          .map(r => r.uri),
+      uri => new UriTreeItem(uri)
     );
     const directory = new DirectoryTreeItem(
       '/path',
@@ -107,13 +114,16 @@ describe('GroupedResourcesTreeDataProvider', () => {
       groupBy: GroupedResoucesConfigGroupBy.Off,
     };
     const provider = new GroupedResourcesTreeDataProvider(
-      workspace,
-      graph,
       'length3',
       'note',
-      isMatch,
       mockConfig,
-      [strToUri('')]
+      [strToUri('')],
+      () =>
+        workspace
+          .list()
+          .filter(r => r.title.length === 3)
+          .map(r => r.uri),
+      uri => new UriTreeItem(uri)
     );
     const result = await provider.getChildren();
     expect(result).toMatchObject([
@@ -135,13 +145,16 @@ describe('GroupedResourcesTreeDataProvider', () => {
   it('should return the grouped resources without exclusion', async () => {
     const mockConfig = { ...config, exclude: [] };
     const provider = new GroupedResourcesTreeDataProvider(
-      workspace,
-      graph,
       'length3',
       'note',
-      isMatch,
       mockConfig,
-      [strToUri('')]
+      [strToUri('')],
+      () =>
+        workspace
+          .list()
+          .filter(r => r.title.length === 3)
+          .map(r => r.uri),
+      uri => new UriTreeItem(uri)
     );
     const result = await provider.getChildren();
     expect(result).toMatchObject([
@@ -159,13 +172,16 @@ describe('GroupedResourcesTreeDataProvider', () => {
   it('should dynamically set the description', async () => {
     const description = 'test description';
     const provider = new GroupedResourcesTreeDataProvider(
-      workspace,
-      graph,
       'length3',
       description,
-      isMatch,
       config,
-      [strToUri('')]
+      [strToUri('')],
+      () =>
+        workspace
+          .list()
+          .filter(r => r.title.length === 3)
+          .map(r => r.uri),
+      uri => new UriTreeItem(uri)
     );
     const result = await provider.getChildren();
     expect(result).toMatchObject([
@@ -173,13 +189,13 @@ describe('GroupedResourcesTreeDataProvider', () => {
         collapsibleState: 1,
         label: '/path',
         description: `1 ${description}`,
-        resources: expect.anything(),
+        children: expect.anything(),
       },
       {
         collapsibleState: 1,
         label: '/path-bis',
         description: `1 ${description}`,
-        resources: expect.anything(),
+        children: expect.anything(),
       },
     ]);
   });

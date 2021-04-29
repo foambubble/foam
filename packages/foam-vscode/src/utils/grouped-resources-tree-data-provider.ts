@@ -132,7 +132,7 @@ export class GroupedResourcesTreeDataProvider
   ): Thenable<GroupedResourceTreeItem[]> {
     if (this.groupBy === GroupedResoucesConfigGroupBy.Folder) {
       if (isSome(directory)) {
-        return Promise.resolve(directory.children);
+        return Promise.resolve(directory.children.sort(sortByTreeItemLabel));
       }
       const directories = Object.entries(this.getUrisByDirectory())
         .sort(([dir1], [dir2]) => sortByString(dir1, dir2))

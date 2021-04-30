@@ -225,7 +225,7 @@ export class UriTreeItem extends vscode.TreeItem {
       title: OPEN_COMMAND.title,
       arguments: [
         {
-          resource: uri,
+          uri: uri,
         },
       ],
     };

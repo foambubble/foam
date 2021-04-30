@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { FoamWorkspace } from 'foam-core';
+import { FoamGraph, FoamWorkspace } from 'foam-core';
 import {
   cleanWorkspace,
   closeEditors,
@@ -30,14 +30,16 @@ describe('Link Completion', () => {
         uri: 'path/to/file.md',
         links: [{ slug: 'placeholder text' }],
       })
-    )
-    .resolveLinks();
+    );
+  const graph = FoamGraph.fromWorkspace(ws);
 
   beforeAll(async () => {
     await cleanWorkspace();
   });
 
   afterAll(async () => {
+    ws.dispose();
+    graph.dispose();
     await cleanWorkspace();
   });
 
@@ -48,7 +50,7 @@ describe('Link Completion', () => {
   it('should not return any link for empty documents', async () => {
     const { uri } = await createFile('');
     const { doc } = await showInEditor(uri);
-    const provider = new CompletionProvider(ws);
+    const provider = new CompletionProvider(ws, graph);
 
     const links = await provider.provideCompletionItems(
       doc,
@@ -61,7 +63,7 @@ describe('Link Completion', () => {
   it('should return notes and placeholders', async () => {
     const { uri } = await createFile('[[');
     const { doc } = await showInEditor(uri);
-    const provider = new CompletionProvider(ws);
+    const provider = new CompletionProvider(ws, graph);
 
     const links = await provider.provideCompletionItems(
       doc,

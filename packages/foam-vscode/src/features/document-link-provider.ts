@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
-import { Foam, FoamWorkspace, NoteParser, URI } from 'foam-core';
+import { Foam, FoamWorkspace, ResourceParser, URI } from 'foam-core';
 import { FoamFeature } from '../types';
-import { isNote, mdDocSelector } from '../utils';
+import { mdDocSelector } from '../utils';
 import { OPEN_COMMAND } from './utility-commands';
 import { toVsCodeRange, toVsCodeUri } from '../utils/vsc-utils';
 import { getFoamVsCodeConfig } from '../services/config';
@@ -27,28 +27,28 @@ const feature: FoamFeature = {
 };
 
 export class LinkProvider implements vscode.DocumentLinkProvider {
-  constructor(private workspace: FoamWorkspace, private parser: NoteParser) {}
+  constructor(
+    private workspace: FoamWorkspace,
+    private parser: ResourceParser
+  ) {}
 
   public provideDocumentLinks(
     document: vscode.TextDocument
   ): vscode.DocumentLink[] {
     const resource = this.parser.parse(document.uri, document.getText());
 
-    if (isNote(resource)) {
-      return resource.links.map(link => {
-        const target = this.workspace.resolveLink(resource, link);
-        const command = OPEN_COMMAND.asURI(toVsCodeUri(target));
-        const documentLink = new vscode.DocumentLink(
-          toVsCodeRange(link.range),
-          command
-        );
-        documentLink.tooltip = URI.isPlaceholder(target)
-          ? `Create note for '${target.path}'`
-          : `Go to ${URI.toFsPath(target)}`;
-        return documentLink;
-      });
-    }
-    return [];
+    return resource.links.map(link => {
+      const target = this.workspace.resolveLink(resource, link);
+      const command = OPEN_COMMAND.asURI(toVsCodeUri(target));
+      const documentLink = new vscode.DocumentLink(
+        toVsCodeRange(link.range),
+        command
+      );
+      documentLink.tooltip = URI.isPlaceholder(target)
+        ? `Create note for '${target.path}'`
+        : `Go to ${URI.toFsPath(target)}`;
+      return documentLink;
+    });
   }
 }
 

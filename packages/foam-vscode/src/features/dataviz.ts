@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { FoamFeature } from '../types';
-import { Foam, Logger } from 'foam-core';
+import { Foam, Logger, URI } from 'foam-core';
 import { TextDecoder } from 'util';
 import { getGraphStyle, getTitleMaxLength } from '../settings';
 import { isSome } from '../utils';
@@ -82,11 +82,19 @@ function generateGraphData(foam: Foam) {
       title: cutTitle(title),
     };
   });
-  foam.workspace.getAllConnections().forEach(c => {
+  foam.graph.getAllConnections().forEach(c => {
     graph.edges.add({
       source: c.source.path,
       target: c.target.path,
     });
+    if (URI.isPlaceholder(c.target)) {
+      graph.nodes[c.target.path] = {
+        id: c.target.path,
+        type: 'placeholder',
+        uri: c.target,
+        title: c.target.path,
+      };
+    }
   });
 
   return {

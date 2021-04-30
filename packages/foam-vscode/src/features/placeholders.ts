@@ -1,8 +1,12 @@
 import * as vscode from 'vscode';
-import { Foam, Resource, isNote, isPlaceholder } from 'foam-core';
+import { Foam, FoamWorkspace, URI } from 'foam-core';
 import { getPlaceholdersConfig } from '../settings';
 import { FoamFeature } from '../types';
-import { GroupedResourcesTreeDataProvider } from '../utils/grouped-resources-tree-data-provider';
+import {
+  GroupedResourcesTreeDataProvider,
+  ResourceTreeItem,
+  UriTreeItem,
+} from '../utils/grouped-resources-tree-data-provider';
 
 const feature: FoamFeature = {
   activate: async (
@@ -14,13 +18,21 @@ const feature: FoamFeature = {
       dir => dir.uri
     );
     const provider = new GroupedResourcesTreeDataProvider(
-      foam.workspace,
-      foam.services.dataStore,
       'placeholders',
       'placeholder',
-      isPlaceholderResource,
       getPlaceholdersConfig(),
-      workspacesURIs
+      workspacesURIs,
+      () =>
+        foam.graph
+          .getAllNodes()
+          .filter(uri => isPlaceholderResource(uri, foam.workspace)),
+      uri => {
+        if (URI.isPlaceholder(uri)) {
+          return new UriTreeItem(uri);
+        }
+        const resource = foam.workspace.find(uri);
+        return new ResourceTreeItem(resource, foam.workspace);
+      }
     );
 
     context.subscriptions.push(
@@ -38,22 +50,19 @@ const feature: FoamFeature = {
 
 export default feature;
 
-export function isPlaceholderResource(resource: Resource) {
-  if (isPlaceholder(resource)) {
-    // A placeholder is, by default, blank
+export function isPlaceholderResource(uri: URI, workspace: FoamWorkspace) {
+  if (URI.isPlaceholder(uri)) {
     return true;
   }
 
-  if (isNote(resource)) {
-    const contentLines = resource.source.text
+  const resource = workspace.find(uri);
+  const contentLines =
+    resource?.source.text
       .trim()
       .split('\n')
       .map(line => line.trim())
       .filter(line => line.length > 0)
-      .filter(line => !line.startsWith('#'));
+      .filter(line => !line.startsWith('#')) ?? '';
 
-    return contentLines.length === 0;
-  }
-
-  return false;
+  return contentLines.length === 0;
 }

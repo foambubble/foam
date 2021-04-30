@@ -26,14 +26,17 @@ A #recipe is a guide, tip or strategy for getting the most out of your Foam work
 - Clip webpages with [[web-clipper]]
 
 ## Discover
+
 - Explore your notes using [[graph-visualisation]]
 - Discover relationships with [[backlinking]]
 - Simulating [[unlinked-references]]
 
 ## Organise
+
 - Using [[backlinking]] for reference lists.
 
 ## Write
+
 - Link documents with [[wiki-links]].
 - Use shortcuts for [[creating-new-notes]]
 - Instantly create and access your [[daily-notes]]

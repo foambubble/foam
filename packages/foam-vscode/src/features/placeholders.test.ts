@@ -1,99 +1,70 @@
-import {
-  createAttachment,
-  createPlaceholder,
-  createTestNote,
-} from '../test/test-utils';
+import { FoamWorkspace, URI } from 'foam-core';
+import { createTestNote } from '../test/test-utils';
 import { isPlaceholderResource } from './placeholders';
 
 describe('isPlaceholderResource', () => {
   it('should return true when a placeholder', () => {
-    expect(isPlaceholderResource(createPlaceholder(''))).toBeTruthy();
-  });
-
-  it('should return true when an empty note is provided', () => {
+    const noteA = createTestNote({
+      uri: 'note-a.md',
+      text: '',
+      links: [{ slug: 'placeholder' }],
+    });
+    const ws = new FoamWorkspace().set(noteA);
     expect(
-      isPlaceholderResource(
-        createTestNote({
-          uri: '',
-          text: '',
-        })
-      )
+      isPlaceholderResource(URI.placeholder('placeholder'), ws)
     ).toBeTruthy();
   });
 
   it('should return true when an empty note is provided', () => {
-    expect(
-      isPlaceholderResource(
-        createTestNote({
-          uri: '',
-          text: '',
-        })
-      )
-    ).toBeTruthy();
+    const noteA = createTestNote({ uri: 'note-a.md', text: '' });
+    const ws = new FoamWorkspace().set(noteA);
+    expect(isPlaceholderResource(noteA.uri, ws)).toBeTruthy();
   });
 
   it('should return true when a note containing only whitespace is provided', () => {
-    expect(
-      isPlaceholderResource(
-        createTestNote({
-          uri: '',
-          text: ' \n\t\n\t  ',
-        })
-      )
-    ).toBeTruthy();
+    const noteA = createTestNote({
+      uri: '',
+      text: ' \n\t\n\t  ',
+    });
+    const ws = new FoamWorkspace().set(noteA);
+    expect(isPlaceholderResource(noteA.uri, ws)).toBeTruthy();
   });
 
   it('should return true when a note containing only a title is provided', () => {
-    expect(
-      isPlaceholderResource(
-        createTestNote({
-          uri: '',
-          text: '# Title',
-        })
-      )
-    ).toBeTruthy();
+    const noteA = createTestNote({
+      uri: '',
+      text: '# Title',
+    });
+    const ws = new FoamWorkspace().set(noteA);
+
+    expect(isPlaceholderResource(noteA.uri, ws)).toBeTruthy();
   });
 
   it('should return true when a note containing a title followed by whitespace is provided', () => {
-    expect(
-      isPlaceholderResource(
-        createTestNote({
-          uri: '',
-          text: '# Title \n\t\n \t \n  ',
-        })
-      )
-    ).toBeTruthy();
+    const noteA = createTestNote({
+      uri: '',
+      text: '# Title \n\t\n \t \n  ',
+    });
+    const ws = new FoamWorkspace().set(noteA);
+    expect(isPlaceholderResource(noteA.uri, ws)).toBeTruthy();
   });
 
   it('should return false when there is more than one line containing more than just whitespace', () => {
-    expect(
-      isPlaceholderResource(
-        createTestNote({
-          uri: '',
-          text: '# Title\nA line that is not the title\nAnother line',
-        })
-      )
-    ).toBeFalsy();
+    const noteA = createTestNote({
+      uri: '',
+      text: '# Title\nA line that is not the title\nAnother line',
+    });
+    const ws = new FoamWorkspace().set(noteA);
+    expect(isPlaceholderResource(noteA.uri, ws)).toBeFalsy();
   });
 
   it('should return false when there is at least one line of non-text content', () => {
-    expect(
-      isPlaceholderResource(
-        createTestNote({
-          uri: '',
-          text: 'A line that is not the title\n',
-        })
-      )
-    ).toBeFalsy();
-  });
+    const noteA = createTestNote({
+      uri: '',
+      text: 'A line that is not the title\n',
+    });
+    const ws = new FoamWorkspace().set(noteA);
 
-  it('should return false when an attachment is provided', () => {
-    expect(
-      isPlaceholderResource(
-        createAttachment({
-          uri: '',
-        })
-      )
-    ).toBeFalsy();
+    expect(isPlaceholderResource(noteA.uri, ws)).toBeFalsy();
   });
 });

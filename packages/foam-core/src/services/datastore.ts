@@ -1,141 +1,90 @@
-import glob from 'glob';
-import { promisify } from 'util';
 import micromatch from 'micromatch';
 import fs from 'fs';
-import { Event, Emitter } from '../common/event';
 import { URI } from '../model/uri';
-import { FoamConfig } from '../config';
 import { Logger } from '../utils/log';
-import { isSome } from '../utils';
-import { IDisposable } from '../common/lifecycle';
+import glob from 'glob';
+import { promisify } from 'util';
+import { isWindows } from '../common/platform';
 
 const findAllFiles = promisify(glob);
-
-export interface IWatcher {
+export interface IMatcher {
   /**
-   * An event which fires on file creation.
-   */
-  onDidCreate: Event<URI>;
-
-  /**
-   * An event which fires on file change.
-   */
-  onDidChange: Event<URI>;
-
-  /**
-   * An event which fires on file deletion.
-   */
-  onDidDelete: Event<URI>;
-}
-
-/**
- * Represents a source of files and content
- */
-export interface IDataStore {
-  /**
-   * List the files available in the store
-   */
-  listFiles: () => Promise<URI[]>;
-
-  /**
-   * Read the content of the file from the store
+   * Filters the given list of URIs, keepin only the ones that
+   * are matched by this Matcher
    *
-   * Returns `null` in case of errors while reading
+   * @param files the URIs to check
    */
-  read: (uri: URI) => Promise<string | null>;
+  match(files: URI[]): URI[];
 
   /**
-   * Returns whether the given URI is a match in
-   * this data store
+   * Returns whether this URI is matched by this Matcher
+   *
+   * @param uri the URI to check
    */
-  isMatch: (uri: URI) => boolean;
+  isMatch(uri: URI): boolean;
 
   /**
-   * An event which fires on file creation.
+   * The include globs
    */
-  onDidCreate: Event<URI>;
+  include: string[];
 
   /**
-   * An event which fires on file change.
+   * The exclude lobs
    */
-  onDidChange: Event<URI>;
-
-  /**
-   * An event which fires on file deletion.
-   */
-  onDidDelete: Event<URI>;
+  exclude: string[];
 }
 
 /**
- * File system based data store
+ * The matcher requires the path to be in unix format, so if we are in windows
+ * we convert the fs path on the way in and out
  */
-export class FileDataStore implements IDataStore, IDisposable {
-  readonly onDidChangeEmitter = new Emitter<URI>();
-  readonly onDidCreateEmitter = new Emitter<URI>();
-  readonly onDidDeleteEmitter = new Emitter<URI>();
-  readonly onDidCreate: Event<URI> = this.onDidCreateEmitter.event;
-  readonly onDidChange: Event<URI> = this.onDidChangeEmitter.event;
-  readonly onDidDelete: Event<URI> = this.onDidDeleteEmitter.event;
+export const toMatcherPathFormat = isWindows
+  ? (uri: URI) => URI.toFsPath(uri).replace(/\\/g, '/')
+  : (uri: URI) => URI.toFsPath(uri);
 
-  private _folders: readonly string[];
-  private _includeGlobs: string[] = [];
-  private _ignoreGlobs: string[] = [];
-  private _disposables: IDisposable[] = [];
+export const toFsPath = isWindows
+  ? (path: string): string => path.replace(/\//g, '\\')
+  : (path: string): string => path;
 
-  constructor(config: FoamConfig, watcher?: IWatcher) {
-    this._folders = config.workspaceFolders.map(f =>
-      URI.toFsPath(f).replace(/\\/g, '/')
-    );
-    Logger.info('Workspace folders: ', this._folders);
+export class Matcher implements IMatcher {
+  public readonly folders: string[];
+  public readonly include: string[] = [];
+  public readonly exclude: string[] = [];
 
-    this._folders.forEach(folder => {
+  constructor(
+    baseFolders: URI[],
+    include: string[] = ['**/*'],
+    exclude: string[] = []
+  ) {
+    this.folders = baseFolders.map(toMatcherPathFormat);
+    Logger.info('Workspace folders: ', this.folders);
+
+    this.folders.forEach(folder => {
       const withFolder = folderPlusGlob(folder);
-      this._includeGlobs.push(
-        ...config.includeGlobs.map(glob => {
-          if (glob.endsWith('*')) {
-            glob = `${glob}\\.(md|mdx|markdown)`;
-          }
+      this.include.push(
+        ...include.map(glob => {
+          // if (glob.endsWith('*')) {
+          //   glob = `${glob}\\.{md,mdx,markdown}`;
+          // }
           return withFolder(glob);
         })
       );
-      this._ignoreGlobs.push(...config.ignoreGlobs.map(withFolder));
+      this.exclude.push(...exclude.map(withFolder));
     });
     Logger.info('Glob patterns', {
-      includeGlobs: this._includeGlobs,
-      ignoreGlobs: this._ignoreGlobs,
+      includeGlobs: this.include,
+      ignoreGlobs: this.exclude,
     });
-
-    if (isSome(watcher)) {
-      this._disposables.push(
-        watcher.onDidCreate(uri => {
-          if (this.isMatch(uri)) {
-            Logger.info(`Created: ${uri.path}`);
-            this.onDidCreateEmitter.fire(uri);
-          }
-        }),
-        watcher.onDidChange(uri => {
-          if (this.isMatch(uri)) {
-            Logger.info(`Updated: ${uri.path}`);
-            this.onDidChangeEmitter.fire(uri);
-          }
-        }),
-        watcher.onDidDelete(uri => {
-          if (this.isMatch(uri)) {
-            Logger.info(`Deleted: ${uri.path}`);
-            this.onDidDeleteEmitter.fire(uri);
-          }
-        })
-      );
-    }
   }
 
   match(files: URI[]) {
     const matches = micromatch(
       files.map(f => URI.toFsPath(f)),
-      this._includeGlobs,
+      this.include,
       {
-        ignore: this._ignoreGlobs,
+        ignore: this.exclude,
         nocase: true,
+        format: toFsPath,
       }
     );
     return matches.map(URI.file);
@@ -144,17 +93,33 @@ export class FileDataStore implements IDataStore, IDisposable {
   isMatch(uri: URI) {
     return this.match([uri]).length > 0;
   }
+}
 
-  async listFiles() {
-    const files = (
-      await Promise.all(
-        this._folders.map(async folder => {
-          const res = await findAllFiles(folderPlusGlob(folder)('**/*'));
-          return res.map(URI.file);
-        })
-      )
-    ).flat();
-    return this.match(files);
+/**
+ * Represents a source of files and content
+ */
+export interface IDataStore {
+  /**
+   * List the files matching the given glob from the
+   * store
+   */
+  list: (glob: string) => Promise<URI[]>;
+
+  /**
+   * Read the content of the file from the store
+   *
+   * Returns `null` in case of errors while reading
+   */
+  read: (uri: URI) => Promise<string | null>;
+}
+
+/**
+ * File system based data store
+ */
+export class FileDataStore implements IDataStore {
+  async list(glob: string): Promise<URI[]> {
+    const res = await findAllFiles(glob);
+    return res.map(URI.file);
   }
 
   async read(uri: URI) {
@@ -167,13 +132,9 @@ export class FileDataStore implements IDataStore, IDisposable {
       return null;
     }
   }
-
-  dispose() {
-    this._disposables.forEach(d => d.dispose());
-  }
 }
 
-const folderPlusGlob = (folder: string) => (glob: string): string => {
+export const folderPlusGlob = (folder: string) => (glob: string): string => {
   if (folder.substr(-1) === '/') {
     folder = folder.slice(0, -1);
   }

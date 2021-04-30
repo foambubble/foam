@@ -5,10 +5,12 @@ To store your personal knowledge graph in markdown files instead of a database, 
 **Foam Janitor** (inspired by Andy Matuschak's [note-link-janitor](https://github.com/andymatuschak/note-link-janitor)) helps you migrate existing notes to Foam, and maintain your Foam's health over time.
 
 Currently, Foam's Janitor helps you to:
+
 - Ensure your [[link-reference-definitions]] are up to date
 - Ensure every document has a well-formatted title (required for Markdown Links, Markdown Notes, and Foam Gatsby Template compatibility)
 
 In the future, Janitor can help you with
+
 - Updating [[materialized-backlinks]]
 - Lint, format and structure notes
 - Rename and move notes around while keeping their references up to date.

@@ -9,7 +9,6 @@ This list is subject to change. Especially the Git ones.
 - [Markdown Links](https://marketplace.visualstudio.com/items?itemName=tchayen.markdown-links)
 - [Markdown All In One](https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one)
 
-
 ## Extensions For Additional Features
 
 These extensions are not (yet?) defined in `.vscode/extensions.json`, but have been used by others and shown to play nice with Foam.

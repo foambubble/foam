@@ -1,6 +1,6 @@
 import { debounce } from 'lodash';
 import * as vscode from 'vscode';
-import { Foam, FoamWorkspace, NoteParser, URI } from 'foam-core';
+import { Foam, FoamWorkspace, ResourceParser, URI } from 'foam-core';
 import { FoamFeature } from '../types';
 import {
   ConfigurationMonitor,
@@ -25,7 +25,7 @@ const placeholderDecoration = vscode.window.createTextEditorDecorationType({
 
 const updateDecorations = (
   areDecorationsEnabled: () => boolean,
-  parser: NoteParser,
+  parser: ResourceParser,
   workspace: FoamWorkspace
 ) => (editor: vscode.TextEditor) => {
   if (!editor || !areDecorationsEnabled()) {

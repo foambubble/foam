@@ -12,7 +12,7 @@ import {
   Uri,
 } from 'vscode';
 import * as fs from 'fs';
-import { Logger, Resource, Note, URI } from 'foam-core';
+import { Logger, URI } from 'foam-core';
 import matter from 'gray-matter';
 import removeMarkdown from 'remove-markdown';
 import { TextEncoder } from 'util';
@@ -253,10 +253,6 @@ export function stripImages(markdown: string): string {
     '$1'.length ? '[Image: $1]' : ''
   );
 }
-
-export const isNote = (resource: Resource): resource is Note => {
-  return resource.type === 'note';
-};
 
 /**
  * Creates a note from the given placeholder Uri.

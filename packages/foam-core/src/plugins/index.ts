@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import path from 'path';
 import { Node } from 'unist';
 import { isNotNull } from '../utils';
-import { Note } from '../model/note';
+import { Resource } from '../model/note';
 import unified from 'unified';
 import { FoamConfig } from '../config';
 import { Logger } from '../utils/log';
@@ -16,12 +16,12 @@ export interface FoamPlugin {
 
 export interface ParserPlugin {
   name?: string;
-  visit?: (node: Node, note: Note) => void;
+  visit?: (node: Node, note: Resource) => void;
   onDidInitializeParser?: (parser: unified.Processor) => void;
   onWillParseMarkdown?: (markdown: string) => string;
-  onWillVisitTree?: (tree: Node, note: Note) => void;
-  onDidVisitTree?: (tree: Node, note: Note) => void;
-  onDidFindProperties?: (properties: any, note: Note) => void;
+  onWillVisitTree?: (tree: Node, note: Resource) => void;
+  onDidVisitTree?: (tree: Node, note: Resource) => void;
+  onDidFindProperties?: (properties: any, note: Resource) => void;
 }
 
 export interface PluginConfig {

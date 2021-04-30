@@ -5,9 +5,7 @@
 [![Installs](https://img.shields.io/visual-studio-marketplace/i/foam.foam-vscode)](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode)
 [![Ratings](https://img.shields.io/visual-studio-marketplace/r/foam.foam-vscode)](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode)
 
-
 > ⚠️ This is an early stage software. Use at your own peril.
-
 > You can join the Foam Community on the [Foam Discord](https://foambubble.github.io/join-discord/e)
 
 [Foam](https://foambubble.github.io/foam) is a note-taking tool that lives within VsCode, which means you can pair it with your favorite extensions for a great editing experience.

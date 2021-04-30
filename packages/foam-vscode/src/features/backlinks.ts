@@ -3,14 +3,13 @@ import { groupBy } from 'lodash';
 import {
   Foam,
   FoamWorkspace,
-  IDataStore,
-  isNote,
-  NoteLink,
+  FoamGraph,
+  ResourceLink,
   Resource,
   URI,
   Range,
 } from 'foam-core';
-import { getNoteTooltip } from '../utils';
+import { getNoteTooltip, isNone } from '../utils';
 import { FoamFeature } from '../types';
 import { ResourceTreeItem } from '../utils/grouped-resources-tree-data-provider';
 
@@ -21,10 +20,7 @@ const feature: FoamFeature = {
   ) => {
     const foam = await foamPromise;
 
-    const provider = new BacklinksTreeDataProvider(
-      foam.workspace,
-      foam.services.dataStore
-    );
+    const provider = new BacklinksTreeDataProvider(foam.workspace, foam.graph);
 
     vscode.window.onDidChangeActiveTextEditor(async () => {
       provider.target = vscode.window.activeTextEditor?.document.uri;
@@ -41,9 +37,6 @@ const feature: FoamFeature = {
 };
 export default feature;
 
-const isBefore = (a: Range, b: Range) =>
-  a.start.line - b.start.line || a.start.character - b.start.character;
-
 export class BacklinksTreeDataProvider
   implements vscode.TreeDataProvider<BacklinkPanelTreeItem> {
   public target?: URI = undefined;
@@ -51,10 +44,7 @@ export class BacklinksTreeDataProvider
   private _onDidChangeTreeDataEmitter = new vscode.EventEmitter<BacklinkPanelTreeItem | undefined | void>();
   readonly onDidChangeTreeData = this._onDidChangeTreeDataEmitter.event;
 
-  constructor(
-    private workspace: FoamWorkspace,
-    private dataStore: IDataStore
-  ) {}
+  constructor(private workspace: FoamWorkspace, private graph: FoamGraph) {}
 
   refresh(): void {
     this._onDidChangeTreeDataEmitter.fire();
@@ -68,9 +58,6 @@ export class BacklinksTreeDataProvider
     const uri = this.target;
     if (item) {
       const resource = item.resource;
-      if (!isNote(resource)) {
-        return Promise.resolve([]);
-      }
 
       const backlinkRefs = Promise.all(
         resource.links
@@ -80,7 +67,7 @@ export class BacklinksTreeDataProvider
           .map(async link => {
             const item = new BacklinkTreeItem(resource, link);
             const lines = (
-              (await this.dataStore.read(resource.uri)) ?? ''
+              (await this.workspace.read(resource.uri)) ?? ''
             ).split('\n');
             if (link.range.start.line < lines.length) {
               const line = lines[link.range.start.line];
@@ -100,29 +87,26 @@ export class BacklinksTreeDataProvider
       return backlinkRefs;
     }
 
-    if (!uri || !this.dataStore.isMatch(uri)) {
+    if (isNone(uri) || isNone(this.workspace.find(uri))) {
       return Promise.resolve([]);
     }
 
     const backlinksByResourcePath = groupBy(
-      this.workspace
-        .getConnections(uri)
-        .filter(c => URI.isEqual(c.target, uri)),
+      this.graph.getConnections(uri).filter(c => URI.isEqual(c.target, uri)),
       b => b.source.path
     );
 
     const resources = Object.keys(backlinksByResourcePath)
       .map(res => backlinksByResourcePath[res][0].source)
       .map(uri => this.workspace.get(uri))
-      .filter(isNote)
-      .sort((a, b) => a.title.localeCompare(b.title))
+      .sort(Resource.sortByTitle)
       .map(note => {
         const connections = backlinksByResourcePath[
           note.uri.path
-        ].sort((a, b) => isBefore(a.link.range, b.link.range));
+        ].sort((a, b) => Range.isBefore(a.link.range, b.link.range));
         const item = new ResourceTreeItem(
           note,
-          this.dataStore,
+          this.workspace,
           vscode.TreeItemCollapsibleState.Expanded
         );
         item.description = `(${connections.length}) ${item.description}`;
@@ -139,7 +123,7 @@ export class BacklinksTreeDataProvider
 export class BacklinkTreeItem extends vscode.TreeItem {
   constructor(
     public readonly resource: Resource,
-    public readonly link: NoteLink
+    public readonly link: ResourceLink
   ) {
     super(
       link.type === 'wikilink' ? link.slug : link.label,

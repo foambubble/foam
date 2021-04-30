@@ -4,7 +4,7 @@ With this #recipe you can convert a link to a fully-formed Markdown link, using 
 
 ## Required Extensions
 
- - [Markdown Link Expander](https://marketplace.visualstudio.com/items?itemName=skn0tt.markdown-link-expander) (not included in template)
+- [Markdown Link Expander](https://marketplace.visualstudio.com/items?itemName=skn0tt.markdown-link-expander) (not included in template)
 
 Markdown Link Expander will scrape your URL's `<title>` tag to create a nice Markdown-style link.
 
@@ -22,4 +22,3 @@ Tip: If you paste a lot of links, give the action a custom [key binding](https:/
 ## Feedback and issues
 
 Have an idea for the extension? [Feel free to share! 🎉](https://github.com/Skn0tt/markdown-link-expander/issues)
-

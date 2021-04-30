@@ -16,18 +16,16 @@
     "**/.vscode/**/*",
     "**/_layouts/**/*",
     "**/_site/**/*",
-    "**/node_modules/**/*"
+    "**/node_modules/**/*",
+    "packages/**/*"
   ],
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "prettier.requireConfig": true,
   "editor.formatOnSave": true,
   "editor.tabSize": 2,
-  "jest.debugCodeLens.showWhenTestStateIn": [
-    "fail",
-    "unknown",
-    "pass"
-  ],
+  "jest.debugCodeLens.showWhenTestStateIn": ["fail", "unknown", "pass"],
   "gitdoc.enabled": false,
   "jest.autoEnable": false,
-  "jest.runAllTestsFirst": false
+  "jest.runAllTestsFirst": false,
+  "search.mode": "reuseEditor"
 }

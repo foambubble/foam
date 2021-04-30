@@ -1,56 +1,39 @@
 import { createMarkdownParser } from './markdown-provider';
-import { FoamConfig, Foam, IDataStore } from './index';
-import { loadPlugins } from './plugins';
-import { isSome } from './utils';
-import { Logger } from './utils/log';
-import { URI } from './model/uri';
+import { FoamConfig, Foam, IDataStore, FoamGraph } from './index';
 import { FoamWorkspace } from './model/workspace';
+import { Matcher } from './services/datastore';
+import { ResourceProvider } from 'model/provider';
 
-export const bootstrap = async (config: FoamConfig, dataStore: IDataStore) => {
-  const plugins = await loadPlugins(config);
-
-  const parserPlugins = plugins.map(p => p.parser).filter(isSome);
-  const parser = createMarkdownParser(parserPlugins);
-
-  const workspace = new FoamWorkspace();
-  const files = await dataStore.listFiles();
-  await Promise.all(
-    files.map(async uri => {
-      Logger.info('Found: ' + uri);
-      if (URI.isMarkdownFile(uri)) {
-        const content = await dataStore.read(uri);
-        if (isSome(content)) {
-          workspace.set(parser.parse(uri, content));
-        }
-      }
-    })
+export const bootstrap = async (
+  config: FoamConfig,
+  dataStore: IDataStore,
+  initialProviders: ResourceProvider[]
+) => {
+  const parser = createMarkdownParser([]);
+  const matcher = new Matcher(
+    config.workspaceFolders,
+    config.includeGlobs,
+    config.ignoreGlobs
   );
-  workspace.resolveLinks(true);
+  const workspace = new FoamWorkspace();
+  const graph = FoamGraph.fromWorkspace(workspace, true);
 
-  const listeners = [
-    dataStore.onDidChange(async uri => {
-      const content = await dataStore.read(uri);
-      isSome(content) && workspace.set(await parser.parse(uri, content));
-    }),
-    dataStore.onDidCreate(async uri => {
-      const content = await dataStore.read(uri);
-      isSome(content) && workspace.set(await parser.parse(uri, content));
-    }),
-    dataStore.onDidDelete(uri => {
-      workspace.delete(uri);
-    }),
-  ];
-
-  return {
-    workspace: workspace,
-    config: config,
+  const foam: Foam = {
+    workspace,
+    graph,
+    config,
     services: {
       dataStore,
       parser,
+      matcher,
     },
     dispose: () => {
-      listeners.forEach(l => l.dispose());
       workspace.dispose();
+      graph.dispose();
     },
-  } as Foam;
+  };
+
+  await Promise.all(initialProviders.map(p => workspace.registerProvider(p)));
+
+  return foam;
 };

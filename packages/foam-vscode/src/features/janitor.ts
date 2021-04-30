@@ -12,7 +12,7 @@ import {
   generateLinkReferences,
   generateHeading,
   Foam,
-  Note,
+  Resource,
   Range,
   URI,
 } from 'foam-core';
@@ -21,7 +21,6 @@ import {
   getWikilinkDefinitionSetting,
   LinkReferenceDefinitionsSetting,
 } from '../settings';
-import { isNote } from '../utils';
 import { toVsCodePosition, toVsCodeRange } from '../utils/vsc-utils';
 
 const feature: FoamFeature = {
@@ -71,7 +70,9 @@ async function janitor(foam: Foam) {
 }
 
 async function runJanitor(foam: Foam) {
-  const notes: Note[] = foam.workspace.list().filter(isNote);
+  const notes: Resource[] = foam.workspace
+    .list()
+    .filter(r => URI.isMarkdownFile(r.uri));
 
   let updatedHeadingCount = 0;
   let updatedDefinitionListCount = 0;

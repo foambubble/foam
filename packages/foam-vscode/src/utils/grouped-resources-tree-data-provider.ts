@@ -1,12 +1,12 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { IDataStore, URI, FoamWorkspace, Resource, getTitle } from 'foam-core';
+import { URI, FoamWorkspace, Resource } from 'foam-core';
 import micromatch from 'micromatch';
 import {
   GroupedResourcesConfig,
   GroupedResoucesConfigGroupBy,
 } from '../settings';
-import { getContainsTooltip, getNoteTooltip, isSome } from '../utils';
+import { getContainsTooltip, getNoteTooltip, isSome, isNone } from '../utils';
 import { OPEN_COMMAND } from '../features/utility-commands';
 import { toVsCodeUri } from './vsc-utils';
 
@@ -46,7 +46,7 @@ export class GroupedResourcesTreeDataProvider
   // prettier-ignore
   private groupBy: GroupedResoucesConfigGroupBy = GroupedResoucesConfigGroupBy.Folder;
   private exclude: string[] = [];
-  private resources: Resource[] = [];
+  private flatUris: Array<URI> = [];
   private root = vscode.workspace.workspaceFolders[0].uri.path;
 
   /**
@@ -69,28 +69,26 @@ export class GroupedResourcesTreeDataProvider
        ...provider.commands,
     );
     ```
-   * @param {FoamWorkspace} workspace
-   * @param {IDataStore} dataStore
    * @param {string} providerId A **unique** providerId, this will be used to generate necessary commands within the provider.
    * @param {string} resourceName A display name used in the explorer view
-   * @param {(resource: Resource, index: number) => boolean} filterPredicate A filter function called on each Resource within the workspace
+   * @param {() => Array<URI>} computeResources
+   * @param {(item: URI) => GroupedResourceTreeItem} createTreeItem
    * @param {GroupedResourcesConfig} config
    * @param {URI[]} workspaceUris The workspace URIs
    * @memberof GroupedResourcesTreeDataProvider
    */
   constructor(
-    private workspace: FoamWorkspace,
-    private dataStore: IDataStore,
     private providerId: string,
     private resourceName: string,
-    private filterPredicate: (resource: Resource, index: number) => boolean,
     config: GroupedResourcesConfig,
-    workspaceUris: URI[]
+    workspaceUris: URI[],
+    private computeResources: () => Array<URI>,
+    private createTreeItem: (item: URI) => GroupedResourceTreeItem
   ) {
     this.groupBy = config.groupBy;
     this.exclude = this.getGlobs(workspaceUris, config.exclude);
     this.setContext();
-    this.computeResources();
+    this.doComputeResources();
   }
 
   public get commands() {
@@ -121,7 +119,7 @@ export class GroupedResourcesTreeDataProvider
   }
 
   refresh(): void {
-    this.computeResources();
+    this.doComputeResources();
     this._onDidChangeTreeData.fire();
   }
 
@@ -132,27 +130,27 @@ export class GroupedResourcesTreeDataProvider
   getChildren(
     directory?: DirectoryTreeItem
   ): Thenable<GroupedResourceTreeItem[]> {
-    if (!directory && this.groupBy === GroupedResoucesConfigGroupBy.Folder) {
-      const directories = Object.entries(this.getGroupedResourcesByDirectory())
-        .sort(([a], [b]) => a.localeCompare(b))
+    if (this.groupBy === GroupedResoucesConfigGroupBy.Folder) {
+      if (isSome(directory)) {
+        return Promise.resolve(directory.children.sort(sortByTreeItemLabel));
+      }
+      const directories = Object.entries(this.getUrisByDirectory())
+        .sort(([dir1], [dir2]) => sortByString(dir1, dir2))
         .map(
-          ([dir, resources]) =>
-            new DirectoryTreeItem(dir, resources, this.resourceName)
+          ([dir, children]) =>
+            new DirectoryTreeItem(
+              dir,
+              children.map(this.createTreeItem),
+              this.resourceName
+            )
         );
       return Promise.resolve(directories);
     }
 
-    if (directory) {
-      const resources = directory.resources.map(
-        o => new ResourceTreeItem(o, this.dataStore)
-      );
-      return Promise.resolve(resources);
-    }
-
-    const resources = this.resources.map(
-      o => new ResourceTreeItem(o, this.dataStore)
-    );
-    return Promise.resolve(resources);
+    const items = this.flatUris
+      .map(uri => this.createTreeItem(uri))
+      .sort(sortByTreeItemLabel);
+    return Promise.resolve(items);
   }
 
   resolveTreeItem(
@@ -161,12 +159,10 @@ export class GroupedResourcesTreeDataProvider
     return item.resolveTreeItem();
   }
 
-  private computeResources(): void {
-    this.resources = this.workspace
-      .list()
-      .filter(this.filterPredicate)
-      .filter(resource => !this.isMatch(resource.uri))
-      .sort(this.sort);
+  private doComputeResources(): void {
+    this.flatUris = this.computeResources()
+      .filter(uri => !this.isMatch(uri))
+      .filter(isSome);
   }
 
   private isMatch(uri: URI) {
@@ -189,47 +185,38 @@ export class GroupedResourcesTreeDataProvider
     return exclude;
   }
 
-  private getGroupedResourcesByDirectory(): ResourceByDirectory {
-    const resourcesByDirectory: ResourceByDirectory = {};
-    for (const resource of this.resources) {
-      const p = resource.uri.path.replace(this.root, '');
+  private getUrisByDirectory(): UrisByDirectory {
+    const resourcesByDirectory: UrisByDirectory = {};
+    for (const uri of this.flatUris) {
+      const p = uri.path.replace(this.root, '');
       const { dir } = path.parse(p);
 
       if (resourcesByDirectory[dir]) {
-        resourcesByDirectory[dir].push(resource);
+        resourcesByDirectory[dir].push(uri);
       } else {
-        resourcesByDirectory[dir] = [resource];
+        resourcesByDirectory[dir] = [uri];
       }
     }
-
-    for (const k in resourcesByDirectory) {
-      resourcesByDirectory[k].sort(this.sort);
-    }
-
     return resourcesByDirectory;
-  }
-
-  private sort(a: Resource, b: Resource) {
-    const titleA = getTitle(a);
-    const titleB = getTitle(b);
-    return titleA.localeCompare(titleB);
   }
 }
 
-type ResourceByDirectory = { [key: string]: Resource[] };
+type UrisByDirectory = { [key: string]: Array<URI> };
 
-type GroupedResourceTreeItem = ResourceTreeItem | DirectoryTreeItem;
+type GroupedResourceTreeItem = UriTreeItem | DirectoryTreeItem;
 
-export class ResourceTreeItem extends vscode.TreeItem {
+export class UriTreeItem extends vscode.TreeItem {
   constructor(
-    public readonly resource: Resource,
-    private readonly dataStore: IDataStore,
-    collapsibleState = vscode.TreeItemCollapsibleState.None
+    public readonly uri: URI,
+    options: {
+      collapsibleState?: vscode.TreeItemCollapsibleState;
+      icon?: string;
+      title?: string;
+    } = {}
   ) {
-    super(getTitle(resource), collapsibleState);
-    this.contextValue = 'resource';
-    this.description = resource.uri.path.replace(
-      vscode.workspace.getWorkspaceFolder(toVsCodeUri(resource.uri))?.uri.path,
+    super(options?.title ?? URI.getBasename(uri), options.collapsibleState);
+    this.description = uri.path.replace(
+      vscode.workspace.getWorkspaceFolder(toVsCodeUri(uri))?.uri.path,
       ''
     );
     this.tooltip = undefined;
@@ -238,33 +225,38 @@ export class ResourceTreeItem extends vscode.TreeItem {
       title: OPEN_COMMAND.title,
       arguments: [
         {
-          resource: resource.uri,
+          resource: uri,
         },
       ],
     };
+    this.iconPath = new vscode.ThemeIcon(options.icon ?? 'new-file');
+  }
 
-    let iconStr: string;
-    switch (this.resource.type) {
-      case 'attachment':
-        iconStr = 'file-media';
-        break;
-      case 'placeholder':
-        iconStr = 'new-file';
-        break;
-      case 'note':
-      default:
-        iconStr = 'note';
-        break;
-    }
-    this.iconPath = new vscode.ThemeIcon(iconStr);
+  resolveTreeItem(): Promise<GroupedResourceTreeItem> {
+    return Promise.resolve(this);
+  }
+}
+
+export class ResourceTreeItem extends UriTreeItem {
+  constructor(
+    public readonly resource: Resource,
+    private readonly workspace: FoamWorkspace,
+    collapsibleState = vscode.TreeItemCollapsibleState.None
+  ) {
+    super(resource.uri, {
+      title: resource.title,
+      icon: 'note',
+      collapsibleState,
+    });
+    this.contextValue = 'resource';
   }
 
   async resolveTreeItem(): Promise<ResourceTreeItem> {
     if (this instanceof ResourceTreeItem) {
-      const content = await this.dataStore?.read(this.resource.uri);
+      const content = await this.workspace.readAsMarkdown(this.resource.uri);
       this.tooltip = isSome(content)
         ? getNoteTooltip(content)
-        : getTitle(this.resource);
+        : this.resource.title;
     }
     return this;
   }
@@ -273,20 +265,28 @@ export class ResourceTreeItem extends vscode.TreeItem {
 export class DirectoryTreeItem extends vscode.TreeItem {
   constructor(
     public readonly dir: string,
-    public readonly resources: Resource[],
+    public readonly children: Array<GroupedResourceTreeItem>,
     itemLabel: string
   ) {
     super(dir || 'Not Created', vscode.TreeItemCollapsibleState.Collapsed);
-    const s = this.resources.length > 1 ? 's' : '';
-    this.description = `${this.resources.length} ${itemLabel}${s}`;
-    const titles = this.resources.map(getTitle);
-    this.tooltip = getContainsTooltip(titles);
+    const s = this.children.length > 1 ? 's' : '';
+    this.description = `${this.children.length} ${itemLabel}${s}`;
   }
 
   iconPath = new vscode.ThemeIcon('folder');
   contextValue = 'directory';
 
   resolveTreeItem(): Promise<GroupedResourceTreeItem> {
+    const titles = this.children
+      .map(c => c.label?.toString())
+      .sort(sortByString);
+    this.tooltip = getContainsTooltip(titles);
     return Promise.resolve(this);
   }
 }
+
+const sortByTreeItemLabel = (a: vscode.TreeItem, b: vscode.TreeItem) =>
+  a.label.toString().localeCompare(b.label.toString());
+
+const sortByString = (a: string, b: string) =>
+  a.toLocaleLowerCase().localeCompare(b.toLocaleLowerCase());

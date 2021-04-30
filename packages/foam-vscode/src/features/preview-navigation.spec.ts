@@ -1,15 +1,15 @@
 import MarkdownIt from 'markdown-it';
 import { FoamWorkspace, URI } from 'foam-core';
-import { createPlaceholder, createTestNote } from '../test/test-utils';
+import { createTestNote } from '../test/test-utils';
 import { markdownItWithFoamLinks } from './preview-navigation';
 
 describe('Link generation in preview', () => {
   const noteA = createTestNote({
     uri: 'note-a.md',
     title: 'My note title',
+    links: [{ slug: 'placeholder' }],
   });
-  const placeholder = createPlaceholder('placeholder');
-  const ws = new FoamWorkspace().set(noteA).set(placeholder);
+  const ws = new FoamWorkspace().set(noteA);
   const md = markdownItWithFoamLinks(MarkdownIt(), ws);
 
   it('generates a link to a note', () => {

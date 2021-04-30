@@ -5,11 +5,12 @@ import * as vscode from 'vscode';
 import path from 'path';
 import {
   URI,
-  Attachment,
   NoteLinkDefinition,
-  Note,
-  Placeholder,
+  Resource,
   Range,
+  FoamWorkspace,
+  Matcher,
+  MarkdownResourceProvider,
 } from 'foam-core';
 import { TextEncoder } from 'util';
 import { toVsCodeUri } from '../utils/vsc-utils';
@@ -27,18 +28,15 @@ const eol = '\n';
  */
 export const strToUri = URI.file;
 
-export const createPlaceholder = (key: string): Placeholder => {
-  return {
-    uri: URI.placeholder(key),
-    type: 'placeholder',
-  };
-};
-
-export const createAttachment = (params: { uri: string }): Attachment => {
-  return {
-    uri: strToUri(params.uri),
-    type: 'attachment',
-  };
+export const createTestWorkspace = () => {
+  const workspace = new FoamWorkspace();
+  const matcher = new Matcher([URI.file('/')], ['**/*']);
+  const provider = new MarkdownResourceProvider(matcher, undefined, undefined, {
+    read: _ => Promise.resolve(''),
+    list: _ => Promise.resolve([]),
+  });
+  workspace.registerProvider(provider);
+  return workspace;
 };
 
 export const createTestNote = (params: {
@@ -48,7 +46,7 @@ export const createTestNote = (params: {
   links?: Array<{ slug: string } | { to: string }>;
   text?: string;
   root?: URI;
-}): Note => {
+}): Resource => {
   const root = params.root ?? URI.file('/');
   return {
     uri: URI.resolve(params.uri, root),
@@ -132,7 +130,7 @@ export const createFile = async (content: string, filepath?: string) => {
   return { uri, content, ...filenameComponents };
 };
 
-export const createNote = (r: Note) => {
+export const createNote = (r: Resource) => {
   let content = `# ${r.title}
 
   some content and ${r.links

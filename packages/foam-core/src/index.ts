@@ -1,37 +1,37 @@
 import {
   Resource,
-  Attachment,
-  Placeholder,
-  Note,
-  NoteLink,
-  isNote,
+  ResourceLink,
   NoteLinkDefinition,
-  isPlaceholder,
-  isAttachment,
-  getTitle,
-  NoteParser,
+  ResourceParser,
 } from './model/note';
 import { FoamConfig } from './config';
-import { IDataStore, FileDataStore } from './services/datastore';
+import {
+  IDataStore,
+  FileDataStore,
+  Matcher,
+  IMatcher,
+} from './services/datastore';
 import { ILogger } from './utils/log';
 import { IDisposable, isDisposable } from './common/lifecycle';
 import { FoamWorkspace } from './model/workspace';
+import { FoamGraph } from '../src/model/graph';
 import { URI } from './model/uri';
 
 export { Position } from './model/position';
 export { Range } from './model/range';
-export { IDataStore, FileDataStore };
+export { IDataStore, FileDataStore, Matcher, IMatcher };
 export { ILogger };
 export { LogLevel, LogLevelThreshold, Logger, BaseLogger } from './utils/log';
 export { Event, Emitter } from './common/event';
 export { FoamConfig };
-
+export { ResourceProvider } from './model/provider';
 export { IDisposable, isDisposable };
 
 export {
   createMarkdownReferences,
   stringifyMarkdownLinkReferenceDefinition,
   createMarkdownParser,
+  MarkdownResourceProvider,
 } from './markdown-provider';
 
 export {
@@ -51,27 +51,23 @@ export { bootstrap } from './bootstrap';
 
 export {
   Resource,
-  Attachment,
-  Placeholder,
-  Note,
-  NoteLink,
+  ResourceLink,
   URI,
   FoamWorkspace,
+  FoamGraph,
   NoteLinkDefinition,
-  NoteParser,
-  isNote,
-  isPlaceholder,
-  isAttachment,
-  getTitle,
+  ResourceParser,
 };
 
 export interface Services {
   dataStore: IDataStore;
-  parser: NoteParser;
+  parser: ResourceParser;
+  matcher: IMatcher;
 }
 
 export interface Foam extends IDisposable {
   services: Services;
   workspace: FoamWorkspace;
+  graph: FoamGraph;
   config: FoamConfig;
 }

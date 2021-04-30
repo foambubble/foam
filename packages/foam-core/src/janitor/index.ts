@@ -1,5 +1,5 @@
 import GithubSlugger from 'github-slugger';
-import { Note } from '../model/note';
+import { Resource } from '../model/note';
 import { Range } from '../model/range';
 import {
   createMarkdownReferences,
@@ -20,7 +20,7 @@ export interface TextEdit {
 }
 
 export const generateLinkReferences = (
-  note: Note,
+  note: Resource,
   workspace: FoamWorkspace,
   includeExtensions: boolean
 ): TextEdit | null => {
@@ -75,7 +75,7 @@ export const generateLinkReferences = (
   }
 };
 
-export const generateHeading = (note: Note): TextEdit | null => {
+export const generateHeading = (note: Resource): TextEdit | null => {
   if (!note) {
     return null;
   }

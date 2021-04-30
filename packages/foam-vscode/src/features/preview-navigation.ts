@@ -30,18 +30,9 @@ export const markdownItWithFoamLinks = (
         if (resource == null) {
           return getPlaceholderLink(wikilink);
         }
-        switch (resource.type) {
-          case 'note':
-            return `<a class='foam-note-link' title='${
-              resource.title
-            }' href='${URI.toFsPath(resource.uri)}'>${wikilink}</a>`;
-          case 'attachment':
-            return `<a class='foam-attachment-link' title='attachment' href='${URI.toFsPath(
-              resource.uri
-            )}'>${wikilink}</a>`;
-          case 'placeholder':
-            return getPlaceholderLink(wikilink);
-        }
+        return `<a class='foam-note-link' title='${
+          resource.title
+        }' href='${URI.toFsPath(resource.uri)}'>${wikilink}</a>`;
       } catch (e) {
         Logger.error(
           `Error while creating link for [[${wikilink}]] in Preview panel`,

@@ -1,12 +1,7 @@
 import * as vscode from 'vscode';
-import { Foam, Note, IDataStore, URI } from 'foam-core';
+import { Foam, Resource, URI, FoamWorkspace } from 'foam-core';
 import { FoamFeature } from '../../types';
-import {
-  getNoteTooltip,
-  getContainsTooltip,
-  isNote,
-  isSome,
-} from '../../utils';
+import { getNoteTooltip, getContainsTooltip, isSome } from '../../utils';
 
 const feature: FoamFeature = {
   activate: async (
@@ -14,7 +9,7 @@ const feature: FoamFeature = {
     foamPromise: Promise<Foam>
   ) => {
     const foam = await foamPromise;
-    const provider = new TagsProvider(foam, foam.services.dataStore);
+    const provider = new TagsProvider(foam, foam.workspace);
     context.subscriptions.push(
       vscode.window.registerTreeDataProvider(
         'foam-vscode.tags-explorer',
@@ -40,7 +35,7 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
     notes: TagMetadata[];
   }[];
 
-  constructor(private foam: Foam, private dataStore: IDataStore) {
+  constructor(private foam: Foam, private workspace: FoamWorkspace) {
     this.computeTags();
   }
 
@@ -54,7 +49,6 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
       [key: string]: TagMetadata[];
     } = this.foam.workspace
       .list()
-      .filter(isNote)
       .reduce((acc: { [key: string]: TagMetadata[] }, note) => {
         note.tags.forEach(tag => {
           acc[tag] = acc[tag] ?? [];
@@ -75,7 +69,6 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
     if (element) {
       const references: TagReference[] = element.notes
         .map(({ uri }) => this.foam.workspace.get(uri))
-        .filter(isNote)
         .map(note => new TagReference(element.tag, note));
 
       return Promise.resolve([
@@ -93,7 +86,7 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
 
   async resolveTreeItem(item: TagTreeItem): Promise<TagTreeItem> {
     if (item instanceof TagReference) {
-      const content = await this.dataStore.read(item.note.uri);
+      const content = await this.workspace.read(item.note.uri);
       if (isSome(content)) {
         item.tooltip = getNoteTooltip(content);
       }
@@ -147,7 +140,7 @@ export class TagSearch extends vscode.TreeItem {
 
 export class TagReference extends vscode.TreeItem {
   public readonly title: string;
-  constructor(public readonly tag: string, public readonly note: Note) {
+  constructor(public readonly tag: string, public readonly note: Resource) {
     super(note.title, vscode.TreeItemCollapsibleState.None);
     this.title = note.title;
     this.description = note.uri.path;

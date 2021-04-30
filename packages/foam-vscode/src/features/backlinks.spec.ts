@@ -1,10 +1,11 @@
 import { workspace, window } from 'vscode';
-import { URI, FoamWorkspace, IDataStore } from 'foam-core';
+import { URI, FoamGraph } from 'foam-core';
 import {
   cleanWorkspace,
   closeEditors,
   createNote,
   createTestNote,
+  createTestWorkspace,
 } from '../test/test-utils';
 import { BacklinksTreeDataProvider, BacklinkTreeItem } from './backlinks';
 import { ResourceTreeItem } from '../utils/grouped-resources-tree-data-provider';
@@ -19,18 +20,13 @@ describe('Backlinks panel', () => {
     await createNote(noteC);
   });
   afterAll(async () => {
+    graph.dispose();
     ws.dispose();
     await cleanWorkspace();
   });
 
   const rootUri = workspace.workspaceFolders[0].uri;
-  const ws = new FoamWorkspace();
-  const dataStore = {
-    read: uri => {
-      return Promise.resolve('');
-    },
-    isMatch: uri => uri.path.endsWith('.md'),
-  } as IDataStore;
+  const ws = createTestWorkspace();
 
   const noteA = createTestNote({
     root: rootUri,
@@ -48,10 +44,10 @@ describe('Backlinks panel', () => {
   });
   ws.set(noteA)
     .set(noteB)
-    .set(noteC)
-    .resolveLinks(true);
+    .set(noteC);
+  const graph = FoamGraph.fromWorkspace(ws, true);
 
-  const provider = new BacklinksTreeDataProvider(ws, dataStore);
+  const provider = new BacklinksTreeDataProvider(ws, graph);
 
   beforeEach(async () => {
     await closeEditors();

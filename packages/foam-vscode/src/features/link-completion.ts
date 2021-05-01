@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { Foam, FoamWorkspace, URI, FoamGraph } from 'foam-core';
+import { Foam, FoamWorkspace, URI, isNote } from 'foam-core';
 import { FoamFeature } from '../types';
 import { getNoteTooltip, mdDocSelector } from '../utils';
 import { toVsCodeUri } from '../utils/vsc-utils';
@@ -13,7 +13,7 @@ const feature: FoamFeature = {
     context.subscriptions.push(
       vscode.languages.registerCompletionItemProvider(
         mdDocSelector,
-        new CompletionProvider(foam.workspace, foam.graph),
+        new CompletionProvider(foam.workspace),
         '['
       )
     );
@@ -22,7 +22,7 @@ const feature: FoamFeature = {
 
 export class CompletionProvider
   implements vscode.CompletionItemProvider<vscode.CompletionItem> {
-  constructor(private ws: FoamWorkspace, private graph: FoamGraph) {}
+  constructor(private ws: FoamWorkspace) {}
 
   provideCompletionItems(
     document: vscode.TextDocument,
@@ -32,7 +32,7 @@ export class CompletionProvider
       .lineAt(position)
       .text.substr(0, position.character);
 
-    // Requires autocmplete only if cursorPrefix startting with `[[` and NOT ending with `]]`.
+    // Requires autocomplete only if cursorPrefix matches `[[` that NOT ended by `]]`.
     // See https://github.com/foambubble/foam/pull/596#issuecomment-825748205 for details.
     // eslint-disable-next-line no-useless-escape
     const requiresAutocomplete = cursorPrefix.match(/\[\[[^\[\]]*(?!.*\]\])/);
@@ -41,25 +41,27 @@ export class CompletionProvider
       return null;
     }
 
-    const resources = this.ws.list().map(resource => {
+    const results = this.ws.list().map(resource => {
+      const uri = resource.uri;
+      if (URI.isPlaceholder(uri)) {
+        return new vscode.CompletionItem(
+          uri.path,
+          vscode.CompletionItemKind.Interface
+        );
+      }
+
       const item = new vscode.CompletionItem(
         vscode.workspace.asRelativePath(toVsCodeUri(resource.uri)),
         vscode.CompletionItemKind.File
       );
       item.insertText = URI.getBasename(resource.uri);
-      item.documentation = getNoteTooltip(resource.source.text);
+      item.documentation =
+        isNote(resource) && getNoteTooltip(resource.source.text);
 
       return item;
     });
 
-    const placeholders = Object.values(this.graph.placeholders).map(uri => {
-      return new vscode.CompletionItem(
-        uri.path,
-        vscode.CompletionItemKind.Interface
-      );
-    });
-
-    return new vscode.CompletionList([...resources, ...placeholders]);
+    return new vscode.CompletionList(results);
   }
 }
 

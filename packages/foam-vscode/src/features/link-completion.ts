@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { Foam, FoamWorkspace, URI, isNote } from 'foam-core';
+import { Foam, FoamWorkspace, URI, FoamGraph } from 'foam-core';
 import { FoamFeature } from '../types';
 import { getNoteTooltip, mdDocSelector } from '../utils';
 import { toVsCodeUri } from '../utils/vsc-utils';
@@ -13,7 +13,7 @@ const feature: FoamFeature = {
     context.subscriptions.push(
       vscode.languages.registerCompletionItemProvider(
         mdDocSelector,
-        new CompletionProvider(foam.workspace),
+        new CompletionProvider(foam.workspace, foam.graph),
         '['
       )
     );
@@ -22,7 +22,7 @@ const feature: FoamFeature = {
 
 export class CompletionProvider
   implements vscode.CompletionItemProvider<vscode.CompletionItem> {
-  constructor(private ws: FoamWorkspace) {}
+  constructor(private ws: FoamWorkspace, private graph: FoamGraph) {}
 
   provideCompletionItems(
     document: vscode.TextDocument,
@@ -41,27 +41,25 @@ export class CompletionProvider
       return null;
     }
 
-    const results = this.ws.list().map(resource => {
-      const uri = resource.uri;
-      if (URI.isPlaceholder(uri)) {
-        return new vscode.CompletionItem(
-          uri.path,
-          vscode.CompletionItemKind.Interface
-        );
-      }
-
+    const resources = this.ws.list().map(resource => {
       const item = new vscode.CompletionItem(
         vscode.workspace.asRelativePath(toVsCodeUri(resource.uri)),
         vscode.CompletionItemKind.File
       );
       item.insertText = URI.getBasename(resource.uri);
-      item.documentation =
-        isNote(resource) && getNoteTooltip(resource.source.text);
+      item.documentation = getNoteTooltip(resource.source.text);
 
       return item;
     });
 
-    return new vscode.CompletionList(results);
+    const placeholders = Object.values(this.graph.placeholders).map(uri => {
+      return new vscode.CompletionItem(
+        uri.path,
+        vscode.CompletionItemKind.Interface
+      );
+    });
+
+    return new vscode.CompletionList([...resources, ...placeholders]);
   }
 }
 

@@ -18,6 +18,8 @@ const templatesDir = Uri.joinPath(
   'templates'
 );
 
+const knownFoamVariables = new Set(['FOAM_TITLE']);
+
 const defaultTemplateDefaultText: string = '# ${FOAM_TITLE}'; // eslint-disable-line no-template-curly-in-string
 const defaultTemplateUri = Uri.joinPath(templatesDir, 'new-note.md');
 
@@ -64,7 +66,8 @@ function findFoamVariables(templateText: string): string[] {
     output.push(matches[1] || matches[2]);
   }
   const uniqVariables = [...new Set(output)];
-  return uniqVariables;
+  const knownVariables = uniqVariables.filter(x => knownFoamVariables.has(x));
+  return knownVariables;
 }
 
 function resolveFoamTitle() {
@@ -167,7 +170,7 @@ async function askUserForFilepathConfirmation(
   });
 }
 
-async function resolveFoamTemplateVariables(
+export async function resolveFoamTemplateVariables(
   templateText: string
 ): Promise<[Map<string, string>, SnippetString]> {
   const givenValues = new Map<string, string>();

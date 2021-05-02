@@ -1,6 +1,7 @@
-import { window } from 'vscode';
+import { SnippetString, window } from 'vscode';
 import {
   resolveFoamVariables,
+  resolveFoamTemplateVariables,
   substituteFoamVariables,
 } from './create-from-template';
 
@@ -11,7 +12,7 @@ describe('substituteFoamVariables', () => {
       # \${AnotherVariable:default_value} <-- Unrelated to foam
       # \${AnotherVariable:default_value/(.*)/\${1:/upcase}/}} <-- Unrelated to foam
       # $AnotherVariable} <-- Unrelated to foam
-      # #CURRENT_YEAR-\${CURRENT_MONTH}-$CURRENT_DAY <-- Unrelated to foam
+      # $CURRENT_YEAR-\${CURRENT_MONTH}-$CURRENT_DAY <-- Unrelated to foam
     `;
 
     const givenValues = new Map<string, string>();
@@ -85,5 +86,38 @@ describe('resolveFoamVariables', () => {
     expect(await resolveFoamVariables(variables, givenValues)).toEqual(
       expected
     );
+  });
+});
+
+describe('resolveFoamTemplateVariables', () => {
+  test('Does nothing for template without Foam-specific variables', async () => {
+    const input = `
+      # \${AnotherVariable} <-- Unrelated to foam
+      # \${AnotherVariable:default_value} <-- Unrelated to foam
+      # \${AnotherVariable:default_value/(.*)/\${1:/upcase}/}} <-- Unrelated to foam
+      # $AnotherVariable} <-- Unrelated to foam
+      # $CURRENT_YEAR-\${CURRENT_MONTH}-$CURRENT_DAY <-- Unrelated to foam
+    `;
+
+    const expectedMap = new Map<string, string>();
+    const expectedSnippet = new SnippetString(input);
+    const expected = [expectedMap, expectedSnippet];
+
+    expect(await resolveFoamTemplateVariables(input)).toEqual(expected);
+  });
+
+  test('Does nothing for unknown Foam-specific variables', async () => {
+    const input = `
+      # $FOAM_FOO
+      # \${FOAM_FOO}
+      # \${FOAM_FOO:default_value}
+      # \${FOAM_FOO:default_value/(.*)/\${1:/upcase}/}}
+    `;
+
+    const expectedMap = new Map<string, string>();
+    const expectedSnippet = new SnippetString(input);
+    const expected = [expectedMap, expectedSnippet];
+
+    expect(await resolveFoamTemplateVariables(input)).toEqual(expected);
   });
 });

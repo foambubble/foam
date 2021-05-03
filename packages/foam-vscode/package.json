@@ -28,7 +28,8 @@
     "onCommand:foam-vscode.copy-without-brackets",
     "onCommand:foam-vscode.show-graph",
     "onCommand:foam-vscode.create-new-template",
-    "onCommand:foam-vscode.create-note-from-template"
+    "onCommand:foam-vscode.create-note-from-template",
+    "onCommand:foam-vscode.create-note-from-default-template"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -160,6 +161,10 @@
       {
         "command": "foam-vscode.create-note-from-template",
         "title": "Foam: Create New Note From Template"
+      },
+      {
+        "command": "foam-vscode.create-note-from-default-template",
+        "title": "Foam: Create New Note"
       },
       {
         "command": "foam-vscode.open-resource",

@@ -199,6 +199,7 @@ If that sounds like something you're interested in, I'd love to have you along o
   <tr>
     <td align="center"><a href="http://twitter.com/deegovee"><img src="https://avatars.githubusercontent.com/u/4730170?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Dheepak </b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=dheepakg" title="Documentation">📖</a></td>
     <td align="center"><a href="https://github.com/daniel-vera-g"><img src="https://avatars.githubusercontent.com/u/28257108?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Daniel VG</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=daniel-vera-g" title="Documentation">📖</a></td>
+    <td align="center"><a href="https://github.com/Barabazs"><img src="https://avatars.githubusercontent.com/u/31799121?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Barabas</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=Barabazs" title="Code">💻</a></td>
   </tr>
 </table>
 

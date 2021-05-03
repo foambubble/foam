@@ -1,8 +1,14 @@
 .foam-placeholder-link {
-  color: red;
+  color: var(--vscode-editorWarning-foreground);
   cursor: default;
 }
 
 .foam-note-link,
 .foam-attachment-link {
+  color: var(--vscode-textLink-foreground);
+
+}
+
+.foam-tag {
+  color: var(--vscode-editorLineNumber-foreground)
 }

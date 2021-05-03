@@ -96,7 +96,7 @@ describe('Backlinks panel', () => {
     const notes = (await provider.getChildren()) as ResourceTreeItem[];
     expect(notes[0].command).toMatchObject({
       command: OPEN_COMMAND.command,
-      arguments: [expect.objectContaining({ resource: noteB.uri })],
+      arguments: [expect.objectContaining({ uri: noteB.uri })],
     });
   });
   it('navigates to document with link selection if clicking on backlink', async () => {

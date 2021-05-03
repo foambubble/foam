@@ -670,6 +670,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "Barabazs",
+      "name": "Barabas",
+      "avatar_url": "https://avatars.githubusercontent.com/u/31799121?v=4",
+      "profile": "https://github.com/Barabazs",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,

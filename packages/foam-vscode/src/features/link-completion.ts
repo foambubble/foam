@@ -32,8 +32,10 @@ export class CompletionProvider
       .lineAt(position)
       .text.substr(0, position.character);
 
+    // Requires autocomplete only if cursorPrefix matches `[[` that NOT ended by `]]`.
+    // See https://github.com/foambubble/foam/pull/596#issuecomment-825748205 for details.
     // eslint-disable-next-line no-useless-escape
-    const requiresAutocomplete = cursorPrefix.match(/\[\[([^\[\]]*?)/);
+    const requiresAutocomplete = cursorPrefix.match(/\[\[[^\[\]]*(?!.*\]\])/);
 
     if (!requiresAutocomplete) {
       return null;

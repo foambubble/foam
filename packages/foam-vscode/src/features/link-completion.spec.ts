@@ -61,15 +61,28 @@ describe('Link Completion', () => {
   });
 
   it('should return notes and placeholders', async () => {
-    const { uri } = await createFile('[[');
+    const { uri } = await createFile('[[file]] [[');
     const { doc } = await showInEditor(uri);
     const provider = new CompletionProvider(ws, graph);
 
     const links = await provider.provideCompletionItems(
       doc,
-      new vscode.Position(0, 2)
+      new vscode.Position(0, 11)
     );
 
     expect(links.items.length).toEqual(4);
+  });
+
+  it('should not return link outside the wiki-link brackets', async () => {
+    const { uri } = await createFile('[[file]] then');
+    const { doc } = await showInEditor(uri);
+    const provider = new CompletionProvider(ws, graph);
+
+    const links = await provider.provideCompletionItems(
+      doc,
+      new vscode.Position(0, 12)
+    );
+
+    expect(links).toBeNull();
   });
 });

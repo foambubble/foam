@@ -33,7 +33,9 @@ jobs:
     - uses: actions/checkout@master
     - uses: anglinb/foam-capture-action@main
       with:
+        {% raw %}
         capture: ${{ github.event.inputs.data }}
+        {% endraw %}
     - run: |
         git config --local user.email "example@gmail.com"
         git config --local user.name "Your name"

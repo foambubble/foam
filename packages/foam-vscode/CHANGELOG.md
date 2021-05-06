@@ -4,6 +4,19 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.13.2] - 2021-05-06
+
+Fixes and Improvements:
+
+- Fixed wikilink completion bug (#592 - thanks @RobinKing)
+- Added support for stylable tags (#598 - thanks @Barabas)
+- Added "Create new note" command (#601 - thanks @movermeyer)
+- Fixed navigation from placeholder and orphan panel (#600)
+
+Internal:
+
+- Refactored data model representation of resources: `Resource` (#593)
+
 ## [0.13.1] - 2021-04-21
 
 Fixes and Improvements:

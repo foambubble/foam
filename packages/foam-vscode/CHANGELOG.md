@@ -9,7 +9,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 Fixes and Improvements:
 
 - Fixed wikilink completion bug (#592 - thanks @RobinKing)
-- Added support for stylable tags (#598 - thanks @Barabas)
+- Added support for stylable tags (#598 - thanks @Barabazs)
 - Added "Create new note" command (#601 - thanks @movermeyer)
 - Fixed navigation from placeholder and orphan panel (#600)
 

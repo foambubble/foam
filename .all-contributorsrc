@@ -679,6 +679,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "EngincanV",
+      "name": "Engincan VESKE",
+      "avatar_url": "https://avatars.githubusercontent.com/u/43685404?v=4",
+      "profile": "http://enginveske@gmail.com",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,

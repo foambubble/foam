@@ -249,7 +249,7 @@ export abstract class URI {
     );
   }
   static isMarkdownFile(uri: URI): boolean {
-    return uri.path.endsWith('md');
+    return uri.path.endsWith('.md');
   }
 }
 

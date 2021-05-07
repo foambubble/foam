@@ -70,6 +70,6 @@ const parseConfig = (path: URI) => {
   try {
     return JSON.parse(readFileSync(URI.toFsPath(path), 'utf8'));
   } catch {
-    Logger.debug('Could not read configuration from ' + path);
+    Logger.debug('Could not read configuration from ' + URI.toString(path));
   }
 };

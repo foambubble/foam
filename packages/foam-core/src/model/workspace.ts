@@ -139,7 +139,7 @@ export class FoamWorkspace implements IDisposable {
 
   public resolveLink(resource: Resource, link: ResourceLink): URI {
     // TODO add tests
-    const provider = this.providers.find(p => p.match(resource.uri));
+    const provider = this.providers.find(p => p.isMatch(resource.uri));
     return (
       provider?.resolveLink(this, resource, link) ??
       URI.placeholder(link.target)
@@ -147,12 +147,12 @@ export class FoamWorkspace implements IDisposable {
   }
 
   public read(uri: URI): Promise<string | null> {
-    const provider = this.providers.find(p => p.match(uri));
+    const provider = this.providers.find(p => p.isMatch(uri));
     return provider?.read(uri) ?? Promise.resolve(null);
   }
 
   public readAsMarkdown(uri: URI): Promise<string | null> {
-    const provider = this.providers.find(p => p.match(uri));
+    const provider = this.providers.find(p => p.isMatch(uri));
     return provider?.readAsMarkdown(uri) ?? Promise.resolve(null);
   }
 

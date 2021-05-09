@@ -50,16 +50,14 @@ export class MarkdownResourceProvider implements ResourceProvider {
     const filesByFolder = await Promise.all(
       this.matcher.include.map(glob => this.dataStore.list(glob))
     );
-    const files = this.matcher.match(filesByFolder.flat());
+    const files = this.match(filesByFolder.flat());
 
     await Promise.all(
       files.map(async uri => {
         Logger.info('Found: ' + URI.toString(uri));
-        if (this.match(uri)) {
-          const content = await this.dataStore.read(uri);
-          if (isSome(content)) {
-            workspace.set(this.parser.parse(uri, content));
-          }
+        const content = await this.dataStore.read(uri);
+        if (isSome(content)) {
+          workspace.set(this.parser.parse(uri, content));
         }
       })
     );
@@ -67,27 +65,31 @@ export class MarkdownResourceProvider implements ResourceProvider {
     this.disposables =
       this.watcherInit?.({
         onDidChange: async uri => {
-          if (this.matcher.isMatch(uri)) {
+          this.match([uri]).map(async uri => {
             const content = await this.dataStore.read(uri);
             isSome(content) &&
               workspace.set(await this.parser.parse(uri, content));
-          }
+          });
         },
         onDidCreate: async uri => {
-          if (this.matcher.isMatch(uri)) {
+          this.match([uri]).map(async uri => {
             const content = await this.dataStore.read(uri);
             isSome(content) &&
               workspace.set(await this.parser.parse(uri, content));
-          }
+          });
         },
         onDidDelete: uri => {
-          this.matcher.isMatch(uri) && workspace.delete(uri);
+          this.match([uri]).map(uri => workspace.delete(uri));
         },
       }) ?? [];
   }
 
-  match(uri: URI) {
-    return URI.isMarkdownFile(uri);
+  match(uris: URI[]) {
+    return this.matcher.match(uris).filter(URI.isMarkdownFile);
+  }
+
+  isMatch(uri: URI) {
+    return this.match([uri]).length > 0;
   }
 
   read(uri: URI): Promise<string | null> {

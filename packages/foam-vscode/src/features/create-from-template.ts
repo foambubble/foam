@@ -18,6 +18,15 @@ const templatesDir = Uri.joinPath(
   'templates'
 );
 
+export class UserCancelledOperation extends Error {
+  constructor(message?: string) {
+    super('UserCancelledOperation');
+    if (message) {
+      this.message = message;
+    }
+  }
+}
+
 const knownFoamVariables = new Set(['FOAM_TITLE']);
 
 const defaultTemplateDefaultText: string = '# ${FOAM_TITLE}'; // eslint-disable-line no-template-curly-in-string
@@ -70,13 +79,17 @@ function findFoamVariables(templateText: string): string[] {
   return knownVariables;
 }
 
-function resolveFoamTitle() {
-  return window.showInputBox({
+async function resolveFoamTitle() {
+  const title = await window.showInputBox({
     prompt: `Enter a title for the new note`,
     value: 'Title of my New Note',
     validateInput: value =>
       value.trim().length === 0 ? 'Please enter a title' : undefined,
   });
+  if (title === undefined) {
+    throw new UserCancelledOperation();
+  }
+  return title;
 }
 class Resolver {
   promises = new Map<string, Thenable<string>>();
@@ -207,9 +220,18 @@ async function createNoteFromDefaultTemplate(): Promise<void> {
     ? await workspace.fs.readFile(templateUri).then(bytes => bytes.toString())
     : defaultTemplateDefaultText;
 
-  const [resolvedValues, templateSnippet] = await resolveFoamTemplateVariables(
-    templateText
-  );
+  let resolvedValues, templateSnippet;
+  try {
+    [resolvedValues, templateSnippet] = await resolveFoamTemplateVariables(
+      templateText
+    );
+  } catch (err) {
+    if (err instanceof UserCancelledOperation) {
+      return;
+    } else {
+      throw err;
+    }
+  }
 
   const defaultSlug = resolvedValues.get('FOAM_TITLE') || 'New Note';
   const defaultFilename = `${defaultSlug}.md`;
@@ -243,9 +265,18 @@ async function createNoteFromTemplate(
     .readFile(templateUri)
     .then(bytes => bytes.toString());
 
-  const [resolvedValues, templateSnippet] = await resolveFoamTemplateVariables(
-    templateText
-  );
+  let resolvedValues, templateSnippet;
+  try {
+    [resolvedValues, templateSnippet] = await resolveFoamTemplateVariables(
+      templateText
+    );
+  } catch (err) {
+    if (err instanceof UserCancelledOperation) {
+      return;
+    } else {
+      throw err;
+    }
+  }
 
   const defaultSlug = resolvedValues.get('FOAM_TITLE') || 'New Note';
   const defaultFilename = `${defaultSlug}.md`;

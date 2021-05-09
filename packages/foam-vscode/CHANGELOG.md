@@ -4,6 +4,11 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## Unreleased
+
+- Unknown Foam template variables are now ignored by Foam.
+  - e.g. before `$FOAM_FOO` would become `FOAM_FOO`, now it is passed to VSCode which turns it into an empty string
+
 ## [0.13.2] - 2021-05-06
 
 Fixes and Improvements:

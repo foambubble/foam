@@ -4,11 +4,14 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-## Unreleased
+## [0.13.3] - 2021-05-09
 
-- Unknown Foam template variables are now ignored by Foam.
-  - e.g. before `$FOAM_FOO` would become `FOAM_FOO`, now it is passed to VSCode which turns it into an empty string
-- Cancelling `Foam: Create New Note` and `Foam: Create New Note From Template` actually ends the commands
+Fixes and Improvements:
+
+- Improved Foam template variables resolution: unknown variables are now ignored (#622 - thanks @movermeyer)
+- Fixed file matching in MarkdownProvider (#617)
+- Fixed cancelling `Foam: Create New Note` and `Foam: Create New Note From Template` behavior (#623 - thanks @movermeyer)
+
 ## [0.13.2] - 2021-05-06
 
 Fixes and Improvements:

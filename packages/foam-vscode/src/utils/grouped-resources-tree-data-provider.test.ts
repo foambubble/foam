@@ -12,14 +12,6 @@ import {
 } from './grouped-resources-tree-data-provider';
 
 describe('GroupedResourcesTreeDataProvider', () => {
-  const isMatch = (
-    uri: URI,
-    _: number,
-    _g: FoamGraph,
-    workspace: FoamWorkspace
-  ) => {
-    return workspace.get(uri).title.length === 3;
-  };
   const matchingNote1 = createTestNote({ uri: '/path/ABC.md', title: 'ABC' });
   const matchingNote2 = createTestNote({
     uri: '/path-bis/XYZ.md',
@@ -39,9 +31,6 @@ describe('GroupedResourcesTreeDataProvider', () => {
     .set(matchingNote2)
     .set(excludedPathNote)
     .set(notMatchingNote);
-  const graph = FoamGraph.fromWorkspace(workspace);
-
-  const dataStore = { read: () => '' } as any;
 
   // Mock config
   const config: GroupedResourcesConfig = {

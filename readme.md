@@ -2,6 +2,8 @@
 
 # Foam
 
+> **English** | [简体中文](readme.zh-hans.md)
+
 👀*This is an early stage project under rapid development. For updates join the [Foam community Discord](https://foambubble.github.io/join-discord/g)! 💬*
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->

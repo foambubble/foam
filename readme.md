@@ -175,3 +175,4 @@ This project follows the [all-contributors](https://github.com/all-contributors/
 - [Notational velocity](https://notational.net/)
 - [Zim](https://github.com/zim-desktop-wiki/zim-desktop-wiki)
 - [Joplin](https://github.com/laurent22/joplin)
+- [Memo](https://github.com/svsool/vscode-memo)

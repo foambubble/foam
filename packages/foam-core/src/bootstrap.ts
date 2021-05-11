@@ -16,6 +16,8 @@ export const bootstrap = async (
     config.ignoreGlobs
   );
   const workspace = new FoamWorkspace();
+  await Promise.all(initialProviders.map(p => workspace.registerProvider(p)));
+
   const graph = FoamGraph.fromWorkspace(workspace, true);
 
   const foam: Foam = {
@@ -32,8 +34,6 @@ export const bootstrap = async (
       graph.dispose();
     },
   };
-
-  await Promise.all(initialProviders.map(p => workspace.registerProvider(p)));
 
   return foam;
 };

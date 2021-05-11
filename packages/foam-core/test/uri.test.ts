@@ -1,5 +1,8 @@
+import { Logger } from '../src';
 import { URI } from '../src/model/uri';
 import { uriToSlug } from '../src/utils/slug';
+
+Logger.setLevel('error');
 
 describe('Foam URIs', () => {
   describe('URI parsing', () => {

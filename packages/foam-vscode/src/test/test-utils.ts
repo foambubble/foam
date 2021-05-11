@@ -11,9 +11,12 @@ import {
   FoamWorkspace,
   Matcher,
   MarkdownResourceProvider,
+  Logger,
 } from 'foam-core';
 import { TextEncoder } from 'util';
 import { toVsCodeUri } from '../utils/vsc-utils';
+
+Logger.setLevel('error');
 
 const position = Range.create(0, 0, 0, 100);
 

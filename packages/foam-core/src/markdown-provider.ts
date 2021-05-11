@@ -50,7 +50,9 @@ export class MarkdownResourceProvider implements ResourceProvider {
     const filesByFolder = await Promise.all(
       this.matcher.include.map(glob => this.dataStore.list(glob))
     );
-    const files = this.match(filesByFolder.flat());
+    const files = this.matcher
+      .match(filesByFolder.flat())
+      .filter(this.supports);
 
     await Promise.all(
       files.map(async uri => {
@@ -65,31 +67,27 @@ export class MarkdownResourceProvider implements ResourceProvider {
     this.disposables =
       this.watcherInit?.({
         onDidChange: async uri => {
-          this.match([uri]).map(async uri => {
+          if (this.matcher.isMatch(uri) && this.supports(uri)) {
             const content = await this.dataStore.read(uri);
             isSome(content) &&
               workspace.set(await this.parser.parse(uri, content));
-          });
+          }
         },
         onDidCreate: async uri => {
-          this.match([uri]).map(async uri => {
+          if (this.matcher.isMatch(uri) && this.supports(uri)) {
             const content = await this.dataStore.read(uri);
             isSome(content) &&
               workspace.set(await this.parser.parse(uri, content));
-          });
+          }
         },
         onDidDelete: uri => {
-          this.match([uri]).map(uri => workspace.delete(uri));
+          this.supports(uri) && workspace.delete(uri);
         },
       }) ?? [];
   }
 
-  match(uris: URI[]) {
-    return this.matcher.match(uris).filter(URI.isMarkdownFile);
-  }
-
-  isMatch(uri: URI) {
-    return this.match([uri]).length > 0;
+  supports(uri: URI) {
+    return URI.isMarkdownFile(uri);
   }
 
   read(uri: URI): Promise<string | null> {

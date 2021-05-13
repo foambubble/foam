@@ -177,7 +177,7 @@ const titlePlugin: ParserPlugin = {
   },
   onDidFindProperties: (props, note) => {
     // Give precendence to the title from the frontmatter if it exists
-    note.title = props.title ?? note.title;
+    note.title = props.title.toString() ?? note.title;
   },
   onDidVisitTree: (tree, note) => {
     if (note.title === '') {
@@ -313,8 +313,6 @@ export function createMarkdownParser(
               ...note.properties,
               ...yamlProperties,
             };
-            // Give precendence to the title from the frontmatter if it exists
-            note.title = note.properties.title ?? note.title;
             // Update the start position of the note by exluding the metadata
             note.source.contentStart = Position.create(
               node.position!.end.line! + 2,

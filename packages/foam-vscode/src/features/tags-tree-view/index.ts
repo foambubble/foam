@@ -3,6 +3,7 @@ import { Foam, Resource, URI, FoamWorkspace } from 'foam-core';
 import { FoamFeature } from '../../types';
 import { getNoteTooltip, getContainsTooltip, isSome } from '../../utils';
 
+const TAG_SEPARATOR = '/';
 const feature: FoamFeature = {
   activate: async (
     context: vscode.ExtensionContext,
@@ -62,7 +63,7 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
   }
 
   getTreeItem(element: TagTreeItem): vscode.TreeItem {
-    if (element.title.indexOf('/') > -1) {
+    if (element.title.indexOf(TAG_SEPARATOR) > -1) {
       return;
     }
     return element;
@@ -71,10 +72,10 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
   getChildren(element?: Tag): Thenable<TagTreeItem[]> {
     if (element) {
       const tagChilds: TagTreeItem[] = this.tags
-        .filter(tag => tag.tag.indexOf(element.tag + '/') > -1)
+        .filter(tag => tag.tag.indexOf(element.tag + TAG_SEPARATOR) > -1)
         .map(
           ({ tag, notes }) =>
-            new Tag(tag, tag.substring(tag.indexOf('/') + 1), notes)
+            new Tag(tag, tag.substring(tag.indexOf(TAG_SEPARATOR) + 1), notes)
         );
 
       const references: TagTreeItem[] = element.notes
@@ -150,7 +151,7 @@ export class TagSearch extends vscode.TreeItem {
   constructor(public readonly tag: string) {
     super(`Search #${tag}`, vscode.TreeItemCollapsibleState.None);
     const searchString = `#?${tag}`;
-    this.title = tag.replace('/', '-');
+    this.title = tag.replace(TAG_SEPARATOR, '-');
     this.tooltip = `Search ${searchString} in workspace`;
     this.command = {
       command: 'workbench.action.findInFiles',

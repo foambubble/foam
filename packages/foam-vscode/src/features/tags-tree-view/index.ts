@@ -62,23 +62,51 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
   }
 
   getTreeItem(element: TagTreeItem): vscode.TreeItem {
+    if (element.title.indexOf('/') > -1) {
+      return;
+    }
     return element;
   }
 
   getChildren(element?: Tag): Thenable<TagTreeItem[]> {
     if (element) {
-      const references: TagReference[] = element.notes
+      const tagChilds: TagTreeItem[] = this.tags
+        .filter(tag => tag.tag.indexOf(element.tag + '/') > -1)
+        .map(
+          ({ tag, notes }) =>
+            new Tag(tag, tag.substring(tag.indexOf('/') + 1), notes)
+        );
+
+      const references: TagTreeItem[] = element.notes
         .map(({ uri }) => this.foam.workspace.get(uri))
-        .map(note => new TagReference(element.tag, note));
+        .map(note => new TagReference(element.tag, note) as TagTreeItem)
+        .concat(tagChilds);
 
       return Promise.resolve([
         new TagSearch(element.tag),
-        ...references.sort((a, b) => a.title.localeCompare(b.title)),
+        ...references
+          .sort((a, b) => {
+            if (a instanceof Tag && b instanceof TagReference) {
+              return -1;
+            } else {
+              return 1;
+            }
+          })
+          .sort((a, b) => {
+            if (
+              (a instanceof Tag && b instanceof Tag) ||
+              (a instanceof TagReference && b instanceof TagReference)
+            ) {
+              a.title.localeCompare(b.title);
+            }
+
+            return 0;
+          }),
       ]);
     }
     if (!element) {
       const tags: Tag[] = this.tags.map(
-        ({ tag, notes }) => new Tag(tag, notes)
+        ({ tag, notes }) => new Tag(tag, tag, notes)
       );
       return Promise.resolve(tags.sort((a, b) => a.tag.localeCompare(b.tag)));
     }
@@ -102,13 +130,15 @@ type TagMetadata = { title: string; uri: URI };
 export class Tag extends vscode.TreeItem {
   constructor(
     public readonly tag: string,
+    public readonly title: string,
     public readonly notes: TagMetadata[]
   ) {
-    super(tag, vscode.TreeItemCollapsibleState.Collapsed);
+    super(title, vscode.TreeItemCollapsibleState.Collapsed);
     this.description = `${this.notes.length} reference${
       this.notes.length !== 1 ? 's' : ''
     }`;
     this.tooltip = getContainsTooltip(this.notes.map(n => n.title));
+    this.tag = tag;
   }
 
   iconPath = new vscode.ThemeIcon('symbol-number');
@@ -116,9 +146,11 @@ export class Tag extends vscode.TreeItem {
 }
 
 export class TagSearch extends vscode.TreeItem {
+  public readonly title: string;
   constructor(public readonly tag: string) {
     super(`Search #${tag}`, vscode.TreeItemCollapsibleState.None);
-    const searchString = `#${tag}`;
+    const searchString = `#?${tag}`;
+    this.title = tag.replace('/', '-');
     this.tooltip = `Search ${searchString} in workspace`;
     this.command = {
       command: 'workbench.action.findInFiles',
@@ -128,6 +160,7 @@ export class TagSearch extends vscode.TreeItem {
           triggerSearch: true,
           matchWholeWord: true,
           isCaseSensitive: true,
+          isRegex: true,
         },
       ],
       title: 'Search',

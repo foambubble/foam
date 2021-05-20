@@ -120,4 +120,30 @@ describe('resolveFoamTemplateVariables', () => {
 
     expect(await resolveFoamTemplateVariables(input)).toEqual(expected);
   });
+
+  test('Allows extra variables to be provided; only resolves the unique set', async () => {
+    const foamTitle = 'My note title';
+
+    jest
+      .spyOn(window, 'showInputBox')
+      .mockImplementationOnce(jest.fn(() => Promise.resolve(foamTitle)));
+
+    const input = `
+      # $FOAM_TITLE
+    `;
+
+    const expectedOutput = `
+      # My note title
+    `;
+
+    const expectedMap = new Map<string, string>();
+    expectedMap.set('FOAM_TITLE', foamTitle);
+
+    const expectedSnippet = new SnippetString(expectedOutput);
+    const expected = [expectedMap, expectedSnippet];
+
+    expect(
+      await resolveFoamTemplateVariables(input, new Set(['FOAM_TITLE']))
+    ).toEqual(expected);
+  });
 });

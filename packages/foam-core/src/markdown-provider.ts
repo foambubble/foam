@@ -177,7 +177,7 @@ const titlePlugin: ParserPlugin = {
   },
   onDidFindProperties: (props, note) => {
     // Give precendence to the title from the frontmatter if it exists
-    note.title = props.title.toString() ?? note.title;
+    note.title = props.title?.toString() ?? note.title;
   },
   onDidVisitTree: (tree, note) => {
     if (note.title === '') {

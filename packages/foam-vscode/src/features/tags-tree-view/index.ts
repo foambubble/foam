@@ -63,52 +63,37 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
   }
 
   getTreeItem(element: TagTreeItem): vscode.TreeItem {
-    if (element.title.indexOf(TAG_SEPARATOR) > -1) {
-      return;
-    }
     return element;
   }
 
   getChildren(element?: Tag): Thenable<TagTreeItem[]> {
     if (element) {
-      const tagChilds: TagTreeItem[] = this.tags
-        .filter(tag => tag.tag.indexOf(element.tag + TAG_SEPARATOR) > -1)
+      const nestedTagItems: TagTreeItem[] = this.tags
+        .filter(item => item.tag.indexOf(element.tag + TAG_SEPARATOR) > -1)
         .map(
-          ({ tag, notes }) =>
-            new Tag(tag, tag.substring(tag.indexOf(TAG_SEPARATOR) + 1), notes)
-        );
+          item =>
+            new Tag(
+              item.tag,
+              item.tag.substring(item.tag.indexOf(TAG_SEPARATOR) + 1),
+              item.notes
+            )
+        )
+        .sort((a, b) => a.title.localeCompare(b.title));
 
       const references: TagTreeItem[] = element.notes
         .map(({ uri }) => this.foam.workspace.get(uri))
-        .map(note => new TagReference(element.tag, note) as TagTreeItem)
-        .concat(tagChilds);
+        .map(note => new TagReference(element.tag, note))
+        .sort((a, b) => a.title.localeCompare(b.title));
 
       return Promise.resolve([
         new TagSearch(element.tag),
-        ...references
-          .sort((a, b) => {
-            if (a instanceof Tag && b instanceof TagReference) {
-              return -1;
-            } else {
-              return 1;
-            }
-          })
-          .sort((a, b) => {
-            if (
-              (a instanceof Tag && b instanceof Tag) ||
-              (a instanceof TagReference && b instanceof TagReference)
-            ) {
-              a.title.localeCompare(b.title);
-            }
-
-            return 0;
-          }),
+        ...nestedTagItems.concat(references),
       ]);
     }
     if (!element) {
-      const tags: Tag[] = this.tags.map(
-        ({ tag, notes }) => new Tag(tag, tag, notes)
-      );
+      const tags: Tag[] = this.tags
+        .filter(item => item.tag.indexOf(TAG_SEPARATOR) < 0)
+        .map(({ tag, notes }) => new Tag(tag, tag, notes));
       return Promise.resolve(tags.sort((a, b) => a.tag.localeCompare(b.tag)));
     }
   }
@@ -150,7 +135,7 @@ export class TagSearch extends vscode.TreeItem {
   public readonly title: string;
   constructor(public readonly tag: string) {
     super(`Search #${tag}`, vscode.TreeItemCollapsibleState.None);
-    const searchString = `#?${tag}`;
+    const searchString = `#${tag}`;
     this.title = tag.replace(TAG_SEPARATOR, '-');
     this.tooltip = `Search ${searchString} in workspace`;
     this.command = {
@@ -161,7 +146,6 @@ export class TagSearch extends vscode.TreeItem {
           triggerSearch: true,
           matchWholeWord: true,
           isCaseSensitive: true,
-          isRegex: true,
         },
       ],
       title: 'Search',

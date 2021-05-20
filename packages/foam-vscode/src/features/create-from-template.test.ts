@@ -58,15 +58,15 @@ describe('resolveFoamVariables', () => {
   });
 
   test('Resolves FOAM_TITLE', async () => {
-    const foam_title = 'My note title';
+    const foamTitle = 'My note title';
     const variables = ['FOAM_TITLE'];
 
     jest
       .spyOn(window, 'showInputBox')
-      .mockImplementationOnce(jest.fn(() => Promise.resolve(foam_title)));
+      .mockImplementationOnce(jest.fn(() => Promise.resolve(foamTitle)));
 
     const expected = new Map<string, string>();
-    expected.set('FOAM_TITLE', foam_title);
+    expected.set('FOAM_TITLE', foamTitle);
 
     const givenValues = new Map<string, string>();
     expect(await resolveFoamVariables(variables, givenValues)).toEqual(
@@ -75,14 +75,14 @@ describe('resolveFoamVariables', () => {
   });
 
   test('Resolves FOAM_TITLE without asking the user when it is provided', async () => {
-    const foam_title = 'My note title';
+    const foamTitle = 'My note title';
     const variables = ['FOAM_TITLE'];
 
     const expected = new Map<string, string>();
-    expected.set('FOAM_TITLE', foam_title);
+    expected.set('FOAM_TITLE', foamTitle);
 
     const givenValues = new Map<string, string>();
-    givenValues.set('FOAM_TITLE', foam_title);
+    givenValues.set('FOAM_TITLE', foamTitle);
     expect(await resolveFoamVariables(variables, givenValues)).toEqual(
       expected
     );

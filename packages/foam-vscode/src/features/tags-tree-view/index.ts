@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { Foam, Resource, URI, FoamWorkspace } from 'foam-core';
+import { Foam, Resource, URI, FoamWorkspace, Logger } from 'foam-core';
 import { FoamFeature } from '../../types';
 import { getNoteTooltip, getContainsTooltip, isSome } from '../../utils';
 
@@ -69,7 +69,7 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
   getChildren(element?: Tag): Thenable<TagTreeItem[]> {
     if (element) {
       const nestedTagItems: TagTreeItem[] = this.tags
-        .filter(item => item.tag.indexOf(element.tag + TAG_SEPARATOR) > -1)
+        .filter(item => item.tag.indexOf(element.title + TAG_SEPARATOR) > -1)
         .map(
           item =>
             new Tag(
@@ -86,14 +86,26 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
         .sort((a, b) => a.title.localeCompare(b.title));
 
       return Promise.resolve([
-        new TagSearch(element.tag),
-        ...nestedTagItems.concat(references),
+        new TagSearch(element.title),
+        ...nestedTagItems,
+        ...references,
       ]);
     }
     if (!element) {
       const tags: Tag[] = this.tags
-        .filter(item => item.tag.indexOf(TAG_SEPARATOR) < 0)
-        .map(({ tag, notes }) => new Tag(tag, tag, notes));
+        .map(({ tag, notes }) => {
+          const title =
+            tag.indexOf(TAG_SEPARATOR) > 0
+              ? tag.substring(0, tag.indexOf(TAG_SEPARATOR))
+              : tag;
+
+          return new Tag(tag, title, notes);
+        })
+        .filter(
+          (value, index, array) =>
+            array.findIndex(tag => tag.title === value.title) === index
+        );
+
       return Promise.resolve(tags.sort((a, b) => a.tag.localeCompare(b.tag)));
     }
   }
@@ -124,7 +136,6 @@ export class Tag extends vscode.TreeItem {
       this.notes.length !== 1 ? 's' : ''
     }`;
     this.tooltip = getContainsTooltip(this.notes.map(n => n.title));
-    this.tag = tag;
   }
 
   iconPath = new vscode.ThemeIcon('symbol-number');
@@ -136,7 +147,6 @@ export class TagSearch extends vscode.TreeItem {
   constructor(public readonly tag: string) {
     super(`Search #${tag}`, vscode.TreeItemCollapsibleState.None);
     const searchString = `#${tag}`;
-    this.title = tag.replace(TAG_SEPARATOR, '-');
     this.tooltip = `Search ${searchString} in workspace`;
     this.command = {
       command: 'workbench.action.findInFiles',

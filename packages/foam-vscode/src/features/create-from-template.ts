@@ -184,12 +184,16 @@ async function askUserForFilepathConfirmation(
 }
 
 export async function resolveFoamTemplateVariables(
-  templateText: string
+  templateText: string,
+  extraVariablesToResolve: Set<string> = new Set()
 ): Promise<[Map<string, string>, SnippetString]> {
   const givenValues = new Map<string, string>();
-  const variables = findFoamVariables(templateText.toString());
+  const variables = findFoamVariables(templateText.toString()).concat(
+    ...extraVariablesToResolve
+  );
+  const uniqVariables = [...new Set(variables)];
 
-  const resolvedValues = await resolveFoamVariables(variables, givenValues);
+  const resolvedValues = await resolveFoamVariables(uniqVariables, givenValues);
   const subbedText = substituteFoamVariables(
     templateText.toString(),
     resolvedValues
@@ -223,7 +227,8 @@ async function createNoteFromDefaultTemplate(): Promise<void> {
   let resolvedValues, templateSnippet;
   try {
     [resolvedValues, templateSnippet] = await resolveFoamTemplateVariables(
-      templateText
+      templateText,
+      new Set(['FOAM_TITLE'])
     );
   } catch (err) {
     if (err instanceof UserCancelledOperation) {

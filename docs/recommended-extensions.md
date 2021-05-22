@@ -22,4 +22,3 @@ These extensions are not (yet?) defined in `.vscode/extensions.json`, but have b
 - [Markdown Extended](https://marketplace.visualstudio.com/items?itemName=jebbs.markdown-extended) (with `kbd` option disabled, `kbd` turns wiki-links into non-clickable buttons)
 - [GitDoc](https://marketplace.visualstudio.com/items?itemName=vsls-contrib.gitdoc) (easy version management via git auto commits)
 - [Markdown Footnotes](https://marketplace.visualstudio.com/items?itemName=bierner.markdown-footnotes) (Adds [^footnote] syntax support to VS Code's built-in markdown preview)
-- [Project Manager](https://marketplace.visualstudio.com/items?itemName=alefragnani.project-manager) Fast Switching for other Foam Repos. especially seperated repo, this extension is very useful and helful. More Easy Things is Making and Clone to Main Foam Only Folder (for example /Users/Form/Form)

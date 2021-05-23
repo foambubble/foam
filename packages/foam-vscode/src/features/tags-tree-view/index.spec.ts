@@ -36,7 +36,7 @@ describe('Tags tree panel', () => {
   });
 
   afterAll(async () => {
-    _foam.workspace.dispose();
+    _foam.dispose();
     await cleanWorkspace();
   });
 
@@ -66,18 +66,15 @@ describe('Tags tree panel', () => {
     provider.refresh();
 
     const parentTreeItems = (await provider.getChildren()) as Tag[];
-    const parentTagItem = parentTreeItems.filter(item => item instanceof Tag);
-    expect(parentTagItem[0].title).toEqual('parent');
-    expect(parentTagItem[0].title).not.toEqual('child');
+    const parentTagItem = parentTreeItems.pop();
+    expect(parentTagItem.title).toEqual('parent');
+    expect(parentTagItem.title).not.toEqual('child');
 
-    const childTreeItems = (await provider.getChildren(
-      parentTagItem[0]
-    )) as Tag[];
+    const childTreeItems = (await provider.getChildren(parentTagItem)) as Tag[];
 
     childTreeItems.map(child => {
       if (child instanceof Tag) {
         expect(child.title).toEqual('child');
-        expect(child.title).not.toEqual('parent');
       }
     });
   });
@@ -101,7 +98,6 @@ describe('Tags tree panel', () => {
     )[0];
 
     expect(parentTagItem.title).toEqual('parent');
-    expect(parentTagItem.title).not.toEqual('child');
 
     const childTreeItems = (await provider.getChildren(parentTagItem)) as Tag[];
 

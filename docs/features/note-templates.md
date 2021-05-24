@@ -40,3 +40,96 @@ In addition, you can also use variables provided by Foam:
 | `FOAM_TITLE` | The title of the note. If used, Foam will prompt you to enter a title for the note. |
 
 **Note:** neither the defaulting feature (eg. `${variable:default}`) nor the format feature (eg. `${variable/(.*)/${1:/upcase}/}`) (available to other variables) are available for these Foam-provided variables.
+
+## Metadata
+
+Templates can also contain metadata about the templates themselves. The metadata is defined in YAML "Frontmatter" blocks within the templates.
+
+| Name       | Description                                                                                                                      |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `filepath` | The filepath to use when creating the new note. If the filepath is a relative filepath, it is relative to the current workspace. |
+
+Foam-specific variables (e.g. `$FOAM_TITLE`) can be used within template metadata. However, VS Code snippet variables are ([currently](https://github.com/foambubble/foam/pull/655)) not supported.
+
+### `filepath` attribute
+
+The `filepath` metadata attribute allows you to define a relative or absolute filepath to use when creating a note using the template.
+If the filepath is a relative filepath, it is relative to the current workspace.
+
+#### Example of relative `filepath`
+
+For example, `filepath` can be used to customize `.foam/templates/new-note.md`, overriding the default `Foam: Create New Note` behaviour of opening the file in the same directory as the active file:
+
+```yaml
+---
+# This will create the note in the "journal" subdirectory of the current workspace,
+# regardless of which file is the active file.
+foam_template:
+  filepath: 'journal/$FOAM_TITLE.md'
+---
+```
+
+#### Example of absolute `filepath`
+
+`filepath` can be an absolute filepath, so that the notes get created in the same location, regardless of which file or workspace the editor currently has open.
+The format of an absolute filepath may vary depending on the filesystem used.
+
+```yaml
+---
+foam_template:
+  # Unix / MacOS filesystems
+  filepath: '/Users/john.smith/foam/journal/$FOAM_TITLE.md'
+
+  # Windows filesystems
+  filepath: 'C:\Users\john.smith\Documents\foam\journal\$FOAM_TITLE.md'
+---
+```
+
+### Adding template metadata to an existing YAML Frontmatter block
+
+If your template already has a YAML Frontmatter block, you can add the Foam template metadata to it.
+
+#### Limitations
+
+Foam only supports adding the template metadata to *YAML* Frontmatter blocks. If the existing Frontmatter block uses some other format (e.g. JSON), you will have to add the template metadata to its own YAML Frontmatter block.
+
+Further, the template metadata must be provided as a [YAML block mapping](https://yaml.org/spec/1.2/spec.html#id2798057), with the `filepath` attribute placed on the line immediately following the `foam_template` line:
+
+```yaml
+---
+existing_frontmatter: "Existing Frontmatter block"
+foam_template: # this is a YAML "Block" mapping ("Flow" mappings aren't supported)
+  filepath: `journal/$FOAM_TITLE.md` # `filepath` attribute must be on the line immediately following `foam_template`
+---
+This is the rest of the template
+```
+
+Due to the technical limitations of parsing the complex YAML format, unless the metadata is provided this specific form, Foam is unable to correctly remove the template metadata before creating the resulting note.
+
+If this limitation proves inconvenient to you, please let us know. We may be able to extend our parsing capabilities to cover your use case. In the meantime, you can add the template metadata without this limitation by providing it in its own YAML Frontmatter block.
+
+### Adding template metadata to its own YAML Frontmatter block
+
+You can add the template metadata to its own YAML Frontmatter block at the start of the template:
+
+```yaml
+---
+foam_template:
+  filepath: `journal/$FOAM_TITLE.md`
+---
+This is the rest of the template
+```
+
+If the note already has a Frontmatter block, a Foam-specific Frontmatter block can be added to the start of the template. The Foam-specific Frontmatter block must always be placed at the very beginning of the file, and only whitespace can separate the two Frontmatter blocks.
+
+```yaml
+---
+foam_template:
+  filepath: `journal/$FOAM_TITLE.md`
+---
+
+---
+existing_frontmatter: "Existing Frontmatter block"
+---
+This is the rest of the template
+```

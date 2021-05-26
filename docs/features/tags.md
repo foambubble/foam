@@ -9,6 +9,8 @@ There are two ways of creating a tag:
 - adding a `#tag` anywhere in the text of the note
 - using the `tags: tag1, tag2` property in frontmatter
 
+Tags can also be hierarchical, so you can have `#parent/child`.
+
 ## Navigating tags
 
 It's possible to navigate tags via the Tag Explorer panel.

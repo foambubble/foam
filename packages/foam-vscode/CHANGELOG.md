@@ -4,6 +4,18 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.13.4] - 2021-05-26
+
+Fixes and Improvements:
+
+- Added support for nested tags (#643 - thanks @pderaaij)
+- Improved the flow of creating note from template (#645 - thanks @movermeyer)
+- Fixed handling of title property in YAML (#647 - thanks @pderaaij and #546)
+
+Internal:
+
+- Updated various dependencies
+
 ## [0.13.3] - 2021-05-09
 
 Fixes and Improvements:

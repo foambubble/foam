@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { Foam, Resource, URI, FoamWorkspace, Logger } from 'foam-core';
+import { Foam, Resource, URI, FoamWorkspace } from 'foam-core';
 import { FoamFeature } from '../../types';
 import { getNoteTooltip, getContainsTooltip, isSome } from '../../utils';
 

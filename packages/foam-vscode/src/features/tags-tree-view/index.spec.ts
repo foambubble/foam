@@ -72,7 +72,7 @@ describe('Tags tree panel', () => {
 
     const childTreeItems = (await provider.getChildren(parentTagItem)) as Tag[];
 
-    childTreeItems.map(child => {
+    childTreeItems.forEach(child => {
       if (child instanceof Tag) {
         expect(child.title).toEqual('child');
       }
@@ -101,7 +101,7 @@ describe('Tags tree panel', () => {
 
     const childTreeItems = (await provider.getChildren(parentTagItem)) as Tag[];
 
-    childTreeItems.map(child => {
+    childTreeItems.forEach(child => {
       if (child instanceof Tag) {
         expect(['child', 'subchild']).toContain(child.title);
         expect(child.title).not.toEqual('parent');

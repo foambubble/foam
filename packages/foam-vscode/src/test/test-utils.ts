@@ -47,6 +47,7 @@ export const createTestNote = (params: {
   title?: string;
   definitions?: NoteLinkDefinition[];
   links?: Array<{ slug: string } | { to: string }>;
+  tags?: Set<string>;
   text?: string;
   root?: URI;
 }): Resource => {
@@ -57,7 +58,7 @@ export const createTestNote = (params: {
     properties: {},
     title: params.title ?? path.parse(strToUri(params.uri).path).base,
     definitions: params.definitions ?? [],
-    tags: new Set(),
+    tags: params.tags ?? new Set(),
     links: params.links
       ? params.links.map((link, index) => {
           const range = Range.create(

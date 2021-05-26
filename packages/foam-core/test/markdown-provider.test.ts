@@ -336,6 +336,19 @@ this is some #text that includes #tags we #care-about.
       new Set(['text', 'tags', 'care-about', 'hello', 'world', 'this_is_good'])
     );
   });
+
+  it('can find nested tags as array in yaml', () => {
+    const noteA = createNoteFromMarkdown(
+      '/dir1/page-a.md',
+      `
+---
+tags: [hello, world,  parent/child]
+---
+# this is a heading
+    `
+    );
+    expect(noteA.tags).toEqual(new Set(['hello', 'world', 'parent/child']));
+  });
 });
 
 describe('parser plugins', () => {

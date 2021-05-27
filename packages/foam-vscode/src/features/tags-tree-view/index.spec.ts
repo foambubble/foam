@@ -4,7 +4,7 @@ import {
   createTestNote,
 } from '../../test/test-utils';
 
-import { Tag, TagsProvider } from '.';
+import { Tag, TagReference, TagsProvider } from '.';
 
 import {
   bootstrap,
@@ -98,6 +98,7 @@ describe('Tags tree panel', () => {
     )[0];
 
     expect(parentTagItem.title).toEqual('parent');
+    expect(parentTreeItems).toHaveLength(1);
 
     const childTreeItems = (await provider.getChildren(parentTagItem)) as Tag[];
 
@@ -107,5 +108,6 @@ describe('Tags tree panel', () => {
         expect(child.title).not.toEqual('parent');
       }
     });
+    expect(childTreeItems).toHaveLength(3);
   });
 });

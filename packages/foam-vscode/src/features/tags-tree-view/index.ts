@@ -82,6 +82,16 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
 
       const references: TagTreeItem[] = element.notes
         .map(({ uri }) => this.foam.workspace.get(uri))
+        .filter(note =>
+          // foreach nested tag item check if the exact tag is present as a tag on the note. If so,
+          // it belongs to a nested tag item and should not be displayed as a reference underneath the current element
+          nestedTagItems.reduce(
+            (tagPresentAsNestedTag, nestedTag) => note.tags.has(nestedTag.tag),
+            true
+          )
+            ? note
+            : null
+        )
         .map(note => new TagReference(element.tag, note))
         .sort((a, b) => a.title.localeCompare(b.title));
 

@@ -4,7 +4,7 @@ import {
   createTestNote,
 } from '../../test/test-utils';
 
-import { Tag, TagReference, TagsProvider } from '.';
+import { Tag, TagsProvider } from '.';
 
 import {
   bootstrap,

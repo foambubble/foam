@@ -1,7 +1,12 @@
 import * as vscode from 'vscode';
 import { Foam, Resource, URI, FoamWorkspace } from 'foam-core';
 import { FoamFeature } from '../../types';
-import { getNoteTooltip, getContainsTooltip, isSome } from '../../utils';
+import {
+  getNoteTooltip,
+  getContainsTooltip,
+  isSome,
+  isNone,
+} from '../../utils';
 
 const TAG_SEPARATOR = '/';
 const feature: FoamFeature = {
@@ -85,12 +90,7 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
         .filter(note =>
           // foreach nested tag item check if the exact tag is present as a tag on the note. If so,
           // it belongs to a nested tag item and should not be displayed as a reference underneath the current element
-          nestedTagItems.reduce(
-            (tagPresentAsNestedTag, nestedTag) => note.tags.has(nestedTag.tag),
-            true
-          )
-            ? note
-            : null
+          isNone(nestedTagItems.find(item => note.tags.has(item.tag)))
         )
         .map(note => new TagReference(element.tag, note))
         .sort((a, b) => a.title.localeCompare(b.title));

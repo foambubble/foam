@@ -4,7 +4,7 @@ import {
   createTestNote,
 } from '../../test/test-utils';
 
-import { Tag, TagsProvider } from '.';
+import { Tag, TagReference, TagsProvider } from '.';
 
 import {
   bootstrap,
@@ -68,7 +68,6 @@ describe('Tags tree panel', () => {
     const parentTreeItems = (await provider.getChildren()) as Tag[];
     const parentTagItem = parentTreeItems.pop();
     expect(parentTagItem.title).toEqual('parent');
-    expect(parentTagItem.title).not.toEqual('child');
 
     const childTreeItems = (await provider.getChildren(parentTagItem)) as Tag[];
 
@@ -108,6 +107,42 @@ describe('Tags tree panel', () => {
         expect(child.title).not.toEqual('parent');
       }
     });
+    expect(childTreeItems).toHaveLength(3);
+  });
+
+  it('correctly handles a single parent and child tag in the same note', async () => {
+    const noteC = createTestNote({
+      tags: new Set(['main', 'main/subtopic']),
+      title: 'Test note',
+      uri: './note-c.md',
+    });
+
+    _foam.workspace.set(noteC);
+
+    provider.refresh();
+
+    const parentTreeItems = (await provider.getChildren()) as Tag[];
+    const parentTagItem = parentTreeItems.filter(
+      item => item instanceof Tag
+    )[0];
+
+    expect(parentTagItem.title).toEqual('main');
+
+    const childTreeItems = (await provider.getChildren(parentTagItem)) as Tag[];
+
+    childTreeItems
+      .filter(item => item instanceof TagReference)
+      .forEach(item => {
+        expect(item.title).toEqual('Test note');
+      });
+
+    childTreeItems
+      .filter(item => item instanceof Tag)
+      .forEach(item => {
+        expect(['main/subtopic']).toContain(item.tag);
+        expect(item.title).toEqual('subtopic');
+      });
+
     expect(childTreeItems).toHaveLength(3);
   });
 });

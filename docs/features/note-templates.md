@@ -45,9 +45,11 @@ In addition, you can also use variables provided by Foam:
 
 Templates can also contain metadata about the templates themselves. The metadata is defined in YAML "Frontmatter" blocks within the templates.
 
-| Name       | Description                                                                                                                      |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `filepath` | The filepath to use when creating the new note. If the filepath is a relative filepath, it is relative to the current workspace. |
+| Name          | Description                                                                                                                      |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `filepath`    | The filepath to use when creating the new note. If the filepath is a relative filepath, it is relative to the current workspace. |
+| `name`        | A human readable name to show in the template picker.                                                                            |
+| `description` | A human readable description to show in the template picker.                                                                     |
 
 Foam-specific variables (e.g. `$FOAM_TITLE`) can be used within template metadata. However, VS Code snippet variables are ([currently](https://github.com/foambubble/foam/pull/655)) not supported.
 
@@ -85,6 +87,12 @@ foam_template:
 ---
 ```
 
+### `name` and `description` attributes
+
+These attributes provide a human readable name and description to be shown in the template picker (e.g. When a user uses the `Foam: Create New Note From Template` command):
+
+![Template Picker annotated with attributes](../assets/images/template-picker-annotated.png)
+
 ### Adding template metadata to an existing YAML Frontmatter block
 
 If your template already has a YAML Frontmatter block, you can add the Foam template metadata to it.
@@ -93,13 +101,15 @@ If your template already has a YAML Frontmatter block, you can add the Foam temp
 
 Foam only supports adding the template metadata to *YAML* Frontmatter blocks. If the existing Frontmatter block uses some other format (e.g. JSON), you will have to add the template metadata to its own YAML Frontmatter block.
 
-Further, the template metadata must be provided as a [YAML block mapping](https://yaml.org/spec/1.2/spec.html#id2798057), with the `filepath` attribute placed on the line immediately following the `foam_template` line:
+Further, the template metadata must be provided as a [YAML block mapping](https://yaml.org/spec/1.2/spec.html#id2798057), with the attributes placed on the lines immediately following the `foam_template` line:
 
 ```yaml
 ---
 existing_frontmatter: "Existing Frontmatter block"
 foam_template: # this is a YAML "Block" mapping ("Flow" mappings aren't supported)
-  filepath: `journal/$FOAM_TITLE.md` # `filepath` attribute must be on the line immediately following `foam_template`
+  name: My Note Template # Attributes must be on the lines immediately following `foam_template`
+  description: This is my note template
+  filepath: `journal/$FOAM_TITLE.md`
 ---
 This is the rest of the template
 ```
@@ -115,6 +125,8 @@ You can add the template metadata to its own YAML Frontmatter block at the start
 ```yaml
 ---
 foam_template:
+  name: My Note Template
+  description: This is my note template
   filepath: `journal/$FOAM_TITLE.md`
 ---
 This is the rest of the template
@@ -125,6 +137,8 @@ If the note already has a Frontmatter block, a Foam-specific Frontmatter block c
 ```yaml
 ---
 foam_template:
+  name: My Note Template
+  description: This is my note template
   filepath: `journal/$FOAM_TITLE.md`
 ---
 

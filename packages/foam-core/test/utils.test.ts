@@ -19,6 +19,11 @@ describe('hashtag extraction', () => {
       new Set(['hello-world', 'this_planet'])
     );
   });
+  it('supports nested tags', () => {
+    expect(extractHashtags('#parent/child on #planet')).toEqual(
+      new Set(['parent/child', 'planet'])
+    );
+  });
   it('ignores tags that only have numbers in text', () => {
     expect(
       extractHashtags('this #123 tag should be ignore, but not #123four')

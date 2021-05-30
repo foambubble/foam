@@ -61,6 +61,14 @@ describe('Matcher', () => {
     expect(matcher.isMatch(files[3])).toEqual(false);
   });
 
+  it('happy path', () => {
+    const matcher = new Matcher([URI.file('/')], ['**/*'], ['**/*.pdf']);
+    expect(matcher.isMatch(URI.file('/file.md'))).toBeTruthy();
+    expect(matcher.isMatch(URI.file('/file.pdf'))).toBeFalsy();
+    expect(matcher.isMatch(URI.file('/dir/file.md'))).toBeTruthy();
+    expect(matcher.isMatch(URI.file('/dir/file.pdf'))).toBeFalsy();
+  });
+
   it('ignores files in the exclude list', () => {
     const matcher = new Matcher([testFolder], ['*.md'], ['file1.*']);
     const files = [

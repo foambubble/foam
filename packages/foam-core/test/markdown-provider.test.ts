@@ -171,6 +171,26 @@ date: 20-12-12
     expect(note.title).toBe('Note Title');
   });
 
+  it('should support numbers', () => {
+    const note1 = createNoteFromMarkdown('/157.md', `hello`);
+    expect(note1.title).toBe('157');
+
+    const note2 = createNoteFromMarkdown('/157.md', `# 158`);
+    expect(note2.title).toBe('158');
+
+    const note3 = createNoteFromMarkdown(
+      '/157.md',
+      `
+---
+title: 159
+---
+
+# 158
+`
+    );
+    expect(note3.title).toBe('159');
+  });
+
   it('should not break on empty titles (see #276)', () => {
     const note = createNoteFromMarkdown(
       '/Hello Page.md',
@@ -315,6 +335,19 @@ this is some #text that includes #tags we #care-about.
     expect(noteA.tags).toEqual(
       new Set(['text', 'tags', 'care-about', 'hello', 'world', 'this_is_good'])
     );
+  });
+
+  it('can find nested tags as array in yaml', () => {
+    const noteA = createNoteFromMarkdown(
+      '/dir1/page-a.md',
+      `
+---
+tags: [hello, world,  parent/child]
+---
+# this is a heading
+    `
+    );
+    expect(noteA.tags).toEqual(new Set(['hello', 'world', 'parent/child']));
   });
 });
 

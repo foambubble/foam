@@ -6,7 +6,7 @@ import {
   GroupedResourcesConfig,
   GroupedResoucesConfigGroupBy,
 } from '../settings';
-import { getContainsTooltip, getNoteTooltip, isSome, isNone } from '../utils';
+import { getContainsTooltip, getNoteTooltip, isSome } from '../utils';
 import { OPEN_COMMAND } from '../features/utility-commands';
 import { toVsCodeUri } from './vsc-utils';
 

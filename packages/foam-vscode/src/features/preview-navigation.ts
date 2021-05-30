@@ -12,13 +12,11 @@ const feature: FoamFeature = {
     const foam = await foamPromise;
 
     return {
-      extendMarkdownIt: (md: markdownit) => {
-        const markdownItExtends = fp.compose(
-          markdownItWithFoamLinks,
-          markdownItWithFoamTags
-        );
-        return markdownItExtends(md, foam.workspace);
-      },
+      extendMarkdownIt: (md: markdownit) =>
+        [markdownItWithFoamTags, markdownItWithFoamLinks].reduce(
+          (acc, extension) => extension(acc, foam.workspace),
+          md
+        ),
     };
   },
 };

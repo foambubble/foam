@@ -2552,16 +2552,16 @@ flatted@^2.0.0:
   resolved "https://registry.yarnpkg.com/flatted/-/flatted-2.0.2.tgz#4575b21e2bcee7434aa9be662f4b7b5f9c2b5138"
   integrity sha512-r5wGx7YeOwNWNlCA0wQ86zKyDLMQr+/RB8xy74M4hTphfmjlijTSSXGuH8rnvKZnfT9i+75zmd8jcKdMR4O6jA==
 
-foam-core@^0.13.3:
-  version "0.13.3"
-  resolved "https://registry.yarnpkg.com/foam-core/-/foam-core-0.13.3.tgz#69fab82d96842b1bb71228ba8b7423c46ff50e4a"
-  integrity sha512-BYCdEx8waFrwtxvykyhPznaFn6ukVVJ7vXmc+gShLxTJVYdoccWl2u7BZf1vZcy7HWLluXgkvObYlMVuKDTd/g==
+foam-core@^0.13.4:
+  version "0.13.4"
+  resolved "https://registry.yarnpkg.com/foam-core/-/foam-core-0.13.4.tgz#2520f9aa70f4fd23e1f6d8614445d44c68931034"
+  integrity sha512-5EydR6kIPAZdHSaTWVaQjLXb+GqFkV3jYW989RIRRX7ad7g0dzIigtd3iXtU2bUX6e+Wne7pjlxeLWvYICbvZA==
   dependencies:
     detect-newline "^3.1.0"
     fast-array-diff "^1.0.0"
     github-slugger "^1.3.0"
     glob "^7.1.6"
-    lodash "^4.17.19"
+    lodash "^4.17.21"
     micromatch "^4.0.2"
     remark-frontmatter "^2.0.0"
     remark-parse "^8.0.2"
@@ -3822,7 +3822,7 @@ lodash.sortby@^4.7.0:
   resolved "https://registry.yarnpkg.com/lodash.sortby/-/lodash.sortby-4.7.0.tgz#edd14c824e2cc9c1e0b0a1b42bb5210516a42438"
   integrity sha1-7dFMgk4sycHgsKG0K7UhBRakJDg=
 
-lodash@4.x, lodash@^4.17.14, lodash@^4.17.15, lodash@^4.17.19:
+lodash@4.x, lodash@^4.17.14, lodash@^4.17.15, lodash@^4.17.19, lodash@^4.17.21:
   version "4.17.21"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.21.tgz#679591c564c3bffaae8454cf0b3df370c3d6911c"
   integrity sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==
@@ -5581,9 +5581,9 @@ write@1.0.3:
     mkdirp "^0.5.1"
 
 ws@^7.2.3:
-  version "7.3.1"
-  resolved "https://registry.yarnpkg.com/ws/-/ws-7.3.1.tgz#d0547bf67f7ce4f12a72dfe31262c68d7dc551c8"
-  integrity sha512-D3RuNkynyHmEJIpD2qrgVkc9DQ23OrN/moAwZX4L8DfvszsJxpjQuUq3LMx6HoYji9fbIOBY18XWBsAux1ZZUA==
+  version "7.4.6"
+  resolved "https://registry.yarnpkg.com/ws/-/ws-7.4.6.tgz#5654ca8ecdeee47c33a9a4bf6d28e2be2980377c"
+  integrity sha512-YmhHDO4MzaDLB+M9ym/mDA5z0naX8j7SIlT8f8z+I0VtzsRbekxEutHSme7NPS2qE8StCYQNUnfWdXta/Yu85A==
 
 xml-name-validator@^3.0.0:
   version "3.0.0"

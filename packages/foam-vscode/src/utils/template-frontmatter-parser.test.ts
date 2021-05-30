@@ -65,6 +65,8 @@ foo: bar
   test('Returns the `foam_template` metadata when it is used in its own frontmatter block', () => {
     const input = `---
 foam_template:
+  name: My Note Template
+  description: This is my note template
   filepath: journal/$CURRENT_YEAR-$CURRENT_MONTH-$CURRENT_DATE_$FOAM_TITLE.md
 ---
 
@@ -76,6 +78,8 @@ foam_template:
 `;
 
     const expectedMetadata = new Map<string, string>();
+    expectedMetadata.set('name', 'My Note Template');
+    expectedMetadata.set('description', 'This is my note template');
     expectedMetadata.set(
       'filepath',
       'journal/$CURRENT_YEAR-$CURRENT_MONTH-$CURRENT_DATE_$FOAM_TITLE.md'
@@ -89,6 +93,8 @@ foam_template:
     const input = `---
 foam_template:
   filepath: journal/$CURRENT_YEAR-$CURRENT_MONTH-$CURRENT_DATE_$FOAM_TITLE.md
+  description: This is my note template
+  name: My Note Template
 ---
 
 ---
@@ -116,6 +122,8 @@ more_metadata: *info
 `;
 
     const expectedMetadata = new Map<string, string>();
+    expectedMetadata.set('name', 'My Note Template');
+    expectedMetadata.set('description', 'This is my note template');
     expectedMetadata.set(
       'filepath',
       'journal/$CURRENT_YEAR-$CURRENT_MONTH-$CURRENT_DATE_$FOAM_TITLE.md'
@@ -129,7 +137,9 @@ more_metadata: *info
     const input = `---
 foo: bar
 foam_template:
+  name: My Note Template
   filepath: journal/$CURRENT_YEAR-$CURRENT_MONTH-$CURRENT_DATE_$FOAM_TITLE.md
+  description: This is my note template
 # A YAML comment
 metadata: &info
   title: The Gentlemen
@@ -151,6 +161,8 @@ more_metadata: *info
 # $FOAM_TITLE`;
 
     const expectedMetadata = new Map<string, string>();
+    expectedMetadata.set('name', 'My Note Template');
+    expectedMetadata.set('description', 'This is my note template');
     expectedMetadata.set(
       'filepath',
       'journal/$CURRENT_YEAR-$CURRENT_MONTH-$CURRENT_DATE_$FOAM_TITLE.md'
@@ -166,7 +178,9 @@ describe('removeFoamMetadata', () => {
     const input = `---
 foo: bar
 foam_template: &foam_template # A YAML comment
+  description: This is my note template
   filepath: journal/$CURRENT_YEAR-$CURRENT_MONTH-$CURRENT_DATE_$FOAM_TITLE.md # A YAML comment
+  name: My Note Template
 # A YAML comment
 metadata: &info
   title: The Gentlemen

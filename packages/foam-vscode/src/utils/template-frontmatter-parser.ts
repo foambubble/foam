@@ -50,5 +50,8 @@ export function extractFoamTemplateFrontmatterMetadata(
 }
 
 export function removeFoamMetadata(contents: string) {
-  return contents.replace(/^\s*foam_template:.*?\n\s*filepath:.*\n/gm, '');
+  return contents.replace(
+    /^\s*foam_template:.*?\n(?:\s*(?:filepath|name|description):.*\n)+/gm,
+    ''
+  );
 }

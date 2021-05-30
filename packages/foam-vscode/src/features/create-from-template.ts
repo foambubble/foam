@@ -1,10 +1,11 @@
 import {
-  window,
   commands,
   ExtensionContext,
-  workspace,
+  QuickPickItem,
   SnippetString,
   Uri,
+  window,
+  workspace,
 } from 'vscode';
 import * as path from 'path';
 import { FoamFeature } from '../types';
@@ -31,7 +32,13 @@ export class UserCancelledOperation extends Error {
 
 const knownFoamVariables = new Set(['FOAM_TITLE']);
 
-const defaultTemplateDefaultText: string = '# ${FOAM_TITLE}'; // eslint-disable-line no-template-curly-in-string
+const defaultTemplateDefaultText: string = `---
+foam_template:
+  name: New Note
+  description: Foam's default new note template
+---
+# \${FOAM_TITLE}
+`;
 const defaultTemplateUri = Uri.joinPath(templatesDir, 'new-note.md');
 
 const templateContent = `# \${1:$TM_FILENAME_BASE}
@@ -53,9 +60,19 @@ For a full list of features see [the VS Code snippets page](https://code.visuals
 2. create a note from this template by running the \`Foam: Create New Note From Template\` command
 `;
 
-async function getTemplates(): Promise<string[]> {
+async function templateMetadata(
+  templateUri: Uri
+): Promise<Map<string, string>> {
+  const contents = await workspace.fs
+    .readFile(templateUri)
+    .then(bytes => bytes.toString());
+  const [templateMetadata] = extractFoamTemplateFrontmatterMetadata(contents);
+  return templateMetadata;
+}
+
+async function getTemplates(): Promise<Uri[]> {
   const templates = await workspace.findFiles('.foam/templates/**.md');
-  return templates.map(template => path.basename(template.path));
+  return templates;
 }
 
 async function offerToCreateTemplate(): Promise<void> {
@@ -155,12 +172,71 @@ export function substituteFoamVariables(
   return templateText;
 }
 
+function sortTemplatesMetadata(
+  t1: Map<string, string>,
+  t2: Map<string, string>
+) {
+  // Sort by name's existence, then name, then path
+
+  if (t1.get('name') === undefined && t2.get('name') !== undefined) {
+    return 1;
+  }
+
+  if (t1.get('name') !== undefined && t2.get('name') === undefined) {
+    return -1;
+  }
+
+  const pathSortOrder = t1
+    .get('templatePath')
+    .localeCompare(t2.get('templatePath'));
+
+  if (t1.get('name') === undefined && t2.get('name') === undefined) {
+    return pathSortOrder;
+  }
+
+  const nameSortOrder = t1.get('name').localeCompare(t2.get('name'));
+
+  return nameSortOrder || pathSortOrder;
+}
+
 async function askUserForTemplate() {
   const templates = await getTemplates();
   if (templates.length === 0) {
     return offerToCreateTemplate();
   }
-  return await window.showQuickPick(templates, {
+
+  const templatesMetadata = (
+    await Promise.all(
+      templates.map(async templateUri => {
+        const metadata = await templateMetadata(templateUri);
+        metadata.set('templatePath', path.basename(templateUri.path));
+        return metadata;
+      })
+    )
+  ).sort(sortTemplatesMetadata);
+
+  const items: QuickPickItem[] = await Promise.all(
+    templatesMetadata.map(metadata => {
+      const label = metadata.get('name') || metadata.get('templatePath');
+      const description = metadata.get('name')
+        ? metadata.get('templatePath')
+        : null;
+      const detail = metadata.get('description');
+      const item = {
+        label: label,
+        description: description,
+        detail: detail,
+      };
+      Object.keys(item).forEach(key => {
+        if (!item[key]) {
+          delete item[key];
+        }
+      });
+      return item;
+    })
+  );
+
+  return await window.showQuickPick(items, {
     placeHolder: 'Select a template to use.',
   });
 }
@@ -299,7 +375,9 @@ async function createNoteFromTemplate(
   if (selectedTemplate === undefined) {
     return;
   }
-  templateFilename = selectedTemplate as string;
+  templateFilename =
+    (selectedTemplate as QuickPickItem).description ||
+    (selectedTemplate as QuickPickItem).label;
   const templateUri = Uri.joinPath(templatesDir, templateFilename);
   const templateText = await workspace.fs
     .readFile(templateUri)

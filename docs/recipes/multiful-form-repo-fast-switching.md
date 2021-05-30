@@ -25,6 +25,6 @@ or you can editing project manager's favorites. click to 'Edit Project' and edit
 		"enabled": true
 	},
     
-This Part, **,** is need add to multiful Project. if end of project, deleted **,** and save the ```project.json```
+This Part, **,** is need add to multiful Project. if end of project, deleted **,** and save the ```project.json```.  
 
 That's it. if you need fast switching or maintained multiful form repo, click to left's folder icon and select fast switching your repo, and maintaing.

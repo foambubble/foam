@@ -2,7 +2,6 @@ import * as vscode from 'vscode';
 import markdownItRegex from 'markdown-it-regex';
 import { Foam, FoamWorkspace, Logger, URI } from 'foam-core';
 import { FoamFeature } from '../types';
-import fp from 'lodash/fp';
 
 const feature: FoamFeature = {
   activate: async (

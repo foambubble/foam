@@ -20,19 +20,17 @@ describe('Tags tree panel', () => {
   let _foam: Foam;
   let provider: TagsProvider;
 
+  const config: FoamConfig = createConfigFromFolders([]);
+  const mdProvider = new MarkdownResourceProvider(
+    new Matcher(
+      config.workspaceFolders,
+      config.includeGlobs,
+      config.ignoreGlobs
+    )
+  );
+
   beforeAll(async () => {
     await cleanWorkspace();
-
-    const config: FoamConfig = createConfigFromFolders([]);
-    const mdProvider = new MarkdownResourceProvider(
-      new Matcher(
-        config.workspaceFolders,
-        config.includeGlobs,
-        config.ignoreGlobs
-      )
-    );
-    _foam = await bootstrap(config, new FileDataStore(), [mdProvider]);
-    provider = new TagsProvider(_foam, _foam.workspace);
   });
 
   afterAll(async () => {
@@ -41,7 +39,13 @@ describe('Tags tree panel', () => {
   });
 
   beforeEach(async () => {
+    _foam = await bootstrap(config, new FileDataStore(), [mdProvider]);
+    provider = new TagsProvider(_foam, _foam.workspace);
     await closeEditors();
+  });
+
+  afterEach(() => {
+    _foam.dispose();
   });
 
   it('correctly provides a tag from a set of notes', async () => {

@@ -1,4 +1,4 @@
-# multiful form repo Fast Switching & maintain
+# multiful form repos Fast Switching & maintain
 
 this #recipe is allow to multiful form repos in one VSCode Windows and Fast Switching. in my case, need seperated form repo, using 6 form repo. but it's very easy & convenience
 

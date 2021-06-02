@@ -1,6 +1,6 @@
 # Quickly switch between multiple Foam repos
 
-this #recipe is allow to Quickly switch between multiple Foam repos.
+this #recipe is allow to Quickly switch between multiple Foam repos. and sorry for Setting/Content's Hangul the Korean Character.
 
 ## Installation
 

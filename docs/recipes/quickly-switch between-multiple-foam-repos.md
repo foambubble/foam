@@ -6,7 +6,7 @@ this #recipe is allow to Quickly switch between multiple Foam repos.
 
 **This extension is not included in the template**
 
-This Method need [Project Manager](https://marketplace.visualstudio.com/items?itemName=alefragnani.project-manager), so please install this extension
+This Method need [Project Manager](https://marketplace.visualstudio.com/items?itemName=alefragnani.project-manager) extension, so please install this extension.
 
 ## Quickly switch between multiple Foam repos - Git Folder
 First, Need arrange Quickly switching Multiful Foam repos in one folder

@@ -71,7 +71,7 @@ async function templateMetadata(
 }
 
 async function getTemplates(): Promise<Uri[]> {
-  const templates = await workspace.findFiles('.foam/templates/**.md');
+  const templates = await workspace.findFiles('.foam/templates/**.md', null);
   return templates;
 }
 

@@ -1,6 +1,5 @@
-import { window, Uri, workspace, commands } from 'vscode';
 import path from 'path';
-
+import { commands, Uri, window, workspace } from 'vscode';
 describe('createFromTemplate', () => {
   describe('create-note-from-template', () => {
     afterEach(() => {

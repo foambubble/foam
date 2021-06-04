@@ -1,18 +1,23 @@
+import { URI } from 'foam-core';
+import { existsSync } from 'fs';
+import * as path from 'path';
+import { isAbsolute } from 'path';
+import { TextEncoder } from 'util';
 import {
   commands,
   ExtensionContext,
   QuickPickItem,
+  Selection,
   SnippetString,
+  TextDocument,
   Uri,
+  ViewColumn,
   window,
   workspace,
+  WorkspaceEdit,
 } from 'vscode';
-import * as path from 'path';
 import { FoamFeature } from '../types';
-import { TextEncoder } from 'util';
 import { focusNote } from '../utils';
-import { existsSync } from 'fs';
-import { isAbsolute } from 'path';
 import { extractFoamTemplateFrontmatterMetadata } from '../utils/template-frontmatter-parser';
 
 const templatesDir = Uri.joinPath(
@@ -30,7 +35,13 @@ export class UserCancelledOperation extends Error {
   }
 }
 
-const knownFoamVariables = new Set(['FOAM_TITLE']);
+interface FoamSelectionContent {
+  document: TextDocument;
+  selection: Selection;
+  content: string;
+}
+
+const knownFoamVariables = new Set(['FOAM_TITLE', 'FOAM_SELECTED_TEXT']);
 
 const defaultTemplateDefaultText: string = `---
 foam_template:
@@ -38,6 +49,8 @@ foam_template:
   description: Foam's default new note template
 ---
 # \${FOAM_TITLE}
+
+\${FOAM_SELECTED_TEXT}
 `;
 const defaultTemplateUri = Uri.joinPath(templatesDir, 'new-note.md');
 
@@ -263,13 +276,28 @@ async function askUserForFilepathConfirmation(
 
 export async function resolveFoamTemplateVariables(
   templateText: string,
-  extraVariablesToResolve: Set<string> = new Set()
+  extraVariablesToResolve: Set<string> = new Set(),
+  givenValues: Map<string, string> = new Map()
 ): Promise<[Map<string, string>, string]> {
-  const givenValues = new Map<string, string>();
   const variables = findFoamVariables(templateText.toString()).concat(
     ...extraVariablesToResolve
   );
   const uniqVariables = [...new Set(variables)];
+
+  const missingFoamVariables = [...givenValues.keys()].filter(
+    x => uniqVariables.indexOf(x) < 0
+  );
+  if (missingFoamVariables.includes('FOAM_SELECTED_TEXT')) {
+    missingFoamVariables.forEach(key => {
+      templateText = `${templateText}
+      \${FOAM_SELECTED_TEXT}`;
+      uniqVariables.push('FOAM_SELECTED_TEXT');
+
+      if (!givenValues.get('FOAM_SELECTED_TEXT')) {
+        givenValues.set('FOAM_SELECTED_TEXT', '');
+      }
+    });
+  }
 
   const resolvedValues = await resolveFoamVariables(uniqVariables, givenValues);
   const subbedText = substituteFoamVariables(
@@ -279,9 +307,13 @@ export async function resolveFoamTemplateVariables(
   return [resolvedValues, subbedText];
 }
 
-async function writeTemplate(templateSnippet: SnippetString, filepath: Uri) {
+async function writeTemplate(
+  templateSnippet: SnippetString,
+  filepath: Uri,
+  viewColumn: ViewColumn = ViewColumn.Active
+) {
   await workspace.fs.writeFile(filepath, new TextEncoder().encode(''));
-  await focusNote(filepath, true);
+  await focusNote(filepath, true, viewColumn);
   await window.activeTextEditor.insertSnippet(templateSnippet);
 }
 
@@ -293,6 +325,39 @@ function currentDirectoryFilepath(filename: string) {
       : workspace.workspaceFolders[0].uri;
 
   return Uri.joinPath(currentDir, filename);
+}
+
+function findSelectionContent(): FoamSelectionContent | undefined {
+  const editor = window.activeTextEditor;
+  if (editor === undefined) {
+    return undefined;
+  }
+
+  const document = editor.document;
+  const selection = editor.selection;
+
+  if (!document || selection.isEmpty) {
+    return undefined;
+  }
+
+  return {
+    document,
+    selection,
+    content: document.getText(selection),
+  };
+}
+
+async function replaceSelectionWithWikiLink(
+  document: TextDocument,
+  newNoteFile: URI,
+  selection: Selection
+) {
+  const newNoteTitle = URI.getFileNameWithoutExtension(newNoteFile);
+
+  const originatingFileEdit = new WorkspaceEdit();
+  originatingFileEdit.replace(document.uri, selection, `[[${newNoteTitle}]]`);
+
+  await workspace.applyEdit(originatingFileEdit);
 }
 
 export function determineDefaultFilepath(
@@ -323,6 +388,8 @@ async function createNoteFromDefaultTemplate(): Promise<void> {
     ? await workspace.fs.readFile(templateUri).then(bytes => bytes.toString())
     : defaultTemplateDefaultText;
 
+  const selectedContent = findSelectionContent();
+
   let resolvedValues: Map<string, string>,
     templateWithResolvedVariables: string;
   try {
@@ -331,7 +398,8 @@ async function createNoteFromDefaultTemplate(): Promise<void> {
       templateWithResolvedVariables,
     ] = await resolveFoamTemplateVariables(
       templateText,
-      new Set(['FOAM_TITLE'])
+      new Set(['FOAM_TITLE']),
+      new Map().set('FOAM_SELECTED_TEXT', selectedContent?.content ?? '')
     );
   } catch (err) {
     if (err instanceof UserCancelledOperation) {
@@ -365,7 +433,20 @@ async function createNoteFromDefaultTemplate(): Promise<void> {
     }
     filepath = Uri.file(newFilepath);
   }
-  await writeTemplate(templateSnippet, filepath);
+
+  await writeTemplate(
+    templateSnippet,
+    filepath,
+    selectedContent ? ViewColumn.Beside : ViewColumn.Active
+  );
+
+  if (selectedContent !== undefined) {
+    await replaceSelectionWithWikiLink(
+      selectedContent.document,
+      filepath,
+      selectedContent.selection
+    );
+  }
 }
 
 async function createNoteFromTemplate(
@@ -383,12 +464,18 @@ async function createNoteFromTemplate(
     .readFile(templateUri)
     .then(bytes => bytes.toString());
 
+  const selectedContent = findSelectionContent();
+
   let resolvedValues, templateWithResolvedVariables;
   try {
     [
       resolvedValues,
       templateWithResolvedVariables,
-    ] = await resolveFoamTemplateVariables(templateText);
+    ] = await resolveFoamTemplateVariables(
+      templateText,
+      new Set(),
+      new Map().set('FOAM_SELECTED_TEXT', selectedContent?.content ?? '')
+    );
   } catch (err) {
     if (err instanceof UserCancelledOperation) {
       return;
@@ -418,7 +505,20 @@ async function createNoteFromTemplate(
     return;
   }
   const filepathURI = Uri.file(filepath);
-  await writeTemplate(templateSnippet, filepathURI);
+
+  await writeTemplate(
+    templateSnippet,
+    filepathURI,
+    selectedContent ? ViewColumn.Beside : ViewColumn.Active
+  );
+
+  if (selectedContent !== undefined) {
+    await replaceSelectionWithWikiLink(
+      selectedContent.document,
+      filepathURI,
+      selectedContent.selection
+    );
+  }
 }
 
 async function createNewTemplate(): Promise<void> {

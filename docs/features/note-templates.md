@@ -35,9 +35,10 @@ Templates can use all the variables available in [VS Code Snippets](https://code
 
 In addition, you can also use variables provided by Foam:
 
-| Name         | Description                                                                         |
-| ------------ | ----------------------------------------------------------------------------------- |
-| `FOAM_TITLE` | The title of the note. If used, Foam will prompt you to enter a title for the note. |
+| Name                 | Description                                                                                                                                             |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `FOAM_SELECTED_TEXT` | Foam will fill it with selected text when creating a new note, if any text is selected. Selected text will be replaced with a wikilink to the new note. |
+| `FOAM_TITLE`         | The title of the note. If used, Foam will prompt you to enter a title for the note.                                                                     |
 
 **Note:** neither the defaulting feature (eg. `${variable:default}`) nor the format feature (eg. `${variable/(.*)/${1:/upcase}/}`) (available to other variables) are available for these Foam-provided variables.
 

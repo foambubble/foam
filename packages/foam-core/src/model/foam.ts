@@ -1,8 +1,24 @@
-import { createMarkdownParser } from './markdown-provider';
-import { FoamConfig, Foam, IDataStore, FoamGraph } from './index';
-import { FoamWorkspace } from './model/workspace';
-import { Matcher } from './services/datastore';
-import { ResourceProvider } from 'model/provider';
+import { IDisposable } from '../common/lifecycle';
+import { IDataStore, IMatcher, Matcher } from '../services/datastore';
+import { FoamConfig } from '../config';
+import { FoamWorkspace } from './workspace';
+import { FoamGraph } from './graph';
+import { ResourceParser } from './note';
+import { ResourceProvider } from './provider';
+import { createMarkdownParser } from '../markdown-provider';
+
+export interface Services {
+  dataStore: IDataStore;
+  parser: ResourceParser;
+  matcher: IMatcher;
+}
+
+export interface Foam extends IDisposable {
+  services: Services;
+  workspace: FoamWorkspace;
+  graph: FoamGraph;
+  config: FoamConfig;
+}
 
 export const bootstrap = async (
   config: FoamConfig,

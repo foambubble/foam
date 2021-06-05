@@ -1,9 +1,9 @@
 import {
   createMarkdownParser,
   createMarkdownReferences,
+  ParserPlugin,
 } from '../src/markdown-provider';
 import { DirectLink } from '../src/model/note';
-import { ParserPlugin } from '../src/plugins';
 import { Logger } from '../src/utils/log';
 import { uriToSlug } from '../src/utils/slug';
 import { URI } from '../src/model/uri';

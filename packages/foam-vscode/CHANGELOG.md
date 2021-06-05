@@ -4,6 +4,17 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.13.7] - 2021-06-05
+
+Fixes and Improvements:
+
+- Fixed #667, incorrect resolution of foam-core library
+
+Internal: 
+
+- BREAKING CHANGE: Removed Foam local plugins 
+  If you were previously using the alpha feature of Foam local plugins you will soon be able to migrate the functionality to the V1 API
+
 ## [0.13.6] - 2021-06-05
 
 Fixes and Improvements:

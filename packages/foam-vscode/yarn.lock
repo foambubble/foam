@@ -2506,10 +2506,10 @@
   "resolved" "https://registry.npmjs.org/flatted/-/flatted-2.0.2.tgz"
   "version" "2.0.2"
 
-"foam-core@^0.13.6":
-  "integrity" "sha512-Yu+ACWQ38EdTnGMuYRIVlqc6FzJfvm1GWM50w3Wnpx7w/AaUTnnlddCccnYzmXYiISZTRfWQgiOdR/0L9i3WJw=="
-  "resolved" "https://registry.npmjs.org/foam-core/-/foam-core-0.13.6.tgz"
-  "version" "0.13.6"
+"foam-core@^0.13.7":
+  "integrity" "sha512-+A2RUGvkk1ntyrjhQkf0mUo1ytWrqWKYho56R4avCc9W1dQtavJ4+IGv+iR+ettAk8k5hbuF30KOZm4KCplhJA=="
+  "resolved" "https://registry.npmjs.org/foam-core/-/foam-core-0.13.7.tgz"
+  "version" "0.13.7"
   dependencies:
     "detect-newline" "^3.1.0"
     "fast-array-diff" "^1.0.0"
@@ -2520,6 +2520,7 @@
     "remark-frontmatter" "^2.0.0"
     "remark-parse" "^8.0.2"
     "remark-wiki-link" "^0.0.4"
+    "replace-ext" "^2.0.0"
     "title-case" "^3.0.2"
     "unified" "^9.0.0"
     "unist-util-visit" "^2.0.2"
@@ -4458,6 +4459,11 @@
   "integrity" "sha1-jcrkcOHIirwtYA//Sndihtp15jc="
   "resolved" "https://registry.npmjs.org/repeat-string/-/repeat-string-1.6.1.tgz"
   "version" "1.6.1"
+
+"replace-ext@^2.0.0":
+  "integrity" "sha512-UszKE5KVK6JvyD92nzMn9cDapSk6w/CaFZ96CnmDMUqH9oowfxF/ZjRITD25H4DnOQClLA4/j7jLGXXLVKxAug=="
+  "resolved" "https://registry.npmjs.org/replace-ext/-/replace-ext-2.0.0.tgz"
+  "version" "2.0.0"
 
 "replace-ext@1.0.0":
   "integrity" "sha1-3mMSg3P8v3w8z6TeWkgMRaZ5WOs="

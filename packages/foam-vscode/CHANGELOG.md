@@ -4,6 +4,12 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.13.6] - 2021-06-05
+
+Fixes and Improvements:
+
+- Fixed #667, incorrect resolution of foam-core library
+
 ## [0.13.5] - 2021-06-05
 
 Fixes and Improvements:

@@ -1,9 +1,13 @@
-import { SnippetString, window } from 'vscode';
+import { window, workspace } from 'vscode';
 import {
   resolveFoamVariables,
   resolveFoamTemplateVariables,
   substituteFoamVariables,
+  determineDefaultFilepath,
 } from './create-from-template';
+import path from 'path';
+import { isWindows } from '../utils';
+import { URI } from 'foam-core';
 
 describe('substituteFoamVariables', () => {
   test('Does nothing if no Foam-specific variables are used', () => {
@@ -100,8 +104,8 @@ describe('resolveFoamTemplateVariables', () => {
     `;
 
     const expectedMap = new Map<string, string>();
-    const expectedSnippet = new SnippetString(input);
-    const expected = [expectedMap, expectedSnippet];
+    const expectedString = input;
+    const expected = [expectedMap, expectedString];
 
     expect(await resolveFoamTemplateVariables(input)).toEqual(expected);
   });
@@ -115,8 +119,8 @@ describe('resolveFoamTemplateVariables', () => {
     `;
 
     const expectedMap = new Map<string, string>();
-    const expectedSnippet = new SnippetString(input);
-    const expected = [expectedMap, expectedSnippet];
+    const expectedString = input;
+    const expected = [expectedMap, expectedString];
 
     expect(await resolveFoamTemplateVariables(input)).toEqual(expected);
   });
@@ -139,11 +143,51 @@ describe('resolveFoamTemplateVariables', () => {
     const expectedMap = new Map<string, string>();
     expectedMap.set('FOAM_TITLE', foamTitle);
 
-    const expectedSnippet = new SnippetString(expectedOutput);
-    const expected = [expectedMap, expectedSnippet];
+    const expected = [expectedMap, expectedOutput];
 
     expect(
       await resolveFoamTemplateVariables(input, new Set(['FOAM_TITLE']))
     ).toEqual(expected);
+  });
+});
+
+describe('determineDefaultFilepath', () => {
+  test('Absolute filepath metadata is unchanged', () => {
+    const absolutePath = isWindows
+      ? 'c:\\absolute_path\\journal\\My Note Title.md'
+      : '/absolute_path/journal/My Note Title.md';
+
+    const resolvedValues = new Map<string, string>();
+    const templateMetadata = new Map<string, string>();
+    templateMetadata.set('filepath', absolutePath);
+
+    const resultFilepath = determineDefaultFilepath(
+      resolvedValues,
+      templateMetadata
+    );
+
+    expect(URI.toFsPath(resultFilepath)).toMatch(absolutePath);
+  });
+
+  test('Relative filepath metadata is appended to current directory', () => {
+    const relativePath = isWindows
+      ? 'journal\\My Note Title.md'
+      : 'journal/My Note Title.md';
+
+    const resolvedValues = new Map<string, string>();
+    const templateMetadata = new Map<string, string>();
+    templateMetadata.set('filepath', relativePath);
+
+    const resultFilepath = determineDefaultFilepath(
+      resolvedValues,
+      templateMetadata
+    );
+
+    const expectedPath = path.join(
+      workspace.workspaceFolders[0].uri.fsPath,
+      relativePath
+    );
+
+    expect(URI.toFsPath(resultFilepath)).toMatch(expectedPath);
   });
 });

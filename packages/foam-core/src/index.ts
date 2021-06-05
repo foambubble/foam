@@ -47,7 +47,7 @@ export { applyTextEdit } from './janitor/apply-text-edit';
 
 export { createConfigFromFolders } from './config';
 
-export { bootstrap } from './bootstrap';
+export { Foam, Services, bootstrap } from './model/foam';
 
 export {
   Resource,
@@ -58,16 +58,3 @@ export {
   NoteLinkDefinition,
   ResourceParser,
 };
-
-export interface Services {
-  dataStore: IDataStore;
-  parser: ResourceParser;
-  matcher: IMatcher;
-}
-
-export interface Foam extends IDisposable {
-  services: Services;
-  workspace: FoamWorkspace;
-  graph: FoamGraph;
-  config: FoamConfig;
-}

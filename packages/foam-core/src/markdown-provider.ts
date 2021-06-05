@@ -24,13 +24,22 @@ import {
   isNone,
   isSome,
 } from './utils';
-import { ParserPlugin } from './plugins';
 import { Logger } from './utils/log';
 import { URI } from './model/uri';
 import { FoamWorkspace } from './model/workspace';
 import { ResourceProvider } from 'model/provider';
 import { IDataStore, FileDataStore, IMatcher } from './services/datastore';
 import { IDisposable } from 'common/lifecycle';
+
+export interface ParserPlugin {
+  name?: string;
+  visit?: (node: Node, note: Resource) => void;
+  onDidInitializeParser?: (parser: unified.Processor) => void;
+  onWillParseMarkdown?: (markdown: string) => string;
+  onWillVisitTree?: (tree: Node, note: Resource) => void;
+  onDidVisitTree?: (tree: Node, note: Resource) => void;
+  onDidFindProperties?: (properties: any, note: Resource) => void;
+}
 
 export class MarkdownResourceProvider implements ResourceProvider {
   private disposables: IDisposable[] = [];

@@ -1,6 +1,5 @@
 import * as path from 'path';
 import { generateLinkReferences } from '../../src/janitor';
-import { bootstrap } from '../../src/bootstrap';
 import { createConfigFromFolders } from '../../src/config';
 import { FileDataStore, Matcher } from '../../src/services/datastore';
 import { Logger } from '../../src/utils/log';
@@ -8,7 +7,7 @@ import { FoamWorkspace } from '../../src/model/workspace';
 import { URI } from '../../src/model/uri';
 import { Resource } from '../../src/model/note';
 import { Range } from '../../src/model/range';
-import { MarkdownResourceProvider } from '../../src';
+import { MarkdownResourceProvider, bootstrap } from '../../src';
 
 Logger.setLevel('error');
 

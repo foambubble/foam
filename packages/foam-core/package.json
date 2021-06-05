@@ -1,7 +1,7 @@
 {
   "name": "foam-core",
   "repository": "https://github.com/foambubble/foam",
-  "version": "0.13.4",
+  "version": "0.13.7",
   "license": "MIT",
   "files": [
     "dist"
@@ -38,6 +38,7 @@
     "remark-frontmatter": "^2.0.0",
     "remark-parse": "^8.0.2",
     "remark-wiki-link": "^0.0.4",
+    "replace-ext": "^2.0.0",
     "title-case": "^3.0.2",
     "unified": "^9.0.0",
     "unist-util-visit": "^2.0.2",

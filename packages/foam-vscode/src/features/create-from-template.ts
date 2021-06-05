@@ -1,16 +1,19 @@
 import {
-  window,
   commands,
   ExtensionContext,
-  workspace,
+  QuickPickItem,
   SnippetString,
   Uri,
+  window,
+  workspace,
 } from 'vscode';
 import * as path from 'path';
 import { FoamFeature } from '../types';
 import { TextEncoder } from 'util';
 import { focusNote } from '../utils';
 import { existsSync } from 'fs';
+import { isAbsolute } from 'path';
+import { extractFoamTemplateFrontmatterMetadata } from '../utils/template-frontmatter-parser';
 
 const templatesDir = Uri.joinPath(
   workspace.workspaceFolders[0].uri,
@@ -29,7 +32,13 @@ export class UserCancelledOperation extends Error {
 
 const knownFoamVariables = new Set(['FOAM_TITLE']);
 
-const defaultTemplateDefaultText: string = '# ${FOAM_TITLE}'; // eslint-disable-line no-template-curly-in-string
+const defaultTemplateDefaultText: string = `---
+foam_template:
+  name: New Note
+  description: Foam's default new note template
+---
+# \${FOAM_TITLE}
+`;
 const defaultTemplateUri = Uri.joinPath(templatesDir, 'new-note.md');
 
 const templateContent = `# \${1:$TM_FILENAME_BASE}
@@ -51,9 +60,19 @@ For a full list of features see [the VS Code snippets page](https://code.visuals
 2. create a note from this template by running the \`Foam: Create New Note From Template\` command
 `;
 
-async function getTemplates(): Promise<string[]> {
-  const templates = await workspace.findFiles('.foam/templates/**.md');
-  return templates.map(template => path.basename(template.path));
+async function templateMetadata(
+  templateUri: Uri
+): Promise<Map<string, string>> {
+  const contents = await workspace.fs
+    .readFile(templateUri)
+    .then(bytes => bytes.toString());
+  const [templateMetadata] = extractFoamTemplateFrontmatterMetadata(contents);
+  return templateMetadata;
+}
+
+async function getTemplates(): Promise<Uri[]> {
+  const templates = await workspace.findFiles('.foam/templates/**.md', null);
+  return templates;
 }
 
 async function offerToCreateTemplate(): Promise<void> {
@@ -153,12 +172,71 @@ export function substituteFoamVariables(
   return templateText;
 }
 
+function sortTemplatesMetadata(
+  t1: Map<string, string>,
+  t2: Map<string, string>
+) {
+  // Sort by name's existence, then name, then path
+
+  if (t1.get('name') === undefined && t2.get('name') !== undefined) {
+    return 1;
+  }
+
+  if (t1.get('name') !== undefined && t2.get('name') === undefined) {
+    return -1;
+  }
+
+  const pathSortOrder = t1
+    .get('templatePath')
+    .localeCompare(t2.get('templatePath'));
+
+  if (t1.get('name') === undefined && t2.get('name') === undefined) {
+    return pathSortOrder;
+  }
+
+  const nameSortOrder = t1.get('name').localeCompare(t2.get('name'));
+
+  return nameSortOrder || pathSortOrder;
+}
+
 async function askUserForTemplate() {
   const templates = await getTemplates();
   if (templates.length === 0) {
     return offerToCreateTemplate();
   }
-  return await window.showQuickPick(templates, {
+
+  const templatesMetadata = (
+    await Promise.all(
+      templates.map(async templateUri => {
+        const metadata = await templateMetadata(templateUri);
+        metadata.set('templatePath', path.basename(templateUri.path));
+        return metadata;
+      })
+    )
+  ).sort(sortTemplatesMetadata);
+
+  const items: QuickPickItem[] = await Promise.all(
+    templatesMetadata.map(metadata => {
+      const label = metadata.get('name') || metadata.get('templatePath');
+      const description = metadata.get('name')
+        ? metadata.get('templatePath')
+        : null;
+      const detail = metadata.get('description');
+      const item = {
+        label: label,
+        description: description,
+        detail: detail,
+      };
+      Object.keys(item).forEach(key => {
+        if (!item[key]) {
+          delete item[key];
+        }
+      });
+      return item;
+    })
+  );
+
+  return await window.showQuickPick(items, {
     placeHolder: 'Select a template to use.',
   });
 }
@@ -186,7 +264,7 @@ async function askUserForFilepathConfirmation(
 export async function resolveFoamTemplateVariables(
   templateText: string,
   extraVariablesToResolve: Set<string> = new Set()
-): Promise<[Map<string, string>, SnippetString]> {
+): Promise<[Map<string, string>, string]> {
   const givenValues = new Map<string, string>();
   const variables = findFoamVariables(templateText.toString()).concat(
     ...extraVariablesToResolve
@@ -198,8 +276,7 @@ export async function resolveFoamTemplateVariables(
     templateText.toString(),
     resolvedValues
   );
-  const snippet = new SnippetString(subbedText);
-  return [resolvedValues, snippet];
+  return [resolvedValues, subbedText];
 }
 
 async function writeTemplate(templateSnippet: SnippetString, filepath: Uri) {
@@ -218,15 +295,41 @@ function currentDirectoryFilepath(filename: string) {
   return Uri.joinPath(currentDir, filename);
 }
 
+export function determineDefaultFilepath(
+  resolvedValues: Map<string, string>,
+  templateMetadata: Map<string, string>
+) {
+  let defaultFilepath: Uri;
+  if (templateMetadata.get('filepath')) {
+    const filepathFromMetadata = templateMetadata.get('filepath');
+    if (isAbsolute(filepathFromMetadata)) {
+      defaultFilepath = Uri.file(filepathFromMetadata);
+    } else {
+      defaultFilepath = Uri.joinPath(
+        workspace.workspaceFolders[0].uri,
+        filepathFromMetadata
+      );
+    }
+  } else {
+    const defaultSlug = resolvedValues.get('FOAM_TITLE') || 'New Note';
+    defaultFilepath = currentDirectoryFilepath(`${defaultSlug}.md`);
+  }
+  return defaultFilepath;
+}
+
 async function createNoteFromDefaultTemplate(): Promise<void> {
   const templateUri = defaultTemplateUri;
   const templateText = existsSync(templateUri.fsPath)
     ? await workspace.fs.readFile(templateUri).then(bytes => bytes.toString())
     : defaultTemplateDefaultText;
 
-  let resolvedValues, templateSnippet;
+  let resolvedValues: Map<string, string>,
+    templateWithResolvedVariables: string;
   try {
-    [resolvedValues, templateSnippet] = await resolveFoamTemplateVariables(
+    [
+      resolvedValues,
+      templateWithResolvedVariables,
+    ] = await resolveFoamTemplateVariables(
       templateText,
       new Set(['FOAM_TITLE'])
     );
@@ -238,9 +341,17 @@ async function createNoteFromDefaultTemplate(): Promise<void> {
     }
   }
 
-  const defaultSlug = resolvedValues.get('FOAM_TITLE') || 'New Note';
-  const defaultFilename = `${defaultSlug}.md`;
-  const defaultFilepath = currentDirectoryFilepath(defaultFilename);
+  const [
+    templateMetadata,
+    templateWithFoamFrontmatterRemoved,
+  ] = extractFoamTemplateFrontmatterMetadata(templateWithResolvedVariables);
+  const templateSnippet = new SnippetString(templateWithFoamFrontmatterRemoved);
+
+  const defaultFilepath = determineDefaultFilepath(
+    resolvedValues,
+    templateMetadata
+  );
+  const defaultFilename = path.basename(defaultFilepath.path);
 
   let filepath = defaultFilepath;
   if (existsSync(filepath.fsPath)) {
@@ -264,17 +375,20 @@ async function createNoteFromTemplate(
   if (selectedTemplate === undefined) {
     return;
   }
-  templateFilename = selectedTemplate as string;
+  templateFilename =
+    (selectedTemplate as QuickPickItem).description ||
+    (selectedTemplate as QuickPickItem).label;
   const templateUri = Uri.joinPath(templatesDir, templateFilename);
   const templateText = await workspace.fs
     .readFile(templateUri)
     .then(bytes => bytes.toString());
 
-  let resolvedValues, templateSnippet;
+  let resolvedValues, templateWithResolvedVariables;
   try {
-    [resolvedValues, templateSnippet] = await resolveFoamTemplateVariables(
-      templateText
-    );
+    [
+      resolvedValues,
+      templateWithResolvedVariables,
+    ] = await resolveFoamTemplateVariables(templateText);
   } catch (err) {
     if (err instanceof UserCancelledOperation) {
       return;
@@ -283,9 +397,17 @@ async function createNoteFromTemplate(
     }
   }
 
-  const defaultSlug = resolvedValues.get('FOAM_TITLE') || 'New Note';
-  const defaultFilename = `${defaultSlug}.md`;
-  const defaultFilepath = currentDirectoryFilepath(defaultFilename);
+  const [
+    templateMetadata,
+    templateWithFoamFrontmatterRemoved,
+  ] = extractFoamTemplateFrontmatterMetadata(templateWithResolvedVariables);
+  const templateSnippet = new SnippetString(templateWithFoamFrontmatterRemoved);
+
+  const defaultFilepath = determineDefaultFilepath(
+    resolvedValues,
+    templateMetadata
+  );
+  const defaultFilename = path.basename(defaultFilepath.path);
 
   const filepath = await askUserForFilepathConfirmation(
     defaultFilepath,

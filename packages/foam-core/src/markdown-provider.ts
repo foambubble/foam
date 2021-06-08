@@ -14,7 +14,6 @@ import {
   ResourceLink,
   WikiLink,
   ResourceParser,
-  NoteSource,
 } from './model/note';
 import { Position } from './model/position';
 import { Range } from './model/range';
@@ -36,7 +35,7 @@ const ALIAS_DIVIDER_CHAR = '|';
 
 export interface ParserPlugin {
   name?: string;
-  visit?: (node: Node, note: Resource, noteSource: NoteSource) => void;
+  visit?: (node: Node, note: Resource, noteSource: string) => void;
   onDidInitializeParser?: (parser: unified.Processor) => void;
   onWillParseMarkdown?: (markdown: string) => string;
   onWillVisitTree?: (tree: Node, note: Resource) => void;
@@ -204,7 +203,7 @@ const wikilinkPlugin: ParserPlugin = {
     if (node.type === 'wikiLink') {
       const text = node.value as string;
       const alias = node.data?.alias as string;
-      const literalContent = noteSource.text.substring(
+      const literalContent = noteSource.substring(
         node.position!.start.offset!,
         node.position!.end.offset!
       );
@@ -326,13 +325,6 @@ export function createMarkdownParser(
         },
       };
 
-      var noteSource: NoteSource = {
-        text: markdown,
-        contentStart: astPointToFoamPosition(tree.position!.start),
-        end: astPointToFoamPosition(tree.position!.end),
-        eol: eol,
-      };
-
       plugins.forEach(plugin => {
         try {
           plugin.onWillVisitTree?.(tree, note);
@@ -368,7 +360,7 @@ export function createMarkdownParser(
 
         for (let i = 0, len = plugins.length; i < len; i++) {
           try {
-            plugins[i].visit?.(node, note, noteSource);
+            plugins[i].visit?.(node, note, markdown);
           } catch (e) {
             handleError(plugins[i], 'visit', uri, e);
           }

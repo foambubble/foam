@@ -96,63 +96,10 @@ export const markdownItWithRemoveLinkReferences = (
   md: markdownit,
   workspace: FoamWorkspace
 ) => {
-  // Add a custom rule to execute after the defult link rule to strip away the text
-  // before the alias of the WikiLink.
-
-  // As state is on block level the token array con have multiple links. We need to process
-  // them all. As such we are iterating to find all instances of link_open and find the next
-  // link_close token. We then determine the content between the tokens and if it has an alias.
-  // If it has an alias we iterate over all tokens in between to strip them to the desired content.
-  md.inline.ruler.after('link', 'replace-alias', state => {
-    if (state.tokens.filter(t => t.type === 'link_open').length > 0) {
-      let iteratorInLinkBlock = false;
-      let linkBlockContainsAlias = false;
-      state.tokens.forEach((token, currentTokenIndex) => {
-        if (!iteratorInLinkBlock && token.type !== 'link_open') {
-          return;
-        }
-
-        iteratorInLinkBlock = true;
-        if (iteratorInLinkBlock && token.type === 'link_close') {
-          iteratorInLinkBlock = false;
-          linkBlockContainsAlias = false;
-          return;
-        }
-
-        if (token.type === 'link_open') {
-          const nextLinkClosePosition = state.tokens
-            .slice(currentTokenIndex + 1)
-            .findIndex(t => t.type === 'link_close');
-
-          const linkContent = state.tokens
-            .slice(
-              currentTokenIndex + 1,
-              nextLinkClosePosition + currentTokenIndex + 1
-            )
-            .reduce((linkContent, token) => {
-              return linkContent + token.content;
-            }, '');
-
-          if (linkContent.includes(ALIAS_DIVIDER_CHAR)) {
-            linkBlockContainsAlias = true;
-          }
-        }
-
-        if (linkBlockContainsAlias) {
-          if (token.content.includes(ALIAS_DIVIDER_CHAR)) {
-            const dividerPosition = token.content.indexOf(ALIAS_DIVIDER_CHAR);
-            token.content = token.content.substr(
-              dividerPosition + 1,
-              token.content.length - dividerPosition - 1
-            );
-          } else {
-            token.content = '';
-          }
-        }
-      });
-    } else {
-      return false;
-    }
+  // Forget about reference blocks before processing links.
+  md.inline.ruler.before('link', 'clear-references', state => {
+    state.env.references = undefined;
+    return false;
   });
   return md;
 };

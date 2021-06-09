@@ -1,7 +1,10 @@
-import * as vscode from 'vscode';
-import markdownItRegex from 'markdown-it-regex';
 import { Foam, FoamWorkspace, Logger, URI } from 'foam-core';
+import markdownItRegex from 'markdown-it-regex';
+import * as vscode from 'vscode';
 import { FoamFeature } from '../types';
+import { isNone } from '../utils';
+
+const ALIAS_DIVIDER_CHAR = '|';
 
 const feature: FoamFeature = {
   activate: async (
@@ -11,11 +14,13 @@ const feature: FoamFeature = {
     const foam = await foamPromise;
 
     return {
-      extendMarkdownIt: (md: markdownit) =>
-        [markdownItWithFoamTags, markdownItWithFoamLinks].reduce(
-          (acc, extension) => extension(acc, foam.workspace),
-          md
-        ),
+      extendMarkdownIt: (md: markdownit) => {
+        return [
+          markdownItWithFoamTags,
+          markdownItWithFoamLinks,
+          markdownItWithRemoveLinkReferences,
+        ].reduce((acc, extension) => extension(acc, foam.workspace), md);
+      },
     };
   },
 };
@@ -29,13 +34,23 @@ export const markdownItWithFoamLinks = (
     regex: /\[\[([^[\]]+?)\]\]/,
     replace: (wikilink: string) => {
       try {
-        const resource = workspace.find(wikilink);
-        if (resource == null) {
-          return getPlaceholderLink(wikilink);
+        const linkHasAlias = wikilink.includes(ALIAS_DIVIDER_CHAR);
+        const resourceLink = linkHasAlias
+          ? wikilink.substring(0, wikilink.indexOf('|'))
+          : wikilink;
+
+        const resource = workspace.find(resourceLink);
+        if (isNone(resource)) {
+          return getPlaceholderLink(resourceLink);
         }
+
+        const linkLabel = linkHasAlias
+          ? wikilink.substr(wikilink.indexOf('|') + 1)
+          : wikilink;
+
         return `<a class='foam-note-link' title='${
           resource.title
-        }' href='${URI.toFsPath(resource.uri)}'>${wikilink}</a>`;
+        }' href='${URI.toFsPath(resource.uri)}'>${linkLabel}</a>`;
       } catch (e) {
         Logger.error(
           `Error while creating link for [[${wikilink}]] in Preview panel`,
@@ -60,7 +75,7 @@ export const markdownItWithFoamTags = (
     replace: (tag: string) => {
       try {
         const resource = workspace.find(tag);
-        if (resource == null) {
+        if (isNone(resource)) {
           return getFoamTag(tag);
         }
       } catch (e) {
@@ -76,5 +91,17 @@ export const markdownItWithFoamTags = (
 
 const getFoamTag = (content: string) =>
   `<span class='foam-tag'>${content}</span>`;
+
+export const markdownItWithRemoveLinkReferences = (
+  md: markdownit,
+  workspace: FoamWorkspace
+) => {
+  // Forget about reference blocks before processing links.
+  md.inline.ruler.before('link', 'clear-references', state => {
+    state.env.references = undefined;
+    return false;
+  });
+  return md;
+};
 
 export default feature;

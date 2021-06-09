@@ -232,7 +232,7 @@ describe('Wikilinks', () => {
     expect(graph.getAllConnections()[0]).toEqual({
       source: noteA.uri,
       target: noteB.uri,
-      link: expect.objectContaining({ type: 'wikilink', slug: 'page-b' }),
+      link: expect.objectContaining({ type: 'wikilink', label: 'page-b' }),
     });
   });
 

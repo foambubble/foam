@@ -70,10 +70,10 @@ export const createTestNote = (params: {
           return 'slug' in link
             ? {
                 type: 'wikilink',
-                slug: link.slug,
                 target: link.slug,
+                label: link.slug,
                 range: range,
-                text: 'link text',
+                rawText: 'link text',
               }
             : {
                 type: 'link',
@@ -139,7 +139,7 @@ export const createNote = (r: Resource) => {
 
   some content and ${r.links
     .map(l =>
-      l.type === 'wikilink' ? `[[${l.slug}]]` : `[${l.label}](${l.target})`
+      l.type === 'wikilink' ? `[[${l.label}]]` : `[${l.label}](${l.target})`
     )
     .join(' some content between links.\n')}
   last line.

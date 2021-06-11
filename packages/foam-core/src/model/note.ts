@@ -11,8 +11,9 @@ export interface NoteSource {
 
 export interface WikiLink {
   type: 'wikilink';
-  slug: string;
   target: string;
+  label: string;
+  rawText: string;
   range: Range;
 }
 

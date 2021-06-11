@@ -3,7 +3,7 @@ import {
   createMarkdownReferences,
   ParserPlugin,
 } from '../src/markdown-provider';
-import { DirectLink } from '../src/model/note';
+import { DirectLink, WikiLink } from '../src/model/note';
 import { Logger } from '../src/utils/log';
 import { uriToSlug } from '../src/utils/slug';
 import { URI } from '../src/model/uri';
@@ -129,6 +129,24 @@ this is a [link to intro](#introduction)
       noteD.uri,
       noteE.uri,
     ]);
+  });
+
+  it('Parses backlinks with an alias', () => {
+    const note = createNoteFromMarkdown(
+      '/path/to/page-a.md',
+      'this is [[link|link alias]]. A link with spaces [[other link | spaced]]'
+    );
+    expect(note.links.length).toEqual(2);
+    let link = note.links[0] as WikiLink;
+    expect(link.type).toEqual('wikilink');
+    expect(link.rawText).toEqual('[[link|link alias]]');
+    expect(link.label).toEqual('link alias');
+    expect(link.target).toEqual('link');
+    link = note.links[1] as WikiLink;
+    expect(link.type).toEqual('wikilink');
+    expect(link.rawText).toEqual('[[other link | spaced]]');
+    expect(link.label).toEqual('spaced');
+    expect(link.target).toEqual('other link');
   });
 });
 
@@ -335,19 +353,6 @@ this is some #text that includes #tags we #care-about.
     expect(noteA.tags).toEqual(
       new Set(['text', 'tags', 'care-about', 'hello', 'world', 'this_is_good'])
     );
-  });
-
-  it('can find nested tags as array in yaml', () => {
-    const noteA = createNoteFromMarkdown(
-      '/dir1/page-a.md',
-      `
----
-tags: [hello, world,  parent/child]
----
-# this is a heading
-    `
-    );
-    expect(noteA.tags).toEqual(new Set(['hello', 'world', 'parent/child']));
   });
 });
 

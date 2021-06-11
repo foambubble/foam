@@ -100,4 +100,24 @@ describe('Document links provider', () => {
     );
     expect(links[0].range).toEqual(new vscode.Range(0, 18, 0, 35));
   });
+
+  it('should support wikilinks that have an alias', async () => {
+    const fileB = await createFile('# File B');
+    const fileA = await createFile(
+      `this is a link to [[${fileB.name}|alias]].`
+    );
+    const noteA = parser.parse(fileA.uri, fileA.content);
+    const noteB = parser.parse(fileB.uri, fileB.content);
+    const ws = createTestWorkspace()
+      .set(noteA)
+      .set(noteB);
+
+    const { doc } = await showInEditor(noteA.uri);
+    const provider = new LinkProvider(ws, parser);
+    const links = provider.provideDocumentLinks(doc);
+
+    expect(links.length).toEqual(1);
+    expect(links[0].target).toEqual(OPEN_COMMAND.asURI(noteB.uri));
+    expect(links[0].range).toEqual(new vscode.Range(0, 18, 0, 33));
+  });
 });

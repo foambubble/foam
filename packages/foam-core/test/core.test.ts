@@ -67,10 +67,10 @@ export const createTestNote = (params: {
           return 'slug' in link
             ? {
                 type: 'wikilink',
-                slug: link.slug,
                 target: link.slug,
+                label: link.slug,
                 range: range,
-                text: 'link text',
+                rawText: 'link text',
               }
             : {
                 type: 'link',

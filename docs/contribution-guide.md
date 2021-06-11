@@ -62,10 +62,6 @@ This guide assumes you read the previous instructions and you're set up to work 
 
 3. Test a command to make sure it's working as expected. Open the Command Palette (Ctrl/Cmd + Shift + P) and select "Foam: Update Markdown Reference List". If you see no errors, it's good to go!
 
-For more resources related to the VS Code Extension, check out the links below:
-
-- [[tutorial-adding-a-new-command-to-the-vs-code-extension]]
-
 ---
 
 Feel free to modify and submit a PR if this guide is out-of-date or contains errors!

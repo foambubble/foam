@@ -74,17 +74,6 @@ function getTemplates(): Thenable<Uri[]> {
   return workspace.findFiles('.foam/templates/**.md', null);
 }
 
-async function offerToCreateTemplate(): Promise<void> {
-  const response = await window.showQuickPick(['Yes', 'No'], {
-    placeHolder:
-      'No templates available. Would you like to create one instead?',
-  });
-  if (response === 'Yes') {
-    commands.executeCommand('foam-vscode.create-new-template');
-    return;
-  }
-}
-
 function findFoamVariables(templateText: string): string[] {
   const regex = /\$(FOAM_[_a-zA-Z0-9]*)|\${(FOAM_[[_a-zA-Z0-9]*)}/g;
   var matches = [];
@@ -198,15 +187,10 @@ function sortTemplatesMetadata(
   return nameSortOrder || basenameSortOrder;
 }
 
-async function askUserForTemplate() {
-  const templates = await getTemplates();
-  if (templates.length === 0) {
-    return offerToCreateTemplate();
-  }
-
+async function templateQuickPickItems(templateUris: Uri[]) {
   const templatesMetadata = (
     await Promise.all(
-      templates.map(async templateUri => {
+      templateUris.map(async templateUri => {
         const metadata = await templateMetadata(templateUri);
         metadata.set('templatePath', templateUri.fsPath);
         return metadata;
@@ -214,7 +198,7 @@ async function askUserForTemplate() {
     )
   ).sort(sortTemplatesMetadata);
 
-  const items: QuickPickItem[] = await Promise.all(
+  return await Promise.all(
     templatesMetadata.map(metadata => {
       const basename = path.basename(metadata.get('templatePath'));
       const label = metadata.get('name') || basename;
@@ -234,6 +218,26 @@ async function askUserForTemplate() {
       return item;
     })
   );
+}
+
+async function offerToCreateTemplate(): Promise<void> {
+  const response = await window.showQuickPick(['Yes', 'No'], {
+    placeHolder:
+      'No templates available. Would you like to create one instead?',
+  });
+  if (response === 'Yes') {
+    commands.executeCommand('foam-vscode.create-new-template');
+    return;
+  }
+}
+
+async function askUserForTemplate() {
+  const templates = await getTemplates();
+  if (templates.length === 0) {
+    return offerToCreateTemplate();
+  }
+
+  const items = await templateQuickPickItems(templates);
 
   return await window.showQuickPick(items, {
     placeHolder: 'Select a template to use.',

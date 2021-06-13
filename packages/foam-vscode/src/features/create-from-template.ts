@@ -242,15 +242,15 @@ async function askUserForTemplate() {
 }
 
 async function askUserForFilepathConfirmation(
-  defaultFilepath: Uri,
+  defaultFilepath: string,
   defaultFilename: string
 ) {
   return await window.showInputBox({
     prompt: `Enter the filename for the new note`,
-    value: defaultFilepath.fsPath,
+    value: defaultFilepath,
     valueSelection: [
-      defaultFilepath.fsPath.length - defaultFilename.length,
-      defaultFilepath.fsPath.length - 3,
+      defaultFilepath.length - defaultFilename.length,
+      defaultFilepath.length - 3,
     ],
     validateInput: value =>
       value.trim().length === 0
@@ -356,7 +356,7 @@ async function createNoteFromDefaultTemplate(): Promise<void> {
   let filepath = defaultFilepath;
   if (existsSync(filepath.fsPath)) {
     const newFilepath = await askUserForFilepathConfirmation(
-      defaultFilepath,
+      defaultFilepath.fsPath,
       defaultFilename
     );
 
@@ -410,7 +410,7 @@ async function createNoteFromTemplate(
   const defaultFilename = path.basename(defaultFilepath.path);
 
   const filepath = await askUserForFilepathConfirmation(
-    defaultFilepath,
+    defaultFilepath.fsPath,
     defaultFilename
   );
 

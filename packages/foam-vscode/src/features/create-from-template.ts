@@ -70,9 +70,8 @@ async function templateMetadata(
   return templateMetadata;
 }
 
-async function getTemplates(): Promise<Uri[]> {
-  const templates = await workspace.findFiles('.foam/templates/**.md', null);
-  return templates;
+function getTemplates(): Thenable<Uri[]> {
+  return workspace.findFiles('.foam/templates/**.md', null);
 }
 
 async function offerToCreateTemplate(): Promise<void> {
@@ -176,7 +175,7 @@ function sortTemplatesMetadata(
   t1: Map<string, string>,
   t2: Map<string, string>
 ) {
-  // Sort by name's existence, then name, then path
+  // Sort by name's existence, then name, then basename
 
   if (t1.get('name') === undefined && t2.get('name') !== undefined) {
     return 1;
@@ -186,17 +185,17 @@ function sortTemplatesMetadata(
     return -1;
   }
 
-  const pathSortOrder = t1
-    .get('templatePath')
-    .localeCompare(t2.get('templatePath'));
+  const t1_basename = path.basename(t1.get('templatePath'));
+  const t2_basename = path.basename(t1.get('templatePath'));
+  const basenameSortOrder = t1_basename.localeCompare(t2_basename);
 
   if (t1.get('name') === undefined && t2.get('name') === undefined) {
-    return pathSortOrder;
+    return basenameSortOrder;
   }
 
   const nameSortOrder = t1.get('name').localeCompare(t2.get('name'));
 
-  return nameSortOrder || pathSortOrder;
+  return nameSortOrder || basenameSortOrder;
 }
 
 async function askUserForTemplate() {
@@ -209,7 +208,7 @@ async function askUserForTemplate() {
     await Promise.all(
       templates.map(async templateUri => {
         const metadata = await templateMetadata(templateUri);
-        metadata.set('templatePath', path.basename(templateUri.path));
+        metadata.set('templatePath', templateUri.fsPath);
         return metadata;
       })
     )
@@ -217,15 +216,15 @@ async function askUserForTemplate() {
 
   const items: QuickPickItem[] = await Promise.all(
     templatesMetadata.map(metadata => {
-      const label = metadata.get('name') || metadata.get('templatePath');
-      const description = metadata.get('name')
-        ? metadata.get('templatePath')
-        : null;
+      const basename = path.basename(metadata.get('templatePath'));
+      const label = metadata.get('name') || basename;
+      const description = metadata.get('name') ? basename : null;
       const detail = metadata.get('description');
       const item = {
         label: label,
         description: description,
         detail: detail,
+        filepath: metadata.get('templatePath'),
       };
       Object.keys(item).forEach(key => {
         if (!item[key]) {
@@ -370,16 +369,14 @@ async function createNoteFromDefaultTemplate(): Promise<void> {
 }
 
 async function createNoteFromTemplate(
-  templateFilename?: string
+  templateFilepath?: string
 ): Promise<void> {
   const selectedTemplate = await askUserForTemplate();
   if (selectedTemplate === undefined) {
     return;
   }
-  templateFilename =
-    (selectedTemplate as QuickPickItem).description ||
-    (selectedTemplate as QuickPickItem).label;
-  const templateUri = Uri.joinPath(templatesDir, templateFilename);
+  templateFilepath = (selectedTemplate as QuickPickItem)['filepath'];
+  const templateUri = Uri.file(templateFilepath);
   const templateText = await workspace.fs
     .readFile(templateUri)
     .then(bytes => bytes.toString());

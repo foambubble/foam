@@ -57,15 +57,14 @@ For a full list of features see [the VS Code snippets page](https://code.visuals
 
 const homeDir = Uri.file(homedir());
 const homeDirTemplatesDir = Uri.joinPath(homeDir, '.foam', 'templates');
-const workspaceTemplatesDir = Uri.joinPath(
-  workspace.workspaceFolders[0].uri,
-  '.foam',
-  'templates'
-);
 
 function findTemplate(filename: string) {
-  return [workspaceTemplatesDir, homeDirTemplatesDir].find(uri =>
-    existsSync(Uri.joinPath(uri, filename).fsPath)
+  const workspaceTemplatesDir: Uri | undefined = workspace.workspaceFolders
+    ? Uri.joinPath(workspace.workspaceFolders[0].uri, '.foam', 'templates')
+    : undefined;
+
+  return [workspaceTemplatesDir, homeDirTemplatesDir].find(
+    uri => uri && existsSync(Uri.joinPath(uri, filename).fsPath)
   );
 }
 
@@ -339,11 +338,15 @@ async function writeTemplate(templateSnippet: SnippetString, filepath: Uri) {
 
 function currentDirectoryFilepath(filename: string): Uri {
   const activeFile = window.activeTextEditor?.document?.uri.path;
-  const currentDir =
-    activeFile !== undefined
-      ? Uri.parse(path.dirname(activeFile))
-      : workspace.workspaceFolders[0].uri;
 
+  let currentDir: Uri;
+  if (activeFile) {
+    currentDir = Uri.parse(path.dirname(activeFile));
+  } else if (workspace.workspaceFolders) {
+    currentDir = workspace.workspaceFolders[0].uri;
+  } else {
+    currentDir = homeDir;
+  }
   return Uri.joinPath(currentDir, filename);
 }
 
@@ -357,10 +360,9 @@ export function determineDefaultFilepath(
     if (isAbsolute(filepathFromMetadata)) {
       defaultFilepath = Uri.file(filepathFromMetadata);
     } else {
-      defaultFilepath = Uri.joinPath(
-        workspace.workspaceFolders[0].uri,
-        filepathFromMetadata
-      );
+      defaultFilepath = workspace.workspaceFolders
+        ? Uri.joinPath(workspace.workspaceFolders[0].uri, filepathFromMetadata)
+        : Uri.joinPath(homeDir, filepathFromMetadata);
     }
   } else {
     const defaultSlug = resolvedValues.get('FOAM_TITLE') || 'New Note';
@@ -471,26 +473,30 @@ async function createNoteFromTemplate(
 }
 
 function askTemplateCreationLocation(): Thenable<QuickPickItem | undefined> {
-  const workspaceQuickPick = {
-    label: 'In this workspace',
-    description: 'Available for this workspace',
-    detail: Uri.joinPath(
-      workspace.workspaceFolders[0].uri,
-      '.foam',
-      'templates'
-    ).fsPath,
-  };
-
   const homeDirQuickPick = {
     label: 'In your home directory',
     description: 'Available for all workspaces',
     detail: homeDirTemplatesDir.fsPath,
   };
 
-  const quickPicks = [workspaceQuickPick, homeDirQuickPick];
-  return window.showQuickPick(quickPicks, {
-    placeHolder: 'Where should the new template be created?',
-  });
+  if (workspace.workspaceFolders) {
+    const workspaceQuickPick = {
+      label: 'In this workspace',
+      description: 'Available for this workspace',
+      detail: Uri.joinPath(
+        workspace.workspaceFolders[0].uri,
+        '.foam',
+        'templates'
+      ).fsPath,
+    };
+
+    const quickPicks = [workspaceQuickPick, homeDirQuickPick];
+    return window.showQuickPick(quickPicks, {
+      placeHolder: 'Where should the new template be created?',
+    });
+  } else {
+    return Promise.resolve(homeDirQuickPick);
+  }
 }
 
 async function createNewTemplate(): Promise<void> {

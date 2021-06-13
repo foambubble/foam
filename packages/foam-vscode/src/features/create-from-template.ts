@@ -245,12 +245,13 @@ async function askUserForFilepathConfirmation(
   defaultFilepath: string,
   defaultFilename: string
 ) {
+  const defaultFilepathNoExtension = defaultFilepath.replace(/\.[^.]+$/, '');
   return await window.showInputBox({
     prompt: `Enter the filename for the new note`,
     value: defaultFilepath,
     valueSelection: [
       defaultFilepath.length - defaultFilename.length,
-      defaultFilepath.length - 3,
+      defaultFilepathNoExtension.length,
     ],
     validateInput: value =>
       value.trim().length === 0
@@ -423,13 +424,14 @@ async function createNoteFromTemplate(
 
 async function createNewTemplate(): Promise<void> {
   const defaultFilename = 'new-template.md';
-  const defaultTemplate = Uri.joinPath(templatesDir, defaultFilename);
+  const defaultFilepath = Uri.joinPath(templatesDir, defaultFilename).fsPath;
+  const defaultFilepathNoExtension = defaultFilepath.replace(/\.[^.]+$/, '');
   const filename = await window.showInputBox({
     prompt: `Enter the filename for the new template`,
-    value: defaultTemplate.fsPath,
+    value: defaultFilepath,
     valueSelection: [
-      defaultTemplate.fsPath.length - defaultFilename.length,
-      defaultTemplate.fsPath.length - 3,
+      defaultFilepath.length - defaultFilename.length,
+      defaultFilepathNoExtension.length,
     ],
     validateInput: value =>
       value.trim().length === 0

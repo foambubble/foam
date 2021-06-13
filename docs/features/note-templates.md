@@ -2,7 +2,7 @@
 
 Foam supports note templates. Templates are a way to customize the starting content for your notes (instead of always starting from an empty note).
 
-Note templates are files located in the special `.foam/templates` directory.
+Note templates are files located in the special `.foam/templates` directory. The `.foam/templates` can be within the workspace, or within the user's home directory (e.g. `~/.foam/templates`).
 
 ## Quickstart
 
@@ -26,7 +26,8 @@ _Theme: Ayu Light_
 
 ## Default template
 
-The `.foam/templates/new-note.md` template is special in that it is the template that will be used by the `Foam: Create New Note` command.
+The `.foam/templates/new-note.md` template is special in that it is the template that will be used by the `Foam: Create New Note` command. `Foam: Create New Note` will look for this template in the current workspace, and then in the user's home directory if not found in the current workspace.
+
 Customize this template to contain content that you want included every time you create a note.
 
 ## Variables

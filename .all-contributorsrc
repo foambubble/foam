@@ -697,6 +697,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "bronson",
+      "name": "Scott Bronson",
+      "avatar_url": "https://avatars.githubusercontent.com/u/1776?v=4",
+      "profile": "https://github.com/bronson",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,

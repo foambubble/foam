@@ -80,7 +80,7 @@ const getDailyNoteLink = (date: Date) => {
   return `[[${name.replace(`.${foamExtension}`, '')}]]`;
 };
 
-const snippets: (() => DateSnippet)[] = [
+const snippetFactories: (() => DateSnippet)[] = [
   () => ({
     detail: "Insert a link to today's daily note",
     snippet: '/day',
@@ -169,24 +169,28 @@ const computedSnippets: ((number: number) => DateSnippet)[] = [
 ];
 
 const completions: CompletionItemProvider = {
-  provideCompletionItems: (_document, _position, _token, _context) => {
+  provideCompletionItems: (document, position, _token, _context) => {
     if (_context.triggerKind === CompletionTriggerKind.Invoke) {
       // if completion was triggered without trigger character then we return [] to fallback
       // to vscode word-based suggestions (see https://github.com/foambubble/foam/pull/417)
       return [];
     }
-
+    const range = document.getWordRangeAtPosition(position, /\S+/);
     const completionItems = [
-      ...snippets.map(item => createCompletionItem(item())),
-      ...generateDayOfWeekSnippets().map(item => createCompletionItem(item)),
-    ];
+      ...snippetFactories.map(snippetFactory => snippetFactory()),
+      ...generateDayOfWeekSnippets(),
+    ].map(snippet => {
+      const completionItem = createCompletionItem(snippet);
+      completionItem.range = range;
+      return completionItem;
+    });
     return completionItems;
   },
 };
 
-const computedCompletions: CompletionItemProvider = {
-  provideCompletionItems: (document, position, _token, _context) => {
-    if (_context.triggerKind === CompletionTriggerKind.Invoke) {
+export const datesCompletionProvider: CompletionItemProvider = {
+  provideCompletionItems: (document, position, _token, context) => {
+    if (context.triggerKind === CompletionTriggerKind.Invoke) {
       // if completion was triggered without trigger character then we return [] to fallback
       // to vscode word-based suggestions (see https://github.com/foambubble/foam/pull/417)
       return [];
@@ -229,7 +233,7 @@ const feature: FoamFeature = {
     languages.registerCompletionItemProvider('markdown', completions, '/');
     languages.registerCompletionItemProvider(
       'markdown',
-      computedCompletions,
+      datesCompletionProvider,
       '/',
       '+'
     );

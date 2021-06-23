@@ -26,7 +26,7 @@ describe('hashtag extraction', () => {
   });
   it('ignores tags that only have numbers in text', () => {
     expect(
-      extractHashtags('this #123 tag should be ignore, but not #123four')
+      extractHashtags('this #123 tag should be ignored, but not for #123four')
     ).toEqual(new Set(['123four']));
   });
   it('supports unicode letters like Chinese charaters', () => {
@@ -38,6 +38,15 @@ describe('hashtag extraction', () => {
     ).toEqual(
       new Set(['tag_with_unicode_letters_汉字', '纯中文标签', '标签1', '123四'])
     );
+  });
+  it('ignores tags in code blocks', () => {
+    expect(
+      extractHashtags(`\`\`\`
+      this #tag_in_code_blocks should be ignored
+      \`\`\`
+      and \` #tag_of_inline_code \` should be ignored, but not for #tag_outside
+      `)
+    ).toEqual(new Set(['tag_outside']));
   });
 
   it('ignores hashes in plain text urls and links', () => {

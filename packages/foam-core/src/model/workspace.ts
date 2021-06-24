@@ -110,7 +110,12 @@ export class FoamWorkspace implements IDisposable {
 
       case 'key':
         const name = pathToResourceName(resourceId as string);
-        const paths = this.resourcesByName[name];
+        let paths = this.resourcesByName[name];
+
+        if (isNone(paths) || paths.length === 0) {
+          paths = this.resourcesByName[resourceId as string];
+        }
+
         if (isNone(paths) || paths.length === 0) {
           return null;
         }
@@ -118,6 +123,7 @@ export class FoamWorkspace implements IDisposable {
         const sortedPaths = paths.length === 1
           ? paths
           : paths.sort((a, b) => a.localeCompare(b));
+
         return this.resources[sortedPaths[0]];
 
       case 'absolute-path':

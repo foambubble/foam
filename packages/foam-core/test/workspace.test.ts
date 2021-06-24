@@ -354,6 +354,20 @@ describe('Wikilinks', () => {
       attachmentABis.uri,
     ]);
   });
+
+  it('Allows for dendron-style wikilinks, including a dot', () => {
+    const noteA = createTestNote({
+      uri: '/path/to/page-a.md',
+      links: [{ slug: 'dendron.style' }],
+    });
+    const noteB1 = createTestNote({ uri: '/path/to/another/dendron.style.md' });
+
+    const ws = createTestWorkspace();
+    ws.set(noteA).set(noteB1);
+    const graph = FoamGraph.fromWorkspace(ws);
+
+    expect(graph.getLinks(noteA.uri).map(l => l.target)).toEqual([noteB1.uri]);
+  });
 });
 
 describe('markdown direct links', () => {

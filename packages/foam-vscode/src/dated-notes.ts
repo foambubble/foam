@@ -38,6 +38,16 @@ function getDailyNotePath(
   }
 }
 
+/**
+ * Get the daily note filename.
+ *
+ * This function will fetch the filename format and extension from
+ * `foam.openDailyNote.filenameFormat` and `foam.openDailyNote.fileExtension`, respectively.
+ *
+ * @param configuration
+ * @param date A given date to be formatted as filename.
+ * @returns The daily note's filename.
+ */
 function getDailyNoteFileName(
   configuration: WorkspaceConfiguration,
   date: Date

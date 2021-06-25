@@ -5,6 +5,14 @@ import { isAbsolute } from 'path';
 import { docConfig, focusNote, pathExists } from './utils';
 import { URI } from 'foam-core';
 
+/**
+ * Open the daily note file.
+ *
+ * In the case that the daily note file does not exist,
+ * it gets created along with any folders in its path.
+ *
+ * @param date A given date to be formatted as filename.
+ */
 async function openDailyNoteFor(date?: Date) {
   const foamConfiguration = workspace.getConfiguration('foam');
   const currentDate = date !== undefined ? date : new Date();

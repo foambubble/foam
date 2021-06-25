@@ -19,6 +19,19 @@ async function openDailyNoteFor(date?: Date) {
   await focusNote(dailyNotePath, isNew);
 }
 
+/**
+ * Get the daily note file path.
+ *
+ * This function first checks the `foam.openDailyNote.directory` configuration string,
+ * defaulting to the current directory.
+ *
+ * In the case that the directory path is not absolute,
+ * the resulting path will start on the current workspace top-level.
+ *
+ * @param configuration The current workspace configuration.
+ * @param date A given date to be formatted as filename.
+ * @returns The path to the daily note file.
+ */
 function getDailyNotePath(
   configuration: WorkspaceConfiguration,
   date: Date

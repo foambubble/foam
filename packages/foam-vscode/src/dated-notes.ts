@@ -52,6 +52,17 @@ function getDailyNoteFileName(
   return `${dateFormat(date, filenameFormat, false)}.${fileExtension}`;
 }
 
+/**
+ * Create a daily note if it does not exist.
+ *
+ * In the case that the folders referenced in the file path also do not exist,
+ * this function will create all folders in the path.
+ *
+ * @param configuration
+ * @param dailyNotePath the path to daily note file.
+ * @param currentDate the current date, to be used as a title.
+ * @returns wether the file was created.
+ */
 async function createDailyNoteIfNotExists(
   configuration: WorkspaceConfiguration,
   dailyNotePath: URI,

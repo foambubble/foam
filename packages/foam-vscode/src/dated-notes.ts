@@ -77,6 +77,15 @@ async function createDailyNoteIfNotExists(
   return true;
 }
 
+/**
+ * If the daily note's folder does not exist,
+ * create such directory.
+ *
+ * For example, for the path `/home/user/foam-template/journal/yyyy-mm-dd.md`,
+ * it will create all directories in the path up until the file.
+ *
+ * @param dailyNotePath The path to the daily note file.
+ */
 async function createDailyNoteDirectoryIfNotExists(dailyNotePath: URI) {
   const dailyNoteDirectory = URI.getDir(dailyNotePath);
 

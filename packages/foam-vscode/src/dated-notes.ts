@@ -120,6 +120,8 @@ async function createDailyNoteIfNotExists(
 }
 
 /**
+ * Create the directory needed for the note to be placed in. 
+ *
  * If the daily note's folder does not exist,
  * create such directory.
  *

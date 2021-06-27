@@ -60,12 +60,11 @@ function getDailyNotePath(
 }
 
 /**
- * Get the daily note filename.
+ * Get the daily note filename (basename) to use.
  *
- * Get the filename (basename) to use.
- *   
- * It fetch the filename format and extension from
- * `foam.openDailyNote.filenameFormat` and `foam.openDailyNote.fileExtension`, respectively.
+ * Fetch the filename format and extension from
+ * `foam.openDailyNote.filenameFormat` and
+ * `foam.openDailyNote.fileExtension`, respectively.
  *
  * @param configuration The current workspace configuration.
  * @param date A given date to be formatted as filename.
@@ -122,10 +121,10 @@ async function createDailyNoteIfNotExists(
 }
 
 /**
- * Create the directory needed for the note to be placed in. 
+ * Create the directory (or directories) needed for the note to be placed in.
  *
  * If the daily note's folder does not exist,
- * create such directory.
+ * create such directory and all other non-existent directories in the path.
  *
  * For example, for the path `/home/user/foam-template/journal/yyyy-mm-dd.md`,
  * it will create all directories in the path up until the file.

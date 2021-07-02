@@ -4,6 +4,16 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.13.8] - 2021-07-02
+
+Fixes and Improvements:
+
+- Improved handling of capitalization in wikilinks (#688 - thanks @pderaaij)
+  - This update will make wikilinks with different capitalization, such as `[[wikilink]]` and `[[WikiLink]]` point to the same file. Please note that means that files that only differ in capitalization across the workspace would now be treated as having the same name
+- Allow dots in wikilinks (#689 - thanks @pderaaij)
+- Fixed a bug in the expansion of date snippets (thanks @syndenham-chorea)
+- Added support for wikilink alias syntax, like `[[wikilink|label]]` (#689 - thanks @pderaaij)
+
 ## [0.13.7] - 2021-06-05
 
 Fixes and Improvements:

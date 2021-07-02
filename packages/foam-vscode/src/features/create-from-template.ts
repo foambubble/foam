@@ -11,15 +11,10 @@ import * as path from 'path';
 import { FoamFeature } from '../types';
 import { TextEncoder } from 'util';
 import { focusNote } from '../utils';
-import { existsSync } from 'fs';
+import { homedir } from 'os';
+import { existsSync, readdirSync } from 'fs';
 import { isAbsolute } from 'path';
 import { extractFoamTemplateFrontmatterMetadata } from '../utils/template-frontmatter-parser';
-
-const templatesDir = Uri.joinPath(
-  workspace.workspaceFolders[0].uri,
-  '.foam',
-  'templates'
-);
 
 export class UserCancelledOperation extends Error {
   constructor(message?: string) {
@@ -32,6 +27,7 @@ export class UserCancelledOperation extends Error {
 
 const knownFoamVariables = new Set(['FOAM_TITLE']);
 
+const defaultTemplateFilename = 'new-note.md';
 const defaultTemplateDefaultText: string = `---
 foam_template:
   name: New Note
@@ -39,7 +35,6 @@ foam_template:
 ---
 # \${FOAM_TITLE}
 `;
-const defaultTemplateUri = Uri.joinPath(templatesDir, 'new-note.md');
 
 const templateContent = `# \${1:$TM_FILENAME_BASE}
 
@@ -60,6 +55,19 @@ For a full list of features see [the VS Code snippets page](https://code.visuals
 2. create a note from this template by running the \`Foam: Create New Note From Template\` command
 `;
 
+const homeDir = Uri.file(homedir());
+const homeDirTemplatesDir = Uri.joinPath(homeDir, '.foam', 'templates');
+
+function findTemplate(filename: string) {
+  const workspaceTemplatesDir: Uri | undefined = workspace.workspaceFolders
+    ? Uri.joinPath(workspace.workspaceFolders[0].uri, '.foam', 'templates')
+    : undefined;
+
+  return [workspaceTemplatesDir, homeDirTemplatesDir].find(
+    uri => uri && existsSync(Uri.joinPath(uri, filename).fsPath)
+  );
+}
+
 async function templateMetadata(
   templateUri: Uri
 ): Promise<Map<string, string>> {
@@ -70,20 +78,19 @@ async function templateMetadata(
   return templateMetadata;
 }
 
-async function getTemplates(): Promise<Uri[]> {
-  const templates = await workspace.findFiles('.foam/templates/**.md', null);
-  return templates;
+function getHomeDirTemplates(): Uri[] {
+  const homeDirTemplates = existsSync(homeDirTemplatesDir.fsPath)
+    ? readdirSync(homeDirTemplatesDir.fsPath, {
+        withFileTypes: true,
+      })
+        .filter(dirent => dirent.isFile && dirent.name.endsWith('.md'))
+        .map(dirent => Uri.joinPath(homeDirTemplatesDir, dirent.name))
+    : [];
+  return homeDirTemplates;
 }
 
-async function offerToCreateTemplate(): Promise<void> {
-  const response = await window.showQuickPick(['Yes', 'No'], {
-    placeHolder:
-      'No templates available. Would you like to create one instead?',
-  });
-  if (response === 'Yes') {
-    commands.executeCommand('foam-vscode.create-new-template');
-    return;
-  }
+function getWorkspaceTemplates(): Thenable<Uri[]> {
+  return workspace.findFiles('.foam/templates/**.md', null);
 }
 
 function findFoamVariables(templateText: string): string[] {
@@ -176,7 +183,7 @@ function sortTemplatesMetadata(
   t1: Map<string, string>,
   t2: Map<string, string>
 ) {
-  // Sort by name's existence, then name, then path
+  // Sort by name's existence, then name, then basename
 
   if (t1.get('name') === undefined && t2.get('name') !== undefined) {
     return 1;
@@ -186,46 +193,41 @@ function sortTemplatesMetadata(
     return -1;
   }
 
-  const pathSortOrder = t1
-    .get('templatePath')
-    .localeCompare(t2.get('templatePath'));
+  const t1_basename = path.basename(t1.get('templatePath'));
+  const t2_basename = path.basename(t1.get('templatePath'));
+  const basenameSortOrder = t1_basename.localeCompare(t2_basename);
 
   if (t1.get('name') === undefined && t2.get('name') === undefined) {
-    return pathSortOrder;
+    return basenameSortOrder;
   }
 
   const nameSortOrder = t1.get('name').localeCompare(t2.get('name'));
 
-  return nameSortOrder || pathSortOrder;
+  return nameSortOrder || basenameSortOrder;
 }
 
-async function askUserForTemplate() {
-  const templates = await getTemplates();
-  if (templates.length === 0) {
-    return offerToCreateTemplate();
-  }
-
+async function templateQuickPickItems(templateUris: Uri[]) {
   const templatesMetadata = (
     await Promise.all(
-      templates.map(async templateUri => {
+      templateUris.map(async templateUri => {
         const metadata = await templateMetadata(templateUri);
-        metadata.set('templatePath', path.basename(templateUri.path));
+        metadata.set('templatePath', templateUri.fsPath);
         return metadata;
       })
     )
   ).sort(sortTemplatesMetadata);
 
-  const items: QuickPickItem[] = await Promise.all(
+  return await Promise.all(
     templatesMetadata.map(metadata => {
-      const label = metadata.get('name') || metadata.get('templatePath');
-      const description = metadata.get('name')
-        ? metadata.get('templatePath')
-        : null;
+      const basename = path.basename(metadata.get('templatePath'));
+      const label = metadata.get('name') || basename;
+      const description = metadata.get('name') ? basename : null;
       const detail = metadata.get('description');
       const item = {
         label: label,
         description: description,
         detail: detail,
+        filepath: metadata.get('templatePath'),
       };
       Object.keys(item).forEach(key => {
         if (!item[key]) {
@@ -235,22 +237,71 @@ async function askUserForTemplate() {
       return item;
     })
   );
+}
 
-  return await window.showQuickPick(items, {
+async function offerToCreateTemplate(): Promise<void> {
+  const response = await window.showQuickPick(['Yes', 'No'], {
+    placeHolder:
+      'No templates available. Would you like to create one instead?',
+  });
+  if (response === 'Yes') {
+    commands.executeCommand('foam-vscode.create-new-template');
+    return;
+  }
+}
+
+async function askUserForTemplate() {
+  const workspaceTemplates = await getWorkspaceTemplates();
+
+  if (workspaceTemplates.length > 0) {
+    const workspaceQuickPicks = await templateQuickPickItems(
+      workspaceTemplates
+    );
+
+    const selectMore = {
+      label: 'Show templates from your home directory',
+      description: '',
+      detail: homeDirTemplatesDir.fsPath,
+      filepath: '',
+    };
+
+    workspaceQuickPicks.push(selectMore);
+
+    const workspaceSelection = await window.showQuickPick(workspaceQuickPicks, {
+      placeHolder: 'Select a template to use.',
+    });
+
+    if (workspaceSelection === undefined || workspaceSelection !== selectMore) {
+      return workspaceSelection;
+    }
+  }
+
+  const homeDirTemplates = getHomeDirTemplates();
+
+  if (homeDirTemplates.length === 0) {
+    return offerToCreateTemplate();
+  }
+
+  const homeDirQuickPicks = await templateQuickPickItems(homeDirTemplates);
+
+  const homeDirSelection = await window.showQuickPick(homeDirQuickPicks, {
     placeHolder: 'Select a template to use.',
   });
+
+  return homeDirSelection;
 }
 
 async function askUserForFilepathConfirmation(
-  defaultFilepath: Uri,
+  defaultFilepath: string,
   defaultFilename: string
 ) {
+  const defaultFilepathNoExtension = defaultFilepath.replace(/\.[^.]+$/, '');
   return await window.showInputBox({
     prompt: `Enter the filename for the new note`,
-    value: defaultFilepath.fsPath,
+    value: defaultFilepath,
     valueSelection: [
-      defaultFilepath.fsPath.length - defaultFilename.length,
-      defaultFilepath.fsPath.length - 3,
+      defaultFilepath.length - defaultFilename.length,
+      defaultFilepathNoExtension.length,
     ],
     validateInput: value =>
       value.trim().length === 0
@@ -285,30 +336,33 @@ async function writeTemplate(templateSnippet: SnippetString, filepath: Uri) {
   await window.activeTextEditor.insertSnippet(templateSnippet);
 }
 
-function currentDirectoryFilepath(filename: string) {
+function currentDirectoryFilepath(filename: string): Uri {
   const activeFile = window.activeTextEditor?.document?.uri.path;
-  const currentDir =
-    activeFile !== undefined
-      ? Uri.parse(path.dirname(activeFile))
-      : workspace.workspaceFolders[0].uri;
 
+  let currentDir: Uri;
+  if (activeFile) {
+    currentDir = Uri.parse(path.dirname(activeFile));
+  } else if (workspace.workspaceFolders) {
+    currentDir = workspace.workspaceFolders[0].uri;
+  } else {
+    currentDir = homeDir;
+  }
   return Uri.joinPath(currentDir, filename);
 }
 
 export function determineDefaultFilepath(
   resolvedValues: Map<string, string>,
   templateMetadata: Map<string, string>
-) {
+): Uri {
   let defaultFilepath: Uri;
-  if (templateMetadata.get('filepath')) {
-    const filepathFromMetadata = templateMetadata.get('filepath');
+  const filepathFromMetadata = templateMetadata.get('filepath');
+  if (filepathFromMetadata) {
     if (isAbsolute(filepathFromMetadata)) {
       defaultFilepath = Uri.file(filepathFromMetadata);
     } else {
-      defaultFilepath = Uri.joinPath(
-        workspace.workspaceFolders[0].uri,
-        filepathFromMetadata
-      );
+      defaultFilepath = workspace.workspaceFolders
+        ? Uri.joinPath(workspace.workspaceFolders[0].uri, filepathFromMetadata)
+        : Uri.joinPath(homeDir, filepathFromMetadata);
     }
   } else {
     const defaultSlug = resolvedValues.get('FOAM_TITLE') || 'New Note';
@@ -318,10 +372,11 @@ export function determineDefaultFilepath(
 }
 
 async function createNoteFromDefaultTemplate(): Promise<void> {
-  const templateUri = defaultTemplateUri;
-  const templateText = existsSync(templateUri.fsPath)
-    ? await workspace.fs.readFile(templateUri).then(bytes => bytes.toString())
-    : defaultTemplateDefaultText;
+  const templateUri: Uri | undefined = findTemplate(defaultTemplateFilename);
+  const templateText =
+    templateUri !== undefined
+      ? await workspace.fs.readFile(templateUri).then(bytes => bytes.toString())
+      : defaultTemplateDefaultText;
 
   let resolvedValues: Map<string, string>,
     templateWithResolvedVariables: string;
@@ -351,13 +406,12 @@ async function createNoteFromDefaultTemplate(): Promise<void> {
     resolvedValues,
     templateMetadata
   );
-  const defaultFilename = path.basename(defaultFilepath.path);
 
   let filepath = defaultFilepath;
   if (existsSync(filepath.fsPath)) {
     const newFilepath = await askUserForFilepathConfirmation(
-      defaultFilepath,
-      defaultFilename
+      filepath.fsPath,
+      path.basename(filepath.path)
     );
 
     if (newFilepath === undefined) {
@@ -369,16 +423,14 @@ async function createNoteFromDefaultTemplate(): Promise<void> {
 }
 
 async function createNoteFromTemplate(
-  templateFilename?: string
+  templateFilepath?: string
 ): Promise<void> {
   const selectedTemplate = await askUserForTemplate();
   if (selectedTemplate === undefined) {
     return;
   }
-  templateFilename =
-    (selectedTemplate as QuickPickItem).description ||
-    (selectedTemplate as QuickPickItem).label;
-  const templateUri = Uri.joinPath(templatesDir, templateFilename);
+  templateFilepath = (selectedTemplate as QuickPickItem)['filepath'];
+  const templateUri = Uri.file(templateFilepath);
   const templateText = await workspace.fs
     .readFile(templateUri)
     .then(bytes => bytes.toString());
@@ -407,29 +459,64 @@ async function createNoteFromTemplate(
     resolvedValues,
     templateMetadata
   );
-  const defaultFilename = path.basename(defaultFilepath.path);
 
   const filepath = await askUserForFilepathConfirmation(
-    defaultFilepath,
-    defaultFilename
+    defaultFilepath.fsPath,
+    path.basename(defaultFilepath.path)
   );
 
   if (filepath === undefined) {
     return;
   }
-  const filepathURI = Uri.file(filepath);
-  await writeTemplate(templateSnippet, filepathURI);
+  const filepathUri = Uri.file(filepath);
+  await writeTemplate(templateSnippet, filepathUri);
+}
+
+function askTemplateCreationLocation(): Thenable<QuickPickItem | undefined> {
+  const homeDirQuickPick = {
+    label: 'In your home directory',
+    description: 'Available for all workspaces',
+    detail: homeDirTemplatesDir.fsPath,
+  };
+
+  if (workspace.workspaceFolders) {
+    const workspaceQuickPick = {
+      label: 'In this workspace',
+      description: 'Available for this workspace',
+      detail: Uri.joinPath(
+        workspace.workspaceFolders[0].uri,
+        '.foam',
+        'templates'
+      ).fsPath,
+    };
+
+    const quickPicks = [workspaceQuickPick, homeDirQuickPick];
+    return window.showQuickPick(quickPicks, {
+      placeHolder: 'Where should the new template be created?',
+    });
+  } else {
+    return Promise.resolve(homeDirQuickPick);
+  }
 }
 
 async function createNewTemplate(): Promise<void> {
   const defaultFilename = 'new-template.md';
-  const defaultTemplate = Uri.joinPath(templatesDir, defaultFilename);
+  const templateLocationSelection = await askTemplateCreationLocation();
+  if (templateLocationSelection === undefined) {
+    return;
+  }
+
+  const defaultFilepath = Uri.joinPath(
+    Uri.file((templateLocationSelection as QuickPickItem).detail),
+    defaultFilename
+  ).fsPath;
+  const defaultFilepathNoExtension = defaultFilepath.replace(/\.[^.]+$/, '');
   const filename = await window.showInputBox({
     prompt: `Enter the filename for the new template`,
-    value: defaultTemplate.fsPath,
+    value: defaultFilepath,
     valueSelection: [
-      defaultTemplate.fsPath.length - defaultFilename.length,
-      defaultTemplate.fsPath.length - 3,
+      defaultFilepath.length - defaultFilename.length,
+      defaultFilepathNoExtension.length,
     ],
     validateInput: value =>
       value.trim().length === 0

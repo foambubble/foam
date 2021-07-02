@@ -368,6 +368,37 @@ describe('Wikilinks', () => {
 
     expect(graph.getLinks(noteA.uri).map(l => l.target)).toEqual([noteB1.uri]);
   });
+
+  it('Handles capatalization of files and wiki links correctly', () => {
+    const noteA = createTestNote({
+      uri: '/path/to/page-a.md',
+      links: [
+        // uppercased filename, lowercased slug
+        { slug: 'page-b' },
+        // lowercased filename, camelcased wikilink
+        { slug: 'Page-C' },
+        // lowercased filename, lowercased wikilink
+        { slug: 'page-d' },
+      ],
+    });
+    const ws = createTestWorkspace()
+      .set(noteA)
+      .set(createTestNote({ uri: '/somewhere/PAGE-B.md' }))
+      .set(createTestNote({ uri: '/path/another/page-c.md' }))
+      .set(createTestNote({ uri: '/path/another/page-d.md' }));
+    const graph = FoamGraph.fromWorkspace(ws);
+
+    expect(
+      graph
+        .getLinks(noteA.uri)
+        .map(link => link.target.path)
+        .sort()
+    ).toEqual([
+      '/path/another/page-c.md',
+      '/path/another/page-d.md',
+      '/somewhere/PAGE-B.md',
+    ]);
+  });
 });
 
 describe('markdown direct links', () => {

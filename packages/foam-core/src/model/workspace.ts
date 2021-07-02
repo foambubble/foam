@@ -26,7 +26,8 @@ const pathToResourceId = (pathValue: string) => {
 };
 const uriToResourceId = (uri: URI) => pathToResourceId(uri.path);
 
-const pathToResourceName = (pathValue: string) => path.parse(pathValue).name;
+const pathToResourceName = (pathValue: string) =>
+  path.parse(pathValue).name.toLowerCase();
 export const uriToResourceName = (uri: URI) => pathToResourceName(uri.path);
 
 export class FoamWorkspace implements IDisposable {

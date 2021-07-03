@@ -30,6 +30,7 @@ import { FoamWorkspace } from './model/workspace';
 import { ResourceProvider } from 'model/provider';
 import { IDataStore, FileDataStore, IMatcher } from './services/datastore';
 import { IDisposable } from 'common/lifecycle';
+import MarkdownIt from 'markdown-it';
 
 const ALIAS_DIVIDER_CHAR = '|';
 
@@ -486,4 +487,27 @@ const astPositionToFoamRange = (pos: AstPosition): Range =>
 
 const isWikilink = (link: ResourceLink): link is WikiLink => {
   return link.type === 'wikilink';
+};
+
+export const ignoreCode = (text: string): string => {
+  let md = MarkdownIt().configure('commonmark');
+  const tokens = md.parse(text, {});
+  let textWithoutCode = '';
+  tokens.forEach(v => {
+    if (v.type !== 'fence' && v.type !== 'inline') {
+      textWithoutCode += v.content;
+    }
+    if (v.type === 'inline') {
+      v.children?.forEach(c => {
+        if (c.type !== 'code_inline') {
+          textWithoutCode += c.content;
+        }
+        if (c.type === 'softbreak') {
+          textWithoutCode += ' ';
+        }
+      });
+    }
+  });
+  // console.log('FromTokens:', textWithoutCode);
+  return textWithoutCode;
 };

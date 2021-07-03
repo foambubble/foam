@@ -32,8 +32,8 @@ describe('hashtag extraction', () => {
   it('supports unicode letters like Chinese charaters', () => {
     expect(
       extractHashtags(`
-        this #tag_with_unicode_letters_汉字, pure Chinese tag like #纯中文标签 and 
-        other mixed tags like #标签1 #123四 should work
+this #tag_with_unicode_letters_汉字, pure Chinese tag like #纯中文标签 and 
+other mixed tags like #标签1 #123四 should work
       `)
     ).toEqual(
       new Set(['tag_with_unicode_letters_汉字', '纯中文标签', '标签1', '123四'])
@@ -41,10 +41,11 @@ describe('hashtag extraction', () => {
   });
   it('ignores tags in code blocks', () => {
     expect(
-      extractHashtags(`\`\`\`
-      this #tag_in_code_blocks should be ignored
-      \`\`\`
-      and \` #tag_of_inline_code \` should be ignored, but not for #tag_outside
+      extractHashtags(`
+\`\`\`
+this #tag_in_code_blocks should be ignored
+\`\`\`
+and \` #tag_of_inline_code \` should be ignored, but not for #tag_outside
       `)
     ).toEqual(new Set(['tag_outside']));
   });
@@ -52,10 +53,10 @@ describe('hashtag extraction', () => {
   it('ignores hashes in plain text urls and links', () => {
     expect(
       extractHashtags(`
-        test text with url https://site.com/#section1 https://site.com/home#section2 and
-        https://site.com/home/#section3a
-        [link](https://site.com/#section4) with [link2](https://site.com/home#section5) #control
-        hello world
+test text with url https://site.com/#section1 https://site.com/home#section2 and
+https://site.com/home/#section3a
+[link](https://site.com/#section4) with [link2](https://site.com/home#section5) #control
+hello world
       `)
     ).toEqual(new Set(['control']));
   });
@@ -63,8 +64,8 @@ describe('hashtag extraction', () => {
   it('ignores hashes in links to sections', () => {
     expect(
       extractHashtags(`
-      this is a wikilink to [[#section1]] in the file and a [[link#section2]] in another
-      this is a [link](#section3) to a section
+this is a wikilink to [[#section1]] in the file and a [[link#section2]] in another
+this is a [link](#section3) to a section
       `)
     ).toEqual(new Set());
   });

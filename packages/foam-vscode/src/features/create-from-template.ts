@@ -288,15 +288,13 @@ export async function resolveFoamTemplateVariables(
     x => uniqVariables.indexOf(x) < 0
   );
   if (missingFoamVariables.includes('FOAM_SELECTED_TEXT')) {
-    missingFoamVariables.forEach(key => {
-      templateText = `${templateText}
+    templateText = `${templateText}
       \${FOAM_SELECTED_TEXT}`;
-      uniqVariables.push('FOAM_SELECTED_TEXT');
+    uniqVariables.push('FOAM_SELECTED_TEXT');
+  }
 
-      if (!givenValues.get('FOAM_SELECTED_TEXT')) {
-        givenValues.set('FOAM_SELECTED_TEXT', '');
-      }
-    });
+  if (!givenValues.get('FOAM_SELECTED_TEXT')) {
+    givenValues.set('FOAM_SELECTED_TEXT', '');
   }
 
   const resolvedValues = await resolveFoamVariables(uniqVariables, givenValues);

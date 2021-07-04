@@ -149,6 +149,70 @@ describe('resolveFoamTemplateVariables', () => {
       await resolveFoamTemplateVariables(input, new Set(['FOAM_TITLE']))
     ).toEqual(expected);
   });
+
+  test('Adds FOAM_SELECTED_TEXT at end of template if it has variable has a value but is not referenced', async () => {
+    const foamTitle = 'My note title';
+
+    jest
+      .spyOn(window, 'showInputBox')
+      .mockImplementationOnce(jest.fn(() => Promise.resolve(foamTitle)));
+
+    const input = `
+      # \${FOAM_TITLE}
+      # $FOAM_TITLE`;
+
+    const expectedOutput = `
+      # My note title
+      # My note title
+      Selected text`;
+
+    const expectedMap = new Map<string, string>();
+    expectedMap.set('FOAM_TITLE', foamTitle);
+    expectedMap.set('FOAM_SELECTED_TEXT', 'Selected text');
+
+    const expected = [expectedMap, expectedOutput];
+    const givenValues = new Map<string, string>();
+    givenValues.set('FOAM_SELECTED_TEXT', 'Selected text');
+    expect(
+      await resolveFoamTemplateVariables(
+        input,
+        new Set(['FOAM_TITLE']),
+        givenValues
+      )
+    ).toEqual(expected);
+  });
+
+  test('Does not add FOAM_SELECTED_TEXT at end of template if it has variable not has a value and is not referenced', async () => {
+    const foamTitle = 'My note title';
+
+    jest
+      .spyOn(window, 'showInputBox')
+      .mockImplementationOnce(jest.fn(() => Promise.resolve(foamTitle)));
+
+    const input = `
+      # \${FOAM_TITLE}
+      # $FOAM_TITLE`;
+
+    const expectedOutput = `
+      # My note title
+      # My note title
+      `;
+
+    const expectedMap = new Map<string, string>();
+    expectedMap.set('FOAM_TITLE', foamTitle);
+    expectedMap.set('FOAM_SELECTED_TEXT', '');
+
+    const expected = [expectedMap, expectedOutput];
+    const givenValues = new Map<string, string>();
+    givenValues.set('FOAM_SELECTED_TEXT', null);
+    expect(
+      await resolveFoamTemplateVariables(
+        input,
+        new Set(['FOAM_TITLE']),
+        givenValues
+      )
+    ).toEqual(expected);
+  });
 });
 
 describe('determineDefaultFilepath', () => {

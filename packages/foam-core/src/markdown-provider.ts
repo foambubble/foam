@@ -31,6 +31,7 @@ import { ResourceProvider } from 'model/provider';
 import { IDataStore, FileDataStore, IMatcher } from './services/datastore';
 import { IDisposable } from 'common/lifecycle';
 import MarkdownIt from 'markdown-it';
+import Token from 'markdown-it/lib/token';
 
 const ALIAS_DIVIDER_CHAR = '|';
 
@@ -489,25 +490,42 @@ const isWikilink = (link: ResourceLink): link is WikiLink => {
   return link.type === 'wikilink';
 };
 
-export const ignoreCode = (text: string): string => {
+/**
+ * Ignores some type in the notes
+ * @param text input text to ignore percific
+ * @param types to ignore
+ * 'fence' : fenced code blocks
+ * 'code_inline': inline code
+ * 'code_block': code by indent
+ * 'link_open': links
+ * @returns text after ignoring the specific type(s)
+ */
+export const ignoreTypes = (
+  text: string,
+  types: string | Array<string>
+): string => {
   let md = MarkdownIt().configure('commonmark');
-  const tokens = md.parse(text, {});
+  const allTokens = md.parse(text, {});
   let textWithoutCode = '';
-  tokens.forEach(v => {
-    if (v.type !== 'fence' && v.type !== 'inline') {
-      textWithoutCode += v.content;
-    }
-    if (v.type === 'inline') {
-      v.children?.forEach(c => {
-        if (c.type !== 'code_inline') {
-          textWithoutCode += c.content;
-        }
-        if (c.type === 'softbreak') {
-          textWithoutCode += ' ';
-        }
-      });
-    }
-  });
-  // console.log('FromTokens:', textWithoutCode);
+  const typeArray = Array.isArray(types) ? types : Array(types);
+
+  const stringFromTokens = (tokens: Token[], tArray: Array<string>): string => {
+    let stringForOut = '';
+    const contentArray = tokens.map(t => {
+      if (tArray.includes(t.type)) {
+        return '';
+      } else if (t.type !== 'inline') {
+        return t.content;
+      }
+      // else t.type === 'inline'
+      return stringFromTokens(t.children!, tArray);
+      //return childString;
+    });
+    stringForOut += contentArray.join(' ');
+    return stringForOut;
+  };
+
+  textWithoutCode = stringFromTokens(allTokens, typeArray);
+  // console.log(textWithoutCode);
   return textWithoutCode;
 };

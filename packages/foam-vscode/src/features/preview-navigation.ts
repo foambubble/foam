@@ -96,9 +96,13 @@ export const markdownItWithRemoveLinkReferences = (
   md: markdownit,
   workspace: FoamWorkspace
 ) => {
-  // Forget about reference blocks before processing links.
+  // Forget about reference links that contain an alias divider
   md.inline.ruler.before('link', 'clear-references', state => {
-    state.env.references = undefined;
+    Object.keys(state.env.references).forEach(refKey => {
+      if (refKey.includes(ALIAS_DIVIDER_CHAR)) {
+        delete state.env.references[refKey];
+      }
+    });
     return false;
   });
   return md;

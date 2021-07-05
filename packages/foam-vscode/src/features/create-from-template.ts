@@ -123,6 +123,11 @@ async function resolveFoamTitle() {
   }
   return title;
 }
+
+function resolveFoamSelectedText() {
+  return findSelectionContent()?.content ?? '';
+}
+
 class Resolver {
   promises = new Map<string, Thenable<string>>();
 
@@ -133,6 +138,9 @@ class Resolver {
       switch (name) {
         case 'FOAM_TITLE':
           this.promises.set(name, resolveFoamTitle());
+          break;
+        case 'FOAM_SELECTED_TEXT':
+          this.promises.set(name, Promise.resolve(resolveFoamSelectedText()));
           break;
         default:
           this.promises.set(name, Promise.resolve(name));
@@ -274,34 +282,43 @@ async function askUserForFilepathConfirmation(
   });
 }
 
+function appendSnippetVariableUsage(templateText: string, variable: string) {
+  if (templateText.endsWith('\n')) {
+    return `${templateText}\${${variable}}\n`;
+  } else {
+    return `${templateText}\n\${${variable}}`;
+  }
+}
+
 export async function resolveFoamTemplateVariables(
   templateText: string,
   extraVariablesToResolve: Set<string> = new Set(),
   givenValues: Map<string, string> = new Map()
 ): Promise<[Map<string, string>, string]> {
-  const variables = findFoamVariables(templateText.toString()).concat(
-    ...extraVariablesToResolve
-  );
+  const variablesInTemplate = findFoamVariables(templateText.toString());
+  const variables = variablesInTemplate.concat(...extraVariablesToResolve);
   const uniqVariables = [...new Set(variables)];
 
-  const missingFoamVariables = [...givenValues.keys()].filter(
-    x => uniqVariables.indexOf(x) < 0
-  );
-  if (missingFoamVariables.includes('FOAM_SELECTED_TEXT')) {
-    templateText = `${templateText}
-      \${FOAM_SELECTED_TEXT}`;
+  const resolvedValues = await resolveFoamVariables(uniqVariables, givenValues);
+
+  if (
+    resolvedValues.get('FOAM_SELECTED_TEXT') &&
+    !variablesInTemplate.includes('FOAM_SELECTED_TEXT')
+  ) {
+    templateText = appendSnippetVariableUsage(
+      templateText,
+      'FOAM_SELECTED_TEXT'
+    );
+    variablesInTemplate.push('FOAM_SELECTED_TEXT');
+    variables.push('FOAM_SELECTED_TEXT');
     uniqVariables.push('FOAM_SELECTED_TEXT');
   }
 
-  if (!givenValues.get('FOAM_SELECTED_TEXT')) {
-    givenValues.set('FOAM_SELECTED_TEXT', '');
-  }
-
-  const resolvedValues = await resolveFoamVariables(uniqVariables, givenValues);
   const subbedText = substituteFoamVariables(
     templateText.toString(),
     resolvedValues
   );
+
   return [resolvedValues, subbedText];
 }
 
@@ -396,7 +413,7 @@ async function createNoteFromDefaultTemplate(): Promise<void> {
       templateWithResolvedVariables,
     ] = await resolveFoamTemplateVariables(
       templateText,
-      new Set(['FOAM_TITLE']),
+      new Set(['FOAM_TITLE', 'FOAM_SELECTED_TEXT']),
       new Map().set('FOAM_SELECTED_TEXT', selectedContent?.content ?? '')
     );
   } catch (err) {
@@ -471,7 +488,7 @@ async function createNoteFromTemplate(
       templateWithResolvedVariables,
     ] = await resolveFoamTemplateVariables(
       templateText,
-      new Set(),
+      new Set(['FOAM_SELECTED_TEXT']),
       new Map().set('FOAM_SELECTED_TEXT', selectedContent?.content ?? '')
     );
   } catch (err) {

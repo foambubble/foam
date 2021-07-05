@@ -24,10 +24,16 @@ To create a note from a template:
 
 _Theme: Ayu Light_
 
-## Default template
+## Special templates
+### Default template
 
 The `.foam/templates/new-note.md` template is special in that it is the template that will be used by the `Foam: Create New Note` command.
 Customize this template to contain content that you want included every time you create a note.
+
+### Default daily note template
+
+The `.foam/templates/daily-note.md` template is special in that it is the template that will be used when creating daily notes (e.g. by using `Foam: Open Daily Note`).
+Customize this template to contain content that you want included every time you create a daily note.
 
 ## Variables
 
@@ -58,6 +64,8 @@ Foam-specific variables (e.g. `$FOAM_TITLE`) can be used within template metadat
 
 The `filepath` metadata attribute allows you to define a relative or absolute filepath to use when creating a note using the template.
 If the filepath is a relative filepath, it is relative to the current workspace.
+
+**Note:** While you can make use of the `filepath` attribute in [daily note](daily-notes.md) templates (`.foam/templates/daily-note.md`), there is currently no way to have `filepath` vary based on the date. This will be improved in the future. For now, you can customize the location of daily notes using the [`foam.openDailyNote` settings](daily-notes.md).
 
 #### Example of relative `filepath`
 

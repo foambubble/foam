@@ -150,21 +150,16 @@ describe('resolveFoamTemplateVariables', () => {
     ).toEqual(expected);
   });
 
-  test('Adds FOAM_SELECTED_TEXT at end of template if it has variable has a value but is not referenced', async () => {
+  test('Appends FOAM_SELECTED_TEXT with a newline to the template if there is selected text but FOAM_SELECTED_TEXT is not referenced and the template ends in a newline', async () => {
     const foamTitle = 'My note title';
 
     jest
       .spyOn(window, 'showInputBox')
       .mockImplementationOnce(jest.fn(() => Promise.resolve(foamTitle)));
 
-    const input = `
-      # \${FOAM_TITLE}
-      # $FOAM_TITLE`;
+    const input = `# \${FOAM_TITLE}\n`;
 
-    const expectedOutput = `
-      # My note title
-      # My note title
-      Selected text`;
+    const expectedOutput = `# My note title\nSelected text\n`;
 
     const expectedMap = new Map<string, string>();
     expectedMap.set('FOAM_TITLE', foamTitle);
@@ -176,13 +171,67 @@ describe('resolveFoamTemplateVariables', () => {
     expect(
       await resolveFoamTemplateVariables(
         input,
-        new Set(['FOAM_TITLE']),
+        new Set(['FOAM_TITLE', 'FOAM_SELECTED_TEXT']),
         givenValues
       )
     ).toEqual(expected);
   });
 
-  test('Does not add FOAM_SELECTED_TEXT at end of template if it has variable not has a value and is not referenced', async () => {
+  test('Appends FOAM_SELECTED_TEXT with a newline to the template if there is selected text but FOAM_SELECTED_TEXT is not referenced and the template ends in multiple newlines', async () => {
+    const foamTitle = 'My note title';
+
+    jest
+      .spyOn(window, 'showInputBox')
+      .mockImplementationOnce(jest.fn(() => Promise.resolve(foamTitle)));
+
+    const input = `# \${FOAM_TITLE}\n\n`;
+
+    const expectedOutput = `# My note title\n\nSelected text\n`;
+
+    const expectedMap = new Map<string, string>();
+    expectedMap.set('FOAM_TITLE', foamTitle);
+    expectedMap.set('FOAM_SELECTED_TEXT', 'Selected text');
+
+    const expected = [expectedMap, expectedOutput];
+    const givenValues = new Map<string, string>();
+    givenValues.set('FOAM_SELECTED_TEXT', 'Selected text');
+    expect(
+      await resolveFoamTemplateVariables(
+        input,
+        new Set(['FOAM_TITLE', 'FOAM_SELECTED_TEXT']),
+        givenValues
+      )
+    ).toEqual(expected);
+  });
+
+  test('Appends FOAM_SELECTED_TEXT without a newline to the template if there is selected text but FOAM_SELECTED_TEXT is not referenced and the template does not end in a newline', async () => {
+    const foamTitle = 'My note title';
+
+    jest
+      .spyOn(window, 'showInputBox')
+      .mockImplementationOnce(jest.fn(() => Promise.resolve(foamTitle)));
+
+    const input = '# ${FOAM_TITLE}';
+
+    const expectedOutput = '# My note title\nSelected text';
+
+    const expectedMap = new Map<string, string>();
+    expectedMap.set('FOAM_TITLE', foamTitle);
+    expectedMap.set('FOAM_SELECTED_TEXT', 'Selected text');
+
+    const expected = [expectedMap, expectedOutput];
+    const givenValues = new Map<string, string>();
+    givenValues.set('FOAM_SELECTED_TEXT', 'Selected text');
+    expect(
+      await resolveFoamTemplateVariables(
+        input,
+        new Set(['FOAM_TITLE', 'FOAM_SELECTED_TEXT']),
+        givenValues
+      )
+    ).toEqual(expected);
+  });
+
+  test('Does not append FOAM_SELECTED_TEXT to a template if there is no selected text and is not referenced', async () => {
     const foamTitle = 'My note title';
 
     jest
@@ -191,10 +240,9 @@ describe('resolveFoamTemplateVariables', () => {
 
     const input = `
       # \${FOAM_TITLE}
-      # $FOAM_TITLE`;
+      `;
 
     const expectedOutput = `
-      # My note title
       # My note title
       `;
 
@@ -204,11 +252,11 @@ describe('resolveFoamTemplateVariables', () => {
 
     const expected = [expectedMap, expectedOutput];
     const givenValues = new Map<string, string>();
-    givenValues.set('FOAM_SELECTED_TEXT', null);
+    givenValues.set('FOAM_SELECTED_TEXT', '');
     expect(
       await resolveFoamTemplateVariables(
         input,
-        new Set(['FOAM_TITLE']),
+        new Set(['FOAM_TITLE', 'FOAM_SELECTED_TEXT']),
         givenValues
       )
     ).toEqual(expected);

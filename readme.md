@@ -5,7 +5,7 @@
 👀*This is an early stage project under rapid development. For updates join the [Foam community Discord](https://foambubble.github.io/join-discord/g)! 💬*
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-76-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-77-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 [![Discord Chat](https://img.shields.io/discord/729975036148056075?color=748AD9&label=discord%20chat&style=flat-square)](https://foambubble.github.io/join-discord/g)
@@ -159,6 +159,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="http://enginveske@gmail.com"><img src="https://avatars.githubusercontent.com/u/43685404?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Engincan VESKE</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=EngincanV" title="Documentation">📖</a></td>
     <td align="center"><a href="http://www.paulderaaij.nl"><img src="https://avatars.githubusercontent.com/u/495374?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Paul de Raaij</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=pderaaij" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/bronson"><img src="https://avatars.githubusercontent.com/u/1776?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Scott Bronson</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=bronson" title="Documentation">📖</a></td>
+    <td align="center"><a href="http://rafaelriedel.de"><img src="https://avatars.githubusercontent.com/u/41793?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Rafael Riedel</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=rafo" title="Documentation">📖</a></td>
   </tr>
 </table>
 

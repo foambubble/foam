@@ -706,6 +706,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "rafo",
+      "name": "Rafael Riedel",
+      "avatar_url": "https://avatars.githubusercontent.com/u/41793?v=4",
+      "profile": "http://rafaelriedel.de",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,

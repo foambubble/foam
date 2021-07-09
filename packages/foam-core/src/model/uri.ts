@@ -148,6 +148,10 @@ export abstract class URI {
     return URI.file(posix.dirname(uri.path));
   }
 
+  static getFileNameWithoutExtension(uri: URI) {
+    return URI.getBasename(uri).replace(/\.[^.]+$/, '');
+  }
+
   /**
    * Uses a placeholder URI, and a reference directory, to generate
    * the URI of the corresponding resource

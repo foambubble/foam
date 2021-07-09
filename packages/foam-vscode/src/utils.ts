@@ -10,6 +10,7 @@ import {
   MarkdownString,
   version,
   Uri,
+  ViewColumn,
 } from 'vscode';
 import * as fs from 'fs';
 import { Logger, URI } from 'foam-core';
@@ -169,9 +170,13 @@ export function isNone<T>(
   return value == null; // eslint-disable-line
 }
 
-export async function focusNote(notePath: URI, moveCursorToEnd: boolean) {
+export async function focusNote(
+  notePath: URI,
+  moveCursorToEnd: boolean,
+  viewColumn: ViewColumn = ViewColumn.Active
+) {
   const document = await workspace.openTextDocument(toVsCodeUri(notePath));
-  const editor = await window.showTextDocument(document);
+  const editor = await window.showTextDocument(document, viewColumn);
 
   // Move the cursor to end of the file
   if (moveCursorToEnd) {

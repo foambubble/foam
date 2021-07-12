@@ -1,5 +1,7 @@
+import { URI } from 'foam-core';
 import path from 'path';
-import { commands, Uri, window, workspace } from 'vscode';
+import { toVsCodeUri } from '../utils/vsc-utils';
+import { commands, window, workspace } from 'vscode';
 describe('createFromTemplate', () => {
   describe('create-note-from-template', () => {
     afterEach(() => {
@@ -65,7 +67,7 @@ describe('createFromTemplate', () => {
 
       await commands.executeCommand('foam-vscode.create-new-template');
 
-      const file = await workspace.fs.readFile(Uri.file(template));
+      const file = await workspace.fs.readFile(toVsCodeUri(URI.file(template)));
       expect(window.showInputBox).toHaveBeenCalled();
       expect(file).toBeDefined();
     });
@@ -85,7 +87,9 @@ describe('createFromTemplate', () => {
       await commands.executeCommand('foam-vscode.create-new-template');
 
       expect(window.showInputBox).toHaveBeenCalled();
-      await expect(workspace.fs.readFile(Uri.file(template))).rejects.toThrow();
+      await expect(
+        workspace.fs.readFile(toVsCodeUri(URI.file(template)))
+      ).rejects.toThrow();
     });
   });
 });

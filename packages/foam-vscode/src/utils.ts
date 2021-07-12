@@ -9,14 +9,12 @@ import {
   Selection,
   MarkdownString,
   version,
-  Uri,
   ViewColumn,
 } from 'vscode';
 import * as fs from 'fs';
 import { Logger, URI } from 'foam-core';
 import matter from 'gray-matter';
 import removeMarkdown from 'remove-markdown';
-import { TextEncoder } from 'util';
 import os from 'os';
 import { toVsCodeUri } from './utils/vsc-utils';
 
@@ -258,30 +256,3 @@ export function stripImages(markdown: string): string {
     '$1'.length ? '[Image: $1]' : ''
   );
 }
-
-/**
- * Creates a note from the given placeholder Uri.
- *
- * @param placeholder the placeholder Uri
- * @returns the Uri of the created note, or `null`
- * if the Uri was not a placeholder or no reference directory could be found
- */
-export const createNoteFromPlaceholder = async (
-  placeholder: URI
-): Promise<Uri | null> => {
-  const basedir =
-    workspace.workspaceFolders.length > 0
-      ? workspace.workspaceFolders[0].uri
-      : window.activeTextEditor?.document.uri
-      ? URI.getDir(window.activeTextEditor!.document.uri)
-      : null;
-
-  if (isSome(basedir)) {
-    const target = toVsCodeUri(
-      URI.createResourceUriFromPlaceholder(basedir, placeholder)
-    );
-    await workspace.fs.writeFile(target, new TextEncoder().encode(''));
-    return target;
-  }
-  return null;
-};

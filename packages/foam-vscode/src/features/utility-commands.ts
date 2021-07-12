@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
 import { FoamFeature } from '../types';
 import { commands } from 'vscode';
-import { createNoteFromPlaceholder, focusNote, isSome } from '../utils';
 import { URI } from 'foam-core';
 import { toVsCodeUri } from '../utils/vsc-utils';
+import { createNoteForPlaceholderWikilink } from './create-from-template';
 
 export const OPEN_COMMAND = {
   command: 'foam-vscode.open-resource',
@@ -16,16 +16,24 @@ export const OPEN_COMMAND = {
         return vscode.commands.executeCommand('vscode.open', toVsCodeUri(uri));
 
       case 'placeholder':
-        const newNote = await createNoteFromPlaceholder(uri);
+        const title = uri.path.split('/').slice(-1)[0];
 
-        if (isSome(newNote)) {
-          const title = uri.path.split('/').slice(-1);
-          const snippet = new vscode.SnippetString(
-            '# ${1:' + title + '}\n\n$0'
-          );
-          await focusNote(newNote, true);
-          await vscode.window.activeTextEditor.insertSnippet(snippet);
+        const basedir =
+          vscode.workspace.workspaceFolders.length > 0
+            ? vscode.workspace.workspaceFolders[0].uri
+            : vscode.window.activeTextEditor?.document.uri
+            ? URI.getDir(vscode.window.activeTextEditor!.document.uri)
+            : undefined;
+
+        if (basedir === undefined) {
+          return;
         }
+
+        const target = toVsCodeUri(
+          URI.createResourceUriFromPlaceholder(basedir, uri)
+        );
+
+        await createNoteForPlaceholderWikilink(title, target);
         return;
     }
   },

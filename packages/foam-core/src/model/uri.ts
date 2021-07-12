@@ -1,4 +1,7 @@
-// Some code in this file coming from https://github.com/microsoft/vscode/
+// `URI` is mostly compatible with VSCode's `Uri`.
+// Having a Foam-specific URI object allows for easier maintenance of the API.
+// See https://github.com/foambubble/foam/pull/537 for more context.
+// Some code in this file comes from https://github.com/microsoft/vscode/main/src/vs/base/common/uri.ts
 // See LICENSE for details
 
 import * as paths from 'path';

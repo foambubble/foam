@@ -10,7 +10,6 @@ import {
   Selection,
   SnippetString,
   TextDocument,
-  Uri,
   ViewColumn,
   window,
   workspace,
@@ -18,9 +17,10 @@ import {
 } from 'vscode';
 import { FoamFeature } from '../types';
 import { focusNote } from '../utils';
+import { toVsCodeUri } from '../utils/vsc-utils';
 import { extractFoamTemplateFrontmatterMetadata } from '../utils/template-frontmatter-parser';
 
-const templatesDir = Uri.joinPath(
+const templatesDir = URI.joinPath(
   workspace.workspaceFolders[0].uri,
   '.foam',
   'templates'
@@ -52,7 +52,7 @@ foam_template:
 
 \${FOAM_SELECTED_TEXT}
 `;
-const defaultTemplateUri = Uri.joinPath(templatesDir, 'new-note.md');
+const defaultTemplateUri = URI.joinPath(templatesDir, 'new-note.md');
 
 const templateContent = `# \${1:$TM_FILENAME_BASE}
 
@@ -74,16 +74,16 @@ For a full list of features see [the VS Code snippets page](https://code.visuals
 `;
 
 async function templateMetadata(
-  templateUri: Uri
+  templateUri: URI
 ): Promise<Map<string, string>> {
   const contents = await workspace.fs
-    .readFile(templateUri)
+    .readFile(toVsCodeUri(templateUri))
     .then(bytes => bytes.toString());
   const [templateMetadata] = extractFoamTemplateFrontmatterMetadata(contents);
   return templateMetadata;
 }
 
-async function getTemplates(): Promise<Uri[]> {
+async function getTemplates(): Promise<URI[]> {
   const templates = await workspace.findFiles('.foam/templates/**.md', null);
   return templates;
 }
@@ -263,16 +263,14 @@ async function askUserForTemplate() {
 }
 
 async function askUserForFilepathConfirmation(
-  defaultFilepath: Uri,
+  defaultFilepath: URI,
   defaultFilename: string
 ) {
+  const fsPath = URI.toFsPath(defaultFilepath);
   return await window.showInputBox({
     prompt: `Enter the filename for the new note`,
-    value: defaultFilepath.fsPath,
-    valueSelection: [
-      defaultFilepath.fsPath.length - defaultFilename.length,
-      defaultFilepath.fsPath.length - 3,
-    ],
+    value: fsPath,
+    valueSelection: [fsPath.length - defaultFilename.length, fsPath.length - 3],
     validateInput: value =>
       value.trim().length === 0
         ? 'Please enter a value'
@@ -324,10 +322,13 @@ export async function resolveFoamTemplateVariables(
 
 async function writeTemplate(
   templateSnippet: SnippetString,
-  filepath: Uri,
+  filepath: URI,
   viewColumn: ViewColumn = ViewColumn.Active
 ) {
-  await workspace.fs.writeFile(filepath, new TextEncoder().encode(''));
+  await workspace.fs.writeFile(
+    toVsCodeUri(filepath),
+    new TextEncoder().encode('')
+  );
   await focusNote(filepath, true, viewColumn);
   await window.activeTextEditor.insertSnippet(templateSnippet);
 }
@@ -336,10 +337,10 @@ function currentDirectoryFilepath(filename: string) {
   const activeFile = window.activeTextEditor?.document?.uri.path;
   const currentDir =
     activeFile !== undefined
-      ? Uri.parse(path.dirname(activeFile))
+      ? URI.parse(path.dirname(activeFile))
       : workspace.workspaceFolders[0].uri;
 
-  return Uri.joinPath(currentDir, filename);
+  return URI.joinPath(currentDir, filename);
 }
 
 function findSelectionContent(): FoamSelectionContent | undefined {
@@ -379,13 +380,13 @@ export function determineDefaultFilepath(
   resolvedValues: Map<string, string>,
   templateMetadata: Map<string, string>
 ) {
-  let defaultFilepath: Uri;
+  let defaultFilepath: URI;
   if (templateMetadata.get('filepath')) {
     const filepathFromMetadata = templateMetadata.get('filepath');
     if (isAbsolute(filepathFromMetadata)) {
-      defaultFilepath = Uri.file(filepathFromMetadata);
+      defaultFilepath = URI.file(filepathFromMetadata);
     } else {
-      defaultFilepath = Uri.joinPath(
+      defaultFilepath = URI.joinPath(
         workspace.workspaceFolders[0].uri,
         filepathFromMetadata
       );
@@ -399,8 +400,10 @@ export function determineDefaultFilepath(
 
 async function createNoteFromDefaultTemplate(): Promise<void> {
   const templateUri = defaultTemplateUri;
-  const templateText = existsSync(templateUri.fsPath)
-    ? await workspace.fs.readFile(templateUri).then(bytes => bytes.toString())
+  const templateText = existsSync(URI.toFsPath(templateUri))
+    ? await workspace.fs
+        .readFile(toVsCodeUri(templateUri))
+        .then(bytes => bytes.toString())
     : defaultTemplateDefaultText;
 
   const selectedContent = findSelectionContent();
@@ -437,7 +440,7 @@ async function createNoteFromDefaultTemplate(): Promise<void> {
   const defaultFilename = path.basename(defaultFilepath.path);
 
   let filepath = defaultFilepath;
-  if (existsSync(filepath.fsPath)) {
+  if (existsSync(URI.toFsPath(filepath))) {
     const newFilepath = await askUserForFilepathConfirmation(
       defaultFilepath,
       defaultFilename
@@ -446,7 +449,7 @@ async function createNoteFromDefaultTemplate(): Promise<void> {
     if (newFilepath === undefined) {
       return;
     }
-    filepath = Uri.file(newFilepath);
+    filepath = URI.file(newFilepath);
   }
 
   await writeTemplate(
@@ -474,9 +477,9 @@ async function createNoteFromTemplate(
   templateFilename =
     (selectedTemplate as QuickPickItem).description ||
     (selectedTemplate as QuickPickItem).label;
-  const templateUri = Uri.joinPath(templatesDir, templateFilename);
+  const templateUri = URI.joinPath(templatesDir, templateFilename);
   const templateText = await workspace.fs
-    .readFile(templateUri)
+    .readFile(toVsCodeUri(templateUri))
     .then(bytes => bytes.toString());
 
   const selectedContent = findSelectionContent();
@@ -519,7 +522,7 @@ async function createNoteFromTemplate(
   if (filepath === undefined) {
     return;
   }
-  const filepathURI = Uri.file(filepath);
+  const filepathURI = URI.file(filepath);
 
   await writeTemplate(
     templateSnippet,
@@ -538,14 +541,12 @@ async function createNoteFromTemplate(
 
 async function createNewTemplate(): Promise<void> {
   const defaultFilename = 'new-template.md';
-  const defaultTemplate = Uri.joinPath(templatesDir, defaultFilename);
+  const defaultTemplate = URI.joinPath(templatesDir, defaultFilename);
+  const fsPath = URI.toFsPath(defaultTemplate);
   const filename = await window.showInputBox({
     prompt: `Enter the filename for the new template`,
-    value: defaultTemplate.fsPath,
-    valueSelection: [
-      defaultTemplate.fsPath.length - defaultFilename.length,
-      defaultTemplate.fsPath.length - 3,
-    ],
+    value: fsPath,
+    valueSelection: [fsPath.length - defaultFilename.length, fsPath.length - 3],
     validateInput: value =>
       value.trim().length === 0
         ? 'Please enter a value'
@@ -557,9 +558,9 @@ async function createNewTemplate(): Promise<void> {
     return;
   }
 
-  const filenameURI = Uri.file(filename);
+  const filenameURI = URI.file(filename);
   await workspace.fs.writeFile(
-    filenameURI,
+    toVsCodeUri(filenameURI),
     new TextEncoder().encode(templateContent)
   );
   await focusNote(filenameURI, false);

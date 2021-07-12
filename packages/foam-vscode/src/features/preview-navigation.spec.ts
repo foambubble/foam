@@ -19,7 +19,7 @@ describe('Link generation in preview', () => {
     expect(md.render(`[[note-a]]`)).toEqual(
       `<p><a class='foam-note-link' title='${noteA.title}' href='${URI.toFsPath(
         noteA.uri
-      )}'>note-a</a></p>\n`
+      )}' data-href='${URI.toFsPath(noteA.uri)}'>note-a</a></p>\n`
     );
   });
 

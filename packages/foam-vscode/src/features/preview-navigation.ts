@@ -50,7 +50,9 @@ export const markdownItWithFoamLinks = (
 
         return `<a class='foam-note-link' title='${
           resource.title
-        }' href='${URI.toFsPath(resource.uri)}'>${linkLabel}</a>`;
+        }' href='${URI.toFsPath(resource.uri)}' data-href='${URI.toFsPath(
+          resource.uri
+        )}'>${linkLabel}</a>`;
       } catch (e) {
         Logger.error(
           `Error while creating link for [[${wikilink}]] in Preview panel`,

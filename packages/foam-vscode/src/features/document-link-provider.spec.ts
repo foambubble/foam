@@ -22,10 +22,7 @@ describe('Document links provider', () => {
 
   afterAll(async () => {
     await cleanWorkspace();
-    await updateFoamVsCodeConfig(
-      'edit.linkReferenceDefinitions',
-      'withoutExtensions'
-    );
+    await updateFoamVsCodeConfig('edit.linkReferenceDefinitions', undefined);
   });
 
   beforeEach(async () => {

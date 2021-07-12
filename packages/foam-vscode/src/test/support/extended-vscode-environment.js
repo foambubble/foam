@@ -13,6 +13,10 @@ class ExtendedVscodeEnvironment extends VscodeEnvironment {
     // And also https://github.com/microsoft/vscode-test/issues/37#issuecomment-700167820
     this.global.RegExp = RegExp;
     this.global.vscode = vscode;
+
+    vscode.workspace
+      .getConfiguration()
+      .update('foam.edit.linkReferenceDefinitions', 'off');
   }
   async teardown() {
     this.global.vscode = initialVscode;

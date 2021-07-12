@@ -10,19 +10,16 @@ import {
 import { LinkProvider } from './document-link-provider';
 import { OPEN_COMMAND } from './utility-commands';
 import { toVsCodeUri } from '../utils/vsc-utils';
-import { updateFoamVsCodeConfig } from '../services/config';
 
 describe('Document links provider', () => {
   const parser = createMarkdownParser([]);
 
   beforeAll(async () => {
     await cleanWorkspace();
-    await updateFoamVsCodeConfig('edit.linkReferenceDefinitions', 'off');
   });
 
   afterAll(async () => {
     await cleanWorkspace();
-    await updateFoamVsCodeConfig('edit.linkReferenceDefinitions', undefined);
   });
 
   beforeEach(async () => {

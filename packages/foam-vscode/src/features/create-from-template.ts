@@ -266,13 +266,11 @@ async function askUserForFilepathConfirmation(
   defaultFilepath: URI,
   defaultFilename: string
 ) {
+  const fsPath = URI.toFsPath(defaultFilepath);
   return await window.showInputBox({
     prompt: `Enter the filename for the new note`,
-    value: URI.toFsPath(defaultFilepath),
-    valueSelection: [
-      URI.toFsPath(defaultFilepath).length - defaultFilename.length,
-      URI.toFsPath(defaultFilepath).length - 3,
-    ],
+    value: fsPath,
+    valueSelection: [fsPath.length - defaultFilename.length, fsPath.length - 3],
     validateInput: value =>
       value.trim().length === 0
         ? 'Please enter a value'
@@ -544,13 +542,11 @@ async function createNoteFromTemplate(
 async function createNewTemplate(): Promise<void> {
   const defaultFilename = 'new-template.md';
   const defaultTemplate = URI.joinPath(templatesDir, defaultFilename);
+  const fsPath = URI.toFsPath(defaultTemplate);
   const filename = await window.showInputBox({
     prompt: `Enter the filename for the new template`,
-    value: URI.toFsPath(defaultTemplate),
-    valueSelection: [
-      URI.toFsPath(defaultTemplate).length - defaultFilename.length,
-      URI.toFsPath(defaultTemplate).length - 3,
-    ],
+    value: fsPath,
+    valueSelection: [fsPath.length - defaultFilename.length, fsPath.length - 3],
     validateInput: value =>
       value.trim().length === 0
         ? 'Please enter a value'

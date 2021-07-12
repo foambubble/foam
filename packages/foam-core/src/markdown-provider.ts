@@ -219,6 +219,7 @@ const wikilinkPlugin: ParserPlugin = {
         target: hasAlias
           ? literalContent
               .substring(2, literalContent.indexOf(ALIAS_DIVIDER_CHAR))
+              .replace(/\\/g, '')
               .trim()
           : text.trim(),
         range: astPositionToFoamRange(node.position!),

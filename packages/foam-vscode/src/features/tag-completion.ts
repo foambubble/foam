@@ -1,4 +1,5 @@
-import { Foam, FoamGraph, FoamWorkspace } from 'foam-core';
+import { Foam } from 'foam-core';
+import { FoamTags } from 'packages/foam-core/src/model/tags';
 import * as vscode from 'vscode';
 import { FoamFeature } from '../types';
 import { mdDocSelector } from '../utils';
@@ -12,7 +13,7 @@ const feature: FoamFeature = {
     context.subscriptions.push(
       vscode.languages.registerCompletionItemProvider(
         mdDocSelector,
-        new TagCompletionProvider(foam.workspace, foam.graph),
+        new TagCompletionProvider(foam.tags),
         '#'
       )
     );
@@ -21,7 +22,7 @@ const feature: FoamFeature = {
 
 export class TagCompletionProvider
   implements vscode.CompletionItemProvider<vscode.CompletionItem> {
-  constructor(private ws: FoamWorkspace, private graph: FoamGraph) {}
+  constructor(private foamTags: FoamTags) {}
 
   provideCompletionItems(
     document: vscode.TextDocument,
@@ -31,22 +32,14 @@ export class TagCompletionProvider
       .lineAt(position)
       .text.substr(0, position.character);
 
-    // Requires autocomplete only if cursorPrefix matches `[[` that NOT ended by `]]`.
-    // See https://github.com/foambubble/foam/pull/596#issuecomment-825748205 for details.
-    // eslint-disable-next-line no-useless-escape
     const requiresAutocomplete = cursorPrefix.match(/#(.*)/);
 
     if (!requiresAutocomplete) {
       return null;
     }
 
-    const allTags = [];
-    this.ws.list().forEach(resource => {
-      allTags.push(...resource.tags);
-    });
-
     const completionTags = [];
-    [...new Set(allTags)].forEach(tag => {
+    Object.entries(this.foamTags.tags).forEach(([tag]) => {
       const item = new vscode.CompletionItem(
         tag,
         vscode.CompletionItemKind.Text

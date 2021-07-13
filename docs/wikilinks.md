@@ -1,6 +1,6 @@
 # Wikilinks
 
-Foam enables you to Link pages together using `[[file-name]]` annotations (i.e. `[[media-wiki]]` links).
+Foam enables you to Link pages together using `[[file-name]]` annotations (i.e. `[[MediaWiki]]` links).
 
 - Type `[[` and start typing a file name for autocompletion.
   - Note that your file names should be in `lower-dash-case.md`, and your wikilinks should reference file names exactly: `[[lower-dash-case]]`, not `[[Lower Dash Case]]`.

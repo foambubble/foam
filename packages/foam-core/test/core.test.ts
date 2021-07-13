@@ -47,6 +47,7 @@ export const createTestNote = (params: {
   links?: Array<{ slug: string } | { to: string }>;
   text?: string;
   root?: URI;
+  tags?: string[];
 }): Resource => {
   const root = params.root ?? URI.file('/');
   return {
@@ -55,7 +56,7 @@ export const createTestNote = (params: {
     properties: {},
     title: params.title ?? path.parse(strToUri(params.uri).path).base,
     definitions: params.definitions ?? [],
-    tags: new Set(),
+    tags: new Set(params.tags) ?? new Set(),
     links: params.links
       ? params.links.map((link, index) => {
           const range = Range.create(

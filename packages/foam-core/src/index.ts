@@ -16,6 +16,7 @@ import { IDisposable, isDisposable } from './common/lifecycle';
 import { FoamWorkspace } from './model/workspace';
 import { FoamGraph } from '../src/model/graph';
 import { URI } from './model/uri';
+import { FoamTags } from '../src/model/tags';
 
 export { Position } from './model/position';
 export { Range } from './model/range';
@@ -55,6 +56,7 @@ export {
   URI,
   FoamWorkspace,
   FoamGraph,
+  FoamTags,
   NoteLinkDefinition,
   ResourceParser,
 };

@@ -369,7 +369,7 @@ describe('Wikilinks', () => {
     expect(graph.getLinks(noteA.uri).map(l => l.target)).toEqual([noteB1.uri]);
   });
 
-  it('Handles capatalization of files and wiki links correctly', () => {
+  it('Handles capatalization of files and wikilinks correctly', () => {
     const noteA = createTestNote({
       uri: '/path/to/page-a.md',
       links: [

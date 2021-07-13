@@ -1,9 +1,9 @@
-# Wiki Links
+# Wikilinks
 
 Foam enables you to Link pages together using `[[file-name]]` annotations (i.e. `[[media-wiki]]` links).
 
 - Type `[[` and start typing a file name for autocompletion.
-  - Note that your file names should be in `lower-dash-case.md`, and your wiki links should reference file names exactly: `[[lower-dash-case]]`, not `[[Lower Dash Case]]`.
+  - Note that your file names should be in `lower-dash-case.md`, and your wikilinks should reference file names exactly: `[[lower-dash-case]]`, not `[[Lower Dash Case]]`.
   - See [[link-formatting-and-autocompletion]] for more information, and how to setup your link autocompletions to make this easier.
 - `Cmd` + `Click` ( `Ctrl` + `Click` on Windows ) on file name to navigate to file (`F12` also works while your cursor is on the file name)
 - `Cmd` + `Click` ( `Ctrl` + `Click` on Windows ) on non-existent file to create that file in the workspace.
@@ -12,7 +12,7 @@ Foam enables you to Link pages together using `[[file-name]]` annotations (i.e. 
 
 ## Markdown compatibility
 
-The [Foam for VSCode](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode) extension automatically generates [[link-reference-definitions]] at the bottom of the file to make wiki-links compatible with Markdown tools and parsers.
+The [Foam for VSCode](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode) extension automatically generates [[link-reference-definitions]] at the bottom of the file to make wikilinks compatible with Markdown tools and parsers.
 
 ## Read more
 

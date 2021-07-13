@@ -37,7 +37,7 @@ A #recipe is a guide, tip or strategy for getting the most out of your Foam work
 
 ## Write
 
-- Link documents with [[wiki-links]].
+- Link documents with [[wikilinks]].
 - Use shortcuts for [[creating-new-notes]]
 - Instantly create and access your [[daily-notes]]
 - Add and explore [[tags]]
@@ -112,7 +112,7 @@ _See [[contribution-guide]] and [[how-to-write-recipes]]._
 [graph-visualisation]: ../features/graph-visualisation.md "Graph Visualisation"
 [backlinking]: ../features/backlinking.md "Backlinking"
 [unlinked-references]: ../dev/unlinked-references.md "Unlinked references (stub)"
-[wiki-links]: ../wiki-links.md "Wiki Links"
+[wikilinks]: ../wikilinks.md "Wikilinks"
 [creating-new-notes]: ../features/creating-new-notes.md "Creating New Notes"
 [daily-notes]: ../features/daily-notes.md "Daily notes"
 [tags]: ../features/tags.md "Tags"

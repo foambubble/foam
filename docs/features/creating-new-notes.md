@@ -1,6 +1,6 @@
 # Creating New Notes
 
-- Write out a new `[[wiki-link]]` and `Cmd` + `Click` to create a new file and enter it.
+- Write out a new `[[wikilink]]` and `Cmd` + `Click` to create a new file and enter it.
   - For keyboard navigation, use the 'Follow Definition' key `F12` (or [remap key binding](https://code.visualstudio.com/docs/getstarted/keybindings) to something more ergonomic)
 - `Cmd` + `Shift` + `P` (`Ctrl` + `Shift` + `P` for Windows), execute `Foam: Create New Note` and enter a **Title Case Name** to create `Title Case Name.md`
   - Add a keyboard binding to make creating new notes easier.

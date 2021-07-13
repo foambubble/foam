@@ -46,18 +46,7 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
   }
 
   private computeTags() {
-    const rawTags: {
-      [key: string]: TagMetadata[];
-    } = this.foam.workspace
-      .list()
-      .reduce((acc: { [key: string]: TagMetadata[] }, note) => {
-        note.tags.forEach(tag => {
-          acc[tag] = acc[tag] ?? [];
-          acc[tag].push({ title: note.title, uri: note.uri });
-        });
-        return acc;
-      }, {});
-    this.tags = Object.entries(rawTags)
+    this.tags = Object.entries(this.foam.tags.tags)
       .map(([tag, notes]) => ({ tag, notes }))
       .sort((a, b) => a.tag.localeCompare(b.tag));
   }

@@ -6,6 +6,7 @@ import { FoamGraph } from './graph';
 import { ResourceParser } from './note';
 import { ResourceProvider } from './provider';
 import { createMarkdownParser } from '../markdown-provider';
+import { FoamTags } from './tags';
 
 export interface Services {
   dataStore: IDataStore;
@@ -18,6 +19,7 @@ export interface Foam extends IDisposable {
   workspace: FoamWorkspace;
   graph: FoamGraph;
   config: FoamConfig;
+  tags: FoamTags;
 }
 
 export const bootstrap = async (
@@ -35,10 +37,12 @@ export const bootstrap = async (
   await Promise.all(initialProviders.map(p => workspace.registerProvider(p)));
 
   const graph = FoamGraph.fromWorkspace(workspace, true);
+  const tags = FoamTags.fromWorkspace(workspace, true);
 
   const foam: Foam = {
     workspace,
     graph,
+    tags,
     config,
     services: {
       dataStore,

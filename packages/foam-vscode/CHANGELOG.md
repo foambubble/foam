@@ -4,6 +4,20 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.14.0] - 2021-07-13
+
+Features: 
+
+- Create new note from selection (#666 - thanks @pderaaij)
+- Use templates for daily notes (#700 - thanks @movermeyer)
+
+Fixes and Improvements:
+
+- Fixed for wikilink aliases in tables (#697 - thanks @pderaaij)
+- Fixed link definition generation in presence of aliased wikilinks (#698 - thanks @pderaaij)
+- Fixed template insertion of selected text (#701 - thanks @movermeyer)
+- Fixed preview navigation (#710 - thanks @pderaaij)
+
 ## [0.13.8] - 2021-07-02
 
 Fixes and Improvements:

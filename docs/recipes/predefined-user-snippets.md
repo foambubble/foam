@@ -9,7 +9,7 @@ This #recipe allows us to introduce Roam style commands to Foam, by using [VS Co
     "prefix": "/id",
     "description": "Zettelkasten Id",
     "body": [
-      "${CURRENT_YEAR}-${CURRENT_MONTH}-${CURRENT_DATE} ${CURRENT_HOUR}:${CURRENT_MINUTE}:${CURRENT_SECOND}"
+      "${CURRENT_YEAR}-${CURRENT_MONTH}-${CURRENT_DATE} ${CURRENT_HOUR}-${CURRENT_MINUTE}-${CURRENT_SECOND}"
     ]
   },
   "Current date": {
@@ -17,7 +17,7 @@ This #recipe allows us to introduce Roam style commands to Foam, by using [VS Co
     "prefix": "/date",
     "description": "Current date",
     "body": [
-      "${CURRENT_YEAR}-${CURRENT_MONTH}-${CURRENT_DATE} ${CURRENT_HOUR}:${CURRENT_MINUTE}:${CURRENT_SECOND}"
+      "${CURRENT_YEAR}-${CURRENT_MONTH}-${CURRENT_DATE} ${CURRENT_HOUR}-${CURRENT_MINUTE}-${CURRENT_SECOND}"
     ]
   }
 }

@@ -15,7 +15,7 @@ Pros
 - Provides functionality to edit, create, and browser markdown files.
 - Support journal mode, todo lists, and free writing
 - Syncs to GitHub repo
-- Supports Wiki Links
+- Supports Wikilinks
 - Supports Backlinks
 - Developer is happy to prioritize Foam compatibility
 

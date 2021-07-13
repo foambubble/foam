@@ -2,21 +2,21 @@
 
 ## Introduction
 
-When you use `[[wiki-links]]`, the [foam-vscode](https://github.com/foambubble/foam/tree/master/packages/foam-vscode) extension will automatically generate [Markdown Link Reference Definitions](https://spec.commonmark.org/0.29/#link-reference-definitions) at the bottom of the file. This is done to make the content of the file compatible with various Markdown tools (e.g. parsers, static site generators, VS code plugins etc), which don't support `[[wiki-links]]`.
+When you use `[[wikilinks]]`, the [foam-vscode](https://github.com/foambubble/foam/tree/master/packages/foam-vscode) extension will automatically generate [Markdown Link Reference Definitions](https://spec.commonmark.org/0.29/#link-reference-definitions) at the bottom of the file. This is done to make the content of the file compatible with various Markdown tools (e.g. parsers, static site generators, VS code plugins etc), which don't support `[[wikilinks]]`.
 
 ## Example
 
 The following example:
 
   ```md
-  - [[wiki-links]]
+  - [[wikilinks]]
   - [[github-pages]]
   ```
 
 ...generates the following link reference definitions to the bottom of the file:
 
   ```md
-  [wiki-links]: wiki-links "Wiki Links"
+  [wikilinks]: wikilinks "Wikilinks"
   [github-pages]: github-pages "Github Pages"
   ```
 
@@ -26,7 +26,7 @@ You can open the [raw markdown](https://foambubble.github.io/foam/features/link-
 
 The three components of a link reference definition are `[link-label]: link-target "Link Title"`
 
-- **link label:** The link text to match in the surrounding markdown document. This matches the inner bracket of the double-bracketed `[[wiki-link]]` notation
+- **link label:** The link text to match in the surrounding markdown document. This matches the inner bracket of the double-bracketed `[[wikilink]]` notation
 - **link destination** The target of the matched link
   - By default we generate links without extension. This can be overridden, see [Configuration](#configuration) below
 - **"Link Title"** Optional title for link (The Foam template has a snippet of JavaScript to replace this on the website at runtime)

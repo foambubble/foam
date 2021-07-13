@@ -25,7 +25,7 @@ If a roadmap item is a stub, **consider** opening a [GitHub issue](https://githu
 - [[improve-default-workspace-settings]]
   - Discussion: [foam#270](https://github.com/foambubble/foam/issues/270)
 - Improve [[git-integration]]
-- Fix [[wiki-links]] compatibility issues
+- Fix [[wikilinks]] compatibility issues
 - Simplify [[foam-file-format]]
 
 ### Core features
@@ -87,7 +87,7 @@ The community is working on a number of automated scripts to help you migrate to
 [recipes]: ../recipes/recipes.md "Recipes"
 [contribution-guide]: ../contribution-guide.md "Contribution Guide"
 [git-integration]: ../features/git-integration.md "Git Integration"
-[wiki-links]: ../wiki-links.md "Wiki Links"
+[wikilinks]: ../wikilinks.md "Wikilinks"
 [foam-file-format]: foam-file-format.md "Foam File Format"
 [unlinked-references]: unlinked-references.md "Unlinked references (stub)"
 [make-backlinks-more-prominent]: ../recipes/make-backlinks-more-prominent.md "Make Backlinks More Prominent"

@@ -211,7 +211,7 @@ describe('resolveFoamTemplateVariables', () => {
       .spyOn(window, 'showInputBox')
       .mockImplementationOnce(jest.fn(() => Promise.resolve(foamTitle)));
 
-    const input = '# ${FOAM_TITLE}';
+    const input = `# \${FOAM_TITLE}`;
 
     const expectedOutput = '# My note title\nSelected text';
 

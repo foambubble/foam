@@ -25,9 +25,9 @@ The above configuration would create a file `journal/note-2020-07-25.mdx`, with 
 
 ## Daily Note Templates
 
-In the future, Foam may provide a functionality for specifying a template for new Daily Notes and other types of documents.
+Daily notes can also make use of [templates](note-templates.md), by defining a special `.foam/templates/daily-note.md` template.
 
-In the meantime, you can use [VS Code Snippets](https://code.visualstudio.com/docs/editor/userdefinedsnippets) for defining your own Daily Note template.
+See [Note Templates](note-templates.md) for details of the features available in templates.
 
 ## Roam-style Automatic Daily Notes
 

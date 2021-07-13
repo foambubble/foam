@@ -1,9 +1,9 @@
-import { workspace, WorkspaceConfiguration, Uri } from 'vscode';
+import { workspace, WorkspaceConfiguration } from 'vscode';
 import dateFormat from 'dateformat';
-import * as fs from 'fs';
 import { isAbsolute } from 'path';
-import { docConfig, focusNote, pathExists } from './utils';
+import { focusNote, pathExists } from './utils';
 import { URI } from 'foam-core';
+import { createNoteFromDailyNoteTemplate } from './features/create-from-template';
 
 /**
  * Open the daily note file.
@@ -49,7 +49,7 @@ function getDailyNotePath(
   const dailyNoteFilename = getDailyNoteFileName(configuration, date);
 
   if (isAbsolute(dailyNoteDirectory)) {
-    return URI.joinPath(Uri.file(dailyNoteDirectory), dailyNoteFilename);
+    return URI.joinPath(URI.file(dailyNoteDirectory), dailyNoteFilename);
   } else {
     return URI.joinPath(
       workspace.workspaceFolders[0].uri,
@@ -104,41 +104,21 @@ async function createDailyNoteIfNotExists(
     return false;
   }
 
-  await createDailyNoteDirectoryIfNotExists(dailyNotePath);
-
   const titleFormat: string =
     configuration.get('openDailyNote.titleFormat') ??
     configuration.get('openDailyNote.filenameFormat');
 
-  await fs.promises.writeFile(
-    URI.toFsPath(dailyNotePath),
-    `# ${dateFormat(currentDate, titleFormat, false)}${docConfig.eol}${
-      docConfig.eol
-    }`
-  );
+  const templateFallbackText: string = `---
+foam_template:
+  name: New Daily Note
+  description: Foam's default daily note template
+---
+# ${dateFormat(currentDate, titleFormat, false)}
+`;
+
+  await createNoteFromDailyNoteTemplate(dailyNotePath, templateFallbackText);
 
   return true;
-}
-
-/**
- * Create the directory (or directories) needed for the note to be placed in.
- *
- * If the daily note's folder does not exist,
- * create such directory and all other non-existent directories in the path.
- *
- * For example, for the path `/home/user/foam-template/journal/yyyy-mm-dd.md`,
- * it will create all directories in the path up until the file.
- *
- * @param dailyNotePath The path to the daily note file.
- */
-async function createDailyNoteDirectoryIfNotExists(dailyNotePath: URI) {
-  const dailyNoteDirectory = URI.getDir(dailyNotePath);
-
-  if (!(await pathExists(dailyNoteDirectory))) {
-    await fs.promises.mkdir(URI.toFsPath(dailyNoteDirectory), {
-      recursive: true,
-    });
-  }
 }
 
 export {

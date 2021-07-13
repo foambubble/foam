@@ -53,6 +53,7 @@ foam_template:
 \${FOAM_SELECTED_TEXT}
 `;
 const defaultTemplateUri = URI.joinPath(templatesDir, 'new-note.md');
+const dailyNoteTemplateUri = URI.joinPath(templatesDir, 'daily-note.md');
 
 const templateContent = `# \${1:$TM_FILENAME_BASE}
 
@@ -376,21 +377,24 @@ async function replaceSelectionWithWikiLink(
   await workspace.applyEdit(originatingFileEdit);
 }
 
+function resolveFilepathAttribute(filepath) {
+  return isAbsolute(filepath)
+    ? URI.file(filepath)
+    : URI.joinPath(workspace.workspaceFolders[0].uri, filepath);
+}
+
 export function determineDefaultFilepath(
   resolvedValues: Map<string, string>,
-  templateMetadata: Map<string, string>
+  templateMetadata: Map<string, string>,
+  fallbackURI: URI = undefined
 ) {
   let defaultFilepath: URI;
   if (templateMetadata.get('filepath')) {
-    const filepathFromMetadata = templateMetadata.get('filepath');
-    if (isAbsolute(filepathFromMetadata)) {
-      defaultFilepath = URI.file(filepathFromMetadata);
-    } else {
-      defaultFilepath = URI.joinPath(
-        workspace.workspaceFolders[0].uri,
-        filepathFromMetadata
-      );
-    }
+    defaultFilepath = resolveFilepathAttribute(
+      templateMetadata.get('filepath')
+    );
+  } else if (fallbackURI) {
+    return fallbackURI;
   } else {
     const defaultSlug = resolvedValues.get('FOAM_TITLE') || 'New Note';
     defaultFilepath = currentDirectoryFilepath(`${defaultSlug}.md`);
@@ -398,13 +402,47 @@ export function determineDefaultFilepath(
   return defaultFilepath;
 }
 
-async function createNoteFromDefaultTemplate(): Promise<void> {
-  const templateUri = defaultTemplateUri;
+/**
+ * Creates a daily note from the daily note template.
+ * @param filepathFallbackURI the URI to use if the template does not specify the `filepath` metadata attribute. This is configurable by the caller for backwards compatibility purposes.
+ * @param templateFallbackText the template text to use if daily-note.md template does not exist. This is configurable by the caller for backwards compatibility purposes.
+ */
+export async function createNoteFromDailyNoteTemplate(
+  filepathFallbackURI: URI,
+  templateFallbackText: string
+): Promise<void> {
+  return await createNoteFromDefaultTemplate(
+    new Map(),
+    new Set(['FOAM_SELECTED_TEXT']),
+    dailyNoteTemplateUri,
+    filepathFallbackURI,
+    templateFallbackText
+  );
+}
+
+/**
+ * Creates a new note using the default note template.
+ * @param givenValues already resolved values of Foam template variables. These are used instead of resolving the Foam template variables.
+ * @param extraVariablesToResolve Foam template variables to resolve, in addition to those mentioned in the template.
+ * @param templateUri the URI of the template to use/
+ * @param filepathFallbackURI the URI to use if the template does not specify the `filepath` metadata attribute. This is configurable by the caller for backwards compatibility purposes.
+ * @param templateFallbackText the template text to use the default note template does not exist. This is configurable by the caller for backwards compatibility purposes.
+ */
+async function createNoteFromDefaultTemplate(
+  givenValues: Map<string, string> = new Map(),
+  extraVariablesToResolve: Set<string> = new Set([
+    'FOAM_TITLE',
+    'FOAM_SELECTED_TEXT',
+  ]),
+  templateUri: URI = defaultTemplateUri,
+  filepathFallbackURI: URI = undefined,
+  templateFallbackText: string = defaultTemplateDefaultText
+): Promise<void> {
   const templateText = existsSync(URI.toFsPath(templateUri))
     ? await workspace.fs
         .readFile(toVsCodeUri(templateUri))
         .then(bytes => bytes.toString())
-    : defaultTemplateDefaultText;
+    : templateFallbackText;
 
   const selectedContent = findSelectionContent();
 
@@ -416,8 +454,8 @@ async function createNoteFromDefaultTemplate(): Promise<void> {
       templateWithResolvedVariables,
     ] = await resolveFoamTemplateVariables(
       templateText,
-      new Set(['FOAM_TITLE', 'FOAM_SELECTED_TEXT']),
-      new Map().set('FOAM_SELECTED_TEXT', selectedContent?.content ?? '')
+      extraVariablesToResolve,
+      givenValues.set('FOAM_SELECTED_TEXT', selectedContent?.content ?? '')
     );
   } catch (err) {
     if (err instanceof UserCancelledOperation) {
@@ -435,7 +473,8 @@ async function createNoteFromDefaultTemplate(): Promise<void> {
 
   const defaultFilepath = determineDefaultFilepath(
     resolvedValues,
-    templateMetadata
+    templateMetadata,
+    filepathFallbackURI
   );
   const defaultFilename = path.basename(defaultFilepath.path);
 

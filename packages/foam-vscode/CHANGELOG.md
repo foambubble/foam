@@ -4,6 +4,12 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.14.1] - 2021-07-14
+
+Fixes and Improvements:
+
+- Fixed NPE that would cause markdown preview to render incorrectly (#718 - thanks @pderaaij)
+
 ## [0.14.0] - 2021-07-13
 
 Features: 

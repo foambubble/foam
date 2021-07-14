@@ -100,11 +100,13 @@ export const markdownItWithRemoveLinkReferences = (
 ) => {
   // Forget about reference links that contain an alias divider
   md.inline.ruler.before('link', 'clear-references', state => {
-    Object.keys(state.env.references).forEach(refKey => {
-      if (refKey.includes(ALIAS_DIVIDER_CHAR)) {
-        delete state.env.references[refKey];
-      }
-    });
+    if (state.env.references) {
+      Object.keys(state.env.references).forEach(refKey => {
+        if (refKey.includes(ALIAS_DIVIDER_CHAR)) {
+          delete state.env.references[refKey];
+        }
+      });
+    }
     return false;
   });
   return md;

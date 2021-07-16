@@ -59,7 +59,7 @@ Problem space in essence:
     - may clutter the search results
 - During build-time (when converting markdown to html for publishing purposes)
   - link reference definitions are needed, if the files are published via such tools (or to such platforms) that don't understand wikilinks
-  - link reference definitions might have to be in different formats depending on the publish target (e.g. Github pages vs Github UI)
+  - link reference definitions might have to be in different formats depending on the publish target (e.g. GitHub pages vs GitHub UI)
 
 The potential solution:
 
@@ -122,8 +122,8 @@ The potential solution:
 
     ```
 
-  - With Foam repo, just use edit-time link reference definitions with '.md' extension - this makes the links work in the Github UI
-  - Have publish target defined for Github pages, that doesn't use '.md' extension, but still has the link reference definitions. Generate the output into gh-pages branch (or separate repo) with automation.
+  - With Foam repo, just use edit-time link reference definitions with '.md' extension - this makes the links work in the GitHub UI
+  - Have publish target defined for GitHub pages, that doesn't use '.md' extension, but still has the link reference definitions. Generate the output into gh-pages branch (or separate repo) with automation.
     - This naturally requires first removing the existing link reference definitions during the build
 - Other
   - To clean up the search results, remove link reference definition section guards (assuming that these are not defined by the markdown spec). Use unifiedjs parse trees to identify if there's missing (or surplus) definitions (check if they are identified properly by the library), and just add the needed definitions to the bottom of the file (without guards) AND remove them if they are not needed (anywhere from the file).

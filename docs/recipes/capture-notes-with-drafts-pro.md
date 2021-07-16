@@ -30,7 +30,7 @@ With this #recipe you can create notes on your iOS device, which will automatica
     2. the repository name of your Foam repo
     3. the GitHub access token from step 7
     4. An author name
-11. Check your Github repo for a commit
+11. Check your GitHub repo for a commit
 12. If you are publishing your Foam to the web you may want to edit your publishing configuration to exclude inbox files - as publishing (and method) is a user choice that is beyond the scope of this recipe
 
 ## Code for Drafts Action

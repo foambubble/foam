@@ -17,7 +17,7 @@ The following example:
 
   ```md
   [wikilinks]: wikilinks "Wikilinks"
-  [github-pages]: github-pages "Github Pages"
+  [github-pages]: github-pages "GitHub Pages"
   ```
 
 You can open the [raw markdown](https://foambubble.github.io/foam/features/link-reference-definitions.md) to see them at the bottom of this file

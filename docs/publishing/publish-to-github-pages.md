@@ -1,4 +1,4 @@
-# Github Pages
+# GitHub Pages
 
 - In VSCode workspace settings set `"foam.edit.linkReferenceDefinitions": "withoutExtensions"`
 - Execute the “Foam: Run Janitor” command from the command palette.

@@ -11,8 +11,8 @@ import orphans from './orphans';
 import placeholders from './placeholders';
 import backlinks from './backlinks';
 import utilityCommands from './utility-commands';
-import documentLinkProvider from './document-link-provider';
 import hoverProvider from './hover-provider';
+import wikilinkProvider from './wikilink-provider';
 import previewNavigation from './preview-navigation';
 import completionProvider from './link-completion';
 import tagCompletionProvider from './tag-completion';
@@ -32,8 +32,8 @@ export const features: FoamFeature[] = [
   orphans,
   placeholders,
   backlinks,
-  documentLinkProvider,
   hoverProvider,
+  wikilinkProvider,
   utilityCommands,
   linkDecorations,
   previewNavigation,

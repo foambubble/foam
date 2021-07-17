@@ -235,10 +235,22 @@
             "Disable wikilink definitions generation"
           ]
         },
-        "foam.links.navigation.enable": {
-          "description": "Enable navigation through links",
-          "type": "boolean",
-          "default": true
+        "foam.links.navigationMode": {
+          "description": "Choose how to navigate through links and how to create notes from placeholders",
+          "type": "string",
+          "default": "goToDefinitionButOpenLinkForCreation",
+          "enum": [
+            "openLink",
+            "goToDefinitionButOpenLinkForCreation",
+            "goToDefinition",
+            "off"
+          ],
+          "enumDescriptions": [
+            "Use 'Open Link' command for navigation and creation",
+            "Use 'Go to Definition' command for navigation but use 'Open Link' for creation",
+            "Use 'Go to Definition' command for navigation and creation (Ctrl+hover over a placeholder will create and open the new note)",
+            "Disable navigation and creation"
+          ]
         },
         "foam.links.hover.enable": {
           "description": "Enable displaying note content on hover links",

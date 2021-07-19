@@ -27,7 +27,7 @@ export class FoamGraph implements IDisposable {
   /**
    * Maps the connections arriving to a URI
    */
-  public readonly backlinks: { [key: string]: Connection[] } = {};
+  public readonly backlinks: Map<string, Connection[]> = new Map();
 
   /**
    * List of disposables to destroy with the workspace
@@ -54,7 +54,7 @@ export class FoamGraph implements IDisposable {
   public getConnections(uri: URI): Connection[] {
     return [
       ...(this.links[uri.path] || []),
-      ...(this.backlinks[uri.path] || []),
+      ...(this.backlinks.get(uri.path) || []),
     ];
   }
 
@@ -63,7 +63,7 @@ export class FoamGraph implements IDisposable {
   }
 
   public getBacklinks(uri: URI): Connection[] {
-    return this.backlinks[uri.path] ?? [];
+    return this.backlinks.get(uri.path) ?? [];
   }
 
   /**
@@ -105,7 +105,7 @@ export class FoamGraph implements IDisposable {
     if (name in this.placeholders) {
       const placeholder = this.placeholders[name];
       delete this.placeholders[name];
-      const resourcesToUpdate = this.backlinks[placeholder.path] ?? [];
+      const resourcesToUpdate = this.backlinks.get(placeholder.path) ?? [];
       resourcesToUpdate.forEach(res =>
         this.resolveResource(this.workspace.get(res.source))
       );
@@ -150,8 +150,8 @@ export class FoamGraph implements IDisposable {
     );
 
     // recompute previous links to old resource
-    const notesPointingToDeletedResource = this.backlinks[uri.path] ?? [];
-    delete this.backlinks[uri.path];
+    const notesPointingToDeletedResource = this.backlinks.get(uri.path) ?? [];
+    this.backlinks.delete(uri.path);
     notesPointingToDeletedResource.forEach(link =>
       this.resolveResource(this.workspace.get(link.source))
     );
@@ -163,8 +163,12 @@ export class FoamGraph implements IDisposable {
 
     this.links[source.path] = this.links[source.path] ?? [];
     this.links[source.path].push(connection);
-    this.backlinks[target.path] = this.backlinks[target.path] ?? [];
-    this.backlinks[target.path].push(connection);
+
+    if (!this.backlinks.get(target.path)) {
+      this.backlinks.set(target.path, []);
+    }
+
+    this.backlinks.get(target.path)?.push(connection);
 
     if (URI.isPlaceholder(target)) {
       this.placeholders[uriToPlaceholderId(target)] = target;
@@ -194,10 +198,12 @@ export class FoamGraph implements IDisposable {
     if (this.links[source.path].length === 0) {
       delete this.links[source.path];
     }
-    this.backlinks[target.path] =
-      this.backlinks[target.path]?.filter(connectionsToKeep) ?? [];
-    if (this.backlinks[target.path].length === 0) {
-      delete this.backlinks[target.path];
+    this.backlinks.set(
+      target.path,
+      this.backlinks.get(target.path)?.filter(connectionsToKeep) ?? []
+    );
+    if ((this.backlinks.get(target.path) as Connection[]).length === 0) {
+      this.backlinks.delete(target.path);
       if (URI.isPlaceholder(target)) {
         delete this.placeholders[uriToPlaceholderId(target)];
       }

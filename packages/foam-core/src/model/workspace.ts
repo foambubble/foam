@@ -43,7 +43,7 @@ export class FoamWorkspace implements IDisposable {
   /**
    * Resources by key / slug
    */
-  private resourcesByName: { [key: string]: string[] } = {};
+  private resourcesByName: Map<string, string[]> = new Map();
   /**
    * Resources by URI
    */
@@ -59,8 +59,10 @@ export class FoamWorkspace implements IDisposable {
     const old = this.find(resource.uri);
     const name = uriToResourceName(resource.uri);
     this.resources[id] = resource;
-    this.resourcesByName[name] = this.resourcesByName[name] ?? [];
-    this.resourcesByName[name].push(id);
+    if (!this.resourcesByName.has(name)) {
+      this.resourcesByName.set(name, []);
+    }
+    this.resourcesByName.get(name)?.push(id);
     isSome(old)
       ? this.onDidUpdateEmitter.fire({ old: old, new: resource })
       : this.onDidAddEmitter.fire(resource);
@@ -73,10 +75,12 @@ export class FoamWorkspace implements IDisposable {
     delete this.resources[id];
 
     const name = uriToResourceName(uri);
-    this.resourcesByName[name] =
-      this.resourcesByName[name]?.filter(resId => resId !== id) ?? [];
-    if (this.resourcesByName[name].length === 0) {
-      delete this.resourcesByName[name];
+    this.resourcesByName.set(
+      name,
+      this.resourcesByName.get(name)?.filter(resId => resId !== id) ?? []
+    );
+    if (this.resourcesByName.get(name)?.length === 0) {
+      this.resourcesByName.delete(name);
     }
 
     isSome(deleted) && this.onDidDeleteEmitter.fire(deleted);
@@ -111,10 +115,10 @@ export class FoamWorkspace implements IDisposable {
 
       case 'key':
         const name = pathToResourceName(resourceId as string);
-        let paths = this.resourcesByName[name];
+        let paths = this.resourcesByName.get(name);
 
         if (isNone(paths) || paths.length === 0) {
-          paths = this.resourcesByName[resourceId as string];
+          paths = this.resourcesByName.get(resourceId as string);
         }
 
         if (isNone(paths) || paths.length === 0) {

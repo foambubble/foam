@@ -59,7 +59,9 @@ export class MarkdownResourceProvider implements ResourceProvider {
 
   async init(workspace: FoamWorkspace) {
     const filesByFolder = await Promise.all(
-      this.matcher.include.map(glob => this.dataStore.list(glob))
+      this.matcher.include.map(glob =>
+        this.dataStore.list(glob, this.matcher.exclude)
+      )
     );
     const files = this.matcher
       .match(filesByFolder.flat())

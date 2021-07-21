@@ -100,7 +100,7 @@ export interface IDataStore {
    * List the files matching the given glob from the
    * store
    */
-  list: (glob: string) => Promise<URI[]>;
+  list: (glob: string, ignoreGlob?: string | string[]) => Promise<URI[]>;
 
   /**
    * Read the content of the file from the store
@@ -114,8 +114,10 @@ export interface IDataStore {
  * File system based data store
  */
 export class FileDataStore implements IDataStore {
-  async list(glob: string): Promise<URI[]> {
-    const res = await findAllFiles(glob);
+  async list(glob: string, ignoreGlob?: string | string[]): Promise<URI[]> {
+    const res = await findAllFiles(glob, {
+      ignore: ignoreGlob,
+    });
     return res.map(URI.file);
   }
 

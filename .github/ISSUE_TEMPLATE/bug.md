@@ -20,4 +20,4 @@ labels: bug
 Feel free to attach any of the following that might help with debugging the issue:
 - screenshots
 - a zip with a minimal repo to reproduce the issue
-- the Foam log in VsCode (see [instructions](https://github.com/foambubble/foam/blob/master/docs/foam-logging-in-vscode.md))
+- the Foam log in VsCode (see [instructions](https://github.com/foambubble/foam/blob/master/docs/features/foam-logging-in-vscode.md))

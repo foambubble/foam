@@ -37,7 +37,7 @@ A #recipe is a guide, tip or strategy for getting the most out of your Foam work
 
 ## Write
 
-- Link documents with [[wiki-links]].
+- Link documents with [[wikilinks]].
 - Use shortcuts for [[creating-new-notes]]
 - Instantly create and access your [[daily-notes]]
 - Add and explore [[tags]]
@@ -112,7 +112,7 @@ _See [[contribution-guide]] and [[how-to-write-recipes]]._
 [graph-visualisation]: ../features/graph-visualisation.md "Graph Visualisation"
 [backlinking]: ../features/backlinking.md "Backlinking"
 [unlinked-references]: ../dev/unlinked-references.md "Unlinked references (stub)"
-[wiki-links]: ../wiki-links.md "Wiki Links"
+[wikilinks]: ../wikilinks.md "Wikilinks"
 [creating-new-notes]: ../features/creating-new-notes.md "Creating New Notes"
 [daily-notes]: ../features/daily-notes.md "Daily notes"
 [tags]: ../features/tags.md "Tags"
@@ -127,7 +127,7 @@ _See [[contribution-guide]] and [[how-to-write-recipes]]._
 [good-first-task]: ../dev/good-first-task.md "Good First Task"
 [git-integration]: ../features/git-integration.md "Git Integration"
 [write-your-notes-in-github-gist]: write-your-notes-in-github-gist.md "Write your notes in GitHub Gist"
-[publish-to-github-pages]: ../publishing/publish-to-github-pages.md "Github Pages"
+[publish-to-github-pages]: ../publishing/publish-to-github-pages.md "GitHub Pages"
 [publish-to-gitlab-pages]: ../publishing/publish-to-gitlab-pages.md "GitLab Pages"
 [publish-to-azure-devops-wiki]: ../publishing/publish-to-azure-devops-wiki.md "Publish to Azure DevOps Wiki"
 [publish-to-vercel]: ../publishing/publish-to-vercel.md "Publish to Vercel"

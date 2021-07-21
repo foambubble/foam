@@ -28,8 +28,8 @@ You really, _really_, **really** should read [Foam documentation](https://foambu
 
 ## Features
 
-- Connect your notes using [`[[wiki-links]]`](https://foambubble.github.io/foam/features/backlinking)
-- Create markdown [references](https://foambubble.github.io/foam/features/link-reference-definitions) for `[[wiki-links]]`, to use your notes in a non-foam workspace
+- Connect your notes using [`[[wikilinks]]`](https://foambubble.github.io/foam/features/backlinking)
+- Create markdown [references](https://foambubble.github.io/foam/features/link-reference-definitions) for `[[wikilinks]]`, to use your notes in a non-foam workspace
 - See how your notes are connected via a [graph](https://foambubble.github.io/foam/features/graph-visualisation) with the `Foam: Show Graph` command
 - Tag your notes and navigate them with the [Tag Explorer](https://foambubble.github.io/foam/features/tags)
 - Make your notes navigable both in GitHub UI as well as GitHub Pages

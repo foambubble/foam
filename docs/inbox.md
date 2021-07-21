@@ -19,7 +19,7 @@ Uncategorised thoughts, to be added
   - <https://code.visualstudio.com/api/extension-guides/notebook>
 - Future architecture
   - Could we do publish-related settings as a pre-push git hook, e.g. generating footnote labels
-  - Running them on Github Actions to edit stuff as it comes in
+  - Running them on GitHub Actions to edit stuff as it comes in
     - Ideally, we shouldn't have to touch files, should be just markdown
 - Looking at the errors/warnings/output panes makes me think, what kind of automated quality tools could we write.
   - Deduplication, finding similarities...

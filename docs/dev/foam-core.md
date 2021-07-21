@@ -17,7 +17,7 @@
 `foam-core`'s primary responsibility is to build an API on top of a workspace of markdown files, which allows us to:
 
 - Treat files as a graph, based on links
-  - Can be either [[wiki-links]] or relative `[markdown](links.md)` style
+  - Can be either [[wikilinks]] or relative `[markdown](links.md)` style
   - We need to know about the edges (connections) as well as nodes
     - What link points to what other file, etc.
     - Needs to have the exact link text, e.g. even if `[[some-page]]` or `[[some-page.md]]` or `[[Some Page]]` point to the same document (`./some-page.md`), we need to know which format was used, so [[link-reference-definitions]] can be generated correctly
@@ -61,7 +61,7 @@ Here are some example use cases that the core should support. They don't need to
 
 - Adding and editing page content
   - [[materialized-backlinks]]
-  - [[link-reference-definitions]] for [[wiki-links]]
+  - [[link-reference-definitions]] for [[wikilinks]]
   - [Frontmatter](https://jekyllrb.com/docs/front-matter/)
 - Finding all documents with `#tag`
 - Finding all documents with instances of `[[link]]`
@@ -99,7 +99,7 @@ Useful for knowing what needs to be supported. See [[feature-comparison]].
 [workspace-janitor]: ../features/workspace-janitor.md "Janitor"
 [cli]: ../features/cli.md "Command Line Interface"
 [build-vs-assemble]: build-vs-assemble.md "Build vs Assemble"
-[wiki-links]: ../wiki-links.md "Wiki Links"
+[wikilinks]: ../wikilinks.md "Wikilinks"
 [link-reference-definitions]: ../features/link-reference-definitions.md "Link Reference Definitions"
 [materialized-backlinks]: materialized-backlinks.md "Materialized Backlinks (stub)"
 [todo]: todo.md "Todo"

@@ -73,7 +73,7 @@ describe('Link Completion', () => {
     expect(links.items.length).toEqual(4);
   });
 
-  it('should not return link outside the wiki-link brackets', async () => {
+  it('should not return link outside the wikilink brackets', async () => {
     const { uri } = await createFile('[[file]] then');
     const { doc } = await showInEditor(uri);
     const provider = new CompletionProvider(ws, graph);

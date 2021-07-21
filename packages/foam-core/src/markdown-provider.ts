@@ -451,7 +451,7 @@ export function createMarkdownReferences(
         ? relativePath
         : dropExtension(relativePath);
 
-      // [wiki-link-text]: path/to/file.md "Page title"
+      // [wikilink-text]: path/to/file.md "Page title"
       return {
         label:
           link.rawText.indexOf('[[') > -1

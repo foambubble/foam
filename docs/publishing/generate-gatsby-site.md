@@ -2,11 +2,11 @@
 
 ## Using foam-gatsby-template
 
-You can use [foam-gatsby-template](https://github.com/mathieudutour/foam-gatsby-template) to generate a static site to host it online on Github or [Vercel](https://vercel.com).
+You can use [foam-gatsby-template](https://github.com/mathieudutour/foam-gatsby-template) to generate a static site to host it online on GitHub or [Vercel](https://vercel.com).
 
 ### Publishing your foam to GitHub pages
 
-It comes configured with Github actions to auto deploy to Github pages when changes are pushed to your main branch.
+It comes configured with GitHub actions to auto deploy to GitHub pages when changes are pushed to your main branch.
 
 ### Publishing your foam to Vercel
 
@@ -17,7 +17,7 @@ cd _layouts
 npm run build
 ```
 
-Remove `public` from your .gitignore file then commit and push your public folder in `_layouts` to Github.
+Remove `public` from your .gitignore file then commit and push your public folder in `_layouts` to GitHub.
 
 Log into your Vercel account. (Create one if you don't have it already.)
 

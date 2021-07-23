@@ -39,7 +39,7 @@ export class TagCompletionProvider
     }
 
     const completionTags = [];
-    Object.entries(this.foamTags.tags).forEach(([tag]) => {
+    [...this.foamTags.tags].forEach(([tag]) => {
       const item = new vscode.CompletionItem(
         tag,
         vscode.CompletionItemKind.Text

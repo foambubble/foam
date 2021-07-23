@@ -60,7 +60,7 @@ describe('Tag Completion', () => {
       new vscode.Position(0, 0)
     );
 
-    expect(foamTags.tags).toHaveProperty('primary');
+    expect(foamTags.tags.get('primary')).toBeTruthy();
     expect(tags).toBeNull();
   });
 
@@ -74,7 +74,7 @@ describe('Tag Completion', () => {
       new vscode.Position(0, 5)
     );
 
-    expect(foamTags.tags).toHaveProperty('primary');
+    expect(foamTags.tags.get('primary')).toBeTruthy();
     expect(tags.items.length).toEqual(3);
   });
 });

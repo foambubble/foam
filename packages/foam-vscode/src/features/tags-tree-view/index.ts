@@ -47,7 +47,7 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
   }
 
   private computeTags() {
-    this.tags = Object.entries(this.foam.tags.tags)
+    this.tags = [...this.foam.tags.tags]
       .map(([tag, notes]) => ({ tag, notes }))
       .sort((a, b) => a.tag.localeCompare(b.tag));
   }

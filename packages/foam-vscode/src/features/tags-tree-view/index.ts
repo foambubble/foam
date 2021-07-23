@@ -1,7 +1,8 @@
+import { Foam, FoamWorkspace, Resource } from 'foam-core';
+import { TagMetadata } from 'packages/foam-core/src/model/tags';
 import * as vscode from 'vscode';
-import { Foam, Resource, URI, FoamWorkspace } from 'foam-core';
 import { FoamFeature } from '../../types';
-import { getNoteTooltip, getContainsTooltip, isSome } from '../../utils';
+import { getNoteTooltip, isSome } from '../../utils';
 
 const TAG_SEPARATOR = '/';
 const feature: FoamFeature = {
@@ -46,18 +47,7 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
   }
 
   private computeTags() {
-    const rawTags: {
-      [key: string]: TagMetadata[];
-    } = this.foam.workspace
-      .list()
-      .reduce((acc: { [key: string]: TagMetadata[] }, note) => {
-        note.tags.forEach(tag => {
-          acc[tag] = acc[tag] ?? [];
-          acc[tag].push({ title: note.title, uri: note.uri });
-        });
-        return acc;
-      }, {});
-    this.tags = Object.entries(rawTags)
+    this.tags = [...this.foam.tags.tags]
       .map(([tag, notes]) => ({ tag, notes }))
       .sort((a, b) => a.tag.localeCompare(b.tag));
   }
@@ -124,8 +114,6 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
 
 type TagTreeItem = Tag | TagReference | TagSearch;
 
-type TagMetadata = { title: string; uri: URI };
-
 export class Tag extends vscode.TreeItem {
   constructor(
     public readonly tag: string,
@@ -136,7 +124,6 @@ export class Tag extends vscode.TreeItem {
     this.description = `${this.notes.length} reference${
       this.notes.length !== 1 ? 's' : ''
     }`;
-    this.tooltip = getContainsTooltip(this.notes.map(n => n.title));
   }
 
   iconPath = new vscode.ThemeIcon('symbol-number');

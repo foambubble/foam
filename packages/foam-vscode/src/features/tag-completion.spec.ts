@@ -1,0 +1,80 @@
+import * as vscode from 'vscode';
+import { FoamTags, FoamWorkspace } from 'foam-core';
+import {
+  cleanWorkspace,
+  closeEditors,
+  createFile,
+  createTestNote,
+  showInEditor,
+} from '../test/test-utils';
+import { TagCompletionProvider } from './tag-completion';
+
+describe('Tag Completion', () => {
+  const root = vscode.workspace.workspaceFolders[0].uri;
+  const ws = new FoamWorkspace();
+  ws.set(
+    createTestNote({
+      root,
+      uri: 'file-name.md',
+      tags: new Set(['primary']),
+    })
+  )
+    .set(
+      createTestNote({
+        root,
+        uri: 'File name with spaces.md',
+        tags: new Set(['secondary']),
+      })
+    )
+    .set(
+      createTestNote({
+        root,
+        uri: 'path/to/file.md',
+        links: [{ slug: 'placeholder text' }],
+        tags: new Set(['primary', 'third']),
+      })
+    );
+  const foamTags = FoamTags.fromWorkspace(ws);
+
+  beforeAll(async () => {
+    await cleanWorkspace();
+  });
+
+  afterAll(async () => {
+    ws.dispose();
+    foamTags.dispose();
+    await cleanWorkspace();
+  });
+
+  beforeEach(async () => {
+    await closeEditors();
+  });
+
+  it('should not return any tags for empty documents', async () => {
+    const { uri } = await createFile('');
+    const { doc } = await showInEditor(uri);
+    const provider = new TagCompletionProvider(foamTags);
+
+    const tags = await provider.provideCompletionItems(
+      doc,
+      new vscode.Position(0, 0)
+    );
+
+    expect(foamTags.tags.get('primary')).toBeTruthy();
+    expect(tags).toBeNull();
+  });
+
+  it('should provide a suggestion when typing #prim', async () => {
+    const { uri } = await createFile('#prim');
+    const { doc } = await showInEditor(uri);
+    const provider = new TagCompletionProvider(foamTags);
+
+    const tags = await provider.provideCompletionItems(
+      doc,
+      new vscode.Position(0, 5)
+    );
+
+    expect(foamTags.tags.get('primary')).toBeTruthy();
+    expect(tags.items.length).toEqual(3);
+  });
+});

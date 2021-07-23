@@ -2506,10 +2506,10 @@
   "resolved" "https://registry.npmjs.org/flatted/-/flatted-2.0.2.tgz"
   "version" "2.0.2"
 
-"foam-core@^0.14.0":
-  "integrity" "sha512-OIQXh3vDjIk/R/MxhVANoTCBlaHvgjfbIJlCNiegAK6JRLuwVS5wG+qeGTtW6pMMo8fwN4FJl68+RlCgP02YRA=="
-  "resolved" "https://registry.npmjs.org/foam-core/-/foam-core-0.14.0.tgz"
-  "version" "0.14.0"
+"foam-core@^0.14.1":
+  "integrity" "sha512-bzUpaQhGCDCMGX7T9EbeIGmdfLn5CXlXDfguTs/35N2pl1XPp0r/zk2JAw1QsMr+eyCyTTToOy3ijt0gfUEhxQ=="
+  "resolved" "https://registry.npmjs.org/foam-core/-/foam-core-0.14.1.tgz"
+  "version" "0.14.1"
   dependencies:
     "detect-newline" "^3.1.0"
     "fast-array-diff" "^1.0.0"

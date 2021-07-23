@@ -6,7 +6,7 @@ import { Resource } from './note';
 export type TagMetadata = { uri: URI };
 
 export class FoamTags implements IDisposable {
-  public readonly tags: { [key: string]: TagMetadata[] } = {};
+  public readonly tags: Map<string, TagMetadata[]> = new Map();
 
   constructor(private readonly workspace: FoamWorkspace) {}
 
@@ -29,55 +29,23 @@ export class FoamTags implements IDisposable {
     let tags = new FoamTags(workspace);
 
     Object.values(workspace.list()).forEach(resource =>
-      tags.resolveResource(resource)
+      tags.addResourceFromTagIndex(resource)
     );
 
     if (keepMonitoring) {
       tags.disposables.push(
         workspace.onDidAdd(resource => {
-          tags.resolveResource(resource);
+          tags.addResourceFromTagIndex(resource);
         }),
         workspace.onDidUpdate(change => {
-          tags.updateTagsForUpdatedResource(change.old, change.new);
+          tags.updateResourceWithinTagIndex(change.old, change.new);
         }),
         workspace.onDidDelete(resource => {
-          tags.updateTagsForRemovedResource(resource);
+          tags.removeResourceFromTagIndex(resource);
         })
       );
     }
     return tags;
-  }
-
-  updateTagsForUpdatedResource(oldVersion: Resource, newVersion: Resource) {
-    if (oldVersion.tags.size === 0 && newVersion.tags.size === 0) {
-      return;
-    }
-
-    this.resolveUpdatedTags(newVersion, oldVersion);
-    this.resolveMovedResource(newVersion, oldVersion);
-  }
-
-  updateTagsForRemovedResource(resource: Resource): void {
-    if (resource.tags.size === 0) {
-      return;
-    }
-
-    resource.tags.forEach(tag => {
-      this.tags[tag] = this.tags[tag].filter(
-        t => !URI.isEqual(t.uri, resource.uri)
-      );
-
-      if (this.tags[tag].length === 0) {
-        delete this.tags[tag];
-      }
-    });
-  }
-
-  resolveResource(resource: Resource): void {
-    resource.tags.forEach(tag => {
-      this.tags[tag] = this.tags[tag] ?? [];
-      this.tags[tag].push({ uri: resource.uri });
-    });
   }
 
   dispose(): void {
@@ -85,75 +53,31 @@ export class FoamTags implements IDisposable {
     this.disposables = [];
   }
 
-  /**
-   * If the file has been moved, update all relevant metadata objects of the tag
-   * @param newVersion
-   * @param oldVersion
-   */
-  private resolveMovedResource(newVersion: Resource, oldVersion: Resource) {
-    if (!URI.isEqual(oldVersion.uri, newVersion.uri)) {
-      newVersion.tags.forEach(tag => {
-        this.tags[tag].forEach((meta, idx) => {
-          if (meta.uri === oldVersion.uri) {
-            this.tags[tag][idx].uri = newVersion.uri;
-          }
-        });
-      });
-    }
+  updateResourceWithinTagIndex(oldResource: Resource, newResource: Resource) {
+    this.removeResourceFromTagIndex(oldResource);
+    this.addResourceFromTagIndex(newResource);
   }
 
-  /**
-   * Look for differences in the tags of the resources and update accordingly
-   *
-   * @param newVersion
-   * @param oldVersion
-   */
-  private resolveUpdatedTags(newVersion: Resource, oldVersion: Resource) {
-    const newTags = Array.from(newVersion.tags).filter(
-      t => !oldVersion.tags.has(t)
-    );
-    const removedTags = Array.from(oldVersion.tags).filter(
-      t => !newVersion.tags.has(t)
-    );
-
-    newTags.forEach(newTag => {
-      if (!this.tags[newTag]) {
-        this.tags[newTag] = [];
-      }
-
-      this.tags[newTag].push({ uri: newVersion.uri });
+  addResourceFromTagIndex(resource: Resource) {
+    resource.tags.forEach(tag => {
+      this.tags.set(tag, this.tags.get(tag) ?? []);
+      this.tags.get(tag)?.push({ uri: resource.uri });
     });
+  }
 
-    removedTags.forEach(removedTag => {
-      // should not happen
-      if (!this.tags[removedTag]) {
-        return;
-      }
+  removeResourceFromTagIndex(resource: Resource) {
+    resource.tags.forEach(tag => {
+      if (this.tags.has(tag)) {
+        const remainingLocations = this.tags
+          .get(tag)
+          ?.filter(meta => !URI.isEqual(meta.uri, resource.uri));
 
-      this.tags[removedTag] = this.tags[removedTag].filter(
-        meta => !URI.isEqual(meta.uri, newVersion.uri)
-      );
-
-      if (this.tags[removedTag].length === 0) {
-        delete this.tags[removedTag];
-      }
-    });
-
-    // No change in tags detected, but might be a newly added tag to the file
-    if (
-      removedTags.length === 0 &&
-      newTags.length === 0 &&
-      URI.isEqual(oldVersion.uri, newVersion.uri)
-    ) {
-      newVersion.tags.forEach(tag => {
-        const noteRegistered = this.tags[tag].find(meta =>
-          URI.isEqual(meta.uri, newVersion.uri)
-        );
-
-        if (!noteRegistered) {
-          this.tags[tag].push({ uri: newVersion.uri });
+        if (remainingLocations && remainingLocations.length > 0) {
+          this.tags.set(tag, remainingLocations);
+        } else {
+          this.tags.delete(tag);
         }
-      });
-    }
+      }
+    });
   }
 }

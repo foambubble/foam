@@ -43,6 +43,7 @@ interface FoamSelectionContent {
 
 const knownFoamVariables = new Set(['FOAM_TITLE', 'FOAM_SELECTED_TEXT']);
 
+const wikilinkDefaultTemplateText = `# $\{1:\$FOAM_TITLE}\n\n$0`;
 const defaultTemplateDefaultText: string = `---
 foam_template:
   name: New Note
@@ -421,10 +422,28 @@ export async function createNoteFromDailyNoteTemplate(
 }
 
 /**
+ * Creates a new note when following a placeholder wikilink using the default template.
+ * @param wikilinkPlaceholder the placeholder value from the wikilink. (eg. `[[Hello Joe]]` -> `Hello Joe`)
+ * @param filepathFallbackURI the URI to use if the template does not specify the `filepath` metadata attribute. This is configurable by the caller for backwards compatibility purposes.
+ */
+export async function createNoteForPlaceholderWikilink(
+  wikilinkPlaceholder: string,
+  filepathFallbackURI: URI
+): Promise<void> {
+  return await createNoteFromDefaultTemplate(
+    new Map().set('FOAM_TITLE', wikilinkPlaceholder),
+    new Set(['FOAM_TITLE', 'FOAM_SELECTED_TEXT']),
+    defaultTemplateUri,
+    filepathFallbackURI,
+    wikilinkDefaultTemplateText
+  );
+}
+
+/**
  * Creates a new note using the default note template.
  * @param givenValues already resolved values of Foam template variables. These are used instead of resolving the Foam template variables.
  * @param extraVariablesToResolve Foam template variables to resolve, in addition to those mentioned in the template.
- * @param templateUri the URI of the template to use/
+ * @param templateUri the URI of the template to use.
  * @param filepathFallbackURI the URI to use if the template does not specify the `filepath` metadata attribute. This is configurable by the caller for backwards compatibility purposes.
  * @param templateFallbackText the template text to use the default note template does not exist. This is configurable by the caller for backwards compatibility purposes.
  */

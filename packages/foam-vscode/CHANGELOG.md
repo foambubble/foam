@@ -4,6 +4,17 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.14.2] - 2021-07-24
+
+Features: 
+
+- Autocompletion for tags (#708 - thanks @pderaaij)
+- Use templates for new note created from wikilink (#712 - thanks @movermeyer)
+
+Fixes and Improvements:
+
+- Improved performance of initial file loading (#730 - thanks @pderaaij)
+
 ## [0.14.1] - 2021-07-14
 
 Fixes and Improvements:

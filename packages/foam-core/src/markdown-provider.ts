@@ -171,12 +171,17 @@ const getTextFromChildren = (root: Node): string => {
 
 const tagsPlugin: ParserPlugin = {
   name: 'tags',
-  onWillVisitTree: (tree, note) => {
-    note.tags = extractHashtags(note.source.text);
-  },
   onDidFindProperties: (props, note) => {
     const yamlTags = extractTagsFromProp(props.tags);
     yamlTags.forEach(tag => note.tags.add(tag));
+  },
+  visit: (node, note) => {
+    if (node.type === 'text') {
+      const tags = extractHashtags((node as any).value);
+      if (tags.size > 0) {
+        tags.forEach(tag => note.tags.add(tag));
+      }
+    }
   },
 };
 

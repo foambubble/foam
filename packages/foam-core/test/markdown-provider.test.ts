@@ -148,6 +148,42 @@ this is a [link to intro](#introduction)
     expect(link.label).toEqual('spaced');
     expect(link.target).toEqual('other link');
   });
+
+  it('Skips wikilinks in codeblocks', () => {
+    const noteA = createNoteFromMarkdown(
+      '/dir1/page-a.md',
+      `
+this is some text with our [[first-wikilink]].
+
+\`\`\`
+this is inside a [[codeblock]]
+\`\`\`
+
+this is some text with our [[second-wikilink]].
+    `
+    );
+    expect(noteA.links.map(l => l.label)).toEqual([
+      'first-wikilink',
+      'second-wikilink',
+    ]);
+  });
+
+  it('Skips wikilinks in inlined codeblocks', () => {
+    const noteA = createNoteFromMarkdown(
+      '/dir1/page-a.md',
+      `
+this is some text with our [[first-wikilink]].
+
+this is \`inside a [[codeblock]]\`
+
+this is some text with our [[second-wikilink]].
+    `
+    );
+    expect(noteA.links.map(l => l.label)).toEqual([
+      'first-wikilink',
+      'second-wikilink',
+    ]);
+  });
 });
 
 describe('Note Title', () => {
@@ -316,13 +352,39 @@ describe('tags plugin', () => {
     const noteA = createNoteFromMarkdown(
       '/dir1/page-a.md',
       `
-# this is a heading
+# this is a #heading
 this is some #text that includes #tags we #care-about.
+    `
+    );
+    expect(noteA.tags).toEqual(
+      new Set(['heading', 'text', 'tags', 'care-about'])
+    );
+  });
+
+  it('will skip tags in codeblocks', () => {
+    const noteA = createNoteFromMarkdown(
+      '/dir1/page-a.md',
+      `
+this is some #text that includes #tags we #care-about.
+
+\`\`\`
+this is a #codeblock
+\`\`\`
     `
     );
     expect(noteA.tags).toEqual(new Set(['text', 'tags', 'care-about']));
   });
 
+  it('will skip tags in inlined codeblocks', () => {
+    const noteA = createNoteFromMarkdown(
+      '/dir1/page-a.md',
+      `
+this is some #text that includes #tags we #care-about.
+this is a \`inlined #codeblock\`
+    `
+    );
+    expect(noteA.tags).toEqual(new Set(['text', 'tags', 'care-about']));
+  });
   it('can find tags as text in yaml', () => {
     const noteA = createNoteFromMarkdown(
       '/dir1/page-a.md',

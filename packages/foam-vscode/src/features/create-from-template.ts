@@ -43,7 +43,7 @@ interface FoamSelectionContent {
 
 const knownFoamVariables = new Set(['FOAM_TITLE', 'FOAM_SELECTED_TEXT']);
 
-const wikilinkDefaultTemplateText = `# $\{1:\$FOAM_TITLE}\n\n$0`;
+const wikilinkDefaultTemplateText = `# $\{1:$FOAM_TITLE}\n\n$0`;
 const defaultTemplateDefaultText: string = `---
 foam_template:
   name: New Note

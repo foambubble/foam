@@ -4,7 +4,7 @@ import {
   createTestNote,
 } from '../../test/test-utils';
 
-import { Tag, TagReference, TagsProvider } from '.';
+import { TagItem, TagReference, TagsProvider } from '.';
 
 import {
   bootstrap,
@@ -50,33 +50,35 @@ describe('Tags tree panel', () => {
 
   it('correctly provides a tag from a set of notes', async () => {
     const noteA = createTestNote({
-      tags: new Set(['test']),
+      tags: ['test'],
       uri: './note-a.md',
     });
     _foam.workspace.set(noteA);
     provider.refresh();
 
-    const treeItems = (await provider.getChildren()) as Tag[];
+    const treeItems = (await provider.getChildren()) as TagItem[];
 
     treeItems.map(item => expect(item.tag).toContain('test'));
   });
 
   it('correctly handles a parent and child tag', async () => {
     const noteA = createTestNote({
-      tags: new Set(['parent/child']),
+      tags: ['parent/child'],
       uri: './note-a.md',
     });
     _foam.workspace.set(noteA);
     provider.refresh();
 
-    const parentTreeItems = (await provider.getChildren()) as Tag[];
+    const parentTreeItems = (await provider.getChildren()) as TagItem[];
     const parentTagItem = parentTreeItems.pop();
     expect(parentTagItem.title).toEqual('parent');
 
-    const childTreeItems = (await provider.getChildren(parentTagItem)) as Tag[];
+    const childTreeItems = (await provider.getChildren(
+      parentTagItem
+    )) as TagItem[];
 
     childTreeItems.forEach(child => {
-      if (child instanceof Tag) {
+      if (child instanceof TagItem) {
         expect(child.title).toEqual('child');
       }
     });
@@ -84,29 +86,31 @@ describe('Tags tree panel', () => {
 
   it('correctly handles a single parent and multiple child tag', async () => {
     const noteA = createTestNote({
-      tags: new Set(['parent/child']),
+      tags: ['parent/child'],
       uri: './note-a.md',
     });
     _foam.workspace.set(noteA);
     const noteB = createTestNote({
-      tags: new Set(['parent/subchild']),
+      tags: ['parent/subchild'],
       uri: './note-b.md',
     });
     _foam.workspace.set(noteB);
     provider.refresh();
 
-    const parentTreeItems = (await provider.getChildren()) as Tag[];
+    const parentTreeItems = (await provider.getChildren()) as TagItem[];
     const parentTagItem = parentTreeItems.filter(
-      item => item instanceof Tag
+      item => item instanceof TagItem
     )[0];
 
     expect(parentTagItem.title).toEqual('parent');
     expect(parentTreeItems).toHaveLength(1);
 
-    const childTreeItems = (await provider.getChildren(parentTagItem)) as Tag[];
+    const childTreeItems = (await provider.getChildren(
+      parentTagItem
+    )) as TagItem[];
 
     childTreeItems.forEach(child => {
-      if (child instanceof Tag) {
+      if (child instanceof TagItem) {
         expect(['child', 'subchild']).toContain(child.title);
         expect(child.title).not.toEqual('parent');
       }
@@ -116,7 +120,7 @@ describe('Tags tree panel', () => {
 
   it('correctly handles a single parent and child tag in the same note', async () => {
     const noteC = createTestNote({
-      tags: new Set(['main', 'main/subtopic']),
+      tags: ['main', 'main/subtopic'],
       title: 'Test note',
       uri: './note-c.md',
     });
@@ -125,14 +129,16 @@ describe('Tags tree panel', () => {
 
     provider.refresh();
 
-    const parentTreeItems = (await provider.getChildren()) as Tag[];
+    const parentTreeItems = (await provider.getChildren()) as TagItem[];
     const parentTagItem = parentTreeItems.filter(
-      item => item instanceof Tag
+      item => item instanceof TagItem
     )[0];
 
     expect(parentTagItem.title).toEqual('main');
 
-    const childTreeItems = (await provider.getChildren(parentTagItem)) as Tag[];
+    const childTreeItems = (await provider.getChildren(
+      parentTagItem
+    )) as TagItem[];
 
     childTreeItems
       .filter(item => item instanceof TagReference)
@@ -141,7 +147,7 @@ describe('Tags tree panel', () => {
       });
 
     childTreeItems
-      .filter(item => item instanceof Tag)
+      .filter(item => item instanceof TagItem)
       .forEach(item => {
         expect(['main/subtopic']).toContain(item.tag);
         expect(item.title).toEqual('subtopic');

@@ -16,14 +16,14 @@ describe('Tag Completion', () => {
     createTestNote({
       root,
       uri: 'file-name.md',
-      tags: new Set(['primary']),
+      tags: ['primary'],
     })
   )
     .set(
       createTestNote({
         root,
         uri: 'File name with spaces.md',
-        tags: new Set(['secondary']),
+        tags: ['secondary'],
       })
     )
     .set(
@@ -31,7 +31,7 @@ describe('Tag Completion', () => {
         root,
         uri: 'path/to/file.md',
         links: [{ slug: 'placeholder text' }],
-        tags: new Set(['primary', 'third']),
+        tags: ['primary', 'third'],
       })
     );
   const foamTags = FoamTags.fromWorkspace(ws);

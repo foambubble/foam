@@ -33,13 +33,18 @@ export interface NoteLinkDefinition {
   range?: Range;
 }
 
+export interface Tag {
+  label: string;
+  range: Range;
+}
+
 export interface Resource {
   uri: URI;
   type: string;
   title: string;
   properties: any;
   // sections: NoteSection[]
-  tags: Set<string>;
+  tags: Tag[];
   links: ResourceLink[];
 
   // TODO to remove

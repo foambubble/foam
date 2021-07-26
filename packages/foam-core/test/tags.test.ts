@@ -26,9 +26,9 @@ describe('FoamTags', () => {
 
     expect(tags.tags).toEqual(
       new Map([
-        ['primary', [{ uri: pageA.uri }, { uri: pageB.uri }]],
-        ['secondary', [{ uri: pageA.uri }]],
-        ['third', [{ uri: pageB.uri }]],
+        ['primary', [pageA.uri, pageB.uri]],
+        ['secondary', [pageA.uri]],
+        ['third', [pageB.uri]],
       ])
     );
   });
@@ -51,7 +51,7 @@ describe('FoamTags', () => {
     ws.set(taglessPage);
 
     const tags = FoamTags.fromWorkspace(ws);
-    expect(tags.tags).toEqual(new Map([['primary', [{ uri: page.uri }]]]));
+    expect(tags.tags).toEqual(new Map([['primary', [page.uri]]]));
 
     const newPage = createTestNote({
       uri: '/page-b.md',
@@ -61,9 +61,7 @@ describe('FoamTags', () => {
 
     tags.updateResourceWithinTagIndex(taglessPage, newPage);
 
-    expect(tags.tags).toEqual(
-      new Map([['primary', [{ uri: page.uri }, { uri: newPage.uri }]]])
-    );
+    expect(tags.tags).toEqual(new Map([['primary', [page.uri, newPage.uri]]]));
   });
 
   it('Replaces the tag when a note is updated with an altered tag', () => {
@@ -79,7 +77,7 @@ describe('FoamTags', () => {
     ws.set(page);
 
     const tags = FoamTags.fromWorkspace(ws);
-    expect(tags.tags).toEqual(new Map([['primary', [{ uri: page.uri }]]]));
+    expect(tags.tags).toEqual(new Map([['primary', [page.uri]]]));
 
     const pageEdited = createTestNote({
       uri: '/page-a.md',
@@ -90,7 +88,7 @@ describe('FoamTags', () => {
 
     tags.updateResourceWithinTagIndex(page, pageEdited);
 
-    expect(tags.tags).toEqual(new Map([['new', [{ uri: page.uri }]]]));
+    expect(tags.tags).toEqual(new Map([['new', [page.uri]]]));
   });
 
   it('Updates the metadata of a tag when the note is moved', () => {
@@ -105,7 +103,7 @@ describe('FoamTags', () => {
     ws.set(page);
 
     const tags = FoamTags.fromWorkspace(ws);
-    expect(tags.tags).toEqual(new Map([['primary', [{ uri: page.uri }]]]));
+    expect(tags.tags).toEqual(new Map([['primary', [page.uri]]]));
 
     const pageEdited = createTestNote({
       uri: '/new-place/page-a.md',
@@ -116,9 +114,7 @@ describe('FoamTags', () => {
 
     tags.updateResourceWithinTagIndex(page, pageEdited);
 
-    expect(tags.tags).toEqual(
-      new Map([['primary', [{ uri: pageEdited.uri }]]])
-    );
+    expect(tags.tags).toEqual(new Map([['primary', [pageEdited.uri]]]));
   });
 
   it('Updates the metadata of a tag when a note is delete', () => {
@@ -133,7 +129,7 @@ describe('FoamTags', () => {
     ws.set(page);
 
     const tags = FoamTags.fromWorkspace(ws);
-    expect(tags.tags).toEqual(new Map([['primary', [{ uri: page.uri }]]]));
+    expect(tags.tags).toEqual(new Map([['primary', [page.uri]]]));
 
     tags.removeResourceFromTagIndex(page);
 

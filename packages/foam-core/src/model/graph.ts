@@ -202,7 +202,7 @@ export class FoamGraph implements IDisposable {
       target.path,
       this.backlinks.get(target.path)?.filter(connectionsToKeep) ?? []
     );
-    if ((this.backlinks.get(target.path) as Connection[]).length === 0) {
+    if (this.backlinks.get(target.path)?.length === 0) {
       this.backlinks.delete(target.path);
       if (URI.isPlaceholder(target)) {
         delete this.placeholders[uriToPlaceholderId(target)];

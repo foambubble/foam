@@ -56,7 +56,11 @@ export const createTestNote = (params: {
     properties: {},
     title: params.title ?? path.parse(strToUri(params.uri).path).base,
     definitions: params.definitions ?? [],
-    tags: new Set(params.tags) ?? new Set(),
+    tags:
+      params.tags?.map(t => ({
+        label: t,
+        range: Range.create(0, 0, 0, 0),
+      })) ?? [],
     links: params.links
       ? params.links.map((link, index) => {
           const range = Range.create(

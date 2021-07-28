@@ -3,12 +3,8 @@ import { URI } from './uri';
 import { IDisposable } from '../index';
 import { Resource } from './note';
 
-export type TagMetadata = { uri: URI };
-
 export class FoamTags implements IDisposable {
-  public readonly tags: Map<string, TagMetadata[]> = new Map();
-
-  constructor(private readonly workspace: FoamWorkspace) {}
+  public readonly tags: Map<string, URI[]> = new Map();
 
   /**
    * List of disposables to destroy with the tags
@@ -26,7 +22,7 @@ export class FoamTags implements IDisposable {
     workspace: FoamWorkspace,
     keepMonitoring: boolean = false
   ): FoamTags {
-    let tags = new FoamTags(workspace);
+    let tags = new FoamTags();
 
     Object.values(workspace.list()).forEach(resource =>
       tags.addResourceFromTagIndex(resource)
@@ -59,18 +55,20 @@ export class FoamTags implements IDisposable {
   }
 
   addResourceFromTagIndex(resource: Resource) {
-    resource.tags.forEach(tag => {
-      this.tags.set(tag, this.tags.get(tag) ?? []);
-      this.tags.get(tag)?.push({ uri: resource.uri });
+    new Set(resource.tags.map(t => t.label)).forEach(tag => {
+      const tagMeta = this.tags.get(tag) ?? [];
+      tagMeta.push(resource.uri);
+      this.tags.set(tag, tagMeta);
     });
   }
 
   removeResourceFromTagIndex(resource: Resource) {
-    resource.tags.forEach(tag => {
+    resource.tags.forEach(t => {
+      const tag = t.label;
       if (this.tags.has(tag)) {
         const remainingLocations = this.tags
           .get(tag)
-          ?.filter(meta => !URI.isEqual(meta.uri, resource.uri));
+          ?.filter(uri => !URI.isEqual(uri, resource.uri));
 
         if (remainingLocations && remainingLocations.length > 0) {
           this.tags.set(tag, remainingLocations);

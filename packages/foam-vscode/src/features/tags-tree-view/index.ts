@@ -1,8 +1,8 @@
-import { Foam, FoamWorkspace, Resource } from 'foam-core';
-import { TagMetadata } from 'packages/foam-core/src/model/tags';
+import { Foam, FoamWorkspace, Resource, Tag, URI } from 'foam-core';
 import * as vscode from 'vscode';
 import { FoamFeature } from '../../types';
 import { getNoteTooltip, isSome } from '../../utils';
+import { toVsCodeRange, toVsCodeUri } from '../../utils/vsc-utils';
 
 const TAG_SEPARATOR = '/';
 const feature: FoamFeature = {
@@ -34,7 +34,7 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
 
   private tags: {
     tag: string;
-    notes: TagMetadata[];
+    notes: URI[];
   }[];
 
   constructor(private foam: Foam, private workspace: FoamWorkspace) {
@@ -56,13 +56,13 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
     return element;
   }
 
-  getChildren(element?: Tag): Thenable<TagTreeItem[]> {
+  getChildren(element?: TagItem): Thenable<TagTreeItem[]> {
     if (element) {
       const nestedTagItems: TagTreeItem[] = this.tags
         .filter(item => item.tag.indexOf(element.title + TAG_SEPARATOR) > -1)
         .map(
           item =>
-            new Tag(
+            new TagItem(
               item.tag,
               item.tag.substring(item.tag.indexOf(TAG_SEPARATOR) + 1),
               item.notes
@@ -71,26 +71,31 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
         .sort((a, b) => a.title.localeCompare(b.title));
 
       const references: TagTreeItem[] = element.notes
-        .map(({ uri }) => this.foam.workspace.get(uri))
-        .filter(note => note.tags.has(element.tag))
-        .map(note => new TagReference(element.tag, note))
+        .map(uri => this.foam.workspace.get(uri))
+        .reduce((acc, note) => {
+          const tags = note.tags.filter(t => t.label === element.tag);
+          return [
+            ...acc,
+            ...tags.slice(0, 1).map(t => new TagReference(t, note)),
+          ];
+        }, [])
         .sort((a, b) => a.title.localeCompare(b.title));
 
       return Promise.resolve([
-        new TagSearch(element.title),
+        new TagSearch(element.tag),
         ...nestedTagItems,
         ...references,
       ]);
     }
     if (!element) {
-      const tags: Tag[] = this.tags
+      const tags: TagItem[] = this.tags
         .map(({ tag, notes }) => {
           const parentTag =
             tag.indexOf(TAG_SEPARATOR) > 0
               ? tag.substring(0, tag.indexOf(TAG_SEPARATOR))
               : tag;
 
-          return new Tag(parentTag, parentTag, notes);
+          return new TagItem(parentTag, parentTag, notes);
         })
         .filter(
           (value, index, array) =>
@@ -112,13 +117,13 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
   }
 }
 
-type TagTreeItem = Tag | TagReference | TagSearch;
+type TagTreeItem = TagItem | TagReference | TagSearch;
 
-export class Tag extends vscode.TreeItem {
+export class TagItem extends vscode.TreeItem {
   constructor(
     public readonly tag: string,
     public readonly title: string,
-    public readonly notes: TagMetadata[]
+    public readonly notes: URI[]
   ) {
     super(title, vscode.TreeItemCollapsibleState.Collapsed);
     this.description = `${this.notes.length} reference${
@@ -156,29 +161,21 @@ export class TagSearch extends vscode.TreeItem {
 
 export class TagReference extends vscode.TreeItem {
   public readonly title: string;
-  constructor(public readonly tag: string, public readonly note: Resource) {
+  constructor(public readonly tag: Tag, public readonly note: Resource) {
     super(note.title, vscode.TreeItemCollapsibleState.None);
     this.title = note.title;
-    this.description = note.uri.path;
+    this.description = note.uri.path.replace(
+      vscode.workspace.getWorkspaceFolder(toVsCodeUri(note.uri))?.uri.path,
+      ''
+    );
     this.tooltip = undefined;
-    const resourceUri = note.uri;
-    let selection: vscode.Range | null = null;
-    // TODO move search fn to core
-    const lines = note.source.text.split(/\r?\n/);
-    for (let i = 0; i < lines.length; i++) {
-      const found = lines[i].indexOf(`#${tag}`);
-      if (found >= 0) {
-        selection = new vscode.Range(i, found, i, found + `#${tag}`.length);
-        break;
-      }
-    }
     this.command = {
       command: 'vscode.open',
       arguments: [
-        resourceUri,
+        note.uri,
         {
           preview: true,
-          selection: selection,
+          selection: toVsCodeRange(tag.range),
         },
       ],
       title: 'Open File',

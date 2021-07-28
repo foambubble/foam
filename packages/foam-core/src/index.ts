@@ -3,6 +3,7 @@ import {
   ResourceLink,
   NoteLinkDefinition,
   ResourceParser,
+  Tag,
 } from './model/note';
 import { FoamConfig } from './config';
 import {
@@ -54,6 +55,7 @@ export {
   Resource,
   ResourceLink,
   URI,
+  Tag,
   FoamWorkspace,
   FoamGraph,
   FoamTags,

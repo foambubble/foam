@@ -9,6 +9,7 @@ import { uriToSlug } from '../src/utils/slug';
 import { URI } from '../src/model/uri';
 import { FoamGraph } from '../src/model/graph';
 import { createTestWorkspace } from './core.test';
+import { Range } from '../src/model/range';
 
 Logger.setLevel('error');
 
@@ -147,6 +148,42 @@ this is a [link to intro](#introduction)
     expect(link.rawText).toEqual('[[other link | spaced]]');
     expect(link.label).toEqual('spaced');
     expect(link.target).toEqual('other link');
+  });
+
+  it('Skips wikilinks in codeblocks', () => {
+    const noteA = createNoteFromMarkdown(
+      '/dir1/page-a.md',
+      `
+this is some text with our [[first-wikilink]].
+
+\`\`\`
+this is inside a [[codeblock]]
+\`\`\`
+
+this is some text with our [[second-wikilink]].
+    `
+    );
+    expect(noteA.links.map(l => l.label)).toEqual([
+      'first-wikilink',
+      'second-wikilink',
+    ]);
+  });
+
+  it('Skips wikilinks in inlined codeblocks', () => {
+    const noteA = createNoteFromMarkdown(
+      '/dir1/page-a.md',
+      `
+this is some text with our [[first-wikilink]].
+
+this is \`inside a [[codeblock]]\`
+
+this is some text with our [[second-wikilink]].
+    `
+    );
+    expect(noteA.links.map(l => l.label)).toEqual([
+      'first-wikilink',
+      'second-wikilink',
+    ]);
   });
 });
 
@@ -316,13 +353,51 @@ describe('tags plugin', () => {
     const noteA = createNoteFromMarkdown(
       '/dir1/page-a.md',
       `
-# this is a heading
-this is some #text that includes #tags we #care-about.
+# this is a #heading
+#this is some #text that includes #tags we #care-about.
     `
     );
-    expect(noteA.tags).toEqual(new Set(['text', 'tags', 'care-about']));
+    expect(noteA.tags).toEqual([
+      { label: 'heading', range: Range.create(1, 12, 1, 20) },
+      { label: 'this', range: Range.create(2, 0, 2, 5) },
+      { label: 'text', range: Range.create(2, 14, 2, 19) },
+      { label: 'tags', range: Range.create(2, 34, 2, 39) },
+      { label: 'care-about', range: Range.create(2, 43, 2, 54) },
+    ]);
   });
 
+  it('will skip tags in codeblocks', () => {
+    const noteA = createNoteFromMarkdown(
+      '/dir1/page-a.md',
+      `
+this is some #text that includes #tags we #care-about.
+
+\`\`\`
+this is a #codeblock
+\`\`\`
+    `
+    );
+    expect(noteA.tags.map(t => t.label)).toEqual([
+      'text',
+      'tags',
+      'care-about',
+    ]);
+  });
+
+  it('will skip tags in inlined codeblocks', () => {
+    const noteA = createNoteFromMarkdown(
+      '/dir1/page-a.md',
+      `
+this is some #text that includes #tags we #care-about.
+this is a \`inlined #codeblock\`
+    `
+    );
+    expect(noteA.tags.map(t => t.label)).toEqual([
+      'text',
+      'tags',
+      'care-about',
+    ]);
+  });
   it('can find tags as text in yaml', () => {
     const noteA = createNoteFromMarkdown(
       '/dir1/page-a.md',
@@ -334,9 +409,14 @@ tags: hello, world  this_is_good
 this is some #text that includes #tags we #care-about.
     `
     );
-    expect(noteA.tags).toEqual(
-      new Set(['text', 'tags', 'care-about', 'hello', 'world', 'this_is_good'])
-    );
+    expect(noteA.tags.map(t => t.label)).toEqual([
+      'hello',
+      'world',
+      'this_is_good',
+      'text',
+      'tags',
+      'care-about',
+    ]);
   });
 
   it('can find tags as array in yaml', () => {
@@ -350,9 +430,34 @@ tags: [hello, world,  this_is_good]
 this is some #text that includes #tags we #care-about.
     `
     );
-    expect(noteA.tags).toEqual(
-      new Set(['text', 'tags', 'care-about', 'hello', 'world', 'this_is_good'])
+    expect(noteA.tags.map(t => t.label)).toEqual([
+      'hello',
+      'world',
+      'this_is_good',
+      'text',
+      'tags',
+      'care-about',
+    ]);
+  });
+
+  it('provides rough range for tags in yaml', () => {
+    // For now it's enough to just get the YAML block range
+    // in the future we might want to be more specific
+
+    const noteA = createNoteFromMarkdown(
+      '/dir1/page-a.md',
+      `
+---
+tags: [hello, world, this_is_good]
+---
+# this is a heading
+this is some text
+    `
     );
+    expect(noteA.tags[0]).toEqual({
+      label: 'hello',
+      range: Range.create(1, 0, 3, 3),
+    });
   });
 });
 

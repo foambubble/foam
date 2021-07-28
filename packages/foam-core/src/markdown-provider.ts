@@ -40,7 +40,7 @@ export interface ParserPlugin {
   onWillParseMarkdown?: (markdown: string) => string;
   onWillVisitTree?: (tree: Node, note: Resource) => void;
   onDidVisitTree?: (tree: Node, note: Resource) => void;
-  onDidFindProperties?: (properties: any, note: Resource) => void;
+  onDidFindProperties?: (properties: any, note: Resource, node: Node) => void;
 }
 
 export class MarkdownResourceProvider implements ResourceProvider {
@@ -171,12 +171,33 @@ const getTextFromChildren = (root: Node): string => {
 
 const tagsPlugin: ParserPlugin = {
   name: 'tags',
-  onWillVisitTree: (tree, note) => {
-    note.tags = extractHashtags(note.source.text);
+  onDidFindProperties: (props, note, node) => {
+    if (isSome(props.tags)) {
+      const yamlTags = extractTagsFromProp(props.tags);
+      yamlTags.forEach(t => {
+        note.tags.push({
+          label: t,
+          range: astPositionToFoamRange(node.position!),
+        });
+      });
+    }
   },
-  onDidFindProperties: (props, note) => {
-    const yamlTags = extractTagsFromProp(props.tags);
-    yamlTags.forEach(tag => note.tags.add(tag));
+  visit: (node, note) => {
+    if (node.type === 'text') {
+      const tags = extractHashtags((node as any).value);
+      tags.forEach(tag => {
+        let start = astPointToFoamPosition(node.position!.start);
+        start.character = start.character + tag.offset;
+        const end: Position = {
+          line: start.line,
+          character: start.character + tag.label.length + 1,
+        };
+        note.tags.push({
+          label: tag.label,
+          range: Range.createFromPosition(start, end),
+        });
+      });
+    }
   },
 };
 
@@ -317,7 +338,7 @@ export function createMarkdownParser(
         type: 'note',
         properties: {},
         title: '',
-        tags: new Set(),
+        tags: [],
         links: [],
         definitions: [],
         source: {
@@ -351,7 +372,7 @@ export function createMarkdownParser(
 
             for (let i = 0, len = plugins.length; i < len; i++) {
               try {
-                plugins[i].onDidFindProperties?.(yamlProperties, note);
+                plugins[i].onDidFindProperties?.(yamlProperties, note, node);
               } catch (e) {
                 handleError(plugins[i], 'onDidFindProperties', uri, e);
               }

@@ -290,7 +290,9 @@ const handleError = (
 ): void => {
   const name = plugin.name || '';
   Logger.warn(
-    `Error while executing [${fnName}] in plugin [${name}] for file [${uri?.path}]`,
+    `Error while executing [${fnName}] in plugin [${name}]. ${
+      uri ? 'for file [' + URI.toString(uri) : ']'
+    }.`,
     e
   );
 };
@@ -321,7 +323,7 @@ export function createMarkdownParser(
 
   const foamParser: ResourceParser = {
     parse: (uri: URI, markdown: string): Resource => {
-      Logger.debug('Parsing:', uri);
+      Logger.debug('Parsing:', URI.toString(uri));
       markdown = plugins.reduce((acc, plugin) => {
         try {
           return plugin.onWillParseMarkdown?.(acc) || acc;
@@ -378,7 +380,10 @@ export function createMarkdownParser(
               }
             }
           } catch (e) {
-            Logger.warn(`Error while parsing YAML for [${uri}]`, e);
+            Logger.warn(
+              `Error while parsing YAML for [${URI.toString(uri)}]`,
+              e
+            );
           }
         }
 
@@ -448,7 +453,9 @@ export function createMarkdownReferences(
   // Should never occur since we're already in a file,
   if (source?.type !== 'note') {
     console.warn(
-      `Note ${noteUri} note found in workspace when attempting to generate markdown reference list`
+      `Note ${URI.toString(
+        noteUri
+      )} note found in workspace when attempting to generate markdown reference list`
     );
     return [];
   }
@@ -459,7 +466,11 @@ export function createMarkdownReferences(
       const targetUri = workspace.resolveLink(source, link);
       const target = workspace.find(targetUri);
       if (isNone(target)) {
-        Logger.warn(`Link ${targetUri} in ${noteUri} is not valid.`);
+        Logger.warn(
+          `Link ${URI.toString(targetUri)} in ${URI.toString(
+            noteUri
+          )} is not valid.`
+        );
         return null;
       }
       if (target.type === 'placeholder') {

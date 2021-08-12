@@ -486,6 +486,7 @@ try {
         const node = graph.getElementById(noteId);
         if (node) {
           graph.center(node);
+          node.flashClass('highlighted',1000);
         }
         break;
       case 'didUpdateStyle':

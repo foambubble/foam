@@ -1,318 +1,450 @@
 const CONTAINER_ID = 'graph';
 
-/** The style fallback. These values should only be used when all else fails. */
-const styleFallback = {
-  background: '#202020',
-  fontSize: 12,
-  lineColor: '#277da1',
-  lineWidth: 0.2,
-  particleWidth: 1.0,
-  highlightedForeground: '#f9c74f',
-  node: {
-    note: '#277da1',
-    placeholder: '#545454',
-  },
+const coseLayout = {
+  name: 'cose',
+  idealEdgeLength: 50,
+  nodeOverlap: 20,
+  refresh: 20,
+  fit: true,
+  padding: 30,
+  randomize: false,
+  componentSpacing: 100,
+  //nodeRepulsion: 400000,
+  nodeRepulsion: function(node) {return node.data('type') == "folder" ? 100000*graph.nodes().maxDegree() : 100000*node.degree(); },
+  edgeElasticity: 100,
+  nestingFactor: 5,
+  gravity: 80,
+  numIter: 1000,
+  initialTemp: 200,
+  coolingFactor: 0.95,
+  minTemp: 1.0
+};
+var fcoseLayout = {
+  name: "fcose",
+  quality: "default",
+  randomize: true, 
+  animate: false, 
+  nodeDimensionsIncludeLabels: true,
+  uniformNodeDimensions: true,
+  nodeRepulsion: node => 4500,
+  idealEdgeLength: edge => 100,
+};
+let hierarchyLayout = {
+  name: 'breadthfirst',
+
+  fit: true, // whether to fit the viewport to the graph
+  directed: true, // whether the tree is directed downwards (or edges can point in any direction if false)
+  padding: 30, // padding on fit
+  circle: false, // put depths in concentric circles if true, put depths top down if false
+  grid: false, // whether to create an even grid into which the DAG is placed (circle:false only)
+  spacingFactor: 300, // positive spacing factor, larger => more space between nodes (N.B. n/a if causes overlap)
+  boundingBox: undefined, // constrain layout bounds; { x1, y1, x2, y2 } or { x1, y1, w, h }
+  avoidOverlap: true, // prevents node overlap, may overflow boundingBox if not enough space
+  nodeDimensionsIncludeLabels: false, // Excludes the label when calculating node bounding boxes for the layout algorithm
+};
+const preHierarchyLayout = {
+  name: 'preset',
+  positions: node => positions.get(node.id()), // map of (node id) => (position obj); or function(node){ return somPos; }
 };
 
-function getStyle(name) {
-  return getComputedStyle(document.documentElement).getPropertyValue(name);
-}
-
-const sizeScale = d3
-  .scaleLinear()
-  .domain([0, 30])
-  .range([0.5, 2])
-  .clamp(true);
-
-const labelAlpha = d3
-  .scaleLinear()
-  .domain([1.2, 2])
-  .range([0, 1])
-  .clamp(true);
-
-const defaultStyle = {
-  background: getStyle(`--vscode-panel-background`) ?? styleFallback.background,
-  fontSize:
-    parseInt(getStyle(`--vscode-font-size`) ?? styleFallback.fontSize) - 2,
-  lineColor: getStyle('--vscode-editor-foreground') ?? styleFallback.lineColor,
-  lineWidth: parseFloat(styleFallback.lineWidth),
-  particleWidth: parseFloat(styleFallback.particleWidth),
-  highlightedForeground:
-    getStyle('--vscode-list-highlightForeground') ??
-    styleFallback.highlightedForeground,
-  node: {
-    note: getStyle('--vscode-editor-foreground') ?? styleFallback.node.note,
-    placeholder:
-      getStyle('--vscode-list-deemphasizedForeground') ??
-      styleFallback.node.placeholder,
-  },
-};
-
-let model = {
-  selectedNodes: new Set(),
-  hoverNode: null,
-  focusNodes: new Set(),
-  focusLinks: new Set(),
-  nodeInfo: {},
-  data: {
-    nodes: [],
-    links: [],
-  },
-  /** The style property.
-   * It tries to be set using VSCode values,
-   * in the case it fails, use the fallback style values.
-   */
-  style: defaultStyle,
-};
-const graph = ForceGraph();
-
-function update(patch) {
-  // Apply the patch function to the model..
-  patch(model);
-  // ..then compute the derived state
-
-  // compute highlighted elements
-  const focusNodes = new Set();
-  const focusLinks = new Set();
-  if (model.hoverNode) {
-    focusNodes.add(model.hoverNode);
-    const info = model.nodeInfo[model.hoverNode];
-    info.neighbors.forEach(neighborId => focusNodes.add(neighborId));
-    info.links.forEach(link => focusLinks.add(link));
+const defaultStyle = [{
+  "selector": "core",
+  "style": {
+    "selection-box-color": "#AAD8FF",
+    "selection-box-border-color": "#8BB0D0",
+    "selection-box-opacity": "0.5"
   }
-  if (model.selectedNodes) {
-    model.selectedNodes.forEach(nodeId => {
-      focusNodes.add(nodeId);
-      const info = model.nodeInfo[nodeId];
-      info.neighbors.forEach(neighborId => focusNodes.add(neighborId));
-      info.links.forEach(link => focusLinks.add(link));
-    });
+}, {
+  "selector": "node",
+  "style": {
+    "width": "20",
+    "height": "20",
+    "content": "data(title)",
+    "font-size": "12px",
+    "text-valign": "bottom",
+    "text-halign": "center",
+    "background-color": "#555",
+    "text-outline-color": "#555",
+    "text-outline-width": "2px",
+    "color": "#fff",
+    "overlay-padding": "6px",
+    "z-index": "10"
   }
-  model.focusNodes = focusNodes;
-  model.focusLinks = focusLinks;
-}
-
-const Actions = {
-  refresh: graphInfo =>
-    update(m => {
-      m.nodeInfo = graphInfo.nodes;
-      const links = graphInfo.links;
-
-      // compute graph delta, for smooth transitions we need to mutate objects in-place
-      const nodeIdsToAdd = new Set(Object.keys(m.nodeInfo));
-      const nodeIndexesToRemove = new Set();
-      m.data.nodes.forEach((node, index) => {
-        if (nodeIdsToAdd.has(node.id)) {
-          nodeIdsToAdd.delete(node.id);
-        } else {
-          nodeIndexesToRemove.add(index);
-        }
-      });
-      // apply the delta
-      nodeIndexesToRemove.forEach(index => {
-        m.data.nodes.splice(index, 1); // delete the element
-      });
-      nodeIdsToAdd.forEach(nodeId => {
-        m.data.nodes.push({
-          id: nodeId,
-        });
-      });
-      m.data.links = links; // links can be swapped out without problem
-
-      // check that selected/hovered nodes are still valid (see #397)
-      m.hoverNode = m.nodeInfo[m.hoverNode] != null ? m.hoverNode : null;
-      m.selectedNodes = new Set(
-        Array.from(m.selectedNodes).filter(nId => m.nodeInfo[nId] != null)
-      );
-
-      // annoying we need to call this function, but I haven't found a good workaround
-      graph.graphData(m.data);
-    }),
-  selectNode: (nodeId, isAppend) =>
-    update(m => {
-      if (!isAppend) {
-        m.selectedNodes.clear();
-      }
-      if (nodeId != null) {
-        m.selectedNodes.add(nodeId);
-      }
-    }),
-  highlightNode: nodeId =>
-    update(m => {
-      m.hoverNode = nodeId;
-    }),
-  /** Applies a new style to the graph,
-   * missing elements are set to their existing values.
-   *
-   * @param {*} newStyle the style to be applied
-   */
-  updateStyle: newStyle => {
-    if (!newStyle) {
-      return;
+}, {
+  "selector": "node[type = 'note']",
+  "style": {
+    "background-color": "blue",
+  }
+}, {
+  "selector": "node[type = 'folder']",
+  "style": {
+    "shape": "rectangle",
+    "width": "40",
+    "height": "20",
+    "background-color": "cyan",
+  }
+}, {
+  "selector": "node[type = 'tag']",
+  "style": {
+    "text-valign": "center",
+    "background-opacity": "0",
+    "background-color": "red",
+    "text-outline-width": "1px",
+    "color": "data(tagColor)",
+  }
+}, {
+  "selector": "node[type = 'placeholder']",
+  "style": {
+    "background-color": "yellow",
+  }
+}, {
+  "selector": "node:selected",
+  "style": {
+    "border-width": "6px",
+    "border-color": "#AAD8FF",
+    "border-opacity": "0.5",
+    "background-color": "#77828C",
+    "text-outline-color": "#77828C"
+  }
+}, {
+  "selector": "node[type = 'tag']:selected",
+  "style": {
+    "text-valign": "center",
+    "border-width": "0px",
+    "background-opacity": "0",
+    "background-color": "red",
+    "text-outline-width": "1px",
+    "color": "data(tagColor)",
+  }
+}, {
+  "selector": "edge",
+  "style": {
+    "curve-style": "haystack",
+    "haystack-radius": "0",
+    "opacity": "0.1",
+    "line-color": "#bbb",
+    "width": "2",
+    "overlay-padding": "3px"
+  }
+}, {
+  "selector": "node.unhighlighted",
+  "style": {
+    "opacity": "0.2"
+  }
+}, {
+  "selector": "edge.unhighlighted",
+  "style": {
+    "opacity": "0.05"
+  }
+}, {
+  "selector": "edge.highlighted",
+  "style": {
+    "opacity": "0.4",
+    "line-color": "orange"
+  }
+}, {
+  "selector": "edge.outgoing",
+  "style": {
+    "opacity": "0.6",
+    "line-color": "blue"
+  }
+}, {
+  "selector": "edge.incoming",
+  "style": {
+    "opacity": "0.6",
+    "line-color": "orange"
+  }
+}, {
+  "selector": ".highlighted",
+  "style": {
+    "z-index": "999999"
+  }
+}, {
+  "selector": "node.highlighted",
+  "style": {
+    "border-width": "6px",
+    "border-color": "orange",
+    "border-opacity": "0.9",
+    "background-color": "#394855",
+    "text-outline-color": "#394855"
+  }
+}, {
+  "selector": "node.tagged",
+  "style": {
+    "border-width": "6px",
+    "border-opacity": "0.8",
+    "background-color": "#394855",
+    "border-color": "data(tagColor)",
+    "text-outline-color": "#394855"
+  }
+}, {
+  "selector": "node[type = 'tag'].tagged",
+  "style": {
+    "text-valign": "center",
+    "border-width": "0px",
+    "background-opacity": "0",
+    "background-color": "red",
+    "text-outline-width": "1px",
+    "color": "data(tagColor)",
+  }
+}, {
+  "selector": "edge.tagged",
+  "style": {
+    "line-color": "data(tagColor)",
+    "opacity": "0.8"
+  }
+}, {
+  "selector": "edge[type = 'tag']:selected",
+  "style": {
+    "line-color": "data(tagColor)",
+    "opacity": "0.8"
+  }
+}, {
+  "selector": "edge.filtered",
+  "style": {
+    "opacity": "0"
+  }
+}];
+const propStyles = [
+  {
+    "selector": "node[?color]",
+    "style": {
+      "background-color": "data(color)",
     }
-    model.style = {
-      ...defaultStyle,
-      ...newStyle,
-      lineColor:
-        newStyle.lineColor ||
-        (newStyle.node && newStyle.node.note) ||
-        defaultStyle.lineColor,
-      node: {
-        ...defaultStyle.node,
-        ...newStyle.node,
-      },
-    };
-    graph.backgroundColor(model.style.background);
-  },
-};
+  }
+];
 
+var graph;
+var graphInfo;
+
+const filters = {
+  allEdges: () =>{
+    return graph.edges();
+  },
+  edgeByType: (collection,types) => {
+    return collection.edges('[type]').filter(n => {
+      return types.some(t => n.data('type')==t);
+    });
+  },
+  nodeByType: (collection,types) => {
+    return collection.nodes('[type]').filter(n => {
+      return types.some(t => n.data('type')==t);
+    });
+  },
+  byTags: () => {
+    return filters.nodeByType(graph,["tag"]).closedNeighborhood();
+  },
+  bySelection: () => {
+    return graph.nodes().filter(n => n.selected());
+  }
+};
+function defaultFilter() {
+  return filters.nodeByType(graph,["note","placeholder","folder"]).union(filters.allEdges());
+};
+function hierarchyFilter() {
+  return filters.nodeByType(graph,["note","folder"]).union(filters.edgeByType(graph,["folder"]));
+}
+function withTagsFilter() {
+  return filters.nodeByType(graph,["note","placeholder","tag"]).union(filters.allEdges());
+};
+function taggedFilter() {
+  return filters.byTags();
+}
+const views = new Map([
+  ["default",defaultFilter],
+  ["hierarchy",hierarchyFilter],
+  ["withTags",withTagsFilter],
+  ["tagged",taggedFilter]
+]);
+function applyFilter(filter) {
+  graph.elements().difference(filter).remove();
+}
+const model = {
+  View: "default",
+  SearchText: "",
+  SearchResults: [],
+  HighlightTags: false,
+  LimitSelection: false,
+};
+const clear = () => {
+    let selection = filters.bySelection();
+    graph.json(graphInfo);
+    selection.select();
+  };
+const apply = () => {
+    let filter = views.get(model.View)();
+    applyFilter(filter);
+  };
+const select = () => {
+    if(model.LimitSelection){
+      let selection = filters.bySelection().closedNeighborhood();
+      if(selection.nonempty()) applyFilter(selection);
+    }
+  };
+const highlight = () => {
+    if(model.SearchText){
+      let highlighter = graph.collection();
+      model.SearchResults.forEach(r => highlighter = highlighter.union(graph.getElementById(r)));
+      highlighter = highlighter.union(filters.allEdges().filter(e => highlighter.contains(e.connectedNodes())));
+      highlighter.toggleClass("highlighted");
+      graph.elements().difference(highlighter).toggleClass("unhighlighted",true);
+    }
+  };
+const highlightTags = () => {
+    if(model.HighlightTags){
+      let tagged = filters.byTags();
+      tagged.toggleClass('tagged');
+      graph.elements().difference(tagged).toggleClass('unhighlighted',true);
+    }
+  };
+const run = () => {
+    if(model.View == "hierarchy"){
+      graph.layout(fcoseLayout).run();
+    } else {
+      graph.layout(coseLayout).run();
+    }
+  };
+
+const evaluateModel = () => {
+  graph.startBatch();
+    clear();
+    select();
+    apply();
+    highlight();
+    highlightTags();
+    run();
+  graph.endBatch();
+};
+function updateStyle(newStyle) {
+  if (!newStyle) {
+    return;
+  }
+  let styleUpdate = [...defaultStyle, ...newStyle.styles, ...propStyles];
+  graph.style(styleUpdate).update();
+}
 function initDataviz(channel) {
   const elem = document.getElementById(CONTAINER_ID);
-  graph(elem)
-    .graphData(model.data)
-    .backgroundColor(model.style.background)
-    .linkHoverPrecision(8)
-    .d3Force('x', d3.forceX())
-    .d3Force('y', d3.forceY())
-    .d3Force('collide', d3.forceCollide(graph.nodeRelSize()))
-    .linkWidth(() => model.style.lineWidth || styleFallback.lineWidth)
-    .linkDirectionalParticles(1)
-    .linkDirectionalParticleWidth(link =>
-      getLinkState(link, model) === 'highlighted'
-        ? model.style.particleWidth || styleFallback.particleWidth
-        : 0
-    )
-    .nodeCanvasObject((node, ctx, globalScale) => {
-      const info = model.nodeInfo[node.id];
-      if (info == null) {
-        console.error(`Could not find info for node ${node.id} - skipping`);
-        return;
-      }
-      const size = sizeScale(info.neighbors.length);
-      const { fill, border } = getNodeColor(node.id, model);
-      const fontSize = model.style.fontSize / globalScale;
-      const nodeState = getNodeState(node.id, model);
-      const textColor = fill.copy({
-        opacity:
-          nodeState === 'regular'
-            ? labelAlpha(globalScale)
-            : nodeState === 'highlighted'
-            ? 1
-            : Math.min(labelAlpha(globalScale), fill.opacity),
+  graph = cytoscape({
+    container: elem,
+    layout: {name: "grid"},
+    style: [...defaultStyle, ...propStyles],
+    wheelSensitivity: 0.2
+  });
+  const gui = new dat.gui.GUI();
+    gui.add(model, 'View', {Default: "default", Hierarchy: "hierarchy", WithTags: "withTags", Tagged: "tagged"})
+      .onFinishChange(function(){
+        evaluateModel();
       });
-      const label = info.title;
+    gui.add(model, "SearchText")
+      .onFinishChange(function(){
+        if(model.SearchText) {
+          channel.postMessage({
+            type: 'webviewDidSubmitSearch',
+            payload: model.SearchText,
+          });
+        }
+        evaluateModel();
+      });
+    gui.add(model, "HighlightTags")
+      .onChange(function(){
+        evaluateModel();
+      });
+    gui.add(model, "LimitSelection")
+      .onChange(function(){
+        evaluateModel();
+      });
+  
+  graph.on('select', e => {
+    let node = e.target;
+    if(node.data('type') == "note") {
+      node.outgoers().edges().toggleClass("outgoing", true);
+      node.incomers().edges().forEach(e => {
+        e.data('type') == "tag" ? e.select() : e.toggleClass("incoming", true);
+      });
+    }
+    if(node.data('type') == "tag") {
+      node.connectedEdges().select();
+    }
+    channel.postMessage({
+      type: 'webviewDidSelectNode',
+      payload: node.id(),
+    });
+  });
+  graph.on('unselect', e => {
+    let node = e.target;
+    if(node.data('type') == "note") {
+      node.outgoers().edges().toggleClass("outgoing", false);
+      node.incomers().edges().forEach(e => {
+        e.data('type') == "tag" ? e.unselect() : e.toggleClass("incoming", false);
+      });
+    }
+    if(node.data('type') == "tag") {
+      node.connectedEdges().unselect();
+    }
+  });
+}
 
-      Draw(ctx)
-        .circle(node.x, node.y, size + 0.2, border)
-        .circle(node.x, node.y, size, fill)
-        .text(label, node.x, node.y + size + 1, fontSize, textColor.toString());
-    })
-    .linkColor(link => getLinkColor(link, model))
-    .onNodeHover(node => {
-      Actions.highlightNode(node?.id);
-    })
-    .onNodeClick((node, event) => {
-      if (event.getModifierState('Control') || event.getModifierState('Meta')) {
-        channel.postMessage({
-          type: 'webviewDidSelectNode',
-          payload: node.id,
+function augmentData() {
+  let cy = cytoscape({layout: {name: "random"}});
+  Object.keys(graphInfo.nodes).forEach(n => {
+    let nData = graphInfo.nodes[n];
+    cy.add({group: 'nodes', data: nData});
+    if(nData.type == "note") {
+      if(nData.properties.color) cy.$id(nData.id).data('color', nData.properties.color);
+      if(nData.tags.length > 0) {
+        let tags = cy.nodes('[type = "tag"]');
+        nData.tags.forEach(tag => {
+          let tagNode = tags.filter(t => t.data('title') == tag.label);
+          if(tagNode.empty()) {
+            tagNode = cy.add({group: 'nodes', data: {type: 'tag', title: tag.label}});
+          }
+          cy.add({group: 'edges', data: {target: nData.id, source: tagNode.id(), type: 'tag'}});
         });
       }
-      Actions.selectNode(node.id, event.getModifierState('Shift'));
-    })
-    .onBackgroundClick(event => {
-      Actions.selectNode(null, event.getModifierState('Shift'));
-    });
-}
-
-function augmentGraphInfo(data) {
-  Object.values(data.nodes).forEach(node => {
-    node.neighbors = [];
-    node.links = [];
+      let folders = nData.id.split('/');
+      folders = folders.slice(folders.indexOf(graphInfo.rootFolder),folders.length-1);
+      let parent;
+      folders.forEach(f => {
+        if (f == graphInfo.rootFolder) {
+          f = 'root';
+        }
+        let node = cy.nodes('[type = "folder"]').filter(folder => {
+          return folder.data('title') == f;
+        });
+        if (node.empty()) {
+          node = cy.add({ group: 'nodes', data: { title: f, type: 'folder' } });
+          if (parent) {
+            cy.add({
+              group: 'edges',
+              data: { source: parent.id(), target: node.id(), type: 'folder' },
+            });
+          }
+        }
+        parent = node;
+      });
+      cy.add({
+        group: 'edges',
+        data: { source: parent.id(), target: nData.id, type: 'folder' },
+      });
+    }
   });
-  data.links.forEach(link => {
-    const a = data.nodes[link.source];
-    const b = data.nodes[link.target];
-    a.neighbors.push(b.id);
-    b.neighbors.push(a.id);
-    a.links.push(link);
-    b.links.push(link);
+  graphInfo.links.forEach(e => {
+    cy.add({group: 'edges', data: e});
   });
-  return data;
+  let tags = cy.nodes('[type = "tag"]');
+  tags.forEach(t => {
+    let tagged = t.closedNeighborhood();
+    let color = d3.interpolateTurbo(Math.random());
+    tagged.data('tagColor',color);
+  });
+  graphInfo = cy.json();
+  let folders = cy.elements('[type = "folder"]');
+  folders.layout(hierarchyLayout).run();
+  fcoseLayout.fixedNodeConstraint = folders.nodes().map(n => {
+    return {nodeId: n.id(), position: n.position()};
+  });
+  cy.destroy();
 }
-
-function getNodeColor(nodeId, model) {
-  const info = model.nodeInfo[nodeId];
-  const style = model.style;
-  const typeFill = d3.rgb(
-    style.node[info.type ?? 'note'] ?? style.node['note']
-  );
-  switch (getNodeState(nodeId, model)) {
-    case 'regular':
-      return { fill: typeFill, border: typeFill };
-    case 'lessened':
-      const transparent = d3.rgb(typeFill).copy({ opacity: 0.05 });
-      return { fill: transparent, border: transparent };
-    case 'highlighted':
-      return {
-        fill: typeFill,
-        border: d3.rgb(style.highlightedForeground),
-      };
-    default:
-      throw new Error('Unknown type for node', nodeId);
-  }
-}
-
-function getLinkColor(link, model) {
-  const style = model.style;
-  switch (getLinkState(link, model)) {
-    case 'regular':
-      return style.lineColor;
-    case 'highlighted':
-      return style.highlightedForeground;
-    case 'lessened':
-      return d3.hsl(style.lineColor).copy({ opacity: 0.5 });
-    default:
-      throw new Error('Unknown type for link', link);
-  }
-}
-
-function getNodeState(nodeId, model) {
-  return model.selectedNodes.has(nodeId) || model.hoverNode === nodeId
-    ? 'highlighted'
-    : model.focusNodes.size === 0
-    ? 'regular'
-    : model.focusNodes.has(nodeId)
-    ? 'regular'
-    : 'lessened';
-}
-
-function getLinkState(link, model) {
-  return model.focusNodes.size === 0
-    ? 'regular'
-    : model.focusLinks.has(link)
-    ? 'highlighted'
-    : 'lessened';
-}
-
-const Draw = ctx => ({
-  circle: function(x, y, radius, color) {
-    ctx.beginPath();
-    ctx.arc(x, y, radius, 0, 2 * Math.PI, false);
-    ctx.fillStyle = color;
-    ctx.fill();
-    ctx.closePath();
-    return this;
-  },
-  text: function(text, x, y, size, color) {
-    ctx.font = `${size}px Sans-Serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
-    ctx.fillStyle = color;
-    ctx.fillText(text, x, y);
-    return this;
-  },
-});
 
 // init the app
 try {
@@ -343,21 +475,26 @@ try {
     const message = event.data;
     switch (message.type) {
       case 'didUpdateGraphData':
-        const graphData = augmentGraphInfo(message.payload);
-        console.log('didUpdateGraphData', graphData);
-        Actions.refresh(graphData);
+        console.log('didUpdateGraphData', message.payload);
+        graphInfo = message.payload;
+        augmentData();
+        graph.json(graphInfo);
+        evaluateModel();
         break;
       case 'didSelectNote':
         const noteId = message.payload;
-        const node = graph.graphData().nodes.find(node => node.id === noteId);
+        const node = graph.getElementById(noteId);
         if (node) {
-          graph.centerAt(node.x, node.y, 300).zoom(3, 300);
-          Actions.selectNode(noteId);
+          graph.center(node);
         }
         break;
       case 'didUpdateStyle':
         const style = message.payload;
-        Actions.updateStyle(style);
+        updateStyle(style);
+        break;
+      case 'didReturnSearchResults':
+        model.SearchResults = message.payload;
+        evaluateModel();
         break;
     }
   });
@@ -370,7 +507,7 @@ window.addEventListener('resize', () => {
 });
 
 // For testing
-if (window.data) {
+/*if (window.data) {
   console.log('Test mode');
   window.model = model;
   window.graph = graph;
@@ -381,4 +518,4 @@ if (window.data) {
     const graphData = augmentGraphInfo(window.data);
     Actions.refresh(graphData);
   };
-}
+}*/

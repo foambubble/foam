@@ -80,6 +80,8 @@ function generateGraphData(foam: Foam) {
       type: type,
       uri: n.uri,
       title: cutTitle(title),
+      properties: n.properties,
+      tags: n.tags,
     };
   });
   foam.graph.getAllConnections().forEach(c => {
@@ -98,6 +100,7 @@ function generateGraphData(foam: Foam) {
   });
 
   return {
+    rootFolder: vscode.workspace.workspaceFolders[0].name,
     nodes: graph.nodes,
     links: Array.from(graph.edges),
   };
@@ -146,6 +149,20 @@ async function createGraphPanel(foam: Foam, context: vscode.ExtensionContext) {
             );
             vscode.window.showTextDocument(doc, vscode.ViewColumn.One);
           }
+          break;
+
+        case 'webviewDidSubmitSearch':
+          const searchtext = message.payload;
+          const results = foam.workspace.list().map(n => {
+            return n.source.text.includes(searchtext) ||
+              n.title.includes(searchtext)
+              ? n.uri.path
+              : '';
+          });
+          panel.webview.postMessage({
+            type: 'didReturnSearchResults',
+            payload: results,
+          });
           break;
 
         case 'error':

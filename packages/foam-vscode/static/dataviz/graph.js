@@ -5,7 +5,7 @@ const coseLayout = {
   idealEdgeLength: 50,
   nodeOverlap: 20,
   refresh: 20,
-  fit: true,
+  fit: false,
   padding: 30,
   randomize: false,
   componentSpacing: 100,
@@ -17,9 +17,20 @@ const coseLayout = {
   numIter: 1000,
   initialTemp: 200,
   coolingFactor: 0.95,
-  minTemp: 1.0
+  minTemp: 1.0,
+  animate: false
 };
 var fcoseLayout = {
+  name: "fcose",
+  quality: "default",
+  randomize: true, 
+  animate: false, 
+  nodeDimensionsIncludeLabels: true,
+  uniformNodeDimensions: true,
+  nodeRepulsion: node => 4500,
+  idealEdgeLength: edge => 100,
+};
+var fcose = {
   name: "fcose",
   quality: "default",
   randomize: true, 
@@ -40,7 +51,8 @@ let hierarchyLayout = {
   spacingFactor: 300, // positive spacing factor, larger => more space between nodes (N.B. n/a if causes overlap)
   boundingBox: undefined, // constrain layout bounds; { x1, y1, x2, y2 } or { x1, y1, w, h }
   avoidOverlap: true, // prevents node overlap, may overflow boundingBox if not enough space
-  nodeDimensionsIncludeLabels: false, // Excludes the label when calculating node bounding boxes for the layout algorithm
+  nodeDimensionsIncludeLabels: false, // Excludes the label when calculating node bounding boxes for the layout algorithm,
+  animate: false
 };
 const preHierarchyLayout = {
   name: 'preset',
@@ -60,6 +72,7 @@ const defaultStyle = [{
     "width": "20",
     "height": "20",
     "content": "data(title)",
+    "min-zoomed-font-size": "18",
     "font-size": "12px",
     "text-valign": "bottom",
     "text-halign": "center",
@@ -326,9 +339,11 @@ function initDataviz(channel) {
   const elem = document.getElementById(CONTAINER_ID);
   graph = cytoscape({
     container: elem,
-    layout: {name: "grid"},
     style: [...defaultStyle, ...propStyles],
-    wheelSensitivity: 0.2
+    wheelSensitivity: 0.2,
+    pixelRatio: 1,
+    hideEdgesOnViewport: true,
+    textureOnViewport: true,
   });
   const gui = new dat.gui.GUI();
     gui.add(model, 'View', {Default: "default", Hierarchy: "hierarchy", WithTags: "withTags", Tagged: "tagged"})

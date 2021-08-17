@@ -80,6 +80,8 @@ function generateGraphData(foam: Foam) {
       type: type,
       uri: n.uri,
       title: cutTitle(title),
+      properties: n.properties,
+      tags: n.tags,
     };
   });
   foam.graph.getAllConnections().forEach(c => {
@@ -93,6 +95,7 @@ function generateGraphData(foam: Foam) {
         type: 'placeholder',
         uri: c.target,
         title: c.target.path,
+        properties: [],
       };
     }
   });

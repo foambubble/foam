@@ -53,6 +53,7 @@ let model = {
   hoverNode: null,
   focusNodes: new Set(),
   focusLinks: new Set(),
+  graphData: {},
   nodeInfo: {},
   data: {
     nodes: [],
@@ -63,6 +64,7 @@ let model = {
    * in the case it fails, use the fallback style values.
    */
   style: defaultStyle,
+  View: "default",
 };
 const graph = ForceGraph();
 
@@ -164,6 +166,33 @@ const Actions = {
     };
     graph.backgroundColor(model.style.background);
   },
+  evaluate: () => {
+    // create deep copy of the graph data as a reference for the filter
+    const graphData = JSON.parse(JSON.stringify(model.graphData));
+    let types = [];
+    switch(model.View){
+      case "default":
+        types = ["note","placeholder"];
+        break;
+      case "tags":
+        types = ["note", "placeholder", "tag"];
+        break;
+    }
+    const nodes = Object.values(graphData.nodes)
+      .filter(n => types.some(t => t == n.type))
+      .reduce((nodesAccumulator,node) => {
+        nodesAccumulator[node.id] = graphData.nodes[node.id];
+        return nodesAccumulator;
+    }, {});
+    const links = graphData.links.filter(link => {
+      const isSource = Object.values(nodes).some(node => node.id == link.source);
+      const isTarget = Object.values(nodes).some(node => node.id == link.target);
+      return isSource && isTarget;
+    });
+    const graphInfo = {nodes: nodes, links: links};
+    // refresh graph with filtered data but maintain original graph data in model.graphData
+    Actions.refresh(graphInfo);
+  },
 };
 
 function initDataviz(channel) {
@@ -223,12 +252,34 @@ function initDataviz(channel) {
     .onBackgroundClick(event => {
       Actions.selectNode(null, event.getModifierState('Shift'));
     });
+    const gui = new dat.gui.GUI();
+    gui.add(model, 'View', {Default: "default", Tags: "tags"})
+      .onFinishChange(function(){
+        Actions.evaluate();
+    });
 }
 
 function augmentGraphInfo(data) {
   Object.values(data.nodes).forEach(node => {
     node.neighbors = [];
     node.links = [];
+    if(node.tags && node.tags.length > 0){
+      node.tags.forEach(tag => {
+        const tagNode = {
+          id: tag.label,
+          title: tag.label,
+          type: 'tag',
+          properties: {color: d3.interpolateTurbo(Math.random())},
+          neighbors: [],
+          links: [],
+        };
+        data.nodes[tag.label] = tagNode;
+        data.links.push({
+          target: node.id,
+          source: tagNode.id
+        });
+      });
+    }
   });
   data.links.forEach(link => {
     const a = data.nodes[link.source];
@@ -244,7 +295,7 @@ function augmentGraphInfo(data) {
 function getNodeColor(nodeId, model) {
   const info = model.nodeInfo[nodeId];
   const style = model.style;
-  const typeFill = d3.rgb(
+  const typeFill = info.properties.color ? d3.rgb(info.properties.color) : d3.rgb(
     style.node[info.type ?? 'note'] ?? style.node['note']
   );
   switch (getNodeState(nodeId, model)) {
@@ -344,8 +395,10 @@ try {
     switch (message.type) {
       case 'didUpdateGraphData':
         const graphData = augmentGraphInfo(message.payload);
-        console.log('didUpdateGraphData', graphData);
+        model.graphData = graphData;
         Actions.refresh(graphData);
+        console.log('didUpdateGraphData', graphData, model.graphData);
+        Actions.evaluate();
         break;
       case 'didSelectNote':
         const noteId = message.payload;

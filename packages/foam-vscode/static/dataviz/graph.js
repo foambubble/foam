@@ -64,7 +64,7 @@ let model = {
    * in the case it fails, use the fallback style values.
    */
   style: defaultStyle,
-  View: "default",
+  view: "default",
 };
 const graph = ForceGraph();
 
@@ -171,7 +171,7 @@ const Actions = {
     // create deep copy of the graph data as a reference for the filter
     const graphData = JSON.parse(JSON.stringify(model.graphData));
     let types = [];
-    switch(model.View){
+    switch(model.view){
       case "default":
         types = ["note","placeholder"];
         break;
@@ -254,7 +254,8 @@ function initDataviz(channel) {
       Actions.selectNode(null, event.getModifierState('Shift'));
     });
     const gui = new dat.gui.GUI();
-    gui.add(model, 'View', {Default: "default", Tags: "tags"})
+    gui.add(model, 'view', {Default: "default", Tags: "tags"})
+      .name('View')
       .onFinishChange(function(){
         Actions.evaluate();
     });
@@ -395,10 +396,8 @@ try {
     const message = event.data;
     switch (message.type) {
       case 'didUpdateGraphData':
-        const graphData = augmentGraphInfo(message.payload);
-        model.graphData = graphData;
-        Actions.refresh(graphData);
-        console.log('didUpdateGraphData', graphData, model.graphData);
+        model.graphData = augmentGraphInfo(message.payload);
+        console.log('didUpdateGraphData', model.graphData);
         Actions.evaluate();
         break;
       case 'didSelectNote':

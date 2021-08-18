@@ -342,7 +342,7 @@ function getNodeState(nodeId, model) {
 function getLinkState(link, model) {
   return model.focusNodes.size === 0
     ? 'regular'
-    : model.focusLinks.has(link)
+    : Array.from(model.focusLinks).some(fLink => fLink.source == link.source.id && fLink.target == link.target.id)
     ? 'highlighted'
     : 'lessened';
 }

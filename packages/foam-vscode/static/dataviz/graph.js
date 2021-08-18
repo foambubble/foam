@@ -168,8 +168,6 @@ const Actions = {
     graph.backgroundColor(model.style.background);
   },
   evaluate: () => {
-    // create deep copy of the graph data as a reference for the filter
-    const graphData = JSON.parse(JSON.stringify(model.graphData));
     let types = [];
     switch(model.view){
       case "default":
@@ -178,19 +176,11 @@ const Actions = {
       case "tags":
         types = ["note", "placeholder", "tag"];
         break;
+      case "all":
+        types = "all";
+        break;
     }
-    const nodes = Object.values(graphData.nodes)
-      .filter(n => types.some(t => t == n.type))
-      .reduce((nodesAccumulator,node) => {
-        nodesAccumulator[node.id] = graphData.nodes[node.id];
-        return nodesAccumulator;
-    }, {});
-    const links = graphData.links.filter(link => {
-      const isSource = Object.values(nodes).some(node => node.id == link.source);
-      const isTarget = Object.values(nodes).some(node => node.id == link.target);
-      return isSource && isTarget;
-    });
-    const graphInfo = {nodes: nodes, links: links};
+    const graphInfo = filterByType(types);
     // refresh graph with filtered data but maintain original graph data in model.graphData
     Actions.refresh(graphInfo);
   },
@@ -254,7 +244,7 @@ function initDataviz(channel) {
       Actions.selectNode(null, event.getModifierState('Shift'));
     });
     const gui = new dat.gui.GUI();
-    gui.add(model, 'view', {Default: "default", Tags: "tags"})
+    gui.add(model, 'view', {Default: "default", Tags: "tags", All: "all"})
       .name('View')
       .onFinishChange(function(){
         Actions.evaluate();
@@ -292,6 +282,27 @@ function augmentGraphInfo(data) {
     b.links.push(link);
   });
   return data;
+}
+
+function filterByType(types) {
+  // create deep copy of the graph data as a reference for the filter
+  const graphData = JSON.parse(JSON.stringify(model.graphData));
+  if(types == "all") {
+    return graphData;
+  } else {
+    const nodes = Object.values(graphData.nodes)
+      .filter(n => types.some(t => t == n.type))
+      .reduce((nodesAccumulator,node) => {
+        nodesAccumulator[node.id] = graphData.nodes[node.id];
+        return nodesAccumulator;
+    }, {});
+    const links = graphData.links.filter(link => {
+      const isSource = Object.values(nodes).some(node => node.id == link.source);
+      const isTarget = Object.values(nodes).some(node => node.id == link.target);
+      return isSource && isTarget;
+    });
+    return {nodes: nodes, links: links};
+  }
 }
 
 function getNodeColor(nodeId, model) {

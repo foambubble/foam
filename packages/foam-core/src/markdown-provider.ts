@@ -290,7 +290,9 @@ const handleError = (
 ): void => {
   const name = plugin.name || '';
   Logger.warn(
-    `Error while executing [${fnName}] in plugin [${name}] for file [${uri?.path}]`,
+    `Error while executing [${fnName}] in plugin [${name}]. ${
+      uri ? 'for file [' + URI.toString(uri) : ']'
+    }.`,
     e
   );
 };

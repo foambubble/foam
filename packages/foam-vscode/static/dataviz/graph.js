@@ -102,16 +102,17 @@ const Actions = {
 
       // compute graph delta, for smooth transitions we need to mutate objects in-place
       const nodeIdsToAdd = new Set(Object.keys(m.nodeInfo));
-      const nodeIndexesToRemove = new Set();
-      m.data.nodes.forEach((node, index) => {
+      const nodeIdsToRemove = new Set();
+      m.data.nodes.forEach(node => {
         if (nodeIdsToAdd.has(node.id)) {
           nodeIdsToAdd.delete(node.id);
         } else {
-          nodeIndexesToRemove.add(index);
+          nodeIdsToRemove.add(node.id);
         }
       });
       // apply the delta
-      nodeIndexesToRemove.forEach(index => {
+      nodeIdsToRemove.forEach(id => {
+        const index = m.data.nodes.findIndex(n => n.id == id);
         m.data.nodes.splice(index, 1); // delete the element
       });
       nodeIdsToAdd.forEach(nodeId => {

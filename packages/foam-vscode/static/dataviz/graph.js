@@ -243,12 +243,12 @@ function initDataviz(channel) {
     .onBackgroundClick(event => {
       Actions.selectNode(null, event.getModifierState('Shift'));
     });
-    const gui = new dat.gui.GUI();
-    gui.add(model, 'view', {Default: "default", Tags: "tags", All: "all"})
-      .name('View')
-      .onFinishChange(function(){
-        Actions.evaluate();
-    });
+  const gui = new dat.gui.GUI();
+  gui.add(model, 'view', {Default: "default", Tags: "tags", All: "all"})
+    .name('View')
+    .onFinishChange(function(){
+      Actions.evaluate();
+  });
 }
 
 function augmentGraphInfo(data) {

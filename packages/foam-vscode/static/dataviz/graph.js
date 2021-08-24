@@ -11,6 +11,7 @@ const styleFallback = {
   node: {
     note: '#277da1',
     placeholder: '#545454',
+    tag: '#f9c74f'
   },
 };
 
@@ -45,6 +46,8 @@ const defaultStyle = {
     placeholder:
       getStyle('--vscode-list-deemphasizedForeground') ??
       styleFallback.node.placeholder,
+    tag: getStyle('--vscode-list-highlightForeground') ?? styleFallback.node.tag,
+
   },
 };
 
@@ -53,7 +56,7 @@ let model = {
   hoverNode: null,
   focusNodes: new Set(),
   focusLinks: new Set(),
-  graphData: {},
+  fullGraphData: {},
   nodeInfo: {},
   data: {
     nodes: [],
@@ -95,41 +98,10 @@ function update(patch) {
 }
 
 const Actions = {
-  refresh: graphInfo =>
+  refreshWorkspaceData: graphInfo =>
     update(m => {
-      m.nodeInfo = graphInfo.nodes;
-      const links = graphInfo.links;
-
-      // compute graph delta, for smooth transitions we need to mutate objects in-place
-      const nodeIdsToAdd = new Set(Object.keys(m.nodeInfo));
-      const nodeIdsToRemove = new Set();
-      m.data.nodes.forEach(node => {
-        if (nodeIdsToAdd.has(node.id)) {
-          nodeIdsToAdd.delete(node.id);
-        } else {
-          nodeIdsToRemove.add(node.id);
-        }
-      });
-      // apply the delta
-      nodeIdsToRemove.forEach(id => {
-        const index = m.data.nodes.findIndex(n => n.id == id);
-        m.data.nodes.splice(index, 1); // delete the element
-      });
-      nodeIdsToAdd.forEach(nodeId => {
-        m.data.nodes.push({
-          id: nodeId,
-        });
-      });
-      m.data.links = links; // links can be swapped out without problem
-
-      // check that selected/hovered nodes are still valid (see #397)
-      m.hoverNode = m.nodeInfo[m.hoverNode] != null ? m.hoverNode : null;
-      m.selectedNodes = new Set(
-        Array.from(m.selectedNodes).filter(nId => m.nodeInfo[nId] != null)
-      );
-
-      // annoying we need to call this function, but I haven't found a good workaround
-      graph.graphData(m.data);
+      m.fullGraphData = graphInfo;
+      //patchGraphData(m,graphInfo);
     }),
   selectNode: (nodeId, isAppend) =>
     update(m => {
@@ -167,7 +139,7 @@ const Actions = {
     };
     graph.backgroundColor(model.style.background);
   },
-  evaluate: () => {
+  filterByType: () => {
     let types = [];
     switch(model.view){
       case "default":
@@ -180,9 +152,27 @@ const Actions = {
         types = "all";
         break;
     }
-    const graphInfo = filterByType(types);
-    // refresh graph with filtered data but maintain original graph data in model.graphData
-    Actions.refresh(graphInfo);
+    const graphData = JSON.parse(JSON.stringify(model.fullGraphData));
+    if(types == "all") {
+      update(m => {
+        patchGraphData(m,graphData);
+      });
+    } else {
+      const nodes = Object.values(graphData.nodes)
+        .filter(n => types.some(t => t == n.type))
+        .reduce((nodesAccumulator,node) => {
+          nodesAccumulator[node.id] = graphData.nodes[node.id];
+          return nodesAccumulator;
+      }, {});
+      const links = graphData.links.filter(link => {
+        const isSource = Object.values(nodes).some(node => node.id == link.source);
+        const isTarget = Object.values(nodes).some(node => node.id == link.target);
+        return isSource && isTarget;
+      });
+      update(m => {
+        patchGraphData(m,{nodes: nodes, links: links});
+      });
+    }
   },
 };
 
@@ -247,7 +237,7 @@ function initDataviz(channel) {
   gui.add(model, 'view', {Default: "default", Tags: "tags", All: "all"})
     .name('View')
     .onFinishChange(function(){
-      Actions.evaluate();
+      Actions.filterByType();
   });
 }
 
@@ -261,7 +251,7 @@ function augmentGraphInfo(data) {
           id: tag.label,
           title: tag.label,
           type: 'tag',
-          properties: {color: d3.interpolateTurbo(Math.random())},
+          properties: {},
           neighbors: [],
           links: [],
         };
@@ -284,25 +274,40 @@ function augmentGraphInfo(data) {
   return data;
 }
 
-function filterByType(types) {
-  // create deep copy of the graph data as a reference for the filter
-  const graphData = JSON.parse(JSON.stringify(model.graphData));
-  if(types == "all") {
-    return graphData;
-  } else {
-    const nodes = Object.values(graphData.nodes)
-      .filter(n => types.some(t => t == n.type))
-      .reduce((nodesAccumulator,node) => {
-        nodesAccumulator[node.id] = graphData.nodes[node.id];
-        return nodesAccumulator;
-    }, {});
-    const links = graphData.links.filter(link => {
-      const isSource = Object.values(nodes).some(node => node.id == link.source);
-      const isTarget = Object.values(nodes).some(node => node.id == link.target);
-      return isSource && isTarget;
+function patchGraphData(m,graphInfo) {
+  m.nodeInfo = graphInfo.nodes;
+  const links = graphInfo.links;
+
+  // compute graph delta, for smooth transitions we need to mutate objects in-place
+  const nodeIdsToAdd = new Set(Object.keys(m.nodeInfo));
+  const nodeIdsToRemove = new Set();
+  m.data.nodes.forEach(node => {
+    if (nodeIdsToAdd.has(node.id)) {
+      nodeIdsToAdd.delete(node.id);
+    } else {
+      nodeIdsToRemove.add(node.id);
+    }
+  });
+  // apply the delta
+  nodeIdsToRemove.forEach(id => {
+    const index = m.data.nodes.findIndex(n => n.id == id);
+    m.data.nodes.splice(index, 1); // delete the element
+  });
+  nodeIdsToAdd.forEach(nodeId => {
+    m.data.nodes.push({
+      id: nodeId,
     });
-    return {nodes: nodes, links: links};
-  }
+  });
+  m.data.links = links; // links can be swapped out without problem
+
+  // check that selected/hovered nodes are still valid (see #397)
+  m.hoverNode = m.nodeInfo[m.hoverNode] != null ? m.hoverNode : null;
+  m.selectedNodes = new Set(
+    Array.from(m.selectedNodes).filter(nId => m.nodeInfo[nId] != null)
+  );
+
+  // annoying we need to call this function, but I haven't found a good workaround
+  graph.graphData(m.data);
 }
 
 function getNodeColor(nodeId, model) {
@@ -407,9 +412,10 @@ try {
     const message = event.data;
     switch (message.type) {
       case 'didUpdateGraphData':
-        model.graphData = augmentGraphInfo(message.payload);
-        console.log('didUpdateGraphData', model.graphData);
-        Actions.evaluate();
+        graphData = augmentGraphInfo(message.payload);
+        Actions.refreshWorkspaceData(graphData);
+        console.log('didUpdateGraphData', graphData);
+        Actions.filterByType();
         break;
       case 'didSelectNote':
         const noteId = message.payload;

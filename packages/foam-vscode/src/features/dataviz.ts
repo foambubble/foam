@@ -95,7 +95,7 @@ function generateGraphData(foam: Foam) {
         type: 'placeholder',
         uri: c.target,
         title: c.target.path,
-        properties: [],
+        properties: {},
       };
     }
   });

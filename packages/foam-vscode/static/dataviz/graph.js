@@ -140,39 +140,37 @@ const Actions = {
     graph.backgroundColor(model.style.background);
   },
   filterByType: () => {
-    let types = [];
-    switch(model.view){
-      case "default":
-        types = ["note","placeholder"];
-        break;
-      case "tags":
-        types = ["note", "placeholder", "tag"];
-        break;
-      case "all":
-        types = "all";
-        break;
-    }
-    const graphData = JSON.parse(JSON.stringify(model.fullGraphData));
-    if(types == "all") {
-      update(m => {
+    update(m => {
+      let types = [];
+      switch(model.view){
+        case "default":
+          types = ["note","placeholder"];
+          break;
+        case "tags":
+          types = ["note", "placeholder", "tag"];
+          break;
+        case "all":
+          types = "all";
+          break;
+      }
+      const graphData = JSON.parse(JSON.stringify(model.fullGraphData));
+      if(types == "all") {
         patchGraphData(m,graphData);
-      });
-    } else {
-      const nodes = Object.values(graphData.nodes)
-        .filter(n => types.some(t => t == n.type))
-        .reduce((nodesAccumulator,node) => {
-          nodesAccumulator[node.id] = graphData.nodes[node.id];
-          return nodesAccumulator;
-      }, {});
-      const links = graphData.links.filter(link => {
-        const isSource = Object.values(nodes).some(node => node.id == link.source);
-        const isTarget = Object.values(nodes).some(node => node.id == link.target);
-        return isSource && isTarget;
-      });
-      update(m => {
+      } else {
+        const nodes = Object.values(graphData.nodes)
+          .filter(n => types.some(t => t == n.type))
+          .reduce((nodesAccumulator,node) => {
+            nodesAccumulator[node.id] = graphData.nodes[node.id];
+            return nodesAccumulator;
+        }, {});
+        const links = graphData.links.filter(link => {
+          const isSource = Object.values(nodes).some(node => node.id == link.source);
+          const isTarget = Object.values(nodes).some(node => node.id == link.target);
+          return isSource && isTarget;
+        });
         patchGraphData(m,{nodes: nodes, links: links});
-      });
-    }
+      }
+    });
   },
 };
 

@@ -24,9 +24,9 @@ export class FoamTags implements IDisposable {
   ): FoamTags {
     let tags = new FoamTags();
 
-    Object.values(workspace.list()).forEach(resource =>
-      tags.addResourceFromTagIndex(resource)
-    );
+    workspace
+      .list()
+      .forEach(resource => tags.addResourceFromTagIndex(resource));
 
     if (keepMonitoring) {
       tags.disposables.push(

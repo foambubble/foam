@@ -47,7 +47,7 @@ export class FoamWorkspace implements IDisposable {
   /**
    * Resources by URI
    */
-  private resources: { [key: string]: Resource } = {};
+  private resources: Map<string, Resource> = new Map();
 
   registerProvider(provider: ResourceProvider) {
     this.providers.push(provider);
@@ -58,7 +58,7 @@ export class FoamWorkspace implements IDisposable {
     const id = uriToResourceId(resource.uri);
     const old = this.find(resource.uri);
     const name = uriToResourceName(resource.uri);
-    this.resources[id] = resource;
+    this.resources.set(id, resource);
     if (!this.resourcesByName.has(name)) {
       this.resourcesByName.set(name, []);
     }
@@ -71,8 +71,8 @@ export class FoamWorkspace implements IDisposable {
 
   delete(uri: URI) {
     const id = uriToResourceId(uri);
-    const deleted = this.resources[id];
-    delete this.resources[id];
+    const deleted = this.resources.get(id);
+    this.resources.delete(id);
 
     const name = uriToResourceName(uri);
     this.resourcesByName.set(
@@ -89,12 +89,13 @@ export class FoamWorkspace implements IDisposable {
 
   public exists(uri: URI): boolean {
     return (
-      !URI.isPlaceholder(uri) && isSome(this.resources[uriToResourceId(uri)])
+      !URI.isPlaceholder(uri) &&
+      isSome(this.resources.get(uriToResourceId(uri)))
     );
   }
 
   public list(): Resource[] {
-    return Object.values(this.resources);
+    return Array.from(this.resources.values());
   }
 
   public get(uri: URI): Resource {
@@ -111,7 +112,9 @@ export class FoamWorkspace implements IDisposable {
     switch (refType) {
       case 'uri':
         const uri = resourceId as URI;
-        return this.exists(uri) ? this.resources[uriToResourceId(uri)] : null;
+        return this.exists(uri)
+          ? this.resources.get(uriToResourceId(uri)) ?? null
+          : null;
 
       case 'key':
         const name = pathToResourceName(resourceId as string);
@@ -129,11 +132,11 @@ export class FoamWorkspace implements IDisposable {
           ? paths
           : paths.sort((a, b) => a.localeCompare(b));
 
-        return this.resources[sortedPaths[0]];
+        return this.resources.get(sortedPaths[0]) ?? null;
 
       case 'absolute-path':
         const resourceUri = URI.file(resourceId as string);
-        return this.resources[uriToResourceId(resourceUri)] ?? null;
+        return this.resources.get(uriToResourceId(resourceUri)) ?? null;
 
       case 'relative-path':
         if (isNone(reference)) {
@@ -141,7 +144,7 @@ export class FoamWorkspace implements IDisposable {
         }
         const relativePath = resourceId as string;
         const targetUri = URI.computeRelativeURI(reference, relativePath);
-        return this.resources[uriToResourceId(targetUri)] ?? null;
+        return this.resources.get(uriToResourceId(targetUri)) ?? null;
 
       default:
         throw new Error('Unexpected reference type: ' + refType);

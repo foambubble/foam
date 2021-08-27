@@ -100,8 +100,8 @@ function update(patch) {
 const Actions = {
   refreshWorkspaceData: graphInfo =>
     update(m => {
-      m.fullGraphData = graphInfo;
-      //patchGraphData(m,graphInfo);
+      m.fullGraphData = JSON.parse(JSON.stringify(graphInfo));
+      patchGraphData(m,graphInfo);
     }),
   selectNode: (nodeId, isAppend) =>
     update(m => {
@@ -311,9 +311,9 @@ function patchGraphData(m,graphInfo) {
 function getNodeColor(nodeId, model) {
   const info = model.nodeInfo[nodeId];
   const style = model.style;
-  const typeFill = info.properties.color ? d3.rgb(info.properties.color) : d3.rgb(
-    style.node[info.type ?? 'note'] ?? style.node['note']
-  );
+  const typeFill = info.properties.color 
+    ? d3.rgb(info.properties.color) 
+    : d3.rgb(style.node[info.type ?? 'note'] ?? style.node['note']);
   switch (getNodeState(nodeId, model)) {
     case 'regular':
       return { fill: typeFill, border: typeFill };
@@ -413,7 +413,6 @@ try {
         graphData = augmentGraphInfo(message.payload);
         Actions.refreshWorkspaceData(graphData);
         console.log('didUpdateGraphData', graphData);
-        Actions.filterByType();
         break;
       case 'didSelectNote':
         const noteId = message.payload;

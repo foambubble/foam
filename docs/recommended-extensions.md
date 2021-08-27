@@ -22,3 +22,4 @@ These extensions are not (yet?) defined in `.vscode/extensions.json`, but have b
 - [Markdown Extended](https://marketplace.visualstudio.com/items?itemName=jebbs.markdown-extended) (with `kbd` option disabled, `kbd` turns wikilinks into non-clickable buttons)
 - [GitDoc](https://marketplace.visualstudio.com/items?itemName=vsls-contrib.gitdoc) (easy version management via git auto commits)
 - [Markdown Footnotes](https://marketplace.visualstudio.com/items?itemName=bierner.markdown-footnotes) (Adds [^footnote] syntax support to VS Code's built-in markdown preview)
+- [Todo Tree](https://marketplace.visualstudio.com/items?itemName=Gruntfuggly.todo-tree) (Searches workspace for TODO and related comments and summarizes those lines in vs-code gutter)

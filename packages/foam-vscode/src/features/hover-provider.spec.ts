@@ -79,21 +79,11 @@ eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee`;
     const noteA = parser.parse(fileA.uri, fileA.content);
     const noteB = parser.parse(fileB.uri, fileB.content);
 
-    // Create custom workspace fixture.
-    const workspace = new FoamWorkspace();
     const matcher = new Matcher([URI.file('/')], ['**/*']);
-    const resourceProvider: MarkdownResourceProvider = new MarkdownResourceProvider(
-      matcher,
-      undefined,
-      undefined,
-      {
-        read: _ => Promise.resolve(fileBContent),
-        list: _ => Promise.resolve([]),
-      }
-    );
+    const resourceProvider = new MarkdownResourceProvider(matcher);
 
+    const workspace = new FoamWorkspace();
     workspace.registerProvider(resourceProvider);
-
     workspace.set(noteA).set(noteB);
 
     const { doc } = await showInEditor(noteA.uri);

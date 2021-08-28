@@ -32,11 +32,11 @@ export class HoverProvider implements vscode.HoverProvider {
     private parser: ResourceParser
   ) {}
 
-  provideHover(
+  async provideHover(
     document: vscode.TextDocument,
     position: vscode.Position,
     token: vscode.CancellationToken
-  ): vscode.ProviderResult<vscode.Hover> {
+  ): Promise<vscode.Hover> {
     const startResource = this.parser.parse(document.uri, document.getText());
 
     const targetLink: ResourceLink | undefined = startResource.links.find(
@@ -56,25 +56,16 @@ export class HoverProvider implements vscode.HoverProvider {
       return;
     }
 
-    const resultP: Promise<
-      vscode.Hover | undefined
-    > = this.workspace.readAsMarkdown(targetUri).then(
-      content => {
-        const md = isSome(content)
-          ? getNoteTooltip(content)
-          : this.workspace.get(targetUri).title;
-        const hover: vscode.Hover = {
-          contents: [md],
-          range: toVsCodeRange(targetLink.range),
-        };
-        return hover;
-      },
-      err => {
-        return undefined;
-      }
-    );
+    const content: string = await this.workspace.readAsMarkdown(targetUri);
 
-    return resultP;
+    const md = isSome(content)
+      ? getNoteTooltip(content)
+      : this.workspace.get(targetUri).title;
+    const hover: vscode.Hover = {
+      contents: [md],
+      range: toVsCodeRange(targetLink.range),
+    };
+    return hover;
   }
 }
 

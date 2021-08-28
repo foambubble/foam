@@ -38,11 +38,7 @@ describe('Hover provider', () => {
 
     const doc = await vscode.workspace.openTextDocument(uri);
     const pos = new vscode.Position(0, 0);
-    const result: vscode.ProviderResult<vscode.Hover> = provider.provideHover(
-      doc,
-      pos,
-      noCancelToken
-    );
+    const result = await provider.provideHover(doc, pos, noCancelToken);
 
     expect(result).toBeUndefined();
   });
@@ -57,11 +53,7 @@ describe('Hover provider', () => {
 
     const doc = await vscode.workspace.openTextDocument(uri);
     const pos = new vscode.Position(0, 0);
-    const result: vscode.ProviderResult<vscode.Hover> = provider.provideHover(
-      doc,
-      pos,
-      noCancelToken
-    );
+    const result = await provider.provideHover(doc, pos, noCancelToken);
 
     expect(result).toBeUndefined();
   });
@@ -107,20 +99,14 @@ eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee`;
     const { doc } = await showInEditor(noteA.uri);
     const pos = new vscode.Position(0, 22); // Set cursor position on the wikilink.
 
-    const promiseResult = provider.provideHover(
-      doc,
-      pos,
-      noCancelToken
-    ) as Promise<vscode.Hover>;
+    const result = await provider.provideHover(doc, pos, noCancelToken);
 
     // As long as the tests are running with vscode 1.53.0 , MarkdownString is not available.
     // See file://./../test/run-tests.ts and getNoteTooltip at file://./../utils.ts
     const simpleTooltipExpectedFormat =
       'File B Title --- tags: my-tag1 my-tag2 --- The content of file B aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb cccccccccccccccccccccccccccccccccccccccc dddddddddddd...';
-    return promiseResult.then(result => {
-      expect(result.contents).toHaveLength(1);
-      expect(result.contents[0]).toEqual(simpleTooltipExpectedFormat);
-    });
+    expect(result.contents).toHaveLength(1);
+    expect(result.contents[0]).toEqual(simpleTooltipExpectedFormat);
 
     // If vscode test version >= STABLE_MARKDOWN_STRING_API_VERSION (1.52.1)
     /*
@@ -135,12 +121,9 @@ bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
 cccccccccccccccccccccccccccccccccccccccc
 dddddddddddddddddddddddddddddddddddddddd
 eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee`;
-
-    return promiseResult.then(result => {
-      const md = (result.contents as unknown) as vscode.MarkdownString[];
-      expect(md).toHaveLength(1);
-      expect(md[0].value).toEqual(markdownTooltipExpectedFormat);
-    });
+    const md = (result.contents as unknown) as vscode.MarkdownString[];
+    expect(md).toHaveLength(1);
+    expect(md[0].value).toEqual(markdownTooltipExpectedFormat);
     */
   });
 
@@ -159,11 +142,7 @@ eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee`;
     const { doc } = await showInEditor(noteA.uri);
     const pos = new vscode.Position(0, 11); // Set cursor position beside the wikilink.
 
-    const result: vscode.ProviderResult<vscode.Hover> = provider.provideHover(
-      doc,
-      pos,
-      noCancelToken
-    );
+    const result = await provider.provideHover(doc, pos, noCancelToken);
     expect(result).toBeUndefined();
   });
 
@@ -182,11 +161,7 @@ eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee`;
     const { doc } = await showInEditor(noteA.uri);
     const pos = new vscode.Position(0, 22); // Set cursor position on the link.
 
-    const result: vscode.ProviderResult<vscode.Hover> = provider.provideHover(
-      doc,
-      pos,
-      noCancelToken
-    );
+    const result = await provider.provideHover(doc, pos, noCancelToken);
     expect(result).toBeUndefined();
   });
 
@@ -201,11 +176,7 @@ eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee`;
     const { doc } = await showInEditor(noteA.uri);
     const pos = new vscode.Position(0, 22); // Set cursor position on the placeholder.
 
-    const result: vscode.ProviderResult<vscode.Hover> = provider.provideHover(
-      doc,
-      pos,
-      noCancelToken
-    );
+    const result = await provider.provideHover(doc, pos, noCancelToken);
     expect(result).toBeUndefined();
   });
 });

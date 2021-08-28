@@ -75,18 +75,18 @@ describe('Hover provider', () => {
     const { doc } = await showInEditor(noteA.uri);
     const pos = new vscode.Position(0, 22); // Set cursor position on the wikilink.
 
-    const result: vscode.Hover = provider.provideHover(
+    const promiseResult = provider.provideHover(
       doc,
       pos,
       noCancelToken
-    ) as vscode.Hover;
+    ) as Promise<vscode.Hover>;
 
-    expect(result.contents.length).toEqual(1);
-    const mdResult = result.contents[0] as vscode.MarkdownString;
-    expect(mdResult.value).toEqual(
-      '\n```markdown\n' + fileB.content + '\n```\n'
-    );
-    expect(mdResult.isTrusted).toBeFalsy();
+    return promiseResult.then(result => {
+      expect(result.contents).toBeDefined();
+      expect(result.contents).toEqual(
+        '\n```markdown\n' + fileB.content + '\n```\n'
+      );
+    });
   });
 
   it('should not return hover content when the cursor is not placed on a wikilink', async () => {

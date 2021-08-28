@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { Foam, FoamWorkspace, ResourceParser, URI, Range } from 'foam-core';
 import { FoamFeature } from '../types';
-import { mdDocSelector } from '../utils';
+import { getNoteTooltip, mdDocSelector, isSome } from '../utils';
 import { toVsCodeRange } from '../utils/vsc-utils';
 import { ResourceLink } from 'foam-core';
 import { getFoamVsCodeConfig } from '../services/config';
@@ -56,15 +56,25 @@ export class HoverProvider implements vscode.HoverProvider {
       return;
     }
 
-    const md = new vscode.MarkdownString();
-    const targetContent = this.workspace.get(targetUri).source.text;
-    md.appendCodeblock(targetContent, 'markdown');
+    const resultP: Promise<
+      vscode.Hover | undefined
+    > = this.workspace.readAsMarkdown(targetUri).then(
+      content => {
+        const md = isSome(content)
+          ? getNoteTooltip(content)
+          : this.workspace.get(targetUri).title;
+        const hover: vscode.Hover = {
+          contents: [md],
+          range: toVsCodeRange(targetLink.range),
+        };
+        return hover;
+      },
+      err => {
+        return undefined;
+      }
+    );
 
-    const hover: vscode.Hover = {
-      contents: [md],
-      range: toVsCodeRange(targetLink.range),
-    };
-    return hover;
+    return resultP;
   }
 }
 

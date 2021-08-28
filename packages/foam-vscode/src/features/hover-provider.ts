@@ -23,6 +23,7 @@ const feature: FoamFeature = {
     const foam = await foamPromise;
 
     context.subscriptions.push(
+      isHoverEnabled,
       vscode.languages.registerHoverProvider(
         mdDocSelector,
         new HoverProvider(isHoverEnabled, foam.workspace, foam.services.parser)

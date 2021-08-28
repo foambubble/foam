@@ -4,23 +4,28 @@ import { FoamFeature } from '../types';
 import { getNoteTooltip, mdDocSelector, isSome } from '../utils';
 import { toVsCodeRange } from '../utils/vsc-utils';
 import { ResourceLink } from 'foam-core';
-import { getFoamVsCodeConfig } from '../services/config';
+import {
+  ConfigurationMonitor,
+  monitorFoamVsCodeConfig,
+} from '../services/config';
+
+export const CONFIG_KEY = 'links.hover.enable';
 
 const feature: FoamFeature = {
   activate: async (
     context: vscode.ExtensionContext,
     foamPromise: Promise<Foam>
   ) => {
-    if (!getFoamVsCodeConfig('links.hover.enable')) {
-      return;
-    }
+    const isHoverEnabled: ConfigurationMonitor<boolean> = monitorFoamVsCodeConfig(
+      CONFIG_KEY
+    );
 
     const foam = await foamPromise;
 
     context.subscriptions.push(
       vscode.languages.registerHoverProvider(
         mdDocSelector,
-        new HoverProvider(foam.workspace, foam.services.parser)
+        new HoverProvider(isHoverEnabled, foam.workspace, foam.services.parser)
       )
     );
   },
@@ -28,6 +33,7 @@ const feature: FoamFeature = {
 
 export class HoverProvider implements vscode.HoverProvider {
   constructor(
+    private isHoverEnabled: () => boolean,
     private workspace: FoamWorkspace,
     private parser: ResourceParser
   ) {}
@@ -37,6 +43,10 @@ export class HoverProvider implements vscode.HoverProvider {
     position: vscode.Position,
     token: vscode.CancellationToken
   ): Promise<vscode.Hover> {
+    if (!this.isHoverEnabled()) {
+      return;
+    }
+
     const startResource = this.parser.parse(document.uri, document.getText());
 
     const targetLink: ResourceLink | undefined = startResource.links.find(

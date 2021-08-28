@@ -17,6 +17,7 @@ import { HoverProvider } from './hover-provider';
 
 describe('Hover provider', () => {
   const parser = createMarkdownParser([]);
+  const hoverEnabled = () => true;
 
   beforeAll(async () => {
     await cleanWorkspace();
@@ -34,7 +35,7 @@ describe('Hover provider', () => {
     const { uri, content } = await createFile('');
     const ws = new FoamWorkspace().set(parser.parse(uri, content));
 
-    const provider = new HoverProvider(ws, parser);
+    const provider = new HoverProvider(hoverEnabled, ws, parser);
 
     const doc = await vscode.workspace.openTextDocument(uri);
     const pos = new vscode.Position(0, 0);
@@ -49,7 +50,7 @@ describe('Hover provider', () => {
     );
     const ws = new FoamWorkspace().set(parser.parse(uri, content));
 
-    const provider = new HoverProvider(ws, parser);
+    const provider = new HoverProvider(hoverEnabled, ws, parser);
 
     const doc = await vscode.workspace.openTextDocument(uri);
     const pos = new vscode.Position(0, 0);
@@ -95,10 +96,19 @@ eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee`;
 
     workspace.set(noteA).set(noteB);
 
-    const provider = new HoverProvider(workspace, parser);
     const { doc } = await showInEditor(noteA.uri);
     const pos = new vscode.Position(0, 22); // Set cursor position on the wikilink.
 
+    const providerNotEnabled = new HoverProvider(
+      () => false,
+      workspace,
+      parser
+    );
+    expect(
+      await providerNotEnabled.provideHover(doc, pos, noCancelToken)
+    ).toBeUndefined();
+
+    const provider = new HoverProvider(hoverEnabled, workspace, parser);
     const result = await provider.provideHover(doc, pos, noCancelToken);
 
     // As long as the tests are running with vscode 1.53.0 , MarkdownString is not available.
@@ -138,7 +148,7 @@ eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee`;
       .set(noteA)
       .set(noteB);
 
-    const provider = new HoverProvider(ws, parser);
+    const provider = new HoverProvider(hoverEnabled, ws, parser);
     const { doc } = await showInEditor(noteA.uri);
     const pos = new vscode.Position(0, 11); // Set cursor position beside the wikilink.
 
@@ -157,7 +167,7 @@ eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee`;
       .set(noteA)
       .set(noteB);
 
-    const provider = new HoverProvider(ws, parser);
+    const provider = new HoverProvider(hoverEnabled, ws, parser);
     const { doc } = await showInEditor(noteA.uri);
     const pos = new vscode.Position(0, 22); // Set cursor position on the link.
 
@@ -172,7 +182,7 @@ eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee`;
     const noteA = parser.parse(fileA.uri, fileA.content);
     const ws = createTestWorkspace().set(noteA);
 
-    const provider = new HoverProvider(ws, parser);
+    const provider = new HoverProvider(hoverEnabled, ws, parser);
     const { doc } = await showInEditor(noteA.uri);
     const pos = new vscode.Position(0, 22); // Set cursor position on the placeholder.
 

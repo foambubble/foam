@@ -724,6 +724,16 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "theowenyoung",
+      "name": "Owen Young",
+      "avatar_url": "https://avatars.githubusercontent.com/u/62473795?v=4",
+      "profile": "https://github.com/theowenyoung",
+      "contributions": [
+        "doc",
+        "content"
+      ]
     }
   ],
   "contributorsPerLine": 7,

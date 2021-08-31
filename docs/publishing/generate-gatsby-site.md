@@ -28,3 +28,7 @@ That's it!
 ## Using foam-template-gatsby-kb
 
 You can use another template [foam-template-gatsby-kb](https://github.com/hikerpig/foam-template-gatsby-kb), and host it on [Vercel](https://vercel.com) or [Netlify](https://www.netlify.com/).
+
+## Using foam-template-gatsby-theme-primer-wiki
+
+You can use another template [foam-template-gatsby-theme-primer-wiki](https://github.com/theowenyoung/foam-template-gatsby-theme-primer-wiki), ([Demo](https://demo-wiki.owenyoung.com/)), and host it on Github Pages, [Vercel](https://vercel.com) or [Netlify](https://www.netlify.com/).

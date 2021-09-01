@@ -734,6 +734,15 @@
         "doc",
         "content"
       ]
+    },
+    {
+      "login": "ksprashu",
+      "name": "Prashanth Subrahmanyam",
+      "avatar_url": "https://avatars.githubusercontent.com/u/476729?v=4",
+      "profile": "http://www.prashu.com",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,

@@ -4,6 +4,7 @@ import { createTestNote } from '../test/test-utils';
 import {
   markdownItWithFoamLinks,
   markdownItWithFoamTags,
+  markdownItWithNoteInclusion,
 } from './preview-navigation';
 
 describe('Link generation in preview', () => {
@@ -47,6 +48,58 @@ describe('Stylable tag generation in preview', () => {
   it('transforms a string containing multiple tags to a stylable html element', () => {
     expect(md.render(`Lorem #ipsum dolor #sit`)).toMatch(
       `<p>Lorem <span class='foam-tag'>#ipsum</span> dolor <span class='foam-tag'>#sit</span></p>`
+    );
+  });
+});
+
+describe('Displaying included notes in preview', () => {
+  const noteA = createTestNote({
+    uri: 'note-a.md',
+    text: 'This is the text of note A',
+  });
+  const noteC = createTestNote({
+    uri: 'note-c.md',
+    text: 'This is the text of note C which includes ![[note-d]]',
+  });
+  const noteD = createTestNote({
+    uri: 'note-d.md',
+    text: 'This is the text of note D which includes ![[note-c]]',
+  });
+  const ws = new FoamWorkspace()
+    .set(noteA)
+    .set(noteC)
+    .set(noteD);
+  const md = markdownItWithNoteInclusion(MarkdownIt(), ws);
+
+  it('renders an included note', () => {
+    expect(
+      md.render(`This is the root node. 
+
+ ![[note-a]]`)
+    ).toMatch(
+      `<p>This is the root node.</p>
+<p><p>This is the text of note A</p>
+</p>`
+    );
+  });
+
+  it('displays the syntax when a note is not found', () => {
+    expect(
+      md.render(`This is the root node.
+    ![[note-b]]`)
+    ).toMatch(
+      `<p>This is the root node.
+![[note-b]]</p>
+`
+    );
+  });
+
+  it('displays a warning in case of cyclical inclusions', () => {
+    expect(md.render(noteD.source.text)).toMatch(
+      `<p>This is the text of note D which includes <p>This is the text of note C which includes <p>This is the text of note D which includes <div class=\"foam-cyclic-link-warning\">Cyclic link detected for wikilink: note-c</div></p>
+</p>
+</p>
+`
     );
   });
 });

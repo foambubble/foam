@@ -39,7 +39,7 @@ export const markdownItWithNoteInclusion = (
         const includedNote = workspace.find(wikilink);
 
         if (!includedNote) {
-          return '';
+          return `![[${wikilink}]]`;
         }
 
         const cyclicLinkDetected = refsStack.includes(wikilink);

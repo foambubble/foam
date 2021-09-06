@@ -240,6 +240,11 @@
           "type": "boolean",
           "default": true
         },
+        "foam.links.hover.enable": {
+          "description": "Enable displaying note content on hover links",
+          "type": "boolean",
+          "default": true
+        },
         "foam.decorations.links.enable": {
           "description": "Enable decorations for links",
           "type": "boolean",

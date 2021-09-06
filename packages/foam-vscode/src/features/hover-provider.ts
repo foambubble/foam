@@ -52,7 +52,6 @@ export class HoverProvider implements vscode.HoverProvider {
 
     const targetLink: ResourceLink | undefined = startResource.links.find(
       link =>
-        link.type === 'wikilink' &&
         Range.containsPosition(link.range, {
           line: position.line,
           character: position.character,

@@ -64,6 +64,13 @@ describe('Workspace resources', () => {
     expect(ws.find(uri)).toBeNull();
     expect(() => ws.get(uri)).toThrow();
   });
+
+  it('Should work with a resource named like a JS prototype property', () => {
+    const ws = createTestWorkspace();
+    const noteA = createTestNote({ uri: '/somewhere/constructor.md' });
+    ws.set(noteA);
+    expect(ws.list()).toEqual([noteA]);
+  });
 });
 
 describe('Graph', () => {
@@ -517,6 +524,23 @@ describe('Placeholders', () => {
       target: URI.placeholder('/path/to/page-c.md'),
       link: expect.objectContaining({ type: 'wikilink' }),
     });
+  });
+
+  it('Should work with a placeholder named like a JS prototype property', () => {
+    const ws = createTestWorkspace();
+    const noteA = createTestNote({
+      uri: '/page-a.md',
+      links: [{ slug: 'constructor' }],
+    });
+    ws.set(noteA);
+    const graph = FoamGraph.fromWorkspace(ws);
+
+    expect(
+      graph
+        .getAllNodes()
+        .map(uri => uri.path)
+        .sort()
+    ).toEqual(['/page-a.md', 'constructor']);
   });
 });
 

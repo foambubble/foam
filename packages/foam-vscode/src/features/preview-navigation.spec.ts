@@ -96,7 +96,7 @@ describe('Displaying included notes in preview', () => {
 
   it('displays a warning in case of cyclical inclusions', () => {
     expect(md.render(noteD.source.text)).toMatch(
-      `<p>This is the text of note D which includes <p>This is the text of note C which includes <p>This is the text of note D which includes <div class=\"foam-cyclic-link-warning\">Cyclic link detected for wikilink: note-c</div></p>
+      `<p>This is the text of note D which includes <p>This is the text of note C which includes <p>This is the text of note D which includes <div class="foam-cyclic-link-warning">Cyclic link detected for wikilink: note-c</div></p>
 </p>
 </p>
 `

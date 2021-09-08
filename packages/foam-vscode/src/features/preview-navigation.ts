@@ -33,7 +33,7 @@ export const markdownItWithNoteInclusion = (
 ) => {
   return md.use(markdownItRegex, {
     name: 'include-notes',
-    regex: /!\[\[([^\[\]]+?)\]\]/,
+    regex: /!\[\[([^[\]]+?)\]\]/,
     replace: (wikilink: string) => {
       try {
         const includedNote = workspace.find(wikilink);

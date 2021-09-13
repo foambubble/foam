@@ -6,9 +6,13 @@
 .foam-note-link,
 .foam-attachment-link {
   color: var(--vscode-textLink-foreground);
-
 }
 
 .foam-tag {
-  color: var(--vscode-editorLineNumber-foreground)
+  color: var(--vscode-editorLineNumber-foreground);
+}
+
+.foam-cyclic-link-warning {
+  background-color: var(--vscode-editorError-background);
+  color: var(--vscode-editorError-foreground);
 }

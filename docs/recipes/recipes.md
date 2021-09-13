@@ -56,6 +56,7 @@ A #recipe is a guide, tip or strategy for getting the most out of your Foam work
   - _More..._
 - VS Code Advanced Features [[todo]] [[good-first-task]]
   - Focus with Zen Mode
+- Display content of other notes in the preview tab by [[including-notes]]
 
 ## Version control
 
@@ -125,6 +126,7 @@ _See [[contribution-guide]] and [[how-to-write-recipes]]._
 [add-images-to-notes]: add-images-to-notes.md "Add images to your notes"
 [shows-image-preview-on-hover]: shows-image-preview-on-hover.md "Shows Image Preview on Hover"
 [good-first-task]: ../dev/good-first-task.md "Good First Task"
+[including-notes]: ../features/including-notes.md "Including notes in a note"
 [git-integration]: ../features/git-integration.md "Git Integration"
 [write-your-notes-in-github-gist]: write-your-notes-in-github-gist.md "Write your notes in GitHub Gist"
 [publish-to-github-pages]: ../publishing/publish-to-github-pages.md "GitHub Pages"

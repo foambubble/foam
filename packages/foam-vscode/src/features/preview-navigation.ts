@@ -5,6 +5,7 @@ import { FoamFeature } from '../types';
 import { isNone } from '../utils';
 
 const ALIAS_DIVIDER_CHAR = '|';
+const refsStack: string[] = [];
 
 const feature: FoamFeature = {
   activate: async (
@@ -17,12 +18,54 @@ const feature: FoamFeature = {
       extendMarkdownIt: (md: markdownit) => {
         return [
           markdownItWithFoamTags,
+          markdownItWithNoteInclusion,
           markdownItWithFoamLinks,
           markdownItWithRemoveLinkReferences,
         ].reduce((acc, extension) => extension(acc, foam.workspace), md);
       },
     };
   },
+};
+
+export const markdownItWithNoteInclusion = (
+  md: markdownit,
+  workspace: FoamWorkspace
+) => {
+  return md.use(markdownItRegex, {
+    name: 'include-notes',
+    regex: /!\[\[([^[\]]+?)\]\]/,
+    replace: (wikilink: string) => {
+      try {
+        const includedNote = workspace.find(wikilink);
+
+        if (!includedNote) {
+          return `![[${wikilink}]]`;
+        }
+
+        const cyclicLinkDetected = refsStack.includes(wikilink);
+
+        if (!cyclicLinkDetected) {
+          refsStack.push(wikilink.toLowerCase());
+        }
+
+        const html = cyclicLinkDetected
+          ? `<div class="foam-cyclic-link-warning">Cyclic link detected for wikilink: ${wikilink}</div>`
+          : md.render(includedNote.source.text);
+
+        if (!cyclicLinkDetected) {
+          refsStack.pop();
+        }
+
+        return html;
+      } catch (e) {
+        Logger.error(
+          `Error while including [[${wikilink}]] into the current document of the Preview panel`,
+          e
+        );
+        return '';
+      }
+    },
+  });
 };
 
 export const markdownItWithFoamLinks = (

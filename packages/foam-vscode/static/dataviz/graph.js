@@ -11,6 +11,7 @@ const styleFallback = {
   node: {
     note: '#277da1',
     placeholder: '#545454',
+    tag: '#f9c74f'
   },
 };
 
@@ -45,6 +46,8 @@ const defaultStyle = {
     placeholder:
       getStyle('--vscode-list-deemphasizedForeground') ??
       styleFallback.node.placeholder,
+    tag: getStyle('--vscode-list-highlightForeground') ?? styleFallback.node.tag,
+
   },
 };
 
@@ -53,6 +56,7 @@ let model = {
   hoverNode: null,
   focusNodes: new Set(),
   focusLinks: new Set(),
+  fullGraphData: {},
   nodeInfo: {},
   data: {
     nodes: [],
@@ -63,6 +67,7 @@ let model = {
    * in the case it fails, use the fallback style values.
    */
   style: defaultStyle,
+  view: "default",
 };
 const graph = ForceGraph();
 
@@ -93,40 +98,10 @@ function update(patch) {
 }
 
 const Actions = {
-  refresh: graphInfo =>
+  refreshWorkspaceData: graphInfo =>
     update(m => {
-      m.nodeInfo = graphInfo.nodes;
-      const links = graphInfo.links;
-
-      // compute graph delta, for smooth transitions we need to mutate objects in-place
-      const nodeIdsToAdd = new Set(Object.keys(m.nodeInfo));
-      const nodeIndexesToRemove = new Set();
-      m.data.nodes.forEach((node, index) => {
-        if (nodeIdsToAdd.has(node.id)) {
-          nodeIdsToAdd.delete(node.id);
-        } else {
-          nodeIndexesToRemove.add(index);
-        }
-      });
-      // apply the delta
-      nodeIndexesToRemove.forEach(index => {
-        m.data.nodes.splice(index, 1); // delete the element
-      });
-      nodeIdsToAdd.forEach(nodeId => {
-        m.data.nodes.push({
-          id: nodeId,
-        });
-      });
-      m.data.links = links; // links can be swapped out without problem
-
-      // check that selected/hovered nodes are still valid (see #397)
-      m.hoverNode = m.nodeInfo[m.hoverNode] != null ? m.hoverNode : null;
-      m.selectedNodes = new Set(
-        Array.from(m.selectedNodes).filter(nId => m.nodeInfo[nId] != null)
-      );
-
-      // annoying we need to call this function, but I haven't found a good workaround
-      graph.graphData(m.data);
+      m.fullGraphData = JSON.parse(JSON.stringify(graphInfo));
+      patchGraphData(m,graphInfo);
     }),
   selectNode: (nodeId, isAppend) =>
     update(m => {
@@ -163,6 +138,39 @@ const Actions = {
       },
     };
     graph.backgroundColor(model.style.background);
+  },
+  filterByType: () => {
+    update(m => {
+      let types = [];
+      switch(model.view){
+        case "default":
+          types = ["note","placeholder"];
+          break;
+        case "tags":
+          types = ["note", "placeholder", "tag"];
+          break;
+        case "all":
+          types = "all";
+          break;
+      }
+      const graphData = JSON.parse(JSON.stringify(model.fullGraphData));
+      if(types == "all") {
+        patchGraphData(m,graphData);
+      } else {
+        const nodes = Object.values(graphData.nodes)
+          .filter(n => types.some(t => t == n.type))
+          .reduce((nodesAccumulator,node) => {
+            nodesAccumulator[node.id] = graphData.nodes[node.id];
+            return nodesAccumulator;
+        }, {});
+        const links = graphData.links.filter(link => {
+          const isSource = Object.values(nodes).some(node => node.id == link.source);
+          const isTarget = Object.values(nodes).some(node => node.id == link.target);
+          return isSource && isTarget;
+        });
+        patchGraphData(m,{nodes: nodes, links: links});
+      }
+    });
   },
 };
 
@@ -223,12 +231,35 @@ function initDataviz(channel) {
     .onBackgroundClick(event => {
       Actions.selectNode(null, event.getModifierState('Shift'));
     });
+  const gui = new dat.gui.GUI();
+  gui.add(model, 'view', {Default: "default", Tags: "tags", All: "all"})
+    .name('View')
+    .onFinishChange(function(){
+      Actions.filterByType();
+  });
 }
 
 function augmentGraphInfo(data) {
   Object.values(data.nodes).forEach(node => {
     node.neighbors = [];
     node.links = [];
+    if(node.tags && node.tags.length > 0){
+      node.tags.forEach(tag => {
+        const tagNode = {
+          id: tag.label,
+          title: tag.label,
+          type: 'tag',
+          properties: {},
+          neighbors: [],
+          links: [],
+        };
+        data.nodes[tag.label] = tagNode;
+        data.links.push({
+          target: node.id,
+          source: tagNode.id
+        });
+      });
+    }
   });
   data.links.forEach(link => {
     const a = data.nodes[link.source];
@@ -241,12 +272,48 @@ function augmentGraphInfo(data) {
   return data;
 }
 
+function patchGraphData(m,graphInfo) {
+  m.nodeInfo = graphInfo.nodes;
+  const links = graphInfo.links;
+
+  // compute graph delta, for smooth transitions we need to mutate objects in-place
+  const nodeIdsToAdd = new Set(Object.keys(m.nodeInfo));
+  const nodeIdsToRemove = new Set();
+  m.data.nodes.forEach(node => {
+    if (nodeIdsToAdd.has(node.id)) {
+      nodeIdsToAdd.delete(node.id);
+    } else {
+      nodeIdsToRemove.add(node.id);
+    }
+  });
+  // apply the delta
+  nodeIdsToRemove.forEach(id => {
+    const index = m.data.nodes.findIndex(n => n.id == id);
+    m.data.nodes.splice(index, 1); // delete the element
+  });
+  nodeIdsToAdd.forEach(nodeId => {
+    m.data.nodes.push({
+      id: nodeId,
+    });
+  });
+  m.data.links = links; // links can be swapped out without problem
+
+  // check that selected/hovered nodes are still valid (see #397)
+  m.hoverNode = m.nodeInfo[m.hoverNode] != null ? m.hoverNode : null;
+  m.selectedNodes = new Set(
+    Array.from(m.selectedNodes).filter(nId => m.nodeInfo[nId] != null)
+  );
+
+  // annoying we need to call this function, but I haven't found a good workaround
+  graph.graphData(m.data);
+}
+
 function getNodeColor(nodeId, model) {
   const info = model.nodeInfo[nodeId];
   const style = model.style;
-  const typeFill = d3.rgb(
-    style.node[info.type ?? 'note'] ?? style.node['note']
-  );
+  const typeFill = info.properties.color 
+    ? d3.rgb(info.properties.color) 
+    : d3.rgb(style.node[info.type ?? 'note'] ?? style.node['note']);
   switch (getNodeState(nodeId, model)) {
     case 'regular':
       return { fill: typeFill, border: typeFill };
@@ -290,7 +357,7 @@ function getNodeState(nodeId, model) {
 function getLinkState(link, model) {
   return model.focusNodes.size === 0
     ? 'regular'
-    : model.focusLinks.has(link)
+    : Array.from(model.focusLinks).some(fLink => fLink.source == link.source.id && fLink.target == link.target.id)
     ? 'highlighted'
     : 'lessened';
 }
@@ -343,9 +410,9 @@ try {
     const message = event.data;
     switch (message.type) {
       case 'didUpdateGraphData':
-        const graphData = augmentGraphInfo(message.payload);
+        graphData = augmentGraphInfo(message.payload);
+        Actions.refreshWorkspaceData(graphData);
         console.log('didUpdateGraphData', graphData);
-        Actions.refresh(graphData);
         break;
       case 'didSelectNote':
         const noteId = message.payload;

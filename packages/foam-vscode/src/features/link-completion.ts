@@ -52,12 +52,14 @@ export class CompletionProvider
       return item;
     });
 
-    const placeholders = Object.values(this.graph.placeholders).map(uri => {
-      return new vscode.CompletionItem(
-        uri.path,
-        vscode.CompletionItemKind.Interface
-      );
-    });
+    const placeholders = Array.from(this.graph.placeholders.values()).map(
+      uri => {
+        return new vscode.CompletionItem(
+          uri.path,
+          vscode.CompletionItemKind.Interface
+        );
+      }
+    );
 
     return new vscode.CompletionList([...resources, ...placeholders]);
   }

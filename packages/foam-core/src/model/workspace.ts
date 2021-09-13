@@ -43,11 +43,11 @@ export class FoamWorkspace implements IDisposable {
   /**
    * Resources by key / slug
    */
-  private resourcesByName: { [key: string]: string[] } = {};
+  private resourcesByName: Map<string, string[]> = new Map();
   /**
    * Resources by URI
    */
-  private resources: { [key: string]: Resource } = {};
+  private resources: Map<string, Resource> = new Map();
 
   registerProvider(provider: ResourceProvider) {
     this.providers.push(provider);
@@ -58,9 +58,11 @@ export class FoamWorkspace implements IDisposable {
     const id = uriToResourceId(resource.uri);
     const old = this.find(resource.uri);
     const name = uriToResourceName(resource.uri);
-    this.resources[id] = resource;
-    this.resourcesByName[name] = this.resourcesByName[name] ?? [];
-    this.resourcesByName[name].push(id);
+    this.resources.set(id, resource);
+    if (!this.resourcesByName.has(name)) {
+      this.resourcesByName.set(name, []);
+    }
+    this.resourcesByName.get(name)?.push(id);
     isSome(old)
       ? this.onDidUpdateEmitter.fire({ old: old, new: resource })
       : this.onDidAddEmitter.fire(resource);
@@ -69,14 +71,16 @@ export class FoamWorkspace implements IDisposable {
 
   delete(uri: URI) {
     const id = uriToResourceId(uri);
-    const deleted = this.resources[id];
-    delete this.resources[id];
+    const deleted = this.resources.get(id);
+    this.resources.delete(id);
 
     const name = uriToResourceName(uri);
-    this.resourcesByName[name] =
-      this.resourcesByName[name]?.filter(resId => resId !== id) ?? [];
-    if (this.resourcesByName[name].length === 0) {
-      delete this.resourcesByName[name];
+    this.resourcesByName.set(
+      name,
+      this.resourcesByName.get(name)?.filter(resId => resId !== id) ?? []
+    );
+    if (this.resourcesByName.get(name)?.length === 0) {
+      this.resourcesByName.delete(name);
     }
 
     isSome(deleted) && this.onDidDeleteEmitter.fire(deleted);
@@ -85,12 +89,13 @@ export class FoamWorkspace implements IDisposable {
 
   public exists(uri: URI): boolean {
     return (
-      !URI.isPlaceholder(uri) && isSome(this.resources[uriToResourceId(uri)])
+      !URI.isPlaceholder(uri) &&
+      isSome(this.resources.get(uriToResourceId(uri)))
     );
   }
 
   public list(): Resource[] {
-    return Object.values(this.resources);
+    return Array.from(this.resources.values());
   }
 
   public get(uri: URI): Resource {
@@ -107,14 +112,16 @@ export class FoamWorkspace implements IDisposable {
     switch (refType) {
       case 'uri':
         const uri = resourceId as URI;
-        return this.exists(uri) ? this.resources[uriToResourceId(uri)] : null;
+        return this.exists(uri)
+          ? this.resources.get(uriToResourceId(uri)) ?? null
+          : null;
 
       case 'key':
         const name = pathToResourceName(resourceId as string);
-        let paths = this.resourcesByName[name];
+        let paths = this.resourcesByName.get(name);
 
         if (isNone(paths) || paths.length === 0) {
-          paths = this.resourcesByName[resourceId as string];
+          paths = this.resourcesByName.get(resourceId as string);
         }
 
         if (isNone(paths) || paths.length === 0) {
@@ -125,11 +132,11 @@ export class FoamWorkspace implements IDisposable {
           ? paths
           : paths.sort((a, b) => a.localeCompare(b));
 
-        return this.resources[sortedPaths[0]];
+        return this.resources.get(sortedPaths[0]) ?? null;
 
       case 'absolute-path':
         const resourceUri = URI.file(resourceId as string);
-        return this.resources[uriToResourceId(resourceUri)] ?? null;
+        return this.resources.get(uriToResourceId(resourceUri)) ?? null;
 
       case 'relative-path':
         if (isNone(reference)) {
@@ -137,7 +144,7 @@ export class FoamWorkspace implements IDisposable {
         }
         const relativePath = resourceId as string;
         const targetUri = URI.computeRelativeURI(reference, relativePath);
-        return this.resources[uriToResourceId(targetUri)] ?? null;
+        return this.resources.get(uriToResourceId(targetUri)) ?? null;
 
       default:
         throw new Error('Unexpected reference type: ' + refType);

@@ -19,15 +19,15 @@ export class FoamGraph implements IDisposable {
   /**
    * Placehoders by key / slug / value
    */
-  public readonly placeholders: { [key: string]: URI } = {};
+  public readonly placeholders: Map<string, URI> = new Map();
   /**
    * Maps the connections starting from a URI
    */
-  public readonly links: { [key: string]: Connection[] } = {};
+  public readonly links: Map<string, Connection[]> = new Map();
   /**
    * Maps the connections arriving to a URI
    */
-  public readonly backlinks: { [key: string]: Connection[] } = {};
+  public readonly backlinks: Map<string, Connection[]> = new Map();
 
   /**
    * List of disposables to destroy with the workspace
@@ -42,28 +42,28 @@ export class FoamGraph implements IDisposable {
 
   public getAllNodes(): URI[] {
     return [
-      ...Object.values(this.placeholders),
+      ...Array.from(this.placeholders.values()),
       ...this.workspace.list().map(r => r.uri),
     ];
   }
 
   public getAllConnections(): Connection[] {
-    return Object.values(this.links).flat();
+    return Array.from(this.links.values()).flat();
   }
 
   public getConnections(uri: URI): Connection[] {
     return [
-      ...(this.links[uri.path] || []),
-      ...(this.backlinks[uri.path] || []),
+      ...(this.links.get(uri.path) || []),
+      ...(this.backlinks.get(uri.path) || []),
     ];
   }
 
   public getLinks(uri: URI): Connection[] {
-    return this.links[uri.path] ?? [];
+    return this.links.get(uri.path) ?? [];
   }
 
   public getBacklinks(uri: URI): Connection[] {
-    return this.backlinks[uri.path] ?? [];
+    return this.backlinks.get(uri.path) ?? [];
   }
 
   /**
@@ -80,9 +80,7 @@ export class FoamGraph implements IDisposable {
   ): FoamGraph {
     let graph = new FoamGraph(workspace);
 
-    Object.values(workspace.list()).forEach(resource =>
-      graph.resolveResource(resource)
-    );
+    workspace.list().forEach(resource => graph.resolveResource(resource));
     if (keepMonitoring) {
       graph.disposables.push(
         workspace.onDidAdd(resource => {
@@ -102,10 +100,10 @@ export class FoamGraph implements IDisposable {
   private updateLinksRelatedToAddedResource(resource: Resource) {
     // check if any existing connection can be filled by new resource
     const name = uriToResourceName(resource.uri);
-    if (name in this.placeholders) {
-      const placeholder = this.placeholders[name];
-      delete this.placeholders[name];
-      const resourcesToUpdate = this.backlinks[placeholder.path] ?? [];
+    const placeholder = this.placeholders.get(name);
+    if (placeholder) {
+      this.placeholders.delete(name);
+      const resourcesToUpdate = this.backlinks.get(placeholder.path) ?? [];
       resourcesToUpdate.forEach(res =>
         this.resolveResource(this.workspace.get(res.source))
       );
@@ -143,15 +141,15 @@ export class FoamGraph implements IDisposable {
     const uri = resource.uri;
 
     // remove forward links from old resource
-    const resourcesPointedByDeletedNote = this.links[uri.path] ?? [];
-    delete this.links[uri.path];
+    const resourcesPointedByDeletedNote = this.links.get(uri.path) ?? [];
+    this.links.delete(uri.path);
     resourcesPointedByDeletedNote.forEach(connection =>
       this.disconnect(uri, connection.target, connection.link)
     );
 
     // recompute previous links to old resource
-    const notesPointingToDeletedResource = this.backlinks[uri.path] ?? [];
-    delete this.backlinks[uri.path];
+    const notesPointingToDeletedResource = this.backlinks.get(uri.path) ?? [];
+    this.backlinks.delete(uri.path);
     notesPointingToDeletedResource.forEach(link =>
       this.resolveResource(this.workspace.get(link.source))
     );
@@ -161,13 +159,19 @@ export class FoamGraph implements IDisposable {
   private connect(source: URI, target: URI, link: ResourceLink) {
     const connection = { source, target, link };
 
-    this.links[source.path] = this.links[source.path] ?? [];
-    this.links[source.path].push(connection);
-    this.backlinks[target.path] = this.backlinks[target.path] ?? [];
-    this.backlinks[target.path].push(connection);
+    if (!this.links.has(source.path)) {
+      this.links.set(source.path, []);
+    }
+    this.links.get(source.path)?.push(connection);
+
+    if (!this.backlinks.get(target.path)) {
+      this.backlinks.set(target.path, []);
+    }
+
+    this.backlinks.get(target.path)?.push(connection);
 
     if (URI.isPlaceholder(target)) {
-      this.placeholders[uriToPlaceholderId(target)] = target;
+      this.placeholders.set(uriToPlaceholderId(target), target);
     }
     return this;
   }
@@ -189,24 +193,28 @@ export class FoamGraph implements IDisposable {
             !URI.isEqual(source, c.source) || !URI.isEqual(target, c.target)
         : (c: Connection) => !isSameConnection({ source, target, link }, c);
 
-    this.links[source.path] =
-      this.links[source.path]?.filter(connectionsToKeep) ?? [];
-    if (this.links[source.path].length === 0) {
-      delete this.links[source.path];
+    this.links.set(
+      source.path,
+      this.links.get(source.path)?.filter(connectionsToKeep) ?? []
+    );
+    if (this.links.get(source.path)?.length === 0) {
+      this.links.delete(source.path);
     }
-    this.backlinks[target.path] =
-      this.backlinks[target.path]?.filter(connectionsToKeep) ?? [];
-    if (this.backlinks[target.path].length === 0) {
-      delete this.backlinks[target.path];
+    this.backlinks.set(
+      target.path,
+      this.backlinks.get(target.path)?.filter(connectionsToKeep) ?? []
+    );
+    if (this.backlinks.get(target.path)?.length === 0) {
+      this.backlinks.delete(target.path);
       if (URI.isPlaceholder(target)) {
-        delete this.placeholders[uriToPlaceholderId(target)];
+        this.placeholders.delete(uriToPlaceholderId(target));
       }
     }
     return this;
   }
 
   public resolveResource(resource: Resource) {
-    delete this.links[resource.uri.path];
+    this.links.delete(resource.uri.path);
     // prettier-ignore
     resource.links.forEach(link => {
       const targetUri = this.workspace.resolveLink(resource, link);

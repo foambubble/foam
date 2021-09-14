@@ -2,14 +2,14 @@ import {
   createMarkdownParser,
   createMarkdownReferences,
   ParserPlugin,
-} from '../src/markdown-provider';
-import { DirectLink, WikiLink } from '../src/model/note';
-import { Logger } from '../src/utils/log';
-import { uriToSlug } from '../src/utils/slug';
-import { URI } from '../src/model/uri';
-import { FoamGraph } from '../src/model/graph';
-import { createTestWorkspace } from './core.test';
-import { Range } from '../src/model/range';
+} from './markdown-provider';
+import { DirectLink, WikiLink } from './model/note';
+import { Logger } from './utils/log';
+import { uriToSlug } from './utils/slug';
+import { URI } from './model/uri';
+import { FoamGraph } from './model/graph';
+import { Range } from './model/range';
+import { createTestWorkspace } from '../test/test-utils';
 
 Logger.setLevel('error');
 

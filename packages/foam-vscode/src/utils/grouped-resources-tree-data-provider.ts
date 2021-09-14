@@ -1,6 +1,5 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { URI, FoamWorkspace, Resource } from 'foam-core';
 import micromatch from 'micromatch';
 import {
   GroupedResourcesConfig,
@@ -9,6 +8,9 @@ import {
 import { getContainsTooltip, getNoteTooltip, isSome } from '../utils';
 import { OPEN_COMMAND } from '../features/utility-commands';
 import { toVsCodeUri } from './vsc-utils';
+import { URI } from '../core/model/uri';
+import { Resource } from '../core/model/note';
+import { FoamWorkspace } from '../core/model/workspace';
 
 /**
  * Provides the ability to expose a TreeDataExplorerView in VSCode. This class will

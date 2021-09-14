@@ -1,13 +1,15 @@
 import * as path from 'path';
-import { generateHeading } from '../../src/janitor';
-import { createConfigFromFolders } from '../../src/config';
-import { Resource } from '../../src/model/note';
-import { FileDataStore, Matcher } from '../../src/services/datastore';
-import { Logger } from '../../src/utils/log';
-import { FoamWorkspace } from '../../src/model/workspace';
-import { URI } from '../../src/model/uri';
-import { Range } from '../../src/model/range';
-import { MarkdownResourceProvider, bootstrap } from '../../src';
+import { generateHeading } from '.';
+import { TEST_DATA_DIR } from '../../test/test-utils';
+import { createConfigFromFolders } from '../config';
+import { MarkdownResourceProvider } from '../markdown-provider';
+import { bootstrap } from '../model/foam';
+import { Resource } from '../model/note';
+import { Range } from '../model/range';
+import { URI } from '../model/uri';
+import { FoamWorkspace } from '../model/workspace';
+import { FileDataStore, Matcher } from '../services/datastore';
+import { Logger } from '../utils/log';
 
 Logger.setLevel('error');
 
@@ -21,7 +23,7 @@ describe('generateHeadings', () => {
 
   beforeAll(async () => {
     const config = createConfigFromFolders([
-      URI.file(path.join(__dirname, '..', '__scaffold__')),
+      URI.joinPath(TEST_DATA_DIR, '__scaffold__'),
     ]);
     const mdProvider = new MarkdownResourceProvider(
       new Matcher(

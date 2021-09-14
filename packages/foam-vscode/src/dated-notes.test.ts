@@ -1,6 +1,6 @@
 import { workspace } from 'vscode';
 import { getDailyNotePath } from './dated-notes';
-import { URI } from 'foam-core';
+import { URI } from './core/model/uri';
 import { isWindows } from './utils';
 
 describe('getDailyNotePath', () => {

@@ -1,7 +1,7 @@
 import { FoamWorkspace } from './workspace';
 import { URI } from './uri';
-import { IDisposable } from '../index';
 import { Resource } from './note';
+import { IDisposable } from '../common/lifecycle';
 
 export class FoamTags implements IDisposable {
   public readonly tags: Map<string, URI[]> = new Map();

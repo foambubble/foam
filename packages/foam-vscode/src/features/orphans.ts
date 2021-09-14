@@ -1,5 +1,7 @@
 import * as vscode from 'vscode';
-import { Foam, FoamGraph, URI } from 'foam-core';
+import { Foam } from '../core/model/foam';
+import { FoamGraph } from '../core/model/graph';
+import { URI } from '../core/model/uri';
 import { getOrphansConfig } from '../settings';
 import { FoamFeature } from '../types';
 import {

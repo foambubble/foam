@@ -7,21 +7,18 @@ import {
 } from 'vscode';
 import * as fs from 'fs';
 import { FoamFeature } from '../types';
-import {
-  applyTextEdit,
-  generateLinkReferences,
-  generateHeading,
-  Foam,
-  Resource,
-  Range,
-  URI,
-} from 'foam-core';
+import { URI } from '../core/model/uri';
 
 import {
   getWikilinkDefinitionSetting,
   LinkReferenceDefinitionsSetting,
 } from '../settings';
 import { toVsCodePosition, toVsCodeRange } from '../utils/vsc-utils';
+import { Foam } from '../core/model/foam';
+import { Resource } from '../core/model/note';
+import { generateHeading, generateLinkReferences } from '../core/janitor';
+import { Range } from '../core/model/range';
+import { applyTextEdit } from '../core/janitor/apply-text-edit';
 
 const feature: FoamFeature = {
   activate: (context: ExtensionContext, foamPromise: Promise<Foam>) => {

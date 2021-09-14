@@ -1,5 +1,8 @@
 import * as vscode from 'vscode';
-import { Foam, FoamWorkspace, URI, FoamGraph } from 'foam-core';
+import { Foam } from '../core/model/foam';
+import { FoamGraph } from '../core/model/graph';
+import { URI } from '../core/model/uri';
+import { FoamWorkspace } from '../core/model/workspace';
 import { FoamFeature } from '../types';
 import { getNoteTooltip, mdDocSelector } from '../utils';
 import { toVsCodeUri } from '../utils/vsc-utils';

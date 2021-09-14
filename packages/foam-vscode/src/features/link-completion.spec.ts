@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
-import { FoamGraph, FoamWorkspace } from 'foam-core';
+import { FoamGraph } from '../core/model/graph';
+import { FoamWorkspace } from '../core/model/workspace';
 import {
   cleanWorkspace,
   closeEditors,

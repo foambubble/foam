@@ -1,6 +1,6 @@
-import { applyTextEdit } from '../../src/janitor/apply-text-edit';
-import { Range } from '../../src/model/range';
-import { Logger } from '../../src/utils/log';
+import { Range } from '../model/range';
+import { Logger } from '../utils/log';
+import { applyTextEdit } from './apply-text-edit';
 
 Logger.setLevel('error');
 

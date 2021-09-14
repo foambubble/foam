@@ -1,11 +1,11 @@
-import { Logger } from '../src/utils/log';
-import { URI } from '../src/model/uri';
-import { FileDataStore, Matcher } from '../src';
-import { toMatcherPathFormat } from '../src/services/datastore';
+import { TEST_DATA_DIR } from '../../test/test-utils';
+import { URI } from '../model/uri';
+import { Logger } from '../utils/log';
+import { FileDataStore, Matcher, toMatcherPathFormat } from './datastore';
 
 Logger.setLevel('error');
 
-const testFolder = URI.joinPath(URI.file(__dirname), 'test-datastore');
+const testFolder = URI.joinPath(TEST_DATA_DIR, 'test-datastore');
 
 describe('Matcher', () => {
   it('generates globs with the base dir provided', () => {

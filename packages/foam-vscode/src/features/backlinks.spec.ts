@@ -1,5 +1,4 @@
 import { workspace, window } from 'vscode';
-import { URI, FoamGraph } from 'foam-core';
 import {
   cleanWorkspace,
   closeEditors,
@@ -11,6 +10,8 @@ import { BacklinksTreeDataProvider, BacklinkTreeItem } from './backlinks';
 import { ResourceTreeItem } from '../utils/grouped-resources-tree-data-provider';
 import { OPEN_COMMAND } from './utility-commands';
 import { toVsCodeUri } from '../utils/vsc-utils';
+import { FoamGraph } from '../core/model/graph';
+import { URI } from '../core/model/uri';
 
 describe('Backlinks panel', () => {
   beforeAll(async () => {

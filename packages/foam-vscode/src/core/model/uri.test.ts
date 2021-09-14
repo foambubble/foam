@@ -1,6 +1,6 @@
-import { Logger } from '../src';
-import { URI } from '../src/model/uri';
-import { uriToSlug } from '../src/utils/slug';
+import { Logger } from '../utils/log';
+import { uriToSlug } from '../utils/slug';
+import { URI } from './uri';
 
 Logger.setLevel('error');
 

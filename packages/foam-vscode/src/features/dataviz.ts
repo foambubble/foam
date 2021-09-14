@@ -1,10 +1,12 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { FoamFeature } from '../types';
-import { Foam, Logger, URI } from 'foam-core';
+import { URI } from '../core/model/uri';
 import { TextDecoder } from 'util';
 import { getGraphStyle, getTitleMaxLength } from '../settings';
 import { isSome } from '../utils';
+import { Foam } from '../core/model/foam';
+import { Logger } from '../core/utils/log';
 
 const feature: FoamFeature = {
   activate: (context: vscode.ExtensionContext, foamPromise: Promise<Foam>) => {

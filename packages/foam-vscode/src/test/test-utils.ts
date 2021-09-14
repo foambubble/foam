@@ -1,22 +1,23 @@
-// TODO: this file has some utility functions also present in foam-core testing
-// they should be consolidated
-
 import * as vscode from 'vscode';
 import path from 'path';
-import {
-  URI,
-  NoteLinkDefinition,
-  Resource,
-  Range,
-  FoamWorkspace,
-  Matcher,
-  MarkdownResourceProvider,
-  Logger,
-} from 'foam-core';
 import { TextEncoder } from 'util';
 import { toVsCodeUri } from '../utils/vsc-utils';
+import { Logger } from '../core/utils/log';
+import { Range } from '../core/model/range';
+import { URI } from '../core/model/uri';
+import { FoamWorkspace } from '../core/model/workspace';
+import { Matcher } from '../core/services/datastore';
+import { MarkdownResourceProvider } from '../core/markdown-provider';
+import { NoteLinkDefinition, Resource } from '../core/model/note';
 
 Logger.setLevel('error');
+
+export const TEST_DATA_DIR = URI.joinPath(
+  URI.file(__dirname),
+  '..',
+  '..',
+  'test-data'
+);
 
 const position = Range.create(0, 0, 0, 100);
 

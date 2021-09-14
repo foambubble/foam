@@ -1,5 +1,5 @@
-import { FoamTags } from '../src/model/tags';
-import { createTestNote, createTestWorkspace } from './core.test';
+import { createTestNote, createTestWorkspace } from '../../test/test-utils';
+import { FoamTags } from './tags';
 
 describe('FoamTags', () => {
   it('Collects tags from a list of resources', () => {

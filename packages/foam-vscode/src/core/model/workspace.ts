@@ -3,8 +3,8 @@ import { Resource, ResourceLink } from './note';
 import { URI } from './uri';
 import { isSome, isNone } from '../utils';
 import { Emitter } from '../common/event';
-import { IDisposable } from '../index';
 import { ResourceProvider } from './provider';
+import { IDisposable } from '../common/lifecycle';
 
 export function getReferenceType(
   reference: URI | string

@@ -1,8 +1,8 @@
-import { getReferenceType } from '../src/model/workspace';
-import { FoamGraph } from '../src/model/graph';
-import { Logger } from '../src/utils/log';
-import { createTestNote, createTestWorkspace } from './core.test';
-import { URI } from '../src/model/uri';
+import { getReferenceType } from './workspace';
+import { FoamGraph } from './graph';
+import { Logger } from '../utils/log';
+import { URI } from './uri';
+import { createTestNote, createTestWorkspace } from '../../test/test-utils';
 
 Logger.setLevel('error');
 

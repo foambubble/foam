@@ -1,5 +1,7 @@
 import * as vscode from 'vscode';
-import { Foam, FoamWorkspace, URI } from 'foam-core';
+import { Foam } from '../core/model/foam';
+import { URI } from '../core/model/uri';
+import { FoamWorkspace } from '../core/model/workspace';
 import { getPlaceholdersConfig } from '../settings';
 import { FoamFeature } from '../types';
 import {

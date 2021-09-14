@@ -1,4 +1,4 @@
-import { URI } from 'foam-core';
+import { URI } from '../core/model/uri';
 import { existsSync } from 'fs';
 import * as path from 'path';
 import { isAbsolute } from 'path';

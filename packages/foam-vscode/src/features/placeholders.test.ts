@@ -1,4 +1,5 @@
-import { FoamWorkspace, URI } from 'foam-core';
+import { URI } from '../core/model/uri';
+import { FoamWorkspace } from '../core/model/workspace';
 import { createTestNote } from '../test/test-utils';
 import { isPlaceholderResource } from './placeholders';
 

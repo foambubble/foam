@@ -1,4 +1,4 @@
-import { URI } from 'foam-core';
+import { URI } from '../core/model/uri';
 import path from 'path';
 import { toVsCodeUri } from '../utils/vsc-utils';
 import { commands, window, workspace } from 'vscode';

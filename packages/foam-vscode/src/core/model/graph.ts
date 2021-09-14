@@ -2,9 +2,9 @@ import { diff } from 'fast-array-diff';
 import { isEqual } from 'lodash';
 import { Resource, ResourceLink } from './note';
 import { URI } from './uri';
-import { IDisposable } from '../index';
 import { FoamWorkspace, uriToResourceName } from './workspace';
 import { Range } from './range';
+import { IDisposable } from '../common/lifecycle';
 
 export type Connection = {
   source: URI;

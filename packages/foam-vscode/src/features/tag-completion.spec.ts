@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
-import { FoamTags, FoamWorkspace } from 'foam-core';
+import { FoamTags } from '../core/model/tags';
+import { FoamWorkspace } from '../core/model/workspace';
 import {
   cleanWorkspace,
   closeEditors,

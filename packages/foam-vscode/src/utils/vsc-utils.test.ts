@@ -1,6 +1,6 @@
 import os from 'os';
 import { workspace, Uri } from 'vscode';
-import { URI } from 'foam-core';
+import { URI } from '../core/model/uri';
 import { fromVsCodeUri, toVsCodeUri } from './vsc-utils';
 
 describe('uri conversion', () => {

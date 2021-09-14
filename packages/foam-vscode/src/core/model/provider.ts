@@ -1,6 +1,6 @@
-import { IDisposable } from 'common/lifecycle';
-import { ResourceLink, URI } from 'index';
-import { Resource } from './note';
+import { IDisposable } from '../common/lifecycle';
+import { Resource, ResourceLink } from './note';
+import { URI } from './uri';
 import { FoamWorkspace } from './workspace';
 
 export interface ResourceProvider extends IDisposable {

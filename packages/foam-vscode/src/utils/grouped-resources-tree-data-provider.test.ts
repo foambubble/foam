@@ -1,4 +1,4 @@
-import { FoamWorkspace } from 'foam-core';
+import { FoamWorkspace } from '../core/model/workspace';
 import { OPEN_COMMAND } from '../features/utility-commands';
 import {
   GroupedResoucesConfigGroupBy,

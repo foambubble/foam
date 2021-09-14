@@ -3,18 +3,11 @@ import {
   closeEditors,
   createTestNote,
 } from '../../test/test-utils';
-
 import { TagItem, TagReference, TagsProvider } from '.';
-
-import {
-  bootstrap,
-  createConfigFromFolders,
-  Foam,
-  FileDataStore,
-  FoamConfig,
-  MarkdownResourceProvider,
-  Matcher,
-} from 'foam-core';
+import { bootstrap, Foam } from '../../core/model/foam';
+import { createConfigFromFolders, FoamConfig } from '../../core/config';
+import { MarkdownResourceProvider } from '../../core/markdown-provider';
+import { FileDataStore, Matcher } from '../../core/services/datastore';
 
 describe('Tags tree panel', () => {
   let _foam: Foam;

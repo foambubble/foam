@@ -7,7 +7,7 @@ import {
 } from './create-from-template';
 import path from 'path';
 import { isWindows } from '../utils';
-import { URI } from 'foam-core';
+import { URI } from '../core/model/uri';
 
 describe('substituteFoamVariables', () => {
   test('Does nothing if no Foam-specific variables are used', () => {

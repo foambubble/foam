@@ -12,15 +12,6 @@ import {
   workspace,
   Position,
 } from 'vscode';
-
-import {
-  createMarkdownReferences,
-  stringifyMarkdownLinkReferenceDefinition,
-  FoamWorkspace,
-  Foam,
-  LINK_REFERENCE_DEFINITION_HEADER,
-  LINK_REFERENCE_DEFINITION_FOOTER,
-} from 'foam-core';
 import {
   hasEmptyTrailing,
   docConfig,
@@ -34,6 +25,16 @@ import {
   getWikilinkDefinitionSetting,
   LinkReferenceDefinitionsSetting,
 } from '../settings';
+import { Foam } from '../core/model/foam';
+import { FoamWorkspace } from '../core/model/workspace';
+import {
+  createMarkdownReferences,
+  stringifyMarkdownLinkReferenceDefinition,
+} from '../core/markdown-provider';
+import {
+  LINK_REFERENCE_DEFINITION_FOOTER,
+  LINK_REFERENCE_DEFINITION_HEADER,
+} from '../core/janitor';
 
 const feature: FoamFeature = {
   activate: async (context: ExtensionContext, foamPromise: Promise<Foam>) => {

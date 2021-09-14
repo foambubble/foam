@@ -1,10 +1,11 @@
-import { createConfigFromFolders } from '../src/config';
-import { Logger } from '../src/utils/log';
-import { URI } from '../src/model/uri';
+import { createConfigFromFolders } from './config';
+import { Logger } from './utils/log';
+import { URI } from './model/uri';
+import { TEST_DATA_DIR } from '../test/test-utils';
 
 Logger.setLevel('error');
 
-const testFolder = URI.joinPath(URI.file(__dirname), 'test-config');
+const testFolder = URI.joinPath(TEST_DATA_DIR, 'test-config');
 
 describe('Foam configuration', () => {
   it('can read settings from config.json', () => {

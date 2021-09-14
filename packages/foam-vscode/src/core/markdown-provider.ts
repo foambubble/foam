@@ -27,9 +27,9 @@ import {
 import { Logger } from './utils/log';
 import { URI } from './model/uri';
 import { FoamWorkspace } from './model/workspace';
-import { ResourceProvider } from 'model/provider';
 import { IDataStore, FileDataStore, IMatcher } from './services/datastore';
-import { IDisposable } from 'common/lifecycle';
+import { IDisposable } from './common/lifecycle';
+import { ResourceProvider } from './model/provider';
 
 const ALIAS_DIVIDER_CHAR = '|';
 

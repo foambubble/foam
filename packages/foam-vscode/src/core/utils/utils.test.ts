@@ -1,5 +1,5 @@
-import { extractHashtags } from '../src/utils';
-import { Logger } from '../src/utils/log';
+import { extractHashtags } from './index';
+import { Logger } from './log';
 
 Logger.setLevel('error');
 

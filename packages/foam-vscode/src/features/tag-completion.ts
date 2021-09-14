@@ -1,6 +1,6 @@
-import { Foam } from 'foam-core';
-import { FoamTags } from 'packages/foam-core/src/model/tags';
 import * as vscode from 'vscode';
+import { Foam } from '../core/model/foam';
+import { FoamTags } from '../core/model/tags';
 import { FoamFeature } from '../types';
 import { mdDocSelector } from '../utils';
 

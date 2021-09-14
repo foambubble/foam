@@ -4787,10 +4787,10 @@ extsprintf@^1.2.0:
   resolved "https://registry.yarnpkg.com/extsprintf/-/extsprintf-1.4.0.tgz#e2689f8f356fad62cca65a3a91c5df5f9551692f"
   integrity sha1-4mifjzVvrWLMplo6kcXfX5VRaS8=
 
-fast-array-diff@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/fast-array-diff/-/fast-array-diff-1.0.0.tgz#4ff6315e7cd9a8a9cbcf59a5c7e2ae2bdcee6763"
-  integrity sha512-ogkVOYhBglkIsl5pjxZ7dIuItFG+1Ihh1kCChVaNgPZ30gQggRcuSjm4v4lAoS8ruGu8wFnHWYMEMO8dtKNgoA==
+fast-array-diff@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/fast-array-diff/-/fast-array-diff-1.0.1.tgz#463bacfeddaa3f5d56b79f6847fe322f15581c92"
+  integrity sha512-pU83E/Y7+c/hRrDlmIiPYHy0Ugt+QypqzHKZI5qFOWMJAspWdmOyIeN/1FbdnGPlROp6FeGLLfhMO075DBqb4A==
 
 fast-deep-equal@^3.1.1:
   version "3.1.3"

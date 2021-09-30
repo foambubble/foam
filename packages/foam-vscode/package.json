@@ -355,6 +355,26 @@
         "command": "foam-vscode.open-daily-note",
         "key": "alt+d"
       }
+    ],
+    "colors": [
+      {
+        "id": "foam.link.found",
+        "description": "Color decoration for links.",
+        "defaults": {
+          "dark": "textLink.foreground",
+          "light": "textLink.foreground",
+          "highContrast": "textLink.foreground"
+        }
+      },
+      {
+        "id": "foam.link.placeholder",
+        "description": "Color decoration for placeholder links.",
+        "defaults": {
+          "dark": "editorWarning.foreground",
+          "light": "editorWarning.foreground",
+          "highContrast": "editorWarning.foreground"
+        }
+      }
     ]
   },
   "scripts": {

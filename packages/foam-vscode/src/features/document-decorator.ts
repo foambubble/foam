@@ -12,14 +12,14 @@ export const CONFIG_KEY = 'decorations.links.enable';
 const linkDecoration = vscode.window.createTextEditorDecorationType({
   rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
   textDecoration: 'none',
-  color: { id: 'textLink.foreground' },
+  color: { id: 'foam.link.found' },
   cursor: 'pointer',
 });
 
 const placeholderDecoration = vscode.window.createTextEditorDecorationType({
   rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
   textDecoration: 'none',
-  color: { id: 'editorWarning.foreground' },
+  color: { id: 'foam.link.placeholder' },
   cursor: 'pointer',
 });
 

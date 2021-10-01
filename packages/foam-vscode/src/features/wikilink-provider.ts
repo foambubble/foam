@@ -10,7 +10,6 @@ import * as vscode from 'vscode';
 import { FoamFeature } from '../types';
 import { mdDocSelector } from '../utils';
 import { toVsCodeRange, toVsCodeUri } from '../utils/vsc-utils';
-import { createNoteForPlaceholderWikilink } from './create-from-template';
 import { OPEN_COMMAND } from './utility-commands';
 import { monitorFoamVsCodeConfig } from '../services/config';
 
@@ -77,21 +76,11 @@ export class WikilinkProvider
 
     const uri = this.workspace.resolveLink(resource, targetLink);
     if (URI.isPlaceholder(uri)) {
-      if (
-        navMode === MIXED_NAV_MODE ||
-        vscode.workspace.workspaceFolders.length < 1
-      ) {
+      if (navMode === MIXED_NAV_MODE) {
         return;
       }
 
-      const newNoteUri = toVsCodeUri(
-        URI.createResourceUriFromPlaceholder(
-          vscode.workspace.workspaceFolders[0].uri,
-          uri
-        )
-      );
-      const newNoteTitle = uri.path.split('/').slice(-1)[0];
-      await createNoteForPlaceholderWikilink(newNoteTitle, newNoteUri);
+      await OPEN_COMMAND.execute({ uri: uri });
     }
 
     const targetResource = this.workspace.get(uri);

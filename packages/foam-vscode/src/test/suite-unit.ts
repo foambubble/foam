@@ -47,12 +47,6 @@ export function runUnit(): Promise<void> {
         0
       );
 
-      if (failures === 0) {
-        console.log('all good');
-        console.log((results as any).console);
-      } else {
-        console.log('there were issues');
-      }
       return failures === 0
         ? resolve()
         : reject(`${failures} tests have failed!`);

@@ -8,35 +8,12 @@
  *   they will make direct use of the vscode API to be invoked as commands, create editors,
  *   and so on..
  */
-
-import { EOL } from 'os';
 import path from 'path';
 import { runCLI } from '@jest/core';
 
 const rootDir = path.resolve(__dirname, '../..');
 
-const bufferLinesAndLog = (out: (value: string) => void) => {
-  let currentLine = '';
-  return (buffer: string) => {
-    const lines = buffer.split(EOL);
-    const partialLine = lines.pop() ?? '';
-    if (lines.length > 0) {
-      const [endOfCurrentLine, ...otherFullLines] = lines;
-      currentLine += endOfCurrentLine;
-      [currentLine, ...otherFullLines].forEach(l => out(l));
-      currentLine = '';
-    }
-    currentLine += partialLine;
-    return true;
-  };
-};
-
-export function run(): Promise<void> {
-  process.stdout.write = bufferLinesAndLog(console.log.bind(console));
-  process.stderr.write = bufferLinesAndLog(console.error.bind(console));
-  process.on('unhandledRejection', err => {
-    throw err;
-  });
+export function runUnit(): Promise<void> {
   process.env.FORCE_COLOR = '1';
   process.env.NODE_ENV = 'test';
   process.env.BABEL_ENV = 'test';
@@ -49,9 +26,7 @@ export function run(): Promise<void> {
           roots: ['<rootDir>/src'],
           transform: JSON.stringify({ '^.+\\.ts$': 'ts-jest' }),
           runInBand: true,
-          testRegex: '\\.(test|spec)\\.ts$',
-          testEnvironment:
-            '<rootDir>/src/test/support/extended-vscode-environment.js',
+          testRegex: '\\.(test)\\.ts$',
           setupFiles: ['<rootDir>/src/test/support/jest-setup.ts'],
           setupFilesAfterEnv: ['jest-extended'],
           globals: JSON.stringify({
@@ -60,7 +35,8 @@ export function run(): Promise<void> {
             },
           }),
           testTimeout: 20000,
-          verbose: true,
+          verbose: false,
+          silent: false,
           colors: true,
         } as any,
         [rootDir]
@@ -71,6 +47,12 @@ export function run(): Promise<void> {
         0
       );
 
+      if (failures === 0) {
+        console.log('all good');
+        console.log((results as any).console);
+      } else {
+        console.log('there were issues');
+      }
       return failures === 0
         ? resolve()
         : reject(`${failures} tests have failed!`);

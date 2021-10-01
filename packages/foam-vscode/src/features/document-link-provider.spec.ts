@@ -1,12 +1,12 @@
 import * as vscode from 'vscode';
 import { URI } from '../core/model/uri';
+import { createTestWorkspace } from '../test/test-utils';
 import {
   cleanWorkspace,
   closeEditors,
   createFile,
-  createTestWorkspace,
   showInEditor,
-} from '../test/test-utils';
+} from '../test/test-utils-vscode';
 import { LinkProvider } from './document-link-provider';
 import { OPEN_COMMAND } from './utility-commands';
 import { toVsCodeUri } from '../utils/vsc-utils';

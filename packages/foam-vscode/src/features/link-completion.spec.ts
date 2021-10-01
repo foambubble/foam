@@ -1,13 +1,13 @@
 import * as vscode from 'vscode';
 import { FoamGraph } from '../core/model/graph';
 import { FoamWorkspace } from '../core/model/workspace';
+import { createTestNote } from '../test/test-utils';
 import {
   cleanWorkspace,
   closeEditors,
   createFile,
-  createTestNote,
   showInEditor,
-} from '../test/test-utils';
+} from '../test/test-utils-vscode';
 import { CompletionProvider } from './link-completion';
 
 describe('Link Completion', () => {

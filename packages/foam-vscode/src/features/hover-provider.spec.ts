@@ -11,7 +11,7 @@ import {
   closeEditors,
   createFile,
   showInEditor,
-} from '../test/test-utils';
+} from '../test/test-utils-vscode';
 import { HoverProvider } from './hover-provider';
 
 describe('Hover provider', () => {

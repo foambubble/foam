@@ -1,8 +1,5 @@
-import {
-  cleanWorkspace,
-  closeEditors,
-  createTestNote,
-} from '../../test/test-utils';
+import { createTestNote } from '../../test/test-utils';
+import { cleanWorkspace, closeEditors } from '../../test/test-utils-vscode';
 import { TagItem, TagReference, TagsProvider } from '.';
 import { bootstrap, Foam } from '../../core/model/foam';
 import { createConfigFromFolders, FoamConfig } from '../../core/config';

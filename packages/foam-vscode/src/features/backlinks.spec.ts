@@ -1,11 +1,10 @@
 import { workspace, window } from 'vscode';
+import { createTestNote, createTestWorkspace } from '../test/test-utils';
 import {
   cleanWorkspace,
   closeEditors,
   createNote,
-  createTestNote,
-  createTestWorkspace,
-} from '../test/test-utils';
+} from '../test/test-utils-vscode';
 import { BacklinksTreeDataProvider, BacklinkTreeItem } from './backlinks';
 import { ResourceTreeItem } from '../utils/grouped-resources-tree-data-provider';
 import { OPEN_COMMAND } from './utility-commands';

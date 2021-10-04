@@ -4,6 +4,18 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.15.0] - 2021-10-04
+
+Features:
+
+- Preview on hover for wikilinks (#728 - thanks @JonasSprenger)
+- Added tags and controls to graph dataviz (#737 - thanks @dannysemi)
+
+Fixes and Improvements:
+
+- Improved tags parsing (#708 - thanks @pderaaij)
+- Fixed support for resources named like JS Object methods (#729 - thanks @JonasSprenger)
+
 ## [0.14.2] - 2021-07-24
 
 Features: 

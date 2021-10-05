@@ -27,7 +27,7 @@ jobs:
             node_modules
             */*/node_modules
             packages/foam-vscode/.vscode-test
-          key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock', 'packages/foam-vscode/src/test/run-tests.ts') }}
+          key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock', 'packages/foam-vscode/src/test/run-tests.ts') }}-${{ secrets.CACHE_VERSION }}
       - name: Install Dependencies
         run: yarn
       - name: Check Lint Rules
@@ -55,7 +55,7 @@ jobs:
             node_modules
             */*/node_modules
             packages/foam-vscode/.vscode-test
-          key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock', 'packages/foam-vscode/src/test/run-tests.ts') }}
+          key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock', 'packages/foam-vscode/src/test/run-tests.ts') }}-${{ secrets.CACHE_VERSION }}
       - name: Install Dependencies
         run: yarn
       - name: Build Packages

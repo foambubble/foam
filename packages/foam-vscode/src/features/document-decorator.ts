@@ -12,7 +12,7 @@ export const CONFIG_KEY = 'decorations.links.enable';
 const linkDecoration = vscode.window.createTextEditorDecorationType({
   rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
   textDecoration: 'none',
-  color: { id: 'foam.link.found' },
+  color: { id: 'foam.link.resource' },
   cursor: 'pointer',
 });
 

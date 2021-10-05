@@ -1,4 +1,3 @@
-import * as path from 'path';
 import { generateLinkReferences } from '.';
 import { TEST_DATA_DIR } from '../../test/test-utils';
 import { createConfigFromFolders } from '../config';

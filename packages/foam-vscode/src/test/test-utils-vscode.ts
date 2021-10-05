@@ -1,3 +1,6 @@
+/*
+ * This file depends on VS Code as it's used for integration/e2e tests
+ */
 import * as vscode from 'vscode';
 import path from 'path';
 import { TextEncoder } from 'util';

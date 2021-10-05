@@ -358,7 +358,7 @@
     ],
     "colors": [
       {
-        "id": "foam.link.found",
+        "id": "foam.link.resource",
         "description": "Color decoration for links.",
         "defaults": {
           "dark": "textLink.foreground",

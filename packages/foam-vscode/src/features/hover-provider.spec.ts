@@ -3,6 +3,7 @@ import {
   createMarkdownParser,
   MarkdownResourceProvider,
 } from '../core/markdown-provider';
+import { FoamGraph } from '../core/model/graph';
 import { URI } from '../core/model/uri';
 import { FoamWorkspace } from '../core/model/workspace';
 import { Matcher } from '../core/services/datastore';
@@ -77,7 +78,8 @@ eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee`;*/
   it('should not return hover content for empty documents', async () => {
     const { uri, content } = await createFile('');
     const ws = createWorkspace().set(parser.parse(uri, content));
-    const provider = new HoverProvider(hoverEnabled, ws, parser);
+    const graph = FoamGraph.fromWorkspace(ws);
+    const provider = new HoverProvider(hoverEnabled, ws, graph, parser);
 
     const doc = await vscode.workspace.openTextDocument(uri);
     const pos = new vscode.Position(0, 0);
@@ -91,8 +93,9 @@ eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee`;*/
       'This is some content without links'
     );
     const ws = createWorkspace().set(parser.parse(uri, content));
+    const graph = FoamGraph.fromWorkspace(ws);
 
-    const provider = new HoverProvider(hoverEnabled, ws, parser);
+    const provider = new HoverProvider(hoverEnabled, ws, graph, parser);
 
     const doc = await vscode.workspace.openTextDocument(uri);
     const pos = new vscode.Position(0, 0);
@@ -112,20 +115,26 @@ eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee`;*/
     const ws = createWorkspace()
       .set(noteA)
       .set(noteB);
+    const graph = FoamGraph.fromWorkspace(ws);
 
     const { doc } = await showInEditor(noteA.uri);
     const pos = new vscode.Position(0, 22); // Set cursor position on the wikilink.
 
-    const providerNotEnabled = new HoverProvider(() => false, ws, parser);
+    const providerNotEnabled = new HoverProvider(
+      () => false,
+      ws,
+      graph,
+      parser
+    );
     expect(
       await providerNotEnabled.provideHover(doc, pos, noCancelToken)
     ).toBeUndefined();
 
-    const provider = new HoverProvider(hoverEnabled, ws, parser);
+    const provider = new HoverProvider(hoverEnabled, ws, graph, parser);
     const result = await provider.provideHover(doc, pos, noCancelToken);
 
-    expect(result.contents).toHaveLength(1);
-    const content: vscode.MarkedString = result.contents[0];
+    expect(result.contents).toHaveLength(2);
+    const content = result.contents[0];
 
     // As long as the tests are running with vscode 1.53.0 , MarkdownString is not available.
     // See file://./../test/run-tests.ts and getNoteTooltip at file://./../utils.ts
@@ -145,15 +154,16 @@ eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee`;*/
     const ws = createWorkspace()
       .set(noteA)
       .set(noteB);
+    const graph = FoamGraph.fromWorkspace(ws);
 
     const { doc } = await showInEditor(noteA.uri);
     const pos = new vscode.Position(0, 22); // Set cursor position on the link.
 
-    const provider = new HoverProvider(hoverEnabled, ws, parser);
+    const provider = new HoverProvider(hoverEnabled, ws, graph, parser);
     const result = await provider.provideHover(doc, pos, noCancelToken);
 
-    expect(result.contents).toHaveLength(1);
-    const content: vscode.MarkedString = result.contents[0];
+    expect(result.contents).toHaveLength(2);
+    const content = result.contents[0];
 
     // As long as the tests are running with vscode 1.53.0 , MarkdownString is not available.
     // See file://./../test/run-tests.ts and getNoteTooltip at file://./../utils.ts
@@ -173,8 +183,9 @@ eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee`;*/
     const ws = createWorkspace()
       .set(noteA)
       .set(noteB);
+    const graph = FoamGraph.fromWorkspace(ws);
 
-    const provider = new HoverProvider(hoverEnabled, ws, parser);
+    const provider = new HoverProvider(hoverEnabled, ws, graph, parser);
     const { doc } = await showInEditor(noteA.uri);
     const pos = new vscode.Position(0, 11); // Set cursor position beside the wikilink.
 
@@ -188,12 +199,13 @@ eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee`;*/
     );
     const noteA = parser.parse(fileA.uri, fileA.content);
     const ws = createWorkspace().set(noteA);
+    const graph = FoamGraph.fromWorkspace(ws);
 
-    const provider = new HoverProvider(hoverEnabled, ws, parser);
+    const provider = new HoverProvider(hoverEnabled, ws, graph, parser);
     const { doc } = await showInEditor(noteA.uri);
     const pos = new vscode.Position(0, 22); // Set cursor position on the placeholder.
 
     const result = await provider.provideHover(doc, pos, noCancelToken);
-    expect(result).toBeUndefined();
+    expect(result.contents[0]).toBeNull();
   });
 });

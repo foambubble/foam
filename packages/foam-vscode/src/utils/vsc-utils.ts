@@ -1,9 +1,7 @@
 import { Position, Range, Uri } from 'vscode';
-import {
-  Position as FoamPosition,
-  Range as FoamRange,
-  URI as FoamURI,
-} from 'foam-core';
+import { Position as FoamPosition } from '../core/model/position';
+import { Range as FoamRange } from '../core/model/range';
+import { URI as FoamURI } from '../core/model/uri';
 
 export const toVsCodePosition = (p: FoamPosition): Position =>
   new Position(p.line, p.character);

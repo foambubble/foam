@@ -1,5 +1,6 @@
 import { window, commands, ExtensionContext } from 'vscode';
-import { ILogger, IDisposable, LogLevel, BaseLogger } from 'foam-core';
+import { IDisposable } from '../core/common/lifecycle';
+import { BaseLogger, ILogger, LogLevel } from '../core/utils/log';
 import { getFoamLoggerLevel } from '../settings';
 
 export interface VsCodeLogger extends ILogger, IDisposable {

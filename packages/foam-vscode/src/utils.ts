@@ -12,11 +12,12 @@ import {
   ViewColumn,
 } from 'vscode';
 import * as fs from 'fs';
-import { Logger, URI } from 'foam-core';
 import matter from 'gray-matter';
 import removeMarkdown from 'remove-markdown';
 import os from 'os';
 import { toVsCodeUri } from './utils/vsc-utils';
+import { Logger } from './core/utils/log';
+import { URI } from './core/model/uri';
 
 export const isWindows = os.platform() === 'win32';
 

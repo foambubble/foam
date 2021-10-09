@@ -1,19 +1,15 @@
 import { workspace, ExtensionContext, window } from 'vscode';
-import {
-  bootstrap,
-  FoamConfig,
-  Logger,
-  FileDataStore,
-  Matcher,
-  MarkdownResourceProvider,
-  ResourceProvider,
-} from 'foam-core';
+import { FoamConfig } from './core/config';
+import { MarkdownResourceProvider } from './core/markdown-provider';
+import { bootstrap } from './core/model/foam';
+import { FileDataStore, Matcher } from './core/services/datastore';
+import { Logger } from './core/utils/log';
 
 import { features } from './features';
 import { getConfigFromVscode } from './services/config';
 import { VsCodeOutputLogger, exposeLogger } from './services/logging';
 
-function createMarkdownProvider(config: FoamConfig): ResourceProvider {
+function createMarkdownProvider(config: FoamConfig): MarkdownResourceProvider {
   const matcher = new Matcher(
     config.workspaceFolders,
     config.includeGlobs,

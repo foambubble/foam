@@ -1,11 +1,14 @@
 import { debounce } from 'lodash';
 import * as vscode from 'vscode';
-import { Foam, FoamWorkspace, ResourceParser, URI } from 'foam-core';
+import { URI } from '../core/model/uri';
 import { FoamFeature } from '../types';
 import {
   ConfigurationMonitor,
   monitorFoamVsCodeConfig,
 } from '../services/config';
+import { ResourceParser } from '../core/model/note';
+import { FoamWorkspace } from '../core/model/workspace';
+import { Foam } from '../core/model/foam';
 
 export const CONFIG_KEY = 'decorations.links.enable';
 

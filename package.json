@@ -9,10 +9,6 @@
     "packages/*"
   ],
   "scripts": {
-    "start:vscode": "yarn workspace foam-vscode vscode:start-debugging",
-    "build:core": "yarn workspace foam-core build",
-    "watch:core": "yarn workspace foam-core start",
-    "test:core": "yarn workspace foam-core test",
     "vscode:package-extension": "yarn workspace foam-vscode package-extension",
     "vscode:install-extension": "yarn workspace foam-vscode install-extension",
     "vscode:publish-extension": "yarn workspace foam-vscode publish-extension",

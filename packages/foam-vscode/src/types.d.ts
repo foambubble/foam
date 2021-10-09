@@ -1,5 +1,5 @@
-import { Foam } from 'foam-core';
 import { ExtensionContext } from 'vscode';
+import { Foam } from './core/model/foam';
 
 export interface FoamFeature {
   activate: (

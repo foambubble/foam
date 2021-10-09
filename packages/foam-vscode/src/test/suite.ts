@@ -9,22 +9,37 @@
  *   and so on..
  */
 
+import { EOL } from 'os';
 import path from 'path';
 import { runCLI } from '@jest/core';
 
 const rootDir = path.resolve(__dirname, '../..');
 
+const bufferLinesAndLog = (out: (value: string) => void) => {
+  let currentLine = '';
+  return (buffer: string) => {
+    const lines = buffer.split(EOL);
+    const partialLine = lines.pop() ?? '';
+    if (lines.length > 0) {
+      const [endOfCurrentLine, ...otherFullLines] = lines;
+      currentLine += endOfCurrentLine;
+      [currentLine, ...otherFullLines].forEach(l => out(l));
+      currentLine = '';
+    }
+    currentLine += partialLine;
+    return true;
+  };
+};
+
 export function run(): Promise<void> {
-  process.stdout.write = (buffer: string) => {
-    console.log(buffer);
-    return true;
-  };
-  process.stderr.write = (buffer: string) => {
-    console.error(buffer);
-    return true;
-  };
+  process.stdout.write = bufferLinesAndLog(console.log.bind(console));
+  process.stderr.write = bufferLinesAndLog(console.error.bind(console));
+  process.on('unhandledRejection', err => {
+    throw err;
+  });
   process.env.FORCE_COLOR = '1';
   process.env.NODE_ENV = 'test';
+  process.env.BABEL_ENV = 'test';
 
   return new Promise(async (resolve, reject) => {
     try {

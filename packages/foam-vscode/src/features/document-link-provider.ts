@@ -1,10 +1,13 @@
 import * as vscode from 'vscode';
-import { Foam, FoamWorkspace, ResourceParser, URI } from 'foam-core';
+import { URI } from '../core/model/uri';
 import { FoamFeature } from '../types';
 import { mdDocSelector } from '../utils';
 import { OPEN_COMMAND } from './utility-commands';
 import { toVsCodeRange, toVsCodeUri } from '../utils/vsc-utils';
 import { getFoamVsCodeConfig } from '../services/config';
+import { Foam } from '../core/model/foam';
+import { FoamWorkspace } from '../core/model/workspace';
+import { ResourceParser } from '../core/model/note';
 
 const feature: FoamFeature = {
   activate: async (

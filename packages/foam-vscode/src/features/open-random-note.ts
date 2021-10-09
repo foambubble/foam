@@ -1,7 +1,8 @@
-import { Foam, URI } from 'foam-core';
+import { URI } from '../core/model/uri';
 import { ExtensionContext, commands, window } from 'vscode';
 import { FoamFeature } from '../types';
 import { focusNote } from '../utils';
+import { Foam } from '../core/model/foam';
 
 const feature: FoamFeature = {
   activate: (context: ExtensionContext, foamPromise: Promise<Foam>) => {

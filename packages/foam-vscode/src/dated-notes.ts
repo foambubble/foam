@@ -2,7 +2,7 @@ import { workspace, WorkspaceConfiguration } from 'vscode';
 import dateFormat from 'dateformat';
 import { isAbsolute } from 'path';
 import { focusNote, pathExists } from './utils';
-import { URI } from 'foam-core';
+import { URI } from './core/model/uri';
 import { createNoteFromDailyNoteTemplate } from './features/create-from-template';
 
 /**

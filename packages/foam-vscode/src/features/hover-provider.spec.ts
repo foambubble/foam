@@ -1,17 +1,17 @@
 import * as vscode from 'vscode';
 import {
-  FoamWorkspace,
   createMarkdownParser,
-  Matcher,
   MarkdownResourceProvider,
-  URI,
-} from 'foam-core';
+} from '../core/markdown-provider';
+import { URI } from '../core/model/uri';
+import { FoamWorkspace } from '../core/model/workspace';
+import { Matcher } from '../core/services/datastore';
 import {
   cleanWorkspace,
   closeEditors,
   createFile,
   showInEditor,
-} from '../test/test-utils';
+} from '../test/test-utils-vscode';
 import { HoverProvider } from './hover-provider';
 
 describe('Hover provider', () => {

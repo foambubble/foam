@@ -1,13 +1,16 @@
 import * as vscode from 'vscode';
-import { Foam, FoamWorkspace, ResourceParser, URI, Range } from 'foam-core';
+import { URI } from '../core/model/uri';
 import { FoamFeature } from '../types';
 import { getNoteTooltip, mdDocSelector, isSome } from '../utils';
 import { toVsCodeRange } from '../utils/vsc-utils';
-import { ResourceLink } from 'foam-core';
 import {
   ConfigurationMonitor,
   monitorFoamVsCodeConfig,
 } from '../services/config';
+import { ResourceLink, ResourceParser } from '../core/model/note';
+import { Foam } from '../core/model/foam';
+import { FoamWorkspace } from '../core/model/workspace';
+import { Range } from '../core/model/range';
 
 export const CONFIG_KEY = 'links.hover.enable';
 

@@ -4,16 +4,11 @@
     "moduleResolution": "node",
     "esModuleInterop": true,
     "outDir": "out",
-    "lib": ["ES2019"],
+    "lib": ["ES2019", "es2020.string"],
     "sourceMap": true,
     "strict": false,
     "downlevelIteration": true
   },
-  "include": ["src"],
-  "exclude": ["node_modules", ".vscode-test"],
-  "references": [
-    {
-      "path": "../foam-core"
-    }
-  ]
+  "include": ["src", "types"],
+  "exclude": ["node_modules", ".vscode-test"]
 }

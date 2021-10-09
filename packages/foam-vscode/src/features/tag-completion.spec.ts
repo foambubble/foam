@@ -1,12 +1,13 @@
 import * as vscode from 'vscode';
-import { FoamTags, FoamWorkspace } from 'foam-core';
+import { FoamTags } from '../core/model/tags';
+import { FoamWorkspace } from '../core/model/workspace';
+import { createTestNote } from '../test/test-utils';
 import {
   cleanWorkspace,
   closeEditors,
   createFile,
-  createTestNote,
   showInEditor,
-} from '../test/test-utils';
+} from '../test/test-utils-vscode';
 import { TagCompletionProvider } from './tag-completion';
 
 describe('Tag Completion', () => {

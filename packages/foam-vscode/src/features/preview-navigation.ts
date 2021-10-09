@@ -1,8 +1,11 @@
-import { Foam, FoamWorkspace, Logger, URI } from 'foam-core';
+import { URI } from '../core/model/uri';
 import markdownItRegex from 'markdown-it-regex';
 import * as vscode from 'vscode';
 import { FoamFeature } from '../types';
 import { isNone } from '../utils';
+import { Foam } from '../core/model/foam';
+import { FoamWorkspace } from '../core/model/workspace';
+import { Logger } from '../core/utils/log';
 
 const ALIAS_DIVIDER_CHAR = '|';
 const refsStack: string[] = [];

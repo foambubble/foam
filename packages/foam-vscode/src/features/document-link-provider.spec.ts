@@ -1,15 +1,17 @@
 import * as vscode from 'vscode';
-import { FoamWorkspace, createMarkdownParser, URI } from 'foam-core';
+import { URI } from '../core/model/uri';
+import { createTestWorkspace } from '../test/test-utils';
 import {
   cleanWorkspace,
   closeEditors,
   createFile,
-  createTestWorkspace,
   showInEditor,
-} from '../test/test-utils';
+} from '../test/test-utils-vscode';
 import { LinkProvider } from './document-link-provider';
 import { OPEN_COMMAND } from './utility-commands';
 import { toVsCodeUri } from '../utils/vsc-utils';
+import { createMarkdownParser } from '../core/markdown-provider';
+import { FoamWorkspace } from '../core/model/workspace';
 
 describe('Document links provider', () => {
   const parser = createMarkdownParser([]);

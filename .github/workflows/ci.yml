@@ -3,17 +3,15 @@ name: CI
 on:
   push:
     branches:
-      - '**'
-  # The following will also make the workflow run on all PRs, internal and external.
-  # This would create duplicate runs, that we are skipping by adding the "if" to the jobs below.
-  # See https://github.community/t/duplicate-checks-on-push-and-pull-request-simultaneous-event/18012
+      - master
   pull_request:
+    branches:
+      - master
 
 jobs:
   lint:
     name: Lint
     runs-on: ubuntu-18.04
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != 'foambubble/foam'
     steps:
       - uses: actions/checkout@v1
       - name: Setup Node
@@ -27,7 +25,7 @@ jobs:
             node_modules
             */*/node_modules
             packages/foam-vscode/.vscode-test
-          key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock', 'packages/foam-vscode/src/test/run-tests.ts') }}
+          key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock', 'packages/foam-vscode/src/test/run-tests.ts') }}-${{ secrets.CACHE_VERSION }}
       - name: Install Dependencies
         run: yarn
       - name: Check Lint Rules
@@ -39,7 +37,6 @@ jobs:
       matrix:
         os: [macos-10.15, ubuntu-18.04, windows-2019]
     runs-on: ${{ matrix.os }}
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != 'foambubble/foam'
     env:
       OS: ${{ matrix.os }}
     steps:
@@ -55,7 +52,7 @@ jobs:
             node_modules
             */*/node_modules
             packages/foam-vscode/.vscode-test
-          key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock', 'packages/foam-vscode/src/test/run-tests.ts') }}
+          key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock', 'packages/foam-vscode/src/test/run-tests.ts') }}-${{ secrets.CACHE_VERSION }}
       - name: Install Dependencies
         run: yarn
       - name: Build Packages

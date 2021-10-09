@@ -1,5 +1,5 @@
 import { Disposable, workspace } from 'vscode';
-import { FoamConfig, createConfigFromFolders } from 'foam-core';
+import { createConfigFromFolders, FoamConfig } from '../core/config';
 import { getIgnoredFilesSetting } from '../settings';
 
 // TODO this is still to be improved - foam config should

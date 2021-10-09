@@ -1,0 +1,36 @@
+{
+  "rules": {
+    "no-restricted-imports": [
+      "error",
+      {
+        "name": "vscode",
+        "message": "Core submodule must not depend on VS Code."
+      }
+    ]
+    // Ideally we would also prevent the core module from depending on other modules
+    // but I have been struggling to get it to work.
+    // For future reference, below are some configurations I think should achieve this
+    // (but I couldn't manage to get working).
+    //
+    // "import/no-internal-modules": [
+    //   "error",
+    //   {
+    //     "allow": ["./src/core"]
+    //   }
+    // ]
+    // "import/no-restricted-paths": [
+    //   "error",
+    //   {
+    //     "zones": [
+    //       {
+    //         "target": "./src/core",
+    //         "from": "./src/(!core)",
+    //         "message": "Core module can't have outside dependencies."
+    //       }
+    //     ]
+    //   }
+    // ]
+    // "import/no-relative-parent-imports": "error"
+    // note:  https://github.com/import-js/eslint-plugin-import/issues/1610
+  }
+}

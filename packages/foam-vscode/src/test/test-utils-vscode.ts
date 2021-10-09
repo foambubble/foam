@@ -3,7 +3,7 @@
  */
 import * as vscode from 'vscode';
 import path from 'path';
-import { TextEncoder } from 'util';
+import { TextDecoder, TextEncoder } from 'util';
 import { toVsCodeUri } from '../utils/vsc-utils';
 import { Logger } from '../core/utils/log';
 import { URI } from '../core/model/uri';
@@ -35,13 +35,24 @@ export const closeEditors = async () => {
  * @param path relative file path
  * @returns an object containing various information about the file created
  */
-export const createFile = async (content: string, filepath?: string) => {
+export const createFile = async (content: string, filepath?: string[]) => {
   const rootUri = vscode.workspace.workspaceFolders[0].uri;
-  filepath = filepath ?? randomString() + '.md';
-  const uri = vscode.Uri.joinPath(rootUri, filepath);
+  filepath = filepath ?? [randomString() + '.md'];
+  const uri = vscode.Uri.joinPath(rootUri, ...filepath);
   const filenameComponents = path.parse(uri.fsPath);
   await vscode.workspace.fs.writeFile(uri, new TextEncoder().encode(content));
   return { uri, content, ...filenameComponents };
+};
+
+export const readFile = async (filepath?: string[] | URI): Promise<string> => {
+  const rootUri = vscode.workspace.workspaceFolders[0].uri;
+  filepath = filepath ?? [randomString() + '.md'];
+  const uri = URI.isUri(filepath)
+    ? filepath
+    : vscode.Uri.joinPath(rootUri, ...filepath);
+  return vscode.workspace.fs
+    .readFile(toVsCodeUri(uri))
+    .then(b => new TextDecoder().decode(b));
 };
 
 export const createNote = (r: Resource) => {

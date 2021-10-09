@@ -13,7 +13,7 @@ import { createNoteFromDailyNoteTemplate } from './features/create-from-template
  *
  * @param date A given date to be formatted as filename.
  */
-async function openDailyNoteFor(date?: Date) {
+export async function openDailyNoteFor(date?: Date) {
   const foamConfiguration = workspace.getConfiguration('foam');
   const currentDate = date !== undefined ? date : new Date();
 
@@ -40,7 +40,7 @@ async function openDailyNoteFor(date?: Date) {
  * @param date A given date to be formatted as filename.
  * @returns The path to the daily note file.
  */
-function getDailyNotePath(
+export function getDailyNotePath(
   configuration: WorkspaceConfiguration,
   date: Date
 ): URI {
@@ -70,7 +70,7 @@ function getDailyNotePath(
  * @param date A given date to be formatted as filename.
  * @returns The daily note's filename.
  */
-function getDailyNoteFileName(
+export function getDailyNoteFileName(
   configuration: WorkspaceConfiguration,
   date: Date
 ): string {
@@ -95,10 +95,10 @@ function getDailyNoteFileName(
  * @param currentDate The current date, to be used as a title.
  * @returns Wether the file was created.
  */
-async function createDailyNoteIfNotExists(
+export async function createDailyNoteIfNotExists(
   configuration: WorkspaceConfiguration,
   dailyNotePath: URI,
-  currentDate: Date
+  targetDate: Date
 ) {
   if (await pathExists(dailyNotePath)) {
     return false;
@@ -113,17 +113,75 @@ foam_template:
   name: New Daily Note
   description: Foam's default daily note template
 ---
-# ${dateFormat(currentDate, titleFormat, false)}
+# ${dateFormat(targetDate, titleFormat, false)}
 `;
 
-  await createNoteFromDailyNoteTemplate(dailyNotePath, templateFallbackText);
+  await createNoteFromDailyNoteTemplate(
+    dailyNotePath,
+    templateFallbackText,
+    getDailyNoteVariables(targetDate)
+  );
 
   return true;
 }
 
-export {
-  openDailyNoteFor,
-  getDailyNoteFileName,
-  createDailyNoteIfNotExists,
-  getDailyNotePath,
-};
+/**
+ * Creates a map of Foam template variables based on the given note
+ *
+ * Variable names are based on https://code.visualstudio.com/docs/editor/userdefinedsnippets:
+ * - DAILY_NOTE_YEAR
+ * - DAILY_NOTE_YEAR_SHORT
+ * - DAILY_NOTE_MONTH
+ * - DAILY_NOTE_MONTH_NAME
+ * - DAILY_NOTE_MONTH_NAME_SHORT
+ * - DAILY_NOTE_DATE
+ * - DAILY_NOTE_DAY_NAME
+ * - DAILY_NOTE_DAY_NAME_SHORT
+ * - DAILY_NOTE_HOUR
+ * - DAILY_NOTE_MINUTE
+ * - DAILY_NOTE_SECOND
+ * - DAILY_NOTE_SECONDS_UNIX
+ *
+ * @param targetDate The date used to generate the variables
+ * @returns The map of variables
+ */
+export function getDailyNoteVariables(targetDate: Date): Map<string, string> {
+  const dateVariables = new Map();
+  dateVariables.set(
+    'DAILY_NOTE_YEAR',
+    targetDate.toLocaleString('default', { year: 'numeric' })
+  ); // The current year
+  dateVariables.set(
+    'DAILY_NOTE_YEAR_SHORT',
+    targetDate.toLocaleString('default', { year: '2-digit' })
+  ); // The current year's last two digits
+  dateVariables.set(
+    'DAILY_NOTE_MONTH',
+    targetDate.toLocaleString('default', { month: '2-digit' })
+  ); // The month as two digits (example '02')
+  dateVariables.set(
+    'DAILY_NOTE_MONTH_NAME',
+    targetDate.toLocaleString('default', { month: 'long' })
+  ); //  The full name of the month (example 'July')
+  dateVariables.set(
+    'DAILY_NOTE_MONTH_NAME_SHORT',
+    targetDate.toLocaleString('default', { month: 'short' })
+  ); //  The short name of the month (example 'Jul')
+  dateVariables.set(
+    'DAILY_NOTE_DATE',
+    targetDate.toLocaleString('default', { day: '2-digit' })
+  ); //  The day of the month
+  dateVariables.set(
+    'DAILY_NOTE_DAY_NAME',
+    targetDate.toLocaleString('default', { weekday: 'long' })
+  ); //  The name of day (example 'Monday')
+  dateVariables.set(
+    'DAILY_NOTE_DAY_NAME_SHORT',
+    targetDate.toLocaleString('default', { weekday: 'short' })
+  ); //  The short name of the day (example 'Mon')
+  dateVariables.set('DAILY_NOTE_HOUR', '00'); //  The current hour in 24-hour clock format
+  dateVariables.set('DAILY_NOTE_MINUTE', '00'); //  The current minute
+  dateVariables.set('DAILY_NOTE_SECOND', '00'); //  The current second
+  dateVariables.set('DAILY_NOTE_SECONDS_UNIX', targetDate.getMilliseconds()); //  The number of seconds since the Unix epoch
+  return dateVariables;
+}

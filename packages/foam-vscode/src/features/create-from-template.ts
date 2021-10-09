@@ -41,7 +41,22 @@ interface FoamSelectionContent {
   content: string;
 }
 
-const knownFoamVariables = new Set(['FOAM_TITLE', 'FOAM_SELECTED_TEXT']);
+const knownFoamVariables = new Set([
+  'FOAM_TITLE',
+  'FOAM_SELECTED_TEXT',
+  'DAILY_NOTE_YEAR',
+  'DAILY_NOTE_YEAR_SHORT',
+  'DAILY_NOTE_MONTH',
+  'DAILY_NOTE_MONTH_NAME',
+  'DAILY_NOTE_MONTH_NAME_SHORT',
+  'DAILY_NOTE_DATE',
+  'DAILY_NOTE_DAY_NAME',
+  'DAILY_NOTE_DAY_NAME_SHORT',
+  'DAILY_NOTE_HOUR',
+  'DAILY_NOTE_MINUTE',
+  'DAILY_NOTE_SECOND',
+  'DAILY_NOTE_SECONDS_UNIX',
+]);
 
 const wikilinkDefaultTemplateText = `# $\{1:$FOAM_TITLE}\n\n$0`;
 const defaultTemplateDefaultText: string = `---
@@ -102,11 +117,11 @@ async function offerToCreateTemplate(): Promise<void> {
 }
 
 function findFoamVariables(templateText: string): string[] {
-  const regex = /\$(FOAM_[_a-zA-Z0-9]*)|\${(FOAM_[[_a-zA-Z0-9]*)}/g;
+  const regex = /\$(FOAM_[_a-zA-Z0-9]*)|\${(FOAM_[[_a-zA-Z0-9]*)}|\$(DAILY_NOTE_[_a-zA-Z0-9]*)|\${(DAILY_NOTE_[[_a-zA-Z0-9]*)}/g;
   var matches = [];
   const output: string[] = [];
   while ((matches = regex.exec(templateText))) {
-    output.push(matches[1] || matches[2]);
+    output.push(matches[1] || matches[2] || matches[3] || matches[4]);
   }
   const uniqVariables = [...new Set(output)];
   const knownVariables = uniqVariables.filter(x => knownFoamVariables.has(x));
@@ -410,10 +425,11 @@ export function determineDefaultFilepath(
  */
 export async function createNoteFromDailyNoteTemplate(
   filepathFallbackURI: URI,
-  templateFallbackText: string
+  templateFallbackText: string,
+  dateVariables: Map<string, string>
 ): Promise<void> {
   return await createNoteFromDefaultTemplate(
-    new Map(),
+    dateVariables,
     new Set(['FOAM_SELECTED_TEXT']),
     dailyNoteTemplateUri,
     filepathFallbackURI,

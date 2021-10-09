@@ -87,6 +87,8 @@ eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee`;*/
       const result = await provider.provideHover(doc, pos, noCancelToken);
 
       expect(result).toBeUndefined();
+      ws.dispose();
+      graph.dispose();
     });
 
     it('should not return hover content for documents without links', async () => {
@@ -103,6 +105,8 @@ eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee`;*/
       const result = await provider.provideHover(doc, pos, noCancelToken);
 
       expect(result).toBeUndefined();
+      ws.dispose();
+      graph.dispose();
     });
 
     it('should not return hover content when the cursor is not placed on a wikilink', async () => {
@@ -123,6 +127,8 @@ eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee`;*/
 
       const result = await provider.provideHover(doc, pos, noCancelToken);
       expect(result).toBeUndefined();
+      ws.dispose();
+      graph.dispose();
     });
 
     it('should not return hover content for a placeholder', async () => {
@@ -139,6 +145,8 @@ eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee`;*/
 
       const result = await provider.provideHover(doc, pos, noCancelToken);
       expect(result.contents[0]).toBeNull();
+      ws.dispose();
+      graph.dispose();
     });
 
     it('should not return hover when provider is disabled', async () => {
@@ -166,12 +174,14 @@ eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee`;*/
       expect(
         await disabledProvider.provideHover(doc, pos, noCancelToken)
       ).toBeUndefined();
+      ws.dispose();
+      graph.dispose();
     });
   });
 
   describe('wikilink content preview', () => {
     it('should return hover content for a wikilink', async () => {
-      const fileB = await createFile(fileBContent);
+      const fileB = await createFile(`This is some content from file B`);
       const fileA = await createFile(
         `this is a link to [[${fileB.name}]] end of the line.`
       );
@@ -190,17 +200,13 @@ eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee`;*/
       const result = await provider.provideHover(doc, pos, noCancelToken);
 
       expect(result.contents).toHaveLength(2);
-
-      // As long as the tests are running with vscode 1.53.0 , MarkdownString is not available.
-      // See file://./../test/run-tests.ts and getNoteTooltip at file://./../utils.ts
-      expect(result.contents[0]).toEqual(simpleTooltipExpectedFormat);
-
-      // If vscode test version >= STABLE_MARKDOWN_STRING_API_VERSION (1.52.1)
-      // expect((content as vscode.MarkdownString).value).toEqual(markdownTooltipExpectedFormat);
+      expect(result.contents[0]).toEqual(`This is some content from file B`);
+      ws.dispose();
+      graph.dispose();
     });
 
     it('should return hover content for a regular link', async () => {
-      const fileB = await createFile(fileBContent);
+      const fileB = await createFile(`This is some content from file B`);
       const fileA = await createFile(
         `this is a link to [a file](./${fileB.base}).`
       );
@@ -218,13 +224,111 @@ eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee`;*/
       const result = await provider.provideHover(doc, pos, noCancelToken);
 
       expect(result.contents).toHaveLength(2);
+      expect(result.contents[0]).toEqual(`This is some content from file B`);
+      ws.dispose();
+      graph.dispose();
+    });
 
-      // As long as the tests are running with vscode 1.53.0 , MarkdownString is not available.
-      // See file://./../test/run-tests.ts and getNoteTooltip at file://./../utils.ts
-      expect(result.contents[0]).toEqual(simpleTooltipExpectedFormat);
+    it('should remove YAML properties from preview', async () => {
+      const fileB = await createFile(`---
+tags: my-tag1 my-tag2
+---      
+    
+The content of file B`);
+      const fileA = await createFile(
+        `this is a link to [a file](./${fileB.base}).`
+      );
+      const noteA = parser.parse(fileA.uri, fileA.content);
+      const noteB = parser.parse(fileB.uri, fileB.content);
+      const ws = createWorkspace()
+        .set(noteA)
+        .set(noteB);
+      const graph = FoamGraph.fromWorkspace(ws);
 
-      // If vscode test version >= STABLE_MARKDOWN_STRING_API_VERSION (1.52.1)
-      // expect((content as vscode.MarkdownString).value).toEqual(markdownTooltipExpectedFormat);
+      const { doc } = await showInEditor(noteA.uri);
+      const pos = new vscode.Position(0, 22); // Set cursor position on the link.
+
+      const provider = new HoverProvider(hoverEnabled, ws, graph, parser);
+      const result = await provider.provideHover(doc, pos, noCancelToken);
+
+      expect(result.contents).toHaveLength(2);
+      expect(result.contents[0]).toEqual(`The content of file B`);
+      ws.dispose();
+      graph.dispose();
+    });
+  });
+
+  describe('backlink inclusion in hover', () => {
+    it('should not include references if there are none', async () => {
+      const fileA = await createFile(`This is some [[wikilink]]`);
+
+      const ws = createWorkspace().set(parser.parse(fileA.uri, fileA.content));
+      const graph = FoamGraph.fromWorkspace(ws);
+
+      const { doc } = await showInEditor(fileA.uri);
+      const pos = new vscode.Position(0, 20); // Set cursor position on the link.
+
+      const provider = new HoverProvider(hoverEnabled, ws, graph, parser);
+      const result = await provider.provideHover(doc, pos, noCancelToken);
+
+      expect(result.contents).toHaveLength(2);
+      expect(result.contents[0]).toEqual(null);
+      expect(result.contents[1]).toEqual(null);
+      ws.dispose();
+      graph.dispose();
+    });
+
+    it('should include other backlinks (but not self) to target wikilink', async () => {
+      const fileA = await createFile(`This is some content`);
+      const fileB = await createFile(
+        `this is a link to [a file](./${fileA.base}).`
+      );
+      const fileC = await createFile(
+        `this is another note linked to [[${fileA.name}]]`
+      );
+
+      const ws = createWorkspace()
+        .set(parser.parse(fileA.uri, fileA.content))
+        .set(parser.parse(fileB.uri, fileB.content))
+        .set(parser.parse(fileC.uri, fileC.content));
+      const graph = FoamGraph.fromWorkspace(ws);
+
+      const { doc } = await showInEditor(fileB.uri);
+      const pos = new vscode.Position(0, 22); // Set cursor position on the link.
+
+      const provider = new HoverProvider(hoverEnabled, ws, graph, parser);
+      const result = await provider.provideHover(doc, pos, noCancelToken);
+
+      expect(result.contents).toHaveLength(2);
+      expect(result.contents[0]).toEqual(`This is some content`);
+      expect(result.contents[1]).toMatch(/^Also referenced in 1 note:/);
+      ws.dispose();
+      graph.dispose();
+    });
+
+    it('should work for placeholders', async () => {
+      const fileA = await createFile(`Some content and a [[placeholder]]`);
+      const fileB = await createFile(`More content to a [[placeholder]]`);
+      const fileC = await createFile(`Yet more content to a [[placeholder]]`);
+
+      const ws = createWorkspace()
+        .set(parser.parse(fileA.uri, fileA.content))
+        .set(parser.parse(fileB.uri, fileB.content))
+        .set(parser.parse(fileC.uri, fileC.content));
+      const graph = FoamGraph.fromWorkspace(ws);
+
+      const { doc } = await showInEditor(fileB.uri);
+      const pos = new vscode.Position(0, 24); // Set cursor position on the link.
+
+      const provider = new HoverProvider(hoverEnabled, ws, graph, parser);
+      const result = await provider.provideHover(doc, pos, noCancelToken);
+
+      expect(result.contents).toHaveLength(2);
+      expect(result.contents[0]).toEqual(null);
+      expect(result.contents[1]).toMatch(/^Also referenced in 2 notes:/);
+
+      ws.dispose();
+      graph.dispose();
     });
   });
 });

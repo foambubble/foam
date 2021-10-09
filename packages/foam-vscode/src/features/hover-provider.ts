@@ -85,14 +85,13 @@ export class HoverProvider implements vscode.HoverProvider {
     });
 
     const notes = `note${refs.length > 1 ? 's' : ''}`;
-    const references = new vscode.MarkdownString(
+    const references = getNoteTooltip(
       [
         `Also referenced in ${refs.length} ${notes}:`,
         ...links,
         links.length === refs.length ? '' : '- ...',
       ].join('\n')
     );
-    references.isTrusted = true;
 
     let mdContent = null;
     if (!URI.isPlaceholder(targetUri)) {

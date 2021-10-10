@@ -1,53 +1,57 @@
 const CONTAINER_ID = 'graph';
 
-/** The style fallback. These values should only be used when all else fails. */
-const styleFallback = {
-  background: '#202020',
-  fontSize: 12,
-  lineColor: '#277da1',
-  lineWidth: 0.2,
-  particleWidth: 1.0,
-  highlightedForeground: '#f9c74f',
-  node: {
-    note: '#277da1',
-    placeholder: '#545454',
-    tag: '#f9c74f',
-  },
+const initGUI = () => {
+  const gui = new dat.gui.GUI();
+  const nodeTypeFilterFolder = gui.addFolder('Filter by type');
+  const nodeTypeFilterControllers = new Map();
+
+  return {
+    /**
+     * Update the DAT controls to reflect the model
+     */
+    update: m => {
+      // Update the DAT controls
+      const types = new Set(Object.keys(m.showNodesOfType));
+      // Add new ones
+      Array.from(types)
+        .sort()
+        .forEach(type => {
+          if (!nodeTypeFilterControllers.has(type)) {
+            const ctrl = nodeTypeFilterFolder
+              .add(m.showNodesOfType, type)
+              .onFinishChange(function() {
+                Actions.updateFilters();
+              });
+            nodeTypeFilterControllers.set(type, ctrl);
+          }
+        });
+      // Remove old ones
+      for (const type of nodeTypeFilterControllers.keys()) {
+        if (!types.has(type)) {
+          nodeTypeFilterFolder.remove(nodeTypeFilterControllers.get(type));
+          nodeTypeFilterControllers.delete(type);
+        }
+      }
+    },
+  };
 };
 
 function getStyle(name) {
   return getComputedStyle(document.documentElement).getPropertyValue(name);
 }
 
-const sizeScale = d3
-  .scaleLinear()
-  .domain([0, 30])
-  .range([0.5, 2])
-  .clamp(true);
-
-const labelAlpha = d3
-  .scaleLinear()
-  .domain([1.2, 2])
-  .range([0, 1])
-  .clamp(true);
-
 const defaultStyle = {
-  background: getStyle(`--vscode-panel-background`) ?? styleFallback.background,
-  fontSize:
-    parseInt(getStyle(`--vscode-font-size`) ?? styleFallback.fontSize) - 2,
-  lineColor: getStyle('--vscode-editor-foreground') ?? styleFallback.lineColor,
-  lineWidth: parseFloat(styleFallback.lineWidth),
-  particleWidth: parseFloat(styleFallback.particleWidth),
+  background: getStyle(`--vscode-panel-background`) ?? '#202020',
+  fontSize: parseInt(getStyle(`--vscode-font-size`) ?? 12) - 2,
+  lineColor: getStyle('--vscode-editor-foreground') ?? '#277da1',
+  lineWidth: 0.2,
+  particleWidth: 1.0,
   highlightedForeground:
-    getStyle('--vscode-list-highlightForeground') ??
-    styleFallback.highlightedForeground,
+    getStyle('--vscode-list-highlightForeground') ?? '#f9c74f',
   node: {
-    note: getStyle('--vscode-editor-foreground') ?? styleFallback.node.note,
-    placeholder:
-      getStyle('--vscode-list-deemphasizedForeground') ??
-      styleFallback.node.placeholder,
-    tag:
-      getStyle('--vscode-list-highlightForeground') ?? styleFallback.node.tag,
+    note: getStyle('--vscode-editor-foreground') ?? '#277da1',
+    placeholder: getStyle('--vscode-list-deemphasizedForeground') ?? '#545454',
+    tag: getStyle('--vscode-list-highlightForeground') ?? '#f9c74f',
   },
 };
 
@@ -57,13 +61,13 @@ let model = {
   focusNodes: new Set(),
   focusLinks: new Set(),
   /** The original graph data.
-   * This is the full graph data representing the workspace, as received by VS Code.
+   * This is the full graph data representing the workspace
    */
   graph: {
     nodeInfo: {},
     links: [],
   },
-  /** This is the graph data used to render the graph.
+  /** This is the graph data used to render the graph by force-graph.
    * This is derived from model.graph, e.g. by applying filters by node type
    */
   data: {
@@ -75,16 +79,15 @@ let model = {
    * in the case it fails, use the fallback style values.
    */
   style: defaultStyle,
-  show: {
+  showNodesOfType: {
     placeholder: true,
     note: true,
     tag: true,
   },
 };
+
 const graph = ForceGraph();
-const gui = new dat.gui.GUI();
-const show = gui.addFolder('Show');
-let noteTypeFilters = new Map();
+const gui = initGUI();
 
 function update(patch) {
   // Apply the patch function to the model..
@@ -111,26 +114,7 @@ function update(patch) {
   model.focusNodes = focusNodes;
   model.focusLinks = focusLinks;
 
-  // Update the DAT controls
-  const types = new Set(Object.keys(model.show));
-  // Add new ones
-  Array.from(types)
-    .sort()
-    .forEach(type => {
-      if (!noteTypeFilters.has(type)) {
-        const ctrl = show.add(model.show, type).onFinishChange(function() {
-          Actions.filterByType();
-        });
-        noteTypeFilters.set(type, ctrl);
-      }
-    });
-  // Remove old ones
-  for (const type of noteTypeFilters.keys()) {
-    if (!types.has(type)) {
-      show.remove(noteTypeFilters.get(type));
-      noteTypeFilters.delete(type);
-    }
-  }
+  gui.update(model);
 }
 
 const Actions = {
@@ -141,19 +125,19 @@ const Actions = {
       // compute node types
       let types = new Set();
       Object.values(model.graph.nodeInfo).forEach(node => types.add(node.type));
-      const existingTypes = Object.keys(model.show);
+      const existingTypes = Object.keys(model.showNodesOfType);
       existingTypes.forEach(exType => {
         if (!types.has(exType)) {
-          delete model.show[exType];
+          delete model.showNodesOfType[exType];
         }
       });
       types.forEach(type => {
-        if (model.show[type] == null) {
-          model.show[type] = true;
+        if (model.showNodesOfType[type] == null) {
+          model.showNodesOfType[type] = true;
         }
       });
 
-      patchGraphData(m);
+      updateForceGraphDataFromModel(m);
     }),
   selectNode: (nodeId, isAppend) =>
     update(m => {
@@ -191,9 +175,9 @@ const Actions = {
     };
     graph.backgroundColor(model.style.background);
   },
-  filterByType: () => {
+  updateFilters: () => {
     update(m => {
-      patchGraphData(m);
+      updateForceGraphDataFromModel(m);
     });
   },
 };
@@ -207,11 +191,11 @@ function initDataviz(channel) {
     .d3Force('x', d3.forceX())
     .d3Force('y', d3.forceY())
     .d3Force('collide', d3.forceCollide(graph.nodeRelSize()))
-    .linkWidth(() => model.style.lineWidth || styleFallback.lineWidth)
+    .linkWidth(() => model.style.lineWidth)
     .linkDirectionalParticles(1)
     .linkDirectionalParticleWidth(link =>
       getLinkState(link, model) === 'highlighted'
-        ? model.style.particleWidth || styleFallback.particleWidth
+        ? model.style.particleWidth
         : 0
     )
     .nodeCanvasObject((node, ctx, globalScale) => {
@@ -220,17 +204,17 @@ function initDataviz(channel) {
         console.error(`Could not find info for node ${node.id} - skipping`);
         return;
       }
-      const size = sizeScale(info.neighbors.length);
+      const size = getNodeSize(info.neighbors.length);
       const { fill, border } = getNodeColor(node.id, model);
       const fontSize = model.style.fontSize / globalScale;
       const nodeState = getNodeState(node.id, model);
       const textColor = fill.copy({
         opacity:
           nodeState === 'regular'
-            ? labelAlpha(globalScale)
+            ? getNodeLabelOpacity(globalScale)
             : nodeState === 'highlighted'
             ? 1
-            : Math.min(labelAlpha(globalScale), fill.opacity),
+            : Math.min(getNodeLabelOpacity(globalScale), fill.opacity),
       });
       const label = info.title;
 
@@ -257,8 +241,8 @@ function initDataviz(channel) {
     });
 }
 
-function augmentGraphInfo(data) {
-  Object.values(data.nodeInfo).forEach(node => {
+function augmentGraphInfo(graph) {
+  Object.values(graph.nodeInfo).forEach(node => {
     node.neighbors = [];
     node.links = [];
     if (node.tags && node.tags.length > 0) {
@@ -271,30 +255,30 @@ function augmentGraphInfo(data) {
           neighbors: [],
           links: [],
         };
-        data.nodeInfo[tag.label] = tagNode;
-        data.links.push({
+        graph.nodeInfo[tag.label] = tagNode;
+        graph.links.push({
           source: tagNode.id,
           target: node.id,
         });
       });
     }
   });
-  data.links.forEach(link => {
-    const a = data.nodeInfo[link.source];
-    const b = data.nodeInfo[link.target];
+  graph.links.forEach(link => {
+    const a = graph.nodeInfo[link.source];
+    const b = graph.nodeInfo[link.target];
     a.neighbors.push(b.id);
     b.neighbors.push(a.id);
     a.links.push(link);
     b.links.push(link);
   });
-  return data;
+  return graph;
 }
 
-function patchGraphData(m) {
+function updateForceGraphDataFromModel(m) {
   // compute graph delta, for smooth transitions we need to mutate objects in-place
   const nodeIdsToAdd = new Set(
     Object.values(m.graph.nodeInfo ?? {})
-      .filter(n => model.show[n.type])
+      .filter(n => model.showNodesOfType[n.type])
       .map(n => n.id)
   );
 
@@ -339,6 +323,18 @@ function patchGraphData(m) {
   // annoying we need to call this function, but I haven't found a good workaround
   graph.graphData(m.data);
 }
+
+const getNodeSize = d3
+  .scaleLinear()
+  .domain([0, 30])
+  .range([0.5, 2])
+  .clamp(true);
+
+const getNodeLabelOpacity = d3
+  .scaleLinear()
+  .domain([1.2, 2])
+  .range([0, 1])
+  .clamp(true);
 
 function getNodeColor(nodeId, model) {
   const info = model.graph.nodeInfo[nodeId];
@@ -465,7 +461,7 @@ try {
     }
   });
 } catch {
-  console.log('VsCode not detected');
+  console.log('VS Code not detected');
 }
 
 window.addEventListener('resize', () => {
@@ -482,6 +478,6 @@ if (window.data) {
       postMessage: message => console.log('message', message),
     });
     const graphData = augmentGraphInfo(window.data);
-    Actions.refresh(graphData);
+    Actions.refreshWorkspaceData(graphData);
   };
 }

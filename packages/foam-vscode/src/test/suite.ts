@@ -32,6 +32,8 @@ const bufferLinesAndLog = (out: (value: string) => void) => {
 };
 
 export function run(): Promise<void> {
+  const outWrite = process.stdout.write;
+  const errWrite = process.stderr.write;
   process.stdout.write = bufferLinesAndLog(console.log.bind(console));
   process.stderr.write = bufferLinesAndLog(console.error.bind(console));
   process.on('unhandledRejection', err => {
@@ -66,16 +68,23 @@ export function run(): Promise<void> {
         [rootDir]
       );
 
-      const failures = results.testResults.reduce(
-        (acc, res) => (res.failureMessage ? acc + 1 : acc),
-        0
-      );
+      const failures = results.testResults.reduce((acc, res) => {
+        acc.push(res as any);
+        return acc;
+      }, [] as jest.TestResult[]);
 
-      return failures === 0
+      results.testResults.forEach(r => {
+        console.log(r);
+      });
+
+      return failures.length === 0
         ? resolve()
-        : reject(`${failures} tests have failed!`);
+        : reject(`${JSON.stringify(failures)}`);
     } catch (error) {
       return reject(error);
+    } finally {
+      process.stdout.write = outWrite.bind(process.stdout);
+      process.stderr.write = errWrite.bind(process.stderr);
     }
   });
 }

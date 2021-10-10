@@ -6,9 +6,9 @@ import { runUnit } from './suite-unit';
 
 function parseArgs(): { unit: boolean; e2e: boolean } {
   const args = process.argv.slice(2);
-  const unit = args.length === 0 || args.some(arg => arg === '--unit');
-  const e2e = args.length === 0 || args.some(arg => arg === '--e2e');
-  return { unit, e2e };
+  const unit = args.some(arg => arg === '--unit');
+  const e2e = args.some(arg => arg === '--e2e');
+  return unit || e2e ? { unit, e2e } : { unit: true, e2e: true };
 }
 
 async function main() {

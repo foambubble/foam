@@ -45,7 +45,7 @@ const feature: FoamFeature = {
         });
 
         vscode.window.onDidChangeActiveTextEditor(e => {
-          if (e.document.uri.scheme === 'file') {
+          if (e?.document?.uri?.scheme === 'file') {
             const note = foam.workspace.get(e.document.uri);
             if (isSome(note)) {
               panel.webview.postMessage({
@@ -70,14 +70,14 @@ function updateGraph(panel: vscode.WebviewPanel, foam: Foam) {
 
 function generateGraphData(foam: Foam) {
   const graph = {
-    nodes: {},
+    nodeInfo: {},
     edges: new Set(),
   };
 
   foam.workspace.list().forEach(n => {
     const type = n.type === 'note' ? n.properties.type ?? 'note' : n.type;
     const title = n.type === 'note' ? n.title : path.basename(n.uri.path);
-    graph.nodes[n.uri.path] = {
+    graph.nodeInfo[n.uri.path] = {
       id: n.uri.path,
       type: type,
       uri: n.uri,
@@ -92,7 +92,7 @@ function generateGraphData(foam: Foam) {
       target: c.target.path,
     });
     if (URI.isPlaceholder(c.target)) {
-      graph.nodes[c.target.path] = {
+      graph.nodeInfo[c.target.path] = {
         id: c.target.path,
         type: 'placeholder',
         uri: c.target,
@@ -103,7 +103,7 @@ function generateGraphData(foam: Foam) {
   });
 
   return {
-    nodes: graph.nodes,
+    nodeInfo: graph.nodeInfo,
     links: Array.from(graph.edges),
   };
 }

@@ -1,53 +1,57 @@
 const CONTAINER_ID = 'graph';
 
-/** The style fallback. These values should only be used when all else fails. */
-const styleFallback = {
-  background: '#202020',
-  fontSize: 12,
-  lineColor: '#277da1',
-  lineWidth: 0.2,
-  particleWidth: 1.0,
-  highlightedForeground: '#f9c74f',
-  node: {
-    note: '#277da1',
-    placeholder: '#545454',
-    tag: '#f9c74f'
-  },
+const initGUI = () => {
+  const gui = new dat.gui.GUI();
+  const nodeTypeFilterFolder = gui.addFolder('Filter by type');
+  const nodeTypeFilterControllers = new Map();
+
+  return {
+    /**
+     * Update the DAT controls to reflect the model
+     */
+    update: m => {
+      // Update the DAT controls
+      const types = new Set(Object.keys(m.showNodesOfType));
+      // Add new ones
+      Array.from(types)
+        .sort()
+        .forEach(type => {
+          if (!nodeTypeFilterControllers.has(type)) {
+            const ctrl = nodeTypeFilterFolder
+              .add(m.showNodesOfType, type)
+              .onFinishChange(function() {
+                Actions.updateFilters();
+              });
+            nodeTypeFilterControllers.set(type, ctrl);
+          }
+        });
+      // Remove old ones
+      for (const type of nodeTypeFilterControllers.keys()) {
+        if (!types.has(type)) {
+          nodeTypeFilterFolder.remove(nodeTypeFilterControllers.get(type));
+          nodeTypeFilterControllers.delete(type);
+        }
+      }
+    },
+  };
 };
 
 function getStyle(name) {
   return getComputedStyle(document.documentElement).getPropertyValue(name);
 }
 
-const sizeScale = d3
-  .scaleLinear()
-  .domain([0, 30])
-  .range([0.5, 2])
-  .clamp(true);
-
-const labelAlpha = d3
-  .scaleLinear()
-  .domain([1.2, 2])
-  .range([0, 1])
-  .clamp(true);
-
 const defaultStyle = {
-  background: getStyle(`--vscode-panel-background`) ?? styleFallback.background,
-  fontSize:
-    parseInt(getStyle(`--vscode-font-size`) ?? styleFallback.fontSize) - 2,
-  lineColor: getStyle('--vscode-editor-foreground') ?? styleFallback.lineColor,
-  lineWidth: parseFloat(styleFallback.lineWidth),
-  particleWidth: parseFloat(styleFallback.particleWidth),
+  background: getStyle(`--vscode-panel-background`) ?? '#202020',
+  fontSize: parseInt(getStyle(`--vscode-font-size`) ?? 12) - 2,
+  lineColor: getStyle('--vscode-editor-foreground') ?? '#277da1',
+  lineWidth: 0.2,
+  particleWidth: 1.0,
   highlightedForeground:
-    getStyle('--vscode-list-highlightForeground') ??
-    styleFallback.highlightedForeground,
+    getStyle('--vscode-list-highlightForeground') ?? '#f9c74f',
   node: {
-    note: getStyle('--vscode-editor-foreground') ?? styleFallback.node.note,
-    placeholder:
-      getStyle('--vscode-list-deemphasizedForeground') ??
-      styleFallback.node.placeholder,
-    tag: getStyle('--vscode-list-highlightForeground') ?? styleFallback.node.tag,
-
+    note: getStyle('--vscode-editor-foreground') ?? '#277da1',
+    placeholder: getStyle('--vscode-list-deemphasizedForeground') ?? '#545454',
+    tag: getStyle('--vscode-list-highlightForeground') ?? '#f9c74f',
   },
 };
 
@@ -56,8 +60,16 @@ let model = {
   hoverNode: null,
   focusNodes: new Set(),
   focusLinks: new Set(),
-  fullGraphData: {},
-  nodeInfo: {},
+  /** The original graph data.
+   * This is the full graph data representing the workspace
+   */
+  graph: {
+    nodeInfo: {},
+    links: [],
+  },
+  /** This is the graph data used to render the graph by force-graph.
+   * This is derived from model.graph, e.g. by applying filters by node type
+   */
   data: {
     nodes: [],
     links: [],
@@ -67,9 +79,15 @@ let model = {
    * in the case it fails, use the fallback style values.
    */
   style: defaultStyle,
-  view: "default",
+  showNodesOfType: {
+    placeholder: true,
+    note: true,
+    tag: true,
+  },
 };
+
 const graph = ForceGraph();
+const gui = initGUI();
 
 function update(patch) {
   // Apply the patch function to the model..
@@ -81,27 +99,45 @@ function update(patch) {
   const focusLinks = new Set();
   if (model.hoverNode) {
     focusNodes.add(model.hoverNode);
-    const info = model.nodeInfo[model.hoverNode];
+    const info = model.graph.nodeInfo[model.hoverNode];
     info.neighbors.forEach(neighborId => focusNodes.add(neighborId));
     info.links.forEach(link => focusLinks.add(link));
   }
   if (model.selectedNodes) {
     model.selectedNodes.forEach(nodeId => {
       focusNodes.add(nodeId);
-      const info = model.nodeInfo[nodeId];
+      const info = model.graph.nodeInfo[nodeId];
       info.neighbors.forEach(neighborId => focusNodes.add(neighborId));
       info.links.forEach(link => focusLinks.add(link));
     });
   }
   model.focusNodes = focusNodes;
   model.focusLinks = focusLinks;
+
+  gui.update(model);
 }
 
 const Actions = {
   refreshWorkspaceData: graphInfo =>
     update(m => {
-      m.fullGraphData = JSON.parse(JSON.stringify(graphInfo));
-      patchGraphData(m,graphInfo);
+      m.graph = graphInfo;
+
+      // compute node types
+      let types = new Set();
+      Object.values(model.graph.nodeInfo).forEach(node => types.add(node.type));
+      const existingTypes = Object.keys(model.showNodesOfType);
+      existingTypes.forEach(exType => {
+        if (!types.has(exType)) {
+          delete model.showNodesOfType[exType];
+        }
+      });
+      types.forEach(type => {
+        if (model.showNodesOfType[type] == null) {
+          model.showNodesOfType[type] = true;
+        }
+      });
+
+      updateForceGraphDataFromModel(m);
     }),
   selectNode: (nodeId, isAppend) =>
     update(m => {
@@ -139,37 +175,9 @@ const Actions = {
     };
     graph.backgroundColor(model.style.background);
   },
-  filterByType: () => {
+  updateFilters: () => {
     update(m => {
-      let types = [];
-      switch(model.view){
-        case "default":
-          types = ["note","placeholder"];
-          break;
-        case "tags":
-          types = ["note", "placeholder", "tag"];
-          break;
-        case "all":
-          types = "all";
-          break;
-      }
-      const graphData = JSON.parse(JSON.stringify(model.fullGraphData));
-      if(types == "all") {
-        patchGraphData(m,graphData);
-      } else {
-        const nodes = Object.values(graphData.nodes)
-          .filter(n => types.some(t => t == n.type))
-          .reduce((nodesAccumulator,node) => {
-            nodesAccumulator[node.id] = graphData.nodes[node.id];
-            return nodesAccumulator;
-        }, {});
-        const links = graphData.links.filter(link => {
-          const isSource = Object.values(nodes).some(node => node.id == link.source);
-          const isTarget = Object.values(nodes).some(node => node.id == link.target);
-          return isSource && isTarget;
-        });
-        patchGraphData(m,{nodes: nodes, links: links});
-      }
+      updateForceGraphDataFromModel(m);
     });
   },
 };
@@ -183,30 +191,30 @@ function initDataviz(channel) {
     .d3Force('x', d3.forceX())
     .d3Force('y', d3.forceY())
     .d3Force('collide', d3.forceCollide(graph.nodeRelSize()))
-    .linkWidth(() => model.style.lineWidth || styleFallback.lineWidth)
+    .linkWidth(() => model.style.lineWidth)
     .linkDirectionalParticles(1)
     .linkDirectionalParticleWidth(link =>
       getLinkState(link, model) === 'highlighted'
-        ? model.style.particleWidth || styleFallback.particleWidth
+        ? model.style.particleWidth
         : 0
     )
     .nodeCanvasObject((node, ctx, globalScale) => {
-      const info = model.nodeInfo[node.id];
+      const info = model.graph.nodeInfo[node.id];
       if (info == null) {
         console.error(`Could not find info for node ${node.id} - skipping`);
         return;
       }
-      const size = sizeScale(info.neighbors.length);
+      const size = getNodeSize(info.neighbors.length);
       const { fill, border } = getNodeColor(node.id, model);
       const fontSize = model.style.fontSize / globalScale;
       const nodeState = getNodeState(node.id, model);
       const textColor = fill.copy({
         opacity:
           nodeState === 'regular'
-            ? labelAlpha(globalScale)
+            ? getNodeLabelOpacity(globalScale)
             : nodeState === 'highlighted'
             ? 1
-            : Math.min(labelAlpha(globalScale), fill.opacity),
+            : Math.min(getNodeLabelOpacity(globalScale), fill.opacity),
       });
       const label = info.title;
 
@@ -231,19 +239,13 @@ function initDataviz(channel) {
     .onBackgroundClick(event => {
       Actions.selectNode(null, event.getModifierState('Shift'));
     });
-  const gui = new dat.gui.GUI();
-  gui.add(model, 'view', {Default: "default", Tags: "tags", All: "all"})
-    .name('View')
-    .onFinishChange(function(){
-      Actions.filterByType();
-  });
 }
 
-function augmentGraphInfo(data) {
-  Object.values(data.nodes).forEach(node => {
+function augmentGraphInfo(graph) {
+  Object.values(graph.nodeInfo).forEach(node => {
     node.neighbors = [];
     node.links = [];
-    if(node.tags && node.tags.length > 0){
+    if (node.tags && node.tags.length > 0) {
       node.tags.forEach(tag => {
         const tagNode = {
           id: tag.label,
@@ -253,31 +255,33 @@ function augmentGraphInfo(data) {
           neighbors: [],
           links: [],
         };
-        data.nodes[tag.label] = tagNode;
-        data.links.push({
+        graph.nodeInfo[tag.label] = tagNode;
+        graph.links.push({
+          source: tagNode.id,
           target: node.id,
-          source: tagNode.id
         });
       });
     }
   });
-  data.links.forEach(link => {
-    const a = data.nodes[link.source];
-    const b = data.nodes[link.target];
+  graph.links.forEach(link => {
+    const a = graph.nodeInfo[link.source];
+    const b = graph.nodeInfo[link.target];
     a.neighbors.push(b.id);
     b.neighbors.push(a.id);
     a.links.push(link);
     b.links.push(link);
   });
-  return data;
+  return graph;
 }
 
-function patchGraphData(m,graphInfo) {
-  m.nodeInfo = graphInfo.nodes;
-  const links = graphInfo.links;
-
+function updateForceGraphDataFromModel(m) {
   // compute graph delta, for smooth transitions we need to mutate objects in-place
-  const nodeIdsToAdd = new Set(Object.keys(m.nodeInfo));
+  const nodeIdsToAdd = new Set(
+    Object.values(m.graph.nodeInfo ?? {})
+      .filter(n => model.showNodesOfType[n.type])
+      .map(n => n.id)
+  );
+
   const nodeIdsToRemove = new Set();
   m.data.nodes.forEach(node => {
     if (nodeIdsToAdd.has(node.id)) {
@@ -296,23 +300,47 @@ function patchGraphData(m,graphInfo) {
       id: nodeId,
     });
   });
-  m.data.links = links; // links can be swapped out without problem
+
+  // links can be swapped out without problem, we just need to filter them
+  m.data.links = m.graph.links
+    .filter(link => {
+      const isSource = Object.values(m.data.nodes).some(
+        node => node.id == link.source
+      );
+      const isTarget = Object.values(m.data.nodes).some(
+        node => node.id == link.target
+      );
+      return isSource && isTarget;
+    })
+    .map(link => ({ ...link }));
 
   // check that selected/hovered nodes are still valid (see #397)
-  m.hoverNode = m.nodeInfo[m.hoverNode] != null ? m.hoverNode : null;
+  m.hoverNode = m.graph.nodeInfo[m.hoverNode] != null ? m.hoverNode : null;
   m.selectedNodes = new Set(
-    Array.from(m.selectedNodes).filter(nId => m.nodeInfo[nId] != null)
+    Array.from(m.selectedNodes).filter(nId => m.graph.nodeInfo[nId] != null)
   );
 
   // annoying we need to call this function, but I haven't found a good workaround
   graph.graphData(m.data);
 }
 
+const getNodeSize = d3
+  .scaleLinear()
+  .domain([0, 30])
+  .range([0.5, 2])
+  .clamp(true);
+
+const getNodeLabelOpacity = d3
+  .scaleLinear()
+  .domain([1.2, 2])
+  .range([0, 1])
+  .clamp(true);
+
 function getNodeColor(nodeId, model) {
-  const info = model.nodeInfo[nodeId];
+  const info = model.graph.nodeInfo[nodeId];
   const style = model.style;
-  const typeFill = info.properties.color 
-    ? d3.rgb(info.properties.color) 
+  const typeFill = info.properties.color
+    ? d3.rgb(info.properties.color)
     : d3.rgb(style.node[info.type ?? 'note'] ?? style.node['note']);
   switch (getNodeState(nodeId, model)) {
     case 'regular':
@@ -357,7 +385,10 @@ function getNodeState(nodeId, model) {
 function getLinkState(link, model) {
   return model.focusNodes.size === 0
     ? 'regular'
-    : Array.from(model.focusLinks).some(fLink => fLink.source == link.source.id && fLink.target == link.target.id)
+    : Array.from(model.focusLinks).some(
+        fLink =>
+          fLink.source == link.source.id && fLink.target == link.target.id
+      )
     ? 'highlighted'
     : 'lessened';
 }
@@ -384,6 +415,7 @@ const Draw = ctx => ({
 // init the app
 try {
   const vscode = acquireVsCodeApi();
+  window.model = model;
 
   window.onload = () => {
     initDataviz(vscode);
@@ -429,7 +461,7 @@ try {
     }
   });
 } catch {
-  console.log('VsCode not detected');
+  console.log('VS Code not detected');
 }
 
 window.addEventListener('resize', () => {
@@ -446,6 +478,6 @@ if (window.data) {
       postMessage: message => console.log('message', message),
     });
     const graphData = augmentGraphInfo(window.data);
-    Actions.refresh(graphData);
+    Actions.refreshWorkspaceData(graphData);
   };
 }

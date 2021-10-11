@@ -215,7 +215,9 @@ export function formatMarkdownTooltip(content: string): MarkdownString {
   const totalLines = content.split('\n').length;
   const diffLines = totalLines - lines;
   const ellipsis = diffLines > 0 ? `\n\n[...] *(+ ${diffLines} lines)*` : '';
-  return new MarkdownString(`${excerpt}${ellipsis}`);
+  const md = new MarkdownString(`${excerpt}${ellipsis}`);
+  md.isTrusted = true;
+  return md;
 }
 
 export function formatSimpleTooltip(content: string): string {

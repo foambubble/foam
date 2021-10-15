@@ -119,7 +119,7 @@ export const markdownItWithFoamTags = (
 ) => {
   return md.use(markdownItRegex, {
     name: 'foam-tags',
-    regex: /(#\w+)/,
+    regex: /(?<=^|\s)(#[0-9]*[\p{L}/_-][\p{L}\p{N}/_-]*)/u,
     replace: (tag: string) => {
       try {
         const resource = workspace.find(tag);

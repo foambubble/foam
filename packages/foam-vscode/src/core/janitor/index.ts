@@ -57,6 +57,9 @@ export const generateLinkReferences = (
       range: Range.createFromPosition(note.source.end, note.source.end),
     };
   } else {
+    if (newReferences === '' && !note.source.text.includes('[//begin]')) {
+      return null;
+    }
     const first = note.definitions[0];
     const last = note.definitions[note.definitions.length - 1];
     const oldReferences = note.definitions

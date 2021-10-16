@@ -13,11 +13,6 @@ import { toVsCodeRange, toVsCodeUri } from '../utils/vsc-utils';
 import { OPEN_COMMAND } from './utility-commands';
 import { monitorFoamVsCodeConfig } from '../services/config';
 
-const GO_TO_DEFINITION_NAV_MODE = 'goToDefinition';
-const OPEN_LINK_NAV_MODE = 'openLink';
-const MIXED_NAV_MODE = 'goToDefinitionButOpenLinkForCreation';
-const NAVIGATION_DISABLED = 'off';
-
 const feature: FoamFeature = {
   activate: async (
     context: vscode.ExtensionContext,
@@ -28,7 +23,9 @@ const feature: FoamFeature = {
     const wikilinkProvider = new WikilinkProvider(
       foam.workspace,
       foam.services.parser,
-      monitorFoamVsCodeConfig('links.navigationMode')
+      monitorFoamVsCodeConfig('links.navigation.creationFromPlaceholder'),
+      monitorFoamVsCodeConfig('links.navigation.useOpenLinkCommand'),
+      monitorFoamVsCodeConfig('links.navigation.useGoToDefinitionCommand')
     );
 
     context.subscriptions.push(
@@ -49,7 +46,9 @@ export class WikilinkProvider
   constructor(
     private workspace: FoamWorkspace,
     private parser: ResourceParser,
-    private getNavigationMode: () => string
+    private getCreationCmd: () => string,
+    private navWithOpenLinkCmdEnabled: () => boolean,
+    private navWithGoToDefinitionCmdEnabled: () => boolean
   ) {}
 
   public async provideDefinition(
@@ -57,11 +56,6 @@ export class WikilinkProvider
     position: vscode.Position,
     token: vscode.CancellationToken
   ): Promise<vscode.LocationLink[] | vscode.Definition> {
-    const navMode = this.getNavigationMode();
-    if (navMode === OPEN_LINK_NAV_MODE || navMode === NAVIGATION_DISABLED) {
-      return;
-    }
-
     const resource = this.parser.parse(document.uri, document.getText());
     const targetLink: ResourceLink | undefined = resource.links.find(link =>
       Range.containsPosition(link.range, position)
@@ -71,13 +65,18 @@ export class WikilinkProvider
       return;
     }
 
+    const creationDisabled = this.getCreationCmd() !== 'goToDefinition';
+
     const uri = this.workspace.resolveLink(resource, targetLink);
     if (URI.isPlaceholder(uri)) {
-      if (navMode === MIXED_NAV_MODE) {
+      if (creationDisabled) {
         return;
       }
-
       await OPEN_COMMAND.execute({ uri: uri });
+    } else {
+      if (!this.navWithGoToDefinitionCmdEnabled()) {
+        return;
+      }
     }
 
     const targetResource = this.workspace.get(uri);
@@ -95,13 +94,7 @@ export class WikilinkProvider
   public provideDocumentLinks(
     document: vscode.TextDocument
   ): vscode.DocumentLink[] {
-    const navMode = this.getNavigationMode();
-    if (
-      navMode === GO_TO_DEFINITION_NAV_MODE ||
-      navMode === NAVIGATION_DISABLED
-    ) {
-      return;
-    }
+    const creationEnabled = this.getCreationCmd() === 'openLink';
 
     const resource = this.parser.parse(document.uri, document.getText());
 
@@ -114,7 +107,9 @@ export class WikilinkProvider
 
     return targets
       .filter(
-        o => navMode === OPEN_LINK_NAV_MODE || URI.isPlaceholder(o.target)
+        o =>
+          (this.navWithOpenLinkCmdEnabled() && !URI.isPlaceholder(o.target)) ||
+          (creationEnabled && URI.isPlaceholder(o.target))
       )
       .map(o => generateDocumentLink(o.link, o.target));
   }

@@ -56,6 +56,8 @@ export class WikilinkProvider
     position: vscode.Position,
     token: vscode.CancellationToken
   ): Promise<vscode.LocationLink[] | vscode.Definition> {
+    console.log('GO TO DEFINITION');
+
     const resource = this.parser.parse(document.uri, document.getText());
     const targetLink: ResourceLink | undefined = resource.links.find(link =>
       Range.containsPosition(link.range, position)
@@ -94,6 +96,10 @@ export class WikilinkProvider
   public provideDocumentLinks(
     document: vscode.TextDocument
   ): vscode.DocumentLink[] {
+    console.log('OPEN LINK');
+
+    // return [new vscode.DocumentLink(new vscode.Range(0,23, 4, 4))];
+
     const creationEnabled = this.getCreationCmd() === 'openLink';
 
     const resource = this.parser.parse(document.uri, document.getText());

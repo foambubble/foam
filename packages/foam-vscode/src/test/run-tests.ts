@@ -14,20 +14,26 @@ function parseArgs(): { unit: boolean; e2e: boolean } {
 async function main() {
   const { unit, e2e } = parseArgs();
 
-  try {
-    // The folder containing the Extension Manifest package.json
-    // Passed to `--extensionDevelopmentPath`
-    const extensionDevelopmentPath = path.resolve(__dirname, '../../');
+  let isSuccess = true;
 
-    // The path to the extension test script
-    // Passed to --extensionTestsPath
-    if (unit) {
+  if (unit) {
+    try {
       console.log('Running unit tests');
       await runUnit();
+    } catch (err) {
+      console.error('Error occurred while running Foam unit tests:', err);
+      isSuccess = false;
     }
+  }
 
-    if (e2e) {
+  if (e2e) {
+    try {
       console.log('Running e2e tests');
+      // The folder containing the Extension Manifest package.json
+      // Passed to `--extensionDevelopmentPath`
+      const extensionDevelopmentPath = path.resolve(__dirname, '../../');
+      // The path to the extension test script
+      // Passed to --extensionTestsPath
       const extensionTestsPath = path.resolve(__dirname, './suite');
       const tmpWorkspaceDir = fs.mkdtempSync(path.join(os.tmpdir(), 'foam-'));
 
@@ -36,16 +42,20 @@ async function main() {
         extensionDevelopmentPath,
         extensionTestsPath,
         launchArgs: [tmpWorkspaceDir, '--disable-extensions'],
-        // Running the tests with vscode 1.53.0 is causing issues in `suite.ts:23`,
+        // Running the tests with vscode 1.53.0 is causing issues in the output/error stream management,
         // which is causing a stack overflow, possibly due to a recursive callback.
         // Also see https://github.com/foambubble/foam/pull/479#issuecomment-774167127
         // Forcing the version to 1.52.0 solves the problem.
         // TODO: to review, further investigate, and roll back this workaround.
         version: '1.52.0',
       });
+    } catch (err) {
+      console.error('Error occurred while running Foam e2e tests:', err);
+      isSuccess = false;
     }
-  } catch (err) {
-    console.error('Failed to run tests');
+  }
+
+  if (!isSuccess) {
     process.exit(1);
   }
 }

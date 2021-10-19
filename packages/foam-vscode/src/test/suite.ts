@@ -36,9 +36,9 @@ export function run(): Promise<void> {
   const errWrite = process.stderr.write;
   process.stdout.write = bufferLinesAndLog(console.log.bind(console));
   process.stderr.write = bufferLinesAndLog(console.error.bind(console));
-  process.on('unhandledRejection', err => {
-    throw err;
-  });
+  // process.on('unhandledRejection', err => {
+  //   throw err;
+  // });
   process.env.FORCE_COLOR = '1';
   process.env.NODE_ENV = 'test';
   process.env.BABEL_ENV = 'test';
@@ -61,7 +61,7 @@ export function run(): Promise<void> {
               tsconfig: path.resolve(rootDir, './tsconfig.json'),
             },
           }),
-          testTimeout: 20000,
+          testTimeout: 30000,
           verbose: true,
           colors: true,
         } as any,
@@ -69,7 +69,9 @@ export function run(): Promise<void> {
       );
 
       const failures = results.testResults.reduce((acc, res) => {
-        acc.push(res as any);
+        if (res.failureMessage) {
+          acc.push(res as any);
+        }
         return acc;
       }, [] as jest.TestResult[]);
 
@@ -77,10 +79,14 @@ export function run(): Promise<void> {
         console.log(r);
       });
 
-      return failures.length === 0
-        ? resolve()
-        : reject(`${JSON.stringify(failures)}`);
+      if (failures.length > 0) {
+        console.error('Some Foam tests failed: ', failures.length);
+        reject(`${JSON.stringify(failures)}`);
+      } else {
+        resolve();
+      }
     } catch (error) {
+      console.error('There was an error while running the Foam suite', error);
       return reject(error);
     } finally {
       process.stdout.write = outWrite.bind(process.stdout);

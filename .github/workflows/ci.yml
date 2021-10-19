@@ -58,6 +58,6 @@ jobs:
       - name: Build Packages
         run: yarn build
       - name: Run Tests
-        uses: GabrielBB/xvfb-action@v1.0
+        uses: GabrielBB/xvfb-action@v1.4
         with:
           run: yarn test

@@ -16,7 +16,7 @@ describe('Foam URIs', () => {
         '../relative/file.md#section',
         URI.parse('file:/path/relative/file.md#section'),
       ],
-    ])('URI Parsing (%s) - %s', (input, exp) => {
+    ])('URI Parsing (%s)', (input, exp) => {
       const result = URI.resolve(input, base);
       expect(result.scheme).toEqual(exp.scheme);
       expect(result.authority).toEqual(exp.authority);

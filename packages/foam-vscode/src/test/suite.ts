@@ -69,7 +69,9 @@ export function run(): Promise<void> {
       );
 
       const failures = results.testResults.reduce((acc, res) => {
-        acc.push(res as any);
+        if (res.failureMessage) {
+          acc.push(res as any);
+        }
         return acc;
       }, [] as jest.TestResult[]);
 

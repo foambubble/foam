@@ -61,7 +61,7 @@ export function run(): Promise<void> {
               tsconfig: path.resolve(rootDir, './tsconfig.json'),
             },
           }),
-          testTimeout: 20000,
+          testTimeout: 30000,
           verbose: true,
           colors: true,
         } as any,
@@ -81,6 +81,7 @@ export function run(): Promise<void> {
         ? resolve()
         : reject(`${JSON.stringify(failures)}`);
     } catch (error) {
+      console.error('There was an error while running the Foam suite', error);
       return reject(error);
     } finally {
       process.stdout.write = outWrite.bind(process.stdout);

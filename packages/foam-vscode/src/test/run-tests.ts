@@ -15,12 +15,6 @@ async function main() {
   const { unit, e2e } = parseArgs();
 
   try {
-    // The folder containing the Extension Manifest package.json
-    // Passed to `--extensionDevelopmentPath`
-    const extensionDevelopmentPath = path.resolve(__dirname, '../../');
-
-    // The path to the extension test script
-    // Passed to --extensionTestsPath
     if (unit) {
       console.log('Running unit tests');
       await runUnit();
@@ -28,6 +22,11 @@ async function main() {
 
     if (e2e) {
       console.log('Running e2e tests');
+      // The folder containing the Extension Manifest package.json
+      // Passed to `--extensionDevelopmentPath`
+      const extensionDevelopmentPath = path.resolve(__dirname, '../../');
+      // The path to the extension test script
+      // Passed to --extensionTestsPath
       const extensionTestsPath = path.resolve(__dirname, './suite');
       const tmpWorkspaceDir = fs.mkdtempSync(path.join(os.tmpdir(), 'foam-'));
 
@@ -45,7 +44,7 @@ async function main() {
       });
     }
   } catch (err) {
-    console.error('Failed to run tests');
+    console.error('Failed to run Foam tests', err);
     process.exit(1);
   }
 }

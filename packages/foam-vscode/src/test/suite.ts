@@ -36,9 +36,9 @@ export function run(): Promise<void> {
   const errWrite = process.stderr.write;
   process.stdout.write = bufferLinesAndLog(console.log.bind(console));
   process.stderr.write = bufferLinesAndLog(console.error.bind(console));
-  process.on('unhandledRejection', err => {
-    throw err;
-  });
+  // process.on('unhandledRejection', err => {
+  //   throw err;
+  // });
   process.env.FORCE_COLOR = '1';
   process.env.NODE_ENV = 'test';
   process.env.BABEL_ENV = 'test';

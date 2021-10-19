@@ -77,9 +77,12 @@ export function run(): Promise<void> {
         console.log(r);
       });
 
-      return failures.length === 0
-        ? resolve()
-        : reject(`${JSON.stringify(failures)}`);
+      if (failures.length > 0) {
+        console.error('Some Foam tests failed: ', failures.length);
+        reject(`${JSON.stringify(failures)}`);
+      } else {
+        resolve();
+      }
     } catch (error) {
       console.error('There was an error while running the Foam suite', error);
       return reject(error);

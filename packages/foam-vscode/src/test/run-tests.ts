@@ -21,7 +21,7 @@ async function main() {
       console.log('Running unit tests');
       await runUnit();
     } catch (err) {
-      console.error('Error occurred while running Foam unit tests:', err);
+      console.log('Error occurred while running Foam unit tests:', err);
       isSuccess = false;
     }
   }
@@ -41,16 +41,14 @@ async function main() {
       await runTests({
         extensionDevelopmentPath,
         extensionTestsPath,
-        launchArgs: [tmpWorkspaceDir, '--disable-extensions'],
-        // Running the tests with vscode 1.53.0 is causing issues in the output/error stream management,
-        // which is causing a stack overflow, possibly due to a recursive callback.
-        // Also see https://github.com/foambubble/foam/pull/479#issuecomment-774167127
-        // Forcing the version to 1.52.0 solves the problem.
-        // TODO: to review, further investigate, and roll back this workaround.
-        version: '1.52.0',
+        launchArgs: [
+          tmpWorkspaceDir,
+          '--disable-extensions',
+          '--disable-workspace-trust',
+        ],
       });
     } catch (err) {
-      console.error('Error occurred while running Foam e2e tests:', err);
+      console.log('Error occurred while running Foam e2e tests:', err);
       isSuccess = false;
     }
   }

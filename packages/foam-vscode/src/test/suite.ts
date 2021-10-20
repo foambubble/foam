@@ -34,11 +34,8 @@ const bufferLinesAndLog = (out: (value: string) => void) => {
 export function run(): Promise<void> {
   const outWrite = process.stdout.write;
   const errWrite = process.stderr.write;
-  process.stdout.write = bufferLinesAndLog(console.log.bind(console));
-  process.stderr.write = bufferLinesAndLog(console.error.bind(console));
-  // process.on('unhandledRejection', err => {
-  //   throw err;
-  // });
+  process.stderr.write = bufferLinesAndLog(console.log.bind(console));
+
   process.env.FORCE_COLOR = '1';
   process.env.NODE_ENV = 'test';
   process.env.BABEL_ENV = 'test';
@@ -75,18 +72,14 @@ export function run(): Promise<void> {
         return acc;
       }, [] as jest.TestResult[]);
 
-      results.testResults.forEach(r => {
-        console.log(r);
-      });
-
       if (failures.length > 0) {
-        console.error('Some Foam tests failed: ', failures.length);
-        reject(`Some Foam tests failed: ${failures.length}`);
+        console.log('Some Foam tests failed: ', failures.length);
+        reject(`${failures?.length} tests failed!`);
       } else {
         resolve();
       }
     } catch (error) {
-      console.error('There was an error while running the Foam suite', error);
+      console.log('There was an error while running the Foam suite', error);
       return reject(error);
     } finally {
       process.stdout.write = outWrite.bind(process.stdout);

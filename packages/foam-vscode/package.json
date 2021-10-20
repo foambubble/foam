@@ -12,7 +12,7 @@
   "license": "MIT",
   "publisher": "foam",
   "engines": {
-    "vscode": "^1.47.1"
+    "vscode": "^1.54.0"
   },
   "icon": "icon/FOAM_ICON_256.png",
   "categories": [
@@ -390,7 +390,7 @@
     "@types/node": "^13.11.0",
     "@types/picomatch": "^2.2.1",
     "@types/remove-markdown": "^0.1.1",
-    "@types/vscode": "^1.47.1",
+    "@types/vscode": "^1.54.0",
     "@typescript-eslint/eslint-plugin": "^2.30.0",
     "@typescript-eslint/parser": "^2.30.0",
     "babel-jest": "^26.2.2",

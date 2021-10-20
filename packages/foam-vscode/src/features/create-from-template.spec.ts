@@ -33,7 +33,16 @@ describe('createFromTemplate', () => {
         .spyOn(window, 'showInputBox')
         .mockImplementation(jest.fn(() => Promise.resolve(undefined)));
 
-      const fileWriteSpy = jest.spyOn(workspace.fs, 'writeFile');
+      // The following is a workaround code to achieve this:
+      // const fileWriteSpy = jest.spyOn(workspace.fs, 'writeFile');
+      // as writeFile is a read-only property.
+      // the approach is a bit risky and britte as it overwrites the whole module
+      // but will be enough for now.
+      const oldFs = workspace.fs;
+      const fileWriteSpy = jest.fn(workspace.fs.writeFile);
+      Object.defineProperty(workspace, 'fs', {
+        value: { writeFile: fileWriteSpy },
+      });
 
       await commands.executeCommand(
         'foam-vscode.create-note-from-default-template'
@@ -46,6 +55,11 @@ describe('createFromTemplate', () => {
       });
 
       expect(fileWriteSpy).toHaveBeenCalledTimes(0);
+
+      // restore the old fs object or all tests will be affected by this one
+      Object.defineProperty(workspace, 'fs', {
+        value: oldFs,
+      });
     });
   });
 

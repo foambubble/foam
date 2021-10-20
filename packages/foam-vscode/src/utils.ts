@@ -198,18 +198,12 @@ export function getContainsTooltip(titles: string[]): string {
  * https://code.visualstudio.com/updates/v1_52#_markdown-tree-tooltip-api
  * @param note A Foam Note
  */
-export function getNoteTooltip(content: string): string {
-  const STABLE_MARKDOWN_STRING_API_VERSION = '1.52.1';
+export function getNoteTooltip(content: string): MarkdownString {
   const strippedContent = stripFrontMatter(stripImages(content));
-
-  if (version >= STABLE_MARKDOWN_STRING_API_VERSION) {
-    return formatMarkdownTooltip(strippedContent) as any;
-  }
-
-  return formatSimpleTooltip(strippedContent);
+  return formatMarkdownTooltip(strippedContent);
 }
 
-export function formatMarkdownTooltip(content: string): MarkdownString {
+function formatMarkdownTooltip(content: string): MarkdownString {
   const LINES_LIMIT = 16;
   const { excerpt, lines } = getExcerpt(content, LINES_LIMIT);
   const totalLines = content.split('\n').length;

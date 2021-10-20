@@ -200,7 +200,10 @@ eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee`;*/
       const result = await provider.provideHover(doc, pos, noCancelToken);
 
       expect(result.contents).toHaveLength(2);
-      expect(result.contents[0]).toEqual(`This is some content from file B`);
+      expect(result.contents[0]).toHaveProperty(
+        'value',
+        `This is some content from file B`
+      );
       ws.dispose();
       graph.dispose();
     });
@@ -224,7 +227,10 @@ eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee`;*/
       const result = await provider.provideHover(doc, pos, noCancelToken);
 
       expect(result.contents).toHaveLength(2);
-      expect(result.contents[0]).toEqual(`This is some content from file B`);
+      expect(result.contents[0]).toHaveProperty(
+        'value',
+        `This is some content from file B`
+      );
       ws.dispose();
       graph.dispose();
     });
@@ -252,7 +258,10 @@ The content of file B`);
       const result = await provider.provideHover(doc, pos, noCancelToken);
 
       expect(result.contents).toHaveLength(2);
-      expect(result.contents[0]).toEqual(`The content of file B`);
+      expect(result.contents[0]).toHaveProperty(
+        'value',
+        `The content of file B`
+      );
       ws.dispose();
       graph.dispose();
     });
@@ -300,8 +309,13 @@ The content of file B`);
       const result = await provider.provideHover(doc, pos, noCancelToken);
 
       expect(result.contents).toHaveLength(2);
-      expect(result.contents[0]).toEqual(`This is some content`);
-      expect(result.contents[1]).toMatch(/^Also referenced in 1 note:/);
+      expect(result.contents[0]).toHaveProperty(
+        'value',
+        `This is some content`
+      );
+      expect((result.contents[1] as any).value).toMatch(
+        /^Also referenced in 1 note:/
+      );
       ws.dispose();
       graph.dispose();
     });
@@ -325,7 +339,9 @@ The content of file B`);
 
       expect(result.contents).toHaveLength(2);
       expect(result.contents[0]).toEqual(null);
-      expect(result.contents[1]).toMatch(/^Also referenced in 2 notes:/);
+      expect((result.contents[1] as any).value).toMatch(
+        /^Also referenced in 2 notes:/
+      );
 
       ws.dispose();
       graph.dispose();

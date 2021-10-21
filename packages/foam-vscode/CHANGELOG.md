@@ -4,6 +4,13 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.15.1] - 2021-10-21
+
+Fixes and Improvements:
+
+- Improved filtering controls for graph (#782)
+- Link Hover: Include other connected notes to link target
+
 ## [0.15.0] - 2021-10-04
 
 Features:

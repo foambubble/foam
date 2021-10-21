@@ -163,7 +163,7 @@ const getTextFromChildren = (root: Node): string => {
   let text = '';
   visit(root, 'text', node => {
     if (node.type === 'text') {
-      text = text + node.value;
+      text = text + (node as any).value;
     }
   });
   return text;
@@ -204,9 +204,13 @@ const tagsPlugin: ParserPlugin = {
 const titlePlugin: ParserPlugin = {
   name: 'title',
   visit: (node, note) => {
-    if (note.title === '' && node.type === 'heading' && node.depth === 1) {
+    if (
+      note.title === '' &&
+      node.type === 'heading' &&
+      (node as any).depth === 1
+    ) {
       note.title =
-        ((node as Parent)!.children?.[0]?.value as string) || note.title;
+        ((node as Parent)!.children?.[0] as any)?.value || note.title;
     }
   },
   onDidFindProperties: (props, note) => {
@@ -224,7 +228,7 @@ const wikilinkPlugin: ParserPlugin = {
   name: 'wikilink',
   visit: (node, note, noteSource) => {
     if (node.type === 'wikiLink') {
-      const text = node.value as string;
+      const text = (node as any).value;
       const alias = node.data?.alias as string;
       const literalContent = noteSource.substring(
         node.position!.start.offset!,
@@ -270,9 +274,9 @@ const definitionsPlugin: ParserPlugin = {
   visit: (node, note) => {
     if (node.type === 'definition') {
       note.definitions.push({
-        label: node.label as string,
-        url: node.url as string,
-        title: node.title as string,
+        label: (node as any).label,
+        url: (node as any).url,
+        title: (node as any).title,
         range: astPositionToFoamRange(node.position!),
       });
     }
@@ -361,7 +365,7 @@ export function createMarkdownParser(
       visit(tree, node => {
         if (node.type === 'yaml') {
           try {
-            const yamlProperties = parseYAML(node.value as string) ?? {};
+            const yamlProperties = parseYAML((node as any).value) ?? {};
             note.properties = {
               ...note.properties,
               ...yamlProperties,

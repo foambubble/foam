@@ -396,7 +396,6 @@
     "babel-jest": "^26.2.2",
     "eslint": "^6.8.0",
     "eslint-plugin-import": "^2.24.2",
-    "glob": "^7.1.6",
     "husky": "^4.2.5",
     "jest": "^26.2.2",
     "jest-environment-vscode": "^1.0.0",

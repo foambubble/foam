@@ -22,6 +22,10 @@ const initGUI = () => {
               .onFinishChange(function() {
                 Actions.updateFilters();
               });
+            ctrl.domElement.previousSibling.style.color = getNodeTypeColor(
+              type,
+              m
+            );
             nodeTypeFilterControllers.set(type, ctrl);
           }
         });
@@ -336,12 +340,17 @@ const getNodeLabelOpacity = d3
   .range([0, 1])
   .clamp(true);
 
+function getNodeTypeColor(type, model) {
+  const style = model.style;
+  return style.node[type ?? 'note'] ?? style.node['note'];
+}
+
 function getNodeColor(nodeId, model) {
   const info = model.graph.nodeInfo[nodeId];
   const style = model.style;
   const typeFill = info.properties.color
     ? d3.rgb(info.properties.color)
-    : d3.rgb(style.node[info.type ?? 'note'] ?? style.node['note']);
+    : d3.rgb(getNodeTypeColor(info.type, model));
   switch (getNodeState(nodeId, model)) {
     case 'regular':
       return { fill: typeFill, border: typeFill };

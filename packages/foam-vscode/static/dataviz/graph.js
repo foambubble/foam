@@ -188,6 +188,7 @@ const Actions = {
 
 function initDataviz(channel) {
   const elem = document.getElementById(CONTAINER_ID);
+  const painter = new Painter();
   graph(elem)
     .graphData(model.data)
     .backgroundColor(model.style.background)
@@ -222,10 +223,12 @@ function initDataviz(channel) {
       });
       const label = info.title;
 
-      Draw(ctx)
-        .circle(node.x, node.y, size + 0.2, border)
-        .circle(node.x, node.y, size, fill)
-        .text(label, node.x, node.y + size + 1, fontSize, textColor.toString());
+      painter
+        .circle(node.x, node.y, size, fill, border)
+        .text(label, node.x, node.y + size + 1, fontSize, textColor);
+    })
+    .onRenderFramePost(ctx => {
+      painter.paint(ctx);
     })
     .linkColor(link => getLinkColor(link, model))
     .onNodeHover(node => {
@@ -402,24 +405,69 @@ function getLinkState(link, model) {
     : 'lessened';
 }
 
-const Draw = ctx => ({
-  circle: function(x, y, radius, color) {
-    ctx.beginPath();
-    ctx.arc(x, y, radius, 0, 2 * Math.PI, false);
-    ctx.fillStyle = color;
-    ctx.fill();
-    ctx.closePath();
+class Painter {
+  circlesByColor = new Map();
+  bordersByColor = new Map();
+  texts = [];
+
+  _addCircle(x, y, radius, color, isBorder = false) {
+    if (color.opacity > 0) {
+      const target = isBorder ? this.bordersByColor : this.circlesByColor;
+      if (!target.has(color)) {
+        target.set(color, []);
+      }
+      target.get(color).push({ x, y, radius });
+    }
+  }
+
+  _areSameColor(a, b) {
+    return a.r === b.r && a.g === b.g && a.b === b.b && a.opacity === b.opacity;
+  }
+
+  circle(x, y, radius, fill, border) {
+    this._addCircle(x, y, radius + 0.2, border, true);
+    if (!this._areSameColor(border, fill)) {
+      this._addCircle(x, y, radius, fill);
+    }
     return this;
-  },
-  text: function(text, x, y, size, color) {
-    ctx.font = `${size}px Sans-Serif`;
+  }
+
+  text(text, x, y, size, color) {
+    if (color.opacity > 0) {
+      this.texts.push({ x, y, text, size, color });
+    }
+    return this;
+  }
+
+  paint(ctx) {
+    // Draw nodes
+    // first draw borders, then draw contents over them
+    for (const target of [this.bordersByColor, this.circlesByColor]) {
+      for (const [color, circles] of target.entries()) {
+        ctx.beginPath();
+        ctx.fillStyle = color;
+        for (const circle of circles) {
+          ctx.arc(circle.x, circle.y, circle.radius, 0, 2 * Math.PI, false);
+        }
+        ctx.closePath();
+        ctx.fill();
+      }
+      target.clear();
+    }
+
+    // Draw labels
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
-    ctx.fillStyle = color;
-    ctx.fillText(text, x, y);
+    for (const text of this.texts) {
+      ctx.font = `${text.size}px Sans-Serif`;
+      ctx.fillStyle = text.color;
+      ctx.fillText(text.text, text.x, text.y);
+    }
+    this.texts = [];
+
     return this;
-  },
-});
+  }
+}
 
 // init the app
 try {

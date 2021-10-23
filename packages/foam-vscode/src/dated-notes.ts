@@ -129,18 +129,18 @@ foam_template:
  * Creates a map of Foam template variables based on the given note
  *
  * Variable names are based on https://code.visualstudio.com/docs/editor/userdefinedsnippets:
- * - DAILY_NOTE_YEAR
- * - DAILY_NOTE_YEAR_SHORT
- * - DAILY_NOTE_MONTH
- * - DAILY_NOTE_MONTH_NAME
- * - DAILY_NOTE_MONTH_NAME_SHORT
- * - DAILY_NOTE_DATE
- * - DAILY_NOTE_DAY_NAME
- * - DAILY_NOTE_DAY_NAME_SHORT
- * - DAILY_NOTE_HOUR
- * - DAILY_NOTE_MINUTE
- * - DAILY_NOTE_SECOND
- * - DAILY_NOTE_SECONDS_UNIX
+ * - FOAM_DATE_YEAR
+ * - FOAM_DATE_YEAR_SHORT
+ * - FOAM_DATE_MONTH
+ * - FOAM_DATE_MONTH_NAME
+ * - FOAM_DATE_MONTH_NAME_SHORT
+ * - FOAM_DATE_DATE
+ * - FOAM_DATE_DAY_NAME
+ * - FOAM_DATE_DAY_NAME_SHORT
+ * - FOAM_DATE_HOUR
+ * - FOAM_DATE_MINUTE
+ * - FOAM_DATE_SECOND
+ * - FOAM_DATE_SECONDS_UNIX
  *
  * @param targetDate The date used to generate the variables
  * @returns The map of variables
@@ -148,40 +148,40 @@ foam_template:
 export function getDailyNoteVariables(targetDate: Date): Map<string, string> {
   const dateVariables = new Map();
   dateVariables.set(
-    'DAILY_NOTE_YEAR',
+    'FOAM_DATE_YEAR',
     targetDate.toLocaleString('default', { year: 'numeric' })
   ); // The current year
   dateVariables.set(
-    'DAILY_NOTE_YEAR_SHORT',
+    'FOAM_DATE_YEAR_SHORT',
     targetDate.toLocaleString('default', { year: '2-digit' })
   ); // The current year's last two digits
   dateVariables.set(
-    'DAILY_NOTE_MONTH',
+    'FOAM_DATE_MONTH',
     targetDate.toLocaleString('default', { month: '2-digit' })
   ); // The month as two digits (example '02')
   dateVariables.set(
-    'DAILY_NOTE_MONTH_NAME',
+    'FOAM_DATE_MONTH_NAME',
     targetDate.toLocaleString('default', { month: 'long' })
   ); //  The full name of the month (example 'July')
   dateVariables.set(
-    'DAILY_NOTE_MONTH_NAME_SHORT',
+    'FOAM_DATE_MONTH_NAME_SHORT',
     targetDate.toLocaleString('default', { month: 'short' })
   ); //  The short name of the month (example 'Jul')
   dateVariables.set(
-    'DAILY_NOTE_DATE',
+    'FOAM_DATE_DATE',
     targetDate.toLocaleString('default', { day: '2-digit' })
   ); //  The day of the month
   dateVariables.set(
-    'DAILY_NOTE_DAY_NAME',
+    'FOAM_DATE_DAY_NAME',
     targetDate.toLocaleString('default', { weekday: 'long' })
   ); //  The name of day (example 'Monday')
   dateVariables.set(
-    'DAILY_NOTE_DAY_NAME_SHORT',
+    'FOAM_DATE_DAY_NAME_SHORT',
     targetDate.toLocaleString('default', { weekday: 'short' })
   ); //  The short name of the day (example 'Mon')
-  dateVariables.set('DAILY_NOTE_HOUR', '00'); //  The current hour in 24-hour clock format
-  dateVariables.set('DAILY_NOTE_MINUTE', '00'); //  The current minute
-  dateVariables.set('DAILY_NOTE_SECOND', '00'); //  The current second
-  dateVariables.set('DAILY_NOTE_SECONDS_UNIX', targetDate.getMilliseconds()); //  The number of seconds since the Unix epoch
+  dateVariables.set('FOAM_DATE_HOUR', '00'); //  The current hour in 24-hour clock format
+  dateVariables.set('FOAM_DATE_MINUTE', '00'); //  The current minute
+  dateVariables.set('FOAM_DATE_SECOND', '00'); //  The current second
+  dateVariables.set('FOAM_DATE_SECONDS_UNIX', targetDate.getMilliseconds()); //  The number of seconds since the Unix epoch
   return dateVariables;
 }

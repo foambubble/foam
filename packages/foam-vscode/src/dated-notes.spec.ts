@@ -77,26 +77,27 @@ describe('Daily note template', () => {
   it('Computes variables correctly based on the target day', () => {
     const targetDate = new Date(Date.UTC(2021, 8, 12));
     const map = getDailyNoteVariables(targetDate);
-    expect(map.get('DAILY_NOTE_YEAR')).toEqual('2021');
-    expect(map.get('DAILY_NOTE_YEAR_SHORT')).toEqual('21');
-    expect(map.get('DAILY_NOTE_MONTH')).toEqual('09');
-    expect(map.get('DAILY_NOTE_MONTH_NAME')).toEqual('September');
-    expect(map.get('DAILY_NOTE_MONTH_NAME_SHORT')).toEqual('Sep');
-    expect(map.get('DAILY_NOTE_DATE')).toEqual('12');
-    expect(map.get('DAILY_NOTE_DAY_NAME')).toEqual('Sunday');
-    expect(map.get('DAILY_NOTE_DAY_NAME_SHORT')).toEqual('Sun');
-    expect(map.get('DAILY_NOTE_HOUR')).toEqual('00');
-    expect(map.get('DAILY_NOTE_MINUTE')).toEqual('00');
-    expect(map.get('DAILY_NOTE_SECOND')).toEqual('00');
+    expect(map.get('FOAM_DATE_YEAR')).toEqual('2021');
+    expect(map.get('FOAM_DATE_YEAR_SHORT')).toEqual('21');
+    expect(map.get('FOAM_DATE_MONTH')).toEqual('09');
+    expect(map.get('FOAM_DATE_MONTH_NAME')).toEqual('September');
+    expect(map.get('FOAM_DATE_MONTH_NAME_SHORT')).toEqual('Sep');
+    expect(map.get('FOAM_DATE_DATE')).toEqual('12');
+    expect(map.get('FOAM_DATE_DAY_NAME')).toEqual('Sunday');
+    expect(map.get('FOAM_DATE_DAY_NAME_SHORT')).toEqual('Sun');
+    expect(map.get('FOAM_DATE_HOUR')).toEqual('00');
+    expect(map.get('FOAM_DATE_MINUTE')).toEqual('00');
+    expect(map.get('FOAM_DATE_SECOND')).toEqual('00');
   });
 
   it('Uses the daily note variables in the template', async () => {
     const targetDate = new Date(Date.UTC(2021, 8, 12));
 
-    await createFile(
-      'hello ${DAILY_NOTE_MONTH_NAME} ${DAILY_NOTE_DATE} hello',
-      ['.foam', 'templates', 'daily-note.md']
-    );
+    await createFile('hello ${FOAM_DATE_MONTH_NAME} ${FOAM_DATE_DATE} hello', [
+      '.foam',
+      'templates',
+      'daily-note.md',
+    ]);
 
     const config = workspace.getConfiguration('foam');
     const uri = getDailyNotePath(config, targetDate);

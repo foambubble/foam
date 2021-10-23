@@ -44,18 +44,18 @@ interface FoamSelectionContent {
 const knownFoamVariables = new Set([
   'FOAM_TITLE',
   'FOAM_SELECTED_TEXT',
-  'DAILY_NOTE_YEAR',
-  'DAILY_NOTE_YEAR_SHORT',
-  'DAILY_NOTE_MONTH',
-  'DAILY_NOTE_MONTH_NAME',
-  'DAILY_NOTE_MONTH_NAME_SHORT',
-  'DAILY_NOTE_DATE',
-  'DAILY_NOTE_DAY_NAME',
-  'DAILY_NOTE_DAY_NAME_SHORT',
-  'DAILY_NOTE_HOUR',
-  'DAILY_NOTE_MINUTE',
-  'DAILY_NOTE_SECOND',
-  'DAILY_NOTE_SECONDS_UNIX',
+  'FOAM_DATE_YEAR',
+  'FOAM_DATE_YEAR_SHORT',
+  'FOAM_DATE_MONTH',
+  'FOAM_DATE_MONTH_NAME',
+  'FOAM_DATE_MONTH_NAME_SHORT',
+  'FOAM_DATE_DATE',
+  'FOAM_DATE_DAY_NAME',
+  'FOAM_DATE_DAY_NAME_SHORT',
+  'FOAM_DATE_HOUR',
+  'FOAM_DATE_MINUTE',
+  'FOAM_DATE_SECOND',
+  'FOAM_DATE_SECONDS_UNIX',
 ]);
 
 const wikilinkDefaultTemplateText = `# $\{1:$FOAM_TITLE}\n\n$0`;
@@ -117,11 +117,11 @@ async function offerToCreateTemplate(): Promise<void> {
 }
 
 function findFoamVariables(templateText: string): string[] {
-  const regex = /\$(FOAM_[_a-zA-Z0-9]*)|\${(FOAM_[[_a-zA-Z0-9]*)}|\$(DAILY_NOTE_[_a-zA-Z0-9]*)|\${(DAILY_NOTE_[[_a-zA-Z0-9]*)}/g;
+  const regex = /\$(FOAM_[_a-zA-Z0-9]*)|\${(FOAM_[[_a-zA-Z0-9]*)}/g;
   var matches = [];
   const output: string[] = [];
   while ((matches = regex.exec(templateText))) {
-    output.push(matches[1] || matches[2] || matches[3] || matches[4]);
+    output.push(matches[1] || matches[2]);
   }
   const uniqVariables = [...new Set(output)];
   const knownVariables = uniqVariables.filter(x => knownFoamVariables.has(x));

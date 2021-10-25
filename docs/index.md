@@ -72,6 +72,8 @@ These instructions assume you have a GitHub account, and you have Visual Studio 
 
 After setting up the repository, open `.vscode/settings.json` and edit, add or remove any settings you'd like for your Foam workspace.
 
+* *If using a [multi-root workspace](https://code.visualstudio.com/docs/editor/multi-root-workspaces) as noted above, make sure that your **Foam** directory is first in the list. There are some settings that will need to be migrated from `.vscode/settings.json` to your `.code-workspace` file.*
+
 To learn more about how to use **Foam**, read the [[recipes]].
 
 Getting stuck in the setup? Read the [[frequently-asked-questions]].

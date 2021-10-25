@@ -3,83 +3,29 @@
 // Hover to view descriptions of existing attributes.
 // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
 {
-	"version": "0.2.0",
-  "inputs": [
+  "version": "0.2.0",
+  "configurations": [
     {
-      "id": "packageName",
-      "type": "pickString",
-      "description": "Select the package in which this test is located",
-      "options": ["foam-core", "foam-vscode"],
-      "default": "foam-core"
+      "type": "node",
+      "name": "Debug Jest Tests",
+      "request": "launch",
+      "runtimeArgs": ["workspace", "foam-vscode", "run", "test"], // ${yarnWorkspaceName} is what we're missing
+      "args": ["--runInBand"],
+      "runtimeExecutable": "yarn",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "disableOptimisticBPs": true
+    },
+    {
+      "name": "Run VSCode Extension",
+      "type": "extensionHost",
+      "request": "launch",
+      "runtimeExecutable": "${execPath}",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}/packages/foam-vscode"
+      ],
+      "outFiles": ["${workspaceFolder}/packages/foam-vscode/out/**/*.js"],
+      "preLaunchTask": "${defaultBuildTask}"
     }
-  ],
-	"configurations": [
-		{
-			"type": "node",
-			"name": "vscode-jest-tests",
-			"request": "launch",
-			"runtimeArgs": ["workspace", "${input:packageName}", "run", "test"], // ${yarnWorkspaceName} is what we're missing
-			"args": [
-					"--runInBand"
-			],
-			"runtimeExecutable": "yarn",
-			"console": "integratedTerminal",
-			"internalConsoleOptions": "neverOpen",
-			"disableOptimisticBPs": true,
-	},
-		{
-			"name": "Debug Jest Tests",
-			"type": "node",
-			"request": "launch",
-			"runtimeArgs": [
-				"--inspect-brk",
-				"${workspaceRoot}/node_modules/.bin/tsdx",
-				"test",
-			],
-			"console": "integratedTerminal",
-			"cwd": "${workspaceFolder}/packages/foam-core",
-			"internalConsoleOptions": "neverOpen"
-	},
-		{
-			"name": "Run VSCode Extension",
-			"type": "extensionHost",
-			"request": "launch",
-			"runtimeExecutable": "${execPath}",
-			"args": [
-				"--extensionDevelopmentPath=${workspaceFolder}/packages/foam-vscode"
-			],
-			"outFiles": [
-				"${workspaceFolder}/packages/foam-vscode/out/**/*.js"
-			],
-			"preLaunchTask": "${defaultBuildTask}"
-		},
-
-		// @NOTE: This task is broken. VSCode e2e tests are currently disabled
-		// due to incompability of jest and mocha inside a typescript monorepo
-		// Contributions to fix this are welcome!
-		{
-			"name": "Test VSCode Extension",
-			"type": "extensionHost",
-			"request": "launch",
-			"runtimeExecutable": "${execPath}",
-			"args": [
-				"--extensionDevelopmentPath=${workspaceFolder}/packages/foam-vscode",
-				"--extensionTestsPath=${workspaceFolder}/packages/foam-vscode/out/test/suite/index"
-			],
-			"outFiles": [
-				"${workspaceFolder}/packages/foam-vscode/out/test/**/*.js"
-			],
-			"preLaunchTask": "${defaultBuildTask}"
-		},
-		{
-			"name": "Test Core",
-			"type": "node",
-			"request": "launch",
-			"program": "${workspaceFolder}/node_modules/tsdx/dist/index.js",
-			"args": ["test"],
-			"cwd": "${workspaceFolder}/packages/foam-core",
-			"internalConsoleOptions": "openOnSessionStart",
-			"preLaunchTask": "${defaultBuildTask}"
-		}
-	]
+  ]
 }

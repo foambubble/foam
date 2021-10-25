@@ -248,7 +248,7 @@
         "foam.decorations.links.enable": {
           "description": "Enable decorations for links",
           "type": "boolean",
-          "default": false
+          "default": true
         },
         "foam.openDailyNote.onStartup": {
           "type": "boolean",

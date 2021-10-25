@@ -1,9 +1,5 @@
 import { workspace } from 'vscode';
-import {
-  createDailyNoteIfNotExists,
-  getDailyNotePath,
-  getDailyNoteVariables,
-} from './dated-notes';
+import { createDailyNoteIfNotExists, getDailyNotePath } from './dated-notes';
 import { URI } from './core/model/uri';
 import { isWindows } from './utils';
 import {
@@ -74,24 +70,8 @@ describe('getDailyNotePath', () => {
 });
 
 describe('Daily note template', () => {
-  it('Computes variables correctly based on the target day', () => {
-    const targetDate = new Date(Date.UTC(2021, 8, 12));
-    const map = getDailyNoteVariables(targetDate);
-    expect(map.get('FOAM_DATE_YEAR')).toEqual('2021');
-    expect(map.get('FOAM_DATE_YEAR_SHORT')).toEqual('21');
-    expect(map.get('FOAM_DATE_MONTH')).toEqual('09');
-    expect(map.get('FOAM_DATE_MONTH_NAME')).toEqual('September');
-    expect(map.get('FOAM_DATE_MONTH_NAME_SHORT')).toEqual('Sep');
-    expect(map.get('FOAM_DATE_DATE')).toEqual('12');
-    expect(map.get('FOAM_DATE_DAY_NAME')).toEqual('Sunday');
-    expect(map.get('FOAM_DATE_DAY_NAME_SHORT')).toEqual('Sun');
-    expect(map.get('FOAM_DATE_HOUR')).toEqual('00');
-    expect(map.get('FOAM_DATE_MINUTE')).toEqual('00');
-    expect(map.get('FOAM_DATE_SECOND')).toEqual('00');
-  });
-
   it('Uses the daily note variables in the template', async () => {
-    const targetDate = new Date(Date.UTC(2021, 8, 12));
+    const targetDate = new Date(2021, 8, 12);
 
     await createFile('hello ${FOAM_DATE_MONTH_NAME} ${FOAM_DATE_DATE} hello', [
       '.foam',

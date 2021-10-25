@@ -752,6 +752,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "Laptop765",
+      "name": "Paul",
+      "avatar_url": "https://avatars.githubusercontent.com/u/1468359?v=4",
+      "profile": "https://github.com/Laptop765",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,

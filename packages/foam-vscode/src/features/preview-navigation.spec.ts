@@ -51,6 +51,12 @@ describe('Stylable tag generation in preview', () => {
       `<p>Lorem <span class='foam-tag'>#ipsum</span> dolor <span class='foam-tag'>#sit</span></p>`
     );
   });
+
+  it('transforms a string containing a tag with dash', () => {
+    expect(md.render(`Lorem ipsum dolor #si-t`)).toMatch(
+      `<p>Lorem ipsum dolor <span class='foam-tag'>#si-t</span></p>`
+    );
+  });
 });
 
 describe('Displaying included notes in preview', () => {

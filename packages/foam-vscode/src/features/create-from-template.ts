@@ -232,10 +232,12 @@ class Resolver {
           this.promises.set(
             name,
             Promise.resolve(
-              this.foamDate.toLocaleString('default', {
-                hour: '2-digit',
-                hour12: false,
-              })
+              this.foamDate
+                .toLocaleString('default', {
+                  hour: '2-digit',
+                  hour12: false,
+                })
+                .padStart(2, '0')
             )
           );
           break;
@@ -243,7 +245,12 @@ class Resolver {
           this.promises.set(
             name,
             Promise.resolve(
-              this.foamDate.toLocaleString('default', { minute: '2-digit' })
+              this.foamDate
+                .toLocaleString('default', {
+                  minute: '2-digit',
+                  hour12: false,
+                })
+                .padStart(2, '0')
             )
           );
           break;
@@ -251,14 +258,21 @@ class Resolver {
           this.promises.set(
             name,
             Promise.resolve(
-              this.foamDate.toLocaleString('default', { second: '2-digit' })
+              this.foamDate
+                .toLocaleString('default', {
+                  second: '2-digit',
+                  hour12: false,
+                })
+                .padStart(2, '0')
             )
           );
           break;
         case 'FOAM_DATE_SECONDS_UNIX':
           this.promises.set(
             name,
-            Promise.resolve(this.foamDate.getTime().toString())
+            Promise.resolve(
+              (this.foamDate.getTime() / 1000).toString().padStart(2, '0')
+            )
           );
           break;
         default:

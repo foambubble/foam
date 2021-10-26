@@ -130,7 +130,6 @@ describe('resolveFoamVariables', () => {
   test('Resolves FOAM_DATE_* properties with given date', async () => {
     const targetDate = new Date(2021, 8, 12, 1, 2, 3);
     const variables = [
-      'FOAM_DATE_MONTH_NAME',
       'FOAM_DATE_YEAR',
       'FOAM_DATE_YEAR_SHORT',
       'FOAM_DATE_MONTH',
@@ -142,6 +141,7 @@ describe('resolveFoamVariables', () => {
       'FOAM_DATE_HOUR',
       'FOAM_DATE_MINUTE',
       'FOAM_DATE_SECOND',
+      'FOAM_DATE_SECONDS_UNIX',
     ];
 
     const expected = new Map<string, string>();
@@ -154,8 +154,12 @@ describe('resolveFoamVariables', () => {
     expected.set('FOAM_DATE_DAY_NAME', 'Sunday');
     expected.set('FOAM_DATE_DAY_NAME_SHORT', 'Sun');
     expected.set('FOAM_DATE_HOUR', '01');
-    expected.set('FOAM_DATE_MINUTE', '2');
-    expected.set('FOAM_DATE_SECOND', '3');
+    expected.set('FOAM_DATE_MINUTE', '02');
+    expected.set('FOAM_DATE_SECOND', '03');
+    expected.set(
+      'FOAM_DATE_SECONDS_UNIX',
+      (targetDate.getTime() / 1000).toString()
+    );
 
     const givenValues = new Map<string, string>();
 

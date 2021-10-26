@@ -74,7 +74,7 @@ export function run(): Promise<void> {
 
       if (failures.length > 0) {
         console.log('Some Foam tests failed: ', failures.length);
-        reject(`${failures} tests failed!`);
+        reject(`Foam e2e tests failed: ${JSON.stringify(failures)}`);
       } else {
         resolve();
       }

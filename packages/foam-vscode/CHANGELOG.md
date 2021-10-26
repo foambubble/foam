@@ -4,6 +4,10 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## Unreleased
+
+- Added `FOAM_DATE_*` template variables (#781)
+
 ## [0.15.1] - 2021-10-21
 
 Fixes and Improvements:
@@ -25,7 +29,7 @@ Fixes and Improvements:
 
 ## [0.14.2] - 2021-07-24
 
-Features: 
+Features:
 
 - Autocompletion for tags (#708 - thanks @pderaaij)
 - Use templates for new note created from wikilink (#712 - thanks @movermeyer)
@@ -42,7 +46,7 @@ Fixes and Improvements:
 
 ## [0.14.0] - 2021-07-13
 
-Features: 
+Features:
 
 - Create new note from selection (#666 - thanks @pderaaij)
 - Use templates for daily notes (#700 - thanks @movermeyer)
@@ -70,9 +74,9 @@ Fixes and Improvements:
 
 - Fixed #667, incorrect resolution of foam-core library
 
-Internal: 
+Internal:
 
-- BREAKING CHANGE: Removed Foam local plugins 
+- BREAKING CHANGE: Removed Foam local plugins
   If you were previously using the alpha feature of Foam local plugins you will soon be able to migrate the functionality to the V1 API
 
 ## [0.13.6] - 2021-06-05

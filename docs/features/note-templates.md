@@ -41,12 +41,42 @@ Templates can use all the variables available in [VS Code Snippets](https://code
 
 In addition, you can also use variables provided by Foam:
 
-| Name                 | Description                                                                                                                                             |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `FOAM_SELECTED_TEXT` | Foam will fill it with selected text when creating a new note, if any text is selected. Selected text will be replaced with a wikilink to the new note. |
-| `FOAM_TITLE`         | The title of the note. If used, Foam will prompt you to enter a title for the note.                                                                     |
+| Name                 | Description                                                                                                                                                                                                                 |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `FOAM_SELECTED_TEXT` | Foam will fill it with selected text when creating a new note, if any text is selected. Selected text will be replaced with a wikilink to the new note.                                                                     |
+| `FOAM_TITLE`         | The title of the note. If used, Foam will prompt you to enter a title for the note.                                                                                                                                         |
+| `FOAM_DATE_*`        | `FOAM_DATE_YEAR`, `FOAM_DATE_MONTH`, etc. Foam-specific versions of [VS Code's datetime snippet variables](https://code.visualstudio.com/docs/editor/userdefinedsnippets#_variables). Prefer these versions over VS Code's. |
 
-**Note:** neither the defaulting feature (eg. `${variable:default}`) nor the format feature (eg. `${variable/(.*)/${1:/upcase}/}`) (available to other variables) are available for these Foam-provided variables.
+**Note:** neither the defaulting feature (eg. `${variable:default}`) nor the format feature (eg. `${variable/(.*)/${1:/upcase}/}`) (available to other variables) are available for these Foam-provided variables. See [#693](https://github.com/foambubble/foam/issues/693).
+
+### `FOAM_DATE_*` variables
+
+Foam defines its own set of datetime variables that have a similar behaviour as [VS Code's datetime snippet variables](https://code.visualstudio.com/docs/editor/userdefinedsnippets#_variables).
+
+For example, `FOAM_DATE_YEAR` has the same behaviour as VS Code's `CURRENT_YEAR`, `FOAM_DATE_SECONDS_UNIX` has the same behaviour as `CURRENT_SECONDS_UNIX`, etc.
+
+By default, prefer using the `FOAM_DATE_` versions. The datetime used to compute the values will be the same for both `FOAM_DATE_` and VS Code's variables, with the exception of the creation notes using the daily note template.
+
+#### Relative daily notes
+
+When referring to daily notes, you can use the relative snippets (`/+1d`, `/tomorrow`, etc.). In these cases, the new notes will be created with the daily note template, but the datetime used should be the relative datetime, not the current datetime.
+By using the `FOAM_DATE_` versions of the variables, the correct relative date will populate the variables, instead of the current datetime.
+
+For example, given this daily note template (`.foam/templates/daily-note.md`):
+
+```markdown
+# $FOAM_DATE_YEAR-$FOAM_DATE_MONTH-$FOAM_DATE_DATE
+
+## Here's what I'm going to do today
+
+* Thing 1
+* Thing 2
+```
+
+When the `/tomorrow` snippet is used, `FOAM_DATE_` variables will be populated with tomorrow's date, as expected.
+If instead you were to use the VS Code versions of these variables, they would be populated with today's date, not tomorrow's, causing unexpected behaviour.
+
+When creating notes in any other scenario, the `FOAM_DATE_` values are computed using the same datetime as the VS Code ones, so the `FOAM_DATE_` versions can be used in all scenarios by default.
 
 ## Metadata
 

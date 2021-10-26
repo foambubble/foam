@@ -44,17 +44,6 @@ export const createFile = async (content: string, filepath?: string[]) => {
   return { uri, content, ...filenameComponents };
 };
 
-export const readFile = async (filepath?: string[] | URI): Promise<string> => {
-  const rootUri = vscode.workspace.workspaceFolders[0].uri;
-  filepath = filepath ?? [randomString() + '.md'];
-  const uri = URI.isUri(filepath)
-    ? filepath
-    : vscode.Uri.joinPath(rootUri, ...filepath);
-  return vscode.workspace.fs
-    .readFile(toVsCodeUri(uri))
-    .then(b => new TextDecoder().decode(b));
-};
-
 export const createNote = (r: Resource) => {
   let content = `# ${r.title}
 

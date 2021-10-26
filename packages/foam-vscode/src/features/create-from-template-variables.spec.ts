@@ -105,6 +105,7 @@ describe('resolveFoamVariables', () => {
       'FOAM_DATE_HOUR',
       'FOAM_DATE_MINUTE',
       'FOAM_DATE_SECOND',
+      'FOAM_DATE_SECONDS_UNIX',
     ];
 
     const expected = new Map<string, string>();

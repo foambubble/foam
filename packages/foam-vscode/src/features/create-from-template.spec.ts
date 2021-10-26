@@ -28,7 +28,7 @@ describe('createFromTemplate', () => {
       jest.clearAllMocks();
     });
 
-    it('can be cancelled while resolving FOAM_TITLE', async () => {
+    it.skip('can be cancelled while resolving FOAM_TITLE', async () => {
       const spy = jest
         .spyOn(window, 'showInputBox')
         .mockImplementation(jest.fn(() => Promise.resolve(undefined)));

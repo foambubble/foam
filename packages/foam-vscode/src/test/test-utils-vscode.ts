@@ -3,7 +3,7 @@
  */
 import * as vscode from 'vscode';
 import path from 'path';
-import { TextDecoder, TextEncoder } from 'util';
+import { TextEncoder } from 'util';
 import { toVsCodeUri } from '../utils/vsc-utils';
 import { Logger } from '../core/utils/log';
 import { URI } from '../core/model/uri';

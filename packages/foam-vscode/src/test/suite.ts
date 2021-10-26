@@ -32,7 +32,6 @@ const bufferLinesAndLog = (out: (value: string) => void) => {
 };
 
 export function run(): Promise<void> {
-  const outWrite = process.stdout.write;
   const errWrite = process.stderr.write;
   process.stderr.write = bufferLinesAndLog(console.log.bind(console));
 
@@ -59,6 +58,7 @@ export function run(): Promise<void> {
             },
           }),
           testTimeout: 30000,
+          useStderr: true,
           verbose: true,
           colors: true,
         } as any,
@@ -74,7 +74,7 @@ export function run(): Promise<void> {
 
       if (failures.length > 0) {
         console.log('Some Foam tests failed: ', failures.length);
-        reject(`${failures?.length} tests failed!`);
+        reject(`${failures} tests failed!`);
       } else {
         resolve();
       }
@@ -82,7 +82,6 @@ export function run(): Promise<void> {
       console.log('There was an error while running the Foam suite', error);
       return reject(error);
     } finally {
-      process.stdout.write = outWrite.bind(process.stdout);
       process.stderr.write = errWrite.bind(process.stderr);
     }
   });

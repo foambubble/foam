@@ -213,6 +213,7 @@ If that sounds like something you're interested in, I'd love to have you along o
     <td align="center"><a href="http://www.prashu.com"><img src="https://avatars.githubusercontent.com/u/476729?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Prashanth Subrahmanyam</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=ksprashu" title="Documentation">📖</a></td>
     <td align="center"><a href="https://github.com/JonasSprenger"><img src="https://avatars.githubusercontent.com/u/25108895?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Jonas SPRENGER</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=JonasSprenger" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/Laptop765"><img src="https://avatars.githubusercontent.com/u/1468359?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Paul</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=Laptop765" title="Documentation">📖</a></td>
+    <td align="center"><a href="https://bandism.net/"><img src="https://avatars.githubusercontent.com/u/22633385?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Ikko Ashimine</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=eltociear" title="Documentation">📖</a></td>
   </tr>
 </table>
 

@@ -34,7 +34,7 @@ Once you've opened/created the Foam repository, it will appear in the `Repositor
 
 ## Editing your workspace
 
-When you create or open a page, you can edit the markdown content as usual, as well as [paste images](https://github.com/vsls-contrib/gistpad#pasting-images-1), and create [`[[links]]` to other pages](https://github.com/vsls-contrib/gistpad#links). When you type `[[`, you'll recieve auto-completion for the existing pages in your workspace, and you can also automatically create new pages by simply creating a link to it.
+When you create or open a page, you can edit the markdown content as usual, as well as [paste images](https://github.com/vsls-contrib/gistpad#pasting-images-1), and create [`[[links]]` to other pages](https://github.com/vsls-contrib/gistpad#links). When you type `[[`, you'll receive auto-completion for the existing pages in your workspace, and you can also automatically create new pages by simply creating a link to it.
 
 Since you're using the Visual Studio Code markdown editor, you can benefit from all of the rich language services (e.g. syntax highlighting, header collapsing), as well as the extension ecosystem (e.g. [Emojisense](https://marketplace.visualstudio.com/items?itemName=bierner.emojisense)).
 

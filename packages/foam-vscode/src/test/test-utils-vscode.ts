@@ -35,10 +35,10 @@ export const closeEditors = async () => {
  * @param path relative file path
  * @returns an object containing various information about the file created
  */
-export const createFile = async (content: string, filepath?: string) => {
+export const createFile = async (content: string, filepath?: string[]) => {
   const rootUri = vscode.workspace.workspaceFolders[0].uri;
-  filepath = filepath ?? randomString() + '.md';
-  const uri = vscode.Uri.joinPath(rootUri, filepath);
+  filepath = filepath ?? [randomString() + '.md'];
+  const uri = vscode.Uri.joinPath(rootUri, ...filepath);
   const filenameComponents = path.parse(uri.fsPath);
   await vscode.workspace.fs.writeFile(uri, new TextEncoder().encode(content));
   return { uri, content, ...filenameComponents };

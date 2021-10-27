@@ -13,7 +13,7 @@ import { createNoteFromDailyNoteTemplate } from './features/create-from-template
  *
  * @param date A given date to be formatted as filename.
  */
-async function openDailyNoteFor(date?: Date) {
+export async function openDailyNoteFor(date?: Date) {
   const foamConfiguration = workspace.getConfiguration('foam');
   const currentDate = date !== undefined ? date : new Date();
 
@@ -40,7 +40,7 @@ async function openDailyNoteFor(date?: Date) {
  * @param date A given date to be formatted as filename.
  * @returns The path to the daily note file.
  */
-function getDailyNotePath(
+export function getDailyNotePath(
   configuration: WorkspaceConfiguration,
   date: Date
 ): URI {
@@ -70,7 +70,7 @@ function getDailyNotePath(
  * @param date A given date to be formatted as filename.
  * @returns The daily note's filename.
  */
-function getDailyNoteFileName(
+export function getDailyNoteFileName(
   configuration: WorkspaceConfiguration,
   date: Date
 ): string {
@@ -95,10 +95,10 @@ function getDailyNoteFileName(
  * @param currentDate The current date, to be used as a title.
  * @returns Wether the file was created.
  */
-async function createDailyNoteIfNotExists(
+export async function createDailyNoteIfNotExists(
   configuration: WorkspaceConfiguration,
   dailyNotePath: URI,
-  currentDate: Date
+  targetDate: Date
 ) {
   if (await pathExists(dailyNotePath)) {
     return false;
@@ -113,17 +113,14 @@ foam_template:
   name: New Daily Note
   description: Foam's default daily note template
 ---
-# ${dateFormat(currentDate, titleFormat, false)}
+# ${dateFormat(targetDate, titleFormat, false)}
 `;
 
-  await createNoteFromDailyNoteTemplate(dailyNotePath, templateFallbackText);
+  await createNoteFromDailyNoteTemplate(
+    dailyNotePath,
+    templateFallbackText,
+    targetDate
+  );
 
   return true;
 }
-
-export {
-  openDailyNoteFor,
-  getDailyNoteFileName,
-  createDailyNoteIfNotExists,
-  getDailyNotePath,
-};

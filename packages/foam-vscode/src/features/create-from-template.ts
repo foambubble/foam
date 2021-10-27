@@ -41,7 +41,22 @@ interface FoamSelectionContent {
   content: string;
 }
 
-const knownFoamVariables = new Set(['FOAM_TITLE', 'FOAM_SELECTED_TEXT']);
+const knownFoamVariables = new Set([
+  'FOAM_TITLE',
+  'FOAM_SELECTED_TEXT',
+  'FOAM_DATE_YEAR',
+  'FOAM_DATE_YEAR_SHORT',
+  'FOAM_DATE_MONTH',
+  'FOAM_DATE_MONTH_NAME',
+  'FOAM_DATE_MONTH_NAME_SHORT',
+  'FOAM_DATE_DATE',
+  'FOAM_DATE_DAY_NAME',
+  'FOAM_DATE_DAY_NAME_SHORT',
+  'FOAM_DATE_HOUR',
+  'FOAM_DATE_MINUTE',
+  'FOAM_DATE_SECOND',
+  'FOAM_DATE_SECONDS_UNIX',
+]);
 
 const wikilinkDefaultTemplateText = `# $\{1:$FOAM_TITLE}\n\n$0`;
 const defaultTemplateDefaultText: string = `---
@@ -133,9 +148,14 @@ function resolveFoamSelectedText() {
 class Resolver {
   promises = new Map<string, Thenable<string>>();
 
-  resolve(name: string, givenValues: Map<string, string>): Thenable<string> {
-    if (givenValues.has(name)) {
-      this.promises.set(name, Promise.resolve(givenValues.get(name)));
+  constructor(
+    private givenValues: Map<string, string>,
+    private foamDate: Date
+  ) {}
+
+  resolve(name: string): Thenable<string> {
+    if (this.givenValues.has(name)) {
+      this.promises.set(name, Promise.resolve(this.givenValues.get(name)));
     } else if (!this.promises.has(name)) {
       switch (name) {
         case 'FOAM_TITLE':
@@ -143,6 +163,117 @@ class Resolver {
           break;
         case 'FOAM_SELECTED_TEXT':
           this.promises.set(name, Promise.resolve(resolveFoamSelectedText()));
+          break;
+        case 'FOAM_DATE_YEAR':
+          this.promises.set(
+            name,
+            Promise.resolve(
+              this.foamDate.toLocaleString('default', { year: 'numeric' })
+            )
+          );
+          break;
+        case 'FOAM_DATE_YEAR_SHORT':
+          this.promises.set(
+            name,
+            Promise.resolve(
+              this.foamDate.toLocaleString('default', { year: '2-digit' })
+            )
+          );
+          break;
+        case 'FOAM_DATE_MONTH':
+          this.promises.set(
+            name,
+            Promise.resolve(
+              this.foamDate.toLocaleString('default', { month: '2-digit' })
+            )
+          );
+          break;
+        case 'FOAM_DATE_MONTH_NAME':
+          this.promises.set(
+            name,
+            Promise.resolve(
+              this.foamDate.toLocaleString('default', { month: 'long' })
+            )
+          );
+          break;
+        case 'FOAM_DATE_MONTH_NAME_SHORT':
+          this.promises.set(
+            name,
+            Promise.resolve(
+              this.foamDate.toLocaleString('default', { month: 'short' })
+            )
+          );
+          break;
+        case 'FOAM_DATE_DATE':
+          this.promises.set(
+            name,
+            Promise.resolve(
+              this.foamDate.toLocaleString('default', { day: '2-digit' })
+            )
+          );
+          break;
+        case 'FOAM_DATE_DAY_NAME':
+          this.promises.set(
+            name,
+            Promise.resolve(
+              this.foamDate.toLocaleString('default', { weekday: 'long' })
+            )
+          );
+          break;
+        case 'FOAM_DATE_DAY_NAME_SHORT':
+          this.promises.set(
+            name,
+            Promise.resolve(
+              this.foamDate.toLocaleString('default', { weekday: 'short' })
+            )
+          );
+          break;
+        case 'FOAM_DATE_HOUR':
+          this.promises.set(
+            name,
+            Promise.resolve(
+              this.foamDate
+                .toLocaleString('default', {
+                  hour: '2-digit',
+                  hour12: false,
+                })
+                .padStart(2, '0')
+            )
+          );
+          break;
+        case 'FOAM_DATE_MINUTE':
+          this.promises.set(
+            name,
+            Promise.resolve(
+              this.foamDate
+                .toLocaleString('default', {
+                  minute: '2-digit',
+                  hour12: false,
+                })
+                .padStart(2, '0')
+            )
+          );
+          break;
+        case 'FOAM_DATE_SECOND':
+          this.promises.set(
+            name,
+            Promise.resolve(
+              this.foamDate
+                .toLocaleString('default', {
+                  second: '2-digit',
+                  hour12: false,
+                })
+                .padStart(2, '0')
+            )
+          );
+          break;
+        case 'FOAM_DATE_SECONDS_UNIX':
+          this.promises.set(
+            name,
+            Promise.resolve(
+              (this.foamDate.getTime() / 1000).toString().padStart(2, '0')
+            )
+          );
           break;
         default:
           this.promises.set(name, Promise.resolve(name));
@@ -156,11 +287,12 @@ class Resolver {
 
 export async function resolveFoamVariables(
   variables: string[],
-  givenValues: Map<string, string>
+  givenValues: Map<string, string>,
+  foamDate: Date = new Date()
 ) {
-  const resolver = new Resolver();
+  const resolver = new Resolver(givenValues, foamDate);
   const promises = variables.map(async variable =>
-    Promise.resolve([variable, await resolver.resolve(variable, givenValues)])
+    Promise.resolve([variable, await resolver.resolve(variable)])
   );
 
   const results = await Promise.all(promises);
@@ -293,13 +425,18 @@ function appendSnippetVariableUsage(templateText: string, variable: string) {
 export async function resolveFoamTemplateVariables(
   templateText: string,
   extraVariablesToResolve: Set<string> = new Set(),
-  givenValues: Map<string, string> = new Map()
+  givenValues: Map<string, string> = new Map(),
+  foamDate: Date = new Date()
 ): Promise<[Map<string, string>, string]> {
   const variablesInTemplate = findFoamVariables(templateText.toString());
   const variables = variablesInTemplate.concat(...extraVariablesToResolve);
   const uniqVariables = [...new Set(variables)];
 
-  const resolvedValues = await resolveFoamVariables(uniqVariables, givenValues);
+  const resolvedValues = await resolveFoamVariables(
+    uniqVariables,
+    givenValues,
+    foamDate
+  );
 
   if (
     resolvedValues.get('FOAM_SELECTED_TEXT') &&
@@ -410,14 +547,16 @@ export function determineDefaultFilepath(
  */
 export async function createNoteFromDailyNoteTemplate(
   filepathFallbackURI: URI,
-  templateFallbackText: string
+  templateFallbackText: string,
+  targetDate: Date
 ): Promise<void> {
   return await createNoteFromDefaultTemplate(
     new Map(),
     new Set(['FOAM_SELECTED_TEXT']),
     dailyNoteTemplateUri,
     filepathFallbackURI,
-    templateFallbackText
+    templateFallbackText,
+    targetDate
   );
 }
 
@@ -455,7 +594,8 @@ async function createNoteFromDefaultTemplate(
   ]),
   templateUri: URI = defaultTemplateUri,
   filepathFallbackURI: URI = undefined,
-  templateFallbackText: string = defaultTemplateDefaultText
+  templateFallbackText: string = defaultTemplateDefaultText,
+  foamDate: Date = new Date()
 ): Promise<void> {
   const templateText = existsSync(URI.toFsPath(templateUri))
     ? await workspace.fs
@@ -474,7 +614,8 @@ async function createNoteFromDefaultTemplate(
     ] = await resolveFoamTemplateVariables(
       templateText,
       extraVariablesToResolve,
-      givenValues.set('FOAM_SELECTED_TEXT', selectedContent?.content ?? '')
+      givenValues.set('FOAM_SELECTED_TEXT', selectedContent?.content ?? ''),
+      foamDate
     );
   } catch (err) {
     if (err instanceof UserCancelledOperation) {

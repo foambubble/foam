@@ -4,9 +4,19 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-## Unreleased
+## [0.15.2] - 2021-10-27
+
+Features:
 
 - Added `FOAM_DATE_*` template variables (#781)
+
+Fixes and Improvements:
+
+- Dataviz: apply note type color to filter item label
+- Dataviz: optimized rendering of graph to reduce load on CPU (#795)
+- Preview: improved tag highlight in preview (#785 - thanks @pderaaij)
+- Better handling of link reference definition (#786 - thanks @pderaaij)
+- Link decorations are now enabled by default (can be turned off in settings)
 
 ## [0.15.1] - 2021-10-21
 

@@ -32,9 +32,7 @@ const bufferLinesAndLog = (out: (value: string) => void) => {
 };
 
 export function run(): Promise<void> {
-  const outWrite = process.stdout.write;
   const errWrite = process.stderr.write;
-  process.stdout.write = bufferLinesAndLog(console.log.bind(console));
   process.stderr.write = bufferLinesAndLog(console.error.bind(console));
   // process.on('unhandledRejection', err => {
   //   throw err;
@@ -62,6 +60,7 @@ export function run(): Promise<void> {
             },
           }),
           testTimeout: 30000,
+          useStderr: true,
           verbose: true,
           colors: true,
         } as any,
@@ -75,21 +74,16 @@ export function run(): Promise<void> {
         return acc;
       }, [] as jest.TestResult[]);
 
-      results.testResults.forEach(r => {
-        console.log(r);
-      });
-
       if (failures.length > 0) {
-        console.error('Some Foam tests failed: ', failures.length);
+        console.log('Some Foam tests failed: ', failures.length);
         reject(`Some Foam tests failed: ${failures.length}`);
       } else {
         resolve();
       }
     } catch (error) {
-      console.error('There was an error while running the Foam suite', error);
+      console.log('There was an error while running the Foam suite', error);
       return reject(error);
     } finally {
-      process.stdout.write = outWrite.bind(process.stdout);
       process.stderr.write = errWrite.bind(process.stderr);
     }
   });

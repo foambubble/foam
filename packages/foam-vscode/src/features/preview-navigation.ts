@@ -151,6 +151,11 @@ export const markdownItWithRemoveLinkReferences = (
         if (refKey.includes(ALIAS_DIVIDER_CHAR)) {
           delete state.env.references[refKey];
         }
+
+        // if we try to include this note, we can remove the reference as well
+        if (state.src.toLowerCase().includes(`![[${refKey.toLowerCase()}]]`)) {
+          delete state.env.references[refKey];
+        }
       });
     }
     return false;

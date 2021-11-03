@@ -770,6 +770,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "memeplex",
+      "name": "memeplex",
+      "avatar_url": "https://avatars.githubusercontent.com/u/2845433?v=4",
+      "profile": "https://github.com/memeplex",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,

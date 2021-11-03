@@ -60,16 +60,18 @@ const feature: FoamFeature = {
     const foam = await foamPromise;
     let activeEditor = vscode.window.activeTextEditor;
 
+    const immediatelyUpdateDecorations = updateDecorations(
+      areDecorationsEnabled,
+      foam.services.parser,
+      foam.workspace
+    )
+
     const debouncedUpdateDecorations = debounce(
-      updateDecorations(
-        areDecorationsEnabled,
-        foam.services.parser,
-        foam.workspace
-      ),
+      immediatelyUpdateDecorations,
       500
     );
 
-    debouncedUpdateDecorations(activeEditor);
+    immediatelyUpdateDecorations(activeEditor);
 
     context.subscriptions.push(
       areDecorationsEnabled,
@@ -77,7 +79,7 @@ const feature: FoamFeature = {
       placeholderDecoration,
       vscode.window.onDidChangeActiveTextEditor(editor => {
         activeEditor = editor;
-        debouncedUpdateDecorations(activeEditor);
+        immediatelyUpdateDecorations(activeEditor);
       }),
       vscode.workspace.onDidChangeTextDocument(event => {
         if (activeEditor && event.document === activeEditor.document) {

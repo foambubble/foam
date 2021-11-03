@@ -64,7 +64,7 @@ const feature: FoamFeature = {
       areDecorationsEnabled,
       foam.services.parser,
       foam.workspace
-    )
+    );
 
     const debouncedUpdateDecorations = debounce(
       immediatelyUpdateDecorations,

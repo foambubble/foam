@@ -33,23 +33,6 @@ describe('Hover provider', () => {
   const parser = createMarkdownParser([]);
   const hoverEnabled = () => true;
 
-  const fileBContent = `# File B Title
-  ---
-  tags: my-tag1 my-tag2
-  ---
-
-The content of file B
-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
-cccccccccccccccccccccccccccccccccccccccc
-dddddddddddddddddddddddddddddddddddddddd
-eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee`;
-
-  // Fixture needed as long tests are running with vscode 1.53.0 (MarkdownString is not available)
-  const simpleTooltipExpectedFormat =
-    'File B Title --- tags: my-tag1 my-tag2 --- The content of file B aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa ' +
-    'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb cccccccccccccccccccccccccccccccccccccccc dddddddddddd...';
-
   // Fixture to use when tests are running with vscode version >= STABLE_MARKDOWN_STRING_API_VERSION (1.52.1)
   /*const markdownTooltipExpectedFormat = `# File B Title
   ---

@@ -33,7 +33,7 @@ const bufferLinesAndLog = (out: (value: string) => void) => {
 
 export function run(): Promise<void> {
   const errWrite = process.stderr.write;
-  process.stderr.write = bufferLinesAndLog(console.error.bind(console));
+  process.stderr.write = bufferLinesAndLog(console.log.bind(console));
   // process.on('unhandledRejection', err => {
   //   throw err;
   // });

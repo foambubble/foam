@@ -46,12 +46,6 @@ async function main() {
           '--disable-extensions',
           '--disable-workspace-trust',
         ],
-        // Running the tests with vscode 1.53.0 is causing issues in the output/error stream management,
-        // which is causing a stack overflow, possibly due to a recursive callback.
-        // Also see https://github.com/foambubble/foam/pull/479#issuecomment-774167127
-        // Forcing the version to 1.52.0 solves the problem.
-        // TODO: to review, further investigate, and roll back this workaround.
-        version: '1.52.0',
       });
     } catch (err) {
       console.log('Error occurred while running Foam e2e tests:', err);

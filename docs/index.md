@@ -216,6 +216,9 @@ If that sounds like something you're interested in, I'd love to have you along o
     <td align="center"><a href="https://bandism.net/"><img src="https://avatars.githubusercontent.com/u/22633385?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Ikko Ashimine</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=eltociear" title="Documentation">📖</a></td>
     <td align="center"><a href="https://github.com/memeplex"><img src="https://avatars.githubusercontent.com/u/2845433?v=4?s=60" width="60px;" alt=""/><br /><sub><b>memeplex</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=memeplex" title="Code">💻</a></td>
   </tr>
+  <tr>
+    <td align="center"><a href="https://github.com/AndreiD049"><img src="https://avatars.githubusercontent.com/u/52671223?v=4?s=60" width="60px;" alt=""/><br /><sub><b>AndreiD049</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=AndreiD049" title="Code">💻</a></td>
+  </tr>
 </table>
 
 <!-- markdownlint-restore -->

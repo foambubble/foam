@@ -144,15 +144,19 @@ export const markdownItWithRemoveLinkReferences = (
   md: markdownit,
   workspace: FoamWorkspace
 ) => {
-  // Forget about reference links that contain an alias divider
   md.inline.ruler.before('link', 'clear-references', state => {
     if (state.env.references) {
       Object.keys(state.env.references).forEach(refKey => {
+        // Forget about reference links that contain an alias divider
+        // Aliased reference links will lead the MarkdownParser to include wrong link references
         if (refKey.includes(ALIAS_DIVIDER_CHAR)) {
           delete state.env.references[refKey];
         }
 
-        // if we try to include this note, we can remove the reference as well
+        // When the reference is present due to an inclusion of that note, we
+        // need to remove that reference. This ensures the MarkdownIt parser
+        // will not replace the wikilink syntax with an <a href> link and as a result
+        // break our inclusion logic.
         if (state.src.toLowerCase().includes(`![[${refKey.toLowerCase()}]]`)) {
           delete state.env.references[refKey];
         }

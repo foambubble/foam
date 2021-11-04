@@ -5,6 +5,7 @@ import { isSome, isNone } from '../utils';
 import { Emitter } from '../common/event';
 import { ResourceProvider } from './provider';
 import { IDisposable } from '../common/lifecycle';
+import { Logger } from '../utils/log';
 
 export function getReferenceType(
   reference: URI | string
@@ -66,6 +67,43 @@ export class FoamWorkspace implements IDisposable {
     isSome(old)
       ? this.onDidUpdateEmitter.fire({ old: old, new: resource })
       : this.onDidAddEmitter.fire(resource);
+    return this;
+  }
+
+  rename(oldResource: Resource, newResource: Resource) {
+    const oldResourceName = uriToResourceName(oldResource.uri);
+    const oldResourceId = uriToResourceId(oldResource.uri);
+
+    const newResourceId = uriToResourceId(newResource.uri);
+    const newResourceName = uriToResourceName(newResource.uri);
+    this.resources.set(newResourceId, newResource);
+
+    newResource.links.map(l => Logger.info(l.target));
+
+    if (!this.resourcesByName.has(newResourceName)) {
+      this.resourcesByName.set(
+        newResourceName,
+        this.resourcesByName.get(oldResourceName)
+      );
+    }
+    this.resourcesByName.get(newResourceName)?.push(newResourceId);
+
+    if (this.resourcesByName.has(oldResourceName)) {
+      this.resourcesByName.delete(oldResourceName);
+    }
+    this.resources.delete(oldResourceId);
+
+    // is this necessary?
+    this.onDidUpdateEmitter.fire({ old: oldResource, new: newResource });
+
+    // do some backlink magic
+    // oldResource.links.map(link => {
+    //   const linkResource = this.find(this.resolveLink(oldResource, link));
+    //   linkResource.links.filter(l => l.type ==='wikilink').forEach(l => {
+    //     if(l.target)
+    //   })
+    // });
+
     return this;
   }
 

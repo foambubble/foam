@@ -43,6 +43,12 @@ export interface ParserPlugin {
   onDidFindProperties?: (properties: any, note: Resource, node: Node) => void;
 }
 
+interface FileRenameEvent {
+  /**
+   * The files that got renamed.
+   */
+  readonly files: ReadonlyArray<{ oldUri: URI; newUri: URI }>;
+}
 export class MarkdownResourceProvider implements ResourceProvider {
   private disposables: IDisposable[] = [];
 
@@ -52,6 +58,7 @@ export class MarkdownResourceProvider implements ResourceProvider {
       onDidChange: (uri: URI) => void;
       onDidCreate: (uri: URI) => void;
       onDidDelete: (uri: URI) => void;
+      onDidRenameFiles: (e: FileRenameEvent) => any;
     }) => IDisposable[],
     private readonly parser: ResourceParser = createMarkdownParser([]),
     private readonly dataStore: IDataStore = new FileDataStore()
@@ -95,6 +102,22 @@ export class MarkdownResourceProvider implements ResourceProvider {
         },
         onDidDelete: uri => {
           this.supports(uri) && workspace.delete(uri);
+        },
+        onDidRenameFiles: event => {
+          event.files.map(async renamedFile => {
+            if (
+              this.supports(renamedFile.newUri) &&
+              this.supports(renamedFile.oldUri)
+            ) {
+              const content = await this.dataStore.read(renamedFile.newUri);
+              workspace.rename(
+                await this.parser.parse(renamedFile.oldUri, content),
+                await this.parser.parse(renamedFile.newUri, content)
+              );
+            }
+          });
+          Logger.info(event.files[0].newUri);
+          Logger.info(event.files[0].oldUri);
         },
       }) ?? [];
   }

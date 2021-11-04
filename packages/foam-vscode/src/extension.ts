@@ -21,6 +21,7 @@ function createMarkdownProvider(config: FoamConfig): MarkdownResourceProvider {
       watcher.onDidChange(triggers.onDidChange),
       watcher.onDidCreate(triggers.onDidCreate),
       watcher.onDidDelete(triggers.onDidDelete),
+      workspace.onDidRenameFiles(triggers.onDidRenameFiles),
       watcher,
     ];
   });

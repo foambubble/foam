@@ -35,6 +35,7 @@ import {
   LINK_REFERENCE_DEFINITION_FOOTER,
   LINK_REFERENCE_DEFINITION_HEADER,
 } from '../core/janitor';
+import { fromVsCodeUri } from '../utils/vsc-utils';
 
 const feature: FoamFeature = {
   activate: async (context: ExtensionContext, foamPromise: Promise<Foam>) => {
@@ -73,7 +74,7 @@ const feature: FoamFeature = {
 
 function updateDocumentInNoteGraph(foam: Foam, document: TextDocument) {
   foam.workspace.set(
-    foam.services.parser.parse(document.uri, document.getText())
+    foam.services.parser.parse(fromVsCodeUri(document.uri), document.getText())
   );
 }
 
@@ -139,7 +140,7 @@ function generateReferenceList(
     return [];
   }
 
-  const note = foam.get(doc.uri);
+  const note = foam.get(fromVsCodeUri(doc.uri));
 
   // Should never happen as `doc` is usually given by `editor.document`, which
   // binds to an opened note.

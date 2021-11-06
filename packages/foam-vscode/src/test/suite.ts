@@ -15,25 +15,12 @@ import { runCLI } from '@jest/core';
 
 const rootDir = path.resolve(__dirname, '../..');
 
-const bufferLinesAndLog = (out: (value: string) => void) => {
-  let currentLine = '';
-  return (buffer: string) => {
-    const lines = buffer.split(EOL);
-    const partialLine = lines.pop() ?? '';
-    if (lines.length > 0) {
-      const [endOfCurrentLine, ...otherFullLines] = lines;
-      currentLine += endOfCurrentLine;
-      [currentLine, ...otherFullLines].forEach(l => out(l));
-      currentLine = '';
-    }
-    currentLine += partialLine;
-    return true;
-  };
-};
-
 export function run(): Promise<void> {
   const errWrite = process.stderr.write;
-  process.stderr.write = bufferLinesAndLog(console.log.bind(console));
+  process.stderr.write = (buffer: string) => {
+    console.log(buffer);
+    return true;
+  };
   // process.on('unhandledRejection', err => {
   //   throw err;
   // });

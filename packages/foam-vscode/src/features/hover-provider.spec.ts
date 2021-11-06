@@ -4,9 +4,9 @@ import {
   MarkdownResourceProvider,
 } from '../core/markdown-provider';
 import { FoamGraph } from '../core/model/graph';
-import { URI } from '../core/model/uri';
 import { FoamWorkspace } from '../core/model/workspace';
 import { Matcher } from '../core/services/datastore';
+import { getConfigFromVscode } from '../services/config';
 import {
   cleanWorkspace,
   closeEditors,
@@ -16,14 +16,22 @@ import {
 import { HoverProvider } from './hover-provider';
 
 // We can't use createTestWorkspace from /packages/foam-vscode/src/test/test-utils.ts
-// because we need a fully instantiated MarkdownResourceProvider (with a real instance of ResourceParser).
+// because we need a MarkdownResourceProvider with a real instance of FileDataStore.
 const createWorkspace = () => {
-  const matcher = new Matcher([URI.file('/')], ['**/*']);
+  const config = getConfigFromVscode();
+  const matcher = new Matcher(
+    config.workspaceFolders,
+    config.includeGlobs,
+    config.ignoreGlobs
+  );
   const resourceProvider = new MarkdownResourceProvider(matcher);
   const workspace = new FoamWorkspace();
   workspace.registerProvider(resourceProvider);
   return workspace;
 };
+
+const getValue = (value: vscode.MarkdownString | vscode.MarkedString) =>
+  value instanceof vscode.MarkdownString ? value.value : value;
 
 describe('Hover provider', () => {
   const noCancelToken: vscode.CancellationToken = {
@@ -32,19 +40,6 @@ describe('Hover provider', () => {
   };
   const parser = createMarkdownParser([]);
   const hoverEnabled = () => true;
-
-  // Fixture to use when tests are running with vscode version >= STABLE_MARKDOWN_STRING_API_VERSION (1.52.1)
-  /*const markdownTooltipExpectedFormat = `# File B Title
-  ---
-  tags: my-tag1 my-tag2
-  ---
-
-The content of file B
-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
-cccccccccccccccccccccccccccccccccccccccc
-dddddddddddddddddddddddddddddddddddddddd
-eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee`;*/
 
   beforeAll(async () => {
     await cleanWorkspace();
@@ -183,7 +178,9 @@ eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee`;*/
       const result = await provider.provideHover(doc, pos, noCancelToken);
 
       expect(result.contents).toHaveLength(2);
-      expect(result.contents[0]).toEqual(`This is some content from file B`);
+      expect(getValue(result.contents[0])).toEqual(
+        `This is some content from file B`
+      );
       ws.dispose();
       graph.dispose();
     });
@@ -207,7 +204,9 @@ eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee`;*/
       const result = await provider.provideHover(doc, pos, noCancelToken);
 
       expect(result.contents).toHaveLength(2);
-      expect(result.contents[0]).toEqual(`This is some content from file B`);
+      expect(getValue(result.contents[0])).toEqual(
+        `This is some content from file B`
+      );
       ws.dispose();
       graph.dispose();
     });
@@ -235,7 +234,7 @@ The content of file B`);
       const result = await provider.provideHover(doc, pos, noCancelToken);
 
       expect(result.contents).toHaveLength(2);
-      expect(result.contents[0]).toEqual(`The content of file B`);
+      expect(getValue(result.contents[0])).toEqual(`The content of file B`);
       ws.dispose();
       graph.dispose();
     });
@@ -283,8 +282,10 @@ The content of file B`);
       const result = await provider.provideHover(doc, pos, noCancelToken);
 
       expect(result.contents).toHaveLength(2);
-      expect(result.contents[0]).toEqual(`This is some content`);
-      expect(result.contents[1]).toMatch(/^Also referenced in 1 note:/);
+      expect(getValue(result.contents[0])).toEqual(`This is some content`);
+      expect(getValue(result.contents[1])).toMatch(
+        /^Also referenced in 1 note:/
+      );
       ws.dispose();
       graph.dispose();
     });
@@ -308,7 +309,9 @@ The content of file B`);
 
       expect(result.contents).toHaveLength(2);
       expect(result.contents[0]).toEqual(null);
-      expect(result.contents[1]).toMatch(/^Also referenced in 2 notes:/);
+      expect(getValue(result.contents[1])).toMatch(
+        /^Also referenced in 2 notes:/
+      );
 
       ws.dispose();
       graph.dispose();

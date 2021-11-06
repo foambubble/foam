@@ -343,7 +343,7 @@ describe('resolveFoamTemplateVariables', () => {
 describe('determineDefaultFilepath', () => {
   test('Absolute filepath metadata is unchanged', () => {
     const absolutePath = isWindows
-      ? 'c:\\absolute_path\\journal\\My Note Title.md'
+      ? 'C:\\absolute_path\\journal\\My Note Title.md'
       : '/absolute_path/journal/My Note Title.md';
 
     const resolvedValues = new Map<string, string>();

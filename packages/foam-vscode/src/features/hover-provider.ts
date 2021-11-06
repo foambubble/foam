@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { URI } from '../core/model/uri';
 import { FoamFeature } from '../types';
 import { getNoteTooltip, mdDocSelector, isSome } from '../utils';
-import { toVsCodeRange } from '../utils/vsc-utils';
+import { fromVsCodeUri, toVsCodeRange } from '../utils/vsc-utils';
 import {
   ConfigurationMonitor,
   monitorFoamVsCodeConfig,
@@ -59,7 +59,10 @@ export class HoverProvider implements vscode.HoverProvider {
       return;
     }
 
-    const startResource = this.parser.parse(document.uri, document.getText());
+    const startResource = this.parser.parse(
+      fromVsCodeUri(document.uri),
+      document.getText()
+    );
 
     const targetLink: ResourceLink | undefined = startResource.links.find(
       link =>
@@ -75,7 +78,7 @@ export class HoverProvider implements vscode.HoverProvider {
     const targetUri = this.workspace.resolveLink(startResource, targetLink);
     const refs = this.graph
       .getBacklinks(targetUri)
-      .filter(link => !URI.isEqual(link.source, document.uri));
+      .filter(link => !URI.isEqual(link.source, fromVsCodeUri(document.uri)));
 
     const links = refs.slice(0, 10).map(link => {
       const command = OPEN_COMMAND.asURI(link.source);

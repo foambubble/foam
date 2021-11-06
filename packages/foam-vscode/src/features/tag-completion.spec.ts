@@ -8,10 +8,11 @@ import {
   createFile,
   showInEditor,
 } from '../test/test-utils-vscode';
+import { fromVsCodeUri } from '../utils/vsc-utils';
 import { TagCompletionProvider } from './tag-completion';
 
 describe('Tag Completion', () => {
-  const root = vscode.workspace.workspaceFolders[0].uri;
+  const root = fromVsCodeUri(vscode.workspace.workspaceFolders[0].uri);
   const ws = new FoamWorkspace();
   ws.set(
     createTestNote({

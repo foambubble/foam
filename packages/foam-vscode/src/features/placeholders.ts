@@ -9,6 +9,7 @@ import {
   ResourceTreeItem,
   UriTreeItem,
 } from '../utils/grouped-resources-tree-data-provider';
+import { fromVsCodeUri } from '../utils/vsc-utils';
 
 const feature: FoamFeature = {
   activate: async (
@@ -16,8 +17,8 @@ const feature: FoamFeature = {
     foamPromise: Promise<Foam>
   ) => {
     const foam = await foamPromise;
-    const workspacesURIs = vscode.workspace.workspaceFolders.map(
-      dir => dir.uri
+    const workspacesURIs = vscode.workspace.workspaceFolders.map(dir =>
+      fromVsCodeUri(dir.uri)
     );
     const provider = new GroupedResourcesTreeDataProvider(
       'placeholders',

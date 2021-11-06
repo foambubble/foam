@@ -13,6 +13,7 @@ import {
   createFile,
   showInEditor,
 } from '../test/test-utils-vscode';
+import { toVsCodeUri } from '../utils/vsc-utils';
 import { HoverProvider } from './hover-provider';
 
 // We can't use createTestWorkspace from /packages/foam-vscode/src/test/test-utils.ts
@@ -60,7 +61,7 @@ describe('Hover provider', () => {
       const graph = FoamGraph.fromWorkspace(ws);
       const provider = new HoverProvider(hoverEnabled, ws, graph, parser);
 
-      const doc = await vscode.workspace.openTextDocument(uri);
+      const doc = await vscode.workspace.openTextDocument(toVsCodeUri(uri));
       const pos = new vscode.Position(0, 0);
       const result = await provider.provideHover(doc, pos, noCancelToken);
 
@@ -78,7 +79,7 @@ describe('Hover provider', () => {
 
       const provider = new HoverProvider(hoverEnabled, ws, graph, parser);
 
-      const doc = await vscode.workspace.openTextDocument(uri);
+      const doc = await vscode.workspace.openTextDocument(toVsCodeUri(uri));
       const pos = new vscode.Position(0, 0);
       const result = await provider.provideHover(doc, pos, noCancelToken);
 

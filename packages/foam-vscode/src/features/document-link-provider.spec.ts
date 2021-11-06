@@ -32,7 +32,7 @@ describe('Document links provider', () => {
     const { uri, content } = await createFile('');
     const ws = new FoamWorkspace().set(parser.parse(uri, content));
 
-    const doc = await vscode.workspace.openTextDocument(uri);
+    const doc = await vscode.workspace.openTextDocument(toVsCodeUri(uri));
     const provider = new LinkProvider(ws, parser);
     const links = provider.provideDocumentLinks(doc);
 
@@ -45,7 +45,7 @@ describe('Document links provider', () => {
     );
     const ws = new FoamWorkspace().set(parser.parse(uri, content));
 
-    const doc = await vscode.workspace.openTextDocument(uri);
+    const doc = await vscode.workspace.openTextDocument(toVsCodeUri(uri));
     const provider = new LinkProvider(ws, parser);
     const links = provider.provideDocumentLinks(doc);
 
@@ -98,7 +98,7 @@ describe('Document links provider', () => {
 
     expect(links.length).toEqual(1);
     expect(links[0].target).toEqual(
-      OPEN_COMMAND.asURI(toVsCodeUri(URI.placeholder('a placeholder')))
+      OPEN_COMMAND.asURI(URI.placeholder('a placeholder'))
     );
     expect(links[0].range).toEqual(new vscode.Range(0, 18, 0, 35));
   });

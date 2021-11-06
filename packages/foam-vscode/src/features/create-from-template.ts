@@ -17,11 +17,11 @@ import {
 } from 'vscode';
 import { FoamFeature } from '../types';
 import { focusNote } from '../utils';
-import { toVsCodeUri } from '../utils/vsc-utils';
+import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
 import { extractFoamTemplateFrontmatterMetadata } from '../utils/template-frontmatter-parser';
 
 const templatesDir = URI.joinPath(
-  workspace.workspaceFolders[0].uri,
+  fromVsCodeUri(workspace.workspaceFolders[0].uri),
   '.foam',
   'templates'
 );
@@ -101,7 +101,9 @@ async function templateMetadata(
 }
 
 async function getTemplates(): Promise<URI[]> {
-  const templates = await workspace.findFiles('.foam/templates/**.md', null);
+  const templates = await workspace
+    .findFiles('.foam/templates/**.md', null)
+    .then(v => v.map(uri => fromVsCodeUri(uri)));
   return templates;
 }
 
@@ -477,7 +479,7 @@ function currentDirectoryFilepath(filename: string) {
   const currentDir =
     activeFile !== undefined
       ? URI.parse(path.dirname(activeFile))
-      : workspace.workspaceFolders[0].uri;
+      : fromVsCodeUri(workspace.workspaceFolders[0].uri);
 
   return URI.joinPath(currentDir, filename);
 }
@@ -518,7 +520,7 @@ async function replaceSelectionWithWikiLink(
 function resolveFilepathAttribute(filepath) {
   return isAbsolute(filepath)
     ? URI.file(filepath)
-    : URI.joinPath(workspace.workspaceFolders[0].uri, filepath);
+    : URI.joinPath(fromVsCodeUri(workspace.workspaceFolders[0].uri), filepath);
 }
 
 export function determineDefaultFilepath(

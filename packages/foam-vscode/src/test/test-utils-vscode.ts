@@ -4,7 +4,7 @@
 import * as vscode from 'vscode';
 import path from 'path';
 import { TextEncoder } from 'util';
-import { toVsCodeUri } from '../utils/vsc-utils';
+import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
 import { Logger } from '../core/utils/log';
 import { URI } from '../core/model/uri';
 import { Resource } from '../core/model/note';
@@ -36,11 +36,14 @@ export const closeEditors = async () => {
  * @returns an object containing various information about the file created
  */
 export const createFile = async (content: string, filepath?: string[]) => {
-  const rootUri = vscode.workspace.workspaceFolders[0].uri;
+  const rootUri = fromVsCodeUri(vscode.workspace.workspaceFolders[0].uri);
   filepath = filepath ?? [randomString() + '.md'];
-  const uri = vscode.Uri.joinPath(rootUri, ...filepath);
-  const filenameComponents = path.parse(uri.fsPath);
-  await vscode.workspace.fs.writeFile(uri, new TextEncoder().encode(content));
+  const uri = URI.joinPath(rootUri, ...filepath);
+  const filenameComponents = path.parse(URI.toFsPath(uri));
+  await vscode.workspace.fs.writeFile(
+    toVsCodeUri(uri),
+    new TextEncoder().encode(content)
+  );
   return { uri, content, ...filenameComponents };
 };
 

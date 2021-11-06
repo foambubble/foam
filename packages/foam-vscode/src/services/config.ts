@@ -1,12 +1,15 @@
 import { Disposable, workspace } from 'vscode';
 import { createConfigFromFolders, FoamConfig } from '../core/config';
 import { getIgnoredFilesSetting } from '../settings';
+import { fromVsCodeUri } from '../utils/vsc-utils';
 
 // TODO this is still to be improved - foam config should
 // not be dependent on vscode but at the moment it's convenient
 // to leverage it
 export const getConfigFromVscode = (): FoamConfig => {
-  const workspaceFolders = workspace.workspaceFolders.map(dir => dir.uri);
+  const workspaceFolders = workspace.workspaceFolders.map(dir =>
+    fromVsCodeUri(dir.uri)
+  );
   const excludeGlobs = getIgnoredFilesSetting();
 
   return createConfigFromFolders(workspaceFolders, {

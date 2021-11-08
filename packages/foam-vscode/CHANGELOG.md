@@ -4,6 +4,13 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.15.3] - 2021-11-08
+
+Fixes and Improvements:
+
+- Avoid delaying decorations on editor switch (#811 - thanks @memeplex)
+- Fix preview issue when embedding a note and using reference definitions (#808 - thanks @pderaaij)
+
 ## [0.15.2] - 2021-10-27
 
 Features:

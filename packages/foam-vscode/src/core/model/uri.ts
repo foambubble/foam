@@ -6,7 +6,6 @@
 
 import * as paths from 'path';
 import { CharCode } from '../common/charCode';
-import { isWindows } from '../common/platform';
 
 /**
  * Uniform Resource Identifier (URI) http://tools.ietf.org/html/rfc3986.
@@ -216,7 +215,7 @@ export abstract class URI {
       // other path
       value = uri.path;
     }
-    if (isWindows) {
+    if (URI.isWindowsPath(value)) {
       value = value.replace(/\//g, '\\');
     }
     return value;

@@ -1,6 +1,5 @@
 import { generateHeading } from '.';
 import { TEST_DATA_DIR } from '../../test/test-utils';
-import { createConfigFromFolders } from '../config';
 import { MarkdownResourceProvider } from '../markdown-provider';
 import { bootstrap } from '../model/foam';
 import { Resource } from '../model/note';
@@ -21,17 +20,9 @@ describe('generateHeadings', () => {
   };
 
   beforeAll(async () => {
-    const config = createConfigFromFolders([
-      URI.joinPath(TEST_DATA_DIR, '__scaffold__'),
-    ]);
-    const mdProvider = new MarkdownResourceProvider(
-      new Matcher(
-        config.workspaceFolders,
-        config.includeGlobs,
-        config.ignoreGlobs
-      )
-    );
-    const foam = await bootstrap(config, new FileDataStore(), [mdProvider]);
+    const matcher = new Matcher([URI.joinPath(TEST_DATA_DIR, '__scaffold__')]);
+    const mdProvider = new MarkdownResourceProvider(matcher);
+    const foam = await bootstrap(matcher, new FileDataStore(), [mdProvider]);
     _workspace = foam.workspace;
   });
 

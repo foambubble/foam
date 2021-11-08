@@ -2,7 +2,6 @@ import { createTestNote } from '../../test/test-utils';
 import { cleanWorkspace, closeEditors } from '../../test/test-utils-vscode';
 import { TagItem, TagReference, TagsProvider } from '.';
 import { bootstrap, Foam } from '../../core/model/foam';
-import { createConfigFromFolders, FoamConfig } from '../../core/config';
 import { MarkdownResourceProvider } from '../../core/markdown-provider';
 import { FileDataStore, Matcher } from '../../core/services/datastore';
 
@@ -10,14 +9,8 @@ describe('Tags tree panel', () => {
   let _foam: Foam;
   let provider: TagsProvider;
 
-  const config: FoamConfig = createConfigFromFolders([]);
-  const mdProvider = new MarkdownResourceProvider(
-    new Matcher(
-      config.workspaceFolders,
-      config.includeGlobs,
-      config.ignoreGlobs
-    )
-  );
+  const matcher = new Matcher([]);
+  const mdProvider = new MarkdownResourceProvider(matcher);
 
   beforeAll(async () => {
     await cleanWorkspace();
@@ -29,7 +22,7 @@ describe('Tags tree panel', () => {
   });
 
   beforeEach(async () => {
-    _foam = await bootstrap(config, new FileDataStore(), [mdProvider]);
+    _foam = await bootstrap(matcher, new FileDataStore(), [mdProvider]);
     provider = new TagsProvider(_foam, _foam.workspace);
     await closeEditors();
   });

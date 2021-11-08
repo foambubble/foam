@@ -1,32 +1,13 @@
 import { workspace, ExtensionContext, window } from 'vscode';
-import { FoamConfig } from './core/config';
 import { MarkdownResourceProvider } from './core/markdown-provider';
 import { bootstrap } from './core/model/foam';
 import { FileDataStore, Matcher } from './core/services/datastore';
 import { Logger } from './core/utils/log';
 
 import { features } from './features';
-import { getConfigFromVscode } from './services/config';
 import { VsCodeOutputLogger, exposeLogger } from './services/logging';
+import { getIgnoredFilesSetting } from './settings';
 import { fromVsCodeUri } from './utils/vsc-utils';
-
-function createMarkdownProvider(config: FoamConfig): MarkdownResourceProvider {
-  const matcher = new Matcher(
-    config.workspaceFolders,
-    config.includeGlobs,
-    config.ignoreGlobs
-  );
-  const provider = new MarkdownResourceProvider(matcher, triggers => {
-    const watcher = workspace.createFileSystemWatcher('**/*');
-    return [
-      watcher.onDidChange(uri => triggers.onDidChange(fromVsCodeUri(uri))),
-      watcher.onDidCreate(uri => triggers.onDidCreate(fromVsCodeUri(uri))),
-      watcher.onDidDelete(uri => triggers.onDidDelete(fromVsCodeUri(uri))),
-      watcher,
-    ];
-  });
-  return provider;
-}
 
 export async function activate(context: ExtensionContext) {
   const logger = new VsCodeOutputLogger();
@@ -37,10 +18,23 @@ export async function activate(context: ExtensionContext) {
     Logger.info('Starting Foam');
 
     // Prepare Foam
-    const config: FoamConfig = getConfigFromVscode();
     const dataStore = new FileDataStore();
-    const markdownProvider = createMarkdownProvider(config);
-    const foamPromise = bootstrap(config, dataStore, [markdownProvider]);
+    const matcher = new Matcher(
+      workspace.workspaceFolders.map(dir => fromVsCodeUri(dir.uri)),
+      ['**/*'],
+      getIgnoredFilesSetting().map(g => g.toString())
+    );
+    const markdownProvider = new MarkdownResourceProvider(matcher, triggers => {
+      const watcher = workspace.createFileSystemWatcher('**/*');
+      return [
+        watcher.onDidChange(uri => triggers.onDidChange(fromVsCodeUri(uri))),
+        watcher.onDidCreate(uri => triggers.onDidCreate(fromVsCodeUri(uri))),
+        watcher.onDidDelete(uri => triggers.onDidDelete(fromVsCodeUri(uri))),
+        watcher,
+      ];
+    });
+
+    const foamPromise = bootstrap(matcher, dataStore, [markdownProvider]);
 
     // Load the features
     const resPromises = features.map(f => f.activate(context, foamPromise));

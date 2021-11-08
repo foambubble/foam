@@ -1,31 +1,14 @@
 import { Disposable, workspace } from 'vscode';
-import { createConfigFromFolders, FoamConfig } from '../core/config';
-import { getIgnoredFilesSetting } from '../settings';
-import { fromVsCodeUri } from '../utils/vsc-utils';
 
-// TODO this is still to be improved - foam config should
-// not be dependent on vscode but at the moment it's convenient
-// to leverage it
-export const getConfigFromVscode = (): FoamConfig => {
-  const workspaceFolders = workspace.workspaceFolders.map(dir =>
-    fromVsCodeUri(dir.uri)
-  );
-  const excludeGlobs = getIgnoredFilesSetting();
-
-  return createConfigFromFolders(workspaceFolders, {
-    ignore: excludeGlobs.map(g => g.toString()),
-  });
-};
+export interface ConfigurationMonitor<T> extends Disposable {
+  (): T;
+}
 
 export const getFoamVsCodeConfig = <T>(key: string): T =>
   workspace.getConfiguration('foam').get(key);
 
 export const updateFoamVsCodeConfig = <T>(key: string, value: T) =>
   workspace.getConfiguration().update('foam.' + key, value);
-
-export interface ConfigurationMonitor<T> extends Disposable {
-  (): T;
-}
 
 export const monitorFoamVsCodeConfig = <T>(
   key: string

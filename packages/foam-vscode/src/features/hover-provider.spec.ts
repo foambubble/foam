@@ -264,10 +264,36 @@ The content of file B`);
     it('should include other backlinks (but not self) to target wikilink', async () => {
       const fileA = await createFile(`This is some content`);
       const fileB = await createFile(
-        `this is a link to [a file](./${fileA.base}).`
+        `This is a direct link to [a file](./${fileA.base}).`
       );
+      const fileC = await createFile(`Here is a wikilink to [[${fileA.name}]]`);
+
+      const ws = createWorkspace()
+        .set(parser.parse(fileA.uri, fileA.content))
+        .set(parser.parse(fileB.uri, fileB.content))
+        .set(parser.parse(fileC.uri, fileC.content));
+      const graph = FoamGraph.fromWorkspace(ws);
+
+      const { doc } = await showInEditor(fileB.uri);
+      const pos = new vscode.Position(0, 29); // Set cursor position on the link.
+
+      const provider = new HoverProvider(hoverEnabled, ws, graph, parser);
+      const result = await provider.provideHover(doc, pos, noCancelToken);
+
+      expect(result.contents).toHaveLength(2);
+      expect(getValue(result.contents[0])).toEqual(`This is some content`);
+      expect(getValue(result.contents[1])).toMatch(
+        /^Also referenced in 1 note:/
+      );
+      ws.dispose();
+      graph.dispose();
+    });
+
+    it('should only add a note only once no matter how many links it has to the target', async () => {
+      const fileA = await createFile(`This is some content`);
+      const fileB = await createFile(`This is a link to [[${fileA.name}]].`);
       const fileC = await createFile(
-        `this is another note linked to [[${fileA.name}]]`
+        `This note is linked to [[${fileA.name}]] twice, here is the second: [[${fileA.name}]]`
       );
 
       const ws = createWorkspace()
@@ -283,14 +309,12 @@ The content of file B`);
       const result = await provider.provideHover(doc, pos, noCancelToken);
 
       expect(result.contents).toHaveLength(2);
-      expect(getValue(result.contents[0])).toEqual(`This is some content`);
       expect(getValue(result.contents[1])).toMatch(
         /^Also referenced in 1 note:/
       );
       ws.dispose();
       graph.dispose();
     });
-
     it('should work for placeholders', async () => {
       const fileA = await createFile(`Some content and a [[placeholder]]`);
       const fileB = await createFile(`More content to a [[placeholder]]`);

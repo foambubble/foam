@@ -4,6 +4,12 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.15.4] - 2021-11-09
+
+Fixes and Improvements:
+
+- Detached Foam URI from VS Code URI. This should improve several path related issues in Windows. Given how core this change is, the release is just about this refactoring to easily detect possible side effects.
+
 ## [0.15.3] - 2021-11-08
 
 Fixes and Improvements:

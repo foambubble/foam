@@ -60,7 +60,7 @@ async function main() {
   }
 
   if (!isSuccess) {
-    process.exit(1);
+    throw new Error('Some Foam tests failed');
   }
 }
 

@@ -4,6 +4,7 @@ import { isAbsolute } from 'path';
 import { focusNote, pathExists } from './utils';
 import { URI } from './core/model/uri';
 import { createNoteFromDailyNoteTemplate } from './features/create-from-template';
+import { fromVsCodeUri } from './utils/vsc-utils';
 
 /**
  * Open the daily note file.
@@ -52,7 +53,7 @@ export function getDailyNotePath(
     return URI.joinPath(URI.file(dailyNoteDirectory), dailyNoteFilename);
   } else {
     return URI.joinPath(
-      workspace.workspaceFolders[0].uri,
+      fromVsCodeUri(workspace.workspaceFolders[0].uri),
       dailyNoteDirectory,
       dailyNoteFilename
     );

@@ -9,6 +9,7 @@ import {
 import { ResourceParser } from '../core/model/note';
 import { FoamWorkspace } from '../core/model/workspace';
 import { Foam } from '../core/model/foam';
+import { fromVsCodeUri } from '../utils/vsc-utils';
 
 export const CONFIG_KEY = 'decorations.links.enable';
 
@@ -34,7 +35,10 @@ const updateDecorations = (
   if (!editor || !areDecorationsEnabled()) {
     return;
   }
-  const note = parser.parse(editor.document.uri, editor.document.getText());
+  const note = parser.parse(
+    fromVsCodeUri(editor.document.uri),
+    editor.document.getText()
+  );
   let linkRanges = [];
   let placeholderRanges = [];
   note.links.forEach(link => {

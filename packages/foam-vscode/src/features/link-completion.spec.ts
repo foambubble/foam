@@ -8,10 +8,11 @@ import {
   createFile,
   showInEditor,
 } from '../test/test-utils-vscode';
+import { fromVsCodeUri } from '../utils/vsc-utils';
 import { CompletionProvider } from './link-completion';
 
 describe('Link Completion', () => {
-  const root = vscode.workspace.workspaceFolders[0].uri;
+  const root = fromVsCodeUri(vscode.workspace.workspaceFolders[0].uri);
   const ws = new FoamWorkspace();
   ws.set(
     createTestNote({

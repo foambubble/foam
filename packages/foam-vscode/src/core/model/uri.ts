@@ -39,6 +39,9 @@ const _regexp = /^(([^:/?#]{2,}?):)?(\/\/([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?
 
 export abstract class URI {
   static create(from: Partial<URI>): URI {
+    // When using this method we assume the path is already posix
+    // so we don't check whether it's a Windows path, nor we do any
+    // conversion
     return {
       scheme: from.scheme ?? _empty,
       authority: from.authority ?? _empty,
@@ -53,10 +56,14 @@ export abstract class URI {
     if (!match) {
       return URI.create({});
     }
+    let path = percentDecode(match[5] ?? _empty);
+    if (URI.isWindowsPath(path)) {
+      path = windowsPathToUriPath(path);
+    }
     return URI.create({
       scheme: match[2] || 'file',
       authority: percentDecode(match[4] ?? _empty),
-      path: percentDecode(match[5] ?? _empty),
+      path: path,
       query: percentDecode(match[7] ?? _empty),
       fragment: percentDecode(match[9] ?? _empty),
     });
@@ -104,12 +111,8 @@ export abstract class URI {
     // normalize to fwd-slashes on windows,
     // on other systems bwd-slashes are valid
     // filename character, eg /f\oo/ba\r.txt
-    if (isWindows) {
-      if (path.startsWith(_slash)) {
-        path = `${path.replace(/\\/g, _slash)}`;
-      } else {
-        path = `/${path.replace(/\\/g, _slash)}`;
-      }
+    if (URI.isWindowsPath(path)) {
+      path = windowsPathToUriPath(path);
     }
 
     // check for authority as used in UNC shares
@@ -185,7 +188,7 @@ export abstract class URI {
       throw new Error(`[UriError]: cannot call joinPath on URI without path`);
     }
     let newPath: string;
-    if (isWindows && uri.scheme === 'file') {
+    if (URI.isWindowsPath(uri.path) && uri.scheme === 'file') {
       newPath = URI.file(paths.win32.join(URI.toFsPath(uri), ...pathFragment))
         .path;
     } else {
@@ -194,7 +197,7 @@ export abstract class URI {
     return URI.create({ ...uri, path: newPath });
   }
 
-  static toFsPath(uri: URI, keepDriveLetterCasing = true): string {
+  static toFsPath(uri: URI): string {
     let value: string;
     if (uri.authority && uri.path.length > 1 && uri.scheme === 'file') {
       // unc path: file://shares/c$/far/boo
@@ -207,12 +210,8 @@ export abstract class URI {
           uri.path.charCodeAt(1) <= CharCode.z)) &&
       uri.path.charCodeAt(2) === CharCode.Colon
     ) {
-      if (!keepDriveLetterCasing) {
-        // windows drive letter: file:///c:/far/boo
-        value = uri.path[1].toLowerCase() + uri.path.substr(2);
-      } else {
-        value = uri.path.substr(1);
-      }
+      // windows drive letter: file:///C:/far/boo
+      value = uri.path[1].toUpperCase() + uri.path.substr(2);
     } else {
       // other path
       value = uri.path;
@@ -228,6 +227,15 @@ export abstract class URI {
   }
 
   // --- utility
+
+  static isWindowsPath(path: string) {
+    return (
+      (path.length >= 2 && path.charCodeAt(1) === CharCode.Colon) ||
+      (path.length >= 3 &&
+        path.charCodeAt(0) === CharCode.Slash &&
+        path.charCodeAt(2) === CharCode.Colon)
+    );
+  }
 
   static isUri(thing: any): thing is URI {
     if (!thing) {
@@ -286,6 +294,33 @@ function percentDecode(str: string): string {
 }
 
 /**
+ * Converts a windows-like path to standard URI path
+ * - Normalize the Windows drive letter to upper case
+ * - replace \ with /
+ * - always start with /
+ *
+ * see https://github.com/foambubble/foam/issues/813
+ * see https://github.com/microsoft/vscode/issues/43959
+ * see https://github.com/microsoft/vscode/issues/116298
+ *
+ * @param path the path to convert
+ * @returns the URI compatible path
+ */
+function windowsPathToUriPath(path: string): string {
+  path = path.charCodeAt(0) === CharCode.Slash ? path : `/${path}`;
+  path = path.replace(/\\/g, _slash);
+  const code = path.charCodeAt(1);
+  if (
+    path.charCodeAt(2) === CharCode.Colon &&
+    code >= CharCode.a &&
+    code <= CharCode.z
+  ) {
+    path = `/${String.fromCharCode(code - 32)}:${path.substr(3)}`; // "/C:".length === 3
+  }
+  return path;
+}
+
+/**
  * Create the external version of a uri
  */
 function encode(uri: URI, skipEncoding: boolean): string {
@@ -331,20 +366,20 @@ function encode(uri: URI, skipEncoding: boolean): string {
     }
   }
   if (path) {
-    // lower-case windows drive letters in /C:/fff or C:/fff
+    // upper-case windows drive letters in /c:/fff or c:/fff
     if (
       path.length >= 3 &&
       path.charCodeAt(0) === CharCode.Slash &&
       path.charCodeAt(2) === CharCode.Colon
     ) {
       const code = path.charCodeAt(1);
-      if (code >= CharCode.A && code <= CharCode.Z) {
-        path = `/${String.fromCharCode(code + 32)}:${path.substr(3)}`; // "/c:".length === 3
+      if (code >= CharCode.a && code <= CharCode.z) {
+        path = `/${String.fromCharCode(code - 32)}:${path.substr(3)}`; // "/C:".length === 3
       }
     } else if (path.length >= 2 && path.charCodeAt(1) === CharCode.Colon) {
       const code = path.charCodeAt(0);
-      if (code >= CharCode.A && code <= CharCode.Z) {
-        path = `${String.fromCharCode(code + 32)}:${path.substr(2)}`; // "/c:".length === 3
+      if (code >= CharCode.a && code <= CharCode.z) {
+        path = `${String.fromCharCode(code - 32)}:${path.substr(2)}`; // "/C:".length === 3
       }
     }
     // encode the rest of the path

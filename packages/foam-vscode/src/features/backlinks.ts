@@ -10,6 +10,7 @@ import { FoamWorkspace } from '../core/model/workspace';
 import { FoamGraph } from '../core/model/graph';
 import { Resource, ResourceLink } from '../core/model/note';
 import { Range } from '../core/model/range';
+import { fromVsCodeUri } from '../utils/vsc-utils';
 
 const feature: FoamFeature = {
   activate: async (
@@ -21,7 +22,9 @@ const feature: FoamFeature = {
     const provider = new BacklinksTreeDataProvider(foam.workspace, foam.graph);
 
     vscode.window.onDidChangeActiveTextEditor(async () => {
-      provider.target = vscode.window.activeTextEditor?.document.uri;
+      provider.target = vscode.window.activeTextEditor
+        ? fromVsCodeUri(vscode.window.activeTextEditor?.document.uri)
+        : undefined;
       await provider.refresh();
     });
 

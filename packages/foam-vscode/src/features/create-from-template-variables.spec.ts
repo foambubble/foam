@@ -8,6 +8,7 @@ import {
 import path from 'path';
 import { isWindows } from '../utils';
 import { URI } from '../core/model/uri';
+import { fromVsCodeUri } from '../utils/vsc-utils';
 
 describe('substituteFoamVariables', () => {
   test('Does nothing if no Foam-specific variables are used', () => {
@@ -129,7 +130,7 @@ describe('resolveFoamVariables', () => {
   });
 
   test('Resolves FOAM_DATE_* properties with given date', async () => {
-    const targetDate = new Date(2021, 8, 12, 1, 2, 3);
+    const targetDate = new Date(2021, 9, 12, 1, 2, 3);
     const variables = [
       'FOAM_DATE_YEAR',
       'FOAM_DATE_YEAR_SHORT',
@@ -148,12 +149,12 @@ describe('resolveFoamVariables', () => {
     const expected = new Map<string, string>();
     expected.set('FOAM_DATE_YEAR', '2021');
     expected.set('FOAM_DATE_YEAR_SHORT', '21');
-    expected.set('FOAM_DATE_MONTH', '09');
-    expected.set('FOAM_DATE_MONTH_NAME', 'September');
-    expected.set('FOAM_DATE_MONTH_NAME_SHORT', 'Sep');
+    expected.set('FOAM_DATE_MONTH', '10');
+    expected.set('FOAM_DATE_MONTH_NAME', 'October');
+    expected.set('FOAM_DATE_MONTH_NAME_SHORT', 'Oct');
     expected.set('FOAM_DATE_DATE', '12');
-    expected.set('FOAM_DATE_DAY_NAME', 'Sunday');
-    expected.set('FOAM_DATE_DAY_NAME_SHORT', 'Sun');
+    expected.set('FOAM_DATE_DAY_NAME', 'Tuesday');
+    expected.set('FOAM_DATE_DAY_NAME_SHORT', 'Tue');
     expected.set('FOAM_DATE_HOUR', '01');
     expected.set('FOAM_DATE_MINUTE', '02');
     expected.set('FOAM_DATE_SECOND', '03');
@@ -343,7 +344,7 @@ describe('resolveFoamTemplateVariables', () => {
 describe('determineDefaultFilepath', () => {
   test('Absolute filepath metadata is unchanged', () => {
     const absolutePath = isWindows
-      ? 'c:\\absolute_path\\journal\\My Note Title.md'
+      ? 'C:\\absolute_path\\journal\\My Note Title.md'
       : '/absolute_path/journal/My Note Title.md';
 
     const resolvedValues = new Map<string, string>();
@@ -373,7 +374,7 @@ describe('determineDefaultFilepath', () => {
     );
 
     const expectedPath = path.join(
-      workspace.workspaceFolders[0].uri.fsPath,
+      URI.toFsPath(fromVsCodeUri(workspace.workspaceFolders[0].uri)),
       relativePath
     );
 

@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { FoamFeature } from '../types';
 import { URI } from '../core/model/uri';
-import { toVsCodeUri } from '../utils/vsc-utils';
+import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
 import { createNoteForPlaceholderWikilink } from './create-from-template';
 
 export const OPEN_COMMAND = {
@@ -19,18 +19,18 @@ export const OPEN_COMMAND = {
 
         const basedir =
           vscode.workspace.workspaceFolders.length > 0
-            ? vscode.workspace.workspaceFolders[0].uri
-            : vscode.window.activeTextEditor?.document.uri
-            ? URI.getDir(vscode.window.activeTextEditor!.document.uri)
+            ? fromVsCodeUri(vscode.workspace.workspaceFolders[0].uri)
+            : fromVsCodeUri(vscode.window.activeTextEditor?.document.uri)
+            ? URI.getDir(
+                fromVsCodeUri(vscode.window.activeTextEditor!.document.uri)
+              )
             : undefined;
 
         if (basedir === undefined) {
           return;
         }
 
-        const target = toVsCodeUri(
-          URI.createResourceUriFromPlaceholder(basedir, uri)
-        );
+        const target = URI.createResourceUriFromPlaceholder(basedir, uri);
 
         await createNoteForPlaceholderWikilink(title, target);
         return;

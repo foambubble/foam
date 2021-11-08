@@ -8,6 +8,7 @@ import { Logger } from './core/utils/log';
 import { features } from './features';
 import { getConfigFromVscode } from './services/config';
 import { VsCodeOutputLogger, exposeLogger } from './services/logging';
+import { fromVsCodeUri } from './utils/vsc-utils';
 
 function createMarkdownProvider(config: FoamConfig): MarkdownResourceProvider {
   const matcher = new Matcher(
@@ -18,9 +19,9 @@ function createMarkdownProvider(config: FoamConfig): MarkdownResourceProvider {
   const provider = new MarkdownResourceProvider(matcher, triggers => {
     const watcher = workspace.createFileSystemWatcher('**/*');
     return [
-      watcher.onDidChange(triggers.onDidChange),
-      watcher.onDidCreate(triggers.onDidCreate),
-      watcher.onDidDelete(triggers.onDidDelete),
+      watcher.onDidChange(uri => triggers.onDidChange(fromVsCodeUri(uri))),
+      watcher.onDidCreate(uri => triggers.onDidCreate(fromVsCodeUri(uri))),
+      watcher.onDidDelete(uri => triggers.onDidDelete(fromVsCodeUri(uri))),
       watcher,
     ];
   });

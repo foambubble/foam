@@ -8,6 +8,7 @@ import {
   createFile,
   showInEditor,
 } from './test/test-utils-vscode';
+import { fromVsCodeUri } from './utils/vsc-utils';
 
 describe('getDailyNotePath', () => {
   const date = new Date('2021-02-07T00:00:00Z');
@@ -20,7 +21,7 @@ describe('getDailyNotePath', () => {
     const config = 'journal';
 
     const expectedPath = URI.joinPath(
-      workspace.workspaceFolders[0].uri,
+      fromVsCodeUri(workspace.workspaceFolders[0].uri),
       config,
       `${isoDate}.md`
     );
@@ -44,7 +45,7 @@ describe('getDailyNotePath', () => {
 
   test('Uses absolute directories without modification', async () => {
     const config = isWindows
-      ? 'c:\\absolute_path\\journal'
+      ? 'C:\\absolute_path\\journal'
       : '/absolute_path/journal';
     const expectedPath = isWindows
       ? `${config}\\${isoDate}.md`

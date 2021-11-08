@@ -45,7 +45,7 @@ describe('getDailyNotePath', () => {
 
   test('Uses absolute directories without modification', async () => {
     const config = isWindows
-      ? 'c:\\absolute_path\\journal'
+      ? 'C:\\absolute_path\\journal'
       : '/absolute_path/journal';
     const expectedPath = isWindows
       ? `${config}\\${isoDate}.md`

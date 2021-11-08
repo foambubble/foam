@@ -30,8 +30,8 @@ describe('Foam URI', () => {
       const lowerCase = URI.parse('file:///c:/this/is/a/Path');
       expect(upperCase.path).toEqual('/C:/this/is/a/Path');
       expect(lowerCase.path).toEqual('/C:/this/is/a/Path');
-      expect(URI.toFsPath(upperCase)).toEqual('C:/this/is/a/Path');
-      expect(URI.toFsPath(lowerCase)).toEqual('C:/this/is/a/Path');
+      expect(URI.toFsPath(upperCase)).toEqual('C:\\this\\is\\a\\Path');
+      expect(URI.toFsPath(lowerCase)).toEqual('C:\\this\\is\\a\\Path');
     });
 
     it('consistently parses file paths', () => {

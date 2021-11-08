@@ -8,6 +8,7 @@ import {
 import path from 'path';
 import { isWindows } from '../utils';
 import { URI } from '../core/model/uri';
+import { fromVsCodeUri } from '../utils/vsc-utils';
 
 describe('substituteFoamVariables', () => {
   test('Does nothing if no Foam-specific variables are used', () => {
@@ -373,7 +374,7 @@ describe('determineDefaultFilepath', () => {
     );
 
     const expectedPath = path.join(
-      workspace.workspaceFolders[0].uri.fsPath,
+      URI.toFsPath(fromVsCodeUri(workspace.workspaceFolders[0].uri)),
       relativePath
     );
 

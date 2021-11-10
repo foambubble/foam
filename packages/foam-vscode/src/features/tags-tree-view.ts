@@ -1,11 +1,11 @@
-import { URI } from '../../core/model/uri';
+import { URI } from '../core/model/uri';
 import * as vscode from 'vscode';
-import { FoamFeature } from '../../types';
-import { getNoteTooltip, isSome } from '../../utils';
-import { toVsCodeRange, toVsCodeUri } from '../../utils/vsc-utils';
-import { Foam } from '../../core/model/foam';
-import { FoamWorkspace } from '../../core/model/workspace';
-import { Resource, Tag } from '../../core/model/note';
+import { FoamFeature } from '../types';
+import { getNoteTooltip, isSome } from '../utils';
+import { toVsCodeRange, toVsCodeUri } from '../utils/vsc-utils';
+import { Foam } from '../core/model/foam';
+import { FoamWorkspace } from '../core/model/workspace';
+import { Resource, Tag } from '../core/model/note';
 
 const TAG_SEPARATOR = '/';
 const feature: FoamFeature = {

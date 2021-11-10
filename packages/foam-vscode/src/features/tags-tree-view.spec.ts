@@ -1,9 +1,9 @@
-import { createTestNote } from '../../test/test-utils';
-import { cleanWorkspace, closeEditors } from '../../test/test-utils-vscode';
-import { TagItem, TagReference, TagsProvider } from '.';
-import { bootstrap, Foam } from '../../core/model/foam';
-import { MarkdownResourceProvider } from '../../core/markdown-provider';
-import { FileDataStore, Matcher } from '../../core/services/datastore';
+import { createTestNote } from '../test/test-utils';
+import { cleanWorkspace, closeEditors } from '../test/test-utils-vscode';
+import { TagItem, TagReference, TagsProvider } from './tags-tree-view';
+import { bootstrap, Foam } from '../core/model/foam';
+import { MarkdownResourceProvider } from '../core/markdown-provider';
+import { FileDataStore, Matcher } from '../core/services/datastore';
 
 describe('Tags tree panel', () => {
   let _foam: Foam;

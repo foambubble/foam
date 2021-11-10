@@ -6,24 +6,20 @@ import {
 import { FoamGraph } from '../core/model/graph';
 import { FoamWorkspace } from '../core/model/workspace';
 import { Matcher } from '../core/services/datastore';
-import { getConfigFromVscode } from '../services/config';
 import {
   cleanWorkspace,
   closeEditors,
   createFile,
   showInEditor,
 } from '../test/test-utils-vscode';
-import { toVsCodeUri } from '../utils/vsc-utils';
+import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
 import { HoverProvider } from './hover-provider';
 
 // We can't use createTestWorkspace from /packages/foam-vscode/src/test/test-utils.ts
 // because we need a MarkdownResourceProvider with a real instance of FileDataStore.
 const createWorkspace = () => {
-  const config = getConfigFromVscode();
   const matcher = new Matcher(
-    config.workspaceFolders,
-    config.includeGlobs,
-    config.ignoreGlobs
+    vscode.workspace.workspaceFolders.map(f => fromVsCodeUri(f.uri))
   );
   const resourceProvider = new MarkdownResourceProvider(matcher);
   const workspace = new FoamWorkspace();

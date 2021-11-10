@@ -9,7 +9,6 @@
  *   and so on..
  */
 
-import { EOL } from 'os';
 import path from 'path';
 import { runCLI } from '@jest/core';
 

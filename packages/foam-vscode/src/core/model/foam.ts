@@ -1,6 +1,5 @@
 import { IDisposable } from '../common/lifecycle';
-import { IDataStore, IMatcher, Matcher } from '../services/datastore';
-import { FoamConfig } from '../config';
+import { IDataStore, IMatcher } from '../services/datastore';
 import { FoamWorkspace } from './workspace';
 import { FoamGraph } from './graph';
 import { ResourceParser } from './note';
@@ -18,21 +17,15 @@ export interface Foam extends IDisposable {
   services: Services;
   workspace: FoamWorkspace;
   graph: FoamGraph;
-  config: FoamConfig;
   tags: FoamTags;
 }
 
 export const bootstrap = async (
-  config: FoamConfig,
+  matcher: IMatcher,
   dataStore: IDataStore,
   initialProviders: ResourceProvider[]
 ) => {
   const parser = createMarkdownParser([]);
-  const matcher = new Matcher(
-    config.workspaceFolders,
-    config.includeGlobs,
-    config.ignoreGlobs
-  );
   const workspace = new FoamWorkspace();
   await Promise.all(initialProviders.map(p => workspace.registerProvider(p)));
 
@@ -43,7 +36,6 @@ export const bootstrap = async (
     workspace,
     graph,
     tags,
-    config,
     services: {
       dataStore,
       parser,

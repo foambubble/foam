@@ -235,11 +235,6 @@
             "Disable wikilink definitions generation"
           ]
         },
-        "foam.links.navigation.enable": {
-          "description": "Enable navigation through links",
-          "type": "boolean",
-          "default": true
-        },
         "foam.links.hover.enable": {
           "description": "Enable displaying note content on hover links",
           "type": "boolean",

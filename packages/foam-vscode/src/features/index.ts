@@ -11,15 +11,16 @@ import orphans from './orphans';
 import placeholders from './placeholders';
 import backlinks from './backlinks';
 import utilityCommands from './utility-commands';
-import documentLinkProvider from './document-link-provider';
 import hoverProvider from './hover-provider';
 import previewNavigation from './preview-navigation';
 import completionProvider from './link-completion';
 import tagCompletionProvider from './tag-completion';
 import linkDecorations from './document-decorator';
+import navigationProviders from './navigation-provider';
 import { FoamFeature } from '../types';
 
 export const features: FoamFeature[] = [
+  navigationProviders,
   tagsExplorer,
   createReferences,
   openDailyNote,
@@ -32,7 +33,6 @@ export const features: FoamFeature[] = [
   orphans,
   placeholders,
   backlinks,
-  documentLinkProvider,
   hoverProvider,
   utilityCommands,
   linkDecorations,

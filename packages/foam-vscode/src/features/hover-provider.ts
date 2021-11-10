@@ -1,3 +1,4 @@
+import { uniqWith } from 'lodash';
 import * as vscode from 'vscode';
 import { URI } from '../core/model/uri';
 import { FoamFeature } from '../types';
@@ -75,24 +76,27 @@ export class HoverProvider implements vscode.HoverProvider {
       return;
     }
 
+    const documentUri = fromVsCodeUri(document.uri);
     const targetUri = this.workspace.resolveLink(startResource, targetLink);
-    const refs = this.graph
-      .getBacklinks(targetUri)
-      .filter(link => !URI.isEqual(link.source, fromVsCodeUri(document.uri)));
+    const sources = uniqWith(
+      this.graph
+        .getBacklinks(targetUri)
+        .filter(link => !URI.isEqual(link.source, documentUri))
+        .map(link => link.source),
+      URI.isEqual
+    );
 
-    const links = refs.slice(0, 10).map(link => {
-      const command = OPEN_COMMAND.asURI(link.source);
-      return `- [${
-        this.workspace.get(link.source).title
-      }](${command.toString()})`;
+    const links = sources.slice(0, 10).map(ref => {
+      const command = OPEN_COMMAND.asURI(ref);
+      return `- [${this.workspace.get(ref).title}](${command.toString()})`;
     });
 
-    const notes = `note${refs.length > 1 ? 's' : ''}`;
+    const notes = `note${sources.length > 1 ? 's' : ''}`;
     const references = getNoteTooltip(
       [
-        `Also referenced in ${refs.length} ${notes}:`,
+        `Also referenced in ${sources.length} ${notes}:`,
         ...links,
-        links.length === refs.length ? '' : '- ...',
+        links.length === sources.length ? '' : '- ...',
       ].join('\n')
     );
 
@@ -106,7 +110,7 @@ export class HoverProvider implements vscode.HoverProvider {
     }
 
     const hover: vscode.Hover = {
-      contents: [mdContent, refs.length > 0 ? references : null],
+      contents: [mdContent, sources.length > 0 ? references : null],
       range: toVsCodeRange(targetLink.range),
     };
     return hover;

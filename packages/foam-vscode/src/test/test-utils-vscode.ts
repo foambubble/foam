@@ -28,6 +28,24 @@ export const closeEditors = async () => {
   await wait(100);
 };
 
+export const deleteFile = (uri: URI) => {
+  return vscode.workspace.fs.delete(toVsCodeUri(uri));
+};
+
+/**
+ * Generates a URI within the workspace, either randomly
+ * or by using the provided path components
+ *
+ * @param filepath optional path components for the URI
+ * @returns a URI within the workspace
+ */
+export const getWorkspaceUri = (filepath?: string[]) => {
+  const rootUri = fromVsCodeUri(vscode.workspace.workspaceFolders[0].uri);
+  filepath = filepath ?? [randomString() + '.md'];
+  const uri = URI.joinPath(rootUri, ...filepath);
+  return uri;
+};
+
 /**
  * Creates a file with a some content.
  *
@@ -36,9 +54,7 @@ export const closeEditors = async () => {
  * @returns an object containing various information about the file created
  */
 export const createFile = async (content: string, filepath?: string[]) => {
-  const rootUri = fromVsCodeUri(vscode.workspace.workspaceFolders[0].uri);
-  filepath = filepath ?? [randomString() + '.md'];
-  const uri = URI.joinPath(rootUri, ...filepath);
+  const uri = getWorkspaceUri(filepath);
   const filenameComponents = path.parse(URI.toFsPath(uri));
   await vscode.workspace.fs.writeFile(
     toVsCodeUri(uri),

@@ -154,7 +154,7 @@ export const NoteFactory = {
       await replaceSelection(
         selectedContent.document,
         selectedContent.selection,
-        newNoteTitle
+        `[[${newNoteTitle}]]`
       );
     }
   },

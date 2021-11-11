@@ -12,13 +12,13 @@ import {
 import { focusNote } from '../utils';
 import { toVsCodeUri } from '../utils/vsc-utils';
 
-interface FoamSelectionContent {
+interface SelectionInfo {
   document: TextDocument;
   selection: Selection;
   content: string;
 }
 
-export function findSelectionContent(): FoamSelectionContent | undefined {
+export function findSelectionContent(): SelectionInfo | undefined {
   const editor = window.activeTextEditor;
   if (editor === undefined) {
     return undefined;
@@ -39,7 +39,7 @@ export function findSelectionContent(): FoamSelectionContent | undefined {
 }
 
 export async function createDocAndFocus(
-  templateSnippet: SnippetString,
+  text: SnippetString,
   filepath: URI,
   viewColumn: ViewColumn = ViewColumn.Active
 ) {
@@ -48,7 +48,7 @@ export async function createDocAndFocus(
     new TextEncoder().encode('')
   );
   await focusNote(filepath, true, viewColumn);
-  await window.activeTextEditor.insertSnippet(templateSnippet);
+  await window.activeTextEditor.insertSnippet(text);
 }
 
 export async function replaceSelection(

@@ -1,4 +1,4 @@
-import { Position, Selection, ViewColumn, window, workspace } from 'vscode';
+import { Selection, ViewColumn, window, workspace } from 'vscode';
 import path from 'path';
 import { isWindows } from '../utils';
 import { URI } from '../core/model/uri';
@@ -8,7 +8,7 @@ import {
   closeEditors,
   createFile,
   deleteFile,
-  getWorkspaceUri,
+  getUriInWorkspace,
   showInEditor,
 } from '../test/test-utils-vscode';
 import { Resolver } from './variable-resolver';
@@ -56,7 +56,7 @@ describe('Create note from template', () => {
     });
 
     it('should focus the editor on the newly created note', async () => {
-      const target = getWorkspaceUri();
+      const target = getUriInWorkspace();
       await NoteFactory.createFromTemplate(
         templateA.uri,
         new Resolver(new Map(), new Date()),
@@ -71,12 +71,13 @@ describe('Create note from template', () => {
   });
 
   it('should expand variables when using a template', async () => {
+    // eslint-disable-next-line no-template-curly-in-string
     const template = await createFile('${FOAM_DATE_YEAR}', [
       '.foam',
       'templates',
       'template-with-variables.md',
     ]);
-    const target = getWorkspaceUri();
+    const target = getUriInWorkspace();
     await NoteFactory.createFromTemplate(
       template.uri,
       new Resolver(new Map(), new Date()),
@@ -94,7 +95,7 @@ describe('Create note from template', () => {
       const file = await createFile('Content of first file');
       const { editor } = await showInEditor(file.uri);
       editor.selection = new Selection(0, 11, 1, 0);
-      const target = getWorkspaceUri();
+      const target = getUriInWorkspace();
       const resolver = new Resolver(new Map(), new Date());
       await NoteFactory.createFromTemplate(templateA.uri, resolver, target);
       expect(await resolver.resolve('FOAM_SELECTED_TEXT')).toEqual(
@@ -107,7 +108,7 @@ describe('Create note from template', () => {
       const { editor } = await showInEditor(file.uri);
       editor.selection = new Selection(0, 23, 0, 35);
 
-      const target = getWorkspaceUri();
+      const target = getUriInWorkspace();
       await NoteFactory.createFromTemplate(
         templateA.uri,
         new Resolver(new Map(), new Date()),
@@ -129,6 +130,7 @@ describe('Create note from template', () => {
 
     it('should replace selection with a link to the newly created note', async () => {
       const template = await createFile(
+        // eslint-disable-next-line no-template-curly-in-string
         'Hello ${FOAM_SELECTED_TEXT} ${FOAM_SELECTED_TEXT}',
         ['.foam', 'templates', 'template-with-selection.md']
       );
@@ -136,7 +138,7 @@ describe('Create note from template', () => {
       const { editor } = await showInEditor(file.uri);
       editor.selection = new Selection(0, 23, 0, 28);
 
-      const target = getWorkspaceUri();
+      const target = getUriInWorkspace();
       await NoteFactory.createFromTemplate(
         template.uri,
         new Resolver(new Map(), new Date()),

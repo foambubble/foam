@@ -1,24 +1,5 @@
-import { URI } from '../core/model/uri';
-import { existsSync } from 'fs';
 import { findSelectionContent } from './editor';
-import { isAbsolute } from 'path';
-import { TextEncoder } from 'util';
-import {
-  commands,
-  ExtensionContext,
-  QuickPickItem,
-  Selection,
-  SnippetString,
-  TextDocument,
-  ViewColumn,
-  window,
-  workspace,
-  WorkspaceEdit,
-} from 'vscode';
-import { FoamFeature } from '../types';
-import { focusNote } from '../utils';
-import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
-import { extractFoamTemplateFrontmatterMetadata } from '../utils/template-frontmatter-parser';
+import { window } from 'vscode';
 import { UserCancelledOperation } from './errors';
 
 const knownFoamVariables = new Set([

@@ -37,9 +37,9 @@ export const DAILY_NOTE_TEMPLATE_URI = URI.joinPath(
   'daily-note.md'
 );
 
-const wikilinkDefaultTemplateText = `# $\{1:$FOAM_TITLE}\n\n$0`;
+const WIKILINK_DEFAULT_TEMPLATE_TEXT = `# $\{1:$FOAM_TITLE}\n\n$0`;
 
-const templateContent = `# \${1:$TM_FILENAME_BASE}
+const TEMPLATE_CONTENT = `# \${1:$TM_FILENAME_BASE}
 
 Welcome to Foam templates.
 
@@ -69,9 +69,8 @@ export async function getTemplateMetadata(
 }
 
 export async function getTemplates(): Promise<URI[]> {
-  // TODO should use templatesDir
   const templates = await workspace
-    .findFiles('.foam/templates/**.md', null)
+    .findFiles(workspace.asRelativePath(TEMPLATES_DIR.path) + '/**.md', null)
     .then(v => v.map(uri => fromVsCodeUri(uri)));
   return templates;
 }
@@ -200,7 +199,7 @@ export const NoteFactory = {
       DEFAULT_TEMPLATE_URI,
       resolver,
       filepathFallbackURI,
-      wikilinkDefaultTemplateText
+      WIKILINK_DEFAULT_TEMPLATE_TEXT
     );
   },
 };
@@ -227,7 +226,7 @@ export const createTemplate = async (): Promise<void> => {
   const filenameURI = URI.file(filename);
   await workspace.fs.writeFile(
     toVsCodeUri(filenameURI),
-    new TextEncoder().encode(templateContent)
+    new TextEncoder().encode(TEMPLATE_CONTENT)
   );
   await focusNote(filenameURI, false);
 };

@@ -86,15 +86,10 @@ export const NoteFactory = {
    * @param templateFallbackText the template text to use if the template does not exist. This is configurable by the caller for backwards compatibility purposes.
    */
   createFromTemplate: async (
-    givenValues: Map<string, string> = new Map(),
-    extraVariablesToResolve: Set<string> = new Set([
-      'FOAM_TITLE',
-      'FOAM_SELECTED_TEXT',
-    ]),
     templateUri: URI,
-    filepathFallbackURI: URI,
-    templateFallbackText: string,
-    foamDate: Date
+    resolver: Resolver,
+    filepathFallbackURI?: URI,
+    templateFallbackText: string = ''
   ): Promise<void> => {
     const templateText = existsSync(URI.toFsPath(templateUri))
       ? await workspace.fs
@@ -104,21 +99,19 @@ export const NoteFactory = {
 
     const selectedContent = findSelectionContent();
 
-    givenValues.set('FOAM_SELECTED_TEXT', selectedContent?.content ?? '');
-    const resolver = new Resolver(givenValues, foamDate);
+    resolver.define('FOAM_SELECTED_TEXT', selectedContent?.content ?? '');
     let resolvedValues: Map<string, string>,
       templateWithResolvedVariables: string;
     try {
       [
         resolvedValues,
         templateWithResolvedVariables,
-      ] = await resolver.resolveText(templateText, extraVariablesToResolve);
+      ] = await resolver.resolveText(templateText);
     } catch (err) {
       if (err instanceof UserCancelledOperation) {
         return;
-      } else {
-        throw err;
       }
+      throw err;
     }
 
     const [
@@ -175,15 +168,19 @@ export const NoteFactory = {
     filepathFallbackURI: URI,
     templateFallbackText: string,
     targetDate: Date
-  ): Promise<void> =>
-    NoteFactory.createFromTemplate(
+  ): Promise<void> => {
+    const resolver = new Resolver(
       new Map(),
-      new Set(['FOAM_SELECTED_TEXT']),
+      targetDate,
+      new Set(['FOAM_SELECTED_TEXT'])
+    );
+    return NoteFactory.createFromTemplate(
       DAILY_NOTE_TEMPLATE_URI,
+      resolver,
       filepathFallbackURI,
-      templateFallbackText,
-      targetDate
-    ),
+      templateFallbackText
+    );
+  },
 
   /**
    * Creates a new note when following a placeholder wikilink using the default template.
@@ -193,15 +190,19 @@ export const NoteFactory = {
   createForPlaceholderWikilink: (
     wikilinkPlaceholder: string,
     filepathFallbackURI: URI
-  ): Promise<void> =>
-    NoteFactory.createFromTemplate(
+  ): Promise<void> => {
+    const resolver = new Resolver(
       new Map().set('FOAM_TITLE', wikilinkPlaceholder),
-      new Set(['FOAM_TITLE', 'FOAM_SELECTED_TEXT']),
+      new Date(),
+      new Set(['FOAM_TITLE', 'FOAM_SELECTED_TEXT'])
+    );
+    return NoteFactory.createFromTemplate(
       DEFAULT_TEMPLATE_URI,
+      resolver,
       filepathFallbackURI,
-      wikilinkDefaultTemplateText,
-      new Date()
-    ),
+      wikilinkDefaultTemplateText
+    );
+  },
 };
 
 export const createTemplate = async (): Promise<void> => {

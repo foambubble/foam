@@ -5,6 +5,29 @@ import { URI } from '../core/model/uri';
 import { fromVsCodeUri } from '../utils/vsc-utils';
 import { determineDefaultFilepath } from '../services/templates';
 
+describe('Template', () => {
+  it.todo('should support having metadata');
+});
+
+describe('Create note from template', () => {
+  describe('User flow', () => {
+    it.todo('should ask a user to confirm the path if note already exists');
+    it.todo('should focus the editor on the newly created note');
+  });
+
+  it.todo('should expand variables when using a template');
+
+  describe('Creation with active text selection', () => {
+    it.todo('should populate FOAM_SELECTED_TEXT with the current selection');
+    it.todo(
+      'should open the newly created note in a new column if there was a selection'
+    );
+    it.todo(
+      'should replace the original selection with a link to the newly created note'
+    );
+  });
+});
+
 describe('determineDefaultFilepath', () => {
   test('Absolute filepath metadata is unchanged', () => {
     const absolutePath = isWindows

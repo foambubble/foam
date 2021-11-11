@@ -215,10 +215,12 @@ describe('resolveFoamTemplateVariables', () => {
 
     const expected = [expectedMap, expectedOutput];
 
-    const resolver = new Resolver(new Map(), new Date());
-    expect(await resolver.resolveText(input, new Set(['FOAM_TITLE']))).toEqual(
-      expected
+    const resolver = new Resolver(
+      new Map(),
+      new Date(),
+      new Set(['FOAM_TITLE'])
     );
+    expect(await resolver.resolveText(input)).toEqual(expected);
   });
 
   test('Appends FOAM_SELECTED_TEXT with a newline to the template if there is selected text but FOAM_SELECTED_TEXT is not referenced and the template ends in a newline', async () => {
@@ -239,13 +241,12 @@ describe('resolveFoamTemplateVariables', () => {
     const expected = [expectedMap, expectedOutput];
     const givenValues = new Map<string, string>();
     givenValues.set('FOAM_SELECTED_TEXT', 'Selected text');
-    const resolver = new Resolver(givenValues, new Date());
-    expect(
-      await resolver.resolveText(
-        input,
-        new Set(['FOAM_TITLE', 'FOAM_SELECTED_TEXT'])
-      )
-    ).toEqual(expected);
+    const resolver = new Resolver(
+      givenValues,
+      new Date(),
+      new Set(['FOAM_TITLE', 'FOAM_SELECTED_TEXT'])
+    );
+    expect(await resolver.resolveText(input)).toEqual(expected);
   });
 
   test('Appends FOAM_SELECTED_TEXT with a newline to the template if there is selected text but FOAM_SELECTED_TEXT is not referenced and the template ends in multiple newlines', async () => {
@@ -266,13 +267,12 @@ describe('resolveFoamTemplateVariables', () => {
     const expected = [expectedMap, expectedOutput];
     const givenValues = new Map<string, string>();
     givenValues.set('FOAM_SELECTED_TEXT', 'Selected text');
-    const resolver = new Resolver(givenValues, new Date());
-    expect(
-      await resolver.resolveText(
-        input,
-        new Set(['FOAM_TITLE', 'FOAM_SELECTED_TEXT'])
-      )
-    ).toEqual(expected);
+    const resolver = new Resolver(
+      givenValues,
+      new Date(),
+      new Set(['FOAM_TITLE', 'FOAM_SELECTED_TEXT'])
+    );
+    expect(await resolver.resolveText(input)).toEqual(expected);
   });
 
   test('Appends FOAM_SELECTED_TEXT without a newline to the template if there is selected text but FOAM_SELECTED_TEXT is not referenced and the template does not end in a newline', async () => {
@@ -293,13 +293,12 @@ describe('resolveFoamTemplateVariables', () => {
     const expected = [expectedMap, expectedOutput];
     const givenValues = new Map<string, string>();
     givenValues.set('FOAM_SELECTED_TEXT', 'Selected text');
-    const resolver = new Resolver(givenValues, new Date());
-    expect(
-      await resolver.resolveText(
-        input,
-        new Set(['FOAM_TITLE', 'FOAM_SELECTED_TEXT'])
-      )
-    ).toEqual(expected);
+    const resolver = new Resolver(
+      givenValues,
+      new Date(),
+      new Set(['FOAM_TITLE', 'FOAM_SELECTED_TEXT'])
+    );
+    expect(await resolver.resolveText(input)).toEqual(expected);
   });
 
   test('Does not append FOAM_SELECTED_TEXT to a template if there is no selected text and is not referenced', async () => {
@@ -324,12 +323,11 @@ describe('resolveFoamTemplateVariables', () => {
     const expected = [expectedMap, expectedOutput];
     const givenValues = new Map<string, string>();
     givenValues.set('FOAM_SELECTED_TEXT', '');
-    const resolver = new Resolver(givenValues, new Date());
-    expect(
-      await resolver.resolveText(
-        input,
-        new Set(['FOAM_TITLE', 'FOAM_SELECTED_TEXT'])
-      )
-    ).toEqual(expected);
+    const resolver = new Resolver(
+      givenValues,
+      new Date(),
+      new Set(['FOAM_TITLE', 'FOAM_SELECTED_TEXT'])
+    );
+    expect(await resolver.resolveText(input)).toEqual(expected);
   });
 });

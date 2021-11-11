@@ -10,6 +10,7 @@ import {
   NoteFactory,
   TEMPLATES_DIR,
 } from '../services/templates';
+import { Resolver } from '../services/variable-resolver';
 
 async function offerToCreateTemplate(): Promise<void> {
   const response = await window.showQuickPick(['Yes', 'No'], {
@@ -106,14 +107,9 @@ const feature: FoamFeature = {
             (selectedTemplate as QuickPickItem).label;
           const templateUri = URI.joinPath(TEMPLATES_DIR, templateFilename);
 
-          await NoteFactory.createFromTemplate(
-            new Map(),
-            new Set(['FOAM_TITLE', 'FOAM_SELECTED_TEXT']),
-            templateUri,
-            undefined,
-            '',
-            new Date()
-          );
+          const resolver = new Resolver(new Map(), new Date());
+
+          await NoteFactory.createFromTemplate(templateUri, resolver);
         }
       )
     );
@@ -121,10 +117,11 @@ const feature: FoamFeature = {
       commands.registerCommand(
         'foam-vscode.create-note-from-default-template',
         () => {
+          const resolver = new Resolver(new Map(), new Date());
+
           NoteFactory.createFromTemplate(
-            new Map(),
-            new Set(['FOAM_TITLE', 'FOAM_SELECTED_TEXT']),
             DEFAULT_TEMPLATE_URI,
+            resolver,
             undefined,
             `---
 foam_template:
@@ -134,8 +131,7 @@ foam_template:
 # \${FOAM_TITLE}
 
 \${FOAM_SELECTED_TEXT}
-`,
-            new Date()
+`
           );
         }
       )

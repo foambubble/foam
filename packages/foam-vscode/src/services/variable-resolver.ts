@@ -75,17 +75,41 @@ export function findFoamVariables(templateText: string): string[] {
 export class Resolver {
   promises = new Map<string, Thenable<string>>();
 
+  /**
+   * Create a resolver
+   *
+   * @param givenValues the map of variable name to value
+   * @param foamDate the date used to fill FOAM_DATE_* variables
+   * @param extraVariablesToResolve other variables to always resolve, even if not present in text
+   */
   constructor(
     private givenValues: Map<string, string>,
-    private foamDate: Date
+    private foamDate: Date,
+    private extraVariablesToResolve: Set<string> = new Set()
   ) {}
 
-  async resolveText(
-    text: string,
-    extraVariablesToResolve: Set<string> = new Set()
-  ): Promise<[Map<string, string>, string]> {
+  /**
+   * Adds a variable definition in the resolver
+   *
+   * @param name the name of the variable
+   * @param value the value of the variable
+   */
+  define(name: string, value: string) {
+    this.givenValues.set(name, value);
+  }
+
+  /**
+   * Process a string, replacing the variables with their values
+   *
+   * @param text the text to resolve
+   * @returns an array, where the first element is the resolution map,
+   *          and the second is the processed text
+   */
+  async resolveText(text: string): Promise<[Map<string, string>, string]> {
     const variablesInTemplate = findFoamVariables(text.toString());
-    const variables = variablesInTemplate.concat(...extraVariablesToResolve);
+    const variables = variablesInTemplate.concat(
+      ...this.extraVariablesToResolve
+    );
     const uniqVariables = [...new Set(variables)];
 
     const resolvedValues = await this.resolveAll(uniqVariables);
@@ -108,6 +132,12 @@ export class Resolver {
     return [resolvedValues, subbedText];
   }
 
+  /**
+   * Resolves a list of variables
+   *
+   * @param variables a list of variables to resolve
+   * @returns a Map of variable name to its value
+   */
   async resolveAll(variables: string[]): Promise<Map<string, string>> {
     const promises = variables.map(async variable =>
       Promise.resolve([variable, await this.resolve(variable)])
@@ -123,6 +153,12 @@ export class Resolver {
     return valueByName;
   }
 
+  /**
+   * Resolve a variable
+   *
+   * @param name the variable name
+   * @returns the resolved value, or the name of the variable if nothing is found
+   */
   resolve(name: string): Thenable<string> {
     if (this.givenValues.has(name)) {
       this.promises.set(name, Promise.resolve(this.givenValues.get(name)));

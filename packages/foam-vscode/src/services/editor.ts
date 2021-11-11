@@ -1,12 +1,6 @@
 import { URI } from '../core/model/uri';
-import { existsSync } from 'fs';
-import * as path from 'path';
-import { isAbsolute } from 'path';
 import { TextEncoder } from 'util';
 import {
-  commands,
-  ExtensionContext,
-  QuickPickItem,
   Selection,
   SnippetString,
   TextDocument,
@@ -15,10 +9,8 @@ import {
   workspace,
   WorkspaceEdit,
 } from 'vscode';
-import { FoamFeature } from '../types';
 import { focusNote } from '../utils';
-import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
-import { extractFoamTemplateFrontmatterMetadata } from '../utils/template-frontmatter-parser';
+import { toVsCodeUri } from '../utils/vsc-utils';
 
 interface FoamSelectionContent {
   document: TextDocument;

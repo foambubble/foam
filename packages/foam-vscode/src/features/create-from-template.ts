@@ -668,14 +668,12 @@ async function createNoteFromDefaultTemplate(
   }
 }
 
-async function createNoteFromTemplate(
-  templateFilename?: string
-): Promise<void> {
+async function createNoteFromTemplate(): Promise<void> {
   const selectedTemplate = await askUserForTemplate();
   if (selectedTemplate === undefined) {
     return;
   }
-  templateFilename =
+  const templateFilename =
     (selectedTemplate as QuickPickItem).description ||
     (selectedTemplate as QuickPickItem).label;
   const templateUri = URI.joinPath(templatesDir, templateFilename);

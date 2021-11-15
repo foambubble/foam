@@ -4,6 +4,18 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.15.5] - 2021-11-15
+
+Fixes and Improvements:
+
+- Major improvement in navigation. Use link definitions and link references (#821)
+- Fixed bug showing in hover reference the same more than once when it had multiple links to another (#822)
+
+Internal:
+
+- Foam URI refactoring (#820)
+- Template service refactoring (#825)
+
 ## [0.15.4] - 2021-11-09
 
 Fixes and Improvements:

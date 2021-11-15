@@ -16,26 +16,18 @@ import { Resolver } from './variable-resolver';
 type Awaited<T> = T extends PromiseLike<infer U> ? U : T;
 
 describe('Create note from template', () => {
-  let templateA: Awaited<ReturnType<typeof createFile>>;
-
-  beforeAll(async () => {
-    templateA = await createFile('Template A', [
-      '.foam',
-      'templates',
-      'template-a.md',
-    ]);
-  });
-
-  afterAll(async () => {
-    await deleteFile(templateA.uri);
-  });
-
   beforeEach(async () => {
+    await deleteFile(getUriInWorkspace(['.foam', 'templates']));
     await closeEditors();
   });
 
   describe('User flow', () => {
     it('should ask a user to confirm the path if note already exists', async () => {
+      const templateA = await createFile('Template A', [
+        '.foam',
+        'templates',
+        'template-a.md',
+      ]);
       const spy = jest
         .spyOn(window, 'showInputBox')
         .mockImplementationOnce(jest.fn(() => Promise.resolve(undefined)));
@@ -56,6 +48,11 @@ describe('Create note from template', () => {
     });
 
     it('should focus the editor on the newly created note', async () => {
+      const templateA = await createFile('Template A', [
+        '.foam',
+        'templates',
+        'template-a.md',
+      ]);
       const target = getUriInWorkspace();
       await NoteFactory.createFromTemplate(
         templateA.uri,
@@ -88,10 +85,16 @@ describe('Create note from template', () => {
       `${new Date().getFullYear()}`
     );
     await deleteFile(target);
+    await deleteFile(template.uri);
   });
 
   describe('Creation with active text selection', () => {
     it('should populate FOAM_SELECTED_TEXT with the current selection', async () => {
+      const templateA = await createFile('Template A', [
+        '.foam',
+        'templates',
+        'template-a.md',
+      ]);
       const file = await createFile('Content of first file');
       const { editor } = await showInEditor(file.uri);
       editor.selection = new Selection(0, 11, 1, 0);
@@ -104,6 +107,11 @@ describe('Create note from template', () => {
     });
 
     it('should open created note in a new column if there was a selection', async () => {
+      const templateA = await createFile('Template A', [
+        '.foam',
+        'templates',
+        'template-a.md',
+      ]);
       const file = await createFile('This is my first file: for new file');
       const { editor } = await showInEditor(file.uri);
       editor.selection = new Selection(0, 23, 0, 35);

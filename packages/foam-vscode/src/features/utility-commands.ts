@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { FoamFeature } from '../types';
 import { URI } from '../core/model/uri';
 import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
-import { createNoteForPlaceholderWikilink } from './create-from-template';
+import { NoteFactory } from '../services/templates';
 
 export const OPEN_COMMAND = {
   command: 'foam-vscode.open-resource',
@@ -32,7 +32,7 @@ export const OPEN_COMMAND = {
 
         const target = URI.createResourceUriFromPlaceholder(basedir, uri);
 
-        await createNoteForPlaceholderWikilink(title, target);
+        await NoteFactory.createForPlaceholderWikilink(title, target);
         return;
     }
   },

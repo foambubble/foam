@@ -2,8 +2,10 @@ import { URI } from '../core/model/uri';
 import path from 'path';
 import { toVsCodeUri } from '../utils/vsc-utils';
 import { commands, window, workspace } from 'vscode';
+import { createFile } from '../test/test-utils-vscode';
+import * as editor from '../services/editor';
 
-describe('createFromTemplate', () => {
+describe('Create from template commands', () => {
   describe('create-note-from-template', () => {
     afterEach(() => {
       jest.clearAllMocks();
@@ -21,6 +23,71 @@ describe('createFromTemplate', () => {
           'No templates available. Would you like to create one instead?',
       });
     });
+
+    it('offers to pick which template to use', async () => {
+      const templateA = await createFile('Template A', [
+        '.foam',
+        'templates',
+        'template-a.md',
+      ]);
+      const templateB = await createFile('Template A', [
+        '.foam',
+        'templates',
+        'template-b.md',
+      ]);
+
+      const spy = jest
+        .spyOn(window, 'showQuickPick')
+        .mockImplementationOnce(jest.fn(() => Promise.resolve(undefined)));
+
+      await commands.executeCommand('foam-vscode.create-note-from-template');
+
+      expect(spy).toBeCalledWith(
+        [
+          expect.objectContaining({ label: 'template-a.md' }),
+          expect.objectContaining({ label: 'template-b.md' }),
+        ],
+        {
+          placeHolder: 'Select a template to use.',
+        }
+      );
+
+      await workspace.fs.delete(toVsCodeUri(templateA.uri));
+      await workspace.fs.delete(toVsCodeUri(templateB.uri));
+    });
+
+    it('Uses template metadata to improve dialog box', async () => {
+      const templateA = await createFile(
+        `---
+foam_template:
+  name: My Template
+  description: My Template description
+---
+
+Template A
+      `,
+        ['.foam', 'templates', 'template-a.md']
+      );
+
+      const spy = jest
+        .spyOn(window, 'showQuickPick')
+        .mockImplementationOnce(jest.fn(() => Promise.resolve(undefined)));
+
+      await commands.executeCommand('foam-vscode.create-note-from-template');
+
+      expect(spy).toBeCalledWith(
+        [
+          expect.objectContaining({
+            label: 'My Template',
+            description: 'template-a.md',
+            detail: 'My Template description',
+          }),
+        ],
+        expect.anything()
+      );
+
+      await workspace.fs.delete(toVsCodeUri(templateA.uri));
+    });
   });
 
   describe('create-note-from-default-template', () => {
@@ -33,7 +100,7 @@ describe('createFromTemplate', () => {
         .spyOn(window, 'showInputBox')
         .mockImplementation(jest.fn(() => Promise.resolve(undefined)));
 
-      const fileWriteSpy = jest.spyOn(workspace.fs, 'writeFile');
+      const docCreatorSpy = jest.spyOn(editor, 'createDocAndFocus');
 
       await commands.executeCommand(
         'foam-vscode.create-note-from-default-template'
@@ -45,7 +112,7 @@ describe('createFromTemplate', () => {
         validateInput: expect.anything(),
       });
 
-      expect(fileWriteSpy).toHaveBeenCalledTimes(0);
+      expect(docCreatorSpy).toHaveBeenCalledTimes(0);
     });
   });
 

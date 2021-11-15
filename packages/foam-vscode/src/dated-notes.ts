@@ -3,8 +3,8 @@ import dateFormat from 'dateformat';
 import { isAbsolute } from 'path';
 import { focusNote, pathExists } from './utils';
 import { URI } from './core/model/uri';
-import { createNoteFromDailyNoteTemplate } from './features/create-from-template';
 import { fromVsCodeUri } from './utils/vsc-utils';
+import { NoteFactory } from './services/templates';
 
 /**
  * Open the daily note file.
@@ -117,7 +117,7 @@ foam_template:
 # ${dateFormat(targetDate, titleFormat, false)}
 `;
 
-  await createNoteFromDailyNoteTemplate(
+  await NoteFactory.createFromDailyNoteTemplate(
     dailyNotePath,
     templateFallbackText,
     targetDate

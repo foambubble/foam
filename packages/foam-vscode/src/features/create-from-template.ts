@@ -97,12 +97,12 @@ const feature: FoamFeature = {
     context.subscriptions.push(
       commands.registerCommand(
         'foam-vscode.create-note-from-template',
-        async (templateFilename?: string) => {
+        async () => {
           const selectedTemplate = await askUserForTemplate();
           if (selectedTemplate === undefined) {
             return;
           }
-          templateFilename =
+          const templateFilename =
             (selectedTemplate as QuickPickItem).description ||
             (selectedTemplate as QuickPickItem).label;
           const templateUri = URI.joinPath(TEMPLATES_DIR, templateFilename);

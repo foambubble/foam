@@ -223,7 +223,7 @@
         },
         "foam.edit.linkReferenceDefinitions": {
           "type": "string",
-          "default": "withoutExtensions",
+          "default": "off",
           "enum": [
             "withExtensions",
             "withoutExtensions",

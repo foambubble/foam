@@ -41,7 +41,7 @@ describe('Tags tree panel', () => {
 
     const treeItems = (await provider.getChildren()) as TagItem[];
 
-    treeItems.map(item => expect(item.tag).toContain('test'));
+    treeItems.forEach(item => expect(item.tag).toContain('test'));
   });
 
   it('correctly handles a parent and child tag', async () => {

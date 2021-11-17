@@ -1,7 +1,7 @@
 {
   "name": "foam-vscode",
-  "displayName": "Foam for VSCode (Wikilinks to Markdown)",
-  "description": "Generate markdown reference lists from wikilinks in a workspace",
+  "displayName": "Foam",
+  "description": "VS Code + Markdown + Wikilinks for your note taking and knowledge base",
   "private": true,
   "repository": {
     "url": "https://github.com/foambubble/foam",

@@ -6,6 +6,7 @@ import { isNone } from '../utils';
 import { Foam } from '../core/model/foam';
 import { FoamWorkspace } from '../core/model/workspace';
 import { Logger } from '../core/utils/log';
+import { toVsCodeUri } from '../utils/vsc-utils';
 
 const ALIAS_DIVIDER_CHAR = '|';
 const refsStack: string[] = [];
@@ -94,11 +95,8 @@ export const markdownItWithFoamLinks = (
           ? wikilink.substr(wikilink.indexOf('|') + 1)
           : wikilink;
 
-        return `<a class='foam-note-link' title='${
-          resource.title
-        }' href='${URI.toFsPath(resource.uri)}' data-href='${URI.toFsPath(
-          resource.uri
-        )}'>${linkLabel}</a>`;
+        const link = vscode.workspace.asRelativePath(toVsCodeUri(resource.uri));
+        return `<a class='foam-note-link' title='${resource.title}' href='/${link}' data-href='/${link}'>${linkLabel}</a>`;
       } catch (e) {
         Logger.error(
           `Error while creating link for [[${wikilink}]] in Preview panel`,

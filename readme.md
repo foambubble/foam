@@ -16,7 +16,107 @@ You can use **Foam** for organising your research, keeping re-discoverable notes
 
 **Foam** is free, open source, and extremely extensible to suit your personal workflow. You own the information you create with Foam, and you're free to share it, and collaborate on it with anyone you want.
 
-## How do I use Foam?
+## Features
+
+### Graph Visualization
+
+See how your notes are connected via a [graph](https://foambubble.github.io/foam/features/graph-visualisation) with the `Foam: Show Graph` command.
+
+![Graph Visualization](../../docs/assets/images/feature-show-graph.gif)
+
+### Link Autocompletion
+
+Foam helps you create the connections between your notes, and your placeholders as well.
+
+![Link Autocompletion](../../docs/assets/images/feature-link-autocompletion.gif)
+
+### Link Preview and Navigation
+
+
+![Link Preview and Navigation](../../docs/assets/images/feature-navigation.gif)
+
+### Go to definition, Peek References
+
+See where a note is being referenced in your knowledge base.
+
+![Go to Definition, Peek References](../../docs/assets/images/feature-definition-references.gif)
+
+### Navigation in Preview
+
+Navigate your rendered notes in the VS Code preview panel.
+
+![Navigation in Preview](../../docs/assets/images/feature-preview-navigation.gif)
+
+### Note embed
+
+Embed the content from other notes.
+
+![Note Embed](../../docs/assets/images/feature-note-embed.gif)
+
+### Link Alias
+
+Foam supports link aliasing, so you can have a `[[wikilink]]`, or a `[[wikilink|alias]]`.
+
+### Templates
+
+Use [custom templates](https://foambubble.github.io/foam/features/note-templates) to have avoid repetitve work on your notes.
+
+![Templates](../../docs/assets/images/feature-templates.gif)
+
+### Backlinks Panel
+
+Quickly check which notes are referencing the currently active note.
+See for each occurrence the context in which it lives, as well as a preview of the note.
+
+![Backlinks Panel](../../docs/assets/images/feature-backlinks-panel.gif)
+
+### Tag Explorer Panel
+
+Tag your notes and navigate them with the [Tag Explorer](https://foambubble.github.io/foam/features/tags).
+Foam also supports hierarchical tags.
+
+![Tag Explorer Panel](../../docs/assets/images/feature-tags-panel.gif)
+
+### Orphans and Placeholder Panels
+
+Orphans are note that have no inbound nor outbound links. 
+Placeholders are dangling links, or notes without content.
+Keep them under control, and your knowledge base in better state, by using this panel.
+
+![Orphans and Placeholder Panels](../../docs/assets/images/feature-placeholder-orphan-panel.gif)
+
+### Syntax highlight
+
+Foam highlights wikilinks and placeholder differently, to help you visualize your knowledge base.
+
+![Syntax Highlight](../../docs/assets/images/feature-syntax-highlight.png)
+
+### Daily note
+
+Create a journal with [daily notes](https://foambubble.github.io/foam/features/daily-notes).
+
+![Daily Note](../../docs/assets/images/feature-daily-note.gif)
+
+### Generate references for your wikilinks
+
+Create markdown [references](https://foambubble.github.io/foam/features/link-reference-definitions) for `[[wikilinks]]`, to use your notes in a non-Foam workspace.
+With references you can also make your notes navigable both in GitHub UI as well as GitHub Pages.
+
+![Generate references](../../docs/assets/images/feature-definitions-generation.gif)
+
+### Commands
+
+- Explore your knowledge base with the `Foam: Open Random Note` command
+- Access your daily note with the `Foam: Open Daily Note` command
+- Create a new note with the `Foam: Create New Note` command
+  - This becomes very powerful when combined with [note templates](https://foambubble.github.io/foam/features/note-templates) and the `Foam: Create New Note from Template` command
+- See your workspace as a connected graph with the `Foam: Show Graph` command
+
+## Recipes
+
+People use Foam in different ways for different use cases, check out the [recipes](https://foambubble.github.io/foam/recipes/recipes) page for inspiration!
+
+## Getting started
 
 Whether you want to build a [Second Brain](https://www.buildingasecondbrain.com/) or a [Zettelkasten](https://zettelkasten.de/posts/overview/), write a book, or just get better at long-term learning, **Foam** can help you organise your thoughts if you follow these simple rules:
 
@@ -25,9 +125,27 @@ Whether you want to build a [Second Brain](https://www.buildingasecondbrain.com/
 3. Use Foam's shortcuts and autocompletions to link your thoughts together with `[[wikilinks]]`, and navigate between them to explore your knowledge graph.
 4. Get an overview of your **Foam** workspace using the [[Graph Visualisation]], and discover relationships between your thoughts with the use of [[Backlinking]].
 
-![Foam kitchen sink, showing a few of the key features](docs/assets/images/foam-features-dark-mode-demo.png)
+You can also use our Foam template:
 
-Foam is a like a bathtub: _What you get out of it depends on what you put into it._
+1. [Create a GitHub repository from foam-template](https://github.com/foambubble/foam-template/generate). If you want to keep your thoughts to yourself, remember to set the repository private.
+2. Clone the repository and open it in VS Code.
+3. When prompted to install recommended extensions, click **Install all** (or **Show Recommendations** if you want to review and install them one by one).
+
+This will also install `Foam`, but if you already have it installed, that's ok, just make sure you're up to date on the latest version.
+
+## Requirements
+
+High tolerance for alpha-grade software.
+Foam is still a Work in Progress.
+Rest assured it will never lock you in, nor compromise your files, but sometimes some features might break ;)
+
+## Known Issues
+
+See the [issues](https://github.com/foambubble/foam/issues/) on our GitHub repo ;)
+
+## Release Notes
+
+See the [CHANGELOG](./packages/foam-vscode/CHANGELOG.md).
 
 ## Learn more
 

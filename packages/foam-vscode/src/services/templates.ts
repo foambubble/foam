@@ -70,7 +70,7 @@ export async function getTemplateMetadata(
 
 export async function getTemplates(): Promise<URI[]> {
   const templates = await workspace
-    .findFiles(workspace.asRelativePath(TEMPLATES_DIR.path) + '/**.md', null)
+    .findFiles('.foam/templates/**.md', null)
     .then(v => v.map(uri => fromVsCodeUri(uri)));
   return templates;
 }

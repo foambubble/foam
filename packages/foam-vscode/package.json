@@ -14,7 +14,7 @@
   "engines": {
     "vscode": "^1.47.1"
   },
-  "icon": "icon/FOAM_ICON_256.png",
+  "icon": "assets/icon/FOAM_ICON_256.png",
   "categories": [
     "Other"
   ],

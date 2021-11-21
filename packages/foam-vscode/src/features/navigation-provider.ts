@@ -91,10 +91,10 @@ export class NavigationProvider
   /**
    * Create definitions for resolved links
    */
-  public async provideDefinition(
+  public provideDefinition(
     document: vscode.TextDocument,
     position: vscode.Position
-  ): Promise<vscode.LocationLink[]> {
+  ): vscode.LocationLink[] {
     const resource = this.parser.parse(document.uri, document.getText());
     const targetLink: ResourceLink | undefined = resource.links.find(link =>
       Range.containsPosition(link.range, position)

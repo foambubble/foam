@@ -1,4 +1,3 @@
-import { URI } from '../core/model/uri';
 import markdownItRegex from 'markdown-it-regex';
 import * as vscode from 'vscode';
 import { FoamFeature } from '../types';

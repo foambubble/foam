@@ -55,8 +55,8 @@ describe('Document navigation', () => {
       expect(links.length).toEqual(0);
     });
 
-    it('should not create links for wikilinks (as we use definitions)', async () => {
-      const fileA = await createFile('# File A');
+    it('should create links for wikilinks', async () => {
+      const fileA = await createFile('# File A', ['file-a.md']);
       const fileB = await createFile(`this is a link to [[${fileA.name}]].`);
       const ws = createTestWorkspace()
         .set(parser.parse(fileA.uri, fileA.content))
@@ -67,7 +67,9 @@ describe('Document navigation', () => {
       const provider = new NavigationProvider(ws, graph, parser);
       const links = provider.provideDocumentLinks(doc);
 
-      expect(links.length).toEqual(0);
+      expect(links.length).toEqual(1);
+      expect(links[0].target).toEqual(OPEN_COMMAND.asURI(fileA.uri));
+      expect(links[0].range).toEqual(new vscode.Range(0, 18, 0, 28));
     });
 
     it('should create links for placeholders', async () => {

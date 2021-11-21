@@ -53,7 +53,7 @@ export const getUriInWorkspace = (...filepath: string[]) => {
  * @param path relative file path
  * @returns an object containing various information about the file created
  */
-export const createFile = async (content: string, filepath?: string[]) => {
+export const createFile = async (content: string, filepath: string[] = []) => {
   const uri = getUriInWorkspace(...filepath);
   const filenameComponents = path.parse(URI.toFsPath(uri));
   await vscode.workspace.fs.writeFile(

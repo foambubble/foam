@@ -42,8 +42,8 @@ const feature: FoamFeature = {
 
 /**
  * Provides navigation and references for Foam links.
- * - We create definintions for existing wikilinks
- * - We create links for placholders
+ * - We create definintions for existing wikilinks but not placeholders
+ * - We create links for both
  * - We create references for both
  *
  * Placeholders are created as links so that when clicking on them a new note will be created.
@@ -130,19 +130,19 @@ export class NavigationProvider
   }
 
   /**
-   * Create links for placholders
+   * Create links for wikilinks and placeholders
    */
   public provideDocumentLinks(
     document: vscode.TextDocument
   ): vscode.DocumentLink[] {
     const resource = this.parser.parse(document.uri, document.getText());
 
-    const targets: { link: ResourceLink; target: URI }[] = resource.links
-      .map(link => ({
+    const targets: { link: ResourceLink; target: URI }[] = resource.links.map(
+      link => ({
         link,
         target: this.workspace.resolveLink(resource, link),
-      }))
-      .filter(link => URI.isPlaceholder(link.target));
+      })
+    );
 
     return targets.map(o => {
       const command = OPEN_COMMAND.asURI(toVsCodeUri(o.target));
@@ -150,7 +150,9 @@ export class NavigationProvider
         toVsCodeRange(o.link.range),
         command
       );
-      documentLink.tooltip = `Create note for '${o.target.path}'`;
+      documentLink.tooltip = URI.isPlaceholder(o.target)
+        ? `Create note for '${o.target.path}'`
+        : `Go to ${URI.toFsPath(o.target)}`;
       return documentLink;
     });
   }

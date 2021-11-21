@@ -10,7 +10,8 @@ import {
   WorkspaceEdit,
 } from 'vscode';
 import { focusNote } from '../utils';
-import { toVsCodeUri } from '../utils/vsc-utils';
+import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
+import { isSome } from '../core/utils';
 
 interface SelectionInfo {
   document: TextDocument;
@@ -59,4 +60,27 @@ export async function replaceSelection(
   const originatingFileEdit = new WorkspaceEdit();
   originatingFileEdit.replace(document.uri, selection, content);
   await workspace.applyEdit(originatingFileEdit);
+}
+
+/**
+ * Returns the directory of the file currently open in the editor.
+ * If no file is open in the editor it will return the first folder
+ * in the workspace.
+ * If both aren't available it will throw.
+ *
+ * @returns URI
+ * @throws Error if no file is open in editor AND no workspace folder defined
+ */
+export function getCurrentEditorDirectory() {
+  const uri = window.activeTextEditor?.document?.uri;
+
+  if (isSome(uri)) {
+    return URI.getDir(fromVsCodeUri(uri));
+  }
+
+  if (workspace.workspaceFolders.length > 0) {
+    return fromVsCodeUri(workspace.workspaceFolders[0].uri);
+  }
+
+  throw new Error('A file must be open in editor, or workspace folder needed');
 }

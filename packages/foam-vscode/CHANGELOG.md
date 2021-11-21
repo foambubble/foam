@@ -4,6 +4,12 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.15.8] - 2021-11-22
+
+Fixes and Improvements:
+
+- Re-enable link navigation for wikilinks (#840)
+
 ## [0.15.7] - 2021-11-21
 
 Fixes and Improvements:

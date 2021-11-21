@@ -100,13 +100,11 @@ export const NoteFactory = {
     const selectedContent = findSelectionContent();
 
     resolver.define('FOAM_SELECTED_TEXT', selectedContent?.content ?? '');
-    let resolvedValues: Map<string, string>,
-      templateWithResolvedVariables: string;
+    let templateWithResolvedVariables: string;
     try {
-      [
-        resolvedValues,
-        templateWithResolvedVariables,
-      ] = await resolver.resolveText(templateText);
+      [, templateWithResolvedVariables] = await resolver.resolveText(
+        templateText
+      );
     } catch (err) {
       if (err instanceof UserCancelledOperation) {
         return;

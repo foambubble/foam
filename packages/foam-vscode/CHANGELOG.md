@@ -4,6 +4,21 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.15.7] - 2021-11-21
+
+Fixes and Improvements:
+
+- Fixed template listing (#831)
+- Fixed note creation from template (#834)
+
+## [0.15.6] - 2021-11-18
+
+Fixes and Improvements:
+
+- Link Reference Generation is now OFF by default
+- Fixed preview navigation (#830)
+
+
 ## [0.15.5] - 2021-11-15
 
 Fixes and Improvements:

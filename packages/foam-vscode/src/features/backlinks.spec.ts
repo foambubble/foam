@@ -4,6 +4,7 @@ import {
   cleanWorkspace,
   closeEditors,
   createNote,
+  getUriInWorkspace,
 } from '../test/test-utils-vscode';
 import { BacklinksTreeDataProvider, BacklinkTreeItem } from './backlinks';
 import { ResourceTreeItem } from '../utils/grouped-resources-tree-data-provider';
@@ -25,7 +26,8 @@ describe('Backlinks panel', () => {
     await cleanWorkspace();
   });
 
-  const rootUri = fromVsCodeUri(workspace.workspaceFolders[0].uri);
+  // TODO: this should really just be the workspace folder, use that once #806 is fixed
+  const rootUri = getUriInWorkspace('just-a-ref.md');
   const ws = createTestWorkspace();
 
   const noteA = createTestNote({

@@ -39,9 +39,9 @@ export const deleteFile = (uri: URI) => {
  * @param filepath optional path components for the URI
  * @returns a URI within the workspace
  */
-export const getUriInWorkspace = (filepath?: string[]) => {
+export const getUriInWorkspace = (...filepath: string[]) => {
   const rootUri = fromVsCodeUri(vscode.workspace.workspaceFolders[0].uri);
-  filepath = filepath ?? [randomString() + '.md'];
+  filepath = filepath.length > 0 ? filepath : [randomString() + '.md'];
   const uri = URI.joinPath(rootUri, ...filepath);
   return uri;
 };
@@ -54,7 +54,7 @@ export const getUriInWorkspace = (filepath?: string[]) => {
  * @returns an object containing various information about the file created
  */
 export const createFile = async (content: string, filepath?: string[]) => {
-  const uri = getUriInWorkspace(filepath);
+  const uri = getUriInWorkspace(...filepath);
   const filenameComponents = path.parse(URI.toFsPath(uri));
   await vscode.workspace.fs.writeFile(
     toVsCodeUri(uri),

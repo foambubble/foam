@@ -11,6 +11,7 @@ import { UserCancelledOperation } from './errors';
 import {
   createDocAndFocus,
   findSelectionContent,
+  getCurrentEditorDirectory,
   replaceSelection,
 } from './editor';
 import { Resolver } from './variable-resolver';
@@ -121,18 +122,17 @@ export const NoteFactory = {
       templateWithFoamFrontmatterRemoved
     );
 
-    const defaultFilepath = determineDefaultFilepath(
-      resolvedValues,
-      templateMetadata,
-      filepathFallbackURI
+    let filepath = await determineNewNoteFilepath(
+      templateMetadata.get('filename'),
+      filepathFallbackURI,
+      resolver
     );
-    const defaultFilename = path.basename(defaultFilepath.path);
 
-    let filepath = defaultFilepath;
     if (existsSync(URI.toFsPath(filepath))) {
+      const filename = path.basename(filepath.path);
       const newFilepath = await askUserForFilepathConfirmation(
-        defaultFilepath,
-        defaultFilename
+        filepath,
+        filename
       );
 
       if (newFilepath === undefined) {
@@ -249,37 +249,29 @@ async function askUserForFilepathConfirmation(
   });
 }
 
-export function determineDefaultFilepath(
-  resolvedValues: Map<string, string>,
-  templateMetadata: Map<string, string>,
-  fallbackURI: URI = undefined
-) {
-  let defaultFilepath: URI;
-  if (templateMetadata.get('filepath')) {
-    defaultFilepath = resolveFilepathAttribute(
-      templateMetadata.get('filepath')
-    );
-  } else if (fallbackURI) {
-    return fallbackURI;
-  } else {
-    const defaultSlug = resolvedValues.get('FOAM_TITLE') || 'New Note';
-    defaultFilepath = currentDirectoryFilepath(`${defaultSlug}.md`);
+export async function determineNewNoteFilepath(
+  templateFilepathAttribute: string | undefined,
+  fallbackURI: URI | undefined,
+  resolver: Resolver
+): Promise<URI> {
+  if (templateFilepathAttribute) {
+    const defaultFilepath = isAbsolute(templateFilepathAttribute)
+      ? URI.file(templateFilepathAttribute)
+      : URI.joinPath(
+          fromVsCodeUri(workspace.workspaceFolders[0].uri),
+          templateFilepathAttribute
+        );
+    return defaultFilepath;
   }
+
+  if (fallbackURI) {
+    return fallbackURI;
+  }
+
+  const defaultName = await resolver.resolve('FOAM_TITLE');
+  const defaultFilepath = URI.joinPath(
+    getCurrentEditorDirectory(),
+    `${defaultName}.md`
+  );
   return defaultFilepath;
-}
-
-function currentDirectoryFilepath(filename: string) {
-  const activeFile = window.activeTextEditor?.document?.uri.path;
-  const currentDir =
-    activeFile !== undefined
-      ? URI.parse(path.dirname(activeFile))
-      : fromVsCodeUri(workspace.workspaceFolders[0].uri);
-
-  return URI.joinPath(currentDir, filename);
-}
-
-function resolveFilepathAttribute(filepath) {
-  return isAbsolute(filepath)
-    ? URI.file(filepath)
-    : URI.joinPath(fromVsCodeUri(workspace.workspaceFolders[0].uri), filepath);
 }

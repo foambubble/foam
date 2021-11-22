@@ -4,6 +4,13 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## Unreleased
+
+Features:
+
+- Added support for wikilinks across directories (#841)
+  - BREAKING CHANGE: wikilinks to attachments must now include the extension
+
 ## [0.15.9] - 2021-11-23
 
 Fixes and Improvements:

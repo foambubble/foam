@@ -2,7 +2,7 @@ import { diff } from 'fast-array-diff';
 import { isEqual } from 'lodash';
 import { Resource, ResourceLink } from './note';
 import { URI } from './uri';
-import { FoamWorkspace, uriToResourceName } from './workspace';
+import { FoamWorkspace } from './workspace';
 import { Range } from './range';
 import { IDisposable } from '../common/lifecycle';
 
@@ -99,16 +99,16 @@ export class FoamGraph implements IDisposable {
 
   private updateLinksRelatedToAddedResource(resource: Resource) {
     // check if any existing connection can be filled by new resource
-    const name = uriToResourceName(resource.uri);
-    const placeholder = this.placeholders.get(name);
-    if (placeholder) {
-      this.placeholders.delete(name);
-      const resourcesToUpdate = this.backlinks.get(placeholder.path) ?? [];
-      resourcesToUpdate.forEach(res =>
-        this.resolveResource(this.workspace.get(res.source))
-      );
+    let resourcesToUpdate: Resource[] = [];
+    for (const placeholderId of this.placeholders.keys()) {
+      // quick and dirty check for affected resources
+      if (resource.uri.path.endsWith(placeholderId + '.md')) {
+        resourcesToUpdate.push(resource);
+      }
     }
-
+    resourcesToUpdate.forEach(res =>
+      this.resolveResource(this.workspace.get(res.uri))
+    );
     // resolve the resource
     this.resolveResource(resource);
   }

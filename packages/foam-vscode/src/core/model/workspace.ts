@@ -1,6 +1,6 @@
 import { Resource, ResourceLink } from './note';
 import { URI } from './uri';
-import { isSome, isNone } from '../utils';
+import { isSome, isNone, getShortestIdentifier } from '../utils';
 import { Emitter } from '../common/event';
 import { ResourceProvider } from './provider';
 import { IDisposable } from '../common/lifecycle';
@@ -93,6 +93,29 @@ export class FoamWorkspace implements IDisposable {
       }
     }
     return resources;
+  }
+
+  /**
+   * Returns the minimal identifier for the given resource, either in the whole
+   * workspace, or in the provided set of URIs
+   *
+   * @param forResource the resource to compute the identifier for
+   * @param amongst an optional parameter to limit the computation to the provided URIs.
+   *                If not provided the identifier will be computed against all the resources in the workspace
+   */
+  public getIdentifier(forResource: URI, amongst?: URI[]): string {
+    if (isNone(amongst)) {
+      amongst = [];
+      for (const res of this.resources.values()) {
+        amongst.push(res.uri);
+      }
+    }
+    const identifier = getShortestIdentifier(
+      forResource.path,
+      amongst.map(uri => uri.path)
+    );
+
+    return identifier.endsWith('.md') ? identifier.slice(0, -3) : identifier;
   }
 
   public find(resourceId: URI | string, reference?: URI): Resource | null {

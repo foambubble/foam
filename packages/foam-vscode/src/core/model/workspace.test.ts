@@ -1,4 +1,4 @@
-import { getReferenceType } from './workspace';
+import { FoamWorkspace, getReferenceType } from './workspace';
 import { FoamGraph } from './graph';
 import { Logger } from '../utils/log';
 import { URI } from './uri';
@@ -143,6 +143,28 @@ describe('Graph', () => {
 
     ws.dispose();
     graph.dispose();
+  });
+});
+
+describe('Identifier computation', () => {
+  it('should compute the minimum identifier to resolve a name clash', () => {
+    const first = createTestNote({
+      uri: '/path/to/page-a.md',
+    });
+    const second = createTestNote({
+      uri: '/another/way/for/page-a.md',
+    });
+    const third = createTestNote({
+      uri: '/another/path/for/page-a.md',
+    });
+    const ws = new FoamWorkspace()
+      .set(first)
+      .set(second)
+      .set(third);
+
+    expect(ws.getIdentifier(first.uri)).toEqual('to/page-a');
+    expect(ws.getIdentifier(second.uri)).toEqual('way/for/page-a');
+    expect(ws.getIdentifier(third.uri)).toEqual('path/for/page-a');
   });
 });
 

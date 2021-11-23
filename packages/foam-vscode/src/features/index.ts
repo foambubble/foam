@@ -17,10 +17,12 @@ import completionProvider from './link-completion';
 import tagCompletionProvider from './tag-completion';
 import linkDecorations from './document-decorator';
 import navigationProviders from './navigation-provider';
+import wikilinkDiagnostics from './wikilink-diagnostics';
 import { FoamFeature } from '../types';
 
 export const features: FoamFeature[] = [
   navigationProviders,
+  wikilinkDiagnostics,
   tagsExplorer,
   createReferences,
   openDailyNote,

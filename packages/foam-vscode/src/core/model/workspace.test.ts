@@ -313,15 +313,14 @@ describe('Wikilinks', () => {
     expect(graph.getBacklinks(attachmentA.uri).map(l => l.source)).toEqual([
       noteA.uri,
     ]);
-    expect(graph.getBacklinks(attachmentB.uri).map(l => l.source)).toEqual([
-      noteA.uri,
-    ]);
+    // Attachments require extension
+    expect(graph.getBacklinks(attachmentB.uri).map(l => l.source)).toEqual([]);
   });
 
   it('Resolves conflicts alphabetically - part 1', () => {
     const noteA = createTestNote({
       uri: '/path/to/page-a.md',
-      links: [{ slug: 'attachment-a' }],
+      links: [{ slug: 'attachment-a.pdf' }],
     });
     const attachmentA = createTestNote({
       uri: '/path/to/more/attachment-a.pdf',
@@ -343,7 +342,7 @@ describe('Wikilinks', () => {
   it('Resolves conflicts alphabetically - part 2', () => {
     const noteA = createTestNote({
       uri: '/path/to/page-a.md',
-      links: [{ slug: 'attachment-a' }],
+      links: [{ slug: 'attachment-a.pdf' }],
     });
     const attachmentA = createTestNote({
       uri: '/path/to/more/attachment-a.pdf',
@@ -376,7 +375,7 @@ describe('Wikilinks', () => {
     expect(graph.getLinks(noteA.uri).map(l => l.target)).toEqual([noteB1.uri]);
   });
 
-  it('Handles capatalization of files and wikilinks correctly', () => {
+  it('Handles capitalization of files and wikilinks correctly', () => {
     const noteA = createTestNote({
       uri: '/path/to/page-a.md',
       links: [

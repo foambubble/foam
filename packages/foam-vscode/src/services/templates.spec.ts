@@ -16,6 +16,8 @@ import { Resolver } from './variable-resolver';
 describe('Create note from template', () => {
   beforeEach(async () => {
     await closeEditors();
+    jest.clearAllMocks();
+    jest.restoreAllMocks();
   });
 
   describe('User flow', () => {
@@ -42,6 +44,27 @@ describe('Create note from template', () => {
       );
 
       await deleteFile(fileA.uri);
+    });
+
+    it('should not ask a user for path if defined in template', async () => {
+      const uri = getUriInWorkspace();
+      const templateA = await createFile(
+        `---
+foam_template: # foam template metadata
+  filepath: "${URI.toFsPath(uri)}"
+---
+`,
+        ['.foam', 'templates', 'template-with-path.md']
+      );
+      const spy = jest
+        .spyOn(window, 'showInputBox')
+        .mockImplementationOnce(jest.fn(() => Promise.resolve(undefined)));
+
+      await NoteFactory.createFromTemplate(
+        templateA.uri,
+        new Resolver(new Map(), new Date())
+      );
+      expect(spy).toHaveBeenCalledTimes(0);
     });
 
     it('should focus the editor on the newly created note', async () => {
@@ -155,6 +178,10 @@ describe('Create note from template', () => {
 });
 
 describe('determineNewNoteFilepath', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    jest.restoreAllMocks();
+  });
   it('should use the template path if absolute', async () => {
     const winAbsolutePath = 'C:\\absolute_path\\journal\\My Note Title.md';
     const linuxAbsolutePath = '/absolute_path/journal/My Note Title.md';

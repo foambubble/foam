@@ -4,6 +4,12 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.15.9] - 2021-11-23
+
+Fixes and Improvements:
+
+- Fixed filepath retrieval when creating note from template (#843)
+
 ## [0.15.8] - 2021-11-22
 
 Fixes and Improvements:

@@ -121,7 +121,7 @@ export const NoteFactory = {
     );
 
     let filepath = await determineNewNoteFilepath(
-      templateMetadata.get('filename'),
+      templateMetadata.get('filepath'),
       filepathFallbackURI,
       resolver
     );

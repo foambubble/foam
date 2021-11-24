@@ -32,6 +32,12 @@ describe('Link Completion', () => {
         uri: 'path/to/file.md',
         links: [{ slug: 'placeholder text' }],
       })
+    )
+    .set(
+      createTestNote({
+        root,
+        uri: 'another/file.md',
+      })
     );
   const graph = FoamGraph.fromWorkspace(ws);
 
@@ -62,19 +68,6 @@ describe('Link Completion', () => {
     expect(links).toBeNull();
   });
 
-  it('should return notes and placeholders', async () => {
-    const { uri } = await createFile('[[file]] [[');
-    const { doc } = await showInEditor(uri);
-    const provider = new CompletionProvider(ws, graph);
-
-    const links = await provider.provideCompletionItems(
-      doc,
-      new vscode.Position(0, 11)
-    );
-
-    expect(links.items.length).toEqual(4);
-  });
-
   it('should not return link outside the wikilink brackets', async () => {
     const { uri } = await createFile('[[file]] then');
     const { doc } = await showInEditor(uri);
@@ -86,5 +79,27 @@ describe('Link Completion', () => {
     );
 
     expect(links).toBeNull();
+  });
+
+  it('should return notes with unique identifiers, and placeholders', async () => {
+    const { uri } = await createFile('[[file]] [[');
+    const { doc } = await showInEditor(uri);
+    const provider = new CompletionProvider(ws, graph);
+
+    const links = await provider.provideCompletionItems(
+      doc,
+      new vscode.Position(0, 11)
+    );
+
+    expect(links.items.length).toEqual(5);
+    expect(new Set(links.items.map(i => i.insertText))).toEqual(
+      new Set([
+        'to/file',
+        'another/file',
+        'File name with spaces',
+        'file-name',
+        'placeholder text',
+      ])
+    );
   });
 });

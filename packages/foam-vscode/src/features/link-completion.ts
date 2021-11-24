@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { Foam } from '../core/model/foam';
 import { FoamGraph } from '../core/model/graph';
+import { Resource } from '../core/model/note';
 import { URI } from '../core/model/uri';
 import { FoamWorkspace } from '../core/model/workspace';
 import { FoamFeature } from '../types';
@@ -45,26 +46,50 @@ export class CompletionProvider
     }
 
     const resources = this.ws.list().map(resource => {
-      const item = new vscode.CompletionItem(
-        vscode.workspace.asRelativePath(toVsCodeUri(resource.uri)),
-        vscode.CompletionItemKind.File
+      const label = vscode.workspace.asRelativePath(toVsCodeUri(resource.uri));
+      const item = new ResourceCompletionItem(
+        label,
+        vscode.CompletionItemKind.File,
+        resource
       );
-      item.insertText = URI.getBasename(resource.uri);
-      item.documentation = getNoteTooltip(resource.source.text);
-
+      item.filterText = URI.getBasename(resource.uri);
+      item.insertText = this.ws.getIdentifier(resource.uri);
       return item;
     });
-
     const placeholders = Array.from(this.graph.placeholders.values()).map(
       uri => {
-        return new vscode.CompletionItem(
+        const item = new vscode.CompletionItem(
           uri.path,
           vscode.CompletionItemKind.Interface
         );
+        item.insertText = uri.path;
+        return item;
       }
     );
 
     return new vscode.CompletionList([...resources, ...placeholders]);
+  }
+
+  resolveCompletionItem(
+    item: ResourceCompletionItem | vscode.CompletionItem
+  ): vscode.ProviderResult<vscode.CompletionItem> {
+    if (item instanceof ResourceCompletionItem) {
+      item.documentation = getNoteTooltip(item.resource.source.text);
+    }
+    return item;
+  }
+}
+
+/**
+ * A CompletionItem related to a Resource
+ */
+class ResourceCompletionItem extends vscode.CompletionItem {
+  constructor(
+    label: string,
+    type: vscode.CompletionItemKind,
+    public resource: Resource
+  ) {
+    super(label, type);
   }
 }
 

@@ -4,12 +4,15 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-## Unreleased
+## [0.16.0] - 2021-11-24
 
 Features:
 
-- Added support for wikilinks across directories (#841)
+- Added support for unique wikilink identifiers (#841)
+  - This change allows files that have the same name to be uniquely referenced as wikilinks
   - BREAKING CHANGE: wikilinks to attachments must now include the extension
+- Added diagnostics for ambiguous wikilinks, with quick fixes available (#844)
+- Added support for unique wikilinks in autocompletion (#845)
 
 ## [0.15.9] - 2021-11-23
 

@@ -27,8 +27,16 @@ Foam helps you create the connections between your notes, and your placeholders 
 
 ![Link Autocompletion](./assets/screenshots/feature-link-autocompletion.gif)
 
-### Link Preview and Navigation
+### Unique identifiers across directories
 
+Foam supports files with the same name in multiple directories.
+It will use the minimum identifier required, and even report and help you fix existing ambiguous wikilinks.
+
+![Unique identifier autocompletion](./assets/screenshots/feature-unique-wikilink-completion.gif)
+
+![Wikilink diagnostic](./assets/screenshots/feature-wikilink-diagnostics.gif)
+
+### Link Preview and Navigation
 
 ![Link Preview and Navigation](./assets/screenshots/feature-navigation.gif)
 

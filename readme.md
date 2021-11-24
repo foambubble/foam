@@ -22,36 +22,44 @@ You can use **Foam** for organising your research, keeping re-discoverable notes
 
 See how your notes are connected via a [graph](https://foambubble.github.io/foam/features/graph-visualisation) with the `Foam: Show Graph` command.
 
-![Graph Visualization](./packages/foam-vscode/assets/screenshots/feature-show-graph.gif)
+![Graph Visualization](./assets/screenshots/feature-show-graph.gif)
 
 ### Link Autocompletion
 
 Foam helps you create the connections between your notes, and your placeholders as well.
 
-![Link Autocompletion](./packages/foam-vscode/assets/screenshots/feature-link-autocompletion.gif)
+![Link Autocompletion](./assets/screenshots/feature-link-autocompletion.gif)
+
+### Unique identifiers across directories
+
+Foam supports files with the same name in multiple directories.
+It will use the minimum identifier required, and even report and help you fix existing ambiguous wikilinks.
+
+![Unique identifier autocompletion](./assets/screenshots/feature-unique-wikilink-completion.gif)
+
+![Wikilink diagnostic](./assets/screenshots/feature-wikilink-diagnostics.gif)
 
 ### Link Preview and Navigation
 
-
-![Link Preview and Navigation](./packages/foam-vscode/assets/screenshots/feature-navigation.gif)
+![Link Preview and Navigation](./assets/screenshots/feature-navigation.gif)
 
 ### Go to definition, Peek References
 
 See where a note is being referenced in your knowledge base.
 
-![Go to Definition, Peek References](./packages/foam-vscode/assets/screenshots/feature-definition-references.gif)
+![Go to Definition, Peek References](./assets/screenshots/feature-definition-references.gif)
 
 ### Navigation in Preview
 
 Navigate your rendered notes in the VS Code preview panel.
 
-![Navigation in Preview](./packages/foam-vscode/assets/screenshots/feature-preview-navigation.gif)
+![Navigation in Preview](./assets/screenshots/feature-preview-navigation.gif)
 
 ### Note embed
 
 Embed the content from other notes.
 
-![Note Embed](./packages/foam-vscode/assets/screenshots/feature-note-embed.gif)
+![Note Embed](./assets/screenshots/feature-note-embed.gif)
 
 ### Link Alias
 
@@ -61,21 +69,21 @@ Foam supports link aliasing, so you can have a `[[wikilink]]`, or a `[[wikilink|
 
 Use [custom templates](https://foambubble.github.io/foam/features/note-templates) to have avoid repetitve work on your notes.
 
-![Templates](./packages/foam-vscode/assets/screenshots/feature-templates.gif)
+![Templates](./assets/screenshots/feature-templates.gif)
 
 ### Backlinks Panel
 
 Quickly check which notes are referencing the currently active note.
 See for each occurrence the context in which it lives, as well as a preview of the note.
 
-![Backlinks Panel](./packages/foam-vscode/assets/screenshots/feature-backlinks-panel.gif)
+![Backlinks Panel](./assets/screenshots/feature-backlinks-panel.gif)
 
 ### Tag Explorer Panel
 
 Tag your notes and navigate them with the [Tag Explorer](https://foambubble.github.io/foam/features/tags).
 Foam also supports hierarchical tags.
 
-![Tag Explorer Panel](./packages/foam-vscode/assets/screenshots/feature-tags-panel.gif)
+![Tag Explorer Panel](./assets/screenshots/feature-tags-panel.gif)
 
 ### Orphans and Placeholder Panels
 
@@ -83,26 +91,26 @@ Orphans are note that have no inbound nor outbound links.
 Placeholders are dangling links, or notes without content.
 Keep them under control, and your knowledge base in better state, by using this panel.
 
-![Orphans and Placeholder Panels](./packages/foam-vscode/assets/screenshots/feature-placeholder-orphan-panel.gif)
+![Orphans and Placeholder Panels](./assets/screenshots/feature-placeholder-orphan-panel.gif)
 
 ### Syntax highlight
 
 Foam highlights wikilinks and placeholder differently, to help you visualize your knowledge base.
 
-![Syntax Highlight](./packages/foam-vscode/assets/screenshots/feature-syntax-highlight.png)
+![Syntax Highlight](./assets/screenshots/feature-syntax-highlight.png)
 
 ### Daily note
 
 Create a journal with [daily notes](https://foambubble.github.io/foam/features/daily-notes).
 
-![Daily Note](./packages/foam-vscode/assets/screenshots/feature-daily-note.gif)
+![Daily Note](./assets/screenshots/feature-daily-note.gif)
 
 ### Generate references for your wikilinks
 
 Create markdown [references](https://foambubble.github.io/foam/features/link-reference-definitions) for `[[wikilinks]]`, to use your notes in a non-Foam workspace.
 With references you can also make your notes navigable both in GitHub UI as well as GitHub Pages.
 
-![Generate references](./packages/foam-vscode/assets/screenshots/feature-definitions-generation.gif)
+![Generate references](./assets/screenshots/feature-definitions-generation.gif)
 
 ### Commands
 

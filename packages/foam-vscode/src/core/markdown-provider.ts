@@ -237,7 +237,10 @@ const blocksPlugin: ParserPlugin = {
   },
   onDidVisitTree: (tree, note) => {
     if (note.blocks.length > 0) {
-      note.blocks[note.blocks.length - 1].range.end = note.source.end;
+      note.blocks[note.blocks.length - 1].range.end = Position.create(
+        note.source.end.line + 1,
+        0
+      );
     }
   },
 };

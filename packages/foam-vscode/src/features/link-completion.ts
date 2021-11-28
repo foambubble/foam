@@ -19,10 +19,50 @@ const feature: FoamFeature = {
         mdDocSelector,
         new CompletionProvider(foam.workspace, foam.graph),
         '['
+      ),
+      vscode.languages.registerCompletionItemProvider(
+        mdDocSelector,
+        new SectionCompletionProvider(foam.workspace, foam.graph),
+        '#'
       )
     );
   },
 };
+
+export class SectionCompletionProvider
+  implements vscode.CompletionItemProvider<vscode.CompletionItem> {
+  constructor(private ws: FoamWorkspace, private graph: FoamGraph) {}
+
+  provideCompletionItems(
+    document: vscode.TextDocument,
+    position: vscode.Position
+  ): vscode.ProviderResult<vscode.CompletionList<vscode.CompletionItem>> {
+    const cursorPrefix = document
+      .lineAt(position)
+      .text.substr(0, position.character);
+
+    // Requires autocomplete only if cursorPrefix matches `[[` that NOT ended by `]]`.
+    // See https://github.com/foambubble/foam/pull/596#issuecomment-825748205 for details.
+    // eslint-disable-next-line no-useless-escape
+    const match = cursorPrefix.match(/\[\[([^\[\]]*#(?!.*\]\]))/);
+
+    if (!match) {
+      return null;
+    }
+
+    const resourceId = match[1].slice(0, -1);
+    const resource = this.ws.find(resourceId);
+    if (resource) {
+      const items = resource.blocks.map(b => {
+        return new vscode.CompletionItem(
+          b.label,
+          vscode.CompletionItemKind.Text
+        );
+      });
+      return new vscode.CompletionList(items);
+    }
+  }
+}
 
 export class CompletionProvider
   implements vscode.CompletionItemProvider<vscode.CompletionItem> {
@@ -54,6 +94,7 @@ export class CompletionProvider
       );
       item.filterText = URI.getBasename(resource.uri);
       item.insertText = this.ws.getIdentifier(resource.uri);
+      item.commitCharacters = ['#'];
       return item;
     });
     const placeholders = Array.from(this.graph.placeholders.values()).map(

@@ -38,12 +38,17 @@ export interface Tag {
   range: Range;
 }
 
+export interface NoteBlock {
+  label: string;
+  range: Range;
+}
+
 export interface Resource {
   uri: URI;
   type: string;
   title: string;
   properties: any;
-  // sections: NoteSection[]
+  blocks: NoteBlock[];
   tags: Tag[];
   links: ResourceLink[];
 

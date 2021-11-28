@@ -107,8 +107,20 @@ export class MarkdownResourceProvider implements ResourceProvider {
     return this.dataStore.read(uri);
   }
 
-  readAsMarkdown(uri: URI): Promise<string | null> {
-    return this.dataStore.read(uri);
+  async readAsMarkdown(uri: URI): Promise<string | null> {
+    let content = await this.dataStore.read(uri);
+    if (isSome(content) && uri.fragment) {
+      const block = this.parser
+        .parse(uri, content)
+        .blocks.find(b => b.label === uri.fragment);
+      if (isSome(block)) {
+        const rows = content.split('\n');
+        content = rows
+          .slice(block.range.start.line, block.range.end.line)
+          .join('\n');
+      }
+    }
+    return content;
   }
 
   async fetch(uri: URI) {
@@ -133,9 +145,14 @@ export class MarkdownResourceProvider implements ResourceProvider {
             workspace.find(definedUri, resource.uri)?.uri ??
             URI.placeholder(definedUri.path);
         } else {
+          const [target, section] = link.target.split('#');
           targetUri =
-            workspace.find(link.target, resource.uri)?.uri ??
+            workspace.find(target, resource.uri)?.uri ??
             URI.placeholder(link.target);
+
+          if (section && !URI.isPlaceholder(targetUri)) {
+            targetUri = URI.create({ ...targetUri, fragment: section });
+          }
         }
         break;
 
@@ -197,6 +214,30 @@ const tagsPlugin: ParserPlugin = {
           range: Range.createFromPosition(start, end),
         });
       });
+    }
+  },
+};
+
+const blocksPlugin: ParserPlugin = {
+  name: 'block',
+  visit: (node, note) => {
+    if (node.type === 'heading') {
+      const label = ((node as Parent)!.children?.[0] as any)?.value;
+      if (label) {
+        const range = astPositionToFoamRange(node.position!);
+        if (note.blocks.length > 0) {
+          note.blocks[note.blocks.length - 1].range.end = range.start;
+        }
+        note.blocks.push({
+          label,
+          range: range,
+        });
+      }
+    }
+  },
+  onDidVisitTree: (tree, note) => {
+    if (note.blocks.length > 0) {
+      note.blocks[note.blocks.length - 1].range.end = note.source.end;
     }
   },
 };
@@ -314,6 +355,7 @@ export function createMarkdownParser(
     wikilinkPlugin,
     definitionsPlugin,
     tagsPlugin,
+    blocksPlugin,
     ...extraPlugins,
   ];
 
@@ -344,6 +386,7 @@ export function createMarkdownParser(
         type: 'note',
         properties: {},
         title: '',
+        blocks: [],
         tags: [],
         links: [],
         definitions: [],

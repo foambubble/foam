@@ -461,6 +461,34 @@ this is some text
   });
 });
 
+describe('Blocks plugin', () => {
+  it('should find sections within the note', () => {
+    const note = createNoteFromMarkdown(
+      '/dir1/page-a.md',
+      `
+# Section 1
+
+This is the content of section 1.
+
+## Section 1.1
+
+This is the content of section 1.1.
+
+# Section 2
+
+This is the content of section 2.
+      `
+    );
+    expect(note.blocks).toHaveLength(3);
+    expect(note.blocks[0].label).toEqual('Section 1');
+    expect(note.blocks[0].range).toEqual(Range.create(1, 0, 5, 0));
+    expect(note.blocks[1].label).toEqual('Section 1.1');
+    expect(note.blocks[1].range).toEqual(Range.create(5, 0, 9, 0));
+    expect(note.blocks[2].label).toEqual('Section 2');
+    expect(note.blocks[2].range).toEqual(Range.create(9, 0, 12, 6));
+  });
+});
+
 describe('parser plugins', () => {
   const testPlugin: ParserPlugin = {
     visit: (node, note) => {

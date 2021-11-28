@@ -110,20 +110,22 @@ export class NavigationProvider
 
     const targetResource = this.workspace.get(uri);
 
+    let targetRange = Range.createFromPosition(
+      targetResource.source.contentStart,
+      targetResource.source.end
+    );
+    if (uri.fragment) {
+      const block = targetResource.blocks.find(b => b.label === uri.fragment);
+      if (block) {
+        targetRange = block.range;
+      }
+    }
     const result: vscode.LocationLink = {
       originSelectionRange: toVsCodeRange(targetLink.range),
       targetUri: toVsCodeUri(uri),
-      targetRange: toVsCodeRange(
-        Range.createFromPosition(
-          targetResource.source.contentStart,
-          targetResource.source.end
-        )
-      ),
+      targetRange: toVsCodeRange(targetRange),
       targetSelectionRange: toVsCodeRange(
-        Range.createFromPosition(
-          targetResource.source.contentStart,
-          targetResource.source.contentStart
-        )
+        Range.createFromPosition(targetRange.start, targetRange.start)
       ),
     };
     return [result];

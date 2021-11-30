@@ -4,6 +4,12 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.16.1] - 2021-11-30
+
+Fixes and Improvements:
+
+- Fixed diagnostic bug triggered when file had same suffix (#851)
+
 ## [0.16.0] - 2021-11-24
 
 Features:

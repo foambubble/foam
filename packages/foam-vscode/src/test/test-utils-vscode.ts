@@ -28,7 +28,8 @@ export const closeEditors = async () => {
   await wait(100);
 };
 
-export const deleteFile = (uri: URI) => {
+export const deleteFile = (file: URI | { uri: URI }) => {
+  const uri = 'uri' in file ? file.uri : file;
   return vscode.workspace.fs.delete(toVsCodeUri(uri), { recursive: true });
 };
 

@@ -485,7 +485,7 @@ This is the content of section 2.
     expect(note.blocks[1].label).toEqual('Section 1.1');
     expect(note.blocks[1].range).toEqual(Range.create(5, 0, 9, 0));
     expect(note.blocks[2].label).toEqual('Section 2');
-    expect(note.blocks[2].range).toEqual(Range.create(9, 0, 12, 6));
+    expect(note.blocks[2].range).toEqual(Range.create(9, 0, 13, 0));
   });
 });
 

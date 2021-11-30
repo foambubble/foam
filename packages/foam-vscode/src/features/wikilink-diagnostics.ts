@@ -185,7 +185,9 @@ export function updateDiagnostics(
         }
       }
     }
-    collection.set(document.uri, result);
+    if (result.length > 0) {
+      collection.set(document.uri, result);
+    }
   }
 }
 

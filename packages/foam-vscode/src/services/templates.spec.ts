@@ -43,7 +43,8 @@ describe('Create note from template', () => {
         })
       );
 
-      await deleteFile(fileA.uri);
+      await deleteFile(fileA);
+      await deleteFile(templateA);
     });
 
     it('should not ask a user for path if defined in template', async () => {
@@ -65,6 +66,9 @@ foam_template: # foam template metadata
         new Resolver(new Map(), new Date())
       );
       expect(spy).toHaveBeenCalledTimes(0);
+
+      await deleteFile(uri);
+      await deleteFile(templateA);
     });
 
     it('should focus the editor on the newly created note', async () => {
@@ -84,6 +88,7 @@ foam_template: # foam template metadata
       );
 
       await deleteFile(target);
+      await deleteFile(templateA);
     });
   });
 
@@ -104,8 +109,9 @@ foam_template: # foam template metadata
     expect(window.activeTextEditor.document.getText()).toEqual(
       `${new Date().getFullYear()}`
     );
+
     await deleteFile(target);
-    await deleteFile(template.uri);
+    await deleteFile(template);
   });
 
   describe('Creation with active text selection', () => {
@@ -124,6 +130,10 @@ foam_template: # foam template metadata
       expect(await resolver.resolve('FOAM_SELECTED_TEXT')).toEqual(
         'first file'
       );
+
+      await deleteFile(templateA);
+      await deleteFile(target);
+      await deleteFile(file);
     });
 
     it('should open created note in a new column if there was a selection', async () => {
@@ -148,7 +158,9 @@ foam_template: # foam template metadata
       expect(fromVsCodeUri(window.visibleTextEditors[1].document.uri)).toEqual(
         target
       );
+
       await deleteFile(target);
+      await deleteFile(templateA);
       await closeEditors();
     });
 

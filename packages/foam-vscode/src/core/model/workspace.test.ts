@@ -71,6 +71,13 @@ describe('Workspace resources', () => {
     ws.set(noteA);
     expect(ws.list()).toEqual([noteA]);
   });
+
+  it('#851 - listing by ID should not return files with same suffix', () => {
+    const ws = createTestWorkspace()
+      .set(createTestNote({ uri: 'test-file.md' }))
+      .set(createTestNote({ uri: 'file.md' }));
+    expect(ws.listById('file').length).toEqual(1);
+  });
 });
 
 describe('Graph', () => {

@@ -82,13 +82,14 @@ export class FoamWorkspace implements IDisposable {
   }
 
   public listById(resourceId: string): Resource[] {
-    if (!hasExtension(resourceId)) {
-      resourceId = resourceId + '.md';
+    let needle = '/' + resourceId;
+    if (!hasExtension(needle)) {
+      needle = needle + '.md';
     }
-    resourceId = normalize(resourceId);
+    needle = normalize(needle);
     let resources = [];
     for (const key of this.resources.keys()) {
-      if (key.endsWith(resourceId)) {
+      if (key.endsWith(needle)) {
         resources.push(this.resources.get(normalize(key)));
       }
     }

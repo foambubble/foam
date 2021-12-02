@@ -218,30 +218,45 @@ const tagsPlugin: ParserPlugin = {
   },
 };
 
+let blockStack: Array<{ label: string; level: number; start: Position }> = [];
 const blocksPlugin: ParserPlugin = {
   name: 'block',
+  onWillVisitTree: () => {
+    blockStack = [];
+  },
   visit: (node, note) => {
     if (node.type === 'heading') {
+      const level = (node as any).depth || 1;
       const label = ((node as Parent)!.children?.[0] as any)?.value;
-      if (label) {
-        const range = astPositionToFoamRange(node.position!);
-        if (note.blocks.length > 0) {
-          note.blocks[note.blocks.length - 1].range.end = range.start;
-        }
+      if (!label || !level) {
+        return;
+      }
+      const start = astPositionToFoamRange(node.position!).start;
+      while (
+        blockStack.length > 0 &&
+        blockStack[blockStack.length - 1].level >= level
+      ) {
+        const block = blockStack.pop();
         note.blocks.push({
-          label,
-          range: range,
+          label: block.label,
+          range: Range.createFromPosition(block.start, start),
         });
       }
+      blockStack.push({ label, level, start });
     }
   },
   onDidVisitTree: (tree, note) => {
-    if (note.blocks.length > 0) {
-      note.blocks[note.blocks.length - 1].range.end = Position.create(
-        note.source.end.line + 1,
-        0
-      );
+    const end = Position.create(note.source.end.line + 1, 0);
+    while (blockStack.length > 0) {
+      const block = blockStack.pop();
+      note.blocks.push({
+        label: block.label,
+        range: { start: block.start, end },
+      });
     }
+    note.blocks.sort((a, b) =>
+      Position.compareTo(a.range.start, b.range.start)
+    );
   },
 };
 

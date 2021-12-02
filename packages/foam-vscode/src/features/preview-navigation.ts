@@ -45,16 +45,17 @@ export const markdownItWithNoteInclusion = (
           return `![[${wikilink}]]`;
         }
 
-        const cyclicLinkDetected = refsStack.includes(wikilink);
+        const cyclicLinkDetected = refsStack.includes(
+          includedNote.uri.path.toLocaleLowerCase()
+        );
 
         if (!cyclicLinkDetected) {
-          refsStack.push(wikilink.toLowerCase());
+          refsStack.push(includedNote.uri.path.toLocaleLowerCase());
         }
 
         if (cyclicLinkDetected) {
           return `<div class="foam-cyclic-link-warning">Cyclic link detected for wikilink: ${wikilink}</div>`;
         } else {
-          refsStack.pop();
           let content = includedNote.source.text;
           if (isSome(content) && includedNote.uri.fragment) {
             const block = includedNote.blocks.find(
@@ -67,7 +68,9 @@ export const markdownItWithNoteInclusion = (
                 .join('\n');
             }
           }
-          return md.render(content);
+          const html = md.render(content);
+          refsStack.pop();
+          return html;
         }
       } catch (e) {
         Logger.error(

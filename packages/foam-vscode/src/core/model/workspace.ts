@@ -174,7 +174,7 @@ export class FoamWorkspace implements IDisposable {
     }
     return {
       ...resource,
-      uri: URI.create({ ...resource.uri, fragment }),
+      uri: URI.withFragment(resource.uri, fragment),
     };
   }
 

@@ -57,7 +57,7 @@ export class SectionCompletionProvider
         return new ResourceCompletionItem(
           b.label,
           vscode.CompletionItemKind.Text,
-          URI.create({ ...resource.uri, fragment: b.label })
+          URI.withFragment(resource.uri, b.label)
         );
       });
       return new vscode.CompletionList(items);

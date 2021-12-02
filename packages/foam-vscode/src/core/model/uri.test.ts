@@ -11,7 +11,7 @@ describe('Foam URI', () => {
       ['https://www.google.com', URI.parse('https://www.google.com')],
       ['/path/to/a/file.md', URI.file('/path/to/a/file.md')],
       ['../relative/file.md', URI.file('/path/relative/file.md')],
-      ['#section', URI.create({ ...base, fragment: 'section' })],
+      ['#section', URI.withFragment(base, 'section')],
       [
         '../relative/file.md#section',
         URI.parse('file:/path/relative/file.md#section'),

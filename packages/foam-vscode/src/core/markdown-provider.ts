@@ -151,15 +151,19 @@ export class MarkdownResourceProvider implements ResourceProvider {
             URI.placeholder(link.target);
 
           if (section && !URI.isPlaceholder(targetUri)) {
-            targetUri = URI.create({ ...targetUri, fragment: section });
+            targetUri = URI.withFragment(targetUri, section);
           }
         }
         break;
 
       case 'link':
+        const [target, section] = link.target.split('#');
         targetUri =
-          workspace.find(link.target, resource.uri)?.uri ??
+          workspace.find(target, resource.uri)?.uri ??
           URI.placeholder(URI.resolve(link.target, resource.uri).path);
+        if (section && !URI.isPlaceholder(targetUri)) {
+          targetUri = URI.withFragment(targetUri, section);
+        }
         break;
     }
     return targetUri;

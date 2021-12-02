@@ -137,6 +137,13 @@ export abstract class URI {
     });
   }
 
+  static withFragment(uri: URI, fragment: string): URI {
+    return URI.create({
+      ...uri,
+      fragment,
+    });
+  }
+
   static relativePath(source: URI, target: URI): string {
     const relativePath = posix.relative(
       posix.dirname(source.path),

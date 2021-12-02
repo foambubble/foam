@@ -6,7 +6,7 @@ Wikilinks can refer to any note or attachment in the repo: `[[note.md]]`, `[[doc
 
 The usual wikilink syntax without extension refers to notes: `[[wikilink]]` and `[[wikilink.md]]` are equivalent.
 
-The goal of wikilinks is to uniquily identify a file in a repo, no matter in which directory it lives.
+The goal of wikilinks is to uniquely identify a file in a repo, no matter in which directory it lives.
 
 Sometimes in a repo you can have files with the same name in different directories.
 Foam allows you to identify those files using the minimum effort needed to disambiguate them.
@@ -67,10 +67,6 @@ Basically we could say as a rule:
 
 ## Compatibility with other apps
 
-Foam's identifiers are a super set of Obsidian's: all Obsidian links are supported by Foam, but Foam multi-part identifier (scenario 6) is only supported by Foam.
-
-To improve compatibility this option should either be behind a configuration key, or it should be easily updated e.g. via the janitor.
-
 | Scenario                    | Obsidian                        | Foam                            |
 | --------------------------- | ------------------------------- | ------------------------------- |
 | 1 `[[notes]]`               | ✔ unique identifier in repo     | ✔ unique identifier in repo     |
@@ -78,7 +74,7 @@ To improve compatibility this option should either be behind a configuration key
 | 3 `[[work/notes]]`          | ✔ valid path from repo root     | ✔ valid identifier in repo      |
 | 4 `[[project/house/todo]]`  | ✔ valid path from repo root     | ✔ valid unique identifier       |
 | 5 `[[/project/house/todo]]` | ✔ valid path from repo root     | ✔ valid path from repo root     |
-| 6 `[[house/todo]]`          | ✘ incorrect path from repo root | ✔ valid unique identifier       |
+| 6 `[[house/todo]]`          | ✔ valid unique identifier       | ✔ valid unique identifier       |
 | 7 `[[todo]]`                | ✘ ambiguous identifier          | ✘ ambiguous identifier          |
 | 8 `[[/house/todo]]`         | ✘ incorrect path from repo root | ✘ incorrect path from repo root |
 

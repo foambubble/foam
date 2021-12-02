@@ -78,6 +78,15 @@ describe('Workspace resources', () => {
       .set(createTestNote({ uri: 'file.md' }));
     expect(ws.listById('file').length).toEqual(1);
   });
+
+  it('should include fragment when finding resource URI', () => {
+    const ws = createTestWorkspace()
+      .set(createTestNote({ uri: 'test-file.md' }))
+      .set(createTestNote({ uri: 'file.md' }));
+
+    const res = ws.find('test-file#my-section');
+    expect(res.uri.fragment).toEqual('my-section');
+  });
 });
 
 describe('Graph', () => {

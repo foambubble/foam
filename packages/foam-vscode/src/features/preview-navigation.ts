@@ -1,7 +1,7 @@
 import markdownItRegex from 'markdown-it-regex';
 import * as vscode from 'vscode';
 import { FoamFeature } from '../types';
-import { isNone } from '../utils';
+import { isNone, isSome } from '../utils';
 import { Foam } from '../core/model/foam';
 import { FoamWorkspace } from '../core/model/workspace';
 import { Logger } from '../core/utils/log';
@@ -51,15 +51,24 @@ export const markdownItWithNoteInclusion = (
           refsStack.push(wikilink.toLowerCase());
         }
 
-        const html = cyclicLinkDetected
-          ? `<div class="foam-cyclic-link-warning">Cyclic link detected for wikilink: ${wikilink}</div>`
-          : md.render(includedNote.source.text);
-
-        if (!cyclicLinkDetected) {
+        if (cyclicLinkDetected) {
+          return `<div class="foam-cyclic-link-warning">Cyclic link detected for wikilink: ${wikilink}</div>`;
+        } else {
           refsStack.pop();
+          let content = includedNote.source.text;
+          if (isSome(content) && includedNote.uri.fragment) {
+            const block = includedNote.blocks.find(
+              b => b.label === includedNote.uri.fragment
+            );
+            if (isSome(block)) {
+              const rows = content.split('\n');
+              content = rows
+                .slice(block.range.start.line, block.range.end.line)
+                .join('\n');
+            }
+          }
+          return md.render(content);
         }
-
-        return html;
       } catch (e) {
         Logger.error(
           `Error while including [[${wikilink}]] into the current document of the Preview panel`,

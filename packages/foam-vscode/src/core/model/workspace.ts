@@ -112,14 +112,20 @@ export class FoamWorkspace implements IDisposable {
         }
       }
     }
-    const identifier = getShortestIdentifier(
+    let identifier = getShortestIdentifier(
       forResource.path,
       amongst.map(uri => uri.path)
     );
 
-    // TODO maybe we should support sections here too..
+    identifier = identifier.endsWith('.md')
+      ? identifier.slice(0, -3)
+      : identifier;
 
-    return identifier.endsWith('.md') ? identifier.slice(0, -3) : identifier;
+    if (forResource.fragment) {
+      identifier += `#${forResource.fragment}`;
+    }
+
+    return identifier;
   }
 
   public find(resourceId: URI | string, reference?: URI): Resource | null {

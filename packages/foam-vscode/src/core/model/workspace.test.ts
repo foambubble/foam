@@ -182,6 +182,26 @@ describe('Identifier computation', () => {
     expect(ws.getIdentifier(second.uri)).toEqual('way/for/page-a');
     expect(ws.getIdentifier(third.uri)).toEqual('path/for/page-a');
   });
+
+  it('should support sections in identifier computation', () => {
+    const first = createTestNote({
+      uri: '/path/to/page-a.md',
+    });
+    const second = createTestNote({
+      uri: '/another/way/for/page-a.md',
+    });
+    const third = createTestNote({
+      uri: '/another/path/for/page-a.md',
+    });
+    const ws = new FoamWorkspace()
+      .set(first)
+      .set(second)
+      .set(third);
+
+    expect(
+      ws.getIdentifier(URI.withFragment(first.uri, 'section name'))
+    ).toEqual('to/page-a#section name');
+  });
 });
 
 describe('Wikilinks', () => {

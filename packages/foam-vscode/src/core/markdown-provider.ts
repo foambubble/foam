@@ -150,7 +150,7 @@ export class MarkdownResourceProvider implements ResourceProvider {
             workspace.find(target, resource.uri)?.uri ??
             URI.placeholder(link.target);
 
-          if (section && !URI.isPlaceholder(targetUri)) {
+          if (section) {
             targetUri = URI.withFragment(targetUri, section);
           }
         }
@@ -230,12 +230,14 @@ const blocksPlugin: ParserPlugin = {
   },
   visit: (node, note) => {
     if (node.type === 'heading') {
-      const level = (node as any).depth || 1;
+      const level = (node as any).depth;
       const label = ((node as Parent)!.children?.[0] as any)?.value;
       if (!label || !level) {
         return;
       }
       const start = astPositionToFoamRange(node.position!).start;
+
+      // Close all the blocks that are not parents of the current block
       while (
         blockStack.length > 0 &&
         blockStack[blockStack.length - 1].level >= level
@@ -246,11 +248,14 @@ const blocksPlugin: ParserPlugin = {
           range: Range.createFromPosition(block.start, start),
         });
       }
+
+      // Add the new block to the stack
       blockStack.push({ label, level, start });
     }
   },
   onDidVisitTree: (tree, note) => {
     const end = Position.create(note.source.end.line + 1, 0);
+    // Close all the remainig blocks
     while (blockStack.length > 0) {
       const block = blockStack.pop();
       note.blocks.push({

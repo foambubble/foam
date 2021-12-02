@@ -1,5 +1,4 @@
 import { getShortestIdentifier } from './core';
-import { extractHashtags } from './index';
 import { Logger } from './log';
 
 Logger.setLevel('error');

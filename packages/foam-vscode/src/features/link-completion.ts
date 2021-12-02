@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
 import { Foam } from '../core/model/foam';
 import { FoamGraph } from '../core/model/graph';
-import { Resource } from '../core/model/note';
 import { URI } from '../core/model/uri';
 import { FoamWorkspace } from '../core/model/workspace';
 import { FoamFeature } from '../types';

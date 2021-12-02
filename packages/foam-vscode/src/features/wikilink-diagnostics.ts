@@ -40,7 +40,7 @@ const FIND_IDENTIFER_COMMAND: FoamCommand<FindIdentifierCommandArgs> = {
         ? identifier.slice(0, -3)
         : identifier;
 
-      vscode.window.activeTextEditor.edit(builder => {
+      await vscode.window.activeTextEditor.edit(builder => {
         builder.replace(range, identifier);
       });
     }
@@ -55,7 +55,7 @@ interface ReplaceTextCommandArgs {
 const REPLACE_TEXT_COMMAND: FoamCommand<ReplaceTextCommandArgs> = {
   name: 'foam:replace-text',
   execute: async ({ range, value }) => {
-    vscode.window.activeTextEditor.edit(builder => {
+    await vscode.window.activeTextEditor.edit(builder => {
       builder.replace(range, value);
     });
   },

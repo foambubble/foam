@@ -54,13 +54,26 @@ export class SectionCompletionProvider
     const resource = this.ws.find(resourceId);
     if (resource) {
       const items = resource.blocks.map(b => {
-        return new vscode.CompletionItem(
+        return new ResourceCompletionItem(
           b.label,
-          vscode.CompletionItemKind.Text
+          vscode.CompletionItemKind.Text,
+          URI.create({ ...resource.uri, fragment: b.label })
         );
       });
       return new vscode.CompletionList(items);
     }
+  }
+
+  resolveCompletionItem(
+    item: ResourceCompletionItem | vscode.CompletionItem
+  ): vscode.ProviderResult<vscode.CompletionItem> {
+    if (item instanceof ResourceCompletionItem) {
+      return this.ws.readAsMarkdown(item.resourceUri).then(text => {
+        item.documentation = getNoteTooltip(text);
+        return item;
+      });
+    }
+    return item;
   }
 }
 
@@ -90,7 +103,7 @@ export class CompletionProvider
       const item = new ResourceCompletionItem(
         label,
         vscode.CompletionItemKind.File,
-        resource
+        resource.uri
       );
       item.filterText = URI.getBasename(resource.uri);
       item.insertText = this.ws.getIdentifier(resource.uri);
@@ -115,7 +128,10 @@ export class CompletionProvider
     item: ResourceCompletionItem | vscode.CompletionItem
   ): vscode.ProviderResult<vscode.CompletionItem> {
     if (item instanceof ResourceCompletionItem) {
-      item.documentation = getNoteTooltip(item.resource.source.text);
+      return this.ws.readAsMarkdown(item.resourceUri).then(text => {
+        item.documentation = getNoteTooltip(text);
+        return item;
+      });
     }
     return item;
   }
@@ -128,7 +144,7 @@ class ResourceCompletionItem extends vscode.CompletionItem {
   constructor(
     label: string,
     type: vscode.CompletionItemKind,
-    public resource: Resource
+    public resourceUri: URI
   ) {
     super(label, type);
   }

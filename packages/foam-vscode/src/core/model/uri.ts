@@ -5,6 +5,7 @@
 // See LICENSE for details
 
 import * as paths from 'path';
+import { isAbsolute } from 'path';
 import { CharCode } from '../common/charCode';
 
 /**
@@ -169,6 +170,9 @@ export abstract class URI {
     basedir: URI,
     placeholderUri: URI
   ): URI {
+    if (isAbsolute(placeholderUri.path)) {
+      return URI.file(placeholderUri.path);
+    }
     const tokens = placeholderUri.path.split('/');
     const path = tokens.slice(0, -1);
     const filename = tokens.slice(-1);

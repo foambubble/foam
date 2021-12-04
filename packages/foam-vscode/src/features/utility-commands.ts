@@ -9,6 +9,7 @@ import {
 } from '../utils/vsc-utils';
 import { NoteFactory } from '../services/templates';
 import { Foam } from '../core/model/foam';
+import { Resource } from '../core/model/note';
 
 export const OPEN_COMMAND = {
   command: 'foam-vscode.open-resource',
@@ -33,9 +34,7 @@ const feature: FoamFeature = {
               if (uri.fragment) {
                 const foam = await foamPromise;
                 const resource = foam.workspace.get(uri);
-                const section = resource.sections.find(
-                  b => b.label === uri.fragment
-                );
+                const section = Resource.findSection(resource, uri.fragment);
                 if (section) {
                   selection = toVsCodeRange(section.range);
                 }

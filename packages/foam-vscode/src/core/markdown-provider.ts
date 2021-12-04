@@ -110,9 +110,8 @@ export class MarkdownResourceProvider implements ResourceProvider {
   async readAsMarkdown(uri: URI): Promise<string | null> {
     let content = await this.dataStore.read(uri);
     if (isSome(content) && uri.fragment) {
-      const section = this.parser
-        .parse(uri, content)
-        .sections.find(b => b.label === uri.fragment);
+      const resource = this.parser.parse(uri, content);
+      const section = Resource.findSection(resource, uri.fragment);
       if (isSome(section)) {
         const rows = content.split('\n');
         content = rows

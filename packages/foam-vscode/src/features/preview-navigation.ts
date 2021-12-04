@@ -6,6 +6,7 @@ import { Foam } from '../core/model/foam';
 import { FoamWorkspace } from '../core/model/workspace';
 import { Logger } from '../core/utils/log';
 import { toVsCodeUri } from '../utils/vsc-utils';
+import { Resource } from '../core/model/note';
 
 const ALIAS_DIVIDER_CHAR = '|';
 const refsStack: string[] = [];
@@ -57,16 +58,15 @@ export const markdownItWithNoteInclusion = (
           return `<div class="foam-cyclic-link-warning">Cyclic link detected for wikilink: ${wikilink}</div>`;
         } else {
           let content = includedNote.source.text;
-          if (isSome(content) && includedNote.uri.fragment) {
-            const section = includedNote.sections.find(
-              b => b.label === includedNote.uri.fragment
-            );
-            if (isSome(section)) {
-              const rows = content.split('\n');
-              content = rows
-                .slice(section.range.start.line, section.range.end.line)
-                .join('\n');
-            }
+          const section = Resource.findSection(
+            includedNote,
+            includedNote.uri.fragment
+          );
+          if (isSome(section)) {
+            const rows = content.split('\n');
+            content = rows
+              .slice(section.range.start.line, section.range.end.line)
+              .join('\n');
           }
           const html = md.render(content);
           refsStack.pop();

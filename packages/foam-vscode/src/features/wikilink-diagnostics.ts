@@ -1,11 +1,12 @@
 import { debounce } from 'lodash';
 import * as vscode from 'vscode';
 import { Foam } from '../core/model/foam';
-import { ResourceParser } from '../core/model/note';
+import { Resource, ResourceParser } from '../core/model/note';
 import { Range } from '../core/model/range';
 import { FoamWorkspace } from '../core/model/workspace';
 import { getShortestIdentifier } from '../core/utils';
 import { FoamFeature } from '../types';
+import { isNone } from '../utils';
 import {
   fromVsCodeUri,
   toVsCodePosition,
@@ -156,8 +157,7 @@ export function updateDiagnostics(
         }
         if (section && targets.length === 1) {
           const resource = targets[0];
-          const found = resource.sections.find(b => b.label === section);
-          if (!found) {
+          if (isNone(Resource.findSection(resource, section))) {
             const range = Range.create(
               link.range.start.line,
               link.range.start.character + target.length + 2,

@@ -5,7 +5,7 @@ import { toVsCodeRange, toVsCodeUri } from '../utils/vsc-utils';
 import { OPEN_COMMAND } from './utility-commands';
 import { Foam } from '../core/model/foam';
 import { FoamWorkspace } from '../core/model/workspace';
-import { ResourceLink, ResourceParser } from '../core/model/note';
+import { Resource, ResourceLink, ResourceParser } from '../core/model/note';
 import { URI } from '../core/model/uri';
 import { Range } from '../core/model/range';
 import { FoamGraph } from '../core/model/graph';
@@ -114,13 +114,9 @@ export class NavigationProvider
       targetResource.source.contentStart,
       targetResource.source.end
     );
-    if (uri.fragment) {
-      const section = targetResource.sections.find(
-        b => b.label === uri.fragment
-      );
-      if (section) {
-        targetRange = section.range;
-      }
+    const section = Resource.findSection(targetResource, uri.fragment);
+    if (section) {
+      targetRange = section.range;
     }
     const result: vscode.LocationLink = {
       originSelectionRange: toVsCodeRange(targetLink.range),

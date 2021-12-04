@@ -79,4 +79,11 @@ export abstract class Resource {
       typeof (thing as Resource).links === 'object'
     );
   }
+
+  public static findSection(resource: Resource, label: string): Section | null {
+    if (label) {
+      return resource.sections.find(s => s.label === label) ?? null;
+    }
+    return null;
+  }
 }

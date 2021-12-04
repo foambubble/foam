@@ -1,11 +1,12 @@
 import markdownItRegex from 'markdown-it-regex';
 import * as vscode from 'vscode';
 import { FoamFeature } from '../types';
-import { isNone } from '../utils';
+import { isNone, isSome } from '../utils';
 import { Foam } from '../core/model/foam';
 import { FoamWorkspace } from '../core/model/workspace';
 import { Logger } from '../core/utils/log';
 import { toVsCodeUri } from '../utils/vsc-utils';
+import { Resource } from '../core/model/note';
 
 const ALIAS_DIVIDER_CHAR = '|';
 const refsStack: string[] = [];
@@ -45,21 +46,32 @@ export const markdownItWithNoteInclusion = (
           return `![[${wikilink}]]`;
         }
 
-        const cyclicLinkDetected = refsStack.includes(wikilink);
+        const cyclicLinkDetected = refsStack.includes(
+          includedNote.uri.path.toLocaleLowerCase()
+        );
 
         if (!cyclicLinkDetected) {
-          refsStack.push(wikilink.toLowerCase());
+          refsStack.push(includedNote.uri.path.toLocaleLowerCase());
         }
 
-        const html = cyclicLinkDetected
-          ? `<div class="foam-cyclic-link-warning">Cyclic link detected for wikilink: ${wikilink}</div>`
-          : md.render(includedNote.source.text);
-
-        if (!cyclicLinkDetected) {
+        if (cyclicLinkDetected) {
+          return `<div class="foam-cyclic-link-warning">Cyclic link detected for wikilink: ${wikilink}</div>`;
+        } else {
+          let content = includedNote.source.text;
+          const section = Resource.findSection(
+            includedNote,
+            includedNote.uri.fragment
+          );
+          if (isSome(section)) {
+            const rows = content.split('\n');
+            content = rows
+              .slice(section.range.start.line, section.range.end.line)
+              .join('\n');
+          }
+          const html = md.render(content);
           refsStack.pop();
+          return html;
         }
-
-        return html;
       } catch (e) {
         Logger.error(
           `Error while including [[${wikilink}]] into the current document of the Preview panel`,

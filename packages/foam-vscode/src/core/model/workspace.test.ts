@@ -78,6 +78,15 @@ describe('Workspace resources', () => {
       .set(createTestNote({ uri: 'file.md' }));
     expect(ws.listById('file').length).toEqual(1);
   });
+
+  it('should include fragment when finding resource URI', () => {
+    const ws = createTestWorkspace()
+      .set(createTestNote({ uri: 'test-file.md' }))
+      .set(createTestNote({ uri: 'file.md' }));
+
+    const res = ws.find('test-file#my-section');
+    expect(res.uri.fragment).toEqual('my-section');
+  });
 });
 
 describe('Graph', () => {
@@ -172,6 +181,26 @@ describe('Identifier computation', () => {
     expect(ws.getIdentifier(first.uri)).toEqual('to/page-a');
     expect(ws.getIdentifier(second.uri)).toEqual('way/for/page-a');
     expect(ws.getIdentifier(third.uri)).toEqual('path/for/page-a');
+  });
+
+  it('should support sections in identifier computation', () => {
+    const first = createTestNote({
+      uri: '/path/to/page-a.md',
+    });
+    const second = createTestNote({
+      uri: '/another/way/for/page-a.md',
+    });
+    const third = createTestNote({
+      uri: '/another/path/for/page-a.md',
+    });
+    const ws = new FoamWorkspace()
+      .set(first)
+      .set(second)
+      .set(third);
+
+    expect(
+      ws.getIdentifier(URI.withFragment(first.uri, 'section name'))
+    ).toEqual('to/page-a#section name');
   });
 });
 

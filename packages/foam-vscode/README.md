@@ -58,6 +58,11 @@ Embed the content from other notes.
 
 ![Note Embed](./assets/screenshots/feature-note-embed.gif)
 
+### Support for sections
+
+Foam supports autocompletion, navigation, embedding and diagnostics for note sections.
+Just use the standard wiki syntax of `[[resource#Section Title]]`.
+
 ### Link Alias
 
 Foam supports link aliasing, so you can have a `[[wikilink]]`, or a `[[wikilink|alias]]`.

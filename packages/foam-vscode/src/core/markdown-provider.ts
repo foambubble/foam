@@ -107,8 +107,19 @@ export class MarkdownResourceProvider implements ResourceProvider {
     return this.dataStore.read(uri);
   }
 
-  readAsMarkdown(uri: URI): Promise<string | null> {
-    return this.dataStore.read(uri);
+  async readAsMarkdown(uri: URI): Promise<string | null> {
+    let content = await this.dataStore.read(uri);
+    if (isSome(content) && uri.fragment) {
+      const resource = this.parser.parse(uri, content);
+      const section = Resource.findSection(resource, uri.fragment);
+      if (isSome(section)) {
+        const rows = content.split('\n');
+        content = rows
+          .slice(section.range.start.line, section.range.end.line)
+          .join('\n');
+      }
+    }
+    return content;
   }
 
   async fetch(uri: URI) {
@@ -133,16 +144,27 @@ export class MarkdownResourceProvider implements ResourceProvider {
             workspace.find(definedUri, resource.uri)?.uri ??
             URI.placeholder(definedUri.path);
         } else {
+          const [target, section] = link.target.split('#');
           targetUri =
-            workspace.find(link.target, resource.uri)?.uri ??
-            URI.placeholder(link.target);
+            target === ''
+              ? resource.uri
+              : workspace.find(target, resource.uri)?.uri ??
+                URI.placeholder(link.target);
+
+          if (section) {
+            targetUri = URI.withFragment(targetUri, section);
+          }
         }
         break;
 
       case 'link':
+        const [target, section] = link.target.split('#');
         targetUri =
-          workspace.find(link.target, resource.uri)?.uri ??
+          workspace.find(target, resource.uri)?.uri ??
           URI.placeholder(URI.resolve(link.target, resource.uri).path);
+        if (section && !URI.isPlaceholder(targetUri)) {
+          targetUri = URI.withFragment(targetUri, section);
+        }
         break;
     }
     return targetUri;
@@ -198,6 +220,53 @@ const tagsPlugin: ParserPlugin = {
         });
       });
     }
+  },
+};
+
+let sectionStack: Array<{ label: string; level: number; start: Position }> = [];
+const sectionsPlugin: ParserPlugin = {
+  name: 'section',
+  onWillVisitTree: () => {
+    sectionStack = [];
+  },
+  visit: (node, note) => {
+    if (node.type === 'heading') {
+      const level = (node as any).depth;
+      const label = ((node as Parent)!.children?.[0] as any)?.value;
+      if (!label || !level) {
+        return;
+      }
+      const start = astPositionToFoamRange(node.position!).start;
+
+      // Close all the sections that are not parents of the current section
+      while (
+        sectionStack.length > 0 &&
+        sectionStack[sectionStack.length - 1].level >= level
+      ) {
+        const section = sectionStack.pop();
+        note.sections.push({
+          label: section.label,
+          range: Range.createFromPosition(section.start, start),
+        });
+      }
+
+      // Add the new section to the stack
+      sectionStack.push({ label, level, start });
+    }
+  },
+  onDidVisitTree: (tree, note) => {
+    const end = Position.create(note.source.end.line + 1, 0);
+    // Close all the remainig sections
+    while (sectionStack.length > 0) {
+      const section = sectionStack.pop();
+      note.sections.push({
+        label: section.label,
+        range: { start: section.start, end },
+      });
+    }
+    note.sections.sort((a, b) =>
+      Position.compareTo(a.range.start, b.range.start)
+    );
   },
 };
 
@@ -314,6 +383,7 @@ export function createMarkdownParser(
     wikilinkPlugin,
     definitionsPlugin,
     tagsPlugin,
+    sectionsPlugin,
     ...extraPlugins,
   ];
 
@@ -344,6 +414,7 @@ export function createMarkdownParser(
         type: 'note',
         properties: {},
         title: '',
+        sections: [],
         tags: [],
         links: [],
         definitions: [],

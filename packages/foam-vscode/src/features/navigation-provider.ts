@@ -5,7 +5,7 @@ import { toVsCodeRange, toVsCodeUri } from '../utils/vsc-utils';
 import { OPEN_COMMAND } from './utility-commands';
 import { Foam } from '../core/model/foam';
 import { FoamWorkspace } from '../core/model/workspace';
-import { ResourceLink, ResourceParser } from '../core/model/note';
+import { Resource, ResourceLink, ResourceParser } from '../core/model/note';
 import { URI } from '../core/model/uri';
 import { Range } from '../core/model/range';
 import { FoamGraph } from '../core/model/graph';
@@ -110,20 +110,20 @@ export class NavigationProvider
 
     const targetResource = this.workspace.get(uri);
 
+    let targetRange = Range.createFromPosition(
+      targetResource.source.contentStart,
+      targetResource.source.end
+    );
+    const section = Resource.findSection(targetResource, uri.fragment);
+    if (section) {
+      targetRange = section.range;
+    }
     const result: vscode.LocationLink = {
       originSelectionRange: toVsCodeRange(targetLink.range),
       targetUri: toVsCodeUri(uri),
-      targetRange: toVsCodeRange(
-        Range.createFromPosition(
-          targetResource.source.contentStart,
-          targetResource.source.end
-        )
-      ),
+      targetRange: toVsCodeRange(targetRange),
       targetSelectionRange: toVsCodeRange(
-        Range.createFromPosition(
-          targetResource.source.contentStart,
-          targetResource.source.contentStart
-        )
+        Range.createFromPosition(targetRange.start, targetRange.start)
       ),
     };
     return [result];

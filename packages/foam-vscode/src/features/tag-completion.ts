@@ -3,6 +3,9 @@ import { Foam } from '../core/model/foam';
 import { FoamTags } from '../core/model/tags';
 import { FoamFeature } from '../types';
 import { mdDocSelector } from '../utils';
+import { SECTION_REGEX } from './link-completion';
+
+export const TAG_REGEX = /#(.*)/;
 
 const feature: FoamFeature = {
   activate: async (
@@ -32,7 +35,8 @@ export class TagCompletionProvider
       .lineAt(position)
       .text.substr(0, position.character);
 
-    const requiresAutocomplete = cursorPrefix.match(/#(.*)/);
+    const requiresAutocomplete =
+      cursorPrefix.match(TAG_REGEX) && !cursorPrefix.match(SECTION_REGEX);
 
     if (!requiresAutocomplete) {
       return null;

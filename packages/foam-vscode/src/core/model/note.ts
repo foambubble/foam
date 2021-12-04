@@ -38,12 +38,17 @@ export interface Tag {
   range: Range;
 }
 
+export interface Section {
+  label: string;
+  range: Range;
+}
+
 export interface Resource {
   uri: URI;
   type: string;
   title: string;
   properties: any;
-  // sections: NoteSection[]
+  sections: Section[];
   tags: Tag[];
   links: ResourceLink[];
 
@@ -73,5 +78,12 @@ export abstract class Resource {
       typeof (thing as Resource).tags === 'object' &&
       typeof (thing as Resource).links === 'object'
     );
+  }
+
+  public static findSection(resource: Resource, label: string): Section | null {
+    if (label) {
+      return resource.sections.find(s => s.label === label) ?? null;
+    }
+    return null;
   }
 }

@@ -63,9 +63,7 @@ export class FoamWorkspace implements IDisposable {
   }
 
   public exists(uri: URI): boolean {
-    return (
-      !URI.isPlaceholder(uri) && isSome(this.resources.get(normalize(uri.path)))
-    );
+    return isSome(this.find(uri));
   }
 
   public list(): Resource[] {
@@ -112,36 +110,49 @@ export class FoamWorkspace implements IDisposable {
         }
       }
     }
-    const identifier = getShortestIdentifier(
+    let identifier = getShortestIdentifier(
       forResource.path,
       amongst.map(uri => uri.path)
     );
 
-    return identifier.endsWith('.md') ? identifier.slice(0, -3) : identifier;
+    identifier = identifier.endsWith('.md')
+      ? identifier.slice(0, -3)
+      : identifier;
+
+    if (forResource.fragment) {
+      identifier += `#${forResource.fragment}`;
+    }
+
+    return identifier;
   }
 
   public find(resourceId: URI | string, reference?: URI): Resource | null {
     const refType = getReferenceType(resourceId);
-    switch (refType) {
-      case 'uri':
-        const uri = resourceId as URI;
-        return this.exists(uri)
-          ? this.resources.get(normalize(uri.path)) ?? null
-          : null;
+    if (refType === 'uri') {
+      const uri = resourceId as URI;
+      return URI.isPlaceholder(uri)
+        ? null
+        : this.resources.get(normalize(uri.path)) ?? null;
+    }
 
+    const [target, fragment] = (resourceId as string).split('#');
+    let resource: Resource | null = null;
+    switch (refType) {
       case 'key':
-        const resources = this.listById(resourceId as string);
+        const resources = this.listById(target);
         const sorted = resources.sort((a, b) =>
           a.uri.path.localeCompare(b.uri.path)
         );
-        return sorted[0] ?? null;
+        resource = sorted[0];
+        break;
 
       case 'absolute-path':
         if (!hasExtension(resourceId as string)) {
           resourceId = resourceId + '.md';
         }
         const resourceUri = URI.file(resourceId as string);
-        return this.resources.get(normalize(resourceUri.path)) ?? null;
+        resource = this.resources.get(normalize(resourceUri.path));
+        break;
 
       case 'relative-path':
         if (isNone(reference)) {
@@ -152,11 +163,23 @@ export class FoamWorkspace implements IDisposable {
         }
         const relativePath = resourceId as string;
         const targetUri = URI.computeRelativeURI(reference, relativePath);
-        return this.resources.get(normalize(targetUri.path)) ?? null;
+        resource = this.resources.get(normalize(targetUri.path));
+        break;
 
       default:
         throw new Error('Unexpected reference type: ' + refType);
     }
+
+    if (!resource) {
+      return null;
+    }
+    if (!fragment) {
+      return resource;
+    }
+    return {
+      ...resource,
+      uri: URI.withFragment(resource.uri, fragment),
+    };
   }
 
   public resolveLink(resource: Resource, link: ResourceLink): URI {

@@ -38,7 +38,7 @@ export interface Tag {
   range: Range;
 }
 
-export interface NoteBlock {
+export interface Section {
   label: string;
   range: Range;
 }
@@ -48,7 +48,7 @@ export interface Resource {
   type: string;
   title: string;
   properties: any;
-  blocks: NoteBlock[];
+  sections: Section[];
   tags: Tag[];
   links: ResourceLink[];
 

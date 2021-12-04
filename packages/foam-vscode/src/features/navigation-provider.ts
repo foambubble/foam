@@ -115,9 +115,11 @@ export class NavigationProvider
       targetResource.source.end
     );
     if (uri.fragment) {
-      const block = targetResource.blocks.find(b => b.label === uri.fragment);
-      if (block) {
-        targetRange = block.range;
+      const section = targetResource.sections.find(
+        b => b.label === uri.fragment
+      );
+      if (section) {
+        targetRange = section.range;
       }
     }
     const result: vscode.LocationLink = {

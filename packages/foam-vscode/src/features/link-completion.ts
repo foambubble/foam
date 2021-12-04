@@ -52,7 +52,7 @@ export class SectionCompletionProvider
     const resourceId = match[1].slice(0, -1);
     const resource = this.ws.find(resourceId);
     if (resource) {
-      const items = resource.blocks.map(b => {
+      const items = resource.sections.map(b => {
         return new ResourceCompletionItem(
           b.label,
           vscode.CompletionItemKind.Text,

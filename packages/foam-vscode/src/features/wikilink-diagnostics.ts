@@ -14,7 +14,7 @@ import {
 } from '../utils/vsc-utils';
 
 const AMBIGUOUS_IDENTIFIER_CODE = 'ambiguous-identifier';
-const UNKNOWN_BLOCK_CODE = 'unknown-block';
+const UNKNOWN_SECTION_CODE = 'unknown-section';
 
 interface FoamCommand<T> {
   name: string;
@@ -156,7 +156,7 @@ export function updateDiagnostics(
         }
         if (section && targets.length === 1) {
           const resource = targets[0];
-          const found = resource.blocks.find(b => b.label === section);
+          const found = resource.sections.find(b => b.label === section);
           if (!found) {
             const range = Range.create(
               link.range.start.line,
@@ -165,12 +165,12 @@ export function updateDiagnostics(
               link.range.end.character
             );
             result.push({
-              code: UNKNOWN_BLOCK_CODE,
+              code: UNKNOWN_SECTION_CODE,
               message: `Cannot find section "${section}" in document, available sections are:`,
               range: toVsCodeRange(range),
               severity: vscode.DiagnosticSeverity.Warning,
               source: 'Foam',
-              relatedInformation: resource.blocks.map(
+              relatedInformation: resource.sections.map(
                 b =>
                   new vscode.DiagnosticRelatedInformation(
                     new vscode.Location(
@@ -215,7 +215,7 @@ export class IdentifierResolver implements vscode.CodeActionProvider {
         }
         return [...acc, ...res];
       }
-      if (diagnostic.code === UNKNOWN_BLOCK_CODE) {
+      if (diagnostic.code === UNKNOWN_SECTION_CODE) {
         const res: vscode.CodeAction[] = [];
         const sections = diagnostic.relatedInformation.map(
           info => info.message

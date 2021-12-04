@@ -110,13 +110,13 @@ export class MarkdownResourceProvider implements ResourceProvider {
   async readAsMarkdown(uri: URI): Promise<string | null> {
     let content = await this.dataStore.read(uri);
     if (isSome(content) && uri.fragment) {
-      const block = this.parser
+      const section = this.parser
         .parse(uri, content)
-        .blocks.find(b => b.label === uri.fragment);
-      if (isSome(block)) {
+        .sections.find(b => b.label === uri.fragment);
+      if (isSome(section)) {
         const rows = content.split('\n');
         content = rows
-          .slice(block.range.start.line, block.range.end.line)
+          .slice(section.range.start.line, section.range.end.line)
           .join('\n');
       }
     }
@@ -222,11 +222,11 @@ const tagsPlugin: ParserPlugin = {
   },
 };
 
-let blockStack: Array<{ label: string; level: number; start: Position }> = [];
-const blocksPlugin: ParserPlugin = {
-  name: 'block',
+let sectionStack: Array<{ label: string; level: number; start: Position }> = [];
+const sectionsPlugin: ParserPlugin = {
+  name: 'section',
   onWillVisitTree: () => {
-    blockStack = [];
+    sectionStack = [];
   },
   visit: (node, note) => {
     if (node.type === 'heading') {
@@ -237,33 +237,33 @@ const blocksPlugin: ParserPlugin = {
       }
       const start = astPositionToFoamRange(node.position!).start;
 
-      // Close all the blocks that are not parents of the current block
+      // Close all the sections that are not parents of the current section
       while (
-        blockStack.length > 0 &&
-        blockStack[blockStack.length - 1].level >= level
+        sectionStack.length > 0 &&
+        sectionStack[sectionStack.length - 1].level >= level
       ) {
-        const block = blockStack.pop();
-        note.blocks.push({
-          label: block.label,
-          range: Range.createFromPosition(block.start, start),
+        const section = sectionStack.pop();
+        note.sections.push({
+          label: section.label,
+          range: Range.createFromPosition(section.start, start),
         });
       }
 
-      // Add the new block to the stack
-      blockStack.push({ label, level, start });
+      // Add the new section to the stack
+      sectionStack.push({ label, level, start });
     }
   },
   onDidVisitTree: (tree, note) => {
     const end = Position.create(note.source.end.line + 1, 0);
-    // Close all the remainig blocks
-    while (blockStack.length > 0) {
-      const block = blockStack.pop();
-      note.blocks.push({
-        label: block.label,
-        range: { start: block.start, end },
+    // Close all the remainig sections
+    while (sectionStack.length > 0) {
+      const section = sectionStack.pop();
+      note.sections.push({
+        label: section.label,
+        range: { start: section.start, end },
       });
     }
-    note.blocks.sort((a, b) =>
+    note.sections.sort((a, b) =>
       Position.compareTo(a.range.start, b.range.start)
     );
   },
@@ -382,7 +382,7 @@ export function createMarkdownParser(
     wikilinkPlugin,
     definitionsPlugin,
     tagsPlugin,
-    blocksPlugin,
+    sectionsPlugin,
     ...extraPlugins,
   ];
 
@@ -413,7 +413,7 @@ export function createMarkdownParser(
         type: 'note',
         properties: {},
         title: '',
-        blocks: [],
+        sections: [],
         tags: [],
         links: [],
         definitions: [],

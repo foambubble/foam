@@ -28,11 +28,11 @@ const feature: FoamFeature = {
               if (uri.fragment) {
                 const foam = await foamPromise;
                 const resource = foam.workspace.get(uri);
-                const block = resource.blocks.find(
+                const section = resource.sections.find(
                   b => b.label === uri.fragment
                 );
-                if (block) {
-                  selection = toVsCodeRange(block.range);
+                if (section) {
+                  selection = toVsCodeRange(section.range);
                 }
               }
               return vscode.commands.executeCommand(

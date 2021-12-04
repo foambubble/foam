@@ -461,7 +461,7 @@ this is some text
   });
 });
 
-describe('Blocks plugin', () => {
+describe('Sections plugin', () => {
   it('should find sections within the note', () => {
     const note = createNoteFromMarkdown(
       '/dir1/page-a.md',
@@ -479,13 +479,13 @@ This is the content of section 1.1.
 This is the content of section 2.
       `
     );
-    expect(note.blocks).toHaveLength(3);
-    expect(note.blocks[0].label).toEqual('Section 1');
-    expect(note.blocks[0].range).toEqual(Range.create(1, 0, 9, 0));
-    expect(note.blocks[1].label).toEqual('Section 1.1');
-    expect(note.blocks[1].range).toEqual(Range.create(5, 0, 9, 0));
-    expect(note.blocks[2].label).toEqual('Section 2');
-    expect(note.blocks[2].range).toEqual(Range.create(9, 0, 13, 0));
+    expect(note.sections).toHaveLength(3);
+    expect(note.sections[0].label).toEqual('Section 1');
+    expect(note.sections[0].range).toEqual(Range.create(1, 0, 9, 0));
+    expect(note.sections[1].label).toEqual('Section 1.1');
+    expect(note.sections[1].range).toEqual(Range.create(5, 0, 9, 0));
+    expect(note.sections[2].label).toEqual('Section 2');
+    expect(note.sections[2].range).toEqual(Range.create(9, 0, 13, 0));
   });
 });
 

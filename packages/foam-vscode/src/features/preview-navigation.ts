@@ -58,13 +58,13 @@ export const markdownItWithNoteInclusion = (
         } else {
           let content = includedNote.source.text;
           if (isSome(content) && includedNote.uri.fragment) {
-            const block = includedNote.blocks.find(
+            const section = includedNote.sections.find(
               b => b.label === includedNote.uri.fragment
             );
-            if (isSome(block)) {
+            if (isSome(section)) {
               const rows = content.split('\n');
               content = rows
-                .slice(block.range.start.line, block.range.end.line)
+                .slice(section.range.start.line, section.range.end.line)
                 .join('\n');
             }
           }

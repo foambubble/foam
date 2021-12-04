@@ -59,7 +59,7 @@ export const createTestNote = (params: {
     properties: {},
     title: params.title ?? path.parse(strToUri(params.uri).path).base,
     definitions: params.definitions ?? [],
-    blocks: [],
+    sections: [],
     tags:
       params.tags?.map(t => ({
         label: t,

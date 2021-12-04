@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { createMarkdownParser } from '../core/markdown-provider';
 import { FoamGraph } from '../core/model/graph';
 import { FoamWorkspace } from '../core/model/workspace';
 import { createTestNote } from '../test/test-utils';
@@ -9,15 +10,20 @@ import {
   showInEditor,
 } from '../test/test-utils-vscode';
 import { fromVsCodeUri } from '../utils/vsc-utils';
-import { CompletionProvider } from './link-completion';
+import {
+  CompletionProvider,
+  SectionCompletionProvider,
+} from './link-completion';
 
 describe('Link Completion', () => {
+  const parser = createMarkdownParser([]);
   const root = fromVsCodeUri(vscode.workspace.workspaceFolders[0].uri);
   const ws = new FoamWorkspace();
   ws.set(
     createTestNote({
       root,
       uri: 'file-name.md',
+      sections: ['Section One', 'Section Two'],
     })
   )
     .set(
@@ -100,6 +106,48 @@ describe('Link Completion', () => {
         'file-name',
         'placeholder text',
       ])
+    );
+  });
+
+  it('should return sections for other notes', async () => {
+    const { uri } = await createFile('[[file-name#');
+    const { doc } = await showInEditor(uri);
+    const provider = new SectionCompletionProvider(ws);
+
+    const links = await provider.provideCompletionItems(
+      doc,
+      new vscode.Position(0, 12)
+    );
+
+    expect(new Set(links.items.map(i => i.label))).toEqual(
+      new Set(['Section One', 'Section Two'])
+    );
+  });
+
+  it('should return sections within the note', async () => {
+    const { uri, content } = await createFile(`
+# Section 1
+
+Content of section 1
+
+# Section 2
+
+Content of section 2
+
+[[#
+`);
+    ws.set(parser.parse(uri, content));
+
+    const { doc } = await showInEditor(uri);
+    const provider = new SectionCompletionProvider(ws);
+
+    const links = await provider.provideCompletionItems(
+      doc,
+      new vscode.Position(9, 3)
+    );
+
+    expect(new Set(links.items.map(i => i.label))).toEqual(
+      new Set(['Section 1', 'Section 2'])
     );
   });
 });

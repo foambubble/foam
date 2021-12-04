@@ -79,4 +79,18 @@ describe('Tag Completion', () => {
     expect(foamTags.tags.get('primary')).toBeTruthy();
     expect(tags.items.length).toEqual(3);
   });
+
+  it('should not provide suggestions when inside a wikilink', async () => {
+    const { uri } = await createFile('[[#prim');
+    const { doc } = await showInEditor(uri);
+    const provider = new TagCompletionProvider(foamTags);
+
+    const tags = await provider.provideCompletionItems(
+      doc,
+      new vscode.Position(0, 7)
+    );
+
+    expect(foamTags.tags.get('primary')).toBeTruthy();
+    expect(tags).toBeNull();
+  });
 });

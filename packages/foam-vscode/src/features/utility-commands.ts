@@ -1,7 +1,12 @@
 import * as vscode from 'vscode';
 import { FoamFeature } from '../types';
 import { URI } from '../core/model/uri';
-import { fromVsCodeUri, toVsCodeRange, toVsCodeUri } from '../utils/vsc-utils';
+import {
+  fromVsCodeUri,
+  toVsCodePosition,
+  toVsCodeRange,
+  toVsCodeUri,
+} from '../utils/vsc-utils';
 import { NoteFactory } from '../services/templates';
 import { Foam } from '../core/model/foam';
 
@@ -35,13 +40,15 @@ const feature: FoamFeature = {
                   selection = toVsCodeRange(section.range);
                 }
               }
-              return vscode.commands.executeCommand(
-                'vscode.open',
-                toVsCodeUri(uri),
-                {
-                  selection: selection,
-                }
-              );
+
+              const targetUri =
+                uri.path === vscode.window.activeTextEditor?.document.uri.path
+                  ? vscode.window.activeTextEditor?.document.uri
+                  : toVsCodeUri(uri);
+
+              return vscode.commands.executeCommand('vscode.open', targetUri, {
+                selection: selection,
+              });
 
             case 'placeholder':
               const title = uri.path.split('/').slice(-1)[0];

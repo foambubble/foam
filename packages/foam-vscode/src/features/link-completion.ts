@@ -5,7 +5,10 @@ import { URI } from '../core/model/uri';
 import { FoamWorkspace } from '../core/model/workspace';
 import { FoamFeature } from '../types';
 import { getNoteTooltip, mdDocSelector } from '../utils';
-import { toVsCodeUri } from '../utils/vsc-utils';
+import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
+
+export const WIKILINK_REGEX = /\[\[[^\[\]]*(?!.*\]\])/;
+export const SECTION_REGEX = /\[\[([^\[\]]*#(?!.*\]\]))/;
 
 const feature: FoamFeature = {
   activate: async (
@@ -21,7 +24,7 @@ const feature: FoamFeature = {
       ),
       vscode.languages.registerCompletionItemProvider(
         mdDocSelector,
-        new SectionCompletionProvider(foam.workspace, foam.graph),
+        new SectionCompletionProvider(foam.workspace),
         '#'
       )
     );
@@ -30,7 +33,7 @@ const feature: FoamFeature = {
 
 export class SectionCompletionProvider
   implements vscode.CompletionItemProvider<vscode.CompletionItem> {
-  constructor(private ws: FoamWorkspace, private graph: FoamGraph) {}
+  constructor(private ws: FoamWorkspace) {}
 
   provideCompletionItems(
     document: vscode.TextDocument,
@@ -43,13 +46,15 @@ export class SectionCompletionProvider
     // Requires autocomplete only if cursorPrefix matches `[[` that NOT ended by `]]`.
     // See https://github.com/foambubble/foam/pull/596#issuecomment-825748205 for details.
     // eslint-disable-next-line no-useless-escape
-    const match = cursorPrefix.match(/\[\[([^\[\]]*#(?!.*\]\]))/);
+    const match = cursorPrefix.match(SECTION_REGEX);
 
     if (!match) {
       return null;
     }
 
-    const resourceId = match[1].slice(0, -1);
+    const resourceId =
+      match[1] === '#' ? fromVsCodeUri(document.uri) : match[1].slice(0, -1);
+
     const resource = this.ws.find(resourceId);
     if (resource) {
       const items = resource.sections.map(b => {
@@ -91,7 +96,7 @@ export class CompletionProvider
     // Requires autocomplete only if cursorPrefix matches `[[` that NOT ended by `]]`.
     // See https://github.com/foambubble/foam/pull/596#issuecomment-825748205 for details.
     // eslint-disable-next-line no-useless-escape
-    const requiresAutocomplete = cursorPrefix.match(/\[\[[^\[\]]*(?!.*\]\])/);
+    const requiresAutocomplete = cursorPrefix.match(WIKILINK_REGEX);
 
     if (!requiresAutocomplete) {
       return null;

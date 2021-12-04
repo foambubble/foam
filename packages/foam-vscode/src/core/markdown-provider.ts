@@ -147,8 +147,10 @@ export class MarkdownResourceProvider implements ResourceProvider {
         } else {
           const [target, section] = link.target.split('#');
           targetUri =
-            workspace.find(target, resource.uri)?.uri ??
-            URI.placeholder(link.target);
+            target === ''
+              ? resource.uri
+              : workspace.find(target, resource.uri)?.uri ??
+                URI.placeholder(link.target);
 
           if (section) {
             targetUri = URI.withFragment(targetUri, section);

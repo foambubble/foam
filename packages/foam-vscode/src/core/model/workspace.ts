@@ -63,9 +63,7 @@ export class FoamWorkspace implements IDisposable {
   }
 
   public exists(uri: URI): boolean {
-    return (
-      !URI.isPlaceholder(uri) && isSome(this.resources.get(normalize(uri.path)))
-    );
+    return isSome(this.find(uri));
   }
 
   public list(): Resource[] {
@@ -132,9 +130,9 @@ export class FoamWorkspace implements IDisposable {
     const refType = getReferenceType(resourceId);
     if (refType === 'uri') {
       const uri = resourceId as URI;
-      return this.exists(uri)
-        ? this.resources.get(normalize(uri.path)) ?? null
-        : null;
+      return URI.isPlaceholder(uri)
+        ? null
+        : this.resources.get(normalize(uri.path)) ?? null;
     }
 
     const [target, fragment] = (resourceId as string).split('#');

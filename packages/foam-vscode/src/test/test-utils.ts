@@ -1,8 +1,8 @@
 /*
  * This file should not depend on VS Code as it's used for unit tests
  */
-import path from 'path';
 import { Logger } from '../core/utils/log';
+import { getBasename } from '../core/utils/path';
 import { Range } from '../core/model/range';
 import { URI } from '../core/model/uri';
 import { FoamWorkspace } from '../core/model/workspace';
@@ -58,7 +58,7 @@ export const createTestNote = (params: {
     uri: URI.resolve(params.uri, root),
     type: 'note',
     properties: {},
-    title: params.title ?? path.parse(strToUri(params.uri).path).base,
+    title: params.title ?? getBasename(strToUri(params.uri).path),
     definitions: params.definitions ?? [],
     sections: params.sections?.map(label => ({
       label,

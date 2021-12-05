@@ -1,29 +1,10 @@
 import { Resource, ResourceLink } from './note';
 import { URI } from './uri';
-import { isSome, isNone, getShortestIdentifier } from '../utils';
+import { isPath, isAbsolute, getExtension } from '../utils/path';
+import { isSome, getShortestIdentifier } from '../utils';
 import { Emitter } from '../common/event';
 import { ResourceProvider } from './provider';
 import { IDisposable } from '../common/lifecycle';
-
-export function getReferenceType(
-  reference: URI | string
-): 'uri' | 'absolute-path' | 'relative-path' | 'key' {
-  if (URI.isUri(reference)) {
-    return 'uri';
-  }
-  if (reference.startsWith('/')) {
-    return 'absolute-path';
-  }
-  if (reference.startsWith('./') || reference.startsWith('../')) {
-    return 'relative-path';
-  }
-  return 'key';
-}
-
-function hasExtension(path: string): boolean {
-  const dotIdx = path.lastIndexOf('.');
-  return dotIdx > 0 && path.length - dotIdx <= 4;
-}
 
 export class FoamWorkspace implements IDisposable {
   private onDidAddEmitter = new Emitter<Resource>();
@@ -79,9 +60,9 @@ export class FoamWorkspace implements IDisposable {
     }
   }
 
-  public listById(resourceId: string): Resource[] {
-    let needle = '/' + resourceId;
-    if (!hasExtension(needle)) {
+  public listByKey(key: string): Resource[] {
+    let needle = '/' + key;
+    if (!getExtension(needle)) {
       needle = needle + '.md';
     }
     needle = normalize(needle);
@@ -126,60 +107,32 @@ export class FoamWorkspace implements IDisposable {
     return identifier;
   }
 
-  public find(resourceId: URI | string, reference?: URI): Resource | null {
-    const refType = getReferenceType(resourceId);
-    if (refType === 'uri') {
-      const uri = resourceId as URI;
-      return URI.isPlaceholder(uri)
-        ? null
-        : this.resources.get(normalize(uri.path)) ?? null;
+  public find(reference: URI | string, baseUri?: URI): Resource | null {
+    if (URI.isUri(reference)) {
+      return this.resources.get(normalize((reference as URI).path)) ?? null;
     }
-
-    const [target, fragment] = (resourceId as string).split('#');
     let resource: Resource | null = null;
-    switch (refType) {
-      case 'key':
-        const resources = this.listById(target);
-        const sorted = resources.sort((a, b) =>
-          a.uri.path.localeCompare(b.uri.path)
-        );
-        resource = sorted[0];
-        break;
-
-      case 'absolute-path':
-        if (!hasExtension(resourceId as string)) {
-          resourceId = resourceId + '.md';
+    let [pathOrKey, fragment] = (reference as string).split('#');
+    if (isPath(pathOrKey)) {
+      let path = pathOrKey;
+      if (isAbsolute(path) || isSome(baseUri)) {
+        if (!getExtension(path)) {
+          path = path + '.md';
         }
-        const resourceUri = URI.file(resourceId as string);
-        resource = this.resources.get(normalize(resourceUri.path));
-        break;
-
-      case 'relative-path':
-        if (isNone(reference)) {
-          return null;
-        }
-        if (!hasExtension(resourceId as string)) {
-          resourceId = resourceId + '.md';
-        }
-        const relativePath = resourceId as string;
-        const targetUri = URI.computeRelativeURI(reference, relativePath);
-        resource = this.resources.get(normalize(targetUri.path));
-        break;
-
-      default:
-        throw new Error('Unexpected reference type: ' + refType);
+        const uri = URI.resolve(path, baseUri);
+        resource = uri ? this.resources.get(normalize(uri.path)) : null;
+      }
+    } else {
+      const resources = this.listByKey(pathOrKey);
+      const sorted = resources.sort((a, b) =>
+        a.uri.path.localeCompare(b.uri.path)
+      );
+      resource = sorted[0];
     }
-
-    if (!resource) {
-      return null;
+    if (resource && fragment) {
+      resource = { ...resource, uri: URI.withFragment(resource.uri, fragment) };
     }
-    if (!fragment) {
-      return resource;
-    }
-    return {
-      ...resource,
-      uri: URI.withFragment(resource.uri, fragment),
-    };
+    return resource ?? null;
   }
 
   public resolveLink(resource: Resource, link: ResourceLink): URI {

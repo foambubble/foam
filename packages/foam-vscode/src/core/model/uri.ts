@@ -4,8 +4,7 @@
 // Some code in this file comes from https://github.com/microsoft/vscode/main/src/vs/base/common/uri.ts
 // See LICENSE for details
 
-import * as paths from 'path';
-import { isAbsolute } from 'path';
+import * as pathUtils from '../utils/path';
 import { CharCode } from '../common/charCode';
 
 /**
@@ -32,7 +31,6 @@ export interface URI {
   fragment: string;
 }
 
-const { posix } = paths;
 const _empty = '';
 const _slash = '/';
 const _regexp = /^(([^:/?#]{2,}?):)?(\/\/([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?/;
@@ -57,9 +55,7 @@ export abstract class URI {
       return URI.create({});
     }
     let path = percentDecode(match[5] ?? _empty);
-    if (URI.isWindowsPath(path)) {
-      path = windowsPathToUriPath(path);
-    }
+    path = pathUtils.toUriPath(path);
     return URI.create({
       scheme: match[2] || 'file',
       authority: percentDecode(match[4] ?? _empty),
@@ -72,69 +68,51 @@ export abstract class URI {
   /**
    * Parses a URI from value, taking into consideration possible relative paths.
    *
-   * @param reference the URI to use as reference in case value is a relative path
    * @param value the value to parse for a URI
-   * @returns the URI from the given value. In case of a relative path, the URI will take into account
-   * the reference from which it is computed
+   * @param baseUri the URI to use as base in case value is a relative path
+   * @returns the URI from the given value. In case of a relative path, the URI will take into
+   * account the base from which it is computed. If the resolved URI has no extension, it will
+   * inherit the extension from the base. Any fragment will be preserved
    */
-  static resolve(value: string, reference: URI): URI {
+  static resolve(value: string, baseUri: URI): URI {
     let uri = URI.parse(value);
-    if (uri.scheme === 'file' && !value.startsWith('/')) {
-      const [path, fragment] = value.split('#');
-      uri =
-        path.length > 0 ? URI.computeRelativeURI(reference, path) : reference;
+    if (uri.scheme === 'file' && !pathUtils.isAbsolute(uri.path)) {
+      let [path, fragment] = value.split('#');
+      if (path) {
+        if (!pathUtils.getExtension(path)) {
+          path += pathUtils.getExtension(baseUri.path);
+        }
+        path = pathUtils.join(pathUtils.getDir(baseUri.path), path);
+        uri = URI.create({ ...baseUri, path: path });
+      } else {
+        uri = baseUri;
+      }
       if (fragment) {
-        uri = URI.create({
-          ...uri,
-          fragment: fragment,
-        });
+        uri = URI.create({ ...uri, fragment: fragment });
       }
     }
     return uri;
   }
 
-  static computeRelativeURI(reference: URI, relativeSlug: string): URI {
-    // if no extension is provided, use the same extension as the source file
-    const slug =
-      posix.extname(relativeSlug) !== ''
-        ? relativeSlug
-        : `${relativeSlug}${posix.extname(reference.path)}`;
-    return URI.create({
-      ...reference,
-      path: posix.join(posix.dirname(reference.path), slug),
-    });
-  }
-
+  /**
+   * Creates a file URI from a filesystem path, which may be a UNC share.
+   *
+   * @param path the filesystem path
+   * @returns the file URI representing the given path
+   */
   static file(path: string): URI {
     let authority = _empty;
-
-    // normalize to fwd-slashes on windows,
-    // on other systems bwd-slashes are valid
-    // filename character, eg /f\oo/ba\r.txt
-    if (URI.isWindowsPath(path)) {
-      path = windowsPathToUriPath(path);
+    if (pathUtils.isUNCShare(path)) {
+      [authority, path] = pathUtils.parseUNCShare(path);
     }
-
-    // check for authority as used in UNC shares
-    // or use the path as given
-    if (path[0] === _slash && path[1] === _slash) {
-      const idx = path.indexOf(_slash, 2);
-      if (idx === -1) {
-        authority = path.substring(2);
-        path = _slash;
-      } else {
-        authority = path.substring(2, idx);
-        path = path.substring(idx) || _slash;
-      }
-    }
-
+    path = pathUtils.toUriPath(path);
     return URI.create({ scheme: 'file', authority, path });
   }
 
-  static placeholder(key: string): URI {
+  static placeholder(path: string): URI {
     return URI.create({
       scheme: 'placeholder',
-      path: key,
+      path: path,
     });
   }
 
@@ -145,91 +123,33 @@ export abstract class URI {
     });
   }
 
-  static relativePath(source: URI, target: URI): string {
-    const relativePath = posix.relative(
-      posix.dirname(source.path),
-      target.path
-    );
-    return relativePath;
-  }
-
-  static getBasename(uri: URI) {
-    return posix.parse(uri.path).name;
-  }
-
-  static getDir(uri: URI) {
-    return URI.file(posix.dirname(uri.path));
-  }
-
-  static getFileNameWithoutExtension(uri: URI) {
-    return URI.getBasename(uri).replace(/\.[^.]+$/, '');
-  }
-
   /**
-   * Uses a placeholder URI, and a reference directory, to generate
-   * the URI of the corresponding resource
+   * Join a URI path to a series of paths.
    *
-   * @param placeholderUri the placeholder URI
-   * @param basedir the dir to be used as reference
-   * @returns the target resource URI
+   * @param uri the input URI
+   * @param paths the paths to add to the URI path
+   * @returns the resulting URI
    */
-  static createResourceUriFromPlaceholder(
-    basedir: URI,
-    placeholderUri: URI
-  ): URI {
-    if (isAbsolute(placeholderUri.path)) {
-      return URI.file(placeholderUri.path);
-    }
-    const tokens = placeholderUri.path.split('/');
-    const path = tokens.slice(0, -1);
-    const filename = tokens.slice(-1);
-    return URI.joinPath(basedir, ...path, `${filename}.md`);
-  }
-
-  /**
-   * Join a URI path with path fragments and normalizes the resulting path.
-   *
-   * @param uri The input URI.
-   * @param pathFragment The path fragment to add to the URI path.
-   * @returns The resulting URI.
-   */
-  static joinPath(uri: URI, ...pathFragment: string[]): URI {
+  static joinPath(uri: URI, ...paths: string[]): URI {
     if (!uri.path) {
-      throw new Error(`[UriError]: cannot call joinPath on URI without path`);
+      throw new Error(`[UriError]: cannot call join path to URI without path`);
     }
-    let newPath: string;
-    if (URI.isWindowsPath(uri.path) && uri.scheme === 'file') {
-      newPath = URI.file(paths.win32.join(URI.toFsPath(uri), ...pathFragment))
-        .path;
-    } else {
-      newPath = paths.posix.join(uri.path, ...pathFragment);
-    }
-    return URI.create({ ...uri, path: newPath });
+    let path = pathUtils.join(uri.path, ...paths);
+    return URI.create({ ...uri, path: path });
   }
 
+  /**
+   * Returns filesystem path for a URI. This is the inverse of URI.file.
+   *
+   * @param uri a (presumably file) URI
+   * @returns the filesystem path for the uri, it may be a UNC share
+   */
   static toFsPath(uri: URI): string {
-    let value: string;
     if (uri.authority && uri.path.length > 1 && uri.scheme === 'file') {
-      // unc path: file://shares/c$/far/boo
-      value = `//${uri.authority}${uri.path}`;
-    } else if (
-      uri.path.charCodeAt(0) === CharCode.Slash &&
-      ((uri.path.charCodeAt(1) >= CharCode.A &&
-        uri.path.charCodeAt(1) <= CharCode.Z) ||
-        (uri.path.charCodeAt(1) >= CharCode.a &&
-          uri.path.charCodeAt(1) <= CharCode.z)) &&
-      uri.path.charCodeAt(2) === CharCode.Colon
-    ) {
-      // windows drive letter: file:///C:/far/boo
-      value = uri.path[1].toUpperCase() + uri.path.substr(2);
+      return `//${uri.authority}${uri.path}`;
     } else {
-      // other path
-      value = uri.path;
+      return pathUtils.toFsPath(uri.path);
     }
-    if (URI.isWindowsPath(value)) {
-      value = value.replace(/\//g, '\\');
-    }
-    return value;
   }
 
   static toString(uri: URI): string {
@@ -237,15 +157,6 @@ export abstract class URI {
   }
 
   // --- utility
-
-  static isWindowsPath(path: string) {
-    return (
-      (path.length >= 2 && path.charCodeAt(1) === CharCode.Colon) ||
-      (path.length >= 3 &&
-        path.charCodeAt(0) === CharCode.Slash &&
-        path.charCodeAt(2) === CharCode.Colon)
-    );
-  }
 
   static isUri(thing: any): thing is URI {
     if (!thing) {
@@ -273,6 +184,7 @@ export abstract class URI {
       a.query === b.query
     );
   }
+
   static isMarkdownFile(uri: URI): boolean {
     return uri.path.endsWith('.md');
   }
@@ -301,33 +213,6 @@ function percentDecode(str: string): string {
   return str.replace(_rEncodedAsHex, match =>
     decodeURIComponentGraceful(match)
   );
-}
-
-/**
- * Converts a windows-like path to standard URI path
- * - Normalize the Windows drive letter to upper case
- * - replace \ with /
- * - always start with /
- *
- * see https://github.com/foambubble/foam/issues/813
- * see https://github.com/microsoft/vscode/issues/43959
- * see https://github.com/microsoft/vscode/issues/116298
- *
- * @param path the path to convert
- * @returns the URI compatible path
- */
-function windowsPathToUriPath(path: string): string {
-  path = path.charCodeAt(0) === CharCode.Slash ? path : `/${path}`;
-  path = path.replace(/\\/g, _slash);
-  const code = path.charCodeAt(1);
-  if (
-    path.charCodeAt(2) === CharCode.Colon &&
-    code >= CharCode.a &&
-    code <= CharCode.z
-  ) {
-    path = `/${String.fromCharCode(code - 32)}:${path.substr(3)}`; // "/C:".length === 3
-  }
-  return path;
 }
 
 /**

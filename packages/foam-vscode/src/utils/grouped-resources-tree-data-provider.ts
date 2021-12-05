@@ -9,6 +9,7 @@ import { getContainsTooltip, getNoteTooltip, isSome } from '../utils';
 import { OPEN_COMMAND } from '../features/utility-commands';
 import { toVsCodeUri } from './vsc-utils';
 import { URI } from '../core/model/uri';
+import { getName } from '../core/utils/path';
 import { Resource } from '../core/model/note';
 import { FoamWorkspace } from '../core/model/workspace';
 
@@ -16,7 +17,7 @@ import { FoamWorkspace } from '../core/model/workspace';
  * Provides the ability to expose a TreeDataExplorerView in VSCode. This class will
  * iterate over each Resource in the FoamWorkspace, call the provided filter predicate, and
  * display the Resources.
- * 
+ *
  * **NOTE**: In order for this provider to correctly function, you must define the following command in the package.json file:
    * ```
    * foam-vscode.group-${providerId}-by-folder
@@ -216,7 +217,7 @@ export class UriTreeItem extends vscode.TreeItem {
       title?: string;
     } = {}
   ) {
-    super(options?.title ?? URI.getBasename(uri), options.collapsibleState);
+    super(options?.title ?? getName(uri.path), options.collapsibleState);
     this.description = uri.path.replace(
       vscode.workspace.getWorkspaceFolder(toVsCodeUri(uri))?.uri.path,
       ''

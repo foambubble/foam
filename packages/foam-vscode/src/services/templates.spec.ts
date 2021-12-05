@@ -12,6 +12,7 @@ import {
   showInEditor,
 } from '../test/test-utils-vscode';
 import { Resolver } from './variable-resolver';
+import { getName } from '../core/utils/path';
 
 describe('Create note from template', () => {
   beforeEach(async () => {
@@ -183,7 +184,7 @@ foam_template: # foam template metadata
         'Hello World World'
       );
       expect(window.visibleTextEditors[0].document.getText()).toEqual(
-        `This is my first file: [[${URI.getBasename(target)}]]`
+        `This is my first file: [[${getName(target.path)}]]`
       );
     });
   });

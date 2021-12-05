@@ -63,15 +63,15 @@ describe('Foam URI', () => {
   });
 
   it('supports computing relative paths', () => {
-    expect(
-      URI.computeRelativeURI(URI.file('/my/file.md'), '../hello.md')
-    ).toEqual(URI.file('/hello.md'));
-    expect(URI.computeRelativeURI(URI.file('/my/file.md'), '../hello')).toEqual(
+    expect(URI.resolve('../hello.md', URI.file('/my/file.md'))).toEqual(
       URI.file('/hello.md')
     );
-    expect(
-      URI.computeRelativeURI(URI.file('/my/file.markdown'), '../hello')
-    ).toEqual(URI.file('/hello.markdown'));
+    expect(URI.resolve('../hello', URI.file('/my/file.md'))).toEqual(
+      URI.file('/hello.md')
+    );
+    expect(URI.resolve('../hello', URI.file('/my/file.markdown'))).toEqual(
+      URI.file('/hello.markdown')
+    );
   });
 
   it('can be slugified', () => {

@@ -8,6 +8,7 @@ import { URI } from '../model/uri';
 import { FoamWorkspace } from '../model/workspace';
 import { FileDataStore, Matcher } from '../services/datastore';
 import { Logger } from '../utils/log';
+import { getName } from '../utils/path';
 
 Logger.setLevel('error');
 
@@ -16,7 +17,7 @@ describe('generateHeadings', () => {
   const findBySlug = (slug: string): Resource => {
     return _workspace
       .list()
-      .find(res => URI.getBasename(res.uri) === slug) as Resource;
+      .find(res => getName(res.uri.path) === slug) as Resource;
   };
 
   beforeAll(async () => {

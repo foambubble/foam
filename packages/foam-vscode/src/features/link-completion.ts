@@ -3,6 +3,7 @@ import { Foam } from '../core/model/foam';
 import { FoamGraph } from '../core/model/graph';
 import { URI } from '../core/model/uri';
 import { FoamWorkspace } from '../core/model/workspace';
+import { getName } from '../core/utils/path';
 import { FoamFeature } from '../types';
 import { getNoteTooltip, mdDocSelector } from '../utils';
 import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
@@ -109,7 +110,7 @@ export class CompletionProvider
         vscode.CompletionItemKind.File,
         resource.uri
       );
-      item.filterText = URI.getBasename(resource.uri);
+      item.filterText = getName(resource.uri.path);
       item.insertText = this.ws.getIdentifier(resource.uri);
       item.commitCharacters = ['#'];
       return item;

@@ -1,7 +1,6 @@
 import { URI } from '../core/model/uri';
+import { isAbsolute, getName, getBasename } from '../core/utils/path';
 import { existsSync } from 'fs';
-import * as path from 'path';
-import { isAbsolute } from 'path';
 import { TextEncoder } from 'util';
 import { SnippetString, ViewColumn, window, workspace } from 'vscode';
 import { focusNote } from '../utils';
@@ -127,7 +126,7 @@ export const NoteFactory = {
     );
 
     if (existsSync(URI.toFsPath(filepath))) {
-      const filename = path.basename(filepath.path);
+      const filename = getBasename(filepath.path);
       const newFilepath = await askUserForFilepathConfirmation(
         filepath,
         filename
@@ -146,7 +145,7 @@ export const NoteFactory = {
     );
 
     if (selectedContent !== undefined) {
-      const newNoteTitle = URI.getFileNameWithoutExtension(filepath);
+      const newNoteTitle = getName(filepath.path);
 
       await replaceSelection(
         selectedContent.document,

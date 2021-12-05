@@ -1,28 +1,10 @@
-import { FoamWorkspace, getReferenceType } from './workspace';
+import { FoamWorkspace } from './workspace';
 import { FoamGraph } from './graph';
 import { Logger } from '../utils/log';
 import { URI } from './uri';
 import { createTestNote, createTestWorkspace } from '../../test/test-utils';
 
 Logger.setLevel('error');
-
-describe('Reference types', () => {
-  it('Detects absolute references', () => {
-    expect(getReferenceType('/hello')).toEqual('absolute-path');
-    expect(getReferenceType('/hello/there')).toEqual('absolute-path');
-  });
-  it('Detects relative references', () => {
-    expect(getReferenceType('../hello')).toEqual('relative-path');
-    expect(getReferenceType('./hello')).toEqual('relative-path');
-    expect(getReferenceType('./hello/there')).toEqual('relative-path');
-  });
-  it('Detects key references', () => {
-    expect(getReferenceType('hello')).toEqual('key');
-  });
-  it('Detects URIs', () => {
-    expect(getReferenceType(URI.file('/path/to/file.md'))).toEqual('uri');
-  });
-});
 
 describe('Workspace resources', () => {
   it('Adds notes to workspace', () => {
@@ -76,7 +58,7 @@ describe('Workspace resources', () => {
     const ws = createTestWorkspace()
       .set(createTestNote({ uri: 'test-file.md' }))
       .set(createTestNote({ uri: 'file.md' }));
-    expect(ws.listById('file').length).toEqual(1);
+    expect(ws.listByKey('file').length).toEqual(1);
   });
 
   it('should include fragment when finding resource URI', () => {
@@ -422,7 +404,7 @@ describe('Wikilinks', () => {
   it('Allows for dendron-style wikilinks, including a dot', () => {
     const noteA = createTestNote({
       uri: '/path/to/page-a.md',
-      links: [{ slug: 'dendron.style' }],
+      links: [{ slug: 'dendron.style.md' }],
     });
     const noteB1 = createTestNote({ uri: '/path/to/another/dendron.style.md' });
 

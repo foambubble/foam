@@ -1,12 +1,7 @@
 import * as vscode from 'vscode';
 import { FoamFeature } from '../types';
 import { URI } from '../core/model/uri';
-import {
-  fromVsCodeUri,
-  toVsCodePosition,
-  toVsCodeRange,
-  toVsCodeUri,
-} from '../utils/vsc-utils';
+import { fromVsCodeUri, toVsCodeRange, toVsCodeUri } from '../utils/vsc-utils';
 import { NoteFactory } from '../services/templates';
 import { Foam } from '../core/model/foam';
 import { Resource } from '../core/model/note';
@@ -56,18 +51,14 @@ const feature: FoamFeature = {
                 vscode.workspace.workspaceFolders.length > 0
                   ? fromVsCodeUri(vscode.workspace.workspaceFolders[0].uri)
                   : fromVsCodeUri(vscode.window.activeTextEditor?.document.uri)
-                  ? URI.getDir(
-                      fromVsCodeUri(
-                        vscode.window.activeTextEditor!.document.uri
-                      )
-                    )
+                  ? fromVsCodeUri(vscode.window.activeTextEditor!.document.uri)
                   : undefined;
 
               if (basedir === undefined) {
                 return;
               }
 
-              const target = URI.createResourceUriFromPlaceholder(basedir, uri);
+              const target = URI.resolve(uri.path, basedir);
 
               await NoteFactory.createForPlaceholderWikilink(title, target);
               return;

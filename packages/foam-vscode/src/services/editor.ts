@@ -1,4 +1,5 @@
 import { URI } from '../core/model/uri';
+import { getDir } from '../core/utils/path';
 import { TextEncoder } from 'util';
 import {
   Selection,
@@ -71,11 +72,11 @@ export async function replaceSelection(
  * @returns URI
  * @throws Error if no file is open in editor AND no workspace folder defined
  */
-export function getCurrentEditorDirectory() {
+export function getCurrentEditorDirectory(): URI {
   const uri = window.activeTextEditor?.document?.uri;
 
   if (isSome(uri)) {
-    return URI.getDir(fromVsCodeUri(uri));
+    return URI.file(getDir(fromVsCodeUri(uri).path));
   }
 
   if (workspace.workspaceFolders.length > 0) {

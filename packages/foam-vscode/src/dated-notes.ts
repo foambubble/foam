@@ -1,7 +1,7 @@
 import { workspace, WorkspaceConfiguration } from 'vscode';
 import dateFormat from 'dateformat';
-import { isAbsolute } from 'path';
-import { focusNote, pathExists } from './utils';
+import { isAbsolute, exists as pathExists } from './core/utils/path';
+import { focusNote } from './utils';
 import { URI } from './core/model/uri';
 import { fromVsCodeUri } from './utils/vsc-utils';
 import { NoteFactory } from './services/templates';
@@ -101,7 +101,7 @@ export async function createDailyNoteIfNotExists(
   dailyNotePath: URI,
   targetDate: Date
 ) {
-  if (await pathExists(dailyNotePath)) {
+  if (await pathExists(URI.toFsPath(dailyNotePath))) {
     return false;
   }
 

@@ -17,14 +17,9 @@ import {
 } from './model/note';
 import { Position } from './model/position';
 import { Range } from './model/range';
-import {
-  dropExtension,
-  extractHashtags,
-  extractTagsFromProp,
-  isNone,
-  isSome,
-} from './utils';
+import { extractHashtags, extractTagsFromProp, isNone, isSome } from './utils';
 import { Logger } from './utils/log';
+import { removeExtension, getName, relativeTo } from './utils/path';
 import { URI } from './model/uri';
 import { FoamWorkspace } from './model/workspace';
 import { IDataStore, FileDataStore, IMatcher } from './services/datastore';
@@ -288,7 +283,7 @@ const titlePlugin: ParserPlugin = {
   },
   onDidVisitTree: (tree, note) => {
     if (note.title === '') {
-      note.title = URI.getBasename(note.uri);
+      note.title = getName(note.uri.path);
     }
   },
 };
@@ -555,10 +550,10 @@ export function createMarkdownReferences(
         return null;
       }
 
-      const relativePath = URI.relativePath(noteUri, target.uri);
+      const relativePath = relativeTo(noteUri.path, target.uri.path);
       const pathToNote = includeExtension
         ? relativePath
-        : dropExtension(relativePath);
+        : removeExtension(relativePath);
 
       // [wikilink-text]: path/to/file.md "Page title"
       return {

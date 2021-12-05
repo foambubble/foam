@@ -133,7 +133,7 @@ export function updateDiagnostics(
     for (const link of resource.links) {
       if (link.type === 'wikilink') {
         const [target, section] = link.target.split('#');
-        const targets = workspace.listByKey(target);
+        const targets = workspace.findByIdentifier(target);
         if (targets.length > 1) {
           result.push({
             code: AMBIGUOUS_IDENTIFIER_CODE,

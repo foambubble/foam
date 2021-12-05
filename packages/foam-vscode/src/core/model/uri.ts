@@ -109,18 +109,12 @@ export abstract class URI {
     return URI.create({ scheme: 'file', authority, path });
   }
 
-  static placeholder(path: string): URI {
-    return URI.create({
-      scheme: 'placeholder',
-      path: path,
-    });
+  static placeholder(uriPath: string): URI {
+    return URI.create({ scheme: 'placeholder', path: uriPath });
   }
 
   static withFragment(uri: URI, fragment: string): URI {
-    return URI.create({
-      ...uri,
-      fragment,
-    });
+    return URI.create({ ...uri, fragment });
   }
 
   /**
@@ -183,10 +177,6 @@ export abstract class URI {
       a.fragment === b.fragment &&
       a.query === b.query
     );
-  }
-
-  static isMarkdownFile(uri: URI): boolean {
-    return uri.path.endsWith('.md');
   }
 }
 

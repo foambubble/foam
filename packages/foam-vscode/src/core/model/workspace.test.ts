@@ -58,7 +58,7 @@ describe('Workspace resources', () => {
     const ws = createTestWorkspace()
       .set(createTestNote({ uri: 'test-file.md' }))
       .set(createTestNote({ uri: 'file.md' }));
-    expect(ws.listByKey('file').length).toEqual(1);
+    expect(ws.findByIdentifier('file').length).toEqual(1);
   });
 
   it('should include fragment when finding resource URI', () => {

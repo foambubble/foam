@@ -18,6 +18,7 @@ import { Foam } from '../core/model/foam';
 import { Resource } from '../core/model/note';
 import { generateHeading, generateLinkReferences } from '../core/janitor';
 import { Range } from '../core/model/range';
+import { getExtension } from '../core/utils/path';
 import { applyTextEdit } from '../core/janitor/apply-text-edit';
 
 const feature: FoamFeature = {
@@ -69,7 +70,7 @@ async function janitor(foam: Foam) {
 async function runJanitor(foam: Foam) {
   const notes: Resource[] = foam.workspace
     .list()
-    .filter(r => URI.isMarkdownFile(r.uri));
+    .filter(r => getExtension(r.uri.path) === '.md');
 
   let updatedHeadingCount = 0;
   let updatedDefinitionListCount = 0;

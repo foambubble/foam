@@ -1,6 +1,11 @@
 import { Resource, ResourceLink } from './note';
 import { URI } from './uri';
-import { isKey, isAbsolute, getExtension } from '../utils/path';
+import {
+  isIdentifier,
+  isAbsolute,
+  getExtension,
+  removeExtension,
+} from '../utils/path';
 import { isSome, getShortestIdentifier } from '../utils';
 import { Emitter } from '../common/event';
 import { ResourceProvider } from './provider';
@@ -60,8 +65,8 @@ export class FoamWorkspace implements IDisposable {
     }
   }
 
-  public listByKey(key: string): Resource[] {
-    let needle = '/' + key;
+  public findByIdentifier(identifier: string): Resource[] {
+    let needle = '/' + identifier;
     if (!getExtension(needle)) {
       needle = needle + '.md';
     }
@@ -72,7 +77,7 @@ export class FoamWorkspace implements IDisposable {
         resources.push(this.resources.get(normalize(key)));
       }
     }
-    return resources;
+    return resources.sort((a, b) => a.uri.path.localeCompare(b.uri.path));
   }
 
   /**
@@ -95,15 +100,12 @@ export class FoamWorkspace implements IDisposable {
       forResource.path,
       amongst.map(uri => uri.path)
     );
-
-    identifier = identifier.endsWith('.md')
-      ? identifier.slice(0, -3)
-      : identifier;
-
+    if (getExtension(identifier) === '.md') {
+      identifier = removeExtension(identifier);
+    }
     if (forResource.fragment) {
       identifier += `#${forResource.fragment}`;
     }
-
     return identifier;
   }
 
@@ -112,19 +114,12 @@ export class FoamWorkspace implements IDisposable {
       return this.resources.get(normalize((reference as URI).path)) ?? null;
     }
     let resource: Resource | null = null;
-    let [pathOrKey, fragment] = (reference as string).split('#');
-    if (isKey(pathOrKey)) {
-      const resources = this.listByKey(pathOrKey);
-      const sorted = resources.sort((a, b) =>
-        a.uri.path.localeCompare(b.uri.path)
-      );
-      resource = sorted[0];
+    let [path, fragment] = (reference as string).split('#');
+    if (isIdentifier(path)) {
+      resource = this.findByIdentifier(path)[0];
     } else {
-      let path = pathOrKey;
       if (isAbsolute(path) || isSome(baseUri)) {
-        if (!getExtension(path)) {
-          path = path + '.md';
-        }
+        path = getExtension(path) ? path : path + '.md';
         const uri = URI.resolve(path, baseUri);
         resource = uri ? this.resources.get(normalize(uri.path)) : null;
       }

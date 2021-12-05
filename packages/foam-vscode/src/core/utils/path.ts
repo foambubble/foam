@@ -1,7 +1,7 @@
 import { posix } from 'path';
 import { promises, constants } from 'fs';
 
-export function isKey(uriPath: string): boolean {
+export function isIdentifier(uriPath: string): boolean {
   return !(
     uriPath.startsWith('/') ||
     uriPath.startsWith('./') ||

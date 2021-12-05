@@ -19,7 +19,12 @@ import { Position } from './model/position';
 import { Range } from './model/range';
 import { extractHashtags, extractTagsFromProp, isNone, isSome } from './utils';
 import { Logger } from './utils/log';
-import { removeExtension, getName, relativeTo } from './utils/path';
+import {
+  getExtension,
+  removeExtension,
+  getName,
+  relativeTo,
+} from './utils/path';
 import { URI } from './model/uri';
 import { FoamWorkspace } from './model/workspace';
 import { IDataStore, FileDataStore, IMatcher } from './services/datastore';
@@ -95,7 +100,7 @@ export class MarkdownResourceProvider implements ResourceProvider {
   }
 
   supports(uri: URI) {
-    return URI.isMarkdownFile(uri);
+    return getExtension(uri.path) === '.md';
   }
 
   read(uri: URI): Promise<string | null> {

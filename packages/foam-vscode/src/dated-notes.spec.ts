@@ -20,7 +20,7 @@ describe('getDailyNotePath', () => {
   test('Adds the root directory to relative directories', async () => {
     const config = 'journal';
 
-    const expectedPath = URI.joinPath(
+    const expectedPath = URI.joinPaths(
       fromVsCodeUri(workspace.workspaceFolders[0].uri),
       config,
       `${isoDate}.md`

@@ -1,94 +1,88 @@
-import { win32, posix } from 'path';
+import { posix } from 'path';
 import { promises, constants } from 'fs';
 
-export function isPath(value: string): boolean {
-  return isRelative(value) || isAbsolute(value);
-}
-
-export function isRelative(path: string): boolean {
-  return path.startsWith('./') || path.startsWith('../');
-}
-
-export function isAbsolute(path: string): boolean {
-  return path.startsWith('/');
-}
-
-export function relativeTo(from: string, to: string): string {
-  return posix.relative(posix.dirname(from), to);
-}
-
-export function getExtension(path: string): string {
-  return posix.extname(path);
-}
-
-export function removeExtension(path: string): string {
-  let ext = getExtension(path);
-  return path.substring(0, path.length - ext.length);
-}
-
-export function getBasename(path: string): string {
-  return posix.basename(path);
-}
-
-export function getName(path: string): string {
-  return removeExtension(getBasename(path));
-}
-
-export function getDir(path: string): string {
-  return posix.dirname(path);
-}
-
-export function isUNCShare(path: string): boolean {
-  return path[0] === '\\' && path[1] === '\\';
-}
-
-export function parseUNCShare(path: string): [string, string] {
-  const idx = path.indexOf('\\', 2);
-  if (idx === -1) {
-    return [path.substring(2), '\\'];
-  } else {
-    return [path.substring(2, idx), path.substring(idx) || '\\'];
-  }
-}
-
-export function isWindows(path: string): boolean {
-  return (
-    (path.length >= 2 && path[1] === ':') ||
-    (path.length >= 3 && path[0] === '/' && path[2] === ':')
+export function isKey(uriPath: string): boolean {
+  return !(
+    uriPath.startsWith('/') ||
+    uriPath.startsWith('./') ||
+    uriPath.startsWith('../')
   );
 }
 
-export function join(basePath: string, ...paths: string[]): string {
-  if (isWindows(basePath)) {
-    return win32.join(toFsPath(basePath), ...paths);
+export function isAbsolute(uriPath: string): boolean {
+  return uriPath.startsWith('/');
+}
+
+export function relativeTo(baseUriPath: string, uriPath: string): string {
+  return posix.relative(posix.dirname(baseUriPath), uriPath);
+}
+
+export function getExtension(uriPath: string): string {
+  return posix.extname(uriPath);
+}
+
+export function removeExtension(uriPath: string): string {
+  let ext = getExtension(uriPath);
+  return uriPath.substring(0, uriPath.length - ext.length);
+}
+
+export function getBasename(uriPath: string): string {
+  return posix.basename(uriPath);
+}
+
+export function getName(uriPath: string): string {
+  return removeExtension(getBasename(uriPath));
+}
+
+export function getDir(uriPath: string): string {
+  return posix.dirname(uriPath);
+}
+
+export function joinPaths(baseUriPath: string, ...uriPaths: string[]): string {
+  return posix.join(baseUriPath, ...uriPaths);
+}
+
+export async function existsInFs(fsPath: string) {
+  try {
+    await promises.access(fsPath, constants.F_OK);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+export function isUNCShare(fsPath: string): boolean {
+  return fsPath.length >= 2 && fsPath[0] === '\\' && fsPath[1] === '\\';
+}
+
+export function parseUNCShare(uncPath: string): [string, string] {
+  const idx = uncPath.indexOf('\\', 2);
+  if (idx === -1) {
+    return [uncPath.substring(2), '\\'];
   } else {
-    return posix.join(basePath, ...paths);
+    return [uncPath.substring(2, idx), uncPath.substring(idx) || '\\'];
   }
 }
 
 export function toUriPath(path: string): string {
-  if (!isWindows(path)) {
-    return path;
+  if (hasDrive(path, 0)) {
+    return '/' + path[0].toUpperCase() + path.substr(1).replace(/\\/g, '/');
   }
-  path = path.replace(/\\/g, '/');
-  if (path[0] === '/') {
+  if (path[0] === '/' && hasDrive(path, 1)) {
     return '/' + path[1].toUpperCase() + path.substr(2);
-  } else {
-    return '/' + path[0].toUpperCase() + path.substr(1);
   }
+  return path;
 }
 
-export function toFsPath(path: string): string {
-  if (!isWindows(path)) {
-    return path;
+export function toFsPath(uriPath: string): string {
+  if (uriPath[0] === '/' && hasDrive(uriPath, 1)) {
+    return uriPath[1].toUpperCase() + uriPath.substr(2).replace(/\//g, '\\');
   }
-  path = path.replace(/\//g, '\\');
-  return path[1].toUpperCase() + path.substr(2);
+  return uriPath;
 }
 
-export function exists(path: string) {
-  return promises
-    .access(path, constants.F_OK)
-    .then(() => true)
-    .catch(() => false);
+function hasDrive(path: string, idx: number): boolean {
+  return (
+    path.length > idx && path[idx].match(/[a-zA-Z]/) && path[idx + 1] === ':'
+  );
 }

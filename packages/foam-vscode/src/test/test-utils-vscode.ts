@@ -43,7 +43,7 @@ export const deleteFile = (file: URI | { uri: URI }) => {
 export const getUriInWorkspace = (...filepath: string[]) => {
   const rootUri = fromVsCodeUri(vscode.workspace.workspaceFolders[0].uri);
   filepath = filepath.length > 0 ? filepath : [randomString() + '.md'];
-  const uri = URI.joinPath(rootUri, ...filepath);
+  const uri = URI.joinPaths(rootUri, ...filepath);
   return uri;
 };
 

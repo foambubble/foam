@@ -1,6 +1,6 @@
 import { Resource, ResourceLink } from './note';
 import { URI } from './uri';
-import { isPath, isAbsolute, getExtension } from '../utils/path';
+import { isKey, isAbsolute, getExtension } from '../utils/path';
 import { isSome, getShortestIdentifier } from '../utils';
 import { Emitter } from '../common/event';
 import { ResourceProvider } from './provider';
@@ -113,7 +113,13 @@ export class FoamWorkspace implements IDisposable {
     }
     let resource: Resource | null = null;
     let [pathOrKey, fragment] = (reference as string).split('#');
-    if (isPath(pathOrKey)) {
+    if (isKey(pathOrKey)) {
+      const resources = this.listByKey(pathOrKey);
+      const sorted = resources.sort((a, b) =>
+        a.uri.path.localeCompare(b.uri.path)
+      );
+      resource = sorted[0];
+    } else {
       let path = pathOrKey;
       if (isAbsolute(path) || isSome(baseUri)) {
         if (!getExtension(path)) {
@@ -122,12 +128,6 @@ export class FoamWorkspace implements IDisposable {
         const uri = URI.resolve(path, baseUri);
         resource = uri ? this.resources.get(normalize(uri.path)) : null;
       }
-    } else {
-      const resources = this.listByKey(pathOrKey);
-      const sorted = resources.sort((a, b) =>
-        a.uri.path.localeCompare(b.uri.path)
-      );
-      resource = sorted[0];
     }
     if (resource && fragment) {
       resource = { ...resource, uri: URI.withFragment(resource.uri, fragment) };

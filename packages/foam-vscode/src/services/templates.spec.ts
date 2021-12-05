@@ -1,7 +1,7 @@
 import { Selection, ViewColumn, window, workspace } from 'vscode';
-import path from 'path';
 import { isWindows } from '../utils';
 import { URI } from '../core/model/uri';
+import { getName } from '../core/utils/path';
 import { fromVsCodeUri } from '../utils/vsc-utils';
 import { determineNewNoteFilepath, NoteFactory } from '../services/templates';
 import {
@@ -12,7 +12,6 @@ import {
   showInEditor,
 } from '../test/test-utils-vscode';
 import { Resolver } from './variable-resolver';
-import { getName } from '../core/utils/path';
 
 describe('Create note from template', () => {
   beforeEach(async () => {
@@ -221,11 +220,11 @@ describe('determineNewNoteFilepath', () => {
       undefined,
       new Resolver(new Map(), new Date())
     );
-    const expectedPath = path.join(
-      URI.toFsPath(fromVsCodeUri(workspace.workspaceFolders[0].uri)),
+    const expectedPath = URI.joinPaths(
+      fromVsCodeUri(workspace.workspaceFolders[0].uri),
       relativePath
     );
-    expect(URI.toFsPath(resultFilepath)).toMatch(expectedPath);
+    expect(URI.toFsPath(resultFilepath)).toMatch(URI.toFsPath(expectedPath));
   });
 
   it('should use the note title if nothing else is available', async () => {
@@ -235,11 +234,11 @@ describe('determineNewNoteFilepath', () => {
       undefined,
       new Resolver(new Map().set('FOAM_TITLE', noteTitle), new Date())
     );
-    const expectedPath = path.join(
-      URI.toFsPath(fromVsCodeUri(workspace.workspaceFolders[0].uri)),
+    const expectedPath = URI.joinPaths(
+      fromVsCodeUri(workspace.workspaceFolders[0].uri),
       `${noteTitle}.md`
     );
-    expect(URI.toFsPath(resultFilepath)).toMatch(expectedPath);
+    expect(URI.toFsPath(resultFilepath)).toMatch(URI.toFsPath(expectedPath));
   });
 
   it('should ask the user for a note title if nothing else is available', async () => {
@@ -252,11 +251,11 @@ describe('determineNewNoteFilepath', () => {
       undefined,
       new Resolver(new Map(), new Date())
     );
-    const expectedPath = path.join(
-      URI.toFsPath(fromVsCodeUri(workspace.workspaceFolders[0].uri)),
+    const expectedPath = URI.joinPaths(
+      fromVsCodeUri(workspace.workspaceFolders[0].uri),
       `${noteTitle}.md`
     );
     expect(spy).toHaveBeenCalled();
-    expect(URI.toFsPath(resultFilepath)).toMatch(expectedPath);
+    expect(URI.toFsPath(resultFilepath)).toMatch(URI.toFsPath(expectedPath));
   });
 });

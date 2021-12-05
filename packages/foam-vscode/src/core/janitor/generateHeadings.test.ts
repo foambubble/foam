@@ -21,7 +21,7 @@ describe('generateHeadings', () => {
   };
 
   beforeAll(async () => {
-    const matcher = new Matcher([URI.joinPath(TEST_DATA_DIR, '__scaffold__')]);
+    const matcher = new Matcher([URI.joinPaths(TEST_DATA_DIR, '__scaffold__')]);
     const mdProvider = new MarkdownResourceProvider(matcher);
     const foam = await bootstrap(matcher, new FileDataStore(), [mdProvider]);
     _workspace = foam.workspace;

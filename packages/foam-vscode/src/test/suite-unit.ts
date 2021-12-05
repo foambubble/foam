@@ -11,7 +11,7 @@
 import path from 'path';
 import { runCLI } from '@jest/core';
 
-const rootDir = path.resolve(__dirname, '../..');
+const rootDir = path.join(__dirname, '..', '..');
 
 export function runUnit(): Promise<void> {
   process.env.FORCE_COLOR = '1';
@@ -31,7 +31,7 @@ export function runUnit(): Promise<void> {
           setupFilesAfterEnv: ['jest-extended'],
           globals: JSON.stringify({
             'ts-jest': {
-              tsconfig: path.resolve(rootDir, './tsconfig.json'),
+              tsconfig: path.join(rootDir, 'tsconfig.json'),
             },
           }),
           testTimeout: 20000,

@@ -82,7 +82,7 @@ export abstract class URI {
         if (!pathUtils.getExtension(path)) {
           path += pathUtils.getExtension(baseUri.path);
         }
-        path = pathUtils.join(pathUtils.getDir(baseUri.path), path);
+        path = pathUtils.joinPaths(pathUtils.getDir(baseUri.path), path);
         uri = URI.create({ ...baseUri, path: path });
       } else {
         uri = baseUri;
@@ -100,12 +100,12 @@ export abstract class URI {
    * @param path the filesystem path
    * @returns the file URI representing the given path
    */
-  static file(path: string): URI {
+  static file(fsPath: string): URI {
     let authority = _empty;
-    if (pathUtils.isUNCShare(path)) {
-      [authority, path] = pathUtils.parseUNCShare(path);
+    if (pathUtils.isUNCShare(fsPath)) {
+      [authority, fsPath] = pathUtils.parseUNCShare(fsPath);
     }
-    path = pathUtils.toUriPath(path);
+    const path = pathUtils.toUriPath(fsPath);
     return URI.create({ scheme: 'file', authority, path });
   }
 
@@ -130,11 +130,11 @@ export abstract class URI {
    * @param paths the paths to add to the URI path
    * @returns the resulting URI
    */
-  static joinPath(uri: URI, ...paths: string[]): URI {
+  static joinPaths(uri: URI, ...paths: string[]): URI {
     if (!uri.path) {
       throw new Error(`[UriError]: cannot call join path to URI without path`);
     }
-    let path = pathUtils.join(uri.path, ...paths);
+    let path = pathUtils.joinPaths(uri.path, ...paths);
     return URI.create({ ...uri, path: path });
   }
 

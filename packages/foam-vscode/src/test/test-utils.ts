@@ -12,7 +12,7 @@ import { NoteLinkDefinition, Resource } from '../core/model/note';
 
 Logger.setLevel('error');
 
-export const TEST_DATA_DIR = URI.joinPath(
+export const TEST_DATA_DIR = URI.joinPaths(
   URI.file(__dirname),
   '..',
   '..',

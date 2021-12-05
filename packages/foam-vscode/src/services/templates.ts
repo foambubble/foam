@@ -18,7 +18,7 @@ import { Resolver } from './variable-resolver';
 /**
  * The templates directory
  */
-export const TEMPLATES_DIR = URI.joinPath(
+export const TEMPLATES_DIR = URI.joinPaths(
   fromVsCodeUri(workspace.workspaceFolders[0].uri),
   '.foam',
   'templates'
@@ -27,12 +27,12 @@ export const TEMPLATES_DIR = URI.joinPath(
 /**
  * The URI of the default template
  */
-export const DEFAULT_TEMPLATE_URI = URI.joinPath(TEMPLATES_DIR, 'new-note.md');
+export const DEFAULT_TEMPLATE_URI = URI.joinPaths(TEMPLATES_DIR, 'new-note.md');
 
 /**
  * The URI of the template for daily notes
  */
-export const DAILY_NOTE_TEMPLATE_URI = URI.joinPath(
+export const DAILY_NOTE_TEMPLATE_URI = URI.joinPaths(
   TEMPLATES_DIR,
   'daily-note.md'
 );
@@ -203,7 +203,7 @@ export const NoteFactory = {
 
 export const createTemplate = async (): Promise<void> => {
   const defaultFilename = 'new-template.md';
-  const defaultTemplate = URI.joinPath(TEMPLATES_DIR, defaultFilename);
+  const defaultTemplate = URI.joinPaths(TEMPLATES_DIR, defaultFilename);
   const fsPath = URI.toFsPath(defaultTemplate);
   const filename = await window.showInputBox({
     prompt: `Enter the filename for the new template`,
@@ -252,12 +252,13 @@ export async function determineNewNoteFilepath(
   resolver: Resolver
 ): Promise<URI> {
   if (templateFilepathAttribute) {
-    const defaultFilepath = isAbsolute(templateFilepathAttribute)
-      ? URI.file(templateFilepathAttribute)
-      : URI.joinPath(
-          fromVsCodeUri(workspace.workspaceFolders[0].uri),
-          templateFilepathAttribute
-        );
+    let defaultFilepath = URI.file(templateFilepathAttribute);
+    if (!isAbsolute(templateFilepathAttribute)) {
+      defaultFilepath = URI.joinPaths(
+        fromVsCodeUri(workspace.workspaceFolders[0].uri),
+        templateFilepathAttribute
+      );
+    }
     return defaultFilepath;
   }
 
@@ -266,7 +267,7 @@ export async function determineNewNoteFilepath(
   }
 
   const defaultName = await resolver.resolve('FOAM_TITLE');
-  const defaultFilepath = URI.joinPath(
+  const defaultFilepath = URI.joinPaths(
     getCurrentEditorDirectory(),
     `${defaultName}.md`
   );

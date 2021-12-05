@@ -1,5 +1,5 @@
 import { URI } from '../core/model/uri';
-import * as path from 'path';
+import { getBasename } from '../core/utils/path';
 import { commands, ExtensionContext, QuickPickItem, window } from 'vscode';
 import { FoamFeature } from '../types';
 import {
@@ -60,7 +60,7 @@ async function askUserForTemplate() {
     await Promise.all(
       templates.map(async templateUri => {
         const metadata = await getTemplateMetadata(templateUri);
-        metadata.set('templatePath', path.basename(templateUri.path));
+        metadata.set('templatePath', getBasename(templateUri.path));
         return metadata;
       })
     )
@@ -105,7 +105,7 @@ const feature: FoamFeature = {
           const templateFilename =
             (selectedTemplate as QuickPickItem).description ||
             (selectedTemplate as QuickPickItem).label;
-          const templateUri = URI.joinPath(TEMPLATES_DIR, templateFilename);
+          const templateUri = URI.joinPaths(TEMPLATES_DIR, templateFilename);
 
           const resolver = new Resolver(new Map(), new Date());
 

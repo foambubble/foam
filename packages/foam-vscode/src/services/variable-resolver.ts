@@ -1,9 +1,11 @@
 import { findSelectionContent } from './editor';
 import { window } from 'vscode';
 import { UserCancelledOperation } from './errors';
+import slugger from 'github-slugger';
 
 const knownFoamVariables = new Set([
   'FOAM_TITLE',
+  'FOAM_TITLE_SLUG',
   'FOAM_SELECTED_TEXT',
   'FOAM_DATE_YEAR',
   'FOAM_DATE_YEAR_SHORT',
@@ -55,6 +57,7 @@ export function findFoamVariables(templateText: string): string[] {
 
 export class Resolver {
   promises = new Map<string, Thenable<string>>();
+  foamTitle: string | null = null;
 
   /**
    * Create a resolver
@@ -120,6 +123,12 @@ export class Resolver {
    * @returns a Map of variable name to its value
    */
   async resolveAll(variables: string[]): Promise<Map<string, string>> {
+    if (
+      variables.indexOf('FOAM_TITLE') !== -1 ||
+      variables.indexOf('FOAM_TITLE_SLUG') !== -1
+    ) {
+      await this.resolveFoamTitle();
+    }
     const promises = variables.map(async variable =>
       Promise.resolve([variable, await this.resolve(variable)])
     );
@@ -146,7 +155,13 @@ export class Resolver {
     } else if (!this.promises.has(name)) {
       switch (name) {
         case 'FOAM_TITLE':
-          this.promises.set(name, resolveFoamTitle());
+          this.promises.set(name, Promise.resolve(this.foamTitle));
+          break;
+        case 'FOAM_TITLE_SLUG':
+          this.promises.set(
+            name,
+            Promise.resolve(slugger.slug(this.foamTitle))
+          );
           break;
         case 'FOAM_SELECTED_TEXT':
           this.promises.set(name, Promise.resolve(resolveFoamSelectedText()));
@@ -270,19 +285,31 @@ export class Resolver {
     const result = this.promises.get(name);
     return result;
   }
-}
 
-async function resolveFoamTitle() {
-  const title = await window.showInputBox({
-    prompt: `Enter a title for the new note`,
-    value: 'Title of my New Note',
-    validateInput: value =>
-      value.trim().length === 0 ? 'Please enter a title' : undefined,
-  });
-  if (title === undefined) {
-    throw new UserCancelledOperation();
+  async resolveFoamTitle() {
+    if (this.foamTitle === null) {
+      const title = await window.showInputBox({
+        prompt: `Enter a title for the new note`,
+        value: 'Title of my New Note',
+        validateInput: value =>
+          value.trim().length === 0 ? 'Please enter a title' : undefined,
+      });
+      if (title === undefined) {
+        throw new UserCancelledOperation();
+      }
+      this.foamTitle = title;
+    }
+    return this.foamTitle;
   }
-  return title;
+
+  async resolveFoamTitleSlug() {
+    if (this.foamTitle === null) {
+      await this.resolveFoamTitle();
+    }
+    return this.foamTitle === null
+      ? 'foamTitle-is-null'
+      : slugger.slug(this.foamTitle);
+  }
 }
 
 function resolveFoamSelectedText() {

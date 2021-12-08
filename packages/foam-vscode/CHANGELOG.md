@@ -4,6 +4,17 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.17.0] - 2021-12-08
+
+Features:
+
+- Added first class support for sections (#856)
+  - Sections can be referred to in wikilinks
+  - Sections can be embedded
+  - Autocompletion for sections
+  - Diagnostic for sections
+  - Embed sections
+
 ## [0.16.1] - 2021-11-30
 
 Fixes and Improvements:

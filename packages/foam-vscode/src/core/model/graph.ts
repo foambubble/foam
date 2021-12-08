@@ -99,15 +99,18 @@ export class FoamGraph implements IDisposable {
 
   private updateLinksRelatedToAddedResource(resource: Resource) {
     // check if any existing connection can be filled by new resource
-    let resourcesToUpdate: Resource[] = [];
+    let resourcesToUpdate: URI[] = [];
     for (const placeholderId of this.placeholders.keys()) {
       // quick and dirty check for affected resources
       if (resource.uri.path.endsWith(placeholderId + '.md')) {
-        resourcesToUpdate.push(resource);
+        resourcesToUpdate.push(
+          ...this.backlinks.get(placeholderId).map(c => c.source)
+        );
+        // resourcesToUpdate.push(resource);
       }
     }
     resourcesToUpdate.forEach(res =>
-      this.resolveResource(this.workspace.get(res.uri))
+      this.resolveResource(this.workspace.get(res))
     );
     // resolve the resource
     this.resolveResource(resource);

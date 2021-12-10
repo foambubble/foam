@@ -51,34 +51,31 @@ export class URI {
     return new URI({
       scheme: match[2] || 'file',
       authority: percentDecode(match[4] ?? _empty),
-      path: pathUtils.asPath(percentDecode(match[5] ?? _empty)),
+      path: pathUtils.asPath(percentDecode(match[5] ?? _empty))[0],
       query: percentDecode(match[7] ?? _empty),
       fragment: percentDecode(match[9] ?? _empty),
     });
   }
 
-  static file(path: string): URI {
-    let authority = _empty;
-    if (pathUtils.isUNCShare(path)) {
-      [authority, path] = pathUtils.parseUNCShare(path);
-    }
-    return new URI({ scheme: 'file', authority, path: pathUtils.asPath(path) });
+  static file(value: string): URI {
+    let [path, authority] = pathUtils.asPath(value);
+    return new URI({ scheme: 'file', authority, path });
   }
 
   static placeholder(path: string): URI {
     return new URI({ scheme: 'placeholder', path: path });
   }
 
-  resolve(value: string): URI {
+  resolve(value: string, isDirectory = false, inheritExtension = true): URI {
     let uri = URI.parse(value);
     if (uri.scheme === 'file' && !pathUtils.isAbsolute(uri.path)) {
       uri = this;
       let [path, fragment] = value.split('#');
       if (path) {
-        if (!pathUtils.getExtension(path)) {
+        if (inheritExtension && !pathUtils.getExtension(path)) {
           path += this.getExtension();
         }
-        uri = uri.joinPath('..', path);
+        uri = uri.joinPath(isDirectory ? '.' : '..', path);
       }
       if (fragment) {
         uri = uri.withFragment(fragment);
@@ -108,7 +105,7 @@ export class URI {
     return new URI({ ...this, path });
   }
 
-  relativeTo(uri: URI, isDirectory?: false) {
+  relativeTo(uri: URI, isDirectory = false) {
     const basePath = isDirectory ? uri.path : pathUtils.getDirectory(uri.path);
     const path = pathUtils.relativeTo(this.path, basePath);
     return new URI({ ...this, path });
@@ -123,11 +120,10 @@ export class URI {
   }
 
   toFsPath() {
-    if (this.authority && this.path.length > 1 && this.scheme === 'file') {
-      return `//${this.authority}${this.path}`;
-    } else {
-      return pathUtils.toFsPath(this.path);
-    }
+    return pathUtils.toFsPath(
+      this.path,
+      this.scheme === 'file' ? this.authority : ''
+    );
   }
 
   toString(): string {

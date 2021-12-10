@@ -2,19 +2,26 @@ import { CharCode } from '../common/charCode';
 import { posix } from 'path';
 import { promises, constants } from 'fs';
 
-export function asPath(value: string): string {
+export function asPath(value: string): [string, string] {
+  let authority: string;
+  if (isUNCShare(value)) {
+    [value, authority] = parseUNCShare(value);
+  }
   if (value[0] === '/' && hasDrive(value, 1)) {
-    return '/' + value[1].toUpperCase() + value.substr(2);
+    value = '/' + value[1].toUpperCase() + value.substr(2);
   }
   if (hasDrive(value, 0)) {
-    return '/' + value[0].toUpperCase() + value.substr(1).replace(/\\/g, '/');
+    value = '/' + value[0].toUpperCase() + value.substr(1).replace(/\\/g, '/');
   }
-  return value;
+  return [value, authority];
 }
 
-export function toFsPath(path: string): string {
+export function toFsPath(path: string, authority?: string): string {
   if (path[0] === '/' && hasDrive(path, 1)) {
-    return path[1].toUpperCase() + path.substr(2).replace(/\//g, '\\');
+    path = path[1].toUpperCase() + path.substr(2).replace(/\//g, '\\');
+  }
+  if (authority) {
+    path = `\\\\${authority}${path}`;
   }
   return path;
 }
@@ -61,11 +68,11 @@ export async function existsInFs(fsPath: string) {
   }
 }
 
-export function isUNCShare(fsPath: string): boolean {
+function isUNCShare(fsPath: string): boolean {
   return fsPath.length >= 2 && fsPath[0] === '\\' && fsPath[1] === '\\';
 }
 
-export function parseUNCShare(uncPath: string): [string, string] {
+function parseUNCShare(uncPath: string): [string, string] {
   const idx = uncPath.indexOf('\\', 2);
   if (idx === -1) {
     return [uncPath.substring(2), '\\'];

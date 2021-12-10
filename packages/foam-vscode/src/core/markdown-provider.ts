@@ -19,7 +19,6 @@ import { Position } from './model/position';
 import { Range } from './model/range';
 import { extractHashtags, extractTagsFromProp, isNone, isSome } from './utils';
 import { Logger } from './utils/log';
-import { removeExtension } from './utils/path';
 import { URI } from './model/uri';
 import { FoamWorkspace } from './model/workspace';
 import { IDataStore, FileDataStore, IMatcher } from './services/datastore';
@@ -523,7 +522,7 @@ export function createMarkdownReferences(
   if (source?.type !== 'note') {
     console.warn(
       `Note ${noteUri.toString()} note found in workspace when attempting \
-      to generate markdown reference list`
+to generate markdown reference list`
     );
     return [];
   }
@@ -544,10 +543,10 @@ export function createMarkdownReferences(
         return null;
       }
 
-      const relativePath = target.uri.relativeTo(noteUri.getDirectory()).path;
-      const pathToNote = includeExtension
-        ? relativePath
-        : removeExtension(relativePath);
+      let relativeUri = target.uri.relativeTo(noteUri.getDirectory());
+      if (!includeExtension) {
+        relativeUri = relativeUri.removeExtension();
+      }
 
       // [wikilink-text]: path/to/file.md "Page title"
       return {
@@ -555,7 +554,7 @@ export function createMarkdownReferences(
           link.rawText.indexOf('[[') > -1
             ? link.rawText.substring(2, link.rawText.length - 2)
             : link.rawText || link.label,
-        url: pathToNote,
+        url: relativeUri.path,
         title: target.title,
       };
     })

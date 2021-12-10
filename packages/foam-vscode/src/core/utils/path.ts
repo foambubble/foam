@@ -30,13 +30,8 @@ export function isAbsolute(path: string): boolean {
   return path.startsWith('/');
 }
 
-export function getExtension(path: string): string {
-  return posix.extname(path);
-}
-
-export function removeExtension(path: string): string {
-  let ext = getExtension(path);
-  return path.substring(0, path.length - ext.length);
+export function getDirectory(path: string): string {
+  return posix.dirname(path);
 }
 
 export function getBasename(path: string): string {
@@ -47,8 +42,13 @@ export function getName(path: string): string {
   return removeExtension(getBasename(path));
 }
 
-export function getDirectory(path: string): string {
-  return posix.dirname(path);
+export function getExtension(path: string): string {
+  return posix.extname(path);
+}
+
+export function removeExtension(path: string): string {
+  let ext = getExtension(path);
+  return path.substring(0, path.length - ext.length);
 }
 
 export function joinPath(basePath: string, ...paths: string[]): string {

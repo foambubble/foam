@@ -1,6 +1,6 @@
 import { workspace, WorkspaceConfiguration } from 'vscode';
 import dateFormat from 'dateformat';
-import { isAbsolute, existsInFs } from './core/utils/path';
+import { existsInFs } from './core/utils/path';
 import { focusNote } from './utils';
 import { URI } from './core/model/uri';
 import { fromVsCodeUri } from './utils/vsc-utils';
@@ -50,7 +50,7 @@ export function getDailyNotePath(
   );
   const dailyNoteFilename = getDailyNoteFileName(configuration, date);
 
-  if (isAbsolute(dailyNoteDirectory.path)) {
+  if (dailyNoteDirectory.isAbsolute()) {
     return dailyNoteDirectory.joinPath(dailyNoteFilename);
   } else {
     return fromVsCodeUri(workspace.workspaceFolders[0].uri).joinPath(

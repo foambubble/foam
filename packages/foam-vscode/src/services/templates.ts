@@ -1,5 +1,4 @@
 import { URI } from '../core/model/uri';
-import { isAbsolute } from '../core/utils/path';
 import { existsSync } from 'fs';
 import { TextEncoder } from 'util';
 import { SnippetString, ViewColumn, window, workspace } from 'vscode';
@@ -248,7 +247,7 @@ export async function determineNewNoteFilepath(
 ): Promise<URI> {
   if (templateFilepathAttribute) {
     let defaultFilepath = URI.file(templateFilepathAttribute);
-    if (!isAbsolute(templateFilepathAttribute)) {
+    if (!defaultFilepath.isAbsolute()) {
       defaultFilepath = fromVsCodeUri(
         workspace.workspaceFolders[0].uri
       ).joinPath(templateFilepathAttribute);

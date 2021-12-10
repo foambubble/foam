@@ -87,20 +87,29 @@ export class URI {
     return uri;
   }
 
-  getName(): string {
-    return pathUtils.getName(this.path);
+  isAbsolute(): boolean {
+    return pathUtils.isAbsolute(this.path);
+  }
+
+  getDirectory(): URI {
+    const path = pathUtils.getDirectory(this.path);
+    return new URI({ ...this, path });
   }
 
   getBasename(): string {
     return pathUtils.getBasename(this.path);
   }
 
+  getName(): string {
+    return pathUtils.getName(this.path);
+  }
+
   getExtension(): string {
     return pathUtils.getExtension(this.path);
   }
 
-  getDirectory(): URI {
-    const path = pathUtils.getDirectory(this.path);
+  removeExtension(): URI {
+    const path = pathUtils.removeExtension(this.path);
     return new URI({ ...this, path });
   }
 
@@ -134,7 +143,8 @@ export class URI {
   }
 
   isMarkdown(): boolean {
-    return pathUtils.getExtension(this.path) === '.md';
+    const ext = this.getExtension();
+    return ext === '.md' || ext === '.markdown';
   }
 
   isEqual(uri: URI): boolean {

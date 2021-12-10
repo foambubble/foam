@@ -22,7 +22,7 @@ const feature: FoamFeature = {
       vscode.commands.registerCommand(
         OPEN_COMMAND.command,
         async (params: { uri: URI }) => {
-          const { uri } = params;
+          const uri = new URI(params.uri);
           switch (uri.scheme) {
             case 'file':
               let selection = new vscode.Range(1, 0, 1, 0);

@@ -75,7 +75,7 @@ export function getCurrentEditorDirectory(): URI {
   const uri = window.activeTextEditor?.document?.uri;
 
   if (isSome(uri)) {
-    return URI.file(fromVsCodeUri(uri).getDirectory());
+    return fromVsCodeUri(uri).getDirectory();
   }
 
   if (workspace.workspaceFolders.length > 0) {

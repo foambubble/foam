@@ -16,7 +16,7 @@ describe('Editor utils', () => {
       const file = await createFile('this is the file content.');
       await showInEditor(file.uri);
 
-      expect(getCurrentEditorDirectory().path).toEqual(file.uri.getDirectory());
+      expect(getCurrentEditorDirectory()).toEqual(file.uri.getDirectory());
     });
 
     it('should return the directory of the workspace folder if no editor is open', async () => {

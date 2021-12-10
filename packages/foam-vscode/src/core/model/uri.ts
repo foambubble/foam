@@ -75,7 +75,10 @@ export class URI {
         if (inheritExtension && !pathUtils.getExtension(path)) {
           path += this.getExtension();
         }
-        uri = uri.joinPath(isDirectory ? '.' : '..', path);
+        if (!isDirectory) {
+          uri = uri.getDirectory();
+        }
+        uri = uri.joinPath(path);
       }
       if (fragment) {
         uri = uri.withFragment(fragment);
@@ -96,8 +99,9 @@ export class URI {
     return pathUtils.getExtension(this.path);
   }
 
-  getDirectory(): string {
-    return pathUtils.getDirectory(this.path);
+  getDirectory(): URI {
+    const path = pathUtils.getDirectory(this.path);
+    return new URI({ ...this, path });
   }
 
   joinPath(...paths: string[]) {
@@ -105,9 +109,8 @@ export class URI {
     return new URI({ ...this, path });
   }
 
-  relativeTo(uri: URI, isDirectory = false) {
-    const basePath = isDirectory ? uri.path : pathUtils.getDirectory(uri.path);
-    const path = pathUtils.relativeTo(this.path, basePath);
+  relativeTo(uri: URI) {
+    const path = pathUtils.relativeTo(this.path, uri.path);
     return new URI({ ...this, path });
   }
 

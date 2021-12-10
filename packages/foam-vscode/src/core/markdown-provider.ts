@@ -544,7 +544,7 @@ export function createMarkdownReferences(
         return null;
       }
 
-      const relativePath = target.uri.relativeTo(noteUri).path;
+      const relativePath = target.uri.relativeTo(noteUri.getDirectory()).path;
       const pathToNote = includeExtension
         ? relativePath
         : removeExtension(relativePath);

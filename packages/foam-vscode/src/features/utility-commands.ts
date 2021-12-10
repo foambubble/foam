@@ -12,7 +12,7 @@ export const OPEN_COMMAND = {
 
   asURI: (uri: URI) =>
     vscode.Uri.parse(`command:${OPEN_COMMAND.command}`).with({
-      query: encodeURIComponent(JSON.stringify({ uri: uri })),
+      query: encodeURIComponent(JSON.stringify({ uri })),
     }),
 };
 

@@ -545,7 +545,7 @@ to generate markdown reference list`
 
       let relativeUri = target.uri.relativeTo(noteUri.getDirectory());
       if (!includeExtension) {
-        relativeUri = relativeUri.removeExtension();
+        relativeUri = relativeUri.changeExtension('*', '');
       }
 
       // [wikilink-text]: path/to/file.md "Page title"

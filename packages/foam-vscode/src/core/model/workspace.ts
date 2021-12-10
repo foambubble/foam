@@ -1,6 +1,6 @@
 import { Resource, ResourceLink } from './note';
 import { URI } from './uri';
-import { isAbsolute, getExtension, removeExtension } from '../utils/path';
+import { isAbsolute, getExtension, changeExtension } from '../utils/path';
 import { isSome } from '../utils';
 import { Emitter } from '../common/event';
 import { ResourceProvider } from './provider';
@@ -95,9 +95,7 @@ export class FoamWorkspace implements IDisposable {
       forResource.path,
       amongst.map(uri => uri.path)
     );
-    if (getExtension(identifier) === '.md') {
-      identifier = removeExtension(identifier);
-    }
+    identifier = changeExtension(identifier, '.md', '');
     if (forResource.fragment) {
       identifier += `#${forResource.fragment}`;
     }

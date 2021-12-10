@@ -34,32 +34,28 @@ const feature: FoamFeature = {
                   selection = toVsCodeRange(section.range);
                 }
               }
-
               const targetUri =
                 uri.path === vscode.window.activeTextEditor?.document.uri.path
                   ? vscode.window.activeTextEditor?.document.uri
                   : toVsCodeUri(uri);
-
               return vscode.commands.executeCommand('vscode.open', targetUri, {
                 selection: selection,
               });
 
             case 'placeholder':
-              const title = uri.path.split('/').slice(-1)[0];
-
               const basedir =
                 vscode.workspace.workspaceFolders.length > 0
-                  ? fromVsCodeUri(vscode.workspace.workspaceFolders[0].uri)
-                  : fromVsCodeUri(vscode.window.activeTextEditor?.document.uri)
-                  ? fromVsCodeUri(vscode.window.activeTextEditor!.document.uri)
+                  ? vscode.workspace.workspaceFolders[0].uri
+                  : vscode.window.activeTextEditor?.document.uri
+                  ? vscode.window.activeTextEditor!.document.uri
                   : undefined;
-
               if (basedir === undefined) {
                 return;
               }
-
-              const target = basedir.resolve(uri.path);
-
+              const title = uri.getName();
+              const target = fromVsCodeUri(basedir)
+                .resolve(uri, true)
+                .changeExtension('', '.md');
               await NoteFactory.createForPlaceholderWikilink(title, target);
               return;
           }

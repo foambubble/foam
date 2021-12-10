@@ -39,16 +39,24 @@ export function getBasename(path: string): string {
 }
 
 export function getName(path: string): string {
-  return removeExtension(getBasename(path));
+  return changeExtension(getBasename(path), '*', '');
 }
 
 export function getExtension(path: string): string {
   return posix.extname(path);
 }
 
-export function removeExtension(path: string): string {
-  let ext = getExtension(path);
-  return path.substring(0, path.length - ext.length);
+export function changeExtension(
+  path: string,
+  from: string,
+  to: string
+): string {
+  const old = getExtension(path);
+  if ((from === '*' && old !== to) || old === from) {
+    path = path.substring(0, path.length - old.length);
+    return to ? path + to : path;
+  }
+  return path;
 }
 
 export function joinPath(basePath: string, ...paths: string[]): string {

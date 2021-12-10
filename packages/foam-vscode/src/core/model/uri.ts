@@ -66,23 +66,17 @@ export class URI {
     return new URI({ scheme: 'placeholder', path: path });
   }
 
-  resolve(value: string, isDirectory = false, inheritExtension = true): URI {
-    let uri = URI.parse(value);
-    if (uri.scheme === 'file' && !pathUtils.isAbsolute(uri.path)) {
-      uri = this;
-      let [path, fragment] = value.split('#');
-      if (path) {
-        if (inheritExtension && !pathUtils.getExtension(path)) {
-          path += this.getExtension();
-        }
-        if (!isDirectory) {
-          uri = uri.getDirectory();
-        }
-        uri = uri.joinPath(path);
+  resolve(value: string | URI, isDirectory = false): URI {
+    const uri = value instanceof URI ? value : URI.parse(value);
+    const isResolvable = uri.scheme === 'file' || uri.scheme === 'placeholder';
+    if (isResolvable && !uri.isAbsolute()) {
+      let newUri = this.withFragment(uri.fragment);
+      if (uri.path) {
+        newUri = (isDirectory ? newUri : newUri.getDirectory())
+          .joinPath(uri.path)
+          .changeExtension('', this.getExtension());
       }
-      if (fragment) {
-        uri = uri.withFragment(fragment);
-      }
+      return newUri;
     }
     return uri;
   }
@@ -108,8 +102,8 @@ export class URI {
     return pathUtils.getExtension(this.path);
   }
 
-  removeExtension(): URI {
-    const path = pathUtils.removeExtension(this.path);
+  changeExtension(from: string, to: string): URI {
+    const path = pathUtils.changeExtension(this.path, from, to);
     return new URI({ ...this, path });
   }
 

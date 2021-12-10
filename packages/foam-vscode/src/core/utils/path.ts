@@ -2,37 +2,54 @@ import { CharCode } from '../common/charCode';
 import { posix } from 'path';
 import { promises, constants } from 'fs';
 
-export function isAbsolute(uriPath: string): boolean {
-  return uriPath.startsWith('/');
+export function asPath(value: string): string {
+  if (value[0] === '/' && hasDrive(value, 1)) {
+    return '/' + value[1].toUpperCase() + value.substr(2);
+  }
+  if (hasDrive(value, 0)) {
+    return '/' + value[0].toUpperCase() + value.substr(1).replace(/\\/g, '/');
+  }
+  return value;
 }
 
-export function relativeTo(uriPath: string, baseUriPath: string): string {
-  return posix.relative(posix.dirname(baseUriPath), uriPath);
+export function toFsPath(path: string): string {
+  if (path[0] === '/' && hasDrive(path, 1)) {
+    return path[1].toUpperCase() + path.substr(2).replace(/\//g, '\\');
+  }
+  return path;
 }
 
-export function getExtension(uriPath: string): string {
-  return posix.extname(uriPath);
+export function isAbsolute(path: string): boolean {
+  return path.startsWith('/');
 }
 
-export function removeExtension(uriPath: string): string {
-  let ext = getExtension(uriPath);
-  return uriPath.substring(0, uriPath.length - ext.length);
+export function getExtension(path: string): string {
+  return posix.extname(path);
 }
 
-export function getBasename(uriPath: string): string {
-  return posix.basename(uriPath);
+export function removeExtension(path: string): string {
+  let ext = getExtension(path);
+  return path.substring(0, path.length - ext.length);
 }
 
-export function getName(uriPath: string): string {
-  return removeExtension(getBasename(uriPath));
+export function getBasename(path: string): string {
+  return posix.basename(path);
 }
 
-export function getDirectory(uriPath: string): string {
-  return posix.dirname(uriPath);
+export function getName(path: string): string {
+  return removeExtension(getBasename(path));
 }
 
-export function joinPath(baseUriPath: string, ...uriPaths: string[]): string {
-  return posix.join(baseUriPath, ...uriPaths);
+export function getDirectory(path: string): string {
+  return posix.dirname(path);
+}
+
+export function joinPath(basePath: string, ...paths: string[]): string {
+  return posix.join(basePath, ...paths);
+}
+
+export function relativeTo(path: string, basePath: string): string {
+  return posix.relative(basePath, path);
 }
 
 export async function existsInFs(fsPath: string) {
@@ -55,71 +72,6 @@ export function parseUNCShare(uncPath: string): [string, string] {
   } else {
     return [uncPath.substring(2, idx), uncPath.substring(idx) || '\\'];
   }
-}
-
-export function toUriPath(path: string): string {
-  if (hasDrive(path, 0)) {
-    return '/' + path[0].toUpperCase() + path.substr(1).replace(/\\/g, '/');
-  }
-  if (path[0] === '/' && hasDrive(path, 1)) {
-    return '/' + path[1].toUpperCase() + path.substr(2);
-  }
-  return path;
-}
-
-export function toFsPath(uriPath: string): string {
-  if (uriPath[0] === '/' && hasDrive(uriPath, 1)) {
-    return uriPath[1].toUpperCase() + uriPath.substr(2).replace(/\//g, '\\');
-  }
-  return uriPath;
-}
-
-export function isIdentifier(path: string): boolean {
-  return !(
-    path.startsWith('/') ||
-    path.startsWith('./') ||
-    path.startsWith('../')
-  );
-}
-
-/**
- * Returns the minimal identifier for the given string amongst others
- *
- * @param uriPath the value to compute the identifier for
- * @param amongstUriPaths the set of strings within which to find the identifier
- */
-export function getShortestIdentifier(
-  uriPath: string,
-  amongstUriPaths: string[]
-): string {
-  const needleTokens = uriPath.split('/').reverse();
-  const haystack = amongstUriPaths
-    .filter(value => value !== uriPath)
-    .map(value => value.split('/').reverse());
-
-  let tokenIndex = 0;
-  let res = needleTokens;
-  while (tokenIndex < needleTokens.length) {
-    for (let j = haystack.length - 1; j >= 0; j--) {
-      if (
-        haystack[j].length < tokenIndex ||
-        needleTokens[tokenIndex] !== haystack[j][tokenIndex]
-      ) {
-        haystack.splice(j, 1);
-      }
-    }
-    if (haystack.length === 0) {
-      res = needleTokens.splice(0, tokenIndex + 1);
-      break;
-    }
-    tokenIndex++;
-  }
-  const identifier = res
-    .filter(token => token.trim() !== '')
-    .reverse()
-    .join('/');
-
-  return identifier;
 }
 
 function hasDrive(path: string, idx: number): boolean {

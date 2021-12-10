@@ -51,7 +51,7 @@ export class URI {
     return new URI({
       scheme: match[2] || 'file',
       authority: percentDecode(match[4] ?? _empty),
-      path: pathUtils.toUriPath(percentDecode(match[5] ?? _empty)),
+      path: pathUtils.asPath(percentDecode(match[5] ?? _empty)),
       query: percentDecode(match[7] ?? _empty),
       fragment: percentDecode(match[9] ?? _empty),
     });
@@ -62,8 +62,7 @@ export class URI {
     if (pathUtils.isUNCShare(path)) {
       [authority, path] = pathUtils.parseUNCShare(path);
     }
-    path = pathUtils.toUriPath(path);
-    return new URI({ scheme: 'file', authority, path });
+    return new URI({ scheme: 'file', authority, path: pathUtils.asPath(path) });
   }
 
   static placeholder(path: string): URI {
@@ -109,8 +108,9 @@ export class URI {
     return new URI({ ...this, path });
   }
 
-  relativeTo(uri: URI) {
-    const path = pathUtils.relativeTo(this.path, uri.path);
+  relativeTo(uri: URI, isDirectory?: false) {
+    const basePath = isDirectory ? uri.path : pathUtils.getDirectory(uri.path);
+    const path = pathUtils.relativeTo(this.path, basePath);
     return new URI({ ...this, path });
   }
 

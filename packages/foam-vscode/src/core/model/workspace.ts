@@ -1,12 +1,6 @@
 import { Resource, ResourceLink } from './note';
 import { URI } from './uri';
-import {
-  isAbsolute,
-  isIdentifier,
-  getShortestIdentifier,
-  getExtension,
-  removeExtension,
-} from '../utils/path';
+import { isAbsolute, getExtension, removeExtension } from '../utils/path';
 import { isSome } from '../utils';
 import { Emitter } from '../common/event';
 import { ResourceProvider } from './provider';
@@ -97,7 +91,7 @@ export class FoamWorkspace implements IDisposable {
         }
       }
     }
-    let identifier = getShortestIdentifier(
+    let identifier = FoamWorkspace.getShortestIdentifier(
       forResource.path,
       amongst.map(uri => uri.path)
     );
@@ -116,7 +110,7 @@ export class FoamWorkspace implements IDisposable {
     }
     let resource: Resource | null = null;
     let [path, fragment] = (reference as string).split('#');
-    if (isIdentifier(path)) {
+    if (FoamWorkspace.isIdentifier(path)) {
       resource = this.listByIdentifier(path)[0];
     } else {
       if (isAbsolute(path) || isSome(baseUri)) {
@@ -154,6 +148,51 @@ export class FoamWorkspace implements IDisposable {
     this.onDidAddEmitter.dispose();
     this.onDidDeleteEmitter.dispose();
     this.onDidUpdateEmitter.dispose();
+  }
+
+  static isIdentifier(path: string): boolean {
+    return !(
+      path.startsWith('/') ||
+      path.startsWith('./') ||
+      path.startsWith('../')
+    );
+  }
+
+  /**
+   * Returns the minimal identifier for the given string amongst others
+   *
+   * @param forPath the value to compute the identifier for
+   * @param amongst the set of strings within which to find the identifier
+   */
+  static getShortestIdentifier(forPath: string, amongst: string[]): string {
+    const needleTokens = forPath.split('/').reverse();
+    const haystack = amongst
+      .filter(value => value !== forPath)
+      .map(value => value.split('/').reverse());
+
+    let tokenIndex = 0;
+    let res = needleTokens;
+    while (tokenIndex < needleTokens.length) {
+      for (let j = haystack.length - 1; j >= 0; j--) {
+        if (
+          haystack[j].length < tokenIndex ||
+          needleTokens[tokenIndex] !== haystack[j][tokenIndex]
+        ) {
+          haystack.splice(j, 1);
+        }
+      }
+      if (haystack.length === 0) {
+        res = needleTokens.splice(0, tokenIndex + 1);
+        break;
+      }
+      tokenIndex++;
+    }
+    const identifier = res
+      .filter(token => token.trim() !== '')
+      .reverse()
+      .join('/');
+
+    return identifier;
   }
 }
 

@@ -2,7 +2,6 @@ import { ExtensionContext, commands, window } from 'vscode';
 import { FoamFeature } from '../types';
 import { focusNote } from '../utils';
 import { Foam } from '../core/model/foam';
-import { getExtension } from '../core/utils/path';
 
 const feature: FoamFeature = {
   activate: (context: ExtensionContext, foamPromise: Promise<Foam>) => {
@@ -10,9 +9,7 @@ const feature: FoamFeature = {
       commands.registerCommand('foam-vscode.open-random-note', async () => {
         const foam = await foamPromise;
         const currentFile = window.activeTextEditor?.document.uri.path;
-        const notes = foam.workspace
-          .list()
-          .filter(r => getExtension(r.uri.path) === '.md');
+        const notes = foam.workspace.list().filter(r => r.uri.isMarkdown());
         if (notes.length <= 1) {
           window.showInformationMessage(
             'Could not find another note to open. If you believe this is a bug, please file an issue.'

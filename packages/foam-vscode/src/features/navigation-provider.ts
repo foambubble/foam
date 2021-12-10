@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { FoamFeature } from '../types';
 import { mdDocSelector } from '../utils';
-import { toVsCodeRange, toVsCodeUri } from '../utils/vsc-utils';
+import { toVsCodeRange, toVsCodeUri, fromVsCodeUri } from '../utils/vsc-utils';
 import { OPEN_COMMAND } from './utility-commands';
 import { Foam } from '../core/model/foam';
 import { FoamWorkspace } from '../core/model/workspace';
@@ -70,7 +70,10 @@ export class NavigationProvider
     document: vscode.TextDocument,
     position: vscode.Position
   ): vscode.ProviderResult<vscode.Location[]> {
-    const resource = this.parser.parse(document.uri, document.getText());
+    const resource = this.parser.parse(
+      fromVsCodeUri(document.uri),
+      document.getText()
+    );
     const targetLink: ResourceLink | undefined = resource.links.find(link =>
       Range.containsPosition(link.range, position)
     );
@@ -95,7 +98,10 @@ export class NavigationProvider
     document: vscode.TextDocument,
     position: vscode.Position
   ): vscode.LocationLink[] {
-    const resource = this.parser.parse(document.uri, document.getText());
+    const resource = this.parser.parse(
+      fromVsCodeUri(document.uri),
+      document.getText()
+    );
     const targetLink: ResourceLink | undefined = resource.links.find(link =>
       Range.containsPosition(link.range, position)
     );
@@ -104,7 +110,7 @@ export class NavigationProvider
     }
 
     const uri = this.workspace.resolveLink(resource, targetLink);
-    if (URI.isPlaceholder(uri)) {
+    if (uri.isPlaceholder()) {
       return;
     }
 
@@ -135,7 +141,10 @@ export class NavigationProvider
   public provideDocumentLinks(
     document: vscode.TextDocument
   ): vscode.DocumentLink[] {
-    const resource = this.parser.parse(document.uri, document.getText());
+    const resource = this.parser.parse(
+      fromVsCodeUri(document.uri),
+      document.getText()
+    );
 
     const targets: { link: ResourceLink; target: URI }[] = resource.links.map(
       link => ({
@@ -145,14 +154,14 @@ export class NavigationProvider
     );
 
     return targets.map(o => {
-      const command = OPEN_COMMAND.asURI(toVsCodeUri(o.target));
+      const command = OPEN_COMMAND.asURI(o.target);
       const documentLink = new vscode.DocumentLink(
         toVsCodeRange(o.link.range),
         command
       );
-      documentLink.tooltip = URI.isPlaceholder(o.target)
+      documentLink.tooltip = o.target.isPlaceholder()
         ? `Create note for '${o.target.path}'`
-        : `Go to ${URI.toFsPath(o.target)}`;
+        : `Go to ${o.target.toFsPath()}`;
       return documentLink;
     });
   }

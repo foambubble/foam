@@ -1,4 +1,4 @@
-import { getShortestIdentifier } from './core';
+import { getShortestIdentifier } from './path';
 import { Logger } from './log';
 
 Logger.setLevel('error');

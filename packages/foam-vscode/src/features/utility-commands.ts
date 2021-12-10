@@ -12,7 +12,7 @@ export const OPEN_COMMAND = {
 
   asURI: (uri: URI) =>
     vscode.Uri.parse(`command:${OPEN_COMMAND.command}`).with({
-      query: encodeURIComponent(JSON.stringify({ uri: URI.create(uri) })),
+      query: encodeURIComponent(JSON.stringify({ uri: uri })),
     }),
 };
 
@@ -58,7 +58,7 @@ const feature: FoamFeature = {
                 return;
               }
 
-              const target = URI.resolve(uri.path, basedir);
+              const target = basedir.resolve(uri.path);
 
               await NoteFactory.createForPlaceholderWikilink(title, target);
               return;

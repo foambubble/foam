@@ -1,5 +1,5 @@
 import { URI } from '../core/model/uri';
-import { isAbsolute, getName, getBasename } from '../core/utils/path';
+import { isAbsolute } from '../core/utils/path';
 import { existsSync } from 'fs';
 import { TextEncoder } from 'util';
 import { SnippetString, ViewColumn, window, workspace } from 'vscode';
@@ -18,24 +18,19 @@ import { Resolver } from './variable-resolver';
 /**
  * The templates directory
  */
-export const TEMPLATES_DIR = URI.joinPaths(
-  fromVsCodeUri(workspace.workspaceFolders[0].uri),
-  '.foam',
-  'templates'
-);
+export const TEMPLATES_DIR = fromVsCodeUri(
+  workspace.workspaceFolders[0].uri
+).joinPath('.foam', 'templates');
 
 /**
  * The URI of the default template
  */
-export const DEFAULT_TEMPLATE_URI = URI.joinPaths(TEMPLATES_DIR, 'new-note.md');
+export const DEFAULT_TEMPLATE_URI = TEMPLATES_DIR.joinPath('new-note.md');
 
 /**
  * The URI of the template for daily notes
  */
-export const DAILY_NOTE_TEMPLATE_URI = URI.joinPaths(
-  TEMPLATES_DIR,
-  'daily-note.md'
-);
+export const DAILY_NOTE_TEMPLATE_URI = TEMPLATES_DIR.joinPath('daily-note.md');
 
 const WIKILINK_DEFAULT_TEMPLATE_TEXT = `# $\{1:$FOAM_TITLE}\n\n$0`;
 
@@ -90,7 +85,7 @@ export const NoteFactory = {
     filepathFallbackURI?: URI,
     templateFallbackText: string = ''
   ): Promise<void> => {
-    const templateText = existsSync(URI.toFsPath(templateUri))
+    const templateText = existsSync(templateUri.toFsPath())
       ? await workspace.fs
           .readFile(toVsCodeUri(templateUri))
           .then(bytes => bytes.toString())
@@ -125,8 +120,8 @@ export const NoteFactory = {
       resolver
     );
 
-    if (existsSync(URI.toFsPath(filepath))) {
-      const filename = getBasename(filepath.path);
+    if (existsSync(filepath.toFsPath())) {
+      const filename = filepath.getBasename();
       const newFilepath = await askUserForFilepathConfirmation(
         filepath,
         filename
@@ -145,7 +140,7 @@ export const NoteFactory = {
     );
 
     if (selectedContent !== undefined) {
-      const newNoteTitle = getName(filepath.path);
+      const newNoteTitle = filepath.getName();
 
       await replaceSelection(
         selectedContent.document,
@@ -203,8 +198,8 @@ export const NoteFactory = {
 
 export const createTemplate = async (): Promise<void> => {
   const defaultFilename = 'new-template.md';
-  const defaultTemplate = URI.joinPaths(TEMPLATES_DIR, defaultFilename);
-  const fsPath = URI.toFsPath(defaultTemplate);
+  const defaultTemplate = TEMPLATES_DIR.joinPath(defaultFilename);
+  const fsPath = defaultTemplate.toFsPath();
   const filename = await window.showInputBox({
     prompt: `Enter the filename for the new template`,
     value: fsPath,
@@ -232,7 +227,7 @@ async function askUserForFilepathConfirmation(
   defaultFilepath: URI,
   defaultFilename: string
 ) {
-  const fsPath = URI.toFsPath(defaultFilepath);
+  const fsPath = defaultFilepath.toFsPath();
   return await window.showInputBox({
     prompt: `Enter the filename for the new note`,
     value: fsPath,
@@ -254,10 +249,9 @@ export async function determineNewNoteFilepath(
   if (templateFilepathAttribute) {
     let defaultFilepath = URI.file(templateFilepathAttribute);
     if (!isAbsolute(templateFilepathAttribute)) {
-      defaultFilepath = URI.joinPaths(
-        fromVsCodeUri(workspace.workspaceFolders[0].uri),
-        templateFilepathAttribute
-      );
+      defaultFilepath = fromVsCodeUri(
+        workspace.workspaceFolders[0].uri
+      ).joinPath(templateFilepathAttribute);
     }
     return defaultFilepath;
   }
@@ -267,8 +261,7 @@ export async function determineNewNoteFilepath(
   }
 
   const defaultName = await resolver.resolve('FOAM_TITLE');
-  const defaultFilepath = URI.joinPaths(
-    getCurrentEditorDirectory(),
+  const defaultFilepath = getCurrentEditorDirectory().joinPath(
     `${defaultName}.md`
   );
   return defaultFilepath;

@@ -1,8 +1,6 @@
 import * as vscode from 'vscode';
 import path from 'path';
 import { FoamFeature } from '../types';
-import { URI } from '../core/model/uri';
-import { getBasename } from '../core/utils/path';
 import { TextDecoder } from 'util';
 import { getGraphStyle, getTitleMaxLength } from '../settings';
 import { isSome } from '../utils';
@@ -78,7 +76,7 @@ function generateGraphData(foam: Foam) {
 
   foam.workspace.list().forEach(n => {
     const type = n.type === 'note' ? n.properties.type ?? 'note' : n.type;
-    const title = n.type === 'note' ? n.title : getBasename(n.uri.path);
+    const title = n.type === 'note' ? n.title : n.uri.getBasename();
     graph.nodeInfo[n.uri.path] = {
       id: n.uri.path,
       type: type,
@@ -93,7 +91,7 @@ function generateGraphData(foam: Foam) {
       source: c.source.path,
       target: c.target.path,
     });
-    if (URI.isPlaceholder(c.target)) {
+    if (c.target.isPlaceholder()) {
       graph.nodeInfo[c.target.path] = {
         id: c.target.path,
         type: 'placeholder',

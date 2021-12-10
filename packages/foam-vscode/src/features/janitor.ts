@@ -7,7 +7,6 @@ import {
 } from 'vscode';
 import * as fs from 'fs';
 import { FoamFeature } from '../types';
-import { URI } from '../core/model/uri';
 
 import {
   getWikilinkDefinitionSetting,
@@ -18,7 +17,6 @@ import { Foam } from '../core/model/foam';
 import { Resource } from '../core/model/note';
 import { generateHeading, generateLinkReferences } from '../core/janitor';
 import { Range } from '../core/model/range';
-import { getExtension } from '../core/utils/path';
 import { applyTextEdit } from '../core/janitor/apply-text-edit';
 
 const feature: FoamFeature = {
@@ -70,7 +68,7 @@ async function janitor(foam: Foam) {
 async function runJanitor(foam: Foam) {
   const notes: Resource[] = foam.workspace
     .list()
-    .filter(r => getExtension(r.uri.path) === '.md');
+    .filter(r => r.uri.isMarkdown());
 
   let updatedHeadingCount = 0;
   let updatedDefinitionListCount = 0;
@@ -87,11 +85,11 @@ async function runJanitor(foam: Foam) {
   );
 
   const dirtyNotes = notes.filter(note =>
-    dirtyEditorsFileName.includes(URI.toFsPath(note.uri))
+    dirtyEditorsFileName.includes(note.uri.toFsPath())
   );
 
   const nonDirtyNotes = notes.filter(
-    note => !dirtyEditorsFileName.includes(URI.toFsPath(note.uri))
+    note => !dirtyEditorsFileName.includes(note.uri.toFsPath())
   );
 
   const wikilinkSetting = getWikilinkDefinitionSetting();
@@ -127,7 +125,7 @@ async function runJanitor(foam: Foam) {
     text = definitions ? applyTextEdit(text, definitions) : text;
     text = heading ? applyTextEdit(text, heading) : text;
 
-    return fs.promises.writeFile(URI.toFsPath(note.uri), text);
+    return fs.promises.writeFile(note.uri.toFsPath(), text);
   });
 
   await Promise.all(fileWritePromises);
@@ -137,7 +135,7 @@ async function runJanitor(foam: Foam) {
   for (const doc of dirtyTextDocuments) {
     const editor = await window.showTextDocument(doc);
     const note = dirtyNotes.find(
-      n => URI.toFsPath(n.uri) === editor.document.uri.fsPath
+      n => n.uri.toFsPath() === editor.document.uri.fsPath
     )!;
 
     // Get edits

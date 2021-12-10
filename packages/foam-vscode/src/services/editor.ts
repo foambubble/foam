@@ -1,5 +1,4 @@
 import { URI } from '../core/model/uri';
-import { getDir } from '../core/utils/path';
 import { TextEncoder } from 'util';
 import {
   Selection,
@@ -76,7 +75,7 @@ export function getCurrentEditorDirectory(): URI {
   const uri = window.activeTextEditor?.document?.uri;
 
   if (isSome(uri)) {
-    return URI.file(getDir(fromVsCodeUri(uri).path));
+    return URI.file(fromVsCodeUri(uri).getDirectory());
   }
 
   if (workspace.workspaceFolders.length > 0) {

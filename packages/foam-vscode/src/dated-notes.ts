@@ -51,10 +51,9 @@ export function getDailyNotePath(
   const dailyNoteFilename = getDailyNoteFileName(configuration, date);
 
   if (isAbsolute(dailyNoteDirectory.path)) {
-    return URI.joinPaths(dailyNoteDirectory, dailyNoteFilename);
+    return dailyNoteDirectory.joinPath(dailyNoteFilename);
   } else {
-    return URI.joinPaths(
-      fromVsCodeUri(workspace.workspaceFolders[0].uri),
+    return fromVsCodeUri(workspace.workspaceFolders[0].uri).joinPath(
       dailyNoteDirectory.path,
       dailyNoteFilename
     );
@@ -102,7 +101,7 @@ export async function createDailyNoteIfNotExists(
   dailyNotePath: URI,
   targetDate: Date
 ) {
-  if (await existsInFs(URI.toFsPath(dailyNotePath))) {
+  if (await existsInFs(dailyNotePath.toFsPath())) {
     return false;
   }
 

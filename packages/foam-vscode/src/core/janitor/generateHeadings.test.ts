@@ -4,11 +4,9 @@ import { MarkdownResourceProvider } from '../markdown-provider';
 import { bootstrap } from '../model/foam';
 import { Resource } from '../model/note';
 import { Range } from '../model/range';
-import { URI } from '../model/uri';
 import { FoamWorkspace } from '../model/workspace';
 import { FileDataStore, Matcher } from '../services/datastore';
 import { Logger } from '../utils/log';
-import { getName } from '../utils/path';
 
 Logger.setLevel('error');
 
@@ -17,11 +15,11 @@ describe('generateHeadings', () => {
   const findBySlug = (slug: string): Resource => {
     return _workspace
       .list()
-      .find(res => getName(res.uri.path) === slug) as Resource;
+      .find(res => res.uri.getName() === slug) as Resource;
   };
 
   beforeAll(async () => {
-    const matcher = new Matcher([URI.joinPaths(TEST_DATA_DIR, '__scaffold__')]);
+    const matcher = new Matcher([TEST_DATA_DIR.joinPath('__scaffold__')]);
     const mdProvider = new MarkdownResourceProvider(matcher);
     const foam = await bootstrap(matcher, new FileDataStore(), [mdProvider]);
     _workspace = foam.workspace;

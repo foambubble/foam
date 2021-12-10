@@ -1,19 +1,12 @@
+import { CharCode } from '../common/charCode';
 import { posix } from 'path';
 import { promises, constants } from 'fs';
-
-export function isIdentifier(uriPath: string): boolean {
-  return !(
-    uriPath.startsWith('/') ||
-    uriPath.startsWith('./') ||
-    uriPath.startsWith('../')
-  );
-}
 
 export function isAbsolute(uriPath: string): boolean {
   return uriPath.startsWith('/');
 }
 
-export function relativeTo(baseUriPath: string, uriPath: string): string {
+export function relativeTo(uriPath: string, baseUriPath: string): string {
   return posix.relative(posix.dirname(baseUriPath), uriPath);
 }
 
@@ -34,11 +27,11 @@ export function getName(uriPath: string): string {
   return removeExtension(getBasename(uriPath));
 }
 
-export function getDir(uriPath: string): string {
+export function getDirectory(uriPath: string): string {
   return posix.dirname(uriPath);
 }
 
-export function joinPaths(baseUriPath: string, ...uriPaths: string[]): string {
+export function joinPath(baseUriPath: string, ...uriPaths: string[]): string {
   return posix.join(baseUriPath, ...uriPaths);
 }
 
@@ -81,8 +74,62 @@ export function toFsPath(uriPath: string): string {
   return uriPath;
 }
 
+export function isIdentifier(path: string): boolean {
+  return !(
+    path.startsWith('/') ||
+    path.startsWith('./') ||
+    path.startsWith('../')
+  );
+}
+
+/**
+ * Returns the minimal identifier for the given string amongst others
+ *
+ * @param uriPath the value to compute the identifier for
+ * @param amongstUriPaths the set of strings within which to find the identifier
+ */
+export function getShortestIdentifier(
+  uriPath: string,
+  amongstUriPaths: string[]
+): string {
+  const needleTokens = uriPath.split('/').reverse();
+  const haystack = amongstUriPaths
+    .filter(value => value !== uriPath)
+    .map(value => value.split('/').reverse());
+
+  let tokenIndex = 0;
+  let res = needleTokens;
+  while (tokenIndex < needleTokens.length) {
+    for (let j = haystack.length - 1; j >= 0; j--) {
+      if (
+        haystack[j].length < tokenIndex ||
+        needleTokens[tokenIndex] !== haystack[j][tokenIndex]
+      ) {
+        haystack.splice(j, 1);
+      }
+    }
+    if (haystack.length === 0) {
+      res = needleTokens.splice(0, tokenIndex + 1);
+      break;
+    }
+    tokenIndex++;
+  }
+  const identifier = res
+    .filter(token => token.trim() !== '')
+    .reverse()
+    .join('/');
+
+  return identifier;
+}
+
 function hasDrive(path: string, idx: number): boolean {
+  if (path.length <= idx) {
+    return false;
+  }
+  const c = path.charCodeAt(idx);
   return (
-    path.length > idx && path[idx].match(/[a-zA-Z]/) && path[idx + 1] === ':'
+    ((c >= CharCode.A && c <= CharCode.Z) ||
+      (c >= CharCode.a && c <= CharCode.z)) &&
+    path.charCodeAt(idx + 1) === CharCode.Colon
   );
 }

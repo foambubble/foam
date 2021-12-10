@@ -5,14 +5,14 @@ import { FileDataStore, Matcher, toMatcherPathFormat } from './datastore';
 
 Logger.setLevel('error');
 
-const testFolder = URI.joinPaths(TEST_DATA_DIR, 'test-datastore');
+const testFolder = TEST_DATA_DIR.joinPath('test-datastore');
 
 describe('Matcher', () => {
   it('generates globs with the base dir provided', () => {
     const matcher = new Matcher([testFolder], ['*'], []);
     expect(matcher.folders).toEqual([toMatcherPathFormat(testFolder)]);
     expect(matcher.include).toEqual([
-      toMatcherPathFormat(URI.joinPaths(testFolder, '*')),
+      toMatcherPathFormat(testFolder.joinPath('*')),
     ]);
   });
 
@@ -20,7 +20,7 @@ describe('Matcher', () => {
     const matcher = new Matcher([testFolder]);
     expect(matcher.exclude).toEqual([]);
     expect(matcher.include).toEqual([
-      toMatcherPathFormat(URI.joinPaths(testFolder, '**', '*')),
+      toMatcherPathFormat(testFolder.joinPath('**', '*')),
     ]);
   });
 
@@ -28,32 +28,32 @@ describe('Matcher', () => {
     const matcher = new Matcher([testFolder], ['g1', 'g2'], []);
     expect(matcher.exclude).toEqual([]);
     expect(matcher.include).toEqual([
-      toMatcherPathFormat(URI.joinPaths(testFolder, 'g1')),
-      toMatcherPathFormat(URI.joinPaths(testFolder, 'g2')),
+      toMatcherPathFormat(testFolder.joinPath('g1')),
+      toMatcherPathFormat(testFolder.joinPath('g2')),
     ]);
   });
 
   it('has a match method to filter strings', () => {
     const matcher = new Matcher([testFolder], ['*.md'], []);
     const files = [
-      URI.joinPaths(testFolder, 'file1.md'),
-      URI.joinPaths(testFolder, 'file2.md'),
-      URI.joinPaths(testFolder, 'file3.mdx'),
-      URI.joinPaths(testFolder, 'sub', 'file4.md'),
+      testFolder.joinPath('file1.md'),
+      testFolder.joinPath('file2.md'),
+      testFolder.joinPath('file3.mdx'),
+      testFolder.joinPath('sub', 'file4.md'),
     ];
     expect(matcher.match(files)).toEqual([
-      URI.joinPaths(testFolder, 'file1.md'),
-      URI.joinPaths(testFolder, 'file2.md'),
+      testFolder.joinPath('file1.md'),
+      testFolder.joinPath('file2.md'),
     ]);
   });
 
   it('has a isMatch method to see whether a file is matched or not', () => {
     const matcher = new Matcher([testFolder], ['*.md'], []);
     const files = [
-      URI.joinPaths(testFolder, 'file1.md'),
-      URI.joinPaths(testFolder, 'file2.md'),
-      URI.joinPaths(testFolder, 'file3.mdx'),
-      URI.joinPaths(testFolder, 'sub', 'file4.md'),
+      testFolder.joinPath('file1.md'),
+      testFolder.joinPath('file2.md'),
+      testFolder.joinPath('file3.mdx'),
+      testFolder.joinPath('sub', 'file4.md'),
     ];
     expect(matcher.isMatch(files[0])).toEqual(true);
     expect(matcher.isMatch(files[1])).toEqual(true);
@@ -72,10 +72,10 @@ describe('Matcher', () => {
   it('ignores files in the exclude list', () => {
     const matcher = new Matcher([testFolder], ['*.md'], ['file1.*']);
     const files = [
-      URI.joinPaths(testFolder, 'file1.md'),
-      URI.joinPaths(testFolder, 'file2.md'),
-      URI.joinPaths(testFolder, 'file3.mdx'),
-      URI.joinPaths(testFolder, 'sub', 'file4.md'),
+      testFolder.joinPath('file1.md'),
+      testFolder.joinPath('file2.md'),
+      testFolder.joinPath('file3.mdx'),
+      testFolder.joinPath('sub', 'file4.md'),
     ];
     expect(matcher.isMatch(files[0])).toEqual(false);
     expect(matcher.isMatch(files[1])).toEqual(true);

@@ -9,7 +9,6 @@ import { getContainsTooltip, getNoteTooltip, isSome } from '../utils';
 import { OPEN_COMMAND } from '../features/utility-commands';
 import { toVsCodeUri } from './vsc-utils';
 import { URI } from '../core/model/uri';
-import { getName } from '../core/utils/path';
 import { Resource } from '../core/model/note';
 import { FoamWorkspace } from '../core/model/workspace';
 
@@ -169,7 +168,7 @@ export class GroupedResourcesTreeDataProvider
   }
 
   private isMatch(uri: URI) {
-    return micromatch.isMatch(URI.toFsPath(uri), this.exclude);
+    return micromatch.isMatch(uri.toFsPath(), this.exclude);
   }
 
   private getGlobs(fsURI: URI[], globs: string[]): string[] {
@@ -217,7 +216,7 @@ export class UriTreeItem extends vscode.TreeItem {
       title?: string;
     } = {}
   ) {
-    super(options?.title ?? getName(uri.path), options.collapsibleState);
+    super(options?.title ?? uri.getName(), options.collapsibleState);
     this.description = uri.path.replace(
       vscode.workspace.getWorkspaceFolder(toVsCodeUri(uri))?.uri.path,
       ''

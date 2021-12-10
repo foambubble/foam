@@ -1,12 +1,13 @@
 import { Resource, ResourceLink } from './note';
 import { URI } from './uri';
 import {
-  isIdentifier,
   isAbsolute,
+  isIdentifier,
+  getShortestIdentifier,
   getExtension,
   removeExtension,
 } from '../utils/path';
-import { isSome, getShortestIdentifier } from '../utils';
+import { isSome } from '../utils';
 import { Emitter } from '../common/event';
 import { ResourceProvider } from './provider';
 import { IDisposable } from '../common/lifecycle';
@@ -65,7 +66,7 @@ export class FoamWorkspace implements IDisposable {
     }
   }
 
-  public findByIdentifier(identifier: string): Resource[] {
+  public listByIdentifier(identifier: string): Resource[] {
     let needle = '/' + identifier;
     if (!getExtension(needle)) {
       needle = needle + '.md';
@@ -87,11 +88,11 @@ export class FoamWorkspace implements IDisposable {
    */
   public getIdentifier(forResource: URI): string {
     const amongst = [];
-    const base = forResource.path.split('/').pop();
+    const basename = forResource.getBasename();
     for (const res of this.resources.values()) {
       // Just a quick optimization to only add the elements that might match
-      if (res.uri.path.endsWith(base)) {
-        if (!URI.isEqual(res.uri, forResource)) {
+      if (res.uri.path.endsWith(basename)) {
+        if (!res.uri.isEqual(forResource)) {
           amongst.push(res.uri);
         }
       }
@@ -110,22 +111,22 @@ export class FoamWorkspace implements IDisposable {
   }
 
   public find(reference: URI | string, baseUri?: URI): Resource | null {
-    if (URI.isUri(reference)) {
+    if (reference instanceof URI) {
       return this.resources.get(normalize((reference as URI).path)) ?? null;
     }
     let resource: Resource | null = null;
     let [path, fragment] = (reference as string).split('#');
     if (isIdentifier(path)) {
-      resource = this.findByIdentifier(path)[0];
+      resource = this.listByIdentifier(path)[0];
     } else {
       if (isAbsolute(path) || isSome(baseUri)) {
         path = getExtension(path) ? path : path + '.md';
-        const uri = URI.resolve(path, baseUri);
+        const uri = baseUri.resolve(path);
         resource = uri ? this.resources.get(normalize(uri.path)) : null;
       }
     }
     if (resource && fragment) {
-      resource = { ...resource, uri: URI.withFragment(resource.uri, fragment) };
+      resource = { ...resource, uri: resource.uri.withFragment(fragment) };
     }
     return resource ?? null;
   }

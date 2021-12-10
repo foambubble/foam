@@ -29,7 +29,7 @@ const feature: FoamFeature = {
       workspacesURIs,
       () => foam.graph.getAllNodes().filter(uri => isOrphan(uri, foam.graph)),
       uri => {
-        if (URI.isPlaceholder(uri)) {
+        if (uri.isPlaceholder()) {
           return new UriTreeItem(uri);
         }
         const resource = foam.workspace.find(uri);

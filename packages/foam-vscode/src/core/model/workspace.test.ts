@@ -58,7 +58,7 @@ describe('Workspace resources', () => {
     const ws = createTestWorkspace()
       .set(createTestNote({ uri: 'test-file.md' }))
       .set(createTestNote({ uri: 'file.md' }));
-    expect(ws.findByIdentifier('file').length).toEqual(1);
+    expect(ws.listByIdentifier('file').length).toEqual(1);
   });
 
   it('should include fragment when finding resource URI', () => {
@@ -180,9 +180,9 @@ describe('Identifier computation', () => {
       .set(second)
       .set(third);
 
-    expect(
-      ws.getIdentifier(URI.withFragment(first.uri, 'section name'))
-    ).toEqual('to/page-a#section name');
+    expect(ws.getIdentifier(first.uri.withFragment('section name'))).toEqual(
+      'to/page-a#section name'
+    );
   });
 });
 

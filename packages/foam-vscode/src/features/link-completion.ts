@@ -3,13 +3,12 @@ import { Foam } from '../core/model/foam';
 import { FoamGraph } from '../core/model/graph';
 import { URI } from '../core/model/uri';
 import { FoamWorkspace } from '../core/model/workspace';
-import { getName } from '../core/utils/path';
 import { FoamFeature } from '../types';
 import { getNoteTooltip, mdDocSelector } from '../utils';
 import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
 
-export const WIKILINK_REGEX = /\[\[[^\[\]]*(?!.*\]\])/;
-export const SECTION_REGEX = /\[\[([^\[\]]*#(?!.*\]\]))/;
+export const WIKILINK_REGEX = /\[\[[^[\]]*(?!.*\]\])/;
+export const SECTION_REGEX = /\[\[([^[\]]*#(?!.*\]\]))/;
 
 const feature: FoamFeature = {
   activate: async (
@@ -62,7 +61,7 @@ export class SectionCompletionProvider
         return new ResourceCompletionItem(
           b.label,
           vscode.CompletionItemKind.Text,
-          URI.withFragment(resource.uri, b.label)
+          resource.uri.withFragment(b.label)
         );
       });
       return new vscode.CompletionList(items);
@@ -110,7 +109,7 @@ export class CompletionProvider
         vscode.CompletionItemKind.File,
         resource.uri
       );
-      item.filterText = getName(resource.uri.path);
+      item.filterText = resource.uri.getName();
       item.insertText = this.ws.getIdentifier(resource.uri);
       item.commitCharacters = ['#'];
       return item;

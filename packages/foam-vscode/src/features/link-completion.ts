@@ -56,13 +56,22 @@ export class SectionCompletionProvider
       match[1] === '#' ? fromVsCodeUri(document.uri) : match[1].slice(0, -1);
 
     const resource = this.ws.find(resourceId);
+    const replacementRange = new vscode.Range(
+      position.line,
+      cursorPrefix.lastIndexOf('#') + 1,
+      position.line,
+      position.character
+    );
     if (resource) {
       const items = resource.sections.map(b => {
-        return new ResourceCompletionItem(
+        const item = new ResourceCompletionItem(
           b.label,
           vscode.CompletionItemKind.Text,
           URI.withFragment(resource.uri, b.label)
         );
+        item.sortText = String(b.range.start.line).padStart(5, '0');
+        item.range = replacementRange;
+        return item;
       });
       return new vscode.CompletionList(items);
     }
@@ -98,10 +107,17 @@ export class CompletionProvider
     // eslint-disable-next-line no-useless-escape
     const requiresAutocomplete = cursorPrefix.match(WIKILINK_REGEX);
 
-    if (!requiresAutocomplete) {
+    if (!requiresAutocomplete || cursorPrefix.indexOf('#') >= 0) {
       return null;
     }
 
+    const text = requiresAutocomplete[0];
+    const replacementRange = new vscode.Range(
+      position.line,
+      position.character - (text.length - 2),
+      position.line,
+      position.character
+    );
     const resources = this.ws.list().map(resource => {
       const label = vscode.workspace.asRelativePath(toVsCodeUri(resource.uri));
       const item = new ResourceCompletionItem(
@@ -111,6 +127,7 @@ export class CompletionProvider
       );
       item.filterText = URI.getBasename(resource.uri);
       item.insertText = this.ws.getIdentifier(resource.uri);
+      item.range = replacementRange;
       item.commitCharacters = ['#'];
       return item;
     });
@@ -121,6 +138,7 @@ export class CompletionProvider
           vscode.CompletionItemKind.Interface
         );
         item.insertText = uri.path;
+        item.range = replacementRange;
         return item;
       }
     );

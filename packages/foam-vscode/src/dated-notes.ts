@@ -25,7 +25,12 @@ export async function openDailyNoteFor(date?: Date) {
     dailyNotePath,
     currentDate
   );
-  await focusNote(dailyNotePath, isNew);
+  // if a new file is created, the editor is automatically created
+  // but forcing the focus will block the template placeholders from working
+  // so we only explicitly focus on the note if the file already exists
+  if (!isNew) {
+    await focusNote(dailyNotePath, isNew);
+  }
 }
 
 /**

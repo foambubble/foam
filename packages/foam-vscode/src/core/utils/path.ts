@@ -2,20 +2,40 @@ import { CharCode } from '../common/charCode';
 import { posix } from 'path';
 import { promises, constants } from 'fs';
 
-export function asPath(value: string): [string, string] {
+/**
+ * Converts a supported filesystem-specific path to a POSIX path.
+ *
+ * Supported input representations are:
+ *   - A Windows path starting with a drive letter.
+ *   - A UNC path for a shared file.
+ *   - A POSIX path.
+ *
+ * Most functions in this module expect a POSIX path.
+ *
+ * @param path A supported filesystem-specific path.
+ * @returns [path, authority] where path is a POSIX representation for the
+ *    given input and authority is null except for UNC paths.
+ */
+export function fromFsPath(path: string): [string, string] {
   let authority: string;
-  if (isUNCShare(value)) {
-    [value, authority] = parseUNCShare(value);
+  if (isUNCShare(path)) {
+    [path, authority] = parseUNCShare(path);
   }
-  if (value[0] === '/' && hasDrive(value, 1)) {
-    value = '/' + value[1].toUpperCase() + value.substr(2);
+  if (hasDrive(path, 0)) {
+    path = '/' + path[0].toUpperCase() + path.substr(1).replace(/\\/g, '/');
+  } else if (path[0] === '/' && hasDrive(path, 1)) {
+    path = '/' + path[1].toUpperCase() + path.substr(2);
   }
-  if (hasDrive(value, 0)) {
-    value = '/' + value[0].toUpperCase() + value.substr(1).replace(/\\/g, '/');
-  }
-  return [value, authority];
+  return [path, authority];
 }
 
+/**
+ * Converts a POSIX path to a filesystem-specific path.
+ *
+ * @param path A POSIX path.
+ * @param authority An optional authority used to build UNC paths.
+ * @returns A filesystem-specific representation of the given POSIX path.
+ */
 export function toFsPath(path: string, authority?: string): string {
   if (path[0] === '/' && hasDrive(path, 1)) {
     path = path.substr(1).replace(/\//g, '\\');
@@ -26,26 +46,71 @@ export function toFsPath(path: string, authority?: string): string {
   return path;
 }
 
+/**
+ * Extracts the containing directory of a POSIX path, e.g.
+ *    - /d1/d2/f.ext -> /d1/d2
+ *    - /d1/d2 -> /d1
+ *
+ * @param path A POSIX path.
+ * @returns true is the path is absolute, false otherwise.
+ */
 export function isAbsolute(path: string): boolean {
-  return path.startsWith('/');
+  return posix.isAbsolute(path);
 }
 
+/**
+ * Extracts the containing directory of a POSIX path, e.g.
+ *    - /d1/d2/f.ext -> /d1/d2
+ *    - /d1/d2 -> /d1
+ *
+ * @param path A POSIX path.
+ * @returns The containing directory of the given path.
+ */
 export function getDirectory(path: string): string {
   return posix.dirname(path);
 }
 
+/**
+ * Extracts the basename of a POSIX path, e.g. /d/f.ext -> f.ext.
+ *
+ * @param path A POSIX path.
+ * @returns The basename of the given path.
+ */
 export function getBasename(path: string): string {
   return posix.basename(path);
 }
 
+/**
+ * Extracts the name of a POSIX path, e.g. /d/f.ext -> f.
+ *
+ * @param path A POSIX path.
+ * @returns The name of the given path.
+ */
 export function getName(path: string): string {
   return changeExtension(getBasename(path), '*', '');
 }
 
+/**
+ * Extracts the extension of a POSIX path, e.g.
+ *    - /d/f.ext -> .ext
+ *    - /d/f.g.ext -> .ext
+ *    - /d/f -> ''
+ *
+ * @param path A POSIX path.
+ * @returns The extension of the given path.
+ */
 export function getExtension(path: string): string {
   return posix.extname(path);
 }
 
+/**
+ * Changes a POSIX path matching some extension to have another extension.
+ *
+ * @param path A POSIX path.
+ * @param from The required current extension, or '*' to match any extension.
+ * @param to The target extension.
+ * @returns A POSIX path with its extension possibly changed.
+ */
 export function changeExtension(
   path: string,
   from: string,
@@ -59,14 +124,37 @@ export function changeExtension(
   return path;
 }
 
-export function joinPath(basePath: string, ...paths: string[]): string {
-  return posix.join(basePath, ...paths);
+/**
+ * Joins a number of POSIX paths into a single POSIX path, e.g.
+ *    - /d1, d2, f.ext -> /d1/d2/f.ext
+ *    - /d1/d2, .., f.ext -> /d1/f.ext
+ *
+ * @param paths A variable number of POSIX paths.
+ * @returns A POSIX path built from the given POSIX paths.
+ */
+export function joinPath(...paths: string[]): string {
+  return posix.join(...paths);
 }
 
+/**
+ * Makes a POSIX path relative to another POSIX path, e.g.
+ *    - /d1/d2 relative to /d1 -> d2
+ *    - /d1/d2 relative to /d1/d3 -> ../d2
+ *
+ * @param path The POSIX path to be made relative.
+ * @param basePath The POSIX base path.
+ * @returns A POSIX path relative to the base path.
+ */
 export function relativeTo(path: string, basePath: string): string {
   return posix.relative(basePath, path);
 }
 
+/**
+ * Asynchronously checks if there is an accessible file for a path.
+ *
+ * @param fsPath A filesystem-specific path.
+ * @returns true if an accesible file exists, false otherwise.
+ */
 export async function existsInFs(fsPath: string) {
   try {
     await promises.access(fsPath, constants.F_OK);

@@ -51,14 +51,14 @@ export class URI {
     return new URI({
       scheme: match[2] || 'file',
       authority: percentDecode(match[4] ?? _empty),
-      path: pathUtils.asPath(percentDecode(match[5] ?? _empty))[0],
+      path: pathUtils.fromFsPath(percentDecode(match[5] ?? _empty))[0],
       query: percentDecode(match[7] ?? _empty),
       fragment: percentDecode(match[9] ?? _empty),
     });
   }
 
   static file(value: string): URI {
-    let [path, authority] = pathUtils.asPath(value);
+    let [path, authority] = pathUtils.fromFsPath(value);
     return new URI({ scheme: 'file', authority, path });
   }
 

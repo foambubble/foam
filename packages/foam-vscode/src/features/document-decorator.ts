@@ -32,7 +32,11 @@ const updateDecorations = (
   parser: ResourceParser,
   workspace: FoamWorkspace
 ) => (editor: vscode.TextEditor) => {
-  if (!editor || !areDecorationsEnabled()) {
+  if (
+    !editor ||
+    !areDecorationsEnabled() ||
+    editor.document.languageId !== 'markdown'
+  ) {
     return;
   }
   const note = parser.parse(

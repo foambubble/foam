@@ -3,45 +3,43 @@ import { posix } from 'path';
 import { promises, constants } from 'fs';
 
 /**
- * Converts a supported filesystem-specific path to a POSIX path.
+ * Converts filesystem path to POSIX path. Supported inputs are:
+ *   - Windows path starting with a drive letter, e.g. C:\dir\file.ext
+ *   - UNC path for a shared file, e.g. \\server\share\path\file.ext
+ *   - POSIX path, e.g. /dir/file.ext
  *
- * Supported input representations are:
- *   - A Windows path starting with a drive letter.
- *   - A UNC path for a shared file.
- *   - A POSIX path.
- *
- * Most functions in this module expect a POSIX path.
- *
- * @param path A supported filesystem-specific path.
+ * @param path A supported filesystem path.
  * @returns [path, authority] where path is a POSIX representation for the
- *    given input and authority is null except for UNC paths.
+ *     given input and authority is undefined except for UNC paths.
  */
 export function fromFsPath(path: string): [string, string] {
   let authority: string;
   if (isUNCShare(path)) {
     [path, authority] = parseUNCShare(path);
-  }
-  if (hasDrive(path, 0)) {
+    path = path.replace(/\\/g, '/');
+  } else if (hasDrive(path)) {
     path = '/' + path[0].toUpperCase() + path.substr(1).replace(/\\/g, '/');
   } else if (path[0] === '/' && hasDrive(path, 1)) {
+    // POSIX representation of a Windows path: just normalize drive letter case
     path = '/' + path[1].toUpperCase() + path.substr(2);
   }
   return [path, authority];
 }
 
 /**
- * Converts a POSIX path to a filesystem-specific path.
+ * Converts a POSIX path to a filesystem path.
  *
  * @param path A POSIX path.
- * @param authority An optional authority used to build UNC paths.
- * @returns A filesystem-specific representation of the given POSIX path.
+ * @param authority An optional authority used to build UNC paths. This only
+ *     makes sense for the Windows platform.
+ * @returns A platform-specific representation of the given POSIX path.
  */
 export function toFsPath(path: string, authority?: string): string {
   if (path[0] === '/' && hasDrive(path, 1)) {
     path = path.substr(1).replace(/\//g, '\\');
-  }
-  if (authority) {
-    path = `\\\\${authority}${path}`;
+    if (authority) {
+      path = `\\\\${authority}${path}`;
+    }
   }
   return path;
 }
@@ -52,7 +50,7 @@ export function toFsPath(path: string, authority?: string): string {
  *    - /d1/d2 -> /d1
  *
  * @param path A POSIX path.
- * @returns true is the path is absolute, false otherwise.
+ * @returns true if the path is absolute, false otherwise.
  */
 export function isAbsolute(path: string): boolean {
   return posix.isAbsolute(path);
@@ -164,20 +162,7 @@ export async function existsInFs(fsPath: string) {
   }
 }
 
-function isUNCShare(fsPath: string): boolean {
-  return fsPath.length >= 2 && fsPath[0] === '\\' && fsPath[1] === '\\';
-}
-
-function parseUNCShare(uncPath: string): [string, string] {
-  const idx = uncPath.indexOf('\\', 2);
-  if (idx === -1) {
-    return [uncPath.substring(2), '\\'];
-  } else {
-    return [uncPath.substring(2, idx), uncPath.substring(idx) || '\\'];
-  }
-}
-
-function hasDrive(path: string, idx: number): boolean {
+function hasDrive(path: string, idx = 0): boolean {
   if (path.length <= idx) {
     return false;
   }
@@ -187,4 +172,21 @@ function hasDrive(path: string, idx: number): boolean {
       (c >= CharCode.a && c <= CharCode.z)) &&
     path.charCodeAt(idx + 1) === CharCode.Colon
   );
+}
+
+function isUNCShare(fsPath: string): boolean {
+  return (
+    fsPath.length >= 2 &&
+    fsPath.charCodeAt(0) === CharCode.Backslash &&
+    fsPath.charCodeAt(1) === CharCode.Backslash
+  );
+}
+
+function parseUNCShare(uncPath: string): [string, string] {
+  const idx = uncPath.indexOf('\\', 2);
+  if (idx === -1) {
+    return [uncPath.substring(2), '\\'];
+  } else {
+    return [uncPath.substring(2, idx), uncPath.substring(idx) || '\\'];
+  }
 }

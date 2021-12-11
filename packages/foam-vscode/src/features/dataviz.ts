@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import path from 'path';
 import { FoamFeature } from '../types';
 import { TextDecoder } from 'util';
 import { getGraphStyle, getTitleMaxLength } from '../settings';
@@ -169,15 +168,17 @@ async function getWebviewContent(
   context: vscode.ExtensionContext,
   panel: vscode.WebviewPanel
 ) {
-  const datavizPath = [context.extensionPath, 'static', 'dataviz'];
+  const datavizPath = vscode.Uri.joinPath(
+    vscode.Uri.file(context.extensionPath),
+    'static',
+    'dataviz'
+  );
 
   const getWebviewUri = (fileName: string) =>
-    panel.webview.asWebviewUri(
-      vscode.Uri.file(path.join(...datavizPath, fileName))
-    );
+    panel.webview.asWebviewUri(vscode.Uri.joinPath(datavizPath, fileName));
 
   const indexHtml = await vscode.workspace.fs.readFile(
-    vscode.Uri.file(path.join(...datavizPath, 'index.html'))
+    vscode.Uri.joinPath(datavizPath, 'index.html')
   );
 
   // Replace the script paths with the appropriate webview URI.

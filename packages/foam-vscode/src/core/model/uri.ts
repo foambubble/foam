@@ -29,11 +29,11 @@ const _slash = '/';
 const _regexp = /^(([^:/?#]{2,}?):)?(\/\/([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?/;
 
 export class URI {
-  scheme: string;
-  authority: string;
-  path: string;
-  query: string;
-  fragment: string;
+  readonly scheme: string;
+  readonly authority: string;
+  readonly path: string;
+  readonly query: string;
+  readonly fragment: string;
 
   constructor(from: Partial<URI> = {}) {
     this.scheme = from.scheme ?? _empty;
@@ -68,15 +68,16 @@ export class URI {
 
   resolve(value: string | URI, isDirectory = false): URI {
     const uri = value instanceof URI ? value : URI.parse(value);
-    const isResolvable = uri.scheme === 'file' || uri.scheme === 'placeholder';
-    if (isResolvable && !uri.isAbsolute()) {
-      let newUri = this.withFragment(uri.fragment);
-      if (uri.path) {
-        newUri = (isDirectory ? newUri : newUri.getDirectory())
-          .joinPath(uri.path)
-          .changeExtension('', this.getExtension());
+    if (!uri.isAbsolute()) {
+      if (uri.scheme === 'file' || uri.scheme === 'placeholder') {
+        let newUri = this.withFragment(uri.fragment);
+        if (uri.path) {
+          newUri = (isDirectory ? newUri : newUri.getDirectory())
+            .joinPath(uri.path)
+            .changeExtension('', this.getExtension());
+        }
+        return newUri;
       }
-      return newUri;
     }
     return uri;
   }

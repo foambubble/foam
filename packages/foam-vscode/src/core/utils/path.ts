@@ -18,7 +18,7 @@ export function asPath(value: string): [string, string] {
 
 export function toFsPath(path: string, authority?: string): string {
   if (path[0] === '/' && hasDrive(path, 1)) {
-    path = path[1].toUpperCase() + path.substr(2).replace(/\//g, '\\');
+    path = path.substr(1).replace(/\//g, '\\');
   }
   if (authority) {
     path = `\\\\${authority}${path}`;

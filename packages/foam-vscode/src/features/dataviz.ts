@@ -169,15 +169,15 @@ async function getWebviewContent(
   context: vscode.ExtensionContext,
   panel: vscode.WebviewPanel
 ) {
-  const datavizPath = path.join(context.extensionPath, 'static', 'dataviz');
+  const datavizPath = [context.extensionPath, 'static', 'dataviz'];
 
   const getWebviewUri = (fileName: string) =>
     panel.webview.asWebviewUri(
-      vscode.Uri.file(path.join(datavizPath, fileName))
+      vscode.Uri.file(path.join(...datavizPath, fileName))
     );
 
   const indexHtml = await vscode.workspace.fs.readFile(
-    vscode.Uri.file(path.join(datavizPath, 'index.html'))
+    vscode.Uri.file(path.join(...datavizPath, 'index.html'))
   );
 
   // Replace the script paths with the appropriate webview URI.

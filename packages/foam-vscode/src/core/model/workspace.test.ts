@@ -1,28 +1,10 @@
-import { FoamWorkspace, getReferenceType } from './workspace';
+import { FoamWorkspace } from './workspace';
 import { FoamGraph } from './graph';
 import { Logger } from '../utils/log';
 import { URI } from './uri';
 import { createTestNote, createTestWorkspace } from '../../test/test-utils';
 
 Logger.setLevel('error');
-
-describe('Reference types', () => {
-  it('Detects absolute references', () => {
-    expect(getReferenceType('/hello')).toEqual('absolute-path');
-    expect(getReferenceType('/hello/there')).toEqual('absolute-path');
-  });
-  it('Detects relative references', () => {
-    expect(getReferenceType('../hello')).toEqual('relative-path');
-    expect(getReferenceType('./hello')).toEqual('relative-path');
-    expect(getReferenceType('./hello/there')).toEqual('relative-path');
-  });
-  it('Detects key references', () => {
-    expect(getReferenceType('hello')).toEqual('key');
-  });
-  it('Detects URIs', () => {
-    expect(getReferenceType(URI.file('/path/to/file.md'))).toEqual('uri');
-  });
-});
 
 describe('Workspace resources', () => {
   it('Adds notes to workspace', () => {
@@ -76,7 +58,7 @@ describe('Workspace resources', () => {
     const ws = createTestWorkspace()
       .set(createTestNote({ uri: 'test-file.md' }))
       .set(createTestNote({ uri: 'file.md' }));
-    expect(ws.listById('file').length).toEqual(1);
+    expect(ws.listByIdentifier('file').length).toEqual(1);
   });
 
   it('should include fragment when finding resource URI', () => {
@@ -198,9 +180,9 @@ describe('Identifier computation', () => {
       .set(second)
       .set(third);
 
-    expect(
-      ws.getIdentifier(URI.withFragment(first.uri, 'section name'))
-    ).toEqual('to/page-a#section name');
+    expect(ws.getIdentifier(first.uri.withFragment('section name'))).toEqual(
+      'to/page-a#section name'
+    );
   });
 });
 
@@ -422,7 +404,7 @@ describe('Wikilinks', () => {
   it('Allows for dendron-style wikilinks, including a dot', () => {
     const noteA = createTestNote({
       uri: '/path/to/page-a.md',
-      links: [{ slug: 'dendron.style' }],
+      links: [{ slug: 'dendron.style.md' }],
     });
     const noteB1 = createTestNote({ uri: '/path/to/another/dendron.style.md' });
 
@@ -967,5 +949,45 @@ describe('Monitoring of workspace state', () => {
     ).toBeFalsy();
     ws.dispose();
     graph.dispose();
+  });
+});
+
+describe('getShortestIdentifier', () => {
+  const needle = '/project/car/todo';
+
+  test.each([
+    [['/project/home/todo', '/other/todo', '/something/else'], 'car/todo'],
+    [['/family/car/todo', '/other/todo'], 'project/car/todo'],
+    [[], 'todo'],
+  ])('Find shortest identifier', (haystack, id) => {
+    expect(FoamWorkspace.getShortestIdentifier(needle, haystack)).toEqual(id);
+  });
+
+  it('should ignore same string in haystack', () => {
+    const haystack = [
+      needle,
+      '/project/home/todo',
+      '/other/todo',
+      '/something/else',
+    ];
+    const identifier = FoamWorkspace.getShortestIdentifier(needle, haystack);
+    expect(identifier).toEqual('car/todo');
+  });
+
+  it('should return best guess when no solution is possible', () => {
+    /**
+     * In this case there is no way to uniquely identify the element,
+     * our fallback is to just return the "least wrong" result, basically
+     * a full identifier
+     * This is an edge case that should never happen in a real repo
+     */
+    const haystack = [
+      '/parent/' + needle,
+      '/project/home/todo',
+      '/other/todo',
+      '/something/else',
+    ];
+    const identifier = FoamWorkspace.getShortestIdentifier(needle, haystack);
+    expect(identifier).toEqual('project/car/todo');
   });
 });

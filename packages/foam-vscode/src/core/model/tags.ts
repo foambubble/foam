@@ -68,7 +68,7 @@ export class FoamTags implements IDisposable {
       if (this.tags.has(tag)) {
         const remainingLocations = this.tags
           .get(tag)
-          ?.filter(uri => !URI.isEqual(uri, resource.uri));
+          ?.filter(uri => !uri.isEqual(resource.uri));
 
         if (remainingLocations && remainingLocations.length > 0) {
           this.tags.set(tag, remainingLocations);

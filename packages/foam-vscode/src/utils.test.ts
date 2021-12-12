@@ -1,10 +1,4 @@
-import { dropExtension, removeBrackets, toTitleCase } from './utils';
-
-describe('dropExtension', () => {
-  test('returns file name without extension', () => {
-    expect(dropExtension('file.md')).toEqual('file');
-  });
-});
+import { removeBrackets, toTitleCase } from './utils';
 
 describe('removeBrackets', () => {
   it('removes the brackets', () => {

@@ -103,7 +103,7 @@ describe('Wikilink diagnostics', () => {
     expect(items[0].severity).toEqual(vscode.DiagnosticSeverity.Warning);
     expect(
       items[0].relatedInformation.map(info => info.location.uri.path)
-    ).toEqual([fileA.uri.path, fileB.uri.path]);
+    ).toEqual([fileB.uri.path, fileA.uri.path]);
   });
 });
 

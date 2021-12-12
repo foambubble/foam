@@ -16,7 +16,7 @@ import { FoamWorkspace } from '../core/model/workspace';
  * Provides the ability to expose a TreeDataExplorerView in VSCode. This class will
  * iterate over each Resource in the FoamWorkspace, call the provided filter predicate, and
  * display the Resources.
- * 
+ *
  * **NOTE**: In order for this provider to correctly function, you must define the following command in the package.json file:
    * ```
    * foam-vscode.group-${providerId}-by-folder
@@ -168,7 +168,7 @@ export class GroupedResourcesTreeDataProvider
   }
 
   private isMatch(uri: URI) {
-    return micromatch.isMatch(URI.toFsPath(uri), this.exclude);
+    return micromatch.isMatch(uri.toFsPath(), this.exclude);
   }
 
   private getGlobs(fsURI: URI[], globs: string[]): string[] {
@@ -216,7 +216,7 @@ export class UriTreeItem extends vscode.TreeItem {
       title?: string;
     } = {}
   ) {
-    super(options?.title ?? URI.getBasename(uri), options.collapsibleState);
+    super(options?.title ?? uri.getName(), options.collapsibleState);
     this.description = uri.path.replace(
       vscode.workspace.getWorkspaceFolder(toVsCodeUri(uri))?.uri.path,
       ''

@@ -1,29 +1,10 @@
 import { Resource, ResourceLink } from './note';
 import { URI } from './uri';
-import { isSome, isNone, getShortestIdentifier } from '../utils';
+import { isAbsolute, getExtension, changeExtension } from '../utils/path';
+import { isSome } from '../utils';
 import { Emitter } from '../common/event';
 import { ResourceProvider } from './provider';
 import { IDisposable } from '../common/lifecycle';
-
-export function getReferenceType(
-  reference: URI | string
-): 'uri' | 'absolute-path' | 'relative-path' | 'key' {
-  if (URI.isUri(reference)) {
-    return 'uri';
-  }
-  if (reference.startsWith('/')) {
-    return 'absolute-path';
-  }
-  if (reference.startsWith('./') || reference.startsWith('../')) {
-    return 'relative-path';
-  }
-  return 'key';
-}
-
-function hasExtension(path: string): boolean {
-  const dotIdx = path.lastIndexOf('.');
-  return dotIdx > 0 && path.length - dotIdx <= 4;
-}
 
 export class FoamWorkspace implements IDisposable {
   private onDidAddEmitter = new Emitter<Resource>();
@@ -79,9 +60,9 @@ export class FoamWorkspace implements IDisposable {
     }
   }
 
-  public listById(resourceId: string): Resource[] {
-    let needle = '/' + resourceId;
-    if (!hasExtension(needle)) {
+  public listByIdentifier(identifier: string): Resource[] {
+    let needle = '/' + identifier;
+    if (!getExtension(needle)) {
       needle = needle + '.md';
     }
     needle = normalize(needle);
@@ -91,7 +72,7 @@ export class FoamWorkspace implements IDisposable {
         resources.push(this.resources.get(normalize(key)));
       }
     }
-    return resources;
+    return resources.sort((a, b) => a.uri.path.localeCompare(b.uri.path));
   }
 
   /**
@@ -101,85 +82,45 @@ export class FoamWorkspace implements IDisposable {
    */
   public getIdentifier(forResource: URI): string {
     const amongst = [];
-    const base = forResource.path.split('/').pop();
+    const basename = forResource.getBasename();
     for (const res of this.resources.values()) {
       // Just a quick optimization to only add the elements that might match
-      if (res.uri.path.endsWith(base)) {
-        if (!URI.isEqual(res.uri, forResource)) {
+      if (res.uri.path.endsWith(basename)) {
+        if (!res.uri.isEqual(forResource)) {
           amongst.push(res.uri);
         }
       }
     }
-    let identifier = getShortestIdentifier(
+    let identifier = FoamWorkspace.getShortestIdentifier(
       forResource.path,
       amongst.map(uri => uri.path)
     );
-
-    identifier = identifier.endsWith('.md')
-      ? identifier.slice(0, -3)
-      : identifier;
-
+    identifier = changeExtension(identifier, '.md', '');
     if (forResource.fragment) {
       identifier += `#${forResource.fragment}`;
     }
-
     return identifier;
   }
 
-  public find(resourceId: URI | string, reference?: URI): Resource | null {
-    const refType = getReferenceType(resourceId);
-    if (refType === 'uri') {
-      const uri = resourceId as URI;
-      return URI.isPlaceholder(uri)
-        ? null
-        : this.resources.get(normalize(uri.path)) ?? null;
+  public find(reference: URI | string, baseUri?: URI): Resource | null {
+    if (reference instanceof URI) {
+      return this.resources.get(normalize((reference as URI).path)) ?? null;
     }
-
-    const [target, fragment] = (resourceId as string).split('#');
     let resource: Resource | null = null;
-    switch (refType) {
-      case 'key':
-        const resources = this.listById(target);
-        const sorted = resources.sort((a, b) =>
-          a.uri.path.localeCompare(b.uri.path)
-        );
-        resource = sorted[0];
-        break;
-
-      case 'absolute-path':
-        if (!hasExtension(resourceId as string)) {
-          resourceId = resourceId + '.md';
-        }
-        const resourceUri = URI.file(resourceId as string);
-        resource = this.resources.get(normalize(resourceUri.path));
-        break;
-
-      case 'relative-path':
-        if (isNone(reference)) {
-          return null;
-        }
-        if (!hasExtension(resourceId as string)) {
-          resourceId = resourceId + '.md';
-        }
-        const relativePath = resourceId as string;
-        const targetUri = URI.computeRelativeURI(reference, relativePath);
-        resource = this.resources.get(normalize(targetUri.path));
-        break;
-
-      default:
-        throw new Error('Unexpected reference type: ' + refType);
+    let [path, fragment] = (reference as string).split('#');
+    if (FoamWorkspace.isIdentifier(path)) {
+      resource = this.listByIdentifier(path)[0];
+    } else {
+      if (isAbsolute(path) || isSome(baseUri)) {
+        path = getExtension(path) ? path : path + '.md';
+        const uri = baseUri.resolve(path);
+        resource = uri ? this.resources.get(normalize(uri.path)) : null;
+      }
     }
-
-    if (!resource) {
-      return null;
+    if (resource && fragment) {
+      resource = { ...resource, uri: resource.uri.withFragment(fragment) };
     }
-    if (!fragment) {
-      return resource;
-    }
-    return {
-      ...resource,
-      uri: URI.withFragment(resource.uri, fragment),
-    };
+    return resource ?? null;
   }
 
   public resolveLink(resource: Resource, link: ResourceLink): URI {
@@ -205,6 +146,51 @@ export class FoamWorkspace implements IDisposable {
     this.onDidAddEmitter.dispose();
     this.onDidDeleteEmitter.dispose();
     this.onDidUpdateEmitter.dispose();
+  }
+
+  static isIdentifier(path: string): boolean {
+    return !(
+      path.startsWith('/') ||
+      path.startsWith('./') ||
+      path.startsWith('../')
+    );
+  }
+
+  /**
+   * Returns the minimal identifier for the given string amongst others
+   *
+   * @param forPath the value to compute the identifier for
+   * @param amongst the set of strings within which to find the identifier
+   */
+  static getShortestIdentifier(forPath: string, amongst: string[]): string {
+    const needleTokens = forPath.split('/').reverse();
+    const haystack = amongst
+      .filter(value => value !== forPath)
+      .map(value => value.split('/').reverse());
+
+    let tokenIndex = 0;
+    let res = needleTokens;
+    while (tokenIndex < needleTokens.length) {
+      for (let j = haystack.length - 1; j >= 0; j--) {
+        if (
+          haystack[j].length < tokenIndex ||
+          needleTokens[tokenIndex] !== haystack[j][tokenIndex]
+        ) {
+          haystack.splice(j, 1);
+        }
+      }
+      if (haystack.length === 0) {
+        res = needleTokens.splice(0, tokenIndex + 1);
+        break;
+      }
+      tokenIndex++;
+    }
+    const identifier = res
+      .filter(token => token.trim() !== '')
+      .reverse()
+      .join('/');
+
+    return identifier;
   }
 }
 

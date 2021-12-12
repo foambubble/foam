@@ -71,11 +71,11 @@ export async function replaceSelection(
  * @returns URI
  * @throws Error if no file is open in editor AND no workspace folder defined
  */
-export function getCurrentEditorDirectory() {
+export function getCurrentEditorDirectory(): URI {
   const uri = window.activeTextEditor?.document?.uri;
 
   if (isSome(uri)) {
-    return URI.getDir(fromVsCodeUri(uri));
+    return fromVsCodeUri(uri).getDirectory();
   }
 
   if (workspace.workspaceFolders.length > 0) {

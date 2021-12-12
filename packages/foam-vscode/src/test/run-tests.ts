@@ -1,6 +1,6 @@
-import * as path from 'path';
 import fs from 'fs';
 import os from 'os';
+import path from 'path';
 import { runTests } from 'vscode-test';
 import { runUnit } from './suite-unit';
 
@@ -31,10 +31,10 @@ async function main() {
       console.log('Running e2e tests');
       // The folder containing the Extension Manifest package.json
       // Passed to `--extensionDevelopmentPath`
-      const extensionDevelopmentPath = path.resolve(__dirname, '../../');
+      const extensionDevelopmentPath = path.join(__dirname, '..', '..');
       // The path to the extension test script
       // Passed to --extensionTestsPath
-      const extensionTestsPath = path.resolve(__dirname, './suite');
+      const extensionTestsPath = path.join(__dirname, 'suite');
       const tmpWorkspaceDir = fs.mkdtempSync(path.join(os.tmpdir(), 'foam-'));
 
       // Download VS Code, unzip it and run the integration test

@@ -11,7 +11,6 @@ import {
   version,
   ViewColumn,
 } from 'vscode';
-import * as fs from 'fs';
 import matter from 'gray-matter';
 import removeMarkdown from 'remove-markdown';
 import os from 'os';
@@ -85,12 +84,6 @@ export function getText(range: Range): string {
   return window.activeTextEditor.document.getText(range);
 }
 
-export function dropExtension(path: string): string {
-  const parts = path.split('.');
-  parts.pop();
-  return parts.join('.');
-}
-
 /**
  * Used for the "Copy to Clipboard Without Brackets" command
  *
@@ -132,18 +125,6 @@ export function toTitleCase(word: string): string {
     .split(' ')
     .map(word => word[0].toUpperCase() + word.substring(1))
     .join(' ');
-}
-
-/**
- * Verify the given path exists in the file system
- *
- * @param path The path to verify
- */
-export function pathExists(path: URI) {
-  return fs.promises
-    .access(URI.toFsPath(path), fs.constants.F_OK)
-    .then(() => true)
-    .catch(() => false);
 }
 
 /**

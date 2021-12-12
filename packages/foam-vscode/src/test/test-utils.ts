@@ -1,7 +1,6 @@
 /*
  * This file should not depend on VS Code as it's used for unit tests
  */
-import path from 'path';
 import { Logger } from '../core/utils/log';
 import { Range } from '../core/model/range';
 import { URI } from '../core/model/uri';
@@ -12,8 +11,7 @@ import { NoteLinkDefinition, Resource } from '../core/model/note';
 
 Logger.setLevel('error');
 
-export const TEST_DATA_DIR = URI.joinPath(
-  URI.file(__dirname),
+export const TEST_DATA_DIR = URI.file(__dirname).joinPath(
   '..',
   '..',
   'test-data'
@@ -55,10 +53,10 @@ export const createTestNote = (params: {
 }): Resource => {
   const root = params.root ?? URI.file('/');
   return {
-    uri: URI.resolve(params.uri, root),
+    uri: root.resolve(params.uri),
     type: 'note',
     properties: {},
-    title: params.title ?? path.parse(strToUri(params.uri).path).base,
+    title: params.title ?? strToUri(params.uri).getBasename(),
     definitions: params.definitions ?? [],
     sections: params.sections?.map(label => ({
       label,

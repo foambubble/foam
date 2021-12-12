@@ -1,5 +1,5 @@
+import { Uri } from 'vscode';
 import { URI } from '../core/model/uri';
-import path from 'path';
 import { toVsCodeUri } from '../utils/vsc-utils';
 import { commands, window, workspace } from 'vscode';
 import { createFile } from '../test/test-utils-vscode';
@@ -122,12 +122,12 @@ Template A
     });
 
     it('should create a new template', async () => {
-      const template = path.join(
-        workspace.workspaceFolders[0].uri.fsPath,
+      const template = Uri.joinPath(
+        workspace.workspaceFolders[0].uri,
         '.foam',
         'templates',
         'hello-world.md'
-      );
+      ).fsPath;
 
       window.showInputBox = jest.fn(() => {
         return Promise.resolve(template);
@@ -142,12 +142,12 @@ Template A
 
     it('can be cancelled', async () => {
       // This is the default template which would be created.
-      const template = path.join(
-        workspace.workspaceFolders[0].uri.fsPath,
+      const template = Uri.joinPath(
+        workspace.workspaceFolders[0].uri,
         '.foam',
         'templates',
         'new-template.md'
-      );
+      ).fsPath;
       window.showInputBox = jest.fn(() => {
         return Promise.resolve(undefined);
       });

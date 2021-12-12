@@ -1,7 +1,7 @@
 import { workspace, WorkspaceConfiguration } from 'vscode';
 import dateFormat from 'dateformat';
-import { isAbsolute } from 'path';
-import { focusNote, pathExists } from './utils';
+import { existsInFs } from './core/utils/path';
+import { focusNote } from './utils';
 import { URI } from './core/model/uri';
 import { fromVsCodeUri } from './utils/vsc-utils';
 import { NoteFactory } from './services/templates';
@@ -50,16 +50,16 @@ export function getDailyNotePath(
   configuration: WorkspaceConfiguration,
   date: Date
 ): URI {
-  const dailyNoteDirectory: string =
-    configuration.get('openDailyNote.directory') ?? '.';
+  const dailyNoteDirectory = URI.file(
+    configuration.get('openDailyNote.directory') ?? '.'
+  );
   const dailyNoteFilename = getDailyNoteFileName(configuration, date);
 
-  if (isAbsolute(dailyNoteDirectory)) {
-    return URI.joinPath(URI.file(dailyNoteDirectory), dailyNoteFilename);
+  if (dailyNoteDirectory.isAbsolute()) {
+    return dailyNoteDirectory.joinPath(dailyNoteFilename);
   } else {
-    return URI.joinPath(
-      fromVsCodeUri(workspace.workspaceFolders[0].uri),
-      dailyNoteDirectory,
+    return fromVsCodeUri(workspace.workspaceFolders[0].uri).joinPath(
+      dailyNoteDirectory.path,
       dailyNoteFilename
     );
   }
@@ -106,7 +106,7 @@ export async function createDailyNoteIfNotExists(
   dailyNotePath: URI,
   targetDate: Date
 ) {
-  if (await pathExists(dailyNotePath)) {
+  if (await existsInFs(dailyNotePath.toFsPath())) {
     return false;
   }
 

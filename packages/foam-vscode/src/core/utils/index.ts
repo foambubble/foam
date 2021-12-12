@@ -2,12 +2,6 @@ import { titleCase } from 'title-case';
 export { extractHashtags, extractTagsFromProp } from './hashtags';
 export * from './core';
 
-export function dropExtension(path: string): string {
-  const parts = path.split('.');
-  parts.pop();
-  return parts.join('.');
-}
-
 /**
  *
  * @param filename

@@ -4,7 +4,6 @@ import { Foam } from '../core/model/foam';
 import { Resource, ResourceParser } from '../core/model/note';
 import { Range } from '../core/model/range';
 import { FoamWorkspace } from '../core/model/workspace';
-import { getShortestIdentifier } from '../core/utils';
 import { FoamFeature } from '../types';
 import { isNone } from '../utils';
 import {
@@ -32,7 +31,7 @@ const FIND_IDENTIFER_COMMAND: FoamCommand<FindIdentifierCommandArgs> = {
   name: 'foam:compute-identifier',
   execute: async ({ target, amongst, range }) => {
     if (vscode.window.activeTextEditor) {
-      let identifier = getShortestIdentifier(
+      let identifier = FoamWorkspace.getShortestIdentifier(
         target.path,
         amongst.map(uri => uri.path)
       );
@@ -133,7 +132,7 @@ export function updateDiagnostics(
     for (const link of resource.links) {
       if (link.type === 'wikilink') {
         const [target, section] = link.target.split('#');
-        const targets = workspace.listById(target);
+        const targets = workspace.listByIdentifier(target);
         if (targets.length > 1) {
           result.push({
             code: AMBIGUOUS_IDENTIFIER_CODE,

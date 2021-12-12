@@ -9,6 +9,6 @@ export const toVsCodePosition = (p: FoamPosition): Position =>
 export const toVsCodeRange = (r: FoamRange): Range =>
   new Range(r.start.line, r.start.character, r.end.line, r.end.character);
 
-export const toVsCodeUri = (u: FoamURI): Uri => Uri.parse(FoamURI.toString(u));
+export const toVsCodeUri = (u: FoamURI): Uri => Uri.parse(u.toString());
 
 export const fromVsCodeUri = (u: Uri): FoamURI => FoamURI.parse(u.toString());

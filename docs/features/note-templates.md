@@ -8,8 +8,8 @@ Note templates are files located in the special `.foam/templates` directory.
 
 Create a template:
 
-- Run the `Foam: Create New Template` command from the command palette
-- OR manually create a regular `.md` file in the `.foam/templates` directory
+* Run the `Foam: Create New Template` command from the command palette
+* OR manually create a regular `.md` file in the `.foam/templates` directory
 
 ![Create new template GIF](../assets/images/create-new-template.gif)
 
@@ -17,15 +17,14 @@ _Theme: Ayu Light_
 
 To create a note from a template:
 
-- Run the `Foam: Create New Note From Template` command and follow the instructions. Don't worry if you've not created a template yet! You'll be prompted to create a new template if none exist.
-- OR run the `Foam: Create New Note` command, which uses the special default template (`.foam/templates/new-note.md`, if it exists)
+* Run the `Foam: Create New Note From Template` command and follow the instructions. Don't worry if you've not created a template yet! You'll be prompted to create a new template if none exist.
+* OR run the `Foam: Create New Note` command, which uses the special default template (`.foam/templates/new-note.md`, if it exists)
 
 ![Create new note from template GIF](../assets/images/create-new-note-from-template.gif)
 
 _Theme: Ayu Light_
 
 ## Special templates
-
 ### Default template
 
 The `.foam/templates/new-note.md` template is special in that it is the template that will be used by the `Foam: Create New Note` command.
@@ -67,12 +66,12 @@ By using the `FOAM_DATE_` versions of the variables, the correct relative date w
 For example, given this daily note template (`.foam/templates/daily-note.md`):
 
 ```markdown
-# $FOAM_DATE_YEAR-$FOAM_DATE_MONTH-\$FOAM_DATE_DATE
+# $FOAM_DATE_YEAR-$FOAM_DATE_MONTH-$FOAM_DATE_DATE
 
 ## Here's what I'm going to do today
 
-- Thing 1
-- Thing 2
+* Thing 1
+* Thing 2
 ```
 
 When the `/tomorrow` snippet is used, `FOAM_DATE_` variables will be populated with tomorrow's date, as expected.
@@ -108,9 +107,8 @@ For example, `filepath` can be used to customize `.foam/templates/new-note.md`, 
 # This will create the note in the "journal" subdirectory of the current workspace,
 # regardless of which file is the active file.
 foam_template:
-  filepath: 'journal/$FOAM_TITLE_SLUG.md'
+  filepath: 'journal/$FOAM_TITLE.md'
 ---
-
 ```
 
 #### Example of absolute `filepath`
@@ -122,10 +120,10 @@ The format of an absolute filepath may vary depending on the filesystem used.
 ---
 foam_template:
   # Unix / MacOS filesystems
-  filepath: '/Users/john.smith/foam/journal/$FOAM_TITLE_SLUG.md'
+  filepath: '/Users/john.smith/foam/journal/$FOAM_TITLE.md'
 
   # Windows filesystems
-  filepath: 'C:\Users\john.smith\Documents\foam\journal\$FOAM_TITLE_SLUG.md'
+  filepath: 'C:\Users\john.smith\Documents\foam\journal\$FOAM_TITLE.md'
 ---
 ```
 
@@ -141,17 +139,17 @@ If your template already has a YAML Frontmatter block, you can add the Foam temp
 
 #### Limitations
 
-Foam only supports adding the template metadata to _YAML_ Frontmatter blocks. If the existing Frontmatter block uses some other format (e.g. JSON), you will have to add the template metadata to its own YAML Frontmatter block.
+Foam only supports adding the template metadata to *YAML* Frontmatter blocks. If the existing Frontmatter block uses some other format (e.g. JSON), you will have to add the template metadata to its own YAML Frontmatter block.
 
 Further, the template metadata must be provided as a [YAML block mapping](https://yaml.org/spec/1.2/spec.html#id2798057), with the attributes placed on the lines immediately following the `foam_template` line:
 
 ```yaml
 ---
-existing_frontmatter: 'Existing Frontmatter block'
+existing_frontmatter: "Existing Frontmatter block"
 foam_template: # this is a YAML "Block" mapping ("Flow" mappings aren't supported)
   name: My Note Template # Attributes must be on the lines immediately following `foam_template`
   description: This is my note template
-  filepath: `journal/$FOAM_TITLE_SLUG.md`
+  filepath: `journal/$FOAM_TITLE.md`
 ---
 This is the rest of the template
 ```
@@ -169,7 +167,7 @@ You can add the template metadata to its own YAML Frontmatter block at the start
 foam_template:
   name: My Note Template
   description: This is my note template
-  filepath: `journal/$FOAM_TITLE_SLUG.md`
+  filepath: `journal/$FOAM_TITLE.md`
 ---
 This is the rest of the template
 ```
@@ -181,11 +179,11 @@ If the note already has a Frontmatter block, a Foam-specific Frontmatter block c
 foam_template:
   name: My Note Template
   description: This is my note template
-  filepath: `journal/$FOAM_TITLE_SLUG.md`
+  filepath: `journal/$FOAM_TITLE.md`
 ---
 
 ---
-existing_frontmatter: 'Existing Frontmatter block'
+existing_frontmatter: "Existing Frontmatter block"
 ---
 This is the rest of the template
 ```

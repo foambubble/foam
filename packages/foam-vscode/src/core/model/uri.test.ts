@@ -1,5 +1,4 @@
 import { Logger } from '../utils/log';
-import { uriToSlug } from '../utils/slug';
 import { URI } from './uri';
 
 Logger.setLevel('error');
@@ -71,18 +70,6 @@ describe('Foam URI', () => {
     );
     expect(URI.file('/my/file.markdown').resolve('../hello')).toEqual(
       URI.file('/hello.markdown')
-    );
-  });
-
-  it('can be slugified', () => {
-    expect(uriToSlug(URI.file('/this/is/a/path.md'))).toEqual('path');
-    expect(uriToSlug(URI.file('../a/relative/path.md'))).toEqual('path');
-    expect(uriToSlug(URI.file('another/relative/path.md'))).toEqual('path');
-    expect(uriToSlug(URI.file('no-directory.markdown'))).toEqual(
-      'no-directory'
-    );
-    expect(uriToSlug(URI.file('many.dots.name.markdown'))).toEqual(
-      'manydotsname'
     );
   });
 });

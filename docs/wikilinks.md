@@ -10,6 +10,10 @@ Foam enables you to Link pages together using `[[file-name]]` annotations (i.e. 
 
 > If the `F12` shortcut feels unnatural you can rebind it at File > Preferences > Keyboard Shortcuts by searching for `editor.action.revealDefinition`.
 
+## Support for sections
+
+Foam supports autocompletion, navigation, embedding and diagnostics for note sections. Just use the standard wiki syntax of `[[resource#Section Title]]`.
+
 ## Markdown compatibility
 
 The [Foam for VSCode](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode) extension automatically generates [[link-reference-definitions]] at the bottom of the file to make wikilinks compatible with Markdown tools and parsers.

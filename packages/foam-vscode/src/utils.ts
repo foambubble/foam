@@ -13,12 +13,9 @@ import {
 } from 'vscode';
 import matter from 'gray-matter';
 import removeMarkdown from 'remove-markdown';
-import os from 'os';
 import { toVsCodeUri } from './utils/vsc-utils';
 import { Logger } from './core/utils/log';
 import { URI } from './core/model/uri';
-
-export const isWindows = os.platform() === 'win32';
 
 export const docConfig = { tab: '  ', eol: '\r\n' };
 

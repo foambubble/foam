@@ -1,6 +1,6 @@
 import { workspace } from 'vscode';
 import { createDailyNoteIfNotExists, getDailyNotePath } from './dated-notes';
-import { isWindows } from './utils';
+import { isWindows } from './core/common/platform';
 import {
   cleanWorkspace,
   closeEditors,

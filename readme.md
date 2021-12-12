@@ -92,9 +92,9 @@ Foam also supports hierarchical tags.
 
 ### Orphans and Placeholder Panels
 
-Orphans are note that have no inbound nor outbound links. 
+Orphans are notes that have no inbound nor outbound links. 
 Placeholders are dangling links, or notes without content.
-Keep them under control, and your knowledge base in better state, by using this panel.
+Keep them under control, and your knowledge base in a better state, by using this panel.
 
 ![Orphans and Placeholder Panels](./assets/screenshots/feature-placeholder-orphan-panel.gif)
 

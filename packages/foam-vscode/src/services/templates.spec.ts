@@ -1,5 +1,5 @@
 import { Selection, ViewColumn, window, workspace } from 'vscode';
-import { isWindows } from '../utils';
+import { isWindows } from '../core/common/platform';
 import { fromVsCodeUri } from '../utils/vsc-utils';
 import { determineNewNoteFilepath, NoteFactory } from '../services/templates';
 import {

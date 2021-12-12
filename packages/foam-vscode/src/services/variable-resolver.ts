@@ -1,7 +1,7 @@
 import { findSelectionContent } from './editor';
 import { window } from 'vscode';
 import { UserCancelledOperation } from './errors';
-import slugger from 'github-slugger';
+import { toSlug } from '../utils/slug';
 
 const knownFoamVariables = new Set([
   'FOAM_TITLE',
@@ -158,10 +158,7 @@ export class Resolver {
           this.promises.set(name, Promise.resolve(this.foamTitle));
           break;
         case 'FOAM_TITLE_SLUG':
-          this.promises.set(
-            name,
-            Promise.resolve(slugger.slug(this.foamTitle))
-          );
+          this.promises.set(name, Promise.resolve(toSlug(this.foamTitle)));
           break;
         case 'FOAM_SELECTED_TEXT':
           this.promises.set(name, Promise.resolve(resolveFoamSelectedText()));
@@ -308,7 +305,7 @@ export class Resolver {
     }
     return this.foamTitle === null
       ? 'foamTitle-is-null'
-      : slugger.slug(this.foamTitle);
+      : toSlug(this.foamTitle);
   }
 }
 

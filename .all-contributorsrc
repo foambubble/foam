@@ -788,6 +788,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "iam-yan",
+      "name": "Yan",
+      "avatar_url": "https://avatars.githubusercontent.com/u/48427014?v=4",
+      "profile": "https://github.com/iam-yan",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,

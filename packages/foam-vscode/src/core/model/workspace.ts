@@ -61,14 +61,11 @@ export class FoamWorkspace implements IDisposable {
   }
 
   public listByIdentifier(identifier: string): Resource[] {
-    let needle = '/' + identifier;
-    if (!getExtension(needle)) {
-      needle = needle + '.md';
-    }
-    needle = normalize(needle);
+    let needle = normalize('/' + identifier);
+    let mdNeedle = getExtension(needle) !== '.md' ? needle + '.md' : undefined;
     let resources = [];
     for (const key of this.resources.keys()) {
-      if (key.endsWith(needle)) {
+      if ((mdNeedle && key.endsWith(mdNeedle)) || key.endsWith(needle)) {
         resources.push(this.resources.get(normalize(key)));
       }
     }
@@ -112,9 +109,14 @@ export class FoamWorkspace implements IDisposable {
       resource = this.listByIdentifier(path)[0];
     } else {
       if (isAbsolute(path) || isSome(baseUri)) {
-        path = getExtension(path) ? path : path + '.md';
-        const uri = baseUri.resolve(path);
-        resource = uri ? this.resources.get(normalize(uri.path)) : null;
+        if (getExtension(path) !== '.md') {
+          const uri = baseUri.resolve(path + '.md');
+          resource = uri ? this.resources.get(normalize(uri.path)) : null;
+        }
+        if (!resource) {
+          const uri = baseUri.resolve(path);
+          resource = uri ? this.resources.get(normalize(uri.path)) : null;
+        }
       }
     }
     if (resource && fragment) {

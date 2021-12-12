@@ -61,7 +61,22 @@ describe('Workspace resources', () => {
     expect(ws.listByIdentifier('file').length).toEqual(1);
   });
 
-  it('should include fragment when finding resource URI', () => {
+  it('Support dendron-style names', () => {
+    const ws = createTestWorkspace()
+      .set(createTestNote({ uri: 'test.md' }))
+      .set(createTestNote({ uri: 'test.yo.md' }));
+    for (const [reference, path] of [
+      ['test', '/test.md'],
+      ['test.md', '/test.md'],
+      ['test.yo', '/test.yo.md'],
+      ['test.yo.md', '/test.yo.md'],
+    ]) {
+      expect(ws.listByIdentifier(reference)[0].uri.path).toEqual(path);
+      expect(ws.find(reference).uri.path).toEqual(path);
+    }
+  });
+
+  it('Should include fragment when finding resource URI', () => {
     const ws = createTestWorkspace()
       .set(createTestNote({ uri: 'test-file.md' }))
       .set(createTestNote({ uri: 'file.md' }));
@@ -183,6 +198,44 @@ describe('Identifier computation', () => {
     expect(ws.getIdentifier(first.uri.withFragment('section name'))).toEqual(
       'to/page-a#section name'
     );
+  });
+
+  const needle = '/project/car/todo';
+
+  test.each([
+    [['/project/home/todo', '/other/todo', '/something/else'], 'car/todo'],
+    [['/family/car/todo', '/other/todo'], 'project/car/todo'],
+    [[], 'todo'],
+  ])('Find shortest identifier', (haystack, id) => {
+    expect(FoamWorkspace.getShortestIdentifier(needle, haystack)).toEqual(id);
+  });
+
+  it('should ignore same string in haystack', () => {
+    const haystack = [
+      needle,
+      '/project/home/todo',
+      '/other/todo',
+      '/something/else',
+    ];
+    const identifier = FoamWorkspace.getShortestIdentifier(needle, haystack);
+    expect(identifier).toEqual('car/todo');
+  });
+
+  it('should return best guess when no solution is possible', () => {
+    /**
+     * In this case there is no way to uniquely identify the element,
+     * our fallback is to just return the "least wrong" result, basically
+     * a full identifier
+     * This is an edge case that should never happen in a real repo
+     */
+    const haystack = [
+      '/parent/' + needle,
+      '/project/home/todo',
+      '/other/todo',
+      '/something/else',
+    ];
+    const identifier = FoamWorkspace.getShortestIdentifier(needle, haystack);
+    expect(identifier).toEqual('project/car/todo');
   });
 });
 
@@ -447,7 +500,7 @@ describe('Wikilinks', () => {
   });
 });
 
-describe('markdown direct links', () => {
+describe('Markdown direct links', () => {
   it('Support absolute and relative path', () => {
     const noteA = createTestNote({
       uri: '/path/to/page-a.md',
@@ -949,45 +1002,5 @@ describe('Monitoring of workspace state', () => {
     ).toBeFalsy();
     ws.dispose();
     graph.dispose();
-  });
-});
-
-describe('getShortestIdentifier', () => {
-  const needle = '/project/car/todo';
-
-  test.each([
-    [['/project/home/todo', '/other/todo', '/something/else'], 'car/todo'],
-    [['/family/car/todo', '/other/todo'], 'project/car/todo'],
-    [[], 'todo'],
-  ])('Find shortest identifier', (haystack, id) => {
-    expect(FoamWorkspace.getShortestIdentifier(needle, haystack)).toEqual(id);
-  });
-
-  it('should ignore same string in haystack', () => {
-    const haystack = [
-      needle,
-      '/project/home/todo',
-      '/other/todo',
-      '/something/else',
-    ];
-    const identifier = FoamWorkspace.getShortestIdentifier(needle, haystack);
-    expect(identifier).toEqual('car/todo');
-  });
-
-  it('should return best guess when no solution is possible', () => {
-    /**
-     * In this case there is no way to uniquely identify the element,
-     * our fallback is to just return the "least wrong" result, basically
-     * a full identifier
-     * This is an edge case that should never happen in a real repo
-     */
-    const haystack = [
-      '/parent/' + needle,
-      '/project/home/todo',
-      '/other/todo',
-      '/something/else',
-    ];
-    const identifier = FoamWorkspace.getShortestIdentifier(needle, haystack);
-    expect(identifier).toEqual('project/car/todo');
   });
 });

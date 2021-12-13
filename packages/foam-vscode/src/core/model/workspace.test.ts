@@ -63,13 +63,17 @@ describe('Workspace resources', () => {
 
   it('Support dendron-style names', () => {
     const ws = createTestWorkspace()
-      .set(createTestNote({ uri: 'test.md' }))
-      .set(createTestNote({ uri: 'test.yo.md' }));
+      .set(createTestNote({ uri: 'note.pdf' }))
+      .set(createTestNote({ uri: 'note.md' }))
+      .set(createTestNote({ uri: 'note.yo.md' }))
+      .set(createTestNote({ uri: 'note2.md' }));
     for (const [reference, path] of [
-      ['test', '/test.md'],
-      ['test.md', '/test.md'],
-      ['test.yo', '/test.yo.md'],
-      ['test.yo.md', '/test.yo.md'],
+      ['note', '/note.md'],
+      ['note.md', '/note.md'],
+      ['note.yo', '/note.yo.md'],
+      ['note.yo.md', '/note.yo.md'],
+      ['note.pdf', '/note.pdf'],
+      ['note2', '/note2.md'],
     ]) {
       expect(ws.listByIdentifier(reference)[0].uri.path).toEqual(path);
       expect(ws.find(reference).uri.path).toEqual(path);
@@ -452,20 +456,6 @@ describe('Wikilinks', () => {
     expect(graph.getLinks(noteA.uri).map(l => l.target)).toEqual([
       attachmentABis.uri,
     ]);
-  });
-
-  it('Allows for dendron-style wikilinks, including a dot', () => {
-    const noteA = createTestNote({
-      uri: '/path/to/page-a.md',
-      links: [{ slug: 'dendron.style.md' }],
-    });
-    const noteB1 = createTestNote({ uri: '/path/to/another/dendron.style.md' });
-
-    const ws = createTestWorkspace();
-    ws.set(noteA).set(noteB1);
-    const graph = FoamGraph.fromWorkspace(ws);
-
-    expect(graph.getLinks(noteA.uri).map(l => l.target)).toEqual([noteB1.uri]);
   });
 
   it('Handles capitalization of files and wikilinks correctly', () => {

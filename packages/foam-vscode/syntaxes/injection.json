@@ -1,0 +1,20 @@
+{
+  "scopeName": "wikilink.injection",
+  "injectionSelector": "L:meta.paragraph.markdown",
+  "patterns": [
+    { "include": "#wikilink" }
+  ],
+  "repository": {
+    "wikilink": {
+      "name": "markup.underline.link.markdown",
+      "begin": "\\[\\[",
+      "beginCaptures": {
+        "0": { "name": "wikilink.open" }
+      },
+      "end": "\\]\\]",
+      "endCaptures": {
+        "0": { "name": "wikilink.close" }
+      }
+    }
+  }
+}

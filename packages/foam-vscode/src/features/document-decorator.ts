@@ -12,13 +12,6 @@ import { fromVsCodeUri } from '../utils/vsc-utils';
 
 export const CONFIG_KEY = 'decorations.links.enable';
 
-const linkDecoration = vscode.window.createTextEditorDecorationType({
-  rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
-  textDecoration: 'none',
-  color: { id: 'textLink.foreground' },
-  cursor: 'pointer',
-});
-
 const placeholderDecoration = vscode.window.createTextEditorDecorationType({
   rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
   textDecoration: 'none',
@@ -42,17 +35,13 @@ const updateDecorations = (
     fromVsCodeUri(editor.document.uri),
     editor.document.getText()
   );
-  let linkRanges = [];
   let placeholderRanges = [];
   note.links.forEach(link => {
     const linkUri = workspace.resolveLink(note, link);
     if (linkUri.isPlaceholder()) {
       placeholderRanges.push(link.range);
-    } else {
-      linkRanges.push(link.range);
     }
   });
-  editor.setDecorations(linkDecoration, linkRanges);
   editor.setDecorations(placeholderDecoration, placeholderRanges);
 };
 
@@ -82,7 +71,6 @@ const feature: FoamFeature = {
 
     context.subscriptions.push(
       areDecorationsEnabled,
-      linkDecoration,
       placeholderDecoration,
       vscode.window.onDidChangeActiveTextEditor(editor => {
         activeEditor = editor;

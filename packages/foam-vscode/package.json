@@ -33,6 +33,13 @@
   ],
   "main": "./out/extension.js",
   "contributes": {
+    "grammars": [
+      {
+        "path": "./syntaxes/injection.json",
+        "scopeName": "wikilink.injection",
+        "injectTo": ["text.html.markdown"]
+      }
+    ],
     "markdown.markdownItPlugins": true,
     "markdown.previewStyles": [
       "./static/preview/style.css"

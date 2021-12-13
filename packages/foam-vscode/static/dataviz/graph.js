@@ -136,7 +136,7 @@ const Actions = {
         }
       });
       types.forEach(type => {
-        if (model.showNodesOfType[type] == null) {
+        if (model.showNodesOfType[type] === null) {
           model.showNodesOfType[type] = true;
         }
       });
@@ -148,7 +148,7 @@ const Actions = {
       if (!isAppend) {
         m.selectedNodes.clear();
       }
-      if (nodeId != null) {
+      if (nodeId !== null) {
         m.selectedNodes.add(nodeId);
       }
     }),
@@ -205,7 +205,7 @@ function initDataviz(channel) {
     )
     .nodeCanvasObject((node, ctx, globalScale) => {
       const info = model.graph.nodeInfo[node.id];
-      if (info == null) {
+      if (info === null) {
         console.error(`Could not find info for node ${node.id} - skipping`);
         return;
       }
@@ -299,7 +299,7 @@ function updateForceGraphDataFromModel(m) {
   });
   // apply the delta
   nodeIdsToRemove.forEach(id => {
-    const index = m.data.nodes.findIndex(n => n.id == id);
+    const index = m.data.nodes.findIndex(n => n.id === id);
     m.data.nodes.splice(index, 1); // delete the element
   });
   nodeIdsToAdd.forEach(nodeId => {
@@ -312,19 +312,19 @@ function updateForceGraphDataFromModel(m) {
   m.data.links = m.graph.links
     .filter(link => {
       const isSource = Object.values(m.data.nodes).some(
-        node => node.id == link.source
+        node => node.id === link.source
       );
       const isTarget = Object.values(m.data.nodes).some(
-        node => node.id == link.target
+        node => node.id === link.target
       );
       return isSource && isTarget;
     })
     .map(link => ({ ...link }));
 
   // check that selected/hovered nodes are still valid (see #397)
-  m.hoverNode = m.graph.nodeInfo[m.hoverNode] != null ? m.hoverNode : null;
+  m.hoverNode = m.graph.nodeInfo[m.hoverNode] !== null ? m.hoverNode : null;
   m.selectedNodes = new Set(
-    Array.from(m.selectedNodes).filter(nId => m.graph.nodeInfo[nId] != null)
+    Array.from(m.selectedNodes).filter(nId => m.graph.nodeInfo[nId] !== null)
   );
 
   // annoying we need to call this function, but I haven't found a good workaround
@@ -399,7 +399,7 @@ function getLinkState(link, model) {
     ? 'regular'
     : Array.from(model.focusLinks).some(
         fLink =>
-          fLink.source == link.source.id && fLink.target == link.target.id
+          fLink.source === link.source.id && fLink.target === link.target.id
       )
     ? 'highlighted'
     : 'lessened';
@@ -501,6 +501,9 @@ try {
       case 'didUpdateGraphData':
         graphData = augmentGraphInfo(message.payload);
         Actions.refreshWorkspaceData(graphData);
+        graph.zoom(graph.zoom() * 1.5);
+        graph.cooldownTicks(100);
+        graph.onEngineStop(() => graph.zoomToFit(500));
         console.log('didUpdateGraphData', graphData);
         break;
       case 'didSelectNote':

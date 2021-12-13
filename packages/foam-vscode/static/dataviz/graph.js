@@ -148,7 +148,7 @@ const Actions = {
       if (!isAppend) {
         m.selectedNodes.clear();
       }
-      if (nodeId !== null) {
+      if (nodeId != null) {
         m.selectedNodes.add(nodeId);
       }
     }),
@@ -205,7 +205,7 @@ function initDataviz(channel) {
     )
     .nodeCanvasObject((node, ctx, globalScale) => {
       const info = model.graph.nodeInfo[node.id];
-      if (info === null) {
+      if (info == null) {
         console.error(`Could not find info for node ${node.id} - skipping`);
         return;
       }
@@ -322,9 +322,9 @@ function updateForceGraphDataFromModel(m) {
     .map(link => ({ ...link }));
 
   // check that selected/hovered nodes are still valid (see #397)
-  m.hoverNode = m.graph.nodeInfo[m.hoverNode] !== null ? m.hoverNode : null;
+  m.hoverNode = m.graph.nodeInfo[m.hoverNode] != null ? m.hoverNode : null;
   m.selectedNodes = new Set(
-    Array.from(m.selectedNodes).filter(nId => m.graph.nodeInfo[nId] !== null)
+    Array.from(m.selectedNodes).filter(nId => m.graph.nodeInfo[nId] != null)
   );
 
   // annoying we need to call this function, but I haven't found a good workaround
@@ -473,6 +473,7 @@ class Painter {
 try {
   const vscode = acquireVsCodeApi();
   window.model = model;
+  window.graphUpdated = false;
 
   window.onload = () => {
     initDataviz(vscode);
@@ -501,9 +502,15 @@ try {
       case 'didUpdateGraphData':
         graphData = augmentGraphInfo(message.payload);
         Actions.refreshWorkspaceData(graphData);
-        graph.zoom(graph.zoom() * 1.5);
-        graph.cooldownTicks(100);
-        graph.onEngineStop(() => graph.zoomToFit(500));
+        if (!graphUpdated) {
+          window.graphUpdated = true;
+          graph.zoom(graph.zoom() * 1.5);
+          graph.cooldownTicks(100);
+          graph.onEngineStop(() => {
+            graph.onEngineStop(() => {});
+            graph.zoomToFit(500);
+          });
+        }
         console.log('didUpdateGraphData', graphData);
         break;
       case 'didSelectNote':

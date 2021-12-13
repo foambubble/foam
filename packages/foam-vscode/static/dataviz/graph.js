@@ -136,7 +136,7 @@ const Actions = {
         }
       });
       types.forEach(type => {
-        if (model.showNodesOfType[type] === null) {
+        if (model.showNodesOfType[type] == null) {
           model.showNodesOfType[type] = true;
         }
       });

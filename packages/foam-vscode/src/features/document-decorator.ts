@@ -15,7 +15,7 @@ export const CONFIG_KEY = 'decorations.links.enable';
 const placeholderDecoration = vscode.window.createTextEditorDecorationType({
   rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
   textDecoration: 'none',
-  color: { id: 'editorWarning.foreground' },
+  color: { id: 'foam.placeholder' },
   cursor: 'pointer',
 });
 

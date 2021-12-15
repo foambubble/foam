@@ -184,11 +184,11 @@ async function getWebviewContent(
   // Replace the script paths with the appropriate webview URI.
   const filled = new TextDecoder('utf-8')
     .decode(indexHtml)
-    .replace(/<script data-replace src="([^"]+")/g, match => {
-      const fileName = match
-        .slice('<script data-replace src="'.length, -1)
-        .trim();
-      return '<script src="' + getWebviewUri(fileName).toString() + '"';
+    .replace(/data-replace (src|href)="[^"]+"/g, match => {
+      const i = match.indexOf(' ');
+      const j = match.indexOf('=');
+      const uri = getWebviewUri(match.slice(j + 2, -1).trim());
+      return match.slice(i + 1, j) + '="' + uri.toString() + '"';
     });
 
   return filled;

@@ -177,9 +177,9 @@ export class MarkdownResourceProvider implements ResourceProvider {
  */
 const getTextFromChildren = (root: Node): string => {
   let text = '';
-  visit(root, 'text', node => {
-    if (node.type === 'text') {
-      text = text + (node as any).value;
+  visit(root, node => {
+    if (node.type === 'text' || node.type === 'wikiLink') {
+      text = text + ((node as any).value || '');
     }
   });
   return text;
@@ -226,7 +226,7 @@ const sectionsPlugin: ParserPlugin = {
   visit: (node, note) => {
     if (node.type === 'heading') {
       const level = (node as any).depth;
-      const label = ((node as Parent)!.children?.[0] as any)?.value;
+      const label = getTextFromChildren(node);
       if (!label || !level) {
         return;
       }
@@ -272,8 +272,8 @@ const titlePlugin: ParserPlugin = {
       node.type === 'heading' &&
       (node as any).depth === 1
     ) {
-      note.title =
-        ((node as Parent)!.children?.[0] as any)?.value || note.title;
+      const title = getTextFromChildren(node);
+      note.title = title.length > 0 ? title : note.title;
     }
   },
   onDidFindProperties: (props, note) => {

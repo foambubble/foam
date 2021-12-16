@@ -199,6 +199,17 @@ this note has a title
     expect(note.title).toBe('Page A');
   });
 
+  it('should support wikilinks and urls in title', () => {
+    const note = createNoteFromMarkdown(
+      '/page-a.md',
+      `
+# Page A with [[wikilink]] and a [url](https://google.com)
+this note has a title
+    `
+    );
+    expect(note.title).toBe('Page A with wikilink and a url');
+  });
+
   it('should default to file name if heading does not exist', () => {
     const note = createNoteFromMarkdown(
       '/page-d.md',
@@ -486,6 +497,24 @@ This is the content of section 2.
     expect(note.sections[1].range).toEqual(Range.create(5, 0, 9, 0));
     expect(note.sections[2].label).toEqual('Section 2');
     expect(note.sections[2].range).toEqual(Range.create(9, 0, 13, 0));
+  });
+
+  it('should support wikilinks and links in the section label', () => {
+    const note = createNoteFromMarkdown(
+      '/dir1/section-with-links.md',
+      `
+# Section with [[wikilink]]
+
+This is the content of section with wikilink
+
+## Section with [url](https://google.com)
+
+This is the content of section with url
+      `
+    );
+    expect(note.sections).toHaveLength(2);
+    expect(note.sections[0].label).toEqual('Section with wikilink');
+    expect(note.sections[1].label).toEqual('Section with url');
   });
 });
 

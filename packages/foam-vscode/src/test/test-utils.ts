@@ -109,3 +109,6 @@ export const randomString = (len = 5) =>
     .fill('')
     .map(() => chars.charAt(Math.floor(Math.random() * chars.length)))
     .join('');
+
+export const getRandomURI = () =>
+  URI.file('/random-uri-root/' + randomString() + '.md');

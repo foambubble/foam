@@ -4,6 +4,16 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.17.1] - 2021-12-16
+
+Fixes and Improvements:
+- Decorate markdown files only (#857)
+- Fix template placeholders issue (#859)
+- Improved replacement range for link completion
+
+Internal:
+- Major URI/path handling refactoring (#858 - thanks @memeplex)
+
 ## [0.17.0] - 2021-12-08
 
 Features:

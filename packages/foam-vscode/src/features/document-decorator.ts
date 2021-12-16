@@ -8,6 +8,7 @@ import {
 import { ResourceParser } from '../core/model/note';
 import { FoamWorkspace } from '../core/model/workspace';
 import { Foam } from '../core/model/foam';
+import { Range } from '../core/model/range';
 import { fromVsCodeUri } from '../utils/vsc-utils';
 
 export const CONFIG_KEY = 'decorations.links.enable';
@@ -39,7 +40,14 @@ const updateDecorations = (
   note.links.forEach(link => {
     const linkUri = workspace.resolveLink(note, link);
     if (linkUri.isPlaceholder()) {
-      placeholderRanges.push(link.range);
+      placeholderRanges.push(
+        Range.create(
+          link.range.start.line,
+          link.range.start.character + 2,
+          link.range.end.line,
+          link.range.end.character - 2
+        )
+      );
     }
   });
   editor.setDecorations(placeholderDecoration, placeholderRanges);

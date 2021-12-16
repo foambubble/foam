@@ -3,7 +3,7 @@
   "injectionSelector": "L:meta.paragraph.markdown",
   "patterns": [
     {
-      "name": "string.other.link.title.markdown",
+      "contentName": "string.other.link.title.markdown.foam",
       "begin": "\\[\\[",
       "end": "\\]\\]"
     }

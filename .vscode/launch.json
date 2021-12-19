@@ -6,15 +6,18 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "type": "node",
       "name": "Debug Jest Tests",
+      "type": "extensionHost",
       "request": "launch",
-      "runtimeArgs": ["workspace", "foam-vscode", "run", "test"], // ${yarnWorkspaceName} is what we're missing
-      "args": ["--runInBand"],
-      "runtimeExecutable": "yarn",
-      "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
-      "disableOptimisticBPs": true
+      "args": [
+        "${workspaceFolder}/packages/foam-vscode/.test-workspace",
+        "--disable-extensions",
+        "--disable-workspace-trust",
+        "--extensionDevelopmentPath=${workspaceFolder}/packages/foam-vscode",
+        "--extensionTestsPath=${workspaceFolder}/packages/foam-vscode/out/test/suite"
+      ],
+      "outFiles": ["${workspaceFolder}/packages/foam-vscode/out/**/*.js"],
+      "preLaunchTask": "${defaultBuildTask}"
     },
     {
       "name": "Run VSCode Extension",

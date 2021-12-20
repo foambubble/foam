@@ -20,7 +20,7 @@ describe('findFoamVariables', () => {
       'FOAM_DATE_MONTH_NAME',
     ];
 
-    expect(findFoamVariables(input)).toEqual(expected);
+    expect(findFoamVariables(input).map(v => v.name)).toEqual(expected);
   });
 
   test('Ignores non-Foam variables', () => {

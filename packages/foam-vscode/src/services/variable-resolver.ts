@@ -47,7 +47,7 @@ export function substituteVariables(
   return text;
 }
 
-export function findFoamVariables(templateText: string): string[] {
+export function findFoamVariables(templateText: string): Variable[] {
   const snippet = new SnippetParser().parse(templateText, false, false);
 
   const variables: Variable[] = [];
@@ -58,10 +58,7 @@ export function findFoamVariables(templateText: string): string[] {
     return true;
   });
 
-  const variableNames = variables.map(variable => variable.name);
-  const uniqVariables = [...new Set(variableNames)];
-
-  const knownVariables = uniqVariables.filter(x => knownFoamVariables.has(x));
+  const knownVariables = variables.filter(v => knownFoamVariables.has(v.name));
   return knownVariables;
 }
 
@@ -99,7 +96,9 @@ export class Resolver {
    *          and the second is the processed text
    */
   async resolveText(text: string): Promise<[Map<string, string>, string]> {
-    const variablesInTemplate = findFoamVariables(text.toString());
+    const variablesInTemplate = findFoamVariables(text.toString()).map(
+      variable => variable.name
+    );
     const variables = variablesInTemplate.concat(
       ...this.extraVariablesToResolve
     );

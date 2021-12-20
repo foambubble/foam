@@ -26,26 +26,21 @@ const knownFoamVariables = new Set([
   'FOAM_DATE_SECONDS_UNIX',
 ]);
 
-export function substituteVariables(
-  text: string,
-  variables: Map<string, string>
-) {
-  variables.forEach((value, variable) => {
-    const regex = new RegExp(
-      // Matches a limited subset of the the TextMate variable syntax:
-      //  ${VARIABLE}  OR   $VARIABLE
-      `\\\${${variable}}|\\$${variable}(\\W|$)`,
-      // The latter is more complicated, since it needs to avoid replacing
-      // longer variable names with the values of variables that are
-      // substrings of the longer ones (e.g. `$FOO` and `$FOOBAR`. If you
-      // replace $FOO first, and aren't careful, you replace the first
-      // characters of `$FOOBAR`)
-      'g' // 'g' => Global replacement (i.e. not just the first instance)
-    );
-    text = text.replace(regex, `${value}$1`);
-  });
+export function substituteVariables(text: string, variables: Variable[]) {
+  // Assumes/requires that the variables are sorted by start position, and non-overlapping
+  let result = '';
 
-  return text;
+  let i = 0;
+  variables
+    .filter(v => v.pos !== undefined && v.endPos !== undefined)
+    .forEach(variable => {
+      result += text.substring(i, variable.pos);
+      result += variable.toString();
+      i = variable.endPos;
+    });
+  result += text.substring(i);
+
+  return result;
 }
 
 export function findFoamVariables(templateText: string): Variable[] {
@@ -254,17 +249,27 @@ export class Resolver {
       !uniqVariableNamesInTemplate.has('FOAM_SELECTED_TEXT')
     ) {
       const token = '$FOAM_SELECTED_TEXT';
-      text = text.endsWith('\n') ? `${text}${token}\n` : `${text}\n${token}`;
+      let pos = text.length;
+      if (text.endsWith('\n')) {
+        text = `${text}${token}\n`;
+      } else {
+        pos += 1;
+        text = `${text}\n${token}`;
+      }
 
-      const selectedTextVariable = new Variable('FOAM_SELECTED_TEXT');
+      const endPos = pos + token.length;
+      const selectedTextVariable = new Variable(
+        'FOAM_SELECTED_TEXT',
+        pos,
+        endPos
+      );
       await selectedTextVariable.resolve(this.resolver);
       variablesInTemplate.push(selectedTextVariable);
       uniqVariableNamesInTemplate.add('FOAM_SELECTED_TEXT');
       variables.push(selectedTextVariable);
     }
 
-    const subbedText = substituteVariables(text.toString(), resolvedValues);
-
+    const subbedText = substituteVariables(text.toString(), variables);
     return [resolvedValues, subbedText];
   }
 

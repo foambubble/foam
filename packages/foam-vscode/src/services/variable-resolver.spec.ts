@@ -5,11 +5,24 @@ import { Variable } from '../core/common/snippetParser';
 describe('substituteFoamVariables', () => {
   test('Does nothing if no Foam-specific variables are used', async () => {
     const input = `
-      # \${AnotherVariable} <-- Unrelated to foam
-      # \${AnotherVariable:default_value} <-- Unrelated to foam
-      # \${AnotherVariable:default_value/(.*)/\${1:/upcase}/}} <-- Unrelated to foam
-      # $AnotherVariable} <-- Unrelated to foam
-      # $CURRENT_YEAR-\${CURRENT_MONTH}-$CURRENT_DAY <-- Unrelated to foam
+      # \${AnotherVariable} <-- Unrelated to Foam
+      # \${AnotherVariable:default_value} <-- Unrelated to Foam
+      # \${AnotherVariable:default_value/(.*)/\${1:/upcase}/}} <-- Unrelated to Foam
+      # $AnotherVariable} <-- Unrelated to Foam
+      # $CURRENT_YEAR-\${CURRENT_MONTH}-$CURRENT_DAY <-- Unrelated to Foam
+    `;
+
+    const givenValues = new Map<string, string>();
+    givenValues.set('FOAM_TITLE', 'My note title');
+    const resolver = new Resolver(givenValues, new Date());
+    expect((await resolver.resolveText(input))[1]).toEqual(input);
+  });
+
+  test('Ignores variable-looking text values', async () => {
+    // Related to https://github.com/foambubble/foam/issues/602
+    const input = `
+      # \${CURRENT_DATE/.*/\${FOAM_TITLE}/} <-- FOAM_TITLE is not a variable here, but a text in a transform
+      # \${1|one,two,\${FOAM_TITLE}|} <-- FOAM_TITLE is not a variable here, but a text in a choice
     `;
 
     const givenValues = new Map<string, string>();
@@ -165,11 +178,11 @@ describe('resolveFoamVariables', () => {
 describe('resolveFoamTemplateVariables', () => {
   test('Does nothing for template without Foam-specific variables', async () => {
     const input = `
-      # \${AnotherVariable} <-- Unrelated to foam
-      # \${AnotherVariable:default_value} <-- Unrelated to foam
-      # \${AnotherVariable:default_value/(.*)/\${1:/upcase}/}} <-- Unrelated to foam
-      # $AnotherVariable} <-- Unrelated to foam
-      # $CURRENT_YEAR-\${CURRENT_MONTH}-$CURRENT_DAY <-- Unrelated to foam
+      # \${AnotherVariable} <-- Unrelated to Foam
+      # \${AnotherVariable:default_value} <-- Unrelated to Foam
+      # \${AnotherVariable:default_value/(.*)/\${1:/upcase}/}} <-- Unrelated to Foam
+      # $AnotherVariable} <-- Unrelated to Foam
+      # $CURRENT_YEAR-\${CURRENT_MONTH}-$CURRENT_DAY <-- Unrelated to Foam
     `;
 
     const expectedMap = new Map<string, string>();

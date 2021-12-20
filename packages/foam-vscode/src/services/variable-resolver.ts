@@ -1,6 +1,12 @@
 import { findSelectionContent } from './editor';
 import { window } from 'vscode';
 import { UserCancelledOperation } from './errors';
+import {
+  Placeholder,
+  SnippetParser,
+  TransformableMarker,
+  Variable,
+} from '../core/common/snippetParser';
 
 const knownFoamVariables = new Set([
   'FOAM_TITLE',
@@ -42,13 +48,19 @@ export function substituteVariables(
 }
 
 export function findFoamVariables(templateText: string): string[] {
-  const regex = /\$(FOAM_[_a-zA-Z0-9]*)|\${(FOAM_[[_a-zA-Z0-9]*)}/g;
-  let matches = [];
-  const output: string[] = [];
-  while ((matches = regex.exec(templateText))) {
-    output.push(matches[1] || matches[2]);
-  }
-  const uniqVariables = [...new Set(output)];
+  const snippet = new SnippetParser().parse(templateText, false, false);
+
+  const variables: Variable[] = [];
+  snippet.walk(marker => {
+    if (marker instanceof Variable) {
+      variables.push(marker as Variable);
+    }
+    return true;
+  });
+
+  const variableNames = variables.map(variable => variable.name);
+  const uniqVariables = [...new Set(variableNames)];
+
   const knownVariables = uniqVariables.filter(x => knownFoamVariables.has(x));
   return knownVariables;
 }

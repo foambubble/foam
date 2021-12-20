@@ -464,9 +464,13 @@ export class FormatString extends Marker {
 }
 
 export class Variable extends TransformableMarker {
+	public pos?: number
+	public endPos?: number
 
-	constructor(public name: string) {
+	constructor(public name: string, pos?: number, endPos?: number) {
 		super();
+		this.pos = pos;
+		this.endPos = endPos;
 	}
 
 	async resolve(resolver: VariableResolver): Promise<boolean> {
@@ -494,7 +498,7 @@ export class Variable extends TransformableMarker {
 	}
 
 	clone(): Variable {
-		const ret = new Variable(this.name);
+		const ret = new Variable(this.name, this.pos, this.endPos);
 		if (this.transform) {
 			ret.transform = this.transform.clone();
 		}
@@ -781,7 +785,7 @@ export class SnippetParser {
 
 		parent.appendChild(/^\d+$/.test(value!)
 			? new Placeholder(Number(value!))
-			: new Variable(value!)
+			: new Variable(value!, token.pos, this._scanner.pos - this._token.len)
 		);
 		return true;
 	}
@@ -913,7 +917,7 @@ export class SnippetParser {
 			return this._backTo(token);
 		}
 
-		const variable = new Variable(name!);
+		const variable = new Variable(name!, token.pos);
 
 		if (this._accept(TokenType.Colon)) {
 			// ${foo:<children>}
@@ -921,6 +925,7 @@ export class SnippetParser {
 
 				// ...} -> done
 				if (this._accept(TokenType.CurlyClose)) {
+					variable.endPos = this._scanner.pos - this._token.len
 					parent.appendChild(variable);
 					return true;
 				}
@@ -938,6 +943,7 @@ export class SnippetParser {
 		} else if (this._accept(TokenType.Forwardslash)) {
 			// ${foo/<regex>/<format>/<options>}
 			if (this._parseTransform(variable)) {
+				variable.endPos = this._scanner.pos - this._token.len
 				parent.appendChild(variable);
 				return true;
 			}
@@ -947,6 +953,7 @@ export class SnippetParser {
 
 		} else if (this._accept(TokenType.CurlyClose)) {
 			// ${foo}
+			variable.endPos = this._scanner.pos - this._token.len
 			parent.appendChild(variable);
 			return true;
 

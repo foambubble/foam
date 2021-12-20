@@ -82,7 +82,7 @@ module.exports = {
   // moduleNameMapper: {},
 
   // An array of regexp pattern strings, matched against all module paths before considered 'visible' to the module loader
-  // modulePathIgnorePatterns: [],
+  modulePathIgnorePatterns: ['.vscode-test'],
 
   // Activates notifications for test results
   // notify: false,
@@ -152,7 +152,7 @@ module.exports = {
   // ],
 
   // The regexp pattern or array of patterns that Jest uses to detect test files
-  // testRegex: [],
+  testRegex: ['\\.test\\.ts$'],
 
   // This option allows the use of a custom results processor
   // testResultsProcessor: undefined,

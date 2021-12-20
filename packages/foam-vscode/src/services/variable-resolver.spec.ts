@@ -1,5 +1,6 @@
 import { window } from 'vscode';
 import { Resolver } from './variable-resolver';
+import { Variable } from '../core/common/snippetParser';
 
 describe('substituteFoamVariables', () => {
   test('Does nothing if no Foam-specific variables are used', async () => {
@@ -44,7 +45,7 @@ describe('substituteFoamVariables', () => {
 
 describe('resolveFoamVariables', () => {
   test('Does nothing for unknown Foam-specific variables', async () => {
-    const variables = ['FOAM_FOO'];
+    const variables = [new Variable('FOAM_FOO')];
 
     const expected = new Map<string, string>();
     expected.set('FOAM_FOO', 'FOAM_FOO');
@@ -56,7 +57,7 @@ describe('resolveFoamVariables', () => {
 
   test('Resolves FOAM_TITLE', async () => {
     const foamTitle = 'My note title';
-    const variables = ['FOAM_TITLE'];
+    const variables = [new Variable('FOAM_TITLE')];
 
     jest
       .spyOn(window, 'showInputBox')
@@ -72,7 +73,7 @@ describe('resolveFoamVariables', () => {
 
   test('Resolves FOAM_TITLE without asking the user when it is provided', async () => {
     const foamTitle = 'My note title';
-    const variables = ['FOAM_TITLE'];
+    const variables = [new Variable('FOAM_TITLE')];
 
     const expected = new Map<string, string>();
     expected.set('FOAM_TITLE', foamTitle);
@@ -85,18 +86,18 @@ describe('resolveFoamVariables', () => {
 
   test('Resolves FOAM_DATE_* properties with current day by default', async () => {
     const variables = [
-      'FOAM_DATE_YEAR',
-      'FOAM_DATE_YEAR_SHORT',
-      'FOAM_DATE_MONTH',
-      'FOAM_DATE_MONTH_NAME',
-      'FOAM_DATE_MONTH_NAME_SHORT',
-      'FOAM_DATE_DATE',
-      'FOAM_DATE_DAY_NAME',
-      'FOAM_DATE_DAY_NAME_SHORT',
-      'FOAM_DATE_HOUR',
-      'FOAM_DATE_MINUTE',
-      'FOAM_DATE_SECOND',
-      'FOAM_DATE_SECONDS_UNIX',
+      new Variable('FOAM_DATE_YEAR'),
+      new Variable('FOAM_DATE_YEAR_SHORT'),
+      new Variable('FOAM_DATE_MONTH'),
+      new Variable('FOAM_DATE_MONTH_NAME'),
+      new Variable('FOAM_DATE_MONTH_NAME_SHORT'),
+      new Variable('FOAM_DATE_DATE'),
+      new Variable('FOAM_DATE_DAY_NAME'),
+      new Variable('FOAM_DATE_DAY_NAME_SHORT'),
+      new Variable('FOAM_DATE_HOUR'),
+      new Variable('FOAM_DATE_MINUTE'),
+      new Variable('FOAM_DATE_SECOND'),
+      new Variable('FOAM_DATE_SECONDS_UNIX'),
     ];
 
     const expected = new Map<string, string>();
@@ -123,18 +124,18 @@ describe('resolveFoamVariables', () => {
   test('Resolves FOAM_DATE_* properties with given date', async () => {
     const targetDate = new Date(2021, 9, 12, 1, 2, 3);
     const variables = [
-      'FOAM_DATE_YEAR',
-      'FOAM_DATE_YEAR_SHORT',
-      'FOAM_DATE_MONTH',
-      'FOAM_DATE_MONTH_NAME',
-      'FOAM_DATE_MONTH_NAME_SHORT',
-      'FOAM_DATE_DATE',
-      'FOAM_DATE_DAY_NAME',
-      'FOAM_DATE_DAY_NAME_SHORT',
-      'FOAM_DATE_HOUR',
-      'FOAM_DATE_MINUTE',
-      'FOAM_DATE_SECOND',
-      'FOAM_DATE_SECONDS_UNIX',
+      new Variable('FOAM_DATE_YEAR'),
+      new Variable('FOAM_DATE_YEAR_SHORT'),
+      new Variable('FOAM_DATE_MONTH'),
+      new Variable('FOAM_DATE_MONTH_NAME'),
+      new Variable('FOAM_DATE_MONTH_NAME_SHORT'),
+      new Variable('FOAM_DATE_DATE'),
+      new Variable('FOAM_DATE_DAY_NAME'),
+      new Variable('FOAM_DATE_DAY_NAME_SHORT'),
+      new Variable('FOAM_DATE_HOUR'),
+      new Variable('FOAM_DATE_MINUTE'),
+      new Variable('FOAM_DATE_SECOND'),
+      new Variable('FOAM_DATE_SECONDS_UNIX'),
     ];
 
     const expected = new Map<string, string>();

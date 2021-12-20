@@ -9,6 +9,8 @@
  *   and so on..
  */
 
+/* eslint-disable import/first */
+
 process.env.FORCE_COLOR = '1';
 process.env.NODE_ENV = 'test';
 

@@ -5,7 +5,6 @@ import {
 } from './markdown-provider';
 import { DirectLink, WikiLink } from './model/note';
 import { Logger } from './utils/log';
-import { uriToSlug } from './utils/slug';
 import { URI } from './model/uri';
 import { FoamGraph } from './model/graph';
 import { Range } from './model/range';
@@ -55,8 +54,7 @@ describe('Markdown loader', () => {
     expect(
       workspace
         .list()
-        .map(n => n.uri)
-        .map(uriToSlug)
+        .map(n => n.uri.getName())
         .sort()
     ).toEqual(['page-a', 'page-b', 'page-c', 'page-d', 'page-e']);
   });

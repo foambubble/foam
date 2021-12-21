@@ -259,7 +259,7 @@ export async function determineNewNoteFilepath(
     return fallbackURI;
   }
 
-  const defaultName = await resolver.resolve('FOAM_TITLE');
+  const defaultName = await resolver.resolveFromName('FOAM_TITLE');
   const defaultFilepath = getCurrentEditorDirectory().joinPath(
     `${defaultName}.md`
   );

@@ -9,42 +9,46 @@
  *   and so on..
  */
 
+/* eslint-disable import/first */
+
+// Set before imports, see https://github.com/facebook/jest/issues/12162
+process.env.FORCE_COLOR = '1';
+process.env.NODE_ENV = 'test';
+
 import path from 'path';
 import { runCLI } from '@jest/core';
+import { cleanWorkspace } from './test-utils-vscode';
 
-const rootDir = path.resolve(__dirname, '../..');
+const rootDir = path.join(__dirname, '../..');
 
 export function run(): Promise<void> {
   const errWrite = process.stderr.write;
+
+  let remaining = '';
   process.stderr.write = (buffer: string) => {
-    console.log(buffer);
+    const lines = (remaining + buffer).split('\n');
+    remaining = lines.pop() as string;
+    // Trim long lines because some uninformative code dumps will flood the
+    // console or, worse, be suppressed altogether because of their size.
+    lines.forEach(l => console.log(l.substr(0, 300)));
     return true;
   };
+
   // process.on('unhandledRejection', err => {
   //   throw err;
   // });
-  process.env.FORCE_COLOR = '1';
-  process.env.NODE_ENV = 'test';
-  process.env.BABEL_ENV = 'test';
 
   return new Promise(async (resolve, reject) => {
+    await cleanWorkspace();
     try {
       const { results } = await runCLI(
         {
           rootDir,
           roots: ['<rootDir>/src'],
-          transform: JSON.stringify({ '^.+\\.ts$': 'ts-jest' }),
           runInBand: true,
           testRegex: '\\.(test|spec)\\.ts$',
-          testEnvironment:
-            '<rootDir>/src/test/support/extended-vscode-environment.js',
+          testEnvironment: '<rootDir>/src/test/support/vscode-environment.js',
           setupFiles: ['<rootDir>/src/test/support/jest-setup.ts'],
-          setupFilesAfterEnv: ['jest-extended'],
-          globals: JSON.stringify({
-            'ts-jest': {
-              tsconfig: path.resolve(rootDir, './tsconfig.json'),
-            },
-          }),
           testTimeout: 30000,
           useStderr: true,
           verbose: true,
@@ -71,6 +75,7 @@ export function run(): Promise<void> {
       return reject(error);
     } finally {
       process.stderr.write = errWrite.bind(process.stderr);
+      await cleanWorkspace();
     }
   });
 }

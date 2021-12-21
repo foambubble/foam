@@ -13,7 +13,7 @@ import { randomString, wait } from './test-utils';
 Logger.setLevel('error');
 
 export const cleanWorkspace = async () => {
-  const files = await vscode.workspace.findFiles('**', '.vscode');
+  const files = await vscode.workspace.findFiles('**', '{.vscode,.keep}');
   await Promise.all(files.map(f => vscode.workspace.fs.delete(f)));
 };
 

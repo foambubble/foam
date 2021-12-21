@@ -24,9 +24,9 @@
   "prettier.requireConfig": true,
   "editor.formatOnSave": true,
   "editor.tabSize": 2,
-  "jest.debugCodeLens.showWhenTestStateIn": ["fail", "unknown", "pass"],
+  "jest.autoRun": "off",
+  "jest.rootPath": "packages/foam-vscode",
+  "jest.jestCommandLine": "yarn jest"
   "gitdoc.enabled": false,
-  "jest.autoEnable": false,
-  "jest.runAllTestsFirst": false,
   "search.mode": "reuseEditor"
 }

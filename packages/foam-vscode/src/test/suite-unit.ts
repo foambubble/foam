@@ -8,32 +8,28 @@
  *   they will make direct use of the vscode API to be invoked as commands, create editors,
  *   and so on..
  */
+
+/* eslint-disable import/first */
+
+// Set before imports, see https://github.com/facebook/jest/issues/12162
+process.env.FORCE_COLOR = '1';
+process.env.NODE_ENV = 'test';
+
 import path from 'path';
 import { runCLI } from '@jest/core';
 
 const rootDir = path.join(__dirname, '..', '..');
 
 export function runUnit(): Promise<void> {
-  process.env.FORCE_COLOR = '1';
-  process.env.NODE_ENV = 'test';
-  process.env.BABEL_ENV = 'test';
-
   return new Promise(async (resolve, reject) => {
     try {
       const { results } = await runCLI(
         {
           rootDir,
           roots: ['<rootDir>/src'],
-          transform: JSON.stringify({ '^.+\\.ts$': 'ts-jest' }),
           runInBand: true,
           testRegex: '\\.(test)\\.ts$',
           setupFiles: ['<rootDir>/src/test/support/jest-setup.ts'],
-          setupFilesAfterEnv: ['jest-extended'],
-          globals: JSON.stringify({
-            'ts-jest': {
-              tsconfig: path.join(rootDir, 'tsconfig.json'),
-            },
-          }),
           testTimeout: 20000,
           verbose: false,
           silent: false,

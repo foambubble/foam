@@ -156,7 +156,12 @@ export class NavigationProvider
     return targets.map(o => {
       const command = OPEN_COMMAND.asURI(o.target);
       const documentLink = new vscode.DocumentLink(
-        toVsCodeRange(o.link.range),
+        new vscode.Range(
+          o.link.range.start.line,
+          o.link.range.start.character + 2,
+          o.link.range.end.line,
+          o.link.range.end.character - 2
+        ),
         command
       );
       documentLink.tooltip = o.target.isPlaceholder()

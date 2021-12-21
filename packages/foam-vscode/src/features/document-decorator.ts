@@ -8,21 +8,15 @@ import {
 import { ResourceParser } from '../core/model/note';
 import { FoamWorkspace } from '../core/model/workspace';
 import { Foam } from '../core/model/foam';
+import { Range } from '../core/model/range';
 import { fromVsCodeUri } from '../utils/vsc-utils';
 
 export const CONFIG_KEY = 'decorations.links.enable';
 
-const linkDecoration = vscode.window.createTextEditorDecorationType({
-  rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
-  textDecoration: 'none',
-  color: { id: 'textLink.foreground' },
-  cursor: 'pointer',
-});
-
 const placeholderDecoration = vscode.window.createTextEditorDecorationType({
   rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
   textDecoration: 'none',
-  color: { id: 'editorWarning.foreground' },
+  color: { id: 'foam.placeholder' },
   cursor: 'pointer',
 });
 
@@ -42,17 +36,20 @@ const updateDecorations = (
     fromVsCodeUri(editor.document.uri),
     editor.document.getText()
   );
-  let linkRanges = [];
   let placeholderRanges = [];
   note.links.forEach(link => {
     const linkUri = workspace.resolveLink(note, link);
     if (linkUri.isPlaceholder()) {
-      placeholderRanges.push(link.range);
-    } else {
-      linkRanges.push(link.range);
+      placeholderRanges.push(
+        Range.create(
+          link.range.start.line,
+          link.range.start.character + 2,
+          link.range.end.line,
+          link.range.end.character - 2
+        )
+      );
     }
   });
-  editor.setDecorations(linkDecoration, linkRanges);
   editor.setDecorations(placeholderDecoration, placeholderRanges);
 };
 
@@ -82,7 +79,6 @@ const feature: FoamFeature = {
 
     context.subscriptions.push(
       areDecorationsEnabled,
-      linkDecoration,
       placeholderDecoration,
       vscode.window.onDidChangeActiveTextEditor(editor => {
         activeEditor = editor;

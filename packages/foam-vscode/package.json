@@ -37,6 +37,24 @@
     "markdown.previewStyles": [
       "./static/preview/style.css"
     ],
+    "grammars": [
+      {
+        "path": "./syntaxes/injection.json",
+        "scopeName": "foam.wikilink.injection",
+        "injectTo": ["text.html.markdown"]
+      }
+    ],
+    "colors": [
+      {
+        "id": "foam.placeholder",
+        "description": "Color of foam placeholders.",
+        "defaults": {
+          "dark": "editorWarning.foreground",
+          "light": "editorWarning.foreground",
+          "highContrast": "editorWarning.foreground"
+        }
+      }
+    ],
     "views": {
       "explorer": [
         {

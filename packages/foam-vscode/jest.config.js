@@ -152,6 +152,9 @@ module.exports = {
   // ],
 
   // The regexp pattern or array of patterns that Jest uses to detect test files
+  // This is overridden in every runCLI invocation but it's here as the default
+  // for vscode-jest. We only want unit tests in the test explorer (sidebar),
+  // since spec tests require the entire extension host to be launched before.
   testRegex: ['\\.test\\.ts$'],
 
   // This option allows the use of a custom results processor

@@ -41,7 +41,7 @@
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",
       "disableOptimisticBPs": true,
-      "cwd": "/Users/carlos/Desktop/foam/packages/foam-vscode",
+      "cwd": "${workspaceFolder}/packages/foam-vscode",
       "runtimeExecutable": "yarn",
       "args": [
         "jest",

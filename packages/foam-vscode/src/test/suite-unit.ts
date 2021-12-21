@@ -11,6 +11,7 @@
 
 /* eslint-disable import/first */
 
+// Set before imports, see https://github.com/facebook/jest/issues/12162
 process.env.FORCE_COLOR = '1';
 process.env.NODE_ENV = 'test';
 

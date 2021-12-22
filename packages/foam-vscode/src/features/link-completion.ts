@@ -7,8 +7,8 @@ import { FoamFeature } from '../types';
 import { getNoteTooltip, mdDocSelector } from '../utils';
 import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
 
-export const WIKILINK_REGEX = /\[\[[^[\]]*(?!.*\]\])/;
-export const SECTION_REGEX = /\[\[([^[\]]*#(?!.*\]\]))/;
+export const WIKILINK_REGEX = /\[\[[^[\]#]*$/;
+export const SECTION_REGEX = /\[\[([^[\]]*#)[^[\]]*$/;
 
 const feature: FoamFeature = {
   activate: async (
@@ -107,7 +107,7 @@ export class CompletionProvider
     // eslint-disable-next-line no-useless-escape
     const requiresAutocomplete = cursorPrefix.match(WIKILINK_REGEX);
 
-    if (!requiresAutocomplete || cursorPrefix.indexOf('#') >= 0) {
+    if (!requiresAutocomplete) {
       return null;
     }
 

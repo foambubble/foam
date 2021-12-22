@@ -34,5 +34,5 @@ const getOffset = (
     offset = offset + lines[i].length + eolLen;
     i++;
   }
-  return offset + Math.min(position.character, lines[i].length);
+  return offset + Math.min(position.character, lines[i]?.length ?? 0);
 };

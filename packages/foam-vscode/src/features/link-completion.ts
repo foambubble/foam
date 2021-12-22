@@ -107,7 +107,7 @@ export class CompletionProvider
     // eslint-disable-next-line no-useless-escape
     const requiresAutocomplete = cursorPrefix.match(WIKILINK_REGEX);
 
-    if (!requiresAutocomplete || cursorPrefix.indexOf('#') >= 0) {
+    if (!requiresAutocomplete || requiresAutocomplete[0].indexOf('#') >= 0) {
       return null;
     }
 

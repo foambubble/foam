@@ -26,7 +26,7 @@
   "editor.tabSize": 2,
   "jest.autoRun": "off",
   "jest.rootPath": "packages/foam-vscode",
-  "jest.jestCommandLine": "yarn jest"
+  "jest.jestCommandLine": "yarn jest",
   "gitdoc.enabled": false,
   "search.mode": "reuseEditor"
 }

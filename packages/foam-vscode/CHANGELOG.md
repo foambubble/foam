@@ -4,6 +4,16 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.17.2] - 2021-12-22
+
+Fixes and Improvements:
+- Improved support for wikilinks in titles (#878)
+- Use syntax injection for wikilinks (#876 - thanks @memeplex)
+- Fix when applying text edits in last line 
+
+Internal:
+- DX: Clean up of testing setup (#881 - thanks @memeplex)
+
 ## [0.17.1] - 2021-12-16
 
 Fixes and Improvements:

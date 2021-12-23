@@ -88,40 +88,48 @@ describe('Link Completion', () => {
   });
 
   it('should return notes with unique identifiers, and placeholders', async () => {
-    const { uri } = await createFile('[[file]] [[');
-    const { doc } = await showInEditor(uri);
-    const provider = new CompletionProvider(ws, graph);
+    for (const text of ['[[', '[[file]] [[', '[[file]] #tag [[']) {
+      const { uri } = await createFile(text);
+      const { doc } = await showInEditor(uri);
+      const provider = new CompletionProvider(ws, graph);
 
-    const links = await provider.provideCompletionItems(
-      doc,
-      new vscode.Position(0, 11)
-    );
+      const links = await provider.provideCompletionItems(
+        doc,
+        new vscode.Position(0, text.length)
+      );
 
-    expect(links.items.length).toEqual(5);
-    expect(new Set(links.items.map(i => i.insertText))).toEqual(
-      new Set([
-        'to/file',
-        'another/file',
-        'File name with spaces',
-        'file-name',
-        'placeholder text',
-      ])
-    );
+      expect(links.items.length).toEqual(5);
+      expect(new Set(links.items.map(i => i.insertText))).toEqual(
+        new Set([
+          'to/file',
+          'another/file',
+          'File name with spaces',
+          'file-name',
+          'placeholder text',
+        ])
+      );
+    }
   });
 
   it('should return sections for other notes', async () => {
-    const { uri } = await createFile('[[file-name#');
-    const { doc } = await showInEditor(uri);
-    const provider = new SectionCompletionProvider(ws);
+    for (const text of [
+      '[[file-name#',
+      '[[file]] [[file-name#',
+      '[[file]] #tag [[file-name#',
+    ]) {
+      const { uri } = await createFile(text);
+      const { doc } = await showInEditor(uri);
+      const provider = new SectionCompletionProvider(ws);
 
-    const links = await provider.provideCompletionItems(
-      doc,
-      new vscode.Position(0, 12)
-    );
+      const links = await provider.provideCompletionItems(
+        doc,
+        new vscode.Position(0, text.length)
+      );
 
-    expect(new Set(links.items.map(i => i.label))).toEqual(
-      new Set(['Section One', 'Section Two'])
-    );
+      expect(new Set(links.items.map(i => i.label))).toEqual(
+        new Set(['Section One', 'Section Two'])
+      );
+    }
   });
 
   it('should return sections within the note', async () => {

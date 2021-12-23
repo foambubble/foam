@@ -6,11 +6,11 @@
       "contentName": "string.other.link.title.markdown.foam",
       "begin": "\\[\\[",
       "beginCaptures": {
-        "0": { "name": "punctuation.definition.metadata.markdown" }
+        "0": { "name": "punctuation.definition.metadata.markdown.foam" }
       },
       "end": "\\]\\]",
       "endCaptures": {
-        "0": { "name": "punctuation.definition.metadata.markdown" }
+        "0": { "name": "punctuation.definition.metadata.markdown.foam" }
       }
     }
   ]

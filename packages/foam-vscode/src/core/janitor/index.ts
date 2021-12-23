@@ -56,7 +56,7 @@ export const generateLinkReferences = (
     const first = note.definitions[0];
     const last = note.definitions[note.definitions.length - 1];
 
-    var nonGeneratedReferenceDefinitions = note.definitions;
+    let nonGeneratedReferenceDefinitions = note.definitions;
 
     // if we have more definitions then referenced pages AND the page refers to a page
     // we expect non-generated link definitions to be present
@@ -115,7 +115,7 @@ export const generateLinkReferences = (
       return null;
     }
 
-    var fullReferences = `${newReferences}`;
+    let fullReferences = `${newReferences}`;
     // If there are any non-generated definitions, add those to the output as well
     if (
       nonGeneratedReferenceDefinitions.length > 0 &&

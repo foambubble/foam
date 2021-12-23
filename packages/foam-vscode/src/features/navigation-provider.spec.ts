@@ -232,6 +232,5 @@ describe('Document navigation', () => {
         range: new vscode.Range(0, 23, 0, 23 + 9),
       });
     });
-    it('should provide references for placeholders', async () => {});
   });
 });

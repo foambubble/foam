@@ -76,9 +76,9 @@ export class FoamGraph implements IDisposable {
    */
   public static fromWorkspace(
     workspace: FoamWorkspace,
-    keepMonitoring: boolean = false
+    keepMonitoring = false
   ): FoamGraph {
-    let graph = new FoamGraph(workspace);
+    const graph = new FoamGraph(workspace);
 
     workspace.list().forEach(resource => graph.resolveResource(resource));
     if (keepMonitoring) {
@@ -99,7 +99,7 @@ export class FoamGraph implements IDisposable {
 
   private updateLinksRelatedToAddedResource(resource: Resource) {
     // check if any existing connection can be filled by new resource
-    let resourcesToUpdate: URI[] = [];
+    const resourcesToUpdate: URI[] = [];
     for (const placeholderId of this.placeholders.keys()) {
       // quick and dirty check for affected resources
       if (resource.uri.path.endsWith(placeholderId + '.md')) {

@@ -1,11 +1,11 @@
-import { Node, Position as AstPosition } from 'unist';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { Point, Node, Position as AstPosition } from 'unist';
 import unified from 'unified';
 import markdownParse from 'remark-parse';
 import wikiLinkPlugin from 'remark-wiki-link';
 import frontmatterPlugin from 'remark-frontmatter';
 import { parse as parseYAML } from 'yaml';
 import visit from 'unist-util-visit';
-import { Parent, Point } from 'unist';
 import detectNewline from 'detect-newline';
 import os from 'os';
 import {
@@ -128,7 +128,7 @@ export class MarkdownResourceProvider implements ResourceProvider {
   ) {
     let targetUri: URI | undefined;
     switch (link.type) {
-      case 'wikilink':
+      case 'wikilink': {
         const definitionUri = resource.definitions.find(
           def => def.label === link.target
         )?.url;
@@ -150,8 +150,8 @@ export class MarkdownResourceProvider implements ResourceProvider {
           }
         }
         break;
-
-      case 'link':
+      }
+      case 'link': {
         const [target, section] = link.target.split('#');
         targetUri =
           workspace.find(target, resource.uri)?.uri ??
@@ -160,6 +160,7 @@ export class MarkdownResourceProvider implements ResourceProvider {
           targetUri = targetUri.withFragment(section);
         }
         break;
+      }
     }
     return targetUri;
   }
@@ -202,7 +203,7 @@ const tagsPlugin: ParserPlugin = {
     if (node.type === 'text') {
       const tags = extractHashtags((node as any).value);
       tags.forEach(tag => {
-        let start = astPointToFoamPosition(node.position!.start);
+        const start = astPointToFoamPosition(node.position!.start);
         start.character = start.character + tag.offset;
         const end: Position = {
           line: start.line,
@@ -403,7 +404,7 @@ export function createMarkdownParser(
       const tree = parser.parse(markdown);
       const eol = detectNewline(markdown) || os.EOL;
 
-      var note: Resource = {
+      const note: Resource = {
         uri: uri,
         type: 'note',
         properties: {},
@@ -480,7 +481,7 @@ function getFoamDefinitions(
   fileEndPoint: Position
 ): NoteLinkDefinition[] {
   let previousLine = fileEndPoint.line;
-  let foamDefinitions = [];
+  const foamDefinitions = [];
 
   // walk through each definition in reverse order
   // (last one first)
@@ -503,7 +504,7 @@ function getFoamDefinitions(
 export function stringifyMarkdownLinkReferenceDefinition(
   definition: NoteLinkDefinition
 ) {
-  let url =
+  const url =
     definition.url.indexOf(' ') > 0 ? `<${definition.url}>` : definition.url;
   let text = `[${definition.label}]: ${url}`;
   if (definition.title) {

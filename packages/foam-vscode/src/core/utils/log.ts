@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/interface-name-prefix
 export interface ILogger {
   debug(message?: any, ...params: any[]): void;
   info(message?: any, ...params: any[]): void;
@@ -58,7 +59,9 @@ export class ConsoleLogger extends BaseLogger {
 }
 
 export class NoOpLogger extends BaseLogger {
-  log(_l: LogLevel, _m?: string, ..._p: any[]): void {}
+  log(_l: LogLevel, _m?: string, ..._p: any[]): void {
+    // do nothing
+  }
 }
 
 export class Logger {

@@ -26,7 +26,7 @@ export const mdDocSelector = [
 
 export function loadDocConfig() {
   // Load workspace config
-  let activeEditor = window.activeTextEditor;
+  const activeEditor = window.activeTextEditor;
   if (!activeEditor) {
     Logger.debug('Failed to load config, no active editor');
     return;
@@ -34,8 +34,8 @@ export function loadDocConfig() {
 
   docConfig.eol = activeEditor.document.eol === EndOfLine.CRLF ? '\r\n' : '\n';
 
-  let tabSize = Number(activeEditor.options.tabSize);
-  let insertSpaces = activeEditor.options.insertSpaces;
+  const tabSize = Number(activeEditor.options.tabSize);
+  const insertSpaces = activeEditor.options.insertSpaces;
   if (insertSpaces) {
     docConfig.tab = ' '.repeat(tabSize);
   } else {

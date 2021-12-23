@@ -61,7 +61,7 @@ const feature: FoamFeature = {
     // when a file is created as a result of peekDefinition
     // action on a wikilink, add definition update references
     foam.workspace.onDidAdd(_ => {
-      let editor = window.activeTextEditor;
+      const editor = window.activeTextEditor;
       if (!editor || !isMdEditor(editor)) {
         return;
       }
@@ -79,13 +79,13 @@ function updateDocumentInNoteGraph(foam: Foam, document: TextDocument) {
 }
 
 async function createReferenceList(foam: FoamWorkspace) {
-  let editor = window.activeTextEditor;
+  const editor = window.activeTextEditor;
 
   if (!editor || !isMdEditor(editor)) {
     return;
   }
 
-  let refs = await generateReferenceList(foam, editor.document);
+  const refs = await generateReferenceList(foam, editor.document);
   if (refs && refs.length) {
     await editor.edit(function(editBuilder) {
       if (editor) {
@@ -213,7 +213,7 @@ class WikilinkReferenceCodeLensProvider implements CodeLensProvider {
   ): CodeLens[] | Thenable<CodeLens[]> {
     loadDocConfig();
 
-    let range = detectReferenceListRange(document);
+    const range = detectReferenceListRange(document);
     if (!range) {
       return [];
     }
@@ -222,7 +222,7 @@ class WikilinkReferenceCodeLensProvider implements CodeLensProvider {
     const oldRefs = getText(range).replace(/\r?\n|\r/g, docConfig.eol);
     const newRefs = refs.join(docConfig.eol);
 
-    let status = oldRefs === newRefs ? 'up to date' : 'out of date';
+    const status = oldRefs === newRefs ? 'up to date' : 'out of date';
 
     return [
       new CodeLens(range, {

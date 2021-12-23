@@ -97,12 +97,12 @@ async function runJanitor(foam: Foam) {
   // Apply Text Edits to Non Dirty Notes using fs module just like CLI
 
   const fileWritePromises = nonDirtyNotes.map(note => {
-    let heading = generateHeading(note);
+    const heading = generateHeading(note);
     if (heading) {
       updatedHeadingCount += 1;
     }
 
-    let definitions =
+    const definitions =
       wikilinkSetting === LinkReferenceDefinitionsSetting.off
         ? null
         : generateLinkReferences(
@@ -140,7 +140,7 @@ async function runJanitor(foam: Foam) {
 
     // Get edits
     const heading = generateHeading(note);
-    let definitions =
+    const definitions =
       wikilinkSetting === LinkReferenceDefinitionsSetting.off
         ? null
         : generateLinkReferences(

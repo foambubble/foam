@@ -13,8 +13,8 @@ export const applyTextEdit = (text: string, textEdit: TextEdit): string => {
   const eol = detectNewline(text) || os.EOL;
   const lines = text.split(eol);
   const characters = text.split('');
-  let startOffset = getOffset(lines, textEdit.range.start, eol);
-  let endOffset = getOffset(lines, textEdit.range.end, eol);
+  const startOffset = getOffset(lines, textEdit.range.start, eol);
+  const endOffset = getOffset(lines, textEdit.range.end, eol);
   const deleteCount = endOffset - startOffset;
 
   const textToAppend = `${textEdit.newText}`;

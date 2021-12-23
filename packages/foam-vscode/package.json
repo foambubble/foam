@@ -394,10 +394,6 @@
     "publish-extension": "yarn publish-extension-vscode && yarn publish-extension-openvsx && yarn npm-cleanup"
   },
   "devDependencies": {
-    "@babel/core": "^7.11.0",
-    "@babel/plugin-transform-runtime": "^7.10.4",
-    "@babel/preset-env": "^7.11.0",
-    "@babel/preset-typescript": "^7.10.4",
     "@types/dateformat": "^3.0.1",
     "@types/glob": "^7.1.1",
     "@types/lodash": "^4.14.157",
@@ -410,7 +406,9 @@
     "@typescript-eslint/eslint-plugin": "^2.30.0",
     "@typescript-eslint/parser": "^2.30.0",
     "eslint": "^6.8.0",
+    "eslint-import-resolver-typescript": "^2.5.0",
     "eslint-plugin-import": "^2.24.2",
+    "eslint-plugin-jest": "^25.3.0",
     "husky": "^4.2.5",
     "jest": "^26.2.2",
     "jest-extended": "^0.11.5",

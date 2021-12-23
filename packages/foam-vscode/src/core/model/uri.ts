@@ -58,7 +58,7 @@ export class URI {
   }
 
   static file(value: string): URI {
-    let [path, authority] = pathUtils.fromFsPath(value);
+    const [path, authority] = pathUtils.fromFsPath(value);
     return new URI({ scheme: 'file', authority, path });
   }
 
@@ -187,6 +187,7 @@ function encode(uri: URI, skipEncoding: boolean): string {
     : encodeURIComponentMinimal;
 
   let res = '';
+  // eslint-disable-next-line prefer-const
   let { scheme, authority, path, query, fragment } = uri;
   if (scheme) {
     res += scheme;

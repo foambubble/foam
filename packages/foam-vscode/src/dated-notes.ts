@@ -114,7 +114,7 @@ export async function createDailyNoteIfNotExists(
     configuration.get('openDailyNote.titleFormat') ??
     configuration.get('openDailyNote.filenameFormat');
 
-  const templateFallbackText: string = `---
+  const templateFallbackText = `---
 foam_template:
   name: New Daily Note
   description: Foam's default daily note template

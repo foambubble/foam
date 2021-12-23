@@ -20,9 +20,9 @@ export class FoamTags implements IDisposable {
    */
   public static fromWorkspace(
     workspace: FoamWorkspace,
-    keepMonitoring: boolean = false
+    keepMonitoring = false
   ): FoamTags {
-    let tags = new FoamTags();
+    const tags = new FoamTags();
 
     workspace
       .list()

@@ -131,7 +131,7 @@ async function createGraphPanel(foam: Foam, context: vscode.ExtensionContext) {
   panel.webview.onDidReceiveMessage(
     async message => {
       switch (message.type) {
-        case 'webviewDidLoad':
+        case 'webviewDidLoad': {
           const styles = getGraphStyle();
           panel.webview.postMessage({
             type: 'didUpdateStyle',
@@ -139,8 +139,8 @@ async function createGraphPanel(foam: Foam, context: vscode.ExtensionContext) {
           });
           updateGraph(panel, foam);
           break;
-
-        case 'webviewDidSelectNode':
+        }
+        case 'webviewDidSelectNode': {
           const noteUri = vscode.Uri.parse(message.payload);
           const selectedNote = foam.workspace.get(fromVsCodeUri(noteUri));
 
@@ -151,10 +151,11 @@ async function createGraphPanel(foam: Foam, context: vscode.ExtensionContext) {
             vscode.window.showTextDocument(doc, vscode.ViewColumn.One);
           }
           break;
-
-        case 'error':
+        }
+        case 'error': {
           Logger.error('An error occurred in the graph view', message.payload);
           break;
+        }
       }
     },
     undefined,

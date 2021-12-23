@@ -2,11 +2,12 @@ import micromatch from 'micromatch';
 import fs from 'fs';
 import { URI } from '../model/uri';
 import { Logger } from '../utils/log';
-import glob from 'glob';
+import { glob } from 'glob';
 import { promisify } from 'util';
 import { isWindows } from '../common/platform';
 
 const findAllFiles = promisify(glob);
+// eslint-disable-next-line @typescript-eslint/interface-name-prefix
 export interface IMatcher {
   /**
    * Filters the given list of URIs, keepin only the ones that
@@ -95,6 +96,7 @@ export class Matcher implements IMatcher {
 /**
  * Represents a source of files and content
  */
+// eslint-disable-next-line @typescript-eslint/interface-name-prefix
 export interface IDataStore {
   /**
    * List the files matching the given glob from the

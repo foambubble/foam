@@ -125,7 +125,14 @@ export class NavigationProvider
       targetRange = section.range;
     }
     const result: vscode.LocationLink = {
-      originSelectionRange: toVsCodeRange(targetLink.range),
+      originSelectionRange: toVsCodeRange(
+        new vscode.Range(
+          targetLink.range.start.line,
+          targetLink.range.start.character + 2,
+          targetLink.range.end.line,
+          targetLink.range.end.character - 2
+        )
+      ),
       targetUri: toVsCodeUri(uri),
       targetRange: toVsCodeRange(targetRange),
       targetSelectionRange: toVsCodeRange(

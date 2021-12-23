@@ -261,7 +261,7 @@
           "default": true
         },
         "foam.decorations.links.enable": {
-          "description": "Enable decorations for links",
+          "description": "Enable decorations for placeholders",
           "type": "boolean",
           "default": true
         },

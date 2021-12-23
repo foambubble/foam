@@ -105,7 +105,7 @@ export class CompletionProvider
     // See https://github.com/foambubble/foam/pull/596#issuecomment-825748205 for details.
     const requiresAutocomplete = cursorPrefix.match(WIKILINK_REGEX);
 
-    if (!requiresAutocomplete || cursorPrefix.indexOf('#') >= 0) {
+    if (!requiresAutocomplete || requiresAutocomplete[0].indexOf('#') >= 0) {
       return null;
     }
 

@@ -1,4 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/interface-name-prefix
 export interface ILogger {
   debug(message?: any, ...params: any[]): void;
   info(message?: any, ...params: any[]): void;

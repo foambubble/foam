@@ -24,7 +24,7 @@ const feature: FoamFeature = {
         async (params: { uri: URI }) => {
           const uri = new URI(params.uri);
           switch (uri.scheme) {
-            case 'file':
+            case 'file': {
               let selection = new vscode.Range(1, 0, 1, 0);
               if (uri.fragment) {
                 const foam = await foamPromise;
@@ -41,8 +41,8 @@ const feature: FoamFeature = {
               return vscode.commands.executeCommand('vscode.open', targetUri, {
                 selection: selection,
               });
-
-            case 'placeholder':
+            }
+            case 'placeholder': {
               const basedir =
                 vscode.workspace.workspaceFolders.length > 0
                   ? vscode.workspace.workspaceFolders[0].uri
@@ -58,6 +58,7 @@ const feature: FoamFeature = {
                 .changeExtension('', '.md');
               await NoteFactory.createForPlaceholderWikilink(title, target);
               return;
+            }
           }
         }
       )

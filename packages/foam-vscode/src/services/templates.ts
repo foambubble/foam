@@ -82,7 +82,7 @@ export const NoteFactory = {
     templateUri: URI,
     resolver: Resolver,
     filepathFallbackURI?: URI,
-    templateFallbackText: string = ''
+    templateFallbackText = ''
   ): Promise<void> => {
     const templateText = existsSync(templateUri.toFsPath())
       ? await workspace.fs

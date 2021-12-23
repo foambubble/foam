@@ -72,7 +72,7 @@ export class BacklinksTreeDataProvider
             ).split('\n');
             if (link.range.start.line < lines.length) {
               const line = lines[link.range.start.line];
-              let start = Math.max(0, link.range.start.character - 15);
+              const start = Math.max(0, link.range.start.character - 15);
               const ellipsis = start === 0 ? '' : '...';
 
               item.label = `${link.range.start.line}: ${ellipsis}${line.substr(

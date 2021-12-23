@@ -65,7 +65,7 @@ export const createFile = async (content: string, filepath: string[] = []) => {
 };
 
 export const createNote = (r: Resource) => {
-  let content = `# ${r.title}
+  const content = `# ${r.title}
 
   some content and ${r.links
     .map(l =>

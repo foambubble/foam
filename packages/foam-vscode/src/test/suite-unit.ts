@@ -15,12 +15,14 @@
 process.env.FORCE_COLOR = '1';
 process.env.NODE_ENV = 'test';
 
-import path from 'path';
+// eslint-disable-next-line import/no-extraneous-dependencies
 import { runCLI } from '@jest/core';
+import path from 'path';
 
 const rootDir = path.join(__dirname, '..', '..');
 
 export function runUnit(): Promise<void> {
+  // eslint-disable-next-line no-async-promise-executor
   return new Promise(async (resolve, reject) => {
     try {
       const { results } = await runCLI(

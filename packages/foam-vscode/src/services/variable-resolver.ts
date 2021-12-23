@@ -43,7 +43,7 @@ export function substituteVariables(
 
 export function findFoamVariables(templateText: string): string[] {
   const regex = /\$(FOAM_[_a-zA-Z0-9]*)|\${(FOAM_[[_a-zA-Z0-9]*)}/g;
-  var matches = [];
+  let matches = [];
   const output: string[] = [];
   while ((matches = regex.exec(templateText))) {
     output.push(matches[1] || matches[2]);

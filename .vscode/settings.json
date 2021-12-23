@@ -20,10 +20,10 @@
     "**/node_modules/**/*",
     "packages/**/*"
   ],
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "prettier.requireConfig": true,
-  "editor.formatOnSave": true,
   "editor.tabSize": 2,
+  "editor.formatOnSave": true,
+  "editor.formatOnSaveMode": "file",
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
   "jest.autoRun": "off",
   "jest.rootPath": "packages/foam-vscode",
   "jest.jestCommandLine": "yarn jest",

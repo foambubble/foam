@@ -16,7 +16,7 @@ import { NoteFactory } from './services/templates';
  */
 export async function openDailyNoteFor(date?: Date) {
   const foamConfiguration = workspace.getConfiguration('foam');
-  const currentDate = date !== undefined ? date : new Date();
+  const currentDate = date instanceof Date ? date : new Date();
 
   const dailyNotePath = getDailyNotePath(foamConfiguration, currentDate);
 

@@ -806,6 +806,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "MalcolmMielle",
+      "name": "Malcolm Mielle",
+      "avatar_url": "https://avatars.githubusercontent.com/u/4457840?v=4",
+      "profile": "http://malcolmmielle.wordpress.com/",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,

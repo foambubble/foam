@@ -1,6 +1,6 @@
 # Backlinking
 
-When using [[wikilinks]], you can find all notes that link to a specific note in the [VS Code Markdown Notes](https://marketplace.visualstudio.com/items?itemName=kortina.vscode-markdown-notes) **Backlinks Explorer**
+When using [[wikilinks]], you can find all notes that link to a specific note in the **Backlinks Explorer**
 
 - Run `Cmd` + `Shift` + `P` (`Ctrl` + `Shift` + `P` for Windows), type "backlinks" and run the **Explorer: Focus on Backlinks** view.
 - Keep this pane always visible to discover relationships between your thoughts

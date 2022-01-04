@@ -8,7 +8,7 @@ Gitlab pages can be kept private for private repo, so that your notes are still 
 
 ### Generate the directory from GitHub
 
-Generate a solution using the [foam template](https://github.com/foambubble/foam-template).
+Generate a solution using the [Foam template](https://github.com/foambubble/foam-template).
 
 Change the remote to GitLab, or copy all the files into a new GitLab repo
 

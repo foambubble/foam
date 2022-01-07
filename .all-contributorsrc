@@ -824,6 +824,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "bentongxyz",
+      "name": "bentongxyz",
+      "avatar_url": "https://avatars.githubusercontent.com/u/60358804?v=4",
+      "profile": "https://github.com/bentongxyz",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,

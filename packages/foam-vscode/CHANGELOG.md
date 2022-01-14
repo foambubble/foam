@@ -4,6 +4,12 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.17.3] - 2022-01-14
+
+Fixes and Improvements:
+- Fixed autocompletion with tags (#885 - thanks @memeplex)
+- Improved "Open Daily Note" to be usabled in tasks (#897 - thanks @MCluck90)
+
 ## [0.17.2] - 2021-12-22
 
 Fixes and Improvements:

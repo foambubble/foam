@@ -62,7 +62,7 @@ describe('Markdown loader', () => {
     ).toEqual(['page-a', 'page-b', 'page-c', 'page-d', 'page-e']);
   });
 
-  it('Ingores external links', () => {
+  it('Ignores external links', () => {
     const note = createNoteFromMarkdown(
       `this is a [link to google](https://www.google.com)`
     );

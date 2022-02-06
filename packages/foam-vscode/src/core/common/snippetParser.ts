@@ -600,9 +600,9 @@ export class TextmateSnippet extends Marker {
 		return ret;
 	}
 
-	async resolveVariables(resolver: VariableResolver): Promise<this> {
+	async resolveVariables(resolver: VariableResolver, variableNames?: Set<string>): Promise<this> {
 		await this.asyncWalk(async candidate => {
-			if (candidate instanceof Variable) {
+			if (candidate instanceof Variable && (!variableNames || variableNames.has(candidate.name))) {
 				if (await candidate.resolve(resolver)) {
 					this._placeholders = undefined;
 				}

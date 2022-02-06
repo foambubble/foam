@@ -61,7 +61,6 @@ describe('resolveFoamVariables', () => {
     const variables = [new Variable('FOAM_FOO')];
 
     const expected = new Map<string, string>();
-    expected.set('FOAM_FOO', 'FOAM_FOO');
 
     const givenValues = new Map<string, string>();
     const resolver = new Resolver(givenValues, new Date());

@@ -271,7 +271,7 @@ export class Resolver implements VariableResolver {
           );
           break;
         default:
-          this.promises.set(name, Promise.resolve(name));
+          this.promises.set(name, Promise.resolve(undefined));
           break;
       }
     }

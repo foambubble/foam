@@ -31,13 +31,11 @@ export function substituteVariables(text: string, variables: Variable[]) {
   let result = '';
 
   let i = 0;
-  variables
-    .filter(v => v.pos !== undefined && v.endPos !== undefined)
-    .forEach(variable => {
-      result += text.substring(i, variable.pos);
-      result += variable.toString();
-      i = variable.endPos;
-    });
+  variables.forEach(variable => {
+    result += text.substring(i, variable.pos);
+    result += variable.toString();
+    i = variable.endPos;
+  });
   result += text.substring(i);
 
   return result;
@@ -66,12 +64,10 @@ export class Resolver implements VariableResolver {
    *
    * @param givenValues the map of variable name to value
    * @param foamDate the date used to fill FOAM_DATE_* variables
-   * @param extraVariablesToResolve other variables to always resolve, even if not present in text
    */
   constructor(
     private givenValues: Map<string, string>,
-    private foamDate: Date,
-    private extraVariablesToResolve: Set<string> = new Set()
+    private foamDate: Date
   ) {}
 
   /**
@@ -91,47 +87,33 @@ export class Resolver implements VariableResolver {
    * @returns an array, where the first element is the resolution map,
    *          and the second is the processed text
    */
-  async resolveText(text: string): Promise<[Map<string, string>, string]> {
-    const variablesInTemplate = findFoamVariables(text.toString());
+  async resolveText(text: string): Promise<string> {
+    let variablesInTemplate = findFoamVariables(text.toString());
 
-    const uniqVariableNamesInTemplate = new Set(
-      variablesInTemplate.map(variable => variable.name)
-    );
-
-    const variables = variablesInTemplate.concat(
-      [...this.extraVariablesToResolve]
-        .filter(name => !uniqVariableNamesInTemplate.has(name))
-        .map(name => new Variable(name))
-    );
-    const resolvedValues = await this.resolveAll(variables);
-
+    // Add FOAM_SELECTED_TEXT to the template text if required
+    // and re-parse the template text.
     if (
-      resolvedValues.get('FOAM_SELECTED_TEXT') &&
-      !uniqVariableNamesInTemplate.has('FOAM_SELECTED_TEXT')
+      this.givenValues.has('FOAM_SELECTED_TEXT') &&
+      !variablesInTemplate.find(
+        variable => variable.name === 'FOAM_SELECTED_TEXT'
+      )
     ) {
       const token = '$FOAM_SELECTED_TEXT';
-      let pos = text.length;
       if (text.endsWith('\n')) {
         text = `${text}${token}\n`;
       } else {
-        pos += 1;
         text = `${text}\n${token}`;
       }
-
-      const endPos = pos + token.length;
-      const selectedTextVariable = new Variable(
-        'FOAM_SELECTED_TEXT',
-        pos,
-        endPos
-      );
-      await selectedTextVariable.resolve(this);
-      variablesInTemplate.push(selectedTextVariable);
-      uniqVariableNamesInTemplate.add('FOAM_SELECTED_TEXT');
-      variables.push(selectedTextVariable);
+      variablesInTemplate = findFoamVariables(text.toString());
     }
 
-    const subbedText = substituteVariables(text.toString(), variables);
-    return [resolvedValues, subbedText];
+    await this.resolveAll(variablesInTemplate);
+
+    const subbedText = substituteVariables(
+      text.toString(),
+      variablesInTemplate
+    );
+    return subbedText;
   }
 
   /**

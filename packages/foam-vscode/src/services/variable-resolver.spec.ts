@@ -15,20 +15,20 @@ describe('substituteFoamVariables', () => {
     const givenValues = new Map<string, string>();
     givenValues.set('FOAM_TITLE', 'My note title');
     const resolver = new Resolver(givenValues, new Date());
-    expect((await resolver.resolveText(input))[1]).toEqual(input);
+    expect(await resolver.resolveText(input)).toEqual(input);
   });
 
   test('Ignores variable-looking text values', async () => {
     // Related to https://github.com/foambubble/foam/issues/602
     const input = `
-      # \${CURRENT_DATE/.*/\${FOAM_TITLE}/} <-- FOAM_TITLE is not a variable here, but a text in a transform
-      # \${1|one,two,\${FOAM_TITLE}|} <-- FOAM_TITLE is not a variable here, but a text in a choice
-    `;
+        # \${CURRENT_DATE/.*/\${FOAM_TITLE}/} <-- FOAM_TITLE is not a variable here, but a text in a transform
+        # \${1|one,two,\${FOAM_TITLE}|} <-- FOAM_TITLE is not a variable here, but a text in a choice
+      `;
 
     const givenValues = new Map<string, string>();
     givenValues.set('FOAM_TITLE', 'My note title');
     const resolver = new Resolver(givenValues, new Date());
-    expect((await resolver.resolveText(input))[1]).toEqual(input);
+    expect(await resolver.resolveText(input)).toEqual(input);
   });
 
   test('Correctly substitutes variables that are substrings of one another', async () => {
@@ -36,23 +36,23 @@ describe('substituteFoamVariables', () => {
     // If we're not careful with how we substitute the values
     // we can end up putting the FOAM_TITLE in place FOAM_TITLE_NON_EXISTENT_VARIABLE should be.
     const input = `
-      # \${FOAM_TITLE}
-      # $FOAM_TITLE
-      # \${FOAM_TITLE_NON_EXISTENT_VARIABLE}
-      # $FOAM_TITLE_NON_EXISTENT_VARIABLE
-    `;
+        # \${FOAM_TITLE}
+        # $FOAM_TITLE
+        # \${FOAM_TITLE_NON_EXISTENT_VARIABLE}
+        # $FOAM_TITLE_NON_EXISTENT_VARIABLE
+      `;
 
     const expected = `
-      # My note title
-      # My note title
-      # \${FOAM_TITLE_NON_EXISTENT_VARIABLE}
-      # $FOAM_TITLE_NON_EXISTENT_VARIABLE
-    `;
+        # My note title
+        # My note title
+        # \${FOAM_TITLE_NON_EXISTENT_VARIABLE}
+        # $FOAM_TITLE_NON_EXISTENT_VARIABLE
+      `;
 
     const givenValues = new Map<string, string>();
     givenValues.set('FOAM_TITLE', 'My note title');
     const resolver = new Resolver(givenValues, new Date());
-    expect((await resolver.resolveText(input))[1]).toEqual(expected);
+    expect(await resolver.resolveText(input)).toEqual(expected);
   });
 });
 
@@ -178,16 +178,14 @@ describe('resolveFoamVariables', () => {
 describe('resolveFoamTemplateVariables', () => {
   test('Does nothing for template without Foam-specific variables', async () => {
     const input = `
-      # \${AnotherVariable} <-- Unrelated to Foam
-      # \${AnotherVariable:default_value} <-- Unrelated to Foam
-      # \${AnotherVariable:default_value/(.*)/\${1:/upcase}/}} <-- Unrelated to Foam
-      # $AnotherVariable} <-- Unrelated to Foam
-      # $CURRENT_YEAR-\${CURRENT_MONTH}-$CURRENT_DAY <-- Unrelated to Foam
-    `;
+        # \${AnotherVariable} <-- Unrelated to Foam
+        # \${AnotherVariable:default_value} <-- Unrelated to Foam
+        # \${AnotherVariable:default_value/(.*)/\${1:/upcase}/}} <-- Unrelated to Foam
+        # $AnotherVariable} <-- Unrelated to Foam
+        # $CURRENT_YEAR-\${CURRENT_MONTH}-$CURRENT_DAY <-- Unrelated to Foam
+      `;
 
-    const expectedMap = new Map<string, string>();
-    const expectedString = input;
-    const expected = [expectedMap, expectedString];
+    const expected = input;
 
     const resolver = new Resolver(new Map(), new Date());
     expect(await resolver.resolveText(input)).toEqual(expected);
@@ -195,45 +193,14 @@ describe('resolveFoamTemplateVariables', () => {
 
   test('Does nothing for unknown Foam-specific variables', async () => {
     const input = `
-      # $FOAM_FOO
-      # \${FOAM_FOO}
-      # \${FOAM_FOO:default_value}
-      # \${FOAM_FOO:default_value/(.*)/\${1:/upcase}/}}
-    `;
+        # $FOAM_FOO
+        # \${FOAM_FOO}
+        # \${FOAM_FOO:default_value}
+        # \${FOAM_FOO:default_value/(.*)/\${1:/upcase}/}}
+      `;
 
-    const expectedMap = new Map<string, string>();
-    const expectedString = input;
-    const expected = [expectedMap, expectedString];
-
+    const expected = input;
     const resolver = new Resolver(new Map(), new Date());
-    expect(await resolver.resolveText(input)).toEqual(expected);
-  });
-
-  test('Allows extra variables to be provided; only resolves the unique set', async () => {
-    const foamTitle = 'My note title';
-
-    jest
-      .spyOn(window, 'showInputBox')
-      .mockImplementationOnce(jest.fn(() => Promise.resolve(foamTitle)));
-
-    const input = `
-      # $FOAM_TITLE
-    `;
-
-    const expectedOutput = `
-      # My note title
-    `;
-
-    const expectedMap = new Map<string, string>();
-    expectedMap.set('FOAM_TITLE', foamTitle);
-
-    const expected = [expectedMap, expectedOutput];
-
-    const resolver = new Resolver(
-      new Map(),
-      new Date(),
-      new Set(['FOAM_TITLE'])
-    );
     expect(await resolver.resolveText(input)).toEqual(expected);
   });
 
@@ -246,20 +213,11 @@ describe('resolveFoamTemplateVariables', () => {
 
     const input = `# \${FOAM_TITLE}\n`;
 
-    const expectedOutput = `# My note title\nSelected text\n`;
+    const expected = `# My note title\nSelected text\n`;
 
-    const expectedMap = new Map<string, string>();
-    expectedMap.set('FOAM_TITLE', foamTitle);
-    expectedMap.set('FOAM_SELECTED_TEXT', 'Selected text');
-
-    const expected = [expectedMap, expectedOutput];
     const givenValues = new Map<string, string>();
     givenValues.set('FOAM_SELECTED_TEXT', 'Selected text');
-    const resolver = new Resolver(
-      givenValues,
-      new Date(),
-      new Set(['FOAM_TITLE', 'FOAM_SELECTED_TEXT'])
-    );
+    const resolver = new Resolver(givenValues, new Date());
     expect(await resolver.resolveText(input)).toEqual(expected);
   });
 
@@ -272,20 +230,11 @@ describe('resolveFoamTemplateVariables', () => {
 
     const input = `# \${FOAM_TITLE}\n\n`;
 
-    const expectedOutput = `# My note title\n\nSelected text\n`;
+    const expected = `# My note title\n\nSelected text\n`;
 
-    const expectedMap = new Map<string, string>();
-    expectedMap.set('FOAM_TITLE', foamTitle);
-    expectedMap.set('FOAM_SELECTED_TEXT', 'Selected text');
-
-    const expected = [expectedMap, expectedOutput];
     const givenValues = new Map<string, string>();
     givenValues.set('FOAM_SELECTED_TEXT', 'Selected text');
-    const resolver = new Resolver(
-      givenValues,
-      new Date(),
-      new Set(['FOAM_TITLE', 'FOAM_SELECTED_TEXT'])
-    );
+    const resolver = new Resolver(givenValues, new Date());
     expect(await resolver.resolveText(input)).toEqual(expected);
   });
 
@@ -298,20 +247,11 @@ describe('resolveFoamTemplateVariables', () => {
 
     const input = `# \${FOAM_TITLE}`;
 
-    const expectedOutput = '# My note title\nSelected text';
+    const expected = '# My note title\nSelected text';
 
-    const expectedMap = new Map<string, string>();
-    expectedMap.set('FOAM_TITLE', foamTitle);
-    expectedMap.set('FOAM_SELECTED_TEXT', 'Selected text');
-
-    const expected = [expectedMap, expectedOutput];
     const givenValues = new Map<string, string>();
     givenValues.set('FOAM_SELECTED_TEXT', 'Selected text');
-    const resolver = new Resolver(
-      givenValues,
-      new Date(),
-      new Set(['FOAM_TITLE', 'FOAM_SELECTED_TEXT'])
-    );
+    const resolver = new Resolver(givenValues, new Date());
     expect(await resolver.resolveText(input)).toEqual(expected);
   });
 
@@ -323,25 +263,15 @@ describe('resolveFoamTemplateVariables', () => {
       .mockImplementationOnce(jest.fn(() => Promise.resolve(foamTitle)));
 
     const input = `
-      # \${FOAM_TITLE}
-      `;
+        # \${FOAM_TITLE}
+        `;
 
-    const expectedOutput = `
-      # My note title
-      `;
+    const expected = `
+        # My note title
+        `;
 
-    const expectedMap = new Map<string, string>();
-    expectedMap.set('FOAM_TITLE', foamTitle);
-    expectedMap.set('FOAM_SELECTED_TEXT', '');
-
-    const expected = [expectedMap, expectedOutput];
     const givenValues = new Map<string, string>();
-    givenValues.set('FOAM_SELECTED_TEXT', '');
-    const resolver = new Resolver(
-      givenValues,
-      new Date(),
-      new Set(['FOAM_TITLE', 'FOAM_SELECTED_TEXT'])
-    );
+    const resolver = new Resolver(givenValues, new Date());
     expect(await resolver.resolveText(input)).toEqual(expected);
   });
 });

@@ -109,21 +109,4 @@ describe('substituteVariables', () => {
 
     expect(substituteVariables(input, variables)).toEqual(expected);
   });
-
-  test('it ignores Variables that are missing positions', () => {
-    // This can happen when variables are given as `extraVariablesToResolve`
-    // but do not exist in the text.
-    const input = `\${FOAM_DATE_MONTH}\n`;
-
-    const foamDateMonth = new Variable('FOAM_DATE_MONTH', 0, 18);
-    foamDateMonth.children.push(new Text('07'));
-
-    const foamTitle = new Variable('FOAM_TITLE');
-    foamTitle.children.push(new Text('My new note'));
-
-    const variables = [foamTitle, foamDateMonth];
-    const expected = '07\n';
-
-    expect(substituteVariables(input, variables)).toEqual(expected);
-  });
 });

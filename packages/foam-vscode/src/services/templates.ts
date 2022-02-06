@@ -72,9 +72,8 @@ export async function getTemplates(): Promise<URI[]> {
 export const NoteFactory = {
   /**
    * Creates a new note using a template.
-   * @param givenValues already resolved values of Foam template variables. These are used instead of resolving the Foam template variables.
-   * @param extraVariablesToResolve Foam template variables to resolve, in addition to those mentioned in the template.
    * @param templateUri the URI of the template to use.
+   * @param resolver the Resolver to use.
    * @param filepathFallbackURI the URI to use if the template does not specify the `filepath` metadata attribute. This is configurable by the caller for backwards compatibility purposes.
    * @param templateFallbackText the template text to use if the template does not exist. This is configurable by the caller for backwards compatibility purposes.
    */
@@ -92,12 +91,13 @@ export const NoteFactory = {
 
     const selectedContent = findSelectionContent();
 
-    resolver.define('FOAM_SELECTED_TEXT', selectedContent?.content ?? '');
+    if (selectedContent?.content) {
+      resolver.define('FOAM_SELECTED_TEXT', selectedContent?.content);
+    }
+
     let templateWithResolvedVariables: string;
     try {
-      [, templateWithResolvedVariables] = await resolver.resolveText(
-        templateText
-      );
+      templateWithResolvedVariables = await resolver.resolveText(templateText);
     } catch (err) {
       if (err instanceof UserCancelledOperation) {
         return;
@@ -159,11 +159,7 @@ export const NoteFactory = {
     templateFallbackText: string,
     targetDate: Date
   ): Promise<void> => {
-    const resolver = new Resolver(
-      new Map(),
-      targetDate,
-      new Set(['FOAM_SELECTED_TEXT'])
-    );
+    const resolver = new Resolver(new Map(), targetDate);
     return NoteFactory.createFromTemplate(
       DAILY_NOTE_TEMPLATE_URI,
       resolver,
@@ -183,8 +179,7 @@ export const NoteFactory = {
   ): Promise<void> => {
     const resolver = new Resolver(
       new Map().set('FOAM_TITLE', wikilinkPlaceholder),
-      new Date(),
-      new Set(['FOAM_TITLE', 'FOAM_SELECTED_TEXT'])
+      new Date()
     );
     return NoteFactory.createFromTemplate(
       DEFAULT_TEMPLATE_URI,

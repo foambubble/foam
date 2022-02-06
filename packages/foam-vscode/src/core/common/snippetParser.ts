@@ -537,7 +537,46 @@ function walk(marker: Marker[], visitor: (marker: Marker) => boolean): void {
 
 export class TextmateSnippet extends Marker {
 
+	private value: string
 	private _placeholders?: { all: Placeholder[], last?: Placeholder };
+
+	constructor(value: string) {
+		super();
+		this.value = value;
+	}
+
+	variables(): Variable[] {
+		const variables: Variable[] = [];
+		this.walk(marker => {
+			if (marker instanceof Variable) {
+				variables.push(marker as Variable);
+			}
+			return true;
+		});
+		return variables;
+	}
+
+	snippetTextWithVariablesSubstituted(variableNames?: Set<string>): string {
+		const resolvedVariables: Variable[] = [];
+		this.walk(marker => {
+			if (marker instanceof Variable && (!variableNames || variableNames.has(marker.name))) {
+				resolvedVariables.push(marker as Variable);
+			}
+			return true;
+		});
+
+		let result = '';
+
+		let i = 0;
+		resolvedVariables.forEach(variable => {
+			result += this.value.substring(i, variable.pos);
+			result += variable.toString();
+			i = variable.endPos;
+		});
+		result += this.value.substring(i);
+
+    return result;
+	}
 
 	get placeholderInfo() {
 		if (!this._placeholders) {
@@ -627,7 +666,7 @@ export class TextmateSnippet extends Marker {
 	}
 
 	clone(): TextmateSnippet {
-		let ret = new TextmateSnippet();
+		let ret = new TextmateSnippet(this.value);
 		this._children = this.children.map(child => child.clone());
 		return ret;
 	}
@@ -663,7 +702,7 @@ export class SnippetParser {
 		this._scanner.text(value);
 		this._token = this._scanner.next();
 
-		const snippet = new TextmateSnippet();
+		const snippet = new TextmateSnippet(value);
 		while (this._parse(snippet)) {
 			// nothing
 		}

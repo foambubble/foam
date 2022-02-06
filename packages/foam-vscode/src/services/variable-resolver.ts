@@ -2,9 +2,7 @@ import { findSelectionContent } from './editor';
 import { window } from 'vscode';
 import { UserCancelledOperation } from './errors';
 import {
-  Placeholder,
   SnippetParser,
-  TransformableMarker,
   Variable,
   VariableResolver,
 } from '../core/common/snippetParser';
@@ -25,36 +23,6 @@ const knownFoamVariables = new Set([
   'FOAM_DATE_SECOND',
   'FOAM_DATE_SECONDS_UNIX',
 ]);
-
-export function substituteVariables(text: string, variables: Variable[]) {
-  // Assumes/requires that the variables are sorted by start position, and non-overlapping
-  let result = '';
-
-  let i = 0;
-  variables.forEach(variable => {
-    result += text.substring(i, variable.pos);
-    result += variable.toString();
-    i = variable.endPos;
-  });
-  result += text.substring(i);
-
-  return result;
-}
-
-export function findFoamVariables(templateText: string): Variable[] {
-  const snippet = new SnippetParser().parse(templateText, false, false);
-
-  const variables: Variable[] = [];
-  snippet.walk(marker => {
-    if (marker instanceof Variable) {
-      variables.push(marker as Variable);
-    }
-    return true;
-  });
-
-  const knownVariables = variables.filter(v => knownFoamVariables.has(v.name));
-  return knownVariables;
-}
 
 export class Resolver implements VariableResolver {
   private promises = new Map<string, Promise<string | undefined>>();
@@ -88,15 +56,19 @@ export class Resolver implements VariableResolver {
    *          and the second is the processed text
    */
   async resolveText(text: string): Promise<string> {
-    let variablesInTemplate = findFoamVariables(text.toString());
+    let snippet = new SnippetParser().parse(text, false, false);
+    let foamVariablesInTemplate = new Set(
+      snippet
+        .variables()
+        .map(v => v.name)
+        .filter(name => knownFoamVariables.has(name))
+    );
 
     // Add FOAM_SELECTED_TEXT to the template text if required
     // and re-parse the template text.
     if (
       this.givenValues.has('FOAM_SELECTED_TEXT') &&
-      !variablesInTemplate.find(
-        variable => variable.name === 'FOAM_SELECTED_TEXT'
-      )
+      !foamVariablesInTemplate.has('FOAM_SELECTED_TEXT')
     ) {
       const token = '$FOAM_SELECTED_TEXT';
       if (text.endsWith('\n')) {
@@ -104,16 +76,17 @@ export class Resolver implements VariableResolver {
       } else {
         text = `${text}\n${token}`;
       }
-      variablesInTemplate = findFoamVariables(text.toString());
+      snippet = new SnippetParser().parse(text, false, false);
+      foamVariablesInTemplate = new Set(
+        snippet
+          .variables()
+          .map(v => v.name)
+          .filter(name => knownFoamVariables.has(name))
+      );
     }
 
-    await this.resolveAll(variablesInTemplate);
-
-    const subbedText = substituteVariables(
-      text.toString(),
-      variablesInTemplate
-    );
-    return subbedText;
+    await snippet.resolveVariables(this, foamVariablesInTemplate);
+    return snippet.snippetTextWithVariablesSubstituted(foamVariablesInTemplate);
   }
 
   /**

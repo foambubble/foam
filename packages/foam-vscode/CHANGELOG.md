@@ -4,6 +4,12 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.17.4] - 2022-02-13
+
+Fixes and Improvements:
+- Improvements to Foam variables in templates (#882 - thanks @movermeyer)
+  - Foam variables can now be used just any other VS Code variables, including in combination with placeholders and transformers
+
 ## [0.17.3] - 2022-01-14
 
 Fixes and Improvements:

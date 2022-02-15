@@ -62,6 +62,7 @@ describe('Tags tree panel', () => {
 
     childTreeItems.forEach(child => {
       if (child instanceof TagItem) {
+        // eslint-disable-next-line jest/no-conditional-expect
         expect(child.title).toEqual('child');
       }
     });
@@ -94,7 +95,9 @@ describe('Tags tree panel', () => {
 
     childTreeItems.forEach(child => {
       if (child instanceof TagItem) {
+        // eslint-disable-next-line jest/no-conditional-expect
         expect(['child', 'subchild']).toContain(child.title);
+        // eslint-disable-next-line jest/no-conditional-expect
         expect(child.title).not.toEqual('parent');
       }
     });

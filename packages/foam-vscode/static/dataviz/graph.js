@@ -299,7 +299,7 @@ function updateForceGraphDataFromModel(m) {
   });
   // apply the delta
   nodeIdsToRemove.forEach(id => {
-    const index = m.data.nodes.findIndex(n => n.id == id);
+    const index = m.data.nodes.findIndex(n => n.id === id);
     m.data.nodes.splice(index, 1); // delete the element
   });
   nodeIdsToAdd.forEach(nodeId => {
@@ -312,10 +312,10 @@ function updateForceGraphDataFromModel(m) {
   m.data.links = m.graph.links
     .filter(link => {
       const isSource = Object.values(m.data.nodes).some(
-        node => node.id == link.source
+        node => node.id === link.source
       );
       const isTarget = Object.values(m.data.nodes).some(
-        node => node.id == link.target
+        node => node.id === link.target
       );
       return isSource && isTarget;
     })
@@ -399,7 +399,7 @@ function getLinkState(link, model) {
     ? 'regular'
     : Array.from(model.focusLinks).some(
         fLink =>
-          fLink.source == link.source.id && fLink.target == link.target.id
+          fLink.source === link.source.id && fLink.target === link.target.id
       )
     ? 'highlighted'
     : 'lessened';
@@ -473,6 +473,7 @@ class Painter {
 try {
   const vscode = acquireVsCodeApi();
   window.model = model;
+  window.graphUpdated = false;
 
   window.onload = () => {
     initDataviz(vscode);
@@ -501,6 +502,15 @@ try {
       case 'didUpdateGraphData':
         graphData = augmentGraphInfo(message.payload);
         Actions.refreshWorkspaceData(graphData);
+        if (!graphUpdated) {
+          window.graphUpdated = true;
+          graph.zoom(graph.zoom() * 1.5);
+          graph.cooldownTicks(100);
+          graph.onEngineStop(() => {
+            graph.onEngineStop(() => {});
+            graph.zoomToFit(500);
+          });
+        }
         console.log('didUpdateGraphData', graphData);
         break;
       case 'didSelectNote':

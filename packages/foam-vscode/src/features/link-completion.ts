@@ -7,8 +7,8 @@ import { FoamFeature } from '../types';
 import { getNoteTooltip, mdDocSelector } from '../utils';
 import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
 
-export const WIKILINK_REGEX = /\[\[[^\[\]]*(?!.*\]\])/;
-export const SECTION_REGEX = /\[\[([^\[\]]*#(?!.*\]\]))/;
+export const WIKILINK_REGEX = /\[\[[^[\]]*(?!.*\]\])/;
+export const SECTION_REGEX = /\[\[([^[\]]*#(?!.*\]\]))/;
 
 const feature: FoamFeature = {
   activate: async (
@@ -45,7 +45,6 @@ export class SectionCompletionProvider
 
     // Requires autocomplete only if cursorPrefix matches `[[` that NOT ended by `]]`.
     // See https://github.com/foambubble/foam/pull/596#issuecomment-825748205 for details.
-    // eslint-disable-next-line no-useless-escape
     const match = cursorPrefix.match(SECTION_REGEX);
 
     if (!match) {
@@ -67,7 +66,7 @@ export class SectionCompletionProvider
         const item = new ResourceCompletionItem(
           b.label,
           vscode.CompletionItemKind.Text,
-          URI.withFragment(resource.uri, b.label)
+          resource.uri.withFragment(b.label)
         );
         item.sortText = String(b.range.start.line).padStart(5, '0');
         item.range = replacementRange;
@@ -104,10 +103,9 @@ export class CompletionProvider
 
     // Requires autocomplete only if cursorPrefix matches `[[` that NOT ended by `]]`.
     // See https://github.com/foambubble/foam/pull/596#issuecomment-825748205 for details.
-    // eslint-disable-next-line no-useless-escape
     const requiresAutocomplete = cursorPrefix.match(WIKILINK_REGEX);
 
-    if (!requiresAutocomplete || cursorPrefix.indexOf('#') >= 0) {
+    if (!requiresAutocomplete || requiresAutocomplete[0].indexOf('#') >= 0) {
       return null;
     }
 
@@ -125,7 +123,7 @@ export class CompletionProvider
         vscode.CompletionItemKind.File,
         resource.uri
       );
-      item.filterText = URI.getBasename(resource.uri);
+      item.filterText = resource.uri.getName();
       item.insertText = this.ws.getIdentifier(resource.uri);
       item.range = replacementRange;
       item.commitCharacters = ['#'];

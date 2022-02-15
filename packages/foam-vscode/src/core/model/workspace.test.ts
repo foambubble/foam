@@ -1,28 +1,10 @@
-import { FoamWorkspace, getReferenceType } from './workspace';
+import { FoamWorkspace } from './workspace';
 import { FoamGraph } from './graph';
 import { Logger } from '../utils/log';
 import { URI } from './uri';
 import { createTestNote, createTestWorkspace } from '../../test/test-utils';
 
 Logger.setLevel('error');
-
-describe('Reference types', () => {
-  it('Detects absolute references', () => {
-    expect(getReferenceType('/hello')).toEqual('absolute-path');
-    expect(getReferenceType('/hello/there')).toEqual('absolute-path');
-  });
-  it('Detects relative references', () => {
-    expect(getReferenceType('../hello')).toEqual('relative-path');
-    expect(getReferenceType('./hello')).toEqual('relative-path');
-    expect(getReferenceType('./hello/there')).toEqual('relative-path');
-  });
-  it('Detects key references', () => {
-    expect(getReferenceType('hello')).toEqual('key');
-  });
-  it('Detects URIs', () => {
-    expect(getReferenceType(URI.file('/path/to/file.md'))).toEqual('uri');
-  });
-});
 
 describe('Workspace resources', () => {
   it('Adds notes to workspace', () => {
@@ -76,10 +58,29 @@ describe('Workspace resources', () => {
     const ws = createTestWorkspace()
       .set(createTestNote({ uri: 'test-file.md' }))
       .set(createTestNote({ uri: 'file.md' }));
-    expect(ws.listById('file').length).toEqual(1);
+    expect(ws.listByIdentifier('file').length).toEqual(1);
   });
 
-  it('should include fragment when finding resource URI', () => {
+  it('Support dendron-style names', () => {
+    const ws = createTestWorkspace()
+      .set(createTestNote({ uri: 'note.pdf' }))
+      .set(createTestNote({ uri: 'note.md' }))
+      .set(createTestNote({ uri: 'note.yo.md' }))
+      .set(createTestNote({ uri: 'note2.md' }));
+    for (const [reference, path] of [
+      ['note', '/note.md'],
+      ['note.md', '/note.md'],
+      ['note.yo', '/note.yo.md'],
+      ['note.yo.md', '/note.yo.md'],
+      ['note.pdf', '/note.pdf'],
+      ['note2', '/note2.md'],
+    ]) {
+      expect(ws.listByIdentifier(reference)[0].uri.path).toEqual(path);
+      expect(ws.find(reference).uri.path).toEqual(path);
+    }
+  });
+
+  it('Should include fragment when finding resource URI', () => {
     const ws = createTestWorkspace()
       .set(createTestNote({ uri: 'test-file.md' }))
       .set(createTestNote({ uri: 'file.md' }));
@@ -198,9 +199,47 @@ describe('Identifier computation', () => {
       .set(second)
       .set(third);
 
-    expect(
-      ws.getIdentifier(URI.withFragment(first.uri, 'section name'))
-    ).toEqual('to/page-a#section name');
+    expect(ws.getIdentifier(first.uri.withFragment('section name'))).toEqual(
+      'to/page-a#section name'
+    );
+  });
+
+  const needle = '/project/car/todo';
+
+  test.each([
+    [['/project/home/todo', '/other/todo', '/something/else'], 'car/todo'],
+    [['/family/car/todo', '/other/todo'], 'project/car/todo'],
+    [[], 'todo'],
+  ])('Find shortest identifier', (haystack, id) => {
+    expect(FoamWorkspace.getShortestIdentifier(needle, haystack)).toEqual(id);
+  });
+
+  it('should ignore same string in haystack', () => {
+    const haystack = [
+      needle,
+      '/project/home/todo',
+      '/other/todo',
+      '/something/else',
+    ];
+    const identifier = FoamWorkspace.getShortestIdentifier(needle, haystack);
+    expect(identifier).toEqual('car/todo');
+  });
+
+  it('should return best guess when no solution is possible', () => {
+    /**
+     * In this case there is no way to uniquely identify the element,
+     * our fallback is to just return the "least wrong" result, basically
+     * a full identifier
+     * This is an edge case that should never happen in a real repo
+     */
+    const haystack = [
+      '/parent/' + needle,
+      '/project/home/todo',
+      '/other/todo',
+      '/something/else',
+    ];
+    const identifier = FoamWorkspace.getShortestIdentifier(needle, haystack);
+    expect(identifier).toEqual('project/car/todo');
   });
 });
 
@@ -419,20 +458,6 @@ describe('Wikilinks', () => {
     ]);
   });
 
-  it('Allows for dendron-style wikilinks, including a dot', () => {
-    const noteA = createTestNote({
-      uri: '/path/to/page-a.md',
-      links: [{ slug: 'dendron.style' }],
-    });
-    const noteB1 = createTestNote({ uri: '/path/to/another/dendron.style.md' });
-
-    const ws = createTestWorkspace();
-    ws.set(noteA).set(noteB1);
-    const graph = FoamGraph.fromWorkspace(ws);
-
-    expect(graph.getLinks(noteA.uri).map(l => l.target)).toEqual([noteB1.uri]);
-  });
-
   it('Handles capitalization of files and wikilinks correctly', () => {
     const noteA = createTestNote({
       uri: '/path/to/page-a.md',
@@ -465,7 +490,7 @@ describe('Wikilinks', () => {
   });
 });
 
-describe('markdown direct links', () => {
+describe('Markdown direct links', () => {
   it('Support absolute and relative path', () => {
     const noteA = createTestNote({
       uri: '/path/to/page-a.md',

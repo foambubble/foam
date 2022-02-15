@@ -1,7 +1,5 @@
 import * as vscode from 'vscode';
-import * as path from 'path';
 import { FoamFeature } from '../types';
-import { URI } from '../core/model/uri';
 import { TextDecoder } from 'util';
 import { getGraphStyle, getTitleMaxLength } from '../settings';
 import { isSome } from '../utils';
@@ -77,7 +75,7 @@ function generateGraphData(foam: Foam) {
 
   foam.workspace.list().forEach(n => {
     const type = n.type === 'note' ? n.properties.type ?? 'note' : n.type;
-    const title = n.type === 'note' ? n.title : path.basename(n.uri.path);
+    const title = n.type === 'note' ? n.title : n.uri.getBasename();
     graph.nodeInfo[n.uri.path] = {
       id: n.uri.path,
       type: type,
@@ -92,7 +90,7 @@ function generateGraphData(foam: Foam) {
       source: c.source.path,
       target: c.target.path,
     });
-    if (URI.isPlaceholder(c.target)) {
+    if (c.target.isPlaceholder()) {
       graph.nodeInfo[c.target.path] = {
         id: c.target.path,
         type: 'placeholder',
@@ -133,7 +131,7 @@ async function createGraphPanel(foam: Foam, context: vscode.ExtensionContext) {
   panel.webview.onDidReceiveMessage(
     async message => {
       switch (message.type) {
-        case 'webviewDidLoad':
+        case 'webviewDidLoad': {
           const styles = getGraphStyle();
           panel.webview.postMessage({
             type: 'didUpdateStyle',
@@ -141,8 +139,8 @@ async function createGraphPanel(foam: Foam, context: vscode.ExtensionContext) {
           });
           updateGraph(panel, foam);
           break;
-
-        case 'webviewDidSelectNode':
+        }
+        case 'webviewDidSelectNode': {
           const noteUri = vscode.Uri.parse(message.payload);
           const selectedNote = foam.workspace.get(fromVsCodeUri(noteUri));
 
@@ -153,10 +151,11 @@ async function createGraphPanel(foam: Foam, context: vscode.ExtensionContext) {
             vscode.window.showTextDocument(doc, vscode.ViewColumn.One);
           }
           break;
-
-        case 'error':
+        }
+        case 'error': {
           Logger.error('An error occurred in the graph view', message.payload);
           break;
+        }
       }
     },
     undefined,
@@ -170,25 +169,27 @@ async function getWebviewContent(
   context: vscode.ExtensionContext,
   panel: vscode.WebviewPanel
 ) {
-  const datavizPath = [context.extensionPath, 'static', 'dataviz'];
+  const datavizPath = vscode.Uri.joinPath(
+    vscode.Uri.file(context.extensionPath),
+    'static',
+    'dataviz'
+  );
 
   const getWebviewUri = (fileName: string) =>
-    panel.webview.asWebviewUri(
-      vscode.Uri.file(path.join(...datavizPath, fileName))
-    );
+    panel.webview.asWebviewUri(vscode.Uri.joinPath(datavizPath, fileName));
 
   const indexHtml = await vscode.workspace.fs.readFile(
-    vscode.Uri.file(path.join(...datavizPath, 'index.html'))
+    vscode.Uri.joinPath(datavizPath, 'index.html')
   );
 
   // Replace the script paths with the appropriate webview URI.
   const filled = new TextDecoder('utf-8')
     .decode(indexHtml)
-    .replace(/<script data-replace src="([^"]+")/g, match => {
-      const fileName = match
-        .slice('<script data-replace src="'.length, -1)
-        .trim();
-      return '<script src="' + getWebviewUri(fileName).toString() + '"';
+    .replace(/data-replace (src|href)="[^"]+"/g, match => {
+      const i = match.indexOf(' ');
+      const j = match.indexOf('=');
+      const uri = getWebviewUri(match.slice(j + 2, -1).trim());
+      return match.slice(i + 1, j) + '="' + uri.toString() + '"';
     });
 
   return filled;

@@ -1,6 +1,5 @@
 import { uniqWith } from 'lodash';
 import * as vscode from 'vscode';
-import { URI } from '../core/model/uri';
 import { FoamFeature } from '../types';
 import { getNoteTooltip, mdDocSelector, isSome } from '../utils';
 import { fromVsCodeUri, toVsCodeRange } from '../utils/vsc-utils';
@@ -81,9 +80,9 @@ export class HoverProvider implements vscode.HoverProvider {
     const sources = uniqWith(
       this.graph
         .getBacklinks(targetUri)
-        .filter(link => !URI.isEqual(link.source, documentUri))
+        .filter(link => !link.source.isEqual(documentUri))
         .map(link => link.source),
-      URI.isEqual
+      (u1, u2) => u1.isEqual(u2)
     );
 
     const links = sources.slice(0, 10).map(ref => {
@@ -101,7 +100,7 @@ export class HoverProvider implements vscode.HoverProvider {
     );
 
     let mdContent = null;
-    if (!URI.isPlaceholder(targetUri)) {
+    if (!targetUri.isPlaceholder()) {
       const content: string = await this.workspace.readAsMarkdown(targetUri);
 
       mdContent = isSome(content)

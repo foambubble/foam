@@ -76,9 +76,9 @@ export class FoamGraph implements IDisposable {
    */
   public static fromWorkspace(
     workspace: FoamWorkspace,
-    keepMonitoring: boolean = false
+    keepMonitoring = false
   ): FoamGraph {
-    let graph = new FoamGraph(workspace);
+    const graph = new FoamGraph(workspace);
 
     workspace.list().forEach(resource => graph.resolveResource(resource));
     if (keepMonitoring) {
@@ -99,7 +99,7 @@ export class FoamGraph implements IDisposable {
 
   private updateLinksRelatedToAddedResource(resource: Resource) {
     // check if any existing connection can be filled by new resource
-    let resourcesToUpdate: URI[] = [];
+    const resourcesToUpdate: URI[] = [];
     for (const placeholderId of this.placeholders.keys()) {
       // quick and dirty check for affected resources
       if (resource.uri.path.endsWith(placeholderId + '.md')) {
@@ -173,7 +173,7 @@ export class FoamGraph implements IDisposable {
 
     this.backlinks.get(target.path)?.push(connection);
 
-    if (URI.isPlaceholder(target)) {
+    if (target.isPlaceholder()) {
       this.placeholders.set(uriToPlaceholderId(target), target);
     }
     return this;
@@ -193,7 +193,7 @@ export class FoamGraph implements IDisposable {
     const connectionsToKeep =
       link === true
         ? (c: Connection) =>
-            !URI.isEqual(source, c.source) || !URI.isEqual(target, c.target)
+            !source.isEqual(c.source) || !target.isEqual(c.target)
         : (c: Connection) => !isSameConnection({ source, target, link }, c);
 
     this.links.set(
@@ -209,7 +209,7 @@ export class FoamGraph implements IDisposable {
     );
     if (this.backlinks.get(target.path)?.length === 0) {
       this.backlinks.delete(target.path);
-      if (URI.isPlaceholder(target)) {
+      if (target.isPlaceholder()) {
         this.placeholders.delete(uriToPlaceholderId(target));
       }
     }
@@ -235,8 +235,8 @@ export class FoamGraph implements IDisposable {
 // TODO move these utility fns to appropriate places
 
 const isSameConnection = (a: Connection, b: Connection) =>
-  URI.isEqual(a.source, b.source) &&
-  URI.isEqual(a.target, b.target) &&
+  a.source.isEqual(b.source) &&
+  a.target.isEqual(b.target) &&
   isSameLink(a.link, b.link);
 
 const isSameLink = (a: ResourceLink, b: ResourceLink) =>

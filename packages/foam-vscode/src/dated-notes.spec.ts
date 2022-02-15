@@ -1,7 +1,6 @@
 import { workspace } from 'vscode';
 import { createDailyNoteIfNotExists, getDailyNotePath } from './dated-notes';
-import { URI } from './core/model/uri';
-import { isWindows } from './utils';
+import { isWindows } from './core/common/platform';
 import {
   cleanWorkspace,
   closeEditors,
@@ -20,11 +19,9 @@ describe('getDailyNotePath', () => {
   test('Adds the root directory to relative directories', async () => {
     const config = 'journal';
 
-    const expectedPath = URI.joinPath(
-      fromVsCodeUri(workspace.workspaceFolders[0].uri),
-      config,
-      `${isoDate}.md`
-    );
+    const expectedPath = fromVsCodeUri(
+      workspace.workspaceFolders[0].uri
+    ).joinPath(config, `${isoDate}.md`);
 
     const oldValue = await workspace
       .getConfiguration('foam')
@@ -34,8 +31,8 @@ describe('getDailyNotePath', () => {
       .update('openDailyNote.directory', config);
     const foamConfiguration = workspace.getConfiguration('foam');
 
-    expect(URI.toFsPath(getDailyNotePath(foamConfiguration, date))).toEqual(
-      URI.toFsPath(expectedPath)
+    expect(getDailyNotePath(foamConfiguration, date).toFsPath()).toEqual(
+      expectedPath.toFsPath()
     );
 
     await workspace
@@ -60,7 +57,7 @@ describe('getDailyNotePath', () => {
       .update('openDailyNote.directory', config);
     const foamConfiguration = workspace.getConfiguration('foam');
 
-    expect(URI.toFsPath(getDailyNotePath(foamConfiguration, date))).toMatch(
+    expect(getDailyNotePath(foamConfiguration, date).toFsPath()).toMatch(
       expectedPath
     );
 

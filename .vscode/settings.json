@@ -20,13 +20,13 @@
     "**/node_modules/**/*",
     "packages/**/*"
   ],
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "prettier.requireConfig": true,
-  "editor.formatOnSave": true,
   "editor.tabSize": 2,
-  "jest.debugCodeLens.showWhenTestStateIn": ["fail", "unknown", "pass"],
+  "editor.formatOnSave": true,
+  "editor.formatOnSaveMode": "file",
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "jest.autoRun": "off",
+  "jest.rootPath": "packages/foam-vscode",
+  "jest.jestCommandLine": "yarn jest",
   "gitdoc.enabled": false,
-  "jest.autoEnable": false,
-  "jest.runAllTestsFirst": false,
   "search.mode": "reuseEditor"
 }

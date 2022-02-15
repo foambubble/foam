@@ -1,0 +1,74 @@
+body {
+  overflow: hidden;
+}
+
+.dg .c {
+  width: 10%;
+}
+
+.dg .property-name {
+  width: 90%;
+}
+
+.vscode-light .dg.main.taller-than-window .close-button {
+border-top: 1px solid #ddd;
+}
+
+.vscode-light .dg.main .close-button {
+background-color: #ccc;
+}
+
+.vscode-light .dg.main .close-button:hover {
+background-color: #ddd;
+}
+
+.vscode-light .dg {
+color: #555;
+text-shadow: none !important;
+}
+
+.vscode-light .dg.main::-webkit-scrollbar {
+background: #fafafa;
+}
+
+.vscode-light .dg.main::-webkit-scrollbar-thumb {
+background: #bbb;
+}
+
+.vscode-light .dg li:not(.folder) {
+background: #fafafa;
+border-bottom: 1px solid #ddd;
+}
+
+.vscode-light .dg li.save-row .button {
+text-shadow: none !important;
+}
+
+.vscode-light .dg li.title {
+background: #e8e8e8 url(data:image/gif;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAAXNSR0IArs4c6QAAACVJREFUGFdjZMACGLEKRkfH/0eXAKtElli6dCEjXDtIAiQAUgQAF7UKGmOy49cAAAAASUVORK5CYII=) 6px 10px no-repeat;
+}
+
+.vscode-light .dg .cr.function:hover,.dg .cr.boolean:hover {
+background: #fff;
+}
+
+.vscode-light .dg .c input[type=text] {
+background: #e9e9e9;
+}
+
+.vscode-light .dg .c input[type=text]:hover {
+background: #eee;
+}
+
+.vscode-light .dg .c input[type=text]:focus {
+background: #eee;
+color: #555;
+}
+
+.vscode-light .dg .c .slider {
+background: #e9e9e9;
+}
+
+.vscode-light .dg .c .slider:hover {
+background: #eee;
+}

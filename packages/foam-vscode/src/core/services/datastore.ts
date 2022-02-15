@@ -2,11 +2,12 @@ import micromatch from 'micromatch';
 import fs from 'fs';
 import { URI } from '../model/uri';
 import { Logger } from '../utils/log';
-import glob from 'glob';
+import { glob } from 'glob';
 import { promisify } from 'util';
 import { isWindows } from '../common/platform';
 
 const findAllFiles = promisify(glob);
+
 export interface IMatcher {
   /**
    * Filters the given list of URIs, keepin only the ones that
@@ -39,8 +40,8 @@ export interface IMatcher {
  * we convert the fs path on the way in and out
  */
 export const toMatcherPathFormat = isWindows
-  ? (uri: URI) => URI.toFsPath(uri).replace(/\\/g, '/')
-  : (uri: URI) => URI.toFsPath(uri);
+  ? (uri: URI) => uri.toFsPath().replace(/\\/g, '/')
+  : (uri: URI) => uri.toFsPath();
 
 export const toFsPath = isWindows
   ? (path: string): string => path.replace(/\//g, '\\')
@@ -76,7 +77,7 @@ export class Matcher implements IMatcher {
 
   match(files: URI[]) {
     const matches = micromatch(
-      files.map(f => URI.toFsPath(f)),
+      files.map(f => f.toFsPath()),
       this.include,
       {
         ignore: this.exclude,
@@ -123,7 +124,7 @@ export class FileDataStore implements IDataStore {
 
   async read(uri: URI) {
     try {
-      return (await fs.promises.readFile(URI.toFsPath(uri))).toString();
+      return (await fs.promises.readFile(uri.toFsPath())).toString();
     } catch (e) {
       Logger.error(
         `FileDataStore: error while reading uri: ${uri.path} - ${e}`

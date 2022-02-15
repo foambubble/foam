@@ -11,15 +11,11 @@ import {
   version,
   ViewColumn,
 } from 'vscode';
-import * as fs from 'fs';
 import matter from 'gray-matter';
 import removeMarkdown from 'remove-markdown';
-import os from 'os';
 import { toVsCodeUri } from './utils/vsc-utils';
 import { Logger } from './core/utils/log';
 import { URI } from './core/model/uri';
-
-export const isWindows = os.platform() === 'win32';
 
 export const docConfig = { tab: '  ', eol: '\r\n' };
 
@@ -30,7 +26,7 @@ export const mdDocSelector = [
 
 export function loadDocConfig() {
   // Load workspace config
-  let activeEditor = window.activeTextEditor;
+  const activeEditor = window.activeTextEditor;
   if (!activeEditor) {
     Logger.debug('Failed to load config, no active editor');
     return;
@@ -38,8 +34,8 @@ export function loadDocConfig() {
 
   docConfig.eol = activeEditor.document.eol === EndOfLine.CRLF ? '\r\n' : '\n';
 
-  let tabSize = Number(activeEditor.options.tabSize);
-  let insertSpaces = activeEditor.options.insertSpaces;
+  const tabSize = Number(activeEditor.options.tabSize);
+  const insertSpaces = activeEditor.options.insertSpaces;
   if (insertSpaces) {
     docConfig.tab = ' '.repeat(tabSize);
   } else {
@@ -83,12 +79,6 @@ export function hasEmptyTrailing(doc: TextDocument): boolean {
 
 export function getText(range: Range): string {
   return window.activeTextEditor.document.getText(range);
-}
-
-export function dropExtension(path: string): string {
-  const parts = path.split('.');
-  parts.pop();
-  return parts.join('.');
 }
 
 /**
@@ -135,18 +125,6 @@ export function toTitleCase(word: string): string {
 }
 
 /**
- * Verify the given path exists in the file system
- *
- * @param path The path to verify
- */
-export function pathExists(path: URI) {
-  return fs.promises
-    .access(URI.toFsPath(path), fs.constants.F_OK)
-    .then(() => true)
-    .catch(() => false);
-}
-
-/**
  * Verify the given object is defined
  *
  * @param value The object to verify
@@ -155,7 +133,7 @@ export function isSome<T>(
   value: T | null | undefined | void
 ): value is NonNullable<T> {
   //
-  return value != null; // eslint-disable-line
+  return value != null;
 }
 
 /**
@@ -166,7 +144,7 @@ export function isSome<T>(
 export function isNone<T>(
   value: T | null | undefined | void
 ): value is null | undefined | void {
-  return value == null; // eslint-disable-line
+  return value == null;
 }
 
 export async function focusNote(

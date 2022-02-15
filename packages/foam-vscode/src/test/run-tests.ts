@@ -1,6 +1,4 @@
-import * as path from 'path';
-import fs from 'fs';
-import os from 'os';
+import path from 'path';
 import { runTests } from 'vscode-test';
 import { runUnit } from './suite-unit';
 
@@ -31,27 +29,21 @@ async function main() {
       console.log('Running e2e tests');
       // The folder containing the Extension Manifest package.json
       // Passed to `--extensionDevelopmentPath`
-      const extensionDevelopmentPath = path.resolve(__dirname, '../../');
+      const extensionDevelopmentPath = path.join(__dirname, '..', '..');
       // The path to the extension test script
       // Passed to --extensionTestsPath
-      const extensionTestsPath = path.resolve(__dirname, './suite');
-      const tmpWorkspaceDir = fs.mkdtempSync(path.join(os.tmpdir(), 'foam-'));
+      const extensionTestsPath = path.join(__dirname, 'suite');
 
       // Download VS Code, unzip it and run the integration test
       await runTests({
         extensionDevelopmentPath,
         extensionTestsPath,
         launchArgs: [
-          tmpWorkspaceDir,
+          path.join(extensionDevelopmentPath, '.test-workspace'),
           '--disable-extensions',
           '--disable-workspace-trust',
         ],
-        // Running the tests with vscode 1.53.0 is causing issues in the output/error stream management,
-        // which is causing a stack overflow, possibly due to a recursive callback.
-        // Also see https://github.com/foambubble/foam/pull/479#issuecomment-774167127
-        // Forcing the version to 1.52.0 solves the problem.
-        // TODO: to review, further investigate, and roll back this workaround.
-        version: '1.52.0',
+        version: '1.60.0',
       });
     } catch (err) {
       console.log('Error occurred while running Foam e2e tests:', err);

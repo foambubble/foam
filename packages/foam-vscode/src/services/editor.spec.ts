@@ -1,5 +1,4 @@
 import { Selection, workspace } from 'vscode';
-import { URI } from '../core/model/uri';
 import { fromVsCodeUri } from '../utils/vsc-utils';
 import {
   closeEditors,
@@ -17,7 +16,7 @@ describe('Editor utils', () => {
       const file = await createFile('this is the file content.');
       await showInEditor(file.uri);
 
-      expect(getCurrentEditorDirectory()).toEqual(URI.getDir(file.uri));
+      expect(getCurrentEditorDirectory()).toEqual(file.uri.getDirectory());
     });
 
     it('should return the directory of the workspace folder if no editor is open', async () => {

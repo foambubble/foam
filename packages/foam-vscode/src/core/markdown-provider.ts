@@ -1,11 +1,11 @@
-import { Node, Position as AstPosition } from 'unist';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { Point, Node, Position as AstPosition } from 'unist';
 import unified from 'unified';
 import markdownParse from 'remark-parse';
 import wikiLinkPlugin from 'remark-wiki-link';
 import frontmatterPlugin from 'remark-frontmatter';
 import { parse as parseYAML } from 'yaml';
 import visit from 'unist-util-visit';
-import { Parent, Point } from 'unist';
 import detectNewline from 'detect-newline';
 import os from 'os';
 import {
@@ -17,13 +17,7 @@ import {
 } from './model/note';
 import { Position } from './model/position';
 import { Range } from './model/range';
-import {
-  dropExtension,
-  extractHashtags,
-  extractTagsFromProp,
-  isNone,
-  isSome,
-} from './utils';
+import { extractHashtags, extractTagsFromProp, isNone, isSome } from './utils';
 import { Logger } from './utils/log';
 import { URI } from './model/uri';
 import { FoamWorkspace } from './model/workspace';
@@ -69,7 +63,7 @@ export class MarkdownResourceProvider implements ResourceProvider {
 
     await Promise.all(
       files.map(async uri => {
-        Logger.info('Found: ' + URI.toString(uri));
+        Logger.info('Found: ' + uri.toString());
         const content = await this.dataStore.read(uri);
         if (isSome(content)) {
           workspace.set(this.parser.parse(uri, content));
@@ -100,7 +94,7 @@ export class MarkdownResourceProvider implements ResourceProvider {
   }
 
   supports(uri: URI) {
-    return URI.isMarkdownFile(uri);
+    return uri.isMarkdown();
   }
 
   read(uri: URI): Promise<string | null> {
@@ -134,12 +128,12 @@ export class MarkdownResourceProvider implements ResourceProvider {
   ) {
     let targetUri: URI | undefined;
     switch (link.type) {
-      case 'wikilink':
+      case 'wikilink': {
         const definitionUri = resource.definitions.find(
           def => def.label === link.target
         )?.url;
         if (isSome(definitionUri)) {
-          const definedUri = URI.resolve(definitionUri, resource.uri);
+          const definedUri = resource.uri.resolve(definitionUri);
           targetUri =
             workspace.find(definedUri, resource.uri)?.uri ??
             URI.placeholder(definedUri.path);
@@ -152,20 +146,21 @@ export class MarkdownResourceProvider implements ResourceProvider {
                 URI.placeholder(link.target);
 
           if (section) {
-            targetUri = URI.withFragment(targetUri, section);
+            targetUri = targetUri.withFragment(section);
           }
         }
         break;
-
-      case 'link':
+      }
+      case 'link': {
         const [target, section] = link.target.split('#');
         targetUri =
           workspace.find(target, resource.uri)?.uri ??
-          URI.placeholder(URI.resolve(link.target, resource.uri).path);
-        if (section && !URI.isPlaceholder(targetUri)) {
-          targetUri = URI.withFragment(targetUri, section);
+          URI.placeholder(resource.uri.resolve(link.target).path);
+        if (section && !targetUri.isPlaceholder()) {
+          targetUri = targetUri.withFragment(section);
         }
         break;
+      }
     }
     return targetUri;
   }
@@ -183,9 +178,9 @@ export class MarkdownResourceProvider implements ResourceProvider {
  */
 const getTextFromChildren = (root: Node): string => {
   let text = '';
-  visit(root, 'text', node => {
-    if (node.type === 'text') {
-      text = text + (node as any).value;
+  visit(root, node => {
+    if (node.type === 'text' || node.type === 'wikiLink') {
+      text = text + ((node as any).value || '');
     }
   });
   return text;
@@ -208,7 +203,7 @@ const tagsPlugin: ParserPlugin = {
     if (node.type === 'text') {
       const tags = extractHashtags((node as any).value);
       tags.forEach(tag => {
-        let start = astPointToFoamPosition(node.position!.start);
+        const start = astPointToFoamPosition(node.position!.start);
         start.character = start.character + tag.offset;
         const end: Position = {
           line: start.line,
@@ -232,7 +227,7 @@ const sectionsPlugin: ParserPlugin = {
   visit: (node, note) => {
     if (node.type === 'heading') {
       const level = (node as any).depth;
-      const label = ((node as Parent)!.children?.[0] as any)?.value;
+      const label = getTextFromChildren(node);
       if (!label || !level) {
         return;
       }
@@ -278,8 +273,8 @@ const titlePlugin: ParserPlugin = {
       node.type === 'heading' &&
       (node as any).depth === 1
     ) {
-      note.title =
-        ((node as Parent)!.children?.[0] as any)?.value || note.title;
+      const title = getTextFromChildren(node);
+      note.title = title.length > 0 ? title : note.title;
     }
   },
   onDidFindProperties: (props, note) => {
@@ -288,7 +283,7 @@ const titlePlugin: ParserPlugin = {
   },
   onDidVisitTree: (tree, note) => {
     if (note.title === '') {
-      note.title = URI.getBasename(note.uri);
+      note.title = note.uri.getName();
     }
   },
 };
@@ -323,7 +318,7 @@ const wikilinkPlugin: ParserPlugin = {
     }
     if (node.type === 'link') {
       const targetUri = (node as any).url;
-      const uri = URI.resolve(targetUri, note.uri);
+      const uri = note.uri.resolve(targetUri);
       if (uri.scheme !== 'file' || uri.path === note.uri.path) {
         return;
       }
@@ -364,7 +359,7 @@ const handleError = (
   const name = plugin.name || '';
   Logger.warn(
     `Error while executing [${fnName}] in plugin [${name}]. ${
-      uri ? 'for file [' + URI.toString(uri) : ']'
+      uri ? 'for file [' + uri.toString() : ']'
     }.`,
     e
   );
@@ -397,7 +392,7 @@ export function createMarkdownParser(
 
   const foamParser: ResourceParser = {
     parse: (uri: URI, markdown: string): Resource => {
-      Logger.debug('Parsing:', URI.toString(uri));
+      Logger.debug('Parsing:', uri.toString());
       markdown = plugins.reduce((acc, plugin) => {
         try {
           return plugin.onWillParseMarkdown?.(acc) || acc;
@@ -409,7 +404,7 @@ export function createMarkdownParser(
       const tree = parser.parse(markdown);
       const eol = detectNewline(markdown) || os.EOL;
 
-      var note: Resource = {
+      const note: Resource = {
         uri: uri,
         type: 'note',
         properties: {},
@@ -455,10 +450,7 @@ export function createMarkdownParser(
               }
             }
           } catch (e) {
-            Logger.warn(
-              `Error while parsing YAML for [${URI.toString(uri)}]`,
-              e
-            );
+            Logger.warn(`Error while parsing YAML for [${uri.toString()}]`, e);
           }
         }
 
@@ -489,7 +481,7 @@ function getFoamDefinitions(
   fileEndPoint: Position
 ): NoteLinkDefinition[] {
   let previousLine = fileEndPoint.line;
-  let foamDefinitions = [];
+  const foamDefinitions = [];
 
   // walk through each definition in reverse order
   // (last one first)
@@ -512,7 +504,7 @@ function getFoamDefinitions(
 export function stringifyMarkdownLinkReferenceDefinition(
   definition: NoteLinkDefinition
 ) {
-  let url =
+  const url =
     definition.url.indexOf(' ') > 0 ? `<${definition.url}>` : definition.url;
   let text = `[${definition.label}]: ${url}`;
   if (definition.title) {
@@ -530,9 +522,8 @@ export function createMarkdownReferences(
   // Should never occur since we're already in a file,
   if (source?.type !== 'note') {
     console.warn(
-      `Note ${URI.toString(
-        noteUri
-      )} note found in workspace when attempting to generate markdown reference list`
+      `Note ${noteUri.toString()} note found in workspace when attempting \
+to generate markdown reference list`
     );
     return [];
   }
@@ -544,9 +535,7 @@ export function createMarkdownReferences(
       const target = workspace.find(targetUri);
       if (isNone(target)) {
         Logger.warn(
-          `Link ${URI.toString(targetUri)} in ${URI.toString(
-            noteUri
-          )} is not valid.`
+          `Link ${targetUri.toString()} in ${noteUri.toString()} is not valid.`
         );
         return null;
       }
@@ -555,10 +544,10 @@ export function createMarkdownReferences(
         return null;
       }
 
-      const relativePath = URI.relativePath(noteUri, target.uri);
-      const pathToNote = includeExtension
-        ? relativePath
-        : dropExtension(relativePath);
+      let relativeUri = target.uri.relativeTo(noteUri.getDirectory());
+      if (!includeExtension) {
+        relativeUri = relativeUri.changeExtension('*', '');
+      }
 
       // [wikilink-text]: path/to/file.md "Page title"
       return {
@@ -566,7 +555,7 @@ export function createMarkdownReferences(
           link.rawText.indexOf('[[') > -1
             ? link.rawText.substring(2, link.rawText.length - 2)
             : link.rawText || link.label,
-        url: pathToNote,
+        url: relativeUri.path,
         title: target.title,
       };
     })

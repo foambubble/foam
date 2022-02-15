@@ -2,6 +2,11 @@ import { findSelectionContent } from './editor';
 import { window } from 'vscode';
 import { UserCancelledOperation } from './errors';
 import { toSlug } from '../utils/slug';
+import {
+  SnippetParser,
+  Variable,
+  VariableResolver,
+} from '../core/common/snippetParser';
 
 const knownFoamVariables = new Set([
   'FOAM_TITLE',
@@ -21,55 +26,18 @@ const knownFoamVariables = new Set([
   'FOAM_DATE_SECONDS_UNIX',
 ]);
 
-export function substituteVariables(
-  text: string,
-  variables: Map<string, string>
-) {
-  variables.forEach((value, variable) => {
-    const regex = new RegExp(
-      // Matches a limited subset of the the TextMate variable syntax:
-      //  ${VARIABLE}  OR   $VARIABLE
-      `\\\${${variable}}|\\$${variable}(\\W|$)`,
-      // The latter is more complicated, since it needs to avoid replacing
-      // longer variable names with the values of variables that are
-      // substrings of the longer ones (e.g. `$FOO` and `$FOOBAR`. If you
-      // replace $FOO first, and aren't careful, you replace the first
-      // characters of `$FOOBAR`)
-      'g' // 'g' => Global replacement (i.e. not just the first instance)
-    );
-    text = text.replace(regex, `${value}$1`);
-  });
-
-  return text;
-}
-
-export function findFoamVariables(templateText: string): string[] {
-  const regex = /\$(FOAM_[_a-zA-Z0-9]*)|\${(FOAM_[[_a-zA-Z0-9]*)}/g;
-  var matches = [];
-  const output: string[] = [];
-  while ((matches = regex.exec(templateText))) {
-    output.push(matches[1] || matches[2]);
-  }
-  const uniqVariables = [...new Set(output)];
-  const knownVariables = uniqVariables.filter(x => knownFoamVariables.has(x));
-  return knownVariables;
-}
-
-export class Resolver {
-  promises = new Map<string, Thenable<string>>();
-  foamTitle: string | null = null;
-
+export class Resolver implements VariableResolver {
+  private promises = new Map<string, Promise<string | undefined>>();
+  private foamTitle = '';
   /**
    * Create a resolver
    *
    * @param givenValues the map of variable name to value
    * @param foamDate the date used to fill FOAM_DATE_* variables
-   * @param extraVariablesToResolve other variables to always resolve, even if not present in text
    */
   constructor(
     private givenValues: Map<string, string>,
-    private foamDate: Date,
-    private extraVariablesToResolve: Set<string> = new Set()
+    private foamDate: Date
   ) {}
 
   /**
@@ -89,31 +57,38 @@ export class Resolver {
    * @returns an array, where the first element is the resolution map,
    *          and the second is the processed text
    */
-  async resolveText(text: string): Promise<[Map<string, string>, string]> {
-    const variablesInTemplate = findFoamVariables(text.toString());
-    const variables = variablesInTemplate.concat(
-      ...this.extraVariablesToResolve
+  async resolveText(text: string): Promise<string> {
+    let snippet = new SnippetParser().parse(text, false, false);
+    let foamVariablesInTemplate = new Set(
+      snippet
+        .variables()
+        .map(v => v.name)
+        .filter(name => knownFoamVariables.has(name))
     );
-    const uniqVariables = [...new Set(variables)];
 
-    const resolvedValues = await this.resolveAll(uniqVariables);
-
+    // Add FOAM_SELECTED_TEXT to the template text if required
+    // and re-parse the template text.
     if (
-      resolvedValues.get('FOAM_SELECTED_TEXT') &&
-      !variablesInTemplate.includes('FOAM_SELECTED_TEXT')
+      this.givenValues.has('FOAM_SELECTED_TEXT') &&
+      !foamVariablesInTemplate.has('FOAM_SELECTED_TEXT')
     ) {
-      text = text.endsWith('\n')
-        ? `${text}\${FOAM_SELECTED_TEXT}\n`
-        : `${text}\n\${FOAM_SELECTED_TEXT}`;
-
-      variablesInTemplate.push('FOAM_SELECTED_TEXT');
-      variables.push('FOAM_SELECTED_TEXT');
-      uniqVariables.push('FOAM_SELECTED_TEXT');
+      const token = '$FOAM_SELECTED_TEXT';
+      if (text.endsWith('\n')) {
+        text = `${text}${token}\n`;
+      } else {
+        text = `${text}\n${token}`;
+      }
+      snippet = new SnippetParser().parse(text, false, false);
+      foamVariablesInTemplate = new Set(
+        snippet
+          .variables()
+          .map(v => v.name)
+          .filter(name => knownFoamVariables.has(name))
+      );
     }
 
-    const subbedText = substituteVariables(text.toString(), resolvedValues);
-
-    return [resolvedValues, subbedText];
+    await snippet.resolveVariables(this, foamVariablesInTemplate);
+    return snippet.snippetTextWithVariablesSubstituted(foamVariablesInTemplate);
   }
 
   /**
@@ -122,25 +97,16 @@ export class Resolver {
    * @param variables a list of variables to resolve
    * @returns a Map of variable name to its value
    */
-  async resolveAll(variables: string[]): Promise<Map<string, string>> {
-    if (
-      variables.indexOf('FOAM_TITLE') !== -1 ||
-      variables.indexOf('FOAM_TITLE_SLUG') !== -1
-    ) {
-      await this.resolveFoamTitle();
-    }
-    const promises = variables.map(async variable =>
-      Promise.resolve([variable, await this.resolve(variable)])
-    );
+  async resolveAll(variables: Variable[]): Promise<Map<string, string>> {
+    await Promise.all(variables.map(variable => variable.resolve(this)));
 
-    const results = await Promise.all(promises);
-
-    const valueByName = new Map<string, string>();
-    results.forEach(([variable, value]) => {
-      valueByName.set(variable, value);
+    const resolvedValues = new Map<string, string>();
+    variables.forEach(variable => {
+      if (variable.children.length > 0) {
+        resolvedValues.set(variable.name, variable.toString());
+      }
     });
-
-    return valueByName;
+    return resolvedValues;
   }
 
   /**
@@ -149,7 +115,15 @@ export class Resolver {
    * @param name the variable name
    * @returns the resolved value, or the name of the variable if nothing is found
    */
-  resolve(name: string): Thenable<string> {
+  async resolveFromName(name: string): Promise<string> {
+    const variable = new Variable(name);
+    await variable.resolve(this);
+
+    return (variable.children[0] ?? name).toString();
+  }
+
+  resolve(variable: Variable): Promise<string | undefined> {
+    const name = variable.name;
     if (this.givenValues.has(name)) {
       this.promises.set(name, Promise.resolve(this.givenValues.get(name)));
     } else if (!this.promises.has(name)) {
@@ -275,7 +249,7 @@ export class Resolver {
           );
           break;
         default:
-          this.promises.set(name, Promise.resolve(name));
+          this.promises.set(name, Promise.resolve(undefined));
           break;
       }
     }

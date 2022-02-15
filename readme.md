@@ -5,7 +5,7 @@
 👀*This is an early stage project under rapid development. For updates join the [Foam community Discord](https://foambubble.github.io/join-discord/g)! 💬*
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-85-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-90-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 [![Discord Chat](https://img.shields.io/discord/729975036148056075?color=748AD9&label=discord%20chat&style=flat-square)](https://foambubble.github.io/join-discord/g)
@@ -92,9 +92,9 @@ Foam also supports hierarchical tags.
 
 ### Orphans and Placeholder Panels
 
-Orphans are note that have no inbound nor outbound links. 
+Orphans are notes that have no inbound nor outbound links. 
 Placeholders are dangling links, or notes without content.
-Keep them under control, and your knowledge base in better state, by using this panel.
+Keep them under control, and your knowledge base in a better state, by using this panel.
 
 ![Orphans and Placeholder Panels](./assets/screenshots/feature-placeholder-orphan-panel.gif)
 
@@ -237,7 +237,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
   </tr>
   <tr>
     <td align="center"><a href="https://github.com/hooncp"><img src="https://avatars1.githubusercontent.com/u/48883554?v=4?s=60" width="60px;" alt=""/><br /><sub><b>hooncp</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=hooncp" title="Documentation">📖</a></td>
-    <td align="center"><a href="http://mlaws.ca"><img src="https://avatars1.githubusercontent.com/u/13721239?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Martin Laws</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=martinlaws" title="Documentation">📖</a></td>
+    <td align="center"><a href="http://rt-canada.ca"><img src="https://avatars1.githubusercontent.com/u/13721239?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Martin Laws</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=martinlaws" title="Documentation">📖</a></td>
     <td align="center"><a href="http://seanksmith.me"><img src="https://avatars3.githubusercontent.com/u/2085441?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Sean K Smith</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=sksmith" title="Code">💻</a></td>
     <td align="center"><a href="https://www.linkedin.com/in/kevin-neely/"><img src="https://avatars1.githubusercontent.com/u/37545028?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Kevin Neely</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=kneely" title="Documentation">📖</a></td>
     <td align="center"><a href="https://ariefrahmansyah.dev"><img src="https://avatars3.githubusercontent.com/u/8122852?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Arief Rahmansyah</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=ariefrahmansyah" title="Documentation">📖</a></td>
@@ -300,6 +300,11 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
   </tr>
   <tr>
     <td align="center"><a href="https://github.com/AndreiD049"><img src="https://avatars.githubusercontent.com/u/52671223?v=4?s=60" width="60px;" alt=""/><br /><sub><b>AndreiD049</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=AndreiD049" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/iam-yan"><img src="https://avatars.githubusercontent.com/u/48427014?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Yan</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=iam-yan" title="Documentation">📖</a></td>
+    <td align="center"><a href="https://WikiEducator.org/User:JimTittsler"><img src="https://avatars.githubusercontent.com/u/180326?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Jim Tittsler</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=jimt" title="Documentation">📖</a></td>
+    <td align="center"><a href="http://malcolmmielle.wordpress.com/"><img src="https://avatars.githubusercontent.com/u/4457840?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Malcolm Mielle</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=MalcolmMielle" title="Documentation">📖</a></td>
+    <td align="center"><a href="https://snippets.page/"><img src="https://avatars.githubusercontent.com/u/74916913?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Veesar</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=veesar" title="Documentation">📖</a></td>
+    <td align="center"><a href="https://github.com/bentongxyz"><img src="https://avatars.githubusercontent.com/u/60358804?v=4?s=60" width="60px;" alt=""/><br /><sub><b>bentongxyz</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=bentongxyz" title="Code">💻</a></td>
   </tr>
 </table>
 

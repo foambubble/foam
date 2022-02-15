@@ -1,7 +1,5 @@
 import { Selection, ViewColumn, window, workspace } from 'vscode';
-import path from 'path';
-import { isWindows } from '../utils';
-import { URI } from '../core/model/uri';
+import { isWindows } from '../core/common/platform';
 import { fromVsCodeUri } from '../utils/vsc-utils';
 import { determineNewNoteFilepath, NoteFactory } from '../services/templates';
 import {
@@ -52,7 +50,7 @@ describe('Create note from template', () => {
       const templateA = await createFile(
         `---
 foam_template: # foam template metadata
-  filepath: "${URI.toFsPath(uri)}"
+  filepath: "${uri.toFsPath()}"
 ---
 `,
         ['.foam', 'templates', 'template-with-path.md']
@@ -127,7 +125,7 @@ foam_template: # foam template metadata
       const target = getUriInWorkspace();
       const resolver = new Resolver(new Map(), new Date());
       await NoteFactory.createFromTemplate(templateA.uri, resolver, target);
-      expect(await resolver.resolve('FOAM_SELECTED_TEXT')).toEqual(
+      expect(await resolver.resolveFromName('FOAM_SELECTED_TEXT')).toEqual(
         'first file'
       );
 
@@ -183,7 +181,7 @@ foam_template: # foam template metadata
         'Hello World World'
       );
       expect(window.visibleTextEditors[0].document.getText()).toEqual(
-        `This is my first file: [[${URI.getBasename(target)}]]`
+        `This is my first file: [[${target.getName()}]]`
       );
     });
   });
@@ -202,13 +200,13 @@ describe('determineNewNoteFilepath', () => {
       undefined,
       new Resolver(new Map(), new Date())
     );
-    expect(URI.toFsPath(winResult)).toMatch(winAbsolutePath);
+    expect(winResult.toFsPath()).toMatch(winAbsolutePath);
     const linuxResult = await determineNewNoteFilepath(
       linuxAbsolutePath,
       undefined,
       new Resolver(new Map(), new Date())
     );
-    expect(URI.toFsPath(linuxResult)).toMatch(linuxAbsolutePath);
+    expect(linuxResult.toFsPath()).toMatch(linuxAbsolutePath);
   });
 
   it('should compute the relative template filepath from the current directory', async () => {
@@ -220,11 +218,10 @@ describe('determineNewNoteFilepath', () => {
       undefined,
       new Resolver(new Map(), new Date())
     );
-    const expectedPath = path.join(
-      URI.toFsPath(fromVsCodeUri(workspace.workspaceFolders[0].uri)),
-      relativePath
-    );
-    expect(URI.toFsPath(resultFilepath)).toMatch(expectedPath);
+    const expectedPath = fromVsCodeUri(
+      workspace.workspaceFolders[0].uri
+    ).joinPath(relativePath);
+    expect(resultFilepath.toFsPath()).toMatch(expectedPath.toFsPath());
   });
 
   it('should use the note title if nothing else is available', async () => {
@@ -234,11 +231,10 @@ describe('determineNewNoteFilepath', () => {
       undefined,
       new Resolver(new Map().set('FOAM_TITLE', noteTitle), new Date())
     );
-    const expectedPath = path.join(
-      URI.toFsPath(fromVsCodeUri(workspace.workspaceFolders[0].uri)),
-      `${noteTitle}.md`
-    );
-    expect(URI.toFsPath(resultFilepath)).toMatch(expectedPath);
+    const expectedPath = fromVsCodeUri(
+      workspace.workspaceFolders[0].uri
+    ).joinPath(`${noteTitle}.md`);
+    expect(resultFilepath.toFsPath()).toMatch(expectedPath.toFsPath());
   });
 
   it('should ask the user for a note title if nothing else is available', async () => {
@@ -251,11 +247,10 @@ describe('determineNewNoteFilepath', () => {
       undefined,
       new Resolver(new Map(), new Date())
     );
-    const expectedPath = path.join(
-      URI.toFsPath(fromVsCodeUri(workspace.workspaceFolders[0].uri)),
-      `${noteTitle}.md`
-    );
+    const expectedPath = fromVsCodeUri(
+      workspace.workspaceFolders[0].uri
+    ).joinPath(`${noteTitle}.md`);
     expect(spy).toHaveBeenCalled();
-    expect(URI.toFsPath(resultFilepath)).toMatch(expectedPath);
+    expect(resultFilepath.toFsPath()).toMatch(expectedPath.toFsPath());
   });
 });

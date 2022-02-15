@@ -20,9 +20,9 @@ export class FoamTags implements IDisposable {
    */
   public static fromWorkspace(
     workspace: FoamWorkspace,
-    keepMonitoring: boolean = false
+    keepMonitoring = false
   ): FoamTags {
-    let tags = new FoamTags();
+    const tags = new FoamTags();
 
     workspace
       .list()
@@ -68,7 +68,7 @@ export class FoamTags implements IDisposable {
       if (this.tags.has(tag)) {
         const remainingLocations = this.tags
           .get(tag)
-          ?.filter(uri => !URI.isEqual(uri, resource.uri));
+          ?.filter(uri => !uri.isEqual(resource.uri));
 
         if (remainingLocations && remainingLocations.length > 0) {
           this.tags.set(tag, remainingLocations);

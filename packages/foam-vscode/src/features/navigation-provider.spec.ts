@@ -69,7 +69,7 @@ describe('Document navigation', () => {
 
       expect(links.length).toEqual(1);
       expect(links[0].target).toEqual(OPEN_COMMAND.asURI(fileA.uri));
-      expect(links[0].range).toEqual(new vscode.Range(0, 18, 0, 28));
+      expect(links[0].range).toEqual(new vscode.Range(0, 20, 0, 26));
     });
 
     it('should create links for placeholders', async () => {
@@ -87,7 +87,7 @@ describe('Document navigation', () => {
       expect(links[0].target).toEqual(
         OPEN_COMMAND.asURI(URI.placeholder('a placeholder'))
       );
-      expect(links[0].range).toEqual(new vscode.Range(0, 18, 0, 35));
+      expect(links[0].range).toEqual(new vscode.Range(0, 20, 0, 33));
     });
   });
 
@@ -232,6 +232,6 @@ describe('Document navigation', () => {
         range: new vscode.Range(0, 23, 0, 23 + 9),
       });
     });
-    it('should provide references for placeholders', async () => {});
+    // it('should provide references for placeholders', async () => {});
   });
 });

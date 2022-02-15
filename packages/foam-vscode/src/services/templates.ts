@@ -1,7 +1,5 @@
 import { URI } from '../core/model/uri';
 import { existsSync } from 'fs';
-import * as path from 'path';
-import { isAbsolute } from 'path';
 import { TextEncoder } from 'util';
 import { SnippetString, ViewColumn, window, workspace } from 'vscode';
 import { focusNote } from '../utils';
@@ -19,24 +17,19 @@ import { Resolver } from './variable-resolver';
 /**
  * The templates directory
  */
-export const TEMPLATES_DIR = URI.joinPath(
-  fromVsCodeUri(workspace.workspaceFolders[0].uri),
-  '.foam',
-  'templates'
-);
+export const TEMPLATES_DIR = fromVsCodeUri(
+  workspace.workspaceFolders[0].uri
+).joinPath('.foam', 'templates');
 
 /**
  * The URI of the default template
  */
-export const DEFAULT_TEMPLATE_URI = URI.joinPath(TEMPLATES_DIR, 'new-note.md');
+export const DEFAULT_TEMPLATE_URI = TEMPLATES_DIR.joinPath('new-note.md');
 
 /**
  * The URI of the template for daily notes
  */
-export const DAILY_NOTE_TEMPLATE_URI = URI.joinPath(
-  TEMPLATES_DIR,
-  'daily-note.md'
-);
+export const DAILY_NOTE_TEMPLATE_URI = TEMPLATES_DIR.joinPath('daily-note.md');
 
 const WIKILINK_DEFAULT_TEMPLATE_TEXT = `# $\{1:$FOAM_TITLE}\n\n$0`;
 
@@ -79,9 +72,8 @@ export async function getTemplates(): Promise<URI[]> {
 export const NoteFactory = {
   /**
    * Creates a new note using a template.
-   * @param givenValues already resolved values of Foam template variables. These are used instead of resolving the Foam template variables.
-   * @param extraVariablesToResolve Foam template variables to resolve, in addition to those mentioned in the template.
    * @param templateUri the URI of the template to use.
+   * @param resolver the Resolver to use.
    * @param filepathFallbackURI the URI to use if the template does not specify the `filepath` metadata attribute. This is configurable by the caller for backwards compatibility purposes.
    * @param templateFallbackText the template text to use if the template does not exist. This is configurable by the caller for backwards compatibility purposes.
    */
@@ -89,9 +81,9 @@ export const NoteFactory = {
     templateUri: URI,
     resolver: Resolver,
     filepathFallbackURI?: URI,
-    templateFallbackText: string = ''
+    templateFallbackText = ''
   ): Promise<void> => {
-    const templateText = existsSync(URI.toFsPath(templateUri))
+    const templateText = existsSync(templateUri.toFsPath())
       ? await workspace.fs
           .readFile(toVsCodeUri(templateUri))
           .then(bytes => bytes.toString())
@@ -99,12 +91,13 @@ export const NoteFactory = {
 
     const selectedContent = findSelectionContent();
 
-    resolver.define('FOAM_SELECTED_TEXT', selectedContent?.content ?? '');
+    if (selectedContent?.content) {
+      resolver.define('FOAM_SELECTED_TEXT', selectedContent?.content);
+    }
+
     let templateWithResolvedVariables: string;
     try {
-      [, templateWithResolvedVariables] = await resolver.resolveText(
-        templateText
-      );
+      templateWithResolvedVariables = await resolver.resolveText(templateText);
     } catch (err) {
       if (err instanceof UserCancelledOperation) {
         return;
@@ -126,8 +119,8 @@ export const NoteFactory = {
       resolver
     );
 
-    if (existsSync(URI.toFsPath(filepath))) {
-      const filename = path.basename(filepath.path);
+    if (existsSync(filepath.toFsPath())) {
+      const filename = filepath.getBasename();
       const newFilepath = await askUserForFilepathConfirmation(
         filepath,
         filename
@@ -146,7 +139,7 @@ export const NoteFactory = {
     );
 
     if (selectedContent !== undefined) {
-      const newNoteTitle = URI.getFileNameWithoutExtension(filepath);
+      const newNoteTitle = filepath.getName();
 
       await replaceSelection(
         selectedContent.document,
@@ -166,11 +159,7 @@ export const NoteFactory = {
     templateFallbackText: string,
     targetDate: Date
   ): Promise<void> => {
-    const resolver = new Resolver(
-      new Map(),
-      targetDate,
-      new Set(['FOAM_SELECTED_TEXT'])
-    );
+    const resolver = new Resolver(new Map(), targetDate);
     return NoteFactory.createFromTemplate(
       DAILY_NOTE_TEMPLATE_URI,
       resolver,
@@ -190,8 +179,7 @@ export const NoteFactory = {
   ): Promise<void> => {
     const resolver = new Resolver(
       new Map().set('FOAM_TITLE', wikilinkPlaceholder),
-      new Date(),
-      new Set(['FOAM_TITLE', 'FOAM_SELECTED_TEXT'])
+      new Date()
     );
     return NoteFactory.createFromTemplate(
       DEFAULT_TEMPLATE_URI,
@@ -204,8 +192,8 @@ export const NoteFactory = {
 
 export const createTemplate = async (): Promise<void> => {
   const defaultFilename = 'new-template.md';
-  const defaultTemplate = URI.joinPath(TEMPLATES_DIR, defaultFilename);
-  const fsPath = URI.toFsPath(defaultTemplate);
+  const defaultTemplate = TEMPLATES_DIR.joinPath(defaultFilename);
+  const fsPath = defaultTemplate.toFsPath();
   const filename = await window.showInputBox({
     prompt: `Enter the filename for the new template`,
     value: fsPath,
@@ -233,7 +221,7 @@ async function askUserForFilepathConfirmation(
   defaultFilepath: URI,
   defaultFilename: string
 ) {
-  const fsPath = URI.toFsPath(defaultFilepath);
+  const fsPath = defaultFilepath.toFsPath();
   return await window.showInputBox({
     prompt: `Enter the filename for the new note`,
     value: fsPath,
@@ -253,12 +241,12 @@ export async function determineNewNoteFilepath(
   resolver: Resolver
 ): Promise<URI> {
   if (templateFilepathAttribute) {
-    const defaultFilepath = isAbsolute(templateFilepathAttribute)
-      ? URI.file(templateFilepathAttribute)
-      : URI.joinPath(
-          fromVsCodeUri(workspace.workspaceFolders[0].uri),
-          templateFilepathAttribute
-        );
+    let defaultFilepath = URI.file(templateFilepathAttribute);
+    if (!defaultFilepath.isAbsolute()) {
+      defaultFilepath = fromVsCodeUri(
+        workspace.workspaceFolders[0].uri
+      ).joinPath(templateFilepathAttribute);
+    }
     return defaultFilepath;
   }
 
@@ -266,9 +254,8 @@ export async function determineNewNoteFilepath(
     return fallbackURI;
   }
 
-  const defaultName = await resolver.resolve('FOAM_TITLE');
-  const defaultFilepath = URI.joinPath(
-    getCurrentEditorDirectory(),
+  const defaultName = await resolver.resolveFromName('FOAM_TITLE');
+  const defaultFilepath = getCurrentEditorDirectory().joinPath(
     `${defaultName}.md`
   );
   return defaultFilepath;

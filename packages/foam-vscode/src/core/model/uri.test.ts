@@ -1,5 +1,4 @@
 import { Logger } from '../utils/log';
-import { uriToSlug } from '../utils/slug';
 import { URI } from './uri';
 
 Logger.setLevel('error');
@@ -11,13 +10,13 @@ describe('Foam URI', () => {
       ['https://www.google.com', URI.parse('https://www.google.com')],
       ['/path/to/a/file.md', URI.file('/path/to/a/file.md')],
       ['../relative/file.md', URI.file('/path/relative/file.md')],
-      ['#section', URI.withFragment(base, 'section')],
+      ['#section', base.withFragment('section')],
       [
         '../relative/file.md#section',
         URI.parse('file:/path/relative/file.md#section'),
       ],
     ])('URI Parsing (%s)', (input, exp) => {
-      const result = URI.resolve(input, base);
+      const result = base.resolve(input);
       expect(result.scheme).toEqual(exp.scheme);
       expect(result.authority).toEqual(exp.authority);
       expect(result.path).toEqual(exp.path);
@@ -30,8 +29,8 @@ describe('Foam URI', () => {
       const lowerCase = URI.parse('file:///c:/this/is/a/Path');
       expect(upperCase.path).toEqual('/C:/this/is/a/Path');
       expect(lowerCase.path).toEqual('/C:/this/is/a/Path');
-      expect(URI.toFsPath(upperCase)).toEqual('C:\\this\\is\\a\\Path');
-      expect(URI.toFsPath(lowerCase)).toEqual('C:\\this\\is\\a\\Path');
+      expect(upperCase.toFsPath()).toEqual('C:\\this\\is\\a\\Path');
+      expect(lowerCase.toFsPath()).toEqual('C:\\this\\is\\a\\Path');
     });
 
     it('consistently parses file paths', () => {
@@ -48,13 +47,13 @@ describe('Foam URI', () => {
       const winUri = URI.file('c:\\this\\is\\a\\path');
       const unixUri = URI.file('/this/is/a/path');
       expect(winUri).toEqual(
-        URI.create({
+        new URI({
           scheme: 'file',
           path: '/C:/this/is/a/path',
         })
       );
       expect(unixUri).toEqual(
-        URI.create({
+        new URI({
           scheme: 'file',
           path: '/this/is/a/path',
         })
@@ -63,26 +62,14 @@ describe('Foam URI', () => {
   });
 
   it('supports computing relative paths', () => {
-    expect(
-      URI.computeRelativeURI(URI.file('/my/file.md'), '../hello.md')
-    ).toEqual(URI.file('/hello.md'));
-    expect(URI.computeRelativeURI(URI.file('/my/file.md'), '../hello')).toEqual(
+    expect(URI.file('/my/file.md').resolve('../hello.md')).toEqual(
       URI.file('/hello.md')
     );
-    expect(
-      URI.computeRelativeURI(URI.file('/my/file.markdown'), '../hello')
-    ).toEqual(URI.file('/hello.markdown'));
-  });
-
-  it('can be slugified', () => {
-    expect(uriToSlug(URI.file('/this/is/a/path.md'))).toEqual('path');
-    expect(uriToSlug(URI.file('../a/relative/path.md'))).toEqual('path');
-    expect(uriToSlug(URI.file('another/relative/path.md'))).toEqual('path');
-    expect(uriToSlug(URI.file('no-directory.markdown'))).toEqual(
-      'no-directory'
+    expect(URI.file('/my/file.md').resolve('../hello')).toEqual(
+      URI.file('/hello.md')
     );
-    expect(uriToSlug(URI.file('many.dots.name.markdown'))).toEqual(
-      'manydotsname'
+    expect(URI.file('/my/file.markdown').resolve('../hello')).toEqual(
+      URI.file('/hello.markdown')
     );
   });
 });

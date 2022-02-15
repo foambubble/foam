@@ -71,7 +71,7 @@ export abstract class Resource {
       return false;
     }
     return (
-      URI.isUri((thing as Resource).uri) &&
+      (thing as Resource).uri instanceof URI &&
       typeof (thing as Resource).title === 'string' &&
       typeof (thing as Resource).type === 'string' &&
       typeof (thing as Resource).properties === 'object' &&

@@ -8,7 +8,7 @@
     "type": "git"
   },
   "homepage": "https://github.com/foambubble/foam",
-  "version": "0.17.0",
+  "version": "0.17.4",
   "license": "MIT",
   "publisher": "foam",
   "engines": {
@@ -36,6 +36,26 @@
     "markdown.markdownItPlugins": true,
     "markdown.previewStyles": [
       "./static/preview/style.css"
+    ],
+    "grammars": [
+      {
+        "path": "./syntaxes/injection.json",
+        "scopeName": "foam.wikilink.injection",
+        "injectTo": [
+          "text.html.markdown"
+        ]
+      }
+    ],
+    "colors": [
+      {
+        "id": "foam.placeholder",
+        "description": "Color of foam placeholders.",
+        "defaults": {
+          "dark": "editorWarning.foreground",
+          "light": "editorWarning.foreground",
+          "highContrast": "editorWarning.foreground"
+        }
+      }
     ],
     "views": {
       "explorer": [
@@ -356,7 +376,9 @@
     "build": "tsc -p ./",
     "pretest": "yarn build",
     "test": "node ./out/test/run-tests.js",
+    "pretest:unit": "yarn build",
     "test:unit": "node ./out/test/run-tests.js --unit",
+    "pretest:e2e": "yarn build",
     "test:e2e": "node ./out/test/run-tests.js --e2e",
     "lint": "tsdx lint src",
     "clean": "rimraf out",
@@ -372,12 +394,7 @@
     "publish-extension": "yarn publish-extension-vscode && yarn publish-extension-openvsx && yarn npm-cleanup"
   },
   "devDependencies": {
-    "@babel/core": "^7.11.0",
-    "@babel/plugin-transform-runtime": "^7.10.4",
-    "@babel/preset-env": "^7.11.0",
-    "@babel/preset-typescript": "^7.10.4",
     "@types/dateformat": "^3.0.1",
-    "@types/github-slugger": "^1.3.0",
     "@types/glob": "^7.1.1",
     "@types/lodash": "^4.14.157",
     "@types/markdown-it": "^12.0.1",
@@ -388,12 +405,12 @@
     "@types/vscode": "^1.47.1",
     "@typescript-eslint/eslint-plugin": "^2.30.0",
     "@typescript-eslint/parser": "^2.30.0",
-    "babel-jest": "^26.2.2",
     "eslint": "^6.8.0",
+    "eslint-import-resolver-typescript": "^2.5.0",
     "eslint-plugin-import": "^2.24.2",
+    "eslint-plugin-jest": "^25.3.0",
     "husky": "^4.2.5",
     "jest": "^26.2.2",
-    "jest-environment-vscode": "^1.0.0",
     "jest-extended": "^0.11.5",
     "markdown-it": "^12.0.4",
     "rimraf": "^3.0.2",
@@ -407,7 +424,6 @@
     "dateformat": "^3.0.3",
     "detect-newline": "^3.1.0",
     "fast-array-diff": "^1.0.1",
-    "github-slugger": "^1.3.0",
     "glob": "^7.1.6",
     "gray-matter": "^4.0.2",
     "lodash": "^4.17.21",

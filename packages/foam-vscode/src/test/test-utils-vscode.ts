@@ -13,7 +13,7 @@ import { randomString, wait } from './test-utils';
 Logger.setLevel('error');
 
 export const cleanWorkspace = async () => {
-  const files = await vscode.workspace.findFiles('**', '.vscode');
+  const files = await vscode.workspace.findFiles('**', '{.vscode,.keep}');
   await Promise.all(files.map(f => vscode.workspace.fs.delete(f)));
 };
 
@@ -43,7 +43,7 @@ export const deleteFile = (file: URI | { uri: URI }) => {
 export const getUriInWorkspace = (...filepath: string[]) => {
   const rootUri = fromVsCodeUri(vscode.workspace.workspaceFolders[0].uri);
   filepath = filepath.length > 0 ? filepath : [randomString() + '.md'];
-  const uri = URI.joinPath(rootUri, ...filepath);
+  const uri = rootUri.joinPath(...filepath);
   return uri;
 };
 
@@ -56,7 +56,7 @@ export const getUriInWorkspace = (...filepath: string[]) => {
  */
 export const createFile = async (content: string, filepath: string[] = []) => {
   const uri = getUriInWorkspace(...filepath);
-  const filenameComponents = path.parse(URI.toFsPath(uri));
+  const filenameComponents = path.parse(uri.toFsPath());
   await vscode.workspace.fs.writeFile(
     toVsCodeUri(uri),
     new TextEncoder().encode(content)
@@ -65,7 +65,7 @@ export const createFile = async (content: string, filepath: string[] = []) => {
 };
 
 export const createNote = (r: Resource) => {
-  let content = `# ${r.title}
+  const content = `# ${r.title}
 
   some content and ${r.links
     .map(l =>

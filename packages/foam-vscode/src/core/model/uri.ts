@@ -4,9 +4,8 @@
 // Some code in this file comes from https://github.com/microsoft/vscode/main/src/vs/base/common/uri.ts
 // See LICENSE for details
 
-import * as paths from 'path';
-import { isAbsolute } from 'path';
 import { CharCode } from '../common/charCode';
+import * as pathUtils from '../utils/path';
 
 /**
  * Uniform Resource Identifier (URI) http://tools.ietf.org/html/rfc3986.
@@ -24,257 +23,133 @@ import { CharCode } from '../common/charCode';
  *       urn:example:animal:ferret:nose
  * ```
  */
-export interface URI {
-  scheme: string;
-  authority: string;
-  path: string;
-  query: string;
-  fragment: string;
-}
 
-const { posix } = paths;
 const _empty = '';
 const _slash = '/';
 const _regexp = /^(([^:/?#]{2,}?):)?(\/\/([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?/;
 
-export abstract class URI {
-  static create(from: Partial<URI>): URI {
-    // When using this method we assume the path is already posix
-    // so we don't check whether it's a Windows path, nor we do any
-    // conversion
-    return {
-      scheme: from.scheme ?? _empty,
-      authority: from.authority ?? _empty,
-      path: from.path ?? _empty,
-      query: from.query ?? _empty,
-      fragment: from.fragment ?? _empty,
-    };
+export class URI {
+  readonly scheme: string;
+  readonly authority: string;
+  readonly path: string;
+  readonly query: string;
+  readonly fragment: string;
+
+  constructor(from: Partial<URI> = {}) {
+    this.scheme = from.scheme ?? _empty;
+    this.authority = from.authority ?? _empty;
+    this.path = from.path ?? _empty; // We assume the path is already posix
+    this.query = from.query ?? _empty;
+    this.fragment = from.fragment ?? _empty;
   }
 
   static parse(value: string): URI {
     const match = _regexp.exec(value);
     if (!match) {
-      return URI.create({});
+      return new URI();
     }
-    let path = percentDecode(match[5] ?? _empty);
-    if (URI.isWindowsPath(path)) {
-      path = windowsPathToUriPath(path);
-    }
-    return URI.create({
+    return new URI({
       scheme: match[2] || 'file',
       authority: percentDecode(match[4] ?? _empty),
-      path: path,
+      path: pathUtils.fromFsPath(percentDecode(match[5] ?? _empty))[0],
       query: percentDecode(match[7] ?? _empty),
       fragment: percentDecode(match[9] ?? _empty),
     });
   }
 
-  /**
-   * Parses a URI from value, taking into consideration possible relative paths.
-   *
-   * @param reference the URI to use as reference in case value is a relative path
-   * @param value the value to parse for a URI
-   * @returns the URI from the given value. In case of a relative path, the URI will take into account
-   * the reference from which it is computed
-   */
-  static resolve(value: string, reference: URI): URI {
-    let uri = URI.parse(value);
-    if (uri.scheme === 'file' && !value.startsWith('/')) {
-      const [path, fragment] = value.split('#');
-      uri =
-        path.length > 0 ? URI.computeRelativeURI(reference, path) : reference;
-      if (fragment) {
-        uri = URI.create({
-          ...uri,
-          fragment: fragment,
-        });
+  static file(value: string): URI {
+    const [path, authority] = pathUtils.fromFsPath(value);
+    return new URI({ scheme: 'file', authority, path });
+  }
+
+  static placeholder(path: string): URI {
+    return new URI({ scheme: 'placeholder', path: path });
+  }
+
+  resolve(value: string | URI, isDirectory = false): URI {
+    const uri = value instanceof URI ? value : URI.parse(value);
+    if (!uri.isAbsolute()) {
+      if (uri.scheme === 'file' || uri.scheme === 'placeholder') {
+        let newUri = this.withFragment(uri.fragment);
+        if (uri.path) {
+          newUri = (isDirectory ? newUri : newUri.getDirectory())
+            .joinPath(uri.path)
+            .changeExtension('', this.getExtension());
+        }
+        return newUri;
       }
     }
     return uri;
   }
 
-  static computeRelativeURI(reference: URI, relativeSlug: string): URI {
-    // if no extension is provided, use the same extension as the source file
-    const slug =
-      posix.extname(relativeSlug) !== ''
-        ? relativeSlug
-        : `${relativeSlug}${posix.extname(reference.path)}`;
-    return URI.create({
-      ...reference,
-      path: posix.join(posix.dirname(reference.path), slug),
-    });
+  isAbsolute(): boolean {
+    return pathUtils.isAbsolute(this.path);
   }
 
-  static file(path: string): URI {
-    let authority = _empty;
-
-    // normalize to fwd-slashes on windows,
-    // on other systems bwd-slashes are valid
-    // filename character, eg /f\oo/ba\r.txt
-    if (URI.isWindowsPath(path)) {
-      path = windowsPathToUriPath(path);
-    }
-
-    // check for authority as used in UNC shares
-    // or use the path as given
-    if (path[0] === _slash && path[1] === _slash) {
-      const idx = path.indexOf(_slash, 2);
-      if (idx === -1) {
-        authority = path.substring(2);
-        path = _slash;
-      } else {
-        authority = path.substring(2, idx);
-        path = path.substring(idx) || _slash;
-      }
-    }
-
-    return URI.create({ scheme: 'file', authority, path });
+  getDirectory(): URI {
+    const path = pathUtils.getDirectory(this.path);
+    return new URI({ ...this, path });
   }
 
-  static placeholder(key: string): URI {
-    return URI.create({
-      scheme: 'placeholder',
-      path: key,
-    });
+  getBasename(): string {
+    return pathUtils.getBasename(this.path);
   }
 
-  static withFragment(uri: URI, fragment: string): URI {
-    return URI.create({
-      ...uri,
-      fragment,
-    });
+  getName(): string {
+    return pathUtils.getName(this.path);
   }
 
-  static relativePath(source: URI, target: URI): string {
-    const relativePath = posix.relative(
-      posix.dirname(source.path),
-      target.path
+  getExtension(): string {
+    return pathUtils.getExtension(this.path);
+  }
+
+  changeExtension(from: string, to: string): URI {
+    const path = pathUtils.changeExtension(this.path, from, to);
+    return new URI({ ...this, path });
+  }
+
+  joinPath(...paths: string[]) {
+    const path = pathUtils.joinPath(this.path, ...paths);
+    return new URI({ ...this, path });
+  }
+
+  relativeTo(uri: URI) {
+    const path = pathUtils.relativeTo(this.path, uri.path);
+    return new URI({ ...this, path });
+  }
+
+  withFragment(fragment: string): URI {
+    return new URI({ ...this, fragment });
+  }
+
+  isPlaceholder(): boolean {
+    return this.scheme === 'placeholder';
+  }
+
+  toFsPath() {
+    return pathUtils.toFsPath(
+      this.path,
+      this.scheme === 'file' ? this.authority : ''
     );
-    return relativePath;
   }
 
-  static getBasename(uri: URI) {
-    return posix.parse(uri.path).name;
+  toString(): string {
+    return encode(this, false);
   }
 
-  static getDir(uri: URI) {
-    return URI.file(posix.dirname(uri.path));
+  isMarkdown(): boolean {
+    const ext = this.getExtension();
+    return ext === '.md' || ext === '.markdown';
   }
 
-  static getFileNameWithoutExtension(uri: URI) {
-    return URI.getBasename(uri).replace(/\.[^.]+$/, '');
-  }
-
-  /**
-   * Uses a placeholder URI, and a reference directory, to generate
-   * the URI of the corresponding resource
-   *
-   * @param placeholderUri the placeholder URI
-   * @param basedir the dir to be used as reference
-   * @returns the target resource URI
-   */
-  static createResourceUriFromPlaceholder(
-    basedir: URI,
-    placeholderUri: URI
-  ): URI {
-    if (isAbsolute(placeholderUri.path)) {
-      return URI.file(placeholderUri.path);
-    }
-    const tokens = placeholderUri.path.split('/');
-    const path = tokens.slice(0, -1);
-    const filename = tokens.slice(-1);
-    return URI.joinPath(basedir, ...path, `${filename}.md`);
-  }
-
-  /**
-   * Join a URI path with path fragments and normalizes the resulting path.
-   *
-   * @param uri The input URI.
-   * @param pathFragment The path fragment to add to the URI path.
-   * @returns The resulting URI.
-   */
-  static joinPath(uri: URI, ...pathFragment: string[]): URI {
-    if (!uri.path) {
-      throw new Error(`[UriError]: cannot call joinPath on URI without path`);
-    }
-    let newPath: string;
-    if (URI.isWindowsPath(uri.path) && uri.scheme === 'file') {
-      newPath = URI.file(paths.win32.join(URI.toFsPath(uri), ...pathFragment))
-        .path;
-    } else {
-      newPath = paths.posix.join(uri.path, ...pathFragment);
-    }
-    return URI.create({ ...uri, path: newPath });
-  }
-
-  static toFsPath(uri: URI): string {
-    let value: string;
-    if (uri.authority && uri.path.length > 1 && uri.scheme === 'file') {
-      // unc path: file://shares/c$/far/boo
-      value = `//${uri.authority}${uri.path}`;
-    } else if (
-      uri.path.charCodeAt(0) === CharCode.Slash &&
-      ((uri.path.charCodeAt(1) >= CharCode.A &&
-        uri.path.charCodeAt(1) <= CharCode.Z) ||
-        (uri.path.charCodeAt(1) >= CharCode.a &&
-          uri.path.charCodeAt(1) <= CharCode.z)) &&
-      uri.path.charCodeAt(2) === CharCode.Colon
-    ) {
-      // windows drive letter: file:///C:/far/boo
-      value = uri.path[1].toUpperCase() + uri.path.substr(2);
-    } else {
-      // other path
-      value = uri.path;
-    }
-    if (URI.isWindowsPath(value)) {
-      value = value.replace(/\//g, '\\');
-    }
-    return value;
-  }
-
-  static toString(uri: URI): string {
-    return encode(uri, false);
-  }
-
-  // --- utility
-
-  static isWindowsPath(path: string) {
+  isEqual(uri: URI): boolean {
     return (
-      (path.length >= 2 && path.charCodeAt(1) === CharCode.Colon) ||
-      (path.length >= 3 &&
-        path.charCodeAt(0) === CharCode.Slash &&
-        path.charCodeAt(2) === CharCode.Colon)
+      this.authority === uri.authority &&
+      this.scheme === uri.scheme &&
+      this.path === uri.path &&
+      this.fragment === uri.fragment &&
+      this.query === uri.query
     );
-  }
-
-  static isUri(thing: any): thing is URI {
-    if (!thing) {
-      return false;
-    }
-    return (
-      typeof (thing as URI).authority === 'string' &&
-      typeof (thing as URI).fragment === 'string' &&
-      typeof (thing as URI).path === 'string' &&
-      typeof (thing as URI).query === 'string' &&
-      typeof (thing as URI).scheme === 'string'
-    );
-  }
-
-  static isPlaceholder(uri: URI): boolean {
-    return uri.scheme === 'placeholder';
-  }
-
-  static isEqual(a: URI, b: URI): boolean {
-    return (
-      a.authority === b.authority &&
-      a.scheme === b.scheme &&
-      a.path === b.path &&
-      a.fragment === b.fragment &&
-      a.query === b.query
-    );
-  }
-  static isMarkdownFile(uri: URI): boolean {
-    return uri.path.endsWith('.md');
   }
 }
 
@@ -304,33 +179,6 @@ function percentDecode(str: string): string {
 }
 
 /**
- * Converts a windows-like path to standard URI path
- * - Normalize the Windows drive letter to upper case
- * - replace \ with /
- * - always start with /
- *
- * see https://github.com/foambubble/foam/issues/813
- * see https://github.com/microsoft/vscode/issues/43959
- * see https://github.com/microsoft/vscode/issues/116298
- *
- * @param path the path to convert
- * @returns the URI compatible path
- */
-function windowsPathToUriPath(path: string): string {
-  path = path.charCodeAt(0) === CharCode.Slash ? path : `/${path}`;
-  path = path.replace(/\\/g, _slash);
-  const code = path.charCodeAt(1);
-  if (
-    path.charCodeAt(2) === CharCode.Colon &&
-    code >= CharCode.a &&
-    code <= CharCode.z
-  ) {
-    path = `/${String.fromCharCode(code - 32)}:${path.substr(3)}`; // "/C:".length === 3
-  }
-  return path;
-}
-
-/**
  * Create the external version of a uri
  */
 function encode(uri: URI, skipEncoding: boolean): string {
@@ -339,6 +187,7 @@ function encode(uri: URI, skipEncoding: boolean): string {
     : encodeURIComponentMinimal;
 
   let res = '';
+  // eslint-disable-next-line prefer-const
   let { scheme, authority, path, query, fragment } = uri;
   if (scheme) {
     res += scheme;

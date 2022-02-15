@@ -788,6 +788,51 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "iam-yan",
+      "name": "Yan",
+      "avatar_url": "https://avatars.githubusercontent.com/u/48427014?v=4",
+      "profile": "https://github.com/iam-yan",
+      "contributions": [
+        "doc"
+      ]
+    },
+    {
+      "login": "jimt",
+      "name": "Jim Tittsler",
+      "avatar_url": "https://avatars.githubusercontent.com/u/180326?v=4",
+      "profile": "https://WikiEducator.org/User:JimTittsler",
+      "contributions": [
+        "doc"
+      ]
+    },
+    {
+      "login": "MalcolmMielle",
+      "name": "Malcolm Mielle",
+      "avatar_url": "https://avatars.githubusercontent.com/u/4457840?v=4",
+      "profile": "http://malcolmmielle.wordpress.com/",
+      "contributions": [
+        "doc"
+      ]
+    },
+    {
+      "login": "veesar",
+      "name": "Veesar",
+      "avatar_url": "https://avatars.githubusercontent.com/u/74916913?v=4",
+      "profile": "https://snippets.page/",
+      "contributions": [
+        "doc"
+      ]
+    },
+    {
+      "login": "bentongxyz",
+      "name": "bentongxyz",
+      "avatar_url": "https://avatars.githubusercontent.com/u/60358804?v=4",
+      "profile": "https://github.com/bentongxyz",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,

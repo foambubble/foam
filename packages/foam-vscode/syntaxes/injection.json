@@ -1,0 +1,11 @@
+{
+  "scopeName": "foam.wikilink.injection",
+  "injectionSelector": "L:meta.paragraph.markdown",
+  "patterns": [
+    {
+      "contentName": "string.other.link.title.markdown.foam",
+      "begin": "\\[\\[",
+      "end": "\\]\\]"
+    }
+  ]
+}

@@ -63,7 +63,7 @@ export class BacklinksTreeDataProvider
       const backlinkRefs = Promise.all(
         resource.links
           .filter(link =>
-            URI.isEqual(this.workspace.resolveLink(resource, link), uri)
+            this.workspace.resolveLink(resource, link).isEqual(uri)
           )
           .map(async link => {
             const item = new BacklinkTreeItem(resource, link);
@@ -72,7 +72,7 @@ export class BacklinksTreeDataProvider
             ).split('\n');
             if (link.range.start.line < lines.length) {
               const line = lines[link.range.start.line];
-              let start = Math.max(0, link.range.start.character - 15);
+              const start = Math.max(0, link.range.start.character - 15);
               const ellipsis = start === 0 ? '' : '...';
 
               item.label = `${link.range.start.line}: ${ellipsis}${line.substr(
@@ -93,7 +93,7 @@ export class BacklinksTreeDataProvider
     }
 
     const backlinksByResourcePath = groupBy(
-      this.graph.getConnections(uri).filter(c => URI.isEqual(c.target, uri)),
+      this.graph.getConnections(uri).filter(c => c.target.isEqual(uri)),
       b => b.source.path
     );
 

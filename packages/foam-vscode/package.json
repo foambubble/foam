@@ -424,6 +424,7 @@
     "dateformat": "^3.0.3",
     "detect-newline": "^3.1.0",
     "fast-array-diff": "^1.0.1",
+    "github-slugger": "^1.4.0",
     "glob": "^7.1.6",
     "gray-matter": "^4.0.2",
     "lodash": "^4.17.21",

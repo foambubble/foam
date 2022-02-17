@@ -10,7 +10,7 @@ import {
 
 const knownFoamVariables = new Set([
   'FOAM_TITLE',
-  'FOAM_TITLE_SLUG',
+  'FOAM_SLUG',
   'FOAM_SELECTED_TEXT',
   'FOAM_DATE_YEAR',
   'FOAM_DATE_YEAR_SHORT',
@@ -28,7 +28,7 @@ const knownFoamVariables = new Set([
 
 export class Resolver implements VariableResolver {
   private promises = new Map<string, Promise<string | undefined>>();
-  private foamTitle = '';
+  private foamTitle = null;
   /**
    * Create a resolver
    *
@@ -122,17 +122,23 @@ export class Resolver implements VariableResolver {
     return (variable.children[0] ?? name).toString();
   }
 
-  resolve(variable: Variable): Promise<string | undefined> {
+  async resolve(variable: Variable): Promise<string | undefined> {
     const name = variable.name;
     if (this.givenValues.has(name)) {
       this.promises.set(name, Promise.resolve(this.givenValues.get(name)));
     } else if (!this.promises.has(name)) {
       switch (name) {
         case 'FOAM_TITLE':
-          this.promises.set(name, Promise.resolve(this.foamTitle));
+          this.promises.set(
+            name,
+            Promise.resolve(await this.resolveFoamTitle())
+          );
           break;
-        case 'FOAM_TITLE_SLUG':
-          this.promises.set(name, Promise.resolve(toSlug(this.foamTitle)));
+        case 'FOAM_SLUG':
+          this.promises.set(
+            name,
+            Promise.resolve(toSlug(await this.resolveFoamTitle()))
+          );
           break;
         case 'FOAM_SELECTED_TEXT':
           this.promises.set(name, Promise.resolve(resolveFoamSelectedText()));
@@ -271,15 +277,6 @@ export class Resolver implements VariableResolver {
       this.foamTitle = title;
     }
     return this.foamTitle;
-  }
-
-  async resolveFoamTitleSlug() {
-    if (this.foamTitle === null) {
-      await this.resolveFoamTitle();
-    }
-    return this.foamTitle === null
-      ? 'foamTitle-is-null'
-      : toSlug(this.foamTitle);
   }
 }
 

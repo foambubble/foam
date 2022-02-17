@@ -69,10 +69,7 @@ describe('resolveFoamVariables', () => {
 
   test('Resolves FOAM_TITLE', async () => {
     const foamTitle = 'My note title';
-    const variables = [
-      new Variable('FOAM_TITLE'),
-      new Variable('FOAM_TITLE_SLUG'),
-    ];
+    const variables = [new Variable('FOAM_TITLE'), new Variable('FOAM_SLUG')];
 
     jest
       .spyOn(window, 'showInputBox')
@@ -80,7 +77,7 @@ describe('resolveFoamVariables', () => {
 
     const expected = new Map<string, string>();
     expected.set('FOAM_TITLE', foamTitle);
-    expected.set('FOAM_TITLE_SLUG', 'my-note-title');
+    expected.set('FOAM_SLUG', 'my-note-title');
 
     const givenValues = new Map<string, string>();
     const resolver = new Resolver(givenValues, new Date());

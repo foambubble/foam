@@ -28,7 +28,6 @@ const knownFoamVariables = new Set([
 
 export class Resolver implements VariableResolver {
   private promises = new Map<string, Promise<string | undefined>>();
-  private foamTitle = null;
   /**
    * Create a resolver
    *

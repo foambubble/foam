@@ -128,10 +128,7 @@ export class Resolver implements VariableResolver {
     } else if (!this.promises.has(name)) {
       switch (name) {
         case 'FOAM_TITLE':
-          this.promises.set(
-            name,
-            Promise.resolve(await this.resolveFoamTitle())
-          );
+          this.promises.set(name, resolveFoamTitle());
           break;
         case 'FOAM_SLUG':
           this.promises.set(

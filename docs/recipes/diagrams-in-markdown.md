@@ -11,8 +11,6 @@ We have two alternative #recipe for displaying diagrams in markdown:
 
 You can use [Mermaid](https://marketplace.visualstudio.com/items?itemName=bierner.markdown-mermaid) plugin to draw and preview diagrams in your content.
 
-⚠️ Be aware that Mermaid diagrams don't automatically get rendered in published Foams in [[publish-to-github-pages]], and would require you to eject to another static site generation approach that supports Mermaid plugins.
-
 ## Draw.io
 
 [Draw.io](https://marketplace.visualstudio.com/items?itemName=hediet.vscode-drawio) extension allows you to create, edit, and display your diagrams without leaving Visual Studio Code. The `.drawio.svg` or `.drawio.png` files can be automatically embedded and displayed in published Foams, no export needed. FYI, the diagram below was made using Draw.io! You can check the diagram [here](../assets/images/diagram-drawio-demo.drawio.svg).

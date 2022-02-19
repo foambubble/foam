@@ -262,22 +262,19 @@ export class Resolver implements VariableResolver {
     const result = this.promises.get(name);
     return result;
   }
+}
 
-  async resolveFoamTitle() {
-    if (this.foamTitle === null) {
-      const title = await window.showInputBox({
-        prompt: `Enter a title for the new note`,
-        value: 'Title of my New Note',
-        validateInput: value =>
-          value.trim().length === 0 ? 'Please enter a title' : undefined,
-      });
-      if (title === undefined) {
-        throw new UserCancelledOperation();
-      }
-      this.foamTitle = title;
-    }
-    return this.foamTitle;
+async function resolveFoamTitle() {
+  const title = await window.showInputBox({
+    prompt: `Enter a title for the new note`,
+    value: 'Title of my New Note',
+    validateInput: value =>
+      value.trim().length === 0 ? 'Please enter a title' : undefined,
+  });
+  if (title === undefined) {
+    throw new UserCancelledOperation();
   }
+  return title;
 }
 
 function resolveFoamSelectedText() {

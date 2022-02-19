@@ -136,7 +136,9 @@ export class Resolver implements VariableResolver {
         case 'FOAM_SLUG':
           this.promises.set(
             name,
-            Promise.resolve(toSlug(await this.resolveFoamTitle()))
+            Promise.resolve(
+              toSlug(await this.resolve(new Variable('FOAM_TITLE')))
+            )
           );
           break;
         case 'FOAM_SELECTED_TEXT':

@@ -362,6 +362,11 @@
           "type": "object",
           "description": "Custom graph styling settings. An example is present in the documentation.",
           "default": {}
+        },
+        "foam.tags.poundSignTags": {
+          "type": "boolean",
+          "description": "Search tags starts with '#'",
+          "default": true
         }
       }
     },

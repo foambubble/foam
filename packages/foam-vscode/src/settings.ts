@@ -54,6 +54,11 @@ export function getPlaceholdersConfig(): GroupedResourcesConfig {
   return { exclude, groupBy };
 }
 
+/** Retrieve the poundTags configuration */
+export function getEnabledPoundTags(): boolean {
+  return workspace.getConfiguration('foam.tags').get('poundSignTags');
+}
+
 export interface GroupedResourcesConfig {
   exclude: string[];
   groupBy: GroupedResoucesConfigGroupBy;

@@ -24,6 +24,7 @@ import { FoamWorkspace } from './model/workspace';
 import { IDataStore, FileDataStore, IMatcher } from './services/datastore';
 import { IDisposable } from './common/lifecycle';
 import { ResourceProvider } from './model/provider';
+import { getEnabledPoundTags } from '../settings';
 
 const ALIAS_DIVIDER_CHAR = '|';
 
@@ -186,6 +187,7 @@ const getTextFromChildren = (root: Node): string => {
   return text;
 };
 
+const poundSignTags: boolean = getEnabledPoundTags();
 const tagsPlugin: ParserPlugin = {
   name: 'tags',
   onDidFindProperties: (props, note, node) => {
@@ -200,7 +202,7 @@ const tagsPlugin: ParserPlugin = {
     }
   },
   visit: (node, note) => {
-    if (node.type === 'text') {
+    if (poundSignTags && node.type === 'text') {
       const tags = extractHashtags((node as any).value);
       tags.forEach(tag => {
         const start = astPointToFoamPosition(node.position!.start);

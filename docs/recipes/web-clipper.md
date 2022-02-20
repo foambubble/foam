@@ -10,5 +10,5 @@ There are a couple of options when it comes to clipping web pages:
 - [Markdown Clipper](https://github.com/deathau/markdownload)
   - A Firefox and Google Chrome extension to clip websites and download them into a readable markdown file.
 
-- [https://clipper.website](https://clipper.website/)
+- [Web Clipper](https://clipper.website/)
   - A Firefox, Chrome and Edge extension to clip websites and save them directly to the GitHub repository into a readable markdown file.

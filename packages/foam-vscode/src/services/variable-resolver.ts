@@ -1,6 +1,7 @@
 import { findSelectionContent } from './editor';
 import { window } from 'vscode';
 import { UserCancelledOperation } from './errors';
+import { toSlug } from '../utils/slug';
 import {
   SnippetParser,
   Variable,
@@ -9,6 +10,7 @@ import {
 
 const knownFoamVariables = new Set([
   'FOAM_TITLE',
+  'FOAM_SLUG',
   'FOAM_SELECTED_TEXT',
   'FOAM_DATE_YEAR',
   'FOAM_DATE_YEAR_SHORT',
@@ -26,7 +28,6 @@ const knownFoamVariables = new Set([
 
 export class Resolver implements VariableResolver {
   private promises = new Map<string, Promise<string | undefined>>();
-
   /**
    * Create a resolver
    *
@@ -120,7 +121,7 @@ export class Resolver implements VariableResolver {
     return (variable.children[0] ?? name).toString();
   }
 
-  resolve(variable: Variable): Promise<string | undefined> {
+  async resolve(variable: Variable): Promise<string | undefined> {
     const name = variable.name;
     if (this.givenValues.has(name)) {
       this.promises.set(name, Promise.resolve(this.givenValues.get(name)));
@@ -128,6 +129,14 @@ export class Resolver implements VariableResolver {
       switch (name) {
         case 'FOAM_TITLE':
           this.promises.set(name, resolveFoamTitle());
+          break;
+        case 'FOAM_SLUG':
+          this.promises.set(
+            name,
+            Promise.resolve(
+              toSlug(await this.resolve(new Variable('FOAM_TITLE')))
+            )
+          );
           break;
         case 'FOAM_SELECTED_TEXT':
           this.promises.set(name, Promise.resolve(resolveFoamSelectedText()));

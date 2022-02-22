@@ -4,6 +4,11 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.17.5] - 2022-02-22
+
+Fixes and Improvements:
+- Added FOAM_SLUG template variable (#865 - Thanks @techCarpenter)
+
 ## [0.17.4] - 2022-02-13
 
 Fixes and Improvements:

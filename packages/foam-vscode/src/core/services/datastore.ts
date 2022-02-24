@@ -118,6 +118,7 @@ export class FileDataStore implements IDataStore {
   async list(glob: string, ignoreGlob?: string | string[]): Promise<URI[]> {
     const res = await findAllFiles(glob, {
       ignore: ignoreGlob,
+      strict: false,
     });
     return res.map(URI.file);
   }

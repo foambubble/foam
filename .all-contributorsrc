@@ -842,6 +842,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "cliffordfajardo",
+      "name": "Clifford Fajardo ",
+      "avatar_url": "https://avatars.githubusercontent.com/u/6743796?v=4",
+      "profile": "http://Cliffordfajardo.com",
+      "contributions": [
+        "tool"
+      ]
     }
   ],
   "contributorsPerLine": 7,

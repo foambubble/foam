@@ -4,6 +4,11 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.17.6] - 2022-03-03
+
+Fixes and Improvements:
+- Don't fail on error when scannig workspace (#943 - thanks @develmusa)
+
 ## [0.17.5] - 2022-02-22
 
 Fixes and Improvements:

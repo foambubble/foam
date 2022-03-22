@@ -1,9 +1,32 @@
-import { workspace, WorkspaceConfiguration } from 'vscode';
+import { window, workspace, WorkspaceConfiguration } from 'vscode';
 import dateFormat from 'dateformat';
 import { focusNote } from './utils';
 import { URI } from './core/model/uri';
 import { fromVsCodeUri, toVsCodeUri } from './utils/vsc-utils';
 import { NoteFactory } from './services/templates';
+
+export async function openDailyNoteForToday() {
+  console.log('Open daily note for today');
+  openDailyNoteFor();
+}
+
+export async function openDailyNoteForPickedDate() {
+  console.log('Open daily note for date');
+
+  const result = await window.showQuickPick(['today', 'tomorrow'], {
+    placeHolder: 'today or tomorrow',
+    // onDidSelectItem: item => window.showInformationMessage(`Focus: ${item}`)
+  });
+
+  if (result == 'today') {
+    openDailyNoteFor();
+  } else if (result == 'tomorrow') {
+    const date = new Date();
+    date.setDate(date.getDate() + 1);
+
+    openDailyNoteFor(date);
+  }
+}
 
 /**
  * Open the daily note file.

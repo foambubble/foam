@@ -171,6 +171,10 @@
         "title": "Foam: Open Daily Note"
       },
       {
+        "command": "foam-vscode.open-daily-note-for-date",
+        "title": "Foam: Pick Date for Daily Note"
+      },
+      {
         "command": "foam-vscode.open-random-note",
         "title": "Foam: Open Random Note"
       },
@@ -377,6 +381,10 @@
       {
         "command": "foam-vscode.open-daily-note",
         "key": "alt+d"
+      },
+      {
+        "command": "foam-vscode.open-daily-note-for-date",
+        "key": "alt+h"
       }
     ]
   },

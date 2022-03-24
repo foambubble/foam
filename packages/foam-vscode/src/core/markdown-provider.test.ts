@@ -1,489 +1,233 @@
 import {
   createMarkdownParser,
   createMarkdownReferences,
-  ParserPlugin,
 } from './markdown-provider';
-import { DirectLink, WikiLink } from './model/note';
 import { Logger } from './utils/log';
 import { URI } from './model/uri';
-import { FoamGraph } from './model/graph';
-import { Range } from './model/range';
-import { createTestWorkspace, getRandomURI } from '../test/test-utils';
+import {
+  createTestNote,
+  createTestWorkspace,
+  getRandomURI,
+} from '../test/test-utils';
 
 Logger.setLevel('error');
 
-const pageA = `
-# Page A
-
-## Section
-- [[page-b]]
-- [[page-c]]
-- [[Page D]]
-- [[page e]]
-`;
-
-const pageB = `
-# Page B
-
-This references [[page-a]]`;
-
-const pageC = `
-# Page C
-`;
-
-const pageD = `
-# Page D
-`;
-
-const pageE = `
-# Page E
-`;
-
+const parser = createMarkdownParser([]);
 const createNoteFromMarkdown = (content: string, path?: string) =>
-  createMarkdownParser([]).parse(
-    path ? URI.file(path) : getRandomURI(),
-    content
-  );
+  parser.parse(path ? URI.file(path) : getRandomURI(), content);
 
-describe('Markdown loader', () => {
-  it('Converts markdown to notes', () => {
-    const workspace = createTestWorkspace();
-    workspace.set(createNoteFromMarkdown(pageA, '/page-a.md'));
-    workspace.set(createNoteFromMarkdown(pageB, '/page-b.md'));
-    workspace.set(createNoteFromMarkdown(pageC, '/page-c.md'));
-    workspace.set(createNoteFromMarkdown(pageD, '/page-d.md'));
-    workspace.set(createNoteFromMarkdown(pageE, '/page-e.md'));
+describe('Link resolution', () => {
+  describe('Wikilinks', () => {
+    it('should resolve basename wikilinks with files in same directory', () => {
+      const workspace = createTestWorkspace();
+      const noteA = createNoteFromMarkdown('Link to [[page b]]', './page-a.md');
+      const noteB = createNoteFromMarkdown('Content of page b', './page b.md');
+      workspace.set(noteA).set(noteB);
+      expect(workspace.resolveLink(noteA, noteA.links[0])).toEqual(noteB.uri);
+    });
 
-    expect(
+    it('should resolve basename wikilinks with files in other directory', () => {
+      const workspace = createTestWorkspace();
+      const noteA = createNoteFromMarkdown('Link to [[page b]]', './page-a.md');
+      const noteB = createNoteFromMarkdown('Page b', './folder/page b.md');
+      workspace.set(noteA).set(noteB);
+      expect(workspace.resolveLink(noteA, noteA.links[0])).toEqual(noteB.uri);
+    });
+
+    it('should resolve wikilinks that represent an absolute path', () => {
+      const workspace = createTestWorkspace();
+      const noteA = createNoteFromMarkdown(
+        'Link to [[/folder/page b]]',
+        '/page-a.md'
+      );
+      const noteB = createNoteFromMarkdown('Page b', '/folder/page b.md');
+      workspace.set(noteA).set(noteB);
+      expect(workspace.resolveLink(noteA, noteA.links[0])).toEqual(noteB.uri);
+    });
+
+    it('should resolve wikilinks that represent a relative path', () => {
+      const workspace = createTestWorkspace();
+      const noteA = createNoteFromMarkdown(
+        'Link to [[../two/page b]]',
+        '/path/one/page-a.md'
+      );
+      const noteB = createNoteFromMarkdown('Page b', '/path/one/page b.md');
+      const noteB2 = createNoteFromMarkdown('Page b 2', '/path/two/page b.md');
       workspace
-        .list()
-        .map(n => n.uri.getName())
-        .sort()
-    ).toEqual(['page-a', 'page-b', 'page-c', 'page-d', 'page-e']);
+        .set(noteA)
+        .set(noteB)
+        .set(noteB2);
+      expect(workspace.resolveLink(noteA, noteA.links[0])).toEqual(noteB2.uri);
+    });
+
+    it('should resolve ambiguous wikilinks', () => {
+      const workspace = createTestWorkspace();
+      const noteA = createNoteFromMarkdown('Link to [[page b]]', '/page-a.md');
+      const noteB = createNoteFromMarkdown('Page b', '/path/one/page b.md');
+      const noteB2 = createNoteFromMarkdown('Page b2', '/path/two/page b.md');
+      workspace
+        .set(noteA)
+        .set(noteB)
+        .set(noteB2);
+      expect(workspace.resolveLink(noteA, noteA.links[0])).toEqual(noteB.uri);
+    });
+
+    it('should resolve path wikilink even with other ambiguous notes', () => {
+      const noteA = createTestNote({
+        uri: '/path/to/page-a.md',
+        links: [{ slug: './more/page-b' }, { slug: 'yet/page-b' }],
+      });
+      const noteB1 = createTestNote({ uri: '/path/to/another/page-b.md' });
+      const noteB2 = createTestNote({ uri: '/path/to/more/page-b.md' });
+      const noteB3 = createTestNote({ uri: '/path/to/yet/page-b.md' });
+
+      const ws = createTestWorkspace();
+      ws.set(noteA)
+        .set(noteB1)
+        .set(noteB2)
+        .set(noteB3);
+
+      expect(ws.resolveLink(noteA, noteA.links[0])).toEqual(noteB2.uri);
+      expect(ws.resolveLink(noteA, noteA.links[1])).toEqual(noteB3.uri);
+    });
+
+    it('should resolve Foam wikilinks', () => {
+      const workspace = createTestWorkspace();
+      const noteA = createNoteFromMarkdown(
+        'Link to [[two/page b]] and [[one/page b]]',
+        '/page-a.md'
+      );
+      const noteB = createNoteFromMarkdown('Page b', '/path/one/page b.md');
+      const noteB2 = createNoteFromMarkdown('Page b2', '/path/two/page b.md');
+      workspace
+        .set(noteA)
+        .set(noteB)
+        .set(noteB2);
+      expect(workspace.resolveLink(noteA, noteA.links[0])).toEqual(noteB2.uri);
+      expect(workspace.resolveLink(noteA, noteA.links[1])).toEqual(noteB.uri);
+    });
+
+    it('should use wikilink definitions when available to resolve target', () => {
+      const ws = createTestWorkspace();
+      const noteA = createTestNote({
+        uri: '/somewhere/from/page-a.md',
+        links: [{ slug: 'page-b' }],
+      });
+      noteA.definitions.push({
+        label: 'page-b',
+        url: '../to/page-b.md',
+      });
+      const noteB = createTestNote({
+        uri: '/somewhere/to/page-b.md',
+      });
+      ws.set(noteA).set(noteB);
+      expect(ws.resolveLink(noteA, noteA.links[0])).toEqual(noteB.uri);
+    });
+
+    it('should support case insensitive wikilink resolution', () => {
+      const noteA = createTestNote({
+        uri: '/path/to/page-a.md',
+        links: [
+          // uppercased filename, lowercased slug
+          { slug: 'page-b' },
+          // lowercased filename, camelcased wikilink
+          { slug: 'Page-C' },
+          // lowercased filename, lowercased wikilink
+          { slug: 'page-d' },
+        ],
+      });
+      const noteB = createTestNote({ uri: '/somewhere/PAGE-B.md' });
+      const noteC = createTestNote({ uri: '/path/another/page-c.md' });
+      const noteD = createTestNote({ uri: '/path/another/page-d.md' });
+      const ws = createTestWorkspace()
+        .set(noteA)
+        .set(noteB)
+        .set(noteC)
+        .set(noteD);
+
+      expect(ws.resolveLink(noteA, noteA.links[0])).toEqual(noteB.uri);
+      expect(ws.resolveLink(noteA, noteA.links[1])).toEqual(noteC.uri);
+      expect(ws.resolveLink(noteA, noteA.links[2])).toEqual(noteD.uri);
+    });
   });
 
-  it('Ignores external links', () => {
-    const note = createNoteFromMarkdown(
-      `this is a [link to google](https://www.google.com)`
-    );
-    expect(note.links.length).toEqual(0);
-  });
+  describe('Markdown direct links', () => {
+    it('should support absolute path', () => {
+      const noteA = createTestNote({
+        uri: '/path/to/page-a.md',
+        links: [{ to: './another/page-b.md' }],
+      });
+      const noteB = createTestNote({
+        uri: '/path/to/another/page-b.md',
+        links: [{ to: '../../to/page-a.md' }],
+      });
 
-  it('Ignores references to sections in the same file', () => {
-    const note = createNoteFromMarkdown(
-      `this is a [link to intro](#introduction)`
-    );
-    expect(note.links.length).toEqual(0);
-  });
+      const ws = createTestWorkspace();
+      ws.set(noteA).set(noteB);
+      expect(ws.resolveLink(noteA, noteA.links[0])).toEqual(noteB.uri);
+    });
 
-  it('Parses internal links correctly', () => {
-    const note = createNoteFromMarkdown(
-      'this is a [link to page b](../doc/page-b.md)'
-    );
-    expect(note.links.length).toEqual(1);
-    const link = note.links[0] as DirectLink;
-    expect(link.type).toEqual('link');
-    expect(link.label).toEqual('link to page b');
-    expect(link.target).toEqual('../doc/page-b.md');
-  });
-
-  it('Parses links that have formatting in label', () => {
-    const note = createNoteFromMarkdown(
-      'this is [**link** with __formatting__](../doc/page-b.md)'
-    );
-    expect(note.links.length).toEqual(1);
-    const link = note.links[0] as DirectLink;
-    expect(link.type).toEqual('link');
-    expect(link.label).toEqual('link with formatting');
-    expect(link.target).toEqual('../doc/page-b.md');
-  });
-
-  it('Parses wikilinks correctly', () => {
-    const workspace = createTestWorkspace();
-    const noteA = createNoteFromMarkdown(pageA, '/page-a.md');
-    const noteB = createNoteFromMarkdown(pageB, '/page-b.md');
-    const noteC = createNoteFromMarkdown(pageC, '/page-c.md');
-    const noteD = createNoteFromMarkdown(pageD, '/Page D.md');
-    const noteE = createNoteFromMarkdown(pageE, '/page e.md');
-
-    workspace
-      .set(noteA)
-      .set(noteB)
-      .set(noteC)
-      .set(noteD)
-      .set(noteE);
-    const graph = FoamGraph.fromWorkspace(workspace);
-
-    expect(graph.getBacklinks(noteB.uri).map(l => l.source)).toEqual([
-      noteA.uri,
-    ]);
-    expect(graph.getLinks(noteA.uri).map(l => l.target)).toEqual([
-      noteB.uri,
-      noteC.uri,
-      noteD.uri,
-      noteE.uri,
-    ]);
-  });
-
-  it('Parses backlinks with an alias', () => {
-    const note = createNoteFromMarkdown(
-      'this is [[link|link alias]]. A link with spaces [[other link | spaced]]'
-    );
-    expect(note.links.length).toEqual(2);
-    let link = note.links[0] as WikiLink;
-    expect(link.type).toEqual('wikilink');
-    expect(link.rawText).toEqual('[[link|link alias]]');
-    expect(link.label).toEqual('link alias');
-    expect(link.target).toEqual('link');
-    link = note.links[1] as WikiLink;
-    expect(link.type).toEqual('wikilink');
-    expect(link.rawText).toEqual('[[other link | spaced]]');
-    expect(link.label).toEqual('spaced');
-    expect(link.target).toEqual('other link');
-  });
-
-  it('Skips wikilinks in codeblocks', () => {
-    const noteA = createNoteFromMarkdown(`
-this is some text with our [[first-wikilink]].
-
-\`\`\`
-this is inside a [[codeblock]]
-\`\`\`
-
-this is some text with our [[second-wikilink]].
-    `);
-    expect(noteA.links.map(l => l.label)).toEqual([
-      'first-wikilink',
-      'second-wikilink',
-    ]);
-  });
-
-  it('Skips wikilinks in inlined codeblocks', () => {
-    const noteA = createNoteFromMarkdown(`
-this is some text with our [[first-wikilink]].
-
-this is \`inside a [[codeblock]]\`
-
-this is some text with our [[second-wikilink]].
-    `);
-    expect(noteA.links.map(l => l.label)).toEqual([
-      'first-wikilink',
-      'second-wikilink',
-    ]);
-  });
-});
-
-describe('Note Title', () => {
-  it('should initialize note title if heading exists', () => {
-    const note = createNoteFromMarkdown(`
-# Page A
-this note has a title
-    `);
-    expect(note.title).toBe('Page A');
-  });
-
-  it('should support wikilinks and urls in title', () => {
-    const note = createNoteFromMarkdown(`
-# Page A with [[wikilink]] and a [url](https://google.com)
-this note has a title
-    `);
-    expect(note.title).toBe('Page A with wikilink and a url');
-  });
-
-  it('should default to file name if heading does not exist', () => {
-    const note = createNoteFromMarkdown(
-      `This file has no heading.`,
-      '/page-d.md'
-    );
-
-    expect(note.title).toEqual('page-d');
-  });
-
-  it('should give precedence to frontmatter title over other headings', () => {
-    const note = createNoteFromMarkdown(`
----
-title: Note Title
-date: 20-12-12
----
-
-# Other Note Title
-    `);
-
-    expect(note.title).toBe('Note Title');
-  });
-
-  it('should support numbers', () => {
-    const note1 = createNoteFromMarkdown(`hello`, '/157.md');
-    expect(note1.title).toBe('157');
-
-    const note2 = createNoteFromMarkdown(`# 158`, '/157.md');
-    expect(note2.title).toBe('158');
-
-    const note3 = createNoteFromMarkdown(
-      `
----
-title: 159
----
-
-# 158
-`,
-      '/157.md'
-    );
-    expect(note3.title).toBe('159');
-  });
-
-  it('should not break on empty titles (see #276)', () => {
-    const note = createNoteFromMarkdown(
-      `
-#
-
-this note has an empty title line
-    `,
-      '/Hello Page.md'
-    );
-    expect(note.title).toEqual('Hello Page');
-  });
-});
-
-describe('frontmatter', () => {
-  it('should parse yaml frontmatter', () => {
-    const note = createNoteFromMarkdown(`
----
-title: Note Title
-date: 20-12-12
----
-
-# Other Note Title`);
-
-    expect(note.properties.title).toBe('Note Title');
-    expect(note.properties.date).toBe('20-12-12');
-  });
-
-  it('should parse empty frontmatter', () => {
-    const note = createNoteFromMarkdown(`
----
----
-
-# Empty Frontmatter
-`);
-
-    expect(note.properties).toEqual({});
-  });
-
-  it('should not fail when there are issues with parsing frontmatter', () => {
-    const note = createNoteFromMarkdown(`
----
-title: - one
- - two
- - #
----
-
-`);
-
-    expect(note.properties).toEqual({});
-  });
-});
-
-describe('wikilinks definitions', () => {
-  it('can generate links without file extension when includeExtension = false', () => {
-    const workspace = createTestWorkspace();
-    const noteA = createNoteFromMarkdown(pageA, '/dir1/page-a.md');
-    workspace
-      .set(noteA)
-      .set(createNoteFromMarkdown(pageB, '/dir1/page-b.md'))
-      .set(createNoteFromMarkdown(pageC, '/dir1/page-c.md'));
-
-    const noExtRefs = createMarkdownReferences(workspace, noteA.uri, false);
-    expect(noExtRefs.map(r => r.url)).toEqual(['page-b', 'page-c']);
-  });
-
-  it('can generate links with file extension when includeExtension = true', () => {
-    const workspace = createTestWorkspace();
-    const noteA = createNoteFromMarkdown(pageA, '/dir1/page-a.md');
-    workspace
-      .set(noteA)
-      .set(createNoteFromMarkdown(pageB, '/dir1/page-b.md'))
-      .set(createNoteFromMarkdown(pageC, '/dir1/page-c.md'));
-
-    const extRefs = createMarkdownReferences(workspace, noteA.uri, true);
-    expect(extRefs.map(r => r.url)).toEqual(['page-b.md', 'page-c.md']);
-  });
-
-  it('use relative paths', () => {
-    const workspace = createTestWorkspace();
-    const noteA = createNoteFromMarkdown(pageA, '/dir1/page-a.md');
-    workspace
-      .set(noteA)
-      .set(createNoteFromMarkdown(pageB, '/dir2/page-b.md'))
-      .set(createNoteFromMarkdown(pageC, '/dir3/page-c.md'));
-
-    const extRefs = createMarkdownReferences(workspace, noteA.uri, true);
-    expect(extRefs.map(r => r.url)).toEqual([
-      '../dir2/page-b.md',
-      '../dir3/page-c.md',
-    ]);
-  });
-});
-
-describe('tags plugin', () => {
-  it('can find tags in the text of the note', () => {
-    const noteA = createNoteFromMarkdown(`
-# this is a #heading
-#this is some #text that includes #tags we #care-about.
-    `);
-    expect(noteA.tags).toEqual([
-      { label: 'heading', range: Range.create(1, 12, 1, 20) },
-      { label: 'this', range: Range.create(2, 0, 2, 5) },
-      { label: 'text', range: Range.create(2, 14, 2, 19) },
-      { label: 'tags', range: Range.create(2, 34, 2, 39) },
-      { label: 'care-about', range: Range.create(2, 43, 2, 54) },
-    ]);
-  });
-
-  it('will skip tags in codeblocks', () => {
-    const noteA = createNoteFromMarkdown(`
-this is some #text that includes #tags we #care-about.
-
-\`\`\`
-this is a #codeblock
-\`\`\`
-    `);
-    expect(noteA.tags.map(t => t.label)).toEqual([
-      'text',
-      'tags',
-      'care-about',
-    ]);
-  });
-
-  it('will skip tags in inlined codeblocks', () => {
-    const noteA = createNoteFromMarkdown(`
-this is some #text that includes #tags we #care-about.
-this is a \`inlined #codeblock\` `);
-    expect(noteA.tags.map(t => t.label)).toEqual([
-      'text',
-      'tags',
-      'care-about',
-    ]);
-  });
-  it('can find tags as text in yaml', () => {
-    const noteA = createNoteFromMarkdown(`
----
-tags: hello, world  this_is_good
----
-# this is a heading
-this is some #text that includes #tags we #care-about.
-    `);
-    expect(noteA.tags.map(t => t.label)).toEqual([
-      'hello',
-      'world',
-      'this_is_good',
-      'text',
-      'tags',
-      'care-about',
-    ]);
-  });
-
-  it('can find tags as array in yaml', () => {
-    const noteA = createNoteFromMarkdown(`
----
-tags: [hello, world,  this_is_good]
----
-# this is a heading
-this is some #text that includes #tags we #care-about.
-    `);
-    expect(noteA.tags.map(t => t.label)).toEqual([
-      'hello',
-      'world',
-      'this_is_good',
-      'text',
-      'tags',
-      'care-about',
-    ]);
-  });
-
-  it('provides rough range for tags in yaml', () => {
-    // For now it's enough to just get the YAML block range
-    // in the future we might want to be more specific
-
-    const noteA = createNoteFromMarkdown(`
----
-tags: [hello, world, this_is_good]
----
-# this is a heading
-this is some text
-    `);
-    expect(noteA.tags[0]).toEqual({
-      label: 'hello',
-      range: Range.create(1, 0, 3, 3),
+    it('should support relative path', () => {
+      const noteA = createTestNote({
+        uri: '/path/to/page-a.md',
+        links: [{ to: 'more/page-c.md' }],
+      });
+      const noteB = createTestNote({
+        uri: '/path/to/more/page-c.md',
+      });
+      const ws = createTestWorkspace();
+      ws.set(noteA).set(noteB);
+      expect(ws.resolveLink(noteA, noteA.links[0])).toEqual(noteB.uri);
     });
   });
 });
 
-describe('Sections plugin', () => {
-  it('should find sections within the note', () => {
-    const note = createNoteFromMarkdown(`
-# Section 1
+describe('Generation of markdown references', () => {
+  it('should generate links without file extension when includeExtension = false', () => {
+    const workspace = createTestWorkspace();
+    const noteA = createNoteFromMarkdown(
+      'Link to [[page-b]] and [[page-c]]',
+      '/dir1/page-a.md'
+    );
+    workspace
+      .set(noteA)
+      .set(createNoteFromMarkdown('Content of note B', '/dir1/page-b.md'))
+      .set(createNoteFromMarkdown('Content of note C', '/dir1/page-c.md'));
 
-This is the content of section 1.
-
-## Section 1.1
-
-This is the content of section 1.1.
-
-# Section 2
-
-This is the content of section 2.
-      `);
-    expect(note.sections).toHaveLength(3);
-    expect(note.sections[0].label).toEqual('Section 1');
-    expect(note.sections[0].range).toEqual(Range.create(1, 0, 9, 0));
-    expect(note.sections[1].label).toEqual('Section 1.1');
-    expect(note.sections[1].range).toEqual(Range.create(5, 0, 9, 0));
-    expect(note.sections[2].label).toEqual('Section 2');
-    expect(note.sections[2].range).toEqual(Range.create(9, 0, 13, 0));
+    const references = createMarkdownReferences(workspace, noteA.uri, false);
+    expect(references.map(r => r.url)).toEqual(['page-b', 'page-c']);
   });
 
-  it('should support wikilinks and links in the section label', () => {
-    const note = createNoteFromMarkdown(`
-# Section with [[wikilink]]
+  it('should generate links with file extension when includeExtension = true', () => {
+    const workspace = createTestWorkspace();
+    const noteA = createNoteFromMarkdown(
+      'Link to [[page-b]] and [[page-c]]',
+      '/dir1/page-a.md'
+    );
+    workspace
+      .set(noteA)
+      .set(createNoteFromMarkdown('Content of note B', '/dir1/page-b.md'))
+      .set(createNoteFromMarkdown('Content of note C', '/dir1/page-c.md'));
 
-This is the content of section with wikilink
-
-## Section with [url](https://google.com)
-
-This is the content of section with url`);
-    expect(note.sections).toHaveLength(2);
-    expect(note.sections[0].label).toEqual('Section with wikilink');
-    expect(note.sections[1].label).toEqual('Section with url');
+    const references = createMarkdownReferences(workspace, noteA.uri, true);
+    expect(references.map(r => r.url)).toEqual(['page-b.md', 'page-c.md']);
   });
-});
 
-describe('parser plugins', () => {
-  const testPlugin: ParserPlugin = {
-    visit: (node, note) => {
-      if (node.type === 'heading') {
-        note.properties.hasHeading = true;
-      }
-    },
-  };
-  const parser = createMarkdownParser([testPlugin]);
-
-  it('can augment the parsing of the file', () => {
-    const note1 = parser.parse(
-      URI.file('/path/to/a'),
-      `
-This is a test note without headings.
-But with some content.
-`
+  it('should use relative paths', () => {
+    const workspace = createTestWorkspace();
+    const noteA = createNoteFromMarkdown(
+      'Link to [[page-b]] and [[page-c]]',
+      '/dir1/page-a.md'
     );
-    expect(note1.properties.hasHeading).toBeUndefined();
+    workspace
+      .set(noteA)
+      .set(createNoteFromMarkdown('Content of note B', '/dir2/page-b.md'))
+      .set(createNoteFromMarkdown('Content of note C', '/dir3/page-c.md'));
 
-    const note2 = parser.parse(
-      URI.file('/path/to/a'),
-      `
-# This is a note with header
-and some content`
-    );
-    expect(note2.properties.hasHeading).toBeTruthy();
+    const references = createMarkdownReferences(workspace, noteA.uri, true);
+    expect(references.map(r => r.url)).toEqual([
+      '../dir2/page-b.md',
+      '../dir3/page-c.md',
+    ]);
   });
 });

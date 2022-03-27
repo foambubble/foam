@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { createMarkdownParser } from '../core/markdown-provider';
+import { createMarkdownParser } from '../core/services/markdown-parser';
 import { FoamGraph } from '../core/model/graph';
 import { FoamWorkspace } from '../core/model/workspace';
 import { createTestNote } from '../test/test-utils';

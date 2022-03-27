@@ -1,6 +1,6 @@
 import { generateLinkReferences } from '.';
 import { TEST_DATA_DIR } from '../../test/test-utils';
-import { MarkdownResourceProvider } from '../markdown-provider';
+import { MarkdownResourceProvider } from '../services/markdown-provider';
 import { bootstrap } from '../model/foam';
 import { Resource } from '../model/note';
 import { Range } from '../model/range';

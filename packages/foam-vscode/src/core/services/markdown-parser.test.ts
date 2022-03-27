@@ -1,9 +1,9 @@
-import { createMarkdownParser, ParserPlugin } from './markdown-provider';
-import { DirectLink, WikiLink } from './model/note';
-import { Logger } from './utils/log';
-import { URI } from './model/uri';
-import { Range } from './model/range';
-import { getRandomURI } from '../test/test-utils';
+import { createMarkdownParser, ParserPlugin } from './markdown-parser';
+import { DirectLink, WikiLink } from '../model/note';
+import { Logger } from '../utils/log';
+import { URI } from '../model/uri';
+import { Range } from '../model/range';
+import { getRandomURI } from '../../test/test-utils';
 
 Logger.setLevel('error');
 

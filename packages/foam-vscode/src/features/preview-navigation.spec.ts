@@ -1,5 +1,5 @@
 import MarkdownIt from 'markdown-it';
-import { createMarkdownParser } from '../core/markdown-provider';
+import { createMarkdownParser } from '../core/services/markdown-parser';
 import { FoamWorkspace } from '../core/model/workspace';
 import { createTestNote } from '../test/test-utils';
 import {

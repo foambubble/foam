@@ -4,7 +4,7 @@ import { FoamWorkspace } from './workspace';
 import { FoamGraph } from './graph';
 import { ResourceParser } from './note';
 import { ResourceProvider } from './provider';
-import { createMarkdownParser } from '../markdown-provider';
+import { createMarkdownParser } from '../services/markdown-parser';
 import { FoamTags } from './tags';
 
 export interface Services {

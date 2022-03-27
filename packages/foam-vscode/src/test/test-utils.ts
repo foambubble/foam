@@ -6,7 +6,7 @@ import { Range } from '../core/model/range';
 import { URI } from '../core/model/uri';
 import { FoamWorkspace } from '../core/model/workspace';
 import { Matcher } from '../core/services/datastore';
-import { MarkdownResourceProvider } from '../core/markdown-provider';
+import { MarkdownResourceProvider } from '../core/services/markdown-provider';
 import { NoteLinkDefinition, Resource } from '../core/model/note';
 
 Logger.setLevel('error');

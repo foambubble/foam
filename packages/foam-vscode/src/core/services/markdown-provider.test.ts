@@ -1,14 +1,12 @@
-import {
-  createMarkdownParser,
-  createMarkdownReferences,
-} from './markdown-provider';
-import { Logger } from './utils/log';
-import { URI } from './model/uri';
+import { createMarkdownParser } from './markdown-parser';
+import { createMarkdownReferences } from './markdown-provider';
+import { Logger } from '../utils/log';
+import { URI } from '../model/uri';
 import {
   createTestNote,
   createTestWorkspace,
   getRandomURI,
-} from '../test/test-utils';
+} from '../../test/test-utils';
 
 Logger.setLevel('error');
 
@@ -174,6 +172,19 @@ describe('Link resolution', () => {
       });
       const noteB = createTestNote({
         uri: '/path/to/more/page-c.md',
+      });
+      const ws = createTestWorkspace();
+      ws.set(noteA).set(noteB);
+      expect(ws.resolveLink(noteA, noteA.links[0])).toEqual(noteB.uri);
+    });
+
+    it('should default to relative path', () => {
+      const noteA = createTestNote({
+        uri: '/path/to/page-a.md',
+        links: [{ to: 'page c.md' }],
+      });
+      const noteB = createTestNote({
+        uri: '/path/to/page c.md',
       });
       const ws = createTestWorkspace();
       ws.set(noteA).set(noteB);

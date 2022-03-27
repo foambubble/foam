@@ -3,7 +3,7 @@ import { Range } from '../model/range';
 import {
   createMarkdownReferences,
   stringifyMarkdownLinkReferenceDefinition,
-} from '../markdown-provider';
+} from '../services/markdown-provider';
 import { getHeadingFromFileName } from '../utils';
 import { FoamWorkspace } from '../model/workspace';
 

@@ -30,7 +30,7 @@ import { FoamWorkspace } from '../core/model/workspace';
 import {
   createMarkdownReferences,
   stringifyMarkdownLinkReferenceDefinition,
-} from '../core/markdown-provider';
+} from '../core/services/markdown-provider';
 import {
   LINK_REFERENCE_DEFINITION_FOOTER,
   LINK_REFERENCE_DEFINITION_HEADER,

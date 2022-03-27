@@ -1,5 +1,5 @@
 import { workspace, ExtensionContext, window } from 'vscode';
-import { MarkdownResourceProvider } from './core/markdown-provider';
+import { MarkdownResourceProvider } from './core/services/markdown-provider';
 import { bootstrap } from './core/model/foam';
 import { FileDataStore, Matcher } from './core/services/datastore';
 import { Logger } from './core/utils/log';

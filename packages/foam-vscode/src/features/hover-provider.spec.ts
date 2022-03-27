@@ -1,8 +1,6 @@
 import * as vscode from 'vscode';
-import {
-  createMarkdownParser,
-  MarkdownResourceProvider,
-} from '../core/markdown-provider';
+import { createMarkdownParser } from '../core/services/markdown-parser';
+import { MarkdownResourceProvider } from '../core/services/markdown-provider';
 import { FoamGraph } from '../core/model/graph';
 import { FoamWorkspace } from '../core/model/workspace';
 import { Matcher } from '../core/services/datastore';

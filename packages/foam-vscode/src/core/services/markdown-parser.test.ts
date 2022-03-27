@@ -1,5 +1,5 @@
 import { createMarkdownParser, ParserPlugin } from './markdown-parser';
-import { DirectLink, WikiLink } from '../model/note';
+import { ResourceLink } from '../model/note';
 import { Logger } from '../utils/log';
 import { URI } from '../model/uri';
 import { Range } from '../model/range';
@@ -37,9 +37,10 @@ describe('Markdown parsing', () => {
         'this is a [link to page b](../doc/page-b.md)'
       );
       expect(note.links.length).toEqual(1);
-      const link = note.links[0] as DirectLink;
+      const link = note.links[0];
       expect(link.type).toEqual('link');
       expect(link.label).toEqual('link to page b');
+      expect(link.rawText).toEqual('[link to page b](../doc/page-b.md)');
       expect(link.target).toEqual('../doc/page-b.md');
     });
 
@@ -48,7 +49,7 @@ describe('Markdown parsing', () => {
         'this is [**link** with __formatting__](../doc/page-b.md)'
       );
       expect(note.links.length).toEqual(1);
-      const link = note.links[0] as DirectLink;
+      const link = note.links[0];
       expect(link.type).toEqual('link');
       expect(link.label).toEqual('link with formatting');
       expect(link.target).toEqual('../doc/page-b.md');
@@ -59,12 +60,12 @@ describe('Markdown parsing', () => {
         'Some content and [[a link]] to [[a file]]'
       );
       expect(note.links.length).toEqual(2);
-      let link = note.links[0] as WikiLink;
+      let link = note.links[0];
       expect(link.type).toEqual('wikilink');
       expect(link.rawText).toEqual('[[a link]]');
       expect(link.label).toEqual('a link');
       expect(link.target).toEqual('a link');
-      link = note.links[1] as WikiLink;
+      link = note.links[1];
       expect(link.type).toEqual('wikilink');
       expect(link.rawText).toEqual('[[a file]]');
       expect(link.label).toEqual('a file');
@@ -76,12 +77,12 @@ describe('Markdown parsing', () => {
         'this is [[link|link alias]]. A link with spaces [[other link | spaced]]'
       );
       expect(note.links.length).toEqual(2);
-      let link = note.links[0] as WikiLink;
+      let link = note.links[0];
       expect(link.type).toEqual('wikilink');
       expect(link.rawText).toEqual('[[link|link alias]]');
       expect(link.label).toEqual('link alias');
       expect(link.target).toEqual('link');
-      link = note.links[1] as WikiLink;
+      link = note.links[1];
       expect(link.type).toEqual('wikilink');
       expect(link.rawText).toEqual('[[other link | spaced]]');
       expect(link.label).toEqual('spaced');

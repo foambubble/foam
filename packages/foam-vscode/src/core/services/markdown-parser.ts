@@ -295,6 +295,7 @@ const wikilinkPlugin: ParserPlugin = {
         type: 'link',
         target: targetUri,
         label: label,
+        rawText: `[${label}](${targetUri})`,
         range: astPositionToFoamRange(node.position!),
       });
     }

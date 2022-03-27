@@ -2,7 +2,6 @@ import {
   NoteLinkDefinition,
   Resource,
   ResourceLink,
-  WikiLink,
   ResourceParser,
 } from '../model/note';
 import { isNone, isSome } from '../utils';
@@ -163,7 +162,7 @@ to generate markdown reference list`
   }
 
   return source.links
-    .filter(isWikilink)
+    .filter(link => link.type === 'wikilink')
     .map(link => {
       const targetUri = workspace.resolveLink(source, link);
       const target = workspace.find(targetUri);
@@ -209,7 +208,3 @@ export function stringifyMarkdownLinkReferenceDefinition(
 
   return text;
 }
-
-const isWikilink = (link: ResourceLink): link is WikiLink => {
-  return link.type === 'wikilink';
-};

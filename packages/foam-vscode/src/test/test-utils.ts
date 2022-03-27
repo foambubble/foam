@@ -88,6 +88,7 @@ export const createTestNote = (params: {
                 target: link.to,
                 label: 'link text',
                 range: range,
+                rawText: 'link text',
               };
         })
       : [],

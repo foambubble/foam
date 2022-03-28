@@ -442,7 +442,7 @@ describe('SnippetParser', () => {
 		assert.strictEqual(children[3].children.length, 0);
 		assert.notStrictEqual((<Placeholder>children[3]).transform, undefined);
 		let transform = (<Placeholder>children[3]).transform!;
-		assert.deepStrictEqual(transform.regexp, /\s:=(.*)/);
+		assert.deepStrictEqual(transform.regexp.source, /\s:=(.*)/.source);
 		assert.strictEqual(transform.children.length, 2);
 		assert.ok(transform.children[0] instanceof FormatString);
 		assert.strictEqual((<FormatString>transform.children[0]).index, 1);

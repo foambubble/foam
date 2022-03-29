@@ -4,6 +4,12 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.17.7] - 2022-03-29
+
+Fixes and Improvements:
+- Include links with sections in backlinks (#895)
+- Improved navigation when document editor is already open
+
 ## [0.17.6] - 2022-03-03
 
 Fixes and Improvements:

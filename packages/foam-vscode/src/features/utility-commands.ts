@@ -25,21 +25,16 @@ const feature: FoamFeature = {
           const uri = new URI(params.uri);
           switch (uri.scheme) {
             case 'file': {
-              let selection = new vscode.Range(1, 0, 1, 0);
-              if (uri.fragment) {
-                const foam = await foamPromise;
-                const resource = foam.workspace.get(uri);
-                const section = Resource.findSection(resource, uri.fragment);
-                if (section) {
-                  selection = toVsCodeRange(section.range);
-                }
-              }
               const targetUri =
                 uri.path === vscode.window.activeTextEditor?.document.uri.path
                   ? vscode.window.activeTextEditor?.document.uri
-                  : toVsCodeUri(uri);
-              return vscode.commands.executeCommand('vscode.open', targetUri, {
-                selection: selection,
+                  : toVsCodeUri(uri.asPlain());
+              const targetEditor = vscode.window.visibleTextEditors.find(
+                ed => targetUri.path === ed.document.uri.path
+              );
+              const column = targetEditor?.viewColumn;
+              return vscode.window.showTextDocument(targetEditor.document, {
+                viewColumn: column,
               });
             }
             case 'placeholder': {

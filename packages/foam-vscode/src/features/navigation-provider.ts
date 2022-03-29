@@ -115,22 +115,23 @@ export class NavigationProvider
     }
 
     const targetResource = this.workspace.get(uri);
-
-    let targetRange = Range.createFromPosition(
-      targetResource.source.contentStart,
-      targetResource.source.end
-    );
     const section = Resource.findSection(targetResource, uri.fragment);
-    if (section) {
-      targetRange = section.range;
-    }
+
+    const targetRange = section
+      ? section.range
+      : Range.createFromPosition(
+          targetResource.source.contentStart,
+          targetResource.source.end
+        );
+    const targetSelectionRange = section
+      ? section.range
+      : Range.createFromPosition(targetRange.start);
+
     const result: vscode.LocationLink = {
       originSelectionRange: toVsCodeRange(targetLink.range),
-      targetUri: toVsCodeUri(uri),
+      targetUri: toVsCodeUri(uri.asPlain()),
       targetRange: toVsCodeRange(targetRange),
-      targetSelectionRange: toVsCodeRange(
-        Range.createFromPosition(targetRange.start, targetRange.start)
-      ),
+      targetSelectionRange: toVsCodeRange(targetSelectionRange),
     };
     return [result];
   }

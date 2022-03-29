@@ -43,7 +43,6 @@ function generateDateItems(): DateItem[] {
 
   // Today
   const today = new DateItem('today', new Date());
-  // today.picked = true;˙
   items.push(today);
 
   // Tomorrow
@@ -66,27 +65,17 @@ export async function openDailyNoteForPickedDate() {
 
   const result = await window.showQuickPick<DateItem>(generateDateItems(), {
     placeHolder: 'pick or enter a date (YYYY-MM-DD)',
-    onDidSelectItem: item =>
-      window.showInformationMessage(`Focus: ${(item as DateItem).date}`),
+    // onDidSelectItem: item =>
+    // window.showInformationMessage(`Focus: ${(item as DateItem).date}`),
   });
 
-  // TODO check for free form input and parse that
-  // TODO check for cancel and handle that without error message
-  // TODO remove all the
+  if (result) {
+    console.log(`Picked: ${result}`);
 
-  console.log(`Date: ${result.date}`);
-  openDailyNoteFor(result.date);
-
-  // if (result.label == 'today') {
-  //
-
-  //   openDailyNoteFor();
-  // } else if (result.label == 'tomorrow') {
-  //   const date = new Date();
-  //   date.setDate(date.getDate() + 1);
-
-  //   openDailyNoteFor(date);
-  // }
+    openDailyNoteFor(result.date);
+  } else {
+    console.log('Cancelled');
+  }
 }
 
 /**

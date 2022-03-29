@@ -63,7 +63,10 @@ export class BacklinksTreeDataProvider
       const backlinkRefs = Promise.all(
         resource.links
           .filter(link =>
-            this.workspace.resolveLink(resource, link).isEqual(uri)
+            this.workspace
+              .resolveLink(resource, link)
+              .asPlain()
+              .isEqual(uri)
           )
           .map(async link => {
             const item = new BacklinkTreeItem(resource, link);
@@ -93,7 +96,9 @@ export class BacklinksTreeDataProvider
     }
 
     const backlinksByResourcePath = groupBy(
-      this.graph.getConnections(uri).filter(c => c.target.isEqual(uri)),
+      this.graph
+        .getConnections(uri)
+        .filter(c => c.target.asPlain().isEqual(uri)),
       b => b.source.path
     );
 

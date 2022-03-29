@@ -122,6 +122,13 @@ export class URI {
     return new URI({ ...this, fragment });
   }
 
+  /**
+   * Returns a URI without the fragment and query information
+   */
+  asPlain(): URI {
+    return new URI({ ...this, fragment: '', query: '' });
+  }
+
   isPlaceholder(): boolean {
     return this.scheme === 'placeholder';
   }

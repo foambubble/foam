@@ -37,7 +37,7 @@ describe('Backlinks panel', () => {
   const noteB = createTestNote({
     root: rootUri,
     uri: './note-b.md',
-    links: [{ slug: 'note-a' }, { slug: 'note-a' }],
+    links: [{ slug: 'note-a' }, { slug: 'note-a#section' }],
   });
   const noteC = createTestNote({
     root: rootUri,

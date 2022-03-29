@@ -1,31 +1,92 @@
-import { window, workspace, WorkspaceConfiguration } from 'vscode';
+import {
+  QuickPickItem,
+  window,
+  workspace,
+  WorkspaceConfiguration,
+} from 'vscode';
 import dateFormat from 'dateformat';
 import { focusNote } from './utils';
 import { URI } from './core/model/uri';
 import { fromVsCodeUri, toVsCodeUri } from './utils/vsc-utils';
 import { NoteFactory } from './services/templates';
+import { setFlagsFromString } from 'v8';
 
 export async function openDailyNoteForToday() {
   console.log('Open daily note for today');
   openDailyNoteFor();
 }
 
+class DateItem implements QuickPickItem {
+  label: string;
+  date: Date;
+
+  constructor(public l: string, public d: Date) {
+    this.label = l;
+    this.date = d;
+  }
+}
+
+function generateDateItems(): DateItem[] {
+  const items = [];
+
+  // Past
+  for (let offset = -5; offset < -1; offset++) {
+    const d = new Date();
+    d.setDate(d.getDate() + offset);
+    items.push(new DateItem(d.toDateString(), d));
+  }
+
+  // Yesterday
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  items.push(new DateItem('yesterday', yesterday));
+
+  // Today
+  const today = new DateItem('today', new Date());
+  // today.picked = true;˙
+  items.push(today);
+
+  // Tomorrow
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  items.push(new DateItem('tomorrow', tomorrow));
+
+  // Future
+  for (let offset = 2; offset < 6; offset++) {
+    const d = new Date();
+    d.setDate(d.getDate() + offset);
+    items.push(new DateItem(d.toDateString(), d));
+  }
+
+  return items;
+}
+
 export async function openDailyNoteForPickedDate() {
   console.log('Open daily note for date');
 
-  const result = await window.showQuickPick(['today', 'tomorrow'], {
-    placeHolder: 'today or tomorrow',
-    // onDidSelectItem: item => window.showInformationMessage(`Focus: ${item}`)
+  const result = await window.showQuickPick<DateItem>(generateDateItems(), {
+    placeHolder: 'pick or enter a date (YYYY-MM-DD)',
+    onDidSelectItem: item =>
+      window.showInformationMessage(`Focus: ${(item as DateItem).date}`),
   });
 
-  if (result == 'today') {
-    openDailyNoteFor();
-  } else if (result == 'tomorrow') {
-    const date = new Date();
-    date.setDate(date.getDate() + 1);
+  // TODO check for free form input and parse that
+  // TODO check for cancel and handle that without error message
+  // TODO remove all the
 
-    openDailyNoteFor(date);
-  }
+  console.log(`Date: ${result.date}`);
+  openDailyNoteFor(result.date);
+
+  // if (result.label == 'today') {
+  //
+
+  //   openDailyNoteFor();
+  // } else if (result.label == 'tomorrow') {
+  //   const date = new Date();
+  //   date.setDate(date.getDate() + 1);
+
+  //   openDailyNoteFor(date);
+  // }
 }
 
 /**

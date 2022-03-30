@@ -126,136 +126,80 @@ export class Resolver implements VariableResolver {
     if (this.givenValues.has(name)) {
       this.promises.set(name, Promise.resolve(this.givenValues.get(name)));
     } else if (!this.promises.has(name)) {
+      let value: Promise<string | undefined> = Promise.resolve(undefined);
       switch (name) {
         case 'FOAM_TITLE':
-          this.promises.set(name, resolveFoamTitle());
+          value = resolveFoamTitle();
           break;
         case 'FOAM_SLUG':
-          this.promises.set(
-            name,
-            Promise.resolve(
-              toSlug(await this.resolve(new Variable('FOAM_TITLE')))
-            )
-          );
+          value = toSlug(await this.resolve(new Variable('FOAM_TITLE')));
           break;
         case 'FOAM_SELECTED_TEXT':
-          this.promises.set(name, Promise.resolve(resolveFoamSelectedText()));
+          value = Promise.resolve(resolveFoamSelectedText());
           break;
         case 'FOAM_DATE_YEAR':
-          this.promises.set(
-            name,
-            Promise.resolve(
-              this.foamDate.toLocaleString('default', { year: 'numeric' })
-            )
-          );
+          value = Promise.resolve(String(this.foamDate.getFullYear()));
           break;
         case 'FOAM_DATE_YEAR_SHORT':
-          this.promises.set(
-            name,
-            Promise.resolve(
-              this.foamDate.toLocaleString('default', { year: '2-digit' })
-            )
+          value = Promise.resolve(
+            String(this.foamDate.getFullYear()).slice(-2)
           );
           break;
         case 'FOAM_DATE_MONTH':
-          this.promises.set(
-            name,
-            Promise.resolve(
-              this.foamDate.toLocaleString('default', { month: '2-digit' })
-            )
+          value = Promise.resolve(
+            String(this.foamDate.getMonth().valueOf() + 1).padStart(2, '0')
           );
           break;
         case 'FOAM_DATE_MONTH_NAME':
-          this.promises.set(
-            name,
-            Promise.resolve(
-              this.foamDate.toLocaleString('default', { month: 'long' })
-            )
+          value = Promise.resolve(
+            this.foamDate.toLocaleString('default', { month: 'long' })
           );
           break;
         case 'FOAM_DATE_MONTH_NAME_SHORT':
-          this.promises.set(
-            name,
-            Promise.resolve(
-              this.foamDate.toLocaleString('default', { month: 'short' })
-            )
+          value = Promise.resolve(
+            this.foamDate.toLocaleString('default', { month: 'short' })
           );
           break;
         case 'FOAM_DATE_DATE':
-          this.promises.set(
-            name,
-            Promise.resolve(
-              this.foamDate.toLocaleString('default', { day: '2-digit' })
-            )
+          value = Promise.resolve(
+            String(this.foamDate.getDate().valueOf()).padStart(2, '0')
           );
           break;
         case 'FOAM_DATE_DAY_NAME':
-          this.promises.set(
-            name,
-            Promise.resolve(
-              this.foamDate.toLocaleString('default', { weekday: 'long' })
-            )
+          value = Promise.resolve(
+            this.foamDate.toLocaleString('default', { weekday: 'long' })
           );
           break;
         case 'FOAM_DATE_DAY_NAME_SHORT':
-          this.promises.set(
-            name,
-            Promise.resolve(
-              this.foamDate.toLocaleString('default', { weekday: 'short' })
-            )
+          value = Promise.resolve(
+            this.foamDate.toLocaleString('default', { weekday: 'short' })
           );
           break;
         case 'FOAM_DATE_HOUR':
-          this.promises.set(
-            name,
-            Promise.resolve(
-              this.foamDate
-                .toLocaleString('default', {
-                  hour: '2-digit',
-                  hour12: false,
-                })
-                .padStart(2, '0')
-            )
+          value = Promise.resolve(
+            String(this.foamDate.getHours().valueOf()).padStart(2, '0')
           );
           break;
         case 'FOAM_DATE_MINUTE':
-          this.promises.set(
-            name,
-            Promise.resolve(
-              this.foamDate
-                .toLocaleString('default', {
-                  minute: '2-digit',
-                  hour12: false,
-                })
-                .padStart(2, '0')
-            )
+          value = Promise.resolve(
+            String(this.foamDate.getMinutes().valueOf()).padStart(2, '0')
           );
           break;
         case 'FOAM_DATE_SECOND':
-          this.promises.set(
-            name,
-            Promise.resolve(
-              this.foamDate
-                .toLocaleString('default', {
-                  second: '2-digit',
-                  hour12: false,
-                })
-                .padStart(2, '0')
-            )
+          value = Promise.resolve(
+            String(this.foamDate.getSeconds().valueOf()).padStart(2, '0')
           );
           break;
         case 'FOAM_DATE_SECONDS_UNIX':
-          this.promises.set(
-            name,
-            Promise.resolve(
-              (this.foamDate.getTime() / 1000).toString().padStart(2, '0')
-            )
+          value = Promise.resolve(
+            (this.foamDate.getTime() / 1000).toString().padStart(2, '0')
           );
           break;
         default:
-          this.promises.set(name, Promise.resolve(undefined));
+          value = Promise.resolve(undefined);
           break;
       }
+      this.promises.set(name, value);
     }
     const result = this.promises.get(name);
     return result;

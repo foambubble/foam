@@ -51,7 +51,7 @@ function generateDateItems(): DateItem[] {
   items.push(new DateItem('tomorrow', tomorrow));
 
   // Future
-  for (let offset = 2; offset < 6; offset++) {
+  for (let offset = 2; offset < 8; offset++) {
     const d = new Date();
     d.setDate(d.getDate() + offset);
     items.push(new DateItem(d.toDateString(), d));

@@ -47,9 +47,11 @@ const feature: FoamFeature = {
       ),
 
       workspace.onWillSaveTextDocument(e => {
-        if (e.document.languageId === 'markdown') {
-          updateDocumentInNoteGraph(foam, e.document);
-          e.waitUntil(updateReferenceList(foam.workspace));
+        if (foam.services.matcher.isMatch(fromVsCodeUri(e.document.uri))) {
+          if (e.document.languageId === 'markdown') {
+            updateDocumentInNoteGraph(foam, e.document);
+            e.waitUntil(updateReferenceList(foam.workspace));
+          }
         }
       }),
       languages.registerCodeLensProvider(

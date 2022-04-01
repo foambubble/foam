@@ -33,7 +33,7 @@ const feature: FoamFeature = {
                 ed => targetUri.path === ed.document.uri.path
               );
               const column = targetEditor?.viewColumn;
-              return vscode.window.showTextDocument(targetEditor.document, {
+              return vscode.window.showTextDocument(targetUri, {
                 viewColumn: column,
               });
             }

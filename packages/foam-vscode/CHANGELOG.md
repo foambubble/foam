@@ -4,6 +4,13 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.17.8] - 2022-04-01
+
+Fixes and Improvements:
+- Do not add ignored files to Foam upon change (#480)
+- Restore full use of editor.action.openLink (#693)
+- Minor performance improvements
+
 ## [0.17.7] - 2022-03-29
 
 Fixes and Improvements:

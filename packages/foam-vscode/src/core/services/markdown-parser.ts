@@ -44,25 +44,24 @@ export function createMarkdownParser(
     ...extraPlugins,
   ];
 
-  plugins.forEach(plugin => {
+  for (const plugin of plugins) {
     try {
       plugin.onDidInitializeParser?.(parser);
     } catch (e) {
       handleError(plugin, 'onDidInitializeParser', undefined, e);
     }
-  });
+  }
 
   const foamParser: ResourceParser = {
     parse: (uri: URI, markdown: string): Resource => {
       Logger.debug('Parsing:', uri.toString());
-      markdown = plugins.reduce((acc, plugin) => {
+      for (const plugin of plugins) {
         try {
-          return plugin.onWillParseMarkdown?.(acc) || acc;
+          plugin.onWillParseMarkdown?.(markdown);
         } catch (e) {
           handleError(plugin, 'onWillParseMarkdown', uri, e);
-          return acc;
         }
-      }, markdown);
+      }
       const tree = parser.parse(markdown);
       const eol = detectNewline(markdown) || os.EOL;
 
@@ -83,13 +82,13 @@ export function createMarkdownParser(
         },
       };
 
-      plugins.forEach(plugin => {
+      for (const plugin of plugins) {
         try {
           plugin.onWillVisitTree?.(tree, note);
         } catch (e) {
           handleError(plugin, 'onWillVisitTree', uri, e);
         }
-      });
+      }
       visit(tree, node => {
         if (node.type === 'yaml') {
           try {
@@ -104,11 +103,11 @@ export function createMarkdownParser(
               0
             );
 
-            for (let i = 0, len = plugins.length; i < len; i++) {
+            for (const plugin of plugins) {
               try {
-                plugins[i].onDidFindProperties?.(yamlProperties, note, node);
+                plugin.onDidFindProperties?.(yamlProperties, note, node);
               } catch (e) {
-                handleError(plugins[i], 'onDidFindProperties', uri, e);
+                handleError(plugin, 'onDidFindProperties', uri, e);
               }
             }
           } catch (e) {
@@ -116,21 +115,21 @@ export function createMarkdownParser(
           }
         }
 
-        for (let i = 0, len = plugins.length; i < len; i++) {
+        for (const plugin of plugins) {
           try {
-            plugins[i].visit?.(node, note, markdown);
+            plugin.visit?.(node, note, markdown);
           } catch (e) {
-            handleError(plugins[i], 'visit', uri, e);
+            handleError(plugin, 'visit', uri, e);
           }
         }
       });
-      plugins.forEach(plugin => {
+      for (const plugin of plugins) {
         try {
           plugin.onDidVisitTree?.(tree, note);
         } catch (e) {
           handleError(plugin, 'onDidVisitTree', uri, e);
         }
-      });
+      }
       Logger.debug('Result:', note);
       return note;
     },
@@ -159,18 +158,18 @@ const tagsPlugin: ParserPlugin = {
   onDidFindProperties: (props, note, node) => {
     if (isSome(props.tags)) {
       const yamlTags = extractTagsFromProp(props.tags);
-      yamlTags.forEach(t => {
+      for (const tag of yamlTags) {
         note.tags.push({
-          label: t,
+          label: tag,
           range: astPositionToFoamRange(node.position!),
         });
-      });
+      }
     }
   },
   visit: (node, note) => {
     if (node.type === 'text') {
       const tags = extractHashtags((node as any).value);
-      tags.forEach(tag => {
+      for (const tag of tags) {
         const start = astPointToFoamPosition(node.position!.start);
         start.character = start.character + tag.offset;
         const end: Position = {
@@ -181,7 +180,7 @@ const tagsPlugin: ParserPlugin = {
           label: tag.label,
           range: Range.createFromPosition(start, end),
         });
-      });
+      }
     }
   },
 };

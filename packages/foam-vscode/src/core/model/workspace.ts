@@ -51,6 +51,10 @@ export class FoamWorkspace implements IDisposable {
     return Array.from(this.resources.values());
   }
 
+  public iterator(): IterableIterator<Resource> {
+    return this.resources.values();
+  }
+
   public get(uri: URI): Resource {
     const note = this.find(uri);
     if (isSome(note)) {
@@ -128,21 +132,30 @@ export class FoamWorkspace implements IDisposable {
 
   public resolveLink(resource: Resource, link: ResourceLink): URI {
     // TODO add tests
-    const provider = this.providers.find(p => p.supports(resource.uri));
-    return (
-      provider?.resolveLink(this, resource, link) ??
-      URI.placeholder(link.target)
-    );
+    for (const provider of this.providers) {
+      if (provider.supports(resource.uri)) {
+        return provider.resolveLink(this, resource, link);
+      }
+    }
+    return URI.placeholder(link.target);
   }
 
   public read(uri: URI): Promise<string | null> {
-    const provider = this.providers.find(p => p.supports(uri));
-    return provider?.read(uri) ?? Promise.resolve(null);
+    for (const provider of this.providers) {
+      if (provider.supports(uri)) {
+        return provider.read(uri);
+      }
+    }
+    return Promise.resolve(null);
   }
 
   public readAsMarkdown(uri: URI): Promise<string | null> {
-    const provider = this.providers.find(p => p.supports(uri));
-    return provider?.readAsMarkdown(uri) ?? Promise.resolve(null);
+    for (const provider of this.providers) {
+      if (provider.supports(uri)) {
+        return provider.readAsMarkdown(uri);
+      }
+    }
+    return Promise.resolve(null);
   }
 
   public dispose(): void {

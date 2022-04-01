@@ -6,6 +6,7 @@ import { ResourceParser } from './note';
 import { ResourceProvider } from './provider';
 import { createMarkdownParser } from '../services/markdown-parser';
 import { FoamTags } from './tags';
+import { Logger } from '../utils/log';
 
 export interface Services {
   dataStore: IDataStore;
@@ -27,10 +28,19 @@ export const bootstrap = async (
 ) => {
   const parser = createMarkdownParser([]);
   const workspace = new FoamWorkspace();
+  const pStart = Date.now();
+
   await Promise.all(initialProviders.map(p => workspace.registerProvider(p)));
+  const pWsEnd = Date.now();
+  Logger.info(`Workspace loaded in ${pWsEnd - pStart}ms`);
 
   const graph = FoamGraph.fromWorkspace(workspace, true);
+  const pGraphEnd = Date.now();
+  Logger.info(`Graph loaded in ${pGraphEnd - pWsEnd}ms`);
+
   const tags = FoamTags.fromWorkspace(workspace, true);
+  const pTagsEnd = Date.now();
+  Logger.info(`Tags loaded in ${pTagsEnd - pGraphEnd}ms`);
 
   const foam: Foam = {
     workspace,

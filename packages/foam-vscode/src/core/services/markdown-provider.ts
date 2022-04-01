@@ -105,9 +105,13 @@ export class MarkdownResourceProvider implements ResourceProvider {
     let targetUri: URI | undefined;
     switch (link.type) {
       case 'wikilink': {
-        const definitionUri = resource.definitions.find(
-          def => def.label === link.target
-        )?.url;
+        let definitionUri = undefined;
+        for (const def of resource.definitions) {
+          if (def.label === link.target) {
+            definitionUri = def.url;
+            break;
+          }
+        }
         if (isSome(definitionUri)) {
           const definedUri = resource.uri.resolve(definitionUri);
           targetUri =

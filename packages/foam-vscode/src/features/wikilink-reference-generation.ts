@@ -45,13 +45,12 @@ const feature: FoamFeature = {
       commands.registerCommand('foam-vscode.update-wikilinks', () =>
         updateReferenceList(foam.workspace)
       ),
-
       workspace.onWillSaveTextDocument(e => {
-        if (foam.services.matcher.isMatch(fromVsCodeUri(e.document.uri))) {
-          if (e.document.languageId === 'markdown') {
-            updateDocumentInNoteGraph(foam, e.document);
-            e.waitUntil(updateReferenceList(foam.workspace));
-          }
+        if (
+          e.document.languageId === 'markdown' &&
+          foam.services.matcher.isMatch(fromVsCodeUri(e.document.uri))
+        ) {
+          e.waitUntil(updateReferenceList(foam.workspace));
         }
       }),
       languages.registerCodeLensProvider(
@@ -59,26 +58,8 @@ const feature: FoamFeature = {
         new WikilinkReferenceCodeLensProvider(foam.workspace)
       )
     );
-
-    // when a file is created as a result of peekDefinition
-    // action on a wikilink, add definition update references
-    foam.workspace.onDidAdd(_ => {
-      const editor = window.activeTextEditor;
-      if (!editor || !isMdEditor(editor)) {
-        return;
-      }
-
-      updateDocumentInNoteGraph(foam, editor.document);
-      updateReferenceList(foam.workspace);
-    });
   },
 };
-
-function updateDocumentInNoteGraph(foam: Foam, document: TextDocument) {
-  foam.workspace.set(
-    foam.services.parser.parse(fromVsCodeUri(document.uri), document.getText())
-  );
-}
 
 async function createReferenceList(foam: FoamWorkspace) {
   const editor = window.activeTextEditor;

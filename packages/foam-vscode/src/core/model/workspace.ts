@@ -19,7 +19,7 @@ export class FoamWorkspace implements IDisposable {
   /**
    * Resources by path
    */
-  private resources: Map<string, Resource> = new Map();
+  private _resources: Map<string, Resource> = new Map();
 
   registerProvider(provider: ResourceProvider) {
     this.providers.push(provider);
@@ -28,7 +28,7 @@ export class FoamWorkspace implements IDisposable {
 
   set(resource: Resource) {
     const old = this.find(resource.uri);
-    this.resources.set(normalize(resource.uri.path), resource);
+    this._resources.set(normalize(resource.uri.path), resource);
     isSome(old)
       ? this.onDidUpdateEmitter.fire({ old: old, new: resource })
       : this.onDidAddEmitter.fire(resource);
@@ -36,8 +36,8 @@ export class FoamWorkspace implements IDisposable {
   }
 
   delete(uri: URI) {
-    const deleted = this.resources.get(normalize(uri.path));
-    this.resources.delete(normalize(uri.path));
+    const deleted = this._resources.get(normalize(uri.path));
+    this._resources.delete(normalize(uri.path));
 
     isSome(deleted) && this.onDidDeleteEmitter.fire(deleted);
     return deleted ?? null;
@@ -48,11 +48,11 @@ export class FoamWorkspace implements IDisposable {
   }
 
   public list(): Resource[] {
-    return Array.from(this.resources.values());
+    return Array.from(this._resources.values());
   }
 
-  public iterator(): IterableIterator<Resource> {
-    return this.resources.values();
+  public resources(): IterableIterator<Resource> {
+    return this._resources.values();
   }
 
   public get(uri: URI): Resource {
@@ -69,9 +69,9 @@ export class FoamWorkspace implements IDisposable {
     const mdNeedle =
       getExtension(needle) !== '.md' ? needle + '.md' : undefined;
     const resources = [];
-    for (const key of this.resources.keys()) {
+    for (const key of this._resources.keys()) {
       if ((mdNeedle && key.endsWith(mdNeedle)) || key.endsWith(needle)) {
-        resources.push(this.resources.get(normalize(key)));
+        resources.push(this._resources.get(normalize(key)));
       }
     }
     return resources.sort((a, b) => a.uri.path.localeCompare(b.uri.path));
@@ -85,7 +85,7 @@ export class FoamWorkspace implements IDisposable {
   public getIdentifier(forResource: URI): string {
     const amongst = [];
     const basename = forResource.getBasename();
-    for (const res of this.resources.values()) {
+    for (const res of this._resources.values()) {
       // Just a quick optimization to only add the elements that might match
       if (res.uri.path.endsWith(basename)) {
         if (!res.uri.isEqual(forResource)) {
@@ -106,7 +106,7 @@ export class FoamWorkspace implements IDisposable {
 
   public find(reference: URI | string, baseUri?: URI): Resource | null {
     if (reference instanceof URI) {
-      return this.resources.get(normalize((reference as URI).path)) ?? null;
+      return this._resources.get(normalize((reference as URI).path)) ?? null;
     }
     let resource: Resource | null = null;
     const [path, fragment] = (reference as string).split('#');
@@ -116,11 +116,11 @@ export class FoamWorkspace implements IDisposable {
       if (isAbsolute(path) || isSome(baseUri)) {
         if (getExtension(path) !== '.md') {
           const uri = baseUri.resolve(path + '.md');
-          resource = uri ? this.resources.get(normalize(uri.path)) : null;
+          resource = uri ? this._resources.get(normalize(uri.path)) : null;
         }
         if (!resource) {
           const uri = baseUri.resolve(path);
-          resource = uri ? this.resources.get(normalize(uri.path)) : null;
+          resource = uri ? this._resources.get(normalize(uri.path)) : null;
         }
       }
     }

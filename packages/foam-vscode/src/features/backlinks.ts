@@ -30,9 +30,7 @@ const feature: FoamFeature = {
 
     context.subscriptions.push(
       vscode.window.registerTreeDataProvider('foam-vscode.backlinks', provider),
-      foam.workspace.onDidAdd(() => provider.refresh()),
-      foam.workspace.onDidUpdate(() => provider.refresh()),
-      foam.workspace.onDidDelete(() => provider.refresh())
+      foam.graph.onDidUpdate(() => provider.refresh())
     );
   },
 };

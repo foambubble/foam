@@ -1,81 +1,66 @@
 import { FoamWorkspace } from './workspace';
 import { URI } from './uri';
-import { Resource } from './note';
 import { IDisposable } from '../common/lifecycle';
+import { debounce } from 'lodash';
+import { Emitter } from '../common/event';
 
 export class FoamTags implements IDisposable {
   public readonly tags: Map<string, URI[]> = new Map();
+
+  private onDidUpdateEmitter = new Emitter<void>();
+  onDidUpdate = this.onDidUpdateEmitter.event;
 
   /**
    * List of disposables to destroy with the tags
    */
   private disposables: IDisposable[] = [];
 
+  constructor(private readonly workspace: FoamWorkspace) {}
+
   /**
    * Computes all tags in the workspace and keep them up-to-date
    *
    * @param workspace the target workspace
    * @param keepMonitoring whether to recompute the links when the workspace changes
+   * @param debounceFor how long to wait between change detection and tags update
    * @returns the FoamTags
    */
   public static fromWorkspace(
     workspace: FoamWorkspace,
-    keepMonitoring = false
+    keepMonitoring = false,
+    debounceFor = 0
   ): FoamTags {
-    const tags = new FoamTags();
-
-    workspace
-      .list()
-      .forEach(resource => tags.addResourceFromTagIndex(resource));
+    const tags = new FoamTags(workspace);
+    tags.update();
 
     if (keepMonitoring) {
+      const updateTags =
+        debounceFor > 0
+          ? debounce(tags.update.bind(tags), 500)
+          : tags.update.bind(tags);
       tags.disposables.push(
-        workspace.onDidAdd(resource => {
-          tags.addResourceFromTagIndex(resource);
-        }),
-        workspace.onDidUpdate(change => {
-          tags.updateResourceWithinTagIndex(change.old, change.new);
-        }),
-        workspace.onDidDelete(resource => {
-          tags.removeResourceFromTagIndex(resource);
-        })
+        workspace.onDidAdd(updateTags),
+        workspace.onDidUpdate(updateTags),
+        workspace.onDidDelete(updateTags)
       );
     }
     return tags;
   }
 
+  update(): void {
+    this.tags.clear();
+    for (const resource of this.workspace.resources()) {
+      for (const tag of new Set(resource.tags.map(t => t.label))) {
+        const tagMeta = this.tags.get(tag) ?? [];
+        tagMeta.push(resource.uri);
+        this.tags.set(tag, tagMeta);
+      }
+    }
+    this.onDidUpdateEmitter.fire();
+  }
+
   dispose(): void {
     this.disposables.forEach(d => d.dispose());
     this.disposables = [];
-  }
-
-  updateResourceWithinTagIndex(oldResource: Resource, newResource: Resource) {
-    this.removeResourceFromTagIndex(oldResource);
-    this.addResourceFromTagIndex(newResource);
-  }
-
-  addResourceFromTagIndex(resource: Resource) {
-    new Set(resource.tags.map(t => t.label)).forEach(tag => {
-      const tagMeta = this.tags.get(tag) ?? [];
-      tagMeta.push(resource.uri);
-      this.tags.set(tag, tagMeta);
-    });
-  }
-
-  removeResourceFromTagIndex(resource: Resource) {
-    resource.tags.forEach(t => {
-      const tag = t.label;
-      if (this.tags.has(tag)) {
-        const remainingLocations = this.tags
-          .get(tag)
-          ?.filter(uri => !uri.isEqual(resource.uri));
-
-        if (remainingLocations && remainingLocations.length > 0) {
-          this.tags.set(tag, remainingLocations);
-        } else {
-          this.tags.delete(tag);
-        }
-      }
-    });
   }
 }

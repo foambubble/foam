@@ -33,13 +33,9 @@ const feature: FoamFeature = {
           updateGraph(panel, foam);
         };
 
-        const noteAddedListener = foam.workspace.onDidAdd(onFoamChanged);
-        const noteUpdatedListener = foam.workspace.onDidUpdate(onFoamChanged);
-        const noteDeletedListener = foam.workspace.onDidDelete(onFoamChanged);
+        const noteUpdatedListener = foam.graph.onDidUpdate(onFoamChanged);
         panel.onDidDispose(() => {
-          noteAddedListener.dispose();
           noteUpdatedListener.dispose();
-          noteDeletedListener.dispose();
           panel = undefined;
         });
 

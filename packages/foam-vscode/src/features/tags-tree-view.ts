@@ -21,9 +21,7 @@ const feature: FoamFeature = {
         provider
       )
     );
-    foam.workspace.onDidUpdate(() => provider.refresh());
-    foam.workspace.onDidAdd(() => provider.refresh());
-    foam.workspace.onDidDelete(() => provider.refresh());
+    foam.tags.onDidUpdate(() => provider.refresh());
   },
 };
 

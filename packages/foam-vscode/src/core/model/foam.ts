@@ -28,19 +28,19 @@ export const bootstrap = async (
 ) => {
   const parser = createMarkdownParser([]);
   const workspace = new FoamWorkspace();
-  const pStart = Date.now();
+  const tsStart = Date.now();
 
   await Promise.all(initialProviders.map(p => workspace.registerProvider(p)));
-  const pWsEnd = Date.now();
-  Logger.info(`Workspace loaded in ${pWsEnd - pStart}ms`);
+  const tsWsDone = Date.now();
+  Logger.info(`Workspace loaded in ${tsWsDone - tsStart}ms`);
 
-  const graph = FoamGraph.fromWorkspace(workspace, true);
-  const pGraphEnd = Date.now();
-  Logger.info(`Graph loaded in ${pGraphEnd - pWsEnd}ms`);
+  const graph = FoamGraph.fromWorkspace(workspace, true, 500);
+  const tsGraphDone = Date.now();
+  Logger.info(`Graph loaded in ${tsGraphDone - tsWsDone}ms`);
 
   const tags = FoamTags.fromWorkspace(workspace, true);
-  const pTagsEnd = Date.now();
-  Logger.info(`Tags loaded in ${pTagsEnd - pGraphEnd}ms`);
+  const tsTagsEnd = Date.now();
+  Logger.info(`Tags loaded in ${tsTagsEnd - tsGraphDone}ms`);
 
   const foam: Foam = {
     workspace,

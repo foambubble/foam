@@ -71,5 +71,13 @@ describe('Foam URI', () => {
     expect(URI.file('/my/file.markdown').resolve('../hello')).toEqual(
       URI.file('/hello.markdown')
     );
+    expect(
+      URI.file('/path/to/a/note.md').resolve('../another-note.md')
+    ).toEqual(URI.file('/path/to/another-note.md'));
+    expect(
+      URI.file('/path/to/a/note.md').relativeTo(
+        URI.file('/path/to/another/note.md').getDirectory()
+      )
+    ).toEqual(URI.file('../a/note.md'));
   });
 });

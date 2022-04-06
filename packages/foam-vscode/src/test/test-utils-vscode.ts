@@ -68,9 +68,7 @@ export const createNote = (r: Resource) => {
   const content = `# ${r.title}
 
   some content and ${r.links
-    .map(l =>
-      l.type === 'wikilink' ? `[[${l.label}]]` : `[${l.label}](${l.target})`
-    )
+    .map(l => l.rawText)
     .join(' some content between links.\n')}
   last line.
 `;

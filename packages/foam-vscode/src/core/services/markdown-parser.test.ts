@@ -39,9 +39,7 @@ describe('Markdown parsing', () => {
       expect(note.links.length).toEqual(1);
       const link = note.links[0];
       expect(link.type).toEqual('link');
-      expect(link.label).toEqual('link to page b');
       expect(link.rawText).toEqual('[link to page b](../doc/page-b.md)');
-      expect(link.target).toEqual('../doc/page-b.md');
     });
 
     it('should detect links that have formatting in label', () => {
@@ -51,8 +49,6 @@ describe('Markdown parsing', () => {
       expect(note.links.length).toEqual(1);
       const link = note.links[0];
       expect(link.type).toEqual('link');
-      expect(link.label).toEqual('link with formatting');
-      expect(link.target).toEqual('../doc/page-b.md');
     });
 
     it('should detect wikilinks', () => {
@@ -63,13 +59,9 @@ describe('Markdown parsing', () => {
       let link = note.links[0];
       expect(link.type).toEqual('wikilink');
       expect(link.rawText).toEqual('[[a link]]');
-      expect(link.label).toEqual('a link');
-      expect(link.target).toEqual('a link');
       link = note.links[1];
       expect(link.type).toEqual('wikilink');
       expect(link.rawText).toEqual('[[a file]]');
-      expect(link.label).toEqual('a file');
-      expect(link.target).toEqual('a file');
     });
 
     it('should detect wikilinks that have aliases', () => {
@@ -80,13 +72,9 @@ describe('Markdown parsing', () => {
       let link = note.links[0];
       expect(link.type).toEqual('wikilink');
       expect(link.rawText).toEqual('[[link|link alias]]');
-      expect(link.label).toEqual('link alias');
-      expect(link.target).toEqual('link');
       link = note.links[1];
       expect(link.type).toEqual('wikilink');
       expect(link.rawText).toEqual('[[other link | spaced]]');
-      expect(link.label).toEqual('spaced');
-      expect(link.target).toEqual('other link');
     });
 
     it('should skip wikilinks in codeblocks', () => {
@@ -99,9 +87,9 @@ this is inside a [[codeblock]]
 
 this is some text with our [[second-wikilink]].
     `);
-      expect(noteA.links.map(l => l.label)).toEqual([
-        'first-wikilink',
-        'second-wikilink',
+      expect(noteA.links.map(l => l.rawText)).toEqual([
+        '[[first-wikilink]]',
+        '[[second-wikilink]]',
       ]);
     });
 
@@ -113,9 +101,9 @@ this is \`inside a [[codeblock]]\`
 
 this is some text with our [[second-wikilink]].
     `);
-      expect(noteA.links.map(l => l.label)).toEqual([
-        'first-wikilink',
-        'second-wikilink',
+      expect(noteA.links.map(l => l.rawText)).toEqual([
+        '[[first-wikilink]]',
+        '[[second-wikilink]]',
       ]);
     });
   });

@@ -4,6 +4,7 @@ import { Foam } from '../core/model/foam';
 import { Resource, ResourceParser } from '../core/model/note';
 import { Range } from '../core/model/range';
 import { FoamWorkspace } from '../core/model/workspace';
+import { MarkdownLink } from '../core/services/markdown-link';
 import { FoamFeature } from '../types';
 import { isNone } from '../utils';
 import {
@@ -131,7 +132,7 @@ export function updateDiagnostics(
 
     for (const link of resource.links) {
       if (link.type === 'wikilink') {
-        const [target, section] = link.target.split('#');
+        const { target, section } = MarkdownLink.analyzeLink(link);
         const targets = workspace.listByIdentifier(target);
         if (targets.length > 1) {
           result.push({

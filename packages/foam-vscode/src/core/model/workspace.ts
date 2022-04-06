@@ -5,6 +5,7 @@ import { isSome } from '../utils';
 import { Emitter } from '../common/event';
 import { ResourceProvider } from './provider';
 import { IDisposable } from '../common/lifecycle';
+import { Logger } from '../utils/log';
 
 export class FoamWorkspace implements IDisposable {
   private onDidAddEmitter = new Emitter<Resource>();
@@ -137,7 +138,9 @@ export class FoamWorkspace implements IDisposable {
         return provider.resolveLink(this, resource, link);
       }
     }
-    return URI.placeholder(link.target);
+    throw new Error(
+      `Couldn't find provider for resource "${resource.uri.toString()}"`
+    );
   }
 
   public read(uri: URI): Promise<string | null> {

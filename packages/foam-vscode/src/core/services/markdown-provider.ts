@@ -12,6 +12,7 @@ import { IDataStore, FileDataStore, IMatcher } from '../services/datastore';
 import { IDisposable } from '../common/lifecycle';
 import { ResourceProvider } from '../model/provider';
 import { createMarkdownParser } from './markdown-parser';
+import { MarkdownLink } from './markdown-link';
 
 export class MarkdownResourceProvider implements ResourceProvider {
   private disposables: IDisposable[] = [];
@@ -103,11 +104,12 @@ export class MarkdownResourceProvider implements ResourceProvider {
     link: ResourceLink
   ) {
     let targetUri: URI | undefined;
+    const { target, section } = MarkdownLink.analyzeLink(link);
     switch (link.type) {
       case 'wikilink': {
         let definitionUri = undefined;
         for (const def of resource.definitions) {
-          if (def.label === link.target) {
+          if (def.label === target) {
             definitionUri = def.url;
             break;
           }
@@ -118,12 +120,11 @@ export class MarkdownResourceProvider implements ResourceProvider {
             workspace.find(definedUri, resource.uri)?.uri ??
             URI.placeholder(definedUri.path);
         } else {
-          const [target, section] = link.target.split('#');
           targetUri =
             target === ''
               ? resource.uri
               : workspace.find(target, resource.uri)?.uri ??
-                URI.placeholder(link.target);
+                URI.placeholder(target);
 
           if (section) {
             targetUri = targetUri.withFragment(section);
@@ -132,10 +133,9 @@ export class MarkdownResourceProvider implements ResourceProvider {
         break;
       }
       case 'link': {
-        const [target, section] = link.target.split('#');
         targetUri =
           workspace.find(target, resource.uri)?.uri ??
-          URI.placeholder(resource.uri.resolve(link.target).path);
+          URI.placeholder(resource.uri.resolve(target).path);
         if (section && !targetUri.isPlaceholder()) {
           targetUri = targetUri.withFragment(section);
         }
@@ -191,7 +191,7 @@ to generate markdown reference list`
         label:
           link.rawText.indexOf('[[') > -1
             ? link.rawText.substring(2, link.rawText.length - 2)
-            : link.rawText || link.label,
+            : link.rawText,
         url: relativeUri.path,
         title: target.title,
       };

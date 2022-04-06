@@ -11,8 +11,6 @@ export interface NoteSource {
 
 export interface ResourceLink {
   type: 'wikilink' | 'link';
-  target: string;
-  label: string;
   rawText: string;
   range: Range;
 }

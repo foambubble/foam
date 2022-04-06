@@ -78,17 +78,13 @@ export const createTestNote = (params: {
           return 'slug' in link
             ? {
                 type: 'wikilink',
-                target: link.slug,
-                label: link.slug,
                 range: range,
-                rawText: 'link text',
+                rawText: `[[${link.slug}]]`,
               }
             : {
                 type: 'link',
-                target: link.to,
-                label: 'link text',
                 range: range,
-                rawText: 'link text',
+                rawText: `[link text](${link.to})`,
               };
         })
       : [],

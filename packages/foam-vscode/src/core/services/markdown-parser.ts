@@ -259,27 +259,14 @@ const wikilinkPlugin: ParserPlugin = {
   name: 'wikilink',
   visit: (node, note, noteSource) => {
     if (node.type === 'wikiLink') {
-      const text = (node as any).value;
-      const alias = node.data?.alias as string;
       const literalContent = noteSource.substring(
         node.position!.start.offset!,
         node.position!.end.offset!
       );
 
-      const hasAlias =
-        literalContent !== text && literalContent.includes(ALIAS_DIVIDER_CHAR);
       note.links.push({
         type: 'wikilink',
         rawText: literalContent,
-        label: hasAlias
-          ? alias.trim()
-          : literalContent.substring(2, literalContent.length - 2),
-        target: hasAlias
-          ? literalContent
-              .substring(2, literalContent.indexOf(ALIAS_DIVIDER_CHAR))
-              .replace(/\\/g, '')
-              .trim()
-          : text.trim(),
         range: astPositionToFoamRange(node.position!),
       });
     }
@@ -289,12 +276,13 @@ const wikilinkPlugin: ParserPlugin = {
       if (uri.scheme !== 'file' || uri.path === note.uri.path) {
         return;
       }
-      const label = getTextFromChildren(node);
+      const literalContent = noteSource.substring(
+        node.position!.start.offset!,
+        node.position!.end.offset!
+      );
       note.links.push({
         type: 'link',
-        target: targetUri,
-        label: label,
-        rawText: `[${label}](${targetUri})`,
+        rawText: literalContent,
         range: astPositionToFoamRange(node.position!),
       });
     }

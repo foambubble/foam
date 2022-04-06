@@ -31,7 +31,7 @@ describe('Document navigation', () => {
   describe('Document links provider', () => {
     it('should not return any link for empty documents', async () => {
       const { uri, content } = await createFile('');
-      const ws = new FoamWorkspace().set(parser.parse(uri, content));
+      const ws = createTestWorkspace().set(parser.parse(uri, content));
       const graph = FoamGraph.fromWorkspace(ws);
 
       const doc = await vscode.workspace.openTextDocument(toVsCodeUri(uri));
@@ -45,7 +45,7 @@ describe('Document navigation', () => {
       const { uri, content } = await createFile(
         'This is some content without links'
       );
-      const ws = new FoamWorkspace().set(parser.parse(uri, content));
+      const ws = createTestWorkspace().set(parser.parse(uri, content));
       const graph = FoamGraph.fromWorkspace(ws);
 
       const doc = await vscode.workspace.openTextDocument(toVsCodeUri(uri));
@@ -74,7 +74,7 @@ describe('Document navigation', () => {
 
     it('should create links for placeholders', async () => {
       const fileA = await createFile(`this is a link to [[a placeholder]].`);
-      const ws = new FoamWorkspace().set(
+      const ws = createTestWorkspace().set(
         parser.parse(fileA.uri, fileA.content)
       );
       const graph = FoamGraph.fromWorkspace(ws);

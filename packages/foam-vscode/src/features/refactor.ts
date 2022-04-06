@@ -1,7 +1,8 @@
 import * as vscode from 'vscode';
 import { Foam } from '../core/model/foam';
-import { URI } from '../core/model/uri';
-import { replaceSelection } from '../services/editor';
+import { MarkdownLink } from '../core/services/markdown-link';
+import { Logger } from '../core/utils/log';
+import { isAbsolute } from '../core/utils/path';
 import { FoamFeature } from '../types';
 import { fromVsCodeUri, toVsCodeRange, toVsCodeUri } from '../utils/vsc-utils';
 
@@ -16,44 +17,53 @@ const feature: FoamFeature = {
       vscode.workspace.onWillRenameFiles(async e => {
         const originatingFileEdit = new vscode.WorkspaceEdit();
         e.files.forEach(({ oldUri, newUri }) => {
-          const identifier = foam.workspace.getIdentifier(
-            fromVsCodeUri(newUri)
-          );
           const connections = foam.graph.getBacklinks(fromVsCodeUri(oldUri));
           connections.forEach(async connection => {
-            const range = toVsCodeRange(connection.link.range);
+            const { target } = MarkdownLink.analyzeLink(connection.link);
             switch (connection.link.type) {
               case 'wikilink':
+                const identifier = foam.workspace.getIdentifier(
+                  fromVsCodeUri(newUri)
+                );
+                const renameLinkEdit = MarkdownLink.createUpdateLinkEdit(
+                  connection.link,
+                  { target: identifier }
+                );
                 originatingFileEdit.replace(
                   toVsCodeUri(connection.source),
-                  new vscode.Selection(
-                    range.start.line,
-                    range.start.character + 2,
-                    range.end.line,
-                    range.end.character - 2
-                  ),
-                  identifier
+                  toVsCodeRange(renameLinkEdit.selection),
+                  renameLinkEdit.newText
                 );
                 break;
               case 'link':
-                const path = connection.link.target.startsWith('/') // TODO replace with isAbsolute after path refactoring
+                const path = isAbsolute(target)
                   ? '/' + vscode.workspace.asRelativePath(newUri)
-                  : URI.relativePath(connection.source, fromVsCodeUri(newUri));
+                  : fromVsCodeUri(newUri).relativeTo(
+                      connection.source.getDirectory()
+                    ).path;
+                const edit = MarkdownLink.createUpdateLinkEdit(
+                  connection.link,
+                  { target: path }
+                );
                 originatingFileEdit.replace(
                   toVsCodeUri(connection.source),
-                  new vscode.Selection(
-                    range.start.line,
-                    range.start.character + 2 + connection.link.label.length,
-                    range.end.line,
-                    range.end.character
-                  ),
-                  '(' + path + ')'
+                  toVsCodeRange(edit.selection),
+                  edit.newText
                 );
                 break;
             }
           });
         });
-        return await vscode.workspace.applyEdit(originatingFileEdit);
+        try {
+          await vscode.workspace.applyEdit(originatingFileEdit);
+          await vscode.commands.executeCommand(
+            'workbench.action.files.saveAll'
+          );
+          const result = await vscode.workspace.saveAll();
+          Logger.error('Files saved ', result);
+        } catch (e) {
+          Logger.error('Error while updating references to file', e);
+        }
       })
     );
   },

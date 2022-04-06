@@ -62,8 +62,26 @@ const feature: FoamFeature = {
             'workbench.action.files.saveAll'
           );
           await vscode.workspace.saveAll();
+
+          // Reporting
+          const nUpdates = originatingFileEdit
+            .entries()
+            .reduce((acc, entry) => {
+              return (acc += entry[1].length);
+            }, 0);
+          const links = nUpdates > 1 ? 'links' : 'link';
+          const nFiles = originatingFileEdit.entries().length;
+          const files = nFiles > 1 ? 'files' : 'file';
+          vscode.window.showInformationMessage(
+            `Foam updated ${nUpdates} ${links} across ${nFiles} ${files}.`
+          );
         } catch (e) {
           Logger.error('Error while updating references to file', e);
+          vscode.window.showErrorMessage(
+            `Foam couldn't update the links to ${vscode.workspace.asRelativePath(
+              e.newUri
+            )}. Check the logs for error details.`
+          );
         }
       })
     );

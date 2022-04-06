@@ -51,7 +51,7 @@ describe('Note rename sync', () => {
         'first',
         'note-a.md',
       ]);
-      const noteB = await createFile(`Content of note B`, [
+      await createFile(`Content of note B`, [
         'refactor',
         'wikilink',
         'second',

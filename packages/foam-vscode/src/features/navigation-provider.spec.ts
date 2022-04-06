@@ -11,7 +11,6 @@ import { NavigationProvider } from './navigation-provider';
 import { OPEN_COMMAND } from './utility-commands';
 import { toVsCodeUri } from '../utils/vsc-utils';
 import { createMarkdownParser } from '../core/services/markdown-parser';
-import { FoamWorkspace } from '../core/model/workspace';
 import { FoamGraph } from '../core/model/graph';
 
 describe('Document navigation', () => {
@@ -232,6 +231,6 @@ describe('Document navigation', () => {
         range: new vscode.Range(0, 23, 0, 23 + 9),
       });
     });
-    // it('should provide references for placeholders', async () => {});
+    it.todo('should provide references for placeholders');
   });
 });

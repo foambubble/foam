@@ -21,21 +21,22 @@ const feature: FoamFeature = {
           connections.forEach(async connection => {
             const { target } = MarkdownLink.analyzeLink(connection.link);
             switch (connection.link.type) {
-              case 'wikilink':
+              case 'wikilink': {
                 const identifier = foam.workspace.getIdentifier(
                   fromVsCodeUri(newUri)
                 );
-                const renameLinkEdit = MarkdownLink.createUpdateLinkEdit(
+                const edit = MarkdownLink.createUpdateLinkEdit(
                   connection.link,
                   { target: identifier }
                 );
                 originatingFileEdit.replace(
                   toVsCodeUri(connection.source),
-                  toVsCodeRange(renameLinkEdit.selection),
-                  renameLinkEdit.newText
+                  toVsCodeRange(edit.selection),
+                  edit.newText
                 );
                 break;
-              case 'link':
+              }
+              case 'link': {
                 const path = isAbsolute(target)
                   ? '/' + vscode.workspace.asRelativePath(newUri)
                   : fromVsCodeUri(newUri).relativeTo(
@@ -51,6 +52,7 @@ const feature: FoamFeature = {
                   edit.newText
                 );
                 break;
+              }
             }
           });
         });
@@ -59,8 +61,7 @@ const feature: FoamFeature = {
           await vscode.commands.executeCommand(
             'workbench.action.files.saveAll'
           );
-          const result = await vscode.workspace.saveAll();
-          Logger.error('Files saved ', result);
+          await vscode.workspace.saveAll();
         } catch (e) {
           Logger.error('Error while updating references to file', e);
         }

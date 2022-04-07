@@ -30,6 +30,12 @@ Foam helps you create the connections between your notes, and your placeholders 
 
 ![Link Autocompletion](./assets/screenshots/feature-link-autocompletion.gif)
 
+### Sync links on file rename
+
+Foam updates the links to renamed files, so your notes stay consistent.
+
+![Sync links on file rename](./assets/screenshots/feature-link-sync.gif)
+
 ### Unique identifiers across directories
 
 Foam supports files with the same name in multiple directories.

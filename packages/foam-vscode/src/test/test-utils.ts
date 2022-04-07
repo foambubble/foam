@@ -9,6 +9,8 @@ import { Matcher } from '../core/services/datastore';
 import { MarkdownResourceProvider } from '../core/services/markdown-provider';
 import { NoteLinkDefinition, Resource } from '../core/model/note';
 
+export { default as waitForExpect } from 'wait-for-expect';
+
 Logger.setLevel('error');
 
 export const TEST_DATA_DIR = URI.file(__dirname).joinPath(

@@ -2,7 +2,7 @@ import { ResourceLink } from '../model/note';
 
 export abstract class MarkdownLink {
   private static wikilinkRegex = new RegExp(
-    /\[\[([^#\|]+)?#?([^\|]+)?\|?(.*)?\]\]/
+    /\[\[([^#|]+)?#?([^|]+)?\|?(.*)?\]\]/
   );
   private static directLinkRegex = new RegExp(
     /\[([^\]]+)\]\(([^#]*)?#?([^\]]+)?\)/
@@ -10,7 +10,7 @@ export abstract class MarkdownLink {
 
   public static analyzeLink(link: ResourceLink) {
     if (link.type === 'wikilink') {
-      const [_, target, section, alias] = this.wikilinkRegex.exec(link.rawText);
+      const [, target, section, alias] = this.wikilinkRegex.exec(link.rawText);
       return {
         target: target?.replace(/\\/g, ''),
         section,
@@ -18,7 +18,7 @@ export abstract class MarkdownLink {
       };
     }
     if (link.type === 'link') {
-      const [_, alias, target, section] = this.directLinkRegex.exec(
+      const [, alias, target, section] = this.directLinkRegex.exec(
         link.rawText
       );
       return { target, section, alias };

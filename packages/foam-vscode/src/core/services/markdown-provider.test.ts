@@ -150,7 +150,22 @@ describe('Link resolution', () => {
   });
 
   describe('Markdown direct links', () => {
-    it('should support absolute path', () => {
+    it('should support absolute path 1', () => {
+      const noteA = createTestNote({
+        uri: '/path/to/page-a.md',
+        links: [{ to: '/path/to/another/page-b.md' }],
+      });
+      const noteB = createTestNote({
+        uri: '/path/to/another/page-b.md',
+        links: [{ to: '../../to/page-a.md' }],
+      });
+
+      const ws = createTestWorkspace();
+      ws.set(noteA).set(noteB);
+      expect(ws.resolveLink(noteA, noteA.links[0])).toEqual(noteB.uri);
+    });
+
+    it('should support relative path 1', () => {
       const noteA = createTestNote({
         uri: '/path/to/page-a.md',
         links: [{ to: './another/page-b.md' }],
@@ -165,13 +180,13 @@ describe('Link resolution', () => {
       expect(ws.resolveLink(noteA, noteA.links[0])).toEqual(noteB.uri);
     });
 
-    it('should support relative path', () => {
+    it('should support relative path 2', () => {
       const noteA = createTestNote({
         uri: '/path/to/page-a.md',
-        links: [{ to: 'more/page-c.md' }],
+        links: [{ to: 'more/page-b.md' }],
       });
       const noteB = createTestNote({
-        uri: '/path/to/more/page-c.md',
+        uri: '/path/to/more/page-b.md',
       });
       const ws = createTestWorkspace();
       ws.set(noteA).set(noteB);
@@ -181,10 +196,10 @@ describe('Link resolution', () => {
     it('should default to relative path', () => {
       const noteA = createTestNote({
         uri: '/path/to/page-a.md',
-        links: [{ to: 'page c.md' }],
+        links: [{ to: 'page .md' }],
       });
       const noteB = createTestNote({
-        uri: '/path/to/page c.md',
+        uri: '/path/to/page .md',
       });
       const ws = createTestWorkspace();
       ws.set(noteA).set(noteB);

@@ -5,7 +5,6 @@ import { isSome } from '../utils';
 import { Emitter } from '../common/event';
 import { ResourceProvider } from './provider';
 import { IDisposable } from '../common/lifecycle';
-import { Logger } from '../utils/log';
 
 export class FoamWorkspace implements IDisposable {
   private onDidAddEmitter = new Emitter<Resource>();
@@ -83,17 +82,25 @@ export class FoamWorkspace implements IDisposable {
    *
    * @param forResource the resource to compute the identifier for
    */
-  public getIdentifier(forResource: URI): string {
+  public getIdentifier(forResource: URI, exclude?: URI[]): string {
     const amongst = [];
     const basename = forResource.getBasename();
     for (const res of this._resources.values()) {
-      // Just a quick optimization to only add the elements that might match
-      if (res.uri.path.endsWith(basename)) {
-        if (!res.uri.isEqual(forResource)) {
-          amongst.push(res.uri);
-        }
+      // skip elements that cannot possibly match
+      if (!res.uri.path.endsWith(basename)) {
+        continue;
       }
+      // skip self
+      if (res.uri.isEqual(forResource)) {
+        continue;
+      }
+      // skip exclude list
+      if (exclude && exclude.find(ex => ex.isEqual(res.uri))) {
+        continue;
+      }
+      amongst.push(res.uri);
     }
+
     let identifier = FoamWorkspace.getShortestIdentifier(
       forResource.path,
       amongst.map(uri => uri.path)

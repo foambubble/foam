@@ -3,7 +3,7 @@
  */
 import * as vscode from 'vscode';
 import path from 'path';
-import { TextEncoder } from 'util';
+import { TextDecoder, TextEncoder } from 'util';
 import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
 import { Logger } from '../core/utils/log';
 import { URI } from '../core/model/uri';
@@ -62,6 +62,18 @@ export const createFile = async (content: string, filepath: string[] = []) => {
     new TextEncoder().encode(content)
   );
   return { uri, content, ...filenameComponents };
+};
+
+export const renameFile = (from: URI, to: URI) => {
+  const edit = new vscode.WorkspaceEdit();
+  edit.renameFile(toVsCodeUri(from), toVsCodeUri(to));
+  return vscode.workspace.applyEdit(edit);
+};
+
+const decoder = new TextDecoder('utf-8');
+export const readFile = async (uri: URI) => {
+  const content = await vscode.workspace.fs.readFile(toVsCodeUri(uri));
+  return decoder.decode(content);
 };
 
 export const createNote = (r: Resource) => {

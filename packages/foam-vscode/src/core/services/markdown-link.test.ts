@@ -96,7 +96,7 @@ describe('MarkdownLink', () => {
   });
 
   describe('rename wikilink', () => {
-    it.skip('should rename the target only', () => {
+    it('should rename the target only', () => {
       const link = parser.parse(
         getRandomURI(),
         `this is a [[wikilink#section]]`

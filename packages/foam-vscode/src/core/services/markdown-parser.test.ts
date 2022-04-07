@@ -1,5 +1,4 @@
 import { createMarkdownParser, ParserPlugin } from './markdown-parser';
-import { ResourceLink } from '../model/note';
 import { Logger } from '../utils/log';
 import { URI } from '../model/uri';
 import { Range } from '../model/range';

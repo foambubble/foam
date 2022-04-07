@@ -167,4 +167,23 @@ describe('Identifier computation', () => {
     const identifier = FoamWorkspace.getShortestIdentifier(needle, haystack);
     expect(identifier).toEqual('project/car/todo');
   });
+
+  it('should ignore elements from the exclude list', () => {
+    const workspace = new FoamWorkspace();
+    const noteA = createTestNote({ uri: '/path/to/note-a.md' });
+    const noteB = createTestNote({ uri: '/path/to/note-b.md' });
+    const noteC = createTestNote({ uri: '/path/to/note-c.md' });
+    const noteD = createTestNote({ uri: '/path/to/note-d.md' });
+    const noteABis = createTestNote({ uri: '/path/to/another/note-a.md' });
+
+    workspace
+      .set(noteA)
+      .set(noteB)
+      .set(noteC)
+      .set(noteD);
+    expect(workspace.getIdentifier(noteABis.uri)).toEqual('another/note-a');
+    expect(
+      workspace.getIdentifier(noteABis.uri, [noteB.uri, noteA.uri])
+    ).toEqual('note-a');
+  });
 });

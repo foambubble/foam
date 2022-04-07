@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
 import { createMarkdownParser } from '../core/services/markdown-parser';
 import { FoamGraph } from '../core/model/graph';
-import { FoamWorkspace } from '../core/model/workspace';
 import { createTestNote, createTestWorkspace } from '../test/test-utils';
 import {
   cleanWorkspace,

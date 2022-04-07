@@ -18,9 +18,11 @@ import tagCompletionProvider from './tag-completion';
 import linkDecorations from './document-decorator';
 import navigationProviders from './navigation-provider';
 import wikilinkDiagnostics from './wikilink-diagnostics';
+import refactor from './refactor';
 import { FoamFeature } from '../types';
 
 export const features: FoamFeature[] = [
+  refactor,
   navigationProviders,
   wikilinkDiagnostics,
   tagsExplorer,

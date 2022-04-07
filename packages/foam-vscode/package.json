@@ -255,6 +255,11 @@
             "Disable wikilink definitions generation"
           ]
         },
+        "foam.links.sync.enable": {
+          "description": "Enable synching links when moving/renaming notes",
+          "type": "boolean",
+          "default": true
+        },
         "foam.links.hover.enable": {
           "description": "Enable displaying note content on hover links",
           "type": "boolean",

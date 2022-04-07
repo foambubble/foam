@@ -16,6 +16,9 @@ const feature: FoamFeature = {
     context.subscriptions.push(
       vscode.workspace.onWillRenameFiles(async e => {
         const originatingFileEdit = new vscode.WorkspaceEdit();
+        if (!getFoamVsCodeConfig<boolean>('links.sync.enable')) {
+          return;
+        }
         e.files.forEach(({ oldUri, newUri }) => {
           const connections = foam.graph.getBacklinks(fromVsCodeUri(oldUri));
           connections.forEach(async connection => {

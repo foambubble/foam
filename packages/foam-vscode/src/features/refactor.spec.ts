@@ -26,7 +26,11 @@ describe('Note rename sync', () => {
         `Link to [[${noteA.name}]]. Also a [[placeholder]] and again [[${noteA.name}]]`,
         ['refactor', 'wikilinks', 'rename-note-b.md']
       );
-
+      const noteC = await createFile(`Link to [[${noteA.name}]] from note C.`, [
+        'refactor',
+        'wikilinks',
+        'rename-note-c.md',
+      ]);
       const { doc } = await showInEditor(noteB.uri);
 
       const newName = 'renamed-note-a';
@@ -38,8 +42,13 @@ describe('Note rename sync', () => {
       await renameFile(noteA.uri, newUri);
 
       await waitForExpect(async () => {
+        // check it updates documents open in editors
         expect(doc.getText()).toEqual(
           `Link to [[${newName}]]. Also a [[placeholder]] and again [[${newName}]]`
+        );
+        // and documents not open in editors
+        expect(await readFile(noteC.uri)).toEqual(
+          `Link to [[${newName}]] from note C.`
         );
       });
     });
@@ -71,6 +80,35 @@ describe('Note rename sync', () => {
 
       await waitForExpect(async () => {
         expect(doc.getText()).toEqual(`Link to [[first/note-b]] from note C.`);
+      });
+    });
+
+    it('should use the best identifier when moving the note to another directory', async () => {
+      const noteA = await createFile(`Content of note A`, [
+        'refactor',
+        'wikilink',
+        'first',
+        'note-a.md',
+      ]);
+      await createFile(`Content of note B`, [
+        'refactor',
+        'wikilink',
+        'second',
+        'note-b.md',
+      ]);
+      const noteC = await createFile(`Link to [[${noteA.name}]] from note C.`);
+
+      const { doc } = await showInEditor(noteC.uri);
+
+      const newUri = noteA.uri.resolve('../second/note-a.md');
+
+      // wait for workspace files to be added to graph (because of graph debounced update)
+      // TODO this should be replaced by either a force-refresh command or by Foam updating immediately in test mode
+      await wait(600);
+      await renameFile(noteA.uri, newUri);
+
+      await waitForExpect(async () => {
+        expect(doc.getText()).toEqual(`Link to [[note-a]] from note C.`);
       });
     });
 

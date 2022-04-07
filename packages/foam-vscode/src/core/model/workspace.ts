@@ -82,17 +82,18 @@ export class FoamWorkspace implements IDisposable {
    *
    * @param forResource the resource to compute the identifier for
    */
-  public getIdentifier(forResource: URI): string {
+  public getIdentifier(forResource: URI, exclude?: URI[]): string {
     const amongst = [];
     const basename = forResource.getBasename();
     for (const res of this._resources.values()) {
       // Just a quick optimization to only add the elements that might match
-      if (res.uri.path.endsWith(basename)) {
-        if (!res.uri.isEqual(forResource)) {
+      if (res.uri.path.endsWith(basename) && !res.uri.isEqual(forResource)) {
+        if (exclude == null || !exclude.find(ex => ex.isEqual(res.uri))) {
           amongst.push(res.uri);
         }
       }
     }
+
     let identifier = FoamWorkspace.getShortestIdentifier(
       forResource.path,
       amongst.map(uri => uri.path)

@@ -1,10 +1,9 @@
 import * as vscode from 'vscode';
 import { FoamFeature } from '../types';
 import { URI } from '../core/model/uri';
-import { fromVsCodeUri, toVsCodeRange, toVsCodeUri } from '../utils/vsc-utils';
+import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
 import { NoteFactory } from '../services/templates';
 import { Foam } from '../core/model/foam';
-import { Resource } from '../core/model/note';
 
 export const OPEN_COMMAND = {
   command: 'foam-vscode.open-resource',

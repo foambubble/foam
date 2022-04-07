@@ -168,7 +168,7 @@ describe('Identifier computation', () => {
     expect(identifier).toEqual('project/car/todo');
   });
 
-  it('should ignore elements from the ignore list', () => {
+  it('should ignore elements from the exclude list', () => {
     const workspace = new FoamWorkspace();
     const noteA = createTestNote({ uri: '/path/to/note-a.md' });
     const noteB = createTestNote({ uri: '/path/to/note-b.md' });

@@ -81,7 +81,7 @@ describe('Daily note template', () => {
     const config = workspace.getConfiguration('foam');
     const uri = getDailyNotePath(config, targetDate);
 
-    await createDailyNoteIfNotExists(config, uri, targetDate);
+    await createDailyNoteIfNotExists(targetDate);
 
     const doc = await showInEditor(uri);
     const content = doc.editor.document.getText();

@@ -77,8 +77,9 @@ export async function getTemplateInfo(templateUri: URI, resolver: Resolver) {
         .then(bytes => bytes.toString())
     : '';
 
-  let templateWithResolvedVariables: string;
-  templateWithResolvedVariables = await resolver.resolveText(templateText);
+  const templateWithResolvedVariables = await resolver.resolveText(
+    templateText
+  );
 
   const [
     templateMetadata,

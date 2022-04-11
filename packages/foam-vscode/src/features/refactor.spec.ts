@@ -43,14 +43,14 @@ describe('Note rename sync', () => {
 
       await waitForExpect(async () => {
         // check it updates documents open in editors
-        expect(doc.getText()).toEqual(
+        expect(doc.getText().trim()).toEqual(
           `Link to [[${newName}]]. Also a [[placeholder]] and again [[${newName}]]`
         );
         // and documents not open in editors
-        expect(await readFile(noteC.uri)).toEqual(
+        expect((await readFile(noteC.uri)).trim()).toEqual(
           `Link to [[${newName}]] from note C.`
         );
-      });
+      }, 1000);
     });
 
     it('should use the best identifier based on the new note location', async () => {
@@ -79,7 +79,9 @@ describe('Note rename sync', () => {
       await renameFile(noteA.uri, newUri);
 
       await waitForExpect(async () => {
-        expect(doc.getText()).toEqual(`Link to [[first/note-b]] from note C.`);
+        expect(doc.getText().trim()).toEqual(
+          `Link to [[first/note-b]] from note C.`
+        );
       });
     });
 
@@ -108,7 +110,7 @@ describe('Note rename sync', () => {
       await renameFile(noteA.uri, newUri);
 
       await waitForExpect(async () => {
-        expect(doc.getText()).toEqual(`Link to [[note-a]] from note C.`);
+        expect(doc.getText().trim()).toEqual(`Link to [[note-a]] from note C.`);
       });
     });
 
@@ -126,7 +128,7 @@ describe('Note rename sync', () => {
       await renameFile(noteA.uri, newUri);
 
       await waitForExpect(async () => {
-        expect(doc.getText()).toEqual(`Link to [[new-note-a|Alias]]`);
+        expect(doc.getText().trim()).toEqual(`Link to [[new-note-a|Alias]]`);
       });
     });
 
@@ -144,7 +146,7 @@ describe('Note rename sync', () => {
       await renameFile(noteA.uri, newUri);
 
       await waitForExpect(async () => {
-        expect(doc.getText()).toEqual(
+        expect(doc.getText().trim()).toEqual(
           `Link to [[new-note-with-section#Section]]`
         );
       });
@@ -166,7 +168,7 @@ describe('Note rename sync', () => {
 
       const content = await readFile(noteC.uri);
       await waitForExpect(async () => {
-        expect(content).toEqual(`Link to [[note-a]] from note C.`);
+        expect(content.trim()).toEqual(`Link to [[note-a]] from note C.`);
       });
     });
   });
@@ -196,7 +198,7 @@ describe('Note rename sync', () => {
       await renameFile(noteA.uri, newUri);
 
       await waitForExpect(async () => {
-        expect(doc.getText()).toEqual(
+        expect(doc.getText().trim()).toEqual(
           `Link to [note](../note-a.md) from note B.`
         );
       });

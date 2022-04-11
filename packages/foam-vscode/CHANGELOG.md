@@ -4,6 +4,14 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.18.0] - 2022-04-11
+
+Features:
+- Link synchronization on file rename
+
+Internal:
+- Changed graph computation on workspace change to simplify code
+
 ## [0.17.8] - 2022-04-01
 
 Fixes and Improvements:

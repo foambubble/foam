@@ -70,12 +70,16 @@ export async function getTemplates(): Promise<URI[]> {
   return templates;
 }
 
-export async function getTemplateInfo(templateUri: URI, resolver: Resolver) {
+export async function getTemplateInfo(
+  templateUri: URI,
+  templateFallbackText: string = '',
+  resolver: Resolver
+) {
   const templateText = existsSync(templateUri.toFsPath())
     ? await workspace.fs
         .readFile(toVsCodeUri(templateUri))
         .then(bytes => bytes.toString())
-    : '';
+    : templateFallbackText;
 
   const templateWithResolvedVariables = await resolver.resolveText(
     templateText
@@ -115,16 +119,18 @@ export const NoteFactory = {
             return askUserForFilepathConfirmation(existingFile, filename);
           };
 
-      const template = await getTemplateInfo(templateUri, resolver);
+      const template = await getTemplateInfo(
+        templateUri,
+        templateFallbackText,
+        resolver
+      );
 
       const selectedContent = findSelectionContent();
       if (selectedContent?.content) {
         resolver.define('FOAM_SELECTED_TEXT', selectedContent?.content);
       }
 
-      const templateSnippet = new SnippetString(
-        template.text ?? templateFallbackText
-      );
+      const templateSnippet = new SnippetString(template.text);
 
       let newFilePath = await determineNewNoteFilepath(
         template.metadata.get('filepath'),

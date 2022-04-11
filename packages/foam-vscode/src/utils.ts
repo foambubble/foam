@@ -161,6 +161,8 @@ export async function focusNote(
     const { range } = editor.document.lineAt(lineCount - 1);
     editor.selection = new Selection(range.end, range.end);
   }
+
+  return { document, editor };
 }
 
 export function getContainsTooltip(titles: string[]): string {

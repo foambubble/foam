@@ -133,11 +133,13 @@ export class MarkdownResourceProvider implements ResourceProvider {
         break;
       }
       case 'link': {
-        // not sure I love this, but it's a way to force ambiguous links
-        // (those that don't start with / ./ ../) to be treated as relative
-        const path = FoamWorkspace.isIdentifier(target)
-          ? './' + target
-          : target;
+        // force ambiguous links to be treated as relative
+        const path =
+          target.startsWith('/') ||
+          target.startsWith('./') ||
+          target.startsWith('../')
+            ? target
+            : './' + target;
         targetUri =
           workspace.find(path, resource.uri)?.uri ??
           URI.placeholder(resource.uri.resolve(path).path);

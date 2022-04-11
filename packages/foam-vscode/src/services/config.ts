@@ -4,8 +4,8 @@ export interface ConfigurationMonitor<T> extends Disposable {
   (): T;
 }
 
-export const getFoamVsCodeConfig = <T>(key: string): T =>
-  workspace.getConfiguration('foam').get(key);
+export const getFoamVsCodeConfig = <T>(key: string, defaultValue?: T): T =>
+  workspace.getConfiguration('foam').get(key, defaultValue);
 
 export const updateFoamVsCodeConfig = <T>(key: string, value: T) =>
   workspace.getConfiguration().update('foam.' + key, value);

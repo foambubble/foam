@@ -13,7 +13,6 @@ import {
   createDailyNoteIfNotExists,
   getDailyNoteFileName,
   openDailyNoteFor,
-  getDailyNotePath,
 } from '../dated-notes';
 import { FoamFeature } from '../types';
 

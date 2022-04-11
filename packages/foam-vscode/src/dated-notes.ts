@@ -1,14 +1,9 @@
 import { workspace, WorkspaceConfiguration } from 'vscode';
 import dateFormat from 'dateformat';
-import { existsInFs } from './core/utils/path';
 import { focusNote } from './utils';
 import { URI } from './core/model/uri';
 import { fromVsCodeUri, toVsCodeUri } from './utils/vsc-utils';
-import {
-  DAILY_NOTE_TEMPLATE_URI,
-  getTemplateInfo,
-  NoteFactory,
-} from './services/templates';
+import { NoteFactory } from './services/templates';
 
 /**
  * Open the daily note file.

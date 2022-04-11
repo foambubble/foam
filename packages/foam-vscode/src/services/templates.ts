@@ -72,7 +72,7 @@ export async function getTemplates(): Promise<URI[]> {
 
 export async function getTemplateInfo(
   templateUri: URI,
-  templateFallbackText: string = '',
+  templateFallbackText = '',
   resolver: Resolver
 ) {
   const templateText = existsSync(templateUri.toFsPath())

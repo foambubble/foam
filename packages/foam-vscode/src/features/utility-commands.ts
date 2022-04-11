@@ -37,6 +37,13 @@ const feature: FoamFeature = {
               });
             }
             case 'placeholder': {
+              const title = uri.getName();
+              if (uri.isAbsolute()) {
+                return NoteFactory.createForPlaceholderWikilink(
+                  title,
+                  URI.file(uri.path)
+                );
+              }
               const basedir =
                 vscode.workspace.workspaceFolders.length > 0
                   ? vscode.workspace.workspaceFolders[0].uri
@@ -46,7 +53,6 @@ const feature: FoamFeature = {
               if (basedir === undefined) {
                 return;
               }
-              const title = uri.getName();
               const target = fromVsCodeUri(basedir)
                 .resolve(uri, true)
                 .changeExtension('', '.md');

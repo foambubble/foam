@@ -50,7 +50,7 @@ describe('Create note from template', () => {
       const templateA = await createFile(
         `---
 foam_template: # foam template metadata
-  filepath: "${uri.toFsPath()}"
+  filepath: ${uri.toFsPath()}
 ---
 `,
         ['.foam', 'templates', 'template-with-path.md']

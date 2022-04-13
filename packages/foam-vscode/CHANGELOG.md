@@ -4,6 +4,13 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.18.1] - 2022-04-13
+
+Fixes and Improvements:
+- Fixed parsing error for direct links with square brackets in them (#977)
+- Improved markdown direct link resolution (#972)
+- Improved templates support for custom paths (#970)
+
 ## [0.18.0] - 2022-04-11
 
 Features:

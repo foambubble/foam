@@ -33,6 +33,26 @@ describe('MarkdownLink', () => {
       expect(parsed.section).toBeUndefined();
       expect(parsed.alias).toEqual('alias');
     });
+    it('should parse links with square brackets #975', () => {
+      const link = parser.parse(
+        getRandomURI(),
+        `this is a [[wikilink [with] brackets]]`
+      ).links[0];
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.target).toEqual('wikilink [with] brackets');
+      expect(parsed.section).toBeUndefined();
+      expect(parsed.alias).toBeUndefined();
+    });
+    it('should parse links with square brackets in alias #975', () => {
+      const link = parser.parse(
+        getRandomURI(),
+        `this is a [[wikilink|alias [with] brackets]]`
+      ).links[0];
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.target).toEqual('wikilink');
+      expect(parsed.section).toBeUndefined();
+      expect(parsed.alias).toEqual('alias [with] brackets');
+    });
     it('should parse target and alias with escaped separator', () => {
       const link = parser.parse(
         getRandomURI(),
@@ -92,6 +112,16 @@ describe('MarkdownLink', () => {
       expect(parsed.target).toBeUndefined();
       expect(parsed.section).toEqual('section');
       expect(parsed.alias).toEqual('link');
+    });
+    it('should parse links with square brackets in label #975', () => {
+      const link = parser.parse(
+        getRandomURI(),
+        `this is a [inbox [xyz]](to/path.md)`
+      ).links[0];
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.target).toEqual('to/path.md');
+      expect(parsed.section).toBeUndefined();
+      expect(parsed.alias).toEqual('inbox [xyz]');
     });
   });
 

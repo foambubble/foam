@@ -133,9 +133,16 @@ export class MarkdownResourceProvider implements ResourceProvider {
         break;
       }
       case 'link': {
+        // force ambiguous links to be treated as relative
+        const path =
+          target.startsWith('/') ||
+          target.startsWith('./') ||
+          target.startsWith('../')
+            ? target
+            : './' + target;
         targetUri =
-          workspace.find(target, resource.uri)?.uri ??
-          URI.placeholder(resource.uri.resolve(target).path);
+          workspace.find(path, resource.uri)?.uri ??
+          URI.placeholder(resource.uri.resolve(path).path);
         if (section && !targetUri.isPlaceholder()) {
           targetUri = targetUri.withFragment(section);
         }

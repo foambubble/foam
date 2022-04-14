@@ -860,6 +860,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "josephdecock",
+      "name": "Joe DeCock",
+      "avatar_url": "https://avatars.githubusercontent.com/u/1145533?v=4",
+      "profile": "https://github.com/josephdecock",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,

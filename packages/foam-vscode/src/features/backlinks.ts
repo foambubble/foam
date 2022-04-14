@@ -10,7 +10,7 @@ import { FoamWorkspace } from '../core/model/workspace';
 import { FoamGraph } from '../core/model/graph';
 import { Resource, ResourceLink } from '../core/model/note';
 import { Range } from '../core/model/range';
-import { fromVsCodeUri } from '../utils/vsc-utils';
+import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
 
 const feature: FoamFeature = {
   activate: async (
@@ -133,7 +133,7 @@ export class BacklinkTreeItem extends vscode.TreeItem {
     this.label = `${link.range.start.line}: ${this.label}`;
     this.command = {
       command: 'vscode.open',
-      arguments: [resource.uri, { selection: link.range }],
+      arguments: [toVsCodeUri(resource.uri), { selection: link.range }],
       title: 'Go to link',
     };
   }

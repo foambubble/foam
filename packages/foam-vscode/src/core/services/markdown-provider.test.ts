@@ -147,6 +147,39 @@ describe('Link resolution', () => {
       expect(ws.resolveLink(noteA, noteA.links[1])).toEqual(noteC.uri);
       expect(ws.resolveLink(noteA, noteA.links[2])).toEqual(noteD.uri);
     });
+
+    it('should resolve wikilink with section identifier', () => {
+      const noteA = createTestNote({
+        uri: '/path/to/page-a.md',
+        links: [
+          // uppercased filename, lowercased slug
+          { slug: 'page-b#section' },
+        ],
+      });
+      const noteB = createTestNote({ uri: '/somewhere/PAGE-B.md' });
+      const ws = createTestWorkspace()
+        .set(noteA)
+        .set(noteB);
+
+      expect(ws.resolveLink(noteA, noteA.links[0])).toEqual(
+        noteB.uri.withFragment('section')
+      );
+    });
+
+    it('should resolve section-only wikilinks', () => {
+      const noteA = createTestNote({
+        uri: '/path/to/page-a.md',
+        links: [
+          // uppercased filename, lowercased slug
+          { slug: '#section' },
+        ],
+      });
+      const ws = createTestWorkspace().set(noteA);
+
+      expect(ws.resolveLink(noteA, noteA.links[0])).toEqual(
+        noteA.uri.withFragment('section')
+      );
+    });
   });
 
   describe('Markdown direct links', () => {

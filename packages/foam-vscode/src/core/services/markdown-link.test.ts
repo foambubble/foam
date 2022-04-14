@@ -123,6 +123,16 @@ describe('MarkdownLink', () => {
       expect(parsed.section).toBeUndefined();
       expect(parsed.alias).toEqual('inbox [xyz]');
     });
+   it('should parse links with empty label #975', () => {
+      const link = parser.parse(
+        getRandomURI(),
+        `this is a [](to/path.md)`
+      ).links[0];
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.target).toEqual('to/path.md');
+      expect(parsed.section).toBeUndefined();
+      expect(parsed.alias).toEqual('');
+    });
   });
 
   describe('rename wikilink', () => {

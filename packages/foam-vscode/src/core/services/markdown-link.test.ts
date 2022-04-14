@@ -12,8 +12,8 @@ describe('MarkdownLink', () => {
         .links[0];
       const parsed = MarkdownLink.analyzeLink(link);
       expect(parsed.target).toEqual('wikilink');
-      expect(parsed.section).toBeUndefined();
-      expect(parsed.alias).toBeUndefined();
+      expect(parsed.section).toEqual('');
+      expect(parsed.alias).toEqual('');
     });
     it('should parse target and section', () => {
       const link = parser.parse(
@@ -23,14 +23,14 @@ describe('MarkdownLink', () => {
       const parsed = MarkdownLink.analyzeLink(link);
       expect(parsed.target).toEqual('wikilink');
       expect(parsed.section).toEqual('section');
-      expect(parsed.alias).toBeUndefined();
+      expect(parsed.alias).toEqual('');
     });
     it('should parse target and alias', () => {
       const link = parser.parse(getRandomURI(), `this is a [[wikilink|alias]]`)
         .links[0];
       const parsed = MarkdownLink.analyzeLink(link);
       expect(parsed.target).toEqual('wikilink');
-      expect(parsed.section).toBeUndefined();
+      expect(parsed.section).toEqual('');
       expect(parsed.alias).toEqual('alias');
     });
     it('should parse links with square brackets #975', () => {
@@ -40,8 +40,8 @@ describe('MarkdownLink', () => {
       ).links[0];
       const parsed = MarkdownLink.analyzeLink(link);
       expect(parsed.target).toEqual('wikilink [with] brackets');
-      expect(parsed.section).toBeUndefined();
-      expect(parsed.alias).toBeUndefined();
+      expect(parsed.section).toEqual('');
+      expect(parsed.alias).toEqual('');
     });
     it('should parse links with square brackets in alias #975', () => {
       const link = parser.parse(
@@ -50,7 +50,7 @@ describe('MarkdownLink', () => {
       ).links[0];
       const parsed = MarkdownLink.analyzeLink(link);
       expect(parsed.target).toEqual('wikilink');
-      expect(parsed.section).toBeUndefined();
+      expect(parsed.section).toEqual('');
       expect(parsed.alias).toEqual('alias [with] brackets');
     });
     it('should parse target and alias with escaped separator', () => {
@@ -60,7 +60,7 @@ describe('MarkdownLink', () => {
       ).links[0];
       const parsed = MarkdownLink.analyzeLink(link);
       expect(parsed.target).toEqual('wikilink');
-      expect(parsed.section).toBeUndefined();
+      expect(parsed.section).toEqual('');
       expect(parsed.alias).toEqual('alias');
     });
     it('should parse target section and alias', () => {
@@ -77,9 +77,9 @@ describe('MarkdownLink', () => {
       const link = parser.parse(getRandomURI(), `this is a [[#section]]`)
         .links[0];
       const parsed = MarkdownLink.analyzeLink(link);
-      expect(parsed.target).toBeUndefined();
+      expect(parsed.target).toEqual('');
       expect(parsed.section).toEqual('section');
-      expect(parsed.alias).toBeUndefined();
+      expect(parsed.alias).toEqual('');
     });
   });
 
@@ -89,7 +89,7 @@ describe('MarkdownLink', () => {
         .links[0];
       const parsed = MarkdownLink.analyzeLink(link);
       expect(parsed.target).toEqual('to/path.md');
-      expect(parsed.section).toBeUndefined();
+      expect(parsed.section).toEqual('');
       expect(parsed.alias).toEqual('link');
     });
     it('should parse target and section', () => {
@@ -109,7 +109,7 @@ describe('MarkdownLink', () => {
         range: Range.create(0, 0),
       };
       const parsed = MarkdownLink.analyzeLink(link);
-      expect(parsed.target).toBeUndefined();
+      expect(parsed.target).toEqual('');
       expect(parsed.section).toEqual('section');
       expect(parsed.alias).toEqual('link');
     });
@@ -120,17 +120,15 @@ describe('MarkdownLink', () => {
       ).links[0];
       const parsed = MarkdownLink.analyzeLink(link);
       expect(parsed.target).toEqual('to/path.md');
-      expect(parsed.section).toBeUndefined();
+      expect(parsed.section).toEqual('');
       expect(parsed.alias).toEqual('inbox [xyz]');
     });
-   it('should parse links with empty label #975', () => {
-      const link = parser.parse(
-        getRandomURI(),
-        `this is a [](to/path.md)`
-      ).links[0];
+    it('should parse links with empty label #975', () => {
+      const link = parser.parse(getRandomURI(), `this is a [](to/path.md)`)
+        .links[0];
       const parsed = MarkdownLink.analyzeLink(link);
       expect(parsed.target).toEqual('to/path.md');
-      expect(parsed.section).toBeUndefined();
+      expect(parsed.section).toEqual('');
       expect(parsed.alias).toEqual('');
     });
   });

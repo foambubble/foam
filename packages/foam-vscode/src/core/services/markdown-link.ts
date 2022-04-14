@@ -12,16 +12,20 @@ export abstract class MarkdownLink {
     if (link.type === 'wikilink') {
       const [, target, section, alias] = this.wikilinkRegex.exec(link.rawText);
       return {
-        target: target?.replace(/\\/g, ''),
-        section,
-        alias,
+        target: target?.replace(/\\/g, '') ?? '',
+        section: section ?? '',
+        alias: alias ?? '',
       };
     }
     if (link.type === 'link') {
       const [, alias, target, section] = this.directLinkRegex.exec(
         link.rawText
       );
-      return { target, section, alias };
+      return {
+        target: target ?? '',
+        section: section ?? '',
+        alias: alias ?? '',
+      };
     }
     throw new Error(
       `Unexpected state: link of type ${link.type} is not supported`

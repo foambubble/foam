@@ -4,6 +4,12 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.18.3] - 2022-04-17
+
+Fixes and Improvements:
+- Better reporting when links fail to resolve
+- Failing link resolution during graph computation no longer fatal
+
 ## [0.18.2] - 2022-04-14
 
 Fixes and Improvements:

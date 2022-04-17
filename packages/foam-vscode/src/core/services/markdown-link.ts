@@ -9,27 +9,31 @@ export abstract class MarkdownLink {
   );
 
   public static analyzeLink(link: ResourceLink) {
-    if (link.type === 'wikilink') {
-      const [, target, section, alias] = this.wikilinkRegex.exec(link.rawText);
-      return {
-        target: target?.replace(/\\/g, '') ?? '',
-        section: section ?? '',
-        alias: alias ?? '',
-      };
+    try {
+      if (link.type === 'wikilink') {
+        const [, target, section, alias] = this.wikilinkRegex.exec(
+          link.rawText
+        );
+        return {
+          target: target?.replace(/\\/g, '') ?? '',
+          section: section ?? '',
+          alias: alias ?? '',
+        };
+      }
+      if (link.type === 'link') {
+        const [, alias, target, section] = this.directLinkRegex.exec(
+          link.rawText
+        );
+        return {
+          target: target ?? '',
+          section: section ?? '',
+          alias: alias ?? '',
+        };
+      }
+      throw new Error(`Link of type ${link.type} is not supported`);
+    } catch (e) {
+      throw new Error(`Couldn't parse link ${link.rawText} - ${e}`);
     }
-    if (link.type === 'link') {
-      const [, alias, target, section] = this.directLinkRegex.exec(
-        link.rawText
-      );
-      return {
-        target: target ?? '',
-        section: section ?? '',
-        alias: alias ?? '',
-      };
-    }
-    throw new Error(
-      `Unexpected state: link of type ${link.type} is not supported`
-    );
   }
 
   public static createUpdateLinkEdit(

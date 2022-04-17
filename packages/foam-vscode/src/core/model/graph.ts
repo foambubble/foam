@@ -107,8 +107,18 @@ export class FoamGraph implements IDisposable {
 
     for (const resource of this.workspace.resources()) {
       for (const link of resource.links) {
-        const targetUri = this.workspace.resolveLink(resource, link);
-        this.connect(resource.uri, targetUri, link);
+        try {
+          const targetUri = this.workspace.resolveLink(resource, link);
+          this.connect(resource.uri, targetUri, link);
+        } catch (e) {
+          Logger.error(
+            `Error while resolving link ${
+              link.rawText
+            } in ${resource.uri.toFsPath()}, skipping.`,
+            link,
+            e
+          );
+        }
       }
     }
 

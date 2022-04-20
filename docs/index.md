@@ -31,8 +31,6 @@ You can use **Foam** for organising your research, keeping re-discoverable notes
 
 **Foam** is a tool that supports creating relationships between thoughts and information to help you think better.
 
-![Foam kitchen sink, showing a few of the key features](assets/images/foam-features-dark-mode-demo.png)
-
 Whether you want to build a [Second Brain](https://www.buildingasecondbrain.com/) or a [Zettelkasten](https://zettelkasten.de/posts/overview/), write a book, or just get better at long-term learning, **Foam** can help you organise your thoughts if you follow these simple rules:
 
 1. Create a single **Foam** workspace for all your knowledge and research following the [Getting started](#getting-started) guide.

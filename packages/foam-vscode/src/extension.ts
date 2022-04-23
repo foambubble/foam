@@ -9,6 +9,7 @@ import { features } from './features';
 import { VsCodeOutputLogger, exposeLogger } from './services/logging';
 import { getIgnoredFilesSetting } from './settings';
 import { fromVsCodeUri, toVsCodeUri } from './utils/vsc-utils';
+import { AttachmentResourceProvider } from './core/services/attachment-provider';
 
 export async function activate(context: ExtensionContext) {
   const logger = new VsCodeOutputLogger();
@@ -27,11 +28,18 @@ export async function activate(context: ExtensionContext) {
       ['**/*'],
       getIgnoredFilesSetting().map(g => g.toString())
     );
-    const markdownProvider = new MarkdownResourceProvider(
+    const watcher = workspace.createFileSystemWatcher('**/*');
+    const markdownProvider = new MarkdownResourceProvider(matcher, triggers => {
+      return [
+        watcher.onDidChange(uri => triggers.onDidChange(fromVsCodeUri(uri))),
+        watcher.onDidCreate(uri => triggers.onDidCreate(fromVsCodeUri(uri))),
+        watcher.onDidDelete(uri => triggers.onDidDelete(fromVsCodeUri(uri))),
+        watcher,
+      ];
+    });
+    const attachmentProvider = new AttachmentResourceProvider(
       matcher,
-      dataStore,
       triggers => {
-        const watcher = workspace.createFileSystemWatcher('**/*');
         return [
           watcher.onDidChange(uri => triggers.onDidChange(fromVsCodeUri(uri))),
           watcher.onDidCreate(uri => triggers.onDidCreate(fromVsCodeUri(uri))),
@@ -41,14 +49,22 @@ export async function activate(context: ExtensionContext) {
       }
     );
 
-    const foamPromise = bootstrap(matcher, dataStore, [markdownProvider]);
+    const foamPromise = bootstrap(matcher, dataStore, [
+      markdownProvider,
+      attachmentProvider,
+    ]);
 
     // Load the features
     const resPromises = features.map(f => f.activate(context, foamPromise));
 
     const foam = await foamPromise;
     Logger.info(`Loaded ${foam.workspace.list().length} notes`);
-    context.subscriptions.push(foam, markdownProvider);
+    context.subscriptions.push(
+      foam,
+      watcher,
+      markdownProvider,
+      attachmentProvider
+    );
 
     const res = (await Promise.all(resPromises)).filter(r => r != null);
 

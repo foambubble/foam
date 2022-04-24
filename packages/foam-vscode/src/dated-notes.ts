@@ -3,6 +3,7 @@ import {
   window,
   workspace,
   WorkspaceConfiguration,
+  Disposable,
 } from 'vscode';
 import dateFormat from 'dateformat';
 import { focusNote } from './utils';
@@ -10,6 +11,7 @@ import { URI } from './core/model/uri';
 import { fromVsCodeUri, toVsCodeUri } from './utils/vsc-utils';
 import { NoteFactory } from './services/templates';
 import { setFlagsFromString } from 'v8';
+import { ConsoleLogger } from './core/utils/log';
 
 export async function openDailyNoteForToday() {
   console.log('Open daily note for today');
@@ -24,6 +26,10 @@ class DateItem implements QuickPickItem {
     this.label = l;
     this.date = d;
   }
+}
+
+class MessageItem implements QuickPickItem {
+  label: string;
 }
 
 function generateDateItems(): DateItem[] {
@@ -60,21 +66,96 @@ function generateDateItems(): DateItem[] {
   return items;
 }
 
+function generateParametricDateItems(basedOn: string): DateItem[] {
+  const items = [];
+
+  if (basedOn.length < 4) {
+    return generateDateItems();
+  }
+
+  // Take first 4 to be a year
+  const yearPart = basedOn.substring(0, 4);
+  const year = parseInt(yearPart);
+
+  // Generate all dates for the year
+  for (let offset = 0; offset < 367; offset++) {
+    const d = new Date(year, 0, 1, 0, 0, 0, 0);
+    d.setDate(d.getDate() + offset);
+
+    if (d.toISOString().startsWith(basedOn)) {
+      // Keep only those that fit the input
+      items.push(
+        new DateItem(
+          d.getFullYear() +
+            '-' +
+            (d.getMonth() + 1).toString().padStart(2, '0') +
+            '-' +
+            d
+              .getDate()
+              .toString()
+              .padStart(2, '0'),
+          d
+        )
+      );
+    }
+  }
+
+  return items;
+}
+
 export async function openDailyNoteForPickedDate() {
   console.log('Open daily note for date');
 
-  const result = await window.showQuickPick<DateItem>(generateDateItems(), {
-    placeHolder: 'pick or enter a date (YYYY-MM-DD)',
-    // onDidSelectItem: item =>
-    // window.showInformationMessage(`Focus: ${(item as DateItem).date}`),
-  });
+  // const result = await window.showQuickPick<DateItem>(generateDateItems(), {
+  //   placeHolder: 'pick or enter a date (YYYY-MM-DD)', // TODO fix the placeholder because we can't enter free form text
+  //   // onDidSelectItem: item =>
+  //   // window.showInformationMessage(`Focus: ${(item as DateItem).date}`),
+  // });
+
+  const result = await pickDate();
 
   if (result) {
     console.log(`Picked: ${result}`);
 
-    openDailyNoteFor(result.date);
+    openDailyNoteFor(result);
   } else {
     console.log('Cancelled');
+  }
+}
+
+async function pickDate() {
+  console.log('In pick date');
+
+  const disposables: Disposable[] = [];
+
+  try {
+    return await new Promise<Date | undefined>((resolve, reject) => {
+      const input = window.createQuickPick<DateItem | MessageItem>();
+      input.placeholder = 'Choose or type a date (YYYY-MM-DD)';
+
+      input.items = generateDateItems();
+
+      disposables.push(
+        input.onDidChangeValue(value => {
+          input.items = generateParametricDateItems(value);
+        }),
+        input.onDidChangeSelection(items => {
+          const item = items[0];
+          if (item instanceof DateItem) {
+            resolve(item.date);
+            input.hide();
+          }
+        }),
+        input.onDidHide(() => {
+          resolve(undefined);
+          input.dispose();
+        })
+      );
+
+      input.show();
+    });
+  } finally {
+    disposables.forEach(d => d.dispose());
   }
 }
 

@@ -85,7 +85,7 @@ export class AttachmentResourceProvider implements ResourceProvider {
 
   async readAsMarkdown(uri: URI): Promise<string | null> {
     if (imageExtensions.includes(uri.getExtension())) {
-      return `![${''}](${uri.toString()}|height=400|width=300)`;
+      return `![${''}](${uri.toString()}|height=200)`;
     }
     return `### ${uri.getBasename()}`;
   }

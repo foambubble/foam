@@ -193,6 +193,8 @@ export class CompletionProvider
         vscode.CompletionItemKind.File,
         resource.uri
       );
+      item.sortText =
+        resource.type === 'attachment' ? `1-${item.label}` : `0-${item.label}`;
       item.filterText = resource.uri.getName();
       item.insertText = this.ws.getIdentifier(resource.uri);
       item.range = replacementRange;

@@ -227,6 +227,7 @@ If that sounds like something you're interested in, I'd love to have you along o
     <td align="center"><a href="http://Cliffordfajardo.com"><img src="https://avatars.githubusercontent.com/u/6743796?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Clifford Fajardo </b></sub></a><br /><a href="#tool-cliffordfajardo" title="Tools">🔧</a></td>
     <td align="center"><a href="http://cu-dev.ca"><img src="https://avatars.githubusercontent.com/u/6589365?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Chris Usick</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=chrisUsick" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/josephdecock"><img src="https://avatars.githubusercontent.com/u/1145533?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Joe DeCock</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=josephdecock" title="Code">💻</a></td>
+    <td align="center"><a href="http://www.drewtyler.com"><img src="https://avatars.githubusercontent.com/u/5640816?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Drew Tyler</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=drewtyler" title="Documentation">📖</a></td>
   </tr>
 </table>
 

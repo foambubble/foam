@@ -869,6 +869,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "drewtyler",
+      "name": "Drew Tyler",
+      "avatar_url": "https://avatars.githubusercontent.com/u/5640816?v=4",
+      "profile": "http://www.drewtyler.com",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,

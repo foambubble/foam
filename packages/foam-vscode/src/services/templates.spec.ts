@@ -50,7 +50,7 @@ describe('Create note from template', () => {
       const templateA = await createFile(
         `---
 foam_template: # foam template metadata
-  filepath: "${uri.toFsPath()}"
+  filepath: ${uri.toFsPath()}
 ---
 `,
         ['.foam', 'templates', 'template-with-path.md']
@@ -125,7 +125,7 @@ foam_template: # foam template metadata
       const target = getUriInWorkspace();
       const resolver = new Resolver(new Map(), new Date());
       await NoteFactory.createFromTemplate(templateA.uri, resolver, target);
-      expect(await resolver.resolve('FOAM_SELECTED_TEXT')).toEqual(
+      expect(await resolver.resolveFromName('FOAM_SELECTED_TEXT')).toEqual(
         'first file'
       );
 

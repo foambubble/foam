@@ -1,5 +1,5 @@
 import MarkdownIt from 'markdown-it';
-import { createMarkdownParser } from '../core/markdown-provider';
+import { createMarkdownParser } from '../core/services/markdown-parser';
 import { FoamWorkspace } from '../core/model/workspace';
 import { createTestNote } from '../test/test-utils';
 import {
@@ -11,6 +11,7 @@ import {
   markdownItWithFoamLinks,
   markdownItWithFoamTags,
   markdownItWithNoteInclusion,
+  markdownItWithRemoveLinkReferences,
 } from './preview-navigation';
 
 describe('Link generation in preview', () => {
@@ -22,7 +23,11 @@ describe('Link generation in preview', () => {
     links: [{ slug: 'placeholder' }],
   });
   const ws = new FoamWorkspace().set(noteA);
-  const md = markdownItWithFoamLinks(MarkdownIt(), ws);
+
+  const md = [
+    markdownItWithFoamLinks,
+    markdownItWithRemoveLinkReferences,
+  ].reduce((acc, extension) => extension(acc, ws), MarkdownIt());
 
   it('generates a link to a note', () => {
     expect(md.render(`[[note-a]]`)).toEqual(
@@ -39,6 +44,14 @@ describe('Link generation in preview', () => {
   it('generates a placeholder link to an unknown slug', () => {
     expect(md.render(`[[random-text]]`)).toEqual(
       `<p><a class='foam-placeholder-link' title="Link to non-existing resource" href="javascript:void(0);">random-text</a></p>\n`
+    );
+  });
+
+  it('generates a wikilink even when there is a link reference', () => {
+    const note = `[[note-a]]
+    [note-a]: <note-a.md> "Note A"`;
+    expect(md.render(note)).toEqual(
+      `<p><a class='foam-note-link' title='${noteA.title}' href='/path/to/note-a.md' data-href='/path/to/note-a.md'>note-a</a>\n[note-a]: &lt;note-a.md&gt; &quot;Note A&quot;</p>\n`
     );
   });
 });

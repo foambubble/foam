@@ -1,9 +1,8 @@
 import { workspace, WorkspaceConfiguration } from 'vscode';
 import dateFormat from 'dateformat';
-import { existsInFs } from './core/utils/path';
 import { focusNote } from './utils';
 import { URI } from './core/model/uri';
-import { fromVsCodeUri } from './utils/vsc-utils';
+import { fromVsCodeUri, toVsCodeUri } from './utils/vsc-utils';
 import { NoteFactory } from './services/templates';
 
 /**
@@ -15,21 +14,14 @@ import { NoteFactory } from './services/templates';
  * @param date A given date to be formatted as filename.
  */
 export async function openDailyNoteFor(date?: Date) {
-  const foamConfiguration = workspace.getConfiguration('foam');
-  const currentDate = date !== undefined ? date : new Date();
+  const targetDate = date instanceof Date ? date : new Date();
 
-  const dailyNotePath = getDailyNotePath(foamConfiguration, currentDate);
-
-  const isNew = await createDailyNoteIfNotExists(
-    foamConfiguration,
-    dailyNotePath,
-    currentDate
-  );
+  const { didCreateFile, uri } = await createDailyNoteIfNotExists(targetDate);
   // if a new file is created, the editor is automatically created
   // but forcing the focus will block the template placeholders from working
   // so we only explicitly focus on the note if the file already exists
-  if (!isNew) {
-    await focusNote(dailyNotePath, isNew);
+  if (!didCreateFile) {
+    await focusNote(uri, didCreateFile);
   }
 }
 
@@ -96,37 +88,31 @@ export function getDailyNoteFileName(
  * In the case that the folders referenced in the file path also do not exist,
  * this function will create all folders in the path.
  *
- * @param configuration The current workspace configuration.
- * @param dailyNotePath The path to daily note file.
  * @param currentDate The current date, to be used as a title.
  * @returns Wether the file was created.
  */
-export async function createDailyNoteIfNotExists(
-  configuration: WorkspaceConfiguration,
-  dailyNotePath: URI,
-  targetDate: Date
-) {
-  if (await existsInFs(dailyNotePath.toFsPath())) {
-    return false;
-  }
-
+export async function createDailyNoteIfNotExists(targetDate: Date) {
+  const configuration = workspace.getConfiguration('foam');
+  const pathFromLegacyConfiguration = getDailyNotePath(
+    configuration,
+    targetDate
+  );
   const titleFormat: string =
     configuration.get('openDailyNote.titleFormat') ??
     configuration.get('openDailyNote.filenameFormat');
 
-  const templateFallbackText: string = `---
+  const templateFallbackText = `---
 foam_template:
-  name: New Daily Note
-  description: Foam's default daily note template
+  filepath: "${workspace.asRelativePath(
+    toVsCodeUri(pathFromLegacyConfiguration)
+  )}"
 ---
 # ${dateFormat(targetDate, titleFormat, false)}
 `;
 
-  await NoteFactory.createFromDailyNoteTemplate(
-    dailyNotePath,
+  return await NoteFactory.createFromDailyNoteTemplate(
+    pathFromLegacyConfiguration,
     templateFallbackText,
     targetDate
   );
-
-  return true;
 }

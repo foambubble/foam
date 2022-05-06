@@ -10,8 +10,7 @@ import {
 import { NavigationProvider } from './navigation-provider';
 import { OPEN_COMMAND } from './utility-commands';
 import { toVsCodeUri } from '../utils/vsc-utils';
-import { createMarkdownParser } from '../core/markdown-provider';
-import { FoamWorkspace } from '../core/model/workspace';
+import { createMarkdownParser } from '../core/services/markdown-parser';
 import { FoamGraph } from '../core/model/graph';
 
 describe('Document navigation', () => {
@@ -31,7 +30,7 @@ describe('Document navigation', () => {
   describe('Document links provider', () => {
     it('should not return any link for empty documents', async () => {
       const { uri, content } = await createFile('');
-      const ws = new FoamWorkspace().set(parser.parse(uri, content));
+      const ws = createTestWorkspace().set(parser.parse(uri, content));
       const graph = FoamGraph.fromWorkspace(ws);
 
       const doc = await vscode.workspace.openTextDocument(toVsCodeUri(uri));
@@ -45,7 +44,7 @@ describe('Document navigation', () => {
       const { uri, content } = await createFile(
         'This is some content without links'
       );
-      const ws = new FoamWorkspace().set(parser.parse(uri, content));
+      const ws = createTestWorkspace().set(parser.parse(uri, content));
       const graph = FoamGraph.fromWorkspace(ws);
 
       const doc = await vscode.workspace.openTextDocument(toVsCodeUri(uri));
@@ -74,7 +73,7 @@ describe('Document navigation', () => {
 
     it('should create links for placeholders', async () => {
       const fileA = await createFile(`this is a link to [[a placeholder]].`);
-      const ws = new FoamWorkspace().set(
+      const ws = createTestWorkspace().set(
         parser.parse(fileA.uri, fileA.content)
       );
       const graph = FoamGraph.fromWorkspace(ws);
@@ -232,6 +231,6 @@ describe('Document navigation', () => {
         range: new vscode.Range(0, 23, 0, 23 + 9),
       });
     });
-    it('should provide references for placeholders', async () => {});
+    it.todo('should provide references for placeholders');
   });
 });

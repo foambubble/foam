@@ -10,7 +10,7 @@ import { FoamWorkspace } from '../core/model/workspace';
 import { FoamGraph } from '../core/model/graph';
 import { Resource, ResourceLink } from '../core/model/note';
 import { Range } from '../core/model/range';
-import { fromVsCodeUri } from '../utils/vsc-utils';
+import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
 
 const feature: FoamFeature = {
   activate: async (
@@ -30,9 +30,7 @@ const feature: FoamFeature = {
 
     context.subscriptions.push(
       vscode.window.registerTreeDataProvider('foam-vscode.backlinks', provider),
-      foam.workspace.onDidAdd(() => provider.refresh()),
-      foam.workspace.onDidUpdate(() => provider.refresh()),
-      foam.workspace.onDidDelete(() => provider.refresh())
+      foam.graph.onDidUpdate(() => provider.refresh())
     );
   },
 };
@@ -63,7 +61,10 @@ export class BacklinksTreeDataProvider
       const backlinkRefs = Promise.all(
         resource.links
           .filter(link =>
-            this.workspace.resolveLink(resource, link).isEqual(uri)
+            this.workspace
+              .resolveLink(resource, link)
+              .asPlain()
+              .isEqual(uri)
           )
           .map(async link => {
             const item = new BacklinkTreeItem(resource, link);
@@ -72,7 +73,7 @@ export class BacklinksTreeDataProvider
             ).split('\n');
             if (link.range.start.line < lines.length) {
               const line = lines[link.range.start.line];
-              let start = Math.max(0, link.range.start.character - 15);
+              const start = Math.max(0, link.range.start.character - 15);
               const ellipsis = start === 0 ? '' : '...';
 
               item.label = `${link.range.start.line}: ${ellipsis}${line.substr(
@@ -93,7 +94,9 @@ export class BacklinksTreeDataProvider
     }
 
     const backlinksByResourcePath = groupBy(
-      this.graph.getConnections(uri).filter(c => c.target.isEqual(uri)),
+      this.graph
+        .getConnections(uri)
+        .filter(c => c.target.asPlain().isEqual(uri)),
       b => b.source.path
     );
 
@@ -126,11 +129,11 @@ export class BacklinkTreeItem extends vscode.TreeItem {
     public readonly resource: Resource,
     public readonly link: ResourceLink
   ) {
-    super(link.label, vscode.TreeItemCollapsibleState.None);
+    super(link.rawText, vscode.TreeItemCollapsibleState.None);
     this.label = `${link.range.start.line}: ${this.label}`;
     this.command = {
       command: 'vscode.open',
-      arguments: [resource.uri, { selection: link.range }],
+      arguments: [toVsCodeUri(resource.uri), { selection: link.range }],
       title: 'Go to link',
     };
   }

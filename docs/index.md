@@ -31,8 +31,6 @@ You can use **Foam** for organising your research, keeping re-discoverable notes
 
 **Foam** is a tool that supports creating relationships between thoughts and information to help you think better.
 
-![Foam kitchen sink, showing a few of the key features](assets/images/foam-features-dark-mode-demo.png)
-
 Whether you want to build a [Second Brain](https://www.buildingasecondbrain.com/) or a [Zettelkasten](https://zettelkasten.de/posts/overview/), write a book, or just get better at long-term learning, **Foam** can help you organise your thoughts if you follow these simple rules:
 
 1. Create a single **Foam** workspace for all your knowledge and research following the [Getting started](#getting-started) guide.
@@ -220,6 +218,16 @@ If that sounds like something you're interested in, I'd love to have you along o
     <td align="center"><a href="https://github.com/AndreiD049"><img src="https://avatars.githubusercontent.com/u/52671223?v=4?s=60" width="60px;" alt=""/><br /><sub><b>AndreiD049</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=AndreiD049" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/iam-yan"><img src="https://avatars.githubusercontent.com/u/48427014?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Yan</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=iam-yan" title="Documentation">📖</a></td>
     <td align="center"><a href="https://WikiEducator.org/User:JimTittsler"><img src="https://avatars.githubusercontent.com/u/180326?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Jim Tittsler</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=jimt" title="Documentation">📖</a></td>
+    <td align="center"><a href="http://malcolmmielle.wordpress.com/"><img src="https://avatars.githubusercontent.com/u/4457840?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Malcolm Mielle</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=MalcolmMielle" title="Documentation">📖</a></td>
+    <td align="center"><a href="https://snippets.page/"><img src="https://avatars.githubusercontent.com/u/74916913?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Veesar</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=veesar" title="Documentation">📖</a></td>
+    <td align="center"><a href="https://github.com/bentongxyz"><img src="https://avatars.githubusercontent.com/u/60358804?v=4?s=60" width="60px;" alt=""/><br /><sub><b>bentongxyz</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=bentongxyz" title="Code">💻</a></td>
+    <td align="center"><a href="https://brianjdevries.com"><img src="https://avatars.githubusercontent.com/u/42778030?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Brian DeVries</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=techCarpenter" title="Code">💻</a></td>
+  </tr>
+  <tr>
+    <td align="center"><a href="http://Cliffordfajardo.com"><img src="https://avatars.githubusercontent.com/u/6743796?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Clifford Fajardo </b></sub></a><br /><a href="#tool-cliffordfajardo" title="Tools">🔧</a></td>
+    <td align="center"><a href="http://cu-dev.ca"><img src="https://avatars.githubusercontent.com/u/6589365?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Chris Usick</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=chrisUsick" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/josephdecock"><img src="https://avatars.githubusercontent.com/u/1145533?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Joe DeCock</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=josephdecock" title="Code">💻</a></td>
+    <td align="center"><a href="http://www.drewtyler.com"><img src="https://avatars.githubusercontent.com/u/5640816?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Drew Tyler</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=drewtyler" title="Documentation">📖</a></td>
   </tr>
 </table>
 

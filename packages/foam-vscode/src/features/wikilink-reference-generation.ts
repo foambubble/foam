@@ -30,7 +30,7 @@ import { FoamWorkspace } from '../core/model/workspace';
 import {
   createMarkdownReferences,
   stringifyMarkdownLinkReferenceDefinition,
-} from '../core/markdown-provider';
+} from '../core/services/markdown-provider';
 import {
   LINK_REFERENCE_DEFINITION_FOOTER,
   LINK_REFERENCE_DEFINITION_HEADER,
@@ -45,10 +45,11 @@ const feature: FoamFeature = {
       commands.registerCommand('foam-vscode.update-wikilinks', () =>
         updateReferenceList(foam.workspace)
       ),
-
       workspace.onWillSaveTextDocument(e => {
-        if (e.document.languageId === 'markdown') {
-          updateDocumentInNoteGraph(foam, e.document);
+        if (
+          e.document.languageId === 'markdown' &&
+          foam.services.matcher.isMatch(fromVsCodeUri(e.document.uri))
+        ) {
           e.waitUntil(updateReferenceList(foam.workspace));
         }
       }),
@@ -57,35 +58,17 @@ const feature: FoamFeature = {
         new WikilinkReferenceCodeLensProvider(foam.workspace)
       )
     );
-
-    // when a file is created as a result of peekDefinition
-    // action on a wikilink, add definition update references
-    foam.workspace.onDidAdd(_ => {
-      let editor = window.activeTextEditor;
-      if (!editor || !isMdEditor(editor)) {
-        return;
-      }
-
-      updateDocumentInNoteGraph(foam, editor.document);
-      updateReferenceList(foam.workspace);
-    });
   },
 };
 
-function updateDocumentInNoteGraph(foam: Foam, document: TextDocument) {
-  foam.workspace.set(
-    foam.services.parser.parse(fromVsCodeUri(document.uri), document.getText())
-  );
-}
-
 async function createReferenceList(foam: FoamWorkspace) {
-  let editor = window.activeTextEditor;
+  const editor = window.activeTextEditor;
 
   if (!editor || !isMdEditor(editor)) {
     return;
   }
 
-  let refs = await generateReferenceList(foam, editor.document);
+  const refs = await generateReferenceList(foam, editor.document);
   if (refs && refs.length) {
     await editor.edit(function(editBuilder) {
       if (editor) {
@@ -213,7 +196,7 @@ class WikilinkReferenceCodeLensProvider implements CodeLensProvider {
   ): CodeLens[] | Thenable<CodeLens[]> {
     loadDocConfig();
 
-    let range = detectReferenceListRange(document);
+    const range = detectReferenceListRange(document);
     if (!range) {
       return [];
     }
@@ -222,7 +205,7 @@ class WikilinkReferenceCodeLensProvider implements CodeLensProvider {
     const oldRefs = getText(range).replace(/\r?\n|\r/g, docConfig.eol);
     const newRefs = refs.join(docConfig.eol);
 
-    let status = oldRefs === newRefs ? 'up to date' : 'out of date';
+    const status = oldRefs === newRefs ? 'up to date' : 'out of date';
 
     return [
       new CodeLens(range, {

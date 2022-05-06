@@ -48,8 +48,9 @@ export async function createDocAndFocus(
     toVsCodeUri(filepath),
     new TextEncoder().encode('')
   );
-  await focusNote(filepath, true, viewColumn);
-  await window.activeTextEditor.insertSnippet(text);
+  const note = await focusNote(filepath, true, viewColumn);
+  await note.editor.insertSnippet(text);
+  await note.document.save();
 }
 
 export async function replaceSelection(

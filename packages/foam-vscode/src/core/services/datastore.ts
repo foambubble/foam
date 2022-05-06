@@ -2,11 +2,12 @@ import micromatch from 'micromatch';
 import fs from 'fs';
 import { URI } from '../model/uri';
 import { Logger } from '../utils/log';
-import glob from 'glob';
+import { glob } from 'glob';
 import { promisify } from 'util';
 import { isWindows } from '../common/platform';
 
 const findAllFiles = promisify(glob);
+
 export interface IMatcher {
   /**
    * Filters the given list of URIs, keepin only the ones that
@@ -117,6 +118,7 @@ export class FileDataStore implements IDataStore {
   async list(glob: string, ignoreGlob?: string | string[]): Promise<URI[]> {
     const res = await findAllFiles(glob, {
       ignore: ignoreGlob,
+      strict: false,
     });
     return res.map(URI.file);
   }

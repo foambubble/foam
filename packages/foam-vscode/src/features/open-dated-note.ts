@@ -13,7 +13,6 @@ import {
   createDailyNoteIfNotExists,
   getDailyNoteFileName,
   openDailyNoteFor,
-  getDailyNotePath,
 } from '../dated-notes';
 import { FoamFeature } from '../types';
 
@@ -215,11 +214,7 @@ const datedNoteCommand = (date: Date) => {
     return openDailyNoteFor(date);
   }
   if (foamNavigateOnSelect === 'createNote') {
-    return createDailyNoteIfNotExists(
-      foamConfig,
-      getDailyNotePath(foamConfig, date),
-      date
-    );
+    return createDailyNoteIfNotExists(date);
   }
 };
 

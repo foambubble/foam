@@ -26,7 +26,7 @@ export const mdDocSelector = [
 
 export function loadDocConfig() {
   // Load workspace config
-  let activeEditor = window.activeTextEditor;
+  const activeEditor = window.activeTextEditor;
   if (!activeEditor) {
     Logger.debug('Failed to load config, no active editor');
     return;
@@ -34,8 +34,8 @@ export function loadDocConfig() {
 
   docConfig.eol = activeEditor.document.eol === EndOfLine.CRLF ? '\r\n' : '\n';
 
-  let tabSize = Number(activeEditor.options.tabSize);
-  let insertSpaces = activeEditor.options.insertSpaces;
+  const tabSize = Number(activeEditor.options.tabSize);
+  const insertSpaces = activeEditor.options.insertSpaces;
   if (insertSpaces) {
     docConfig.tab = ' '.repeat(tabSize);
   } else {
@@ -133,7 +133,7 @@ export function isSome<T>(
   value: T | null | undefined | void
 ): value is NonNullable<T> {
   //
-  return value != null; // eslint-disable-line
+  return value != null;
 }
 
 /**
@@ -144,7 +144,7 @@ export function isSome<T>(
 export function isNone<T>(
   value: T | null | undefined | void
 ): value is null | undefined | void {
-  return value == null; // eslint-disable-line
+  return value == null;
 }
 
 export async function focusNote(
@@ -161,6 +161,8 @@ export async function focusNote(
     const { range } = editor.document.lineAt(lineCount - 1);
     editor.selection = new Selection(range.end, range.end);
   }
+
+  return { document, editor };
 }
 
 export function getContainsTooltip(titles: string[]): string {

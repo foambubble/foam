@@ -9,22 +9,11 @@ export interface NoteSource {
   eol: string;
 }
 
-export interface WikiLink {
-  type: 'wikilink';
-  target: string;
-  label: string;
+export interface ResourceLink {
+  type: 'wikilink' | 'link';
   rawText: string;
   range: Range;
 }
-
-export interface DirectLink {
-  type: 'link';
-  label: string;
-  target: string;
-  range: Range;
-}
-
-export type ResourceLink = WikiLink | DirectLink;
 
 export interface NoteLinkDefinition {
   label: string;

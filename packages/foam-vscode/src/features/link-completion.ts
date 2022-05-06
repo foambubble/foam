@@ -45,7 +45,6 @@ export class SectionCompletionProvider
 
     // Requires autocomplete only if cursorPrefix matches `[[` that NOT ended by `]]`.
     // See https://github.com/foambubble/foam/pull/596#issuecomment-825748205 for details.
-    // eslint-disable-next-line no-useless-escape
     const match = cursorPrefix.match(SECTION_REGEX);
 
     if (!match) {
@@ -104,10 +103,9 @@ export class CompletionProvider
 
     // Requires autocomplete only if cursorPrefix matches `[[` that NOT ended by `]]`.
     // See https://github.com/foambubble/foam/pull/596#issuecomment-825748205 for details.
-    // eslint-disable-next-line no-useless-escape
     const requiresAutocomplete = cursorPrefix.match(WIKILINK_REGEX);
 
-    if (!requiresAutocomplete || cursorPrefix.indexOf('#') >= 0) {
+    if (!requiresAutocomplete || requiresAutocomplete[0].indexOf('#') >= 0) {
       return null;
     }
 

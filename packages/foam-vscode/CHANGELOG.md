@@ -4,6 +4,69 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.18.3] - 2022-04-17
+
+Fixes and Improvements:
+- Better reporting when links fail to resolve
+- Failing link resolution during graph computation no longer fatal
+
+## [0.18.2] - 2022-04-14
+
+Fixes and Improvements:
+- Fixed parsing error on empty direct links (#980 - thanks @chrisUsick)
+- Improved rendering in preview of wikilinks that have link definitions (#979 - thanks @josephdecock)
+- Restored handling of section-only wikilinks (#981)
+
+## [0.18.1] - 2022-04-13
+
+Fixes and Improvements:
+- Fixed parsing error for direct links with square brackets in them (#977)
+- Improved markdown direct link resolution (#972)
+- Improved templates support for custom paths (#970)
+
+## [0.18.0] - 2022-04-11
+
+Features:
+- Link synchronization on file rename
+
+Internal:
+- Changed graph computation on workspace change to simplify code
+
+## [0.17.8] - 2022-04-01
+
+Fixes and Improvements:
+- Do not add ignored files to Foam upon change (#480)
+- Restore full use of editor.action.openLink (#693)
+- Minor performance improvements
+
+## [0.17.7] - 2022-03-29
+
+Fixes and Improvements:
+- Include links with sections in backlinks (#895)
+- Improved navigation when document editor is already open
+
+## [0.17.6] - 2022-03-03
+
+Fixes and Improvements:
+- Don't fail on error when scannig workspace (#943 - thanks @develmusa)
+
+## [0.17.5] - 2022-02-22
+
+Fixes and Improvements:
+- Added FOAM_SLUG template variable (#865 - Thanks @techCarpenter)
+
+## [0.17.4] - 2022-02-13
+
+Fixes and Improvements:
+- Improvements to Foam variables in templates (#882 - thanks @movermeyer)
+  - Foam variables can now be used just any other VS Code variables, including in combination with placeholders and transformers
+
+## [0.17.3] - 2022-01-14
+
+Fixes and Improvements:
+- Fixed autocompletion with tags (#885 - thanks @memeplex)
+- Improved "Open Daily Note" to be usabled in tasks (#897 - thanks @MCluck90)
+
 ## [0.17.2] - 2021-12-22
 
 Fixes and Improvements:

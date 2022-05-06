@@ -45,9 +45,8 @@ In addition, you can also use variables provided by Foam:
 | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `FOAM_SELECTED_TEXT` | Foam will fill it with selected text when creating a new note, if any text is selected. Selected text will be replaced with a wikilink to the new note.                                                                     |
 | `FOAM_TITLE`         | The title of the note. If used, Foam will prompt you to enter a title for the note.                                                                                                                                         |
+| `FOAM_SLUG`          | The sluggified title of the note (using the default github slug method). If used, Foam will prompt you to enter a title for the note unless `FOAM_TITLE` has already caused the prompt.                                     |
 | `FOAM_DATE_*`        | `FOAM_DATE_YEAR`, `FOAM_DATE_MONTH`, etc. Foam-specific versions of [VS Code's datetime snippet variables](https://code.visualstudio.com/docs/editor/userdefinedsnippets#_variables). Prefer these versions over VS Code's. |
-
-**Note:** neither the defaulting feature (eg. `${variable:default}`) nor the format feature (eg. `${variable/(.*)/${1:/upcase}/}`) (available to other variables) are available for these Foam-provided variables. See [#693](https://github.com/foambubble/foam/issues/693).
 
 ### `FOAM_DATE_*` variables
 

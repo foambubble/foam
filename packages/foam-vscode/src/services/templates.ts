@@ -13,6 +13,7 @@ import {
   replaceSelection,
 } from './editor';
 import { Resolver } from './variable-resolver';
+import dateFormat from 'dateformat';
 
 /**
  * The templates directory
@@ -69,12 +70,37 @@ export async function getTemplates(): Promise<URI[]> {
   return templates;
 }
 
+export async function getTemplateInfo(
+  templateUri: URI,
+  templateFallbackText = '',
+  resolver: Resolver
+) {
+  const templateText = existsSync(templateUri.toFsPath())
+    ? await workspace.fs
+        .readFile(toVsCodeUri(templateUri))
+        .then(bytes => bytes.toString())
+    : templateFallbackText;
+
+  const templateWithResolvedVariables = await resolver.resolveText(
+    templateText
+  );
+
+  const [
+    templateMetadata,
+    templateWithFoamFrontmatterRemoved,
+  ] = extractFoamTemplateFrontmatterMetadata(templateWithResolvedVariables);
+
+  return {
+    metadata: templateMetadata,
+    text: templateWithFoamFrontmatterRemoved,
+  };
+}
+
 export const NoteFactory = {
   /**
    * Creates a new note using a template.
-   * @param givenValues already resolved values of Foam template variables. These are used instead of resolving the Foam template variables.
-   * @param extraVariablesToResolve Foam template variables to resolve, in addition to those mentioned in the template.
    * @param templateUri the URI of the template to use.
+   * @param resolver the Resolver to use.
    * @param filepathFallbackURI the URI to use if the template does not specify the `filepath` metadata attribute. This is configurable by the caller for backwards compatibility purposes.
    * @param templateFallbackText the template text to use if the template does not exist. This is configurable by the caller for backwards compatibility purposes.
    */
@@ -82,70 +108,66 @@ export const NoteFactory = {
     templateUri: URI,
     resolver: Resolver,
     filepathFallbackURI?: URI,
-    templateFallbackText: string = ''
-  ): Promise<void> => {
-    const templateText = existsSync(templateUri.toFsPath())
-      ? await workspace.fs
-          .readFile(toVsCodeUri(templateUri))
-          .then(bytes => bytes.toString())
-      : templateFallbackText;
-
-    const selectedContent = findSelectionContent();
-
-    resolver.define('FOAM_SELECTED_TEXT', selectedContent?.content ?? '');
-    let templateWithResolvedVariables: string;
+    templateFallbackText = '',
+    onFileExists?: (filePath: URI) => Promise<string | undefined>
+  ): Promise<{ didCreateFile: boolean; uri: URI | undefined }> => {
     try {
-      [, templateWithResolvedVariables] = await resolver.resolveText(
-        templateText
+      onFileExists = onFileExists
+        ? onFileExists
+        : (existingFile: URI) => {
+            const filename = existingFile.getBasename();
+            return askUserForFilepathConfirmation(existingFile, filename);
+          };
+
+      const template = await getTemplateInfo(
+        templateUri,
+        templateFallbackText,
+        resolver
       );
+
+      const selectedContent = findSelectionContent();
+      if (selectedContent?.content) {
+        resolver.define('FOAM_SELECTED_TEXT', selectedContent?.content);
+      }
+
+      const templateSnippet = new SnippetString(template.text);
+
+      let newFilePath = await determineNewNoteFilepath(
+        template.metadata.get('filepath'),
+        filepathFallbackURI,
+        resolver
+      );
+      while (existsSync(newFilePath.toFsPath())) {
+        const proposedNewFilepath = await onFileExists(newFilePath);
+
+        if (proposedNewFilepath === undefined) {
+          return { didCreateFile: false, uri: newFilePath };
+        }
+        newFilePath = URI.file(proposedNewFilepath);
+      }
+
+      await createDocAndFocus(
+        templateSnippet,
+        newFilePath,
+        selectedContent ? ViewColumn.Beside : ViewColumn.Active
+      );
+
+      if (selectedContent !== undefined) {
+        const newNoteTitle = newFilePath.getName();
+
+        await replaceSelection(
+          selectedContent.document,
+          selectedContent.selection,
+          `[[${newNoteTitle}]]`
+        );
+      }
+
+      return { didCreateFile: true, uri: newFilePath };
     } catch (err) {
       if (err instanceof UserCancelledOperation) {
         return;
       }
       throw err;
-    }
-
-    const [
-      templateMetadata,
-      templateWithFoamFrontmatterRemoved,
-    ] = extractFoamTemplateFrontmatterMetadata(templateWithResolvedVariables);
-    const templateSnippet = new SnippetString(
-      templateWithFoamFrontmatterRemoved
-    );
-
-    let filepath = await determineNewNoteFilepath(
-      templateMetadata.get('filepath'),
-      filepathFallbackURI,
-      resolver
-    );
-
-    if (existsSync(filepath.toFsPath())) {
-      const filename = filepath.getBasename();
-      const newFilepath = await askUserForFilepathConfirmation(
-        filepath,
-        filename
-      );
-
-      if (newFilepath === undefined) {
-        return;
-      }
-      filepath = URI.file(newFilepath);
-    }
-
-    await createDocAndFocus(
-      templateSnippet,
-      filepath,
-      selectedContent ? ViewColumn.Beside : ViewColumn.Active
-    );
-
-    if (selectedContent !== undefined) {
-      const newNoteTitle = filepath.getName();
-
-      await replaceSelection(
-        selectedContent.document,
-        selectedContent.selection,
-        `[[${newNoteTitle}]]`
-      );
     }
   },
 
@@ -158,17 +180,17 @@ export const NoteFactory = {
     filepathFallbackURI: URI,
     templateFallbackText: string,
     targetDate: Date
-  ): Promise<void> => {
+  ): Promise<{ didCreateFile: boolean; uri: URI | undefined }> => {
     const resolver = new Resolver(
-      new Map(),
-      targetDate,
-      new Set(['FOAM_SELECTED_TEXT'])
+      new Map().set('FOAM_TITLE', dateFormat(targetDate, 'yyyy-mm-dd', false)),
+      targetDate
     );
     return NoteFactory.createFromTemplate(
       DAILY_NOTE_TEMPLATE_URI,
       resolver,
       filepathFallbackURI,
-      templateFallbackText
+      templateFallbackText,
+      _ => Promise.resolve(undefined)
     );
   },
 
@@ -180,11 +202,10 @@ export const NoteFactory = {
   createForPlaceholderWikilink: (
     wikilinkPlaceholder: string,
     filepathFallbackURI: URI
-  ): Promise<void> => {
+  ): Promise<{ didCreateFile: boolean; uri: URI | undefined }> => {
     const resolver = new Resolver(
       new Map().set('FOAM_TITLE', wikilinkPlaceholder),
-      new Date(),
-      new Set(['FOAM_TITLE', 'FOAM_SELECTED_TEXT'])
+      new Date()
     );
     return NoteFactory.createFromTemplate(
       DEFAULT_TEMPLATE_URI,
@@ -259,7 +280,7 @@ export async function determineNewNoteFilepath(
     return fallbackURI;
   }
 
-  const defaultName = await resolver.resolve('FOAM_TITLE');
+  const defaultName = await resolver.resolveFromName('FOAM_TITLE');
   const defaultFilepath = getCurrentEditorDirectory().joinPath(
     `${defaultName}.md`
   );

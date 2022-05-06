@@ -117,7 +117,7 @@ const feature: FoamFeature = {
         () => {
           const resolver = new Resolver(new Map(), new Date());
 
-          NoteFactory.createFromTemplate(
+          return NoteFactory.createFromTemplate(
             DEFAULT_TEMPLATE_URI,
             resolver,
             undefined,

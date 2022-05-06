@@ -1,10 +1,10 @@
-import { diff } from 'fast-array-diff';
-import { isEqual } from 'lodash';
-import { Resource, ResourceLink } from './note';
+import { debounce } from 'lodash';
+import { ResourceLink } from './note';
 import { URI } from './uri';
 import { FoamWorkspace } from './workspace';
-import { Range } from './range';
 import { IDisposable } from '../common/lifecycle';
+import { Logger } from '../utils/log';
+import { Emitter } from '../common/event';
 
 export type Connection = {
   source: URI;
@@ -28,6 +28,9 @@ export class FoamGraph implements IDisposable {
    * Maps the connections arriving to a URI
    */
   public readonly backlinks: Map<string, Connection[]> = new Map();
+
+  private onDidUpdateEmitter = new Emitter<void>();
+  onDidUpdate = this.onDidUpdateEmitter.event;
 
   /**
    * List of disposables to destroy with the workspace
@@ -72,91 +75,56 @@ export class FoamGraph implements IDisposable {
    *
    * @param workspace the target workspace
    * @param keepMonitoring whether to recompute the links when the workspace changes
+   * @param debounceFor how long to wait between change detection and graph update
    * @returns the FoamGraph
    */
   public static fromWorkspace(
     workspace: FoamWorkspace,
-    keepMonitoring: boolean = false
+    keepMonitoring = false,
+    debounceFor = 0
   ): FoamGraph {
-    let graph = new FoamGraph(workspace);
-
-    workspace.list().forEach(resource => graph.resolveResource(resource));
+    const graph = new FoamGraph(workspace);
+    graph.update();
     if (keepMonitoring) {
+      const updateGraph =
+        debounceFor > 0
+          ? debounce(graph.update.bind(graph), 500)
+          : graph.update.bind(graph);
       graph.disposables.push(
-        workspace.onDidAdd(resource => {
-          graph.updateLinksRelatedToAddedResource(resource);
-        }),
-        workspace.onDidUpdate(change => {
-          graph.updateLinksForResource(change.old, change.new);
-        }),
-        workspace.onDidDelete(resource => {
-          graph.updateLinksRelatedToDeletedResource(resource);
-        })
+        workspace.onDidAdd(updateGraph),
+        workspace.onDidUpdate(updateGraph),
+        workspace.onDidDelete(updateGraph)
       );
     }
     return graph;
   }
 
-  private updateLinksRelatedToAddedResource(resource: Resource) {
-    // check if any existing connection can be filled by new resource
-    let resourcesToUpdate: URI[] = [];
-    for (const placeholderId of this.placeholders.keys()) {
-      // quick and dirty check for affected resources
-      if (resource.uri.path.endsWith(placeholderId + '.md')) {
-        resourcesToUpdate.push(
-          ...this.backlinks.get(placeholderId).map(c => c.source)
-        );
-        // resourcesToUpdate.push(resource);
+  private update() {
+    const start = Date.now();
+    this.backlinks.clear();
+    this.links.clear();
+    this.placeholders.clear();
+
+    for (const resource of this.workspace.resources()) {
+      for (const link of resource.links) {
+        try {
+          const targetUri = this.workspace.resolveLink(resource, link);
+          this.connect(resource.uri, targetUri, link);
+        } catch (e) {
+          Logger.error(
+            `Error while resolving link ${
+              link.rawText
+            } in ${resource.uri.toFsPath()}, skipping.`,
+            link,
+            e
+          );
+        }
       }
     }
-    resourcesToUpdate.forEach(res =>
-      this.resolveResource(this.workspace.get(res))
-    );
-    // resolve the resource
-    this.resolveResource(resource);
-  }
 
-  private updateLinksForResource(oldResource: Resource, newResource: Resource) {
-    if (oldResource.uri.path !== newResource.uri.path) {
-      throw new Error(
-        'Unexpected State: update should only be called on same resource ' +
-          {
-            old: oldResource,
-            new: newResource,
-          }
-      );
-    }
-    if (oldResource.type === 'note' && newResource.type === 'note') {
-      const patch = diff(oldResource.links, newResource.links, isEqual);
-      patch.removed.forEach(link => {
-        const target = this.workspace.resolveLink(oldResource, link);
-        return this.disconnect(oldResource.uri, target, link);
-      }, this);
-      patch.added.forEach(link => {
-        const target = this.workspace.resolveLink(newResource, link);
-        return this.connect(newResource.uri, target, link);
-      }, this);
-    }
-    return this;
-  }
-
-  private updateLinksRelatedToDeletedResource(resource: Resource) {
-    const uri = resource.uri;
-
-    // remove forward links from old resource
-    const resourcesPointedByDeletedNote = this.links.get(uri.path) ?? [];
-    this.links.delete(uri.path);
-    resourcesPointedByDeletedNote.forEach(connection =>
-      this.disconnect(uri, connection.target, connection.link)
-    );
-
-    // recompute previous links to old resource
-    const notesPointingToDeletedResource = this.backlinks.get(uri.path) ?? [];
-    this.backlinks.delete(uri.path);
-    notesPointingToDeletedResource.forEach(link =>
-      this.resolveResource(this.workspace.get(link.source))
-    );
-    return this;
+    const end = Date.now();
+    Logger.info(`Graph updated in ${end - start}ms`);
+    this.onDidUpdateEmitter.fire();
   }
 
   private connect(source: URI, target: URI, link: ResourceLink) {
@@ -167,10 +135,9 @@ export class FoamGraph implements IDisposable {
     }
     this.links.get(source.path)?.push(connection);
 
-    if (!this.backlinks.get(target.path)) {
+    if (!this.backlinks.has(target.path)) {
       this.backlinks.set(target.path, []);
     }
-
     this.backlinks.get(target.path)?.push(connection);
 
     if (target.isPlaceholder()) {
@@ -179,65 +146,9 @@ export class FoamGraph implements IDisposable {
     return this;
   }
 
-  /**
-   * Removes a connection, or all connections, between the source and
-   * target resources
-   *
-   * @param workspace the Foam workspace
-   * @param source the source resource
-   * @param target the target resource
-   * @param link the link reference, or `true` to remove all links
-   * @returns the updated Foam workspace
-   */
-  private disconnect(source: URI, target: URI, link: ResourceLink | true) {
-    const connectionsToKeep =
-      link === true
-        ? (c: Connection) =>
-            !source.isEqual(c.source) || !target.isEqual(c.target)
-        : (c: Connection) => !isSameConnection({ source, target, link }, c);
-
-    this.links.set(
-      source.path,
-      this.links.get(source.path)?.filter(connectionsToKeep) ?? []
-    );
-    if (this.links.get(source.path)?.length === 0) {
-      this.links.delete(source.path);
-    }
-    this.backlinks.set(
-      target.path,
-      this.backlinks.get(target.path)?.filter(connectionsToKeep) ?? []
-    );
-    if (this.backlinks.get(target.path)?.length === 0) {
-      this.backlinks.delete(target.path);
-      if (target.isPlaceholder()) {
-        this.placeholders.delete(uriToPlaceholderId(target));
-      }
-    }
-    return this;
-  }
-
-  public resolveResource(resource: Resource) {
-    this.links.delete(resource.uri.path);
-    // prettier-ignore
-    resource.links.forEach(link => {
-      const targetUri = this.workspace.resolveLink(resource, link);
-      this.connect(resource.uri, targetUri, link);
-    });
-    return this;
-  }
-
   public dispose(): void {
+    this.onDidUpdateEmitter.dispose();
     this.disposables.forEach(d => d.dispose());
     this.disposables = [];
   }
 }
-
-// TODO move these utility fns to appropriate places
-
-const isSameConnection = (a: Connection, b: Connection) =>
-  a.source.isEqual(b.source) &&
-  a.target.isEqual(b.target) &&
-  isSameLink(a.link, b.link);
-
-const isSameLink = (a: ResourceLink, b: ResourceLink) =>
-  a.type === b.type && Range.isEqual(a.range, b.range);

@@ -8,7 +8,7 @@
     "type": "git"
   },
   "homepage": "https://github.com/foambubble/foam",
-  "version": "0.17.2",
+  "version": "0.18.3",
   "license": "MIT",
   "publisher": "foam",
   "engines": {
@@ -255,6 +255,11 @@
             "Disable wikilink definitions generation"
           ]
         },
+        "foam.links.sync.enable": {
+          "description": "Enable synching links when moving/renaming notes",
+          "type": "boolean",
+          "default": true
+        },
         "foam.links.hover.enable": {
           "description": "Enable displaying note content on hover links",
           "type": "boolean",
@@ -394,10 +399,6 @@
     "publish-extension": "yarn publish-extension-vscode && yarn publish-extension-openvsx && yarn npm-cleanup"
   },
   "devDependencies": {
-    "@babel/core": "^7.11.0",
-    "@babel/plugin-transform-runtime": "^7.10.4",
-    "@babel/preset-env": "^7.11.0",
-    "@babel/preset-typescript": "^7.10.4",
     "@types/dateformat": "^3.0.1",
     "@types/glob": "^7.1.1",
     "@types/lodash": "^4.14.157",
@@ -410,7 +411,9 @@
     "@typescript-eslint/eslint-plugin": "^2.30.0",
     "@typescript-eslint/parser": "^2.30.0",
     "eslint": "^6.8.0",
+    "eslint-import-resolver-typescript": "^2.5.0",
     "eslint-plugin-import": "^2.24.2",
+    "eslint-plugin-jest": "^25.3.0",
     "husky": "^4.2.5",
     "jest": "^26.2.2",
     "jest-extended": "^0.11.5",
@@ -420,12 +423,14 @@
     "tsdx": "^0.13.2",
     "tslib": "^2.0.0",
     "typescript": "^3.9.5",
-    "vscode-test": "^1.3.0"
+    "vscode-test": "^1.3.0",
+    "wait-for-expect": "^3.0.2"
   },
   "dependencies": {
     "dateformat": "^3.0.3",
     "detect-newline": "^3.1.0",
     "fast-array-diff": "^1.0.1",
+    "github-slugger": "^1.4.0",
     "glob": "^7.1.6",
     "gray-matter": "^4.0.2",
     "lodash": "^4.17.21",

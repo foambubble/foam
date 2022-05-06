@@ -19,7 +19,7 @@ export class FoamWorkspace implements IDisposable {
   /**
    * Resources by path
    */
-  private resources: Map<string, Resource> = new Map();
+  private _resources: Map<string, Resource> = new Map();
 
   registerProvider(provider: ResourceProvider) {
     this.providers.push(provider);
@@ -28,7 +28,7 @@ export class FoamWorkspace implements IDisposable {
 
   set(resource: Resource) {
     const old = this.find(resource.uri);
-    this.resources.set(normalize(resource.uri.path), resource);
+    this._resources.set(normalize(resource.uri.path), resource);
     isSome(old)
       ? this.onDidUpdateEmitter.fire({ old: old, new: resource })
       : this.onDidAddEmitter.fire(resource);
@@ -36,8 +36,8 @@ export class FoamWorkspace implements IDisposable {
   }
 
   delete(uri: URI) {
-    const deleted = this.resources.get(normalize(uri.path));
-    this.resources.delete(normalize(uri.path));
+    const deleted = this._resources.get(normalize(uri.path));
+    this._resources.delete(normalize(uri.path));
 
     isSome(deleted) && this.onDidDeleteEmitter.fire(deleted);
     return deleted ?? null;
@@ -48,7 +48,11 @@ export class FoamWorkspace implements IDisposable {
   }
 
   public list(): Resource[] {
-    return Array.from(this.resources.values());
+    return Array.from(this._resources.values());
+  }
+
+  public resources(): IterableIterator<Resource> {
+    return this._resources.values();
   }
 
   public get(uri: URI): Resource {
@@ -61,12 +65,13 @@ export class FoamWorkspace implements IDisposable {
   }
 
   public listByIdentifier(identifier: string): Resource[] {
-    let needle = normalize('/' + identifier);
-    let mdNeedle = getExtension(needle) !== '.md' ? needle + '.md' : undefined;
-    let resources = [];
-    for (const key of this.resources.keys()) {
+    const needle = normalize('/' + identifier);
+    const mdNeedle =
+      getExtension(needle) !== '.md' ? needle + '.md' : undefined;
+    const resources = [];
+    for (const key of this._resources.keys()) {
       if ((mdNeedle && key.endsWith(mdNeedle)) || key.endsWith(needle)) {
-        resources.push(this.resources.get(normalize(key)));
+        resources.push(this._resources.get(normalize(key)));
       }
     }
     return resources.sort((a, b) => a.uri.path.localeCompare(b.uri.path));
@@ -77,17 +82,25 @@ export class FoamWorkspace implements IDisposable {
    *
    * @param forResource the resource to compute the identifier for
    */
-  public getIdentifier(forResource: URI): string {
+  public getIdentifier(forResource: URI, exclude?: URI[]): string {
     const amongst = [];
     const basename = forResource.getBasename();
-    for (const res of this.resources.values()) {
-      // Just a quick optimization to only add the elements that might match
-      if (res.uri.path.endsWith(basename)) {
-        if (!res.uri.isEqual(forResource)) {
-          amongst.push(res.uri);
-        }
+    for (const res of this._resources.values()) {
+      // skip elements that cannot possibly match
+      if (!res.uri.path.endsWith(basename)) {
+        continue;
       }
+      // skip self
+      if (res.uri.isEqual(forResource)) {
+        continue;
+      }
+      // skip exclude list
+      if (exclude && exclude.find(ex => ex.isEqual(res.uri))) {
+        continue;
+      }
+      amongst.push(res.uri);
     }
+
     let identifier = FoamWorkspace.getShortestIdentifier(
       forResource.path,
       amongst.map(uri => uri.path)
@@ -101,21 +114,21 @@ export class FoamWorkspace implements IDisposable {
 
   public find(reference: URI | string, baseUri?: URI): Resource | null {
     if (reference instanceof URI) {
-      return this.resources.get(normalize((reference as URI).path)) ?? null;
+      return this._resources.get(normalize((reference as URI).path)) ?? null;
     }
     let resource: Resource | null = null;
-    let [path, fragment] = (reference as string).split('#');
+    const [path, fragment] = (reference as string).split('#');
     if (FoamWorkspace.isIdentifier(path)) {
       resource = this.listByIdentifier(path)[0];
     } else {
       if (isAbsolute(path) || isSome(baseUri)) {
         if (getExtension(path) !== '.md') {
           const uri = baseUri.resolve(path + '.md');
-          resource = uri ? this.resources.get(normalize(uri.path)) : null;
+          resource = uri ? this._resources.get(normalize(uri.path)) : null;
         }
         if (!resource) {
           const uri = baseUri.resolve(path);
-          resource = uri ? this.resources.get(normalize(uri.path)) : null;
+          resource = uri ? this._resources.get(normalize(uri.path)) : null;
         }
       }
     }
@@ -127,21 +140,32 @@ export class FoamWorkspace implements IDisposable {
 
   public resolveLink(resource: Resource, link: ResourceLink): URI {
     // TODO add tests
-    const provider = this.providers.find(p => p.supports(resource.uri));
-    return (
-      provider?.resolveLink(this, resource, link) ??
-      URI.placeholder(link.target)
+    for (const provider of this.providers) {
+      if (provider.supports(resource.uri)) {
+        return provider.resolveLink(this, resource, link);
+      }
+    }
+    throw new Error(
+      `Couldn't find provider for resource "${resource.uri.toString()}"`
     );
   }
 
   public read(uri: URI): Promise<string | null> {
-    const provider = this.providers.find(p => p.supports(uri));
-    return provider?.read(uri) ?? Promise.resolve(null);
+    for (const provider of this.providers) {
+      if (provider.supports(uri)) {
+        return provider.read(uri);
+      }
+    }
+    return Promise.resolve(null);
   }
 
   public readAsMarkdown(uri: URI): Promise<string | null> {
-    const provider = this.providers.find(p => p.supports(uri));
-    return provider?.readAsMarkdown(uri) ?? Promise.resolve(null);
+    for (const provider of this.providers) {
+      if (provider.supports(uri)) {
+        return provider.readAsMarkdown(uri);
+      }
+    }
+    return Promise.resolve(null);
   }
 
   public dispose(): void {

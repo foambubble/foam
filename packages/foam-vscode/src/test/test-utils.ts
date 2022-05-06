@@ -6,8 +6,10 @@ import { Range } from '../core/model/range';
 import { URI } from '../core/model/uri';
 import { FoamWorkspace } from '../core/model/workspace';
 import { Matcher } from '../core/services/datastore';
-import { MarkdownResourceProvider } from '../core/markdown-provider';
+import { MarkdownResourceProvider } from '../core/services/markdown-provider';
 import { NoteLinkDefinition, Resource } from '../core/model/note';
+
+export { default as waitForExpect } from 'wait-for-expect';
 
 Logger.setLevel('error');
 
@@ -78,16 +80,13 @@ export const createTestNote = (params: {
           return 'slug' in link
             ? {
                 type: 'wikilink',
-                target: link.slug,
-                label: link.slug,
                 range: range,
-                rawText: 'link text',
+                rawText: `[[${link.slug}]]`,
               }
             : {
                 type: 'link',
-                target: link.to,
-                label: 'link text',
                 range: range,
+                rawText: `[link text](${link.to})`,
               };
         })
       : [],

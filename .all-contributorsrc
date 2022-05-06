@@ -806,6 +806,78 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "MalcolmMielle",
+      "name": "Malcolm Mielle",
+      "avatar_url": "https://avatars.githubusercontent.com/u/4457840?v=4",
+      "profile": "http://malcolmmielle.wordpress.com/",
+      "contributions": [
+        "doc"
+      ]
+    },
+    {
+      "login": "veesar",
+      "name": "Veesar",
+      "avatar_url": "https://avatars.githubusercontent.com/u/74916913?v=4",
+      "profile": "https://snippets.page/",
+      "contributions": [
+        "doc"
+      ]
+    },
+    {
+      "login": "bentongxyz",
+      "name": "bentongxyz",
+      "avatar_url": "https://avatars.githubusercontent.com/u/60358804?v=4",
+      "profile": "https://github.com/bentongxyz",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "techCarpenter",
+      "name": "Brian DeVries",
+      "avatar_url": "https://avatars.githubusercontent.com/u/42778030?v=4",
+      "profile": "https://brianjdevries.com",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "cliffordfajardo",
+      "name": "Clifford Fajardo ",
+      "avatar_url": "https://avatars.githubusercontent.com/u/6743796?v=4",
+      "profile": "http://Cliffordfajardo.com",
+      "contributions": [
+        "tool"
+      ]
+    },
+    {
+      "login": "chrisUsick",
+      "name": "Chris Usick",
+      "avatar_url": "https://avatars.githubusercontent.com/u/6589365?v=4",
+      "profile": "http://cu-dev.ca",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "josephdecock",
+      "name": "Joe DeCock",
+      "avatar_url": "https://avatars.githubusercontent.com/u/1145533?v=4",
+      "profile": "https://github.com/josephdecock",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "drewtyler",
+      "name": "Drew Tyler",
+      "avatar_url": "https://avatars.githubusercontent.com/u/5640816?v=4",
+      "profile": "http://www.drewtyler.com",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,

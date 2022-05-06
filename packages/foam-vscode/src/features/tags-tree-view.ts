@@ -21,9 +21,7 @@ const feature: FoamFeature = {
         provider
       )
     );
-    foam.workspace.onDidUpdate(() => provider.refresh());
-    foam.workspace.onDidAdd(() => provider.refresh());
-    foam.workspace.onDidDelete(() => provider.refresh());
+    foam.tags.onDidUpdate(() => provider.refresh());
   },
 };
 
@@ -166,16 +164,14 @@ export class TagReference extends vscode.TreeItem {
   public readonly title: string;
   constructor(public readonly tag: Tag, public readonly note: Resource) {
     super(note.title, vscode.TreeItemCollapsibleState.None);
+    const uri = toVsCodeUri(note.uri);
     this.title = note.title;
-    this.description = note.uri.path.replace(
-      vscode.workspace.getWorkspaceFolder(toVsCodeUri(note.uri))?.uri.path,
-      ''
-    );
+    this.description = vscode.workspace.asRelativePath(uri);
     this.tooltip = undefined;
     this.command = {
       command: 'vscode.open',
       arguments: [
-        note.uri,
+        uri,
         {
           preview: true,
           selection: toVsCodeRange(tag.range),

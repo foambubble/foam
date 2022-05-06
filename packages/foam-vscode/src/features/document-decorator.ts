@@ -36,7 +36,7 @@ const updateDecorations = (
     fromVsCodeUri(editor.document.uri),
     editor.document.getText()
   );
-  let placeholderRanges = [];
+  const placeholderRanges = [];
   note.links.forEach(link => {
     const linkUri = workspace.resolveLink(note, link);
     if (linkUri.isPlaceholder()) {

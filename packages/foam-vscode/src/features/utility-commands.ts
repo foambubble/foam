@@ -1,10 +1,9 @@
 import * as vscode from 'vscode';
 import { FoamFeature } from '../types';
 import { URI } from '../core/model/uri';
-import { fromVsCodeUri, toVsCodeRange, toVsCodeUri } from '../utils/vsc-utils';
+import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
 import { NoteFactory } from '../services/templates';
 import { Foam } from '../core/model/foam';
-import { Resource } from '../core/model/note';
 
 export const OPEN_COMMAND = {
   command: 'foam-vscode.open-resource',
@@ -24,25 +23,27 @@ const feature: FoamFeature = {
         async (params: { uri: URI }) => {
           const uri = new URI(params.uri);
           switch (uri.scheme) {
-            case 'file':
-              let selection = new vscode.Range(1, 0, 1, 0);
-              if (uri.fragment) {
-                const foam = await foamPromise;
-                const resource = foam.workspace.get(uri);
-                const section = Resource.findSection(resource, uri.fragment);
-                if (section) {
-                  selection = toVsCodeRange(section.range);
-                }
-              }
+            case 'file': {
               const targetUri =
                 uri.path === vscode.window.activeTextEditor?.document.uri.path
                   ? vscode.window.activeTextEditor?.document.uri
-                  : toVsCodeUri(uri);
-              return vscode.commands.executeCommand('vscode.open', targetUri, {
-                selection: selection,
+                  : toVsCodeUri(uri.asPlain());
+              const targetEditor = vscode.window.visibleTextEditors.find(
+                ed => targetUri.path === ed.document.uri.path
+              );
+              const column = targetEditor?.viewColumn;
+              return vscode.window.showTextDocument(targetUri, {
+                viewColumn: column,
               });
-
-            case 'placeholder':
+            }
+            case 'placeholder': {
+              const title = uri.getName();
+              if (uri.isAbsolute()) {
+                return NoteFactory.createForPlaceholderWikilink(
+                  title,
+                  URI.file(uri.path)
+                );
+              }
               const basedir =
                 vscode.workspace.workspaceFolders.length > 0
                   ? vscode.workspace.workspaceFolders[0].uri
@@ -52,12 +53,12 @@ const feature: FoamFeature = {
               if (basedir === undefined) {
                 return;
               }
-              const title = uri.getName();
               const target = fromVsCodeUri(basedir)
                 .resolve(uri, true)
                 .changeExtension('', '.md');
               await NoteFactory.createForPlaceholderWikilink(title, target);
               return;
+            }
           }
         }
       )

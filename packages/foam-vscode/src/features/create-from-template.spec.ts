@@ -1,7 +1,6 @@
-import { Uri } from 'vscode';
+import { Uri, commands, window, workspace } from 'vscode';
 import { URI } from '../core/model/uri';
 import { toVsCodeUri } from '../utils/vsc-utils';
-import { commands, window, workspace } from 'vscode';
 import { createFile } from '../test/test-utils-vscode';
 import * as editor from '../services/editor';
 

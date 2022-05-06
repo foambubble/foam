@@ -58,7 +58,7 @@ export class URI {
   }
 
   static file(value: string): URI {
-    let [path, authority] = pathUtils.fromFsPath(value);
+    const [path, authority] = pathUtils.fromFsPath(value);
     return new URI({ scheme: 'file', authority, path });
   }
 
@@ -120,6 +120,13 @@ export class URI {
 
   withFragment(fragment: string): URI {
     return new URI({ ...this, fragment });
+  }
+
+  /**
+   * Returns a URI without the fragment and query information
+   */
+  asPlain(): URI {
+    return new URI({ ...this, fragment: '', query: '' });
   }
 
   isPlaceholder(): boolean {
@@ -187,6 +194,7 @@ function encode(uri: URI, skipEncoding: boolean): string {
     : encodeURIComponentMinimal;
 
   let res = '';
+  // eslint-disable-next-line prefer-const
   let { scheme, authority, path, query, fragment } = uri;
   if (scheme) {
     res += scheme;

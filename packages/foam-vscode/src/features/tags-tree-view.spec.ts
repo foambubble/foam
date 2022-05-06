@@ -2,7 +2,7 @@ import { createTestNote } from '../test/test-utils';
 import { cleanWorkspace, closeEditors } from '../test/test-utils-vscode';
 import { TagItem, TagReference, TagsProvider } from './tags-tree-view';
 import { bootstrap, Foam } from '../core/model/foam';
-import { MarkdownResourceProvider } from '../core/markdown-provider';
+import { MarkdownResourceProvider } from '../core/services/markdown-provider';
 import { FileDataStore, Matcher } from '../core/services/datastore';
 
 describe('Tags tree panel', () => {
@@ -62,6 +62,7 @@ describe('Tags tree panel', () => {
 
     childTreeItems.forEach(child => {
       if (child instanceof TagItem) {
+        // eslint-disable-next-line jest/no-conditional-expect
         expect(child.title).toEqual('child');
       }
     });
@@ -94,7 +95,9 @@ describe('Tags tree panel', () => {
 
     childTreeItems.forEach(child => {
       if (child instanceof TagItem) {
+        // eslint-disable-next-line jest/no-conditional-expect
         expect(['child', 'subchild']).toContain(child.title);
+        // eslint-disable-next-line jest/no-conditional-expect
         expect(child.title).not.toEqual('parent');
       }
     });

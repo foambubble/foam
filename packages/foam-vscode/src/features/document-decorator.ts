@@ -1,17 +1,11 @@
 import { debounce } from 'lodash';
 import * as vscode from 'vscode';
 import { FoamFeature } from '../types';
-import {
-  ConfigurationMonitor,
-  monitorFoamVsCodeConfig,
-} from '../services/config';
 import { ResourceParser } from '../core/model/note';
 import { FoamWorkspace } from '../core/model/workspace';
 import { Foam } from '../core/model/foam';
 import { Range } from '../core/model/range';
 import { fromVsCodeUri } from '../utils/vsc-utils';
-
-export const CONFIG_KEY = 'decorations.links.enable';
 
 const placeholderDecoration = vscode.window.createTextEditorDecorationType({
   rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
@@ -21,15 +15,10 @@ const placeholderDecoration = vscode.window.createTextEditorDecorationType({
 });
 
 const updateDecorations = (
-  areDecorationsEnabled: () => boolean,
   parser: ResourceParser,
   workspace: FoamWorkspace
 ) => (editor: vscode.TextEditor) => {
-  if (
-    !editor ||
-    !areDecorationsEnabled() ||
-    editor.document.languageId !== 'markdown'
-  ) {
+  if (!editor || editor.document.languageId !== 'markdown') {
     return;
   }
   const note = parser.parse(
@@ -58,14 +47,10 @@ const feature: FoamFeature = {
     context: vscode.ExtensionContext,
     foamPromise: Promise<Foam>
   ) => {
-    const areDecorationsEnabled: ConfigurationMonitor<boolean> = monitorFoamVsCodeConfig(
-      CONFIG_KEY
-    );
     const foam = await foamPromise;
     let activeEditor = vscode.window.activeTextEditor;
 
     const immediatelyUpdateDecorations = updateDecorations(
-      areDecorationsEnabled,
       foam.services.parser,
       foam.workspace
     );
@@ -78,7 +63,6 @@ const feature: FoamFeature = {
     immediatelyUpdateDecorations(activeEditor);
 
     context.subscriptions.push(
-      areDecorationsEnabled,
       placeholderDecoration,
       vscode.window.onDidChangeActiveTextEditor(editor => {
         activeEditor = editor;

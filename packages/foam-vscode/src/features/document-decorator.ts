@@ -43,9 +43,9 @@ const updateDecorations = (
       placeholderRanges.push(
         Range.create(
           link.range.start.line,
-          link.range.start.character + 2,
+          link.range.start.character + (link.type === 'wikilink' ? 2 : 0),
           link.range.end.line,
-          link.range.end.character - 2
+          link.range.end.character - (link.type === 'wikilink' ? 2 : 0)
         )
       );
     }

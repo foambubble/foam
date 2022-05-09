@@ -1,11 +1,17 @@
 {
   "scopeName": "foam.wikilink.injection",
-  "injectionSelector": "L:meta.paragraph.markdown",
+  "injectionSelector": "L:meta.paragraph.markdown, L:markup.heading.markdown",
   "patterns": [
     {
       "contentName": "string.other.link.title.markdown.foam",
       "begin": "\\[\\[",
-      "end": "\\]\\]"
+      "beginCaptures": {
+        "0": { "name": "punctuation.definition.metadata.markdown.foam" }
+      },
+      "end": "\\]\\]",
+      "endCaptures": {
+        "0": { "name": "punctuation.definition.metadata.markdown.foam" }
+      }
     }
   ]
 }

@@ -265,11 +265,6 @@
           "type": "boolean",
           "default": true
         },
-        "foam.decorations.links.enable": {
-          "description": "Enable decorations for links",
-          "type": "boolean",
-          "default": true
-        },
         "foam.openDailyNote.onStartup": {
           "type": "boolean",
           "default": false

@@ -9,6 +9,19 @@ import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
 
 export const WIKILINK_REGEX = /\[\[[^[\]]*(?!.*\]\])/;
 export const SECTION_REGEX = /\[\[([^[\]]*#(?!.*\]\]))/;
+const RIGHT_BRACKETS_REGEX = /\]\]/;
+
+const cursorMoveCommand = {
+  command: 'cursorMove',
+  arguments: [
+    {
+      to: 'right',
+      by: 'character',
+      value: 2,
+    },
+  ],
+  title: 'cursorMove',
+};
 
 const feature: FoamFeature = {
   activate: async (
@@ -42,6 +55,9 @@ export class SectionCompletionProvider
     const cursorPrefix = document
       .lineAt(position)
       .text.substr(0, position.character);
+    const cursorSuffix = document
+      .lineAt(position)
+      .text.substr(position.character, position.character + 2);
 
     // Requires autocomplete only if cursorPrefix matches `[[` that NOT ended by `]]`.
     // See https://github.com/foambubble/foam/pull/596#issuecomment-825748205 for details.
@@ -53,6 +69,10 @@ export class SectionCompletionProvider
 
     const resourceId =
       match[1] === '#' ? fromVsCodeUri(document.uri) : match[1].slice(0, -1);
+    const requireMoveCursorRight = cursorSuffix.match(RIGHT_BRACKETS_REGEX);
+    const completionCommand = requireMoveCursorRight ? cursorMoveCommand : null;
+
+    console.log('SectionCompletionProvider', { requireMoveCursorRight });
 
     const resource = this.ws.find(resourceId);
     const replacementRange = new vscode.Range(
@@ -70,6 +90,7 @@ export class SectionCompletionProvider
         );
         item.sortText = String(b.range.start.line).padStart(5, '0');
         item.range = replacementRange;
+        item.command = completionCommand;
         return item;
       });
       return new vscode.CompletionList(items);
@@ -97,19 +118,28 @@ export class CompletionProvider
     document: vscode.TextDocument,
     position: vscode.Position
   ): vscode.ProviderResult<vscode.CompletionList<vscode.CompletionItem>> {
+    // ANCHOR: provideCompletionItems
+
     const cursorPrefix = document
       .lineAt(position)
       .text.substr(0, position.character);
 
+    const cursorSuffix = document
+      .lineAt(position)
+      .text.substr(position.character, position.character + 2);
+
     // Requires autocomplete only if cursorPrefix matches `[[` that NOT ended by `]]`.
     // See https://github.com/foambubble/foam/pull/596#issuecomment-825748205 for details.
     const requiresAutocomplete = cursorPrefix.match(WIKILINK_REGEX);
-
+    // 如果是有 # 就代鰾是 section link，就直接用另外一個
     if (!requiresAutocomplete || requiresAutocomplete[0].indexOf('#') >= 0) {
       return null;
     }
 
     const text = requiresAutocomplete[0];
+    const requireMoveCursorRight = cursorSuffix.match(RIGHT_BRACKETS_REGEX);
+    const completionCommand = requireMoveCursorRight ? cursorMoveCommand : null;
+
     const replacementRange = new vscode.Range(
       position.line,
       position.character - (text.length - 2),
@@ -117,6 +147,8 @@ export class CompletionProvider
       position.character
     );
     const resources = this.ws.list().map(resource => {
+      // TODO 這個是什麼的 snippet??
+      // TODO 看起來 wiki limk 還有 Section  都要加上去
       const label = vscode.workspace.asRelativePath(toVsCodeUri(resource.uri));
       const item = new ResourceCompletionItem(
         label,
@@ -126,16 +158,20 @@ export class CompletionProvider
       item.filterText = resource.uri.getName();
       item.insertText = this.ws.getIdentifier(resource.uri);
       item.range = replacementRange;
+      item.command = completionCommand;
       item.commitCharacters = ['#'];
       return item;
     });
     const placeholders = Array.from(this.graph.placeholders.values()).map(
       uri => {
+        // TODO 這個是什麼的 snippet??
         const item = new vscode.CompletionItem(
           uri.path,
           vscode.CompletionItemKind.Interface
         );
+        console.log('path', uri.path);
         item.insertText = uri.path;
+        item.command = cursorMoveCommand;
         item.range = replacementRange;
         return item;
       }

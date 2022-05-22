@@ -18,6 +18,7 @@ import tagCompletionProvider from './tag-completion';
 import linkDecorations from './document-decorator';
 import navigationProviders from './navigation-provider';
 import wikilinkDiagnostics from './wikilink-diagnostics';
+import completionMoveCursor from './completion-cursor-move';
 import refactor from './refactor';
 import { FoamFeature } from '../types';
 
@@ -43,4 +44,5 @@ export const features: FoamFeature[] = [
   previewNavigation,
   completionProvider,
   tagCompletionProvider,
+  completionMoveCursor,
 ];

@@ -146,6 +146,10 @@
         {
           "command": "foam-vscode.open-resource",
           "when": "false"
+        },
+        {
+          "command": "foam-vscode.completion-move-cursor",
+          "when": "false"
         }
       ]
     },
@@ -213,6 +217,10 @@
       {
         "command": "foam-vscode.create-new-template",
         "title": "Foam: Create New Template"
+      },
+      {
+        "command": "foam-vscode.completion-move-cursor",
+        "title": "Foam: Move cursor after completion"
       }
     ],
     "configuration": {
@@ -240,6 +248,11 @@
             "warn",
             "error"
           ]
+        },
+        "foam.edit.moveCursorAfterWikilinkCompletion": {
+          "type": "boolean",
+          "default": true,
+          "description": "Cursor will jump to the closing bracket after wikilink auto completion been insert"
         },
         "foam.edit.linkReferenceDefinitions": {
           "type": "string",

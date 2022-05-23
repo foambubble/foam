@@ -5,6 +5,7 @@ import {
   ConfigurationMonitor,
   monitorFoamVsCodeConfig,
 } from '../services/config';
+import { linkCommitCharacters } from './link-completion';
 
 const CONFIG_KEY = 'edit.moveCursorAfterWikilinkCompletion';
 
@@ -45,7 +46,7 @@ const completionCursorMove: FoamFeature = {
               } = currentPosition;
 
               const inCompleteBySectionDivider =
-                preChar === '#' &&
+                linkCommitCharacters.includes(preChar) &&
                 selectionLine === completionLine &&
                 selectionChar === completionChar + 1;
 
@@ -65,8 +66,6 @@ const completionCursorMove: FoamFeature = {
             by: 'character',
             value: 2,
           });
-
-          console.log('move cursor');
         }
       )
     );

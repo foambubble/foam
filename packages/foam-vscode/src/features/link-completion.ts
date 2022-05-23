@@ -8,6 +8,9 @@ import { getNoteTooltip, mdDocSelector } from '../utils';
 import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
 import { COMPLETION_CURSOR_MOVE } from './completion-cursor-move';
 
+export const linkCommitCharacters = ['#', '|'];
+export const sectionCommitCharacters = ['|'];
+
 export const WIKILINK_REGEX = /\[\[[^[\]]*(?!.*\]\])/;
 export const SECTION_REGEX = /\[\[([^[\]]*#(?!.*\]\]))/;
 
@@ -71,6 +74,7 @@ export class SectionCompletionProvider
         );
         item.sortText = String(b.range.start.line).padStart(5, '0');
         item.range = replacementRange;
+        item.commitCharacters = sectionCommitCharacters;
         item.command = COMPLETION_CURSOR_MOVE;
         return item;
       });
@@ -129,7 +133,7 @@ export class CompletionProvider
       item.insertText = this.ws.getIdentifier(resource.uri);
       item.range = replacementRange;
       item.command = COMPLETION_CURSOR_MOVE;
-      item.commitCharacters = ['#'];
+      item.commitCharacters = linkCommitCharacters;
       return item;
     });
     const placeholders = Array.from(this.graph.placeholders.values()).map(

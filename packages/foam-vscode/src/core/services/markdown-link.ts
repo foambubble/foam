@@ -15,6 +15,7 @@ export abstract class MarkdownLink {
           link.rawText
         );
         return {
+          rawTarget: target,
           target: target?.replace(/\\/g, '') ?? '',
           section: section ?? '',
           alias: alias ?? '',
@@ -40,8 +41,16 @@ export abstract class MarkdownLink {
     link: ResourceLink,
     delta: { target?: string; section?: string; alias?: string }
   ) {
-    const { target, section, alias } = MarkdownLink.analyzeLink(link);
-    const newTarget = delta.target ?? target;
+    const { target, section, alias, rawTarget } = MarkdownLink.analyzeLink(
+      link
+    );
+
+    let replacedTarget = null;
+    if (rawTarget && delta.target) {
+      replacedTarget = rawTarget.replace(target, delta.target);
+    }
+
+    const newTarget = replacedTarget ?? delta.target ?? target;
     const newSection = delta.section ?? section ?? '';
     const newAlias = delta.alias ?? alias ?? '';
     const sectionDivider = newSection ? '#' : '';

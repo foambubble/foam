@@ -1,13 +1,7 @@
 import * as vscode from 'vscode';
 import { FoamFeature } from '../types';
 import { Foam } from '../core/model/foam';
-import {
-  ConfigurationMonitor,
-  monitorFoamVsCodeConfig,
-} from '../services/config';
 import { linkCommitCharacters } from './link-completion';
-
-const CONFIG_KEY = 'edit.moveCursorAfterWikilinkCompletion';
 
 export const COMPLETION_CURSOR_MOVE = {
   command: 'foam-vscode.completion-move-cursor',
@@ -20,11 +14,6 @@ const completionCursorMove: FoamFeature = {
       vscode.commands.registerCommand(
         COMPLETION_CURSOR_MOVE.command,
         async () => {
-          const isCompletionCursorMoveEnable: ConfigurationMonitor<boolean> = monitorFoamVsCodeConfig(
-            CONFIG_KEY
-          );
-
-          if (!isCompletionCursorMoveEnable()) return;
           const activeEditor = vscode.window.activeTextEditor;
           const document = activeEditor.document;
           const currentPosition = activeEditor.selection.active;

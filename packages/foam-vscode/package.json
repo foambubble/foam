@@ -249,11 +249,6 @@
             "error"
           ]
         },
-        "foam.edit.moveCursorAfterWikilinkCompletion": {
-          "type": "boolean",
-          "default": true,
-          "description": "Cursor will jump to the closing bracket after wikilink auto completion been insert"
-        },
         "foam.edit.linkReferenceDefinitions": {
           "type": "string",
           "default": "off",

@@ -13,12 +13,12 @@ import backlinks from './backlinks';
 import utilityCommands from './utility-commands';
 import hoverProvider from './hover-provider';
 import previewNavigation from './preview-navigation';
-import completionProvider from './link-completion';
+import completionProvider, { completionCursorMove } from './link-completion';
 import tagCompletionProvider from './tag-completion';
 import linkDecorations from './document-decorator';
 import navigationProviders from './navigation-provider';
 import wikilinkDiagnostics from './wikilink-diagnostics';
-import completionMoveCursor from './completion-cursor-move';
+// import completionMoveCursor from './completion-cursor-move';
 import refactor from './refactor';
 import { FoamFeature } from '../types';
 
@@ -44,5 +44,5 @@ export const features: FoamFeature[] = [
   previewNavigation,
   completionProvider,
   tagCompletionProvider,
-  completionMoveCursor,
+  completionCursorMove,
 ];

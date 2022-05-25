@@ -6,10 +6,14 @@ import { FoamWorkspace } from '../core/model/workspace';
 import { FoamFeature } from '../types';
 import { getNoteTooltip, mdDocSelector } from '../utils';
 import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
-import { COMPLETION_CURSOR_MOVE } from './completion-cursor-move';
 
 export const linkCommitCharacters = ['#', '|'];
 export const sectionCommitCharacters = ['|'];
+
+const COMPLETION_CURSOR_MOVE = {
+  command: 'foam-vscode.completion-move-cursor',
+  title: 'Foam: Move cursor after completion',
+};
 
 export const WIKILINK_REGEX = /\[\[[^[\]]*(?!.*\]\])/;
 export const SECTION_REGEX = /\[\[([^[\]]*#(?!.*\]\]))/;
@@ -30,6 +34,65 @@ const feature: FoamFeature = {
         mdDocSelector,
         new SectionCompletionProvider(foam.workspace),
         '#'
+      )
+    );
+  },
+};
+
+/**
+ * always jump to the closing bracket, but jump back the cursor when commit
+ * by alias divider `|` and section divider `#`
+ * See https://github.com/foambubble/foam/issues/962,
+ */
+
+export const completionCursorMove: FoamFeature = {
+  activate: (context: vscode.ExtensionContext, foamPromise: Promise<Foam>) => {
+    context.subscriptions.push(
+      vscode.commands.registerCommand(
+        COMPLETION_CURSOR_MOVE.command,
+        async () => {
+          const activeEditor = vscode.window.activeTextEditor;
+          const document = activeEditor.document;
+          const currentPosition = activeEditor.selection.active;
+          const cursorChange = vscode.window.onDidChangeTextEditorSelection(
+            async e => {
+              const changedPosition = e.selections[0].active;
+              const preChar = document
+                .lineAt(changedPosition.line)
+                .text.charAt(changedPosition.character - 1);
+
+              const {
+                character: selectionChar,
+                line: selectionLine,
+              } = e.selections[0].active;
+
+              const {
+                line: completionLine,
+                character: completionChar,
+              } = currentPosition;
+
+              const inCompleteBySectionDivider =
+                linkCommitCharacters.includes(preChar) &&
+                selectionLine === completionLine &&
+                selectionChar === completionChar + 1;
+
+              cursorChange.dispose();
+              if (inCompleteBySectionDivider) {
+                await vscode.commands.executeCommand('cursorMove', {
+                  to: 'left',
+                  by: 'character',
+                  value: 2,
+                });
+              }
+            }
+          );
+
+          await vscode.commands.executeCommand('cursorMove', {
+            to: 'right',
+            by: 'character',
+            value: 2,
+          });
+        }
       )
     );
   },

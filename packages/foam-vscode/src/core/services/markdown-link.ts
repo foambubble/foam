@@ -2,8 +2,9 @@ import { ResourceLink } from '../model/note';
 
 export abstract class MarkdownLink {
   private static wikilinkRegex = new RegExp(
-    /\[\[([^#|]+)?#?([^|]+)?\|?(.*)?\]\]/
+    /\[\[([^#|]+[^\\|#])?#?([^|]+[^\\|])?(\\\||\|)?(.*)?\]\]/
   );
+
   private static directLinkRegex = new RegExp(
     /\[(.*)\]\(([^#]*)?#?([^\]]+)?\)/
   );
@@ -11,13 +12,19 @@ export abstract class MarkdownLink {
   public static analyzeLink(link: ResourceLink) {
     try {
       if (link.type === 'wikilink') {
-        const [, target, section, alias] = this.wikilinkRegex.exec(
-          link.rawText
-        );
+        const [
+          ,
+          target,
+          section,
+          aliasDivider,
+          alias,
+        ] = this.wikilinkRegex.exec(link.rawText);
+
         return {
           rawTarget: target,
           target: target?.replace(/\\/g, '') ?? '',
           section: section ?? '',
+          aliasDivider: aliasDivider ?? '',
           alias: alias ?? '',
         };
       }
@@ -41,23 +48,19 @@ export abstract class MarkdownLink {
     link: ResourceLink,
     delta: { target?: string; section?: string; alias?: string }
   ) {
-    const { target, section, alias, rawTarget } = MarkdownLink.analyzeLink(
+    const { target, section, alias, aliasDivider } = MarkdownLink.analyzeLink(
       link
     );
 
-    let replacedTarget = null;
-    if (rawTarget && delta.target) {
-      replacedTarget = rawTarget.replace(target, delta.target);
-    }
-
-    const newTarget = replacedTarget ?? delta.target ?? target;
+    const newTarget = delta.target ?? target;
     const newSection = delta.section ?? section ?? '';
     const newAlias = delta.alias ?? alias ?? '';
     const sectionDivider = newSection ? '#' : '';
-    const aliasDivider = newAlias ? '|' : '';
+    const newAliasDivider = aliasDivider || (newAlias ? '|' : '');
+
     if (link.type === 'wikilink') {
       return {
-        newText: `[[${newTarget}${sectionDivider}${newSection}${aliasDivider}${newAlias}]]`,
+        newText: `[[${newTarget}${sectionDivider}${newSection}${newAliasDivider}${newAlias}]]`,
         selection: link.range,
       };
     }

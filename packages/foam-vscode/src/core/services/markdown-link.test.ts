@@ -188,7 +188,7 @@ describe('MarkdownLink', () => {
       expect(edit.newText).toEqual(`[[wikilink|new-alias]]`);
       expect(edit.selection).toEqual(link.range);
     });
-    it('should be able to rename the escaped alias divider', () => {
+    it('should be able to rename the table escaped alias divider', () => {
       const link = parser.parse(
         getRandomURI(),
         `this is a [[wikilink\\|alias]]`
@@ -199,21 +199,8 @@ describe('MarkdownLink', () => {
       expect(edit.newText).toEqual(`[[new-link\\|alias]]`);
       expect(edit.selection).toEqual(link.range);
     });
-    
-    it('should be able to rename the escaped alias divider on \\ in file name', () => {
-      const link = parser.parse(
-        getRandomURI(),
-        `this is a [[wikilink\\|alias]]`
-      ).links[0];
-      const edit = MarkdownLink.createUpdateLinkEdit(link, {
-        target: 'new-link\\',
-      });
-      expect(edit.newText).toEqual(`[[new-link\\\\|alias]]`);
-      expect(edit.selection).toEqual(link.range);
-    });
-    
 
-    it('should be able to rename the escaped alias divider with section link', () => {
+    it('should be able to rename the table escaped alias divider with section link', () => {
       const link = parser.parse(
         getRandomURI(),
         `this is a [[wikilink#section\\|alias]]`
@@ -222,18 +209,6 @@ describe('MarkdownLink', () => {
         target: 'new-link',
       });
       expect(edit.newText).toEqual(`[[new-link#section\\|alias]]`);
-      expect(edit.selection).toEqual(link.range);
-    });
-
-    it('should be able to rename the escaped alias divider with section link on \\ in file name', () => {
-      const link = parser.parse(
-        getRandomURI(),
-        `this is a [[wikilink\\#section\\|alias]]`
-      ).links[0];
-      const edit = MarkdownLink.createUpdateLinkEdit(link, {
-        target: 'new-link',
-      });
-      expect(edit.newText).toEqual(`[[new-link\\#section\\|alias]]`);
       expect(edit.selection).toEqual(link.range);
     });
   });

@@ -146,6 +146,10 @@
         {
           "command": "foam-vscode.open-resource",
           "when": "false"
+        },
+        {
+          "command": "foam-vscode.completion-move-cursor",
+          "when": "false"
         }
       ]
     },
@@ -213,6 +217,10 @@
       {
         "command": "foam-vscode.create-new-template",
         "title": "Foam: Create New Template"
+      },
+      {
+        "command": "foam-vscode.completion-move-cursor",
+        "title": "Foam: Move cursor after completion"
       }
     ],
     "configuration": {

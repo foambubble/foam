@@ -7,6 +7,14 @@ import { FoamFeature } from '../types';
 import { getNoteTooltip, mdDocSelector } from '../utils';
 import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
 
+export const linkCommitCharacters = ['#', '|'];
+export const sectionCommitCharacters = ['|'];
+
+const COMPLETION_CURSOR_MOVE = {
+  command: 'foam-vscode.completion-move-cursor',
+  title: 'Foam: Move cursor after completion',
+};
+
 export const WIKILINK_REGEX = /\[\[[^[\]]*(?!.*\]\])/;
 export const SECTION_REGEX = /\[\[([^[\]]*#(?!.*\]\]))/;
 
@@ -26,6 +34,65 @@ const feature: FoamFeature = {
         mdDocSelector,
         new SectionCompletionProvider(foam.workspace),
         '#'
+      )
+    );
+  },
+};
+
+/**
+ * always jump to the closing bracket, but jump back the cursor when commit
+ * by alias divider `|` and section divider `#`
+ * See https://github.com/foambubble/foam/issues/962,
+ */
+
+export const completionCursorMove: FoamFeature = {
+  activate: (context: vscode.ExtensionContext, foamPromise: Promise<Foam>) => {
+    context.subscriptions.push(
+      vscode.commands.registerCommand(
+        COMPLETION_CURSOR_MOVE.command,
+        async () => {
+          const activeEditor = vscode.window.activeTextEditor;
+          const document = activeEditor.document;
+          const currentPosition = activeEditor.selection.active;
+          const cursorChange = vscode.window.onDidChangeTextEditorSelection(
+            async e => {
+              const changedPosition = e.selections[0].active;
+              const preChar = document
+                .lineAt(changedPosition.line)
+                .text.charAt(changedPosition.character - 1);
+
+              const {
+                character: selectionChar,
+                line: selectionLine,
+              } = e.selections[0].active;
+
+              const {
+                line: completionLine,
+                character: completionChar,
+              } = currentPosition;
+
+              const inCompleteBySectionDivider =
+                linkCommitCharacters.includes(preChar) &&
+                selectionLine === completionLine &&
+                selectionChar === completionChar + 1;
+
+              cursorChange.dispose();
+              if (inCompleteBySectionDivider) {
+                await vscode.commands.executeCommand('cursorMove', {
+                  to: 'left',
+                  by: 'character',
+                  value: 2,
+                });
+              }
+            }
+          );
+
+          await vscode.commands.executeCommand('cursorMove', {
+            to: 'right',
+            by: 'character',
+            value: 2,
+          });
+        }
       )
     );
   },
@@ -70,6 +137,8 @@ export class SectionCompletionProvider
         );
         item.sortText = String(b.range.start.line).padStart(5, '0');
         item.range = replacementRange;
+        item.commitCharacters = sectionCommitCharacters;
+        item.command = COMPLETION_CURSOR_MOVE;
         return item;
       });
       return new vscode.CompletionList(items);
@@ -104,12 +173,12 @@ export class CompletionProvider
     // Requires autocomplete only if cursorPrefix matches `[[` that NOT ended by `]]`.
     // See https://github.com/foambubble/foam/pull/596#issuecomment-825748205 for details.
     const requiresAutocomplete = cursorPrefix.match(WIKILINK_REGEX);
-
     if (!requiresAutocomplete || requiresAutocomplete[0].indexOf('#') >= 0) {
       return null;
     }
 
     const text = requiresAutocomplete[0];
+
     const replacementRange = new vscode.Range(
       position.line,
       position.character - (text.length - 2),
@@ -126,7 +195,8 @@ export class CompletionProvider
       item.filterText = resource.uri.getName();
       item.insertText = this.ws.getIdentifier(resource.uri);
       item.range = replacementRange;
-      item.commitCharacters = ['#'];
+      item.command = COMPLETION_CURSOR_MOVE;
+      item.commitCharacters = linkCommitCharacters;
       return item;
     });
     const placeholders = Array.from(this.graph.placeholders.values()).map(
@@ -136,6 +206,7 @@ export class CompletionProvider
           vscode.CompletionItemKind.Interface
         );
         item.insertText = uri.path;
+        item.command = COMPLETION_CURSOR_MOVE;
         item.range = replacementRange;
         return item;
       }

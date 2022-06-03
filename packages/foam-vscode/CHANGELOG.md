@@ -4,6 +4,12 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.18.4] - 2022-06-03
+
+Fixes and Improvements:
+- move past `]]` when writing wikilinks (#998 - thanks @Lauviah0622)
+- highlight improvements (#890 - thanks @memeplex)
+
 ## [0.18.3] - 2022-04-17
 
 Fixes and Improvements:

@@ -55,6 +55,15 @@
           "light": "editorWarning.foreground",
           "highContrast": "editorWarning.foreground"
         }
+      },
+      {
+        "id": "foam.tag",
+        "description": "Color of foam tags.",
+        "defaults": {
+          "dark": "editorWarning.foreground",
+          "light": "editorWarning.foreground",
+          "highContrast": "editorWarning.foreground"
+        }
       }
     ],
     "views": {

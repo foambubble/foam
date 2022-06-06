@@ -5,7 +5,7 @@ import { Resource, Tag, ResourceParser } from '../core/model/note';
 import { FoamWorkspace } from '../core/model/workspace';
 import { Foam } from '../core/model/foam';
 import { Range } from '../core/model/range';
-import { fromVsCodeUri } from '../utils/vsc-utils';
+import { fromVsCodeUri, toVsCodeRange } from '../utils/vsc-utils';
 
 const placeholderDecoration = vscode.window.createTextEditorDecorationType({
   rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
@@ -18,7 +18,6 @@ const tagDecoration = vscode.window.createTextEditorDecorationType({
   rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
   textDecoration: 'none',
   color: { id: 'foam.tag' },
-  cursor: 'pointer',
 });
 
 const updateDecorations = (
@@ -42,30 +41,31 @@ const updateDecorations = (
   editor.setDecorations(tagDecoration, getTagRanges(note.tags));
 };
 
-const getPlaceholderRanges = (
-  workspace: FoamWorkspace,
-  note: Resource
-): vscode.Range[] =>
+const getPlaceholderRanges = (workspace: FoamWorkspace, note: Resource) =>
   note.links
     .filter(link => workspace.resolveLink(note, link).isPlaceholder())
     .map(link =>
-      Range.create(
-        link.range.start.line,
-        link.range.start.character + (link.type === 'wikilink' ? 2 : 0),
-        link.range.end.line,
-        link.range.end.character - (link.type === 'wikilink' ? 2 : 0)
+      toVsCodeRange(
+        Range.create(
+          link.range.start.line,
+          link.range.start.character + (link.type === 'wikilink' ? 2 : 0),
+          link.range.end.line,
+          link.range.end.character - (link.type === 'wikilink' ? 2 : 0)
+        )
       )
-    ) as vscode.Range[];
+    );
 
-const getTagRanges = (tags: Tag[]): vscode.Range[] =>
+const getTagRanges = (tags: Tag[]) =>
   tags.map(tag =>
-    Range.create(
-      tag.range.start.line,
-      tag.range.start.character,
-      tag.range.end.line,
-      tag.range.end.character
+    toVsCodeRange(
+      Range.create(
+        tag.range.start.line,
+        tag.range.start.character,
+        tag.range.end.line,
+        tag.range.end.character
+      )
     )
-  ) as vscode.Range[];
+  );
 
 const feature: FoamFeature = {
   activate: async (

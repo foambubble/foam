@@ -5,14 +5,17 @@ import {
   commands,
   ProgressLocation,
 } from 'vscode';
-import * as fs from 'fs';
 import { FoamFeature } from '../types';
 
 import {
   getWikilinkDefinitionSetting,
   LinkReferenceDefinitionsSetting,
 } from '../settings';
-import { toVsCodePosition, toVsCodeRange } from '../utils/vsc-utils';
+import {
+  toVsCodePosition,
+  toVsCodeRange,
+  toVsCodeUri,
+} from '../utils/vsc-utils';
 import { Foam } from '../core/model/foam';
 import { Resource } from '../core/model/note';
 import { generateHeading, generateLinkReferences } from '../core/janitor';
@@ -125,7 +128,7 @@ async function runJanitor(foam: Foam) {
     text = definitions ? applyTextEdit(text, definitions) : text;
     text = heading ? applyTextEdit(text, heading) : text;
 
-    return fs.promises.writeFile(note.uri.toFsPath(), text);
+    return workspace.fs.writeFile(toVsCodeUri(note.uri), Buffer.from(text));
   });
 
   await Promise.all(fileWritePromises);

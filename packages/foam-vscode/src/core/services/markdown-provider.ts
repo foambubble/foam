@@ -8,7 +8,7 @@ import { isNone, isSome } from '../utils';
 import { Logger } from '../utils/log';
 import { URI } from '../model/uri';
 import { FoamWorkspace } from '../model/workspace';
-import { IDataStore, FileDataStore, IMatcher } from '../services/datastore';
+import { IDataStore, IMatcher } from '../services/datastore';
 import { IDisposable } from '../common/lifecycle';
 import { ResourceProvider } from '../model/provider';
 import { createMarkdownParser } from './markdown-parser';
@@ -19,13 +19,13 @@ export class MarkdownResourceProvider implements ResourceProvider {
 
   constructor(
     private readonly matcher: IMatcher,
+    private readonly dataStore: IDataStore,
     private readonly watcherInit?: (triggers: {
       onDidChange: (uri: URI) => void;
       onDidCreate: (uri: URI) => void;
       onDidDelete: (uri: URI) => void;
     }) => IDisposable[],
-    private readonly parser: ResourceParser = createMarkdownParser([]),
-    private readonly dataStore: IDataStore = new FileDataStore()
+    private readonly parser: ResourceParser = createMarkdownParser([])
   ) {}
 
   async init(workspace: FoamWorkspace) {

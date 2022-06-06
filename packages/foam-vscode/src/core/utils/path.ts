@@ -1,6 +1,5 @@
 import { CharCode } from '../common/charCode';
 import { posix } from 'path';
-import { promises, constants } from 'fs';
 
 /**
  * Converts filesystem path to POSIX path. Supported inputs are:
@@ -145,21 +144,6 @@ export function joinPath(...paths: string[]): string {
  */
 export function relativeTo(path: string, basePath: string): string {
   return posix.relative(basePath, path);
-}
-
-/**
- * Asynchronously checks if there is an accessible file for a path.
- *
- * @param fsPath A filesystem-specific path.
- * @returns true if an accesible file exists, false otherwise.
- */
-export async function existsInFs(fsPath: string) {
-  try {
-    await promises.access(fsPath, constants.F_OK);
-    return true;
-  } catch (e) {
-    return false;
-  }
 }
 
 function hasDrive(path: string, idx = 0): boolean {

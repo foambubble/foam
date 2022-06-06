@@ -1,5 +1,5 @@
 import { generateHeading } from '.';
-import { TEST_DATA_DIR } from '../../test/test-utils';
+import { readFileFromFs, TEST_DATA_DIR } from '../../test/test-utils';
 import { MarkdownResourceProvider } from '../services/markdown-provider';
 import { bootstrap } from '../model/foam';
 import { Resource } from '../model/note';
@@ -20,8 +20,9 @@ describe('generateHeadings', () => {
 
   beforeAll(async () => {
     const matcher = new Matcher([TEST_DATA_DIR.joinPath('__scaffold__')]);
-    const mdProvider = new MarkdownResourceProvider(matcher);
-    const foam = await bootstrap(matcher, new FileDataStore(), [mdProvider]);
+    const dataStore = new FileDataStore(readFileFromFs);
+    const mdProvider = new MarkdownResourceProvider(matcher, dataStore);
+    const foam = await bootstrap(matcher, dataStore, [mdProvider]);
     _workspace = foam.workspace;
   });
 

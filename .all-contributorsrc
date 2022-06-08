@@ -887,6 +887,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "joshdover",
+      "name": "Josh Dover",
+      "avatar_url": "https://avatars.githubusercontent.com/u/1813008?v=4",
+      "profile": "https://www.elastic.co/elastic-agent",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,

@@ -28,6 +28,22 @@
       }
     ]
   },
+  "overrides": [
+    {
+      // Restrict usage of fs module outside tests to keep foam compatible with the browser
+      "files": ["**/src/**"],
+      "excludedFiles": ["**/src/test/**", "**/src/**/*{test,spec}.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "name": "fs",
+            "message": "Extension code must not rely Node.js filesystem, use vscode.workspace.fs instead."
+          }
+        ]
+      }
+    }
+  ],
   "settings": {
     "import/core-modules": ["vscode"],
     "import/parsers": {

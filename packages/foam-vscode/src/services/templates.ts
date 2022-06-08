@@ -1,7 +1,6 @@
 import { URI } from '../core/model/uri';
-import { existsSync } from 'fs';
 import { TextEncoder } from 'util';
-import { SnippetString, ViewColumn, window, workspace } from 'vscode';
+import { FileType, SnippetString, ViewColumn, window, workspace } from 'vscode';
 import { focusNote } from '../utils';
 import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
 import { extractFoamTemplateFrontmatterMetadata } from '../utils/template-frontmatter-parser';
@@ -75,7 +74,7 @@ export async function getTemplateInfo(
   templateFallbackText = '',
   resolver: Resolver
 ) {
-  const templateText = existsSync(templateUri.toFsPath())
+  const templateText = (await fileExists(templateUri))
     ? await workspace.fs
         .readFile(toVsCodeUri(templateUri))
         .then(bytes => bytes.toString())
@@ -137,7 +136,7 @@ export const NoteFactory = {
         filepathFallbackURI,
         resolver
       );
-      while (existsSync(newFilePath.toFsPath())) {
+      while (await fileExists(newFilePath)) {
         const proposedNewFilepath = await onFileExists(newFilePath);
 
         if (proposedNewFilepath === undefined) {
@@ -224,10 +223,10 @@ export const createTemplate = async (): Promise<void> => {
     prompt: `Enter the filename for the new template`,
     value: fsPath,
     valueSelection: [fsPath.length - defaultFilename.length, fsPath.length - 3],
-    validateInput: value =>
+    validateInput: async value =>
       value.trim().length === 0
         ? 'Please enter a value'
-        : existsSync(value)
+        : (await fileExists(URI.parse(value)))
         ? 'File already exists'
         : undefined,
   });
@@ -252,10 +251,10 @@ async function askUserForFilepathConfirmation(
     prompt: `Enter the filename for the new note`,
     value: fsPath,
     valueSelection: [fsPath.length - defaultFilename.length, fsPath.length - 3],
-    validateInput: value =>
+    validateInput: async value =>
       value.trim().length === 0
         ? 'Please enter a value'
-        : existsSync(value)
+        : (await fileExists(URI.parse(value)))
         ? 'File already exists'
         : undefined,
   });
@@ -285,4 +284,13 @@ export async function determineNewNoteFilepath(
     `${defaultName}.md`
   );
   return defaultFilepath;
+}
+
+async function fileExists(uri: URI): Promise<boolean> {
+  try {
+    const stat = await workspace.fs.stat(toVsCodeUri(uri));
+    return stat.type === FileType.File;
+  } catch (e) {
+    return false;
+  }
 }

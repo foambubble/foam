@@ -1,6 +1,7 @@
 /*
  * This file should not depend on VS Code as it's used for unit tests
  */
+import fs from 'fs';
 import { Logger } from '../core/utils/log';
 import { Range } from '../core/model/range';
 import { URI } from '../core/model/uri';
@@ -35,7 +36,7 @@ export const strToUri = URI.file;
 export const createTestWorkspace = () => {
   const workspace = new FoamWorkspace();
   const matcher = new Matcher([URI.file('/')], ['**/*']);
-  const provider = new MarkdownResourceProvider(matcher, undefined, undefined, {
+  const provider = new MarkdownResourceProvider(matcher, {
     read: _ => Promise.resolve(''),
     list: _ => Promise.resolve([]),
   });
@@ -111,3 +112,7 @@ export const randomString = (len = 5) =>
 
 export const getRandomURI = () =>
   URI.file('/random-uri-root/' + randomString() + '.md');
+
+/** Use fs for reading files in units where vscode.workspace is unavailable */
+export const readFileFromFs = async (uri: URI) =>
+  (await fs.promises.readFile(uri.toFsPath())).toString();

@@ -1,4 +1,4 @@
-import { TEST_DATA_DIR } from '../../test/test-utils';
+import { readFileFromFs, TEST_DATA_DIR } from '../../test/test-utils';
 import { URI } from '../model/uri';
 import { Logger } from '../utils/log';
 import { FileDataStore, Matcher, toMatcherPathFormat } from './datastore';
@@ -87,7 +87,7 @@ describe('Matcher', () => {
 describe('Datastore', () => {
   it('uses the matcher to get the file list', async () => {
     const matcher = new Matcher([testFolder], ['**/*.md'], []);
-    const ds = new FileDataStore();
+    const ds = new FileDataStore(readFileFromFs);
     expect((await ds.list(matcher.include[0])).length).toEqual(4);
   });
 });

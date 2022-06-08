@@ -1,13 +1,14 @@
 import { workspace, ExtensionContext, window } from 'vscode';
 import { MarkdownResourceProvider } from './core/services/markdown-provider';
 import { bootstrap } from './core/model/foam';
+import { URI } from './core/model/uri';
 import { FileDataStore, Matcher } from './core/services/datastore';
 import { Logger } from './core/utils/log';
 
 import { features } from './features';
 import { VsCodeOutputLogger, exposeLogger } from './services/logging';
 import { getIgnoredFilesSetting } from './settings';
-import { fromVsCodeUri } from './utils/vsc-utils';
+import { fromVsCodeUri, toVsCodeUri } from './utils/vsc-utils';
 
 export async function activate(context: ExtensionContext) {
   const logger = new VsCodeOutputLogger();
@@ -18,21 +19,27 @@ export async function activate(context: ExtensionContext) {
     Logger.info('Starting Foam');
 
     // Prepare Foam
-    const dataStore = new FileDataStore();
+    const readFile = async (uri: URI) =>
+      (await workspace.fs.readFile(toVsCodeUri(uri))).toString();
+    const dataStore = new FileDataStore(readFile);
     const matcher = new Matcher(
       workspace.workspaceFolders.map(dir => fromVsCodeUri(dir.uri)),
       ['**/*'],
       getIgnoredFilesSetting().map(g => g.toString())
     );
-    const markdownProvider = new MarkdownResourceProvider(matcher, triggers => {
-      const watcher = workspace.createFileSystemWatcher('**/*');
-      return [
-        watcher.onDidChange(uri => triggers.onDidChange(fromVsCodeUri(uri))),
-        watcher.onDidCreate(uri => triggers.onDidCreate(fromVsCodeUri(uri))),
-        watcher.onDidDelete(uri => triggers.onDidDelete(fromVsCodeUri(uri))),
-        watcher,
-      ];
-    });
+    const markdownProvider = new MarkdownResourceProvider(
+      matcher,
+      dataStore,
+      triggers => {
+        const watcher = workspace.createFileSystemWatcher('**/*');
+        return [
+          watcher.onDidChange(uri => triggers.onDidChange(fromVsCodeUri(uri))),
+          watcher.onDidCreate(uri => triggers.onDidCreate(fromVsCodeUri(uri))),
+          watcher.onDidDelete(uri => triggers.onDidDelete(fromVsCodeUri(uri))),
+          watcher,
+        ];
+      }
+    );
 
     const foamPromise = bootstrap(matcher, dataStore, [markdownProvider]);
 

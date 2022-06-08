@@ -1,4 +1,4 @@
-import { createTestNote } from '../test/test-utils';
+import { createTestNote, readFileFromFs } from '../test/test-utils';
 import { cleanWorkspace, closeEditors } from '../test/test-utils-vscode';
 import { TagItem, TagReference, TagsProvider } from './tags-tree-view';
 import { bootstrap, Foam } from '../core/model/foam';
@@ -9,8 +9,9 @@ describe('Tags tree panel', () => {
   let _foam: Foam;
   let provider: TagsProvider;
 
+  const dataStore = new FileDataStore(readFileFromFs);
   const matcher = new Matcher([]);
-  const mdProvider = new MarkdownResourceProvider(matcher);
+  const mdProvider = new MarkdownResourceProvider(matcher, dataStore);
 
   beforeAll(async () => {
     await cleanWorkspace();
@@ -22,7 +23,7 @@ describe('Tags tree panel', () => {
   });
 
   beforeEach(async () => {
-    _foam = await bootstrap(matcher, new FileDataStore(), [mdProvider]);
+    _foam = await bootstrap(matcher, dataStore, [mdProvider]);
     provider = new TagsProvider(_foam, _foam.workspace);
     await closeEditors();
   });

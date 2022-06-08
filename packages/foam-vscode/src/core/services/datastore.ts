@@ -1,5 +1,4 @@
 import micromatch from 'micromatch';
-import fs from 'fs';
 import { URI } from '../model/uri';
 import { Logger } from '../utils/log';
 import { glob } from 'glob';
@@ -115,6 +114,8 @@ export interface IDataStore {
  * File system based data store
  */
 export class FileDataStore implements IDataStore {
+  constructor(private readFile: (uri: URI) => Promise<string>) {}
+
   async list(glob: string, ignoreGlob?: string | string[]): Promise<URI[]> {
     const res = await findAllFiles(glob, {
       ignore: ignoreGlob,
@@ -125,7 +126,7 @@ export class FileDataStore implements IDataStore {
 
   async read(uri: URI) {
     try {
-      return (await fs.promises.readFile(uri.toFsPath())).toString();
+      return await this.readFile(uri);
     } catch (e) {
       Logger.error(
         `FileDataStore: error while reading uri: ${uri.path} - ${e}`

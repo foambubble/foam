@@ -7,6 +7,8 @@ import { Range } from '../model/range';
 import { FoamWorkspace } from '../model/workspace';
 import { FileDataStore, Matcher } from '../services/datastore';
 import { Logger } from '../utils/log';
+import fs from 'fs';
+import { URI } from '../model/uri';
 
 Logger.setLevel('error');
 
@@ -21,8 +23,12 @@ describe('generateLinkReferences', () => {
 
   beforeAll(async () => {
     const matcher = new Matcher([TEST_DATA_DIR.joinPath('__scaffold__')]);
-    const mdProvider = new MarkdownResourceProvider(matcher);
-    const foam = await bootstrap(matcher, new FileDataStore(), [mdProvider]);
+    /** Use fs for reading files in units where vscode.workspace is unavailable */
+    const readFile = async (uri: URI) =>
+      (await fs.promises.readFile(uri.toFsPath())).toString();
+    const dataStore = new FileDataStore(readFile);
+    const mdProvider = new MarkdownResourceProvider(matcher, dataStore);
+    const foam = await bootstrap(matcher, dataStore, [mdProvider]);
     _workspace = foam.workspace;
   });
 

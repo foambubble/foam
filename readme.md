@@ -5,7 +5,7 @@
 👀*This is an early stage project under rapid development. For updates join the [Foam community Discord](https://foambubble.github.io/join-discord/g)! 💬*
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-96-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-97-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 [![Discord Chat](https://img.shields.io/discord/729975036148056075?color=748AD9&label=discord%20chat&style=flat-square)](https://foambubble.github.io/join-discord/g)
@@ -319,6 +319,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://github.com/josephdecock"><img src="https://avatars.githubusercontent.com/u/1145533?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Joe DeCock</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=josephdecock" title="Code">💻</a></td>
     <td align="center"><a href="http://www.drewtyler.com"><img src="https://avatars.githubusercontent.com/u/5640816?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Drew Tyler</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=drewtyler" title="Documentation">📖</a></td>
     <td align="center"><a href="https://github.com/Lauviah0622"><img src="https://avatars.githubusercontent.com/u/43416399?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Lauviah0622</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=Lauviah0622" title="Code">💻</a></td>
+    <td align="center"><a href="https://www.elastic.co/elastic-agent"><img src="https://avatars.githubusercontent.com/u/1813008?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Josh Dover</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=joshdover" title="Code">💻</a></td>
   </tr>
 </table>
 

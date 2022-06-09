@@ -146,9 +146,10 @@ Whether you want to build a [Second Brain](https://www.buildingasecondbrain.com/
 
 You can also use our Foam template:
 
-1. [Create a GitHub repository from foam-template](https://github.com/foambubble/foam-template/generate). If you want to keep your thoughts to yourself, remember to set the repository private.
-2. Clone the repository and open it in VS Code.
-3. When prompted to install recommended extensions, click **Install all** (or **Show Recommendations** if you want to review and install them one by one).
+1. Log in on your GitHub account. 
+2. [Create a GitHub repository from foam-template](https://github.com/foambubble/foam-template/generate). If you want to keep your thoughts to yourself, remember to set the repository private.
+3. Clone the repository and open it in VS Code.
+4. When prompted to install recommended extensions, click **Install all** (or **Show Recommendations** if you want to review and install them one by one).
 
 This will also install `Foam`, but if you already have it installed, that's ok, just make sure you're up to date on the latest version.
 

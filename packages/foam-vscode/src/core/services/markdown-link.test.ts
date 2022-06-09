@@ -73,6 +73,15 @@ describe('MarkdownLink', () => {
       expect(parsed.section).toEqual('section with spaces');
       expect(parsed.alias).toEqual('alias with spaces');
     });
+    it('should parse target section and filename end with \\', () => {
+      const link = parser.parse(
+        getRandomURI(),
+        `this is a [[wikilink\\#section]]`
+      ).links[0];
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.target).toEqual('wikilink\\');
+      expect(parsed.section).toEqual('section');
+    });
     it('should parse section', () => {
       const link = parser.parse(getRandomURI(), `this is a [[#section]]`)
         .links[0];

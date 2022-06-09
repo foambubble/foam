@@ -1,9 +1,40 @@
 import { ResourceLink } from '../model/note';
 
 export abstract class MarkdownLink {
-  private static wikilinkRegex = new RegExp(
-    /\[\[([^#|]+[^\\|#])?#?([^|]+[^\\|])?(\\\||\|)?(.*)?\]\]/
-  );
+  private static parseWikilink = (text: string) => {
+    const textWithoutBracket = text.replace(/^\[\[|\]\]$/g, '');
+    const splitGroup = textWithoutBracket.split(/(#|\\\||\|)/);
+
+    const hasAliasDivider = splitGroup.some(group => group.match(/[\\|||]/));
+    const hasSectionDivider = splitGroup.some(group => group.match(/#/));
+    if (hasAliasDivider && hasSectionDivider) {
+      const [target, sectionDivider, section, aliasDivider, alias] = splitGroup;
+      return {
+        target,
+        sectionDivider,
+        section,
+        aliasDivider,
+        alias,
+      };
+    } else if (hasAliasDivider) {
+      const [target, aliasDivider, alias] = splitGroup;
+      return {
+        target,
+        aliasDivider,
+        alias,
+      };
+    } else if (hasSectionDivider) {
+      const [target, sectionDivider, section] = splitGroup;
+      return {
+        target,
+        sectionDivider,
+        section,
+      };
+    } else {
+      const [target] = splitGroup;
+      return { target };
+    }
+  };
 
   private static directLinkRegex = new RegExp(
     /\[(.*)\]\(([^#]*)?#?([^\]]+)?\)/
@@ -12,20 +43,18 @@ export abstract class MarkdownLink {
   public static analyzeLink(link: ResourceLink) {
     try {
       if (link.type === 'wikilink') {
-        const [
-          ,
+        const {
+          target = '',
+          section = '',
+          aliasDivider = '',
+          alias = '',
+        } = this.parseWikilink(link.rawText);
+
+        return {
           target,
           section,
           aliasDivider,
           alias,
-        ] = this.wikilinkRegex.exec(link.rawText);
-
-        return {
-          rawTarget: target,
-          target: target?.replace(/\\/g, '') ?? '',
-          section: section ?? '',
-          aliasDivider: aliasDivider ?? '',
-          alias: alias ?? '',
         };
       }
       if (link.type === 'link') {

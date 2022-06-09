@@ -62,7 +62,7 @@ A #recipe is a guide, tip or strategy for getting the most out of your Foam work
 
 - Quick commits with VS Code's built in [[git-integration]]
 - Store your workspace in an auto-synced GitHub repo with [[write-your-notes-in-github-gist]]
-- Sync your GitHub repo automatically [[todo]].
+- Sync your GitHub repo automatically using the [GitDoc VSCode Plugin](https://marketplace.visualstudio.com/items?itemName=vsls-contrib.gitdoc).
 
 ## Publish
 

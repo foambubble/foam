@@ -3665,6 +3665,11 @@ clone@^1.0.2:
   resolved "https://registry.yarnpkg.com/clone/-/clone-1.0.4.tgz#da309cc263df15994c688ca902179ca3c7cd7c7e"
   integrity sha1-2jCcwmPfFZlMaIypAheco8fNfH4=
 
+clone@^2.1.2:
+  version "2.1.2"
+  resolved "https://registry.yarnpkg.com/clone/-/clone-2.1.2.tgz#1b7f4b9f591f1e8f83670401600345a02887435f"
+  integrity sha512-3Pe/CF1Nn94hyhIYpjtiLhdCoEoz0DqQ+988E9gmeEdQZlojxnOb74wctFyuwWQHzqyf9X7C7MG8juUpqBJT8w==
+
 co@^4.6.0:
   version "4.6.0"
   resolved "https://registry.yarnpkg.com/co/-/co-4.6.0.tgz#6ea6bdf3d853ae54ccb8e47bfa0bf3f9031fb184"
@@ -9379,6 +9384,13 @@ regjsparser@^0.6.4:
   integrity sha512-ib77G0uxsA2ovgiYbCVGx4Pv3PSttAx2vIwidqQzbL2U5S4Q+j00HdSAneSBuyVcMvEnTXMjiGgB+DlXozVhpQ==
   dependencies:
     jsesc "~0.5.0"
+
+remark-disable-tokenizers@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/remark-disable-tokenizers/-/remark-disable-tokenizers-1.1.0.tgz#607dc77e7208eed85cef06aebd2e5a924c21b39f"
+  integrity sha512-49cCg4uSVKVmDHWKT5w+2mpDQ3G+xvt/GjypOqjlS0qTSs6/aBxE3iNWgX6ls2upXY17EKVlU0UpGcZjmGWI6A==
+  dependencies:
+    clone "^2.1.2"
 
 remark-frontmatter@^2.0.0:
   version "2.0.0"

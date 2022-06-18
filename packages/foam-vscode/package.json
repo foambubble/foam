@@ -439,6 +439,7 @@
     "lodash": "^4.17.21",
     "markdown-it-regex": "^0.2.0",
     "micromatch": "^4.0.2",
+    "remark-disable-tokenizers": "^1.1.0",
     "remark-frontmatter": "^2.0.0",
     "remark-parse": "^8.0.2",
     "remark-wiki-link": "^0.0.4",

@@ -8,7 +8,8 @@ export enum LinkReferenceDefinitionsSetting {
 }
 
 export interface DisableMarkdownFeaturesSetting {
-  indentedCode: boolean;
+  block: string[];
+  inline: string[];
 }
 
 export function getWikilinkDefinitionSetting(): LinkReferenceDefinitionsSetting {
@@ -42,10 +43,10 @@ export function getFoamLoggerLevel(): LogLevel {
   return workspace.getConfiguration('foam.logging').get('level') ?? 'info';
 }
 
-export function getDisabledMarkdownFeatures(): DisableMarkdownFeaturesSetting {
-  // do setting things
-  // return workspace.getConfiguration('foam.disabled-markdown-features').
-}
+// export function getDisabledMarkdownFeatures(): DisableMarkdownFeaturesSetting {
+//   // do setting things
+//   // return workspace.getConfiguration('foam.disabled-markdown-features').
+// }
 
 /** Retrieve the orphans configuration */
 export function getOrphansConfig(): GroupedResourcesConfig {

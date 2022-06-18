@@ -4,6 +4,7 @@ import unified from 'unified';
 import markdownParse from 'remark-parse';
 import wikiLinkPlugin from 'remark-wiki-link';
 import frontmatterPlugin from 'remark-frontmatter';
+import remarkDisableBlocks from 'remark-disable-tokenizers';
 import { parse as parseYAML } from 'yaml';
 import visit from 'unist-util-visit';
 import detectNewline from 'detect-newline';
@@ -14,7 +15,7 @@ import { Range } from '../model/range';
 import { extractHashtags, extractTagsFromProp, isSome } from '../utils';
 import { Logger } from '../utils/log';
 import { URI } from '../model/uri';
-import { getDisabledMarkdownFeatures } from '../../settings';
+import { DisableMarkdownFeaturesSetting } from '../../settings';
 
 export interface ParserPlugin {
   name?: string;
@@ -29,21 +30,14 @@ export interface ParserPlugin {
 const ALIAS_DIVIDER_CHAR = '|';
 
 export function createMarkdownParser(
-  extraPlugins: ParserPlugin[]
+  extraPlugins: ParserPlugin[],
+  disableMarkDownFeatures?: DisableMarkdownFeaturesSetting
 ): ResourceParser {
   const parser = unified()
     .use(markdownParse, { gfm: true })
     .use(frontmatterPlugin, ['yaml'])
-    .use(wikiLinkPlugin, { aliasDivider: ALIAS_DIVIDER_CHAR });
-
-  const disabledMarkdownFeatures = getDisabledMarkdownFeatures();
-  if (disabledMarkdownFeatures) {
-    if (disabledMarkdownFeatures.indentedCode) {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-      // @ts-ignore
-      delete markdownParse?.Parser?.prototype?.blockTokenizers?.indentedCode;
-    }
-  }
+    .use(wikiLinkPlugin, { aliasDivider: ALIAS_DIVIDER_CHAR })
+    .use(remarkDisableBlocks, disableMarkDownFeatures);
 
   const plugins = [
     titlePlugin,

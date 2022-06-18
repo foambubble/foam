@@ -14,6 +14,7 @@ import { Range } from '../model/range';
 import { extractHashtags, extractTagsFromProp, isSome } from '../utils';
 import { Logger } from '../utils/log';
 import { URI } from '../model/uri';
+import { getDisabledMarkdownFeatures } from '../../settings';
 
 export interface ParserPlugin {
   name?: string;
@@ -34,6 +35,15 @@ export function createMarkdownParser(
     .use(markdownParse, { gfm: true })
     .use(frontmatterPlugin, ['yaml'])
     .use(wikiLinkPlugin, { aliasDivider: ALIAS_DIVIDER_CHAR });
+
+  const disabledMarkdownFeatures = getDisabledMarkdownFeatures();
+  if (disabledMarkdownFeatures) {
+    if (disabledMarkdownFeatures.indentedCode) {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+      // @ts-ignore
+      delete markdownParse?.Parser?.prototype?.blockTokenizers?.indentedCode;
+    }
+  }
 
   const plugins = [
     titlePlugin,

@@ -7,6 +7,10 @@ export enum LinkReferenceDefinitionsSetting {
   off = 'off',
 }
 
+export interface DisableMarkdownFeaturesSetting {
+  indentedCode: boolean;
+}
+
 export function getWikilinkDefinitionSetting(): LinkReferenceDefinitionsSetting {
   return workspace
     .getConfiguration('foam.edit')
@@ -36,6 +40,11 @@ export function getGraphStyle(): object {
 
 export function getFoamLoggerLevel(): LogLevel {
   return workspace.getConfiguration('foam.logging').get('level') ?? 'info';
+}
+
+export function getDisabledMarkdownFeatures(): DisableMarkdownFeaturesSetting {
+  // do setting things
+  // return workspace.getConfiguration('foam.disabled-markdown-features').
 }
 
 /** Retrieve the orphans configuration */

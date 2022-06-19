@@ -10,7 +10,7 @@
 
 - Ensure that you have all the [[recommended-extensions]] installed in Visual Studio Code
 - Reload Visual Studio Code by running `Cmd` + `Shift` + `P` (`Ctrl` + `Shift` + `P` for Windows), type "reload" and run the **Developer: Reload Window** command to for the updated extensions take effect
-- Check the formatting rules for links on [[foam-file-format]], [[wikilinks]] and [[link-formatting-and-autocompletion]]
+- Check the formatting rules for links on [[foam-file-format]] and [[wikilinks]]
 
 ## I don't want Foam enabled for all my workspaces
 Any extension you install in Visual Studio Code is enabled by default. Give the philosophy of Foam it works out of the box without doing any configuration upfront. In case you want to disable Foam for a specific workspace, or disable Foam by default and enable it for specific workspaces, it is advised to follow the best practices as [documented by Visual Studio Code](https://code.visualstudio.com/docs/editor/extension-marketplace#_manage-extensions)

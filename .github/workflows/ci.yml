@@ -12,6 +12,7 @@ jobs:
   lint:
     name: Lint
     runs-on: ubuntu-18.04
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v1
       - name: Setup Node
@@ -39,6 +40,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       OS: ${{ matrix.os }}
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v1
       - name: Setup Node
@@ -60,4 +62,4 @@ jobs:
       - name: Run Tests
         uses: GabrielBB/xvfb-action@v1.4
         with:
-          run: yarn test
+          run: yarn test --stream

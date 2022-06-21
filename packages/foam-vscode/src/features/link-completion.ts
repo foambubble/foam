@@ -185,7 +185,7 @@ export class CompletionProvider
       position.line,
       position.character
     );
-    const resources = this.ws.list().map(resource => {
+    const resources = this.ws.list().flatMap(resource => {
       const label = vscode.workspace.asRelativePath(toVsCodeUri(resource.uri));
       const item = new ResourceCompletionItem(
         label,
@@ -197,7 +197,20 @@ export class CompletionProvider
       item.range = replacementRange;
       item.command = COMPLETION_CURSOR_MOVE;
       item.commitCharacters = linkCommitCharacters;
-      return item;
+      const aliasItems = resource.aliases.map(a => {
+        const item = new ResourceCompletionItem(
+          a.title,
+          vscode.CompletionItemKind.Reference,
+          resource.uri
+        );
+        item.insertText = this.ws.getIdentifier(resource.uri) + '|' + a.title;
+        item.detail = `Alias of ${resource.uri.getName()}`;
+        item.range = replacementRange;
+        item.command = COMPLETION_CURSOR_MOVE;
+        item.commitCharacters = linkCommitCharacters;
+        return item;
+      });
+      return [item, ...aliasItems];
     });
     const placeholders = Array.from(this.graph.placeholders.values()).map(
       uri => {

@@ -380,4 +380,61 @@ and some content`
       expect(note2.properties.hasHeading).toBeTruthy();
     });
   });
+  describe('Alias', () => {
+    it('can find tags in comma separated string', () => {
+      const note = parser.parse(
+        URI.file('/path/to/a'),
+        `
+---
+alias: alias 1, alias 2   , alias3 
+---
+This is a test note without headings.
+But with some content.
+`
+      );
+      expect(note.aliases).toEqual([
+        {
+          range: Range.create(1, 0, 3, 3),
+          title: 'alias 1',
+        },
+        {
+          range: Range.create(1, 0, 3, 3),
+          title: 'alias 2',
+        },
+        {
+          range: Range.create(1, 0, 3, 3),
+          title: 'alias3',
+        },
+      ]);
+    });
+  });
+  it('can find tags in yaml array', () => {
+    const note = parser.parse(
+      URI.file('/path/to/a'),
+      `
+---
+alias:
+- alias 1
+- alias 2
+- alias3
+---
+This is a test note without headings.
+But with some content.
+`
+    );
+    expect(note.aliases).toEqual([
+      {
+        range: Range.create(1, 0, 6, 3),
+        title: 'alias 1',
+      },
+      {
+        range: Range.create(1, 0, 6, 3),
+        title: 'alias 2',
+      },
+      {
+        range: Range.create(1, 0, 6, 3),
+        title: 'alias3',
+      },
+    ]);
+  });
 });

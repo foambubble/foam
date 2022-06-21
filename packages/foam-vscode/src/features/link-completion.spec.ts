@@ -157,4 +157,26 @@ Content of section 2
       new Set(['Section 1', 'Section 2'])
     );
   });
+
+  it('should return page alias', async () => {
+    const { uri, content } = await createFile(`
+---
+alias: alias-a
+---
+[[
+`);
+    ws.set(parser.parse(uri, content));
+
+    const { doc } = await showInEditor(uri);
+    const provider = new SectionCompletionProvider(ws);
+
+    const links = await provider.provideCompletionItems(
+      doc,
+      new vscode.Position(4, 2)
+    );
+
+    expect(new Set(links.items.map(i => i.label))).toEqual(
+      new Set(['alias-a'])
+    );
+  });
 });

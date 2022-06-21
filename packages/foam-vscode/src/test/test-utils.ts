@@ -50,6 +50,7 @@ export const createTestNote = (params: {
   definitions?: NoteLinkDefinition[];
   links?: Array<{ slug: string } | { to: string }>;
   tags?: string[];
+  aliases?: string[];
   text?: string;
   sections?: string[];
   root?: URI;
@@ -68,6 +69,11 @@ export const createTestNote = (params: {
     tags:
       params.tags?.map(t => ({
         label: t,
+        range: Range.create(0, 0, 0, 0),
+      })) ?? [],
+    aliases:
+      params.aliases?.map(a => ({
+        title: a,
         range: Range.create(0, 0, 0, 0),
       })) ?? [],
     links: params.links

@@ -159,24 +159,28 @@ Content of section 2
   });
 
   it('should return page alias', async () => {
-    const { uri, content } = await createFile(`
+    const { uri, content } = await createFile(
+      `
 ---
 alias: alias-a
 ---
 [[
-`);
+`,
+      ['new-note-with-alias.md']
+    );
     ws.set(parser.parse(uri, content));
 
     const { doc } = await showInEditor(uri);
-    const provider = new SectionCompletionProvider(ws);
+    const provider = new CompletionProvider(ws, graph);
 
     const links = await provider.provideCompletionItems(
       doc,
       new vscode.Position(4, 2)
     );
 
-    expect(new Set(links.items.map(i => i.label))).toEqual(
-      new Set(['alias-a'])
-    );
+    const aliasCompletionItem = links.items.find(i => i.label === 'alias-a');
+    expect(aliasCompletionItem).not.toBeNull();
+    expect(aliasCompletionItem.label).toBe('alias-a');
+    expect(aliasCompletionItem.insertText).toBe('new-note-with-alias|alias-a');
   });
 });

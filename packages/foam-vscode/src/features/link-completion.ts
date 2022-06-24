@@ -7,6 +7,7 @@ import { FoamFeature } from '../types';
 import { getNoteTooltip, mdDocSelector } from '../utils';
 import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
 
+export const aliasCommitCharacters = ['#'];
 export const linkCommitCharacters = ['#', '|'];
 export const sectionCommitCharacters = ['|'];
 
@@ -185,7 +186,7 @@ export class CompletionProvider
       position.line,
       position.character
     );
-    const resources = this.ws.list().flatMap(resource => {
+    const resources = this.ws.list().map(resource => {
       const label = vscode.workspace.asRelativePath(toVsCodeUri(resource.uri));
       const item = new ResourceCompletionItem(
         label,
@@ -197,21 +198,25 @@ export class CompletionProvider
       item.range = replacementRange;
       item.command = COMPLETION_CURSOR_MOVE;
       item.commitCharacters = linkCommitCharacters;
-      const aliasItems = resource.aliases.map(a => {
+      return item;
+    });
+    const aliases = this.ws.list().flatMap(resource =>
+      resource.aliases.map(a => {
         const item = new ResourceCompletionItem(
           a.title,
           vscode.CompletionItemKind.Reference,
           resource.uri
         );
         item.insertText = this.ws.getIdentifier(resource.uri) + '|' + a.title;
-        item.detail = `Alias of ${resource.uri.getName()}`;
+        item.detail = `Alias of ${vscode.workspace.asRelativePath(
+          toVsCodeUri(resource.uri)
+        )}`;
         item.range = replacementRange;
         item.command = COMPLETION_CURSOR_MOVE;
-        item.commitCharacters = linkCommitCharacters;
+        item.commitCharacters = aliasCommitCharacters;
         return item;
-      });
-      return [item, ...aliasItems];
-    });
+      })
+    );
     const placeholders = Array.from(this.graph.placeholders.values()).map(
       uri => {
         const item = new vscode.CompletionItem(
@@ -225,7 +230,11 @@ export class CompletionProvider
       }
     );
 
-    return new vscode.CompletionList([...resources, ...placeholders]);
+    return new vscode.CompletionList([
+      ...resources,
+      ...aliases,
+      ...placeholders,
+    ]);
   }
 
   resolveCompletionItem(

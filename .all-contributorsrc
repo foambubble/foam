@@ -905,6 +905,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "lingyv-li",
+      "name": "Larry Li",
+      "avatar_url": "https://avatars.githubusercontent.com/u/8937944?v=4",
+      "profile": "https://github.com/lingyv-li",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,

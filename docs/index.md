@@ -232,6 +232,9 @@ If that sounds like something you're interested in, I'd love to have you along o
     <td align="center"><a href="https://www.elastic.co/elastic-agent"><img src="https://avatars.githubusercontent.com/u/1813008?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Josh Dover</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=joshdover" title="Code">💻</a></td>
     <td align="center"><a href="http://phelm.co.uk"><img src="https://avatars.githubusercontent.com/u/4057948?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Phil Helm</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=phelma" title="Documentation">📖</a></td>
   </tr>
+  <tr>
+    <td align="center"><a href="https://github.com/lingyv-li"><img src="https://avatars.githubusercontent.com/u/8937944?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Larry Li</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=lingyv-li" title="Code">💻</a></td>
+  </tr>
 </table>
 
 <!-- markdownlint-restore -->

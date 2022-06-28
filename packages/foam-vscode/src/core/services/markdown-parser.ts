@@ -40,6 +40,7 @@ export function createMarkdownParser(
     wikilinkPlugin,
     definitionsPlugin,
     tagsPlugin,
+    aliasesPlugin,
     sectionsPlugin,
     ...extraPlugins,
   ];
@@ -72,6 +73,7 @@ export function createMarkdownParser(
         title: '',
         sections: [],
         tags: [],
+        aliases: [],
         links: [],
         definitions: [],
         source: {
@@ -251,6 +253,23 @@ const titlePlugin: ParserPlugin = {
   onDidVisitTree: (tree, note) => {
     if (note.title === '') {
       note.title = note.uri.getName();
+    }
+  },
+};
+
+const aliasesPlugin: ParserPlugin = {
+  name: 'aliases',
+  onDidFindProperties: (props, note, node) => {
+    if (isSome(props.alias)) {
+      const aliases = Array.isArray(props.alias)
+        ? props.alias
+        : props.alias.split(',').map(m => m.trim());
+      for (const alias of aliases) {
+        note.aliases.push({
+          title: alias,
+          range: astPositionToFoamRange(node.position!),
+        });
+      }
     }
   },
 };

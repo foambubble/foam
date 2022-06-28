@@ -7,6 +7,7 @@ import { FoamFeature } from '../types';
 import { getNoteTooltip, mdDocSelector } from '../utils';
 import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
 
+export const aliasCommitCharacters = ['#'];
 export const linkCommitCharacters = ['#', '|'];
 export const sectionCommitCharacters = ['|'];
 
@@ -199,6 +200,23 @@ export class CompletionProvider
       item.commitCharacters = linkCommitCharacters;
       return item;
     });
+    const aliases = this.ws.list().flatMap(resource =>
+      resource.aliases.map(a => {
+        const item = new ResourceCompletionItem(
+          a.title,
+          vscode.CompletionItemKind.Reference,
+          resource.uri
+        );
+        item.insertText = this.ws.getIdentifier(resource.uri) + '|' + a.title;
+        item.detail = `Alias of ${vscode.workspace.asRelativePath(
+          toVsCodeUri(resource.uri)
+        )}`;
+        item.range = replacementRange;
+        item.command = COMPLETION_CURSOR_MOVE;
+        item.commitCharacters = aliasCommitCharacters;
+        return item;
+      })
+    );
     const placeholders = Array.from(this.graph.placeholders.values()).map(
       uri => {
         const item = new vscode.CompletionItem(
@@ -212,7 +230,11 @@ export class CompletionProvider
       }
     );
 
-    return new vscode.CompletionList([...resources, ...placeholders]);
+    return new vscode.CompletionList([
+      ...resources,
+      ...aliases,
+      ...placeholders,
+    ]);
   }
 
   resolveCompletionItem(

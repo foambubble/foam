@@ -157,4 +157,30 @@ Content of section 2
       new Set(['Section 1', 'Section 2'])
     );
   });
+
+  it('should return page alias', async () => {
+    const { uri, content } = await createFile(
+      `
+---
+alias: alias-a
+---
+[[
+`,
+      ['new-note-with-alias.md']
+    );
+    ws.set(parser.parse(uri, content));
+
+    const { doc } = await showInEditor(uri);
+    const provider = new CompletionProvider(ws, graph);
+
+    const links = await provider.provideCompletionItems(
+      doc,
+      new vscode.Position(4, 2)
+    );
+
+    const aliasCompletionItem = links.items.find(i => i.label === 'alias-a');
+    expect(aliasCompletionItem).not.toBeNull();
+    expect(aliasCompletionItem.label).toBe('alias-a');
+    expect(aliasCompletionItem.insertText).toBe('new-note-with-alias|alias-a');
+  });
 });

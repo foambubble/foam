@@ -4,6 +4,15 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.18.5] - 2022-06-29
+
+Fixes and Improvements:
+- Support for `alias` YAML property to define note alias (#1014 - thanks @lingyv-li)
+
+Internal:
+- Improved extension bundling (#1015 - thanks @lingyv-li)
+- Use `vscode.workspace.fs` instead of `fs` (#1005 - thanks @joshdover)
+
 ## [0.18.4] - 2022-06-03
 
 Fixes and Improvements:

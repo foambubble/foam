@@ -168,11 +168,11 @@
       },
       {
         "command": "foam-vscode.open-daily-note",
-        "title": "Foam: Open Daily Note"
+        "title": "Foam: Open Today's Note"
       },
       {
         "command": "foam-vscode.open-daily-note-for-date",
-        "title": "Foam: Pick Date for Daily Note"
+        "title": "Foam: Open Daily Note"
       },
       {
         "command": "foam-vscode.open-random-note",

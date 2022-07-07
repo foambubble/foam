@@ -411,7 +411,7 @@
     "install-extension": "code --install-extension ./foam-vscode-$npm_package_version.vsix",
     "publish-extension-openvsx": "npx ovsx publish foam-vscode-$npm_package_version.vsix -p $OPENVSX_TOKEN",
     "publish-extension-vscode": "npx vsce publish --packagePath foam-vscode-$npm_package_version.vsix",
-    "publish-extension": "yarn publish-extension-vscode && yarn publish-extension-openvsx && yarn npm-cleanup"
+    "publish-extension": "yarn publish-extension-vscode && yarn publish-extension-openvsx"
   },
   "devDependencies": {
     "@types/dateformat": "^3.0.1",

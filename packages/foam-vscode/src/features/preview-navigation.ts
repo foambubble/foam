@@ -32,6 +32,7 @@ const feature: FoamFeature = {
   },
 };
 
+export const CONFIG_EMBED_NOTE_IN_CONTAINER = 'preview.embedNoteInContainer';
 const refsStack: string[] = [];
 export const markdownItWithNoteInclusion = (
   md: markdownit,
@@ -63,12 +64,9 @@ export const markdownItWithNoteInclusion = (
         switch (includedNote.type) {
           case 'note':
             const note = md.render(includedNote.source.text);
-            content = getFoamVsCodeConfig('preview.embedNoteInContainer')
-              ? `
-<div class="embed-container-note">
-  ${note}
-</div>`
-              : note;
+            content = getFoamVsCodeConfig(CONFIG_EMBED_NOTE_IN_CONTAINER)
+              ? `<div class="embed-container-note">${note}</div>`
+              : includedNote.source.text;
             break;
           case 'attachment':
             const link = md.renderInline('[[' + wikilink + ']]');
@@ -84,10 +82,7 @@ Embed for attachments is not supported
                 toVsCodeUri(includedNote.uri)
               )})`
             );
-            content = `
-<div class="embed-container-image">
-  ${image}
-</div>`;
+            content = `<div class="embed-container-image">${image}</div>`;
             break;
         }
         const section = Resource.findSection(
@@ -136,10 +131,7 @@ export const markdownItWithFoamLinks = (
         }
 
         const link = vscode.workspace.asRelativePath(toVsCodeUri(resource.uri));
-        return `
-<a class='foam-note-link' title='${resource.title}' href='/${link}' data-href='/${link}'>
-  ${label}
-</a>`;
+        return `<a class='foam-note-link' title='${resource.title}' href='/${link}' data-href='/${link}'>${label}</a>`;
       } catch (e) {
         Logger.error(
           `Error while creating link for [[${wikilink}]] in Preview panel`,
@@ -151,11 +143,8 @@ export const markdownItWithFoamLinks = (
   });
 };
 
-const getPlaceholderLink = (content: string) => `
-<a class='foam-placeholder-link' title="Link to non-existing resource" href="javascript:void(0);">
-  ${content}
-</a>
-`;
+const getPlaceholderLink = (content: string) =>
+  `<a class='foam-placeholder-link' title="Link to non-existing resource" href="javascript:void(0);">${content}</a>`;
 
 export const markdownItWithFoamTags = (
   md: markdownit,

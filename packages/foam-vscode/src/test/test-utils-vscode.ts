@@ -89,3 +89,29 @@ export const createNote = (r: Resource) => {
     new TextEncoder().encode(content)
   );
 };
+
+/**
+ * Runs a function with a modified configuration and
+ * restores the original configuration afterwards
+ *
+ * @param key the key of the configuration to modify
+ * @param value the value to set the configuration to
+ * @param fn the function to execute
+ */
+export const withModifiedConfiguration = async (key, value, fn: () => void) => {
+  const old = vscode.workspace.getConfiguration().get(key);
+  await vscode.workspace.getConfiguration().update(key, value);
+  await fn();
+  await vscode.workspace.getConfiguration().update(key, old);
+};
+
+/**
+ * Runs a function with a modified Foam configuration and
+ * restores the original configuration afterwards
+ *
+ * @param key the key of the Foam configuration to modify
+ * @param value the value to set the configuration to
+ * @param fn the function to execute
+ */
+export const withModifiedFoamConfiguration = (key, value, fn: () => void) =>
+  withModifiedConfiguration(`foam.${key}`, value, fn);

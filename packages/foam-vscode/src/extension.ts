@@ -29,16 +29,21 @@ export async function activate(context: ExtensionContext) {
       getIgnoredFilesSetting().map(g => g.toString())
     );
     const watcher = workspace.createFileSystemWatcher('**/*');
-    const markdownProvider = new MarkdownResourceProvider(matcher, triggers => {
-      return [
-        watcher.onDidChange(uri => triggers.onDidChange(fromVsCodeUri(uri))),
-        watcher.onDidCreate(uri => triggers.onDidCreate(fromVsCodeUri(uri))),
-        watcher.onDidDelete(uri => triggers.onDidDelete(fromVsCodeUri(uri))),
-        watcher,
-      ];
-    });
+    const markdownProvider = new MarkdownResourceProvider(
+      matcher,
+      dataStore,
+      triggers => {
+        return [
+          watcher.onDidChange(uri => triggers.onDidChange(fromVsCodeUri(uri))),
+          watcher.onDidCreate(uri => triggers.onDidCreate(fromVsCodeUri(uri))),
+          watcher.onDidDelete(uri => triggers.onDidDelete(fromVsCodeUri(uri))),
+          watcher,
+        ];
+      }
+    );
     const attachmentProvider = new AttachmentResourceProvider(
       matcher,
+      dataStore,
       triggers => {
         return [
           watcher.onDidChange(uri => triggers.onDidChange(fromVsCodeUri(uri))),

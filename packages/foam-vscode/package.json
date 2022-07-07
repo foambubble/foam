@@ -62,25 +62,25 @@
         {
           "id": "foam-vscode.backlinks",
           "name": "Backlinks",
-          "icon": "media/dep.svg",
+          "icon": "$(references)",
           "contextualTitle": "Backlinks"
         },
         {
           "id": "foam-vscode.tags-explorer",
           "name": "Tag Explorer",
-          "icon": "media/dep.svg",
+          "icon": "$(tag)",
           "contextualTitle": "Tags Explorer"
         },
         {
           "id": "foam-vscode.orphans",
           "name": "Orphans",
-          "icon": "media/dep.svg",
+          "icon": "$(debug-gripper)",
           "contextualTitle": "Orphans"
         },
         {
           "id": "foam-vscode.placeholders",
           "name": "Placeholders",
-          "icon": "media/dep.svg",
+          "icon": "$(debug-disconnect)",
           "contextualTitle": "Placeholders"
         }
       ]

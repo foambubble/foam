@@ -4,6 +4,12 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.19.0] - 2022-07-07
+
+New Features:
+- Support for attachments (PDF) and images (#1027)
+- Support for opening day notes for other days as well (#1026, thanks @alper)
+
 ## [0.18.5] - 2022-06-29
 
 Fixes and Improvements:

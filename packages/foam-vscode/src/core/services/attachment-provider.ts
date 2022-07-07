@@ -2,7 +2,7 @@ import { Resource, ResourceLink } from '../model/note';
 import { Logger } from '../utils/log';
 import { URI } from '../model/uri';
 import { FoamWorkspace } from '../model/workspace';
-import { IDataStore, FileDataStore, IMatcher } from '../services/datastore';
+import { IDataStore, IMatcher } from '../services/datastore';
 import { IDisposable } from '../common/lifecycle';
 import { ResourceProvider } from '../model/provider';
 import { Position } from '../model/position';
@@ -11,11 +11,15 @@ const imageExtensions = ['.png', '.jpg', '.gif'];
 const attachmentExtensions = ['.pdf', ...imageExtensions];
 
 const asResource = (uri: URI): Resource => {
+  const type = imageExtensions.includes(uri.getExtension())
+    ? 'image'
+    : 'attachment';
   return {
     uri: uri,
     title: uri.getBasename(),
-    type: 'attachment',
-    properties: { type: 'attachment' },
+    type: type,
+    aliases: [],
+    properties: { type: type },
     sections: [],
     links: [],
     tags: [],
@@ -34,12 +38,12 @@ export class AttachmentResourceProvider implements ResourceProvider {
 
   constructor(
     private readonly matcher: IMatcher,
+    private readonly dataStore: IDataStore,
     private readonly watcherInit?: (triggers: {
       onDidChange: (uri: URI) => void;
       onDidCreate: (uri: URI) => void;
       onDidDelete: (uri: URI) => void;
-    }) => IDisposable[],
-    private readonly dataStore: IDataStore = new FileDataStore()
+    }) => IDisposable[]
   ) {}
 
   async init(workspace: FoamWorkspace) {
@@ -52,10 +56,10 @@ export class AttachmentResourceProvider implements ResourceProvider {
       .match(filesByFolder.flat())
       .filter(this.supports);
 
-    files.map(uri => {
+    for (const uri of files) {
       Logger.info('Found: ' + uri.toString());
       workspace.set(asResource(uri));
-    });
+    }
 
     this.disposables =
       this.watcherInit?.({

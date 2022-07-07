@@ -6,8 +6,10 @@ import {
   createFile,
   deleteFile,
   getUriInWorkspace,
+  withModifiedFoamConfiguration,
 } from '../test/test-utils-vscode';
 import {
+  CONFIG_EMBED_NOTE_IN_CONTAINER,
   markdownItWithFoamLinks,
   markdownItWithFoamTags,
   markdownItWithNoteInclusion,
@@ -73,22 +75,48 @@ describe('Stylable tag generation in preview', () => {
 });
 
 describe('Displaying included notes in preview', () => {
-  it('should render an included note', () => {
+  it('should render an included note in flat mode', async () => {
     const note = createTestNote({
       uri: 'note-a.md',
       text: 'This is the text of note A',
     });
     const ws = new FoamWorkspace().set(note);
-    const md = markdownItWithNoteInclusion(MarkdownIt(), ws);
+    await withModifiedFoamConfiguration(
+      CONFIG_EMBED_NOTE_IN_CONTAINER,
+      false,
+      () => {
+        const md = markdownItWithNoteInclusion(MarkdownIt(), ws);
 
-    expect(
-      md.render(`This is the root node. 
-
- ![[note-a]]`)
-    ).toMatch(
-      `<p>This is the root node.</p>
+        expect(
+          md.render(`This is the root node. 
+  
+   ![[note-a]]`)
+        ).toMatch(
+          `<p>This is the root node.</p>
 <p><p>This is the text of note A</p>
 </p>`
+        );
+      }
+    );
+  });
+
+  it('should render an included note in container mode', async () => {
+    const note = createTestNote({
+      uri: 'note-a.md',
+      text: 'This is the text of note A',
+    });
+    const ws = new FoamWorkspace().set(note);
+    await await withModifiedFoamConfiguration(
+      CONFIG_EMBED_NOTE_IN_CONTAINER,
+      true,
+      () => {
+        const md = markdownItWithNoteInclusion(MarkdownIt(), ws);
+
+        const res = md.render(`This is the root node. ![[note-a]]`);
+        expect(res).toContain('This is the root node');
+        expect(res).toContain('embed-container-note');
+        expect(res).toContain('This is the text of note A');
+      }
     );
   });
 
@@ -112,15 +140,21 @@ This is the third section of note D
     const ws = new FoamWorkspace().set(parser.parse(note.uri, note.content));
     const md = markdownItWithNoteInclusion(MarkdownIt(), ws);
 
-    expect(
-      md.render(`This is the root node. 
+    await withModifiedFoamConfiguration(
+      CONFIG_EMBED_NOTE_IN_CONTAINER,
+      false,
+      () => {
+        expect(
+          md.render(`This is the root node. 
 
  ![[note-e#Section 2]]`)
-    ).toMatch(
-      `<p>This is the root node.</p>
+        ).toMatch(
+          `<p>This is the root node.</p>
 <p><h1>Section 2</h1>
 <p>This is the second section of note D</p>
 </p>`
+        );
+      }
     );
 
     await deleteFile(note);
@@ -145,12 +179,10 @@ This is the third section of note D
     });
     const ws = new FoamWorkspace().set(noteA).set(noteB);
     const md = markdownItWithNoteInclusion(MarkdownIt(), ws);
+    const res = md.render(noteB.source.text);
 
-    expect(md.render(noteB.source.text)).toMatch(
-      `<p>This is the text of note B which includes <p>This is the text of note A which includes <p>This is the text of note B which includes <div class="foam-cyclic-link-warning">Cyclic link detected for wikilink: note-a</div></p>
-</p>
-</p>
-`
-    );
+    expect(res).toContain('This is the text of note B which includes');
+    expect(res).toContain('This is the text of note A which includes');
+    expect(res).toContain('Cyclic link detected for wikilink: note-a');
   });
 });

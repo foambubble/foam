@@ -34,7 +34,7 @@ export const bootstrap = async (
   const tsWsDone = Date.now();
   Logger.info(`Workspace loaded in ${tsWsDone - tsStart}ms`);
 
-  const graph = FoamGraph.fromWorkspace(workspace, true, 500);
+  const graph = FoamGraph.fromWorkspace(workspace, true);
   const tsGraphDone = Date.now();
   Logger.info(`Graph loaded in ${tsGraphDone - tsWsDone}ms`);
 

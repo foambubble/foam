@@ -11,12 +11,14 @@ import { NoteFactory } from './services/templates';
  * In the case that the daily note file does not exist,
  * it gets created along with any folders in its path.
  *
- * @param date A given date to be formatted as filename.
+ * @param date The target date. If not provided, the function returns immediately.
  */
 export async function openDailyNoteFor(date?: Date) {
-  const targetDate = date instanceof Date ? date : new Date();
+  if (date == null) {
+    return;
+  }
 
-  const { didCreateFile, uri } = await createDailyNoteIfNotExists(targetDate);
+  const { didCreateFile, uri } = await createDailyNoteIfNotExists(date);
   // if a new file is created, the editor is automatically created
   // but forcing the focus will block the template placeholders from working
   // so we only explicitly focus on the note if the file already exists

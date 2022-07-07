@@ -168,6 +168,10 @@
       },
       {
         "command": "foam-vscode.open-daily-note",
+        "title": "Foam: Open Today's Note"
+      },
+      {
+        "command": "foam-vscode.open-daily-note-for-date",
         "title": "Foam: Open Daily Note"
       },
       {
@@ -377,6 +381,10 @@
       {
         "command": "foam-vscode.open-daily-note",
         "key": "alt+d"
+      },
+      {
+        "command": "foam-vscode.open-daily-note-for-date",
+        "key": "alt+h"
       }
     ]
   },

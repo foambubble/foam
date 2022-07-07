@@ -7,9 +7,9 @@ import { FoamWorkspace } from '../core/model/workspace';
 import { Logger } from '../core/utils/log';
 import { toVsCodeUri } from '../utils/vsc-utils';
 import { Resource } from '../core/model/note';
-
-const ALIAS_DIVIDER_CHAR = '|';
-const refsStack: string[] = [];
+import { MarkdownLink } from '../core/services/markdown-link';
+import { Range } from '../core/model/range';
+import { isEmpty } from 'lodash';
 
 const feature: FoamFeature = {
   activate: async (
@@ -31,6 +31,7 @@ const feature: FoamFeature = {
   },
 };
 
+const refsStack: string[] = [];
 export const markdownItWithNoteInclusion = (
   md: markdownit,
   workspace: FoamWorkspace
@@ -56,22 +57,49 @@ export const markdownItWithNoteInclusion = (
 
         if (cyclicLinkDetected) {
           return `<div class="foam-cyclic-link-warning">Cyclic link detected for wikilink: ${wikilink}</div>`;
-        } else {
-          let content = includedNote.source.text;
-          const section = Resource.findSection(
-            includedNote,
-            includedNote.uri.fragment
-          );
-          if (isSome(section)) {
-            const rows = content.split('\n');
-            content = rows
-              .slice(section.range.start.line, section.range.end.line)
-              .join('\n');
-          }
-          const html = md.render(content);
-          refsStack.pop();
-          return html;
         }
+        let content = `Embed for [[${wikilink}]]`;
+        switch (includedNote.type) {
+          case 'note':
+            const note = md.render(includedNote.source.text);
+            content = `
+<div class="embed-container-note">
+  ${note}
+</div>`;
+            break;
+          case 'attachment':
+            const link = md.renderInline('[[' + wikilink + ']]');
+            content = `
+<div class="embed-container-attachment">
+${link}<br/>
+Embed for attachments is not supported
+</div>`;
+            break;
+          case 'image':
+            const image = md.render(
+              `![](${vscode.workspace.asRelativePath(
+                toVsCodeUri(includedNote.uri)
+              )})`
+            );
+            content = `
+<div class="embed-container-image">
+  ${image}
+</div>`;
+            break;
+        }
+        const section = Resource.findSection(
+          includedNote,
+          includedNote.uri.fragment
+        );
+        if (isSome(section)) {
+          const rows = content.split('\n');
+          content = rows
+            .slice(section.range.start.line, section.range.end.line)
+            .join('\n');
+        }
+        const html = md.render(content);
+        refsStack.pop();
+        return html;
       } catch (e) {
         Logger.error(
           `Error while including [[${wikilink}]] into the current document of the Preview panel`,
@@ -92,22 +120,23 @@ export const markdownItWithFoamLinks = (
     regex: /\[\[([^[\]]+?)\]\]/,
     replace: (wikilink: string) => {
       try {
-        const linkHasAlias = wikilink.includes(ALIAS_DIVIDER_CHAR);
-        const resourceLink = linkHasAlias
-          ? wikilink.substring(0, wikilink.indexOf('|'))
-          : wikilink;
+        const { target, alias } = MarkdownLink.analyzeLink({
+          rawText: '[[' + wikilink + ']]',
+          type: 'wikilink',
+          range: Range.create(0, 0),
+        });
+        const label = isEmpty(alias) ? target : alias;
 
-        const resource = workspace.find(resourceLink);
+        const resource = workspace.find(target);
         if (isNone(resource)) {
-          return getPlaceholderLink(resourceLink);
+          return getPlaceholderLink(label);
         }
 
-        const linkLabel = linkHasAlias
-          ? wikilink.substr(wikilink.indexOf('|') + 1)
-          : wikilink;
-
         const link = vscode.workspace.asRelativePath(toVsCodeUri(resource.uri));
-        return `<a class='foam-note-link' title='${resource.title}' href='/${link}' data-href='/${link}'>${linkLabel}</a>`;
+        return `
+<a class='foam-note-link' title='${resource.title}' href='/${link}' data-href='/${link}'>
+  ${label}
+</a>`;
       } catch (e) {
         Logger.error(
           `Error while creating link for [[${wikilink}]] in Preview panel`,
@@ -119,8 +148,11 @@ export const markdownItWithFoamLinks = (
   });
 };
 
-const getPlaceholderLink = (content: string) =>
-  `<a class='foam-placeholder-link' title="Link to non-existing resource" href="javascript:void(0);">${content}</a>`;
+const getPlaceholderLink = (content: string) => `
+<a class='foam-placeholder-link' title="Link to non-existing resource" href="javascript:void(0);">
+  ${content}
+</a>
+`;
 
 export const markdownItWithFoamTags = (
   md: markdownit,

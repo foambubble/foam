@@ -365,6 +365,11 @@
           ],
           "description": "Whether or not to navigate to the target daily note when a daily note snippet is selected."
         },
+        "foam.preview.embedNoteInContainer": {
+          "type": "boolean",
+          "default": true,
+          "description": "Wrap embedded notes in a container when displayed in preview panel"
+        },
         "foam.graph.titleMaxLength": {
           "type": "number",
           "default": 24,

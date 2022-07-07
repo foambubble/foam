@@ -10,6 +10,7 @@ import { Resource } from '../core/model/note';
 import { MarkdownLink } from '../core/services/markdown-link';
 import { Range } from '../core/model/range';
 import { isEmpty } from 'lodash';
+import { getFoamVsCodeConfig } from '../services/config';
 
 const feature: FoamFeature = {
   activate: async (
@@ -62,10 +63,12 @@ export const markdownItWithNoteInclusion = (
         switch (includedNote.type) {
           case 'note':
             const note = md.render(includedNote.source.text);
-            content = `
+            content = getFoamVsCodeConfig('preview.embedNoteInContainer')
+              ? `
 <div class="embed-container-note">
   ${note}
-</div>`;
+</div>`
+              : note;
             break;
           case 'attachment':
             const link = md.renderInline('[[' + wikilink + ']]');

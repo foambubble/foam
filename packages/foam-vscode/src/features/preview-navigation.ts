@@ -63,26 +63,25 @@ export const markdownItWithNoteInclusion = (
         let content = `Embed for [[${wikilink}]]`;
         switch (includedNote.type) {
           case 'note':
-            const note = md.render(includedNote.source.text);
             content = getFoamVsCodeConfig(CONFIG_EMBED_NOTE_IN_CONTAINER)
-              ? `<div class="embed-container-note">${note}</div>`
+              ? `<div class="embed-container-note">${md.render(
+                  includedNote.source.text
+                )}</div>`
               : includedNote.source.text;
             break;
           case 'attachment':
-            const link = md.renderInline('[[' + wikilink + ']]');
             content = `
 <div class="embed-container-attachment">
-${link}<br/>
+${md.renderInline('[[' + wikilink + ']]')}<br/>
 Embed for attachments is not supported
 </div>`;
             break;
           case 'image':
-            const image = md.render(
+            content = `<div class="embed-container-image">${md.render(
               `![](${vscode.workspace.asRelativePath(
                 toVsCodeUri(includedNote.uri)
               )})`
-            );
-            content = `<div class="embed-container-image">${image}</div>`;
+            )}</div>`;
             break;
         }
         const section = Resource.findSection(

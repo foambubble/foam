@@ -90,6 +90,9 @@ export const createNote = (r: Resource) => {
   );
 };
 
+export const runCommand = async <T>(command: string, args: T = undefined) =>
+  vscode.commands.executeCommand(command, args);
+
 /**
  * Runs a function with a modified configuration and
  * restores the original configuration afterwards

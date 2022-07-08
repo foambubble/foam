@@ -6,7 +6,9 @@ import {
   readFile,
   renameFile,
   showInEditor,
+  runCommand,
 } from '../test/test-utils-vscode';
+import { UPDATE_GRAPH_COMMAND_NAME } from './commands/update-graph';
 
 describe('Note rename sync', () => {
   beforeAll(async () => {
@@ -36,9 +38,9 @@ describe('Note rename sync', () => {
       const newName = 'renamed-note-a';
       const newUri = noteA.uri.resolve(newName);
 
-      // wait for workspace files to be added to graph (because of graph debounced update)
-      // TODO this should be replaced by either a force-refresh command or by Foam updating immediately in test mode
-      await wait(600);
+      // wait for the rename events to be propagated
+      await wait(1000);
+      await runCommand(UPDATE_GRAPH_COMMAND_NAME);
       await renameFile(noteA.uri, newUri);
 
       await waitForExpect(async () => {
@@ -73,9 +75,9 @@ describe('Note rename sync', () => {
       // rename note A
       const newUri = noteA.uri.resolve('note-b.md');
 
-      // wait for workspace files to be added to graph (because of graph debounced update)
-      // TODO this should be replaced by either a force-refresh command or by Foam updating immediately in test mode
-      await wait(600);
+      // wait for the rename events to be propagated
+      await wait(1000);
+      await runCommand(UPDATE_GRAPH_COMMAND_NAME);
       await renameFile(noteA.uri, newUri);
 
       await waitForExpect(async () => {
@@ -104,9 +106,9 @@ describe('Note rename sync', () => {
 
       const newUri = noteA.uri.resolve('../second/note-a.md');
 
-      // wait for workspace files to be added to graph (because of graph debounced update)
-      // TODO this should be replaced by either a force-refresh command or by Foam updating immediately in test mode
-      await wait(600);
+      // wait for the rename events to be propagated
+      await wait(1000);
+      await runCommand(UPDATE_GRAPH_COMMAND_NAME);
       await renameFile(noteA.uri, newUri);
 
       await waitForExpect(async () => {
@@ -122,9 +124,9 @@ describe('Note rename sync', () => {
 
       // rename note A
       const newUri = noteA.uri.resolve('new-note-a.md');
-      // wait for workspace files to be added to graph (because of graph debounced update)
-      // TODO this should be replaced by either a force-refresh command or by Foam updating immediately in test mode
-      await wait(600);
+      // wait for the rename events to be propagated
+      await wait(1000);
+      await runCommand(UPDATE_GRAPH_COMMAND_NAME);
       await renameFile(noteA.uri, newUri);
 
       await waitForExpect(async () => {
@@ -140,9 +142,9 @@ describe('Note rename sync', () => {
 
       // rename note A
       const newUri = noteA.uri.resolve('new-note-with-section.md');
-      // wait for workspace files to be added to graph (because of graph debounced update)
-      // TODO this should be replaced by either a force-refresh command or by Foam updating immediately in test mode
-      await wait(600);
+      // wait for the rename events to be propagated
+      await wait(1000);
+      await runCommand(UPDATE_GRAPH_COMMAND_NAME);
       await renameFile(noteA.uri, newUri);
 
       await waitForExpect(async () => {
@@ -161,9 +163,10 @@ describe('Note rename sync', () => {
       const noteC = await createFile(`Link to [[note-a]] from note C.`);
 
       const newUri = noteA.uri.resolve('../note-a.md');
-      // wait for workspace files to be added to graph (because of graph debounced update)
-      // TODO this should be replaced by either a force-refresh command or by Foam updating immediately in test mode
-      await wait(600);
+      // wait for the rename events to be propagated
+      await wait(1000);
+      await runCommand(UPDATE_GRAPH_COMMAND_NAME);
+
       await renameFile(noteA.uri, newUri);
 
       const content = await readFile(noteC.uri);
@@ -192,9 +195,9 @@ describe('Note rename sync', () => {
       const { doc } = await showInEditor(noteB.uri);
 
       const newUri = noteA.uri.resolve('../note-a.md');
-      // wait for workspace files to be added to graph (because of graph debounced update)
-      // TODO this should be replaced by either a force-refresh command or by Foam updating immediately in test mode
-      await wait(600);
+      // wait for the rename events to be propagated
+      await wait(1000);
+      await runCommand(UPDATE_GRAPH_COMMAND_NAME);
       await renameFile(noteA.uri, newUri);
 
       await waitForExpect(async () => {

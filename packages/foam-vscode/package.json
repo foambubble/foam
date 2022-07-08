@@ -23,6 +23,7 @@
     "onView:foam-vscode.tags-explorer",
     "onCommand:foam-vscode.update-wikilinks",
     "onCommand:foam-vscode.open-daily-note",
+    "onCommand:foam-vscode.update-graph",
     "onCommand:foam-vscode.open-random-note",
     "onCommand:foam-vscode.janitor",
     "onCommand:foam-vscode.copy-without-brackets",
@@ -128,6 +129,10 @@
       ],
       "commandPalette": [
         {
+          "command": "foam-vscode.update-graph",
+          "when": "false"
+        },
+        {
           "command": "foam-vscode.group-orphans-by-folder",
           "when": "false"
         },
@@ -154,6 +159,10 @@
       ]
     },
     "commands": [
+      {
+        "command": "foam-vscode.update-graph",
+        "title": "Foam: Update graph"
+      },
       {
         "command": "foam-vscode.set-log-level",
         "title": "Foam: Set log level"

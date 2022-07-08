@@ -99,7 +99,7 @@ export class FoamGraph implements IDisposable {
     return graph;
   }
 
-  private update() {
+  public update() {
     const start = Date.now();
     this.backlinks.clear();
     this.links.clear();

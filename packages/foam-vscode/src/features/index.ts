@@ -1,16 +1,17 @@
-import createReferences from './commands/wikilink-reference-generation';
-import openDailyNote from './commands/open-daily-note';
-import janitor from './commands/janitor';
+import createReferencesCommand from './commands/wikilink-reference-generation';
+import openDailyNoteCommand from './commands/open-daily-note';
+import janitorCommand from './commands/janitor';
+import copyWithoutBracketsCommand from './commands/copy-without-brackets';
+import createFromTemplateCommand from './commands/create-from-template';
+import openRandomNoteCommand from './commands/open-random-note';
+import utilityCommands from './commands/utility-commands';
+import updateGraphCommand from './commands/update-graph';
 import dataviz from './dataviz';
-import copyWithoutBrackets from './commands/copy-without-brackets';
 import openDatedNote from './open-dated-note';
 import tagsExplorer from './tags-tree-view';
-import createFromTemplate from './commands/create-from-template';
-import openRandomNote from './commands/open-random-note';
 import orphans from './orphans';
 import placeholders from './placeholders';
 import backlinks from './backlinks';
-import utilityCommands from './commands/utility-commands';
 import hoverProvider from './hover-provider';
 import previewNavigation from './preview-navigation';
 import completionProvider, { completionCursorMove } from './link-completion';
@@ -18,23 +19,23 @@ import tagCompletionProvider from './tag-completion';
 import linkDecorations from './document-decorator';
 import navigationProviders from './navigation-provider';
 import wikilinkDiagnostics from './wikilink-diagnostics';
-// import completionMoveCursor from './completion-cursor-move';
 import refactor from './refactor';
 import { FoamFeature } from '../types';
 
 export const features: FoamFeature[] = [
   refactor,
+  updateGraphCommand,
   navigationProviders,
   wikilinkDiagnostics,
   tagsExplorer,
-  createReferences,
-  openDailyNote,
-  openRandomNote,
-  janitor,
+  createReferencesCommand,
+  openDailyNoteCommand,
+  openRandomNoteCommand,
+  janitorCommand,
   dataviz,
-  copyWithoutBrackets,
+  copyWithoutBracketsCommand,
   openDatedNote,
-  createFromTemplate,
+  createFromTemplateCommand,
   orphans,
   placeholders,
   backlinks,

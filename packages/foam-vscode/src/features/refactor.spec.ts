@@ -7,6 +7,7 @@ import {
   renameFile,
   showInEditor,
   runCommand,
+  deleteFile,
 } from '../test/test-utils-vscode';
 import { UPDATE_GRAPH_COMMAND_NAME } from './commands/update-graph';
 
@@ -53,6 +54,10 @@ describe('Note rename sync', () => {
           `Link to [[${newName}]] from note C.`
         );
       }, 1000);
+
+      await deleteFile(noteA.uri);
+      await deleteFile(noteB.uri);
+      await deleteFile(noteC.uri);
     });
 
     it('should use the best identifier based on the new note location', async () => {
@@ -85,6 +90,8 @@ describe('Note rename sync', () => {
           `Link to [[first/note-b]] from note C.`
         );
       });
+      await deleteFile(noteA.uri);
+      await deleteFile(noteC.uri);
     });
 
     it('should use the best identifier when moving the note to another directory', async () => {
@@ -114,6 +121,8 @@ describe('Note rename sync', () => {
       await waitForExpect(async () => {
         expect(doc.getText().trim()).toEqual(`Link to [[note-a]] from note C.`);
       });
+      await deleteFile(noteA.uri);
+      await deleteFile(noteC.uri);
     });
 
     it('should keep the alias in wikilinks', async () => {
@@ -132,6 +141,8 @@ describe('Note rename sync', () => {
       await waitForExpect(async () => {
         expect(doc.getText().trim()).toEqual(`Link to [[new-note-a|Alias]]`);
       });
+      await deleteFile(noteA.uri);
+      await deleteFile(noteB.uri);
     });
 
     it('should keep the section part of the wikilink', async () => {
@@ -152,6 +163,8 @@ describe('Note rename sync', () => {
           `Link to [[new-note-with-section#Section]]`
         );
       });
+      await deleteFile(noteA.uri);
+      await deleteFile(noteB.uri);
     });
 
     it('should sync when moving the note to a new folder', async () => {
@@ -173,6 +186,8 @@ describe('Note rename sync', () => {
       await waitForExpect(async () => {
         expect(content.trim()).toEqual(`Link to [[note-a]] from note C.`);
       });
+      await deleteFile(noteA.uri);
+      await deleteFile(noteC.uri);
     });
   });
 
@@ -205,6 +220,9 @@ describe('Note rename sync', () => {
           `Link to [note](../note-a.md) from note B.`
         );
       });
+
+      await deleteFile(noteA.uri);
+      await deleteFile(noteB.uri);
     });
   });
 });

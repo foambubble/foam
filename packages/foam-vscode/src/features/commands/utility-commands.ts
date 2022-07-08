@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
-import { FoamFeature } from '../types';
-import { URI } from '../core/model/uri';
-import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
-import { NoteFactory } from '../services/templates';
-import { Foam } from '../core/model/foam';
+import { FoamFeature } from '../../types';
+import { URI } from '../../core/model/uri';
+import { fromVsCodeUri, toVsCodeUri } from '../../utils/vsc-utils';
+import { NoteFactory } from '../../services/templates';
+import { Foam } from '../../core/model/foam';
 
 export const OPEN_COMMAND = {
   command: 'foam-vscode.open-resource',

@@ -1,5 +1,5 @@
 import { commands, ExtensionContext, QuickPickItem, window } from 'vscode';
-import { FoamFeature } from '../types';
+import { FoamFeature } from '../../types';
 import {
   createTemplate,
   DEFAULT_TEMPLATE_URI,
@@ -7,8 +7,8 @@ import {
   getTemplates,
   NoteFactory,
   TEMPLATES_DIR,
-} from '../services/templates';
-import { Resolver } from '../services/variable-resolver';
+} from '../../services/templates';
+import { Resolver } from '../../services/variable-resolver';
 
 async function offerToCreateTemplate(): Promise<void> {
   const response = await window.showQuickPick(['Yes', 'No'], {

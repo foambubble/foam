@@ -1,8 +1,8 @@
 import { Uri, commands, window, workspace } from 'vscode';
-import { URI } from '../core/model/uri';
-import { toVsCodeUri } from '../utils/vsc-utils';
-import { createFile } from '../test/test-utils-vscode';
-import * as editor from '../services/editor';
+import { URI } from '../../core/model/uri';
+import { toVsCodeUri } from '../../utils/vsc-utils';
+import { createFile, deleteFile } from '../../test/test-utils-vscode';
+import * as editor from '../../services/editor';
 
 describe('Create from template commands', () => {
   describe('create-note-from-template', () => {
@@ -137,6 +137,8 @@ Template A
       const file = await workspace.fs.readFile(toVsCodeUri(URI.file(template)));
       expect(window.showInputBox).toHaveBeenCalled();
       expect(file).toBeDefined();
+
+      await deleteFile(URI.file(template));
     });
 
     it('can be cancelled', async () => {

@@ -8,7 +8,7 @@ import {
   showInEditor,
 } from '../test/test-utils-vscode';
 import { NavigationProvider } from './navigation-provider';
-import { OPEN_COMMAND } from './utility-commands';
+import { OPEN_COMMAND } from './commands/utility-commands';
 import { toVsCodeUri } from '../utils/vsc-utils';
 import { createMarkdownParser } from '../core/services/markdown-parser';
 import { FoamGraph } from '../core/model/graph';

@@ -19,23 +19,23 @@ import {
   isMdEditor,
   mdDocSelector,
   getText,
-} from '../utils';
-import { FoamFeature } from '../types';
+} from '../../utils';
+import { FoamFeature } from '../../types';
 import {
   getWikilinkDefinitionSetting,
   LinkReferenceDefinitionsSetting,
-} from '../settings';
-import { Foam } from '../core/model/foam';
-import { FoamWorkspace } from '../core/model/workspace';
+} from '../../settings';
+import { Foam } from '../../core/model/foam';
+import { FoamWorkspace } from '../../core/model/workspace';
 import {
   createMarkdownReferences,
   stringifyMarkdownLinkReferenceDefinition,
-} from '../core/services/markdown-provider';
+} from '../../core/services/markdown-provider';
 import {
   LINK_REFERENCE_DEFINITION_FOOTER,
   LINK_REFERENCE_DEFINITION_HEADER,
-} from '../core/janitor';
-import { fromVsCodeUri } from '../utils/vsc-utils';
+} from '../../core/janitor';
+import { fromVsCodeUri } from '../../utils/vsc-utils';
 
 const feature: FoamFeature = {
   activate: async (context: ExtensionContext, foamPromise: Promise<Foam>) => {

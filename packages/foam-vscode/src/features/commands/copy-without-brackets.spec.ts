@@ -1,5 +1,5 @@
 import { env, Position, Selection, commands } from 'vscode';
-import { createFile, showInEditor } from '../test/test-utils-vscode';
+import { createFile, showInEditor } from '../../test/test-utils-vscode';
 
 describe('copyWithoutBrackets', () => {
   it('should get the input from the active editor selection', async () => {

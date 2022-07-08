@@ -55,7 +55,7 @@ describe('Note rename sync', () => {
         );
       }, 1000);
 
-      await deleteFile(noteA.uri);
+      await deleteFile(newUri);
       await deleteFile(noteB.uri);
       await deleteFile(noteC.uri);
     });
@@ -90,7 +90,7 @@ describe('Note rename sync', () => {
           `Link to [[first/note-b]] from note C.`
         );
       });
-      await deleteFile(noteA.uri);
+      await deleteFile(newUri);
       await deleteFile(noteC.uri);
     });
 
@@ -121,7 +121,7 @@ describe('Note rename sync', () => {
       await waitForExpect(async () => {
         expect(doc.getText().trim()).toEqual(`Link to [[note-a]] from note C.`);
       });
-      await deleteFile(noteA.uri);
+      await deleteFile(newUri);
       await deleteFile(noteC.uri);
     });
 
@@ -141,7 +141,7 @@ describe('Note rename sync', () => {
       await waitForExpect(async () => {
         expect(doc.getText().trim()).toEqual(`Link to [[new-note-a|Alias]]`);
       });
-      await deleteFile(noteA.uri);
+      await deleteFile(newUri);
       await deleteFile(noteB.uri);
     });
 
@@ -163,7 +163,7 @@ describe('Note rename sync', () => {
           `Link to [[new-note-with-section#Section]]`
         );
       });
-      await deleteFile(noteA.uri);
+      await deleteFile(newUri);
       await deleteFile(noteB.uri);
     });
 
@@ -186,7 +186,7 @@ describe('Note rename sync', () => {
       await waitForExpect(async () => {
         expect(content.trim()).toEqual(`Link to [[note-a]] from note C.`);
       });
-      await deleteFile(noteA.uri);
+      await deleteFile(newUri);
       await deleteFile(noteC.uri);
     });
   });
@@ -221,7 +221,7 @@ describe('Note rename sync', () => {
         );
       });
 
-      await deleteFile(noteA.uri);
+      await deleteFile(newUri);
       await deleteFile(noteB.uri);
     });
   });

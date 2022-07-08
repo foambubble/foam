@@ -15,7 +15,7 @@
     "reset": "yarn && yarn clean && yarn build",
     "clean": "lerna run clean",
     "build": "lerna run build",
-    "test": "lerna run test",
+    "test": "yarn workspace foam-vscode test",
     "lint": "lerna run lint",
     "watch": "lerna run watch --concurrency 20 --stream"
   },

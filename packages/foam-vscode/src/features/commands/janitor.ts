@@ -21,6 +21,7 @@ import { Resource } from '../../core/model/note';
 import { generateHeading, generateLinkReferences } from '../../core/janitor';
 import { Range } from '../../core/model/range';
 import { applyTextEdit } from '../../core/janitor/apply-text-edit';
+import detectNewline from 'detect-newline';
 
 const feature: FoamFeature = {
   activate: (context: ExtensionContext, foamPromise: Promise<Foam>) => {
@@ -100,7 +101,9 @@ async function runJanitor(foam: Foam) {
   // Apply Text Edits to Non Dirty Notes using fs module just like CLI
 
   const fileWritePromises = nonDirtyNotes.map(async note => {
-    const heading = await generateHeading(note, foam.workspace);
+    const noteText = await foam.workspace.readAsMarkdown(note.uri);
+    const noteEol = detectNewline(noteText);
+    const heading = await generateHeading(note, foam.workspace, noteEol);
     if (heading) {
       updatedHeadingCount += 1;
     }
@@ -108,8 +111,10 @@ async function runJanitor(foam: Foam) {
     const definitions =
       wikilinkSetting === LinkReferenceDefinitionsSetting.off
         ? null
-        : generateLinkReferences(
+        : await generateLinkReferences(
             note,
+            noteText,
+            noteEol,
             foam.workspace,
             wikilinkSetting === LinkReferenceDefinitionsSetting.withExtensions
           );
@@ -124,7 +129,7 @@ async function runJanitor(foam: Foam) {
     // Apply Edits
     // Note: The ordering matters. Definitions need to be inserted
     // before heading, since inserting a heading changes line numbers below
-    let text = await foam.workspace.readAsMarkdown(note.uri);
+    let text = noteText;
     text = definitions ? applyTextEdit(text, definitions) : text;
     text = heading ? applyTextEdit(text, heading) : text;
 
@@ -141,13 +146,17 @@ async function runJanitor(foam: Foam) {
       n => n.uri.toFsPath() === editor.document.uri.fsPath
     )!;
 
+    const noteText = doc.getText();
+    const eol = doc.eol.toString();
     // Get edits
-    const heading = await generateHeading(note, foam.workspace);
+    const heading = await generateHeading(note, foam.workspace, eol);
     const definitions =
       wikilinkSetting === LinkReferenceDefinitionsSetting.off
         ? null
-        : generateLinkReferences(
+        : await generateLinkReferences(
             note,
+            noteText,
+            eol,
             foam.workspace,
             wikilinkSetting === LinkReferenceDefinitionsSetting.withExtensions
           );

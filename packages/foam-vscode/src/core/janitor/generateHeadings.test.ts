@@ -7,6 +7,7 @@ import { Range } from '../model/range';
 import { FoamWorkspace } from '../model/workspace';
 import { FileDataStore, Matcher } from '../services/datastore';
 import { Logger } from '../utils/log';
+import detectNewline from 'detect-newline';
 
 Logger.setLevel('error');
 
@@ -35,7 +36,9 @@ describe('generateHeadings', () => {
       range: Range.create(0, 0, 0, 0),
     };
 
-    const actual = await generateHeading(note, _workspace);
+    const noteText = await _workspace.readAsMarkdown(note.uri);
+    const noteEol = detectNewline(noteText);
+    const actual = await generateHeading(note, _workspace, noteEol);
 
     expect(actual!.range.start).toEqual(expected.range.start);
     expect(actual!.range.end).toEqual(expected.range.end);
@@ -44,7 +47,11 @@ describe('generateHeadings', () => {
 
   it('should not cause any changes to a file that has a heading', async () => {
     const note = findBySlug('index');
-    expect(await generateHeading(note, _workspace)).toBeNull();
+    const noteText = await _workspace.readAsMarkdown(note.uri);
+    const noteEol = detectNewline(noteText);
+    const actual = await generateHeading(note, _workspace, noteEol);
+
+    expect(actual).toBeNull();
   });
 
   it.skip('should generate heading when the file only contains frontmatter', async () => {
@@ -55,7 +62,9 @@ describe('generateHeadings', () => {
       range: Range.create(3, 0, 3, 0),
     };
 
-    const actual = await generateHeading(note, _workspace);
+    const noteText = await _workspace.readAsMarkdown(note.uri);
+    const noteEol = detectNewline(noteText);
+    const actual = await generateHeading(note, _workspace, noteEol);
 
     expect(actual!.range.start).toEqual(expected.range.start);
     expect(actual!.range.end).toEqual(expected.range.end);

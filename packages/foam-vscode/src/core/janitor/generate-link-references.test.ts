@@ -9,7 +9,8 @@ import { FileDataStore, Matcher } from '../services/datastore';
 import { Logger } from '../utils/log';
 import fs from 'fs';
 import { URI } from '../model/uri';
-import detectNewline from 'detect-newline';
+// import detectNewline from 'detect-newline';
+import { EOL } from 'os';
 
 Logger.setLevel('error');
 
@@ -51,7 +52,7 @@ describe('generateLinkReferences', () => {
       range: Range.create(9, 0, 9, 0),
     };
     const noteText = await _workspace.readAsMarkdown(note.uri);
-    const noteEol = detectNewline(noteText);
+    const noteEol = EOL; // detectNewline(noteText);
     const actual = await generateLinkReferences(
       note,
       noteText,
@@ -74,7 +75,7 @@ describe('generateLinkReferences', () => {
     };
 
     const noteText = await _workspace.readAsMarkdown(note.uri);
-    const noteEol = detectNewline(noteText);
+    const noteEol = EOL; // detectNewline(noteText);
     const actual = await generateLinkReferences(
       note,
       noteText,
@@ -101,7 +102,7 @@ describe('generateLinkReferences', () => {
     };
 
     const noteText = await _workspace.readAsMarkdown(note.uri);
-    const noteEol = detectNewline(noteText);
+    const noteEol = EOL; // detectNewline(noteText);
     const actual = await generateLinkReferences(
       note,
       noteText,
@@ -121,7 +122,7 @@ describe('generateLinkReferences', () => {
     const expected = null;
 
     const noteText = await _workspace.readAsMarkdown(note.uri);
-    const noteEol = detectNewline(noteText);
+    const noteEol = EOL; // detectNewline(noteText);
     const actual = await generateLinkReferences(
       note,
       noteText,
@@ -146,7 +147,7 @@ describe('generateLinkReferences', () => {
     };
 
     const noteText = await _workspace.readAsMarkdown(note.uri);
-    const noteEol = detectNewline(noteText);
+    const noteEol = EOL; // detectNewline(noteText);
     const actual = await generateLinkReferences(
       note,
       noteText,
@@ -165,7 +166,7 @@ describe('generateLinkReferences', () => {
     const expected = null;
 
     const noteText = await _workspace.readAsMarkdown(note.uri);
-    const noteEol = detectNewline(noteText);
+    const noteEol = EOL; // detectNewline(noteText);
     const actual = await generateLinkReferences(
       note,
       noteText,
@@ -191,7 +192,7 @@ describe('generateLinkReferences', () => {
     };
 
     const noteText = await _workspace.readAsMarkdown(note.uri);
-    const noteEol = detectNewline(noteText);
+    const noteEol = EOL; // detectNewline(noteText);
     const actual = await generateLinkReferences(
       note,
       noteText,
@@ -213,6 +214,6 @@ describe('generateLinkReferences', () => {
  * @param text starting text, using a \n line separator
  */
 function textForNote(text: string): string {
-  const eol = detectNewline(text);
+  const eol = EOL; // detectNewline(noteText);
   return text.split('\n').join(eol);
 }

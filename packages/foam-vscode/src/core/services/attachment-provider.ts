@@ -2,7 +2,7 @@ import { Resource, ResourceLink } from '../model/note';
 import { Logger } from '../utils/log';
 import { URI } from '../model/uri';
 import { FoamWorkspace } from '../model/workspace';
-import { IDataStore, IMatcher } from '../services/datastore';
+import { IDataStore, IMatcher, IWatcher } from '../services/datastore';
 import { IDisposable } from '../common/lifecycle';
 import { ResourceProvider } from '../model/provider';
 import { Position } from '../model/position';
@@ -39,11 +39,7 @@ export class AttachmentResourceProvider implements ResourceProvider {
   constructor(
     private readonly matcher: IMatcher,
     private readonly dataStore: IDataStore,
-    private readonly watcherInit?: (triggers: {
-      onDidChange: (uri: URI) => void;
-      onDidCreate: (uri: URI) => void;
-      onDidDelete: (uri: URI) => void;
-    }) => IDisposable[]
+    private readonly watcher?: IWatcher
   ) {}
 
   async init(workspace: FoamWorkspace) {
@@ -61,30 +57,27 @@ export class AttachmentResourceProvider implements ResourceProvider {
       workspace.set(asResource(uri));
     }
 
-    this.disposables =
-      this.watcherInit?.({
-        onDidChange: async uri => {
+    if (this.watcher != null) {
+      this.disposables = [
+        this.watcher.onDidChange(async uri => {
           if (this.matcher.isMatch(uri) && this.supports(uri)) {
             workspace.set(asResource(uri));
           }
-        },
-        onDidCreate: async uri => {
+        }),
+        this.watcher.onDidCreate(async uri => {
           if (this.matcher.isMatch(uri) && this.supports(uri)) {
             workspace.set(asResource(uri));
           }
-        },
-        onDidDelete: uri => {
+        }),
+        this.watcher.onDidDelete(uri => {
           this.supports(uri) && workspace.delete(uri);
-        },
-      }) ?? [];
+        }),
+      ];
+    }
   }
 
   supports(uri: URI) {
     return attachmentExtensions.includes(uri.getExtension());
-  }
-
-  read(uri: URI): Promise<string | null> {
-    return null;
   }
 
   async readAsMarkdown(uri: URI): Promise<string | null> {

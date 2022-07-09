@@ -4,6 +4,7 @@ import { Logger } from '../utils/log';
 import { glob } from 'glob';
 import { promisify } from 'util';
 import { isWindows } from '../common/platform';
+import { Event } from '../common/event';
 
 const findAllFiles = promisify(glob);
 
@@ -90,6 +91,12 @@ export class Matcher implements IMatcher {
   isMatch(uri: URI) {
     return this.match([uri]).length > 0;
   }
+}
+
+export interface IWatcher {
+  onDidChange: Event<URI>;
+  onDidCreate: Event<URI>;
+  onDidDelete: Event<URI>;
 }
 
 /**

@@ -150,10 +150,10 @@ export class FoamWorkspace implements IDisposable {
     );
   }
 
-  public read(uri: URI): Promise<string | null> {
+  public fetch(uri: URI): Promise<Resource | null> {
     for (const provider of this.providers) {
       if (provider.supports(uri)) {
-        return provider.read(uri);
+        return provider.fetch(uri);
       }
     }
     return Promise.resolve(null);

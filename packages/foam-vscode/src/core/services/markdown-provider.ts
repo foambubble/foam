@@ -8,7 +8,7 @@ import { isNone, isSome } from '../utils';
 import { Logger } from '../utils/log';
 import { URI } from '../model/uri';
 import { FoamWorkspace } from '../model/workspace';
-import { IDataStore, IMatcher } from '../services/datastore';
+import { IDataStore, IMatcher, IWatcher } from '../services/datastore';
 import { IDisposable } from '../common/lifecycle';
 import { ResourceProvider } from '../model/provider';
 import { createMarkdownParser } from './markdown-parser';
@@ -20,11 +20,7 @@ export class MarkdownResourceProvider implements ResourceProvider {
   constructor(
     private readonly matcher: IMatcher,
     private readonly dataStore: IDataStore,
-    private readonly watcherInit?: (triggers: {
-      onDidChange: (uri: URI) => void;
-      onDidCreate: (uri: URI) => void;
-      onDidDelete: (uri: URI) => void;
-    }) => IDisposable[],
+    private readonly watcher?: IWatcher,
     private readonly parser: ResourceParser = createMarkdownParser([])
   ) {}
 
@@ -48,34 +44,31 @@ export class MarkdownResourceProvider implements ResourceProvider {
       })
     );
 
-    this.disposables =
-      this.watcherInit?.({
-        onDidChange: async uri => {
+    if (this.watcher != null) {
+      this.disposables = [
+        this.watcher.onDidChange(async uri => {
           if (this.matcher.isMatch(uri) && this.supports(uri)) {
             const content = await this.dataStore.read(uri);
             isSome(content) &&
               workspace.set(await this.parser.parse(uri, content));
           }
-        },
-        onDidCreate: async uri => {
+        }),
+        this.watcher.onDidCreate(async uri => {
           if (this.matcher.isMatch(uri) && this.supports(uri)) {
             const content = await this.dataStore.read(uri);
             isSome(content) &&
               workspace.set(await this.parser.parse(uri, content));
           }
-        },
-        onDidDelete: uri => {
+        }),
+        this.watcher.onDidDelete(uri => {
           this.supports(uri) && workspace.delete(uri);
-        },
-      }) ?? [];
+        }),
+      ];
+    }
   }
 
   supports(uri: URI) {
     return uri.isMarkdown();
-  }
-
-  read(uri: URI): Promise<string | null> {
-    return this.dataStore.read(uri);
   }
 
   async readAsMarkdown(uri: URI): Promise<string | null> {
@@ -94,7 +87,7 @@ export class MarkdownResourceProvider implements ResourceProvider {
   }
 
   async fetch(uri: URI) {
-    const content = await this.read(uri);
+    const content = await this.dataStore.read(uri);
     return isSome(content) ? this.parser.parse(uri, content) : null;
   }
 

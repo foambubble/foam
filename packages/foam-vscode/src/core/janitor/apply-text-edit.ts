@@ -1,7 +1,12 @@
 import os from 'os';
 import detectNewline from 'detect-newline';
 import { Position } from '../model/position';
-import { TextEdit } from '.';
+import { Range } from '../model/range';
+
+export interface TextEdit {
+  range: Range;
+  newText: string;
+}
 
 /**
  *

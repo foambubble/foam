@@ -103,7 +103,7 @@ async function runJanitor(foam: Foam) {
   const fileWritePromises = nonDirtyNotes.map(async note => {
     const noteText = await foam.workspace.readAsMarkdown(note.uri);
     const noteEol = detectNewline(noteText);
-    const heading = await generateHeading(note, foam.workspace, noteEol);
+    const heading = await generateHeading(note, noteText, noteEol);
     if (heading) {
       updatedHeadingCount += 1;
     }
@@ -149,7 +149,7 @@ async function runJanitor(foam: Foam) {
     const noteText = doc.getText();
     const eol = doc.eol.toString();
     // Get edits
-    const heading = await generateHeading(note, foam.workspace, eol);
+    const heading = await generateHeading(note, noteText, eol);
     const definitions =
       wikilinkSetting === LinkReferenceDefinitionsSetting.off
         ? null

@@ -38,7 +38,7 @@ describe('generateHeadings', () => {
 
     const noteText = await _workspace.readAsMarkdown(note.uri);
     const noteEol = detectNewline(noteText);
-    const actual = await generateHeading(note, _workspace, noteEol);
+    const actual = await generateHeading(note, noteText, noteEol);
 
     expect(actual!.range.start).toEqual(expected.range.start);
     expect(actual!.range.end).toEqual(expected.range.end);
@@ -49,7 +49,7 @@ describe('generateHeadings', () => {
     const note = findBySlug('index');
     const noteText = await _workspace.readAsMarkdown(note.uri);
     const noteEol = detectNewline(noteText);
-    const actual = await generateHeading(note, _workspace, noteEol);
+    const actual = await generateHeading(note, noteText, noteEol);
 
     expect(actual).toBeNull();
   });
@@ -64,7 +64,7 @@ describe('generateHeadings', () => {
 
     const noteText = await _workspace.readAsMarkdown(note.uri);
     const noteEol = detectNewline(noteText);
-    const actual = await generateHeading(note, _workspace, noteEol);
+    const actual = await generateHeading(note, noteText, noteEol);
 
     expect(actual!.range.start).toEqual(expected.range.start);
     expect(actual!.range.end).toEqual(expected.range.end);

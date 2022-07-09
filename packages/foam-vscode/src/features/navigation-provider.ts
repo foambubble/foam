@@ -122,7 +122,7 @@ export class NavigationProvider
       ? section.range
       : Range.createFromPosition(
           Position.create(0, 0),
-          targetResource.source.end
+          Position.create(1000, 1000) //targetResource.source.end
         );
     const targetSelectionRange = section
       ? section.range

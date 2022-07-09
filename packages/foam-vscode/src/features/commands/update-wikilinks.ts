@@ -34,7 +34,7 @@ import {
 import {
   LINK_REFERENCE_DEFINITION_FOOTER,
   LINK_REFERENCE_DEFINITION_HEADER,
-} from '../../core/janitor';
+} from '../../core/janitor/generate-link-references';
 import { fromVsCodeUri } from '../../utils/vsc-utils';
 
 const feature: FoamFeature = {

@@ -1,14 +1,36 @@
 import { commands, ExtensionContext, QuickPickItem, window } from 'vscode';
-import { FoamFeature } from '../types';
+import { FoamFeature } from '../../types';
 import {
-  createTemplate,
-  DEFAULT_TEMPLATE_URI,
   getTemplateMetadata,
   getTemplates,
   NoteFactory,
   TEMPLATES_DIR,
-} from '../services/templates';
-import { Resolver } from '../services/variable-resolver';
+} from '../../services/templates';
+import { Resolver } from '../../services/variable-resolver';
+
+const feature: FoamFeature = {
+  activate: (context: ExtensionContext) => {
+    context.subscriptions.push(
+      commands.registerCommand(
+        'foam-vscode.create-note-from-template',
+        async () => {
+          const selectedTemplate = await askUserForTemplate();
+          if (selectedTemplate === undefined) {
+            return;
+          }
+          const templateFilename =
+            (selectedTemplate as QuickPickItem).description ||
+            (selectedTemplate as QuickPickItem).label;
+          const templateUri = TEMPLATES_DIR.joinPath(templateFilename);
+
+          const resolver = new Resolver(new Map(), new Date());
+
+          await NoteFactory.createFromTemplate(templateUri, resolver);
+        }
+      )
+    );
+  },
+};
 
 async function offerToCreateTemplate(): Promise<void> {
   const response = await window.showQuickPick(['Yes', 'No'], {
@@ -89,58 +111,5 @@ async function askUserForTemplate() {
     placeHolder: 'Select a template to use.',
   });
 }
-
-const feature: FoamFeature = {
-  activate: (context: ExtensionContext) => {
-    context.subscriptions.push(
-      commands.registerCommand(
-        'foam-vscode.create-note-from-template',
-        async () => {
-          const selectedTemplate = await askUserForTemplate();
-          if (selectedTemplate === undefined) {
-            return;
-          }
-          const templateFilename =
-            (selectedTemplate as QuickPickItem).description ||
-            (selectedTemplate as QuickPickItem).label;
-          const templateUri = TEMPLATES_DIR.joinPath(templateFilename);
-
-          const resolver = new Resolver(new Map(), new Date());
-
-          await NoteFactory.createFromTemplate(templateUri, resolver);
-        }
-      )
-    );
-    context.subscriptions.push(
-      commands.registerCommand(
-        'foam-vscode.create-note-from-default-template',
-        () => {
-          const resolver = new Resolver(new Map(), new Date());
-
-          return NoteFactory.createFromTemplate(
-            DEFAULT_TEMPLATE_URI,
-            resolver,
-            undefined,
-            `---
-foam_template:
-  name: New Note
-  description: Foam's default new note template
----
-# \${FOAM_TITLE}
-
-\${FOAM_SELECTED_TEXT}
-`
-          );
-        }
-      )
-    );
-    context.subscriptions.push(
-      commands.registerCommand(
-        'foam-vscode.create-new-template',
-        createTemplate
-      )
-    );
-  },
-};
 
 export default feature;

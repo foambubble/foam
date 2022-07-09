@@ -52,7 +52,9 @@ async function main() {
   }
 
   if (!isSuccess) {
-    throw new Error('Some Foam tests failed');
+    // throw new Error('Some Foam tests failed');
+    console.log('Some Foam tests failed');
+    process.exit(1);
   }
 }
 

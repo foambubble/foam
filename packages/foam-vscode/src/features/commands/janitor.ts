@@ -5,22 +5,22 @@ import {
   commands,
   ProgressLocation,
 } from 'vscode';
-import { FoamFeature } from '../types';
+import { FoamFeature } from '../../types';
 
 import {
   getWikilinkDefinitionSetting,
   LinkReferenceDefinitionsSetting,
-} from '../settings';
+} from '../../settings';
 import {
   toVsCodePosition,
   toVsCodeRange,
   toVsCodeUri,
-} from '../utils/vsc-utils';
-import { Foam } from '../core/model/foam';
-import { Resource } from '../core/model/note';
-import { generateHeading, generateLinkReferences } from '../core/janitor';
-import { Range } from '../core/model/range';
-import { applyTextEdit } from '../core/janitor/apply-text-edit';
+} from '../../utils/vsc-utils';
+import { Foam } from '../../core/model/foam';
+import { Resource } from '../../core/model/note';
+import { generateHeading, generateLinkReferences } from '../../core/janitor';
+import { Range } from '../../core/model/range';
+import { applyTextEdit } from '../../core/janitor/apply-text-edit';
 
 const feature: FoamFeature = {
   activate: (context: ExtensionContext, foamPromise: Promise<Foam>) => {

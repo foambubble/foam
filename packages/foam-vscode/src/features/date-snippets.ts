@@ -1,7 +1,5 @@
 import {
-  workspace,
   ExtensionContext,
-  commands,
   languages,
   CompletionItemProvider,
   CompletionItem,
@@ -9,11 +7,8 @@ import {
   CompletionList,
   CompletionTriggerKind,
 } from 'vscode';
-import {
-  createDailyNoteIfNotExists,
-  getDailyNoteFileName,
-  openDailyNoteFor,
-} from '../dated-notes';
+import { getDailyNoteFileName } from '../dated-notes';
+import { getFoamVsCodeConfig } from '../services/config';
 import { FoamFeature } from '../types';
 
 interface DateSnippet {
@@ -31,11 +26,6 @@ const daysOfWeek = [
   { day: 'friday', index: 5 },
   { day: 'saturday', index: 6 },
 ];
-type AfterCompletionOptions = 'noop' | 'createNote' | 'navigateToNote';
-const foamConfig = workspace.getConfiguration('foam');
-const foamNavigateOnSelect: AfterCompletionOptions = foamConfig.get(
-  'dateSnippets.afterCompletion'
-);
 
 const generateDayOfWeekSnippets = (): DateSnippet[] => {
   const getTarget = (day: number) => {
@@ -63,7 +53,7 @@ const createCompletionItem = ({ snippet, date, detail }: DateSnippet) => {
   );
   completionItem.insertText = getDailyNoteLink(date);
   completionItem.detail = `${completionItem.insertText} - ${detail}`;
-  if (foamNavigateOnSelect !== 'noop') {
+  if (getFoamVsCodeConfig('dateSnippets.afterCompletion') !== 'noop') {
     completionItem.command = {
       command: 'foam-vscode.open-dated-note',
       title: 'Open a note for the given date',
@@ -74,8 +64,8 @@ const createCompletionItem = ({ snippet, date, detail }: DateSnippet) => {
 };
 
 const getDailyNoteLink = (date: Date) => {
-  const foamExtension = foamConfig.get('openDailyNote.fileExtension');
-  const name = getDailyNoteFileName(foamConfig, date);
+  const foamExtension = getFoamVsCodeConfig('openDailyNote.fileExtension');
+  const name = getDailyNoteFileName(date);
   return `[[${name.replace(`.${foamExtension}`, '')}]]`;
 };
 
@@ -209,28 +199,16 @@ export const datesCompletionProvider: CompletionItemProvider = {
   },
 };
 
-const datedNoteCommand = (date: Date) => {
-  if (foamNavigateOnSelect === 'navigateToNote') {
-    return openDailyNoteFor(date);
-  }
-  if (foamNavigateOnSelect === 'createNote') {
-    return createDailyNoteIfNotExists(date);
-  }
-};
-
 const feature: FoamFeature = {
   activate: (context: ExtensionContext) => {
     context.subscriptions.push(
-      commands.registerCommand('foam-vscode.open-dated-note', date =>
-        datedNoteCommand(date)
+      languages.registerCompletionItemProvider('markdown', completions, '/'),
+      languages.registerCompletionItemProvider(
+        'markdown',
+        datesCompletionProvider,
+        '/',
+        '+'
       )
-    );
-    languages.registerCompletionItemProvider('markdown', completions, '/');
-    languages.registerCompletionItemProvider(
-      'markdown',
-      datesCompletionProvider,
-      '/',
-      '+'
     );
   },
 };

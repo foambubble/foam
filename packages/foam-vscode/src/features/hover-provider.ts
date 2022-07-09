@@ -12,7 +12,7 @@ import { Foam } from '../core/model/foam';
 import { FoamWorkspace } from '../core/model/workspace';
 import { Range } from '../core/model/range';
 import { FoamGraph } from '../core/model/graph';
-import { OPEN_COMMAND } from './utility-commands';
+import { OPEN_COMMAND } from './commands/open-resource';
 
 export const CONFIG_KEY = 'links.hover.enable';
 

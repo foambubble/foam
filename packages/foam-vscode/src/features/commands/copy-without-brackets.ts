@@ -1,6 +1,6 @@
 import { window, env, ExtensionContext, commands } from 'vscode';
-import { FoamFeature } from '../types';
-import { removeBrackets } from '../utils';
+import { FoamFeature } from '../../types';
+import { removeBrackets } from '../../utils';
 
 const feature: FoamFeature = {
   activate: (context: ExtensionContext) => {

@@ -5,7 +5,9 @@ import {
   cleanWorkspace,
   closeEditors,
   createFile,
+  deleteFile,
   showInEditor,
+  withModifiedFoamConfiguration,
 } from './test/test-utils-vscode';
 import { fromVsCodeUri } from './utils/vsc-utils';
 
@@ -23,21 +25,9 @@ describe('getDailyNotePath', () => {
       workspace.workspaceFolders[0].uri
     ).joinPath(config, `${isoDate}.md`);
 
-    const oldValue = await workspace
-      .getConfiguration('foam')
-      .get('openDailyNote.directory');
-    await workspace
-      .getConfiguration('foam')
-      .update('openDailyNote.directory', config);
-    const foamConfiguration = workspace.getConfiguration('foam');
-
-    expect(getDailyNotePath(foamConfiguration, date).toFsPath()).toEqual(
-      expectedPath.toFsPath()
+    await withModifiedFoamConfiguration('openDailyNote.directory', config, () =>
+      expect(getDailyNotePath(date).toFsPath()).toEqual(expectedPath.toFsPath())
     );
-
-    await workspace
-      .getConfiguration('foam')
-      .update('openDailyNote.directory', oldValue);
   });
 
   test('Uses absolute directories without modification', async () => {
@@ -48,22 +38,9 @@ describe('getDailyNotePath', () => {
       ? `${config}\\${isoDate}.md`
       : `${config}/${isoDate}.md`;
 
-    const oldValue = await workspace
-      .getConfiguration('foam')
-      .get('openDailyNote.directory');
-
-    await workspace
-      .getConfiguration('foam')
-      .update('openDailyNote.directory', config);
-    const foamConfiguration = workspace.getConfiguration('foam');
-
-    expect(getDailyNotePath(foamConfiguration, date).toFsPath()).toMatch(
-      expectedPath
+    await withModifiedFoamConfiguration('openDailyNote.directory', config, () =>
+      expect(getDailyNotePath(date).toFsPath()).toMatch(expectedPath)
     );
-
-    await workspace
-      .getConfiguration('foam')
-      .update('openDailyNote.directory', oldValue);
   });
 });
 
@@ -72,20 +49,20 @@ describe('Daily note template', () => {
     const targetDate = new Date(2021, 8, 12);
 
     // eslint-disable-next-line no-template-curly-in-string
-    await createFile('hello ${FOAM_DATE_MONTH_NAME} ${FOAM_DATE_DATE} hello', [
-      '.foam',
-      'templates',
-      'daily-note.md',
-    ]);
+    const template = await createFile(
+      'hello ${FOAM_DATE_MONTH_NAME} ${FOAM_DATE_DATE} hello',
+      ['.foam', 'templates', 'daily-note.md']
+    );
 
-    const config = workspace.getConfiguration('foam');
-    const uri = getDailyNotePath(config, targetDate);
+    const uri = getDailyNotePath(targetDate);
 
     await createDailyNoteIfNotExists(targetDate);
 
     const doc = await showInEditor(uri);
     const content = doc.editor.document.getText();
     expect(content).toEqual('hello September 12 hello');
+
+    await deleteFile(template.uri);
   });
 
   afterAll(async () => {

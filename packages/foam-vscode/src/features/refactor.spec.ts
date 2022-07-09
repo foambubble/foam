@@ -6,7 +6,10 @@ import {
   readFile,
   renameFile,
   showInEditor,
+  runCommand,
+  deleteFile,
 } from '../test/test-utils-vscode';
+import { UPDATE_GRAPH_COMMAND_NAME } from './commands/update-graph';
 
 describe('Note rename sync', () => {
   beforeAll(async () => {
@@ -36,9 +39,9 @@ describe('Note rename sync', () => {
       const newName = 'renamed-note-a';
       const newUri = noteA.uri.resolve(newName);
 
-      // wait for workspace files to be added to graph (because of graph debounced update)
-      // TODO this should be replaced by either a force-refresh command or by Foam updating immediately in test mode
-      await wait(600);
+      // wait for the rename events to be propagated
+      await wait(1000);
+      await runCommand(UPDATE_GRAPH_COMMAND_NAME);
       await renameFile(noteA.uri, newUri);
 
       await waitForExpect(async () => {
@@ -51,6 +54,10 @@ describe('Note rename sync', () => {
           `Link to [[${newName}]] from note C.`
         );
       }, 1000);
+
+      await deleteFile(newUri);
+      await deleteFile(noteB.uri);
+      await deleteFile(noteC.uri);
     });
 
     it('should use the best identifier based on the new note location', async () => {
@@ -73,9 +80,9 @@ describe('Note rename sync', () => {
       // rename note A
       const newUri = noteA.uri.resolve('note-b.md');
 
-      // wait for workspace files to be added to graph (because of graph debounced update)
-      // TODO this should be replaced by either a force-refresh command or by Foam updating immediately in test mode
-      await wait(600);
+      // wait for the rename events to be propagated
+      await wait(1000);
+      await runCommand(UPDATE_GRAPH_COMMAND_NAME);
       await renameFile(noteA.uri, newUri);
 
       await waitForExpect(async () => {
@@ -83,6 +90,8 @@ describe('Note rename sync', () => {
           `Link to [[first/note-b]] from note C.`
         );
       });
+      await deleteFile(newUri);
+      await deleteFile(noteC.uri);
     });
 
     it('should use the best identifier when moving the note to another directory', async () => {
@@ -104,14 +113,16 @@ describe('Note rename sync', () => {
 
       const newUri = noteA.uri.resolve('../second/note-a.md');
 
-      // wait for workspace files to be added to graph (because of graph debounced update)
-      // TODO this should be replaced by either a force-refresh command or by Foam updating immediately in test mode
-      await wait(600);
+      // wait for the rename events to be propagated
+      await wait(1000);
+      await runCommand(UPDATE_GRAPH_COMMAND_NAME);
       await renameFile(noteA.uri, newUri);
 
       await waitForExpect(async () => {
         expect(doc.getText().trim()).toEqual(`Link to [[note-a]] from note C.`);
       });
+      await deleteFile(newUri);
+      await deleteFile(noteC.uri);
     });
 
     it('should keep the alias in wikilinks', async () => {
@@ -122,14 +133,16 @@ describe('Note rename sync', () => {
 
       // rename note A
       const newUri = noteA.uri.resolve('new-note-a.md');
-      // wait for workspace files to be added to graph (because of graph debounced update)
-      // TODO this should be replaced by either a force-refresh command or by Foam updating immediately in test mode
-      await wait(600);
+      // wait for the rename events to be propagated
+      await wait(1000);
+      await runCommand(UPDATE_GRAPH_COMMAND_NAME);
       await renameFile(noteA.uri, newUri);
 
       await waitForExpect(async () => {
         expect(doc.getText().trim()).toEqual(`Link to [[new-note-a|Alias]]`);
       });
+      await deleteFile(newUri);
+      await deleteFile(noteB.uri);
     });
 
     it('should keep the section part of the wikilink', async () => {
@@ -140,9 +153,9 @@ describe('Note rename sync', () => {
 
       // rename note A
       const newUri = noteA.uri.resolve('new-note-with-section.md');
-      // wait for workspace files to be added to graph (because of graph debounced update)
-      // TODO this should be replaced by either a force-refresh command or by Foam updating immediately in test mode
-      await wait(600);
+      // wait for the rename events to be propagated
+      await wait(1000);
+      await runCommand(UPDATE_GRAPH_COMMAND_NAME);
       await renameFile(noteA.uri, newUri);
 
       await waitForExpect(async () => {
@@ -150,6 +163,8 @@ describe('Note rename sync', () => {
           `Link to [[new-note-with-section#Section]]`
         );
       });
+      await deleteFile(newUri);
+      await deleteFile(noteB.uri);
     });
 
     it('should sync when moving the note to a new folder', async () => {
@@ -161,15 +176,18 @@ describe('Note rename sync', () => {
       const noteC = await createFile(`Link to [[note-a]] from note C.`);
 
       const newUri = noteA.uri.resolve('../note-a.md');
-      // wait for workspace files to be added to graph (because of graph debounced update)
-      // TODO this should be replaced by either a force-refresh command or by Foam updating immediately in test mode
-      await wait(600);
+      // wait for the rename events to be propagated
+      await wait(1000);
+      await runCommand(UPDATE_GRAPH_COMMAND_NAME);
+
       await renameFile(noteA.uri, newUri);
 
-      const content = await readFile(noteC.uri);
       await waitForExpect(async () => {
+        const content = await readFile(noteC.uri);
         expect(content.trim()).toEqual(`Link to [[note-a]] from note C.`);
       });
+      await deleteFile(newUri);
+      await deleteFile(noteC.uri);
     });
   });
 
@@ -192,9 +210,9 @@ describe('Note rename sync', () => {
       const { doc } = await showInEditor(noteB.uri);
 
       const newUri = noteA.uri.resolve('../note-a.md');
-      // wait for workspace files to be added to graph (because of graph debounced update)
-      // TODO this should be replaced by either a force-refresh command or by Foam updating immediately in test mode
-      await wait(600);
+      // wait for the rename events to be propagated
+      await wait(1000);
+      await runCommand(UPDATE_GRAPH_COMMAND_NAME);
       await renameFile(noteA.uri, newUri);
 
       await waitForExpect(async () => {
@@ -202,6 +220,9 @@ describe('Note rename sync', () => {
           `Link to [note](../note-a.md) from note B.`
         );
       });
+
+      await deleteFile(newUri);
+      await deleteFile(noteB.uri);
     });
   });
 });

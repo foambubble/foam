@@ -1,6 +1,6 @@
 import * as commands from './commands';
 import dataviz from './dataviz';
-import openDatedNote from './open-dated-note';
+import dateSnippets from './date-snippets';
 import tagsExplorer from './tags-tree-view';
 import orphans from './orphans';
 import placeholders from './placeholders';
@@ -22,7 +22,7 @@ export const features: FoamFeature[] = [
   wikilinkDiagnostics,
   tagsExplorer,
   dataviz,
-  openDatedNote,
+  dateSnippets,
   orphans,
   placeholders,
   backlinks,

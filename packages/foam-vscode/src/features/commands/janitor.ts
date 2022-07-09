@@ -99,8 +99,8 @@ async function runJanitor(foam: Foam) {
 
   // Apply Text Edits to Non Dirty Notes using fs module just like CLI
 
-  const fileWritePromises = nonDirtyNotes.map(note => {
-    const heading = generateHeading(note);
+  const fileWritePromises = nonDirtyNotes.map(async note => {
+    const heading = await generateHeading(note, foam.workspace);
     if (heading) {
       updatedHeadingCount += 1;
     }
@@ -124,7 +124,7 @@ async function runJanitor(foam: Foam) {
     // Apply Edits
     // Note: The ordering matters. Definitions need to be inserted
     // before heading, since inserting a heading changes line numbers below
-    let text = note.source.text;
+    let text = await foam.workspace.readAsMarkdown(note.uri);
     text = definitions ? applyTextEdit(text, definitions) : text;
     text = heading ? applyTextEdit(text, heading) : text;
 
@@ -142,7 +142,7 @@ async function runJanitor(foam: Foam) {
     )!;
 
     // Get edits
-    const heading = generateHeading(note);
+    const heading = await generateHeading(note, foam.workspace);
     const definitions =
       wikilinkSetting === LinkReferenceDefinitionsSetting.off
         ? null

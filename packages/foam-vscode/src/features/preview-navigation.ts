@@ -11,6 +11,7 @@ import { MarkdownLink } from '../core/services/markdown-link';
 import { Range } from '../core/model/range';
 import { isEmpty } from 'lodash';
 import { getFoamVsCodeConfig } from '../services/config';
+import { readFileSync } from 'fs';
 
 const feature: FoamFeature = {
   activate: async (
@@ -63,11 +64,12 @@ export const markdownItWithNoteInclusion = (
         let content = `Embed for [[${wikilink}]]`;
         switch (includedNote.type) {
           case 'note':
+            const noteText = readFileSync(
+              includedNote.uri.toFsPath()
+            ).toString();
             content = getFoamVsCodeConfig(CONFIG_EMBED_NOTE_IN_CONTAINER)
-              ? `<div class="embed-container-note">${md.render(
-                  includedNote.source.text
-                )}</div>`
-              : includedNote.source.text;
+              ? `<div class="embed-container-note">${md.render(noteText)}</div>`
+              : noteText;
             break;
           case 'attachment':
             content = `

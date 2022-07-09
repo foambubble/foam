@@ -28,7 +28,7 @@ export interface ParserPlugin {
 const ALIAS_DIVIDER_CHAR = '|';
 
 export function createMarkdownParser(
-  extraPlugins: ParserPlugin[]
+  extraPlugins: ParserPlugin[] = []
 ): ResourceParser {
   const parser = unified()
     .use(markdownParse, { gfm: true })

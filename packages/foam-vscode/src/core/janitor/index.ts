@@ -132,7 +132,10 @@ export const generateLinkReferences = (
   }
 };
 
-export const generateHeading = (note: Resource): TextEdit | null => {
+export const generateHeading = async (
+  note: Resource,
+  workspace: FoamWorkspace
+): Promise<TextEdit | null> => {
   if (!note) {
     return null;
   }
@@ -151,7 +154,8 @@ export const generateHeading = (note: Resource): TextEdit | null => {
 
   let newLineExistsAfterFrontmatter = false;
   if (frontmatterExists) {
-    const lines = note.source.text.split(note.source.eol);
+    const text = await workspace.readAsMarkdown(note.uri);
+    const lines = text.split(note.source.eol);
     const index = note.source.contentStart.line - 1;
     const line = lines[index];
     newLineExistsAfterFrontmatter = line === '';

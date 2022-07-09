@@ -26,7 +26,7 @@ describe('generateHeadings', () => {
     _workspace = foam.workspace;
   });
 
-  it.skip('should add heading to a file that does not have them', () => {
+  it.skip('should add heading to a file that does not have them', async () => {
     const note = findBySlug('file-without-title');
     const expected = {
       newText: `# File without Title
@@ -35,19 +35,19 @@ describe('generateHeadings', () => {
       range: Range.create(0, 0, 0, 0),
     };
 
-    const actual = generateHeading(note);
+    const actual = await generateHeading(note, _workspace);
 
     expect(actual!.range.start).toEqual(expected.range.start);
     expect(actual!.range.end).toEqual(expected.range.end);
     expect(actual!.newText).toEqual(expected.newText);
   });
 
-  it('should not cause any changes to a file that has a heading', () => {
+  it('should not cause any changes to a file that has a heading', async () => {
     const note = findBySlug('index');
-    expect(generateHeading(note)).toBeNull();
+    expect(await generateHeading(note, _workspace)).toBeNull();
   });
 
-  it.skip('should generate heading when the file only contains frontmatter', () => {
+  it.skip('should generate heading when the file only contains frontmatter', async () => {
     const note = findBySlug('file-with-only-frontmatter');
 
     const expected = {
@@ -55,7 +55,7 @@ describe('generateHeadings', () => {
       range: Range.create(3, 0, 3, 0),
     };
 
-    const actual = generateHeading(note);
+    const actual = await generateHeading(note, _workspace);
 
     expect(actual!.range.start).toEqual(expected.range.start);
     expect(actual!.range.end).toEqual(expected.range.end);

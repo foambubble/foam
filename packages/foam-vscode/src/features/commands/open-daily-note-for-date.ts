@@ -1,6 +1,5 @@
-import { ExtensionContext, commands, QuickPickItem } from 'vscode';
+import { ExtensionContext, commands, window, QuickPickItem } from 'vscode';
 import { FoamFeature } from '../../types';
-import { getFoamVsCodeConfig } from '../../services/config';
 import { openDailyNoteFor } from '../../dated-notes';
 import { FoamWorkspace } from '../../core/model/workspace';
 import { range } from 'lodash';
@@ -9,14 +8,23 @@ import dateFormat from 'dateformat';
 const feature: FoamFeature = {
   activate: (context: ExtensionContext, foamPromise) => {
     context.subscriptions.push(
-      commands.registerCommand('foam-vscode.open-daily-note', () =>
-        openDailyNoteFor(new Date())
+      commands.registerCommand(
+        'foam-vscode.open-daily-note-for-date',
+        async () => {
+          const ws = (await foamPromise).workspace;
+          const date = await window
+            .showQuickPick<DateItem>(generateDateItems(ws), {
+              placeHolder: 'Choose or type a date (YYYY-MM-DD)',
+              matchOnDescription: true,
+              matchOnDetail: true,
+            })
+            .then(item => {
+              return item?.date;
+            });
+          return openDailyNoteFor(date);
+        }
       )
     );
-
-    if (getFoamVsCodeConfig('openDailyNote.onStartup', false)) {
-      commands.executeCommand('foam-vscode.open-daily-note');
-    }
   },
 };
 

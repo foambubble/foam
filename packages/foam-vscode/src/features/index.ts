@@ -1,11 +1,4 @@
-import createReferencesCommand from './commands/wikilink-reference-generation';
-import openDailyNoteCommand from './commands/open-daily-note';
-import janitorCommand from './commands/janitor';
-import copyWithoutBracketsCommand from './commands/copy-without-brackets';
-import createFromTemplateCommand from './commands/create-from-template';
-import openRandomNoteCommand from './commands/open-random-note';
-import utilityCommands from './commands/utility-commands';
-import updateGraphCommand from './commands/update-graph';
+import * as commands from './commands';
 import dataviz from './dataviz';
 import openDatedNote from './open-dated-note';
 import tagsExplorer from './tags-tree-view';
@@ -23,24 +16,17 @@ import refactor from './refactor';
 import { FoamFeature } from '../types';
 
 export const features: FoamFeature[] = [
+  ...Object.values(commands),
   refactor,
-  updateGraphCommand,
   navigationProviders,
   wikilinkDiagnostics,
   tagsExplorer,
-  createReferencesCommand,
-  openDailyNoteCommand,
-  openRandomNoteCommand,
-  janitorCommand,
   dataviz,
-  copyWithoutBracketsCommand,
   openDatedNote,
-  createFromTemplateCommand,
   orphans,
   placeholders,
   backlinks,
   hoverProvider,
-  utilityCommands,
   linkDecorations,
   previewNavigation,
   completionProvider,

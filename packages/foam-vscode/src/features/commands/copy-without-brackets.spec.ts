@@ -1,7 +1,7 @@
 import { env, Position, Selection, commands } from 'vscode';
 import { createFile, showInEditor } from '../../test/test-utils-vscode';
 
-describe('copyWithoutBrackets', () => {
+describe('copy-without-brackets command', () => {
   it('should get the input from the active editor selection', async () => {
     const { uri } = await createFile('This is my [[test-content]].');
     const { editor } = await showInEditor(uri);

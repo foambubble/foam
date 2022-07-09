@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { FoamFeature } from '../types';
 import { mdDocSelector } from '../utils';
 import { toVsCodeRange, toVsCodeUri, fromVsCodeUri } from '../utils/vsc-utils';
-import { OPEN_COMMAND } from './commands/utility-commands';
+import { OPEN_COMMAND } from './commands/open-resource';
 import { Foam } from '../core/model/foam';
 import { FoamWorkspace } from '../core/model/workspace';
 import { Resource, ResourceLink, ResourceParser } from '../core/model/note';

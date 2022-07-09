@@ -16,6 +16,8 @@ import {
   markdownItWithRemoveLinkReferences,
 } from './preview-navigation';
 
+const parser = createMarkdownParser();
+
 describe('Link generation in preview', () => {
   const noteA = createTestNote({
     uri: './path/to/note-a.md',
@@ -76,11 +78,11 @@ describe('Stylable tag generation in preview', () => {
 
 describe('Displaying included notes in preview', () => {
   it('should render an included note in flat mode', async () => {
-    const note = createTestNote({
-      uri: 'note-a.md',
-      text: 'This is the text of note A',
-    });
-    const ws = new FoamWorkspace().set(note);
+    const note = await createFile('This is the text of note A', [
+      'preview',
+      'note-a.md',
+    ]);
+    const ws = new FoamWorkspace().set(parser.parse(note.uri, note.content));
     await withModifiedFoamConfiguration(
       CONFIG_EMBED_NOTE_IN_CONTAINER,
       false,
@@ -98,14 +100,16 @@ describe('Displaying included notes in preview', () => {
         );
       }
     );
+    await deleteFile(note);
   });
 
   it('should render an included note in container mode', async () => {
-    const note = createTestNote({
-      uri: 'note-a.md',
-      text: 'This is the text of note A',
-    });
-    const ws = new FoamWorkspace().set(note);
+    const note = await createFile('This is the text of note A', [
+      'preview',
+      'note-a.md',
+    ]);
+    const ws = new FoamWorkspace().set(parser.parse(note.uri, note.content));
+
     await await withModifiedFoamConfiguration(
       CONFIG_EMBED_NOTE_IN_CONTAINER,
       true,
@@ -118,6 +122,7 @@ describe('Displaying included notes in preview', () => {
         expect(res).toContain('This is the text of note A');
       }
     );
+    await deleteFile(note);
   });
 
   it('should render an included section', async () => {
@@ -168,21 +173,26 @@ This is the third section of note D
     );
   });
 
-  it('should display a warning in case of cyclical inclusions', () => {
-    const noteA = createTestNote({
-      uri: 'note-a.md',
-      text: 'This is the text of note A which includes ![[note-b]]',
-    });
-    const noteB = createTestNote({
-      uri: 'note-b.md',
-      text: 'This is the text of note B which includes ![[note-a]]',
-    });
-    const ws = new FoamWorkspace().set(noteA).set(noteB);
+  it('should display a warning in case of cyclical inclusions', async () => {
+    const noteA = await createFile(
+      'This is the text of note A which includes ![[note-b]]',
+      ['preview', 'note-a.md']
+    );
+
+    const noteBText = 'This is the text of note B which includes ![[note-a]]';
+    const noteB = await createFile(noteBText, ['preview', 'note-b.md']);
+
+    const ws = new FoamWorkspace()
+      .set(parser.parse(noteA.uri, noteA.content))
+      .set(parser.parse(noteB.uri, noteB.content));
     const md = markdownItWithNoteInclusion(MarkdownIt(), ws);
-    const res = md.render(noteB.source.text);
+    const res = md.render(noteBText);
 
     expect(res).toContain('This is the text of note B which includes');
     expect(res).toContain('This is the text of note A which includes');
     expect(res).toContain('Cyclic link detected for wikilink: note-a');
+
+    deleteFile(noteA);
+    deleteFile(noteB);
   });
 });

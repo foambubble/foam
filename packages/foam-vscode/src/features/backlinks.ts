@@ -69,7 +69,7 @@ export class BacklinksTreeDataProvider
           .map(async link => {
             const item = new BacklinkTreeItem(resource, link);
             const lines = (
-              (await this.workspace.read(resource.uri)) ?? ''
+              (await this.workspace.readAsMarkdown(resource.uri)) ?? ''
             ).split('\n');
             if (link.range.start.line < lines.length) {
               const line = lines[link.range.start.line];

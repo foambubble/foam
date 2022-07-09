@@ -6,8 +6,6 @@ import wikiLinkPlugin from 'remark-wiki-link';
 import frontmatterPlugin from 'remark-frontmatter';
 import { parse as parseYAML } from 'yaml';
 import visit from 'unist-util-visit';
-import detectNewline from 'detect-newline';
-import os from 'os';
 import { NoteLinkDefinition, Resource, ResourceParser } from '../model/note';
 import { Position } from '../model/position';
 import { Range } from '../model/range';
@@ -28,7 +26,7 @@ export interface ParserPlugin {
 const ALIAS_DIVIDER_CHAR = '|';
 
 export function createMarkdownParser(
-  extraPlugins: ParserPlugin[]
+  extraPlugins: ParserPlugin[] = []
 ): ResourceParser {
   const parser = unified()
     .use(markdownParse, { gfm: true })
@@ -64,7 +62,6 @@ export function createMarkdownParser(
         }
       }
       const tree = parser.parse(markdown);
-      const eol = detectNewline(markdown) || os.EOL;
 
       const note: Resource = {
         uri: uri,
@@ -76,12 +73,6 @@ export function createMarkdownParser(
         aliases: [],
         links: [],
         definitions: [],
-        source: {
-          text: markdown,
-          contentStart: astPointToFoamPosition(tree.position!.start),
-          end: astPointToFoamPosition(tree.position!.end),
-          eol: eol,
-        },
       };
 
       for (const plugin of plugins) {
@@ -99,12 +90,6 @@ export function createMarkdownParser(
               ...note.properties,
               ...yamlProperties,
             };
-            // Update the start position of the note by exluding the metadata
-            note.source.contentStart = Position.create(
-              node.position!.end.line! + 2,
-              0
-            );
-
             for (const plugin of plugins) {
               try {
                 plugin.onDidFindProperties?.(yamlProperties, note, node);
@@ -219,7 +204,10 @@ const sectionsPlugin: ParserPlugin = {
     }
   },
   onDidVisitTree: (tree, note) => {
-    const end = Position.create(note.source.end.line + 1, 0);
+    const end = Position.create(
+      astPointToFoamPosition(tree.position.end).line + 1,
+      0
+    );
     // Close all the remainig sections
     while (sectionStack.length > 0) {
       const section = sectionStack.pop();
@@ -321,7 +309,8 @@ const definitionsPlugin: ParserPlugin = {
     }
   },
   onDidVisitTree: (tree, note) => {
-    note.definitions = getFoamDefinitions(note.definitions, note.source.end);
+    const end = astPointToFoamPosition(tree.position.end);
+    note.definitions = getFoamDefinitions(note.definitions, end);
   },
 };
 

@@ -109,7 +109,7 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
 
   async resolveTreeItem(item: TagTreeItem): Promise<TagTreeItem> {
     if (item instanceof TagReference) {
-      const content = await this.workspace.read(item.note.uri);
+      const content = await this.workspace.readAsMarkdown(item.note.uri);
       if (isSome(content)) {
         item.tooltip = getNoteTooltip(content);
       }

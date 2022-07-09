@@ -10,6 +10,7 @@ import { VsCodeOutputLogger, exposeLogger } from './services/logging';
 import { getIgnoredFilesSetting } from './settings';
 import { fromVsCodeUri, toVsCodeUri } from './utils/vsc-utils';
 import { AttachmentResourceProvider } from './core/services/attachment-provider';
+import { VsCodeWatcher } from './services/watcher';
 
 export async function activate(context: ExtensionContext) {
   const logger = new VsCodeOutputLogger();
@@ -28,30 +29,18 @@ export async function activate(context: ExtensionContext) {
       ['**/*'],
       getIgnoredFilesSetting().map(g => g.toString())
     );
-    const watcher = workspace.createFileSystemWatcher('**/*');
+    const watcher = new VsCodeWatcher(
+      workspace.createFileSystemWatcher('**/*')
+    );
     const markdownProvider = new MarkdownResourceProvider(
       matcher,
       dataStore,
-      triggers => {
-        return [
-          watcher.onDidChange(uri => triggers.onDidChange(fromVsCodeUri(uri))),
-          watcher.onDidCreate(uri => triggers.onDidCreate(fromVsCodeUri(uri))),
-          watcher.onDidDelete(uri => triggers.onDidDelete(fromVsCodeUri(uri))),
-          watcher,
-        ];
-      }
+      watcher
     );
     const attachmentProvider = new AttachmentResourceProvider(
       matcher,
       dataStore,
-      triggers => {
-        return [
-          watcher.onDidChange(uri => triggers.onDidChange(fromVsCodeUri(uri))),
-          watcher.onDidCreate(uri => triggers.onDidCreate(fromVsCodeUri(uri))),
-          watcher.onDidDelete(uri => triggers.onDidDelete(fromVsCodeUri(uri))),
-          watcher,
-        ];
-      }
+      watcher
     );
 
     const foamPromise = bootstrap(matcher, dataStore, [

@@ -9,6 +9,7 @@ import { Resource, ResourceLink, ResourceParser } from '../core/model/note';
 import { URI } from '../core/model/uri';
 import { Range } from '../core/model/range';
 import { FoamGraph } from '../core/model/graph';
+import { Position } from '../core/model/position';
 
 const feature: FoamFeature = {
   activate: async (
@@ -119,10 +120,7 @@ export class NavigationProvider
 
     const targetRange = section
       ? section.range
-      : Range.createFromPosition(
-          targetResource.source.contentStart,
-          targetResource.source.end
-        );
+      : Range.createFromPosition(Position.create(0, 0), Position.create(0, 0));
     const targetSelectionRange = section
       ? section.range
       : Range.createFromPosition(targetRange.start);

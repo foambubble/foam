@@ -124,8 +124,8 @@ describe('Document navigation', () => {
 
       expect(definitions.length).toEqual(1);
       expect(definitions[0].targetUri).toEqual(toVsCodeUri(fileA.uri));
-      // target the whole file
-      expect(definitions[0].targetRange).toEqual(new vscode.Range(0, 0, 0, 8));
+      // target the beginning of the file
+      expect(definitions[0].targetRange).toEqual(new vscode.Range(0, 0, 0, 0));
       // select nothing
       expect(definitions[0].targetSelectionRange).toEqual(
         new vscode.Range(0, 0, 0, 0)

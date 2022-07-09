@@ -1,12 +1,9 @@
 import * as vscode from 'vscode';
 import { Foam } from '../core/model/foam';
-import { URI } from '../core/model/uri';
-import { FoamWorkspace } from '../core/model/workspace';
 import { getPlaceholdersConfig } from '../settings';
 import { FoamFeature } from '../types';
 import {
   GroupedResourcesTreeDataProvider,
-  ResourceTreeItem,
   UriTreeItem,
 } from '../utils/grouped-resources-tree-data-provider';
 import { fromVsCodeUri } from '../utils/vsc-utils';
@@ -25,16 +22,9 @@ const feature: FoamFeature = {
       'placeholder',
       getPlaceholdersConfig(),
       workspacesURIs,
-      () =>
-        foam.graph
-          .getAllNodes()
-          .filter(uri => isPlaceholderResource(uri, foam.workspace)),
+      () => foam.graph.getAllNodes().filter(uri => uri.isPlaceholder()),
       uri => {
-        if (uri.isPlaceholder()) {
-          return new UriTreeItem(uri);
-        }
-        const resource = foam.workspace.find(uri);
-        return new ResourceTreeItem(resource, foam.workspace);
+        return new UriTreeItem(uri);
       }
     );
 
@@ -50,20 +40,3 @@ const feature: FoamFeature = {
 };
 
 export default feature;
-
-export function isPlaceholderResource(uri: URI, workspace: FoamWorkspace) {
-  if (uri.isPlaceholder()) {
-    return true;
-  }
-
-  const resource = workspace.find(uri);
-  const contentLines =
-    resource?.source.text
-      .trim()
-      .split('\n')
-      .map(line => line.trim())
-      .filter(line => line.length > 0)
-      .filter(line => !line.startsWith('#')) ?? '';
-
-  return contentLines.length === 0;
-}

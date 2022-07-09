@@ -182,8 +182,8 @@ describe('Note rename sync', () => {
 
       await renameFile(noteA.uri, newUri);
 
-      const content = await readFile(noteC.uri);
       await waitForExpect(async () => {
+        const content = await readFile(noteC.uri);
         expect(content.trim()).toEqual(`Link to [[note-a]] from note C.`);
       });
       await deleteFile(newUri);

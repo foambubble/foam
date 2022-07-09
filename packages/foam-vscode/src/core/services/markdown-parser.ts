@@ -6,8 +6,6 @@ import wikiLinkPlugin from 'remark-wiki-link';
 import frontmatterPlugin from 'remark-frontmatter';
 import { parse as parseYAML } from 'yaml';
 import visit from 'unist-util-visit';
-import detectNewline from 'detect-newline';
-import os from 'os';
 import { NoteLinkDefinition, Resource, ResourceParser } from '../model/note';
 import { Position } from '../model/position';
 import { Range } from '../model/range';
@@ -64,7 +62,6 @@ export function createMarkdownParser(
         }
       }
       const tree = parser.parse(markdown);
-      const eol = detectNewline(markdown) || os.EOL;
 
       const note: Resource = {
         uri: uri,

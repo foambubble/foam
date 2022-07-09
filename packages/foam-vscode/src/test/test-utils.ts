@@ -22,10 +22,6 @@ export const TEST_DATA_DIR = URI.file(__dirname).joinPath(
 
 const position = Range.create(0, 0, 0, 100);
 
-const documentStart = position.start;
-const documentEnd = position.end;
-const eol = '\n';
-
 /**
  * Turns a string into a URI
  * The goal of this function is to make sure we are consistent in the

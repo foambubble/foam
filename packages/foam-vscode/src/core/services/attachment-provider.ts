@@ -5,7 +5,6 @@ import { FoamWorkspace } from '../model/workspace';
 import { IDataStore, IMatcher, IWatcher } from '../services/datastore';
 import { IDisposable } from '../common/lifecycle';
 import { ResourceProvider } from '../model/provider';
-import { Position } from '../model/position';
 
 const imageExtensions = ['.png', '.jpg', '.gif'];
 const attachmentExtensions = ['.pdf', ...imageExtensions];

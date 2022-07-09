@@ -1,4 +1,4 @@
-import { workspace, ExtensionContext, window, FileSystemWatcher } from 'vscode';
+import { workspace, ExtensionContext, window } from 'vscode';
 import { MarkdownResourceProvider } from './core/services/markdown-provider';
 import { bootstrap } from './core/model/foam';
 import { URI } from './core/model/uri';

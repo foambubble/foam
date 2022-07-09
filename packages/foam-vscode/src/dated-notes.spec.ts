@@ -48,8 +48,8 @@ describe('Daily note template', () => {
   it('Uses the daily note variables in the template', async () => {
     const targetDate = new Date(2021, 8, 12);
 
-    // eslint-disable-next-line no-template-curly-in-string
     const template = await createFile(
+      // eslint-disable-next-line no-template-curly-in-string
       'hello ${FOAM_DATE_MONTH_NAME} ${FOAM_DATE_DATE} hello',
       ['.foam', 'templates', 'daily-note.md']
     );

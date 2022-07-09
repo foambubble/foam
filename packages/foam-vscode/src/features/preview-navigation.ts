@@ -11,6 +11,7 @@ import { MarkdownLink } from '../core/services/markdown-link';
 import { Range } from '../core/model/range';
 import { isEmpty } from 'lodash';
 import { getFoamVsCodeConfig } from '../services/config';
+// eslint-disable-next-line no-restricted-imports
 import { readFileSync } from 'fs';
 
 const feature: FoamFeature = {
@@ -63,7 +64,7 @@ export const markdownItWithNoteInclusion = (
         }
         let content = `Embed for [[${wikilink}]]`;
         switch (includedNote.type) {
-          case 'note':
+          case 'note': {
             const noteText = readFileSync(
               includedNote.uri.toFsPath()
             ).toString();
@@ -71,6 +72,7 @@ export const markdownItWithNoteInclusion = (
               ? `<div class="embed-container-note">${md.render(noteText)}</div>`
               : noteText;
             break;
+          }
           case 'attachment':
             content = `
 <div class="embed-container-attachment">

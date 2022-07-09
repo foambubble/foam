@@ -1,12 +1,9 @@
 import * as vscode from 'vscode';
 import { Foam } from '../core/model/foam';
-import { URI } from '../core/model/uri';
-import { FoamWorkspace } from '../core/model/workspace';
 import { getPlaceholdersConfig } from '../settings';
 import { FoamFeature } from '../types';
 import {
   GroupedResourcesTreeDataProvider,
-  ResourceTreeItem,
   UriTreeItem,
 } from '../utils/grouped-resources-tree-data-provider';
 import { fromVsCodeUri } from '../utils/vsc-utils';

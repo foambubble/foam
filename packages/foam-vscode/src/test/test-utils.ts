@@ -97,12 +97,6 @@ export const createTestNote = (params: {
               };
         })
       : [],
-    source: {
-      eol: eol,
-      end: documentEnd,
-      contentStart: documentStart,
-      text: params.text ?? '',
-    },
   };
 };
 

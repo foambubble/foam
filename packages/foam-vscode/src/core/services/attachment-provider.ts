@@ -24,12 +24,6 @@ const asResource = (uri: URI): Resource => {
     links: [],
     tags: [],
     definitions: [],
-    source: {
-      contentStart: Position.create(0, 0),
-      end: Position.create(0, 0),
-      eol: '\n',
-      text: '',
-    },
   };
 };
 

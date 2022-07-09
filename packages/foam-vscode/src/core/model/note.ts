@@ -1,13 +1,5 @@
 import { URI } from './uri';
-import { Position } from './position';
 import { Range } from './range';
-
-export interface NoteSource {
-  text: string;
-  contentStart: Position;
-  end: Position;
-  eol: string;
-}
 
 export interface ResourceLink {
   type: 'wikilink' | 'link';
@@ -49,7 +41,6 @@ export interface Resource {
 
   // TODO to remove
   definitions: NoteLinkDefinition[];
-  source: NoteSource;
 }
 
 export interface ResourceParser {

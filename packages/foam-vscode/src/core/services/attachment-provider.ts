@@ -46,7 +46,7 @@ export class AttachmentResourceProvider implements ResourceProvider {
       .filter(this.supports);
 
     for (const uri of files) {
-      Logger.info('Found: ' + uri.toString());
+      Logger.debug('Found: ' + uri.toString());
       workspace.set(asResource(uri));
     }
 

@@ -36,7 +36,7 @@ export class MarkdownResourceProvider implements ResourceProvider {
 
     await Promise.all(
       files.map(async uri => {
-        Logger.info('Found: ' + uri.toString());
+        Logger.debug('Found: ' + uri.toString());
         const content = await this.dataStore.read(uri);
         if (isSome(content)) {
           workspace.set(this.parser.parse(uri, content));

@@ -1,4 +1,4 @@
-import { workspace, ExtensionContext, window } from 'vscode';
+import { workspace, ExtensionContext, window, commands } from 'vscode';
 import { MarkdownResourceProvider } from './core/services/markdown-provider';
 import { bootstrap } from './core/model/foam';
 import { URI } from './core/model/uri';
@@ -11,6 +11,8 @@ import { getIgnoredFilesSetting } from './settings';
 import { fromVsCodeUri, toVsCodeUri } from './utils/vsc-utils';
 import { AttachmentResourceProvider } from './core/services/attachment-provider';
 import { VsCodeWatcher } from './services/watcher';
+import { createMarkdownParser } from './core/services/markdown-parser';
+import { VsCodeBasedParserCache } from './services/cache';
 
 export async function activate(context: ExtensionContext) {
   const logger = new VsCodeOutputLogger();
@@ -32,10 +34,14 @@ export async function activate(context: ExtensionContext) {
     const watcher = new VsCodeWatcher(
       workspace.createFileSystemWatcher('**/*')
     );
+    const parserCache = new VsCodeBasedParserCache(context);
+    const parser = createMarkdownParser([], parserCache);
+
     const markdownProvider = new MarkdownResourceProvider(
       matcher,
       dataStore,
-      watcher
+      watcher,
+      parser
     );
     const attachmentProvider = new AttachmentResourceProvider(
       matcher,
@@ -57,7 +63,10 @@ export async function activate(context: ExtensionContext) {
       foam,
       watcher,
       markdownProvider,
-      attachmentProvider
+      attachmentProvider,
+      commands.registerCommand('foam-vscode.clear-cache', () => {
+        parserCache.clear();
+      })
     );
 
     const res = (await Promise.all(resPromises)).filter(r => r != null);

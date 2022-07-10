@@ -160,6 +160,10 @@
     },
     "commands": [
       {
+        "command": "foam-vscode.clear-cache",
+        "title": "Foam: Clear Cache"
+      },
+      {
         "command": "foam-vscode.update-graph",
         "title": "Foam: Update graph"
       },

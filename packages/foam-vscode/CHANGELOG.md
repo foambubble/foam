@@ -4,6 +4,12 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.19.1] - 2022-07-11
+
+Internal:
+- Introduced cache for markdown parser (#1030)
+- Various code refactorings
+
 ## [0.19.0] - 2022-07-07
 
 New Features:

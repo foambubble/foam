@@ -1,7 +1,6 @@
 import { generateHeading } from '.';
 import { readFileFromFs, TEST_DATA_DIR } from '../../test/test-utils';
 import { MarkdownResourceProvider } from '../services/markdown-provider';
-import { bootstrap } from '../model/foam';
 import { Resource } from '../model/note';
 import { Range } from '../model/range';
 import { FoamWorkspace } from '../model/workspace';

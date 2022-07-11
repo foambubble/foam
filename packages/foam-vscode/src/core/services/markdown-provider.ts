@@ -11,7 +11,6 @@ import { FoamWorkspace } from '../model/workspace';
 import { IDataStore, IMatcher, IWatcher } from '../services/datastore';
 import { IDisposable } from '../common/lifecycle';
 import { ResourceProvider } from '../model/provider';
-import { createMarkdownParser } from './markdown-parser';
 import { MarkdownLink } from './markdown-link';
 
 export class MarkdownResourceProvider implements ResourceProvider {

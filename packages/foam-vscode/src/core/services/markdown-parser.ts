@@ -39,7 +39,7 @@ export interface ParserCacheEntry {
  *
  * If the URI and the Checksum have not changed, the cached resource is returned.
  */
-export interface ParserCache extends ICache<URI, ParserCacheEntry> {}
+export type ParserCache = ICache<URI, ParserCacheEntry>;
 
 export function createMarkdownParser(
   extraPlugins: ParserPlugin[] = [],

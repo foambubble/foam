@@ -1,6 +1,6 @@
 {
   "scopeName": "foam.wikilink.injection",
-  "injectionSelector": "L:meta.paragraph.markdown, L:markup.heading.markdown",
+  "injectionSelector": "L:meta.paragraph.markdown, L:markup.heading.markdown, L:markup.list.unnumbered.markdown",
   "patterns": [
     {
       "contentName": "string.other.link.title.markdown.foam",

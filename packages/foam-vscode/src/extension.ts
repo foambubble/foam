@@ -12,7 +12,7 @@ import { fromVsCodeUri, toVsCodeUri } from './utils/vsc-utils';
 import { AttachmentResourceProvider } from './core/services/attachment-provider';
 import { VsCodeWatcher } from './services/watcher';
 import { createMarkdownParser } from './core/services/markdown-parser';
-import { VsCodeBasedParserCache } from './services/cache';
+import VsCodeBasedParserCache from './services/cache';
 
 export async function activate(context: ExtensionContext) {
   const logger = new VsCodeOutputLogger();
@@ -58,15 +58,15 @@ export async function activate(context: ExtensionContext) {
     const resPromises = features.map(f => f.activate(context, foamPromise));
 
     const foam = await foamPromise;
-    Logger.info(`Loaded ${foam.workspace.list().length} notes`);
+    Logger.info(`Loaded ${foam.workspace.list().length} resources`);
     context.subscriptions.push(
       foam,
       watcher,
       markdownProvider,
       attachmentProvider,
-      commands.registerCommand('foam-vscode.clear-cache', () => {
-        parserCache.clear();
-      })
+      commands.registerCommand('foam-vscode.clear-cache', () =>
+        parserCache.clear()
+      )
     );
 
     const res = (await Promise.all(resPromises)).filter(r => r != null);

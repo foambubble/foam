@@ -463,6 +463,7 @@
     "glob": "^7.1.6",
     "gray-matter": "^4.0.2",
     "lodash": "^4.17.21",
+    "lru-cache": "^7.12.0",
     "markdown-it-regex": "^0.2.0",
     "micromatch": "^4.0.2",
     "remark-frontmatter": "^2.0.0",

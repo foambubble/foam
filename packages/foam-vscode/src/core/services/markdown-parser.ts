@@ -26,6 +26,11 @@ export interface ParserPlugin {
 
 type Checksum = string;
 
+export interface ParserCacheEntry {
+  checksum: Checksum;
+  resource: Resource;
+}
+
 /**
  * This caches the parsed markdown for a given URI.
  *
@@ -34,7 +39,7 @@ type Checksum = string;
  *
  * If the URI and the Checksum have not changed, the cached resource is returned.
  */
-export interface ParserCache extends ICache<URI, [Checksum, Resource]> {}
+export interface ParserCache extends ICache<URI, ParserCacheEntry> {}
 
 export function createMarkdownParser(
   extraPlugins: ParserPlugin[] = [],
@@ -138,13 +143,13 @@ export function createMarkdownParser(
     parse: (uri: URI, markdown: string): Resource => {
       const actualChecksum = hash(markdown);
       if (cache.has(uri)) {
-        const [expectedChecksum, cachedResource] = cache.get(uri);
-        if (actualChecksum === expectedChecksum) {
-          return cachedResource;
+        const { checksum, resource } = cache.get(uri);
+        if (actualChecksum === checksum) {
+          return resource;
         }
       }
       const resource = foamParser.parse(uri, markdown);
-      cache.set(uri, [actualChecksum, resource]);
+      cache.set(uri, { checksum: actualChecksum, resource });
       return resource;
     },
   };

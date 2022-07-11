@@ -1,8 +1,6 @@
 # Link Reference Definitions
 
-## Introduction
-
-When you use `[[wikilinks]]`, the [foam-vscode](https://github.com/foambubble/foam/tree/master/packages/foam-vscode) extension will automatically generate [Markdown Link Reference Definitions](https://spec.commonmark.org/0.29/#link-reference-definitions) at the bottom of the file. This is done to make the content of the file compatible with various Markdown tools (e.g. parsers, static site generators, VS code plugins etc), which don't support `[[wikilinks]]`.
+When you use `[[wikilinks]]`, the [foam-vscode](https://github.com/foambubble/foam/tree/master/packages/foam-vscode) extension can automatically generate [Markdown Link Reference Definitions](https://spec.commonmark.org/0.29/#link-reference-definitions) at the bottom of the file. This is not needed to navigate your workspace with foam-vscode, but is useful for files to remain compatible with various Markdown tools (e.g. parsers, static site generators, VS code plugins etc), which don't support `[[wikilinks]]`.
 
 ## Example
 
@@ -65,9 +63,9 @@ You can ignore the `_site` directory by adding the following to your `.vscode/se
 
 After changing the setting in your workspace, you can run the [[workspace-janitor]] command to convert all existing definitions.
 
-[[todo]] _Implement a `foam.eclude
-
 ## Future improvements
+
+Implement `foam.exclude`. [[todo]]
 
 See [[link-reference-definition-improvements]] for further discussion on current problems and potential solutions.
 

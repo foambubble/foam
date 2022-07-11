@@ -2,6 +2,8 @@
 
 Foam pages can be published.
 
+TODO add publishing TOC
+
 ## Foam site generator?
 
 Another case of the [[build-vs-assemble]] dilemma. We could provide a better publishing experience by building a bespoke static site generator (or a gatsby plugin) that's aware of Foam conventions (backlinks etc.)

@@ -2,7 +2,7 @@
 
 These extensions defined in `.vscode/extensions.json` are automatically installed when you accept the workspace's recommended extensions.
 
-This list is subject to change. Especially the Git ones.
+This list is subject to change.
 
 - [Foam for VSCode](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode) (alpha)
 - [Markdown All In One](https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one)

@@ -1,8 +1,8 @@
 # Note Templates
 
-Foam supports note templates. Templates are a way to customize the starting content for your notes (instead of always starting from an empty note).
+Foam supports note templates which let you customize the starting content of your notes instead of always starting from an empty note.
 
-Note templates are files located in the special `.foam/templates` directory.
+Note templates are `.md` files located in the special `.foam/templates` directory of your workspace.
 
 ## Quickstart
 

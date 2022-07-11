@@ -123,7 +123,7 @@ export class FoamGraph implements IDisposable {
     }
 
     const end = Date.now();
-    Logger.info(`Graph updated in ${end - start}ms`);
+    Logger.debug(`Graph updated in ${end - start}ms`);
     this.onDidUpdateEmitter.fire();
   }
 

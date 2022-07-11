@@ -11,7 +11,6 @@ import { FoamWorkspace } from '../model/workspace';
 import { IDataStore, IMatcher, IWatcher } from '../services/datastore';
 import { IDisposable } from '../common/lifecycle';
 import { ResourceProvider } from '../model/provider';
-import { createMarkdownParser } from './markdown-parser';
 import { MarkdownLink } from './markdown-link';
 
 export class MarkdownResourceProvider implements ResourceProvider {
@@ -20,8 +19,8 @@ export class MarkdownResourceProvider implements ResourceProvider {
   constructor(
     private readonly matcher: IMatcher,
     private readonly dataStore: IDataStore,
-    private readonly watcher?: IWatcher,
-    private readonly parser: ResourceParser = createMarkdownParser([])
+    private readonly parser: ResourceParser,
+    private readonly watcher?: IWatcher
   ) {}
 
   async init(workspace: FoamWorkspace) {

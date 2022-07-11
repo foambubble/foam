@@ -218,6 +218,16 @@ export class FoamWorkspace implements IDisposable {
 
     return identifier;
   }
+
+  static async fromProviders(
+    providers: ResourceProvider[]
+  ): Promise<FoamWorkspace> {
+    const workspace = new FoamWorkspace();
+    for (const provider of providers) {
+      await workspace.registerProvider(provider);
+    }
+    return workspace;
+  }
 }
 
 const normalize = (v: string) => v.toLocaleLowerCase();

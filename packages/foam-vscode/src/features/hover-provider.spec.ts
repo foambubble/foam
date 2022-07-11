@@ -21,7 +21,12 @@ const createWorkspace = () => {
     vscode.workspace.workspaceFolders.map(f => fromVsCodeUri(f.uri))
   );
   const dataStore = new FileDataStore(readFileFromFs);
-  const resourceProvider = new MarkdownResourceProvider(matcher, dataStore);
+  const parser = createMarkdownParser();
+  const resourceProvider = new MarkdownResourceProvider(
+    matcher,
+    dataStore,
+    parser
+  );
   const workspace = new FoamWorkspace();
   workspace.registerProvider(resourceProvider);
   return workspace;

@@ -9,9 +9,10 @@ import visit from 'unist-util-visit';
 import { NoteLinkDefinition, Resource, ResourceParser } from '../model/note';
 import { Position } from '../model/position';
 import { Range } from '../model/range';
-import { extractHashtags, extractTagsFromProp, isSome } from '../utils';
+import { extractHashtags, extractTagsFromProp, hash, isSome } from '../utils';
 import { Logger } from '../utils/log';
 import { URI } from '../model/uri';
+import { ICache } from '../utils/cache';
 
 export interface ParserPlugin {
   name?: string;
@@ -23,15 +24,31 @@ export interface ParserPlugin {
   onDidFindProperties?: (properties: any, note: Resource, node: Node) => void;
 }
 
-const ALIAS_DIVIDER_CHAR = '|';
+type Checksum = string;
+
+export interface ParserCacheEntry {
+  checksum: Checksum;
+  resource: Resource;
+}
+
+/**
+ * This caches the parsed markdown for a given URI.
+ *
+ * The URI identifies the resource that needs to be parsed,
+ * the checksum identifies the text that needs to be parsed.
+ *
+ * If the URI and the Checksum have not changed, the cached resource is returned.
+ */
+export type ParserCache = ICache<URI, ParserCacheEntry>;
 
 export function createMarkdownParser(
-  extraPlugins: ParserPlugin[] = []
+  extraPlugins: ParserPlugin[] = [],
+  cache?: ParserCache
 ): ResourceParser {
   const parser = unified()
     .use(markdownParse, { gfm: true })
     .use(frontmatterPlugin, ['yaml'])
-    .use(wikiLinkPlugin, { aliasDivider: ALIAS_DIVIDER_CHAR });
+    .use(wikiLinkPlugin, { aliasDivider: '|' });
 
   const plugins = [
     titlePlugin,
@@ -121,7 +138,23 @@ export function createMarkdownParser(
       return note;
     },
   };
-  return foamParser;
+
+  const cachedParser: ResourceParser = {
+    parse: (uri: URI, markdown: string): Resource => {
+      const actualChecksum = hash(markdown);
+      if (cache.has(uri)) {
+        const { checksum, resource } = cache.get(uri);
+        if (actualChecksum === checksum) {
+          return resource;
+        }
+      }
+      const resource = foamParser.parse(uri, markdown);
+      cache.set(uri, { checksum: actualChecksum, resource });
+      return resource;
+    },
+  };
+
+  return isSome(cache) ? cachedParser : foamParser;
 }
 
 /**

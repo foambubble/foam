@@ -20,8 +20,8 @@ export class MarkdownResourceProvider implements ResourceProvider {
   constructor(
     private readonly matcher: IMatcher,
     private readonly dataStore: IDataStore,
-    private readonly watcher?: IWatcher,
-    private readonly parser: ResourceParser = createMarkdownParser([])
+    private readonly parser: ResourceParser,
+    private readonly watcher?: IWatcher
   ) {}
 
   async init(workspace: FoamWorkspace) {

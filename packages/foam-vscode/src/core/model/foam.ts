@@ -24,9 +24,9 @@ export interface Foam extends IDisposable {
 export const bootstrap = async (
   matcher: IMatcher,
   dataStore: IDataStore,
+  parser: ResourceParser,
   initialProviders: ResourceProvider[]
 ) => {
-  const parser = createMarkdownParser([]);
   const workspace = new FoamWorkspace();
   const tsStart = Date.now();
 

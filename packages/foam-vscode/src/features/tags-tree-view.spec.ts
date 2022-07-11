@@ -4,6 +4,7 @@ import { TagItem, TagReference, TagsProvider } from './tags-tree-view';
 import { bootstrap, Foam } from '../core/model/foam';
 import { MarkdownResourceProvider } from '../core/services/markdown-provider';
 import { FileDataStore, Matcher } from '../core/services/datastore';
+import { createMarkdownParser } from '../core/services/markdown-parser';
 
 describe('Tags tree panel', () => {
   let _foam: Foam;
@@ -11,7 +12,8 @@ describe('Tags tree panel', () => {
 
   const dataStore = new FileDataStore(readFileFromFs);
   const matcher = new Matcher([]);
-  const mdProvider = new MarkdownResourceProvider(matcher, dataStore);
+  const parser = createMarkdownParser();
+  const mdProvider = new MarkdownResourceProvider(matcher, dataStore, parser);
 
   beforeAll(async () => {
     await cleanWorkspace();
@@ -23,7 +25,7 @@ describe('Tags tree panel', () => {
   });
 
   beforeEach(async () => {
-    _foam = await bootstrap(matcher, dataStore, [mdProvider]);
+    _foam = await bootstrap(matcher, dataStore, parser, [mdProvider]);
     provider = new TagsProvider(_foam, _foam.workspace);
     await closeEditors();
   });

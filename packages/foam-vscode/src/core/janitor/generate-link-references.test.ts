@@ -10,6 +10,7 @@ import { Logger } from '../utils/log';
 import fs from 'fs';
 import { URI } from '../model/uri';
 import { EOL } from 'os';
+import { createMarkdownParser } from '../services/markdown-parser';
 
 Logger.setLevel('error');
 
@@ -28,9 +29,9 @@ describe('generateLinkReferences', () => {
     const readFile = async (uri: URI) =>
       (await fs.promises.readFile(uri.toFsPath())).toString();
     const dataStore = new FileDataStore(readFile);
-    const mdProvider = new MarkdownResourceProvider(matcher, dataStore);
-    const foam = await bootstrap(matcher, dataStore, [mdProvider]);
-    _workspace = foam.workspace;
+    const parser = createMarkdownParser();
+    const mdProvider = new MarkdownResourceProvider(matcher, dataStore, parser);
+    _workspace = await FoamWorkspace.fromProviders([mdProvider]);
   });
 
   it('initialised test graph correctly', () => {

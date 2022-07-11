@@ -8,6 +8,7 @@ import { FoamWorkspace } from '../model/workspace';
 import { FileDataStore, Matcher } from '../services/datastore';
 import { Logger } from '../utils/log';
 import detectNewline from 'detect-newline';
+import { createMarkdownParser } from '../services/markdown-parser';
 
 Logger.setLevel('error');
 
@@ -22,9 +23,9 @@ describe('generateHeadings', () => {
   beforeAll(async () => {
     const matcher = new Matcher([TEST_DATA_DIR.joinPath('__scaffold__')]);
     const dataStore = new FileDataStore(readFileFromFs);
-    const mdProvider = new MarkdownResourceProvider(matcher, dataStore);
-    const foam = await bootstrap(matcher, dataStore, [mdProvider]);
-    _workspace = foam.workspace;
+    const parser = createMarkdownParser();
+    const mdProvider = new MarkdownResourceProvider(matcher, dataStore, parser);
+    _workspace = await FoamWorkspace.fromProviders([mdProvider]);
   });
 
   it.skip('should add heading to a file that does not have them', async () => {

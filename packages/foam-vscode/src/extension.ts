@@ -40,8 +40,8 @@ export async function activate(context: ExtensionContext) {
     const markdownProvider = new MarkdownResourceProvider(
       matcher,
       dataStore,
-      watcher,
-      parser
+      parser,
+      watcher
     );
     const attachmentProvider = new AttachmentResourceProvider(
       matcher,
@@ -49,7 +49,7 @@ export async function activate(context: ExtensionContext) {
       watcher
     );
 
-    const foamPromise = bootstrap(matcher, dataStore, [
+    const foamPromise = bootstrap(matcher, dataStore, parser, [
       markdownProvider,
       attachmentProvider,
     ]);

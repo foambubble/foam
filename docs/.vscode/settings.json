@@ -25,5 +25,6 @@
   ],
   "files.exclude": {
     "_site/**": true
-  }
+  },
+  "files.insertFinalNewline": true
 }

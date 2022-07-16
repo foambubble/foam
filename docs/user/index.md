@@ -1,7 +1,8 @@
 # Using Foam
 
 Foam is a collection VS Code extensions and recipes that power it up into a full-blown note taking system.
-This folder contains user documentation describing how you can use Foam, and is included in the `foam-template` repo that most users start from.
+This folder contains user documentation describing how to get started using Foam, what its main features are, and strategies for getting the most out of Foam.
+The full docs are included in the `foam-template` repo that most users start from.
 
 > See also [[frequently-asked-questions]].
 
@@ -36,12 +37,7 @@ This folder contains user documentation describing how you can use Foam, and is 
 
 ## Publishing
 
-Here are some tips if you want to publish your notes for consumption in a different format.
-
-- [[publish-to-github]]
-- [[publish-to-github-pages]]
-- [[generate-gatsby-site]]
-- ... and many other formats, see [[publishing/index]]
+You can publish your Foam notes for consumption in different formats, like [[GitHub Pages|publish-to-github-pages]], [[Gatsby|generate-gatsby-site]], and [[Vercel|publish-to-vercel]], among others. See [[publishing]] for more details.
 
 ## Tools
 

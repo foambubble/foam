@@ -77,7 +77,7 @@ Next, select the folder to deploy from if prompted. If we are using the default 
 
 Finally, if all is successful, Vercel will show the detected framework: Jekyll. Press `Deploy` to proceed on publishing our project.
 
-![](../assets/images/vercel-detect-preset.png)
+![](../../assets/images/vercel-detect-preset.png)
 
 And now, Vercel will take care of building and rendering our foam workspace each time on push. Vercel will publish our site to `xxx.vercel.app`, we can also define a custom domain name for our Vercel website.
 

@@ -6,7 +6,7 @@ This #recipe shows you how to do that.
 
 At the moment, you can drag the explorer pane to your bottom pane, and either show it side by side with another pane, or have take the full width of the editor:
 
-![Demo of dragging and dropping the pane](../assets/images/demo-backlinks-explorer.gif)
+![Demo of dragging and dropping the pane](../../assets/images/demo-backlinks-explorer.gif)
 
 In the future we'll want to improve this feature by
 

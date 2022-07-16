@@ -6,7 +6,7 @@ Generally this is only useful if you're reporting an issue about Foam.
 1. To show the tab, click on `View > Output`.
 2. In the dropdown on the right of the tab, select `Foam`.
 
-![Find the foam log](../assets/images/foam-log.png)
+![Find the foam log](../../assets/images/foam-log.png)
 
 When reporting an issue about Foam, set the log level to `Debug`:
 

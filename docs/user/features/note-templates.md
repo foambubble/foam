@@ -11,7 +11,7 @@ Create a template:
 * Run the `Foam: Create New Template` command from the command palette
 * OR manually create a regular `.md` file in the `.foam/templates` directory
 
-![Create new template GIF](../assets/images/create-new-template.gif)
+![Create new template GIF](../../assets/images/create-new-template.gif)
 
 _Theme: Ayu Light_
 
@@ -20,7 +20,7 @@ To create a note from a template:
 * Run the `Foam: Create New Note From Template` command and follow the instructions. Don't worry if you've not created a template yet! You'll be prompted to create a new template if none exist.
 * OR run the `Foam: Create New Note` command, which uses the special default template (`.foam/templates/new-note.md`, if it exists)
 
-![Create new note from template GIF](../assets/images/create-new-note-from-template.gif)
+![Create new note from template GIF](../../assets/images/create-new-note-from-template.gif)
 
 _Theme: Ayu Light_
 
@@ -129,7 +129,7 @@ foam_template:
 
 These attributes provide a human readable name and description to be shown in the template picker (e.g. When a user uses the `Foam: Create New Note From Template` command):
 
-![Template Picker annotated with attributes](../assets/images/template-picker-annotated.png)
+![Template Picker annotated with attributes](../../assets/images/template-picker-annotated.png)
 
 ### Adding template metadata to an existing YAML Frontmatter block
 

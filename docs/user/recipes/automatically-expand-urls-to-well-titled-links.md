@@ -10,7 +10,7 @@ Markdown Link Expander will scrape your URL's `<title>` tag to create a nice Mar
 
 ## Instructions
 
-![Demo](../assets/images/prettify-links-demo.gif)
+![Demo](../../assets/images/prettify-links-demo.gif)
 
 1. Highlight desired URL
 2. `Cmd` + `Shift` + `P`

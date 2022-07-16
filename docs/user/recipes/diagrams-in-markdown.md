@@ -13,9 +13,9 @@ You can use [Mermaid](https://marketplace.visualstudio.com/items?itemName=bierne
 
 ## Draw.io
 
-[Draw.io](https://marketplace.visualstudio.com/items?itemName=hediet.vscode-drawio) extension allows you to create, edit, and display your diagrams without leaving Visual Studio Code. The `.drawio.svg` or `.drawio.png` files can be automatically embedded and displayed in published Foams, no export needed. FYI, the diagram below was made using Draw.io! You can check the diagram [here](../assets/images/diagram-drawio-demo.drawio.svg).
+[Draw.io](https://marketplace.visualstudio.com/items?itemName=hediet.vscode-drawio) extension allows you to create, edit, and display your diagrams without leaving Visual Studio Code. The `.drawio.svg` or `.drawio.png` files can be automatically embedded and displayed in published Foams, no export needed. FYI, the diagram below was made using Draw.io! You can check the diagram [here](../../assets/images/diagram-drawio-demo.drawio.svg).
 
-![diagram-drawio-demo](../assets/images/diagram-drawio-demo.drawio.svg)
+![diagram-drawio-demo](../../assets/images/diagram-drawio-demo.drawio.svg)
 
 ### Using Draw.io
 

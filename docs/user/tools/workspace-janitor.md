@@ -19,7 +19,7 @@ In the future, Janitor can help you with
 
 Execute the "Foam: Run Janitor" command from the command palette.
 
-![Foam Janitor demo](../assets/images/foam-janitor-demo.gif)
+![Foam Janitor demo](../../assets/images/foam-janitor-demo.gif)
 
 ## Using Janitor from command line (Experimental)
 

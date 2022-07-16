@@ -33,7 +33,7 @@ The full docs are included in the `foam-template` repo that most users start fro
 
 ## Recipes
 
-- TODO list all recipes
+[[recipes]] is a collection of user-contributed patterns that describe different ways you could utilize Foam or integrate it with other tools.
 
 ## Publishing
 

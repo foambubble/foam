@@ -26,7 +26,7 @@ readme
 
 A published workspace looks like this:
 
-![Azure DevOps wiki](../assets/images/azure-devops-wiki-demo.png)
+![Azure DevOps wiki](../../assets/images/azure-devops-wiki-demo.png)
 
 There is default table of contents pane to the left of the wiki content. Here, you'll find a list of all directories that are present in your Foam workspace, and all wiki pages. Page names are derived from files names, and they are listed in alphabetical order. You may reorder pages by adding filenames without `.md` extension to `.order` file.
 

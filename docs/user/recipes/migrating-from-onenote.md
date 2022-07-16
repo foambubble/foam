@@ -22,7 +22,7 @@ The powershell script 'ConvertOneNote2MarkDown-v2.ps1' will utilize the OneNote 
 3. For the next sections, it is highly recommended that you use VS Code, and its embedded PowerShell terminal, as this allows you to edit and run the script, as well as check the results of the .md output all in one window.
 4. Whatever you choose, you will need to do the following:
    1. Clone the script to your computer (see [here](https://git-scm.com/book/en/v2/Git-Basics-Getting-a-Git-Repository), if you're unfamiliar with git).
-   2. Once cloned, navigate to the repo folder. In VS Code, use File -> Add Folder to Workspace, right click on the folder in the left side bar and click [Open In Integrated Terminal](../assets/images/migrating-one-note.png).
+   2. Once cloned, navigate to the repo folder. In VS Code, use File -> Add Folder to Workspace, right click on the folder in the left side bar and click [Open In Integrated Terminal](../../assets/images/migrating-one-note.png).
    3. Run the script by executing
 ```.\ConvertOnenote2Markdown-v2```
     * if you receive an error, try running this line to bypass security:

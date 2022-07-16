@@ -24,7 +24,7 @@ This #recipe allows us to introduce Roam style commands to Foam, by using [VS Co
 ```
 
 Which would look like:
-![GIF demonstrating User Snippets](../assets/images/snippets.gif)
+![GIF demonstrating User Snippets](../../assets/images/snippets.gif)
 
 Using snippets enables Foam users to add [[custom-snippets]] themselves so they live alongside the first-class `/commands`.
 
@@ -44,7 +44,7 @@ Some markdown syntax is difficult for users who have never authored markdown bef
 ```
 
 We could provide snippets that expand out into the associated markdown syntax, like in the below GIF:
-![GIF demonstrating markdown snippets](../assets/images/markdown-snippets.gif)
+![GIF demonstrating markdown snippets](../../assets/images/markdown-snippets.gif)
 
 The JSON for these snippets can be found [here](https://github.com/foambubble/foam/pull/192#issuecomment-666736270).
 

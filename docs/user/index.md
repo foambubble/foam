@@ -23,7 +23,7 @@ The full docs are included in the `foam-template` repo that most users start fro
 - [[daily-notes]]
 - [[including-notes]]
 - [[spell-checking]]
-- [[graph-visualisation]]
+- [[graph-visualization]]
 - [[note-properties]]
 - [[note-templates]]
 - [[paste-images-from-clipboard]]
@@ -37,7 +37,10 @@ The full docs are included in the `foam-template` repo that most users start fro
 
 ## Publishing
 
-You can publish your Foam notes for consumption in different formats, like [[GitHub Pages|publish-to-github-pages]], [[Gatsby|generate-gatsby-site]], and [[Vercel|publish-to-vercel]], among others. See [[publishing]] for more details.
+You can publish your Foam notes for consumption in different formats.
+Examples: [[publish-to-github-pages]], [[generate-gatsby-site]], [[publish-to-vercel]]
+
+See [[publishing]] for more details.
 
 ## Tools
 
@@ -60,12 +63,17 @@ You can publish your Foam notes for consumption in different formats, like [[Git
 [daily-notes]: features/daily-notes.md "Daily Notes"
 [including-notes]: features/including-notes.md "Including notes in a note"
 [spell-checking]: features/spell-checking.md "Spell Checking"
+[graph-visualization]: features/graph-visualization.md "Graph Visualization"
 [note-properties]: features/note-properties.md "Note Properties"
 [note-templates]: features/note-templates.md "Note Templates"
 [paste-images-from-clipboard]: features/paste-images-from-clipboard.md "Paste Images from Clipboard"
 [custom-markdown-preview-styles]: features/custom-markdown-preview-styles.md "Custom Markdown Preview Styles"
 [link-reference-definitions]: features/link-reference-definitions.md "Link Reference Definitions"
 [custom-snippets]: features/custom-snippets.md "Adding Custom Snippets"
+[recipes]: recipes/recipes.md "Recipes"
+[publish-to-github-pages]: publishing/publish-to-github-pages.md "GitHub Pages"
+[generate-gatsby-site]: publishing/generate-gatsby-site.md "Generate a site using Gatsby"
+[publish-to-vercel]: publishing/publish-to-vercel.md "Publish to Vercel"
 [publishing]: publishing/publishing.md "Publishing pages"
 [cli]: tools/cli.md "Command Line Interface"
 [workspace-janitor]: tools/workspace-janitor.md "Janitor"

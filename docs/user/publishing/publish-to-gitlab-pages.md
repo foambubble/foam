@@ -30,7 +30,7 @@ const siteMetadata = {
   title: "A title",
   shortName: "A short name",
   description: "",
-  imageUrl: "/graph-visualisation.jpg",
+  imageUrl: "/graph-visualization.jpg",
   siteUrl: "https://$USER_NAME.gitlab.io",
 };
 module.exports = {

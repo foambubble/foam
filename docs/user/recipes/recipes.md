@@ -27,7 +27,7 @@ A #recipe is a guide, tip or strategy for getting the most out of your Foam work
 
 ## Discover
 
-- Explore your notes using [[graph-visualisation]]
+- Explore your notes using [[graph-visualization]]
 - Discover relationships with [[backlinking]]
 - Simulating [[unlinked-references]]
 
@@ -110,6 +110,7 @@ _See [[contribution-guide]] and [[how-to-write-recipes]]._
 [how-to-write-recipes]: how-to-write-recipes.md "How to Write Recipes"
 [todo]: ../../dev/todo.md "Todo"
 [web-clipper]: web-clipper.md "Web Clipper"
+[graph-visualization]: ../features/graph-visualization.md "Graph Visualization"
 [backlinking]: ../features/backlinking.md "Backlinking"
 [unlinked-references]: ../../dev/unlinked-references.md "Unlinked references (stub)"
 [wikilinks]: ../features/wikilinks.md "Wikilinks"

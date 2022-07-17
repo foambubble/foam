@@ -9,7 +9,7 @@
   - Visualizations
     - Tag clouds
     - Graph
-    - Should we have a package for visualisation?
+    - Should we have a package for visualization?
       - [[build-vs-assemble]]
       - Not everything needs to live in the Foam repo
   - Web based UI (Monaco)
@@ -65,7 +65,7 @@ Here are some example use cases that the core should support. They don't need to
   - [Frontmatter](https://jekyllrb.com/docs/front-matter/)
 - Finding all documents with `#tag`
 - Finding all documents with instances of `[[link]]`
-- Visualisations
+- Visualizations
 - Full text search
 
   - Or, if search is too expensive/complex, when given a list of file names and line/column positions from VS Code search API, can return the document context (e.g. full paragraph, preceding/following line etc)

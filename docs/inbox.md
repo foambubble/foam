@@ -29,6 +29,6 @@ Uncategorised thoughts, to be added
   - Foam Compiler?
 - Should support Netlify deploys out of the box
 - Foam should tick at the same frequency as your brain, and the Foam graph you build should match the mental model you have in your head, making navigation effortless.
-  - Maps have persistent topologies. As the graph grows, you should be able to visualise where an idea belongs. Maybe a literal map? And island? A DeckGL visualisation?
+  - Maps have persistent topologies. As the graph grows, you should be able to visualise where an idea belongs. Maybe a literal map? And island? A DeckGL visualization?
 
 Testing: This file is served from the /docs directory.

@@ -3,6 +3,7 @@ import { Foam } from '../core/model/foam';
 import { FoamGraph } from '../core/model/graph';
 import { URI } from '../core/model/uri';
 import { FoamWorkspace } from '../core/model/workspace';
+import { getFoamVsCodeConfig } from '../services/config';
 import { FoamFeature } from '../types';
 import { getNoteTooltip, mdDocSelector } from '../utils';
 import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
@@ -186,17 +187,29 @@ export class CompletionProvider
       position.line,
       position.character
     );
+    const labelStyle = getCompletionLabelSetting();
     const resources = this.ws.list().map(resource => {
-      const label = vscode.workspace.asRelativePath(toVsCodeUri(resource.uri));
+      const identifier = this.ws.getIdentifier(resource.uri);
+      const label =
+        labelStyle === 'title'
+          ? resource.title
+          : labelStyle === 'path'
+          ? vscode.workspace.asRelativePath(toVsCodeUri(resource.uri))
+          : identifier;
+      const detail = vscode.workspace.asRelativePath(toVsCodeUri(resource.uri));
+
       const item = new ResourceCompletionItem(
         label,
         vscode.CompletionItemKind.File,
         resource.uri
       );
+      item.detail = detail;
       item.sortText =
-        resource.type === 'attachment' ? `1-${item.label}` : `0-${item.label}`;
+        ['attachment', 'image'].indexOf(resource.type) > -1
+          ? `1-${item.label}`
+          : `0-${item.label}`;
       item.filterText = resource.uri.getName();
-      item.insertText = this.ws.getIdentifier(resource.uri);
+      item.insertText = identifier;
       item.range = replacementRange;
       item.command = COMPLETION_CURSOR_MOVE;
       item.commitCharacters = linkCommitCharacters;
@@ -263,6 +276,13 @@ class ResourceCompletionItem extends vscode.CompletionItem {
   ) {
     super(label, type);
   }
+}
+
+function getCompletionLabelSetting() {
+  const labelStyle: 'path' | 'title' | 'identifier' = getFoamVsCodeConfig(
+    'completion.label'
+  );
+  return labelStyle;
 }
 
 export default feature;

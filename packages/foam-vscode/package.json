@@ -243,6 +243,21 @@
     "configuration": {
       "title": "Foam",
       "properties": {
+        "foam.completion.label": {
+          "type": "string",
+          "default": "path",
+          "description": "Describes what note property to use as a label for completion items",
+          "enum": [
+            "path",
+            "title",
+            "identifier"
+          ],
+          "enumDescriptions": [
+            "Use the path of the note",
+            "Use the title of the note",
+            "Use the identifier of the note"
+          ]
+        },
         "foam.files.ignore": {
           "type": [
             "array"

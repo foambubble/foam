@@ -5,7 +5,7 @@ export abstract class MarkdownLink {
     /\[\[([^#|]+)?#?([^|]+)?\|?(.*)?\]\]/
   );
   private static directLinkRegex = new RegExp(
-    /\[(.*)\]\(([^#]*)?#?([^\]]+)?\)/
+    /\[(.*)\]\(<?([^#>]*)?#?([^\]>]+)?\>?\)/
   );
 
   public static analyzeLink(link: ResourceLink) {

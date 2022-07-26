@@ -131,6 +131,24 @@ describe('MarkdownLink', () => {
       expect(parsed.section).toEqual('');
       expect(parsed.alias).toEqual('');
     });
+    it('should parse links with angles #1039', () => {
+      const link = parser.parse(getRandomURI(), `this is a [](<to/path.md>)`)
+        .links[0];
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.target).toEqual('to/path.md');
+      expect(parsed.section).toEqual('');
+      expect(parsed.alias).toEqual('');
+    });
+    it('should parse links with angles and sections #1039', () => {
+      const link = parser.parse(
+        getRandomURI(),
+        `this is a [](<to/path.md#section>)`
+      ).links[0];
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.target).toEqual('to/path.md');
+      expect(parsed.section).toEqual('section');
+      expect(parsed.alias).toEqual('');
+    });
   });
 
   describe('rename wikilink', () => {

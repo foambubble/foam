@@ -260,6 +260,17 @@ async function askUserForFilepathConfirmation(
   });
 }
 
+/**
+ * Common chars that is better to avoid in file names.
+ * Inspired by:
+ *   https://www.mtu.edu/umc/services/websites/writing/characters-avoid/
+ *   https://stackoverflow.com/questions/1976007/what-characters-are-forbidden-in-windows-and-linux-directory-names
+ * Even if some might be allowed in Win or Linux, to keep things more compatible and less error prone
+ * we don't allow them
+ * Also see https://github.com/foambubble/foam/issues/1042
+ */
+const UNALLOWED_CHARS = '/\\#%&{}<>?*$!\'":@+`|=';
+
 export async function determineNewNoteFilepath(
   templateFilepathAttribute: string | undefined,
   fallbackURI: URI | undefined,
@@ -279,7 +290,11 @@ export async function determineNewNoteFilepath(
     return fallbackURI;
   }
 
-  const defaultName = await resolver.resolveFromName('FOAM_TITLE');
+  let defaultName = await resolver.resolveFromName('FOAM_TITLE');
+  UNALLOWED_CHARS.split('').forEach(char => {
+    defaultName = defaultName.split(char).join('');
+  });
+
   const defaultFilepath = getCurrentEditorDirectory().joinPath(
     `${defaultName}.md`
   );

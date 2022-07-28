@@ -253,4 +253,21 @@ describe('determineNewNoteFilepath', () => {
     expect(spy).toHaveBeenCalled();
     expect(resultFilepath.toFsPath()).toMatch(expectedPath.toFsPath());
   });
+
+  it('should filter invalid chars from the title #1042', async () => {
+    const noteTitle = 'My new note/';
+    const spy = jest
+      .spyOn(window, 'showInputBox')
+      .mockImplementationOnce(jest.fn(() => Promise.resolve(noteTitle)));
+    const resultFilepath = await determineNewNoteFilepath(
+      undefined,
+      undefined,
+      new Resolver(new Map(), new Date())
+    );
+    const expectedPath = fromVsCodeUri(
+      workspace.workspaceFolders[0].uri
+    ).joinPath(`My new note.md`);
+    expect(spy).toHaveBeenCalled();
+    expect(resultFilepath.toFsPath()).toMatch(expectedPath.toFsPath());
+  });
 });

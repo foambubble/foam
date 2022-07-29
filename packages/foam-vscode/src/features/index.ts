@@ -6,7 +6,7 @@ import orphans from './orphans';
 import placeholders from './placeholders';
 import backlinks from './backlinks';
 import hoverProvider from './hover-provider';
-import previewNavigation from './preview-navigation';
+import previewNavigation from './preview';
 import completionProvider, { completionCursorMove } from './link-completion';
 import tagCompletionProvider from './tag-completion';
 import linkDecorations from './document-decorator';

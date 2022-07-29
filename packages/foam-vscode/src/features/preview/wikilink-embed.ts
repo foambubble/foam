@@ -58,9 +58,7 @@ Embed for attachments is not supported
             break;
           case 'image':
             content = `<div class="embed-container-image">${md.render(
-              `![](${vscode.workspace.asRelativePath(
-                toVsCodeUri(includedNote.uri)
-              )})`
+              `![](${md.normalizeLink(includedNote.uri.path)})`
             )}</div>`;
             break;
         }

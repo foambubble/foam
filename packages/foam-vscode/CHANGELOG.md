@@ -4,7 +4,12 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-## [0.19.2] - 2022-07-11
+## [0.19.3] - 2022-08-04
+
+Fixes and Improvements:
+- Image embeds fixed in preview (#1036)
+
+## [0.19.2] - 2022-08-04
 
 Fixes and Improvements:
 - Added support for angle markdown links (#1044)

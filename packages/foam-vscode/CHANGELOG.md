@@ -4,6 +4,17 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.19.2] - 2022-07-11
+
+Fixes and Improvements:
+- Added support for angle markdown links (#1044)
+- Filter out invalid file name chars when creating note (#1042)
+
+Internal:
+- Reorganized docs (#1031, thanks @infogulch)
+- Fixed documentation links (#1046)
+- Preview code refactoring
+
 ## [0.19.1] - 2022-07-11
 
 Internal:

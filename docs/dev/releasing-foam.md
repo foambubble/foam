@@ -10,13 +10,11 @@
    - `git add *`
    - `git commit -m"Preparation for next release"`
 4. Update version
-   - `$ cd packages/foam-vscode`
-   - `foam-vscode$ yarn lerna version <version>` (where `version` is `patch/minor/major`) 
-   - `cd ../..`
+   - `$ yarn version-extension <version>` (where `version` is `patch/minor/major`) 
 5. Package extension
-   - `$ yarn vscode:package-extension`
+   - `$ yarn package-extension`
 6. Publish extension
-   - `$ yarn vscode:publish-extension`
+   - `$ yarn publish-extension`
 7. Update the release notes in GitHub
    - in GitHub, top right, click on "releases"
    - select "tags" in top left

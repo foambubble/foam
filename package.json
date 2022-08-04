@@ -9,9 +9,10 @@
     "packages/*"
   ],
   "scripts": {
-    "vscode:package-extension": "yarn workspace foam-vscode package-extension",
-    "vscode:install-extension": "yarn workspace foam-vscode install-extension",
-    "vscode:publish-extension": "yarn workspace foam-vscode publish-extension",
+    "version-extension": "lerna version",
+    "package-extension": "yarn workspace foam-vscode package-extension",
+    "install-extension": "yarn workspace foam-vscode install-extension",
+    "publish-extension": "yarn workspace foam-vscode publish-extension",
     "reset": "yarn && yarn clean && yarn build",
     "clean": "lerna run clean",
     "build": "lerna run build",

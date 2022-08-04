@@ -17,7 +17,7 @@ Foam is also meant to be extensible, so you can integrate with its internals to 
 
 ### Graph Visualization
 
-See how your notes are connected via a [graph](https://foambubble.github.io/foam/features/graph-visualisation) with the `Foam: Show Graph` command.
+See how your notes are connected via a [graph](https://foambubble.github.io/foam/user/features/graph-visualization) with the `Foam: Show Graph` command.
 
 ![Graph Visualization](./assets/screenshots/feature-show-graph.gif)
 
@@ -75,7 +75,7 @@ Foam supports link aliasing, so you can have a `[[wikilink]]`, or a `[[wikilink|
 
 ### Templates
 
-Use [custom templates](https://foambubble.github.io/foam/features/note-templates) to have avoid repetitve work on your notes.
+Use [custom templates](https://foambubble.github.io/foam/user/features/note-templates) to have avoid repetitve work on your notes.
 
 ![Templates](./assets/screenshots/feature-templates.gif)
 
@@ -88,7 +88,7 @@ See for each occurrence the context in which it lives, as well as a preview of t
 
 ### Tag Explorer Panel
 
-Tag your notes and navigate them with the [Tag Explorer](https://foambubble.github.io/foam/features/tags).
+Tag your notes and navigate them with the [Tag Explorer](https://foambubble.github.io/foam/user/features/tags).
 Foam also supports hierarchical tags.
 
 ![Tag Explorer Panel](./assets/screenshots/feature-tags-panel.gif)
@@ -109,13 +109,13 @@ Foam highlights wikilinks and placeholder differently, to help you visualize you
 
 ### Daily note
 
-Create a journal with [daily notes](https://foambubble.github.io/foam/features/daily-notes).
+Create a journal with [daily notes](https://foambubble.github.io/foam/user/features/daily-notes).
 
 ![Daily Note](./assets/screenshots/feature-daily-note.gif)
 
 ### Generate references for your wikilinks
 
-Create markdown [references](https://foambubble.github.io/foam/features/link-reference-definitions) for `[[wikilinks]]`, to use your notes in a non-Foam workspace.
+Create markdown [references](https://foambubble.github.io/foam/user/features/link-reference-definitions) for `[[wikilinks]]`, to use your notes in a non-Foam workspace.
 With references you can also make your notes navigable both in GitHub UI as well as GitHub Pages.
 
 ![Generate references](./assets/screenshots/feature-definitions-generation.gif)
@@ -125,12 +125,12 @@ With references you can also make your notes navigable both in GitHub UI as well
 - Explore your knowledge base with the `Foam: Open Random Note` command
 - Access your daily note with the `Foam: Open Daily Note` command
 - Create a new note with the `Foam: Create New Note` command
-  - This becomes very powerful when combined with [note templates](https://foambubble.github.io/foam/features/note-templates) and the `Foam: Create New Note from Template` command
+  - This becomes very powerful when combined with [note templates](https://foambubble.github.io/foam/user/features/note-templates) and the `Foam: Create New Note from Template` command
 - See your workspace as a connected graph with the `Foam: Show Graph` command
 
 ## Recipes
 
-People use Foam in different ways for different use cases, check out the [recipes](https://foambubble.github.io/foam/recipes/recipes) page for inspiration!
+People use Foam in different ways for different use cases, check out the [recipes](https://foambubble.github.io/foam/user/recipes/recipes) page for inspiration!
 
 ## Getting started
 

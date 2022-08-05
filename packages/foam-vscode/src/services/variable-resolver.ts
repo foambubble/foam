@@ -18,6 +18,7 @@ const knownFoamVariables = new Set([
   'FOAM_DATE_MONTH_NAME',
   'FOAM_DATE_MONTH_NAME_SHORT',
   'FOAM_DATE_DATE',
+  'FOAM_DATE_WEEK',
   'FOAM_DATE_DAY_NAME',
   'FOAM_DATE_DAY_NAME_SHORT',
   'FOAM_DATE_HOUR',
@@ -164,6 +165,29 @@ export class Resolver implements VariableResolver {
           value = Promise.resolve(
             String(this.foamDate.getDate().valueOf()).padStart(2, '0')
           );
+          break;
+        case 'FOAM_DATE_WEEK':
+          this.promises.set(
+            name,
+            new Promise((resolve) => {
+                // https://en.wikipedia.org/wiki/ISO_8601#Week_dates
+                const date = new Date(this.foamDate);
+
+                // Find Thursday of this week starting on Monday
+                date.setDate(date.getDate() + 4 - (date.getDay() || 7));
+                const thursday = date.getTime();
+
+                // Find January 1st
+                date.setMonth(0); // January
+                date.setDate(1);  // 1st
+                const janFirst = date.getTime();
+
+                // Round the amount of days to compensate for daylight saving time
+                const days = Math.round((thursday - janFirst) / 86400000); // 1 day = 86400000 ms
+                return Math.floor(days / 7) + 1;
+              });
+              this.foamDate.toLocalString('default', 
+          )
           break;
         case 'FOAM_DATE_DAY_NAME':
           value = Promise.resolve(

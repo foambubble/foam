@@ -218,9 +218,8 @@ export class Resolver {
 
                 // Round the amount of days to compensate for daylight saving time
                 const days = Math.round((thursday - janFirst) / 86400000); // 1 day = 86400000 ms
-                return Math.floor(days / 7) + 1;
-              });
-              this.foamDate.toLocalString('default', 
+                resolve(Math.floor(days / 7) + 1);
+              })
           )
           break;
         case 'FOAM_DATE_DAY_NAME':

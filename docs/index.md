@@ -234,6 +234,7 @@ If that sounds like something you're interested in, I'd love to have you along o
   </tr>
   <tr>
     <td align="center"><a href="https://github.com/lingyv-li"><img src="https://avatars.githubusercontent.com/u/8937944?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Larry Li</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=lingyv-li" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/infogulch"><img src="https://avatars.githubusercontent.com/u/133882?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Joe Taber</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=infogulch" title="Documentation">📖</a></td>
   </tr>
 </table>
 

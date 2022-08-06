@@ -914,6 +914,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "infogulch",
+      "name": "Joe Taber",
+      "avatar_url": "https://avatars.githubusercontent.com/u/133882?v=4",
+      "profile": "https://github.com/infogulch",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,

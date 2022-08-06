@@ -923,6 +923,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "readingsnail",
+      "name": "Woosuk Park",
+      "avatar_url": "https://avatars.githubusercontent.com/u/1904967?v=4",
+      "profile": "https://www.readingsnail.pe.kr",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,

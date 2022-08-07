@@ -17,7 +17,7 @@ export const markdownItWikilinkEmbed = (
   workspace: FoamWorkspace
 ) => {
   return md.use(markdownItRegex, {
-    name: 'include-notes',
+    name: 'embed-wikilinks',
     regex: /!\[\[([^[\]]+?)\]\]/,
     replace: (wikilink: string) => {
       try {

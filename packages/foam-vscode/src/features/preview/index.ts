@@ -16,9 +16,9 @@ const feature: FoamFeature = {
     return {
       extendMarkdownIt: (md: markdownit) => {
         return [
+          markdownItWikilinkEmbed,
           markdownItFoamTags,
           markdownItWikilinkNavigation,
-          markdownItWikilinkEmbed,
           markdownItRemoveLinkReferences,
         ].reduce((acc, extension) => extension(acc, foam.workspace), md);
       },

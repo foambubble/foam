@@ -20,7 +20,7 @@ export const markdownItWikilinkNavigation = (
 ) => {
   return md.use(markdownItRegex, {
     name: 'connect-wikilinks',
-    regex: /\[\[([^[\]]+?)\]\]/,
+    regex: /(?=[^!])\[\[([^[\]]+?)\]\]/,
     replace: (wikilink: string) => {
       try {
         const { target, alias } = MarkdownLink.analyzeLink({

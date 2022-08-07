@@ -4,6 +4,11 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.19.4] - 2022-08-07
+
+Fixes and Improvements:
+- Fixed note embed in preview (#1052)
+
 ## [0.19.3] - 2022-08-04
 
 Fixes and Improvements:

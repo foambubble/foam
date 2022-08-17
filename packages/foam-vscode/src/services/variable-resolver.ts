@@ -166,7 +166,7 @@ export class Resolver implements VariableResolver {
             String(this.foamDate.getDate().valueOf()).padStart(2, '0')
           );
           break;
-        case 'FOAM_DATE_WEEK':
+        case 'FOAM_DATE_WEEK': {
           // https://en.wikipedia.org/wiki/ISO_8601#Week_dates
           const date = new Date(this.foamDate);
 
@@ -184,6 +184,7 @@ export class Resolver implements VariableResolver {
           const weekDay = Math.floor(days / 7) + 1;
           value = Promise.resolve(String(weekDay.valueOf()).padStart(2, '0'));
           break;
+        }
         case 'FOAM_DATE_DAY_NAME':
           value = Promise.resolve(
             this.foamDate.toLocaleString('default', { weekday: 'long' })

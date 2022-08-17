@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { Foam } from '../core/model/foam';
 import { FoamGraph } from '../core/model/graph';
+import { Resource } from '../core/model/note';
 import { URI } from '../core/model/uri';
 import { FoamWorkspace } from '../core/model/workspace';
 import { getFoamVsCodeConfig } from '../services/config';
@@ -29,7 +30,7 @@ const feature: FoamFeature = {
     context.subscriptions.push(
       vscode.languages.registerCompletionItemProvider(
         mdDocSelector,
-        new CompletionProvider(foam.workspace, foam.graph),
+        new WikilinkCompletionProvider(foam.workspace, foam.graph),
         '['
       ),
       vscode.languages.registerCompletionItemProvider(
@@ -160,7 +161,7 @@ export class SectionCompletionProvider
   }
 }
 
-export class CompletionProvider
+export class WikilinkCompletionProvider
   implements vscode.CompletionItemProvider<vscode.CompletionItem> {
   constructor(private ws: FoamWorkspace, private graph: FoamGraph) {}
 
@@ -188,28 +189,43 @@ export class CompletionProvider
       position.character
     );
     const labelStyle = getCompletionLabelSetting();
+    const aliasSetting = getCompletionAliasSetting();
+
     const resources = this.ws.list().map(resource => {
+      const resourceIsDocument =
+        ['attachment', 'image'].indexOf(resource.type) === -1;
+
       const identifier = this.ws.getIdentifier(resource.uri);
-      const label =
-        labelStyle === 'title'
-          ? resource.title
-          : labelStyle === 'path'
-          ? vscode.workspace.asRelativePath(toVsCodeUri(resource.uri))
-          : identifier;
-      const detail = vscode.workspace.asRelativePath(toVsCodeUri(resource.uri));
+
+      const label = !resourceIsDocument
+        ? identifier
+        : labelStyle === 'path'
+        ? vscode.workspace.asRelativePath(toVsCodeUri(resource.uri))
+        : labelStyle === 'title'
+        ? resource.title
+        : identifier;
 
       const item = new ResourceCompletionItem(
         label,
         vscode.CompletionItemKind.File,
         resource.uri
       );
-      item.detail = detail;
-      item.sortText =
-        ['attachment', 'image'].indexOf(resource.type) > -1
-          ? `1-${item.label}`
-          : `0-${item.label}`;
-      item.filterText = resource.uri.getName();
-      item.insertText = identifier;
+
+      item.detail = vscode.workspace.asRelativePath(toVsCodeUri(resource.uri));
+      item.sortText = resourceIsDocument
+        ? `0-${item.label}`
+        : `1-${item.label}`;
+      // TODO test this
+      item.filterText = resource.title + ' ' + resource.uri.getName();
+
+      const useAlias =
+        resourceIsDocument &&
+        aliasSetting !== 'never' &&
+        wikilinkRequiresAlias(resource);
+
+      item.insertText = useAlias
+        ? `${identifier}|${resource.title}`
+        : identifier;
       item.range = replacementRange;
       item.command = COMPLETION_CURSOR_MOVE;
       item.commitCharacters = linkCommitCharacters;
@@ -283,6 +299,18 @@ function getCompletionLabelSetting() {
     'completion.label'
   );
   return labelStyle;
+}
+
+function getCompletionAliasSetting() {
+  const aliasStyle: 'never' | 'whenPathDiffersFromTitle' = getFoamVsCodeConfig(
+    'completion.useAlias'
+  );
+  return aliasStyle;
+}
+
+const normalize = (text: string) => text.toLocaleLowerCase().trim();
+function wikilinkRequiresAlias(resource: Resource) {
+  return normalize(resource.uri.getName()) !== normalize(resource.title);
 }
 
 export default feature;

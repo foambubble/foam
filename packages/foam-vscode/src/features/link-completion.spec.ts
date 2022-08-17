@@ -10,7 +10,7 @@ import {
 } from '../test/test-utils-vscode';
 import { fromVsCodeUri } from '../utils/vsc-utils';
 import {
-  CompletionProvider,
+  WikilinkCompletionProvider,
   SectionCompletionProvider,
 } from './link-completion';
 
@@ -63,7 +63,7 @@ describe('Link Completion', () => {
   it('should not return any link for empty documents', async () => {
     const { uri } = await createFile('');
     const { doc } = await showInEditor(uri);
-    const provider = new CompletionProvider(ws, graph);
+    const provider = new WikilinkCompletionProvider(ws, graph);
 
     const links = await provider.provideCompletionItems(
       doc,
@@ -76,7 +76,7 @@ describe('Link Completion', () => {
   it('should not return link outside the wikilink brackets', async () => {
     const { uri } = await createFile('[[file]] then');
     const { doc } = await showInEditor(uri);
-    const provider = new CompletionProvider(ws, graph);
+    const provider = new WikilinkCompletionProvider(ws, graph);
 
     const links = await provider.provideCompletionItems(
       doc,
@@ -90,7 +90,7 @@ describe('Link Completion', () => {
     for (const text of ['[[', '[[file]] [[', '[[file]] #tag [[']) {
       const { uri } = await createFile(text);
       const { doc } = await showInEditor(uri);
-      const provider = new CompletionProvider(ws, graph);
+      const provider = new WikilinkCompletionProvider(ws, graph);
 
       const links = await provider.provideCompletionItems(
         doc,
@@ -171,7 +171,7 @@ alias: alias-a
     ws.set(parser.parse(uri, content));
 
     const { doc } = await showInEditor(uri);
-    const provider = new CompletionProvider(ws, graph);
+    const provider = new WikilinkCompletionProvider(ws, graph);
 
     const links = await provider.provideCompletionItems(
       doc,

@@ -258,6 +258,19 @@
             "Use the identifier of the note"
           ]
         },
+        "foam.completion.useAlias": {
+          "type": "string",
+          "default": "never",
+          "description": "Specifies in which cases to use an alias when creating a wikilink",
+          "enum": [
+            "never",
+            "whenPathDiffersFromTitle"
+          ],
+          "enumDescriptions": [
+            "Never use aliases in completion items",
+            "Use alias if resource path is different from title"
+          ]
+        },
         "foam.files.ignore": {
           "type": [
             "array"

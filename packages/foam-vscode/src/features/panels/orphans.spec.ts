@@ -1,5 +1,5 @@
-import { FoamGraph } from '../core/model/graph';
-import { createTestNote, createTestWorkspace } from '../test/test-utils';
+import { FoamGraph } from '../../core/model/graph';
+import { createTestNote, createTestWorkspace } from '../../test/test-utils';
 import { isOrphan } from './orphans';
 
 const orphanA = createTestNote({

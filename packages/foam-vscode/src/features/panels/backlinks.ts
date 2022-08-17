@@ -1,16 +1,16 @@
 import * as vscode from 'vscode';
 import { groupBy } from 'lodash';
-import { URI } from '../core/model/uri';
+import { URI } from '../../core/model/uri';
 
-import { getNoteTooltip, isNone } from '../utils';
-import { FoamFeature } from '../types';
-import { ResourceTreeItem } from '../utils/grouped-resources-tree-data-provider';
-import { Foam } from '../core/model/foam';
-import { FoamWorkspace } from '../core/model/workspace';
-import { FoamGraph } from '../core/model/graph';
-import { Resource, ResourceLink } from '../core/model/note';
-import { Range } from '../core/model/range';
-import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
+import { getNoteTooltip, isNone } from '../../utils';
+import { FoamFeature } from '../../types';
+import { ResourceTreeItem } from '../../utils/grouped-resources-tree-data-provider';
+import { Foam } from '../../core/model/foam';
+import { FoamWorkspace } from '../../core/model/workspace';
+import { FoamGraph } from '../../core/model/graph';
+import { Resource, ResourceLink } from '../../core/model/note';
+import { Range } from '../../core/model/range';
+import { fromVsCodeUri, toVsCodeUri } from '../../utils/vsc-utils';
 
 const feature: FoamFeature = {
   activate: async (

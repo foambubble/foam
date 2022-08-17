@@ -1,15 +1,15 @@
 import * as vscode from 'vscode';
-import { Foam } from '../core/model/foam';
-import { FoamGraph } from '../core/model/graph';
-import { URI } from '../core/model/uri';
-import { getOrphansConfig } from '../settings';
-import { FoamFeature } from '../types';
+import { Foam } from '../../core/model/foam';
+import { FoamGraph } from '../../core/model/graph';
+import { URI } from '../../core/model/uri';
+import { getOrphansConfig } from '../../settings';
+import { FoamFeature } from '../../types';
 import {
   GroupedResourcesTreeDataProvider,
   ResourceTreeItem,
   UriTreeItem,
-} from '../utils/grouped-resources-tree-data-provider';
-import { fromVsCodeUri } from '../utils/vsc-utils';
+} from '../../utils/grouped-resources-tree-data-provider';
+import { fromVsCodeUri } from '../../utils/vsc-utils';
 
 const feature: FoamFeature = {
   activate: async (

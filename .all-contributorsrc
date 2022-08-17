@@ -932,6 +932,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "dmurph",
+      "name": "Daniel Murphy",
+      "avatar_url": "https://avatars.githubusercontent.com/u/294026?v=4",
+      "profile": "http://www.dmurph.com",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,

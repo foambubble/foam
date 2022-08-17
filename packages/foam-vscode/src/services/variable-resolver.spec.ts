@@ -2,8 +2,8 @@ import { window } from 'vscode';
 import { Resolver } from './variable-resolver';
 import { Variable } from '../core/common/snippetParser';
 
-describe('substituteFoamVariables', () => {
-  test('Does nothing if no Foam-specific variables are used', async () => {
+describe('variable-resolver, text substitution', () => {
+  it('should do nothing if no Foam-specific variables are used', async () => {
     const input = `
       # \${AnotherVariable} <-- Unrelated to Foam
       # \${AnotherVariable:default_value} <-- Unrelated to Foam
@@ -31,7 +31,7 @@ describe('substituteFoamVariables', () => {
     expect(await resolver.resolveText(input)).toEqual(input);
   });
 
-  test('Correctly substitutes variables that are substrings of one another', async () => {
+  it('should correctly substitute variables that are substrings of one another', async () => {
     // FOAM_TITLE is a substring of FOAM_TITLE_NON_EXISTENT_VARIABLE
     // If we're not careful with how we substitute the values
     // we can end up putting the FOAM_TITLE in place FOAM_TITLE_NON_EXISTENT_VARIABLE should be.
@@ -56,8 +56,8 @@ describe('substituteFoamVariables', () => {
   });
 });
 
-describe('resolveFoamVariables', () => {
-  test('Does nothing for unknown Foam-specific variables', async () => {
+describe('variable-resolver, variable resolution', () => {
+  it('should do nothing for unknown Foam-specific variables', async () => {
     const variables = [new Variable('FOAM_FOO')];
 
     const expected = new Map<string, string>();
@@ -67,7 +67,7 @@ describe('resolveFoamVariables', () => {
     expect(await resolver.resolveAll(variables)).toEqual(expected);
   });
 
-  test('Resolves FOAM_TITLE', async () => {
+  it('should resolve FOAM_TITLE', async () => {
     const foamTitle = 'My note title';
     const variables = [new Variable('FOAM_TITLE'), new Variable('FOAM_SLUG')];
 
@@ -84,7 +84,7 @@ describe('resolveFoamVariables', () => {
     expect(await resolver.resolveAll(variables)).toEqual(expected);
   });
 
-  test('Resolves FOAM_TITLE without asking the user when it is provided', async () => {
+  it('should resolve FOAM_TITLE without asking the user when it is provided', async () => {
     const foamTitle = 'My note title';
     const variables = [new Variable('FOAM_TITLE')];
 
@@ -97,7 +97,7 @@ describe('resolveFoamVariables', () => {
     expect(await resolver.resolveAll(variables)).toEqual(expected);
   });
 
-  test('Resolves FOAM_DATE_* properties with current day by default', async () => {
+  it('should resolve FOAM_DATE_* properties with current day by default', async () => {
     const variables = [
       new Variable('FOAM_DATE_YEAR'),
       new Variable('FOAM_DATE_YEAR_SHORT'),
@@ -134,7 +134,7 @@ describe('resolveFoamVariables', () => {
     );
   });
 
-  test('Resolves FOAM_DATE_* properties with given date', async () => {
+  it('should resolve FOAM_DATE_* properties with given date', async () => {
     const targetDate = new Date(2021, 9, 12, 1, 2, 3);
     const variables = [
       new Variable('FOAM_DATE_YEAR'),
@@ -149,6 +149,7 @@ describe('resolveFoamVariables', () => {
       new Variable('FOAM_DATE_MINUTE'),
       new Variable('FOAM_DATE_SECOND'),
       new Variable('FOAM_DATE_SECONDS_UNIX'),
+      new Variable('FOAM_DATE_WEEK'),
     ];
 
     const expected = new Map<string, string>();
@@ -161,6 +162,7 @@ describe('resolveFoamVariables', () => {
     expected.set('FOAM_DATE_DAY_NAME', 'Tuesday');
     expected.set('FOAM_DATE_DAY_NAME_SHORT', 'Tue');
     expected.set('FOAM_DATE_HOUR', '01');
+    expected.set('FOAM_DATE_WEEK', '41');
     expected.set('FOAM_DATE_MINUTE', '02');
     expected.set('FOAM_DATE_SECOND', '03');
     expected.set(
@@ -173,10 +175,35 @@ describe('resolveFoamVariables', () => {
 
     expect(await resolver.resolveAll(variables)).toEqual(expected);
   });
+
+  describe('FOAM_DATE_WEEK', () => {
+    it('should start counting weeks from 1', async () => {
+      // week number starts from 1, not 0
+      // the first "partial week" of the year is really the last of the previous
+      const resolver = new Resolver(
+        new Map<string, string>(),
+        new Date(2021, 0, 1, 1, 2, 3)
+      );
+      expect(await resolver.resolve(new Variable('FOAM_DATE_WEEK'))).toEqual(
+        '53'
+      );
+    });
+
+    it('should pad week number to 2 digits', async () => {
+      // week number is 2-digit
+      const resolver = new Resolver(
+        new Map<string, string>(),
+        new Date(2021, 0, 7, 1, 2, 3)
+      );
+      expect(await resolver.resolve(new Variable('FOAM_DATE_WEEK'))).toEqual(
+        '01'
+      );
+    });
+  });
 });
 
-describe('resolveFoamTemplateVariables', () => {
-  test('Does nothing for template without Foam-specific variables', async () => {
+describe('variable-resolver, resolveText', () => {
+  it('should do nothing for template without Foam-specific variables', async () => {
     const input = `
         # \${AnotherVariable} <-- Unrelated to Foam
         # \${AnotherVariable:default_value} <-- Unrelated to Foam
@@ -191,7 +218,7 @@ describe('resolveFoamTemplateVariables', () => {
     expect(await resolver.resolveText(input)).toEqual(expected);
   });
 
-  test('Does nothing for unknown Foam-specific variables', async () => {
+  it('should do nothing for unknown Foam-specific variables', async () => {
     const input = `
         # $FOAM_FOO
         # \${FOAM_FOO}
@@ -204,7 +231,7 @@ describe('resolveFoamTemplateVariables', () => {
     expect(await resolver.resolveText(input)).toEqual(expected);
   });
 
-  test('Appends FOAM_SELECTED_TEXT with a newline to the template if there is selected text but FOAM_SELECTED_TEXT is not referenced and the template ends in a newline', async () => {
+  it('should append FOAM_SELECTED_TEXT with a newline to the template if there is selected text but FOAM_SELECTED_TEXT is not referenced and the template ends in a newline', async () => {
     const foamTitle = 'My note title';
 
     jest
@@ -221,7 +248,7 @@ describe('resolveFoamTemplateVariables', () => {
     expect(await resolver.resolveText(input)).toEqual(expected);
   });
 
-  test('Appends FOAM_SELECTED_TEXT with a newline to the template if there is selected text but FOAM_SELECTED_TEXT is not referenced and the template ends in multiple newlines', async () => {
+  it('should append FOAM_SELECTED_TEXT with a newline to the template if there is selected text but FOAM_SELECTED_TEXT is not referenced and the template ends in multiple newlines', async () => {
     const foamTitle = 'My note title';
 
     jest
@@ -238,7 +265,7 @@ describe('resolveFoamTemplateVariables', () => {
     expect(await resolver.resolveText(input)).toEqual(expected);
   });
 
-  test('Appends FOAM_SELECTED_TEXT without a newline to the template if there is selected text but FOAM_SELECTED_TEXT is not referenced and the template does not end in a newline', async () => {
+  it('should append FOAM_SELECTED_TEXT without a newline to the template if there is selected text but FOAM_SELECTED_TEXT is not referenced and the template does not end in a newline', async () => {
     const foamTitle = 'My note title';
 
     jest
@@ -255,7 +282,7 @@ describe('resolveFoamTemplateVariables', () => {
     expect(await resolver.resolveText(input)).toEqual(expected);
   });
 
-  test('Does not append FOAM_SELECTED_TEXT to a template if there is no selected text and is not referenced', async () => {
+  it('should not append FOAM_SELECTED_TEXT to a template if there is no selected text and is not referenced', async () => {
     const foamTitle = 'My note title';
 
     jest

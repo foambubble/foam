@@ -1,12 +1,12 @@
 import * as vscode from 'vscode';
-import { Foam } from '../core/model/foam';
-import { getPlaceholdersConfig } from '../settings';
-import { FoamFeature } from '../types';
+import { Foam } from '../../core/model/foam';
+import { getPlaceholdersConfig } from '../../settings';
+import { FoamFeature } from '../../types';
 import {
   GroupedResourcesTreeDataProvider,
   UriTreeItem,
-} from '../utils/grouped-resources-tree-data-provider';
-import { fromVsCodeUri } from '../utils/vsc-utils';
+} from '../../utils/grouped-resources-tree-data-provider';
+import { fromVsCodeUri } from '../../utils/vsc-utils';
 
 const feature: FoamFeature = {
   activate: async (

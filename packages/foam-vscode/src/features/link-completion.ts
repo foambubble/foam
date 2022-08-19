@@ -215,8 +215,6 @@ export class WikilinkCompletionProvider
       item.sortText = resourceIsDocument
         ? `0-${item.label}`
         : `1-${item.label}`;
-      // TODO test this
-      item.filterText = resource.title + ' ' + resource.uri.getName();
 
       const useAlias =
         resourceIsDocument &&

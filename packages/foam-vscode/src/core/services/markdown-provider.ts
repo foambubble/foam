@@ -181,7 +181,7 @@ to generate markdown reference list`
       }
 
       let relativeUri = target.uri.relativeTo(noteUri.getDirectory());
-      if (!includeExtension) {
+      if (!includeExtension && relativeUri.path.endsWith('.md')) {
         relativeUri = relativeUri.changeExtension('*', '');
       }
 

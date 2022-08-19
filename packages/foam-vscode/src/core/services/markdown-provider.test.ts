@@ -301,6 +301,21 @@ describe('Generation of markdown references', () => {
     expect(references.map(r => r.url)).toEqual(['page-b.md', 'page-c.md']);
   });
 
+  it('should always add extensions for attachments, even when includeExtension = false', () => {
+    const workspace = createTestWorkspace();
+    const noteA = createNoteFromMarkdown(
+      'Link to [[page-b]] and [[image.png]]',
+      '/dir1/page-a.md'
+    );
+    workspace
+      .set(noteA)
+      .set(createNoteFromMarkdown('Content of note B', '/dir1/page-b.md'))
+      .set(createNoteFromMarkdown('', '/dir1/image.png'));
+
+    const references = createMarkdownReferences(workspace, noteA.uri, false);
+    expect(references.map(r => r.url)).toEqual(['page-b', 'image.png']);
+  });
+
   it('should use relative paths', () => {
     const workspace = createTestWorkspace();
     const noteA = createNoteFromMarkdown(

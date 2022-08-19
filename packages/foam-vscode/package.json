@@ -243,6 +243,34 @@
     "configuration": {
       "title": "Foam",
       "properties": {
+        "foam.completion.label": {
+          "type": "string",
+          "default": "path",
+          "description": "Describes what note property to use as a label for completion items",
+          "enum": [
+            "path",
+            "title",
+            "identifier"
+          ],
+          "enumDescriptions": [
+            "Use the path of the note",
+            "Use the title of the note",
+            "Use the identifier of the note"
+          ]
+        },
+        "foam.completion.useAlias": {
+          "type": "string",
+          "default": "never",
+          "description": "Specifies in which cases to use an alias when creating a wikilink",
+          "enum": [
+            "never",
+            "whenPathDiffersFromTitle"
+          ],
+          "enumDescriptions": [
+            "Never use aliases in completion items",
+            "Use alias if resource path is different from title"
+          ]
+        },
         "foam.files.ignore": {
           "type": [
             "array"

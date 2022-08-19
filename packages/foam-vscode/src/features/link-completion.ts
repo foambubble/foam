@@ -226,9 +226,9 @@ export class WikilinkCompletionProvider
       item.insertText = useAlias
         ? `${identifier}|${resource.title}`
         : identifier;
+      item.commitCharacters = useAlias ? [] : linkCommitCharacters;
       item.range = replacementRange;
       item.command = COMPLETION_CURSOR_MOVE;
-      item.commitCharacters = linkCommitCharacters;
       return item;
     });
     const aliases = this.ws.list().flatMap(resource =>

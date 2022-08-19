@@ -7,6 +7,7 @@ import {
   closeEditors,
   createFile,
   showInEditor,
+  withModifiedFoamConfiguration,
 } from '../test/test-utils-vscode';
 import { fromVsCodeUri } from '../utils/vsc-utils';
 import {
@@ -108,6 +109,103 @@ describe('Link Completion', () => {
         ])
       );
     }
+  });
+
+  it('should support label setting', async () => {
+    const { uri: noteUri, content } = await createFile(`# My Note Title`);
+    const workspace = createTestWorkspace();
+    workspace.set(parser.parse(noteUri, content));
+    const provider = new WikilinkCompletionProvider(
+      workspace,
+      FoamGraph.fromWorkspace(workspace)
+    );
+
+    const { uri } = await createFile('[[');
+    const { doc } = await showInEditor(uri);
+
+    await withModifiedFoamConfiguration(
+      'completion.label',
+      'title',
+      async () => {
+        const links = await provider.provideCompletionItems(
+          doc,
+          new vscode.Position(0, 3)
+        );
+
+        expect(links.items.map(i => i.label)).toEqual(['My Note Title']);
+      }
+    );
+
+    await withModifiedFoamConfiguration(
+      'completion.label',
+      'path',
+      async () => {
+        const links = await provider.provideCompletionItems(
+          doc,
+          new vscode.Position(0, 3)
+        );
+
+        expect(links.items.map(i => i.label)).toEqual([noteUri.getBasename()]);
+      }
+    );
+
+    await withModifiedFoamConfiguration(
+      'completion.label',
+      'identifier',
+      async () => {
+        const links = await provider.provideCompletionItems(
+          doc,
+          new vscode.Position(0, 3)
+        );
+
+        expect(links.items.map(i => i.label)).toEqual([
+          workspace.getIdentifier(noteUri),
+        ]);
+      }
+    );
+  });
+
+  it('should support alias setting', async () => {
+    const { uri: noteUri, content } = await createFile(`# My Note Title`);
+    const workspace = createTestWorkspace();
+    workspace.set(parser.parse(noteUri, content));
+    const provider = new WikilinkCompletionProvider(
+      workspace,
+      FoamGraph.fromWorkspace(workspace)
+    );
+
+    const { uri } = await createFile('[[');
+    const { doc } = await showInEditor(uri);
+
+    await withModifiedFoamConfiguration(
+      'completion.useAlias',
+      'never',
+      async () => {
+        const links = await provider.provideCompletionItems(
+          doc,
+          new vscode.Position(0, 3)
+        );
+
+        expect(links.items.map(i => i.insertText)).toEqual([
+          workspace.getIdentifier(noteUri),
+        ]);
+      }
+    );
+
+    await withModifiedFoamConfiguration(
+      'completion.useAlias',
+      'whenPathDiffersFromTitle',
+      async () => {
+        const links = await provider.provideCompletionItems(
+          doc,
+          new vscode.Position(0, 3)
+        );
+
+        expect(links.items.map(i => i.insertText)).toEqual([
+          `${workspace.getIdentifier(noteUri)}|My Note Title`,
+        ]);
+      }
+    );
   });
 
   it('should return sections for other notes', async () => {

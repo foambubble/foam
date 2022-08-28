@@ -171,7 +171,7 @@ export class NavigationProvider
         command
       );
       documentLink.tooltip = o.target.isPlaceholder()
-        ? `Create note for '${o.target.path}'`
+        ? `Create note from template for '${o.target.path}'`
         : `Go to ${o.target.toFsPath()}`;
       return documentLink;
     });

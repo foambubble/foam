@@ -85,6 +85,8 @@ let model = {
   style: defaultStyle,
   showNodesOfType: {
     placeholder: true,
+    image: false,
+    attachment: false,
     note: true,
     tag: true,
   },

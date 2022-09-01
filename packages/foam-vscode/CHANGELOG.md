@@ -4,6 +4,14 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.19.5] - 2022-09-01
+
+Fixes and Improvements:
+- Added `FOAM_DATE_WEEK` variable (#1053 - Thanks @dmurph)
+- Fixed extension inclusion when generating references for attachments
+- Link completion label can be note title as well as path (#1059)
+- Images and attachments are not shown by default in graph view (#1056)
+
 ## [0.19.4] - 2022-08-07
 
 Fixes and Improvements:

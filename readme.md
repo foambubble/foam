@@ -91,7 +91,7 @@ See for each occurrence the context in which it lives, as well as a preview of t
 
 ### Tag Explorer Panel
 
-Tag your notes and navigate them with the [Tag Explorer](https://foambubble.github.io/foam/user/user/features/tags).
+Tag your notes and navigate them with the [Tag Explorer](https://foambubble.github.io/foam/user/features/tags).
 Foam also supports hierarchical tags.
 
 ![Tag Explorer Panel](./assets/screenshots/feature-tags-panel.gif)

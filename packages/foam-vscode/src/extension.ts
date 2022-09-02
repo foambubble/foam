@@ -7,7 +7,10 @@ import { Logger } from './core/utils/log';
 
 import { features } from './features';
 import { VsCodeOutputLogger, exposeLogger } from './services/logging';
-import { getIgnoredFilesSetting } from './settings';
+import {
+  getIgnoredFilesSetting,
+  getIgnoredRootFoldersSetting,
+} from './settings';
 import { fromVsCodeUri, toVsCodeUri } from './utils/vsc-utils';
 import { AttachmentResourceProvider } from './core/services/attachment-provider';
 import { VsCodeWatcher } from './services/watcher';
@@ -26,8 +29,11 @@ export async function activate(context: ExtensionContext) {
     const readFile = async (uri: URI) =>
       (await workspace.fs.readFile(toVsCodeUri(uri))).toString();
     const dataStore = new FileDataStore(readFile);
+    const ignoredRoots = getIgnoredRootFoldersSetting();
     const matcher = new Matcher(
-      workspace.workspaceFolders.map(dir => fromVsCodeUri(dir.uri)),
+      workspace.workspaceFolders
+        .filter(dir => !ignoredRoots.includes(dir.name))
+        .map(dir => fromVsCodeUri(dir.uri)),
       ['**/*'],
       getIgnoredFilesSetting().map(g => g.toString())
     );

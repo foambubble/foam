@@ -24,6 +24,11 @@ export function getIgnoredFilesSetting(): GlobPattern[] {
   ];
 }
 
+/** Retrieve the list of root folders to ignore. */
+export function getIgnoredRootFoldersSetting(): string[] {
+  return [...workspace.getConfiguration().get('foam.rootFolders.ignore', [])];
+}
+
 /** Retrieves the maximum length for a Graph node title. */
 export function getTitleMaxLength(): number {
   return workspace.getConfiguration('foam.graph').get('titleMaxLength');

@@ -7,7 +7,6 @@ This list is subject to change.
 - [Foam for VSCode](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode) (alpha)
 - [Markdown All In One](https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one)
 - [Paste Image](https://marketplace.visualstudio.com/items?itemName=mushan.vscode-paste-image)
-- [Spell Right](https://marketplace.visualstudio.com/items?itemName=ban.spellright)
 
 ## Extensions For Additional Features
 

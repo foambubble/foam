@@ -237,12 +237,10 @@ function initDataviz(channel) {
       Actions.highlightNode(node?.id);
     })
     .onNodeClick((node, event) => {
-      if (event.getModifierState('Control') || event.getModifierState('Meta')) {
-        channel.postMessage({
-          type: 'webviewDidSelectNode',
-          payload: node.id,
-        });
-      }
+      channel.postMessage({
+        type: 'webviewDidSelectNode',
+        payload: node.id,
+      });
       Actions.selectNode(node.id, event.getModifierState('Shift'));
     })
     .onBackgroundClick(event => {

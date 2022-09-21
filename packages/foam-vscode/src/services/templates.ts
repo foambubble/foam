@@ -334,24 +334,31 @@ export const NoteFactory = {
    * Creates a new note when following a placeholder wikilink using the default template.
    * @param wikilinkPlaceholder the placeholder value from the wikilink. (eg. `[[Hello Joe]]` -> `Hello Joe`)
    * @param filepathFallbackURI the URI to use if the template does not specify the `filepath` metadata attribute. This is configurable by the caller for backwards compatibility purposes.
+   * @param chooseTemplate whether the user should be prompted to choose a template for the newly created note
    */
   createForPlaceholderWikilink: async (
     wikilinkPlaceholder: string,
-    filepathFallbackURI: URI
+    filepathFallbackURI: URI,
+    chooseTemplate: boolean
   ): Promise<{ didCreateFile: boolean; uri: URI | undefined }> => {
     const resolver = new Resolver(
       new Map().set('FOAM_TITLE', wikilinkPlaceholder),
       new Date()
     );
 
-    const selectedTemplate = await askUserForTemplate();
-    if (selectedTemplate === undefined) {
-      return;
+    let templateUri: URI;
+    if (chooseTemplate) {
+      const selectedTemplate = await askUserForTemplate();
+      if (selectedTemplate === undefined) {
+        return;
+      }
+      const templateFilename =
+        (selectedTemplate as QuickPickItem).description ||
+        (selectedTemplate as QuickPickItem).label;
+      templateUri = TEMPLATES_DIR.joinPath(templateFilename);
+    } else {
+      templateUri = DEFAULT_TEMPLATE_URI;
     }
-    const templateFilename =
-      (selectedTemplate as QuickPickItem).description ||
-      (selectedTemplate as QuickPickItem).label;
-    const templateUri = TEMPLATES_DIR.joinPath(templateFilename);
 
     return NoteFactory.createFromTemplate(
       getDefaultTemplateUri(),

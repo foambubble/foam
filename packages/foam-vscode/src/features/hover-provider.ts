@@ -108,8 +108,19 @@ export class HoverProvider implements vscode.HoverProvider {
         : this.workspace.get(targetUri).title;
     }
 
+    // If placeholder, offer to create a new note from template (compared to default link provider - not from template)
+    const command = OPEN_COMMAND.asURI(targetUri, true);
+    const newNoteFromTemplate = new vscode.MarkdownString(
+      `[Create note from template for '${targetUri.getName()}'](${command})`
+    );
+    newNoteFromTemplate.isTrusted = true;
+
     const hover: vscode.Hover = {
-      contents: [mdContent, sources.length > 0 ? references : null],
+      contents: [
+        mdContent,
+        sources.length > 0 ? references : null,
+        targetUri.isPlaceholder() ? newNoteFromTemplate : null,
+      ],
       range: toVsCodeRange(targetLink.range),
     };
     return hover;

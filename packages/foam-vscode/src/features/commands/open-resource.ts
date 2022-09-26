@@ -28,13 +28,12 @@ const feature: FoamFeature = {
                 uri.path === vscode.window.activeTextEditor?.document.uri.path
                   ? vscode.window.activeTextEditor?.document.uri
                   : toVsCodeUri(uri.asPlain());
+              // if the doc is already open, reuse the same colunm
               const targetEditor = vscode.window.visibleTextEditors.find(
                 ed => targetUri.path === ed.document.uri.path
               );
               const column = targetEditor?.viewColumn;
-              return vscode.window.showTextDocument(targetUri, {
-                viewColumn: column,
-              });
+              return vscode.commands.executeCommand('vscode.open', targetUri);
             }
             case 'placeholder': {
               const title = uri.getName();

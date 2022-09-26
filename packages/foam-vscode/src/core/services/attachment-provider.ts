@@ -5,9 +5,17 @@ import { FoamWorkspace } from '../model/workspace';
 import { IDataStore, IMatcher, IWatcher } from '../services/datastore';
 import { IDisposable } from '../common/lifecycle';
 import { ResourceProvider } from '../model/provider';
+import { getFoamVsCodeConfig } from '../../services/config';
 
-const imageExtensions = ['.png', '.jpg', '.gif'];
-const attachmentExtensions = ['.pdf', ...imageExtensions];
+const attachmentExtConfig = getFoamVsCodeConfig(
+  'files.attachmentExtensions',
+  ''
+)
+  .split(' ')
+  .map(ext => '.' + ext.trim());
+
+const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp'];
+const attachmentExtensions = [...attachmentExtConfig, ...imageExtensions];
 
 const asResource = (uri: URI): Resource => {
   const type = imageExtensions.includes(uri.getExtension())
@@ -45,6 +53,11 @@ export class AttachmentResourceProvider implements ResourceProvider {
       .match(filesByFolder.flat())
       .filter(this.supports);
 
+    Logger.info(
+      `Found ${
+        files.length
+      } attachments, with extensions: ${attachmentExtensions.join(', ')}`
+    );
     for (const uri of files) {
       Logger.debug('Found: ' + uri.toString());
       workspace.set(asResource(uri));
@@ -70,7 +83,9 @@ export class AttachmentResourceProvider implements ResourceProvider {
   }
 
   supports(uri: URI) {
-    return attachmentExtensions.includes(uri.getExtension());
+    return attachmentExtensions.includes(
+      uri.getExtension().toLocaleLowerCase()
+    );
   }
 
   async readAsMarkdown(uri: URI): Promise<string | null> {

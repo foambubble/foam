@@ -17,19 +17,23 @@ import dateFormat from 'dateformat';
 /**
  * The templates directory
  */
-export const TEMPLATES_DIR = fromVsCodeUri(
-  workspace.workspaceFolders[0].uri
-).joinPath('.foam', 'templates');
+export const getTemplatesDir = () =>
+  fromVsCodeUri(workspace.workspaceFolders[0].uri).joinPath(
+    '.foam',
+    'templates'
+  );
 
 /**
  * The URI of the default template
  */
-export const DEFAULT_TEMPLATE_URI = TEMPLATES_DIR.joinPath('new-note.md');
+export const getDefaultTemplateUri = () =>
+  getTemplatesDir().joinPath('new-note.md');
 
 /**
  * The URI of the template for daily notes
  */
-export const DAILY_NOTE_TEMPLATE_URI = TEMPLATES_DIR.joinPath('daily-note.md');
+export const getDailyNoteTemplateUri = () =>
+  getTemplatesDir().joinPath('daily-note.md');
 
 const WIKILINK_DEFAULT_TEMPLATE_TEXT = `# $\{1:$FOAM_TITLE}\n\n$0`;
 
@@ -185,7 +189,7 @@ export const NoteFactory = {
       targetDate
     );
     return NoteFactory.createFromTemplate(
-      DAILY_NOTE_TEMPLATE_URI,
+      getDailyNoteTemplateUri(),
       resolver,
       filepathFallbackURI,
       templateFallbackText,
@@ -207,7 +211,7 @@ export const NoteFactory = {
       new Date()
     );
     return NoteFactory.createFromTemplate(
-      DEFAULT_TEMPLATE_URI,
+      getDefaultTemplateUri(),
       resolver,
       filepathFallbackURI,
       WIKILINK_DEFAULT_TEMPLATE_TEXT
@@ -217,7 +221,7 @@ export const NoteFactory = {
 
 export const createTemplate = async (): Promise<void> => {
   const defaultFilename = 'new-template.md';
-  const defaultTemplate = TEMPLATES_DIR.joinPath(defaultFilename);
+  const defaultTemplate = getTemplatesDir().joinPath(defaultFilename);
   const fsPath = defaultTemplate.toFsPath();
   const filename = await window.showInputBox({
     prompt: `Enter the filename for the new template`,

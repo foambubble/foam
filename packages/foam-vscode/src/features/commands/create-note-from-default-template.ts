@@ -1,6 +1,6 @@
 import { commands, ExtensionContext } from 'vscode';
 import { FoamFeature } from '../../types';
-import { DEFAULT_TEMPLATE_URI, NoteFactory } from '../../services/templates';
+import { getDefaultTemplateUri, NoteFactory } from '../../services/templates';
 import { Resolver } from '../../services/variable-resolver';
 
 const feature: FoamFeature = {
@@ -12,7 +12,7 @@ const feature: FoamFeature = {
           const resolver = new Resolver(new Map(), new Date());
 
           return NoteFactory.createFromTemplate(
-            DEFAULT_TEMPLATE_URI,
+            getDefaultTemplateUri(),
             resolver,
             undefined,
             `---

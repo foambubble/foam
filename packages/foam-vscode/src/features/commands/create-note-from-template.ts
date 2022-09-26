@@ -4,7 +4,7 @@ import {
   getTemplateMetadata,
   getTemplates,
   NoteFactory,
-  TEMPLATES_DIR,
+  getTemplatesDir,
 } from '../../services/templates';
 import { Resolver } from '../../services/variable-resolver';
 
@@ -21,7 +21,7 @@ const feature: FoamFeature = {
           const templateFilename =
             (selectedTemplate as QuickPickItem).description ||
             (selectedTemplate as QuickPickItem).label;
-          const templateUri = TEMPLATES_DIR.joinPath(templateFilename);
+          const templateUri = getTemplatesDir().joinPath(templateFilename);
 
           const resolver = new Resolver(new Map(), new Date());
 

@@ -22,6 +22,11 @@ export async function activate(context: ExtensionContext) {
   try {
     Logger.info('Starting Foam');
 
+    if (workspace.workspaceFolders === undefined) {
+      Logger.info('No workspace open. Foam will not start');
+      return;
+    }
+
     // Prepare Foam
     const readFile = async (uri: URI) =>
       (await workspace.fs.readFile(toVsCodeUri(uri))).toString();

@@ -29,6 +29,7 @@
     "onCommand:foam-vscode.copy-without-brackets",
     "onCommand:foam-vscode.show-graph",
     "onCommand:foam-vscode.create-new-template",
+    "onCommand:foam-vscode.create-note",
     "onCommand:foam-vscode.create-note-from-template",
     "onCommand:foam-vscode.create-note-from-default-template"
   ],
@@ -159,6 +160,10 @@
       ]
     },
     "commands": [
+      {
+        "command": "foam-vscode.create-note",
+        "title": "Create Note"
+      },
       {
         "command": "foam-vscode.clear-cache",
         "title": "Foam: Clear Cache"

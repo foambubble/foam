@@ -1,6 +1,11 @@
-import { window } from 'vscode';
+import { Selection, window } from 'vscode';
 import { Resolver } from './variable-resolver';
 import { Variable } from '../core/common/snippetParser';
+import {
+  createFile,
+  deleteFile,
+  showInEditor,
+} from '../test/test-utils-vscode';
 
 describe('variable-resolver, text substitution', () => {
   it('should do nothing if no Foam-specific variables are used', async () => {
@@ -229,6 +234,17 @@ describe('variable-resolver, resolveText', () => {
     const expected = input;
     const resolver = new Resolver(new Map(), new Date());
     expect(await resolver.resolveText(input)).toEqual(expected);
+  });
+
+  it('should resolve FOAM_SELECTED_TEXT with the editor selection', async () => {
+    const file = await createFile('Content of note file');
+    const { editor } = await showInEditor(file.uri);
+    editor.selection = new Selection(0, 11, 1, 0);
+    const resolver = new Resolver(new Map(), new Date());
+    expect(await resolver.resolveFromName('FOAM_SELECTED_TEXT')).toEqual(
+      'note file'
+    );
+    await deleteFile(file);
   });
 
   it('should append FOAM_SELECTED_TEXT with a newline to the template if there is selected text but FOAM_SELECTED_TEXT is not referenced and the template ends in a newline', async () => {

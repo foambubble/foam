@@ -98,10 +98,10 @@ export async function getTemplateInfo(
 export const NoteFactory = {
   createNote: async (
     newFilePath: URI,
-    text: SnippetString,
+    text: string,
     resolver: Resolver,
     onFileExists?: (filePath: URI) => Promise<URI | undefined>,
-    considerSelection: boolean = true
+    replaceSelectionWithLink: boolean = true
   ): Promise<{ didCreateFile: boolean; uri: URI | undefined }> => {
     try {
       onFileExists = onFileExists
@@ -115,13 +115,6 @@ export const NoteFactory = {
             return newProposedPath && URI.file(newProposedPath);
           };
 
-      const selectedContent = findSelectionContent();
-      if (considerSelection) {
-        if (selectedContent?.content) {
-          resolver.define('FOAM_SELECTED_TEXT', selectedContent?.content);
-        }
-      }
-
       while (await fileExists(newFilePath)) {
         const proposedNewFilepath = await onFileExists(newFilePath);
 
@@ -131,13 +124,15 @@ export const NoteFactory = {
         newFilePath = proposedNewFilepath;
       }
 
+      const expandedText = await resolver.resolveText(text);
+      const selectedContent = findSelectionContent();
       await createDocAndFocus(
-        text,
+        new SnippetString(expandedText),
         newFilePath,
         selectedContent ? ViewColumn.Beside : ViewColumn.Active
       );
 
-      if (considerSelection && selectedContent !== undefined) {
+      if (replaceSelectionWithLink && selectedContent !== undefined) {
         const newNoteTitle = newFilePath.getName();
 
         await replaceSelection(
@@ -177,8 +172,6 @@ export const NoteFactory = {
         resolver
       );
 
-      const templateSnippet = new SnippetString(template.text);
-
       const newFilePath = await determineNewNoteFilepath(
         template.metadata.get('filepath'),
         filepathFallbackURI,
@@ -187,10 +180,9 @@ export const NoteFactory = {
 
       return NoteFactory.createNote(
         newFilePath,
-        templateSnippet,
+        template.text,
         resolver,
-        onFileExists,
-        true
+        onFileExists
       );
     } catch (err) {
       if (err instanceof UserCancelledOperation) {

@@ -1,4 +1,10 @@
-import { Selection, ViewColumn, window, workspace } from 'vscode';
+import {
+  Selection,
+  SnippetString,
+  ViewColumn,
+  window,
+  workspace,
+} from 'vscode';
 import { isWindows } from '../core/common/platform';
 import { fromVsCodeUri } from '../utils/vsc-utils';
 import { determineNewNoteFilepath, NoteFactory } from '../services/templates';
@@ -10,6 +16,7 @@ import {
   showInEditor,
 } from '../test/test-utils-vscode';
 import { Resolver } from './variable-resolver';
+import { fileExists } from './editor';
 
 describe('Create note from template', () => {
   beforeEach(async () => {
@@ -113,27 +120,6 @@ foam_template: # foam template metadata
   });
 
   describe('Creation with active text selection', () => {
-    it('should populate FOAM_SELECTED_TEXT with the current selection', async () => {
-      const templateA = await createFile('Template A', [
-        '.foam',
-        'templates',
-        'template-a.md',
-      ]);
-      const file = await createFile('Content of first file');
-      const { editor } = await showInEditor(file.uri);
-      editor.selection = new Selection(0, 11, 1, 0);
-      const target = getUriInWorkspace();
-      const resolver = new Resolver(new Map(), new Date());
-      await NoteFactory.createFromTemplate(templateA.uri, resolver, target);
-      expect(await resolver.resolveFromName('FOAM_SELECTED_TEXT')).toEqual(
-        'first file'
-      );
-
-      await deleteFile(templateA);
-      await deleteFile(target);
-      await deleteFile(file);
-    });
-
     it('should open created note in a new column if there was a selection', async () => {
       const templateA = await createFile('Template A', [
         '.foam',
@@ -183,7 +169,70 @@ foam_template: # foam template metadata
       expect(window.visibleTextEditors[0].document.getText()).toEqual(
         `This is my first file: [[${target.getName()}]]`
       );
+      await deleteFile(template.uri);
     });
+  });
+});
+
+describe('NoteFactory.createNote', () => {
+  beforeEach(async () => {
+    await closeEditors();
+  });
+  it('should create a new note', async () => {
+    const target = getUriInWorkspace();
+    await NoteFactory.createNote(
+      target,
+      'Hello World',
+      new Resolver(new Map(), new Date())
+    );
+    expect(await fileExists(target)).toBeTruthy();
+    expect(window.activeTextEditor.document.getText()).toEqual('Hello World');
+
+    await deleteFile(target);
+  });
+
+  it('should support not replacing the selection with a link to the newly created note', async () => {
+    const file = await createFile('This is my first file: World');
+    const { editor } = await showInEditor(file.uri);
+    editor.selection = new Selection(0, 23, 0, 28);
+    const target = getUriInWorkspace();
+    await NoteFactory.createNote(
+      target,
+      'Hello ${FOAM_SELECTED_TEXT} ${FOAM_SELECTED_TEXT}',
+      new Resolver(new Map(), new Date()),
+      undefined,
+      false
+    );
+    expect(window.activeTextEditor.document.getText()).toEqual(
+      'Hello World World'
+    );
+    expect(window.visibleTextEditors[0].document.getText()).toEqual(
+      `This is my first file: World`
+    );
+    await deleteFile(file.uri);
+    await deleteFile(target);
+  });
+
+  it('should support replacing the selection with a link to the newly created note', async () => {
+    const file = await createFile('This is my first file: World');
+    const { editor } = await showInEditor(file.uri);
+    editor.selection = new Selection(0, 23, 0, 28);
+    const target = getUriInWorkspace();
+    await NoteFactory.createNote(
+      target,
+      'Hello ${FOAM_SELECTED_TEXT} ${FOAM_SELECTED_TEXT}',
+      new Resolver(new Map(), new Date()),
+      undefined,
+      true
+    );
+    expect(window.activeTextEditor.document.getText()).toEqual(
+      'Hello World World'
+    );
+    expect(window.visibleTextEditors[0].document.getText()).toEqual(
+      `This is my first file: [[${target.getName()}]]`
+    );
+    await deleteFile(file.uri);
+    await deleteFile(target);
   });
 });
 

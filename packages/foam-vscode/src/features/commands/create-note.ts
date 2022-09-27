@@ -55,7 +55,7 @@ async function createNote(args: CreateNoteArgs) {
   } else {
     return NoteFactory.createNote(
       noteUri,
-      new vscode.SnippetString(args.text),
+      args.text,
       resolver,
       onFileExists,
       true

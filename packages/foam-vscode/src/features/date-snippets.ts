@@ -206,8 +206,7 @@ const feature: FoamFeature = {
       languages.registerCompletionItemProvider(
         'markdown',
         datesCompletionProvider,
-        '/',
-        '+'
+        '/'
       )
     );
   },

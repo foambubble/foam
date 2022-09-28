@@ -1,5 +1,5 @@
 import { Logger } from '../utils/log';
-import { URI } from './uri';
+import { asAbsoluteUri, URI } from './uri';
 
 Logger.setLevel('error');
 
@@ -79,5 +79,49 @@ describe('Foam URI', () => {
         URI.file('/path/to/another/note.md').getDirectory()
       )
     ).toEqual(URI.file('../a/note.md'));
+  });
+});
+
+describe('asAbsoluteUri', () => {
+  it('should throw if no workspace folder is found', () => {
+    expect(() => asAbsoluteUri(URI.file('relative/path'), [])).toThrow();
+  });
+  it('should return the given URI if already absolute', () => {
+    const uri = URI.file('/absolute/path');
+    expect(asAbsoluteUri(uri, [URI.file('/base')])).toEqual(uri);
+  });
+  describe('with relative URI', () => {
+    it('should return a URI relative if the given URI is relative and there is only one workspace folder', () => {
+      const uri = URI.file('relative/path');
+      const workspaceFolder = URI.file('/workspace/folder');
+      expect(asAbsoluteUri(uri, [workspaceFolder])).toEqual(
+        workspaceFolder.joinPath(uri.path)
+      );
+    });
+    it('should match the first folder with the same name as the first part of the URI', () => {
+      const uri = URI.file('folder2/file');
+      const workspaceFolder1 = URI.file('/absolute/path/folder1');
+      const workspaceFolder2 = URI.file('/absolute/path/folder2');
+      expect(asAbsoluteUri(uri, [workspaceFolder1, workspaceFolder2])).toEqual(
+        workspaceFolder2.joinPath('file')
+      );
+    });
+  });
+  it('should use the first folder if no matching folder is found', () => {
+    const uri = URI.file('folder3/file');
+    const workspaceFolder1 = URI.file('/absolute/path/folder1');
+    const workspaceFolder2 = URI.file('/absolute/path/folder2');
+    expect(asAbsoluteUri(uri, [workspaceFolder1, workspaceFolder2])).toEqual(
+      workspaceFolder1.joinPath(uri.path)
+    );
+  });
+  it('should use the first matching folder', () => {
+    const uri = URI.file('folder/file');
+    const workspaceFolder1 = URI.file('/absolute/path1');
+    const workspaceFolder2 = URI.file('/absolute/path2/folder');
+    const workspaceFolder3 = URI.file('/absolute/path3/folder');
+    expect(
+      asAbsoluteUri(uri, [workspaceFolder1, workspaceFolder2, workspaceFolder3])
+    ).toEqual(workspaceFolder2.joinPath('file'));
   });
 });

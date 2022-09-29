@@ -1,12 +1,13 @@
 import { URI } from '../core/model/uri';
 import { TextEncoder } from 'util';
-import { SnippetString, ViewColumn, window, workspace } from 'vscode';
+import { commands, SnippetString, ViewColumn, window, workspace } from 'vscode';
 import { focusNote } from '../utils';
 import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
 import { extractFoamTemplateFrontmatterMetadata } from '../utils/template-frontmatter-parser';
 import { UserCancelledOperation } from './errors';
 import {
   createDocAndFocus,
+  deleteFile,
   fileExists,
   findSelectionContent,
   getCurrentEditorDirectory,
@@ -95,28 +96,51 @@ export async function getTemplateInfo(
   };
 }
 
+export type OnFileExistStrategy =
+  | 'open'
+  | 'overwrite'
+  | 'cancel'
+  | 'ask'
+  | ((filePath: URI) => Promise<URI | undefined>);
+
 export const NoteFactory = {
   createNote: async (
     newFilePath: URI,
     text: string,
     resolver: Resolver,
-    onFileExists?: (filePath: URI) => Promise<URI | undefined>,
+    onFileExists?: OnFileExistStrategy,
     replaceSelectionWithLink = true
   ): Promise<{ didCreateFile: boolean; uri: URI | undefined }> => {
     try {
-      onFileExists = onFileExists
-        ? onFileExists
-        : async (existingFile: URI) => {
+      const onFileExistsFn = async (existingFile: URI) => {
+        if (typeof onFileExists === 'function') {
+          return onFileExists(existingFile);
+        }
+        switch (onFileExists) {
+          case 'open':
+            await commands.executeCommand(
+              'vscode.open',
+              toVsCodeUri(existingFile)
+            );
+            return;
+          case 'overwrite':
+            await deleteFile(existingFile);
+            return existingFile;
+          case 'cancel':
+            return undefined;
+          case 'ask':
+          default:
             const filename = existingFile.getBasename();
             const newProposedPath = await askUserForFilepathConfirmation(
               existingFile,
               filename
             );
             return newProposedPath && URI.file(newProposedPath);
-          };
+        }
+      };
 
       while (await fileExists(newFilePath)) {
-        const proposedNewFilepath = await onFileExists(newFilePath);
+        const proposedNewFilepath = await onFileExistsFn(newFilePath);
 
         if (proposedNewFilepath === undefined) {
           return { didCreateFile: false, uri: newFilePath };
@@ -163,7 +187,7 @@ export const NoteFactory = {
     resolver: Resolver,
     filepathFallbackURI?: URI,
     templateFallbackText = '',
-    onFileExists?: (filePath: URI) => Promise<URI | undefined>
+    onFileExists?: OnFileExistStrategy
   ): Promise<{ didCreateFile: boolean; uri: URI | undefined }> => {
     try {
       const template = await getTemplateInfo(

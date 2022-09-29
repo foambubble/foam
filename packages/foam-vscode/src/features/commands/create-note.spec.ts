@@ -1,5 +1,6 @@
 import { commands, window, Uri } from 'vscode';
 import { URI } from '../../core/model/uri';
+import { readFile } from '../../services/editor';
 import {
   closeEditors,
   createFile,
@@ -77,6 +78,9 @@ describe('create-note command', () => {
 
   it('supports various options to deal with existing notes', async () => {
     const target = await createFile('hello');
+    const content = await readFile(target.uri);
+    expect(content).toEqual('hello');
+
     await commands.executeCommand('foam-vscode.create-note', {
       notePath: target.uri.path,
       text: 'test overwrite',
@@ -106,24 +110,13 @@ describe('create-note command', () => {
     });
     expect(window.activeTextEditor).toBeUndefined();
 
-    await closeEditors();
-    await commands.executeCommand('foam-vscode.create-note', {
-      notePath: target.uri.path,
-      text: 'test overwrite 2',
-      onFileExists: 'overwrite',
-    });
-    expect(window.activeTextEditor.document.getText()).toEqual(
-      'test overwrite 2'
-    );
-    expectSameUri(window.activeTextEditor.document.uri, target.uri);
-
     const spy = jest
-      .spyOn(window, 'showQuickPick')
+      .spyOn(window, 'showInputBox')
       .mockImplementationOnce(jest.fn(() => Promise.resolve(undefined)));
     await closeEditors();
     await commands.executeCommand('foam-vscode.create-note', {
       notePath: target.uri.path,
-      text: 'let me think',
+      text: 'test ask',
       onFileExists: 'ask',
     });
     expect(spy).toBeCalled();

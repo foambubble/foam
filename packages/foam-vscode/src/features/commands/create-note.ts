@@ -55,33 +55,21 @@ async function createNote(args: CreateNoteArgs) {
     args.notePath && asAbsoluteWorkspaceUri(URI.file(args.notePath));
   const templateUri =
     args.templatePath && asAbsoluteWorkspaceUri(URI.file(args.templatePath));
-  const onFileExists = async (uri: URI) => {
-    switch (args.onFileExists) {
-      case 'open':
-        await vscode.commands.executeCommand('vscode.open', toVsCodeUri(uri));
-        return;
-      case 'overwrite':
-        await deleteFile(uri);
-        return uri;
-      case 'cancel':
-        return undefined;
-      case 'ask':
-        throw new Error('not implemented');
-      default:
-        vscode.commands.executeCommand('vscode.open', toVsCodeUri(uri));
-        return;
-    }
-  };
   if (await fileExists(templateUri)) {
     return NoteFactory.createFromTemplate(
       templateUri,
       resolver,
       noteUri,
       args.text,
-      onFileExists
+      args.onFileExists
     );
   } else {
-    return NoteFactory.createNote(noteUri, args.text, resolver, onFileExists);
+    return NoteFactory.createNote(
+      noteUri,
+      args.text,
+      resolver,
+      args.onFileExists
+    );
   }
 }
 

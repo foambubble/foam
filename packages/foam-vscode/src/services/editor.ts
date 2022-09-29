@@ -105,6 +105,10 @@ export async function readFile(uri: URI): Promise<string | undefined> {
   return undefined;
 }
 
+export const deleteFile = (uri: URI) => {
+  return workspace.fs.delete(toVsCodeUri(uri), { recursive: true });
+};
+
 /**
  * Turns a relative URI into an absolute URI for the given workspace.
  * @param uri the uri to evaluate

@@ -1,11 +1,16 @@
 import { Selection, workspace } from 'vscode';
-import { fromVsCodeUri } from '../utils/vsc-utils';
+import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
 import {
   closeEditors,
   createFile,
   showInEditor,
 } from '../test/test-utils-vscode';
-import { getCurrentEditorDirectory, replaceSelection } from './editor';
+import {
+  asAbsoluteWorkspaceUri,
+  getCurrentEditorDirectory,
+  replaceSelection,
+} from './editor';
+import { URI } from '../core/model/uri';
 
 describe('Editor utils', () => {
   beforeAll(closeEditors);
@@ -36,6 +41,16 @@ describe('Editor utils', () => {
       await replaceSelection(doc.doc, selection, 'was');
 
       expect(doc.doc.getText()).toEqual('This was the file A');
+    });
+  });
+
+  describe('asAbsoluteWorkspaceUri', () => {
+    it('should work with the VS Code workspace folders if none are passed', () => {
+      const uri = URI.file('relative/path');
+      const workspaceFolder = workspace.workspaceFolders[0];
+      expect(asAbsoluteWorkspaceUri(uri)).toEqual(
+        fromVsCodeUri(workspaceFolder.uri).joinPath(uri.path)
+      );
     });
   });
 });

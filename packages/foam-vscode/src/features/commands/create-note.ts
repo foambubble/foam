@@ -5,35 +5,60 @@ import { NoteFactory } from '../../services/templates';
 import { Foam } from '../../core/model/foam';
 import { Resolver } from '../../services/variable-resolver';
 import { toVsCodeUri } from '../../utils/vsc-utils';
-import { isNone } from '../../utils';
-import { fileExists } from '../../services/editor';
+import { asAbsoluteWorkspaceUri, fileExists } from '../../services/editor';
+import { isSome, isNone } from '../../core/utils';
+import { deleteFile } from '../../test/test-utils-vscode';
 
 interface CreateNoteArgs {
+  /**
+   * The path of the note to create.
+   * If relative it will be resolved against the workspace root.
+   */
   notePath?: string;
+  /**
+   * The path of the template to use.
+   */
   templatePath?: string;
+  /**
+   * The text to use for the note.
+   * If a template is provided, the template has precedence
+   */
   text?: string;
+  /**
+   * Variables to use in the text or template
+   */
   variables?: Map<string, string>;
-  date?: Date;
+  /**
+   * The date used to resolve the FOAM_DATE_* variables. in YYYY-MM-DD format
+   */
+  date?: string;
+  /**
+   * What to do in case the target file already exists
+   */
   onFileExists?: 'overwrite' | 'open' | 'ask' | 'cancel';
 }
 
 async function createNote(args: CreateNoteArgs) {
+  args = args ?? {};
+  const date = isSome(args.date) ? new Date(Date.parse(args.date)) : new Date();
   const resolver = new Resolver(
-    new Map(Object.entries(args.variables)),
-    args.date ?? new Date()
+    new Map(Object.entries(args.variables ?? {})),
+    date
   );
   if (isNone(args.notePath) && isNone(args.templatePath)) {
     throw new Error('Either notePath or templatePath must be provided');
   }
-  const noteUri = args.notePath && URI.file(args.notePath);
-  const templateUri = args.templatePath && URI.file(args.templatePath);
+  const noteUri =
+    args.notePath && asAbsoluteWorkspaceUri(URI.file(args.notePath));
+  const templateUri =
+    args.templatePath && asAbsoluteWorkspaceUri(URI.file(args.templatePath));
   const onFileExists = async (uri: URI) => {
     switch (args.onFileExists) {
       case 'open':
-        vscode.commands.executeCommand('vscode.open', toVsCodeUri(uri));
+        await vscode.commands.executeCommand('vscode.open', toVsCodeUri(uri));
         return;
       case 'overwrite':
-        await vscode.workspace.fs.delete(toVsCodeUri(uri));
+        await deleteFile(uri);
         return uri;
       case 'cancel':
         return undefined;
@@ -53,13 +78,7 @@ async function createNote(args: CreateNoteArgs) {
       onFileExists
     );
   } else {
-    return NoteFactory.createNote(
-      noteUri,
-      args.text,
-      resolver,
-      onFileExists,
-      true
-    );
+    return NoteFactory.createNote(noteUri, args.text, resolver, onFileExists);
   }
 }
 

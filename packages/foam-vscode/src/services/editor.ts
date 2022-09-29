@@ -1,4 +1,4 @@
-import { URI } from '../core/model/uri';
+import { asAbsoluteUri, URI } from '../core/model/uri';
 import { TextEncoder } from 'util';
 import {
   FileType,
@@ -103,4 +103,20 @@ export async function readFile(uri: URI): Promise<string | undefined> {
       .then(bytes => bytes.toString());
   }
   return undefined;
+}
+
+/**
+ * Turns a relative URI into an absolute URI for the given workspace.
+ * @param uri the uri to evaluate
+ * @returns an absolute uri
+ */
+export function asAbsoluteWorkspaceUri(uri: URI): URI {
+  if (workspace.workspaceFolders === undefined) {
+    throw new Error('An open folder or workspace is required');
+  }
+  const folders = workspace.workspaceFolders.map(folder =>
+    fromVsCodeUri(folder.uri)
+  );
+  const res = asAbsoluteUri(uri, folders);
+  return res;
 }

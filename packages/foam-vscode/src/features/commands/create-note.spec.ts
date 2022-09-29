@@ -1,8 +1,10 @@
-import { commands, window } from 'vscode';
+import { commands, window, Uri } from 'vscode';
+import { URI } from '../../core/model/uri';
 import {
   closeEditors,
   createFile,
   deleteFile,
+  expectSameUri,
   getUriInWorkspace,
 } from '../../test/test-utils-vscode';
 
@@ -11,10 +13,13 @@ describe('create-note command', () => {
     jest.clearAllMocks();
   });
 
-  it('fails if neither note path nor template path are provided', () => {
-    expect(() =>
-      commands.executeCommand('foam-vscode.create-note')
-    ).rejects.toThrow('Either notePath or templatePath must be provided');
+  it('fails if neither note path nor template path are provided', async () => {
+    const spy = jest
+      .spyOn(window, 'showErrorMessage')
+      .mockImplementationOnce(jest.fn(() => Promise.resolve(undefined)));
+
+    await commands.executeCommand('foam-vscode.create-note');
+    expect(spy).toBeCalled();
   });
 
   it.skip('gives precedence to the template over the text', async () => {
@@ -29,8 +34,8 @@ describe('create-note command', () => {
       templatePath: templateA.uri.path,
       text: 'hello',
     });
-    expect(window.activeTextEditor?.document.getText()).toEqual('Template A');
-    expect(window.activeTextEditor.document.uri.path).toEqual(target.path);
+    expect(window.activeTextEditor.document.getText()).toEqual('Template A');
+    expectSameUri(window.activeTextEditor.document.uri, target);
     await deleteFile(target);
     await deleteFile(templateA.uri);
   });
@@ -41,8 +46,8 @@ describe('create-note command', () => {
       notePath: target.path,
       text: 'hello',
     });
-    expect(window.activeTextEditor?.document.getText()).toEqual('hello');
-    expect(window.activeTextEditor.document.uri.path).toEqual(target.path);
+    expect(window.activeTextEditor.document.getText()).toEqual('hello');
+    expectSameUri(window.activeTextEditor.document.uri, target);
     await deleteFile(target);
   });
 
@@ -53,8 +58,8 @@ describe('create-note command', () => {
       text: 'hello ${FOAM_TITLE}',
       variables: { FOAM_TITLE: 'world' },
     });
-    expect(window.activeTextEditor?.document.getText()).toEqual('hello world');
-    expect(window.activeTextEditor.document.uri.path).toEqual(target.path);
+    expect(window.activeTextEditor.document.getText()).toEqual('hello world');
+    expectSameUri(window.activeTextEditor.document.uri, target);
     await deleteFile(target);
   });
 
@@ -65,8 +70,8 @@ describe('create-note command', () => {
       text: 'hello ${FOAM_DATE_YEAR}',
       date: '2021-10-01',
     });
-    expect(window.activeTextEditor?.document.getText()).toEqual('hello 2021');
-    expect(window.activeTextEditor.document.uri.path).toEqual(target.path);
+    expect(window.activeTextEditor.document.getText()).toEqual('hello 2021');
+    expectSameUri(window.activeTextEditor.document.uri, target);
     await deleteFile(target);
   });
 
@@ -77,10 +82,10 @@ describe('create-note command', () => {
       text: 'test overwrite',
       onFileExists: 'overwrite',
     });
-    expect(window.activeTextEditor?.document.getText()).toEqual(
+    expect(window.activeTextEditor.document.getText()).toEqual(
       'test overwrite'
     );
-    expect(window.activeTextEditor.document.uri.path).toEqual(target.uri.path);
+    expectSameUri(window.activeTextEditor.document.uri, target.uri);
 
     await closeEditors();
     await commands.executeCommand('foam-vscode.create-note', {
@@ -88,10 +93,10 @@ describe('create-note command', () => {
       text: 'test open',
       onFileExists: 'open',
     });
-    expect(window.activeTextEditor?.document.getText()).toEqual(
+    expect(window.activeTextEditor.document.getText()).toEqual(
       'test overwrite'
     );
-    expect(window.activeTextEditor.document.uri.path).toEqual(target.uri.path);
+    expectSameUri(window.activeTextEditor.document.uri, target.uri);
 
     await closeEditors();
     await commands.executeCommand('foam-vscode.create-note', {
@@ -107,10 +112,10 @@ describe('create-note command', () => {
       text: 'test overwrite 2',
       onFileExists: 'overwrite',
     });
-    expect(window.activeTextEditor?.document.getText()).toEqual(
+    expect(window.activeTextEditor.document.getText()).toEqual(
       'test overwrite 2'
     );
-    expect(window.activeTextEditor.document.uri.path).toEqual(target.uri.path);
+    expectSameUri(window.activeTextEditor.document.uri, target.uri);
 
     const spy = jest
       .spyOn(window, 'showQuickPick')

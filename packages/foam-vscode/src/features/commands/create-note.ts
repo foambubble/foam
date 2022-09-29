@@ -46,7 +46,10 @@ async function createNote(args: CreateNoteArgs) {
     date
   );
   if (isNone(args.notePath) && isNone(args.templatePath)) {
-    throw new Error('Either notePath or templatePath must be provided');
+    await vscode.window.showErrorMessage(
+      'Either notePath or templatePath must be provided when running create-note command'
+    );
+    return;
   }
   const noteUri =
     args.notePath && asAbsoluteWorkspaceUri(URI.file(args.notePath));

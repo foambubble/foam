@@ -129,13 +129,14 @@ export const NoteFactory = {
           case 'cancel':
             return undefined;
           case 'ask':
-          default:
+          default: {
             const filename = existingFile.getBasename();
             const newProposedPath = await askUserForFilepathConfirmation(
               existingFile,
               filename
             );
             return newProposedPath && URI.file(newProposedPath);
+          }
         }
       };
 

@@ -4,10 +4,8 @@ import { URI } from '../../core/model/uri';
 import { NoteFactory } from '../../services/templates';
 import { Foam } from '../../core/model/foam';
 import { Resolver } from '../../services/variable-resolver';
-import { toVsCodeUri } from '../../utils/vsc-utils';
 import { asAbsoluteWorkspaceUri, fileExists } from '../../services/editor';
 import { isSome, isNone } from '../../core/utils';
-import { deleteFile } from '../../test/test-utils-vscode';
 
 interface CreateNoteArgs {
   /**

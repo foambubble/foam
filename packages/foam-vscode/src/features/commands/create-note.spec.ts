@@ -1,5 +1,4 @@
-import { commands, window, Uri } from 'vscode';
-import { URI } from '../../core/model/uri';
+import { commands, window } from 'vscode';
 import { readFile } from '../../services/editor';
 import {
   closeEditors,
@@ -23,7 +22,7 @@ describe('create-note command', () => {
     expect(spy).toBeCalled();
   });
 
-  it.skip('gives precedence to the template over the text', async () => {
+  it('gives precedence to the template over the text', async () => {
     const templateA = await createFile('Template A', [
       '.foam',
       'templates',

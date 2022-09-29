@@ -75,9 +75,9 @@ export const CREATE_NOTE_COMMAND = {
   command: 'foam-vscode.create-note',
   title: 'Foam: Create Note',
 
-  asURI: (uri: URI) =>
+  asURI: (args: CreateNoteArgs) =>
     vscode.Uri.parse(`command:${CREATE_NOTE_COMMAND.command}`).with({
-      query: encodeURIComponent(JSON.stringify({ uri })),
+      query: encodeURIComponent(JSON.stringify(args)),
     }),
 };
 

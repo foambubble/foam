@@ -101,7 +101,7 @@ export const NoteFactory = {
     text: string,
     resolver: Resolver,
     onFileExists?: (filePath: URI) => Promise<URI | undefined>,
-    replaceSelectionWithLink: boolean = true
+    replaceSelectionWithLink = true
   ): Promise<{ didCreateFile: boolean; uri: URI | undefined }> => {
     try {
       onFileExists = onFileExists

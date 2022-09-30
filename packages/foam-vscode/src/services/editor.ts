@@ -1,6 +1,7 @@
-import { URI } from '../core/model/uri';
+import { asAbsoluteUri, URI } from '../core/model/uri';
 import { TextEncoder } from 'util';
 import {
+  FileType,
   Selection,
   SnippetString,
   TextDocument,
@@ -84,4 +85,42 @@ export function getCurrentEditorDirectory(): URI {
   }
 
   throw new Error('A file must be open in editor, or workspace folder needed');
+}
+
+export async function fileExists(uri: URI): Promise<boolean> {
+  try {
+    const stat = await workspace.fs.stat(toVsCodeUri(uri));
+    return stat.type === FileType.File;
+  } catch (e) {
+    return false;
+  }
+}
+
+export async function readFile(uri: URI): Promise<string | undefined> {
+  if (await fileExists(uri)) {
+    return workspace.fs
+      .readFile(toVsCodeUri(uri))
+      .then(bytes => bytes.toString());
+  }
+  return undefined;
+}
+
+export const deleteFile = (uri: URI) => {
+  return workspace.fs.delete(toVsCodeUri(uri), { recursive: true });
+};
+
+/**
+ * Turns a relative URI into an absolute URI for the given workspace.
+ * @param uri the uri to evaluate
+ * @returns an absolute uri
+ */
+export function asAbsoluteWorkspaceUri(uri: URI): URI {
+  if (workspace.workspaceFolders === undefined) {
+    throw new Error('An open folder or workspace is required');
+  }
+  const folders = workspace.workspaceFolders.map(folder =>
+    fromVsCodeUri(folder.uri)
+  );
+  const res = asAbsoluteUri(uri, folders);
+  return res;
 }

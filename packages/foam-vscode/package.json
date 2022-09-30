@@ -29,6 +29,7 @@
     "onCommand:foam-vscode.copy-without-brackets",
     "onCommand:foam-vscode.show-graph",
     "onCommand:foam-vscode.create-new-template",
+    "onCommand:foam-vscode.create-note",
     "onCommand:foam-vscode.create-note-from-template",
     "onCommand:foam-vscode.create-note-from-default-template"
   ],
@@ -129,6 +130,10 @@
       ],
       "commandPalette": [
         {
+          "command": "foam-vscode.create-note-from-default-template",
+          "when": "false"
+        },
+        {
           "command": "foam-vscode.update-graph",
           "when": "false"
         },
@@ -159,6 +164,10 @@
       ]
     },
     "commands": [
+      {
+        "command": "foam-vscode.create-note",
+        "title": "Foam: Create Note"
+      },
       {
         "command": "foam-vscode.clear-cache",
         "title": "Foam: Clear Cache"
@@ -201,7 +210,7 @@
       },
       {
         "command": "foam-vscode.create-note-from-template",
-        "title": "Foam: Create New Note From Template"
+        "title": "Foam: Create Note From Template"
       },
       {
         "command": "foam-vscode.create-note-from-default-template",

@@ -118,3 +118,21 @@ export const withModifiedConfiguration = async (key, value, fn: () => void) => {
  */
 export const withModifiedFoamConfiguration = (key, value, fn: () => void) =>
   withModifiedConfiguration(`foam.${key}`, value, fn);
+
+/**
+ * Utility function to check if two URIs are the same.
+ * It has the goal of supporting Uri and URI, and dealing with
+ * inconsistencies in the way they are represented (especially the
+ * drive letter in Windows)
+ *
+ * @param actual the actual value
+ * @param expected the expected value
+ */
+export const expectSameUri = (
+  actual: vscode.Uri | URI,
+  expected: vscode.Uri | URI
+) => {
+  expect(actual.path.toLocaleLowerCase()).toEqual(
+    expected.path.toLocaleLowerCase()
+  );
+};

@@ -1,7 +1,6 @@
-import { Selection, ViewColumn, window, workspace } from 'vscode';
-import { isWindows } from '../core/common/platform';
+import { Selection, ViewColumn, window } from 'vscode';
 import { fromVsCodeUri } from '../utils/vsc-utils';
-import { determineNewNoteFilepath, NoteFactory } from '../services/templates';
+import { NoteFactory } from '../services/templates';
 import {
   closeEditors,
   createFile,
@@ -10,6 +9,7 @@ import {
   showInEditor,
 } from '../test/test-utils-vscode';
 import { Resolver } from './variable-resolver';
+import { fileExists } from './editor';
 
 describe('Create note from template', () => {
   beforeEach(async () => {
@@ -113,27 +113,6 @@ foam_template: # foam template metadata
   });
 
   describe('Creation with active text selection', () => {
-    it('should populate FOAM_SELECTED_TEXT with the current selection', async () => {
-      const templateA = await createFile('Template A', [
-        '.foam',
-        'templates',
-        'template-a.md',
-      ]);
-      const file = await createFile('Content of first file');
-      const { editor } = await showInEditor(file.uri);
-      editor.selection = new Selection(0, 11, 1, 0);
-      const target = getUriInWorkspace();
-      const resolver = new Resolver(new Map(), new Date());
-      await NoteFactory.createFromTemplate(templateA.uri, resolver, target);
-      expect(await resolver.resolveFromName('FOAM_SELECTED_TEXT')).toEqual(
-        'first file'
-      );
-
-      await deleteFile(templateA);
-      await deleteFile(target);
-      await deleteFile(file);
-    });
-
     it('should open created note in a new column if there was a selection', async () => {
       const templateA = await createFile('Template A', [
         '.foam',
@@ -183,91 +162,69 @@ foam_template: # foam template metadata
       expect(window.visibleTextEditors[0].document.getText()).toEqual(
         `This is my first file: [[${target.getName()}]]`
       );
+      await deleteFile(template.uri);
     });
   });
 });
 
-describe('determineNewNoteFilepath', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    jest.restoreAllMocks();
+describe('NoteFactory.createNote', () => {
+  beforeEach(async () => {
+    await closeEditors();
   });
-  it('should use the template path if absolute', async () => {
-    const winAbsolutePath = 'C:\\absolute_path\\journal\\My Note Title.md';
-    const linuxAbsolutePath = '/absolute_path/journal/My Note Title.md';
-    const winResult = await determineNewNoteFilepath(
-      winAbsolutePath,
-      undefined,
+  it('should create a new note', async () => {
+    const target = getUriInWorkspace();
+    await NoteFactory.createNote(
+      target,
+      'Hello World',
       new Resolver(new Map(), new Date())
     );
-    expect(winResult.toFsPath()).toMatch(winAbsolutePath);
-    const linuxResult = await determineNewNoteFilepath(
-      linuxAbsolutePath,
-      undefined,
-      new Resolver(new Map(), new Date())
-    );
-    expect(linuxResult.toFsPath()).toMatch(linuxAbsolutePath);
+    expect(await fileExists(target)).toBeTruthy();
+    expect(window.activeTextEditor.document.getText()).toEqual('Hello World');
+
+    await deleteFile(target);
   });
 
-  it('should compute the relative template filepath from the current directory', async () => {
-    const relativePath = isWindows
-      ? 'journal\\My Note Title.md'
-      : 'journal/My Note Title.md';
-    const resultFilepath = await determineNewNoteFilepath(
-      relativePath,
+  it('should support not replacing the selection with a link to the newly created note', async () => {
+    const file = await createFile('This is my first file: World');
+    const { editor } = await showInEditor(file.uri);
+    editor.selection = new Selection(0, 23, 0, 28);
+    const target = getUriInWorkspace();
+    await NoteFactory.createNote(
+      target,
+      'Hello ${FOAM_SELECTED_TEXT} ${FOAM_SELECTED_TEXT}',
+      new Resolver(new Map(), new Date()),
       undefined,
-      new Resolver(new Map(), new Date())
+      false
     );
-    const expectedPath = fromVsCodeUri(
-      workspace.workspaceFolders[0].uri
-    ).joinPath(relativePath);
-    expect(resultFilepath.toFsPath()).toMatch(expectedPath.toFsPath());
+    expect(window.activeTextEditor.document.getText()).toEqual(
+      'Hello World World'
+    );
+    expect(window.visibleTextEditors[0].document.getText()).toEqual(
+      `This is my first file: World`
+    );
+    await deleteFile(file.uri);
+    await deleteFile(target);
   });
 
-  it('should use the note title if nothing else is available', async () => {
-    const noteTitle = 'My new note';
-    const resultFilepath = await determineNewNoteFilepath(
+  it('should support replacing the selection with a link to the newly created note', async () => {
+    const file = await createFile('This is my first file: World');
+    const { editor } = await showInEditor(file.uri);
+    editor.selection = new Selection(0, 23, 0, 28);
+    const target = getUriInWorkspace();
+    await NoteFactory.createNote(
+      target,
+      'Hello ${FOAM_SELECTED_TEXT} ${FOAM_SELECTED_TEXT}',
+      new Resolver(new Map(), new Date()),
       undefined,
-      undefined,
-      new Resolver(new Map().set('FOAM_TITLE', noteTitle), new Date())
+      true
     );
-    const expectedPath = fromVsCodeUri(
-      workspace.workspaceFolders[0].uri
-    ).joinPath(`${noteTitle}.md`);
-    expect(resultFilepath.toFsPath()).toMatch(expectedPath.toFsPath());
-  });
-
-  it('should ask the user for a note title if nothing else is available', async () => {
-    const noteTitle = 'My new note';
-    const spy = jest
-      .spyOn(window, 'showInputBox')
-      .mockImplementationOnce(jest.fn(() => Promise.resolve(noteTitle)));
-    const resultFilepath = await determineNewNoteFilepath(
-      undefined,
-      undefined,
-      new Resolver(new Map(), new Date())
+    expect(window.activeTextEditor.document.getText()).toEqual(
+      'Hello World World'
     );
-    const expectedPath = fromVsCodeUri(
-      workspace.workspaceFolders[0].uri
-    ).joinPath(`${noteTitle}.md`);
-    expect(spy).toHaveBeenCalled();
-    expect(resultFilepath.toFsPath()).toMatch(expectedPath.toFsPath());
-  });
-
-  it('should filter invalid chars from the title #1042', async () => {
-    const noteTitle = 'My new note/';
-    const spy = jest
-      .spyOn(window, 'showInputBox')
-      .mockImplementationOnce(jest.fn(() => Promise.resolve(noteTitle)));
-    const resultFilepath = await determineNewNoteFilepath(
-      undefined,
-      undefined,
-      new Resolver(new Map(), new Date())
+    expect(window.visibleTextEditors[0].document.getText()).toEqual(
+      `This is my first file: [[${target.getName()}]]`
     );
-    const expectedPath = fromVsCodeUri(
-      workspace.workspaceFolders[0].uri
-    ).joinPath(`My new note.md`);
-    expect(spy).toHaveBeenCalled();
-    expect(resultFilepath.toFsPath()).toMatch(expectedPath.toFsPath());
+    await deleteFile(file.uri);
+    await deleteFile(target);
   });
 });

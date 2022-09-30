@@ -5,7 +5,7 @@ import { getPathFromTitle, NoteFactory } from '../../services/templates';
 import { Foam } from '../../core/model/foam';
 import { Resolver } from '../../services/variable-resolver';
 import { asAbsoluteWorkspaceUri, fileExists } from '../../services/editor';
-import { isSome, isNone } from '../../core/utils';
+import { isSome } from '../../core/utils';
 
 interface CreateNoteArgs {
   /**

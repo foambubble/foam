@@ -59,7 +59,7 @@ describe('create-note command', () => {
     const target = getUriInWorkspace();
     await commands.executeCommand('foam-vscode.create-note', {
       notePath: target.path,
-      text: 'hello ${FOAM_TITLE}',
+      text: 'hello ${FOAM_TITLE}', // eslint-disable-line no-template-curly-in-string
       variables: { FOAM_TITLE: 'world' },
     });
     expect(window.activeTextEditor.document.getText()).toEqual('hello world');
@@ -71,7 +71,7 @@ describe('create-note command', () => {
     const target = getUriInWorkspace();
     await commands.executeCommand('foam-vscode.create-note', {
       notePath: target.path,
-      text: 'hello ${FOAM_DATE_YEAR}',
+      text: 'hello ${FOAM_DATE_YEAR}', // eslint-disable-line no-template-curly-in-string
       date: '2021-10-01',
     });
     expect(window.activeTextEditor.document.getText()).toEqual('hello 2021');

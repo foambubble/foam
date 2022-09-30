@@ -6,7 +6,8 @@ import {
   deleteFile,
   withModifiedFoamConfiguration,
 } from '../../test/test-utils-vscode';
-import markdownItWikilinkEmbed, {
+import {
+  default as markdownItWikilinkEmbed,
   CONFIG_EMBED_NOTE_IN_CONTAINER,
 } from './wikilink-embed';
 

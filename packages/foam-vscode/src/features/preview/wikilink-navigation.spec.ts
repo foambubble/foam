@@ -1,12 +1,9 @@
 import MarkdownIt from 'markdown-it';
-import { createMarkdownParser } from '../../core/services/markdown-parser';
 import { FoamWorkspace } from '../../core/model/workspace';
 import { createTestNote } from '../../test/test-utils';
 import { getUriInWorkspace } from '../../test/test-utils-vscode';
-import markdownItWikilinkNavigation from './wikilink-navigation';
-import markdownItRemoveLinkReferences from './remove-wikilink-references';
-
-const parser = createMarkdownParser();
+import { default as markdownItWikilinkNavigation } from './wikilink-navigation';
+import { default as markdownItRemoveLinkReferences } from './remove-wikilink-references';
 
 describe('Link generation in preview', () => {
   const noteA = createTestNote({

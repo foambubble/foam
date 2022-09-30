@@ -1,9 +1,7 @@
 import markdownItRegex from 'markdown-it-regex';
-import * as vscode from 'vscode';
 import { isSome } from '../../utils';
 import { FoamWorkspace } from '../../core/model/workspace';
 import { Logger } from '../../core/utils/log';
-import { toVsCodeUri } from '../../utils/vsc-utils';
 import { Resource } from '../../core/model/note';
 import { getFoamVsCodeConfig } from '../../services/config';
 // eslint-disable-next-line no-restricted-imports

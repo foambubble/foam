@@ -5,6 +5,7 @@ import { URI } from './core/model/uri';
 import { fromVsCodeUri, toVsCodeUri } from './utils/vsc-utils';
 import { NoteFactory } from './services/templates';
 import { getFoamVsCodeConfig } from './services/config';
+import { asAbsoluteWorkspaceUri } from './services/editor';
 
 /**
  * Open the daily note file.
@@ -42,17 +43,9 @@ export async function openDailyNoteFor(date?: Date) {
  */
 export function getDailyNotePath(date: Date): URI {
   const folder = getFoamVsCodeConfig<string>('openDailyNote.directory') ?? '.';
-  const dailyNoteDirectory = URI.file(folder);
+  const dailyNoteDirectory = asAbsoluteWorkspaceUri(URI.file(folder));
   const dailyNoteFilename = getDailyNoteFileName(date);
-
-  if (dailyNoteDirectory.isAbsolute()) {
-    return dailyNoteDirectory.joinPath(dailyNoteFilename);
-  } else {
-    return fromVsCodeUri(workspace.workspaceFolders[0].uri).joinPath(
-      dailyNoteDirectory.path,
-      dailyNoteFilename
-    );
-  }
+  return dailyNoteDirectory.joinPath(dailyNoteFilename);
 }
 
 /**

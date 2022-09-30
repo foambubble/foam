@@ -6,6 +6,7 @@ import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
 import { extractFoamTemplateFrontmatterMetadata } from '../utils/template-frontmatter-parser';
 import { UserCancelledOperation } from './errors';
 import {
+  asAbsoluteWorkspaceUri,
   createDocAndFocus,
   deleteFile,
   fileExists,
@@ -16,6 +17,7 @@ import {
 } from './editor';
 import { Resolver } from './variable-resolver';
 import dateFormat from 'dateformat';
+import { isSome } from '../core/utils';
 
 /**
  * The templates directory
@@ -130,10 +132,8 @@ export const NoteFactory = {
             return undefined;
           case 'ask':
           default: {
-            const filename = existingFile.getBasename();
             const newProposedPath = await askUserForFilepathConfirmation(
-              existingFile,
-              filename
+              existingFile
             );
             return newProposedPath && URI.file(newProposedPath);
           }
@@ -197,10 +197,12 @@ export const NoteFactory = {
         resolver
       );
 
-      const newFilePath = await determineNewNoteFilepath(
-        template.metadata.get('filepath'),
-        filepathFallbackURI,
-        resolver
+      const newFilePath = asAbsoluteWorkspaceUri(
+        template.metadata.has('filepath')
+          ? URI.file(template.metadata.get('filepath'))
+          : isSome(filepathFallbackURI)
+          ? filepathFallbackURI
+          : await getPathFromTitle(resolver)
       );
 
       return NoteFactory.createNote(
@@ -290,14 +292,18 @@ export const createTemplate = async (): Promise<void> => {
 };
 
 async function askUserForFilepathConfirmation(
-  defaultFilepath: URI,
-  defaultFilename: string
+  defaultFilepath: URI
 ): Promise<string | undefined> {
   const fsPath = defaultFilepath.toFsPath();
+  const defaultFilename = defaultFilepath.getBasename();
+  const defaultExtension = defaultFilepath.getExtension();
   return window.showInputBox({
     prompt: `Enter the filename for the new note`,
     value: fsPath,
-    valueSelection: [fsPath.length - defaultFilename.length, fsPath.length - 3],
+    valueSelection: [
+      fsPath.length - defaultFilename.length,
+      fsPath.length - defaultExtension.length,
+    ],
     validateInput: async value =>
       value.trim().length === 0
         ? 'Please enter a value'
@@ -318,25 +324,14 @@ async function askUserForFilepathConfirmation(
  */
 const UNALLOWED_CHARS = '/\\#%&{}<>?*$!\'":@+`|=';
 
-export async function determineNewNoteFilepath(
-  templateFilepathAttribute: string | undefined,
-  fallbackURI: URI | undefined,
-  resolver: Resolver
-): Promise<URI> {
-  if (templateFilepathAttribute) {
-    let defaultFilepath = URI.file(templateFilepathAttribute);
-    if (!defaultFilepath.isAbsolute()) {
-      defaultFilepath = fromVsCodeUri(
-        workspace.workspaceFolders[0].uri
-      ).joinPath(templateFilepathAttribute);
-    }
-    return defaultFilepath;
-  }
-
-  if (fallbackURI) {
-    return fallbackURI;
-  }
-
+/**
+ * Uses the title to generate a file path.
+ * It sanitizes the title to remove special characters and spaces.
+ *
+ * @param resolver the resolver to use
+ * @returns the string path of the new note
+ */
+export const getPathFromTitle = async (resolver: Resolver) => {
   let defaultName = await resolver.resolveFromName('FOAM_TITLE');
   UNALLOWED_CHARS.split('').forEach(char => {
     defaultName = defaultName.split(char).join('');
@@ -346,4 +341,4 @@ export async function determineNewNoteFilepath(
     `${defaultName}.md`
   );
   return defaultFilepath;
-}
+};

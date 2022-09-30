@@ -1,13 +1,6 @@
-import {
-  Selection,
-  SnippetString,
-  ViewColumn,
-  window,
-  workspace,
-} from 'vscode';
-import { isWindows } from '../core/common/platform';
+import { Selection, ViewColumn, window } from 'vscode';
 import { fromVsCodeUri } from '../utils/vsc-utils';
-import { determineNewNoteFilepath, NoteFactory } from '../services/templates';
+import { NoteFactory } from '../services/templates';
 import {
   closeEditors,
   createFile,
@@ -233,90 +226,5 @@ describe('NoteFactory.createNote', () => {
     );
     await deleteFile(file.uri);
     await deleteFile(target);
-  });
-});
-
-describe('determineNewNoteFilepath', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    jest.restoreAllMocks();
-  });
-  it('should use the template path if absolute', async () => {
-    const winAbsolutePath = 'C:\\absolute_path\\journal\\My Note Title.md';
-    const linuxAbsolutePath = '/absolute_path/journal/My Note Title.md';
-    const winResult = await determineNewNoteFilepath(
-      winAbsolutePath,
-      undefined,
-      new Resolver(new Map(), new Date())
-    );
-    expect(winResult.toFsPath()).toMatch(winAbsolutePath);
-    const linuxResult = await determineNewNoteFilepath(
-      linuxAbsolutePath,
-      undefined,
-      new Resolver(new Map(), new Date())
-    );
-    expect(linuxResult.toFsPath()).toMatch(linuxAbsolutePath);
-  });
-
-  it('should compute the relative template filepath from the current directory', async () => {
-    const relativePath = isWindows
-      ? 'journal\\My Note Title.md'
-      : 'journal/My Note Title.md';
-    const resultFilepath = await determineNewNoteFilepath(
-      relativePath,
-      undefined,
-      new Resolver(new Map(), new Date())
-    );
-    const expectedPath = fromVsCodeUri(
-      workspace.workspaceFolders[0].uri
-    ).joinPath(relativePath);
-    expect(resultFilepath.toFsPath()).toMatch(expectedPath.toFsPath());
-  });
-
-  it('should use the note title if nothing else is available', async () => {
-    const noteTitle = 'My new note';
-    const resultFilepath = await determineNewNoteFilepath(
-      undefined,
-      undefined,
-      new Resolver(new Map().set('FOAM_TITLE', noteTitle), new Date())
-    );
-    const expectedPath = fromVsCodeUri(
-      workspace.workspaceFolders[0].uri
-    ).joinPath(`${noteTitle}.md`);
-    expect(resultFilepath.toFsPath()).toMatch(expectedPath.toFsPath());
-  });
-
-  it('should ask the user for a note title if nothing else is available', async () => {
-    const noteTitle = 'My new note';
-    const spy = jest
-      .spyOn(window, 'showInputBox')
-      .mockImplementationOnce(jest.fn(() => Promise.resolve(noteTitle)));
-    const resultFilepath = await determineNewNoteFilepath(
-      undefined,
-      undefined,
-      new Resolver(new Map(), new Date())
-    );
-    const expectedPath = fromVsCodeUri(
-      workspace.workspaceFolders[0].uri
-    ).joinPath(`${noteTitle}.md`);
-    expect(spy).toHaveBeenCalled();
-    expect(resultFilepath.toFsPath()).toMatch(expectedPath.toFsPath());
-  });
-
-  it('should filter invalid chars from the title #1042', async () => {
-    const noteTitle = 'My new note/';
-    const spy = jest
-      .spyOn(window, 'showInputBox')
-      .mockImplementationOnce(jest.fn(() => Promise.resolve(noteTitle)));
-    const resultFilepath = await determineNewNoteFilepath(
-      undefined,
-      undefined,
-      new Resolver(new Map(), new Date())
-    );
-    const expectedPath = fromVsCodeUri(
-      workspace.workspaceFolders[0].uri
-    ).joinPath(`My new note.md`);
-    expect(spy).toHaveBeenCalled();
-    expect(resultFilepath.toFsPath()).toMatch(expectedPath.toFsPath());
   });
 });

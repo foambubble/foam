@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { FoamFeature } from '../../types';
 import { URI } from '../../core/model/uri';
-import { NoteFactory } from '../../services/templates';
+import { getPathFromTitle, NoteFactory } from '../../services/templates';
 import { Foam } from '../../core/model/foam';
 import { Resolver } from '../../services/variable-resolver';
 import { asAbsoluteWorkspaceUri, fileExists } from '../../services/editor';
@@ -36,6 +36,10 @@ interface CreateNoteArgs {
   onFileExists?: 'overwrite' | 'open' | 'ask' | 'cancel';
 }
 
+const DEFAULT_NEW_NOTE_TEXT = `# \${FOAM_TITLE}
+
+\${FOAM_SELECTED_TEXT}`;
+
 async function createNote(args: CreateNoteArgs) {
   args = args ?? {};
   const date = isSome(args.date) ? new Date(Date.parse(args.date)) : new Date();
@@ -43,28 +47,24 @@ async function createNote(args: CreateNoteArgs) {
     new Map(Object.entries(args.variables ?? {})),
     date
   );
-  if (isNone(args.notePath) && isNone(args.templatePath)) {
-    await vscode.window.showErrorMessage(
-      'Either notePath or templatePath must be provided when running create-note command'
-    );
-    return;
-  }
+  const text = args.text ?? DEFAULT_NEW_NOTE_TEXT;
   const noteUri =
     args.notePath && asAbsoluteWorkspaceUri(URI.file(args.notePath));
   const templateUri =
     args.templatePath && asAbsoluteWorkspaceUri(URI.file(args.templatePath));
+
   if (await fileExists(templateUri)) {
     return NoteFactory.createFromTemplate(
       templateUri,
       resolver,
       noteUri,
-      args.text,
+      text,
       args.onFileExists
     );
   } else {
     return NoteFactory.createNote(
-      noteUri,
-      args.text,
+      noteUri ?? (await getPathFromTitle(resolver)),
+      text,
       resolver,
       args.onFileExists
     );

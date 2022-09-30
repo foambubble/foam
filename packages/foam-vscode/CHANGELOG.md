@@ -4,6 +4,19 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.20.0] - 2022-09-30
+
+New Features:
+- Added `foam-vscode.create-note` command, which can be very customized for several use cases (#1076)
+
+Fixes and Improvements:
+- Removed `+` as a trigger char for date snippets
+- Improved attachment support (#915)
+- Improved error handling when starting Foam without an open workspace (#908)
+- Added support for opening non-text files via wikilink (#915)
+- Dataviz: now clicking is enough to open a link from the graph
+- Dataviz: clicking on images/attachments will open them
+
 ## [0.19.5] - 2022-09-01
 
 Fixes and Improvements:

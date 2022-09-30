@@ -130,6 +130,10 @@
       ],
       "commandPalette": [
         {
+          "command": "foam-vscode.create-note-from-default-template",
+          "when": "false"
+        },
+        {
           "command": "foam-vscode.update-graph",
           "when": "false"
         },
@@ -162,7 +166,7 @@
     "commands": [
       {
         "command": "foam-vscode.create-note",
-        "title": "Create Note"
+        "title": "Foam: Create Note"
       },
       {
         "command": "foam-vscode.clear-cache",
@@ -206,7 +210,7 @@
       },
       {
         "command": "foam-vscode.create-note-from-template",
-        "title": "Foam: Create New Note From Template"
+        "title": "Foam: Create Note From Template"
       },
       {
         "command": "foam-vscode.create-note-from-default-template",

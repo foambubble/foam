@@ -1,5 +1,6 @@
 import { commands, window } from 'vscode';
-import { readFile } from '../../services/editor';
+import { URI } from '../../core/model/uri';
+import { asAbsoluteWorkspaceUri, readFile } from '../../services/editor';
 import {
   closeEditors,
   createFile,
@@ -13,13 +14,16 @@ describe('create-note command', () => {
     jest.clearAllMocks();
   });
 
-  it('fails if neither note path nor template path are provided', async () => {
+  it('uses sensible defaults to work even without params', async () => {
     const spy = jest
-      .spyOn(window, 'showErrorMessage')
-      .mockImplementationOnce(jest.fn(() => Promise.resolve(undefined)));
+      .spyOn(window, 'showInputBox')
+      .mockImplementationOnce(jest.fn(() => Promise.resolve('Test note')));
 
     await commands.executeCommand('foam-vscode.create-note');
     expect(spy).toBeCalled();
+    const target = asAbsoluteWorkspaceUri(URI.file('Test note.md'));
+    expectSameUri(target, window.activeTextEditor?.document.uri);
+    await deleteFile(target);
   });
 
   it('gives precedence to the template over the text', async () => {

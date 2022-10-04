@@ -25,7 +25,7 @@ import {
 } from './editor';
 import { Resolver } from './variable-resolver';
 import dateFormat from 'dateformat';
-import '../features/commands/create-note-from-template';
+import { isSome } from '../core/utils';
 
 /**
  * The templates directory
@@ -112,7 +112,7 @@ export type OnFileExistStrategy =
   | 'cancel'
   | 'ask'
   | ((filePath: URI) => Promise<URI | undefined>);
-  
+
 async function askUserForTemplate() {
   const templates = await getTemplates();
   if (templates.length === 0) {
@@ -355,9 +355,9 @@ export const NoteFactory = {
       const templateFilename =
         (selectedTemplate as QuickPickItem).description ||
         (selectedTemplate as QuickPickItem).label;
-      templateUri = TEMPLATES_DIR.joinPath(templateFilename);
+      templateUri = getTemplatesDir().joinPath(templateFilename);
     } else {
-      templateUri = DEFAULT_TEMPLATE_URI;
+      templateUri = getDefaultTemplateUri();
     }
 
     return NoteFactory.createFromTemplate(

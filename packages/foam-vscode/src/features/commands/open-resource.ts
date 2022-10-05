@@ -9,9 +9,9 @@ export const OPEN_COMMAND = {
   command: 'foam-vscode.open-resource',
   title: 'Foam: Open Resource',
 
-  asURI: (uri: URI, chooseTemplate = false) =>
+  asURI: (uri: URI) =>
     vscode.Uri.parse(`command:${OPEN_COMMAND.command}`).with({
-      query: encodeURIComponent(JSON.stringify({ uri, chooseTemplate })),
+      query: encodeURIComponent(JSON.stringify({ uri })),
     }),
 };
 
@@ -20,7 +20,7 @@ const feature: FoamFeature = {
     context.subscriptions.push(
       vscode.commands.registerCommand(
         OPEN_COMMAND.command,
-        async (params: { uri: URI; chooseTemplate: boolean }) => {
+        async (params: { uri: URI }) => {
           const uri = new URI(params.uri);
           switch (uri.scheme) {
             case 'file': {
@@ -40,8 +40,7 @@ const feature: FoamFeature = {
               if (uri.isAbsolute()) {
                 return NoteFactory.createForPlaceholderWikilink(
                   title,
-                  URI.file(uri.path),
-                  params.chooseTemplate
+                  URI.file(uri.path)
                 );
               }
               const basedir =
@@ -56,11 +55,7 @@ const feature: FoamFeature = {
               const target = fromVsCodeUri(basedir)
                 .resolve(uri, true)
                 .changeExtension('', '.md');
-              await NoteFactory.createForPlaceholderWikilink(
-                title,
-                target,
-                params.chooseTemplate
-              );
+              await NoteFactory.createForPlaceholderWikilink(title, target);
               return;
             }
           }

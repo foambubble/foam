@@ -113,7 +113,7 @@ export type OnFileExistStrategy =
   | 'ask'
   | ((filePath: URI) => Promise<URI | undefined>);
 
-async function askUserForTemplate() {
+export async function askUserForTemplate() {
   const templates = await getTemplates();
   if (templates.length === 0) {
     return offerToCreateTemplate();
@@ -150,9 +150,18 @@ async function askUserForTemplate() {
     })
   );
 
-  return await window.showQuickPick(items, {
+  const selectedTemplate = await window.showQuickPick(items, {
     placeHolder: 'Select a template to use.',
   });
+
+  if (selectedTemplate === undefined) {
+    return undefined;
+  }
+  const templateFilename =
+    (selectedTemplate as QuickPickItem).description ||
+    (selectedTemplate as QuickPickItem).label;
+  const templateUri = getTemplatesDir().joinPath(templateFilename);
+  return templateUri;
 }
 
 async function offerToCreateTemplate(): Promise<void> {
@@ -334,34 +343,24 @@ export const NoteFactory = {
    * Creates a new note when following a placeholder wikilink using the default template.
    * @param wikilinkPlaceholder the placeholder value from the wikilink. (eg. `[[Hello Joe]]` -> `Hello Joe`)
    * @param filepathFallbackURI the URI to use if the template does not specify the `filepath` metadata attribute. This is configurable by the caller for backwards compatibility purposes.
-   * @param chooseTemplate whether the user should be prompted to choose a template for the newly created note
+   * @param templateURI URI of the template to use. If undefined, use the default template.
    */
   createForPlaceholderWikilink: async (
     wikilinkPlaceholder: string,
     filepathFallbackURI: URI,
-    chooseTemplate: boolean
+    templateURI?: URI
   ): Promise<{ didCreateFile: boolean; uri: URI | undefined }> => {
     const resolver = new Resolver(
       new Map().set('FOAM_TITLE', wikilinkPlaceholder),
       new Date()
     );
 
-    let templateUri: URI;
-    if (chooseTemplate) {
-      const selectedTemplate = await askUserForTemplate();
-      if (selectedTemplate === undefined) {
-        return;
-      }
-      const templateFilename =
-        (selectedTemplate as QuickPickItem).description ||
-        (selectedTemplate as QuickPickItem).label;
-      templateUri = getTemplatesDir().joinPath(templateFilename);
-    } else {
-      templateUri = getDefaultTemplateUri();
+    if (templateURI === undefined) {
+      templateURI = getDefaultTemplateUri();
     }
 
     return NoteFactory.createFromTemplate(
-      getDefaultTemplateUri(),
+      templateURI,
       resolver,
       filepathFallbackURI,
       WIKILINK_DEFAULT_TEMPLATE_TEXT

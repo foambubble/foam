@@ -1,7 +1,11 @@
 import * as vscode from 'vscode';
 import { FoamFeature } from '../../types';
 import { URI } from '../../core/model/uri';
-import { getPathFromTitle, NoteFactory } from '../../services/templates';
+import {
+  askUserForTemplate,
+  getPathFromTitle,
+  NoteFactory,
+} from '../../services/templates';
 import { Foam } from '../../core/model/foam';
 import { Resolver } from '../../services/variable-resolver';
 import { asAbsoluteWorkspaceUri, fileExists } from '../../services/editor';
@@ -17,6 +21,10 @@ interface CreateNoteArgs {
    * The path of the template to use.
    */
   templatePath?: string;
+  /**
+   * Whether to ask the user to select a template for the new note. If so, overwrites templatePath.
+   */
+  askForTemplate?: boolean;
   /**
    * The text to use for the note.
    * If a template is provided, the template has precedence
@@ -50,8 +58,18 @@ async function createNote(args: CreateNoteArgs) {
   const text = args.text ?? DEFAULT_NEW_NOTE_TEXT;
   const noteUri =
     args.notePath && asAbsoluteWorkspaceUri(URI.file(args.notePath));
-  const templateUri =
-    args.templatePath && asAbsoluteWorkspaceUri(URI.file(args.templatePath));
+  let templateUri: URI;
+  if (args.askForTemplate) {
+    const selectedTemplate = await askUserForTemplate();
+    if (selectedTemplate) {
+      templateUri = selectedTemplate;
+    } else {
+      return;
+    }
+  } else {
+    templateUri =
+      args.templatePath && asAbsoluteWorkspaceUri(URI.file(args.templatePath));
+  }
 
   if (await fileExists(templateUri)) {
     return NoteFactory.createFromTemplate(

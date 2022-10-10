@@ -340,9 +340,14 @@ The content of file B`);
       expect(getValue(result.contents[1])).toMatch(
         /^Also referenced in 2 notes:/
       );
-      expect(getValue(result.contents[2])).toMatch(
-        /^Create note from template for 'placeholder'/
-      );
+      const expectedStringStart =
+        "[Create note from template for 'placeholder'](command:foam-vscode.create-note?";
+      expect(
+        (getValue(result.contents[2]) as string).substring(
+          0,
+          expectedStringStart.length
+        )
+      ).toMatch(expectedStringStart);
 
       ws.dispose();
       graph.dispose();

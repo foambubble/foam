@@ -340,15 +340,9 @@ The content of file B`);
       expect(getValue(result.contents[1])).toMatch(
         /^Also referenced in 2 notes:/
       );
-      const expectedStringStart =
-        "[Create note from template for 'placeholder'](command:foam-vscode.create-note?";
-      expect(
-        (getValue(result.contents[2]) as string).substring(
-          0,
-          expectedStringStart.length
-        )
-      ).toMatch(expectedStringStart);
-
+      expect(getValue(result.contents[2])).toMatch(
+        /^\[Create note from template for 'placeholder'\]\(command:foam-vscode.create-note?%257B%2522text%2522%253A%2522placeholder%2522%252C%2522notePath%2522%253A%2522%252Fhome%252Frunner%252Fwork%252Ffoam%252Ffoam%252Fpackages%252Ffoam-vscode%252F.test-workspace%252Fplaceholder.md%/
+      );
       ws.dispose();
       graph.dispose();
     });

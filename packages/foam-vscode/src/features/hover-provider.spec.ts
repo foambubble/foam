@@ -258,7 +258,10 @@ The content of file B`);
       expect(result.contents).toHaveLength(3);
       expect(result.contents[0]).toEqual(null);
       expect(result.contents[1]).toEqual(null);
-      expect(result.contents[2]).toEqual(null);
+      // expect(result.contents[2]).toEqual(null);
+      expect(getValue(result.contents[2])).toMatch(
+        "[Create note from template for 'wikilink'](command:foam-vscode.create-note?"
+      );
       ws.dispose();
       graph.dispose();
     });
@@ -341,7 +344,7 @@ The content of file B`);
         /^Also referenced in 2 notes:/
       );
       expect(getValue(result.contents[2])).toMatch(
-        /^\[Create note from template for 'placeholder'\]\(command:foam-vscode.create-note?%257B%2522text%2522%253A%2522placeholder%2522%252C%2522notePath%2522%253A%2522%252Fhome%252Frunner%252Fwork%252Ffoam%252Ffoam%252Fpackages%252Ffoam-vscode%252F.test-workspace%252Fplaceholder.md%2522%252C%2522askForTemplate%2522%253Atrue%257D/
+        "[Create note from template for 'placeholder'](command:foam-vscode.create-note?"
       );
       ws.dispose();
       graph.dispose();

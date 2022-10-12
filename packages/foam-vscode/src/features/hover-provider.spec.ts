@@ -258,7 +258,6 @@ The content of file B`);
       expect(result.contents).toHaveLength(3);
       expect(result.contents[0]).toEqual(null);
       expect(result.contents[1]).toEqual(null);
-      // expect(result.contents[2]).toEqual(null);
       expect(getValue(result.contents[2])).toMatch(
         "[Create note from template for 'wikilink'](command:foam-vscode.create-note?"
       );

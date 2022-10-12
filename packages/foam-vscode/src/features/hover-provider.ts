@@ -13,6 +13,9 @@ import { FoamWorkspace } from '../core/model/workspace';
 import { Range } from '../core/model/range';
 import { FoamGraph } from '../core/model/graph';
 import { OPEN_COMMAND } from './commands/open-resource';
+import { CREATE_NOTE_COMMAND } from './commands/create-note';
+import { askUserForTemplate } from '../services/templates';
+import { QuickPickItem } from 'vscode';
 
 export const CONFIG_KEY = 'links.hover.enable';
 
@@ -108,8 +111,36 @@ export class HoverProvider implements vscode.HoverProvider {
         : this.workspace.get(targetUri).title;
     }
 
+    // If placeholder, offer to create a new note from template (compared to default link provider - not from template)
+    const basedir =
+      vscode.workspace.workspaceFolders.length > 0
+        ? vscode.workspace.workspaceFolders[0].uri
+        : vscode.window.activeTextEditor?.document.uri
+        ? vscode.window.activeTextEditor!.document.uri
+        : undefined;
+    if (basedir === undefined) {
+      return;
+    }
+    const target = fromVsCodeUri(basedir)
+      .resolve(targetUri, true)
+      .changeExtension('', '.md');
+    const args = {
+      text: target.getName(),
+      notePath: target.path,
+      askForTemplate: true,
+    };
+    const command = CREATE_NOTE_COMMAND.asURI(args);
+    const newNoteFromTemplate = new vscode.MarkdownString(
+      `[Create note from template for '${targetUri.getName()}'](${command})`
+    );
+    newNoteFromTemplate.isTrusted = true;
+
     const hover: vscode.Hover = {
-      contents: [mdContent, sources.length > 0 ? references : null],
+      contents: [
+        mdContent,
+        sources.length > 0 ? references : null,
+        targetUri.isPlaceholder() ? newNoteFromTemplate : null,
+      ],
       range: toVsCodeRange(targetLink.range),
     };
     return hover;

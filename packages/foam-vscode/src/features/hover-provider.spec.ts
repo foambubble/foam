@@ -179,7 +179,7 @@ describe('Hover provider', () => {
       const provider = new HoverProvider(hoverEnabled, ws, graph, parser);
       const result = await provider.provideHover(doc, pos, noCancelToken);
 
-      expect(result.contents).toHaveLength(2);
+      expect(result.contents).toHaveLength(3);
       expect(getValue(result.contents[0])).toEqual(
         `This is some content from file B`
       );
@@ -205,7 +205,7 @@ describe('Hover provider', () => {
       const provider = new HoverProvider(hoverEnabled, ws, graph, parser);
       const result = await provider.provideHover(doc, pos, noCancelToken);
 
-      expect(result.contents).toHaveLength(2);
+      expect(result.contents).toHaveLength(3);
       expect(getValue(result.contents[0])).toEqual(
         `This is some content from file B`
       );
@@ -235,7 +235,7 @@ The content of file B`);
       const provider = new HoverProvider(hoverEnabled, ws, graph, parser);
       const result = await provider.provideHover(doc, pos, noCancelToken);
 
-      expect(result.contents).toHaveLength(2);
+      expect(result.contents).toHaveLength(3);
       expect(getValue(result.contents[0])).toEqual(`The content of file B`);
       ws.dispose();
       graph.dispose();
@@ -255,9 +255,12 @@ The content of file B`);
       const provider = new HoverProvider(hoverEnabled, ws, graph, parser);
       const result = await provider.provideHover(doc, pos, noCancelToken);
 
-      expect(result.contents).toHaveLength(2);
+      expect(result.contents).toHaveLength(3);
       expect(result.contents[0]).toEqual(null);
       expect(result.contents[1]).toEqual(null);
+      expect(getValue(result.contents[2])).toMatch(
+        "[Create note from template for 'wikilink'](command:foam-vscode.create-note?"
+      );
       ws.dispose();
       graph.dispose();
     });
@@ -281,11 +284,12 @@ The content of file B`);
       const provider = new HoverProvider(hoverEnabled, ws, graph, parser);
       const result = await provider.provideHover(doc, pos, noCancelToken);
 
-      expect(result.contents).toHaveLength(2);
+      expect(result.contents).toHaveLength(3);
       expect(getValue(result.contents[0])).toEqual(`This is some content`);
       expect(getValue(result.contents[1])).toMatch(
         /^Also referenced in 1 note:/
       );
+      expect(result.contents[2]).toEqual(null);
       ws.dispose();
       graph.dispose();
     });
@@ -309,7 +313,7 @@ The content of file B`);
       const provider = new HoverProvider(hoverEnabled, ws, graph, parser);
       const result = await provider.provideHover(doc, pos, noCancelToken);
 
-      expect(result.contents).toHaveLength(2);
+      expect(result.contents).toHaveLength(3);
       expect(getValue(result.contents[1])).toMatch(
         /^Also referenced in 1 note:/
       );
@@ -333,12 +337,14 @@ The content of file B`);
       const provider = new HoverProvider(hoverEnabled, ws, graph, parser);
       const result = await provider.provideHover(doc, pos, noCancelToken);
 
-      expect(result.contents).toHaveLength(2);
+      expect(result.contents).toHaveLength(3);
       expect(result.contents[0]).toEqual(null);
       expect(getValue(result.contents[1])).toMatch(
         /^Also referenced in 2 notes:/
       );
-
+      expect(getValue(result.contents[2])).toMatch(
+        "[Create note from template for 'placeholder'](command:foam-vscode.create-note?"
+      );
       ws.dispose();
       graph.dispose();
     });

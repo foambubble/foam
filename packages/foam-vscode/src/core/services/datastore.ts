@@ -5,6 +5,7 @@ import { glob } from 'glob';
 import { promisify } from 'util';
 import { isWindows } from '../common/platform';
 import { Event } from '../common/event';
+import { asAbsolutePaths } from '../utils/path';
 
 const findAllFiles = promisify(glob);
 
@@ -54,21 +55,19 @@ export class Matcher implements IMatcher {
 
   constructor(
     baseFolders: URI[],
-    include: string[] = ['**/*'],
-    exclude: string[] = []
+    includeGlobs: string[] = ['**/*'],
+    excludeGlobs: string[] = []
   ) {
     this.folders = baseFolders.map(toMatcherPathFormat);
     Logger.info('Workspace folders: ', this.folders);
 
-    this.folders.forEach(folder => {
-      const withFolder = folderPlusGlob(folder);
-      this.include.push(
-        ...include.map(glob => {
-          return withFolder(glob);
-        })
-      );
-      this.exclude.push(...exclude.map(withFolder));
-    });
+    this.include = includeGlobs.flatMap(glob =>
+      asAbsolutePaths(glob, this.folders)
+    );
+    this.exclude = excludeGlobs.flatMap(glob =>
+      asAbsolutePaths(glob, this.folders)
+    );
+
     Logger.info('Glob patterns', {
       includeGlobs: this.include,
       ignoreGlobs: this.exclude,

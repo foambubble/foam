@@ -5,13 +5,14 @@ import { bootstrap, Foam } from '../../core/model/foam';
 import { MarkdownResourceProvider } from '../../core/services/markdown-provider';
 import { FileDataStore, Matcher } from '../../core/services/datastore';
 import { createMarkdownParser } from '../../core/services/markdown-parser';
+import { URI } from '../../core/model/uri';
 
 describe('Tags tree panel', () => {
   let _foam: Foam;
   let provider: TagsProvider;
 
   const dataStore = new FileDataStore(readFileFromFs);
-  const matcher = new Matcher([]);
+  const matcher = new Matcher([URI.file('/root')]);
   const parser = createMarkdownParser();
   const mdProvider = new MarkdownResourceProvider(matcher, dataStore, parser);
 

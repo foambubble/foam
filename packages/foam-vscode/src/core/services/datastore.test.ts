@@ -62,11 +62,11 @@ describe('Matcher', () => {
   });
 
   it('happy path', () => {
-    const matcher = new Matcher([URI.file('/')], ['**/*'], ['**/*.pdf']);
-    expect(matcher.isMatch(URI.file('/file.md'))).toBeTruthy();
-    expect(matcher.isMatch(URI.file('/file.pdf'))).toBeFalsy();
-    expect(matcher.isMatch(URI.file('/dir/file.md'))).toBeTruthy();
-    expect(matcher.isMatch(URI.file('/dir/file.pdf'))).toBeFalsy();
+    const matcher = new Matcher([URI.file('/root/')], ['**/*'], ['**/*.pdf']);
+    expect(matcher.isMatch(URI.file('/root/file.md'))).toBeTruthy();
+    expect(matcher.isMatch(URI.file('/root/file.pdf'))).toBeFalsy();
+    expect(matcher.isMatch(URI.file('/root/dir/file.md'))).toBeTruthy();
+    expect(matcher.isMatch(URI.file('/root/dir/file.pdf'))).toBeFalsy();
   });
 
   it('ignores files in the exclude list', () => {

@@ -5,7 +5,6 @@
 // See LICENSE for details
 
 import { CharCode } from '../common/charCode';
-import { isNone } from '../utils';
 import * as pathUtils from '../utils/path';
 
 /**
@@ -371,14 +370,10 @@ function encodeURIComponentMinimal(path: string): string {
 
 /**
  * Turns a relative URI into an absolute URI given a collection of base folders.
- * - if no workspace folder is provided, it will throw
- * - if the given URI is already absolute, it will return it
- * - if the given URI is relative
- *   - if there is only one workspace folder, it will be relative to that
- *   - if there is more than a workspace folder, it will search for the one matching the
- *     first part of the URI
- *   - if no matching workspace folder is found, it will use the first one
- *   - if more than a folder matches the first part of the URI, it will return the first one
+ * In case of multiple matches it returns the first one.
+ *
+ * @see {@link pathUtils.asAbsolutePaths|path.asAbsolutePath}
+ *
  * @param uri the uri to evaluate
  * @param baseFolders the base folders to use
  * @returns an absolute uri
@@ -386,25 +381,10 @@ function encodeURIComponentMinimal(path: string): string {
  * TODO this probably needs to be moved to the workspace service
  */
 export function asAbsoluteUri(uri: URI, baseFolders: URI[]): URI {
-  if (isNone(baseFolders) || baseFolders.length === 0) {
-    throw new Error('Cannot compute absolute URI without a base');
-  }
-  if (uri.isAbsolute()) {
-    return uri;
-  }
-  let tokens = uri.path.split('/');
-  const firstDir = tokens[0];
-  let base = baseFolders[0];
-  if (baseFolders.length > 1) {
-    for (const folder of baseFolders) {
-      const lastDir = folder.path.split('/').pop();
-      if (lastDir === firstDir) {
-        tokens = tokens.slice(1);
-        base = folder;
-        break;
-      }
-    }
-  }
-  const res = base.joinPath(...tokens);
-  return res;
+  return URI.file(
+    pathUtils.asAbsolutePaths(
+      uri.path,
+      baseFolders.map(f => f.path)
+    )[0]
+  );
 }

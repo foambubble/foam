@@ -1,5 +1,6 @@
 import { CharCode } from '../common/charCode';
 import { posix } from 'path';
+import { isNone } from './core';
 
 /**
  * Converts filesystem path to POSIX path. Supported inputs are:
@@ -173,4 +174,47 @@ function parseUNCShare(uncPath: string): [string, string] {
   } else {
     return [uncPath.substring(2, idx), uncPath.substring(idx) || '\\'];
   }
+}
+
+/**
+ * Turns a relative path into an absolute path given a collection of base folders.
+ * - if no base folder is provided, it will throw
+ * - if the given path is already absolute, it will return it
+ * - if the given path is relative it will return absolute paths for the ones matching the
+ *     first part of the path
+ * - if no matching base folder is found, it will return an absolute path per base folder
+ * @param path the path to evaluate
+ * @param baseFolders the base folders to use
+ * @returns an array of absolute path, guaranteed to have at least 1 element
+ */
+export function asAbsolutePaths(path: string, baseFolders: string[]): string[] {
+  if (isNone(baseFolders) || baseFolders.length === 0) {
+    throw new Error('Cannot compute absolute URI without a base');
+  }
+
+  if (isAbsolute(path)) {
+    return [path];
+  }
+  let tokens = path.split('/');
+  const firstDir = tokens[0];
+  const res = [];
+  if (baseFolders.length > 1) {
+    for (const folder of baseFolders) {
+      const lastDir = folder.split('/').pop();
+      if (lastDir === firstDir) {
+        tokens = tokens.slice(1);
+        res.push([folder, ...tokens].join('/'));
+        continue;
+      }
+    }
+  }
+  if (res.length === 0) {
+    for (const folder of baseFolders) {
+      const match = folder.endsWith('/')
+        ? folder.substring(0, folder.length - 1)
+        : folder;
+      res.push([match, ...tokens].join('/'));
+    }
+  }
+  return res;
 }

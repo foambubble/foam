@@ -1,10 +1,6 @@
-import { commands, ExtensionContext, QuickPickItem, window } from 'vscode';
+import { commands, ExtensionContext } from 'vscode';
 import { FoamFeature } from '../../types';
-import {
-  askUserForTemplate,
-  NoteFactory,
-  getTemplatesDir,
-} from '../../services/templates';
+import { askUserForTemplate, NoteFactory } from '../../services/templates';
 import { Resolver } from '../../services/variable-resolver';
 
 const feature: FoamFeature = {

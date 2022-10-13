@@ -4,6 +4,13 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.20.1] - 2022-10-13
+
+Fixes and Improvements:
+- Improved support for daily notes in multi root workspace (#1073)
+- Create note from placeholder using template (#1061 - thanks @Dominic-DallOsto)
+- Improved support for globs in multi root workspace (#1083)
+
 ## [0.20.0] - 2022-09-30
 
 New Features:

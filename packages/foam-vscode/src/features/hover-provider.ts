@@ -14,8 +14,6 @@ import { Range } from '../core/model/range';
 import { FoamGraph } from '../core/model/graph';
 import { OPEN_COMMAND } from './commands/open-resource';
 import { CREATE_NOTE_COMMAND } from './commands/create-note';
-import { askUserForTemplate } from '../services/templates';
-import { QuickPickItem } from 'vscode';
 
 export const CONFIG_KEY = 'links.hover.enable';
 

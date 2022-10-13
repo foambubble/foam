@@ -2,7 +2,7 @@ import { workspace } from 'vscode';
 import dateFormat from 'dateformat';
 import { focusNote } from './utils';
 import { URI } from './core/model/uri';
-import { fromVsCodeUri, toVsCodeUri } from './utils/vsc-utils';
+import { toVsCodeUri } from './utils/vsc-utils';
 import { NoteFactory } from './services/templates';
 import { getFoamVsCodeConfig } from './services/config';
 import { asAbsoluteWorkspaceUri } from './services/editor';

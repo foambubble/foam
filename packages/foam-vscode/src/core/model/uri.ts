@@ -4,9 +4,7 @@
 // Some code in this file comes from https://github.com/microsoft/vscode/main/src/vs/base/common/uri.ts
 // See LICENSE for details
 
-import { isAbsolute } from 'path';
 import { CharCode } from '../common/charCode';
-import { isNone } from '../utils';
 import * as pathUtils from '../utils/path';
 
 /**

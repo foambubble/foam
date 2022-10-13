@@ -141,13 +141,3 @@ export class FileDataStore implements IDataStore {
     }
   }
 }
-
-export const folderPlusGlob = (folder: string) => (glob: string): string => {
-  if (folder.substr(-1) === '/') {
-    folder = folder.slice(0, -1);
-  }
-  if (glob.startsWith('/')) {
-    glob = glob.slice(1);
-  }
-  return folder.length > 0 ? `${folder}/${glob}` : glob;
-};

@@ -1,7 +1,6 @@
 import { URI } from '../core/model/uri';
 import { TextEncoder } from 'util';
 import {
-  FileType,
   SnippetString,
   ViewColumn,
   QuickPickItem,

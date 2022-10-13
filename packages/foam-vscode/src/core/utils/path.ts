@@ -210,7 +210,10 @@ export function asAbsolutePaths(path: string, baseFolders: string[]): string[] {
   }
   if (res.length === 0) {
     for (const folder of baseFolders) {
-      res.push([folder, ...tokens].join('/'));
+      const match = folder.endsWith('/')
+        ? folder.substring(0, folder.length - 1)
+        : folder;
+      res.push([match, ...tokens].join('/'));
     }
   }
   return res;

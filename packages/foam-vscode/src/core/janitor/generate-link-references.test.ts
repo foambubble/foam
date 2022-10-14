@@ -23,14 +23,16 @@ describe('generateLinkReferences', () => {
   };
 
   beforeAll(async () => {
-    const matcher = new Matcher([TEST_DATA_DIR.joinPath('__scaffold__')]);
     /** Use fs for reading files in units where vscode.workspace is unavailable */
     const readFile = async (uri: URI) =>
       (await fs.promises.readFile(uri.toFsPath())).toString();
-    const dataStore = new FileDataStore(readFile);
+    const dataStore = new FileDataStore(
+      readFile,
+      TEST_DATA_DIR.joinPath('__scaffold__').toFsPath()
+    );
     const parser = createMarkdownParser();
-    const mdProvider = new MarkdownResourceProvider(matcher, dataStore, parser);
-    _workspace = await FoamWorkspace.fromProviders([mdProvider]);
+    const mdProvider = new MarkdownResourceProvider(dataStore, parser);
+    _workspace = await FoamWorkspace.fromProviders([mdProvider], dataStore);
   });
 
   it('initialised test graph correctly', () => {

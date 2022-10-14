@@ -26,6 +26,14 @@ export interface IMatcher {
   isMatch(uri: URI): boolean;
 
   /**
+   * Refreshes the list of files that this matcher matches
+   * To be used when new files are added to the workspace,
+   * it can be a more or less expensive operation depending on the
+   * implementation of the matcher
+   */
+  refresh(): Promise<void>;
+
+  /**
    * The include globs
    */
   include: string[];
@@ -90,6 +98,32 @@ export class Matcher implements IMatcher {
   isMatch(uri: URI) {
     return this.match([uri]).length > 0;
   }
+
+  refresh(): Promise<void> {
+    return Promise.resolve();
+  }
+}
+
+export class FileListBasedMatcher implements IMatcher {
+  private files: string[] = [];
+  include: string[];
+  exclude: string[];
+
+  constructor(files: URI[], private readonly listFiles: () => Promise<URI[]>) {
+    this.files = files.map(f => f.path);
+  }
+
+  match(files: URI[]): URI[] {
+    return files.filter(f => this.files.includes(f.path));
+  }
+
+  isMatch(uri: URI): boolean {
+    return this.files.includes(uri.path);
+  }
+
+  async refresh() {
+    this.files = (await this.listFiles()).map(f => f.path);
+  }
 }
 
 export interface IWatcher {
@@ -106,7 +140,7 @@ export interface IDataStore {
    * List the files matching the given glob from the
    * store
    */
-  list: (glob: string, ignoreGlob?: string | string[]) => Promise<URI[]>;
+  list: () => Promise<URI[]>;
 
   /**
    * Read the content of the file from the store
@@ -120,19 +154,41 @@ export interface IDataStore {
  * File system based data store
  */
 export class FileDataStore implements IDataStore {
-  constructor(private readFile: (uri: URI) => Promise<string>) {}
+  constructor(
+    private readFile: (uri: URI) => Promise<string>,
+    private readonly basedir: string
+  ) {}
 
-  async list(glob: string, ignoreGlob?: string | string[]): Promise<URI[]> {
-    const res = await findAllFiles(glob, {
-      ignore: ignoreGlob,
-      strict: false,
-    });
+  async list(): Promise<URI[]> {
+    const res = await findAllFiles([this.basedir, '**/*'].join('/'));
     return res.map(URI.file);
   }
 
   async read(uri: URI) {
     try {
       return await this.readFile(uri);
+    } catch (e) {
+      Logger.error(
+        `FileDataStore: error while reading uri: ${uri.path} - ${e}`
+      );
+      return null;
+    }
+  }
+}
+
+export class GenericDataStore implements IDataStore {
+  constructor(
+    private readonly listFiles: () => Promise<URI[]>,
+    private readFile: (uri: URI) => Promise<string>
+  ) {}
+
+  async list(): Promise<URI[]> {
+    return this.listFiles();
+  }
+
+  async read(uri: URI) {
+    try {
+      return this.readFile(uri);
     } catch (e) {
       Logger.error(
         `FileDataStore: error while reading uri: ${uri.path} - ${e}`

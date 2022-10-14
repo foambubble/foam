@@ -20,11 +20,13 @@ describe('generateHeadings', () => {
   };
 
   beforeAll(async () => {
-    const matcher = new Matcher([TEST_DATA_DIR.joinPath('__scaffold__')]);
-    const dataStore = new FileDataStore(readFileFromFs);
+    const dataStore = new FileDataStore(
+      readFileFromFs,
+      TEST_DATA_DIR.joinPath('__scaffold__').toFsPath()
+    );
     const parser = createMarkdownParser();
-    const mdProvider = new MarkdownResourceProvider(matcher, dataStore, parser);
-    _workspace = await FoamWorkspace.fromProviders([mdProvider]);
+    const mdProvider = new MarkdownResourceProvider(dataStore, parser);
+    _workspace = await FoamWorkspace.fromProviders([mdProvider], dataStore);
   });
 
   it.skip('should add heading to a file that does not have them', async () => {

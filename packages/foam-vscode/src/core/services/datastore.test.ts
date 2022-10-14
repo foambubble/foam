@@ -83,11 +83,3 @@ describe('Matcher', () => {
     expect(matcher.isMatch(files[3])).toEqual(false);
   });
 });
-
-describe('Datastore', () => {
-  it('uses the matcher to get the file list', async () => {
-    const matcher = new Matcher([testFolder], ['**/*.md'], []);
-    const ds = new FileDataStore(readFileFromFs);
-    expect((await ds.list(matcher.include[0])).length).toEqual(4);
-  });
-});

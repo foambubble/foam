@@ -11,10 +11,10 @@ describe('Tags tree panel', () => {
   let _foam: Foam;
   let provider: TagsProvider;
 
-  const dataStore = new FileDataStore(readFileFromFs);
+  const dataStore = new FileDataStore(readFileFromFs, '/root');
   const matcher = new Matcher([URI.file('/root')]);
   const parser = createMarkdownParser();
-  const mdProvider = new MarkdownResourceProvider(matcher, dataStore, parser);
+  const mdProvider = new MarkdownResourceProvider(dataStore, parser);
 
   beforeAll(async () => {
     await cleanWorkspace();
@@ -26,7 +26,9 @@ describe('Tags tree panel', () => {
   });
 
   beforeEach(async () => {
-    _foam = await bootstrap(matcher, dataStore, parser, [mdProvider]);
+    _foam = await bootstrap(matcher, undefined, dataStore, parser, [
+      mdProvider,
+    ]);
     provider = new TagsProvider(_foam, _foam.workspace);
     await closeEditors();
   });

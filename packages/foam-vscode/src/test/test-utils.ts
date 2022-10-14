@@ -35,10 +35,9 @@ export const createTestWorkspace = () => {
   const matcher = new Matcher([URI.file('/')], ['**/*']);
   const parser = createMarkdownParser();
   const provider = new MarkdownResourceProvider(
-    matcher,
     {
       read: _ => Promise.resolve(''),
-      list: _ => Promise.resolve([]),
+      list: () => Promise.resolve([]),
     },
     parser
   );

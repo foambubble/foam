@@ -6,7 +6,6 @@ import { Logger } from '../core/utils/log';
 import { Range } from '../core/model/range';
 import { URI } from '../core/model/uri';
 import { FoamWorkspace } from '../core/model/workspace';
-import { Matcher } from '../core/services/datastore';
 import { MarkdownResourceProvider } from '../core/services/markdown-provider';
 import { NoteLinkDefinition, Resource } from '../core/model/note';
 import { createMarkdownParser } from '../core/services/markdown-parser';
@@ -32,7 +31,6 @@ export const strToUri = URI.file;
 
 export const createTestWorkspace = () => {
   const workspace = new FoamWorkspace();
-  const matcher = new Matcher([URI.file('/')], ['**/*']);
   const parser = createMarkdownParser();
   const provider = new MarkdownResourceProvider(
     {

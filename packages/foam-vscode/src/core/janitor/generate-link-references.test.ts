@@ -4,7 +4,7 @@ import { MarkdownResourceProvider } from '../services/markdown-provider';
 import { Resource } from '../model/note';
 import { Range } from '../model/range';
 import { FoamWorkspace } from '../model/workspace';
-import { FileDataStore, Matcher } from '../services/datastore';
+import { FileDataStore } from '../services/datastore';
 import { Logger } from '../utils/log';
 import fs from 'fs';
 import { URI } from '../model/uri';

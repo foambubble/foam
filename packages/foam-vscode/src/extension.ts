@@ -43,14 +43,14 @@ export async function activate(context: ExtensionContext) {
 
     const excludes = getIgnoredFilesSetting().map(g => g.toString());
     for (const exclude of excludes) {
-      let tokens = exclude.split('/');
+      const tokens = exclude.split('/');
       const matchesFolder = workspace.workspaceFolders.find(
         f => f.name === tokens[0]
       );
       if (matchesFolder) {
         excludePatterns.get(tokens[0]).push(tokens.slice(1).join('/'));
       } else {
-        for (const [key, value] of excludePatterns.entries()) {
+        for (const [, value] of excludePatterns.entries()) {
           value.push(exclude);
         }
       }

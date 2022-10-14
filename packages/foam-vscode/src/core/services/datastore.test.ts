@@ -1,7 +1,7 @@
-import { readFileFromFs, TEST_DATA_DIR } from '../../test/test-utils';
+import { TEST_DATA_DIR } from '../../test/test-utils';
 import { URI } from '../model/uri';
 import { Logger } from '../utils/log';
-import { FileDataStore, Matcher, toMatcherPathFormat } from './datastore';
+import { Matcher, toMatcherPathFormat } from './datastore';
 
 Logger.setLevel('error');
 

@@ -1,4 +1,8 @@
-import { createTestNote, readFileFromFs } from '../../test/test-utils';
+import {
+  createTestNote,
+  readFileFromFs,
+  TEST_DATA_DIR,
+} from '../../test/test-utils';
 import { cleanWorkspace, closeEditors } from '../../test/test-utils-vscode';
 import { TagItem, TagReference, TagsProvider } from './tags-explorer';
 import { bootstrap, Foam } from '../../core/model/foam';
@@ -11,8 +15,8 @@ describe('Tags tree panel', () => {
   let _foam: Foam;
   let provider: TagsProvider;
 
-  const dataStore = new FileDataStore(readFileFromFs, '/root');
-  const matcher = new Matcher([URI.file('/root')]);
+  const dataStore = new FileDataStore(readFileFromFs, TEST_DATA_DIR.toFsPath());
+  const matcher = new Matcher([URI.file(TEST_DATA_DIR.toFsPath())]);
   const parser = createMarkdownParser();
   const mdProvider = new MarkdownResourceProvider(dataStore, parser);
 

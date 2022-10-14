@@ -14,7 +14,7 @@ Logger.setLevel('error');
 
 export const cleanWorkspace = async () => {
   const files = await vscode.workspace.findFiles('**', '{.vscode,.keep}');
-  await Promise.all(files.map(f => vscode.workspace.fs.delete(f)));
+  await Promise.all(files.map(f => deleteFile(fromVsCodeUri(f))));
 };
 
 export const showInEditor = async (uri: URI) => {
@@ -30,7 +30,11 @@ export const closeEditors = async () => {
 
 export const deleteFile = (file: URI | { uri: URI }) => {
   const uri = 'uri' in file ? file.uri : file;
-  return vscode.workspace.fs.delete(toVsCodeUri(uri), { recursive: true });
+  try {
+    return vscode.workspace.fs.delete(toVsCodeUri(uri), { recursive: true });
+  } catch (e) {
+    // ignore
+  }
 };
 
 /**

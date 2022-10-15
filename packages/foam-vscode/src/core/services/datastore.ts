@@ -188,7 +188,7 @@ export class GenericDataStore implements IDataStore {
 
   async read(uri: URI) {
     try {
-      return this.readFile(uri);
+      return await this.readFile(uri);
     } catch (e) {
       Logger.error(
         `FileDataStore: error while reading uri: ${uri.path} - ${e}`

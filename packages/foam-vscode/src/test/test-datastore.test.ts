@@ -1,7 +1,7 @@
-import { Matcher, toMatcherPathFormat } from '../../test/test-datastore';
-import { TEST_DATA_DIR } from '../../test/test-utils';
-import { URI } from '../model/uri';
-import { Logger } from '../utils/log';
+import { URI } from '../core/model/uri';
+import { Logger } from '../core/utils/log';
+import { Matcher, toMatcherPathFormat } from './test-datastore';
+import { TEST_DATA_DIR } from './test-utils';
 
 Logger.setLevel('error');
 

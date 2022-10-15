@@ -4,12 +4,12 @@ import { MarkdownResourceProvider } from '../services/markdown-provider';
 import { Resource } from '../model/note';
 import { Range } from '../model/range';
 import { FoamWorkspace } from '../model/workspace';
-import { FileDataStore } from '../services/datastore';
 import { Logger } from '../utils/log';
 import fs from 'fs';
 import { URI } from '../model/uri';
 import { EOL } from 'os';
 import { createMarkdownParser } from '../services/markdown-parser';
+import { FileDataStore } from '../../test/test-datastore';
 
 Logger.setLevel('error');
 

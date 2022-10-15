@@ -7,9 +7,9 @@ import { cleanWorkspace, closeEditors } from '../../test/test-utils-vscode';
 import { TagItem, TagReference, TagsProvider } from './tags-explorer';
 import { bootstrap, Foam } from '../../core/model/foam';
 import { MarkdownResourceProvider } from '../../core/services/markdown-provider';
-import { FileDataStore, Matcher } from '../../core/services/datastore';
 import { createMarkdownParser } from '../../core/services/markdown-parser';
 import { URI } from '../../core/model/uri';
+import { FileDataStore, Matcher } from '../../test/test-datastore';
 
 describe('Tags tree panel', () => {
   let _foam: Foam;

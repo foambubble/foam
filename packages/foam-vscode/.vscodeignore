@@ -1,7 +1,12 @@
 .vscode/**
 .vscode-test/**
 out/test/**
+out/**/*.test.*
+out/**/*.spec.*
+test-data/**
 src/**
+jest.config.js
+.test-workspace
 .gitignore
 vsc-extension-quickstart.md
 **/tsconfig.json

@@ -1,8 +1,6 @@
 import { Resource, ResourceLink } from '../model/note';
-import { Logger } from '../utils/log';
 import { URI } from '../model/uri';
 import { FoamWorkspace } from '../model/workspace';
-import { IDataStore, IMatcher, IWatcher } from '../services/datastore';
 import { IDisposable } from '../common/lifecycle';
 import { ResourceProvider } from '../model/provider';
 import { getFoamVsCodeConfig } from '../../services/config';
@@ -36,51 +34,6 @@ const asResource = (uri: URI): Resource => {
 
 export class AttachmentResourceProvider implements ResourceProvider {
   private disposables: IDisposable[] = [];
-
-  constructor(
-    private readonly matcher: IMatcher,
-    private readonly dataStore: IDataStore,
-    private readonly watcher?: IWatcher
-  ) {}
-
-  async init(workspace: FoamWorkspace) {
-    const filesByFolder = await Promise.all(
-      this.matcher.include.map(glob =>
-        this.dataStore.list(glob, this.matcher.exclude)
-      )
-    );
-    const files = this.matcher
-      .match(filesByFolder.flat())
-      .filter(this.supports);
-
-    Logger.info(
-      `Found ${
-        files.length
-      } attachments, with extensions: ${attachmentExtensions.join(', ')}`
-    );
-    for (const uri of files) {
-      Logger.debug('Found: ' + uri.toString());
-      workspace.set(asResource(uri));
-    }
-
-    if (this.watcher != null) {
-      this.disposables = [
-        this.watcher.onDidChange(async uri => {
-          if (this.matcher.isMatch(uri) && this.supports(uri)) {
-            workspace.set(asResource(uri));
-          }
-        }),
-        this.watcher.onDidCreate(async uri => {
-          if (this.matcher.isMatch(uri) && this.supports(uri)) {
-            workspace.set(asResource(uri));
-          }
-        }),
-        this.watcher.onDidDelete(uri => {
-          this.supports(uri) && workspace.delete(uri);
-        }),
-      ];
-    }
-  }
 
   supports(uri: URI) {
     return attachmentExtensions.includes(

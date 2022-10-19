@@ -8,63 +8,18 @@ import { isNone, isSome } from '../utils';
 import { Logger } from '../utils/log';
 import { URI } from '../model/uri';
 import { FoamWorkspace } from '../model/workspace';
-import { IDataStore, IMatcher, IWatcher } from '../services/datastore';
 import { IDisposable } from '../common/lifecycle';
 import { ResourceProvider } from '../model/provider';
 import { MarkdownLink } from './markdown-link';
+import { IDataStore } from './datastore';
 
 export class MarkdownResourceProvider implements ResourceProvider {
   private disposables: IDisposable[] = [];
 
   constructor(
-    private readonly matcher: IMatcher,
     private readonly dataStore: IDataStore,
-    private readonly parser: ResourceParser,
-    private readonly watcher?: IWatcher
+    private readonly parser: ResourceParser
   ) {}
-
-  async init(workspace: FoamWorkspace) {
-    const filesByFolder = await Promise.all(
-      this.matcher.include.map(glob =>
-        this.dataStore.list(glob, this.matcher.exclude)
-      )
-    );
-    const files = this.matcher
-      .match(filesByFolder.flat())
-      .filter(this.supports);
-
-    await Promise.all(
-      files.map(async uri => {
-        Logger.debug('Found: ' + uri.toString());
-        const content = await this.dataStore.read(uri);
-        if (isSome(content)) {
-          workspace.set(this.parser.parse(uri, content));
-        }
-      })
-    );
-
-    if (this.watcher != null) {
-      this.disposables = [
-        this.watcher.onDidChange(async uri => {
-          if (this.matcher.isMatch(uri) && this.supports(uri)) {
-            const content = await this.dataStore.read(uri);
-            isSome(content) &&
-              workspace.set(await this.parser.parse(uri, content));
-          }
-        }),
-        this.watcher.onDidCreate(async uri => {
-          if (this.matcher.isMatch(uri) && this.supports(uri)) {
-            const content = await this.dataStore.read(uri);
-            isSome(content) &&
-              workspace.set(await this.parser.parse(uri, content));
-          }
-        }),
-        this.watcher.onDidDelete(uri => {
-          this.supports(uri) && workspace.delete(uri);
-        }),
-      ];
-    }
-  }
 
   supports(uri: URI) {
     return uri.isMarkdown();

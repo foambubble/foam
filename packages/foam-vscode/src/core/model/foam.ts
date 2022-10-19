@@ -1,5 +1,5 @@
 import { IDisposable } from '../common/lifecycle';
-import { IDataStore, IMatcher } from '../services/datastore';
+import { IDataStore, IMatcher, IWatcher } from '../services/datastore';
 import { FoamWorkspace } from './workspace';
 import { FoamGraph } from './graph';
 import { ResourceParser } from './note';
@@ -22,14 +22,18 @@ export interface Foam extends IDisposable {
 
 export const bootstrap = async (
   matcher: IMatcher,
+  watcher: IWatcher | undefined,
   dataStore: IDataStore,
   parser: ResourceParser,
   initialProviders: ResourceProvider[]
 ) => {
-  const workspace = new FoamWorkspace();
   const tsStart = Date.now();
 
-  await Promise.all(initialProviders.map(p => workspace.registerProvider(p)));
+  const workspace = await FoamWorkspace.fromProviders(
+    initialProviders,
+    dataStore
+  );
+
   const tsWsDone = Date.now();
   Logger.info(`Workspace loaded in ${tsWsDone - tsStart}ms`);
 
@@ -41,13 +45,28 @@ export const bootstrap = async (
   const tsTagsEnd = Date.now();
   Logger.info(`Tags loaded in ${tsTagsEnd - tsGraphDone}ms`);
 
+  watcher?.onDidChange(async uri => {
+    if (matcher.isMatch(uri)) {
+      await workspace.fetchAndSet(uri);
+    }
+  });
+  watcher?.onDidCreate(async uri => {
+    await matcher.refresh();
+    if (matcher.isMatch(uri)) {
+      await workspace.fetchAndSet(uri);
+    }
+  });
+  watcher?.onDidDelete(uri => {
+    workspace.delete(uri);
+  });
+
   const foam: Foam = {
     workspace,
     graph,
     tags,
     services: {
-      dataStore,
       parser,
+      dataStore,
       matcher,
     },
     dispose: () => {

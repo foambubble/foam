@@ -5,6 +5,7 @@ import { isSome } from '../utils';
 import { Emitter } from '../common/event';
 import { ResourceProvider } from './provider';
 import { IDisposable } from '../common/lifecycle';
+import { IDataStore } from '../services/datastore';
 
 export class FoamWorkspace implements IDisposable {
   private onDidAddEmitter = new Emitter<Resource>();
@@ -23,7 +24,6 @@ export class FoamWorkspace implements IDisposable {
 
   registerProvider(provider: ResourceProvider) {
     this.providers.push(provider);
-    return provider.init(this);
   }
 
   set(resource: Resource) {
@@ -159,6 +159,20 @@ export class FoamWorkspace implements IDisposable {
     return Promise.resolve(null);
   }
 
+  /**
+   * Takes a resource URI, and adds it to the workspace as a resource.
+   * If the URI is not supported by any provider or is not found, it will not
+   * add anything to the workspace, and return null.
+   *
+   * @param uri the URI where the resource is located
+   * @returns A promise to the Resource, or null if none was found
+   */
+  public async fetchAndSet(uri: URI): Promise<Resource | null> {
+    const resource = await this.fetch(uri);
+    resource && this.set(resource);
+    return resource;
+  }
+
   public readAsMarkdown(uri: URI): Promise<string | null> {
     for (const provider of this.providers) {
       if (provider.supports(uri)) {
@@ -220,12 +234,13 @@ export class FoamWorkspace implements IDisposable {
   }
 
   static async fromProviders(
-    providers: ResourceProvider[]
+    providers: ResourceProvider[],
+    dataStore: IDataStore
   ): Promise<FoamWorkspace> {
     const workspace = new FoamWorkspace();
-    for (const provider of providers) {
-      await workspace.registerProvider(provider);
-    }
+    await Promise.all(providers.map(p => workspace.registerProvider(p)));
+    const files = await dataStore.list();
+    await Promise.all(files.map(f => workspace.fetchAndSet(f)));
     return workspace;
   }
 }

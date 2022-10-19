@@ -4,7 +4,6 @@ import { URI } from './uri';
 import { FoamWorkspace } from './workspace';
 
 export interface ResourceProvider extends IDisposable {
-  init: (workspace: FoamWorkspace) => Promise<void>;
   supports: (uri: URI) => boolean;
   readAsMarkdown: (uri: URI) => Promise<string | null>;
   fetch: (uri: URI) => Promise<Resource | null>;

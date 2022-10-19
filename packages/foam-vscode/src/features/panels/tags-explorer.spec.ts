@@ -1,20 +1,24 @@
-import { createTestNote, readFileFromFs } from '../../test/test-utils';
+import {
+  createTestNote,
+  readFileFromFs,
+  TEST_DATA_DIR,
+} from '../../test/test-utils';
 import { cleanWorkspace, closeEditors } from '../../test/test-utils-vscode';
 import { TagItem, TagReference, TagsProvider } from './tags-explorer';
 import { bootstrap, Foam } from '../../core/model/foam';
 import { MarkdownResourceProvider } from '../../core/services/markdown-provider';
-import { FileDataStore, Matcher } from '../../core/services/datastore';
 import { createMarkdownParser } from '../../core/services/markdown-parser';
 import { URI } from '../../core/model/uri';
+import { FileDataStore, Matcher } from '../../test/test-datastore';
 
 describe('Tags tree panel', () => {
   let _foam: Foam;
   let provider: TagsProvider;
 
-  const dataStore = new FileDataStore(readFileFromFs);
-  const matcher = new Matcher([URI.file('/root')]);
+  const dataStore = new FileDataStore(readFileFromFs, TEST_DATA_DIR.toFsPath());
+  const matcher = new Matcher([URI.file(TEST_DATA_DIR.toFsPath())]);
   const parser = createMarkdownParser();
-  const mdProvider = new MarkdownResourceProvider(matcher, dataStore, parser);
+  const mdProvider = new MarkdownResourceProvider(dataStore, parser);
 
   beforeAll(async () => {
     await cleanWorkspace();
@@ -26,7 +30,9 @@ describe('Tags tree panel', () => {
   });
 
   beforeEach(async () => {
-    _foam = await bootstrap(matcher, dataStore, parser, [mdProvider]);
+    _foam = await bootstrap(matcher, undefined, dataStore, parser, [
+      mdProvider,
+    ]);
     provider = new TagsProvider(_foam, _foam.workspace);
     await closeEditors();
   });

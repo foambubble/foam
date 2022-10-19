@@ -28,10 +28,12 @@ export const closeEditors = async () => {
   await wait(100);
 };
 
-export const deleteFile = (file: URI | { uri: URI }) => {
+export const deleteFile = async (file: URI | { uri: URI }) => {
   const uri = 'uri' in file ? file.uri : file;
   try {
-    return vscode.workspace.fs.delete(toVsCodeUri(uri), { recursive: true });
+    await vscode.workspace.fs.delete(toVsCodeUri(uri), {
+      recursive: true,
+    });
   } catch (e) {
     // ignore
   }

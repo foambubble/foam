@@ -5,7 +5,7 @@
 👀*This is an early stage project under rapid development. For updates join the [Foam community Discord](https://foambubble.github.io/join-discord/g)! 💬*
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-103-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-104-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 [![Discord Chat](https://img.shields.io/discord/729975036148056075?color=748AD9&label=discord%20chat&style=flat-square)](https://foambubble.github.io/join-discord/g)
@@ -330,6 +330,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
       <td align="center"><a href="https://www.readingsnail.pe.kr"><img src="https://avatars.githubusercontent.com/u/1904967?v=4?s=60" width="60px;" alt="Woosuk Park"/><br /><sub><b>Woosuk Park</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=readingsnail" title="Documentation">📖</a></td>
       <td align="center"><a href="http://www.dmurph.com"><img src="https://avatars.githubusercontent.com/u/294026?v=4?s=60" width="60px;" alt="Daniel Murphy"/><br /><sub><b>Daniel Murphy</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=dmurph" title="Code">💻</a></td>
       <td align="center"><a href="https://github.com/Dominic-DallOsto"><img src="https://avatars.githubusercontent.com/u/26859884?v=4?s=60" width="60px;" alt="Dominic D"/><br /><sub><b>Dominic D</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=Dominic-DallOsto" title="Code">💻</a></td>
+      <td align="center"><a href="http://elgirafo.xyz"><img src="https://avatars.githubusercontent.com/u/80516439?v=4?s=60" width="60px;" alt="luca"/><br /><sub><b>luca</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=elgirafo" title="Documentation">📖</a></td>
     </tr>
   </tbody>
 </table>

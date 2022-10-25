@@ -166,7 +166,7 @@
     "commands": [
       {
         "command": "foam-vscode.create-note",
-        "title": "Foam: Create Note"
+        "title": "Foam: Create New Note"
       },
       {
         "command": "foam-vscode.clear-cache",

@@ -950,6 +950,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "elgirafo",
+      "name": "luca",
+      "avatar_url": "https://avatars.githubusercontent.com/u/80516439?v=4",
+      "profile": "http://elgirafo.xyz",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,

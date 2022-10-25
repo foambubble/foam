@@ -12,7 +12,6 @@ import {
   ViewColumn,
 } from 'vscode';
 import matter from 'gray-matter';
-import removeMarkdown from 'remove-markdown';
 import { toVsCodeUri } from './utils/vsc-utils';
 import { Logger } from './core/utils/log';
 import { URI } from './core/model/uri';
@@ -179,14 +178,8 @@ export function getContainsTooltip(titles: string[]): string {
  * @param note A Foam Note
  */
 export function getNoteTooltip(content: string): string {
-  const STABLE_MARKDOWN_STRING_API_VERSION = '1.52.1';
   const strippedContent = stripFrontMatter(stripImages(content));
-
-  if (version >= STABLE_MARKDOWN_STRING_API_VERSION) {
-    return formatMarkdownTooltip(strippedContent) as any;
-  }
-
-  return formatSimpleTooltip(strippedContent);
+  return formatMarkdownTooltip(strippedContent) as any;
 }
 
 export function formatMarkdownTooltip(content: string): MarkdownString {
@@ -198,16 +191,6 @@ export function formatMarkdownTooltip(content: string): MarkdownString {
   const md = new MarkdownString(`${excerpt}${ellipsis}`);
   md.isTrusted = true;
   return md;
-}
-
-export function formatSimpleTooltip(content: string): string {
-  const CHARACTERS_LIMIT = 200;
-  const flatContent = removeMarkdown(content)
-    .replace(/\r?\n|\r/g, ' ')
-    .replace(/\s+/g, ' ');
-  const extract = flatContent.substr(0, CHARACTERS_LIMIT);
-  const ellipsis = flatContent.length > CHARACTERS_LIMIT ? '...' : '';
-  return `${extract}${ellipsis}`;
 }
 
 export function getExcerpt(

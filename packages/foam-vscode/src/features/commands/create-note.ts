@@ -3,6 +3,7 @@ import { FoamFeature } from '../../types';
 import { URI } from '../../core/model/uri';
 import {
   askUserForTemplate,
+  getDefaultTemplateUri,
   getPathFromTitle,
   NoteFactory,
 } from '../../services/templates';
@@ -67,8 +68,9 @@ async function createNote(args: CreateNoteArgs) {
       return;
     }
   } else {
-    templateUri =
-      args.templatePath && asAbsoluteWorkspaceUri(URI.file(args.templatePath));
+    templateUri = args.templatePath
+      ? asAbsoluteWorkspaceUri(URI.file(args.templatePath))
+      : getDefaultTemplateUri();
   }
 
   if (await fileExists(templateUri)) {

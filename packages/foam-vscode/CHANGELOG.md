@@ -4,6 +4,15 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.20.2] - 2022-10-26
+
+Fixes and Improvements:
+- Creating new note uses default template when none is provided (#1094)
+
+Internal:
+- Changed matcher implementation to remove dependency on micromatch/glob
+- Removed unnecessary dependencies and assets from extension
+
 ## [0.20.1] - 2022-10-13
 
 Fixes and Improvements:

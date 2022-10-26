@@ -1,28 +1,16 @@
-import {
-  workspace,
-  ExtensionContext,
-  window,
-  commands,
-  RelativePattern,
-  Uri,
-} from 'vscode';
+import { workspace, ExtensionContext, window, commands } from 'vscode';
 import { MarkdownResourceProvider } from './core/services/markdown-provider';
 import { bootstrap } from './core/model/foam';
-import { URI } from './core/model/uri';
-import {
-  FileListBasedMatcher,
-  GenericDataStore,
-} from './core/services/datastore';
 import { Logger } from './core/utils/log';
 
 import { features } from './features';
 import { VsCodeOutputLogger, exposeLogger } from './services/logging';
 import { getIgnoredFilesSetting } from './settings';
-import { fromVsCodeUri, toVsCodeUri } from './utils/vsc-utils';
 import { AttachmentResourceProvider } from './core/services/attachment-provider';
 import { VsCodeWatcher } from './services/watcher';
 import { createMarkdownParser } from './core/services/markdown-parser';
 import VsCodeBasedParserCache from './services/cache';
+import { createMatcherAndDataStore } from './services/editor';
 
 export async function activate(context: ExtensionContext) {
   const logger = new VsCodeOutputLogger();
@@ -38,23 +26,12 @@ export async function activate(context: ExtensionContext) {
     }
 
     // Prepare Foam
-    const excludePatterns = new Map<string, string[]>();
-    workspace.workspaceFolders.forEach(f => excludePatterns.set(f.name, []));
-
     const excludes = getIgnoredFilesSetting().map(g => g.toString());
-    for (const exclude of excludes) {
-      const tokens = exclude.split('/');
-      const matchesFolder = workspace.workspaceFolders.find(
-        f => f.name === tokens[0]
-      );
-      if (matchesFolder) {
-        excludePatterns.get(tokens[0]).push(tokens.slice(1).join('/'));
-      } else {
-        for (const [, value] of excludePatterns.entries()) {
-          value.push(exclude);
-        }
-      }
-    }
+    const {
+      matcher,
+      dataStore,
+      excludePatterns,
+    } = await createMatcherAndDataStore(excludes);
 
     Logger.info('Loading from directories:');
     for (const folder of workspace.workspaceFolders) {
@@ -63,30 +40,6 @@ export async function activate(context: ExtensionContext) {
       Logger.info('  Exclude: ' + excludePatterns.get(folder.name).join(','));
     }
 
-    const listFiles = async () => {
-      let files: Uri[] = [];
-      for (const folder of workspace.workspaceFolders) {
-        const uris = await workspace.findFiles(
-          new RelativePattern(folder.uri.path, '**/*'),
-          new RelativePattern(
-            folder.uri.path,
-            `{${excludePatterns.get(folder.name).join(',')}}`
-          )
-        );
-        files = [...files, ...uris];
-      }
-
-      return files.map(fromVsCodeUri);
-    };
-
-    const readFile = async (uri: URI) =>
-      (await workspace.fs.readFile(toVsCodeUri(uri))).toString();
-
-    const dataStore = new GenericDataStore(listFiles, readFile);
-
-    const files = await dataStore.list();
-
-    const matcher = new FileListBasedMatcher(files, listFiles);
     const watcher = new VsCodeWatcher(
       workspace.createFileSystemWatcher('**/*')
     );

@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
 import { Foam } from '../../core/model/foam';
-import { FoamGraph } from '../../core/model/graph';
-import { URI } from '../../core/model/uri';
+import { createMatcherAndDataStore } from '../../services/editor';
 import { getOrphansConfig } from '../../settings';
 import { FoamFeature } from '../../types';
 import {
@@ -9,7 +8,6 @@ import {
   ResourceTreeItem,
   UriTreeItem,
 } from '../../utils/grouped-resources-tree-data-provider';
-import { fromVsCodeUri } from '../../utils/vsc-utils';
 
 const feature: FoamFeature = {
   activate: async (
@@ -18,24 +16,24 @@ const feature: FoamFeature = {
   ) => {
     const foam = await foamPromise;
 
-    const workspacesURIs = vscode.workspace.workspaceFolders.map(dir =>
-      fromVsCodeUri(dir.uri)
+    const { matcher } = await createMatcherAndDataStore(
+      getOrphansConfig().exclude
     );
-
     const provider = new GroupedResourcesTreeDataProvider(
       'orphans',
       'orphan',
-      getOrphansConfig(),
-      workspacesURIs,
-      () => foam.graph.getAllNodes().filter(uri => isOrphan(uri, foam.graph)),
+      () =>
+        foam.graph
+          .getAllNodes()
+          .filter(uri => foam.graph.getConnections(uri).length === 0),
       uri => {
-        if (uri.isPlaceholder()) {
-          return new UriTreeItem(uri);
-        }
-        const resource = foam.workspace.find(uri);
-        return new ResourceTreeItem(resource, foam.workspace);
-      }
+        return uri.isPlaceholder()
+          ? new UriTreeItem(uri)
+          : new ResourceTreeItem(foam.workspace.find(uri), foam.workspace);
+      },
+      matcher
     );
+    provider.setGroupBy(getOrphansConfig().groupBy);
 
     context.subscriptions.push(
       vscode.window.registerTreeDataProvider('foam-vscode.orphans', provider),
@@ -44,8 +42,5 @@ const feature: FoamFeature = {
     );
   },
 };
-
-export const isOrphan = (uri: URI, graph: FoamGraph) =>
-  graph.getConnections(uri).length === 0;
 
 export default feature;

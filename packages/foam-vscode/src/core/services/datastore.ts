@@ -109,4 +109,48 @@ export class FileListBasedMatcher implements IMatcher {
   async refresh() {
     this.files = (await this.listFiles()).map(f => f.path);
   }
+
+  static async createFromListFn(listFiles: () => Promise<URI[]>) {
+    const files = await listFiles();
+    return new FileListBasedMatcher(files, listFiles);
+  }
+}
+
+/**
+ * A matcher that includes all URIs passed to it
+ */
+export class AlwaysIncludeMatcher implements IMatcher {
+  include: string[] = ['**/*'];
+  exclude: string[] = [];
+  match(files: URI[]): URI[] {
+    return files;
+  }
+
+  isMatch(uri: URI): boolean {
+    return true;
+  }
+
+  refresh(): Promise<void> {
+    return;
+  }
+}
+
+export class SubstringExcludeMatcher implements IMatcher {
+  include: string[] = ['**/*'];
+  exclude: string[] = [];
+  constructor(exclude: string) {
+    this.exclude = [exclude];
+  }
+
+  match(files: URI[]): URI[] {
+    return files.filter(f => this.isMatch(f));
+  }
+
+  isMatch(uri: URI): boolean {
+    return !uri.path.includes(this.exclude[0]);
+  }
+
+  refresh(): Promise<void> {
+    return;
+  }
 }

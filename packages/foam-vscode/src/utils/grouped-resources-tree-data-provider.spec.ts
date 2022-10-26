@@ -1,15 +1,18 @@
 import { FoamWorkspace } from '../core/model/workspace';
-import { OPEN_COMMAND } from '../features/commands/open-resource';
 import {
-  GroupedResoucesConfigGroupBy,
-  GroupedResourcesConfig,
-} from '../settings';
-import { createTestNote, strToUri } from '../test/test-utils';
+  AlwaysIncludeMatcher,
+  SubstringExcludeMatcher,
+} from '../core/services/datastore';
+import { OPEN_COMMAND } from '../features/commands/open-resource';
+import { GroupedResoucesConfigGroupBy } from '../settings';
+import { createTestNote } from '../test/test-utils';
 import {
   DirectoryTreeItem,
   GroupedResourcesTreeDataProvider,
   UriTreeItem,
 } from './grouped-resources-tree-data-provider';
+
+const testMatcher = new SubstringExcludeMatcher('path-exclude');
 
 describe('GroupedResourcesTreeDataProvider', () => {
   const matchingNote1 = createTestNote({ uri: '/path/ABC.md', title: 'ABC' });
@@ -32,25 +35,19 @@ describe('GroupedResourcesTreeDataProvider', () => {
     .set(excludedPathNote)
     .set(notMatchingNote);
 
-  // Mock config
-  const config: GroupedResourcesConfig = {
-    exclude: ['path-exclude/**/*'],
-    groupBy: GroupedResoucesConfigGroupBy.Folder,
-  };
-
   it('should return the grouped resources as a folder tree', async () => {
     const provider = new GroupedResourcesTreeDataProvider(
       'length3',
       'note',
-      config,
-      [strToUri('')],
       () =>
         workspace
           .list()
           .filter(r => r.title.length === 3)
           .map(r => r.uri),
-      uri => new UriTreeItem(uri)
+      uri => new UriTreeItem(uri),
+      testMatcher
     );
+    provider.setGroupBy(GroupedResoucesConfigGroupBy.Folder);
     const result = await provider.getChildren();
     expect(result).toMatchObject([
       {
@@ -72,15 +69,16 @@ describe('GroupedResourcesTreeDataProvider', () => {
     const provider = new GroupedResourcesTreeDataProvider(
       'length3',
       'note',
-      config,
-      [strToUri('')],
       () =>
         workspace
           .list()
           .filter(r => r.title.length === 3)
           .map(r => r.uri),
-      uri => new UriTreeItem(uri)
+      uri => new UriTreeItem(uri),
+      testMatcher
     );
+    provider.setGroupBy(GroupedResoucesConfigGroupBy.Folder);
+
     const directory = new DirectoryTreeItem(
       '/path',
       [new UriTreeItem(matchingNote1.uri)],
@@ -98,22 +96,19 @@ describe('GroupedResourcesTreeDataProvider', () => {
   });
 
   it('should return the flattened resources', async () => {
-    const mockConfig = {
-      ...config,
-      groupBy: GroupedResoucesConfigGroupBy.Off,
-    };
     const provider = new GroupedResourcesTreeDataProvider(
       'length3',
       'note',
-      mockConfig,
-      [strToUri('')],
       () =>
         workspace
           .list()
           .filter(r => r.title.length === 3)
           .map(r => r.uri),
-      uri => new UriTreeItem(uri)
+      uri => new UriTreeItem(uri),
+      testMatcher
     );
+    provider.setGroupBy(GroupedResoucesConfigGroupBy.Off);
+
     const result = await provider.getChildren();
     expect(result).toMatchObject([
       {
@@ -132,19 +127,19 @@ describe('GroupedResourcesTreeDataProvider', () => {
   });
 
   it('should return the grouped resources without exclusion', async () => {
-    const mockConfig = { ...config, exclude: [] };
     const provider = new GroupedResourcesTreeDataProvider(
       'length3',
       'note',
-      mockConfig,
-      [strToUri('')],
       () =>
         workspace
           .list()
           .filter(r => r.title.length === 3)
           .map(r => r.uri),
-      uri => new UriTreeItem(uri)
+      uri => new UriTreeItem(uri),
+      new AlwaysIncludeMatcher()
     );
+    provider.setGroupBy(GroupedResoucesConfigGroupBy.Folder);
+
     const result = await provider.getChildren();
     expect(result).toMatchObject([
       expect.anything(),
@@ -163,15 +158,15 @@ describe('GroupedResourcesTreeDataProvider', () => {
     const provider = new GroupedResourcesTreeDataProvider(
       'length3',
       description,
-      config,
-      [strToUri('')],
       () =>
         workspace
           .list()
           .filter(r => r.title.length === 3)
           .map(r => r.uri),
-      uri => new UriTreeItem(uri)
+      uri => new UriTreeItem(uri),
+      testMatcher
     );
+    provider.setGroupBy(GroupedResoucesConfigGroupBy.Folder);
     const result = await provider.getChildren();
     expect(result).toMatchObject([
       {

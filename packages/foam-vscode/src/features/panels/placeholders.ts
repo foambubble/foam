@@ -1,12 +1,12 @@
 import * as vscode from 'vscode';
 import { Foam } from '../../core/model/foam';
+import { createMatcherAndDataStore } from '../../services/editor';
 import { getPlaceholdersConfig } from '../../settings';
 import { FoamFeature } from '../../types';
 import {
   GroupedResourcesTreeDataProvider,
   UriTreeItem,
 } from '../../utils/grouped-resources-tree-data-provider';
-import { fromVsCodeUri } from '../../utils/vsc-utils';
 
 const feature: FoamFeature = {
   activate: async (
@@ -14,19 +14,19 @@ const feature: FoamFeature = {
     foamPromise: Promise<Foam>
   ) => {
     const foam = await foamPromise;
-    const workspacesURIs = vscode.workspace.workspaceFolders.map(dir =>
-      fromVsCodeUri(dir.uri)
+    const { matcher } = await createMatcherAndDataStore(
+      getPlaceholdersConfig().exclude
     );
     const provider = new GroupedResourcesTreeDataProvider(
       'placeholders',
       'placeholder',
-      getPlaceholdersConfig(),
-      workspacesURIs,
       () => foam.graph.getAllNodes().filter(uri => uri.isPlaceholder()),
       uri => {
         return new UriTreeItem(uri);
-      }
+      },
+      matcher
     );
+    provider.setGroupBy(getPlaceholdersConfig().groupBy);
 
     context.subscriptions.push(
       vscode.window.registerTreeDataProvider(

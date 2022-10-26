@@ -1,16 +1,13 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
-import micromatch from 'micromatch';
-import {
-  GroupedResourcesConfig,
-  GroupedResoucesConfigGroupBy,
-} from '../settings';
+import { GroupedResoucesConfigGroupBy } from '../settings';
 import { getContainsTooltip, getNoteTooltip, isSome } from '../utils';
 import { OPEN_COMMAND } from '../features/commands/open-resource';
 import { toVsCodeUri } from './vsc-utils';
 import { URI } from '../core/model/uri';
 import { Resource } from '../core/model/note';
 import { FoamWorkspace } from '../core/model/workspace';
+import { IMatcher } from '../core/services/datastore';
 
 /**
  * Provides the ability to expose a TreeDataExplorerView in VSCode. This class will
@@ -82,13 +79,10 @@ export class GroupedResourcesTreeDataProvider
   constructor(
     private providerId: string,
     private resourceName: string,
-    config: GroupedResourcesConfig,
-    workspaceUris: URI[],
     private computeResources: () => Array<URI>,
-    private createTreeItem: (item: URI) => GroupedResourceTreeItem
+    private createTreeItem: (item: URI) => GroupedResourceTreeItem,
+    private matcher: IMatcher
   ) {
-    this.groupBy = config.groupBy;
-    this.exclude = this.getGlobs(workspaceUris, config.exclude);
     this.setContext();
     this.doComputeResources();
   }
@@ -163,28 +157,8 @@ export class GroupedResourcesTreeDataProvider
 
   private doComputeResources(): void {
     this.flatUris = this.computeResources()
-      .filter(uri => !this.isMatch(uri))
+      .filter(uri => this.matcher.isMatch(uri))
       .filter(isSome);
-  }
-
-  private isMatch(uri: URI) {
-    return micromatch.isMatch(uri.toFsPath(), this.exclude);
-  }
-
-  private getGlobs(fsURI: URI[], globs: string[]): string[] {
-    globs = globs.map(glob => (glob.startsWith('/') ? glob.slice(1) : glob));
-
-    const exclude: string[] = [];
-
-    for (const fsPath of fsURI) {
-      let folder = fsPath.path.replace(/\\/g, '/');
-      if (folder.substr(-1) === '/') {
-        folder = folder.slice(0, -1);
-      }
-      exclude.push(...globs.map(g => `${folder}/${g}`));
-    }
-
-    return exclude;
   }
 
   private getUrisByDirectory(): UrisByDirectory {

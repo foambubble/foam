@@ -1,10 +1,13 @@
+import { isEmpty } from 'lodash';
 import { asAbsoluteUri, URI } from '../core/model/uri';
 import { TextEncoder } from 'util';
 import {
   FileType,
+  RelativePattern,
   Selection,
   SnippetString,
   TextDocument,
+  Uri,
   ViewColumn,
   window,
   workspace,
@@ -13,6 +16,13 @@ import {
 import { focusNote } from '../utils';
 import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
 import { isSome } from '../core/utils';
+import {
+  AlwaysIncludeMatcher,
+  FileListBasedMatcher,
+  GenericDataStore,
+  IDataStore,
+  IMatcher,
+} from '../core/services/datastore';
 
 interface SelectionInfo {
   document: TextDocument;
@@ -124,3 +134,54 @@ export function asAbsoluteWorkspaceUri(uri: URI): URI {
   const res = asAbsoluteUri(uri, folders);
   return res;
 }
+
+export const createMatcherAndDataStore = async (
+  excludes: string[]
+): Promise<{
+  matcher: IMatcher;
+  dataStore: IDataStore;
+  excludePatterns: Map<string, string[]>;
+}> => {
+  const excludePatterns = new Map<string, string[]>();
+  workspace.workspaceFolders.forEach(f => excludePatterns.set(f.name, []));
+
+  for (const exclude of excludes) {
+    const tokens = exclude.split('/');
+    const matchesFolder = workspace.workspaceFolders.find(
+      f => f.name === tokens[0]
+    );
+    if (matchesFolder) {
+      excludePatterns.get(tokens[0]).push(tokens.slice(1).join('/'));
+    } else {
+      for (const [, value] of excludePatterns.entries()) {
+        value.push(exclude);
+      }
+    }
+  }
+
+  const listFiles = async () => {
+    let files: Uri[] = [];
+    for (const folder of workspace.workspaceFolders) {
+      const uris = await workspace.findFiles(
+        new RelativePattern(folder.uri.path, '**/*'),
+        new RelativePattern(
+          folder.uri.path,
+          `{${excludePatterns.get(folder.name).join(',')}}`
+        )
+      );
+      files = [...files, ...uris];
+    }
+
+    return files.map(fromVsCodeUri);
+  };
+
+  const readFile = async (uri: URI) =>
+    (await workspace.fs.readFile(toVsCodeUri(uri))).toString();
+
+  const dataStore = new GenericDataStore(listFiles, readFile);
+  const matcher = isEmpty(excludes)
+    ? new AlwaysIncludeMatcher()
+    : await FileListBasedMatcher.createFromListFn(listFiles);
+
+  return { matcher, dataStore, excludePatterns };
+};

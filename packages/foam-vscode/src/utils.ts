@@ -8,7 +8,6 @@ import {
   workspace,
   Selection,
   MarkdownString,
-  version,
   ViewColumn,
 } from 'vscode';
 import matter from 'gray-matter';

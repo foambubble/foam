@@ -22,7 +22,14 @@ export const mdDocSelector = [
   { language: 'markdown', scheme: 'untitled' },
 ];
 
-export const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp'];
+export const imageExtensions = [
+  '.png',
+  '.jpg',
+  '.jpeg',
+  '.gif',
+  '.svg',
+  '.webp',
+];
 
 export function loadDocConfig() {
   // Load workspace config
@@ -217,11 +224,10 @@ export function stripFrontMatter(markdown: string): string {
   return matter(markdown).content.trim();
 }
 
-const imgRegex = new RegExp(`!\\[(.*)\\]\\(.*(${imageExtensions.join('|')})\\)`)
+const imgRegex = new RegExp(
+  `!\\[(.*)\\]\\(.*(${imageExtensions.join('|')})\\)`
+);
 
 export function stripImages(markdown: string): string {
-  return markdown.replace(
-    imgRegex,
-    '$1'.length ? '[Image: $1]' : ''
-  );
+  return markdown.replace(imgRegex, '$1'.length ? '[Image: $1]' : '');
 }

@@ -22,6 +22,8 @@ export const mdDocSelector = [
   { language: 'markdown', scheme: 'untitled' },
 ];
 
+export const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp'];
+
 export function loadDocConfig() {
   // Load workspace config
   const activeEditor = window.activeTextEditor;
@@ -215,9 +217,11 @@ export function stripFrontMatter(markdown: string): string {
   return matter(markdown).content.trim();
 }
 
+const imgRegex = new RegExp(`!\\[(.*)\\]\\(.*(${imageExtensions.join('|')})\\)`)
+
 export function stripImages(markdown: string): string {
   return markdown.replace(
-    /!\[(.*)\]\([-/\\.A-Za-z]*\)/gi,
+    imgRegex,
     '$1'.length ? '[Image: $1]' : ''
   );
 }

@@ -4,6 +4,7 @@ import { FoamWorkspace } from '../model/workspace';
 import { IDisposable } from '../common/lifecycle';
 import { ResourceProvider } from '../model/provider';
 import { getFoamVsCodeConfig } from '../../services/config';
+import { imageExtensions } from '../../utils';
 
 const attachmentExtConfig = getFoamVsCodeConfig(
   'files.attachmentExtensions',
@@ -12,7 +13,6 @@ const attachmentExtConfig = getFoamVsCodeConfig(
   .split(' ')
   .map(ext => '.' + ext.trim());
 
-const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp'];
 const attachmentExtensions = [...attachmentExtConfig, ...imageExtensions];
 
 const asResource = (uri: URI): Resource => {

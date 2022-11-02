@@ -83,7 +83,7 @@ A #recipe is a guide, tip or strategy for getting the most out of your Foam work
 ## Collaborate
 
 - Give your team push access to your GitHub repo [[todo]]
-- Real-time collaboration via VS Code Live Share [[todo]]
+- Real-time collaboration via VS Code Live Share [[real-time-collaboration]]
 - Accept patches via GitHub PRs [[todo]]
 
 ## Workflow

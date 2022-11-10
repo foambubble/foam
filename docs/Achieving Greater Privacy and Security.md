@@ -27,6 +27,3 @@ A more private approach would manage replication between devices and users with 
 
 If you need the version control and collaboration, but do not want to compromise on your privacy, the best course of action is to host the open source GitLab  server software yourself.  The steps (well described [here](https://www.techrepublic.com/article/how-to-set-up-a-gitlab-server-and-host-your-own-git-repositories/)) are not especially complex by any means and can be used exclusively on the local network, if required, offering a rich experience of "built-in version control, issue tracking, code review, CI/CD, and more", according to its website, [GitLab / GitLab Community Edition · GitLab](https://gitlab.com/rluna-gitlab/gitlab-ce).
 
-## A Debt?
-
-Foam development has relied upon it being built on VS Code with its website and documentation hosted on GitHub.  Despite Foam itself being open source, it would be easy to feel that swapping out such items is ungrateful for Microsoft's (passive) contribution.  It would, however, be equally poor to not accept the varying use cases and requirements of Foam users and reflect how these default choices may not be suitable for all.  In exploring the above, we maintain Foam's place in a broad set of applications with a multitude of interfaces.

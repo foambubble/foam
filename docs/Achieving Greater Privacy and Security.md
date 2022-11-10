@@ -6,7 +6,9 @@ Foam, at its heart and committed to in its [Principles](https://foambubble.githu
 
 Foam is built upon VS Code, itself a Microsoft product built on top of an open source project, but as can be found [here](https://github.com/Microsoft/vscode/issues/60#issuecomment-161792005) the VS Code product itself is not open source.  This means that its inner workings are not transparent, facilitating the collection and distribution of your data, as specified in its [Privacy Statement](https://devblogs.microsoft.com/visualstudio/privacy/).  
 
-This may make you feel uncomfortable, but isn't a reason to consider that Foam isn't the right tool for you as VS Code is built on top of an open source project and one that has resulted in an open source derivative of the same called [VSCodium](https://github.com/VSCodium).  In its own introduction it is described as, "Binary releases of VS Code without MS branding/telemetry/licensing".  Installation packages are easily available for those not wishing to build the application from source code across Windows, Unix and Linux operating systems and access to the VS Code marketplace of add-ons remains in place.
+If you prefer a fully open source editor based on the same core of VS Code (and for most intents and purposes equivalent to it), you can try [VSCodium](https://github.com/VSCodium).  
+In its own introduction it is described as, "Binary releases of VS Code without MS branding/telemetry/licensing".  Installation packages are easily available across Windows, Unix and Linux (or you can build it from source!).
+Access to the VS Code marketplace of add-ons remains in place, including the Foam extension.
 
 The change you will notice in using VS Code versus VS Codium - simply speaking, none. It is, in just about every way you will think of, the same IDE, just without the Microsoft proprietary licence and telemetry.  Your Foam experience will remain as smooth and productive as before the change.
 

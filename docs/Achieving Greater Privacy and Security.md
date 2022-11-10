@@ -2,7 +2,7 @@
 
 Foam, at its heart and committed to in its [Principles](https://foambubble.github.io/foam/principles), allows the user to control their content in a flexible and non-prescriptive manner.  This extends to user preferences, or requirements depending on application and context, around both privacy and security.  One way that these use cases can be met is through the use of open-source and not-for-profit mechanisms in the user's workflow to provide a functional equivalence.
 
-## The not very Open Source IDE
+## VS Codium: The Open Source build of VS Code 
 
 Foam is built upon VS Code, itself a Microsoft product built on top of an open source project, but as can be found [here](https://github.com/Microsoft/vscode/issues/60#issuecomment-161792005) the VS Code product itself is not open source.  This means that its inner workings are not transparent, facilitating the collection and distribution of your data, as specified in its [Privacy Statement](https://devblogs.microsoft.com/visualstudio/privacy/).  
 

@@ -17,7 +17,8 @@ The change you will notice in using VS Code versus VS Codium - simply speaking, 
 
 ## Version Control and Replication
 
-In Foam's [Getting Started](https://foambubble.github.io/foam/#getting-started) section, the set up describes how to set up your notes with a GitHub repository in using the template provided.  Doing so provides the user with both the ability to see commits made and therefore versions of their notes, but also allows the user to work across devices or collaborate effectively with other users.  These are all strong use cases, but the web-hosting of the content and closed-source nature of GitHub, being owned by Microsoft, may present some users with issues.
+In Foam's [Getting Started](https://foambubble.github.io/foam/#getting-started) section, the set up describes how to set up your notes with a GitHub repository in using the template provided.  Doing so provides the user with the ability to see commits made and therefore versions of their notes, allows the user to work across devices or collaborate effectively with other users, and makes publishing to GitHub pages easy.
+It's important at the same time to point out the closed-source nature of GitHub, being owned by Microsoft.
 
 One alternative approach could be to use GitLab, an open source alternative to GitHub.  Whilst it certainly effectively deals with the issue of transparency, it does also collect usage details and sends your content across the internet.  
 

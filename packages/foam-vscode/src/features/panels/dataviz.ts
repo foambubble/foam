@@ -6,6 +6,10 @@ import { isSome } from '../../utils';
 import { Foam } from '../../core/model/foam';
 import { Logger } from '../../core/utils/log';
 import { fromVsCodeUri } from '../../utils/vsc-utils';
+import { Resource } from '../../core/model/note';
+import { URI } from '../../core/model/uri';
+import { getFoamVsCodeConfig } from '../../services/config';
+import { isEmpty } from 'lodash';
 
 const feature: FoamFeature = {
   activate: (context: vscode.ExtensionContext, foamPromise: Promise<Foam>) => {
@@ -63,23 +67,62 @@ function updateGraph(panel: vscode.WebviewPanel, foam: Foam) {
   });
 }
 
+type DatavizNode = {
+  id: string;
+  type: string;
+  uri: URI;
+  title: string;
+  properties: any;
+  tags: string[];
+};
+
+function resourceToNode(
+  r: Resource,
+  onDidCreateNode?: (n: DatavizNode, r: Resource) => void
+) {
+  const node: DatavizNode = {
+    id: r.uri.path,
+    type: r.properties?.type ?? 'note',
+    uri: r.uri,
+    title: cutTitle(r.title),
+    properties: r.properties,
+    tags: r.tags.map(t => t.label),
+  };
+  onDidCreateNode?.(node, r);
+  return node;
+}
+
+function placeholderToNode(
+  placeholder: URI,
+  onDidCreateNode?: (n: DatavizNode, p: URI) => void
+) {
+  const node: DatavizNode = {
+    id: placeholder.path,
+    type: 'placeholder',
+    uri: placeholder,
+    title: placeholder.path,
+    properties: {},
+    tags: [],
+  };
+  onDidCreateNode?.(node, placeholder);
+  return node;
+}
+
 function generateGraphData(foam: Foam) {
   const graph = {
     nodeInfo: {},
     edges: new Set(),
   };
 
+  const onDidCreateNode = (node: DatavizNode, r: Resource | URI) => {
+    const hook: string = getFoamVsCodeConfig('hooks.dataviz.onDidCreateNode');
+    if (!isEmpty(hook)) {
+      eval(hook);
+    }
+  };
+
   foam.workspace.list().forEach(n => {
-    const type = n.type === 'note' ? n.properties.type ?? 'note' : n.type;
-    const title = n.type === 'note' ? n.title : n.uri.getBasename();
-    graph.nodeInfo[n.uri.path] = {
-      id: n.uri.path,
-      type: type,
-      uri: n.uri,
-      title: cutTitle(title),
-      properties: n.properties,
-      tags: n.tags,
-    };
+    graph.nodeInfo[n.uri.path] = resourceToNode(n, onDidCreateNode);
   });
   foam.graph.getAllConnections().forEach(c => {
     graph.edges.add({
@@ -87,13 +130,10 @@ function generateGraphData(foam: Foam) {
       target: c.target.path,
     });
     if (c.target.isPlaceholder()) {
-      graph.nodeInfo[c.target.path] = {
-        id: c.target.path,
-        type: 'placeholder',
-        uri: c.target,
-        title: c.target.path,
-        properties: {},
-      };
+      graph.nodeInfo[c.target.path] = placeholderToNode(
+        c.target,
+        onDidCreateNode
+      );
     }
   });
 

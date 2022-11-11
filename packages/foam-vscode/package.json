@@ -450,6 +450,9 @@
   },
   "scripts": {
     "build": "tsc -p ./",
+    "compile-web": "esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=browser",
+    "watch-web": "yarn watch",
+    "package-web": "webpackdd --mode production --devtool hidden-source-map",
     "pretest": "yarn build",
     "test": "node ./out/test/run-tests.js",
     "pretest:unit": "yarn build",

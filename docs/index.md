@@ -240,6 +240,7 @@ If that sounds like something you're interested in, I'd love to have you along o
       <td align="center"><a href="http://www.dmurph.com"><img src="https://avatars.githubusercontent.com/u/294026?v=4?s=60" width="60px;" alt="Daniel Murphy"/><br /><sub><b>Daniel Murphy</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=dmurph" title="Code">💻</a></td>
       <td align="center"><a href="https://github.com/Dominic-DallOsto"><img src="https://avatars.githubusercontent.com/u/26859884?v=4?s=60" width="60px;" alt="Dominic D"/><br /><sub><b>Dominic D</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=Dominic-DallOsto" title="Code">💻</a></td>
       <td align="center"><a href="http://elgirafo.xyz"><img src="https://avatars.githubusercontent.com/u/80516439?v=4?s=60" width="60px;" alt="luca"/><br /><sub><b>luca</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=elgirafo" title="Documentation">📖</a></td>
+      <td align="center"><a href="https://github.com/Lloyd-Jackman-UKPL"><img src="https://avatars.githubusercontent.com/u/55206370?v=4?s=60" width="60px;" alt="Lloyd Jackman"/><br /><sub><b>luca</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=Lloyd-Jackman-UKPL" title="Documentation">📖</a></td>
     </tr>
   </tbody>
 </table>

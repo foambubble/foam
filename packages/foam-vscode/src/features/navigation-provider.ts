@@ -159,22 +159,23 @@ export class NavigationProvider
       })
     );
 
-    return targets.map(o => {
-      const command = OPEN_COMMAND.asURI(o.target);
-      const documentLink = new vscode.DocumentLink(
-        new vscode.Range(
-          o.link.range.start.line,
-          o.link.range.start.character + 2,
-          o.link.range.end.line,
-          o.link.range.end.character - 2
-        ),
-        command
-      );
-      documentLink.tooltip = o.target.isPlaceholder()
-        ? `Create note for '${o.target.path}'`
-        : `Go to ${o.target.toFsPath()}`;
-      return documentLink;
-    });
+    return targets
+      .filter(o => o.target.isPlaceholder()) // links to resources are managed by the definition provider
+      .map(o => {
+        const command = OPEN_COMMAND.asURI(o.target);
+
+        const documentLink = new vscode.DocumentLink(
+          new vscode.Range(
+            o.link.range.start.line,
+            o.link.range.start.character + 2,
+            o.link.range.end.line,
+            o.link.range.end.character - 2
+          ),
+          command
+        );
+        documentLink.tooltip = `Create note for '${o.target.path}'`;
+        return documentLink;
+      });
   }
 }
 

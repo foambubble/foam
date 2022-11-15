@@ -106,6 +106,7 @@ export class FoamGraph implements IDisposable {
     this.placeholders.clear();
 
     for (const resource of this.workspace.resources()) {
+      //TODO: Workspace locations for graph.
       for (const link of resource.links) {
         try {
           const targetUri = this.workspace.resolveLink(resource, link);

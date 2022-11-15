@@ -143,7 +143,7 @@ export const createMatcherAndDataStore = async (
   excludePatterns: Map<string, string[]>;
 }> => {
   const excludePatterns = new Map<string, string[]>();
-  workspace.workspaceFolders.forEach(f => excludePatterns.set(f.name, []));
+  workspace.workspaceFolders.forEach(f => excludePatterns.set(f.name, [])); //TODO: Excluded locations.
 
   for (const exclude of excludes) {
     const tokens = exclude.split('/');
@@ -162,6 +162,7 @@ export const createMatcherAndDataStore = async (
   const listFiles = async () => {
     let files: Uri[] = [];
     for (const folder of workspace.workspaceFolders) {
+      //TODO: Filter not excluded locations.
       const uris = await workspace.findFiles(
         new RelativePattern(folder.uri.path, '**/*'),
         new RelativePattern(

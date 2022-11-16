@@ -5,7 +5,7 @@ keywords: hello world, bonjour
 
 # Note Properties
 
-At the top of the file you can have a section where you define your properties. This section is known as the [Front-Matter](https://learn.cloudcannon.com/jekyll/introduction-to-jekyll-front-matter/) of the document and uses the YAML formatting.
+At the top of the file you can have a section where you define your properties. This section is known as the [Front-Matter](https://learn.cloudcannon.com/jekyll/introduction-to-jekyll-front-matter/) of the document and uses [YAML formatting](https://www.codeproject.com/Articles/1214409/Learn-YAML-in-five-minutes).
 
 > Be aware that this section needs to be at the very top of the file to be valid
 

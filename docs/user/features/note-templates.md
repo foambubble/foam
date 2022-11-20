@@ -25,15 +25,28 @@ To create a note from a template:
 _Theme: Ayu Light_
 
 ## Special templates
+
 ### Default template
 
 The `.foam/templates/new-note.md` template is special in that it is the template that will be used by the `Foam: Create New Note` command.
-Customize this template to contain content that you want included every time you create a note.
+Customize this template to contain content that you want included every time you create a note. At minimum this template should include the following:
+
+```markdown
+---
+type: basic-note
+---
+```
 
 ### Default daily note template
 
 The `.foam/templates/daily-note.md` template is special in that it is the template that will be used when creating daily notes (e.g. by using `Foam: Open Daily Note`).
-Customize this template to contain content that you want included every time you create a daily note.
+Customize this template to contain content that you want included every time you create a daily note. At minimum this template should include the following details:
+
+```markdown
+---
+type: daily-note
+---
+```
 
 ## Variables
 
@@ -41,11 +54,11 @@ Templates can use all the variables available in [VS Code Snippets](https://code
 
 In addition, you can also use variables provided by Foam:
 
-| Name                 | Description                                                                                                                                                                                                                 |
-| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `FOAM_SELECTED_TEXT` | Foam will fill it with selected text when creating a new note, if any text is selected. Selected text will be replaced with a wikilink to the new note.                                                                     |
-| `FOAM_TITLE`         | The title of the note. If used, Foam will prompt you to enter a title for the note.                                                                                                                                         |
-| `FOAM_SLUG`          | The sluggified title of the note (using the default github slug method). If used, Foam will prompt you to enter a title for the note unless `FOAM_TITLE` has already caused the prompt.                                     |
+| Name                 | Description      |
+| -------------------- | ------------ |
+| `FOAM_SELECTED_TEXT` | Foam will fill it with selected text when creating a new note, if any text is selected. Selected text will be replaced with a wikilink to the new     |
+| `FOAM_TITLE`         | The title of the note. If used, Foam will prompt you to enter a title for the note.        |
+| `FOAM_SLUG`          | The sluggified title of the note (using the default github slug method). If used, Foam will prompt you to enter a title for the note unless `FOAM_TITLE` has already caused the prompt.   |
 | `FOAM_DATE_*`        | `FOAM_DATE_YEAR`, `FOAM_DATE_MONTH`, etc. Foam-specific versions of [VS Code's datetime snippet variables](https://code.visualstudio.com/docs/editor/userdefinedsnippets#_variables). Prefer these versions over VS Code's. |
 
 ### `FOAM_DATE_*` variables
@@ -55,6 +68,8 @@ Foam defines its own set of datetime variables that have a similar behaviour as 
 For example, `FOAM_DATE_YEAR` has the same behaviour as VS Code's `CURRENT_YEAR`, `FOAM_DATE_SECONDS_UNIX` has the same behaviour as `CURRENT_SECONDS_UNIX`, etc.
 
 By default, prefer using the `FOAM_DATE_` versions. The datetime used to compute the values will be the same for both `FOAM_DATE_` and VS Code's variables, with the exception of the creation notes using the daily note template.
+
+For more nitty-gritty details about the supported date formats, [see here](https://github.com/foambubble/foam/blob/master/packages/foam-vscode/src/services/variable-resolver.ts).
 
 #### Relative daily notes
 
@@ -81,22 +96,19 @@ When creating notes in any other scenario, the `FOAM_DATE_` values are computed 
 
 Templates can also contain metadata about the templates themselves. The metadata is defined in YAML "Frontmatter" blocks within the templates.
 
-| Name          | Description                                                                                                                      |
-| ------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Name         | Description         |
+| ------------- | ---------------------- |
 | `filepath`    | The filepath to use when creating the new note. If the filepath is a relative filepath, it is relative to the current workspace. |
-| `name`        | A human readable name to show in the template picker.                                                                            |
-| `description` | A human readable description to show in the template picker.                                                                     |
+| `name`        | A human readable name to show in the template picker.    |
+| `description` | A human readable description to show in the template picker.       |
 
 Foam-specific variables (e.g. `$FOAM_TITLE`) can be used within template metadata. However, VS Code snippet variables are ([currently](https://github.com/foambubble/foam/pull/655)) not supported.
 
 ### `filepath` attribute
 
-The `filepath` metadata attribute allows you to define a relative or absolute filepath to use when creating a note using the template.
-If the filepath is a relative filepath, it is relative to the current workspace.
+The `filepath` metadata attribute allows you to define a relative or absolute filepath to use when creating a note using the template. If the filepath is a relative filepath, it is relative to the current workspace.
 
-**Note:** While you can make use of the `filepath` attribute in [daily note](daily-notes.md) templates (`.foam/templates/daily-note.md`), there is currently no way to have `filepath` vary based on the date. This will be improved in the future. For now, you can customize the location of daily notes using the [`foam.openDailyNote` settings](daily-notes.md).
-
-#### Example of relative `filepath`
+#### Example of **relative** `filepath`
 
 For example, `filepath` can be used to customize `.foam/templates/new-note.md`, overriding the default `Foam: Create New Note` behaviour of opening the file in the same directory as the active file:
 
@@ -109,7 +121,7 @@ foam_template:
 ---
 ```
 
-#### Example of absolute `filepath`
+#### Example of **absolute** `filepath`
 
 `filepath` can be an absolute filepath, so that the notes get created in the same location, regardless of which file or workspace the editor currently has open.
 The format of an absolute filepath may vary depending on the filesystem used.
@@ -124,6 +136,22 @@ foam_template:
   filepath: 'C:\Users\john.smith\Documents\foam\journal\$FOAM_TITLE.md'
 ---
 ```
+
+#### Example of **date-based** `filepath`
+
+It is possible to vary the `filepath` value based on the current date using the `FOAM_DATE_*` variables. This is especially useful for the [[daily-notes]] template if you wish to organize by years, months, etc. Below is an example of a daily-note template metadata section that will create new daily notes under the `journal/YEAR/MONTH-MONTH_NAME/` filepath. For example, when a note is created on November 15, 2022, a new file will be created at `C:\Users\foam_user\foam_notes\journal\2022\11-Nov\2022-11-15-daily-note.md`. This method also respects the creation of daily notes relative to the current date (i.e. `/+1d`).
+
+```markdown
+---
+type: daily-note
+foam_template:
+    description: Daily Note for $FOAM_TITLE
+    filepath: "C:\\Users\\foam_user\\foam_notes\\journal\\$FOAM_DATE_YEAR\\$FOAM_DATE_MONTH-$FOAM_DATE_MONTH_NAME_SHORT\\$FOAM_DATE_YEAR-$FOAM_DATE_MONTH-$FOAM_DATE_DATE-daily-note.md"
+---
+# $FOAM_DATE_YEAR-$FOAM_DATE_MONTH-$FOAM_DATE_DATE Daily Notes
+```
+
+> Note: this method **requires** the use of absolute file paths, and in this example is using Windows path conventions. This method will also override any filename formatting defined in `.vscode/settings.json`
 
 ### `name` and `description` attributes
 
@@ -185,3 +213,7 @@ existing_frontmatter: "Existing Frontmatter block"
 ---
 This is the rest of the template
 ```
+
+[//begin]: # "Autogenerated link references for markdown compatibility"
+[daily-notes]: daily-notes.md "Daily Notes"
+[//end]: # "Autogenerated link references"

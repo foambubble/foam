@@ -26,5 +26,8 @@
   "files.exclude": {
     "_site/**": true
   },
-  "files.insertFinalNewline": true
+  "files.insertFinalNewline": true,
+  "markdown.styles": [
+    "assets/css/custom-tag-style.css"
+  ]
 }

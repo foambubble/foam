@@ -23,15 +23,15 @@ Tags can also be visualized in the Foam Graph Explorer. See [[graph-visualizatio
 
 ## Styling tags
 
-It is possible to customize the way that tags look in the Markdown Preview panel that renders your Foam notes.
+It is possible to customize the way that tags look in the Markdown Preview panel that renders your Foam notes. This requires some knowledge of the CSS language, which is used to customize the styles of web technologies such as VSCode. A cursory introduction to CSS can be [found here](https://www.freecodecamp.org/news/get-started-with-css-in-5-minutes-e0804813fc3e/).
 
-1. Create a CSS file within your Foam project, for example in `assets/css/custom-tag-style.css`
+1. Create a CSS file within your Foam project, for example in `.foam/css/custom-tag-style.css` or [.vscode/custom-tag-style.css](../../.vscode/custom-tag-style.css)
 2. Add CSS code that targets the `.foam-tag` class
 3. Add a rule for each [CSS property](https://www.w3schools.com/cssref/index.php) you would like applied to your tags.
 4. Open the `.vscode/settings.json` file (or the Settings browser with `ctrl+,`)
 5. Add the path to your new stylesheet to the `markdown.styles` setting.
 
-> Note: the file path will be relative to the currently open folder in the workspace when changing this setting for the current workspace. If changing this setting for the user, then the file path will be relative to your global [VSCode settings](https://code.visualstudio.com/docs/getstarted/settings).
+> Note: the file path for the stylesheet will be relative to the currently open folder in the workspace when changing this setting for the current workspace. If changing this setting for the user, then the file path will be relative to your global [VSCode settings](https://code.visualstudio.com/docs/getstarted/settings).
 
 The end result will be a CSS file that looks similiar to the content below. Now you can make your tags standout in your note previews.
 

@@ -28,6 +28,6 @@
   },
   "files.insertFinalNewline": true,
   "markdown.styles": [
-    "assets/css/custom-tag-style.css"
+    ".vscode/custom-tag-style.css"
   ]
 }

@@ -3,7 +3,7 @@
 Foam comes with a graph visualization of your notes.
 To see the graph execute the `Foam: Show Graph` command.
 
-Notes and documents are shown as the nodes of the graph while the links and shared tags are represented as the edges that join together the nodes. A node in the graph will grow with the number of connections it has, representing stronger or more defined concepts and topics.
+Your files, such as notes and documents, are shown as the nodes of the graph along with the tags defined in your notes. The edges of the graph represent either a link between two files or a file that contains a certain tag. A node in the graph will grow in size with the number of connections it has, representing stronger or more defined concepts and topics.
 
 ## Graph Navigation
 

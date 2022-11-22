@@ -29,7 +29,7 @@ _Theme: Ayu Light_
 ### Default template
 
 The `.foam/templates/new-note.md` template is special in that it is the template that will be used by the `Foam: Create New Note` command.
-Customize this template to contain content that you want included every time you create a note. At minimum this template should include the following:
+Customize this template to contain content that you want included every time you create a note. To begin it is *recommended* to define the YAML Front-Matter of the template similar to the following:
 
 ```markdown
 ---
@@ -40,7 +40,7 @@ type: basic-note
 ### Default daily note template
 
 The `.foam/templates/daily-note.md` template is special in that it is the template that will be used when creating daily notes (e.g. by using `Foam: Open Daily Note`).
-Customize this template to contain content that you want included every time you create a daily note. At minimum this template should include the following details:
+Customize this template to contain content that you want included every time you create a daily note. To begin it is *recommended* to define the YAML Front-Matter of the template similar to the following:
 
 ```markdown
 ---

@@ -977,6 +977,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "jonathanpberger",
+      "name": "jonathan berger",
+      "avatar_url": "https://avatars.githubusercontent.com/u/41085?v=4",
+      "profile": "http://jonathanpberger.com/",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,

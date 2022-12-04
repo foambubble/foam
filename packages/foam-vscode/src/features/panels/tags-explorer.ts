@@ -15,11 +15,18 @@ const feature: FoamFeature = {
   ) => {
     const foam = await foamPromise;
     const provider = new TagsProvider(foam, foam.workspace);
+    const treeView = vscode.window.createTreeView('foam-vscode.tags-explorer', {
+      treeDataProvider: provider,
+      showCollapseAll: true,
+    });
+    const baseTitle = treeView.title;
+    treeView.title = baseTitle + ` (${foam.tags.tags.size})`;
+
     context.subscriptions.push(
-      vscode.window.registerTreeDataProvider(
-        'foam-vscode.tags-explorer',
-        provider
-      )
+      treeView,
+      foam.tags.onDidUpdate(() => {
+        treeView.title = baseTitle + ` (${foam.tags.tags.size})`;
+      })
     );
     foam.tags.onDidUpdate(() => provider.refresh());
   },
@@ -29,9 +36,12 @@ export default feature;
 
 export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
   // prettier-ignore
-  private _onDidChangeTreeData: vscode.EventEmitter<TagTreeItem | undefined | void> = new vscode.EventEmitter<TagTreeItem | undefined | void>();
+  private _onDidChangeTreeData: vscode.EventEmitter<
+    TagTreeItem | undefined | void
+  > = new vscode.EventEmitter<TagTreeItem | undefined | void>();
   // prettier-ignore
-  readonly onDidChangeTreeData: vscode.Event<TagTreeItem | undefined | void> = this._onDidChangeTreeData.event;
+  readonly onDidChangeTreeData: vscode.Event<TagTreeItem | undefined | void> =
+    this._onDidChangeTreeData.event;
 
   private tags: {
     tag: string;

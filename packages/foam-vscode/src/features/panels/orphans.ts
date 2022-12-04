@@ -9,6 +9,7 @@ import {
   UriTreeItem,
 } from '../../utils/grouped-resources-tree-data-provider';
 
+const EXCLUDE_TYPES = ['image', 'attachment'];
 const feature: FoamFeature = {
   activate: async (
     context: vscode.ExtensionContext,
@@ -25,7 +26,11 @@ const feature: FoamFeature = {
       () =>
         foam.graph
           .getAllNodes()
-          .filter(uri => foam.graph.getConnections(uri).length === 0),
+          .filter(
+            uri =>
+              !EXCLUDE_TYPES.includes(foam.workspace.find(uri)?.type) &&
+              foam.graph.getConnections(uri).length === 0
+          ),
       uri => {
         return uri.isPlaceholder()
           ? new UriTreeItem(uri)
@@ -35,10 +40,20 @@ const feature: FoamFeature = {
     );
     provider.setGroupBy(getOrphansConfig().groupBy);
 
+    const treeView = vscode.window.createTreeView('foam-vscode.orphans', {
+      treeDataProvider: provider,
+      showCollapseAll: true,
+    });
+    const baseTitle = treeView.title;
+    treeView.title = baseTitle + ` (${provider.numElements})`;
+
     context.subscriptions.push(
       vscode.window.registerTreeDataProvider('foam-vscode.orphans', provider),
       ...provider.commands,
-      foam.graph.onDidUpdate(() => provider.refresh())
+      foam.graph.onDidUpdate(() => {
+        treeView.title = baseTitle + ` (${provider.numElements})`;
+        provider.refresh();
+      })
     );
   },
 };

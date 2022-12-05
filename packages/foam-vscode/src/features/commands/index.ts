@@ -11,3 +11,4 @@ export { default as openResource } from './open-resource';
 export { default as updateGraphCommand } from './update-graph';
 export { default as updateWikilinksCommand } from './update-wikilinks';
 export { default as createNote } from './create-note';
+export { default as createNoteInWorkspace } from './create-note-in-workspace';

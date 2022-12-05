@@ -30,6 +30,7 @@
     "onCommand:foam-vscode.show-graph",
     "onCommand:foam-vscode.create-new-template",
     "onCommand:foam-vscode.create-note",
+    "onCommand:foam-vscode.create-note-in-workspace",
     "onCommand:foam-vscode.create-note-from-template",
     "onCommand:foam-vscode.create-note-from-default-template"
   ],
@@ -247,6 +248,10 @@
       {
         "command": "foam-vscode.completion-move-cursor",
         "title": "Foam: Move cursor after completion"
+      },
+      {
+        "command": "foam-vscode.create-note-in-workspace",
+        "title": "Foam: Create New Note In Workspace"
       }
     ],
     "configuration": {
@@ -434,6 +439,14 @@
           "type": "object",
           "description": "Custom graph styling settings. An example is present in the documentation.",
           "default": {}
+        },
+        "foam.workspace.directory": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null,
+          "description": "directory your note locate"
         }
       }
     },

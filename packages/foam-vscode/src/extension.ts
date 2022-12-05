@@ -20,10 +20,10 @@ export async function activate(context: ExtensionContext) {
   try {
     Logger.info('Starting Foam');
 
-    if (workspace.workspaceFolders === undefined) {
-      Logger.info('No workspace open. Foam will not start');
-      return;
-    }
+    // if (workspace.workspaceFolders === undefined) {
+    //   Logger.info('No workspace open. Foam will not start');
+    //   return;
+    // }
 
     // Prepare Foam
     const excludes = getIgnoredFilesSetting().map(g => g.toString());

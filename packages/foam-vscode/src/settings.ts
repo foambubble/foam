@@ -1,5 +1,6 @@
 import { workspace, GlobPattern } from 'vscode';
 import { LogLevel } from './core/utils/log';
+import * as os from 'os';
 
 export enum LinkReferenceDefinitionsSetting {
   withExtensions = 'withExtensions',
@@ -52,6 +53,17 @@ export function getPlaceholdersConfig(): GroupedResourcesConfig {
   const exclude: string[] = placeholderCfg.get('exclude');
   const groupBy: GroupedResoucesConfigGroupBy = placeholderCfg.get('groupBy');
   return { exclude, groupBy };
+}
+
+/** your foam directory. */
+export function getWorkspaceFolder(): string | null {
+  let dir: string | null = workspace
+    .getConfiguration('foam.workspace')
+    .get('directory');
+  if (dir) {
+    if (dir.startsWith('~')) dir = dir.replace(/^~/, os.homedir());
+  }
+  return dir;
 }
 
 export interface GroupedResourcesConfig {

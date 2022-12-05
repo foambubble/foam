@@ -7,6 +7,7 @@ import {
   commands,
   window,
   workspace,
+  Uri,
 } from 'vscode';
 import { focusNote } from '../utils';
 import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
@@ -25,6 +26,8 @@ import {
 import { Resolver } from './variable-resolver';
 import dateFormat from 'dateformat';
 import { isSome } from '../core/utils';
+
+// import { join } from 'path';
 
 /**
  * The templates directory
@@ -434,14 +437,14 @@ const UNALLOWED_CHARS = '/\\#%&{}<>?*$!\'":@+`|=';
  * @param resolver the resolver to use
  * @returns the string path of the new note
  */
-export const getPathFromTitle = async (resolver: Resolver) => {
+export const getPathFromTitle = async (resolver: Resolver, noteDir?: URI) => {
   let defaultName = await resolver.resolveFromName('FOAM_TITLE');
   UNALLOWED_CHARS.split('').forEach(char => {
     defaultName = defaultName.split(char).join('');
   });
 
-  const defaultFilepath = getCurrentEditorDirectory().joinPath(
-    `${defaultName}.md`
-  );
+  const defaultFilepath = noteDir 
+                            ? noteDir.joinPath(`${defaultName}.md`)
+                            :getCurrentEditorDirectory().joinPath(`${defaultName}.md`);
   return defaultFilepath;
 };

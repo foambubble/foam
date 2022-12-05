@@ -27,6 +27,7 @@
       "request": "launch",
       "runtimeExecutable": "${execPath}",
       "args": [
+        "--disable-extensions",
         "--extensionDevelopmentPath=${workspaceFolder}/packages/foam-vscode"
       ],
       "outFiles": [

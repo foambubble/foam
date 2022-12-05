@@ -143,6 +143,7 @@ export const createMatcherAndDataStore = async (
   excludePatterns: Map<string, string[]>;
 }> => {
   const excludePatterns = new Map<string, string[]>();
+  // TODO lead to create foam workspace
   workspace.workspaceFolders.forEach(f => excludePatterns.set(f.name, []));
 
   for (const exclude of excludes) {

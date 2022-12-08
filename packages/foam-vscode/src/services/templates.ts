@@ -7,7 +7,6 @@ import {
   commands,
   window,
   workspace,
-  Uri,
 } from 'vscode';
 import { focusNote } from '../utils';
 import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
@@ -443,8 +442,8 @@ export const getPathFromTitle = async (resolver: Resolver, noteDir?: URI) => {
     defaultName = defaultName.split(char).join('');
   });
 
-  const defaultFilepath = noteDir 
-                            ? noteDir.joinPath(`${defaultName}.md`)
-                            :getCurrentEditorDirectory().joinPath(`${defaultName}.md`);
+  const defaultFilepath = noteDir
+    ? noteDir.joinPath(`${defaultName}.md`)
+    : getCurrentEditorDirectory().joinPath(`${defaultName}.md`);
   return defaultFilepath;
 };

@@ -22,8 +22,8 @@ const feature: FoamFeature = {
       vscode.commands.registerCommand(
         CREATE_NOTE_IN_ROOT_COMMAND.command,
         () => {
-          const noteDir = getWorkspaceFolder()
-          createNote({noteDir});
+          const noteDir = getWorkspaceFolder();
+          createNote({ noteDir });
         }
       )
     );

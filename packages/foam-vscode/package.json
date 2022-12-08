@@ -60,8 +60,25 @@
         }
       }
     ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "foam-vscode-explorer",
+          "title": "foam",
+          "icon": "assets/icon/foam.svg"
+        }
+      ],
+      "panel": [
+        {
+          "id": "foam-vscode-explorer",
+          "title": "foam",
+          "icon": "assets/icon/foam.svg"
+        }
+      ]
+  
+    },
     "views": {
-      "explorer": [
+      "foam-vscode-explorer": [
         {
           "id": "foam-vscode.backlinks",
           "name": "Backlinks",
@@ -106,6 +123,7 @@
         "contents": "No placeholders found. Pending links and notes without content will show up here."
       }
     ],
+  
     "menus": {
       "view/title": [
         {

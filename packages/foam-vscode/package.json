@@ -34,7 +34,7 @@
     "onCommand:foam-vscode.create-note-from-default-template"
   ],
   "main": "./out/extension.js",
-  "browser": "./out/extension.js",
+  "browser": "./web/dist/web/extension.js",
   "contributes": {
     "markdown.markdownItPlugins": true,
     "markdown.previewStyles": [

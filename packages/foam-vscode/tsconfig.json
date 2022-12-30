@@ -10,5 +10,5 @@
     "downlevelIteration": true
   },
   "include": ["src", "types"],
-  "exclude": ["node_modules", ".vscode-test"]
+  "exclude": ["node_modules", ".vscode-test", ".vscode-test-web"]
 }

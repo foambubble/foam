@@ -50,16 +50,18 @@
       ]
     },
     {
-      "name": "Run Web Extension in VS Code",
-      "type": "pwa-extensionHost",
-      "debugWebWorkerHost": true,
-      "request": "launch",
-      "args": [
-        "--extensionDevelopmentPath=${workspaceFolder}",
-        "--extensionDevelopmentKind=web"
-      ],
-      "outFiles": ["${workspaceFolder}/dist/web/**/*.js"],
-      "preLaunchTask": "npm: watch-web"
-    }
+			"name": "Run Web Extension in VS Code",
+			"type": "pwa-extensionHost",
+			"debugWebWorkerHost": true,
+			"request": "launch",
+			"args": [
+				"--extensionDevelopmentPath=${workspaceFolder}/packages/foam-vscode",
+				"--extensionDevelopmentKind=web",
+			],
+			"outFiles": [
+				"${workspaceFolder}/packages/foam-vscode/web/dist/web/**/*.js"
+			],
+			"preLaunchTask": "npm: watch-web"
+		},
   ]
 }

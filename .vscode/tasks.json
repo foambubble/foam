@@ -28,11 +28,17 @@
       }
     },
     {
-      "type": "npm",
-      "script": "watch-web",
-      "group": "build",
-      "isBackground": true,
-      "problemMatcher": ["$ts-webpack-watch"]
-    }
+			"type": "npm",
+			"script": "watch-web",
+			"group": "build",
+      "options": {
+        "cwd": "${workspaceFolder}/packages/foam-vscode"
+      },
+			"isBackground": true,
+			"problemMatcher": [
+				"$ts-webpack-watch",
+				"$tslint-webpack-watch"
+			]
+		}
   ]
 }

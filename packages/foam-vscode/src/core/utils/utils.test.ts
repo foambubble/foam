@@ -7,7 +7,7 @@ describe('hashtag extraction', () => {
   it('returns empty list if no tags are present', () => {
     expect(extractHashtags('hello world')).toEqual([]);
   });
-  
+
   it('works with simple strings', () => {
     expect(
       extractHashtags('hello #world on #this planet').map(t => t.label)
@@ -27,7 +27,7 @@ describe('hashtag extraction', () => {
       extractHashtags('#hello world on this #planet').map(t => t.label)
     ).toEqual(['hello', 'planet']);
   });
-  
+
   it('supports _ and -', () => {
     expect(
       extractHashtags('#hello-world on #this_planet').map(t => t.label)
@@ -61,7 +61,7 @@ describe('hashtag extraction', () => {
       '123四',
     ]);
   });
-  
+
   it('supports emoji tags', () => {
     expect(
       extractHashtags(`this is a pure emoji #⭐, #⭐⭐, #👍👍🏽👍🏿 some mixed emoji #π🥧, #✅todo
@@ -71,7 +71,7 @@ describe('hashtag extraction', () => {
       '⭐',
       '⭐⭐',
       '👍👍🏽👍🏿',
-      'π🥧', 
+      'π🥧',
       '✅todo',
       'urgent❗',
       '❗❗urgent',

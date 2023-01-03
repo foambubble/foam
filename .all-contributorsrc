@@ -986,6 +986,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "badsketch",
+      "name": "Daniel Wang",
+      "avatar_url": "https://avatars.githubusercontent.com/u/8953212?v=4",
+      "profile": "https://github.com/badsketch",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,

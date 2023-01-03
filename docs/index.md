@@ -245,6 +245,7 @@ If that sounds like something you're interested in, I'd love to have you along o
     <tr>
       <td align="center"><a href="http://sn3akiwhizper.github.io"><img src="https://avatars.githubusercontent.com/u/102705294?v=4?s=60" width="60px;" alt="sn3akiwhizper"/><br /><sub><b>sn3akiwhizper</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=sn3akiwhizper" title="Documentation">📖</a></td>
       <td align="center"><a href="http://jonathanpberger.com/"><img src="https://avatars.githubusercontent.com/u/41085?v=4?s=60" width="60px;" alt="jonathan berger"/><br /><sub><b>jonathan berger</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=jonathanpberger" title="Documentation">📖</a></td>
+      <td align="center"><a href="https://github.com/badsketch"><img src="https://avatars.githubusercontent.com/u/8953212?v=4?s=60" width="60px;" alt="Daniel Wang"/><br /><sub><b>Daniel Wang</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=badsketch" title="Code">💻</a></td>
     </tr>
   </tbody>
 </table>

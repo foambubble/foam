@@ -7,11 +7,13 @@ describe('hashtag extraction', () => {
   it('returns empty list if no tags are present', () => {
     expect(extractHashtags('hello world')).toEqual([]);
   });
+
   it('works with simple strings', () => {
     expect(
       extractHashtags('hello #world on #this planet').map(t => t.label)
     ).toEqual(['world', 'this']);
   });
+
   it('detects the offset of the tag', () => {
     expect(extractHashtags('#hello')).toEqual([{ label: 'hello', offset: 0 }]);
     expect(extractHashtags(' #hello')).toEqual([{ label: 'hello', offset: 1 }]);
@@ -19,21 +21,25 @@ describe('hashtag extraction', () => {
       { label: 'hello', offset: 3 },
     ]);
   });
+
   it('works with tags at beginning or end of text', () => {
     expect(
       extractHashtags('#hello world on this #planet').map(t => t.label)
     ).toEqual(['hello', 'planet']);
   });
+
   it('supports _ and -', () => {
     expect(
       extractHashtags('#hello-world on #this_planet').map(t => t.label)
     ).toEqual(['hello-world', 'this_planet']);
   });
+
   it('supports nested tags', () => {
     expect(
       extractHashtags('#parent/child on #planet').map(t => t.label)
     ).toEqual(['parent/child', 'planet']);
   });
+
   it('ignores tags that only have numbers in text', () => {
     expect(
       extractHashtags('this #123 tag should be ignore, but not #123four').map(
@@ -41,7 +47,8 @@ describe('hashtag extraction', () => {
       )
     ).toEqual(['123four']);
   });
-  it('supports unicode letters like Chinese charaters', () => {
+
+  it('supports unicode letters like Chinese characters', () => {
     expect(
       extractHashtags(`
         this #tag_with_unicode_letters_汉字, pure Chinese tag like #纯中文标签 and 
@@ -52,6 +59,24 @@ describe('hashtag extraction', () => {
       '纯中文标签',
       '标签1',
       '123四',
+    ]);
+  });
+
+  it('supports emoji tags', () => {
+    expect(
+      extractHashtags(`this is a pure emoji #⭐, #⭐⭐, #👍👍🏽👍🏿 some mixed emoji #π🥧, #✅todo
+       #urgent❗ or #❗❗urgent, and some nested emoji #📥/🟥 or #📥/🟢
+      `).map(t => t.label)
+    ).toEqual([
+      '⭐',
+      '⭐⭐',
+      '👍👍🏽👍🏿',
+      'π🥧',
+      '✅todo',
+      'urgent❗',
+      '❗❗urgent',
+      '📥/🟥',
+      '📥/🟢',
     ]);
   });
 

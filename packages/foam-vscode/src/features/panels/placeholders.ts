@@ -39,8 +39,8 @@ const feature: FoamFeature = {
       treeView,
       ...provider.commands,
       foam.graph.onDidUpdate(() => {
-        treeView.title = baseTitle + ` (${provider.numElements})`;
         provider.refresh();
+        treeView.title = baseTitle + ` (${provider.numElements})`;
       })
     );
   },

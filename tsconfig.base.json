@@ -9,6 +9,8 @@
     "paths": {
       "foam-core": ["./packages/foam-core/src"],
       "foam-vscode": ["./packages/foam-vscode/src"]
-    }
+    },
+    "typeRoots": ["node_modules/@types"],
+    "sourceMap": true 
   }
 }

@@ -54,14 +54,17 @@
 			"type": "pwa-extensionHost",
 			"debugWebWorkerHost": true,
 			"request": "launch",
+      "webRoot": "${workspaceFolder}/packages/foam-vscode/web/dist/web/",
 			"args": [
 				"--extensionDevelopmentPath=${workspaceFolder}/packages/foam-vscode",
 				"--extensionDevelopmentKind=web",
 			],
 			"outFiles": [
+        "${workspaceFolder}/packages/foam-vscode/out/**/*.js",
 				"${workspaceFolder}/packages/foam-vscode/web/dist/web/**/*.js"
 			],
-			"preLaunchTask": "npm: watch-web"
+			"preLaunchTask": "npm: watch-web",
+      "sourceMaps": true,
 		},
   ]
 }

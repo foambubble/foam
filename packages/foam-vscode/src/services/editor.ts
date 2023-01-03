@@ -175,8 +175,11 @@ export const createMatcherAndDataStore = async (
     return files.map(fromVsCodeUri);
   };
 
-  const readFile = async (uri: URI) =>
-    (await workspace.fs.readFile(toVsCodeUri(uri))).toString();
+  const decoder = new TextDecoder('utf-8');
+  const readFile = async (uri: URI) => {
+    const content = await workspace.fs.readFile(toVsCodeUri(uri));
+    return decoder.decode(content);
+  };
 
   const dataStore = new GenericDataStore(listFiles, readFile);
   const matcher = isEmpty(excludes)

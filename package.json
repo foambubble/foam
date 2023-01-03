@@ -21,6 +21,7 @@
     "watch": "lerna run watch --concurrency 20 --stream"
   },
   "devDependencies": {
+    "@types/estree": "^0.0.51",
     "all-contributors-cli": "^6.16.1",
     "lerna": "^3.22.1"
   },

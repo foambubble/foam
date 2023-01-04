@@ -25,10 +25,10 @@ const feature: FoamFeature = {
     context.subscriptions.push(
       treeView,
       foam.tags.onDidUpdate(() => {
+        provider.refresh();
         treeView.title = baseTitle + ` (${foam.tags.tags.size})`;
       })
     );
-    foam.tags.onDidUpdate(() => provider.refresh());
   },
 };
 

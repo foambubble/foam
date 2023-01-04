@@ -51,8 +51,8 @@ const feature: FoamFeature = {
       vscode.window.registerTreeDataProvider('foam-vscode.orphans', provider),
       ...provider.commands,
       foam.graph.onDidUpdate(() => {
-        treeView.title = baseTitle + ` (${provider.numElements})`;
         provider.refresh();
+        treeView.title = baseTitle + ` (${provider.numElements})`;
       })
     );
   },

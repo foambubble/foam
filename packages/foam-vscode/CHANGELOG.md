@@ -4,6 +4,12 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.20.4] - 2023-01-04
+
+Fixes and Improvements:
+
+- Added support for emoji tags (#1125 - thanks @badsketch)
+
 ## [0.20.3] - 2022-12-19
 
 Fixes and Improvements:

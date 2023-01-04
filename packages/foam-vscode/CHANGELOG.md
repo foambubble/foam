@@ -4,6 +4,12 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.20.5] - 2023-01-04
+
+Fixes and Improvements:
+
+- Fixed entry count in orphan, placeholder, tags-explorer panels (#1131 - thanks @badsketch)
+
 ## [0.20.4] - 2023-01-04
 
 Fixes and Improvements:

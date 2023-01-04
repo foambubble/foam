@@ -1,6 +1,6 @@
 # Foam for VSCode
 
-[![Version](https://vsmarketplacebadge.apphb.com/version/foam.foam-vscode.svg)](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode)
+[![Version](https://img.shields.io/visual-studio-marketplace/v/foam.foam-vscode)](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode)
 [![Downloads](https://img.shields.io/visual-studio-marketplace/d/foam.foam-vscode)](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode)
 [![Installs](https://img.shields.io/visual-studio-marketplace/i/foam.foam-vscode)](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode)
 [![Ratings](https://img.shields.io/visual-studio-marketplace/r/foam.foam-vscode)](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode)
@@ -95,7 +95,7 @@ Foam also supports hierarchical tags.
 
 ### Orphans and Placeholder Panels
 
-Orphans are note that have no inbound nor outbound links. 
+Orphans are note that have no inbound nor outbound links.
 Placeholders are dangling links, or notes without content.
 Keep them under control, and your knowledge base in better state, by using this panel.
 

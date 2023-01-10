@@ -17,20 +17,24 @@ export const markdownItWikilinkNavigation = (
     regex: /(?=[^!])\[\[([^[\]]+?)\]\]/,
     replace: (wikilink: string) => {
       try {
-        const { target, alias } = MarkdownLink.analyzeLink({
+        const { target, section, alias } = MarkdownLink.analyzeLink({
           rawText: '[[' + wikilink + ']]',
           type: 'wikilink',
           range: Range.create(0, 0),
         });
-        const label = isEmpty(alias) ? target : alias;
+        const formattedSection = section ? `#${section}` : '';
+        const label = isEmpty(alias) ? `${target}${formattedSection}` : alias;
 
         const resource = workspace.find(target);
         if (isNone(resource)) {
           return getPlaceholderLink(label);
         }
 
-        const link = vscode.workspace.asRelativePath(toVsCodeUri(resource.uri));
-        return `<a class='foam-note-link' title='${resource.title}' href='/${link}' data-href='/${link}'>${label}</a>`;
+        const link = `${vscode.workspace.asRelativePath(
+          toVsCodeUri(resource.uri)
+        )}${formattedSection}`;
+        const title = `${resource.title}${formattedSection}`;
+        return `<a class='foam-note-link' title='${title}' href='/${link}' data-href='/${link}'>${label}</a>`;
       } catch (e) {
         Logger.error(
           `Error while creating link for [[${wikilink}]] in Preview panel`,

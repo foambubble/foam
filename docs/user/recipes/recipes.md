@@ -24,6 +24,7 @@ A #recipe is a guide, tip or strategy for getting the most out of your Foam work
 
 - Introduction to Zettelkasten [[todo]]
 - Clip webpages with [[web-clipper]]
+- Convert Microsoft Word files into Markdown with [[markup-converter]]
 
 ## Discover
 
@@ -110,6 +111,7 @@ _See [[contribution-guide]] and [[how-to-write-recipes]]._
 [how-to-write-recipes]: how-to-write-recipes.md "How to Write Recipes"
 [todo]: ../../dev/todo.md "Todo"
 [web-clipper]: web-clipper.md "Web Clipper"
+[markup-converter]: markup-converter.md "Markup Converter"
 [graph-visualization]: ../features/graph-visualization.md "Graph Visualization"
 [backlinking]: ../features/backlinking.md "Backlinking"
 [unlinked-references]: ../../dev/unlinked-references.md "Unlinked references (stub)"

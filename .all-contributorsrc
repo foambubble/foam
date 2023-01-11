@@ -995,6 +995,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "tlylt",
+      "name": "Liu YongLiang",
+      "avatar_url": "https://avatars.githubusercontent.com/u/41845017?v=4",
+      "profile": "http://yongliangliu.com",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,

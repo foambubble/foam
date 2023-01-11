@@ -23,7 +23,7 @@ Finally, the easiest way to help, is to use it and provide feedback by [submitti
 
 ## Contributing
 
-If you're interested in contributing, this short guide will help you get things set up locally (assuming [node.js](https://nodejs.org/) and [yarn](https://yarnpkg.com/) are already installed on your system).
+If you're interested in contributing, this short guide will help you get things set up locally (assuming [node.js >= v12](https://nodejs.org/) and [yarn](https://yarnpkg.com/) are already installed on your system).
 
 1. Fork the project to your Github account by clicking the "Fork" button on the top right hand corner of the project's [home repository page](https://github.com/foambubble/foam).
 2. Clone your newly forked repo locally:
@@ -55,7 +55,7 @@ This project uses [Yarn workspaces](https://classic.yarnpkg.com/en/docs/workspac
 
 Originally Foam had:
 
-- [/packages/foam-core](https://github.com/foambubble/foam/tree/master/packages/foam-core) - Powers the core functionality in Foam across all platforms.
+- [/packages/foam-core](https://github.com/foambubble/foam/tree/ee7a8919761f168d3931079adf21c5ad4d63db59/packages/foam-core) - Powers the core functionality in Foam across all platforms.
 - [/packages/foam-vscode](https://github.com/foambubble/foam/tree/master/packages/foam-vscode) - The core VS Code plugin.
 
 To improve DX we have moved the `foam-core` module into `packages/foam-vscode/src/core`, but from a development point of view it's useful to think of the `foam-vscode/src/core` "submodule" as something that might be extracted in the future.

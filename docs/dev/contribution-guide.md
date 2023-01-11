@@ -23,7 +23,7 @@ Finally, the easiest way to help, is to use it and provide feedback by [submitti
 
 ## Contributing
 
-If you're interested in contributing, this short guide will help you get things set up locally (assuming [node.js >= v12](https://nodejs.org/) and [yarn](https://yarnpkg.com/) are already installed on your system).
+If you're interested in contributing, this short guide will help you get things set up locally (assuming [node.js >= v16](https://nodejs.org/) and [yarn](https://yarnpkg.com/) are already installed on your system).
 
 1. Fork the project to your Github account by clicking the "Fork" button on the top right hand corner of the project's [home repository page](https://github.com/foambubble/foam).
 2. Clone your newly forked repo locally:

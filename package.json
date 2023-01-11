@@ -25,7 +25,7 @@
     "lerna": "^3.22.1"
   },
   "engines": {
-    "node": ">=12"
+    "node": ">=16"
   },
   "husky": {
     "hooks": {

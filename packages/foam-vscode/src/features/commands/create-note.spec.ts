@@ -167,21 +167,21 @@ describe('create-note command', () => {
     await closeEditors();
     await showInEditor(base.uri);
     await commands.executeCommand('foam-vscode.create-note', {
-      notePath: target.path,
+      notePath: target.getBasename(),
       text: 'test cancelling',
       onRelativeNotePath: 'cancel',
     });
     expectSameUri(window.activeTextEditor.document.uri, base.uri);
 
+    await closeEditors();
+    await showInEditor(base.uri);
     const spy = jest
       .spyOn(window, 'showInputBox')
       .mockImplementationOnce(jest.fn(() => Promise.resolve(undefined)));
-    await closeEditors();
-    await showInEditor(base.uri);
     await commands.executeCommand('foam-vscode.create-note', {
-      notePath: target.path,
+      notePath: target.getBasename(),
       text: 'test asking',
-      onRelativeNotePath: 'cancel',
+      onRelativeNotePath: 'ask',
     });
     expect(spy).toBeCalled();
 

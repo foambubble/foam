@@ -65,8 +65,7 @@ async function createNote(args: CreateNoteArgs) {
     date
   );
   const text = args.text ?? DEFAULT_NEW_NOTE_TEXT;
-  const noteUri =
-    args.notePath && asAbsoluteWorkspaceUri(URI.file(args.notePath));
+  const noteUri = args.notePath && URI.file(args.notePath);
   let templateUri: URI;
   if (args.askForTemplate) {
     const selectedTemplate = await askUserForTemplate();

@@ -194,6 +194,7 @@ describe('NoteFactory.createNote', () => {
       'Hello ${FOAM_SELECTED_TEXT} ${FOAM_SELECTED_TEXT}', // eslint-disable-line no-template-curly-in-string
       new Resolver(new Map(), new Date()),
       undefined,
+      undefined,
       false
     );
     expect(window.activeTextEditor.document.getText()).toEqual(
@@ -215,6 +216,7 @@ describe('NoteFactory.createNote', () => {
       target,
       'Hello ${FOAM_SELECTED_TEXT} ${FOAM_SELECTED_TEXT}', // eslint-disable-line no-template-curly-in-string
       new Resolver(new Map(), new Date()),
+      undefined,
       undefined,
       true
     );

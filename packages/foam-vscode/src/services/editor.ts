@@ -97,6 +97,19 @@ export function getCurrentEditorDirectory(): URI {
   throw new Error('A file must be open in editor, or workspace folder needed');
 }
 
+export function getRootDirectories(): URI[] {
+  return workspace.workspaceFolders.map(folder => {
+    return fromVsCodeUri(folder.uri);
+  });
+}
+
+export function getRootDirectory(): URI {
+  if (workspace.workspaceFolders.length === 0) {
+    throw new Error('No workspace or folder open');
+  }
+  return fromVsCodeUri(workspace.workspaceFolders[0].uri);
+}
+
 export async function fileExists(uri: URI): Promise<boolean> {
   try {
     const stat = await workspace.fs.stat(toVsCodeUri(uri));
@@ -175,8 +188,11 @@ export const createMatcherAndDataStore = async (
     return files.map(fromVsCodeUri);
   };
 
-  const readFile = async (uri: URI) =>
-    (await workspace.fs.readFile(toVsCodeUri(uri))).toString();
+  const decoder = new TextDecoder('utf-8');
+  const readFile = async (uri: URI) => {
+    const content = await workspace.fs.readFile(toVsCodeUri(uri));
+    return decoder.decode(content);
+  };
 
   const dataStore = new GenericDataStore(listFiles, readFile);
   const matcher = isEmpty(excludes)

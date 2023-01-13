@@ -43,6 +43,14 @@ interface CreateNoteArgs {
    * What to do in case the target file already exists
    */
   onFileExists?: 'overwrite' | 'open' | 'ask' | 'cancel';
+  /**
+   * What to do if the new note path is relative
+   */
+  onRelativeNotePath?:
+    | 'resolve-from-root'
+    | 'resolve-from-current-dir'
+    | 'ask'
+    | 'cancel';
 }
 
 const DEFAULT_NEW_NOTE_TEXT = `# \${FOAM_TITLE}
@@ -86,7 +94,8 @@ async function createNote(args: CreateNoteArgs) {
       noteUri ?? (await getPathFromTitle(resolver)),
       text,
       resolver,
-      args.onFileExists
+      args.onFileExists,
+      args.onRelativeNotePath
     );
   }
 }

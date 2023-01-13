@@ -8,7 +8,7 @@ import {
   window,
   workspace,
 } from 'vscode';
-import { focusNote } from '../utils';
+import { focusNote, isNone } from '../utils';
 import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
 import { extractFoamTemplateFrontmatterMetadata } from '../utils/template-frontmatter-parser';
 import { UserCancelledOperation } from './errors';
@@ -19,12 +19,15 @@ import {
   fileExists,
   findSelectionContent,
   getCurrentEditorDirectory,
+  getRootDirectories,
+  getRootDirectory,
   readFile,
   replaceSelection,
 } from './editor';
 import { Resolver } from './variable-resolver';
 import dateFormat from 'dateformat';
 import { isSome } from '../core/utils';
+import { getFoamVsCodeConfig } from './config';
 
 /**
  * The templates directory
@@ -108,6 +111,13 @@ export async function getTemplateInfo(
 export type OnFileExistStrategy =
   | 'open'
   | 'overwrite'
+  | 'cancel'
+  | 'ask'
+  | ((filePath: URI) => Promise<URI | undefined>);
+
+export type OnRelativePathStrategy =
+  | 'resolve-from-root'
+  | 'resolve-from-current-dir'
   | 'cancel'
   | 'ask'
   | ((filePath: URI) => Promise<URI | undefined>);
@@ -201,48 +211,98 @@ function sortTemplatesMetadata(
   return nameSortOrder || pathSortOrder;
 }
 
+const createFnForOnRelativePathStrategy = (
+  onRelativePath: OnRelativePathStrategy | undefined
+) => async (existingFile: URI) => {
+  // Get the default from the configuration
+  if (isNone(onRelativePath)) {
+    onRelativePath =
+      getFoamVsCodeConfig('files.newNotePath') === 'root'
+        ? 'resolve-from-root'
+        : 'resolve-from-current-dir';
+  }
+
+  if (typeof onRelativePath === 'function') {
+    return onRelativePath(existingFile);
+  }
+
+  switch (onRelativePath) {
+    case 'resolve-from-current-dir':
+      return getCurrentEditorDirectory().joinPath(existingFile.path);
+    case 'resolve-from-root':
+      return getRootDirectory().joinPath(existingFile.path);
+    case 'cancel':
+      return undefined;
+    case 'ask':
+    default: {
+      const newProposedPath = await askUserForFilepathConfirmation(
+        existingFile
+      );
+      return newProposedPath && URI.file(newProposedPath);
+    }
+  }
+};
+
+const createFnForOnFileExistsStrategy = (
+  onFileExists: OnFileExistStrategy
+) => async (existingFile: URI) => {
+  if (typeof onFileExists === 'function') {
+    return onFileExists(existingFile);
+  }
+  switch (onFileExists) {
+    case 'open':
+      await commands.executeCommand('vscode.open', toVsCodeUri(existingFile));
+      return;
+    case 'overwrite':
+      await deleteFile(existingFile);
+      return existingFile;
+    case 'cancel':
+      return undefined;
+    case 'ask':
+    default: {
+      const newProposedPath = await askUserForFilepathConfirmation(
+        existingFile
+      );
+      return newProposedPath && URI.file(newProposedPath);
+    }
+  }
+};
+
 export const NoteFactory = {
   createNote: async (
     newFilePath: URI,
     text: string,
     resolver: Resolver,
-    onFileExists?: OnFileExistStrategy,
+    onFileExistsStrategy?: OnFileExistStrategy,
+    onRelativePathStrategy?: OnRelativePathStrategy,
     replaceSelectionWithLink = true
   ): Promise<{ didCreateFile: boolean; uri: URI | undefined }> => {
     try {
-      const onFileExistsFn = async (existingFile: URI) => {
-        if (typeof onFileExists === 'function') {
-          return onFileExists(existingFile);
-        }
-        switch (onFileExists) {
-          case 'open':
-            await commands.executeCommand(
-              'vscode.open',
-              toVsCodeUri(existingFile)
-            );
-            return;
-          case 'overwrite':
-            await deleteFile(existingFile);
-            return existingFile;
-          case 'cancel':
-            return undefined;
-          case 'ask':
-          default: {
-            const newProposedPath = await askUserForFilepathConfirmation(
-              existingFile
-            );
-            return newProposedPath && URI.file(newProposedPath);
+      const onRelativePath = createFnForOnRelativePathStrategy(
+        onRelativePathStrategy
+      );
+      const onFileExists = createFnForOnFileExistsStrategy(
+        onFileExistsStrategy
+      );
+
+      /**
+       * Make sure the path is absolute and doesn't exist
+       */
+      while ((await fileExists(newFilePath)) || !newFilePath.isAbsolute()) {
+        while (!newFilePath.isAbsolute()) {
+          const proposedNewFilepath = await onRelativePath(newFilePath);
+          if (proposedNewFilepath === undefined) {
+            return { didCreateFile: false, uri: newFilePath };
           }
+          newFilePath = proposedNewFilepath;
         }
-      };
-
-      while (await fileExists(newFilePath)) {
-        const proposedNewFilepath = await onFileExistsFn(newFilePath);
-
-        if (proposedNewFilepath === undefined) {
-          return { didCreateFile: false, uri: newFilePath };
+        while (newFilePath.isAbsolute() && (await fileExists(newFilePath))) {
+          const proposedNewFilepath = await onFileExists(newFilePath);
+          if (proposedNewFilepath === undefined) {
+            return { didCreateFile: false, uri: newFilePath };
+          }
+          newFilePath = proposedNewFilepath;
         }
-        newFilePath = proposedNewFilepath;
       }
 
       const expandedText = await resolver.resolveText(text);
@@ -256,6 +316,8 @@ export const NoteFactory = {
       if (replaceSelectionWithLink && selectedContent !== undefined) {
         const newNoteTitle = newFilePath.getName();
 
+        // This should really use the FoamWorkspace.getIdentifier() function,
+        // but for simplicity we just use newNoteTitle
         await replaceSelection(
           selectedContent.document,
           selectedContent.selection,
@@ -401,7 +463,7 @@ async function askUserForFilepathConfirmation(
   const defaultFilename = defaultFilepath.getBasename();
   const defaultExtension = defaultFilepath.getExtension();
   return window.showInputBox({
-    prompt: `Enter the filename for the new note`,
+    prompt: `Enter the path for the new note`,
     value: fsPath,
     valueSelection: [
       fsPath.length - defaultFilename.length,
@@ -412,6 +474,8 @@ async function askUserForFilepathConfirmation(
         ? 'Please enter a value'
         : (await fileExists(URI.parse(value)))
         ? 'File already exists'
+        : !URI.parse(value).isAbsolute()
+        ? 'Path needs to be absolute'
         : undefined,
   });
 }
@@ -440,8 +504,6 @@ export const getPathFromTitle = async (resolver: Resolver) => {
     defaultName = defaultName.split(char).join('');
   });
 
-  const defaultFilepath = getCurrentEditorDirectory().joinPath(
-    `${defaultName}.md`
-  );
+  const defaultFilepath = URI.file(`${defaultName}.md`);
   return defaultFilepath;
 };

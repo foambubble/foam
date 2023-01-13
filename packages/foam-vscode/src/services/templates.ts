@@ -19,8 +19,6 @@ import {
   fileExists,
   findSelectionContent,
   getCurrentEditorDirectory,
-  getRootDirectories,
-  getRootDirectory,
   readFile,
   replaceSelection,
 } from './editor';

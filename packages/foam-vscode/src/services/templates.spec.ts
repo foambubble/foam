@@ -37,7 +37,7 @@ describe('Create note from template', () => {
       );
       expect(spy).toBeCalledWith(
         expect.objectContaining({
-          prompt: `Enter the filename for the new note`,
+          prompt: `Enter the path for the new note`,
         })
       );
 

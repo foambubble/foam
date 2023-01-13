@@ -158,7 +158,7 @@ describe('create-note command', () => {
     expect(window.activeTextEditor.document.getText()).toEqual(
       'test resolving from current dir'
     );
-    expect(fromVsCodeUri(window.activeTextEditor.document.uri)).toEqual(
+    expect(fromVsCodeUri(window.activeTextEditor.document.uri).path).toEqual(
       fromVsCodeUri(window.activeTextEditor.document.uri)
         .getDirectory()
         .joinPath(target.getBasename()).path

@@ -13,7 +13,13 @@ describe('Link generation in preview', () => {
     title: 'My note title',
     links: [{ slug: 'placeholder' }],
   });
-  const ws = new FoamWorkspace().set(noteA);
+  const noteB = createTestNote({
+    uri: './path2/to/note-b.md',
+    root: getUriInWorkspace('just-a-ref.md'),
+    title: 'My second note',
+    sections: ['sec1', 'sec2'],
+  });
+  const ws = new FoamWorkspace().set(noteA).set(noteB);
 
   const md = [
     markdownItWikilinkNavigation,
@@ -43,6 +49,36 @@ describe('Link generation in preview', () => {
     [note-a]: <note-a.md> "Note A"`;
     expect(md.render(note)).toEqual(
       `<p><a class='foam-note-link' title='${noteA.title}' href='/path/to/note-a.md' data-href='/path/to/note-a.md'>note-a</a>\n[note-a]: &lt;note-a.md&gt; &quot;Note A&quot;</p>\n`
+    );
+  });
+
+  it('generates a link to a note with a specific section', () => {
+    expect(md.render(`[[note-b#sec2]]`)).toEqual(
+      `<p><a class='foam-note-link' title='My second note#sec2' href='/path2/to/note-b.md#sec2' data-href='/path2/to/note-b.md#sec2'>note-b#sec2</a></p>\n`
+    );
+  });
+
+  it('generates a link to an aliased note with a specific section', () => {
+    expect(md.render(`[[note-b#sec2|this note]]`)).toEqual(
+      `<p><a class='foam-note-link' title='My second note#sec2' href='/path2/to/note-b.md#sec2' data-href='/path2/to/note-b.md#sec2'>this note</a></p>\n`
+    );
+  });
+
+  it('generates a link to a note if the note exists, but the section does not exist', () => {
+    expect(md.render(`[[note-b#nonexistentsec]]`)).toEqual(
+      `<p><a class='foam-note-link' title='My second note#nonexistentsec' href='/path2/to/note-b.md#nonexistentsec' data-href='/path2/to/note-b.md#nonexistentsec'>note-b#nonexistentsec</a></p>\n`
+    );
+  });
+
+  it('generates a placeholder link if the note does not exist and a section is specified', () => {
+    expect(md.render(`[[placeholder#sec2]]`)).toEqual(
+      `<p><a class='foam-placeholder-link' title="Link to non-existing resource" href="javascript:void(0);">placeholder#sec2</a></p>\n`
+    );
+  });
+
+  it('generates a placeholder link with alias if the note does not exist, but alias is given', () => {
+    expect(md.render(`[[placeholder#sec2|this note]]`)).toEqual(
+      `<p><a class='foam-placeholder-link' title="Link to non-existing resource" href="javascript:void(0);">this note</a></p>\n`
     );
   });
 });

@@ -7,7 +7,9 @@ import {
   deleteFile,
   expectSameUri,
   getUriInWorkspace,
+  showInEditor,
 } from '../../test/test-utils-vscode';
+import { fromVsCodeUri } from '../../utils/vsc-utils';
 
 describe('create-note command', () => {
   afterEach(() => {
@@ -125,5 +127,64 @@ describe('create-note command', () => {
     expect(spy).toBeCalled();
 
     await deleteFile(target);
+  });
+
+  it('supports various options to deal with relative paths', async () => {
+    const base = await createFile('relative path tests base file', [
+      'create-note-tests',
+      'base-file.md',
+    ]);
+    await closeEditors();
+    await showInEditor(base.uri);
+
+    const target = getUriInWorkspace();
+    await commands.executeCommand('foam-vscode.create-note', {
+      notePath: target.getBasename(),
+      text: 'test resolving from root',
+      onRelativeNotePath: 'resolve-from-root',
+    });
+    expect(window.activeTextEditor.document.getText()).toEqual(
+      'test resolving from root'
+    );
+    expectSameUri(window.activeTextEditor.document.uri, target);
+
+    await closeEditors();
+    await showInEditor(base.uri);
+    await commands.executeCommand('foam-vscode.create-note', {
+      notePath: target.getBasename(),
+      text: 'test resolving from current dir',
+      onRelativeNotePath: 'resolve-from-current-dir',
+    });
+    expect(window.activeTextEditor.document.getText()).toEqual(
+      'test resolving from current dir'
+    );
+    expect(fromVsCodeUri(window.activeTextEditor.document.uri).path).toEqual(
+      fromVsCodeUri(window.activeTextEditor.document.uri)
+        .getDirectory()
+        .joinPath(target.getBasename()).path
+    );
+
+    await closeEditors();
+    await showInEditor(base.uri);
+    await commands.executeCommand('foam-vscode.create-note', {
+      notePath: target.getBasename(),
+      text: 'test cancelling',
+      onRelativeNotePath: 'cancel',
+    });
+    expectSameUri(window.activeTextEditor.document.uri, base.uri);
+
+    await closeEditors();
+    await showInEditor(base.uri);
+    const spy = jest
+      .spyOn(window, 'showInputBox')
+      .mockImplementationOnce(jest.fn(() => Promise.resolve(undefined)));
+    await commands.executeCommand('foam-vscode.create-note', {
+      notePath: target.getBasename(),
+      text: 'test asking',
+      onRelativeNotePath: 'ask',
+    });
+    expect(spy).toBeCalled();
+
+    await deleteFile(base);
   });
 });

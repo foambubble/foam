@@ -115,9 +115,9 @@ export async function readFile(uri: URI): Promise<string | undefined> {
   return undefined;
 }
 
-export const deleteFile = (uri: URI) => {
+export function deleteFile(uri: URI) {
   return workspace.fs.delete(toVsCodeUri(uri), { recursive: true });
-};
+}
 
 /**
  * Turns a relative URI into an absolute URI for the given workspace.
@@ -135,13 +135,13 @@ export function asAbsoluteWorkspaceUri(uri: URI): URI {
   return res;
 }
 
-export const createMatcherAndDataStore = async (
+export async function createMatcherAndDataStore(
   excludes: string[]
 ): Promise<{
   matcher: IMatcher;
   dataStore: IDataStore;
   excludePatterns: Map<string, string[]>;
-}> => {
+}> {
   const excludePatterns = new Map<string, string[]>();
   workspace.workspaceFolders.forEach(f => excludePatterns.set(f.name, []));
 
@@ -175,8 +175,11 @@ export const createMatcherAndDataStore = async (
     return files.map(fromVsCodeUri);
   };
 
-  const readFile = async (uri: URI) =>
-    (await workspace.fs.readFile(toVsCodeUri(uri))).toString();
+  const decoder = new TextDecoder('utf-8');
+  const readFile = async (uri: URI) => {
+    const content = await workspace.fs.readFile(toVsCodeUri(uri));
+    return decoder.decode(content);
+  };
 
   const dataStore = new GenericDataStore(listFiles, readFile);
   const matcher = isEmpty(excludes)
@@ -184,4 +187,4 @@ export const createMatcherAndDataStore = async (
     : await FileListBasedMatcher.createFromListFn(listFiles);
 
   return { matcher, dataStore, excludePatterns };
-};
+}

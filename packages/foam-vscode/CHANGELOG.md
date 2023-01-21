@@ -4,6 +4,14 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.20.6] - 2023-01-21
+
+Fixes and Improvements:
+
+- Updated minimum VS Code version to 1.70.0 (#1140)
+- Fixed preview links with sections (#1135 - thanks @badsketch)
+- Added setting for creating new notes in root or current dir (#1142)
+
 ## [0.20.5] - 2023-01-04
 
 Fixes and Improvements:

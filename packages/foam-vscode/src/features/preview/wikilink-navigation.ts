@@ -34,7 +34,11 @@ export const markdownItWikilinkNavigation = (
           toVsCodeUri(resource.uri)
         )}${formattedSection}`;
         const title = `${resource.title}${formattedSection}`;
-        return `<a class='foam-note-link' title='${title}' href='/${link}' data-href='/${link}'>${label}</a>`;
+        const finalLabel =
+          isEmpty(alias) && !isEmpty(resource.properties.link_label)
+            ? `${resource.properties.link_label}${formattedSection}`
+            : label;
+        return `<a class='foam-note-link' title='${title}' href='/${link}' data-href='/${link}'>${finalLabel}</a>`;
       } catch (e) {
         Logger.error(
           `Error while creating link for [[${wikilink}]] in Preview panel`,

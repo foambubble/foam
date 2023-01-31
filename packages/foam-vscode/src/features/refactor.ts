@@ -20,7 +20,16 @@ const feature: FoamFeature = {
           return;
         }
         const renameEdits = new vscode.WorkspaceEdit();
-        e.files.forEach(({ oldUri, newUri }) => {
+        for (const { oldUri, newUri } of e.files) {
+          if (
+            (await vscode.workspace.fs.stat(oldUri)).type ===
+            vscode.FileType.Directory
+          ) {
+            vscode.window.showWarningMessage(
+              'Foam: Updating links on directory rename is not supported.'
+            );
+            continue;
+          }
           const connections = foam.graph.getBacklinks(fromVsCodeUri(oldUri));
           connections.forEach(async connection => {
             const { target } = MarkdownLink.analyzeLink(connection.link);
@@ -60,7 +69,7 @@ const feature: FoamFeature = {
               }
             }
           });
-        });
+        }
 
         try {
           if (renameEdits.size > 0) {

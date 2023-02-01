@@ -5,9 +5,12 @@
 👀*This is an early stage project under rapid development. For updates join the [Foam community Discord](https://foambubble.github.io/join-discord/g)! 💬*
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+
 [![All Contributors](https://img.shields.io/badge/all_contributors-109-orange.svg?style=flat-square)](#contributors-)
+
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
+[![Visual Studio Marketplace Installs](https://img.shields.io/visual-studio-marketplace/i/foam.foam-vscode?label=VS%20Code%20Installs)](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode)
 [![Discord Chat](https://img.shields.io/discord/729975036148056075?color=748AD9&label=discord%20chat&style=flat-square)](https://foambubble.github.io/join-discord/g)
 
 **Foam** is a personal knowledge management and sharing system inspired by [Roam Research](https://roamresearch.com/), built on [Visual Studio Code](https://code.visualstudio.com/) and [GitHub](https://github.com/).
@@ -98,7 +101,7 @@ Foam also supports hierarchical tags.
 
 ### Orphans and Placeholder Panels
 
-Orphans are notes that have no inbound nor outbound links. 
+Orphans are notes that have no inbound nor outbound links.
 Placeholders are dangling links, or notes without content.
 Keep them under control, and your knowledge base in a better state, by using this panel.
 
@@ -146,7 +149,7 @@ Whether you want to build a [Second Brain](https://www.buildingasecondbrain.com/
 
 You can also use our Foam template:
 
-1. Log in on your GitHub account. 
+1. Log in on your GitHub account.
 2. [Create a GitHub repository from foam-template](https://github.com/foambubble/foam-template/generate). If you want to keep your thoughts to yourself, remember to set the repository private.
 3. Clone the repository and open it in VS Code.
 4. When prompted to install recommended extensions, click **Install all** (or **Show Recommendations** if you want to review and install them one by one).

@@ -4,6 +4,13 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.20.7] - 2023-01-31
+
+Fixes and Improvements:
+
+- Inform the user that directory renaming is not supported (#1143)
+- Fixed extra `web` directory in published extension (#1152 - thanks @piousdeer)
+
 ## [0.20.6] - 2023-01-21
 
 Fixes and Improvements:

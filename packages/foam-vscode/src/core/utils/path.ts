@@ -115,7 +115,7 @@ export function changeExtension(
   to: string
 ): string {
   const old = getExtension(path);
-  if ((from === '*' && old !== to) || old === from) {
+  if (((from === '*' || from === '') && old !== to) || old === from) {
     path = path.substring(0, path.length - old.length);
     return to ? path + to : path;
   }

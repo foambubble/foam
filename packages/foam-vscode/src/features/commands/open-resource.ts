@@ -1,8 +1,7 @@
 import * as vscode from 'vscode';
 import { FoamFeature } from '../../types';
 import { URI } from '../../core/model/uri';
-import { fromVsCodeUri, toVsCodeUri } from '../../utils/vsc-utils';
-import { NoteFactory } from '../../services/templates';
+import { toVsCodeUri } from '../../utils/vsc-utils';
 import { Foam } from '../../core/model/foam';
 
 export const OPEN_COMMAND = {
@@ -28,35 +27,12 @@ const feature: FoamFeature = {
                 uri.path === vscode.window.activeTextEditor?.document.uri.path
                   ? vscode.window.activeTextEditor?.document.uri
                   : toVsCodeUri(uri.asPlain());
-              // if the doc is already open, reuse the same colunm
-              const targetEditor = vscode.window.visibleTextEditors.find(
-                ed => targetUri.path === ed.document.uri.path
-              );
-              const column = targetEditor?.viewColumn;
               return vscode.commands.executeCommand('vscode.open', targetUri);
             }
             case 'placeholder': {
-              const title = uri.getName();
-              if (uri.isAbsolute()) {
-                return NoteFactory.createForPlaceholderWikilink(
-                  title,
-                  URI.file(uri.path)
-                );
-              }
-              const basedir =
-                vscode.workspace.workspaceFolders.length > 0
-                  ? vscode.workspace.workspaceFolders[0].uri
-                  : vscode.window.activeTextEditor?.document.uri
-                  ? vscode.window.activeTextEditor!.document.uri
-                  : undefined;
-              if (basedir === undefined) {
-                return;
-              }
-              const target = fromVsCodeUri(basedir)
-                .resolve(uri, true)
-                .changeExtension('', '.md');
-              await NoteFactory.createForPlaceholderWikilink(title, target);
-              return;
+              vscode.window.showErrorMessage(
+                "Foam: Can't open placeholder. Use create-note command instead."
+              );
             }
           }
         }

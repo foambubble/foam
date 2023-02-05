@@ -11,6 +11,7 @@ import { Foam } from '../../core/model/foam';
 import { Resolver } from '../../services/variable-resolver';
 import { asAbsoluteWorkspaceUri, fileExists } from '../../services/editor';
 import { isSome } from '../../core/utils';
+import { CommandDescriptor } from '../../utils/commands';
 
 interface CreateNoteArgs {
   /**
@@ -108,12 +109,20 @@ async function createNote(args: CreateNoteArgs) {
 
 export const CREATE_NOTE_COMMAND = {
   command: 'foam-vscode.create-note',
-  title: 'Foam: Create Note',
 
-  asURI: (args: CreateNoteArgs) =>
-    vscode.Uri.parse(`command:${CREATE_NOTE_COMMAND.command}`).with({
-      query: encodeURIComponent(JSON.stringify(args)),
-    }),
+  forPlaceholder: (
+    placeholder: string,
+    extra: Partial<CreateNoteArgs> = {}
+  ): CommandDescriptor<CreateNoteArgs> => {
+    return {
+      name: CREATE_NOTE_COMMAND.command,
+      params: {
+        title: placeholder,
+        notePath: placeholder,
+        ...extra,
+      },
+    };
+  },
 };
 
 const feature: FoamFeature = {

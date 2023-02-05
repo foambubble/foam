@@ -34,11 +34,15 @@ interface CreateNoteArgs {
   /**
    * Variables to use in the text or template
    */
-  variables?: Map<string, string>;
+  variables?: { [key: string]: string };
   /**
    * The date used to resolve the FOAM_DATE_* variables. in YYYY-MM-DD format
    */
   date?: string;
+  /**
+   * The title of the note (translates into the FOAM_TITLE variable)
+   */
+  title?: string;
   /**
    * What to do in case the target file already exists
    */
@@ -64,6 +68,9 @@ async function createNote(args: CreateNoteArgs) {
     new Map(Object.entries(args.variables ?? {})),
     date
   );
+  if (args.title) {
+    resolver.define('FOAM_TITLE', args.title);
+  }
   const text = args.text ?? DEFAULT_NEW_NOTE_TEXT;
   const noteUri = args.notePath && URI.file(args.notePath);
   let templateUri: URI;

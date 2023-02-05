@@ -12,6 +12,7 @@ import { OPEN_COMMAND } from './commands/open-resource';
 import { toVsCodeUri } from '../utils/vsc-utils';
 import { createMarkdownParser } from '../core/services/markdown-parser';
 import { FoamGraph } from '../core/model/graph';
+import { commandAsURI } from '../utils/commands';
 
 describe('Document navigation', () => {
   const parser = createMarkdownParser([]);
@@ -82,7 +83,7 @@ describe('Document navigation', () => {
 
       expect(links.length).toEqual(1);
       expect(links[0].target).toEqual(
-        OPEN_COMMAND.asURI(URI.placeholder('a placeholder'))
+        commandAsURI(OPEN_COMMAND.forURI(URI.placeholder('a placeholder')))
       );
       expect(links[0].range).toEqual(new vscode.Range(0, 20, 0, 33));
     });

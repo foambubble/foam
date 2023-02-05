@@ -87,7 +87,7 @@ export class HoverProvider implements vscode.HoverProvider {
     );
 
     const links = sources.slice(0, 10).map(ref => {
-      const command = OPEN_COMMAND.asURI(ref);
+      const command = commandAsURI(OPEN_COMMAND.forURI(ref));
       return `- [${this.workspace.get(ref).title}](${command.toString()})`;
     });
 
@@ -116,7 +116,7 @@ export class HoverProvider implements vscode.HoverProvider {
     const newNoteFromTemplate = new vscode.MarkdownString(
       `[Create note from template for '${targetUri.getName()}'](${commandAsURI(
         command
-      )})`
+      ).toString()})`
     );
     newNoteFromTemplate.isTrusted = true;
 

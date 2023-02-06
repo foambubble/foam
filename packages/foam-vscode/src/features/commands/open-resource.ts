@@ -36,7 +36,9 @@ async function openResource(workspace: FoamWorkspace, args?: OpenResourceArgs) {
 
   const resources = workspace.list();
 
-  const candidates = resources.filter(createFilter(args.filter));
+  const candidates = resources.filter(
+    createFilter(args.filter, vscode.workspace.isTrusted)
+  );
 
   if (candidates.length === 0) {
     vscode.window.showInformationMessage(

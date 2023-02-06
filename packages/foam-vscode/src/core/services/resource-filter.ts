@@ -1,33 +1,10 @@
 import * as _ from 'lodash';
 import { Resource } from '../model/note';
+import { URI } from '../model/uri';
 
-type ResourceFilter = (r: Resource) => boolean;
-
-export function createFilter(filter: FilterDescriptor): ResourceFilter {
-  return resource => {
-    if (filter.exclude && resource.uri.toFsPath().match(filter.exclude)) {
-      return false;
-    }
-    if (filter.type && resource.type !== filter.type) {
-      return false;
-    }
-    if (filter.title && !resource.title.match(filter.title)) {
-      return false;
-    }
-    if (filter.and) {
-      return filter.and
-        .map(pred => createFilter(pred))
-        .every(fn => fn(resource));
-    }
-    if (filter.or) {
-      return filter.or.map(pred => createFilter(pred)).some(fn => fn(resource));
-    }
-    if (filter.not) {
-      return _.negate(createFilter(filter.not))(resource);
-    }
-    return true;
-  };
-}
+export interface FilterDescriptor
+  extends FilterDescriptorOp,
+    FilterDescriptorParam {}
 
 interface FilterDescriptorOp {
   and?: FilterDescriptor[];
@@ -60,8 +37,55 @@ interface FilterDescriptorParam {
    * The title of the note
    */
   title?: string;
+
+  /**
+   * The uri of the file to open
+   */
+  uri?: URI;
+
+  /**
+   * An expression to evaluate to JS, use `resource` to reference the resource object
+   */
+  expression?: string;
 }
 
-export interface FilterDescriptor
-  extends FilterDescriptorOp,
-    FilterDescriptorParam {}
+type ResourceFilter = (r: Resource) => boolean;
+
+export function createFilter(
+  filter: FilterDescriptor,
+  enableCode: boolean = false
+): ResourceFilter {
+  const expressionFn =
+    enableCode && filter.expression
+      ? resource => eval(filter.expression)
+      : undefined;
+  return resource => {
+    if (expressionFn) {
+      return expressionFn(resource);
+    }
+    if (filter.exclude && resource.uri.toFsPath().match(filter.exclude)) {
+      return false;
+    }
+    if (filter.type && resource.type !== filter.type) {
+      return false;
+    }
+    if (filter.title && !resource.title.match(filter.title)) {
+      return false;
+    }
+    if (filter.uri && !resource.uri.asPlain().isEqual(filter.uri.asPlain())) {
+      return false;
+    }
+    if (filter.and) {
+      return filter.and
+        .map(pred => createFilter(pred))
+        .every(fn => fn(resource));
+    }
+    if (filter.or) {
+      return filter.or.map(pred => createFilter(pred)).some(fn => fn(resource));
+    }
+    if (filter.not) {
+      return _.negate(createFilter(filter.not))(resource);
+    }
+    return true;
+  };
+}

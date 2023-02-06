@@ -1,5 +1,5 @@
 import { Logger } from '../utils/log';
-import { createTestNote, createTestWorkspace } from '../../test/test-utils';
+import { createTestNote } from '../../test/test-utils';
 import { createFilter, FilterDescriptor } from './resource-filter';
 
 Logger.setLevel('error');

@@ -53,7 +53,7 @@ type ResourceFilter = (r: Resource) => boolean;
 
 export function createFilter(
   filter: FilterDescriptor,
-  enableCode: boolean = false
+  enableCode: boolean
 ): ResourceFilter {
   const expressionFn =
     enableCode && filter.expression
@@ -77,14 +77,16 @@ export function createFilter(
     }
     if (filter.and) {
       return filter.and
-        .map(pred => createFilter(pred))
+        .map(pred => createFilter(pred, enableCode))
         .every(fn => fn(resource));
     }
     if (filter.or) {
-      return filter.or.map(pred => createFilter(pred)).some(fn => fn(resource));
+      return filter.or
+        .map(pred => createFilter(pred, enableCode))
+        .some(fn => fn(resource));
     }
     if (filter.not) {
-      return _.negate(createFilter(filter.not))(resource);
+      return _.negate(createFilter(filter.not, enableCode))(resource);
     }
     return true;
   };

@@ -63,23 +63,6 @@ describe('Resource Filter', () => {
       expect(filter(noteB)).toBeTruthy();
     });
 
-    it('should not allow code execution by default', () => {
-      const noteA = createTestNote({
-        uri: 'note-a.md',
-        type: 'type-1',
-      });
-      const noteB = createTestNote({
-        uri: 'note-b.md',
-        type: 'type-2',
-      });
-
-      const filter = createFilter({
-        expression: 'resource.type === "type-1"',
-      });
-      expect(filter(noteA)).toBeTruthy();
-      expect(filter(noteB)).toBeTruthy();
-    });
-
     it('should support resource type', () => {
       const noteA = createTestNote({
         uri: 'note-a.md',
@@ -90,9 +73,12 @@ describe('Resource Filter', () => {
         type: 'type-2',
       });
 
-      const filter = createFilter({
-        type: 'type-1',
-      });
+      const filter = createFilter(
+        {
+          type: 'type-1',
+        },
+        false
+      );
       expect(filter(noteA)).toBeTruthy();
       expect(filter(noteB)).toBeFalsy();
     });
@@ -111,9 +97,12 @@ describe('Resource Filter', () => {
         title: 'another title',
       });
 
-      const filter = createFilter({
-        title: '^title',
-      });
+      const filter = createFilter(
+        {
+          title: '^title',
+        },
+        false
+      );
       expect(filter(noteA)).toBeTruthy();
       expect(filter(noteB)).toBeTruthy();
       expect(filter(noteC)).toBeFalsy();
@@ -131,9 +120,12 @@ describe('Resource Filter', () => {
         type: 'type-2',
       });
 
-      const filter = createFilter({
-        or: [{ type: 'type-1' }, { type: 'type-2' }],
-      });
+      const filter = createFilter(
+        {
+          or: [{ type: 'type-1' }, { type: 'type-2' }],
+        },
+        false
+      );
       expect(filter(noteA)).toBeTruthy();
       expect(filter(noteB)).toBeTruthy();
     });

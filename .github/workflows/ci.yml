@@ -18,7 +18,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v1
         with:
-          node-version: '12'
+          node-version: '18'
       - name: Restore Dependencies and VS Code test instance
         uses: actions/cache@v2
         with:
@@ -46,7 +46,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v1
         with:
-          node-version: '12'
+          node-version: '18'
       - name: Restore Dependencies and VS Code test instance
         uses: actions/cache@v2
         with:

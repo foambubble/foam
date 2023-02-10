@@ -523,10 +523,6 @@
     "unist-util-visit": "^2.0.2",
     "yaml": "^1.10.0"
   },
-  "resolutions": {
-    "@typescript-eslint/eslint-plugin": "^5.51.0",
-    "@typescript-eslint/parser": "^5.51.0"
-  },
   "__metadata": {
     "id": "b85c6625-454b-4b61-8a22-c42f3d0f2e1e",
     "publisherDisplayName": "Foam",

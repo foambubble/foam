@@ -54,7 +54,7 @@ export class BacklinksTreeDataProvider
     return item;
   }
 
-  getChildren(item?: ResourceTreeItem): Thenable<BacklinkPanelTreeItem[]> {
+  getChildren(item?: ResourceTreeItem): Promise<BacklinkPanelTreeItem[]> {
     const uri = this.target;
     if (item) {
       const resource = item.resource;

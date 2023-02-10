@@ -1,3 +1,5 @@
+/*global markdownit:readonly*/
+
 import { workspace, ExtensionContext, window, commands } from 'vscode';
 import { MarkdownResourceProvider } from './core/services/markdown-provider';
 import { bootstrap } from './core/model/foam';

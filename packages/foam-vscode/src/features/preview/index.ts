@@ -1,3 +1,5 @@
+/*global markdownit:readonly*/
+
 import * as vscode from 'vscode';
 import { FoamFeature } from '../../types';
 import { Foam } from '../../core/model/foam';

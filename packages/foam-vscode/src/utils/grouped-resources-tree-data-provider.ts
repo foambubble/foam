@@ -130,7 +130,7 @@ export class GroupedResourcesTreeDataProvider
 
   getChildren(
     directory?: DirectoryTreeItem
-  ): Thenable<GroupedResourceTreeItem[]> {
+  ): Promise<GroupedResourceTreeItem[]> {
     if (this.groupBy === GroupedResoucesConfigGroupBy.Folder) {
       if (isSome(directory)) {
         return Promise.resolve(directory.children.sort(sortByTreeItemLabel));

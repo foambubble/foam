@@ -1,3 +1,5 @@
+/*global markdownit:readonly*/
+
 import markdownItRegex from 'markdown-it-regex';
 import * as vscode from 'vscode';
 import { isNone } from '../../utils';

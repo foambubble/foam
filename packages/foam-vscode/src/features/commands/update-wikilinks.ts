@@ -193,7 +193,7 @@ class WikilinkReferenceCodeLensProvider implements CodeLensProvider {
   public provideCodeLenses(
     document: TextDocument,
     _: CancellationToken
-  ): CodeLens[] | Thenable<CodeLens[]> {
+  ): CodeLens[] | Promise<CodeLens[]> {
     loadDocConfig();
 
     const range = detectReferenceListRange(document);

@@ -51,10 +51,7 @@ describe('Link resolution', () => {
       );
       const noteB = createNoteFromMarkdown('Page b', '/path/one/page b.md');
       const noteB2 = createNoteFromMarkdown('Page b 2', '/path/two/page b.md');
-      workspace
-        .set(noteA)
-        .set(noteB)
-        .set(noteB2);
+      workspace.set(noteA).set(noteB).set(noteB2);
       expect(workspace.resolveLink(noteA, noteA.links[0])).toEqual(noteB2.uri);
     });
 
@@ -63,10 +60,7 @@ describe('Link resolution', () => {
       const noteA = createNoteFromMarkdown('Link to [[page b]]', '/page-a.md');
       const noteB = createNoteFromMarkdown('Page b', '/path/one/page b.md');
       const noteB2 = createNoteFromMarkdown('Page b2', '/path/two/page b.md');
-      workspace
-        .set(noteA)
-        .set(noteB)
-        .set(noteB2);
+      workspace.set(noteA).set(noteB).set(noteB2);
       expect(workspace.resolveLink(noteA, noteA.links[0])).toEqual(noteB.uri);
     });
 
@@ -80,10 +74,7 @@ describe('Link resolution', () => {
       const noteB3 = createTestNote({ uri: '/path/to/yet/page-b.md' });
 
       const ws = createTestWorkspace();
-      ws.set(noteA)
-        .set(noteB1)
-        .set(noteB2)
-        .set(noteB3);
+      ws.set(noteA).set(noteB1).set(noteB2).set(noteB3);
 
       expect(ws.resolveLink(noteA, noteA.links[0])).toEqual(noteB2.uri);
       expect(ws.resolveLink(noteA, noteA.links[1])).toEqual(noteB3.uri);
@@ -97,10 +88,7 @@ describe('Link resolution', () => {
       );
       const noteB = createNoteFromMarkdown('Page b', '/path/one/page b.md');
       const noteB2 = createNoteFromMarkdown('Page b2', '/path/two/page b.md');
-      workspace
-        .set(noteA)
-        .set(noteB)
-        .set(noteB2);
+      workspace.set(noteA).set(noteB).set(noteB2);
       expect(workspace.resolveLink(noteA, noteA.links[0])).toEqual(noteB2.uri);
       expect(workspace.resolveLink(noteA, noteA.links[1])).toEqual(noteB.uri);
     });
@@ -157,9 +145,7 @@ describe('Link resolution', () => {
         ],
       });
       const noteB = createTestNote({ uri: '/somewhere/PAGE-B.md' });
-      const ws = createTestWorkspace()
-        .set(noteA)
-        .set(noteB);
+      const ws = createTestWorkspace().set(noteA).set(noteB);
 
       expect(ws.resolveLink(noteA, noteA.links[0])).toEqual(
         noteB.uri.withFragment('section')
@@ -258,10 +244,7 @@ describe('Link resolution', () => {
       );
 
       const ws = createTestWorkspace();
-      ws.set(noteA)
-        .set(noteB)
-        .set(noteC)
-        .set(noteD);
+      ws.set(noteA).set(noteB).set(noteC).set(noteD);
 
       expect(ws.resolveLink(noteB, noteB.links[0])).toEqual(noteA.uri);
       expect(ws.resolveLink(noteC, noteC.links[0])).toEqual(noteA.uri);

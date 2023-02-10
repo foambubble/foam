@@ -37,7 +37,8 @@ const feature: FoamFeature = {
 export default feature;
 
 export class BacklinksTreeDataProvider
-  implements vscode.TreeDataProvider<BacklinkPanelTreeItem> {
+  implements vscode.TreeDataProvider<BacklinkPanelTreeItem>
+{
   public target?: URI = undefined;
   // prettier-ignore
   private _onDidChangeTreeDataEmitter = new vscode.EventEmitter<BacklinkPanelTreeItem | undefined | void>();
@@ -61,10 +62,7 @@ export class BacklinksTreeDataProvider
       const backlinkRefs = Promise.all(
         resource.links
           .filter(link =>
-            this.workspace
-              .resolveLink(resource, link)
-              .asPlain()
-              .isEqual(uri)
+            this.workspace.resolveLink(resource, link).asPlain().isEqual(uri)
           )
           .map(async link => {
             const item = new BacklinkTreeItem(resource, link);
@@ -105,9 +103,9 @@ export class BacklinksTreeDataProvider
       .map(uri => this.workspace.get(uri))
       .sort(Resource.sortByTitle)
       .map(note => {
-        const connections = backlinksByResourcePath[
-          note.uri.path
-        ].sort((a, b) => Range.isBefore(a.link.range, b.link.range));
+        const connections = backlinksByResourcePath[note.uri.path].sort(
+          (a, b) => Range.isBefore(a.link.range, b.link.range)
+        );
         const item = new ResourceTreeItem(
           note,
           this.workspace,

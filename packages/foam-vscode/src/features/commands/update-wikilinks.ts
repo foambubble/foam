@@ -70,7 +70,7 @@ async function createReferenceList(foam: FoamWorkspace) {
 
   const refs = await generateReferenceList(foam, editor.document);
   if (refs && refs.length) {
-    await editor.edit(function(editBuilder) {
+    await editor.edit(function (editBuilder) {
       if (editor) {
         const spacing = hasEmptyTrailing(editor.document)
           ? docConfig.eol

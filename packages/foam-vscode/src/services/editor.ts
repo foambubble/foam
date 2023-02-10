@@ -135,9 +135,7 @@ export function asAbsoluteWorkspaceUri(uri: URI): URI {
   return res;
 }
 
-export async function createMatcherAndDataStore(
-  excludes: string[]
-): Promise<{
+export async function createMatcherAndDataStore(excludes: string[]): Promise<{
   matcher: IMatcher;
   dataStore: IDataStore;
   excludePatterns: Map<string, string[]>;

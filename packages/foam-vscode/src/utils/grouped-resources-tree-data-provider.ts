@@ -37,7 +37,8 @@ import { IMatcher } from '../core/services/datastore';
  * @implements {vscode.TreeDataProvider<GroupedResourceTreeItem>}
  */
 export class GroupedResourcesTreeDataProvider
-  implements vscode.TreeDataProvider<GroupedResourceTreeItem> {
+  implements vscode.TreeDataProvider<GroupedResourceTreeItem>
+{
   // prettier-ignore
   private _onDidChangeTreeData: vscode.EventEmitter<GroupedResourceTreeItem | undefined | void> = new vscode.EventEmitter<GroupedResourceTreeItem | undefined | void>();
   // prettier-ignore

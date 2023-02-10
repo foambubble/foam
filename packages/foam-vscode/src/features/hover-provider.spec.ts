@@ -92,9 +92,7 @@ describe('Hover provider', () => {
       );
       const noteA = parser.parse(fileA.uri, fileA.content);
       const noteB = parser.parse(fileB.uri, fileB.content);
-      const ws = createWorkspace()
-        .set(noteA)
-        .set(noteB);
+      const ws = createWorkspace().set(noteA).set(noteB);
       const graph = FoamGraph.fromWorkspace(ws);
 
       const provider = new HoverProvider(hoverEnabled, ws, graph, parser);
@@ -133,9 +131,7 @@ describe('Hover provider', () => {
       const noteA = parser.parse(fileA.uri, fileA.content);
       const noteB = parser.parse(fileB.uri, fileB.content);
 
-      const ws = createWorkspace()
-        .set(noteA)
-        .set(noteB);
+      const ws = createWorkspace().set(noteA).set(noteB);
       const graph = FoamGraph.fromWorkspace(ws);
 
       const { doc } = await showInEditor(noteA.uri);
@@ -164,9 +160,7 @@ describe('Hover provider', () => {
       const noteA = parser.parse(fileA.uri, fileA.content);
       const noteB = parser.parse(fileB.uri, fileB.content);
 
-      const ws = createWorkspace()
-        .set(noteA)
-        .set(noteB);
+      const ws = createWorkspace().set(noteA).set(noteB);
       const graph = FoamGraph.fromWorkspace(ws);
 
       const { doc } = await showInEditor(noteA.uri);
@@ -190,9 +184,7 @@ describe('Hover provider', () => {
       );
       const noteA = parser.parse(fileA.uri, fileA.content);
       const noteB = parser.parse(fileB.uri, fileB.content);
-      const ws = createWorkspace()
-        .set(noteA)
-        .set(noteB);
+      const ws = createWorkspace().set(noteA).set(noteB);
       const graph = FoamGraph.fromWorkspace(ws);
 
       const { doc } = await showInEditor(noteA.uri);
@@ -220,9 +212,7 @@ The content of file B`);
       );
       const noteA = parser.parse(fileA.uri, fileA.content);
       const noteB = parser.parse(fileB.uri, fileB.content);
-      const ws = createWorkspace()
-        .set(noteA)
-        .set(noteB);
+      const ws = createWorkspace().set(noteA).set(noteB);
       const graph = FoamGraph.fromWorkspace(ws);
 
       const { doc } = await showInEditor(noteA.uri);

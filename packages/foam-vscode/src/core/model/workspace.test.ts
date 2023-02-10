@@ -100,10 +100,7 @@ describe('Identifier computation', () => {
     const third = createTestNote({
       uri: '/another/path/for/page-a.md',
     });
-    const ws = new FoamWorkspace()
-      .set(first)
-      .set(second)
-      .set(third);
+    const ws = new FoamWorkspace().set(first).set(second).set(third);
 
     expect(ws.getIdentifier(first.uri)).toEqual('to/page-a');
     expect(ws.getIdentifier(second.uri)).toEqual('way/for/page-a');
@@ -120,10 +117,7 @@ describe('Identifier computation', () => {
     const third = createTestNote({
       uri: '/another/path/for/page-a.md',
     });
-    const ws = new FoamWorkspace()
-      .set(first)
-      .set(second)
-      .set(third);
+    const ws = new FoamWorkspace().set(first).set(second).set(third);
 
     expect(ws.getIdentifier(first.uri.withFragment('section name'))).toEqual(
       'to/page-a#section name'
@@ -176,11 +170,7 @@ describe('Identifier computation', () => {
     const noteD = createTestNote({ uri: '/path/to/note-d.md' });
     const noteABis = createTestNote({ uri: '/path/to/another/note-a.md' });
 
-    workspace
-      .set(noteA)
-      .set(noteB)
-      .set(noteC)
-      .set(noteD);
+    workspace.set(noteA).set(noteB).set(noteC).set(noteD);
     expect(workspace.getIdentifier(noteABis.uri)).toEqual('another/note-a');
     expect(
       workspace.getIdentifier(noteABis.uri, [noteB.uri, noteA.uri])

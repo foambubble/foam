@@ -22,9 +22,8 @@ const feature: FoamFeature = {
     context: vscode.ExtensionContext,
     foamPromise: Promise<Foam>
   ) => {
-    const isHoverEnabled: ConfigurationMonitor<boolean> = monitorFoamVsCodeConfig(
-      CONFIG_KEY
-    );
+    const isHoverEnabled: ConfigurationMonitor<boolean> =
+      monitorFoamVsCodeConfig(CONFIG_KEY);
 
     const foam = await foamPromise;
 

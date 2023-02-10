@@ -17,7 +17,7 @@ describe('create-note-from-default-template command', () => {
       'foam-vscode.create-note-from-default-template'
     );
 
-    expect(spy).toBeCalledWith({
+    expect(spy).toHaveBeenCalledWith({
       prompt: `Enter a title for the new note`,
       value: 'Title of my New Note',
       validateInput: expect.anything(),

@@ -64,15 +64,11 @@ export const completionCursorMove: FoamFeature = {
                 .lineAt(changedPosition.line)
                 .text.charAt(changedPosition.character - 1);
 
-              const {
-                character: selectionChar,
-                line: selectionLine,
-              } = e.selections[0].active;
+              const { character: selectionChar, line: selectionLine } =
+                e.selections[0].active;
 
-              const {
-                line: completionLine,
-                character: completionChar,
-              } = currentPosition;
+              const { line: completionLine, character: completionChar } =
+                currentPosition;
 
               const inCompleteBySectionDivider =
                 linkCommitCharacters.includes(preChar) &&
@@ -102,7 +98,8 @@ export const completionCursorMove: FoamFeature = {
 };
 
 export class SectionCompletionProvider
-  implements vscode.CompletionItemProvider<vscode.CompletionItem> {
+  implements vscode.CompletionItemProvider<vscode.CompletionItem>
+{
   constructor(private ws: FoamWorkspace) {}
 
   provideCompletionItems(
@@ -162,7 +159,8 @@ export class SectionCompletionProvider
 }
 
 export class WikilinkCompletionProvider
-  implements vscode.CompletionItemProvider<vscode.CompletionItem> {
+  implements vscode.CompletionItemProvider<vscode.CompletionItem>
+{
   constructor(private ws: FoamWorkspace, private graph: FoamGraph) {}
 
   provideCompletionItems(
@@ -293,9 +291,8 @@ class ResourceCompletionItem extends vscode.CompletionItem {
 }
 
 function getCompletionLabelSetting() {
-  const labelStyle: 'path' | 'title' | 'identifier' = getFoamVsCodeConfig(
-    'completion.label'
-  );
+  const labelStyle: 'path' | 'title' | 'identifier' =
+    getFoamVsCodeConfig('completion.label');
   return labelStyle;
 }
 

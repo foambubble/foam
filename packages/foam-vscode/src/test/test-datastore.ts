@@ -1,14 +1,27 @@
 import micromatch from 'micromatch';
-import { promisify } from 'util';
-import { glob } from 'glob';
 import { Logger } from '../core/utils/log';
 import { IDataStore, IMatcher } from '../core/services/datastore';
 import { URI } from '../core/model/uri';
 import { isWindows } from '../core/common/platform';
 import { asAbsolutePaths } from '../core/utils/path';
+import fs from 'fs';
+import path from 'path';
 
-const findAllFiles = promisify(glob);
-
+function getFiles(directory: string) {
+  const files = [];
+  getFilesFromDir(files, directory);
+  return files;
+}
+function getFilesFromDir(files: string[], directory: string) {
+  fs.readdirSync(directory).forEach(file => {
+    const absolute = path.join(directory, file);
+    if (fs.statSync(absolute).isDirectory()) {
+      getFilesFromDir(files, absolute);
+    } else {
+      files.push(absolute);
+    }
+  });
+}
 /**
  * File system based data store
  */
@@ -19,7 +32,7 @@ export class FileDataStore implements IDataStore {
   ) {}
 
   async list(): Promise<URI[]> {
-    const res = await findAllFiles([this.basedir, '**/*'].join('/'));
+    const res = getFiles(this.basedir);
     return res.map(URI.file);
   }
 

@@ -4,6 +4,12 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.20.8] - 2023-02-10
+
+Internal:
+
+- Updated most dependencies (#1160)
+
 ## [0.20.7] - 2023-01-31
 
 Fixes and Improvements:

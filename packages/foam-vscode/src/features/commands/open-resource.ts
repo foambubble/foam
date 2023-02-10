@@ -10,9 +10,20 @@ import {
 import { CommandDescriptor } from '../../utils/commands';
 import { FoamWorkspace } from '../../core/model/workspace';
 import { Resource } from '../../core/model/note';
+import { isNone } from '../../utils';
 
 interface OpenResourceArgs {
-  filter: FilterDescriptor;
+  /**
+   * The URI of the resource to open.
+   * If present the `filter` param is ignored
+   */
+  uri?: URI;
+
+  /**
+   * The filter object that describes which notes to consider
+   * for opening
+   */
+  filter?: FilterDescriptor;
 }
 
 export const OPEN_COMMAND = {
@@ -23,36 +34,41 @@ export const OPEN_COMMAND = {
     return {
       name: OPEN_COMMAND.command,
       params: {
-        filter: {
-          uri: uri,
-        },
+        uri: uri,
       },
     };
   },
 };
 
 async function openResource(workspace: FoamWorkspace, args?: OpenResourceArgs) {
-  args = args ?? { filter: {} };
+  args = args ?? {};
 
-  const resources = workspace.list();
+  let item: { uri: URI } | null = null;
 
-  const candidates = resources.filter(
-    createFilter(args.filter, vscode.workspace.isTrusted)
-  );
-
-  if (candidates.length === 0) {
-    vscode.window.showInformationMessage(
-      'Foam: No note matches given filters.'
-    );
-    return;
+  if (args.uri) {
+    item = workspace.find(args.uri.path);
   }
 
-  const item =
-    candidates.length === 1
-      ? candidates[0]
-      : await vscode.window.showQuickPick(
-          candidates.map(createQuickPickItemForResource)
-        );
+  if (isNone(item) && args.filter) {
+    const resources = workspace.list();
+    const candidates = resources.filter(
+      createFilter(args.filter, vscode.workspace.isTrusted)
+    );
+
+    if (candidates.length === 0) {
+      vscode.window.showInformationMessage(
+        'Foam: No note matches given filters.'
+      );
+      return;
+    }
+
+    item =
+      candidates.length === 1
+        ? candidates[0]
+        : await vscode.window.showQuickPick(
+            candidates.map(createQuickPickItemForResource)
+          );
+  }
 
   if (item) {
     const targetUri =

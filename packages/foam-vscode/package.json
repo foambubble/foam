@@ -22,12 +22,6 @@
     "workspaceContains:.vscode/foam.json"
   ],
   "main": "./out/extension.js",
-  "capabilities": {
-    "untrustedWorkspaces": {
-      "supported": "limited",
-      "description": "No expressions are allowed in filters."
-    }
-  },
   "contributes": {
     "markdown.markdownItPlugins": true,
     "markdown.previewStyles": [
@@ -484,7 +478,7 @@
     "@types/node": "^13.11.0",
     "@types/picomatch": "^2.2.1",
     "@types/remove-markdown": "^0.1.1",
-    "@types/vscode": "^1.70.0",
+    "@types/vscode": "^1.47.1",
     "@typescript-eslint/eslint-plugin": "^2.30.0",
     "@typescript-eslint/parser": "^2.30.0",
     "esbuild": "^0.14.45",

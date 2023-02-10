@@ -15,12 +15,14 @@
     "plugin:jest/recommended"
   ],
   "rules": {
+    "no-unused-vars": "off",
     "no-use-before-define": "off",
     "@typescript-eslint/no-use-before-define": "off",
     "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/no-non-null-assertion": "off",
     "@typescript-eslint/explicit-function-return-type": "off",
     "@typescript-eslint/interface-name-prefix": "off",
+    "@typescript-eslint/no-unused-vars": "warn",
     "import/no-extraneous-dependencies": [
       "error",
       {

@@ -22,7 +22,7 @@
   },
   "devDependencies": {
     "all-contributors-cli": "^6.16.1",
-    "lerna": "^3.22.1"
+    "lerna": "^6.4.1"
   },
   "engines": {
     "node": ">=18"

@@ -14,14 +14,9 @@ interface FilterDescriptorOp {
 
 interface FilterDescriptorParam {
   /**
-   * A glob of the notes to include
+   * A regex of the path to include
    */
-  include?: string;
-
-  /**
-   * A glob of the notes to exclude
-   */
-  exclude?: string;
+  path?: string;
 
   /**
    * A tag
@@ -37,11 +32,6 @@ interface FilterDescriptorParam {
    * The title of the note
    */
   title?: string;
-
-  /**
-   * The uri of the file to open
-   */
-  uri?: URI;
 
   /**
    * An expression to evaluate to JS, use `resource` to reference the resource object
@@ -61,13 +51,7 @@ export function createFilter(
       ? resource => eval(filter.expression)
       : undefined;
   return resource => {
-    if (filter.uri && resource.uri.path !== filter.uri.path) {
-      return false;
-    }
     if (expressionFn && !expressionFn(resource)) {
-      return false;
-    }
-    if (filter.exclude && resource.uri.toFsPath().match(filter.exclude)) {
       return false;
     }
     if (filter.type && resource.type !== filter.type) {

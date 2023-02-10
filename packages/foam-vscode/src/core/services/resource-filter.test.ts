@@ -1,25 +1,8 @@
 import { Logger } from '../utils/log';
 import { createTestNote } from '../../test/test-utils';
-import { createFilter, FilterDescriptor } from './resource-filter';
+import { createFilter } from './resource-filter';
 
 Logger.setLevel('error');
-
-const complexFilter: FilterDescriptor = {
-  and: [
-    { tag: '#a' },
-    { tag: '#b' },
-    {
-      or: [
-        { type: 'daily-note' },
-        { type: 'weekly-note' },
-        { include: '/projects/**' },
-      ],
-      not: {
-        type: 'root',
-      },
-    },
-  ],
-};
 
 describe('Resource Filter', () => {
   describe('Filter parameters', () => {

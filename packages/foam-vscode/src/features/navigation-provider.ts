@@ -57,7 +57,8 @@ export class NavigationProvider
   implements
     vscode.DefinitionProvider,
     vscode.DocumentLinkProvider,
-    vscode.ReferenceProvider {
+    vscode.ReferenceProvider
+{
   constructor(
     private workspace: FoamWorkspace,
     private graph: FoamGraph,

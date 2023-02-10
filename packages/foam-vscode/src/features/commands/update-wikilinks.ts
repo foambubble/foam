@@ -70,7 +70,7 @@ async function createReferenceList(foam: FoamWorkspace) {
 
   const refs = await generateReferenceList(foam, editor.document);
   if (refs && refs.length) {
-    await editor.edit(function(editBuilder) {
+    await editor.edit(function (editBuilder) {
       if (editor) {
         const spacing = hasEmptyTrailing(editor.document)
           ? docConfig.eol
@@ -193,7 +193,7 @@ class WikilinkReferenceCodeLensProvider implements CodeLensProvider {
   public provideCodeLenses(
     document: TextDocument,
     _: CancellationToken
-  ): CodeLens[] | Thenable<CodeLens[]> {
+  ): CodeLens[] | Promise<CodeLens[]> {
     loadDocConfig();
 
     const range = detectReferenceListRange(document);

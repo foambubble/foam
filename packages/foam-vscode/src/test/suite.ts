@@ -59,12 +59,13 @@ export function run(): Promise<void> {
         [rootDir]
       );
 
-      const failures = results.testResults.reduce((acc, res) => {
-        if (res.failureMessage) {
-          acc.push(res as any);
-        }
-        return acc;
-      }, [] as jest.TestResult[]);
+      const failures = results.testResults.filter(t => t.failureMessage);
+      // const failures = results.testResults.reduce((acc, res) => {
+      //   if (res.failureMessage) {
+      //     acc.push(res as any);
+      //   }
+      //   return acc;
+      // }, []);
 
       if (failures.length > 0) {
         console.log('Some Foam tests failed: ', failures.length);

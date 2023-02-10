@@ -24,7 +24,8 @@ const feature: FoamFeature = {
 };
 
 export class TagCompletionProvider
-  implements vscode.CompletionItemProvider<vscode.CompletionItem> {
+  implements vscode.CompletionItemProvider<vscode.CompletionItem>
+{
   constructor(private foamTags: FoamTags) {}
 
   provideCompletionItems(

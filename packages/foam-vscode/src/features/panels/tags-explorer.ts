@@ -67,7 +67,7 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
     return element;
   }
 
-  getChildren(element?: TagItem): Thenable<TagTreeItem[]> {
+  getChildren(element?: TagItem): Promise<TagTreeItem[]> {
     if (element) {
       const nestedTagItems: TagTreeItem[] = this.tags
         .filter(item => item.tag.indexOf(element.title + TAG_SEPARATOR) > -1)

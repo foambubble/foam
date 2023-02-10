@@ -44,9 +44,7 @@ describe('Backlinks panel', () => {
     uri: './note-c.md',
     links: [{ slug: 'note-a' }],
   });
-  ws.set(noteA)
-    .set(noteB)
-    .set(noteC);
+  ws.set(noteA).set(noteB).set(noteC);
   const graph = FoamGraph.fromWorkspace(ws, true);
 
   const provider = new BacklinksTreeDataProvider(ws, graph);

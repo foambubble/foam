@@ -22,7 +22,7 @@ describe('create-note command', () => {
       .mockImplementationOnce(jest.fn(() => Promise.resolve('Test note')));
 
     await commands.executeCommand('foam-vscode.create-note');
-    expect(spy).toBeCalled();
+    expect(spy).toHaveBeenCalled();
     const target = asAbsoluteWorkspaceUri(URI.file('Test note.md'));
     expectSameUri(target, window.activeTextEditor?.document.uri);
     await deleteFile(target);
@@ -124,7 +124,7 @@ describe('create-note command', () => {
       text: 'test ask',
       onFileExists: 'ask',
     });
-    expect(spy).toBeCalled();
+    expect(spy).toHaveBeenCalled();
 
     await deleteFile(target);
   });
@@ -183,7 +183,7 @@ describe('create-note command', () => {
       text: 'test asking',
       onRelativeNotePath: 'ask',
     });
-    expect(spy).toBeCalled();
+    expect(spy).toHaveBeenCalled();
 
     await deleteFile(base);
   });

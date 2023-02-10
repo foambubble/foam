@@ -1,3 +1,5 @@
+/*global markdownit:readonly*/
+
 import { FoamWorkspace } from '../../core/model/workspace';
 
 export const markdownItRemoveLinkReferences = (

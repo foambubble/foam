@@ -9,7 +9,7 @@ describe('open-daily-note-for-date command', () => {
 
     await commands.executeCommand('foam-vscode.open-daily-note-for-date');
 
-    expect(spy).toBeCalledWith(
+    expect(spy).toHaveBeenCalledWith(
       expect.objectContaining([
         expect.objectContaining({
           label: expect.stringContaining(

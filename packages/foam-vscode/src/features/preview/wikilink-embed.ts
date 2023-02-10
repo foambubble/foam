@@ -1,3 +1,5 @@
+/*global markdownit:readonly*/
+
 import markdownItRegex from 'markdown-it-regex';
 import { isSome } from '../../utils';
 import { FoamWorkspace } from '../../core/model/workspace';

@@ -95,10 +95,8 @@ export async function getTemplateInfo(
     templateText
   );
 
-  const [
-    templateMetadata,
-    templateWithFoamFrontmatterRemoved,
-  ] = extractFoamTemplateFrontmatterMetadata(templateWithResolvedVariables);
+  const [templateMetadata, templateWithFoamFrontmatterRemoved] =
+    extractFoamTemplateFrontmatterMetadata(templateWithResolvedVariables);
 
   return {
     metadata: templateMetadata,
@@ -209,62 +207,61 @@ function sortTemplatesMetadata(
   return nameSortOrder || pathSortOrder;
 }
 
-const createFnForOnRelativePathStrategy = (
-  onRelativePath: OnRelativePathStrategy | undefined
-) => async (existingFile: URI) => {
-  // Get the default from the configuration
-  if (isNone(onRelativePath)) {
-    onRelativePath =
-      getFoamVsCodeConfig('files.newNotePath') === 'root'
-        ? 'resolve-from-root'
-        : 'resolve-from-current-dir';
-  }
-
-  if (typeof onRelativePath === 'function') {
-    return onRelativePath(existingFile);
-  }
-
-  switch (onRelativePath) {
-    case 'resolve-from-current-dir':
-      return getCurrentEditorDirectory().joinPath(existingFile.path);
-    case 'resolve-from-root':
-      return asAbsoluteWorkspaceUri(existingFile);
-    case 'cancel':
-      return undefined;
-    case 'ask':
-    default: {
-      const newProposedPath = await askUserForFilepathConfirmation(
-        existingFile
-      );
-      return newProposedPath && URI.file(newProposedPath);
+const createFnForOnRelativePathStrategy =
+  (onRelativePath: OnRelativePathStrategy | undefined) =>
+  async (existingFile: URI) => {
+    // Get the default from the configuration
+    if (isNone(onRelativePath)) {
+      onRelativePath =
+        getFoamVsCodeConfig('files.newNotePath') === 'root'
+          ? 'resolve-from-root'
+          : 'resolve-from-current-dir';
     }
-  }
-};
 
-const createFnForOnFileExistsStrategy = (
-  onFileExists: OnFileExistStrategy
-) => async (existingFile: URI) => {
-  if (typeof onFileExists === 'function') {
-    return onFileExists(existingFile);
-  }
-  switch (onFileExists) {
-    case 'open':
-      await commands.executeCommand('vscode.open', toVsCodeUri(existingFile));
-      return;
-    case 'overwrite':
-      await deleteFile(existingFile);
-      return existingFile;
-    case 'cancel':
-      return undefined;
-    case 'ask':
-    default: {
-      const newProposedPath = await askUserForFilepathConfirmation(
-        existingFile
-      );
-      return newProposedPath && URI.file(newProposedPath);
+    if (typeof onRelativePath === 'function') {
+      return onRelativePath(existingFile);
     }
-  }
-};
+
+    switch (onRelativePath) {
+      case 'resolve-from-current-dir':
+        return getCurrentEditorDirectory().joinPath(existingFile.path);
+      case 'resolve-from-root':
+        return asAbsoluteWorkspaceUri(existingFile);
+      case 'cancel':
+        return undefined;
+      case 'ask':
+      default: {
+        const newProposedPath = await askUserForFilepathConfirmation(
+          existingFile
+        );
+        return newProposedPath && URI.file(newProposedPath);
+      }
+    }
+  };
+
+const createFnForOnFileExistsStrategy =
+  (onFileExists: OnFileExistStrategy) => async (existingFile: URI) => {
+    if (typeof onFileExists === 'function') {
+      return onFileExists(existingFile);
+    }
+    switch (onFileExists) {
+      case 'open':
+        await commands.executeCommand('vscode.open', toVsCodeUri(existingFile));
+        return;
+      case 'overwrite':
+        await deleteFile(existingFile);
+        return existingFile;
+      case 'cancel':
+        return undefined;
+      case 'ask':
+      default: {
+        const newProposedPath = await askUserForFilepathConfirmation(
+          existingFile
+        );
+        return newProposedPath && URI.file(newProposedPath);
+      }
+    }
+  };
 
 export const NoteFactory = {
   createNote: async (
@@ -279,9 +276,8 @@ export const NoteFactory = {
       const onRelativePath = createFnForOnRelativePathStrategy(
         onRelativePathStrategy
       );
-      const onFileExists = createFnForOnFileExistsStrategy(
-        onFileExistsStrategy
-      );
+      const onFileExists =
+        createFnForOnFileExistsStrategy(onFileExistsStrategy);
 
       /**
        * Make sure the path is absolute and doesn't exist

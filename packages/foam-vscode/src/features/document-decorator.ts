@@ -14,33 +14,32 @@ const placeholderDecoration = vscode.window.createTextEditorDecorationType({
   cursor: 'pointer',
 });
 
-const updateDecorations = (
-  parser: ResourceParser,
-  workspace: FoamWorkspace
-) => (editor: vscode.TextEditor) => {
-  if (!editor || editor.document.languageId !== 'markdown') {
-    return;
-  }
-  const note = parser.parse(
-    fromVsCodeUri(editor.document.uri),
-    editor.document.getText()
-  );
-  const placeholderRanges = [];
-  note.links.forEach(link => {
-    const linkUri = workspace.resolveLink(note, link);
-    if (linkUri.isPlaceholder()) {
-      placeholderRanges.push(
-        Range.create(
-          link.range.start.line,
-          link.range.start.character + (link.type === 'wikilink' ? 2 : 0),
-          link.range.end.line,
-          link.range.end.character - (link.type === 'wikilink' ? 2 : 0)
-        )
-      );
+const updateDecorations =
+  (parser: ResourceParser, workspace: FoamWorkspace) =>
+  (editor: vscode.TextEditor) => {
+    if (!editor || editor.document.languageId !== 'markdown') {
+      return;
     }
-  });
-  editor.setDecorations(placeholderDecoration, placeholderRanges);
-};
+    const note = parser.parse(
+      fromVsCodeUri(editor.document.uri),
+      editor.document.getText()
+    );
+    const placeholderRanges = [];
+    note.links.forEach(link => {
+      const linkUri = workspace.resolveLink(note, link);
+      if (linkUri.isPlaceholder()) {
+        placeholderRanges.push(
+          Range.create(
+            link.range.start.line,
+            link.range.start.character + (link.type === 'wikilink' ? 2 : 0),
+            link.range.end.line,
+            link.range.end.character - (link.type === 'wikilink' ? 2 : 0)
+          )
+        );
+      }
+    });
+    editor.setDecorations(placeholderDecoration, placeholderRanges);
+  };
 
 const feature: FoamFeature = {
   activate: async (

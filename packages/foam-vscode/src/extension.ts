@@ -1,3 +1,5 @@
+/*global markdownit:readonly*/
+
 import { workspace, ExtensionContext, window, commands } from 'vscode';
 import { MarkdownResourceProvider } from './core/services/markdown-provider';
 import { bootstrap } from './core/model/foam';
@@ -27,11 +29,8 @@ export async function activate(context: ExtensionContext) {
 
     // Prepare Foam
     const excludes = getIgnoredFilesSetting().map(g => g.toString());
-    const {
-      matcher,
-      dataStore,
-      excludePatterns,
-    } = await createMatcherAndDataStore(excludes);
+    const { matcher, dataStore, excludePatterns } =
+      await createMatcherAndDataStore(excludes);
 
     Logger.info('Loading from directories:');
     for (const folder of workspace.workspaceFolders) {

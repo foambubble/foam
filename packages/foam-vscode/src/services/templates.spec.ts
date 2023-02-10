@@ -35,7 +35,7 @@ describe('Create note from template', () => {
         new Resolver(new Map(), new Date()),
         fileA.uri
       );
-      expect(spy).toBeCalledWith(
+      expect(spy).toHaveBeenCalledWith(
         expect.objectContaining({
           prompt: `Enter the path for the new note`,
         })

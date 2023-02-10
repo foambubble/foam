@@ -21,7 +21,4 @@ export function isNumeric(value: string): boolean {
 }
 
 export const hash = (text: string) =>
-  crypto
-    .createHash('sha1')
-    .update(text)
-    .digest('hex');
+  crypto.createHash('sha1').update(text).digest('hex');

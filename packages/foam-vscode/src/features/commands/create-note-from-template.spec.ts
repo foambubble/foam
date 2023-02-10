@@ -14,7 +14,7 @@ describe('create-note-from-template command', () => {
 
     await commands.executeCommand('foam-vscode.create-note-from-template');
 
-    expect(spy).toBeCalledWith(['Yes', 'No'], {
+    expect(spy).toHaveBeenCalledWith(['Yes', 'No'], {
       placeHolder:
         'No templates available. Would you like to create one instead?',
     });
@@ -38,7 +38,7 @@ describe('create-note-from-template command', () => {
 
     await commands.executeCommand('foam-vscode.create-note-from-template');
 
-    expect(spy).toBeCalledWith(
+    expect(spy).toHaveBeenCalledWith(
       [
         expect.objectContaining({ label: 'template-a.md' }),
         expect.objectContaining({ label: 'template-b.md' }),
@@ -71,7 +71,7 @@ Template A
 
     await commands.executeCommand('foam-vscode.create-note-from-template');
 
-    expect(spy).toBeCalledWith(
+    expect(spy).toHaveBeenCalledWith(
       [
         expect.objectContaining({
           label: 'My Template',

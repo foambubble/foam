@@ -26,7 +26,8 @@ import * as pathUtils from '../utils/path';
 
 const _empty = '';
 const _slash = '/';
-const _regexp = /^(([^:/?#]{2,}?):)?(\/\/([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?/;
+const _regexp =
+  /^(([^:/?#]{2,}?):)?(\/\/([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?/;
 
 export class URI {
   readonly scheme: string;

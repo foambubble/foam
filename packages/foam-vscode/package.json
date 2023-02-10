@@ -502,7 +502,7 @@
     "ts-jest": "^26.4.4",
     "tsdx": "^0.13.2",
     "tslib": "^2.0.0",
-    "typescript": "^4.9",
+    "typescript": "^3.9.5",
     "vscode-test": "^1.3.0",
     "wait-for-expect": "^3.0.2"
   },

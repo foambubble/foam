@@ -55,13 +55,17 @@ export function createFilter(
   filter: FilterDescriptor,
   enableCode: boolean
 ): ResourceFilter {
+  filter = filter ?? {};
   const expressionFn =
     enableCode && filter.expression
       ? resource => eval(filter.expression)
       : undefined;
   return resource => {
-    if (expressionFn) {
-      return expressionFn(resource);
+    if (filter.uri && resource.uri.path !== filter.uri.path) {
+      return false;
+    }
+    if (expressionFn && !expressionFn(resource)) {
+      return false;
     }
     if (filter.exclude && resource.uri.toFsPath().match(filter.exclude)) {
       return false;
@@ -70,9 +74,6 @@ export function createFilter(
       return false;
     }
     if (filter.title && !resource.title.match(filter.title)) {
-      return false;
-    }
-    if (filter.uri && !resource.uri.asPlain().isEqual(filter.uri.asPlain())) {
       return false;
     }
     if (filter.and) {

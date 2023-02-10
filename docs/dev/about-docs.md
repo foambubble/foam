@@ -1,7 +1,7 @@
 # Developing documentation
 
 The best way to develop docs for the Foam repo is to directly open the `$foam-repo/docs/` as the root folder in a new vscode window.
-This automatically configures vscode with the necessary settings enabled (like [[link-reference-definitions]]) to effiniently write this documentation.
+This automatically configures vscode with the necessary settings enabled (like [[link-reference-definitions]]) to efficiently write this documentation.
 
 ## Organization
 

@@ -100,6 +100,10 @@ export class GroupedResourcesTreeDataProvider
     ];
   }
 
+  public get numElements() {
+    return this.flatUris.length;
+  }
+
   setGroupBy(groupBy: GroupedResoucesConfigGroupBy): void {
     this.groupBy = groupBy;
     this.setContext();

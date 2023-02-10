@@ -4,7 +4,7 @@ tags: todo, good-first-task
 # Contribution Guide
 
 Foam is open to contributions of any kind, including but not limited to code, documentation, ideas, and feedback.
-This guide aims to help guide new and seasoned contributors getting around the Foam codebase.
+This guide aims to help guide new and seasoned contributors getting around the Foam codebase. For a comprehensive guide about contributing to open-source projects in general, [see here](https://sqldbawithabeard.com/2019/11/29/how-to-fork-a-github-repository-and-contribute-to-an-open-source-project/).
 
 ## Getting Up To Speed
 
@@ -23,17 +23,18 @@ Finally, the easiest way to help, is to use it and provide feedback by [submitti
 
 ## Contributing
 
-If you're interested in contributing, this short guide will help you get things set up locally.
+If you're interested in contributing, this short guide will help you get things set up locally (assuming [node.js >= v16](https://nodejs.org/) and [yarn](https://yarnpkg.com/) are already installed on your system).
 
-1. Clone the repo locally:
+1. Fork the project to your Github account by clicking the "Fork" button on the top right hand corner of the project's [home repository page](https://github.com/foambubble/foam).
+2. Clone your newly forked repo locally:
 
-   `git clone https://github.com/foambubble/foam.git`
+   `git clone https://github.com/your_username/foam.git`
 
-2. Install the necessary dependencies by running this command from the root:
+3. Install the necessary dependencies by running this command from the root of the cloned repository:
 
    `yarn install`
 
-3. From the root, run the command:
+4. From the repository root, run the command:
 
    `yarn build`
 
@@ -54,7 +55,7 @@ This project uses [Yarn workspaces](https://classic.yarnpkg.com/en/docs/workspac
 
 Originally Foam had:
 
-- [/packages/foam-core](https://github.com/foambubble/foam/tree/master/packages/foam-core) - Powers the core functionality in Foam across all platforms.
+- [/packages/foam-core](https://github.com/foambubble/foam/tree/ee7a8919761f168d3931079adf21c5ad4d63db59/packages/foam-core) - Powers the core functionality in Foam across all platforms.
 - [/packages/foam-vscode](https://github.com/foambubble/foam/tree/master/packages/foam-vscode) - The core VS Code plugin.
 
 To improve DX we have moved the `foam-core` module into `packages/foam-vscode/src/core`, but from a development point of view it's useful to think of the `foam-vscode/src/core` "submodule" as something that might be extracted in the future.
@@ -85,6 +86,18 @@ This guide assumes you read the previous instructions and you're set up to work 
 2. In the new extension host of VS Code that launched, open a Foam workspace (e.g. your personal one, or a test-specific one created from [foam-template](https://github.com/foambubble/foam-template)). This is strictly not necessary, but the extension won't auto-run unless it's in a workspace with a `.vscode/foam.json` file.
 
 3. Test a command to make sure it's working as expected. Open the Command Palette (Ctrl/Cmd + Shift + P) and select "Foam: Update Markdown Reference List". If you see no errors, it's good to go!
+
+### Submitting a Pull Request (PR)
+
+After you have made your changes to your copy of the project, it is time to try and merge those changes into the public community project.
+
+1. Return to the project's [home repository page](https://github.com/foambubble/foam).
+2. Github should show you an button called "Compare & pull request" linking your forked repository to the community repository.
+3. Click that button and confirm that your repository is going to be merged into the community repository. See [this guide](https://sqldbawithabeard.com/2019/11/29/how-to-fork-a-github-repository-and-contribute-to-an-open-source-project/) for more specifics.
+4. Add as many relevant details to the PR message to make it clear to the project maintainers and other members of the community what you have accomplished with your new changes. Link to any issues the changes are related to.
+5. Your PR will then need to be reviewed and accepted by the other members of the community. Any discussion about the changes will occur in your PR thread.
+6. Once reviewed and accept you can complete the merge request!
+7. Finally rest and watch the sun rise on a grateful universe... Or start tackling the other open issues ;)
 
 ---
 

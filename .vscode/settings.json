@@ -28,5 +28,8 @@
   "jest.rootPath": "packages/foam-vscode",
   "jest.jestCommandLine": "yarn jest",
   "gitdoc.enabled": false,
-  "search.mode": "reuseEditor"
+  "search.mode": "reuseEditor",
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
 }

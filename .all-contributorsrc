@@ -968,6 +968,42 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "sn3akiwhizper",
+      "name": "sn3akiwhizper",
+      "avatar_url": "https://avatars.githubusercontent.com/u/102705294?v=4",
+      "profile": "http://sn3akiwhizper.github.io",
+      "contributions": [
+        "doc"
+      ]
+    },
+    {
+      "login": "jonathanpberger",
+      "name": "jonathan berger",
+      "avatar_url": "https://avatars.githubusercontent.com/u/41085?v=4",
+      "profile": "http://jonathanpberger.com/",
+      "contributions": [
+        "doc"
+      ]
+    },
+    {
+      "login": "badsketch",
+      "name": "Daniel Wang",
+      "avatar_url": "https://avatars.githubusercontent.com/u/8953212?v=4",
+      "profile": "https://github.com/badsketch",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "tlylt",
+      "name": "Liu YongLiang",
+      "avatar_url": "https://avatars.githubusercontent.com/u/41845017?v=4",
+      "profile": "http://yongliangliu.com",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,

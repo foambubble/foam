@@ -8,30 +8,18 @@
     "type": "git"
   },
   "homepage": "https://github.com/foambubble/foam",
-  "version": "0.20.2",
+  "version": "0.20.7",
   "license": "MIT",
   "publisher": "foam",
   "engines": {
-    "vscode": "^1.47.1"
+    "vscode": "^1.70.0"
   },
   "icon": "assets/icon/FOAM_ICON_256.png",
   "categories": [
     "Other"
   ],
   "activationEvents": [
-    "workspaceContains:.vscode/foam.json",
-    "onView:foam-vscode.tags-explorer",
-    "onCommand:foam-vscode.update-wikilinks",
-    "onCommand:foam-vscode.open-daily-note",
-    "onCommand:foam-vscode.update-graph",
-    "onCommand:foam-vscode.open-random-note",
-    "onCommand:foam-vscode.janitor",
-    "onCommand:foam-vscode.copy-without-brackets",
-    "onCommand:foam-vscode.show-graph",
-    "onCommand:foam-vscode.create-new-template",
-    "onCommand:foam-vscode.create-note",
-    "onCommand:foam-vscode.create-note-from-template",
-    "onCommand:foam-vscode.create-note-from-default-template"
+    "workspaceContains:.vscode/foam.json"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -297,6 +285,19 @@
           "default": "pdf mp3 webm wav m4a mp4 avi mov rtf txt doc docx pages xls xlsx numbers ppt pptm pptx",
           "description": "Space separated list of file extensions that will be considered attachments"
         },
+        "foam.files.newNotePath": {
+          "type": "string",
+          "default": "root",
+          "description": "Specifies where to create a new note. It is overruled by the template or command arguments",
+          "enum": [
+            "root",
+            "currentDir"
+          ],
+          "enumDescriptions": [
+            "Use the root of the workspace",
+            "Use the directory of the file in the current editor"
+          ]
+        },
         "foam.logging.level": {
           "type": "string",
           "default": "info",
@@ -514,5 +515,11 @@
     "unified": "^9.0.0",
     "unist-util-visit": "^2.0.2",
     "yaml": "^1.10.0"
+  },
+  "__metadata": {
+    "id": "b85c6625-454b-4b61-8a22-c42f3d0f2e1e",
+    "publisherDisplayName": "Foam",
+    "publisherId": "34339645-24f0-4619-9917-12157fd92446",
+    "isPreReleaseVersion": false
   }
 }

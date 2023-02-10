@@ -28,13 +28,20 @@ const feature: FoamFeature = {
     );
     provider.setGroupBy(getPlaceholdersConfig().groupBy);
 
+    const treeView = vscode.window.createTreeView('foam-vscode.placeholders', {
+      treeDataProvider: provider,
+      showCollapseAll: true,
+    });
+    const baseTitle = treeView.title;
+    treeView.title = baseTitle + ` (${provider.numElements})`;
+
     context.subscriptions.push(
-      vscode.window.registerTreeDataProvider(
-        'foam-vscode.placeholders',
-        provider
-      ),
+      treeView,
       ...provider.commands,
-      foam.graph.onDidUpdate(() => provider.refresh())
+      foam.graph.onDidUpdate(() => {
+        provider.refresh();
+        treeView.title = baseTitle + ` (${provider.numElements})`;
+      })
     );
   },
 };

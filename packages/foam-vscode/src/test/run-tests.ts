@@ -43,7 +43,7 @@ async function main() {
           '--disable-extensions',
           '--disable-workspace-trust',
         ],
-        version: '1.60.0',
+        version: '1.70.0',
       });
     } catch (err) {
       console.log('Error occurred while running Foam e2e tests:', err);

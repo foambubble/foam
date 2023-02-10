@@ -20,7 +20,7 @@ jobs:
         with:
           node-version: '18'
       - name: Restore Dependencies and VS Code test instance
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             node_modules
@@ -36,7 +36,7 @@ jobs:
     name: Build and Test
     strategy:
       matrix:
-        os: [macos-10.15, ubuntu-22.04, windows-2019]
+        os: [macos-12, ubuntu-22.04, windows-2022]
     runs-on: ${{ matrix.os }}
     env:
       OS: ${{ matrix.os }}
@@ -48,7 +48,7 @@ jobs:
         with:
           node-version: '18'
       - name: Restore Dependencies and VS Code test instance
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             node_modules

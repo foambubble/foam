@@ -53,11 +53,12 @@ export const createTestNote = (params: {
   text?: string;
   sections?: string[];
   root?: URI;
+  type?: string;
 }): Resource => {
   const root = params.root ?? URI.file('/');
   return {
     uri: root.resolve(params.uri),
-    type: 'note',
+    type: params.type ?? 'note',
     properties: {},
     title: params.title ?? strToUri(params.uri).getBasename(),
     definitions: params.definitions ?? [],

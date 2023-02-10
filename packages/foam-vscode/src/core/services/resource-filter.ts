@@ -1,6 +1,5 @@
-import * as _ from 'lodash';
+import { negate } from 'lodash';
 import { Resource } from '../model/note';
-import { URI } from '../model/uri';
 
 export interface FilterDescriptor
   extends FilterDescriptorOp,
@@ -48,7 +47,7 @@ export function createFilter(
   filter = filter ?? {};
   const expressionFn =
     enableCode && filter.expression
-      ? resource => eval(filter.expression)
+      ? resource => eval(filter.expression) // eslint-disable-line no-eval
       : undefined;
   return resource => {
     if (expressionFn && !expressionFn(resource)) {
@@ -71,7 +70,7 @@ export function createFilter(
         .some(fn => fn(resource));
     }
     if (filter.not) {
-      return _.negate(createFilter(filter.not, enableCode))(resource);
+      return negate(createFilter(filter.not, enableCode))(resource);
     }
     return true;
   };

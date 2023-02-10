@@ -8,7 +8,7 @@
     "type": "git"
   },
   "homepage": "https://github.com/foambubble/foam",
-  "version": "0.20.7",
+  "version": "0.20.8",
   "license": "MIT",
   "publisher": "foam",
   "engines": {
@@ -487,6 +487,7 @@
     "@types/vscode": "^1.70.0",
     "@typescript-eslint/eslint-plugin": "^5.51.0",
     "@typescript-eslint/parser": "^5.51.0",
+    "dts-cli": "^1.6.3",
     "esbuild": "^0.17.7",
     "eslint": "^8.33.0",
     "eslint-import-resolver-typescript": "^3.5.3",
@@ -499,7 +500,6 @@
     "micromatch": "^4.0.2",
     "rimraf": "^3.0.2",
     "ts-jest": "^27.1.5",
-    "dts-cli": "^1.6.3",
     "tslib": "^2.0.0",
     "typescript": "^4.9.5",
     "vscode-test": "^1.3.0",

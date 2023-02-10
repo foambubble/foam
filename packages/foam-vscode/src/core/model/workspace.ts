@@ -121,14 +121,16 @@ export class FoamWorkspace implements IDisposable {
     if (FoamWorkspace.isIdentifier(path)) {
       resource = this.listByIdentifier(path)[0];
     } else {
-      if (isAbsolute(path) || isSome(baseUri)) {
-        if (getExtension(path) !== '.md') {
-          const uri = baseUri.resolve(path + '.md');
-          resource = uri ? this._resources.get(normalize(uri.path)) : null;
-        }
-        if (!resource) {
-          const uri = baseUri.resolve(path);
-          resource = uri ? this._resources.get(normalize(uri.path)) : null;
+      const candidates = [path, path + '.md'];
+      for (const candidate of candidates) {
+        const searchKey = isAbsolute(candidate)
+          ? candidate
+          : isSome(baseUri)
+          ? baseUri.resolve(candidate).path
+          : null;
+        resource = this._resources.get(normalize(searchKey));
+        if (resource) {
+          break;
         }
       }
     }

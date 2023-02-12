@@ -13,6 +13,7 @@ import { toVsCodeUri } from '../utils/vsc-utils';
 import { createMarkdownParser } from '../core/services/markdown-parser';
 import { FoamGraph } from '../core/model/graph';
 import { commandAsURI } from '../utils/commands';
+import { CREATE_NOTE_COMMAND } from './commands/create-note';
 
 describe('Document navigation', () => {
   const parser = createMarkdownParser([]);
@@ -83,7 +84,11 @@ describe('Document navigation', () => {
 
       expect(links.length).toEqual(1);
       expect(links[0].target).toEqual(
-        commandAsURI(OPEN_COMMAND.forURI(URI.placeholder('a placeholder')))
+        commandAsURI(
+          CREATE_NOTE_COMMAND.forPlaceholder('a placeholder', {
+            onFileExists: 'open',
+          })
+        )
       );
       expect(links[0].range).toEqual(new vscode.Range(0, 20, 0, 33));
     });

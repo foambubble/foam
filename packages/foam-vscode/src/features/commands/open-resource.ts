@@ -10,7 +10,8 @@ import {
 import { CommandDescriptor } from '../../utils/commands';
 import { FoamWorkspace } from '../../core/model/workspace';
 import { Resource } from '../../core/model/note';
-import { isNone } from '../../utils';
+import { isSome, isNone } from '../../core/utils';
+import { Logger } from '../../core/utils/log';
 
 interface OpenResourceArgs {
   /**
@@ -70,14 +71,36 @@ async function openResource(workspace: FoamWorkspace, args?: OpenResourceArgs) {
           );
   }
 
-  if (item) {
+  if (isSome(item)) {
     const targetUri =
       item.uri.path === vscode.window.activeTextEditor?.document.uri.path
         ? vscode.window.activeTextEditor?.document.uri
         : toVsCodeUri(item.uri.asPlain());
     return vscode.commands.executeCommand('vscode.open', targetUri);
   }
+
+  Logger.info(
+    `${OPEN_COMMAND.command}: No resource matches given args`,
+    JSON.stringify(args)
+  );
+  vscode.window.showInformationMessage(
+    `${OPEN_COMMAND.command}: No resource matches given args`
+  );
 }
+
+const feature: FoamFeature = {
+  activate: async (
+    context: vscode.ExtensionContext,
+    foamPromise: Promise<Foam>
+  ) => {
+    const foam = await foamPromise;
+    context.subscriptions.push(
+      vscode.commands.registerCommand(OPEN_COMMAND.command, args => {
+        return openResource(foam.workspace, args);
+      })
+    );
+  },
+};
 
 interface ResourceItem extends vscode.QuickPickItem {
   label: string;
@@ -98,38 +121,6 @@ const createQuickPickItemForResource = (resource: Resource): ResourceItem => {
     uri: resource.uri,
     detail: detail,
   };
-};
-
-const feature: FoamFeature = {
-  activate: async (
-    context: vscode.ExtensionContext,
-    foamPromise: Promise<Foam>
-  ) => {
-    const foam = await foamPromise;
-    context.subscriptions.push(
-      vscode.commands.registerCommand(OPEN_COMMAND.command, args => {
-        return openResource(foam.workspace, args);
-      })
-      //   async (params: { uri: URI }) => {
-      //     const uri = new URI(params.uri);
-      //     switch (uri.scheme) {
-      //       case 'file': {
-      //         const targetUri =
-      //           uri.path === vscode.window.activeTextEditor?.document.uri.path
-      //             ? vscode.window.activeTextEditor?.document.uri
-      //             : toVsCodeUri(uri.asPlain());
-      //         return vscode.commands.executeCommand('vscode.open', targetUri);
-      //       }
-      //       case 'placeholder': {
-      //         vscode.window.showErrorMessage(
-      //           "Foam: Can't open placeholder. Use create-note command instead."
-      //         );
-      //       }
-      //     }
-      //   }
-      // )
-    );
-  },
 };
 
 export default feature;

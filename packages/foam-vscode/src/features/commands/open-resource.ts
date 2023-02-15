@@ -13,12 +13,12 @@ import { Resource } from '../../core/model/note';
 import { isSome, isNone } from '../../core/utils';
 import { Logger } from '../../core/utils/log';
 
-interface OpenResourceArgs {
+export interface OpenResourceArgs {
   /**
    * The URI of the resource to open.
    * If present the `filter` param is ignored
    */
-  uri?: URI;
+  uri?: URI | string | vscode.Uri;
 
   /**
    * The filter object that describes which notes to consider
@@ -47,7 +47,8 @@ async function openResource(workspace: FoamWorkspace, args?: OpenResourceArgs) {
   let item: { uri: URI } | null = null;
 
   if (args.uri) {
-    item = workspace.find(args.uri.path);
+    const path = typeof args.uri === 'string' ? args.uri : args.uri.path;
+    item = workspace.find(path);
   }
 
   if (isNone(item) && args.filter) {

@@ -2,7 +2,6 @@ import * as vscode from 'vscode';
 import { FoamFeature } from '../types';
 import { mdDocSelector } from '../utils';
 import { toVsCodeRange, toVsCodeUri, fromVsCodeUri } from '../utils/vsc-utils';
-import { OPEN_COMMAND } from './commands/open-resource';
 import { Foam } from '../core/model/foam';
 import { FoamWorkspace } from '../core/model/workspace';
 import { Resource, ResourceLink, ResourceParser } from '../core/model/note';
@@ -10,6 +9,8 @@ import { URI } from '../core/model/uri';
 import { Range } from '../core/model/range';
 import { FoamGraph } from '../core/model/graph';
 import { Position } from '../core/model/position';
+import { CREATE_NOTE_COMMAND } from './commands/create-note';
+import { commandAsURI } from '../utils/commands';
 
 const feature: FoamFeature = {
   activate: async (
@@ -163,7 +164,9 @@ export class NavigationProvider
     return targets
       .filter(o => o.target.isPlaceholder()) // links to resources are managed by the definition provider
       .map(o => {
-        const command = OPEN_COMMAND.asURI(o.target);
+        const command = CREATE_NOTE_COMMAND.forPlaceholder(o.target.path, {
+          onFileExists: 'open',
+        });
 
         const documentLink = new vscode.DocumentLink(
           new vscode.Range(
@@ -172,7 +175,7 @@ export class NavigationProvider
             o.link.range.end.line,
             o.link.range.end.character - 2
           ),
-          command
+          commandAsURI(command)
         );
         documentLink.tooltip = `Create note for '${o.target.path}'`;
         return documentLink;

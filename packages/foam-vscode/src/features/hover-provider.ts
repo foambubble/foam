@@ -14,6 +14,7 @@ import { Range } from '../core/model/range';
 import { FoamGraph } from '../core/model/graph';
 import { OPEN_COMMAND } from './commands/open-resource';
 import { CREATE_NOTE_COMMAND } from './commands/create-note';
+import { commandAsURI } from '../utils/commands';
 
 export const CONFIG_KEY = 'links.hover.enable';
 
@@ -86,7 +87,7 @@ export class HoverProvider implements vscode.HoverProvider {
     );
 
     const links = sources.slice(0, 10).map(ref => {
-      const command = OPEN_COMMAND.asURI(ref);
+      const command = commandAsURI(OPEN_COMMAND.forURI(ref));
       return `- [${this.workspace.get(ref).title}](${command.toString()})`;
     });
 
@@ -108,27 +109,14 @@ export class HoverProvider implements vscode.HoverProvider {
         : this.workspace.get(targetUri).title;
     }
 
-    // If placeholder, offer to create a new note from template (compared to default link provider - not from template)
-    const basedir =
-      vscode.workspace.workspaceFolders.length > 0
-        ? vscode.workspace.workspaceFolders[0].uri
-        : vscode.window.activeTextEditor?.document.uri
-        ? vscode.window.activeTextEditor!.document.uri
-        : undefined;
-    if (basedir === undefined) {
-      return;
-    }
-    const target = fromVsCodeUri(basedir)
-      .resolve(targetUri, true)
-      .changeExtension('', '.md');
-    const args = {
-      text: target.getName(),
-      notePath: target.path,
+    const command = CREATE_NOTE_COMMAND.forPlaceholder(targetUri.path, {
       askForTemplate: true,
-    };
-    const command = CREATE_NOTE_COMMAND.asURI(args);
+      onFileExists: 'open',
+    });
     const newNoteFromTemplate = new vscode.MarkdownString(
-      `[Create note from template for '${targetUri.getName()}'](${command})`
+      `[Create note from template for '${targetUri.getName()}'](${commandAsURI(
+        command
+      ).toString()})`
     );
     newNoteFromTemplate.isTrusted = true;
 

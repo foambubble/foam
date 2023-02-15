@@ -87,6 +87,13 @@ describe('Workspace resources', () => {
     const res = ws.find('test-file#my-section');
     expect(res.uri.fragment).toEqual('my-section');
   });
+
+  it('should find absolute files even when no basedir is provided', () => {
+    const noteA = createTestNote({ uri: '/a/path/to/file.md' });
+    const ws = createTestWorkspace().set(noteA);
+
+    expect(ws.find('/a/path/to/file.md').uri.path).toEqual(noteA.uri.path);
+  });
 });
 
 describe('Identifier computation', () => {

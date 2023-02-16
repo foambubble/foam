@@ -68,13 +68,13 @@ describe('Displaying included notes in preview', () => {
     const note = await createFile(
       `
 # Section 1
-This is the first section of note D
+This is the first section of note E
 
 # Section 2 
-This is the second section of note D
+This is the second section of note E
 
 # Section 3
-This is the third section of note D
+This is the third section of note E
     `,
       ['note-e.md']
     );
@@ -93,9 +93,45 @@ This is the third section of note D
         ).toMatch(
           `<p>This is the root node.</p>
 <p><h1>Section 2</h1>
-<p>This is the second section of note D</p>
+<p>This is the second section of note E</p>
 </p>`
         );
+      }
+    );
+
+    await deleteFile(note);
+  });
+
+  it('should render an included section in container mode', async () => {
+    const note = await createFile(
+      `
+# Section 1
+This is the first section of note E
+
+# Section 2 
+This is the second section of note E
+
+# Section 3
+This is the third section of note E
+    `,
+      ['note-e-container.md']
+    );
+    const parser = createMarkdownParser([]);
+    const ws = new FoamWorkspace().set(parser.parse(note.uri, note.content));
+
+    await withModifiedFoamConfiguration(
+      CONFIG_EMBED_NOTE_IN_CONTAINER,
+      true,
+      () => {
+        const md = markdownItWikilinkEmbed(MarkdownIt(), ws);
+
+        const res = md.render(
+          `This is the root node. ![[note-e-container#Section 3]]`
+        );
+        expect(res).toContain('This is the root node');
+        expect(res).toContain('embed-container-note');
+        expect(res).toContain('Section 3');
+        expect(res).toContain('This is the third section of note E');
       }
     );
 

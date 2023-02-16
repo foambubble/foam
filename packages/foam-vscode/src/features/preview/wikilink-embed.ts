@@ -41,9 +41,17 @@ export const markdownItWikilinkEmbed = (
         let content = `Embed for [[${wikilink}]]`;
         switch (includedNote.type) {
           case 'note': {
-            const noteText = readFileSync(
-              includedNote.uri.toFsPath()
-            ).toString();
+            let noteText = readFileSync(includedNote.uri.toFsPath()).toString();
+            const section = Resource.findSection(
+              includedNote,
+              includedNote.uri.fragment
+            );
+            if (isSome(section)) {
+              const rows = noteText.split('\n');
+              noteText = rows
+                .slice(section.range.start.line, section.range.end.line)
+                .join('\n');
+            }
             content = getFoamVsCodeConfig(CONFIG_EMBED_NOTE_IN_CONTAINER)
               ? `<div class="embed-container-note">${md.render(noteText)}</div>`
               : noteText;
@@ -61,16 +69,6 @@ Embed for attachments is not supported
               `![](${md.normalizeLink(includedNote.uri.path)})`
             )}</div>`;
             break;
-        }
-        const section = Resource.findSection(
-          includedNote,
-          includedNote.uri.fragment
-        );
-        if (isSome(section)) {
-          const rows = content.split('\n');
-          content = rows
-            .slice(section.range.start.line, section.range.end.line)
-            .join('\n');
         }
         const html = md.render(content);
         refsStack.pop();

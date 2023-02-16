@@ -4,6 +4,12 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.21.0] - 2023-02-16
+
+Features:
+
+- Added support for filters for the `foam-vscode.open-resource` command (#1161)
+
 ## [0.20.8] - 2023-02-10
 
 Internal:
@@ -64,7 +70,7 @@ Fixes and Improvements:
 
 ## [0.20.0] - 2022-09-30
 
-New Features:
+Features:
 
 - Added `foam-vscode.create-note` command, which can be very customized for several use cases (#1076)
 
@@ -120,7 +126,7 @@ Internal:
 
 ## [0.19.0] - 2022-07-07
 
-New Features:
+Features:
 
 - Support for attachments (PDF) and images (#1027)
 - Support for opening day notes for other days as well (#1026, thanks @alper)
@@ -600,7 +606,7 @@ Fixes and Improvements:
 
 ## [0.7.1] - 2020-11-27
 
-New Feature:
+Features:
 
 - Foam logging can now be inspected in VsCode Output panel (#377)
 
@@ -612,7 +618,7 @@ Fixes and Improvements:
 
 ## [0.7.0] - 2020-11-25
 
-New Features:
+Features:
 
 - Foam stays in sync with changes in notes
 - Dataviz: Added multiple selection in graph (shift+click on node)
@@ -624,7 +630,7 @@ Fixes and Improvements:
 
 ## [0.6.0] - 2020-11-19
 
-New features:
+Features:
 
 - Added command to create notes from templates (#115 - Thanks @ingalless)
 
@@ -639,7 +645,7 @@ Fixes and Improvements:
 
 ## [0.5.0] - 2020-11-09
 
-New features:
+Features:
 
 - Added tags panel (#311)
 
@@ -653,7 +659,7 @@ Fixes and Improvements:
 
 ## [0.4.0] - 2020-10-28
 
-New features:
+Features:
 
 - Added `Foam: Show Graph` command
 - Added date snippets (/+1d, ...) to create wikilinks to dates in daily note format
@@ -681,7 +687,7 @@ Fixes and improvements:
 
 ## [0.3.0] - 2020-07-25
 
-New features:
+Features:
 
 - [Daily Notes](https://foambubble.github.io/foam/daily-notes)
 - [Janitor](https://foambubble.github.io/foam/workspace-janitor) for updating headings and link references across your workspace

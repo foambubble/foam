@@ -125,10 +125,12 @@ This is the third section of note E
       () => {
         const md = markdownItWikilinkEmbed(MarkdownIt(), ws);
 
-        const res = md.render(`This is the root node. ![[note-e-container#Section 3]]`);
+        const res = md.render(
+          `This is the root node. ![[note-e-container#Section 3]]`
+        );
         expect(res).toContain('This is the root node');
         expect(res).toContain('embed-container-note');
-        expect(res).toContain('Section 3')
+        expect(res).toContain('Section 3');
         expect(res).toContain('This is the third section of note E');
       }
     );

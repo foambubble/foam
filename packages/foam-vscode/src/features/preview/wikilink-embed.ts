@@ -41,9 +41,7 @@ export const markdownItWikilinkEmbed = (
         let content = `Embed for [[${wikilink}]]`;
         switch (includedNote.type) {
           case 'note': {
-            let noteText = readFileSync(
-              includedNote.uri.toFsPath()
-            ).toString();
+            let noteText = readFileSync(includedNote.uri.toFsPath()).toString();
             const section = Resource.findSection(
               includedNote,
               includedNote.uri.fragment

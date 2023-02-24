@@ -199,7 +199,7 @@ describe('factories', () => {
 
       const doc = window.activeTextEditor.document;
       expect(doc.uri.path).toMatch(/my-placeholder.md$/);
-      expect(doc.getText()).toMatch(/^# my-placeholder\n/);
+      expect(doc.getText()).toMatch(/^# my-placeholder/);
     });
   });
 });

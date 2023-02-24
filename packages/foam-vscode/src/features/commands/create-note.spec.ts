@@ -10,6 +10,7 @@ import {
   showInEditor,
 } from '../../test/test-utils-vscode';
 import { fromVsCodeUri } from '../../utils/vsc-utils';
+import { CREATE_NOTE_COMMAND } from './create-note';
 
 describe('create-note command', () => {
   afterEach(() => {
@@ -186,5 +187,19 @@ describe('create-note command', () => {
     expect(spy).toHaveBeenCalled();
 
     await deleteFile(base);
+  });
+});
+
+describe('factories', () => {
+  describe('forPlaceholder', () => {
+    it('adds the .md extension to notes created for placeholders', async () => {
+      await closeEditors();
+      const command = CREATE_NOTE_COMMAND.forPlaceholder('my-placeholder');
+      await commands.executeCommand(command.name, command.params);
+
+      const doc = window.activeTextEditor.document;
+      expect(doc.uri.path).toMatch(/my-placeholder.md$/);
+      expect(doc.getText()).toMatch(/^# my-placeholder/);
+    });
   });
 });

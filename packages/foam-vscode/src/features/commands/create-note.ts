@@ -114,11 +114,17 @@ export const CREATE_NOTE_COMMAND = {
     placeholder: string,
     extra: Partial<CreateNoteArgs> = {}
   ): CommandDescriptor<CreateNoteArgs> => {
+    const title = placeholder.endsWith('.md')
+      ? placeholder.replace(/\.md$/, '')
+      : placeholder;
+    const notePath = placeholder.endsWith('.md')
+      ? placeholder
+      : placeholder + '.md';
     return {
       name: CREATE_NOTE_COMMAND.command,
       params: {
-        title: placeholder,
-        notePath: placeholder,
+        title,
+        notePath,
         ...extra,
       },
     };

@@ -1,5 +1,6 @@
 /*global markdownit:readonly*/
 
+import { Uri, workspace, window } from 'vscode';
 import markdownItRegex from 'markdown-it-regex';
 import { isSome } from '../../utils';
 import { FoamWorkspace } from '../../core/model/workspace';
@@ -8,6 +9,10 @@ import { Resource } from '../../core/model/note';
 import { getFoamVsCodeConfig } from '../../services/config';
 // eslint-disable-next-line no-restricted-imports
 import { readFileSync } from 'fs';
+import { createMarkdownParser } from '../../core/services/markdown-parser';
+import { fromVsCodeUri } from '../../utils/vsc-utils';
+import { isAbsolute } from '../../core/utils/path';
+import { MarkdownLink } from '../../core/services/markdown-link';
 
 export const CONFIG_EMBED_NOTE_IN_CONTAINER = 'preview.embedNoteInContainer';
 const refsStack: string[] = [];
@@ -52,6 +57,8 @@ export const markdownItWikilinkEmbed = (
                 .slice(section.range.start.line, section.range.end.line)
                 .join('\n');
             }
+            // TODO adjust relative links
+            noteText = makeRelativeLinksAbsolute(noteText);
             content = getFoamVsCodeConfig(CONFIG_EMBED_NOTE_IN_CONTAINER)
               ? `<div class="embed-container-note">${md.render(noteText)}</div>`
               : noteText;
@@ -83,5 +90,17 @@ Embed for attachments is not supported
     },
   });
 };
+
+function makeRelativeLinksAbsolute(noteText: string) {
+  const parser = createMarkdownParser();
+  const note = parser.parse(
+    fromVsCodeUri(workspace.workspaceFolders[0].uri),
+    noteText
+  );
+  const newLinks = note.links.map(link => {
+    MarkdownLink.analyzeLink(link);
+  });
+  return noteText;
+}
 
 export default markdownItWikilinkEmbed;

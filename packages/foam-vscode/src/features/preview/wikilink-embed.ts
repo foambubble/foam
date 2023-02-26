@@ -5,7 +5,7 @@ import markdownItRegex from 'markdown-it-regex';
 import { isSome } from '../../utils';
 import { FoamWorkspace } from '../../core/model/workspace';
 import { Logger } from '../../core/utils/log';
-import { Resource } from '../../core/model/note';
+import { Resource, ResourceParser } from '../../core/model/note';
 import { applyTextEdit } from '../../core/janitor/apply-text-edit';
 import { getFoamVsCodeConfig } from '../../services/config';
 // eslint-disable-next-line no-restricted-imports
@@ -20,7 +20,8 @@ const refsStack: string[] = [];
 
 export const markdownItWikilinkEmbed = (
   md: markdownit,
-  workspace: FoamWorkspace
+  workspace: FoamWorkspace,
+  parser: ResourceParser
 ) => {
   return md.use(markdownItRegex, {
     name: 'embed-wikilinks',
@@ -58,7 +59,11 @@ export const markdownItWikilinkEmbed = (
                 .slice(section.range.start.line, section.range.end.line)
                 .join('\n');
             }
-            noteText = withLinksRelativeToWorkspaceRoot(noteText, workspace);
+            noteText = withLinksRelativeToWorkspaceRoot(
+              noteText,
+              parser,
+              workspace
+            );
             content = getFoamVsCodeConfig(CONFIG_EMBED_NOTE_IN_CONTAINER)
               ? `<div class="embed-container-note">${md.render(noteText)}</div>`
               : noteText;
@@ -91,9 +96,9 @@ Embed for attachments is not supported
   });
 };
 
-const parser = createMarkdownParser();
 function withLinksRelativeToWorkspaceRoot(
   noteText: string,
+  parser: ResourceParser,
   workspace: FoamWorkspace
 ) {
   const note = parser.parse(

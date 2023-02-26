@@ -23,6 +23,7 @@ export const markdownItWikilinkNavigation = (
           rawText: '[[' + wikilink + ']]',
           type: 'wikilink',
           range: Range.create(0, 0),
+          isEmbed: false,
         });
         const formattedSection = section ? `#${section}` : '';
         const label = isEmpty(alias) ? `${target}${formattedSection}` : alias;

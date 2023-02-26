@@ -299,18 +299,33 @@ const wikilinkPlugin: ParserPlugin = {
   name: 'wikilink',
   visit: (node, note, noteSource) => {
     if (node.type === 'wikiLink') {
+      const isEmbed =
+        noteSource.charAt(node.position!.start.offset - 1) === '!';
+
       const literalContent = noteSource.substring(
-        node.position!.start.offset!,
+        isEmbed
+          ? node.position!.start.offset! - 1
+          : node.position!.start.offset!,
         node.position!.end.offset!
       );
+
+      const range = isEmbed
+        ? Range.create(
+            node.position.start.line - 1,
+            node.position.start.column - 2,
+            node.position.end.line - 1,
+            node.position.end.column - 1
+          )
+        : astPositionToFoamRange(node.position!);
 
       note.links.push({
         type: 'wikilink',
         rawText: literalContent,
-        range: astPositionToFoamRange(node.position!),
+        range,
+        isEmbed,
       });
     }
-    if (node.type === 'link') {
+    if (node.type === 'link' || node.type === 'image') {
       const targetUri = (node as any).url;
       const uri = note.uri.resolve(targetUri);
       if (uri.scheme !== 'file' || uri.path === note.uri.path) {
@@ -324,6 +339,7 @@ const wikilinkPlugin: ParserPlugin = {
         type: 'link',
         rawText: literalContent,
         range: astPositionToFoamRange(node.position!),
+        isEmbed: literalContent.startsWith('!'),
       });
     }
   },

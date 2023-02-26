@@ -46,15 +46,16 @@ export abstract class MarkdownLink {
     const newAlias = delta.alias ?? alias ?? '';
     const sectionDivider = newSection ? '#' : '';
     const aliasDivider = newAlias ? '|' : '';
+    const embed = link.isEmbed ? '!' : '';
     if (link.type === 'wikilink') {
       return {
-        newText: `[[${newTarget}${sectionDivider}${newSection}${aliasDivider}${newAlias}]]`,
+        newText: `${embed}[[${newTarget}${sectionDivider}${newSection}${aliasDivider}${newAlias}]]`,
         selection: link.range,
       };
     }
     if (link.type === 'link') {
       return {
-        newText: `[${newAlias}](${newTarget}${sectionDivider}${newSection})`,
+        newText: `${embed}[${newAlias}](${newTarget}${sectionDivider}${newSection})`,
         selection: link.range,
       };
     }

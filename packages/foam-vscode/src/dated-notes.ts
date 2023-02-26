@@ -86,9 +86,7 @@ export async function createDailyNoteIfNotExists(targetDate: Date) {
 
   const templateFallbackText = `---
 foam_template:
-  filepath: "${workspace.asRelativePath(
-    toVsCodeUri(pathFromLegacyConfiguration)
-  )}"
+  filepath: "${pathFromLegacyConfiguration.toFsPath()}"
 ---
 # ${dateFormat(targetDate, titleFormat, false)}
 `;

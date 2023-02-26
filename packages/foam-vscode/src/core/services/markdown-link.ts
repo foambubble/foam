@@ -50,13 +50,13 @@ export abstract class MarkdownLink {
     if (link.type === 'wikilink') {
       return {
         newText: `${embed}[[${newTarget}${sectionDivider}${newSection}${aliasDivider}${newAlias}]]`,
-        selection: link.range,
+        range: link.range,
       };
     }
     if (link.type === 'link') {
       return {
         newText: `${embed}[${newAlias}](${newTarget}${sectionDivider}${newSection})`,
-        selection: link.range,
+        range: link.range,
       };
     }
     throw new Error(

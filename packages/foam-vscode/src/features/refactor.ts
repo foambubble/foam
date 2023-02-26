@@ -45,7 +45,7 @@ const feature: FoamFeature = {
                 );
                 renameEdits.replace(
                   toVsCodeUri(connection.source),
-                  toVsCodeRange(edit.selection),
+                  toVsCodeRange(edit.range),
                   edit.newText
                 );
                 break;
@@ -62,7 +62,7 @@ const feature: FoamFeature = {
                 );
                 renameEdits.replace(
                   toVsCodeUri(connection.source),
-                  toVsCodeRange(edit.selection),
+                  toVsCodeRange(edit.range),
                   edit.newText
                 );
                 break;

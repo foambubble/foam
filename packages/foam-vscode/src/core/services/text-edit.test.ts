@@ -1,6 +1,6 @@
 import { Range } from '../model/range';
 import { Logger } from '../utils/log';
-import { applyTextEdit } from './apply-text-edit';
+import { TextEdit } from './text-edit';
 
 Logger.setLevel('error');
 
@@ -23,7 +23,7 @@ describe('applyTextEdit', () => {
 3. this is third line
 4. this is fourth line`;
 
-    const actual = applyTextEdit(text, textEdit);
+    const actual = TextEdit.apply(text, textEdit);
 
     expect(actual).toBe(expected);
   });
@@ -45,7 +45,7 @@ describe('applyTextEdit', () => {
 3. this is third line
 `;
 
-    const actual = applyTextEdit(text, textEdit);
+    const actual = TextEdit.apply(text, textEdit);
 
     expect(actual).toBe(expected);
   });
@@ -68,7 +68,7 @@ describe('applyTextEdit', () => {
 3. this is third line
 `;
 
-    const actual = applyTextEdit(text, textEdit);
+    const actual = TextEdit.apply(text, textEdit);
 
     expect(actual).toBe(expected);
   });

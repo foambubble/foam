@@ -1,19 +1,18 @@
 /*global markdownit:readonly*/
 
+// eslint-disable-next-line no-restricted-imports
+import { readFileSync } from 'fs';
 import { workspace as vsWorkspace } from 'vscode';
 import markdownItRegex from 'markdown-it-regex';
 import { isSome } from '../../utils';
 import { FoamWorkspace } from '../../core/model/workspace';
 import { Logger } from '../../core/utils/log';
 import { Resource, ResourceParser } from '../../core/model/note';
-import { applyTextEdit } from '../../core/janitor/apply-text-edit';
 import { getFoamVsCodeConfig } from '../../services/config';
-// eslint-disable-next-line no-restricted-imports
-import { readFileSync } from 'fs';
-import { createMarkdownParser } from '../../core/services/markdown-parser';
 import { fromVsCodeUri, toVsCodeUri } from '../../utils/vsc-utils';
 import { MarkdownLink } from '../../core/services/markdown-link';
 import { Position } from '../../core/model/position';
+import { TextEdit } from '../../core/services/text-edit';
 
 export const CONFIG_EMBED_NOTE_IN_CONTAINER = 'preview.embedNoteInContainer';
 const refsStack: string[] = [];
@@ -116,13 +115,9 @@ function withLinksRelativeToWorkspaceRoot(
         target: pathFromRoot,
       });
     })
-    .sort((a, b) => Position.compareTo(b.selection.start, a.selection.start));
+    .sort((a, b) => Position.compareTo(b.range.start, a.range.start));
   const text = edits.reduce(
-    (text, edit) =>
-      applyTextEdit(text, {
-        newText: edit.newText,
-        range: edit.selection,
-      }),
+    (text, edit) => TextEdit.apply(text, edit),
     noteText
   );
   return text;

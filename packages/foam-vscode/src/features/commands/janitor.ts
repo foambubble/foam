@@ -20,8 +20,8 @@ import { Foam } from '../../core/model/foam';
 import { Resource } from '../../core/model/note';
 import { generateHeading, generateLinkReferences } from '../../core/janitor';
 import { Range } from '../../core/model/range';
-import { applyTextEdit } from '../../core/janitor/apply-text-edit';
 import detectNewline from 'detect-newline';
+import { TextEdit } from '../../core/services/text-edit';
 
 const feature: FoamFeature = {
   activate: (context: ExtensionContext, foamPromise: Promise<Foam>) => {
@@ -130,8 +130,8 @@ async function runJanitor(foam: Foam) {
     // Note: The ordering matters. Definitions need to be inserted
     // before heading, since inserting a heading changes line numbers below
     let text = noteText;
-    text = definitions ? applyTextEdit(text, definitions) : text;
-    text = heading ? applyTextEdit(text, heading) : text;
+    text = definitions ? TextEdit.apply(text, definitions) : text;
+    text = heading ? TextEdit.apply(text, heading) : text;
 
     return workspace.fs.writeFile(toVsCodeUri(note.uri), Buffer.from(text));
   });

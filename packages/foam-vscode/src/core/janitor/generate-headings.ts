@@ -1,7 +1,7 @@
 import matter from 'gray-matter';
-import { TextEdit } from './apply-text-edit';
 import { Resource } from '../model/note';
 import { Range } from '../model/range';
+import { TextEdit } from '../services/text-edit';
 import { getHeadingFromFileName } from '../utils';
 
 export const generateHeading = async (

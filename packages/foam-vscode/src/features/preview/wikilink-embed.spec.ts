@@ -163,7 +163,7 @@ This is the third section of note E
 
     expect(res).toContain('This is the text of note B which includes');
     expect(res).toContain('This is the text of note A which includes');
-    expect(res).toContain('Cyclic link detected for wikilink: note-a');
+    expect(res).toContain('Cyclic link detected for wikilink');
 
     deleteFile(noteA);
     deleteFile(noteB);

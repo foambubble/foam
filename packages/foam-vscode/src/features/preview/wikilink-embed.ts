@@ -116,13 +116,9 @@ function withLinksRelativeToWorkspaceRoot(
         target: pathFromRoot,
       });
     })
-    .sort((a, b) => Position.compareTo(b.selection.start, a.selection.start));
+    .sort((a, b) => Position.compareTo(b.range.start, a.range.start));
   const text = edits.reduce(
-    (text, edit) =>
-      applyTextEdit(text, {
-        newText: edit.newText,
-        range: edit.selection,
-      }),
+    (text, edit) => applyTextEdit(text, edit),
     noteText
   );
   return text;

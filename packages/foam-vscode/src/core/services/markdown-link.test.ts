@@ -162,7 +162,7 @@ describe('MarkdownLink', () => {
         target: 'new-link',
       });
       expect(edit.newText).toEqual(`[[new-link#section]]`);
-      expect(edit.selection).toEqual(link.range);
+      expect(edit.range).toEqual(link.range);
     });
     it('should rename the section only', () => {
       const link = parser.parse(
@@ -173,7 +173,7 @@ describe('MarkdownLink', () => {
         section: 'new-section',
       });
       expect(edit.newText).toEqual(`[[wikilink#new-section]]`);
-      expect(edit.selection).toEqual(link.range);
+      expect(edit.range).toEqual(link.range);
     });
     it('should rename both target and section', () => {
       const link = parser.parse(
@@ -185,7 +185,7 @@ describe('MarkdownLink', () => {
         section: 'new-section',
       });
       expect(edit.newText).toEqual(`[[new-link#new-section]]`);
-      expect(edit.selection).toEqual(link.range);
+      expect(edit.range).toEqual(link.range);
     });
     it('should be able to remove the section', () => {
       const link = parser.parse(
@@ -196,7 +196,7 @@ describe('MarkdownLink', () => {
         section: '',
       });
       expect(edit.newText).toEqual(`[[wikilink]]`);
-      expect(edit.selection).toEqual(link.range);
+      expect(edit.range).toEqual(link.range);
     });
     it('should be able to rename the alias', () => {
       const link = parser.parse(getRandomURI(), `this is a [[wikilink|alias]]`)
@@ -205,7 +205,7 @@ describe('MarkdownLink', () => {
         alias: 'new-alias',
       });
       expect(edit.newText).toEqual(`[[wikilink|new-alias]]`);
-      expect(edit.selection).toEqual(link.range);
+      expect(edit.range).toEqual(link.range);
     });
   });
 
@@ -217,7 +217,7 @@ describe('MarkdownLink', () => {
         target: 'to/another-path.md',
       });
       expect(edit.newText).toEqual(`[link](to/another-path.md)`);
-      expect(edit.selection).toEqual(link.range);
+      expect(edit.range).toEqual(link.range);
     });
     it('should rename the section only', () => {
       const link = parser.parse(
@@ -228,7 +228,7 @@ describe('MarkdownLink', () => {
         section: 'section2',
       });
       expect(edit.newText).toEqual(`[link](to/path.md#section2)`);
-      expect(edit.selection).toEqual(link.range);
+      expect(edit.range).toEqual(link.range);
     });
     it('should rename both target and section', () => {
       const link = parser.parse(
@@ -240,7 +240,7 @@ describe('MarkdownLink', () => {
         section: 'section2',
       });
       expect(edit.newText).toEqual(`[link](to/another-path.md#section2)`);
-      expect(edit.selection).toEqual(link.range);
+      expect(edit.range).toEqual(link.range);
     });
     it('should be able to remove the section', () => {
       const link = parser.parse(
@@ -251,7 +251,7 @@ describe('MarkdownLink', () => {
         section: '',
       });
       expect(edit.newText).toEqual(`[link](to/path.md)`);
-      expect(edit.selection).toEqual(link.range);
+      expect(edit.range).toEqual(link.range);
     });
   });
 });

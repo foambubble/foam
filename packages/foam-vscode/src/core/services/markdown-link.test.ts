@@ -107,6 +107,7 @@ describe('MarkdownLink', () => {
         type: 'link',
         rawText: '[link](#section)',
         range: Range.create(0, 0),
+        isEmbed: false,
       };
       const parsed = MarkdownLink.analyzeLink(link);
       expect(parsed.target).toEqual('');

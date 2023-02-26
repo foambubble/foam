@@ -22,7 +22,11 @@ const feature: FoamFeature = {
           markdownItFoamTags,
           markdownItWikilinkNavigation,
           markdownItRemoveLinkReferences,
-        ].reduce((acc, extension) => extension(acc, foam.workspace), md);
+        ].reduce(
+          (acc, extension) =>
+            extension(acc, foam.workspace, foam.services.parser),
+          md
+        );
       },
     };
   },

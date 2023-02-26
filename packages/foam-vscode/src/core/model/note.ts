@@ -5,6 +5,7 @@ export interface ResourceLink {
   type: 'wikilink' | 'link';
   rawText: string;
   range: Range;
+  isEmbed: boolean;
 }
 
 export interface NoteLinkDefinition {

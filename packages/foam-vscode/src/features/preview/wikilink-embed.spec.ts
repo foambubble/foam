@@ -24,7 +24,7 @@ describe('Displaying included notes in preview', () => {
       CONFIG_EMBED_NOTE_IN_CONTAINER,
       false,
       () => {
-        const md = markdownItWikilinkEmbed(MarkdownIt(), ws);
+        const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser);
 
         expect(
           md.render(`This is the root node. 
@@ -51,7 +51,7 @@ describe('Displaying included notes in preview', () => {
       CONFIG_EMBED_NOTE_IN_CONTAINER,
       true,
       () => {
-        const md = markdownItWikilinkEmbed(MarkdownIt(), ws);
+        const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser);
 
         const res = md.render(`This is the root node. ![[note-a]]`);
         expect(res).toContain('This is the root node');
@@ -80,7 +80,7 @@ This is the third section of note E
     );
     const parser = createMarkdownParser([]);
     const ws = new FoamWorkspace().set(parser.parse(note.uri, note.content));
-    const md = markdownItWikilinkEmbed(MarkdownIt(), ws);
+    const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser);
 
     await withModifiedFoamConfiguration(
       CONFIG_EMBED_NOTE_IN_CONTAINER,
@@ -123,7 +123,7 @@ This is the third section of note E
       CONFIG_EMBED_NOTE_IN_CONTAINER,
       true,
       () => {
-        const md = markdownItWikilinkEmbed(MarkdownIt(), ws);
+        const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser);
 
         const res = md.render(
           `This is the root node. ![[note-e-container#Section 3]]`
@@ -139,7 +139,11 @@ This is the third section of note E
   });
 
   it('should fallback to the bare text when the note is not found', () => {
-    const md = markdownItWikilinkEmbed(MarkdownIt(), new FoamWorkspace());
+    const md = markdownItWikilinkEmbed(
+      MarkdownIt(),
+      new FoamWorkspace(),
+      parser
+    );
 
     expect(md.render(`This is the root node. ![[non-existing-note]]`)).toMatch(
       `<p>This is the root node. ![[non-existing-note]]</p>`
@@ -158,12 +162,12 @@ This is the third section of note E
     const ws = new FoamWorkspace()
       .set(parser.parse(noteA.uri, noteA.content))
       .set(parser.parse(noteB.uri, noteB.content));
-    const md = markdownItWikilinkEmbed(MarkdownIt(), ws);
+    const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser);
     const res = md.render(noteBText);
 
     expect(res).toContain('This is the text of note B which includes');
     expect(res).toContain('This is the text of note A which includes');
-    expect(res).toContain('Cyclic link detected for wikilink: note-a');
+    expect(res).toContain('Cyclic link detected for wikilink');
 
     deleteFile(noteA);
     deleteFile(noteB);

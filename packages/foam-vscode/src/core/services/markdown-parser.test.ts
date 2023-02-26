@@ -39,6 +39,7 @@ describe('Markdown parsing', () => {
       const link = note.links[0];
       expect(link.type).toEqual('link');
       expect(link.rawText).toEqual('[link to page b](../doc/page-b.md)');
+      expect(link.isEmbed).toBeFalsy();
     });
 
     it('should detect links that have formatting in label', () => {
@@ -48,6 +49,15 @@ describe('Markdown parsing', () => {
       expect(note.links.length).toEqual(1);
       const link = note.links[0];
       expect(link.type).toEqual('link');
+      expect(link.isEmbed).toBeFalsy();
+    });
+
+    it('should detect embed links', () => {
+      const note = createNoteFromMarkdown('this is ![link](../doc/page-b.md)');
+      expect(note.links.length).toEqual(1);
+      const link = note.links[0];
+      expect(link.type).toEqual('link');
+      expect(link.isEmbed).toBeTruthy();
     });
 
     it('should detect wikilinks', () => {
@@ -61,6 +71,16 @@ describe('Markdown parsing', () => {
       link = note.links[1];
       expect(link.type).toEqual('wikilink');
       expect(link.rawText).toEqual('[[a file]]');
+      expect(link.isEmbed).toBeFalsy();
+    });
+
+    it('should detect wikilink embeds', () => {
+      const note = createNoteFromMarkdown('Some content and ![[an embed]]');
+      expect(note.links.length).toEqual(1);
+      const link = note.links[0];
+      expect(link.type).toEqual('wikilink');
+      expect(link.rawText).toEqual('![[an embed]]');
+      expect(link.isEmbed).toBeTruthy();
     });
 
     it('should detect wikilinks that have aliases', () => {
@@ -74,6 +94,7 @@ describe('Markdown parsing', () => {
       link = note.links[1];
       expect(link.type).toEqual('wikilink');
       expect(link.rawText).toEqual('[[other link | spaced]]');
+      expect(link.isEmbed).toBeFalsy();
     });
 
     it('should skip wikilinks in codeblocks', () => {

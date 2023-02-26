@@ -89,11 +89,13 @@ export const createTestNote = (params: {
                 type: 'wikilink',
                 range: range,
                 rawText: `[[${link.slug}]]`,
+                isEmbed: false,
               }
             : {
                 type: 'link',
                 range: range,
                 rawText: `[link text](${link.to})`,
+                isEmbed: false,
               };
         })
       : [],

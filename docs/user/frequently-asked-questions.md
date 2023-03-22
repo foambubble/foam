@@ -5,6 +5,7 @@
 - [Frequently Asked Questions](#frequently-asked-questions)
   - [Links/Graphs/BackLinks don't work. How do I enable them?](#linksgraphsbacklinks-dont-work-how-do-i-enable-them)
   - [I don't want Foam enabled for all my workspaces](#i-dont-want-foam-enabled-for-all-my-workspaces)
+  - [I want to publish the graph view to GitHub pages or Vercel](#i-want-to-publish-the-graph-view-to-github-pages-or-vercel)
 
 ## Links/Graphs/BackLinks don't work. How do I enable them?
 

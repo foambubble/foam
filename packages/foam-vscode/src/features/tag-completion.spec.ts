@@ -93,4 +93,18 @@ describe('Tag Completion', () => {
     expect(foamTags.tags.get('primary')).toBeTruthy();
     expect(tags).toBeNull();
   });
+
+  it('should not provide suggestions when inside a markdown heading #1182', async () => {
+    const { uri } = await createFile('# primary heading 1');
+    const { doc } = await showInEditor(uri);
+    const provider = new TagCompletionProvider(foamTags);
+
+    const tags = await provider.provideCompletionItems(
+      doc,
+      new vscode.Position(0, 7)
+    );
+
+    expect(foamTags.tags.get('primary')).toBeTruthy();
+    expect(tags).toBeNull();
+  });
 });

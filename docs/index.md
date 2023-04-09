@@ -248,6 +248,7 @@ If that sounds like something you're interested in, I'd love to have you along o
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/badsketch"><img src="https://avatars.githubusercontent.com/u/8953212?v=4?s=60" width="60px;" alt="Daniel Wang"/><br /><sub><b>Daniel Wang</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=badsketch" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="http://yongliangliu.com"><img src="https://avatars.githubusercontent.com/u/41845017?v=4?s=60" width="60px;" alt="Liu YongLiang"/><br /><sub><b>Liu YongLiang</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=tlylt" title="Documentation">📖</a></td>
       <td align="center" valign="top" width="14.28%"><a href="http://scottakerman.com"><img src="https://avatars.githubusercontent.com/u/15224439?v=4?s=60" width="60px;" alt="Scott Akerman"/><br /><sub><b>Scott Akerman</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=Skakerman" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="http://www.jim-graham.net/"><img src="https://avatars.githubusercontent.com/u/430293?v=4?s=60" width="60px;" alt="Jim Graham"/><br /><sub><b>Jim Graham</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=jimgraham" title="Code">💻</a></td>
     </tr>
   </tbody>
 </table>

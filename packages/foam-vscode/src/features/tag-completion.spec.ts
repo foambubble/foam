@@ -107,4 +107,39 @@ describe('Tag Completion', () => {
     expect(foamTags.tags.get('primary')).toBeTruthy();
     expect(tags).toBeNull();
   });
+
+  it('should provide suggestions when inside the `tags:` front-matter #1184', async () => {
+    const { uri } = await createFile(`---
+created: 2023-01-01
+tags: prim`);
+    const { doc } = await showInEditor(uri);
+    const provider = new TagCompletionProvider(foamTags);
+
+    const tags = await provider.provideCompletionItems(
+      doc,
+      new vscode.Position(2, 10)
+    );
+
+    expect(foamTags.tags.get('primary')).toBeTruthy();
+    expect(tags.items.length).toEqual(3);
+  });
+
+  it('should not provide suggestions when outside the `tags:` front-matter #1184', async () => {
+    const { uri } = await createFile(`---
+created: 2023-01-01
+tags: prim
+---
+content
+tags: prim`);
+    const { doc } = await showInEditor(uri);
+    const provider = new TagCompletionProvider(foamTags);
+
+    const tags = await provider.provideCompletionItems(
+      doc,
+      new vscode.Position(5, 10)
+    );
+
+    expect(foamTags.tags.get('primary')).toBeTruthy();
+    expect(tags).toBeNull();
+  });
 });

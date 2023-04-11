@@ -4,6 +4,19 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.21.2] - 2023-04-11
+
+Fixes and Improvements:
+
+- Fixed embed with relative paths (#1168, #1170)
+- Improved multi-root folder support for daily notes (#1126, #1175)
+- Improved use of tag completion (#1183 - thanks @jimgraham)
+- Fixed relative path use in note creation when using templates (#1170)
+
+Internal:
+
+- Sync user docs with foam-template docs (#1180 - thanks @infogulch)
+
 ## [0.21.1] - 2023-02-24
 
 Fixes and Improvements:

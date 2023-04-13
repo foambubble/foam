@@ -4,6 +4,12 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.21.3] - 2023-04-12
+
+Fixes and Improvements:
+
+- Fixed relative path from workspace root in templates (#1188)
+
 ## [0.21.2] - 2023-04-11
 
 Fixes and Improvements:

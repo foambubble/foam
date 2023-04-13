@@ -349,12 +349,15 @@ export const NoteFactory = {
         resolver
       );
 
-      const newFilePath = template.metadata.has('filepath')
+      let newFilePath = template.metadata.has('filepath')
         ? URI.file(template.metadata.get('filepath'))
         : isSome(filepathFallbackURI)
         ? filepathFallbackURI
         : await getPathFromTitle(resolver);
 
+      if (!newFilePath.path.startsWith('./')) {
+        newFilePath = asAbsoluteWorkspaceUri(newFilePath);
+      }
       return NoteFactory.createNote(
         newFilePath,
         template.text,

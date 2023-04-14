@@ -79,14 +79,6 @@ async function openResource(workspace: FoamWorkspace, args?: OpenResourceArgs) {
         : toVsCodeUri(item.uri.asPlain());
     return vscode.commands.executeCommand('vscode.open', targetUri);
   }
-
-  Logger.info(
-    `${OPEN_COMMAND.command}: No resource matches given args`,
-    JSON.stringify(args)
-  );
-  vscode.window.showInformationMessage(
-    `${OPEN_COMMAND.command}: No resource matches given args`
-  );
 }
 
 const feature: FoamFeature = {

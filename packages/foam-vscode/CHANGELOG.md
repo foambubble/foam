@@ -4,6 +4,12 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.21.4] - 2023-04-14
+
+Fixes and Improvements:
+
+- Fixed issue with generated daily note template due to path escape (#1188, #1190)
+
 ## [0.21.3] - 2023-04-12
 
 Fixes and Improvements:

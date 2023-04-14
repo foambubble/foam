@@ -66,6 +66,36 @@ describe('Tag Completion', () => {
     expect(tags).toBeNull();
   });
 
+  it('should provide multiple suggestions when typing #, issue #1189', async () => {
+    const { uri } = await createFile(`# Title
+
+#`);
+    const { doc } = await showInEditor(uri);
+    const provider = new TagCompletionProvider(foamTags);
+
+    const tags = await provider.provideCompletionItems(
+      doc,
+      new vscode.Position(2, 1)
+    );
+    expect(tags.items.length).toEqual(3);
+  });
+
+  it('should not provide a suggestion when typing `# `, issue #1189', async () => {
+    const { uri } = await createFile(`# Title
+
+# `);
+    const { doc } = await showInEditor(uri);
+    const provider = new TagCompletionProvider(foamTags);
+
+    const tags = await provider.provideCompletionItems(
+      doc,
+      new vscode.Position(2, 2)
+    );
+
+    expect(foamTags.tags.get('primary')).toBeTruthy();
+    expect(tags).toBeNull();
+  });
+
   it('should provide a suggestion when typing #prim', async () => {
     const { uri } = await createFile('#prim');
     const { doc } = await showInEditor(uri);
@@ -95,7 +125,7 @@ describe('Tag Completion', () => {
   });
 
   it('should not provide suggestions when inside a markdown heading #1182', async () => {
-    const { uri } = await createFile('# primary heading 1');
+    const { uri } = await createFile('# primary');
     const { doc } = await showInEditor(uri);
     const provider = new TagCompletionProvider(foamTags);
 

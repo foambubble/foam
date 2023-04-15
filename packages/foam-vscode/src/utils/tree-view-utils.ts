@@ -23,7 +23,9 @@ export class UriTreeItem extends vscode.TreeItem {
   ) {
     super(
       options?.title ?? uri.getName(),
-      options.collapsibleState ?? options.getChildren
+      options.collapsibleState
+        ? options.collapsibleState
+        : options.getChildren
         ? vscode.TreeItemCollapsibleState.Collapsed
         : vscode.TreeItemCollapsibleState.None
     );
@@ -33,15 +35,6 @@ export class UriTreeItem extends vscode.TreeItem {
       ''
     );
     this.tooltip = undefined;
-    this.command = {
-      command: OPEN_COMMAND.command,
-      title: OPEN_COMMAND.title,
-      arguments: [
-        {
-          uri: uri,
-        },
-      ],
-    };
     this.iconPath = new vscode.ThemeIcon(options.icon ?? 'new-file');
   }
 
@@ -71,6 +64,12 @@ export class ResourceTreeItem extends UriTreeItem {
       collapsibleState: options.collapsibleState,
       getChildren: options.getChildren,
     });
+    this.command = {
+      command: 'vscode.open',
+      arguments: [toVsCodeUri(resource.uri)],
+      title: 'Go to location',
+    };
+
     this.contextValue = 'resource';
   }
 
@@ -100,6 +99,10 @@ export class ResourceRangeTreeItem extends vscode.TreeItem {
     };
   }
 
+  resolveTreeItem(): Promise<ResourceRangeTreeItem> {
+    return Promise.resolve(this);
+  }
+
   static async createStandardItem(
     workspace: FoamWorkspace,
     resource: Resource,
@@ -125,10 +128,12 @@ export class ResourceRangeTreeItem extends vscode.TreeItem {
 }
 
 export const groupRangesByResource = async (
+  workspace: FoamWorkspace,
   items:
     | ResourceRangeTreeItem[]
     | Promise<ResourceRangeTreeItem[]>
-    | Promise<ResourceRangeTreeItem>[]
+    | Promise<ResourceRangeTreeItem>[],
+  collapsibleState = vscode.TreeItemCollapsibleState.Collapsed
 ) => {
   let itemsArray = [] as ResourceRangeTreeItem[];
   if (items instanceof Promise) {
@@ -137,13 +142,22 @@ export const groupRangesByResource = async (
   if (items instanceof Array && items[0] instanceof Promise) {
     itemsArray = await Promise.all(items);
   }
+  if (items instanceof Array && items[0] instanceof ResourceRangeTreeItem) {
+    itemsArray = items as any;
+  }
   const byResource = groupBy(itemsArray, item => item.resource.uri.path);
-  return Object.values(byResource).map(items => {
-    return new ResourceTreeItem(items[0].resource, null, {
-      collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+  const resourceItems = Object.values(byResource).map(items => {
+    const resourceItem = new ResourceTreeItem(items[0].resource, workspace, {
+      collapsibleState,
       getChildren: () => {
-        return Promise.resolve(items);
+        return Promise.resolve(
+          items.sort((a, b) => Range.isBefore(a.range, b.range))
+        );
       },
     });
+    resourceItem.description = `(${items.length}) ${resourceItem.description}`;
+    return resourceItem;
   });
+  resourceItems.sort((a, b) => Resource.sortByTitle(a.resource, b.resource));
+  return resourceItems;
 };

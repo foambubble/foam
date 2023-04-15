@@ -28,6 +28,7 @@ const feature: FoamFeature = {
           icon: 'link',
           getChildren: async () => {
             return groupRangesByResource(
+              foam.workspace,
               foam.graph.getBacklinks(uri).map(link => {
                 return ResourceRangeTreeItem.createStandardItem(
                   foam.workspace,

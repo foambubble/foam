@@ -1,16 +1,17 @@
 import * as vscode from 'vscode';
-import { groupBy } from 'lodash';
 import { URI } from '../../core/model/uri';
 
-import { getNoteTooltip, isNone } from '../../utils';
+import { isNone } from '../../utils';
 import { FoamFeature } from '../../types';
 import { Foam } from '../../core/model/foam';
 import { FoamWorkspace } from '../../core/model/workspace';
 import { FoamGraph } from '../../core/model/graph';
-import { Resource, ResourceLink } from '../../core/model/note';
-import { Range } from '../../core/model/range';
-import { fromVsCodeUri, toVsCodeUri } from '../../utils/vsc-utils';
-import { ResourceTreeItem } from '../../utils/tree-view-utils';
+import { fromVsCodeUri } from '../../utils/vsc-utils';
+import {
+  ResourceRangeTreeItem,
+  ResourceTreeItem,
+  groupRangesByResource,
+} from '../../utils/tree-view-utils';
 
 const feature: FoamFeature = {
   activate: async (
@@ -37,7 +38,7 @@ const feature: FoamFeature = {
 export default feature;
 
 export class BacklinksTreeDataProvider
-  implements vscode.TreeDataProvider<BacklinkPanelTreeItem>
+  implements vscode.TreeDataProvider<vscode.TreeItem>
 {
   public target?: URI = undefined;
   // prettier-ignore
@@ -54,65 +55,32 @@ export class BacklinksTreeDataProvider
     return item;
   }
 
-  getChildren(item?: ResourceTreeItem): Promise<BacklinkPanelTreeItem[]> {
+  getChildren(item?: BacklinkPanelTreeItem): Promise<vscode.TreeItem[]> {
     const uri = this.target;
-    if (item) {
-      const resource = item.resource;
-
-      const backlinkRefs = Promise.all(
-        resource.links
-          .filter(link =>
-            this.workspace.resolveLink(resource, link).asPlain().isEqual(uri)
-          )
-          .map(async link => {
-            const item = new BacklinkTreeItem(resource, link);
-            const lines = (
-              (await this.workspace.readAsMarkdown(resource.uri)) ?? ''
-            ).split('\n');
-            if (link.range.start.line < lines.length) {
-              const line = lines[link.range.start.line];
-              const start = Math.max(0, link.range.start.character - 15);
-              const ellipsis = start === 0 ? '' : '...';
-
-              item.label = `${link.range.start.line}: ${ellipsis}${line.substr(
-                start,
-                300
-              )}`;
-              item.tooltip = getNoteTooltip(line);
-            }
-            return item;
-          })
-      );
-
-      return backlinkRefs;
+    if (item && item instanceof ResourceTreeItem) {
+      return item.getChildren();
     }
 
     if (isNone(uri) || isNone(this.workspace.find(uri))) {
       return Promise.resolve([]);
     }
 
-    const backlinksByResourcePath = groupBy(
-      this.graph
-        .getConnections(uri)
-        .filter(c => c.target.asPlain().isEqual(uri)),
-      b => b.source.path
-    );
+    const connections = this.graph
+      .getConnections(uri)
+      .filter(c => c.target.asPlain().isEqual(uri));
 
-    const resources = Object.keys(backlinksByResourcePath)
-      .map(res => backlinksByResourcePath[res][0].source)
-      .map(uri => this.workspace.get(uri))
-      .sort(Resource.sortByTitle)
-      .map(note => {
-        const connections = backlinksByResourcePath[note.uri.path].sort(
-          (a, b) => Range.isBefore(a.link.range, b.link.range)
-        );
-        const item = new ResourceTreeItem(note, this.workspace, {
-          collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
-        });
-        item.description = `(${connections.length}) ${item.description}`;
-        return item;
-      });
-    return Promise.resolve(resources);
+    const backlinkItems = connections.map(c =>
+      ResourceRangeTreeItem.createStandardItem(
+        this.workspace,
+        this.workspace.get(c.source),
+        c.link.range
+      )
+    );
+    return groupRangesByResource(
+      this.workspace,
+      backlinkItems,
+      vscode.TreeItemCollapsibleState.Expanded
+    );
   }
 
   resolveTreeItem(item: BacklinkPanelTreeItem): Promise<BacklinkPanelTreeItem> {
@@ -120,33 +88,4 @@ export class BacklinksTreeDataProvider
   }
 }
 
-export class ResourceRangeTreeItem extends vscode.TreeItem {
-  constructor(
-    public label: string,
-    public readonly resource: Resource,
-    public readonly range: Range
-  ) {
-    super(label, vscode.TreeItemCollapsibleState.None);
-    this.label = `${range.start.line}: ${this.label}`;
-    this.command = {
-      command: 'vscode.open',
-      arguments: [toVsCodeUri(resource.uri), { selection: range }],
-      title: 'Go to location',
-    };
-  }
-}
-
-export class BacklinkTreeItem extends ResourceRangeTreeItem {
-  constructor(
-    public readonly resource: Resource,
-    public readonly link: ResourceLink
-  ) {
-    super(link.rawText, resource, link.range);
-  }
-
-  resolveTreeItem(): Promise<BacklinkTreeItem> {
-    return Promise.resolve(this);
-  }
-}
-
-type BacklinkPanelTreeItem = ResourceTreeItem | BacklinkTreeItem;
+type BacklinkPanelTreeItem = ResourceTreeItem | ResourceRangeTreeItem;

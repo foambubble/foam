@@ -122,18 +122,28 @@ export class BacklinksTreeDataProvider
   }
 }
 
-export class BacklinkTreeItem extends vscode.TreeItem {
+export class ResourceRangeTreeItem extends vscode.TreeItem {
+  constructor(
+    public label: string,
+    public readonly resource: Resource,
+    public readonly range: Range
+  ) {
+    super(label, vscode.TreeItemCollapsibleState.None);
+    this.label = `${range.start.line}: ${this.label}`;
+    this.command = {
+      command: 'vscode.open',
+      arguments: [toVsCodeUri(resource.uri), { selection: range }],
+      title: 'Go to location',
+    };
+  }
+}
+
+export class BacklinkTreeItem extends ResourceRangeTreeItem {
   constructor(
     public readonly resource: Resource,
     public readonly link: ResourceLink
   ) {
-    super(link.rawText, vscode.TreeItemCollapsibleState.None);
-    this.label = `${link.range.start.line}: ${this.label}`;
-    this.command = {
-      command: 'vscode.open',
-      arguments: [toVsCodeUri(resource.uri), { selection: link.range }],
-      title: 'Go to link',
-    };
+    super(link.rawText, resource, link.range);
   }
 
   resolveTreeItem(): Promise<BacklinkTreeItem> {

@@ -9,8 +9,8 @@ import { createTestNote } from '../test/test-utils';
 import {
   DirectoryTreeItem,
   GroupedResourcesTreeDataProvider,
-  UriTreeItem,
 } from './grouped-resources-tree-data-provider';
+import { ResourceTreeItem, UriTreeItem } from './tree-view-utils';
 
 const testMatcher = new SubstringExcludeMatcher('path-exclude');
 
@@ -74,14 +74,14 @@ describe('GroupedResourcesTreeDataProvider', () => {
           .list()
           .filter(r => r.title.length === 3)
           .map(r => r.uri),
-      uri => new UriTreeItem(uri),
+      uri => new ResourceTreeItem(workspace.get(uri), workspace),
       testMatcher
     );
     provider.setGroupBy(GroupedResoucesConfigGroupBy.Folder);
 
     const directory = new DirectoryTreeItem(
       '/path',
-      [new UriTreeItem(matchingNote1.uri)],
+      [new ResourceTreeItem(matchingNote1, workspace)],
       'note'
     );
     const result = await provider.getChildren(directory);
@@ -90,7 +90,7 @@ describe('GroupedResourcesTreeDataProvider', () => {
         collapsibleState: 0,
         label: 'ABC',
         description: '/path/ABC.md',
-        command: { command: OPEN_COMMAND.command },
+        command: { command: 'vscode.open' },
       },
     ]);
   });
@@ -104,7 +104,7 @@ describe('GroupedResourcesTreeDataProvider', () => {
           .list()
           .filter(r => r.title.length === 3)
           .map(r => r.uri),
-      uri => new UriTreeItem(uri),
+      uri => new ResourceTreeItem(workspace.get(uri), workspace),
       testMatcher
     );
     provider.setGroupBy(GroupedResoucesConfigGroupBy.Off);
@@ -115,13 +115,13 @@ describe('GroupedResourcesTreeDataProvider', () => {
         collapsibleState: 0,
         label: matchingNote1.title,
         description: '/path/ABC.md',
-        command: { command: OPEN_COMMAND.command },
+        command: { command: 'vscode.open' },
       },
       {
         collapsibleState: 0,
         label: matchingNote2.title,
         description: '/path-bis/XYZ.md',
-        command: { command: OPEN_COMMAND.command },
+        command: { command: 'vscode.open' },
       },
     ]);
   });

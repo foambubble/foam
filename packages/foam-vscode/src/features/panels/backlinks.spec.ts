@@ -6,12 +6,15 @@ import {
   createNote,
   getUriInWorkspace,
 } from '../../test/test-utils-vscode';
-import { BacklinksTreeDataProvider, BacklinkTreeItem } from './backlinks';
-import { ResourceTreeItem } from '../../utils/grouped-resources-tree-data-provider';
+import { BacklinksTreeDataProvider } from './backlinks';
 import { OPEN_COMMAND } from '../commands/open-resource';
 import { toVsCodeUri } from '../../utils/vsc-utils';
 import { FoamGraph } from '../../core/model/graph';
 import { URI } from '../../core/model/uri';
+import {
+  ResourceRangeTreeItem,
+  ResourceTreeItem,
+} from '../../utils/tree-view-utils';
 
 describe('Backlinks panel', () => {
   beforeAll(async () => {
@@ -84,19 +87,19 @@ describe('Backlinks panel', () => {
     const notes = (await provider.getChildren()) as ResourceTreeItem[];
     const linksFromB = (await provider.getChildren(
       notes[0]
-    )) as BacklinkTreeItem[];
-    expect(linksFromB.map(l => l.link)).toEqual(
-      noteB.links.sort(
-        (a, b) => a.range.start.character - b.range.start.character
-      )
+    )) as ResourceRangeTreeItem[];
+    expect(linksFromB.map(l => l.range)).toEqual(
+      noteB.links
+        .map(l => l.range)
+        .sort((a, b) => a.start.character - b.start.character)
     );
   });
   it('navigates to the document if clicking on note', async () => {
     provider.target = noteA.uri;
     const notes = (await provider.getChildren()) as ResourceTreeItem[];
     expect(notes[0].command).toMatchObject({
-      command: OPEN_COMMAND.command,
-      arguments: [expect.objectContaining({ uri: noteB.uri })],
+      command: 'vscode.open',
+      arguments: [expect.objectContaining({ path: noteB.uri.path })],
     });
   });
   it('navigates to document with link selection if clicking on backlink', async () => {
@@ -104,11 +107,11 @@ describe('Backlinks panel', () => {
     const notes = (await provider.getChildren()) as ResourceTreeItem[];
     const linksFromB = (await provider.getChildren(
       notes[0]
-    )) as BacklinkTreeItem[];
+    )) as ResourceRangeTreeItem[];
     expect(linksFromB[0].command).toMatchObject({
       command: 'vscode.open',
       arguments: [
-        noteB.uri,
+        expect.objectContaining({ path: noteB.uri.path }),
         {
           selection: expect.arrayContaining([]),
         },

@@ -3,11 +3,8 @@ import { Foam } from '../../core/model/foam';
 import { createMatcherAndDataStore } from '../../services/editor';
 import { getOrphansConfig } from '../../settings';
 import { FoamFeature } from '../../types';
-import {
-  GroupedResourcesTreeDataProvider,
-  ResourceTreeItem,
-  UriTreeItem,
-} from '../../utils/grouped-resources-tree-data-provider';
+import { GroupedResourcesTreeDataProvider } from '../../utils/grouped-resources-tree-data-provider';
+import { ResourceTreeItem, UriTreeItem } from '../../utils/tree-view-utils';
 
 const EXCLUDE_TYPES = ['image', 'attachment'];
 const feature: FoamFeature = {

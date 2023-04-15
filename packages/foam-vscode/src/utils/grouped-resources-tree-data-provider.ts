@@ -1,13 +1,10 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { GroupedResoucesConfigGroupBy } from '../settings';
-import { getContainsTooltip, getNoteTooltip, isSome } from '../utils';
-import { OPEN_COMMAND } from '../features/commands/open-resource';
-import { toVsCodeUri } from './vsc-utils';
+import { getContainsTooltip, isSome } from '../utils';
 import { URI } from '../core/model/uri';
-import { Resource } from '../core/model/note';
-import { FoamWorkspace } from '../core/model/workspace';
 import { IMatcher } from '../core/services/datastore';
+import { UriTreeItem } from './tree-view-utils';
 
 /**
  * Provides the ability to expose a TreeDataExplorerView in VSCode. This class will
@@ -128,13 +125,14 @@ export class GroupedResourcesTreeDataProvider
     return item;
   }
 
-  getChildren(
-    directory?: DirectoryTreeItem
+  async getChildren(
+    item?: GroupedResourceTreeItem
   ): Promise<GroupedResourceTreeItem[]> {
+    if ((item as any)?.getChildren) {
+      const children = await (item as any).getChildren();
+      return children.sort(sortByTreeItemLabel);
+    }
     if (this.groupBy === GroupedResoucesConfigGroupBy.Folder) {
-      if (isSome(directory)) {
-        return Promise.resolve(directory.children.sort(sortByTreeItemLabel));
-      }
       const directories = Object.entries(this.getUrisByDirectory())
         .sort(([dir1], [dir2]) => sortByString(dir1, dir2))
         .map(
@@ -186,63 +184,6 @@ type UrisByDirectory = { [key: string]: Array<URI> };
 
 type GroupedResourceTreeItem = UriTreeItem | DirectoryTreeItem;
 
-export class UriTreeItem extends vscode.TreeItem {
-  constructor(
-    public readonly uri: URI,
-    options: {
-      collapsibleState?: vscode.TreeItemCollapsibleState;
-      icon?: string;
-      title?: string;
-    } = {}
-  ) {
-    super(options?.title ?? uri.getName(), options.collapsibleState);
-    this.description = uri.path.replace(
-      vscode.workspace.getWorkspaceFolder(toVsCodeUri(uri))?.uri.path,
-      ''
-    );
-    this.tooltip = undefined;
-    this.command = {
-      command: OPEN_COMMAND.command,
-      title: OPEN_COMMAND.title,
-      arguments: [
-        {
-          uri: uri,
-        },
-      ],
-    };
-    this.iconPath = new vscode.ThemeIcon(options.icon ?? 'new-file');
-  }
-
-  resolveTreeItem(): Promise<GroupedResourceTreeItem> {
-    return Promise.resolve(this);
-  }
-}
-
-export class ResourceTreeItem extends UriTreeItem {
-  constructor(
-    public readonly resource: Resource,
-    private readonly workspace: FoamWorkspace,
-    collapsibleState = vscode.TreeItemCollapsibleState.None
-  ) {
-    super(resource.uri, {
-      title: resource.title,
-      icon: 'note',
-      collapsibleState,
-    });
-    this.contextValue = 'resource';
-  }
-
-  async resolveTreeItem(): Promise<ResourceTreeItem> {
-    if (this instanceof ResourceTreeItem) {
-      const content = await this.workspace.readAsMarkdown(this.resource.uri);
-      this.tooltip = isSome(content)
-        ? getNoteTooltip(content)
-        : this.resource.title;
-    }
-    return this;
-  }
-}
-
 export class DirectoryTreeItem extends vscode.TreeItem {
   constructor(
     public readonly dir: string,
@@ -263,6 +204,10 @@ export class DirectoryTreeItem extends vscode.TreeItem {
       .sort(sortByString);
     this.tooltip = getContainsTooltip(titles);
     return Promise.resolve(this);
+  }
+
+  getChildren(): Promise<GroupedResourceTreeItem[]> {
+    return Promise.resolve(this.children);
   }
 }
 

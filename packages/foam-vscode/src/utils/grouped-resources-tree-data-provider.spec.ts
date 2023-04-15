@@ -9,8 +9,8 @@ import { createTestNote } from '../test/test-utils';
 import {
   DirectoryTreeItem,
   GroupedResourcesTreeDataProvider,
-  UriTreeItem,
 } from './grouped-resources-tree-data-provider';
+import { UriTreeItem } from './tree-view-utils';
 
 const testMatcher = new SubstringExcludeMatcher('path-exclude');
 

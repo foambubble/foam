@@ -4,13 +4,13 @@ import { URI } from '../../core/model/uri';
 
 import { getNoteTooltip, isNone } from '../../utils';
 import { FoamFeature } from '../../types';
-import { ResourceTreeItem } from '../../utils/grouped-resources-tree-data-provider';
 import { Foam } from '../../core/model/foam';
 import { FoamWorkspace } from '../../core/model/workspace';
 import { FoamGraph } from '../../core/model/graph';
 import { Resource, ResourceLink } from '../../core/model/note';
 import { Range } from '../../core/model/range';
 import { fromVsCodeUri, toVsCodeUri } from '../../utils/vsc-utils';
+import { ResourceTreeItem } from '../../utils/tree-view-utils';
 
 const feature: FoamFeature = {
   activate: async (
@@ -106,11 +106,9 @@ export class BacklinksTreeDataProvider
         const connections = backlinksByResourcePath[note.uri.path].sort(
           (a, b) => Range.isBefore(a.link.range, b.link.range)
         );
-        const item = new ResourceTreeItem(
-          note,
-          this.workspace,
-          vscode.TreeItemCollapsibleState.Expanded
-        );
+        const item = new ResourceTreeItem(note, this.workspace, {
+          collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+        });
         item.description = `(${connections.length}) ${item.description}`;
         return item;
       });

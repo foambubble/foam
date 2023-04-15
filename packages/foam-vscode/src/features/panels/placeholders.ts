@@ -3,10 +3,12 @@ import { Foam } from '../../core/model/foam';
 import { createMatcherAndDataStore } from '../../services/editor';
 import { getPlaceholdersConfig } from '../../settings';
 import { FoamFeature } from '../../types';
+import { GroupedResourcesTreeDataProvider } from '../../utils/grouped-resources-tree-data-provider';
 import {
-  GroupedResourcesTreeDataProvider,
+  ResourceRangeTreeItem,
   UriTreeItem,
-} from '../../utils/grouped-resources-tree-data-provider';
+  groupRangesByResource,
+} from '../../utils/tree-view-utils';
 
 const feature: FoamFeature = {
   activate: async (
@@ -22,7 +24,20 @@ const feature: FoamFeature = {
       'placeholder',
       () => foam.graph.getAllNodes().filter(uri => uri.isPlaceholder()),
       uri => {
-        return new UriTreeItem(uri);
+        return new UriTreeItem(uri, {
+          icon: 'link',
+          getChildren: async () => {
+            return groupRangesByResource(
+              foam.graph.getBacklinks(uri).map(link => {
+                return ResourceRangeTreeItem.createStandardItem(
+                  foam.workspace,
+                  foam.workspace.get(link.source),
+                  link.link.range
+                );
+              })
+            );
+          },
+        });
       },
       matcher
     );

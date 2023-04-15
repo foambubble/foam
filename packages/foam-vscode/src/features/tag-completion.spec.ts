@@ -95,7 +95,7 @@ describe('Tag Completion', () => {
   });
 
   it('should not provide suggestions when inside a markdown heading #1182', async () => {
-    const { uri } = await createFile('# primary heading 1');
+    const { uri } = await createFile('# primary');
     const { doc } = await showInEditor(uri);
     const provider = new TagCompletionProvider(foamTags);
 
@@ -106,5 +106,111 @@ describe('Tag Completion', () => {
 
     expect(foamTags.tags.get('primary')).toBeTruthy();
     expect(tags).toBeNull();
+  });
+
+  describe('has robust triggering #1189', () => {
+    it('should provide multiple suggestions when typing #', async () => {
+      const { uri } = await createFile(`# Title
+
+#`);
+      const { doc } = await showInEditor(uri);
+      const provider = new TagCompletionProvider(foamTags);
+
+      const tags = await provider.provideCompletionItems(
+        doc,
+        new vscode.Position(2, 1)
+      );
+      expect(tags.items.length).toEqual(3);
+    });
+
+    it('should provide multiple suggestions when typing # on line with match', async () => {
+      const { uri } = await createFile('Here is #my-tag and #');
+      const { doc } = await showInEditor(uri);
+      const provider = new TagCompletionProvider(foamTags);
+
+      const tags = await provider.provideCompletionItems(
+        doc,
+        new vscode.Position(0, 21)
+      );
+      expect(tags.items.length).toEqual(3);
+    });
+
+    it('should provide multiple suggestions when typing # at EOL', async () => {
+      const { uri } = await createFile(`# Title
+
+#
+more text
+`);
+      const { doc } = await showInEditor(uri);
+      const provider = new TagCompletionProvider(foamTags);
+
+      const tags = await provider.provideCompletionItems(
+        doc,
+        new vscode.Position(2, 1)
+      );
+      expect(tags.items.length).toEqual(3);
+    });
+
+    it('should not provide a suggestion when typing `# `', async () => {
+      const { uri } = await createFile(`# Title
+
+# `);
+      const { doc } = await showInEditor(uri);
+      const provider = new TagCompletionProvider(foamTags);
+
+      const tags = await provider.provideCompletionItems(
+        doc,
+        new vscode.Position(2, 2)
+      );
+
+      expect(foamTags.tags.get('primary')).toBeTruthy();
+      expect(tags).toBeNull();
+    });
+
+    it('should not provide a suggestion when typing `#{non-match}`', async () => {
+      const { uri } = await createFile(`# Title
+
+#$`);
+      const { doc } = await showInEditor(uri);
+      const provider = new TagCompletionProvider(foamTags);
+
+      const tags = await provider.provideCompletionItems(
+        doc,
+        new vscode.Position(2, 2)
+      );
+
+      expect(foamTags.tags.get('primary')).toBeTruthy();
+      expect(tags).toBeNull();
+    });
+
+    it('should not provide a suggestion when typing `##`', async () => {
+      const { uri } = await createFile(`# Title
+
+##`);
+      const { doc } = await showInEditor(uri);
+      const provider = new TagCompletionProvider(foamTags);
+
+      const tags = await provider.provideCompletionItems(
+        doc,
+        new vscode.Position(2, 2)
+      );
+
+      expect(foamTags.tags.get('primary')).toBeTruthy();
+      expect(tags).toBeNull();
+    });
+
+    it('should not provide a suggestion when typing `# ` in a line that already matched', async () => {
+      const { uri } = await createFile('here is #primary and now # ');
+      const { doc } = await showInEditor(uri);
+      const provider = new TagCompletionProvider(foamTags);
+
+      const tags = await provider.provideCompletionItems(
+        doc,
+        new vscode.Position(0, 29)
+      );
+
+      expect(foamTags.tags.get('primary')).toBeTruthy();
+      expect(tags).toBeNull();
+    });
   });
 });

@@ -1,4 +1,4 @@
-import { Selection, ViewColumn, window } from 'vscode';
+import { Selection, Uri, ViewColumn, window, workspace } from 'vscode';
 import { fromVsCodeUri } from '../utils/vsc-utils';
 import { NoteFactory } from '../services/templates';
 import {
@@ -7,6 +7,7 @@ import {
   deleteFile,
   getUriInWorkspace,
   showInEditor,
+  withModifiedFoamConfiguration,
 } from '../test/test-utils-vscode';
 import { Resolver } from './variable-resolver';
 import { fileExists } from './editor';
@@ -19,6 +20,56 @@ describe('Create note from template', () => {
   });
 
   describe('User flow', () => {
+    it('should resolve the path using the config when path is derived from note title', async () => {
+      const templateA = await createFile('Template A', [
+        '.foam',
+        'templates',
+        'template-a.md',
+      ]);
+      jest
+        .spyOn(window, 'showInputBox')
+        .mockImplementation(jest.fn(() => Promise.resolve('Title of note')));
+
+      const noteA = await createFile('Note A', [
+        'path',
+        'of-new-note',
+        'note-a.md',
+      ]);
+      await showInEditor(noteA.uri);
+      await withModifiedFoamConfiguration(
+        'files.newNotePath',
+        'currentDir',
+        async () => {
+          const result = await NoteFactory.createFromTemplate(
+            templateA.uri,
+            new Resolver(new Map(), new Date())
+          );
+          expect(result.uri.path).toEqual(
+            noteA.uri.getDirectory().joinPath('Title of note.md').path
+          );
+          await deleteFile(result.uri);
+        }
+      );
+      await withModifiedFoamConfiguration(
+        'files.newNotePath',
+        'root',
+        async () => {
+          const result = await NoteFactory.createFromTemplate(
+            templateA.uri,
+            new Resolver(new Map(), new Date())
+          );
+          expect(result.uri.path).toEqual(
+            Uri.joinPath(workspace.workspaceFolders[0].uri, 'Title of note.md')
+              .path
+          );
+          await deleteFile(result.uri);
+        }
+      );
+
+      await deleteFile(noteA);
+      await deleteFile(templateA);
+    });
+
     it('should ask a user to confirm the path if note already exists', async () => {
       const templateA = await createFile('Template A', [
         '.foam',

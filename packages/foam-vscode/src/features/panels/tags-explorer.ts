@@ -6,6 +6,7 @@ import { toVsCodeRange, toVsCodeUri } from '../../utils/vsc-utils';
 import { Foam } from '../../core/model/foam';
 import { FoamWorkspace } from '../../core/model/workspace';
 import { Resource, Tag } from '../../core/model/note';
+import { FoamTags } from '../../core/model/tags';
 
 const TAG_SEPARATOR = '/';
 const feature: FoamFeature = {
@@ -14,7 +15,7 @@ const feature: FoamFeature = {
     foamPromise: Promise<Foam>
   ) => {
     const foam = await foamPromise;
-    const provider = new TagsProvider(foam, foam.workspace);
+    const provider = new TagsProvider(foam.tags, foam.workspace);
     const treeView = vscode.window.createTreeView('foam-vscode.tags-explorer', {
       treeDataProvider: provider,
       showCollapseAll: true,
@@ -48,7 +49,10 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
     notes: URI[];
   }[];
 
-  constructor(private foam: Foam, private workspace: FoamWorkspace) {
+  private foamTags: FoamTags;
+
+  constructor(tags: FoamTags, private workspace: FoamWorkspace) {
+    this.foamTags = tags;
     this.computeTags();
   }
 
@@ -58,7 +62,7 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
   }
 
   private computeTags() {
-    this.tags = [...this.foam.tags.tags]
+    this.tags = [...this.foamTags.tags]
       .map(([tag, notes]) => ({ tag, notes }))
       .sort((a, b) => a.tag.localeCompare(b.tag));
   }
@@ -68,53 +72,55 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
   }
 
   getChildren(element?: TagItem): Promise<TagTreeItem[]> {
-    if (element) {
-      const nestedTagItems: TagTreeItem[] = this.tags
-        .filter(item => item.tag.indexOf(element.title + TAG_SEPARATOR) > -1)
-        .map(
-          item =>
-            new TagItem(
-              item.tag,
-              item.tag.substring(item.tag.indexOf(TAG_SEPARATOR) + 1),
-              item.notes
-            )
-        )
-        .sort((a, b) => a.title.localeCompare(b.title));
+    const parentTag = element ? element.tag : '';
+    const parentPrefix = element ? parentTag + TAG_SEPARATOR : '';
 
-      const references: TagTreeItem[] = element.notes
-        .map(uri => this.foam.workspace.get(uri))
-        .reduce((acc, note) => {
-          const tags = note.tags.filter(t => t.label === element.tag);
-          return [
-            ...acc,
-            ...tags.slice(0, 1).map(t => new TagReference(t, note)),
-          ];
-        }, [])
-        .sort((a, b) => a.title.localeCompare(b.title));
+    const tagsAtThisLevel = this.tags
+      .filter(({ tag }) => tag.startsWith(parentPrefix))
+      .map(({ tag }) => {
+        const nextSeparator = tag.indexOf(TAG_SEPARATOR, parentPrefix.length);
+        const label =
+          nextSeparator > -1
+            ? tag.substring(parentPrefix.length, nextSeparator)
+            : tag.substring(parentPrefix.length);
+        const tagId = parentPrefix + label;
+        return { label, tagId, tag };
+      })
+      .reduce((acc, { label, tagId, tag }) => {
+        const existing = acc.has(label);
+        const nResources = this.foamTags.tags.get(tag).length ?? 0;
+        if (!existing) {
+          acc.set(label, { label, tagId, nResources: 0 });
+        }
+        acc.get(label).nResources += nResources;
+        return acc;
+      }, new Map() as Map<string, { label: string; tagId: string; nResources: number }>);
 
-      return Promise.resolve([
-        new TagSearch(element.tag),
-        ...nestedTagItems,
-        ...references,
-      ]);
-    }
-    if (!element) {
-      const tags: TagItem[] = this.tags
-        .map(({ tag, notes }) => {
-          const parentTag =
-            tag.indexOf(TAG_SEPARATOR) > 0
-              ? tag.substring(0, tag.indexOf(TAG_SEPARATOR))
-              : tag;
+    const tagChildren = Array.from(tagsAtThisLevel.values())
+      .map(({ label, tagId, nResources }) => {
+        const resources = this.foamTags.tags.get(tagId) ?? [];
+        return new TagItem(tagId, label, nResources, resources);
+      })
+      .sort((a, b) => a.title.localeCompare(b.title));
 
-          return new TagItem(parentTag, parentTag, notes);
-        })
-        .filter(
-          (value, index, array) =>
-            array.findIndex(tag => tag.title === value.title) === index
-        );
+    const referenceChildren: TagTreeItem[] = (element?.notes ?? [])
+      .map(uri => this.workspace.get(uri))
+      .reduce((acc, note) => {
+        const tags = note.tags.filter(t => t.label === element.tag);
+        return [
+          ...acc,
+          ...tags.slice(0, 1).map(t => new TagReference(t, note)),
+        ];
+      }, [])
+      .sort((a, b) => a.title.localeCompare(b.title));
 
-      return Promise.resolve(tags.sort((a, b) => a.tag.localeCompare(b.tag)));
-    }
+    return Promise.resolve(
+      [
+        element && new TagSearch(element.tag),
+        ...tagChildren,
+        ...referenceChildren,
+      ].filter(Boolean)
+    );
   }
 
   async resolveTreeItem(item: TagTreeItem): Promise<TagTreeItem> {
@@ -134,11 +140,12 @@ export class TagItem extends vscode.TreeItem {
   constructor(
     public readonly tag: string,
     public readonly title: string,
+    public readonly nResourcesInSubtree: number,
     public readonly notes: URI[]
   ) {
     super(title, vscode.TreeItemCollapsibleState.Collapsed);
-    this.description = `${this.notes.length} reference${
-      this.notes.length !== 1 ? 's' : ''
+    this.description = `${nResourcesInSubtree} reference${
+      nResourcesInSubtree !== 1 ? 's' : ''
     }`;
   }
 

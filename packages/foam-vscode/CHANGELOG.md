@@ -4,6 +4,14 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.22.0] - 2023-04-15
+
+Fixes and Improvements:
+
+- Added support for deep tag hierarchy in Tag Explorer panel (#1134, #1194)
+- Consolidated and improved Backlinks, Placeholders and Orphans panels (#1196)
+- Fixed note resolution when using template without defined path (#1197)
+
 ## [0.21.4] - 2023-04-14
 
 Fixes and Improvements:

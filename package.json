@@ -18,19 +18,19 @@
     "build": "lerna run build",
     "test": "yarn workspace foam-vscode test",
     "lint": "lerna run lint",
-    "watch": "lerna run watch --concurrency 20 --stream"
+    "watch": "lerna run watch --concurrency 20 --stream",
+    "postinstall": "husky install",
+    "prepack": "pinst --disable",
+    "postpack": "pinst --enable"
   },
   "devDependencies": {
     "all-contributors-cli": "^6.16.1",
-    "lerna": "^6.4.1"
+    "husky": "^8.0.0",
+    "lerna": "^6.4.1",
+    "pinst": "^3.0.0"
   },
   "engines": {
     "node": ">=18"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "yarn lint"
-    }
   },
   "prettier": {
     "arrowParens": "avoid",
@@ -38,6 +38,5 @@
     "semi": true,
     "singleQuote": true,
     "trailingComma": "es5"
-  },
-  "dependencies": {}
+  }
 }

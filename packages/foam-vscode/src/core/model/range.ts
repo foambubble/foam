@@ -69,4 +69,8 @@ export abstract class Range {
   static isBefore(a: Range, b: Range): number {
     return a.start.line - b.start.line || a.start.character - b.start.character;
   }
+
+  static toString(range: Range): string {
+    return `${range.start.line}:${range.start.character} - ${range.end.line}:${range.end.character}`;
+  }
 }

@@ -116,11 +116,10 @@ export class ResourceRangeTreeItem extends vscode.TreeItem {
     const start = Math.max(0, range.start.character - 15);
     const ellipsis = start === 0 ? '' : '...';
 
-    const label = `${range.start.line}: ${ellipsis}${line.slice(
-      start,
-      start + 300
-    )}`;
-    const tooltip = getNoteTooltip(line);
+    const label = line
+      ? `${range.start.line}: ${ellipsis}${line.slice(start, start + 300)}`
+      : Range.toString(range);
+    const tooltip = line && getNoteTooltip(line);
     const item = new ResourceRangeTreeItem(label, resource, range);
     item.tooltip = tooltip;
     return item;

@@ -98,8 +98,8 @@ describe('Backlinks panel', () => {
     provider.target = noteA.uri;
     const notes = (await provider.getChildren()) as ResourceTreeItem[];
     expect(notes[0].command).toMatchObject({
-      command: OPEN_COMMAND.command,
-      arguments: [expect.objectContaining({ uri: noteB.uri })],
+      command: 'vscode.open',
+      arguments: [expect.objectContaining({ path: noteB.uri.path })],
     });
   });
   it('navigates to document with link selection if clicking on backlink', async () => {
@@ -111,7 +111,7 @@ describe('Backlinks panel', () => {
     expect(linksFromB[0].command).toMatchObject({
       command: 'vscode.open',
       arguments: [
-        noteB.uri,
+        expect.objectContaining({ path: noteB.uri.path }),
         {
           selection: expect.arrayContaining([]),
         },

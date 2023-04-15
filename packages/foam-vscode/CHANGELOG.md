@@ -4,6 +4,12 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.22.1] - 2023-04-15
+
+Fixes and Improvements:
+
+- Allow the `#` char to trigger tag autocompletion (#1192, #1189 - thanks @jimgraham)
+
 ## [0.22.0] - 2023-04-15
 
 Fixes and Improvements:

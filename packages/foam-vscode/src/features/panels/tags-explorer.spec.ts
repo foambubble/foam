@@ -1,65 +1,48 @@
-import {
-  createTestNote,
-  readFileFromFs,
-  TEST_DATA_DIR,
-} from '../../test/test-utils';
+import { createTestNote } from '../../test/test-utils';
 import { cleanWorkspace, closeEditors } from '../../test/test-utils-vscode';
 import { TagItem, TagReference, TagsProvider } from './tags-explorer';
-import { bootstrap, Foam } from '../../core/model/foam';
-import { MarkdownResourceProvider } from '../../core/services/markdown-provider';
-import { createMarkdownParser } from '../../core/services/markdown-parser';
-import { URI } from '../../core/model/uri';
-import { FileDataStore, Matcher } from '../../test/test-datastore';
+import { FoamTags } from '../../core/model/tags';
+import { FoamWorkspace } from '../../core/model/workspace';
 
 describe('Tags tree panel', () => {
-  let _foam: Foam;
-  let provider: TagsProvider;
-
-  const dataStore = new FileDataStore(readFileFromFs, TEST_DATA_DIR.toFsPath());
-  const matcher = new Matcher([URI.file(TEST_DATA_DIR.toFsPath())]);
-  const parser = createMarkdownParser();
-  const mdProvider = new MarkdownResourceProvider(dataStore, parser);
-
   beforeAll(async () => {
     await cleanWorkspace();
   });
 
   afterAll(async () => {
-    _foam.dispose();
     await cleanWorkspace();
   });
 
   beforeEach(async () => {
-    _foam = await bootstrap(matcher, undefined, dataStore, parser, [
-      mdProvider,
-    ]);
-    provider = new TagsProvider(_foam, _foam.workspace);
     await closeEditors();
   });
 
-  afterEach(() => {
-    _foam.dispose();
-  });
-
-  it('correctly provides a tag from a set of notes', async () => {
+  it('provides a tag from a set of notes', async () => {
     const noteA = createTestNote({
       tags: ['test'],
       uri: './note-a.md',
     });
-    _foam.workspace.set(noteA);
+    const workspace = new FoamWorkspace().set(noteA);
+    const foamTags = FoamTags.fromWorkspace(workspace);
+    const provider = new TagsProvider(foamTags, workspace);
     provider.refresh();
 
     const treeItems = (await provider.getChildren()) as TagItem[];
 
-    treeItems.forEach(item => expect(item.tag).toContain('test'));
+    expect(treeItems).toHaveLength(1);
+    expect(treeItems[0].label).toEqual('test');
+    expect(treeItems[0].tag).toEqual('test');
+    expect(treeItems[0].nResourcesInSubtree).toEqual(1);
   });
 
-  it('correctly handles a parent and child tag', async () => {
+  it('handles a simple parent and child tag', async () => {
     const noteA = createTestNote({
       tags: ['parent/child'],
       uri: './note-a.md',
     });
-    _foam.workspace.set(noteA);
+    const workspace = new FoamWorkspace().set(noteA);
+    const foamTags = FoamTags.fromWorkspace(workspace);
+    const provider = new TagsProvider(foamTags, workspace);
     provider.refresh();
 
     const parentTreeItems = (await provider.getChildren()) as TagItem[];
@@ -78,17 +61,18 @@ describe('Tags tree panel', () => {
     });
   });
 
-  it('correctly handles a single parent and multiple child tag', async () => {
+  it('handles a single parent and multiple child tag', async () => {
     const noteA = createTestNote({
       tags: ['parent/child'],
       uri: './note-a.md',
     });
-    _foam.workspace.set(noteA);
     const noteB = createTestNote({
       tags: ['parent/subchild'],
       uri: './note-b.md',
     });
-    _foam.workspace.set(noteB);
+    const workspace = new FoamWorkspace().set(noteA).set(noteB);
+    const foamTags = FoamTags.fromWorkspace(workspace);
+    const provider = new TagsProvider(foamTags, workspace);
     provider.refresh();
 
     const parentTreeItems = (await provider.getChildren()) as TagItem[];
@@ -114,14 +98,15 @@ describe('Tags tree panel', () => {
     expect(childTreeItems).toHaveLength(3);
   });
 
-  it('correctly handles a single parent and child tag in the same note', async () => {
+  it('handles a parent and child tag in the same note', async () => {
     const noteC = createTestNote({
       tags: ['main', 'main/subtopic'],
       title: 'Test note',
       uri: './note-c.md',
     });
-
-    _foam.workspace.set(noteC);
+    const workspace = new FoamWorkspace().set(noteC);
+    const foamTags = FoamTags.fromWorkspace(workspace);
+    const provider = new TagsProvider(foamTags, workspace);
 
     provider.refresh();
 
@@ -150,5 +135,37 @@ describe('Tags tree panel', () => {
       });
 
     expect(childTreeItems).toHaveLength(3);
+  });
+
+  it('handles a tag with multiple levels of hierarchy - #1134', async () => {
+    const noteA = createTestNote({
+      tags: ['parent/child/second'],
+      uri: './note-a.md',
+    });
+    const workspace = new FoamWorkspace().set(noteA);
+    const foamTags = FoamTags.fromWorkspace(workspace);
+    const provider = new TagsProvider(foamTags, workspace);
+
+    provider.refresh();
+
+    const parentTreeItems = (await provider.getChildren()) as TagItem[];
+    const parentTagItem = parentTreeItems.pop();
+    expect(parentTagItem.title).toEqual('parent');
+
+    const childTreeItems = (await provider.getChildren(
+      parentTagItem
+    )) as TagItem[];
+
+    expect(childTreeItems).toHaveLength(2);
+    expect(childTreeItems[0].label).toMatch(/^Search.*/);
+    expect(childTreeItems[1].label).toEqual('child');
+
+    const grandchildTreeItems = (await provider.getChildren(
+      childTreeItems[1]
+    )) as TagItem[];
+
+    expect(grandchildTreeItems).toHaveLength(2);
+    expect(grandchildTreeItems[0].label).toMatch(/^Search.*/);
+    expect(grandchildTreeItems[1].label).toEqual('second');
   });
 });

@@ -7,7 +7,7 @@ import { mdDocSelector } from '../utils';
 // this regex is different from HASHTAG_REGEX in that it does not look for a
 // #+character. It uses a negative look-ahead for `# `
 const TAG_REGEX =
-  /(?<=^|\s)#(?!(\s+))([0-9]*[\p{L}\p{Emoji_Presentation}\p{N}/_-]*)/gmu;
+  /(?<=^|\s)#(?![ \t#])([0-9]*[\p{L}\p{Emoji_Presentation}\p{N}/_-]*)/gu;
 
 const feature: FoamFeature = {
   activate: async (
@@ -41,6 +41,19 @@ export class TagCompletionProvider
     const requiresAutocomplete = cursorPrefix.match(TAG_REGEX);
 
     if (!requiresAutocomplete) {
+      return null;
+    }
+
+    // check the match group length.
+    // if the match is only '#', the character to the left of cursor should
+    // also be `#`. If it isn't, we didn't match the
+    // `[0-9]*[\p{L}\p{Emoji_Presentation}\p{N}/_-]` group
+    // This excludes things like `#&`
+    const matchText = requiresAutocomplete[requiresAutocomplete.length - 1];
+    if (
+      matchText === '#' &&
+      cursorPrefix.charAt(position.character - 1) !== '#'
+    ) {
       return null;
     }
 

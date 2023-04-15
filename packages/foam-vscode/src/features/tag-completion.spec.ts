@@ -123,6 +123,18 @@ describe('Tag Completion', () => {
       expect(tags.items.length).toEqual(3);
     });
 
+    it('should provide multiple suggestions when typing # on line with match', async () => {
+      const { uri } = await createFile('Here is #my-tag and #');
+      const { doc } = await showInEditor(uri);
+      const provider = new TagCompletionProvider(foamTags);
+
+      const tags = await provider.provideCompletionItems(
+        doc,
+        new vscode.Position(0, 21)
+      );
+      expect(tags.items.length).toEqual(3);
+    });
+
     it('should provide multiple suggestions when typing # at EOL', async () => {
       const { uri } = await createFile(`# Title
 
@@ -181,6 +193,20 @@ more text
       const tags = await provider.provideCompletionItems(
         doc,
         new vscode.Position(2, 2)
+      );
+
+      expect(foamTags.tags.get('primary')).toBeTruthy();
+      expect(tags).toBeNull();
+    });
+
+    it('should not provide a suggestion when typing `# ` in a line that already matched', async () => {
+      const { uri } = await createFile('here is #primary and now # ');
+      const { doc } = await showInEditor(uri);
+      const provider = new TagCompletionProvider(foamTags);
+
+      const tags = await provider.provideCompletionItems(
+        doc,
+        new vscode.Position(0, 29)
       );
 
       expect(foamTags.tags.get('primary')).toBeTruthy();

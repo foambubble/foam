@@ -19,6 +19,7 @@ export function getWikilinkDefinitionSetting(): LinkReferenceDefinitionsSetting 
 /** Retrieve the list of file ignoring globs. */
 export function getIgnoredFilesSetting(): GlobPattern[] {
   return [
+    '**/.foam/**',
     ...workspace.getConfiguration().get('foam.files.ignore', []),
     ...Object.keys(workspace.getConfiguration().get('files.exclude', {})),
   ];

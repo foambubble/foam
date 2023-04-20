@@ -13,8 +13,8 @@ import { UriTreeItem } from './tree-view-utils';
  *
  * **NOTE**: In order for this provider to correctly function, you must define the following command in the package.json file:
    * ```
-   * foam-vscode.group-${providerId}-by-folder
-   * foam-vscode.group-${providerId}-off
+   * foam-vscode.views.${providerId}.group-by-folder
+   * foam-vscode.views.${providerId}.group-off
    * ```
    * Where `providerId` is the same string provided to the constructor. You must also register the commands in your context subscriptions as follows:
    * ```
@@ -88,11 +88,11 @@ export class GroupedResourcesTreeDataProvider
   public get commands() {
     return [
       vscode.commands.registerCommand(
-        `foam-vscode.group-${this.providerId}-by-folder`,
+        `foam-vscode.views.${this.providerId}.group-by-folder`,
         () => this.setGroupBy(GroupedResoucesConfigGroupBy.Folder)
       ),
       vscode.commands.registerCommand(
-        `foam-vscode.group-${this.providerId}-off`,
+        `foam-vscode.views.${this.providerId}.group-off`,
         () => this.setGroupBy(GroupedResoucesConfigGroupBy.Off)
       ),
     ];
@@ -111,7 +111,7 @@ export class GroupedResourcesTreeDataProvider
   private setContext(): void {
     vscode.commands.executeCommand(
       'setContext',
-      `foam-vscode.${this.providerId}-grouped-by-folder`,
+      `foam-vscode.views.${this.providerId}.grouped-by-folder`,
       this.groupBy === GroupedResoucesConfigGroupBy.Folder
     );
   }

@@ -102,23 +102,23 @@
     "menus": {
       "view/title": [
         {
-          "command": "foam-vscode.group-orphans-by-folder",
-          "when": "view == foam-vscode.orphans && foam-vscode.orphans-grouped-by-folder == false",
+          "command": "foam-vscode.views.orphans.group-by-folder",
+          "when": "view == foam-vscode.orphans && foam-vscode.views.orphans.grouped-by-folder == false",
           "group": "navigation"
         },
         {
-          "command": "foam-vscode.group-orphans-off",
-          "when": "view == foam-vscode.orphans && foam-vscode.orphans-grouped-by-folder == true",
+          "command": "foam-vscode.views.orphans.group-off",
+          "when": "view == foam-vscode.orphans && foam-vscode.views.orphans.grouped-by-folder == true",
           "group": "navigation"
         },
         {
-          "command": "foam-vscode.group-placeholders-by-folder",
-          "when": "view == foam-vscode.placeholders && foam-vscode.placeholders-grouped-by-folder == false",
+          "command": "foam-vscode.views.placeholders.group-by-folder",
+          "when": "view == foam-vscode.placeholders && foam-vscode.views.placeholders.grouped-by-folder == false",
           "group": "navigation"
         },
         {
-          "command": "foam-vscode.group-placeholders-off",
-          "when": "view == foam-vscode.placeholders && foam-vscode.placeholders-grouped-by-folder == true",
+          "command": "foam-vscode.views.placeholders.group-off",
+          "when": "view == foam-vscode.placeholders && foam-vscode.views.placeholders.grouped-by-folder == true",
           "group": "navigation"
         }
       ],
@@ -132,19 +132,19 @@
           "when": "false"
         },
         {
-          "command": "foam-vscode.group-orphans-by-folder",
+          "command": "foam-vscode.views.orphans.group-by-folder",
           "when": "false"
         },
         {
-          "command": "foam-vscode.group-orphans-off",
+          "command": "foam-vscode.views.orphans.group-off",
           "when": "false"
         },
         {
-          "command": "foam-vscode.group-placeholders-by-folder",
+          "command": "foam-vscode.views.placeholders.group-by-folder",
           "when": "false"
         },
         {
-          "command": "foam-vscode.group-placeholders-off",
+          "command": "foam-vscode.views.placeholders.group-off",
           "when": "false"
         },
         {
@@ -215,22 +215,22 @@
         "title": "Foam: Open Resource"
       },
       {
-        "command": "foam-vscode.group-orphans-by-folder",
+        "command": "foam-vscode.views.orphans.group-by-folder",
         "title": "Foam: Group Orphans By Folder",
         "icon": "$(list-tree)"
       },
       {
-        "command": "foam-vscode.group-orphans-off",
+        "command": "foam-vscode.views.orphans.group-off",
         "title": "Foam: Don't Group Orphans",
         "icon": "$(list-flat)"
       },
       {
-        "command": "foam-vscode.group-placeholders-by-folder",
+        "command": "foam-vscode.views.placeholders.group-by-folder",
         "title": "Foam: Group Placeholders By Folder",
         "icon": "$(list-tree)"
       },
       {
-        "command": "foam-vscode.group-placeholders-off",
+        "command": "foam-vscode.views.placeholders.group-off",
         "title": "Foam: Don't Group Placeholders",
         "icon": "$(list-flat)"
       },

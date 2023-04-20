@@ -479,27 +479,32 @@ this is another simple line
   `;
 
   it('can detect block', () => {
-    expect(getBlockFor(md, 1)).toEqual('- this is block 1');
+    const { block } = getBlockFor(md, 1);
+    expect(block).toEqual('- this is block 1');
   });
 
   it('supports nested blocks 1', () => {
-    expect(getBlockFor(md, 2)).toEqual(`- this is [[block]] 2
+    const { block } = getBlockFor(md, 2);
+    expect(block).toEqual(`- this is [[block]] 2
   - this is block 2.1`);
   });
 
   it('supports nested blocks 2', () => {
-    expect(getBlockFor(md, 5)).toEqual(`  - this is block 3.1
+    const { block } = getBlockFor(md, 5);
+    expect(block).toEqual(`  - this is block 3.1
     - this is block 3.1.1`);
   });
 
   it('returns the line if no block is detected', () => {
-    expect(getBlockFor(md, 9)).toEqual(`this is a simple line`);
+    const { block } = getBlockFor(md, 9);
+    expect(block).toEqual(`this is a simple line`);
   });
 
   it('is compatible with Range object', () => {
     const note = parser.parse(URI.file('/path/to/a'), md);
     const { start } = note.links[0].range;
-    expect(getBlockFor(md, start)).toEqual(`- this is [[block]] 2
+    const { block } = getBlockFor(md, start);
+    expect(block).toEqual(`- this is [[block]] 2
   - this is block 2.1`);
   });
 });

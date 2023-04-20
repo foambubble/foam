@@ -45,6 +45,11 @@ const feature: FoamFeature = {
       }),
       provider.onDidChangeTreeData(() => {
         treeView.title = baseTitle + ` (${provider.numElements})`;
+      }),
+      vscode.window.onDidChangeActiveTextEditor(() => {
+        if (provider.show.get() === 'for-current-file') {
+          provider.refresh();
+        }
       })
     );
   },

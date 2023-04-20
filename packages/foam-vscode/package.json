@@ -96,7 +96,7 @@
       },
       {
         "view": "foam-vscode.placeholders",
-        "contents": "No placeholders found. Pending links and notes without content will show up here."
+        "contents": "No placeholders found for selected resource or workspace."
       }
     ],
     "menus": {

@@ -1,10 +1,9 @@
+import { Memento } from 'vscode';
 import { FoamWorkspace } from '../core/model/workspace';
 import {
   AlwaysIncludeMatcher,
   SubstringExcludeMatcher,
 } from '../core/services/datastore';
-import { OPEN_COMMAND } from '../features/commands/open-resource';
-import { GroupedResoucesConfigGroupBy } from '../settings';
 import { createTestNote } from '../test/test-utils';
 import {
   DirectoryTreeItem,
@@ -13,6 +12,23 @@ import {
 import { ResourceTreeItem, UriTreeItem } from './tree-view-utils';
 
 const testMatcher = new SubstringExcludeMatcher('path-exclude');
+
+// implementation of the Memento interface that uses a Map as backend
+class TestMemento implements Memento {
+  get<T>(key: string): T;
+  get<T>(key: string, defaultValue: T): T;
+  get<T>(key: unknown, defaultValue?: unknown): T | T {
+    return (this.map.get(key as string) as T) || (defaultValue as T);
+  }
+  private map: Map<string, string> = new Map();
+  keys(): readonly string[] {
+    return Array.from(this.map.keys());
+  }
+  update(key: string, value: any): Thenable<void> {
+    this.map.set(key, value);
+    return Promise.resolve();
+  }
+}
 
 describe('GroupedResourcesTreeDataProvider', () => {
   const matchingNote1 = createTestNote({ uri: '/path/ABC.md', title: 'ABC' });
@@ -39,6 +55,7 @@ describe('GroupedResourcesTreeDataProvider', () => {
     const provider = new GroupedResourcesTreeDataProvider(
       'length3',
       'note',
+      new TestMemento(),
       () =>
         workspace
           .list()
@@ -47,7 +64,7 @@ describe('GroupedResourcesTreeDataProvider', () => {
       uri => new UriTreeItem(uri),
       testMatcher
     );
-    provider.setGroupBy(GroupedResoucesConfigGroupBy.Folder);
+    provider.groupBy.update('folder');
     const result = await provider.getChildren();
     expect(result).toMatchObject([
       {
@@ -69,6 +86,7 @@ describe('GroupedResourcesTreeDataProvider', () => {
     const provider = new GroupedResourcesTreeDataProvider(
       'length3',
       'note',
+      new TestMemento(),
       () =>
         workspace
           .list()
@@ -77,7 +95,7 @@ describe('GroupedResourcesTreeDataProvider', () => {
       uri => new ResourceTreeItem(workspace.get(uri), workspace),
       testMatcher
     );
-    provider.setGroupBy(GroupedResoucesConfigGroupBy.Folder);
+    provider.groupBy.update('folder');
 
     const directory = new DirectoryTreeItem(
       '/path',
@@ -99,6 +117,7 @@ describe('GroupedResourcesTreeDataProvider', () => {
     const provider = new GroupedResourcesTreeDataProvider(
       'length3',
       'note',
+      new TestMemento(),
       () =>
         workspace
           .list()
@@ -107,7 +126,7 @@ describe('GroupedResourcesTreeDataProvider', () => {
       uri => new ResourceTreeItem(workspace.get(uri), workspace),
       testMatcher
     );
-    provider.setGroupBy(GroupedResoucesConfigGroupBy.Off);
+    provider.groupBy.update('off');
 
     const result = await provider.getChildren();
     expect(result).toMatchObject([
@@ -130,6 +149,7 @@ describe('GroupedResourcesTreeDataProvider', () => {
     const provider = new GroupedResourcesTreeDataProvider(
       'length3',
       'note',
+      new TestMemento(),
       () =>
         workspace
           .list()
@@ -138,7 +158,7 @@ describe('GroupedResourcesTreeDataProvider', () => {
       uri => new UriTreeItem(uri),
       new AlwaysIncludeMatcher()
     );
-    provider.setGroupBy(GroupedResoucesConfigGroupBy.Folder);
+    provider.groupBy.update('folder');
 
     const result = await provider.getChildren();
     expect(result).toMatchObject([
@@ -158,6 +178,7 @@ describe('GroupedResourcesTreeDataProvider', () => {
     const provider = new GroupedResourcesTreeDataProvider(
       'length3',
       description,
+      new TestMemento(),
       () =>
         workspace
           .list()
@@ -166,7 +187,7 @@ describe('GroupedResourcesTreeDataProvider', () => {
       uri => new UriTreeItem(uri),
       testMatcher
     );
-    provider.setGroupBy(GroupedResoucesConfigGroupBy.Folder);
+    provider.groupBy.update('folder');
     const result = await provider.getChildren();
     expect(result).toMatchObject([
       {

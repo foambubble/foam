@@ -1,10 +1,10 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { GroupedResoucesConfigGroupBy } from '../settings';
 import { getContainsTooltip, isSome } from '../utils';
 import { URI } from '../core/model/uri';
 import { IMatcher } from '../core/services/datastore';
 import { UriTreeItem } from './tree-view-utils';
+import { ContextMemento } from './vsc-utils';
 
 /**
  * Provides the ability to expose a TreeDataExplorerView in VSCode. This class will
@@ -34,24 +34,29 @@ import { UriTreeItem } from './tree-view-utils';
  * @implements {vscode.TreeDataProvider<GroupedResourceTreeItem>}
  */
 export class GroupedResourcesTreeDataProvider
-  implements vscode.TreeDataProvider<GroupedResourceTreeItem>
+  implements
+    vscode.TreeDataProvider<GroupedResourceTreeItem>,
+    vscode.Disposable
 {
   // prettier-ignore
   private _onDidChangeTreeData: vscode.EventEmitter<GroupedResourceTreeItem | undefined | void> = new vscode.EventEmitter<GroupedResourceTreeItem | undefined | void>();
   // prettier-ignore
   readonly onDidChangeTreeData: vscode.Event<GroupedResourceTreeItem | undefined | void> = this._onDidChangeTreeData.event;
-  // prettier-ignore
-  private groupBy: GroupedResoucesConfigGroupBy = GroupedResoucesConfigGroupBy.Folder;
-  private exclude: string[] = [];
   private flatUris: Array<URI> = [];
   private root = vscode.workspace.workspaceFolders[0].uri.path;
+  public groupBy = new ContextMemento<'off' | 'folder'>(
+    this.state,
+    `foam-vscode.views.${this.providerId}.group-by`,
+    'folder'
+  );
+  protected disposables: vscode.Disposable[] = [];
 
   /**
    * Creates an instance of GroupedResourcesTreeDataProvider.
    * **NOTE**: In order for this provider to correctly function, you must define the following command in the package.json file:
    * ```
-   * foam-vscode.group-${providerId}-by-folder
-   * foam-vscode.group-${providerId}-off
+   * foam-vscode.views.${this.providerId}.group-by-folder
+   * foam-vscode.views.${this.providerId}.group-by-off
    * ```
    * Where `providerId` is the same string provided to this constructor. You must also register the commands in your context subscriptions as follows:
    * ```
@@ -75,45 +80,37 @@ export class GroupedResourcesTreeDataProvider
    * @memberof GroupedResourcesTreeDataProvider
    */
   constructor(
-    private providerId: string,
+    protected providerId: string,
     private resourceName: string,
-    private computeResources: () => Array<URI>,
+    protected state: vscode.Memento,
+    protected computeResources: () => Array<URI>,
     private createTreeItem: (item: URI) => GroupedResourceTreeItem,
     private matcher: IMatcher
   ) {
-    this.setContext();
-    this.doComputeResources();
+    this.disposables.push(
+      vscode.commands.registerCommand(
+        `foam-vscode.views.${this.providerId}.group-by:folder`,
+        () => {
+          this.groupBy.update('folder');
+          this.refresh();
+        }
+      ),
+      vscode.commands.registerCommand(
+        `foam-vscode.views.${this.providerId}.group-by:off`,
+        () => {
+          this.groupBy.update('off');
+          this.refresh();
+        }
+      )
+    );
   }
 
-  public get commands() {
-    return [
-      vscode.commands.registerCommand(
-        `foam-vscode.views.${this.providerId}.group-by-folder`,
-        () => this.setGroupBy(GroupedResoucesConfigGroupBy.Folder)
-      ),
-      vscode.commands.registerCommand(
-        `foam-vscode.views.${this.providerId}.group-off`,
-        () => this.setGroupBy(GroupedResoucesConfigGroupBy.Off)
-      ),
-    ];
+  dispose() {
+    this.disposables.forEach(d => d.dispose());
   }
 
   public get numElements() {
     return this.flatUris.length;
-  }
-
-  setGroupBy(groupBy: GroupedResoucesConfigGroupBy): void {
-    this.groupBy = groupBy;
-    this.setContext();
-    this.refresh();
-  }
-
-  private setContext(): void {
-    vscode.commands.executeCommand(
-      'setContext',
-      `foam-vscode.views.${this.providerId}.grouped-by-folder`,
-      this.groupBy === GroupedResoucesConfigGroupBy.Folder
-    );
   }
 
   refresh(): void {
@@ -132,7 +129,7 @@ export class GroupedResourcesTreeDataProvider
       const children = await (item as any).getChildren();
       return children.sort(sortByTreeItemLabel);
     }
-    if (this.groupBy === GroupedResoucesConfigGroupBy.Folder) {
+    if (this.groupBy.get() === 'folder') {
       const directories = Object.entries(this.getUrisByDirectory())
         .sort(([dir1], [dir2]) => sortByString(dir1, dir2))
         .map(

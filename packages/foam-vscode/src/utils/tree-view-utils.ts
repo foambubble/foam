@@ -8,6 +8,7 @@ import { FoamWorkspace } from '../core/model/workspace';
 import { getNoteTooltip } from '../utils';
 import { isSome } from '../core/utils';
 import { groupBy } from 'lodash';
+import { getBlockFor } from '../core/services/markdown-parser';
 
 export class UriTreeItem extends vscode.TreeItem {
   private doGetChildren: () => Promise<vscode.TreeItem[]>;
@@ -88,7 +89,10 @@ export class ResourceRangeTreeItem extends vscode.TreeItem {
   constructor(
     public label: string,
     public readonly resource: Resource,
-    public readonly range: Range
+    public readonly range: Range,
+    private resolveFn?: (
+      item: ResourceRangeTreeItem
+    ) => Promise<ResourceRangeTreeItem>
   ) {
     super(label, vscode.TreeItemCollapsibleState.None);
     this.label = `${range.start.line}: ${this.label}`;
@@ -100,7 +104,7 @@ export class ResourceRangeTreeItem extends vscode.TreeItem {
   }
 
   resolveTreeItem(): Promise<ResourceRangeTreeItem> {
-    return Promise.resolve(this);
+    return this.resolveFn ? this.resolveFn(this) : Promise.resolve(this);
   }
 
   static async createStandardItem(
@@ -108,9 +112,8 @@ export class ResourceRangeTreeItem extends vscode.TreeItem {
     resource: Resource,
     range: Range
   ): Promise<ResourceRangeTreeItem> {
-    const lines = ((await workspace.readAsMarkdown(resource.uri)) ?? '').split(
-      '\n'
-    );
+    const markdown = (await workspace.readAsMarkdown(resource.uri)) ?? '';
+    const lines = markdown.split('\n');
 
     const line = lines[range.start.line];
     const start = Math.max(0, range.start.character - 15);
@@ -119,9 +122,22 @@ export class ResourceRangeTreeItem extends vscode.TreeItem {
     const label = line
       ? `${range.start.line}: ${ellipsis}${line.slice(start, start + 300)}`
       : Range.toString(range);
-    const tooltip = line && getNoteTooltip(line);
-    const item = new ResourceRangeTreeItem(label, resource, range);
-    item.tooltip = tooltip;
+
+    const resolveFn = (item: ResourceRangeTreeItem) => {
+      let { block, nLines } = getBlockFor(markdown, range.start);
+      // Long blocks need to be interrupted or they won't display in hover preview
+      // We keep the extra lines so that the count in the preview is correct
+      if (nLines > 15) {
+        let tmp = block.split('\n');
+        tmp.splice(15, 1, '\n'); // replace a line with a blank line to interrupt the block
+        block = tmp.join('\n');
+      }
+      const tooltip = getNoteTooltip(block ?? line ?? '');
+      item.tooltip = tooltip;
+      return Promise.resolve(item);
+    };
+
+    const item = new ResourceRangeTreeItem(label, resource, range, resolveFn);
     return item;
   }
 }

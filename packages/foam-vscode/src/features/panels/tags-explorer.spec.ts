@@ -1,8 +1,9 @@
 import { createTestNote } from '../../test/test-utils';
 import { cleanWorkspace, closeEditors } from '../../test/test-utils-vscode';
-import { TagItem, TagReference, TagsProvider } from './tags-explorer';
+import { TagItem, TagsProvider } from './tags-explorer';
 import { FoamTags } from '../../core/model/tags';
 import { FoamWorkspace } from '../../core/model/workspace';
+import { ResourceTreeItem } from '../../utils/tree-view-utils';
 
 describe('Tags tree panel', () => {
   beforeAll(async () => {
@@ -122,9 +123,9 @@ describe('Tags tree panel', () => {
     )) as TagItem[];
 
     childTreeItems
-      .filter(item => item instanceof TagReference)
+      .filter(item => item instanceof ResourceTreeItem)
       .forEach(item => {
-        expect(item.title).toEqual('Test note');
+        expect(item.label).toEqual('Test note');
       });
 
     childTreeItems

@@ -7,6 +7,11 @@ import { Foam } from '../../core/model/foam';
 import { FoamWorkspace } from '../../core/model/workspace';
 import { Resource, Tag } from '../../core/model/note';
 import { FoamTags } from '../../core/model/tags';
+import {
+  ResourceRangeTreeItem,
+  ResourceTreeItem,
+  groupRangesByResource,
+} from '../../utils/tree-view-utils';
 
 const TAG_SEPARATOR = '/';
 const feature: FoamFeature = {
@@ -71,7 +76,11 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
     return element;
   }
 
-  getChildren(element?: TagItem): Promise<TagTreeItem[]> {
+  async getChildren(element?: TagItem): Promise<TagTreeItem[]> {
+    if ((element as any)?.getChildren) {
+      const children = await (element as any).getChildren();
+      return children;
+    }
     const parentTag = element ? element.tag : '';
     const parentPrefix = element ? parentTag + TAG_SEPARATOR : '';
 
@@ -96,45 +105,52 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
         return acc;
       }, new Map() as Map<string, { label: string; tagId: string; nResources: number }>);
 
-    const tagChildren = Array.from(tagsAtThisLevel.values())
+    const subtags = Array.from(tagsAtThisLevel.values())
       .map(({ label, tagId, nResources }) => {
         const resources = this.foamTags.tags.get(tagId) ?? [];
         return new TagItem(tagId, label, nResources, resources);
       })
       .sort((a, b) => a.title.localeCompare(b.title));
 
-    const referenceChildren: TagTreeItem[] = (element?.notes ?? [])
+    const resourceTags: ResourceRangeTreeItem[] = (element?.notes ?? [])
       .map(uri => this.workspace.get(uri))
       .reduce((acc, note) => {
         const tags = note.tags.filter(t => t.label === element.tag);
-        return [
-          ...acc,
-          ...tags.slice(0, 1).map(t => new TagReference(t, note)),
-        ];
-      }, [])
-      .sort((a, b) => a.title.localeCompare(b.title));
+        const items = tags.map(t =>
+          ResourceRangeTreeItem.createStandardItem(
+            this.workspace,
+            note,
+            t.range
+          )
+        );
+        return [...acc, ...items];
+      }, []);
+
+    const resources = await groupRangesByResource(this.workspace, resourceTags);
 
     return Promise.resolve(
-      [
-        element && new TagSearch(element.tag),
-        ...tagChildren,
-        ...referenceChildren,
-      ].filter(Boolean)
+      [element && new TagSearch(element.tag), ...subtags, ...resources].filter(
+        Boolean
+      )
     );
   }
 
   async resolveTreeItem(item: TagTreeItem): Promise<TagTreeItem> {
-    if (item instanceof TagReference) {
-      const content = await this.workspace.readAsMarkdown(item.note.uri);
-      if (isSome(content)) {
-        item.tooltip = getNoteTooltip(content);
-      }
+    if (
+      item instanceof ResourceTreeItem ||
+      item instanceof ResourceRangeTreeItem
+    ) {
+      return item.resolveTreeItem();
     }
-    return item;
+    return Promise.resolve(item);
   }
 }
 
-type TagTreeItem = TagItem | TagReference | TagSearch;
+type TagTreeItem =
+  | TagItem
+  | TagSearch
+  | ResourceTreeItem
+  | ResourceRangeTreeItem;
 
 export class TagItem extends vscode.TreeItem {
   constructor(
@@ -175,29 +191,4 @@ export class TagSearch extends vscode.TreeItem {
 
   iconPath = new vscode.ThemeIcon('search');
   contextValue = 'tag-search';
-}
-
-export class TagReference extends vscode.TreeItem {
-  public readonly title: string;
-  constructor(public readonly tag: Tag, public readonly note: Resource) {
-    super(note.title, vscode.TreeItemCollapsibleState.None);
-    const uri = toVsCodeUri(note.uri);
-    this.title = note.title;
-    this.description = vscode.workspace.asRelativePath(uri);
-    this.tooltip = undefined;
-    this.command = {
-      command: 'vscode.open',
-      arguments: [
-        uri,
-        {
-          preview: true,
-          selection: toVsCodeRange(tag.range),
-        },
-      ],
-      title: 'Open File',
-    };
-  }
-
-  iconPath = new vscode.ThemeIcon('note');
-  contextValue = 'reference';
 }

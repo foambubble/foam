@@ -1,35 +1,18 @@
-import { Memento } from 'vscode';
 import { FoamWorkspace } from '../core/model/workspace';
 import {
   AlwaysIncludeMatcher,
   SubstringExcludeMatcher,
 } from '../core/services/datastore';
-import { createTestNote, getRandomURI } from '../test/test-utils';
+import { createTestNote } from '../test/test-utils';
 import {
   DirectoryTreeItem,
   GroupedResourcesTreeDataProvider,
 } from './grouped-resources-tree-data-provider';
 import { ResourceTreeItem, UriTreeItem } from './tree-view-utils';
 import { randomString } from '../test/test-utils';
+import { MapBasedMemento } from './vsc-utils';
 
 const testMatcher = new SubstringExcludeMatcher('path-exclude');
-
-// implementation of the Memento interface that uses a Map as backend
-class TestMemento implements Memento {
-  get<T>(key: string): T;
-  get<T>(key: string, defaultValue: T): T;
-  get<T>(key: unknown, defaultValue?: unknown): T | T {
-    return (this.map.get(key as string) as T) || (defaultValue as T);
-  }
-  private map: Map<string, string> = new Map();
-  keys(): readonly string[] {
-    return Array.from(this.map.keys());
-  }
-  update(key: string, value: any): Thenable<void> {
-    this.map.set(key, value);
-    return Promise.resolve();
-  }
-}
 
 describe('GroupedResourcesTreeDataProvider', () => {
   const matchingNote1 = createTestNote({ uri: '/path/ABC.md', title: 'ABC' });
@@ -56,7 +39,7 @@ describe('GroupedResourcesTreeDataProvider', () => {
     const provider = new GroupedResourcesTreeDataProvider(
       randomString(),
       'note',
-      new TestMemento(),
+      new MapBasedMemento(),
       testMatcher,
       () =>
         workspace
@@ -88,7 +71,7 @@ describe('GroupedResourcesTreeDataProvider', () => {
     const provider = new GroupedResourcesTreeDataProvider(
       randomString(),
       'note',
-      new TestMemento(),
+      new MapBasedMemento(),
       testMatcher,
       () =>
         workspace
@@ -120,7 +103,7 @@ describe('GroupedResourcesTreeDataProvider', () => {
     const provider = new GroupedResourcesTreeDataProvider(
       randomString(),
       'note',
-      new TestMemento(),
+      new MapBasedMemento(),
       testMatcher,
       () =>
         workspace
@@ -153,7 +136,7 @@ describe('GroupedResourcesTreeDataProvider', () => {
     const provider = new GroupedResourcesTreeDataProvider(
       randomString(),
       'note',
-      new TestMemento(),
+      new MapBasedMemento(),
       new AlwaysIncludeMatcher(),
       () =>
         workspace
@@ -183,7 +166,7 @@ describe('GroupedResourcesTreeDataProvider', () => {
     const provider = new GroupedResourcesTreeDataProvider(
       randomString(),
       description,
-      new TestMemento(),
+      new MapBasedMemento(),
       testMatcher,
       () =>
         workspace

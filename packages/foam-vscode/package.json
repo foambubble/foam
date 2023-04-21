@@ -96,29 +96,39 @@
       },
       {
         "view": "foam-vscode.placeholders",
-        "contents": "No placeholders found. Pending links and notes without content will show up here."
+        "contents": "No placeholders found for selected resource or workspace."
       }
     ],
     "menus": {
       "view/title": [
         {
-          "command": "foam-vscode.group-orphans-by-folder",
-          "when": "view == foam-vscode.orphans && foam-vscode.orphans-grouped-by-folder == false",
+          "command": "foam-vscode.views.orphans.group-by:folder",
+          "when": "view == foam-vscode.orphans && foam-vscode.views.orphans.group-by == 'off'",
           "group": "navigation"
         },
         {
-          "command": "foam-vscode.group-orphans-off",
-          "when": "view == foam-vscode.orphans && foam-vscode.orphans-grouped-by-folder == true",
+          "command": "foam-vscode.views.orphans.group-by:off",
+          "when": "view == foam-vscode.orphans && foam-vscode.views.orphans.group-by == 'folder'",
           "group": "navigation"
         },
         {
-          "command": "foam-vscode.group-placeholders-by-folder",
-          "when": "view == foam-vscode.placeholders && foam-vscode.placeholders-grouped-by-folder == false",
+          "command": "foam-vscode.views.placeholders.show:for-current-file",
+          "when": "view == foam-vscode.placeholders && foam-vscode.views.placeholders.show == 'all'",
           "group": "navigation"
         },
         {
-          "command": "foam-vscode.group-placeholders-off",
-          "when": "view == foam-vscode.placeholders && foam-vscode.placeholders-grouped-by-folder == true",
+          "command": "foam-vscode.views.placeholders.show:all",
+          "when": "view == foam-vscode.placeholders && foam-vscode.views.placeholders.show == 'for-current-file'",
+          "group": "navigation"
+        },
+        {
+          "command": "foam-vscode.views.placeholders.group-by:folder",
+          "when": "view == foam-vscode.placeholders && foam-vscode.views.placeholders.group-by == 'off'",
+          "group": "navigation"
+        },
+        {
+          "command": "foam-vscode.views.placeholders.group-by:off",
+          "when": "view == foam-vscode.placeholders && foam-vscode.views.placeholders.group-by == 'folder'",
           "group": "navigation"
         }
       ],
@@ -132,19 +142,27 @@
           "when": "false"
         },
         {
-          "command": "foam-vscode.group-orphans-by-folder",
+          "command": "foam-vscode.views.orphans.group-by:folder",
           "when": "false"
         },
         {
-          "command": "foam-vscode.group-orphans-off",
+          "command": "foam-vscode.views.orphans.group-by:off",
           "when": "false"
         },
         {
-          "command": "foam-vscode.group-placeholders-by-folder",
+          "command": "foam-vscode.views.placeholders.show:for-current-file",
           "when": "false"
         },
         {
-          "command": "foam-vscode.group-placeholders-off",
+          "command": "foam-vscode.views.placeholders.show:all",
+          "when": "false"
+        },
+        {
+          "command": "foam-vscode.views.placeholders.group-by:folder",
+          "when": "false"
+        },
+        {
+          "command": "foam-vscode.views.placeholders.group-by:off",
           "when": "false"
         },
         {
@@ -215,23 +233,33 @@
         "title": "Foam: Open Resource"
       },
       {
-        "command": "foam-vscode.group-orphans-by-folder",
-        "title": "Foam: Group Orphans By Folder",
+        "command": "foam-vscode.views.orphans.group-by:folder",
+        "title": "Group By Folder",
         "icon": "$(list-tree)"
       },
       {
-        "command": "foam-vscode.group-orphans-off",
-        "title": "Foam: Don't Group Orphans",
+        "command": "foam-vscode.views.orphans.group-by:off",
+        "title": "Flat list",
         "icon": "$(list-flat)"
       },
       {
-        "command": "foam-vscode.group-placeholders-by-folder",
-        "title": "Foam: Group Placeholders By Folder",
+        "command": "foam-vscode.views.placeholders.show:for-current-file",
+        "title": "Show placeholders in current file",
+        "icon": "$(file)"
+      },
+      {
+        "command": "foam-vscode.views.placeholders.show:all",
+        "title": "Show placeholders in workspace",
+        "icon": "$(files)"
+      },
+      {
+        "command": "foam-vscode.views.placeholders.group-by:folder",
+        "title": "Group By Folder",
         "icon": "$(list-tree)"
       },
       {
-        "command": "foam-vscode.group-placeholders-off",
-        "title": "Foam: Don't Group Placeholders",
+        "command": "foam-vscode.views.placeholders.group-by:off",
+        "title": "Flat list",
         "icon": "$(list-flat)"
       },
       {
@@ -375,42 +403,12 @@
           "default": [],
           "markdownDescription": "Specifies the list of glob patterns that will be excluded from the orphans report. To ignore the all the content of a given folder, use `**<folderName>/**/*`"
         },
-        "foam.orphans.groupBy": {
-          "type": [
-            "string"
-          ],
-          "enum": [
-            "off",
-            "folder"
-          ],
-          "enumDescriptions": [
-            "Disable grouping",
-            "Group by folder"
-          ],
-          "default": "folder",
-          "markdownDescription": "Group orphans report entries by."
-        },
         "foam.placeholders.exclude": {
           "type": [
             "array"
           ],
           "default": [],
           "markdownDescription": "Specifies the list of glob patterns that will be excluded from the placeholders report. To ignore the all the content of a given folder, use `**<folderName>/**/*`"
-        },
-        "foam.placeholders.groupBy": {
-          "type": [
-            "string"
-          ],
-          "enum": [
-            "off",
-            "folder"
-          ],
-          "enumDescriptions": [
-            "Disable grouping",
-            "Group by folder"
-          ],
-          "default": "folder",
-          "markdownDescription": "Group blank note report entries by."
         },
         "foam.dateSnippets.afterCompletion": {
           "type": "string",

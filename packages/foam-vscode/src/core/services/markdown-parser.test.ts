@@ -1,4 +1,8 @@
-import { createMarkdownParser, ParserPlugin } from './markdown-parser';
+import {
+  createMarkdownParser,
+  getBlockFor,
+  ParserPlugin,
+} from './markdown-parser';
 import { Logger } from '../utils/log';
 import { URI } from '../model/uri';
 import { Range } from '../model/range';
@@ -457,5 +461,50 @@ But with some content.
         title: 'alias3',
       },
     ]);
+  });
+});
+
+describe('Block detection', () => {
+  const md = `
+- this is block 1
+- this is [[block]] 2
+  - this is block 2.1
+- this is block 3
+  - this is block 3.1
+    - this is block 3.1.1
+  - this is block 3.2
+- this is block 4
+this is a simple line
+this is another simple line
+  `;
+
+  it('can detect block', () => {
+    const { block } = getBlockFor(md, 1);
+    expect(block).toEqual('- this is block 1');
+  });
+
+  it('supports nested blocks 1', () => {
+    const { block } = getBlockFor(md, 2);
+    expect(block).toEqual(`- this is [[block]] 2
+  - this is block 2.1`);
+  });
+
+  it('supports nested blocks 2', () => {
+    const { block } = getBlockFor(md, 5);
+    expect(block).toEqual(`  - this is block 3.1
+    - this is block 3.1.1`);
+  });
+
+  it('returns the line if no block is detected', () => {
+    const { block } = getBlockFor(md, 9);
+    expect(block).toEqual(`this is a simple line`);
+  });
+
+  it('is compatible with Range object', () => {
+    const note = parser.parse(URI.file('/path/to/a'), md);
+    const { start } = note.links[0].range;
+    const { block } = getBlockFor(md, start);
+    expect(block).toEqual(`- this is [[block]] 2
+  - this is block 2.1`);
   });
 });

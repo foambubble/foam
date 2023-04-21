@@ -20,6 +20,8 @@ const feature: FoamFeature = {
     const provider = new GroupedResourcesTreeDataProvider(
       'orphans',
       'orphan',
+      context.globalState,
+      matcher,
       () =>
         foam.graph
           .getAllNodes()
@@ -32,21 +34,20 @@ const feature: FoamFeature = {
         return uri.isPlaceholder()
           ? new UriTreeItem(uri)
           : new ResourceTreeItem(foam.workspace.find(uri), foam.workspace);
-      },
-      matcher
+      }
     );
-    provider.setGroupBy(getOrphansConfig().groupBy);
 
     const treeView = vscode.window.createTreeView('foam-vscode.orphans', {
       treeDataProvider: provider,
       showCollapseAll: true,
     });
+    provider.refresh();
     const baseTitle = treeView.title;
     treeView.title = baseTitle + ` (${provider.numElements})`;
 
     context.subscriptions.push(
       vscode.window.registerTreeDataProvider('foam-vscode.orphans', provider),
-      ...provider.commands,
+      provider,
       foam.graph.onDidUpdate(() => {
         provider.refresh();
         treeView.title = baseTitle + ` (${provider.numElements})`;

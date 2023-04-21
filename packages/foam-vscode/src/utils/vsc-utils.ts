@@ -34,9 +34,7 @@ export class ContextMemento<T> {
  * Implementation of the Memento interface that uses a Map as backend
  */
 export class MapBasedMemento implements Memento {
-  get<T>(key: string): T;
-  get<T>(key: string, defaultValue: T): T;
-  get<T>(key: unknown, defaultValue?: unknown): T | T {
+  get<T>(key: unknown, defaultValue?: unknown | T): T | T {
     return (this.map.get(key as string) as T) || (defaultValue as T);
   }
   private map: Map<string, string> = new Map();

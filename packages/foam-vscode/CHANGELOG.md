@@ -4,6 +4,16 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.22.2] - 2023-04-20
+
+Fixes and Improvements:
+
+- Support to show placeholders only for open file in panel (#1201, #988)
+- Show note block in panels on hover preview (#1201, #800)
+- Show tag references within tag explorer (#1201)
+- Improved structure of view related commands (#1201)
+- Ignore `.foam` directory
+
 ## [0.22.1] - 2023-04-15
 
 Fixes and Improvements:

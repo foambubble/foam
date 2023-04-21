@@ -68,8 +68,10 @@ export class PlaceholderTreeView extends GroupedResourcesTreeDataProvider {
       'placeholders',
       'placeholder',
       state,
+      matcher,
       () => {
-        return foam.graph.getAllNodes().filter(uri => uri.isPlaceholder()); // TODO
+        // we override computeResources below (as we can't use "this" here)
+        throw new Error('Not implemented');
       },
       uri => {
         return new UriTreeItem(uri, {
@@ -87,8 +89,7 @@ export class PlaceholderTreeView extends GroupedResourcesTreeDataProvider {
             );
           },
         });
-      },
-      matcher
+      }
     );
     this.graph = foam.graph;
     this.disposables.push(

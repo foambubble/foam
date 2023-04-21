@@ -4,12 +4,13 @@ import {
   AlwaysIncludeMatcher,
   SubstringExcludeMatcher,
 } from '../core/services/datastore';
-import { createTestNote } from '../test/test-utils';
+import { createTestNote, getRandomURI } from '../test/test-utils';
 import {
   DirectoryTreeItem,
   GroupedResourcesTreeDataProvider,
 } from './grouped-resources-tree-data-provider';
 import { ResourceTreeItem, UriTreeItem } from './tree-view-utils';
+import { randomString } from '../test/test-utils';
 
 const testMatcher = new SubstringExcludeMatcher('path-exclude');
 
@@ -53,18 +54,19 @@ describe('GroupedResourcesTreeDataProvider', () => {
 
   it('should return the grouped resources as a folder tree', async () => {
     const provider = new GroupedResourcesTreeDataProvider(
-      'length3',
+      randomString(),
       'note',
       new TestMemento(),
+      testMatcher,
       () =>
         workspace
           .list()
           .filter(r => r.title.length === 3)
           .map(r => r.uri),
-      uri => new UriTreeItem(uri),
-      testMatcher
+      uri => new UriTreeItem(uri)
     );
     provider.groupBy.update('folder');
+    provider.refresh();
     const result = await provider.getChildren();
     expect(result).toMatchObject([
       {
@@ -84,18 +86,19 @@ describe('GroupedResourcesTreeDataProvider', () => {
 
   it('should return the grouped resources in a directory', async () => {
     const provider = new GroupedResourcesTreeDataProvider(
-      'length3',
+      randomString(),
       'note',
       new TestMemento(),
+      testMatcher,
       () =>
         workspace
           .list()
           .filter(r => r.title.length === 3)
           .map(r => r.uri),
-      uri => new ResourceTreeItem(workspace.get(uri), workspace),
-      testMatcher
+      uri => new ResourceTreeItem(workspace.get(uri), workspace)
     );
     provider.groupBy.update('folder');
+    provider.refresh();
 
     const directory = new DirectoryTreeItem(
       '/path',
@@ -115,18 +118,19 @@ describe('GroupedResourcesTreeDataProvider', () => {
 
   it('should return the flattened resources', async () => {
     const provider = new GroupedResourcesTreeDataProvider(
-      'length3',
+      randomString(),
       'note',
       new TestMemento(),
+      testMatcher,
       () =>
         workspace
           .list()
           .filter(r => r.title.length === 3)
           .map(r => r.uri),
-      uri => new ResourceTreeItem(workspace.get(uri), workspace),
-      testMatcher
+      uri => new ResourceTreeItem(workspace.get(uri), workspace)
     );
     provider.groupBy.update('off');
+    provider.refresh();
 
     const result = await provider.getChildren();
     expect(result).toMatchObject([
@@ -147,18 +151,19 @@ describe('GroupedResourcesTreeDataProvider', () => {
 
   it('should return the grouped resources without exclusion', async () => {
     const provider = new GroupedResourcesTreeDataProvider(
-      'length3',
+      randomString(),
       'note',
       new TestMemento(),
+      new AlwaysIncludeMatcher(),
       () =>
         workspace
           .list()
           .filter(r => r.title.length === 3)
           .map(r => r.uri),
-      uri => new UriTreeItem(uri),
-      new AlwaysIncludeMatcher()
+      uri => new UriTreeItem(uri)
     );
     provider.groupBy.update('folder');
+    provider.refresh();
 
     const result = await provider.getChildren();
     expect(result).toMatchObject([
@@ -176,18 +181,19 @@ describe('GroupedResourcesTreeDataProvider', () => {
   it('should dynamically set the description', async () => {
     const description = 'test description';
     const provider = new GroupedResourcesTreeDataProvider(
-      'length3',
+      randomString(),
       description,
       new TestMemento(),
+      testMatcher,
       () =>
         workspace
           .list()
           .filter(r => r.title.length === 3)
           .map(r => r.uri),
-      uri => new UriTreeItem(uri),
-      testMatcher
+      uri => new UriTreeItem(uri)
     );
     provider.groupBy.update('folder');
+    provider.refresh();
     const result = await provider.getChildren();
     expect(result).toMatchObject([
       {

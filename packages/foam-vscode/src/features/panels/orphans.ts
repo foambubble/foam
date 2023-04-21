@@ -21,6 +21,7 @@ const feature: FoamFeature = {
       'orphans',
       'orphan',
       context.globalState,
+      matcher,
       () =>
         foam.graph
           .getAllNodes()
@@ -33,8 +34,7 @@ const feature: FoamFeature = {
         return uri.isPlaceholder()
           ? new UriTreeItem(uri)
           : new ResourceTreeItem(foam.workspace.find(uri), foam.workspace);
-      },
-      matcher
+      }
     );
 
     const treeView = vscode.window.createTreeView('foam-vscode.orphans', {

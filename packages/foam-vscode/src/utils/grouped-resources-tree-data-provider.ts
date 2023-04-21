@@ -83,9 +83,9 @@ export class GroupedResourcesTreeDataProvider
     protected providerId: string,
     private resourceName: string,
     protected state: vscode.Memento,
+    private matcher: IMatcher,
     protected computeResources: () => Array<URI>,
-    private createTreeItem: (item: URI) => GroupedResourceTreeItem,
-    private matcher: IMatcher
+    private createTreeItem: (item: URI) => GroupedResourceTreeItem
   ) {
     this.disposables.push(
       vscode.commands.registerCommand(
@@ -126,8 +126,7 @@ export class GroupedResourcesTreeDataProvider
     item?: GroupedResourceTreeItem
   ): Promise<GroupedResourceTreeItem[]> {
     if ((item as any)?.getChildren) {
-      const children = await (item as any).getChildren();
-      return children.sort(sortByTreeItemLabel);
+      return (item as any).getChildren();
     }
     if (this.groupBy.get() === 'folder') {
       const directories = Object.entries(this.getUrisByDirectory())

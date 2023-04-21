@@ -425,16 +425,16 @@ const astPositionToFoamRange = (pos: AstPosition): Range =>
     pos.end.column - 1
   );
 
+const blockParser = unified().use(markdownParse, { gfm: true });
 export const getBlockFor = (
   markdown: string,
   line: number | Position
 ): { block: string; nLines: number } => {
   const searchLine = typeof line === 'number' ? line : line.line;
-  const parser = unified().use(markdownParse, { gfm: true });
-  const tree = parser.parse(markdown);
+  const tree = blockParser.parse(markdown);
+  const lines = markdown.split('\n');
   let block = null;
   let nLines = 0;
-  const lines = markdown.split('\n');
   visit(tree, ['listItem'], (node: any) => {
     if (node.position.start.line === searchLine + 1) {
       block = lines

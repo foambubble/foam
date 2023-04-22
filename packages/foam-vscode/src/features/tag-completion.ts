@@ -63,7 +63,7 @@ export class TagCompletionProvider
       : this.createTagsForContent(cursorPrefix, position);
   }
 
-  createTagsForFrontMatter(
+  private createTagsForFrontMatter(
     content: string,
     position: vscode.Position
   ): vscode.ProviderResult<vscode.CompletionList<vscode.CompletionItem>> {
@@ -116,7 +116,7 @@ export class TagCompletionProvider
     return new vscode.CompletionList(completionTags);
   }
 
-  createTagsForContent(
+  private createTagsForContent(
     content: string,
     position: vscode.Position
   ): vscode.ProviderResult<vscode.CompletionList<vscode.CompletionItem>> {
@@ -128,7 +128,7 @@ export class TagCompletionProvider
     return new vscode.CompletionList(this.createCompletionTagItems());
   }
 
-  createCompletionTagItems(): vscode.CompletionItem[] {
+  private createCompletionTagItems(): vscode.CompletionItem[] {
     const completionTags = [];
     [...this.foamTags.tags].forEach(([tag]) => {
       const item = new vscode.CompletionItem(
@@ -144,7 +144,7 @@ export class TagCompletionProvider
     return completionTags;
   }
 
-  tagMatchIndices(content: string, match: RegExp): number[] {
+  private tagMatchIndices(content: string, match: RegExp): number[] {
     // check the match group length.
     // find the last match group, and ensure the end of that group is
     // at the cursor position.

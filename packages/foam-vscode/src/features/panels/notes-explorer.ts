@@ -10,7 +10,7 @@ import {
 import { Resource } from '../../core/model/note';
 import { FoamGraph } from '../../core/model/graph';
 import { BacklinksTreeDataProvider } from './backlinks';
-import { toVsCodeUri } from '../../utils/vsc-utils';
+import { ContextMemento, toVsCodeUri } from '../../utils/vsc-utils';
 
 const feature: FoamFeature = {
   activate: async (
@@ -18,7 +18,11 @@ const feature: FoamFeature = {
     foamPromise: Promise<Foam>
   ) => {
     const foam = await foamPromise;
-    const provider = new NotesProvider(foam.workspace, foam.graph);
+    const provider = new NotesProvider(
+      foam.workspace,
+      foam.graph,
+      context.globalState
+    );
     provider.refresh();
     const treeView = vscode.window.createTreeView(
       'foam-vscode.notes-explorer',
@@ -55,18 +59,49 @@ export type NotesTreeItems =
 
 export class NotesProvider implements vscode.TreeDataProvider<NotesTreeItems> {
   // prettier-ignore
-  private _onDidChangeTreeData: vscode.EventEmitter<
-  NotesTreeItems | undefined | void
-  > = new vscode.EventEmitter<NotesTreeItems | undefined | void>();
+  private _onDidChangeTreeData: vscode.EventEmitter<NotesTreeItems | undefined | void> = new vscode.EventEmitter<NotesTreeItems | undefined | void>();
   // prettier-ignore
-  readonly onDidChangeTreeData: vscode.Event<NotesTreeItems | undefined | void> =
-    this._onDidChangeTreeData.event;
-  private root: Directory = {};
+  readonly onDidChangeTreeData: vscode.Event<NotesTreeItems | undefined | void> = this._onDidChangeTreeData.event;
 
-  constructor(private workspace: FoamWorkspace, private graph: FoamGraph) {}
+  public show = new ContextMemento<'all' | 'notes-only'>(
+    this.state,
+    `foam-vscode.views.notes-explorer.show`,
+    'all'
+  );
+
+  private root: Directory = {};
+  protected disposables: vscode.Disposable[] = [];
+
+  constructor(
+    private workspace: FoamWorkspace,
+    private graph: FoamGraph,
+    private state: vscode.Memento
+  ) {
+    this.disposables.push(
+      vscode.commands.registerCommand(
+        `foam-vscode.views.notes-explorer.show:all`,
+        () => {
+          this.show.update('all');
+          this.refresh();
+        }
+      ),
+      vscode.commands.registerCommand(
+        `foam-vscode.views.notes-explorer.show:notes`,
+        () => {
+          this.show.update('notes-only');
+          this.refresh();
+        }
+      )
+    );
+  }
 
   refresh(): void {
-    this.root = createTreeStructure(this.workspace);
+    this.root = createTreeStructure(
+      this.workspace,
+      this.show.get() === 'notes-only'
+        ? r => r.type !== 'image' && r.type !== 'attachment'
+        : () => true
+    );
     this._onDidChangeTreeData.fire();
   }
 
@@ -145,7 +180,10 @@ interface Directory {
   [key: string]: Directory | Resource;
 }
 
-function createTreeStructure(workspace: FoamWorkspace): Directory {
+function createTreeStructure(
+  workspace: FoamWorkspace,
+  filterFn: (r: Resource) => boolean
+): Directory {
   const root: Directory = {};
 
   for (const r of workspace.resources()) {
@@ -158,7 +196,13 @@ function createTreeStructure(workspace: FoamWorkspace): Directory {
 
     parts.forEach((part, index) => {
       if (!currentNode[part]) {
-        currentNode[part] = index === parts.length - 1 ? r : {};
+        if (index < parts.length - 1) {
+          currentNode[part] = {};
+        } else {
+          if (filterFn(r)) {
+            currentNode[part] = r;
+          }
+        }
       }
       currentNode = currentNode[part] as Directory;
     });

@@ -333,7 +333,7 @@ tags: prim`);
       expect(tags).toBeNull();
     });
 
-    it('should not provide suggestions when outside the front-matter without `#` key #1184', async () => {
+    it('should not provide suggestions when outside the front-matter without `#` key', async () => {
       const { uri } = await createFile(
         '---\ncreated: 2023-01-01\ntags: prim\n---\ncontent\ntags: prim'
       );

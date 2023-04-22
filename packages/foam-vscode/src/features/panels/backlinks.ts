@@ -65,17 +65,12 @@ export class BacklinksTreeDataProvider
       return Promise.resolve([]);
     }
 
-    const connections = this.graph
-      .getConnections(uri)
-      .filter(c => c.target.asPlain().isEqual(uri));
-
-    const backlinkItems = connections.map(c =>
-      ResourceRangeTreeItem.createStandardItem(
-        this.workspace,
-        this.workspace.get(c.source),
-        c.link.range
-      )
+    const backlinkItems = BacklinksTreeDataProvider.createForResource(
+      this.workspace,
+      this.graph,
+      uri
     );
+
     return groupRangesByResource(
       this.workspace,
       backlinkItems,
@@ -85,6 +80,25 @@ export class BacklinksTreeDataProvider
 
   resolveTreeItem(item: BacklinkPanelTreeItem): Promise<BacklinkPanelTreeItem> {
     return item.resolveTreeItem();
+  }
+
+  static createForResource(
+    workspace: FoamWorkspace,
+    graph: FoamGraph,
+    uri: URI
+  ) {
+    const connections = graph
+      .getConnections(uri)
+      .filter(c => c.target.asPlain().isEqual(uri));
+
+    const backlinkItems = connections.map(c =>
+      ResourceRangeTreeItem.createStandardItem(
+        workspace,
+        workspace.get(c.source),
+        c.link.range
+      )
+    );
+    return Promise.all(backlinkItems);
   }
 }
 

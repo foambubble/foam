@@ -68,6 +68,12 @@
           "contextualTitle": "Tags Explorer"
         },
         {
+          "id": "foam-vscode.notes-explorer",
+          "name": "Notes",
+          "icon": "$(files)",
+          "contextualTitle": "Notes Explore"
+        },
+        {
           "id": "foam-vscode.orphans",
           "name": "Orphans",
           "icon": "$(debug-gripper)",

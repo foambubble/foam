@@ -2,7 +2,6 @@ import * as vscode from 'vscode';
 import { Resource } from '../core/model/note';
 import { toVsCodeUri } from './vsc-utils';
 import { Range } from '../core/model/range';
-import { OPEN_COMMAND } from '../features/commands/open-resource';
 import { URI } from '../core/model/uri';
 import { FoamWorkspace } from '../core/model/workspace';
 import { getNoteTooltip } from '../utils';
@@ -24,7 +23,7 @@ export class UriTreeItem extends vscode.TreeItem {
   ) {
     super(
       options?.title ?? uri.getName(),
-      options.collapsibleState
+      isSome(options.collapsibleState)
         ? options.collapsibleState
         : options.getChildren
         ? vscode.TreeItemCollapsibleState.Collapsed

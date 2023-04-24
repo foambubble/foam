@@ -517,7 +517,7 @@
     "title-case": "^3.0.2",
     "unified": "^9.0.0",
     "unist-util-visit": "^2.0.2",
-    "yaml": "^1.10.0"
+    "yaml": "^2.2.2"
   },
   "__metadata": {
     "id": "b85c6625-454b-4b61-8a22-c42f3d0f2e1e",

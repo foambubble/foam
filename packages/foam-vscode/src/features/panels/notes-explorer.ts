@@ -6,11 +6,16 @@ import { FoamWorkspace } from '../../core/model/workspace';
 import {
   ResourceRangeTreeItem,
   ResourceTreeItem,
+  createBacklinkItemsForResource as createBacklinkTreeItemsForResource,
 } from '../../utils/tree-view-utils';
 import { Resource } from '../../core/model/note';
 import { FoamGraph } from '../../core/model/graph';
-import { BacklinksTreeDataProvider } from './backlinks';
-import { ContextMemento, toVsCodeUri } from '../../utils/vsc-utils';
+import {
+  ContextMemento,
+  fromVsCodeUri,
+  toVsCodeUri,
+} from '../../utils/vsc-utils';
+import { IDisposable } from '../../core/common/lifecycle';
 
 const feature: FoamFeature = {
   activate: async (
@@ -33,8 +38,16 @@ const feature: FoamFeature = {
     );
     context.subscriptions.push(
       treeView,
+      provider,
       foam.workspace.onDidUpdate(() => {
         provider.refresh();
+      }),
+      vscode.window.onDidChangeActiveTextEditor(async () => {
+        const target = vscode.window.activeTextEditor?.document.uri;
+        if (target) {
+          const item = await provider.findTreeItem(target);
+          treeView.reveal(item);
+        }
       })
     );
   },
@@ -47,7 +60,11 @@ export class FolderTreeItem extends vscode.TreeItem {
   contextValue = 'folder';
   iconPath = new vscode.ThemeIcon('folder');
 
-  constructor(public parent: Directory, public name: string) {
+  constructor(
+    public parent: Directory,
+    public name: string,
+    public parentElement?: FolderTreeItem
+  ) {
     super(name, vscode.TreeItemCollapsibleState.Collapsed);
   }
 }
@@ -57,7 +74,9 @@ export type NotesTreeItems =
   | FolderTreeItem
   | ResourceRangeTreeItem;
 
-export class NotesProvider implements vscode.TreeDataProvider<NotesTreeItems> {
+export class NotesProvider
+  implements vscode.TreeDataProvider<NotesTreeItems>, IDisposable
+{
   // prettier-ignore
   private _onDidChangeTreeData: vscode.EventEmitter<NotesTreeItems | undefined | void> = new vscode.EventEmitter<NotesTreeItems | undefined | void>();
   // prettier-ignore
@@ -109,6 +128,15 @@ export class NotesProvider implements vscode.TreeDataProvider<NotesTreeItems> {
     return item;
   }
 
+  getParent(element: NotesTreeItems): vscode.ProviderResult<NotesTreeItems> {
+    if (element instanceof ResourceTreeItem) {
+      return Promise.resolve(element.parent as NotesTreeItems);
+    }
+    if (element instanceof FolderTreeItem) {
+      return Promise.resolve(element.parentElement);
+    }
+  }
+
   async getChildren(item?: NotesTreeItems): Promise<NotesTreeItems[]> {
     if (item instanceof ResourceTreeItem) {
       return item.getChildren() as Promise<NotesTreeItems[]>;
@@ -122,50 +150,40 @@ export class NotesProvider implements vscode.TreeDataProvider<NotesTreeItems> {
     const children = Object.keys(parent).map(name => {
       const value = parent[name];
       if ((value as Resource)?.uri) {
-        const res = new ResourceTreeItem(value as Resource, this.workspace, {
-          collapsibleState:
-            this.graph.getBacklinks((value as Resource).uri).length > 0
-              ? vscode.TreeItemCollapsibleState.Collapsed
-              : vscode.TreeItemCollapsibleState.None,
-          getChildren: async () => {
-            const backlinks = await BacklinksTreeDataProvider.createForResource(
-              this.workspace,
-              this.graph,
-              res.uri
-            );
-            backlinks.forEach(b => {
-              b.iconPath = new vscode.ThemeIcon(
-                'arrow-left',
-                new vscode.ThemeColor('charts.purple')
-              );
-            });
-            return backlinks;
-          },
+        return this.createResourceTreeItem(value as Resource);
+      } else {
+        return new FolderTreeItem(value as Directory, name, item);
+      }
+    });
+
+    return children.sort(sortNotesExplorerItems);
+  }
+
+  private createResourceTreeItem(value: Resource, parent?: FolderTreeItem) {
+    const res = new ResourceTreeItem(value, this.workspace, {
+      parent,
+      collapsibleState:
+        this.graph.getBacklinks(value.uri).length > 0
+          ? vscode.TreeItemCollapsibleState.Collapsed
+          : vscode.TreeItemCollapsibleState.None,
+      getChildren: async () => {
+        const backlinks = await createBacklinkTreeItemsForResource(
+          this.workspace,
+          this.graph,
+          res.uri
+        );
+        backlinks.forEach(b => {
+          b.iconPath = new vscode.ThemeIcon(
+            'arrow-left',
+            new vscode.ThemeColor('charts.purple')
+          );
         });
-        res.iconPath = vscode.ThemeIcon.File;
-        res.resourceUri = toVsCodeUri(res.uri);
-        return res;
-      }
-      return new FolderTreeItem(value as Directory, name);
+        return backlinks;
+      },
     });
-    return children.sort((a, b) => {
-      // Both a and b are FolderTreeItem instances
-      if (a instanceof FolderTreeItem && b instanceof FolderTreeItem) {
-        return a.label.toString().localeCompare(b.label.toString());
-      }
-
-      // Only a is a FolderTreeItem instance
-      if (a instanceof FolderTreeItem) {
-        return -1;
-      }
-
-      // Only b is a FolderTreeItem instance
-      if (b instanceof FolderTreeItem) {
-        return 1;
-      }
-
-      return a.label.toString().localeCompare(b.label.toString());
-    });
+    res.iconPath = vscode.ThemeIcon.File;
+    res.resourceUri = toVsCodeUri(res.uri);
+    return res;
   }
 
   async resolveTreeItem(item: NotesTreeItems): Promise<NotesTreeItems> {
@@ -174,6 +192,77 @@ export class NotesProvider implements vscode.TreeDataProvider<NotesTreeItems> {
     }
     return Promise.resolve(item);
   }
+
+  getTreeItemsHierarchy(uri: vscode.Uri, root: Directory): vscode.TreeItem[] {
+    const path = vscode.workspace.asRelativePath(uri, true);
+    const parts = path.split('/').filter(p => p.length > 0);
+    const treeItemsHierarchy: vscode.TreeItem[] = [];
+    let currentNode: Directory | Resource = root;
+
+    for (const part of parts) {
+      if (currentNode[part] !== undefined) {
+        currentNode = currentNode[part] as Directory | Resource;
+        if ((currentNode as Resource).uri) {
+          treeItemsHierarchy.push(
+            this.createResourceTreeItem(
+              currentNode as Resource,
+              treeItemsHierarchy[
+                treeItemsHierarchy.length - 1
+              ] as FolderTreeItem
+            )
+          );
+        } else {
+          treeItemsHierarchy.push(
+            new FolderTreeItem(
+              currentNode as Directory,
+              part,
+              treeItemsHierarchy[
+                treeItemsHierarchy.length - 1
+              ] as FolderTreeItem
+            )
+          );
+        }
+      } else {
+        // If a part is not found in the tree structure, the given URI is not valid.
+        return [];
+      }
+    }
+
+    return treeItemsHierarchy;
+  }
+
+  findTreeItem(target: vscode.Uri): Promise<NotesTreeItems> {
+    const hierarchy = this.getTreeItemsHierarchy(target, this.root);
+    return hierarchy.length > 0
+      ? Promise.resolve(hierarchy.pop())
+      : Promise.resolve(null);
+  }
+
+  dispose(): void {
+    this.disposables.forEach(d => d.dispose());
+  }
+}
+
+function sortNotesExplorerItems(
+  a: ResourceTreeItem | FolderTreeItem,
+  b: ResourceTreeItem | FolderTreeItem
+): number {
+  // Both a and b are FolderTreeItem instances
+  if (a instanceof FolderTreeItem && b instanceof FolderTreeItem) {
+    return a.label.toString().localeCompare(b.label.toString());
+  }
+
+  // Only a is a FolderTreeItem instance
+  if (a instanceof FolderTreeItem) {
+    return -1;
+  }
+
+  // Only b is a FolderTreeItem instance
+  if (b instanceof FolderTreeItem) {
+    return 1;
+  }
+
+  return a.label.toString().localeCompare(b.label.toString());
 }
 
 interface Directory {

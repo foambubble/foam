@@ -8,9 +8,11 @@ import { getNoteTooltip } from '../utils';
 import { isSome } from '../core/utils';
 import { groupBy } from 'lodash';
 import { getBlockFor } from '../core/services/markdown-parser';
+import { FoamGraph } from '../core/model/graph';
 
 export class UriTreeItem extends vscode.TreeItem {
   private doGetChildren: () => Promise<vscode.TreeItem[]>;
+  public parent?: vscode.TreeItem;
 
   constructor(
     public readonly uri: URI,
@@ -19,6 +21,7 @@ export class UriTreeItem extends vscode.TreeItem {
       icon?: string;
       title?: string;
       getChildren?: () => Promise<vscode.TreeItem[]>;
+      parent?: vscode.TreeItem;
     } = {}
   ) {
     super(
@@ -29,6 +32,7 @@ export class UriTreeItem extends vscode.TreeItem {
         ? vscode.TreeItemCollapsibleState.Collapsed
         : vscode.TreeItemCollapsibleState.None
     );
+    this.parent = options.parent;
     this.doGetChildren = options.getChildren;
     this.description = uri.path.replace(
       vscode.workspace.getWorkspaceFolder(toVsCodeUri(uri))?.uri.path,
@@ -56,6 +60,7 @@ export class ResourceTreeItem extends UriTreeItem {
     options: {
       collapsibleState?: vscode.TreeItemCollapsibleState;
       getChildren?: () => Promise<vscode.TreeItem[]>;
+      parent?: vscode.TreeItem;
     } = {}
   ) {
     super(resource.uri, {
@@ -63,6 +68,7 @@ export class ResourceTreeItem extends UriTreeItem {
       icon: 'note',
       collapsibleState: options.collapsibleState,
       getChildren: options.getChildren,
+      parent: options.parent,
     });
     this.command = {
       command: 'vscode.open',
@@ -175,3 +181,22 @@ export const groupRangesByResource = async (
   resourceItems.sort((a, b) => Resource.sortByTitle(a.resource, b.resource));
   return resourceItems;
 };
+
+export function createBacklinkItemsForResource(
+  workspace: FoamWorkspace,
+  graph: FoamGraph,
+  uri: URI
+) {
+  const connections = graph
+    .getConnections(uri)
+    .filter(c => c.target.asPlain().isEqual(uri));
+
+  const backlinkItems = connections.map(c =>
+    ResourceRangeTreeItem.createStandardItem(
+      workspace,
+      workspace.get(c.source),
+      c.link.range
+    )
+  );
+  return Promise.all(backlinkItems);
+}

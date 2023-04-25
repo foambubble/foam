@@ -10,11 +10,7 @@ import {
 } from '../../utils/tree-view-utils';
 import { Resource } from '../../core/model/note';
 import { FoamGraph } from '../../core/model/graph';
-import {
-  ContextMemento,
-  fromVsCodeUri,
-  toVsCodeUri,
-} from '../../utils/vsc-utils';
+import { ContextMemento, toVsCodeUri } from '../../utils/vsc-utils';
 import { IDisposable } from '../../core/common/lifecycle';
 
 const feature: FoamFeature = {
@@ -39,14 +35,25 @@ const feature: FoamFeature = {
     context.subscriptions.push(
       treeView,
       provider,
-      foam.workspace.onDidUpdate(() => {
+      foam.graph.onDidUpdate(() => {
         provider.refresh();
       }),
       vscode.window.onDidChangeActiveTextEditor(async () => {
-        const target = vscode.window.activeTextEditor?.document.uri;
-        if (target) {
-          const item = await provider.findTreeItem(target);
-          treeView.reveal(item);
+        if (treeView.visible) {
+          const target = vscode.window.activeTextEditor?.document.uri;
+          if (target) {
+            const item = await provider.findTreeItem(target);
+            treeView.reveal(item);
+          }
+        }
+      }),
+      treeView.onDidChangeVisibility(async () => {
+        if (treeView.visible) {
+          const target = vscode.window.activeTextEditor?.document.uri;
+          if (target) {
+            const item = await provider.findTreeItem(target);
+            treeView.reveal(item);
+          }
         }
       })
     );
@@ -172,12 +179,6 @@ export class NotesProvider
           this.graph,
           res.uri
         );
-        backlinks.forEach(b => {
-          b.iconPath = new vscode.ThemeIcon(
-            'arrow-left',
-            new vscode.ThemeColor('charts.purple')
-          );
-        });
         return backlinks;
       },
     });

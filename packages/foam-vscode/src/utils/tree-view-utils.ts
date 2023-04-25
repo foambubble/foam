@@ -75,7 +75,8 @@ export class ResourceTreeItem extends UriTreeItem {
       arguments: [toVsCodeUri(resource.uri)],
       title: 'Go to location',
     };
-
+    this.resourceUri = toVsCodeUri(resource.uri);
+    this.iconPath = vscode.ThemeIcon.File;
     this.contextValue = 'resource';
   }
 
@@ -115,7 +116,8 @@ export class ResourceRangeTreeItem extends vscode.TreeItem {
   static async createStandardItem(
     workspace: FoamWorkspace,
     resource: Resource,
-    range: Range
+    range: Range,
+    type?: 'backlink' | 'tag'
   ): Promise<ResourceRangeTreeItem> {
     const markdown = (await workspace.readAsMarkdown(resource.uri)) ?? '';
     const lines = markdown.split('\n');
@@ -143,6 +145,20 @@ export class ResourceRangeTreeItem extends vscode.TreeItem {
     };
 
     const item = new ResourceRangeTreeItem(label, resource, range, resolveFn);
+    switch (type) {
+      case 'backlink':
+        item.iconPath = new vscode.ThemeIcon(
+          'arrow-left',
+          new vscode.ThemeColor('charts.purple')
+        );
+        break;
+      case 'tag':
+        item.iconPath = new vscode.ThemeIcon(
+          'symbol-number',
+          new vscode.ThemeColor('charts.purple')
+        );
+        break;
+    }
     return item;
   }
 }
@@ -195,7 +211,8 @@ export function createBacklinkItemsForResource(
     ResourceRangeTreeItem.createStandardItem(
       workspace,
       workspace.get(c.source),
-      c.link.range
+      c.link.range,
+      'backlink'
     )
   );
   return Promise.all(backlinkItems);

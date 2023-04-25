@@ -5,8 +5,8 @@ import { getPlaceholdersConfig } from '../../settings';
 import { FoamFeature } from '../../types';
 import { GroupedResourcesTreeDataProvider } from '../../utils/grouped-resources-tree-data-provider';
 import {
-  ResourceRangeTreeItem,
   UriTreeItem,
+  createBacklinkItemsForResource,
   groupRangesByResource,
 } from '../../utils/tree-view-utils';
 import { IMatcher } from '../../core/services/datastore';
@@ -79,13 +79,7 @@ export class PlaceholderTreeView extends GroupedResourcesTreeDataProvider {
           getChildren: async () => {
             return groupRangesByResource(
               foam.workspace,
-              foam.graph.getBacklinks(uri).map(link => {
-                return ResourceRangeTreeItem.createStandardItem(
-                  foam.workspace,
-                  foam.workspace.get(link.source),
-                  link.link.range
-                );
-              })
+              createBacklinkItemsForResource(foam.workspace, foam.graph, uri)
             );
           },
         });

@@ -70,8 +70,8 @@
         {
           "id": "foam-vscode.notes-explorer",
           "name": "Notes",
-          "icon": "$(files)",
-          "contextualTitle": "Notes Explore"
+          "icon": "$(notebook)",
+          "contextualTitle": "Notes Explorer"
         },
         {
           "id": "foam-vscode.orphans",

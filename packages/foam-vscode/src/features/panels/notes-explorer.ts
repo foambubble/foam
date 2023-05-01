@@ -1,4 +1,3 @@
-import { URI } from '../../core/model/uri';
 import * as vscode from 'vscode';
 import { FoamFeature } from '../../types';
 import { Foam } from '../../core/model/foam';
@@ -25,11 +24,12 @@ const feature: FoamFeature = {
       context.globalState
     );
     provider.refresh();
-    const treeView = vscode.window.createTreeView(
+    const treeView = vscode.window.createTreeView<NotesTreeItems>(
       'foam-vscode.notes-explorer',
       {
         treeDataProvider: provider,
         showCollapseAll: true,
+        canSelectMany: true,
       }
     );
     context.subscriptions.push(
@@ -39,11 +39,21 @@ const feature: FoamFeature = {
         provider.refresh();
       }),
       vscode.window.onDidChangeActiveTextEditor(async () => {
+        const target = vscode.window.activeTextEditor?.document.uri;
         if (treeView.visible) {
-          const target = vscode.window.activeTextEditor?.document.uri;
           if (target) {
             const item = await provider.findTreeItem(target);
-            treeView.reveal(item);
+            // Check if the item is already selected.
+            // This check is needed because always calling reveal() will
+            // cause the tree view to take the focus from the item when
+            // browsing the notes explorer
+            if (
+              !treeView.selection.find(
+                i => i.resourceUri.path === item.resourceUri.path
+              )
+            ) {
+              treeView.reveal(item);
+            }
           }
         }
       }),

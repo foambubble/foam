@@ -68,12 +68,6 @@
           "contextualTitle": "Tags Explorer"
         },
         {
-          "id": "foam-vscode.notes-explorer",
-          "name": "Notes",
-          "icon": "$(notebook)",
-          "contextualTitle": "Notes Explorer"
-        },
-        {
           "id": "foam-vscode.orphans",
           "name": "Orphans",
           "icon": "$(debug-gripper)",
@@ -136,16 +130,6 @@
           "command": "foam-vscode.views.placeholders.group-by:off",
           "when": "view == foam-vscode.placeholders && foam-vscode.views.placeholders.group-by == 'folder'",
           "group": "navigation"
-        },
-        {
-          "command": "foam-vscode.views.notes-explorer.show:notes",
-          "when": "view == foam-vscode.notes-explorer && foam-vscode.views.notes-explorer.show == 'all'",
-          "group": "navigation"
-        },
-        {
-          "command": "foam-vscode.views.notes-explorer.show:all",
-          "when": "view == foam-vscode.notes-explorer && foam-vscode.views.notes-explorer.show == 'notes-only'",
-          "group": "navigation"
         }
       ],
       "commandPalette": [
@@ -179,14 +163,6 @@
         },
         {
           "command": "foam-vscode.views.placeholders.group-by:off",
-          "when": "false"
-        },
-        {
-          "command": "foam-vscode.views.notes-explorer.show:all",
-          "when": "false"
-        },
-        {
-          "command": "foam-vscode.views.notes-explorer.show:notes",
           "when": "false"
         },
         {
@@ -285,16 +261,6 @@
         "command": "foam-vscode.views.placeholders.group-by:off",
         "title": "Flat list",
         "icon": "$(list-flat)"
-      },
-      {
-        "command": "foam-vscode.views.notes-explorer.show:all",
-        "title": "Show all resources",
-        "icon": "$(files)"
-      },
-      {
-        "command": "foam-vscode.views.notes-explorer.show:notes",
-        "title": "Show only notes",
-        "icon": "$(file)"
       },
       {
         "command": "foam-vscode.create-new-template",

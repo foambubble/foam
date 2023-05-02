@@ -3,13 +3,14 @@ import { FoamFeature } from '../../types';
 import { Foam } from '../../core/model/foam';
 import { FoamWorkspace } from '../../core/model/workspace';
 import {
+  BaseTreeItem,
   ResourceRangeTreeItem,
   ResourceTreeItem,
   createBacklinkItemsForResource as createBacklinkTreeItemsForResource,
 } from '../../utils/tree-view-utils';
 import { Resource } from '../../core/model/note';
 import { FoamGraph } from '../../core/model/graph';
-import { ContextMemento, toVsCodeUri } from '../../utils/vsc-utils';
+import { ContextMemento } from '../../utils/vsc-utils';
 import { IDisposable } from '../../core/common/lifecycle';
 
 const feature: FoamFeature = {
@@ -113,9 +114,17 @@ export class NotesProvider
 
   refresh(): void {
     this.root = createTreeStructure(
-      this.workspace,
+      this.workspace.list(),
+      res => {
+        const path = vscode.workspace.asRelativePath(
+          res.uri.path,
+          vscode.workspace.workspaceFolders.length > 1
+        );
+        const parts = path.split('/');
+        return parts;
+      },
       this.show.get() === 'notes-only'
-        ? r => r.type !== 'image' && r.type !== 'attachment'
+        ? res => res.type !== 'image' && res.type !== 'attachment'
         : () => true
     );
     this._onDidChangeTreeData.fire();
@@ -135,11 +144,8 @@ export class NotesProvider
   }
 
   async getChildren(item?: NotesTreeItems): Promise<NotesTreeItems[]> {
-    if (item instanceof ResourceTreeItem) {
+    if (item instanceof BaseTreeItem) {
       return item.getChildren() as Promise<NotesTreeItems[]>;
-    }
-    if (item instanceof ResourceRangeTreeItem) {
-      return [];
     }
 
     const parent = item?.parent ?? this.root;
@@ -147,7 +153,11 @@ export class NotesProvider
     const children = Object.keys(parent).map(name => {
       const value = parent[name];
       if ((value as Resource)?.uri) {
-        return this.createResourceTreeItem(value as Resource);
+        return this.createResourceTreeItem(
+          value as Resource,
+          this.workspace,
+          this.graph
+        );
       } else {
         return new FolderTreeItem(value as Folder<Resource>, name, item);
       }
@@ -158,19 +168,21 @@ export class NotesProvider
 
   private createResourceTreeItem(
     value: Resource,
+    workspace: FoamWorkspace,
+    graph: FoamGraph,
     parent?: FolderTreeItem<Resource>
   ) {
-    const res = new ResourceTreeItem(value, this.workspace, {
+    const res = new ResourceTreeItem(value, workspace, {
       parent,
       collapsibleState:
-        this.graph.getBacklinks(value.uri).length > 0
+        graph.getBacklinks(value.uri).length > 0
           ? vscode.TreeItemCollapsibleState.Collapsed
           : vscode.TreeItemCollapsibleState.None,
     });
     res.getChildren = async () => {
       const backlinks = await createBacklinkTreeItemsForResource(
-        this.workspace,
-        this.graph,
+        workspace,
+        graph,
         res.uri
       );
       return backlinks;
@@ -187,10 +199,11 @@ export class NotesProvider
 
   findTreeItem(target: vscode.Uri): Promise<NotesTreeItems> {
     const hierarchy = getTreeItemsHierarchy(
-      vscode.workspace.asRelativePath(target, true),
       this.root,
+      vscode.workspace.asRelativePath(target, true).split('/'),
       value => value.uri != null,
-      (value, parent) => this.createResourceTreeItem(value, parent)
+      (value, parent) =>
+        this.createResourceTreeItem(value, this.workspace, this.graph, parent)
     );
     return hierarchy.length > 0
       ? Promise.resolve(hierarchy.pop())
@@ -224,37 +237,6 @@ function sortFolderTreeItems<T>(
   return a.label.toString().localeCompare(b.label.toString());
 }
 
-function createTreeStructure(
-  workspace: FoamWorkspace,
-  filterFn: (r: Resource) => boolean
-): Folder<Resource> {
-  const root: Folder<Resource> = {};
-
-  for (const r of workspace.resources()) {
-    const path = vscode.workspace.asRelativePath(
-      r.uri.path,
-      vscode.workspace.workspaceFolders.length > 1
-    );
-    const parts = path.split('/');
-    let currentNode: Folder<Resource> = root;
-
-    parts.forEach((part, index) => {
-      if (!currentNode[part]) {
-        if (index < parts.length - 1) {
-          currentNode[part] = {};
-        } else {
-          if (filterFn(r)) {
-            currentNode[part] = r;
-          }
-        }
-      }
-      currentNode = currentNode[part] as Folder<Resource>;
-    });
-  }
-
-  return root;
-}
-
 interface Folder<T> {
   [basename: string]: Folder<T> | T;
 }
@@ -273,17 +255,44 @@ export class FolderTreeItem<T> extends vscode.TreeItem {
   }
 }
 
+function createTreeStructure<T>(
+  values: T[],
+  valueToPath: (value: T) => string[],
+  filterFn: (value: T) => boolean
+): Folder<T> {
+  const root: Folder<T> = {};
+
+  for (const r of values) {
+    const parts = valueToPath(r);
+    let currentNode: Folder<T> = root;
+
+    parts.forEach((part, index) => {
+      if (!currentNode[part]) {
+        if (index < parts.length - 1) {
+          currentNode[part] = {};
+        } else {
+          if (filterFn(r)) {
+            currentNode[part] = r;
+          }
+        }
+      }
+      currentNode = currentNode[part] as Folder<T>;
+    });
+  }
+
+  return root;
+}
+
 function getTreeItemsHierarchy<T>(
-  path: string,
   root: Folder<T>,
+  path: string[],
   isValueType: (value: T) => boolean,
   createLeaf: (value: T, parent?: FolderTreeItem<T>) => ResourceTreeItem
 ): vscode.TreeItem[] {
-  const parts = path.split('/').filter(p => p.length > 0);
   const treeItemsHierarchy: vscode.TreeItem[] = [];
   let currentNode: Folder<T> | T = root;
 
-  for (const part of parts) {
+  for (const part of path) {
     if (currentNode[part] !== undefined) {
       currentNode = currentNode[part] as Folder<T> | T;
       if (isValueType(currentNode as T)) {

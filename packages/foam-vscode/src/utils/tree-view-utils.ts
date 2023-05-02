@@ -76,7 +76,7 @@ export class ResourceTreeItem extends UriTreeItem {
   }
 }
 
-export class ResourceRangeTreeItem extends vscode.TreeItem {
+export class ResourceRangeTreeItem extends BaseTreeItem {
   constructor(
     public label: string,
     public readonly resource: Resource,

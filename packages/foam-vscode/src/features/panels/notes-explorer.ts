@@ -32,63 +32,43 @@ const feature: FoamFeature = {
         canSelectMany: true,
       }
     );
+    const revealTextEditorItem = async () => {
+      const target = vscode.window.activeTextEditor?.document.uri;
+      if (treeView.visible) {
+        if (target) {
+          const item = await provider.findTreeItem(target);
+          // Check if the item is already selected.
+          // This check is needed because always calling reveal() will
+          // cause the tree view to take the focus from the item when
+          // browsing the notes explorer
+          if (
+            !treeView.selection.find(
+              i => i.resourceUri.path === item.resourceUri.path
+            )
+          ) {
+            treeView.reveal(item);
+          }
+        }
+      }
+    };
+
     context.subscriptions.push(
       treeView,
       provider,
       foam.graph.onDidUpdate(() => {
         provider.refresh();
       }),
-      vscode.window.onDidChangeActiveTextEditor(async () => {
-        const target = vscode.window.activeTextEditor?.document.uri;
-        if (treeView.visible) {
-          if (target) {
-            const item = await provider.findTreeItem(target);
-            // Check if the item is already selected.
-            // This check is needed because always calling reveal() will
-            // cause the tree view to take the focus from the item when
-            // browsing the notes explorer
-            if (
-              !treeView.selection.find(
-                i => i.resourceUri.path === item.resourceUri.path
-              )
-            ) {
-              treeView.reveal(item);
-            }
-          }
-        }
-      }),
-      treeView.onDidChangeVisibility(async () => {
-        if (treeView.visible) {
-          const target = vscode.window.activeTextEditor?.document.uri;
-          if (target) {
-            const item = await provider.findTreeItem(target);
-            treeView.reveal(item);
-          }
-        }
-      })
+      vscode.window.onDidChangeActiveTextEditor(revealTextEditorItem),
+      treeView.onDidChangeVisibility(revealTextEditorItem)
     );
   },
 };
 
 export default feature;
 
-export class FolderTreeItem extends vscode.TreeItem {
-  collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
-  contextValue = 'folder';
-  iconPath = new vscode.ThemeIcon('folder');
-
-  constructor(
-    public parent: Directory,
-    public name: string,
-    public parentElement?: FolderTreeItem
-  ) {
-    super(name, vscode.TreeItemCollapsibleState.Collapsed);
-  }
-}
-
 export type NotesTreeItems =
   | ResourceTreeItem
-  | FolderTreeItem
+  | FolderTreeItem<Resource>
   | ResourceRangeTreeItem;
 
 export class NotesProvider
@@ -105,7 +85,7 @@ export class NotesProvider
     'all'
   );
 
-  private root: Directory = {};
+  private root: Folder<Resource> = {};
   protected disposables: vscode.Disposable[] = [];
 
   constructor(
@@ -169,14 +149,17 @@ export class NotesProvider
       if ((value as Resource)?.uri) {
         return this.createResourceTreeItem(value as Resource);
       } else {
-        return new FolderTreeItem(value as Directory, name, item);
+        return new FolderTreeItem(value as Folder<Resource>, name, item);
       }
     });
 
-    return children.sort(sortNotesExplorerItems);
+    return children.sort(sortFolderTreeItems);
   }
 
-  private createResourceTreeItem(value: Resource, parent?: FolderTreeItem) {
+  private createResourceTreeItem(
+    value: Resource,
+    parent?: FolderTreeItem<Resource>
+  ) {
     const res = new ResourceTreeItem(value, this.workspace, {
       parent,
       collapsibleState:
@@ -192,8 +175,6 @@ export class NotesProvider
       );
       return backlinks;
     };
-    res.iconPath = vscode.ThemeIcon.File;
-    res.resourceUri = toVsCodeUri(res.uri);
     return res;
   }
 
@@ -204,46 +185,13 @@ export class NotesProvider
     return Promise.resolve(item);
   }
 
-  getTreeItemsHierarchy(uri: vscode.Uri, root: Directory): vscode.TreeItem[] {
-    const path = vscode.workspace.asRelativePath(uri, true);
-    const parts = path.split('/').filter(p => p.length > 0);
-    const treeItemsHierarchy: vscode.TreeItem[] = [];
-    let currentNode: Directory | Resource = root;
-
-    for (const part of parts) {
-      if (currentNode[part] !== undefined) {
-        currentNode = currentNode[part] as Directory | Resource;
-        if ((currentNode as Resource).uri) {
-          treeItemsHierarchy.push(
-            this.createResourceTreeItem(
-              currentNode as Resource,
-              treeItemsHierarchy[
-                treeItemsHierarchy.length - 1
-              ] as FolderTreeItem
-            )
-          );
-        } else {
-          treeItemsHierarchy.push(
-            new FolderTreeItem(
-              currentNode as Directory,
-              part,
-              treeItemsHierarchy[
-                treeItemsHierarchy.length - 1
-              ] as FolderTreeItem
-            )
-          );
-        }
-      } else {
-        // If a part is not found in the tree structure, the given URI is not valid.
-        return [];
-      }
-    }
-
-    return treeItemsHierarchy;
-  }
-
   findTreeItem(target: vscode.Uri): Promise<NotesTreeItems> {
-    const hierarchy = this.getTreeItemsHierarchy(target, this.root);
+    const hierarchy = getTreeItemsHierarchy(
+      vscode.workspace.asRelativePath(target, true),
+      this.root,
+      value => value.uri != null,
+      (value, parent) => this.createResourceTreeItem(value, parent)
+    );
     return hierarchy.length > 0
       ? Promise.resolve(hierarchy.pop())
       : Promise.resolve(null);
@@ -254,9 +202,9 @@ export class NotesProvider
   }
 }
 
-function sortNotesExplorerItems(
-  a: ResourceTreeItem | FolderTreeItem,
-  b: ResourceTreeItem | FolderTreeItem
+function sortFolderTreeItems<T>(
+  a: ResourceTreeItem | FolderTreeItem<T>,
+  b: ResourceTreeItem | FolderTreeItem<T>
 ): number {
   // Both a and b are FolderTreeItem instances
   if (a instanceof FolderTreeItem && b instanceof FolderTreeItem) {
@@ -276,15 +224,11 @@ function sortNotesExplorerItems(
   return a.label.toString().localeCompare(b.label.toString());
 }
 
-interface Directory {
-  [key: string]: Directory | Resource;
-}
-
 function createTreeStructure(
   workspace: FoamWorkspace,
   filterFn: (r: Resource) => boolean
-): Directory {
-  const root: Directory = {};
+): Folder<Resource> {
+  const root: Folder<Resource> = {};
 
   for (const r of workspace.resources()) {
     const path = vscode.workspace.asRelativePath(
@@ -292,7 +236,7 @@ function createTreeStructure(
       vscode.workspace.workspaceFolders.length > 1
     );
     const parts = path.split('/');
-    let currentNode: Directory = root;
+    let currentNode: Folder<Resource> = root;
 
     parts.forEach((part, index) => {
       if (!currentNode[part]) {
@@ -304,9 +248,69 @@ function createTreeStructure(
           }
         }
       }
-      currentNode = currentNode[part] as Directory;
+      currentNode = currentNode[part] as Folder<Resource>;
     });
   }
 
   return root;
+}
+
+interface Folder<T> {
+  [basename: string]: Folder<T> | T;
+}
+
+export class FolderTreeItem<T> extends vscode.TreeItem {
+  collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+  contextValue = 'folder';
+  iconPath = new vscode.ThemeIcon('folder');
+
+  constructor(
+    public parent: Folder<T>,
+    public name: string,
+    public parentElement?: FolderTreeItem<T>
+  ) {
+    super(name, vscode.TreeItemCollapsibleState.Collapsed);
+  }
+}
+
+function getTreeItemsHierarchy<T>(
+  path: string,
+  root: Folder<T>,
+  isValueType: (value: T) => boolean,
+  createLeaf: (value: T, parent?: FolderTreeItem<T>) => ResourceTreeItem
+): vscode.TreeItem[] {
+  const parts = path.split('/').filter(p => p.length > 0);
+  const treeItemsHierarchy: vscode.TreeItem[] = [];
+  let currentNode: Folder<T> | T = root;
+
+  for (const part of parts) {
+    if (currentNode[part] !== undefined) {
+      currentNode = currentNode[part] as Folder<T> | T;
+      if (isValueType(currentNode as T)) {
+        treeItemsHierarchy.push(
+          createLeaf(
+            currentNode as T,
+            treeItemsHierarchy[
+              treeItemsHierarchy.length - 1
+            ] as FolderTreeItem<T>
+          )
+        );
+      } else {
+        treeItemsHierarchy.push(
+          new FolderTreeItem(
+            currentNode as Folder<T>,
+            part,
+            treeItemsHierarchy[
+              treeItemsHierarchy.length - 1
+            ] as FolderTreeItem<T>
+          )
+        );
+      }
+    } else {
+      // If a part is not found in the tree structure, the given URI is not valid.
+      return [];
+    }
+  }
+
+  return treeItemsHierarchy;
 }

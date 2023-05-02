@@ -5,6 +5,9 @@ import { getOrphansConfig } from '../../settings';
 import { FoamFeature } from '../../types';
 import { GroupedResourcesTreeDataProvider } from '../../utils/grouped-resources-tree-data-provider';
 import { ResourceTreeItem, UriTreeItem } from '../../utils/tree-view-utils';
+import { IMatcher } from '../../core/services/datastore';
+import { FoamWorkspace } from '../../core/model/workspace';
+import { FoamGraph } from '../../core/model/graph';
 
 const EXCLUDE_TYPES = ['image', 'attachment'];
 const feature: FoamFeature = {
@@ -17,24 +20,11 @@ const feature: FoamFeature = {
     const { matcher } = await createMatcherAndDataStore(
       getOrphansConfig().exclude
     );
-    const provider = new GroupedResourcesTreeDataProvider(
-      'orphans',
-      'orphan',
+    const provider = new OrphanTreeView(
       context.globalState,
-      matcher,
-      () =>
-        foam.graph
-          .getAllNodes()
-          .filter(
-            uri =>
-              !EXCLUDE_TYPES.includes(foam.workspace.find(uri)?.type) &&
-              foam.graph.getConnections(uri).length === 0
-          ),
-      uri => {
-        return uri.isPlaceholder()
-          ? new UriTreeItem(uri)
-          : new ResourceTreeItem(foam.workspace.find(uri), foam.workspace);
-      }
+      foam.workspace,
+      foam.graph,
+      matcher
     );
 
     const treeView = vscode.window.createTreeView('foam-vscode.orphans', {
@@ -55,5 +45,31 @@ const feature: FoamFeature = {
     );
   },
 };
+
+export class OrphanTreeView extends GroupedResourcesTreeDataProvider {
+  constructor(
+    state: vscode.Memento,
+    private workspace: FoamWorkspace,
+    private graph: FoamGraph,
+    matcher: IMatcher
+  ) {
+    super('orphans', 'orphan', state, matcher);
+  }
+
+  createTreeItem = uri => {
+    return uri.isPlaceholder()
+      ? new UriTreeItem(uri)
+      : new ResourceTreeItem(this.workspace.find(uri), this.workspace);
+  };
+
+  computeResources = () =>
+    this.graph
+      .getAllNodes()
+      .filter(
+        uri =>
+          !EXCLUDE_TYPES.includes(this.workspace.find(uri)?.type) &&
+          this.graph.getConnections(uri).length === 0
+      );
+}
 
 export default feature;

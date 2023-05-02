@@ -84,8 +84,12 @@ export class GroupedResourcesTreeDataProvider
     private resourceName: string,
     protected state: vscode.Memento,
     private matcher: IMatcher,
-    protected computeResources: () => Array<URI>,
-    private createTreeItem: (item: URI) => GroupedResourceTreeItem
+    protected computeResources: () => Array<URI> = () => {
+      throw new Error('Not implemented');
+    },
+    protected createTreeItem: (item: URI) => GroupedResourceTreeItem = () => {
+      throw new Error('Not implemented');
+    }
   ) {
     this.disposables.push(
       vscode.commands.registerCommand(

@@ -12,6 +12,7 @@ import { Resource } from '../../core/model/note';
 import { FoamGraph } from '../../core/model/graph';
 import { ContextMemento } from '../../utils/vsc-utils';
 import { IDisposable } from '../../core/common/lifecycle';
+import { BaseTreeProvider } from './utils/base-tree-provider';
 
 const feature: FoamFeature = {
   activate: async (
@@ -72,14 +73,7 @@ export type NotesTreeItems =
   | FolderTreeItem<Resource>
   | ResourceRangeTreeItem;
 
-export class NotesProvider
-  implements vscode.TreeDataProvider<NotesTreeItems>, IDisposable
-{
-  // prettier-ignore
-  private _onDidChangeTreeData: vscode.EventEmitter<NotesTreeItems | undefined | void> = new vscode.EventEmitter<NotesTreeItems | undefined | void>();
-  // prettier-ignore
-  readonly onDidChangeTreeData: vscode.Event<NotesTreeItems | undefined | void> = this._onDidChangeTreeData.event;
-
+export class NotesProvider extends BaseTreeProvider<NotesTreeItems> {
   public show = new ContextMemento<'all' | 'notes-only'>(
     this.state,
     `foam-vscode.views.notes-explorer.show`,
@@ -87,13 +81,13 @@ export class NotesProvider
   );
 
   private root: Folder<Resource> = {};
-  protected disposables: vscode.Disposable[] = [];
 
   constructor(
     private workspace: FoamWorkspace,
     private graph: FoamGraph,
     private state: vscode.Memento
   ) {
+    super();
     this.disposables.push(
       vscode.commands.registerCommand(
         `foam-vscode.views.notes-explorer.show:all`,
@@ -127,11 +121,7 @@ export class NotesProvider
         ? res => res.type !== 'image' && res.type !== 'attachment'
         : () => true
     );
-    this._onDidChangeTreeData.fire();
-  }
-
-  getTreeItem(item) {
-    return item;
+    super.refresh();
   }
 
   getParent(element: NotesTreeItems): vscode.ProviderResult<NotesTreeItems> {
@@ -153,10 +143,11 @@ export class NotesProvider
     const children = Object.keys(parent).map(name => {
       const value = parent[name];
       if ((value as Resource)?.uri) {
-        return this.createResourceTreeItem(
+        return createResourceTreeItem(
           value as Resource,
           this.workspace,
-          this.graph
+          this.graph,
+          undefined
         );
       } else {
         return new FolderTreeItem(value as Folder<Resource>, name, item);
@@ -166,53 +157,42 @@ export class NotesProvider
     return children.sort(sortFolderTreeItems);
   }
 
-  private createResourceTreeItem(
-    value: Resource,
-    workspace: FoamWorkspace,
-    graph: FoamGraph,
-    parent?: FolderTreeItem<Resource>
-  ) {
-    const res = new ResourceTreeItem(value, workspace, {
-      parent,
-      collapsibleState:
-        graph.getBacklinks(value.uri).length > 0
-          ? vscode.TreeItemCollapsibleState.Collapsed
-          : vscode.TreeItemCollapsibleState.None,
-    });
-    res.getChildren = async () => {
-      const backlinks = await createBacklinkTreeItemsForResource(
-        workspace,
-        graph,
-        res.uri
-      );
-      return backlinks;
-    };
-    return res;
-  }
-
-  async resolveTreeItem(item: NotesTreeItems): Promise<NotesTreeItems> {
-    if ((item as any)?.resolveTreeItem) {
-      return (item as any).resolveTreeItem();
-    }
-    return Promise.resolve(item);
-  }
-
   findTreeItem(target: vscode.Uri): Promise<NotesTreeItems> {
     const hierarchy = getTreeItemsHierarchy(
       this.root,
       vscode.workspace.asRelativePath(target, true).split('/'),
       value => value.uri != null,
       (value, parent) =>
-        this.createResourceTreeItem(value, this.workspace, this.graph, parent)
+        createResourceTreeItem(value, this.workspace, this.graph, parent)
     );
     return hierarchy.length > 0
       ? Promise.resolve(hierarchy.pop())
       : Promise.resolve(null);
   }
+}
 
-  dispose(): void {
-    this.disposables.forEach(d => d.dispose());
-  }
+function createResourceTreeItem(
+  value: Resource,
+  workspace: FoamWorkspace,
+  graph: FoamGraph,
+  parent?: FolderTreeItem<Resource>
+) {
+  const res = new ResourceTreeItem(value, workspace, {
+    parent,
+    collapsibleState:
+      graph.getBacklinks(value.uri).length > 0
+        ? vscode.TreeItemCollapsibleState.Collapsed
+        : vscode.TreeItemCollapsibleState.None,
+  });
+  res.getChildren = async () => {
+    const backlinks = await createBacklinkTreeItemsForResource(
+      workspace,
+      graph,
+      res.uri
+    );
+    return backlinks;
+  };
+  return res;
 }
 
 function sortFolderTreeItems<T>(

@@ -74,15 +74,15 @@ export class PlaceholderTreeView extends GroupedResourcesTreeDataProvider {
         throw new Error('Not implemented');
       },
       uri => {
-        return new UriTreeItem(uri, {
-          icon: 'link',
-          getChildren: async () => {
-            return groupRangesByResource(
-              foam.workspace,
-              createBacklinkItemsForResource(foam.workspace, foam.graph, uri)
-            );
-          },
-        });
+        const item = new UriTreeItem(uri);
+        item.getChildren = async () => {
+          return groupRangesByResource(
+            foam.workspace,
+            createBacklinkItemsForResource(foam.workspace, foam.graph, uri)
+          );
+        };
+        item.iconPath = new vscode.ThemeIcon('link');
+        return item;
       }
     );
     this.graph = foam.graph;

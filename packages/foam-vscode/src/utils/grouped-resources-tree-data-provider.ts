@@ -151,7 +151,7 @@ export class GroupedResourcesTreeDataProvider
   resolveTreeItem(
     item: GroupedResourceTreeItem
   ): Promise<GroupedResourceTreeItem> {
-    return item.resolveTreeItem();
+    return item.resolveTreeItem() as Promise<GroupedResourceTreeItem>;
   }
 
   private doComputeResources(): void {

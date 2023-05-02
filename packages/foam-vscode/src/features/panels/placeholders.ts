@@ -74,7 +74,9 @@ export class PlaceholderTreeView extends GroupedResourcesTreeDataProvider {
         throw new Error('Not implemented');
       },
       uri => {
-        const item = new UriTreeItem(uri);
+        const item = new UriTreeItem(uri, {
+          collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+        });
         item.getChildren = async () => {
           return groupRangesByResource(
             foam.workspace,

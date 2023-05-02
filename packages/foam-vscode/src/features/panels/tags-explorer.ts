@@ -120,7 +120,8 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
           ResourceRangeTreeItem.createStandardItem(
             this.workspace,
             note,
-            t.range
+            t.range,
+            'tag'
           )
         );
         return [...acc, ...items];

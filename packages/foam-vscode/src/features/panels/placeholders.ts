@@ -5,14 +5,15 @@ import { getPlaceholdersConfig } from '../../settings';
 import { FoamFeature } from '../../types';
 import { GroupedResourcesTreeDataProvider } from '../../utils/grouped-resources-tree-data-provider';
 import {
-  ResourceRangeTreeItem,
   UriTreeItem,
+  createBacklinkItemsForResource,
   groupRangesByResource,
 } from '../../utils/tree-view-utils';
 import { IMatcher } from '../../core/services/datastore';
 import { ContextMemento, fromVsCodeUri } from '../../utils/vsc-utils';
 import { FoamGraph } from '../../core/model/graph';
 import { URI } from '../../core/model/uri';
+import { FoamWorkspace } from '../../core/model/workspace';
 
 const feature: FoamFeature = {
   activate: async (
@@ -25,7 +26,8 @@ const feature: FoamFeature = {
     );
     const provider = new PlaceholderTreeView(
       context.globalState,
-      foam,
+      foam.workspace,
+      foam.graph,
       matcher
     );
 
@@ -56,42 +58,19 @@ const feature: FoamFeature = {
 };
 
 export class PlaceholderTreeView extends GroupedResourcesTreeDataProvider {
-  private graph: FoamGraph;
   public show = new ContextMemento<'all' | 'for-current-file'>(
     this.state,
     `foam-vscode.views.${this.providerId}.show`,
     'all'
   );
 
-  public constructor(state: vscode.Memento, foam: Foam, matcher: IMatcher) {
-    super(
-      'placeholders',
-      'placeholder',
-      state,
-      matcher,
-      () => {
-        // we override computeResources below (as we can't use "this" here)
-        throw new Error('Not implemented');
-      },
-      uri => {
-        return new UriTreeItem(uri, {
-          icon: 'link',
-          getChildren: async () => {
-            return groupRangesByResource(
-              foam.workspace,
-              foam.graph.getBacklinks(uri).map(link => {
-                return ResourceRangeTreeItem.createStandardItem(
-                  foam.workspace,
-                  foam.workspace.get(link.source),
-                  link.link.range
-                );
-              })
-            );
-          },
-        });
-      }
-    );
-    this.graph = foam.graph;
+  public constructor(
+    state: vscode.Memento,
+    private workspace: FoamWorkspace,
+    private graph: FoamGraph,
+    matcher: IMatcher
+  ) {
+    super('placeholders', 'placeholder', state, matcher);
     this.disposables.push(
       vscode.commands.registerCommand(
         `foam-vscode.views.${this.providerId}.show:all`,
@@ -109,6 +88,20 @@ export class PlaceholderTreeView extends GroupedResourcesTreeDataProvider {
       )
     );
   }
+
+  createTreeItem = uri => {
+    const item = new UriTreeItem(uri, {
+      collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+    });
+    item.getChildren = async () => {
+      return groupRangesByResource(
+        this.workspace,
+        createBacklinkItemsForResource(this.workspace, this.graph, uri)
+      );
+    };
+    item.iconPath = new vscode.ThemeIcon('link');
+    return item;
+  };
 
   computeResources = (): URI[] => {
     if (this.show.get() === 'for-current-file') {

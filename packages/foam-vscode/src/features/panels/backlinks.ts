@@ -10,6 +10,7 @@ import { fromVsCodeUri } from '../../utils/vsc-utils';
 import {
   ResourceRangeTreeItem,
   ResourceTreeItem,
+  createBacklinkItemsForResource,
   groupRangesByResource,
 } from '../../utils/tree-view-utils';
 
@@ -65,17 +66,12 @@ export class BacklinksTreeDataProvider
       return Promise.resolve([]);
     }
 
-    const connections = this.graph
-      .getConnections(uri)
-      .filter(c => c.target.asPlain().isEqual(uri));
-
-    const backlinkItems = connections.map(c =>
-      ResourceRangeTreeItem.createStandardItem(
-        this.workspace,
-        this.workspace.get(c.source),
-        c.link.range
-      )
+    const backlinkItems = createBacklinkItemsForResource(
+      this.workspace,
+      this.graph,
+      uri
     );
+
     return groupRangesByResource(
       this.workspace,
       backlinkItems,

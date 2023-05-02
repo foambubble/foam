@@ -1,52 +1,43 @@
 import * as vscode from 'vscode';
+import { groupBy } from 'lodash';
 import { Resource } from '../core/model/note';
 import { toVsCodeUri } from './vsc-utils';
 import { Range } from '../core/model/range';
-import { OPEN_COMMAND } from '../features/commands/open-resource';
 import { URI } from '../core/model/uri';
 import { FoamWorkspace } from '../core/model/workspace';
 import { getNoteTooltip } from '../utils';
 import { isSome } from '../core/utils';
-import { groupBy } from 'lodash';
 import { getBlockFor } from '../core/services/markdown-parser';
+import { FoamGraph } from '../core/model/graph';
 
-export class UriTreeItem extends vscode.TreeItem {
-  private doGetChildren: () => Promise<vscode.TreeItem[]>;
+export class BaseTreeItem extends vscode.TreeItem {
+  resolveTreeItem(): Promise<vscode.TreeItem> {
+    return Promise.resolve(this);
+  }
+
+  getChildren(): Promise<vscode.TreeItem[]> {
+    return Promise.resolve([]);
+  }
+}
+
+export class UriTreeItem extends BaseTreeItem {
+  public parent?: vscode.TreeItem;
 
   constructor(
     public readonly uri: URI,
     options: {
       collapsibleState?: vscode.TreeItemCollapsibleState;
-      icon?: string;
       title?: string;
-      getChildren?: () => Promise<vscode.TreeItem[]>;
+      parent?: vscode.TreeItem;
     } = {}
   ) {
-    super(
-      options?.title ?? uri.getName(),
-      options.collapsibleState
-        ? options.collapsibleState
-        : options.getChildren
-        ? vscode.TreeItemCollapsibleState.Collapsed
-        : vscode.TreeItemCollapsibleState.None
-    );
-    this.doGetChildren = options.getChildren;
+    super(options?.title ?? uri.getName(), options.collapsibleState);
+    this.parent = options.parent;
     this.description = uri.path.replace(
       vscode.workspace.getWorkspaceFolder(toVsCodeUri(uri))?.uri.path,
       ''
     );
-    this.tooltip = undefined;
-    this.iconPath = new vscode.ThemeIcon(options.icon ?? 'new-file');
-  }
-
-  resolveTreeItem(): Promise<UriTreeItem> {
-    return Promise.resolve(this);
-  }
-
-  getChildren(): Promise<vscode.TreeItem[]> {
-    return isSome(this.doGetChildren)
-      ? this.doGetChildren()
-      : Promise.resolve([]);
+    this.iconPath = new vscode.ThemeIcon('new-file');
   }
 }
 
@@ -56,22 +47,22 @@ export class ResourceTreeItem extends UriTreeItem {
     private readonly workspace: FoamWorkspace,
     options: {
       collapsibleState?: vscode.TreeItemCollapsibleState;
-      getChildren?: () => Promise<vscode.TreeItem[]>;
+      parent?: vscode.TreeItem;
     } = {}
   ) {
     super(resource.uri, {
       title: resource.title,
-      icon: 'note',
       collapsibleState: options.collapsibleState,
-      getChildren: options.getChildren,
+      parent: options.parent,
     });
     this.command = {
       command: 'vscode.open',
       arguments: [toVsCodeUri(resource.uri)],
       title: 'Go to location',
     };
-
-    this.contextValue = 'resource';
+    this.resourceUri = toVsCodeUri(resource.uri);
+    this.iconPath = vscode.ThemeIcon.File;
+    this.contextValue = 'foam.resource';
   }
 
   async resolveTreeItem(): Promise<ResourceTreeItem> {
@@ -90,9 +81,7 @@ export class ResourceRangeTreeItem extends vscode.TreeItem {
     public label: string,
     public readonly resource: Resource,
     public readonly range: Range,
-    private resolveFn?: (
-      item: ResourceRangeTreeItem
-    ) => Promise<ResourceRangeTreeItem>
+    public readonly workspace: FoamWorkspace
   ) {
     super(label, vscode.TreeItemCollapsibleState.None);
     this.label = `${range.start.line}: ${this.label}`;
@@ -103,14 +92,27 @@ export class ResourceRangeTreeItem extends vscode.TreeItem {
     };
   }
 
-  resolveTreeItem(): Promise<ResourceRangeTreeItem> {
-    return this.resolveFn ? this.resolveFn(this) : Promise.resolve(this);
+  async resolveTreeItem(): Promise<ResourceRangeTreeItem> {
+    const markdown =
+      (await this.workspace.readAsMarkdown(this.resource.uri)) ?? '';
+    let { block, nLines } = getBlockFor(markdown, this.range.start);
+    // Long blocks need to be interrupted or they won't display in hover preview
+    // We keep the extra lines so that the count in the preview is correct
+    if (nLines > 15) {
+      let tmp = block.split('\n');
+      tmp.splice(15, 1, '\n'); // replace a line with a blank line to interrupt the block
+      block = tmp.join('\n');
+    }
+    const tooltip = getNoteTooltip(block ?? this.label ?? '');
+    this.tooltip = tooltip;
+    return Promise.resolve(this);
   }
 
   static async createStandardItem(
     workspace: FoamWorkspace,
     resource: Resource,
-    range: Range
+    range: Range,
+    type?: 'backlink' | 'tag'
   ): Promise<ResourceRangeTreeItem> {
     const markdown = (await workspace.readAsMarkdown(resource.uri)) ?? '';
     const lines = markdown.split('\n');
@@ -123,21 +125,12 @@ export class ResourceRangeTreeItem extends vscode.TreeItem {
       ? `${range.start.line}: ${ellipsis}${line.slice(start, start + 300)}`
       : Range.toString(range);
 
-    const resolveFn = (item: ResourceRangeTreeItem) => {
-      let { block, nLines } = getBlockFor(markdown, range.start);
-      // Long blocks need to be interrupted or they won't display in hover preview
-      // We keep the extra lines so that the count in the preview is correct
-      if (nLines > 15) {
-        let tmp = block.split('\n');
-        tmp.splice(15, 1, '\n'); // replace a line with a blank line to interrupt the block
-        block = tmp.join('\n');
-      }
-      const tooltip = getNoteTooltip(block ?? line ?? '');
-      item.tooltip = tooltip;
-      return Promise.resolve(item);
-    };
+    const item = new ResourceRangeTreeItem(label, resource, range, workspace);
+    item.iconPath = new vscode.ThemeIcon(
+      type === 'backlink' ? 'arrow-left' : 'symbol-number',
+      new vscode.ThemeColor('charts.purple')
+    );
 
-    const item = new ResourceRangeTreeItem(label, resource, range, resolveFn);
     return item;
   }
 }
@@ -164,15 +157,32 @@ export const groupRangesByResource = async (
   const resourceItems = Object.values(byResource).map(items => {
     const resourceItem = new ResourceTreeItem(items[0].resource, workspace, {
       collapsibleState,
-      getChildren: () => {
-        return Promise.resolve(
-          items.sort((a, b) => Range.isBefore(a.range, b.range))
-        );
-      },
     });
+    resourceItem.getChildren = () =>
+      Promise.resolve(items.sort((a, b) => Range.isBefore(a.range, b.range)));
     resourceItem.description = `(${items.length}) ${resourceItem.description}`;
     return resourceItem;
   });
   resourceItems.sort((a, b) => Resource.sortByTitle(a.resource, b.resource));
   return resourceItems;
 };
+
+export function createBacklinkItemsForResource(
+  workspace: FoamWorkspace,
+  graph: FoamGraph,
+  uri: URI
+) {
+  const connections = graph
+    .getConnections(uri)
+    .filter(c => c.target.asPlain().isEqual(uri));
+
+  const backlinkItems = connections.map(c =>
+    ResourceRangeTreeItem.createStandardItem(
+      workspace,
+      workspace.get(c.source),
+      c.link.range,
+      'backlink'
+    )
+  );
+  return Promise.all(backlinkItems);
+}

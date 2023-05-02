@@ -221,3 +221,37 @@ export function stripImages(markdown: string): string {
     '$1'.length ? '[Image: $1]' : ''
   );
 }
+
+export function isInFrontMatter(content: string, lineNumber: number): Boolean {
+  const FIRST_DELIMITER_MATCH = /^---\s*?$/gm;
+  const LAST_DELIMITER_MATCH = /^[-.]{3}\s*?$/g;
+
+  // if we're on the first line, we're not _yet_ in the front matter
+  if (lineNumber == 0) {
+    return false;
+  }
+
+  // look for --- at start, and a second --- or ... to end
+  if (content.match(FIRST_DELIMITER_MATCH) === null) {
+    return false;
+  }
+
+  const lines = content.split('\n');
+  lines.shift();
+  const endLineMatches = (l: string) => l.match(LAST_DELIMITER_MATCH);
+  const endLineNumber = lines.findIndex(endLineMatches);
+
+  return endLineNumber == -1 || endLineNumber >= lineNumber;
+}
+
+export function isOnYAMLKeywordLine(content: string, keyword: string): Boolean {
+  const keywordMatch = /^\s*(\w+):/gm;
+
+  if (content.match(keywordMatch) === null) {
+    return false;
+  }
+
+  const matches = Array.from(content.matchAll(keywordMatch));
+  const lastMatch = matches[matches.length - 1];
+  return lastMatch[1] === keyword;
+}

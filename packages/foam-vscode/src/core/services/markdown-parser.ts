@@ -241,7 +241,7 @@ const sectionsPlugin: ParserPlugin = {
       astPointToFoamPosition(tree.position.end).line + 1,
       0
     );
-    // Close all the remainig sections
+    // Close all the remaining sections
     while (sectionStack.length > 0) {
       const section = sectionStack.pop();
       note.sections.push({
@@ -268,7 +268,7 @@ const titlePlugin: ParserPlugin = {
     }
   },
   onDidFindProperties: (props, note) => {
-    // Give precendence to the title from the frontmatter if it exists
+    // Give precedence to the title from the frontmatter if it exists
     note.title = props.title?.toString() ?? note.title;
   },
   onDidVisitTree: (tree, note) => {

@@ -62,7 +62,7 @@ It is possible to customize the style of a node based on the `type` property in 
 
 There are a few default node types defined by Foam that are displayed in the graph:
 
-- `note` defines the color for regular nodes whose documents have not overriden the `type` property.
+- `note` defines the color for regular nodes whose documents have not overridden the `type` property.
 - `placeholder` defines the color for links that don't match any existing note. This is a [[placeholder]] because no file with such name exists.
   - see [[wikilinks]] for more info <!--NOTE: this placeholder link should NOT have an associated file. This is to demonstrate the custom coloring-->
 - `tag` defines the color for nodes representing #tags, allowing tags to be used as graph nodes similar to backlinks.

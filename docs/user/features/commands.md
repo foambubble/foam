@@ -2,7 +2,7 @@
 
 Foam has various commands that you can explore by calling the command palette and typing "Foam".
 
-In particular, some commands can be very customizible and can help with custom workflows and use cases.
+In particular, some commands can be very customizable and can help with custom workflows and use cases.
 
 ## foam-vscode.create-note command
 

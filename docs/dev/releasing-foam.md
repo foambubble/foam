@@ -20,6 +20,6 @@
    - select "tags" in top left
    - select the tag that was just released, click "edit" and copy release information from changelog
    - publish (no need to attach artifacts)
-8. Annouce on Discord
+8. Announce on Discord
 
 Steps 1 to 6 should really be replaced by a GitHub action...

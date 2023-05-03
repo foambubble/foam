@@ -1,4 +1,4 @@
-# Note being refered as angel
+# Note being referred as angel
 
 This is just a link target for now.
 

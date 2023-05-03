@@ -27,7 +27,7 @@ interface FindIdentifierCommandArgs {
   amongst: vscode.Uri[];
 }
 
-const FIND_IDENTIFER_COMMAND: FoamCommand<FindIdentifierCommandArgs> = {
+const FIND_IDENTIFIER_COMMAND: FoamCommand<FindIdentifierCommandArgs> = {
   name: 'foam:compute-identifier',
   execute: async ({ target, amongst, range }) => {
     if (vscode.window.activeTextEditor) {
@@ -103,8 +103,8 @@ export default async function activate(
       }
     ),
     vscode.commands.registerCommand(
-      FIND_IDENTIFER_COMMAND.name,
-      FIND_IDENTIFER_COMMAND.execute
+      FIND_IDENTIFIER_COMMAND.name,
+      FIND_IDENTIFIER_COMMAND.execute
     ),
     vscode.commands.registerCommand(
       REPLACE_TEXT_COMMAND.name,
@@ -264,7 +264,7 @@ const createFindIdentifierCommand = (
     vscode.CodeActionKind.QuickFix
   );
   action.command = {
-    command: FIND_IDENTIFER_COMMAND.name,
+    command: FIND_IDENTIFIER_COMMAND.name,
     title: 'Link to this resource',
     arguments: [
       {

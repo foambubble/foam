@@ -117,7 +117,7 @@ The potential solution:
     enum LinkReferenceDefinitions {
       Off,               // link reference definitions are not generated
       WithExtensions,    // link reference definitions contain .md (or similar) file extensions
-      WithoutExtensions  // link reference definitions do not contain file extenions
+      WithoutExtensions  // link reference definitions do not contain file extensions
     }
 
     ```

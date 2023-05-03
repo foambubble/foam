@@ -1,0 +1,6 @@
+# See https://github.com/crate-ci/typos/blob/master/docs/reference.md to configure typos
+[default.extend-words]
+ons = "ons" # add-ons
+pallette = "pallette"
+[files]
+extend-exclude = ["CHANGELOG.md", "d3.v6.min.js", "force-graph.1.40.5.min.js", "dat.gui.min.js"]

@@ -9,6 +9,16 @@ on:
       - master
 
 jobs:
+  typos-check:
+    name: Spell Check with Typos
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Actions Repository
+        uses: actions/checkout@v3
+      - name: Check spelling with custom config file
+        uses: crate-ci/typos@v1.14.8
+        with:
+          config: ./typos.toml
   lint:
     name: Lint
     runs-on: ubuntu-22.04

@@ -65,7 +65,7 @@ gem "jekyll-katex"  # Optional, the package that enables KaTeX math rendering
 
 Besides adding the plugin `jekyll-katex` in `_config.yml` and `Gemfile`, we'll also have to follow the guides in [[math-support-with-katex]] to let our site fully support using KaTeX to render math equations.
 
-### Commiting changes to GitHub repo
+### Committing changes to GitHub repo
 
 Finally, commit the newly created files to GitHub.
 

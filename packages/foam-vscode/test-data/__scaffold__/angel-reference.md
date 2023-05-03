@@ -1,3 +1,3 @@
 # Angel reference
 
-[[Note being refered as angel]]
+[[Note being referred as angel]]

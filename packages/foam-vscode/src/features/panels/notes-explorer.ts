@@ -39,14 +39,14 @@ const feature: FoamFeature = {
       const target = vscode.window.activeTextEditor?.document.uri;
       if (treeView.visible) {
         if (target) {
-          const item = await provider.findTreeItemByUri(target);
+          const item = await findTreeItemByUri(provider, target);
           // Check if the item is already selected.
           // This check is needed because always calling reveal() will
           // cause the tree view to take the focus from the item when
           // browsing the notes explorer
           if (
             !treeView.selection.find(
-              i => i.resourceUri.path === item.resourceUri.path
+              i => i.resourceUri?.path === item.resourceUri.path
             )
           ) {
             treeView.reveal(item);
@@ -68,6 +68,17 @@ const feature: FoamFeature = {
 };
 
 export default feature;
+
+export function findTreeItemByUri<I, T>(
+  provider: FolderTreeProvider<I, T>,
+  target: vscode.Uri
+) {
+  const path = vscode.workspace.asRelativePath(
+    target,
+    vscode.workspace.workspaceFolders.length > 1
+  );
+  return provider.findTreeItemByPath(path.split('/'));
+}
 
 export type NotesTreeItems =
   | ResourceTreeItem
@@ -108,16 +119,6 @@ export class NotesProvider extends FolderTreeProvider<
     );
   }
 
-  findTreeItemByUri(target: vscode.Uri) {
-    const path = vscode.workspace.asRelativePath(
-      target,
-      vscode.workspace.workspaceFolders.length > 1
-    );
-    return this.findTreeItemByPath(path.split('/'));
-  }
-
-  // Implementation of abstract methods
-
   getValues() {
     return this.workspace.list();
   }
@@ -138,7 +139,7 @@ export class NotesProvider extends FolderTreeProvider<
   }
 
   isValueType(value: Resource): value is Resource {
-    return (value as Resource)?.uri != null;
+    return value.uri != null;
   }
 
   createValueTreeItem(

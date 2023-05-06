@@ -24,7 +24,6 @@ import {
 } from './editor';
 import { Resolver } from './variable-resolver';
 import dateFormat from 'dateformat';
-import { isSome } from '../core/utils';
 import { getFoamVsCodeConfig } from './config';
 
 /**

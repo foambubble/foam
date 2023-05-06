@@ -11,7 +11,6 @@ import { CommandDescriptor } from '../../utils/commands';
 import { FoamWorkspace } from '../../core/model/workspace';
 import { Resource } from '../../core/model/note';
 import { isSome, isNone } from '../../core/utils';
-import { Logger } from '../../core/utils/log';
 
 export interface OpenResourceArgs {
   /**

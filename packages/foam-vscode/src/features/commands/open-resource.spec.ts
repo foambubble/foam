@@ -1,4 +1,3 @@
-import dateFormat from 'dateformat';
 import { commands, window } from 'vscode';
 import { CommandDescriptor } from '../../utils/commands';
 import { OpenResourceArgs, OPEN_COMMAND } from './open-resource';

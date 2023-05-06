@@ -120,7 +120,7 @@ export class TagCompletionProvider
     content: string,
     position: vscode.Position
   ): vscode.ProviderResult<vscode.CompletionList<vscode.CompletionItem>> {
-    const [_, lastMatchEndIndex] = this.tagMatchIndices(content, HASH_REGEX);
+    const [, lastMatchEndIndex] = this.tagMatchIndices(content, HASH_REGEX);
     if (lastMatchEndIndex !== position.character) {
       return null;
     }

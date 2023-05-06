@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { FoamFeature } from '../../types';
 import { URI } from '../../core/model/uri';
 import { toVsCodeUri } from '../../utils/vsc-utils';
 import { Foam } from '../../core/model/foam';
@@ -11,7 +10,18 @@ import { CommandDescriptor } from '../../utils/commands';
 import { FoamWorkspace } from '../../core/model/workspace';
 import { Resource } from '../../core/model/note';
 import { isSome, isNone } from '../../core/utils';
-import { Logger } from '../../core/utils/log';
+
+export default async function activate(
+  context: vscode.ExtensionContext,
+  foamPromise: Promise<Foam>
+) {
+  const foam = await foamPromise;
+  context.subscriptions.push(
+    vscode.commands.registerCommand(OPEN_COMMAND.command, args => {
+      return openResource(foam.workspace, args);
+    })
+  );
+}
 
 export interface OpenResourceArgs {
   /**
@@ -81,20 +91,6 @@ async function openResource(workspace: FoamWorkspace, args?: OpenResourceArgs) {
   }
 }
 
-const feature: FoamFeature = {
-  activate: async (
-    context: vscode.ExtensionContext,
-    foamPromise: Promise<Foam>
-  ) => {
-    const foam = await foamPromise;
-    context.subscriptions.push(
-      vscode.commands.registerCommand(OPEN_COMMAND.command, args => {
-        return openResource(foam.workspace, args);
-      })
-    );
-  },
-};
-
 interface ResourceItem extends vscode.QuickPickItem {
   label: string;
   description: string;
@@ -115,5 +111,3 @@ const createQuickPickItemForResource = (resource: Resource): ResourceItem => {
     detail: detail,
   };
 };
-
-export default feature;

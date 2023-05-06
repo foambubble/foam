@@ -227,7 +227,7 @@ export function isInFrontMatter(content: string, lineNumber: number): Boolean {
   const LAST_DELIMITER_MATCH = /^[-.]{3}\s*?$/g;
 
   // if we're on the first line, we're not _yet_ in the front matter
-  if (lineNumber == 0) {
+  if (lineNumber === 0) {
     return false;
   }
 
@@ -241,7 +241,7 @@ export function isInFrontMatter(content: string, lineNumber: number): Boolean {
   const endLineMatches = (l: string) => l.match(LAST_DELIMITER_MATCH);
   const endLineNumber = lines.findIndex(endLineMatches);
 
-  return endLineNumber == -1 || endLineNumber >= lineNumber;
+  return endLineNumber === -1 || endLineNumber >= lineNumber;
 }
 
 export function isOnYAMLKeywordLine(content: string, keyword: string): Boolean {

@@ -1,10 +1,10 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { getContainsTooltip, isSome } from '../utils';
-import { URI } from '../core/model/uri';
-import { IMatcher } from '../core/services/datastore';
+import { getContainsTooltip, isSome } from '../../../utils';
+import { URI } from '../../../core/model/uri';
+import { IMatcher } from '../../../core/services/datastore';
 import { UriTreeItem } from './tree-view-utils';
-import { ContextMemento } from './vsc-utils';
+import { ContextMemento } from '../../../utils/vsc-utils';
 
 /**
  * Provides the ability to expose a TreeDataExplorerView in VSCode. This class will

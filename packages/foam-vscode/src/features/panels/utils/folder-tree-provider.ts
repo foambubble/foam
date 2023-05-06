@@ -1,11 +1,17 @@
 import * as vscode from 'vscode';
 import { BaseTreeProvider } from './base-tree-provider';
-import { BaseTreeItem, ResourceTreeItem } from '../../../utils/tree-view-utils';
+import { BaseTreeItem, ResourceTreeItem } from './tree-view-utils';
 
+/**
+ * A folder is a map of basenames to either folders or values (e.g. resources).
+ */
 export interface Folder<T> {
   [basename: string]: Folder<T> | T;
 }
 
+/**
+ * A TreeItem that represents a folder.
+ */
 export class FolderTreeItem<T> extends vscode.TreeItem {
   collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
   contextValue = 'folder';
@@ -20,6 +26,11 @@ export class FolderTreeItem<T> extends vscode.TreeItem {
   }
 }
 
+/**
+ * An abstract class that can be used to create a tree view from a Folder object.
+ * Its abstract methods must be implemented by the subclass to define the type of
+ * the values in the folder, and how to filter them.
+ */
 export abstract class FolderTreeProvider<I, T> extends BaseTreeProvider<I> {
   private root: Folder<T>;
 
@@ -128,14 +139,34 @@ export abstract class FolderTreeProvider<I, T> extends BaseTreeProvider<I> {
       : Promise.resolve(null);
   }
 
+  /**
+   * Converts a value to a path of strings that can be used to create a tree.
+   */
   abstract valueToPath(value: T);
 
+  /**
+   * Returns all the values that should be displayed in the tree.
+   */
   abstract getValues(): T[];
 
+  /**
+   * Returns a function that can be used to filter the values.
+   * The difference between using this function vs not including the values
+   * is that in this case, the tree will be created with all the folders
+   * and subfolders, but the values will only be displayed if they pass
+   * the filter.
+   */
   abstract getFilterFn(): (value: T) => boolean;
 
+  /**
+   * Returns true if the given value is of the type that should be displayed
+   * as a leaf in the tree. That is, not as a folder.
+   */
   abstract isValueType(value: T): value is T;
 
+  /**
+   * Creates a tree item for the given value.
+   */
   abstract createValueTreeItem(value: T, parent: FolderTreeItem<T>): I;
 }
 

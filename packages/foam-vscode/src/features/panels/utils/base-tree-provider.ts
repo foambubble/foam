@@ -1,6 +1,16 @@
 import * as vscode from 'vscode';
 import { IDisposable } from 'packages/foam-vscode/src/core/common/lifecycle';
 
+/**
+ * This class is a wrapper around vscode.TreeDataProvider that adds a few
+ * features:
+ * - It adds a `refresh()` method that can be called to refresh the tree view
+ * - It adds a `resolveTreeItem()` method that can be used to resolve the
+ *   tree item asynchronously. This is useful when the tree item needs to
+ *   fetch data from the file system or from the network.
+ * - It adds a `dispose()` method that can be used to dispose of any resources
+ *   that the tree provider might be holding on to.
+ */
 export abstract class BaseTreeProvider<T>
   implements vscode.TreeDataProvider<T>, IDisposable
 {

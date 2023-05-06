@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { URI } from '../core/model/uri';
 import { createTestWorkspace } from '../test/test-utils';
 import {
   cleanWorkspace,
@@ -8,7 +7,6 @@ import {
   showInEditor,
 } from '../test/test-utils-vscode';
 import { NavigationProvider } from './navigation-provider';
-import { OPEN_COMMAND } from './commands/open-resource';
 import { toVsCodeUri } from '../utils/vsc-utils';
 import { createMarkdownParser } from '../core/services/markdown-parser';
 import { FoamGraph } from '../core/model/graph';

@@ -7,14 +7,13 @@ import {
   getUriInWorkspace,
 } from '../../test/test-utils-vscode';
 import { BacklinksTreeDataProvider } from './backlinks';
-import { OPEN_COMMAND } from '../commands/open-resource';
 import { toVsCodeUri } from '../../utils/vsc-utils';
 import { FoamGraph } from '../../core/model/graph';
 import { URI } from '../../core/model/uri';
 import {
   ResourceRangeTreeItem,
   ResourceTreeItem,
-} from '../../utils/tree-view-utils';
+} from './utils/tree-view-utils';
 
 describe('Backlinks panel', () => {
   beforeAll(async () => {

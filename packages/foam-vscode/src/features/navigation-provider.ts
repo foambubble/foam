@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { FoamFeature } from '../types';
 import { mdDocSelector } from '../utils';
 import { toVsCodeRange, toVsCodeUri, fromVsCodeUri } from '../utils/vsc-utils';
 import { Foam } from '../core/model/foam';
@@ -12,35 +11,33 @@ import { Position } from '../core/model/position';
 import { CREATE_NOTE_COMMAND } from './commands/create-note';
 import { commandAsURI } from '../utils/commands';
 
-const feature: FoamFeature = {
-  activate: async (
-    context: vscode.ExtensionContext,
-    foamPromise: Promise<Foam>
-  ) => {
-    const foam = await foamPromise;
+export default async function activate(
+  context: vscode.ExtensionContext,
+  foamPromise: Promise<Foam>
+) {
+  const foam = await foamPromise;
 
-    const navigationProvider = new NavigationProvider(
-      foam.workspace,
-      foam.graph,
-      foam.services.parser
-    );
+  const navigationProvider = new NavigationProvider(
+    foam.workspace,
+    foam.graph,
+    foam.services.parser
+  );
 
-    context.subscriptions.push(
-      vscode.languages.registerDefinitionProvider(
-        mdDocSelector,
-        navigationProvider
-      ),
-      vscode.languages.registerDocumentLinkProvider(
-        mdDocSelector,
-        navigationProvider
-      ),
-      vscode.languages.registerReferenceProvider(
-        mdDocSelector,
-        navigationProvider
-      )
-    );
-  },
-};
+  context.subscriptions.push(
+    vscode.languages.registerDefinitionProvider(
+      mdDocSelector,
+      navigationProvider
+    ),
+    vscode.languages.registerDocumentLinkProvider(
+      mdDocSelector,
+      navigationProvider
+    ),
+    vscode.languages.registerReferenceProvider(
+      mdDocSelector,
+      navigationProvider
+    )
+  );
+}
 
 /**
  * Provides navigation and references for Foam links.
@@ -182,5 +179,3 @@ export class NavigationProvider
       });
   }
 }
-
-export default feature;

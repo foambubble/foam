@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { FoamFeature } from '../../types';
 import { TextDecoder } from 'util';
 import { getGraphStyle, getTitleMaxLength } from '../../settings';
 import { isSome } from '../../utils';
@@ -7,53 +6,54 @@ import { Foam } from '../../core/model/foam';
 import { Logger } from '../../core/utils/log';
 import { fromVsCodeUri } from '../../utils/vsc-utils';
 
-const feature: FoamFeature = {
-  activate: (context: vscode.ExtensionContext, foamPromise: Promise<Foam>) => {
-    let panel: vscode.WebviewPanel | undefined = undefined;
-    vscode.workspace.onDidChangeConfiguration(event => {
-      if (event.affectsConfiguration('foam.graph.style')) {
-        const style = getGraphStyle();
-        panel.webview.postMessage({
-          type: 'didUpdateStyle',
-          payload: style,
-        });
-      }
-    });
+export default async function activate(
+  context: vscode.ExtensionContext,
+  foamPromise: Promise<Foam>
+) {
+  let panel: vscode.WebviewPanel | undefined = undefined;
+  vscode.workspace.onDidChangeConfiguration(event => {
+    if (event.affectsConfiguration('foam.graph.style')) {
+      const style = getGraphStyle();
+      panel.webview.postMessage({
+        type: 'didUpdateStyle',
+        payload: style,
+      });
+    }
+  });
 
-    vscode.commands.registerCommand('foam-vscode.show-graph', async () => {
-      if (panel) {
-        const columnToShowIn = vscode.window.activeTextEditor
-          ? vscode.window.activeTextEditor.viewColumn
-          : undefined;
-        panel.reveal(columnToShowIn);
-      } else {
-        const foam = await foamPromise;
-        panel = await createGraphPanel(foam, context);
-        const onFoamChanged = _ => {
-          updateGraph(panel, foam);
-        };
+  vscode.commands.registerCommand('foam-vscode.show-graph', async () => {
+    if (panel) {
+      const columnToShowIn = vscode.window.activeTextEditor
+        ? vscode.window.activeTextEditor.viewColumn
+        : undefined;
+      panel.reveal(columnToShowIn);
+    } else {
+      const foam = await foamPromise;
+      panel = await createGraphPanel(foam, context);
+      const onFoamChanged = _ => {
+        updateGraph(panel, foam);
+      };
 
-        const noteUpdatedListener = foam.graph.onDidUpdate(onFoamChanged);
-        panel.onDidDispose(() => {
-          noteUpdatedListener.dispose();
-          panel = undefined;
-        });
+      const noteUpdatedListener = foam.graph.onDidUpdate(onFoamChanged);
+      panel.onDidDispose(() => {
+        noteUpdatedListener.dispose();
+        panel = undefined;
+      });
 
-        vscode.window.onDidChangeActiveTextEditor(e => {
-          if (e?.document?.uri?.scheme === 'file') {
-            const note = foam.workspace.get(fromVsCodeUri(e.document.uri));
-            if (isSome(note)) {
-              panel.webview.postMessage({
-                type: 'didSelectNote',
-                payload: note.uri.path,
-              });
-            }
+      vscode.window.onDidChangeActiveTextEditor(e => {
+        if (e?.document?.uri?.scheme === 'file') {
+          const note = foam.workspace.get(fromVsCodeUri(e.document.uri));
+          if (isSome(note)) {
+            panel.webview.postMessage({
+              type: 'didSelectNote',
+              payload: note.uri.path,
+            });
           }
-        });
-      }
-    });
-  },
-};
+        }
+      });
+    }
+  });
+}
 
 function updateGraph(panel: vscode.WebviewPanel, foam: Foam) {
   const graph = generateGraphData(foam);
@@ -191,5 +191,3 @@ async function getWebviewContent(
 
   return filled;
 }
-
-export default feature;

@@ -5,7 +5,6 @@ import { Resource } from '../core/model/note';
 import { URI } from '../core/model/uri';
 import { FoamWorkspace } from '../core/model/workspace';
 import { getFoamVsCodeConfig } from '../services/config';
-import { FoamFeature } from '../types';
 import { getNoteTooltip, mdDocSelector } from '../utils';
 import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
 
@@ -21,81 +20,72 @@ const COMPLETION_CURSOR_MOVE = {
 export const WIKILINK_REGEX = /\[\[[^[\]]*(?!.*\]\])/;
 export const SECTION_REGEX = /\[\[([^[\]]*#(?!.*\]\]))/;
 
-const feature: FoamFeature = {
-  activate: async (
-    context: vscode.ExtensionContext,
-    foamPromise: Promise<Foam>
-  ) => {
-    const foam = await foamPromise;
-    context.subscriptions.push(
-      vscode.languages.registerCompletionItemProvider(
-        mdDocSelector,
-        new WikilinkCompletionProvider(foam.workspace, foam.graph),
-        '['
-      ),
-      vscode.languages.registerCompletionItemProvider(
-        mdDocSelector,
-        new SectionCompletionProvider(foam.workspace),
-        '#'
-      )
-    );
-  },
-};
+export default async function activate(
+  context: vscode.ExtensionContext,
+  foamPromise: Promise<Foam>
+) {
+  const foam = await foamPromise;
+  context.subscriptions.push(
+    vscode.languages.registerCompletionItemProvider(
+      mdDocSelector,
+      new WikilinkCompletionProvider(foam.workspace, foam.graph),
+      '['
+    ),
+    vscode.languages.registerCompletionItemProvider(
+      mdDocSelector,
+      new SectionCompletionProvider(foam.workspace),
+      '#'
+    ),
 
-/**
- * always jump to the closing bracket, but jump back the cursor when commit
- * by alias divider `|` and section divider `#`
- * See https://github.com/foambubble/foam/issues/962,
- */
+    /**
+     * always jump to the closing bracket, but jump back the cursor when commit
+     * by alias divider `|` and section divider `#`
+     * See https://github.com/foambubble/foam/issues/962,
+     */
+    vscode.commands.registerCommand(
+      COMPLETION_CURSOR_MOVE.command,
+      async () => {
+        const activeEditor = vscode.window.activeTextEditor;
+        const document = activeEditor.document;
+        const currentPosition = activeEditor.selection.active;
+        const cursorChange = vscode.window.onDidChangeTextEditorSelection(
+          async e => {
+            const changedPosition = e.selections[0].active;
+            const preChar = document
+              .lineAt(changedPosition.line)
+              .text.charAt(changedPosition.character - 1);
 
-export const completionCursorMove: FoamFeature = {
-  activate: (context: vscode.ExtensionContext, foamPromise: Promise<Foam>) => {
-    context.subscriptions.push(
-      vscode.commands.registerCommand(
-        COMPLETION_CURSOR_MOVE.command,
-        async () => {
-          const activeEditor = vscode.window.activeTextEditor;
-          const document = activeEditor.document;
-          const currentPosition = activeEditor.selection.active;
-          const cursorChange = vscode.window.onDidChangeTextEditorSelection(
-            async e => {
-              const changedPosition = e.selections[0].active;
-              const preChar = document
-                .lineAt(changedPosition.line)
-                .text.charAt(changedPosition.character - 1);
+            const { character: selectionChar, line: selectionLine } =
+              e.selections[0].active;
 
-              const { character: selectionChar, line: selectionLine } =
-                e.selections[0].active;
+            const { line: completionLine, character: completionChar } =
+              currentPosition;
 
-              const { line: completionLine, character: completionChar } =
-                currentPosition;
+            const inCompleteBySectionDivider =
+              linkCommitCharacters.includes(preChar) &&
+              selectionLine === completionLine &&
+              selectionChar === completionChar + 1;
 
-              const inCompleteBySectionDivider =
-                linkCommitCharacters.includes(preChar) &&
-                selectionLine === completionLine &&
-                selectionChar === completionChar + 1;
-
-              cursorChange.dispose();
-              if (inCompleteBySectionDivider) {
-                await vscode.commands.executeCommand('cursorMove', {
-                  to: 'left',
-                  by: 'character',
-                  value: 2,
-                });
-              }
+            cursorChange.dispose();
+            if (inCompleteBySectionDivider) {
+              await vscode.commands.executeCommand('cursorMove', {
+                to: 'left',
+                by: 'character',
+                value: 2,
+              });
             }
-          );
+          }
+        );
 
-          await vscode.commands.executeCommand('cursorMove', {
-            to: 'right',
-            by: 'character',
-            value: 2,
-          });
-        }
-      )
-    );
-  },
-};
+        await vscode.commands.executeCommand('cursorMove', {
+          to: 'right',
+          by: 'character',
+          value: 2,
+        });
+      }
+    )
+  );
+}
 
 export class SectionCompletionProvider
   implements vscode.CompletionItemProvider<vscode.CompletionItem>
@@ -307,5 +297,3 @@ const normalize = (text: string) => text.toLocaleLowerCase().trim();
 function wikilinkRequiresAlias(resource: Resource) {
   return normalize(resource.uri.getName()) !== normalize(resource.title);
 }
-
-export default feature;

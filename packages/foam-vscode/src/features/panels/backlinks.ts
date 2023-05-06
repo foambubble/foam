@@ -2,7 +2,6 @@ import * as vscode from 'vscode';
 import { URI } from '../../core/model/uri';
 
 import { isNone } from '../../utils';
-import { FoamFeature } from '../../types';
 import { Foam } from '../../core/model/foam';
 import { FoamWorkspace } from '../../core/model/workspace';
 import { FoamGraph } from '../../core/model/graph';
@@ -12,31 +11,28 @@ import {
   ResourceTreeItem,
   createBacklinkItemsForResource,
   groupRangesByResource,
-} from '../../utils/tree-view-utils';
+} from './utils/tree-view-utils';
 
-const feature: FoamFeature = {
-  activate: async (
-    context: vscode.ExtensionContext,
-    foamPromise: Promise<Foam>
-  ) => {
-    const foam = await foamPromise;
+export default async function activate(
+  context: vscode.ExtensionContext,
+  foamPromise: Promise<Foam>
+) {
+  const foam = await foamPromise;
 
-    const provider = new BacklinksTreeDataProvider(foam.workspace, foam.graph);
+  const provider = new BacklinksTreeDataProvider(foam.workspace, foam.graph);
 
-    vscode.window.onDidChangeActiveTextEditor(async () => {
-      provider.target = vscode.window.activeTextEditor
-        ? fromVsCodeUri(vscode.window.activeTextEditor?.document.uri)
-        : undefined;
-      await provider.refresh();
-    });
+  vscode.window.onDidChangeActiveTextEditor(async () => {
+    provider.target = vscode.window.activeTextEditor
+      ? fromVsCodeUri(vscode.window.activeTextEditor?.document.uri)
+      : undefined;
+    await provider.refresh();
+  });
 
-    context.subscriptions.push(
-      vscode.window.registerTreeDataProvider('foam-vscode.backlinks', provider),
-      foam.graph.onDidUpdate(() => provider.refresh())
-    );
-  },
-};
-export default feature;
+  context.subscriptions.push(
+    vscode.window.registerTreeDataProvider('foam-vscode.backlinks', provider),
+    foam.graph.onDidUpdate(() => provider.refresh())
+  );
+}
 
 export class BacklinksTreeDataProvider
   implements vscode.TreeDataProvider<vscode.TreeItem>

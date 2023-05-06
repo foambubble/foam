@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { FoamFeature } from '../../types';
 import { URI } from '../../core/model/uri';
 import {
   askUserForTemplate,
@@ -7,11 +6,16 @@ import {
   getPathFromTitle,
   NoteFactory,
 } from '../../services/templates';
-import { Foam } from '../../core/model/foam';
 import { Resolver } from '../../services/variable-resolver';
 import { asAbsoluteWorkspaceUri, fileExists } from '../../services/editor';
 import { isSome } from '../../core/utils';
 import { CommandDescriptor } from '../../utils/commands';
+
+export default async function activate(context: vscode.ExtensionContext) {
+  context.subscriptions.push(
+    vscode.commands.registerCommand(CREATE_NOTE_COMMAND.command, createNote)
+  );
+}
 
 interface CreateNoteArgs {
   /**
@@ -130,13 +134,3 @@ export const CREATE_NOTE_COMMAND = {
     };
   },
 };
-
-const feature: FoamFeature = {
-  activate: (context: vscode.ExtensionContext, foamPromise: Promise<Foam>) => {
-    context.subscriptions.push(
-      vscode.commands.registerCommand(CREATE_NOTE_COMMAND.command, createNote)
-    );
-  },
-};
-
-export default feature;

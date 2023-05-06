@@ -5,8 +5,6 @@ import {
   commands,
   ProgressLocation,
 } from 'vscode';
-import { FoamFeature } from '../../types';
-
 import {
   getWikilinkDefinitionSetting,
   LinkReferenceDefinitionsSetting,
@@ -23,15 +21,16 @@ import { Range } from '../../core/model/range';
 import detectNewline from 'detect-newline';
 import { TextEdit } from '../../core/services/text-edit';
 
-const feature: FoamFeature = {
-  activate: (context: ExtensionContext, foamPromise: Promise<Foam>) => {
-    context.subscriptions.push(
-      commands.registerCommand('foam-vscode.janitor', async () =>
-        janitor(await foamPromise)
-      )
-    );
-  },
-};
+export default async function activate(
+  context: ExtensionContext,
+  foamPromise: Promise<Foam>
+) {
+  context.subscriptions.push(
+    commands.registerCommand('foam-vscode.janitor', async () =>
+      janitor(await foamPromise)
+    )
+  );
+}
 
 async function janitor(foam: Foam) {
   try {
@@ -192,5 +191,3 @@ async function runJanitor(foam: Foam) {
     changedAnyFiles: updatedHeadingCount + updatedDefinitionListCount,
   };
 }
-
-export default feature;

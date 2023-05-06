@@ -13,7 +13,7 @@ export abstract class BaseTreeProvider<T>
 
   abstract getChildren(element?: T): vscode.ProviderResult<T[]>;
 
-  getTreeItem(element: T): vscode.TreeItem | Thenable<vscode.TreeItem> {
+  getTreeItem(element: T) {
     return element;
   }
 

@@ -5,7 +5,7 @@ import {
   ResourceRangeTreeItem,
   ResourceTreeItem,
   createBacklinkItemsForResource as createBacklinkTreeItemsForResource,
-} from '../../utils/tree-view-utils';
+} from './utils/tree-view-utils';
 import { Resource } from '../../core/model/note';
 import { FoamGraph } from '../../core/model/graph';
 import { ContextMemento } from '../../utils/vsc-utils';

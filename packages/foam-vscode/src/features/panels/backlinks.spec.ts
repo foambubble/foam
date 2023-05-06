@@ -13,7 +13,7 @@ import { URI } from '../../core/model/uri';
 import {
   ResourceRangeTreeItem,
   ResourceTreeItem,
-} from '../../utils/tree-view-utils';
+} from './utils/tree-view-utils';
 
 describe('Backlinks panel', () => {
   beforeAll(async () => {

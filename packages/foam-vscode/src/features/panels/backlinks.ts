@@ -11,7 +11,7 @@ import {
   ResourceTreeItem,
   createBacklinkItemsForResource,
   groupRangesByResource,
-} from '../../utils/tree-view-utils';
+} from './utils/tree-view-utils';
 
 export default async function activate(
   context: vscode.ExtensionContext,

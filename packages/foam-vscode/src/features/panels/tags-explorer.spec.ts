@@ -3,7 +3,7 @@ import { cleanWorkspace, closeEditors } from '../../test/test-utils-vscode';
 import { TagItem, TagsProvider } from './tags-explorer';
 import { FoamTags } from '../../core/model/tags';
 import { FoamWorkspace } from '../../core/model/workspace';
-import { ResourceTreeItem } from '../../utils/tree-view-utils';
+import { ResourceTreeItem } from './utils/tree-view-utils';
 
 describe('Tags tree panel', () => {
   beforeAll(async () => {

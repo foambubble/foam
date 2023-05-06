@@ -1,16 +1,16 @@
-import { FoamWorkspace } from '../core/model/workspace';
+import { FoamWorkspace } from '../../../core/model/workspace';
 import {
   AlwaysIncludeMatcher,
   SubstringExcludeMatcher,
-} from '../core/services/datastore';
-import { createTestNote } from '../test/test-utils';
+} from '../../../core/services/datastore';
+import { createTestNote } from '../../../test/test-utils';
 import {
   DirectoryTreeItem,
   GroupedResourcesTreeDataProvider,
 } from './grouped-resources-tree-data-provider';
 import { ResourceTreeItem, UriTreeItem } from './tree-view-utils';
-import { randomString } from '../test/test-utils';
-import { MapBasedMemento } from './vsc-utils';
+import { randomString } from '../../../test/test-utils';
+import { MapBasedMemento } from '../../../utils/vsc-utils';
 
 const testMatcher = new SubstringExcludeMatcher('path-exclude');
 

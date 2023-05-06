@@ -2,12 +2,12 @@ import * as vscode from 'vscode';
 import { Foam } from '../../core/model/foam';
 import { createMatcherAndDataStore } from '../../services/editor';
 import { getPlaceholdersConfig } from '../../settings';
-import { GroupedResourcesTreeDataProvider } from '../../utils/grouped-resources-tree-data-provider';
+import { GroupedResourcesTreeDataProvider } from './utils/grouped-resources-tree-data-provider';
 import {
   UriTreeItem,
   createBacklinkItemsForResource,
   groupRangesByResource,
-} from '../../utils/tree-view-utils';
+} from './utils/tree-view-utils';
 import { IMatcher } from '../../core/services/datastore';
 import { ContextMemento, fromVsCodeUri } from '../../utils/vsc-utils';
 import { FoamGraph } from '../../core/model/graph';

@@ -7,7 +7,7 @@ import {
   ResourceRangeTreeItem,
   ResourceTreeItem,
   groupRangesByResource,
-} from '../../utils/tree-view-utils';
+} from './utils/tree-view-utils';
 
 const TAG_SEPARATOR = '/';
 export default async function activate(

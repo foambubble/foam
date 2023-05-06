@@ -1,5 +1,4 @@
 export { default as copyWithoutBracketsCommand } from './copy-without-brackets';
-export { default as createFromDefaultTemplateCommand } from './create-note-from-default-template';
 export { default as createFromTemplateCommand } from './create-note-from-template';
 export { default as createNewTemplate } from './create-new-template';
 export { default as janitorCommand } from './janitor';

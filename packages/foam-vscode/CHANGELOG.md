@@ -4,6 +4,17 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.23.0] - 2023-05-06
+
+Features:
+
+- Added notes explorer (#1223)
+
+Fixes and Improvements:
+
+- Enabled tag completion in front matter (#1191 - thanks @jimgraham)
+- Various improvements to tree views (#1220)
+
 ## [0.22.2] - 2023-04-20
 
 Fixes and Improvements:

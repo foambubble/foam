@@ -9,7 +9,17 @@ import {
 } from 'vscode';
 import { getDailyNoteFileName } from '../dated-notes';
 import { getFoamVsCodeConfig } from '../services/config';
-import { FoamFeature } from '../types';
+
+export default async function activate(context: ExtensionContext) {
+  context.subscriptions.push(
+    languages.registerCompletionItemProvider('markdown', completions, '/'),
+    languages.registerCompletionItemProvider(
+      'markdown',
+      datesCompletionProvider,
+      '/'
+    )
+  );
+}
 
 interface DateSnippet {
   snippet: string;
@@ -198,18 +208,3 @@ export const datesCompletionProvider: CompletionItemProvider = {
     return new CompletionList(completionItems, true);
   },
 };
-
-const feature: FoamFeature = {
-  activate: (context: ExtensionContext) => {
-    context.subscriptions.push(
-      languages.registerCompletionItemProvider('markdown', completions, '/'),
-      languages.registerCompletionItemProvider(
-        'markdown',
-        datesCompletionProvider,
-        '/'
-      )
-    );
-  },
-};
-
-export default feature;

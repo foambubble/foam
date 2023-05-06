@@ -8,27 +8,24 @@ import { default as markdownItWikilinkNavigation } from './wikilink-navigation';
 import { default as markdownItRemoveLinkReferences } from './remove-wikilink-references';
 import { default as markdownItWikilinkEmbed } from './wikilink-embed';
 
-const feature: FoamFeature = {
-  activate: async (
-    _context: vscode.ExtensionContext,
-    foamPromise: Promise<Foam>
-  ) => {
-    const foam = await foamPromise;
+export default async function activate(
+  context: vscode.ExtensionContext,
+  foamPromise: Promise<Foam>
+) {
+  const foam = await foamPromise;
 
-    return {
-      extendMarkdownIt: (md: markdownit) => {
-        return [
-          markdownItWikilinkEmbed,
-          markdownItFoamTags,
-          markdownItWikilinkNavigation,
-          markdownItRemoveLinkReferences,
-        ].reduce(
-          (acc, extension) =>
-            extension(acc, foam.workspace, foam.services.parser),
-          md
-        );
-      },
-    };
-  },
-};
-export default feature;
+  return {
+    extendMarkdownIt: (md: markdownit) => {
+      return [
+        markdownItWikilinkEmbed,
+        markdownItFoamTags,
+        markdownItWikilinkNavigation,
+        markdownItRemoveLinkReferences,
+      ].reduce(
+        (acc, extension) =>
+          extension(acc, foam.workspace, foam.services.parser),
+        md
+      );
+    },
+  };
+}

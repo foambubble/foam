@@ -5,7 +5,6 @@ import { Resource, ResourceParser } from '../core/model/note';
 import { Range } from '../core/model/range';
 import { FoamWorkspace } from '../core/model/workspace';
 import { MarkdownLink } from '../core/services/markdown-link';
-import { FoamFeature } from '../types';
 import { isNone } from '../utils';
 import {
   fromVsCodeUri,
@@ -62,59 +61,57 @@ const REPLACE_TEXT_COMMAND: FoamCommand<ReplaceTextCommandArgs> = {
   },
 };
 
-const feature: FoamFeature = {
-  activate: async (
-    context: vscode.ExtensionContext,
-    foamPromise: Promise<Foam>
-  ) => {
-    const collection = vscode.languages.createDiagnosticCollection('foam');
-    const debouncedUpdateDiagnostics = debounce(updateDiagnostics, 500);
-    const foam = await foamPromise;
-    if (vscode.window.activeTextEditor) {
-      updateDiagnostics(
-        foam.workspace,
-        foam.services.parser,
-        vscode.window.activeTextEditor.document,
-        collection
-      );
-    }
-    context.subscriptions.push(
-      vscode.window.onDidChangeActiveTextEditor(editor => {
-        if (editor) {
-          updateDiagnostics(
-            foam.workspace,
-            foam.services.parser,
-            editor.document,
-            collection
-          );
-        }
-      }),
-      vscode.workspace.onDidChangeTextDocument(event => {
-        debouncedUpdateDiagnostics(
+export default async function activate(
+  context: vscode.ExtensionContext,
+  foamPromise: Promise<Foam>
+) {
+  const collection = vscode.languages.createDiagnosticCollection('foam');
+  const debouncedUpdateDiagnostics = debounce(updateDiagnostics, 500);
+  const foam = await foamPromise;
+  if (vscode.window.activeTextEditor) {
+    updateDiagnostics(
+      foam.workspace,
+      foam.services.parser,
+      vscode.window.activeTextEditor.document,
+      collection
+    );
+  }
+  context.subscriptions.push(
+    vscode.window.onDidChangeActiveTextEditor(editor => {
+      if (editor) {
+        updateDiagnostics(
           foam.workspace,
           foam.services.parser,
-          event.document,
+          editor.document,
           collection
         );
-      }),
-      vscode.languages.registerCodeActionsProvider(
-        'markdown',
-        new IdentifierResolver(),
-        {
-          providedCodeActionKinds: IdentifierResolver.providedCodeActionKinds,
-        }
-      ),
-      vscode.commands.registerCommand(
-        FIND_IDENTIFER_COMMAND.name,
-        FIND_IDENTIFER_COMMAND.execute
-      ),
-      vscode.commands.registerCommand(
-        REPLACE_TEXT_COMMAND.name,
-        REPLACE_TEXT_COMMAND.execute
-      )
-    );
-  },
-};
+      }
+    }),
+    vscode.workspace.onDidChangeTextDocument(event => {
+      debouncedUpdateDiagnostics(
+        foam.workspace,
+        foam.services.parser,
+        event.document,
+        collection
+      );
+    }),
+    vscode.languages.registerCodeActionsProvider(
+      'markdown',
+      new IdentifierResolver(),
+      {
+        providedCodeActionKinds: IdentifierResolver.providedCodeActionKinds,
+      }
+    ),
+    vscode.commands.registerCommand(
+      FIND_IDENTIFER_COMMAND.name,
+      FIND_IDENTIFER_COMMAND.execute
+    ),
+    vscode.commands.registerCommand(
+      REPLACE_TEXT_COMMAND.name,
+      REPLACE_TEXT_COMMAND.execute
+    )
+  );
+}
 
 export function updateDiagnostics(
   workspace: FoamWorkspace,
@@ -285,5 +282,3 @@ const createFindIdentifierCommand = (
   action.diagnostics = [diagnostic];
   return action;
 };
-
-export default feature;

@@ -1,17 +1,14 @@
 import { window, env, ExtensionContext, commands } from 'vscode';
-import { FoamFeature } from '../../types';
 import { removeBrackets } from '../../utils';
 
-const feature: FoamFeature = {
-  activate: (context: ExtensionContext) => {
-    context.subscriptions.push(
-      commands.registerCommand(
-        'foam-vscode.copy-without-brackets',
-        copyWithoutBrackets
-      )
-    );
-  },
-};
+export default async function activate(context: ExtensionContext) {
+  context.subscriptions.push(
+    commands.registerCommand(
+      'foam-vscode.copy-without-brackets',
+      copyWithoutBrackets
+    )
+  );
+}
 
 async function copyWithoutBrackets() {
   // Get the active text editor
@@ -34,5 +31,3 @@ async function copyWithoutBrackets() {
     window.showInformationMessage('Successfully copied to clipboard!');
   }
 }
-
-export default feature;

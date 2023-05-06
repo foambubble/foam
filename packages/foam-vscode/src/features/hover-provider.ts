@@ -1,6 +1,5 @@
 import { uniqWith } from 'lodash';
 import * as vscode from 'vscode';
-import { FoamFeature } from '../types';
 import { getNoteTooltip, mdDocSelector, isSome } from '../utils';
 import { fromVsCodeUri, toVsCodeRange } from '../utils/vsc-utils';
 import {
@@ -18,30 +17,28 @@ import { commandAsURI } from '../utils/commands';
 
 export const CONFIG_KEY = 'links.hover.enable';
 
-const feature: FoamFeature = {
-  activate: async (
-    context: vscode.ExtensionContext,
-    foamPromise: Promise<Foam>
-  ) => {
-    const isHoverEnabled: ConfigurationMonitor<boolean> =
-      monitorFoamVsCodeConfig(CONFIG_KEY);
+export default async function activate(
+  context: vscode.ExtensionContext,
+  foamPromise: Promise<Foam>
+) {
+  const isHoverEnabled: ConfigurationMonitor<boolean> =
+    monitorFoamVsCodeConfig(CONFIG_KEY);
 
-    const foam = await foamPromise;
+  const foam = await foamPromise;
 
-    context.subscriptions.push(
-      isHoverEnabled,
-      vscode.languages.registerHoverProvider(
-        mdDocSelector,
-        new HoverProvider(
-          isHoverEnabled,
-          foam.workspace,
-          foam.graph,
-          foam.services.parser
-        )
+  context.subscriptions.push(
+    isHoverEnabled,
+    vscode.languages.registerHoverProvider(
+      mdDocSelector,
+      new HoverProvider(
+        isHoverEnabled,
+        foam.workspace,
+        foam.graph,
+        foam.services.parser
       )
-    );
-  },
-};
+    )
+  );
+}
 
 export class HoverProvider implements vscode.HoverProvider {
   constructor(
@@ -131,5 +128,3 @@ export class HoverProvider implements vscode.HoverProvider {
     return hover;
   }
 }
-
-export default feature;

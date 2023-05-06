@@ -1,32 +1,33 @@
 import { ExtensionContext, commands, window, QuickPickItem } from 'vscode';
-import { FoamFeature } from '../../types';
 import { openDailyNoteFor } from '../../dated-notes';
 import { FoamWorkspace } from '../../core/model/workspace';
 import { range } from 'lodash';
 import dateFormat from 'dateformat';
+import { Foam } from '../../core/model/foam';
 
-const feature: FoamFeature = {
-  activate: (context: ExtensionContext, foamPromise) => {
-    context.subscriptions.push(
-      commands.registerCommand(
-        'foam-vscode.open-daily-note-for-date',
-        async () => {
-          const ws = (await foamPromise).workspace;
-          const date = await window
-            .showQuickPick<DateItem>(generateDateItems(ws), {
-              placeHolder: 'Choose or type a date (YYYY-MM-DD)',
-              matchOnDescription: true,
-              matchOnDetail: true,
-            })
-            .then(item => {
-              return item?.date;
-            });
-          return openDailyNoteFor(date);
-        }
-      )
-    );
-  },
-};
+export default async function activate(
+  context: ExtensionContext,
+  foamPromise: Promise<Foam>
+) {
+  context.subscriptions.push(
+    commands.registerCommand(
+      'foam-vscode.open-daily-note-for-date',
+      async () => {
+        const ws = (await foamPromise).workspace;
+        const date = await window
+          .showQuickPick<DateItem>(generateDateItems(ws), {
+            placeHolder: 'Choose or type a date (YYYY-MM-DD)',
+            matchOnDescription: true,
+            matchOnDetail: true,
+          })
+          .then(item => {
+            return item?.date;
+          });
+        return openDailyNoteFor(date);
+      }
+    )
+  );
+}
 
 class DateItem implements QuickPickItem {
   public label: string;
@@ -68,5 +69,3 @@ function generateDateItems(ws: FoamWorkspace): DateItem[] {
 
   return items;
 }
-
-export default feature;

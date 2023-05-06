@@ -1,6 +1,5 @@
 import { debounce } from 'lodash';
 import * as vscode from 'vscode';
-import { FoamFeature } from '../types';
 import { ResourceParser } from '../core/model/note';
 import { FoamWorkspace } from '../core/model/workspace';
 import { Foam } from '../core/model/foam';
@@ -41,39 +40,35 @@ const updateDecorations =
     editor.setDecorations(placeholderDecoration, placeholderRanges);
   };
 
-const feature: FoamFeature = {
-  activate: async (
-    context: vscode.ExtensionContext,
-    foamPromise: Promise<Foam>
-  ) => {
-    const foam = await foamPromise;
-    let activeEditor = vscode.window.activeTextEditor;
+export default async function activate(
+  context: vscode.ExtensionContext,
+  foamPromise: Promise<Foam>
+) {
+  const foam = await foamPromise;
+  let activeEditor = vscode.window.activeTextEditor;
 
-    const immediatelyUpdateDecorations = updateDecorations(
-      foam.services.parser,
-      foam.workspace
-    );
+  const immediatelyUpdateDecorations = updateDecorations(
+    foam.services.parser,
+    foam.workspace
+  );
 
-    const debouncedUpdateDecorations = debounce(
-      immediatelyUpdateDecorations,
-      500
-    );
+  const debouncedUpdateDecorations = debounce(
+    immediatelyUpdateDecorations,
+    500
+  );
 
-    immediatelyUpdateDecorations(activeEditor);
+  immediatelyUpdateDecorations(activeEditor);
 
-    context.subscriptions.push(
-      placeholderDecoration,
-      vscode.window.onDidChangeActiveTextEditor(editor => {
-        activeEditor = editor;
-        immediatelyUpdateDecorations(activeEditor);
-      }),
-      vscode.workspace.onDidChangeTextDocument(event => {
-        if (activeEditor && event.document === activeEditor.document) {
-          debouncedUpdateDecorations(activeEditor);
-        }
-      })
-    );
-  },
-};
-
-export default feature;
+  context.subscriptions.push(
+    placeholderDecoration,
+    vscode.window.onDidChangeActiveTextEditor(editor => {
+      activeEditor = editor;
+      immediatelyUpdateDecorations(activeEditor);
+    }),
+    vscode.workspace.onDidChangeTextDocument(event => {
+      if (activeEditor && event.document === activeEditor.document) {
+        debouncedUpdateDecorations(activeEditor);
+      }
+    })
+  );
+}

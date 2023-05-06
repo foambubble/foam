@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
 import { Foam } from '../core/model/foam';
 import { FoamTags } from '../core/model/tags';
-import { FoamFeature } from '../types';
 import { isInFrontMatter, isOnYAMLKeywordLine, mdDocSelector } from '../utils';
 
 // this regex is different from HASHTAG_REGEX in that it does not look for a
@@ -10,21 +9,19 @@ const HASH_REGEX =
   /(?<=^|\s)#(?![ \t#])([0-9]*[\p{L}\p{Emoji_Presentation}\p{N}/_-]*)/dgu;
 const MAX_LINES_FOR_FRONT_MATTER = 50;
 
-const feature: FoamFeature = {
-  activate: async (
-    context: vscode.ExtensionContext,
-    foamPromise: Promise<Foam>
-  ) => {
-    const foam = await foamPromise;
-    context.subscriptions.push(
-      vscode.languages.registerCompletionItemProvider(
-        mdDocSelector,
-        new TagCompletionProvider(foam.tags),
-        '#'
-      )
-    );
-  },
-};
+export default async function activate(
+  context: vscode.ExtensionContext,
+  foamPromise: Promise<Foam>
+) {
+  const foam = await foamPromise;
+  context.subscriptions.push(
+    vscode.languages.registerCompletionItemProvider(
+      mdDocSelector,
+      new TagCompletionProvider(foam.tags),
+      '#'
+    )
+  );
+}
 
 export class TagCompletionProvider
   implements vscode.CompletionItemProvider<vscode.CompletionItem>
@@ -162,5 +159,3 @@ export class TagCompletionProvider
     return [lastMatchStartIndex, lastMatchEndIndex];
   }
 }
-
-export default feature;

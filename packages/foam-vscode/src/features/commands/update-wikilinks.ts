@@ -20,7 +20,6 @@ import {
   mdDocSelector,
   getText,
 } from '../../utils';
-import { FoamFeature } from '../../types';
 import {
   getWikilinkDefinitionSetting,
   LinkReferenceDefinitionsSetting,
@@ -37,29 +36,30 @@ import {
 } from '../../core/janitor/generate-link-references';
 import { fromVsCodeUri } from '../../utils/vsc-utils';
 
-const feature: FoamFeature = {
-  activate: async (context: ExtensionContext, foamPromise: Promise<Foam>) => {
-    const foam = await foamPromise;
+export default async function activate(
+  context: ExtensionContext,
+  foamPromise: Promise<Foam>
+) {
+  const foam = await foamPromise;
 
-    context.subscriptions.push(
-      commands.registerCommand('foam-vscode.update-wikilinks', () =>
-        updateReferenceList(foam.workspace)
-      ),
-      workspace.onWillSaveTextDocument(e => {
-        if (
-          e.document.languageId === 'markdown' &&
-          foam.services.matcher.isMatch(fromVsCodeUri(e.document.uri))
-        ) {
-          e.waitUntil(updateReferenceList(foam.workspace));
-        }
-      }),
-      languages.registerCodeLensProvider(
-        mdDocSelector,
-        new WikilinkReferenceCodeLensProvider(foam.workspace)
-      )
-    );
-  },
-};
+  context.subscriptions.push(
+    commands.registerCommand('foam-vscode.update-wikilinks', () =>
+      updateReferenceList(foam.workspace)
+    ),
+    workspace.onWillSaveTextDocument(e => {
+      if (
+        e.document.languageId === 'markdown' &&
+        foam.services.matcher.isMatch(fromVsCodeUri(e.document.uri))
+      ) {
+        e.waitUntil(updateReferenceList(foam.workspace));
+      }
+    }),
+    languages.registerCodeLensProvider(
+      mdDocSelector,
+      new WikilinkReferenceCodeLensProvider(foam.workspace)
+    )
+  );
+}
 
 async function createReferenceList(foam: FoamWorkspace) {
   const editor = window.activeTextEditor;
@@ -216,5 +216,3 @@ class WikilinkReferenceCodeLensProvider implements CodeLensProvider {
     ];
   }
 }
-
-export default feature;

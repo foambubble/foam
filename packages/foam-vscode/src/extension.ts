@@ -54,7 +54,7 @@ export async function activate(context: ExtensionContext) {
     ]);
 
     // Load the features
-    const resPromises = features.map(f => f.activate(context, foamPromise));
+    const resPromises = features.map(feature => feature(context, foamPromise));
 
     const foam = await foamPromise;
     Logger.info(`Loaded ${foam.workspace.list().length} resources`);

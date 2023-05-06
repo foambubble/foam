@@ -2,7 +2,6 @@ import * as vscode from 'vscode';
 import { Foam } from '../../core/model/foam';
 import { createMatcherAndDataStore } from '../../services/editor';
 import { getPlaceholdersConfig } from '../../settings';
-import { FoamFeature } from '../../types';
 import { GroupedResourcesTreeDataProvider } from '../../utils/grouped-resources-tree-data-provider';
 import {
   UriTreeItem,
@@ -15,47 +14,45 @@ import { FoamGraph } from '../../core/model/graph';
 import { URI } from '../../core/model/uri';
 import { FoamWorkspace } from '../../core/model/workspace';
 
-const feature: FoamFeature = {
-  activate: async (
-    context: vscode.ExtensionContext,
-    foamPromise: Promise<Foam>
-  ) => {
-    const foam = await foamPromise;
-    const { matcher } = await createMatcherAndDataStore(
-      getPlaceholdersConfig().exclude
-    );
-    const provider = new PlaceholderTreeView(
-      context.globalState,
-      foam.workspace,
-      foam.graph,
-      matcher
-    );
+export default async function activate(
+  context: vscode.ExtensionContext,
+  foamPromise: Promise<Foam>
+) {
+  const foam = await foamPromise;
+  const { matcher } = await createMatcherAndDataStore(
+    getPlaceholdersConfig().exclude
+  );
+  const provider = new PlaceholderTreeView(
+    context.globalState,
+    foam.workspace,
+    foam.graph,
+    matcher
+  );
 
-    const treeView = vscode.window.createTreeView('foam-vscode.placeholders', {
-      treeDataProvider: provider,
-      showCollapseAll: true,
-    });
-    const baseTitle = treeView.title;
-    treeView.title = baseTitle + ` (${provider.numElements})`;
-    provider.refresh();
+  const treeView = vscode.window.createTreeView('foam-vscode.placeholders', {
+    treeDataProvider: provider,
+    showCollapseAll: true,
+  });
+  const baseTitle = treeView.title;
+  treeView.title = baseTitle + ` (${provider.numElements})`;
+  provider.refresh();
 
-    context.subscriptions.push(
-      treeView,
-      provider,
-      foam.graph.onDidUpdate(() => {
+  context.subscriptions.push(
+    treeView,
+    provider,
+    foam.graph.onDidUpdate(() => {
+      provider.refresh();
+    }),
+    provider.onDidChangeTreeData(() => {
+      treeView.title = baseTitle + ` (${provider.numElements})`;
+    }),
+    vscode.window.onDidChangeActiveTextEditor(() => {
+      if (provider.show.get() === 'for-current-file') {
         provider.refresh();
-      }),
-      provider.onDidChangeTreeData(() => {
-        treeView.title = baseTitle + ` (${provider.numElements})`;
-      }),
-      vscode.window.onDidChangeActiveTextEditor(() => {
-        if (provider.show.get() === 'for-current-file') {
-          provider.refresh();
-        }
-      })
-    );
-  },
-};
+      }
+    })
+  );
+}
 
 export class PlaceholderTreeView extends GroupedResourcesTreeDataProvider {
   public show = new ContextMemento<'all' | 'for-current-file'>(
@@ -116,5 +113,3 @@ export class PlaceholderTreeView extends GroupedResourcesTreeDataProvider {
     return this.graph.getAllNodes().filter(uri => uri.isPlaceholder());
   };
 }
-
-export default feature;

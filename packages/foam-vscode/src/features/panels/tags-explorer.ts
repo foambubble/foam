@@ -1,6 +1,5 @@
 import { URI } from '../../core/model/uri';
 import * as vscode from 'vscode';
-import { FoamFeature } from '../../types';
 import { Foam } from '../../core/model/foam';
 import { FoamWorkspace } from '../../core/model/workspace';
 import { FoamTags } from '../../core/model/tags';
@@ -11,31 +10,27 @@ import {
 } from '../../utils/tree-view-utils';
 
 const TAG_SEPARATOR = '/';
-const feature: FoamFeature = {
-  activate: async (
-    context: vscode.ExtensionContext,
-    foamPromise: Promise<Foam>
-  ) => {
-    const foam = await foamPromise;
-    const provider = new TagsProvider(foam.tags, foam.workspace);
-    const treeView = vscode.window.createTreeView('foam-vscode.tags-explorer', {
-      treeDataProvider: provider,
-      showCollapseAll: true,
-    });
-    const baseTitle = treeView.title;
-    treeView.title = baseTitle + ` (${foam.tags.tags.size})`;
+export default async function activate(
+  context: vscode.ExtensionContext,
+  foamPromise: Promise<Foam>
+) {
+  const foam = await foamPromise;
+  const provider = new TagsProvider(foam.tags, foam.workspace);
+  const treeView = vscode.window.createTreeView('foam-vscode.tags-explorer', {
+    treeDataProvider: provider,
+    showCollapseAll: true,
+  });
+  const baseTitle = treeView.title;
+  treeView.title = baseTitle + ` (${foam.tags.tags.size})`;
 
-    context.subscriptions.push(
-      treeView,
-      foam.tags.onDidUpdate(() => {
-        provider.refresh();
-        treeView.title = baseTitle + ` (${foam.tags.tags.size})`;
-      })
-    );
-  },
-};
-
-export default feature;
+  context.subscriptions.push(
+    treeView,
+    foam.tags.onDidUpdate(() => {
+      provider.refresh();
+      treeView.title = baseTitle + ` (${foam.tags.tags.size})`;
+    })
+  );
+}
 
 export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
   // prettier-ignore

@@ -4,7 +4,7 @@ import * as panels from './panels';
 import dateSnippets from './date-snippets';
 import hoverProvider from './hover-provider';
 import preview from './preview';
-import completionProvider, { completionCursorMove } from './link-completion';
+import completionProvider from './link-completion';
 import tagCompletionProvider from './tag-completion';
 import linkDecorations from './document-decorator';
 import navigationProviders from './navigation-provider';
@@ -23,5 +23,4 @@ export const features: FoamFeature[] = [
   preview,
   completionProvider,
   tagCompletionProvider,
-  completionCursorMove,
 ];

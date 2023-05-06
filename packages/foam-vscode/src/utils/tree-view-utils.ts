@@ -76,7 +76,7 @@ export class ResourceTreeItem extends UriTreeItem {
   }
 }
 
-export class ResourceRangeTreeItem extends vscode.TreeItem {
+export class ResourceRangeTreeItem extends BaseTreeItem {
   constructor(
     public label: string,
     public readonly resource: Resource,
@@ -84,7 +84,6 @@ export class ResourceRangeTreeItem extends vscode.TreeItem {
     public readonly workspace: FoamWorkspace
   ) {
     super(label, vscode.TreeItemCollapsibleState.None);
-    this.label = `${range.start.line}: ${this.label}`;
     this.command = {
       command: 'vscode.open',
       arguments: [toVsCodeUri(resource.uri), { selection: range }],
@@ -122,7 +121,7 @@ export class ResourceRangeTreeItem extends vscode.TreeItem {
     const ellipsis = start === 0 ? '' : '...';
 
     const label = line
-      ? `${range.start.line}: ${ellipsis}${line.slice(start, start + 300)}`
+      ? `${range.start.line + 1}: ${ellipsis}${line.slice(start, start + 300)}`
       : Range.toString(range);
 
     const item = new ResourceRangeTreeItem(label, resource, range, workspace);
@@ -176,13 +175,16 @@ export function createBacklinkItemsForResource(
     .getConnections(uri)
     .filter(c => c.target.asPlain().isEqual(uri));
 
-  const backlinkItems = connections.map(c =>
-    ResourceRangeTreeItem.createStandardItem(
+  const backlinkItems = connections.map(async c => {
+    const item = await ResourceRangeTreeItem.createStandardItem(
       workspace,
       workspace.get(c.source),
       c.link.range,
       'backlink'
-    )
-  );
+    );
+    item.description = item.label;
+    item.label = workspace.get(c.source).title;
+    return item;
+  });
   return Promise.all(backlinkItems);
 }

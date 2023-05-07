@@ -33,9 +33,12 @@ export class FolderTreeItem<T> extends vscode.TreeItem {
  */
 export abstract class FolderTreeProvider<I, T> extends BaseTreeProvider<I> {
   private root: Folder<T>;
+  public nValues = 0;
 
   refresh(): void {
-    this.createTree(this.getValues(), this.getFilterFn());
+    const values = this.getValues();
+    this.nValues = values.length;
+    this.createTree(values, this.getFilterFn());
     super.refresh();
   }
 
@@ -46,6 +49,14 @@ export abstract class FolderTreeProvider<I, T> extends BaseTreeProvider<I> {
     if (element instanceof FolderTreeItem) {
       return Promise.resolve(element.parentElement as any);
     }
+  }
+
+  createFolderTreeItem(
+    value: Folder<T>,
+    name: string,
+    parent: FolderTreeItem<T>
+  ) {
+    return new FolderTreeItem<T>(value, name, parent);
   }
 
   async getChildren(item?: I): Promise<I[]> {
@@ -60,8 +71,8 @@ export abstract class FolderTreeProvider<I, T> extends BaseTreeProvider<I> {
       if (this.isValueType(value)) {
         return this.createValueTreeItem(value, undefined);
       } else {
-        return new FolderTreeItem<T>(
-          value as Folder<T>,
+        return this.createFolderTreeItem(
+          value,
           name,
           item as unknown as FolderTreeItem<T>
         );
@@ -140,6 +151,18 @@ export abstract class FolderTreeProvider<I, T> extends BaseTreeProvider<I> {
   }
 
   /**
+   * Returns a function that can be used to filter the values.
+   * The difference between using this function vs not including the values
+   * is that in this case, the tree will be created with all the folders
+   * and subfolders, but the values will only be displayed if they pass
+   * the filter.
+   * By default it doesn't filter anything.
+   */
+  getFilterFn(): (value: T) => boolean {
+    return () => true;
+  }
+
+  /**
    * Converts a value to a path of strings that can be used to create a tree.
    */
   abstract valueToPath(value: T);
@@ -148,15 +171,6 @@ export abstract class FolderTreeProvider<I, T> extends BaseTreeProvider<I> {
    * Returns all the values that should be displayed in the tree.
    */
   abstract getValues(): T[];
-
-  /**
-   * Returns a function that can be used to filter the values.
-   * The difference between using this function vs not including the values
-   * is that in this case, the tree will be created with all the folders
-   * and subfolders, but the values will only be displayed if they pass
-   * the filter.
-   */
-  abstract getFilterFn(): (value: T) => boolean;
 
   /**
    * Returns true if the given value is of the type that should be displayed

@@ -13,6 +13,7 @@ import { ContextMemento, fromVsCodeUri } from '../../utils/vsc-utils';
 import { FoamGraph } from '../../core/model/graph';
 import { URI } from '../../core/model/uri';
 import { FoamWorkspace } from '../../core/model/workspace';
+import { Folder, FolderTreeItem } from './utils/folder-tree-provider';
 
 export default async function activate(
   context: vscode.ExtensionContext,
@@ -33,9 +34,9 @@ export default async function activate(
     treeDataProvider: provider,
     showCollapseAll: true,
   });
-  const baseTitle = treeView.title;
-  treeView.title = baseTitle + ` (${provider.numElements})`;
   provider.refresh();
+  const baseTitle = treeView.title;
+  treeView.title = baseTitle + ` (${provider.nValues})`;
 
   context.subscriptions.push(
     treeView,
@@ -44,7 +45,7 @@ export default async function activate(
       provider.refresh();
     }),
     provider.onDidChangeTreeData(() => {
-      treeView.title = baseTitle + ` (${provider.numElements})`;
+      treeView.title = baseTitle + ` (${provider.nValues})`;
     }),
     vscode.window.onDidChangeActiveTextEditor(() => {
       if (provider.show.get() === 'for-current-file') {
@@ -67,7 +68,7 @@ export class PlaceholderTreeView extends GroupedResourcesTreeDataProvider {
     private graph: FoamGraph,
     matcher: IMatcher
   ) {
-    super('placeholders', 'placeholder', state, matcher);
+    super('placeholders', state, matcher);
     this.disposables.push(
       vscode.commands.registerCommand(
         `foam-vscode.views.${this.providerId}.show:all`,
@@ -86,21 +87,26 @@ export class PlaceholderTreeView extends GroupedResourcesTreeDataProvider {
     );
   }
 
-  createTreeItem = uri => {
+  createValueTreeItem(uri: URI, parent: FolderTreeItem<URI>): UriTreeItem {
     const item = new UriTreeItem(uri, {
+      parent,
       collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
     });
     item.getChildren = async () => {
       return groupRangesByResource(
         this.workspace,
-        createBacklinkItemsForResource(this.workspace, this.graph, uri)
+        await createBacklinkItemsForResource(
+          this.workspace,
+          this.graph,
+          uri,
+          'link'
+        )
       );
     };
-    item.iconPath = new vscode.ThemeIcon('link');
     return item;
-  };
+  }
 
-  computeResources = (): URI[] => {
+  getUris(): URI[] {
     if (this.show.get() === 'for-current-file') {
       const currentFile = vscode.window.activeTextEditor?.document.uri;
       return currentFile
@@ -111,5 +117,5 @@ export class PlaceholderTreeView extends GroupedResourcesTreeDataProvider {
         : [];
     }
     return this.graph.getAllNodes().filter(uri => uri.isPlaceholder());
-  };
+  }
 }

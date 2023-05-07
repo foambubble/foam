@@ -13,7 +13,7 @@ import { ContextMemento, fromVsCodeUri } from '../../utils/vsc-utils';
 import { FoamGraph } from '../../core/model/graph';
 import { URI } from '../../core/model/uri';
 import { FoamWorkspace } from '../../core/model/workspace';
-import { Folder, FolderTreeItem } from './utils/folder-tree-provider';
+import { FolderTreeItem } from './utils/folder-tree-provider';
 
 export default async function activate(
   context: vscode.ExtensionContext,

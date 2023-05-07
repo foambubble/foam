@@ -20,12 +20,18 @@ export default async function activate(
   const foam = await foamPromise;
 
   const provider = new BacklinksTreeDataProvider(foam.workspace, foam.graph);
+  const treeView = vscode.window.createTreeView('foam-vscode.backlinks', {
+    treeDataProvider: provider,
+    showCollapseAll: true,
+  });
+  const baseTitle = treeView.title;
 
-  const updateTarget = () => {
+  const updateTarget = async () => {
     provider.target = vscode.window.activeTextEditor
       ? fromVsCodeUri(vscode.window.activeTextEditor?.document.uri)
       : undefined;
-    provider.refresh();
+    await provider.refresh();
+    treeView.title = baseTitle + ` (${provider.nValues})`;
   };
 
   updateTarget();
@@ -40,30 +46,34 @@ export default async function activate(
 
 export class BacklinksTreeDataProvider extends BaseTreeProvider<vscode.TreeItem> {
   public target?: URI = undefined;
+  public nValues = 0;
+  private backlinkItems: ResourceRangeTreeItem[];
 
   constructor(private workspace: FoamWorkspace, private graph: FoamGraph) {
     super();
   }
 
-  getChildren(item?: BacklinkPanelTreeItem): Promise<vscode.TreeItem[]> {
+  async refresh(): Promise<void> {
     const uri = this.target;
+
+    const backlinkItems =
+      isNone(uri) || isNone(this.workspace.find(uri))
+        ? []
+        : await createBacklinkItemsForResource(this.workspace, this.graph, uri);
+
+    this.backlinkItems = backlinkItems;
+    this.nValues = backlinkItems.length;
+    super.refresh();
+  }
+
+  async getChildren(item?: BacklinkPanelTreeItem): Promise<vscode.TreeItem[]> {
     if (item && item instanceof ResourceTreeItem) {
       return item.getChildren();
     }
 
-    if (isNone(uri) || isNone(this.workspace.find(uri))) {
-      return Promise.resolve([]);
-    }
-
-    const backlinkItems = createBacklinkItemsForResource(
-      this.workspace,
-      this.graph,
-      uri
-    );
-
     return groupRangesByResource(
       this.workspace,
-      backlinkItems,
+      this.backlinkItems,
       vscode.TreeItemCollapsibleState.Expanded
     );
   }

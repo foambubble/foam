@@ -37,7 +37,7 @@ export class UriTreeItem extends BaseTreeItem {
       vscode.workspace.getWorkspaceFolder(toVsCodeUri(uri))?.uri.path,
       ''
     );
-    this.iconPath = new vscode.ThemeIcon('new-file');
+    this.iconPath = new vscode.ThemeIcon('link');
   }
 }
 
@@ -107,11 +107,16 @@ export class ResourceRangeTreeItem extends BaseTreeItem {
     return Promise.resolve(this);
   }
 
+  static icons = {
+    backlink: 'arrow-left',
+    link: 'arrow-right',
+    tag: 'symbol-number',
+  };
   static async createStandardItem(
     workspace: FoamWorkspace,
     resource: Resource,
     range: Range,
-    type?: 'backlink' | 'tag'
+    variant: 'backlink' | 'tag' | 'link'
   ): Promise<ResourceRangeTreeItem> {
     const markdown = (await workspace.readAsMarkdown(resource.uri)) ?? '';
     const lines = markdown.split('\n');
@@ -126,7 +131,7 @@ export class ResourceRangeTreeItem extends BaseTreeItem {
 
     const item = new ResourceRangeTreeItem(label, resource, range, workspace);
     item.iconPath = new vscode.ThemeIcon(
-      type === 'backlink' ? 'arrow-left' : 'symbol-number',
+      ResourceRangeTreeItem.icons[variant],
       new vscode.ThemeColor('charts.purple')
     );
 
@@ -157,9 +162,10 @@ export const groupRangesByResource = async (
     const resourceItem = new ResourceTreeItem(items[0].resource, workspace, {
       collapsibleState,
     });
-    resourceItem.getChildren = () =>
-      Promise.resolve(items.sort((a, b) => Range.isBefore(a.range, b.range)));
+    const children = items.sort((a, b) => Range.isBefore(a.range, b.range));
+    resourceItem.getChildren = () => Promise.resolve(children);
     resourceItem.description = `(${items.length}) ${resourceItem.description}`;
+    resourceItem.command = children[0].command;
     return resourceItem;
   });
   resourceItems.sort((a, b) => Resource.sortByTitle(a.resource, b.resource));
@@ -169,22 +175,20 @@ export const groupRangesByResource = async (
 export function createBacklinkItemsForResource(
   workspace: FoamWorkspace,
   graph: FoamGraph,
-  uri: URI
+  uri: URI,
+  variant: 'backlink' | 'link' = 'backlink'
 ) {
   const connections = graph
     .getConnections(uri)
     .filter(c => c.target.asPlain().isEqual(uri));
 
-  const backlinkItems = connections.map(async c => {
-    const item = await ResourceRangeTreeItem.createStandardItem(
+  const backlinkItems = connections.map(async c =>
+    ResourceRangeTreeItem.createStandardItem(
       workspace,
       workspace.get(c.source),
       c.link.range,
-      'backlink'
-    );
-    item.description = item.label;
-    item.label = workspace.get(c.source).title;
-    return item;
-  });
+      variant
+    )
+  );
   return Promise.all(backlinkItems);
 }

@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import { URI } from '../../core/model/uri';
-
 import { isNone } from '../../utils';
 import { Foam } from '../../core/model/foam';
 import { FoamWorkspace } from '../../core/model/workspace';
@@ -12,6 +11,7 @@ import {
   createBacklinkItemsForResource,
   groupRangesByResource,
 } from './utils/tree-view-utils';
+import { BaseTreeProvider } from './utils/base-tree-provider';
 
 export default async function activate(
   context: vscode.ExtensionContext,
@@ -20,63 +20,62 @@ export default async function activate(
   const foam = await foamPromise;
 
   const provider = new BacklinksTreeDataProvider(foam.workspace, foam.graph);
+  const treeView = vscode.window.createTreeView('foam-vscode.backlinks', {
+    treeDataProvider: provider,
+    showCollapseAll: true,
+  });
+  const baseTitle = treeView.title;
 
-  vscode.window.onDidChangeActiveTextEditor(async () => {
+  const updateTreeView = async () => {
     provider.target = vscode.window.activeTextEditor
       ? fromVsCodeUri(vscode.window.activeTextEditor?.document.uri)
       : undefined;
     await provider.refresh();
-  });
+    treeView.title = baseTitle + ` (${provider.nValues})`;
+  };
+
+  updateTreeView();
 
   context.subscriptions.push(
-    vscode.window.registerTreeDataProvider('foam-vscode.backlinks', provider),
-    foam.graph.onDidUpdate(() => provider.refresh())
+    provider,
+    treeView,
+    foam.graph.onDidUpdate(() => updateTreeView()),
+    vscode.window.onDidChangeActiveTextEditor(() => updateTreeView())
   );
 }
 
-export class BacklinksTreeDataProvider
-  implements vscode.TreeDataProvider<vscode.TreeItem>
-{
+export class BacklinksTreeDataProvider extends BaseTreeProvider<vscode.TreeItem> {
   public target?: URI = undefined;
-  // prettier-ignore
-  private _onDidChangeTreeDataEmitter = new vscode.EventEmitter<BacklinkPanelTreeItem | undefined | void>();
-  readonly onDidChangeTreeData = this._onDidChangeTreeDataEmitter.event;
+  public nValues = 0;
+  private backlinkItems: ResourceRangeTreeItem[];
 
-  constructor(private workspace: FoamWorkspace, private graph: FoamGraph) {}
-
-  refresh(): void {
-    this._onDidChangeTreeDataEmitter.fire();
+  constructor(private workspace: FoamWorkspace, private graph: FoamGraph) {
+    super();
   }
 
-  getTreeItem(item: BacklinkPanelTreeItem): vscode.TreeItem {
-    return item;
-  }
-
-  getChildren(item?: BacklinkPanelTreeItem): Promise<vscode.TreeItem[]> {
+  async refresh(): Promise<void> {
     const uri = this.target;
+
+    const backlinkItems =
+      isNone(uri) || isNone(this.workspace.find(uri))
+        ? []
+        : await createBacklinkItemsForResource(this.workspace, this.graph, uri);
+
+    this.backlinkItems = backlinkItems;
+    this.nValues = backlinkItems.length;
+    super.refresh();
+  }
+
+  async getChildren(item?: BacklinkPanelTreeItem): Promise<vscode.TreeItem[]> {
     if (item && item instanceof ResourceTreeItem) {
       return item.getChildren();
     }
 
-    if (isNone(uri) || isNone(this.workspace.find(uri))) {
-      return Promise.resolve([]);
-    }
-
-    const backlinkItems = createBacklinkItemsForResource(
-      this.workspace,
-      this.graph,
-      uri
-    );
-
     return groupRangesByResource(
       this.workspace,
-      backlinkItems,
+      this.backlinkItems,
       vscode.TreeItemCollapsibleState.Expanded
     );
-  }
-
-  resolveTreeItem(item: BacklinkPanelTreeItem): Promise<BacklinkPanelTreeItem> {
-    return item.resolveTreeItem();
   }
 }
 

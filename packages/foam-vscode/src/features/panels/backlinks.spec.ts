@@ -9,7 +9,6 @@ import {
 import { BacklinksTreeDataProvider } from './backlinks';
 import { toVsCodeUri } from '../../utils/vsc-utils';
 import { FoamGraph } from '../../core/model/graph';
-import { URI } from '../../core/model/uri';
 import {
   ResourceRangeTreeItem,
   ResourceTreeItem,
@@ -56,12 +55,6 @@ describe('Backlinks panel', () => {
     provider.target = undefined;
   });
 
-  // Skipping these as still figuring out how to interact with the provider
-  // running in the test instance of VS Code
-  it.skip('does not target excluded files', async () => {
-    provider.target = URI.file('/excluded-file.txt');
-    expect(await provider.getChildren()).toEqual([]);
-  });
   it.skip('targets active editor', async () => {
     const docA = await workspace.openTextDocument(toVsCodeUri(noteA.uri));
     const docB = await workspace.openTextDocument(toVsCodeUri(noteB.uri));
@@ -75,6 +68,7 @@ describe('Backlinks panel', () => {
 
   it('shows linking resources alphaetically by name', async () => {
     provider.target = noteA.uri;
+    await provider.refresh();
     const notes = (await provider.getChildren()) as ResourceTreeItem[];
     expect(notes.map(n => n.resource.uri.path)).toEqual([
       noteB.uri.path,
@@ -83,6 +77,7 @@ describe('Backlinks panel', () => {
   });
   it('shows references in range order', async () => {
     provider.target = noteA.uri;
+    await provider.refresh();
     const notes = (await provider.getChildren()) as ResourceTreeItem[];
     const linksFromB = (await provider.getChildren(
       notes[0]
@@ -95,14 +90,19 @@ describe('Backlinks panel', () => {
   });
   it('navigates to the document if clicking on note', async () => {
     provider.target = noteA.uri;
+    await provider.refresh();
     const notes = (await provider.getChildren()) as ResourceTreeItem[];
     expect(notes[0].command).toMatchObject({
       command: 'vscode.open',
-      arguments: [expect.objectContaining({ path: noteB.uri.path })],
+      arguments: [
+        expect.objectContaining({ path: noteB.uri.path }),
+        expect.objectContaining({ selection: expect.anything() }),
+      ],
     });
   });
   it('navigates to document with link selection if clicking on backlink', async () => {
     provider.target = noteA.uri;
+    await provider.refresh();
     const notes = (await provider.getChildren()) as ResourceTreeItem[];
     const linksFromB = (await provider.getChildren(
       notes[0]
@@ -120,7 +120,7 @@ describe('Backlinks panel', () => {
   it('refreshes upon changes in the workspace', async () => {
     let notes: ResourceTreeItem[] = [];
     provider.target = noteA.uri;
-
+    await provider.refresh();
     notes = (await provider.getChildren()) as ResourceTreeItem[];
     expect(notes.length).toEqual(2);
 
@@ -129,6 +129,7 @@ describe('Backlinks panel', () => {
       uri: './note-d.md',
     });
     ws.set(noteD);
+    await provider.refresh();
     notes = (await provider.getChildren()) as ResourceTreeItem[];
     expect(notes.length).toEqual(2);
 
@@ -138,8 +139,8 @@ describe('Backlinks panel', () => {
       links: [{ slug: 'note-a' }],
     });
     ws.set(noteDBis);
+    await provider.refresh();
     notes = (await provider.getChildren()) as ResourceTreeItem[];
-    expect(notes.length).toEqual(3);
     expect(notes.map(n => n.resource.uri.path)).toEqual(
       [noteB.uri, noteC.uri, noteD.uri].map(uri => uri.path)
     );

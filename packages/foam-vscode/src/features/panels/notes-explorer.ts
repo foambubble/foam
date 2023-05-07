@@ -154,6 +154,10 @@ export class NotesProvider extends FolderTreeProvider<
         this.graph,
         res.uri
       );
+      backlinks.forEach(item => {
+        item.description = item.label;
+        item.label = item.resource.title;
+      });
       return backlinks;
     };
     return res;

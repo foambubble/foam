@@ -31,14 +31,15 @@ export default async function activate(
   });
   provider.refresh();
   const baseTitle = treeView.title;
-  treeView.title = baseTitle + ` (${provider.numElements})`;
+  treeView.title = baseTitle + ` (${provider.nValues})`;
 
   context.subscriptions.push(
     vscode.window.registerTreeDataProvider('foam-vscode.orphans', provider),
     provider,
+    treeView,
     foam.graph.onDidUpdate(() => {
       provider.refresh();
-      treeView.title = baseTitle + ` (${provider.numElements})`;
+      treeView.title = baseTitle + ` (${provider.nValues})`;
     })
   );
 }
@@ -50,16 +51,16 @@ export class OrphanTreeView extends GroupedResourcesTreeDataProvider {
     private graph: FoamGraph,
     matcher: IMatcher
   ) {
-    super('orphans', 'orphan', state, matcher);
+    super('orphans', state, matcher);
   }
 
-  createTreeItem = uri => {
+  createValueTreeItem = uri => {
     return uri.isPlaceholder()
       ? new UriTreeItem(uri)
       : new ResourceTreeItem(this.workspace.find(uri), this.workspace);
   };
 
-  computeResources = () =>
+  getUris = () =>
     this.graph
       .getAllNodes()
       .filter(

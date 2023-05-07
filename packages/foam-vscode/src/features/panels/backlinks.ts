@@ -26,7 +26,7 @@ export default async function activate(
   });
   const baseTitle = treeView.title;
 
-  const updateTarget = async () => {
+  const updateTreeView = async () => {
     provider.target = vscode.window.activeTextEditor
       ? fromVsCodeUri(vscode.window.activeTextEditor?.document.uri)
       : undefined;
@@ -34,13 +34,13 @@ export default async function activate(
     treeView.title = baseTitle + ` (${provider.nValues})`;
   };
 
-  updateTarget();
+  updateTreeView();
 
   context.subscriptions.push(
-    vscode.window.registerTreeDataProvider('foam-vscode.backlinks', provider),
-    foam.graph.onDidUpdate(() => provider.refresh()),
-    vscode.window.onDidChangeActiveTextEditor(() => updateTarget()),
-    provider
+    provider,
+    treeView,
+    foam.graph.onDidUpdate(() => updateTreeView()),
+    vscode.window.onDidChangeActiveTextEditor(() => updateTreeView())
   );
 }
 

@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import { URI } from '../../core/model/uri';
-
 import { isNone } from '../../utils';
 import { Foam } from '../../core/model/foam';
 import { FoamWorkspace } from '../../core/model/workspace';
@@ -12,6 +11,7 @@ import {
   createBacklinkItemsForResource,
   groupRangesByResource,
 } from './utils/tree-view-utils';
+import { BaseTreeProvider } from './utils/base-tree-provider';
 
 export default async function activate(
   context: vscode.ExtensionContext,
@@ -21,35 +21,28 @@ export default async function activate(
 
   const provider = new BacklinksTreeDataProvider(foam.workspace, foam.graph);
 
-  vscode.window.onDidChangeActiveTextEditor(async () => {
+  const updateTarget = () => {
     provider.target = vscode.window.activeTextEditor
       ? fromVsCodeUri(vscode.window.activeTextEditor?.document.uri)
       : undefined;
-    await provider.refresh();
-  });
+    provider.refresh();
+  };
+
+  updateTarget();
 
   context.subscriptions.push(
     vscode.window.registerTreeDataProvider('foam-vscode.backlinks', provider),
-    foam.graph.onDidUpdate(() => provider.refresh())
+    foam.graph.onDidUpdate(() => provider.refresh()),
+    vscode.window.onDidChangeActiveTextEditor(() => updateTarget()),
+    provider
   );
 }
 
-export class BacklinksTreeDataProvider
-  implements vscode.TreeDataProvider<vscode.TreeItem>
-{
+export class BacklinksTreeDataProvider extends BaseTreeProvider<vscode.TreeItem> {
   public target?: URI = undefined;
-  // prettier-ignore
-  private _onDidChangeTreeDataEmitter = new vscode.EventEmitter<BacklinkPanelTreeItem | undefined | void>();
-  readonly onDidChangeTreeData = this._onDidChangeTreeDataEmitter.event;
 
-  constructor(private workspace: FoamWorkspace, private graph: FoamGraph) {}
-
-  refresh(): void {
-    this._onDidChangeTreeDataEmitter.fire();
-  }
-
-  getTreeItem(item: BacklinkPanelTreeItem): vscode.TreeItem {
-    return item;
+  constructor(private workspace: FoamWorkspace, private graph: FoamGraph) {
+    super();
   }
 
   getChildren(item?: BacklinkPanelTreeItem): Promise<vscode.TreeItem[]> {
@@ -73,10 +66,6 @@ export class BacklinksTreeDataProvider
       backlinkItems,
       vscode.TreeItemCollapsibleState.Expanded
     );
-  }
-
-  resolveTreeItem(item: BacklinkPanelTreeItem): Promise<BacklinkPanelTreeItem> {
-    return item.resolveTreeItem();
   }
 }
 

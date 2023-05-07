@@ -102,7 +102,7 @@ describe('Backlinks panel', () => {
   });
   it('navigates to document with link selection if clicking on backlink', async () => {
     provider.target = noteA.uri;
-    provider.refresh();
+    await provider.refresh();
     const notes = (await provider.getChildren()) as ResourceTreeItem[];
     const linksFromB = (await provider.getChildren(
       notes[0]

@@ -13,12 +13,10 @@ import {
   Position,
 } from 'vscode';
 import {
+  getText,
   hasEmptyTrailing,
-  docConfig,
-  loadDocConfig,
   isMdEditor,
   mdDocSelector,
-  getText,
 } from '../../utils';
 import {
   getWikilinkDefinitionSetting,
@@ -35,6 +33,8 @@ import {
   LINK_REFERENCE_DEFINITION_HEADER,
 } from '../../core/janitor/generate-link-references';
 import { fromVsCodeUri } from '../../utils/vsc-utils';
+import { URI } from '../../core/model/uri';
+import { getEditorEOL } from '../../services/editor';
 
 export default async function activate(
   context: ExtensionContext,
@@ -61,82 +61,79 @@ export default async function activate(
   );
 }
 
-async function createReferenceList(foam: FoamWorkspace) {
+async function createReferenceList(fWorkspace: FoamWorkspace, eol: string) {
   const editor = window.activeTextEditor;
 
   if (!editor || !isMdEditor(editor)) {
     return;
   }
 
-  const refs = await generateReferenceList(foam, editor.document);
+  const refs = await generateReferenceList(
+    fWorkspace,
+    fromVsCodeUri(editor.document.uri)
+  );
   if (refs && refs.length) {
     await editor.edit(function (editBuilder) {
       if (editor) {
-        const spacing = hasEmptyTrailing(editor.document)
-          ? docConfig.eol
-          : docConfig.eol + docConfig.eol;
+        const spacing = hasEmptyTrailing(editor.document) ? eol : eol + eol;
 
         editBuilder.insert(
           new Position(editor.document.lineCount, 0),
-          spacing + refs.join(docConfig.eol)
+          spacing + refs.join(eol)
         );
       }
     });
   }
 }
 
-async function updateReferenceList(foam: FoamWorkspace) {
+async function updateReferenceList(fWorkspace: FoamWorkspace) {
   const editor = window.activeTextEditor;
 
   if (!editor || !isMdEditor(editor)) {
     return;
   }
 
-  loadDocConfig();
-
+  const eol = getEditorEOL();
   const doc = editor.document;
-  const range = detectReferenceListRange(doc);
+  const range = detectReferenceListRange(doc.getText(), eol);
 
   if (!range) {
-    await createReferenceList(foam);
+    await createReferenceList(fWorkspace, eol);
   } else {
-    const refs = generateReferenceList(foam, doc);
+    const refs = generateReferenceList(fWorkspace, fromVsCodeUri(doc.uri));
 
     // references must always be preceded by an empty line
     const spacing = doc.lineAt(range.start.line - 1).isEmptyOrWhitespace
       ? ''
-      : docConfig.eol;
+      : eol;
 
     await editor.edit(editBuilder => {
-      editBuilder.replace(range, spacing + refs.join(docConfig.eol));
+      editBuilder.replace(range, spacing + refs.join(eol));
     });
   }
 }
 
-function generateReferenceList(
-  foam: FoamWorkspace,
-  doc: TextDocument
-): string[] {
+function generateReferenceList(fWorkspace: FoamWorkspace, uri: URI): string[] {
   const wikilinkSetting = getWikilinkDefinitionSetting();
 
   if (wikilinkSetting === LinkReferenceDefinitionsSetting.off) {
     return [];
   }
 
-  const note = foam.get(fromVsCodeUri(doc.uri));
+  const note = fWorkspace.get(uri);
 
   // Should never happen as `doc` is usually given by `editor.document`, which
   // binds to an opened note.
   if (!note) {
     console.warn(
-      `Can't find note for URI ${doc.uri.path} before attempting to generate its markdown reference list`
+      `Can't find note for URI ${uri.path} before attempting to generate its markdown reference list`
     );
     return [];
   }
 
   const references = uniq(
     createMarkdownReferences(
-      foam,
+      fWorkspace,
       note.uri,
       wikilinkSetting === LinkReferenceDefinitionsSetting.withExtensions
     ).map(stringifyMarkdownLinkReferenceDefinition)
@@ -157,21 +154,17 @@ function generateReferenceList(
  * Find the range of existing reference list
  * @param doc
  */
-function detectReferenceListRange(doc: TextDocument): Range | null {
-  const fullText = doc.getText();
-
-  const headerIndex = fullText.indexOf(LINK_REFERENCE_DEFINITION_HEADER);
-  const footerIndex = fullText.lastIndexOf(LINK_REFERENCE_DEFINITION_FOOTER);
+function detectReferenceListRange(text: string, eol: string): Range | null {
+  const headerIndex = text.indexOf(LINK_REFERENCE_DEFINITION_HEADER);
+  const footerIndex = text.lastIndexOf(LINK_REFERENCE_DEFINITION_FOOTER);
 
   if (headerIndex < 0) {
     return null;
   }
 
-  const headerLine =
-    fullText.substring(0, headerIndex).split(docConfig.eol).length - 1;
+  const headerLine = text.substring(0, headerIndex).split(eol).length - 1;
 
-  const footerLine =
-    fullText.substring(0, footerIndex).split(docConfig.eol).length - 1;
+  const footerLine = text.substring(0, footerIndex).split(eol).length - 1;
 
   if (headerLine >= footerLine) {
     return null;
@@ -194,16 +187,15 @@ class WikilinkReferenceCodeLensProvider implements CodeLensProvider {
     document: TextDocument,
     _: CancellationToken
   ): CodeLens[] | Promise<CodeLens[]> {
-    loadDocConfig();
-
-    const range = detectReferenceListRange(document);
+    const eol = getEditorEOL();
+    const range = detectReferenceListRange(document.getText(), eol);
     if (!range) {
       return [];
     }
 
-    const refs = generateReferenceList(this.foam, document);
-    const oldRefs = getText(range).replace(/\r?\n|\r/g, docConfig.eol);
-    const newRefs = refs.join(docConfig.eol);
+    const refs = generateReferenceList(this.foam, fromVsCodeUri(document.uri));
+    const oldRefs = getText(range).replace(/\r?\n|\r/g, eol);
+    const newRefs = refs.join(eol);
 
     const status = oldRefs === newRefs ? 'up to date' : 'out of date';
 

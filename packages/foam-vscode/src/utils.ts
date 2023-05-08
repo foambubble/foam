@@ -1,5 +1,4 @@
 import {
-  EndOfLine,
   Range,
   TextDocument,
   window,
@@ -12,34 +11,13 @@ import {
 } from 'vscode';
 import matter from 'gray-matter';
 import { toVsCodeUri } from './utils/vsc-utils';
-import { Logger } from './core/utils/log';
 import { URI } from './core/model/uri';
-
-export const docConfig = { tab: '  ', eol: '\r\n' };
+import { getEditorEOL } from './services/editor';
 
 export const mdDocSelector = [
   { language: 'markdown', scheme: 'file' },
   { language: 'markdown', scheme: 'untitled' },
 ];
-
-export function loadDocConfig() {
-  // Load workspace config
-  const activeEditor = window.activeTextEditor;
-  if (!activeEditor) {
-    Logger.debug('Failed to load config, no active editor');
-    return;
-  }
-
-  docConfig.eol = activeEditor.document.eol === EndOfLine.CRLF ? '\r\n' : '\n';
-
-  const tabSize = Number(activeEditor.options.tabSize);
-  const insertSpaces = activeEditor.options.insertSpaces;
-  if (insertSpaces) {
-    docConfig.tab = ' '.repeat(tabSize);
-  } else {
-    docConfig.tab = '\t';
-  }
-}
 
 export function isMdEditor(editor: TextEditor) {
   return editor && editor.document && editor.document.languageId === 'markdown';
@@ -50,7 +28,7 @@ export function detectGeneratedCode(
   header: string,
   footer: string
 ): { range: Range | null; lines: string[] } {
-  const lines = fullText.split(docConfig.eol);
+  const lines = fullText.split(getEditorEOL());
 
   const headerLine = lines.findIndex(line => line === header);
   const footerLine = lines.findIndex(line => line === footer);

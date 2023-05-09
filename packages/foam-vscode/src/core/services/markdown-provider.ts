@@ -12,6 +12,7 @@ import { IDisposable } from '../common/lifecycle';
 import { ResourceProvider } from '../model/provider';
 import { MarkdownLink } from './markdown-link';
 import { IDataStore } from './datastore';
+import { uniqBy } from 'lodash';
 
 export class MarkdownResourceProvider implements ResourceProvider {
   private disposables: IDisposable[] = [];
@@ -111,7 +112,7 @@ export function createMarkdownReferences(
 ): NoteLinkDefinition[] {
   const resource = source instanceof URI ? workspace.find(source) : source;
 
-  return resource.links
+  const definitions = resource.links
     .filter(link => link.type === 'wikilink')
     .map(link => {
       const targetUri = workspace.resolveLink(resource, link);
@@ -144,17 +145,5 @@ export function createMarkdownReferences(
     })
     .filter(isSome)
     .sort();
-}
-
-export function stringifyMarkdownLinkReferenceDefinition(
-  definition: NoteLinkDefinition
-) {
-  const url =
-    definition.url.indexOf(' ') > 0 ? `<${definition.url}>` : definition.url;
-  let text = `[${definition.label}]: ${url}`;
-  if (definition.title) {
-    text = `${text} "${definition.title}"`;
-  }
-
-  return text;
+  return uniqBy(definitions, def => NoteLinkDefinition.format(def));
 }

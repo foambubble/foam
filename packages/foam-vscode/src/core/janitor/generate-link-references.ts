@@ -24,7 +24,7 @@ export const generateLinkReferences = async (
 
   const newWikilinkDefinitions = createMarkdownReferences(
     workspace,
-    note.uri,
+    note,
     includeExtensions
   );
 

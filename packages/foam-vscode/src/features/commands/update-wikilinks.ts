@@ -1,4 +1,3 @@
-import { uniq } from 'lodash';
 import {
   CancellationToken,
   CodeLens,
@@ -13,23 +12,14 @@ import {
   Position,
 } from 'vscode';
 import { isMdEditor, mdDocSelector } from '../../utils';
-import {
-  getWikilinkDefinitionSetting,
-  LinkReferenceDefinitionsSetting,
-} from '../../settings';
 import { Foam } from '../../core/model/foam';
 import { FoamWorkspace } from '../../core/model/workspace';
-import {
-  createMarkdownReferences,
-  stringifyMarkdownLinkReferenceDefinition,
-} from '../../core/services/markdown-provider';
 import {
   LINK_REFERENCE_DEFINITION_FOOTER,
   LINK_REFERENCE_DEFINITION_HEADER,
   generateLinkReferences,
 } from '../../core/janitor/generate-link-references';
 import { fromVsCodeUri, toVsCodeRange } from '../../utils/vsc-utils';
-import { URI } from '../../core/model/uri';
 import { getEditorEOL } from '../../services/editor';
 import { ResourceParser } from '../../core/model/note';
 

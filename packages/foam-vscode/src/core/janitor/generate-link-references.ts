@@ -1,9 +1,6 @@
-import { Resource } from '../model/note';
+import { NoteLinkDefinition, Resource } from '../model/note';
 import { Range } from '../model/range';
-import {
-  createMarkdownReferences,
-  stringifyMarkdownLinkReferenceDefinition,
-} from '../services/markdown-provider';
+import { createMarkdownReferences } from '../services/markdown-provider';
 import { FoamWorkspace } from '../model/workspace';
 import { TextEdit } from '../services/text-edit';
 import { Position } from '../model/position';
@@ -55,9 +52,7 @@ export const generateLinkReferences = async (
       ? ''
       : [
           LINK_REFERENCE_DEFINITION_HEADER,
-          ...newWikilinkDefinitions.map(
-            stringifyMarkdownLinkReferenceDefinition
-          ),
+          ...newWikilinkDefinitions.map(NoteLinkDefinition.format),
           LINK_REFERENCE_DEFINITION_FOOTER,
         ].join(eol);
 

@@ -106,27 +106,19 @@ export class MarkdownResourceProvider implements ResourceProvider {
 
 export function createMarkdownReferences(
   workspace: FoamWorkspace,
-  noteUri: URI,
+  source: Resource | URI,
   includeExtension: boolean
 ): NoteLinkDefinition[] {
-  const source = workspace.find(noteUri);
-  // Should never occur since we're already in a file,
-  if (source?.type !== 'note') {
-    console.warn(
-      `Note ${noteUri.toString()} note found in workspace when attempting \
-to generate markdown reference list`
-    );
-    return [];
-  }
+  const resource = source instanceof URI ? workspace.find(source) : source;
 
-  return source.links
+  return resource.links
     .filter(link => link.type === 'wikilink')
     .map(link => {
-      const targetUri = workspace.resolveLink(source, link);
+      const targetUri = workspace.resolveLink(resource, link);
       const target = workspace.find(targetUri);
       if (isNone(target)) {
         Logger.warn(
-          `Link ${targetUri.toString()} in ${noteUri.toString()} is not valid.`
+          `Link ${targetUri.toString()} in ${resource.uri.toString()} is not valid.`
         );
         return null;
       }
@@ -135,7 +127,7 @@ to generate markdown reference list`
         return null;
       }
 
-      let relativeUri = target.uri.relativeTo(noteUri.getDirectory());
+      let relativeUri = target.uri.relativeTo(resource.uri.getDirectory());
       if (!includeExtension && relativeUri.path.endsWith('.md')) {
         relativeUri = relativeUri.changeExtension('*', '');
       }

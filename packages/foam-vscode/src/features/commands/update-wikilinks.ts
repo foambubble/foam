@@ -22,6 +22,8 @@ import {
 import { fromVsCodeUri, toVsCodeRange } from '../../utils/vsc-utils';
 import { getEditorEOL } from '../../services/editor';
 import { ResourceParser } from '../../core/model/note';
+import { getWikilinkDefinitionSetting } from '../../settings';
+import { IMatcher } from '../../core/services/datastore';
 
 export default async function activate(
   context: ExtensionContext,
@@ -30,16 +32,21 @@ export default async function activate(
   const foam = await foamPromise;
 
   context.subscriptions.push(
-    commands.registerCommand('foam-vscode.update-wikilinks', () =>
-      updateReferenceList(foam.workspace, foam.services.parser)
-    ),
+    commands.registerCommand('foam-vscode.update-wikilinks', () => {
+      return updateReferenceList(
+        foam.workspace,
+        foam.services.parser,
+        foam.services.matcher
+      );
+    }),
     workspace.onWillSaveTextDocument(e => {
-      if (
-        e.document.languageId === 'markdown' &&
-        foam.services.matcher.isMatch(fromVsCodeUri(e.document.uri))
-      ) {
-        e.waitUntil(updateReferenceList(foam.workspace, foam.services.parser));
-      }
+      e.waitUntil(
+        updateReferenceList(
+          foam.workspace,
+          foam.services.parser,
+          foam.services.matcher
+        )
+      );
     }),
     languages.registerCodeLensProvider(
       mdDocSelector,
@@ -53,24 +60,37 @@ export default async function activate(
 
 async function updateReferenceList(
   fWorkspace: FoamWorkspace,
-  fParser: ResourceParser
+  fParser: ResourceParser,
+  fMatcher: IMatcher
 ) {
   const editor = window.activeTextEditor;
+  const doc = editor.document;
 
-  if (!editor || !isMdEditor(editor)) {
+  if (!isMdEditor(editor) || !fMatcher.isMatch(fromVsCodeUri(doc.uri))) {
     return;
   }
 
+  const setting = getWikilinkDefinitionSetting();
   const eol = getEditorEOL();
-  const doc = editor.document;
   const text = doc.getText();
+
+  if (setting === 'off') {
+    const { range } = detectDocumentWikilinkDefinitions(text, eol);
+    if (range) {
+      await editor.edit(editBuilder => {
+        editBuilder.delete(toVsCodeRange(range));
+      });
+    }
+    return;
+  }
+
   const resource = fParser.parse(fromVsCodeUri(doc.uri), text);
   const update = await generateLinkReferences(
     resource,
     text,
     eol,
     fWorkspace,
-    true
+    setting === 'withExtensions'
   );
 
   if (update) {
@@ -127,6 +147,7 @@ class WikilinkReferenceCodeLensProvider implements CodeLensProvider {
     if (!range) {
       return [];
     }
+    const setting = getWikilinkDefinitionSetting();
 
     const resource = this.fParser.parse(fromVsCodeUri(document.uri), text);
     const update = await generateLinkReferences(
@@ -134,7 +155,7 @@ class WikilinkReferenceCodeLensProvider implements CodeLensProvider {
       text,
       eol,
       this.fWorkspace,
-      true
+      setting === 'withExtensions'
     );
 
     const status = update == null ? 'up to date' : 'out of date';

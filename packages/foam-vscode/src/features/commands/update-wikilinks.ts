@@ -32,8 +32,8 @@ export default async function activate(
   const foam = await foamPromise;
 
   context.subscriptions.push(
-    commands.registerCommand('foam-vscode.update-wikilinks', () => {
-      return updateReferenceList(
+    commands.registerCommand('foam-vscode.update-wikilink-definitions', () => {
+      return updateWikilinkDefinitions(
         foam.workspace,
         foam.services.parser,
         foam.services.matcher
@@ -41,7 +41,7 @@ export default async function activate(
     }),
     workspace.onWillSaveTextDocument(e => {
       e.waitUntil(
-        updateReferenceList(
+        updateWikilinkDefinitions(
           foam.workspace,
           foam.services.parser,
           foam.services.matcher
@@ -58,7 +58,7 @@ export default async function activate(
   );
 }
 
-async function updateReferenceList(
+async function updateWikilinkDefinitions(
   fWorkspace: FoamWorkspace,
   fParser: ResourceParser,
   fMatcher: IMatcher

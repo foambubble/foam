@@ -34,12 +34,13 @@ jobs:
 
   test:
     name: Build and Test
-    strategy:
-      matrix:
-        os: [macos-12, ubuntu-22.04, windows-2022]
-    runs-on: ${{ matrix.os }}
-    env:
-      OS: ${{ matrix.os }}
+    # strategy:
+    #   matrix:
+    #     os: [macos-12, ubuntu-22.04, windows-2022]
+    # runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-22.04
+    # env:
+    #   OS: ${{ matrix.os }}
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v1

@@ -104,8 +104,7 @@ async function updateWikilinkDefinitions(
 }
 
 /**
- * Find the range of existing reference list
- * @param doc
+ * Detects the range of the wikilink definitions in the document.
  */
 function detectDocumentWikilinkDefinitions(text: string, eol: string) {
   const lines = text.split(eol);
@@ -130,6 +129,9 @@ function detectDocumentWikilinkDefinitions(text: string, eol: string) {
   return { range, definitions };
 }
 
+/**
+ * Provides a code lens to update the wikilink definitions in the document.
+ */
 class WikilinkReferenceCodeLensProvider implements CodeLensProvider {
   constructor(
     private fWorkspace: FoamWorkspace,
@@ -162,9 +164,10 @@ class WikilinkReferenceCodeLensProvider implements CodeLensProvider {
 
     return [
       new CodeLens(range, {
-        arguments: [],
+        command:
+          update == null ? '' : 'foam-vscode.update-wikilink-definitions',
         title: `Wikilink definitions (${status})`,
-        command: '',
+        arguments: [],
       }),
     ];
   }

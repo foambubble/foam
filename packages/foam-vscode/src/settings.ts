@@ -1,19 +1,13 @@
 import { workspace, GlobPattern } from 'vscode';
 import { LogLevel } from './core/utils/log';
 
-export enum LinkReferenceDefinitionsSetting {
-  withExtensions = 'withExtensions',
-  withoutExtensions = 'withoutExtensions',
-  off = 'off',
-}
-
-export function getWikilinkDefinitionSetting(): LinkReferenceDefinitionsSetting {
+export function getWikilinkDefinitionSetting():
+  | 'withExtensions'
+  | 'withoutExtensions'
+  | 'off' {
   return workspace
     .getConfiguration('foam.edit')
-    .get<LinkReferenceDefinitionsSetting>(
-      'linkReferenceDefinitions',
-      LinkReferenceDefinitionsSetting.withoutExtensions
-    );
+    .get('linkReferenceDefinitions', 'withoutExtensions');
 }
 
 /** Retrieve the list of file ignoring globs. */

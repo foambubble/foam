@@ -12,6 +12,7 @@ import { IDisposable } from '../common/lifecycle';
 import { ResourceProvider } from '../model/provider';
 import { MarkdownLink } from './markdown-link';
 import { IDataStore } from './datastore';
+import { uniqBy } from 'lodash';
 
 export class MarkdownResourceProvider implements ResourceProvider {
   private disposables: IDisposable[] = [];
@@ -106,27 +107,19 @@ export class MarkdownResourceProvider implements ResourceProvider {
 
 export function createMarkdownReferences(
   workspace: FoamWorkspace,
-  noteUri: URI,
+  source: Resource | URI,
   includeExtension: boolean
 ): NoteLinkDefinition[] {
-  const source = workspace.find(noteUri);
-  // Should never occur since we're already in a file,
-  if (source?.type !== 'note') {
-    console.warn(
-      `Note ${noteUri.toString()} note found in workspace when attempting \
-to generate markdown reference list`
-    );
-    return [];
-  }
+  const resource = source instanceof URI ? workspace.find(source) : source;
 
-  return source.links
+  const definitions = resource.links
     .filter(link => link.type === 'wikilink')
     .map(link => {
-      const targetUri = workspace.resolveLink(source, link);
+      const targetUri = workspace.resolveLink(resource, link);
       const target = workspace.find(targetUri);
       if (isNone(target)) {
         Logger.warn(
-          `Link ${targetUri.toString()} in ${noteUri.toString()} is not valid.`
+          `Link ${targetUri.toString()} in ${resource.uri.toString()} is not valid.`
         );
         return null;
       }
@@ -135,7 +128,7 @@ to generate markdown reference list`
         return null;
       }
 
-      let relativeUri = target.uri.relativeTo(noteUri.getDirectory());
+      let relativeUri = target.uri.relativeTo(resource.uri.getDirectory());
       if (!includeExtension && relativeUri.path.endsWith('.md')) {
         relativeUri = relativeUri.changeExtension('*', '');
       }
@@ -152,17 +145,5 @@ to generate markdown reference list`
     })
     .filter(isSome)
     .sort();
-}
-
-export function stringifyMarkdownLinkReferenceDefinition(
-  definition: NoteLinkDefinition
-) {
-  const url =
-    definition.url.indexOf(' ') > 0 ? `<${definition.url}>` : definition.url;
-  let text = `[${definition.label}]: ${url}`;
-  if (definition.title) {
-    text = `${text} "${definition.title}"`;
-  }
-
-  return text;
+  return uniqBy(definitions, def => NoteLinkDefinition.format(def));
 }

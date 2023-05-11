@@ -2,6 +2,7 @@ import { isEmpty } from 'lodash';
 import { asAbsoluteUri, URI } from '../core/model/uri';
 import { TextEncoder } from 'util';
 import {
+  EndOfLine,
   FileType,
   RelativePattern,
   Selection,
@@ -72,6 +73,15 @@ export async function replaceSelection(
   const originatingFileEdit = new WorkspaceEdit();
   originatingFileEdit.replace(document.uri, selection, content);
   await workspace.applyEdit(originatingFileEdit);
+}
+
+/**
+ * Returns the EOL character for the currently open editor.
+ */
+export function getEditorEOL(): string {
+  return window.activeTextEditor.document.eol === EndOfLine.CRLF
+    ? '\r\n'
+    : '\n';
 }
 
 /**

@@ -1,4 +1,3 @@
-import { uniq } from 'lodash';
 import {
   CancellationToken,
   CodeLens,
@@ -12,29 +11,19 @@ import {
   workspace,
   Position,
 } from 'vscode';
-import {
-  hasEmptyTrailing,
-  docConfig,
-  loadDocConfig,
-  isMdEditor,
-  mdDocSelector,
-  getText,
-} from '../../utils';
-import {
-  getWikilinkDefinitionSetting,
-  LinkReferenceDefinitionsSetting,
-} from '../../settings';
+import { isMdEditor, mdDocSelector } from '../../utils';
 import { Foam } from '../../core/model/foam';
 import { FoamWorkspace } from '../../core/model/workspace';
 import {
-  createMarkdownReferences,
-  stringifyMarkdownLinkReferenceDefinition,
-} from '../../core/services/markdown-provider';
-import {
   LINK_REFERENCE_DEFINITION_FOOTER,
   LINK_REFERENCE_DEFINITION_HEADER,
+  generateLinkReferences,
 } from '../../core/janitor/generate-link-references';
-import { fromVsCodeUri } from '../../utils/vsc-utils';
+import { fromVsCodeUri, toVsCodeRange } from '../../utils/vsc-utils';
+import { getEditorEOL } from '../../services/editor';
+import { ResourceParser } from '../../core/model/note';
+import { getWikilinkDefinitionSetting } from '../../settings';
+import { IMatcher } from '../../core/services/datastore';
 
 export default async function activate(
   context: ExtensionContext,
@@ -43,175 +32,142 @@ export default async function activate(
   const foam = await foamPromise;
 
   context.subscriptions.push(
-    commands.registerCommand('foam-vscode.update-wikilinks', () =>
-      updateReferenceList(foam.workspace)
-    ),
+    commands.registerCommand('foam-vscode.update-wikilink-definitions', () => {
+      return updateWikilinkDefinitions(
+        foam.workspace,
+        foam.services.parser,
+        foam.services.matcher
+      );
+    }),
     workspace.onWillSaveTextDocument(e => {
-      if (
-        e.document.languageId === 'markdown' &&
-        foam.services.matcher.isMatch(fromVsCodeUri(e.document.uri))
-      ) {
-        e.waitUntil(updateReferenceList(foam.workspace));
-      }
+      e.waitUntil(
+        updateWikilinkDefinitions(
+          foam.workspace,
+          foam.services.parser,
+          foam.services.matcher
+        )
+      );
     }),
     languages.registerCodeLensProvider(
       mdDocSelector,
-      new WikilinkReferenceCodeLensProvider(foam.workspace)
+      new WikilinkReferenceCodeLensProvider(
+        foam.workspace,
+        foam.services.parser
+      )
     )
   );
 }
 
-async function createReferenceList(foam: FoamWorkspace) {
+async function updateWikilinkDefinitions(
+  fWorkspace: FoamWorkspace,
+  fParser: ResourceParser,
+  fMatcher: IMatcher
+) {
   const editor = window.activeTextEditor;
-
-  if (!editor || !isMdEditor(editor)) {
-    return;
-  }
-
-  const refs = await generateReferenceList(foam, editor.document);
-  if (refs && refs.length) {
-    await editor.edit(function (editBuilder) {
-      if (editor) {
-        const spacing = hasEmptyTrailing(editor.document)
-          ? docConfig.eol
-          : docConfig.eol + docConfig.eol;
-
-        editBuilder.insert(
-          new Position(editor.document.lineCount, 0),
-          spacing + refs.join(docConfig.eol)
-        );
-      }
-    });
-  }
-}
-
-async function updateReferenceList(foam: FoamWorkspace) {
-  const editor = window.activeTextEditor;
-
-  if (!editor || !isMdEditor(editor)) {
-    return;
-  }
-
-  loadDocConfig();
-
   const doc = editor.document;
-  const range = detectReferenceListRange(doc);
 
-  if (!range) {
-    await createReferenceList(foam);
-  } else {
-    const refs = generateReferenceList(foam, doc);
-
-    // references must always be preceded by an empty line
-    const spacing = doc.lineAt(range.start.line - 1).isEmptyOrWhitespace
-      ? ''
-      : docConfig.eol;
-
-    await editor.edit(editBuilder => {
-      editBuilder.replace(range, spacing + refs.join(docConfig.eol));
-    });
-  }
-}
-
-function generateReferenceList(
-  foam: FoamWorkspace,
-  doc: TextDocument
-): string[] {
-  const wikilinkSetting = getWikilinkDefinitionSetting();
-
-  if (wikilinkSetting === LinkReferenceDefinitionsSetting.off) {
-    return [];
+  if (!isMdEditor(editor) || !fMatcher.isMatch(fromVsCodeUri(doc.uri))) {
+    return;
   }
 
-  const note = foam.get(fromVsCodeUri(doc.uri));
+  const setting = getWikilinkDefinitionSetting();
+  const eol = getEditorEOL();
+  const text = doc.getText();
 
-  // Should never happen as `doc` is usually given by `editor.document`, which
-  // binds to an opened note.
-  if (!note) {
-    console.warn(
-      `Can't find note for URI ${doc.uri.path} before attempting to generate its markdown reference list`
-    );
-    return [];
+  if (setting === 'off') {
+    const { range } = detectDocumentWikilinkDefinitions(text, eol);
+    if (range) {
+      await editor.edit(editBuilder => {
+        editBuilder.delete(toVsCodeRange(range));
+      });
+    }
+    return;
   }
 
-  const references = uniq(
-    createMarkdownReferences(
-      foam,
-      note.uri,
-      wikilinkSetting === LinkReferenceDefinitionsSetting.withExtensions
-    ).map(stringifyMarkdownLinkReferenceDefinition)
+  const resource = fParser.parse(fromVsCodeUri(doc.uri), text);
+  const update = await generateLinkReferences(
+    resource,
+    text,
+    eol,
+    fWorkspace,
+    setting === 'withExtensions'
   );
 
-  if (references.length) {
-    return [
-      LINK_REFERENCE_DEFINITION_HEADER,
-      ...references,
-      LINK_REFERENCE_DEFINITION_FOOTER,
-    ];
+  if (update) {
+    await editor.edit(editBuilder => {
+      const gap = doc.lineAt(update.range.start.line - 1).isEmptyOrWhitespace
+        ? ''
+        : eol;
+      editBuilder.replace(toVsCodeRange(update.range), gap + update.newText);
+    });
   }
-
-  return [];
 }
 
 /**
- * Find the range of existing reference list
- * @param doc
+ * Detects the range of the wikilink definitions in the document.
  */
-function detectReferenceListRange(doc: TextDocument): Range | null {
-  const fullText = doc.getText();
+function detectDocumentWikilinkDefinitions(text: string, eol: string) {
+  const lines = text.split(eol);
 
-  const headerIndex = fullText.indexOf(LINK_REFERENCE_DEFINITION_HEADER);
-  const footerIndex = fullText.lastIndexOf(LINK_REFERENCE_DEFINITION_FOOTER);
-
-  if (headerIndex < 0) {
-    return null;
-  }
-
-  const headerLine =
-    fullText.substring(0, headerIndex).split(docConfig.eol).length - 1;
-
-  const footerLine =
-    fullText.substring(0, footerIndex).split(docConfig.eol).length - 1;
-
-  if (headerLine >= footerLine) {
-    return null;
-  }
-
-  return new Range(
-    new Position(headerLine, 0),
-    new Position(footerLine, LINK_REFERENCE_DEFINITION_FOOTER.length)
+  const headerLine = lines.findIndex(
+    line => line === LINK_REFERENCE_DEFINITION_HEADER
   );
+  const footerLine = lines.findIndex(
+    line => line === LINK_REFERENCE_DEFINITION_FOOTER
+  );
+
+  if (headerLine < 0 || footerLine < 0 || headerLine >= footerLine) {
+    return { range: null, definitions: null };
+  }
+
+  const range = new Range(
+    new Position(headerLine, 0),
+    new Position(footerLine, lines[footerLine].length)
+  );
+  const definitions = lines.slice(headerLine, footerLine).join(eol);
+
+  return { range, definitions };
 }
 
+/**
+ * Provides a code lens to update the wikilink definitions in the document.
+ */
 class WikilinkReferenceCodeLensProvider implements CodeLensProvider {
-  private foam: FoamWorkspace;
+  constructor(
+    private fWorkspace: FoamWorkspace,
+    private fParser: ResourceParser
+  ) {}
 
-  constructor(foam: FoamWorkspace) {
-    this.foam = foam;
-  }
-
-  public provideCodeLenses(
+  public async provideCodeLenses(
     document: TextDocument,
     _: CancellationToken
-  ): CodeLens[] | Promise<CodeLens[]> {
-    loadDocConfig();
+  ): Promise<CodeLens[]> {
+    const eol = getEditorEOL();
+    const text = document.getText();
 
-    const range = detectReferenceListRange(document);
+    const { range } = detectDocumentWikilinkDefinitions(text, eol);
     if (!range) {
       return [];
     }
+    const setting = getWikilinkDefinitionSetting();
 
-    const refs = generateReferenceList(this.foam, document);
-    const oldRefs = getText(range).replace(/\r?\n|\r/g, docConfig.eol);
-    const newRefs = refs.join(docConfig.eol);
+    const resource = this.fParser.parse(fromVsCodeUri(document.uri), text);
+    const update = await generateLinkReferences(
+      resource,
+      text,
+      eol,
+      this.fWorkspace,
+      setting === 'withExtensions'
+    );
 
-    const status = oldRefs === newRefs ? 'up to date' : 'out of date';
+    const status = update == null ? 'up to date' : 'out of date';
 
     return [
       new CodeLens(range, {
+        command:
+          update == null ? '' : 'foam-vscode.update-wikilink-definitions',
+        title: `Wikilink definitions (${status})`,
         arguments: [],
-        title: `Link references (${status})`,
-        command: '',
       }),
     ];
   }

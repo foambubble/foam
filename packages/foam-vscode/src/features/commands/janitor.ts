@@ -5,10 +5,7 @@ import {
   commands,
   ProgressLocation,
 } from 'vscode';
-import {
-  getWikilinkDefinitionSetting,
-  LinkReferenceDefinitionsSetting,
-} from '../../settings';
+import { getWikilinkDefinitionSetting } from '../../settings';
 import {
   toVsCodePosition,
   toVsCodeRange,
@@ -108,14 +105,14 @@ async function runJanitor(foam: Foam) {
     }
 
     const definitions =
-      wikilinkSetting === LinkReferenceDefinitionsSetting.off
+      wikilinkSetting === 'off'
         ? null
         : await generateLinkReferences(
             note,
             noteText,
             noteEol,
             foam.workspace,
-            wikilinkSetting === LinkReferenceDefinitionsSetting.withExtensions
+            wikilinkSetting === 'withExtensions'
           );
     if (definitions) {
       updatedDefinitionListCount += 1;
@@ -150,14 +147,14 @@ async function runJanitor(foam: Foam) {
     // Get edits
     const heading = await generateHeading(note, noteText, eol);
     const definitions =
-      wikilinkSetting === LinkReferenceDefinitionsSetting.off
+      wikilinkSetting === 'off'
         ? null
         : await generateLinkReferences(
             note,
             noteText,
             eol,
             foam.workspace,
-            wikilinkSetting === LinkReferenceDefinitionsSetting.withExtensions
+            wikilinkSetting === 'withExtensions'
           );
 
     if (heading || definitions) {

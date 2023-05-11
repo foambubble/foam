@@ -15,6 +15,19 @@ export interface NoteLinkDefinition {
   range?: Range;
 }
 
+export abstract class NoteLinkDefinition {
+  static format(definition: NoteLinkDefinition) {
+    const url =
+      definition.url.indexOf(' ') > 0 ? `<${definition.url}>` : definition.url;
+    let text = `[${definition.label}]: ${url}`;
+    if (definition.title) {
+      text = `${text} "${definition.title}"`;
+    }
+
+    return text;
+  }
+}
+
 export interface Tag {
   label: string;
   range: Range;

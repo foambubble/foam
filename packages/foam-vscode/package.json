@@ -221,8 +221,8 @@
         "title": "Foam: Show graph"
       },
       {
-        "command": "foam-vscode.update-wikilinks",
-        "title": "Foam: Update Markdown Reference List"
+        "command": "foam-vscode.update-wikilink-definitions",
+        "title": "Foam: Update wikilink definitions"
       },
       {
         "command": "foam-vscode.open-daily-note",

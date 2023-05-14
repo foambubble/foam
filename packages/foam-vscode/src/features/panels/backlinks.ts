@@ -3,15 +3,21 @@ import { URI } from '../../core/model/uri';
 import { isNone } from '../../utils';
 import { Foam } from '../../core/model/foam';
 import { FoamWorkspace } from '../../core/model/workspace';
-import { FoamGraph } from '../../core/model/graph';
+import { Connection, FoamGraph } from '../../core/model/graph';
+import { Range } from '../../core/model/range';
 import { fromVsCodeUri } from '../../utils/vsc-utils';
 import {
+  BaseTreeItem,
   ResourceRangeTreeItem,
   ResourceTreeItem,
+  UriTreeItem,
   createBacklinkItemsForResource,
+  createConnectionItemsForResource,
   groupRangesByResource,
 } from './utils/tree-view-utils';
 import { BaseTreeProvider } from './utils/base-tree-provider';
+import { groupBy } from 'lodash';
+import { Resource } from '../../core/model/note';
 
 export default async function activate(
   context: vscode.ExtensionContext,
@@ -19,8 +25,8 @@ export default async function activate(
 ) {
   const foam = await foamPromise;
 
-  const provider = new BacklinksTreeDataProvider(foam.workspace, foam.graph);
-  const treeView = vscode.window.createTreeView('foam-vscode.backlinks', {
+  const provider = new ConnectionsTreeDataProvider(foam.workspace, foam.graph);
+  const treeView = vscode.window.createTreeView('foam-vscode.connections', {
     treeDataProvider: provider,
     showCollapseAll: true,
   });
@@ -44,38 +50,65 @@ export default async function activate(
   );
 }
 
-export class BacklinksTreeDataProvider extends BaseTreeProvider<vscode.TreeItem> {
+export class ConnectionsTreeDataProvider extends BaseTreeProvider<vscode.TreeItem> {
   public target?: URI = undefined;
   public nValues = 0;
-  private backlinkItems: ResourceRangeTreeItem[];
+  private connectionItems: ResourceRangeTreeItem[];
 
   constructor(private workspace: FoamWorkspace, private graph: FoamGraph) {
     super();
+    this.disposables.push();
   }
 
   async refresh(): Promise<void> {
     const uri = this.target;
 
-    const backlinkItems =
+    const connectionItems =
       isNone(uri) || isNone(this.workspace.find(uri))
         ? []
-        : await createBacklinkItemsForResource(this.workspace, this.graph, uri);
+        : await createConnectionItemsForResource(
+            this.workspace,
+            this.graph,
+            uri
+          );
 
-    this.backlinkItems = backlinkItems;
-    this.nValues = backlinkItems.length;
+    this.connectionItems = connectionItems;
+    this.nValues = connectionItems.length;
     super.refresh();
   }
 
   async getChildren(item?: BacklinkPanelTreeItem): Promise<vscode.TreeItem[]> {
-    if (item && item instanceof ResourceTreeItem) {
+    if (item && item instanceof BaseTreeItem) {
       return item.getChildren();
     }
 
-    return groupRangesByResource(
-      this.workspace,
-      this.backlinkItems,
-      vscode.TreeItemCollapsibleState.Expanded
-    );
+    const byResource = this.connectionItems.reduce((acc, item) => {
+      const connection = item.value as Connection;
+      const uri = connection.source.asPlain().isEqual(this.target)
+        ? connection.target
+        : connection.source;
+      acc.set(uri.toString(), [...(acc.get(uri.toString()) ?? []), item]);
+      return acc;
+    }, new Map() as Map<string, ResourceRangeTreeItem[]>);
+
+    const resourceItems = [];
+    for (const [uriString, items] of byResource.entries()) {
+      const uri = URI.parse(uriString);
+      const item = uri.isPlaceholder()
+        ? new UriTreeItem(uri, {
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+          })
+        : new ResourceTreeItem(items[0].resource, this.workspace, {
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+          });
+      const children = items.sort((a, b) => Range.isBefore(a.range, b.range));
+      item.getChildren = () => Promise.resolve(children);
+      item.description = `(${items.length}) ${item.description}`;
+      item.command = children[0].command;
+      resourceItems.push(item);
+    }
+    resourceItems.sort((a, b) => a.label.localeCompare(b.label));
+    return resourceItems;
   }
 }
 

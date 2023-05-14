@@ -6,7 +6,7 @@ import {
   createNote,
   getUriInWorkspace,
 } from '../../test/test-utils-vscode';
-import { BacklinksTreeDataProvider } from './backlinks';
+import { ConnectionsTreeDataProvider } from './backlinks';
 import { toVsCodeUri } from '../../utils/vsc-utils';
 import { FoamGraph } from '../../core/model/graph';
 import {
@@ -48,7 +48,7 @@ describe('Backlinks panel', () => {
   ws.set(noteA).set(noteB).set(noteC);
   const graph = FoamGraph.fromWorkspace(ws, true);
 
-  const provider = new BacklinksTreeDataProvider(ws, graph);
+  const provider = new ConnectionsTreeDataProvider(ws, graph);
 
   beforeEach(async () => {
     await closeEditors();

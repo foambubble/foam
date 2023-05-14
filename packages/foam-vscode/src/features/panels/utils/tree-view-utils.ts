@@ -8,7 +8,7 @@ import { FoamWorkspace } from '../../../core/model/workspace';
 import { getNoteTooltip } from '../../../utils';
 import { isSome } from '../../../core/utils';
 import { getBlockFor } from '../../../core/services/markdown-parser';
-import { FoamGraph } from '../../../core/model/graph';
+import { Connection, FoamGraph } from '../../../core/model/graph';
 
 export class BaseTreeItem extends vscode.TreeItem {
   resolveTreeItem(): Promise<vscode.TreeItem> {
@@ -77,8 +77,10 @@ export class ResourceTreeItem extends UriTreeItem {
 }
 
 export class ResourceRangeTreeItem extends BaseTreeItem {
+  public value: any;
   constructor(
     public label: string,
+    public variant: string,
     public readonly resource: Resource,
     public readonly range: Range,
     public readonly workspace: FoamWorkspace
@@ -129,7 +131,13 @@ export class ResourceRangeTreeItem extends BaseTreeItem {
       ? `${range.start.line + 1}: ${ellipsis}${line.slice(start, start + 300)}`
       : Range.toString(range);
 
-    const item = new ResourceRangeTreeItem(label, resource, range, workspace);
+    const item = new ResourceRangeTreeItem(
+      label,
+      variant,
+      resource,
+      range,
+      workspace
+    );
     item.iconPath = new vscode.ThemeIcon(
       ResourceRangeTreeItem.icons[variant],
       new vscode.ThemeColor('charts.purple')
@@ -190,5 +198,26 @@ export function createBacklinkItemsForResource(
       variant
     )
   );
+  return Promise.all(backlinkItems);
+}
+
+export function createConnectionItemsForResource(
+  workspace: FoamWorkspace,
+  graph: FoamGraph,
+  uri: URI,
+  filter: (c: Connection) => boolean = () => true
+) {
+  const connections = graph.getConnections(uri).filter(c => filter(c));
+
+  const backlinkItems = connections.map(async c => {
+    const item = await ResourceRangeTreeItem.createStandardItem(
+      workspace,
+      workspace.get(c.source),
+      c.link.range,
+      c.source.asPlain().isEqual(uri) ? 'link' : 'backlink'
+    );
+    item.value = c;
+    return item;
+  });
   return Promise.all(backlinkItems);
 }

@@ -56,34 +56,34 @@
     "views": {
       "explorer": [
         {
-          "id": "foam-vscode.backlinks",
-          "name": "Backlinks",
+          "id": "foam-vscode.connections",
+          "name": "Connections",
           "icon": "$(references)",
-          "contextualTitle": "Backlinks"
+          "contextualTitle": "Foam"
         },
         {
           "id": "foam-vscode.tags-explorer",
           "name": "Tag Explorer",
           "icon": "$(tag)",
-          "contextualTitle": "Tags Explorer"
+          "contextualTitle": "Foam"
         },
         {
           "id": "foam-vscode.notes-explorer",
           "name": "Notes",
           "icon": "$(notebook)",
-          "contextualTitle": "Notes Explorer"
+          "contextualTitle": "Foam"
         },
         {
           "id": "foam-vscode.orphans",
           "name": "Orphans",
           "icon": "$(debug-gripper)",
-          "contextualTitle": "Orphans"
+          "contextualTitle": "Foam"
         },
         {
           "id": "foam-vscode.placeholders",
           "name": "Placeholders",
           "icon": "$(debug-disconnect)",
-          "contextualTitle": "Placeholders"
+          "contextualTitle": "Foam"
         }
       ]
     },
@@ -93,8 +93,8 @@
         "contents": "No tags found. Notes that contain tags will show up here. You may add tags to a note with a hashtag (#tag) or by adding a tag list to the front matter (tags: tag1, tag2)."
       },
       {
-        "view": "foam-vscode.backlinks",
-        "contents": "No backlinks found for selected resource."
+        "view": "foam-vscode.connections",
+        "contents": "No links found to and from the selected resource."
       },
       {
         "view": "foam-vscode.orphans",

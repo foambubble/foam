@@ -74,7 +74,7 @@ export function getDailyNoteFileName(date: Date): string {
  * this function will create all folders in the path.
  *
  * @param currentDate The current date, to be used as a title.
- * @returns Wether the file was created.
+ * @returns Whether the file was created.
  */
 export async function createDailyNoteIfNotExists(targetDate: Date) {
   const pathFromLegacyConfiguration = getDailyNotePath(targetDate);

@@ -86,7 +86,7 @@ export class GenericDataStore implements IDataStore {
 /**
  * A matcher that instead of using globs uses a list of files to
  * check the matches.
- * The {@link refresh} function has been added to the interface to accomodate
+ * The {@link refresh} function has been added to the interface to accommodate
  * this matcher, far from ideal but to be refactored later
  */
 export class FileListBasedMatcher implements IMatcher {

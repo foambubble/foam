@@ -4,7 +4,7 @@ In some situations it might be useful to include the content of another note in 
 
 ## Including a note
 
-Including a note can be done by adding an `!` before a wikilink defintion. For example `![[wikilink]]`.
+Including a note can be done by adding an `!` before a wikilink definition. For example `![[wikilink]]`.
 
 ## Custom styling
 

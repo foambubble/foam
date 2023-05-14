@@ -64,7 +64,7 @@ export class NavigationProvider
   ) {}
 
   /**
-   * Provide references for links and placholders
+   * Provide references for links and placeholders
    */
   public provideReferences(
     document: vscode.TextDocument,

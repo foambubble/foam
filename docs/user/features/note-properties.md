@@ -19,7 +19,7 @@ keywords: hello world, bonjour
 ---
 ```
 
-This sets the `type` of this document to `feature` and sets **three** keywords for the document: `hello`, `world`, and `bonjour`. The YAML parser will treat both spaces and commas as the seperators for these YAML properties. If you want to use multi-word values for these properties, you will need to combine the words with dashes or underscores (i.e. instead of `hello world`, use `hello_world` or `hello-world`).
+This sets the `type` of this document to `feature` and sets **three** keywords for the document: `hello`, `world`, and `bonjour`. The YAML parser will treat both spaces and commas as the separators for these YAML properties. If you want to use multi-word values for these properties, you will need to combine the words with dashes or underscores (i.e. instead of `hello world`, use `hello_world` or `hello-world`).
 
 > You can set as many custom properties for a document as you like, but there are a few [special properties](#special-properties) defined by Foam.
 
@@ -27,11 +27,11 @@ This sets the `type` of this document to `feature` and sets **three** keywords f
 
 Some properties have special meaning for Foam:
 
-| Name                 | Description        |
-| -------------------- | ------------------- |
-| `title` | will assign the name to the note that you will see in the graph, regardless of the filename or the first heading (also see how to [[write-notes-in-foam]])      |
-| `type`         | can be used to style notes differently in the graph (also see [[graph-visualization]]). The default type for a document is `note` unless otherwise specified with this property.       |
-| `tags`          | can be used to add tags to a note (see [[tags]])      |
+| Name    | Description                                                                                                                                                                      |
+| ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `title` | will assign the name to the note that you will see in the graph, regardless of the filename or the first heading (also see how to [[write-notes-in-foam]])                       |
+| `type`  | can be used to style notes differently in the graph (also see [[graph-visualization]]). The default type for a document is `note` unless otherwise specified with this property. |
+| `tags`  | can be used to add tags to a note (see [[tags]])                                                                                                                                 |
 
 For example:
 

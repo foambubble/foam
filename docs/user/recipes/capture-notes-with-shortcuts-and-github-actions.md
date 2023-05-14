@@ -6,7 +6,7 @@ With this #recipe you can create notes on your iOS device, which will automatica
 
 * You use [Foam for VSCode](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode) to manage your notes
 * You wish to adopt a practice such as [A writing inbox for transient and incomplete notes](https://notes.andymatuschak.org/A%20writing%20inbox%20for%20transient%20and%20incomplete%20notes)
-* You wish to use [Shorcuts](https://support.apple.com/guide/shortcuts/welcome/ios) to capture quick notes into your Foam notes from your iOS device
+* You wish to use [Shortcuts](https://support.apple.com/guide/shortcuts/welcome/ios) to capture quick notes into your Foam notes from your iOS device
 
 ## Other tools
 

@@ -14,7 +14,7 @@ strategies for getting the most out of Foam. The full docs are included in the
 - [[recommended-extensions]]
 - [[creating-new-notes]]
 - [[write-notes-in-foam]]
-- [[sync-notes-with-soruce-control]]
+- [[sync-notes-with-source-control]]
 - [[keyboard-shortcuts]]
 
 ## Features
@@ -57,7 +57,7 @@ See [[publishing]] for more details.
 [recommended-extensions]: getting-started/recommended-extensions.md "Recommended Extensions"
 [creating-new-notes]: getting-started/creating-new-notes.md "Creating New Notes"
 [write-notes-in-foam]: getting-started/write-notes-in-foam.md "Writing Notes"
-[sync-notes-with-soruce-control]: getting-started/sync-notes-with-soruce-control.md "Sync notes with source control"
+[sync-notes-with-source-control]: getting-started/sync-notes-with-source-control.md "Sync notes with source control"
 [keyboard-shortcuts]: getting-started/keyboard-shortcuts.md "Keyboard Shortcuts"
 [wikilinks]: features/wikilinks.md "Wikilinks"
 [tags]: features/tags.md "Tags"

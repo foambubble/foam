@@ -1022,6 +1022,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "hezhizhen",
+      "name": "Zhizhen He",
+      "avatar_url": "https://avatars.githubusercontent.com/u/7611700?v=4",
+      "profile": "https://t.me/littlepoint",
+      "contributions": [
+        "tool"
+      ]
     }
   ],
   "contributorsPerLine": 7,

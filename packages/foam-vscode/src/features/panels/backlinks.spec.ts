@@ -7,7 +7,7 @@ import {
   getUriInWorkspace,
 } from '../../test/test-utils-vscode';
 import { ConnectionsTreeDataProvider } from './backlinks';
-import { toVsCodeUri } from '../../utils/vsc-utils';
+import { MapBasedMemento, toVsCodeUri } from '../../utils/vsc-utils';
 import { FoamGraph } from '../../core/model/graph';
 import {
   ResourceRangeTreeItem,
@@ -48,7 +48,11 @@ describe('Backlinks panel', () => {
   ws.set(noteA).set(noteB).set(noteC);
   const graph = FoamGraph.fromWorkspace(ws, true);
 
-  const provider = new ConnectionsTreeDataProvider(ws, graph);
+  const provider = new ConnectionsTreeDataProvider(
+    ws,
+    graph,
+    new MapBasedMemento()
+  );
 
   beforeEach(async () => {
     await closeEditors();

@@ -94,7 +94,7 @@
       },
       {
         "view": "foam-vscode.connections",
-        "contents": "No links found to and from the selected resource."
+        "contents": "Nothing found for the selected resource and the current filter."
       },
       {
         "view": "foam-vscode.orphans",
@@ -106,7 +106,28 @@
       }
     ],
     "menus": {
+      "view/item/context": [
+        {
+          "when": "view == foam-vscode.connections",
+          "command": "foam-vscode.views.connections.show:backlinks"
+        }
+      ],
       "view/title": [
+        {
+          "command": "foam-vscode.views.connections.show:backlinks",
+          "when": "view == foam-vscode.connections && foam-vscode.views.connections.show == 'connections'",
+          "group": "navigation"
+        },
+        {
+          "command": "foam-vscode.views.connections.show:links",
+          "when": "view == foam-vscode.connections && foam-vscode.views.connections.show == 'backlinks'",
+          "group": "navigation"
+        },
+        {
+          "command": "foam-vscode.views.connections.show:connections",
+          "when": "view == foam-vscode.connections && foam-vscode.views.connections.show == 'links'",
+          "group": "navigation"
+        },
         {
           "command": "foam-vscode.views.orphans.group-by:folder",
           "when": "view == foam-vscode.orphans && foam-vscode.views.orphans.group-by == 'off'",
@@ -155,6 +176,18 @@
         },
         {
           "command": "foam-vscode.update-graph",
+          "when": "false"
+        },
+        {
+          "command": "foam-vscode.views.connections.show:connections",
+          "when": "false"
+        },
+        {
+          "command": "foam-vscode.views.connections.show:backlinks",
+          "when": "false"
+        },
+        {
+          "command": "foam-vscode.views.connections.show:links",
           "when": "false"
         },
         {
@@ -260,6 +293,21 @@
         "command": "foam-vscode.views.orphans.group-by:folder",
         "title": "Group By Folder",
         "icon": "$(list-tree)"
+      },
+      {
+        "command": "foam-vscode.views.connections.show:backlinks",
+        "title": "Show Backlinks",
+        "icon": "$(arrow-left)"
+      },
+      {
+        "command": "foam-vscode.views.connections.show:links",
+        "title": "Show Links",
+        "icon": "$(arrow-right)"
+      },
+      {
+        "command": "foam-vscode.views.connections.show:connections",
+        "title": "Show All",
+        "icon": "$(arrow-swap)"
       },
       {
         "command": "foam-vscode.views.orphans.group-by:off",

@@ -110,9 +110,18 @@ export class ResourceRangeTreeItem extends BaseTreeItem {
   }
 
   static icons = {
-    backlink: 'arrow-left',
-    link: 'arrow-right',
-    tag: 'symbol-number',
+    backlink: new vscode.ThemeIcon(
+      'arrow-left',
+      new vscode.ThemeColor('charts.purple')
+    ),
+    link: new vscode.ThemeIcon(
+      'arrow-right',
+      new vscode.ThemeColor('charts.purple')
+    ),
+    tag: new vscode.ThemeIcon(
+      'symbol-number',
+      new vscode.ThemeColor('charts.purple')
+    ),
   };
   static async createStandardItem(
     workspace: FoamWorkspace,
@@ -138,10 +147,7 @@ export class ResourceRangeTreeItem extends BaseTreeItem {
       range,
       workspace
     );
-    item.iconPath = new vscode.ThemeIcon(
-      ResourceRangeTreeItem.icons[variant],
-      new vscode.ThemeColor('charts.purple')
-    );
+    item.iconPath = ResourceRangeTreeItem.icons[variant];
 
     return item;
   }

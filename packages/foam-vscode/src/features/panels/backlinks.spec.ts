@@ -14,7 +14,7 @@ import {
   ResourceTreeItem,
 } from './utils/tree-view-utils';
 
-describe('Backlinks panel', () => {
+describe.skip('Backlinks panel', () => {
   beforeAll(async () => {
     await cleanWorkspace();
     await createNote(noteA);

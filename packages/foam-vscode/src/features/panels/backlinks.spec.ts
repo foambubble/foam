@@ -98,6 +98,11 @@ describe('Backlinks panel', () => {
     const notes = (await provider.getChildren()) as ResourceTreeItem[];
     expect(notes[0].command).toMatchObject({
       command: 'vscode.open',
+      arguments: [expect.objectContaining({ path: noteB.uri.path })],
+    });
+    const links = (await provider.getChildren(notes[0])) as ResourceTreeItem[];
+    expect(links[0].command).toMatchObject({
+      command: 'vscode.open',
       arguments: [
         expect.objectContaining({ path: noteB.uri.path }),
         expect.objectContaining({ selection: expect.anything() }),

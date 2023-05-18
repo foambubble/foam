@@ -106,12 +106,6 @@
       }
     ],
     "menus": {
-      "view/item/context": [
-        {
-          "when": "view == foam-vscode.connections",
-          "command": "foam-vscode.views.connections.show:backlinks"
-        }
-      ],
       "view/title": [
         {
           "command": "foam-vscode.views.connections.show:backlinks",

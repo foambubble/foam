@@ -4,6 +4,18 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.24.0] - 2023-05-19
+
+Features:
+
+- Converted backlinks panel into more general connections panel (#1230)
+
+Internal:
+
+- Improved janitor code (#1228)
+- Refactored code related to tree view panels (#1226)
+- Lint and cleanup (#1224)
+
 ## [0.23.0] - 2023-05-06
 
 Features:

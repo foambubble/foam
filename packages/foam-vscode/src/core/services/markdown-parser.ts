@@ -433,19 +433,37 @@ export const getBlockFor = (
   const searchLine = typeof line === 'number' ? line : line.line;
   const tree = blockParser.parse(markdown);
   const lines = markdown.split('\n');
-  let block = null;
-  let nLines = 0;
+  let startLine = -1;
+  let endLine = -1;
+
+  // For list items, we also include the sub-lists
   visit(tree, ['listItem'], (node: any) => {
     if (node.position.start.line === searchLine + 1) {
-      block = lines
-        .slice(node.position.start.line - 1, node.position.end.line)
-        .join('\n');
-      nLines = node.position.end.line - node.position.start.line;
+      startLine = node.position.start.line - 1;
+      endLine = node.position.end.line;
       return visit.EXIT;
     }
   });
-  if (block == null) {
-    block = lines[searchLine];
-  }
+
+  // For headings, we also include the sub-sections
+  let headingLevel = -1;
+  visit(tree, ['heading'], (node: any) => {
+    if (startLine > -1 && node.depth <= headingLevel) {
+      endLine = node.position.start.line - 1;
+      return visit.EXIT;
+    }
+    if (node.position.start.line === searchLine + 1) {
+      headingLevel = node.depth;
+      startLine = node.position.start.line - 1;
+      endLine = lines.length - 1; // in case it's the last section
+    }
+  });
+
+  let nLines = startLine == -1 ? 1 : endLine - startLine;
+  let block =
+    startLine == -1
+      ? lines[searchLine] ?? ''
+      : lines.slice(startLine, endLine).join('\n');
+
   return { block, nLines };
 };

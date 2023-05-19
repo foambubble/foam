@@ -6,8 +6,8 @@ import {
   createNote,
   getUriInWorkspace,
 } from '../../test/test-utils-vscode';
-import { BacklinksTreeDataProvider } from './backlinks';
-import { toVsCodeUri } from '../../utils/vsc-utils';
+import { ConnectionsTreeDataProvider } from './backlinks';
+import { MapBasedMemento, toVsCodeUri } from '../../utils/vsc-utils';
 import { FoamGraph } from '../../core/model/graph';
 import {
   ResourceRangeTreeItem,
@@ -20,11 +20,6 @@ describe('Backlinks panel', () => {
     await createNote(noteA);
     await createNote(noteB);
     await createNote(noteC);
-  });
-  afterAll(async () => {
-    graph.dispose();
-    ws.dispose();
-    await cleanWorkspace();
   });
 
   // TODO: this should really just be the workspace folder, use that once #806 is fixed
@@ -48,7 +43,19 @@ describe('Backlinks panel', () => {
   ws.set(noteA).set(noteB).set(noteC);
   const graph = FoamGraph.fromWorkspace(ws, true);
 
-  const provider = new BacklinksTreeDataProvider(ws, graph);
+  const provider = new ConnectionsTreeDataProvider(
+    ws,
+    graph,
+    new MapBasedMemento(),
+    false
+  );
+
+  afterAll(async () => {
+    graph.dispose();
+    ws.dispose();
+    provider.dispose();
+    await cleanWorkspace();
+  });
 
   beforeEach(async () => {
     await closeEditors();
@@ -93,6 +100,11 @@ describe('Backlinks panel', () => {
     await provider.refresh();
     const notes = (await provider.getChildren()) as ResourceTreeItem[];
     expect(notes[0].command).toMatchObject({
+      command: 'vscode.open',
+      arguments: [expect.objectContaining({ path: noteB.uri.path })],
+    });
+    const links = (await provider.getChildren(notes[0])) as ResourceTreeItem[];
+    expect(links[0].command).toMatchObject({
       command: 'vscode.open',
       arguments: [
         expect.objectContaining({ path: noteB.uri.path }),

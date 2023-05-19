@@ -17,7 +17,13 @@ export const fromVsCodeUri = (u: Uri): FoamURI => FoamURI.parse(u.toString());
  * A class that wraps context value, syncs it via setContext, and provides a typed interface to it.
  */
 export class ContextMemento<T> {
-  constructor(private data: Memento, private key: string, defaultValue: T) {
+  constructor(
+    private data: Memento,
+    private key: string,
+    defaultValue: T,
+    resetToDefault: boolean = false
+  ) {
+    resetToDefault && this.data.update(this.key, defaultValue);
     const value = data.get(key) ?? defaultValue;
     commands.executeCommand('setContext', this.key, value);
   }

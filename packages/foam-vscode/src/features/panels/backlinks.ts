@@ -3,13 +3,15 @@ import { URI } from '../../core/model/uri';
 import { isNone } from '../../utils';
 import { Foam } from '../../core/model/foam';
 import { FoamWorkspace } from '../../core/model/workspace';
-import { FoamGraph } from '../../core/model/graph';
-import { fromVsCodeUri } from '../../utils/vsc-utils';
+import { Connection, FoamGraph } from '../../core/model/graph';
+import { Range } from '../../core/model/range';
+import { ContextMemento, fromVsCodeUri } from '../../utils/vsc-utils';
 import {
+  BaseTreeItem,
   ResourceRangeTreeItem,
   ResourceTreeItem,
-  createBacklinkItemsForResource,
-  groupRangesByResource,
+  UriTreeItem,
+  createConnectionItemsForResource,
 } from './utils/tree-view-utils';
 import { BaseTreeProvider } from './utils/base-tree-provider';
 
@@ -19,8 +21,12 @@ export default async function activate(
 ) {
   const foam = await foamPromise;
 
-  const provider = new BacklinksTreeDataProvider(foam.workspace, foam.graph);
-  const treeView = vscode.window.createTreeView('foam-vscode.backlinks', {
+  const provider = new ConnectionsTreeDataProvider(
+    foam.workspace,
+    foam.graph,
+    context.globalState
+  );
+  const treeView = vscode.window.createTreeView('foam-vscode.connections', {
     treeDataProvider: provider,
     showCollapseAll: true,
   });
@@ -31,7 +37,6 @@ export default async function activate(
       ? fromVsCodeUri(vscode.window.activeTextEditor?.document.uri)
       : undefined;
     await provider.refresh();
-    treeView.title = baseTitle + ` (${provider.nValues})`;
   };
 
   updateTreeView();
@@ -40,42 +45,126 @@ export default async function activate(
     provider,
     treeView,
     foam.graph.onDidUpdate(() => updateTreeView()),
-    vscode.window.onDidChangeActiveTextEditor(() => updateTreeView())
+    vscode.window.onDidChangeActiveTextEditor(() => updateTreeView()),
+    provider.onDidChangeTreeData(() => {
+      treeView.title = ` ${provider.show.get()} (${provider.nValues})`;
+    })
   );
 }
 
-export class BacklinksTreeDataProvider extends BaseTreeProvider<vscode.TreeItem> {
+export class ConnectionsTreeDataProvider extends BaseTreeProvider<vscode.TreeItem> {
+  public show = new ContextMemento<'connections' | 'backlinks' | 'links'>(
+    this.state,
+    `foam-vscode.views.connections.show`,
+    'connections',
+    true
+  );
   public target?: URI = undefined;
   public nValues = 0;
-  private backlinkItems: ResourceRangeTreeItem[];
+  private connectionItems: ResourceRangeTreeItem[] = [];
 
-  constructor(private workspace: FoamWorkspace, private graph: FoamGraph) {
+  constructor(
+    private workspace: FoamWorkspace,
+    private graph: FoamGraph,
+    public state: vscode.Memento,
+    registerCommands = true // for testing. don't love it, but will do for now
+  ) {
     super();
+    if (!registerCommands) {
+      return;
+    }
+    this.disposables.push(
+      vscode.commands.registerCommand(
+        `foam-vscode.views.connections.show:connections`,
+        () => {
+          this.show.update('connections');
+          this.refresh();
+        }
+      ),
+      vscode.commands.registerCommand(
+        `foam-vscode.views.connections.show:backlinks`,
+        () => {
+          this.show.update('backlinks');
+          this.refresh();
+        }
+      ),
+      vscode.commands.registerCommand(
+        `foam-vscode.views.connections.show:links`,
+        () => {
+          this.show.update('links');
+          this.refresh();
+        }
+      )
+    );
   }
 
   async refresh(): Promise<void> {
     const uri = this.target;
 
-    const backlinkItems =
+    const connectionItems =
       isNone(uri) || isNone(this.workspace.find(uri))
         ? []
-        : await createBacklinkItemsForResource(this.workspace, this.graph, uri);
+        : await createConnectionItemsForResource(
+            this.workspace,
+            this.graph,
+            uri,
+            (connection: Connection) => {
+              const isBacklink = connection.target
+                .asPlain()
+                .isEqual(this.target);
+              return (
+                this.show.get() === 'connections' ||
+                (isBacklink && this.show.get() === 'backlinks') ||
+                (!isBacklink && this.show.get() === 'links')
+              );
+            }
+          );
 
-    this.backlinkItems = backlinkItems;
-    this.nValues = backlinkItems.length;
+    this.connectionItems = connectionItems;
+    this.nValues = connectionItems.length;
     super.refresh();
   }
 
   async getChildren(item?: BacklinkPanelTreeItem): Promise<vscode.TreeItem[]> {
-    if (item && item instanceof ResourceTreeItem) {
+    if (item && item instanceof BaseTreeItem) {
       return item.getChildren();
     }
 
-    return groupRangesByResource(
-      this.workspace,
-      this.backlinkItems,
-      vscode.TreeItemCollapsibleState.Expanded
-    );
+    const byResource = this.connectionItems.reduce((acc, item) => {
+      const connection = item.value as Connection;
+      const isBacklink = connection.target.asPlain().isEqual(this.target);
+      const uri = isBacklink ? connection.source : connection.target;
+      acc.set(uri.toString(), [...(acc.get(uri.toString()) ?? []), item]);
+      return acc;
+    }, new Map() as Map<string, ResourceRangeTreeItem[]>);
+
+    const resourceItems = [];
+    for (const [uriString, items] of byResource.entries()) {
+      const uri = URI.parse(uriString);
+      const item = uri.isPlaceholder()
+        ? new UriTreeItem(uri, {
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+          })
+        : new ResourceTreeItem(this.workspace.get(uri), this.workspace, {
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+          });
+      const children = items.sort((a, b) => {
+        return (
+          a.variant.localeCompare(b.variant) || Range.isBefore(a.range, b.range)
+        );
+      });
+      item.getChildren = () => Promise.resolve(children);
+      item.description = `(${items.length}) ${item.description}`;
+      // item.iconPath = children.every(c => c.variant === children[0].variant)
+      //   ? children[0].iconPath
+      //   : new vscode.ThemeIcon(
+      //       'arrow-swap',
+      //       new vscode.ThemeColor('charts.purple')
+      //     );
+      resourceItems.push(item);
+    }
+    resourceItems.sort((a, b) => a.label.localeCompare(b.label));
+    return resourceItems;
   }
 }
 

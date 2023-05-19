@@ -66,9 +66,13 @@ export class ConnectionsTreeDataProvider extends BaseTreeProvider<vscode.TreeIte
   constructor(
     private workspace: FoamWorkspace,
     private graph: FoamGraph,
-    public state: vscode.Memento
+    public state: vscode.Memento,
+    registerCommands = true // for testing. don't love it, but will do for now
   ) {
     super();
+    if (!registerCommands) {
+      return;
+    }
     this.disposables.push(
       vscode.commands.registerCommand(
         `foam-vscode.views.connections.show:connections`,

@@ -21,11 +21,6 @@ describe('Backlinks panel', () => {
     await createNote(noteB);
     await createNote(noteC);
   });
-  afterAll(async () => {
-    graph.dispose();
-    ws.dispose();
-    await cleanWorkspace();
-  });
 
   // TODO: this should really just be the workspace folder, use that once #806 is fixed
   const rootUri = getUriInWorkspace('just-a-ref.md');
@@ -51,8 +46,16 @@ describe('Backlinks panel', () => {
   const provider = new ConnectionsTreeDataProvider(
     ws,
     graph,
-    new MapBasedMemento()
+    new MapBasedMemento(),
+    false
   );
+
+  afterAll(async () => {
+    graph.dispose();
+    ws.dispose();
+    provider.dispose();
+    await cleanWorkspace();
+  });
 
   beforeEach(async () => {
     await closeEditors();

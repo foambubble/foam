@@ -160,6 +160,11 @@ export class NotesProvider extends FolderTreeProvider<
       });
       return backlinks;
     };
+    res.description =
+      value.uri.getName().toLocaleLowerCase() ===
+      value.title.toLocaleLowerCase()
+        ? undefined
+        : value.uri.getBasename();
     return res;
   }
 }

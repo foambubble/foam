@@ -1,4 +1,4 @@
-export { default as backlinks } from './backlinks';
+export { default as backlinks } from './connections';
 export { default as dataviz } from './dataviz';
 export { default as orphans } from './orphans';
 export { default as placeholders } from './placeholders';

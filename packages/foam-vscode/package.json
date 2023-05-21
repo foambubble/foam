@@ -109,17 +109,17 @@
       "view/title": [
         {
           "command": "foam-vscode.views.connections.show:backlinks",
-          "when": "view == foam-vscode.connections && foam-vscode.views.connections.show == 'connections'",
+          "when": "view == foam-vscode.connections && foam-vscode.views.connections.show == 'all links'",
           "group": "navigation"
         },
         {
-          "command": "foam-vscode.views.connections.show:links",
+          "command": "foam-vscode.views.connections.show:forward-links",
           "when": "view == foam-vscode.connections && foam-vscode.views.connections.show == 'backlinks'",
           "group": "navigation"
         },
         {
-          "command": "foam-vscode.views.connections.show:connections",
-          "when": "view == foam-vscode.connections && foam-vscode.views.connections.show == 'links'",
+          "command": "foam-vscode.views.connections.show:all-links",
+          "when": "view == foam-vscode.connections && foam-vscode.views.connections.show == 'forward links'",
           "group": "navigation"
         },
         {
@@ -173,7 +173,7 @@
           "when": "false"
         },
         {
-          "command": "foam-vscode.views.connections.show:connections",
+          "command": "foam-vscode.views.connections.show:all-links",
           "when": "false"
         },
         {
@@ -181,7 +181,7 @@
           "when": "false"
         },
         {
-          "command": "foam-vscode.views.connections.show:links",
+          "command": "foam-vscode.views.connections.show:forward-links",
           "when": "false"
         },
         {
@@ -294,12 +294,12 @@
         "icon": "$(arrow-left)"
       },
       {
-        "command": "foam-vscode.views.connections.show:links",
+        "command": "foam-vscode.views.connections.show:forward-links",
         "title": "Show Links",
         "icon": "$(arrow-right)"
       },
       {
-        "command": "foam-vscode.views.connections.show:connections",
+        "command": "foam-vscode.views.connections.show:all-links",
         "title": "Show All",
         "icon": "$(arrow-swap)"
       },

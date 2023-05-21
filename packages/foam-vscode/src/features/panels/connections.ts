@@ -53,10 +53,10 @@ export default async function activate(
 }
 
 export class ConnectionsTreeDataProvider extends BaseTreeProvider<vscode.TreeItem> {
-  public show = new ContextMemento<'connections' | 'backlinks' | 'links'>(
+  public show = new ContextMemento<'all links' | 'backlinks' | 'forward links'>(
     this.state,
     `foam-vscode.views.connections.show`,
-    'connections',
+    'all links',
     true
   );
   public target?: URI = undefined;
@@ -75,9 +75,9 @@ export class ConnectionsTreeDataProvider extends BaseTreeProvider<vscode.TreeIte
     }
     this.disposables.push(
       vscode.commands.registerCommand(
-        `foam-vscode.views.connections.show:connections`,
+        `foam-vscode.views.connections.show:all-links`,
         () => {
-          this.show.update('connections');
+          this.show.update('all links');
           this.refresh();
         }
       ),
@@ -89,9 +89,9 @@ export class ConnectionsTreeDataProvider extends BaseTreeProvider<vscode.TreeIte
         }
       ),
       vscode.commands.registerCommand(
-        `foam-vscode.views.connections.show:links`,
+        `foam-vscode.views.connections.show:forward-links`,
         () => {
-          this.show.update('links');
+          this.show.update('forward links');
           this.refresh();
         }
       )
@@ -113,9 +113,9 @@ export class ConnectionsTreeDataProvider extends BaseTreeProvider<vscode.TreeIte
                 .asPlain()
                 .isEqual(this.target);
               return (
-                this.show.get() === 'connections' ||
+                this.show.get() === 'all links' ||
                 (isBacklink && this.show.get() === 'backlinks') ||
-                (!isBacklink && this.show.get() === 'links')
+                (!isBacklink && this.show.get() === 'forward links')
               );
             }
           );

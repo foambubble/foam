@@ -43,6 +43,7 @@ export default async function activate(
         // cause the tree view to take the focus from the item when
         // browsing the notes explorer
         if (
+          item &&
           !treeView.selection.find(
             i => i.resourceUri?.path === item.resourceUri.path
           )

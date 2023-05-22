@@ -10,6 +10,7 @@ import {
 
 const knownFoamVariables = new Set([
   'FOAM_TITLE',
+  'FOAM_TITLE_SAFE',
   'FOAM_SLUG',
   'FOAM_SELECTED_TEXT',
   'FOAM_DATE_YEAR',
@@ -132,6 +133,9 @@ export class Resolver implements VariableResolver {
         case 'FOAM_TITLE':
           value = resolveFoamTitle();
           break;
+        case 'FOAM_TITLE_SAFE':
+          value = resolveFoamTitleSafe(this);
+          break;
         case 'FOAM_SLUG':
           value = toSlug(await this.resolve(new Variable('FOAM_TITLE')));
           break;
@@ -242,3 +246,29 @@ async function resolveFoamTitle() {
 function resolveFoamSelectedText() {
   return findSelectionContent()?.content ?? '';
 }
+
+/**
+ * Common chars that is better to avoid in file names.
+ * Inspired by:
+ *   https://www.mtu.edu/umc/services/websites/writing/characters-avoid/
+ *   https://stackoverflow.com/questions/1976007/what-characters-are-forbidden-in-windows-and-linux-directory-names
+ * Even if some might be allowed in Win or Linux, to keep things more compatible and less error prone
+ * we don't allow them
+ * Also see https://github.com/foambubble/foam/issues/1042
+ */
+const UNALLOWED_CHARS = '/\\#%&{}<>?*$!\'":@+`|=';
+
+/**
+ * Uses the title to generate a file path.
+ * It sanitizes the title to remove special characters and spaces.
+ *
+ * @param resolver the resolver to use
+ * @returns the string path of the new note
+ */
+export const resolveFoamTitleSafe = async (resolver: Resolver) => {
+  let safeTitle = await resolver.resolveFromName('FOAM_TITLE');
+  UNALLOWED_CHARS.split('').forEach(char => {
+    safeTitle = safeTitle.split(char).join('-');
+  });
+  return safeTitle;
+};

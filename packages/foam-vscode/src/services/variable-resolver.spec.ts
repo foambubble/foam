@@ -102,6 +102,23 @@ describe('variable-resolver, variable resolution', () => {
     expect(await resolver.resolveAll(variables)).toEqual(expected);
   });
 
+  it('should resolve FOAM_TITLE_SAFE', async () => {
+    const foamTitle = 'My/note#title';
+    const variables = [
+      new Variable('FOAM_TITLE'),
+      new Variable('FOAM_TITLE_SAFE'),
+    ];
+
+    const expected = new Map<string, string>();
+    expected.set('FOAM_TITLE', foamTitle);
+    expected.set('FOAM_TITLE_SAFE', 'My-note-title');
+
+    const givenValues = new Map<string, string>();
+    givenValues.set('FOAM_TITLE', foamTitle);
+    const resolver = new Resolver(givenValues, new Date());
+    expect(await resolver.resolveAll(variables)).toEqual(expected);
+  });
+
   it('should resolve FOAM_DATE_* properties with current day by default', async () => {
     const variables = [
       new Variable('FOAM_DATE_YEAR'),

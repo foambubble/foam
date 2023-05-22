@@ -75,6 +75,7 @@ export class FoamWorkspace implements IDisposable {
       }
     }
     return resources.sort((a, b) => a.uri.path.localeCompare(b.uri.path));
+    return resources.sort(Resource.sortByPath);
   }
 
   /**

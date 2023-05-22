@@ -398,7 +398,7 @@
         "foam.files.noteExtensions": {
           "type": "string",
           "default": "md",
-          "description": "Space separated list of file extensions that will be considered markdown notes"
+          "description": "Space separated list of file extensions that will be considered markdown notes.\n *The first extension listed will be used as default for new notes and link resolution*"
         },
         "foam.files.newNotePath": {
           "type": "string",

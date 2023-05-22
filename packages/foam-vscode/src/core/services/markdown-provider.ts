@@ -13,6 +13,14 @@ import { ResourceProvider } from '../model/provider';
 import { MarkdownLink } from './markdown-link';
 import { IDataStore } from './datastore';
 import { uniqBy } from 'lodash';
+import { getFoamVsCodeConfig } from '../../services/config';
+
+const notesExtensions = getFoamVsCodeConfig(
+  'files.noteExtensions',
+  'md markdown'
+)
+  .split(' ')
+  .map(ext => '.' + ext.trim());
 
 export class MarkdownResourceProvider implements ResourceProvider {
   private disposables: IDisposable[] = [];
@@ -23,7 +31,7 @@ export class MarkdownResourceProvider implements ResourceProvider {
   ) {}
 
   supports(uri: URI) {
-    return uri.isMarkdown();
+    return notesExtensions.includes(uri.getExtension());
   }
 
   async readAsMarkdown(uri: URI): Promise<string | null> {

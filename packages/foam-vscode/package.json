@@ -395,6 +395,11 @@
           "default": "pdf mp3 webm wav m4a mp4 avi mov rtf txt doc docx pages xls xlsx numbers ppt pptm pptx",
           "description": "Space separated list of file extensions that will be considered attachments"
         },
+        "foam.files.noteExtensions": {
+          "type": "string",
+          "default": "md",
+          "description": "Space separated list of file extensions that will be considered markdown notes"
+        },
         "foam.files.newNotePath": {
           "type": "string",
           "default": "root",

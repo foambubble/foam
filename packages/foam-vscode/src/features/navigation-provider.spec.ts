@@ -83,7 +83,7 @@ describe('Document navigation', () => {
       expect(links.length).toEqual(1);
       expect(links[0].target).toEqual(
         commandAsURI(
-          CREATE_NOTE_COMMAND.forPlaceholder('a placeholder', {
+          CREATE_NOTE_COMMAND.forPlaceholder('a placeholder', '.md', {
             onFileExists: 'open',
           })
         )

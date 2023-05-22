@@ -137,7 +137,10 @@ export function createMarkdownReferences(
       }
 
       let relativeUri = target.uri.relativeTo(resource.uri.getDirectory());
-      if (!includeExtension && relativeUri.path.endsWith('.md')) {
+      if (
+        !includeExtension &&
+        relativeUri.path.endsWith(workspace.defaultExtension)
+      ) {
         relativeUri = relativeUri.changeExtension('*', '');
       }
 

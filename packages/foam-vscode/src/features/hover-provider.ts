@@ -106,10 +106,14 @@ export class HoverProvider implements vscode.HoverProvider {
         : this.workspace.get(targetUri).title;
     }
 
-    const command = CREATE_NOTE_COMMAND.forPlaceholder(targetUri.path, {
-      askForTemplate: true,
-      onFileExists: 'open',
-    });
+    const command = CREATE_NOTE_COMMAND.forPlaceholder(
+      targetUri.path,
+      this.workspace.defaultExtension,
+      {
+        askForTemplate: true,
+        onFileExists: 'open',
+      }
+    );
     const newNoteFromTemplate = new vscode.MarkdownString(
       `[Create note from template for '${targetUri.getBasename()}'](${commandAsURI(
         command

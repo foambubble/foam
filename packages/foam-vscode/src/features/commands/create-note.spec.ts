@@ -194,7 +194,10 @@ describe('factories', () => {
   describe('forPlaceholder', () => {
     it('adds the .md extension to notes created for placeholders', async () => {
       await closeEditors();
-      const command = CREATE_NOTE_COMMAND.forPlaceholder('my-placeholder');
+      const command = CREATE_NOTE_COMMAND.forPlaceholder(
+        'my-placeholder',
+        '.md'
+      );
       await commands.executeCommand(command.name, command.params);
 
       const doc = window.activeTextEditor.document;

@@ -6,10 +6,6 @@ import { Emitter } from '../common/event';
 import { ResourceProvider } from './provider';
 import { IDisposable } from '../common/lifecycle';
 import { IDataStore } from '../services/datastore';
-import { getFoamVsCodeConfig } from '../../services/config';
-
-const defaultExtension =
-  getFoamVsCodeConfig('files.noteExtensions', 'md').split(' ')?.[0] ?? 'md';
 
 export class FoamWorkspace implements IDisposable {
   private onDidAddEmitter = new Emitter<Resource>();
@@ -27,9 +23,9 @@ export class FoamWorkspace implements IDisposable {
   private _resources: Map<string, Resource> = new Map();
 
   /**
-   * The default extension for notes in this workspace (e.g. `.md`)
+   * @param defaultExtension: The default extension for notes in this workspace (e.g. `.md`)
    */
-  public defaultExtension: string = '.' + defaultExtension;
+  constructor(public defaultExtension: string = '.md') {}
 
   registerProvider(provider: ResourceProvider) {
     this.providers.push(provider);
@@ -247,9 +243,10 @@ export class FoamWorkspace implements IDisposable {
 
   static async fromProviders(
     providers: ResourceProvider[],
-    dataStore: IDataStore
+    dataStore: IDataStore,
+    defaultExtension: string = '.md'
   ): Promise<FoamWorkspace> {
-    const workspace = new FoamWorkspace();
+    const workspace = new FoamWorkspace(defaultExtension);
     await Promise.all(providers.map(p => workspace.registerProvider(p)));
     const files = await dataStore.list();
     await Promise.all(files.map(f => workspace.fetchAndSet(f)));

@@ -13,6 +13,7 @@ import { VsCodeWatcher } from './services/watcher';
 import { createMarkdownParser } from './core/services/markdown-parser';
 import VsCodeBasedParserCache from './services/cache';
 import { createMatcherAndDataStore } from './services/editor';
+import { getFoamVsCodeConfig } from './services/config';
 
 export async function activate(context: ExtensionContext) {
   const logger = new VsCodeOutputLogger();
@@ -45,13 +46,29 @@ export async function activate(context: ExtensionContext) {
     const parserCache = new VsCodeBasedParserCache(context);
     const parser = createMarkdownParser([], parserCache);
 
-    const markdownProvider = new MarkdownResourceProvider(dataStore, parser);
+    const notesExtensions = getFoamVsCodeConfig(
+      'files.noteExtensions',
+      'md markdown'
+    )
+      .split(' ')
+      .map(ext => '.' + ext.trim());
+    const defaultExtension = notesExtensions?.[0] ?? '.md';
+
+    const markdownProvider = new MarkdownResourceProvider(
+      dataStore,
+      parser,
+      notesExtensions
+    );
     const attachmentProvider = new AttachmentResourceProvider();
 
-    const foamPromise = bootstrap(matcher, watcher, dataStore, parser, [
-      markdownProvider,
-      attachmentProvider,
-    ]);
+    const foamPromise = bootstrap(
+      matcher,
+      watcher,
+      dataStore,
+      parser,
+      [markdownProvider, attachmentProvider],
+      defaultExtension
+    );
 
     // Load the features
     const resPromises = features.map(feature => feature(context, foamPromise));

@@ -13,25 +13,18 @@ import { ResourceProvider } from '../model/provider';
 import { MarkdownLink } from './markdown-link';
 import { IDataStore } from './datastore';
 import { uniqBy } from 'lodash';
-import { getFoamVsCodeConfig } from '../../services/config';
-
-const notesExtensions = getFoamVsCodeConfig(
-  'files.noteExtensions',
-  'md markdown'
-)
-  .split(' ')
-  .map(ext => '.' + ext.trim());
 
 export class MarkdownResourceProvider implements ResourceProvider {
   private disposables: IDisposable[] = [];
 
   constructor(
     private readonly dataStore: IDataStore,
-    private readonly parser: ResourceParser
+    private readonly parser: ResourceParser,
+    public readonly noteExtensions: string[] = ['.md']
   ) {}
 
   supports(uri: URI) {
-    return notesExtensions.includes(uri.getExtension());
+    return this.noteExtensions.includes(uri.getExtension());
   }
 
   async readAsMarkdown(uri: URI): Promise<string | null> {

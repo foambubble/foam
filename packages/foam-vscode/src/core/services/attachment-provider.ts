@@ -3,17 +3,8 @@ import { URI } from '../model/uri';
 import { FoamWorkspace } from '../model/workspace';
 import { IDisposable } from '../common/lifecycle';
 import { ResourceProvider } from '../model/provider';
-import { getFoamVsCodeConfig } from '../../services/config';
-
-const attachmentExtConfig = getFoamVsCodeConfig(
-  'files.attachmentExtensions',
-  ''
-)
-  .split(' ')
-  .map(ext => '.' + ext.trim());
 
 const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp'];
-const attachmentExtensions = [...attachmentExtConfig, ...imageExtensions];
 
 const asResource = (uri: URI): Resource => {
   const type = imageExtensions.includes(uri.getExtension())
@@ -34,9 +25,14 @@ const asResource = (uri: URI): Resource => {
 
 export class AttachmentResourceProvider implements ResourceProvider {
   private disposables: IDisposable[] = [];
+  public readonly attachmentExtensions: string[];
+
+  constructor(attachmentExtensions: string[] = []) {
+    this.attachmentExtensions = [...imageExtensions, ...attachmentExtensions];
+  }
 
   supports(uri: URI) {
-    return attachmentExtensions.includes(
+    return this.attachmentExtensions.includes(
       uri.getExtension().toLocaleLowerCase()
     );
   }

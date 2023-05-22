@@ -59,7 +59,16 @@ export async function activate(context: ExtensionContext) {
       parser,
       notesExtensions
     );
-    const attachmentProvider = new AttachmentResourceProvider();
+
+    const attachmentExtConfig = getFoamVsCodeConfig(
+      'files.attachmentExtensions',
+      ''
+    )
+      .split(' ')
+      .map(ext => '.' + ext.trim());
+    const attachmentProvider = new AttachmentResourceProvider(
+      attachmentExtConfig
+    );
 
     const foamPromise = bootstrap(
       matcher,

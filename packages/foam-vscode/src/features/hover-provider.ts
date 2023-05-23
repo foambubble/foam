@@ -111,7 +111,7 @@ export class HoverProvider implements vscode.HoverProvider {
       onFileExists: 'open',
     });
     const newNoteFromTemplate = new vscode.MarkdownString(
-      `[Create note from template for '${targetUri.getName()}'](${commandAsURI(
+      `[Create note from template for '${targetUri.getBasename()}'](${commandAsURI(
         command
       ).toString()})`
     );

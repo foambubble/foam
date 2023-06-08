@@ -2,7 +2,7 @@ import { getNotesExtensions } from './settings';
 import { withModifiedFoamConfiguration } from './test/test-utils-vscode';
 
 describe('Default note settings', () => {
-  it('should default to md', async () => {
+  it('should default to .md', async () => {
     const config = getNotesExtensions();
     expect(config.defaultExtension).toEqual('.md');
     expect(config.notesExtensions).toEqual(['.md']);
@@ -14,7 +14,18 @@ describe('Default note settings', () => {
       'mdxx',
       async () => {
         const { notesExtensions } = getNotesExtensions();
-        expect(notesExtensions).toEqual(['.md', '.mdxx']);
+        expect(notesExtensions).toEqual(['.mdxx']);
+
+        withModifiedFoamConfiguration(
+          'files.notesExtensions',
+          'md markdown',
+          async () => {
+            const { notesExtensions } = getNotesExtensions();
+            expect(notesExtensions).toEqual(
+              expect.arrayContaining(['.mdxx', 'md', 'markdown'])
+            );
+          }
+        );
       }
     );
   });

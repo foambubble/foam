@@ -1,5 +1,5 @@
 import { workspace, GlobPattern } from 'vscode';
-import _ from 'lodash';
+import { uniq } from 'lodash';
 import { LogLevel } from './core/utils/log';
 import { getFoamVsCodeConfig } from './services/config';
 
@@ -10,8 +10,8 @@ import { getFoamVsCodeConfig } from './services/config';
  */
 export function getNotesExtensions() {
   const notesExtensionsFromSetting = getFoamVsCodeConfig(
-    'files.noteExtensions',
-    'md'
+    'files.notesExtensions',
+    ''
   )
     .split(' ')
     .map(ext => '.' + ext.trim());
@@ -20,7 +20,7 @@ export function getNotesExtensions() {
     (getFoamVsCodeConfig('files.defaultNoteExtension', 'md') ?? 'md').trim();
 
   // we make sure that the default extension is always included in the list of extensions
-  const notesExtensions = _.uniq(
+  const notesExtensions = uniq(
     notesExtensionsFromSetting.concat(defaultExtension)
   );
 

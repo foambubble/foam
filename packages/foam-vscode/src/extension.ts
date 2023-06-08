@@ -7,7 +7,7 @@ import { Logger } from './core/utils/log';
 
 import { features } from './features';
 import { VsCodeOutputLogger, exposeLogger } from './services/logging';
-import { getIgnoredFilesSetting } from './settings';
+import { getIgnoredFilesSetting, getNotesExtensions } from './settings';
 import { AttachmentResourceProvider } from './core/services/attachment-provider';
 import { VsCodeWatcher } from './services/watcher';
 import { createMarkdownParser } from './core/services/markdown-parser';
@@ -46,13 +46,7 @@ export async function activate(context: ExtensionContext) {
     const parserCache = new VsCodeBasedParserCache(context);
     const parser = createMarkdownParser([], parserCache);
 
-    const notesExtensions = getFoamVsCodeConfig(
-      'files.noteExtensions',
-      'md markdown'
-    )
-      .split(' ')
-      .map(ext => '.' + ext.trim());
-    const defaultExtension = notesExtensions?.[0] ?? '.md';
+    const { notesExtensions, defaultExtension } = getNotesExtensions();
 
     const markdownProvider = new MarkdownResourceProvider(
       dataStore,
@@ -92,7 +86,21 @@ export async function activate(context: ExtensionContext) {
       attachmentProvider,
       commands.registerCommand('foam-vscode.clear-cache', () =>
         parserCache.clear()
-      )
+      ),
+      workspace.onDidChangeConfiguration(e => {
+        if (
+          [
+            'foam.files.ignore',
+            'foam.files.attachmentExtensions',
+            'foam.files.noteExtensions',
+            'foam.files.defaultNoteExtension',
+          ].some(setting => e.affectsConfiguration(setting))
+        ) {
+          window.showInformationMessage(
+            'Foam: Reload the window to use the updated settings'
+          );
+        }
+      })
     );
 
     const res = (await Promise.all(resPromises)).filter(r => r != null);

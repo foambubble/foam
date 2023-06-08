@@ -14,6 +14,7 @@ export function getNotesExtensions() {
     ''
   )
     .split(' ')
+    .filter(ext => ext.trim() !== '')
     .map(ext => '.' + ext.trim());
   const defaultExtension =
     '.' +

@@ -22,7 +22,7 @@ describe('Default note settings', () => {
           async () => {
             const { notesExtensions } = getNotesExtensions();
             expect(notesExtensions).toEqual(
-              expect.arrayContaining(['.mdxx', 'md', 'markdown'])
+              expect.arrayContaining(['.mdxx', '.md', '.markdown'])
             );
           }
         );

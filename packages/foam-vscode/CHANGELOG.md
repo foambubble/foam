@@ -4,6 +4,17 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.25.0] - 2023-06-30
+
+Features:
+
+- Support for multiple extensions and custom default extension (#1235)
+- Added `FOAM_TITLE_SAFE` template variable (#1232)
+
+Fixes and Improvements:
+
+- Connections panel tweaks (#1233)
+
 ## [0.24.0] - 2023-05-19
 
 Features:

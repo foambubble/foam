@@ -25,13 +25,15 @@ export const bootstrap = async (
   watcher: IWatcher | undefined,
   dataStore: IDataStore,
   parser: ResourceParser,
-  initialProviders: ResourceProvider[]
+  initialProviders: ResourceProvider[],
+  defaultExtension: string = '.md'
 ) => {
   const tsStart = Date.now();
 
   const workspace = await FoamWorkspace.fromProviders(
     initialProviders,
-    dataStore
+    dataStore,
+    defaultExtension
   );
 
   const tsWsDone = Date.now();

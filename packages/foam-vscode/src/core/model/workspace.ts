@@ -22,6 +22,11 @@ export class FoamWorkspace implements IDisposable {
    */
   private _resources: Map<string, Resource> = new Map();
 
+  /**
+   * @param defaultExtension: The default extension for notes in this workspace (e.g. `.md`)
+   */
+  constructor(public defaultExtension: string = '.md') {}
+
   registerProvider(provider: ResourceProvider) {
     this.providers.push(provider);
   }
@@ -67,14 +72,16 @@ export class FoamWorkspace implements IDisposable {
   public listByIdentifier(identifier: string): Resource[] {
     const needle = normalize('/' + identifier);
     const mdNeedle =
-      getExtension(needle) !== '.md' ? needle + '.md' : undefined;
-    const resources = [];
+      getExtension(needle) !== this.defaultExtension
+        ? needle + this.defaultExtension
+        : undefined;
+    const resources: Resource[] = [];
     for (const key of this._resources.keys()) {
-      if ((mdNeedle && key.endsWith(mdNeedle)) || key.endsWith(needle)) {
+      if (key.endsWith(mdNeedle) || key.endsWith(needle)) {
         resources.push(this._resources.get(normalize(key)));
       }
     }
-    return resources.sort((a, b) => a.uri.path.localeCompare(b.uri.path));
+    return resources.sort(Resource.sortByPath);
   }
 
   /**
@@ -105,7 +112,7 @@ export class FoamWorkspace implements IDisposable {
       forResource.path,
       amongst.map(uri => uri.path)
     );
-    identifier = changeExtension(identifier, '.md', '');
+    identifier = changeExtension(identifier, this.defaultExtension, '');
     if (forResource.fragment) {
       identifier += `#${forResource.fragment}`;
     }
@@ -121,7 +128,7 @@ export class FoamWorkspace implements IDisposable {
     if (FoamWorkspace.isIdentifier(path)) {
       resource = this.listByIdentifier(path)[0];
     } else {
-      const candidates = [path, path + '.md'];
+      const candidates = [path, path + this.defaultExtension];
       for (const candidate of candidates) {
         const searchKey = isAbsolute(candidate)
           ? candidate
@@ -141,7 +148,6 @@ export class FoamWorkspace implements IDisposable {
   }
 
   public resolveLink(resource: Resource, link: ResourceLink): URI {
-    // TODO add tests
     for (const provider of this.providers) {
       if (provider.supports(resource.uri)) {
         return provider.resolveLink(this, resource, link);
@@ -237,9 +243,10 @@ export class FoamWorkspace implements IDisposable {
 
   static async fromProviders(
     providers: ResourceProvider[],
-    dataStore: IDataStore
+    dataStore: IDataStore,
+    defaultExtension: string = '.md'
   ): Promise<FoamWorkspace> {
-    const workspace = new FoamWorkspace();
+    const workspace = new FoamWorkspace(defaultExtension);
     await Promise.all(providers.map(p => workspace.registerProvider(p)));
     const files = await dataStore.list();
     await Promise.all(files.map(f => workspace.fetchAndSet(f)));

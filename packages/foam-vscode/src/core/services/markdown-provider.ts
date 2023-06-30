@@ -19,11 +19,12 @@ export class MarkdownResourceProvider implements ResourceProvider {
 
   constructor(
     private readonly dataStore: IDataStore,
-    private readonly parser: ResourceParser
+    private readonly parser: ResourceParser,
+    public readonly noteExtensions: string[] = ['.md']
   ) {}
 
   supports(uri: URI) {
-    return uri.isMarkdown();
+    return this.noteExtensions.includes(uri.getExtension());
   }
 
   async readAsMarkdown(uri: URI): Promise<string | null> {
@@ -129,7 +130,10 @@ export function createMarkdownReferences(
       }
 
       let relativeUri = target.uri.relativeTo(resource.uri.getDirectory());
-      if (!includeExtension && relativeUri.path.endsWith('.md')) {
+      if (
+        !includeExtension &&
+        relativeUri.path.endsWith(workspace.defaultExtension)
+      ) {
         relativeUri = relativeUri.changeExtension('*', '');
       }
 

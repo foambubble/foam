@@ -107,7 +107,7 @@ describe('Identifier computation', () => {
     const third = createTestNote({
       uri: '/another/path/for/page-a.md',
     });
-    const ws = new FoamWorkspace().set(first).set(second).set(third);
+    const ws = new FoamWorkspace('.md').set(first).set(second).set(third);
 
     expect(ws.getIdentifier(first.uri)).toEqual('to/page-a');
     expect(ws.getIdentifier(second.uri)).toEqual('way/for/page-a');
@@ -124,7 +124,7 @@ describe('Identifier computation', () => {
     const third = createTestNote({
       uri: '/another/path/for/page-a.md',
     });
-    const ws = new FoamWorkspace().set(first).set(second).set(third);
+    const ws = new FoamWorkspace('.md').set(first).set(second).set(third);
 
     expect(ws.getIdentifier(first.uri.withFragment('section name'))).toEqual(
       'to/page-a#section name'
@@ -170,7 +170,7 @@ describe('Identifier computation', () => {
   });
 
   it('should ignore elements from the exclude list', () => {
-    const workspace = new FoamWorkspace();
+    const workspace = new FoamWorkspace('.md');
     const noteA = createTestNote({ uri: '/path/to/note-a.md' });
     const noteB = createTestNote({ uri: '/path/to/note-b.md' });
     const noteC = createTestNote({ uri: '/path/to/note-c.md' });

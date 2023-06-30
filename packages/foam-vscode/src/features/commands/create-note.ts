@@ -114,16 +114,27 @@ async function createNote(args: CreateNoteArgs) {
 export const CREATE_NOTE_COMMAND = {
   command: 'foam-vscode.create-note',
 
+  /**
+   * Creates a command descriptor to create a note from the given placeholder.
+   *
+   * @param placeholder the placeholder
+   * @param defaultExtension the default extension (e.g. '.md')
+   * @param extra extra command arguments
+   * @returns the command descriptor
+   */
   forPlaceholder: (
     placeholder: string,
+    defaultExtension: string,
     extra: Partial<CreateNoteArgs> = {}
   ): CommandDescriptor<CreateNoteArgs> => {
-    const title = placeholder.endsWith('.md')
-      ? placeholder.replace(/\.md$/, '')
+    const endsWithDefaultExtension = new RegExp(defaultExtension + '$');
+
+    const title = placeholder.endsWith(defaultExtension)
+      ? placeholder.replace(endsWithDefaultExtension, '')
       : placeholder;
-    const notePath = placeholder.endsWith('.md')
+    const notePath = placeholder.endsWith(defaultExtension)
       ? placeholder
-      : placeholder + '.md';
+      : placeholder + defaultExtension;
     return {
       name: CREATE_NOTE_COMMAND.command,
       params: {

@@ -24,20 +24,21 @@ interface FoamCommand<T> {
 interface FindIdentifierCommandArgs {
   range: vscode.Range;
   target: vscode.Uri;
+  defaultExtension: string;
   amongst: vscode.Uri[];
 }
 
 const FIND_IDENTIFIER_COMMAND: FoamCommand<FindIdentifierCommandArgs> = {
   name: 'foam:compute-identifier',
-  execute: async ({ target, amongst, range }) => {
+  execute: async ({ target, amongst, range, defaultExtension }) => {
     if (vscode.window.activeTextEditor) {
       let identifier = FoamWorkspace.getShortestIdentifier(
         target.path,
         amongst.map(uri => uri.path)
       );
 
-      identifier = identifier.endsWith('.md')
-        ? identifier.slice(0, -3)
+      identifier = identifier.endsWith(defaultExtension)
+        ? identifier.slice(0, defaultExtension.length * -1)
         : identifier;
 
       await vscode.window.activeTextEditor.edit(builder => {
@@ -97,7 +98,7 @@ export default async function activate(
     }),
     vscode.languages.registerCodeActionsProvider(
       'markdown',
-      new IdentifierResolver(),
+      new IdentifierResolver(foam.workspace.defaultExtension),
       {
         providedCodeActionKinds: IdentifierResolver.providedCodeActionKinds,
       }
@@ -193,6 +194,8 @@ export class IdentifierResolver implements vscode.CodeActionProvider {
     vscode.CodeActionKind.QuickFix,
   ];
 
+  constructor(private defaultExtension: string) {}
+
   provideCodeActions(
     document: vscode.TextDocument,
     range: vscode.Range | vscode.Selection,
@@ -207,7 +210,12 @@ export class IdentifierResolver implements vscode.CodeActionProvider {
         );
         for (const item of diagnostic.relatedInformation) {
           res.push(
-            createFindIdentifierCommand(diagnostic, item.location.uri, uris)
+            createFindIdentifierCommand(
+              diagnostic,
+              item.location.uri,
+              this.defaultExtension,
+              uris
+            )
           );
         }
         return [...acc, ...res];
@@ -257,6 +265,7 @@ const createReplaceSectionCommand = (
 const createFindIdentifierCommand = (
   diagnostic: vscode.Diagnostic,
   target: vscode.Uri,
+  defaultExtension: string,
   possibleTargets: vscode.Uri[]
 ): vscode.CodeAction => {
   const action = new vscode.CodeAction(
@@ -270,6 +279,7 @@ const createFindIdentifierCommand = (
       {
         target: target,
         amongst: possibleTargets,
+        defaultExtension: defaultExtension,
         range: new vscode.Range(
           diagnostic.range.start.line,
           diagnostic.range.start.character + 2,

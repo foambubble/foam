@@ -161,9 +161,13 @@ export class NavigationProvider
     return targets
       .filter(o => o.target.isPlaceholder()) // links to resources are managed by the definition provider
       .map(o => {
-        const command = CREATE_NOTE_COMMAND.forPlaceholder(o.target.path, {
-          onFileExists: 'open',
-        });
+        const command = CREATE_NOTE_COMMAND.forPlaceholder(
+          o.target.path,
+          this.workspace.defaultExtension,
+          {
+            onFileExists: 'open',
+          }
+        );
 
         const documentLink = new vscode.DocumentLink(
           new vscode.Range(

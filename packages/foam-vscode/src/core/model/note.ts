@@ -66,6 +66,10 @@ export abstract class Resource {
     return a.title.localeCompare(b.title);
   }
 
+  public static sortByPath(a: Resource, b: Resource) {
+    return a.uri.path.localeCompare(b.uri.path);
+  }
+
   public static isResource(thing: any): thing is Resource {
     if (!thing) {
       return false;

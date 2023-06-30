@@ -28,6 +28,17 @@ export function getNotesExtensions() {
   return { notesExtensions, defaultExtension };
 }
 
+/**
+ * Gets the attachment extensions from the config.
+ *
+ * @returns string[]
+ */
+export function getAttachmentsExtensions() {
+  return getFoamVsCodeConfig('files.attachmentExtensions', '')
+    .split(' ')
+    .map(ext => '.' + ext.trim());
+}
+
 export function getWikilinkDefinitionSetting():
   | 'withExtensions'
   | 'withoutExtensions'

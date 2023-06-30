@@ -7,7 +7,11 @@ import { Logger } from './core/utils/log';
 
 import { features } from './features';
 import { VsCodeOutputLogger, exposeLogger } from './services/logging';
-import { getIgnoredFilesSetting, getNotesExtensions } from './settings';
+import {
+  getAttachmentsExtensions,
+  getIgnoredFilesSetting,
+  getNotesExtensions,
+} from './settings';
 import { AttachmentResourceProvider } from './core/services/attachment-provider';
 import { VsCodeWatcher } from './services/watcher';
 import { createMarkdownParser } from './core/services/markdown-parser';
@@ -54,12 +58,7 @@ export async function activate(context: ExtensionContext) {
       notesExtensions
     );
 
-    const attachmentExtConfig = getFoamVsCodeConfig(
-      'files.attachmentExtensions',
-      ''
-    )
-      .split(' ')
-      .map(ext => '.' + ext.trim());
+    const attachmentExtConfig = getAttachmentsExtensions();
     const attachmentProvider = new AttachmentResourceProvider(
       attachmentExtConfig
     );

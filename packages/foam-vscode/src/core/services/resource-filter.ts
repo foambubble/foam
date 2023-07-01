@@ -53,6 +53,9 @@ export function createFilter(
     if (expressionFn && !expressionFn(resource)) {
       return false;
     }
+    if (filter.path && !resource.uri.path.match(filter.path)) {
+      return false;
+    }
     if (filter.type && resource.type !== filter.type) {
       return false;
     }

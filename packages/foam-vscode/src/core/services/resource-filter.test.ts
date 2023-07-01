@@ -6,6 +6,22 @@ Logger.setLevel('error');
 
 describe('Resource Filter', () => {
   describe('Filter parameters', () => {
+    it('should support the path regex', () => {
+      const noteA = createTestNote({
+        uri: '/path/to/foo.md',
+        type: 'type-1',
+      });
+      const noteB = createTestNote({
+        uri: 'note-b.md',
+        type: '/path/to/bar.md',
+      });
+
+      const filter = createFilter({ path: 'foo' }, false);
+
+      expect(filter(noteA)).toBeTruthy();
+      expect(filter(noteB)).toBeFalsy();
+    });
+
     it('should support expressions when code execution is enabled', () => {
       const noteA = createTestNote({
         uri: 'note-a.md',

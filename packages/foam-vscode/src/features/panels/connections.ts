@@ -35,7 +35,14 @@ export default async function activate(
   const updateTreeView = async () => {
     provider.target = vscode.window.activeTextEditor
       ? fromVsCodeUri(vscode.window.activeTextEditor?.document.uri)
-      : undefined;
+      : fromVsCodeUri(
+          vscode.Uri.parse(
+            `file://${vscode.workspace.workspaceFolders[0].uri.fsPath}/${
+              vscode.window.tabGroups.activeTabGroup.tabs.find(e => e.isActive)
+                .label
+            }`.replace(/\s/g, '%20')
+          )
+        );
     await provider.refresh();
   };
 
@@ -45,6 +52,7 @@ export default async function activate(
     provider,
     treeView,
     foam.graph.onDidUpdate(() => updateTreeView()),
+    vscode.window.tabGroups.onDidChangeTabs(() => updateTreeView()),
     vscode.window.onDidChangeActiveTextEditor(() => updateTreeView()),
     provider.onDidChangeTreeData(() => {
       treeView.title = ` ${provider.show.get()} (${provider.nValues})`;

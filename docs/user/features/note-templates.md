@@ -194,7 +194,7 @@ You can add the template metadata to its own YAML Frontmatter block at the start
 foam_template:
   name: My Note Template
   description: This is my note template
-  filepath: `journal/$FOAM_TITLE.md`
+  filepath: 'journal/$FOAM_TITLE.md'
 ---
 This is the rest of the template
 ```
@@ -206,7 +206,7 @@ If the note already has a Frontmatter block, a Foam-specific Frontmatter block c
 foam_template:
   name: My Note Template
   description: This is my note template
-  filepath: `journal/$FOAM_TITLE.md`
+  filepath: 'journal/$FOAM_TITLE.md'
 ---
 
 ---

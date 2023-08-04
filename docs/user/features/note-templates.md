@@ -206,7 +206,7 @@ If the note already has a Frontmatter block, a Foam-specific Frontmatter block c
 foam_template:
   name: My Note Template
   description: This is my note template
-  filepath: `journal/$FOAM_TITLE.md`
+  filepath: 'journal/$FOAM_TITLE.md'
 ---
 
 ---

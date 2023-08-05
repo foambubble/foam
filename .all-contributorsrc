@@ -1031,8 +1031,18 @@
       "contributions": [
         "tool"
       ]
+    },
+    {
+      "login": "tcheneau",
+      "name": "Tony Cheneau",
+      "avatar_url": "https://avatars.githubusercontent.com/u/952059?v=4",
+      "profile": "https://amnesiak.org/me",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,
-  "skipCi": true
+  "skipCi": true,
+  "commitType": "docs"
 }

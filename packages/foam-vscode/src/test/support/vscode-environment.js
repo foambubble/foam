@@ -1,7 +1,7 @@
-const NodeEnvironment = require('jest-environment-node');
+const { TestEnvironment } = require('jest-environment-node');
 const vscode = require('vscode');
 
-class VscodeEnvironment extends NodeEnvironment {
+class VscodeEnvironment extends TestEnvironment {
   async setup() {
     await super.setup();
     this.global.vscode = vscode;

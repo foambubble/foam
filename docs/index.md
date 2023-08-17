@@ -253,6 +253,7 @@ If that sounds like something you're interested in, I'd love to have you along o
     </tr>
     <tr>
       <td align="center" valign="top" width="14.28%"><a href="https://amnesiak.org/me"><img src="https://avatars.githubusercontent.com/u/952059?v=4?s=60" width="60px;" alt="Tony Cheneau"/><br /><sub><b>Tony Cheneau</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=tcheneau" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/nicholas-l"><img src="https://avatars.githubusercontent.com/u/12977174?v=4?s=60" width="60px;" alt="Nicholas Latham"/><br /><sub><b>Nicholas Latham</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=nicholas-l" title="Code">💻</a></td>
     </tr>
   </tbody>
 </table>

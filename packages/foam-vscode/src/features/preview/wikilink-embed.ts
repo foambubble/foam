@@ -47,25 +47,20 @@ export const markdownItWikilinkEmbed = (
         let content = `Embed for [[${wikilink}]]`;
         switch (includedNote.type) {
           case 'note': {
-            let noteText = readFileSync(includedNote.uri.toFsPath()).toString();
-            const section = Resource.findSection(
+            const noteStyle = getFoamVsCodeConfig(
+              CONFIG_EMBED_NOTE_IN_CONTAINER
+            )
+              ? 'card'
+              : 'inline';
+            const noteEmbedder = new NoteEmbedder(
               includedNote,
-              includedNote.uri.fragment
-            );
-            if (isSome(section)) {
-              const rows = noteText.split('\n');
-              noteText = rows
-                .slice(section.range.start.line, section.range.end.line)
-                .join('\n');
-            }
-            noteText = withLinksRelativeToWorkspaceRoot(
-              noteText,
+              'full',
+              noteStyle,
               parser,
-              workspace
+              workspace,
+              md
             );
-            content = getFoamVsCodeConfig(CONFIG_EMBED_NOTE_IN_CONTAINER)
-              ? `<div class="embed-container-note">${md.render(noteText)}</div>`
-              : noteText;
+            content = noteEmbedder.generateEmbedding();
             break;
           }
           case 'attachment':
@@ -121,6 +116,104 @@ function withLinksRelativeToWorkspaceRoot(
     noteText
   );
   return text;
+}
+
+interface EmbedNoteExtractor {
+  extract(note: Resource): string;
+}
+
+class FullExtractor implements EmbedNoteExtractor {
+  parser: ResourceParser;
+  workspace: FoamWorkspace;
+
+  constructor(parser: ResourceParser, workspace: FoamWorkspace) {
+    this.parser = parser;
+    this.workspace = workspace;
+  }
+
+  extract(note: Resource) {
+    let noteText = readFileSync(note.uri.toFsPath()).toString();
+    const section = Resource.findSection(note, note.uri.fragment);
+    if (isSome(section)) {
+      const rows = noteText.split('\n');
+      noteText = rows
+        .slice(section.range.start.line, section.range.end.line)
+        .join('\n');
+    }
+    noteText = withLinksRelativeToWorkspaceRoot(
+      noteText,
+      this.parser,
+      this.workspace
+    );
+    return noteText;
+  }
+}
+
+interface EmbedNoteFormatter {
+  format(content: string): string;
+}
+
+class CardFormatter implements EmbedNoteFormatter {
+  md: markdownit;
+  constructor(md: markdownit) {
+    this.md = md;
+  }
+  format(content: string) {
+    return `<div class="embed-container-note">${this.md.render(content)}</div>`;
+  }
+}
+
+class InlineFormatter implements EmbedNoteFormatter {
+  format(content: string) {
+    return content;
+  }
+}
+
+class NoteEmbedder {
+  includedNote: Resource;
+  extractor: EmbedNoteExtractor;
+  formatter: EmbedNoteFormatter;
+
+  /* extractor dependencies */
+  parser: ResourceParser;
+  workspace: FoamWorkspace;
+
+  /* formatter dependencies */
+  md: markdownit;
+
+  constructor(
+    includedNote: Resource,
+    extractorType: string,
+    formatterType: string,
+    parser: ResourceParser,
+    workspace: FoamWorkspace,
+    md: markdownit
+  ) {
+    this.includedNote = includedNote;
+
+    switch (extractorType) {
+      case 'full':
+      case 'content': // TODO: IMPLEMENT
+      default:
+        this.extractor = new FullExtractor(parser, workspace);
+        break;
+    }
+
+    switch (formatterType) {
+      case 'card':
+        this.formatter = new CardFormatter(md);
+        break;
+      case 'inline':
+      default:
+        this.formatter = new InlineFormatter();
+        break;
+    }
+  }
+
+  generateEmbedding() {
+    const rawContent = this.extractor.extract(this.includedNote);
+    return this.formatter.format(rawContent);
+  }
 }
 
 export default markdownItWikilinkEmbed;

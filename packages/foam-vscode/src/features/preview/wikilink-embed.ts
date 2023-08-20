@@ -49,7 +49,7 @@ export const markdownItWikilinkEmbed = (
 
         switch (includedNote.type) {
           case 'note': {
-            let extractor = fullExtractor;
+            let extractor: EmbedNoteExtractor = fullExtractor;
             const noteContentType = 'full';
             switch (noteContentType) {
               case 'full':
@@ -63,7 +63,7 @@ export const markdownItWikilinkEmbed = (
               ? 'card'
               : 'inline';
 
-            let formatter = cardFormatter;
+            let formatter: EmbedNoteFormatter = cardFormatter;
             switch (noteStyleType) {
               case 'card':
                 formatter = cardFormatter;
@@ -73,14 +73,8 @@ export const markdownItWikilinkEmbed = (
                 break;
             }
 
-            html = generateNoteEmbedding(
-              includedNote,
-              parser,
-              workspace,
-              md,
-              extractor,
-              formatter
-            );
+            content = extractor(includedNote, parser, workspace);
+            html = formatter(content, md);
             break;
           }
           case 'attachment':
@@ -166,7 +160,7 @@ function fullExtractor(
 }
 
 /**
- * A type of function that renders note content to the desired style
+ * A type of function that renders note content with the desired style in html
  */
 export type EmbedNoteFormatter = (content: string, md: markdownit) => string;
 
@@ -178,18 +172,6 @@ function cardFormatter(content: string, md: markdownit): string {
 
 function inlineFormatter(content: string, md: markdownit): string {
   return md.render(content);
-}
-
-function generateNoteEmbedding(
-  note: Resource,
-  parser: ResourceParser,
-  workspace: FoamWorkspace,
-  md: markdownit,
-  extractor: EmbedNoteExtractor,
-  formatter: EmbedNoteFormatter
-): string {
-  const rawContent = extractor(note, parser, workspace);
-  return formatter(rawContent, md);
 }
 
 export default markdownItWikilinkEmbed;

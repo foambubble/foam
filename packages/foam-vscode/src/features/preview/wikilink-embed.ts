@@ -15,6 +15,7 @@ import { Position } from '../../core/model/position';
 import { TextEdit } from '../../core/services/text-edit';
 
 export const CONFIG_EMBED_NOTE_IN_CONTAINER = 'preview.embedNoteInContainer';
+export const CONFIG_EMBED_STYLE = 'preview.embedNoteType';
 const refsStack: string[] = [];
 
 export const markdownItWikilinkEmbed = (
@@ -49,22 +50,17 @@ export const markdownItWikilinkEmbed = (
 
         switch (includedNote.type) {
           case 'note': {
+            let { noteScope, noteStyle } = retrieveNoteConfig();
+
             let extractor: EmbedNoteExtractor = fullExtractor;
-            const noteContentType = 'full';
-            switch (noteContentType) {
+            switch (noteScope) {
               case 'full':
                 extractor = fullExtractor;
                 break;
             }
 
-            const noteStyleType = getFoamVsCodeConfig(
-              CONFIG_EMBED_NOTE_IN_CONTAINER
-            )
-              ? 'card'
-              : 'inline';
-
             let formatter: EmbedNoteFormatter = cardFormatter;
-            switch (noteStyleType) {
+            switch (noteStyle) {
               case 'card':
                 formatter = cardFormatter;
                 break;
@@ -131,6 +127,21 @@ function withLinksRelativeToWorkspaceRoot(
     noteText
   );
   return text;
+}
+
+export function retrieveNoteConfig(): {
+  noteScope: string;
+  noteStyle: string;
+} {
+  let config = getFoamVsCodeConfig<string>(CONFIG_EMBED_STYLE); // ex. full-inline
+  let [noteScope, noteStyle] = config.split('-');
+
+  // **DEPRECATED** setting to be removed
+  // for now it overrides the above to preserve user settings if they have it set
+  if (getFoamVsCodeConfig<boolean>(CONFIG_EMBED_NOTE_IN_CONTAINER, false)) {
+    noteStyle = 'card';
+  }
+  return { noteScope, noteStyle };
 }
 
 /**

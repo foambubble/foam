@@ -15,7 +15,7 @@ import { Position } from '../../core/model/position';
 import { TextEdit } from '../../core/services/text-edit';
 
 export const CONFIG_EMBED_NOTE_IN_CONTAINER = 'preview.embedNoteInContainer';
-export const CONFIG_EMBED_STYLE = 'preview.embedNoteType';
+export const CONFIG_EMBED_NOTE_TYPE = 'preview.embedNoteType';
 const refsStack: string[] = [];
 
 export const markdownItWikilinkEmbed = (
@@ -133,7 +133,7 @@ export function retrieveNoteConfig(): {
   noteScope: string;
   noteStyle: string;
 } {
-  let config = getFoamVsCodeConfig<string>(CONFIG_EMBED_STYLE); // ex. full-inline
+  let config = getFoamVsCodeConfig<string>(CONFIG_EMBED_NOTE_TYPE); // ex. full-inline
   let [noteScope, noteStyle] = config.split('-');
 
   // **DEPRECATED** setting to be removed

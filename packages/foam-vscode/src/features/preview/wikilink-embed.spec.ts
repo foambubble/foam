@@ -8,7 +8,7 @@ import {
 } from '../../test/test-utils-vscode';
 import {
   default as markdownItWikilinkEmbed,
-  CONFIG_EMBED_NOTE_IN_CONTAINER,
+  CONFIG_EMBED_NOTE_TYPE,
 } from './wikilink-embed';
 
 const parser = createMarkdownParser();
@@ -21,8 +21,8 @@ describe('Displaying included notes in preview', () => {
     ]);
     const ws = new FoamWorkspace().set(parser.parse(note.uri, note.content));
     await withModifiedFoamConfiguration(
-      CONFIG_EMBED_NOTE_IN_CONTAINER,
-      false,
+      CONFIG_EMBED_NOTE_TYPE,
+      'full-inline',
       () => {
         const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser);
 
@@ -48,8 +48,8 @@ describe('Displaying included notes in preview', () => {
     const ws = new FoamWorkspace().set(parser.parse(note.uri, note.content));
 
     await await withModifiedFoamConfiguration(
-      CONFIG_EMBED_NOTE_IN_CONTAINER,
-      true,
+      CONFIG_EMBED_NOTE_TYPE,
+      'full-container',
       () => {
         const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser);
 
@@ -83,8 +83,8 @@ This is the third section of note E
     const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser);
 
     await withModifiedFoamConfiguration(
-      CONFIG_EMBED_NOTE_IN_CONTAINER,
-      false,
+      CONFIG_EMBED_NOTE_TYPE,
+      'full-inline',
       () => {
         expect(
           md.render(`This is the root node. 
@@ -120,8 +120,8 @@ This is the third section of note E
     const ws = new FoamWorkspace().set(parser.parse(note.uri, note.content));
 
     await withModifiedFoamConfiguration(
-      CONFIG_EMBED_NOTE_IN_CONTAINER,
-      true,
+      CONFIG_EMBED_NOTE_TYPE,
+      'full-container',
       () => {
         const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser);
 

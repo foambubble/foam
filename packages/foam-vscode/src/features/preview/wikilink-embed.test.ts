@@ -3,7 +3,7 @@ import * as config from '../../services/config';
 
 describe('Wikilink Note Embedding', () => {
   describe('Config Parsing', () => {
-    it('should use preview.embedType if deprecated preview.embedNoteInContainer not used', () => {
+    it('should use preview.embedNoteType if deprecated preview.embedNoteInContainer not used', () => {
       jest
         .spyOn(config, 'getFoamVsCodeConfig')
         .mockReturnValueOnce('full-card')

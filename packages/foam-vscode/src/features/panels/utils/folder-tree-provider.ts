@@ -10,6 +10,7 @@ export interface Folder<T> {
     [basename: string]: Folder<T>;
   };
   value?: T;
+  path: string[];
 }
 
 /**
@@ -90,6 +91,7 @@ export abstract class FolderTreeProvider<I, T> extends BaseTreeProvider<I> {
   createTree(values: T[], filterFn: (value: T) => boolean): Folder<T> {
     const root: Folder<T> = {
       children: {},
+      path: [],
     };
 
     for (const r of values) {
@@ -101,10 +103,12 @@ export abstract class FolderTreeProvider<I, T> extends BaseTreeProvider<I> {
           if (index < parts.length - 1) {
             currentNode.children[part] = {
               children: {},
+              path: parts.slice(0, index + 1),
             };
           } else if (filterFn(r)) {
             currentNode.children[part] = {
               children: {},
+              path: parts.slice(0, index + 1),
               value: r,
             };
           }

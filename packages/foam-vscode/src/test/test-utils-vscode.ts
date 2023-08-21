@@ -108,10 +108,10 @@ export const runCommand = async <T>(command: string, args: T = undefined) =>
  * @param fn the function to execute
  */
 export const withModifiedConfiguration = async (key, value, fn: () => void) => {
-  const old = vscode.workspace.getConfiguration().get(key);
+  const old = vscode.workspace.getConfiguration().inspect(key);
   await vscode.workspace.getConfiguration().update(key, value);
   await fn();
-  await vscode.workspace.getConfiguration().update(key, old);
+  await vscode.workspace.getConfiguration().update(key, old.workspaceValue);
 };
 
 /**

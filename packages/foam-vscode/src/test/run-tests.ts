@@ -1,3 +1,4 @@
+import rf from 'rimraf';
 import path from 'path';
 import { runTests } from 'vscode-test';
 import { runUnit } from './suite-unit';
@@ -34,12 +35,21 @@ async function main() {
       // Passed to --extensionTestsPath
       const extensionTestsPath = path.join(__dirname, 'suite');
 
+      const testWorkspace = path.join(
+        extensionDevelopmentPath,
+        '.test-workspace'
+      );
+      // clean test workspace
+      rf.sync(path.join(testWorkspace, '*'));
+      rf.sync(path.join(testWorkspace, '.vscode'));
+      rf.sync(path.join(testWorkspace, '.foam'));
+
       // Download VS Code, unzip it and run the integration test
       await runTests({
         extensionDevelopmentPath,
         extensionTestsPath,
         launchArgs: [
-          path.join(extensionDevelopmentPath, '.test-workspace'),
+          testWorkspace,
           '--disable-extensions',
           '--disable-workspace-trust',
         ],

@@ -14,6 +14,11 @@ import {
   FolderTreeProvider,
   walk,
 } from './utils/folder-tree-provider';
+import {
+  ContextMemento,
+  MapBasedMemento,
+  fromVsCodeUri,
+} from '../../utils/vsc-utils';
 
 const TAG_SEPARATOR = '/';
 export default async function activate(
@@ -34,11 +39,22 @@ export default async function activate(
     foam.tags.onDidUpdate(() => {
       provider.refresh();
       treeView.title = baseTitle + ` (${foam.tags.tags.size})`;
+    }),
+    vscode.window.onDidChangeActiveTextEditor(() => {
+      if (provider.show.get() === 'for-current-file') {
+        provider.refresh();
+      }
     })
   );
 }
 
 export class TagsProvider extends FolderTreeProvider<TagTreeItem, string> {
+  public show = new ContextMemento<'all' | 'for-current-file'>(
+    new MapBasedMemento(),
+    `foam-vscode.views.tags-explorer.show`,
+    'all'
+  );
+
   private tags: {
     tag: string;
     notes: URI[];
@@ -46,6 +62,22 @@ export class TagsProvider extends FolderTreeProvider<TagTreeItem, string> {
 
   constructor(private foamTags: FoamTags, private workspace: FoamWorkspace) {
     super();
+    this.disposables.push(
+      vscode.commands.registerCommand(
+        `foam-vscode.views.tags-explorer.show:all`,
+        () => {
+          this.show.update('all');
+          this.refresh();
+        }
+      ),
+      vscode.commands.registerCommand(
+        `foam-vscode.views.tags-explorer.show:for-current-file`,
+        () => {
+          this.show.update('for-current-file');
+          this.refresh();
+        }
+      )
+    );
   }
 
   refresh(): void {
@@ -56,6 +88,11 @@ export class TagsProvider extends FolderTreeProvider<TagTreeItem, string> {
   }
 
   getValues(): string[] {
+    if (this.show.get() === 'for-current-file') {
+      const uriInEditor = vscode.window.activeTextEditor?.document.uri;
+      const currentResource = this.workspace.find(fromVsCodeUri(uriInEditor));
+      return currentResource?.tags.map(t => t.label) ?? [];
+    }
     return Array.from(this.tags.values()).map(tag => tag.tag);
   }
 

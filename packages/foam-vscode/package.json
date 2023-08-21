@@ -133,6 +133,16 @@
           "group": "navigation"
         },
         {
+          "command": "foam-vscode.views.tags-explorer.show:for-current-file",
+          "when": "view == foam-vscode.tags-explorer && foam-vscode.views.tags-explorer.show == 'all'",
+          "group": "navigation"
+        },
+        {
+          "command": "foam-vscode.views.tags-explorer.show:all",
+          "when": "view == foam-vscode.tags-explorer && foam-vscode.views.tags-explorer.show == 'for-current-file'",
+          "group": "navigation"
+        },
+        {
           "command": "foam-vscode.views.placeholders.show:for-current-file",
           "when": "view == foam-vscode.placeholders && foam-vscode.views.placeholders.show == 'all'",
           "group": "navigation"
@@ -190,6 +200,14 @@
         },
         {
           "command": "foam-vscode.views.orphans.group-by:off",
+          "when": "false"
+        },
+        {
+          "command": "foam-vscode.views.tags-explorer.show:for-current-file",
+          "when": "false"
+        },
+        {
+          "command": "foam-vscode.views.tags-explorer.show:all",
           "when": "false"
         },
         {
@@ -307,6 +325,16 @@
         "command": "foam-vscode.views.orphans.group-by:off",
         "title": "Flat list",
         "icon": "$(list-flat)"
+      },
+      {
+        "command": "foam-vscode.views.tags-explorer.show:for-current-file",
+        "title": "Show tags in current file",
+        "icon": "$(file)"
+      },
+      {
+        "command": "foam-vscode.views.tags-explorer.show:all",
+        "title": "Show tags in workspace",
+        "icon": "$(files)"
       },
       {
         "command": "foam-vscode.views.placeholders.show:for-current-file",

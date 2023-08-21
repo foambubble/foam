@@ -118,62 +118,6 @@ export class TagsProvider extends FolderTreeProvider<TagTreeItem, string> {
 
     return [...subtags, ...resources];
   }
-
-  //   async getChildren2(element?: TagItem): Promise<TagTreeItem[]> {
-  //     if ((element as any)?.getChildren) {
-  //       const children = await (element as any).getChildren();
-  //       return children;
-  //     }
-  //     const parentTag = element ? element.tag : '';
-  //     const parentPrefix = element ? parentTag + TAG_SEPARATOR : '';
-
-  //     const tagsAtThisLevel = this.tags
-  //       .filter(({ tag }) => tag.startsWith(parentPrefix))
-  //       .map(({ tag }) => {
-  //         const nextSeparator = tag.indexOf(TAG_SEPARATOR, parentPrefix.length);
-  //         const label =
-  //           nextSeparator > -1
-  //             ? tag.substring(parentPrefix.length, nextSeparator)
-  //             : tag.substring(parentPrefix.length);
-  //         const tagId = parentPrefix + label;
-  //         return { label, tagId, tag };
-  //       })
-  //       .reduce((acc, { label, tagId, tag }) => {
-  //         const existing = acc.has(label);
-  //         const nResources = this.foamTags.tags.get(tag).length ?? 0;
-  //         if (!existing) {
-  //           acc.set(label, { label, tagId, nResources: 0 });
-  //         }
-  //         acc.get(label).nResources += nResources;
-  //         return acc;
-  //       }, new Map() as Map<string, { label: string; tagId: string; nResources: number }>);
-
-  //     const subtags = Array.from(tagsAtThisLevel.values())
-  //       .map(({ label, tagId, nResources }) => {
-  //         const resources = this.foamTags.tags.get(tagId) ?? [];
-  //         return new TagItem(tagId, label, nResources, resources);
-  //       })
-  //       .sort((a, b) => a.title.localeCompare(b.title));
-
-  //     const resourceTags: ResourceRangeTreeItem[] = (element?.notes ?? [])
-  //       .map(uri => this.workspace.get(uri))
-  //       .reduce((acc, note) => {
-  //         const tags = note.tags.filter(t => t.label === element.tag);
-  //         const items = tags.map(t =>
-  //           ResourceRangeTreeItem.createStandardItem(
-  //             this.workspace,
-  //             note,
-  //             t.range,
-  //             'tag'
-  //           )
-  //         );
-  //         return [...acc, ...items];
-  //       }, []);
-
-  //     const resources = await groupRangesByResource(this.workspace, resourceTags);
-
-  //     return Promise.resolve([...subtags, ...resources].filter(Boolean));
-  //   }
 }
 
 type TagTreeItem = TagItem | ResourceTreeItem | ResourceRangeTreeItem;

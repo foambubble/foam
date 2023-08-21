@@ -183,12 +183,6 @@ export abstract class FolderTreeProvider<I, T> extends BaseTreeProvider<I> {
   abstract getValues(): T[];
 
   /**
-   * Returns true if the given value is of the type that should be displayed
-   * as a leaf in the tree. That is, not as a folder.
-   */
-  abstract isValueType(value: T): value is T;
-
-  /**
    * Creates a tree item for the given value.
    */
   abstract createValueTreeItem(value: T, parent: FolderTreeItem<T>): I;

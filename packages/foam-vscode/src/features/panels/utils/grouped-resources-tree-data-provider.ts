@@ -92,10 +92,6 @@ export abstract class GroupedResourcesTreeDataProvider extends FolderTreeProvide
     return uris.filter(uri => this.matcher.isMatch(uri));
   }
 
-  isValueType(value: URI): value is URI {
-    return value instanceof URI;
-  }
-
   createFolderTreeItem(
     value: Folder<URI>,
     name: string,

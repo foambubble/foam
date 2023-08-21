@@ -143,6 +143,16 @@
           "group": "navigation"
         },
         {
+          "command": "foam-vscode.views.tags-explorer.group-by:folder",
+          "when": "view == foam-vscode.tags-explorer && foam-vscode.views.tags-explorer.group-by == 'off'",
+          "group": "navigation"
+        },
+        {
+          "command": "foam-vscode.views.tags-explorer.group-by:off",
+          "when": "view == foam-vscode.tags-explorer && foam-vscode.views.tags-explorer.group-by == 'folder'",
+          "group": "navigation"
+        },
+        {
           "command": "foam-vscode.views.placeholders.show:for-current-file",
           "when": "view == foam-vscode.placeholders && foam-vscode.views.placeholders.show == 'all'",
           "group": "navigation"
@@ -208,6 +218,22 @@
         },
         {
           "command": "foam-vscode.views.tags-explorer.show:all",
+          "when": "false"
+        },
+        {
+          "command": "foam-vscode.views.tags-explorer.group-by:folder",
+          "when": "false"
+        },
+        {
+          "command": "foam-vscode.views.tags-explorer.group-by:off",
+          "when": "false"
+        },
+        {
+          "command": "foam-vscode.views.tags-explorer.group-by:folder",
+          "when": "false"
+        },
+        {
+          "command": "foam-vscode.views.tags-explorer.group-by:off",
           "when": "false"
         },
         {
@@ -335,6 +361,16 @@
         "command": "foam-vscode.views.tags-explorer.show:all",
         "title": "Show tags in workspace",
         "icon": "$(files)"
+      },
+      {
+        "command": "foam-vscode.views.tags-explorer.group-by:folder",
+        "title": "Group By Folder",
+        "icon": "$(list-tree)"
+      },
+      {
+        "command": "foam-vscode.views.tags-explorer.group-by:off",
+        "title": "Flat list",
+        "icon": "$(list-flat)"
       },
       {
         "command": "foam-vscode.views.placeholders.show:for-current-file",

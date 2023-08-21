@@ -49,10 +49,16 @@ export default async function activate(
 }
 
 export class TagsProvider extends FolderTreeProvider<TagTreeItem, string> {
+  private providerId = 'tags-explorer';
   public show = new ContextMemento<'all' | 'for-current-file'>(
     new MapBasedMemento(),
-    `foam-vscode.views.tags-explorer.show`,
+    `foam-vscode.views.${this.providerId}.show`,
     'all'
+  );
+  public groupBy = new ContextMemento<'off' | 'folder'>(
+    new MapBasedMemento(),
+    `foam-vscode.views.${this.providerId}.group-by`,
+    'folder'
   );
 
   private tags: {
@@ -64,16 +70,30 @@ export class TagsProvider extends FolderTreeProvider<TagTreeItem, string> {
     super();
     this.disposables.push(
       vscode.commands.registerCommand(
-        `foam-vscode.views.tags-explorer.show:all`,
+        `foam-vscode.views.${this.providerId}.show:all`,
         () => {
           this.show.update('all');
           this.refresh();
         }
       ),
       vscode.commands.registerCommand(
-        `foam-vscode.views.tags-explorer.show:for-current-file`,
+        `foam-vscode.views.${this.providerId}.show:for-current-file`,
         () => {
           this.show.update('for-current-file');
+          this.refresh();
+        }
+      ),
+      vscode.commands.registerCommand(
+        `foam-vscode.views.${this.providerId}.group-by:folder`,
+        () => {
+          this.groupBy.update('folder');
+          this.refresh();
+        }
+      ),
+      vscode.commands.registerCommand(
+        `foam-vscode.views.${this.providerId}.group-by:off`,
+        () => {
+          this.groupBy.update('off');
           this.refresh();
         }
       )
@@ -97,7 +117,9 @@ export class TagsProvider extends FolderTreeProvider<TagTreeItem, string> {
   }
 
   valueToPath(value: string) {
-    return value.split(TAG_SEPARATOR);
+    return this.groupBy.get() === 'folder'
+      ? value.split(TAG_SEPARATOR)
+      : [value];
   }
 
   private countResourcesInSubtree(node: Folder<string>) {

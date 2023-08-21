@@ -69,11 +69,11 @@ export abstract class FolderTreeProvider<I, T> extends BaseTreeProvider<I> {
 
     const parent: Folder<T> = (item as any)?.node ?? this.root;
 
-    const children: vscode.TreeItem[] = Object.keys(parent.children).map(
+    const children: vscode.TreeItem[] = Object.keys(parent?.children ?? []).map(
       name => {
         const node = parent.children[name];
         if (node.value != null) {
-          return this.createValueTreeItem(node.value, undefined);
+          return this.createValueTreeItem(node.value, undefined, node);
         } else {
           return this.createFolderTreeItem(
             node,
@@ -130,7 +130,8 @@ export abstract class FolderTreeProvider<I, T> extends BaseTreeProvider<I> {
               currentNode.value,
               treeItemsHierarchy[
                 treeItemsHierarchy.length - 1
-              ] as FolderTreeItem<T>
+              ] as FolderTreeItem<T>,
+              currentNode
             )
           );
         } else {
@@ -185,7 +186,33 @@ export abstract class FolderTreeProvider<I, T> extends BaseTreeProvider<I> {
   /**
    * Creates a tree item for the given value.
    */
-  abstract createValueTreeItem(value: T, parent: FolderTreeItem<T>): I;
+  abstract createValueTreeItem(
+    value: T,
+    parent: FolderTreeItem<T>,
+    node: Folder<T>
+  ): I;
+}
+
+/**
+ * walks the node and perfoms an action on each value
+ * @returns
+ */
+export function walk<T, R>(node: Folder<T>, fn: (value: T) => R): R[] {
+  const results: R[] = [];
+
+  function traverse(node: Folder<T>) {
+    if (node.value) {
+      results.push(fn(node.value));
+    }
+
+    Object.values(node.children).forEach(child => {
+      traverse(child);
+    });
+  }
+
+  traverse(node);
+
+  return results;
 }
 
 function sortFolderTreeItems(a: vscode.TreeItem, b: vscode.TreeItem): number {

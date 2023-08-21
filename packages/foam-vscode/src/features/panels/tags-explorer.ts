@@ -63,16 +63,21 @@ export class TagsProvider extends FolderTreeProvider<TagTreeItem, string> {
     return value.split(TAG_SEPARATOR);
   }
 
+  private countResourcesInSubtree(node: Folder<string>) {
+    const nChildren = walk(
+      node,
+      tag => this.foamTags.tags.get(tag)?.length ?? 0
+    ).reduce((acc, nResources) => acc + nResources, 0);
+    return nChildren;
+  }
+
   createFolderTreeItem(
     node: Folder<string>,
     name: string,
     parent: FolderTreeItem<string>
   ): FolderTreeItem<string> {
-    const nChildren = walk(
-      node,
-      tag => this.foamTags.tags.get(tag)?.length ?? 0
-    ).reduce((acc, nResources) => acc + nResources, 0);
-    return new TagItem(node, name, name, name, nChildren, [], parent);
+    const nChildren = this.countResourcesInSubtree(node);
+    return new TagItem(node, nChildren, [], parent);
   }
 
   createValueTreeItem(
@@ -80,12 +85,9 @@ export class TagsProvider extends FolderTreeProvider<TagTreeItem, string> {
     parent: FolderTreeItem<string>,
     node: Folder<string>
   ): TagItem {
-    const nChildren = walk(
-      node,
-      tag => this.foamTags.tags.get(tag)?.length ?? 0
-    ).reduce((acc, nResources) => acc + nResources, 0);
+    const nChildren = this.countResourcesInSubtree(node);
     const resources = this.foamTags.tags.get(value) ?? [];
-    return new TagItem(node, value, value, value, nChildren, resources, parent);
+    return new TagItem(node, nChildren, resources, parent);
   }
 
   async getChildren(element?: TagItem): Promise<TagTreeItem[]> {
@@ -93,9 +95,11 @@ export class TagsProvider extends FolderTreeProvider<TagTreeItem, string> {
       const children = await (element as any).getChildren();
       return children;
     }
-    // This is managed by the FolderTreeProvider
+
+    // Subtags are managed by the FolderTreeProvider
     const subtags = await super.getChildren(element);
 
+    // Compute the resources children
     const resourceTags: ResourceRangeTreeItem[] = (element?.notes ?? [])
       .map(uri => this.workspace.get(uri))
       .reduce((acc, note) => {
@@ -110,7 +114,6 @@ export class TagsProvider extends FolderTreeProvider<TagTreeItem, string> {
         );
         return [...acc, ...items];
       }, []);
-
     const resources = await groupRangesByResource(this.workspace, resourceTags);
 
     return [...subtags, ...resources];
@@ -176,16 +179,16 @@ export class TagsProvider extends FolderTreeProvider<TagTreeItem, string> {
 type TagTreeItem = TagItem | ResourceTreeItem | ResourceRangeTreeItem;
 
 export class TagItem extends FolderTreeItem<string> {
+  public readonly tag: string;
+
   constructor(
     public readonly node: Folder<string>,
-    public readonly name: string,
-    public readonly tag: string,
-    public readonly title: string,
     public readonly nResourcesInSubtree: number,
     public readonly notes: URI[],
     public readonly parentElement?: FolderTreeItem<string>
   ) {
-    super(node, title, parentElement);
+    super(node, node.path.slice(-1)[0], parentElement);
+    this.tag = node.path.join(TAG_SEPARATOR);
     this.description = `${nResourcesInSubtree} reference${
       nResourcesInSubtree !== 1 ? 's' : ''
     }`;

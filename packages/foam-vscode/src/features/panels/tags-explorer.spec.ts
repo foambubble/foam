@@ -48,7 +48,7 @@ describe('Tags tree panel', () => {
 
     const parentTreeItems = (await provider.getChildren()) as TagItem[];
     const parentTagItem = parentTreeItems.pop();
-    expect(parentTagItem.title).toEqual('parent');
+    expect(parentTagItem.label).toEqual('parent');
 
     const childTreeItems = (await provider.getChildren(
       parentTagItem
@@ -57,7 +57,7 @@ describe('Tags tree panel', () => {
     childTreeItems.forEach(child => {
       if (child instanceof TagItem) {
         // eslint-disable-next-line jest/no-conditional-expect
-        expect(child.title).toEqual('child');
+        expect(child.label).toEqual('child');
       }
     });
   });
@@ -81,7 +81,7 @@ describe('Tags tree panel', () => {
       item => item instanceof TagItem
     )[0];
 
-    expect(parentTagItem.title).toEqual('parent');
+    expect(parentTagItem.label).toEqual('parent');
     expect(parentTreeItems).toHaveLength(1);
 
     const childTreeItems = (await provider.getChildren(
@@ -91,9 +91,9 @@ describe('Tags tree panel', () => {
     childTreeItems.forEach(child => {
       if (child instanceof TagItem) {
         // eslint-disable-next-line jest/no-conditional-expect
-        expect(['child', 'subchild']).toContain(child.title);
+        expect(['child', 'subchild']).toContain(child.label);
         // eslint-disable-next-line jest/no-conditional-expect
-        expect(child.title).not.toEqual('parent');
+        expect(child.label).not.toEqual('parent');
       }
     });
     expect(childTreeItems).toHaveLength(3);
@@ -116,7 +116,7 @@ describe('Tags tree panel', () => {
       item => item instanceof TagItem
     )[0];
 
-    expect(parentTagItem.title).toEqual('main');
+    expect(parentTagItem.label).toEqual('main');
 
     const childTreeItems = (await provider.getChildren(
       parentTagItem
@@ -132,7 +132,7 @@ describe('Tags tree panel', () => {
       .filter(item => item instanceof TagItem)
       .forEach(item => {
         expect(['main/subtopic']).toContain(item.tag);
-        expect(item.title).toEqual('subtopic');
+        expect(item.label).toEqual('subtopic');
       });
 
     expect(childTreeItems).toHaveLength(3);
@@ -151,7 +151,7 @@ describe('Tags tree panel', () => {
 
     const parentTreeItems = (await provider.getChildren()) as TagItem[];
     const parentTagItem = parentTreeItems.pop();
-    expect(parentTagItem.title).toEqual('parent');
+    expect(parentTagItem.label).toEqual('parent');
 
     const childTreeItems = (await provider.getChildren(
       parentTagItem

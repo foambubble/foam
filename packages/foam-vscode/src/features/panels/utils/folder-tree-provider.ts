@@ -198,7 +198,7 @@ export abstract class FolderTreeProvider<I, T> extends BaseTreeProvider<I> {
 }
 
 /**
- * walks the node and perfoms an action on each value
+ * walks the node and performs an action on each value
  * @returns
  */
 export function walk<T, R>(node: Folder<T>, fn: (value: T) => R): R[] {

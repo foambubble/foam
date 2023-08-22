@@ -50,24 +50,16 @@ export const markdownItWikilinkEmbed = (
 
         switch (includedNote.type) {
           case 'note': {
-            let { noteScope, noteStyle } = retrieveNoteConfig();
+            const { noteScope: _, noteStyle } = retrieveNoteConfig();
 
-            let extractor: EmbedNoteExtractor = fullExtractor;
-            switch (noteScope) {
-              case 'full':
-                extractor = fullExtractor;
-                break;
-            }
+            const extractor: EmbedNoteExtractor = fullExtractor;
 
-            let formatter: EmbedNoteFormatter = cardFormatter;
-            switch (noteStyle) {
-              case 'card':
-                formatter = cardFormatter;
-                break;
-              case 'inline':
-                formatter = inlineFormatter;
-                break;
-            }
+            const formatter: EmbedNoteFormatter =
+              noteStyle === 'card'
+                ? cardFormatter
+                : noteStyle === 'inline'
+                ? inlineFormatter
+                : cardFormatter;
 
             content = extractor(includedNote, parser, workspace);
             html = formatter(content, md);

@@ -25,7 +25,7 @@ describe('Tags tree panel', () => {
     });
     const workspace = new FoamWorkspace().set(noteA);
     const foamTags = FoamTags.fromWorkspace(workspace);
-    const provider = new TagsProvider(foamTags, workspace);
+    const provider = new TagsProvider(foamTags, workspace, false);
     provider.refresh();
 
     const treeItems = (await provider.getChildren()) as TagItem[];
@@ -43,7 +43,7 @@ describe('Tags tree panel', () => {
     });
     const workspace = new FoamWorkspace().set(noteA);
     const foamTags = FoamTags.fromWorkspace(workspace);
-    const provider = new TagsProvider(foamTags, workspace);
+    const provider = new TagsProvider(foamTags, workspace, false);
     provider.refresh();
 
     const parentTreeItems = (await provider.getChildren()) as TagItem[];
@@ -73,7 +73,7 @@ describe('Tags tree panel', () => {
     });
     const workspace = new FoamWorkspace().set(noteA).set(noteB);
     const foamTags = FoamTags.fromWorkspace(workspace);
-    const provider = new TagsProvider(foamTags, workspace);
+    const provider = new TagsProvider(foamTags, workspace, false);
     provider.refresh();
 
     const parentTreeItems = (await provider.getChildren()) as TagItem[];
@@ -107,7 +107,7 @@ describe('Tags tree panel', () => {
     });
     const workspace = new FoamWorkspace().set(noteC);
     const foamTags = FoamTags.fromWorkspace(workspace);
-    const provider = new TagsProvider(foamTags, workspace);
+    const provider = new TagsProvider(foamTags, workspace, false);
 
     provider.refresh();
 
@@ -145,7 +145,7 @@ describe('Tags tree panel', () => {
     });
     const workspace = new FoamWorkspace().set(noteA);
     const foamTags = FoamTags.fromWorkspace(workspace);
-    const provider = new TagsProvider(foamTags, workspace);
+    const provider = new TagsProvider(foamTags, workspace, false);
 
     provider.refresh();
 

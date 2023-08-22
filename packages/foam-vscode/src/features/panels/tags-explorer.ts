@@ -66,8 +66,15 @@ export class TagsProvider extends FolderTreeProvider<TagTreeItem, string> {
     notes: URI[];
   }[];
 
-  constructor(private foamTags: FoamTags, private workspace: FoamWorkspace) {
+  constructor(
+    private foamTags: FoamTags,
+    private workspace: FoamWorkspace,
+    registerCommands: boolean = true
+  ) {
     super();
+    if (!registerCommands) {
+      return;
+    }
     this.disposables.push(
       vscode.commands.registerCommand(
         `foam-vscode.views.${this.providerId}.show:all`,

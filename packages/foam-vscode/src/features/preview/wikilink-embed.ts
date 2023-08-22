@@ -61,8 +61,8 @@ export const markdownItWikilinkEmbed = (
                 ? inlineFormatter
                 : cardFormatter;
 
-            content = extractor(includedNote, parser, workspace);
-            html = formatter(content, md);
+            const rawContent = extractor(includedNote, parser, workspace);
+            content = formatter(rawContent, md);
             break;
           }
           case 'attachment':
@@ -71,15 +71,14 @@ export const markdownItWikilinkEmbed = (
 ${md.renderInline('[[' + wikilink + ']]')}<br/>
 Embed for attachments is not supported
 </div>`;
-            html = md.render(content);
             break;
           case 'image':
             content = `<div class="embed-container-image">${md.render(
               `![](${md.normalizeLink(includedNote.uri.path)})`
             )}</div>`;
-            html = md.render(content);
             break;
         }
+        html = md.render(content);
         refsStack.pop();
         return html;
       } catch (e) {
@@ -168,13 +167,11 @@ function fullExtractor(
 export type EmbedNoteFormatter = (content: string, md: markdownit) => string;
 
 function cardFormatter(content: string, md: markdownit): string {
-  return md.render(
-    `<div class="embed-container-note">${md.render(content)}</div>`
-  );
+  return `<div class="embed-container-note">${md.render(content)}</div>`;
 }
 
 function inlineFormatter(content: string, md: markdownit): string {
-  return md.render(content);
+  return content;
 }
 
 export default markdownItWikilinkEmbed;

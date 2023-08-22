@@ -1,4 +1,3 @@
-import rf from 'rimraf';
 import path from 'path';
 import { runTests } from 'vscode-test';
 import { runUnit } from './suite-unit';
@@ -39,10 +38,6 @@ async function main() {
         extensionDevelopmentPath,
         '.test-workspace'
       );
-      // clean test workspace
-      rf.sync(path.join(testWorkspace, '*'));
-      rf.sync(path.join(testWorkspace, '.vscode'));
-      rf.sync(path.join(testWorkspace, '.foam'));
 
       // Download VS Code, unzip it and run the integration test
       await runTests({

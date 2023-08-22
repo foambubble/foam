@@ -25,7 +25,7 @@ describe('Tags tree panel', () => {
     });
     const workspace = new FoamWorkspace().set(noteA);
     const foamTags = FoamTags.fromWorkspace(workspace);
-    const provider = new TagsProvider(foamTags, workspace);
+    const provider = new TagsProvider(foamTags, workspace, false);
     provider.refresh();
 
     const treeItems = (await provider.getChildren()) as TagItem[];
@@ -43,12 +43,12 @@ describe('Tags tree panel', () => {
     });
     const workspace = new FoamWorkspace().set(noteA);
     const foamTags = FoamTags.fromWorkspace(workspace);
-    const provider = new TagsProvider(foamTags, workspace);
+    const provider = new TagsProvider(foamTags, workspace, false);
     provider.refresh();
 
     const parentTreeItems = (await provider.getChildren()) as TagItem[];
     const parentTagItem = parentTreeItems.pop();
-    expect(parentTagItem.title).toEqual('parent');
+    expect(parentTagItem.label).toEqual('parent');
 
     const childTreeItems = (await provider.getChildren(
       parentTagItem
@@ -57,7 +57,7 @@ describe('Tags tree panel', () => {
     childTreeItems.forEach(child => {
       if (child instanceof TagItem) {
         // eslint-disable-next-line jest/no-conditional-expect
-        expect(child.title).toEqual('child');
+        expect(child.label).toEqual('child');
       }
     });
   });
@@ -73,7 +73,7 @@ describe('Tags tree panel', () => {
     });
     const workspace = new FoamWorkspace().set(noteA).set(noteB);
     const foamTags = FoamTags.fromWorkspace(workspace);
-    const provider = new TagsProvider(foamTags, workspace);
+    const provider = new TagsProvider(foamTags, workspace, false);
     provider.refresh();
 
     const parentTreeItems = (await provider.getChildren()) as TagItem[];
@@ -81,7 +81,7 @@ describe('Tags tree panel', () => {
       item => item instanceof TagItem
     )[0];
 
-    expect(parentTagItem.title).toEqual('parent');
+    expect(parentTagItem.label).toEqual('parent');
     expect(parentTreeItems).toHaveLength(1);
 
     const childTreeItems = (await provider.getChildren(
@@ -91,12 +91,12 @@ describe('Tags tree panel', () => {
     childTreeItems.forEach(child => {
       if (child instanceof TagItem) {
         // eslint-disable-next-line jest/no-conditional-expect
-        expect(['child', 'subchild']).toContain(child.title);
+        expect(['child', 'subchild']).toContain(child.label);
         // eslint-disable-next-line jest/no-conditional-expect
-        expect(child.title).not.toEqual('parent');
+        expect(child.label).not.toEqual('parent');
       }
     });
-    expect(childTreeItems).toHaveLength(3);
+    expect(childTreeItems).toHaveLength(2);
   });
 
   it('handles a parent and child tag in the same note', async () => {
@@ -107,7 +107,7 @@ describe('Tags tree panel', () => {
     });
     const workspace = new FoamWorkspace().set(noteC);
     const foamTags = FoamTags.fromWorkspace(workspace);
-    const provider = new TagsProvider(foamTags, workspace);
+    const provider = new TagsProvider(foamTags, workspace, false);
 
     provider.refresh();
 
@@ -116,7 +116,7 @@ describe('Tags tree panel', () => {
       item => item instanceof TagItem
     )[0];
 
-    expect(parentTagItem.title).toEqual('main');
+    expect(parentTagItem.label).toEqual('main');
 
     const childTreeItems = (await provider.getChildren(
       parentTagItem
@@ -132,10 +132,10 @@ describe('Tags tree panel', () => {
       .filter(item => item instanceof TagItem)
       .forEach(item => {
         expect(['main/subtopic']).toContain(item.tag);
-        expect(item.title).toEqual('subtopic');
+        expect(item.label).toEqual('subtopic');
       });
 
-    expect(childTreeItems).toHaveLength(3);
+    expect(childTreeItems).toHaveLength(2);
   });
 
   it('handles a tag with multiple levels of hierarchy - #1134', async () => {
@@ -145,28 +145,26 @@ describe('Tags tree panel', () => {
     });
     const workspace = new FoamWorkspace().set(noteA);
     const foamTags = FoamTags.fromWorkspace(workspace);
-    const provider = new TagsProvider(foamTags, workspace);
+    const provider = new TagsProvider(foamTags, workspace, false);
 
     provider.refresh();
 
     const parentTreeItems = (await provider.getChildren()) as TagItem[];
     const parentTagItem = parentTreeItems.pop();
-    expect(parentTagItem.title).toEqual('parent');
+    expect(parentTagItem.label).toEqual('parent');
 
     const childTreeItems = (await provider.getChildren(
       parentTagItem
     )) as TagItem[];
 
-    expect(childTreeItems).toHaveLength(2);
-    expect(childTreeItems[0].label).toMatch(/^Search.*/);
-    expect(childTreeItems[1].label).toEqual('child');
+    expect(childTreeItems).toHaveLength(1);
+    expect(childTreeItems[0].label).toEqual('child');
 
     const grandchildTreeItems = (await provider.getChildren(
-      childTreeItems[1]
+      childTreeItems[0]
     )) as TagItem[];
 
-    expect(grandchildTreeItems).toHaveLength(2);
-    expect(grandchildTreeItems[0].label).toMatch(/^Search.*/);
-    expect(grandchildTreeItems[1].label).toEqual('second');
+    expect(grandchildTreeItems).toHaveLength(1);
+    expect(grandchildTreeItems[0].label).toEqual('second');
   });
 });

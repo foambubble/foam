@@ -8,6 +8,17 @@ import {
   ResourceTreeItem,
   groupRangesByResource,
 } from './utils/tree-view-utils';
+import {
+  Folder,
+  FolderTreeItem,
+  FolderTreeProvider,
+  walk,
+} from './utils/folder-tree-provider';
+import {
+  ContextMemento,
+  MapBasedMemento,
+  fromVsCodeUri,
+} from '../../utils/vsc-utils';
 
 const TAG_SEPARATOR = '/';
 export default async function activate(
@@ -20,52 +31,127 @@ export default async function activate(
     treeDataProvider: provider,
     showCollapseAll: true,
   });
+  provider.refresh();
   const baseTitle = treeView.title;
   treeView.title = baseTitle + ` (${foam.tags.tags.size})`;
-
   context.subscriptions.push(
     treeView,
     foam.tags.onDidUpdate(() => {
       provider.refresh();
       treeView.title = baseTitle + ` (${foam.tags.tags.size})`;
+    }),
+    vscode.window.onDidChangeActiveTextEditor(() => {
+      if (provider.show.get() === 'for-current-file') {
+        provider.refresh();
+      }
     })
   );
 }
 
-export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
-  // prettier-ignore
-  private _onDidChangeTreeData: vscode.EventEmitter<
-    TagTreeItem | undefined | void
-  > = new vscode.EventEmitter<TagTreeItem | undefined | void>();
-  // prettier-ignore
-  readonly onDidChangeTreeData: vscode.Event<TagTreeItem | undefined | void> =
-    this._onDidChangeTreeData.event;
+export class TagsProvider extends FolderTreeProvider<TagTreeItem, string> {
+  private providerId = 'tags-explorer';
+  public show = new ContextMemento<'all' | 'for-current-file'>(
+    new MapBasedMemento(),
+    `foam-vscode.views.${this.providerId}.show`,
+    'all'
+  );
+  public groupBy = new ContextMemento<'off' | 'folder'>(
+    new MapBasedMemento(),
+    `foam-vscode.views.${this.providerId}.group-by`,
+    'folder'
+  );
 
   private tags: {
     tag: string;
     notes: URI[];
   }[];
 
-  private foamTags: FoamTags;
-
-  constructor(tags: FoamTags, private workspace: FoamWorkspace) {
-    this.foamTags = tags;
-    this.computeTags();
+  constructor(
+    private foamTags: FoamTags,
+    private workspace: FoamWorkspace,
+    registerCommands: boolean = true
+  ) {
+    super();
+    if (!registerCommands) {
+      return;
+    }
+    this.disposables.push(
+      vscode.commands.registerCommand(
+        `foam-vscode.views.${this.providerId}.show:all`,
+        () => {
+          this.show.update('all');
+          this.refresh();
+        }
+      ),
+      vscode.commands.registerCommand(
+        `foam-vscode.views.${this.providerId}.show:for-current-file`,
+        () => {
+          this.show.update('for-current-file');
+          this.refresh();
+        }
+      ),
+      vscode.commands.registerCommand(
+        `foam-vscode.views.${this.providerId}.group-by:folder`,
+        () => {
+          this.groupBy.update('folder');
+          this.refresh();
+        }
+      ),
+      vscode.commands.registerCommand(
+        `foam-vscode.views.${this.providerId}.group-by:off`,
+        () => {
+          this.groupBy.update('off');
+          this.refresh();
+        }
+      )
+    );
   }
 
   refresh(): void {
-    this.computeTags();
-    this._onDidChangeTreeData.fire();
-  }
-
-  private computeTags() {
     this.tags = [...this.foamTags.tags]
       .map(([tag, notes]) => ({ tag, notes }))
       .sort((a, b) => a.tag.localeCompare(b.tag));
+    super.refresh();
   }
 
-  getTreeItem(element: TagTreeItem): vscode.TreeItem {
-    return element;
+  getValues(): string[] {
+    if (this.show.get() === 'for-current-file') {
+      const uriInEditor = vscode.window.activeTextEditor?.document.uri;
+      const currentResource = this.workspace.find(fromVsCodeUri(uriInEditor));
+      return currentResource?.tags.map(t => t.label) ?? [];
+    }
+    return Array.from(this.tags.values()).map(tag => tag.tag);
+  }
+
+  valueToPath(value: string) {
+    return this.groupBy.get() === 'off' ? [value] : value.split(TAG_SEPARATOR);
+  }
+
+  private countResourcesInSubtree(node: Folder<string>) {
+    const nChildren = walk(
+      node,
+      tag => this.foamTags.tags.get(tag)?.length ?? 0
+    ).reduce((acc, nResources) => acc + nResources, 0);
+    return nChildren;
+  }
+
+  createFolderTreeItem(
+    node: Folder<string>,
+    name: string,
+    parent: FolderTreeItem<string>
+  ): FolderTreeItem<string> {
+    const nChildren = this.countResourcesInSubtree(node);
+    return new TagItem(node, nChildren, [], parent);
+  }
+
+  createValueTreeItem(
+    value: string,
+    parent: FolderTreeItem<string>,
+    node: Folder<string>
+  ): TagItem {
+    const nChildren = this.countResourcesInSubtree(node);
+    const resources = this.foamTags.tags.get(value) ?? [];
+    return new TagItem(node, nChildren, resources, parent);
   }
 
   async getChildren(element?: TagItem): Promise<TagTreeItem[]> {
@@ -73,37 +159,11 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
       const children = await (element as any).getChildren();
       return children;
     }
-    const parentTag = element ? element.tag : '';
-    const parentPrefix = element ? parentTag + TAG_SEPARATOR : '';
 
-    const tagsAtThisLevel = this.tags
-      .filter(({ tag }) => tag.startsWith(parentPrefix))
-      .map(({ tag }) => {
-        const nextSeparator = tag.indexOf(TAG_SEPARATOR, parentPrefix.length);
-        const label =
-          nextSeparator > -1
-            ? tag.substring(parentPrefix.length, nextSeparator)
-            : tag.substring(parentPrefix.length);
-        const tagId = parentPrefix + label;
-        return { label, tagId, tag };
-      })
-      .reduce((acc, { label, tagId, tag }) => {
-        const existing = acc.has(label);
-        const nResources = this.foamTags.tags.get(tag).length ?? 0;
-        if (!existing) {
-          acc.set(label, { label, tagId, nResources: 0 });
-        }
-        acc.get(label).nResources += nResources;
-        return acc;
-      }, new Map() as Map<string, { label: string; tagId: string; nResources: number }>);
+    // Subtags are managed by the FolderTreeProvider
+    const subtags = await super.getChildren(element);
 
-    const subtags = Array.from(tagsAtThisLevel.values())
-      .map(({ label, tagId, nResources }) => {
-        const resources = this.foamTags.tags.get(tagId) ?? [];
-        return new TagItem(tagId, label, nResources, resources);
-      })
-      .sort((a, b) => a.title.localeCompare(b.title));
-
+    // Compute the resources children
     const resourceTags: ResourceRangeTreeItem[] = (element?.notes ?? [])
       .map(uri => this.workspace.get(uri))
       .reduce((acc, note) => {
@@ -118,41 +178,25 @@ export class TagsProvider implements vscode.TreeDataProvider<TagTreeItem> {
         );
         return [...acc, ...items];
       }, []);
-
     const resources = await groupRangesByResource(this.workspace, resourceTags);
 
-    return Promise.resolve(
-      [element && new TagSearch(element.tag), ...subtags, ...resources].filter(
-        Boolean
-      )
-    );
-  }
-
-  async resolveTreeItem(item: TagTreeItem): Promise<TagTreeItem> {
-    if (
-      item instanceof ResourceTreeItem ||
-      item instanceof ResourceRangeTreeItem
-    ) {
-      return item.resolveTreeItem();
-    }
-    return Promise.resolve(item);
+    return [...subtags, ...resources];
   }
 }
 
-type TagTreeItem =
-  | TagItem
-  | TagSearch
-  | ResourceTreeItem
-  | ResourceRangeTreeItem;
+type TagTreeItem = TagItem | ResourceTreeItem | ResourceRangeTreeItem;
 
-export class TagItem extends vscode.TreeItem {
+export class TagItem extends FolderTreeItem<string> {
+  public readonly tag: string;
+
   constructor(
-    public readonly tag: string,
-    public readonly title: string,
+    public readonly node: Folder<string>,
     public readonly nResourcesInSubtree: number,
-    public readonly notes: URI[]
+    public readonly notes: URI[],
+    public readonly parentElement?: FolderTreeItem<string>
   ) {
-    super(title, vscode.TreeItemCollapsibleState.Collapsed);
+    super(node, node.path.slice(-1)[0], parentElement);
+    this.tag = node.path.join(TAG_SEPARATOR);
     this.description = `${nResourcesInSubtree} reference${
       nResourcesInSubtree !== 1 ? 's' : ''
     }`;
@@ -160,28 +204,4 @@ export class TagItem extends vscode.TreeItem {
 
   iconPath = new vscode.ThemeIcon('symbol-number');
   contextValue = 'tag';
-}
-
-export class TagSearch extends vscode.TreeItem {
-  public readonly title: string;
-  constructor(public readonly tag: string) {
-    super(`Search #${tag}`, vscode.TreeItemCollapsibleState.None);
-    const searchString = `#${tag}`;
-    this.tooltip = `Search ${searchString} in workspace`;
-    this.command = {
-      command: 'workbench.action.findInFiles',
-      arguments: [
-        {
-          query: searchString,
-          triggerSearch: true,
-          matchWholeWord: true,
-          isCaseSensitive: true,
-        },
-      ],
-      title: 'Search',
-    };
-  }
-
-  iconPath = new vscode.ThemeIcon('search');
-  contextValue = 'tag-search';
 }

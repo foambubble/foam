@@ -6,7 +6,11 @@ import { BaseTreeItem, ResourceTreeItem } from './tree-view-utils';
  * A folder is a map of basenames to either folders or values (e.g. resources).
  */
 export interface Folder<T> {
-  [basename: string]: Folder<T> | T;
+  children: {
+    [basename: string]: Folder<T>;
+  };
+  value?: T;
+  path: string[];
 }
 
 /**
@@ -18,7 +22,7 @@ export class FolderTreeItem<T> extends vscode.TreeItem {
   iconPath = new vscode.ThemeIcon('folder');
 
   constructor(
-    public parent: Folder<T>,
+    public node: Folder<T>,
     public name: string,
     public parentElement?: FolderTreeItem<T>
   ) {
@@ -52,11 +56,11 @@ export abstract class FolderTreeProvider<I, T> extends BaseTreeProvider<I> {
   }
 
   createFolderTreeItem(
-    value: Folder<T>,
+    node: Folder<T>,
     name: string,
     parent: FolderTreeItem<T>
   ) {
-    return new FolderTreeItem<T>(value, name, parent);
+    return new FolderTreeItem<T>(node, name, parent);
   }
 
   async getChildren(item?: I): Promise<I[]> {
@@ -64,42 +68,52 @@ export abstract class FolderTreeProvider<I, T> extends BaseTreeProvider<I> {
       return item.getChildren() as Promise<I[]>;
     }
 
-    const parent = (item as any)?.parent ?? this.root;
+    const parent: Folder<T> = (item as any)?.node ?? this.root;
 
-    const children: vscode.TreeItem[] = Object.keys(parent).map(name => {
-      const value = parent[name];
-      if (this.isValueType(value)) {
-        return this.createValueTreeItem(value, undefined);
-      } else {
-        return this.createFolderTreeItem(
-          value,
-          name,
-          item as unknown as FolderTreeItem<T>
-        );
+    const children: vscode.TreeItem[] = Object.keys(parent?.children ?? []).map(
+      name => {
+        const node = parent.children[name];
+        if (node.value != null) {
+          return this.createValueTreeItem(node.value, undefined, node);
+        } else {
+          return this.createFolderTreeItem(
+            node,
+            name,
+            item as unknown as FolderTreeItem<T>
+          );
+        }
       }
-    });
+    );
 
     return children.sort((a, b) => sortFolderTreeItems(a, b)) as any;
   }
 
   createTree(values: T[], filterFn: (value: T) => boolean): Folder<T> {
-    const root: Folder<T> = {};
+    const root: Folder<T> = {
+      children: {},
+      path: [],
+    };
 
     for (const r of values) {
       const parts = this.valueToPath(r);
       let currentNode: Folder<T> = root;
 
       parts.forEach((part, index) => {
-        if (!currentNode[part]) {
+        if (!currentNode.children[part]) {
           if (index < parts.length - 1) {
-            currentNode[part] = {};
-          } else {
-            if (filterFn(r)) {
-              currentNode[part] = r;
-            }
+            currentNode.children[part] = {
+              children: {},
+              path: parts.slice(0, index + 1),
+            };
+          } else if (filterFn(r)) {
+            currentNode.children[part] = {
+              children: {},
+              path: parts.slice(0, index + 1),
+              value: r,
+            };
           }
         }
-        currentNode = currentNode[part] as Folder<T>;
+        currentNode = currentNode.children[part];
       });
     }
 
@@ -109,24 +123,25 @@ export abstract class FolderTreeProvider<I, T> extends BaseTreeProvider<I> {
 
   getTreeItemsHierarchy(path: string[]): vscode.TreeItem[] {
     const treeItemsHierarchy: vscode.TreeItem[] = [];
-    let currentNode: Folder<T> | T = this.root;
+    let currentNode: Folder<T> = this.root;
 
     for (const part of path) {
-      if (currentNode[part] !== undefined) {
-        currentNode = currentNode[part] as Folder<T> | T;
-        if (this.isValueType(currentNode as T)) {
+      if (currentNode.children[part] !== undefined) {
+        currentNode = currentNode.children[part] as Folder<T>;
+        if (currentNode.value) {
           treeItemsHierarchy.push(
             this.createValueTreeItem(
-              currentNode as T,
+              currentNode.value,
               treeItemsHierarchy[
                 treeItemsHierarchy.length - 1
-              ] as FolderTreeItem<T>
+              ] as FolderTreeItem<T>,
+              currentNode
             )
           );
         } else {
           treeItemsHierarchy.push(
             new FolderTreeItem(
-              currentNode as Folder<T>,
+              currentNode,
               part,
               treeItemsHierarchy[
                 treeItemsHierarchy.length - 1
@@ -173,15 +188,35 @@ export abstract class FolderTreeProvider<I, T> extends BaseTreeProvider<I> {
   abstract getValues(): T[];
 
   /**
-   * Returns true if the given value is of the type that should be displayed
-   * as a leaf in the tree. That is, not as a folder.
-   */
-  abstract isValueType(value: T): value is T;
-
-  /**
    * Creates a tree item for the given value.
    */
-  abstract createValueTreeItem(value: T, parent: FolderTreeItem<T>): I;
+  abstract createValueTreeItem(
+    value: T,
+    parent: FolderTreeItem<T>,
+    node: Folder<T>
+  ): I;
+}
+
+/**
+ * walks the node and performs an action on each value
+ * @returns
+ */
+export function walk<T, R>(node: Folder<T>, fn: (value: T) => R): R[] {
+  const results: R[] = [];
+
+  function traverse(node: Folder<T>) {
+    if (node.value) {
+      results.push(fn(node.value));
+    }
+
+    Object.values(node.children).forEach(child => {
+      traverse(child);
+    });
+  }
+
+  traverse(node);
+
+  return results;
 }
 
 function sortFolderTreeItems(a: vscode.TreeItem, b: vscode.TreeItem): number {

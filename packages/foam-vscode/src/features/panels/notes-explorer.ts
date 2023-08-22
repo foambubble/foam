@@ -134,10 +134,6 @@ export class NotesProvider extends FolderTreeProvider<
     return parts;
   }
 
-  isValueType(value: Resource): value is Resource {
-    return value.uri != null;
-  }
-
   createValueTreeItem(
     value: Resource,
     parent: FolderTreeItem<Resource>

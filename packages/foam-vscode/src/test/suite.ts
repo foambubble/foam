@@ -15,6 +15,8 @@
 process.env.FORCE_COLOR = '1';
 process.env.NODE_ENV = 'test';
 
+import rf from 'rimraf';
+
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { runCLI } from '@jest/core';
 import { cleanWorkspace } from './test-utils-vscode';
@@ -42,6 +44,12 @@ export function run(): Promise<void> {
   // eslint-disable-next-line no-async-promise-executor
   return new Promise(async (resolve, reject) => {
     await cleanWorkspace();
+    const testWorkspace = path.join(__dirname, '..', '..', '.test-workspace');
+
+    // clean test workspace
+    rf.sync(path.join(testWorkspace, '*'));
+    rf.sync(path.join(testWorkspace, '.vscode'));
+    rf.sync(path.join(testWorkspace, '.foam'));
     try {
       const { results } = await runCLI(
         {

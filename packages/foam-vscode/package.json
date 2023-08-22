@@ -229,14 +229,6 @@
           "when": "false"
         },
         {
-          "command": "foam-vscode.views.tags-explorer.group-by:folder",
-          "when": "false"
-        },
-        {
-          "command": "foam-vscode.views.tags-explorer.group-by:off",
-          "when": "false"
-        },
-        {
           "command": "foam-vscode.views.placeholders.show:for-current-file",
           "when": "false"
         },

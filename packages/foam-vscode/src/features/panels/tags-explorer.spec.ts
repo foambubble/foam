@@ -96,7 +96,7 @@ describe('Tags tree panel', () => {
         expect(child.label).not.toEqual('parent');
       }
     });
-    expect(childTreeItems).toHaveLength(3);
+    expect(childTreeItems).toHaveLength(2);
   });
 
   it('handles a parent and child tag in the same note', async () => {
@@ -135,7 +135,7 @@ describe('Tags tree panel', () => {
         expect(item.label).toEqual('subtopic');
       });
 
-    expect(childTreeItems).toHaveLength(3);
+    expect(childTreeItems).toHaveLength(2);
   });
 
   it('handles a tag with multiple levels of hierarchy - #1134', async () => {
@@ -157,16 +157,14 @@ describe('Tags tree panel', () => {
       parentTagItem
     )) as TagItem[];
 
-    expect(childTreeItems).toHaveLength(2);
-    expect(childTreeItems[0].label).toMatch(/^Search.*/);
-    expect(childTreeItems[1].label).toEqual('child');
+    expect(childTreeItems).toHaveLength(1);
+    expect(childTreeItems[0].label).toEqual('child');
 
     const grandchildTreeItems = (await provider.getChildren(
-      childTreeItems[1]
+      childTreeItems[0]
     )) as TagItem[];
 
-    expect(grandchildTreeItems).toHaveLength(2);
-    expect(grandchildTreeItems[0].label).toMatch(/^Search.*/);
-    expect(grandchildTreeItems[1].label).toEqual('second');
+    expect(grandchildTreeItems).toHaveLength(1);
+    expect(grandchildTreeItems[0].label).toEqual('second');
   });
 });

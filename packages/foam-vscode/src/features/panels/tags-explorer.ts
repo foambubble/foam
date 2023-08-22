@@ -124,9 +124,7 @@ export class TagsProvider extends FolderTreeProvider<TagTreeItem, string> {
   }
 
   valueToPath(value: string) {
-    return this.groupBy.get() === 'folder'
-      ? value.split(TAG_SEPARATOR)
-      : [value];
+    return this.groupBy.get() === 'off' ? [value] : value.split(TAG_SEPARATOR);
   }
 
   private countResourcesInSubtree(node: Folder<string>) {

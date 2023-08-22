@@ -47,7 +47,7 @@ describe('Displaying included notes in preview', () => {
     ]);
     const ws = new FoamWorkspace().set(parser.parse(note.uri, note.content));
 
-    await await withModifiedFoamConfiguration(
+    await withModifiedFoamConfiguration(
       CONFIG_EMBED_NOTE_TYPE,
       'full-container',
       () => {

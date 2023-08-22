@@ -69,8 +69,10 @@ describe('Displaying included notes in preview', () => {
       `
 # Section 1
 This is the first section of note E
+
 # Section 2 
 This is the second section of note E
+
 # Section 3
 This is the third section of note E
     `,
@@ -86,6 +88,7 @@ This is the third section of note E
       () => {
         expect(
           md.render(`This is the root node. 
+
  ![[note-e#Section 2]]`)
         ).toMatch(
           `<p>This is the root node.</p>
@@ -104,8 +107,10 @@ This is the third section of note E
       `
 # Section 1
 This is the first section of note E
+
 # Section 2 
 This is the second section of note E
+
 # Section 3
 This is the third section of note E
     `,

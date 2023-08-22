@@ -93,13 +93,13 @@ export abstract class GroupedResourcesTreeDataProvider extends FolderTreeProvide
   }
 
   createFolderTreeItem(
-    value: Folder<URI>,
+    node: Folder<URI>,
     name: string,
     parent: FolderTreeItem<URI>
   ) {
-    const item = super.createFolderTreeItem(value, name, parent);
+    const item = super.createFolderTreeItem(node, name, parent);
     item.label = item.label || '(Not Created)';
-    item.description = `(${Object.keys(value).length})`;
+    item.description = `(${Object.keys(node.children).length})`;
     return item;
   }
 

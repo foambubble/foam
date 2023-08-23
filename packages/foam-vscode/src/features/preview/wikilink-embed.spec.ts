@@ -9,6 +9,7 @@ import {
 import {
   default as markdownItWikilinkEmbed,
   CONFIG_EMBED_NOTE_TYPE,
+  CONFIG_EMBED_NOTE_IN_CONTAINER,
 } from './wikilink-embed';
 
 const parser = createMarkdownParser();
@@ -21,19 +22,25 @@ describe('Displaying included notes in preview', () => {
     ]);
     const ws = new FoamWorkspace().set(parser.parse(note.uri, note.content));
     await withModifiedFoamConfiguration(
-      CONFIG_EMBED_NOTE_TYPE,
-      'full-inline',
-      () => {
-        const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser);
+      CONFIG_EMBED_NOTE_IN_CONTAINER,
+      false,
+      async () => {
+        await withModifiedFoamConfiguration(
+          CONFIG_EMBED_NOTE_TYPE,
+          'full-inline',
+          () => {
+            const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser);
 
-        expect(
-          md.render(`This is the root node. 
+            expect(
+              md.render(`This is the root node. 
   
    ![[note-a]]`)
-        ).toMatch(
-          `<p>This is the root node.</p>
+            ).toMatch(
+              `<p>This is the root node.</p>
 <p><p>This is the text of note A</p>
 </p>`
+            );
+          }
         );
       }
     );
@@ -48,15 +55,21 @@ describe('Displaying included notes in preview', () => {
     const ws = new FoamWorkspace().set(parser.parse(note.uri, note.content));
 
     await withModifiedFoamConfiguration(
-      CONFIG_EMBED_NOTE_TYPE,
-      'full-card',
-      () => {
-        const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser);
+      CONFIG_EMBED_NOTE_IN_CONTAINER,
+      false,
+      async () => {
+        await withModifiedFoamConfiguration(
+          CONFIG_EMBED_NOTE_TYPE,
+          'full-card',
+          () => {
+            const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser);
 
-        const res = md.render(`This is the root node. ![[note-a]]`);
-        expect(res).toContain('This is the root node');
-        expect(res).toContain('embed-container-note');
-        expect(res).toContain('This is the text of note A');
+            const res = md.render(`This is the root node. ![[note-a]]`);
+            expect(res).toContain('This is the root node');
+            expect(res).toContain('embed-container-note');
+            expect(res).toContain('This is the text of note A');
+          }
+        );
       }
     );
     await deleteFile(note);
@@ -83,18 +96,24 @@ This is the third section of note E
     const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser);
 
     await withModifiedFoamConfiguration(
-      CONFIG_EMBED_NOTE_TYPE,
-      'full-inline',
-      () => {
-        expect(
-          md.render(`This is the root node. 
+      CONFIG_EMBED_NOTE_IN_CONTAINER,
+      false,
+      async () => {
+        await withModifiedFoamConfiguration(
+          CONFIG_EMBED_NOTE_TYPE,
+          'full-inline',
+          () => {
+            expect(
+              md.render(`This is the root node. 
 
  ![[note-e#Section 2]]`)
-        ).toMatch(
-          `<p>This is the root node.</p>
+            ).toMatch(
+              `<p>This is the root node.</p>
 <p><h1>Section 2</h1>
 <p>This is the second section of note E</p>
 </p>`
+            );
+          }
         );
       }
     );
@@ -120,18 +139,24 @@ This is the third section of note E
     const ws = new FoamWorkspace().set(parser.parse(note.uri, note.content));
 
     await withModifiedFoamConfiguration(
-      CONFIG_EMBED_NOTE_TYPE,
-      'full-card',
-      () => {
-        const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser);
+      CONFIG_EMBED_NOTE_IN_CONTAINER,
+      false,
+      async () => {
+        await withModifiedFoamConfiguration(
+          CONFIG_EMBED_NOTE_TYPE,
+          'full-card',
+          () => {
+            const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser);
 
-        const res = md.render(
-          `This is the root node. ![[note-e-container#Section 3]]`
+            const res = md.render(
+              `This is the root node. ![[note-e-container#Section 3]]`
+            );
+            expect(res).toContain('This is the root node');
+            expect(res).toContain('embed-container-note');
+            expect(res).toContain('Section 3');
+            expect(res).toContain('This is the third section of note E');
+          }
         );
-        expect(res).toContain('This is the root node');
-        expect(res).toContain('embed-container-note');
-        expect(res).toContain('Section 3');
-        expect(res).toContain('This is the third section of note E');
       }
     );
 

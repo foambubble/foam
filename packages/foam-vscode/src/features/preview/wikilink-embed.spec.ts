@@ -23,7 +23,7 @@ describe('Displaying included notes in preview', () => {
     const ws = new FoamWorkspace().set(parser.parse(note.uri, note.content));
     await withModifiedFoamConfiguration(
       CONFIG_EMBED_NOTE_IN_CONTAINER,
-      false,
+      null,
       async () => {
         await withModifiedFoamConfiguration(
           CONFIG_EMBED_NOTE_TYPE,
@@ -56,7 +56,7 @@ describe('Displaying included notes in preview', () => {
 
     await withModifiedFoamConfiguration(
       CONFIG_EMBED_NOTE_IN_CONTAINER,
-      false,
+      null,
       async () => {
         await withModifiedFoamConfiguration(
           CONFIG_EMBED_NOTE_TYPE,
@@ -97,7 +97,7 @@ This is the third section of note E
 
     await withModifiedFoamConfiguration(
       CONFIG_EMBED_NOTE_IN_CONTAINER,
-      false,
+      null,
       async () => {
         await withModifiedFoamConfiguration(
           CONFIG_EMBED_NOTE_TYPE,
@@ -140,7 +140,7 @@ This is the third section of note E
 
     await withModifiedFoamConfiguration(
       CONFIG_EMBED_NOTE_IN_CONTAINER,
-      false,
+      null,
       async () => {
         await withModifiedFoamConfiguration(
           CONFIG_EMBED_NOTE_TYPE,

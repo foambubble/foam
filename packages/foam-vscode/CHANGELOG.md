@@ -4,6 +4,20 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.25.1] - 2023-08-23
+
+Fixes and Improvements:
+
+- Added support for path parameter in filter (#1250)
+- Added grouping and filtering to tag explorer (#1275)
+- Added new setting to control note embedding (#1273 - thanks @badsketch)
+- Added last week's days to snippets (#1248 - thanks @jimgraham)
+
+Internal:
+
+- Updated jest to v29 (#1271 - thanks @nicholas-l)
+- Improved test cleanup and management (#1274)
+
 ## [0.25.0] - 2023-06-30
 
 Features:

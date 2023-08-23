@@ -38,21 +38,42 @@ const daysOfWeek = [
 ];
 
 const generateDayOfWeekSnippets = (): DateSnippet[] => {
-  const getTarget = (day: number) => {
+  const getFutureTarget = (day: number) => {
     const target = new Date();
     const currentDay = target.getDay();
     const distance = (day + 7 - currentDay) % 7;
     target.setDate(target.getDate() + distance);
     return target;
   };
+  // needs work
+  const getPastTarget = (day: number) => {
+    const target = new Date();
+    const currentDay = target.getDay();
+    const distance = currentDay === day ? 7 : (7 + currentDay - day) % 7;
+    target.setDate(target.getDate() - distance);
+    return target;
+  };
+
   const snippets = daysOfWeek.map(({ day, index }) => {
-    const target = getTarget(index);
+    const target = getFutureTarget(index);
     return {
       date: target,
       detail: `Get a daily note link for ${day}`,
       snippet: `/${day}`,
     };
   });
+
+  // append snippets previous days
+  snippets.push(
+    ...daysOfWeek.map(({ day, index }) => {
+      const target = getPastTarget(index);
+      return {
+        date: target,
+        detail: `Get a daily note link for last ${day}`,
+        snippet: `/-${day}`,
+      };
+    })
+  );
   return snippets;
 };
 

@@ -130,9 +130,9 @@ export function retrieveNoteConfig(): {
 
   // **DEPRECATED** setting to be removed
   // for now it overrides the above to preserve user settings if they have it set
-  // if (getFoamVsCodeConfig<boolean>(CONFIG_EMBED_NOTE_IN_CONTAINER, false)) {
-  //   noteStyle = 'card';
-  // }
+  if (getFoamVsCodeConfig<boolean>(CONFIG_EMBED_NOTE_IN_CONTAINER, false)) {
+    noteStyle = 'card';
+  }
   return { noteScope, noteStyle };
 }
 

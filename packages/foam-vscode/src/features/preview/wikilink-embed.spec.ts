@@ -49,7 +49,7 @@ describe('Displaying included notes in preview', () => {
 
     await withModifiedFoamConfiguration(
       CONFIG_EMBED_NOTE_TYPE,
-      'full-container',
+      'full-card',
       () => {
         const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser);
 
@@ -121,7 +121,7 @@ This is the third section of note E
 
     await withModifiedFoamConfiguration(
       CONFIG_EMBED_NOTE_TYPE,
-      'full-container',
+      'full-card',
       () => {
         const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser);
 

@@ -15,6 +15,7 @@ import { Position } from '../../core/model/position';
 import { TextEdit } from '../../core/services/text-edit';
 
 export const CONFIG_EMBED_NOTE_IN_CONTAINER = 'preview.embedNoteInContainer';
+export const CONFIG_EMBED_NOTE_TYPE = 'preview.embedNoteType';
 const refsStack: string[] = [];
 
 export const markdownItWikilinkEmbed = (
@@ -45,27 +46,23 @@ export const markdownItWikilinkEmbed = (
           return `<div class="foam-cyclic-link-warning">Cyclic link detected for wikilink: ${wikilink}</div>`;
         }
         let content = `Embed for [[${wikilink}]]`;
+        let html: string;
+
         switch (includedNote.type) {
           case 'note': {
-            let noteText = readFileSync(includedNote.uri.toFsPath()).toString();
-            const section = Resource.findSection(
-              includedNote,
-              includedNote.uri.fragment
-            );
-            if (isSome(section)) {
-              const rows = noteText.split('\n');
-              noteText = rows
-                .slice(section.range.start.line, section.range.end.line)
-                .join('\n');
-            }
-            noteText = withLinksRelativeToWorkspaceRoot(
-              noteText,
-              parser,
-              workspace
-            );
-            content = getFoamVsCodeConfig(CONFIG_EMBED_NOTE_IN_CONTAINER)
-              ? `<div class="embed-container-note">${md.render(noteText)}</div>`
-              : noteText;
+            const { noteScope: _, noteStyle } = retrieveNoteConfig();
+
+            const extractor: EmbedNoteExtractor = fullExtractor;
+
+            const formatter: EmbedNoteFormatter =
+              noteStyle === 'card'
+                ? cardFormatter
+                : noteStyle === 'inline'
+                ? inlineFormatter
+                : cardFormatter;
+
+            content = extractor(includedNote, parser, workspace);
+            html = formatter(content, md);
             break;
           }
           case 'attachment':
@@ -74,14 +71,15 @@ export const markdownItWikilinkEmbed = (
 ${md.renderInline('[[' + wikilink + ']]')}<br/>
 Embed for attachments is not supported
 </div>`;
+            html = md.render(content);
             break;
           case 'image':
             content = `<div class="embed-container-image">${md.render(
               `![](${md.normalizeLink(includedNote.uri.path)})`
             )}</div>`;
+            html = md.render(content);
             break;
         }
-        const html = md.render(content);
         refsStack.pop();
         return html;
       } catch (e) {
@@ -121,6 +119,62 @@ function withLinksRelativeToWorkspaceRoot(
     noteText
   );
   return text;
+}
+
+export function retrieveNoteConfig(): {
+  noteScope: string;
+  noteStyle: string;
+} {
+  let config = getFoamVsCodeConfig<string>(CONFIG_EMBED_NOTE_TYPE); // ex. full-inline
+  let [noteScope, noteStyle] = config.split('-');
+
+  // **DEPRECATED** setting to be removed
+  // for now it overrides the above to preserve user settings if they have it set
+  if (getFoamVsCodeConfig<boolean>(CONFIG_EMBED_NOTE_IN_CONTAINER, false)) {
+    noteStyle = 'card';
+  }
+  return { noteScope, noteStyle };
+}
+
+/**
+ * A type of function that gets the desired content of the note
+ */
+export type EmbedNoteExtractor = (
+  note: Resource,
+  parser: ResourceParser,
+  workspace: FoamWorkspace
+) => string;
+
+function fullExtractor(
+  note: Resource,
+  parser: ResourceParser,
+  workspace: FoamWorkspace
+): string {
+  let noteText = readFileSync(note.uri.toFsPath()).toString();
+  const section = Resource.findSection(note, note.uri.fragment);
+  if (isSome(section)) {
+    const rows = noteText.split('\n');
+    noteText = rows
+      .slice(section.range.start.line, section.range.end.line)
+      .join('\n');
+  }
+  noteText = withLinksRelativeToWorkspaceRoot(noteText, parser, workspace);
+  return noteText;
+}
+
+/**
+ * A type of function that renders note content with the desired style in html
+ */
+export type EmbedNoteFormatter = (content: string, md: markdownit) => string;
+
+function cardFormatter(content: string, md: markdownit): string {
+  return md.render(
+    `<div class="embed-container-note">${md.render(content)}</div>`
+  );
+}
+
+function inlineFormatter(content: string, md: markdownit): string {
+  return md.render(content);
 }
 
 export default markdownItWikilinkEmbed;

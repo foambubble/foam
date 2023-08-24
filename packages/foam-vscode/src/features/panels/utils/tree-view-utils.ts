@@ -9,6 +9,7 @@ import { getNoteTooltip } from '../../../utils';
 import { isSome } from '../../../core/utils';
 import { getBlockFor } from '../../../core/services/markdown-parser';
 import { Connection, FoamGraph } from '../../../core/model/graph';
+import { Logger } from '../../../core/utils/log';
 
 export class BaseTreeItem extends vscode.TreeItem {
   resolveTreeItem(): Promise<vscode.TreeItem> {
@@ -226,4 +227,56 @@ export function createConnectionItemsForResource(
     return item;
   });
   return Promise.all(backlinkItems);
+}
+
+/**
+ * Expands a node and its children in a tree view that match a given predicate
+ *
+ * @param treeView - The tree view to expand nodes in
+ * @param provider - The tree data provider for the view
+ * @param element - The element to expand
+ * @param when - A function that returns true if the node should be expanded
+ */
+export async function expandNode<T>(
+  treeView: vscode.TreeView<any>,
+  provider: vscode.TreeDataProvider<T>,
+  element: T,
+  when: (element: T) => boolean
+) {
+  try {
+    if (when(element)) {
+      await treeView.reveal(element, {
+        select: false,
+        focus: false,
+        expand: true,
+      });
+    }
+  } catch {
+    const obj = element as any;
+    const label = obj.label ?? obj.toString();
+    Logger.warn(`Could not expand element: ${label}`);
+  }
+
+  const children = await provider.getChildren(element);
+  for (const child of children) {
+    await expandNode(treeView, provider, child, when);
+  }
+}
+
+/**
+ * Expands all items in a tree view that match a given predicate
+ *
+ * @param treeView - The tree view to expand items in
+ * @param provider - The tree data provider for the view
+ * @param when - A function that returns true if the node should be expanded
+ */
+export async function expandAll<T>(
+  treeView: vscode.TreeView<T>,
+  provider: vscode.TreeDataProvider<T>,
+  when: (element: T) => boolean = () => true
+) {
+  const elements = await provider.getChildren(undefined);
+  for (const element of elements) {
+    await expandNode(treeView, provider, element, when);
+  }
 }

@@ -181,6 +181,11 @@
           "command": "foam-vscode.views.notes-explorer.show:all",
           "when": "view == foam-vscode.notes-explorer && foam-vscode.views.notes-explorer.show == 'notes-only'",
           "group": "navigation"
+        },
+        {
+          "command": "foam-vscode.views.notes-explorer.expand-all",
+          "when": "view == foam-vscode.notes-explorer",
+          "group": "navigation"
         }
       ],
       "commandPalette": [
@@ -250,6 +255,10 @@
         },
         {
           "command": "foam-vscode.views.notes-explorer.show:notes",
+          "when": "false"
+        },
+        {
+          "command": "foam-vscode.views.notes-explorer.expand-all",
           "when": "false"
         },
         {
@@ -388,6 +397,11 @@
         "command": "foam-vscode.views.notes-explorer.show:all",
         "title": "Show all resources",
         "icon": "$(files)"
+      },
+      {
+        "command": "foam-vscode.views.notes-explorer.expand-all",
+        "title": "Expand all",
+        "icon": "$(expand-all)"
       },
       {
         "command": "foam-vscode.views.notes-explorer.show:notes",

@@ -5,6 +5,7 @@ import {
   ResourceRangeTreeItem,
   ResourceTreeItem,
   createBacklinkItemsForResource as createBacklinkTreeItemsForResource,
+  expandAll,
 } from './utils/tree-view-utils';
 import { Resource } from '../../core/model/note';
 import { FoamGraph } from '../../core/model/graph';
@@ -60,6 +61,11 @@ export default async function activate(
     foam.graph.onDidUpdate(() => {
       provider.refresh();
     }),
+    vscode.commands.registerCommand(
+      `foam-vscode.views.notes-explorer.expand-all`,
+      (...args) =>
+        expandAll(treeView, provider, node => node.contextValue === 'folder')
+    ),
     vscode.window.onDidChangeActiveTextEditor(revealTextEditorItem),
     treeView.onDidChangeVisibility(revealTextEditorItem)
   );

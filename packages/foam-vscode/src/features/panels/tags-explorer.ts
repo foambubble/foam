@@ -6,6 +6,7 @@ import { FoamTags } from '../../core/model/tags';
 import {
   ResourceRangeTreeItem,
   ResourceTreeItem,
+  expandAll,
   groupRangesByResource,
 } from './utils/tree-view-utils';
 import {
@@ -44,12 +45,21 @@ export default async function activate(
       if (provider.show.get() === 'for-current-file') {
         provider.refresh();
       }
-    })
+    }),
+    vscode.commands.registerCommand(
+      `foam-vscode.views.${provider.providerId}.expand-all`,
+      () =>
+        expandAll(
+          treeView,
+          provider,
+          node => node.contextValue === 'tag' || node.contextValue === 'folder'
+        )
+    )
   );
 }
 
 export class TagsProvider extends FolderTreeProvider<TagTreeItem, string> {
-  private providerId = 'tags-explorer';
+  public providerId = 'tags-explorer';
   public show = new ContextMemento<'all' | 'for-current-file'>(
     new MapBasedMemento(),
     `foam-vscode.views.${this.providerId}.show`,
@@ -178,7 +188,12 @@ export class TagsProvider extends FolderTreeProvider<TagTreeItem, string> {
         );
         return [...acc, ...items];
       }, []);
-    const resources = await groupRangesByResource(this.workspace, resourceTags);
+    const resources = (
+      await groupRangesByResource(this.workspace, resourceTags)
+    ).map(item => {
+      item.id = element.tag + ' / ' + item.uri.toString();
+      return item;
+    });
 
     return [...subtags, ...resources];
   }
@@ -197,6 +212,7 @@ export class TagItem extends FolderTreeItem<string> {
   ) {
     super(node, node.path.slice(-1)[0], parentElement);
     this.tag = node.path.join(TAG_SEPARATOR);
+    this.id = this.tag;
     this.description = `${nResourcesInSubtree} reference${
       nResourcesInSubtree !== 1 ? 's' : ''
     }`;

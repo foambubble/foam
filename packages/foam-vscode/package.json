@@ -153,6 +153,11 @@
           "group": "navigation"
         },
         {
+          "command": "foam-vscode.views.tags-explorer.expand-all",
+          "when": "view == foam-vscode.tags-explorer",
+          "group": "navigation"
+        },
+        {
           "command": "foam-vscode.views.placeholders.show:for-current-file",
           "when": "view == foam-vscode.placeholders && foam-vscode.views.placeholders.show == 'all'",
           "group": "navigation"
@@ -236,6 +241,10 @@
         },
         {
           "command": "foam-vscode.views.tags-explorer.group-by:off",
+          "when": "false"
+        },
+        {
+          "command": "foam-vscode.views.tags-explorer.expand-all",
           "when": "false"
         },
         {
@@ -381,6 +390,11 @@
         "command": "foam-vscode.views.tags-explorer.group-by:off",
         "title": "Flat list",
         "icon": "$(list-flat)"
+      },
+      {
+        "command": "foam-vscode.views.tags-explorer.expand-all",
+        "title": "Expand all",
+        "icon": "$(expand-all)"
       },
       {
         "command": "foam-vscode.views.placeholders.show:for-current-file",

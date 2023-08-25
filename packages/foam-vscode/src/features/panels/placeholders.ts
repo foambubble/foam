@@ -6,6 +6,7 @@ import { GroupedResourcesTreeDataProvider } from './utils/grouped-resources-tree
 import {
   UriTreeItem,
   createBacklinkItemsForResource,
+  expandAll,
   groupRangesByResource,
 } from './utils/tree-view-utils';
 import { IMatcher } from '../../core/services/datastore';
@@ -47,6 +48,17 @@ export default async function activate(
     provider.onDidChangeTreeData(() => {
       treeView.title = baseTitle + ` (${provider.nValues})`;
     }),
+    vscode.commands.registerCommand(
+      `foam-vscode.views.placeholders.expand-all`,
+      () =>
+        expandAll(
+          treeView,
+          provider,
+          node =>
+            node.contextValue === 'placeholder' ||
+            node.contextValue === 'folder'
+        )
+    ),
     vscode.window.onDidChangeActiveTextEditor(() => {
       if (provider.show.get() === 'for-current-file') {
         provider.refresh();
@@ -92,6 +104,8 @@ export class PlaceholderTreeView extends GroupedResourcesTreeDataProvider {
       parent,
       collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
     });
+    item.contextValue = 'placeholder';
+    item.id = uri.toString();
     item.getChildren = async () => {
       return groupRangesByResource(
         this.workspace,

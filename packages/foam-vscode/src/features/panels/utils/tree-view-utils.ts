@@ -251,10 +251,12 @@ export async function expandNode<T>(
         expand: true,
       });
     }
-  } catch {
+  } catch (e) {
     const obj = element as any;
     const label = obj.label ?? obj.toString();
-    Logger.warn(`Could not expand element: ${label}`);
+    Logger.warn(
+      `Could not expand element: ${label}. Try setting the ID property of the TreeItem`
+    );
   }
 
   const children = await provider.getChildren(element);

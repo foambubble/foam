@@ -144,18 +144,19 @@ export class NotesProvider extends FolderTreeProvider<
     value: Resource,
     parent: FolderTreeItem<Resource>
   ): NotesTreeItems {
-    const res = new ResourceTreeItem(value, this.workspace, {
+    const item = new ResourceTreeItem(value, this.workspace, {
       parent,
       collapsibleState:
         this.graph.getBacklinks(value.uri).length > 0
           ? vscode.TreeItemCollapsibleState.Collapsed
           : vscode.TreeItemCollapsibleState.None,
     });
-    res.getChildren = async () => {
+    item.id = value.uri.toString();
+    item.getChildren = async () => {
       const backlinks = await createBacklinkTreeItemsForResource(
         this.workspace,
         this.graph,
-        res.uri
+        item.uri
       );
       backlinks.forEach(item => {
         item.description = item.label;
@@ -163,11 +164,11 @@ export class NotesProvider extends FolderTreeProvider<
       });
       return backlinks;
     };
-    res.description =
+    item.description =
       value.uri.getName().toLocaleLowerCase() ===
       value.title.toLocaleLowerCase()
         ? undefined
         : value.uri.getBasename();
-    return res;
+    return item;
   }
 }

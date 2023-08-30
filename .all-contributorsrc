@@ -1049,6 +1049,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "thara",
+      "name": "Tomochika Hara",
+      "avatar_url": "https://avatars.githubusercontent.com/u/1532891?v=4",
+      "profile": "https://thara.dev",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,

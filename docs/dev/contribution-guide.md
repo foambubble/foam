@@ -93,7 +93,7 @@ After you have made your changes to your copy of the project, it is time to try 
 
 1. Return to the project's [home repository page](https://github.com/foambubble/foam).
 2. Github should show you an button called "Compare & pull request" linking your forked repository to the community repository.
-3. Click that button and confirm that your repository is going to be merged into the community repository. See [this guide](https://sqldbawithabeard.com/2019/11/29/how-to-fork-a-github-repository-and-contribute-to-an-open-source-project/) for more specifics.
+3. Click that button and confirm that your repository is going to be merged into the community repository. See [this guide](https://blog.robsewell.com/blog/how-to-fork-a-github-repository-and-contribute-to-an-open-source-project/) for more specifics.
 4. Add as many relevant details to the PR message to make it clear to the project maintainers and other members of the community what you have accomplished with your new changes. Link to any issues the changes are related to.
 5. Your PR will then need to be reviewed and accepted by the other members of the community. Any discussion about the changes will occur in your PR thread.
 6. Once reviewed and accept you can complete the merge request!

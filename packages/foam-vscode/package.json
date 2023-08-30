@@ -578,11 +578,15 @@
           "default": "full-card",
           "enum": [
             "full-inline",
-            "full-card"
+            "full-card",
+            "content-inline",
+            "content-card"
           ],
           "enumDescriptions": [
             "Include the section with title and style inline",
-            "Include the section with title and style it within a container"
+            "Include the section with title and style it within a container",
+            "Include the section without title and style inline",
+            "Include the section without title and style it within a container"
           ]
         },
         "foam.graph.titleMaxLength": {

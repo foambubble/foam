@@ -173,7 +173,16 @@ function contentExtractor(
   workspace: FoamWorkspace
 ): string {
   let noteText = readFileSync(note.uri.toFsPath()).toString();
-  const section = Resource.findSection(note, note.uri.fragment);
+  let section = Resource.findSection(note, note.uri.fragment);
+  if (!note.uri.fragment) {
+    // if there's no fragment(section), the wikilink is linking to the entire note,
+    // in which case we need to remove the title. We could just use rows.shift()
+    // but should the note start with blank lines, it will only remove the first blank line
+    // leaving the title
+    // A better way is to find where the actual title starts by assuming it's at section[0]
+    // then we treat it as the same case as link to a section
+    section = note.sections.length ? note.sections[0] : null;
+  }
   let rows = noteText.split('\n');
   if (isSome(section)) {
     rows = rows.slice(section.range.start.line, section.range.end.line);

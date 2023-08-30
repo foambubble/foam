@@ -165,7 +165,8 @@ This is the third section of note E
 
   it('should not render the title of a note in content inline mode', async () => {
     const note = await createFile(
-      `# Title
+      `
+# Title
 ## Section 1
 
 This is the first section of note E`,
@@ -242,6 +243,8 @@ This is the first section of note E
   it('should not render the section title, but still render subsection titles in content inline mode', async () => {
     const note = await createFile(
       `# Title
+
+
 ## Section 1
 This is the first section of note E
 

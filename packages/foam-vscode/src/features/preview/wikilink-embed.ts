@@ -50,9 +50,14 @@ export const markdownItWikilinkEmbed = (
 
         switch (includedNote.type) {
           case 'note': {
-            const { noteScope: _, noteStyle } = retrieveNoteConfig();
+            const { noteScope, noteStyle } = retrieveNoteConfig();
 
-            const extractor: EmbedNoteExtractor = fullExtractor;
+            const extractor: EmbedNoteExtractor =
+              noteScope === 'full'
+                ? fullExtractor
+                : noteScope === 'content'
+                ? contentExtractor
+                : fullExtractor;
 
             const formatter: EmbedNoteFormatter =
               noteStyle === 'card'
@@ -158,6 +163,23 @@ function fullExtractor(
       .slice(section.range.start.line, section.range.end.line)
       .join('\n');
   }
+  noteText = withLinksRelativeToWorkspaceRoot(noteText, parser, workspace);
+  return noteText;
+}
+
+function contentExtractor(
+  note: Resource,
+  parser: ResourceParser,
+  workspace: FoamWorkspace
+): string {
+  let noteText = readFileSync(note.uri.toFsPath()).toString();
+  const section = Resource.findSection(note, note.uri.fragment);
+  let rows = noteText.split('\n');
+  if (isSome(section)) {
+    rows = rows.slice(section.range.start.line, section.range.end.line);
+  }
+  rows.shift();
+  noteText = rows.join('\n');
   noteText = withLinksRelativeToWorkspaceRoot(noteText, parser, workspace);
   return noteText;
 }

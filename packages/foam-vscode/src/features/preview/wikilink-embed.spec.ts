@@ -276,6 +276,82 @@ This is the first subsection of note E`,
     await deleteFile(note);
   });
 
+  it('should allow a note embedding type to be overridden if a modifier is passed in', async () => {
+    const note = await createFile(
+      `
+# Section 1
+This is the first section of note E
+
+# Section 2 
+This is the second section of note E
+
+# Section 3
+This is the third section of note E
+    `,
+      ['note-e.md']
+    );
+    const parser = createMarkdownParser([]);
+    const ws = new FoamWorkspace().set(parser.parse(note.uri, note.content));
+    const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser);
+
+    await withModifiedFoamConfiguration(
+      CONFIG_EMBED_NOTE_TYPE,
+      'full-inline',
+      () => {
+        expect(
+          md.render(`This is the root node. 
+
+ content![[note-e#Section 2]]
+ 
+ full![[note-e#Section 3]]`)
+        ).toMatch(
+          `<p>This is the root node.</p>
+<p><p>This is the second section of note E</p>
+</p>
+<p><h1>Section 3</h1>
+<p>This is the third section of note E</p>
+</p>
+`
+        );
+      }
+    );
+
+    await deleteFile(note);
+  });
+
+  it('should allow a note embedding type to be overridden if two modifiers are passed in', async () => {
+    const note = await createFile(
+      `
+# Section 1
+This is the first section of note E
+
+# Section 2 
+This is the second section of note E
+    `,
+      ['note-e.md']
+    );
+    const parser = createMarkdownParser([]);
+    const ws = new FoamWorkspace().set(parser.parse(note.uri, note.content));
+    const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser);
+
+    await withModifiedFoamConfiguration(
+      CONFIG_EMBED_NOTE_TYPE,
+      'full-inline',
+      () => {
+        const res = md.render(`This is the root node. 
+ 
+content-card![[note-e#Section 2]]`);
+
+        expect(res).toContain('This is the root node');
+        expect(res).toContain('embed-container-note');
+        expect(res).toContain('This is the second section of note E');
+        expect(res).not.toContain('Section 2');
+      }
+    );
+
+    await deleteFile(note);
+  });
+
   it('should fallback to the bare text when the note is not found', () => {
     const md = markdownItWikilinkEmbed(
       MarkdownIt(),

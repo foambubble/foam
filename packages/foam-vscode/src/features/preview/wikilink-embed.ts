@@ -14,7 +14,6 @@ import { MarkdownLink } from '../../core/services/markdown-link';
 import { Position } from '../../core/model/position';
 import { TextEdit } from '../../core/services/text-edit';
 
-export const CONFIG_EMBED_NOTE_IN_CONTAINER = 'preview.embedNoteInContainer';
 export const CONFIG_EMBED_NOTE_TYPE = 'preview.embedNoteType';
 const refsStack: string[] = [];
 
@@ -50,7 +49,7 @@ export const markdownItWikilinkEmbed = (
 
         switch (includedNote.type) {
           case 'note': {
-            const { noteScope, noteStyle } = retrieveNoteConfig();
+            const { noteScope, noteStyle } = retrieveNoteConfig(undefined);
 
             const extractor: EmbedNoteExtractor =
               noteScope === 'full'
@@ -126,17 +125,22 @@ function withLinksRelativeToWorkspaceRoot(
   return text;
 }
 
-export function retrieveNoteConfig(): {
+export function retrieveNoteConfig(explicitModifier: string | undefined): {
   noteScope: string;
   noteStyle: string;
 } {
   let config = getFoamVsCodeConfig<string>(CONFIG_EMBED_NOTE_TYPE); // ex. full-inline
   let [noteScope, noteStyle] = config.split('-');
 
-  // **DEPRECATED** setting to be removed
-  // for now it overrides the above to preserve user settings if they have it set
-  if (getFoamVsCodeConfig<boolean>(CONFIG_EMBED_NOTE_IN_CONTAINER, false)) {
-    noteStyle = 'card';
+  // an explicit modifier will always override corresponding user setting
+  if (explicitModifier !== undefined) {
+    if (['full', 'content'].includes(explicitModifier)) {
+      noteScope = explicitModifier;
+    } else if (['card', 'inline'].includes(explicitModifier)) {
+      noteStyle = explicitModifier;
+    } else {
+      [noteScope, noteStyle] = explicitModifier.split('-');
+    }
   }
   return { noteScope, noteStyle };
 }

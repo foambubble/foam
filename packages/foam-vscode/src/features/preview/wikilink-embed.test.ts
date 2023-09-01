@@ -7,24 +7,32 @@ describe('Wikilink Note Embedding', () => {
   });
 
   describe('Config Parsing', () => {
-    it('should use preview.embedNoteType if deprecated preview.embedNoteInContainer not used', () => {
+    it('should use preview.embedNoteType if an explicit modifier is not passed in', () => {
       jest
         .spyOn(config, 'getFoamVsCodeConfig')
-        .mockReturnValueOnce('full-card')
-        .mockReturnValueOnce(false);
+        .mockReturnValueOnce('full-card');
 
-      const { noteScope, noteStyle } = retrieveNoteConfig();
+      const { noteScope, noteStyle } = retrieveNoteConfig(undefined);
       expect(noteScope).toEqual('full');
       expect(noteStyle).toEqual('card');
     });
 
-    it('should use preview.embedNoteInContainer if set', () => {
+    it('should use explicit modifier over user settings if passed in', () => {
       jest
         .spyOn(config, 'getFoamVsCodeConfig')
         .mockReturnValueOnce('full-inline')
-        .mockReturnValueOnce(true);
+        .mockReturnValueOnce('full-inline')
+        .mockReturnValueOnce('full-inline');
 
-      const { noteScope, noteStyle } = retrieveNoteConfig();
+      let { noteScope, noteStyle } = retrieveNoteConfig('content-card');
+      expect(noteScope).toEqual('content');
+      expect(noteStyle).toEqual('card');
+
+      ({ noteScope, noteStyle } = retrieveNoteConfig('content'));
+      expect(noteScope).toEqual('content');
+      expect(noteStyle).toEqual('inline');
+
+      ({ noteScope, noteStyle } = retrieveNoteConfig('card'));
       expect(noteScope).toEqual('full');
       expect(noteStyle).toEqual('card');
     });

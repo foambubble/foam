@@ -609,12 +609,6 @@
           ],
           "description": "Whether or not to navigate to the target daily note when a daily note snippet is selected."
         },
-        "foam.preview.embedNoteInContainer": {
-          "type": "boolean",
-          "default": true,
-          "description": "Wrap embedded notes in a container when displayed in preview panel",
-          "deprecationMessage": "*DEPRECATED* use foam.preview.embedNoteType instead."
-        },
         "foam.preview.embedNoteType": {
           "type": "string",
           "default": "full-card",

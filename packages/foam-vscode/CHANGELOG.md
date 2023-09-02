@@ -4,6 +4,13 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.25.2] - 2023-09-02
+
+Fixes and Improvements:
+
+- Added content-only embed styles (#1279 - thanks @badsketch)
+- Added expand-all button to tree views (#1276)
+
 ## [0.25.1] - 2023-08-23
 
 Fixes and Improvements:

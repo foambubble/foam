@@ -4,7 +4,14 @@ import { FoamWorkspace } from '../model/workspace';
 import { IDisposable } from '../common/lifecycle';
 import { ResourceProvider } from '../model/provider';
 
-const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp'];
+export const imageExtensions = [
+  '.png',
+  '.jpg',
+  '.jpeg',
+  '.gif',
+  '.svg',
+  '.webp',
+];
 
 const asResource = (uri: URI): Resource => {
   const type = imageExtensions.includes(uri.getExtension())

@@ -1,12 +1,14 @@
 import * as vscode from 'vscode';
 import { Foam } from '../../core/model/foam';
 import { createMatcherAndDataStore } from '../../services/editor';
-import { getOrphansConfig } from '../../settings';
+import { getAttachmentsExtensions, getOrphansConfig } from '../../settings';
 import { GroupedResourcesTreeDataProvider } from './utils/grouped-resources-tree-data-provider';
 import { ResourceTreeItem, UriTreeItem } from './utils/tree-view-utils';
 import { IMatcher } from '../../core/services/datastore';
 import { FoamWorkspace } from '../../core/model/workspace';
 import { FoamGraph } from '../../core/model/graph';
+import { URI } from '../../core/model/uri';
+import { imageExtensions } from '../../core/services/attachment-provider';
 
 const EXCLUDE_TYPES = ['image', 'attachment'];
 export default async function activate(
@@ -66,6 +68,13 @@ export class OrphanTreeView extends GroupedResourcesTreeDataProvider {
       .filter(
         uri =>
           !EXCLUDE_TYPES.includes(this.workspace.find(uri)?.type) &&
-          this.graph.getConnections(uri).length === 0
+          this.graph.getBacklinks(uri).length === 0 &&
+          this.graph.getLinks(uri).filter(c => !isAttachment(c.target))
+            .length === 0
       );
+}
+
+function isAttachment(uri: URI) {
+  const ext = [...getAttachmentsExtensions(), ...imageExtensions];
+  return ext.includes(uri.getExtension());
 }

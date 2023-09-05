@@ -14,7 +14,13 @@ import { MarkdownLink } from '../../core/services/markdown-link';
 import { Position } from '../../core/model/position';
 import { TextEdit } from '../../core/services/text-edit';
 
-export const CONFIG_EMBED_NOTE_IN_CONTAINER = 'preview.embedNoteInContainer';
+export const WIKILINK_EMBED_REGEX =
+  /((?:(?:full|content)-(?:inline|card)|full|content|inline|card)?!\[\[[^[\]]+?\]\])/;
+// we need another regex because md.use(regex, replace) only permits capturing one group
+// so we capture the entire possible wikilink item (ex. content-card![[note]]) using WIKILINK_EMBED_REGEX and then
+// use WIKILINK_EMBED_REGEX_GROUPER to parse it into the modifier(content-card) and the wikilink(note)
+export const WIKILINK_EMBED_REGEX_GROUPS =
+  /((?:\w+)|(?:(?:\w+)-(?:\w+)))?!\[\[([^[\]]+?)\]\]/;
 export const CONFIG_EMBED_NOTE_TYPE = 'preview.embedNoteType';
 const refsStack: string[] = [];
 
@@ -25,9 +31,13 @@ export const markdownItWikilinkEmbed = (
 ) => {
   return md.use(markdownItRegex, {
     name: 'embed-wikilinks',
-    regex: /!\[\[([^[\]]+?)\]\]/,
-    replace: (wikilink: string) => {
+    regex: WIKILINK_EMBED_REGEX,
+    replace: (wikilinkItem: string) => {
       try {
+        const [_, noteEmbedModifier, wikilink] = wikilinkItem.match(
+          WIKILINK_EMBED_REGEX_GROUPS
+        );
+
         const includedNote = workspace.find(wikilink);
 
         if (!includedNote) {
@@ -50,7 +60,8 @@ export const markdownItWikilinkEmbed = (
 
         switch (includedNote.type) {
           case 'note': {
-            const { noteScope, noteStyle } = retrieveNoteConfig();
+            const { noteScope, noteStyle } =
+              retrieveNoteConfig(noteEmbedModifier);
 
             const extractor: EmbedNoteExtractor =
               noteScope === 'full'
@@ -89,7 +100,7 @@ Embed for attachments is not supported
         return html;
       } catch (e) {
         Logger.error(
-          `Error while including [[${wikilink}]] into the current document of the Preview panel`,
+          `Error while including ${wikilinkItem} into the current document of the Preview panel`,
           e
         );
         return '';
@@ -126,17 +137,22 @@ function withLinksRelativeToWorkspaceRoot(
   return text;
 }
 
-export function retrieveNoteConfig(): {
+export function retrieveNoteConfig(explicitModifier: string | undefined): {
   noteScope: string;
   noteStyle: string;
 } {
   let config = getFoamVsCodeConfig<string>(CONFIG_EMBED_NOTE_TYPE); // ex. full-inline
   let [noteScope, noteStyle] = config.split('-');
 
-  // **DEPRECATED** setting to be removed
-  // for now it overrides the above to preserve user settings if they have it set
-  if (getFoamVsCodeConfig<boolean>(CONFIG_EMBED_NOTE_IN_CONTAINER, false)) {
-    noteStyle = 'card';
+  // an explicit modifier will always override corresponding user setting
+  if (explicitModifier !== undefined) {
+    if (['full', 'content'].includes(explicitModifier)) {
+      noteScope = explicitModifier;
+    } else if (['card', 'inline'].includes(explicitModifier)) {
+      noteStyle = explicitModifier;
+    } else {
+      [noteScope, noteStyle] = explicitModifier.split('-');
+    }
   }
   return { noteScope, noteStyle };
 }

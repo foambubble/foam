@@ -4,7 +4,7 @@
 import { readFileSync } from 'fs';
 import { workspace as vsWorkspace } from 'vscode';
 import markdownItRegex from 'markdown-it-regex';
-import { isSome } from '../../utils';
+import { isSome, isNone } from '../../utils';
 import { FoamWorkspace } from '../../core/model/workspace';
 import { Logger } from '../../core/utils/log';
 import { Resource, ResourceParser } from '../../core/model/note';
@@ -122,6 +122,11 @@ function withLinksRelativeToWorkspaceRoot(
     .map(link => {
       const info = MarkdownLink.analyzeLink(link);
       const resource = workspace.find(info.target);
+      // embedded notes that aren't created are still collected
+      // return null so it can be filtered in the next step
+      if (isNone(resource)) {
+        return null;
+      }
       const pathFromRoot = vsWorkspace.asRelativePath(
         toVsCodeUri(resource.uri)
       );
@@ -129,6 +134,7 @@ function withLinksRelativeToWorkspaceRoot(
         target: pathFromRoot,
       });
     })
+    .filter(linkEdits => !isNone(linkEdits))
     .sort((a, b) => Position.compareTo(b.range.start, a.range.start));
   const text = edits.reduce(
     (text, edit) => TextEdit.apply(text, edit),

@@ -364,6 +364,27 @@ content-card![[note-e#Section 2]]`);
     );
   });
 
+  it('should render the bare text for an embedded note that is embedding a note that is not found', async () => {
+    const note = await createFile(
+      'This is the text of note A which includes ![[does-not-exist]]',
+      ['note.md']
+    );
+
+    const ws = new FoamWorkspace().set(parser.parse(note.uri, note.content));
+
+    await withModifiedFoamConfiguration(
+      CONFIG_EMBED_NOTE_TYPE,
+      'full-inline',
+      () => {
+        const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser);
+        expect(md.render(`This is the root node. ![[note]]`)).toMatch(
+          `<p>This is the root node. <p>This is the text of note A which includes ![[does-not-exist]]</p>
+</p>`
+        );
+      }
+    );
+  });
+
   it('should display a warning in case of cyclical inclusions', async () => {
     const noteA = await createFile(
       'This is the text of note A which includes ![[note-b]]',

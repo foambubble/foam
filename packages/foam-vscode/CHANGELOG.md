@@ -4,6 +4,14 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.25.3] - 2023-09-07
+
+Fixes and Improvements:
+
+- Fixed incorrect handling of embedding of non-existing notes (#1283 - thanks @badsketch)
+- Introduced Note Embedding Sytanx (#1281 - thanks @badsketch)
+- Attachments are not considered when computing orphan notes (#1242)
+
 ## [0.25.2] - 2023-09-02
 
 Fixes and Improvements:

@@ -137,22 +137,14 @@ export function createMarkdownReferences(
         relativeUri = relativeUri.changeExtension('*', '');
       }
 
-      let label = link.rawText;
-      if (link.rawText.indexOf('[[') > -1) {
-        if (link.isEmbed) {
-          // ![[embedded-note]]
-          label = link.rawText.substring(3, link.rawText.length - 2);
-        } else {
-          // [[standard-note]]
-          label = link.rawText.substring(2, link.rawText.length - 2);
-        }
-      } else {
-        label = link.rawText;
-      }
-
       // [wikilink-text]: path/to/file.md "Page title"
       return {
-        label,
+        // embedded looks like ![[note-a]]
+        // regular note looks like [[note-a]]
+        label: link.rawText.substring(
+          link.isEmbed ? 3 : 2,
+          link.rawText.length - 2
+        ),
         url: relativeUri.path,
         title: target.title,
       };

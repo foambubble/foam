@@ -7,8 +7,7 @@ const webExtensionConfig = {
   mode: 'none', // this leaves the source code as close as possible to the original (when packaging we set this to 'production')
   target: 'webworker', // extensions run in a webworker context
   entry: {
-    extension: './src/extension.ts', // source of the web extension main file
-    'test/suite/index': './src/test/suite.ts' // source of the web extension test runner
+    extension: './src/extension.ts' // source of the web extension main file
   },
   output: {
     filename: '[name].js',
@@ -26,7 +25,11 @@ const webExtensionConfig = {
       // Webpack 5 no longer polyfills Node.js core modules automatically.
       // see https://webpack.js.org/configuration/resolve/#resolvefallback
       // for the list of Node.js core module polyfills.
-      assert: require.resolve('assert')
+      assert: require.resolve('assert'),
+      "crypto": require.resolve("crypto-browserify"),
+      "path": require.resolve("path-browserify"),
+      "process/browser": require.resolve('process/browser'),
+      "stream": require.resolve("stream-browserify")
     }
   },
   module: {

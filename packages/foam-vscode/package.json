@@ -678,7 +678,8 @@
     "publish-extension": "yarn publish-extension-vscode && yarn publish-extension-openvsx",
     "compile-web": "webpack --config web/webpack.config.js",
     "watch-web": "webpack --config web/webpack.config.js --watch",
-    "package-web": "webpack --config web/webpack.config.js --mode production --devtool hidden-source-map"
+    "package-web": "webpack --config web/webpack.config.js --mode production --devtool hidden-source-map",
+    "open-in-browser": "vscode-test-web --browser=chromium --extensionDevelopmentPath=."
   },
   "devDependencies": {
     "@types/dateformat": "^3.0.1",
@@ -693,6 +694,7 @@
     "@types/webpack-env": "1.16.0",
     "@typescript-eslint/eslint-plugin": "^5.51.0",
     "@typescript-eslint/parser": "^5.51.0",
+    "@vscode/test-web": "^0.0.45",
     "crypto-browserify": "^3.12.0",
     "dts-cli": "^1.6.3",
     "esbuild": "^0.17.7",
@@ -715,8 +717,8 @@
     "typescript": "^4.9.5",
     "vscode-test": "^1.3.0",
     "wait-for-expect": "^3.0.2",
-    "webpack": "5.38.1",
-    "webpack-cli": "4.7.0"
+    "webpack": "5.88.2",
+    "webpack-cli": "5.1.4"
   },
   "dependencies": {
     "dateformat": "4.5.1",

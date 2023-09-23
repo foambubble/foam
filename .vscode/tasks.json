@@ -18,12 +18,14 @@
       }
     },
     {
-      "label": "watch-web: foam-vscode",
       "type": "npm",
       "script": "watch-web",
       "group": "build",
+      "path": "packages/foam-vscode",
       "isBackground": true,
-      "problemMatcher": ["$ts-webpack-watch"]
+      "problemMatcher": [
+        "$ts-webpack-watch"
+      ]
     },
     {
       "label": "test: all packages",

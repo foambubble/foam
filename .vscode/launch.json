@@ -40,10 +40,10 @@
       "debugWebWorkerHost": true,
       "request": "launch",
       "args": [
-        "--extensionDevelopmentPath=${workspaceFolder}",
+        "--extensionDevelopmentPath=${workspaceFolder}/packages/foam-vscode",
         "--extensionDevelopmentKind=web"
       ],
-      "outFiles": ["${workspaceFolder}/dist/web/**/*.js"],
+      "outFiles": ["${workspaceFolder}/packages/foam-vscode/dist/web/**/*.js"],
       "preLaunchTask": "npm: watch-web"
     },
     {

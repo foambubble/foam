@@ -35,6 +35,18 @@
       "preLaunchTask": "${defaultBuildTask}"
     },
     {
+      "name": "Run Foam Web extension",
+      "type": "pwa-extensionHost",
+      "debugWebWorkerHost": true,
+      "request": "launch",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}",
+        "--extensionDevelopmentKind=web"
+      ],
+      "outFiles": ["${workspaceFolder}/dist/web/**/*.js"],
+      "preLaunchTask": "npm: watch-web"
+    },
+    {
       "type": "node",
       "name": "vscode-jest-tests",
       "request": "launch",

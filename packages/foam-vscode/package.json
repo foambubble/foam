@@ -22,6 +22,7 @@
     "workspaceContains:.vscode/foam.json"
   ],
   "main": "./out/extension.js",
+  "browser": "./dist/web/extension.js",
   "capabilities": {
     "untrustedWorkspaces": {
       "supported": "limited",
@@ -674,7 +675,10 @@
     "install-extension": "code --install-extension ./foam-vscode-$npm_package_version.vsix",
     "publish-extension-openvsx": "npx ovsx publish foam-vscode-$npm_package_version.vsix -p $OPENVSX_TOKEN",
     "publish-extension-vscode": "npx vsce publish --packagePath foam-vscode-$npm_package_version.vsix",
-    "publish-extension": "yarn publish-extension-vscode && yarn publish-extension-openvsx"
+    "publish-extension": "yarn publish-extension-vscode && yarn publish-extension-openvsx",
+    "compile-web": "webpack",
+    "watch-web": "webpack --watch",
+    "package-web": "webpack --mode production --devtool hidden-source-map"
   },
   "devDependencies": {
     "@types/dateformat": "^3.0.1",
@@ -686,6 +690,7 @@
     "@types/picomatch": "^2.2.1",
     "@types/remove-markdown": "^0.1.1",
     "@types/vscode": "^1.70.0",
+    "@types/webpack-env": "1.16.0",
     "@typescript-eslint/eslint-plugin": "^5.51.0",
     "@typescript-eslint/parser": "^5.51.0",
     "dts-cli": "^1.6.3",
@@ -704,7 +709,9 @@
     "tslib": "^2.0.0",
     "typescript": "^4.9.5",
     "vscode-test": "^1.3.0",
-    "wait-for-expect": "^3.0.2"
+    "wait-for-expect": "^3.0.2",
+    "webpack": "5.38.1",
+    "webpack-cli": "4.7.0"
   },
   "dependencies": {
     "dateformat": "4.5.1",

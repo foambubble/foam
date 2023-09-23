@@ -1,6 +1,5 @@
 import { isEmpty } from 'lodash';
 import { asAbsoluteUri, URI } from '../core/model/uri';
-import { TextEncoder } from 'util';
 import {
   EndOfLine,
   FileType,

@@ -316,4 +316,40 @@ describe('Generation of markdown references', () => {
       '../dir3/page-c.md',
     ]);
   });
+
+  it('should generate links for embedded notes that are formatted properly', () => {
+    const workspace = createTestWorkspace();
+    const noteA = createNoteFromMarkdown(
+      'Link to ![[page-b]] and [[page-c]]',
+      '/dir1/page-a.md'
+    );
+    workspace
+      .set(noteA)
+      .set(createNoteFromMarkdown('Content of note B', '/dir2/page-b.md'))
+      .set(createNoteFromMarkdown('Content of note C', '/dir3/page-c.md'));
+
+    const references = createMarkdownReferences(workspace, noteA.uri, true);
+    expect(references.map(r => [r.url, r.label])).toEqual([
+      ['../dir2/page-b.md', 'page-b'],
+      ['../dir3/page-c.md', 'page-c'],
+    ]);
+  });
+
+  it('should not generate links for placeholders', () => {
+    const workspace = createTestWorkspace();
+    const noteA = createNoteFromMarkdown(
+      'Link to ![[page-b]] and [[page-c]] and [[does-not-exist]] and ![[does-not-exist-either]]',
+      '/dir1/page-a.md'
+    );
+    workspace
+      .set(noteA)
+      .set(createNoteFromMarkdown('Content of note B', '/dir2/page-b.md'))
+      .set(createNoteFromMarkdown('Content of note C', '/dir3/page-c.md'));
+
+    const references = createMarkdownReferences(workspace, noteA.uri, true);
+    expect(references.map(r => r.url)).toEqual([
+      '../dir2/page-b.md',
+      '../dir3/page-c.md',
+    ]);
+  });
 });

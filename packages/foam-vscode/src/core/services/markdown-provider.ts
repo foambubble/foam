@@ -139,10 +139,12 @@ export function createMarkdownReferences(
 
       // [wikilink-text]: path/to/file.md "Page title"
       return {
-        label:
-          link.rawText.indexOf('[[') > -1
-            ? link.rawText.substring(2, link.rawText.length - 2)
-            : link.rawText,
+        // embedded looks like ![[note-a]]
+        // regular note looks like [[note-a]]
+        label: link.rawText.substring(
+          link.isEmbed ? 3 : 2,
+          link.rawText.length - 2
+        ),
         url: relativeUri.path,
         title: target.title,
       };

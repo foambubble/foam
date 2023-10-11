@@ -193,7 +193,12 @@ function contentExtractor(
   parser: ResourceParser,
   workspace: FoamWorkspace
 ): string {
-  let noteText = vsWorkspace.fs.readFile(toVsCodeUri(note.uri)).toString();
+  let noteText;
+
+  vsWorkspace.fs
+    .readFile(toVsCodeUri(note.uri))
+    .then(f => (noteText = f.toString()));
+
   let section = Resource.findSection(note, note.uri.fragment);
   if (!note.uri.fragment) {
     // if there's no fragment(section), the wikilink is linking to the entire note,

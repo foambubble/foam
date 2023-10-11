@@ -16,9 +16,7 @@
         "--extensionDevelopmentPath=${workspaceFolder}/packages/foam-vscode",
         "--extensionTestsPath=${workspaceFolder}/packages/foam-vscode/out/test/suite"
       ],
-      "outFiles": [
-        "${workspaceFolder}/packages/foam-vscode/out/**/*.js"
-      ],
+      "outFiles": ["${workspaceFolder}/packages/foam-vscode/out/**/*.js"],
       "preLaunchTask": "${defaultBuildTask}"
     },
     {
@@ -29,22 +27,23 @@
       "args": [
         "--extensionDevelopmentPath=${workspaceFolder}/packages/foam-vscode"
       ],
-      "outFiles": [
-        "${workspaceFolder}/packages/foam-vscode/out/**/*.js"
-      ],
+      "outFiles": ["${workspaceFolder}/packages/foam-vscode/out/**/*.js"],
       "preLaunchTask": "${defaultBuildTask}"
     },
     {
       "name": "Run Foam Web extension",
-      "type": "pwa-extensionHost",
+      "type": "extensionHost",
       "debugWebWorkerHost": true,
       "request": "launch",
       "args": [
         "--extensionDevelopmentPath=${workspaceFolder}/packages/foam-vscode",
-        "--extensionDevelopmentKind=web"
+        "--extensionDevelopmentKind=web",
+        "--extensionTestsPath=${workspaceFolder}/packages/foam-vscode/out/web/test/suite-web.js",
+        "${workspaceFolder}/packages/foam-vscode/.test-workspace"
       ],
-      "outFiles": ["${workspaceFolder}/packages/foam-vscode/dist/web/**/*.js"],
-      "preLaunchTask": "npm: watch-web"
+      "outFiles": ["${workspaceFolder}/packages/foam-vscode/out/web/**/*.js"],
+      "preLaunchTask": "npm: watch-web",
+      "sourceMaps": true
     },
     {
       "type": "node",
@@ -55,11 +54,7 @@
       "disableOptimisticBPs": true,
       "cwd": "${workspaceFolder}/packages/foam-vscode",
       "runtimeExecutable": "yarn",
-      "args": [
-        "jest",
-        "--runInBand",
-        "--watchAll=false"
-      ]
+      "args": ["jest", "--runInBand", "--watchAll=false"]
     }
   ]
 }

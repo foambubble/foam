@@ -9,6 +9,7 @@ import { toVsCodeUri } from '../../utils/vsc-utils';
 import { MarkdownLink } from '../../core/services/markdown-link';
 import { Range } from '../../core/model/range';
 import { isEmpty } from 'lodash';
+import { toSlug } from '../../utils/slug';
 
 export const markdownItWikilinkNavigation = (
   md: markdownit,
@@ -26,18 +27,29 @@ export const markdownItWikilinkNavigation = (
           isEmbed: false,
         });
         const formattedSection = section ? `#${section}` : '';
+        const linkSection = section ? `#${toSlug(section)}` : '';
         const label = isEmpty(alias) ? `${target}${formattedSection}` : alias;
+
+        // [[#section]] links
+        if (target.length === 0) {
+          // we don't have a good way to check if the section exists within the
+          // open file, so we just create a regular link for it
+          return getResourceLink(section, linkSection, label);
+        }
 
         const resource = workspace.find(target);
         if (isNone(resource)) {
           return getPlaceholderLink(label);
         }
 
-        const link = `${vscode.workspace.asRelativePath(
+        const resourceLink = `/${vscode.workspace.asRelativePath(
           toVsCodeUri(resource.uri)
-        )}${formattedSection}`;
-        const title = `${resource.title}${formattedSection}`;
-        return `<a class='foam-note-link' title='${title}' href='/${link}' data-href='/${link}'>${label}</a>`;
+        )}`;
+        return getResourceLink(
+          `${resource.title}${formattedSection}`,
+          `${resourceLink}${linkSection}`,
+          label
+        );
       } catch (e) {
         Logger.error(
           `Error while creating link for [[${wikilink}]] in Preview panel`,
@@ -51,5 +63,8 @@ export const markdownItWikilinkNavigation = (
 
 const getPlaceholderLink = (content: string) =>
   `<a class='foam-placeholder-link' title="Link to non-existing resource" href="javascript:void(0);">${content}</a>`;
+
+const getResourceLink = (title: string, link: string, label: string) =>
+  `<a class='foam-note-link' title='${title}' href='${link}' data-href='${link}'>${label}</a>`;
 
 export default markdownItWikilinkNavigation;

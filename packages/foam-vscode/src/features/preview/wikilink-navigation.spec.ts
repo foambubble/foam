@@ -52,6 +52,15 @@ describe('Link generation in preview', () => {
     );
   });
 
+  it('generates a link to a section within the note', () => {
+    expect(md.render(`[[#sec]]`)).toEqual(
+      `<p><a class='foam-note-link' title='sec' href='#sec' data-href='#sec'>#sec</a></p>\n`
+    );
+    expect(md.render(`[[#Section Name]]`)).toEqual(
+      `<p><a class='foam-note-link' title='Section Name' href='#section-name' data-href='#section-name'>#Section Name</a></p>\n`
+    );
+  });
+
   it('generates a link to a note with a specific section', () => {
     expect(md.render(`[[note-b#sec2]]`)).toEqual(
       `<p><a class='foam-note-link' title='My second note#sec2' href='/path2/to/note-b.md#sec2' data-href='/path2/to/note-b.md#sec2'>note-b#sec2</a></p>\n`

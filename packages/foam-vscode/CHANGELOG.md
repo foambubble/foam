@@ -4,6 +4,13 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.25.4] - 2023-09-19
+
+Fixes and Improvements:
+
+- Added support for linking sections within same document (#1289)
+- Fixed note embedding bug (#1286 - thanks @badsketch)
+
 ## [0.25.3] - 2023-09-07
 
 Fixes and Improvements:

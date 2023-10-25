@@ -20,7 +20,10 @@ Remember, with `CTRL/CMD+click` on a wikilink you can navigate to the note, or c
 
 ## Support for sections
 
-Foam supports autocompletion, navigation, embedding and diagnostics for note sections. Just use the standard wiki syntax of `[[resource#Section Title]]`.
+Foam supports autocompletion, navigation, embedding and diagnostics for note sections. Just use the standard wiki syntax of `[[resource#Section Title]]`. 
+- If it's an external file, `[your link will need the filename](other-file.md#that-section-I-want-to-link-to)`, but
+- if it's an anchor within the same document, `[you just need an octothorpe and the section name](#that-section-above)`.  
+- Doesn't matter what heading-level the anchor is; whether you're linking to an `H1` like `# MEN WALK ON MOON` or an `H2` like `## Astronauts Land on Plain`, the link syntax uses a single octothorpe: `[Walk!](#men-walk-on-moon)` and `[Land!](#astronauts-land-on-plain-collect-rocks-plant-flag)`. Autocomplete is your friend here.
 
 ## Markdown compatibility
 

@@ -6,6 +6,8 @@ on:
       - master
     paths:
       - docs/user/**/*
+      - docs/.vscode/**/*
+      - docs/assets/**/*
   workflow_dispatch:
 
 jobs:
@@ -20,7 +22,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           path: foam
-      - name: Copy and fixup user docs files          
+      - name: Copy and fixup user docs files
         id: copy
         run: |
           rm -r foam-template/docs

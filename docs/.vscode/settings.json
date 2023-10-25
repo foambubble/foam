@@ -5,7 +5,6 @@
   "editor.overviewRulerBorder": false,
   "editor.lineHeight": 24,
   "foam.edit.linkReferenceDefinitions": "withExtensions",
-  "vscodeMarkdownNotes.noteCompletionConvention": "noExtension",
   "[markdown]": {
     "editor.quickSuggestions": {
       "other": true,
@@ -13,21 +12,11 @@
       "strings": false
     }
   },
-  "cSpell.language": "en-GB",
   "git.enableSmartCommit": true,
   "git.postCommitCommand": "sync",
-  "spellright.language": [
-    "en"
-  ],
-  "spellright.documentTypes": [
-    "markdown",
-    "plaintext"
-  ],
   "files.exclude": {
     "_site/**": true
   },
   "files.insertFinalNewline": true,
-  "markdown.styles": [
-    ".vscode/custom-tag-style.css"
-  ]
+  "markdown.styles": [".vscode/custom-tag-style.css"]
 }

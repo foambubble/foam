@@ -3,6 +3,6 @@
 [
   {
     "key": "cmd+shift+n",
-    "command": "vscodeMarkdownNotes.newNote"
+    "command": "foam-vscode.create-note"
   }
 ]

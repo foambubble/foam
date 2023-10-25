@@ -5,7 +5,7 @@
 👀*This is an early stage project under rapid development. For updates join the [Foam community Discord](https://foambubble.github.io/join-discord/g)! 💬*
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-115-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-116-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 [![Visual Studio Marketplace Installs](https://img.shields.io/visual-studio-marketplace/i/foam.foam-vscode?label=VS%20Code%20Installs)](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode)
@@ -347,6 +347,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
       <td align="center" valign="top" width="14.28%"><a href="https://amnesiak.org/me"><img src="https://avatars.githubusercontent.com/u/952059?v=4?s=60" width="60px;" alt="Tony Cheneau"/><br /><sub><b>Tony Cheneau</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=tcheneau" title="Documentation">📖</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/nicholas-l"><img src="https://avatars.githubusercontent.com/u/12977174?v=4?s=60" width="60px;" alt="Nicholas Latham"/><br /><sub><b>Nicholas Latham</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=nicholas-l" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://thara.dev"><img src="https://avatars.githubusercontent.com/u/1532891?v=4?s=60" width="60px;" alt="Tomochika Hara"/><br /><sub><b>Tomochika Hara</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=thara" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/dcarosone"><img src="https://avatars.githubusercontent.com/u/11495017?v=4?s=60" width="60px;" alt="Daniel Carosone"/><br /><sub><b>Daniel Carosone</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=dcarosone" title="Documentation">📖</a></td>
     </tr>
   </tbody>
 </table>

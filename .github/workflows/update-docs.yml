@@ -28,6 +28,7 @@ jobs:
           rm -r foam-template/docs
           rm -r foam-template/assets
           rm -r foam-template/.vscode
+          mkdir foam-template/.vscode
           cp -r foam/docs/user foam-template/docs
           cp -r foam/docs/assets foam-template/assets
           cp -r foam/docs/.vscode foam-templates/.vscode

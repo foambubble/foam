@@ -1058,6 +1058,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "dcarosone",
+      "name": "Daniel Carosone",
+      "avatar_url": "https://avatars.githubusercontent.com/u/11495017?v=4",
+      "profile": "https://github.com/dcarosone",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,

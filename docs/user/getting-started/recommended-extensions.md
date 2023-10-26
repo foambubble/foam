@@ -6,11 +6,11 @@ This list is subject to change.
 
 - [Foam for VSCode](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode) (alpha)
 - [Markdown All In One](https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one)
-- [Paste Image](https://marketplace.visualstudio.com/items?itemName=mushan.vscode-paste-image)
+- [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
 
 ## Extensions For Additional Features
 
-These extensions are not (yet?) defined in `.vscode/extensions.json`, but have been used by others and shown to play nice with Foam.
+These extensions are not defined in `.vscode/extensions.json`, but have been used by others and shown to play nice with Foam.
 
 - [Emojisense](https://marketplace.visualstudio.com/items?itemName=bierner.emojisense)
 - [Markdown Emoji](https://marketplace.visualstudio.com/items?itemName=bierner.markdown-emoji) (adds `:smile:` syntax, works with emojisense to provide autocomplete for this syntax)

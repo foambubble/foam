@@ -42,13 +42,16 @@ export const markdownItWikilinkNavigation = (
           return getPlaceholderLink(label);
         }
 
+        const resourceLabel = isEmpty(alias)
+          ? `${resource.title}${formattedSection}`
+          : alias;
         const resourceLink = `/${vscode.workspace.asRelativePath(
           toVsCodeUri(resource.uri)
         )}`;
         return getResourceLink(
           `${resource.title}${formattedSection}`,
           `${resourceLink}${linkSection}`,
-          label
+          resourceLabel
         );
       } catch (e) {
         Logger.error(

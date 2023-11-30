@@ -26,9 +26,9 @@ describe('Link generation in preview', () => {
     markdownItRemoveLinkReferences,
   ].reduce((acc, extension) => extension(acc, ws), MarkdownIt());
 
-  it('generates a link to a note', () => {
+  it('generates a link to a note using the note title as link', () => {
     expect(md.render(`[[note-a]]`)).toEqual(
-      `<p><a class='foam-note-link' title='${noteA.title}' href='/path/to/note-a.md' data-href='/path/to/note-a.md'>note-a</a></p>\n`
+      `<p><a class='foam-note-link' title='${noteA.title}' href='/path/to/note-a.md' data-href='/path/to/note-a.md'>${noteA.title}</a></p>\n`
     );
   });
 
@@ -48,7 +48,7 @@ describe('Link generation in preview', () => {
     const note = `[[note-a]]
     [note-a]: <note-a.md> "Note A"`;
     expect(md.render(note)).toEqual(
-      `<p><a class='foam-note-link' title='${noteA.title}' href='/path/to/note-a.md' data-href='/path/to/note-a.md'>note-a</a>\n[note-a]: &lt;note-a.md&gt; &quot;Note A&quot;</p>\n`
+      `<p><a class='foam-note-link' title='${noteA.title}' href='/path/to/note-a.md' data-href='/path/to/note-a.md'>${noteA.title}</a>\n[note-a]: &lt;note-a.md&gt; &quot;Note A&quot;</p>\n`
     );
   });
 
@@ -63,7 +63,7 @@ describe('Link generation in preview', () => {
 
   it('generates a link to a note with a specific section', () => {
     expect(md.render(`[[note-b#sec2]]`)).toEqual(
-      `<p><a class='foam-note-link' title='My second note#sec2' href='/path2/to/note-b.md#sec2' data-href='/path2/to/note-b.md#sec2'>note-b#sec2</a></p>\n`
+      `<p><a class='foam-note-link' title='My second note#sec2' href='/path2/to/note-b.md#sec2' data-href='/path2/to/note-b.md#sec2'>${noteB.title}#sec2</a></p>\n`
     );
   });
 
@@ -75,7 +75,7 @@ describe('Link generation in preview', () => {
 
   it('generates a link to a note if the note exists, but the section does not exist', () => {
     expect(md.render(`[[note-b#nonexistentsec]]`)).toEqual(
-      `<p><a class='foam-note-link' title='My second note#nonexistentsec' href='/path2/to/note-b.md#nonexistentsec' data-href='/path2/to/note-b.md#nonexistentsec'>note-b#nonexistentsec</a></p>\n`
+      `<p><a class='foam-note-link' title='My second note#nonexistentsec' href='/path2/to/note-b.md#nonexistentsec' data-href='/path2/to/note-b.md#nonexistentsec'>${noteB.title}#nonexistentsec</a></p>\n`
     );
   });
 

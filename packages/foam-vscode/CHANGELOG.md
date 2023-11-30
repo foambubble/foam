@@ -4,6 +4,12 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.25.5] - 2023-11-30
+
+Fixes and Improvements:
+
+- Using note title in preview (#1309)
+
 ## [0.25.4] - 2023-09-19
 
 Fixes and Improvements:

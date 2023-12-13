@@ -145,7 +145,7 @@ export function createMarkdownReferences(
           link.isEmbed ? 3 : 2,
           link.rawText.length - 2
         ),
-        url: relativeUri.path,
+        url: encodeURIComponent(relativeUri.path),
         title: target.title,
       };
     })

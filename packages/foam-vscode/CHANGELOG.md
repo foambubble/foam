@@ -4,6 +4,12 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.25.6] - 2023-12-13
+
+Fixes and Improvements:
+
+- Fixed wikilink definition encoding (#1311 - thanks @MABruni)
+
 ## [0.25.5] - 2023-11-30
 
 Fixes and Improvements:

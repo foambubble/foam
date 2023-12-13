@@ -1067,6 +1067,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "MABruni",
+      "name": "Miguel Angel Bruni Montero",
+      "avatar_url": "https://avatars.githubusercontent.com/u/100445384?v=4",
+      "profile": "https://github.com/MABruni",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,

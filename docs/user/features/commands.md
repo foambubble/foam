@@ -10,13 +10,13 @@ This command creates a note.
 Although it works fine on its own, it can be customized to achieve various use cases.
 Here are the settings available for the command:
 
-- notePath: The path of the note to create. If relative it will be resolved against the workspace root.
-- templatePath: The path of the template to use. If relative it will be resolved against the workspace root.
-- title: The title of the note (that is, the `FOAM_TITLE` variable)
-- text: The text to use for the note. If also a template is provided, the template has precedence
-- variables: Variables to use in the text or template
-- date: The date used to resolve the FOAM*DATE*\* variables. in `YYYY-MM-DD` format
-- onFileExists?: 'overwrite' | 'open' | 'ask' | 'cancel': What to do in case the target file already exists
+- `notePath`: The path of the note to create. If relative it will be resolved against the workspace root.
+- `templatePath`: The path of the template to use. If relative it will be resolved against the workspace root.
+- `title`: The title of the note (that is, the `FOAM_TITLE` variable)
+- `text`: The text to use for the note. If also a template is provided, the template has precedence
+- `variables`: Variables to use in the text or template
+- `date`: The date used to resolve the FOAM*DATE*\* variables. in `YYYY-MM-DD` format
+- `onFileExists?: 'overwrite' | 'open' | 'ask' | 'cancel'`: What to do in case the target file already exists
 
 To customize a command and associate a key binding to it, open the key binding settings and add the appropriate configuration, here are some examples:
 

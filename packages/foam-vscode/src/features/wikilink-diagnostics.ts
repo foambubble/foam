@@ -240,12 +240,12 @@ const createReplaceSectionCommand = (
   section: string
 ): vscode.CodeAction => {
   const action = new vscode.CodeAction(
-    `Use ${section}`,
+    `${section}`,
     vscode.CodeActionKind.QuickFix
   );
   action.command = {
     command: REPLACE_TEXT_COMMAND.name,
-    title: `Use section ${section}`,
+    title: `Use section "${section}"`,
     arguments: [
       {
         value: section,
@@ -269,7 +269,7 @@ const createFindIdentifierCommand = (
   possibleTargets: vscode.Uri[]
 ): vscode.CodeAction => {
   const action = new vscode.CodeAction(
-    `Use ${vscode.workspace.asRelativePath(target)}`,
+    `${vscode.workspace.asRelativePath(target)}`,
     vscode.CodeActionKind.QuickFix
   );
   action.command = {

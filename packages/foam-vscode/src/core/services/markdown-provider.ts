@@ -137,6 +137,12 @@ export function createMarkdownReferences(
         relativeUri = relativeUri.changeExtension('*', '');
       }
 
+      // Extract base path and link name separately.
+      const basePath = relativeUri.path.split('/').slice(0, -1).join('/');
+      const linkName = relativeUri.path.split('/').pop();
+
+      const encodedURL = encodeURIComponent(linkName).replace(/%20/g, ' ');
+
       // [wikilink-text]: path/to/file.md "Page title"
       return {
         // embedded looks like ![[note-a]]
@@ -145,7 +151,7 @@ export function createMarkdownReferences(
           link.isEmbed ? 3 : 2,
           link.rawText.length - 2
         ),
-        url: encodeURIComponent(relativeUri.path),
+        url: `${basePath ? basePath + '/' : ''}${encodedURL}`,
         title: target.title,
       };
     })

@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { TextDecoder } from 'util';
 import { getGraphStyle, getTitleMaxLength } from '../../settings';
 import { isSome } from '../../utils';
 import { Foam } from '../../core/model/foam';

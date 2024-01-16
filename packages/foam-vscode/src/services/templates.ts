@@ -1,5 +1,4 @@
 import { URI } from '../core/model/uri';
-import { TextEncoder } from 'util';
 import {
   SnippetString,
   ViewColumn,

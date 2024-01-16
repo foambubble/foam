@@ -4,6 +4,13 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.25.7] - 2024-01-16
+
+Fixes and Improvements:
+
+- Modifies url encoding to target only the filename and skip spaces (#1322 - thanks @MABruni)
+- Minor tweak to quick action menu with suggestions for section name
+
 ## [0.25.6] - 2023-12-13
 
 Fixes and Improvements:

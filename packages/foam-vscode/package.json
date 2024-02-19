@@ -699,7 +699,7 @@
     "wait-for-expect": "^3.0.2"
   },
   "dependencies": {
-    "dateformat": "^3.0.3",
+    "dateformat": "4.5.1",
     "detect-newline": "^3.1.0",
     "github-slugger": "^1.4.0",
     "gray-matter": "^4.0.2",

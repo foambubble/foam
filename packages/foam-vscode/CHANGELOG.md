@@ -4,6 +4,12 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.25.8] - 2024-02-21
+
+Fixes and Improvements:
+
+- Upgraded dataformat to improve support for daily note naming (#1326 - thanks @rcyeh)
+
 ## [0.25.7] - 2024-01-16
 
 Fixes and Improvements:

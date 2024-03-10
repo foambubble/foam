@@ -75,7 +75,7 @@ A #recipe is a guide, tip or strategy for getting the most out of your Foam work
 - Publish using community templates
   - [[publish-to-netlify-with-eleventy]] by [@juanfrank77](https://github.com/juanfrank77)
   - [[generate-gatsby-site]] by [@mathieudutour](https://github.com/mathieudutour) and [@hikerpig](https://github.com/hikerpig)
-  - [foamy-nextjs](https://github.com/yenly/foamy-nextjs) by [@yenly](https://github.com/yenly)
+  
 - Make the site your own by [[publish-to-github]].
 - Render math symbols, by either
   - adding client-side [[math-support-with-mathjax]] to the default [[publish-to-github-pages]] site

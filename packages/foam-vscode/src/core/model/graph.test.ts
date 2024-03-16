@@ -139,6 +139,21 @@ describe('Graph', () => {
     ).toEqual(['/path/another/page-c.md', '/somewhere/page-b.md']);
   });
 
+  it('should create inbound connections when targeting a section', () => {
+    const noteA = createTestNote({
+      uri: '/path/to/page-a.md',
+      links: [{ slug: 'page-b#section 2' }],
+    });
+    const noteB = createTestNote({
+      uri: '/somewhere/page-b.md',
+      text: '## Section 1\n\n## Section 2',
+    });
+    const ws = createTestWorkspace().set(noteA).set(noteB);
+    const graph = FoamGraph.fromWorkspace(ws);
+
+    expect(graph.getBacklinks(noteB.uri).length).toEqual(1);
+  });
+
   it('should support attachments', () => {
     const noteA = createTestNote({
       uri: '/path/to/page-a.md',

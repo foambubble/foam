@@ -3,7 +3,7 @@ import { ResourceLink } from './note';
 import { URI } from './uri';
 import { FoamWorkspace } from './workspace';
 import { IDisposable } from '../common/lifecycle';
-import { Logger } from '../utils/log';
+import { Logger, withTiming } from '../utils/log';
 import { Emitter } from '../common/event';
 
 export type Connection = {
@@ -100,31 +100,32 @@ export class FoamGraph implements IDisposable {
   }
 
   public update() {
-    const start = Date.now();
-    this.backlinks.clear();
-    this.links.clear();
-    this.placeholders.clear();
+    withTiming(
+      () => {
+        this.backlinks.clear();
+        this.links.clear();
+        this.placeholders.clear();
 
-    for (const resource of this.workspace.resources()) {
-      for (const link of resource.links) {
-        try {
-          const targetUri = this.workspace.resolveLink(resource, link);
-          this.connect(resource.uri, targetUri, link);
-        } catch (e) {
-          Logger.error(
-            `Error while resolving link ${
-              link.rawText
-            } in ${resource.uri.toFsPath()}, skipping.`,
-            link,
-            e
-          );
+        for (const resource of this.workspace.resources()) {
+          for (const link of resource.links) {
+            try {
+              const targetUri = this.workspace.resolveLink(resource, link);
+              this.connect(resource.uri, targetUri, link);
+            } catch (e) {
+              Logger.error(
+                `Error while resolving link ${
+                  link.rawText
+                } in ${resource.uri.toFsPath()}, skipping.`,
+                link,
+                e
+              );
+            }
+          }
+          this.onDidUpdateEmitter.fire();
         }
-      }
-    }
-
-    const end = Date.now();
-    Logger.debug(`Graph updated in ${end - start}ms`);
-    this.onDidUpdateEmitter.fire();
+      },
+      ms => Logger.debug(`Graph updated in ${ms}ms`)
+    );
   }
 
   private connect(source: URI, target: URI, link: ResourceLink) {

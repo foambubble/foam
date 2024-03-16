@@ -73,7 +73,9 @@ export async function activate(context: ExtensionContext) {
     );
 
     // Load the features
-    const resPromises = features.map(feature => feature(context, foamPromise));
+    const featuresPromises = features.map(feature =>
+      feature(context, foamPromise)
+    );
 
     const foam = await foamPromise;
     Logger.info(`Loaded ${foam.workspace.list().length} resources`);
@@ -102,14 +104,15 @@ export async function activate(context: ExtensionContext) {
       })
     );
 
-    const res = (await Promise.all(resPromises)).filter(r => r != null);
+    const feats = (await Promise.all(featuresPromises)).filter(r => r != null);
 
     return {
       extendMarkdownIt: (md: markdownit) => {
-        return res.reduce((acc: markdownit, r: any) => {
+        return feats.reduce((acc: markdownit, r: any) => {
           return r.extendMarkdownIt ? r.extendMarkdownIt(acc) : acc;
         }, md);
       },
+      foam,
     };
   } catch (e) {
     Logger.error('An error occurred while bootstrapping Foam', e);

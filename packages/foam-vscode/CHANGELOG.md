@@ -4,6 +4,12 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.25.9] - 2024-03-17
+
+Fixes and Improvements:
+
+- Improved note creation from placeholder (#1344)
+
 ## [0.25.8] - 2024-02-21
 
 Fixes and Improvements:

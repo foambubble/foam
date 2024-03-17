@@ -10,10 +10,21 @@ import { Resolver } from '../../services/variable-resolver';
 import { asAbsoluteWorkspaceUri, fileExists } from '../../services/editor';
 import { isSome } from '../../core/utils';
 import { CommandDescriptor } from '../../utils/commands';
+import { Foam } from '../../core/model/foam';
+import { Location } from '../../core/model/location';
+import { MarkdownLink } from '../../core/services/markdown-link';
+import { ResourceLink } from '../../core/model/note';
+import { toVsCodeRange, toVsCodeUri } from '../../utils/vsc-utils';
 
-export default async function activate(context: vscode.ExtensionContext) {
+export default async function activate(
+  context: vscode.ExtensionContext,
+  foamPromise: Promise<Foam>
+) {
+  const foam = await foamPromise;
   context.subscriptions.push(
-    vscode.commands.registerCommand(CREATE_NOTE_COMMAND.command, createNote)
+    vscode.commands.registerCommand(CREATE_NOTE_COMMAND.command, args =>
+      createNote(args, foam)
+    )
   );
 }
 
@@ -49,6 +60,11 @@ interface CreateNoteArgs {
    */
   title?: string;
   /**
+   * The source link that triggered the creation of the note.
+   * It will be updated with the appropriate identifier to the note, if necessary.
+   */
+  sourceLink?: Location<ResourceLink>;
+  /**
    * What to do in case the target file already exists
    */
   onFileExists?: 'overwrite' | 'open' | 'ask' | 'cancel';
@@ -66,7 +82,7 @@ const DEFAULT_NEW_NOTE_TEXT = `# \${FOAM_TITLE}
 
 \${FOAM_SELECTED_TEXT}`;
 
-async function createNote(args: CreateNoteArgs) {
+export async function createNote(args: CreateNoteArgs, foam: Foam) {
   args = args ?? {};
   const date = isSome(args.date) ? new Date(Date.parse(args.date)) : new Date();
   const resolver = new Resolver(
@@ -92,23 +108,39 @@ async function createNote(args: CreateNoteArgs) {
       : getDefaultTemplateUri();
   }
 
-  if (await fileExists(templateUri)) {
-    return NoteFactory.createFromTemplate(
-      templateUri,
-      resolver,
-      noteUri,
-      text,
-      args.onFileExists
-    );
-  } else {
-    return NoteFactory.createNote(
-      noteUri ?? (await getPathFromTitle(resolver)),
-      text,
-      resolver,
-      args.onFileExists,
-      args.onRelativeNotePath
-    );
+  const createdNote = (await fileExists(templateUri))
+    ? await NoteFactory.createFromTemplate(
+        templateUri,
+        resolver,
+        noteUri,
+        text,
+        args.onFileExists
+      )
+    : await NoteFactory.createNote(
+        noteUri ?? (await getPathFromTitle(resolver)),
+        text,
+        resolver,
+        args.onFileExists,
+        args.onRelativeNotePath
+      );
+
+  if (args.sourceLink) {
+    const identifier = foam.workspace.getIdentifier(createdNote.uri);
+    const edit = MarkdownLink.createUpdateLinkEdit(args.sourceLink.data, {
+      target: identifier,
+    });
+    if (edit.newText != args.sourceLink.data.rawText) {
+      const updateLink = new vscode.WorkspaceEdit();
+      const uri = toVsCodeUri(args.sourceLink.uri);
+      updateLink.replace(
+        uri,
+        toVsCodeRange(args.sourceLink.range),
+        edit.newText
+      );
+      await vscode.workspace.applyEdit(updateLink);
+    }
   }
+  return createdNote;
 }
 
 export const CREATE_NOTE_COMMAND = {
@@ -123,12 +155,12 @@ export const CREATE_NOTE_COMMAND = {
    * @returns the command descriptor
    */
   forPlaceholder: (
-    placeholder: string,
+    sourceLink: Location<ResourceLink>,
     defaultExtension: string,
     extra: Partial<CreateNoteArgs> = {}
   ): CommandDescriptor<CreateNoteArgs> => {
     const endsWithDefaultExtension = new RegExp(defaultExtension + '$');
-
+    const { target: placeholder } = MarkdownLink.analyzeLink(sourceLink.data);
     const title = placeholder.endsWith(defaultExtension)
       ? placeholder.replace(endsWithDefaultExtension, '')
       : placeholder;
@@ -140,6 +172,7 @@ export const CREATE_NOTE_COMMAND = {
       params: {
         title,
         notePath,
+        sourceLink,
         ...extra,
       },
     };

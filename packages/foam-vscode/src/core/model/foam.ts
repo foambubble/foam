@@ -5,7 +5,7 @@ import { FoamGraph } from './graph';
 import { ResourceParser } from './note';
 import { ResourceProvider } from './provider';
 import { FoamTags } from './tags';
-import { Logger } from '../utils/log';
+import { Logger, withTiming, withTimingAsync } from '../utils/log';
 
 export interface Services {
   dataStore: IDataStore;
@@ -28,24 +28,25 @@ export const bootstrap = async (
   initialProviders: ResourceProvider[],
   defaultExtension: string = '.md'
 ) => {
-  const tsStart = Date.now();
-
-  const workspace = await FoamWorkspace.fromProviders(
-    initialProviders,
-    dataStore,
-    defaultExtension
+  const workspace = await withTimingAsync(
+    () =>
+      FoamWorkspace.fromProviders(
+        initialProviders,
+        dataStore,
+        defaultExtension
+      ),
+    ms => Logger.info(`Workspace loaded in ${ms}ms`)
   );
 
-  const tsWsDone = Date.now();
-  Logger.info(`Workspace loaded in ${tsWsDone - tsStart}ms`);
+  const graph = withTiming(
+    () => FoamGraph.fromWorkspace(workspace, true),
+    ms => Logger.info(`Graph loaded in ${ms}ms`)
+  );
 
-  const graph = FoamGraph.fromWorkspace(workspace, true);
-  const tsGraphDone = Date.now();
-  Logger.info(`Graph loaded in ${tsGraphDone - tsWsDone}ms`);
-
-  const tags = FoamTags.fromWorkspace(workspace, true);
-  const tsTagsEnd = Date.now();
-  Logger.info(`Tags loaded in ${tsTagsEnd - tsGraphDone}ms`);
+  const tags = withTiming(
+    () => FoamTags.fromWorkspace(workspace, true),
+    ms => Logger.info(`Tags loaded in ${ms}ms`)
+  );
 
   watcher?.onDidChange(async uri => {
     if (matcher.isMatch(uri)) {

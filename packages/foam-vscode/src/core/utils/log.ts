@@ -89,3 +89,25 @@ export class Logger {
     Logger.defaultLogger = logger;
   }
 }
+
+export const withTiming = <T>(
+  fn: () => T,
+  onDidComplete: (elapsed: number) => void
+): T => {
+  const tsStart = Date.now();
+  const res = fn();
+  const tsEnd = Date.now();
+  onDidComplete(tsEnd - tsStart);
+  return res;
+};
+
+export const withTimingAsync = async <T>(
+  fn: () => Promise<T>,
+  onDidComplete: (elapsed: number) => void
+): Promise<T> => {
+  const tsStart = Date.now();
+  const res = await fn();
+  const tsEnd = Date.now();
+  onDidComplete(tsEnd - tsStart);
+  return res;
+};

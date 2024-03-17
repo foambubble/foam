@@ -14,6 +14,7 @@ import { FoamGraph } from '../core/model/graph';
 import { OPEN_COMMAND } from './commands/open-resource';
 import { CREATE_NOTE_COMMAND } from './commands/create-note';
 import { commandAsURI } from '../utils/commands';
+import { Location } from '../core/model/location';
 
 export const CONFIG_KEY = 'links.hover.enable';
 
@@ -107,7 +108,7 @@ export class HoverProvider implements vscode.HoverProvider {
     }
 
     const command = CREATE_NOTE_COMMAND.forPlaceholder(
-      targetUri.path,
+      Location.forObjectWithRange(documentUri, targetLink),
       this.workspace.defaultExtension,
       {
         askForTemplate: true,

@@ -10,7 +10,12 @@ import {
   showInEditor,
 } from '../../test/test-utils-vscode';
 import { fromVsCodeUri } from '../../utils/vsc-utils';
-import { CREATE_NOTE_COMMAND } from './create-note';
+import { CREATE_NOTE_COMMAND, createNote } from './create-note';
+import { Location } from '../../core/model/location';
+import { Range } from '../../core/model/range';
+import { ResourceLink } from '../../core/model/note';
+import { MarkdownResourceProvider } from '../../core/services/markdown-provider';
+import { createMarkdownParser } from '../../core/services/markdown-parser';
 
 describe('create-note command', () => {
   afterEach(() => {
@@ -194,8 +199,14 @@ describe('factories', () => {
   describe('forPlaceholder', () => {
     it('adds the .md extension to notes created for placeholders', async () => {
       await closeEditors();
+      const link: ResourceLink = {
+        type: 'wikilink',
+        rawText: '[[my-placeholder]]',
+        range: Range.create(0, 0, 0, 0),
+        isEmbed: false,
+      };
       const command = CREATE_NOTE_COMMAND.forPlaceholder(
-        'my-placeholder',
+        Location.forObjectWithRange(URI.file(''), link),
         '.md'
       );
       await commands.executeCommand(command.name, command.params);
@@ -203,6 +214,42 @@ describe('factories', () => {
       const doc = window.activeTextEditor.document;
       expect(doc.uri.path).toMatch(/my-placeholder.md$/);
       expect(doc.getText()).toMatch(/^# my-placeholder/);
+    });
+
+    it('replaces the original placeholder based on the new note identifier (#1327)', async () => {
+      await closeEditors();
+      const templateA = await createFile(
+        `---
+foam_template:
+  name: 'Example Template'
+  description: 'An example for reproducing a bug'
+  filepath: '$FOAM_SLUG-world.md'
+---`,
+        ['.foam', 'templates', 'template-a.md']
+      );
+
+      const noteA = await createFile(`this is my [[hello]]`);
+
+      const parser = createMarkdownParser();
+      const res = parser.parse(noteA.uri, noteA.content);
+
+      const command = CREATE_NOTE_COMMAND.forPlaceholder(
+        Location.forObjectWithRange(noteA.uri, res.links[0]),
+        '.md',
+        {
+          templatePath: templateA.uri.path,
+        }
+      );
+      const results: Awaited<ReturnType<typeof createNote>> =
+        await commands.executeCommand(command.name, command.params);
+      expect(results.didCreateFile).toBeTruthy();
+      expect(results.uri.path.endsWith('hello-world.md')).toBeTruthy();
+
+      const newNoteDoc = window.activeTextEditor.document;
+      expect(newNoteDoc.uri.path).toMatch(/hello-world.md$/);
+
+      const { doc } = await showInEditor(noteA.uri);
+      expect(doc.getText()).toEqual(`this is my [[hello-world]]`);
     });
   });
 });

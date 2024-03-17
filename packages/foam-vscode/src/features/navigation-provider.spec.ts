@@ -12,6 +12,10 @@ import { createMarkdownParser } from '../core/services/markdown-parser';
 import { FoamGraph } from '../core/model/graph';
 import { commandAsURI } from '../utils/commands';
 import { CREATE_NOTE_COMMAND } from './commands/create-note';
+import { Location } from '../core/model/location';
+import { URI } from '../core/model/uri';
+import { Range } from '../core/model/range';
+import { ResourceLink } from '../core/model/note';
 
 describe('Document navigation', () => {
   const parser = createMarkdownParser([]);
@@ -71,9 +75,8 @@ describe('Document navigation', () => {
 
     it('should create links for placeholders', async () => {
       const fileA = await createFile(`this is a link to [[a placeholder]].`);
-      const ws = createTestWorkspace().set(
-        parser.parse(fileA.uri, fileA.content)
-      );
+      const noteA = parser.parse(fileA.uri, fileA.content);
+      const ws = createTestWorkspace().set(noteA);
       const graph = FoamGraph.fromWorkspace(ws);
 
       const { doc } = await showInEditor(fileA.uri);
@@ -83,9 +86,13 @@ describe('Document navigation', () => {
       expect(links.length).toEqual(1);
       expect(links[0].target).toEqual(
         commandAsURI(
-          CREATE_NOTE_COMMAND.forPlaceholder('a placeholder', '.md', {
-            onFileExists: 'open',
-          })
+          CREATE_NOTE_COMMAND.forPlaceholder(
+            Location.forObjectWithRange(noteA.uri, noteA.links[0]),
+            '.md',
+            {
+              onFileExists: 'open',
+            }
+          )
         )
       );
       expect(links[0].range).toEqual(new vscode.Range(0, 20, 0, 33));

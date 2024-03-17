@@ -10,6 +10,7 @@ import { FoamGraph } from '../core/model/graph';
 import { Position } from '../core/model/position';
 import { CREATE_NOTE_COMMAND } from './commands/create-note';
 import { commandAsURI } from '../utils/commands';
+import { Location } from '../core/model/location';
 
 export default async function activate(
   context: vscode.ExtensionContext,
@@ -146,10 +147,8 @@ export class NavigationProvider
   public provideDocumentLinks(
     document: vscode.TextDocument
   ): vscode.DocumentLink[] {
-    const resource = this.parser.parse(
-      fromVsCodeUri(document.uri),
-      document.getText()
-    );
+    const documentUri = fromVsCodeUri(document.uri);
+    const resource = this.parser.parse(documentUri, document.getText());
 
     const targets: { link: ResourceLink; target: URI }[] = resource.links.map(
       link => ({
@@ -162,7 +161,7 @@ export class NavigationProvider
       .filter(o => o.target.isPlaceholder()) // links to resources are managed by the definition provider
       .map(o => {
         const command = CREATE_NOTE_COMMAND.forPlaceholder(
-          o.target.path,
+          Location.forObjectWithRange(documentUri, o.link),
           this.workspace.defaultExtension,
           {
             onFileExists: 'open',

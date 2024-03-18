@@ -120,10 +120,11 @@ export class FoamGraph implements IDisposable {
           );
         }
       }
-      this.onDidUpdateEmitter.fire();
     }
-    const ms = Date.now() - start;
-    Logger.debug(`Graph updated in ${ms}ms`);
+
+    const end = Date.now();
+    Logger.debug(`Graph updated in ${end - start}ms`);
+    this.onDidUpdateEmitter.fire();
   }
 
   private connect(source: URI, target: URI, link: ResourceLink) {

@@ -4,6 +4,12 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.25.10] - 2024-03-18
+
+Fixes and Improvements:
+
+- Fixed bug in graph computation (#1345)
+
 ## [0.25.9] - 2024-03-17
 
 Fixes and Improvements:

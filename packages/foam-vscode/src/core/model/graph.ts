@@ -100,32 +100,30 @@ export class FoamGraph implements IDisposable {
   }
 
   public update() {
-    withTiming(
-      () => {
-        this.backlinks.clear();
-        this.links.clear();
-        this.placeholders.clear();
+    const start = Date.now();
+    this.backlinks.clear();
+    this.links.clear();
+    this.placeholders.clear();
 
-        for (const resource of this.workspace.resources()) {
-          for (const link of resource.links) {
-            try {
-              const targetUri = this.workspace.resolveLink(resource, link);
-              this.connect(resource.uri, targetUri, link);
-            } catch (e) {
-              Logger.error(
-                `Error while resolving link ${
-                  link.rawText
-                } in ${resource.uri.toFsPath()}, skipping.`,
-                link,
-                e
-              );
-            }
-          }
-          this.onDidUpdateEmitter.fire();
+    for (const resource of this.workspace.resources()) {
+      for (const link of resource.links) {
+        try {
+          const targetUri = this.workspace.resolveLink(resource, link);
+          this.connect(resource.uri, targetUri, link);
+        } catch (e) {
+          Logger.error(
+            `Error while resolving link ${
+              link.rawText
+            } in ${resource.uri.toFsPath()}, skipping.`,
+            link,
+            e
+          );
         }
-      },
-      ms => Logger.debug(`Graph updated in ${ms}ms`)
-    );
+      }
+      this.onDidUpdateEmitter.fire();
+    }
+    const ms = Date.now() - start;
+    Logger.debug(`Graph updated in ${ms}ms`);
   }
 
   private connect(source: URI, target: URI, link: ResourceLink) {

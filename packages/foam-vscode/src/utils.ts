@@ -200,9 +200,15 @@ export function stripImages(markdown: string): string {
   );
 }
 
+/**
+ * Returns if the given line is inside a front matter block
+ * @param content the string to check
+ * @param lineNumber the line number within the string, 0-based
+ * @returns true if the line is inside a frontmatter block in content
+ */
 export function isInFrontMatter(content: string, lineNumber: number): Boolean {
-  const FIRST_DELIMITER_MATCH = /^---\s*?$/gm;
-  const LAST_DELIMITER_MATCH = /^[-.]{3}\s*?$/g;
+  const FIRST_DELIMITER_MATCH = /^---\s*?$/m;
+  const LAST_DELIMITER_MATCH = /^(-{3}|\.{3})/;
 
   // if we're on the first line, we're not _yet_ in the front matter
   if (lineNumber === 0) {
@@ -216,8 +222,7 @@ export function isInFrontMatter(content: string, lineNumber: number): Boolean {
 
   const lines = content.split('\n');
   lines.shift();
-  const endLineMatches = (l: string) => l.match(LAST_DELIMITER_MATCH);
-  const endLineNumber = lines.findIndex(endLineMatches);
+  const endLineNumber = lines.findIndex(l => l.match(LAST_DELIMITER_MATCH));
 
   return endLineNumber === -1 || endLineNumber >= lineNumber;
 }

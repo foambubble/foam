@@ -81,6 +81,12 @@ describe('isInFrontMatter', () => {
     const actual = isInFrontMatter(content, 1);
     expect(actual).toBeTruthy();
   });
+  it('is false for non valid front matter delimiter #1347', () => {
+    const content = '---\ntitle: A title\n-..\n\n\n---\ntest\n';
+    expect(isInFrontMatter(content, 1)).toBeTruthy();
+    expect(isInFrontMatter(content, 4)).toBeTruthy();
+    expect(isInFrontMatter(content, 6)).toBeFalsy();
+  });
   it('is false for outside completed front matter', () => {
     const content = '---\ntitle: A title\n---\ncontent\nmore content\n';
     const actual = isInFrontMatter(content, 3);

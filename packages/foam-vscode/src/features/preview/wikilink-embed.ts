@@ -177,7 +177,11 @@ function fullExtractor(
   parser: ResourceParser,
   workspace: FoamWorkspace
 ): string {
-  let noteText = readFileSync(note.uri.toFsPath()).toString();
+  let noteText;
+
+  vsWorkspace.fs
+    .readFile(toVsCodeUri(note.uri))
+    .then(f => (noteText = f.toString()));
   const section = Resource.findSection(note, note.uri.fragment);
   if (isSome(section)) {
     const rows = noteText.split('\n');
@@ -194,7 +198,12 @@ function contentExtractor(
   parser: ResourceParser,
   workspace: FoamWorkspace
 ): string {
-  let noteText = readFileSync(note.uri.toFsPath()).toString();
+  let noteText;
+
+  vsWorkspace.fs
+    .readFile(toVsCodeUri(note.uri))
+    .then(f => (noteText = f.toString()));
+
   let section = Resource.findSection(note, note.uri.fragment);
   if (!note.uri.fragment) {
     // if there's no fragment(section), the wikilink is linking to the entire note,

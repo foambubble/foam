@@ -196,7 +196,7 @@ See the [Contribution Guide](https://foambubble.github.io/foam/dev/contribution-
 
 ## Code of conduct
 
-See the [Code of Conduct](https://spencerwooo.github.io/foam-1/code-of-conduct)
+See the [Code of Conduct](https://foambubble.github.io/foam/dev/code-of-conduct)
 
 
 

@@ -1,3 +1,8 @@
+---
+redirect_from:
+  - /code-of-conduct
+---
+
 # Code of Conduct
 
 We follow the [Contributor Covenant](https://www.contributor-covenant.org/) code of conduct.

@@ -90,6 +90,17 @@ export const generateMarkdownLinks = async (
     return [] as TextReplace[];
   }
 
+  const rawText2isEmbedMap = note.links
+    .filter(link => link.type === 'wikilink')
+    .reduce((acc, link) => {
+      const rawText = link.rawText.substring(
+        link.isEmbed ? 3 : 2,
+        link.rawText.length - 2
+      );
+      acc[rawText] = link.isEmbed;
+      return acc;
+    }, {});
+
   const newWikilinkDefinitions = createMarkdownReferences(
     workspace,
     note,
@@ -98,7 +109,9 @@ export const generateMarkdownLinks = async (
   const wikilinkRawTextParser = new WikilinkRawText();
   const toReplaceArray = newWikilinkDefinitions.map(definition => {
     return {
-      from: `[[${definition.label}]]`,
+      from: `${rawText2isEmbedMap[definition.label] ? '!' : ''}[[${
+        definition.label
+      }]]`,
       to: wikilinkRawTextParser.toMarkdownLink(definition, note),
     };
   });

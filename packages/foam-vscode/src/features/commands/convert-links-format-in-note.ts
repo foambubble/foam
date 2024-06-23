@@ -90,6 +90,15 @@ export default async function activate(
   );
 }
 
+/**
+ * convert links based on its workspace and the note containing it.
+ * Changes happen in-place
+ * @param fWorkspace
+ * @param fParser
+ * @param fMatcher
+ * @param convertOption
+ * @returns void
+ */
 async function convertLinkInPlace(
   fWorkspace: FoamWorkspace,
   fParser: ResourceParser,
@@ -128,6 +137,17 @@ async function convertLinkInPlace(
   });
 }
 
+/**
+ * convert links based on its workspace and the note containing it.
+ * Changes happen in a copy
+ * 1. prepare a copy file, and makt it the activeTextEditor
+ * 2. call to convertLinkInPlace
+ * @param fWorkspace
+ * @param fParser
+ * @param fMatcher
+ * @param convertOption
+ * @returns void
+ */
 async function convertLinkInCopy(
   fWorkspace: FoamWorkspace,
   fParser: ResourceParser,

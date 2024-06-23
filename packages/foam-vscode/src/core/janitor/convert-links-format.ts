@@ -10,6 +10,18 @@ export interface LinkReplace {
   range: Range /* old range */;
 }
 
+/**
+ * convert a link based on its workspace and the note containing it.
+ * According to targetFormat parameter to decide output format. If link.type === targetFormat, then it simply copy
+ * the rawText into LinkReplace. Therefore, it's recommanded to filter before conversion.
+ * If targetFormat isn't supported, or the target resource pointed by link cannot be found, the function will throw
+ * exception.
+ * @param link
+ * @param targetFormat
+ * @param workspace
+ * @param note
+ * @returns LinkReplace { newText: string; range: Range; }
+ */
 export function convertLinkFormat(
   link: ResourceLink,
   targetFormat: string,
@@ -52,6 +64,7 @@ export function convertLinkFormat(
       range: link.range,
     };
   }
+
   if (targetFormat === 'link') {
     /* if alias is empty, construct one as target#section */
     if (alias === '') {

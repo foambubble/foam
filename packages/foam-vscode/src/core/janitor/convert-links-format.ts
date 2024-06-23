@@ -88,18 +88,3 @@ export function convertLinkFormat(
     `Unexpected state: targetFormat: ${targetFormat} is not supported`
   );
 }
-
-// export const generateMarkdownLinks = async (
-//   note: Resource,
-//   workspace: FoamWorkspace
-// ): Promise<LinkReplace[]> => {
-//   if (!note) {
-//     return [] as LinkReplace[];
-//   }
-
-//   const toReplaceArray = note.links
-//     .filter(link => link.type === 'wikilink')
-//     .map(link => convertLinkFormat(link, 'link', workspace, note));
-
-//   return toReplaceArray;
-// };

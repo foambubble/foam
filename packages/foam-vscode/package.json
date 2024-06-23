@@ -347,8 +347,20 @@
         "title": "Foam: Open Resource"
       },
       {
-        "command": "foam-vscode.generate-standalone-note",
-        "title": "Foam: generate standalone copy without wikilinks"
+        "command": "foam-vscode.convert-wikilink-to-markdownlink-inplace",
+        "title": "Foam: convert wikilinks to markdown link format in place"
+      },
+      {
+        "command": "foam-vscode.convert-markdownlink-to-wikilink-inplace",
+        "title": "Foam: convert markdown links to wikilinks format in place"
+      },
+      {
+        "command": "foam-vscode.convert-wikilink-to-markdownlink-incopy",
+        "title": "Foam: convert wikilinks to markdown link format in copy"
+      },
+      {
+        "command": "foam-vscode.convert-markdownlink-to-wikilink-incopy",
+        "title": "Foam: convert markdown links to wikilinks format in copy"
       },
       {
         "command": "foam-vscode.views.orphans.group-by:folder",

@@ -1,4 +1,4 @@
-import { generateMarkdownLinks } from './generate-mdlinks';
+import { convertLinkFormat } from '.';
 import { TEST_DATA_DIR } from '../../test/test-utils';
 import { MarkdownResourceProvider } from '../services/markdown-provider';
 import { Resource } from '../model/note';
@@ -39,17 +39,33 @@ describe('generateStdMdLink', () => {
 
   it('can generate markdown links correctly', async () => {
     const note = findBySlug('file-with-different-link-formats');
-    const actual = await generateMarkdownLinks(note, _workspace);
+    const actual = note.links
+      .filter(link => link.type === 'wikilink')
+      .map(link => convertLinkFormat(link, 'link', _workspace, note));
     const expected: string[] = [
-      '[first-document](first-document.md "First Document")',
-      '[second-document](second-document.md "Second Document")',
-      '[#one section](<#one section> "File with different link formats")',
-      '[another name](<#one section> "File with different link formats")',
-      '[an alias](first-document.md "First Document")',
+      '[first-document](first-document.md)',
+      '[second-document](second-document.md)',
+      '[[non-exist-file]]',
+      '[#one section](<#one section>)',
+      '[another name](<#one section>)',
+      '[an alias](first-document.md)',
+      '[first-document](first-document.md)',
     ];
     expect(actual.length).toEqual(expected.length);
-    const _ = actual.map((textReplace, index) => {
-      expect(textReplace.to).toEqual(expected[index]);
+    const _ = actual.map((LinkReplace, index) => {
+      expect(LinkReplace.newText).toEqual(expected[index]);
+    });
+  });
+
+  it('can generate wikilinks correctly', async () => {
+    const note = findBySlug('file-with-different-link-formats');
+    const actual = note.links
+      .filter(link => link.type === 'link')
+      .map(link => convertLinkFormat(link, 'wikilink', _workspace, note));
+    const expected: string[] = ['[[first-document|file]]'];
+    expect(actual.length).toEqual(expected.length);
+    const _ = actual.map((LinkReplace, index) => {
+      expect(LinkReplace.newText).toEqual(expected[index]);
     });
   });
 });

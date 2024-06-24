@@ -38,14 +38,6 @@ export default async function activate(
   const foam = await foamPromise;
 
   /* 
-  commands:
-  foam-vscode.convert-wikilink-to-markdownlink-inplace
-  foam-vscode.convert-markdownlink-to-wikilink-inplace
-  foam-vscode.convert-wikilink-to-markdownlink-in-copy
-  foam-vscode.convert-markdownlink-to-wikilink-in-copy
-   */
-
-  /* 
   commands: 
   foam-vscode.convert-link-style-inplace
   foam-vscode.convert-link-style-incopy

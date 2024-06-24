@@ -8,6 +8,8 @@ import { IMatcher } from '../../core/services/datastore';
 import { convertLinkFormat } from '../../core/janitor';
 const vscode = require('vscode'); /* cannot import workspace from above statement and not sure what happened */
 
+type LinkFormat = 'wikilink' | 'link';
+
 enum ConvertOption {
   Wikilink2MDlink,
   MDlink2Wikilink,
@@ -42,52 +44,63 @@ export default async function activate(
   foam-vscode.convert-wikilink-to-markdownlink-in-copy
   foam-vscode.convert-markdownlink-to-wikilink-in-copy
    */
+
+  /* 
+  commands: 
+  foam-vscode.convert-link-style-inplace
+  foam-vscode.convert-link-style-incopy
+  */
   context.subscriptions.push(
-    commands.registerCommand(
-      'foam-vscode.convert-wikilink-to-markdownlink-inplace',
-      () => {
-        return convertLinkInPlace(
-          foam.workspace,
-          foam.services.parser,
-          foam.services.matcher,
-          Config[ConvertOption.Wikilink2MDlink]
-        );
-      }
-    ),
-    commands.registerCommand(
-      'foam-vscode.convert-markdownlink-to-wikilink-inplace',
-      () => {
-        return convertLinkInPlace(
-          foam.workspace,
-          foam.services.parser,
-          foam.services.matcher,
-          Config[ConvertOption.MDlink2Wikilink]
-        );
-      }
-    ),
-    commands.registerCommand(
-      'foam-vscode.convert-wikilink-to-markdownlink-incopy',
-      () => {
-        return convertLinkInCopy(
-          foam.workspace,
-          foam.services.parser,
-          foam.services.matcher,
-          Config[ConvertOption.Wikilink2MDlink]
-        );
-      }
-    ),
-    commands.registerCommand(
-      'foam-vscode.convert-markdownlink-to-wikilink-incopy',
-      () => {
-        return convertLinkInCopy(
-          foam.workspace,
-          foam.services.parser,
-          foam.services.matcher,
-          Config[ConvertOption.MDlink2Wikilink]
-        );
-      }
-    )
+    commands.registerCommand('foam-vscode.convert-link-style-inplace', () => {
+      return convertLinkAdapter(
+        foam.workspace,
+        foam.services.parser,
+        foam.services.matcher,
+        true
+      );
+    }),
+    commands.registerCommand('foam-vscode.convert-link-style-incopy', () => {
+      return convertLinkAdapter(
+        foam.workspace,
+        foam.services.parser,
+        foam.services.matcher,
+        false
+      );
+    })
   );
+}
+
+async function convertLinkAdapter(
+  fWorkspace: FoamWorkspace,
+  fParser: ResourceParser,
+  fMatcher: IMatcher,
+  isInPlace: boolean
+) {
+  const convertOption = await pickConvertStrategy();
+  if (!convertOption) {
+    window.showInformationMessage('Convert canceled');
+    return;
+  }
+
+  if (isInPlace) {
+    await convertLinkInPlace(fWorkspace, fParser, fMatcher, convertOption);
+  } else {
+    await convertLinkInCopy(fWorkspace, fParser, fMatcher, convertOption);
+  }
+}
+
+async function pickConvertStrategy(): Promise<IConfig | undefined> {
+  const options = {
+    'to wikilink': ConvertOption.MDlink2Wikilink,
+    'to markdown link': ConvertOption.Wikilink2MDlink,
+  };
+  return window.showQuickPick(Object.keys(options)).then(name => {
+    if (name) {
+      return Config[options[name]];
+    } else {
+      return undefined;
+    }
+  });
 }
 
 /**
@@ -119,7 +132,12 @@ async function convertLinkInPlace(
   const textReplaceArr = resource.links
     .filter(link => link.type === convertOption.from)
     .map(link =>
-      convertLinkFormat(link, convertOption.to, fWorkspace, resource)
+      convertLinkFormat(
+        link,
+        convertOption.to as LinkFormat,
+        fWorkspace,
+        resource
+      )
     )
     /* transform .range property into vscode range */
     .map(linkReplace => ({

@@ -17,14 +17,14 @@ export interface LinkReplace {
  * If targetFormat isn't supported, or the target resource pointed by link cannot be found, the function will throw
  * exception.
  * @param link
- * @param targetFormat
+ * @param targetFormat 'wikilink' | 'link'
  * @param workspace
  * @param note
  * @returns LinkReplace { newText: string; range: Range; }
  */
 export function convertLinkFormat(
   link: ResourceLink,
-  targetFormat: string,
+  targetFormat: 'wikilink' | 'link',
   workspace: FoamWorkspace,
   note: Resource | URI
 ): LinkReplace {

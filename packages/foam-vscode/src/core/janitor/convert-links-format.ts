@@ -13,7 +13,7 @@ export interface LinkReplace {
 /**
  * convert a link based on its workspace and the note containing it.
  * According to targetFormat parameter to decide output format. If link.type === targetFormat, then it simply copy
- * the rawText into LinkReplace. Therefore, it's recommanded to filter before conversion.
+ * the rawText into LinkReplace. Therefore, it's recommended to filter before conversion.
  * If targetFormat isn't supported, or the target resource pointed by link cannot be found, the function will throw
  * exception.
  * @param link
@@ -88,7 +88,7 @@ export function convertLinkFormat(
       url = `<${url}>`;
     }
 
-    /* if it's originally an embeded note, the markdown link shouldn't be embeded */
+    /* if it's originally an embedded note, the markdown link shouldn't be embedded */
     if (embed && targetRes.type === 'note') {
       embed = '';
     }

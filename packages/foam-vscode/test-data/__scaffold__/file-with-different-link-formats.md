@@ -6,7 +6,7 @@ wikilink to file [[first-document]].
 
 markdown format link to local [file](first-document.md)
 
-embeded wikilink to file ![[second-document]].
+embedded wikilink to file ![[second-document]].
 
 wikilink to placeholder [[non-exist-file]]
 

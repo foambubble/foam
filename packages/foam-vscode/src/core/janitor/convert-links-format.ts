@@ -40,8 +40,6 @@ export function convertLinkFormat(
 
   let { target, section, alias } = MarkdownLink.analyzeLink(link);
   let sectionDivider = section ? '#' : '';
-  let aliasDivider = alias ? '|' : '';
-  let embed = link.isEmbed ? '!' : '';
 
   if (isNone(targetUri)) {
     throw new Error(
@@ -59,10 +57,10 @@ export function convertLinkFormat(
     }
     target = relativeUri.getBasename();
 
-    return {
-      newText: `${embed}[[${target}${sectionDivider}${section}${aliasDivider}${alias}]]`,
-      range: link.range,
-    };
+    return MarkdownLink.createUpdateLinkEdit(link, {
+      target: target,
+      type: 'wikilink',
+    });
   }
 
   if (targetFormat === 'link') {
@@ -81,21 +79,17 @@ export function convertLinkFormat(
     if (relativeUri.getBasename() === resource.uri.getBasename()) {
       url = '';
     }
-    if (sectionDivider === '#') {
-      url = `${url}${sectionDivider}${section}`;
-    }
-    if (url.indexOf(' ') > 0) {
-      url = `<${url}>`;
-    }
 
     /* if it's originally an embedded note, the markdown link shouldn't be embedded */
-    if (embed && targetRes.type === 'note') {
-      embed = '';
-    }
-    return {
-      newText: `${embed}[${alias}](${url})`,
-      range: link.range,
-    };
+    const isEmbed =
+      link.isEmbed && targetRes.type === 'note' ? false : undefined;
+
+    return MarkdownLink.createUpdateLinkEdit(link, {
+      alias: alias,
+      target: url,
+      isEmbed: isEmbed,
+      type: 'link',
+    });
   }
   throw new Error(
     `Unexpected state: targetFormat: ${targetFormat} is not supported`

@@ -1,8 +1,10 @@
 import * as vscode from 'vscode';
 import { Foam } from '../../core/model/foam';
 import { createMatcherAndDataStore } from '../../services/editor';
-import { getPlaceholdersConfig } from '../../settings';
-import { GroupedResourcesTreeDataProvider } from './utils/grouped-resources-tree-data-provider';
+import {
+  GroupedResourcesConfig,
+  GroupedResourcesTreeDataProvider,
+} from './utils/grouped-resources-tree-data-provider';
 import {
   UriTreeItem,
   createBacklinkItemsForResource,
@@ -15,6 +17,13 @@ import { FoamGraph } from '../../core/model/graph';
 import { URI } from '../../core/model/uri';
 import { FoamWorkspace } from '../../core/model/workspace';
 import { FolderTreeItem } from './utils/folder-tree-provider';
+
+/** Retrieve the placeholders configuration */
+export function getPlaceholdersConfig(): GroupedResourcesConfig {
+  const placeholderCfg = vscode.workspace.getConfiguration('foam.placeholders');
+  const exclude: string[] = placeholderCfg.get('exclude');
+  return { exclude };
+}
 
 export default async function activate(
   context: vscode.ExtensionContext,

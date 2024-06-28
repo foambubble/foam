@@ -22,7 +22,6 @@ import {
 import { fromVsCodeUri, toVsCodeRange } from '../../utils/vsc-utils';
 import { getEditorEOL } from '../../services/editor';
 import { ResourceParser } from '../../core/model/note';
-import { getWikilinkDefinitionSetting } from '../../settings';
 import { IMatcher } from '../../core/services/datastore';
 
 export default async function activate(
@@ -56,6 +55,15 @@ export default async function activate(
       )
     )
   );
+}
+
+export function getWikilinkDefinitionSetting():
+  | 'withExtensions'
+  | 'withoutExtensions'
+  | 'off' {
+  return workspace
+    .getConfiguration('foam.edit')
+    .get('linkReferenceDefinitions', 'withoutExtensions');
 }
 
 async function updateWikilinkDefinitions(

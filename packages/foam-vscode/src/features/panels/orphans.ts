@@ -1,8 +1,11 @@
 import * as vscode from 'vscode';
 import { Foam } from '../../core/model/foam';
 import { createMatcherAndDataStore } from '../../services/editor';
-import { getAttachmentsExtensions, getOrphansConfig } from '../../settings';
-import { GroupedResourcesTreeDataProvider } from './utils/grouped-resources-tree-data-provider';
+import { getAttachmentsExtensions } from '../../settings';
+import {
+  GroupedResourcesConfig,
+  GroupedResourcesTreeDataProvider,
+} from './utils/grouped-resources-tree-data-provider';
 import { ResourceTreeItem, UriTreeItem } from './utils/tree-view-utils';
 import { IMatcher } from '../../core/services/datastore';
 import { FoamWorkspace } from '../../core/model/workspace';
@@ -44,6 +47,13 @@ export default async function activate(
       treeView.title = baseTitle + ` (${provider.nValues})`;
     })
   );
+}
+
+/** Retrieve the orphans configuration */
+export function getOrphansConfig(): GroupedResourcesConfig {
+  const orphansConfig = vscode.workspace.getConfiguration('foam.orphans');
+  const exclude: string[] = orphansConfig.get('exclude');
+  return { exclude };
 }
 
 export class OrphanTreeView extends GroupedResourcesTreeDataProvider {

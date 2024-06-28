@@ -5,18 +5,18 @@ import {
   commands,
   ProgressLocation,
 } from 'vscode';
-import { getWikilinkDefinitionSetting } from '../../settings';
+import detectNewline from 'detect-newline';
+import { Foam } from '../../core/model/foam';
+import { Resource } from '../../core/model/note';
+import { generateHeading, generateLinkReferences } from '../../core/janitor';
+import { Range } from '../../core/model/range';
+import { TextEdit } from '../../core/services/text-edit';
 import {
   toVsCodePosition,
   toVsCodeRange,
   toVsCodeUri,
 } from '../../utils/vsc-utils';
-import { Foam } from '../../core/model/foam';
-import { Resource } from '../../core/model/note';
-import { generateHeading, generateLinkReferences } from '../../core/janitor';
-import { Range } from '../../core/model/range';
-import detectNewline from 'detect-newline';
-import { TextEdit } from '../../core/services/text-edit';
+import { getWikilinkDefinitionSetting } from './update-wikilinks';
 
 export default async function activate(
   context: ExtensionContext,

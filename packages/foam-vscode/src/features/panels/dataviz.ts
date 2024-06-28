@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import { TextDecoder } from 'util';
-import { getGraphStyle, getTitleMaxLength } from '../../settings';
 import { Foam } from '../../core/model/foam';
 import { Logger } from '../../core/utils/log';
 import { fromVsCodeUri } from '../../utils/vsc-utils';
@@ -104,7 +103,9 @@ function generateGraphData(foam: Foam) {
 }
 
 function cutTitle(title: string): string {
-  const maxLen = getTitleMaxLength();
+  const maxLen = vscode.workspace
+    .getConfiguration('foam.graph')
+    .get('titleMaxLength', 24);
   if (maxLen > 0 && title.length > maxLen) {
     return title.substring(0, maxLen).concat('...');
   }
@@ -190,4 +191,8 @@ async function getWebviewContent(
     });
 
   return filled;
+}
+
+function getGraphStyle(): object {
+  return vscode.workspace.getConfiguration('foam.graph').get('style');
 }

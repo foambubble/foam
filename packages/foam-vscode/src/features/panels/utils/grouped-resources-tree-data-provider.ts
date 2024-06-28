@@ -10,6 +10,10 @@ import {
   Folder,
 } from './folder-tree-provider';
 
+export interface GroupedResourcesConfig {
+  exclude: string[];
+}
+
 type GroupedResourceTreeItem = UriTreeItem | FolderTreeItem<URI>;
 
 /**

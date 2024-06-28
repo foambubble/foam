@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { mdDocSelector } from '../utils';
 import { toVsCodeRange, toVsCodeUri, fromVsCodeUri } from '../utils/vsc-utils';
 import { Foam } from '../core/model/foam';
 import { FoamWorkspace } from '../core/model/workspace';
@@ -11,6 +10,7 @@ import { Position } from '../core/model/position';
 import { CREATE_NOTE_COMMAND } from './commands/create-note';
 import { commandAsURI } from '../utils/commands';
 import { Location } from '../core/model/location';
+import { mdDocSelector } from '../services/editor';
 
 export default async function activate(
   context: vscode.ExtensionContext,

@@ -8,7 +8,6 @@ import {
   window,
   workspace,
 } from 'vscode';
-import { focusNote, isNone } from '../utils';
 import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
 import { extractFoamTemplateFrontmatterMetadata } from '../utils/template-frontmatter-parser';
 import { UserCancelledOperation } from './errors';
@@ -18,6 +17,7 @@ import {
   deleteFile,
   fileExists,
   findSelectionContent,
+  focusNote,
   getCurrentEditorDirectory,
   readFile,
   replaceSelection,
@@ -25,6 +25,7 @@ import {
 import { Resolver } from './variable-resolver';
 import dateFormat from 'dateformat';
 import { getFoamVsCodeConfig } from './config';
+import { isNone } from '../core/utils';
 
 /**
  * The templates directory

@@ -11,7 +11,7 @@ import {
   workspace,
   Position,
 } from 'vscode';
-import { isMdEditor, mdDocSelector } from '../../utils';
+import { isMdEditor, mdDocSelector } from '../../services/editor';
 import { Foam } from '../../core/model/foam';
 import { FoamWorkspace } from '../../core/model/workspace';
 import {

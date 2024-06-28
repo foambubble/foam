@@ -4,7 +4,6 @@
 import { readFileSync } from 'fs';
 import { workspace as vsWorkspace } from 'vscode';
 import markdownItRegex from 'markdown-it-regex';
-import { isSome, isNone } from '../../utils';
 import { FoamWorkspace } from '../../core/model/workspace';
 import { Logger } from '../../core/utils/log';
 import { Resource, ResourceParser } from '../../core/model/note';
@@ -13,6 +12,7 @@ import { fromVsCodeUri, toVsCodeUri } from '../../utils/vsc-utils';
 import { MarkdownLink } from '../../core/services/markdown-link';
 import { Position } from '../../core/model/position';
 import { TextEdit } from '../../core/services/text-edit';
+import { isNone, isSome } from '../../core/utils';
 
 export const WIKILINK_EMBED_REGEX =
   /((?:(?:full|content)-(?:inline|card)|full|content|inline|card)?!\[\[[^[\]]+?\]\])/;

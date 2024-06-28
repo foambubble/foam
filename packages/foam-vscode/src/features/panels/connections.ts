@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import { URI } from '../../core/model/uri';
-import { isNone } from '../../utils';
 import { Foam } from '../../core/model/foam';
 import { FoamWorkspace } from '../../core/model/workspace';
 import { Connection, FoamGraph } from '../../core/model/graph';
@@ -14,6 +13,7 @@ import {
   createConnectionItemsForResource,
 } from './utils/tree-view-utils';
 import { BaseTreeProvider } from './utils/base-tree-provider';
+import { isNone } from '../../core/utils';
 
 export default async function activate(
   context: vscode.ExtensionContext,

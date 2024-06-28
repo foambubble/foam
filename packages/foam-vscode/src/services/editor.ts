@@ -1,6 +1,5 @@
-import { isEmpty } from 'lodash';
-import { asAbsoluteUri, URI } from '../core/model/uri';
 import { TextEncoder } from 'util';
+import { isEmpty } from 'lodash';
 import {
   EndOfLine,
   FileType,
@@ -8,15 +7,18 @@ import {
   Selection,
   SnippetString,
   TextDocument,
+  TextEditor,
   Uri,
   ViewColumn,
   window,
   workspace,
   WorkspaceEdit,
+  MarkdownString,
 } from 'vscode';
-import { focusNote } from '../utils';
+import { getExcerpt, stripFrontMatter, stripImages } from '../core/utils/md';
+import { isSome } from '../core/utils/core';
 import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
-import { isSome } from '../core/utils';
+import { asAbsoluteUri, URI } from '../core/model/uri';
 import {
   AlwaysIncludeMatcher,
   FileListBasedMatcher,
@@ -29,6 +31,35 @@ interface SelectionInfo {
   document: TextDocument;
   selection: Selection;
   content: string;
+}
+
+/**
+ * Returns a MarkdownString of the note content
+ * @param note A Foam Note
+ */
+export function getNoteTooltip(content: string): string {
+  const strippedContent = stripFrontMatter(stripImages(content));
+  return formatMarkdownTooltip(strippedContent) as any;
+}
+
+export function formatMarkdownTooltip(content: string): MarkdownString {
+  const LINES_LIMIT = 16;
+  const { excerpt, lines } = getExcerpt(content, LINES_LIMIT);
+  const totalLines = content.split('\n').length;
+  const diffLines = totalLines - lines;
+  const ellipsis = diffLines > 0 ? `\n\n[...] *(+ ${diffLines} lines)*` : '';
+  const md = new MarkdownString(`${excerpt}${ellipsis}`);
+  md.isTrusted = true;
+  return md;
+}
+
+export const mdDocSelector = [
+  { language: 'markdown', scheme: 'file' },
+  { language: 'markdown', scheme: 'untitled' },
+];
+
+export function isMdEditor(editor: TextEditor) {
+  return editor && editor.document && editor.document.languageId === 'markdown';
 }
 
 export function findSelectionContent(): SelectionInfo | undefined {
@@ -49,6 +80,24 @@ export function findSelectionContent(): SelectionInfo | undefined {
     selection,
     content: document.getText(selection),
   };
+}
+
+export async function focusNote(
+  notePath: URI,
+  moveCursorToEnd: boolean,
+  viewColumn: ViewColumn = ViewColumn.Active
+) {
+  const document = await workspace.openTextDocument(toVsCodeUri(notePath));
+  const editor = await window.showTextDocument(document, viewColumn);
+
+  // Move the cursor to end of the file
+  if (moveCursorToEnd) {
+    const { lineCount } = editor.document;
+    const { range } = editor.document.lineAt(lineCount - 1);
+    editor.selection = new Selection(range.end, range.end);
+  }
+
+  return { document, editor };
 }
 
 export async function createDocAndFocus(

@@ -1,9 +1,9 @@
 /*global markdownit:readonly*/
 
 import markdownItRegex from 'markdown-it-regex';
-import { isNone } from '../../utils';
 import { FoamWorkspace } from '../../core/model/workspace';
 import { Logger } from '../../core/utils/log';
+import { isNone } from '../../core/utils';
 
 export const markdownItFoamTags = (
   md: markdownit,

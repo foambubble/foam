@@ -5,8 +5,8 @@ import { Resource } from '../core/model/note';
 import { URI } from '../core/model/uri';
 import { FoamWorkspace } from '../core/model/workspace';
 import { getFoamVsCodeConfig } from '../services/config';
-import { getNoteTooltip, mdDocSelector } from '../utils';
 import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
+import { getNoteTooltip, mdDocSelector } from '../services/editor';
 
 export const aliasCommitCharacters = ['#'];
 export const linkCommitCharacters = ['#', '|'];

@@ -1,6 +1,6 @@
 import { ExtensionContext, commands, window } from 'vscode';
-import { focusNote } from '../../utils';
 import { Foam } from '../../core/model/foam';
+import { focusNote } from '../../services/editor';
 
 export default async function activate(
   context: ExtensionContext,

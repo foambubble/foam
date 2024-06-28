@@ -1,9 +1,8 @@
 import dateFormat from 'dateformat';
-import { focusNote } from './utils';
 import { URI } from './core/model/uri';
 import { NoteFactory } from './services/templates';
 import { getFoamVsCodeConfig } from './services/config';
-import { asAbsoluteWorkspaceUri } from './services/editor';
+import { asAbsoluteWorkspaceUri, focusNote } from './services/editor';
 
 /**
  * Open the daily note file.

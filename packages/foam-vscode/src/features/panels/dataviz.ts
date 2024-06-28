@@ -1,10 +1,10 @@
 import * as vscode from 'vscode';
 import { TextDecoder } from 'util';
 import { getGraphStyle, getTitleMaxLength } from '../../settings';
-import { isSome } from '../../utils';
 import { Foam } from '../../core/model/foam';
 import { Logger } from '../../core/utils/log';
 import { fromVsCodeUri } from '../../utils/vsc-utils';
+import { isSome } from '../../core/utils';
 
 export default async function activate(
   context: vscode.ExtensionContext,

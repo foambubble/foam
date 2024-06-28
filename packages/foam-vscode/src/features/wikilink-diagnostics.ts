@@ -5,13 +5,13 @@ import { Resource, ResourceParser } from '../core/model/note';
 import { Range } from '../core/model/range';
 import { FoamWorkspace } from '../core/model/workspace';
 import { MarkdownLink } from '../core/services/markdown-link';
-import { isNone } from '../utils';
 import {
   fromVsCodeUri,
   toVsCodePosition,
   toVsCodeRange,
   toVsCodeUri,
 } from '../utils/vsc-utils';
+import { isNone } from '../core/utils';
 
 const AMBIGUOUS_IDENTIFIER_CODE = 'ambiguous-identifier';
 const UNKNOWN_SECTION_CODE = 'unknown-section';

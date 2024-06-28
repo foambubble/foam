@@ -36,7 +36,7 @@ describe('generateLinkReferences', () => {
   });
 
   it('initialised test graph correctly', () => {
-    expect(_workspace.list().length).toEqual(10);
+    expect(_workspace.list().length).toEqual(11);
   });
 
   it('should add link references to a file that does not have them', async () => {

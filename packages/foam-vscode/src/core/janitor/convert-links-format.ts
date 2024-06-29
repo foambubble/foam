@@ -55,10 +55,9 @@ export function convertLinkFormat(
     if (relativeUri.path.endsWith(workspace.defaultExtension)) {
       relativeUri = relativeUri.changeExtension('*', '');
     }
-    target = relativeUri.getBasename();
 
     return MarkdownLink.createUpdateLinkEdit(link, {
-      target: target,
+      target: relativeUri.getBasename(),
       type: 'wikilink',
     });
   }

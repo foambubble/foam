@@ -73,20 +73,13 @@ export function convertLinkFormat(
       alias = `${target}${sectionDivider}${section}`;
     }
 
-    /* construct url */
-    let url = relativeUri.path;
-    /* in page anchor have no filename */
-    if (relativeUri.getBasename() === resource.uri.getBasename()) {
-      url = '';
-    }
-
     /* if it's originally an embedded note, the markdown link shouldn't be embedded */
     const isEmbed =
       targetRes.type === 'image' ? link.isEmbed : false;
 
     return MarkdownLink.createUpdateLinkEdit(link, {
       alias: alias,
-      target: url,
+      target: relativeUri.path,
       isEmbed: isEmbed,
       type: 'link',
     });

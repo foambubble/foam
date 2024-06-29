@@ -46,8 +46,8 @@ describe('generateStdMdLink', () => {
       '[first-document](first-document.md)',
       '[second-document](second-document.md)',
       '[[non-exist-file]]',
-      '[#one section](<#one section>)',
-      '[another name](<#one section>)',
+      '[#one section](<file-with-different-link-formats.md#one section>)',
+      '[another name](<file-with-different-link-formats.md#one section>)',
       '[an alias](first-document.md)',
       '[first-document](first-document.md)',
     ];

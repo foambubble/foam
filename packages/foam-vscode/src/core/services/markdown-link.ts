@@ -59,7 +59,6 @@ export abstract class MarkdownLink {
       return link.isEmbed ? '!' : '';
     })();
     const type = delta.type ?? link.type;
-    const useAngles = newTarget.indexOf(' ') > 0 || newSection.indexOf(' ') > 0;
     if (type === 'wikilink') {
       return {
         newText: `${embed}[[${newTarget}${sectionDivider}${newSection}${aliasDivider}${newAlias}]]`,
@@ -67,6 +66,8 @@ export abstract class MarkdownLink {
       };
     }
     if (type === 'link') {
+      const useAngles =
+        newTarget.indexOf(' ') > 0 || newSection.indexOf(' ') > 0;
       return {
         newText: `${embed}[${newAlias}](${
           useAngles ? '<' : ''

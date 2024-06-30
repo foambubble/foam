@@ -73,8 +73,7 @@ export function convertLinkFormat(
     }
 
     /* if it's originally an embedded note, the markdown link shouldn't be embedded */
-    const isEmbed =
-      targetRes.type === 'image' ? link.isEmbed : false;
+    const isEmbed = targetRes.type === 'image' ? link.isEmbed : false;
 
     return MarkdownLink.createUpdateLinkEdit(link, {
       alias: alias,

@@ -254,4 +254,140 @@ describe('MarkdownLink', () => {
       expect(edit.range).toEqual(link.range);
     });
   });
+
+  describe('convert wikilink to link', () => {
+    it('should generate default alias if no one', () => {
+      const wikilink = parser.parse(getRandomURI(), `[[wikilink]]`).links[0];
+      const wikilinkEdit = MarkdownLink.createUpdateLinkEdit(wikilink, {
+        type: 'link',
+      });
+      expect(wikilinkEdit.newText).toEqual(`[wikilink](wikilink)`);
+      expect(wikilinkEdit.range).toEqual(wikilink.range);
+
+      const wikilinkWithSection = parser.parse(
+        getRandomURI(),
+        `[[wikilink#section]]`
+      ).links[0];
+      const wikilinkWithSectionEdit = MarkdownLink.createUpdateLinkEdit(
+        wikilinkWithSection,
+        {
+          type: 'link',
+        }
+      );
+      expect(wikilinkWithSectionEdit.newText).toEqual(
+        `[wikilink#section](wikilink#section)`
+      );
+      expect(wikilinkWithSectionEdit.range).toEqual(wikilinkWithSection.range);
+    });
+
+    it('should use alias in the wikilik the if there has one', () => {
+      const wikilink = parser.parse(
+        getRandomURI(),
+        `[[wikilink#section|alias]]`
+      ).links[0];
+      const wikilinkEdit = MarkdownLink.createUpdateLinkEdit(wikilink, {
+        type: 'link',
+      });
+      expect(wikilinkEdit.newText).toEqual(`[alias](wikilink#section)`);
+      expect(wikilinkEdit.range).toEqual(wikilink.range);
+    });
+  });
+
+  describe('convert link to wikilink', () => {
+    it('should reorganize target, section, and alias in wikilink manner', () => {
+      const link = parser.parse(getRandomURI(), `[link](to/path.md)`).links[0];
+      const linkEdit = MarkdownLink.createUpdateLinkEdit(link, {
+        type: 'wikilink',
+      });
+      expect(linkEdit.newText).toEqual(`[[to/path.md|link]]`);
+      expect(linkEdit.range).toEqual(link.range);
+
+      const linkWithSection = parser.parse(
+        getRandomURI(),
+        `[link](to/path.md#section)`
+      ).links[0];
+      const linkWithSectionEdit = MarkdownLink.createUpdateLinkEdit(
+        linkWithSection,
+        {
+          type: 'wikilink',
+        }
+      );
+      expect(linkWithSectionEdit.newText).toEqual(
+        `[[to/path.md#section|link]]`
+      );
+      expect(linkWithSectionEdit.range).toEqual(linkWithSection.range);
+    });
+
+    it('should use alias in the wikilik the if there has one', () => {
+      const wikilink = parser.parse(
+        getRandomURI(),
+        `[[wikilink#section|alias]]`
+      ).links[0];
+      const wikilinkEdit = MarkdownLink.createUpdateLinkEdit(wikilink, {
+        type: 'link',
+      });
+      expect(wikilinkEdit.newText).toEqual(`[alias](wikilink#section)`);
+      expect(wikilinkEdit.range).toEqual(wikilink.range);
+    });
+  });
+
+  describe('convert to its original type', () => {
+    it('should remaind unchanged', () => {
+      const link = parser.parse(getRandomURI(), `[link](to/path.md#section)`)
+        .links[0];
+      const linkEdit = MarkdownLink.createUpdateLinkEdit(link, {
+        type: 'link',
+      });
+      expect(linkEdit.newText).toEqual(`[link](to/path.md#section)`);
+      expect(linkEdit.range).toEqual(link.range);
+
+      const wikilink = parser.parse(
+        getRandomURI(),
+        `[[wikilink#section|alias]]`
+      ).links[0];
+      const wikilinkEdit = MarkdownLink.createUpdateLinkEdit(wikilink, {
+        type: 'wikilink',
+      });
+      expect(wikilinkEdit.newText).toEqual(`[[wikilink#section|alias]]`);
+      expect(wikilinkEdit.range).toEqual(wikilink.range);
+    });
+  });
+
+  describe('change isEmbed property', () => {
+    it('should change isEmbed only', () => {
+      const wikilink = parser.parse(getRandomURI(), `[[wikilink]]`).links[0];
+      const wikilinkEdit = MarkdownLink.createUpdateLinkEdit(wikilink, {
+        isEmbed: true,
+      });
+      expect(wikilinkEdit.newText).toEqual(`![[wikilink]]`);
+      expect(wikilinkEdit.range).toEqual(wikilink.range);
+
+      const link = parser.parse(getRandomURI(), `![link](to/path.md)`).links[0];
+      const linkEdit = MarkdownLink.createUpdateLinkEdit(link, {
+        isEmbed: false,
+      });
+      expect(linkEdit.newText).toEqual(`[link](to/path.md)`);
+      expect(linkEdit.range).toEqual(link.range);
+    });
+
+    it('should be unchanged if the update value is the same as the original one', () => {
+      const embeddedWikilink = parser.parse(getRandomURI(), `![[wikilink]]`)
+        .links[0];
+      const embeddedWikilinkEdit = MarkdownLink.createUpdateLinkEdit(
+        embeddedWikilink,
+        {
+          isEmbed: true,
+        }
+      );
+      expect(embeddedWikilinkEdit.newText).toEqual(`![[wikilink]]`);
+      expect(embeddedWikilinkEdit.range).toEqual(embeddedWikilink.range);
+
+      const link = parser.parse(getRandomURI(), `[link](to/path.md)`).links[0];
+      const linkEdit = MarkdownLink.createUpdateLinkEdit(link, {
+        isEmbed: false,
+      });
+      expect(linkEdit.newText).toEqual(`[link](to/path.md)`);
+      expect(linkEdit.range).toEqual(link.range);
+    });
+  });
 });

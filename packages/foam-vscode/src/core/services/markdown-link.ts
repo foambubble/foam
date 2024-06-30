@@ -66,10 +66,13 @@ export abstract class MarkdownLink {
       };
     }
     if (type === 'link') {
+      const defaultAlias = () => {
+        return `${newTarget}${sectionDivider}${newSection}`;
+      };
       const useAngles =
         newTarget.indexOf(' ') > 0 || newSection.indexOf(' ') > 0;
       return {
-        newText: `${embed}[${newAlias}](${
+        newText: `${embed}[${newAlias ? newAlias : defaultAlias()}](${
           useAngles ? '<' : ''
         }${newTarget}${sectionDivider}${newSection}${useAngles ? '>' : ''})`,
         range: link.range,

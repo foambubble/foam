@@ -52,12 +52,7 @@ export abstract class MarkdownLink {
     const newAlias = delta.alias ?? alias ?? '';
     const sectionDivider = newSection ? '#' : '';
     const aliasDivider = newAlias ? '|' : '';
-    const embed = (() => {
-      if (typeof delta.isEmbed === 'boolean') {
-        return delta.isEmbed ? '!' : '';
-      }
-      return link.isEmbed ? '!' : '';
-    })();
+    const embed = delta.isEmbed ?? link.isEmbed ? '!' : '';
     const type = delta.type ?? link.type;
     if (type === 'wikilink') {
       return {

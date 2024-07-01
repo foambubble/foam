@@ -51,13 +51,8 @@ export function convertLinkFormat(
   let relativeUri = targetRes.uri.relativeTo(resource.uri.getDirectory());
 
   if (targetFormat === 'wikilink') {
-    /* remove extension if possible, then get the basename to prevent from filename conflict */
-    if (relativeUri.path.endsWith(workspace.defaultExtension)) {
-      relativeUri = relativeUri.changeExtension('*', '');
-    }
-
     return MarkdownLink.createUpdateLinkEdit(link, {
-      target: relativeUri.getBasename(),
+      target: workspace.getIdentifier(relativeUri),
       type: 'wikilink',
     });
   }

@@ -390,4 +390,49 @@ describe('MarkdownLink', () => {
       expect(linkEdit.range).toEqual(link.range);
     });
   });
+
+  describe('insert angles', () => {
+    it('should insert angles when meeting space in links', () => {
+      const link = parser.parse(getRandomURI(), `![link](to/path.md)`).links[0];
+      const linkAddSection = MarkdownLink.createUpdateLinkEdit(link, {
+        section: 'one section',
+      });
+      expect(linkAddSection.newText).toEqual(
+        `![link](<to/path.md#one section>)`
+      );
+      expect(linkAddSection.range).toEqual(link.range);
+
+      const linkChangingTarget = parser.parse(
+        getRandomURI(),
+        `[link](to/path.md#one-section)`
+      ).links[0];
+      const linkEdit = MarkdownLink.createUpdateLinkEdit(linkChangingTarget, {
+        target: 'to/another path.md',
+      });
+      expect(linkEdit.newText).toEqual(
+        `[link](<to/another path.md#one-section>)`
+      );
+      expect(linkEdit.range).toEqual(linkChangingTarget.range);
+
+      const wikilink = parser.parse(getRandomURI(), `[[wikilink#one section]]`)
+        .links[0];
+      const wikilinkEdit = MarkdownLink.createUpdateLinkEdit(wikilink, {
+        type: 'link',
+      });
+      expect(wikilinkEdit.newText).toEqual(
+        `[wikilink#one section](<wikilink#one section>)`
+      );
+      expect(wikilinkEdit.range).toEqual(wikilink.range);
+    });
+
+    it('should not insert angles in wikilink', () => {
+      const wikilink = parser.parse(getRandomURI(), `[[wikilink#one section]]`)
+        .links[0];
+      const wikilinkEdit = MarkdownLink.createUpdateLinkEdit(wikilink, {
+        target: 'another wikilink',
+      });
+      expect(wikilinkEdit.newText).toEqual(`[[another wikilink#one section]]`);
+      expect(wikilinkEdit.range).toEqual(wikilink.range);
+    });
+  });
 });

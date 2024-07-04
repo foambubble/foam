@@ -40,8 +40,6 @@ export function convertLinkFormat(
 
   let { target, section, alias } = MarkdownLink.analyzeLink(link);
   let sectionDivider = section ? '#' : '';
-  let aliasDivider = alias ? '|' : '';
-  let embed = link.isEmbed ? '!' : '';
 
   if (isNone(targetUri)) {
     throw new Error(
@@ -53,16 +51,10 @@ export function convertLinkFormat(
   let relativeUri = targetRes.uri.relativeTo(resource.uri.getDirectory());
 
   if (targetFormat === 'wikilink') {
-    /* remove extension if possible, then get the basename to prevent from filename conflict */
-    if (relativeUri.path.endsWith(workspace.defaultExtension)) {
-      relativeUri = relativeUri.changeExtension('*', '');
-    }
-    target = relativeUri.getBasename();
-
-    return {
-      newText: `${embed}[[${target}${sectionDivider}${section}${aliasDivider}${alias}]]`,
-      range: link.range,
-    };
+    return MarkdownLink.createUpdateLinkEdit(link, {
+      target: workspace.getIdentifier(relativeUri),
+      type: 'wikilink',
+    });
   }
 
   if (targetFormat === 'link') {
@@ -75,27 +67,15 @@ export function convertLinkFormat(
       alias = `${target}${sectionDivider}${section}`;
     }
 
-    /* construct url */
-    let url = relativeUri.path;
-    /* in page anchor have no filename */
-    if (relativeUri.getBasename() === resource.uri.getBasename()) {
-      url = '';
-    }
-    if (sectionDivider === '#') {
-      url = `${url}${sectionDivider}${section}`;
-    }
-    if (url.indexOf(' ') > 0) {
-      url = `<${url}>`;
-    }
-
     /* if it's originally an embedded note, the markdown link shouldn't be embedded */
-    if (embed && targetRes.type === 'note') {
-      embed = '';
-    }
-    return {
-      newText: `${embed}[${alias}](${url})`,
-      range: link.range,
-    };
+    const isEmbed = targetRes.type === 'image' ? link.isEmbed : false;
+
+    return MarkdownLink.createUpdateLinkEdit(link, {
+      alias: alias,
+      target: relativeUri.path,
+      isEmbed: isEmbed,
+      type: 'link',
+    });
   }
   throw new Error(
     `Unexpected state: targetFormat: ${targetFormat} is not supported`

@@ -332,7 +332,7 @@ describe('MarkdownLink', () => {
   });
 
   describe('convert to its original type', () => {
-    it('should remaind unchanged', () => {
+    it('should remain unchanged', () => {
       const link = parser.parse(getRandomURI(), `[link](to/path.md#section)`)
         .links[0];
       const linkEdit = MarkdownLink.createUpdateLinkEdit(link, {

@@ -1,4 +1,4 @@
-import { commands, ExtensionContext, window } from 'vscode';
+import { commands, ExtensionContext, window, workspace, Uri } from 'vscode';
 import { isMdEditor } from '../../utils';
 import { Foam } from '../../core/model/foam';
 import { FoamWorkspace } from '../../core/model/workspace';
@@ -6,7 +6,6 @@ import { fromVsCodeUri, toVsCodeRange } from '../../utils/vsc-utils';
 import { ResourceParser } from '../../core/model/note';
 import { IMatcher } from '../../core/services/datastore';
 import { convertLinkFormat } from '../../core/janitor';
-const vscode = require('vscode'); /* cannot import workspace from above statement and not sure what happened */
 
 type LinkFormat = 'wikilink' | 'link';
 
@@ -176,13 +175,13 @@ async function convertLinkInCopy(
   const resource = fParser.parse(fromVsCodeUri(doc.uri), text);
   const basePath = doc.uri.path.split('/').slice(0, -1).join('/');
 
-  const fileUri = vscode.Uri.file(
+  const fileUri = Uri.file(
     `${
       basePath ? basePath + '/' : ''
     }${resource.uri.getName()}.copy${resource.uri.getExtension()}`
   );
   const encoder = new TextEncoder();
-  await vscode.workspace.fs.writeFile(fileUri, encoder.encode(text));
+  await workspace.fs.writeFile(fileUri, encoder.encode(text));
   await window.showTextDocument(fileUri);
 
   await convertLinkInPlace(fWorkspace, fParser, fMatcher, convertOption);

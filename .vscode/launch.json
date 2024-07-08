@@ -32,17 +32,17 @@
     },
     {
       "name": "Run Foam Web extension",
-      "type": "extensionHost",
-      "debugWebWorkerHost": true,
+      "type": "node",
       "request": "launch",
+      "runtimeExecutable": "npm",
+      "cwd": "${workspaceFolder}/packages/foam-vscode",
       "args": [
-        "--extensionDevelopmentPath=${workspaceFolder}/packages/foam-vscode",
-        "--extensionDevelopmentKind=web",
-        "--extensionTestsPath=${workspaceFolder}/packages/foam-vscode/out/web/test/suite-web.js",
-        "${workspaceFolder}/packages/foam-vscode/.test-workspace"
+        "run",
+        "open-in-browser",
+        "--browserType=chromium",
+        "--extensionDevelopmentPath=${workspaceFolder}/packages/foam-vscode"
       ],
       "outFiles": ["${workspaceFolder}/packages/foam-vscode/out/web/**/*.js"],
-      "preLaunchTask": "npm: watch-web",
       "sourceMaps": true
     },
     {

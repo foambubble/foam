@@ -20,12 +20,16 @@
     {
       "type": "npm",
       "script": "watch-web",
-      "group": "build",
+      "presentation": {
+        "reveal": "always"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
       "path": "packages/foam-vscode",
       "isBackground": true,
-      "problemMatcher": [
-        "$ts-webpack-watch"
-      ]
+      "problemMatcher": ["$ts-webpack-watch"]
     },
     {
       "label": "test: all packages",

@@ -665,8 +665,6 @@
     "test:unit": "node ./out/test/run-tests.js --unit",
     "pretest:e2e": "yarn build",
     "test:e2e": "node ./out/test/run-tests.js --e2e",
-    "pretest:e2e-web": "npm run compile-web && tsc -p tsconfig.webTest.json",
-    "test:e2e-web": "node ./out/web/test/run-tests-web.js",
     "lint": "dts lint src",
     "clean": "rimraf out",
     "watch": "tsc --build ./tsconfig.json --watch",

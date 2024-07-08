@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { FoamTags } from '../core/model/tags';
 import { FoamWorkspace } from '../core/model/workspace';
-import { createTestNote } from '../test/test-utils-vscode';
+import { createTestNote } from '../test/test-utils';
 import {
   cleanWorkspace,
   closeEditors,
@@ -10,7 +10,6 @@ import {
 } from '../test/test-utils-vscode';
 import { fromVsCodeUri } from '../utils/vsc-utils';
 import { TagCompletionProvider } from './tag-completion';
-import assert from 'assert';
 
 describe('Tag Completion', () => {
   const root = fromVsCodeUri(vscode.workspace.workspaceFolders[0].uri);
@@ -39,7 +38,7 @@ describe('Tag Completion', () => {
     );
   const foamTags = FoamTags.fromWorkspace(ws);
 
-  before(async () => {
+  beforeAll(async () => {
     await cleanWorkspace();
   });
 
@@ -53,10 +52,6 @@ describe('Tag Completion', () => {
     await closeEditors();
   });
 
-  it('test', () => {
-    assert.strictEqual(true, true);
-  });
-
   it('should not return any tags for empty documents', async () => {
     const { uri } = await createFile('');
     const { doc } = await showInEditor(uri);
@@ -66,9 +61,6 @@ describe('Tag Completion', () => {
       doc,
       new vscode.Position(0, 0)
     );
-
-    assert.strictEqual(foamTags.tags.get('primary'), true);
-    assert.strictEqual(tags, null);
 
     expect(foamTags.tags.get('primary')).toBeTruthy();
     expect(tags).toBeNull();
@@ -120,7 +112,7 @@ describe('Tag Completion', () => {
     it('should provide multiple suggestions when typing #', async () => {
       const { uri } = await createFile(`# Title
 
-  #`);
+#`);
       const { doc } = await showInEditor(uri);
       const provider = new TagCompletionProvider(foamTags);
 
@@ -146,9 +138,9 @@ describe('Tag Completion', () => {
     it('should provide multiple suggestions when typing # at EOL', async () => {
       const { uri } = await createFile(`# Title
 
-  #
-  more text
-  `);
+#
+more text
+`);
       const { doc } = await showInEditor(uri);
       const provider = new TagCompletionProvider(foamTags);
 
@@ -162,7 +154,7 @@ describe('Tag Completion', () => {
     it('should not provide a suggestion when typing `# `', async () => {
       const { uri } = await createFile(`# Title
 
-  # `);
+# `);
       const { doc } = await showInEditor(uri);
       const provider = new TagCompletionProvider(foamTags);
 
@@ -178,7 +170,7 @@ describe('Tag Completion', () => {
     it('should not provide a suggestion when typing `#{non-match}`', async () => {
       const { uri } = await createFile(`# Title
 
-  #$`);
+#$`);
       const { doc } = await showInEditor(uri);
       const provider = new TagCompletionProvider(foamTags);
 
@@ -194,7 +186,7 @@ describe('Tag Completion', () => {
     it('should not provide a suggestion when typing `##`', async () => {
       const { uri } = await createFile(`# Title
 
-  ##`);
+##`);
       const { doc } = await showInEditor(uri);
       const provider = new TagCompletionProvider(foamTags);
 
@@ -225,8 +217,8 @@ describe('Tag Completion', () => {
   describe('works inside front-matter #1184', () => {
     it('should provide suggestions when on `tags:` in the front-matter', async () => {
       const { uri } = await createFile(`---
-  created: 2023-01-01
-  tags: prim`);
+created: 2023-01-01
+tags: prim`);
       const { doc } = await showInEditor(uri);
       const provider = new TagCompletionProvider(foamTags);
 

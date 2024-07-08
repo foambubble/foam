@@ -1,6 +1,7 @@
 /*global markdownit:readonly*/
 
 // eslint-disable-next-line no-restricted-imports
+import { readFileSync } from 'fs';
 import { workspace as vsWorkspace } from 'vscode';
 import markdownItRegex from 'markdown-it-regex';
 import { FoamWorkspace } from '../../core/model/workspace';
@@ -176,7 +177,7 @@ function fullExtractor(
   parser: ResourceParser,
   workspace: FoamWorkspace
 ): string {
-  let noteText = vsWorkspace.fs.readFile(toVsCodeUri(note.uri)).toString();
+  let noteText = readFileSync(note.uri.toFsPath()).toString();
   const section = Resource.findSection(note, note.uri.fragment);
   if (isSome(section)) {
     const rows = noteText.split('\n');
@@ -193,12 +194,7 @@ function contentExtractor(
   parser: ResourceParser,
   workspace: FoamWorkspace
 ): string {
-  let noteText;
-
-  vsWorkspace.fs
-    .readFile(toVsCodeUri(note.uri))
-    .then(f => (noteText = f.toString()));
-
+  let noteText = readFileSync(note.uri.toFsPath()).toString();
   let section = Resource.findSection(note, note.uri.fragment);
   if (!note.uri.fragment) {
     // if there's no fragment(section), the wikilink is linking to the entire note,

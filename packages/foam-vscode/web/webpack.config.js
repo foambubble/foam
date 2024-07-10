@@ -8,7 +8,7 @@ const webExtensionConfig = {
   target: 'webworker', // extensions run in a webworker context
   entry: {
     extension: './src/extension.ts', // source of the web extension main file,
-    'test/suite-web': './src/test/suite-web.ts',
+    'test/web/index': './src/test/web/index.ts',
   },
   output: {
     clean: true,
@@ -20,7 +20,14 @@ const webExtensionConfig = {
   resolve: {
     mainFields: ['browser', 'module', 'main'],
     extensions: ['.ts', '.js'], // support ts-files and js-files
-    alias: {},
+    alias: {
+      // Overwrite wikilink embedding as it will not work in the current setup on web
+      [path.resolve(__dirname, '../src/features/preview/wikilink-embed.ts')]:
+        path.resolve(
+          __dirname,
+          '../src/web/features/preview/wikilink-embed.ts'
+        ),
+    },
     fallback: {
       // Webpack 5 no longer polyfills Node.js core modules automatically.
       // see https://webpack.js.org/configuration/resolve/#resolvefallback

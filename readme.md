@@ -5,7 +5,7 @@
 👀*This is an early stage project under rapid development. For updates join the [Foam community Discord](https://foambubble.github.io/join-discord/g)! 💬*
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-118-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-119-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 [![Visual Studio Marketplace Installs](https://img.shields.io/visual-studio-marketplace/i/foam.foam-vscode?label=VS%20Code%20Installs)](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode)
@@ -360,6 +360,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/dcarosone"><img src="https://avatars.githubusercontent.com/u/11495017?v=4?s=60" width="60px;" alt="Daniel Carosone"/><br /><sub><b>Daniel Carosone</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=dcarosone" title="Documentation">📖</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/MABruni"><img src="https://avatars.githubusercontent.com/u/100445384?v=4?s=60" width="60px;" alt="Miguel Angel Bruni Montero"/><br /><sub><b>Miguel Angel Bruni Montero</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=MABruni" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/Walshkev"><img src="https://avatars.githubusercontent.com/u/77123083?v=4?s=60" width="60px;" alt="Kevin Walsh "/><br /><sub><b>Kevin Walsh </b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=Walshkev" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="http://hereistheusername.github.io/"><img src="https://avatars.githubusercontent.com/u/33437051?v=4?s=60" width="60px;" alt="Xinglan Liu"/><br /><sub><b>Xinglan Liu</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=hereistheusername" title="Code">💻</a></td>
     </tr>
   </tbody>
 </table>

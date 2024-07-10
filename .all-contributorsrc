@@ -1085,6 +1085,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "hereistheusername",
+      "name": "Xinglan Liu",
+      "avatar_url": "https://avatars.githubusercontent.com/u/33437051?v=4",
+      "profile": "http://hereistheusername.github.io/",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,

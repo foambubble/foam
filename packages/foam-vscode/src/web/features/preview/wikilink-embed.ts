@@ -1,3 +1,5 @@
+/*global markdownit:readonly*/
+
 import { ResourceParser } from 'packages/foam-vscode/src/core/model/note';
 import { FoamWorkspace } from 'packages/foam-vscode/src/core/model/workspace';
 

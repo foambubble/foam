@@ -74,3 +74,38 @@ jobs:
         uses: GabrielBB/xvfb-action@v1.4
         with:
           run: yarn test --stream
+
+  webtest:
+    name: Build and Test (web)
+    # strategy:
+    #   matrix:
+    #     os: [macos-12, ubuntu-22.04, windows-2022]
+    # runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-22.04
+    # env:
+    #   OS: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v1
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Restore Dependencies and VS Code test instance
+        uses: actions/cache@v3
+        with:
+          path: |
+            node_modules
+            */*/node_modules
+            packages/foam-vscode/.vscode-test
+          key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock', 'packages/foam-vscode/src/test/run-tests.ts') }}-${{ secrets.CACHE_VERSION }}
+      - name: Install Dependencies
+        run: yarn
+      - name: Build Packages
+        run: yarn build
+      - name: Download required playwright browsers
+        run: yarn playwright install
+      - name: Run Tests
+        uses: GabrielBB/xvfb-action@v1.4
+        with:
+          run: yarn test:web

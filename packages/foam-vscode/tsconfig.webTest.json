@@ -1,12 +1,12 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
     "target": "ES2019",
     "outDir": "./out/web",
     "lib": ["ES2019"],
+    "sourceMap": true,
     "rootDir": "./src",
-    "strict": true,
+    "strict": true /* enable all strict type-checking options */,
     "skipLibCheck": true
   },
-  "include": ["./src/test/run-tests-web.ts"]
+  "include": ["./src/test/web/index.ts"]
 }

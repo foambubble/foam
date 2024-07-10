@@ -347,6 +347,14 @@
         "title": "Foam: Open Resource"
       },
       {
+        "command": "foam-vscode.convert-link-style-inplace",
+        "title": "Foam: convert link style in place"
+      },
+      {
+        "command": "foam-vscode.convert-link-style-incopy",
+        "title": "Foam: convert link format in copy"
+      },
+      {
         "command": "foam-vscode.views.orphans.group-by:folder",
         "title": "Group By Folder",
         "icon": "$(list-tree)"

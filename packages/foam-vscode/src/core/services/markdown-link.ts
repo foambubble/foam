@@ -38,7 +38,13 @@ export abstract class MarkdownLink {
 
   public static createUpdateLinkEdit(
     link: ResourceLink,
-    delta: { target?: string; section?: string; alias?: string }
+    delta: {
+      target?: string;
+      section?: string;
+      alias?: string;
+      type?: 'wikilink' | 'link';
+      isEmbed?: boolean;
+    }
   ) {
     const { target, section, alias } = MarkdownLink.analyzeLink(link);
     const newTarget = delta.target ?? target;
@@ -46,21 +52,27 @@ export abstract class MarkdownLink {
     const newAlias = delta.alias ?? alias ?? '';
     const sectionDivider = newSection ? '#' : '';
     const aliasDivider = newAlias ? '|' : '';
-    const embed = link.isEmbed ? '!' : '';
-    if (link.type === 'wikilink') {
+    const embed = delta.isEmbed ?? link.isEmbed ? '!' : '';
+    const type = delta.type ?? link.type;
+    if (type === 'wikilink') {
       return {
         newText: `${embed}[[${newTarget}${sectionDivider}${newSection}${aliasDivider}${newAlias}]]`,
         range: link.range,
       };
     }
-    if (link.type === 'link') {
+    if (type === 'link') {
+      const defaultAlias = () => {
+        return `${newTarget}${sectionDivider}${newSection}`;
+      };
+      const useAngles =
+        newTarget.indexOf(' ') > 0 || newSection.indexOf(' ') > 0;
       return {
-        newText: `${embed}[${newAlias}](${newTarget}${sectionDivider}${newSection})`,
+        newText: `${embed}[${newAlias ? newAlias : defaultAlias()}](${
+          useAngles ? '<' : ''
+        }${newTarget}${sectionDivider}${newSection}${useAngles ? '>' : ''})`,
         range: link.range,
       };
     }
-    throw new Error(
-      `Unexpected state: link of type ${link.type} is not supported`
-    );
+    throw new Error(`Unexpected state: link of type ${type} is not supported`);
   }
 }

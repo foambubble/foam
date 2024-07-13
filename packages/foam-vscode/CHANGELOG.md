@@ -4,6 +4,14 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.25.12] - 2024-07-13
+
+Fixes and Improvements:
+
+- Improved YAML support (#1367)
+- Added convesion of wikilinks to markdown links (#1365 - thanks @hereistheusername)
+- Refactored util and settings code
+
 ## [0.25.11] - 2024-03-18
 
 Fixes and Improvements:

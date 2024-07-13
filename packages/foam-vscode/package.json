@@ -8,7 +8,7 @@
     "type": "git"
   },
   "homepage": "https://github.com/foambubble/foam",
-  "version": "0.25.11",
+  "version": "0.25.12",
   "license": "MIT",
   "publisher": "foam",
   "engines": {

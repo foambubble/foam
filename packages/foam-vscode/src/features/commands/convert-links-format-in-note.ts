@@ -1,11 +1,11 @@
 import { commands, ExtensionContext, window, workspace, Uri } from 'vscode';
-import { isMdEditor } from '../../utils';
 import { Foam } from '../../core/model/foam';
 import { FoamWorkspace } from '../../core/model/workspace';
 import { fromVsCodeUri, toVsCodeRange } from '../../utils/vsc-utils';
 import { ResourceParser } from '../../core/model/note';
 import { IMatcher } from '../../core/services/datastore';
 import { convertLinkFormat } from '../../core/janitor';
+import { isMdEditor } from '../../services/editor';
 
 type LinkFormat = 'wikilink' | 'link';
 

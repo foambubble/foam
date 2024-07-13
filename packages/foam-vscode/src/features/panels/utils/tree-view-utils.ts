@@ -9,7 +9,7 @@ import { isSome } from '../../../core/utils';
 import { getBlockFor } from '../../../core/services/markdown-parser';
 import { Connection, FoamGraph } from '../../../core/model/graph';
 import { Logger } from '../../../core/utils/log';
-import { getNoteTooltip } from 'packages/foam-vscode/src/services/editor';
+import { getNoteTooltip } from '../../../services/editor';
 
 export class BaseTreeItem extends vscode.TreeItem {
   resolveTreeItem(): Promise<vscode.TreeItem> {

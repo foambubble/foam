@@ -21,7 +21,8 @@
   "activationEvents": [
     "workspaceContains:.vscode/foam.json"
   ],
-  "main": "./out/extension.js",
+  "main": "./out/bundles/extension-node.js",
+  "browser": "./out/bundles/extension-web.js",
   "capabilities": {
     "untrustedWorkspaces": {
       "supported": "limited",
@@ -657,21 +658,25 @@
     ]
   },
   "scripts": {
-    "build": "tsc -p ./",
-    "pretest": "yarn build",
+    "compile": "tsc -p ./",
+    "build": "yarn esbuild-node && yarn esbuild-web",
+    "pretest": "yarn compile",
     "test": "node ./out/test/run-tests.js",
-    "pretest:unit": "yarn build",
+    "pretest:unit": "yarn compile",
     "test:unit": "node ./out/test/run-tests.js --unit",
-    "pretest:e2e": "yarn build",
+    "pretest:e2e": "yarn compile",
     "test:e2e": "node ./out/test/run-tests.js --e2e",
     "lint": "dts lint src",
     "clean": "rimraf out",
     "watch": "tsc --build ./tsconfig.json --watch",
     "vscode:start-debugging": "yarn clean && yarn watch",
-    "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node",
-    "vscode:prepublish": "yarn run esbuild-base -- --minify",
+    "esbuild-node1": "esbuild ./src/extension.ts --bundle --platform=node --outfile=out/extension-node.js --external:vscode --format=esm",
+    "esbuild-node": "node esbuild.js --platform=node",
+    "esbuild-web": "node esbuild.js --platform=web",
+    "vscode:prepublish": "yarn clean && yarn build -- --minify",
     "package-extension": "npx vsce package --yarn",
     "install-extension": "code --install-extension ./foam-vscode-$npm_package_version.vsix",
+    "open-in-browser": "vscode-test-web --quality=stable --browser=chromium --extensionDevelopmentPath=. ",
     "publish-extension-openvsx": "npx ovsx publish foam-vscode-$npm_package_version.vsix -p $OPENVSX_TOKEN",
     "publish-extension-vscode": "npx vsce publish --packagePath foam-vscode-$npm_package_version.vsix",
     "publish-extension": "yarn publish-extension-vscode && yarn publish-extension-openvsx"

@@ -713,6 +713,7 @@
     "gray-matter": "^4.0.2",
     "lodash": "^4.17.21",
     "lru-cache": "^7.14.1",
+    "js-sha1": "^0.7.0",
     "markdown-it-regex": "^0.2.0",
     "remark-frontmatter": "^2.0.0",
     "remark-parse": "^8.0.2",

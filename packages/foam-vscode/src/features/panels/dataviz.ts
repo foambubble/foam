@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { TextDecoder } from 'util';
 import { Foam } from '../../core/model/foam';
 import { Logger } from '../../core/utils/log';
 import { fromVsCodeUri } from '../../utils/vsc-utils';

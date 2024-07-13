@@ -53,12 +53,7 @@ export default async function activate(
 }
 
 export class ConnectionsTreeDataProvider extends BaseTreeProvider<vscode.TreeItem> {
-  public show = new ContextMemento<'all links' | 'backlinks' | 'forward links'>(
-    this.state,
-    `foam-vscode.views.connections.show`,
-    'all links',
-    true
-  );
+  public show: ContextMemento<'all links' | 'backlinks' | 'forward links'>;
   public target?: URI = undefined;
   public nValues = 0;
   private connectionItems: ResourceRangeTreeItem[] = [];
@@ -73,6 +68,12 @@ export class ConnectionsTreeDataProvider extends BaseTreeProvider<vscode.TreeIte
     if (!registerCommands) {
       return;
     }
+    this.show = new ContextMemento<'all links' | 'backlinks' | 'forward links'>(
+      this.state,
+      `foam-vscode.views.connections.show`,
+      'all links',
+      true
+    );
     this.disposables.push(
       vscode.commands.registerCommand(
         `foam-vscode.views.connections.show:all-links`,

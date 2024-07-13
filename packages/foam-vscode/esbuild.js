@@ -1,4 +1,5 @@
-const { assert } = require('console');
+// also see https://code.visualstudio.com/api/working-with-extensions/bundling-extension
+const assert = require('assert');
 const esbuild = require('esbuild');
 
 // pass the platform to esbuild as an argument
@@ -14,6 +15,9 @@ function getPlatform() {
 
 const platform = getPlatform();
 assert(['web', 'node'].includes(platform), 'Platform must be "web" or "node".');
+
+const production = process.argv.includes('--production');
+const watch = process.argv.includes('--watch');
 
 const config = {
   web: {
@@ -47,21 +51,57 @@ const config = {
     platform: 'node',
     format: 'cjs',
     outfile: `out/bundles/extension-node.js`,
+    plugins: [],
   },
 };
 
-esbuild
-  .build({
+async function main() {
+  const ctx = await esbuild.context({
     ...config[platform],
     entryPoints: ['src/extension.ts'],
     bundle: true,
+    minify: production,
+    sourcemap: !production,
+    sourcesContent: false,
     external: ['vscode'],
-    // define: {
-    //   'process.env.NODE_ENV': '"production"',
-    // },
-  })
-  .catch(e => {
-    console.error('There was an issue while building', e);
-
-    process.exit(1);
+    logLevel: 'silent',
+    plugins: [
+      ...config[platform].plugins,
+      /* add to the end of plugins array */
+      esbuildProblemMatcherPlugin,
+    ],
   });
+  if (watch) {
+    await ctx.watch();
+  } else {
+    await ctx.rebuild();
+    await ctx.dispose();
+  }
+}
+
+/**
+ * @type {import('esbuild').Plugin}
+ */
+const esbuildProblemMatcherPlugin = {
+  name: 'esbuild-problem-matcher',
+
+  setup(build) {
+    build.onStart(() => {
+      console.log('[watch] build started');
+    });
+    build.onEnd(result => {
+      result.errors.forEach(({ text, location }) => {
+        console.error(`✘ [ERROR] ${text}`);
+        console.error(
+          `    ${location.file}:${location.line}:${location.column}:`
+        );
+      });
+      console.log('[watch] build finished');
+    });
+  },
+};
+
+main().catch(e => {
+  console.error(e);
+  process.exit(1);
+});

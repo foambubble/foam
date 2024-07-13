@@ -65,15 +65,15 @@ export class ConnectionsTreeDataProvider extends BaseTreeProvider<vscode.TreeIte
     registerCommands = true // for testing. don't love it, but will do for now
   ) {
     super();
-    if (!registerCommands) {
-      return;
-    }
     this.show = new ContextMemento<'all links' | 'backlinks' | 'forward links'>(
       this.state,
       `foam-vscode.views.connections.show`,
       'all links',
       true
     );
+    if (!registerCommands) {
+      return;
+    }
     this.disposables.push(
       vscode.commands.registerCommand(
         `foam-vscode.views.connections.show:all-links`,

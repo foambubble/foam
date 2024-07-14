@@ -660,13 +660,13 @@
   "scripts": {
     "build": "tsc -p ./",
     "pretest": "yarn build",
-    "test": "node ./out/test/run-tests.js",
+    "test": "node ./out/test/run-tests.js && yarn test:web",
     "pretest:unit": "yarn build",
     "test:unit": "node ./out/test/run-tests.js --unit",
     "pretest:e2e": "yarn build",
     "test:e2e": "node ./out/test/run-tests.js --e2e",
-    "pretest:web": "tsc -p tsconfig.webTest.json && npm run compile-web",
-    "test:web": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=. --extensionTestsPath=out/web/test/web/index.js",
+    "pretest:web": "yarn compile-web && tsc -p tsconfig.webTest.json",
+    "test:web": "node ./out/web/test/run-tests-for-web-extension.js",
     "lint": "dts lint src",
     "clean": "rimraf out",
     "watch": "tsc --build ./tsconfig.json --watch",
@@ -681,7 +681,7 @@
     "compile-web": "webpack --config web/webpack.config.js",
     "watch-web": "webpack --config web/webpack.config.js --watch",
     "package-web": "webpack --config web/webpack.config.js --mode production --devtool hidden-source-map",
-    "open-in-browser": "vscode-test-web --quality=stable --browser=chromium --extensionDevelopmentPath=. "
+    "open-in-browser": "vscode-test-web --quality=stable --browser=chromium --extensionDevelopmentPath=."
   },
   "devDependencies": {
     "@types/dateformat": "^3.0.1",
@@ -717,8 +717,8 @@
     "process": "^0.11.10",
     "rimraf": "^3.0.2",
     "stream-browserify": "^3.0.0",
-    "ts-loader": "9.4.4",
     "ts-jest": "^29.1.1",
+    "ts-loader": "9.4.4",
     "tslib": "^2.0.0",
     "tty-browserify": "^0.0.1",
     "typescript": "^4.9.5",
@@ -729,6 +729,7 @@
     "webpack-cli": "5.1.4"
   },
   "dependencies": {
+    "buffer": "^6.0.3",
     "dateformat": "4.5.1",
     "detect-newline": "^3.1.0",
     "github-slugger": "^1.4.0",

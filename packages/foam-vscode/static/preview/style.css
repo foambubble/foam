@@ -17,6 +17,11 @@
   color: var(--vscode-editorError-foreground);
 }
 
+.foam-no-embeds-warning {
+  background-color: var(--vscode-editorError-background);
+  color: var(--vscode-editorError-foreground);
+}
+
 .embed-container-note {
   padding: 0.5em;
   margin: 1.5em 0;

@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "module": "CommonJS",
     "target": "ES2019",
     "outDir": "./out/web",
     "lib": ["ES2019"],
@@ -8,5 +9,5 @@
     "strict": true /* enable all strict type-checking options */,
     "skipLibCheck": true
   },
-  "include": ["./src/test/web/index.ts"]
+  "include": ["./src/test/run-tests-for-web-extension.ts"]
 }

@@ -42,12 +42,18 @@ export const markdownItWikilinkNavigation = (
           return getPlaceholderLink(label);
         }
 
-        const link = `${vscode.workspace.asRelativePath(
+        const resourceLabel = isEmpty(alias)
+          ? `${resource.title}${formattedSection}`
+          : alias;
+        const resourceLink = `/${vscode.workspace.asRelativePath(
           toVsCodeUri(resource.uri),
           false
-        )}${formattedSection}`;
-        const title = `${resource.title}${formattedSection}`;
-        return `<a class='foam-note-link' title='${title}' href='/${link}' data-href='/${link}'>${label}</a>`;
+        )}`;
+        return getResourceLink(
+          `${resource.title}${formattedSection}`,
+          `${resourceLink}${linkSection}`,
+          resourceLabel
+        );
       } catch (e) {
         Logger.error(
           `Error while creating link for [[${wikilink}]] in Preview panel`,

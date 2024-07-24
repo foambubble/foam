@@ -43,6 +43,20 @@ export interface Section {
   range: Range;
 }
 
+/**
+ *
+ * @jakefrommars64
+ * If a note has the following frontmatter:
+ * ```markdown
+ * ---
+ * type: project
+ * ---
+ * ```
+ * then the following is true:
+ * - `Resource.type == 'note'`
+ * - `Resource.properties.type == 'project'`
+ *
+ */
 export interface Resource {
   uri: URI;
   type: string;

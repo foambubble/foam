@@ -287,6 +287,13 @@
           "command": "foam-vscode.completion-move-cursor",
           "when": "false"
         }
+      ],
+      "explorer/context": [
+        {
+          "command": "foam-vscode.create-note-from-template",
+          "when": "config.foam.files.showNewNoteInExplorer",
+          "group": "navigation"
+        }
       ]
     },
     "commands": [
@@ -642,6 +649,11 @@
           "type": "object",
           "description": "Custom graph styling settings. An example is present in the documentation.",
           "default": {}
+        },
+        "foam.files.showNewNoteInExplorer": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show the option to create a new note in the Explorer context menu."
         }
       }
     },

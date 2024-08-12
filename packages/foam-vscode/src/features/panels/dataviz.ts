@@ -176,6 +176,10 @@ async function getWebviewContent(
   const getWebviewUri = (fileName: string) =>
     panel.webview.asWebviewUri(vscode.Uri.joinPath(datavizPath, fileName));
 
+  if (context.extension.extensionUri.scheme.indexOf('http') >= 0) {
+    return loadForWebExtension(datavizPath, context.extension);
+  }
+
   const indexHtml = await vscode.workspace.fs.readFile(
     vscode.Uri.joinPath(datavizPath, 'index.html')
   );
@@ -195,4 +199,31 @@ async function getWebviewContent(
 
 function getGraphStyle(): object {
   return vscode.workspace.getConfiguration('foam.graph').get('style');
+}
+
+async function loadForWebExtension(
+  datavizPath: vscode.Uri,
+  extension: vscode.Extension<any>
+) {
+  const response = await fetch(`${extension.extensionUri.scheme}://${
+    extension.extensionUri.authority
+  }${vscode.Uri.joinPath(datavizPath, 'index.html').path}
+  `);
+
+  const datavizReport = await response.text();
+
+  const filled = datavizReport.replace(
+    /data-replace (src|href)="[^"]+"/g,
+    match => {
+      const i = match.indexOf(' ');
+      const j = match.indexOf('=');
+      const uri = `${extension.extensionUri.scheme}://${
+        extension.extensionUri.authority
+      }${vscode.Uri.joinPath(datavizPath, match.slice(j + 2, -1).trim()).path}
+  `;
+      return match.slice(i + 1, j) + '="' + uri.toString() + '"';
+    }
+  );
+
+  return filled;
 }

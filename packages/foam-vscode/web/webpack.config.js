@@ -9,6 +9,7 @@ const webExtensionConfig = {
   entry: {
     extension: './src/extension.ts', // source of the web extension main file,
     'test/web/index': './src/test/web/index.ts',
+    dataviz: './static/dataviz/index.html',
   },
   output: {
     clean: true,
@@ -53,6 +54,11 @@ const webExtensionConfig = {
             loader: 'ts-loader',
           },
         ],
+      },
+      {
+        test: /\.html$/,
+        exclude: [/node_modules/],
+        type: 'asset/source',
       },
     ],
   },

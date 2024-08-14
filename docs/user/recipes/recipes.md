@@ -1,19 +1,21 @@
 <!-- omit in toc -->
+
 # Recipes
 
 A #recipe is a guide, tip or strategy for getting the most out of your Foam workspace!
 
-- [Contribute](#contribute)
-- [Take smart notes](#take-smart-notes)
-- [Discover](#discover)
-- [Organise](#organise)
-- [Write](#write)
-- [Version control](#version-control)
-- [Publish](#publish)
-- [Collaborate](#collaborate)
-- [Workflow](#workflow)
-- [Creative ideas](#creative-ideas)
-- [Other](#other)
+- [Recipes](#recipes)
+  - [Contribute](#contribute)
+  - [Take smart notes](#take-smart-notes)
+  - [Discover](#discover)
+  - [Organise](#organise)
+  - [Write](#write)
+  - [Version control](#version-control)
+  - [Publish](#publish)
+  - [Collaborate](#collaborate)
+  - [Workflow](#workflow)
+  - [Creative ideas](#creative-ideas)
+  - [Other](#other)
 
 ## Contribute
 
@@ -75,11 +77,11 @@ A #recipe is a guide, tip or strategy for getting the most out of your Foam work
 - Publish using community templates
   - [[publish-to-netlify-with-eleventy]] by [@juanfrank77](https://github.com/juanfrank77)
   - [[generate-gatsby-site]] by [@mathieudutour](https://github.com/mathieudutour) and [@hikerpig](https://github.com/hikerpig)
-  
 - Make the site your own by [[publish-to-github]].
 - Render math symbols, by either
   - adding client-side [[math-support-with-mathjax]] to the default [[publish-to-github-pages]] site
   - adding a custom Jekyll plugin to support [[math-support-with-katex]]
+- Export note to PDF [[export-to-pdf]]
 
 ## Collaborate
 
@@ -140,6 +142,7 @@ _See [[contribution-guide]] and [[how-to-write-recipes]]._
 [publish-to-github]: ../publishing/publish-to-github.md "Publish to GitHub"
 [math-support-with-mathjax]: ../publishing/math-support-with-mathjax.md "Math Support"
 [math-support-with-katex]: ../publishing/math-support-with-katex.md "Katex Math Rendering"
+[export-to-pdf]: export-to-pdf.md "Export to PDF"
 [real-time-collaboration]: real-time-collaboration.md "Real-time Collaboration"
 [capture-notes-with-drafts-pro]: capture-notes-with-drafts-pro.md "Capture Notes With Drafts Pro"
 [capture-notes-with-shortcuts-and-github-actions]: capture-notes-with-shortcuts-and-github-actions.md "Capture Notes With Shortcuts and GitHub Actions"

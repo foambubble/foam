@@ -260,6 +260,9 @@ If that sounds like something you're interested in, I'd love to have you along o
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/Walshkev"><img src="https://avatars.githubusercontent.com/u/77123083?v=4?s=60" width="60px;" alt="Kevin Walsh "/><br /><sub><b>Kevin Walsh </b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=Walshkev" title="Documentation">📖</a></td>
       <td align="center" valign="top" width="14.28%"><a href="http://hereistheusername.github.io/"><img src="https://avatars.githubusercontent.com/u/33437051?v=4?s=60" width="60px;" alt="Xinglan Liu"/><br /><sub><b>Xinglan Liu</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=hereistheusername" title="Code">💻</a></td>
     </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="http://www.hegghammer.com"><img src="https://avatars.githubusercontent.com/u/64712218?v=4?s=60" width="60px;" alt="Thomas Hegghammer"/><br /><sub><b>Thomas Hegghammer</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=Hegghammer" title="Documentation">📖</a></td>
+    </tr>
   </tbody>
 </table>
 

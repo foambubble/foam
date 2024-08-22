@@ -46,7 +46,8 @@ export const markdownItWikilinkNavigation = (
           ? `${resource.title}${formattedSection}`
           : alias;
         const resourceLink = `/${vscode.workspace.asRelativePath(
-          toVsCodeUri(resource.uri)
+          toVsCodeUri(resource.uri),
+          false
         )}`;
         return getResourceLink(
           `${resource.title}${formattedSection}`,

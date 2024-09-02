@@ -23,6 +23,11 @@ export class FoamWorkspace implements IDisposable {
   private _resources: Map<string, Resource> = new Map();
 
   /**
+   * Hierarchal identifier Map
+   */
+  private _identifiers: Map<string, string[]> = new Map();
+
+  /**
    * @param defaultExtension: The default extension for notes in this workspace (e.g. `.md`)
    */
   constructor(public defaultExtension: string = '.md') {}
@@ -33,7 +38,27 @@ export class FoamWorkspace implements IDisposable {
 
   set(resource: Resource) {
     const old = this.find(resource.uri);
-    this._resources.set(normalize(resource.uri.path), resource);
+    const normalizedPath = normalize(resource.uri.path);
+
+    // store resource
+    this._resources.set(normalizedPath, resource);
+
+    // store identifier locations
+    const identifier = normalizedPath.split('/').pop();
+    const needle = normalize('/' + identifier);
+    const mdNeedle =
+      getExtension(needle) !== this.defaultExtension
+        ? needle + this.defaultExtension
+        : undefined;
+
+    if (this._identifiers.has(needle)) {
+      this._identifiers.get(needle).push(normalizedPath);
+      mdNeedle ?? this._identifiers.get(mdNeedle).push(normalizedPath);
+    } else {
+      this._identifiers.set(needle, new Array(normalizedPath));
+      this._identifiers.set(mdNeedle, new Array(mdNeedle ?? normalizedPath));
+    }
+
     isSome(old)
       ? this.onDidUpdateEmitter.fire({ old: old, new: resource })
       : this.onDidAddEmitter.fire(resource);
@@ -43,6 +68,20 @@ export class FoamWorkspace implements IDisposable {
   delete(uri: URI) {
     const deleted = this._resources.get(normalize(uri.path));
     this._resources.delete(normalize(uri.path));
+
+    const identifier = '/' + this.getIdentifier(uri);
+    if (this._identifiers.has(identifier)) {
+      if (this._identifiers.get(identifier).length === 1) {
+        this._identifiers.delete(identifier);
+      } else {
+        this._identifiers.set(
+          identifier,
+          this._identifiers
+            .get(identifier)
+            .filter(x => x !== normalize(uri.path))
+        );
+      }
+    }
 
     isSome(deleted) && this.onDidDeleteEmitter.fire(deleted);
     return deleted ?? null;
@@ -70,17 +109,39 @@ export class FoamWorkspace implements IDisposable {
   }
 
   public listByIdentifier(identifier: string): Resource[] {
-    const needle = normalize('/' + identifier);
+    const needle = normalize('/' + identifier.split('/').pop());
     const mdNeedle =
       getExtension(needle) !== this.defaultExtension
         ? needle + this.defaultExtension
         : undefined;
     const resources: Resource[] = [];
-    for (const key of this._resources.keys()) {
-      if (key.endsWith(mdNeedle) || key.endsWith(needle)) {
-        resources.push(this._resources.get(normalize(key)));
+
+    // Get all resources matching the needle(s)
+    if (this._identifiers.has(needle)) {
+      for (const resource of this._identifiers.get(needle)) {
+        if (resource.endsWith(normalize('/' + identifier))) {
+          resources.push(this._resources.get(resource));
+        }
       }
     }
+
+    if (needle === '/page b.md') {
+      console.log(needle);
+      console.log(this._identifiers.get(needle));
+    }
+
+    if (mdNeedle && this._identifiers.has(mdNeedle)) {
+      const mdIdentifier =
+        getExtension(needle) !== this.defaultExtension
+          ? identifier + this.defaultExtension
+          : undefined;
+      for (const resource of this._identifiers.get(mdNeedle)) {
+        if (resource.endsWith(normalize('/' + mdIdentifier))) {
+          resources.push(this._resources.get(resource));
+        }
+      }
+    }
+
     return resources.sort(Resource.sortByPath);
   }
 

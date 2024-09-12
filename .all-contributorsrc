@@ -1103,6 +1103,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "PiotrAleksander",
+      "name": "Piotr Mrzygłosz",
+      "avatar_url": "https://avatars.githubusercontent.com/u/6314591?v=4",
+      "profile": "https://github.com/PiotrAleksander",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,

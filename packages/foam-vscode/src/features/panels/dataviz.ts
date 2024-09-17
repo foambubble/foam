@@ -175,7 +175,7 @@ async function getWebviewContent(
     panel.webview.asWebviewUri(vscode.Uri.joinPath(datavizUri, fileName));
 
   const indexHtml =
-    vscode.env.uiKind == vscode.UIKind.Desktop
+    vscode.env.uiKind === vscode.UIKind.Desktop
       ? new TextDecoder('utf-8').decode(
           await vscode.workspace.fs.readFile(
             vscode.Uri.joinPath(datavizUri, 'index.html')

@@ -52,7 +52,7 @@ describe('generateStdMdLink', () => {
       '[first-document](first-document.md)',
     ];
     expect(actual.length).toEqual(expected.length);
-    const _ = actual.map((LinkReplace, index) => {
+    actual.forEach((LinkReplace, index) => {
       expect(LinkReplace.newText).toEqual(expected[index]);
     });
   });
@@ -64,7 +64,7 @@ describe('generateStdMdLink', () => {
       .map(link => convertLinkFormat(link, 'wikilink', _workspace, note));
     const expected: string[] = ['[[first-document|file]]'];
     expect(actual.length).toEqual(expected.length);
-    const _ = actual.map((LinkReplace, index) => {
+    actual.forEach((LinkReplace, index) => {
       expect(LinkReplace.newText).toEqual(expected[index]);
     });
   });

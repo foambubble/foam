@@ -30,7 +30,6 @@ export default async function activate(
     treeDataProvider: provider,
     showCollapseAll: true,
   });
-  const baseTitle = treeView.title;
 
   const updateTreeView = async () => {
     provider.target = vscode.window.activeTextEditor

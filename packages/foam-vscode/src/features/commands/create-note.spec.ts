@@ -14,7 +14,6 @@ import { CREATE_NOTE_COMMAND, createNote } from './create-note';
 import { Location } from '../../core/model/location';
 import { Range } from '../../core/model/range';
 import { ResourceLink } from '../../core/model/note';
-import { MarkdownResourceProvider } from '../../core/services/markdown-provider';
 import { createMarkdownParser } from '../../core/services/markdown-parser';
 
 describe('create-note command', () => {

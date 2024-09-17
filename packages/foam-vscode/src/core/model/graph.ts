@@ -3,7 +3,7 @@ import { ResourceLink } from './note';
 import { URI } from './uri';
 import { FoamWorkspace } from './workspace';
 import { IDisposable } from '../common/lifecycle';
-import { Logger, withTiming } from '../utils/log';
+import { Logger } from '../utils/log';
 import { Emitter } from '../common/event';
 
 export type Connection = {

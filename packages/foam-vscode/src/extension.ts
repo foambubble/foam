@@ -17,7 +17,6 @@ import { VsCodeWatcher } from './services/watcher';
 import { createMarkdownParser } from './core/services/markdown-parser';
 import VsCodeBasedParserCache from './services/cache';
 import { createMatcherAndDataStore } from './services/editor';
-import { getFoamVsCodeConfig } from './services/config';
 
 export async function activate(context: ExtensionContext) {
   const logger = new VsCodeOutputLogger();

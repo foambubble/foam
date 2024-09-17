@@ -34,7 +34,7 @@ export const markdownItWikilinkEmbed = (
     regex: WIKILINK_EMBED_REGEX,
     replace: (wikilinkItem: string) => {
       try {
-        const [_, noteEmbedModifier, wikilink] = wikilinkItem.match(
+        const [, noteEmbedModifier, wikilink] = wikilinkItem.match(
           WIKILINK_EMBED_REGEX_GROUPS
         );
 

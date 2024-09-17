@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { TextDecoder } from 'util';
 import { Foam } from '../../core/model/foam';
 import { Logger } from '../../core/utils/log';
 import { fromVsCodeUri } from '../../utils/vsc-utils';
@@ -167,28 +166,33 @@ async function getWebviewContent(
   context: vscode.ExtensionContext,
   panel: vscode.WebviewPanel
 ) {
-  const datavizPath = vscode.Uri.joinPath(
-    vscode.Uri.file(context.extensionPath),
+  const datavizUri = vscode.Uri.joinPath(
+    context.extensionUri,
     'static',
     'dataviz'
   );
-
   const getWebviewUri = (fileName: string) =>
-    panel.webview.asWebviewUri(vscode.Uri.joinPath(datavizPath, fileName));
+    panel.webview.asWebviewUri(vscode.Uri.joinPath(datavizUri, fileName));
 
-  const indexHtml = await vscode.workspace.fs.readFile(
-    vscode.Uri.joinPath(datavizPath, 'index.html')
-  );
+  const indexHtml =
+    vscode.env.uiKind === vscode.UIKind.Desktop
+      ? new TextDecoder('utf-8').decode(
+          await vscode.workspace.fs.readFile(
+            vscode.Uri.joinPath(datavizUri, 'index.html')
+          )
+        )
+      : await fetch(getWebviewUri('index.html').toString()).then(r => r.text());
 
   // Replace the script paths with the appropriate webview URI.
-  const filled = new TextDecoder('utf-8')
-    .decode(indexHtml)
-    .replace(/data-replace (src|href)="[^"]+"/g, match => {
+  const filled = indexHtml.replace(
+    /data-replace (src|href)="[^"]+"/g,
+    match => {
       const i = match.indexOf(' ');
       const j = match.indexOf('=');
       const uri = getWebviewUri(match.slice(j + 2, -1).trim());
       return match.slice(i + 1, j) + '="' + uri.toString() + '"';
-    });
+    }
+  );
 
   return filled;
 }

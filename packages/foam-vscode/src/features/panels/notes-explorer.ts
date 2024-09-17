@@ -91,11 +91,7 @@ export class NotesProvider extends FolderTreeProvider<
   NotesTreeItems,
   Resource
 > {
-  public show = new ContextMemento<'all' | 'notes-only'>(
-    this.state,
-    `foam-vscode.views.notes-explorer.show`,
-    'all'
-  );
+  public show: ContextMemento<'all' | 'notes-only'>;
 
   constructor(
     private workspace: FoamWorkspace,
@@ -103,6 +99,12 @@ export class NotesProvider extends FolderTreeProvider<
     private state: vscode.Memento
   ) {
     super();
+    this.show = new ContextMemento<'all' | 'notes-only'>(
+      this.state,
+      `foam-vscode.views.notes-explorer.show`,
+      'all'
+    );
+
     this.disposables.push(
       vscode.commands.registerCommand(
         `foam-vscode.views.notes-explorer.show:all`,

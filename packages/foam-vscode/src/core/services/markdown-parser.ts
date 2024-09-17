@@ -459,9 +459,9 @@ export const getBlockFor = (
     }
   });
 
-  let nLines = startLine == -1 ? 1 : endLine - startLine;
+  let nLines = startLine === -1 ? 1 : endLine - startLine;
   let block =
-    startLine == -1
+    startLine === -1
       ? lines[searchLine] ?? ''
       : lines.slice(startLine, endLine).join('\n');
 

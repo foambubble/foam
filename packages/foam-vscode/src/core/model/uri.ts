@@ -195,7 +195,6 @@ function encode(uri: URI, skipEncoding: boolean): string {
     : encodeURIComponentMinimal;
 
   let res = '';
-  // eslint-disable-next-line prefer-const
   let { scheme, authority, path, query, fragment } = uri;
   if (scheme) {
     res += scheme;

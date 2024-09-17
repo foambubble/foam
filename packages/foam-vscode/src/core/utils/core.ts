@@ -1,4 +1,4 @@
-import crypto from 'crypto';
+import sha1 from 'js-sha1';
 
 export function isNotNull<T>(value: T | null): value is T {
   return value != null;
@@ -20,5 +20,4 @@ export function isNumeric(value: string): boolean {
   return /-?\d+$/.test(value);
 }
 
-export const hash = (text: string) =>
-  crypto.createHash('sha1').update(text).digest('hex');
+export const hash = (text: string) => sha1.sha1(text);

@@ -1,4 +1,3 @@
-import { TextEncoder } from 'util';
 import { isEmpty } from 'lodash';
 import {
   EndOfLine,

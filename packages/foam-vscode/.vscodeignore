@@ -6,6 +6,7 @@ out/**/*.spec.*
 test-data/**
 src/**
 jest.config.js
+esbuild.js
 .test-workspace
 .gitignore
 vsc-extension-quickstart.md

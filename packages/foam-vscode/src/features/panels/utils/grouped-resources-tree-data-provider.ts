@@ -35,11 +35,7 @@ export abstract class GroupedResourcesTreeDataProvider extends FolderTreeProvide
   GroupedResourceTreeItem,
   URI
 > {
-  public groupBy = new ContextMemento<'off' | 'folder'>(
-    this.state,
-    `foam-vscode.views.${this.providerId}.group-by`,
-    'folder'
-  );
+  public groupBy: ContextMemento<'off' | 'folder'>;
 
   /**
    * Creates an instance of GroupedResourcesTreeDataProvider.
@@ -61,6 +57,12 @@ export abstract class GroupedResourcesTreeDataProvider extends FolderTreeProvide
     private matcher: IMatcher
   ) {
     super();
+    this.groupBy = new ContextMemento<'off' | 'folder'>(
+      this.state,
+      `foam-vscode.views.${this.providerId}.group-by`,
+      'folder'
+    );
+
     this.disposables.push(
       vscode.commands.registerCommand(
         `foam-vscode.views.${this.providerId}.group-by:folder`,

@@ -129,7 +129,7 @@ export async function createNote(args: CreateNoteArgs, foam: Foam) {
     const edit = MarkdownLink.createUpdateLinkEdit(args.sourceLink.data, {
       target: identifier,
     });
-    if (edit.newText != args.sourceLink.data.rawText) {
+    if (edit.newText !== args.sourceLink.data.rawText) {
       const updateLink = new vscode.WorkspaceEdit();
       const uri = toVsCodeUri(args.sourceLink.uri);
       updateLink.replace(

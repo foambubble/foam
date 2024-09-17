@@ -13,9 +13,6 @@ import { FoamGraph } from '../core/model/graph';
 import { commandAsURI } from '../utils/commands';
 import { CREATE_NOTE_COMMAND } from './commands/create-note';
 import { Location } from '../core/model/location';
-import { URI } from '../core/model/uri';
-import { Range } from '../core/model/range';
-import { ResourceLink } from '../core/model/note';
 
 describe('Document navigation', () => {
   const parser = createMarkdownParser([]);

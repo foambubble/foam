@@ -1,6 +1,5 @@
 import { Range } from './range';
 import { URI } from './uri';
-import { ResourceLink } from './note';
 
 /**
  * Represents a location inside a resource, such as a line

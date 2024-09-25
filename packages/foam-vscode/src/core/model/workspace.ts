@@ -6,6 +6,7 @@ import { Emitter } from '../common/event';
 import { ResourceProvider } from './provider';
 import { IDisposable } from '../common/lifecycle';
 import { IDataStore } from '../services/datastore';
+import { TrieMap } from 'mnemonist';
 
 export class FoamWorkspace implements IDisposable {
   private onDidAddEmitter = new Emitter<Resource>();
@@ -20,12 +21,7 @@ export class FoamWorkspace implements IDisposable {
   /**
    * Resources by path
    */
-  private _resources: Map<string, Resource> = new Map();
-
-  /**
-   * Hierarchal identifier Map
-   */
-  private _identifiers: Map<string, string[]> = new Map();
+  private _resources: TrieMap<string, Resource> = new TrieMap();
 
   /**
    * @param defaultExtension: The default extension for notes in this workspace (e.g. `.md`)
@@ -41,23 +37,7 @@ export class FoamWorkspace implements IDisposable {
     const normalizedPath = normalize(resource.uri.path);
 
     // store resource
-    this._resources.set(normalizedPath, resource);
-
-    // store identifier locations
-    const identifier = normalizedPath.split('/').pop();
-    const needle = normalize('/' + identifier);
-    const mdNeedle =
-      getExtension(needle) !== this.defaultExtension
-        ? needle + this.defaultExtension
-        : undefined;
-
-    if (this._identifiers.has(needle)) {
-      this._identifiers.get(needle).push(normalizedPath);
-      mdNeedle ?? this._identifiers.get(mdNeedle).push(normalizedPath);
-    } else {
-      this._identifiers.set(needle, new Array(normalizedPath));
-      this._identifiers.set(mdNeedle, new Array(mdNeedle ?? normalizedPath));
-    }
+    this._resources.set(this.getReversedIdentifier(normalizedPath), resource);
 
     isSome(old)
       ? this.onDidUpdateEmitter.fire({ old: old, new: resource })
@@ -66,22 +46,8 @@ export class FoamWorkspace implements IDisposable {
   }
 
   delete(uri: URI) {
-    const deleted = this._resources.get(normalize(uri.path));
-    this._resources.delete(normalize(uri.path));
-
-    const identifier = '/' + this.getIdentifier(uri);
-    if (this._identifiers.has(identifier)) {
-      if (this._identifiers.get(identifier).length === 1) {
-        this._identifiers.delete(identifier);
-      } else {
-        this._identifiers.set(
-          identifier,
-          this._identifiers
-            .get(identifier)
-            .filter(x => x !== normalize(uri.path))
-        );
-      }
-    }
+    const deleted = this._resources.get(this.getReversedIdentifier(uri));
+    this._resources.delete(this.getReversedIdentifier(uri));
 
     isSome(deleted) && this.onDidDeleteEmitter.fire(deleted);
     return deleted ?? null;
@@ -96,6 +62,10 @@ export class FoamWorkspace implements IDisposable {
   }
 
   public resources(): IterableIterator<Resource> {
+    const resources: Array<Resource> = Array.from(
+      Array.from(this._resources.values())
+    ).sort(Resource.sortByPath);
+
     return this._resources.values();
   }
 
@@ -109,37 +79,22 @@ export class FoamWorkspace implements IDisposable {
   }
 
   public listByIdentifier(identifier: string): Resource[] {
-    const needle = normalize('/' + identifier.split('/').pop());
+    let needle = this.getReversedIdentifier(identifier);
+
     const mdNeedle =
-      getExtension(needle) !== this.defaultExtension
-        ? needle + this.defaultExtension
+      getExtension(normalize(identifier)) !== this.defaultExtension
+        ? this.getReversedIdentifier(identifier + this.defaultExtension)
         : undefined;
+
     const resources: Resource[] = [];
 
-    // Get all resources matching the needle(s)
-    if (this._identifiers.has(needle)) {
-      for (const resource of this._identifiers.get(needle)) {
-        if (resource.endsWith(normalize('/' + identifier))) {
-          resources.push(this._resources.get(resource));
-        }
+    this._resources.find(needle).forEach(elm => {
+      if (elm[0].indexOf(getExtension(normalize(identifier))) > 0) {
+        resources.push(elm[1]);
       }
-    }
-
-    if (needle === '/page b.md') {
-      console.log(needle);
-      console.log(this._identifiers.get(needle));
-    }
-
-    if (mdNeedle && this._identifiers.has(mdNeedle)) {
-      const mdIdentifier =
-        getExtension(needle) !== this.defaultExtension
-          ? identifier + this.defaultExtension
-          : undefined;
-      for (const resource of this._identifiers.get(mdNeedle)) {
-        if (resource.endsWith(normalize('/' + mdIdentifier))) {
-          resources.push(this._resources.get(resource));
-        }
-      }
+    });
+    if (mdNeedle) {
+      this._resources.find(mdNeedle).forEach(elm => resources.push(elm[1]));
     }
 
     return resources.sort(Resource.sortByPath);
@@ -180,9 +135,32 @@ export class FoamWorkspace implements IDisposable {
     return identifier;
   }
 
+  /**
+   * Returns a note identifier in reversed order. Used to optimise the storage of notes in
+   * the workspace to optimise retrieval of notes.
+   *
+   * @param reference the URI path to reverse
+   */
+  private getReversedIdentifier(reference: URI | string): string {
+    let path: string;
+    if (reference instanceof URI) {
+      path = (reference as URI).path;
+    } else {
+      path = reference as string;
+    }
+
+    let reversedPath = normalize(path).split('/').reverse().join('/');
+
+    if (reversedPath.indexOf('/') < 0) {
+      reversedPath = reversedPath + '/';
+    }
+
+    return reversedPath;
+  }
+
   public find(reference: URI | string, baseUri?: URI): Resource | null {
     if (reference instanceof URI) {
-      return this._resources.get(normalize((reference as URI).path)) ?? null;
+      return this._resources.get(this.getReversedIdentifier(reference)) ?? null;
     }
     let resource: Resource | null = null;
     const [path, fragment] = (reference as string).split('#');
@@ -196,7 +174,9 @@ export class FoamWorkspace implements IDisposable {
           : isSome(baseUri)
           ? baseUri.resolve(candidate).path
           : null;
-        resource = this._resources.get(normalize(searchKey));
+        resource = this._resources.get(
+          normalize(searchKey).split('/').reverse().join('/')
+        );
         if (resource) {
           break;
         }

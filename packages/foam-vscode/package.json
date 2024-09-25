@@ -721,6 +721,7 @@
     "lru-cache": "^7.14.1",
     "markdown-it-regex": "^0.2.0",
     "path-browserify": "^1.0.1",
+    "mnemonist": "^0.39.8",
     "remark-frontmatter": "^2.0.0",
     "remark-parse": "^8.0.2",
     "remark-wiki-link": "^0.0.4",

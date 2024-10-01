@@ -8,7 +8,7 @@
     "type": "git"
   },
   "homepage": "https://github.com/foambubble/foam",
-  "version": "0.25.12",
+  "version": "0.26.0",
   "license": "MIT",
   "publisher": "foam",
   "engines": {
@@ -714,9 +714,9 @@
     "detect-newline": "^3.1.0",
     "github-slugger": "^1.4.0",
     "gray-matter": "^4.0.2",
+    "js-sha1": "^0.7.0",
     "lodash": "^4.17.21",
     "lru-cache": "^7.14.1",
-    "js-sha1": "^0.7.0",
     "markdown-it-regex": "^0.2.0",
     "path-browserify": "^1.0.1",
     "remark-frontmatter": "^2.0.0",

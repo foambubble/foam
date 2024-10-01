@@ -4,6 +4,12 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.26.0] - 2024-10-01
+
+Features:
+
+- Foam is now a web extension! (#1395 - many thanks @pderaaij)
+
 ## [0.25.12] - 2024-07-13
 
 Fixes and Improvements:

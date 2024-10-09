@@ -1,6 +1,7 @@
 // also see https://code.visualstudio.com/api/working-with-extensions/bundling-extension
 const assert = require('assert');
 const esbuild = require('esbuild');
+const polyfillPlugin = require('esbuild-plugin-polyfill-node');
 
 // pass the platform to esbuild as an argument
 
@@ -25,6 +26,9 @@ const config = {
     format: 'cjs',
     outfile: `out/bundles/extension-web.js`,
     plugins: [
+      polyfillPlugin.polyfillNode({
+        // Options (optional)
+      }),
       {
         name: 'path-browserify',
         setup(build) {

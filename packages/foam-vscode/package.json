@@ -691,6 +691,7 @@
     "@types/vscode": "^1.70.0",
     "@typescript-eslint/eslint-plugin": "^5.51.0",
     "@typescript-eslint/parser": "^5.51.0",
+    "@vscode/test-web": "^0.0.62",
     "dts-cli": "^1.6.3",
     "esbuild": "^0.17.7",
     "eslint": "^8.33.0",

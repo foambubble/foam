@@ -4,6 +4,12 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.26.1] - 2024-10-09
+
+Fixes and Improvements:
+
+- Fixed issue with Buffer in web extension (#1401 - thanks @pderaaij)
+
 ## [0.26.0] - 2024-10-01
 
 Features:

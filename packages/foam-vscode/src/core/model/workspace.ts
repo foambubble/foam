@@ -63,10 +63,10 @@ export class FoamWorkspace implements IDisposable {
 
   public resources(): IterableIterator<Resource> {
     const resources: Array<Resource> = Array.from(
-      Array.from(this._resources.values())
+      this._resources.values()
     ).sort(Resource.sortByPath);
 
-    return this._resources.values();
+    return resources.values();
   }
 
   public get(uri: URI): Resource {

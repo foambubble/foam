@@ -6,7 +6,7 @@ import { Emitter } from '../common/event';
 import { ResourceProvider } from './provider';
 import { IDisposable } from '../common/lifecycle';
 import { IDataStore } from '../services/datastore';
-import { TrieMap } from 'mnemonist';
+import TrieMap from 'mnemonist/trie-map';
 
 export class FoamWorkspace implements IDisposable {
   private onDidAddEmitter = new Emitter<Resource>();
@@ -34,10 +34,9 @@ export class FoamWorkspace implements IDisposable {
 
   set(resource: Resource) {
     const old = this.find(resource.uri);
-    const normalizedPath = normalize(resource.uri.path);
 
     // store resource
-    this._resources.set(this.getReversedIdentifier(normalizedPath), resource);
+    this._resources.set(this.getTrieIdentifier(resource.uri.path), resource);
 
     isSome(old)
       ? this.onDidUpdateEmitter.fire({ old: old, new: resource })
@@ -46,8 +45,8 @@ export class FoamWorkspace implements IDisposable {
   }
 
   delete(uri: URI) {
-    const deleted = this._resources.get(this.getReversedIdentifier(uri));
-    this._resources.delete(this.getReversedIdentifier(uri));
+    const deleted = this._resources.get(this.getTrieIdentifier(uri));
+    this._resources.delete(this.getTrieIdentifier(uri));
 
     isSome(deleted) && this.onDidDeleteEmitter.fire(deleted);
     return deleted ?? null;
@@ -79,19 +78,17 @@ export class FoamWorkspace implements IDisposable {
   }
 
   public listByIdentifier(identifier: string): Resource[] {
-    let needle = this.getReversedIdentifier(identifier);
+    let needle = this.getTrieIdentifier(identifier);
 
     const mdNeedle =
       getExtension(normalize(identifier)) !== this.defaultExtension
-        ? this.getReversedIdentifier(identifier + this.defaultExtension)
+        ? this.getTrieIdentifier(identifier + this.defaultExtension)
         : undefined;
 
     const resources: Resource[] = [];
 
     this._resources.find(needle).forEach(elm => {
-      if (elm[0].indexOf(getExtension(normalize(identifier))) > 0) {
-        resources.push(elm[1]);
-      }
+      resources.push(elm[1]);
     });
     if (mdNeedle) {
       this._resources.find(mdNeedle).forEach(elm => resources.push(elm[1]));
@@ -141,7 +138,7 @@ export class FoamWorkspace implements IDisposable {
    *
    * @param reference the URI path to reverse
    */
-  private getReversedIdentifier(reference: URI | string): string {
+  private getTrieIdentifier(reference: URI | string): string {
     let path: string;
     if (reference instanceof URI) {
       path = (reference as URI).path;
@@ -160,7 +157,7 @@ export class FoamWorkspace implements IDisposable {
 
   public find(reference: URI | string, baseUri?: URI): Resource | null {
     if (reference instanceof URI) {
-      return this._resources.get(this.getReversedIdentifier(reference)) ?? null;
+      return this._resources.get(this.getTrieIdentifier(reference)) ?? null;
     }
     let resource: Resource | null = null;
     const [path, fragment] = (reference as string).split('#');
@@ -174,9 +171,7 @@ export class FoamWorkspace implements IDisposable {
           : isSome(baseUri)
           ? baseUri.resolve(candidate).path
           : null;
-        resource = this._resources.get(
-          normalize(searchKey).split('/').reverse().join('/')
-        );
+        resource = this._resources.get(this.getTrieIdentifier(searchKey));
         if (resource) {
           break;
         }

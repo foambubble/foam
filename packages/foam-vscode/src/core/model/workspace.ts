@@ -87,11 +87,8 @@ export class FoamWorkspace implements IDisposable {
 
     const resources: Resource[] = [];
 
-    this._resources.find(needle).forEach(elm => {
-      if (elm[0].indexOf(getExtension(normalize(identifier))) > 0) {
-        resources.push(elm[1]);
-      }
-    });
+    this._resources.find(needle).forEach(elm => resources.push(elm[1]));
+
     if (mdNeedle) {
       this._resources.find(mdNeedle).forEach(elm => resources.push(elm[1]));
     }

@@ -231,6 +231,10 @@ describe('Document navigation', () => {
         doc,
         new vscode.Position(0, 26)
       );
+
+      // Make sure the references are sorted by position, so we match the right expectation
+      refs.sort((a, b) => a.range.start.character - b.range.start.character);
+
       expect(refs.length).toEqual(2);
       expect(refs[0]).toEqual({
         uri: toVsCodeUri(fileB.uri),

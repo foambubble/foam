@@ -720,6 +720,7 @@
     "lodash": "^4.17.21",
     "lru-cache": "^7.14.1",
     "markdown-it-regex": "^0.2.0",
+    "mnemonist": "^0.39.8",
     "path-browserify": "^1.0.1",
     "remark-frontmatter": "^2.0.0",
     "remark-parse": "^8.0.2",

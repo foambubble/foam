@@ -1,4 +1,4 @@
-import { isEmpty } from 'lodash';
+import { isEmpty, map, compact, filter, split, startsWith } from 'lodash';
 import {
   EndOfLine,
   FileType,
@@ -25,6 +25,8 @@ import {
   IDataStore,
   IMatcher,
 } from '../core/services/datastore';
+import * as path from 'path';
+import { Logger } from '../core/utils/log';
 
 interface SelectionInfo {
   document: TextDocument;
@@ -200,6 +202,30 @@ export async function createMatcherAndDataStore(excludes: string[]): Promise<{
 }> {
   const excludePatterns = new Map<string, string[]>();
   workspace.workspaceFolders.forEach(f => excludePatterns.set(f.name, []));
+
+  // Read .gitignore files and add patterns to excludePatterns
+  for (const folder of workspace.workspaceFolders) {
+    const gitignorePath = path.join(folder.uri.fsPath, '.gitignore');
+    try {
+      await workspace.fs.stat(Uri.file(gitignorePath)); // Check if the file exists
+      const gitignoreContent = await workspace.fs.readFile(
+        Uri.file(gitignorePath)
+      ); // Read the file content
+      const patterns = map(
+        filter(
+          split(Buffer.from(gitignoreContent).toString('utf-8'), '\n'),
+          line => line && !startsWith(line, '#')
+        ),
+        line => line.trim()
+      );
+      excludePatterns.get(folder.name).push(...compact(patterns));
+
+      Logger.info(`Excluded patterns from ${gitignorePath}: ${patterns}`);
+    } catch (error) {
+      // .gitignore file does not exist, continue
+      Logger.error(`Error reading .gitignore file: ${error}`);
+    }
+  }
 
   for (const exclude of excludes) {
     const tokens = exclude.split('/');

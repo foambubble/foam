@@ -219,9 +219,9 @@ export async function createMatcherAndDataStore(excludes: string[]): Promise<{
     let files: Uri[] = [];
     for (const folder of workspace.workspaceFolders) {
       const uris = await workspace.findFiles(
-        new RelativePattern(folder.uri.path, '**/*'),
+        new RelativePattern(folder.uri, '**/*'),
         new RelativePattern(
-          folder.uri.path,
+          folder.uri,
           `{${excludePatterns.get(folder.name).join(',')}}`
         )
       );

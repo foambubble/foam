@@ -381,10 +381,20 @@ function encodeURIComponentMinimal(path: string): string {
  * TODO this probably needs to be moved to the workspace service
  */
 export function asAbsoluteUri(uri: URI, baseFolders: URI[]): URI {
-  return URI.file(
-    pathUtils.asAbsolutePaths(
-      uri.path,
-      baseFolders.map(f => f.path)
-    )[0]
-  );
+  const path = uri.path;
+  if (pathUtils.isAbsolute(path)) {
+    return uri;
+  }
+  let tokens = path.split('/');
+  const firstDir = tokens[0];
+  if (baseFolders.length > 1) {
+    for (const folder of baseFolders) {
+      const lastDir = folder.path.split('/').pop();
+      if (lastDir === firstDir) {
+        tokens = tokens.slice(1);
+        return folder.joinPath(...tokens);
+      }
+    }
+  }
+  return baseFolders[0].joinPath(...tokens);
 }

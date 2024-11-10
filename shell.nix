@@ -11,9 +11,15 @@ pkgs.mkShellNoCC {
     typescript
     yarn
     nodePackages_latest.lerna
+
+    #direnv 
+    #hacky -> better add to Home Manager configuration. Otherwise you have to trigger the Nix shell manually in the terminal and maybe the vscode extension direnv will work!
+    #see https://github.com/nix-community/nix-direnv?tab=readme-ov-file#via-home-manager
+
     (vscode-with-extensions.override {
         vscodeExtensions = with vscode-extensions; [
-          
+          mkhl.direnv
+          dbaeumer.vscode-eslint
         ] ++ pkgs.vscode-utils.extensionsFromVscodeMarketplace [
         { 
             name = "vscode-jest";

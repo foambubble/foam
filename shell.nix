@@ -1,5 +1,8 @@
 let
-  pkgs = import <nixpkgs> { config = {}; overlays = []; };
+  pkgs = import <nixpkgs> {
+	config.allowUnfree = true;
+	overlays = []; 
+  };
 in
 
 pkgs.mkShellNoCC {  
@@ -8,6 +11,17 @@ pkgs.mkShellNoCC {
     typescript
     yarn
     nodePackages_latest.lerna
+    (vscode-with-extensions.override {
+        vscodeExtensions = with vscode-extensions; [
+          
+        ] ++ pkgs.vscode-utils.extensionsFromVscodeMarketplace [
+        { 
+            name = "vscode-jest";
+            version = "6.4.0";
+            publisher = "Orta";
+            sha256 = "sha256-habF0CaXgQwAZfdtTLAsoie5i5gWrcKEBDEpxvsjlbE=";
+        }];
+      })
   ];
 
   NIX_LD_LIBRARY_PATH = with pkgs; lib.makeLibraryPath [

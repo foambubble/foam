@@ -54,6 +54,7 @@ export function formatMarkdownTooltip(content: string): MarkdownString {
 
 export const mdDocSelector = [
   { language: 'markdown', scheme: 'file' },
+  { language: 'markdown', scheme: 'vscode-vfs' },
   { language: 'markdown', scheme: 'untitled' },
 ];
 

@@ -54,6 +54,7 @@ export function formatMarkdownTooltip(content: string): MarkdownString {
 
 export const mdDocSelector = [
   { language: 'markdown', scheme: 'file' },
+  { language: 'markdown', scheme: 'vscode-vfs' },
   { language: 'markdown', scheme: 'untitled' },
 ];
 
@@ -219,9 +220,9 @@ export async function createMatcherAndDataStore(excludes: string[]): Promise<{
     let files: Uri[] = [];
     for (const folder of workspace.workspaceFolders) {
       const uris = await workspace.findFiles(
-        new RelativePattern(folder.uri.path, '**/*'),
+        new RelativePattern(folder.uri, '**/*'),
         new RelativePattern(
-          folder.uri.path,
+          folder.uri,
           `{${excludePatterns.get(folder.name).join(',')}}`
         )
       );

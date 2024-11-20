@@ -205,12 +205,10 @@ export async function createMatcherAndDataStore(excludes: string[]): Promise<{
 
   // Read .gitignore files and add patterns to excludePatterns
   for (const folder of workspace.workspaceFolders) {
-    const gitignorePath = path.join(folder.uri.fsPath, '.gitignore');
+    const gitignoreUri = Uri.joinPath(folder.uri, '.gitignore');
     try {
-      await workspace.fs.stat(Uri.file(gitignorePath)); // Check if the file exists
-      const gitignoreContent = await workspace.fs.readFile(
-        Uri.file(gitignorePath)
-      ); // Read the file content
+      await workspace.fs.stat(gitignoreUri); // Check if the file exists
+      const gitignoreContent = await workspace.fs.readFile(gitignoreUri); // Read the file content
       const patterns = map(
         filter(
           split(Buffer.from(gitignoreContent).toString('utf-8'), '\n'),
@@ -220,7 +218,7 @@ export async function createMatcherAndDataStore(excludes: string[]): Promise<{
       );
       excludePatterns.get(folder.name).push(...compact(patterns));
 
-      Logger.info(`Excluded patterns from ${gitignorePath}: ${patterns}`);
+      Logger.info(`Excluded patterns from ${gitignoreUri.path}: ${patterns}`);
     } catch (error) {
       // .gitignore file does not exist, continue
       Logger.error(`Error reading .gitignore file: ${error}`);

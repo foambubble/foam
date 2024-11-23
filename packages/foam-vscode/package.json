@@ -301,19 +301,19 @@
       },
       {
         "command": "foam-vscode.update-graph",
-        "title": "Foam: Update graph"
+        "title": "Foam: Update Graph"
       },
       {
         "command": "foam-vscode.set-log-level",
-        "title": "Foam: Set log level"
+        "title": "Foam: Set Log Level"
       },
       {
         "command": "foam-vscode.show-graph",
-        "title": "Foam: Show graph"
+        "title": "Foam: Show Graph"
       },
       {
         "command": "foam-vscode.update-wikilink-definitions",
-        "title": "Foam: Update wikilink definitions"
+        "title": "Foam: Update Wikilink Definitions"
       },
       {
         "command": "foam-vscode.open-daily-note",
@@ -349,11 +349,11 @@
       },
       {
         "command": "foam-vscode.convert-link-style-inplace",
-        "title": "Foam: convert link style in place"
+        "title": "Foam: Convert Link Style in Place"
       },
       {
         "command": "foam-vscode.convert-link-style-incopy",
-        "title": "Foam: convert link format in copy"
+        "title": "Foam: Convert Link Format in Copy"
       },
       {
         "command": "foam-vscode.views.orphans.group-by:folder",

@@ -1112,6 +1112,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "markschaver",
+      "name": "Mark Schaver",
+      "avatar_url": "https://avatars.githubusercontent.com/u/7584?v=4",
+      "profile": "http://schaver.com/",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,

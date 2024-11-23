@@ -263,6 +263,7 @@ If that sounds like something you're interested in, I'd love to have you along o
     <tr>
       <td align="center" valign="top" width="14.28%"><a href="http://www.hegghammer.com"><img src="https://avatars.githubusercontent.com/u/64712218?v=4?s=60" width="60px;" alt="Thomas Hegghammer"/><br /><sub><b>Thomas Hegghammer</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=Hegghammer" title="Documentation">📖</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/PiotrAleksander"><img src="https://avatars.githubusercontent.com/u/6314591?v=4?s=60" width="60px;" alt="Piotr Mrzygłosz"/><br /><sub><b>Piotr Mrzygłosz</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=PiotrAleksander" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="http://schaver.com/"><img src="https://avatars.githubusercontent.com/u/7584?v=4?s=60" width="60px;" alt="Mark Schaver"/><br /><sub><b>Mark Schaver</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=markschaver" title="Documentation">📖</a></td>
     </tr>
   </tbody>
 </table>

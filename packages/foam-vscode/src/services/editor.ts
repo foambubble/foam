@@ -203,6 +203,7 @@ export async function createMatcherAndDataStore(excludes: string[]): Promise<{
   const excludePatterns = new Map<string, string[]>();
   workspace.workspaceFolders.forEach(f => excludePatterns.set(f.name, []));
 
+  Logger.info('[wtw] Excluded patterns from settings: ' + excludes);
   // Read .gitignore files and add patterns to excludePatterns
   for (const folder of workspace.workspaceFolders) {
     const gitignoreUri = Uri.joinPath(folder.uri, '.gitignore');

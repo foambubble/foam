@@ -24,7 +24,7 @@ export async function activate(context: ExtensionContext) {
   exposeLogger(context, logger);
 
   try {
-    Logger.info('Starting Foam');
+    Logger.info('[wtw] Starting Foam');
 
     if (workspace.workspaceFolders === undefined) {
       Logger.info('No workspace open. Foam will not start');
@@ -100,6 +100,13 @@ export async function activate(context: ExtensionContext) {
             'Foam: Reload the window to use the updated settings'
           );
         }
+      }),
+      // 2024-11-25 21:22:48 TODO wip not working as expected
+      workspace.createFileSystemWatcher('.gitignore').onDidChange(e => {
+        Logger.info(`[wtw] File changed: ${e.fsPath}`);
+        window.showInformationMessage(
+          'Foam: Reload the window to use the updated .gitignore settings'
+        );
       })
     );
 

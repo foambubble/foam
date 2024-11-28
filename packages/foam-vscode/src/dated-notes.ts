@@ -1,8 +1,9 @@
+import { joinPath } from './core/utils/path';
 import dateFormat from 'dateformat';
 import { URI } from './core/model/uri';
 import { NoteFactory } from './services/templates';
 import { getFoamVsCodeConfig } from './services/config';
-import { asAbsoluteWorkspaceUri, focusNote } from './services/editor';
+import { focusNote } from './services/editor';
 
 /**
  * Open the daily note file.
@@ -38,11 +39,10 @@ export async function openDailyNoteFor(date?: Date) {
  * @param date A given date to be formatted as filename.
  * @returns The path to the daily note file.
  */
-export function getDailyNotePath(date: Date): URI {
+export function getDailyNotePath(date: Date): string {
   const folder = getFoamVsCodeConfig<string>('openDailyNote.directory') ?? '.';
-  const dailyNoteDirectory = asAbsoluteWorkspaceUri(URI.file(folder));
   const dailyNoteFilename = getDailyNoteFileName(date);
-  return dailyNoteDirectory.joinPath(dailyNoteFilename);
+  return joinPath(folder, dailyNoteFilename);
 }
 
 /**
@@ -83,13 +83,13 @@ export async function createDailyNoteIfNotExists(targetDate: Date) {
 
   const templateFallbackText = `---
 foam_template:
-  filepath: "${pathFromLegacyConfiguration.toFsPath().replace(/\\/g, '\\\\')}"
+  filepath: "${pathFromLegacyConfiguration.replace(/\\/g, '\\\\')}"
 ---
 # ${dateFormat(targetDate, titleFormat, false)}
 `;
 
   return await NoteFactory.createFromDailyNoteTemplate(
-    pathFromLegacyConfiguration,
+    URI.parse(pathFromLegacyConfiguration),
     templateFallbackText,
     targetDate
   );

@@ -7,7 +7,28 @@
       "label": "watch: foam-vscode",
       "type": "npm",
       "script": "watch",
-      "problemMatcher": "$tsc-watch",
+      "problemMatcher": {
+        "owner": "typescript",
+        "fileLocation": ["relative", "${workspaceFolder}"],
+        "pattern": [
+          {
+            "regexp": "^(.*?)\\((\\d+),(\\d+)\\):\\s+(.*)$",
+            "file": 1,
+            "line": 2,
+            "column": 3,
+            "message": 4
+          }
+        ],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": {
+            "regexp": ".*"
+          },
+          "endsPattern": {
+            "regexp": ".*"
+          }
+        }
+      },
       "isBackground": true,
       "presentation": {
         "reveal": "always"

@@ -79,6 +79,8 @@ export async function activate(context: ExtensionContext) {
     const foam = await foamPromise;
     Logger.info(`Loaded ${foam.workspace.list().length} resources`);
 
+    const gitignoreWatcher = workspace.createFileSystemWatcher('**/.gitignore');
+
     context.subscriptions.push(
       foam,
       watcher,
@@ -101,14 +103,15 @@ export async function activate(context: ExtensionContext) {
           );
         }
       }),
-      // 2024-11-25 21:22:48 TODO wip not working as expected
-      workspace.createFileSystemWatcher('.gitignore').onDidChange(e => {
-        Logger.info(`[wtw] File changed: ${e.fsPath}`);
-        window.showInformationMessage(
-          'Foam: Reload the window to use the updated .gitignore settings'
-        );
-      })
+      gitignoreWatcher
     );
+
+    gitignoreWatcher.onDidChange(e => {
+      Logger.info(`[wtw] File changed: ${e.fsPath}`);
+      window.showInformationMessage(
+        'Foam: Reload the window to use the updated .gitignore settings'
+      );
+    });
 
     const feats = (await Promise.all(featuresPromises)).filter(r => r != null);
 

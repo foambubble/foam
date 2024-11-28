@@ -1,10 +1,13 @@
 /*global markdownit:readonly*/
 
-import { workspace, ExtensionContext, window, commands } from 'vscode';
+import { workspace, ExtensionContext, window, commands, Uri } from 'vscode';
 import { MarkdownResourceProvider } from './core/services/markdown-provider';
 import { bootstrap } from './core/model/foam';
 import { Logger } from './core/utils/log';
+import * as path from 'path';
 
+import { Logger } from '../core/utils/log';
+import { isEmpty, map, compact, filter, split, startsWith } from 'lodash';
 import { features } from './features';
 import { VsCodeOutputLogger, exposeLogger } from './services/logging';
 import {
@@ -33,6 +36,57 @@ export async function activate(context: ExtensionContext) {
 
     // Prepare Foam
     const excludes = getIgnoredFilesSetting().map(g => g.toString());
+
+    Logger.info('[wtw] Excluded patterns from settings: ' + excludes);
+
+    // Read all .gitignore files and add patterns to excludePatterns
+    const gitignoreFiles = await workspace.findFiles('**/.gitignore');
+
+    gitignoreFiles.forEach(gitignoreUri => {
+      try {
+        workspace.fs.stat(gitignoreUri); // Check if the file exists
+        const gitignoreContent = await workspace.fs.readFile(gitignoreUri);
+
+        // TODO maybe better to use a specific gitignore parser lib.
+        let ignore_rules = Buffer.from(gitignoreContent)
+          .toString('utf-8')
+          .split('\n')
+          .map(line => line.trim())
+          .filter(line => !isEmpty(line))
+          .filter(line => !line.startsWith('#'))
+          .forEach(line => excludes.push(line));
+
+        excludes.push(...ignore_rules);
+        Logger.info(
+          `Excluded patterns from ${gitignoreUri.path}: ${ignore_rules}`
+        );
+      } catch (error) {
+        Logger.error(`Error reading .gitignore file: ${error}`);
+      }
+    });
+
+    // Read .gitignore files and add patterns to excludePatterns
+    // for (const folder of workspace.workspaceFolders) {
+    //   const gitignoreUri = Uri.joinPath(folder.uri, '.gitignore');
+    //   try {
+    //     await workspace.fs.stat(gitignoreUri); // Check if the file exists
+    //     const gitignoreContent = await workspace.fs.readFile(gitignoreUri); // Read the file content
+    //     const patterns = map(
+    //       filter(
+    //         split(Buffer.from(gitignoreContent).toString('utf-8'), '\n'),
+    //         line => line && !startsWith(line, '#')
+    //       ),
+    //       line => line.trim()
+    //     );
+    //     excludePatterns.get(folder.name).push(...compact(patterns));
+
+    //     Logger.info(`Excluded patterns from ${gitignoreUri.path}: ${patterns}`);
+    //   } catch (error) {
+    //     // .gitignore file does not exist, continue
+    //     Logger.error(`Error reading .gitignore file: ${error}`);
+    //   }
+    // }
+
     const { matcher, dataStore, excludePatterns } =
       await createMatcherAndDataStore(excludes);
 

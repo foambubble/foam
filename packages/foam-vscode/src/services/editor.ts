@@ -203,29 +203,6 @@ export async function createMatcherAndDataStore(excludes: string[]): Promise<{
   const excludePatterns = new Map<string, string[]>();
   workspace.workspaceFolders.forEach(f => excludePatterns.set(f.name, []));
 
-  Logger.info('[wtw] Excluded patterns from settings: ' + excludes);
-  // Read .gitignore files and add patterns to excludePatterns
-  for (const folder of workspace.workspaceFolders) {
-    const gitignoreUri = Uri.joinPath(folder.uri, '.gitignore');
-    try {
-      await workspace.fs.stat(gitignoreUri); // Check if the file exists
-      const gitignoreContent = await workspace.fs.readFile(gitignoreUri); // Read the file content
-      const patterns = map(
-        filter(
-          split(Buffer.from(gitignoreContent).toString('utf-8'), '\n'),
-          line => line && !startsWith(line, '#')
-        ),
-        line => line.trim()
-      );
-      excludePatterns.get(folder.name).push(...compact(patterns));
-
-      Logger.info(`Excluded patterns from ${gitignoreUri.path}: ${patterns}`);
-    } catch (error) {
-      // .gitignore file does not exist, continue
-      Logger.error(`Error reading .gitignore file: ${error}`);
-    }
-  }
-
   for (const exclude of excludes) {
     const tokens = exclude.split('/');
     const matchesFolder = workspace.workspaceFolders.find(

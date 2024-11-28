@@ -8,8 +8,8 @@ describe('Foam URI', () => {
     const base = URI.file('/path/to/file.md');
     test.each([
       ['https://www.google.com', URI.parse('https://www.google.com')],
-      ['/path/to/a/file.md', URI.file('/path/to/a/file.md')],
-      ['../relative/file.md', URI.file('/path/relative/file.md')],
+      ['/path/to/a/file.md', URI.parse('file:///path/to/a/file.md')],
+      ['../relative/file.md', URI.parse('file:///path/relative/file.md')],
       ['#section', base.withFragment('section')],
       [
         '../relative/file.md#section',
@@ -86,9 +86,11 @@ describe('asAbsoluteUri', () => {
   it('should throw if no workspace folder is found', () => {
     expect(() => asAbsoluteUri(URI.file('relative/path'), [])).toThrow();
   });
-  it('should return the given URI if already absolute', () => {
+  it('should always compute the URI even if already absolute', () => {
     const uri = URI.file('/absolute/path');
-    expect(asAbsoluteUri(uri, [URI.file('/base')])).toEqual(uri);
+    expect(asAbsoluteUri(uri, [URI.file('/base')])).toEqual(
+      URI.file('/base/absolute/path')
+    );
   });
   describe('with relative URI', () => {
     it('should return a URI relative if the given URI is relative and there is only one workspace folder', () => {

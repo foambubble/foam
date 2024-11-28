@@ -93,7 +93,7 @@ export async function createNote(args: CreateNoteArgs, foam: Foam) {
     resolver.define('FOAM_TITLE', args.title);
   }
   const text = args.text ?? DEFAULT_NEW_NOTE_TEXT;
-  const noteUri = args.notePath && URI.file(args.notePath);
+  const noteUri = args.notePath && asAbsoluteWorkspaceUri(args.notePath);
   let templateUri: URI;
   if (args.askForTemplate) {
     const selectedTemplate = await askUserForTemplate();
@@ -104,7 +104,7 @@ export async function createNote(args: CreateNoteArgs, foam: Foam) {
     }
   } else {
     templateUri = args.templatePath
-      ? asAbsoluteWorkspaceUri(URI.file(args.templatePath))
+      ? asAbsoluteWorkspaceUri(args.templatePath)
       : getDefaultTemplateUri();
   }
 

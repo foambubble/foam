@@ -15,6 +15,7 @@ const knownFoamVariables = new Set([
   'FOAM_SLUG',
   'FOAM_SELECTED_TEXT',
   'FOAM_CURRENT_DIR',
+  'FOAM_TRAINING_NOTE',
   'FOAM_DATE_YEAR',
   'FOAM_DATE_YEAR_SHORT',
   'FOAM_DATE_MONTH',
@@ -164,6 +165,9 @@ export class Resolver implements VariableResolver {
         case 'FOAM_CURRENT_DIR':
           value = Promise.resolve(resolveFoamCurrentDir());
           break;
+        case 'FOAM_TRAINING_NOTE':
+          value = resolveTrainingNote();
+          break;
         case 'FOAM_DATE_YEAR':
           value = Promise.resolve(String(this.foamDate.getFullYear()));
           break;
@@ -300,6 +304,23 @@ function resolveFoamCurrentDir() {
     // If no workspace is open, raise
     throw new Error('No workspace is open');
   }
+}
+
+async function resolveTrainingNote() {
+  let trainingNote = false;
+  const response = await window.showQuickPick(['Yes', 'No'], {
+    placeHolder: 'Do you really want to learn this Note?',
+  });
+
+  if (response === 'Yes') {
+    trainingNote = true;
+  } else if (response === 'No') {
+    trainingNote = false;
+  } else {
+    throw new UserCancelledOperation();
+  }
+
+  return trainingNote.toString();
 }
 
 /**

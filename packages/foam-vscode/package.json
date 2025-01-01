@@ -525,6 +525,35 @@
             "Use the directory of the file in the current editor"
           ]
         },
+        "foam.files.workspaceType": { 
+          "type": "string",
+          "default": "internal",
+          "description": "Specifies which 'workspaces' of note folders to watch",
+          "enum": [
+            "internal",
+            "external",
+            "combined"
+          ],
+          "enumDescriptions": [
+            "Watch note folders within 'internal' workspace (exclusive VSCode workspace)",
+            "Watch note folders within 'external' workspace ('external' with respect to VSCode workspace; INFO: this may include folders from 'internal' workspace)",
+            "POTENTIALLY DEPRECATED: Watch note folders of both, 'internal' and 'external' workspace"
+          ]
+        },
+        "foam.files.externalWatchPaths": {
+          "type": "array",
+          "items": {
+              "type": "string",
+              "default": "**/*"
+          },
+          "default": [],
+          "description": "The array of root paths to be watched by the note file watcher"
+        },
+        "foam.files.externalTemplatesRoot": {
+          "type": "string",
+          "default": "",
+          "description": "'External' (as to VSCode workspace) root path for note templates"
+        },
         "foam.logging.level": {
           "type": "string",
           "default": "info",

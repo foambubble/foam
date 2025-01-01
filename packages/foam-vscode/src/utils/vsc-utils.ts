@@ -1,4 +1,4 @@
-import { Memento, Position, Range, Uri, commands } from 'vscode';
+import { Memento, Position, Range, RelativePattern, Uri, commands } from 'vscode'; 
 import { Position as FoamPosition } from '../core/model/position';
 import { Range as FoamRange } from '../core/model/range';
 import { URI as FoamURI } from '../core/model/uri';
@@ -51,4 +51,30 @@ export class MapBasedMemento implements Memento {
     this.map.set(key, value);
     return Promise.resolve();
   }
+}
+
+const externalRelativePatternExtract = (path: string): string[] => {
+  let rootPath: string = "";
+  let relativeGlobPattern: string = "";
+  if(!path.match(/^.*[\*\?\{\}\[\]\!].*$/)){
+    rootPath = path;
+    relativeGlobPattern = "*.md";
+    return [rootPath, relativeGlobPattern];
+  } 
+  const match = path.match(/^((?:[^\*\?\{\}\[\]\!]*\/)*)\s*(.*)$/);
+  if (!match) {
+    throw new Error(`Invalid glob pattern: ${path}`);
+  }
+  [, rootPath, relativeGlobPattern] = match;
+  return [rootPath, relativeGlobPattern];
+}
+
+export const externalGlobPattern = (path: string): RelativePattern => {
+  const [rootPath, relativeGlobPattern] = externalRelativePatternExtract(path);
+  return new RelativePattern(Uri.file(rootPath), relativeGlobPattern);
+}
+
+export const externalRelativePatternRootPath = (path: string): string => {
+  const [rootPath] = externalRelativePatternExtract(path);
+  return rootPath;
 }

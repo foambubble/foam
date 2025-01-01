@@ -46,3 +46,19 @@ export function getIgnoredFilesSetting(): GlobPattern[] {
     ...Object.keys(workspace.getConfiguration().get('files.exclude', {})),
   ];
 }
+
+/** Retrieve external (with respect to VSCode workspace) root paths for note file watching. */
+export function getExternalWatchPaths() { 
+  return getFoamVsCodeConfig('files.externalWatchPaths', []);
+}
+
+/** Retrieve external (with respect to VSCode workspace) root path for note templates. */
+export function getExternalTemplatesRoot() {
+  return getFoamVsCodeConfig('files.externalTemplatesRoot', '');
+}
+
+/** Retrieve external (with respect to VSCode workspace) root paths for file watching. */
+export function getWorkspaceType() {
+  return getFoamVsCodeConfig('files.workspaceType', 'internal');
+}
+

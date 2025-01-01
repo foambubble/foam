@@ -14,6 +14,7 @@ import {
   WorkspaceEdit,
   MarkdownString,
 } from 'vscode';
+import { externalGlobPattern } from '../utils/vsc-utils'; 
 import { getExcerpt, stripFrontMatter, stripImages } from '../core/utils/md';
 import { isSome } from '../core/utils/core';
 import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
@@ -25,6 +26,13 @@ import {
   IDataStore,
   IMatcher,
 } from '../core/services/datastore';
+import {
+  getExternalWatchPaths,
+  getExternalTemplatesRoot,
+  getWorkspaceType
+} from '../settings';
+import { externalRelativePatternRootPath } from '../utils/vsc-utils';
+
 
 interface SelectionInfo {
   document: TextDocument;
@@ -183,13 +191,27 @@ export function deleteFile(uri: URI) {
  * @param uri the uri to evaluate
  * @returns an absolute uri
  */
-export function asAbsoluteWorkspaceUri(uri: URI): URI {
-  if (workspace.workspaceFolders === undefined) {
-    throw new Error('An open folder or workspace is required');
+export function asAbsoluteWorkspaceUri(uri: URI): URI {  
+  let folders: URI[] = [];
+  const workspaceType = getWorkspaceType();
+  if(workspaceType == 'internal'){
+    if (workspace.workspaceFolders === undefined) {
+      throw new Error('An open folder or workspace is required');
+    }
+    folders = workspace.workspaceFolders.map(folder =>
+      fromVsCodeUri(folder.uri)
+    );
+  } else {
+    for (const folder of getExternalWatchPaths()) {
+      folders.push(
+          fromVsCodeUri(
+            Uri.file(externalRelativePatternRootPath(folder)
+          )
+        )
+      );
+    }
   }
-  const folders = workspace.workspaceFolders.map(folder =>
-    fromVsCodeUri(folder.uri)
-  );
+
   const res = asAbsoluteUri(uri, folders);
   return res;
 }
@@ -218,17 +240,30 @@ export async function createMatcherAndDataStore(excludes: string[]): Promise<{
 
   const listFiles = async () => {
     let files: Uri[] = [];
-    for (const folder of workspace.workspaceFolders) {
-      const uris = await workspace.findFiles(
-        new RelativePattern(folder.uri, '**/*'),
-        new RelativePattern(
-          folder.uri,
-          `{${excludePatterns.get(folder.name).join(',')}}`
-        )
-      );
-      files = [...files, ...uris];
-    }
 
+    const workspaceType = getWorkspaceType();
+    if(workspaceType == 'internal' || workspaceType == 'combined'){
+      //--- collect files of internal VSCode workspace
+      for (const folder of workspace.workspaceFolders) {
+        const uris = await workspace.findFiles(
+          new RelativePattern(folder.uri, '**/*'),
+          new RelativePattern(
+            folder.uri,
+            `{${excludePatterns.get(folder.name).join(',')}}`
+          )
+        );
+        files = [...files, ...uris];
+      }
+    }    
+    if(workspaceType == 'external' || workspaceType == 'combined') {
+      //--- collect files of external foam workspace
+      for (const folder of getExternalWatchPaths()) {
+        const uris = await workspace.findFiles(
+          externalGlobPattern(folder)  
+        );
+        files = [...files, ...uris];
+      }
+    }
     return files.map(fromVsCodeUri);
   };
 

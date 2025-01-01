@@ -5,7 +5,7 @@
     "declarationMap": true,
     "baseUrl": ".",
     "module": "commonjs",
-    "target": "ES2019",
+    "target": "ES2022",
     "paths": {
       "foam-core": ["./packages/foam-core/src"],
       "foam-vscode": ["./packages/foam-vscode/src"]

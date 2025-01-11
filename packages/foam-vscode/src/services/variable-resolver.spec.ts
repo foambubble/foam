@@ -483,4 +483,16 @@ describe('variable-resolver, resolveText', () => {
     const resolver = new Resolver(givenValues, new Date());
     expect(await resolver.resolveText(input)).toEqual(expected);
   });
+
+  it('should resolve FOAM_TRAINING_NOTE', async () => {
+    const variables = [new Variable('FOAM_TRAINING_NOTE')];
+
+    jest.spyOn(window, 'showQuickPick').mockResolvedValueOnce({ label: 'Yes' });
+    const expected = new Map<string, string>();
+    expected.set('FOAM_TRAINING_NOTE', 'true');
+
+    const givenValues = new Map<string, string>();
+    const resolver = new Resolver(givenValues, new Date());
+    expect(await resolver.resolveAll(variables)).toEqual(expected);
+  });
 });

@@ -308,16 +308,19 @@ function resolveFoamCurrentDir() {
 
 async function resolveTrainingNote() {
   let trainingNote = false;
-  const response = await window.showQuickPick(['Yes', 'No'], {
-    placeHolder: 'Do you really want to learn this Note?',
-  });
+  const response = await window.showQuickPick(
+    [{ label: 'yes' }, { label: 'no' }],
+    {
+      placeHolder: 'Do you really want to learn this Note?',
+    }
+  );
 
-  if (response === 'Yes') {
+  if (response.label == 'Yes') {
     trainingNote = true;
-  } else if (response === 'No') {
+  } else if (response.label == 'No') {
     trainingNote = false;
   } else {
-    throw new UserCancelledOperation();
+    throw new UserCancelledOperation(`Input was ${response.label}`);
   }
 
   return trainingNote.toString();

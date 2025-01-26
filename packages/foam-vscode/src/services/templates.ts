@@ -6,8 +6,9 @@ import {
   commands,
   window,
   workspace,
+  Uri 
 } from 'vscode';
-import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
+import { fromVsCodeUri, toVsCodeUri, externalGlobPattern } from '../utils/vsc-utils';
 import { extractFoamTemplateFrontmatterMetadata } from '../utils/template-frontmatter-parser';
 import { UserCancelledOperation } from './errors';
 import {
@@ -25,15 +26,28 @@ import { Resolver } from './variable-resolver';
 import dateFormat from 'dateformat';
 import { getFoamVsCodeConfig } from './config';
 import { isNone } from '../core/utils';
+import {
+  getExternalTemplatesRoot,
+  getWorkspaceType
+} from '../settings';
 
 /**
  * The templates directory
  */
-export const getTemplatesDir = () =>
-  fromVsCodeUri(workspace.workspaceFolders[0].uri).joinPath(
-    '.foam',
-    'templates'
-  );
+export const getTemplatesDir = () => {
+  const workspaceType = getWorkspaceType();
+  if(workspaceType == 'internal'){
+    return fromVsCodeUri(workspace.workspaceFolders[0].uri).joinPath(
+      '.foam',
+      'templates'
+    );
+  } 
+  const externalTemplatesRoot = getExternalTemplatesRoot()
+  if (externalTemplatesRoot == '') {
+    throw new Error(`Empty template root directory path in workspace mode "external"/"combined"`);
+  }
+  return fromVsCodeUri(Uri.file(getExternalTemplatesRoot()));
+}
 
 /**
  * The URI of the default template
@@ -77,9 +91,21 @@ export async function getTemplateMetadata(
 }
 
 export async function getTemplates(): Promise<URI[]> {
-  const templates = await workspace
-    .findFiles('.foam/templates/**.md', null)
-    .then(v => v.map(uri => fromVsCodeUri(uri)));
+  let templates: URI[] = [];  
+  const workspaceType = getWorkspaceType();
+  if(workspaceType == 'internal'){
+    templates = await workspace
+      .findFiles('.foam/templates/**.md', null)
+      .then(v => v.map(uri => fromVsCodeUri(uri)));
+    return templates;
+  }
+  templates = await workspace
+      .findFiles(
+        externalGlobPattern(
+          getExternalTemplatesRoot()+'/**.md'
+        ), 
+      null)
+      .then(v => v.map(uri => fromVsCodeUri(uri)));
   return templates;
 }
 

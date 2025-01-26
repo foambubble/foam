@@ -1,6 +1,7 @@
 /*global markdownit:readonly*/
 
 import { workspace, ExtensionContext, window, commands } from 'vscode';
+import { externalGlobPattern } from './utils/vsc-utils'; 
 import { MarkdownResourceProvider } from './core/services/markdown-provider';
 import { bootstrap } from './core/model/foam';
 import { Logger } from './core/utils/log';
@@ -11,6 +12,8 @@ import {
   getAttachmentsExtensions,
   getIgnoredFilesSetting,
   getNotesExtensions,
+  getExternalWatchPaths,
+  getWorkspaceType
 } from './settings';
 import { AttachmentResourceProvider } from './core/services/attachment-provider';
 import { VsCodeWatcher } from './services/watcher';
@@ -36,16 +39,31 @@ export async function activate(context: ExtensionContext) {
     const { matcher, dataStore, excludePatterns } =
       await createMatcherAndDataStore(excludes);
 
-    Logger.info('Loading from directories:');
-    for (const folder of workspace.workspaceFolders) {
-      Logger.info('- ' + folder.uri.fsPath);
-      Logger.info('  Include: **/*');
-      Logger.info('  Exclude: ' + excludePatterns.get(folder.name).join(','));
-    }
+    let watchers: VsCodeWatcher[] = [];
 
-    const watcher = new VsCodeWatcher(
-      workspace.createFileSystemWatcher('**/*')
-    );
+    const workspaceType = getWorkspaceType();
+    if(workspaceType == 'internal' || workspaceType == 'combined'){
+      Logger.info('Loading from directories:');
+      for (const folder of workspace.workspaceFolders) {
+        Logger.info('- ' + folder.uri.fsPath);
+        Logger.info('  Include: **/*');
+        Logger.info('  Exclude: ' + excludePatterns.get(folder.name).join(','));
+      }
+
+      const watcher = new VsCodeWatcher(
+        workspace.createFileSystemWatcher('**/*')
+      );
+      watchers.push(watcher);
+    } 
+    if(workspaceType == 'external' || workspaceType == 'combined') {
+      for (const folder of getExternalWatchPaths()) {
+        const watcher = new VsCodeWatcher(
+          workspace.createFileSystemWatcher(externalGlobPattern(folder))               
+        );
+        watchers.push(watcher);
+      }
+    }
+    
     const parserCache = new VsCodeBasedParserCache(context);
     const parser = createMarkdownParser([], parserCache);
 
@@ -64,7 +82,7 @@ export async function activate(context: ExtensionContext) {
 
     const foamPromise = bootstrap(
       matcher,
-      watcher,
+      watchers,
       dataStore,
       parser,
       [markdownProvider, attachmentProvider],
@@ -79,29 +97,33 @@ export async function activate(context: ExtensionContext) {
     const foam = await foamPromise;
     Logger.info(`Loaded ${foam.workspace.list().length} resources`);
 
-    context.subscriptions.push(
-      foam,
-      watcher,
-      markdownProvider,
-      attachmentProvider,
-      commands.registerCommand('foam-vscode.clear-cache', () =>
-        parserCache.clear()
-      ),
-      workspace.onDidChangeConfiguration(e => {
-        if (
-          [
-            'foam.files.ignore',
-            'foam.files.attachmentExtensions',
-            'foam.files.noteExtensions',
-            'foam.files.defaultNoteExtension',
-          ].some(setting => e.affectsConfiguration(setting))
-        ) {
-          window.showInformationMessage(
-            'Foam: Reload the window to use the updated settings'
-          );
-        }
-      })
+    const clearCacheRegCmdDisposable = commands.registerCommand('foam-vscode.clear-cache', () =>
+      parserCache.clear()
     );
+    const onDidChangeConfigDisposable = workspace.onDidChangeConfiguration(e => {
+      if (
+        [
+          'foam.files.ignore',
+          'foam.files.attachmentExtensions',
+          'foam.files.noteExtensions',
+          'foam.files.defaultNoteExtension',
+        ].some(setting => e.affectsConfiguration(setting))
+      ) {
+        window.showInformationMessage(
+          'Foam: Reload the window to use the updated settings'
+        );
+      }
+    });
+    for (const watcher of watchers) {
+      context.subscriptions.push(
+        foam,
+        watcher,
+        markdownProvider,
+        attachmentProvider,
+        clearCacheRegCmdDisposable,
+        onDidChangeConfigDisposable
+      );
+    }
 
     const feats = (await Promise.all(featuresPromises)).filter(r => r != null);
 

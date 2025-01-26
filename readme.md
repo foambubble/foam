@@ -132,6 +132,10 @@ With references you can also make your notes navigable both in GitHub UI as well
   - This becomes very powerful when combined with [note templates](https://foambubble.github.io/foam/user/features/note-templates) and the `Foam: Create New Note from Template` command
 - See your workspace as a connected graph with the `Foam: Show Graph` command
 
+### Workspaces
+
+- Explore how to work with either the "internal" VSCode workspace or an "external" one: [workspaces](https://foambubble.github.io/foam/user/features/workspaces) .
+
 ## Recipes
 
 People use Foam in different ways for different use cases, check out the [recipes](https://foambubble.github.io/foam/user/recipes/recipes) page for inspiration!

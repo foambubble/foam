@@ -22,7 +22,7 @@ export interface Foam extends IDisposable {
 
 export const bootstrap = async (
   matcher: IMatcher,
-  watcher: IWatcher | undefined,
+  watchers: IWatcher[] | undefined, 
   dataStore: IDataStore,
   parser: ResourceParser,
   initialProviders: ResourceProvider[],
@@ -48,20 +48,22 @@ export const bootstrap = async (
     ms => Logger.info(`Tags loaded in ${ms}ms`)
   );
 
-  watcher?.onDidChange(async uri => {
-    if (matcher.isMatch(uri)) {
-      await workspace.fetchAndSet(uri);
-    }
-  });
-  watcher?.onDidCreate(async uri => {
-    await matcher.refresh();
-    if (matcher.isMatch(uri)) {
-      await workspace.fetchAndSet(uri);
-    }
-  });
-  watcher?.onDidDelete(uri => {
-    workspace.delete(uri);
-  });
+  for (const watcher of watchers) {
+    watcher?.onDidChange(async uri => {
+      if (matcher.isMatch(uri)) {
+        await workspace.fetchAndSet(uri);
+      }
+    });
+    watcher?.onDidCreate(async uri => {
+      await matcher.refresh();
+      if (matcher.isMatch(uri)) {
+        await workspace.fetchAndSet(uri);
+      }
+    });
+    watcher?.onDidDelete(uri => {
+      workspace.delete(uri);
+    });
+  }
 
   const foam: Foam = {
     workspace,

@@ -32,6 +32,7 @@ Some properties have special meaning for Foam:
 | `title` | will assign the name to the note that you will see in the graph, regardless of the filename or the first heading (also see how to [[write-notes-in-foam]])                       |
 | `type`  | can be used to style notes differently in the graph (also see [[graph-visualization]]). The default type for a document is `note` unless otherwise specified with this property. |
 | `tags`  | can be used to add tags to a note (see [[tags]])                                                                                                                                 |
+| `alias` | can be used to add aliases to the note. an alias will show up in the link autocompletion                                                                                         |
 
 For example:
 
@@ -40,7 +41,7 @@ For example:
 title: "Note Title"
 type: "daily-note"
 tags: daily, funny, planning
-
+alias: alias1, alias2
 ---
 ```
 

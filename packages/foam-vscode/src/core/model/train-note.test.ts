@@ -58,3 +58,12 @@ describe('Decrease Phase', () => {
     expect(note.currentPhase).toBe(note.phases.First());
   });
 });
+
+describe('Notify', () => {
+  it('Calls', () => {
+    const observerSpy = jest.spyOn(note.subject, 'Notify');
+    note.Increase();
+    note.Decrease();
+    expect(observerSpy.mock.calls).toHaveLength(2);
+  });
+});

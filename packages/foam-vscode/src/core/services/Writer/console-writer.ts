@@ -1,11 +1,11 @@
 import { IWriter } from './iwriter';
 
 export class ConsoleWriter implements IWriter {
-  public object: any;
-
-  async write(): Promise<boolean> {
-    const keys = Object.keys(this.object);
-    const values = keys.map(key => `${key}: ${Reflect.get(this.object, key)}`);
+  async write(object: any): Promise<boolean> {
+    const keys = Object.keys(object);
+    const values = keys
+      .map(key => `${key}: ${Reflect.get(object, key)}`)
+      .join(', \n');
     console.log(values);
     return true;
   }

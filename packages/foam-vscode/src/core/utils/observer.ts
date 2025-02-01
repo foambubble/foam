@@ -1,7 +1,7 @@
 import { IWriter } from '../services/Writer/iwriter';
 
 export interface Observer {
-  update: () => void;
+  update: (object: any) => void;
 }
 
 export class WriteObserver implements Observer {
@@ -11,8 +11,8 @@ export class WriteObserver implements Observer {
     this.writer = writer;
   }
 
-  update(): void {
-    this.writer.write();
+  update(object: any): void {
+    this.writer.write(object);
   }
 }
 
@@ -28,6 +28,6 @@ export class Subject {
   }
 
   Notify() {
-    this.observer.update();
+    this.observer.update(this);
   }
 }

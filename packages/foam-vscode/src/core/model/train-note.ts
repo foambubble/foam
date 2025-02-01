@@ -29,7 +29,7 @@ export class TrainNote extends Resource {
   private Attach() {
     this.subject = new Subject();
     this.subject.Attach(
-      new WriteObserver(new TrainNoteWriter(new ConsoleWriter(), this))
+      new WriteObserver(new TrainNoteWriter(new ConsoleWriter()))
     );
   }
 }

@@ -1,4 +1,3 @@
 export interface IWriter {
-  object: any;
-  write: () => Promise<boolean>;
+  write: (object: any) => Promise<boolean>;
 }

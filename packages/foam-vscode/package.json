@@ -457,6 +457,13 @@
     "configuration": {
       "title": "Foam",
       "properties": {
+        "foam.supportedLanguages": {
+          "type": "array",
+          "default": [
+            "markdown"
+          ],
+          "description": "List of languages to treat as Markdown-like documents."
+        },
         "foam.completion.label": {
           "type": "string",
           "default": "path",

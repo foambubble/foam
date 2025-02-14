@@ -18,6 +18,7 @@ import { getExcerpt, stripFrontMatter, stripImages } from '../core/utils/md';
 import { isSome } from '../core/utils/core';
 import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
 import { asAbsoluteUri, URI } from '../core/model/uri';
+import { getFoamVsCodeConfig } from './config';
 import {
   AlwaysIncludeMatcher,
   FileListBasedMatcher,
@@ -52,14 +53,27 @@ export function formatMarkdownTooltip(content: string): MarkdownString {
   return md;
 }
 
-export const mdDocSelector = [
-  { language: 'markdown', scheme: 'file' },
-  { language: 'markdown', scheme: 'vscode-vfs' },
-  { language: 'markdown', scheme: 'untitled' },
-];
+// Generate the document selector dynamically
+export const mdDocSelector = getFoamVsCodeConfig<string[]>(
+  'supportedLanguages',
+  ['markdown']
+).flatMap(lang => [
+  { language: lang, scheme: 'file' }, // Local files
+  { language: lang, scheme: 'vscode-vfs' }, // Remote files
+  { language: lang, scheme: 'untitled' }, // Untitled files
+]);
 
-export function isMdEditor(editor: TextEditor) {
-  return editor && editor.document && editor.document.languageId === 'markdown';
+// Check if the editor's document is a supported language
+export function isMdEditor(editor: TextEditor): boolean {
+  const supportedLanguages = getFoamVsCodeConfig<string[]>(
+    'supportedLanguages',
+    ['markdown']
+  );
+  return (
+    editor &&
+    editor.document &&
+    supportedLanguages.includes(editor.document.languageId)
+  );
 }
 
 export function findSelectionContent(): SelectionInfo | undefined {

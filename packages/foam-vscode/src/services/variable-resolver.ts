@@ -309,7 +309,7 @@ function resolveFoamCurrentDir() {
 async function resolveTrainingNote() {
   let trainingNote = false;
   const response = await window.showQuickPick(
-    [{ label: 'yes' }, { label: 'no' }],
+    [{ label: 'Yes' }, { label: 'no' }],
     {
       placeHolder: 'Do you really want to learn this Note?',
     }

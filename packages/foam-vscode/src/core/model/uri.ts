@@ -76,7 +76,7 @@ export class URI {
     const uri = value instanceof URI ? value : URI.parse(value);
     if (!uri.isAbsolute()) {
       if (uri.scheme === 'file' || uri.scheme === 'placeholder') {
-        let newUri = this.withFragment(uri.fragment);
+        let newUri = this.with({ fragment: uri.fragment });
         if (uri.path) {
           newUri = (isDirectory ? newUri : newUri.getDirectory())
             .joinPath(uri.path)
@@ -124,8 +124,20 @@ export class URI {
     return new URI({ ...this, path });
   }
 
-  withFragment(fragment: string): URI {
-    return new URI({ ...this, fragment });
+  with(change: {
+    scheme?: string;
+    authority?: string;
+    path?: string;
+    query?: string;
+    fragment?: string;
+  }): URI {
+    return new URI({
+      scheme: change.scheme ?? this.scheme,
+      authority: change.authority ?? this.authority,
+      path: change.path ?? this.path,
+      query: change.query ?? this.query,
+      fragment: change.fragment ?? this.fragment,
+    });
   }
 
   /**

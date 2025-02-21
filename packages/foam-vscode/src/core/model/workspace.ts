@@ -175,7 +175,10 @@ export class FoamWorkspace implements IDisposable {
       }
     }
     if (resource && fragment) {
-      resource = { ...resource, uri: resource.uri.withFragment(fragment) };
+      resource = {
+        ...resource,
+        uri: resource.uri.with({ fragment: fragment }),
+      };
     }
     return resource ?? null;
   }

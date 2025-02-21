@@ -24,7 +24,7 @@ import {
 import { Resolver } from './variable-resolver';
 import dateFormat from 'dateformat';
 import { getFoamVsCodeConfig } from './config';
-import { isNone } from '../core/utils';
+import { firstFrom, isNone } from '../core/utils';
 
 /**
  * The templates directory
@@ -233,7 +233,7 @@ const createFnForOnRelativePathStrategy =
         const newProposedPath = await askUserForFilepathConfirmation(
           existingFile
         );
-        return newProposedPath && URI.file(newProposedPath);
+        return newProposedPath && existingFile.with({ path: newProposedPath });
       }
     }
   };
@@ -257,7 +257,7 @@ const createFnForOnFileExistsStrategy =
         const newProposedPath = await askUserForFilepathConfirmation(
           existingFile
         );
-        return newProposedPath && URI.file(newProposedPath);
+        return newProposedPath && existingFile.with({ path: newProposedPath });
       }
     }
   };
@@ -348,15 +348,16 @@ export const NoteFactory = {
         resolver
       );
 
-      let newFilePath = template.metadata.has('filepath')
-        ? URI.file(template.metadata.get('filepath'))
-        : filepathFallbackURI;
+      const pathSources = [
+        () =>
+          template.metadata.has('filepath')
+            ? asAbsoluteWorkspaceUri(template.metadata.get('filepath'))
+            : null,
+        () => filepathFallbackURI,
+        () => getPathFromTitle(templateUri.scheme, resolver),
+      ];
 
-      if (isNone(newFilePath)) {
-        newFilePath = await getPathFromTitle(resolver);
-      } else if (!newFilePath.path.startsWith('./')) {
-        newFilePath = asAbsoluteWorkspaceUri(newFilePath);
-      }
+      const newFilePath = await firstFrom(pathSources);
 
       return NoteFactory.createNote(
         newFilePath,
@@ -443,7 +444,7 @@ export const createTemplate = async (): Promise<void> => {
     return;
   }
 
-  const filenameURI = URI.file(filename);
+  const filenameURI = defaultTemplate.with({ path: filename });
   await workspace.fs.writeFile(
     toVsCodeUri(filenameURI),
     new TextEncoder().encode(TEMPLATE_CONTENT)
@@ -475,7 +476,7 @@ async function askUserForFilepathConfirmation(
   });
 }
 
-export const getPathFromTitle = async (resolver: Resolver) => {
+export const getPathFromTitle = async (scheme: string, resolver: Resolver) => {
   const defaultName = await resolver.resolveFromName('FOAM_TITLE_SAFE');
-  return URI.file(`${defaultName}.md`);
+  return new URI({ scheme, path: `${defaultName}.md` });
 };

@@ -117,7 +117,7 @@ export async function createNote(args: CreateNoteArgs, foam: Foam) {
         args.onFileExists
       )
     : await NoteFactory.createNote(
-        noteUri ?? (await getPathFromTitle(resolver)),
+        noteUri ?? (await getPathFromTitle(templateUri.scheme, resolver)),
         text,
         resolver,
         args.onFileExists,

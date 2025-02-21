@@ -10,6 +10,7 @@ import {
   withModifiedFoamConfiguration,
 } from './test/test-utils-vscode';
 import { fromVsCodeUri } from './utils/vsc-utils';
+import { URI } from './core/model/uri';
 
 describe('getDailyNotePath', () => {
   const date = new Date('2021-02-07T00:00:00Z');
@@ -26,7 +27,7 @@ describe('getDailyNotePath', () => {
     ).joinPath(config, `${isoDate}.md`);
 
     await withModifiedFoamConfiguration('openDailyNote.directory', config, () =>
-      expect(getDailyNotePath(date).toFsPath()).toEqual(expectedPath.toFsPath())
+      expect(getDailyNotePath(date)).toEqual(expectedPath.toFsPath())
     );
   });
 
@@ -39,7 +40,7 @@ describe('getDailyNotePath', () => {
       : `${config}/${isoDate}.md`;
 
     await withModifiedFoamConfiguration('openDailyNote.directory', config, () =>
-      expect(getDailyNotePath(date).toFsPath()).toMatch(expectedPath)
+      expect(getDailyNotePath(date)).toMatch(expectedPath)
     );
   });
 });
@@ -58,7 +59,7 @@ describe('Daily note template', () => {
 
     await createDailyNoteIfNotExists(targetDate);
 
-    const doc = await showInEditor(uri);
+    const doc = await showInEditor(URI.file(uri));
     const content = doc.editor.document.getText();
     expect(content).toEqual('hello September 12 hello');
 

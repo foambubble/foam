@@ -175,11 +175,11 @@ async function convertLinkInCopy(
   const resource = fParser.parse(fromVsCodeUri(doc.uri), text);
   const basePath = doc.uri.path.split('/').slice(0, -1).join('/');
 
-  const fileUri = Uri.file(
-    `${
+  const fileUri = doc.uri.with({
+    path: `${
       basePath ? basePath + '/' : ''
-    }${resource.uri.getName()}.copy${resource.uri.getExtension()}`
-  );
+    }${resource.uri.getName()}.copy${resource.uri.getExtension()}`,
+  });
   const encoder = new TextEncoder();
   await workspace.fs.writeFile(fileUri, encoder.encode(text));
   await window.showTextDocument(fileUri);

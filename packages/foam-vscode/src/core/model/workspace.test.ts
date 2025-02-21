@@ -126,9 +126,9 @@ describe('Identifier computation', () => {
     });
     const ws = new FoamWorkspace('.md').set(first).set(second).set(third);
 
-    expect(ws.getIdentifier(first.uri.withFragment('section name'))).toEqual(
-      'to/page-a#section name'
-    );
+    expect(
+      ws.getIdentifier(first.uri.with({ fragment: 'section name' }))
+    ).toEqual('to/page-a#section name');
   });
 
   const needle = '/project/car/todo';

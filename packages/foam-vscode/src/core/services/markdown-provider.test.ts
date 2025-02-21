@@ -148,7 +148,7 @@ describe('Link resolution', () => {
       const ws = createTestWorkspace().set(noteA).set(noteB);
 
       expect(ws.resolveLink(noteA, noteA.links[0])).toEqual(
-        noteB.uri.withFragment('section')
+        noteB.uri.with({ fragment: 'section' })
       );
     });
 
@@ -163,7 +163,7 @@ describe('Link resolution', () => {
       const ws = createTestWorkspace().set(noteA);
 
       expect(ws.resolveLink(noteA, noteA.links[0])).toEqual(
-        noteA.uri.withFragment('section')
+        noteA.uri.with({ fragment: 'section' })
       );
     });
 

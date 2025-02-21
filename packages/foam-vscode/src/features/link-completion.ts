@@ -123,7 +123,7 @@ export class SectionCompletionProvider
         const item = new ResourceCompletionItem(
           b.label,
           vscode.CompletionItemKind.Text,
-          resource.uri.withFragment(b.label)
+          resource.uri.with({ fragment: b.label })
         );
         item.sortText = String(b.range.start.line).padStart(5, '0');
         item.range = replacementRange;

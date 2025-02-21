@@ -58,6 +58,11 @@ export class URI {
     });
   }
 
+  /**
+   * @deprecated Will not work with web extension. Use only for testing.
+   * @param value the path to turn into a URI
+   * @returns the file URI
+   */
   static file(value: string): URI {
     const [path, authority] = pathUtils.fromFsPath(value);
     return new URI({ scheme: 'file', authority, path });
@@ -71,7 +76,7 @@ export class URI {
     const uri = value instanceof URI ? value : URI.parse(value);
     if (!uri.isAbsolute()) {
       if (uri.scheme === 'file' || uri.scheme === 'placeholder') {
-        let newUri = this.withFragment(uri.fragment);
+        let newUri = this.with({ fragment: uri.fragment });
         if (uri.path) {
           newUri = (isDirectory ? newUri : newUri.getDirectory())
             .joinPath(uri.path)
@@ -119,8 +124,20 @@ export class URI {
     return new URI({ ...this, path });
   }
 
-  withFragment(fragment: string): URI {
-    return new URI({ ...this, fragment });
+  with(change: {
+    scheme?: string;
+    authority?: string;
+    path?: string;
+    query?: string;
+    fragment?: string;
+  }): URI {
+    return new URI({
+      scheme: change.scheme ?? this.scheme,
+      authority: change.authority ?? this.authority,
+      path: change.path ?? this.path,
+      query: change.query ?? this.query,
+      fragment: change.fragment ?? this.fragment,
+    });
   }
 
   /**
@@ -380,12 +397,21 @@ function encodeURIComponentMinimal(path: string): string {
  *
  * TODO this probably needs to be moved to the workspace service
  */
-export function asAbsoluteUri(uri: URI, baseFolders: URI[]): URI {
-  const path = uri.path;
-  if (pathUtils.isAbsolute(path)) {
-    return uri;
+export function asAbsoluteUri(
+  uriOrPath: URI | string,
+  baseFolders: URI[]
+): URI {
+  if (baseFolders.length === 0) {
+    throw new Error('At least one base folder needed to compute URI');
+  }
+  const path = uriOrPath instanceof URI ? uriOrPath.path : uriOrPath;
+  if (path.startsWith('/')) {
+    return uriOrPath instanceof URI ? uriOrPath : baseFolders[0].with({ path });
   }
   let tokens = path.split('/');
+  while (tokens[0].trim() === '') {
+    tokens.shift();
+  }
   const firstDir = tokens[0];
   if (baseFolders.length > 1) {
     for (const folder of baseFolders) {

@@ -8,9 +8,9 @@ describe('Foam URI', () => {
     const base = URI.file('/path/to/file.md');
     test.each([
       ['https://www.google.com', URI.parse('https://www.google.com')],
-      ['/path/to/a/file.md', URI.file('/path/to/a/file.md')],
-      ['../relative/file.md', URI.file('/path/relative/file.md')],
-      ['#section', base.withFragment('section')],
+      ['/path/to/a/file.md', URI.parse('file:///path/to/a/file.md')],
+      ['../relative/file.md', URI.parse('file:///path/relative/file.md')],
+      ['#section', base.with({ fragment: 'section' })],
       [
         '../relative/file.md#section',
         URI.parse('file:/path/relative/file.md#section'),

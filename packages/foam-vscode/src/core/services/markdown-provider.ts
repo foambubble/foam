@@ -76,7 +76,7 @@ export class MarkdownResourceProvider implements ResourceProvider {
                 URI.placeholder(target);
 
           if (section) {
-            targetUri = targetUri.withFragment(section);
+            targetUri = targetUri.with({ fragment: section });
           }
         }
         break;
@@ -93,7 +93,7 @@ export class MarkdownResourceProvider implements ResourceProvider {
           workspace.find(path, resource.uri)?.uri ??
           URI.placeholder(resource.uri.resolve(path).path);
         if (section && !targetUri.isPlaceholder()) {
-          targetUri = targetUri.withFragment(section);
+          targetUri = targetUri.with({ fragment: section });
         }
         break;
       }

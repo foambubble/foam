@@ -404,6 +404,9 @@ export function asAbsoluteUri(
   if (baseFolders.length === 0) {
     throw new Error('At least one base folder needed to compute URI');
   }
+  if (uriOrPath instanceof URI && uriOrPath.path.startsWith('/')) {
+    return uriOrPath;
+  }
   const path = uriOrPath instanceof URI ? uriOrPath.path : uriOrPath;
   let tokens = path.split('/');
   while (tokens[0].trim() === '') {

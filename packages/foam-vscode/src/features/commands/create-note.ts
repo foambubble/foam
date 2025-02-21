@@ -93,7 +93,13 @@ export async function createNote(args: CreateNoteArgs, foam: Foam) {
     resolver.define('FOAM_TITLE', args.title);
   }
   const text = args.text ?? DEFAULT_NEW_NOTE_TEXT;
-  const noteUri = args.notePath && asAbsoluteWorkspaceUri(args.notePath);
+  const schemaSource = vscode.workspace.workspaceFolders[0].uri;
+  const noteUri =
+    args.notePath &&
+    new URI({
+      scheme: schemaSource.scheme,
+      path: args.notePath,
+    });
   let templateUri: URI;
   if (args.askForTemplate) {
     const selectedTemplate = await askUserForTemplate();

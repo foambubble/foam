@@ -4,7 +4,10 @@ import { removeBrackets, toTitleCase } from './copy-without-brackets';
 
 describe('copy-without-brackets command', () => {
   it('should get the input from the active editor selection', async () => {
-    const { uri } = await createFile('This is my [[test-content]].');
+    const { uri } = await createFile('This is my [[test-content]].', [
+      'copy-without-brackets',
+      'file.md',
+    ]);
     const { editor } = await showInEditor(uri);
     editor.selection = new Selection(new Position(0, 0), new Position(1, 0));
     await commands.executeCommand('foam-vscode.copy-without-brackets');

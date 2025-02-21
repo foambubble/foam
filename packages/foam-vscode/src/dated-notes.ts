@@ -3,7 +3,7 @@ import dateFormat from 'dateformat';
 import { URI } from './core/model/uri';
 import { NoteFactory } from './services/templates';
 import { getFoamVsCodeConfig } from './services/config';
-import { focusNote } from './services/editor';
+import { asAbsoluteWorkspaceUri, focusNote } from './services/editor';
 
 /**
  * Open the daily note file.
@@ -33,16 +33,13 @@ export async function openDailyNoteFor(date?: Date) {
  * This function first checks the `foam.openDailyNote.directory` configuration string,
  * defaulting to the current directory.
  *
- * In the case that the directory path is not absolute,
- * the resulting path will start on the current workspace top-level.
- *
  * @param date A given date to be formatted as filename.
- * @returns The path to the daily note file.
+ * @returns The URI to the daily note file.
  */
-export function getDailyNotePath(date: Date): string {
+export function getDailyNoteUri(date: Date): URI {
   const folder = getFoamVsCodeConfig<string>('openDailyNote.directory') ?? '.';
   const dailyNoteFilename = getDailyNoteFileName(date);
-  return joinPath(folder, dailyNoteFilename);
+  return asAbsoluteWorkspaceUri(joinPath(folder, dailyNoteFilename));
 }
 
 /**
@@ -76,20 +73,20 @@ export function getDailyNoteFileName(date: Date): string {
  * @returns Whether the file was created.
  */
 export async function createDailyNoteIfNotExists(targetDate: Date) {
-  const pathFromLegacyConfiguration = getDailyNotePath(targetDate);
+  const uriFromLegacyConfiguration = getDailyNoteUri(targetDate);
+  const pathFromLegacyConfiguration = uriFromLegacyConfiguration.toFsPath();
   const titleFormat: string =
     getFoamVsCodeConfig('openDailyNote.titleFormat') ??
     getFoamVsCodeConfig('openDailyNote.filenameFormat');
 
-  const templateFallbackText = `---
-foam_template:
-  filepath: "${pathFromLegacyConfiguration.replace(/\\/g, '\\\\')}"
----
-# ${dateFormat(targetDate, titleFormat, false)}
-`;
+  const templateFallbackText = `# ${dateFormat(
+    targetDate,
+    titleFormat,
+    false
+  )}\n`;
 
   return await NoteFactory.createFromDailyNoteTemplate(
-    URI.parse(pathFromLegacyConfiguration),
+    uriFromLegacyConfiguration,
     templateFallbackText,
     targetDate
   );

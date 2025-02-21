@@ -149,12 +149,10 @@ export function getEditorEOL(): string {
 
 /**
  * Returns the directory of the file currently open in the editor.
- * If no file is open in the editor it will return the first folder
- * in the workspace.
- * If both aren't available it will throw.
+ * If no file is open in the editor it will throw.
  *
  * @returns URI
- * @throws Error if no file is open in editor AND no workspace folder defined
+ * @throws Error if no file is open in editor
  */
 export function getCurrentEditorDirectory(): URI {
   const uri = window.activeTextEditor?.document?.uri;
@@ -163,11 +161,7 @@ export function getCurrentEditorDirectory(): URI {
     return fromVsCodeUri(uri).getDirectory();
   }
 
-  if (workspace.workspaceFolders.length > 0) {
-    return fromVsCodeUri(workspace.workspaceFolders[0].uri);
-  }
-
-  throw new Error('A file must be open in editor, or workspace folder needed');
+  throw new Error('No editor open');
 }
 
 export async function fileExists(uri: URI): Promise<boolean> {

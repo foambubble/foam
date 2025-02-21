@@ -1,4 +1,4 @@
-import { commands, window } from 'vscode';
+import { commands, window, workspace } from 'vscode';
 import { URI } from '../../core/model/uri';
 import { asAbsoluteWorkspaceUri, readFile } from '../../services/editor';
 import {
@@ -135,44 +135,53 @@ describe('create-note command', () => {
   });
 
   it('supports various options to deal with relative paths', async () => {
+    const TEST_FOLDER = 'create-note-tests';
     const base = await createFile('relative path tests base file', [
-      'create-note-tests',
+      TEST_FOLDER,
       'base-file.md',
     ]);
+
     await closeEditors();
     await showInEditor(base.uri);
-
-    const target = getUriInWorkspace();
+    expectSameUri(window.activeTextEditor.document.uri, base.uri);
     await commands.executeCommand('foam-vscode.create-note', {
-      notePath: target.getBasename(),
+      notePath: 'note-resolved-from-root.md',
       text: 'test resolving from root',
       onRelativeNotePath: 'resolve-from-root',
     });
+    expectSameUri(
+      window.activeTextEditor.document.uri,
+      fromVsCodeUri(workspace.workspaceFolders?.[0].uri).joinPath(
+        'note-resolved-from-root.md'
+      )
+    );
     expect(window.activeTextEditor.document.getText()).toEqual(
       'test resolving from root'
     );
-    expectSameUri(window.activeTextEditor.document.uri, target);
 
     await closeEditors();
     await showInEditor(base.uri);
+    expectSameUri(window.activeTextEditor.document.uri, base.uri);
     await commands.executeCommand('foam-vscode.create-note', {
-      notePath: target.getBasename(),
+      notePath: 'note-resolved-from-current-dir.md',
       text: 'test resolving from current dir',
       onRelativeNotePath: 'resolve-from-current-dir',
     });
+    expectSameUri(
+      window.activeTextEditor.document.uri,
+      fromVsCodeUri(workspace.workspaceFolders?.[0].uri).joinPath(
+        TEST_FOLDER,
+        'note-resolved-from-current-dir.md'
+      )
+    );
     expect(window.activeTextEditor.document.getText()).toEqual(
       'test resolving from current dir'
-    );
-    expect(fromVsCodeUri(window.activeTextEditor.document.uri).path).toEqual(
-      fromVsCodeUri(window.activeTextEditor.document.uri)
-        .getDirectory()
-        .joinPath(target.getBasename()).path
     );
 
     await closeEditors();
     await showInEditor(base.uri);
     await commands.executeCommand('foam-vscode.create-note', {
-      notePath: target.getBasename(),
+      notePath: 'note-that-should-not-be-created.md',
       text: 'test cancelling',
       onRelativeNotePath: 'cancel',
     });
@@ -184,13 +193,13 @@ describe('create-note command', () => {
       .spyOn(window, 'showInputBox')
       .mockImplementationOnce(jest.fn(() => Promise.resolve(undefined)));
     await commands.executeCommand('foam-vscode.create-note', {
-      notePath: target.getBasename(),
+      notePath: 'ask-me-about-it.md',
       text: 'test asking',
       onRelativeNotePath: 'ask',
     });
     expect(spy).toHaveBeenCalled();
 
-    await deleteFile(base);
+    // await deleteFile(base);
   });
 });
 

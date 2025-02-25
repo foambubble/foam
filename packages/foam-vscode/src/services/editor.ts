@@ -1,4 +1,4 @@
-import { isEmpty } from 'lodash';
+import { isEmpty, map, compact, filter, split, startsWith } from 'lodash';
 import {
   EndOfLine,
   FileType,
@@ -26,6 +26,8 @@ import {
   IDataStore,
   IMatcher,
 } from '../core/services/datastore';
+import * as path from 'path';
+import { Logger } from '../core/utils/log';
 
 interface SelectionInfo {
   document: TextDocument;

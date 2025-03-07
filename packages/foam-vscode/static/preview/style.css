@@ -17,6 +17,10 @@
   color: var(--vscode-editorError-foreground);
 }
 
+.foam-cyclic-link-warning__stack {
+  /* display: none; */
+}
+
 .embed-container-note {
   padding: 0.5em;
   margin: 1.5em 0;

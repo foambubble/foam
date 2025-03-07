@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-// taken from https://github.com/microsoft/vscode/tree/master/src/vs/base/common
+// taken from https://github.com/microsoft/vscode/tree/main/src/vs/base/common
 
 // Names from https://blog.codinghorror.com/ascii-pronunciation-rules-for-programmers/
 

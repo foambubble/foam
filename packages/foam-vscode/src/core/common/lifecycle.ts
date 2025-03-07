@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-// taken from https://github.com/microsoft/vscode/tree/master/src/vs/base/common
+// taken from https://github.com/microsoft/vscode/tree/main/src/vs/base/common
 
 import { once } from './functional';
 import { Iterable } from './iterator';
@@ -164,7 +164,7 @@ export class DisposableStore implements IDisposable {
     if (!t) {
       return t;
     }
-    if (((t as unknown) as DisposableStore) === this) {
+    if ((t as unknown as DisposableStore) === this) {
       throw new Error('Cannot register a disposable on itself!');
     }
 
@@ -201,7 +201,7 @@ export abstract class Disposable implements IDisposable {
   }
 
   protected _register<T extends IDisposable>(t: T): T {
-    if (((t as unknown) as Disposable) === this) {
+    if ((t as unknown as Disposable) === this) {
       throw new Error('Cannot register a disposable on itself!');
     }
     return this._store.add(t);

@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-// taken from https://github.com/microsoft/vscode/tree/master/src/vs/base/common
+// taken from https://github.com/microsoft/vscode/tree/main/src/vs/base/common
 
 import { onUnexpectedError } from './errors';
 import { once as onceFn } from './functional';
@@ -115,7 +115,7 @@ export namespace Event {
    * Given an event, returns the same event but typed as `Event<void>`.
    */
   export function signal<T>(event: Event<T>): Event<void> {
-    return (event as Event<any>) as Event<void>;
+    return event as Event<any> as Event<void>;
   }
 
   /**
@@ -525,9 +525,7 @@ class LeakageMonitor {
 
   constructor(
     readonly customThreshold?: number,
-    readonly name: string = Math.random()
-      .toString(18)
-      .slice(2, 5)
+    readonly name: string = Math.random().toString(18).slice(2, 5)
   ) {}
 
   dispose(): void {
@@ -549,10 +547,7 @@ class LeakageMonitor {
     if (!this._stacks) {
       this._stacks = new Map();
     }
-    const stack = new Error()
-      .stack!.split('\n')
-      .slice(3)
-      .join('\n');
+    const stack = new Error().stack!.split('\n').slice(3).join('\n');
     const count = this._stacks.get(stack) || 0;
     this._stacks.set(stack, count + 1);
     this._warnCountdown -= 1;
@@ -607,7 +602,7 @@ class LeakageMonitor {
 	}
  */
 export class Emitter<T> {
-  private static readonly _noop = function() {};
+  private static readonly _noop = function () {};
 
   private readonly _options?: EmitterOptions;
   private readonly _leakageMon?: LeakageMonitor;

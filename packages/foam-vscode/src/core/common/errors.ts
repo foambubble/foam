@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-// taken from https://github.com/microsoft/vscode/tree/master/src/vs/base/common
+// taken from https://github.com/microsoft/vscode/tree/main/src/vs/base/common
 
 export interface ErrorListenerCallback {
   (error: any): void;
@@ -21,7 +21,7 @@ export class ErrorHandler {
   constructor() {
     this.listeners = [];
 
-    this.unexpectedErrorHandler = function(e: any) {
+    this.unexpectedErrorHandler = function (e: any) {
       setTimeout(() => {
         if (e.stack) {
           throw new Error(e.message + '\n\n' + e.stack);

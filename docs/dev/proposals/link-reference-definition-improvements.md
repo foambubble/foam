@@ -66,8 +66,9 @@ The potential solution:
 - For edit-time
   - Make edit-time link reference definition generation optional via user settings. They should be on by default, and generating valid markdown links with a relative path to a `.md` file.
   - Make format of the link reference definition configurable (whether to include '.md' or not)
-  - Out of recommended extensions, currently only "markdown links" doesn't support them (?). However even its [code](https://github.com/tchayen/markdown-links/blob/master/src/parsing.ts#L25) seems to include wikilink parser, so it might just be a bug?
+  - Out of recommended extensions, currently only "markdown links" doesn't support them (?). However even its [code](https://github.com/tchayen/markdown-links/blob/main/src/parsing.ts#L25) seems to include wikilink parser, so it might just be a bug?
 - For build-time
+
   - To satisfy mutually incompatible constraints between GitHub UI, VSCode UI, and GitHub Pages, we should add a pre-processing/build step for pushing to GitHub Pages.
     - This would be a GitHub action (or a local script, ran via foam-cli) that outputs publish-friendly markdown format for static site generators and other publishing tools
     - This build step should be pluggable, so that other transformations could be ran during it
@@ -125,6 +126,7 @@ The potential solution:
   - With Foam repo, just use edit-time link reference definitions with '.md' extension - this makes the links work in the GitHub UI
   - Have publish target defined for GitHub pages, that doesn't use '.md' extension, but still has the link reference definitions. Generate the output into gh-pages branch (or separate repo) with automation.
     - This naturally requires first removing the existing link reference definitions during the build
+
 - Other
   - To clean up the search results, remove link reference definition section guards (assuming that these are not defined by the markdown spec). Use unifiedjs parse trees to identify if there's missing (or surplus) definitions (check if they are identified properly by the library), and just add the needed definitions to the bottom of the file (without guards) AND remove them if they are not needed (anywhere from the file).
 

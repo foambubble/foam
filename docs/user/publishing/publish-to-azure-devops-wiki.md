@@ -36,31 +36,31 @@ _Note that first entry in `.order` file defines wiki's home page._
 
 While you are pushing changes to GitHub, you won't see the wiki updated if you don't add Azure as a remote. You can push to multiple repositories simultaneously.
 
- 1. First open a terminal and check if Azure is added running: `git remote show origin`. If you don't see Azure add it in the output then follow these steps.
- 2. Rename your current remote (most likely named origin) to a different name by running: `git remote rename origin main`
- 3. You can then add the remote for your second remote repository, in this case, Azure. e.g `git remote add azure https://<YOUR_ID>@dev.azure.com/<YOUR_ID>/foam-notes/_git/foam-notes`. You can get it from: Repos->Files->Clone and copy the URL.
- 4. Now, you need to set up your origin remote to push to both of these. So run: `git config -e` and edit it.
- 5. Add the `remote origin` section to the bottom of the file with the URLs from each remote repository you'd like to push to. You'll see something like that:
+1.  First open a terminal and check if Azure is added running: `git remote show origin`. If you don't see Azure add it in the output then follow these steps.
+2.  Rename your current remote (most likely named origin) to a different name by running: `git remote rename origin main`
+3.  You can then add the remote for your second remote repository, in this case, Azure. e.g `git remote add azure https://<YOUR_ID>@dev.azure.com/<YOUR_ID>/foam-notes/_git/foam-notes`. You can get it from: Repos->Files->Clone and copy the URL.
+4.  Now, you need to set up your origin remote to push to both of these. So run: `git config -e` and edit it.
+5.  Add the `remote origin` section to the bottom of the file with the URLs from each remote repository you'd like to push to. You'll see something like that:
 
- ```bash
- [core]
+```bash
+[core]
+ ...
+  (ignore this part)
   ...
-   (ignore this part)
-   ...
-[branch "master"]
-  remote = github
-  merge = refs/heads/master
+[branch "main"]
+ remote = github
+ merge = refs/heads/main
 [remote "github"]
-  url = git@github.com:username/repo.git
-  fetch = +refs/heads/*:refs/remotes/github/*
+ url = git@github.com:username/repo.git
+ fetch = +refs/heads/*:refs/remotes/github/*
 [remote "azure"]
-  url = https://<YOUR_ID>@dev.azure.com/<YOUR_ID>/foam-notes/_git/foam-notes
-  fetch = +refs/heads/*:refs/remotes/azure/*
+ url = https://<YOUR_ID>@dev.azure.com/<YOUR_ID>/foam-notes/_git/foam-notes
+ fetch = +refs/heads/*:refs/remotes/azure/*
 [remote "origin"]
-  url = git@github.com:username/repo.git
-  url = https://<YOUR_ID>@dev.azure.com/<YOUR_ID>/foam-notes/_git/foam-notes
- ```
+ url = git@github.com:username/repo.git
+ url = https://<YOUR_ID>@dev.azure.com/<YOUR_ID>/foam-notes/_git/foam-notes
+```
 
- 6. You can then push to both repositories by: `git push origin master` or a single one using: `git push github master` or `git push azure master`
+6.  You can then push to both repositories by: `git push origin main` or a single one using: `git push github main` or `git push azure main`
 
 For more information, read the [Azure DevOps documentation](https://docs.microsoft.com/en-us/azure/devops/project/wiki/publish-repo-to-wiki).

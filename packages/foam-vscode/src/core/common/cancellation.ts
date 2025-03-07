@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-// taken from https://github.com/microsoft/vscode/tree/master/src/vs/base/common
+// taken from https://github.com/microsoft/vscode/tree/main/src/vs/base/common
 
 import { Emitter, Event } from './event';
 import { IDisposable } from './lifecycle';
@@ -29,7 +29,7 @@ export interface CancellationToken {
   ) => IDisposable;
 }
 
-const shortcutEvent: Event<any> = Object.freeze(function(
+const shortcutEvent: Event<any> = Object.freeze(function (
   callback,
   context?
 ): IDisposable {

@@ -1,6 +1,7 @@
 ---
 tags: todo, good-first-task
 ---
+
 # Contribution Guide
 
 Foam is open to contributions of any kind, including but not limited to code, documentation, ideas, and feedback.
@@ -44,19 +45,19 @@ You should now be ready to start working!
 
 Foam code and documentation live in the monorepo at [foambubble/foam](https://github.com/foambubble/foam/).
 
-- [/docs](https://github.com/foambubble/foam/tree/master/docs): documentation and [[recipes]].
+- [/docs](https://github.com/foambubble/foam/tree/main/docs): documentation and [[recipes]].
 
 Exceptions to the monorepo are:
 
 - The starter template at [foambubble/foam-template](https://github.com/foambubble/)
 - All other [[recommended-extensions]] live in their respective GitHub repos
 
-This project uses [Yarn workspaces](https://classic.yarnpkg.com/en/docs/workspaces/). 
+This project uses [Yarn workspaces](https://classic.yarnpkg.com/en/docs/workspaces/).
 
 Originally Foam had:
 
 - [/packages/foam-core](https://github.com/foambubble/foam/tree/ee7a8919761f168d3931079adf21c5ad4d63db59/packages/foam-core) - Powers the core functionality in Foam across all platforms.
-- [/packages/foam-vscode](https://github.com/foambubble/foam/tree/master/packages/foam-vscode) - The core VS Code plugin.
+- [/packages/foam-vscode](https://github.com/foambubble/foam/tree/main/packages/foam-vscode) - The core VS Code plugin.
 
 To improve DX we have moved the `foam-core` module into `packages/foam-vscode/src/core`, but from a development point of view it's useful to think of the `foam-vscode/src/core` "submodule" as something that might be extracted in the future.
 
@@ -81,7 +82,7 @@ Tests live alongside the code in `src`.
 
 This guide assumes you read the previous instructions and you're set up to work on Foam.
 
-1. Now we'll use the launch configuration defined at [`.vscode/launch.json`](https://github.com/foambubble/foam/blob/master/.vscode/launch.json) to start a new extension host of VS Code. Open the "Run and Debug" Activity (the icon with the bug on the far left) and select "Run VSCode Extension" in the pop-up menu. Now hit F5 or click the green arrow "play" button to fire up a new copy of VS Code with your extension installed.
+1. Now we'll use the launch configuration defined at [`.vscode/launch.json`](https://github.com/foambubble/foam/blob/main/.vscode/launch.json) to start a new extension host of VS Code. Open the "Run and Debug" Activity (the icon with the bug on the far left) and select "Run VSCode Extension" in the pop-up menu. Now hit F5 or click the green arrow "play" button to fire up a new copy of VS Code with your extension installed.
 
 2. In the new extension host of VS Code that launched, open a Foam workspace (e.g. your personal one, or a test-specific one created from [foam-template](https://github.com/foambubble/foam-template)). This is strictly not necessary, but the extension won't auto-run unless it's in a workspace with a `.vscode/foam.json` file.
 

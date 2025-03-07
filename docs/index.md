@@ -60,17 +60,17 @@ These instructions assume you have a GitHub account, and you have Visual Studio 
 
    <a class="github-button" href="https://github.com/foambubble/foam-template/generate" data-icon="octicon-repo-template" data-size="large" aria-label="Use this template foambubble/foam-template on GitHub">Use this template</a>
 
-   *If you want to keep your thoughts to yourself, remember to set the repository private, or if you don't want to use GitHub to host your workspace at all, choose [**Download as ZIP**](https://github.com/foambubble/foam-template/archive/master.zip) instead of **Use this template**.*
+   _If you want to keep your thoughts to yourself, remember to set the repository private, or if you don't want to use GitHub to host your workspace at all, choose [**Download as ZIP**](https://github.com/foambubble/foam-template/archive/main.zip) instead of **Use this template**._
 
 2. [Clone the repository locally](https://help.github.com/en/github/creating-cloning-and-archiving-repositories/cloning-a-repository) and open it in VS Code.
 
-   *Open the repository as a folder using the `File > Open...` menu item. In VS Code, "open workspace" refers to [multi-root workspaces](https://code.visualstudio.com/docs/editor/multi-root-workspaces).*
+   _Open the repository as a folder using the `File > Open...` menu item. In VS Code, "open workspace" refers to [multi-root workspaces](https://code.visualstudio.com/docs/editor/multi-root-workspaces)._
 
 3. When prompted to install recommended extensions, click **Install all** (or **Show Recommendations** if you want to review and install them one by one)
 
 After setting up the repository, open `.vscode/settings.json` and edit, add or remove any settings you'd like for your Foam workspace.
 
-* *If using a [multi-root workspace](https://code.visualstudio.com/docs/editor/multi-root-workspaces) as noted above, make sure that your **Foam** directory is first in the list. There are some settings that will need to be migrated from `.vscode/settings.json` to your `.code-workspace` file.*
+- _If using a [multi-root workspace](https://code.visualstudio.com/docs/editor/multi-root-workspaces) as noted above, make sure that your **Foam** directory is first in the list. There are some settings that will need to be migrated from `.vscode/settings.json` to your `.code-workspace` file._
 
 To learn more about how to use **Foam**, read the [[recipes]].
 

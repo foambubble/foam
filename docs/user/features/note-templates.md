@@ -8,8 +8,8 @@ Note templates are `.md` files located in the special `.foam/templates` director
 
 Create a template:
 
-* Run the `Foam: Create New Template` command from the command palette
-* OR manually create a regular `.md` file in the `.foam/templates` directory
+- Run the `Foam: Create New Template` command from the command palette
+- OR manually create a regular `.md` file in the `.foam/templates` directory
 
 ![Create new template GIF](../../assets/images/create-new-template.gif)
 
@@ -17,8 +17,8 @@ _Theme: Ayu Light_
 
 To create a note from a template:
 
-* Run the `Foam: Create New Note From Template` command and follow the instructions. Don't worry if you've not created a template yet! You'll be prompted to create a new template if none exist.
-* OR run the `Foam: Create New Note` command, which uses the special default template (`.foam/templates/new-note.md`, if it exists)
+- Run the `Foam: Create New Note From Template` command and follow the instructions. Don't worry if you've not created a template yet! You'll be prompted to create a new template if none exist.
+- OR run the `Foam: Create New Note` command, which uses the special default template (`.foam/templates/new-note.md`, if it exists)
 
 ![Create new note from template GIF](../../assets/images/create-new-note-from-template.gif)
 
@@ -29,7 +29,7 @@ _Theme: Ayu Light_
 ### Default template
 
 The `.foam/templates/new-note.md` template is special in that it is the template that will be used by the `Foam: Create New Note` command.
-Customize this template to contain content that you want included every time you create a note. To begin it is *recommended* to define the YAML Front-Matter of the template similar to the following:
+Customize this template to contain content that you want included every time you create a note. To begin it is _recommended_ to define the YAML Front-Matter of the template similar to the following:
 
 ```markdown
 ---
@@ -40,7 +40,7 @@ type: basic-note
 ### Default daily note template
 
 The `.foam/templates/daily-note.md` template is special in that it is the template that will be used when creating daily notes (e.g. by using `Foam: Open Daily Note`).
-Customize this template to contain content that you want included every time you create a daily note. To begin it is *recommended* to define the YAML Front-Matter of the template similar to the following:
+Customize this template to contain content that you want included every time you create a daily note. To begin it is _recommended_ to define the YAML Front-Matter of the template similar to the following:
 
 ```markdown
 ---
@@ -54,12 +54,12 @@ Templates can use all the variables available in [VS Code Snippets](https://code
 
 In addition, you can also use variables provided by Foam:
 
-| Name                 | Description      |
-| -------------------- | ------------ |
-| `FOAM_SELECTED_TEXT` | Foam will fill it with selected text when creating a new note, if any text is selected. Selected text will be replaced with a wikilink to the new     |
-| `FOAM_TITLE`         | The title of the note. If used, Foam will prompt you to enter a title for the note.        |
-| `FOAM_TITLE_SAFE`    | The title of the note in a file system safe format. If used, Foam will prompt you to enter a title for the note unless `FOAM_TITLE` has already caused the prompt.   |
-| `FOAM_SLUG`          | The sluggified title of the note (using the default github slug method). If used, Foam will prompt you to enter a title for the note unless `FOAM_TITLE` has already caused the prompt.   |
+| Name                 | Description                                                                                                                                                                                                                                  |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `FOAM_SELECTED_TEXT` | Foam will fill it with selected text when creating a new note, if any text is selected. Selected text will be replaced with a wikilink to the new                                                                                            |
+| `FOAM_TITLE`         | The title of the note. If used, Foam will prompt you to enter a title for the note.                                                                                                                                                          |
+| `FOAM_TITLE_SAFE`    | The title of the note in a file system safe format. If used, Foam will prompt you to enter a title for the note unless `FOAM_TITLE` has already caused the prompt.                                                                           |
+| `FOAM_SLUG`          | The sluggified title of the note (using the default github slug method). If used, Foam will prompt you to enter a title for the note unless `FOAM_TITLE` has already caused the prompt.                                                      |
 | `FOAM_DATE_*`        | `FOAM_DATE_YEAR`, `FOAM_DATE_MONTH`, `FOAM_DATE_WEEK` etc. Foam-specific versions of [VS Code's datetime snippet variables](https://code.visualstudio.com/docs/editor/userdefinedsnippets#_variables). Prefer these versions over VS Code's. |
 
 ### `FOAM_DATE_*` variables
@@ -70,7 +70,7 @@ For example, `FOAM_DATE_YEAR` has the same behaviour as VS Code's `CURRENT_YEAR`
 
 By default, prefer using the `FOAM_DATE_` versions. The datetime used to compute the values will be the same for both `FOAM_DATE_` and VS Code's variables, with the exception of the creation notes using the daily note template.
 
-For more nitty-gritty details about the supported date formats, [see here](https://github.com/foambubble/foam/blob/master/packages/foam-vscode/src/services/variable-resolver.ts).
+For more nitty-gritty details about the supported date formats, [see here](https://github.com/foambubble/foam/blob/main/packages/foam-vscode/src/services/variable-resolver.ts).
 
 #### Relative daily notes
 
@@ -84,8 +84,8 @@ For example, given this daily note template (`.foam/templates/daily-note.md`):
 
 ## Here's what I'm going to do today
 
-* Thing 1
-* Thing 2
+- Thing 1
+- Thing 2
 ```
 
 When the `/tomorrow` snippet is used, `FOAM_DATE_` variables will be populated with tomorrow's date, as expected.
@@ -97,11 +97,11 @@ When creating notes in any other scenario, the `FOAM_DATE_` values are computed 
 
 Templates can also contain metadata about the templates themselves. The metadata is defined in YAML "Frontmatter" blocks within the templates.
 
-| Name         | Description         |
-| ------------- | ---------------------- |
+| Name          | Description                                                                                                                      |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------- |
 | `filepath`    | The filepath to use when creating the new note. If the filepath is a relative filepath, it is relative to the current workspace. |
-| `name`        | A human readable name to show in the template picker.    |
-| `description` | A human readable description to show in the template picker.       |
+| `name`        | A human readable name to show in the template picker.                                                                            |
+| `description` | A human readable description to show in the template picker.                                                                     |
 
 Foam-specific variables (e.g. `$FOAM_TITLE`) can be used within template metadata. However, VS Code snippet variables are ([currently](https://github.com/foambubble/foam/pull/655)) not supported.
 
@@ -146,9 +146,10 @@ It is possible to vary the `filepath` value based on the current date using the 
 ---
 type: daily-note
 foam_template:
-    description: Daily Note for $FOAM_TITLE
-    filepath: "C:\\Users\\foam_user\\foam_notes\\journal\\$FOAM_DATE_YEAR\\$FOAM_DATE_MONTH-$FOAM_DATE_MONTH_NAME_SHORT\\$FOAM_DATE_YEAR-$FOAM_DATE_MONTH-$FOAM_DATE_DATE-daily-note.md"
+  description: Daily Note for $FOAM_TITLE
+  filepath: "C:\\Users\\foam_user\\foam_notes\\journal\\$FOAM_DATE_YEAR\\$FOAM_DATE_MONTH-$FOAM_DATE_MONTH_NAME_SHORT\\$FOAM_DATE_YEAR-$FOAM_DATE_MONTH-$FOAM_DATE_DATE-daily-note.md"
 ---
+
 # $FOAM_DATE_YEAR-$FOAM_DATE_MONTH-$FOAM_DATE_DATE Daily Notes
 ```
 
@@ -166,7 +167,7 @@ If your template already has a YAML Frontmatter block, you can add the Foam temp
 
 #### Limitations
 
-Foam only supports adding the template metadata to *YAML* Frontmatter blocks. If the existing Frontmatter block uses some other format (e.g. JSON), you will have to add the template metadata to its own YAML Frontmatter block.
+Foam only supports adding the template metadata to _YAML_ Frontmatter blocks. If the existing Frontmatter block uses some other format (e.g. JSON), you will have to add the template metadata to its own YAML Frontmatter block.
 
 Further, the template metadata must be provided as a [YAML block mapping](https://yaml.org/spec/1.2/spec.html#id2798057), with the attributes placed on the lines immediately following the `foam_template` line:
 
@@ -210,7 +211,7 @@ foam_template:
 ---
 
 ---
-existing_frontmatter: "Existing Frontmatter block"
+existing_frontmatter: 'Existing Frontmatter block'
 ---
 This is the rest of the template
 ```

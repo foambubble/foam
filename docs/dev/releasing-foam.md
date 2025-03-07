@@ -1,16 +1,16 @@
 # Releasing Foam
 
 1. Get to the latest code
-   - `git checkout master && git fetch && git rebase`
+   - `git checkout main && git fetch && git rebase`
 2. Sanity checks
    - `yarn reset`
    - `yarn test`
-3. Update change log 
+3. Update change log
    - `./packages/foam-vscode/CHANGELOG.md`
    - `git add *`
    - `git commit -m"Preparation for next release"`
 4. Update version
-   - `$ yarn version-extension <version>` (where `version` is `patch/minor/major`) 
+   - `$ yarn version-extension <version>` (where `version` is `patch/minor/major`)
 5. Package extension
    - `$ yarn package-extension`
 6. Publish extension

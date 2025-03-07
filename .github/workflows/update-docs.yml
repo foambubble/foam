@@ -3,7 +3,7 @@ name: Update Docs
 on:
   push:
     branches:
-      - master
+      - main
     paths:
       - docs/user/**/*
       - docs/.vscode/**/*

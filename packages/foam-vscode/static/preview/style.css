@@ -13,12 +13,21 @@
 }
 
 .foam-cyclic-link-warning {
+  border: 1px solid var(--vscode-editorWarning-foreground);
   background-color: var(--vscode-editorError-background);
   color: var(--vscode-editorError-foreground);
+  padding: 0.5em;
 }
 
 .foam-cyclic-link-warning__stack {
-  /* display: none; */
+  color: var(--vscode-editorWarning-foreground);
+}
+
+.foam-embed-not-supported-warning {
+  border: 1px solid var(--vscode-editorWarning-foreground);
+  background-color: var(--vscode-editorError-background);
+  color: var(--vscode-editorWarning-foreground);
+  padding: 0.5em;
 }
 
 .embed-container-note {

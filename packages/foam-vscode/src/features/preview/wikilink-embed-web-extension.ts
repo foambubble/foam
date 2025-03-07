@@ -17,9 +17,10 @@ export const markdownItWikilinkEmbed = (
     regex: WIKILINK_EMBED_REGEX,
     replace: (wikilinkItem: string) => {
       return `
-<div style="padding: 0.25em; margin: 1.5em 0; text-align: center; border: 1px solid var(--vscode-editorLineNumber-foreground);">
-Embeds are not supported in web extension: <br/> ${wikilinkItem}
-</div>`;
+      <div class="foam-embed-not-supported-warning">
+        Embed not supported in web mode: ${wikilinkItem}
+      </div>
+`;
     },
   });
 };

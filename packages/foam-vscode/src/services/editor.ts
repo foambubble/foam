@@ -76,6 +76,17 @@ export function isMdEditor(editor: TextEditor): boolean {
   );
 }
 
+/**
+ * Check if the workspace contains remote or virtual file system folders.
+ * @returns True if the workspace contains remote or virtual file system folders, false otherwise.
+ */
+export function isVirtualWorkspace(): boolean {
+  return workspace.workspaceFolders.some(folder => {
+    const scheme = folder.uri.scheme;
+    return scheme === 'vscode-remote' || scheme === 'vscode-vfs';
+  });
+}
+
 export function findSelectionContent(): SelectionInfo | undefined {
   const editor = window.activeTextEditor;
   if (editor === undefined) {

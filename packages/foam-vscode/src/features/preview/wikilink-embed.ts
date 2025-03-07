@@ -10,10 +10,14 @@ import { Resource, ResourceParser } from '../../core/model/note';
 import { getFoamVsCodeConfig } from '../../services/config';
 import { fromVsCodeUri, toVsCodeUri } from '../../utils/vsc-utils';
 import { MarkdownLink } from '../../core/services/markdown-link';
+import { URI } from '../../core/model/uri';
 import { Position } from '../../core/model/position';
 import { TextEdit } from '../../core/services/text-edit';
 import { isNone, isSome } from '../../core/utils';
-import { asAbsoluteWorkspaceUri } from '../../services/editor';
+import {
+  asAbsoluteWorkspaceUri,
+  isVirtualWorkspace,
+} from '../../services/editor';
 
 export const WIKILINK_EMBED_REGEX =
   /((?:(?:full|content)-(?:inline|card)|full|content|inline|card)?!\[\[[^[\]]+?\]\])/;
@@ -38,6 +42,14 @@ export const markdownItWikilinkEmbed = (
         const [, noteEmbedModifier, wikilink] = wikilinkItem.match(
           WIKILINK_EMBED_REGEX_GROUPS
         );
+
+        if (isVirtualWorkspace()) {
+          return `
+<div class="foam-embed-not-supported-warning">
+  Embed not supported in virtual workspace: ![[${wikilink}]]
+</div>
+          `;
+        }
 
         const includedNote = workspace.find(wikilink);
 
@@ -244,7 +256,12 @@ function contentExtractor(
   }
   rows.shift();
   noteText = rows.join('\n');
-  noteText = withLinksRelativeToWorkspaceRoot(noteText, parser, workspace);
+  noteText = withLinksRelativeToWorkspaceRoot(
+    note.uri,
+    noteText,
+    parser,
+    workspace
+  );
   return noteText;
 }
 

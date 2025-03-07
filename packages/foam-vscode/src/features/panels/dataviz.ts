@@ -39,7 +39,7 @@ export default async function activate(
       });
 
       vscode.window.onDidChangeActiveTextEditor(e => {
-        if (e?.document?.uri?.scheme === 'file') {
+        if (e?.document?.uri?.scheme !== 'untitled') {
           const note = foam.workspace.get(fromVsCodeUri(e.document.uri));
           if (isSome(note)) {
             panel.webview.postMessage({

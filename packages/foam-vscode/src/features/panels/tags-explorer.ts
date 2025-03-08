@@ -54,6 +54,51 @@ export default async function activate(
           provider,
           node => node.contextValue === 'tag' || node.contextValue === 'folder'
         )
+    ),
+    vscode.commands.registerCommand(
+      `foam-vscode.views.${provider.providerId}.focus`,
+      async (tag?: string, source?: object) => {
+        if (tag == null) {
+          tag = await vscode.window.showQuickPick(
+            Array.from(foam.tags.tags.keys()),
+            {
+              title: 'Select a tag to focus',
+            }
+          );
+        }
+        if (tag == null) {
+          return;
+        }
+        const tagItem = (await provider.findTreeItemByPath(
+          provider.valueToPath(tag)
+        )) as TagItem;
+        if (tagItem == null) {
+          return;
+        }
+        await treeView.reveal(tagItem, {
+          select: true,
+          focus: true,
+          expand: true,
+        });
+        const children = await provider.getChildren(tagItem);
+        const sourceUri = source ? new URI(source) : undefined;
+        const resourceItem = sourceUri
+          ? children.find(
+              t =>
+                t instanceof ResourceTreeItem &&
+                sourceUri.isEqual(t.resource?.uri)
+            )
+          : undefined;
+        // doing it as a two reveal process as revealing just the resource
+        // was only working when the tag item was already expanded
+        if (resourceItem) {
+          treeView.reveal(resourceItem, {
+            select: true,
+            focus: true,
+            expand: false,
+          });
+        }
+      }
     )
   );
 }

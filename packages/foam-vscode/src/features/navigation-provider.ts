@@ -157,7 +157,7 @@ export class NavigationProvider
       })
     );
 
-    return targets
+    const links: vscode.DocumentLink[] = targets
       .filter(o => o.target.isPlaceholder()) // links to resources are managed by the definition provider
       .map(o => {
         const command = CREATE_NOTE_COMMAND.forPlaceholder(
@@ -180,5 +180,26 @@ export class NavigationProvider
         documentLink.tooltip = `Create note for '${o.target.path}'`;
         return documentLink;
       });
+
+    const tags: vscode.DocumentLink[] = resource.tags.map(tag => {
+      const command = {
+        name: 'foam-vscode.views.tags-explorer.focus',
+        params: [tag.label, documentUri],
+      };
+
+      const documentLink = new vscode.DocumentLink(
+        new vscode.Range(
+          tag.range.start.line,
+          tag.range.start.character,
+          tag.range.end.line,
+          tag.range.end.character
+        ),
+        commandAsURI(command)
+      );
+      documentLink.tooltip = `Explore tag '${tag.label}'`;
+      return documentLink;
+    });
+
+    return links.concat(tags);
   }
 }

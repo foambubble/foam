@@ -406,6 +406,11 @@
         "icon": "$(expand-all)"
       },
       {
+        "command": "foam-vscode.views.tags-explorer.focus",
+        "title": "Focus on tag",
+        "icon": "$(symbol-number)"
+      },
+      {
         "command": "foam-vscode.views.placeholders.show:for-current-file",
         "title": "Show placeholders in current file",
         "icon": "$(file)"

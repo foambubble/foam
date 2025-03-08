@@ -4,6 +4,7 @@ import markdownItRegex from 'markdown-it-regex';
 import { FoamWorkspace } from '../../core/model/workspace';
 import { Logger } from '../../core/utils/log';
 import { isNone } from '../../core/utils';
+import { commandAsURI } from '../../utils/commands';
 
 export const markdownItFoamTags = (
   md: markdownit,
@@ -14,10 +15,7 @@ export const markdownItFoamTags = (
     regex: /(?<=^|\s)(#[0-9]*[\p{L}/_-][\p{L}\p{N}/_-]*)/u,
     replace: (tag: string) => {
       try {
-        const resource = workspace.find(tag);
-        if (isNone(resource)) {
-          return getFoamTag(tag);
-        }
+        return getFoamTag(tag);
       } catch (e) {
         Logger.error(
           `Error while creating link for ${tag} in Preview panel`,
@@ -29,6 +27,8 @@ export const markdownItFoamTags = (
   });
 };
 
+// Commands can't be run in the preview (see https://github.com/microsoft/vscode/issues/102532)
+// for we just return the tag as a span
 const getFoamTag = (content: string) =>
   `<span class='foam-tag'>${content}</span>`;
 

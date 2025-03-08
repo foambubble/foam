@@ -4,6 +4,18 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.26.6] - 2025-03-08
+
+Fixes and Improvements:
+
+- Improved graph based navigation when running in virtual workspace
+- Improved wikilink embeds and fixed cycle detection issue (#1430)
+- Added links in tags to navigate to corresponding tag explorer item (#1432)
+
+Internal:
+
+- Renamed branch from `master` to `main`
+
 ## [0.26.5] - 2025-02-21
 
 Fixes and Improvements:

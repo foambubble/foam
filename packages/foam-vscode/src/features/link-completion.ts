@@ -6,7 +6,7 @@ import { URI } from '../core/model/uri';
 import { FoamWorkspace } from '../core/model/workspace';
 import { getFoamVsCodeConfig } from '../services/config';
 import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
-import { getNoteTooltip, mdDocSelector } from '../services/editor';
+import { getNoteTooltip, getFoamDocSelectors } from '../services/editor';
 
 export const aliasCommitCharacters = ['#'];
 export const linkCommitCharacters = ['#', '|'];
@@ -27,12 +27,12 @@ export default async function activate(
   const foam = await foamPromise;
   context.subscriptions.push(
     vscode.languages.registerCompletionItemProvider(
-      mdDocSelector,
+      getFoamDocSelectors(),
       new WikilinkCompletionProvider(foam.workspace, foam.graph),
       '['
     ),
     vscode.languages.registerCompletionItemProvider(
-      mdDocSelector,
+      getFoamDocSelectors(),
       new SectionCompletionProvider(foam.workspace),
       '#'
     ),

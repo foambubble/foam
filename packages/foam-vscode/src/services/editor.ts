@@ -54,14 +54,14 @@ export function formatMarkdownTooltip(content: string): MarkdownString {
 }
 
 // Generate the document selector dynamically
-export const mdDocSelector = getFoamVsCodeConfig<string[]>(
-  'supportedLanguages',
-  ['markdown']
-).flatMap(lang => [
-  { language: lang, scheme: 'file' }, // Local files
-  { language: lang, scheme: 'vscode-vfs' }, // Remote files
-  { language: lang, scheme: 'untitled' }, // Untitled files
-]);
+export const getFoamDocSelectors = () =>
+  getFoamVsCodeConfig<string[]>('supportedLanguages', ['markdown']).flatMap(
+    lang => [
+      { language: lang, scheme: 'file' }, // Local files
+      { language: lang, scheme: 'vscode-vfs' }, // Remote files
+      { language: lang, scheme: 'untitled' }, // Untitled files
+    ]
+  );
 
 // Check if the editor's document is a supported language
 export function isMdEditor(editor: TextEditor): boolean {

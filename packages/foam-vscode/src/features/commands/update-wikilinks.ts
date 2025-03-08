@@ -11,7 +11,7 @@ import {
   workspace,
   Position,
 } from 'vscode';
-import { isMdEditor, mdDocSelector } from '../../services/editor';
+import { isMdEditor, getFoamDocSelectors } from '../../services/editor';
 import { Foam } from '../../core/model/foam';
 import { FoamWorkspace } from '../../core/model/workspace';
 import {
@@ -48,7 +48,7 @@ export default async function activate(
       );
     }),
     languages.registerCodeLensProvider(
-      mdDocSelector,
+      getFoamDocSelectors(),
       new WikilinkReferenceCodeLensProvider(
         foam.workspace,
         foam.services.parser

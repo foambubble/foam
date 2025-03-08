@@ -54,14 +54,14 @@ export function formatMarkdownTooltip(content: string): MarkdownString {
 }
 
 // Generate the document selector dynamically
-export const mdDocSelector = getFoamVsCodeConfig<string[]>(
-  'supportedLanguages',
-  ['markdown']
-).flatMap(lang => [
-  { language: lang, scheme: 'file' }, // Local files
-  { language: lang, scheme: 'vscode-vfs' }, // Remote files
-  { language: lang, scheme: 'untitled' }, // Untitled files
-]);
+export const getFoamDocSelectors = () =>
+  getFoamVsCodeConfig<string[]>('supportedLanguages', ['markdown']).flatMap(
+    lang => [
+      { language: lang, scheme: 'file' }, // Local files
+      { language: lang, scheme: 'vscode-vfs' }, // Remote files
+      { language: lang, scheme: 'untitled' }, // Untitled files
+    ]
+  );
 
 // Check if the editor's document is a supported language
 export function isMdEditor(editor: TextEditor): boolean {
@@ -74,6 +74,17 @@ export function isMdEditor(editor: TextEditor): boolean {
     editor.document &&
     supportedLanguages.includes(editor.document.languageId)
   );
+}
+
+/**
+ * Check if the workspace contains remote or virtual file system folders.
+ * @returns True if the workspace contains remote or virtual file system folders, false otherwise.
+ */
+export function isVirtualWorkspace(): boolean {
+  return workspace.workspaceFolders.some(folder => {
+    const scheme = folder.uri.scheme;
+    return scheme === 'vscode-remote' || scheme === 'vscode-vfs';
+  });
 }
 
 export function findSelectionContent(): SelectionInfo | undefined {

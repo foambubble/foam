@@ -10,7 +10,7 @@ import { Position } from '../core/model/position';
 import { CREATE_NOTE_COMMAND } from './commands/create-note';
 import { commandAsURI } from '../utils/commands';
 import { Location } from '../core/model/location';
-import { mdDocSelector } from '../services/editor';
+import { getFoamDocSelectors } from '../services/editor';
 
 export default async function activate(
   context: vscode.ExtensionContext,
@@ -26,15 +26,15 @@ export default async function activate(
 
   context.subscriptions.push(
     vscode.languages.registerDefinitionProvider(
-      mdDocSelector,
+      getFoamDocSelectors(),
       navigationProvider
     ),
     vscode.languages.registerDocumentLinkProvider(
-      mdDocSelector,
+      getFoamDocSelectors(),
       navigationProvider
     ),
     vscode.languages.registerReferenceProvider(
-      mdDocSelector,
+      getFoamDocSelectors(),
       navigationProvider
     )
   );

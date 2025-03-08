@@ -10,9 +10,14 @@ import { Resource, ResourceParser } from '../../core/model/note';
 import { getFoamVsCodeConfig } from '../../services/config';
 import { fromVsCodeUri, toVsCodeUri } from '../../utils/vsc-utils';
 import { MarkdownLink } from '../../core/services/markdown-link';
+import { URI } from '../../core/model/uri';
 import { Position } from '../../core/model/position';
 import { TextEdit } from '../../core/services/text-edit';
 import { isNone, isSome } from '../../core/utils';
+import {
+  asAbsoluteWorkspaceUri,
+  isVirtualWorkspace,
+} from '../../services/editor';
 
 export const WIKILINK_EMBED_REGEX =
   /((?:(?:full|content)-(?:inline|card)|full|content|inline|card)?!\[\[[^[\]]+?\]\])/;
@@ -22,7 +27,7 @@ export const WIKILINK_EMBED_REGEX =
 export const WIKILINK_EMBED_REGEX_GROUPS =
   /((?:\w+)|(?:(?:\w+)-(?:\w+)))?!\[\[([^[\]]+?)\]\]/;
 export const CONFIG_EMBED_NOTE_TYPE = 'preview.embedNoteType';
-const refsStack: string[] = [];
+let refsStack: string[] = [];
 
 export const markdownItWikilinkEmbed = (
   md: markdownit,
@@ -38,6 +43,14 @@ export const markdownItWikilinkEmbed = (
           WIKILINK_EMBED_REGEX_GROUPS
         );
 
+        if (isVirtualWorkspace()) {
+          return `
+<div class="foam-embed-not-supported-warning">
+  Embed not supported in virtual workspace: ![[${wikilink}]]
+</div>
+          `;
+        }
+
         const includedNote = workspace.find(wikilink);
 
         if (!includedNote) {
@@ -48,56 +61,31 @@ export const markdownItWikilinkEmbed = (
           includedNote.uri.path.toLocaleLowerCase()
         );
 
-        if (!cyclicLinkDetected) {
-          refsStack.push(includedNote.uri.path.toLocaleLowerCase());
-        }
-
         if (cyclicLinkDetected) {
-          return `<div class="foam-cyclic-link-warning">Cyclic link detected for wikilink: ${wikilink}</div>`;
+          return `
+<div class="foam-cyclic-link-warning">
+  Cyclic link detected for wikilink: ${wikilink}
+  <div class="foam-cyclic-link-warning__stack">
+    Link sequence: 
+    <ul>
+      ${refsStack.map(ref => `<li>${ref}</li>`).join('')}
+    </ul>
+  </div>
+</div>
+          `;
         }
-        let content = `Embed for [[${wikilink}]]`;
-        let html: string;
 
-        switch (includedNote.type) {
-          case 'note': {
-            const { noteScope, noteStyle } =
-              retrieveNoteConfig(noteEmbedModifier);
+        refsStack.push(includedNote.uri.path.toLocaleLowerCase());
 
-            const extractor: EmbedNoteExtractor =
-              noteScope === 'full'
-                ? fullExtractor
-                : noteScope === 'content'
-                ? contentExtractor
-                : fullExtractor;
-
-            const formatter: EmbedNoteFormatter =
-              noteStyle === 'card'
-                ? cardFormatter
-                : noteStyle === 'inline'
-                ? inlineFormatter
-                : cardFormatter;
-
-            content = extractor(includedNote, parser, workspace);
-            html = formatter(content, md);
-            break;
-          }
-          case 'attachment':
-            content = `
-<div class="embed-container-attachment">
-${md.renderInline('[[' + wikilink + ']]')}<br/>
-Embed for attachments is not supported
-</div>`;
-            html = md.render(content);
-            break;
-          case 'image':
-            content = `<div class="embed-container-image">${md.render(
-              `![](${md.normalizeLink(includedNote.uri.path)})`
-            )}</div>`;
-            html = md.render(content);
-            break;
-        }
+        const content = getNoteContent(
+          includedNote,
+          noteEmbedModifier,
+          parser,
+          workspace,
+          md
+        );
         refsStack.pop();
-        return html;
+        return content;
       } catch (e) {
         Logger.error(
           `Error while including ${wikilinkItem} into the current document of the Preview panel`,
@@ -109,11 +97,65 @@ Embed for attachments is not supported
   });
 };
 
+function getNoteContent(
+  includedNote: Resource,
+  noteEmbedModifier: string | undefined,
+  parser: ResourceParser,
+  workspace: FoamWorkspace,
+  md: markdownit
+): string {
+  let content = `Embed for [[${includedNote.uri.path}]]`;
+  let html: string;
+
+  switch (includedNote.type) {
+    case 'note': {
+      const { noteScope, noteStyle } = retrieveNoteConfig(noteEmbedModifier);
+
+      const extractor: EmbedNoteExtractor =
+        noteScope === 'full'
+          ? fullExtractor
+          : noteScope === 'content'
+          ? contentExtractor
+          : fullExtractor;
+
+      const formatter: EmbedNoteFormatter =
+        noteStyle === 'card'
+          ? cardFormatter
+          : noteStyle === 'inline'
+          ? inlineFormatter
+          : cardFormatter;
+
+      content = extractor(includedNote, parser, workspace);
+      html = formatter(content, md);
+      break;
+    }
+    case 'attachment':
+      content = `
+<div class="embed-container-attachment">
+${md.renderInline('[[' + includedNote.uri.path + ']]')}<br/>
+Embed for attachments is not supported
+</div>`;
+      html = md.render(content);
+      break;
+    case 'image':
+      content = `<div class="embed-container-image">${md.render(
+        `![](${md.normalizeLink(includedNote.uri.path)})`
+      )}</div>`;
+      html = md.render(content);
+      break;
+    default:
+      html = content;
+  }
+
+  return html;
+}
+
 function withLinksRelativeToWorkspaceRoot(
+  noteUri: URI,
   noteText: string,
   parser: ResourceParser,
   workspace: FoamWorkspace
-) {
+): string {
   const note = parser.parse(
     fromVsCodeUri(vsWorkspace.workspaceFolders[0].uri),
     noteText
@@ -121,15 +163,13 @@ function withLinksRelativeToWorkspaceRoot(
   const edits = note.links
     .map(link => {
       const info = MarkdownLink.analyzeLink(link);
-      const resource = workspace.find(info.target);
+      const resource = workspace.find(info.target, noteUri);
       // embedded notes that aren't created are still collected
       // return null so it can be filtered in the next step
       if (isNone(resource)) {
         return null;
       }
-      const pathFromRoot = vsWorkspace.asRelativePath(
-        toVsCodeUri(resource.uri)
-      );
+      const pathFromRoot = asAbsoluteWorkspaceUri(resource.uri).path;
       return MarkdownLink.createUpdateLinkEdit(link, {
         target: pathFromRoot,
       });
@@ -185,7 +225,12 @@ function fullExtractor(
       .slice(section.range.start.line, section.range.end.line)
       .join('\n');
   }
-  noteText = withLinksRelativeToWorkspaceRoot(noteText, parser, workspace);
+  noteText = withLinksRelativeToWorkspaceRoot(
+    note.uri,
+    noteText,
+    parser,
+    workspace
+  );
   return noteText;
 }
 
@@ -211,7 +256,12 @@ function contentExtractor(
   }
   rows.shift();
   noteText = rows.join('\n');
-  noteText = withLinksRelativeToWorkspaceRoot(noteText, parser, workspace);
+  noteText = withLinksRelativeToWorkspaceRoot(
+    note.uri,
+    noteText,
+    parser,
+    workspace
+  );
   return noteText;
 }
 

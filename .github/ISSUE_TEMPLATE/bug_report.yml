@@ -74,7 +74,7 @@ body:
     id: os
     attributes:
       label: Operating System Version
-      description: What opearting system are you using?
+      description: What operating system are you using?
       placeholder: |
         - OS: [e.g. macOS, Windows, Linux]
     validations:
@@ -94,4 +94,4 @@ body:
       label: Additional context
       description: |
         Add any other context about the problem here.
-        The Foam log output for VSCode can be found here: https://github.com/foambubble/foam/blob/main/docs/features/foam-logging-in-vscode.md
+        The Foam log output for VSCode can be found here: https://github.com/foambubble/foam/blob/main/docs/user/tools/foam-logging-in-vscode.md

@@ -5,9 +5,7 @@
 👀*This is an early stage project under rapid development. For updates join the [Foam community Discord](https://foambubble.github.io/join-discord/g)! 💬*
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-
-[![All Contributors](https://img.shields.io/badge/all_contributors-123-orange.svg?style=flat-square)](#contributors-)
-
+[![All Contributors](https://img.shields.io/badge/all_contributors-124-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 [![Visual Studio Marketplace Installs](https://img.shields.io/visual-studio-marketplace/i/foam.foam-vscode?label=VS%20Code%20Installs)](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode)
@@ -367,6 +365,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/PiotrAleksander"><img src="https://avatars.githubusercontent.com/u/6314591?v=4?s=60" width="60px;" alt="Piotr Mrzygłosz"/><br /><sub><b>Piotr Mrzygłosz</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=PiotrAleksander" title="Documentation">📖</a></td>
       <td align="center" valign="top" width="14.28%"><a href="http://schaver.com/"><img src="https://avatars.githubusercontent.com/u/7584?v=4?s=60" width="60px;" alt="Mark Schaver"/><br /><sub><b>Mark Schaver</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=markschaver" title="Documentation">📖</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/n8layman"><img src="https://avatars.githubusercontent.com/u/25353944?v=4?s=60" width="60px;" alt="Nathan Layman"/><br /><sub><b>Nathan Layman</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=n8layman" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/emmanuel-ferdman"><img src="https://avatars.githubusercontent.com/u/35470921?v=4?s=60" width="60px;" alt="Emmanuel Ferdman"/><br /><sub><b>Emmanuel Ferdman</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=emmanuel-ferdman" title="Documentation">📖</a></td>
     </tr>
   </tbody>
 </table>

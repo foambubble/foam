@@ -320,20 +320,55 @@ this is some #text that includes #tags we #care-about.
       ]);
     });
 
-    it('provides rough range for tags in yaml', () => {
+    it('provides a specific range for tags in yaml', () => {
       // For now it's enough to just get the YAML block range
       // in the future we might want to be more specific
 
       const noteA = createNoteFromMarkdown(`
 ---
+prop: hello world
 tags: [hello, world, this_is_good]
+another: i love the world
 ---
 # this is a heading
 this is some text
     `);
       expect(noteA.tags[0]).toEqual({
         label: 'hello',
-        range: Range.create(1, 0, 3, 3),
+        range: Range.create(3, 7, 3, 12),
+      });
+      expect(noteA.tags[1]).toEqual({
+        label: 'world',
+        range: Range.create(3, 14, 3, 19),
+      });
+      expect(noteA.tags[2]).toEqual({
+        label: 'this_is_good',
+        range: Range.create(3, 21, 3, 33),
+      });
+
+      const noteB = createNoteFromMarkdown(`
+---
+prop: hello world
+tags: 
+- hello
+- world
+- this_is_good
+another: i love the world
+---
+# this is a heading
+this is some text
+            `);
+      expect(noteB.tags[0]).toEqual({
+        label: 'hello',
+        range: Range.create(4, 2, 4, 7),
+      });
+      expect(noteB.tags[1]).toEqual({
+        label: 'world',
+        range: Range.create(5, 2, 5, 7),
+      });
+      expect(noteB.tags[2]).toEqual({
+        label: 'this_is_good',
+        range: Range.create(6, 2, 6, 14),
       });
     });
   });

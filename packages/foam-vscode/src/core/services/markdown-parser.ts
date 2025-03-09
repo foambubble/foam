@@ -173,15 +173,51 @@ const getTextFromChildren = (root: Node): string => {
   return text;
 };
 
+function getPropertiesInfoFromYAML(yamlText: string): {
+  [key: string]: { key: string; value: string; text: string; line: number };
+} {
+  const yamlProps = yamlText
+    .split(/(\w+:)/g)
+    .filter(item => item.trim() !== '');
+  const lines = yamlText.split('\n');
+  let result: { line: number; key: string; text: string; value: string }[] = [];
+  for (let i = 0; i < yamlProps.length / 2; i++) {
+    const key = yamlProps[i * 2].replace(':', '');
+    const value = yamlProps[i * 2 + 1].trim();
+    const text = yamlProps[i * 2] + yamlProps[i * 2 + 1];
+    result.push({ key, value, text, line: -1 });
+  }
+  result = result.map(p => {
+    const line = lines.findIndex(l => l.startsWith(p.key + ':'));
+    return { ...p, line };
+  });
+  return result.reduce((acc, curr) => {
+    acc[curr.key] = curr;
+    return acc;
+  }, {});
+}
+
 const tagsPlugin: ParserPlugin = {
   name: 'tags',
   onDidFindProperties: (props, note, node) => {
     if (isSome(props.tags)) {
+      const tagPropertyInfo = getPropertiesInfoFromYAML((node as any).value)[
+        'tags'
+      ];
+      const tagPropertyStartLine =
+        node.position!.start.line + tagPropertyInfo.line;
+      const tagPropertyLines = tagPropertyInfo.text.split('\n');
       const yamlTags = extractTagsFromProp(props.tags);
       for (const tag of yamlTags) {
+        const tagLine = tagPropertyLines.findIndex(l => l.includes(tag));
+        const line = tagPropertyStartLine + tagLine;
+        const charStart = tagPropertyLines[tagLine].indexOf(tag);
         note.tags.push({
           label: tag,
-          range: astPositionToFoamRange(node.position!),
+          range: Range.createFromPosition(
+            Position.create(line, charStart),
+            Position.create(line, charStart + tag.length)
+          ),
         });
       }
     }

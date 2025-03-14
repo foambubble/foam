@@ -19,7 +19,6 @@ export interface Folder<T> {
 export class FolderTreeItem<T> extends vscode.TreeItem {
   collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
   contextValue = 'folder';
-  iconPath = new vscode.ThemeIcon('folder');
 
   constructor(
     public node: Folder<T>,

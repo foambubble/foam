@@ -43,6 +43,9 @@ export class UriTreeItem extends BaseTreeItem {
 }
 
 export class ResourceTreeItem extends UriTreeItem {
+  iconPath = vscode.ThemeIcon.File;
+  contextValue = 'foam.resource';
+
   constructor(
     public readonly resource: Resource,
     private readonly workspace: FoamWorkspace,
@@ -62,8 +65,6 @@ export class ResourceTreeItem extends UriTreeItem {
       title: 'Go to location',
     };
     this.resourceUri = toVsCodeUri(resource.uri);
-    this.iconPath = vscode.ThemeIcon.File;
-    this.contextValue = 'foam.resource';
   }
 
   async resolveTreeItem(): Promise<ResourceTreeItem> {

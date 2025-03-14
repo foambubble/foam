@@ -19,7 +19,7 @@ const initGUI = () => {
           if (!nodeTypeFilterControllers.has(type)) {
             const ctrl = nodeTypeFilterFolder
               .add(m.showNodesOfType, type)
-              .onFinishChange(function() {
+              .onFinishChange(function () {
                 Actions.updateFilters();
               });
             ctrl.domElement.previousSibling.style.color = getNodeTypeColor(
@@ -254,17 +254,28 @@ function augmentGraphInfo(graph) {
     node.links = [];
     if (node.tags && node.tags.length > 0) {
       node.tags.forEach(tag => {
-        const tagNode = {
-          id: tag.label,
-          title: tag.label,
-          type: 'tag',
-          properties: {},
-          neighbors: [],
-          links: [],
-        };
-        graph.nodeInfo[tag.label] = tagNode;
+        subtags = tag.label.split('/');
+        for (let i = 0; i < subtags.length; i++) {
+          const label = subtags.slice(0, i + 1).join('/');
+          const tagNode = {
+            id: label,
+            title: label,
+            type: 'tag',
+            properties: {},
+            neighbors: [],
+            links: [],
+          };
+          graph.nodeInfo[tagNode.id] = tagNode;
+          if (i > 0) {
+            const parent = subtags.slice(0, i).join('/');
+            graph.links.push({
+              source: parent,
+              target: label,
+            });
+          }
+        }
         graph.links.push({
-          source: tagNode.id,
+          source: tag.label,
           target: node.id,
         });
       });
@@ -374,6 +385,12 @@ function getLinkColor(link, model) {
   const style = model.style;
   switch (getLinkState(link, model)) {
     case 'regular':
+      if (
+        model.graph.nodeInfo[link.source.id].type === 'tag' &&
+        model.graph.nodeInfo[link.target.id].type === 'tag'
+      ) {
+        return getNodeTypeColor('tag', model);
+      }
       return style.lineColor;
     case 'highlighted':
       return style.highlightedForeground;

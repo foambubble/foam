@@ -19,7 +19,7 @@ const initGUI = () => {
           if (!nodeTypeFilterControllers.has(type)) {
             const ctrl = nodeTypeFilterFolder
               .add(m.showNodesOfType, type)
-              .onFinishChange(function() {
+              .onFinishChange(function () {
                 Actions.updateFilters();
               });
             ctrl.domElement.previousSibling.style.color = getNodeTypeColor(
@@ -249,23 +249,33 @@ function initDataviz(channel) {
 }
 
 function augmentGraphInfo(graph) {
+  const tagNodes = {};
   Object.values(graph.nodeInfo).forEach(node => {
+    if (node.type === 'tag') {
+      tagNodes[node.title] = node;
+    }
     node.neighbors = [];
     node.links = [];
+  });
+  Object.values(graph.nodeInfo).forEach(node => {
     if (node.tags && node.tags.length > 0) {
       node.tags.forEach(tag => {
-        const tagNode = {
-          id: tag.label,
-          title: tag.label,
-          type: 'tag',
-          properties: {},
-          neighbors: [],
-          links: [],
-        };
-        graph.nodeInfo[tag.label] = tagNode;
+        let tagNode = tagNodes[tag.label];
+        if (!tagNode) {
+          tagNode = {
+            id: tag.label,
+            title: tag.label,
+            type: 'tag',
+            properties: {},
+            neighbors: [],
+            links: [],
+          };
+          graph.nodeInfo[tag.label] = tagNode;
+          tagNodes[tag.label] = tagNode;
+        }
         graph.links.push({
-          source: tagNode.id,
-          target: node.id,
+          source: node.id,
+          target: tagNode.id,
         });
       });
     }

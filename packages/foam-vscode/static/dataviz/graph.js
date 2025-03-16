@@ -249,34 +249,33 @@ function initDataviz(channel) {
 }
 
 function augmentGraphInfo(graph) {
+  const tagNodes = {};
   Object.values(graph.nodeInfo).forEach(node => {
+    if (node.type === 'tag') {
+      tagNodes[node.title] = node;
+    }
     node.neighbors = [];
     node.links = [];
+  });
+  Object.values(graph.nodeInfo).forEach(node => {
     if (node.tags && node.tags.length > 0) {
       node.tags.forEach(tag => {
-        subtags = tag.label.split('/');
-        for (let i = 0; i < subtags.length; i++) {
-          const label = subtags.slice(0, i + 1).join('/');
-          const tagNode = {
-            id: label,
-            title: label,
+        let tagNode = tagNodes[tag.label];
+        if (!tagNode) {
+          tagNode = {
+            id: tag.label,
+            title: tag.label,
             type: 'tag',
             properties: {},
             neighbors: [],
             links: [],
           };
-          graph.nodeInfo[tagNode.id] = tagNode;
-          if (i > 0) {
-            const parent = subtags.slice(0, i).join('/');
-            graph.links.push({
-              source: parent,
-              target: label,
-            });
-          }
+          graph.nodeInfo[tag.label] = tagNode;
+          tagNodes[tag.label] = tagNode;
         }
         graph.links.push({
-          source: tag.label,
-          target: node.id,
+          source: node.id,
+          target: tagNode.id,
         });
       });
     }
@@ -385,12 +384,6 @@ function getLinkColor(link, model) {
   const style = model.style;
   switch (getLinkState(link, model)) {
     case 'regular':
-      if (
-        model.graph.nodeInfo[link.source.id].type === 'tag' &&
-        model.graph.nodeInfo[link.target.id].type === 'tag'
-      ) {
-        return getNodeTypeColor('tag', model);
-      }
       return style.lineColor;
     case 'highlighted':
       return style.highlightedForeground;

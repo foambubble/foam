@@ -4,16 +4,26 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.26.9] - 2025-03-29
+
+Fixes and Improvements:
+
+- Defensive get of link object ID in graph (#1438)
+
+Internal:
+
+- Updated `force-graph` library
+
 ## [0.26.8] - 2025-03-14
 
-Fixese and Improvements:
+Fixes and Improvements:
 
 - Tag hierarchy now visible in graph (#1436)
 - Improved Notes Explorer layout
 
 ## [0.26.7] - 2025-03-09
 
-Fixese and Improvements:
+Fixes and Improvements:
 
 - Improved parsing of tags (fixes #1434)
 

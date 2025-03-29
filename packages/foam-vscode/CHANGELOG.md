@@ -4,6 +4,12 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.26.10] - 2025-03-29
+
+Fixes and Improvements:
+
+- General improvment of wiki embeds (#1443)
+
 ## [0.26.9] - 2025-03-29
 
 Fixes and Improvements:

@@ -8,7 +8,7 @@ export class TrainNoteWriter implements IWriter {
     this.writer = writer;
   }
 
-  write(trainNote: TrainNote): Promise<boolean> {
+  write(trainNote: TrainNote): Promise<void> {
     return this.writer.write(trainNote);
   }
 }

@@ -85,7 +85,7 @@ export const markdownItWikilinkEmbed = (
           md
         );
         refsStack.pop();
-        return content;
+        return refsStack.length === 0 ? md.render(content) : content;
       } catch (e) {
         Logger.error(
           `Error while including ${wikilinkItem} into the current document of the Preview panel`,
@@ -105,7 +105,7 @@ function getNoteContent(
   md: markdownit
 ): string {
   let content = `Embed for [[${includedNote.uri.path}]]`;
-  let html: string;
+  let toRender: string;
 
   switch (includedNote.type) {
     case 'note': {
@@ -126,7 +126,7 @@ function getNoteContent(
           : cardFormatter;
 
       content = extractor(includedNote, parser, workspace);
-      html = formatter(content, md);
+      toRender = formatter(content, md);
       break;
     }
     case 'attachment':
@@ -135,19 +135,19 @@ function getNoteContent(
 ${md.renderInline('[[' + includedNote.uri.path + ']]')}<br/>
 Embed for attachments is not supported
 </div>`;
-      html = md.render(content);
+      toRender = md.render(content);
       break;
     case 'image':
       content = `<div class="embed-container-image">${md.render(
         `![](${md.normalizeLink(includedNote.uri.path)})`
       )}</div>`;
-      html = md.render(content);
+      toRender = md.render(content);
       break;
     default:
-      html = content;
+      toRender = content;
   }
 
-  return html;
+  return toRender;
 }
 
 function withLinksRelativeToWorkspaceRoot(
@@ -271,13 +271,11 @@ function contentExtractor(
 export type EmbedNoteFormatter = (content: string, md: markdownit) => string;
 
 function cardFormatter(content: string, md: markdownit): string {
-  return md.render(
-    `<div class="embed-container-note">${md.render(content)}</div>`
-  );
+  return `<div class="embed-container-note">\n\n${content}\n\n</div>`;
 }
 
 function inlineFormatter(content: string, md: markdownit): string {
-  return md.render(content);
+  return content;
 }
 
 export default markdownItWikilinkEmbed;

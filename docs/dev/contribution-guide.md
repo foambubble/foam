@@ -14,6 +14,8 @@ Before you start contributing we recommend that you read the following links:
 - [[principles]] - This document describes the guiding principles behind Foam.
 - [[code-of-conduct]] - Rules we hope every contributor aims to follow, allowing everyone to participate in our community!
 
+To get yourself familiar with the codebase you can also browse [this repo](https://app.komment.ai/wiki/github/foambubble/foam)
+
 ## Diving In
 
 We understand that diving in an unfamiliar codebase may seem scary,

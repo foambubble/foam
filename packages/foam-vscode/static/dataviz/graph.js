@@ -96,6 +96,7 @@ const graph = ForceGraph();
 const gui = initGUI();
 
 function update(patch) {
+  const startTime = performance.now();
   // Apply the patch function to the model..
   patch(model);
   // ..then compute the derived state
@@ -121,6 +122,7 @@ function update(patch) {
   model.focusLinks = focusLinks;
 
   gui.update(model);
+  console.log(`Updated model in ${performance.now() - startTime}ms`);
 }
 
 const Actions = {
@@ -386,8 +388,8 @@ function getLinkColor(link, model) {
   switch (getLinkState(link, model)) {
     case 'regular':
       if (
-        model.graph.nodeInfo[link.source.id].type === 'tag' &&
-        model.graph.nodeInfo[link.target.id].type === 'tag'
+        model.graph.nodeInfo[getLinkNodeId(link.source)].type === 'tag' &&
+        model.graph.nodeInfo[getLinkNodeId(link.target)].type === 'tag'
       ) {
         return getNodeTypeColor('tag', model);
       }
@@ -399,6 +401,16 @@ function getLinkColor(link, model) {
     default:
       throw new Error('Unknown type for link', link);
   }
+}
+
+/**
+ * Helper function to safely get node ID from a link's source or target
+ * Handles both when the link endpoint is a string ID or a full node object
+ * @param {string|Object} endpoint - Either a node ID string or a node object
+ * @returns {string} The node ID
+ */
+function getLinkNodeId(endpoint) {
+  return typeof endpoint === 'object' ? endpoint.id : endpoint;
 }
 
 function getNodeState(nodeId, model) {
@@ -416,7 +428,8 @@ function getLinkState(link, model) {
     ? 'regular'
     : Array.from(model.focusLinks).some(
         fLink =>
-          fLink.source === link.source.id && fLink.target === link.target.id
+          getLinkNodeId(fLink.source) === getLinkNodeId(link.source) &&
+          getLinkNodeId(fLink.target) === getLinkNodeId(link.target)
       )
     ? 'highlighted'
     : 'lessened';

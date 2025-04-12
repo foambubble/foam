@@ -45,10 +45,11 @@ async function main() {
         extensionTestsPath,
         launchArgs: [
           testWorkspace,
+          '--disable-gpu',
           '--disable-extensions',
           '--disable-workspace-trust',
         ],
-        version: '1.70.0',
+        version: '1.96.0',
       });
     } catch (err) {
       console.log('Error occurred while running Foam e2e tests:', err);

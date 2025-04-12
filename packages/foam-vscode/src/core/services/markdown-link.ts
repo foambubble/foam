@@ -1,4 +1,5 @@
 import { ResourceLink } from '../model/note';
+import { TextEdit } from './text-edit';
 
 export abstract class MarkdownLink {
   private static wikilinkRegex = new RegExp(
@@ -45,7 +46,7 @@ export abstract class MarkdownLink {
       type?: 'wikilink' | 'link';
       isEmbed?: boolean;
     }
-  ) {
+  ): TextEdit {
     const { target, section, alias } = MarkdownLink.analyzeLink(link);
     const newTarget = delta.target ?? target;
     const newSection = delta.section ?? section ?? '';

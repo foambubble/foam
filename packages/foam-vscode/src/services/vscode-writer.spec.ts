@@ -4,11 +4,8 @@ import {
   readFileFromFs,
   createTestNote,
 } from '../test/test-utils';
-import { createMarkdownParser } from '../core/services/markdown-parser';
 import { Range } from '../core/model/range';
 import { getUriInWorkspace, createNote } from '../test/test-utils-vscode';
-
-const parser = createMarkdownParser([]);
 
 describe('VS-Code document Save', () => {
   it('shut save VS-Code Document', async () => {
@@ -20,7 +17,7 @@ describe('VS-Code document Save', () => {
     const noteA = createTestNote({
       uri: getUriInWorkspace().path,
     });
-    createNote(noteA);
+    await createNote(noteA);
     foam_workspace.set(noteA);
 
     // change note
@@ -31,9 +28,6 @@ describe('VS-Code document Save', () => {
     await writer
       .write(noteA)
       .then(() => readFileFromFs(noteA.uri))
-      .then(content => parser.parse(noteA.uri, content))
-      .then(fs_note =>
-        expect(fs_note.sections[0].label).toEqual(noteA.sections[0].label)
-      );
+      .then(content => expect(content).toEqual(newContent));
   });
 });

@@ -47,6 +47,7 @@ function getStyle(name) {
 const defaultStyle = {
   background: getStyle(`--vscode-panel-background`) ?? '#202020',
   fontSize: parseInt(getStyle(`--vscode-font-size`) ?? 12) - 2,
+  fontFamily: 'Sans-Serif',
   lineColor: getStyle('--vscode-editor-foreground') ?? '#277da1',
   lineWidth: 0.2,
   particleWidth: 1.0,
@@ -229,7 +230,14 @@ function initDataviz(channel) {
 
       painter
         .circle(node.x, node.y, size, fill, border)
-        .text(label, node.x, node.y + size + 1, fontSize, textColor);
+        .text(
+          label,
+          node.x,
+          node.y + size + 1,
+          fontSize,
+          model.style.fontFamily,
+          textColor
+        );
     })
     .onRenderFramePost(ctx => {
       painter.paint(ctx);
@@ -462,9 +470,9 @@ class Painter {
     return this;
   }
 
-  text(text, x, y, size, color) {
+  text(text, x, y, size, family, color) {
     if (color.opacity > 0) {
-      this.texts.push({ x, y, text, size, color });
+      this.texts.push({ x, y, text, size, family, color });
     }
     return this;
   }
@@ -489,7 +497,7 @@ class Painter {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     for (const text of this.texts) {
-      ctx.font = `${text.size}px Sans-Serif`;
+      ctx.font = `${text.size}px ${text.family}`;
       ctx.fillStyle = text.color;
       ctx.fillText(text.text, text.x, text.y);
     }

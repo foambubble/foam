@@ -251,23 +251,32 @@ function initDataviz(channel) {
 }
 
 function augmentGraphInfo(graph) {
+  const tagNodes = {};
   Object.values(graph.nodeInfo).forEach(node => {
+    if (node.type === 'tag') {
+      tagNodes[node.title] = node;
+    }
     node.neighbors = [];
     node.links = [];
+  });
+  Object.values(graph.nodeInfo).forEach(node => {
     if (node.tags && node.tags.length > 0) {
       node.tags.forEach(tag => {
         subtags = tag.label.split('/');
         for (let i = 0; i < subtags.length; i++) {
           const label = subtags.slice(0, i + 1).join('/');
-          const tagNode = {
-            id: label,
-            title: label,
-            type: 'tag',
-            properties: {},
-            neighbors: [],
-            links: [],
-          };
-          graph.nodeInfo[tagNode.id] = tagNode;
+          if (!tagNodes[label]) {
+            const tagNode = {
+              id: label,
+              title: label,
+              type: 'tag',
+              properties: {},
+              neighbors: [],
+              links: [],
+            };
+            graph.nodeInfo[tagNode.id] = tagNode;
+            tagNodes[tagNode.id] = tagNode;
+          }
           if (i > 0) {
             const parent = subtags.slice(0, i).join('/');
             graph.links.push({
@@ -277,12 +286,15 @@ function augmentGraphInfo(graph) {
           }
         }
         graph.links.push({
-          source: tag.label,
+          source: tagNodes[tag.label].id,
           target: node.id,
         });
       });
     }
   });
+  graph.links = Array.from(
+    new Set(graph.links.map(link => JSON.stringify(link)))
+  ).map(link => JSON.parse(link));
   graph.links.forEach(link => {
     const a = graph.nodeInfo[link.source];
     const b = graph.nodeInfo[link.target];

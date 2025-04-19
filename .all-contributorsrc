@@ -1139,6 +1139,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "Tenormis",
+      "name": "Tenormis",
+      "avatar_url": "https://avatars.githubusercontent.com/u/61572102?v=4",
+      "profile": "https://github.com/Tenormis",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,

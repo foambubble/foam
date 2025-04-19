@@ -266,6 +266,7 @@ If that sounds like something you're interested in, I'd love to have you along o
       <td align="center" valign="top" width="14.28%"><a href="http://schaver.com/"><img src="https://avatars.githubusercontent.com/u/7584?v=4?s=60" width="60px;" alt="Mark Schaver"/><br /><sub><b>Mark Schaver</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=markschaver" title="Documentation">📖</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/n8layman"><img src="https://avatars.githubusercontent.com/u/25353944?v=4?s=60" width="60px;" alt="Nathan Layman"/><br /><sub><b>Nathan Layman</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=n8layman" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/emmanuel-ferdman"><img src="https://avatars.githubusercontent.com/u/35470921?v=4?s=60" width="60px;" alt="Emmanuel Ferdman"/><br /><sub><b>Emmanuel Ferdman</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=emmanuel-ferdman" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Tenormis"><img src="https://avatars.githubusercontent.com/u/61572102?v=4?s=60" width="60px;" alt="Tenormis"/><br /><sub><b>Tenormis</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=Tenormis" title="Code">💻</a></td>
     </tr>
   </tbody>
 </table>

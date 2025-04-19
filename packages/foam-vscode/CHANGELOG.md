@@ -4,6 +4,12 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.26.11] - 2025-04-19
+
+Fixes and Improvements:
+
+- Support for custom fonts in graph view (#1457 - thanks @Tenormis)
+
 ## [0.26.10] - 2025-03-29
 
 Fixes and Improvements:

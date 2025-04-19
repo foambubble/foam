@@ -38,6 +38,7 @@ A sample configuration object is provided below, you can provide as many or as l
 "foam.graph.style": {
     "background": "#202020",
     "fontSize": 12,
+    "fontFamily": "Sans-Serif",
     "lineColor": "#277da1",
     "lineWidth": 0.2,
     "particleWidth": 1.0,
@@ -50,6 +51,7 @@ A sample configuration object is provided below, you can provide as many or as l
 
 - `background` background color of the graph, adjust to increase contrast
 - `fontSize` size of the title font for each node
+- `fontFamily` font of the title font for each node
 - `lineColor` color of the edges between nodes in the graph
 - `lineWidth` thickness of the edges between nodes
 - `particleWidth` size of the particle animation showing link direction when highlighting a node

@@ -32,8 +32,9 @@ export class TrainNote extends Resource {
     return this.currentPhase;
   }
 
-  SetPhase(phase: Phase) {
-    this.nextReminder = new Date(Date.now() + phase.days);
+  SetPhase(phase: Phase, from: Date = new Date()) {
+    from.setDate(phase.days);
+    this.nextReminder = from;
     this.currentPhase = phase;
   }
 

@@ -6,9 +6,9 @@ import { Phase, Phases } from './phase';
 
 export class TrainNote extends Resource {
   nextReminder: Date;
-  currentPhase: Phase;
   phases: Phases;
   subject: Subject;
+  private currentPhase: Phase;
 
   constructor(phases: Phases) {
     super();
@@ -17,13 +17,24 @@ export class TrainNote extends Resource {
   }
 
   Increase() {
-    this.currentPhase = this.phases.Next(this.currentPhase);
+    var newPhase = this.phases.Next(this.currentPhase);
+    this.SetPhase(newPhase);
     this.subject.Notify();
   }
 
   Decrease() {
-    this.currentPhase = this.phases.Return(this.currentPhase);
+    var newPhase = this.phases.Return(this.currentPhase);
+    this.SetPhase(newPhase);
     this.subject.Notify();
+  }
+
+  CurrentPhase() {
+    return this.currentPhase;
+  }
+
+  SetPhase(phase: Phase) {
+    this.nextReminder = new Date(Date.now() + phase.days);
+    this.currentPhase = phase;
   }
 
   private Attach() {

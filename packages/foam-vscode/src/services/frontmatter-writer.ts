@@ -20,7 +20,7 @@ export class FrontmatterWriter implements IWriter {
   }
 
   private Transform(note: TrainNote) {
-    const currentPhase = stringifyYaml(note.currentPhase);
+    const currentPhase = stringifyYaml(note.CurrentPhase());
     const nextReminder = stringifyYaml(note.nextReminder);
     var result = currentPhase + nextReminder;
     if (note.properties != null) {

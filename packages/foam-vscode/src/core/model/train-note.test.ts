@@ -1,3 +1,4 @@
+import { first } from 'lodash';
 import { Phase, Phases } from './phase';
 import { TrainNote } from './train-note';
 
@@ -67,3 +68,34 @@ describe('Notify', () => {
     expect(observerSpy.mock.calls).toHaveLength(2);
   });
 });
+
+describe('Set Phase', () => {
+  it('Basic Date Test', () => {
+    note.SetPhase(phases.First(), new Date('2025-03-31'));
+    expect(note.nextReminder.getTime()).toBe(new Date('2025-04-01').getTime());
+  });
+
+  it('Increase', () => {
+    note.SetPhase(phases.First());
+    note.Increase();
+    note.nextReminder.setHours(0,0,0,0);
+    
+    var origin = new Date();
+    origin.setDate(origin.getDate() + note.phases.Phase(1).days);
+    origin.setHours(0,0,0,0);
+
+    expect(note.nextReminder.toISOString()).toEqual(origin.toISOString());
+  })
+
+  it('Descrease', () => {
+    note.SetPhase(phases.Last());
+    note.Decrease();
+    note.nextReminder.setHours(0,0,0,0);
+    
+    var origin = new Date();
+    origin.setDate(origin.getDate() + note.phases.Phase(2).days);
+    origin.setHours(0,0,0,0);
+
+    expect(note.nextReminder.toISOString()).toEqual(origin.toISOString());
+  })
+})

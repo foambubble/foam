@@ -33,7 +33,7 @@ export class TrainNote extends Resource {
   }
 
   SetPhase(phase: Phase, from: Date = new Date()) {
-    this.nextReminder = from
+    this.nextReminder = from;
     this.nextReminder.setDate(this.nextReminder.getDate() + phase.days);
     this.currentPhase = phase;
   }

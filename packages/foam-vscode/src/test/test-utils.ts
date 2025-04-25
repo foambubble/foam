@@ -9,6 +9,8 @@ import { FoamWorkspace } from '../core/model/workspace';
 import { MarkdownResourceProvider } from '../core/services/markdown-provider';
 import { Resource } from '../core/model/note';
 import { createMarkdownParser } from '../core/services/markdown-parser';
+import { TrainNote } from '../core/model/train-note';
+import { Phase, Phases } from '../core/model/phase';
 
 export { default as waitForExpect } from 'wait-for-expect';
 
@@ -107,6 +109,39 @@ export const createTestNote = (params: {
         })
       : [],
   };
+};
+
+export const createTestTrainNote = (params: {
+  uri: string;
+  title?: string;
+  definitions?: NoteLinkDefinition[];
+  links?: Array<{ slug: string } | { to: string }>;
+  tags?: string[];
+  aliases?: string[];
+  text?: string;
+  sections?: string[];
+  root?: URI;
+  type?: string;
+}): TrainNote => {
+  let phases = new Phases([
+    new Phase('Phase 1', 1),
+    new Phase('Phase 2', 2),
+    new Phase('Phase 3', 4),
+    new Phase('Phase 4', 8),
+  ]);
+
+  var note = createTestNote(params);
+  var result = new TrainNote(phases);
+  result.aliases = note.aliases;
+  result.definitions = note.definitions;
+  result.links = note.links;
+  result.properties = note.properties;
+  result.sections = note.sections;
+  result.tags = note.tags;
+  result.title = note.title;
+  result.type = params.type ?? 'train-note';
+  result.uri = note.uri;
+  return result;
 };
 
 export const wait = (ms: number) =>

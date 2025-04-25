@@ -1,3 +1,5 @@
+import { URI } from '../../model/uri';
+
 export interface IWriter {
-  write: (object: any) => Promise<void>;
+  write: (object: any, uri: URI) => Promise<void>;
 }

@@ -1,3 +1,4 @@
+import { URI } from '../model/uri';
 import { IWriter } from '../services/Writer/iwriter';
 
 export interface Observer {
@@ -11,8 +12,8 @@ export class WriteObserver implements Observer {
     this.writer = writer;
   }
 
-  update(object: any): void {
-    this.writer.write(object);
+  update(object: { uri: URI }): void {
+    this.writer.write(object, object.uri);
   }
 }
 

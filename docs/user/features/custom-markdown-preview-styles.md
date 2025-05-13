@@ -29,3 +29,22 @@ Foams offers the functionality to include other notes in your note. This will be
   Cyclic link detected for wikilink: ${wikilink}
 </div>
 ```
+
+### Task Lists
+
+Foam supports GitHub-style task lists in the preview. Task lists are rendered with the following classes:
+
+- `task-list-item`: Applied to the `<li>` element containing a task
+- `task-list-item-checkbox`: Applied to the checkbox `<input>` element
+
+You can customize the appearance of task lists with CSS like this:
+
+```css
+li.task-list-item {
+  list-style-type: none;
+}
+
+input.task-list-item-checkbox {
+  margin-right: 4px;
+}
+```

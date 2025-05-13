@@ -4,6 +4,11 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [Unreleased]
+
+Features:
+- Added support for GitHub-style task lists in preview (`- [ ]` and `- [x]`)
+
 ## [0.26.11] - 2025-04-19
 
 Fixes and Improvements:

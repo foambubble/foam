@@ -124,6 +124,14 @@ With references you can also make your notes navigable both in GitHub UI as well
 
 ![Generate references](./assets/screenshots/feature-definitions-generation.gif)
 
+### Task Lists
+
+Create interactive task lists in your notes using standard GitHub-style markdown syntax:
+```markdown
+- [ ] Unchecked task
+- [x] Checked task
+```
+
 ### Commands
 
 - Explore your knowledge base with the `Foam: Open Random Note` command

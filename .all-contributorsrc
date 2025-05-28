@@ -1148,6 +1148,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "djplaner",
+      "name": "David Jones",
+      "avatar_url": "https://avatars.githubusercontent.com/u/225052?v=4",
+      "profile": "http://djon.es/blog",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,

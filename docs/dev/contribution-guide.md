@@ -5,7 +5,7 @@ tags: todo, good-first-task
 # Contribution Guide
 
 Foam is open to contributions of any kind, including but not limited to code, documentation, ideas, and feedback.
-This guide aims to help guide new and seasoned contributors getting around the Foam codebase. For a comprehensive guide about contributing to open-source projects in general, [see here](https://sqldbawithabeard.com/2019/11/29/how-to-fork-a-github-repository-and-contribute-to-an-open-source-project/).
+This guide aims to help guide new and seasoned contributors getting around the Foam codebase. For a comprehensive guide about contributing to open-source projects in general, [see here](https://blog.robsewell.com/blog/how-to-fork-a-github-repository-and-contribute-to-an-open-source-project/).
 
 ## Getting Up To Speed
 

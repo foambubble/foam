@@ -176,8 +176,8 @@ const getTextFromChildren = (root: Node): string => {
 function getPropertiesInfoFromYAML(yamlText: string): {
   [key: string]: { key: string; value: string; text: string; line: number };
 } {
-  const yamlProps = yamlText
-    .split(/(\w+:)/g)
+  const yamlProps = `\n${yamlText}`
+    .split(/[\n](\w+:)/g)
     .filter(item => item.trim() !== '');
   const lines = yamlText.split('\n');
   let result: { line: number; key: string; text: string; value: string }[] = [];

@@ -242,6 +242,18 @@ title: - one
 
       expect(note.properties).toEqual({});
     });
+
+    it('#1467 - should parse yaml frontmatter with colon in value', () => {
+      const note = createNoteFromMarkdown(`
+---
+tags: test
+source: https://example.com/page:123
+---
+
+# Note with colon in meta value\n`);
+      expect(note.properties.source).toBe('https://example.com/page:123');
+      expect(note.tags[0].label).toEqual('test');
+    });
   });
 
   describe('Tags', () => {

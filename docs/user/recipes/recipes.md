@@ -77,6 +77,7 @@ A #recipe is a guide, tip or strategy for getting the most out of your Foam work
 - Publish using community templates
   - [[publish-to-netlify-with-eleventy]] by [@juanfrank77](https://github.com/juanfrank77)
   - [[generate-gatsby-site]] by [@mathieudutour](https://github.com/mathieudutour) and [@hikerpig](https://github.com/hikerpig)
+  - [[generate-material-for-mkdocs-site]] by [@djplaner](https://github.com/djplaner)
 - Make the site your own by [[publish-to-github]].
 - Render math symbols, by either
   - adding client-side [[math-support-with-mathjax]] to the default [[publish-to-github-pages]] site
@@ -139,6 +140,7 @@ _See [[contribution-guide]] and [[how-to-write-recipes]]._
 [publish-to-vercel]: ../publishing/publish-to-vercel.md "Publish to Vercel"
 [publish-to-netlify-with-eleventy]: ../publishing/publish-to-netlify-with-eleventy.md "Publish to Netlify with Eleventy"
 [generate-gatsby-site]: ../publishing/generate-gatsby-site.md "Generate a site using Gatsby"
+[generate-material-for-mkdocs-site]: generate-material-for-mkdocs-site.md "Generate a site using the Material for MkDocs theme"
 [publish-to-github]: ../publishing/publish-to-github.md "Publish to GitHub"
 [math-support-with-mathjax]: ../publishing/math-support-with-mathjax.md "Math Support"
 [math-support-with-katex]: ../publishing/math-support-with-katex.md "Katex Math Rendering"

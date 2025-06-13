@@ -2,9 +2,10 @@ import * as vscode from 'vscode';
 import { Foam } from '../core/model/foam';
 import { MarkdownLink } from '../core/services/markdown-link';
 import { Logger } from '../core/utils/log';
-import { isAbsolute } from '../core/utils/path';
+import { isAbsolute, getDirectory, relativeTo } from '../core/utils/path';
 import { getFoamVsCodeConfig } from '../services/config';
 import { fromVsCodeUri, toVsCodeRange, toVsCodeUri } from '../utils/vsc-utils';
+import * as path from 'path';
 
 interface FolderRenameResult {
 	filesProcessed: number;
@@ -14,9 +15,21 @@ interface FolderRenameResult {
 }
 
 interface FolderRenameOptions {
-	showProgress?: boolean;
 	confirmAction?: boolean;
-	maxFilesToProcess?: number;
+}
+
+interface DryRunCalculationResult {
+	edits: vscode.WorkspaceEdit;
+	linksUpdatedCount: number;
+	filesToEditCount: number; // Number of files with edits
+	filesProcessedCount: number; // Total markdown files scanned
+	calculationErrors: string[];
+}
+
+interface ProcessFilesInternalResult {
+	linksUpdatedCount: number;
+	filesProcessedCount: number;
+	calculationErrors: string[];
 }
 
 /**
@@ -78,14 +91,18 @@ export class FolderRenameHandler {
 			// Get configuration settings
 			const mode = getFoamVsCodeConfig<string>('links.folderRename.mode', 'ask');
 			const maxFiles = getFoamVsCodeConfig<number>('links.folderRename.maxFiles', 500);
-			const showProgress = getFoamVsCodeConfig<boolean>('links.folderRename.showProgress', true);
+			// const showProgress = getFoamVsCodeConfig<boolean>('links.folderRename.showProgress', true); // Removed as unused
 
+			// This variable will store the user's decision from the dialog, if shown.
+			let userDecision: { action: 'proceed' | 'skip' | 'cancel'; setAlwaysMode?: boolean } | undefined;
 			if (mode === 'never') {
-				Logger.info('Link updates disabled by user configuration.');
-				return result;
+				Logger.info('Link updates disabled by user configuration (mode: never). Foam will only refresh workspace data.');
+				// No userDecision needed, proceed to cache refresh, skip link updates.
+				// To achieve this, we can simulate a 'skip' action internally.
+				userDecision = { action: 'skip' };
 			}
 
-			const markdownFilesInFolder = await this.discoverMarkdownFiles(oldUri);
+			const markdownFilesInFolder = this.discoverMarkdownFiles(oldUri);
 			if (markdownFilesInFolder.length === 0) {
 				Logger.info(`No markdown files found in renamed folder: ${vscode.workspace.asRelativePath(oldUri)}`);
 				return result;
@@ -99,25 +116,82 @@ export class FolderRenameHandler {
 				return result;
 			}
 
-			if (mode === 'ask' || options.confirmAction) {
-				const action = await this.askUserConfirmation(markdownFilesInFolder.length, oldUri, newUri);
-				if (action !== 'proceed') {
-					Logger.info('User declined folder rename link updates.');
-					return result;
+			Logger.info('Starting dry run calculation for link updates...');
+			let dryRunCalcResult: DryRunCalculationResult | undefined;
+			try {
+				dryRunCalcResult = await this.calculateLinkUpdateEdits(
+					oldUri,
+					newUri,
+					markdownFilesInFolder
+				);
+				Logger.info(`Dry run complete: ${dryRunCalcResult.linksUpdatedCount} potential links in ${dryRunCalcResult.filesToEditCount} files.`);
+				if (dryRunCalcResult.calculationErrors.length > 0) {
+					Logger.warn('Dry run encountered errors:', dryRunCalcResult.calculationErrors.join('\n'));
+					result.warnings.push(...dryRunCalcResult.calculationErrors.map(e => `Dry run: ${e}`));
+				}
+			} catch (dryRunError) {
+				Logger.error('Critical error during dry run calculation:', dryRunError);
+				result.errors.push(`Critical dry run error: ${dryRunError}`);
+			}
+
+			if (mode === 'always' && !options.confirmAction) {
+				Logger.info("Mode is 'always', proceeding with link updates automatically.");
+				userDecision = { action: 'proceed' }; // Simulate proceed for automatic application
+			} else if (mode !== 'never') { // This covers 'ask' or ('always' with confirmAction)
+				// If mode is 'never', userDecision is already set to skip, and this block is skipped.
+				userDecision = await this.askUserConfirmation(
+					markdownFilesInFolder.length,
+					oldUri,
+					newUri,
+					dryRunCalcResult,
+					mode // Pass the current mode
+				);
+
+				if (userDecision.setAlwaysMode) {
+					try {
+						await vscode.workspace.getConfiguration('foam').update('links.folderRename.mode', 'always', vscode.ConfigurationTarget.Global);
+						Logger.info("User opted to always update links automatically. Setting 'foam.links.folderRename.mode' to 'always'.");
+						vscode.window.showInformationMessage("Foam will now automatically update links for folder renames.");
+					} catch (error) {
+						Logger.warn("Failed to update 'foam.links.folderRename.mode' setting:", error);
+						vscode.window.showWarningMessage("Could not save the preference to always update links.");
+					}
 				}
 			}
 
-			// Perform the link updates
-			const linkUpdateOpResult = await this.updateLinksForFolderRename(
-				oldUri,
-				newUri,
-				markdownFilesInFolder,
-				{ ...options, showProgress }
-			);
-			result.filesProcessed += linkUpdateOpResult.filesProcessed;
-			result.linksUpdated += linkUpdateOpResult.linksUpdated;
-			result.errors.push(...linkUpdateOpResult.errors);
-			result.warnings.push(...linkUpdateOpResult.warnings);
+			// Action based on userDecision (or pre-set decision for 'never'/'always' modes)
+			if (userDecision?.action === 'cancel') {
+				Logger.info('User aborted Foam link update operation for this folder rename.');
+				vscode.window.showWarningMessage('Folder rename has occurred, but Foam link updates and immediate cache processing were aborted by user.');
+				return result; // Return early, no link updates or cache refresh needed from our side for this specific event
+			} else if (userDecision?.action === 'skip') {
+				Logger.info('Skipping link updates for this folder rename.');
+				// Edits are not applied. Cache refresh will still happen below.
+				if (dryRunCalcResult) { // Update filesProcessed even if skipping
+					result.filesProcessed = dryRunCalcResult.filesProcessedCount;
+				}
+			} else if (userDecision?.action === 'proceed') {
+				if (dryRunCalcResult && dryRunCalcResult.edits.size > 0) {
+					Logger.info(`Applying ${dryRunCalcResult.linksUpdatedCount} calculated link updates across ${dryRunCalcResult.filesToEditCount} file(s).`);
+					await this.applyWorkspaceEdits(dryRunCalcResult.edits, result);
+					result.filesProcessed = dryRunCalcResult.filesProcessedCount;
+					// result.linksUpdated is set by applyWorkspaceEdits
+				} else if (dryRunCalcResult) {
+					Logger.info('No link updates were needed based on the dry run, or no edits to apply.');
+					result.filesProcessed = dryRunCalcResult.filesProcessedCount;
+				} else {
+					// This case should ideally not be hit if dryRunCalcResult is always available before this point
+					Logger.warn('Proceeding with link updates, but dry run data was not available. This is unexpected.');
+					// Fallback to re-calculating edits if dryRunCalcResult is missing (should be avoided by structure)
+					// For safety, this fallback is removed as dry run is now always performed before this logic.
+				}
+			} else {
+				// This case should not be reached if userDecision is always defined when mode is not 'never'
+				// and not (mode === 'always' && !options.confirmAction)
+				Logger.error('Unexpected state: userDecision is undefined when it should be defined.');
+				result.errors.push('Internal error: Could not determine user action for folder rename.');
+				// Proceed to cache refresh, but with an error logged.
+			}
 
 			Logger.info('Refreshing Foam workspace, graph, and matcher...');
 			try {
@@ -188,37 +262,22 @@ export class FolderRenameHandler {
 			Logger.debug('Restored original Logger.error.');
 		}
 	}
-
 	/**
-	 * Discovers all markdown files recursively in a folder
+	 * Discovers all markdown files in a folder using Foam's workspace
 	 */
-	private async discoverMarkdownFiles(folderUri: vscode.Uri): Promise<vscode.Uri[]> {
-		const markdownFiles: vscode.Uri[] = [];
-		const markdownExtensions = ['.md', '.markdown', '.mdx', '.mdown', '.mkdn', '.mkd', '.mdwn', '.mdtxt', '.mdtext', '.text', '.rmd'];
+	private discoverMarkdownFiles(folderUri: vscode.Uri): vscode.Uri[] {
+		const folderPath = fromVsCodeUri(folderUri).path;
 
-		const scanDirectory = async (dirUri: vscode.Uri): Promise<void> => {
-			try {
-				const entries = await vscode.workspace.fs.readDirectory(dirUri);
+		// Get all resources from Foam workspace that are in the renamed folder
+		const markdownFilesInFolder = this.foam.workspace
+			.list()
+			.filter(resource => {
+				const resourcePath = resource.uri.path;
+				return resourcePath.startsWith(folderPath + '/') || resourcePath === folderPath;
+			})
+			.map(resource => toVsCodeUri(resource.uri));
 
-				for (const [name, type] of entries) {
-					const entryUri = vscode.Uri.joinPath(dirUri, name);
-
-					if (type === vscode.FileType.Directory) {
-						await scanDirectory(entryUri);
-					} else if (type === vscode.FileType.File) {
-						const ext = name.substring(name.lastIndexOf('.')).toLowerCase();
-						if (markdownExtensions.includes(ext)) {
-							markdownFiles.push(entryUri);
-						}
-					}
-				}
-			} catch (error) {
-				Logger.warn(`Failed to scan directory ${dirUri.fsPath}:`, error);
-			}
-		};
-
-		await scanDirectory(folderUri);
-		return markdownFiles;
+		return markdownFilesInFolder;
 	}
 
 	/**
@@ -244,90 +303,152 @@ export class FolderRenameHandler {
 	}
 
 	/**
-	 * Asks user for confirmation before proceeding with folder rename
+	 * Calculates link update edits for a dry run
 	 */
-	private async askUserConfirmation(
-		fileCount: number,
-		oldUri: vscode.Uri,
-		newUri: vscode.Uri
-	): Promise<'proceed' | 'cancel'> {
-		const oldPath = vscode.workspace.asRelativePath(oldUri);
-		const newPath = vscode.workspace.asRelativePath(newUri);
-
-		const message = `Update links in ${fileCount} markdown files when renaming folder from '${oldPath}' to '${newPath}'?`;
-		const action = await vscode.window.showInformationMessage(
-			message,
-			{ modal: true },
-			'Update Links',
-			'Skip Updates'
-		);
-
-		return action === 'Update Links' ? 'proceed' : 'cancel';
-	}
-
-	/**
-	 * Performs the actual link updates for all files affected by folder rename
-	 */
-	private async updateLinksForFolderRename(
+	private async calculateLinkUpdateEdits(
 		oldFolderUri: vscode.Uri,
 		newFolderUri: vscode.Uri,
 		markdownFiles: vscode.Uri[],
-		options: FolderRenameOptions
-	): Promise<FolderRenameResult> {
-		const result: FolderRenameResult = {
-			filesProcessed: 0,
-			linksUpdated: 0,
-			errors: [],
-			warnings: []
+		progress?: vscode.Progress<{ message?: string; increment?: number }>
+	): Promise<DryRunCalculationResult> {
+		const edits = new vscode.WorkspaceEdit();
+		const result: DryRunCalculationResult = {
+			edits,
+			linksUpdatedCount: 0,
+			filesToEditCount: 0,
+			filesProcessedCount: 0,
+			calculationErrors: [],
 		};
 
-		const renameEdits = new vscode.WorkspaceEdit();
-		let progress: vscode.Progress<{ message?: string; increment?: number }> | undefined;
+		const processingResult = await this.processFilesForLinkUpdates(
+			oldFolderUri,
+			newFolderUri,
+			markdownFiles,
+			edits, // Pass the edits object to be populated
+			progress
+		);
 
-		try {
-			// Setup progress reporting
-			if (options.showProgress) {
-				await vscode.window.withProgress(
-					{
-						location: vscode.ProgressLocation.Notification,
-						title: 'Updating links for folder rename',
-						cancellable: false
-					},
-					async (progressReporter) => {
-						progress = progressReporter;
-						return this.processFilesForLinkUpdates(
-							oldFolderUri,
-							newFolderUri,
-							markdownFiles,
-							renameEdits,
-							result,
-							progress
-						);
-					}
-				);
-			} else {
-				await this.processFilesForLinkUpdates(
-					oldFolderUri,
-					newFolderUri,
-					markdownFiles,
-					renameEdits,
-					result
-				);
-			}
-
-			// Apply all edits
-			if (renameEdits.size > 0) {
-				await this.applyWorkspaceEdits(renameEdits, result);
-			}
-
-		} catch (error) {
-			const errorMessage = `Error during link updates: ${error}`;
-			result.errors.push(errorMessage);
-			Logger.error(errorMessage, error);
-		}
+		result.linksUpdatedCount = processingResult.linksUpdatedCount;
+		result.filesProcessedCount = processingResult.filesProcessedCount;
+		result.calculationErrors.push(...processingResult.calculationErrors);
+		result.filesToEditCount = edits.size; // Number of unique files with edits
 
 		return result;
 	}
+
+	/**
+	 * Asks user for confirmation before proceeding with folder rename
+	 */	private async askUserConfirmation(
+		fileCount: number,
+		oldUri: vscode.Uri,
+		newUri: vscode.Uri,
+		dryRunResult?: DryRunCalculationResult,
+		currentMode?: string // Added to control button visibility
+	): Promise<{ action: 'proceed' | 'skip' | 'cancel'; setAlwaysMode?: boolean }> {
+		const oldPath = vscode.workspace.asRelativePath(oldUri);
+		const newPath = vscode.workspace.asRelativePath(newUri);
+
+		let description = `Renaming folder from '${oldPath}' to '${newPath}'.`;
+
+		if (dryRunResult) {
+			if (dryRunResult.calculationErrors.length > 0) {
+				description += `\n\n⚠️ Encountered ${dryRunResult.calculationErrors.length} error(s) during link update calculation (see logs).`;
+			}
+			if (dryRunResult.linksUpdatedCount > 0) {
+				description += `\n\nThis will update ${dryRunResult.linksUpdatedCount} link(s) across ${dryRunResult.filesToEditCount} file(s) (out of ${dryRunResult.filesProcessedCount} markdown files in the folder).`;
+			} else {
+				description += `\n\nNo links appear to need updating in the ${dryRunResult.filesProcessedCount} markdown file(s) found.`;
+			}
+		} else {
+			description += `\n\nThis may update links in ${fileCount} markdown file(s).`;
+		}
+
+		const items: vscode.QuickPickItem[] = [];
+
+		// Main action items
+		if (dryRunResult && dryRunResult.linksUpdatedCount > 0) {
+			items.push({
+				label: 'Update Links',
+				detail: 'Update the affected links and proceed with the rename'
+			});
+		} else {
+			items.push({
+				label: 'Proceed',
+				detail: 'No link updates needed - proceed with the rename'
+			});
+		}
+
+		items.push({
+			label: 'Skip Link Updates',
+			detail: 'Rename the folder but don\'t update any links'
+		});
+
+		// Add "always" option only if currently in "ask" mode
+		if (currentMode === 'ask') {
+			if (dryRunResult && dryRunResult.linksUpdatedCount > 0) {
+				items.push({
+					label: '$(check) Always Update Links',
+					detail: 'Update links and remember this choice for future folder renames'
+				});
+			} else {
+				items.push({
+					label: '$(check) Always Proceed Automatically',
+					detail: 'Don\'t ask again for folder renames (update links when needed)'
+				});
+			}
+		}
+		const selected = await new Promise<vscode.QuickPickItem | undefined>((resolve) => {
+			const quickPick = vscode.window.createQuickPick();
+			quickPick.title = 'Foam: Folder Rename';
+			quickPick.placeholder = 'Choose how to handle this folder rename...';
+			quickPick.ignoreFocusOut = true;
+			quickPick.matchOnDetail = true;
+			quickPick.items = items;
+
+			quickPick.onDidAccept(() => {
+				const selection = quickPick.selectedItems[0];
+				quickPick.hide();
+				resolve(selection);
+			});
+
+			quickPick.onDidHide(() => {
+				quickPick.dispose();
+				resolve(undefined);
+			}); quickPick.show();
+
+			// Force focus to the QuickPick after a short delay
+			setTimeout(async () => {
+				try {
+					// Try to focus the QuickPick directly
+					await vscode.commands.executeCommand('workbench.action.focusQuickOpen');
+				} catch {
+					// Fallback: briefly open command palette then close it to steal focus
+					try {
+						await vscode.commands.executeCommand('workbench.action.showCommands');
+						setTimeout(() => vscode.commands.executeCommand('workbench.action.closeQuickOpen'), 50);
+					} catch {
+						// If all else fails, just log that we couldn't set focus
+						Logger.debug('Could not force focus to QuickPick dialog');
+					}
+				}
+			}, 150);
+		});
+
+		if (!selected) {
+			return { action: 'cancel' };
+		}
+
+		if (selected.label === 'Update Links' || selected.label === 'Proceed') {
+			return { action: 'proceed' };
+		} else if (selected.label === 'Skip Link Updates') {
+			return { action: 'skip' };
+		} else if (selected.label.includes('$(check) Always')) {
+			return { action: 'proceed', setAlwaysMode: true };
+		} else {
+			return { action: 'cancel' };
+		}
+	}
+
 	/**
 	 * Processes all files to find and update links affected by folder rename
 	 */
@@ -335,11 +456,10 @@ export class FolderRenameHandler {
 		oldFolderUri: vscode.Uri,
 		newFolderUri: vscode.Uri,
 		markdownFiles: vscode.Uri[],
-		renameEdits: vscode.WorkspaceEdit,
-		result: FolderRenameResult, // This will be updated *after* Promise.all
+		renameEdits: vscode.WorkspaceEdit, // Edits will be added to this object
 		progress?: vscode.Progress<{ message?: string; increment?: number }>
-	): Promise<void> {
-		Logger.info(`Processing ${markdownFiles.length} file(s) for link updates in parallel...`);
+	): Promise<ProcessFilesInternalResult> { // Changed return type
+		Logger.info(`Calculating link updates for ${markdownFiles.length} file(s) in parallel...`);
 		if (progress) {
 			progress.report({ message: `Analyzing ${markdownFiles.length} files for link updates...` });
 		}
@@ -347,7 +467,6 @@ export class FolderRenameHandler {
 		const fileProcessingPromises = markdownFiles.map(async (oldFileUri) => {
 			let linksUpdatedForThisFile = 0;
 			const errorsForThisFile: string[] = [];
-			// const warningsForThisFile: string[] = []; // If needed for file-specific warnings
 
 			try {
 				const newFileUri = this.calculateNewFileUri(oldFileUri, oldFolderUri, newFolderUri);
@@ -383,9 +502,21 @@ export class FolderRenameHandler {
 							let newTarget: string;
 
 							if (connection.link.rawText.includes('/')) {
-								// For path-based wikilinks like [[folder/file]], update the folder part
-								const relativePath = vscode.workspace.asRelativePath(newFileUri);
-								newTarget = relativePath.replace(/\\/g, '/');
+								// Check if the original target was a relative path
+								if (target.startsWith('../')) {
+									// This was a relative path - we should preserve its relative nature
+									// Calculate the new relative path from the source to the new target location
+									const sourceDir = connection.source.getDirectory();
+									const newTargetPath = fromVsCodeUri(newFileUri);
+									newTarget = newTargetPath.relativeTo(sourceDir).path;
+
+									Logger.debug(`  → Preserving relative path: original="${target}" → new="${newTarget}"`);
+								} else {
+									// For path-based wikilinks like [[folder/file]], update the folder part
+									const relativePath = vscode.workspace.asRelativePath(newFileUri);
+									newTarget = relativePath.replace(/\\/g, '/');
+								}
+
 								// Remove .md extension for wikilinks
 								if (newTarget.endsWith('.md')) {
 									newTarget = newTarget.slice(0, -3);
@@ -426,6 +557,66 @@ export class FolderRenameHandler {
 							break;
 						}
 					}
+				}				// Now handle outgoing links from this moved file that may need relative path adjustment
+				const outgoingConnections = this.foam.graph.getLinks(fromVsCodeUri(oldFileUri));
+
+				if (outgoingConnections.length > 0) {
+					Logger.info(`Found ${outgoingConnections.length} outgoing links from ${vscode.workspace.asRelativePath(oldFileUri)}`);
+				} for (const outgoingConnection of outgoingConnections) {
+					const { target } = MarkdownLink.analyzeLink(outgoingConnection.link);
+
+					Logger.info(`Checking outgoing link: "${outgoingConnection.link.rawText}" (type: ${outgoingConnection.link.type}, target: "${target}")`);
+
+					// Process relative links that start with ../ for both regular links and wikilinks
+					// But skip links that point to files within the same renamed folder (those are handled by backlink processing)
+					if (!isAbsolute(target) && target.startsWith('../')) {
+						// Check if the target resolves to a file within the renamed folder
+						// If so, skip it as it will be handled by backlink processing
+						const targetUri = toVsCodeUri(outgoingConnection.target);
+						const oldFolderPath = oldFolderUri.fsPath.replace(/\\/g, '/');
+						const targetPath = targetUri.fsPath.replace(/\\/g, '/');
+
+						if (targetPath.startsWith(oldFolderPath)) {
+							Logger.info(`  → Skipping link to file within same renamed folder (handled by backlink processing)`);
+							continue;
+						}
+
+						Logger.info(`Processing outgoing relative link: "${outgoingConnection.link.rawText}"`);
+
+						const workspaceRootPath = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+						if (!workspaceRootPath) {
+							Logger.warn('Cannot process relative links: no workspace root found');
+							continue;
+						}
+
+						const adjustedPath = this.calculateAdjustedRelativePath(
+							target,
+							oldFileUri,
+							newFileUri,
+							workspaceRootPath
+						);
+
+						if (adjustedPath && adjustedPath !== target) {
+							Logger.info(`  → Adjusting relative path "${target}" to "${adjustedPath}"`);
+
+							const edit = MarkdownLink.createUpdateLinkEdit(outgoingConnection.link, {
+								target: adjustedPath,
+							});
+
+							renameEdits.replace(
+								newFileUri,  // Use the new file URI since the file has moved
+								toVsCodeRange(edit.range),
+								edit.newText
+							);
+
+							linksUpdatedForThisFile++;
+							Logger.info(`  → Relative link updated in moved file: "${edit.newText}"`);
+						} else {
+							Logger.info(`  → No adjustment needed for relative path "${target}"`);
+						}
+					} else {
+						Logger.info(`  → Skipping link (absolute: ${isAbsolute(target)}, starts with ../: ${target.startsWith('../')})`);
+					}
 				}
 
 				return {
@@ -435,9 +626,9 @@ export class FolderRenameHandler {
 				};
 
 			} catch (error) {
-				const errorMessage = `Failed to process file ${oldFileUri.fsPath}: ${error}`;
+				const errorMessage = `Failed to calculate link updates for file ${oldFileUri.fsPath}: ${error}`;
 				errorsForThisFile.push(errorMessage);
-				Logger.error(errorMessage, error); // Log error immediately
+				Logger.error(errorMessage, error);
 				return {
 					fileProcessedSuccessfully: false,
 					linksUpdatedCount: 0,
@@ -449,18 +640,98 @@ export class FolderRenameHandler {
 		const allProcessingResults = await Promise.all(fileProcessingPromises);
 
 		// Aggregate results after all promises have completed
+		let totalLinksUpdated = 0;
+		let totalFilesProcessedSuccessfully = 0;
+		const allCalculationErrors: string[] = [];
+
 		for (const res of allProcessingResults) {
 			if (res.fileProcessedSuccessfully) {
-				result.filesProcessed++;
+				totalFilesProcessedSuccessfully++;
 			}
-			result.linksUpdated += res.linksUpdatedCount;
-			result.errors.push(...res.errors);
-			// Aggregate warnings if res.warnings is added
+			totalLinksUpdated += res.linksUpdatedCount;
+			allCalculationErrors.push(...res.errors);
 		}
 
-		Logger.info(`Finished parallel processing of files. Found ${result.linksUpdated} link(s) to update across ${renameEdits.size} file(s).`);
+		Logger.info(`Finished calculating link updates. Potential to update ${totalLinksUpdated} link(s) across ${renameEdits.size} file(s).`);
 		if (progress) {
-			progress.report({ message: `Applied ${result.linksUpdated} link updates. Finalizing...`, increment: 100 });
+			progress.report({ message: `Calculation complete: ${totalLinksUpdated} potential link updates found.`, increment: 100 });
+		}
+
+		return {
+			linksUpdatedCount: totalLinksUpdated,
+			filesProcessedCount: totalFilesProcessedSuccessfully,
+			calculationErrors: allCalculationErrors,
+		};
+	}
+
+	/**
+	 * Calculates an adjusted relative path when a file is moved to a different folder depth.
+	 * This is needed for relative links in moved files that point outside the moved folder.
+	 * 
+	 * @param originalRelativePath The original relative path (e.g., "../../other.md")
+	 * @param oldFileUri The original file URI
+	 * @param newFileUri The new file URI after the folder move
+	 * @param workspaceRootPath The workspace root path for resolving absolute paths
+	 * @returns The adjusted relative path or null if adjustment is not needed/possible
+	 */
+	private calculateAdjustedRelativePath(
+		originalRelativePath: string,
+		oldFileUri: vscode.Uri,
+		newFileUri: vscode.Uri,
+		workspaceRootPath: string
+	): string | null {
+		// Only handle relative paths that go up (start with ../)
+		if (!originalRelativePath.startsWith('../')) {
+			return null;
+		}
+		try {
+			// Calculate old and new folder depths relative to workspace root
+			const oldRelativePath = path.relative(workspaceRootPath, path.dirname(oldFileUri.fsPath));
+			const newRelativePath = path.relative(workspaceRootPath, path.dirname(newFileUri.fsPath));
+
+			const oldDepth = oldRelativePath === '' ? 0 : oldRelativePath.split(path.sep).length;
+			const newDepth = newRelativePath === '' ? 0 : newRelativePath.split(path.sep).length;
+
+			const depthChange = newDepth - oldDepth;
+
+			Logger.info(`Depth calculation: old="${oldRelativePath}" (${oldDepth}), new="${newRelativePath}" (${newDepth}), change=${depthChange}`);
+
+			if (depthChange === 0) {
+				Logger.info('No depth change, no adjustment needed');
+				return null; // No depth change, no adjustment needed
+			}
+
+			// Parse the original relative path to separate the ../ segments from the target
+			const segments = originalRelativePath.split('/');
+			let upCount = 0;
+			let targetIndex = 0;
+
+			for (let i = 0; i < segments.length; i++) {
+				if (segments[i] === '..') {
+					upCount++;
+				} else {
+					targetIndex = i;
+					break;
+				}
+			}
+
+			// Adjust the up count based on depth change
+			const newUpCount = upCount + depthChange;
+
+			if (newUpCount < 0) {
+				Logger.warn(`Cannot adjust relative path ${originalRelativePath}: would result in negative up count`);
+				return null;
+			}			// Reconstruct the path with the adjusted up count
+			const newUpSegments = new Array(newUpCount).fill('..');
+			const remainingSegments = segments.slice(targetIndex);
+			const adjustedPath = [...newUpSegments, ...remainingSegments].join('/');
+
+			Logger.info(`Adjusted relative path "${originalRelativePath}" → "${adjustedPath}" (depth change: ${depthChange}, old up count: ${upCount}, new up count: ${newUpCount})`);
+			return adjustedPath;
+
+		} catch (error) {
+			Logger.error(`Error calculating adjusted relative path for ${originalRelativePath}:`, error);
+			return null;
 		}
 	}
 
@@ -468,11 +739,17 @@ export class FolderRenameHandler {
 	 * Applies workspace edits with proper error handling
 	 */
 	private async applyWorkspaceEdits(
-		renameEdits: vscode.WorkspaceEdit,
-		result: FolderRenameResult
+		renameEdits: vscode.WorkspaceEdit, // These are the edits calculated in the dry run
+		result: FolderRenameResult      // This is the main result object to be updated
 	): Promise<void> {
 		try {
-			const successfulEditsPaths: string[] = []; // Store paths for debug logging
+			const successfulEditsPaths: string[] = [];
+			let actuallyAppliedLinksCount = 0;
+
+			let totalPotentialLinks = 0;
+			for (const [, fileSpecificEdits] of renameEdits.entries()) {
+				totalPotentialLinks += fileSpecificEdits.length;
+			}
 
 			// We break the update by file because applying it at once was causing
 			// dirty state and editors not always saving or closing
@@ -498,6 +775,9 @@ export class FolderRenameHandler {
 						continue;
 					}
 
+					// If edits were applied, count them
+					actuallyAppliedLinksCount += edits.length; // `edits` is the TextEdit[] for this file
+
 					// Try to open and save the document
 					try {
 						const document = await vscode.workspace.openTextDocument(uri);
@@ -518,21 +798,25 @@ export class FolderRenameHandler {
 				}
 			}
 
+			// Update the main result object with the count of actually applied links
+			result.linksUpdated = actuallyAppliedLinksCount;
+
 			if (successfulEditsPaths.length > 0) {
 				Logger.debug(
 					`Successfully applied edits to the following files:`,
 					successfulEditsPaths
 				);
 
+				// Use the now accurate result.linksUpdated for the message
 				let message = `Updated ${result.linksUpdated} link(s) across ${successfulEditsPaths.length} file(s).`;
 				if (result.warnings.length > 0) {
 					message += ` (${result.warnings.length} warnings - check logs for details)`;
 				}
 
 				vscode.window.showInformationMessage(message);
-			} else if (result.linksUpdated > 0) {
+			} else if (totalPotentialLinks > 0) { // Changed condition to use totalPotentialLinks
 				vscode.window.showWarningMessage(
-					`Found ${result.linksUpdated} links to update but could not apply changes to any files. Check logs for details.`
+					`Found ${totalPotentialLinks} potential link(s) to update but could not apply changes to any files. Check logs for details.`
 				);
 			}
 

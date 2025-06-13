@@ -399,62 +399,40 @@ export class FolderRenameHandler {
 
           switch (connection.link.type) {
             case 'wikilink': {
-              // Calculate the new relative path for wikilinks
-              let newTarget: string;
-
-              if (connection.link.rawText.includes('/')) {
-                // Check if the original target was a relative path
-                if (target.startsWith('../')) {
-                  // This was a relative path - we should preserve its relative nature
-                  // Calculate the new relative path from the source to the new target location
-                  const sourceDir = connection.source.getDirectory();
-                  const newTargetPath = fromVsCodeUri(newFileUri);
-                  newTarget = newTargetPath.relativeTo(sourceDir).path;
-
-                  Logger.debug(`  → Preserving relative path: original="${target}" → new="${newTarget}"`);
-                } else {
-                  // For path-based wikilinks like [[folder/file]], update the folder part
-                  const relativePath = vscode.workspace.asRelativePath(newFileUri);
-                  newTarget = relativePath.replace(/\\/g, '/');
-                }
-
-                // Remove .md extension for wikilinks
-                if (newTarget.endsWith('.md')) {
-                  newTarget = newTarget.slice(0, -3);
-                }
-              } else {
-                // For simple wikilinks like [[file]], keep just the filename
-                const fileName = newFileUri.path.split('/').pop() || '';
-                newTarget = fileName.endsWith('.md') ? fileName.slice(0, -3) : fileName;
-              }
+              const targetFoamUri = fromVsCodeUri(newFileUri); // URI of the moved file (link target)
+              // getIdentifier will produce the correct string for inside [[...]]
+              // respecting defaultExtension and uniqueness.
+              const newLinkContent = this.foam.workspace.getIdentifier(targetFoamUri);
 
               const edit = MarkdownLink.createUpdateLinkEdit(connection.link, {
-                target: newTarget,
+                target: newLinkContent,
               });
               renameEdits.replace(
-                actualSourceUri,  // Use the correct (possibly updated) source path
+                actualSourceUri, // Edit is applied to the (potentially new) source file URI
                 toVsCodeRange(edit.range),
                 edit.newText
               );
               linksUpdatedForThisFile++;
-              Logger.debug(`  → Wikilink in "${sourceFile}" updated to: "${edit.newText}"`);
+              Logger.debug(`  → Wikilink in "${vscode.workspace.asRelativePath(actualSourceUri)}" updated to: "${edit.newText}"`);
               break;
             }
-            case 'link': {
-              const path = isAbsolute(target)
-                ? '/' + vscode.workspace.asRelativePath(newFileUri)
-                : fromVsCodeUri(newFileUri).relativeTo(
-                  connection.source.getDirectory()
-                ).path;
+            case 'link': { // This is for standard markdown links [text](path)
+              const targetFoamUri = fromVsCodeUri(newFileUri); // URI of the moved file (link target)
+              const sourceDirectoryFoamUri = fromVsCodeUri(actualSourceUri).getDirectory();
+
+              // Calculate the relative path string for the markdown link.
+              const newLinkPath = targetFoamUri.relativeTo(sourceDirectoryFoamUri).path;
+
               const edit = MarkdownLink.createUpdateLinkEdit(connection.link, {
-                target: path,
-              }); renameEdits.replace(
-                actualSourceUri,  // Use the correct (possibly updated) source path
+                target: newLinkPath, // This is the new href path
+              });
+              renameEdits.replace(
+                actualSourceUri, // Edit is applied to the (potentially new) source file URI
                 toVsCodeRange(edit.range),
                 edit.newText
               );
               linksUpdatedForThisFile++;
-              Logger.debug(`  → Markdown link in "${sourceFile}" updated to: "${edit.newText}"`);
+              Logger.debug(`  → Markdown link in "${vscode.workspace.asRelativePath(actualSourceUri)}" updated to: "${edit.newText}"`);
               break;
             }
           }
@@ -660,7 +638,6 @@ export class FolderRenameHandler {
    * UI Optimization: Uses consolidated WorkspaceEdit to minimize file indicator flashing.
    * Similar optimization could be applied to single file renames in refactor.ts if needed.
    */
-
       // Create a single workspace edit containing all file changes
       // This minimizes UI flashing by applying all changes atomically
       const consolidatedEdit = new vscode.WorkspaceEdit();
@@ -677,7 +654,9 @@ export class FolderRenameHandler {
           Logger.warn(`Skipping edits for non-existent file: ${uri.fsPath}`);
           result.warnings.push(`File not found, skipping link updates: ${uri.fsPath}`);
         }
-      }			// Apply all edits at once - this reduces UI flashing significantly
+      }
+      
+      // Apply all edits at once - this reduces UI flashing significantly
       if (filesToProcess.length > 0) {
         Logger.debug(`Applying consolidated workspace edit with changes to ${filesToProcess.length} files`);
         const success = await vscode.workspace.applyEdit(consolidatedEdit);
@@ -687,7 +666,9 @@ export class FolderRenameHandler {
           result.errors.push(errorMessage);
           Logger.error(errorMessage);
           return;
-        }				// Save all affected documents after successful edit application
+        }
+        
+        // Save all affected documents after successful edit application
         // Use parallel saving for efficiency while only saving the files we modified
         Logger.debug(`Saving ${filesToProcess.length} edited documents in parallel`);
         

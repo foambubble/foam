@@ -61,32 +61,32 @@ export class FolderRenameDialog {
 		if (dryRunResult && dryRunResult.linksUpdatedCount > 0) {
 			items.push({
 				label: '$(check) Update Links',
-				detail: `Update ${this.pluralize(dryRunResult.linksUpdatedCount, 'link')} in ${this.pluralize(dryRunResult.filesToEditCount, 'file')} and proceed with the rename`
+				detail: `Update ${this.pluralize(dryRunResult.linksUpdatedCount, 'link')} in ${this.pluralize(dryRunResult.filesToEditCount, 'file')} and proceed with the rename.`
 			});
 		} else {
 			items.push({
 				label: '$(check) Proceed',
-				detail: dryRunResult ? `No link updates needed - proceed with the rename (${this.pluralize(dryRunResult.filesProcessedCount, 'file')} checked)` : 'Proceed with the rename'
+				detail: dryRunResult ? `No link updates needed - proceed with the rename (${this.pluralize(dryRunResult.filesProcessedCount, 'file')} checked).` : 'Proceed with the rename.'
 			});
 		}
 
 		items.push({
 			label: '$(x) Skip Link Updates',
 			detail: dryRunResult && dryRunResult.linksUpdatedCount > 0
-				? `Rename the folder but leave ${this.pluralize(dryRunResult.linksUpdatedCount, 'link')} unchanged`
-				: 'Rename the folder but don\'t update any links'
+				? `Rename the folder but leave ${this.pluralize(dryRunResult.linksUpdatedCount, 'link')} unchanged.`
+				: 'Rename the folder but don\'t update any links.'
 		});
 
 		items.push({
 			label: '$(discard) Abort Rename',
-			detail: `Revert the folder name back to '${oldPath}' and cancel the entire operation`
+			detail: `Revert the folder name back to '${oldPath}' and cancel the entire operation.`
 		});
 
-		// Add settings option only if currently in "ask" mode
-		if (currentMode === 'ask') {
+		// Add settings option only if currently in "confirm" mode
+		if (currentMode === 'confirm') {
 			items.push({
 				label: '$(gear) Settings',
-				detail: 'Change folder rename behavior in Foam settings'
+				detail: 'Change folder rename behavior in Foam settings.'
 			});
 		}
 

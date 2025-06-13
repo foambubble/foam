@@ -82,9 +82,11 @@ export class FolderRenameHandler {
 
 		try {
 			// Get configuration settings
-			const mode = getFoamVsCodeConfig<string>('links.folderRename.mode', 'ask');
-			const maxFiles = getFoamVsCodeConfig<number>('links.folderRename.maxFiles', 500);
-			// const showProgress = getFoamVsCodeConfig<boolean>('links.folderRename.showProgress', true); // Removed as unused			// This variable will store the user's decision from the dialog, if shown.
+			const mode = getFoamVsCodeConfig<string>('folderRename.updateLinks', 'confirm');
+			const maxFiles = getFoamVsCodeConfig<number>('folderRename.maxFiles', 500);
+			// const showProgress = getFoamVsCodeConfig<boolean>('links.folderRename.showProgress', true); // Removed as unused
+			
+			// This variable will store the user's decision from the dialog, if shown.
 			let userDecision: FolderRenameDialogResult | undefined;
 			if (mode === 'never') {
 				Logger.info('Link updates disabled by user configuration (mode: never). Foam will only refresh workspace data.');
@@ -126,7 +128,7 @@ export class FolderRenameHandler {
 			} if (mode === 'always' && !options.confirmAction) {
 				Logger.debug("Mode is 'always', proceeding with link updates automatically.");
 				userDecision = { action: 'proceed' }; // Simulate proceed for automatic application
-			} else if (mode !== 'never') { // This covers 'ask' or ('always' with confirmAction)
+			} else if (mode !== 'never') { // This covers 'confirm' or ('always' with confirmAction)
 				// If mode is 'never', userDecision is already set to skip, and this block is skipped.
 				userDecision = await FolderRenameDialog.show(
 					markdownFilesInFolder.length,
@@ -136,13 +138,13 @@ export class FolderRenameHandler {
 				); if (userDecision.action === 'settings') {
 					Logger.debug('User chose to open settings for folder rename behavior. Aborting the current rename operation.');
 					// Open VS Code settings and search for the foam folder rename setting
-					await vscode.commands.executeCommand('workbench.action.openSettings', 'foam.links.folderRename');
+					await vscode.commands.executeCommand('workbench.action.openSettings', 'foam.folderRename.updateLinks');
 
 					// Abort the current rename operation by reverting the folder
 					try {
 						await this.revertFolderRename(newUri, oldUri);
 						vscode.window.showInformationMessage(
-							`Folder rename aborted while you browse settings. Reverted '${vscode.workspace.asRelativePath(newUri)}' back to '${vscode.workspace.asRelativePath(oldUri)}'. ` +
+							`Folder rename aborted while browsing settings. Reverted '${vscode.workspace.asRelativePath(newUri)}' back to '${vscode.workspace.asRelativePath(oldUri)}'. ` +
 							`You can rename the folder again after adjusting your settings.`
 						);
 						return result;

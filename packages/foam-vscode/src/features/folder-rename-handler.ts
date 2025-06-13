@@ -336,28 +336,24 @@ export class FolderRenameHandler {
 		newFolderUri: vscode.Uri,
 		markdownFiles: vscode.Uri[],
 		renameEdits: vscode.WorkspaceEdit,
-		result: FolderRenameResult,
+		result: FolderRenameResult, // This will be updated *after* Promise.all
 		progress?: vscode.Progress<{ message?: string; increment?: number }>
 	): Promise<void> {
-		const increment = 100 / markdownFiles.length;
+		Logger.info(`Processing ${markdownFiles.length} file(s) for link updates in parallel...`);
+		if (progress) {
+			progress.report({ message: `Analyzing ${markdownFiles.length} files for link updates...` });
+		}
 
-		Logger.info(`Processing ${markdownFiles.length} file(s) for link updates...`);
+		const fileProcessingPromises = markdownFiles.map(async (oldFileUri) => {
+			let linksUpdatedForThisFile = 0;
+			const errorsForThisFile: string[] = [];
+			// const warningsForThisFile: string[] = []; // If needed for file-specific warnings
 
-		for (const [index, oldFileUri] of markdownFiles.entries()) {
 			try {
-				if (progress) {
-					const fileName = vscode.workspace.asRelativePath(oldFileUri);
-					progress.report({
-						message: `Processing ${fileName}...`,
-						increment: index === 0 ? 0 : increment
-					});
-				}
-
 				const newFileUri = this.calculateNewFileUri(oldFileUri, oldFolderUri, newFolderUri);
 
 				Logger.debug(`Checking backlinks for: ${vscode.workspace.asRelativePath(oldFileUri)} (new: ${vscode.workspace.asRelativePath(newFileUri)})`);
 
-				// Find all links that point to this file (from Foam's knowledge graph)
 				const connections = this.foam.graph.getBacklinks(fromVsCodeUri(oldFileUri));
 
 				if (connections.length > 0) {
@@ -408,7 +404,7 @@ export class FolderRenameHandler {
 								toVsCodeRange(edit.range),
 								edit.newText
 							);
-							result.linksUpdated++;
+							linksUpdatedForThisFile++;
 							Logger.debug(`  → Wikilink in "${sourceFile}" updated to: "${edit.newText}"`);
 							break;
 						}
@@ -425,23 +421,47 @@ export class FolderRenameHandler {
 								toVsCodeRange(edit.range),
 								edit.newText
 							);
-							result.linksUpdated++;
+							linksUpdatedForThisFile++;
 							Logger.debug(`  → Markdown link in "${sourceFile}" updated to: "${edit.newText}"`);
 							break;
 						}
 					}
 				}
 
-				result.filesProcessed++;
+				return {
+					fileProcessedSuccessfully: true,
+					linksUpdatedCount: linksUpdatedForThisFile,
+					errors: errorsForThisFile,
+				};
 
 			} catch (error) {
 				const errorMessage = `Failed to process file ${oldFileUri.fsPath}: ${error}`;
-				result.errors.push(errorMessage);
-				Logger.error(errorMessage, error);
+				errorsForThisFile.push(errorMessage);
+				Logger.error(errorMessage, error); // Log error immediately
+				return {
+					fileProcessedSuccessfully: false,
+					linksUpdatedCount: 0,
+					errors: errorsForThisFile,
+				};
 			}
+		});
+
+		const allProcessingResults = await Promise.all(fileProcessingPromises);
+
+		// Aggregate results after all promises have completed
+		for (const res of allProcessingResults) {
+			if (res.fileProcessedSuccessfully) {
+				result.filesProcessed++;
+			}
+			result.linksUpdated += res.linksUpdatedCount;
+			result.errors.push(...res.errors);
+			// Aggregate warnings if res.warnings is added
 		}
 
-		Logger.info(`Finished processing files. Found ${result.linksUpdated} link(s) to update across ${renameEdits.size} file(s).`);
+		Logger.info(`Finished parallel processing of files. Found ${result.linksUpdated} link(s) to update across ${renameEdits.size} file(s).`);
+		if (progress) {
+			progress.report({ message: `Applied ${result.linksUpdated} link updates. Finalizing...`, increment: 100 });
+		}
 	}
 
 	/**

@@ -632,9 +632,9 @@ export class FolderRenameHandler {
 			return null;
 		}
 	}
-
 	/**
-	 * Applies workspace edits with proper error handling
+	 * Applies workspace edits with proper error handling using a single consolidated WorkspaceEdit
+	 * to minimize UI flashing and improve performance
 	 */
 	private async applyWorkspaceEdits(
 		renameEdits: vscode.WorkspaceEdit, // These are the edits calculated in the dry run
@@ -649,51 +649,73 @@ export class FolderRenameHandler {
 				totalPotentialLinks += fileSpecificEdits.length;
 			}
 
-			// We break the update by file because applying it at once was causing
-			// dirty state and editors not always saving or closing
+		/**
+	 * UI Optimization: Uses consolidated WorkspaceEdit to minimize file indicator flashing.
+	 * Similar optimization could be applied to single file renames in refactor.ts if needed.
+	 */
+
+			// Create a single workspace edit containing all file changes
+			// This minimizes UI flashing by applying all changes atomically
+			const consolidatedEdit = new vscode.WorkspaceEdit();
+			const filesToProcess: vscode.Uri[] = [];
+
+			// First, validate all files exist and collect valid edits
 			for (const [uri, edits] of renameEdits.entries()) {
 				try {
-					// Check if the file exists before trying to edit it
-					try {
-						await vscode.workspace.fs.stat(uri);
-					} catch (statError) {
-						Logger.warn(`Skipping edits for non-existent file: ${uri.fsPath}`);
-						result.warnings.push(`File not found, skipping link updates: ${uri.fsPath}`);
-						continue;
-					}
-
-					const fileEdits = new vscode.WorkspaceEdit();
-					fileEdits.set(uri, edits);
-
-					const success = await vscode.workspace.applyEdit(fileEdits);
-					if (!success) {
-						const warningMessage = `Failed to apply edits to ${uri.fsPath}: Workspace edit was rejected`;
-						result.warnings.push(warningMessage);
-						Logger.warn(warningMessage);
-						continue;
-					}
-
-					// If edits were applied, count them
-					actuallyAppliedLinksCount += edits.length; // `edits` is the TextEdit[] for this file
-
-					// Try to open and save the document
+					await vscode.workspace.fs.stat(uri);
+					consolidatedEdit.set(uri, edits);
+					filesToProcess.push(uri);
+					actuallyAppliedLinksCount += edits.length;
+				} catch (statError) {
+					Logger.warn(`Skipping edits for non-existent file: ${uri.fsPath}`);
+					result.warnings.push(`File not found, skipping link updates: ${uri.fsPath}`);
+				}
+			}			// Apply all edits at once - this reduces UI flashing significantly
+			if (filesToProcess.length > 0) {
+				Logger.debug(`Applying consolidated workspace edit with changes to ${filesToProcess.length} files`);
+				const success = await vscode.workspace.applyEdit(consolidatedEdit);
+				
+				if (!success) {
+					const errorMessage = `Failed to apply consolidated workspace edit with ${totalPotentialLinks} edits across ${filesToProcess.length} files`;
+					result.errors.push(errorMessage);
+					Logger.error(errorMessage);
+					return;
+				}				// Save all affected documents after successful edit application
+				// Use parallel saving for efficiency while only saving the files we modified
+				Logger.debug(`Saving ${filesToProcess.length} edited documents in parallel`);
+				
+				const savePromises = filesToProcess.map(async (uri) => {
 					try {
 						const document = await vscode.workspace.openTextDocument(uri);
-						await document.save();
-						successfulEditsPaths.push(vscode.workspace.asRelativePath(uri));
+						if (document.isDirty) {
+							await document.save();
+						}
+						return { uri, success: true, error: null };
 					} catch (saveError) {
-						const warningMessage = `Applied edits but failed to save ${uri.fsPath}: ${saveError}`;
+						return { uri, success: false, error: saveError };
+					}
+				});
+
+				const saveResults = await Promise.all(savePromises);
+				
+				// Process save results
+				for (const saveResult of saveResults) {
+					if (saveResult.success) {
+						successfulEditsPaths.push(vscode.workspace.asRelativePath(saveResult.uri));
+					} else {
+						const warningMessage = `Applied edits but failed to save ${saveResult.uri.fsPath}: ${saveResult.error}`;
 						result.warnings.push(warningMessage);
 						Logger.warn(warningMessage);
 						// Still count as successful since the edit was applied
-						successfulEditsPaths.push(vscode.workspace.asRelativePath(uri));
+						successfulEditsPaths.push(vscode.workspace.asRelativePath(saveResult.uri));
 					}
-
-				} catch (error) {
-					const errorMessage = `Failed to apply edits to ${uri.fsPath}: ${error}`;
-					result.errors.push(errorMessage);
-					Logger.error(errorMessage, error);
 				}
+
+				Logger.debug(
+					`Successfully applied ${actuallyAppliedLinksCount} link updates across ${filesToProcess.length} file(s): ${successfulEditsPaths.join(', ')}`
+				);
+			} else {
+				Logger.debug('No valid files to process for link updates');
 			}
 
 			// Update the main result object with the count of actually applied links

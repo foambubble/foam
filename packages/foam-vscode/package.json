@@ -567,6 +567,27 @@
           "type": "boolean",
           "default": true
         },
+        "foam.folderRename.updateLinks": {
+          "type": "string",
+          "default": "confirm",
+          "description": "Controls how Foam handles link updates when renaming folders",
+          "enum": [
+            "always",
+            "never",
+            "confirm"
+          ],
+          "enumDescriptions": [
+            "Always update links automatically without asking",
+            "Never update links when renaming folders",
+            "Ask for confirmation before updating links"
+          ]
+        },
+        "foam.folderRename.maxFiles": {
+          "type": "number",
+          "default": 500,
+          "minimum": 1,
+          "description": "Maximum number of markdown files to process during folder rename operations. If exceeded, link updates will be skipped for performance reasons."
+        },
         "foam.links.hover.enable": {
           "description": "Enable displaying note content on hover links",
           "type": "boolean",

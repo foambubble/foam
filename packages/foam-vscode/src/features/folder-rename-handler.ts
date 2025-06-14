@@ -104,7 +104,6 @@ export class FolderRenameHandler {
         'folderRename.maxFiles',
         500
       );
-      // const showProgress = getFoamVsCodeConfig<boolean>('links.folderRename.showProgress', true); // Removed as unused
 
       // This variable will store the user's decision from the dialog, if shown.
       let userDecision: FolderRenameDialogResult | undefined;
@@ -931,10 +930,6 @@ export class FolderRenameHandler {
         totalPotentialLinks += fileSpecificEdits.length;
       }
 
-      /**
-       * UI Optimization: Uses consolidated WorkspaceEdit to minimize file indicator flashing.
-       * Similar optimization could be applied to single file renames in refactor.ts if needed.
-       */
       // Create a single workspace edit containing all file changes
       // This minimizes UI flashing by applying all changes atomically
       const consolidatedEdit = new vscode.WorkspaceEdit();

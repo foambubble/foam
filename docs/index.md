@@ -269,6 +269,9 @@ If that sounds like something you're interested in, I'd love to have you along o
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/Tenormis"><img src="https://avatars.githubusercontent.com/u/61572102?v=4?s=60" width="60px;" alt="Tenormis"/><br /><sub><b>Tenormis</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=Tenormis" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="http://djon.es/blog"><img src="https://avatars.githubusercontent.com/u/225052?v=4?s=60" width="60px;" alt="David Jones"/><br /><sub><b>David Jones</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=djplaner" title="Documentation">📖</a></td>
     </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/s-jacob-powell"><img src="https://avatars.githubusercontent.com/u/109111499?v=4?s=60" width="60px;" alt="S. Jacob Powell"/><br /><sub><b>S. Jacob Powell</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=s-jacob-powell" title="Code">💻</a></td>
+    </tr>
   </tbody>
 </table>
 

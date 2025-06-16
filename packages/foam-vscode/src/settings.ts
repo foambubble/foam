@@ -1,6 +1,7 @@
 import { workspace, GlobPattern } from 'vscode';
 import { uniq } from 'lodash';
 import { getFoamVsCodeConfig } from './services/config';
+import { expandAlternateGroups } from './utils/globExpand';
 
 /**
  * Gets the notes extensions and default extension from the config.
@@ -44,5 +45,5 @@ export function getIgnoredFilesSetting(): GlobPattern[] {
     '**/.foam/**',
     ...workspace.getConfiguration().get('foam.files.ignore', []),
     ...Object.keys(workspace.getConfiguration().get('files.exclude', {})),
-  ];
+  ].flatMap(expandAlternateGroups);
 }

@@ -1157,6 +1157,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "s-jacob-powell",
+      "name": "S. Jacob Powell",
+      "avatar_url": "https://avatars.githubusercontent.com/u/109111499?v=4",
+      "profile": "https://github.com/s-jacob-powell",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,

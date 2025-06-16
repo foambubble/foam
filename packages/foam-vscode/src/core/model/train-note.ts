@@ -1,47 +1,41 @@
-import { ConsoleWriter } from '../services/Writer/console-writer';
-import { TrainNoteWriter } from '../services/Writer/train-note-writer';
-import { Subject, WriteObserver } from '../utils/observer';
+import { Observer, Notifier } from '../utils/observer';
 import { Resource } from './note';
 import { Phase, Phases } from './phase';
 
 export class TrainNote extends Resource {
   nextReminder: Date;
   phases: Phases;
-  subject: Subject;
-  private currentPhase: Phase;
+  currentPhase: Phase;
 
   constructor(phases: Phases) {
     super();
     this.phases = phases;
-    this.Attach();
+  }
+}
+
+export class TrainNoteStepper extends Notifier {
+  constructor(observer: Observer) {
+    super();
+    this.Attach(observer);
   }
 
-  Increase() {
-    var newPhase = this.phases.Next(this.currentPhase);
-    this.SetPhase(newPhase);
-    this.subject.Notify();
+  Increase(trainnote: TrainNote) {
+    var newPhase = trainnote.phases.Next(trainnote.currentPhase);
+    this.SetPhase(trainnote, newPhase);
+    this.Notify();
   }
 
-  Decrease() {
-    var newPhase = this.phases.Return(this.currentPhase);
-    this.SetPhase(newPhase);
-    this.subject.Notify();
+  Decrease(trainnote: TrainNote) {
+    var newPhase = trainnote.phases.Return(trainnote.currentPhase);
+    this.SetPhase(trainnote, newPhase);
+    this.Notify();
   }
 
-  CurrentPhase() {
-    return this.currentPhase;
-  }
-
-  SetPhase(phase: Phase, from: Date = new Date()) {
-    this.nextReminder = from;
-    this.nextReminder.setDate(this.nextReminder.getDate() + phase.days);
-    this.currentPhase = phase;
-  }
-
-  private Attach() {
-    this.subject = new Subject();
-    this.subject.Attach(
-      new WriteObserver(new TrainNoteWriter(new ConsoleWriter()))
+  SetPhase(trainnote: TrainNote, phase: Phase, from: Date = new Date()) {
+    trainnote.nextReminder = from;
+    trainnote.nextReminder.setDate(
+      trainnote.nextReminder.getDate() + phase.days
     );
+    trainnote.currentPhase = phase;
   }
 }

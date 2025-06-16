@@ -17,7 +17,7 @@ export class WriteObserver implements Observer {
   }
 }
 
-export class Subject {
+export class Notifier {
   private observer: Observer;
 
   Attach(observer: Observer): void {

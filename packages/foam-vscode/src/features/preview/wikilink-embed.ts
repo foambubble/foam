@@ -12,6 +12,7 @@ import { fromVsCodeUri, toVsCodeUri } from '../../utils/vsc-utils';
 import { MarkdownLink } from '../../core/services/markdown-link';
 import { URI } from '../../core/model/uri';
 import { Position } from '../../core/model/position';
+import { Range } from '../../core/model/range'; // Add this import
 import { TextEdit } from '../../core/services/text-edit';
 import { isNone, isSome } from '../../core/utils';
 import {
@@ -220,17 +221,23 @@ function fullExtractor(
   let noteText = readFileSync(note.uri.toFsPath()).toString();
   const section = Resource.findSection(note, note.uri.fragment);
   if (isSome(section)) {
-    const rows = noteText.split('\n');
-    noteText = rows
-      .slice(section.range.start.line, section.range.end.line)
-      .join('\n');
+    let rows = noteText.split('\n');
+    // Check if the line at section.range.end.line is a heading.
+    // If it is, it means the section ends *before* this line, so we don't add +1.
+    // Otherwise, add +1 to include the last line of content (e.g., for lists, code blocks).
+    const isLastLineHeading = rows[section.range.end.line]?.match(/^\s*#+\s/);
+    let slicedRows = rows.slice(
+      section.range.start.line,
+      section.range.end.line + (isLastLineHeading ? 0 : 1)
+    );
+    noteText = slicedRows.join('\n');
   }
   noteText = withLinksRelativeToWorkspaceRoot(
     note.uri,
     noteText,
     parser,
     workspace
-  );
+  ).replace(/\s*\^[\w-]+$/m, ''); // Strip block ID, multiline aware
   return noteText;
 }
 
@@ -252,7 +259,11 @@ function contentExtractor(
   }
   let rows = noteText.split('\n');
   if (isSome(section)) {
-    rows = rows.slice(section.range.start.line, section.range.end.line);
+    const isLastLineHeading = rows[section.range.end.line]?.match(/^\s*#+\s/);
+    rows = rows.slice(
+      section.range.start.line,
+      section.range.end.line + (isLastLineHeading ? 0 : 1)
+    );
   }
   rows.shift();
   noteText = rows.join('\n');
@@ -261,7 +272,7 @@ function contentExtractor(
     noteText,
     parser,
     workspace
-  );
+  ).replace(/\s*\^[\w-]+$/m, ''); // Strip block ID, multiline aware
   return noteText;
 }
 

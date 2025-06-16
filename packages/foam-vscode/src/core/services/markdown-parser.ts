@@ -1,5 +1,5 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
-import { Point, Node, Position as AstPosition } from 'unist';
+import { Point, Node, Position as AstPosition, Parent } from 'unist';
 import unified from 'unified';
 import markdownParse from 'remark-parse';
 import wikiLinkPlugin from 'remark-wiki-link';
@@ -16,7 +16,13 @@ import { ICache } from '../utils/cache';
 
 export interface ParserPlugin {
   name?: string;
-  visit?: (node: Node, note: Resource, noteSource: string) => void;
+  visit?: (
+    node: Node,
+    note: Resource,
+    noteSource: string,
+    index?: number,
+    parent?: Parent
+  ) => void;
   onDidInitializeParser?: (parser: unified.Processor) => void;
   onWillParseMarkdown?: (markdown: string) => string;
   onWillVisitTree?: (tree: Node, note: Resource) => void;
@@ -57,6 +63,7 @@ export function createMarkdownParser(
     tagsPlugin,
     aliasesPlugin,
     sectionsPlugin,
+    createBlockIdPlugin(), // Use the new plugin factory here
     ...extraPlugins,
   ];
 
@@ -99,7 +106,7 @@ export function createMarkdownParser(
           handleError(plugin, 'onWillVisitTree', uri, e);
         }
       }
-      visit(tree, node => {
+      visit(tree, (node, index, parent) => {
         if (node.type === 'yaml') {
           try {
             const yamlProperties = parseYAML((node as any).value) ?? {};
@@ -121,7 +128,7 @@ export function createMarkdownParser(
 
         for (const plugin of plugins) {
           try {
-            plugin.visit?.(node, note, markdown);
+            plugin.visit?.(node, note, markdown, index, parent);
           } catch (e) {
             handleError(plugin, 'visit', uri, e);
           }
@@ -250,10 +257,14 @@ const sectionsPlugin: ParserPlugin = {
   visit: (node, note) => {
     if (node.type === 'heading') {
       const level = (node as any).depth;
-      const label = getTextFromChildren(node);
+      let label = getTextFromChildren(node);
       if (!label || !level) {
         return;
       }
+      // Remove block ID from header label
+      const blockIdRegex = /\s(\^[\w-]+)$/;
+      label = label.replace(blockIdRegex, '').trim();
+
       const start = astPositionToFoamRange(node.position!).start;
 
       // Close all the sections that are not parents of the current section
@@ -460,6 +471,154 @@ const astPositionToFoamRange = (pos: AstPosition): Range =>
     pos.end.line - 1,
     pos.end.column - 1
   );
+
+const createBlockIdPlugin = (): ParserPlugin => {
+  const processedListItems: Set<Node> = new Set();
+  const inlineHeaderBlockIds: { node: Node; blockId: string }[] = [];
+
+  const findEndOfHeaderBlock = (
+    tree: Node,
+    startNode: Node,
+    startDepth: number
+  ): Position => {
+    let endPosition: Position = astPointToFoamPosition(tree.position.end); // Default to end of document
+
+    visit(tree, currentNode => {
+      // Only consider nodes after the startNode
+      if (
+        currentNode.position &&
+        currentNode.position.start.offset > startNode.position.start.offset
+      ) {
+        if (currentNode.type === 'heading') {
+          const currentHeadingDepth = (currentNode as any).depth;
+          if (currentHeadingDepth <= startDepth) {
+            // Found a heading of the same or higher level, this marks the end of the block
+            endPosition = astPositionToFoamRange(currentNode.position).start;
+            return visit.EXIT; // Stop visiting
+          }
+        }
+      }
+    });
+    return endPosition;
+  };
+
+  return {
+    name: 'block-id',
+    onWillVisitTree: () => {
+      processedListItems.clear(); // Clear set for each new parse
+      inlineHeaderBlockIds.length = 0; // Clear for each new parse
+    },
+    visit: (node, note, markdown, index, parent) => {
+      const inlineBlockIdRegex = /\s(\^[\w-]+)$/;
+      const fullLineBlockIdRegex = /^\s*(\^[\w-]+)\s*$/;
+
+      if (!node.position) {
+        return;
+      }
+
+      const textContent = getTextFromChildren(node);
+      const inlineMatch = textContent.match(inlineBlockIdRegex);
+      const fullLineMatch = textContent.match(fullLineBlockIdRegex);
+
+      if (inlineMatch && !fullLineMatch) {
+        const blockId = inlineMatch[1];
+
+        if (
+          parent &&
+          parent.type === 'listItem' &&
+          !processedListItems.has(parent)
+        ) {
+          // This is an inline ID for a list item
+          let range = astPositionToFoamRange(parent.position);
+          const lines = markdown.split('\n');
+          const endLineContent = lines[range.end.line];
+
+          // If the end of the range is on an empty line, adjust it to the end of the previous line
+          // This handles cases where the list item's AST position includes a trailing newline
+          if (
+            range.end.line > range.start.line &&
+            endLineContent !== undefined &&
+            endLineContent.trim() === ''
+          ) {
+            range = Range.create(
+              range.start.line,
+              range.start.character,
+              range.end.line - 1,
+              lines[range.end.line - 1].length
+            );
+          } else if (endLineContent !== undefined) {
+            // Ensure the end character is at the end of the content line
+            range = Range.create(
+              range.start.line,
+              range.start.character,
+              range.end.line,
+              endLineContent.length
+            );
+          }
+
+          note.sections.push({
+            label: blockId,
+            range: range,
+          });
+          processedListItems.add(parent);
+        } else if (node.type === 'paragraph') {
+          // This is an inline ID for a paragraph
+          const range = astPositionToFoamRange(node.position);
+          note.sections.push({
+            label: blockId,
+            range: range,
+          });
+        } else if (node.type === 'heading') {
+          // Collect heading nodes with inline block IDs for later processing
+          inlineHeaderBlockIds.push({ node, blockId });
+        }
+      } else if (fullLineMatch && node.type === 'paragraph') {
+        // This is a potential post-block ID (only applies to paragraphs)
+        // Find the previous sibling that is a block element
+        if (parent && index !== undefined && index > 0) {
+          const previousSibling = parent.children[index - 1];
+          if (previousSibling && previousSibling.position) {
+            const blockId = fullLineMatch[1];
+            const idNodeLine = node.position.start.line;
+            const prevSiblingEndLine = previousSibling.position.end.line;
+            const isSeparatedByBlankLine = idNodeLine > prevSiblingEndLine + 1;
+
+            if (isSeparatedByBlankLine) {
+              const isComplexBlock =
+                previousSibling.type === 'list' ||
+                previousSibling.type === 'blockquote' ||
+                previousSibling.type === 'code' ||
+                previousSibling.type === 'table';
+
+              if (isComplexBlock) {
+                note.sections.push({
+                  label: blockId,
+                  range: astPositionToFoamRange(previousSibling.position),
+                });
+              }
+            }
+          }
+        }
+      }
+    },
+    onDidVisitTree: (tree, note) => {
+      // Process inlineHeaderBlockIds
+      for (const { node: headerNode, blockId } of inlineHeaderBlockIds) {
+        const headerStart = astPositionToFoamRange(headerNode.position).start;
+        const headerDepth = (headerNode as any).depth;
+
+        // Find the end of the header block
+        const blockEnd = findEndOfHeaderBlock(tree, headerNode, headerDepth);
+
+        // Add a new section for the block ID, using the same range as the header content
+        note.sections.push({
+          label: blockId,
+          range: Range.createFromPosition(headerStart, blockEnd),
+        });
+      }
+    },
+  };
+};
 
 const blockParser = unified().use(markdownParse, { gfm: true });
 export const getBlockFor = (

@@ -68,3 +68,21 @@ export function isOnYAMLKeywordLine(content: string, keyword: string): boolean {
   const lastMatch = matches[matches.length - 1];
   return lastMatch[1] === keyword;
 }
+
+export function extractBlockIds(
+  markdown: string
+): { id: string; line: number; col: number }[] {
+  const blockIdRegex = /\s(\^[\w.-]+)$/;
+  const lines = markdown.split('\n');
+  const blockIds: { id: string; line: number; col: number }[] = [];
+
+  lines.forEach((lineContent, index) => {
+    const match = lineContent.match(blockIdRegex);
+    if (match) {
+      const id = match[1].substring(1); // Remove the '^'
+      const col = match.index + 1;
+      blockIds.push({ id, line: index, col });
+    }
+  });
+  return blockIds;
+}

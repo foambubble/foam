@@ -10,6 +10,7 @@ import {
   default as markdownItWikilinkEmbed,
   CONFIG_EMBED_NOTE_TYPE,
 } from './wikilink-embed';
+import { readFileFromFs, TEST_DATA_DIR } from '../../test/test-utils';
 
 const parser = createMarkdownParser();
 
@@ -75,6 +76,7 @@ This is the second section of note E
 
 # Section 3
 This is the third section of note E
+
     `,
       ['note-e.md']
     );
@@ -108,11 +110,12 @@ This is the third section of note E
 # Section 1
 This is the first section of note E
 
-# Section 2 
+# Section 2
 This is the second section of note E
 
 # Section 3
 This is the third section of note E
+
     `,
       ['note-e-container.md']
     );
@@ -282,11 +285,12 @@ This is the first subsection of note E`,
 # Section 1
 This is the first section of note E
 
-# Section 2 
+# Section 2
 This is the second section of note E
 
 # Section 3
 This is the third section of note E
+
     `,
       ['note-e.md']
     );
@@ -413,5 +417,128 @@ content-card![[note-e#Section 2]]`);
 
     await deleteFile(noteA);
     await deleteFile(noteB);
+  });
+
+  describe('Block Identifiers', () => {
+    it('should correctly transclude a paragraph block', async () => {
+      const content = await readFileFromFs(
+        TEST_DATA_DIR.joinPath('block-identifiers', 'paragraph.md')
+      );
+      const note = await createFile(content, [
+        'block-identifiers',
+        'paragraph.md',
+      ]);
+      const ws = new FoamWorkspace().set(parser.parse(note.uri, note.content));
+      const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser);
+
+      await withModifiedFoamConfiguration(
+        CONFIG_EMBED_NOTE_TYPE,
+        'full-inline',
+        () => {
+          expect(md.render(`![[paragraph#^p1]]`)).toMatch(
+            `<p>This is a paragraph. ^p1</p>`
+          );
+        }
+      );
+      await deleteFile(note);
+    });
+
+    it('should correctly transclude a list item block', async () => {
+      const content = await readFileFromFs(
+        TEST_DATA_DIR.joinPath('block-identifiers', 'list.md')
+      );
+      const note = await createFile(content, ['block-identifiers', 'list.md']);
+      const ws = new FoamWorkspace().set(parser.parse(note.uri, note.content));
+      const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser);
+
+      await withModifiedFoamConfiguration(
+        CONFIG_EMBED_NOTE_TYPE,
+        'full-inline',
+        () => {
+          expect(md.render(`![[list#^li1]]`)).toMatch(
+            `<ul>
+<li>list item 1 ^li1</li>
+</ul>`
+          );
+        }
+      );
+      await deleteFile(note);
+    });
+
+    it('should correctly transclude a nested list item block', async () => {
+      const content = await readFileFromFs(
+        TEST_DATA_DIR.joinPath('block-identifiers', 'list.md')
+      );
+      const note = await createFile(content, ['block-identifiers', 'list.md']);
+      const ws = new FoamWorkspace().set(parser.parse(note.uri, note.content));
+      const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser);
+
+      await withModifiedFoamConfiguration(
+        CONFIG_EMBED_NOTE_TYPE,
+        'full-inline',
+        () => {
+          expect(md.render(`![[list#^nli1]]`)).toMatch(
+            `<ul>
+<li>list item 2
+<ul>
+<li>nested list item 1 ^nli1</li>
+</ul>
+</li>
+</ul>`
+          );
+        }
+      );
+      await deleteFile(note);
+    });
+
+    it('should correctly transclude a heading block', async () => {
+      const content = await readFileFromFs(
+        TEST_DATA_DIR.joinPath('block-identifiers', 'heading.md')
+      );
+      const note = await createFile(content, [
+        'block-identifiers',
+        'heading.md',
+      ]);
+      const ws = new FoamWorkspace().set(parser.parse(note.uri, note.content));
+      const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser);
+
+      await withModifiedFoamConfiguration(
+        CONFIG_EMBED_NOTE_TYPE,
+        'full-inline',
+        () => {
+          expect(md.render(`![[heading#^h2]]`)).toMatch(
+            `<h2>Heading 2 ^h2</h2>
+<p>Some more content.</p>`
+          );
+        }
+      );
+      await deleteFile(note);
+    });
+
+    it('should correctly transclude a code block', async () => {
+      const content = await readFileFromFs(
+        TEST_DATA_DIR.joinPath('block-identifiers', 'code-block.md')
+      );
+      const note = await createFile(content, [
+        'block-identifiers',
+        'code-block.md',
+      ]);
+      const ws = new FoamWorkspace().set(parser.parse(note.uri, note.content));
+      const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser);
+
+      await withModifiedFoamConfiguration(
+        CONFIG_EMBED_NOTE_TYPE,
+        'full-inline',
+        () => {
+          expect(md.render(`![[code-block#^cb1]]`)).toMatch(
+            `<pre><code class="language-json">{
+  "key": "value"
+}
+</code></pre>`
+          );
+        }
+      );
+      await deleteFile(note);
+    });
   });
 });

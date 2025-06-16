@@ -34,6 +34,9 @@
     "markdown.previewStyles": [
       "./static/preview/style.css"
     ],
+    "markdown.previewScripts": [
+      "./static/preview/block-id-cleanup.js"
+    ],
     "grammars": [
       {
         "path": "./syntaxes/injection.json",
@@ -695,7 +698,6 @@
     "@types/dateformat": "^3.0.1",
     "@types/jest": "^29.5.3",
     "@types/lodash": "^4.14.157",
-    "@types/markdown-it": "^12.0.1",
     "@types/micromatch": "^4.0.1",
     "@types/node": "^13.11.0",
     "@types/picomatch": "^2.2.1",
@@ -732,6 +734,7 @@
     "js-sha1": "^0.7.0",
     "lodash": "^4.17.21",
     "lru-cache": "^7.14.1",
+    "@types/markdown-it": "^12.0.1",
     "markdown-it-regex": "^0.2.0",
     "mnemonist": "^0.39.8",
     "path-browserify": "^1.0.1",

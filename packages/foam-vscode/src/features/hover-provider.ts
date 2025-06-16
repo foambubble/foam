@@ -101,11 +101,18 @@ export class HoverProvider implements vscode.HoverProvider {
 
     let mdContent = null;
     if (!targetUri.isPlaceholder()) {
-      const content: string = await this.workspace.readAsMarkdown(targetUri);
+      let content: string = await this.workspace.readAsMarkdown(targetUri);
 
-      mdContent = isSome(content)
-        ? getNoteTooltip(content)
-        : this.workspace.get(targetUri).title;
+      // Remove YAML frontmatter from the content
+      content = content.replace(/---[\s\S]*?---/, '').trim();
+
+      if (isSome(content)) {
+        const markdownString = new vscode.MarkdownString(content);
+        markdownString.isTrusted = true;
+        mdContent = markdownString;
+      } else {
+        mdContent = this.workspace.get(targetUri).title;
+      }
     }
 
     const command = CREATE_NOTE_COMMAND.forPlaceholder(

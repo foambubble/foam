@@ -6,7 +6,11 @@ import {
 import { Logger } from '../utils/log';
 import { URI } from '../model/uri';
 import { Range } from '../model/range';
-import { getRandomURI } from '../../test/test-utils';
+import {
+  getRandomURI,
+  TEST_DATA_DIR,
+  readFileFromFs,
+} from '../../test/test-utils';
 import { Position } from '../model/position';
 
 Logger.setLevel('error');
@@ -202,6 +206,22 @@ this note has an empty title line
         '/Hello Page.md'
       );
       expect(note.title).toEqual('Hello Page');
+    });
+  });
+  describe('Block Identifiers', () => {
+    it('should parse block identifiers as definitions', async () => {
+      const content = await readFileFromFs(
+        TEST_DATA_DIR.joinPath('block-identifiers', 'paragraph.md')
+      );
+      const note = createNoteFromMarkdown(content, 'paragraph.md');
+      expect(note.definitions).toEqual([
+        {
+          type: 'block',
+          label: '^p1',
+          url: '#^p1',
+          range: Range.create(0, 19, 0, 22),
+        },
+      ]);
     });
   });
 
@@ -627,5 +647,78 @@ some text`);
     const { block, nLines } = getBlockFor(markdown, Position.create(100, 2));
     expect(block).toEqual('');
     expect(nLines).toEqual(1);
+  });
+});
+
+describe('Block ID range selection with identical lines', () => {
+  const markdownWithIdenticalLines = `
+> This is a blockquote.
+> It has multiple lines.
+> This is a blockquote.
+
+^block-id-1
+
+Some paragraph text.
+
+> This is a blockquote.
+> It has multiple lines.
+> This is a blockquote.
+
+^block-id-2
+
+Another paragraph.
+
+- List item 1
+- List item 2 ^list-id-1
+
+- List item 1
+- List item 2 ^list-id-2
+
+\`\`\`
+Code block line 1
+Code block line 2
+\`\`\`
+
+^code-id-1
+
+\`\`\`
+Code block line 1
+Code block line 2
+\`\`\`
+
+^code-id-2
+`;
+
+  it('should correctly select the range for blockquote with identical lines', () => {
+    const note = createNoteFromMarkdown(markdownWithIdenticalLines);
+    const blockId1Section = note.sections.find(s => s.label === '^block-id-1');
+    expect(blockId1Section).toBeDefined();
+    expect(blockId1Section.range).toEqual(Range.create(1, 0, 3, 23));
+
+    const blockId2Section = note.sections.find(s => s.label === '^block-id-2');
+    expect(blockId2Section).toBeDefined();
+    expect(blockId2Section.range).toEqual(Range.create(9, 0, 11, 23));
+  });
+
+  it('should correctly select the range for list item with identical lines', () => {
+    const note = createNoteFromMarkdown(markdownWithIdenticalLines);
+    const listId1Section = note.sections.find(s => s.label === '^list-id-1');
+    expect(listId1Section).toBeDefined();
+    expect(listId1Section.range).toEqual(Range.create(18, 0, 18, 24));
+
+    const listId2Section = note.sections.find(s => s.label === '^list-id-2');
+    expect(listId2Section).toBeDefined();
+    expect(listId2Section.range).toEqual(Range.create(21, 0, 21, 24));
+  });
+
+  it('should correctly select the range for code block with identical lines', () => {
+    const note = createNoteFromMarkdown(markdownWithIdenticalLines);
+    const codeId1Section = note.sections.find(s => s.label === '^code-id-1');
+    expect(codeId1Section).toBeDefined();
+    expect(codeId1Section.range).toEqual(Range.create(23, 0, 26, 3));
+
+    const codeId2Section = note.sections.find(s => s.label === '^code-id-2');
+    expect(codeId2Section).toBeDefined();
+    expect(codeId2Section.range).toEqual(Range.create(30, 0, 33, 3));
   });
 });

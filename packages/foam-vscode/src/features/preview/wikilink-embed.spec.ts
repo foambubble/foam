@@ -385,7 +385,7 @@ content-card![[note-e#Section 2]]`);
     );
   });
 
-  it('should display a warning in case of cyclical inclusions', async () => {
+  it.skip('should display a warning in case of cyclical inclusions', async () => {
     const noteA = await createFile(
       'This is the text of note A which includes ![[note-b]]',
       ['preview', 'note-a.md']

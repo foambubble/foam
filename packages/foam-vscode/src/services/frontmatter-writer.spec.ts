@@ -6,6 +6,9 @@ import {
   readFile,
 } from '../test/test-utils-vscode';
 import { createTestTrainNote, createTestWorkspace } from '../test/test-utils';
+import { TrainNoteStepper } from '../core/model/train-note';
+import { ConsoleWriter } from '../core/services/Writer/console-writer';
+import { WriteObserver } from '../core/utils/observer';
 
 describe('VS-Code document Save', () => {
   it('shut save VS-Code Document', async () => {
@@ -13,13 +16,14 @@ describe('VS-Code document Save', () => {
     let note = createTestTrainNote({
       uri: getUriInWorkspace().path,
     });
+    let stepper = new TrainNoteStepper(new WriteObserver(new ConsoleWriter()));
     await createNote(note);
-    note.SetPhase(note.phases.First());
+    stepper.SetPhase(note, note.phases.First());
 
     var stringnextReminder = note.nextReminder.toISOString().split('T')[0];
     await new FrontmatterWriter().write(
       {
-        currentPhase: note.CurrentPhase(),
+        currentPhase: note.currentPhase,
         nextReminder: stringnextReminder,
       },
       note.uri
@@ -27,7 +31,7 @@ describe('VS-Code document Save', () => {
 
     var file = await readFile(note.uri);
     var frontmatter = matter(file);
-    expect(frontmatter.data.currentPhase).toEqual(note.CurrentPhase());
+    expect(frontmatter.data.currentPhase).toEqual(note.currentPhase);
     expect(frontmatter.data.nextReminder).toBe(stringnextReminder);
   });
 });

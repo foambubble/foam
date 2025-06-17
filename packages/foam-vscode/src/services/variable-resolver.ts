@@ -307,23 +307,23 @@ function resolveFoamCurrentDir() {
 }
 
 async function resolveTrainingNote() {
-  let trainingNote = false;
+  let frontmatter = '';
   const response = await window.showQuickPick(
-    [{ label: 'Yes' }, { label: 'no' }],
+    [{ label: 'Yes' }, { label: 'No' }],
     {
       placeHolder: 'Do you really want to learn this Note?',
     }
   );
 
   if (response.label == 'Yes') {
-    trainingNote = true;
+    frontmatter = ['---', 'type: training-note', '---'].join('\n');
   } else if (response.label == 'No') {
-    trainingNote = false;
+    frontmatter = '';
   } else {
     throw new UserCancelledOperation(`Input was ${response.label}`);
   }
 
-  return trainingNote.toString();
+  return frontmatter;
 }
 
 /**

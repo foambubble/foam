@@ -14,6 +14,10 @@ export interface FolderRenameDialogResult {
   action: 'proceed' | 'skip' | 'cancel' | 'settings' | 'abort';
 }
 
+interface FolderRenameQuickPickItem extends vscode.QuickPickItem {
+  action: FolderRenameDialogResult['action'];
+}
+
 /**
  * Handles the user confirmation dialog for folder renames
  */
@@ -64,7 +68,7 @@ export class FolderRenameDialog {
       )}.`;
     }
 
-    const items: vscode.QuickPickItem[] = [];
+    const items: FolderRenameQuickPickItem[] = [];
 
     // Main action items
     if (dryRunResult && dryRunResult.linksUpdatedCount > 0) {
@@ -77,6 +81,7 @@ export class FolderRenameDialog {
           dryRunResult.filesToEditCount,
           'file'
         )} and proceed with the rename.`,
+        action: 'proceed',
       });
     } else {
       items.push({
@@ -87,6 +92,7 @@ export class FolderRenameDialog {
               'file'
             )} checked).`
           : 'Proceed with the rename.',
+        action: 'proceed',
       });
     }
 
@@ -99,11 +105,13 @@ export class FolderRenameDialog {
               'link'
             )} unchanged.`
           : "Rename the folder but don't update any links.",
+      action: 'skip',
     });
 
     items.push({
       label: '$(discard) Abort Rename',
       detail: `Revert the folder name back to '${oldPath}' and cancel the entire operation.`,
+      action: 'abort',
     });
 
     // Add settings option only if currently in "confirm" mode
@@ -111,12 +119,14 @@ export class FolderRenameDialog {
       items.push({
         label: '$(gear) Settings',
         detail: 'Change folder rename behavior in Foam settings.',
+        action: 'settings',
       });
     }
 
-    const selected = await new Promise<vscode.QuickPickItem | undefined>(
+    const selected = await new Promise<FolderRenameQuickPickItem | undefined>(
       resolve => {
-        const quickPick = vscode.window.createQuickPick();
+        const quickPick =
+          vscode.window.createQuickPick<FolderRenameQuickPickItem>();
 
         // Enhanced title with dry run results, simplified placeholder
         if (dryRunResult) {
@@ -168,19 +178,6 @@ export class FolderRenameDialog {
       return { action: 'cancel' };
     }
 
-    if (
-      selected.label.includes('Update Links') ||
-      selected.label.includes('Proceed')
-    ) {
-      return { action: 'proceed' };
-    } else if (selected.label.includes('Skip Link Updates')) {
-      return { action: 'skip' };
-    } else if (selected.label.includes('Settings')) {
-      return { action: 'settings' };
-    } else if (selected.label.includes('Abort Rename')) {
-      return { action: 'abort' };
-    } else {
-      return { action: 'cancel' };
-    }
+    return { action: selected.action };
   }
 }

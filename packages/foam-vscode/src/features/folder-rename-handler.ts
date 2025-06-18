@@ -10,7 +10,7 @@ import { fromVsCodeUri, toVsCodeRange, toVsCodeUri } from '../utils/vsc-utils';
 import {
   FolderRenameDialog,
   DryRunCalculationResult,
-  FolderRenameDialogResult,
+  FolderRenameAction,
 } from './folder-rename-dialog';
 import * as path from 'path';
 
@@ -107,14 +107,14 @@ export class FolderRenameHandler {
       );
 
       // This variable will store the user's decision from the dialog, if shown.
-      let userDecision: FolderRenameDialogResult | undefined;
+      let userDecision: FolderRenameAction | undefined;
       if (mode === 'never') {
         Logger.info(
           'Link updates disabled by user configuration (mode: never). Foam will only refresh workspace data.'
         );
         // No userDecision needed, proceed to cache refresh, skip link updates.
         // To achieve this, we can simulate a 'skip' action internally.
-        userDecision = { action: 'skip' };
+        userDecision = 'skip';
       }
 
       // Initial workspace refresh to pick up newly imported files before discovery
@@ -242,7 +242,7 @@ export class FolderRenameHandler {
         Logger.debug(
           "Mode is 'always', proceeding with link updates automatically."
         );
-        userDecision = { action: 'proceed' }; // Simulate proceed for automatic application
+        userDecision = 'proceed'; // Simulate proceed for automatic application
       } else if (mode !== 'never') {
         // This covers 'confirm' or ('always' with confirmAction)
         // If mode is 'never', userDecision is already set to skip, and this block is skipped.
@@ -253,7 +253,7 @@ export class FolderRenameHandler {
           dryRunCalcResult,
           mode // Pass the current mode
         );
-        if (userDecision.action === 'settings') {
+        if (userDecision === 'settings') {
           Logger.debug(
             'User chose to open settings for folder rename behavior. Aborting the current rename operation.'
           );
@@ -288,7 +288,7 @@ export class FolderRenameHandler {
           }
         }
 
-        if (userDecision.action === 'abort') {
+        if (userDecision === 'abort') {
           Logger.debug('User chose to abort the folder rename operation.');
           // Attempt to revert the folder rename
           try {
@@ -313,7 +313,7 @@ export class FolderRenameHandler {
       }
 
       // Action based on userDecision (or pre-set decision for 'never'/'always' modes)
-      if (userDecision?.action === 'cancel') {
+      if (userDecision === 'cancel') {
         Logger.debug(
           'User aborted Foam link update operation for this folder rename.'
         );
@@ -321,14 +321,14 @@ export class FolderRenameHandler {
           'Folder rename has occurred, but Foam link updates and immediate cache processing were aborted by user.'
         );
         return result; // Return early, no link updates or cache refresh needed from our side for this specific event
-      } else if (userDecision?.action === 'skip') {
+      } else if (userDecision === 'skip') {
         Logger.debug('Skipping link updates for this folder rename.');
         // Edits are not applied. Cache refresh will still happen below.
         if (dryRunCalcResult) {
           // Update filesProcessed even if skipping
           result.filesProcessed = dryRunCalcResult.filesProcessedCount;
         }
-      } else if (userDecision?.action === 'proceed') {
+      } else if (userDecision === 'proceed') {
         if (dryRunCalcResult && dryRunCalcResult.edits.size > 0) {
           Logger.debug(
             `Applying ${dryRunCalcResult.linksUpdatedCount} calculated link updates across ${dryRunCalcResult.filesToEditCount} file(s).`

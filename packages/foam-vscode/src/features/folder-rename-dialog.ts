@@ -10,12 +10,15 @@ export interface DryRunCalculationResult {
   calculationErrors: string[];
 }
 
-export interface FolderRenameDialogResult {
-  action: 'proceed' | 'skip' | 'cancel' | 'settings' | 'abort';
-}
+export type FolderRenameAction =
+  | 'proceed'
+  | 'skip'
+  | 'cancel'
+  | 'settings'
+  | 'abort';
 
 interface FolderRenameQuickPickItem extends vscode.QuickPickItem {
-  action: FolderRenameDialogResult['action'];
+  action: FolderRenameAction;
 }
 
 /**
@@ -31,7 +34,7 @@ export class FolderRenameDialog {
     newUri: vscode.Uri,
     dryRunResult?: DryRunCalculationResult,
     currentMode?: string
-  ): Promise<FolderRenameDialogResult> {
+  ): Promise<FolderRenameAction> {
     const oldPath = vscode.workspace.asRelativePath(oldUri);
     const newPath = vscode.workspace.asRelativePath(newUri);
 
@@ -175,9 +178,9 @@ export class FolderRenameDialog {
     );
 
     if (!selected) {
-      return { action: 'cancel' };
+      return 'cancel';
     }
 
-    return { action: selected.action };
+    return selected.action;
   }
 }

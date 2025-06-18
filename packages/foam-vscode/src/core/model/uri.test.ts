@@ -80,48 +80,103 @@ describe('Foam URI', () => {
       )
     ).toEqual(URI.file('../a/note.md'));
   });
-});
 
-describe('asAbsoluteUri', () => {
-  it('should throw if no workspace folder is found', () => {
-    expect(() => asAbsoluteUri(URI.file('relative/path'), [])).toThrow();
-  });
-  it('should return the given URI if already absolute', () => {
-    const uri = URI.file('/absolute/path');
-    expect(asAbsoluteUri(uri, [URI.file('/base')])).toEqual(uri);
-  });
-  describe('with relative URI', () => {
-    it('should return a URI relative if the given URI is relative and there is only one workspace folder', () => {
-      const uri = URI.file('relative/path');
-      const workspaceFolder = URI.file('/workspace/folder');
-      expect(asAbsoluteUri(uri, [workspaceFolder])).toEqual(
-        workspaceFolder.joinPath(uri.path)
-      );
+  describe('asAbsoluteUri', () => {
+    it('should throw if no workspace folder is found', () => {
+      expect(() => asAbsoluteUri(URI.file('relative/path'), [])).toThrow();
     });
-    it('should match the first folder with the same name as the first part of the URI', () => {
-      const uri = URI.file('folder2/file');
+    it('should return the given URI if already absolute', () => {
+      const uri = URI.file('/absolute/path');
+      expect(asAbsoluteUri(uri, [URI.file('/base')])).toEqual(uri);
+    });
+    describe('with relative URI', () => {
+      it('should return a URI relative if the given URI is relative and there is only one workspace folder', () => {
+        const uri = URI.file('relative/path');
+        const workspaceFolder = URI.file('/workspace/folder');
+        expect(asAbsoluteUri(uri, [workspaceFolder])).toEqual(
+          workspaceFolder.joinPath(uri.path)
+        );
+      });
+      it('should match the first folder with the same name as the first part of the URI', () => {
+        const uri = URI.file('folder2/file');
+        const workspaceFolder1 = URI.file('/absolute/path/folder1');
+        const workspaceFolder2 = URI.file('/absolute/path/folder2');
+        expect(asAbsoluteUri(uri, [workspaceFolder1, workspaceFolder2])).toEqual(
+          workspaceFolder2.joinPath('file')
+        );
+      });
+    });
+    it('should use the first folder if no matching folder is found', () => {
+      const uri = URI.file('folder3/file');
       const workspaceFolder1 = URI.file('/absolute/path/folder1');
       const workspaceFolder2 = URI.file('/absolute/path/folder2');
       expect(asAbsoluteUri(uri, [workspaceFolder1, workspaceFolder2])).toEqual(
-        workspaceFolder2.joinPath('file')
+        workspaceFolder1.joinPath(uri.path)
       );
     });
+    it('should use the first matching folder', () => {
+      const uri = URI.file('folder/file');
+      const workspaceFolder1 = URI.file('/absolute/path1');
+      const workspaceFolder2 = URI.file('/absolute/path2/folder');
+      const workspaceFolder3 = URI.file('/absolute/path3/folder');
+      expect(
+        asAbsoluteUri(uri, [workspaceFolder1, workspaceFolder2, workspaceFolder3])
+      ).toEqual(workspaceFolder2.joinPath('file'));
+    });
   });
-  it('should use the first folder if no matching folder is found', () => {
-    const uri = URI.file('folder3/file');
-    const workspaceFolder1 = URI.file('/absolute/path/folder1');
-    const workspaceFolder2 = URI.file('/absolute/path/folder2');
-    expect(asAbsoluteUri(uri, [workspaceFolder1, workspaceFolder2])).toEqual(
-      workspaceFolder1.joinPath(uri.path)
-    );
-  });
-  it('should use the first matching folder', () => {
-    const uri = URI.file('folder/file');
-    const workspaceFolder1 = URI.file('/absolute/path1');
-    const workspaceFolder2 = URI.file('/absolute/path2/folder');
-    const workspaceFolder3 = URI.file('/absolute/path3/folder');
-    expect(
-      asAbsoluteUri(uri, [workspaceFolder1, workspaceFolder2, workspaceFolder3])
-    ).toEqual(workspaceFolder2.joinPath('file'));
+
+  describe('isWithinFolder', () => {
+    it('should return true for files within a folder', () => {
+      const folderUri = URI.file('/documents/notes');
+      const fileUri = URI.file('/documents/notes/file.md');
+      expect(fileUri.isWithinFolder(folderUri)).toBe(true);
+    });
+
+    it('should return true for files in subfolders', () => {
+      const folderUri = URI.file('/documents/notes');
+      const fileUri = URI.file('/documents/notes/subfolder/file.md');
+      expect(fileUri.isWithinFolder(folderUri)).toBe(true);
+    });
+
+    it('should return true for the folder itself', () => {
+      const folderUri = URI.file('/documents/notes');
+      expect(folderUri.isWithinFolder(folderUri)).toBe(true);
+    });
+
+    it('should return false for files outside the folder', () => {
+      const folderUri = URI.file('/documents/notes');
+      const fileUri = URI.file('/documents/other/file.md');
+      expect(fileUri.isWithinFolder(folderUri)).toBe(false);
+    });
+
+    it('should return false for files in parent folder', () => {
+      const folderUri = URI.file('/documents/notes');
+      const fileUri = URI.file('/documents/file.md');
+      expect(fileUri.isWithinFolder(folderUri)).toBe(false);
+    });
+
+    it('should return false for files with similar but different folder names', () => {
+      const folderUri = URI.file('/documents/notes');
+      const fileUri = URI.file('/documents/notes-backup/file.md');
+      expect(fileUri.isWithinFolder(folderUri)).toBe(false);
+    });
+
+    it('should return false for different schemes', () => {
+      const folderUri = URI.parse('file:///documents/notes');
+      const fileUri = URI.parse('http://example.com/documents/notes/file.md');
+      expect(fileUri.isWithinFolder(folderUri)).toBe(false);
+    });
+
+    it('should return false for different authorities', () => {
+      const folderUri = URI.parse('file://server1/documents/notes');
+      const fileUri = URI.parse('file://server2/documents/notes/file.md');
+      expect(fileUri.isWithinFolder(folderUri)).toBe(false);
+    });
+
+    it('should handle Windows paths correctly', () => {
+      const folderUri = URI.file('C:\\documents\\notes');
+      const fileUri = URI.file('C:\\documents\\notes\\file.md');
+      expect(fileUri.isWithinFolder(folderUri)).toBe(true);
+    });
   });
 });

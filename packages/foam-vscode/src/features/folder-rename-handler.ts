@@ -161,18 +161,13 @@ export class FolderRenameHandler {
         'Pre-refreshing Foam workspace for accurate link calculation...'
       );
       try {
-        const oldFolderPath = fromVsCodeUri(oldUri).path;
-        const newFolderPath = fromVsCodeUri(newUri).path;
+        const oldFolderFoamUri = fromVsCodeUri(oldUri);
+        const newFolderFoamUri = fromVsCodeUri(newUri);
 
         // Remove old resources from workspace
         const resourcesToRemove = this.foam.workspace
           .list()
-          .filter(resource => {
-            return (
-              resource.uri.path.startsWith(oldFolderPath + '/') ||
-              resource.uri.path === oldFolderPath
-            );
-          });
+          .filter(resource => resource.uri.isWithinFolder(oldFolderFoamUri));
 
         for (const resource of resourcesToRemove) {
           try {
@@ -190,10 +185,8 @@ export class FolderRenameHandler {
 
         // Add new resources to workspace
         const dataStoreFiles = await this.foam.services.dataStore.list();
-        const newFilesToAdd = dataStoreFiles.filter(
-          uri =>
-            uri.path.startsWith(newFolderPath + '/') ||
-            uri.path === newFolderPath
+        const newFilesToAdd = dataStoreFiles.filter(uri =>
+          uri.isWithinFolder(newFolderFoamUri)
         );
 
         for (const fileUri of newFilesToAdd) {
@@ -412,18 +405,12 @@ export class FolderRenameHandler {
    * Discovers all markdown files in a folder using Foam's workspace
    */
   private discoverMarkdownFiles(folderUri: vscode.Uri): vscode.Uri[] {
-    const folderPath = fromVsCodeUri(folderUri).path;
+    const folderFoamUri = fromVsCodeUri(folderUri);
 
     // Get all resources from Foam workspace that are in the renamed folder
     const markdownFilesInFolder = this.foam.workspace
       .list()
-      .filter(resource => {
-        const resourcePath = resource.uri.path;
-        return (
-          resourcePath.startsWith(folderPath + '/') ||
-          resourcePath === folderPath
-        );
-      })
+      .filter(resource => resource.uri.isWithinFolder(folderFoamUri))
       .map(resource => toVsCodeUri(resource.uri));
 
     return markdownFilesInFolder;

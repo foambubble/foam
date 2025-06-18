@@ -178,5 +178,27 @@ describe('Foam URI', () => {
       const fileUri = URI.file('C:\\documents\\notes\\file.md');
       expect(fileUri.isWithinFolder(folderUri)).toBe(true);
     });
+
+    it('should work cross-platform with mixed separators', () => {
+      // Test platform-specific paths
+      const platformPath = process.platform === 'win32' 
+        ? 'C:\\Users\\test\\documents' 
+        : '/home/test/documents';
+      const folderUri = URI.file(platformPath);
+      const fileUri = URI.file(folderUri.joinPath('file.md').path);
+      expect(fileUri.isWithinFolder(folderUri)).toBe(true);
+    });
+
+    it('should handle relative paths properly on all platforms', () => {
+      const baseFolder = process.platform === 'win32' 
+        ? URI.file('C:\\project') 
+        : URI.file('/project');
+      const subFolder = baseFolder.joinPath('src');
+      const file = subFolder.joinPath('index.js');
+      
+      expect(file.isWithinFolder(baseFolder)).toBe(true);
+      expect(file.isWithinFolder(subFolder)).toBe(true);
+      expect(subFolder.isWithinFolder(baseFolder)).toBe(true);
+    });
   });
 });

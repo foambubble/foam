@@ -1,6 +1,7 @@
 import { titleCase } from 'title-case';
 export { extractHashtags, extractTagsFromProp } from './hashtags';
 export * from './core';
+export * from './string';
 
 /**
  *

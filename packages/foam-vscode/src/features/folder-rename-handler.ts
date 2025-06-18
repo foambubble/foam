@@ -4,6 +4,7 @@ import { FoamWorkspace } from '../core/model/workspace';
 import { MarkdownLink } from '../core/services/markdown-link';
 import { Logger } from '../core/utils/log';
 import { isAbsolute, getDirectory, relativeTo } from '../core/utils/path';
+import { pluralize } from '../core/utils';
 import { getFoamVsCodeConfig } from '../services/config';
 import { fromVsCodeUri, toVsCodeRange, toVsCodeUri } from '../utils/vsc-utils';
 import {
@@ -1020,15 +1021,12 @@ export class FolderRenameHandler {
         );
 
         // Use the now accurate result.linksUpdated for the message
-        let message = `Updated ${FolderRenameDialog.pluralize(
+        let message = `Updated ${pluralize(
           result.linksUpdated,
           'link'
-        )} across ${FolderRenameDialog.pluralize(
-          successfulEditsPaths.length,
-          'file'
-        )}.`;
+        )} across ${pluralize(successfulEditsPaths.length, 'file')}.`;
         if (result.warnings.length > 0) {
-          message += ` (${FolderRenameDialog.pluralize(
+          message += ` (${pluralize(
             result.warnings.length,
             'warning'
           )} - check logs for details)`;
@@ -1038,7 +1036,7 @@ export class FolderRenameHandler {
       } else if (totalPotentialLinks > 0) {
         // Changed condition to use totalPotentialLinks
         vscode.window.showWarningMessage(
-          `Found ${FolderRenameDialog.pluralize(
+          `Found ${pluralize(
             totalPotentialLinks,
             'potential link'
           )} to update but could not apply changes to any files. Check logs for details.`

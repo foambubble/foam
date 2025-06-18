@@ -4,6 +4,13 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.26.12] - 2025-06-18
+
+Fixes and Improvements:
+
+- Fix YAML parsing (#1467)
+- Improved regex parsing (#1479 - thanks @s-jacob-powell)
+
 ## [0.26.11] - 2025-04-19
 
 Fixes and Improvements:

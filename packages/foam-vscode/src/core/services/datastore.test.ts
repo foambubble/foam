@@ -62,7 +62,9 @@ describe('Matcher', () => {
   });
   it('happy path', () => {
     // Use cross-platform path construction
-    const rootUri = URI.file(process.platform === 'win32' ? 'C:\\root' : '/root');
+    const rootUri = URI.file(
+      process.platform === 'win32' ? 'C:\\root' : '/root'
+    );
     const matcher = new Matcher([rootUri], ['**/*'], ['**/*.pdf']);
     expect(matcher.isMatch(rootUri.joinPath('file.md'))).toBeTruthy();
     expect(matcher.isMatch(rootUri.joinPath('file.pdf'))).toBeFalsy();

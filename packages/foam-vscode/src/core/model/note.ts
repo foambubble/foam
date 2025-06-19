@@ -89,8 +89,8 @@ export interface Resource {
   links: ResourceLink[];
 }
 
-export interface ResourceParser {
-  parse: (uri: URI, text: string) => Resource;
+export interface ResourceParser<T = Resource> {
+  parse: (uri: URI, text: string) => T;
 }
 
 export abstract class Resource {

@@ -6,15 +6,15 @@ import { toVsCodeUri } from '../utils/vsc-utils';
 import matter from 'gray-matter';
 
 export class FrontmatterWriter implements IWriter {
-  async write(object: any, uri: URI): Promise<void> {
+  async write(object: { uri: URI }): Promise<void> {
     try {
+      const { uri, ...model } = object;
       const markdown = await readFile(uri);
-      var result = this.ReplaceFrontmatter(markdown, object);
+      var result = this.ReplaceFrontmatter(markdown, model);
       await workspace.fs.writeFile(
-        toVsCodeUri(uri),
+        toVsCodeUri(object.uri),
         new TextEncoder().encode(result)
       );
-      console.log(result);
     } catch (error) {
       throw new Error('Could not replace Frontmatter: \n' + error);
     }

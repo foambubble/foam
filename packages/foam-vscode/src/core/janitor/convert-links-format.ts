@@ -47,7 +47,7 @@ export function convertLinkFormat(
 
   if (targetFormat === 'wikilink') {
     return MarkdownLink.createUpdateLinkEdit(link, {
-      target: workspace.getIdentifier(relativeUri),
+      target: workspace.getTrieIdentifier().getIdentifier(relativeUri),
       type: 'wikilink',
     });
   }

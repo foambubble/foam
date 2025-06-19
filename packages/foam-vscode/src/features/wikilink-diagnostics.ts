@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 import { Foam } from '../core/model/foam';
 import { Resource, ResourceParser } from '../core/model/note';
 import { Range } from '../core/model/range';
-import { FoamWorkspace } from '../core/model/workspace';
+import { FoamWorkspace, TrieIdentifier } from '../core/model/workspace';
 import { MarkdownLink } from '../core/services/markdown-link';
 import {
   fromVsCodeUri,
@@ -32,7 +32,7 @@ const FIND_IDENTIFIER_COMMAND: FoamCommand<FindIdentifierCommandArgs> = {
   name: 'foam:compute-identifier',
   execute: async ({ target, amongst, range, defaultExtension }) => {
     if (vscode.window.activeTextEditor) {
-      let identifier = FoamWorkspace.getShortestIdentifier(
+      let identifier = TrieIdentifier.getShortest(
         target.path,
         amongst.map(uri => uri.path)
       );
@@ -131,7 +131,7 @@ export function updateDiagnostics(
     for (const link of resource.links) {
       if (link.type === 'wikilink') {
         const { target, section } = MarkdownLink.analyzeLink(link);
-        const targets = workspace.listByIdentifier(target);
+        const targets = workspace.getTrieIdentifier().listByIdentifier(target);
         if (targets.length > 1) {
           result.push({
             code: AMBIGUOUS_IDENTIFIER_CODE,

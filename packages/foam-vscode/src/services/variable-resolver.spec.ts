@@ -489,7 +489,12 @@ describe('variable-resolver, resolveText', () => {
 
     jest.spyOn(window, 'showQuickPick').mockResolvedValueOnce({ label: 'Yes' });
     const expected = new Map<string, string>();
-    expected.set('FOAM_TRAINING_NOTE', 'true');
+    expected.set(
+      'FOAM_TRAINING_NOTE',
+      `---
+type: training-note
+---`
+    );
 
     const givenValues = new Map<string, string>();
     const resolver = new Resolver(givenValues, new Date());

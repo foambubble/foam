@@ -202,7 +202,9 @@ export async function createNote(args: CreateNoteArgs, foam: Foam) {
 
   // Handle source link updates for placeholders
   if (args.sourceLink && createdNote.uri) {
-    const identifier = foam.workspace.getIdentifier(createdNote.uri);
+    const identifier = foam.workspace
+      .getTrieIdentifier()
+      .getIdentifier(createdNote.uri);
     const edit = MarkdownLink.createUpdateLinkEdit(args.sourceLink.data, {
       target: identifier,
     });

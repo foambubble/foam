@@ -18,16 +18,15 @@ describe('VS-Code document Save', () => {
     });
     let stepper = new TrainNoteStepper(new WriteObserver(new ConsoleWriter()));
     await createNote(note);
-    stepper.SetPhase(note, note.phases.First());
+    stepper.setPhase(note, note.phases.First());
 
     var stringnextReminder = note.nextReminder.toISOString().split('T')[0];
-    await new FrontmatterWriter().write(
-      {
-        currentPhase: note.currentPhase,
-        nextReminder: stringnextReminder,
-      },
-      note.uri
-    );
+    const target = {
+      uri: note.uri,
+      currentPhase: note.currentPhase,
+      nextReminder: stringnextReminder,
+    };
+    await new FrontmatterWriter().write(target);
 
     var file = await readFile(note.uri);
     var frontmatter = matter(file);

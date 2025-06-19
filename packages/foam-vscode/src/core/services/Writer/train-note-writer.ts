@@ -9,6 +9,11 @@ export class TrainNoteWriter implements IWriter {
   }
 
   write(trainNote: TrainNote): Promise<void> {
-    return this.writer.write(trainNote, trainNote.uri);
+    const model = {
+      uri: trainNote.uri,
+      currentPhase: trainNote.currentPhase,
+      nextReminder: trainNote.nextReminder.toDateString(),
+    };
+    return this.writer.write(model);
   }
 }

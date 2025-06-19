@@ -14,9 +14,10 @@ import { Logger } from '../core/utils/log';
  *
  * We use the URI and a checksum of the markdown file to cache the resource.
  */
-export default class VsCodeBasedParserCache implements ParserCache {
+export default class VsCodeBasedParserCache<T> implements ParserCache<T> {
   static CACHE_NAME = 'foam-cache';
-  private _cache: LRU<string, ParserCacheEntry>;
+  private _cache: LRU<string, ParserCacheEntry<T>>;
+  private delayedSync = createDelayedSync<T>();
 
   constructor(private context: ExtensionContext, size = 10000) {
     this._cache = new LRU({
@@ -42,20 +43,20 @@ export default class VsCodeBasedParserCache implements ParserCache {
     this.context.workspaceState.update(VsCodeBasedParserCache.CACHE_NAME, []);
   }
 
-  get(uri: URI): ParserCacheEntry {
+  get(uri: URI): ParserCacheEntry<T> {
     const result = this._cache.get(uri.toString());
     if (result) {
       // The cache returns a plain object, but we need an actual
       // instance of URI in the resource (we check instanceof in the code),
       // so to be sure we convert it here.
-      const { checksum, resource } = result;
+      const { checksum, target } = result;
       const rehydrated = {
-        ...resource,
-        uri: new URI(resource.uri),
+        ...target,
+        uri: new URI(uri),
       };
       return {
         checksum,
-        resource: rehydrated,
+        target: rehydrated,
       };
     }
     return undefined;
@@ -65,24 +66,26 @@ export default class VsCodeBasedParserCache implements ParserCache {
     return this._cache.has(uri.toString());
   }
 
-  set(uri: URI, entry: ParserCacheEntry): void {
+  set(uri: URI, entry: ParserCacheEntry<T>): void {
     this._cache.set(uri.toString(), entry);
-    delayedSync(this._cache, this.context);
+    this.delayedSync(this._cache, this.context);
   }
 
   del(uri: URI): void {
     this._cache.delete(uri.toString());
-    delayedSync(this._cache, this.context);
+    this.delayedSync(this._cache, this.context);
   }
 }
 
-const delayedSync = debounce(
-  (cache: LRU<string, ParserCacheEntry>, context) => {
-    Logger.debug('Updating parser cache');
-    context.workspaceState.update(
-      VsCodeBasedParserCache.CACHE_NAME,
-      cache.dump()
-    );
-  },
-  1000
-);
+function createDelayedSync<T>() {
+  return debounce(
+    (cache: LRU<string, ParserCacheEntry<T>>, context: ExtensionContext) => {
+      Logger.debug('Updating parser cache');
+      context.workspaceState.update(
+        VsCodeBasedParserCache.CACHE_NAME,
+        cache.dump()
+      );
+    },
+    1000
+  );
+}

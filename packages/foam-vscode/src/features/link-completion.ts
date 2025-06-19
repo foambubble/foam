@@ -186,7 +186,9 @@ export class WikilinkCompletionProvider
       const resourceIsDocument =
         ['attachment', 'image'].indexOf(resource.type) === -1;
 
-      const identifier = this.ws.getIdentifier(resource.uri);
+      const identifier = this.ws
+        .getTrieIdentifier()
+        .getIdentifier(resource.uri);
 
       const label = !resourceIsDocument
         ? identifier
@@ -235,7 +237,9 @@ export class WikilinkCompletionProvider
           resource.uri
         );
 
-        const identifier = this.ws.getIdentifier(resource.uri);
+        const identifier = this.ws
+          .getTrieIdentifier()
+          .getIdentifier(resource.uri);
 
         item.insertText = `${identifier}|${a.title}`;
         // When using markdown link format, don't allow commit characters

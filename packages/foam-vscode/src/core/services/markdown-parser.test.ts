@@ -9,6 +9,9 @@ import { URI } from '../model/uri';
 import { Range } from '../model/range';
 import { getRandomURI } from '../../test/test-utils';
 import { Position } from '../model/position';
+import { TrainNote } from '../model/train-note';
+import { Phase } from '../model/phase';
+import { Resource } from '../model/note';
 
 Logger.setLevel('error');
 
@@ -515,7 +518,7 @@ This is the content of section with url`);
   });
 
   describe('Parser plugins', () => {
-    const testPlugin: ParserPlugin = {
+    const testPlugin: ParserPlugin<Resource> = {
       visit: (node, note) => {
         if (node.type === 'heading') {
           note.properties.hasHeading = true;
@@ -599,6 +602,43 @@ But with some content.
         title: 'alias3',
       },
     ]);
+  });
+
+  describe('TrainNote Parsing', () => {
+    it('Phase', () => {
+      const trainNote = parser.parse(
+        URI.file('/path/to/a'),
+        `
+---
+type: training-note
+currentPhase:
+  name: Phase 1
+  days: 0
+---
+This is a test note without headings.
+But with some content.
+`
+      ) as TrainNote;
+
+      expect(trainNote.currentPhase).toEqual(new Phase('Phase 1', 0));
+    });
+    it('nextReminder', () => {
+      const trainNote = parser.parse(
+        URI.file('/path/to/a'),
+        `
+---
+type: training-note
+nextReminder: 2025-09-06
+---
+This is a test note without headings.
+But with some content.
+`
+      ) as TrainNote;
+
+      expect(trainNote.nextReminder.getTime()).toBe(
+        new Date('2025-09-06').getTime()
+      );
+    });
   });
 });
 

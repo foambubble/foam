@@ -28,6 +28,10 @@ export class FoamWorkspace implements IDisposable {
    */
   constructor(public defaultExtension: string = '.md') {}
 
+  public getTrieIdentifier() {
+    return new TrieIdentifier(this._resources, this.defaultExtension);
+  }
+
   registerProvider(provider: ResourceProvider) {
     this.providers.push(provider);
   }
@@ -36,7 +40,10 @@ export class FoamWorkspace implements IDisposable {
     const old = this.find(resource.uri);
 
     // store resource
-    this._resources.set(this.getTrieIdentifier(resource.uri.path), resource);
+    this._resources.set(
+      this.getTrieIdentifier().get(resource.uri.path),
+      resource
+    );
 
     isSome(old)
       ? this.onDidUpdateEmitter.fire({ old: old, new: resource })
@@ -45,8 +52,10 @@ export class FoamWorkspace implements IDisposable {
   }
 
   delete(uri: URI) {
-    const deleted = this._resources.get(this.getTrieIdentifier(uri));
-    this._resources.delete(this.getTrieIdentifier(uri));
+    const trieIdentifier = this.getTrieIdentifier();
+    const targetId = trieIdentifier.get(uri);
+    const deleted = this._resources.get(targetId);
+    this._resources.delete(targetId);
 
     isSome(deleted) && this.onDidDeleteEmitter.fire(deleted);
     return deleted ?? null;
@@ -78,106 +87,24 @@ export class FoamWorkspace implements IDisposable {
     return resources.values();
   }
 
-  public get(uri: URI): Resource {
+  public get = (uri: URI): Resource => {
     const note = this.find(uri);
     if (isSome(note)) {
       return note;
     } else {
       throw new Error('Resource not found: ' + uri.path);
     }
-  }
-
-  public listByIdentifier(identifier: string): Resource[] {
-    let needle = this.getTrieIdentifier(identifier);
-    const mdNeedle =
-      getExtension(normalize(identifier)) !== this.defaultExtension
-        ? this.getTrieIdentifier(identifier + this.defaultExtension)
-        : undefined;
-
-    let resources: Resource[] = [];
-
-    this._resources.find(needle).forEach(elm => resources.push(elm[1]));
-
-    if (mdNeedle) {
-      this._resources.find(mdNeedle).forEach(elm => resources.push(elm[1]));
-    }
-
-    // if multiple resources found, try to filter exact case matches
-    if (resources.length > 1) {
-      resources = resources.filter(
-        r =>
-          r.uri.getBasename() === identifier ||
-          r.uri.getBasename() === identifier + this.defaultExtension
-      );
-    }
-
-    return resources.sort(Resource.sortByPath);
-  }
-
-  /**
-   * Returns the minimal identifier for the given resource
-   *
-   * @param forResource the resource to compute the identifier for
-   */
-  public getIdentifier(forResource: URI, exclude?: URI[]): string {
-    const amongst = [];
-    const basename = forResource.getBasename();
-
-    this.listByIdentifier(basename).forEach(res => {
-      // skip self
-      if (res.uri.isEqual(forResource)) {
-        return;
-      }
-
-      // skip exclude list
-      if (exclude && exclude.find(ex => ex.isEqual(res.uri))) {
-        return;
-      }
-      amongst.push(res.uri);
-    });
-
-    let identifier = FoamWorkspace.getShortestIdentifier(
-      forResource.path,
-      amongst.map(uri => uri.path)
-    );
-    identifier = changeExtension(identifier, this.defaultExtension, '');
-    if (forResource.fragment) {
-      identifier += `#${forResource.fragment}`;
-    }
-    return identifier;
-  }
-
-  /**
-   * Returns a note identifier in reversed order. Used to optimise the storage of notes in
-   * the workspace to optimise retrieval of notes.
-   *
-   * @param reference the URI path to reverse
-   */
-  private getTrieIdentifier(reference: URI | string): string {
-    let path: string;
-    if (reference instanceof URI) {
-      path = (reference as URI).path;
-    } else {
-      path = reference as string;
-    }
-
-    let reversedPath = normalize(path).split('/').reverse().join('/');
-
-    if (reversedPath.indexOf('/') < 0) {
-      reversedPath = reversedPath + '/';
-    }
-
-    return reversedPath;
-  }
+  };
 
   public find(reference: URI | string, baseUri?: URI): Resource | null {
+    const trieIdentifier = this.getTrieIdentifier();
     if (reference instanceof URI) {
-      return this._resources.get(this.getTrieIdentifier(reference)) ?? null;
+      return this._resources.get(trieIdentifier.get(reference)) ?? null;
     }
     let resource: Resource | null = null;
     const [path, fragment] = (reference as string).split('#');
-    if (FoamWorkspace.isIdentifier(path)) {
-      resource = this.listByIdentifier(path)[0];
+    if (TrieIdentifier.isIdentifier(path)) {
+      resource = trieIdentifier.listByIdentifier(path)[0];
     } else {
       const candidates = [path, path + this.defaultExtension];
       for (const candidate of candidates) {
@@ -186,7 +113,7 @@ export class FoamWorkspace implements IDisposable {
           : isSome(baseUri)
           ? baseUri.resolve(candidate).path
           : null;
-        resource = this._resources.get(this.getTrieIdentifier(searchKey));
+        resource = this._resources.get(trieIdentifier.get(searchKey));
         if (resource) {
           break;
         }
@@ -201,7 +128,7 @@ export class FoamWorkspace implements IDisposable {
     return resource ?? null;
   }
 
-  public resolveLink(resource: Resource, link: ResourceLink): URI {
+  public resolveLink = (resource: Resource, link: ResourceLink): URI => {
     for (const provider of this.providers) {
       if (provider.supports(resource.uri)) {
         return provider.resolveLink(this, resource, link);
@@ -210,7 +137,7 @@ export class FoamWorkspace implements IDisposable {
     throw new Error(
       `Couldn't find provider for resource "${resource.uri.toString()}"`
     );
-  }
+  };
 
   public fetch(uri: URI): Promise<Resource | null> {
     for (const provider of this.providers) {
@@ -250,12 +177,107 @@ export class FoamWorkspace implements IDisposable {
     this.onDidUpdateEmitter.dispose();
   }
 
-  static isIdentifier(path: string): boolean {
-    return !(
-      path.startsWith('/') ||
-      path.startsWith('./') ||
-      path.startsWith('../')
+  static async fromProviders(
+    providers: ResourceProvider[],
+    dataStore: IDataStore,
+    defaultExtension: string = '.md'
+  ): Promise<FoamWorkspace> {
+    const workspace = new FoamWorkspace(defaultExtension);
+    await Promise.all(providers.map(p => workspace.registerProvider(p)));
+    const files = await dataStore.list();
+    await Promise.all(files.map(f => workspace.fetchAndSet(f)));
+    return workspace;
+  }
+}
+
+export class TrieIdentifier {
+  constructor(
+    private trieMap: TrieMap<string, any> = new TrieMap(),
+    public defaultExtension: string = '.md'
+  ) {}
+
+  /**
+   * Returns the minimal identifier for the given resource
+   *
+   * @param forResource the resource to compute the identifier for
+   */
+  public getIdentifier = (forResource: URI, exclude?: URI[]): string => {
+    const amongst = [];
+    const basename = forResource.getBasename();
+
+    this.listByIdentifier(basename).map(res => {
+      // skip self
+      if (res.uri.isEqual(forResource)) {
+        return;
+      }
+
+      // skip exclude list
+      if (exclude && exclude.find(ex => ex.isEqual(res.uri))) {
+        return;
+      }
+      amongst.push(res.uri);
+    });
+
+    let identifier = TrieIdentifier.getShortest(
+      forResource.path,
+      amongst.map(uri => uri.path)
     );
+    identifier = changeExtension(identifier, this.defaultExtension, '');
+    if (forResource.fragment) {
+      identifier += `#${forResource.fragment}`;
+    }
+    return identifier;
+  };
+
+  public listByIdentifier(identifier: string): Resource[] {
+    let needle = this.get(identifier);
+
+    const mdNeedle =
+      getExtension(normalize(identifier)) !== this.defaultExtension
+        ? this.get(identifier + this.defaultExtension)
+        : undefined;
+
+    let resources: Resource[] = [];
+
+    this.trieMap.find(needle).forEach(elm => resources.push(elm[1]));
+
+    if (mdNeedle) {
+      this.trieMap.find(mdNeedle).forEach(elm => resources.push(elm[1]));
+    }
+
+    // if multiple resources found, try to filter exact case matches
+    if (resources.length > 1) {
+      resources = resources.filter(
+        r =>
+          r.uri.getBasename() === identifier ||
+          r.uri.getBasename() === identifier + this.defaultExtension
+      );
+    }
+
+    return resources.sort(Resource.sortByPath);
+  }
+
+  /**
+   * Returns a note identifier in reversed order. Used to optimise the storage of notes in
+   * the workspace to optimise retrieval of notes.
+   *
+   * @param reference the URI path to reverse
+   */
+  public get(reference: URI | string): string {
+    let path: string;
+    if (reference instanceof URI) {
+      path = (reference as URI).path;
+    } else {
+      path = reference as string;
+    }
+
+    let reversedPath = normalize(path).split('/').reverse().join('/');
+
+    if (reversedPath.indexOf('/') < 0) {
+      reversedPath = reversedPath + '/';
+    }
+
+    return reversedPath;
   }
 
   /**
@@ -264,7 +286,7 @@ export class FoamWorkspace implements IDisposable {
    * @param forPath the value to compute the identifier for
    * @param amongst the set of strings within which to find the identifier
    */
-  static getShortestIdentifier(forPath: string, amongst: string[]): string {
+  static getShortest(forPath: string, amongst: string[]): string {
     const needleTokens = forPath.split('/').reverse();
     const haystack = amongst
       .filter(value => value !== forPath)
@@ -295,16 +317,12 @@ export class FoamWorkspace implements IDisposable {
     return identifier;
   }
 
-  static async fromProviders(
-    providers: ResourceProvider[],
-    dataStore: IDataStore,
-    defaultExtension: string = '.md'
-  ): Promise<FoamWorkspace> {
-    const workspace = new FoamWorkspace(defaultExtension);
-    await Promise.all(providers.map(p => workspace.registerProvider(p)));
-    const files = await dataStore.list();
-    await Promise.all(files.map(f => workspace.fetchAndSet(f)));
-    return workspace;
+  static isIdentifier(path: string): boolean {
+    return !(
+      path.startsWith('/') ||
+      path.startsWith('./') ||
+      path.startsWith('../')
+    );
   }
 }
 

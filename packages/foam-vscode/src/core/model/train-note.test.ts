@@ -10,54 +10,54 @@ let phases = new Phases([
   new Phase('Phase 4', 8),
 ]);
 let note = new TrainNote(phases);
-var stepper = new TrainNoteStepper(new WriteObserver(new ConsoleWriter()));
+var stepper = new TrainNoteStepper();
 
 describe('Increase Phase', () => {
   it('basic increase', () => {
-    stepper.SetPhase(note, note.phases.First());
-    stepper.Increase(note);
+    stepper.setPhase(note, note.phases.First());
+    stepper.increase(note);
     expect(note.currentPhase).toBe(phases.Phase(1));
   });
   it('increase after highest Phase', () => {
-    stepper.SetPhase(note, note.phases.Last());
-    stepper.Increase(note);
+    stepper.setPhase(note, note.phases.Last());
+    stepper.increase(note);
     expect(note.currentPhase).toBe(phases.Phase(phases.length - 1));
   });
   it('increase throw all', () => {
-    stepper.SetPhase(note, note.phases.First());
+    stepper.setPhase(note, note.phases.First());
     let i = 0;
     while (i < note.phases.length) {
       expect(note.currentPhase).toBe(phases.Phase(i));
-      stepper.Increase(note);
+      stepper.increase(note);
       i++;
     }
 
-    stepper.Increase(note);
+    stepper.increase(note);
     expect(note.currentPhase).toBe(note.phases.Last());
   });
 });
 
 describe('Decrease Phase', () => {
   it('basic decrement', () => {
-    stepper.SetPhase(note, note.phases.Phase(3));
-    stepper.Decrease(note);
+    stepper.setPhase(note, note.phases.Phase(3));
+    stepper.decrease(note);
     expect(note.currentPhase).toBe(note.phases.Phase(2));
   });
   it('decrease first Phase', () => {
-    stepper.SetPhase(note, note.phases.First());
-    stepper.Decrease(note);
+    stepper.setPhase(note, note.phases.First());
+    stepper.decrease(note);
     expect(note.currentPhase).toBe(note.phases.First());
   });
   it('decrease through all', () => {
-    stepper.SetPhase(note, note.phases.Last());
+    stepper.setPhase(note, note.phases.Last());
     var i = phases.length - 1;
     while (i >= 0) {
       expect(note.currentPhase).toBe(phases.Phase(i));
-      stepper.Decrease(note);
+      stepper.decrease(note);
       i--;
     }
 
-    stepper.Decrease(note);
+    stepper.decrease(note);
     expect(note.currentPhase).toBe(note.phases.First());
   });
 });
@@ -65,21 +65,21 @@ describe('Decrease Phase', () => {
 describe('Notify', () => {
   it('Calls', () => {
     const observerSpy = jest.spyOn(stepper, 'Notify');
-    stepper.Increase(note);
-    stepper.Decrease(note);
+    stepper.increase(note);
+    stepper.decrease(note);
     expect(observerSpy.mock.calls).toHaveLength(2);
   });
 });
 
 describe('Set Phase', () => {
   it('Basic Date Test', () => {
-    stepper.SetPhase(note, phases.First(), new Date('2025-03-31'));
+    stepper.setPhase(note, phases.First(), new Date('2025-03-31'));
     expect(note.nextReminder.getTime()).toBe(new Date('2025-04-01').getTime());
   });
 
   it('Increase', () => {
-    stepper.SetPhase(note, phases.First());
-    stepper.Increase(note);
+    stepper.setPhase(note, phases.First());
+    stepper.increase(note);
     note.nextReminder.setHours(0, 0, 0, 0);
 
     var origin = new Date();
@@ -90,8 +90,8 @@ describe('Set Phase', () => {
   });
 
   it('Descrease', () => {
-    stepper.SetPhase(note, phases.Last());
-    stepper.Decrease(note);
+    stepper.setPhase(note, phases.Last());
+    stepper.decrease(note);
     note.nextReminder.setHours(0, 0, 0, 0);
 
     var origin = new Date();

@@ -90,6 +90,72 @@ This is a paragraph. ^block-id-1
     expect(section.blockId).toEqual('^child-id-1');
     expect(section.isHeading).toBeFalsy();
     expect(section.label).toEqual('- Child item 1 ^child-id-1');
-    expect(section.range).toEqual(Range.create(2, 2, 2, 29));
+    expect(section.range).toEqual(Range.create(2, 2, 2, 28));
+  });
+
+  it('should parse a full-line block ID on a blockquote', () => {
+    const markdown = `
+> This is a blockquote.
+> It can span multiple lines.
+^blockquote-id
+`;
+    const resource = parser.parse(uri, markdown);
+
+    expect(resource.sections).toHaveLength(1);
+    const section = resource.sections[0];
+
+    expect(section.id).toEqual('blockquote-id');
+    expect(section.blockId).toEqual('^blockquote-id');
+    expect(section.isHeading).toBeFalsy();
+    expect(section.label).toEqual(`> This is a blockquote.
+> It can span multiple lines.`);
+    expect(section.range).toEqual(Range.create(1, 0, 3, 14));
+  });
+  it('should parse a full-line block ID on a code block', () => {
+    const markdown = `
+\`\`\`typescript
+function hello() {
+  console.log('Hello, world!');
+}
+\`\`\`
+^code-block-id
+`;
+    const resource = parser.parse(uri, markdown);
+
+    expect(resource.sections).toHaveLength(1);
+    const section = resource.sections[0];
+
+    expect(section.id).toEqual('code-block-id');
+    expect(section.blockId).toEqual('^code-block-id');
+    expect(section.isHeading).toBeFalsy();
+    expect(section.label).toEqual(`\`\`\`typescript
+function hello() {
+  console.log('Hello, world!');
+}
+\`\`\``);
+    expect(section.range).toEqual(Range.create(1, 0, 6, 14));
+  });
+
+  it('should parse a full-line block ID on a table', () => {
+    const markdown = `
+| Header 1 | Header 2 |
+| -------- | -------- |
+| Cell 1   | Cell 2   |
+| Cell 3   | Cell 4   |
+^my-table
+`;
+    const resource = parser.parse(uri, markdown);
+
+    expect(resource.sections).toHaveLength(1);
+    const section = resource.sections[0];
+
+    expect(section.id).toEqual('my-table');
+    expect(section.blockId).toEqual('^my-table');
+    expect(section.isHeading).toBeFalsy();
+    expect(section.label).toEqual(`| Header 1 | Header 2 |
+| -------- | -------- |
+| Cell 1   | Cell 2   |
+| Cell 3   | Cell 4   |`);
+    expect(section.range).toEqual(Range.create(1, 0, 5, 9));
   });
 });

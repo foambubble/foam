@@ -6,7 +6,7 @@ import wikiLinkPlugin from 'remark-wiki-link';
 import frontmatterPlugin from 'remark-frontmatter';
 import { parse as parseYAML } from 'yaml';
 import visit from 'unist-util-visit';
-import visitParents from 'unist-util-visit-parents';
+import { visitParents } from 'unist-util-visit-parents';
 import { NoteLinkDefinition, Resource, ResourceParser } from '../model/note';
 import { Position } from '../model/position';
 import { Range } from '../model/range';
@@ -14,6 +14,7 @@ import { extractHashtags, extractTagsFromProp, hash, isSome } from '../utils';
 import { Logger } from '../utils/log';
 import { URI } from '../model/uri';
 import { ICache } from '../utils/cache';
+import GithubSlugger from 'github-slugger';
 
 export interface ParserPlugin {
   name?: string;
@@ -493,82 +494,237 @@ const astPositionToFoamRange = (pos: AstPosition): Range =>
     pos.end.column - 1
   );
 
-import GithubSlugger from 'github-slugger';
-
+/**
+ * Finds the deepest descendant node within a given node's subtree,
+ * based on the maximum end offset. This is crucial for accurately
+ * determining the full extent of a block, especially list items
+ * that can contain nested content.
+ * @param node The starting node to search from.
+ * @returns The deepest descendant node.
+ */
+const findDeepestDescendant = (node: Node): Node => {
+  let deepest = node;
+  visit(node, descendant => {
+    if (
+      descendant.position &&
+      descendant.position.end.offset > deepest.position.end.offset
+    ) {
+      deepest = descendant;
+    }
+  });
+  return deepest;
+};
 const slugger = new GithubSlugger();
 
-let processedNodes: Set<Node>;
+const createBlockIdPlugin = (): ParserPlugin => {
+  let processedNodes: Set<Node>;
+  let collectedNodes: {
+    node: Node;
+    ancestors: Node[];
+    parent: Parent;
+    index: number;
+    noteSource: string;
+  }[];
 
-const findLastDescendant = (node: Node): Node => {
-  let lastNode = node;
-  if ((node as Parent).children && (node as Parent).children.length > 0) {
-    const children = (node as Parent).children;
-    lastNode = findLastDescendant(children[children.length - 1]);
-  }
-  return lastNode;
-};
+  const processBlockIdNode = (
+    node: Node,
+    ancestors: Node[],
+    note: Resource,
+    noteSource: string,
+    parent: Parent,
+    index: number
+  ) => {
+    if (
+      processedNodes.has(node) ||
+      ancestors.some(ancestor => processedNodes.has(ancestor))
+    ) {
+      return;
+    }
 
-const processBlockIdNode = (
-  node: Node,
-  note: Resource,
-  noteSource: string,
-  isHeading: boolean,
-  ancestors: Node[]
-) => {
-  // Check if this node or any of its ancestors have already been processed
-  if (
-    processedNodes.has(node) ||
-    ancestors.some(ancestor => processedNodes.has(ancestor))
-  ) {
-    return; // Skip if already processed
-  }
+    let text: string;
+    let rangeToUse: Range;
+    let blockId: string | undefined;
 
-  let startOffset = node.position.start.offset;
-  let endOffset = node.position.end.offset;
-  let endPosition = node.position.end;
+    if (node.type === 'listItem') {
+      const lines = noteSource.split('\n');
+      const startLineIndex = node.position.start.line - 1;
+      const deepestNode = findDeepestDescendant(node);
 
-  if (node.type === 'listItem') {
-    const lastDescendant = findLastDescendant(node);
-    endOffset = lastDescendant.position.end.offset;
-    endPosition = lastDescendant.position.end;
-  }
+      const originalLine = noteSource.split('\n')[startLineIndex];
+      const labelStartColumn = originalLine.search(/\S/);
 
-  const label = noteSource.substring(startOffset, endOffset);
-  const blockIdRegex = /\s+(\^[\w-]+)$/m; // Use multiline flag to match end of line
-  const match = label.match(blockIdRegex);
+      const offsetToMarker = node.position.start.column - 1 - labelStartColumn;
+      const startOffset = node.position.start.offset - offsetToMarker;
 
-  if (match) {
-    const blockIdWithCaret = match[1];
-    const blockId = blockIdWithCaret.substring(1);
+      const endOffset = deepestNode.position.end.offset;
+      let fullListItemText = noteSource.substring(startOffset, endOffset);
+      text = fullListItemText; // Initial label for list item
+
+      const newStartPos = Position.create(startLineIndex, labelStartColumn);
+      const endLineIndex = deepestNode.position.end.line - 1;
+      const endColumn = deepestNode.position.end.column - 1;
+      rangeToUse = Range.createFromPosition(
+        newStartPos,
+        Position.create(endLineIndex, endColumn)
+      );
+
+      // Try to find inline block ID on the first line of the list item
+      const firstLineOfListItem = lines[startLineIndex];
+      const inlineIdRegex = /\s\^([\w-]+)$/;
+      const inlineBlockIdMatch = firstLineOfListItem.match(inlineIdRegex);
+
+      if (inlineBlockIdMatch) {
+        blockId = inlineBlockIdMatch[1];
+        // Label already includes the full list item text, which is correct for inline IDs.
+      }
+
+      // Check for full-line block ID (if the next node is a paragraph with only a block ID)
+      const nextNode = parent?.children[index + 1];
+      if (
+        nextNode?.type === 'paragraph' &&
+        /^\s*(\^[\w-]+)\s*$/.test(
+          noteSource.substring(
+            nextNode.position.start.offset,
+            nextNode.position.end.offset
+          )
+        )
+      ) {
+        const nextNodeText = noteSource.substring(
+          nextNode.position.start.offset,
+          nextNode.position.end.offset
+        );
+        const ids = Array.from(nextNodeText.matchAll(/\^([\w-]+)/g));
+        if (ids.length > 0) {
+          blockId = ids[ids.length - 1][1];
+          processedNodes.add(nextNode); // Mark the ID paragraph as processed
+          // Extend the range to include the block ID line
+          rangeToUse = Range.create(
+            rangeToUse.start.line,
+            rangeToUse.start.character,
+            nextNode.position.end.line - 1,
+            nextNode.position.end.column
+          );
+        }
+      }
+    } else {
+      // For non-listItem nodes (paragraph, blockquote, code, table)
+      const blockStartLine = node.position.start.line - 1;
+      const blockEndLine = node.position.end.line - 1;
+      const lines = noteSource.split('\n');
+      const rawBlockContentLines = lines.slice(
+        blockStartLine,
+        blockEndLine + 1
+      );
+      let rawNodeText = rawBlockContentLines.join('\n'); // This is the full content of the node, including potential inline ID
+
+      // Determine initial range based on the node itself
+      rangeToUse = Range.create(
+        blockStartLine,
+        0, // Start from column 0 for raw markdown
+        blockEndLine,
+        lines[blockEndLine].length // End at the end of the line
+      );
+
+      // Handle inline block IDs (for single-line blocks like paragraphs)
+      const inlineIdRegex = /\s\^([\w-]+)$/;
+      const inlineBlockIdMatch = rawNodeText.match(inlineIdRegex);
+
+      if (inlineBlockIdMatch) {
+        blockId = inlineBlockIdMatch[1];
+        if (node.type === 'paragraph') {
+          text = rawNodeText; // For paragraphs, the label includes the inline ID
+        } else {
+          text = rawNodeText.replace(inlineIdRegex, '').trim(); // For other types, strip it
+        }
+      } else {
+        text = rawNodeText; // Default label is the full node text
+      }
+
+      // Handle full-line block IDs (for multi-line blocks)
+      const nextNode = parent?.children[index + 1];
+      if (
+        nextNode?.type === 'paragraph' &&
+        /^\s*(\^[\w-]+)\s*$/.test(
+          noteSource.substring(
+            nextNode.position.start.offset,
+            nextNode.position.end.offset
+          )
+        )
+      ) {
+        const nextNodeText = noteSource.substring(
+          nextNode.position.start.offset,
+          nextNode.position.end.offset
+        );
+        const ids = Array.from(nextNodeText.matchAll(/\^([\w-]+)/g));
+        if (ids.length > 0) {
+          blockId = ids[ids.length - 1][1];
+          processedNodes.add(nextNode); // Mark the ID paragraph as processed
+          // Extend the range to include the block ID line
+          rangeToUse = Range.create(
+            rangeToUse.start.line,
+            rangeToUse.start.character,
+            nextNode.position.end.line - 1,
+            nextNode.position.end.column - 1
+          );
+          // The 'text' (label) should remain the rawNodeText (without the full-line ID)
+          // because the full-line ID is a separate node.
+        }
+      }
+    }
+
+    if (!blockId) {
+      return;
+    }
 
     note.sections.push({
       id: blockId,
-      label: label,
-      range: Range.create(
-        node.position.start.line - 1,
-        node.position.start.column - 1,
-        endPosition.line - 1,
-        endPosition.column - 1
-      ),
-      blockId: blockIdWithCaret,
-      isHeading: isHeading,
+      label: text,
+      range: rangeToUse,
+      blockId: `^${blockId}`,
+      isHeading: false,
     });
-    processedNodes.add(node);
-  }
-};
 
-const createBlockIdPlugin = (): ParserPlugin => {
+    // Mark the current node and all its ancestors as processed
+    processedNodes.add(node);
+    ancestors.forEach(ancestor => processedNodes.add(ancestor));
+  };
+
   return {
     name: 'block-id',
     onWillVisitTree: () => {
-      processedNodes = new Set(); // Initialize set for each parse
+      processedNodes = new Set();
+      collectedNodes = [];
     },
     visit: (node, note, noteSource, index, parent, ancestors) => {
-      if (node.type === 'paragraph') {
-        processBlockIdNode(node, note, noteSource, false, ancestors);
-      } else if (node.type === 'listItem') {
-        processBlockIdNode(node, note, noteSource, false, ancestors);
+      const targetedNodes = [
+        'paragraph',
+        'listItem',
+        'blockquote',
+        'code',
+        'table',
+        'code',
+        'table',
+      ];
+      if (targetedNodes.includes(node.type as string)) {
+        // If we have a paragraph inside a list item, we skip it,
+        // because we are already handling the list item.
+        const parentType = parent?.type;
+        if (
+          node.type === 'paragraph' &&
+          (parentType === 'listItem' || parentType === 'blockquote')
+        ) {
+          return;
+        }
+        collectedNodes.push({ node, ancestors, parent, index, noteSource });
       }
+    },
+    onDidVisitTree: (tree, note) => {
+      // Process nodes from bottom-up (most specific to least specific)
+      collectedNodes
+        .reverse()
+        .forEach(({ node, ancestors, parent, index, noteSource }) => {
+          processBlockIdNode(node, ancestors, note, noteSource, parent, index);
+        });
     },
   };
 };

@@ -39,5 +39,7 @@
     "singleQuote": true,
     "trailingComma": "es5"
   },
-  "dependencies": {}
+  "dependencies": {
+    "unist-util-visit-parents": "^6.0.1"
+  }
 }

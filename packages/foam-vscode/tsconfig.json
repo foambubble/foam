@@ -3,6 +3,7 @@
   "compilerOptions": {
     "moduleResolution": "node",
     "esModuleInterop": true,
+    "allowJs": true,
     "outDir": "out",
     "lib": ["ES2019", "es2020.string", "DOM"],
     "sourceMap": true,

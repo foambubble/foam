@@ -6,7 +6,7 @@ import { Range } from '../../../core/model/range';
 import { URI } from '../../../core/model/uri';
 import { FoamWorkspace } from '../../../core/model/workspace';
 import { isSome } from '../../../core/utils';
-import { getBlockFor } from '../../../core/services/markdown-parser';
+import { getBlockFor } from '../../../core/utils/md';
 import { Connection, FoamGraph } from '../../../core/model/graph';
 import { Logger } from '../../../core/utils/log';
 import { getNoteTooltip } from '../../../services/editor';

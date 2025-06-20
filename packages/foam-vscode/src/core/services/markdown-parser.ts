@@ -7,7 +7,12 @@ import frontmatterPlugin from 'remark-frontmatter';
 import { parse as parseYAML } from 'yaml';
 import visit from 'unist-util-visit';
 import { visitParents } from 'unist-util-visit-parents';
-import { NoteLinkDefinition, Resource, ResourceParser } from '../model/note';
+import {
+  NoteLinkDefinition,
+  Resource,
+  ResourceParser,
+  Section,
+} from '../model/note';
 import { Position } from '../model/position';
 import { Range } from '../model/range';
 import { extractHashtags, extractTagsFromProp, hash, isSome } from '../utils';
@@ -29,7 +34,7 @@ export interface ParserPlugin {
   onDidInitializeParser?: (parser: unified.Processor) => void;
   onWillParseMarkdown?: (markdown: string) => string;
   onWillVisitTree?: (tree: Node, note: Resource) => void;
-  onDidVisitTree?: (tree: Node, note: Resource) => void;
+  onDidVisitTree?: (tree: Node, note: Resource, noteSource: string) => void;
   onDidFindProperties?: (properties: any, note: Resource, node: Node) => void;
 }
 
@@ -66,7 +71,7 @@ export function createMarkdownParser(
     tagsPlugin,
     aliasesPlugin,
     sectionsPlugin,
-    createBlockIdPlugin(), // Will be rewritten from scratch
+    createBlockIdPlugin(),
     ...extraPlugins,
   ];
 
@@ -142,7 +147,7 @@ export function createMarkdownParser(
       });
       for (const plugin of plugins) {
         try {
-          plugin.onDidVisitTree?.(tree, note);
+          plugin.onDidVisitTree?.(tree, note, markdown);
         } catch (e) {
           handleError(plugin, 'onDidVisitTree', uri, e);
         }
@@ -179,12 +184,383 @@ export function createMarkdownParser(
 const getTextFromChildren = (root: Node): string => {
   let text = '';
   visit(root, node => {
-    if (node.type === 'text' || node.type === 'wikiLink') {
+    if (
+      node.type === 'text' ||
+      node.type === 'wikiLink' ||
+      node.type === 'code' ||
+      node.type === 'html'
+    ) {
       text = text + ((node as any).value || '');
     }
   });
   return text;
 };
+
+/**
+ * A parser plugin that adds Obsidian-style block identifiers (`^block-id`) to sections.
+ *
+ * This plugin adheres to the following principles:
+ * - Single-pass AST traversal with direct sibling analysis (using `unist-util-visit-parents`).
+ * - Distinguishes between full-line and inline IDs.
+ * - Applies the "Last One Wins" rule for multiple IDs on a line.
+ * - Ensures WYSIWYL (What You See Is What You Link) for section labels.
+ * - Prevents duplicate processing of nodes using a `processedNodes` Set.
+ *
+ * @returns A `ParserPlugin` that processes block identifiers.
+ */
+export const createBlockIdPlugin = (): ParserPlugin => {
+  const processedNodes = new Set<Node>();
+  const slugger = new GithubSlugger();
+
+  // Extracts the LAST block ID from a string (without the ^)
+  // Extracts the LAST block ID from a string (with the ^ prefix)
+  const getLastBlockId = (text: string): string | undefined => {
+    const matches = text.match(/(?:\s|^)(\^[\w.-]+)$/); // Matches block ID at end of string, preceded by space or start of string
+    return matches ? matches[1] : undefined;
+  };
+
+  // Gets the raw text of a node from the source markdown
+  const getNodeText = (node: Node, markdown: string): string => {
+    return markdown.substring(
+      node.position!.start.offset!,
+      node.position!.end.offset!
+    );
+  };
+
+  return {
+    name: 'block-id',
+    onWillVisitTree: () => {
+      processedNodes.clear();
+      slugger.reset();
+    },
+    visit: (node, note, markdown, index, parent, ancestors) => {
+      Logger.debug(
+        `Visiting node: Type=${node.type}, Text="${
+          getNodeText(node, markdown).split('\n')[0]
+        }..."`
+      );
+      // Check if this node or any of its ancestors have already been processed
+      // This prevents child nodes from creating sections if a parent already has one.
+      const isAlreadyProcessed =
+        ancestors.some(ancestor => processedNodes.has(ancestor)) ||
+        processedNodes.has(node);
+      Logger.debug(`  isAlreadyProcessed: ${isAlreadyProcessed}`);
+      if (isAlreadyProcessed || !parent || index === undefined) {
+        Logger.debug(
+          `  Skipping node: isAlreadyProcessed=${isAlreadyProcessed}, parent=${!!parent}, index=${index}`
+        );
+        return;
+      }
+
+      // NEW: Special Case for Full-Line Block IDs on Lists
+      if (node.type === 'list') {
+        const listText = getNodeText(node, markdown);
+        const listLines = listText.split('\n');
+        const lastLine = listLines[listLines.length - 1];
+        const fullLineBlockId = getLastBlockId(lastLine.trim());
+
+        if (fullLineBlockId) {
+          Logger.debug(
+            `  Full-line block ID found on list: ${fullLineBlockId}`
+          );
+          // Create section for the entire list
+          const sectionLabel = listLines
+            .slice(0, listLines.length - 1)
+            .join('\n');
+          const sectionId = fullLineBlockId.substring(1);
+
+          const startPos = astPointToFoamPosition(node.position!.start);
+          const endLine = startPos.line + listLines.length - 2; // -1 for 0-indexed, -1 to exclude ID line
+          const endChar = listLines[listLines.length - 2].length; // Length of the line before the ID line
+
+          const sectionRange = Range.create(
+            startPos.line,
+            startPos.character,
+            endLine,
+            endChar
+          );
+
+          note.sections.push({
+            id: sectionId,
+            blockId: fullLineBlockId,
+            label: sectionLabel,
+            range: sectionRange,
+            isHeading: false,
+          });
+
+          // Mark the list node and all its children as processed
+          processedNodes.add(node);
+          visit(node, child => {
+            processedNodes.add(child);
+          });
+          Logger.debug(
+            `  Marked list and all children as processed for full-line ID.`
+          );
+          return visit.SKIP; // Stop further processing for this list
+        }
+      }
+
+      let block: Node | undefined;
+      let blockId: string | undefined;
+      let idNode: Node | undefined; // The node containing the full-line ID, if applicable
+
+      const nodeText = getNodeText(node, markdown);
+
+      // Case 1: Full-Line Block ID (e.g., "^id" on its own line)
+      // This must be checked before the inline ID case.
+      if (node.type === 'paragraph' && index > 0) {
+        const pText = nodeText.trim();
+        const isFullLineIdParagraph = /^\s*(\^[\w.-]+\s*)+$/.test(pText);
+
+        if (isFullLineIdParagraph) {
+          Logger.debug(`  Is full-line ID paragraph: ${isFullLineIdParagraph}`);
+          const fullLineBlockId = getLastBlockId(pText);
+          Logger.debug(`  Full-line block ID found: ${fullLineBlockId}`);
+          if (fullLineBlockId) {
+            const previousSibling = parent.children[index - 1];
+            Logger.debug(
+              `  Previous sibling type: ${previousSibling.type}, text: "${
+                getNodeText(previousSibling, markdown).split('\n')[0]
+              }..."`
+            );
+            const textBetween = markdown.substring(
+              previousSibling.position!.end.offset!,
+              node.position!.start.offset!
+            );
+            const isSeparatedBySingleNewline =
+              textBetween.trim().length === 0 &&
+              (textBetween.match(/\n/g) || []).length === 1;
+            Logger.debug(
+              `  Is separated by single newline: ${isSeparatedBySingleNewline}`
+            );
+            Logger.debug(
+              `  Previous sibling already processed: ${processedNodes.has(
+                previousSibling
+              )}`
+            );
+
+            // If it's a full-line ID paragraph and correctly separated, link it to the previous block
+            if (
+              isSeparatedBySingleNewline &&
+              !processedNodes.has(previousSibling)
+            ) {
+              block = previousSibling;
+              blockId = fullLineBlockId;
+              idNode = node; // This paragraph is the ID node
+              Logger.debug(
+                `  Assigned block (full-line): Type=${block.type}, ID=${blockId}`
+              );
+            } else {
+              // If it's a full-line ID paragraph but not correctly linked,
+              // mark it as processed so it doesn't get picked up as an inline ID later.
+              processedNodes.add(node);
+              Logger.debug(
+                `  Marked ID node as processed (not correctly linked): ${node.type}`
+              );
+              return; // Skip further processing for this node
+            }
+          }
+        }
+      }
+
+      // If no full-line block ID was found for a previous sibling, check for an inline block ID on the current node
+      if (!block) {
+        const inlineBlockId = getLastBlockId(nodeText);
+        Logger.debug(`  Inline block ID found: ${inlineBlockId}`);
+        if (inlineBlockId) {
+          // If the node is a paragraph and its parent is a listItem, the block is the listItem.
+          // This is only true if the paragraph is the *first* child of the listItem.
+          if (node.type === 'paragraph' && parent.type === 'listItem') {
+            if (parent.children[0] === node) {
+              Logger.debug(
+                `  Node is paragraph, parent is listItem, and it's the first child. Marking parent as processed: ${parent.type}`
+              );
+              // Mark the parent listItem as processed.
+              // This prevents its children from being processed as separate sections.
+              processedNodes.add(parent);
+              block = parent;
+            } else {
+              // If it's a paragraph in a listItem but not the first child,
+              // then the ID belongs to the paragraph itself, not the listItem.
+              block = node;
+            }
+          } else {
+            block = node;
+          }
+          blockId = inlineBlockId;
+          Logger.debug(
+            `  Assigned block (inline): Type=${block.type}, ID=${blockId}`
+          );
+        }
+      }
+
+      if (block && blockId) {
+        let sectionLabel: string;
+        let sectionRange: Range;
+        let sectionId: string;
+        let isHeading = false;
+
+        Logger.debug('--- BLOCK ANALYSIS ---');
+        Logger.debug('Block Type:', block.type);
+        Logger.debug('Block Object:', JSON.stringify(block, null, 2));
+        switch (block.type) {
+          case 'heading':
+            isHeading = true;
+            sectionLabel = getTextFromChildren(block)
+              .replace(/\s*\^[\w.-]+$/, '')
+              .trim();
+            sectionId = slugger.slug(sectionLabel);
+            sectionRange = astPositionToFoamRange(block.position!);
+            break;
+
+          case 'listItem':
+            // For list items, the label should include the leading marker and all content.
+            // We need to get the full text of the listItem, including its children.
+            sectionLabel = getNodeText(block, markdown);
+            sectionId = blockId.substring(1); // ID without caret
+            sectionRange = astPositionToFoamRange(block.position!);
+            break;
+
+          case 'list': {
+            // For full-line IDs on lists, the parser includes the ID line in the node text, so we must remove it.
+            const rawText = getNodeText(block, markdown);
+            const lines = rawText.split('\n');
+            lines.pop(); // Remove the last line which contains the ID
+            sectionLabel = lines.join('\n');
+            sectionId = blockId.substring(1);
+
+            const startPos = astPointToFoamPosition(block.position!.start);
+            const lastLine = lines[lines.length - 1];
+            const endPos = Position.create(
+              startPos.line + lines.length - 1,
+              lastLine.length
+            );
+            sectionRange = Range.create(
+              startPos.line,
+              startPos.character,
+              endPos.line,
+              endPos.character
+            );
+            break;
+          }
+
+          case 'table':
+          case 'code': {
+            // For tables and code blocks, the label is the raw text content.
+            // The range must be calculated from the text, as the parser's position can be inaccurate.
+            Logger.debug(
+              'Processing code/table block. Block position:',
+              JSON.stringify(block.position)
+            );
+            sectionLabel = getNodeText(block, markdown);
+            Logger.debug(
+              'Section Label after getNodeText:',
+              `"${sectionLabel}"`
+            );
+            sectionId = blockId.substring(1);
+            const startPos = astPointToFoamPosition(block.position!.start);
+            const lines = sectionLabel.split('\n');
+            const endPos = Position.create(
+              startPos.line + lines.length - 1,
+              lines[lines.length - 1].length
+            );
+            sectionRange = Range.create(
+              startPos.line,
+              startPos.character,
+              endPos.line,
+              endPos.character
+            );
+            break;
+          }
+
+          case 'blockquote': {
+            // For blockquotes, the parser includes the ID line in the node text, so we must remove it.
+            const rawText = getNodeText(block, markdown);
+            const lines = rawText.split('\n');
+            lines.pop(); // Remove the last line which contains the ID
+            sectionLabel = lines.join('\n');
+            sectionId = blockId.substring(1);
+
+            const startPos = astPointToFoamPosition(block.position!.start);
+            const lastLine = lines[lines.length - 1];
+            Logger.info('Blockquote last line:', `"${lastLine}"`);
+            Logger.info('Blockquote last line length:', lastLine.length);
+            const endPos = Position.create(
+              startPos.line + lines.length - 1,
+              lastLine.length - 1
+            );
+            sectionRange = Range.create(
+              startPos.line,
+              startPos.character,
+              endPos.line,
+              endPos.character
+            );
+            break;
+          }
+
+          case 'paragraph':
+          default: {
+            // For paragraphs, the label should include the inline block ID.
+            sectionLabel = getNodeText(block, markdown);
+            sectionId = blockId.substring(1);
+
+            const startPos = astPointToFoamPosition(block.position!.start);
+            const lines = sectionLabel.split('\n');
+            const endPos = Position.create(
+              startPos.line + lines.length - 1,
+              lines[lines.length - 1].length
+            );
+            sectionRange = Range.create(
+              startPos.line,
+              startPos.character,
+              endPos.line,
+              endPos.character
+            );
+            break;
+          }
+        }
+
+        note.sections.push({
+          id: sectionId,
+          blockId: blockId,
+          label: sectionLabel,
+          range: sectionRange,
+          isHeading: isHeading,
+        });
+
+        // Mark the block and the ID node (if full-line) as processed
+        processedNodes.add(block);
+        Logger.debug(`  Marked block as processed: ${block.type}`);
+        if (idNode) {
+          processedNodes.add(idNode);
+          Logger.debug(`  Marked ID node as processed: ${idNode.type}`);
+        }
+
+        // For list items, mark all children as processed to prevent duplicate sections
+        if (block.type === 'listItem') {
+          Logger.debug(
+            `  Block is listItem. Marking all children as processed.`
+          );
+          visit(block, child => {
+            processedNodes.add(child);
+            Logger.debug(`    Marked child as processed: ${child.type}`);
+          });
+          Logger.debug(`  Returning visit.SKIP for listItem.`);
+          return visit.SKIP; // Stop visiting children of this list item
+        }
+        Logger.debug(`  Returning visit.SKIP for current node.`);
+        return visit.SKIP; // Skip further processing for this node
+      }
+    },
+  };
+};
+
+/**
+ * Traverses all the children of the given node, extracts
+ * the text from them, and returns it concatenated.
+ *
+ * @param root the node from which to start collecting text
+ */
 
 function getPropertiesInfoFromYAML(yamlText: string): {
   [key: string]: { key: string; value: string; text: string; line: number };
@@ -207,7 +583,7 @@ function getPropertiesInfoFromYAML(yamlText: string): {
   return result.reduce((acc, curr) => {
     acc[curr.key] = curr;
     return acc;
-  }, {});
+  }, {} as { [key: string]: { key: string; value: string; text: string; line: number } });
 }
 
 const tagsPlugin: ParserPlugin = {
@@ -254,75 +630,76 @@ const tagsPlugin: ParserPlugin = {
   },
 };
 
-let sectionStack: Array<{
-  label: string;
-  level: number;
-  start: Position;
-  blockId?: string;
-}> = [];
-const sectionsPlugin: ParserPlugin = {
-  name: 'section',
-  onWillVisitTree: () => {
-    sectionStack = [];
-  },
-  visit: (node, note) => {
-    if (node.type === 'heading') {
-      const level = (node as any).depth;
-      let label = getTextFromChildren(node);
-      let blockId: string | undefined;
-      if (!label || !level) {
-        return;
-      }
-      // Extract and remove block ID from header label
-      const blockIdRegex = /\s(\^[\w-]+)$/;
-      const match = label.match(blockIdRegex);
-      if (match) {
-        blockId = match[1].substring(1); // Remove the leading '^'
-        label = label.replace(blockIdRegex, '').trim();
-      }
+const sectionsPlugin: ParserPlugin = (() => {
+  const slugger = new GithubSlugger();
+  let sectionStack: Array<{
+    label: string;
+    level: number;
+    start: Position;
+  }> = [];
 
-      const start = astPositionToFoamRange(node.position!).start;
+  return {
+    name: 'section',
+    onWillVisitTree: () => {
+      sectionStack = [];
+      slugger.reset(); // Reset slugger for each new tree traversal
+    },
+    visit: (node, note) => {
+      if (node.type === 'heading') {
+        const level = (node as any).depth;
+        const label = getTextFromChildren(node);
+        if (!label || !level) {
+          return;
+        }
 
-      // Close all the sections that are not parents of the current section
-      while (
-        sectionStack.length > 0 &&
-        sectionStack[sectionStack.length - 1].level >= level
-      ) {
+        // Check if this heading has an inline block ID.
+        // If it does, createBlockIdPlugin will handle it, so sectionsPlugin should skip.
+        const inlineBlockIdRegex = /(?:^|\s)\^([\w-]+)\s*$/;
+        if (label.match(inlineBlockIdRegex)) {
+          return; // Skip if createBlockIdPlugin will handle this heading
+        }
+
+        const start = astPositionToFoamRange(node.position!).start;
+
+        // Close all the sections that are not parents of the current section
+        while (
+          sectionStack.length > 0 &&
+          sectionStack[sectionStack.length - 1].level >= level
+        ) {
+          const section = sectionStack.pop();
+          note.sections.push({
+            id: slugger.slug(section!.label),
+            label: section!.label,
+            range: Range.createFromPosition(section!.start, start),
+            isHeading: true,
+          });
+        }
+
+        // Add the new section to the stack
+        sectionStack.push({ label, level, start });
+      }
+    },
+    onDidVisitTree: (tree, note) => {
+      const end = Position.create(
+        astPointToFoamPosition(tree.position!.end).line + 1,
+        0
+      );
+      // Close all the remaining sections
+      while (sectionStack.length > 0) {
         const section = sectionStack.pop();
         note.sections.push({
-          id: slugger.slug(section.label),
-          label: section.label,
-          range: Range.createFromPosition(section.start, start),
+          id: slugger.slug(section!.label),
+          label: section!.label,
+          range: { start: section!.start, end },
           isHeading: true,
-          blockId: section.blockId,
         });
       }
-
-      // Add the new section to the stack
-      sectionStack.push({ label, level, start, blockId });
-    }
-  },
-  onDidVisitTree: (tree, note) => {
-    const end = Position.create(
-      astPointToFoamPosition(tree.position.end).line + 1,
-      0
-    );
-    // Close all the remaining sections
-    while (sectionStack.length > 0) {
-      const section = sectionStack.pop();
-      note.sections.push({
-        id: slugger.slug(section.label),
-        label: section.label,
-        range: { start: section.start, end },
-        isHeading: true,
-        blockId: section.blockId,
-      });
-    }
-    note.sections.sort((a, b) =>
-      Position.compareTo(a.range.start, b.range.start)
-    );
-  },
-};
+      note.sections.sort((a, b) =>
+        Position.compareTo(a.range.start, b.range.start)
+      );
+    },
+  };
+})();
 
 const titlePlugin: ParserPlugin = {
   name: 'title',
@@ -493,280 +870,3 @@ const astPositionToFoamRange = (pos: AstPosition): Range =>
     pos.end.line - 1,
     pos.end.column - 1
   );
-
-/**
- * Finds the deepest descendant node within a given node's subtree,
- * based on the maximum end offset. This is crucial for accurately
- * determining the full extent of a block, especially list items
- * that can contain nested content.
- * @param node The starting node to search from.
- * @returns The deepest descendant node.
- */
-const findDeepestDescendant = (node: Node): Node => {
-  let deepest = node;
-  visit(node, descendant => {
-    if (
-      descendant.position &&
-      descendant.position.end.offset > deepest.position.end.offset
-    ) {
-      deepest = descendant;
-    }
-  });
-  return deepest;
-};
-const slugger = new GithubSlugger();
-
-const createBlockIdPlugin = (): ParserPlugin => {
-  let processedNodes: Set<Node>;
-  let collectedNodes: {
-    node: Node;
-    ancestors: Node[];
-    parent: Parent;
-    index: number;
-    noteSource: string;
-  }[];
-
-  const processBlockIdNode = (
-    node: Node,
-    ancestors: Node[],
-    note: Resource,
-    noteSource: string,
-    parent: Parent,
-    index: number
-  ) => {
-    if (
-      processedNodes.has(node) ||
-      ancestors.some(ancestor => processedNodes.has(ancestor))
-    ) {
-      return;
-    }
-
-    let text: string;
-    let rangeToUse: Range;
-    let blockId: string | undefined;
-
-    if (node.type === 'listItem') {
-      const lines = noteSource.split('\n');
-      const startLineIndex = node.position.start.line - 1;
-      const deepestNode = findDeepestDescendant(node);
-
-      const originalLine = noteSource.split('\n')[startLineIndex];
-      const labelStartColumn = originalLine.search(/\S/);
-
-      const offsetToMarker = node.position.start.column - 1 - labelStartColumn;
-      const startOffset = node.position.start.offset - offsetToMarker;
-
-      const endOffset = deepestNode.position.end.offset;
-      let fullListItemText = noteSource.substring(startOffset, endOffset);
-      text = fullListItemText; // Initial label for list item
-
-      const newStartPos = Position.create(startLineIndex, labelStartColumn);
-      const endLineIndex = deepestNode.position.end.line - 1;
-      const endColumn = deepestNode.position.end.column - 1;
-      rangeToUse = Range.createFromPosition(
-        newStartPos,
-        Position.create(endLineIndex, endColumn)
-      );
-
-      // Try to find inline block ID on the first line of the list item
-      const firstLineOfListItem = lines[startLineIndex];
-      const inlineIdRegex = /\s\^([\w-]+)$/;
-      const inlineBlockIdMatch = firstLineOfListItem.match(inlineIdRegex);
-
-      if (inlineBlockIdMatch) {
-        blockId = inlineBlockIdMatch[1];
-        // Label already includes the full list item text, which is correct for inline IDs.
-      }
-
-      // Check for full-line block ID (if the next node is a paragraph with only a block ID)
-      const nextNode = parent?.children[index + 1];
-      if (
-        nextNode?.type === 'paragraph' &&
-        /^\s*(\^[\w-]+)\s*$/.test(
-          noteSource.substring(
-            nextNode.position.start.offset,
-            nextNode.position.end.offset
-          )
-        )
-      ) {
-        const nextNodeText = noteSource.substring(
-          nextNode.position.start.offset,
-          nextNode.position.end.offset
-        );
-        const ids = Array.from(nextNodeText.matchAll(/\^([\w-]+)/g));
-        if (ids.length > 0) {
-          blockId = ids[ids.length - 1][1];
-          processedNodes.add(nextNode); // Mark the ID paragraph as processed
-          // Extend the range to include the block ID line
-          rangeToUse = Range.create(
-            rangeToUse.start.line,
-            rangeToUse.start.character,
-            nextNode.position.end.line - 1,
-            nextNode.position.end.column
-          );
-        }
-      }
-    } else {
-      // For non-listItem nodes (paragraph, blockquote, code, table)
-      const blockStartLine = node.position.start.line - 1;
-      const blockEndLine = node.position.end.line - 1;
-      const lines = noteSource.split('\n');
-      const rawBlockContentLines = lines.slice(
-        blockStartLine,
-        blockEndLine + 1
-      );
-      let rawNodeText = rawBlockContentLines.join('\n'); // This is the full content of the node, including potential inline ID
-
-      // Determine initial range based on the node itself
-      rangeToUse = Range.create(
-        blockStartLine,
-        0, // Start from column 0 for raw markdown
-        blockEndLine,
-        lines[blockEndLine].length // End at the end of the line
-      );
-
-      // Handle inline block IDs (for single-line blocks like paragraphs)
-      const inlineIdRegex = /\s\^([\w-]+)$/;
-      const inlineBlockIdMatch = rawNodeText.match(inlineIdRegex);
-
-      if (inlineBlockIdMatch) {
-        blockId = inlineBlockIdMatch[1];
-        if (node.type === 'paragraph') {
-          text = rawNodeText; // For paragraphs, the label includes the inline ID
-        } else {
-          text = rawNodeText.replace(inlineIdRegex, '').trim(); // For other types, strip it
-        }
-      } else {
-        text = rawNodeText; // Default label is the full node text
-      }
-
-      // Handle full-line block IDs (for multi-line blocks)
-      const nextNode = parent?.children[index + 1];
-      if (
-        nextNode?.type === 'paragraph' &&
-        /^\s*(\^[\w-]+)\s*$/.test(
-          noteSource.substring(
-            nextNode.position.start.offset,
-            nextNode.position.end.offset
-          )
-        )
-      ) {
-        const nextNodeText = noteSource.substring(
-          nextNode.position.start.offset,
-          nextNode.position.end.offset
-        );
-        const ids = Array.from(nextNodeText.matchAll(/\^([\w-]+)/g));
-        if (ids.length > 0) {
-          blockId = ids[ids.length - 1][1];
-          processedNodes.add(nextNode); // Mark the ID paragraph as processed
-          // Extend the range to include the block ID line
-          rangeToUse = Range.create(
-            rangeToUse.start.line,
-            rangeToUse.start.character,
-            nextNode.position.end.line - 1,
-            nextNode.position.end.column - 1
-          );
-          // The 'text' (label) should remain the rawNodeText (without the full-line ID)
-          // because the full-line ID is a separate node.
-        }
-      }
-    }
-
-    if (!blockId) {
-      return;
-    }
-
-    note.sections.push({
-      id: blockId,
-      label: text,
-      range: rangeToUse,
-      blockId: `^${blockId}`,
-      isHeading: false,
-    });
-
-    // Mark the current node and all its ancestors as processed
-    processedNodes.add(node);
-    ancestors.forEach(ancestor => processedNodes.add(ancestor));
-  };
-
-  return {
-    name: 'block-id',
-    onWillVisitTree: () => {
-      processedNodes = new Set();
-      collectedNodes = [];
-    },
-    visit: (node, note, noteSource, index, parent, ancestors) => {
-      const targetedNodes = [
-        'paragraph',
-        'listItem',
-        'blockquote',
-        'code',
-        'table',
-        'code',
-        'table',
-      ];
-      if (targetedNodes.includes(node.type as string)) {
-        // If we have a paragraph inside a list item, we skip it,
-        // because we are already handling the list item.
-        const parentType = parent?.type;
-        if (
-          node.type === 'paragraph' &&
-          (parentType === 'listItem' || parentType === 'blockquote')
-        ) {
-          return;
-        }
-        collectedNodes.push({ node, ancestors, parent, index, noteSource });
-      }
-    },
-    onDidVisitTree: (tree, note) => {
-      // Process nodes from bottom-up (most specific to least specific)
-      collectedNodes
-        .reverse()
-        .forEach(({ node, ancestors, parent, index, noteSource }) => {
-          processBlockIdNode(node, ancestors, note, noteSource, parent, index);
-        });
-    },
-  };
-};
-const blockParser = unified().use(markdownParse, { gfm: true });
-export const getBlockFor = (
-  markdown: string,
-  line: number | Position
-): { block: string; nLines: number } => {
-  const searchLine = typeof line === 'number' ? line : line.line;
-  const tree = blockParser.parse(markdown);
-  const lines = markdown.split('\n');
-  let startLine = -1;
-  let endLine = -1;
-
-  // For list items, we also include the sub-lists
-  visit(tree, ['listItem'], (node: any) => {
-    if (node.position.start.line === searchLine + 1) {
-      startLine = node.position.start.line - 1;
-      endLine = node.position.end.line;
-      return visit.EXIT;
-    }
-  });
-
-  // For headings, we also include the sub-sections
-  let headingLevel = -1;
-  visit(tree, ['heading'], (node: any) => {
-    if (startLine > -1 && node.depth <= headingLevel) {
-      endLine = node.position.start.line - 1;
-      return visit.EXIT;
-    }
-    if (node.position.start.line === searchLine + 1) {
-      headingLevel = node.depth;
-      startLine = node.position.start.line - 1;
-      endLine = lines.length - 1; // in case it's the last section
-    }
-  });
-
-  let nLines = startLine === -1 ? 1 : endLine - startLine;
-  let block =
-    startLine === -1
-      ? lines[searchLine] ?? ''
-      : lines.slice(startLine, endLine).join('\n');
-
-  return { block, nLines };
-};

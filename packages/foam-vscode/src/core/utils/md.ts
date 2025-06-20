@@ -1,4 +1,5 @@
 import matter from 'gray-matter';
+import { Position } from '../model/position'; // Add Position import to the top
 
 export function getExcerpt(
   markdown: string,
@@ -85,4 +86,19 @@ export function extractBlockIds(
     }
   });
   return blockIds;
+}
+
+export function getBlockFor(
+  markdown: string,
+  position: Position
+): { block: string; nLines: number } {
+  const lines = markdown.split('\n');
+  const blockStart = position.line;
+  let blockEnd = blockStart;
+  while (blockEnd < lines.length - 1 && lines[blockEnd + 1].trim() !== '') {
+    blockEnd++;
+  }
+  const block = lines.slice(blockStart, blockEnd + 1).join('\n');
+  const nLines = blockEnd - blockStart + 1;
+  return { block, nLines };
 }

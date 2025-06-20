@@ -9,6 +9,7 @@ import { FoamWorkspace } from '../core/model/workspace';
 import { MarkdownResourceProvider } from '../core/services/markdown-provider';
 import { NoteLinkDefinition, Resource } from '../core/model/note';
 import { createMarkdownParser } from '../core/services/markdown-parser';
+import GithubSlugger from 'github-slugger';
 
 export { default as waitForExpect } from 'wait-for-expect';
 
@@ -62,10 +63,14 @@ export const createTestNote = (params: {
     properties: {},
     title: params.title ?? strToUri(params.uri).getBasename(),
     definitions: params.definitions ?? [],
-    sections: params.sections?.map(label => ({
-      label,
-      range: Range.create(0, 0, 1, 0),
-    })),
+    sections: (() => {
+      const slugger = new GithubSlugger();
+      return params.sections?.map(label => ({
+        id: slugger.slug(label),
+        label,
+        range: Range.create(0, 0, 1, 0),
+      }));
+    })(),
     tags:
       params.tags?.map(t => ({
         label: t,

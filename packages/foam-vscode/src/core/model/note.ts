@@ -40,8 +40,11 @@ export interface Alias {
 }
 
 export interface Section {
+  id: string; // A unique identifier for the section within the note.
   label: string;
   range: Range;
+  blockId?: string; // The optional block identifier, if one exists (e.g., '^my-id').
+  isHeading?: boolean; // A boolean flag to clearly distinguish headings from other content blocks.
 }
 
 export interface Resource {
@@ -86,9 +89,18 @@ export abstract class Resource {
     );
   }
 
-  public static findSection(resource: Resource, label: string): Section | null {
-    if (label) {
-      return resource.sections.find(s => s.label === label) ?? null;
+  public static findSection(
+    resource: Resource,
+    fragment: string
+  ): Section | null {
+    if (fragment) {
+      return (
+        resource.sections.find(
+          s =>
+            s.id === fragment ||
+            (s.blockId && s.blockId.substring(1) === fragment)
+        ) ?? null
+      );
     }
     return null;
   }

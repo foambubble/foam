@@ -28,6 +28,10 @@ export class FoamGraph implements IDisposable {
    * Maps the connections arriving to a URI
    */
   public readonly backlinks: Map<string, Connection[]> = new Map();
+  /**
+   * Maps the block identifiers to the notes that contain them
+   */
+  public readonly blockBacklinks: Map<string, Set<URI>> = new Map();
 
   private onDidUpdateEmitter = new Emitter<void>();
   onDidUpdate = this.onDidUpdateEmitter.event;
@@ -104,6 +108,7 @@ export class FoamGraph implements IDisposable {
     this.backlinks.clear();
     this.links.clear();
     this.placeholders.clear();
+    this.blockBacklinks.clear();
 
     for (const resource of this.workspace.resources()) {
       for (const link of resource.links) {
@@ -118,6 +123,14 @@ export class FoamGraph implements IDisposable {
             link,
             e
           );
+        }
+      }
+      for (const section of resource.sections ?? []) {
+        if (section.blockId) {
+          if (!this.blockBacklinks.has(section.blockId)) {
+            this.blockBacklinks.set(section.blockId, new Set());
+          }
+          this.blockBacklinks.get(section.blockId)?.add(resource.uri);
         }
       }
     }

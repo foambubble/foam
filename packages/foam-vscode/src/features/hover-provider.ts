@@ -5,7 +5,12 @@ import {
   ConfigurationMonitor,
   monitorFoamVsCodeConfig,
 } from '../services/config';
-import { ResourceLink, ResourceParser } from '../core/model/note';
+import {
+  ResourceLink,
+  ResourceParser,
+  Resource,
+  Section,
+} from '../core/model/note';
 import { Foam } from '../core/model/foam';
 import { FoamWorkspace } from '../core/model/workspace';
 import { Range } from '../core/model/range';
@@ -16,6 +21,7 @@ import { commandAsURI } from '../utils/commands';
 import { Location } from '../core/model/location';
 import { getNoteTooltip, getFoamDocSelectors } from '../services/editor';
 import { isSome } from '../core/utils';
+import { MarkdownLink } from '../core/services/markdown-link';
 
 export const CONFIG_KEY = 'links.hover.enable';
 
@@ -101,17 +107,31 @@ export class HoverProvider implements vscode.HoverProvider {
 
     let mdContent = null;
     if (!targetUri.isPlaceholder()) {
-      let content: string = await this.workspace.readAsMarkdown(targetUri);
+      const targetResource = this.workspace.get(targetUri);
+      const { section: linkFragment } = MarkdownLink.analyzeLink(targetLink);
+      let content: string;
 
-      // Remove YAML frontmatter from the content
-      content = content.replace(/---[\s\S]*?---/, '').trim();
+      if (linkFragment) {
+        const section = Resource.findSection(targetResource, linkFragment);
+        if (isSome(section) && isSome(section.blockId)) {
+          content = section.label;
+        } else {
+          content = await this.workspace.readAsMarkdown(targetUri);
+          // Remove YAML frontmatter from the content
+          content = content.replace(/---[\s\S]*?---/, '').trim();
+        }
+      } else {
+        content = await this.workspace.readAsMarkdown(targetUri);
+        // Remove YAML frontmatter from the content
+        content = content.replace(/---[\s\S]*?---/, '').trim();
+      }
 
       if (isSome(content)) {
         const markdownString = new vscode.MarkdownString(content);
         markdownString.isTrusted = true;
         mdContent = markdownString;
       } else {
-        mdContent = this.workspace.get(targetUri).title;
+        mdContent = targetResource.title;
       }
     }
 

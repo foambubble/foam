@@ -119,17 +119,40 @@ export class SectionCompletionProvider
       position.character
     );
     if (resource) {
-      const items = resource.sections.map(b => {
-        const item = new ResourceCompletionItem(
-          b.label,
-          vscode.CompletionItemKind.Text,
-          resource.uri.with({ fragment: b.label })
-        );
-        item.sortText = String(b.range.start.line).padStart(5, '0');
-        item.range = replacementRange;
-        item.commitCharacters = sectionCommitCharacters;
-        item.command = COMPLETION_CURSOR_MOVE;
-        return item;
+      const items = resource.sections.flatMap(b => {
+        const sectionItems: vscode.CompletionItem[] = [];
+
+        // For headings, offer the clean header text as a label
+        if (b.isHeading) {
+          const headingItem = new ResourceCompletionItem(
+            b.label,
+            vscode.CompletionItemKind.Text,
+            resource.uri.with({ fragment: b.id })
+          );
+          headingItem.sortText = String(b.range.start.line).padStart(5, '0');
+          headingItem.range = replacementRange;
+          headingItem.commitCharacters = sectionCommitCharacters;
+          headingItem.command = COMPLETION_CURSOR_MOVE;
+          headingItem.insertText = b.id; // Insert the slugified ID
+          sectionItems.push(headingItem);
+        }
+
+        // If a block ID exists (for headings or other blocks), offer it as a label
+        if (b.blockId) {
+          const blockIdItem = new ResourceCompletionItem(
+            b.blockId, // Label includes '^'
+            vscode.CompletionItemKind.Text,
+            resource.uri.with({ fragment: b.id })
+          );
+          blockIdItem.sortText = String(b.range.start.line).padStart(5, '0');
+          blockIdItem.range = replacementRange;
+          blockIdItem.commitCharacters = sectionCommitCharacters;
+          blockIdItem.command = COMPLETION_CURSOR_MOVE;
+          blockIdItem.insertText = b.id; // Insert the clean ID without '^'
+          sectionItems.push(blockIdItem);
+        }
+
+        return sectionItems;
       });
       return new vscode.CompletionList(items);
     }

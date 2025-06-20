@@ -40,22 +40,29 @@ export const markdownItWikilinkEmbed = (
     regex: WIKILINK_EMBED_REGEX,
     replace: (wikilinkItem: string) => {
       try {
-        const [, noteEmbedModifier, wikilink] = wikilinkItem.match(
+        const [, noteEmbedModifier, wikilinkTarget] = wikilinkItem.match(
           WIKILINK_EMBED_REGEX_GROUPS
         );
 
         if (isVirtualWorkspace()) {
           return `
-<div class="foam-embed-not-supported-warning">
-  Embed not supported in virtual workspace: ![[${wikilink}]]
-</div>
-          `;
+ <div class="foam-embed-not-supported-warning">
+   Embed not supported in virtual workspace: ![[${wikilinkTarget}]]
+ </div>
+           `;
         }
 
-        const includedNote = workspace.find(wikilink);
+        const { target, section: linkFragment } = MarkdownLink.analyzeLink({
+          rawText: wikilinkTarget,
+          range: Range.create(0, 0, 0, 0), // Dummy range
+          type: 'wikilink',
+          isEmbed: true,
+        });
+
+        const includedNote = workspace.find(target);
 
         if (!includedNote) {
-          return `![[${wikilink}]]`;
+          return `![[${wikilinkTarget}]]`;
         }
 
         const cyclicLinkDetected = refsStack.includes(
@@ -64,22 +71,23 @@ export const markdownItWikilinkEmbed = (
 
         if (cyclicLinkDetected) {
           return `
-<div class="foam-cyclic-link-warning">
-  Cyclic link detected for wikilink: ${wikilink}
-  <div class="foam-cyclic-link-warning__stack">
-    Link sequence: 
-    <ul>
-      ${refsStack.map(ref => `<li>${ref}</li>`).join('')}
-    </ul>
-  </div>
-</div>
-          `;
+ <div class="foam-cyclic-link-warning">
+   Cyclic link detected for wikilink: ${wikilinkTarget}
+   <div class="foam-cyclic-link-warning__stack">
+     Link sequence:
+     <ul>
+       ${refsStack.map(ref => `<li>${ref}</li>`).join('')}
+     </ul>
+   </div>
+ </div>
+           `;
         }
 
         refsStack.push(includedNote.uri.path.toLocaleLowerCase());
 
         const content = getNoteContent(
           includedNote,
+          linkFragment,
           noteEmbedModifier,
           parser,
           workspace,
@@ -100,6 +108,7 @@ export const markdownItWikilinkEmbed = (
 
 function getNoteContent(
   includedNote: Resource,
+  linkFragment: string | undefined,
   noteEmbedModifier: string | undefined,
   parser: ResourceParser,
   workspace: FoamWorkspace,
@@ -126,16 +135,16 @@ function getNoteContent(
           ? inlineFormatter
           : cardFormatter;
 
-      content = extractor(includedNote, parser, workspace);
+      content = extractor(includedNote, linkFragment, parser, workspace);
       toRender = formatter(content, md);
       break;
     }
     case 'attachment':
       content = `
-<div class="embed-container-attachment">
-${md.renderInline('[[' + includedNote.uri.path + ']]')}<br/>
-Embed for attachments is not supported
-</div>`;
+ <div class="embed-container-attachment">
+ ${md.renderInline('[[' + includedNote.uri.path + ']]')}<br/>
+ Embed for attachments is not supported
+ </div>`;
       toRender = md.render(content);
       break;
     case 'image':
@@ -209,28 +218,34 @@ export function retrieveNoteConfig(explicitModifier: string | undefined): {
  */
 export type EmbedNoteExtractor = (
   note: Resource,
+  linkFragment: string | undefined,
   parser: ResourceParser,
   workspace: FoamWorkspace
 ) => string;
 
 function fullExtractor(
   note: Resource,
+  linkFragment: string | undefined,
   parser: ResourceParser,
   workspace: FoamWorkspace
 ): string {
   let noteText = readFileSync(note.uri.toFsPath()).toString();
-  const section = Resource.findSection(note, note.uri.fragment);
+  const section = Resource.findSection(note, linkFragment);
   if (isSome(section)) {
-    let rows = noteText.split('\n');
-    // Check if the line at section.range.end.line is a heading.
-    // If it is, it means the section ends *before* this line, so we don't add +1.
-    // Otherwise, add +1 to include the last line of content (e.g., for lists, code blocks).
-    const isLastLineHeading = rows[section.range.end.line]?.match(/^\s*#+\s/);
-    let slicedRows = rows.slice(
-      section.range.start.line,
-      section.range.end.line + (isLastLineHeading ? 0 : 1)
-    );
-    noteText = slicedRows.join('\n');
+    if (section.isHeading) {
+      let rows = noteText.split('\n');
+      // Check if the line at section.range.end.line is a heading.
+      // If it is, it means the section ends *before* this line, so we don't add +1.
+      // Otherwise, add +1 to include the last line of content (e.g., for lists, code blocks).
+      const isLastLineHeading = rows[section.range.end.line]?.match(/^\s*#+\s/);
+      let slicedRows = rows.slice(
+        section.range.start.line,
+        section.range.end.line + (isLastLineHeading ? 0 : 1)
+      );
+      noteText = slicedRows.join('\n');
+    } else {
+      noteText = section.label;
+    }
   }
   noteText = withLinksRelativeToWorkspaceRoot(
     note.uri,
@@ -243,12 +258,13 @@ function fullExtractor(
 
 function contentExtractor(
   note: Resource,
+  linkFragment: string | undefined,
   parser: ResourceParser,
   workspace: FoamWorkspace
 ): string {
   let noteText = readFileSync(note.uri.toFsPath()).toString();
-  let section = Resource.findSection(note, note.uri.fragment);
-  if (!note.uri.fragment) {
+  let section = Resource.findSection(note, linkFragment);
+  if (!linkFragment) {
     // if there's no fragment(section), the wikilink is linking to the entire note,
     // in which case we need to remove the title. We could just use rows.shift()
     // but should the note start with blank lines, it will only remove the first blank line
@@ -257,16 +273,26 @@ function contentExtractor(
     // then we treat it as the same case as link to a section
     section = note.sections.length ? note.sections[0] : null;
   }
-  let rows = noteText.split('\n');
   if (isSome(section)) {
-    const isLastLineHeading = rows[section.range.end.line]?.match(/^\s*#+\s/);
-    rows = rows.slice(
-      section.range.start.line,
-      section.range.end.line + (isLastLineHeading ? 0 : 1)
-    );
+    if (section.isHeading) {
+      let rows = noteText.split('\n');
+      const isLastLineHeading = rows[section.range.end.line]?.match(/^\s*#+\s/);
+      rows = rows.slice(
+        section.range.start.line,
+        section.range.end.line + (isLastLineHeading ? 0 : 1)
+      );
+      rows.shift(); // Remove the heading itself
+      noteText = rows.join('\n');
+    } else {
+      noteText = section.label; // Directly use the block's raw markdown
+    }
+  } else {
+    // If no fragment, or fragment not found as a section,
+    // treat as content of the entire note (excluding title)
+    let rows = noteText.split('\n');
+    rows.shift(); // Remove the title
+    noteText = rows.join('\n');
   }
-  rows.shift();
-  noteText = rows.join('\n');
   noteText = withLinksRelativeToWorkspaceRoot(
     note.uri,
     noteText,

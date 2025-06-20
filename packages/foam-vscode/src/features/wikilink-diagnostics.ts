@@ -98,7 +98,7 @@ export default async function activate(
     }),
     vscode.languages.registerCodeActionsProvider(
       'markdown',
-      new IdentifierResolver(foam.workspace.defaultExtension),
+      new IdentifierResolver(foam.workspace, foam.workspace.defaultExtension),
       {
         providedCodeActionKinds: IdentifierResolver.providedCodeActionKinds,
       }
@@ -169,13 +169,13 @@ export function updateDiagnostics(
               severity: vscode.DiagnosticSeverity.Warning,
               source: 'Foam',
               relatedInformation: resource.sections.map(
-                b =>
+                section =>
                   new vscode.DiagnosticRelatedInformation(
                     new vscode.Location(
                       toVsCodeUri(resource.uri),
-                      toVsCodePosition(b.range.start)
+                      toVsCodePosition(section.range.start)
                     ),
-                    b.label
+                    section.id // Pass the section ID
                   )
               ),
             });
@@ -194,7 +194,10 @@ export class IdentifierResolver implements vscode.CodeActionProvider {
     vscode.CodeActionKind.QuickFix,
   ];
 
-  constructor(private defaultExtension: string) {}
+  constructor(
+    private workspace: FoamWorkspace,
+    private defaultExtension: string
+  ) {}
 
   provideCodeActions(
     document: vscode.TextDocument,
@@ -222,11 +225,13 @@ export class IdentifierResolver implements vscode.CodeActionProvider {
       }
       if (diagnostic.code === UNKNOWN_SECTION_CODE) {
         const res: vscode.CodeAction[] = [];
-        const sections = diagnostic.relatedInformation.map(
+        const sectionIds = diagnostic.relatedInformation.map(
           info => info.message
         );
-        for (const section of sections) {
-          res.push(createReplaceSectionCommand(diagnostic, section));
+        for (const sectionId of sectionIds) {
+          res.push(
+            createReplaceSectionCommand(diagnostic, sectionId, this.workspace)
+          );
         }
         return [...acc, ...res];
       }
@@ -237,18 +242,36 @@ export class IdentifierResolver implements vscode.CodeActionProvider {
 
 const createReplaceSectionCommand = (
   diagnostic: vscode.Diagnostic,
-  section: string
+  sectionId: string,
+  workspace: FoamWorkspace
 ): vscode.CodeAction => {
+  // Get the target resource from the diagnostic's related information
+  const targetUri = fromVsCodeUri(
+    diagnostic.relatedInformation[0].location.uri
+  );
+  const targetResource = workspace.get(targetUri);
+  const section = targetResource.sections.find(s => s.id === sectionId);
+
+  if (!section) {
+    return null; // Should not happen if IDs are correctly passed
+  }
+
+  const replacementValue = section.id;
+
   const action = new vscode.CodeAction(
-    `${section}`,
+    `Use ${section.isHeading ? 'heading' : 'block'} "${
+      section.isHeading ? section.label : section.blockId
+    }"`,
     vscode.CodeActionKind.QuickFix
   );
   action.command = {
     command: REPLACE_TEXT_COMMAND.name,
-    title: `Use section "${section}"`,
+    title: `Use ${section.isHeading ? 'heading' : 'block'} "${
+      section.isHeading ? section.label : section.blockId
+    }"`,
     arguments: [
       {
-        value: section,
+        value: replacementValue,
         range: new vscode.Range(
           diagnostic.range.start.line,
           diagnostic.range.start.character + 1,

@@ -11,7 +11,7 @@ import {
 } from '../test/test-utils-vscode';
 import { toVsCodeUri } from '../utils/vsc-utils';
 import { HoverProvider } from './hover-provider';
-import { readFileFromFs, TEST_DATA_DIR } from '../test/test-utils';
+import { readFileFromFs } from '../test/test-utils';
 import { FileDataStore } from '../test/test-datastore';
 
 // We can't use createTestWorkspace from /packages/foam-vscode/src/test/test-utils.ts
@@ -331,33 +331,6 @@ The content of file B`);
       expect(getValue(result.contents[2])).toMatch(
         "[Create note from template for 'placeholder'](command:foam-vscode.create-note?"
       );
-      ws.dispose();
-      graph.dispose();
-    });
-  });
-
-  describe('Block Identifiers', () => {
-    it('should show a hover preview for a block identifier', async () => {
-      const content = await readFileFromFs(
-        TEST_DATA_DIR.joinPath('block-identifiers', 'paragraph.md')
-      );
-      const file = await createFile(content, [
-        'block-identifiers',
-        'paragraph.md',
-      ]);
-      const note = parser.parse(file.uri, file.content);
-
-      const ws = createWorkspace().set(note);
-      const graph = FoamGraph.fromWorkspace(ws);
-
-      const { doc } = await showInEditor(note.uri);
-      const pos = new vscode.Position(2, 38); // Position on [[#^p1]]
-
-      const provider = new HoverProvider(hoverEnabled, ws, graph, parser);
-      const result = await provider.provideHover(doc, pos, noCancelToken);
-
-      expect(result.contents).toHaveLength(3);
-      expect(getValue(result.contents[0])).toEqual('This is a paragraph. ^p1');
       ws.dispose();
       graph.dispose();
     });

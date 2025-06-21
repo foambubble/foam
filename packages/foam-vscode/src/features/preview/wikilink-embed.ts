@@ -252,7 +252,7 @@ function fullExtractor(
     noteText,
     parser,
     workspace
-  ).replace(/\s*\^[\w-]+$/m, ''); // Strip block ID, multiline aware
+  );
   return noteText;
 }
 
@@ -298,7 +298,7 @@ function contentExtractor(
     noteText,
     parser,
     workspace
-  ).replace(/\s*\^[\w-]+$/m, ''); // Strip block ID, multiline aware
+  );
   return noteText;
 }
 

@@ -175,7 +175,9 @@ export function updateDiagnostics(
                       toVsCodeUri(resource.uri),
                       toVsCodePosition(section.range.start)
                     ),
-                    section.id // Pass the section ID
+                    section.isHeading
+                      ? section.label
+                      : section.blockId || section.id // Display label for headings, blockId for others
                   )
               ),
             });
@@ -260,18 +262,18 @@ const createReplaceSectionCommand = (
 
   const action = new vscode.CodeAction(
     `Use ${section.isHeading ? 'heading' : 'block'} "${
-      section.isHeading ? section.label : section.blockId
-    }"`,
+      section.isHeading ? section.label : section.blockId || section.id
+    }"`, // Use blockId for display if available, otherwise id
     vscode.CodeActionKind.QuickFix
   );
   action.command = {
     command: REPLACE_TEXT_COMMAND.name,
     title: `Use ${section.isHeading ? 'heading' : 'block'} "${
-      section.isHeading ? section.label : section.blockId
-    }"`,
+      section.isHeading ? section.label : section.blockId || section.id
+    }"`, // Use blockId for display if available, otherwise id
     arguments: [
       {
-        value: replacementValue,
+        value: section.isHeading ? section.id : section.blockId || section.id, // Insert blockId for non-headings, id for headings
         range: new vscode.Range(
           diagnostic.range.start.line,
           diagnostic.range.start.character + 1,

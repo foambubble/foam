@@ -40,7 +40,7 @@ export interface Alias {
 }
 
 export interface Section {
-  id: string; // A unique identifier for the section within the note.
+  id?: string; // A unique identifier for the section within the note.
   label: string;
   range: Range;
   blockId?: string; // The optional block identifier, if one exists (e.g., '^my-id').
@@ -98,6 +98,7 @@ export abstract class Resource {
         resource.sections.find(
           s =>
             s.id === fragment ||
+            (s.blockId && s.blockId === fragment) ||
             (s.blockId && s.blockId.substring(1) === fragment)
         ) ?? null
       );

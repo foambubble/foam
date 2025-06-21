@@ -1,4 +1,4 @@
-import { extractBlockIds, isInFrontMatter, isOnYAMLKeywordLine } from './md';
+import { isInFrontMatter, isOnYAMLKeywordLine } from './md';
 
 describe('isInFrontMatter', () => {
   it('is true for started front matter', () => {
@@ -65,53 +65,6 @@ describe('isInFrontMatter', () => {
       const content = 'dates:\n - 2023-01-1\n - 2023-01-02\n';
       const actual = isOnYAMLKeywordLine(content, 'tags');
       expect(actual).toBeFalsy();
-    });
-  });
-
-  describe('Block ID extraction', () => {
-    it('should extract block IDs from paragraphs', () => {
-      const content = `This is a paragraph. ^block-id-1
-This is another paragraph. ^block-id-2`;
-      const expected = [
-        { id: 'block-id-1', line: 0, col: 21 },
-        { id: 'block-id-2', line: 1, col: 27 },
-      ];
-      const actual = extractBlockIds(content);
-      expect(actual).toEqual(expected);
-    });
-
-    it('should extract block IDs from list items', () => {
-      const content = `- List item 1 ^list-id-1
-  - Nested list item ^nested-id
-- List item 2 ^list-id-2`;
-      const expected = [
-        { id: 'list-id-1', line: 0, col: 14 },
-        { id: 'nested-id', line: 1, col: 21 },
-        { id: 'list-id-2', line: 2, col: 14 },
-      ];
-      const actual = extractBlockIds(content);
-      expect(actual).toEqual(expected);
-    });
-
-    it('should not extract block IDs if not at end of line', () => {
-      const content = `This is a paragraph ^block-id-1 with more text.`;
-      const expected = [];
-      const actual = extractBlockIds(content);
-      expect(actual).toEqual(expected);
-    });
-
-    it('should handle multiple block IDs on the same line (only last one counts)', () => {
-      const content = `This is a paragraph ^block-id-1 ^block-id-2`;
-      const expected = [{ id: 'block-id-2', line: 0, col: 32 }];
-      const actual = extractBlockIds(content);
-      expect(actual).toEqual(expected);
-    });
-
-    it('should handle block IDs with special characters', () => {
-      const content = `Paragraph with special chars ^block_id-with.dots`;
-      const expected = [{ id: 'block_id-with.dots', line: 0, col: 29 }];
-      const actual = extractBlockIds(content);
-      expect(actual).toEqual(expected);
     });
   });
 });

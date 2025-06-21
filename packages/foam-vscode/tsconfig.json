@@ -8,7 +8,8 @@
     "lib": ["ES2019", "es2020.string", "DOM"],
     "sourceMap": true,
     "strict": false,
-    "downlevelIteration": true
+    "downlevelIteration": true,
+    "module": "CommonJS"
   },
   "include": ["src", "types"],
   "exclude": ["node_modules", ".vscode-test"]

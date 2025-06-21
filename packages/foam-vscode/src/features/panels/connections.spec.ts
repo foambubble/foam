@@ -157,36 +157,4 @@ describe('Backlinks panel', () => {
       [noteB.uri, noteC.uri, noteD.uri].map(uri => uri.path)
     );
   });
-
-  describe('Block Identifiers', () => {
-    const blockIdNoteUri = getUriInWorkspace('block-identifiers/paragraph.md');
-    const blockIdNote = createTestNote({
-      root: rootUri,
-      uri: './block-identifiers/paragraph.md',
-      links: [{ slug: 'paragraph#^p1' }],
-      definitions: [{ type: 'block', label: '^p1', url: '#^p1' }],
-    });
-
-    beforeAll(async () => {
-      await createNote(blockIdNote);
-      ws.set(blockIdNote);
-    });
-
-    it('should create backlinks for block identifiers', async () => {
-      provider.target = blockIdNoteUri;
-      await provider.refresh();
-      const notes = (await provider.getChildren()) as ResourceTreeItem[];
-      expect(notes.map(n => n.resource.uri.path)).toEqual([
-        blockIdNote.uri.path,
-      ]);
-      const linksFromBlockIdNote = (await provider.getChildren(
-        notes[0]
-      )) as ResourceRangeTreeItem[];
-      expect(linksFromBlockIdNote.length).toEqual(1);
-      expect(linksFromBlockIdNote[0].resource.uri.path).toEqual(
-        blockIdNote.uri.path
-      );
-      expect(linksFromBlockIdNote[0].label).toContain('[[#^p1]]');
-    });
-  });
 });

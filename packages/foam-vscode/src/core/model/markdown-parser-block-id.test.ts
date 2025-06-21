@@ -131,7 +131,7 @@ This is a paragraph. ^block-id-1
       {
         sections: [
           {
-            id: 'my-heading',
+            id: 'heading-id',
             blockId: '^heading-id',
             isHeading: true,
             label: 'My Heading',

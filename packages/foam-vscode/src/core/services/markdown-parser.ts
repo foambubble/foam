@@ -6,7 +6,6 @@ import wikiLinkPlugin from 'remark-wiki-link';
 import frontmatterPlugin from 'remark-frontmatter';
 import { parse as parseYAML } from 'yaml';
 import visit from 'unist-util-visit';
-import { visitParents } from 'unist-util-visit-parents';
 import {
   NoteLinkDefinition,
   Resource,
@@ -20,6 +19,7 @@ import { Logger } from '../utils/log';
 import { URI } from '../model/uri';
 import { ICache } from '../utils/cache';
 import GithubSlugger from 'github-slugger';
+import { visitWithAncestors } from '../utils/visit-with-ancestors'; // Import the new shim
 
 export interface ParserPlugin {
   name?: string;
@@ -114,7 +114,8 @@ export function createMarkdownParser(
           handleError(plugin, 'onWillVisitTree', uri, e);
         }
       }
-      visitParents(tree, (node, ancestors) => {
+      visitWithAncestors(tree, (node, ancestors) => {
+        // Use visitWithAncestors
         const parent = ancestors[ancestors.length - 1] as Parent | undefined; // Get the direct parent and cast to Parent
         const index = parent ? parent.children.indexOf(node) : undefined; // Get the index
 
@@ -259,7 +260,7 @@ export const createBlockIdPlugin = (): ParserPlugin => {
         const lastLine = listLines[listLines.length - 1];
         const fullLineBlockId = getLastBlockId(lastLine.trim());
 
-        if (fullLineBlockId) {
+        if (fullLineBlockId && /^\s*(\^[\w.-]+\s*)+$/.test(lastLine.trim())) {
           Logger.debug(
             `  Full-line block ID found on list: ${fullLineBlockId}`
           );
@@ -298,6 +299,7 @@ export const createBlockIdPlugin = (): ParserPlugin => {
           );
           return visit.SKIP; // Stop further processing for this list
         }
+        return; // If it's a list but not a full-line ID, skip further processing in this plugin
       }
 
       let block: Node | undefined;
@@ -316,56 +318,59 @@ export const createBlockIdPlugin = (): ParserPlugin => {
           Logger.debug(`  Is full-line ID paragraph: ${isFullLineIdParagraph}`);
           const fullLineBlockId = getLastBlockId(pText);
           Logger.debug(`  Full-line block ID found: ${fullLineBlockId}`);
-          if (fullLineBlockId) {
-            const previousSibling = parent.children[index - 1];
-            Logger.debug(
-              `  Previous sibling type: ${previousSibling.type}, text: "${
-                getNodeText(previousSibling, markdown).split('\n')[0]
-              }..."`
-            );
-            const textBetween = markdown.substring(
-              previousSibling.position!.end.offset!,
-              node.position!.start.offset!
-            );
-            const isSeparatedBySingleNewline =
-              textBetween.trim().length === 0 &&
-              (textBetween.match(/\n/g) || []).length === 1;
-            Logger.debug(
-              `  Is separated by single newline: ${isSeparatedBySingleNewline}`
-            );
-            Logger.debug(
-              `  Previous sibling already processed: ${processedNodes.has(
-                previousSibling
-              )}`
-            );
+          // Ensure the last line consists exclusively of the block ID
+          const previousSibling = parent.children[index - 1];
+          Logger.debug(
+            `  Previous sibling type: ${previousSibling.type}, text: "${
+              getNodeText(previousSibling, markdown).split('\n')[0]
+            }..."`
+          );
+          const textBetween = markdown.substring(
+            previousSibling.position!.end.offset!,
+            node.position!.start.offset!
+          );
+          const isSeparatedBySingleNewline =
+            textBetween.trim().length === 0 &&
+            (textBetween.match(/\n/g) || []).length === 1;
+          Logger.debug(
+            `  Is separated by single newline: ${isSeparatedBySingleNewline}`
+          );
+          Logger.debug(
+            `  Previous sibling already processed: ${processedNodes.has(
+              previousSibling
+            )}`
+          );
 
-            // If it's a full-line ID paragraph and correctly separated, link it to the previous block
-            if (
-              isSeparatedBySingleNewline &&
-              !processedNodes.has(previousSibling)
-            ) {
-              block = previousSibling;
-              blockId = fullLineBlockId;
-              idNode = node; // This paragraph is the ID node
-              Logger.debug(
-                `  Assigned block (full-line): Type=${block.type}, ID=${blockId}`
-              );
-            } else {
-              // If it's a full-line ID paragraph but not correctly linked,
-              // mark it as processed so it doesn't get picked up as an inline ID later.
-              processedNodes.add(node);
-              Logger.debug(
-                `  Marked ID node as processed (not correctly linked): ${node.type}`
-              );
-              return; // Skip further processing for this node
-            }
+          // If it's a full-line ID paragraph and correctly separated, link it to the previous block
+          if (
+            isSeparatedBySingleNewline &&
+            !processedNodes.has(previousSibling)
+          ) {
+            block = previousSibling;
+            blockId = fullLineBlockId;
+            idNode = node; // This paragraph is the ID node
+            Logger.debug(
+              `  Assigned block (full-line): Type=${block.type}, ID=${blockId}`
+            );
+          } else {
+            // If it's a full-line ID paragraph but not correctly linked,
+            // mark it as processed so it doesn't get picked up as an inline ID later.
+            processedNodes.add(node);
+            Logger.debug(
+              `  Marked ID node as processed (not correctly linked): ${node.type}`
+            );
+            return; // Skip further processing for this node
           }
         }
       }
 
       // If no full-line block ID was found for a previous sibling, check for an inline block ID on the current node
       if (!block) {
-        const inlineBlockId = getLastBlockId(nodeText);
+        let textForInlineId = nodeText;
+        if (node.type === 'listItem') {
+          textForInlineId = nodeText.split('\n')[0];
+        }
+        const inlineBlockId = getLastBlockId(textForInlineId);
         Logger.debug(`  Inline block ID found: ${inlineBlockId}`);
         if (inlineBlockId) {
           // If the node is a paragraph and its parent is a listItem, the block is the listItem.
@@ -403,13 +408,15 @@ export const createBlockIdPlugin = (): ParserPlugin => {
         Logger.debug('--- BLOCK ANALYSIS ---');
         Logger.debug('Block Type:', block.type);
         Logger.debug('Block Object:', JSON.stringify(block, null, 2));
+        Logger.debug('Block ID:', blockId); // Add logging for blockId
         switch (block.type) {
           case 'heading':
             isHeading = true;
             sectionLabel = getTextFromChildren(block)
               .replace(/\s*\^[\w.-]+$/, '')
               .trim();
-            sectionId = slugger.slug(sectionLabel);
+            // CORRECTED: The ID must come from the blockId, not the slug.
+            sectionId = blockId.substring(1);
             sectionRange = astPositionToFoamRange(block.position!);
             break;
 

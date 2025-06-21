@@ -170,17 +170,15 @@ module.exports = {
   // timers: "real",
 
   // A map from regular expressions to paths to transformers
-  transform: {
-    '^.+\\.(ts|tsx|js|jsx)$': 'ts-jest',
-  },
+  // transform: undefined,
 
   // An array of regexp pattern strings that are matched against all source file paths, matched files will skip transformation
   transformIgnorePatterns: [
-    "/node_modules/(?!remark-parse|remark-frontmatter|remark-wiki-link|unified|unist-util-visit|unist-util-visit-parents|bail|is-plain-obj|trough|vfile.*)/",
+    '/node_modules/(?!(remark-parse|remark-frontmatter|remark-wiki-link|unified|unist-util-visit|bail|is-plain-obj|trough|vfile.*)/)',
   ],
-
-  // An array of regexp pattern strings that are matched against all modules before the module loader will automatically return a mock for them
-  // unmockedModulePathPatterns: undefined,
+  transform: {
+    '^.+\\.(ts|tsx|js|jsx)$': 'ts-jest', // Use ts-jest for all JS/TS files
+  },
 
   // Indicates whether each individual test should be reported during the run
   // verbose: undefined,

@@ -44,18 +44,23 @@ export const createTestWorkspace = () => {
   return workspace;
 };
 
-export const createTestNote = (params: {
-  uri: string;
-  title?: string;
-  definitions?: NoteLinkDefinition[];
-  links?: Array<{ slug: string } | { to: string }>;
-  tags?: string[];
-  aliases?: string[];
-  text?: string;
-  sections?: string[];
-  root?: URI;
-  type?: string;
-}): Resource => {
+export const createTestNote = (
+  params: {
+    uri: string;
+    title?: string;
+    definitions?: NoteLinkDefinition[];
+    links?: Array<{ slug: string } | { to: string }>;
+    tags?: string[];
+    aliases?: string[];
+    text?: string;
+    sections?: string[];
+    root?: URI;
+    type?: string;
+  },
+  options: {
+    generateSectionIds?: boolean;
+  } = {}
+): Resource => {
   const root = params.root ?? URI.file('/');
   return {
     uri: root.resolve(params.uri),
@@ -64,9 +69,15 @@ export const createTestNote = (params: {
     title: params.title ?? strToUri(params.uri).getBasename(),
     definitions: params.definitions ?? [],
     sections: (() => {
-      const slugger = new GithubSlugger();
+      if (options.generateSectionIds) {
+        const slugger = new GithubSlugger();
+        return params.sections?.map(label => ({
+          id: slugger.slug(label),
+          label,
+          range: Range.create(0, 0, 1, 0),
+        }));
+      }
       return params.sections?.map(label => ({
-        id: slugger.slug(label),
         label,
         range: Range.create(0, 0, 1, 0),
       }));

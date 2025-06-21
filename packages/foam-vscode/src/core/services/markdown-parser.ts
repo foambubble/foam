@@ -179,6 +179,20 @@ const sectionsPlugin: ParserPlugin = {
     note.sections.sort((a, b) =>
       Position.compareTo(a.range.start, b.range.start)
     );
+
+    // Debug logging: print all sections after parsing
+    // eslint-disable-next-line no-console
+    console.log(
+      '[Foam Parser] Sections for resource:',
+      note.uri?.path || note.uri
+    );
+    for (const section of note.sections) {
+      // eslint-disable-next-line no-console
+      console.log(
+        `  - label: ${section.label}, id: ${section.id}, blockId: ${section.blockId}, isHeading: ${section.isHeading}, range:`,
+        section.range
+      );
+    }
   },
 };
 
@@ -552,11 +566,17 @@ export const createBlockIdPlugin = (): ParserPlugin => {
           getNodeText(node, markdown).split('\n')[0]
         }..."`
       );
-      // Check if this node or any of its ancestors have already been processed
-      // This prevents child nodes from creating sections if a parent already has one.
-      const isAlreadyProcessed =
-        ancestors.some(ancestor => processedNodes.has(ancestor)) ||
-        processedNodes.has(node);
+      // Refined duplicate prevention logic:
+      // - For listItems: only skip if the listItem itself is processed
+      // - For all other nodes: skip if the node or any ancestor is processed
+      let isAlreadyProcessed = false;
+      if (node.type === 'listItem') {
+        isAlreadyProcessed = processedNodes.has(node);
+      } else {
+        isAlreadyProcessed =
+          processedNodes.has(node) ||
+          ancestors.some(a => processedNodes.has(a));
+      }
       Logger.debug(`  isAlreadyProcessed: ${isAlreadyProcessed}`);
       if (isAlreadyProcessed || !parent || index === undefined) {
         Logger.debug(
@@ -601,15 +621,9 @@ export const createBlockIdPlugin = (): ParserPlugin => {
             isHeading: false,
           });
 
-          // Mark the list node and all its children as processed
           processedNodes.add(node);
-          visit(node as any, (child: any) => {
-            processedNodes.add(child);
-          });
-          Logger.debug(
-            `  Marked list and all children as processed for full-line ID.`
-          );
-          return visit.SKIP; // Stop further processing for this list
+          // DO NOT mark children as processed; allow traversal to continue for list items
+          // DO NOT return visit.SKIP; continue traversal so list items with their own block IDs are processed
         }
         return; // If it's a list but not a full-line ID, skip further processing in this plugin
       }

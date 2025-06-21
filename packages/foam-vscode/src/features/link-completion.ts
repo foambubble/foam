@@ -119,6 +119,16 @@ export class SectionCompletionProvider
       position.character
     );
     if (resource) {
+      // DEBUG: Log all section ids/blockIds being included
+      console.log(
+        '[Foam Completion] Sections for resource:',
+        resource.uri.path
+      );
+      resource.sections.forEach(section => {
+        console.log(
+          `  - label: ${section.label}, id: ${section.id}, blockId: ${section.blockId}, isHeading: ${section.isHeading}`
+        );
+      });
       // Provide completion for all sections: headings, block IDs (including list items), and header IDs
       const items = resource.sections.flatMap(section => {
         const sectionItems: vscode.CompletionItem[] = [];

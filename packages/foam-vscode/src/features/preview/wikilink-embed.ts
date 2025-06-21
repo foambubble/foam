@@ -62,8 +62,6 @@ export const markdownItWikilinkEmbed = (
         }
         const includedNote = workspace.find(noteTarget);
 
-        // (Removed orphaned line: const includedNote = workspace.find(target);)
-
         if (!includedNote) {
           return `![[${wikilinkTarget}]]`;
         }
@@ -88,7 +86,7 @@ export const markdownItWikilinkEmbed = (
 
         refsStack.push(includedNote.uri.path.toLocaleLowerCase());
 
-        const html = getNoteContent(
+        const markdownContent = getNoteContent(
           includedNote,
           fragment,
           noteEmbedModifier,
@@ -97,7 +95,11 @@ export const markdownItWikilinkEmbed = (
           md
         );
         refsStack.pop();
-        return html;
+
+        // Only render at the top level, to avoid corrupting markdown-it state
+        return refsStack.length === 0
+          ? md.render(markdownContent)
+          : markdownContent;
       } catch (e) {
         Logger.error(
           `Error while including ${wikilinkItem} into the current document of the Preview panel`,
@@ -118,49 +120,37 @@ function getNoteContent(
   md: markdownit
 ): string {
   let content = `Embed for [[${includedNote.uri.path}]]`;
-  let toRender: string;
 
   switch (includedNote.type) {
     case 'note': {
-      const { noteScope, noteStyle } = retrieveNoteConfig(noteEmbedModifier);
+      // Only 'full' and 'content' note scopes are supported.
+      // The 'card' and 'inline' styles are removed in favor of a single,
+      // seamless inline rendering for all transclusions.
+      const noteScope = ['full', 'content'].includes(noteEmbedModifier)
+        ? noteEmbedModifier
+        : getFoamVsCodeConfig<string>(CONFIG_EMBED_NOTE_TYPE).startsWith(
+            'content'
+          )
+        ? 'content'
+        : 'full';
 
       const extractor: EmbedNoteExtractor =
-        noteScope === 'full'
-          ? fullExtractor
-          : noteScope === 'content'
-          ? contentExtractor
-          : fullExtractor;
-
-      const formatter: EmbedNoteFormatter =
-        noteStyle === 'card'
-          ? cardFormatter
-          : noteStyle === 'inline'
-          ? inlineFormatter
-          : cardFormatter;
+        noteScope === 'content' ? contentExtractor : fullExtractor;
 
       content = extractor(includedNote, linkFragment, parser, workspace);
-      toRender = formatter(content, md);
       break;
     }
     case 'attachment':
-      content = `
- <div class="embed-container-attachment">
- ${md.renderInline('[[' + includedNote.uri.path + ']]')}<br/>
- Embed for attachments is not supported
- </div>`;
-      toRender = md.render(content);
+      content = `> [[${includedNote.uri.path}]]
+>
+> Embed for attachments is not supported`;
       break;
     case 'image':
-      content = `<div class="embed-container-image">${md.render(
-        `![](${md.normalizeLink(includedNote.uri.path)})`
-      )}</div>`;
-      toRender = md.render(content);
+      content = `![](${md.normalizeLink(includedNote.uri.path)})`;
       break;
-    default:
-      toRender = content;
   }
 
-  return toRender;
+  return content;
 }
 
 function withLinksRelativeToWorkspaceRoot(
@@ -194,26 +184,6 @@ function withLinksRelativeToWorkspaceRoot(
     noteText
   );
   return text;
-}
-
-export function retrieveNoteConfig(explicitModifier: string | undefined): {
-  noteScope: string;
-  noteStyle: string;
-} {
-  let config = getFoamVsCodeConfig<string>(CONFIG_EMBED_NOTE_TYPE); // ex. full-inline
-  let [noteScope, noteStyle] = config.split('-');
-
-  // an explicit modifier will always override corresponding user setting
-  if (explicitModifier !== undefined) {
-    if (['full', 'content'].includes(explicitModifier)) {
-      noteScope = explicitModifier;
-    } else if (['card', 'inline'].includes(explicitModifier)) {
-      noteStyle = explicitModifier;
-    } else {
-      [noteScope, noteStyle] = explicitModifier.split('-');
-    }
-  }
-  return { noteScope, noteStyle };
 }
 
 /**
@@ -312,23 +282,6 @@ function contentExtractor(
     workspace
   );
   return noteText;
-}
-
-/**
- * A type of function that renders note content with the desired style in html
- */
-export type EmbedNoteFormatter = (content: string, md: markdownit) => string;
-
-function cardFormatter(content: string, md: markdownit): string {
-  // Render the markdown content as HTML inside the card
-  return `<div class="embed-container-note">\n\n${md.render(
-    content
-  )}\n\n</div>`;
-}
-
-function inlineFormatter(content: string, md: markdownit): string {
-  // Render the markdown content as HTML inline
-  return md.render(content);
 }
 
 export default markdownItWikilinkEmbed;

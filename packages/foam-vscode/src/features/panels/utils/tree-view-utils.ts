@@ -201,8 +201,11 @@ export function createBacklinkItemsForResource(
 ) {
   let connections;
   if (fragment) {
-    // Use blockId backlinks for section/block-level
-    connections = graph.getBlockIdBacklinks(uri, fragment);
+    // Get all backlinks to the file, then filter by the exact target URI (including fragment).
+    const targetUri = uri.with({ fragment: fragment });
+    connections = graph
+      .getBacklinks(uri)
+      .filter(conn => conn.target.isEqual(targetUri));
   } else {
     // Note-level backlinks
     connections = graph

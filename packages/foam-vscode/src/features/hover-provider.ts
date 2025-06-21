@@ -86,13 +86,17 @@ export class HoverProvider implements vscode.HoverProvider {
     const { section: linkFragment } = MarkdownLink.analyzeLink(targetLink);
     let backlinks: import('../core/model/graph').Connection[];
     if (linkFragment) {
-      backlinks = this.graph.getBlockIdBacklinks(targetUri, linkFragment);
+      // Get all backlinks to the file, then filter by the exact target URI (including fragment).
+      // This is simple and robust, avoiding the complex logic of the old getBlockIdBacklinks.
+      backlinks = this.graph
+        .getBacklinks(targetUri)
+        .filter(conn => conn.target.isEqual(targetUri));
     } else {
       backlinks = this.graph.getBacklinks(targetUri);
     }
     const sources = uniqWith(
       backlinks
-        .filter(link => !link.source.isEqual(documentUri))
+        .filter(link => link.source.toFsPath() !== documentUri.toFsPath())
         .map(link => link.source),
       (u1, u2) => u1.isEqual(u2)
     );

@@ -93,16 +93,40 @@ export abstract class Resource {
     resource: Resource,
     fragment: string
   ): Section | null {
-    if (fragment) {
-      return (
-        resource.sections.find(
-          s =>
-            s.id === fragment ||
-            (s.blockId && s.blockId === fragment) ||
+    if (!fragment) return null;
+    // Normalize for robust matching
+    const normalize = (str: string | undefined) =>
+      str
+        ? str
+            .toLocaleLowerCase()
+            .replace(/\s+/g, '-')
+            .replace(/[^a-z0-9_-]/g, '')
+        : '';
+    const normFragment = normalize(fragment);
+    return (
+      resource.sections.find(s => {
+        // For headings with blockId, match slug, caret-prefixed blockId, or blockId without caret
+        if (s.isHeading && s.blockId) {
+          return (
+            normalize(s.id) === normFragment ||
+            s.blockId === fragment ||
             (s.blockId && s.blockId.substring(1) === fragment)
-        ) ?? null
-      );
-    }
-    return null;
+          );
+        }
+        // For headings without blockId, match slug
+        if (s.isHeading) {
+          return normalize(s.id) === normFragment;
+        }
+        // For non-headings, match blockId (with/without caret) or id
+        if (s.blockId) {
+          return (
+            s.blockId === fragment ||
+            (s.blockId && s.blockId.substring(1) === fragment) ||
+            s.id === fragment
+          );
+        }
+        return s.id === fragment;
+      }) ?? null
+    );
   }
 }

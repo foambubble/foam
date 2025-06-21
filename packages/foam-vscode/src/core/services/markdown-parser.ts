@@ -102,11 +102,14 @@ export interface ParserCacheEntry {
 // --- Plugin and helper function definitions ---
 // --- Plugin and helper function definitions ---
 const slugger = new GithubSlugger();
-let sectionStack: Array<{
+type SectionStackItem = {
   label: string;
   level: number;
   start: Position;
-}> = [];
+  blockId?: string;
+  end?: Position;
+};
+let sectionStack: SectionStackItem[] = [];
 
 const sectionsPlugin: ParserPlugin = {
   name: 'section',
@@ -117,13 +120,17 @@ const sectionsPlugin: ParserPlugin = {
   visit: (node, note) => {
     if (node.type === 'heading') {
       const level = (node as any).depth;
-      const label = getTextFromChildren(node);
+      let label = getTextFromChildren(node);
       if (!label || !level) {
         return;
       }
-      const inlineBlockIdRegex = /(?:^|\s)\^([\w-]+)\s*$/;
-      if (label.match(inlineBlockIdRegex)) {
-        return;
+      // Extract block ID if present at the end of the heading
+      const inlineBlockIdRegex = /(?:^|\s)(\^[\w-]+)\s*$/;
+      const match = label.match(inlineBlockIdRegex);
+      let blockId: string | undefined = undefined;
+      if (match) {
+        blockId = match[1];
+        label = label.replace(inlineBlockIdRegex, '').trim();
       }
       const start = astPositionToFoamRange(node.position!).start;
       while (
@@ -131,14 +138,24 @@ const sectionsPlugin: ParserPlugin = {
         sectionStack[sectionStack.length - 1].level >= level
       ) {
         const section = sectionStack.pop();
+        // For all but the current heading, keep old logic
         note.sections.push({
           id: slugger.slug(section!.label),
           label: section!.label,
           range: Range.createFromPosition(section!.start, start),
           isHeading: true,
+          ...(section.blockId ? { blockId: section.blockId } : {}),
         });
       }
-      sectionStack.push({ label, level, start });
+      // For the current heading, push with its own range (single line)
+      const end = astPositionToFoamRange(node.position!).end;
+      sectionStack.push({
+        label,
+        level,
+        start,
+        end,
+        ...(blockId ? { blockId } : {}),
+      });
     }
   },
   onDidVisitTree: (tree, note) => {
@@ -148,11 +165,15 @@ const sectionsPlugin: ParserPlugin = {
     );
     while (sectionStack.length > 0) {
       const section = sectionStack.pop();
+      // If the section has its own end (single heading), use it; otherwise, use the document end
       note.sections.push({
         id: slugger.slug(section!.label),
         label: section!.label,
-        range: { start: section!.start, end },
+        range: section.end
+          ? { start: section.start, end: section.end }
+          : { start: section.start, end },
         isHeading: true,
+        ...(section.blockId ? { blockId: section.blockId } : {}),
       });
     }
     note.sections.sort((a, b) =>
@@ -506,6 +527,26 @@ export const createBlockIdPlugin = (): ParserPlugin => {
       slugger.reset();
     },
     visit: (node, note, markdown, index, parent, ancestors) => {
+      // Skip heading nodes and all their descendants; only the sectionsPlugin should handle headings and their block IDs
+      if (
+        node.type === 'heading' ||
+        ancestors.some(a => a.type === 'heading')
+      ) {
+        Logger.debug(
+          '  Skipping heading or descendant of heading node in block-id plugin.'
+        );
+        return;
+      }
+      // Skip heading nodes and all their descendants; only the sectionsPlugin should handle headings and their block IDs
+      if (
+        node.type === 'heading' ||
+        ancestors.some(a => a.type === 'heading')
+      ) {
+        Logger.debug(
+          '  Skipping heading or descendant of heading node in block-id plugin.'
+        );
+        return;
+      }
       Logger.debug(
         `Visiting node: Type=${node.type}, Text="${
           getNodeText(node, markdown).split('\n')[0]
@@ -671,180 +712,133 @@ export const createBlockIdPlugin = (): ParserPlugin => {
       }
 
       if (block && blockId) {
-        let sectionLabel: string;
-        let sectionRange: Range;
-        let sectionId: string | undefined;
-        let isHeading = false;
-
-        Logger.debug('--- BLOCK ANALYSIS ---');
-        Logger.debug('Block Type:', block.type);
-        Logger.debug('Block Object:', JSON.stringify(block, null, 2));
-        Logger.debug('Block ID:', blockId); // Add logging for blockId
-        switch (block.type) {
-          case 'heading':
-            isHeading = true;
-            sectionLabel = getTextFromChildren(block)
-              .replace(/\s*\^[\w.-]+$/, '')
-              .trim();
-            sectionId = blockId.substring(1); // Use blockId as id for heading section if not found
-            sectionRange = astPositionToFoamRange(block.position!);
-            break;
-
-          case 'listItem':
-            sectionLabel = getNodeText(block, markdown);
-            sectionId = blockId.substring(1);
-            sectionRange = astPositionToFoamRange(block.position!);
-            break;
-
-          case 'list': {
-            const rawText = getNodeText(block, markdown);
-            const lines = rawText.split('\n');
-            lines.pop();
-            sectionLabel = lines.join('\n');
-            sectionId = blockId.substring(1);
-
-            const startPos = astPointToFoamPosition(block.position!.start);
-            const lastLine = lines[lines.length - 1];
-            const endPos = Position.create(
-              startPos.line + lines.length - 1,
-              lastLine.length
-            );
-            sectionRange = Range.create(
-              startPos.line,
-              startPos.character,
-              endPos.line,
-              endPos.character
-            );
-            break;
+        // Only process non-heading blocks
+        if (block.type !== 'heading') {
+          let sectionLabel: string;
+          let sectionRange: Range;
+          let sectionId: string | undefined;
+          switch (block.type) {
+            case 'listItem':
+              sectionLabel = getNodeText(block, markdown);
+              sectionId = blockId.substring(1);
+              sectionRange = astPositionToFoamRange(block.position!);
+              break;
+            case 'list': {
+              const rawText = getNodeText(block, markdown);
+              const lines = rawText.split('\n');
+              lines.pop();
+              sectionLabel = lines.join('\n');
+              sectionId = blockId.substring(1);
+              const startPos = astPointToFoamPosition(block.position!.start);
+              const lastLine = lines[lines.length - 1];
+              const endPos = Position.create(
+                startPos.line + lines.length - 1,
+                lastLine.length
+              );
+              sectionRange = Range.create(
+                startPos.line,
+                startPos.character,
+                endPos.line,
+                endPos.character
+              );
+              break;
+            }
+            case 'table':
+            case 'code': {
+              Logger.debug(
+                'Processing code/table block. Block position:',
+                JSON.stringify(block.position)
+              );
+              sectionLabel = getNodeText(block, markdown);
+              Logger.debug(
+                'Section Label after getNodeText:',
+                `"${sectionLabel}"`
+              );
+              sectionId = blockId.substring(1);
+              const startPos = astPointToFoamPosition(block.position!.start);
+              const lines = sectionLabel.split('\n');
+              const endPos = Position.create(
+                startPos.line + lines.length - 1,
+                lines[lines.length - 1].length
+              );
+              sectionRange = Range.create(
+                startPos.line,
+                startPos.character,
+                endPos.line,
+                endPos.character
+              );
+              break;
+            }
+            case 'blockquote': {
+              const rawText = getNodeText(block, markdown);
+              const lines = rawText.split('\n');
+              lines.pop();
+              sectionLabel = lines.join('\n');
+              sectionId = blockId.substring(1);
+              const startPos = astPointToFoamPosition(block.position!.start);
+              const lastLine = lines[lines.length - 1];
+              Logger.info('Blockquote last line:', `"${lastLine}"`);
+              Logger.info('Blockquote last line length:', lastLine.length);
+              const endPos = Position.create(
+                startPos.line + lines.length - 1,
+                lastLine.length - 1
+              );
+              sectionRange = Range.create(
+                startPos.line,
+                startPos.character,
+                endPos.line,
+                endPos.character
+              );
+              break;
+            }
+            case 'paragraph':
+            default: {
+              sectionLabel = getNodeText(block, markdown);
+              sectionId = blockId.substring(1);
+              const startPos = astPointToFoamPosition(block.position!.start);
+              const lines = sectionLabel.split('\n');
+              const endPos = Position.create(
+                startPos.line + lines.length - 1,
+                lines[lines.length - 1].length
+              );
+              sectionRange = Range.create(
+                startPos.line,
+                startPos.character,
+                endPos.line,
+                endPos.character
+              );
+              break;
+            }
           }
-
-          case 'table':
-          case 'code': {
-            Logger.debug(
-              'Processing code/table block. Block position:',
-              JSON.stringify(block.position)
-            );
-            sectionLabel = getNodeText(block, markdown);
-            Logger.debug(
-              'Section Label after getNodeText:',
-              `"${sectionLabel}"`
-            );
-            sectionId = blockId.substring(1);
-            const startPos = astPointToFoamPosition(block.position!.start);
-            const lines = sectionLabel.split('\n');
-            const endPos = Position.create(
-              startPos.line + lines.length - 1,
-              lines[lines.length - 1].length
-            );
-            sectionRange = Range.create(
-              startPos.line,
-              startPos.character,
-              endPos.line,
-              endPos.character
-            );
-            break;
-          }
-
-          case 'blockquote': {
-            const rawText = getNodeText(block, markdown);
-            const lines = rawText.split('\n');
-            lines.pop();
-            sectionLabel = lines.join('\n');
-            sectionId = blockId.substring(1);
-
-            const startPos = astPointToFoamPosition(block.position!.start);
-            const lastLine = lines[lines.length - 1];
-            Logger.info('Blockquote last line:', `"${lastLine}"`);
-            Logger.info('Blockquote last line length:', lastLine.length);
-            const endPos = Position.create(
-              startPos.line + lines.length - 1,
-              lastLine.length - 1
-            );
-            sectionRange = Range.create(
-              startPos.line,
-              startPos.character,
-              endPos.line,
-              endPos.character
-            );
-            break;
-          }
-
-          case 'paragraph':
-          default: {
-            sectionLabel = getNodeText(block, markdown);
-            sectionId = blockId.substring(1);
-
-            const startPos = astPointToFoamPosition(block.position!.start);
-            const lines = sectionLabel.split('\n');
-            const endPos = Position.create(
-              startPos.line + lines.length - 1,
-              lines[lines.length - 1].length
-            );
-            sectionRange = Range.create(
-              startPos.line,
-              startPos.character,
-              endPos.line,
-              endPos.character
-            );
-            break;
-          }
-        }
-
-        // For headings, update the existing section to add blockId, or create if not found
-        if (isHeading) {
-          let headingSection = note.sections.find(
-            s =>
-              s.isHeading &&
-              s.range.start.line === sectionRange.start.line &&
-              s.range.start.character === sectionRange.start.character
-          );
-          if (headingSection) {
-            headingSection.blockId = blockId;
-            Logger.debug(
-              '  Updated existing heading section with blockId:',
-              blockId
-            );
-          } else {
-            // If not found, create the heading section (for test environments or if sectionsPlugin hasn't run yet)
-            note.sections.push({
-              id: sectionId,
-              blockId: blockId,
-              label: sectionLabel,
-              range: sectionRange,
-              isHeading: true,
-            });
-            Logger.debug('  Created heading section with blockId:', blockId);
-          }
-        } else {
           note.sections.push({
             id: sectionId,
             blockId: blockId,
             label: sectionLabel,
             range: sectionRange,
-            isHeading: isHeading,
+            isHeading: false,
           });
+          // Mark the block and the ID node (if full-line) as processed
+          processedNodes.add(block);
+          Logger.debug(`  Marked block as processed: ${block.type}`);
+          if (idNode) {
+            processedNodes.add(idNode);
+            Logger.debug(`  Marked ID node as processed: ${idNode.type}`);
+          }
+          // For list items, mark all children as processed to prevent duplicate sections
+          if (block.type === 'listItem') {
+            Logger.debug(
+              `Block is listItem. Marking all children as processed.`
+            );
+            visit(block as any, (child: any) => {
+              processedNodes.add(child);
+              Logger.debug(`    Marked child as processed: ${child.type}`);
+            });
+            Logger.debug(`  Returning visit.SKIP for listItem.`);
+            return visit.SKIP; // Stop visiting children of this list item
+          }
+          Logger.debug(`  Returning visit.SKIP for current node.`);
+          return visit.SKIP; // Skip further processing for this node
         }
-        // ...existing blockId logic...
-        // Mark the block and the ID node (if full-line) as processed
-        processedNodes.add(block);
-        Logger.debug(`  Marked block as processed: ${block.type}`);
-        if (idNode) {
-          processedNodes.add(idNode);
-          Logger.debug(`  Marked ID node as processed: ${idNode.type}`);
-        }
-
-        // For list items, mark all children as processed to prevent duplicate sections
-        if (block.type === 'listItem') {
-          Logger.debug(`  Block is listItem. Marking all children as processed.`);
-          visit(block as any, (child: any) => {
-            processedNodes.add(child);
-            Logger.debug(`    Marked child as processed: ${child.type}`);
-          });
-          Logger.debug(`  Returning visit.SKIP for listItem.`);
-          return visit.SKIP; // Stop visiting children of this list item
-        }
-        Logger.debug(`  Returning visit.SKIP for current node.`);
-        return visit.SKIP; // Skip further processing for this node
       }
     },
   };

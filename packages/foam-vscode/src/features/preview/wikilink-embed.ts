@@ -51,15 +51,18 @@ export const markdownItWikilinkEmbed = (
  </div>
            `;
         }
+        // --- Replacement logic: robust fragment and block ID support ---
+        // Parse fragment (block ID or header) if present
+        let fragment: string | undefined = undefined;
+        let noteTarget = wikilinkTarget;
+        if (wikilinkTarget.includes('#')) {
+          const parts = wikilinkTarget.split('#');
+          noteTarget = parts[0];
+          fragment = parts[1];
+        }
+        const includedNote = workspace.find(noteTarget);
 
-        const { target, section: linkFragment } = MarkdownLink.analyzeLink({
-          rawText: wikilinkTarget,
-          range: Range.create(0, 0, 0, 0), // Dummy range
-          type: 'wikilink',
-          isEmbed: true,
-        });
-
-        const includedNote = workspace.find(target);
+        // (Removed orphaned line: const includedNote = workspace.find(target);)
 
         if (!includedNote) {
           return `![[${wikilinkTarget}]]`;
@@ -85,16 +88,16 @@ export const markdownItWikilinkEmbed = (
 
         refsStack.push(includedNote.uri.path.toLocaleLowerCase());
 
-        const content = getNoteContent(
+        const html = getNoteContent(
           includedNote,
-          linkFragment,
+          fragment,
           noteEmbedModifier,
           parser,
           workspace,
           md
         );
         refsStack.pop();
-        return refsStack.length === 0 ? md.render(content) : content;
+        return html;
       } catch (e) {
         Logger.error(
           `Error while including ${wikilinkItem} into the current document of the Preview panel`,
@@ -230,22 +233,31 @@ function fullExtractor(
   workspace: FoamWorkspace
 ): string {
   let noteText = readFileSync(note.uri.toFsPath()).toString();
-  const section = Resource.findSection(note, linkFragment);
+  const section = linkFragment
+    ? Resource.findSection(note, linkFragment)
+    : null;
   if (isSome(section)) {
     if (section.isHeading) {
       let rows = noteText.split('\n');
-      // Check if the line at section.range.end.line is a heading.
-      // If it is, it means the section ends *before* this line, so we don't add +1.
-      // Otherwise, add +1 to include the last line of content (e.g., for lists, code blocks).
-      const isLastLineHeading = rows[section.range.end.line]?.match(/^\s*#+\s/);
-      let slicedRows = rows.slice(
-        section.range.start.line,
-        section.range.end.line + (isLastLineHeading ? 0 : 1)
-      );
+      // Find the next heading after this one
+      let nextHeadingLine = rows.length;
+      for (let i = section.range.start.line + 1; i < rows.length; i++) {
+        if (/^\s*#+\s/.test(rows[i])) {
+          nextHeadingLine = i;
+          break;
+        }
+      }
+      let slicedRows = rows.slice(section.range.start.line, nextHeadingLine);
       noteText = slicedRows.join('\n');
     } else {
+      // For non-headings (list items, blocks), always use section.label
       noteText = section.label;
     }
+  } else {
+    // No fragment: transclude the whole note (excluding frontmatter if present)
+    // Remove YAML frontmatter if present
+    noteText = noteText.replace(/^---[\s\S]*?---\s*/, '');
+    noteText = noteText.trim();
   }
   noteText = withLinksRelativeToWorkspaceRoot(
     note.uri,
@@ -308,11 +320,15 @@ function contentExtractor(
 export type EmbedNoteFormatter = (content: string, md: markdownit) => string;
 
 function cardFormatter(content: string, md: markdownit): string {
-  return `<div class="embed-container-note">\n\n${content}\n\n</div>`;
+  // Render the markdown content as HTML inside the card
+  return `<div class="embed-container-note">\n\n${md.render(
+    content
+  )}\n\n</div>`;
 }
 
 function inlineFormatter(content: string, md: markdownit): string {
-  return content;
+  // Render the markdown content as HTML inline
+  return md.render(content);
 }
 
 export default markdownItWikilinkEmbed;

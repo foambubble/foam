@@ -119,39 +119,76 @@ export class SectionCompletionProvider
       position.character
     );
     if (resource) {
-      const items = resource.sections.flatMap(b => {
+      // Provide completion for all sections: headings, block IDs (including list items), and header IDs
+      const items = resource.sections.flatMap(section => {
         const sectionItems: vscode.CompletionItem[] = [];
-
-        // For headings, offer the clean header text as a label
-        if (b.isHeading) {
-          const headingItem = new ResourceCompletionItem(
-            b.label,
-            vscode.CompletionItemKind.Text,
-            resource.uri.with({ fragment: b.id })
-          );
-          headingItem.sortText = String(b.range.start.line).padStart(5, '0');
-          headingItem.range = replacementRange;
-          headingItem.commitCharacters = sectionCommitCharacters;
-          headingItem.command = COMPLETION_CURSOR_MOVE;
-          headingItem.insertText = b.id; // Insert the slugified ID
-          sectionItems.push(headingItem);
+        if (section.isHeading) {
+          // Always add the header slug
+          if (section.id) {
+            const slugItem = new ResourceCompletionItem(
+              section.label,
+              vscode.CompletionItemKind.Text,
+              resource.uri.with({ fragment: section.id })
+            );
+            slugItem.sortText = String(section.range.start.line).padStart(
+              5,
+              '0'
+            );
+            slugItem.range = replacementRange;
+            slugItem.commitCharacters = sectionCommitCharacters;
+            slugItem.command = COMPLETION_CURSOR_MOVE;
+            slugItem.insertText = section.id;
+            sectionItems.push(slugItem);
+          }
+          // Always add caret-prefixed blockId for headings if present
+          if (section.blockId) {
+            const blockIdItem = new ResourceCompletionItem(
+              section.blockId,
+              vscode.CompletionItemKind.Text,
+              resource.uri.with({ fragment: section.blockId.substring(1) })
+            );
+            blockIdItem.sortText = String(section.range.start.line).padStart(
+              5,
+              '0'
+            );
+            blockIdItem.range = replacementRange;
+            blockIdItem.commitCharacters = sectionCommitCharacters;
+            blockIdItem.command = COMPLETION_CURSOR_MOVE;
+            blockIdItem.insertText = section.blockId.substring(1);
+            sectionItems.push(blockIdItem);
+          }
+        } else {
+          // For non-headings, only add caret-prefixed blockId if present
+          if (section.blockId) {
+            const blockIdItem = new ResourceCompletionItem(
+              section.blockId,
+              vscode.CompletionItemKind.Text,
+              resource.uri.with({ fragment: section.blockId.substring(1) })
+            );
+            blockIdItem.sortText = String(section.range.start.line).padStart(
+              5,
+              '0'
+            );
+            blockIdItem.range = replacementRange;
+            blockIdItem.commitCharacters = sectionCommitCharacters;
+            blockIdItem.command = COMPLETION_CURSOR_MOVE;
+            blockIdItem.insertText = section.blockId.substring(1);
+            sectionItems.push(blockIdItem);
+          } else if (section.id) {
+            // Only add id if blockId is not present
+            const idItem = new ResourceCompletionItem(
+              section.id,
+              vscode.CompletionItemKind.Text,
+              resource.uri.with({ fragment: section.id })
+            );
+            idItem.sortText = String(section.range.start.line).padStart(5, '0');
+            idItem.range = replacementRange;
+            idItem.commitCharacters = sectionCommitCharacters;
+            idItem.command = COMPLETION_CURSOR_MOVE;
+            idItem.insertText = section.id;
+            sectionItems.push(idItem);
+          }
         }
-
-        // If a block ID exists (for headings or other blocks), offer it as a label
-        if (b.blockId) {
-          const blockIdItem = new ResourceCompletionItem(
-            b.blockId, // Label includes '^'
-            vscode.CompletionItemKind.Text,
-            resource.uri.with({ fragment: b.id })
-          );
-          blockIdItem.sortText = String(b.range.start.line).padStart(5, '0');
-          blockIdItem.range = replacementRange;
-          blockIdItem.commitCharacters = sectionCommitCharacters;
-          blockIdItem.command = COMPLETION_CURSOR_MOVE;
-          blockIdItem.insertText = b.id; // Insert the clean ID without '^'
-          sectionItems.push(blockIdItem);
-        }
-
         return sectionItems;
       });
       return new vscode.CompletionList(items);

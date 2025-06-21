@@ -164,4 +164,28 @@ export class FoamGraph implements IDisposable {
     this.disposables.forEach(d => d.dispose());
     this.disposables = [];
   }
+
+  /**
+   * Returns all connections (backlinks) to a specific blockId (with or without caret) in a note.
+   * This enables the backlinks panel and graph to resolve references to block IDs, including list items.
+   */
+  public getBlockIdBacklinks(uri: URI, fragment: string): Connection[] {
+    // Find all connections targeting this note with a fragment matching a blockId or section id
+    const connections = this.getBacklinks(uri);
+    // Accept both caret-prefixed and non-prefixed block IDs
+    const normalized = fragment.startsWith('^') ? fragment : `^${fragment}`;
+    return connections.filter(conn => {
+      // Try to resolve the section in the target note
+      const targetResource = this.workspace.get(uri);
+      if (!targetResource) return false;
+      const section = targetResource.sections.find(
+        s =>
+          s.id === fragment ||
+          s.id === normalized.substring(1) ||
+          s.blockId === fragment ||
+          s.blockId === normalized
+      );
+      return !!section;
+    });
+  }
 }

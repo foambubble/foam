@@ -188,24 +188,55 @@ export const groupRangesByResource = async (
   return resourceItems;
 };
 
+/**
+ * Creates backlink items for a resource, optionally scoped to a section/block (by fragment).
+ * If fragment is provided, only backlinks to that section/block are included.
+ */
 export function createBacklinkItemsForResource(
   workspace: FoamWorkspace,
   graph: FoamGraph,
   uri: URI,
+  fragment?: string,
   variant: 'backlink' | 'link' = 'backlink'
 ) {
-  const connections = graph
-    .getConnections(uri)
-    .filter(c => c.target.asPlain().isEqual(uri));
+  let connections;
+  if (fragment) {
+    // Use blockId backlinks for section/block-level
+    connections = graph.getBlockIdBacklinks(uri, fragment);
+  } else {
+    // Note-level backlinks
+    connections = graph
+      .getConnections(uri)
+      .filter(c => c.target.asPlain().isEqual(uri));
+  }
 
-  const backlinkItems = connections.map(async c =>
-    ResourceRangeTreeItem.createStandardItem(
+  const backlinkItems = connections.map(async c => {
+    // If fragment is set, try to find the section in the target
+    let label = undefined;
+    if (fragment) {
+      const targetResource = workspace.get(uri);
+      const section =
+        targetResource &&
+        targetResource.sections.find(
+          s =>
+            s.id === fragment ||
+            s.blockId === fragment ||
+            s.blockId === `^${fragment}` ||
+            s.id === fragment.replace(/^\^/, '')
+        );
+      if (section) {
+        label = section.label;
+      }
+    }
+    const item = await ResourceRangeTreeItem.createStandardItem(
       workspace,
       workspace.get(c.source),
       c.link.range,
       variant
-    )
-  );
+    );
+    if (label) item.label = label;
+    return item;
+  });
   return Promise.all(backlinkItems);
 }
 

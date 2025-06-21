@@ -131,7 +131,7 @@ This is a paragraph. ^block-id-1
       {
         sections: [
           {
-            id: 'heading-id',
+            id: 'my-heading', // PRD: slugified header text
             blockId: '^heading-id',
             isHeading: true,
             label: 'My Heading',

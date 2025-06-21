@@ -155,6 +155,7 @@ export function updateDiagnostics(
         }
         if (section && targets.length === 1) {
           const resource = targets[0];
+          // Use the same logic as hover: check for blockId section as well
           if (isNone(Resource.findSection(resource, section))) {
             const range = Range.create(
               link.range.start.line,
@@ -168,18 +169,57 @@ export function updateDiagnostics(
               range: toVsCodeRange(range),
               severity: vscode.DiagnosticSeverity.Warning,
               source: 'Foam',
-              relatedInformation: resource.sections.map(
-                section =>
-                  new vscode.DiagnosticRelatedInformation(
-                    new vscode.Location(
-                      toVsCodeUri(resource.uri),
-                      toVsCodePosition(section.range.start)
-                    ),
-                    section.isHeading
-                      ? section.label
-                      : section.blockId || section.id // Display label for headings, blockId for others
-                  )
-              ),
+              relatedInformation: resource.sections.flatMap(s => {
+                // Deduplicate: for headings, show slug and caret-prefixed blockId if different; for non-headings, only caret-prefixed blockId if present, else id
+                const infos = [];
+                if (s.isHeading) {
+                  if (s.id) {
+                    infos.push(
+                      new vscode.DiagnosticRelatedInformation(
+                        new vscode.Location(
+                          toVsCodeUri(resource.uri),
+                          toVsCodePosition(s.range.start)
+                        ),
+                        s.label
+                      )
+                    );
+                  }
+                  if (s.blockId) {
+                    infos.push(
+                      new vscode.DiagnosticRelatedInformation(
+                        new vscode.Location(
+                          toVsCodeUri(resource.uri),
+                          toVsCodePosition(s.range.start)
+                        ),
+                        s.blockId
+                      )
+                    );
+                  }
+                } else {
+                  if (s.blockId) {
+                    infos.push(
+                      new vscode.DiagnosticRelatedInformation(
+                        new vscode.Location(
+                          toVsCodeUri(resource.uri),
+                          toVsCodePosition(s.range.start)
+                        ),
+                        s.blockId
+                      )
+                    );
+                  } else if (s.id) {
+                    infos.push(
+                      new vscode.DiagnosticRelatedInformation(
+                        new vscode.Location(
+                          toVsCodeUri(resource.uri),
+                          toVsCodePosition(s.range.start)
+                        ),
+                        s.id
+                      )
+                    );
+                  }
+                }
+                return infos;
+              }),
             });
           }
         }

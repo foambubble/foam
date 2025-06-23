@@ -18,7 +18,7 @@ export function visitWithAncestors(
 ) {
   const ancestors: Node[] = [];
 
-  visit(tree, (node, index, parent) => {
+  (visit as any)(tree, (node: any, index: number, parent: any) => {
     // Maintain the ancestors stack
     // When we visit a node, its parent is the last element added to the stack.
     // If the current node is not a child of the last ancestor, it means we've

@@ -120,9 +120,10 @@ export class NavigationProvider
 
     const targetRange = section
       ? section.range
-      : Range.createFromPosition(Position.create(0, 0));
-
-    const previewRange = Range.createFromPosition(targetRange.start);
+      : Range.createFromPosition(Position.create(0, 0), Position.create(0, 0));
+    const targetSelectionRange = section
+      ? section.range
+      : Range.createFromPosition(targetRange.start);
 
     const result: vscode.LocationLink = {
       originSelectionRange: new vscode.Range(
@@ -134,8 +135,8 @@ export class NavigationProvider
           (targetLink.type === 'wikilink' ? 2 : 0)
       ),
       targetUri: toVsCodeUri(uri.asPlain()),
-      targetRange: toVsCodeRange(previewRange),
-      targetSelectionRange: toVsCodeRange(targetRange),
+      targetRange: toVsCodeRange(targetRange),
+      targetSelectionRange: toVsCodeRange(targetSelectionRange),
     };
     return [result];
   }

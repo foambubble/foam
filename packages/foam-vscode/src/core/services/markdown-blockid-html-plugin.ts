@@ -64,16 +64,12 @@ export function blockIdHtmlPlugin(
       // as we are linking to the nearest heading instead.
 
       // Clean the block ID from the text content for all types
-      inlineToken.content = inlineToken.content
-        .replace(blockIdRegex, '')
-        .trim();
+      inlineToken.content = inlineToken.content.replace(blockIdRegex, '');
       if (inlineToken.children) {
         // Also clean from the last text child, which is where it will be
         const lastChild = inlineToken.children[inlineToken.children.length - 1];
         if (lastChild && lastChild.type === 'text') {
-          lastChild.content = lastChild.content
-            .replace(blockIdRegex, '')
-            .trim();
+          lastChild.content = lastChild.content.replace(blockIdRegex, '');
         }
       }
     }

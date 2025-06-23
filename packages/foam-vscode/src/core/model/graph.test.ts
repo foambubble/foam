@@ -1,6 +1,14 @@
-import { createTestNote, createTestWorkspace } from '../../test/test-utils';
+import {
+  createTestNote,
+  createTestWorkspace,
+  readFileFromFs,
+  TEST_DATA_DIR,
+} from '../../test/test-utils';
 import { FoamGraph } from './graph';
 import { URI } from './uri';
+import { createMarkdownParser } from '../services/markdown-parser';
+
+const parser = createMarkdownParser([]);
 
 describe('Graph', () => {
   it('should use wikilink slugs to connect nodes', () => {
@@ -152,6 +160,39 @@ describe('Graph', () => {
     const graph = FoamGraph.fromWorkspace(ws);
 
     expect(graph.getBacklinks(noteB.uri).length).toEqual(1);
+  });
+
+  it('should create inbound connections when targeting a block id', () => {
+    const noteA = parser.parse(
+      URI.file('/page-a.md'),
+      'Link to [[page-b#^block-1]]'
+    );
+    const noteB = parser.parse(
+      URI.file('/page-b.md'),
+      'This is a paragraph with a block identifier. ^block-1'
+    );
+    const ws = createTestWorkspace().set(noteA).set(noteB);
+    const graph = FoamGraph.fromWorkspace(ws);
+
+    expect(graph.getBacklinks(noteB.uri).map(l => l.source)).toEqual([
+      noteA.uri,
+    ]);
+    expect(graph.getLinks(noteA.uri).map(l => l.target)).toEqual([
+      noteB.uri.with({ fragment: '^block-1' }),
+    ]);
+  });
+
+  it('getBacklinks should report sources of links pointing to a block', () => {
+    const noteA = parser.parse(URI.file('/page-a.md'), '[[page-c#^block-1]]');
+    const noteB = parser.parse(URI.file('/page-b.md'), '[[page-c#^block-1]]');
+    const noteC = parser.parse(URI.file('/page-c.md'), 'some text ^block-1');
+    const ws = createTestWorkspace().set(noteA).set(noteB).set(noteC);
+    const graph = FoamGraph.fromWorkspace(ws);
+
+    const backlinks = graph.getBacklinks(noteC.uri);
+    expect(backlinks.length).toEqual(2);
+    const sources = backlinks.map(b => b.source.path).sort();
+    expect(sources).toEqual(['/page-a.md', '/page-b.md']);
   });
 
   it('should support attachments', () => {
@@ -455,9 +496,9 @@ describe('Regenerating graph after workspace changes', () => {
     expect(graph.getLinks(noteA.uri).map(l => l.target)).toEqual([
       URI.placeholder('/path/to/another/page-b.md'),
     ]);
-    expect(() =>
-      ws.get(URI.placeholder('/path/to/another/page-b.md'))
-    ).toThrow();
+    expect(
+      graph.contains(URI.placeholder('/path/to/another/page-b.md'))
+    ).toBeTruthy();
 
     // add note-b
     const noteB = createTestNote({
@@ -465,7 +506,6 @@ describe('Regenerating graph after workspace changes', () => {
     });
 
     ws.set(noteB);
-    FoamGraph.fromWorkspace(ws);
 
     expect(() => ws.get(URI.placeholder('page-b'))).toThrow();
     expect(ws.get(noteB.uri).type).toEqual('note');
@@ -673,5 +713,68 @@ describe('Updating graph on workspace state', () => {
     ).toBeFalsy();
     ws.dispose();
     graph.dispose();
+  });
+});
+
+describe('Mixed Scenario', () => {
+  it('should correctly handle a mix of links', async () => {
+    const parser = createMarkdownParser([]);
+    const ws = createTestWorkspace();
+
+    const mixedTargetContent = await readFileFromFs(
+      TEST_DATA_DIR.joinPath('block-identifiers', 'mixed-target.md')
+    );
+    const mixedOtherContent = await readFileFromFs(
+      TEST_DATA_DIR.joinPath('block-identifiers', 'mixed-other.md')
+    );
+    const mixedSourceContent = await readFileFromFs(
+      TEST_DATA_DIR.joinPath('block-identifiers', 'mixed-source.md')
+    );
+
+    const mixedTarget = parser.parse(
+      URI.file('/mixed-target.md'),
+      mixedTargetContent
+    );
+    const mixedOther = parser.parse(
+      URI.file('/mixed-other.md'),
+      mixedOtherContent
+    );
+    const mixedSource = parser.parse(
+      URI.file('/mixed-source.md'),
+      mixedSourceContent
+    );
+
+    ws.set(mixedTarget).set(mixedOther).set(mixedSource);
+    const graph = FoamGraph.fromWorkspace(ws);
+
+    const links = graph.getLinks(mixedSource.uri);
+    expect(links.map(l => l.target.path).sort()).toEqual([
+      '/mixed-target.md',
+      '/mixed-target.md',
+      '/mixed-target.md',
+      '/mixed-target.md',
+      '/mixed-target.md',
+      '/mixed-target.md',
+    ]);
+
+    const backlinks = graph.getBacklinks(mixedTarget.uri);
+    expect(backlinks.map(b => b.source.path)).toEqual([
+      '/mixed-source.md',
+      '/mixed-source.md',
+      '/mixed-source.md',
+      '/mixed-source.md',
+      '/mixed-source.md',
+      '/mixed-source.md',
+    ]);
+
+    const linksFromTarget = graph.getLinks(mixedTarget.uri);
+    expect(linksFromTarget.map(l => l.target.path)).toEqual([
+      '/mixed-other.md',
+    ]);
+
+    const otherBacklinks = graph.getBacklinks(mixedOther.uri);
+    expect(otherBacklinks.map(b => b.source.path)).toEqual([
+      '/mixed-target.md',
+    ]);
   });
 });

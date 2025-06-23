@@ -24,7 +24,7 @@ export const WIKILINK_EMBED_REGEX =
   /((?:(?:full|content)-(?:inline|card)|full|content|inline|card)?!\[\[[^[\]]+?\]\])/;
 // we need another regex because md.use(regex, replace) only permits capturing one group
 // so we capture the entire possible wikilink item (ex. content-card![[note]]) using WIKILINK_EMBED_REGEX and then
-// use WIKILINK_EMBED_REGEX_GROUPER to parse it into the modifier(content-card) and the wikilink(note)
+// use WIKILINK_EMBED_REGEX_GROUPS to parse it into the modifier(content-card) and the wikilink(note)
 export const WIKILINK_EMBED_REGEX_GROUPS =
   /((?:\w+)|(?:(?:\w+)-(?:\w+)))?!\[\[([^[\]]+?)\]\]/;
 export const CONFIG_EMBED_NOTE_TYPE = 'preview.embedNoteType';
@@ -86,7 +86,7 @@ export const markdownItWikilinkEmbed = (
 
         refsStack.push(includedNote.uri.path.toLocaleLowerCase());
 
-        const markdownContent = getNoteContent(
+        const htmlContent = getNoteContent(
           includedNote,
           fragment,
           noteEmbedModifier,
@@ -96,10 +96,7 @@ export const markdownItWikilinkEmbed = (
         );
         refsStack.pop();
 
-        // Only render at the top level, to avoid corrupting markdown-it state
-        return refsStack.length === 0
-          ? md.render(markdownContent)
-          : markdownContent;
+        return htmlContent;
       } catch (e) {
         Logger.error(
           `Error while including ${wikilinkItem} into the current document of the Preview panel`,
@@ -120,37 +117,37 @@ function getNoteContent(
   md: markdownit
 ): string {
   let content = `Embed for [[${includedNote.uri.path}]]`;
+  let toRender: string;
 
   switch (includedNote.type) {
     case 'note': {
-      // Only 'full' and 'content' note scopes are supported.
-      // The 'card' and 'inline' styles are removed in favor of a single,
-      // seamless inline rendering for all transclusions.
-      const noteScope = ['full', 'content'].includes(noteEmbedModifier)
-        ? noteEmbedModifier
-        : getFoamVsCodeConfig<string>(CONFIG_EMBED_NOTE_TYPE).startsWith(
-            'content'
-          )
-        ? 'content'
-        : 'full';
+      const { noteScope, noteStyle } = retrieveNoteConfig(noteEmbedModifier);
 
       const extractor: EmbedNoteExtractor =
         noteScope === 'content' ? contentExtractor : fullExtractor;
 
       content = extractor(includedNote, linkFragment, parser, workspace);
+
+      const formatter: EmbedNoteFormatter =
+        noteStyle === 'card' ? cardFormatter : inlineFormatter;
+      toRender = formatter(content, md);
       break;
     }
     case 'attachment':
       content = `> [[${includedNote.uri.path}]]
 >
 > Embed for attachments is not supported`;
+      toRender = md.render(content);
       break;
     case 'image':
       content = `![](${md.normalizeLink(includedNote.uri.path)})`;
+      toRender = md.render(content);
       break;
+    default:
+      toRender = content;
   }
 
-  return content;
+  return toRender;
 }
 
 function withLinksRelativeToWorkspaceRoot(
@@ -173,9 +170,13 @@ function withLinksRelativeToWorkspaceRoot(
         return null;
       }
       const pathFromRoot = asAbsoluteWorkspaceUri(resource.uri).path;
-      return MarkdownLink.createUpdateLinkEdit(link, {
+      const update: { target: string; text?: string } = {
         target: pathFromRoot,
-      });
+      };
+      if (!info.alias) {
+        update.text = info.target;
+      }
+      return MarkdownLink.createUpdateLinkEdit(link, update);
     })
     .filter(linkEdits => !isNone(linkEdits))
     .sort((a, b) => Position.compareTo(b.range.start, a.range.start));
@@ -184,6 +185,26 @@ function withLinksRelativeToWorkspaceRoot(
     noteText
   );
   return text;
+}
+
+export function retrieveNoteConfig(explicitModifier: string | undefined): {
+  noteScope: string;
+  noteStyle: string;
+} {
+  let config = getFoamVsCodeConfig<string>(CONFIG_EMBED_NOTE_TYPE); // ex. full-inline
+  let [noteScope, noteStyle] = config.split('-');
+
+  // an explicit modifier will always override corresponding user setting
+  if (explicitModifier !== undefined) {
+    if (['full', 'content'].includes(explicitModifier)) {
+      noteScope = explicitModifier;
+    } else if (['card', 'inline'].includes(explicitModifier)) {
+      noteStyle = explicitModifier;
+    } else if (explicitModifier.includes('-')) {
+      [noteScope, noteStyle] = explicitModifier.split('-');
+    }
+  }
+  return { noteScope, noteStyle };
 }
 
 /**
@@ -220,8 +241,11 @@ function fullExtractor(
       let slicedRows = rows.slice(section.range.start.line, nextHeadingLine);
       noteText = slicedRows.join('\n');
     } else {
-      // For non-headings (list items, blocks), always use section.label
-      noteText = section.label;
+      // For non-headings (list items, blocks), extract content using range
+      const rows = noteText.split('\n');
+      noteText = rows
+        .slice(section.range.start.line, section.range.end.line + 1)
+        .join('\n');
     }
   } else {
     // No fragment: transclude the whole note (excluding frontmatter if present)
@@ -266,7 +290,11 @@ function contentExtractor(
       rows.shift(); // Remove the heading itself
       noteText = rows.join('\n');
     } else {
-      noteText = section.label; // Directly use the block's raw markdown
+      // For non-headings (list items, blocks), extract content using range
+      const rows = noteText.split('\n');
+      noteText = rows
+        .slice(section.range.start.line, section.range.end.line + 1)
+        .join('\n');
     }
   } else {
     // If no fragment, or fragment not found as a section,
@@ -282,6 +310,36 @@ function contentExtractor(
     workspace
   );
   return noteText;
+}
+
+/**
+ * A type of function that renders note content with the desired style in html
+ */
+export type EmbedNoteFormatter = (content: string, md: markdownit) => string;
+
+function cardFormatter(content: string, md: markdownit): string {
+  return `<div class="embed-container-note">
+
+${md.render(content)}
+
+</div>`;
+}
+
+function inlineFormatter(content: string, md: markdownit): string {
+  const tokens = md.parse(content.trim(), {});
+  // Check if the content is a single paragraph
+  if (
+    tokens.length === 3 &&
+    tokens[0].type === 'paragraph_open' &&
+    tokens[1].type === 'inline' &&
+    tokens[2].type === 'paragraph_close'
+  ) {
+    // Render only the inline content to prevent double <p> tags.
+    // The parent renderer will wrap this in <p> tags as needed.
+    return md.renderer.render(tokens[1].children, md.options, {});
+  }
+  // For anything else (headings, lists, multiple paragraphs), render as a block.
+  return md.render(content);
 }
 
 export default markdownItWikilinkEmbed;

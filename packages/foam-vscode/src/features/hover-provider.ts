@@ -23,6 +23,21 @@ import { getNoteTooltip, getFoamDocSelectors } from '../services/editor';
 import { isSome } from '../core/utils';
 import { MarkdownLink } from '../core/services/markdown-link';
 
+const sliceContent = (content: string, range: Range): string => {
+  const lines = content.split('\n');
+  const { start, end } = range;
+
+  if (start.line === end.line) {
+    return lines[start.line]?.substring(start.character, end.character) ?? '';
+  }
+
+  const firstLine = lines[start.line]?.substring(start.character) ?? '';
+  const lastLine = lines[end.line]?.substring(0, end.character) ?? '';
+  const middleLines = lines.slice(start.line + 1, end.line);
+
+  return [firstLine, ...middleLines, lastLine].join('\n');
+};
+
 export const CONFIG_KEY = 'links.hover.enable';
 
 export default async function activate(
@@ -117,23 +132,34 @@ export class HoverProvider implements vscode.HoverProvider {
 
     let mdContent = null;
     if (!targetUri.isPlaceholder()) {
-      const targetResource = this.workspace.get(targetUri);
-      const { section: linkFragment } = MarkdownLink.analyzeLink(targetLink);
+      const targetFileUri = targetUri.with({ fragment: '' });
+      const targetResource = this.workspace.get(targetFileUri);
       let content: string;
 
       if (linkFragment) {
         const section = Resource.findSection(targetResource, linkFragment);
-        if (isSome(section) && isSome(section.blockId)) {
-          content = section.label;
+        if (isSome(section)) {
+          if (section.isHeading) {
+            const fileContent = await this.workspace.readAsMarkdown(
+              targetFileUri
+            );
+            content = sliceContent(fileContent, section.range);
+          } else {
+            content = section.label;
+          }
         } else {
-          content = await this.workspace.readAsMarkdown(targetUri);
-          // Remove YAML frontmatter from the content
+          content = await this.workspace.readAsMarkdown(targetFileUri);
+        }
+        // Remove YAML frontmatter from the content
+        if (isSome(content)) {
           content = content.replace(/---[\s\S]*?---/, '').trim();
         }
       } else {
-        content = await this.workspace.readAsMarkdown(targetUri);
+        content = await this.workspace.readAsMarkdown(targetFileUri);
         // Remove YAML frontmatter from the content
-        content = content.replace(/---[\s\S]*?---/, '').trim();
+        if (isSome(content)) {
+          content = content.replace(/---[\s\S]*?---/, '').trim();
+        }
       }
 
       if (isSome(content)) {

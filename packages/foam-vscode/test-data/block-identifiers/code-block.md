@@ -1,7 +1,7 @@
+```json
 {
-"key": "value"
+  "key": "value"
 }
+```
 
-```
 ^cb1
-```

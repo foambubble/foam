@@ -34,9 +34,6 @@
     "markdown.previewStyles": [
       "./static/preview/style.css"
     ],
-    "markdown.previewScripts": [
-      "./static/preview/block-id-cleanup.js"
-    ],
     "grammars": [
       {
         "path": "./syntaxes/injection.json",
@@ -703,7 +700,6 @@
     "@types/node": "^13.11.0",
     "@types/picomatch": "^2.2.1",
     "@types/remove-markdown": "^0.1.1",
-    "@types/unist": "^3.0.3",
     "@types/vscode": "^1.70.0",
     "@typescript-eslint/eslint-plugin": "^5.51.0",
     "@typescript-eslint/parser": "^5.51.0",
@@ -730,6 +726,7 @@
   },
   "dependencies": {
     "@types/markdown-it": "^12.0.1",
+    "@types/unist": "^3.0.3",
     "dateformat": "4.5.1",
     "detect-newline": "^3.1.0",
     "github-slugger": "^1.4.0",

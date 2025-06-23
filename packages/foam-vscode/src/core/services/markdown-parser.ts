@@ -70,9 +70,28 @@ function getFoamDefinitions(
 }
 
 // Dummy implementation for getPropertiesInfoFromYAML to avoid reference error
-function getPropertiesInfoFromYAML(yaml: string): any {
-  // This should be replaced with the actual implementation if needed
-  return {};
+function getPropertiesInfoFromYAML(yamlText: string): {
+  [key: string]: { key: string; value: string; text: string; line: number };
+} {
+  const yamlProps = `\n${yamlText}`
+    .split(/[\n](\w+:)/g)
+    .filter(item => item.trim() !== '');
+  const lines = yamlText.split('\n');
+  let result: { line: number; key: string; text: string; value: string }[] = [];
+  for (let i = 0; i < yamlProps.length / 2; i++) {
+    const key = yamlProps[i * 2].replace(':', '');
+    const value = yamlProps[i * 2 + 1].trim();
+    const text = yamlProps[i * 2] + yamlProps[i * 2 + 1];
+    result.push({ key, value, text, line: -1 });
+  }
+  result = result.map(p => {
+    const line = lines.findIndex(l => l.startsWith(p.key + ':'));
+    return { ...p, line };
+  });
+  return result.reduce((acc, curr) => {
+    acc[curr.key] = curr;
+    return acc;
+  }, {});
 }
 
 export interface ParserPlugin {
@@ -142,57 +161,50 @@ const sectionsPlugin: ParserPlugin = {
         note.sections.push({
           id: slugger.slug(section!.label),
           label: section!.label,
-          range: Range.createFromPosition(section!.start, start),
+          range: Range.create(
+            section!.start.line,
+            section!.start.character,
+            start.line,
+            start.character
+          ),
           isHeading: true,
           ...(section.blockId ? { blockId: section.blockId } : {}),
         });
       }
-      // For the current heading, push with its own range (single line)
-      const end = astPositionToFoamRange(node.position!).end;
+      // For the current heading, push without its own end. The end will be
+      // determined by the next heading or the end of the file.
       sectionStack.push({
         label,
         level,
         start,
-        end,
         ...(blockId ? { blockId } : {}),
       });
     }
   },
   onDidVisitTree: (tree, note) => {
-    const end = Position.create(
-      astPointToFoamPosition(tree.position!.end).line + 1,
-      0
-    );
+    const fileEndPosition = astPointToFoamPosition(tree.position.end);
+
+    // Close all remaining sections.
+    // These are the sections that were not closed by a subsequent heading.
+    // They all extend to the end of the file.
     while (sectionStack.length > 0) {
-      const section = sectionStack.pop();
-      // If the section has its own end (single heading), use it; otherwise, use the document end
+      const section = sectionStack.pop()!;
       note.sections.push({
-        id: slugger.slug(section!.label),
-        label: section!.label,
-        range: section.end
-          ? { start: section.start, end: section.end }
-          : { start: section.start, end },
+        id: slugger.slug(section.label),
+        label: section.label,
+        range: Range.create(
+          section.start.line,
+          section.start.character,
+          fileEndPosition.line,
+          fileEndPosition.character
+        ),
         isHeading: true,
         ...(section.blockId ? { blockId: section.blockId } : {}),
       });
     }
-    note.sections.sort((a, b) =>
-      Position.compareTo(a.range.start, b.range.start)
-    );
-
-    // Debug logging: print all sections after parsing
-    // eslint-disable-next-line no-console
-    console.log(
-      '[Foam Parser] Sections for resource:',
-      note.uri?.path || note.uri
-    );
-    for (const section of note.sections) {
-      // eslint-disable-next-line no-console
-      console.log(
-        `  - label: ${section.label}, id: ${section.id}, blockId: ${section.blockId}, isHeading: ${section.isHeading}, range:`,
-        section.range
-      );
-    }
+    // The sections are not in order because of how we add them,
+    // so we need to sort them by their start position.
+    note.sections.sort((a, b) => a.range.start.line - b.range.start.line);
   },
 };
 
@@ -239,7 +251,6 @@ const tagsPlugin: ParserPlugin = {
     }
   },
 };
-// ...existing code...
 
 const titlePlugin: ParserPlugin = {
   name: 'title',
@@ -328,7 +339,14 @@ const wikilinkPlugin: ParserPlugin = {
 const definitionsPlugin: ParserPlugin = {
   name: 'definitions',
   visit: (node, note) => {
-    // ...implementation for definitions...
+    if (node.type === 'definition') {
+      note.definitions.push({
+        label: (node as any).label,
+        url: (node as any).url,
+        title: (node as any).title,
+        range: astPositionToFoamRange(node.position!),
+      });
+    }
   },
   onDidVisitTree: (tree, note) => {
     const end = astPointToFoamPosition(tree.position.end);
@@ -546,9 +564,6 @@ export const createBlockIdPlugin = (): ParserPlugin => {
         node.type === 'heading' ||
         ancestors.some(a => a.type === 'heading')
       ) {
-        Logger.debug(
-          '  Skipping heading or descendant of heading node in block-id plugin.'
-        );
         return;
       }
       // Skip heading nodes and all their descendants; only the sectionsPlugin should handle headings and their block IDs
@@ -556,16 +571,8 @@ export const createBlockIdPlugin = (): ParserPlugin => {
         node.type === 'heading' ||
         ancestors.some(a => a.type === 'heading')
       ) {
-        Logger.debug(
-          '  Skipping heading or descendant of heading node in block-id plugin.'
-        );
         return;
       }
-      Logger.debug(
-        `Visiting node: Type=${node.type}, Text="${
-          getNodeText(node, markdown).split('\n')[0]
-        }..."`
-      );
       // Refined duplicate prevention logic:
       // - For listItems: only skip if the listItem itself is processed
       // - For all other nodes: skip if the node or any ancestor is processed
@@ -577,11 +584,7 @@ export const createBlockIdPlugin = (): ParserPlugin => {
           processedNodes.has(node) ||
           ancestors.some(a => processedNodes.has(a));
       }
-      Logger.debug(`  isAlreadyProcessed: ${isAlreadyProcessed}`);
       if (isAlreadyProcessed || !parent || index === undefined) {
-        Logger.debug(
-          `  Skipping node: isAlreadyProcessed=${isAlreadyProcessed}, parent=${!!parent}, index=${index}`
-        );
         return;
       }
 
@@ -593,9 +596,6 @@ export const createBlockIdPlugin = (): ParserPlugin => {
         const fullLineBlockId = getLastBlockId(lastLine.trim());
 
         if (fullLineBlockId && /^\s*(\^[\w.-]+\s*)+$/.test(lastLine.trim())) {
-          Logger.debug(
-            `  Full-line block ID found on list: ${fullLineBlockId}`
-          );
           // Create section for the entire list
           const sectionLabel = listLines
             .slice(0, listLines.length - 1)
@@ -641,16 +641,9 @@ export const createBlockIdPlugin = (): ParserPlugin => {
         const isFullLineIdParagraph = /^\s*(\^[\w.-]+\s*)+$/.test(pText);
 
         if (isFullLineIdParagraph) {
-          Logger.debug(`  Is full-line ID paragraph: ${isFullLineIdParagraph}`);
           const fullLineBlockId = getLastBlockId(pText);
-          Logger.debug(`  Full-line block ID found: ${fullLineBlockId}`);
           // Ensure the last line consists exclusively of the block ID
           const previousSibling = parent.children[index - 1];
-          Logger.debug(
-            `  Previous sibling type: ${previousSibling.type}, text: "${
-              getNodeText(previousSibling, markdown).split('\n')[0]
-            }..."`
-          );
           const textBetween = markdown.substring(
             previousSibling.position!.end.offset!,
             node.position!.start.offset!
@@ -658,14 +651,6 @@ export const createBlockIdPlugin = (): ParserPlugin => {
           const isSeparatedBySingleNewline =
             textBetween.trim().length === 0 &&
             (textBetween.match(/\n/g) || []).length === 1;
-          Logger.debug(
-            `  Is separated by single newline: ${isSeparatedBySingleNewline}`
-          );
-          Logger.debug(
-            `  Previous sibling already processed: ${processedNodes.has(
-              previousSibling
-            )}`
-          );
 
           // If it's a full-line ID paragraph and correctly separated, link it to the previous block
           if (
@@ -675,16 +660,10 @@ export const createBlockIdPlugin = (): ParserPlugin => {
             block = previousSibling;
             blockId = fullLineBlockId;
             idNode = node; // This paragraph is the ID node
-            Logger.debug(
-              `  Assigned block (full-line): Type=${block.type}, ID=${blockId}`
-            );
           } else {
             // If it's a full-line ID paragraph but not correctly linked,
             // mark it as processed so it doesn't get picked up as an inline ID later.
             processedNodes.add(node);
-            Logger.debug(
-              `  Marked ID node as processed (not correctly linked): ${node.type}`
-            );
             return; // Skip further processing for this node
           }
         }
@@ -697,15 +676,11 @@ export const createBlockIdPlugin = (): ParserPlugin => {
           textForInlineId = nodeText.split('\n')[0];
         }
         const inlineBlockId = getLastBlockId(textForInlineId);
-        Logger.debug(`  Inline block ID found: ${inlineBlockId}`);
         if (inlineBlockId) {
           // If the node is a paragraph and its parent is a listItem, the block is the listItem.
           // This is only true if the paragraph is the *first* child of the listItem.
           if (node.type === 'paragraph' && parent.type === 'listItem') {
             if (parent.children[0] === node) {
-              Logger.debug(
-                `  Node is paragraph, parent is listItem, and it's the first child. Marking parent as processed: ${parent.type}`
-              );
               // Mark the parent listItem as processed.
               // This prevents its children from being processed as separate sections.
               processedNodes.add(parent);
@@ -719,9 +694,6 @@ export const createBlockIdPlugin = (): ParserPlugin => {
             block = node;
           }
           blockId = inlineBlockId;
-          Logger.debug(
-            `  Assigned block (inline): Type=${block.type}, ID=${blockId}`
-          );
         }
       }
 
@@ -759,15 +731,7 @@ export const createBlockIdPlugin = (): ParserPlugin => {
             }
             case 'table':
             case 'code': {
-              Logger.debug(
-                'Processing code/table block. Block position:',
-                JSON.stringify(block.position)
-              );
               sectionLabel = getNodeText(block, markdown);
-              Logger.debug(
-                'Section Label after getNodeText:',
-                `"${sectionLabel}"`
-              );
               sectionId = blockId.substring(1);
               const startPos = astPointToFoamPosition(block.position!.start);
               const lines = sectionLabel.split('\n');
@@ -791,8 +755,6 @@ export const createBlockIdPlugin = (): ParserPlugin => {
               sectionId = blockId.substring(1);
               const startPos = astPointToFoamPosition(block.position!.start);
               const lastLine = lines[lines.length - 1];
-              Logger.info('Blockquote last line:', `"${lastLine}"`);
-              Logger.info('Blockquote last line length:', lastLine.length);
               const endPos = Position.create(
                 startPos.line + lines.length - 1,
                 lastLine.length - 1
@@ -833,24 +795,16 @@ export const createBlockIdPlugin = (): ParserPlugin => {
           });
           // Mark the block and the ID node (if full-line) as processed
           processedNodes.add(block);
-          Logger.debug(`  Marked block as processed: ${block.type}`);
           if (idNode) {
             processedNodes.add(idNode);
-            Logger.debug(`  Marked ID node as processed: ${idNode.type}`);
           }
           // For list items, mark all children as processed to prevent duplicate sections
           if (block.type === 'listItem') {
-            Logger.debug(
-              `Block is listItem. Marking all children as processed.`
-            );
             visit(block as any, (child: any) => {
               processedNodes.add(child);
-              Logger.debug(`    Marked child as processed: ${child.type}`);
             });
-            Logger.debug(`  Returning visit.SKIP for listItem.`);
             return visit.SKIP; // Stop visiting children of this list item
           }
-          Logger.debug(`  Returning visit.SKIP for current node.`);
           return visit.SKIP; // Skip further processing for this node
         }
       }

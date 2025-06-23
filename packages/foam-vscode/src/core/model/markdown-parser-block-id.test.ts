@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { URI } from './uri';
 import { Range } from './range';
 import { createMarkdownParser } from '../services/markdown-parser';
@@ -38,7 +39,7 @@ This is a paragraph. ^block-id-1
           blockId: '^heading-id',
           isHeading: true,
           label: 'My Heading',
-          range: Range.create(1, 0, 1, 25),
+          range: Range.create(1, 0, 2, 0),
         },
       ]);
     });

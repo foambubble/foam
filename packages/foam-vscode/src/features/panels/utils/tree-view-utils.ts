@@ -252,13 +252,28 @@ export function createConnectionItemsForResource(
   const connections = graph.getConnections(uri).filter(c => filter(c));
 
   const backlinkItems = connections.map(async c => {
+    const isBacklink = !c.source.asPlain().isEqual(uri);
     const item = await ResourceRangeTreeItem.createStandardItem(
       workspace,
       workspace.get(c.source),
       c.link.range,
-      c.source.asPlain().isEqual(uri) ? 'link' : 'backlink'
+      isBacklink ? 'backlink' : 'link'
     );
     item.value = c;
+
+    if (isBacklink && c.target.fragment) {
+      const targetResource = workspace.get(c.target.asPlain());
+      if (targetResource) {
+        const fragment = c.target.fragment;
+        const section = targetResource.sections.find(
+          s => s.blockId === fragment
+        );
+        if (section) {
+          item.label = section.label;
+        }
+      }
+    }
+
     return item;
   });
   return Promise.all(backlinkItems);

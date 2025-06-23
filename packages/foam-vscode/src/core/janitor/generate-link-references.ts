@@ -15,6 +15,17 @@ export const generateLinkReferences = async (
   workspace: FoamWorkspace,
   includeExtensions: boolean
 ): Promise<TextEdit | null> => {
+  // eslint-disable-next-line no-console
+  console.log(
+    '[generateLinkReferences] Incoming Note:',
+    JSON.stringify(note, null, 2)
+  );
+  // eslint-disable-next-line no-console
+  console.log(
+    '[generateLinkReferences] Note Sections:',
+    JSON.stringify(note.sections, null, 2)
+  );
+
   if (!note) {
     return null;
   }

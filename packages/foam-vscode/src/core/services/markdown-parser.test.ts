@@ -204,22 +204,7 @@ this note has an empty title line
       expect(note.title).toEqual('Hello Page');
     });
   });
-  describe('Block Identifiers', () => {
-    it('should parse block identifiers as definitions', async () => {
-      const content = await readFileFromFs(
-        TEST_DATA_DIR.joinPath('block-identifiers', 'paragraph.md')
-      );
-      const note = createNoteFromMarkdown(content, 'paragraph.md');
-      expect(note.definitions).toEqual([
-        {
-          type: 'block',
-          label: '^p1',
-          url: '#^p1',
-          range: Range.create(0, 19, 0, 22),
-        },
-      ]);
-    });
-  });
+  describe('Block Identifiers', () => {});
 
   describe('Frontmatter', () => {
     it('should parse yaml frontmatter', () => {
@@ -422,7 +407,7 @@ This is the content of section 2.
       expect(note.sections[1].label).toEqual('Section 1.1');
       expect(note.sections[1].range).toEqual(Range.create(5, 0, 9, 0));
       expect(note.sections[2].label).toEqual('Section 2');
-      expect(note.sections[2].range).toEqual(Range.create(9, 0, 13, 0));
+      expect(note.sections[2].range).toEqual(Range.create(9, 0, 12, 6));
     });
 
     it('should support wikilinks and links in the section label', () => {

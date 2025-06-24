@@ -28,8 +28,13 @@ export const WIKILINK_EMBED_REGEX =
 export const WIKILINK_EMBED_REGEX_GROUPS =
   /((?:\w+)|(?:(?:\w+)-(?:\w+)))?!\[\[([^[\]]+?)\]\]/;
 export const CONFIG_EMBED_NOTE_TYPE = 'preview.embedNoteType';
+// refsStack is used to detect and prevent cyclic embeds.
 let refsStack: string[] = [];
 
+/**
+ * A markdown-it plugin to handle wikilink embeds (e.g., ![[note-name]]).
+ * It supports embedding entire notes, specific sections, or blocks with block IDs.
+ */
 export const markdownItWikilinkEmbed = (
   md: markdownit,
   workspace: FoamWorkspace,
@@ -51,8 +56,8 @@ export const markdownItWikilinkEmbed = (
  </div>
            `;
         }
-        // --- Replacement logic: robust fragment and block ID support ---
-        // Parse fragment (block ID or header) if present
+
+        // Parse the wikilink to separate the note path from the fragment (e.g., #heading or #^block-id).
         let fragment: string | undefined = undefined;
         let noteTarget = wikilinkTarget;
         if (wikilinkTarget.includes('#')) {
@@ -217,6 +222,10 @@ export type EmbedNoteExtractor = (
   workspace: FoamWorkspace
 ) => string;
 
+/**
+ * Extracts the full content of a note or a specific section/block.
+ * For sections, it includes the heading itself.
+ */
 function fullExtractor(
   note: Resource,
   linkFragment: string | undefined,
@@ -224,11 +233,13 @@ function fullExtractor(
   workspace: FoamWorkspace
 ): string {
   let noteText = readFileSync(note.uri.toFsPath()).toString();
+  // Find the specific section or block being linked to, if a fragment is provided.
   const section = linkFragment
     ? Resource.findSection(note, linkFragment)
     : null;
   if (isSome(section)) {
     if (section.isHeading) {
+      // For headings, extract all content from that heading to the next.
       let rows = noteText.split('\n');
       // Find the next heading after this one
       let nextHeadingLine = rows.length;
@@ -241,7 +252,8 @@ function fullExtractor(
       let slicedRows = rows.slice(section.range.start.line, nextHeadingLine);
       noteText = slicedRows.join('\n');
     } else {
-      // For non-headings (list items, blocks), extract content using range
+      // For block-level embeds (paragraphs, list items with a ^block-id),
+      // extract the content precisely using the range from the parser.
       const rows = noteText.split('\n');
       noteText = rows
         .slice(section.range.start.line, section.range.end.line + 1)
@@ -262,6 +274,10 @@ function fullExtractor(
   return noteText;
 }
 
+/**
+ * Extracts the content of a note, excluding the main title.
+ * For sections, it extracts the content *under* the heading.
+ */
 function contentExtractor(
   note: Resource,
   linkFragment: string | undefined,
@@ -269,18 +285,16 @@ function contentExtractor(
   workspace: FoamWorkspace
 ): string {
   let noteText = readFileSync(note.uri.toFsPath()).toString();
+  // Find the specific section or block being linked to.
   let section = Resource.findSection(note, linkFragment);
   if (!linkFragment) {
-    // if there's no fragment(section), the wikilink is linking to the entire note,
-    // in which case we need to remove the title. We could just use rows.shift()
-    // but should the note start with blank lines, it will only remove the first blank line
-    // leaving the title
-    // A better way is to find where the actual title starts by assuming it's at section[0]
-    // then we treat it as the same case as link to a section
+    // If no fragment is provided, default to the first section (usually the main title)
+    // to extract the content of the note, excluding the title.
     section = note.sections.length ? note.sections[0] : null;
   }
   if (isSome(section)) {
     if (section.isHeading) {
+      // For headings, extract the content *under* the heading.
       let rows = noteText.split('\n');
       const isLastLineHeading = rows[section.range.end.line]?.match(/^\s*#+\s/);
       rows = rows.slice(
@@ -290,7 +304,8 @@ function contentExtractor(
       rows.shift(); // Remove the heading itself
       noteText = rows.join('\n');
     } else {
-      // For non-headings (list items, blocks), extract content using range
+      // For block-level embeds (e.g., a list item with a ^block-id),
+      // extract the content of just that block using its range.
       const rows = noteText.split('\n');
       noteText = rows
         .slice(section.range.start.line, section.range.end.line + 1)
@@ -327,7 +342,9 @@ ${md.render(content)}
 
 function inlineFormatter(content: string, md: markdownit): string {
   const tokens = md.parse(content.trim(), {});
-  // Check if the content is a single paragraph
+  // Optimization: If the content is just a single paragraph, render only its
+  // inline content. This prevents wrapping the embed in an extra, unnecessary <p> tag,
+  // which can cause layout issues.
   if (
     tokens.length === 3 &&
     tokens[0].type === 'paragraph_open' &&
@@ -338,7 +355,7 @@ function inlineFormatter(content: string, md: markdownit): string {
     // The parent renderer will wrap this in <p> tags as needed.
     return md.renderer.render(tokens[1].children, md.options, {});
   }
-  // For anything else (headings, lists, multiple paragraphs), render as a block.
+  // For more complex content (headings, lists, etc.), render as a full block.
   return md.render(content);
 }
 

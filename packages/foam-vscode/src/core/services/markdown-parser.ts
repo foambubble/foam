@@ -21,7 +21,8 @@ import { ICache } from '../utils/cache';
 import GithubSlugger from 'github-slugger';
 import { visitWithAncestors } from '../utils/visit-with-ancestors'; // Import the new shim
 
-// --- Helper function definitions (moved just below imports for organization) ---
+// #region Helper Functions
+
 /**
  * Converts the 1-index Point object into the VS Code 0-index Position object
  * @param point ast Point (1-indexed)
@@ -44,6 +45,13 @@ const astPositionToFoamRange = (pos: AstPosition): Range =>
     pos.end.column - 1
   );
 
+/**
+ * Filters a list of definitions to include only those that appear
+ * in a contiguous block at the end of a file.
+ * @param defs The list of all definitions in the file.
+ * @param fileEndPoint The end position of the file.
+ * @returns The filtered list of definitions.
+ */
 function getFoamDefinitions(
   defs: NoteLinkDefinition[],
   fileEndPoint: Position
@@ -69,7 +77,13 @@ function getFoamDefinitions(
   return foamDefinitions;
 }
 
-// Dummy implementation for getPropertiesInfoFromYAML to avoid reference error
+/**
+ * A rudimentary YAML parser to extract property information, including line numbers.
+ * NOTE: This is a best-effort heuristic and may not cover all YAML edge cases.
+ * It is used to find the line number of a specific tag in the frontmatter.
+ * @param yamlText The YAML string from the frontmatter.
+ * @returns A map of property keys to their info.
+ */
 function getPropertiesInfoFromYAML(yamlText: string): {
   [key: string]: { key: string; value: string; text: string; line: number };
 } {
@@ -93,6 +107,10 @@ function getPropertiesInfoFromYAML(yamlText: string): {
     return acc;
   }, {});
 }
+
+// #endregion
+
+// #region Parser Plugin System
 
 export interface ParserPlugin {
   name?: string;
@@ -118,9 +136,39 @@ export interface ParserCacheEntry {
   resource: Resource;
 }
 
-// --- Plugin and helper function definitions ---
-// --- Plugin and helper function definitions ---
+const handleError = (
+  plugin: ParserPlugin,
+  fnName: string,
+  uri: URI | undefined,
+  e: Error
+): void => {
+  const name = plugin.name || '';
+  Logger.warn(
+    `Error while executing [${fnName}] in plugin [${name}]. ${
+      uri ? 'for file [' + uri.toString() : ']'
+    }.`,
+    e
+  );
+};
+
+/**
+ * This caches the parsed markdown for a given URI.
+ *
+ * The URI identifies the resource that needs to be parsed,
+ * the checksum identifies the text that needs to be parsed.
+ *
+ * If the URI and the Checksum have not changed, the cached resource is returned.
+ */
+export type ParserCache = ICache<URI, ParserCacheEntry>;
+
+// #endregion
+
+// #region Parser Plugins
+
 const slugger = new GithubSlugger();
+
+// Note: `sectionStack` is a module-level variable that is reset on each parse.
+// This is a stateful approach required by the accumulator pattern of the sections plugin.
 type SectionStackItem = {
   label: string;
   level: number;
@@ -354,181 +402,13 @@ const definitionsPlugin: ParserPlugin = {
   },
 };
 
-const handleError = (
-  plugin: ParserPlugin,
-  fnName: string,
-  uri: URI | undefined,
-  e: Error
-): void => {
-  const name = plugin.name || '';
-  Logger.warn(
-    `Error while executing [${fnName}] in plugin [${name}]. ${
-      uri ? 'for file [' + uri.toString() : ']'
-    }.`,
-    e
-  );
-};
-
 /**
- * This caches the parsed markdown for a given URI.
- *
- * The URI identifies the resource that needs to be parsed,
- * the checksum identifies the text that needs to be parsed.
- *
- * If the URI and the Checksum have not changed, the cached resource is returned.
- */
-export type ParserCache = ICache<URI, ParserCacheEntry>;
-
-export function createMarkdownParser(
-  extraPlugins: ParserPlugin[] = [],
-  cache?: ParserCache
-): ResourceParser {
-  const parser = unified()
-    .use(markdownParse, { gfm: true })
-    .use(frontmatterPlugin, ['yaml'])
-    .use(wikiLinkPlugin, { aliasDivider: '|' });
-
-  const plugins = [
-    titlePlugin,
-    wikilinkPlugin,
-    definitionsPlugin,
-    tagsPlugin,
-    aliasesPlugin,
-    sectionsPlugin,
-    createBlockIdPlugin(),
-    ...extraPlugins,
-  ];
-
-  for (const plugin of plugins) {
-    try {
-      plugin.onDidInitializeParser?.(parser);
-    } catch (e) {
-      handleError(plugin, 'onDidInitializeParser', undefined, e);
-    }
-  }
-
-  const actualParser: ResourceParser = {
-    parse: (uri: URI, markdown: string): Resource => {
-      Logger.debug('Parsing:', uri.toString());
-      for (const plugin of plugins) {
-        try {
-          plugin.onWillParseMarkdown?.(markdown);
-        } catch (e) {
-          handleError(plugin, 'onWillParseMarkdown', uri, e);
-        }
-      }
-      const tree = parser.parse(markdown);
-
-      const note: Resource = {
-        uri: uri,
-        type: 'note',
-        properties: {},
-        title: '',
-        sections: [],
-        tags: [],
-        aliases: [],
-        links: [],
-        definitions: [],
-      };
-
-      for (const plugin of plugins) {
-        try {
-          plugin.onWillVisitTree?.(tree, note);
-        } catch (e) {
-          handleError(plugin, 'onWillVisitTree', uri, e);
-        }
-      }
-      visitWithAncestors(tree, (node, ancestors) => {
-        // Use visitWithAncestors
-        const parent = ancestors[ancestors.length - 1] as Parent | undefined; // Get the direct parent and cast to Parent
-        const index = parent ? parent.children.indexOf(node) : undefined; // Get the index
-
-        if (node.type === 'yaml') {
-          try {
-            const yamlProperties = parseYAML((node as any).value) ?? {};
-            note.properties = {
-              ...note.properties,
-              ...yamlProperties,
-            };
-            for (const plugin of plugins) {
-              try {
-                plugin.onDidFindProperties?.(yamlProperties, note, node);
-              } catch (e) {
-                handleError(plugin, 'onDidFindProperties', uri, e);
-              }
-            }
-          } catch (e) {
-            Logger.warn(`Error while parsing YAML for [${uri.toString()}]`, e);
-          }
-        }
-
-        for (const plugin of plugins) {
-          try {
-            plugin.visit?.(node, note, markdown, index, parent, ancestors);
-          } catch (e) {
-            handleError(plugin, 'visit', uri, e);
-          }
-        }
-      });
-      for (const plugin of plugins) {
-        try {
-          plugin.onDidVisitTree?.(tree, note, markdown);
-        } catch (e) {
-          handleError(plugin, 'onDidVisitTree', uri, e);
-        }
-      }
-      Logger.debug('Result:', note);
-      return note;
-    },
-  };
-
-  const cachedParser: ResourceParser = {
-    parse: (uri: URI, markdown: string): Resource => {
-      const actualChecksum = hash(markdown);
-      if (cache.has(uri)) {
-        const { checksum, resource } = cache.get(uri);
-        if (actualChecksum === checksum) {
-          return resource;
-        }
-      }
-      const resource = actualParser.parse(uri, markdown);
-      cache.set(uri, { checksum: actualChecksum, resource });
-      return resource;
-    },
-  };
-
-  return isSome(cache) ? cachedParser : actualParser;
-}
-
-/**
- * Traverses all the children of the given node, extracts
- * the text from them, and returns it concatenated.
- *
- * @param root the node from which to start collecting text
- */
-const getTextFromChildren = (root: Node): string => {
-  let text = '';
-  visit(root as any, (node: any) => {
-    if (
-      node.type === 'text' ||
-      node.type === 'wikiLink' ||
-      node.type === 'code' ||
-      node.type === 'html'
-    ) {
-      text = text + (node.value || '');
-    }
-  });
-  return text;
-};
-
-/**
- * A parser plugin that adds Obsidian-style block identifiers (`^block-id`) to sections.
+ * A parser plugin that adds block identifiers (`^block-id`) to the list of sections.
  *
  * This plugin adheres to the following principles:
  * - Single-pass AST traversal with direct sibling analysis (using `unist-util-visit-parents`).
  * - Distinguishes between full-line and inline IDs.
  * - Applies the "Last One Wins" rule for multiple IDs on a line.
- * - Ensures WYSIWYL (What You See Is What You Link) for section labels.
  * - Prevents duplicate processing of nodes using a `processedNodes` Set.
  *
  * @returns A `ParserPlugin` that processes block identifiers.
@@ -537,8 +417,7 @@ export const createBlockIdPlugin = (): ParserPlugin => {
   const processedNodes = new Set<Node>();
   const slugger = new GithubSlugger();
 
-  // Extracts the LAST block ID from a string (without the ^)
-  // Extracts the LAST block ID from a string (with the ^ prefix)
+  // Extracts the LAST block ID from a string (e.g., `^my-id`).
   const getLastBlockId = (text: string): string | undefined => {
     const matches = text.match(/(?:\s|^)(\^[\w.-]+)$/); // Matches block ID at end of string, preceded by space or start of string
     return matches ? matches[1] : undefined;
@@ -559,13 +438,6 @@ export const createBlockIdPlugin = (): ParserPlugin => {
       slugger.reset();
     },
     visit: (node, note, markdown, index, parent, ancestors) => {
-      // Skip heading nodes and all their descendants; only the sectionsPlugin should handle headings and their block IDs
-      if (
-        node.type === 'heading' ||
-        ancestors.some(a => a.type === 'heading')
-      ) {
-        return;
-      }
       // Skip heading nodes and all their descendants; only the sectionsPlugin should handle headings and their block IDs
       if (
         node.type === 'heading' ||
@@ -622,8 +494,6 @@ export const createBlockIdPlugin = (): ParserPlugin => {
           });
 
           processedNodes.add(node);
-          // DO NOT mark children as processed; allow traversal to continue for list items
-          // DO NOT return visit.SKIP; continue traversal so list items with their own block IDs are processed
         }
         return; // If it's a list but not a full-line ID, skip further processing in this plugin
       }
@@ -811,4 +681,151 @@ export const createBlockIdPlugin = (): ParserPlugin => {
     },
   };
 };
-// End of file: ensure all code blocks are properly closed
+
+// #endregion
+
+// #region Core Parser Logic
+
+export function createMarkdownParser(
+  extraPlugins: ParserPlugin[] = [],
+  cache?: ParserCache
+): ResourceParser {
+  const parser = unified()
+    .use(markdownParse, { gfm: true })
+    .use(frontmatterPlugin, ['yaml'])
+    .use(wikiLinkPlugin, { aliasDivider: '|' });
+
+  const plugins = [
+    titlePlugin,
+    wikilinkPlugin,
+    definitionsPlugin,
+    tagsPlugin,
+    aliasesPlugin,
+    sectionsPlugin,
+    createBlockIdPlugin(),
+    ...extraPlugins,
+  ];
+
+  for (const plugin of plugins) {
+    try {
+      plugin.onDidInitializeParser?.(parser);
+    } catch (e) {
+      handleError(plugin, 'onDidInitializeParser', undefined, e);
+    }
+  }
+
+  const actualParser: ResourceParser = {
+    parse: (uri: URI, markdown: string): Resource => {
+      Logger.debug('Parsing:', uri.toString());
+      for (const plugin of plugins) {
+        try {
+          plugin.onWillParseMarkdown?.(markdown);
+        } catch (e) {
+          handleError(plugin, 'onWillParseMarkdown', uri, e);
+        }
+      }
+      const tree = parser.parse(markdown);
+
+      const note: Resource = {
+        uri: uri,
+        type: 'note',
+        properties: {},
+        title: '',
+        sections: [],
+        tags: [],
+        aliases: [],
+        links: [],
+        definitions: [],
+      };
+
+      for (const plugin of plugins) {
+        try {
+          plugin.onWillVisitTree?.(tree, note);
+        } catch (e) {
+          handleError(plugin, 'onWillVisitTree', uri, e);
+        }
+      }
+      visitWithAncestors(tree, (node, ancestors) => {
+        // Use visitWithAncestors to get the parent of the current node.
+        const parent = ancestors[ancestors.length - 1] as Parent | undefined;
+        const index = parent ? parent.children.indexOf(node) : undefined;
+
+        if (node.type === 'yaml') {
+          try {
+            const yamlProperties = parseYAML((node as any).value) ?? {};
+            note.properties = {
+              ...note.properties,
+              ...yamlProperties,
+            };
+            for (const plugin of plugins) {
+              try {
+                plugin.onDidFindProperties?.(yamlProperties, note, node);
+              } catch (e) {
+                handleError(plugin, 'onDidFindProperties', uri, e);
+              }
+            }
+          } catch (e) {
+            Logger.warn(`Error while parsing YAML for [${uri.toString()}]`, e);
+          }
+        }
+
+        for (const plugin of plugins) {
+          try {
+            plugin.visit?.(node, note, markdown, index, parent, ancestors);
+          } catch (e) {
+            handleError(plugin, 'visit', uri, e);
+          }
+        }
+      });
+      for (const plugin of plugins) {
+        try {
+          plugin.onDidVisitTree?.(tree, note, markdown);
+        } catch (e) {
+          handleError(plugin, 'onDidVisitTree', uri, e);
+        }
+      }
+      Logger.debug('Result:', note);
+      return note;
+    },
+  };
+
+  const cachedParser: ResourceParser = {
+    parse: (uri: URI, markdown: string): Resource => {
+      const actualChecksum = hash(markdown);
+      if (cache.has(uri)) {
+        const { checksum, resource } = cache.get(uri);
+        if (actualChecksum === checksum) {
+          return resource;
+        }
+      }
+      const resource = actualParser.parse(uri, markdown);
+      cache.set(uri, { checksum: actualChecksum, resource });
+      return resource;
+    },
+  };
+
+  return isSome(cache) ? cachedParser : actualParser;
+}
+
+/**
+ * Traverses all the children of the given node, extracts
+ * the text from them, and returns it concatenated.
+ *
+ * @param root the node from which to start collecting text
+ */
+const getTextFromChildren = (root: Node): string => {
+  let text = '';
+  visit(root as any, (node: any) => {
+    if (
+      node.type === 'text' ||
+      node.type === 'wikiLink' ||
+      node.type === 'code' ||
+      node.type === 'html'
+    ) {
+      text = text + (node.value || '');
+    }
+  });
+  return text;
+};
+
+// #endregion

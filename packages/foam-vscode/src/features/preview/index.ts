@@ -16,14 +16,12 @@ export default async function activate(
 
   return {
     extendMarkdownIt: (md: markdownit) => {
-      // No longer injecting custom-anchor-navigation.js as we are moving to native link handling.
-
       return [
         markdownItWikilinkEmbed,
         markdownItFoamTags,
         markdownItWikilinkNavigation,
         markdownItRemoveLinkReferences,
-        blockIdHtmlPlugin, // Add the blockIdHtmlPlugin here
+        blockIdHtmlPlugin,
       ].reduce(
         (acc, extension) =>
           extension(acc, foam.workspace, foam.services.parser),

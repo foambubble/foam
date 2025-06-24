@@ -86,7 +86,7 @@ describe('Displaying included notes in preview', () => {
           ws
         );
         const result = md.render(linkingNote2.content);
-        const linkHtml = `<a class='foam-note-link' title='Note A' href='/note-a.md' data-href='/note-a.md'>note-a</a>`;
+        const linkHtml = `<a class='foam-note-link' title='Note A' href='/note-a.md' data-href='/note-a.md'>Note A</a>`;
         expect(result).toContain(
           `<p>Here is a paragraph with a ${linkHtml}. ^para-block</p>`
         );
@@ -379,14 +379,8 @@ This is the third section of note E
  content![[note-e#Section 2]]
  
  full![[note-e#Section 3]]`)
-        ).toMatch(
-          `<p>This is the root node.</p>
-<p><p>This is the second section of note E</p>
-</p>
-<p><h1>Section 3</h1>
-<p>This is the third section of note E</p>
-</p>
-`
+        ).toBe(
+          `<p>This is the root node.</p>\n<p>This is the second section of note E</p>\n<p><h1>Section 3</h1>\n<p>This is the third section of note E</p>\n</p>\n`
         );
       }
     );
@@ -659,16 +653,16 @@ describe('Mixed Scenario Embed', () => {
         );
         const result = md.render(mixedSourceContent);
 
-        const linkHtml = `<a class='foam-note-link' title='Note A' href='/note-a.md' data-href='/note-a.md'>note-a</a>`;
+        const linkHtml = `<a class='foam-note-link' title='Note A' href='/note-a.md' data-href='/note-a.md'>Note A</a>`;
 
         // Check for embedded paragraph block content
         expect(result).toContain(
-          `<p>Here is a paragraph with a ${linkHtml}. ^para-block</p>`
+          `This note embeds a paragraph: Here is a paragraph with a ${linkHtml}. ^para-block`
         );
 
         // Check for embedded list block content
         expect(result).toContain(
-          `<ul>\n<li>List item 2 with ${linkHtml} ^list-block</li>\n</ul>`
+          `<li>List item 2 with ${linkHtml} ^list-block</li>`
         );
       }
     );

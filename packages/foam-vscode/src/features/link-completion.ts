@@ -20,6 +20,11 @@ const COMPLETION_CURSOR_MOVE = {
 export const WIKILINK_REGEX = /\[\[[^[\]]*(?!.*\]\])/;
 export const SECTION_REGEX = /\[\[([^[\]]*#(?!.*\]\]))/;
 
+/**
+ * Activates the completion features for Foam.
+ * This includes registering completion providers for wikilinks and sections,
+ * and a command to handle cursor movement after completion.
+ */
 export default async function activate(
   context: vscode.ExtensionContext,
   foamPromise: Promise<Foam>
@@ -87,6 +92,10 @@ export default async function activate(
   );
 }
 
+/**
+ * Provides completion items for sections (headings and block IDs) within a note.
+ * Triggered when the user types `#` inside a wikilink.
+ */
 export class SectionCompletionProvider
   implements vscode.CompletionItemProvider<vscode.CompletionItem>
 {
@@ -108,6 +117,8 @@ export class SectionCompletionProvider
       return null;
     }
 
+    // Determine the target resource. If the link is just `[[#...]]`,
+    // it refers to the current document. Otherwise, it's the text before the '#'.
     const resourceId =
       match[1] === '#' ? fromVsCodeUri(document.uri) : match[1].slice(0, -1);
 
@@ -119,11 +130,6 @@ export class SectionCompletionProvider
       position.character
     );
     if (resource) {
-      // DEBUG: Log all section ids/blockIds being included
-      console.log(
-        '[Foam Completion] Sections for resource:',
-        resource.uri.path
-      );
       resource.sections.forEach(section => {
         console.log(
           `  - label: ${section.label}, id: ${section.id}, blockId: ${section.blockId}, isHeading: ${section.isHeading}`
@@ -133,7 +139,7 @@ export class SectionCompletionProvider
       const items = resource.sections.flatMap(section => {
         const sectionItems: vscode.CompletionItem[] = [];
         if (section.isHeading) {
-          // Always add the header slug
+          // For headings, we provide a completion item for the slugified heading ID.
           if (section.id) {
             const slugItem = new ResourceCompletionItem(
               section.label,
@@ -150,7 +156,8 @@ export class SectionCompletionProvider
             slugItem.insertText = section.id;
             sectionItems.push(slugItem);
           }
-          // Always add caret-prefixed blockId for headings if present
+          // If a heading also has a block ID, we provide a separate completion for it.
+          // The label includes the `^` for clarity, but the inserted text does not.
           if (section.blockId) {
             const blockIdItem = new ResourceCompletionItem(
               section.blockId,
@@ -168,12 +175,13 @@ export class SectionCompletionProvider
             sectionItems.push(blockIdItem);
           }
         } else {
-          // For non-headings, only add caret-prefixed blockId if present
+          // For non-heading elements (paragraphs, list items, etc.), we only offer
+          // completion if they have an explicit block ID.
           if (section.blockId) {
             const blockIdItem = new ResourceCompletionItem(
-              section.blockId,
+              section.blockId, // e.g. ^my-block-id
               vscode.CompletionItemKind.Text,
-              resource.uri.with({ fragment: section.blockId.substring(1) })
+              resource.uri.with({ fragment: section.blockId.substring(1) }) // fragment is 'my-block-id'
             );
             blockIdItem.sortText = String(section.range.start.line).padStart(
               5,
@@ -182,10 +190,12 @@ export class SectionCompletionProvider
             blockIdItem.range = replacementRange;
             blockIdItem.commitCharacters = sectionCommitCharacters;
             blockIdItem.command = COMPLETION_CURSOR_MOVE;
+            // Insert the block ID without the leading `^`.
             blockIdItem.insertText = section.blockId.substring(1);
             sectionItems.push(blockIdItem);
           } else if (section.id) {
-            // Only add id if blockId is not present
+            // This is a fallback for any non-heading sections that might have an 'id'
+            // but not a 'blockId'. This is not the standard case but is included for completeness.
             const idItem = new ResourceCompletionItem(
               section.id,
               vscode.CompletionItemKind.Text,
@@ -218,6 +228,10 @@ export class SectionCompletionProvider
   }
 }
 
+/**
+ * Provides completion items for wikilinks.
+ * Triggered when the user types `[[`.
+ */
 export class WikilinkCompletionProvider
   implements vscode.CompletionItemProvider<vscode.CompletionItem>
 {
@@ -338,7 +352,8 @@ export class WikilinkCompletionProvider
 }
 
 /**
- * A CompletionItem related to a Resource
+ * A custom CompletionItem that includes the URI of the resource it refers to.
+ * This is used to resolve additional information, like tooltips, on demand.
  */
 class ResourceCompletionItem extends vscode.CompletionItem {
   constructor(

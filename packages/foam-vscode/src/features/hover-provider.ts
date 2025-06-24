@@ -23,6 +23,14 @@ import { getNoteTooltip, getFoamDocSelectors } from '../services/editor';
 import { isSome } from '../core/utils';
 import { MarkdownLink } from '../core/services/markdown-link';
 
+/**
+ * Extracts a range of content from a multi-line string.
+ * This is used to display the content of a specific section (e.g., a heading and its content)
+ * in the hover preview, rather than the entire note.
+ * @param content The full string content of the note.
+ * @param range The range to extract.
+ * @returns The substring corresponding to the given range.
+ */
 const sliceContent = (content: string, range: Range): string => {
   const lines = content.split('\n');
   const { start, end } = range;
@@ -98,11 +106,17 @@ export class HoverProvider implements vscode.HoverProvider {
 
     const documentUri = fromVsCodeUri(document.uri);
     const targetUri = this.workspace.resolveLink(startResource, targetLink);
+
+    // --- Start of Block ID Feature Changes ---
+
+    // Extract the fragment (e.g., #my-header or #^my-block-id) from the link.
+    // This is crucial for handling links to specific sections or blocks within a note.
     const { section: linkFragment } = MarkdownLink.analyzeLink(targetLink);
+
     let backlinks: import('../core/model/graph').Connection[];
+
+    // If a fragment exists, we need to be more precise with backlink gathering.
     if (linkFragment) {
-      // Get all backlinks to the file, then filter by the exact target URI (including fragment).
-      // This is simple and robust, avoiding the complex logic of the old getBlockIdBacklinks.
       backlinks = this.graph
         .getBacklinks(targetUri)
         .filter(conn => conn.target.isEqual(targetUri));
@@ -132,41 +146,52 @@ export class HoverProvider implements vscode.HoverProvider {
 
     let mdContent = null;
     if (!targetUri.isPlaceholder()) {
+      // The URI for the file itself, without any fragment identifier.
       const targetFileUri = targetUri.with({ fragment: '' });
       const targetResource = this.workspace.get(targetFileUri);
       let content: string;
 
+      // If the link includes a fragment, we display the content of that specific section.
       if (linkFragment) {
         const section = Resource.findSection(targetResource, linkFragment);
         if (isSome(section)) {
+          // For headings, we read the file content and slice out the range of the section.
+          // This includes the heading line and all content until the next heading.
           if (section.isHeading) {
             const fileContent = await this.workspace.readAsMarkdown(
               targetFileUri
             );
             content = sliceContent(fileContent, section.range);
           } else {
+            // For block IDs, the `section.label` already contains the exact raw markdown
+            // content of the block. This is a core principle of the block ID feature (WYSIWYL),
+            // allowing for efficient and accurate hover previews without re-reading the file.
             content = section.label;
           }
         } else {
+          // Fallback: if the specific section isn't found, show the whole note content.
           content = await this.workspace.readAsMarkdown(targetFileUri);
         }
-        // Remove YAML frontmatter from the content
+        // Ensure YAML frontmatter is not included in the hover preview.
         if (isSome(content)) {
           content = content.replace(/---[\s\S]*?---/, '').trim();
         }
       } else {
+        // If there is no fragment, show the entire note content, minus frontmatter.
         content = await this.workspace.readAsMarkdown(targetFileUri);
-        // Remove YAML frontmatter from the content
         if (isSome(content)) {
           content = content.replace(/---[\s\S]*?---/, '').trim();
         }
       }
 
       if (isSome(content)) {
+        // Using vscode.MarkdownString allows for rich content rendering in the hover.
+        // Setting `isTrusted` to true is necessary to enable command links within the hover.
         const markdownString = new vscode.MarkdownString(content);
         markdownString.isTrusted = true;
         mdContent = markdownString;
       } else {
+        // If no content can be loaded, fall back to displaying the note's title.
         mdContent = targetResource.title;
       }
     }

@@ -8,9 +8,6 @@ const blockIdRegex = /\s*(\^[-_a-zA-Z0-9]+)\s*$/;
  * - For paragraphs and list items, it adds the block ID as the element's `id`.
  * - For headings, it adds a `span` with the block ID to coexist with the default slug-based ID.
  * - It removes the block ID from the rendered text in all cases.
- *
- * NOTE: This plugin only handles INLINE block IDs, per our incremental approach.
- * e.g., `A paragraph ^p-id` or `- A list item ^li-id`
  */
 export function blockIdHtmlPlugin(
   md: MarkdownIt,
@@ -41,8 +38,6 @@ export function blockIdHtmlPlugin(
       }
 
       const blockId = match[1]; // e.g. ^my-id
-      // HTML5 IDs can start with `^`, so we use the blockId directly.
-      // This ensures consistency with the link hrefs.
       const htmlId = blockId;
 
       let targetToken = openToken;

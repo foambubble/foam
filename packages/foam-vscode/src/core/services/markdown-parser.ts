@@ -1,6 +1,7 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { Point, Node, Position as AstPosition, Parent } from 'unist';
 import unified from 'unified';
+import { getNodeText } from '../utils/md';
 import markdownParse from 'remark-parse';
 import wikiLinkPlugin from 'remark-wiki-link';
 import frontmatterPlugin from 'remark-frontmatter';
@@ -406,7 +407,7 @@ const definitionsPlugin: ParserPlugin = {
  * A parser plugin that adds block identifiers (`^block-id`) to the list of sections.
  *
  * This plugin adheres to the following principles:
- * - Single-pass AST traversal with direct sibling analysis (using `unist-util-visit-parents`).
+ * - Single-pass AST traversal with direct sibling analysis.
  * - Distinguishes between full-line and inline IDs.
  * - Applies the "Last One Wins" rule for multiple IDs on a line.
  * - Prevents duplicate processing of nodes using a `processedNodes` Set.
@@ -423,19 +424,10 @@ export const createBlockIdPlugin = (): ParserPlugin => {
     return matches ? matches[1] : undefined;
   };
 
-  // Gets the raw text of a node from the source markdown
-  const getNodeText = (node: Node, markdown: string): string => {
-    return markdown.substring(
-      node.position!.start.offset!,
-      node.position!.end.offset!
-    );
-  };
-
   return {
     name: 'block-id',
     onWillVisitTree: () => {
       processedNodes.clear();
-      slugger.reset();
     },
     visit: (node, note, markdown, index, parent, ancestors) => {
       // Skip heading nodes and all their descendants; only the sectionsPlugin should handle headings and their block IDs
@@ -467,7 +459,9 @@ export const createBlockIdPlugin = (): ParserPlugin => {
         const lastLine = listLines[listLines.length - 1];
         const fullLineBlockId = getLastBlockId(lastLine.trim());
 
-        if (fullLineBlockId && /^\s*(\^[\w.-]+\s*)+$/.test(lastLine.trim())) {
+        // Regex to match a line that consists only of one or more block IDs
+        const fullLineBlockIdPattern = /^\s*(\^[\w.-]+\s*)+$/;
+        if (fullLineBlockId && fullLineBlockIdPattern.test(lastLine.trim())) {
           // Create section for the entire list
           const sectionLabel = listLines
             .slice(0, listLines.length - 1)
@@ -504,16 +498,17 @@ export const createBlockIdPlugin = (): ParserPlugin => {
 
       const nodeText = getNodeText(node, markdown);
 
-      // Case 1: Full-Line Block ID (e.g., "^id" on its own line)
-      // This must be checked before the inline ID case.
+      // Case 1: Check for a full-line block ID.
+      // This pattern applies an ID from a separate line to the immediately preceding node.
       if (node.type === 'paragraph' && index > 0) {
         const pText = nodeText.trim();
-        const isFullLineIdParagraph = /^\s*(\^[\w.-]+\s*)+$/.test(pText);
+        const isFullLineIdParagraph = /^\s*(\^[:\w.-]+\s*)+$/.test(pText);
 
         if (isFullLineIdParagraph) {
           const fullLineBlockId = getLastBlockId(pText);
-          // Ensure the last line consists exclusively of the block ID
           const previousSibling = parent.children[index - 1];
+
+          // A full-line ID must be separated from its target block by a single newline.
           const textBetween = markdown.substring(
             previousSibling.position!.end.offset!,
             node.position!.start.offset!
@@ -522,42 +517,39 @@ export const createBlockIdPlugin = (): ParserPlugin => {
             textBetween.trim().length === 0 &&
             (textBetween.match(/\n/g) || []).length === 1;
 
-          // If it's a full-line ID paragraph and correctly separated, link it to the previous block
+          // If valid, link the ID to the preceding node.
           if (
             isSeparatedBySingleNewline &&
             !processedNodes.has(previousSibling)
           ) {
             block = previousSibling;
             blockId = fullLineBlockId;
-            idNode = node; // This paragraph is the ID node
+            idNode = node; // Mark this paragraph as the ID provider.
           } else {
-            // If it's a full-line ID paragraph but not correctly linked,
-            // mark it as processed so it doesn't get picked up as an inline ID later.
+            // This is an unlinked ID paragraph; mark it as processed and skip.
             processedNodes.add(node);
-            return; // Skip further processing for this node
+            return;
           }
         }
       }
 
-      // If no full-line block ID was found for a previous sibling, check for an inline block ID on the current node
+      // Case 2: Check for an inline block ID if a full-line ID was not found.
+      // This pattern finds an ID at the end of the text within the current node.
       if (!block) {
         let textForInlineId = nodeText;
+        // For list items, only the first line can contain an inline ID for the whole item.
         if (node.type === 'listItem') {
           textForInlineId = nodeText.split('\n')[0];
         }
         const inlineBlockId = getLastBlockId(textForInlineId);
         if (inlineBlockId) {
-          // If the node is a paragraph and its parent is a listItem, the block is the listItem.
-          // This is only true if the paragraph is the *first* child of the listItem.
+          // An ID in the first paragraph of a list item applies to the entire item.
           if (node.type === 'paragraph' && parent.type === 'listItem') {
             if (parent.children[0] === node) {
-              // Mark the parent listItem as processed.
-              // This prevents its children from being processed as separate sections.
-              processedNodes.add(parent);
+              processedNodes.add(parent); // Mark parent to avoid reprocessing children.
               block = parent;
             } else {
-              // If it's a paragraph in a listItem but not the first child,
-              // then the ID belongs to the paragraph itself, not the listItem.
+              // The ID applies only to this paragraph, not the whole list item.
               block = node;
             }
           } else {
@@ -567,22 +559,26 @@ export const createBlockIdPlugin = (): ParserPlugin => {
         }
       }
 
+      // If a block and ID were found, create a new section for it.
       if (block && blockId) {
-        // Only process non-heading blocks
+        // Headings are handled by the sectionsPlugin, so we only process other block types.
         if (block.type !== 'heading') {
           let sectionLabel: string;
           let sectionRange: Range;
           let sectionId: string | undefined;
+
+          // Determine the precise label and range for the given block type.
           switch (block.type) {
             case 'listItem':
               sectionLabel = getNodeText(block, markdown);
               sectionId = blockId.substring(1);
               sectionRange = astPositionToFoamRange(block.position!);
               break;
+            // For blocks that may have a full-line ID on the next line, we need to exclude that line from the label and range.
             case 'list': {
               const rawText = getNodeText(block, markdown);
               const lines = rawText.split('\n');
-              lines.pop();
+              if (idNode) lines.pop(); // Remove the ID line if it was a full-line ID.
               sectionLabel = lines.join('\n');
               sectionId = blockId.substring(1);
               const startPos = astPointToFoamPosition(block.position!.start);
@@ -599,6 +595,7 @@ export const createBlockIdPlugin = (): ParserPlugin => {
               );
               break;
             }
+            // For all other block types, the label and range cover the entire node.
             case 'table':
             case 'code': {
               sectionLabel = getNodeText(block, markdown);
@@ -663,19 +660,19 @@ export const createBlockIdPlugin = (): ParserPlugin => {
             range: sectionRange,
             isHeading: false,
           });
-          // Mark the block and the ID node (if full-line) as processed
+          // Mark the nodes as processed to prevent duplicates.
           processedNodes.add(block);
           if (idNode) {
             processedNodes.add(idNode);
           }
-          // For list items, mark all children as processed to prevent duplicate sections
+          // Skip visiting children of an already-processed block for efficiency.
           if (block.type === 'listItem') {
             visit(block as any, (child: any) => {
               processedNodes.add(child);
             });
-            return visit.SKIP; // Stop visiting children of this list item
+            return visit.SKIP;
           }
-          return visit.SKIP; // Skip further processing for this node
+          return visit.SKIP;
         }
       }
     },

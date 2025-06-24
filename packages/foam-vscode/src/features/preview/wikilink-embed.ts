@@ -15,6 +15,7 @@ import { Position } from '../../core/model/position';
 import { Range } from '../../core/model/range'; // Add this import
 import { TextEdit } from '../../core/services/text-edit';
 import { isNone, isSome } from '../../core/utils';
+import { stripFrontMatter } from '../../core/utils/md';
 import {
   asAbsoluteWorkspaceUri,
   isVirtualWorkspace,
@@ -57,14 +58,8 @@ export const markdownItWikilinkEmbed = (
            `;
         }
 
-        // Parse the wikilink to separate the note path from the fragment (e.g., #heading or #^block-id).
-        let fragment: string | undefined = undefined;
-        let noteTarget = wikilinkTarget;
-        if (wikilinkTarget.includes('#')) {
-          const parts = wikilinkTarget.split('#');
-          noteTarget = parts[0];
-          fragment = parts[1];
-        }
+        // Parse the wikilink to separate the note path from the fragment.
+        const { noteTarget, fragment } = parseWikilink(wikilinkTarget);
         const includedNote = workspace.find(noteTarget);
 
         if (!includedNote) {
@@ -261,9 +256,7 @@ function fullExtractor(
     }
   } else {
     // No fragment: transclude the whole note (excluding frontmatter if present)
-    // Remove YAML frontmatter if present
-    noteText = noteText.replace(/^---[\s\S]*?---\s*/, '');
-    noteText = noteText.trim();
+    noteText = stripFrontMatter(noteText);
   }
   noteText = withLinksRelativeToWorkspaceRoot(
     note.uri,
@@ -357,6 +350,19 @@ function inlineFormatter(content: string, md: markdownit): string {
   }
   // For more complex content (headings, lists, etc.), render as a full block.
   return md.render(content);
+}
+
+/**
+ * Parses a wikilink target into its note and fragment components.
+ * @param wikilinkTarget The full string target of the wikilink (e.g., 'my-note#my-heading').
+ * @returns An object containing the noteTarget and an optional fragment.
+ */
+function parseWikilink(wikilinkTarget: string): {
+  noteTarget: string;
+  fragment?: string;
+} {
+  const [noteTarget, fragment] = wikilinkTarget.split('#');
+  return { noteTarget, fragment };
 }
 
 export default markdownItWikilinkEmbed;

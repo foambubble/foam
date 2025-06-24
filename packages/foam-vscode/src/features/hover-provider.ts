@@ -185,11 +185,7 @@ export class HoverProvider implements vscode.HoverProvider {
       }
 
       if (isSome(content)) {
-        // Using vscode.MarkdownString allows for rich content rendering in the hover.
-        // Setting `isTrusted` to true is necessary to enable command links within the hover.
-        const markdownString = new vscode.MarkdownString(content);
-        markdownString.isTrusted = true;
-        mdContent = markdownString;
+        mdContent = getNoteTooltip(content);
       } else {
         // If no content can be loaded, fall back to displaying the note's title.
         mdContent = targetResource.title;

@@ -3,13 +3,11 @@
   "compilerOptions": {
     "moduleResolution": "node",
     "esModuleInterop": true,
-    "allowJs": true,
     "outDir": "out",
     "lib": ["ES2019", "es2020.string", "DOM"],
     "sourceMap": true,
     "strict": false,
-    "downlevelIteration": true,
-    "module": "CommonJS"
+    "downlevelIteration": true
   },
   "include": ["src", "types"],
   "exclude": ["node_modules", ".vscode-test"]

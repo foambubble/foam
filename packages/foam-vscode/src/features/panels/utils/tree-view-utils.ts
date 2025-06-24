@@ -196,48 +196,21 @@ export function createBacklinkItemsForResource(
   workspace: FoamWorkspace,
   graph: FoamGraph,
   uri: URI,
-  fragment?: string,
   variant: 'backlink' | 'link' = 'backlink'
 ) {
   let connections;
-  if (fragment) {
-    // Get all backlinks to the file, then filter by the exact target URI (including fragment).
-    const targetUri = uri.with({ fragment: fragment });
-    connections = graph
-      .getBacklinks(uri)
-      .filter(conn => conn.target.isEqual(targetUri));
-  } else {
-    // Note-level backlinks
-    connections = graph
-      .getConnections(uri)
-      .filter(c => c.target.asPlain().isEqual(uri));
-  }
+  // Note-level backlinks
+  connections = graph
+    .getConnections(uri)
+    .filter(c => c.target.asPlain().isEqual(uri));
 
   const backlinkItems = connections.map(async c => {
-    // If fragment is set, try to find the section in the target
-    let label = undefined;
-    if (fragment) {
-      const targetResource = workspace.get(uri);
-      const section =
-        targetResource &&
-        targetResource.sections.find(
-          s =>
-            s.id === fragment ||
-            s.blockId === fragment ||
-            s.blockId === `^${fragment}` ||
-            s.id === fragment.replace(/^\^/, '')
-        );
-      if (section) {
-        label = section.label;
-      }
-    }
     const item = await ResourceRangeTreeItem.createStandardItem(
       workspace,
       workspace.get(c.source),
       c.link.range,
       variant
     );
-    if (label) item.label = label;
     return item;
   });
   return Promise.all(backlinkItems);

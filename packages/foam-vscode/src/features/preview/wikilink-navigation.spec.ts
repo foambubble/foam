@@ -83,7 +83,7 @@ describe('Link generation in preview', () => {
 
   it('generates a link to a note with a specific section', () => {
     expect(md.render(`[[note-b#sec2]]`)).toEqual(
-      `<p><a class='foam-note-link' title='My second note#sec2' href='/path2/to/note-b.md#sec2' data-href='/path2/to/note-b.md#sec2'>My second note#sec2</a></p>\n`
+      `<p><a class='foam-note-link' title='My second note#sec2' href='/path2/to/note-b.md#sec2' data-href='/path2/to/note-b.md#sec2'>${noteB.title}#sec2</a></p>\n`
     );
   });
 
@@ -95,7 +95,7 @@ describe('Link generation in preview', () => {
 
   it('generates a link to a note if the note exists, but the section does not exist', () => {
     expect(md.render(`[[note-b#nonexistentsec]]`)).toEqual(
-      `<p><a class='foam-note-link' title='My second note#nonexistentsec' href='/path2/to/note-b.md#nonexistentsec' data-href='/path2/to/note-b.md#nonexistentsec'>My second note#nonexistentsec</a></p>\n`
+      `<p><a class='foam-note-link' title='My second note#nonexistentsec' href='/path2/to/note-b.md#nonexistentsec' data-href='/path2/to/note-b.md#nonexistentsec'>${noteB.title}#nonexistentsec</a></p>\n`
     );
   });
 

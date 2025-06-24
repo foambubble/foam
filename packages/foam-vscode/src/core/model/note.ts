@@ -9,7 +9,6 @@ export interface ResourceLink {
 }
 
 export interface NoteLinkDefinition {
-  type?: string; // 'block' for block identifiers
   label: string;
   url: string;
   title?: string;

@@ -6,7 +6,7 @@ import { default as markdownItFoamTags } from './tag-highlight';
 import { markdownItWikilinkNavigation } from './wikilink-navigation';
 import { default as markdownItRemoveLinkReferences } from './remove-wikilink-references';
 import { default as markdownItWikilinkEmbed } from './wikilink-embed';
-import { blockIdHtmlPlugin } from '../../core/services/markdown-blockid-html-plugin';
+import { markdownItblockIdRemoval } from './blockid-preview-removal';
 
 export default async function activate(
   context: vscode.ExtensionContext,
@@ -21,7 +21,7 @@ export default async function activate(
         markdownItFoamTags,
         markdownItWikilinkNavigation,
         markdownItRemoveLinkReferences,
-        blockIdHtmlPlugin,
+        markdownItblockIdRemoval,
       ].reduce(
         (acc, extension) =>
           extension(acc, foam.workspace, foam.services.parser),

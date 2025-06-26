@@ -1,5 +1,4 @@
 import { debounce } from 'lodash';
-import { MarkdownLink } from '../services/markdown-link';
 import { ResourceLink } from './note';
 import { URI } from './uri';
 import { FoamWorkspace } from './workspace';

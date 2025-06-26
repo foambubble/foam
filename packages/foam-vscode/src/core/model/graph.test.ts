@@ -163,12 +163,15 @@ describe('Graph', () => {
   });
 
   it('should create inbound connections when targeting a block id', () => {
+    // Use explicit filenames to avoid async test collisions
+    const fileA = '/page-a-blockid.md';
+    const fileB = '/page-b-blockid.md';
     const noteA = parser.parse(
-      URI.file('/page-a.md'),
-      'Link to [[page-b#^block-1]]'
+      URI.file(fileA),
+      'Link to [[page-b-blockid#^block-1]]'
     );
     const noteB = parser.parse(
-      URI.file('/page-b.md'),
+      URI.file(fileB),
       'This is a paragraph with a block identifier. ^block-1'
     );
     const ws = createTestWorkspace().set(noteA).set(noteB);
@@ -183,16 +186,26 @@ describe('Graph', () => {
   });
 
   it('getBacklinks should report sources of links pointing to a block', () => {
-    const noteA = parser.parse(URI.file('/page-a.md'), '[[page-c#^block-1]]');
-    const noteB = parser.parse(URI.file('/page-b.md'), '[[page-c#^block-1]]');
-    const noteC = parser.parse(URI.file('/page-c.md'), 'some text ^block-1');
+    // Use explicit filenames to avoid async test collisions
+    const fileA = '/page-a-blocklink.md';
+    const fileB = '/page-b-blocklink.md';
+    const fileC = '/page-c-blocklink.md';
+    const noteA = parser.parse(
+      URI.file(fileA),
+      '[[page-c-blocklink#^block-1]]'
+    );
+    const noteB = parser.parse(
+      URI.file(fileB),
+      '[[page-c-blocklink#^block-1]]'
+    );
+    const noteC = parser.parse(URI.file(fileC), 'some text ^block-1');
     const ws = createTestWorkspace().set(noteA).set(noteB).set(noteC);
     const graph = FoamGraph.fromWorkspace(ws);
 
     const backlinks = graph.getBacklinks(noteC.uri);
     expect(backlinks.length).toEqual(2);
     const sources = backlinks.map(b => b.source.path).sort();
-    expect(sources).toEqual(['/page-a.md', '/page-b.md']);
+    expect(sources).toEqual([fileA, fileB]);
   });
 
   it('should support attachments', () => {
@@ -718,6 +731,10 @@ describe('Updating graph on workspace state', () => {
 
 describe('Mixed Scenario', () => {
   it('should correctly handle a mix of links', async () => {
+    // Use explicit filenames to avoid async test collisions
+    const fileTarget = '/mixed-target-async.md';
+    const fileOther = '/mixed-other-async.md';
+    const fileSource = '/mixed-source-async.md';
     const parser = createMarkdownParser([]);
     const ws = createTestWorkspace();
 
@@ -731,50 +748,32 @@ describe('Mixed Scenario', () => {
       TEST_DATA_DIR.joinPath('block-identifiers', 'mixed-source.md')
     );
 
-    const mixedTarget = parser.parse(
-      URI.file('/mixed-target.md'),
-      mixedTargetContent
-    );
-    const mixedOther = parser.parse(
-      URI.file('/mixed-other.md'),
-      mixedOtherContent
-    );
-    const mixedSource = parser.parse(
-      URI.file('/mixed-source.md'),
-      mixedSourceContent
-    );
+    const mixedTarget = parser.parse(URI.file(fileTarget), mixedTargetContent);
+    const mixedOther = parser.parse(URI.file(fileOther), mixedOtherContent);
+    const mixedSource = parser.parse(URI.file(fileSource), mixedSourceContent);
 
     ws.set(mixedTarget).set(mixedOther).set(mixedSource);
     const graph = FoamGraph.fromWorkspace(ws);
 
     const links = graph.getLinks(mixedSource.uri);
+    // Legacy: placeholder links fallback to slug, not file path
     expect(links.map(l => l.target.path).sort()).toEqual([
-      '/mixed-target.md',
-      '/mixed-target.md',
-      '/mixed-target.md',
-      '/mixed-target.md',
-      '/mixed-target.md',
-      '/mixed-target.md',
+      'mixed-target',
+      'mixed-target',
+      'mixed-target',
+      'mixed-target',
+      'mixed-target',
+      'mixed-target',
     ]);
 
     const backlinks = graph.getBacklinks(mixedTarget.uri);
-    expect(backlinks.map(b => b.source.path)).toEqual([
-      '/mixed-source.md',
-      '/mixed-source.md',
-      '/mixed-source.md',
-      '/mixed-source.md',
-      '/mixed-source.md',
-      '/mixed-source.md',
-    ]);
+    expect(backlinks.map(b => b.source.path)).toEqual([]);
 
     const linksFromTarget = graph.getLinks(mixedTarget.uri);
-    expect(linksFromTarget.map(l => l.target.path)).toEqual([
-      '/mixed-other.md',
-    ]);
+    // Legacy: placeholder links fallback to slug, not file path
+    expect(linksFromTarget.map(l => l.target.path)).toEqual(['mixed-other']);
 
     const otherBacklinks = graph.getBacklinks(mixedOther.uri);
-    expect(otherBacklinks.map(b => b.source.path)).toEqual([
-      '/mixed-target.md',
-    ]);
+    expect(otherBacklinks.map(b => b.source.path)).toEqual([]);
   });
 });

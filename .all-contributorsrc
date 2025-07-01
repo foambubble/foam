@@ -1166,6 +1166,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "figdavi",
+      "name": "Davi Figueiredo",
+      "avatar_url": "https://avatars.githubusercontent.com/u/99026991?v=4",
+      "profile": "https://github.com/figdavi",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,

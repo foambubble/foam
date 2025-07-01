@@ -182,6 +182,33 @@ describe('Document navigation', () => {
       expect(definitions[0].targetUri).toEqual(toVsCodeUri(fileA.uri));
     });
 
+    it('should create a definition for a wikilink to a block', async () => {
+      const fileA = await createFile(
+        '# File A\n\nThis is a paragraph. ^block-id',
+        ['file-a.md']
+      );
+      const fileB = await createFile(`this is a link to [[file-a#^block-id]].`);
+
+      const ws = createTestWorkspace()
+        .set(parser.parse(fileA.uri, fileA.content))
+        .set(parser.parse(fileB.uri, fileB.content));
+      const graph = FoamGraph.fromWorkspace(ws);
+
+      const { doc } = await showInEditor(fileB.uri);
+      const provider = new NavigationProvider(ws, graph, parser);
+      const definitions = await provider.provideDefinition(
+        doc,
+        new vscode.Position(0, 22)
+      );
+
+      expect(definitions.length).toEqual(1);
+      expect(definitions[0].targetUri).toEqual(toVsCodeUri(fileA.uri));
+      expect(definitions[0].targetRange).toEqual(new vscode.Range(2, 0, 2, 30));
+      expect(definitions[0].targetSelectionRange).toEqual(
+        new vscode.Range(2, 0, 2, 30)
+      );
+    });
+
     it('should support wikilink aliases in tables using escape character', async () => {
       const fileA = await createFile('# File that has to be aliased');
       const fileB = await createFile(`

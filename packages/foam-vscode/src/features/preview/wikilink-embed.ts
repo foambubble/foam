@@ -12,8 +12,10 @@ import { fromVsCodeUri, toVsCodeUri } from '../../utils/vsc-utils';
 import { MarkdownLink } from '../../core/services/markdown-link';
 import { URI } from '../../core/model/uri';
 import { Position } from '../../core/model/position';
+import { Range } from '../../core/model/range'; // Add this import
 import { TextEdit } from '../../core/services/text-edit';
 import { isNone, isSome } from '../../core/utils';
+import { stripFrontMatter } from '../../core/utils/md';
 import {
   asAbsoluteWorkspaceUri,
   isVirtualWorkspace,
@@ -23,12 +25,17 @@ export const WIKILINK_EMBED_REGEX =
   /((?:(?:full|content)-(?:inline|card)|full|content|inline|card)?!\[\[[^[\]]+?\]\])/;
 // we need another regex because md.use(regex, replace) only permits capturing one group
 // so we capture the entire possible wikilink item (ex. content-card![[note]]) using WIKILINK_EMBED_REGEX and then
-// use WIKILINK_EMBED_REGEX_GROUPER to parse it into the modifier(content-card) and the wikilink(note)
+// use WIKILINK_EMBED_REGEX_GROUPS to parse it into the modifier(content-card) and the wikilink(note)
 export const WIKILINK_EMBED_REGEX_GROUPS =
   /((?:\w+)|(?:(?:\w+)-(?:\w+)))?!\[\[([^[\]]+?)\]\]/;
 export const CONFIG_EMBED_NOTE_TYPE = 'preview.embedNoteType';
+// refsStack is used to detect and prevent cyclic embeds.
 let refsStack: string[] = [];
 
+/**
+ * A markdown-it plugin to handle wikilink embeds (e.g., ![[note-name]]).
+ * It supports embedding entire notes, specific sections, or blocks with block IDs.
+ */
 export const markdownItWikilinkEmbed = (
   md: markdownit,
   workspace: FoamWorkspace,
@@ -39,22 +46,24 @@ export const markdownItWikilinkEmbed = (
     regex: WIKILINK_EMBED_REGEX,
     replace: (wikilinkItem: string) => {
       try {
-        const [, noteEmbedModifier, wikilink] = wikilinkItem.match(
+        const [, noteEmbedModifier, wikilinkTarget] = wikilinkItem.match(
           WIKILINK_EMBED_REGEX_GROUPS
         );
 
         if (isVirtualWorkspace()) {
           return `
-<div class="foam-embed-not-supported-warning">
-  Embed not supported in virtual workspace: ![[${wikilink}]]
-</div>
-          `;
+ <div class="foam-embed-not-supported-warning">
+   Embed not supported in virtual workspace: ![[${wikilinkTarget}]]
+ </div>
+           `;
         }
 
-        const includedNote = workspace.find(wikilink);
+        // Parse the wikilink to separate the note path from the fragment.
+        const { noteTarget, fragment } = parseWikilink(wikilinkTarget);
+        const includedNote = workspace.find(noteTarget);
 
         if (!includedNote) {
-          return `![[${wikilink}]]`;
+          return `![[${wikilinkTarget}]]`;
         }
 
         const cyclicLinkDetected = refsStack.includes(
@@ -63,29 +72,31 @@ export const markdownItWikilinkEmbed = (
 
         if (cyclicLinkDetected) {
           return `
-<div class="foam-cyclic-link-warning">
-  Cyclic link detected for wikilink: ${wikilink}
-  <div class="foam-cyclic-link-warning__stack">
-    Link sequence: 
-    <ul>
-      ${refsStack.map(ref => `<li>${ref}</li>`).join('')}
-    </ul>
-  </div>
-</div>
-          `;
+ <div class="foam-cyclic-link-warning">
+   Cyclic link detected for wikilink: ${wikilinkTarget}
+   <div class="foam-cyclic-link-warning__stack">
+     Link sequence:
+     <ul>
+       ${refsStack.map(ref => `<li>${ref}</li>`).join('')}
+     </ul>
+   </div>
+ </div>
+           `;
         }
 
         refsStack.push(includedNote.uri.path.toLocaleLowerCase());
 
-        const content = getNoteContent(
+        const htmlContent = getNoteContent(
           includedNote,
+          fragment,
           noteEmbedModifier,
           parser,
           workspace,
           md
         );
         refsStack.pop();
-        return refsStack.length === 0 ? md.render(content) : content;
+
+        return htmlContent;
       } catch (e) {
         Logger.error(
           `Error while including ${wikilinkItem} into the current document of the Preview panel`,
@@ -99,6 +110,7 @@ export const markdownItWikilinkEmbed = (
 
 function getNoteContent(
   includedNote: Resource,
+  linkFragment: string | undefined,
   noteEmbedModifier: string | undefined,
   parser: ResourceParser,
   workspace: FoamWorkspace,
@@ -112,35 +124,23 @@ function getNoteContent(
       const { noteScope, noteStyle } = retrieveNoteConfig(noteEmbedModifier);
 
       const extractor: EmbedNoteExtractor =
-        noteScope === 'full'
-          ? fullExtractor
-          : noteScope === 'content'
-          ? contentExtractor
-          : fullExtractor;
+        noteScope === 'content' ? contentExtractor : fullExtractor;
+
+      content = extractor(includedNote, linkFragment, parser, workspace);
 
       const formatter: EmbedNoteFormatter =
-        noteStyle === 'card'
-          ? cardFormatter
-          : noteStyle === 'inline'
-          ? inlineFormatter
-          : cardFormatter;
-
-      content = extractor(includedNote, parser, workspace);
+        noteStyle === 'card' ? cardFormatter : inlineFormatter;
       toRender = formatter(content, md);
       break;
     }
     case 'attachment':
-      content = `
-<div class="embed-container-attachment">
-${md.renderInline('[[' + includedNote.uri.path + ']]')}<br/>
-Embed for attachments is not supported
-</div>`;
+      content = `> [[${includedNote.uri.path}]]
+>
+> Embed for attachments is not supported`;
       toRender = md.render(content);
       break;
     case 'image':
-      content = `<div class="embed-container-image">${md.render(
-        `![](${md.normalizeLink(includedNote.uri.path)})`
-      )}</div>`;
+      content = `![](${md.normalizeLink(includedNote.uri.path)})`;
       toRender = md.render(content);
       break;
     default:
@@ -170,9 +170,13 @@ function withLinksRelativeToWorkspaceRoot(
         return null;
       }
       const pathFromRoot = asAbsoluteWorkspaceUri(resource.uri).path;
-      return MarkdownLink.createUpdateLinkEdit(link, {
+      const update: { target: string; text?: string } = {
         target: pathFromRoot,
-      });
+      };
+      if (!info.alias) {
+        update.text = info.target;
+      }
+      return MarkdownLink.createUpdateLinkEdit(link, update);
     })
     .filter(linkEdits => !isNone(linkEdits))
     .sort((a, b) => Position.compareTo(b.range.start, a.range.start));
@@ -196,7 +200,7 @@ export function retrieveNoteConfig(explicitModifier: string | undefined): {
       noteScope = explicitModifier;
     } else if (['card', 'inline'].includes(explicitModifier)) {
       noteStyle = explicitModifier;
-    } else {
+    } else if (explicitModifier.includes('-')) {
       [noteScope, noteStyle] = explicitModifier.split('-');
     }
   }
@@ -208,22 +212,51 @@ export function retrieveNoteConfig(explicitModifier: string | undefined): {
  */
 export type EmbedNoteExtractor = (
   note: Resource,
+  linkFragment: string | undefined,
   parser: ResourceParser,
   workspace: FoamWorkspace
 ) => string;
 
+/**
+ * Extracts the full content of a note or a specific section/block.
+ * For sections, it includes the heading itself.
+ */
 function fullExtractor(
   note: Resource,
+  linkFragment: string | undefined,
   parser: ResourceParser,
   workspace: FoamWorkspace
 ): string {
   let noteText = readFileSync(note.uri.toFsPath()).toString();
-  const section = Resource.findSection(note, note.uri.fragment);
+  // Find the specific section or block being linked to, if a fragment is provided.
+  const section = linkFragment
+    ? Resource.findSection(note, linkFragment)
+    : null;
   if (isSome(section)) {
-    const rows = noteText.split('\n');
-    noteText = rows
-      .slice(section.range.start.line, section.range.end.line)
-      .join('\n');
+    if (section.isHeading) {
+      // For headings, extract all content from that heading to the next.
+      let rows = noteText.split('\n');
+      // Find the next heading after this one
+      let nextHeadingLine = rows.length;
+      for (let i = section.range.start.line + 1; i < rows.length; i++) {
+        if (/^\s*#+\s/.test(rows[i])) {
+          nextHeadingLine = i;
+          break;
+        }
+      }
+      let slicedRows = rows.slice(section.range.start.line, nextHeadingLine);
+      noteText = slicedRows.join('\n');
+    } else {
+      // For block-level embeds (paragraphs, list items with a ^block-id),
+      // extract the content precisely using the range from the parser.
+      const rows = noteText.split('\n');
+      noteText = rows
+        .slice(section.range.start.line, section.range.end.line + 1)
+        .join('\n');
+    }
+  } else {
+    // No fragment: transclude the whole note (excluding frontmatter if present)
+    noteText = stripFrontMatter(noteText);
   }
   noteText = withLinksRelativeToWorkspaceRoot(
     note.uri,
@@ -234,28 +267,50 @@ function fullExtractor(
   return noteText;
 }
 
+/**
+ * Extracts the content of a note, excluding the main title.
+ * For sections, it extracts the content *under* the heading.
+ */
 function contentExtractor(
   note: Resource,
+  linkFragment: string | undefined,
   parser: ResourceParser,
   workspace: FoamWorkspace
 ): string {
   let noteText = readFileSync(note.uri.toFsPath()).toString();
-  let section = Resource.findSection(note, note.uri.fragment);
-  if (!note.uri.fragment) {
-    // if there's no fragment(section), the wikilink is linking to the entire note,
-    // in which case we need to remove the title. We could just use rows.shift()
-    // but should the note start with blank lines, it will only remove the first blank line
-    // leaving the title
-    // A better way is to find where the actual title starts by assuming it's at section[0]
-    // then we treat it as the same case as link to a section
+  // Find the specific section or block being linked to.
+  let section = Resource.findSection(note, linkFragment);
+  if (!linkFragment) {
+    // If no fragment is provided, default to the first section (usually the main title)
+    // to extract the content of the note, excluding the title.
     section = note.sections.length ? note.sections[0] : null;
   }
-  let rows = noteText.split('\n');
   if (isSome(section)) {
-    rows = rows.slice(section.range.start.line, section.range.end.line);
+    if (section.isHeading) {
+      // For headings, extract the content *under* the heading.
+      let rows = noteText.split('\n');
+      const isLastLineHeading = rows[section.range.end.line]?.match(/^\s*#+\s/);
+      rows = rows.slice(
+        section.range.start.line,
+        section.range.end.line + (isLastLineHeading ? 0 : 1)
+      );
+      rows.shift(); // Remove the heading itself
+      noteText = rows.join('\n');
+    } else {
+      // For block-level embeds (e.g., a list item with a ^block-id),
+      // extract the content of just that block using its range.
+      const rows = noteText.split('\n');
+      noteText = rows
+        .slice(section.range.start.line, section.range.end.line + 1)
+        .join('\n');
+    }
+  } else {
+    // If no fragment, or fragment not found as a section,
+    // treat as content of the entire note (excluding title)
+    let rows = noteText.split('\n');
+    rows.shift(); // Remove the title
+    noteText = rows.join('\n');
   }
-  rows.shift();
-  noteText = rows.join('\n');
   noteText = withLinksRelativeToWorkspaceRoot(
     note.uri,
     noteText,
@@ -271,11 +326,43 @@ function contentExtractor(
 export type EmbedNoteFormatter = (content: string, md: markdownit) => string;
 
 function cardFormatter(content: string, md: markdownit): string {
-  return `<div class="embed-container-note">\n\n${content}\n\n</div>`;
+  return `<div class="embed-container-note">
+
+${md.render(content)}
+
+</div>`;
 }
 
 function inlineFormatter(content: string, md: markdownit): string {
-  return content;
+  const tokens = md.parse(content.trim(), {});
+  // Optimization: If the content is just a single paragraph, render only its
+  // inline content. This prevents wrapping the embed in an extra, unnecessary <p> tag,
+  // which can cause layout issues.
+  if (
+    tokens.length === 3 &&
+    tokens[0].type === 'paragraph_open' &&
+    tokens[1].type === 'inline' &&
+    tokens[2].type === 'paragraph_close'
+  ) {
+    // Render only the inline content to prevent double <p> tags.
+    // The parent renderer will wrap this in <p> tags as needed.
+    return md.renderer.render(tokens[1].children, md.options, {});
+  }
+  // For more complex content (headings, lists, etc.), render as a full block.
+  return md.render(content);
+}
+
+/**
+ * Parses a wikilink target into its note and fragment components.
+ * @param wikilinkTarget The full string target of the wikilink (e.g., 'my-note#my-heading').
+ * @returns An object containing the noteTarget and an optional fragment.
+ */
+function parseWikilink(wikilinkTarget: string): {
+  noteTarget: string;
+  fragment?: string;
+} {
+  const [noteTarget, fragment] = wikilinkTarget.split('#');
+  return { noteTarget, fragment };
 }
 
 export default markdownItWikilinkEmbed;

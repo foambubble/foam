@@ -678,6 +678,7 @@
     "test-reset-workspace": "rm -rf .test-workspace && mkdir .test-workspace && touch .test-workspace/.keep",
     "test-setup": "yarn compile && yarn build && yarn test-reset-workspace",
     "test": "yarn test-setup && node ./out/test/run-tests.js",
+    "test:single": "yarn build:node && jest --runInBand",
     "test:unit": "yarn test-setup && node ./out/test/run-tests.js --unit",
     "test:e2e": "yarn test-setup && node ./out/test/run-tests.js --e2e",
     "lint": "dts lint src",
@@ -695,7 +696,6 @@
     "@types/dateformat": "^3.0.1",
     "@types/jest": "^29.5.3",
     "@types/lodash": "^4.14.157",
-    "@types/markdown-it": "^12.0.1",
     "@types/micromatch": "^4.0.1",
     "@types/node": "^13.11.0",
     "@types/picomatch": "^2.2.1",
@@ -725,6 +725,8 @@
     "wait-for-expect": "^3.0.2"
   },
   "dependencies": {
+    "@types/markdown-it": "^12.0.1",
+    "@types/unist": "^3.0.3",
     "dateformat": "4.5.1",
     "detect-newline": "^3.1.0",
     "github-slugger": "^1.4.0",

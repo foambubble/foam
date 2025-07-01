@@ -86,7 +86,10 @@ export async function activate(context: ExtensionContext) {
       attachmentProvider,
       commands.registerCommand('foam-vscode.clear-cache', () =>
         parserCache.clear()
-      ),
+      )
+    );
+
+    context.subscriptions.push(
       workspace.onDidChangeConfiguration(e => {
         if (
           [

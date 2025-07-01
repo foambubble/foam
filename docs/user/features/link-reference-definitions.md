@@ -18,7 +18,6 @@ The following example:
 [github-pages]: github-pages 'GitHub Pages'
 ```
 
-You can open the [raw markdown](https://foambubble.github.io/foam/features/link-reference-definitions.md) to see them at the bottom of this file
 You can open the [raw markdown](https://foambubble.github.io/foam/user/features/link-reference-definitions.md) to see them at the bottom of this file
 
 ## Specification

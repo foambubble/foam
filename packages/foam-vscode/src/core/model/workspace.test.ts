@@ -1,4 +1,4 @@
-import { FoamWorkspace } from './workspace';
+import { FoamWorkspace, RootChecker } from './workspace';
 import { Logger } from '../utils/log';
 import { URI } from './uri';
 import { createTestNote, createTestWorkspace } from '../../test/test-utils';
@@ -88,11 +88,20 @@ describe('Workspace resources', () => {
     expect(res.uri.fragment).toEqual('my-section');
   });
 
-  it('should find absolute files even when no basedir is provided', () => {
-    const noteA = createTestNote({ uri: '/a/path/to/file.md' });
-    const ws = createTestWorkspace().set(noteA);
+  it('should consider absolute path under some given root folder', () => {
+    const noteA = createTestNote({ uri: '/fake/root/file.md' });
 
-    expect(ws.find('/a/path/to/file.md').uri.path).toEqual(noteA.uri.path);
+    class FakeRootChecker implements RootChecker {
+      where(path: string): string | null {
+        return '/fake/root';
+      }
+    }
+
+    const ws = new FoamWorkspace('.md', new FakeRootChecker()).set(noteA);
+    // Note that we need to resolve base on some file to trigger root folder search.
+    const item = ws.find('/file.md', URI.parse('/not/care'));
+
+    expect(item.uri.path).toEqual(noteA.uri.path);
   });
 });
 

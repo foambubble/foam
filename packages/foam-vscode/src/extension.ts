@@ -1,8 +1,9 @@
 /*global markdownit:readonly*/
 
-import { workspace, ExtensionContext, window, commands } from 'vscode';
+import { workspace, ExtensionContext, window, commands, Uri } from 'vscode';
 import { MarkdownResourceProvider } from './core/services/markdown-provider';
 import { bootstrap } from './core/model/foam';
+import { RootChecker } from './core/model/workspace';
 import { Logger } from './core/utils/log';
 
 import { features } from './features';
@@ -17,6 +18,13 @@ import { VsCodeWatcher } from './services/watcher';
 import { createMarkdownParser } from './core/services/markdown-parser';
 import VsCodeBasedParserCache from './services/cache';
 import { createMatcherAndDataStore } from './services/editor';
+
+class RealRootChecker implements RootChecker {
+  where(path: string): string | null {
+    const folder = workspace.getWorkspaceFolder(Uri.file(path));
+    return folder !== undefined ? folder.uri.fsPath : null;
+  }
+}
 
 export async function activate(context: ExtensionContext) {
   const logger = new VsCodeOutputLogger();
@@ -68,7 +76,8 @@ export async function activate(context: ExtensionContext) {
       dataStore,
       parser,
       [markdownProvider, attachmentProvider],
-      defaultExtension
+      defaultExtension,
+      new RealRootChecker()
     );
 
     // Load the features

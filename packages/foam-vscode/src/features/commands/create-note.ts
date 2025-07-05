@@ -6,6 +6,9 @@ import {
   getPathFromTitle,
   NoteFactory,
 } from '../../services/templates';
+import { NoteCreationEngine } from '../../services/note-creation-engine';
+import { TriggerFactory } from '../../services/note-creation-triggers';
+import { NoteCreationContext } from '../../services/note-creation-types';
 import { Resolver } from '../../services/variable-resolver';
 import { asAbsoluteWorkspaceUri, fileExists } from '../../services/editor';
 import { isSome } from '../../core/utils';
@@ -146,6 +149,72 @@ export async function createNote(args: CreateNoteArgs, foam: Foam) {
       await vscode.workspace.applyEdit(updateLink);
     }
   }
+  return createdNote;
+}
+
+/**
+ * Enhanced note creation function using the unified creation engine
+ * Supports both Markdown and JavaScript templates with rich trigger context
+ */
+export async function createNoteUnified(args: CreateNoteArgs, foam: Foam) {
+  args = args ?? {};
+  const date = isSome(args.date) ? new Date(Date.parse(args.date)) : new Date();
+
+  let templatePath: string;
+  if (args.askForTemplate) {
+    const selectedTemplate = await askUserForTemplate();
+    if (selectedTemplate) {
+      templatePath = selectedTemplate.toString();
+    } else {
+      return;
+    }
+  } else {
+    templatePath = args.templatePath || getDefaultTemplateUri().toString();
+  }
+
+  // Create appropriate trigger based on context
+  const trigger = args.sourceLink
+    ? TriggerFactory.createPlaceholderTrigger(
+        args.sourceLink.uri,
+        foam.workspace.find(args.sourceLink.uri)?.title || 'Unknown',
+        args.sourceLink
+      )
+    : TriggerFactory.createCommandTrigger('foam-vscode.create-note');
+
+  const context: NoteCreationContext = {
+    trigger,
+    template: templatePath,
+    extraParams: {
+      title: args.title,
+      date,
+      notePath: args.notePath,
+      ...args.variables,
+    },
+    foam,
+    expandTemplate: null!, // Will be injected by engine
+  };
+
+  const engine = new NoteCreationEngine(foam);
+  const createdNote = await engine.createNote(context);
+
+  // Handle source link updates for placeholders
+  if (args.sourceLink) {
+    const identifier = foam.workspace.getIdentifier(createdNote.uri);
+    const edit = MarkdownLink.createUpdateLinkEdit(args.sourceLink.data, {
+      target: identifier,
+    });
+    if (edit.newText !== args.sourceLink.data.rawText) {
+      const updateLink = new vscode.WorkspaceEdit();
+      const uri = toVsCodeUri(args.sourceLink.uri);
+      updateLink.replace(
+        uri,
+        toVsCodeRange(args.sourceLink.range),
+        edit.newText
+      );
+      await vscode.workspace.applyEdit(updateLink);
+    }
+  }
+
   return createdNote;
 }
 

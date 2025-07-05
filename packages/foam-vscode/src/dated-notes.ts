@@ -4,6 +4,7 @@ import { URI } from './core/model/uri';
 import { NoteFactory } from './services/templates';
 import { getFoamVsCodeConfig } from './services/config';
 import { asAbsoluteWorkspaceUri, focusNote } from './services/editor';
+import { Foam } from './core/model/foam';
 
 /**
  * Open the daily note file.
@@ -76,7 +77,6 @@ export function getDailyNoteFileName(date: Date): string {
  */
 export async function createDailyNoteIfNotExists(targetDate: Date) {
   const uriFromLegacyConfiguration = getDailyNoteUri(targetDate);
-  const pathFromLegacyConfiguration = uriFromLegacyConfiguration.toFsPath();
   const titleFormat: string =
     getFoamVsCodeConfig('openDailyNote.titleFormat') ??
     getFoamVsCodeConfig('openDailyNote.filenameFormat');
@@ -91,5 +91,35 @@ export async function createDailyNoteIfNotExists(targetDate: Date) {
     uriFromLegacyConfiguration,
     templateFallbackText,
     targetDate
+  );
+}
+
+/**
+ * Create a daily note using the unified creation engine (supports JS templates)
+ *
+ * @param targetDate The target date
+ * @param foam The Foam instance
+ * @returns Whether the file was created and the URI
+ */
+export async function createDailyNoteIfNotExistsUnified(
+  targetDate: Date,
+  foam: Foam
+) {
+  const uriFromLegacyConfiguration = getDailyNoteUri(targetDate);
+  const titleFormat: string =
+    getFoamVsCodeConfig('openDailyNote.titleFormat') ??
+    getFoamVsCodeConfig('openDailyNote.filenameFormat');
+
+  const templateFallbackText = `# ${dateFormat(
+    targetDate,
+    titleFormat,
+    false
+  )}\n`;
+
+  return await NoteFactory.createFromDailyNoteTemplateUnified(
+    uriFromLegacyConfiguration,
+    templateFallbackText,
+    targetDate,
+    foam
   );
 }

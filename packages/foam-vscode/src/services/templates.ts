@@ -25,6 +25,10 @@ import { Resolver } from './variable-resolver';
 import dateFormat from 'dateformat';
 import { getFoamVsCodeConfig } from './config';
 import { firstFrom, isNone } from '../core/utils';
+import { NoteCreationEngine } from './note-creation-engine';
+import { TriggerFactory } from './note-creation-triggers';
+import { NoteCreationContext } from './note-creation-types';
+import { Foam } from '../core/model/foam';
 
 /**
  * The templates directory
@@ -78,7 +82,7 @@ export async function getTemplateMetadata(
 
 export async function getTemplates(): Promise<URI[]> {
   const templates = await workspace
-    .findFiles('.foam/templates/**.md', null)
+    .findFiles('.foam/templates/**{.md,.js}', null)
     .then(v => v.map(uri => fromVsCodeUri(uri)));
   return templates;
 }
@@ -398,6 +402,43 @@ export const NoteFactory = {
       templateFallbackText,
       _ => Promise.resolve(undefined)
     );
+  },
+
+  /**
+   * Creates a daily note using the unified creation engine with support for JS templates
+   * @param filepathFallbackURI the URI to use if the template does not specify the `filepath` metadata attribute
+   * @param templateFallbackText the template text to use if template does not exist
+   * @param targetDate the date for the daily note
+   * @param foam the Foam instance
+   */
+  createFromDailyNoteTemplateUnified: async (
+    filepathFallbackURI: URI,
+    templateFallbackText: string,
+    targetDate: Date,
+    foam: Foam
+  ): Promise<{ didCreateFile: boolean; uri: URI | undefined }> => {
+    const templatePath =
+      getFoamVsCodeConfig<string>('openDailyNote.templatePath') ||
+      '.foam/templates/daily-note.md';
+
+    const context: NoteCreationContext = {
+      trigger: TriggerFactory.createCommandTrigger(
+        'foam-vscode.open-daily-note',
+        {
+          date: targetDate,
+        }
+      ),
+      template: templatePath,
+      extraParams: {
+        date: targetDate,
+        title: dateFormat(targetDate, 'yyyy-mm-dd', false),
+      },
+      foam,
+      expandTemplate: null!, // Will be injected by engine
+    };
+
+    const engine = new NoteCreationEngine(foam);
+    return engine.createNote(context);
   },
 
   /**

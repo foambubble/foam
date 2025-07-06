@@ -1,7 +1,6 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { Point, Node, Position as AstPosition, Parent } from 'unist';
 import unified from 'unified';
-import { getNodeText } from '../utils/md';
 import markdownParse from 'remark-parse';
 import wikiLinkPlugin from 'remark-wiki-link';
 import frontmatterPlugin from 'remark-frontmatter';
@@ -107,6 +106,29 @@ function getPropertiesInfoFromYAML(yamlText: string): {
     acc[curr.key] = curr;
     return acc;
   }, {});
+}
+
+/**
+ * Gets the raw text of a node from the source markdown.
+ * @param node The AST node with position info.
+ * @param markdown The full markdown source string.
+ * @returns The raw text corresponding to the node.
+ */
+function getNodeText(
+  node: { position?: { start: { offset?: number }; end: { offset?: number } } },
+  markdown: string
+): string {
+  if (
+    !node.position ||
+    node.position.start.offset == null ||
+    node.position.end.offset == null
+  ) {
+    return '';
+  }
+  return markdown.substring(
+    node.position.start.offset,
+    node.position.end.offset
+  );
 }
 
 // #endregion

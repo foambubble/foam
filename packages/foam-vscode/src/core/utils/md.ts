@@ -7,22 +7,6 @@ import { Position } from '../model/position'; // Add Position import to the top
  * @param markdown The full markdown source string.
  * @returns The raw text corresponding to the node.
  */
-export function getNodeText(
-  node: { position?: { start: { offset?: number }; end: { offset?: number } } },
-  markdown: string
-): string {
-  if (
-    !node.position ||
-    node.position.start.offset == null ||
-    node.position.end.offset == null
-  ) {
-    return '';
-  }
-  return markdown.substring(
-    node.position.start.offset,
-    node.position.end.offset
-  );
-}
 
 export function getExcerpt(
   markdown: string,

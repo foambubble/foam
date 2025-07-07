@@ -21,24 +21,30 @@ export type NoteCreationTrigger =
     };
 
 /**
- * Context provided to note creation functions, containing all necessary
- * information and utilities for creating notes
+ * Template types supported by the note creation system
  */
-export interface NoteCreationContext {
-  trigger: NoteCreationTrigger;
-  template: string; // Path to template (JS or MD)
-  extraParams: Record<string, any>;
-  foam: Foam;
+export type Template =
+  | { type: 'markdown'; content: string; metadata?: Map<string, string> }
+  | {
+      type: 'javascript';
+      createNote: (context: TemplateContext) => Promise<NoteCreationResult>;
+    };
 
-  // Template expansion utility function
-  expandTemplate: (
-    templatePath: string,
-    variables?: Record<string, string>
-  ) => Promise<{
-    content: string;
-    metadata: Map<string, string>;
-  }>;
+/**
+ * Context provided to JavaScript template functions
+ */
+export interface TemplateContext {
+  /** The trigger that initiated the note creation */
+  trigger: NoteCreationTrigger;
+  /** Additional parameters for template processing */
+  extraParams: Record<string, any>;
+  /** Foam instance for accessing workspace data */
+  foam: Foam;
 }
+
+/**
+ * Context for creating a note through the unified creation system
+ */
 
 /**
  * Result returned by note creation functions
@@ -52,7 +58,7 @@ export interface NoteCreationResult {
  * Function signature for JavaScript template functions
  */
 export type CreateNoteFunction = (
-  context: NoteCreationContext
+  context: TemplateContext
 ) => Promise<NoteCreationResult> | NoteCreationResult;
 
 /**

@@ -202,6 +202,30 @@ describe('create-note command', () => {
 
     // await deleteFile(base);
   });
+
+  it('throws an error if the template file does not exist', async () => {
+    const nonExistentTemplatePath = '/non/existent/template/path.md';
+    await expect(
+      commands.executeCommand('foam-vscode.create-note', {
+        notePath: 'note-with-missing-template.md',
+        templatePath: nonExistentTemplatePath,
+        text: 'should not matter',
+      })
+    ).rejects.toThrow(
+      `Failed to load template (${nonExistentTemplatePath}): Template file not found: ${nonExistentTemplatePath}`
+    );
+  });
+
+  it('throws an error if the template file does not exist (relative path)', async () => {
+    const nonExistentTemplatePath = 'relative/non-existent-template.md';
+    await expect(
+      commands.executeCommand('foam-vscode.create-note', {
+        notePath: 'note-with-missing-template-relative.md',
+        templatePath: nonExistentTemplatePath,
+        text: 'should not matter',
+      })
+    ).rejects.toThrow(expect.stringContaining('Failed to load template'));
+  });
 });
 
 describe('factories', () => {

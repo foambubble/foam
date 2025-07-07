@@ -1,137 +1,111 @@
 import { URI } from '../core/model/uri';
 import { Resolver } from './variable-resolver';
-import { NoteFactory, getTemplateInfo } from './templates';
+import { NoteFactory } from './templates';
 import { asAbsoluteWorkspaceUri } from './editor';
 import { Foam } from '../core/model/foam';
 import { Logger } from '../core/utils/log';
 import {
-  NoteCreationContext,
   NoteCreationResult,
+  NoteCreationTrigger,
+  Template,
+  TemplateContext,
   isCommandTrigger,
   isPlaceholderTrigger,
 } from './note-creation-types';
-import { JSTemplateLoader, JSTemplateError } from './js-template-loader';
+import { extractFoamTemplateFrontmatterMetadata } from '../utils/template-frontmatter-parser';
 
 /**
  * Unified engine for creating notes from both Markdown and JavaScript templates
  */
 export class NoteCreationEngine {
-  private jsTemplateLoader: JSTemplateLoader;
-
-  constructor(private foam: Foam) {
-    this.jsTemplateLoader = new JSTemplateLoader();
-  }
+  constructor(private foam: Foam) {}
 
   /**
    * Processes a template and generates note content and filepath
    * This method only handles template processing, not file creation
    *
-   * @param context The note creation context
+   * @param trigger The trigger that initiated the note creation
+   * @param template The template object containing content or function
+   * @param extraParams Additional parameters for template processing
    * @returns Promise resolving to the generated content and filepath
    */
-  async processTemplate(context: NoteCreationContext): Promise<NoteCreationResult> {
+  async processTemplate(
+    trigger: NoteCreationTrigger,
+    template: Template,
+    extraParams: Record<string, any>
+  ): Promise<NoteCreationResult> {
     try {
-      Logger.info(`Processing template: ${context.template}`);
-      this.logTriggerInfo(context);
+      Logger.info(`Processing ${template.type} template`);
+      this.logTriggerInfo(trigger);
 
-      // Add template expansion function to context
-      const contextWithExpansion: NoteCreationContext = {
-        ...context,
-        expandTemplate: this.createTemplateExpander(context),
-      };
-
-      if (context.template.endsWith('.js')) {
-        return await this.executeJSTemplate(contextWithExpansion);
+      if (template.type === 'javascript') {
+        return await this.executeJSTemplate(trigger, template, extraParams);
       } else {
-        return await this.executeMarkdownTemplate(contextWithExpansion);
+        return await this.executeMarkdownTemplate(
+          trigger,
+          template,
+          extraParams
+        );
       }
     } catch (error) {
       Logger.error('Template processing failed', error);
-
-      if (error instanceof JSTemplateError) {
-        throw error;
-      }
-
       throw new Error(`Template processing failed: ${error.message}`);
     }
-  }
-
-  /**
-   * Creates a note using the unified creation system
-   * This method combines template processing with file creation
-   *
-   * @param context The note creation context
-   * @returns Promise resolving to creation result with URI and success status
-   */
-  async createNote(
-    context: NoteCreationContext
-  ): Promise<{ didCreateFile: boolean; uri: URI }> {
-    // Process the template to get content and filepath
-    const result = await this.processTemplate(context);
-
-    // Convert result to absolute URI and create the note
-    const uri = this.resolveResultUri(result.filepath);
-    const resolver = new Resolver(new Map(), new Date());
-
-    return await NoteFactory.createNote(uri, result.content, resolver);
-  }
-
-  /**
-   * Creates the template expansion utility function for the context
-   */
-  private createTemplateExpander(context: NoteCreationContext) {
-    return async (templatePath: string, variables?: Record<string, string>) => {
-      const resolver = new Resolver(new Map(), new Date());
-
-      // Add context extraParams as variables
-      Object.entries(context.extraParams).forEach(([key, value]) => {
-        resolver.define(key, String(value));
-      });
-
-      // Add any additional variables passed to expandTemplate
-      if (variables) {
-        Object.entries(variables).forEach(([key, value]) => {
-          resolver.define(key, value);
-        });
-      }
-
-      const templateUri = asAbsoluteWorkspaceUri(templatePath);
-      const templateInfo = await getTemplateInfo(templateUri, '', resolver);
-
-      return {
-        content: templateInfo.text,
-        metadata: templateInfo.metadata,
-      };
-    };
   }
 
   /**
    * Executes a JavaScript template
    */
   private async executeJSTemplate(
-    context: NoteCreationContext
+    trigger: NoteCreationTrigger,
+    template: Template & { type: 'javascript' },
+    extraParams: Record<string, any>
   ): Promise<NoteCreationResult> {
-    const createNoteFunction = await this.jsTemplateLoader.loadFunction(
-      context.template
-    );
-    return await createNoteFunction(context);
+    const templateContext: TemplateContext = {
+      trigger,
+      extraParams,
+      foam: this.foam,
+    };
+
+    return await template.createNote(templateContext);
   }
 
   /**
-   * Executes a Markdown template using the existing template system
+   * Executes a Markdown template using variable resolution
    */
   private async executeMarkdownTemplate(
-    context: NoteCreationContext
+    trigger: NoteCreationTrigger,
+    template: Template & { type: 'markdown' },
+    extraParams: Record<string, any>
   ): Promise<NoteCreationResult> {
-    const expanded = await context.expandTemplate(context.template);
+    // Create resolver with extraParams
+    const resolver = new Resolver(new Map(), new Date());
+    Object.entries(extraParams).forEach(([key, value]) => {
+      // Map common parameter names to Foam variable names
+      const foamVariableName = key === 'title' ? 'FOAM_TITLE' : key;
+      resolver.define(foamVariableName, String(value));
+    });
 
+    // Resolve variables in template content
+    const resolvedContent = await resolver.resolveText(template.content);
+
+    // Process frontmatter metadata
+    const [frontmatterMetadata, cleanContent] =
+      extractFoamTemplateFrontmatterMetadata(resolvedContent);
+
+    // Combine template metadata with frontmatter metadata (frontmatter takes precedence)
+    const metadata = new Map([
+      ...(template.metadata || []),
+      ...frontmatterMetadata,
+    ]);
+
+    // Determine filepath
     const filepath =
-      expanded.metadata.get('filepath') ||
-      (await this.generateDefaultFilepath(context));
+      metadata.get('filepath') || this.generateDefaultFilepath(extraParams);
 
     return {
       filepath,
-      content: expanded.content,
+      content: cleanContent,
     };
   }
 
@@ -148,46 +122,44 @@ export class NoteCreationEngine {
   /**
    * Generates a default filepath when none is specified in the template
    */
-  private async generateDefaultFilepath(
-    context: NoteCreationContext
-  ): Promise<string> {
-    // Use FOAM_TITLE if available, otherwise use a default name
-    const title = context.extraParams.title || 'untitled';
-    const resolver = new Resolver(new Map([['FOAM_TITLE', title]]), new Date());
-
-    const titleSafe = await resolver.resolveFromName('FOAM_TITLE_SAFE');
-    return `${titleSafe}.md`;
+  private generateDefaultFilepath(extraParams: Record<string, any>): string {
+    // Use title from extraParams if available, otherwise use a default name
+    const title = extraParams.title || 'untitled';
+    // Simple safe filename generation (replace unsafe characters)
+    const safeName = title
+      .replace(/[^a-zA-Z0-9\s-]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    return `${safeName}.md`;
   }
 
   /**
    * Logs trigger-specific information for debugging
    */
-  private logTriggerInfo(context: NoteCreationContext): void {
-    if (isCommandTrigger(context.trigger)) {
-      Logger.info(
-        `Note creation triggered by command: ${context.trigger.command}`
-      );
-      if (context.trigger.params) {
-        Logger.info(`Command params:`, context.trigger.params);
+  private logTriggerInfo(trigger: NoteCreationTrigger): void {
+    if (isCommandTrigger(trigger)) {
+      Logger.info(`Note creation triggered by command: ${trigger.command}`);
+      if (trigger.params) {
+        Logger.info(`Command params:`, trigger.params);
       }
 
       // Handle specific commands
-      switch (context.trigger.command) {
+      switch (trigger.command) {
         case 'foam-vscode.open-daily-note': {
-          const date = context.trigger.params?.date;
+          const date = trigger.params?.date;
           Logger.info(`Daily note for date: ${date}`);
           break;
         }
         case 'foam-vscode.create-note-from-template': {
-          const templateUri = context.trigger.params?.templateUri;
+          const templateUri = trigger.params?.templateUri;
           Logger.info(`Using template: ${templateUri}`);
           break;
         }
         default:
-          Logger.info(`Generic command: ${context.trigger.command}`);
+          Logger.info(`Generic command: ${trigger.command}`);
       }
-    } else if (isPlaceholderTrigger(context.trigger)) {
-      const sourceNote = context.trigger.sourceNote;
+    } else if (isPlaceholderTrigger(trigger)) {
+      const sourceNote = trigger.sourceNote;
       Logger.info(`Creating note from placeholder in: ${sourceNote.title}`);
       Logger.info(`Source URI: ${sourceNote.uri}`);
     }

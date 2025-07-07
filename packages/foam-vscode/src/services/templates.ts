@@ -27,7 +27,8 @@ import { getFoamVsCodeConfig } from './config';
 import { firstFrom, isNone } from '../core/utils';
 import { NoteCreationEngine } from './note-creation-engine';
 import { TriggerFactory } from './note-creation-triggers';
-import { NoteCreationContext } from './note-creation-types';
+import { TemplateLoader } from './template-loader';
+import { Template } from './note-creation-types';
 import { Foam } from '../core/model/foam';
 
 /**
@@ -421,24 +422,58 @@ export const NoteFactory = {
       getFoamVsCodeConfig<string>('openDailyNote.templatePath') ||
       '.foam/templates/daily-note.md';
 
-    const context: NoteCreationContext = {
-      trigger: TriggerFactory.createCommandTrigger(
-        'foam-vscode.open-daily-note',
-        {
-          date: targetDate,
-        }
-      ),
-      template: templatePath,
-      extraParams: {
+    // Create trigger for daily note
+    const trigger = TriggerFactory.createCommandTrigger(
+      'foam-vscode.open-daily-note',
+      {
         date: targetDate,
-        title: dateFormat(targetDate, 'yyyy-mm-dd', false),
-      },
-      foam,
-      expandTemplate: null!, // Will be injected by engine
+      }
+    );
+
+    // Load template using the new system
+    const templateLoader = new TemplateLoader();
+    let template: Template;
+    
+    try {
+      if (await fileExists(asAbsoluteWorkspaceUri(templatePath))) {
+        template = await templateLoader.loadTemplate(templatePath);
+      } else {
+        // Create a fallback markdown template
+        template = {
+          type: 'markdown' as const,
+          content: templateFallbackText,
+        };
+      }
+    } catch (error) {
+      // If template loading fails, use fallback
+      template = {
+        type: 'markdown' as const,
+        content: templateFallbackText,
+      };
+    }
+
+    // Prepare extra parameters for template processing
+    const extraParams = {
+      date: targetDate,
+      title: dateFormat(targetDate, 'yyyy-mm-dd', false),
     };
 
+    // Process template using the new engine
     const engine = new NoteCreationEngine(foam);
-    return engine.createNote(context);
+    const result = await engine.processTemplate(trigger, template, extraParams);
+
+    // Create the note using NoteFactory
+    const resolver = new Resolver(
+      new Map().set('FOAM_TITLE', dateFormat(targetDate, 'yyyy-mm-dd', false)),
+      targetDate
+    );
+
+    return await NoteFactory.createNote(
+      filepathFallbackURI,
+      result.content,
+      resolver,
+      _ => Promise.resolve(undefined)
+    );
   },
 
   /**

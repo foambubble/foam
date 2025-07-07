@@ -1,7 +1,7 @@
 import * as vm from 'vm';
 import { readFile } from './editor';
 import { URI } from '../core/model/uri';
-import { CreateNoteFunction } from './note-creation-types';
+import { CreateNoteFunction, TemplateContext } from './note-creation-types';
 import { createTemplateSandbox, BLOCKED_GLOBALS } from './js-template-sandbox';
 import { Logger } from '../core/utils/log';
 
@@ -95,7 +95,7 @@ export class JSTemplateLoader {
       }
 
       // Wrap the function to inject the sandbox context
-      return async noteContext => {
+      return async (noteContext: TemplateContext) => {
         try {
           // Update the sandbox with the current context
           const contextSandbox = createTemplateSandbox(noteContext);

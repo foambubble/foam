@@ -3,12 +3,12 @@ import { URI } from '../../core/model/uri';
 import {
   askUserForTemplate,
   getDefaultTemplateUri,
-  getPathFromTitle,
   NoteFactory,
 } from '../../services/templates';
 import { NoteCreationEngine } from '../../services/note-creation-engine';
 import { TriggerFactory } from '../../services/note-creation-triggers';
-import { NoteCreationContext } from '../../services/note-creation-types';
+import { TemplateLoader } from '../../services/template-loader';
+import { Template } from '../../services/note-creation-types';
 import { Resolver } from '../../services/variable-resolver';
 import { asAbsoluteWorkspaceUri, fileExists } from '../../services/editor';
 import { isSome } from '../../core/utils';
@@ -88,78 +88,8 @@ const DEFAULT_NEW_NOTE_TEXT = `# \${FOAM_TITLE}
 export async function createNote(args: CreateNoteArgs, foam: Foam) {
   args = args ?? {};
   const date = isSome(args.date) ? new Date(Date.parse(args.date)) : new Date();
-  const resolver = new Resolver(
-    new Map(Object.entries(args.variables ?? {})),
-    date
-  );
-  if (args.title) {
-    resolver.define('FOAM_TITLE', args.title);
-  }
-  const text = args.text ?? DEFAULT_NEW_NOTE_TEXT;
-  const schemaSource = vscode.workspace.workspaceFolders[0].uri;
-  const noteUri =
-    args.notePath &&
-    new URI({
-      scheme: schemaSource.scheme,
-      path: args.notePath,
-    });
-  let templateUri: URI;
-  if (args.askForTemplate) {
-    const selectedTemplate = await askUserForTemplate();
-    if (selectedTemplate) {
-      templateUri = selectedTemplate;
-    } else {
-      return;
-    }
-  } else {
-    templateUri = args.templatePath
-      ? asAbsoluteWorkspaceUri(args.templatePath)
-      : getDefaultTemplateUri();
-  }
 
-  const createdNote = (await fileExists(templateUri))
-    ? await NoteFactory.createFromTemplate(
-        templateUri,
-        resolver,
-        noteUri,
-        text,
-        args.onFileExists
-      )
-    : await NoteFactory.createNote(
-        noteUri ?? (await getPathFromTitle(templateUri.scheme, resolver)),
-        text,
-        resolver,
-        args.onFileExists,
-        args.onRelativeNotePath
-      );
-
-  if (args.sourceLink) {
-    const identifier = foam.workspace.getIdentifier(createdNote.uri);
-    const edit = MarkdownLink.createUpdateLinkEdit(args.sourceLink.data, {
-      target: identifier,
-    });
-    if (edit.newText !== args.sourceLink.data.rawText) {
-      const updateLink = new vscode.WorkspaceEdit();
-      const uri = toVsCodeUri(args.sourceLink.uri);
-      updateLink.replace(
-        uri,
-        toVsCodeRange(args.sourceLink.range),
-        edit.newText
-      );
-      await vscode.workspace.applyEdit(updateLink);
-    }
-  }
-  return createdNote;
-}
-
-/**
- * Enhanced note creation function using the unified creation engine
- * Supports both Markdown and JavaScript templates with rich trigger context
- */
-export async function createNoteUnified(args: CreateNoteArgs, foam: Foam) {
-  args = args ?? {};
-  const date = isSome(args.date) ? new Date(Date.parse(args.date)) : new Date();
-
+  // Determine template path
   let templatePath: string;
   if (args.askForTemplate) {
     const selectedTemplate = await askUserForTemplate();
@@ -169,7 +99,9 @@ export async function createNoteUnified(args: CreateNoteArgs, foam: Foam) {
       return;
     }
   } else {
-    templatePath = args.templatePath || getDefaultTemplateUri().toString();
+    templatePath = args.templatePath
+      ? asAbsoluteWorkspaceUri(args.templatePath).toString()
+      : getDefaultTemplateUri().toString();
   }
 
   // Create appropriate trigger based on context
@@ -181,24 +113,59 @@ export async function createNoteUnified(args: CreateNoteArgs, foam: Foam) {
       )
     : TriggerFactory.createCommandTrigger('foam-vscode.create-note');
 
-  const context: NoteCreationContext = {
-    trigger,
-    template: templatePath,
-    extraParams: {
-      title: args.title,
-      date,
-      notePath: args.notePath,
-      ...args.variables,
-    },
-    foam,
-    expandTemplate: null!, // Will be injected by engine
+  // Load template using the new system
+  const templateLoader = new TemplateLoader();
+  let template: Template;
+
+  try {
+    if (await fileExists(URI.parse(templatePath))) {
+      template = await templateLoader.loadTemplate(templatePath);
+    } else {
+      throw new Error(`Template file not found: ${templatePath}`);
+    }
+  } catch (error) {
+    throw new Error(
+      `Failed to load template (${templatePath}): ${error.message}`
+    );
+  }
+
+  // Prepare extra parameters for template processing
+  const extraParams: Record<string, any> = {
+    title: args.title,
+    date,
+    notePath: args.notePath,
+    ...args.variables,
   };
 
+  // Process template using the new engine
   const engine = new NoteCreationEngine(foam);
-  const createdNote = await engine.createNote(context);
+  const result = await engine.processTemplate(trigger, template, extraParams);
+
+  // Convert result to absolute URI and create the note
+  const resolver = new Resolver(new Map(), date);
+  if (args.title) {
+    resolver.define('FOAM_TITLE', args.title);
+  }
+
+  // Determine final file path
+  const finalUri = args.notePath
+    ? new URI({
+        scheme: vscode.workspace.workspaceFolders[0].uri.scheme,
+        path: args.notePath,
+      })
+    : asAbsoluteWorkspaceUri(result.filepath);
+
+  // Create the note using NoteFactory
+  const createdNote = await NoteFactory.createNote(
+    finalUri,
+    result.content,
+    resolver,
+    args.onFileExists,
+    args.onRelativeNotePath
+  );
 
   // Handle source link updates for placeholders
-  if (args.sourceLink) {
+  if (args.sourceLink && createdNote.uri) {
     const identifier = foam.workspace.getIdentifier(createdNote.uri);
     const edit = MarkdownLink.createUpdateLinkEdit(args.sourceLink.data, {
       target: identifier,

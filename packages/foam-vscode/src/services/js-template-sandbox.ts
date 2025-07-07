@@ -1,4 +1,4 @@
-import { NoteCreationContext } from './note-creation-types';
+import { TemplateContext } from './note-creation-types';
 import { URI } from '../core/model/uri';
 import { toSlug } from '../utils/slug';
 import dateFormat from 'dateformat';
@@ -7,14 +7,13 @@ import dateFormat from 'dateformat';
  * Creates a sandbox environment for JavaScript template execution
  * This provides utility functions and safe globals for template functions
  */
-export function createTemplateSandbox(context: NoteCreationContext) {
+export function createTemplateSandbox(context: TemplateContext) {
   return {
     // Context objects
     context,
     trigger: context.trigger,
     foam: context.foam,
     extraParams: context.extraParams,
-    expandTemplate: context.expandTemplate,
 
     // Utility functions
     formatDate: dateFormat,

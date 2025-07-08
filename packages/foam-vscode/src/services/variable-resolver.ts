@@ -52,6 +52,16 @@ export class Resolver implements VariableResolver {
   }
 
   /**
+   * Gets all defined variables as a plain object
+   * Useful for passing to JavaScript templates that expect extraParams
+   *
+   * @returns Record containing all defined variables
+   */
+  getVariables(): Record<string, string> {
+    return Object.fromEntries(this.givenValues);
+  }
+
+  /**
    * Process a string, replacing the variables with their values
    *
    * @param text the text to resolve

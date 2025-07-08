@@ -452,22 +452,17 @@ export const NoteFactory = {
       };
     }
 
-    // Prepare extra parameters for template processing
-    const extraParams = {
-      date: targetDate,
-      title: dateFormat(targetDate, 'yyyy-mm-dd', false),
-    };
+    // Create resolver with all variables upfront
+    const resolver = new Resolver(new Map(), targetDate);
+    resolver.define('FOAM_TITLE', dateFormat(targetDate, 'yyyy-mm-dd', false));
+    resolver.define('date', targetDate.toISOString());
+    resolver.define('title', dateFormat(targetDate, 'yyyy-mm-dd', false));
 
-    // Process template using the new engine
+    // Process template using the new engine with unified resolver
     const engine = new NoteCreationEngine(foam);
-    const result = await engine.processTemplate(trigger, template, extraParams);
+    const result = await engine.processTemplate(trigger, template, resolver);
 
-    // Create the note using NoteFactory
-    const resolver = new Resolver(
-      new Map().set('FOAM_TITLE', dateFormat(targetDate, 'yyyy-mm-dd', false)),
-      targetDate
-    );
-
+    // Create the note using NoteFactory with the same resolver
     return await NoteFactory.createNote(
       filepathFallbackURI,
       result.content,

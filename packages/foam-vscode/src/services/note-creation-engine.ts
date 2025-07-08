@@ -26,25 +26,25 @@ export class NoteCreationEngine {
    *
    * @param trigger The trigger that initiated the note creation
    * @param template The template object containing content or function
-   * @param extraParams Additional parameters for template processing
+   * @param resolver Resolver instance with all variables pre-configured
    * @returns Promise resolving to the generated content and filepath
    */
   async processTemplate(
     trigger: NoteCreationTrigger,
     template: Template,
-    extraParams: Record<string, any>
+    resolver: Resolver
   ): Promise<NoteCreationResult> {
     try {
       Logger.info(`Processing ${template.type} template`);
       this.logTriggerInfo(trigger);
 
       if (template.type === 'javascript') {
-        return await this.executeJSTemplate(trigger, template, extraParams);
+        return await this.executeJSTemplate(trigger, template, resolver);
       } else {
         return await this.executeMarkdownTemplate(
           trigger,
           template,
-          extraParams
+          resolver
         );
       }
     } catch (error) {
@@ -59,8 +59,11 @@ export class NoteCreationEngine {
   private async executeJSTemplate(
     trigger: NoteCreationTrigger,
     template: Template & { type: 'javascript' },
-    extraParams: Record<string, any>
+    resolver: Resolver
   ): Promise<NoteCreationResult> {
+    // Convert resolver's variables back to extraParams for backward compatibility
+    const extraParams = resolver.getVariables();
+    
     const templateContext: TemplateContext = {
       trigger,
       extraParams,
@@ -76,17 +79,9 @@ export class NoteCreationEngine {
   private async executeMarkdownTemplate(
     trigger: NoteCreationTrigger,
     template: Template & { type: 'markdown' },
-    extraParams: Record<string, any>
+    resolver: Resolver
   ): Promise<NoteCreationResult> {
-    // Create resolver with extraParams
-    const resolver = new Resolver(new Map(), new Date());
-    Object.entries(extraParams).forEach(([key, value]) => {
-      // Map common parameter names to Foam variable names
-      const foamVariableName = key === 'title' ? 'FOAM_TITLE' : key;
-      resolver.define(foamVariableName, String(value));
-    });
-
-    // Resolve variables in template content
+    // Use the provided resolver directly for variable resolution
     const resolvedContent = await resolver.resolveText(template.content);
 
     // Process frontmatter metadata
@@ -99,9 +94,9 @@ export class NoteCreationEngine {
       ...frontmatterMetadata,
     ]);
 
-    // Determine filepath
+    // Determine filepath - get variables from resolver for default generation
     const filepath =
-      metadata.get('filepath') || this.generateDefaultFilepath(extraParams);
+      metadata.get('filepath') || this.generateDefaultFilepath(resolver.getVariables());
 
     return {
       filepath,

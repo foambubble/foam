@@ -129,23 +129,25 @@ export async function createNote(args: CreateNoteArgs, foam: Foam) {
     );
   }
 
-  // Prepare extra parameters for template processing
-  const extraParams: Record<string, any> = {
-    title: args.title,
-    date,
-    notePath: args.notePath,
-    ...args.variables,
-  };
-
-  // Process template using the new engine
-  const engine = new NoteCreationEngine(foam);
-  const result = await engine.processTemplate(trigger, template, extraParams);
-
-  // Convert result to absolute URI and create the note
-  const resolver = new Resolver(new Map(), date);
+  // Create resolver with all variables upfront
+  const resolver = new Resolver(
+    new Map(Object.entries(args.variables ?? {})),
+    date
+  );
+  
+  // Define all variables in the resolver with proper mapping
   if (args.title) {
     resolver.define('FOAM_TITLE', args.title);
   }
+  
+  // Add other parameters as variables
+  if (args.notePath) {
+    resolver.define('notePath', args.notePath);
+  }
+
+  // Process template using the new engine with unified resolver
+  const engine = new NoteCreationEngine(foam);
+  const result = await engine.processTemplate(trigger, template, resolver);
 
   // Determine final file path
   const finalUri = args.notePath
@@ -155,7 +157,7 @@ export async function createNote(args: CreateNoteArgs, foam: Foam) {
       })
     : asAbsoluteWorkspaceUri(result.filepath);
 
-  // Create the note using NoteFactory
+  // Create the note using NoteFactory with the same resolver
   const createdNote = await NoteFactory.createNote(
     finalUri,
     result.content,

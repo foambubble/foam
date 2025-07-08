@@ -5,35 +5,33 @@ import {
   isCommandTrigger,
   isPlaceholderTrigger,
 } from './note-creation-types';
-import {
-  createTestWorkspace,
-  readFileFromFs,
-  strToUri,
-} from '../test/test-utils';
+import { readFileFromFs, strToUri } from '../test/test-utils';
 import { bootstrap } from '../core/model/foam';
 import { FileDataStore, Matcher } from '../test/test-datastore';
 import { MarkdownResourceProvider } from '../core/services/markdown-provider';
 import { createMarkdownParser } from '../core/services/markdown-parser';
 import { Logger } from '../core/utils/log';
-import { URI } from '../core/model/uri';
+import { Resolver } from './variable-resolver';
 
 Logger.setLevel('error');
 
-describe('NoteCreationEngine', () => {
-  let foam: any;
-  let engine: NoteCreationEngine;
+async function setupFoamEngine() {
+  // Set up Foam workspace (minimal setup for testing)
+  const dataStore = new FileDataStore(readFileFromFs, '/tmp');
+  const matcher = new Matcher([strToUri('/tmp')], ['**/*.md']);
+  const parser = createMarkdownParser();
+  const provider = new MarkdownResourceProvider(dataStore, parser, ['.md']);
+  const foam = await bootstrap(matcher, undefined, dataStore, parser, [
+    provider,
+  ]);
+  const engine = new NoteCreationEngine(foam);
+  return { foam, engine };
+}
 
-  beforeEach(async () => {
-    // Set up Foam workspace (minimal setup for testing)
-    const dataStore = new FileDataStore(readFileFromFs, '/tmp');
-    const matcher = new Matcher([strToUri('/tmp')], ['**/*.md']);
-    const parser = createMarkdownParser();
-    const provider = new MarkdownResourceProvider(dataStore, parser, ['.md']);
-    foam = await bootstrap(matcher, undefined, dataStore, parser, [provider]);
-    engine = new NoteCreationEngine(foam);
-  });
+describe('NoteCreationEngine', () => {
   describe('processTemplate', () => {
     it('should process markdown templates correctly', async () => {
+      const { engine } = await setupFoamEngine();
       // Create markdown template
       const template: Template = {
         type: 'markdown',
@@ -51,10 +49,12 @@ Test content with title: \${FOAM_TITLE}`,
         'foam-vscode.create-note'
       );
 
+      // Create resolver with variables
+      const resolver = new Resolver(new Map(), new Date());
+      resolver.define('FOAM_TITLE', 'Test Note');
+
       // Test processing
-      const result = await engine.processTemplate(trigger, template, {
-        title: 'Test Note',
-      });
+      const result = await engine.processTemplate(trigger, template, resolver);
 
       expect(result.filepath).toBe('test-note.md');
       expect(result.content).toContain('# Test Note');
@@ -62,6 +62,7 @@ Test content with title: \${FOAM_TITLE}`,
     });
 
     it('should handle command triggers with date parameters', async () => {
+      const { engine } = await setupFoamEngine();
       // Create markdown template with date variables
       const template: Template = {
         type: 'markdown',
@@ -79,14 +80,16 @@ Today is \${FOAM_DATE_DAY_NAME}`,
         }
       );
 
-      // Test processing with date variables in extraParams
-      const result = await engine.processTemplate(trigger, template, {
-        title: '2024-01-15',
-        FOAM_DATE_YEAR: '2024',
-        FOAM_DATE_MONTH: '01',
-        FOAM_DATE_DATE: '15',
-        FOAM_DATE_DAY_NAME: 'Monday',
-      });
+      // Create resolver with date variables
+      const resolver = new Resolver(new Map(), testDate);
+      resolver.define('FOAM_TITLE', '2024-01-15');
+      resolver.define('FOAM_DATE_YEAR', '2024');
+      resolver.define('FOAM_DATE_MONTH', '01');
+      resolver.define('FOAM_DATE_DATE', '15');
+      resolver.define('FOAM_DATE_DAY_NAME', 'Monday');
+
+      // Test processing with date variables
+      const result = await engine.processTemplate(trigger, template, resolver);
 
       expect(result.content).toContain('Daily Note 2024-01-15');
       expect(result.content).toContain('Today is Monday');
@@ -100,6 +103,7 @@ Today is \${FOAM_DATE_DAY_NAME}`,
     });
 
     it('should handle placeholder triggers correctly', async () => {
+      const { engine } = await setupFoamEngine();
       // Create markdown template
       const template: Template = {
         type: 'markdown',
@@ -124,10 +128,12 @@ Content goes here.`,
         } as any
       );
 
+      // Create resolver with variables
+      const resolver = new Resolver(new Map(), new Date());
+      resolver.define('FOAM_TITLE', 'Test Note');
+
       // Test processing
-      const result = await engine.processTemplate(trigger, template, {
-        title: 'Test Note',
-      });
+      const result = await engine.processTemplate(trigger, template, resolver);
 
       expect(result.content).toContain('# Test Note');
       expect(result.content).toContain('Created from placeholder link');
@@ -143,6 +149,7 @@ Content goes here.`,
     });
 
     it('should generate default filepath when not specified in template', async () => {
+      const { engine } = await setupFoamEngine();
       // Create markdown template without filepath metadata
       const template: Template = {
         type: 'markdown',
@@ -151,11 +158,16 @@ Content goes here.`,
 Content without filepath metadata.`,
       };
 
+      // Create resolver with variables
+      const resolver = new Resolver(new Map(), new Date());
+      resolver.define('FOAM_TITLE', 'My New Note');
+      resolver.define('title', 'My New Note');
+
       // Test processing
       const result = await engine.processTemplate(
         TriggerFactory.createCommandTrigger('foam-vscode.create-note'),
         template,
-        { title: 'My New Note' }
+        resolver
       );
 
       expect(result.content).toContain('# My New Note');
@@ -163,6 +175,7 @@ Content without filepath metadata.`,
     });
 
     it('should handle JavaScript templates correctly', async () => {
+      const { engine } = await setupFoamEngine();
       // Create JavaScript template
       const template: Template = {
         type: 'javascript',
@@ -176,11 +189,16 @@ Content without filepath metadata.`,
         },
       };
 
+      // Create resolver with variables  
+      const resolver = new Resolver(new Map(), new Date());
+      resolver.define('FOAM_TITLE', 'JS Generated Note');
+      resolver.define('title', 'JS Generated Note');
+
       // Test processing
       const result = await engine.processTemplate(
         TriggerFactory.createCommandTrigger('foam-vscode.create-note'),
         template,
-        { title: 'JS Generated Note' }
+        resolver
       );
 
       expect(result.content).toContain('# JS Generated Note');

@@ -75,14 +75,14 @@ Unfortunately, all of the current methods for creating notes are cumbersome.
 #### `Markdown Notes: New Note` (Keyboard)
 
 1. Navigate to the directory where you want the note
-2. `Shift+⌘P` to open the command pallette
+2. `Shift+⌘P` to open the command palette
 3. Type `New Note` until it appears in the list. Press `Enter/Return` to select it.
 4. Enter a title for the note
 5. Manually enter the template contents you want
 
 #### Foam template note creation (Keyboard)
 
-1. `Shift+⌘P` to open the command pallette
+1. `Shift+⌘P` to open the command palette
 2. Type `Create New Note From Template` until it appears in the list. Press `Enter/Return` to select it.
 3. Use the arrow keys (or type the template name) to select the template. Press `Enter/Return` to select it.
 4. Modify the filepath to match the desired directory + filename. Press `Enter/Return` to select it.

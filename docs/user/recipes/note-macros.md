@@ -10,7 +10,7 @@ To install search note-macros in vscode or head to [note-macros - Visual Studio 
 
 ## Instructions
 
-### Run macro From command pallette
+### Run macro From command palette
 
 Simply use `Ctrl+P` or `Alt+P` depend on your os, and type `Note Macros: Run A Macro` then chose the macro you want to execute.
 

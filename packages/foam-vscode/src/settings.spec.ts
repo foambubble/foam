@@ -1,3 +1,4 @@
+/* @unit-ready */
 import { getNotesExtensions } from './settings';
 import { withModifiedFoamConfiguration } from './test/test-utils-vscode';
 

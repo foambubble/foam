@@ -18,6 +18,7 @@ import {
   AlwaysIncludeMatcher,
 } from '../core/services/datastore';
 import { MarkdownResourceProvider } from '../core/services/markdown-provider';
+import { randomString } from './test-utils';
 
 // ===== Basic VS Code Types =====
 
@@ -1478,12 +1479,17 @@ export const workspace = {
 
     const fsPath = typeof pathOrUri === 'string' ? pathOrUri : pathOrUri.fsPath;
     const relativePath = path.relative(workspaceFolder.uri.fsPath, fsPath);
-    
+
     if (includeWorkspaceFolder) {
       return `${workspaceFolder.name}/${relativePath}`;
     }
-    
+
     return relativePath;
+  },
+
+  get isTrusted(): boolean {
+    // Mock workspace as trusted for testing
+    return true;
   },
 };
 
@@ -1580,7 +1586,7 @@ export function resetMockState(): void {
   // Create a default workspace folder for tests
   const defaultWorkspaceRoot = path.join(
     require('os').tmpdir(),
-    'foam-mock-workspace'
+    'foam-mock-workspace-' + randomString(3)
   );
   require('fs').mkdirSync(defaultWorkspaceRoot, { recursive: true });
 

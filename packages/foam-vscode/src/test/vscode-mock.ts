@@ -1274,8 +1274,7 @@ export const window = {
     message: string,
     ...items: string[]
   ): Promise<string | undefined> {
-    // Mock implementation - just log for testing
-    console.log(`[INFO] ${message}`);
+    // Mock implementation - do nothing
     return undefined;
   },
 
@@ -1283,8 +1282,7 @@ export const window = {
     message: string,
     ...items: string[]
   ): Promise<string | undefined> {
-    // Mock implementation - just log for testing
-    console.log(`[WARNING] ${message}`);
+    // Mock implementation - do nothing
     return undefined;
   },
 
@@ -1292,8 +1290,7 @@ export const window = {
     message: string,
     ...items: string[]
   ): Promise<string | undefined> {
-    // Mock implementation - just log for testing
-    console.log(`[ERROR] ${message}`);
+    // Mock implementation - do nothing
     return undefined;
   },
 };

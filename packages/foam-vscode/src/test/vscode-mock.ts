@@ -1241,6 +1241,33 @@ export const window = {
 
     return editor;
   },
+
+  async showInformationMessage(
+    message: string,
+    ...items: string[]
+  ): Promise<string | undefined> {
+    // Mock implementation - just log for testing
+    console.log(`[INFO] ${message}`);
+    return undefined;
+  },
+
+  async showWarningMessage(
+    message: string,
+    ...items: string[]
+  ): Promise<string | undefined> {
+    // Mock implementation - just log for testing
+    console.log(`[WARNING] ${message}`);
+    return undefined;
+  },
+
+  async showErrorMessage(
+    message: string,
+    ...items: string[]
+  ): Promise<string | undefined> {
+    // Mock implementation - just log for testing
+    console.log(`[ERROR] ${message}`);
+    return undefined;
+  },
 };
 
 // Workspace namespace

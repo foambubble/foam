@@ -668,13 +668,8 @@ class MockTextDocument implements TextDocument {
   }
 
   getText(range?: Range): string {
-    if (!range) {
-      return this._content;
-    }
-
-    const startOffset = this.offsetAt(range.start);
-    const endOffset = this.offsetAt(range.end);
-    return this._content.substring(startOffset, endOffset);
+    // simplify by always returning the full content for now
+    return this._content;
   }
 
   lineAt(lineOrPosition: number | Position): TextLine {
@@ -1472,7 +1467,10 @@ export const workspace = {
     }
   },
 
-  asRelativePath(pathOrUri: string | Uri, includeWorkspaceFolder?: boolean): string {
+  asRelativePath(
+    pathOrUri: string | Uri,
+    includeWorkspaceFolder?: boolean
+  ): string {
     const workspaceFolder = mockState.workspaceFolders[0];
     if (!workspaceFolder) {
       return typeof pathOrUri === 'string' ? pathOrUri : pathOrUri.fsPath;
@@ -1531,6 +1529,27 @@ export const languages = {
       },
     };
   },
+};
+
+// Env namespace
+export const env = {
+  __mockClipboard: '',
+  clipboard: {
+    async writeText(value: string): Promise<void> {
+      env.__mockClipboard = value;
+    },
+
+    async readText(): Promise<string> {
+      return env.__mockClipboard || '';
+    },
+  },
+
+  // Other common env properties
+  appName: 'Visual Studio Code',
+  appRoot: '/mock/vscode',
+  language: 'en',
+  sessionId: 'mock-session',
+  machineId: 'mock-machine',
 };
 
 // ===== Initialization Helper =====

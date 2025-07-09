@@ -2,22 +2,28 @@ import path from 'path';
 import { runTests } from 'vscode-test';
 import { runUnit } from './suite-unit';
 
-function parseArgs(): { unit: boolean; e2e: boolean } {
+function parseArgs(): { unit: boolean; e2e: boolean; jestArgs: string[] } {
   const args = process.argv.slice(2);
   const unit = args.some(arg => arg === '--unit');
   const e2e = args.some(arg => arg === '--e2e');
-  return unit || e2e ? { unit, e2e } : { unit: true, e2e: true };
+
+  // Filter out our custom flags and pass the rest to Jest
+  const jestArgs = args.filter(arg => arg !== '--unit' && arg !== '--e2e');
+
+  return unit || e2e
+    ? { unit, e2e, jestArgs }
+    : { unit: true, e2e: true, jestArgs };
 }
 
 async function main() {
-  const { unit, e2e } = parseArgs();
+  const { unit, e2e, jestArgs } = parseArgs();
 
   let isSuccess = true;
 
   if (unit) {
     try {
       console.log('Running unit tests');
-      await runUnit();
+      await runUnit(jestArgs);
     } catch (err) {
       console.log('Error occurred while running Foam unit tests:', err);
       isSuccess = false;

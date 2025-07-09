@@ -21,7 +21,7 @@ import path from 'path';
 
 const rootDir = path.join(__dirname, '..', '..');
 
-export function runUnit(): Promise<void> {
+export function runUnit(extraArgs: string[] = []): Promise<void> {
   // eslint-disable-next-line no-async-promise-executor
   return new Promise(async (resolve, reject) => {
     try {
@@ -36,6 +36,8 @@ export function runUnit(): Promise<void> {
           verbose: false,
           silent: false,
           colors: true,
+          // Pass through any additional args
+          _: extraArgs,
         } as any,
         [rootDir]
       );

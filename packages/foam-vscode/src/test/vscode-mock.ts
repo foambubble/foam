@@ -11,12 +11,13 @@ import { URI } from '../core/model/uri';
 import { Logger } from '../core/utils/log';
 import { TextEdit } from '../core/services/text-edit';
 import * as foamCommands from '../features/commands';
-import { FoamWorkspace } from '../core/model/workspace';
-import { FoamGraph } from '../core/model/graph';
-import { Foam } from '../core/model/foam';
-import { FoamTags } from '../core/model/tags';
+import { Foam, bootstrap } from '../core/model/foam';
 import { createMarkdownParser } from '../core/services/markdown-parser';
-import { GenericDataStore } from '../core/services/datastore';
+import {
+  GenericDataStore,
+  AlwaysIncludeMatcher,
+} from '../core/services/datastore';
+import { MarkdownResourceProvider } from '../core/services/markdown-provider';
 
 // ===== Basic VS Code Types =====
 
@@ -1064,103 +1065,134 @@ function createMockExtensionContext(): ExtensionContext {
 
 // ===== Foam Commands Lazy Initialization =====
 
-let foamInstance: Foam | null = null;
-let commandsInitialized = false;
+class TestFoam {
+  private static instance: Foam | null = null;
 
-async function createMockFoam(): Promise<Foam> {
-  const workspace = new FoamWorkspace();
-  
-  // Create real file system implementations
-  const listFiles = async (): Promise<URI[]> => {
+  static async getInstance(): Promise<Foam> {
+    if (!TestFoam.instance) {
+      TestFoam.instance = await TestFoam.bootstrap();
+    }
+    return TestFoam.instance;
+  }
+
+  static async bootstrap(): Promise<Foam> {
     const workspaceFolder = mockState.workspaceFolders[0];
     if (!workspaceFolder) {
-      return [];
+      throw new Error('No workspace folder available for mock Foam');
     }
-    
-    // Recursively find all markdown files in the workspace
-    const findMarkdownFiles = async (dir: string): Promise<URI[]> => {
-      const files: URI[] = [];
-      try {
-        const entries = await fs.promises.readdir(dir, { withFileTypes: true });
-        
-        for (const entry of entries) {
-          const fullPath = path.join(dir, entry.name);
-          
-          if (entry.isDirectory()) {
-            const subFiles = await findMarkdownFiles(fullPath);
-            files.push(...subFiles);
-          } else if (entry.isFile() && entry.name.endsWith('.md')) {
-            files.push(URI.file(fullPath));
+
+    // Create real file system implementations
+    const listFiles = async (): Promise<URI[]> => {
+      // Recursively find all markdown files in the workspace
+      const findMarkdownFiles = async (dir: string): Promise<URI[]> => {
+        const files: URI[] = [];
+        try {
+          const entries = await fs.promises.readdir(dir, {
+            withFileTypes: true,
+          });
+
+          for (const entry of entries) {
+            const fullPath = path.join(dir, entry.name);
+
+            if (entry.isDirectory()) {
+              const subFiles = await findMarkdownFiles(fullPath);
+              files.push(...subFiles);
+            } else if (entry.isFile() && entry.name.endsWith('.md')) {
+              files.push(URI.file(fullPath));
+            }
           }
+        } catch (error) {
+          // Ignore errors accessing directories
         }
-      } catch (error) {
-        // Ignore errors accessing directories
-      }
-      
-      return files;
+
+        return files;
+      };
+
+      return findMarkdownFiles(workspaceFolder.uri.fsPath);
     };
-    
-    return findMarkdownFiles(workspaceFolder.uri.fsPath);
-  };
-  
-  const readFile = async (uri: URI): Promise<string> => {
-    try {
-      return await fs.promises.readFile(uri.toFsPath(), 'utf8');
-    } catch (error) {
-      Logger.debug(`Failed to read file ${uri.toString()}: ${error}`);
-      return '';
-    }
-  };
-  
-  const dataStore = new GenericDataStore(listFiles, readFile);
-  const parser = createMarkdownParser();
-  
-  const foam: Foam = {
-    workspace,
-    graph: FoamGraph.fromWorkspace(workspace),
-    services: {
+
+    const readFile = async (uri: URI): Promise<string> => {
+      try {
+        return await fs.promises.readFile(uri.toFsPath(), 'utf8');
+      } catch (error) {
+        Logger.debug(`Failed to read file ${uri.toString()}: ${error}`);
+        return '';
+      }
+    };
+
+    // Create services
+    const dataStore = new GenericDataStore(listFiles, readFile);
+    const parser = createMarkdownParser();
+    const matcher = new AlwaysIncludeMatcher(); // Accept all markdown files
+
+    // Create resource providers
+    const providers = [new MarkdownResourceProvider(dataStore, parser)];
+
+    // Use the bootstrap function without file watcher (simpler for tests)
+    const foam = await bootstrap(
+      matcher,
+      undefined,
       dataStore,
       parser,
-      matcher: undefined, // matcher can remain undefined for most tests
-    },
-    tags: FoamTags.fromWorkspace(workspace),
-    dispose: function (): void {},
-  };
-  return foam;
-}
+      providers,
+      '.md'
+    );
 
-async function ensureFoamCommandsInitialized(): Promise<void> {
-  if (!commandsInitialized) {
-    try {
-      foamInstance = await createMockFoam();
-      const mockContext = createMockExtensionContext();
-      const foamPromise = Promise.resolve(foamInstance);
+    Logger.info('Mock Foam instance created (manual reload for tests)');
+    return foam;
+  }
 
-      // Initialize all command modules
-      // Commands that need Foam instance
-      await foamCommands.createNote(mockContext, foamPromise);
-      await foamCommands.janitorCommand(mockContext, foamPromise);
-      await foamCommands.openRandomNoteCommand(mockContext, foamPromise);
-      await foamCommands.openResource(mockContext, foamPromise);
-      await foamCommands.updateGraphCommand(mockContext, foamPromise);
-      await foamCommands.updateWikilinksCommand(mockContext, foamPromise);
-      await foamCommands.generateStandaloneNote(mockContext, foamPromise);
-      await foamCommands.openDailyNoteForDateCommand(mockContext, foamPromise);
+  static async reloadFoamWorkspace(): Promise<void> {
+    // Simple reload: clear workspace and reload all files
+    TestFoam.instance.workspace.clear();
 
-      // Commands that only need context
-      await foamCommands.copyWithoutBracketsCommand(mockContext);
-      await foamCommands.createFromTemplateCommand(mockContext);
-      await foamCommands.createNewTemplate(mockContext);
-      await foamCommands.openDailyNoteCommand(mockContext);
-      await foamCommands.openDatedNote(mockContext);
+    // Re-read all markdown files from the filesystem
+    const files = await TestFoam.instance.services.dataStore.list();
+    for (const file of files) {
+      await TestFoam.instance.workspace.fetchAndSet(file);
+    }
 
-      commandsInitialized = true;
-      Logger.info('Foam commands initialized successfully in mock environment');
-    } catch (error) {
-      Logger.error('Failed to initialize Foam commands:', error);
-      // Fallback to stub commands if initialization fails
+    TestFoam.instance.graph.update();
+    TestFoam.instance.tags.update();
+
+    Logger.debug(`Reloaded workspace with ${files.length} files`);
+  }
+
+  static dispose() {
+    if (TestFoam.instance) {
+      try {
+        TestFoam.instance.dispose();
+      } catch (error) {
+        // Ignore disposal errors
+      }
+      TestFoam.instance = null;
     }
   }
+}
+
+async function initializeFoamCommands(foam: Foam): Promise<void> {
+  const mockContext = createMockExtensionContext();
+
+  const foamPromise = Promise.resolve(foam);
+  // Initialize all command modules
+  // Commands that need Foam instance
+  await foamCommands.createNote(mockContext, foamPromise);
+  await foamCommands.janitorCommand(mockContext, foamPromise);
+  await foamCommands.openRandomNoteCommand(mockContext, foamPromise);
+  await foamCommands.openResource(mockContext, foamPromise);
+  await foamCommands.updateGraphCommand(mockContext, foamPromise);
+  await foamCommands.updateWikilinksCommand(mockContext, foamPromise);
+  await foamCommands.generateStandaloneNote(mockContext, foamPromise);
+  await foamCommands.openDailyNoteForDateCommand(mockContext, foamPromise);
+
+  // Commands that only need context
+  await foamCommands.copyWithoutBracketsCommand(mockContext);
+  await foamCommands.createFromTemplateCommand(mockContext);
+  await foamCommands.createNewTemplate(mockContext);
+  await foamCommands.openDailyNoteCommand(mockContext);
+  await foamCommands.openDatedNote(mockContext);
+
+  Logger.info('Foam commands initialized successfully in mock environment');
 }
 
 // ===== VS Code Namespaces =====
@@ -1439,6 +1471,22 @@ export const workspace = {
       return false;
     }
   },
+
+  asRelativePath(pathOrUri: string | Uri, includeWorkspaceFolder?: boolean): string {
+    const workspaceFolder = mockState.workspaceFolders[0];
+    if (!workspaceFolder) {
+      return typeof pathOrUri === 'string' ? pathOrUri : pathOrUri.fsPath;
+    }
+
+    const fsPath = typeof pathOrUri === 'string' ? pathOrUri : pathOrUri.fsPath;
+    const relativePath = path.relative(workspaceFolder.uri.fsPath, fsPath);
+    
+    if (includeWorkspaceFolder) {
+      return `${workspaceFolder.name}/${relativePath}`;
+    }
+    
+    return relativePath;
+  },
 };
 
 // Commands namespace
@@ -1461,7 +1509,7 @@ export const commands = {
   ): Promise<T> {
     // Auto-initialize Foam commands if this is a foam-vscode command
     if (command.startsWith('foam-vscode.')) {
-      await ensureFoamCommandsInitialized();
+      await initializeFoamCommands(await TestFoam.getInstance());
     }
 
     const handler = mockState.commands.get(command);
@@ -1502,6 +1550,8 @@ export function initializeWorkspace(workspaceRoot: string): void {
 
 // Clean up state for tests
 export function resetMockState(): void {
+  // Clean up existing Foam instance
+  TestFoam.dispose();
   mockState.activeTextEditor = undefined;
   mockState.visibleTextEditors = [];
   mockState.workspaceFolders = [];
@@ -1537,3 +1587,31 @@ export function resetMockState(): void {
 
 // Initialize the mock state when the module is loaded
 resetMockState();
+
+// ===== Force Cleanup for Test Files =====
+
+export async function forceCleanup(): Promise<void> {
+  // Clean up existing Foam instance
+  TestFoam.dispose();
+
+  // Clear all registered commands
+  mockState.commands.clear();
+
+  // Clear all event listeners by resetting emitters
+  mockState.activeTextEditor = undefined;
+  mockState.visibleTextEditors = [];
+
+  // Close any open file handles by clearing the file system
+  mockState.fileSystem = new MockFileSystem();
+
+  // Clear configuration
+  mockState.configuration = new MockWorkspaceConfiguration();
+
+  // Force garbage collection
+  if (global.gc) {
+    global.gc();
+  }
+
+  // Wait for any pending file system operations to complete
+  await new Promise(resolve => setTimeout(resolve, 10));
+}

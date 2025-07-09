@@ -10,6 +10,13 @@ import { Range as FoamRange } from '../core/model/range';
 import { URI } from '../core/model/uri';
 import { Logger } from '../core/utils/log';
 import { TextEdit } from '../core/services/text-edit';
+import * as foamCommands from '../features/commands';
+import { FoamWorkspace } from '../core/model/workspace';
+import { FoamGraph } from '../core/model/graph';
+import { Foam } from '../core/model/foam';
+import { FoamTags } from '../core/model/tags';
+import { createMarkdownParser } from '../core/services/markdown-parser';
+import { GenericDataStore } from '../core/services/datastore';
 
 // ===== Basic VS Code Types =====
 
@@ -21,8 +28,18 @@ export class Range implements FoamRange {
   public readonly end: Position;
 
   constructor(start: Position, end: Position);
-  constructor(startLine: number, startCharacter: number, endLine: number, endCharacter: number);
-  constructor(startOrLine: Position | number, endOrCharacter: Position | number, endLine?: number, endCharacter?: number) {
+  constructor(
+    startLine: number,
+    startCharacter: number,
+    endLine: number,
+    endCharacter: number
+  );
+  constructor(
+    startOrLine: Position | number,
+    endOrCharacter: Position | number,
+    endLine?: number,
+    endCharacter?: number
+  ) {
     if (typeof startOrLine === 'number') {
       this.start = { line: startOrLine, character: endOrCharacter as number };
       this.end = { line: endLine!, character: endCharacter! };
@@ -31,12 +48,22 @@ export class Range implements FoamRange {
       this.end = endOrCharacter as Position;
     }
   }
-  
+
   // Add static methods that were being used by other parts of the code
-  static create(startLine: number, startChar: number, endLine?: number, endChar?: number): Range {
-    return new Range(startLine, startChar, endLine ?? startLine, endChar ?? startChar);
+  static create(
+    startLine: number,
+    startChar: number,
+    endLine?: number,
+    endChar?: number
+  ): Range {
+    return new Range(
+      startLine,
+      startChar,
+      endLine ?? startLine,
+      endChar ?? startChar
+    );
   }
-  
+
   static createFromPosition(start: Position, end?: Position): Range {
     return new Range(start, end ?? start);
   }
@@ -60,6 +87,7 @@ export interface Uri {
   }): Uri;
 
   toString(): string;
+  toJSON(): any;
 }
 
 // Adapter to convert Foam URI to VS Code Uri
@@ -79,6 +107,17 @@ export function createVSCodeUri(foamUri: URI): Uri {
 
     toString() {
       return foamUri.toString();
+    },
+
+    toJSON() {
+      return {
+        scheme: foamUri.scheme,
+        authority: foamUri.authority,
+        path: foamUri.path,
+        query: foamUri.query,
+        fragment: foamUri.fragment,
+        fsPath: foamUri.toFsPath(),
+      };
     },
   };
 }
@@ -188,6 +227,256 @@ export enum FileType {
   File = 1,
   Directory = 2,
   SymbolicLink = 64,
+}
+
+export enum CompletionItemKind {
+  Text = 0,
+  Method = 1,
+  Function = 2,
+  Constructor = 3,
+  Field = 4,
+  Variable = 5,
+  Class = 6,
+  Interface = 7,
+  Module = 8,
+  Property = 9,
+  Unit = 10,
+  Value = 11,
+  Enum = 12,
+  Keyword = 13,
+  Snippet = 14,
+  Color = 15,
+  File = 16,
+  Reference = 17,
+  Folder = 18,
+  EnumMember = 19,
+  Constant = 20,
+  Struct = 21,
+  Event = 22,
+  Operator = 23,
+  TypeParameter = 24,
+}
+
+export enum DiagnosticSeverity {
+  Error = 0,
+  Warning = 1,
+  Information = 2,
+  Hint = 3,
+}
+
+// ===== Code Actions =====
+
+export class CodeActionKind {
+  public static readonly QuickFix = new CodeActionKind('quickfix');
+  public static readonly Refactor = new CodeActionKind('refactor');
+  public static readonly RefactorExtract = new CodeActionKind(
+    'refactor.extract'
+  );
+  public static readonly RefactorInline = new CodeActionKind('refactor.inline');
+  public static readonly RefactorMove = new CodeActionKind('refactor.move');
+  public static readonly RefactorRewrite = new CodeActionKind(
+    'refactor.rewrite'
+  );
+  public static readonly Source = new CodeActionKind('source');
+  public static readonly SourceOrganizeImports = new CodeActionKind(
+    'source.organizeImports'
+  );
+  public static readonly SourceFixAll = new CodeActionKind('source.fixAll');
+
+  constructor(public readonly value: string) {}
+}
+
+export class CodeAction {
+  public title: string;
+  public edit?: WorkspaceEdit;
+  public diagnostics?: any[];
+  public kind?: CodeActionKind;
+  public command?: any;
+  public isPreferred?: boolean;
+  public disabled?: { reason: string };
+
+  constructor(title: string, kind?: CodeActionKind) {
+    this.title = title;
+    this.kind = kind;
+  }
+}
+
+// ===== Completion Items =====
+
+export class CompletionItem {
+  public label: string;
+  public kind?: CompletionItemKind;
+  public detail?: string;
+  public documentation?: string;
+  public sortText?: string;
+  public filterText?: string;
+  public insertText?: string;
+  public range?: Range;
+  public command?: any;
+  public textEdit?: any;
+  public additionalTextEdits?: any[];
+
+  constructor(label: string, kind?: CompletionItemKind) {
+    this.label = label;
+    this.kind = kind;
+  }
+}
+
+export class CompletionList {
+  public isIncomplete: boolean;
+  public items: CompletionItem[];
+
+  constructor(items: CompletionItem[] = [], isIncomplete = false) {
+    this.items = items;
+    this.isIncomplete = isIncomplete;
+  }
+}
+
+// ===== Hover =====
+
+export class MarkdownString {
+  public value: string;
+  public isTrusted?: boolean;
+
+  constructor(value?: string) {
+    this.value = value || '';
+  }
+
+  appendText(value: string): MarkdownString {
+    this.value += value;
+    return this;
+  }
+
+  appendMarkdown(value: string): MarkdownString {
+    this.value += value;
+    return this;
+  }
+
+  appendCodeblock(value: string, language?: string): MarkdownString {
+    this.value += `\`\`\`${language || ''}\n${value}\n\`\`\``;
+    return this;
+  }
+}
+
+export class Hover {
+  public contents: (MarkdownString | string)[];
+  public range?: Range;
+
+  constructor(
+    contents: (MarkdownString | string)[] | MarkdownString | string,
+    range?: Range
+  ) {
+    if (Array.isArray(contents)) {
+      this.contents = contents;
+    } else {
+      this.contents = [contents];
+    }
+    this.range = range;
+  }
+}
+
+// ===== Tree Items =====
+
+export class TreeItem {
+  public label?: string;
+  public id?: string;
+  public iconPath?: string | Uri | { light: string | Uri; dark: string | Uri };
+  public description?: string;
+  public tooltip?: string;
+  public command?: any;
+  public collapsibleState?: number;
+  public contextValue?: string;
+  public resourceUri?: Uri;
+
+  constructor(label: string, collapsibleState?: number) {
+    this.label = label;
+    this.collapsibleState = collapsibleState;
+  }
+}
+
+export enum TreeItemCollapsibleState {
+  None = 0,
+  Collapsed = 1,
+  Expanded = 2,
+}
+
+// ===== Theme Classes =====
+
+export class ThemeColor {
+  constructor(public readonly id: string) {}
+}
+
+export class ThemeIcon {
+  public readonly id: string;
+  public readonly color?: ThemeColor;
+
+  constructor(id: string, color?: ThemeColor) {
+    this.id = id;
+    this.color = color;
+  }
+
+  static readonly File = new ThemeIcon('file');
+  static readonly Folder = new ThemeIcon('folder');
+}
+
+// ===== Event System =====
+
+export interface Event<T> {
+  (listener: (e: T) => any, thisArg?: any): { dispose(): void };
+}
+
+export interface Disposable {
+  dispose(): void;
+}
+
+export class EventEmitter<T> {
+  private listeners: ((e: T) => any)[] = [];
+
+  get event(): Event<T> {
+    return (listener: (e: T) => any, thisArg?: any) => {
+      const boundListener = thisArg ? listener.bind(thisArg) : listener;
+      this.listeners.push(boundListener);
+      return {
+        dispose: () => {
+          const index = this.listeners.indexOf(boundListener);
+          if (index >= 0) {
+            this.listeners.splice(index, 1);
+          }
+        },
+      };
+    };
+  }
+
+  fire(data: T): void {
+    this.listeners.forEach(listener => {
+      try {
+        listener(data);
+      } catch (error) {
+        console.error('Error in event listener:', error);
+      }
+    });
+  }
+
+  dispose(): void {
+    this.listeners = [];
+  }
+}
+
+// ===== Diagnostics =====
+
+export class Diagnostic {
+  public range: Range;
+  public message: string;
+  public severity: DiagnosticSeverity;
+  public source?: string;
+  public code?: string | number;
+  public relatedInformation?: any[];
+
+  constructor(range: Range, message: string, severity?: DiagnosticSeverity) {
+    this.range = range;
+    this.message = message;
+    this.severity = severity || DiagnosticSeverity.Error;
+  }
 }
 
 // ===== SnippetString =====
@@ -589,6 +878,18 @@ export class WorkspaceEdit {
     this._edits.get(key)!.push({ type: 'delete', range });
   }
 
+  renameFile(
+    oldUri: Uri,
+    newUri: Uri,
+    options?: { overwrite?: boolean; ignoreIfExists?: boolean }
+  ): void {
+    const key = oldUri.toString();
+    if (!this._edits.has(key)) {
+      this._edits.set(key, []);
+    }
+    this._edits.get(key)!.push({ type: 'rename', oldUri, newUri, options });
+  }
+
   // Internal method to get edits for applying
   _getEdits(): Map<string, any[]> {
     return this._edits;
@@ -700,6 +1001,168 @@ export interface WorkspaceFolder {
   readonly index: number;
 }
 
+// ===== Extension Context =====
+
+export interface ExtensionContext {
+  subscriptions: Disposable[];
+  workspaceState: any;
+  globalState: any;
+  extensionPath: string;
+  extensionUri: Uri;
+  storageUri: Uri | undefined;
+  globalStorageUri: Uri;
+  logUri: Uri;
+  secrets: any;
+  environmentVariableCollection: any;
+  asAbsolutePath(relativePath: string): string;
+  storagePath: string | undefined;
+  globalStoragePath: string;
+  logPath: string;
+  extensionMode: number;
+  extension: any;
+}
+
+function createMockExtensionContext(): ExtensionContext {
+  return {
+    subscriptions: [],
+    workspaceState: {
+      get: () => undefined,
+      update: () => Promise.resolve(),
+    },
+    globalState: {
+      get: () => undefined,
+      update: () => Promise.resolve(),
+    },
+    extensionPath: '/mock/extension/path',
+    extensionUri: createVSCodeUri(URI.parse('file:///mock/extension/path')),
+    storageUri: undefined,
+    globalStorageUri: createVSCodeUri(URI.parse('file:///mock/global/storage')),
+    logUri: createVSCodeUri(URI.parse('file:///mock/logs')),
+    secrets: {
+      get: () => Promise.resolve(undefined),
+      store: () => Promise.resolve(),
+      delete: () => Promise.resolve(),
+    },
+    environmentVariableCollection: {
+      clear: () => {},
+      get: () => undefined,
+      set: () => {},
+      delete: () => {},
+    },
+    asAbsolutePath: (relativePath: string) =>
+      path.join('/mock/extension/path', relativePath),
+    storagePath: '/mock/storage',
+    globalStoragePath: '/mock/global/storage',
+    logPath: '/mock/logs',
+    extensionMode: 1,
+    extension: {
+      id: 'foam.foam-vscode',
+      packageJSON: {},
+    },
+  };
+}
+
+// ===== Foam Commands Lazy Initialization =====
+
+let foamInstance: Foam | null = null;
+let commandsInitialized = false;
+
+async function createMockFoam(): Promise<Foam> {
+  const workspace = new FoamWorkspace();
+  
+  // Create real file system implementations
+  const listFiles = async (): Promise<URI[]> => {
+    const workspaceFolder = mockState.workspaceFolders[0];
+    if (!workspaceFolder) {
+      return [];
+    }
+    
+    // Recursively find all markdown files in the workspace
+    const findMarkdownFiles = async (dir: string): Promise<URI[]> => {
+      const files: URI[] = [];
+      try {
+        const entries = await fs.promises.readdir(dir, { withFileTypes: true });
+        
+        for (const entry of entries) {
+          const fullPath = path.join(dir, entry.name);
+          
+          if (entry.isDirectory()) {
+            const subFiles = await findMarkdownFiles(fullPath);
+            files.push(...subFiles);
+          } else if (entry.isFile() && entry.name.endsWith('.md')) {
+            files.push(URI.file(fullPath));
+          }
+        }
+      } catch (error) {
+        // Ignore errors accessing directories
+      }
+      
+      return files;
+    };
+    
+    return findMarkdownFiles(workspaceFolder.uri.fsPath);
+  };
+  
+  const readFile = async (uri: URI): Promise<string> => {
+    try {
+      return await fs.promises.readFile(uri.toFsPath(), 'utf8');
+    } catch (error) {
+      Logger.debug(`Failed to read file ${uri.toString()}: ${error}`);
+      return '';
+    }
+  };
+  
+  const dataStore = new GenericDataStore(listFiles, readFile);
+  const parser = createMarkdownParser();
+  
+  const foam: Foam = {
+    workspace,
+    graph: FoamGraph.fromWorkspace(workspace),
+    services: {
+      dataStore,
+      parser,
+      matcher: undefined, // matcher can remain undefined for most tests
+    },
+    tags: FoamTags.fromWorkspace(workspace),
+    dispose: function (): void {},
+  };
+  return foam;
+}
+
+async function ensureFoamCommandsInitialized(): Promise<void> {
+  if (!commandsInitialized) {
+    try {
+      foamInstance = await createMockFoam();
+      const mockContext = createMockExtensionContext();
+      const foamPromise = Promise.resolve(foamInstance);
+
+      // Initialize all command modules
+      // Commands that need Foam instance
+      await foamCommands.createNote(mockContext, foamPromise);
+      await foamCommands.janitorCommand(mockContext, foamPromise);
+      await foamCommands.openRandomNoteCommand(mockContext, foamPromise);
+      await foamCommands.openResource(mockContext, foamPromise);
+      await foamCommands.updateGraphCommand(mockContext, foamPromise);
+      await foamCommands.updateWikilinksCommand(mockContext, foamPromise);
+      await foamCommands.generateStandaloneNote(mockContext, foamPromise);
+      await foamCommands.openDailyNoteForDateCommand(mockContext, foamPromise);
+
+      // Commands that only need context
+      await foamCommands.copyWithoutBracketsCommand(mockContext);
+      await foamCommands.createFromTemplateCommand(mockContext);
+      await foamCommands.createNewTemplate(mockContext);
+      await foamCommands.openDailyNoteCommand(mockContext);
+      await foamCommands.openDatedNote(mockContext);
+
+      commandsInitialized = true;
+      Logger.info('Foam commands initialized successfully in mock environment');
+    } catch (error) {
+      Logger.error('Failed to initialize Foam commands:', error);
+      // Fallback to stub commands if initialization fails
+    }
+  }
+}
+
 // ===== VS Code Namespaces =====
 
 // Global state
@@ -735,6 +1198,12 @@ export const window = {
   }): Promise<string | undefined> {
     // This will be mocked in tests
     return undefined;
+  },
+
+  async showQuickPick(items: any[], options?: any): Promise<any> {
+    throw new Error(
+      'showQuickPick not implemented - should be mocked in tests'
+    );
   },
 
   async showTextDocument(
@@ -802,6 +1271,82 @@ export const workspace = {
     return mockState.configuration;
   },
 
+  async findFiles(
+    include: string,
+    exclude?: string,
+    maxResults?: number
+  ): Promise<Uri[]> {
+    // Simple implementation that recursively finds files
+    const micromatch = require('micromatch');
+    const workspaceFolder = mockState.workspaceFolders[0];
+
+    if (!workspaceFolder) {
+      return [];
+    }
+
+    const findFilesRecursive = async (dir: string): Promise<string[]> => {
+      const files: string[] = [];
+      try {
+        const entries = await fs.promises.readdir(dir, { withFileTypes: true });
+
+        for (const entry of entries) {
+          const fullPath = path.join(dir, entry.name);
+          const relativePath = path.relative(
+            workspaceFolder.uri.fsPath,
+            fullPath
+          );
+
+          if (entry.isDirectory()) {
+            const subFiles = await findFilesRecursive(fullPath);
+            files.push(...subFiles);
+          } else if (entry.isFile()) {
+            // Check if file matches include pattern
+            if (micromatch.isMatch(relativePath, include)) {
+              // Check if file matches exclude pattern
+              if (!exclude || !micromatch.isMatch(relativePath, exclude)) {
+                files.push(fullPath);
+              }
+            }
+          }
+        }
+      } catch (error) {
+        // Ignore errors accessing directories
+      }
+
+      return files;
+    };
+
+    try {
+      const files = await findFilesRecursive(workspaceFolder.uri.fsPath);
+
+      let result = files.map(file => createVSCodeUri(URI.file(file)));
+
+      if (maxResults && result.length > maxResults) {
+        result = result.slice(0, maxResults);
+      }
+
+      return result;
+    } catch (error) {
+      return [];
+    }
+  },
+
+  getWorkspaceFolder(uri: Uri): WorkspaceFolder | undefined {
+    const workspaceFolder = mockState.workspaceFolders.find(folder =>
+      uri.fsPath.startsWith(folder.uri.fsPath)
+    );
+    return workspaceFolder;
+  },
+
+  onWillSaveTextDocument(listener: (e: any) => void): Disposable {
+    // Mock event listener for document save events
+    return {
+      dispose: () => {
+        // No-op
+      },
+    };
+  },
+
   async openTextDocument(
     uriOrFileNameOrOptions:
       | Uri
@@ -850,6 +1395,9 @@ export const workspace = {
                 newText: edit.newText,
                 range: edit.range,
               });
+            } else if (edit.type === 'rename') {
+              // Handle file rename by physically moving the file
+              await fs.promises.rename(edit.oldUri.fsPath, edit.newUri.fsPath);
             }
             // Handle other edit types as needed
           }
@@ -884,12 +1432,29 @@ export const commands = {
     command: string,
     ...args: any[]
   ): Promise<T> {
+    // Auto-initialize Foam commands if this is a foam-vscode command
+    if (command.startsWith('foam-vscode.')) {
+      await ensureFoamCommandsInitialized();
+    }
+
     const handler = mockState.commands.get(command);
     if (!handler) {
       throw new Error(`Command '${command}' not found`);
     }
 
     return handler(...args);
+  },
+};
+
+// Languages namespace
+export const languages = {
+  registerCodeLensProvider(selector: any, provider: any): Disposable {
+    // Mock code lens provider registration
+    return {
+      dispose: () => {
+        // No-op
+      },
+    };
   },
 };
 
@@ -908,16 +1473,22 @@ export function initializeWorkspace(workspaceRoot: string): void {
 
 // ===== Utility Functions =====
 
-export function createUri(fsPath: string): Uri {
-  return createVSCodeUri(URI.file(fsPath));
-}
-
 // Clean up state for tests
 export function resetMockState(): void {
   mockState.activeTextEditor = undefined;
   mockState.visibleTextEditors = [];
   mockState.workspaceFolders = [];
   mockState.commands.clear();
+  mockState.configuration = new MockWorkspaceConfiguration();
+
+  // Create a default workspace folder for tests
+  const defaultWorkspaceRoot = path.join(
+    require('os').tmpdir(),
+    'foam-mock-workspace'
+  );
+  require('fs').mkdirSync(defaultWorkspaceRoot, { recursive: true });
+
+  initializeWorkspace(defaultWorkspaceRoot);
 
   // Register built-in VS Code commands
   commands.registerCommand('workbench.action.closeAllEditors', () => {
@@ -931,5 +1502,11 @@ export function resetMockState(): void {
     return window.showTextDocument(uri);
   });
 
-  mockState.configuration = new MockWorkspaceConfiguration();
+  commands.registerCommand('setContext', (key: string, value: any) => {
+    // Mock command for setting VS Code context
+    return Promise.resolve();
+  });
 }
+
+// Initialize the mock state when the module is loaded
+resetMockState();

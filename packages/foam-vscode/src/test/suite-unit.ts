@@ -18,10 +18,42 @@ process.env.NODE_ENV = 'test';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { runCLI } from '@jest/core';
 import path from 'path';
+import * as fs from 'fs';
+import * as glob from 'glob';
 
 const rootDir = path.join(__dirname, '..', '..');
 
-export function runUnit(extraArgs: string[] = []): Promise<void> {
+function getUnitReadySpecFiles(rootDir: string): string[] {
+  const specFiles = glob.sync('**/*.spec.ts', {
+    cwd: path.join(rootDir, 'src'),
+  });
+  const unitReadyFiles: string[] = [];
+
+  for (const file of specFiles) {
+    const fullPath = path.join(rootDir, 'src', file);
+    try {
+      const content = fs.readFileSync(fullPath, 'utf8');
+
+      // Check for @unit-ready annotation in file
+      if (
+        content.includes('/* @unit-ready */') ||
+        content.includes('// @unit-ready')
+      ) {
+        unitReadyFiles.push(file);
+      }
+    } catch (error) {
+      // Skip files that can't be read
+      continue;
+    }
+  }
+
+  return unitReadyFiles;
+}
+
+export function runUnit(
+  extraArgs: string[] = [],
+  excludeSpecs = false
+): Promise<void> {
   // eslint-disable-next-line no-async-promise-executor
   return new Promise(async (resolve, reject) => {
     try {
@@ -30,9 +62,24 @@ export function runUnit(extraArgs: string[] = []): Promise<void> {
           rootDir,
           roots: ['<rootDir>/src'],
           runInBand: true,
-          testRegex: '\\.(test|spec)\\.ts$',
+          testRegex: excludeSpecs
+            ? ['\\.(test)\\.ts$']
+            : (() => {
+                const unitReadySpecs = getUnitReadySpecFiles(rootDir);
+
+                // Create pattern that includes .test files + specific .spec files
+                return [
+                  '\\.(test)\\.ts$', // All .test files
+                  ...unitReadySpecs.map(
+                    file =>
+                      file.replace(/\//g, '\\/').replace(/\./g, '\\.') + '$'
+                  ),
+                ];
+              })(),
           setupFiles: ['<rootDir>/src/test/support/jest-setup.ts'],
-          setupFilesAfterEnv: ['<rootDir>/src/test/support/jest-setup-after-env.ts'],
+          setupFilesAfterEnv: [
+            '<rootDir>/src/test/support/jest-setup-after-env.ts',
+          ],
           testTimeout: 20000,
           verbose: false,
           silent: false,

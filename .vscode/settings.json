@@ -26,7 +26,7 @@
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "jest.autoRun": "off",
   "jest.rootPath": "packages/foam-vscode",
-  "jest.jestCommandLine": "yarn jest",
+  "jest.jestCommandLine": "yarn test:unit",
   "gitdoc.enabled": false,
   "search.mode": "reuseEditor",
   "[typescript]": {

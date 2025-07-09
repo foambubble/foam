@@ -52,6 +52,16 @@ export class FoamWorkspace implements IDisposable {
     return deleted ?? null;
   }
 
+  clear() {
+    const resources = Array.from(this._resources.values());
+    this._resources.clear();
+    
+    // Fire delete events for all resources
+    resources.forEach(resource => {
+      this.onDidDeleteEmitter.fire(resource);
+    });
+  }
+
   public exists(uri: URI): boolean {
     return isSome(this.find(uri));
   }

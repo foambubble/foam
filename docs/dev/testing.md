@@ -17,7 +17,7 @@ We use two distinct types of test files, each serving different purposes:
 ### `.spec.ts` Files - Integration Tests with VS Code APIs
 
 - **Purpose**: Test features that integrate with VS Code APIs and user workflows
-- **Dependencies**: Will likely depend on VS Code APIs (`vscode` module), otherwise avoid incurring the perfomance hit
+- **Dependencies**: Will likely depend on VS Code APIs (`vscode` module), otherwise avoid incurring the performance hit
 - **Environment**: Can run in TWO environments:
   - **Mock Environment**: Jest with VS Code API mocks (fast)
   - **Real VS Code**: Full VS Code extension host (slow but comprehensive)

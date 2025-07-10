@@ -55,7 +55,7 @@ export class FoamWorkspace implements IDisposable {
   clear() {
     const resources = Array.from(this._resources.values());
     this._resources.clear();
-    
+
     // Fire delete events for all resources
     resources.forEach(resource => {
       this.onDidDeleteEmitter.fire(resource);

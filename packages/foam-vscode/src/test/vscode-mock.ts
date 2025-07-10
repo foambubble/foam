@@ -30,6 +30,17 @@ import {
   TreeItemCollapsibleState,
 } from 'vscode';
 
+interface Thenable<T> {
+  then<TResult>(
+    onfulfilled?: (value: T) => TResult | Thenable<TResult>,
+    onrejected?: (reason: any) => TResult | Thenable<TResult>
+  ): Thenable<TResult>;
+  then<TResult>(
+    onfulfilled?: (value: T) => TResult | Thenable<TResult>,
+    onrejected?: (reason: any) => void
+  ): Thenable<TResult>;
+}
+
 // ===== Basic VS Code Types =====
 
 export { Position };
@@ -135,6 +146,7 @@ export function createVSCodeUri(foamUri: URI): Uri {
 }
 
 // VS Code Uri static methods
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const Uri = {
   file(path: string): Uri {
     return createVSCodeUri(URI.file(path));
@@ -499,7 +511,7 @@ export interface WorkspaceConfiguration {
     value: any,
     configurationTarget?: any
   ): Thenable<void>;
-  readonly [key: string]: any;
+  [key: string]: any;
 }
 
 class MockWorkspaceConfiguration implements WorkspaceConfiguration {
@@ -528,15 +540,14 @@ class MockWorkspaceConfiguration implements WorkspaceConfiguration {
     };
   }
 
-  async update(
+  update(
     section: string,
     value: any,
     configurationTarget?: any
-  ): Promise<void> {
+  ): Thenable<void> {
     this._config.set(section, value);
+    return Promise.resolve();
   }
-
-  [key: string]: any;
 }
 
 // ===== Document Management =====

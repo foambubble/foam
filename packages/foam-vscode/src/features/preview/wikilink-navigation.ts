@@ -86,24 +86,28 @@ export const markdownItWikilinkNavigation = (
 
           let fragment;
           if (foundSection) {
-            // If the link points to a heading, the fragment is the heading's generated ID.
-            if (foundSection.isHeading) {
-              fragment = foundSection.id;
-            } else {
-              // If the link points to a block ID, we need to find the nearest parent heading
-              // to use as the navigation anchor. This ensures that clicking the link scrolls
-              // to the correct area in the preview.
-              const parentHeading = resource.sections
-                .filter(
-                  s =>
-                    s.isHeading &&
-                    s.range.start.line < foundSection.range.start.line
-                )
-                // Sort headings by line number descending to find the closest one *before* the block.
-                .sort((a, b) => b.range.start.line - a.range.start.line)[0];
+            switch (foundSection.type) {
+              case 'heading':
+                // If the link points to a heading, the fragment is the heading's generated ID.
+                fragment = foundSection.id;
+                break;
+              case 'block': {
+                // If the link points to a block ID, we need to find the nearest parent heading
+                // to use as the navigation anchor. This ensures that clicking the link scrolls
+                // to the correct area in the preview.
+                const parentHeading = resource.sections
+                  .filter(
+                    s =>
+                      s.type === 'heading' &&
+                      s.range.start.line < foundSection.range.start.line
+                  )
+                  // Sort headings by line number descending to find the closest one *before* the block.
+                  .sort((a, b) => b.range.start.line - a.range.start.line)[0];
 
-              // Use the parent heading's ID if found; otherwise, fall back to a slug of the block ID.
-              fragment = parentHeading ? parentHeading.id : toSlug(section);
+                // Use the parent heading's ID if found; otherwise, fall back to a slug of the block ID.
+                fragment = parentHeading ? parentHeading.id : toSlug(section);
+                break;
+              }
             }
           } else {
             // If no specific section is found, fall back to a slug of the section identifier.

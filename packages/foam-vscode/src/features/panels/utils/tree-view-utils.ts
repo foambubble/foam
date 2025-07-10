@@ -238,10 +238,8 @@ export function createConnectionItemsForResource(
       const targetResource = workspace.get(c.target.asPlain());
       if (targetResource) {
         const fragment = c.target.fragment;
-        const section = targetResource.sections.find(
-          s => s.blockId === fragment
-        );
-        if (section) {
+        const section = Resource.findSection(targetResource, fragment);
+        if (isSome(section)) {
           item.label = section.label;
         }
       }

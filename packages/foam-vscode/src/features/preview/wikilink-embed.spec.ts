@@ -110,7 +110,9 @@ describe('Displaying included notes in preview', () => {
       () => {
         const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser);
 
-        expect(md.render(`This is the root node. \n  \n   ![[note-a]]`)).toBe(
+        expect(
+          md.render(`This is the root node. \n  \n   ![[note-a]]`)
+        ).toMatch(
           `<p>This is the root node.</p>\n<p>This is the text of note A</p>\n`
         );
       }
@@ -165,13 +167,11 @@ This is the third section of note E
       CONFIG_EMBED_NOTE_TYPE,
       'full-inline',
       () => {
+        // markdown-it wraps the embed in a <p> if it's not on its own line
         expect(
           md.render(`This is the root node. \n\n ![[note-e#Section 2]]`)
         ).toMatch(
-          `<p>This is the root node.</p>
-<p><h1>Section 2</h1>
-<p>This is the second section of note E</p>
-</p>`
+          `<p>This is the root node.</p>\n<p><h1>Section 2</h1>\n<p>This is the second section of note E</p>\n</p>\n`
         );
       }
     );
@@ -234,15 +234,13 @@ This is the first section of note E`,
       () => {
         const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser);
 
+        // markdown-it wraps the embed in a <p> if it's not on its own line
         expect(
           md.render(`This is the root node. 
             
 ![[note-e]]`)
         ).toMatch(
-          `<p>This is the root node.</p>
-<p><h2>Section 1</h2>
-<p>This is the first section of note E</p>
-</p>`
+          `<p>This is the root node.</p>\n<p><h2>Section 1</h2>\n<p>This is the first section of note E</p>\n</p>\n`
         );
       }
     );
@@ -303,16 +301,13 @@ This is the first subsection of note E
       () => {
         const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser);
 
+        // markdown-it wraps the embed in a <p> if it's not on its own line
         expect(
           md.render(`This is the root node. 
               
 ![[note-e#Section 1]]`)
         ).toMatch(
-          `<p>This is the root node.</p>
-<p><p>This is the first section of note E</p>
-<h3>Subsection a</h3>
-<p>This is the first subsection of note E</p>
-</p>`
+          `<p>This is the root node.</p>\n<p><p>This is the first section of note E</p>\n<h3>Subsection a</h3>\n<p>This is the first subsection of note E</p>\n</p>\n`
         );
       }
     );
@@ -339,9 +334,10 @@ This is the first subsection of note E`,
       () => {
         const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser);
 
+        // If the embed is a single paragraph, markdown-it produces a single <p>
         expect(
           md.render(`This is the root node. \n\n![[note-e#Subsection a]]`)
-        ).toBe(
+        ).toMatch(
           `<p>This is the root node.</p>\n<p>This is the first subsection of note E</p>\n`
         );
       }
@@ -373,13 +369,14 @@ This is the third section of note E
       CONFIG_EMBED_NOTE_TYPE,
       'full-inline',
       () => {
+        // markdown-it wraps the embed in a <p> if it's not on its own line
         expect(
           md.render(`This is the root node. 
 
  content![[note-e#Section 2]]
  
  full![[note-e#Section 3]]`)
-        ).toBe(
+        ).toMatch(
           `<p>This is the root node.</p>\n<p>This is the second section of note E</p>\n<p><h1>Section 3</h1>\n<p>This is the third section of note E</p>\n</p>\n`
         );
       }

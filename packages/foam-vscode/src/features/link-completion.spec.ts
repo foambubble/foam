@@ -23,7 +23,10 @@ describe('Link Completion', () => {
     createTestNote({
       root,
       uri: 'file-name.md',
-      sections: ['Section One', 'Section Two'],
+      sections: [
+        { label: 'Section One', level: 1 },
+        { label: 'Section Two', level: 1 },
+      ],
     })
   )
     .set(
@@ -159,7 +162,7 @@ describe('Link Completion', () => {
         );
 
         expect(links.items.map(i => i.label)).toEqual([
-          workspace.getIdentifier(noteUri),
+          ws.getIdentifier(noteUri),
         ]);
       }
     );
@@ -187,7 +190,7 @@ describe('Link Completion', () => {
         );
 
         expect(links.items.map(i => i.insertText)).toEqual([
-          workspace.getIdentifier(noteUri),
+          ws.getIdentifier(noteUri),
         ]);
       }
     );
@@ -202,7 +205,7 @@ describe('Link Completion', () => {
         );
 
         expect(links.items.map(i => i.insertText)).toEqual([
-          `${workspace.getIdentifier(noteUri)}|My Note Title`,
+          `${ws.getIdentifier(noteUri)}|My Note Title`,
         ]);
       }
     );

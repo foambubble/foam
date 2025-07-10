@@ -6,13 +6,17 @@ import { workspace as vsWorkspace } from 'vscode';
 import markdownItRegex from 'markdown-it-regex';
 import { FoamWorkspace } from '../../core/model/workspace';
 import { Logger } from '../../core/utils/log';
-import { Resource, ResourceParser } from '../../core/model/note';
+import {
+  HeadingSection,
+  Resource,
+  ResourceParser,
+} from '../../core/model/note';
 import { getFoamVsCodeConfig } from '../../services/config';
 import { fromVsCodeUri, toVsCodeUri } from '../../utils/vsc-utils';
 import { MarkdownLink } from '../../core/services/markdown-link';
 import { URI } from '../../core/model/uri';
 import { Position } from '../../core/model/position';
-import { Range } from '../../core/model/range'; // Add this import
+import { Range } from '../../core/model/range';
 import { TextEdit } from '../../core/services/text-edit';
 import { isNone, isSome } from '../../core/utils';
 import { stripFrontMatter } from '../../core/utils/md';
@@ -20,6 +24,19 @@ import {
   asAbsoluteWorkspaceUri,
   isVirtualWorkspace,
 } from '../../services/editor';
+
+/**
+ * Parses a wikilink target into its note and fragment components.
+ * @param wikilinkTarget The full string target of the wikilink (e.g., 'my-note#my-heading').
+ * @returns An object containing the noteTarget and an optional fragment.
+ */
+function parseWikilink(wikilinkTarget: string): {
+  noteTarget: string;
+  fragment?: string;
+} {
+  const [noteTarget, fragment] = wikilinkTarget.split('#');
+  return { noteTarget, fragment };
+}
 
 export const WIKILINK_EMBED_REGEX =
   /((?:(?:full|content)-(?:inline|card)|full|content|inline|card)?!\[\[[^[\]]+?\]\])/;
@@ -46,22 +63,16 @@ export const markdownItWikilinkEmbed = (
     regex: WIKILINK_EMBED_REGEX,
     replace: (wikilinkItem: string) => {
       try {
-        const [, noteEmbedModifier, wikilinkTarget] = wikilinkItem.match(
-          WIKILINK_EMBED_REGEX_GROUPS
-        );
+        const regexMatch = wikilinkItem.match(WIKILINK_EMBED_REGEX_GROUPS);
+        const [, noteEmbedModifier, wikilinkTarget] = regexMatch;
 
         if (isVirtualWorkspace()) {
-          return `
- <div class="foam-embed-not-supported-warning">
-   Embed not supported in virtual workspace: ![[${wikilinkTarget}]]
- </div>
-           `;
+          return `\n <div class="foam-embed-not-supported-warning">\n   Embed not supported in virtual workspace: ![[${wikilinkTarget}]]\n </div>\n           `;
         }
 
         // Parse the wikilink to separate the note path from the fragment.
         const { noteTarget, fragment } = parseWikilink(wikilinkTarget);
         const includedNote = workspace.find(noteTarget);
-
         if (!includedNote) {
           return `![[${wikilinkTarget}]]`;
         }
@@ -69,35 +80,33 @@ export const markdownItWikilinkEmbed = (
         const cyclicLinkDetected = refsStack.includes(
           includedNote.uri.path.toLocaleLowerCase()
         );
-
         if (cyclicLinkDetected) {
-          return `
- <div class="foam-cyclic-link-warning">
-   Cyclic link detected for wikilink: ${wikilinkTarget}
-   <div class="foam-cyclic-link-warning__stack">
-     Link sequence:
-     <ul>
-       ${refsStack.map(ref => `<li>${ref}</li>`).join('')}
-     </ul>
-   </div>
- </div>
-           `;
+          const { noteStyle } = retrieveNoteConfig(noteEmbedModifier);
+          const warning = `\n <div class="foam-cyclic-link-warning">\n   Cyclic link detected for wikilink: ${wikilinkTarget}\n   <div class="foam-cyclic-link-warning__stack">\n     Link sequence:\n     <ul>\n       ${refsStack
+            .map(ref => `<li>${ref}</li>`)
+            .join('')}\n     </ul>\n   </div>\n </div>\n          `;
+          return warning;
         }
-
         refsStack.push(includedNote.uri.path.toLocaleLowerCase());
 
-        const htmlContent = getNoteContent(
-          includedNote,
-          fragment,
-          noteEmbedModifier,
-          parser,
-          workspace,
-          md
-        );
-        refsStack.pop();
+        // Extract the raw markdown for the embed
+        const { noteScope, noteStyle } = retrieveNoteConfig(noteEmbedModifier);
+        const extractor: EmbedNoteExtractor =
+          noteScope === 'content' ? contentExtractor : fullExtractor;
+        const content = extractor(includedNote, fragment, parser, workspace);
 
-        return htmlContent;
+        // Render the extracted content as HTML using the correct formatter
+        let rendered: string;
+        if (noteStyle === 'card') {
+          rendered = cardFormatter(md.render(content), md);
+        } else {
+          rendered = inlineFormatter(content, md);
+        }
+
+        refsStack.pop();
+        return rendered;
       } catch (e) {
+        console.error(`ERROR in wikilink embed processing:`, e);
         Logger.error(
           `Error while including ${wikilinkItem} into the current document of the Preview panel`,
           e
@@ -128,15 +137,17 @@ function getNoteContent(
 
       content = extractor(includedNote, linkFragment, parser, workspace);
 
-      const formatter: EmbedNoteFormatter =
-        noteStyle === 'card' ? cardFormatter : inlineFormatter;
-      toRender = formatter(content, md);
+      // Guarantee HTML output: if the formatter returns plain text, render it as markdown
+      if (!/^\s*</.test(content)) {
+        // If the output does not start with an HTML tag, render as markdown
+        toRender = md.render(content);
+      } else {
+        toRender = content;
+      }
       break;
     }
     case 'attachment':
-      content = `> [[${includedNote.uri.path}]]
->
-> Embed for attachments is not supported`;
+      content = `> [[${includedNote.uri.path}]]\n>\n> Embed for attachments is not supported`;
       toRender = md.render(content);
       break;
     case 'image':
@@ -144,7 +155,7 @@ function getNoteContent(
       toRender = md.render(content);
       break;
     default:
-      toRender = content;
+      toRender = md.render(content);
   }
 
   return toRender;
@@ -204,6 +215,7 @@ export function retrieveNoteConfig(explicitModifier: string | undefined): {
       [noteScope, noteStyle] = explicitModifier.split('-');
     }
   }
+
   return { noteScope, noteStyle };
 }
 
@@ -228,18 +240,30 @@ function fullExtractor(
   workspace: FoamWorkspace
 ): string {
   let noteText = readFileSync(note.uri.toFsPath()).toString();
+
   // Find the specific section or block being linked to, if a fragment is provided.
   const section = linkFragment
     ? Resource.findSection(note, linkFragment)
     : null;
+
   if (isSome(section)) {
-    if (section.isHeading) {
+    if (section.type === 'heading') {
       // For headings, extract all content from that heading to the next.
-      let rows = noteText.split('\n');
-      // Find the next heading after this one
+      let rows = noteText.split(/\r?\n/);
+      // Find the next heading after this one, regardless of level
       let nextHeadingLine = rows.length;
       for (let i = section.range.start.line + 1; i < rows.length; i++) {
-        if (/^\s*#+\s/.test(rows[i])) {
+        // Find the next heading of the same or higher level
+        const nextHeading = note.sections.find(s => {
+          if (s.type === 'heading') {
+            return (
+              s.range.start.line === i &&
+              s.level <= (section as HeadingSection).level
+            );
+          }
+          return false;
+        });
+        if (nextHeading) {
           nextHeadingLine = i;
           break;
         }
@@ -249,7 +273,7 @@ function fullExtractor(
     } else {
       // For block-level embeds (paragraphs, list items with a ^block-id),
       // extract the content precisely using the range from the parser.
-      const rows = noteText.split('\n');
+      const rows = noteText.split(/\r?\n/);
       noteText = rows
         .slice(section.range.start.line, section.range.end.line + 1)
         .join('\n');
@@ -258,12 +282,14 @@ function fullExtractor(
     // No fragment: transclude the whole note (excluding frontmatter if present)
     noteText = stripFrontMatter(noteText);
   }
+
   noteText = withLinksRelativeToWorkspaceRoot(
     note.uri,
     noteText,
     parser,
     workspace
   );
+
   return noteText;
 }
 
@@ -278,28 +304,44 @@ function contentExtractor(
   workspace: FoamWorkspace
 ): string {
   let noteText = readFileSync(note.uri.toFsPath()).toString();
+
   // Find the specific section or block being linked to.
   let section = Resource.findSection(note, linkFragment);
+
   if (!linkFragment) {
     // If no fragment is provided, default to the first section (usually the main title)
     // to extract the content of the note, excluding the title.
     section = note.sections.length ? note.sections[0] : null;
   }
+
   if (isSome(section)) {
-    if (section.isHeading) {
+    if (section.type === 'heading') {
       // For headings, extract the content *under* the heading.
-      let rows = noteText.split('\n');
-      const isLastLineHeading = rows[section.range.end.line]?.match(/^\s*#+\s/);
-      rows = rows.slice(
-        section.range.start.line,
-        section.range.end.line + (isLastLineHeading ? 0 : 1)
-      );
-      rows.shift(); // Remove the heading itself
-      noteText = rows.join('\n');
+      let rows = noteText.split(/\r?\n/);
+      let endOfSectionLine = rows.length;
+      for (let i = section.range.start.line + 1; i < rows.length; i++) {
+        // Find the next heading of the same or higher level
+        const nextHeading = note.sections.find(s => {
+          if (s.type === 'heading') {
+            return (
+              s.range.start.line === i &&
+              s.level <= (section as HeadingSection).level
+            );
+          }
+          return false;
+        });
+        if (nextHeading) {
+          endOfSectionLine = i;
+          break;
+        }
+      }
+      noteText = rows
+        .slice(section.range.start.line + 1, endOfSectionLine)
+        .join('\n');
     } else {
       // For block-level embeds (e.g., a list item with a ^block-id),
       // extract the content of just that block using its range.
-      const rows = noteText.split('\n');
+      const rows = noteText.split(/\r?\n/);
       noteText = rows
         .slice(section.range.start.line, section.range.end.line + 1)
         .join('\n');
@@ -307,16 +349,18 @@ function contentExtractor(
   } else {
     // If no fragment, or fragment not found as a section,
     // treat as content of the entire note (excluding title)
-    let rows = noteText.split('\n');
+    let rows = noteText.split(/\r?\n/);
     rows.shift(); // Remove the title
     noteText = rows.join('\n');
   }
+
   noteText = withLinksRelativeToWorkspaceRoot(
     note.uri,
     noteText,
     parser,
     workspace
   );
+
   return noteText;
 }
 
@@ -326,15 +370,18 @@ function contentExtractor(
 export type EmbedNoteFormatter = (content: string, md: markdownit) => string;
 
 function cardFormatter(content: string, md: markdownit): string {
-  return `<div class="embed-container-note">
+  const result = `<div class="embed-container-note">
 
-${md.render(content)}
+${content}
 
 </div>`;
+
+  return result;
 }
 
 function inlineFormatter(content: string, md: markdownit): string {
   const tokens = md.parse(content.trim(), {});
+
   // Optimization: If the content is just a single paragraph, render only its
   // inline content. This prevents wrapping the embed in an extra, unnecessary <p> tag,
   // which can cause layout issues.
@@ -346,23 +393,13 @@ function inlineFormatter(content: string, md: markdownit): string {
   ) {
     // Render only the inline content to prevent double <p> tags.
     // The parent renderer will wrap this in <p> tags as needed.
-    return md.renderer.render(tokens[1].children, md.options, {});
+    const result = md.renderer.render(tokens[1].children, md.options, {});
+    return result;
   }
-  // For more complex content (headings, lists, etc.), render as a full block.
-  return md.render(content);
-}
 
-/**
- * Parses a wikilink target into its note and fragment components.
- * @param wikilinkTarget The full string target of the wikilink (e.g., 'my-note#my-heading').
- * @returns An object containing the noteTarget and an optional fragment.
- */
-function parseWikilink(wikilinkTarget: string): {
-  noteTarget: string;
-  fragment?: string;
-} {
-  const [noteTarget, fragment] = wikilinkTarget.split('#');
-  return { noteTarget, fragment };
+  const result = md.render(content);
+  // For more complex content (headings, lists, etc.), render as a full block.
+  return result;
 }
 
 export default markdownItWikilinkEmbed;

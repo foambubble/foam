@@ -3,7 +3,7 @@ import { TextEdit } from './text-edit';
 
 export abstract class MarkdownLink {
   private static wikilinkRegex = new RegExp(
-    /\[\[([^#|]+)?#?([^|]+)?\|?(.*)?\]\]/
+    /\[\[([^#|]*)?(?:#([^|]*))?(?:\|(.*))?\]\]/
   );
   private static directLinkRegex = new RegExp(
     /\[(.*)\]\(<?([^#>]*)?#?([^\]>]+)?>?\)/

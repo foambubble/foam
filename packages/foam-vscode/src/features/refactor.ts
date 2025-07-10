@@ -33,12 +33,14 @@ export default async function activate(
           const { target } = MarkdownLink.analyzeLink(connection.link);
           switch (connection.link.type) {
             case 'wikilink': {
+              const { section } = MarkdownLink.analyzeLink(connection.link);
               const identifier = foam.workspace.getIdentifier(
                 fromVsCodeUri(newUri),
                 [fromVsCodeUri(oldUri)]
               );
               const edit = MarkdownLink.createUpdateLinkEdit(connection.link, {
                 target: identifier,
+                section: section,
               });
               renameEdits.replace(
                 toVsCodeUri(connection.source),
@@ -53,8 +55,9 @@ export default async function activate(
                 : fromVsCodeUri(newUri).relativeTo(
                     connection.source.getDirectory()
                   ).path;
+              const { section } = MarkdownLink.analyzeLink(connection.link);
               const edit = MarkdownLink.createUpdateLinkEdit(connection.link, {
-                target: path,
+                target: section ? `${path}#${section}` : path,
               });
               renameEdits.replace(
                 toVsCodeUri(connection.source),

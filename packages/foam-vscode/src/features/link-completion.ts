@@ -130,54 +130,49 @@ export class SectionCompletionProvider
       position.character
     );
     if (resource) {
-      resource.sections.forEach(section => {
-        console.log(
-          `  - label: ${section.label}, id: ${section.id}, blockId: ${section.blockId}, isHeading: ${section.isHeading}`
-        );
-      });
-      // Provide completion for all sections: headings, block IDs (including list items), and header IDs
       const items = resource.sections.flatMap(section => {
         const sectionItems: vscode.CompletionItem[] = [];
-        if (section.isHeading) {
-          // For headings, we provide a completion item for the slugified heading ID.
-          if (section.id) {
-            const slugItem = new ResourceCompletionItem(
-              section.label,
-              vscode.CompletionItemKind.Text,
-              resource.uri.with({ fragment: section.id })
-            );
-            slugItem.sortText = String(section.range.start.line).padStart(
-              5,
-              '0'
-            );
-            slugItem.range = replacementRange;
-            slugItem.commitCharacters = sectionCommitCharacters;
-            slugItem.command = COMPLETION_CURSOR_MOVE;
-            slugItem.insertText = section.id;
-            sectionItems.push(slugItem);
-          }
-          // If a heading also has a block ID, we provide a separate completion for it.
-          // The label includes the `^` for clarity, but the inserted text does not.
-          if (section.blockId) {
-            const blockIdItem = new ResourceCompletionItem(
-              section.blockId,
-              vscode.CompletionItemKind.Text,
-              resource.uri.with({ fragment: section.blockId.substring(1) })
-            );
-            blockIdItem.sortText = String(section.range.start.line).padStart(
-              5,
-              '0'
-            );
-            blockIdItem.range = replacementRange;
-            blockIdItem.commitCharacters = sectionCommitCharacters;
-            blockIdItem.command = COMPLETION_CURSOR_MOVE;
-            blockIdItem.insertText = section.blockId.substring(1);
-            sectionItems.push(blockIdItem);
-          }
-        } else {
-          // For non-heading elements (paragraphs, list items, etc.), we only offer
-          // completion if they have an explicit block ID.
-          if (section.blockId) {
+        switch (section.type) {
+          case 'heading':
+            // For headings, we provide a completion item for the slugified heading ID.
+            if (section.id) {
+              const slugItem = new ResourceCompletionItem(
+                section.label,
+                vscode.CompletionItemKind.Text,
+                resource.uri.with({ fragment: section.id })
+              );
+              slugItem.sortText = String(section.range.start.line).padStart(
+                5,
+                '0'
+              );
+              slugItem.range = replacementRange;
+              slugItem.commitCharacters = sectionCommitCharacters;
+              slugItem.command = COMPLETION_CURSOR_MOVE;
+              slugItem.insertText = section.id;
+              sectionItems.push(slugItem);
+            }
+            // If a heading also has a block ID, we provide a separate completion for it.
+            // The label includes the `^` for clarity, but the inserted text does not.
+            if (section.blockId) {
+              const blockIdItem = new ResourceCompletionItem(
+                section.blockId,
+                vscode.CompletionItemKind.Text,
+                resource.uri.with({ fragment: section.blockId.substring(1) })
+              );
+              blockIdItem.sortText = String(section.range.start.line).padStart(
+                5,
+                '0'
+              );
+              blockIdItem.range = replacementRange;
+              blockIdItem.commitCharacters = sectionCommitCharacters;
+              blockIdItem.command = COMPLETION_CURSOR_MOVE;
+              blockIdItem.insertText = section.blockId.substring(1);
+              sectionItems.push(blockIdItem);
+            }
+            break;
+          case 'block': {
+            // For non-heading elements (paragraphs, list items, etc.), we only offer
+            // completion if they have an explicit block ID.
             const blockIdItem = new ResourceCompletionItem(
               section.blockId, // e.g. ^my-block-id
               vscode.CompletionItemKind.Text,
@@ -193,20 +188,7 @@ export class SectionCompletionProvider
             // Insert the block ID without the leading `^`.
             blockIdItem.insertText = section.blockId.substring(1);
             sectionItems.push(blockIdItem);
-          } else if (section.id) {
-            // This is a fallback for any non-heading sections that might have an 'id'
-            // but not a 'blockId'. This is not the standard case but is included for completeness.
-            const idItem = new ResourceCompletionItem(
-              section.id,
-              vscode.CompletionItemKind.Text,
-              resource.uri.with({ fragment: section.id })
-            );
-            idItem.sortText = String(section.range.start.line).padStart(5, '0');
-            idItem.range = replacementRange;
-            idItem.commitCharacters = sectionCommitCharacters;
-            idItem.command = COMPLETION_CURSOR_MOVE;
-            idItem.insertText = section.id;
-            sectionItems.push(idItem);
+            break;
           }
         }
         return sectionItems;

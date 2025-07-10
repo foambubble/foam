@@ -263,23 +263,24 @@ function createSectionSuggestions(
       toVsCodeUri(resource.uri),
       toVsCodePosition(s.range.start)
     );
-    if (s.isHeading) {
-      if (s.id) {
-        infos.push(new vscode.DiagnosticRelatedInformation(location, s.label));
-      }
-      if (s.blockId) {
+    switch (s.type) {
+      case 'heading':
+        if (s.id) {
+          infos.push(
+            new vscode.DiagnosticRelatedInformation(location, s.label) // Use s.label for heading suggestions, as Quick Fix uses this
+          );
+        }
+        if (s.blockId) {
+          infos.push(
+            new vscode.DiagnosticRelatedInformation(location, s.blockId) // Use s.blockId for block IDs (including caret)
+          );
+        }
+        break;
+      case 'block':
         infos.push(
-          new vscode.DiagnosticRelatedInformation(location, s.blockId)
+          new vscode.DiagnosticRelatedInformation(location, s.blockId) // For blocks, only blockId is relevant
         );
-      }
-    } else {
-      if (s.blockId) {
-        infos.push(
-          new vscode.DiagnosticRelatedInformation(location, s.blockId)
-        );
-      } else if (s.id) {
-        infos.push(new vscode.DiagnosticRelatedInformation(location, s.id));
-      }
+        break;
     }
     return infos;
   });
@@ -371,28 +372,46 @@ const createReplaceSectionCommand = (
     diagnostic.relatedInformation[0].location.uri
   );
   const targetResource = workspace.get(targetUri);
-  const section = targetResource.sections.find(s => s.id === sectionId);
+  // Find the section by either its ID (for headings) or its blockId (for blocks)
+  // Find the section by its ID (for headings) or its blockId (for blocks).
+  // The sectionId passed from DiagnosticRelatedInformation.message will be either
+  // s.id (for headings) or s.blockId (for blocks, including caret).
+  const section = targetResource.sections.find(
+    s => s.id === sectionId || s.blockId === sectionId
+  );
 
   if (!section) {
     return null; // Should not happen if IDs are correctly passed
   }
 
-  const replacementValue = section.id;
+  const getTitle = () => {
+    switch (section.type) {
+      case 'heading':
+        return `Use heading "${section.label}"`;
+      case 'block':
+        return `Use block "${section.blockId}"`;
+    }
+  };
+
+  const getReplacementValue = () => {
+    switch (section.type) {
+      case 'heading':
+        return section.id;
+      case 'block':
+        return section.blockId; // Do not remove the '^' for insertion
+    }
+  };
 
   const action = new vscode.CodeAction(
-    `Use ${section.isHeading ? 'heading' : 'block'} "${
-      section.isHeading ? section.label : section.blockId || section.id
-    }"`, // Use blockId for display if available, otherwise id
+    getTitle(),
     vscode.CodeActionKind.QuickFix
   );
   action.command = {
     command: REPLACE_TEXT_COMMAND.name,
-    title: `Use ${section.isHeading ? 'heading' : 'block'} "${
-      section.isHeading ? section.label : section.blockId || section.id
-    }"`, // Use blockId for display if available, otherwise id
+    title: getTitle(),
     arguments: [
       {
-        value: section.isHeading ? section.id : section.blockId || section.id, // Insert blockId for non-headings, id for headings
+        value: getReplacementValue(),
         range: new vscode.Range(
           diagnostic.range.start.line,
           diagnostic.range.start.character + 1,

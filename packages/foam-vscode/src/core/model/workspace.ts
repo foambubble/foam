@@ -100,8 +100,13 @@ export class FoamWorkspace implements IDisposable {
    * Returns the minimal identifier for the given resource
    *
    * @param forResource the resource to compute the identifier for
+   * @param section the section of the resource to link to (optional)
    */
-  public getIdentifier(forResource: URI, exclude?: URI[]): string {
+  public getIdentifier(
+    forResource: URI,
+    exclude?: URI[],
+    section?: string
+  ): string {
     const amongst = [];
     const basename = forResource.getBasename();
 
@@ -123,8 +128,9 @@ export class FoamWorkspace implements IDisposable {
       amongst.map(uri => uri.path)
     );
     identifier = changeExtension(identifier, this.defaultExtension, '');
-    if (forResource.fragment) {
-      identifier += `#${forResource.fragment}`;
+    const fragment = section ?? forResource.fragment;
+    if (fragment) {
+      identifier += `#${fragment}`;
     }
     return identifier;
   }

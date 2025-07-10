@@ -38,7 +38,10 @@ describe('Link generation in preview', () => {
   const noteB = createTestNote({
     uri: '/path/to/workspace/path2/to/note-b.md',
     title: 'My second note',
-    sections: ['sec1', 'sec2'],
+    sections: [
+      { label: 'sec1', level: 1 },
+      { label: 'sec2', level: 1 },
+    ],
   });
   const ws = new FoamWorkspace().set(noteA).set(noteB);
 

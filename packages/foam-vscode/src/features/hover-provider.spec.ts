@@ -37,7 +37,7 @@ describe('Hover provider', () => {
     isCancellationRequested: false,
     onCancellationRequested: null,
   };
-  const parser = createMarkdownParser([]);
+  const parser = createMarkdownParser();
   const hoverEnabled = () => true;
 
   beforeAll(async () => {
@@ -92,7 +92,9 @@ describe('Hover provider', () => {
         `this is a link to [[${fileB.name}]] end of the line.`
       );
       const noteA = parser.parse(fileA.uri, fileA.content);
+      (noteA as any).rawText = fileA.content;
       const noteB = parser.parse(fileB.uri, fileB.content);
+      (noteB as any).rawText = fileB.content;
       const ws = createWorkspace().set(noteA).set(noteB);
       const graph = FoamGraph.fromWorkspace(ws);
 
@@ -111,6 +113,7 @@ describe('Hover provider', () => {
         `this is a link to [[a placeholder]] end of the line.`
       );
       const noteA = parser.parse(fileA.uri, fileA.content);
+      (noteA as any).rawText = fileA.content;
       const ws = createWorkspace().set(noteA);
       const graph = FoamGraph.fromWorkspace(ws);
 
@@ -316,6 +319,9 @@ The content of file B`);
         .set(parser.parse(fileA.uri, fileA.content))
         .set(parser.parse(fileB.uri, fileB.content))
         .set(parser.parse(fileC.uri, fileC.content));
+      (fileA as any).rawText = fileA.content;
+      (fileB as any).rawText = fileB.content;
+      (fileC as any).rawText = fileC.content;
       const graph = FoamGraph.fromWorkspace(ws);
 
       const { doc } = await showInEditor(fileB.uri);
@@ -410,11 +416,14 @@ describe('Mixed Scenario Hover', () => {
       mixedTargetFile.uri,
       mixedTargetFile.content
     );
+    (mixedTarget as any).rawText = mixedTargetFile.content;
     const mixedOther = parser.parse(mixedOtherFile.uri, mixedOtherFile.content);
+    (mixedOther as any).rawText = mixedOtherFile.content;
     const mixedSource = parser.parse(
       mixedSourceFile.uri,
       mixedSourceFile.content
     );
+    (mixedSource as any).rawText = mixedSourceFile.content;
 
     ws.set(mixedTarget).set(mixedOther).set(mixedSource);
     const graph = FoamGraph.fromWorkspace(ws);

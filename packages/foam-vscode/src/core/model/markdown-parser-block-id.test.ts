@@ -22,7 +22,7 @@ This is a paragraph. ^block-id-1
           id: 'block-id-1',
           label: 'This is a paragraph. ^block-id-1',
           blockId: '^block-id-1',
-          isHeading: false,
+          type: 'block',
           range: Range.create(1, 0, 1, 32),
         },
       ]);
@@ -35,10 +35,11 @@ This is a paragraph. ^block-id-1
       const actual = parse(markdown);
       expect(actual.sections).toEqual([
         {
-          id: 'my-heading', // PRD: slugified header text
+          id: 'my-heading',
           blockId: '^heading-id',
-          isHeading: true,
+          type: 'heading',
           label: 'My Heading',
+          level: 2, // Add level property
           range: Range.create(1, 0, 2, 0),
         },
       ]);
@@ -53,7 +54,7 @@ This is a paragraph. ^block-id-1
         {
           id: 'list-id-1',
           blockId: '^list-id-1',
-          isHeading: false,
+          type: 'block',
           label: '- List item one ^list-id-1',
           range: Range.create(1, 0, 1, 26),
         },
@@ -70,7 +71,7 @@ This is a paragraph. ^first-id ^second-id
           id: 'second-id',
           blockId: '^second-id',
           label: 'This is a paragraph. ^first-id ^second-id',
-          isHeading: false,
+          type: 'block',
           range: Range.create(1, 0, 1, 41),
         },
       ]);
@@ -89,7 +90,7 @@ This is a paragraph. ^first-id ^second-id
         {
           id: 'blockquote-id',
           blockId: '^blockquote-id',
-          isHeading: false,
+          type: 'block',
           label: `> This is a blockquote.
 > It can span multiple lines.`,
           range: Range.create(1, 0, 2, 28),
@@ -111,7 +112,7 @@ function hello() {
         {
           id: 'code-block-id',
           blockId: '^code-block-id',
-          isHeading: false,
+          type: 'block',
           label: `\`\`\`typescript
 function hello() {
   console.log('Hello, world!');
@@ -135,7 +136,7 @@ function hello() {
         {
           id: 'my-table',
           blockId: '^my-table',
-          isHeading: false,
+          type: 'block',
           label: `| Header 1 | Header 2 |
 | -------- | -------- |
 | Cell 1   | Cell 2   |
@@ -156,7 +157,7 @@ function hello() {
           blockId: '^list-id',
           label: `- list item 1
 - list item 2`,
-          isHeading: false,
+          type: 'block',
           range: Range.create(0, 0, 1, 13),
         },
       ]);
@@ -175,7 +176,7 @@ function hello() {
           blockId: '^new-list-id',
           label: `- list item 1
 - list item 2`,
-          isHeading: false,
+          type: 'block',
           range: Range.create(1, 0, 2, 13),
         },
       ]);
@@ -194,7 +195,7 @@ function hello() {
         {
           id: 'parent-id',
           blockId: '^parent-id',
-          isHeading: false,
+          type: 'block',
           label: `- Parent item ^parent-id
   - Child item 1
   - Child item 2`,
@@ -214,7 +215,7 @@ function hello() {
         {
           id: 'child-id-1',
           blockId: '^child-id-1',
-          isHeading: false,
+          type: 'block',
           label: '- Child item 1 ^child-id-1',
           range: Range.create(2, 2, 2, 28),
         },
@@ -231,9 +232,9 @@ function hello() {
         {
           id: 'parent-id',
           blockId: '^parent-id',
+          type: 'block',
           label: `- Parent item ^parent-id
   - Child item 1 ^child-id`,
-          isHeading: false,
           range: Range.create(1, 0, 2, 26),
         },
       ]);
@@ -243,11 +244,129 @@ function hello() {
       const markdown = `
 - list item1
 - list item2
-
+ 
 ^this-will-not-work
 `;
       const actual = parse(markdown);
       expect(actual.sections).toEqual([]);
+    });
+  });
+
+  describe('Complex List Scenarios', () => {
+    it('should correctly parse an inline block ID on a specific list item', () => {
+      const markdown = `- item 1
+- item 2 ^list-item-id
+- item 3`;
+      const actual = parse(markdown);
+      expect(actual.sections).toEqual([
+        {
+          id: 'list-item-id',
+          blockId: '^list-item-id',
+          type: 'block',
+          label: '- item 2 ^list-item-id',
+          range: Range.create(1, 0, 1, 22),
+        },
+      ]);
+    });
+
+    it('should ignore a child list item ID when a parent list item has an ID', () => {
+      const markdown = `- parent item ^parent-id
+  - child item ^child-id`;
+      const actual = parse(markdown);
+      expect(actual.sections).toEqual([
+        {
+          id: 'parent-id',
+          blockId: '^parent-id',
+          type: 'block',
+          label: `- parent item ^parent-id
+  - child item ^child-id`,
+          range: Range.create(0, 0, 1, 24),
+        },
+      ]);
+    });
+
+    it('should create sections for both a full-list ID and a list item ID', () => {
+      const markdown = `- item 1 ^inline-id
+- item 2
+^list-id`;
+      const actual = parse(markdown);
+      expect(actual.sections).toEqual(
+        expect.arrayContaining([
+          {
+            id: 'list-id',
+            blockId: '^list-id',
+            type: 'block',
+            label: `- item 1 ^inline-id
+- item 2`,
+            range: Range.create(0, 0, 1, 8),
+          },
+          {
+            id: 'inline-id',
+            blockId: '^inline-id',
+            type: 'block',
+            label: '- item 1 ^inline-id',
+            range: Range.create(0, 0, 0, 19),
+          },
+        ])
+      );
+      expect(actual.sections.length).toBe(2);
+    });
+
+    it('should handle a mix of full-list, parent-item, and nullified child-item IDs', () => {
+      const markdown = `- list item 1 ^parent-list-id
+  - list item 2 ^child-list-id
+^full-list-id`;
+      const actual = parse(markdown);
+      expect(actual.sections).toEqual(
+        expect.arrayContaining([
+          {
+            id: 'full-list-id',
+            blockId: '^full-list-id',
+            type: 'block',
+            label: `- list item 1 ^parent-list-id
+  - list item 2 ^child-list-id`,
+            range: Range.create(0, 0, 1, 31),
+          },
+          {
+            id: 'parent-list-id',
+            blockId: '^parent-list-id',
+            type: 'block',
+            label: `- list item 1 ^parent-list-id
+  - list item 2 ^child-list-id`,
+            range: Range.create(0, 0, 1, 31), // This range is for the parent item, which now correctly includes the child item due to the deepest child logic.
+          },
+        ])
+      );
+      expect(actual.sections.length).toBe(2);
+    });
+  });
+
+  describe('Mixed Content Note Block IDs', () => {
+    it('parses block IDs in a realistic mixed-content note', () => {
+      const markdown = `
+# Mixed Target Note
+
+This note has a bit of everything.
+
+Here is a paragraph with a block identifier. ^para-block
+
+- List item 1
+- List item 2 ^list-block
+- List item 3
+
+It also links to [[mixed-other]].
+`;
+      const actual = parse(markdown);
+      expect(actual.sections).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: 'list-block',
+            blockId: '^list-block',
+            type: 'block',
+            label: '- List item 2 ^list-block',
+          }),
+        ])
+      );
     });
   });
 });

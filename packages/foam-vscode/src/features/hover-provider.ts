@@ -146,48 +146,42 @@ export class HoverProvider implements vscode.HoverProvider {
 
     let mdContent = null;
     if (!targetUri.isPlaceholder()) {
-      // The URI for the file itself, without any fragment identifier.
+      // Use the in-memory workspace resource for section/block lookup (not a fresh parse from disk)
       const targetFileUri = targetUri.with({ fragment: '' });
       const targetResource = this.workspace.get(targetFileUri);
-      let content: string;
+      let content: string | null = null;
 
-      // If the link includes a fragment, we display the content of that specific section.
       if (linkFragment) {
-        const section = Resource.findSection(targetResource, linkFragment);
+        // Use the in-memory resource for section/block lookup
+        const section: Section | undefined = Resource.findSection(
+          targetResource,
+          linkFragment
+        );
         if (isSome(section)) {
-          // For headings, we read the file content and slice out the range of the section.
-          // This includes the heading line and all content until the next heading.
-          if (section.isHeading) {
-            const fileContent = await this.workspace.readAsMarkdown(
-              targetFileUri
-            );
-            content = sliceContent(fileContent, section.range);
-          } else {
-            // For block IDs, the `section.label` already contains the exact raw markdown
-            // content of the block. This is a core principle of the block ID feature (WYSIWYL),
-            // allowing for efficient and accurate hover previews without re-reading the file.
+          if (section.type === 'block') {
+            // For block IDs, show the block label (e.g., the list item or paragraph)
             content = section.label;
+          } else if (section.type === 'heading') {
+            // For headings, show the content under the heading (sliceContent)
+            const noteText = await this.workspace.readAsMarkdown(targetFileUri);
+            content = sliceContent(noteText, section.range);
+          } else {
+            // Fallback: show the section label
+            content = (section as any).label;
           }
         } else {
-          // Fallback: if the specific section isn't found, show the whole note content.
+          // Fallback: show the whole note content (from workspace, robust to test/production)
           content = await this.workspace.readAsMarkdown(targetFileUri);
-        }
-        // Ensure YAML frontmatter is not included in the hover preview.
-        if (isSome(content)) {
-          content = content.replace(/---[\s\S]*?---/, '').trim();
         }
       } else {
         // If there is no fragment, show the entire note content, minus frontmatter.
         content = await this.workspace.readAsMarkdown(targetFileUri);
-        if (isSome(content)) {
-          content = content.replace(/---[\s\S]*?---/, '').trim();
-        }
       }
 
       if (isSome(content)) {
+        content = content.replace(/---[\s\S]*?---/, '').trim();
         mdContent = getNoteTooltip(content);
       } else {
-        // If no content can be loaded, fall back to displaying the note's title.
         mdContent = targetResource.title;
       }
     }

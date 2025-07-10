@@ -20,6 +20,16 @@ import {
 import { MarkdownResourceProvider } from '../core/services/markdown-provider';
 import { randomString } from './test-utils';
 
+// Import enums from @types/vscode to avoid duplication
+import {
+  EndOfLine,
+  ViewColumn,
+  FileType,
+  CompletionItemKind,
+  DiagnosticSeverity,
+  TreeItemCollapsibleState,
+} from 'vscode';
+
 // ===== Basic VS Code Types =====
 
 export { Position };
@@ -210,61 +220,15 @@ export class Selection implements Range {
   }
 }
 
-// Basic enums
-export enum EndOfLine {
-  LF = 1,
-  CRLF = 2,
-}
-
-export enum ViewColumn {
-  Active = -1,
-  Beside = -2,
-  One = 1,
-  Two = 2,
-  Three = 3,
-}
-
-export enum FileType {
-  Unknown = 0,
-  File = 1,
-  Directory = 2,
-  SymbolicLink = 64,
-}
-
-export enum CompletionItemKind {
-  Text = 0,
-  Method = 1,
-  Function = 2,
-  Constructor = 3,
-  Field = 4,
-  Variable = 5,
-  Class = 6,
-  Interface = 7,
-  Module = 8,
-  Property = 9,
-  Unit = 10,
-  Value = 11,
-  Enum = 12,
-  Keyword = 13,
-  Snippet = 14,
-  Color = 15,
-  File = 16,
-  Reference = 17,
-  Folder = 18,
-  EnumMember = 19,
-  Constant = 20,
-  Struct = 21,
-  Event = 22,
-  Operator = 23,
-  TypeParameter = 24,
-}
-
-export enum DiagnosticSeverity {
-  Error = 0,
-  Warning = 1,
-  Information = 2,
-  Hint = 3,
-}
+// Re-export enums from @types/vscode to avoid duplication
+export {
+  EndOfLine,
+  ViewColumn,
+  FileType,
+  CompletionItemKind,
+  DiagnosticSeverity,
+  TreeItemCollapsibleState,
+};
 
 // ===== Code Actions =====
 
@@ -394,12 +358,6 @@ export class TreeItem {
     this.label = label;
     this.collapsibleState = collapsibleState;
   }
-}
-
-export enum TreeItemCollapsibleState {
-  None = 0,
-  Collapsed = 1,
-  Expanded = 2,
 }
 
 // ===== Theme Classes =====

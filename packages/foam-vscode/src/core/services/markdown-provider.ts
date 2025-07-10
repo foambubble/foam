@@ -35,7 +35,7 @@ export class MarkdownResourceProvider implements ResourceProvider {
       if (isSome(section)) {
         const rows = content.split('\n');
         content = rows
-          .slice(section.range.start.line, section.range.end.line)
+          .slice(section.range.start.line, section.range.end.line + 1)
           .join('\n');
       }
     }

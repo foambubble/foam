@@ -37,9 +37,9 @@ interface SelectionInfo {
  * Returns a MarkdownString of the note content
  * @param note A Foam Note
  */
-export function getNoteTooltip(content: string): string {
+export function getNoteTooltip(content: string): MarkdownString {
   const strippedContent = stripFrontMatter(stripImages(content));
-  return formatMarkdownTooltip(strippedContent) as any;
+  return formatMarkdownTooltip(strippedContent);
 }
 
 export function formatMarkdownTooltip(content: string): MarkdownString {

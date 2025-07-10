@@ -118,12 +118,7 @@ export class PlaceholderTreeView extends GroupedResourcesTreeDataProvider {
     item.getChildren = async () => {
       return groupRangesByResource(
         this.workspace,
-        await createBacklinkItemsForResource(
-          this.workspace,
-          this.graph,
-          uri,
-          'link'
-        )
+        await createBacklinkItemsForResource(this.workspace, this.graph, uri)
       );
     };
     return item;

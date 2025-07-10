@@ -281,4 +281,35 @@ alias: alias-a
     expect(aliasCompletionItem.label).toBe('alias-a');
     expect(aliasCompletionItem.insertText).toBe('new-note-with-alias|alias-a');
   });
+
+  it('should return block identifiers for the given note', async () => {
+    const noteWithBlocks = await createFile(
+      `
+# Note with blocks
+
+This is a paragraph. ^p1
+
+- list item 1 ^li1
+- list item 2
+
+### A heading ^h1
+`,
+      ['note-with-blocks.md']
+    );
+    ws.set(parser.parse(noteWithBlocks.uri, noteWithBlocks.content));
+
+    const text = '[[note-with-blocks#^';
+    const { uri } = await createFile(text);
+    const { doc } = await showInEditor(uri);
+    const provider = new SectionCompletionProvider(ws);
+
+    const links = await provider.provideCompletionItems(
+      doc,
+      new vscode.Position(0, text.length)
+    );
+
+    expect(new Set(links.items.map(i => i.label))).toEqual(
+      new Set(['Note with blocks', 'A heading', '^p1', '^li1', '^h1'])
+    );
+  });
 });

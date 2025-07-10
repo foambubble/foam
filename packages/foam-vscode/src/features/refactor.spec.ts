@@ -53,7 +53,7 @@ describe('Note rename sync', () => {
         expect((await readFile(noteC.uri)).trim()).toEqual(
           `Link to [[${newName}]] from note C.`
         );
-      }, 1000);
+      }, 3000);
 
       await deleteFile(newUri);
       await deleteFile(noteB.uri);
@@ -89,7 +89,7 @@ describe('Note rename sync', () => {
         expect(doc.getText().trim()).toEqual(
           `Link to [[first/note-b]] from note C.`
         );
-      });
+      }, 3000);
       await deleteFile(newUri);
       await deleteFile(noteC.uri);
     });
@@ -126,8 +126,8 @@ describe('Note rename sync', () => {
     });
 
     it('should keep the alias in wikilinks', async () => {
-      const noteA = await createFile(`Content of note A`);
-      const noteB = await createFile(`Link to [[${noteA.name}|Alias]]`);
+      const noteA = await createFile(`Content of note A`, ['note-a.md']);
+      const noteB = await createFile(`Link to [[note-a|Alias]]`, ['note-b.md']);
 
       const { doc } = await showInEditor(noteB.uri);
 

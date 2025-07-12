@@ -1,3 +1,4 @@
+/* @unit-ready */
 import { createTestNote } from '../../test/test-utils';
 import { cleanWorkspace, closeEditors } from '../../test/test-utils-vscode';
 import { TagItem, TagsProvider } from './tags-explorer';

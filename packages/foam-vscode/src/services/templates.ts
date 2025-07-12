@@ -223,7 +223,11 @@ const createFnForOnRelativePathStrategy =
 
     switch (onRelativePath) {
       case 'resolve-from-current-dir':
-        return getCurrentEditorDirectory().joinPath(existingFile.path);
+        try {
+          return getCurrentEditorDirectory().joinPath(existingFile.path);
+        } catch (e) {
+          return asAbsoluteWorkspaceUri(existingFile);
+        }
       case 'resolve-from-root':
         return asAbsoluteWorkspaceUri(existingFile);
       case 'cancel':

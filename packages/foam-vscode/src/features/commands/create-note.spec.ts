@@ -1,3 +1,4 @@
+/* @unit-ready */
 import { commands, window, workspace } from 'vscode';
 import { URI } from '../../core/model/uri';
 import { asAbsoluteWorkspaceUri, readFile } from '../../services/editor';

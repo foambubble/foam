@@ -58,7 +58,7 @@ export function run(): Promise<void> {
           runInBand: true,
           testRegex: '\\.(test|spec)\\.ts$',
           testEnvironment: '<rootDir>/src/test/support/vscode-environment.js',
-          setupFiles: ['<rootDir>/src/test/support/jest-setup.ts'],
+          setupFiles: ['<rootDir>/src/test/support/jest-setup-e2e.ts'],
           testTimeout: 30000,
           useStderr: true,
           verbose: true,

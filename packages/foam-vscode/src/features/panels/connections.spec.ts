@@ -1,3 +1,4 @@
+/* @unit-ready */
 import { workspace, window } from 'vscode';
 import { createTestNote, createTestWorkspace } from '../../test/test-utils';
 import {

@@ -54,10 +54,12 @@ export function getDailyNoteUri(date: Date): URI {
  */
 export function getDailyNoteFileName(date: Date): string {
   const filenameFormat: string = getFoamVsCodeConfig(
-    'openDailyNote.filenameFormat'
+    'openDailyNote.filenameFormat',
+    'yyyy-mm-dd'
   );
   const fileExtension: string = getFoamVsCodeConfig(
-    'openDailyNote.fileExtension'
+    'openDailyNote.fileExtension',
+    'md'
   );
 
   return `${dateFormat(date, filenameFormat, false)}.${fileExtension}`;

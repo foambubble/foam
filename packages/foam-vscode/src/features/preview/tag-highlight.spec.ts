@@ -1,3 +1,4 @@
+/* @unit-ready */
 import MarkdownIt from 'markdown-it';
 import { FoamWorkspace } from '../../core/model/workspace';
 import { default as markdownItFoamTags } from './tag-highlight';

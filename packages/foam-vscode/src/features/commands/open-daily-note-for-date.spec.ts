@@ -1,3 +1,4 @@
+/* @unit-ready */
 import dateFormat from 'dateformat';
 import { commands, window } from 'vscode';
 

@@ -9,7 +9,6 @@ import { FoamWorkspace } from '../core/model/workspace';
 import { MarkdownResourceProvider } from '../core/services/markdown-provider';
 import { NoteLinkDefinition, Resource } from '../core/model/note';
 import { createMarkdownParser } from '../core/services/markdown-parser';
-
 export { default as waitForExpect } from 'wait-for-expect';
 
 Logger.setLevel('error');
@@ -51,7 +50,7 @@ export const createTestNote = (params: {
   tags?: string[];
   aliases?: string[];
   text?: string;
-  sections?: string[];
+  sections?: Array<{ label: string; blockId?: string; level?: number }>;
   root?: URI;
   type?: string;
 }): Resource => {
@@ -62,10 +61,38 @@ export const createTestNote = (params: {
     properties: {},
     title: params.title ?? strToUri(params.uri).getBasename(),
     definitions: params.definitions ?? [],
-    sections: params.sections?.map(label => ({
-      label,
-      range: Range.create(0, 0, 1, 0),
-    })),
+    sections: (params.sections ?? []).map(section => {
+      if (section.level) {
+        return {
+          type: 'heading',
+          level: section.level,
+          id: section.label, // Use raw label for ID
+          label: section.label,
+          range: Range.create(0, 0, 1, 0),
+        };
+      } else if (section.blockId) {
+        // Only enter this block if blockId is explicitly provided
+        const blockIdWithCaret = section.blockId.startsWith('^')
+          ? section.blockId
+          : `^${section.blockId}`;
+        return {
+          type: 'block',
+          id: blockIdWithCaret.substring(1),
+          label: section.label,
+          range: Range.create(0, 0, 1, 0),
+          blockId: blockIdWithCaret,
+        };
+      } else {
+        // Default to heading if neither level nor blockId is provided
+        return {
+          type: 'heading',
+          level: 1, // Default level
+          id: section.label,
+          label: section.label,
+          range: Range.create(0, 0, 1, 0),
+        };
+      }
+    }),
     tags:
       params.tags?.map(t => ({
         label: t,

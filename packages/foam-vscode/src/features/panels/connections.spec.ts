@@ -1,5 +1,9 @@
 import { workspace, window } from 'vscode';
-import { createTestNote, createTestWorkspace } from '../../test/test-utils';
+import {
+  createTestNote,
+  createTestWorkspace,
+  TEST_DATA_DIR,
+} from '../../test/test-utils';
 import {
   cleanWorkspace,
   closeEditors,
@@ -13,6 +17,9 @@ import {
   ResourceRangeTreeItem,
   ResourceTreeItem,
 } from './utils/tree-view-utils';
+import { FoamWorkspace } from '../../core/model/workspace';
+import { Resource } from '../../core/model/note';
+import { createMarkdownParser } from '../../core/services/markdown-parser';
 
 describe('Backlinks panel', () => {
   beforeAll(async () => {
@@ -155,6 +162,87 @@ describe('Backlinks panel', () => {
     notes = (await provider.getChildren()) as ResourceTreeItem[];
     expect(notes.map(n => n.resource.uri.path)).toEqual(
       [noteB.uri, noteC.uri, noteD.uri].map(uri => uri.path)
+    );
+  });
+});
+
+describe('Backlinks panel with block identifiers', () => {
+  let ws: FoamWorkspace;
+  let graph: FoamGraph;
+  let provider: ConnectionsTreeDataProvider;
+  let noteWithBlockId: Resource;
+  let noteLinkingToBlockId: Resource;
+
+  beforeAll(async () => {
+    await cleanWorkspace();
+
+    const noteWithBlockIdUri = TEST_DATA_DIR.joinPath(
+      'block-identifiers',
+      'note-with-block-id.md'
+    );
+    const noteLinkingToBlockIdUri = TEST_DATA_DIR.joinPath(
+      'block-identifiers',
+      'note-linking-to-block-id.md'
+    );
+
+    const noteWithBlockIdContent = Buffer.from(
+      await workspace.fs.readFile(toVsCodeUri(noteWithBlockIdUri))
+    ).toString('utf8');
+    const noteLinkingToBlockIdContent = Buffer.from(
+      await workspace.fs.readFile(toVsCodeUri(noteLinkingToBlockIdUri))
+    ).toString('utf8');
+
+    const parser = createMarkdownParser();
+    const rootUri = getUriInWorkspace('just-a-ref.md').getDirectory();
+
+    noteWithBlockId = parser.parse(
+      rootUri.joinPath('note-with-block-id.md'),
+      noteWithBlockIdContent
+    );
+    noteLinkingToBlockId = parser.parse(
+      rootUri.joinPath('note-linking-to-block-id.md'),
+      noteLinkingToBlockIdContent
+    );
+
+    await createNote(noteWithBlockId);
+    await createNote(noteLinkingToBlockId);
+
+    ws = createTestWorkspace();
+    ws.set(noteWithBlockId);
+    ws.set(noteLinkingToBlockId);
+    graph = FoamGraph.fromWorkspace(ws, true);
+    provider = new ConnectionsTreeDataProvider(
+      ws,
+      graph,
+      new MapBasedMemento(),
+      false
+    );
+  });
+
+  afterAll(async () => {
+    if (graph) graph.dispose();
+    if (ws) ws.dispose();
+    if (provider) provider.dispose();
+    await cleanWorkspace();
+  });
+
+  beforeEach(async () => {
+    await closeEditors();
+    provider.target = undefined;
+  });
+
+  it('shows backlinks to blocks', async () => {
+    provider.target = noteWithBlockId.uri;
+    await provider.refresh();
+    const notes = (await provider.getChildren()) as ResourceTreeItem[];
+    expect(notes.map(n => n.resource.uri.path)).toEqual([
+      noteLinkingToBlockId.uri.path,
+    ]);
+    const links = (await provider.getChildren(
+      notes[0]
+    )) as ResourceRangeTreeItem[];
+    expect(links[0].label).toEqual(
+      'This is a paragraph with a block identifier. ^block-1'
     );
   });
 });

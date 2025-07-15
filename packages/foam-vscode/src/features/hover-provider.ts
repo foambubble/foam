@@ -5,7 +5,12 @@ import {
   ConfigurationMonitor,
   monitorFoamVsCodeConfig,
 } from '../services/config';
-import { ResourceLink, ResourceParser } from '../core/model/note';
+import {
+  ResourceLink,
+  ResourceParser,
+  Resource,
+  Section,
+} from '../core/model/note';
 import { Foam } from '../core/model/foam';
 import { FoamWorkspace } from '../core/model/workspace';
 import { Range } from '../core/model/range';
@@ -16,6 +21,30 @@ import { commandAsURI } from '../utils/commands';
 import { Location } from '../core/model/location';
 import { getNoteTooltip, getFoamDocSelectors } from '../services/editor';
 import { isSome } from '../core/utils';
+import { MarkdownLink } from '../core/services/markdown-link';
+
+/**
+ * Extracts a range of content from a multi-line string.
+ * This is used to display the content of a specific section (e.g., a heading and its content)
+ * in the hover preview, rather than the entire note.
+ * @param content The full string content of the note.
+ * @param range The range to extract.
+ * @returns The substring corresponding to the given range.
+ */
+const sliceContent = (content: string, range: Range): string => {
+  const lines = content.split('\n');
+  const { start, end } = range;
+
+  if (start.line === end.line) {
+    return lines[start.line]?.substring(start.character, end.character) ?? '';
+  }
+
+  const firstLine = lines[start.line]?.substring(start.character) ?? '';
+  const lastLine = lines[end.line]?.substring(0, end.character) ?? '';
+  const middleLines = lines.slice(start.line + 1, end.line);
+
+  return [firstLine, ...middleLines, lastLine].join('\n');
+};
 
 export const CONFIG_KEY = 'links.hover.enable';
 
@@ -77,10 +106,26 @@ export class HoverProvider implements vscode.HoverProvider {
 
     const documentUri = fromVsCodeUri(document.uri);
     const targetUri = this.workspace.resolveLink(startResource, targetLink);
-    const sources = uniqWith(
-      this.graph
+
+    // --- Start of Block ID Feature Changes ---
+
+    // Extract the fragment (e.g., #my-header or #^my-block-id) from the link.
+    // This is crucial for handling links to specific sections or blocks within a note.
+    const { section: linkFragment } = MarkdownLink.analyzeLink(targetLink);
+
+    let backlinks: import('../core/model/graph').Connection[];
+
+    // If a fragment exists, we need to be more precise with backlink gathering.
+    if (linkFragment) {
+      backlinks = this.graph
         .getBacklinks(targetUri)
-        .filter(link => !link.source.isEqual(documentUri))
+        .filter(conn => conn.target.isEqual(targetUri));
+    } else {
+      backlinks = this.graph.getBacklinks(targetUri);
+    }
+    const sources = uniqWith(
+      backlinks
+        .filter(link => link.source.toFsPath() !== documentUri.toFsPath())
         .map(link => link.source),
       (u1, u2) => u1.isEqual(u2)
     );
@@ -101,11 +146,44 @@ export class HoverProvider implements vscode.HoverProvider {
 
     let mdContent = null;
     if (!targetUri.isPlaceholder()) {
-      const content: string = await this.workspace.readAsMarkdown(targetUri);
+      // Use the in-memory workspace resource for section/block lookup (not a fresh parse from disk)
+      const targetFileUri = targetUri.with({ fragment: '' });
+      const targetResource = this.workspace.get(targetFileUri);
+      let content: string | null = null;
 
-      mdContent = isSome(content)
-        ? getNoteTooltip(content)
-        : this.workspace.get(targetUri).title;
+      if (linkFragment) {
+        // Use the in-memory resource for section/block lookup
+        const section: Section | undefined = Resource.findSection(
+          targetResource,
+          linkFragment
+        );
+        if (isSome(section)) {
+          if (section.type === 'block') {
+            // For block IDs, show the block label (e.g., the list item or paragraph)
+            content = section.label;
+          } else if (section.type === 'heading') {
+            // For headings, show the content under the heading (sliceContent)
+            const noteText = await this.workspace.readAsMarkdown(targetFileUri);
+            content = sliceContent(noteText, section.range);
+          } else {
+            // Fallback: show the section label
+            content = (section as any).label;
+          }
+        } else {
+          // Fallback: show the whole note content (from workspace, robust to test/production)
+          content = await this.workspace.readAsMarkdown(targetFileUri);
+        }
+      } else {
+        // If there is no fragment, show the entire note content, minus frontmatter.
+        content = await this.workspace.readAsMarkdown(targetFileUri);
+      }
+
+      if (isSome(content)) {
+        content = content.replace(/---[\s\S]*?---/, '').trim();
+        mdContent = getNoteTooltip(content);
+      } else {
+        mdContent = targetResource.title;
+      }
     }
 
     const command = CREATE_NOTE_COMMAND.forPlaceholder(

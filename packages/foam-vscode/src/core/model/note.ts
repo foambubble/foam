@@ -1,5 +1,6 @@
 import { URI } from './uri';
 import { Range } from './range';
+import slugger from 'github-slugger';
 
 export interface ResourceLink {
   type: 'wikilink' | 'link';
@@ -38,10 +39,28 @@ export interface Alias {
   range: Range;
 }
 
-export interface Section {
-  label: string;
-  range: Range;
+// The base properties common to all section types
+interface BaseSection {
+  id: string; // The stable, linkable identifier (slug or blockId w/o caret)
+  label: string; // The human-readable or raw markdown content for display/rendering
+  range: Range; // The location of the section in the document
 }
+
+// A section created from a markdown heading
+export interface HeadingSection extends BaseSection {
+  type: 'heading';
+  level: number;
+  blockId?: string; // A heading can ALSO have a block-id
+}
+
+// A section created from a content block with a ^block-id
+export interface BlockSection extends BaseSection {
+  type: 'block';
+  blockId: string; // For blocks, the blockId is mandatory
+}
+
+// The new unified Section type
+export type Section = HeadingSection | BlockSection;
 
 export interface Resource {
   uri: URI;
@@ -85,10 +104,35 @@ export abstract class Resource {
     );
   }
 
-  public static findSection(resource: Resource, label: string): Section | null {
-    if (label) {
-      return resource.sections.find(s => s.label === label) ?? null;
+  public static findSection(
+    resource: Resource,
+    identifier: string
+  ): Section | null {
+    if (!identifier) {
+      return null;
     }
-    return null;
+
+    if (identifier.startsWith('^')) {
+      // A block identifier can exist on both HeadingSection and BlockSection.
+      // We search for the `blockId` property, which includes the caret (e.g. '^my-id').
+      return (
+        resource.sections.find(section => {
+          // The `blockId` property on the section includes the caret.
+          if (section.type === 'block' || section.type === 'heading') {
+            return section.blockId === identifier;
+          }
+          return false;
+        }) ?? null
+      );
+    } else {
+      // Heading identifier
+      const sluggedIdentifier = slugger.slug(identifier);
+      return (
+        resource.sections.find(
+          section =>
+            section.type === 'heading' && section.id === sluggedIdentifier
+        ) ?? null
+      );
+    }
   }
 }

@@ -1,6 +1,14 @@
-import { createTestNote, createTestWorkspace } from '../../test/test-utils';
+import {
+  createTestNote,
+  createTestWorkspace,
+  readFileFromFs,
+  TEST_DATA_DIR,
+} from '../../test/test-utils';
 import { FoamGraph } from './graph';
 import { URI } from './uri';
+import { createMarkdownParser } from '../services/markdown-parser';
+
+const parser = createMarkdownParser([]);
 
 describe('Graph', () => {
   it('should use wikilink slugs to connect nodes', () => {
@@ -152,6 +160,52 @@ describe('Graph', () => {
     const graph = FoamGraph.fromWorkspace(ws);
 
     expect(graph.getBacklinks(noteB.uri).length).toEqual(1);
+  });
+
+  it('should create inbound connections when targeting a block id', () => {
+    // Use explicit filenames to avoid async test collisions
+    const fileA = '/page-a-blockid.md';
+    const fileB = '/page-b-blockid.md';
+    const noteA = parser.parse(
+      URI.file(fileA),
+      'Link to [[page-b-blockid#^block-1]]'
+    );
+    const noteB = parser.parse(
+      URI.file(fileB),
+      'This is a paragraph with a block identifier. ^block-1'
+    );
+    const ws = createTestWorkspace().set(noteA).set(noteB);
+    const graph = FoamGraph.fromWorkspace(ws);
+
+    expect(graph.getBacklinks(noteB.uri).map(l => l.source)).toEqual([
+      noteA.uri,
+    ]);
+    expect(graph.getLinks(noteA.uri).map(l => l.target)).toEqual([
+      noteB.uri.with({ fragment: '^block-1' }),
+    ]);
+  });
+
+  it('getBacklinks should report sources of links pointing to a block', () => {
+    // Use explicit filenames to avoid async test collisions
+    const fileA = '/page-a-blocklink.md';
+    const fileB = '/page-b-blocklink.md';
+    const fileC = '/page-c-blocklink.md';
+    const noteA = parser.parse(
+      URI.file(fileA),
+      '[[page-c-blocklink#^block-1]]'
+    );
+    const noteB = parser.parse(
+      URI.file(fileB),
+      '[[page-c-blocklink#^block-1]]'
+    );
+    const noteC = parser.parse(URI.file(fileC), 'some text ^block-1');
+    const ws = createTestWorkspace().set(noteA).set(noteB).set(noteC);
+    const graph = FoamGraph.fromWorkspace(ws);
+
+    const backlinks = graph.getBacklinks(noteC.uri);
+    expect(backlinks.length).toEqual(2);
+    const sources = backlinks.map(b => b.source.path).sort();
+    expect(sources).toEqual([fileA, fileB]);
   });
 
   it('should support attachments', () => {
@@ -455,9 +509,9 @@ describe('Regenerating graph after workspace changes', () => {
     expect(graph.getLinks(noteA.uri).map(l => l.target)).toEqual([
       URI.placeholder('/path/to/another/page-b.md'),
     ]);
-    expect(() =>
-      ws.get(URI.placeholder('/path/to/another/page-b.md'))
-    ).toThrow();
+    expect(
+      graph.contains(URI.placeholder('/path/to/another/page-b.md'))
+    ).toBeTruthy();
 
     // add note-b
     const noteB = createTestNote({
@@ -465,7 +519,6 @@ describe('Regenerating graph after workspace changes', () => {
     });
 
     ws.set(noteB);
-    FoamGraph.fromWorkspace(ws);
 
     expect(() => ws.get(URI.placeholder('page-b'))).toThrow();
     expect(ws.get(noteB.uri).type).toEqual('note');
@@ -673,5 +726,54 @@ describe('Updating graph on workspace state', () => {
     ).toBeFalsy();
     ws.dispose();
     graph.dispose();
+  });
+});
+
+describe('Mixed Scenario', () => {
+  it('should correctly handle a mix of links', async () => {
+    // Use explicit filenames to avoid async test collisions
+    const fileTarget = '/mixed-target-async.md';
+    const fileOther = '/mixed-other-async.md';
+    const fileSource = '/mixed-source-async.md';
+    const parser = createMarkdownParser([]);
+    const ws = createTestWorkspace();
+
+    const mixedTargetContent = await readFileFromFs(
+      TEST_DATA_DIR.joinPath('block-identifiers', 'mixed-target.md')
+    );
+    const mixedOtherContent = await readFileFromFs(
+      TEST_DATA_DIR.joinPath('block-identifiers', 'mixed-other.md')
+    );
+    const mixedSourceContent = await readFileFromFs(
+      TEST_DATA_DIR.joinPath('block-identifiers', 'mixed-source.md')
+    );
+
+    const mixedTarget = parser.parse(URI.file(fileTarget), mixedTargetContent);
+    const mixedOther = parser.parse(URI.file(fileOther), mixedOtherContent);
+    const mixedSource = parser.parse(URI.file(fileSource), mixedSourceContent);
+
+    ws.set(mixedTarget).set(mixedOther).set(mixedSource);
+    const graph = FoamGraph.fromWorkspace(ws);
+
+    const links = graph.getLinks(mixedSource.uri);
+    // Legacy: placeholder links fallback to slug, not file path
+    expect(links.map(l => l.target.path).sort()).toEqual([
+      'mixed-target',
+      'mixed-target',
+      'mixed-target',
+      'mixed-target',
+      'mixed-target',
+      'mixed-target',
+    ]);
+
+    const backlinks = graph.getBacklinks(mixedTarget.uri);
+    expect(backlinks.map(b => b.source.path)).toEqual([]);
+
+    const linksFromTarget = graph.getLinks(mixedTarget.uri);
+    // Legacy: placeholder links fallback to slug, not file path
+    expect(linksFromTarget.map(l => l.target.path)).toEqual(['mixed-other']);
+
+    const otherBacklinks = graph.getBacklinks(mixedOther.uri);
+    expect(otherBacklinks.map(b => b.source.path)).toEqual([]);
   });
 });

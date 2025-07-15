@@ -1,34 +1,57 @@
+import * as vscode from 'vscode';
 import MarkdownIt from 'markdown-it';
 import { FoamWorkspace } from '../../core/model/workspace';
 import { createTestNote } from '../../test/test-utils';
-import { getUriInWorkspace } from '../../test/test-utils-vscode';
-import { default as markdownItWikilinkNavigation } from './wikilink-navigation';
+import { markdownItWikilinkNavigation } from './wikilink-navigation';
 import { default as markdownItRemoveLinkReferences } from './remove-wikilink-references';
+import { URI } from '../../core/model/uri';
 
 describe('Link generation in preview', () => {
+  const workspaceRoot = URI.file('/path/to/workspace');
+  const workspaceRootVsCode = vscode.Uri.file('/path/to/workspace');
+
+  beforeEach(() => {
+    jest
+      .spyOn(vscode.workspace, 'asRelativePath')
+      .mockImplementation((pathOrUri: string | vscode.Uri) => {
+        const path =
+          pathOrUri instanceof vscode.Uri
+            ? pathOrUri.path
+            : pathOrUri.toString();
+        if (path.startsWith(workspaceRootVsCode.path)) {
+          // get path relative to workspace root, remove leading slash
+          return path.substring(workspaceRootVsCode.path.length + 1);
+        }
+        return path;
+      });
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   const noteA = createTestNote({
-    uri: './path/to/note-a.md',
-    // TODO: this should really just be the workspace folder, use that once #806 is fixed
-    root: getUriInWorkspace('just-a-ref.md'),
+    uri: '/path/to/workspace/note-a.md',
     title: 'My note title',
     links: [{ slug: 'placeholder' }],
   });
   const noteB = createTestNote({
-    uri: './path2/to/note-b.md',
-    root: getUriInWorkspace('just-a-ref.md'),
+    uri: '/path/to/workspace/path2/to/note-b.md',
     title: 'My second note',
-    sections: ['sec1', 'sec2'],
+    sections: [
+      { label: 'sec1', level: 1 },
+      { label: 'sec2', level: 1 },
+    ],
   });
   const ws = new FoamWorkspace().set(noteA).set(noteB);
 
-  const md = [
-    markdownItWikilinkNavigation,
-    markdownItRemoveLinkReferences,
-  ].reduce((acc, extension) => extension(acc, ws), MarkdownIt());
+  const md = MarkdownIt();
+  markdownItWikilinkNavigation(md, ws, { root: workspaceRootVsCode });
+  markdownItRemoveLinkReferences(md, ws);
 
   it('generates a link to a note using the note title as link', () => {
     expect(md.render(`[[note-a]]`)).toEqual(
-      `<p><a class='foam-note-link' title='${noteA.title}' href='/path/to/note-a.md' data-href='/path/to/note-a.md'>${noteA.title}</a></p>\n`
+      `<p><a class='foam-note-link' title='${noteA.title}' href='/note-a.md' data-href='/note-a.md'>${noteA.title}</a></p>\n`
     );
   });
 
@@ -48,7 +71,7 @@ describe('Link generation in preview', () => {
     const note = `[[note-a]]
     [note-a]: <note-a.md> "Note A"`;
     expect(md.render(note)).toEqual(
-      `<p><a class='foam-note-link' title='${noteA.title}' href='/path/to/note-a.md' data-href='/path/to/note-a.md'>${noteA.title}</a>\n[note-a]: &lt;note-a.md&gt; &quot;Note A&quot;</p>\n`
+      `<p><a class='foam-note-link' title='${noteA.title}' href='/note-a.md' data-href='/note-a.md'>${noteA.title}</a>\n[note-a]: &lt;note-a.md&gt; &quot;Note A&quot;</p>\n`
     );
   });
 

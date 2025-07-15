@@ -23,7 +23,10 @@ describe('Link Completion', () => {
     createTestNote({
       root,
       uri: 'file-name.md',
-      sections: ['Section One', 'Section Two'],
+      sections: [
+        { label: 'Section One', level: 1 },
+        { label: 'Section Two', level: 1 },
+      ],
     })
   )
     .set(
@@ -159,7 +162,7 @@ describe('Link Completion', () => {
         );
 
         expect(links.items.map(i => i.label)).toEqual([
-          workspace.getIdentifier(noteUri),
+          ws.getIdentifier(noteUri),
         ]);
       }
     );
@@ -187,7 +190,7 @@ describe('Link Completion', () => {
         );
 
         expect(links.items.map(i => i.insertText)).toEqual([
-          workspace.getIdentifier(noteUri),
+          ws.getIdentifier(noteUri),
         ]);
       }
     );
@@ -202,7 +205,7 @@ describe('Link Completion', () => {
         );
 
         expect(links.items.map(i => i.insertText)).toEqual([
-          `${workspace.getIdentifier(noteUri)}|My Note Title`,
+          `${ws.getIdentifier(noteUri)}|My Note Title`,
         ]);
       }
     );
@@ -280,5 +283,36 @@ alias: alias-a
     expect(aliasCompletionItem).not.toBeNull();
     expect(aliasCompletionItem.label).toBe('alias-a');
     expect(aliasCompletionItem.insertText).toBe('new-note-with-alias|alias-a');
+  });
+
+  it('should return block identifiers for the given note', async () => {
+    const noteWithBlocks = await createFile(
+      `
+# Note with blocks
+
+This is a paragraph. ^p1
+
+- list item 1 ^li1
+- list item 2
+
+### A heading ^h1
+`,
+      ['note-with-blocks.md']
+    );
+    ws.set(parser.parse(noteWithBlocks.uri, noteWithBlocks.content));
+
+    const text = '[[note-with-blocks#^';
+    const { uri } = await createFile(text);
+    const { doc } = await showInEditor(uri);
+    const provider = new SectionCompletionProvider(ws);
+
+    const links = await provider.provideCompletionItems(
+      doc,
+      new vscode.Position(0, text.length)
+    );
+
+    expect(new Set(links.items.map(i => i.label))).toEqual(
+      new Set(['Note with blocks', 'A heading', '^p1', '^li1', '^h1'])
+    );
   });
 });

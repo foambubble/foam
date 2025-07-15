@@ -1,4 +1,12 @@
 import matter from 'gray-matter';
+import { Position } from '../model/position'; // Add Position import to the top
+
+/**
+ * Gets the raw text of a node from the source markdown.
+ * @param node The AST node with position info.
+ * @param markdown The full markdown source string.
+ * @returns The raw text corresponding to the node.
+ */
 
 export function getExcerpt(
   markdown: string,
@@ -67,4 +75,30 @@ export function isOnYAMLKeywordLine(content: string, keyword: string): boolean {
   const matches = Array.from(content.matchAll(keywordMatch));
   const lastMatch = matches[matches.length - 1];
   return lastMatch[1] === keyword;
+}
+
+/**
+ * Extracts a contiguous block of non-empty lines from a Markdown string.
+ *
+ * @param markdown The full Markdown string to extract from.
+ * @param position The starting position (line number) for the extraction.
+ * @returns An object containing:
+ *          - `block`: The extracted string content of the block.
+ *          - `nLines`: The total number of lines in the extracted block. This
+ *            is calculated as `blockEnd - blockStart + 1`, which is crucial
+ *            for consumers to know the exact range of the block.
+ */
+export function getBlockFor(
+  markdown: string,
+  position: Position
+): { block: string; nLines: number } {
+  const lines = markdown.split('\n');
+  const blockStart = position.line;
+  let blockEnd = blockStart;
+  while (blockEnd < lines.length - 1 && lines[blockEnd + 1].trim() !== '') {
+    blockEnd++;
+  }
+  const block = lines.slice(blockStart, blockEnd + 1).join('\n');
+  const nLines = blockEnd - blockStart + 1;
+  return { block, nLines };
 }

@@ -6,7 +6,7 @@ import { Range } from '../../../core/model/range';
 import { URI } from '../../../core/model/uri';
 import { FoamWorkspace } from '../../../core/model/workspace';
 import { isSome } from '../../../core/utils';
-import { getBlockFor } from '../../../core/services/markdown-parser';
+import { getBlockFor } from '../../../core/utils/md';
 import { Connection, FoamGraph } from '../../../core/model/graph';
 import { Logger } from '../../../core/utils/log';
 import { getNoteTooltip } from '../../../services/editor';
@@ -188,24 +188,31 @@ export const groupRangesByResource = async (
   return resourceItems;
 };
 
+/**
+ * Creates backlink items for a resource, optionally scoped to a section/block (by fragment).
+ * If fragment is provided, only backlinks to that section/block are included.
+ */
 export function createBacklinkItemsForResource(
   workspace: FoamWorkspace,
   graph: FoamGraph,
   uri: URI,
   variant: 'backlink' | 'link' = 'backlink'
 ) {
-  const connections = graph
+  let connections;
+  // Note-level backlinks
+  connections = graph
     .getConnections(uri)
     .filter(c => c.target.asPlain().isEqual(uri));
 
-  const backlinkItems = connections.map(async c =>
-    ResourceRangeTreeItem.createStandardItem(
+  const backlinkItems = connections.map(async c => {
+    const item = await ResourceRangeTreeItem.createStandardItem(
       workspace,
       workspace.get(c.source),
       c.link.range,
       variant
-    )
-  );
+    );
+    return item;
+  });
   return Promise.all(backlinkItems);
 }
 
@@ -218,13 +225,26 @@ export function createConnectionItemsForResource(
   const connections = graph.getConnections(uri).filter(c => filter(c));
 
   const backlinkItems = connections.map(async c => {
+    const isBacklink = !c.source.asPlain().isEqual(uri);
     const item = await ResourceRangeTreeItem.createStandardItem(
       workspace,
       workspace.get(c.source),
       c.link.range,
-      c.source.asPlain().isEqual(uri) ? 'link' : 'backlink'
+      isBacklink ? 'backlink' : 'link'
     );
     item.value = c;
+
+    if (isBacklink && c.target.fragment) {
+      const targetResource = workspace.get(c.target.asPlain());
+      if (targetResource) {
+        const fragment = c.target.fragment;
+        const section = Resource.findSection(targetResource, fragment);
+        if (isSome(section)) {
+          item.label = section.label;
+        }
+      }
+    }
+
     return item;
   });
   return Promise.all(backlinkItems);

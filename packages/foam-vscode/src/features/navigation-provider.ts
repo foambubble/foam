@@ -122,7 +122,7 @@ export class NavigationProvider
       ? section.range
       : Range.createFromPosition(Position.create(0, 0), Position.create(0, 0));
     const targetSelectionRange = section
-      ? section.range
+      ? (section as any).labelRange || section.range // Use labelRange for headings, fallback to full section range
       : Range.createFromPosition(targetRange.start);
 
     const result: vscode.LocationLink = {

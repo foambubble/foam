@@ -92,9 +92,8 @@ export const markdownItWikilinkNavigation = (
                 fragment = foundSection.id;
                 break;
               case 'block': {
-                // If the link points to a block ID, we need to find the nearest parent heading
-                // to use as the navigation anchor. This ensures that clicking the link scrolls
-                // to the correct area in the preview.
+                // For block ID links, find the closest preceding heading section to use as the anchor.
+                // This ensures navigation scrolls to the most relevant context in the preview, not just the block.
                 const parentHeading = resource.sections
                   .filter(
                     s =>

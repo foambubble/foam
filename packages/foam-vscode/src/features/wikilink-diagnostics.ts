@@ -372,10 +372,8 @@ const createReplaceSectionCommand = (
     diagnostic.relatedInformation[0].location.uri
   );
   const targetResource = workspace.get(targetUri);
-  // Find the section by either its ID (for headings) or its blockId (for blocks)
-  // Find the section by its ID (for headings) or its blockId (for blocks).
-  // The sectionId passed from DiagnosticRelatedInformation.message will be either
-  // s.id (for headings) or s.blockId (for blocks, including caret).
+  // Look up the section in the target resource by matching either heading ID or block ID.
+  // The sectionId may be a heading's s.id or a block's s.blockId (including caret notation).
   const section = targetResource.sections.find(
     s => s.id === sectionId || s.blockId === sectionId
   );

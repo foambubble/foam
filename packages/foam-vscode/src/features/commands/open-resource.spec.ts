@@ -9,7 +9,11 @@ import waitForExpect from 'wait-for-expect';
 
 describe('open-resource command', () => {
   beforeEach(async () => {
-    await jest.resetAllMocks();
+    jest.resetAllMocks();
+    await closeEditors();
+  });
+
+  afterEach(async () => {
     await closeEditors();
   });
 
@@ -27,6 +31,7 @@ describe('open-resource command', () => {
     await commands.executeCommand(command.name, command.params);
 
     await waitForExpect(() => {
+      expect(window.activeTextEditor).toBeTruthy();
       expect(window.activeTextEditor.document.uri.path).toEqual(noteA.uri.path);
     });
     expect(spy).not.toHaveBeenCalled();
@@ -40,11 +45,12 @@ describe('open-resource command', () => {
     const uriCommand: CommandDescriptor<OpenResourceArgs> = {
       name: OPEN_COMMAND.command,
       params: {
-        uri: URI.file('path/to/file.md'),
+        uri: noteA.uri,
       },
     };
     await commands.executeCommand(uriCommand.name, uriCommand.params);
     await waitForExpect(() => {
+      expect(window.activeTextEditor).toBeTruthy();
       expect(window.activeTextEditor.document.uri.path).toEqual(noteA.uri.path);
     });
 
@@ -53,17 +59,18 @@ describe('open-resource command', () => {
     const pathCommand: CommandDescriptor<OpenResourceArgs> = {
       name: OPEN_COMMAND.command,
       params: {
-        uri: URI.file('path/to/file.md'),
+        uri: noteA.uri.path,
       },
     };
     await commands.executeCommand(pathCommand.name, pathCommand.params);
     await waitForExpect(() => {
+      expect(window.activeTextEditor).toBeTruthy();
       expect(window.activeTextEditor.document.uri.path).toEqual(noteA.uri.path);
     });
     await deleteFile(noteA.uri);
   });
 
-  it('User is notified if no resource is found', async () => {
+  it('User is notified if no resource is found with filter', async () => {
     const spy = jest.spyOn(window, 'showInformationMessage');
 
     const command: CommandDescriptor<OpenResourceArgs> = {
@@ -79,7 +86,26 @@ describe('open-resource command', () => {
     });
   });
 
+  it('User is notified if no resource is found with URI', async () => {
+    const spy = jest.spyOn(window, 'showInformationMessage');
+
+    const command: CommandDescriptor<OpenResourceArgs> = {
+      name: OPEN_COMMAND.command,
+      params: {
+        uri: URI.file('path/to/nonexistent.md'),
+      },
+    };
+    await commands.executeCommand(command.name, command.params);
+
+    await waitForExpect(() => {
+      expect(spy).toHaveBeenCalled();
+    });
+  });
+
   it('filter with multiple results will show a quick pick', async () => {
+    const noteA = await createFile('Note A for filter test');
+    const noteB = await createFile('Note B for filter test');
+
     const spy = jest
       .spyOn(window, 'showQuickPick')
       .mockImplementationOnce(jest.fn(() => Promise.resolve(undefined)));
@@ -95,5 +121,8 @@ describe('open-resource command', () => {
     await waitForExpect(() => {
       expect(spy).toHaveBeenCalled();
     });
+
+    await deleteFile(noteA.uri);
+    await deleteFile(noteB.uri);
   });
 });

@@ -26,7 +26,7 @@ describe('open-resource command', () => {
     };
     await commands.executeCommand(command.name, command.params);
 
-    waitForExpect(() => {
+    await waitForExpect(() => {
       expect(window.activeTextEditor.document.uri.path).toEqual(noteA.uri.path);
     });
     expect(spy).not.toHaveBeenCalled();
@@ -44,7 +44,7 @@ describe('open-resource command', () => {
       },
     };
     await commands.executeCommand(uriCommand.name, uriCommand.params);
-    waitForExpect(() => {
+    await waitForExpect(() => {
       expect(window.activeTextEditor.document.uri.path).toEqual(noteA.uri.path);
     });
 
@@ -57,7 +57,7 @@ describe('open-resource command', () => {
       },
     };
     await commands.executeCommand(pathCommand.name, pathCommand.params);
-    waitForExpect(() => {
+    await waitForExpect(() => {
       expect(window.activeTextEditor.document.uri.path).toEqual(noteA.uri.path);
     });
     await deleteFile(noteA.uri);
@@ -74,7 +74,7 @@ describe('open-resource command', () => {
     };
     await commands.executeCommand(command.name, command.params);
 
-    waitForExpect(() => {
+    await waitForExpect(() => {
       expect(spy).toHaveBeenCalled();
     });
   });
@@ -92,7 +92,7 @@ describe('open-resource command', () => {
     };
     await commands.executeCommand(command.name, command.params);
 
-    waitForExpect(() => {
+    await waitForExpect(() => {
       expect(spy).toHaveBeenCalled();
     });
   });

@@ -3,6 +3,7 @@
  * Reuses existing Foam implementations where possible
  */
 
+import * as os from 'os';
 import * as fs from 'fs';
 import * as path from 'path';
 import { Position } from '../core/model/position';
@@ -19,6 +20,7 @@ import {
 } from '../core/services/datastore';
 import { MarkdownResourceProvider } from '../core/services/markdown-provider';
 import { randomString } from './test-utils';
+import micromatch from 'micromatch';
 
 interface Thenable<T> {
   then<TResult>(
@@ -169,7 +171,7 @@ export const Uri = {
 };
 
 // Selection extends Range
-export class Selection implements Range {
+export class Selection extends Range {
   public readonly anchor: Position;
   public readonly active: Position;
 
@@ -196,21 +198,9 @@ export class Selection implements Range {
       anchor = anchorOrLine;
       active = activeOrCharacter as Position;
     }
-
+    super(anchor, active);
     this.anchor = anchor;
     this.active = active;
-  }
-
-  get start(): Position {
-    return Position.isBefore(this.anchor, this.active)
-      ? this.anchor
-      : this.active;
-  }
-
-  get end(): Position {
-    return Position.isAfter(this.anchor, this.active)
-      ? this.anchor
-      : this.active;
   }
 
   get isReversed(): boolean {
@@ -1340,7 +1330,6 @@ export const workspace = {
     maxResults?: number
   ): Promise<Uri[]> {
     // Simple implementation that recursively finds files
-    const micromatch = require('micromatch');
     const workspaceFolder = mockState.workspaceFolders[0];
 
     if (!workspaceFolder) {
@@ -1593,10 +1582,10 @@ export function resetMockState(): void {
 
   // Create a default workspace folder for tests
   const defaultWorkspaceRoot = path.join(
-    require('os').tmpdir(),
+    os.tmpdir(),
     'foam-mock-workspace-' + randomString(3)
   );
-  require('fs').mkdirSync(defaultWorkspaceRoot, { recursive: true });
+  fs.mkdirSync(defaultWorkspaceRoot, { recursive: true });
 
   initializeWorkspace(defaultWorkspaceRoot);
 

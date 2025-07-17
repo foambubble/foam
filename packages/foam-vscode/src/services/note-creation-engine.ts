@@ -41,11 +41,7 @@ export class NoteCreationEngine {
       if (template.type === 'javascript') {
         return await this.executeJSTemplate(trigger, template, resolver);
       } else {
-        return await this.executeMarkdownTemplate(
-          trigger,
-          template,
-          resolver
-        );
+        return await this.executeMarkdownTemplate(trigger, template, resolver);
       }
     } catch (error) {
       Logger.error('Template processing failed', error);
@@ -63,7 +59,7 @@ export class NoteCreationEngine {
   ): Promise<NoteCreationResult> {
     // Convert resolver's variables back to extraParams for backward compatibility
     const extraParams = resolver.getVariables();
-    
+
     const templateContext: TemplateContext = {
       trigger,
       extraParams,
@@ -96,7 +92,8 @@ export class NoteCreationEngine {
 
     // Determine filepath - get variables from resolver for default generation
     const filepath =
-      metadata.get('filepath') || this.generateDefaultFilepath(resolver.getVariables());
+      metadata.get('filepath') ||
+      (await this.generateDefaultFilepath(resolver));
 
     return {
       filepath,
@@ -105,27 +102,12 @@ export class NoteCreationEngine {
   }
 
   /**
-   * Resolves a filepath result to an absolute URI
-   */
-  private resolveResultUri(filepath: string): URI {
-    if (URI.parse(filepath).isAbsolute()) {
-      return URI.parse(filepath);
-    }
-    return asAbsoluteWorkspaceUri(filepath);
-  }
-
-  /**
    * Generates a default filepath when none is specified in the template
    */
-  private generateDefaultFilepath(extraParams: Record<string, any>): string {
-    // Use title from extraParams if available, otherwise use a default name
-    const title = extraParams.title || 'untitled';
-    // Simple safe filename generation (replace unsafe characters)
-    const safeName = title
-      .replace(/[^a-zA-Z0-9\s-]/g, '')
-      .replace(/\s+/g, ' ')
-      .trim();
-    return `${safeName}.md`;
+  private async generateDefaultFilepath(resolver: Resolver): Promise<string> {
+    const name =
+      (await resolver.resolveFromName('FOAM_TITLE_SAFE')) || 'untitled';
+    return `${name}.md`;
   }
 
   /**

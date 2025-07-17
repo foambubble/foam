@@ -89,6 +89,15 @@ export async function createNote(args: CreateNoteArgs, foam: Foam) {
   args = args ?? {};
   const date = isSome(args.date) ? new Date(Date.parse(args.date)) : new Date();
 
+  // Create appropriate trigger based on context
+  const trigger = args.sourceLink
+    ? TriggerFactory.createPlaceholderTrigger(
+        args.sourceLink.uri,
+        foam.workspace.find(args.sourceLink.uri)?.title || 'Unknown',
+        args.sourceLink
+      )
+    : TriggerFactory.createCommandTrigger('foam-vscode.create-note');
+
   // Determine template path
   let templatePath: string;
   if (args.askForTemplate) {
@@ -101,24 +110,20 @@ export async function createNote(args: CreateNoteArgs, foam: Foam) {
   } else {
     templatePath = args.templatePath
       ? asAbsoluteWorkspaceUri(args.templatePath).toString()
-      : getDefaultTemplateUri().toString();
+      : (await fileExists(getDefaultTemplateUri()))
+      ? getDefaultTemplateUri().toString()
+      : null;
   }
-
-  // Create appropriate trigger based on context
-  const trigger = args.sourceLink
-    ? TriggerFactory.createPlaceholderTrigger(
-        args.sourceLink.uri,
-        foam.workspace.find(args.sourceLink.uri)?.title || 'Unknown',
-        args.sourceLink
-      )
-    : TriggerFactory.createCommandTrigger('foam-vscode.create-note');
 
   // Load template using the new system
   const templateLoader = new TemplateLoader();
   let template: Template;
 
   try {
-    if (await fileExists(URI.parse(templatePath))) {
+    if (!templatePath) {
+      // If no template path is provided, use the default text
+      template = { type: 'markdown', content: DEFAULT_NEW_NOTE_TEXT };
+    } else if (await fileExists(URI.parse(templatePath))) {
       template = await templateLoader.loadTemplate(templatePath);
     } else {
       throw new Error(`Template file not found: ${templatePath}`);
@@ -134,12 +139,12 @@ export async function createNote(args: CreateNoteArgs, foam: Foam) {
     new Map(Object.entries(args.variables ?? {})),
     date
   );
-  
+
   // Define all variables in the resolver with proper mapping
   if (args.title) {
     resolver.define('FOAM_TITLE', args.title);
   }
-  
+
   // Add other parameters as variables
   if (args.notePath) {
     resolver.define('notePath', args.notePath);

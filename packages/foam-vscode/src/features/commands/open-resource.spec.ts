@@ -20,7 +20,7 @@ describe('open-resource command', () => {
   it('URI param has precedence over filter', async () => {
     const spy = jest.spyOn(filter, 'createFilter');
     const noteA = await createFile('Note A for open command');
-    
+
     // Wait for workspace to discover the file
     await new Promise(resolve => setTimeout(resolve, 1000));
 
@@ -44,7 +44,7 @@ describe('open-resource command', () => {
 
   it('URI param accept URI object, or path', async () => {
     const noteA = await createFile('Note A for open command');
-    
+
     // Wait for workspace to discover the file
     await new Promise(resolve => setTimeout(resolve, 1000));
 
@@ -111,7 +111,7 @@ describe('open-resource command', () => {
   it('filter with multiple results will show a quick pick', async () => {
     const noteA = await createFile('Note A for filter test');
     const noteB = await createFile('Note B for filter test');
-    
+
     // Wait for workspace to discover the files
     await new Promise(resolve => setTimeout(resolve, 1000));
 

@@ -188,7 +188,7 @@ export async function readFile(uri: URI): Promise<string | undefined> {
   if (await fileExists(uri)) {
     return workspace.fs
       .readFile(toVsCodeUri(uri))
-      .then(bytes => bytes.toString());
+      .then(bytes => new TextDecoder('utf-8').decode(bytes));
   }
   return undefined;
 }

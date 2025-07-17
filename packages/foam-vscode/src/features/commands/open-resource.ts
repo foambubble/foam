@@ -82,13 +82,18 @@ async function openResource(workspace: FoamWorkspace, args?: OpenResourceArgs) {
           );
   }
 
-  if (isSome(item)) {
-    const targetUri =
-      item.uri.path === vscode.window.activeTextEditor?.document.uri.path
-        ? vscode.window.activeTextEditor?.document.uri
-        : toVsCodeUri(item.uri.asPlain());
-    return vscode.commands.executeCommand('vscode.open', targetUri);
+  if (isNone(item)) {
+    vscode.window.showInformationMessage(
+      'Foam: No note matches given filters or URI.'
+    );
+    return;
   }
+
+  const targetUri =
+    item.uri.path === vscode.window.activeTextEditor?.document.uri.path
+      ? vscode.window.activeTextEditor?.document.uri
+      : toVsCodeUri(item.uri.asPlain());
+  return vscode.commands.executeCommand('vscode.open', targetUri);
 }
 
 interface ResourceItem extends vscode.QuickPickItem {

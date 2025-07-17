@@ -2,28 +2,36 @@ import path from 'path';
 import { runTests } from 'vscode-test';
 import { runUnit } from './suite-unit';
 
-function parseArgs(): { unit: boolean; e2e: boolean; jestArgs: string[] } {
+function parseArgs(): {
+  unit: boolean;
+  e2e: boolean;
+  excludeSpecs: boolean;
+  jestArgs: string[];
+} {
   const args = process.argv.slice(2);
-  const unit = args.some(arg => arg === '--unit');
-  const e2e = args.some(arg => arg === '--e2e');
+  const unit = args.includes('--unit');
+  const e2e = args.includes('--e2e');
+  const excludeSpecs = args.includes('--exclude-specs');
 
   // Filter out our custom flags and pass the rest to Jest
-  const jestArgs = args.filter(arg => arg !== '--unit' && arg !== '--e2e');
+  const jestArgs = args.filter(
+    arg => !['--unit', '--e2e', '--exclude-specs'].includes(arg)
+  );
 
   return unit || e2e
-    ? { unit, e2e, jestArgs }
-    : { unit: true, e2e: true, jestArgs };
+    ? { unit, e2e, excludeSpecs, jestArgs }
+    : { unit: true, e2e: true, excludeSpecs, jestArgs };
 }
 
 async function main() {
-  const { unit, e2e, jestArgs } = parseArgs();
+  const { unit, e2e, excludeSpecs, jestArgs } = parseArgs();
 
   let isSuccess = true;
 
   if (unit) {
     try {
       console.log('Running unit tests');
-      await runUnit(jestArgs);
+      await runUnit(jestArgs, excludeSpecs);
     } catch (err) {
       console.log('Error occurred while running Foam unit tests:', err);
       isSuccess = false;

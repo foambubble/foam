@@ -1,3 +1,4 @@
+/* @unit-ready */
 import { commands, window, workspace } from 'vscode';
 import { toVsCodeUri } from '../../utils/vsc-utils';
 import { createFile } from '../../test/test-utils-vscode';

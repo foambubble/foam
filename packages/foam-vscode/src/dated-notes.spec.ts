@@ -1,3 +1,4 @@
+/* @unit-ready */
 import { workspace } from 'vscode';
 import { createDailyNoteIfNotExists, getDailyNoteUri } from './dated-notes';
 import { isWindows } from './core/common/platform';

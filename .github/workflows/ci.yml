@@ -73,4 +73,4 @@ jobs:
       - name: Run Tests
         uses: GabrielBB/xvfb-action@v1.4
         with:
-          run: yarn test --stream
+          run: yarn test

@@ -16,9 +16,9 @@
     "reset": "yarn && yarn clean && yarn build",
     "clean": "lerna run clean",
     "build": "lerna run build",
-    "test": "yarn workspace foam-vscode test --stream",
+    "test": "yarn workspace foam-vscode test",
     "lint": "lerna run lint",
-    "watch": "lerna run watch --concurrency 20 --stream"
+    "watch": "lerna run watch --concurrency 20"
   },
   "devDependencies": {
     "all-contributors-cli": "^6.16.1",

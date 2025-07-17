@@ -3,7 +3,11 @@ import { CommandDescriptor } from '../../utils/commands';
 import { OpenResourceArgs, OPEN_COMMAND } from './open-resource';
 import * as filter from '../../core/services/resource-filter';
 import { URI } from '../../core/model/uri';
-import { closeEditors, createFile } from '../../test/test-utils-vscode';
+import {
+  closeEditors,
+  createFile,
+  waitForNoteInFoamWorkspace,
+} from '../../test/test-utils-vscode';
 import { deleteFile } from '../../services/editor';
 import waitForExpect from 'wait-for-expect';
 
@@ -20,9 +24,7 @@ describe('open-resource command', () => {
   it('URI param has precedence over filter', async () => {
     const spy = jest.spyOn(filter, 'createFilter');
     const noteA = await createFile('Note A for open command');
-
-    // Wait for workspace to discover the file
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await waitForNoteInFoamWorkspace(noteA.uri);
 
     const command: CommandDescriptor<OpenResourceArgs> = {
       name: OPEN_COMMAND.command,
@@ -44,9 +46,7 @@ describe('open-resource command', () => {
 
   it('URI param accept URI object, or path', async () => {
     const noteA = await createFile('Note A for open command');
-
-    // Wait for workspace to discover the file
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await waitForNoteInFoamWorkspace(noteA.uri);
 
     const uriCommand: CommandDescriptor<OpenResourceArgs> = {
       name: OPEN_COMMAND.command,
@@ -111,9 +111,8 @@ describe('open-resource command', () => {
   it('filter with multiple results will show a quick pick', async () => {
     const noteA = await createFile('Note A for filter test');
     const noteB = await createFile('Note B for filter test');
-
-    // Wait for workspace to discover the files
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await waitForNoteInFoamWorkspace(noteA.uri);
+    await waitForNoteInFoamWorkspace(noteB.uri);
 
     const spy = jest
       .spyOn(window, 'showQuickPick')

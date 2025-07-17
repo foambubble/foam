@@ -9,6 +9,8 @@ import { Logger } from '../core/utils/log';
 import { URI } from '../core/model/uri';
 import { Resource } from '../core/model/note';
 import { randomString, wait } from './test-utils';
+import { FoamWorkspace } from '../core/model/workspace';
+import { Foam } from '../core/model/foam';
 
 Logger.setLevel('error');
 
@@ -51,6 +53,35 @@ export const getUriInWorkspace = (...filepath: string[]) => {
   filepath = filepath.length > 0 ? filepath : [randomString() + '.md'];
   const uri = rootUri.joinPath(...filepath);
   return uri;
+};
+
+export const getFoamFromVSCode = async (): Promise<Foam> => {
+  // In test environment, try different extension IDs
+  const extension = vscode.extensions.getExtension('foam.foam-vscode');
+
+  const exports = extension.isActive
+    ? extension.exports
+    : await extension.activate();
+  if (!exports || !exports.foam) {
+    throw new Error('Foam not available in extension exports');
+  }
+
+  return exports.foam;
+};
+
+export const waitForNoteInFoamWorkspace = async (uri: URI, timeout = 5000) => {
+  const start = Date.now();
+  const foam = await getFoamFromVSCode();
+  const workspace = foam.workspace;
+
+  // Wait for the workspace to discover the note
+  while (Date.now() - start < timeout) {
+    if (workspace.find(uri.path)) {
+      return true;
+    }
+    await wait(100);
+  }
+  return false;
 };
 
 /**

@@ -60,13 +60,16 @@ describe('Matcher', () => {
     expect(matcher.isMatch(files[2])).toEqual(false);
     expect(matcher.isMatch(files[3])).toEqual(false);
   });
-
   it('happy path', () => {
-    const matcher = new Matcher([URI.file('/root/')], ['**/*'], ['**/*.pdf']);
-    expect(matcher.isMatch(URI.file('/root/file.md'))).toBeTruthy();
-    expect(matcher.isMatch(URI.file('/root/file.pdf'))).toBeFalsy();
-    expect(matcher.isMatch(URI.file('/root/dir/file.md'))).toBeTruthy();
-    expect(matcher.isMatch(URI.file('/root/dir/file.pdf'))).toBeFalsy();
+    // Use cross-platform path construction
+    const rootUri = URI.file(
+      process.platform === 'win32' ? 'C:\\root' : '/root'
+    );
+    const matcher = new Matcher([rootUri], ['**/*'], ['**/*.pdf']);
+    expect(matcher.isMatch(rootUri.joinPath('file.md'))).toBeTruthy();
+    expect(matcher.isMatch(rootUri.joinPath('file.pdf'))).toBeFalsy();
+    expect(matcher.isMatch(rootUri.joinPath('dir', 'file.md'))).toBeTruthy();
+    expect(matcher.isMatch(rootUri.joinPath('dir', 'file.pdf'))).toBeFalsy();
   });
 
   it('ignores files in the exclude list', () => {

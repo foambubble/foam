@@ -176,6 +176,29 @@ export class URI {
       this.query === uri.query
     );
   }
+
+  /**
+   * Checks if this URI is within the specified folder or is the folder itself.
+   * This handles the common pattern of checking if a file/resource belongs to a folder
+   * during folder operations like renaming.
+   *
+   * @param folderUri - The folder URI to check containment against
+   * @returns true if this URI is within the folder or is the folder itself
+   */
+  isWithinFolder(folderUri: URI): boolean {
+    // Only compare URIs with the same scheme and authority
+    if (this.scheme !== folderUri.scheme || this.authority !== folderUri.authority) {
+      return false;
+    }
+
+    const folderPath = folderUri.path;
+    const resourcePath = this.path;
+
+    return (
+      resourcePath.startsWith(folderPath + '/') ||
+      resourcePath === folderPath
+    );
+  }
 }
 
 // --- encode / decode

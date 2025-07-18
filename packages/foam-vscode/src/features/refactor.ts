@@ -5,12 +5,14 @@ import { Logger } from '../core/utils/log';
 import { isAbsolute } from '../core/utils/path';
 import { getFoamVsCodeConfig } from '../services/config';
 import { fromVsCodeUri, toVsCodeRange, toVsCodeUri } from '../utils/vsc-utils';
+import { FolderRenameHandler } from './folder-rename-handler';
 
 export default async function activate(
   context: vscode.ExtensionContext,
   foamPromise: Promise<Foam>
 ) {
   const foam = await foamPromise;
+  const folderRenameHandler = new FolderRenameHandler(foam);
 
   context.subscriptions.push(
     vscode.workspace.onWillRenameFiles(async e => {
@@ -23,9 +25,20 @@ export default async function activate(
           (await vscode.workspace.fs.stat(oldUri)).type ===
           vscode.FileType.Directory
         ) {
-          vscode.window.showWarningMessage(
-            'Foam: Updating links on directory rename is not supported.'
-          );
+          // Handle folder rename with our new comprehensive handler
+          try {
+            const result = await folderRenameHandler.handleFolderRename(oldUri, newUri);
+            if (result.errors.length > 0) {
+              vscode.window.showErrorMessage(
+                `Foam: Encountered ${result.errors.length} errors while updating links. Check logs for details.`
+              );
+            }
+          } catch (error) {
+            Logger.error('Error in folder rename handler:', error);
+            vscode.window.showErrorMessage(
+              `Foam: Failed to update links for folder rename. Check logs for details.`
+            );
+          }
           continue;
         }
         const connections = foam.graph.getBacklinks(fromVsCodeUri(oldUri));

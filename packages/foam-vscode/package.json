@@ -567,6 +567,27 @@
           "type": "boolean",
           "default": true
         },
+        "foam.folderRename.updateLinks": {
+          "type": "string",
+          "default": "confirm",
+          "description": "Controls how Foam handles link updates when renaming folders",
+          "enum": [
+            "always",
+            "never",
+            "confirm"
+          ],
+          "enumDescriptions": [
+            "Always update links automatically without asking",
+            "Never update links when renaming folders",
+            "Ask for confirmation before updating links"
+          ]
+        },
+        "foam.folderRename.maxFiles": {
+          "type": "number",
+          "default": 500,
+          "minimum": 1,
+          "description": "Maximum number of markdown files to process during folder rename operations. If exceeded, link updates will be skipped for performance reasons."
+        },
         "foam.links.hover.enable": {
           "description": "Enable displaying note content on hover links",
           "type": "boolean",
@@ -675,7 +696,7 @@
     "build": "yarn build:node && yarn build:web",
     "vscode:prepublish": "yarn clean && yarn build:node --production && yarn build:web --production",
     "compile": "tsc -p ./",
-    "test-reset-workspace": "rm -rf .test-workspace && mkdir .test-workspace && touch .test-workspace/.keep",
+    "test-reset-workspace": "rimraf .test-workspace && mkdir .test-workspace && node -e \"require('fs').writeFileSync('.test-workspace/.keep', '')\"",
     "test-setup": "yarn compile && yarn build && yarn test-reset-workspace",
     "test": "yarn test-setup && node ./out/test/run-tests.js",
     "test:unit": "yarn test-setup && node ./out/test/run-tests.js --unit --exclude-specs",

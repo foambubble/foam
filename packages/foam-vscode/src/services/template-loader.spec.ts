@@ -1,35 +1,16 @@
 /* @unit-ready */
 import { workspace } from 'vscode';
 import { TemplateLoader } from './template-loader';
-import {
-  createFile,
-  deleteFile,
-  getUriInWorkspace,
-} from '../test/test-utils-vscode';
+import { createFile, deleteFile } from '../test/test-utils-vscode';
 import { randomString } from '../test/test-utils';
 
 describe('TemplateLoader', () => {
-  let templateLoader: TemplateLoader;
-  let mockIsTrusted: jest.SpyInstance;
-
-  beforeEach(() => {
-    templateLoader = new TemplateLoader();
-    // Mock the workspace.isTrusted property
-    mockIsTrusted = jest.spyOn(workspace, 'isTrusted', 'get');
-  });
-
-  afterEach(() => {
-    mockIsTrusted.mockRestore();
-  });
-
   describe('workspace trust', () => {
     it('should throw error when loading JS template in untrusted workspace', async () => {
-      // Mock workspace as untrusted
+      const templateLoader = new TemplateLoader();
+      const mockIsTrusted = jest.spyOn(workspace, 'isTrusted', 'get');
       mockIsTrusted.mockReturnValue(false);
 
-      const jsTemplateUri = getUriInWorkspace(
-        `test-template-${randomString()}.js`
-      );
       const { uri } = await createFile(
         'function createNote() { return { filepath: "test.md", content: "test" }; }',
         [`test-template-${randomString()}.js`]
@@ -43,11 +24,13 @@ describe('TemplateLoader', () => {
         );
       } finally {
         await deleteFile(uri);
+        mockIsTrusted.mockRestore();
       }
     });
 
     it('should load JS template successfully in trusted workspace', async () => {
-      // Mock workspace as trusted
+      const templateLoader = new TemplateLoader();
+      const mockIsTrusted = jest.spyOn(workspace, 'isTrusted', 'get');
       mockIsTrusted.mockReturnValue(true);
 
       const jsTemplateContent = `
@@ -65,17 +48,19 @@ describe('TemplateLoader', () => {
       try {
         const template = await templateLoader.loadTemplate(uri.toFsPath());
         expect(template.type).toBe('javascript');
-        if (template.type === 'javascript') {
-          expect(template.createNote).toBeDefined();
-          expect(typeof template.createNote).toBe('function');
+        if (template.type !== 'javascript') {
+          throw new Error('Expected JavaScript template type');
         }
+        expect(template.createNote).toBeDefined();
+        expect(typeof template.createNote).toBe('function');
       } finally {
         await deleteFile(uri);
       }
     });
 
     it('should load markdown template regardless of workspace trust', async () => {
-      // Mock workspace as untrusted
+      const templateLoader = new TemplateLoader();
+      const mockIsTrusted = jest.spyOn(workspace, 'isTrusted', 'get');
       mockIsTrusted.mockReturnValue(false);
 
       const mdTemplateContent = `---
@@ -91,9 +76,10 @@ This is a markdown template.`;
       try {
         const template = await templateLoader.loadTemplate(uri.toFsPath());
         expect(template.type).toBe('markdown');
-        if (template.type === 'markdown') {
-          expect(template.content).toBe(mdTemplateContent);
+        if (template.type !== 'markdown') {
+          throw new Error('Expected markdown template type');
         }
+        expect(template.content).toBe(mdTemplateContent);
       } finally {
         await deleteFile(uri);
       }

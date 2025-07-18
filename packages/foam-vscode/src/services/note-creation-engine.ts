@@ -1,7 +1,4 @@
-import { URI } from '../core/model/uri';
 import { Resolver } from './variable-resolver';
-import { NoteFactory } from './templates';
-import { asAbsoluteWorkspaceUri } from './editor';
 import { Foam } from '../core/model/foam';
 import { Logger } from '../core/utils/log';
 import {

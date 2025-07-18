@@ -72,8 +72,6 @@ export const getDailyNoteTemplateUri = async () => {
   return undefined;
 };
 
-const WIKILINK_DEFAULT_TEMPLATE_TEXT = `# $\{1:$FOAM_TITLE}\n\n$0`;
-
 const TEMPLATE_CONTENT = `# \${1:$TM_FILENAME_BASE}
 
 Welcome to Foam templates.

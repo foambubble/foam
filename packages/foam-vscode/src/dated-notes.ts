@@ -13,13 +13,14 @@ import { Foam } from './core/model/foam';
  * it gets created along with any folders in its path.
  *
  * @param date The target date. If not provided, the function returns immediately.
+ * @param foam The Foam instance, used to create the note.
  */
-export async function openDailyNoteFor(date?: Date) {
+export async function openDailyNoteFor(date?: Date, foam?: Foam) {
   if (date == null) {
     return;
   }
 
-  const { didCreateFile, uri } = await createDailyNoteIfNotExists(date);
+  const { didCreateFile, uri } = await createDailyNoteIfNotExists(date, foam);
   // if a new file is created, the editor is automatically created
   // but forcing the focus will block the template placeholders from working
   // so we only explicitly focus on the note if the file already exists
@@ -67,19 +68,18 @@ export function getDailyNoteFileName(date: Date): string {
 }
 
 /**
- * Create a daily note if it does not exist.
+ * Create a daily note using the unified creation engine (supports JS templates)
  *
- * In the case that the folders referenced in the file path also do not exist,
- * this function will create all folders in the path.
- *
- * @param currentDate The current date, to be used as a title.
- * @returns Whether the file was created.
+ * @param targetDate The target date
+ * @param foam The Foam instance
+ * @returns Whether the file was created and the URI
  */
-export async function createDailyNoteIfNotExists(targetDate: Date) {
+export async function createDailyNoteIfNotExists(targetDate: Date, foam: Foam) {
   const uriFromLegacyConfiguration = getDailyNoteUri(targetDate);
   const titleFormat: string =
     getFoamVsCodeConfig('openDailyNote.titleFormat') ??
-    getFoamVsCodeConfig('openDailyNote.filenameFormat');
+    getFoamVsCodeConfig('openDailyNote.filenameFormat') ??
+    'isoDate';
 
   const templateFallbackText = `# ${dateFormat(
     targetDate,
@@ -88,35 +88,6 @@ export async function createDailyNoteIfNotExists(targetDate: Date) {
   )}\n`;
 
   return await NoteFactory.createFromDailyNoteTemplate(
-    uriFromLegacyConfiguration,
-    templateFallbackText,
-    targetDate
-  );
-}
-
-/**
- * Create a daily note using the unified creation engine (supports JS templates)
- *
- * @param targetDate The target date
- * @param foam The Foam instance
- * @returns Whether the file was created and the URI
- */
-export async function createDailyNoteIfNotExistsUnified(
-  targetDate: Date,
-  foam: Foam
-) {
-  const uriFromLegacyConfiguration = getDailyNoteUri(targetDate);
-  const titleFormat: string =
-    getFoamVsCodeConfig('openDailyNote.titleFormat') ??
-    getFoamVsCodeConfig('openDailyNote.filenameFormat');
-
-  const templateFallbackText = `# ${dateFormat(
-    targetDate,
-    titleFormat,
-    false
-  )}\n`;
-
-  return await NoteFactory.createFromDailyNoteTemplateUnified(
     uriFromLegacyConfiguration,
     templateFallbackText,
     targetDate,

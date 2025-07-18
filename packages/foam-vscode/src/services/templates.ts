@@ -403,36 +403,13 @@ export const NoteFactory = {
   },
 
   /**
-   * Creates a daily note from the daily note template.
-   * @param filepathFallbackURI the URI to use if the template does not specify the `filepath` metadata attribute. This is configurable by the caller for backwards compatibility purposes.
-   * @param templateFallbackText the template text to use if daily-note.md template does not exist. This is configurable by the caller for backwards compatibility purposes.
-   */
-  createFromDailyNoteTemplate: async (
-    filepathFallbackURI: URI,
-    templateFallbackText: string,
-    targetDate: Date
-  ): Promise<{ didCreateFile: boolean; uri: URI | undefined }> => {
-    const resolver = new Resolver(
-      new Map().set('FOAM_TITLE', dateFormat(targetDate, 'yyyy-mm-dd', false)),
-      targetDate
-    );
-    return NoteFactory.createFromTemplate(
-      await getDailyNoteTemplateUri(),
-      resolver,
-      filepathFallbackURI,
-      templateFallbackText,
-      _ => Promise.resolve(undefined)
-    );
-  },
-
-  /**
    * Creates a daily note using the unified creation engine with support for JS templates
    * @param filepathFallbackURI the URI to use if the template does not specify the `filepath` metadata attribute
    * @param templateFallbackText the template text to use if template does not exist
    * @param targetDate the date for the daily note
    * @param foam the Foam instance
    */
-  createFromDailyNoteTemplateUnified: async (
+  createFromDailyNoteTemplate: async (
     filepathFallbackURI: URI,
     templateFallbackText: string,
     targetDate: Date,
@@ -456,7 +433,9 @@ export const NoteFactory = {
 
     try {
       if (await fileExists(asAbsoluteWorkspaceUri(templatePath))) {
-        template = await templateLoader.loadTemplate(templatePath);
+        template = await templateLoader.loadTemplate(
+          asAbsoluteWorkspaceUri(templatePath).toFsPath()
+        );
       } else {
         // Create a fallback markdown template
         template = {

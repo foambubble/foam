@@ -57,8 +57,8 @@ describe('Daily note template', () => {
     );
 
     const uri = getDailyNoteUri(targetDate);
-
-    await createDailyNoteIfNotExists(targetDate);
+    const foam = {} as any; // Mock Foam instance
+    await createDailyNoteIfNotExists(targetDate, foam);
 
     const doc = await showInEditor(uri);
     const content = doc.editor.document.getText();

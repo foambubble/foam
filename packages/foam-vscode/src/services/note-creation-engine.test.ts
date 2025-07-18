@@ -208,6 +208,197 @@ Content without filepath metadata.`,
     });
   });
 
+  describe('JavaScript template error handling', () => {
+    it('should handle synchronous errors thrown by JavaScript templates', async () => {
+      const { engine } = await setupFoamEngine();
+      
+      // Create JavaScript template that throws synchronously
+      const template: Template = {
+        type: 'javascript',
+        createNote: () => {
+          throw new Error('Template execution failed');
+        },
+      };
+
+      const resolver = new Resolver(new Map(), new Date());
+      const trigger = TriggerFactory.createCommandTrigger('foam-vscode.create-note');
+
+      // Test that error is properly caught and handled
+      await expect(
+        engine.processTemplate(trigger, template, resolver)
+      ).rejects.toThrow('Template execution failed');
+    });
+
+    it('should handle asynchronous errors thrown by JavaScript templates', async () => {
+      const { engine } = await setupFoamEngine();
+      
+      // Create JavaScript template that throws asynchronously
+      const template: Template = {
+        type: 'javascript',
+        createNote: async () => {
+          await new Promise(resolve => setTimeout(resolve, 10));
+          throw new Error('Async template execution failed');
+        },
+      };
+
+      const resolver = new Resolver(new Map(), new Date());
+      const trigger = TriggerFactory.createCommandTrigger('foam-vscode.create-note');
+
+      // Test that async error is properly caught and handled
+      await expect(
+        engine.processTemplate(trigger, template, resolver)
+      ).rejects.toThrow('Async template execution failed');
+    });
+
+    it('should handle JavaScript templates returning null/undefined', async () => {
+      const { engine } = await setupFoamEngine();
+      
+      // Create JavaScript template that returns null
+      const nullTemplate: Template = {
+        type: 'javascript',
+        createNote: () => null as any,
+      };
+
+      const resolver = new Resolver(new Map(), new Date());
+      const trigger = TriggerFactory.createCommandTrigger('foam-vscode.create-note');
+
+      // Test that null return is handled
+      await expect(
+        engine.processTemplate(trigger, nullTemplate, resolver)
+      ).rejects.toThrow();
+
+      // Create JavaScript template that returns undefined
+      const undefinedTemplate: Template = {
+        type: 'javascript',
+        createNote: () => undefined as any,
+      };
+
+      // Test that undefined return is handled
+      await expect(
+        engine.processTemplate(trigger, undefinedTemplate, resolver)
+      ).rejects.toThrow();
+    });
+
+    it('should handle JavaScript templates returning invalid data structures', async () => {
+      const { engine } = await setupFoamEngine();
+      
+      // Create JavaScript template that returns object with missing filepath
+      const missingFilepathTemplate: Template = {
+        type: 'javascript',
+        createNote: () => ({
+          content: 'Valid content',
+          // Missing filepath
+        } as any),
+      };
+
+      const resolver = new Resolver(new Map(), new Date());
+      const trigger = TriggerFactory.createCommandTrigger('foam-vscode.create-note');
+
+      // Test that missing filepath is handled
+      await expect(
+        engine.processTemplate(trigger, missingFilepathTemplate, resolver)
+      ).rejects.toThrow();
+
+      // Create JavaScript template that returns object with missing content
+      const missingContentTemplate: Template = {
+        type: 'javascript',
+        createNote: () => ({
+          filepath: 'valid-path.md',
+          // Missing content
+        } as any),
+      };
+
+      // Test that missing content is handled
+      await expect(
+        engine.processTemplate(trigger, missingContentTemplate, resolver)
+      ).rejects.toThrow();
+
+      // Create JavaScript template that returns wrong data types
+      const wrongTypesTemplate: Template = {
+        type: 'javascript',
+        createNote: () => ({
+          filepath: 123, // Should be string
+          content: true, // Should be string
+        } as any),
+      };
+
+      // Test that wrong data types are handled
+      await expect(
+        engine.processTemplate(trigger, wrongTypesTemplate, resolver)
+      ).rejects.toThrow();
+    });
+
+    it('should handle JavaScript templates with rejected promises', async () => {
+      const { engine } = await setupFoamEngine();
+      
+      // Create JavaScript template that returns rejected promise
+      const rejectedPromiseTemplate: Template = {
+        type: 'javascript',
+        createNote: () => Promise.reject(new Error('Promise rejected')),
+      };
+
+      const resolver = new Resolver(new Map(), new Date());
+      const trigger = TriggerFactory.createCommandTrigger('foam-vscode.create-note');
+
+      // Test that rejected promise is handled
+      await expect(
+        engine.processTemplate(trigger, rejectedPromiseTemplate, resolver)
+      ).rejects.toThrow('Promise rejected');
+    });
+
+    it('should handle JavaScript templates with mixed sync/async errors', async () => {
+      const { engine } = await setupFoamEngine();
+      
+      // Create JavaScript template that sometimes throws sync, sometimes async
+      let callCount = 0;
+      const mixedErrorTemplate: Template = {
+        type: 'javascript',
+        createNote: () => {
+          callCount++;
+          if (callCount % 2 === 0) {
+            throw new Error('Sync error');
+          } else {
+            return Promise.reject(new Error('Async error'));
+          }
+        },
+      };
+
+      const resolver = new Resolver(new Map(), new Date());
+      const trigger = TriggerFactory.createCommandTrigger('foam-vscode.create-note');
+
+      // Test first call (async error)
+      await expect(
+        engine.processTemplate(trigger, mixedErrorTemplate, resolver)
+      ).rejects.toThrow('Async error');
+
+      // Test second call (sync error)
+      await expect(
+        engine.processTemplate(trigger, mixedErrorTemplate, resolver)
+      ).rejects.toThrow('Sync error');
+    });
+
+    it('should handle JavaScript templates that return promises resolving to invalid data', async () => {
+      const { engine } = await setupFoamEngine();
+      
+      // Create JavaScript template that returns promise resolving to invalid data
+      const invalidPromiseTemplate: Template = {
+        type: 'javascript',
+        createNote: () => Promise.resolve({
+          filepath: null,
+          content: null,
+        } as any),
+      };
+
+      const resolver = new Resolver(new Map(), new Date());
+      const trigger = TriggerFactory.createCommandTrigger('foam-vscode.create-note');
+
+      // Test that invalid promise resolution is handled
+      await expect(
+        engine.processTemplate(trigger, invalidPromiseTemplate, resolver)
+      ).rejects.toThrow();
+    });
+  });
+
   describe('trigger validation', () => {
     it('should validate command triggers', () => {
       const trigger = TriggerFactory.createCommandTrigger(

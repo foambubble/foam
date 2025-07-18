@@ -61,7 +61,18 @@ export class NoteCreationEngine {
       foam: this.foam,
     };
 
-    return await template.createNote(templateContext);
+    try {
+      const result = await template.createNote(templateContext);
+      
+      // Validate the result structure and types
+      this.validateNoteCreationResult(result);
+      
+      return result;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      Logger.error(`JavaScript template execution failed: ${errorMessage}`);
+      throw new Error(`JavaScript template execution failed: ${errorMessage}`);
+    }
   }
 
   /**
@@ -103,6 +114,33 @@ export class NoteCreationEngine {
     const name =
       (await resolver.resolveFromName('FOAM_TITLE_SAFE')) || 'untitled';
     return `${name}.md`;
+  }
+
+  /**
+   * Validates the result returned by a JavaScript template
+   */
+  private validateNoteCreationResult(result: any): asserts result is NoteCreationResult {
+    if (!result || typeof result !== 'object') {
+      throw new Error('JavaScript template must return an object');
+    }
+
+    if (!result.hasOwnProperty('filepath') || typeof result.filepath !== 'string') {
+      throw new Error('JavaScript template result must have a "filepath" property of type string');
+    }
+
+    if (!result.hasOwnProperty('content') || typeof result.content !== 'string') {
+      throw new Error('JavaScript template result must have a "content" property of type string');
+    }
+
+    if (result.filepath.trim() === '') {
+      throw new Error('JavaScript template result "filepath" cannot be empty');
+    }
+
+    // Optional: Validate filepath doesn't contain dangerous characters
+    const invalidChars = /[<>:"|?*\x00-\x1F]/;
+    if (invalidChars.test(result.filepath)) {
+      throw new Error('JavaScript template result "filepath" contains invalid characters');
+    }
   }
 
   /**

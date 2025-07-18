@@ -217,14 +217,17 @@ describe('create-note command', () => {
   });
 
   it('throws an error if the template file does not exist (relative path)', async () => {
-    const nonExistentTemplatePath = 'relative/non-existent-template.md';
-    await expect(
-      commands.executeCommand('foam-vscode.create-note', {
+    try {
+      const nonExistentTemplatePath = 'relative/non-existent-template.md';
+      await commands.executeCommand('foam-vscode.create-note', {
         notePath: 'note-with-missing-template-relative.md',
         templatePath: nonExistentTemplatePath,
         text: 'should not matter',
-      })
-    ).rejects.toThrow(expect.stringContaining('Failed to load template'));
+      });
+      fail('Expected an error to be thrown');
+    } catch (error) {
+      expect(error.message).toContain(`Failed to load template`);
+    }
   });
 });
 

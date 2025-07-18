@@ -13,7 +13,7 @@ import { createMarkdownParser } from '../core/services/markdown-parser';
 import { Logger } from '../core/utils/log';
 import { Resolver } from './variable-resolver';
 
-Logger.setLevel('error');
+Logger.setLevel('off');
 
 async function setupFoamEngine() {
   // Set up Foam workspace (minimal setup for testing)

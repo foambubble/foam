@@ -1,3 +1,4 @@
+import { workspace } from 'vscode';
 import { URI } from '../core/model/uri';
 import { readFile } from './editor';
 import {
@@ -25,6 +26,11 @@ export class TemplateLoader {
    */
   async loadTemplate(templatePath: string): Promise<Template> {
     if (templatePath.endsWith('.js')) {
+      if (!workspace.isTrusted) {
+        throw new Error(
+          'JavaScript templates can only be used in trusted workspaces for security reasons'
+        );
+      }
       return await this.loadJavaScriptTemplate(templatePath);
     } else {
       return await this.loadMarkdownTemplate(templatePath);

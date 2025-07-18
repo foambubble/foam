@@ -1,6 +1,10 @@
 import { URI } from '../core/model/uri';
 import { readFile } from './editor';
-import { Template, TemplateContext, NoteCreationResult } from './note-creation-types';
+import {
+  Template,
+  TemplateContext,
+  NoteCreationResult,
+} from './note-creation-types';
 import { extractFoamTemplateFrontmatterMetadata } from '../utils/template-frontmatter-parser';
 import { JSTemplateLoader } from './js-template-loader';
 
@@ -30,15 +34,21 @@ export class TemplateLoader {
   /**
    * Loads a JavaScript template
    */
-  private async loadJavaScriptTemplate(templatePath: string): Promise<Template> {
-    const createNoteFunction = await this.jsTemplateLoader.loadFunction(templatePath);
-    
+  private async loadJavaScriptTemplate(
+    templatePath: string
+  ): Promise<Template> {
+    const createNoteFunction = await this.jsTemplateLoader.loadFunction(
+      templatePath
+    );
+
     // Ensure the function returns a Promise
-    const createNote = async (context: TemplateContext): Promise<NoteCreationResult> => {
+    const createNote = async (
+      context: TemplateContext
+    ): Promise<NoteCreationResult> => {
       const result = await createNoteFunction(context);
       return result;
     };
-    
+
     return {
       type: 'javascript',
       createNote,
@@ -50,15 +60,14 @@ export class TemplateLoader {
    */
   private async loadMarkdownTemplate(templatePath: string): Promise<Template> {
     // Read the template file content
-    const templateUri = typeof templatePath === 'string' 
-      ? URI.parse(templatePath) 
-      : templatePath;
-    
+    const templateUri =
+      typeof templatePath === 'string' ? URI.parse(templatePath) : templatePath;
+
     const content = await readFile(templateUri);
-    
+
     // Extract metadata from frontmatter if present
     const [metadata] = extractFoamTemplateFrontmatterMetadata(content);
-    
+
     return {
       type: 'markdown',
       content,

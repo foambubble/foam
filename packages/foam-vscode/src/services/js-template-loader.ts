@@ -89,7 +89,7 @@ export class JSTemplateLoader {
       const createNote = context.createNote;
       if (typeof createNote !== 'function') {
         throw new JSTemplateError(
-          'Template must export a createNote function',
+          'Template must declare a createNote function',
           templatePath
         );
       }

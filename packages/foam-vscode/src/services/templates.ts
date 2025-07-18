@@ -41,16 +41,36 @@ export const getTemplatesDir = () =>
   );
 
 /**
- * The URI of the default template
+ * Gets the default template URI
+ * @returns The URI of the default template or undefined if no default template is found
  */
-export const getDefaultTemplateUri = () =>
-  getTemplatesDir().joinPath('new-note.md');
+export const getDefaultTemplateUri = async () => {
+  for (const uri of [
+    getTemplatesDir().joinPath('new-note.js'),
+    getTemplatesDir().joinPath('new-note.md'),
+  ]) {
+    if (await fileExists(uri)) {
+      return uri;
+    }
+  }
+  return undefined;
+};
 
 /**
  * The URI of the template for daily notes
+ * @returns The URI of the daily note template or undefined if no daily note template is found
  */
-export const getDailyNoteTemplateUri = () =>
-  getTemplatesDir().joinPath('daily-note.md');
+export const getDailyNoteTemplateUri = async () => {
+  for (const uri of [
+    getTemplatesDir().joinPath('daily-note.js'),
+    getTemplatesDir().joinPath('daily-note.md'),
+  ]) {
+    if (await fileExists(uri)) {
+      return uri;
+    }
+  }
+  return undefined;
+};
 
 const WIKILINK_DEFAULT_TEMPLATE_TEXT = `# $\{1:$FOAM_TITLE}\n\n$0`;
 
@@ -387,7 +407,7 @@ export const NoteFactory = {
    * @param filepathFallbackURI the URI to use if the template does not specify the `filepath` metadata attribute. This is configurable by the caller for backwards compatibility purposes.
    * @param templateFallbackText the template text to use if daily-note.md template does not exist. This is configurable by the caller for backwards compatibility purposes.
    */
-  createFromDailyNoteTemplate: (
+  createFromDailyNoteTemplate: async (
     filepathFallbackURI: URI,
     templateFallbackText: string,
     targetDate: Date
@@ -397,7 +417,7 @@ export const NoteFactory = {
       targetDate
     );
     return NoteFactory.createFromTemplate(
-      getDailyNoteTemplateUri(),
+      await getDailyNoteTemplateUri(),
       resolver,
       filepathFallbackURI,
       templateFallbackText,
@@ -433,7 +453,7 @@ export const NoteFactory = {
     // Load template using the new system
     const templateLoader = new TemplateLoader();
     let template: Template;
-    
+
     try {
       if (await fileExists(asAbsoluteWorkspaceUri(templatePath))) {
         template = await templateLoader.loadTemplate(templatePath);
@@ -488,7 +508,7 @@ export const NoteFactory = {
     );
 
     if (templateURI === undefined) {
-      templateURI = getDefaultTemplateUri();
+      templateURI = await getDefaultTemplateUri();
     }
 
     return NoteFactory.createFromTemplate(

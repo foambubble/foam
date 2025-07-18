@@ -96,10 +96,11 @@ Today is \${FOAM_DATE_DAY_NAME}`,
 
       // Verify trigger type handling
       expect(trigger.type).toBe('command');
-      if (isCommandTrigger(trigger)) {
-        expect(trigger.command).toBe('foam-vscode.open-daily-note');
-        expect(trigger.params).toHaveProperty('date');
+      if (!isCommandTrigger(trigger)) {
+        throw new Error('Expected command trigger type');
       }
+      expect(trigger.command).toBe('foam-vscode.open-daily-note');
+      expect(trigger.params).toHaveProperty('date');
     });
 
     it('should handle placeholder triggers correctly', async () => {
@@ -140,12 +141,13 @@ Content goes here.`,
 
       // Verify trigger type handling
       expect(trigger.type).toBe('placeholder');
-      if (isPlaceholderTrigger(trigger)) {
-        expect(trigger.sourceNote.title).toBe('Source Note');
-        expect(trigger.sourceNote.uri).toBe(
-          strToUri('/test/source.md').toString()
-        );
+      if (!isPlaceholderTrigger(trigger)) {
+        throw new Error('Expected placeholder trigger type');
       }
+      expect(trigger.sourceNote.title).toBe('Source Note');
+      expect(trigger.sourceNote.uri).toBe(
+        strToUri('/test/source.md').toString()
+      );
     });
 
     it('should generate default filepath when not specified in template', async () => {
@@ -189,7 +191,7 @@ Content without filepath metadata.`,
         },
       };
 
-      // Create resolver with variables  
+      // Create resolver with variables
       const resolver = new Resolver(new Map(), new Date());
       resolver.define('FOAM_TITLE', 'JS Generated Note');
       resolver.define('title', 'JS Generated Note');
@@ -211,7 +213,7 @@ Content without filepath metadata.`,
   describe('JavaScript template error handling', () => {
     it('should handle synchronous errors thrown by JavaScript templates', async () => {
       const { engine } = await setupFoamEngine();
-      
+
       // Create JavaScript template that throws synchronously
       const template: Template = {
         type: 'javascript',
@@ -221,7 +223,9 @@ Content without filepath metadata.`,
       };
 
       const resolver = new Resolver(new Map(), new Date());
-      const trigger = TriggerFactory.createCommandTrigger('foam-vscode.create-note');
+      const trigger = TriggerFactory.createCommandTrigger(
+        'foam-vscode.create-note'
+      );
 
       // Test that error is properly caught and handled
       await expect(
@@ -231,7 +235,7 @@ Content without filepath metadata.`,
 
     it('should handle asynchronous errors thrown by JavaScript templates', async () => {
       const { engine } = await setupFoamEngine();
-      
+
       // Create JavaScript template that throws asynchronously
       const template: Template = {
         type: 'javascript',
@@ -242,7 +246,9 @@ Content without filepath metadata.`,
       };
 
       const resolver = new Resolver(new Map(), new Date());
-      const trigger = TriggerFactory.createCommandTrigger('foam-vscode.create-note');
+      const trigger = TriggerFactory.createCommandTrigger(
+        'foam-vscode.create-note'
+      );
 
       // Test that async error is properly caught and handled
       await expect(
@@ -252,7 +258,7 @@ Content without filepath metadata.`,
 
     it('should handle JavaScript templates returning null/undefined', async () => {
       const { engine } = await setupFoamEngine();
-      
+
       // Create JavaScript template that returns null
       const nullTemplate: Template = {
         type: 'javascript',
@@ -260,7 +266,9 @@ Content without filepath metadata.`,
       };
 
       const resolver = new Resolver(new Map(), new Date());
-      const trigger = TriggerFactory.createCommandTrigger('foam-vscode.create-note');
+      const trigger = TriggerFactory.createCommandTrigger(
+        'foam-vscode.create-note'
+      );
 
       // Test that null return is handled
       await expect(
@@ -281,18 +289,21 @@ Content without filepath metadata.`,
 
     it('should handle JavaScript templates returning invalid data structures', async () => {
       const { engine } = await setupFoamEngine();
-      
+
       // Create JavaScript template that returns object with missing filepath
       const missingFilepathTemplate: Template = {
         type: 'javascript',
-        createNote: () => ({
-          content: 'Valid content',
-          // Missing filepath
-        } as any),
+        createNote: () =>
+          ({
+            content: 'Valid content',
+            // Missing filepath
+          } as any),
       };
 
       const resolver = new Resolver(new Map(), new Date());
-      const trigger = TriggerFactory.createCommandTrigger('foam-vscode.create-note');
+      const trigger = TriggerFactory.createCommandTrigger(
+        'foam-vscode.create-note'
+      );
 
       // Test that missing filepath is handled
       await expect(
@@ -302,10 +313,11 @@ Content without filepath metadata.`,
       // Create JavaScript template that returns object with missing content
       const missingContentTemplate: Template = {
         type: 'javascript',
-        createNote: () => ({
-          filepath: 'valid-path.md',
-          // Missing content
-        } as any),
+        createNote: () =>
+          ({
+            filepath: 'valid-path.md',
+            // Missing content
+          } as any),
       };
 
       // Test that missing content is handled
@@ -316,10 +328,11 @@ Content without filepath metadata.`,
       // Create JavaScript template that returns wrong data types
       const wrongTypesTemplate: Template = {
         type: 'javascript',
-        createNote: () => ({
-          filepath: 123, // Should be string
-          content: true, // Should be string
-        } as any),
+        createNote: () =>
+          ({
+            filepath: 123, // Should be string
+            content: true, // Should be string
+          } as any),
       };
 
       // Test that wrong data types are handled
@@ -330,7 +343,7 @@ Content without filepath metadata.`,
 
     it('should handle JavaScript templates with rejected promises', async () => {
       const { engine } = await setupFoamEngine();
-      
+
       // Create JavaScript template that returns rejected promise
       const rejectedPromiseTemplate: Template = {
         type: 'javascript',
@@ -338,7 +351,9 @@ Content without filepath metadata.`,
       };
 
       const resolver = new Resolver(new Map(), new Date());
-      const trigger = TriggerFactory.createCommandTrigger('foam-vscode.create-note');
+      const trigger = TriggerFactory.createCommandTrigger(
+        'foam-vscode.create-note'
+      );
 
       // Test that rejected promise is handled
       await expect(
@@ -348,7 +363,7 @@ Content without filepath metadata.`,
 
     it('should handle JavaScript templates with mixed sync/async errors', async () => {
       const { engine } = await setupFoamEngine();
-      
+
       // Create JavaScript template that sometimes throws sync, sometimes async
       let callCount = 0;
       const mixedErrorTemplate: Template = {
@@ -364,7 +379,9 @@ Content without filepath metadata.`,
       };
 
       const resolver = new Resolver(new Map(), new Date());
-      const trigger = TriggerFactory.createCommandTrigger('foam-vscode.create-note');
+      const trigger = TriggerFactory.createCommandTrigger(
+        'foam-vscode.create-note'
+      );
 
       // Test first call (async error)
       await expect(
@@ -379,18 +396,21 @@ Content without filepath metadata.`,
 
     it('should handle JavaScript templates that return promises resolving to invalid data', async () => {
       const { engine } = await setupFoamEngine();
-      
+
       // Create JavaScript template that returns promise resolving to invalid data
       const invalidPromiseTemplate: Template = {
         type: 'javascript',
-        createNote: () => Promise.resolve({
-          filepath: null,
-          content: null,
-        } as any),
+        createNote: () =>
+          Promise.resolve({
+            filepath: null,
+            content: null,
+          } as any),
       };
 
       const resolver = new Resolver(new Map(), new Date());
-      const trigger = TriggerFactory.createCommandTrigger('foam-vscode.create-note');
+      const trigger = TriggerFactory.createCommandTrigger(
+        'foam-vscode.create-note'
+      );
 
       // Test that invalid promise resolution is handled
       await expect(
@@ -407,10 +427,11 @@ Content without filepath metadata.`,
       );
 
       expect(trigger.type).toBe('command');
-      if (isCommandTrigger(trigger)) {
-        expect(trigger.command).toBe('foam-vscode.open-daily-note');
-        expect(trigger.params).toHaveProperty('date');
+      if (!isCommandTrigger(trigger)) {
+        throw new Error('Expected command trigger type');
       }
+      expect(trigger.command).toBe('foam-vscode.open-daily-note');
+      expect(trigger.params).toHaveProperty('date');
     });
 
     it('should validate placeholder triggers', () => {
@@ -431,13 +452,14 @@ Content without filepath metadata.`,
       );
 
       expect(trigger.type).toBe('placeholder');
-      if (isPlaceholderTrigger(trigger)) {
-        expect(trigger.sourceNote).toMatchObject({
-          uri: sourceUri.toString(),
-          title: 'Source Note',
-          location: mockLocation,
-        });
+      if (!isPlaceholderTrigger(trigger)) {
+        throw new Error('Expected placeholder trigger type');
       }
+      expect(trigger.sourceNote).toMatchObject({
+        uri: sourceUri.toString(),
+        title: 'Source Note',
+        location: mockLocation,
+      });
     });
   });
 });

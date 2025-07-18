@@ -224,9 +224,9 @@ describe('create-note command', () => {
         templatePath: nonExistentTemplatePath,
         text: 'should not matter',
       });
-      fail('Expected an error to be thrown');
+      throw new Error('Expected an error to be thrown');
     } catch (error) {
-      expect(error.message).toContain(`Failed to load template`);
+      expect(error.message).toContain(`Failed to load template`); // eslint-disable-line jest/no-conditional-expect
     }
   });
 });

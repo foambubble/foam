@@ -110,9 +110,7 @@ export async function createNote(args: CreateNoteArgs, foam: Foam) {
   } else {
     templatePath = args.templatePath
       ? asAbsoluteWorkspaceUri(args.templatePath).toString()
-      : (await fileExists(getDefaultTemplateUri()))
-      ? getDefaultTemplateUri().toString()
-      : null;
+      : (await getDefaultTemplateUri())?.toString();
   }
 
   // Load template using the new system

@@ -121,8 +121,10 @@ export async function createNote(args: CreateNoteArgs, foam: Foam) {
 
   try {
     if (!templatePath) {
-      // If no template path is provided, use the default text
-      template = { type: 'markdown', content: DEFAULT_NEW_NOTE_TEXT };
+      template = {
+        type: 'markdown',
+        content: args.text || DEFAULT_NEW_NOTE_TEXT,
+      };
     } else if (await fileExists(URI.parse(templatePath))) {
       template = await templateLoader.loadTemplate(templatePath);
     } else {
@@ -161,12 +163,10 @@ export async function createNote(args: CreateNoteArgs, foam: Foam) {
   const result = await engine.processTemplate(trigger, template, resolver);
 
   // Determine final file path
-  const finalUri = args.notePath
-    ? new URI({
-        scheme: vscode.workspace.workspaceFolders[0].uri.scheme,
-        path: args.notePath,
-      })
-    : asAbsoluteWorkspaceUri(result.filepath);
+  const finalUri = new URI({
+    scheme: vscode.workspace.workspaceFolders[0].uri.scheme,
+    path: result.filepath,
+  });
 
   // Create the note using NoteFactory with the same resolver
   const createdNote = await NoteFactory.createNote(

@@ -81,13 +81,13 @@ export class NoteCreationEngine {
 
     // Combine template metadata with frontmatter metadata (frontmatter takes precedence)
     const metadata = new Map([
-      ...(template.metadata || []),
+      ...(template.metadata ?? new Map()),
       ...frontmatterMetadata,
     ]);
 
     // Determine filepath - get variables from resolver for default generation
     const filepath =
-      metadata.get('filepath') ||
+      metadata.get('filepath') ??
       (await this.generateDefaultFilepath(resolver));
 
     return {

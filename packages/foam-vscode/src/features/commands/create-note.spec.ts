@@ -212,7 +212,7 @@ describe('create-note command', () => {
         text: 'should not matter',
       })
     ).rejects.toThrow(
-      `Failed to load template (${nonExistentTemplatePath}): Template file not found: ${nonExistentTemplatePath}`
+      `Failed to load template (file://${nonExistentTemplatePath}): Template file not found: file://${nonExistentTemplatePath}`
     );
   });
 
@@ -276,7 +276,7 @@ foam_template:
       const results: Awaited<ReturnType<typeof createNote>> =
         await commands.executeCommand(command.name, command.params);
       expect(results.didCreateFile).toBeTruthy();
-      expect(results.uri.path.endsWith('hello-world.md')).toBeTruthy();
+      expect(results.uri.path).toMatch(/hello-world.md$/);
 
       const newNoteDoc = window.activeTextEditor.document;
       expect(newNoteDoc.uri.path).toMatch(/hello-world.md$/);

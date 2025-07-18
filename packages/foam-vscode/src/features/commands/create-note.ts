@@ -93,7 +93,7 @@ export async function createNote(args: CreateNoteArgs, foam: Foam) {
   const trigger = args.sourceLink
     ? TriggerFactory.createPlaceholderTrigger(
         args.sourceLink.uri,
-        foam.workspace.find(args.sourceLink.uri)?.title || 'Unknown',
+        foam.workspace.find(new URI(args.sourceLink.uri))?.title || 'Unknown',
         args.sourceLink
       )
     : TriggerFactory.createCommandTrigger('foam-vscode.create-note');

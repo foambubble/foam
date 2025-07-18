@@ -248,7 +248,7 @@ async function resolveFoamTitle() {
       value.trim().length === 0 ? 'Please enter a title' : undefined,
   });
   if (title === undefined) {
-    throw new UserCancelledOperation();
+    throw new UserCancelledOperation('User did not provide a note title');
   }
   return title;
 }

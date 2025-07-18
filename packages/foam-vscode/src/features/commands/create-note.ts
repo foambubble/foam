@@ -134,6 +134,12 @@ export async function createNote(args: CreateNoteArgs, foam: Foam) {
     );
   }
 
+  // If notePath is provided, add it to template metadata to avoid unnecessary title resolution
+  if (args.notePath && template.type === 'markdown') {
+    template.metadata = template.metadata || new Map();
+    template.metadata.set('filepath', args.notePath);
+  }
+
   // Create resolver with all variables upfront
   const resolver = new Resolver(
     new Map(Object.entries(args.variables ?? {})),

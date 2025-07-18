@@ -34,18 +34,13 @@ export class NoteCreationEngine {
     template: Template,
     resolver: Resolver
   ): Promise<NoteCreationResult> {
-    try {
-      Logger.info(`Processing ${template.type} template`);
-      this.logTriggerInfo(trigger);
+    Logger.info(`Processing ${template.type} template`);
+    this.logTriggerInfo(trigger);
 
-      if (template.type === 'javascript') {
-        return await this.executeJSTemplate(trigger, template, resolver);
-      } else {
-        return await this.executeMarkdownTemplate(trigger, template, resolver);
-      }
-    } catch (error) {
-      Logger.error('Template processing failed', error);
-      throw new Error(`Template processing failed: ${error.message}`);
+    if (template.type === 'javascript') {
+      return await this.executeJSTemplate(trigger, template, resolver);
+    } else {
+      return await this.executeMarkdownTemplate(trigger, template, resolver);
     }
   }
 

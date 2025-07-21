@@ -1,6 +1,7 @@
 import { Location } from '../core/model/location';
 import { ResourceLink } from '../core/model/note';
 import { Foam } from '../core/model/foam';
+import { Resolver } from './variable-resolver';
 
 /**
  * Union type for different trigger scenarios that can initiate note creation
@@ -36,8 +37,8 @@ export type Template =
 export interface TemplateContext {
   /** The trigger that initiated the note creation */
   trigger: NoteCreationTrigger;
-  /** Additional parameters for template processing */
-  extraParams: Record<string, any>;
+  /** Resolver instance for variable resolution */
+  resolver: Resolver;
   /** Foam instance for accessing workspace data */
   foam: Foam;
 }

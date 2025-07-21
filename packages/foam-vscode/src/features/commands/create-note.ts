@@ -1,4 +1,4 @@
-import * as vscode from 'vscode';
+import { workspace, commands, WorkspaceEdit, ExtensionContext } from 'vscode';
 import { URI } from '../../core/model/uri';
 import {
   askUserForTemplate,
@@ -17,15 +17,19 @@ import { Foam } from '../../core/model/foam';
 import { Location } from '../../core/model/location';
 import { MarkdownLink } from '../../core/services/markdown-link';
 import { ResourceLink } from '../../core/model/note';
-import { toVsCodeRange, toVsCodeUri } from '../../utils/vsc-utils';
+import {
+  fromVsCodeUri,
+  toVsCodeRange,
+  toVsCodeUri,
+} from '../../utils/vsc-utils';
 
 export default async function activate(
-  context: vscode.ExtensionContext,
+  context: ExtensionContext,
   foamPromise: Promise<Foam>
 ) {
   const foam = await foamPromise;
   context.subscriptions.push(
-    vscode.commands.registerCommand(CREATE_NOTE_COMMAND.command, args =>
+    commands.registerCommand(CREATE_NOTE_COMMAND.command, args =>
       createNote(args, foam)
     )
   );
@@ -157,12 +161,15 @@ export async function createNote(args: CreateNoteArgs, foam: Foam) {
   }
 
   // Process template using the new engine with unified resolver
-  const engine = new NoteCreationEngine(foam);
+  const engine = new NoteCreationEngine(
+    foam,
+    workspace.workspaceFolders.map(folder => fromVsCodeUri(folder.uri))
+  );
   const result = await engine.processTemplate(trigger, template, resolver);
 
   // Determine final file path
   const finalUri = new URI({
-    scheme: vscode.workspace.workspaceFolders[0].uri.scheme,
+    scheme: workspace.workspaceFolders[0].uri.scheme,
     path: result.filepath,
   });
 
@@ -182,14 +189,14 @@ export async function createNote(args: CreateNoteArgs, foam: Foam) {
       target: identifier,
     });
     if (edit.newText !== args.sourceLink.data.rawText) {
-      const updateLink = new vscode.WorkspaceEdit();
+      const updateLink = new WorkspaceEdit();
       const uri = toVsCodeUri(args.sourceLink.uri);
       updateLink.replace(
         uri,
         toVsCodeRange(args.sourceLink.range),
         edit.newText
       );
-      await vscode.workspace.applyEdit(updateLink);
+      await workspace.applyEdit(updateLink);
     }
   }
 

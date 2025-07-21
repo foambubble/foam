@@ -456,7 +456,10 @@ export const NoteFactory = {
     resolver.define('title', dateFormat(targetDate, 'yyyy-mm-dd', false));
 
     // Process template using the new engine with unified resolver
-    const engine = new NoteCreationEngine(foam);
+    const engine = new NoteCreationEngine(
+      foam,
+      workspace.workspaceFolders.map(folder => fromVsCodeUri(folder.uri))
+    );
     const result = await engine.processTemplate(trigger, template, resolver);
 
     // Create the note using NoteFactory with the same resolver

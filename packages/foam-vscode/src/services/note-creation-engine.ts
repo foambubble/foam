@@ -10,12 +10,13 @@ import {
   isPlaceholderTrigger,
 } from './note-creation-types';
 import { extractFoamTemplateFrontmatterMetadata } from '../utils/template-frontmatter-parser';
+import { asAbsoluteUri, URI } from '../core/model/uri';
 
 /**
  * Unified engine for creating notes from both Markdown and JavaScript templates
  */
 export class NoteCreationEngine {
-  constructor(private foam: Foam) {}
+  constructor(private foam: Foam, private roots: URI[]) {}
 
   /**
    * Processes a template and generates note content and filepath
@@ -34,11 +35,17 @@ export class NoteCreationEngine {
     Logger.info(`Processing ${template.type} template`);
     this.logTriggerInfo(trigger);
 
+    let result = null;
     if (template.type === 'javascript') {
-      return await this.executeJSTemplate(trigger, template, resolver);
+      result = await this.executeJSTemplate(trigger, template, resolver);
     } else {
-      return await this.executeMarkdownTemplate(trigger, template, resolver);
+      result = await this.executeMarkdownTemplate(trigger, template, resolver);
     }
+
+    return {
+      ...result,
+      filepath: asAbsoluteUri(result.filepath, this.roots, true).path,
+    };
   }
 
   /**
@@ -54,7 +61,7 @@ export class NoteCreationEngine {
 
     const templateContext: TemplateContext = {
       trigger,
-      extraParams,
+      resolver,
       foam: this.foam,
     };
 

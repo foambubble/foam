@@ -393,19 +393,30 @@ function encodeURIComponentMinimal(path: string): string {
  *
  * @param uri the uri to evaluate
  * @param baseFolders the base folders to use
+ * @param forceSubfolder if true, if the URI is not a subfolder of any baseFolder,
+ * it will be forced to be a subfolder of the first base folder
  * @returns an absolute uri
  *
  * TODO this probably needs to be moved to the workspace service
  */
 export function asAbsoluteUri(
   uriOrPath: URI | string,
-  baseFolders: URI[]
+  baseFolders: URI[],
+  forceSubfolder = false
 ): URI {
   if (baseFolders.length === 0) {
     throw new Error('At least one base folder needed to compute URI');
   }
   const path = uriOrPath instanceof URI ? uriOrPath.path : uriOrPath;
   if (path.startsWith('/')) {
+    if (forceSubfolder) {
+      const isAlreadySubfolder = baseFolders.some(folder =>
+        path.startsWith(folder.path)
+      );
+      if (!isAlreadySubfolder) {
+        return baseFolders[0].joinPath(path);
+      }
+    }
     return uriOrPath instanceof URI ? uriOrPath : baseFolders[0].with({ path });
   }
   let tokens = path.split('/');

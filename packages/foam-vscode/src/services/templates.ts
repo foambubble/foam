@@ -24,7 +24,7 @@ import {
 import { Resolver } from './variable-resolver';
 import dateFormat from 'dateformat';
 import { getFoamVsCodeConfig } from './config';
-import { firstFrom, isNone } from '../core/utils';
+import { isNone } from '../core/utils';
 import { NoteCreationEngine } from './note-creation-engine';
 import { TriggerFactory } from './note-creation-triggers';
 import { TemplateLoader } from './template-loader';
@@ -346,52 +346,6 @@ export const NoteFactory = {
       }
 
       return { didCreateFile: true, uri: newFilePath };
-    } catch (err) {
-      if (err instanceof UserCancelledOperation) {
-        return;
-      }
-      throw err;
-    }
-  },
-
-  /**
-   * Creates a new note using a template.
-   * @param templateUri the URI of the template to use.
-   * @param resolver the Resolver to use.
-   * @param filepathFallbackURI the URI to use if the template does not specify the `filepath` metadata attribute. This is configurable by the caller for backwards compatibility purposes.
-   * @param templateFallbackText the template text to use if the template does not exist. This is configurable by the caller for backwards compatibility purposes.
-   */
-  createFromTemplate: async (
-    templateUri: URI,
-    resolver: Resolver,
-    filepathFallbackURI?: URI,
-    templateFallbackText = '',
-    onFileExists?: OnFileExistStrategy
-  ): Promise<{ didCreateFile: boolean; uri: URI | undefined }> => {
-    try {
-      const template = await getTemplateInfo(
-        templateUri,
-        templateFallbackText,
-        resolver
-      );
-
-      const pathSources = [
-        () =>
-          template.metadata.has('filepath')
-            ? asAbsoluteWorkspaceUri(template.metadata.get('filepath'))
-            : null,
-        () => filepathFallbackURI,
-        () => getPathFromTitle(templateUri.scheme, resolver),
-      ];
-
-      const newFilePath = await firstFrom(pathSources);
-
-      return NoteFactory.createNote(
-        newFilePath,
-        template.text,
-        resolver,
-        onFileExists
-      );
     } catch (err) {
       if (err instanceof UserCancelledOperation) {
         return;

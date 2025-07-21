@@ -19,7 +19,7 @@ export class JSTemplateError extends Error {
  * Loader for JavaScript template functions with secure VM execution
  */
 export class JSTemplateLoader {
-  private static readonly EXECUTION_TIMEOUT = 30000; // 30 seconds
+  private static readonly EXECUTION_TIMEOUT = 10000; // 10 seconds
   private static readonly VM_OPTIONS: vm.RunningScriptOptions = {
     timeout: JSTemplateLoader.EXECUTION_TIMEOUT,
     displayErrors: true,

@@ -11,6 +11,7 @@ import {
 } from './note-creation-types';
 import { extractFoamTemplateFrontmatterMetadata } from '../utils/template-frontmatter-parser';
 import { asAbsoluteUri, URI } from '../core/model/uri';
+import { isAbsolute } from 'path';
 
 /**
  * Unified engine for creating notes from both Markdown and JavaScript templates
@@ -44,7 +45,9 @@ export class NoteCreationEngine {
 
     return {
       ...result,
-      filepath: asAbsoluteUri(result.filepath, this.roots, true).path,
+      filepath: isAbsolute(result.filepath)
+        ? asAbsoluteUri(result.filepath, this.roots, true).path
+        : result.filepath,
     };
   }
 

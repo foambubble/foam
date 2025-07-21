@@ -11,7 +11,6 @@ import {
   withModifiedFoamConfiguration,
 } from './test/test-utils-vscode';
 import { fromVsCodeUri } from './utils/vsc-utils';
-import { URI } from './core/model/uri';
 
 describe('getDailyNoteUri', () => {
   const date = new Date('2021-02-07T00:00:00Z');

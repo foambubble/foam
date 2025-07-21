@@ -67,6 +67,169 @@ type: daily-note
 ---
 ```
 
+## JavaScript Templates
+
+JavaScript templates are a powerful way to create smart, context-aware note templates that can adapt based on the situation. Unlike static Markdown templates, JavaScript templates can make intelligent decisions about what content to include.
+
+**Use JavaScript templates when you want to:**
+
+- Create different note structures based on the day of the week, time, or date
+- Adapt templates based on where the note is being created from
+- Automatically find and link related notes in your workspace
+- Generate content based on existing notes or workspace structure
+- Implement complex logic that static templates cannot handle
+
+### Basic JavaScript template structure
+
+A JavaScript template is a `.js` file that exports a function returning note content, and optionally location:
+
+```javascript
+// .foam/templates/daily-note.js
+async function createNote({ trigger, foam, resolver }) {
+  const today = dayjs();
+  const formattedDay = today.format('YYYY-MM-DD');
+
+  // if you need a variable you can use the resolver
+  // const title = await resolver.resolveFromName('FOAM_TITLE');
+
+  console.log(
+    'Creating note for today: ' + formattedDay,
+    JSON.stringify(trigger)
+  );
+
+  let content = `# Daily Note - ${formattedDay}
+
+## Today's focus
+- 
+
+## Notes
+- 
+`;
+
+  switch (today.day()) {
+    case 1: // Monday
+      content = `# Week Planning - ${formattedDay}
+
+## This week's goals
+- [ ] Goal 1
+- [ ] Goal 2
+
+## Focus areas
+- 
+`;
+      break;
+    case 5: // Friday
+      content = `# Week Review - ${formattedDay}
+
+## What went well
+- 
+
+## What could be improved
+- 
+
+## Next week's priorities
+- 
+`;
+      break;
+  }
+
+  return {
+    content,
+    filepath: `/weekly-planning/${formattedDay}.md`,
+  };
+}
+```
+
+### Examples
+
+**Smart meeting notes:**
+
+```javascript
+async function createNote({ trigger, foam, resolver }) {
+  const title = (await resolver.resolveFromName('FOAM_TITLE')) || 'Meeting';
+  const today = dayjs();
+  // Detect meeting type from title
+  const isStandup = title.toLowerCase().includes('standup');
+  const isReview = title.toLowerCase().includes('review');
+
+  let template = `# ${title} - ${today.format('YYYY-MM-DD')}
+
+`;
+
+  if (isStandup) {
+    template += `## What I did yesterday
+- 
+
+## What I'm doing today
+- 
+
+## Blockers
+- 
+`;
+  } else if (isReview) {
+    template += `## What went well
+- 
+
+## What could be improved
+- 
+
+## Action items
+- [ ] 
+`;
+  } else {
+    template += `## Agenda
+- 
+
+## Notes
+- 
+
+## Action items
+- [ ] 
+`;
+  }
+
+  return {
+    content: template,
+    filepath: `/meetings/${title}.md`,
+  };
+}
+```
+
+### Template result format
+
+JavaScript templates must return an object with:
+
+- `content` (required): The note content as a string
+- `filepath` (required): Custom file path for the note
+  - NOTE: the path must be within the workspace.
+    - A relative path will be resolved based on the `onReslativePath` command configuration.
+    - An absolute path will be taken as is, if it falls within the workspace. Otherwise it will be considered to be from the workspace root
+
+```javascript
+return {
+  content: '# My Note\n\nContent here...',
+  filepath: 'custom-folder/my-note.md',
+};
+```
+
+### Security and limitations
+
+JavaScript templates run in a best-effort secured environment:
+
+- ✅ Can only run from trusted VS Code workspaces
+- ✅ Can access Foam workspace and utilities
+- ✅ Can use standard JavaScript features
+- ✅ Have a 30-second execution timeout
+- ❌ Cannot access the file system directly
+- ❌ Cannot make network requests
+- ❌ Cannot access Node.js modules
+
+This increases the chances that templates stay safe while still being powerful enough for complex logic.
+
+STILL - PLEASE BE AWARE YOU ARE EXECUTING CODE ON YOUR MACHINE. THIS SANDBOX IS NOT MEANT TO BE THE ULTIMATE SECURITY SOLUTION.
+
+**YOU MUST TRUST THE REPO CONTRIBUTORS**
+
 ## Markdown templates
 
 Markdown templates are a simple way to notes
@@ -122,220 +285,9 @@ If instead you were to use the VS Code versions of these variables, they would b
 
 When creating notes in any other scenario, the `FOAM_DATE_` values are computed using the same datetime as the VS Code ones, so the `FOAM_DATE_` versions can be used in all scenarios by default.
 
-## JavaScript Templates
+### Metadata
 
-JavaScript templates are a powerful way to create smart, context-aware note templates that can adapt based on the situation. Unlike static Markdown templates, JavaScript templates can make intelligent decisions about what content to include.
-
-**Use JavaScript templates when you want to:**
-
-- Create different note structures based on the day of the week, time, or date
-- Adapt templates based on where the note is being created from
-- Automatically find and link related notes in your workspace
-- Generate content based on existing notes or workspace structure
-- Implement complex logic that static templates cannot handle
-
-### Basic JavaScript template structure
-
-A JavaScript template is a `.js` file that exports a function returning note content, and optionally location:
-
-```javascript
-// .foam/templates/smart-daily.js
-module.exports = async context => {
-  const { formatDate, getWeekday } = context.utils;
-  const today = new Date();
-  const dayName = getWeekday(today);
-
-  if (dayName === 'Monday') {
-    return {
-      content: `# Week Planning - ${formatDate(today, 'yyyy-MM-dd')}
-
-## This week's goals
-- [ ] Goal 1
-- [ ] Goal 2
-
-## Focus areas
-- 
-`,
-      filepath: `weekly-planning/${formatDate(today, 'yyyy-MM-dd')}.md`,
-    };
-  } else if (dayName === 'Friday') {
-    return {
-      content: `# Week Review - ${formatDate(today, 'yyyy-MM-dd')}
-
-## What went well
-- 
-
-## What could be improved
-- 
-
-## Next week's priorities
-- 
-`,
-    };
-  } else {
-    return {
-      content: `# Daily Note - ${formatDate(today, 'yyyy-MM-dd')}
-
-## Today's focus
-- 
-
-## Notes
-- 
-`,
-    };
-  }
-};
-```
-
-### Template context
-
-JavaScript templates receive a context object with information about how the note is being created:
-
-```javascript
-function createNote(context) {
-  return {
-    content: 'hello world',
-    filepath: 'hello-world.md',
-  };
-}
-```
-
-### Examples
-
-**Smart meeting notes:**
-
-```javascript
-function createNote(context) {
-  const { formatDate } = context.utils;
-  const title = context.variables.FOAM_TITLE || 'Meeting';
-
-  // Detect meeting type from title
-  const isStandup = title.toLowerCase().includes('standup');
-  const isReview = title.toLowerCase().includes('review');
-
-  let template = `# ${title} - ${formatDate(context.date, 'yyyy-MM-dd')}
-
-`;
-
-  if (isStandup) {
-    template += `## What I did yesterday
-- 
-
-## What I'm doing today
-- 
-
-## Blockers
-- 
-`;
-  } else if (isReview) {
-    template += `## What went well
-- 
-
-## What could be improved
-- 
-
-## Action items
-- [ ] 
-`;
-  } else {
-    template += `## Agenda
-- 
-
-## Notes
-- 
-
-## Action items
-- [ ] 
-`;
-  }
-
-  return {
-    content: template,
-    filepath: XYZ,
-  };
-}
-```
-
-**Project-aware notes:**
-
-```javascript
-module.exports = async context => {
-  const { foamWorkspace } = context;
-
-  // Find project notes in the workspace
-  const projectNotes = foamWorkspace.find(
-    uri => uri.path.includes('/projects/') && uri.path.endsWith('.md')
-  );
-
-  let content = `# ${context.variables.FOAM_TITLE || 'New Note'}
-
-`;
-
-  if (projectNotes.length > 0) {
-    content += `## Related projects
-`;
-    projectNotes.slice(0, 5).forEach(note => {
-      const title = note.title || note.basename;
-      content += `- [[${title}]]\n`;
-    });
-    content += `\n`;
-  }
-
-  content += `## Notes
-- 
-`;
-
-  return {
-    content,
-    filepath: XYZ,
-  };
-};
-```
-
-### Template result format
-
-JavaScript templates must return an object with:
-
-- `content` (required): The note content as a string
-- `filepath` (required): Custom file path for the note
-
-```javascript
-return {
-  content: '# My Note\n\nContent here...',
-  filepath: 'custom-folder/my-note.md',
-};
-```
-
-### Available utilities
-
-JavaScript templates have access to these utility functions:
-
-| Function                        | Description                         | Example                                                    |
-| ------------------------------- | ----------------------------------- | ---------------------------------------------------------- |
-| `formatDate(date, format)`      | Format dates using various patterns | `formatDate(new Date(), 'yyyy-MM-dd')`                     |
-| `getWeekday(date)`              | Get the day of the week             | `getWeekday(new Date())` returns `'Monday'`                |
-| `slugify(text)`                 | Convert text to URL-friendly format | `slugify('My Note Title')` returns `'my-note-title'`       |
-| `expandTemplate(path, context)` | Use an existing template            | `await expandTemplate('.foam/templates/base.md', context)` |
-
-### Security and limitations
-
-JavaScript templates run in a best-effort secured environment:
-
-- ✅ Can only run from trusted VS Code workspaces
-- ✅ Can access Foam workspace and utilities
-- ✅ Can use standard JavaScript features
-- ✅ Have a 30-second execution timeout
-- ❌ Cannot access the file system directly
-- ❌ Cannot make network requests
-- ❌ Cannot access Node.js modules
-
-This increases the chances that templates stay safe while still being powerful enough for complex logic.
-
-**STILL - PLEASE BE AWARE YOU ARE EXECUTING CODE ON YOUR MACHINE. YOU MUST TRUST THE REPO CONTRIBUTORS**
-
-## Metadata
-
-Markdown templates can also contain metadata about the templates themselves. The metadata is defined in YAML "Frontmatter" blocks within the templates.
+**Markdown templates** can also contain metadata about the templates themselves. The metadata is defined in YAML "Frontmatter" blocks within the templates.
 
 | Name          | Description                                                                                                                      |
 | ------------- | -------------------------------------------------------------------------------------------------------------------------------- |
@@ -345,40 +297,7 @@ Markdown templates can also contain metadata about the templates themselves. The
 
 Foam-specific variables (e.g. `$FOAM_TITLE`) can be used within template metadata. However, VS Code snippet variables are ([currently](https://github.com/foambubble/foam/pull/655)) not supported.
 
-### `filepath` attribute
-
-The `filepath` metadata attribute allows you to define a relative or absolute filepath to use when creating a note using the template. If the filepath is a relative filepath, it is relative to the current workspace.
-
-#### Example of **relative** `filepath`
-
-For example, `filepath` can be used to customize `.foam/templates/new-note.md`, overriding the default `Foam: Create New Note` behaviour of opening the file in the same directory as the active file:
-
-```yaml
----
-# This will create the note in the "journal" subdirectory of the current workspace,
-# regardless of which file is the active file.
-foam_template:
-  filepath: 'journal/$FOAM_TITLE.md'
----
-```
-
-#### Example of **absolute** `filepath`
-
-`filepath` can be an absolute filepath, so that the notes get created in the same location, regardless of which file or workspace the editor currently has open.
-The format of an absolute filepath may vary depending on the filesystem used.
-
-```yaml
----
-foam_template:
-  # Unix / MacOS filesystems
-  filepath: '/Users/john.smith/foam/journal/$FOAM_TITLE.md'
-
-  # Windows filesystems
-  filepath: 'C:\Users\john.smith\Documents\foam\journal\$FOAM_TITLE.md'
----
-```
-
-#### Example of **date-based** `filepath`
+#### `filepath` attribute
 
 It is possible to vary the `filepath` value based on the current date using the `FOAM_DATE_*` variables. This is especially useful for the [[daily-notes]] template if you wish to organize by years, months, etc. Below is an example of a daily-note template metadata section that will create new daily notes under the `journal/YEAR/MONTH-MONTH_NAME/` filepath. For example, when a note is created on November 15, 2022, a new file will be created at `C:\Users\foam_user\foam_notes\journal\2022\11-Nov\2022-11-15-daily-note.md`. This method also respects the creation of daily notes relative to the current date (i.e. `/+1d`).
 
@@ -386,26 +305,22 @@ It is possible to vary the `filepath` value based on the current date using the 
 ---
 type: daily-note
 foam_template:
-  description: Daily Note for $FOAM_TITLE
-  filepath: "C:\\Users\\foam_user\\foam_notes\\journal\\$FOAM_DATE_YEAR\\$FOAM_DATE_MONTH-$FOAM_DATE_MONTH_NAME_SHORT\\$FOAM_DATE_YEAR-$FOAM_DATE_MONTH-$FOAM_DATE_DATE-daily-note.md"
+  description: Daily Note
+  filepath: '/journal/$FOAM_DATE_YEAR/$FOAM_DATE_MONTH-$FOAM_DATE_MONTH_NAME_SHORT/$FOAM_DATE_YEAR-$FOAM_DATE_MONTH-$FOAM_DATE_DATE-daily-note.md'
 ---
 
 # $FOAM_DATE_YEAR-$FOAM_DATE_MONTH-$FOAM_DATE_DATE Daily Notes
 ```
 
-> Note: this method **requires** the use of absolute file paths, and in this example is using Windows path conventions. This method will also override any filename formatting defined in `.vscode/settings.json`
-
-### `name` and `description` attributes
+#### `name` and `description` attributes
 
 These attributes provide a human readable name and description to be shown in the template picker (e.g. When a user uses the `Foam: Create New Note From Template` command):
 
 ![Template Picker annotated with attributes](../../assets/images/template-picker-annotated.png)
 
-### Adding template metadata to an existing YAML Frontmatter block
+#### Adding template metadata to an existing YAML Frontmatter block
 
 If your template already has a YAML Frontmatter block, you can add the Foam template metadata to it.
-
-#### Limitations
 
 Foam only supports adding the template metadata to _YAML_ Frontmatter blocks. If the existing Frontmatter block uses some other format (e.g. JSON), you will have to add the template metadata to its own YAML Frontmatter block.
 
@@ -422,7 +337,7 @@ foam_template: # this is a YAML "Block" mapping ("Flow" mappings aren't supporte
 This is the rest of the template
 ```
 
-### Adding template metadata to its own YAML Frontmatter block
+#### Adding template metadata to its own YAML Frontmatter block
 
 You can add the template metadata to its own YAML Frontmatter block at the start of the template:
 

@@ -41,6 +41,8 @@ export interface TemplateContext {
   resolver: Resolver;
   /** Foam instance for accessing workspace data */
   foam: Foam;
+  /** Date used by the resolver for the FOAM_DATE_* variables */
+  foamDate: Date;
 }
 
 /**

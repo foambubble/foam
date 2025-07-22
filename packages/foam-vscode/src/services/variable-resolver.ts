@@ -38,7 +38,7 @@ export class Resolver implements VariableResolver {
    */
   constructor(
     private givenValues: Map<string, string>,
-    private foamDate: Date
+    public foamDate: Date
   ) {}
 
   /**

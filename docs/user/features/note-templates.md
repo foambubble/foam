@@ -85,8 +85,10 @@ A JavaScript template is a `.js` file that exports a function returning note con
 
 ```javascript
 // .foam/templates/daily-note.js
-async function createNote({ trigger, foam, resolver }) {
+async function createNote({ trigger, foam, resolver, foamDate }) {
   const today = dayjs();
+  // or you could use foamDate for day specific notes, see FOAM_DATE_* variables
+  // const day = dayjs(foamDate)
   const formattedDay = today.format('YYYY-MM-DD');
 
   // if you need a variable you can use the resolver

@@ -66,6 +66,7 @@ export class NoteCreationEngine {
       trigger,
       resolver,
       foam: this.foam,
+      foamDate: resolver.foamDate,
     };
 
     try {

@@ -347,7 +347,6 @@ export const NoteFactory = {
       throw err;
     }
   },
-
 };
 
 export const createTemplate = async (): Promise<void> => {

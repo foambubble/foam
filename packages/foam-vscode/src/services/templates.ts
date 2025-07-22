@@ -22,14 +22,8 @@ import {
   replaceSelection,
 } from './editor';
 import { Resolver } from './variable-resolver';
-import dateFormat from 'dateformat';
 import { getFoamVsCodeConfig } from './config';
 import { isNone } from '../core/utils';
-import { NoteCreationEngine } from './note-creation-engine';
-import { TriggerFactory } from './note-creation-triggers';
-import { TemplateLoader } from './template-loader';
-import { Template } from './note-creation-types';
-import { Foam } from '../core/model/foam';
 
 /**
  * The templates directory
@@ -354,76 +348,6 @@ export const NoteFactory = {
     }
   },
 
-  /**
-   * Creates a daily note using the unified creation engine with support for JS templates
-   * @param filepathFallbackURI the URI to use if the template does not specify the `filepath` metadata attribute
-   * @param templateFallbackText the template text to use if template does not exist
-   * @param targetDate the date for the daily note
-   * @param foam the Foam instance
-   */
-  createFromDailyNoteTemplate: async (
-    filepathFallbackURI: URI,
-    templateFallbackText: string,
-    targetDate: Date,
-    foam: Foam
-  ): Promise<{ didCreateFile: boolean; uri: URI | undefined }> => {
-    const templatePath =
-      getFoamVsCodeConfig<string>('openDailyNote.templatePath') ||
-      '.foam/templates/daily-note.md';
-
-    // Create trigger for daily note
-    const trigger = TriggerFactory.createCommandTrigger(
-      'foam-vscode.open-daily-note',
-      {
-        date: targetDate,
-      }
-    );
-
-    // Load template using the new system
-    const templateLoader = new TemplateLoader();
-    let template: Template;
-
-    try {
-      if (await fileExists(asAbsoluteWorkspaceUri(templatePath))) {
-        template = await templateLoader.loadTemplate(
-          asAbsoluteWorkspaceUri(templatePath).toFsPath()
-        );
-      } else {
-        // Create a fallback markdown template
-        template = {
-          type: 'markdown' as const,
-          content: templateFallbackText,
-        };
-      }
-    } catch (error) {
-      // If template loading fails, use fallback
-      template = {
-        type: 'markdown' as const,
-        content: templateFallbackText,
-      };
-    }
-
-    // Create resolver with all variables upfront
-    const resolver = new Resolver(new Map(), targetDate);
-    resolver.define('FOAM_TITLE', dateFormat(targetDate, 'yyyy-mm-dd', false));
-    resolver.define('date', targetDate.toISOString());
-    resolver.define('title', dateFormat(targetDate, 'yyyy-mm-dd', false));
-
-    // Process template using the new engine with unified resolver
-    const engine = new NoteCreationEngine(
-      foam,
-      workspace.workspaceFolders.map(folder => fromVsCodeUri(folder.uri))
-    );
-    const result = await engine.processTemplate(trigger, template, resolver);
-
-    // Create the note using NoteFactory with the same resolver
-    return await NoteFactory.createNote(
-      filepathFallbackURI,
-      result.content,
-      resolver,
-      _ => Promise.resolve(undefined)
-    );
-  },
 };
 
 export const createTemplate = async (): Promise<void> => {

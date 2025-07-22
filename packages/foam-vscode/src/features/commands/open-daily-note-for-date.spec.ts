@@ -3,7 +3,7 @@ import dateFormat from 'dateformat';
 import { commands, window } from 'vscode';
 
 describe('open-daily-note-for-date command', () => {
-  it('offers to pick which template to use', async () => {
+  it('offers to pick which date to use', async () => {
     const spy = jest
       .spyOn(window, 'showQuickPick')
       .mockImplementationOnce(jest.fn(() => Promise.resolve(undefined)));

@@ -51,14 +51,6 @@ The daily note template is used when creating daily notes (e.g. by using `Foam: 
 1. `.foam/templates/daily-note.js` (JavaScript template)
 2. `.foam/templates/daily-note.md` (Markdown template)
 
-You can also configure a custom daily note template path in your VS Code settings:
-
-```json
-{
-  "foam.openDailyNote.templatePath": ".foam/templates/my-daily-template.js"
-}
-```
-
 For a simple markdown template, it is _recommended_ to define the YAML Front-Matter similar to the following:
 
 ```markdown

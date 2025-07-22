@@ -655,6 +655,18 @@
           "type": "object",
           "description": "Custom graph styling settings. An example is present in the documentation.",
           "default": {}
+        },
+        "foam.wikilinks.order": {
+          "type": "string",
+          "default": "alias-last",
+          "enum": [
+            "alias-first",
+            "alias-last"
+          ],
+          "enumDescriptions": [
+            "Wiki links as [[Alias|Page Name]]",
+            "Wiki links as [[Page Name|Alias]]"
+          ]
         }
       }
     },

@@ -1,10 +1,14 @@
 import { ResourceLink } from '../model/note';
 import { TextEdit } from './text-edit';
+import { getFoamVsCodeConfig } from '../../services/config';
 
 export abstract class MarkdownLink {
   private static wikilinkRegex = new RegExp(
     /\[\[([^#|]+)?#?([^|]+)?\|?(.*)?\]\]/
   );
+  private static wikilinkRegex2 = new RegExp(
+    /\[\[\s*([^|\]]+)\s*\|?\s*([^#\]]+)?#?([^\]]*)?\s*\]\]/
+  ); 
   private static directLinkRegex = new RegExp(
     /\[(.*)\]\(<?([^#>]*)?#?([^\]>]+)?>?\)/
   );
@@ -12,14 +16,41 @@ export abstract class MarkdownLink {
   public static analyzeLink(link: ResourceLink) {
     try {
       if (link.type === 'wikilink') {
-        const [, target, section, alias] = this.wikilinkRegex.exec(
-          link.rawText
-        );
-        return {
-          target: target?.replace(/\\/g, '') ?? '',
-          section: section ?? '',
-          alias: alias ?? '',
-        };
+        const wikiLinkOrder = getFoamVsCodeConfig("wikilinks.order");
+        if (wikiLinkOrder === 'alias-last') 
+        {
+          const [, target, section, alias] = this.wikilinkRegex.exec(
+            link.rawText
+          );
+          return {
+            target: target?.replace(/\\/g, '') ?? '',
+            section: section ?? '',
+            alias: alias ?? '',
+          };
+        }
+        else
+        {
+          // use Gollum style syntact
+          const [, alias, target, section] = this.wikilinkRegex2.exec(
+            link.rawText
+          );
+          if(!target)
+          {
+            return {
+              target: alias?.replace(/\\/g, '') ?? '',
+              section: section ?? '',
+              alias: ''
+            }
+          }
+          else
+          {
+            return {
+              target: target?.replace(/\\/g, '') ?? '',
+              section: section ?? '',
+              alias: alias ?? ''
+            };
+          }
+        }
       }
       if (link.type === 'link') {
         const [, alias, target, section] = this.directLinkRegex.exec(

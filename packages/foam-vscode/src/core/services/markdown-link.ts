@@ -8,7 +8,7 @@ export abstract class MarkdownLink {
   );
   private static wikilinkRegex2 = new RegExp(
     /\[\[\s*([^|\]]+)\s*\|?\s*([^#\]]+)?#?([^\]]*)?\s*\]\]/
-  ); 
+  );
   private static directLinkRegex = new RegExp(
     /\[(.*)\]\(<?([^#>]*)?#?([^\]>]+)?>?\)/
   );
@@ -16,9 +16,8 @@ export abstract class MarkdownLink {
   public static analyzeLink(link: ResourceLink) {
     try {
       if (link.type === 'wikilink') {
-        const wikiLinkOrder = getFoamVsCodeConfig("wikilinks.order");
-        if (wikiLinkOrder === 'alias-last') 
-        {
+        const wikiLinkOrder = getFoamVsCodeConfig('wikilinks.order');
+        if (wikiLinkOrder === 'alias-last') {
           const [, target, section, alias] = this.wikilinkRegex.exec(
             link.rawText
           );
@@ -27,27 +26,22 @@ export abstract class MarkdownLink {
             section: section ?? '',
             alias: alias ?? '',
           };
-        }
-        else
-        {
-          // use Gollum style syntact
+        } else {
+          // use Gollum-style syntact
           const [, alias, target, section] = this.wikilinkRegex2.exec(
             link.rawText
           );
-          if(!target)
-          {
+          if (!target) {
             return {
               target: alias?.replace(/\\/g, '') ?? '',
               section: section ?? '',
-              alias: ''
-            }
-          }
-          else
-          {
+              alias: '',
+            };
+          } else {
             return {
               target: target?.replace(/\\/g, '') ?? '',
               section: section ?? '',
-              alias: alias ?? ''
+              alias: alias ?? '',
             };
           }
         }

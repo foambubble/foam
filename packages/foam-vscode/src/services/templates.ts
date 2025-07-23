@@ -22,9 +22,8 @@ import {
   replaceSelection,
 } from './editor';
 import { Resolver } from './variable-resolver';
-import dateFormat from 'dateformat';
 import { getFoamVsCodeConfig } from './config';
-import { firstFrom, isNone } from '../core/utils';
+import { isNone } from '../core/utils';
 
 /**
  * The templates directory
@@ -36,18 +35,36 @@ export const getTemplatesDir = () =>
   );
 
 /**
- * The URI of the default template
+ * Gets the default template URI
+ * @returns The URI of the default template or undefined if no default template is found
  */
-export const getDefaultTemplateUri = () =>
-  getTemplatesDir().joinPath('new-note.md');
+export const getDefaultTemplateUri = async () => {
+  for (const uri of [
+    getTemplatesDir().joinPath('new-note.js'),
+    getTemplatesDir().joinPath('new-note.md'),
+  ]) {
+    if (await fileExists(uri)) {
+      return uri;
+    }
+  }
+  return undefined;
+};
 
 /**
  * The URI of the template for daily notes
+ * @returns The URI of the daily note template or undefined if no daily note template is found
  */
-export const getDailyNoteTemplateUri = () =>
-  getTemplatesDir().joinPath('daily-note.md');
-
-const WIKILINK_DEFAULT_TEMPLATE_TEXT = `# $\{1:$FOAM_TITLE}\n\n$0`;
+export const getDailyNoteTemplateUri = async () => {
+  for (const uri of [
+    getTemplatesDir().joinPath('daily-note.js'),
+    getTemplatesDir().joinPath('daily-note.md'),
+  ]) {
+    if (await fileExists(uri)) {
+      return uri;
+    }
+  }
+  return undefined;
+};
 
 const TEMPLATE_CONTENT = `# \${1:$TM_FILENAME_BASE}
 
@@ -78,7 +95,7 @@ export async function getTemplateMetadata(
 
 export async function getTemplates(): Promise<URI[]> {
   const templates = await workspace
-    .findFiles('.foam/templates/**.md', null)
+    .findFiles('.foam/templates/**{.md,.js}', null)
     .then(v => v.map(uri => fromVsCodeUri(uri)));
   return templates;
 }
@@ -329,103 +346,6 @@ export const NoteFactory = {
       }
       throw err;
     }
-  },
-
-  /**
-   * Creates a new note using a template.
-   * @param templateUri the URI of the template to use.
-   * @param resolver the Resolver to use.
-   * @param filepathFallbackURI the URI to use if the template does not specify the `filepath` metadata attribute. This is configurable by the caller for backwards compatibility purposes.
-   * @param templateFallbackText the template text to use if the template does not exist. This is configurable by the caller for backwards compatibility purposes.
-   */
-  createFromTemplate: async (
-    templateUri: URI,
-    resolver: Resolver,
-    filepathFallbackURI?: URI,
-    templateFallbackText = '',
-    onFileExists?: OnFileExistStrategy
-  ): Promise<{ didCreateFile: boolean; uri: URI | undefined }> => {
-    try {
-      const template = await getTemplateInfo(
-        templateUri,
-        templateFallbackText,
-        resolver
-      );
-
-      const pathSources = [
-        () =>
-          template.metadata.has('filepath')
-            ? asAbsoluteWorkspaceUri(template.metadata.get('filepath'))
-            : null,
-        () => filepathFallbackURI,
-        () => getPathFromTitle(templateUri.scheme, resolver),
-      ];
-
-      const newFilePath = await firstFrom(pathSources);
-
-      return NoteFactory.createNote(
-        newFilePath,
-        template.text,
-        resolver,
-        onFileExists
-      );
-    } catch (err) {
-      if (err instanceof UserCancelledOperation) {
-        return;
-      }
-      throw err;
-    }
-  },
-
-  /**
-   * Creates a daily note from the daily note template.
-   * @param filepathFallbackURI the URI to use if the template does not specify the `filepath` metadata attribute. This is configurable by the caller for backwards compatibility purposes.
-   * @param templateFallbackText the template text to use if daily-note.md template does not exist. This is configurable by the caller for backwards compatibility purposes.
-   */
-  createFromDailyNoteTemplate: (
-    filepathFallbackURI: URI,
-    templateFallbackText: string,
-    targetDate: Date
-  ): Promise<{ didCreateFile: boolean; uri: URI | undefined }> => {
-    const resolver = new Resolver(
-      new Map().set('FOAM_TITLE', dateFormat(targetDate, 'yyyy-mm-dd', false)),
-      targetDate
-    );
-    return NoteFactory.createFromTemplate(
-      getDailyNoteTemplateUri(),
-      resolver,
-      filepathFallbackURI,
-      templateFallbackText,
-      _ => Promise.resolve(undefined)
-    );
-  },
-
-  /**
-   * Creates a new note when following a placeholder wikilink using the default template.
-   * @param wikilinkPlaceholder the placeholder value from the wikilink. (eg. `[[Hello Joe]]` -> `Hello Joe`)
-   * @param filepathFallbackURI the URI to use if the template does not specify the `filepath` metadata attribute. This is configurable by the caller for backwards compatibility purposes.
-   * @param templateURI URI of the template to use. If undefined, use the default template.
-   */
-  createForPlaceholderWikilink: async (
-    wikilinkPlaceholder: string,
-    filepathFallbackURI: URI,
-    templateURI?: URI
-  ): Promise<{ didCreateFile: boolean; uri: URI | undefined }> => {
-    const resolver = new Resolver(
-      new Map().set('FOAM_TITLE', wikilinkPlaceholder),
-      new Date()
-    );
-
-    if (templateURI === undefined) {
-      templateURI = getDefaultTemplateUri();
-    }
-
-    return NoteFactory.createFromTemplate(
-      templateURI,
-      resolver,
-      filepathFallbackURI,
-      WIKILINK_DEFAULT_TEMPLATE_TEXT
-    );
   },
 };
 

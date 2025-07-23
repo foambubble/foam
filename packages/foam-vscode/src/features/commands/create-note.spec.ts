@@ -202,6 +202,33 @@ describe('create-note command', () => {
 
     // await deleteFile(base);
   });
+
+  it('throws an error if the template file does not exist', async () => {
+    const nonExistentTemplatePath = '/non/existent/template/path.md';
+    await expect(
+      commands.executeCommand('foam-vscode.create-note', {
+        notePath: 'note-with-missing-template.md',
+        templatePath: nonExistentTemplatePath,
+        text: 'should not matter',
+      })
+    ).rejects.toThrow(
+      `Failed to load template (file://${nonExistentTemplatePath}): Template file not found: file://${nonExistentTemplatePath}`
+    );
+  });
+
+  it('throws an error if the template file does not exist (relative path)', async () => {
+    try {
+      const nonExistentTemplatePath = 'relative/non-existent-template.md';
+      await commands.executeCommand('foam-vscode.create-note', {
+        notePath: 'note-with-missing-template-relative.md',
+        templatePath: nonExistentTemplatePath,
+        text: 'should not matter',
+      });
+      throw new Error('Expected an error to be thrown');
+    } catch (error) {
+      expect(error.message).toContain(`Failed to load template`); // eslint-disable-line jest/no-conditional-expect
+    }
+  });
 });
 
 describe('factories', () => {
@@ -252,7 +279,7 @@ foam_template:
       const results: Awaited<ReturnType<typeof createNote>> =
         await commands.executeCommand(command.name, command.params);
       expect(results.didCreateFile).toBeTruthy();
-      expect(results.uri.path.endsWith('hello-world.md')).toBeTruthy();
+      expect(results.uri.path).toMatch(/hello-world.md$/);
 
       const newNoteDoc = window.activeTextEditor.document;
       expect(newNoteDoc.uri.path).toMatch(/hello-world.md$/);

@@ -38,7 +38,7 @@ export class Resolver implements VariableResolver {
    */
   constructor(
     private givenValues: Map<string, string>,
-    private foamDate: Date
+    public foamDate: Date
   ) {}
 
   /**
@@ -49,6 +49,16 @@ export class Resolver implements VariableResolver {
    */
   define(name: string, value: string) {
     this.givenValues.set(name, value);
+  }
+
+  /**
+   * Gets all defined variables as a plain object
+   * Useful for passing to JavaScript templates that expect extraParams
+   *
+   * @returns Record containing all defined variables
+   */
+  getVariables(): Record<string, string> {
+    return Object.fromEntries(this.givenValues);
   }
 
   /**
@@ -238,7 +248,7 @@ async function resolveFoamTitle() {
       value.trim().length === 0 ? 'Please enter a title' : undefined,
   });
   if (title === undefined) {
-    throw new UserCancelledOperation();
+    throw new UserCancelledOperation('User did not provide a note title');
   }
   return title;
 }

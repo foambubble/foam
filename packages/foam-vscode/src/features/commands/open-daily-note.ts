@@ -1,11 +1,15 @@
 import { ExtensionContext, commands } from 'vscode';
 import { getFoamVsCodeConfig } from '../../services/config';
 import { openDailyNoteFor } from '../../dated-notes';
+import { Foam } from '../../core/model/foam';
 
-export default async function activate(context: ExtensionContext) {
+export default async function activate(
+  context: ExtensionContext,
+  foamPromise: Promise<Foam>
+) {
   context.subscriptions.push(
-    commands.registerCommand('foam-vscode.open-daily-note', () =>
-      openDailyNoteFor(new Date())
+    commands.registerCommand('foam-vscode.open-daily-note', async () =>
+      openDailyNoteFor(new Date(), await foamPromise)
     )
   );
 

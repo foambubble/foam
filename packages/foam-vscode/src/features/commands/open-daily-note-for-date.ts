@@ -23,7 +23,7 @@ export default async function activate(
           .then(item => {
             return item?.date;
           });
-        return openDailyNoteFor(date);
+        return openDailyNoteFor(date, await foamPromise);
       }
     )
   );

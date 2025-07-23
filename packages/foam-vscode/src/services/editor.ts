@@ -200,16 +200,21 @@ export function deleteFile(uri: URI) {
 /**
  * Turns a relative URI into an absolute URI for the given workspace.
  * @param uriOrPath the uri or path to evaluate
+ * @param forceSubfolder if true, if the URI is absolute and not a subfolder in the workspace,
+ * it will be forced to be a subfolder of the first workspace folder
  * @returns an absolute uri
  */
-export function asAbsoluteWorkspaceUri(uriOrPath: URI | string): URI {
+export function asAbsoluteWorkspaceUri(
+  uriOrPath: URI | string,
+  forceSubfolder = false
+): URI {
   if (workspace.workspaceFolders === undefined) {
     throw new Error('An open folder or workspace is required');
   }
   const folders = workspace.workspaceFolders.map(folder =>
     fromVsCodeUri(folder.uri)
   );
-  const res = asAbsoluteUri(uriOrPath, folders);
+  const res = asAbsoluteUri(uriOrPath, folders, forceSubfolder);
   return res;
 }
 

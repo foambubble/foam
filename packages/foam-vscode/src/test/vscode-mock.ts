@@ -1186,8 +1186,8 @@ async function initializeFoamCommands(foam: Foam): Promise<void> {
   await foamCommands.copyWithoutBracketsCommand(mockContext);
   await foamCommands.createFromTemplateCommand(mockContext);
   await foamCommands.createNewTemplate(mockContext);
-  await foamCommands.openDailyNoteCommand(mockContext);
-  await foamCommands.openDatedNote(mockContext);
+  await foamCommands.openDailyNoteCommand(mockContext, foamPromise);
+  await foamCommands.openDatedNote(mockContext, foamPromise);
 
   Logger.info('Foam commands initialized successfully in mock environment');
 }

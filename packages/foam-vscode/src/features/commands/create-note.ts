@@ -1,11 +1,14 @@
-import * as vscode from 'vscode';
+import { workspace, commands, WorkspaceEdit, ExtensionContext } from 'vscode';
 import { URI } from '../../core/model/uri';
 import {
   askUserForTemplate,
   getDefaultTemplateUri,
-  getPathFromTitle,
   NoteFactory,
 } from '../../services/templates';
+import { NoteCreationEngine } from '../../services/note-creation-engine';
+import { TriggerFactory } from '../../services/note-creation-triggers';
+import { TemplateLoader } from '../../services/template-loader';
+import { Template } from '../../services/note-creation-types';
 import { Resolver } from '../../services/variable-resolver';
 import { asAbsoluteWorkspaceUri, fileExists } from '../../services/editor';
 import { isSome } from '../../core/utils';
@@ -14,15 +17,19 @@ import { Foam } from '../../core/model/foam';
 import { Location } from '../../core/model/location';
 import { MarkdownLink } from '../../core/services/markdown-link';
 import { ResourceLink } from '../../core/model/note';
-import { toVsCodeRange, toVsCodeUri } from '../../utils/vsc-utils';
+import {
+  fromVsCodeUri,
+  toVsCodeRange,
+  toVsCodeUri,
+} from '../../utils/vsc-utils';
 
 export default async function activate(
-  context: vscode.ExtensionContext,
+  context: ExtensionContext,
   foamPromise: Promise<Foam>
 ) {
   const foam = await foamPromise;
   context.subscriptions.push(
-    vscode.commands.registerCommand(CREATE_NOTE_COMMAND.command, args =>
+    commands.registerCommand(CREATE_NOTE_COMMAND.command, args =>
       createNote(args, foam)
     )
   );
@@ -85,67 +92,114 @@ const DEFAULT_NEW_NOTE_TEXT = `# \${FOAM_TITLE}
 export async function createNote(args: CreateNoteArgs, foam: Foam) {
   args = args ?? {};
   const date = isSome(args.date) ? new Date(Date.parse(args.date)) : new Date();
-  const resolver = new Resolver(
-    new Map(Object.entries(args.variables ?? {})),
-    date
-  );
-  if (args.title) {
-    resolver.define('FOAM_TITLE', args.title);
-  }
-  const text = args.text ?? DEFAULT_NEW_NOTE_TEXT;
-  const schemaSource = vscode.workspace.workspaceFolders[0].uri;
-  const noteUri =
-    args.notePath &&
-    new URI({
-      scheme: schemaSource.scheme,
-      path: args.notePath,
-    });
-  let templateUri: URI;
+
+  // Create appropriate trigger based on context
+  const trigger = args.sourceLink
+    ? TriggerFactory.createPlaceholderTrigger(
+        args.sourceLink.uri,
+        foam.workspace.find(new URI(args.sourceLink.uri))?.title || 'Unknown',
+        args.sourceLink
+      )
+    : TriggerFactory.createCommandTrigger('foam-vscode.create-note');
+
+  // Determine template path
+  let templatePath: string;
   if (args.askForTemplate) {
     const selectedTemplate = await askUserForTemplate();
     if (selectedTemplate) {
-      templateUri = selectedTemplate;
+      templatePath = selectedTemplate.toString();
     } else {
       return;
     }
   } else {
-    templateUri = args.templatePath
-      ? asAbsoluteWorkspaceUri(args.templatePath)
-      : getDefaultTemplateUri();
+    templatePath = args.templatePath
+      ? asAbsoluteWorkspaceUri(args.templatePath).toString()
+      : (await getDefaultTemplateUri())?.toString();
   }
 
-  const createdNote = (await fileExists(templateUri))
-    ? await NoteFactory.createFromTemplate(
-        templateUri,
-        resolver,
-        noteUri,
-        text,
-        args.onFileExists
-      )
-    : await NoteFactory.createNote(
-        noteUri ?? (await getPathFromTitle(templateUri.scheme, resolver)),
-        text,
-        resolver,
-        args.onFileExists,
-        args.onRelativeNotePath
-      );
+  // Load template using the new system
+  const templateLoader = new TemplateLoader();
+  let template: Template;
 
-  if (args.sourceLink) {
+  try {
+    if (!templatePath) {
+      template = {
+        type: 'markdown',
+        content: args.text || DEFAULT_NEW_NOTE_TEXT,
+      };
+    } else if (await fileExists(URI.parse(templatePath))) {
+      template = await templateLoader.loadTemplate(templatePath);
+    } else {
+      throw new Error(`Template file not found: ${templatePath}`);
+    }
+  } catch (error) {
+    throw new Error(
+      `Failed to load template (${templatePath}): ${error.message}`
+    );
+  }
+
+  // If notePath is provided, add it to template metadata to avoid unnecessary title resolution
+  if (args.notePath && template.type === 'markdown') {
+    template.metadata = template.metadata || new Map();
+    template.metadata.set('filepath', args.notePath);
+  }
+
+  // Create resolver with all variables upfront
+  const resolver = new Resolver(
+    new Map(Object.entries(args.variables ?? {})),
+    date
+  );
+
+  // Define all variables in the resolver with proper mapping
+  if (args.title) {
+    resolver.define('FOAM_TITLE', args.title);
+  }
+
+  // Add other parameters as variables
+  if (args.notePath) {
+    resolver.define('notePath', args.notePath);
+  }
+
+  // Process template using the new engine with unified resolver
+  const engine = new NoteCreationEngine(
+    foam,
+    workspace.workspaceFolders.map(folder => fromVsCodeUri(folder.uri))
+  );
+  const result = await engine.processTemplate(trigger, template, resolver);
+
+  // Determine final file path
+  const finalUri = new URI({
+    scheme: workspace.workspaceFolders[0].uri.scheme,
+    path: result.filepath,
+  });
+
+  // Create the note using NoteFactory with the same resolver
+  const createdNote = await NoteFactory.createNote(
+    finalUri,
+    result.content,
+    resolver,
+    args.onFileExists,
+    args.onRelativeNotePath
+  );
+
+  // Handle source link updates for placeholders
+  if (args.sourceLink && createdNote.uri) {
     const identifier = foam.workspace.getIdentifier(createdNote.uri);
     const edit = MarkdownLink.createUpdateLinkEdit(args.sourceLink.data, {
       target: identifier,
     });
     if (edit.newText !== args.sourceLink.data.rawText) {
-      const updateLink = new vscode.WorkspaceEdit();
+      const updateLink = new WorkspaceEdit();
       const uri = toVsCodeUri(args.sourceLink.uri);
       updateLink.replace(
         uri,
         toVsCodeRange(args.sourceLink.range),
         edit.newText
       );
-      await vscode.workspace.applyEdit(updateLink);
+      await workspace.applyEdit(updateLink);
     }
   }
+
   return createdNote;
 }
 

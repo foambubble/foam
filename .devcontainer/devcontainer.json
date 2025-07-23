@@ -1,0 +1,10 @@
+{
+  "name": "Foam Dev Container",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:0-18",
+  "postCreateCommand": "yarn install",
+  "customizations": {
+    "vscode": {
+      "extensions": ["dbaeumer.vscode-eslint", "esbenp.prettier-vscode"]
+    }
+  }
+}

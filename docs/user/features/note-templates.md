@@ -196,7 +196,7 @@ JavaScript templates must return an object with:
 - `content` (required): The note content as a string
 - `filepath` (required): Custom file path for the note
   - NOTE: the path must be within the workspace.
-    - A relative path will be resolved based on the `onReslativePath` command configuration.
+    - A relative path will be resolved based on the `onRelativePath` command configuration.
     - An absolute path will be taken as is, if it falls within the workspace. Otherwise it will be considered to be from the workspace root
 
 ```javascript
@@ -226,7 +226,7 @@ STILL - PLEASE BE AWARE YOU ARE EXECUTING CODE ON YOUR MACHINE. THIS SANDBOX IS 
 
 ## Markdown templates
 
-Markdown templates are a simple way to notes
+Markdown templates are a simple way to create notes
 
 **Use Markdown templates when you want to:**
 

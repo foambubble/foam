@@ -150,7 +150,7 @@ The extension supports both Node.js and browser environments via separate build 
 # GitHub CLI Integration
 
 To interact with the github repo we will be using the `gh` command.
-ALWASYS ask before performing a write operation on Github.
+ALWAYS ask before performing a write operation on Github.
 
 ## Common Commands for Claude Code Integration
 

@@ -18,9 +18,6 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [
-    "workspaceContains:.vscode/foam.json"
-  ],
   "main": "./out/bundles/extension-node.js",
   "browser": "./out/bundles/extension-web.js",
   "capabilities": {

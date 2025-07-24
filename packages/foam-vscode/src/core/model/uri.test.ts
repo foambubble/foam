@@ -124,4 +124,31 @@ describe('asAbsoluteUri', () => {
       asAbsoluteUri(uri, [workspaceFolder1, workspaceFolder2, workspaceFolder3])
     ).toEqual(workspaceFolder2.joinPath('file'));
   });
+
+  describe('with Windows filesystem paths', () => {
+    it('should return the given path if it is a Windows absolute path (C: drive)', () => {
+      const windowsPath = 'C:/Users/user/template.md';
+      const workspaceFolder = URI.file('/workspace/folder');
+      const result = asAbsoluteUri(windowsPath, [workspaceFolder]);
+      // Should convert to proper URI format
+      expect(result.path).toEqual('C:/Users/user/template.md');
+    });
+
+    it('should return the given path if it is a Windows absolute path (backslashes)', () => {
+      const windowsPath = 'C:\\Users\\user\\template.md';
+      const workspaceFolder = URI.file('/workspace/folder');
+      const result = asAbsoluteUri(windowsPath, [workspaceFolder]);
+      // Should convert to proper URI format
+      expect(result.path).toEqual('C:\\Users\\user\\template.md');
+    });
+
+    it('should treat relative Windows-style paths as relative', () => {
+      const relativePath = 'folder\\subfolder\\file.md';
+      const workspaceFolder = URI.file('/workspace/folder');
+      const result = asAbsoluteUri(relativePath, [workspaceFolder]);
+      expect(result.path).toEqual(
+        '/workspace/folder/folder\\subfolder\\file.md'
+      );
+    });
+  });
 });

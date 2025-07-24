@@ -408,16 +408,20 @@ export function asAbsoluteUri(
     throw new Error('At least one base folder needed to compute URI');
   }
   const path = uriOrPath instanceof URI ? uriOrPath.path : uriOrPath;
-  if (path.startsWith('/')) {
+
+  const isDrivePath = /^[a-zA-Z]:/.test(path);
+  // Check if this is already a POSIX absolute path
+  if (path.startsWith('/') || isDrivePath) {
+    const uri = baseFolders[0].with({ path });
     if (forceSubfolder) {
       const isAlreadySubfolder = baseFolders.some(folder =>
-        path.startsWith(folder.path)
+        uri.path.startsWith(folder.path)
       );
       if (!isAlreadySubfolder) {
-        return baseFolders[0].joinPath(path);
+        return baseFolders[0].joinPath(uri.path);
       }
     }
-    return uriOrPath instanceof URI ? uriOrPath : baseFolders[0].with({ path });
+    return uri;
   }
   let tokens = path.split('/');
   while (tokens[0].trim() === '') {

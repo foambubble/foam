@@ -40,7 +40,7 @@ interface CreateNoteArgs {
    * The path of the note to create.
    * If relative it will be resolved against the workspace root.
    */
-  notePath?: string;
+  notePath?: string | URI;
   /**
    * The path of the template to use.
    */
@@ -141,7 +141,10 @@ export async function createNote(args: CreateNoteArgs, foam: Foam) {
   // If notePath is provided, add it to template metadata to avoid unnecessary title resolution
   if (args.notePath && template.type === 'markdown') {
     template.metadata = template.metadata || new Map();
-    template.metadata.set('filepath', args.notePath);
+    template.metadata.set(
+      'filepath',
+      args.notePath instanceof URI ? args.notePath.toFsPath() : args.notePath
+    );
   }
 
   // Create resolver with all variables upfront
@@ -153,11 +156,6 @@ export async function createNote(args: CreateNoteArgs, foam: Foam) {
   // Define all variables in the resolver with proper mapping
   if (args.title) {
     resolver.define('FOAM_TITLE', args.title);
-  }
-
-  // Add other parameters as variables
-  if (args.notePath) {
-    resolver.define('notePath', args.notePath);
   }
 
   // Process template using the new engine with unified resolver

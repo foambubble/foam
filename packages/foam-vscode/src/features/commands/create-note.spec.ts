@@ -42,7 +42,7 @@ describe('create-note command', () => {
     ]);
     const target = getUriInWorkspace();
     await commands.executeCommand('foam-vscode.create-note', {
-      notePath: target.path,
+      notePath: target,
       templatePath: templateA.uri.path,
       text: 'hello',
     });
@@ -55,7 +55,7 @@ describe('create-note command', () => {
   it('focuses on the newly created note', async () => {
     const target = getUriInWorkspace();
     await commands.executeCommand('foam-vscode.create-note', {
-      notePath: target.path,
+      notePath: target,
       text: 'hello',
     });
     expect(window.activeTextEditor.document.getText()).toEqual('hello');
@@ -66,7 +66,7 @@ describe('create-note command', () => {
   it('supports variables', async () => {
     const target = getUriInWorkspace();
     await commands.executeCommand('foam-vscode.create-note', {
-      notePath: target.path,
+      notePath: target,
       text: 'hello ${FOAM_TITLE}', // eslint-disable-line no-template-curly-in-string
       variables: { FOAM_TITLE: 'world' },
     });
@@ -78,7 +78,7 @@ describe('create-note command', () => {
   it('supports date variables', async () => {
     const target = getUriInWorkspace();
     await commands.executeCommand('foam-vscode.create-note', {
-      notePath: target.path,
+      notePath: target,
       text: 'hello ${FOAM_DATE_YEAR}', // eslint-disable-line no-template-curly-in-string
       date: '2021-10-01',
     });
@@ -93,7 +93,7 @@ describe('create-note command', () => {
     expect(content).toEqual('hello');
 
     await commands.executeCommand('foam-vscode.create-note', {
-      notePath: target.uri.path,
+      notePath: target.uri,
       text: 'test overwrite',
       onFileExists: 'overwrite',
     });
@@ -104,7 +104,7 @@ describe('create-note command', () => {
 
     await closeEditors();
     await commands.executeCommand('foam-vscode.create-note', {
-      notePath: target.uri.path,
+      notePath: target.uri,
       text: 'test open',
       onFileExists: 'open',
     });
@@ -115,7 +115,7 @@ describe('create-note command', () => {
 
     await closeEditors();
     await commands.executeCommand('foam-vscode.create-note', {
-      notePath: target.uri.path,
+      notePath: target.uri,
       text: 'test cancel',
       onFileExists: 'cancel',
     });
@@ -126,7 +126,7 @@ describe('create-note command', () => {
       .mockImplementationOnce(jest.fn(() => Promise.resolve(undefined)));
     await closeEditors();
     await commands.executeCommand('foam-vscode.create-note', {
-      notePath: target.uri.path,
+      notePath: target.uri,
       text: 'test ask',
       onFileExists: 'ask',
     });

@@ -412,7 +412,8 @@ export function asAbsoluteUri(
   const isDrivePath = /^[a-zA-Z]:/.test(path);
   // Check if this is already a POSIX absolute path
   if (path.startsWith('/') || isDrivePath) {
-    const uri = baseFolders[0].with({ path });
+    const uri = URI.parse(path); // Validate the path
+
     if (forceSubfolder) {
       const isAlreadySubfolder = baseFolders.some(folder =>
         uri.path.startsWith(folder.path)

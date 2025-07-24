@@ -88,10 +88,7 @@ export async function createDailyNoteIfNotExists(targetDate: Date, foam: Foam) {
     false
   )}\n`;
 
-  // Get template path from config, same as createFromDailyNoteTemplate did
-  const templatePath =
-    getFoamVsCodeConfig<string>('openDailyNote.templatePath') ||
-    (await getDailyNoteTemplateUri())?.toFsPath();
+  const templatePath = await getDailyNoteTemplateUri();
 
   // Set up variables for template processing
   const formattedDate = dateFormat(targetDate, 'yyyy-mm-dd', false);

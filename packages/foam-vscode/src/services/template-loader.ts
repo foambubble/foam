@@ -21,30 +21,28 @@ export class TemplateLoader {
 
   /**
    * Loads a template from a file path
-   * @param templatePath Path to the template file (relative or absolute)
+   * @param template Path to the template file (relative or absolute)
    * @returns Promise resolving to a Template object
    */
-  async loadTemplate(templatePath: string): Promise<Template> {
-    if (templatePath.endsWith('.js')) {
+  async loadTemplate(template: URI): Promise<Template> {
+    if (template.path.endsWith('.js')) {
       if (!workspace.isTrusted) {
         throw new Error(
           'JavaScript templates can only be used in trusted workspaces for security reasons'
         );
       }
-      return await this.loadJavaScriptTemplate(templatePath);
+      return await this.loadJavaScriptTemplate(template);
     } else {
-      return await this.loadMarkdownTemplate(templatePath);
+      return await this.loadMarkdownTemplate(template);
     }
   }
 
   /**
    * Loads a JavaScript template
    */
-  private async loadJavaScriptTemplate(
-    templatePath: string
-  ): Promise<Template> {
+  private async loadJavaScriptTemplate(template: URI): Promise<Template> {
     const createNoteFunction = await this.jsTemplateLoader.loadFunction(
-      templatePath
+      template
     );
 
     // Ensure the function returns a Promise
@@ -64,12 +62,8 @@ export class TemplateLoader {
   /**
    * Loads a Markdown template
    */
-  private async loadMarkdownTemplate(templatePath: string): Promise<Template> {
-    // Read the template file content
-    const templateUri =
-      typeof templatePath === 'string' ? URI.parse(templatePath) : templatePath;
-
-    const content = await readFile(templateUri);
+  private async loadMarkdownTemplate(template: URI): Promise<Template> {
+    const content = await readFile(template);
 
     // Extract metadata from frontmatter if present
     const [metadata] = extractFoamTemplateFrontmatterMetadata(content);

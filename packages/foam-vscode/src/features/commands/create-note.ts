@@ -44,7 +44,7 @@ interface CreateNoteArgs {
   /**
    * The path of the template to use.
    */
-  templatePath?: string;
+  templatePath?: string | URI;
   /**
    * Whether to ask the user to select a template for the new note. If so, overwrites templatePath.
    */
@@ -103,18 +103,18 @@ export async function createNote(args: CreateNoteArgs, foam: Foam) {
     : TriggerFactory.createCommandTrigger('foam-vscode.create-note');
 
   // Determine template path
-  let templatePath: string;
+  let templateUri: URI;
   if (args.askForTemplate) {
     const selectedTemplate = await askUserForTemplate();
     if (selectedTemplate) {
-      templatePath = selectedTemplate.toString();
+      templateUri = selectedTemplate;
     } else {
       return;
     }
   } else {
-    templatePath = args.templatePath
-      ? asAbsoluteWorkspaceUri(args.templatePath).toString()
-      : (await getDefaultTemplateUri())?.toString();
+    templateUri = args.templatePath
+      ? asAbsoluteWorkspaceUri(args.templatePath)
+      : await getDefaultTemplateUri();
   }
 
   // Load template using the new system
@@ -122,19 +122,19 @@ export async function createNote(args: CreateNoteArgs, foam: Foam) {
   let template: Template;
 
   try {
-    if (!templatePath) {
+    if (!templateUri) {
       template = {
         type: 'markdown',
         content: args.text || DEFAULT_NEW_NOTE_TEXT,
       };
-    } else if (await fileExists(URI.parse(templatePath))) {
-      template = await templateLoader.loadTemplate(templatePath);
+    } else if (await fileExists(templateUri)) {
+      template = await templateLoader.loadTemplate(templateUri);
     } else {
-      throw new Error(`Template file not found: ${templatePath}`);
+      throw new Error(`Template file not found: ${templateUri}`);
     }
   } catch (error) {
     throw new Error(
-      `Failed to load template (${templatePath}): ${error.message}`
+      `Failed to load template (${templateUri}): ${error.message}`
     );
   }
 

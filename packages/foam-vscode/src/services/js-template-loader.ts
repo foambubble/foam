@@ -28,31 +28,30 @@ export class JSTemplateLoader {
   /**
    * Loads and returns a note creation function from a JavaScript template file
    *
-   * @param templatePath Path to the JavaScript template file
+   * @param template Path to the JavaScript template file
    * @returns The createNote function from the template
    */
-  async loadFunction(templatePath: string): Promise<CreateNoteFunction> {
+  async loadFunction(template: URI): Promise<CreateNoteFunction> {
     try {
-      Logger.info(`Loading JavaScript template: ${templatePath}`);
+      Logger.info(`Loading JavaScript template: ${template.path}`);
 
-      const templateUri = URI.parse(templatePath);
-      const templateCode = await readFile(templateUri);
+      const templateCode = await readFile(template);
 
       if (!templateCode) {
         throw new JSTemplateError(
           `Template file not found or empty`,
-          templatePath
+          template.path
         );
       }
 
-      return this.createFunctionFromCode(templateCode, templatePath);
+      return this.createFunctionFromCode(templateCode, template);
     } catch (error) {
       if (error instanceof JSTemplateError) {
         throw error;
       }
       throw new JSTemplateError(
         `Failed to load template: ${error.message}`,
-        templatePath
+        template.path
       );
     }
   }
@@ -61,16 +60,16 @@ export class JSTemplateLoader {
    * Creates a note creation function from JavaScript code
    *
    * @param code The JavaScript code containing the createNote function
-   * @param templatePath Path for error reporting
+   * @param template Path for error reporting
    * @returns The createNote function
    */
   private createFunctionFromCode(
     code: string,
-    templatePath: string
+    template: URI
   ): CreateNoteFunction {
     try {
       // Validate the code structure
-      this.validateTemplateCode(code, templatePath);
+      this.validateTemplateCode(code, template);
 
       // Create the VM context with sandbox
       const sandbox = this.createVMSandbox();
@@ -78,7 +77,7 @@ export class JSTemplateLoader {
 
       // Execute the template code in the sandbox
       const script = new vm.Script(code, {
-        filename: templatePath,
+        filename: template.toFsPath(),
         lineOffset: 0,
         columnOffset: 0,
       });
@@ -90,7 +89,7 @@ export class JSTemplateLoader {
       if (typeof createNote !== 'function') {
         throw new JSTemplateError(
           'Template must declare a createNote function',
-          templatePath
+          template.path
         );
       }
 
@@ -105,7 +104,7 @@ export class JSTemplateLoader {
           const result = await createNote(noteContext);
 
           // Validate the result
-          this.validateResult(result, templatePath);
+          this.validateResult(result, template);
 
           return result;
         } catch (error) {
@@ -114,7 +113,7 @@ export class JSTemplateLoader {
           }
           throw new JSTemplateError(
             `Template execution failed: ${error.message}`,
-            templatePath
+            template.path
           );
         }
       };
@@ -124,7 +123,7 @@ export class JSTemplateLoader {
       }
       throw new JSTemplateError(
         `Failed to create function: ${error.message}`,
-        templatePath
+        template.path
       );
     }
   }
@@ -146,7 +145,7 @@ export class JSTemplateLoader {
   /**
    * Validates that the template code has the expected structure
    */
-  private validateTemplateCode(code: string, templatePath: string): void {
+  private validateTemplateCode(code: string, template: URI): void {
     // Check for createNote function
     if (
       !code.includes('function createNote') &&
@@ -154,7 +153,7 @@ export class JSTemplateLoader {
     ) {
       throw new JSTemplateError(
         'Template must define a createNote function',
-        templatePath
+        template.path
       );
     }
 
@@ -173,7 +172,7 @@ export class JSTemplateLoader {
       if (pattern.test(code)) {
         throw new JSTemplateError(
           `Template contains potentially unsafe code: ${pattern.source}`,
-          templatePath
+          template.path
         );
       }
     }
@@ -182,25 +181,25 @@ export class JSTemplateLoader {
   /**
    * Validates the result returned by a template function
    */
-  private validateResult(result: any, templatePath: string): void {
+  private validateResult(result: any, template: URI): void {
     if (!result || typeof result !== 'object') {
       throw new JSTemplateError(
         'Template must return an object with filepath and content properties',
-        templatePath
+        template.path
       );
     }
 
     if (typeof result.filepath !== 'string' || !result.filepath.trim()) {
       throw new JSTemplateError(
         'Template result must have a non-empty filepath string',
-        templatePath
+        template.path
       );
     }
 
     if (typeof result.content !== 'string') {
       throw new JSTemplateError(
         'Template result must have a content string',
-        templatePath
+        template.path
       );
     }
   }

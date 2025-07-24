@@ -17,9 +17,7 @@ describe('TemplateLoader', () => {
       );
 
       try {
-        await expect(
-          templateLoader.loadTemplate(uri.toFsPath())
-        ).rejects.toThrow(
+        await expect(templateLoader.loadTemplate(uri)).rejects.toThrow(
           'JavaScript templates can only be used in trusted workspaces for security reasons'
         );
       } finally {
@@ -46,7 +44,7 @@ describe('TemplateLoader', () => {
       ]);
 
       try {
-        const template = await templateLoader.loadTemplate(uri.toFsPath());
+        const template = await templateLoader.loadTemplate(uri);
         expect(template.type).toBe('javascript');
         if (template.type !== 'javascript') {
           throw new Error('Expected JavaScript template type');
@@ -74,7 +72,7 @@ This is a markdown template.`;
       ]);
 
       try {
-        const template = await templateLoader.loadTemplate(uri.toFsPath());
+        const template = await templateLoader.loadTemplate(uri);
         expect(template.type).toBe('markdown');
         if (template.type !== 'markdown') {
           throw new Error('Expected markdown template type');

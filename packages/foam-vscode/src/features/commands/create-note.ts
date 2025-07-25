@@ -165,15 +165,9 @@ export async function createNote(args: CreateNoteArgs, foam: Foam) {
   );
   const result = await engine.processTemplate(trigger, template, resolver);
 
-  // Determine final file path
-  const finalUri = new URI({
-    scheme: workspace.workspaceFolders[0].uri.scheme,
-    path: result.filepath,
-  });
-
   // Create the note using NoteFactory with the same resolver
   const createdNote = await NoteFactory.createNote(
-    finalUri,
+    result.filepath,
     result.content,
     resolver,
     args.onFileExists,

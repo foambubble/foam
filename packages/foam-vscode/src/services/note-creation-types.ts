@@ -2,6 +2,7 @@ import { Location } from '../core/model/location';
 import { ResourceLink } from '../core/model/note';
 import { Foam } from '../core/model/foam';
 import { Resolver } from './variable-resolver';
+import { URI } from '../core/model/uri';
 
 /**
  * Union type for different trigger scenarios that can initiate note creation
@@ -53,7 +54,7 @@ export interface TemplateContext {
  * Result returned by note creation functions
  */
 export interface NoteCreationResult {
-  filepath: string;
+  filepath: URI;
   content: string;
 }
 

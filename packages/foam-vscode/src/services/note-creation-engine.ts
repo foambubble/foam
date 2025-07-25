@@ -36,7 +36,7 @@ export class NoteCreationEngine {
     Logger.info(`Processing ${template.type} template`);
     this.logTriggerInfo(trigger);
 
-    let result = null;
+    let result: NoteCreationResult | null = null;
     if (template.type === 'javascript') {
       result = await this.executeJSTemplate(trigger, template, resolver);
     } else {
@@ -45,9 +45,7 @@ export class NoteCreationEngine {
 
     return {
       ...result,
-      filepath: isAbsolute(result.filepath)
-        ? asAbsoluteUri(result.filepath, this.roots, true).path
-        : result.filepath,
+      filepath: result.filepath,
     };
   }
 
@@ -75,6 +73,9 @@ export class NoteCreationEngine {
       // Validate the result structure and types
       this.validateNoteCreationResult(result);
 
+      if (!(result.filepath instanceof URI)) {
+        result.filepath = URI.parse(result.filepath);
+      }
       return result;
     } catch (error) {
       const errorMessage =
@@ -111,7 +112,7 @@ export class NoteCreationEngine {
       (await this.generateDefaultFilepath(resolver));
 
     return {
-      filepath,
+      filepath: URI.parse(filepath),
       content: cleanContent,
     };
   }
@@ -137,10 +138,10 @@ export class NoteCreationEngine {
 
     if (
       !Object.prototype.hasOwnProperty.call(result, 'filepath') ||
-      typeof result.filepath !== 'string'
+      (typeof result.filepath !== 'string' && !(result.filepath instanceof URI))
     ) {
       throw new Error(
-        'JavaScript template result must have a "filepath" property of type string'
+        'JavaScript template result must have a "filepath" property of type string or URI'
       );
     }
 
@@ -153,13 +154,9 @@ export class NoteCreationEngine {
       );
     }
 
-    if (result.filepath.trim() === '') {
-      throw new Error('JavaScript template result "filepath" cannot be empty');
-    }
-
     // Optional: Validate filepath doesn't contain dangerous characters
     const invalidChars = /[<>:"|?*\x00-\x1F]/; // eslint-disable-line no-control-regex
-    if (invalidChars.test(result.filepath)) {
+    if (invalidChars.test(result.filepath.path)) {
       throw new Error(
         'JavaScript template result "filepath" contains invalid characters'
       );

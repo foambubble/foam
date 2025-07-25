@@ -244,7 +244,7 @@ describe('asAbsoluteUri', () => {
         expect(result.toFsPath()).toEqual('C:\\Workspace\\subfolder\\file.md');
       });
 
-      it('should handle Windows backslash paths in case-sensitive comparison - reverse', () => {
+      it('should handle forward slash absolute path also with windows base folders', () => {
         // Using this format for the path works on both windows and unix
         // and allows using absolute paths relative to the workspace root
         const absolutePath = '/subfolder/file.md';

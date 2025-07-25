@@ -682,7 +682,7 @@
     "clean": "rimraf out",
     "watch": "nodemon --watch 'src/**/*.ts' --exec 'yarn build' --ext ts",
     "vscode:start-debugging": "yarn clean && yarn watch",
-    "package-extension": "npx vsce package --yarn",
+    "package-extension": "npx @vscode/vsce@3.6.0 package --yarn",
     "install-extension": "code --install-extension ./foam-vscode-$npm_package_version.vsix",
     "open-in-browser": "vscode-test-web --quality=stable --browser=chromium --extensionDevelopmentPath=. ",
     "publish-extension-openvsx": "npx ovsx publish foam-vscode-$npm_package_version.vsix -p $OPENVSX_TOKEN",

@@ -319,6 +319,7 @@ export const NoteFactory = {
         }
       }
 
+      newFilePath = asAbsoluteWorkspaceUri(newFilePath, true);
       const expandedText = await resolver.resolveText(text);
       const selectedContent = findSelectionContent();
       await createDocAndFocus(

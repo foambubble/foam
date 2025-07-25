@@ -229,6 +229,27 @@ describe('create-note command', () => {
       expect(error.message).toContain(`Failed to load template`); // eslint-disable-line jest/no-conditional-expect
     }
   });
+
+  it('creates a note with absolute path within the workspace', async () => {
+    await commands.executeCommand('foam-vscode.create-note', {
+      notePath: '/note-in-workspace.md',
+      text: 'hello workspace',
+    });
+    expect(window.activeTextEditor.document.getText()).toEqual(
+      'hello workspace'
+    );
+    expectSameUri(
+      window.activeTextEditor.document.uri,
+      fromVsCodeUri(workspace.workspaceFolders?.[0].uri).joinPath(
+        'note-in-workspace.md'
+      )
+    );
+    await deleteFile(
+      fromVsCodeUri(workspace.workspaceFolders?.[0].uri).joinPath(
+        'note-in-workspace.md'
+      )
+    );
+  });
 });
 
 describe('factories', () => {

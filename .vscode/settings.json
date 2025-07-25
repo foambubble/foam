@@ -24,7 +24,6 @@
   "editor.formatOnSave": true,
   "editor.formatOnSaveMode": "file",
   "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "jest.autoRun": "off",
   "jest.rootPath": "packages/foam-vscode",
   "jest.jestCommandLine": "yarn test:unit-with-specs",
   "gitdoc.enabled": false,

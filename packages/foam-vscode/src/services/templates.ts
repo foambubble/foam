@@ -35,14 +35,20 @@ export const getTemplatesDir = () =>
   );
 
 /**
+ * Gets the candidate URIs for the default note template
+ * @returns An array of candidate URIs for the default note template
+ */
+export const getDefaultNoteTemplateCandidateUris = () => [
+  getTemplatesDir().joinPath('new-note.js'),
+  getTemplatesDir().joinPath('new-note.md'),
+];
+
+/**
  * Gets the default template URI
  * @returns The URI of the default template or undefined if no default template is found
  */
 export const getDefaultTemplateUri = async () => {
-  for (const uri of [
-    getTemplatesDir().joinPath('new-note.js'),
-    getTemplatesDir().joinPath('new-note.md'),
-  ]) {
+  for (const uri of getDefaultNoteTemplateCandidateUris()) {
     if (await fileExists(uri)) {
       return uri;
     }
@@ -51,14 +57,20 @@ export const getDefaultTemplateUri = async () => {
 };
 
 /**
- * The URI of the template for daily notes
- * @returns The URI of the daily note template or undefined if no daily note template is found
+ * Gets the candidate URIs for the daily note template
+ * @returns An array of candidate URIs for the daily note template
+ */
+export const getDailyNoteTemplateCandidateUris = () => [
+  getTemplatesDir().joinPath('daily-note.js'),
+  getTemplatesDir().joinPath('daily-note.md'),
+];
+
+/**
+ * Gets the daily note template URI
+ * @returns The URI of the daily note template or undefined if no template is found
  */
 export const getDailyNoteTemplateUri = async () => {
-  for (const uri of [
-    getTemplatesDir().joinPath('daily-note.js'),
-    getTemplatesDir().joinPath('daily-note.md'),
-  ]) {
+  for (const uri of getDailyNoteTemplateCandidateUris()) {
     if (await fileExists(uri)) {
       return uri;
     }
@@ -66,7 +78,7 @@ export const getDailyNoteTemplateUri = async () => {
   return undefined;
 };
 
-const TEMPLATE_CONTENT = `# \${1:$TM_FILENAME_BASE}
+const DEFAULT_NEW_NOTE_TEMPLATE = `# \${1:$TM_FILENAME_BASE}
 
 Welcome to Foam templates.
 
@@ -372,7 +384,7 @@ export const createTemplate = async (): Promise<void> => {
   const filenameURI = defaultTemplate.with({ path: filename });
   await workspace.fs.writeFile(
     toVsCodeUri(filenameURI),
-    new TextEncoder().encode(TEMPLATE_CONTENT)
+    new TextEncoder().encode(DEFAULT_NEW_NOTE_TEMPLATE)
   );
   await focusNote(filenameURI, false);
 };

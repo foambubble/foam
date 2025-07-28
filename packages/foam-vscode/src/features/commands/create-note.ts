@@ -61,7 +61,7 @@ interface CreateNoteArgs {
   /**
    * The date used to resolve the FOAM_DATE_* variables. in YYYY-MM-DD format
    */
-  date?: string;
+  date?: string | Date;
   /**
    * The title of the note (translates into the FOAM_TITLE variable)
    */
@@ -91,7 +91,12 @@ const DEFAULT_NEW_NOTE_TEXT = `# \${FOAM_TITLE}
 
 export async function createNote(args: CreateNoteArgs, foam: Foam) {
   args = args ?? {};
-  const date = isSome(args.date) ? new Date(Date.parse(args.date)) : new Date();
+  const date =
+    typeof args.date === 'string'
+      ? new Date(Date.parse(args.date))
+      : args.date instanceof Date
+      ? args.date
+      : new Date();
 
   // Create appropriate trigger based on context
   const trigger = args.sourceLink

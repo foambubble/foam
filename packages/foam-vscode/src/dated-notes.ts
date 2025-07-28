@@ -1,3 +1,4 @@
+import { Uri, window, workspace } from 'vscode';
 import { joinPath } from './core/utils/path';
 import dateFormat from 'dateformat';
 import { URI } from './core/model/uri';
@@ -5,7 +6,12 @@ import { getDailyNoteTemplateUri } from './services/templates';
 import { getFoamVsCodeConfig } from './services/config';
 import { asAbsoluteWorkspaceUri, focusNote } from './services/editor';
 import { Foam } from './core/model/foam';
-import { createNote } from './features/commands/create-note';
+import {
+  CREATE_NOTE_COMMAND,
+  createNote,
+} from './features/commands/create-note';
+import { fromVsCodeUri } from './utils/vsc-utils';
+import { showInEditor } from './test/test-utils-vscode';
 
 /**
  * Open the daily note file.
@@ -68,6 +74,30 @@ export function getDailyNoteFileName(date: Date): string {
   return `${dateFormat(date, filenameFormat, false)}.${fileExtension}`;
 }
 
+const DEFAULT_DAILY_NOTE_TEMPLATE = `---
+foam_template:
+  filepath: "/journal/\${FOAM_DATE_YEAR}-\${FOAM_DATE_MONTH}-\${FOAM_DATE_DATE}.md"
+  description: "Daily note template"
+---
+# \${FOAM_DATE_YEAR}-\${FOAM_DATE_MONTH}-\${FOAM_DATE_DATE}
+
+> you probably want to delete these instructions as you customize your template
+
+Welcome to your new daily note template.
+The file is located in \`.foam/templates/daily-note.md\`.
+The text in this file will be used as the content of your daily note.
+You can customize it as you like, and you can use the following variables in the template:
+- \`\${FOAM_DATE_YEAR}\`: The year of the date
+- \`\${FOAM_DATE_MONTH}\`: The month of the date
+- \`\${FOAM_DATE_DATE}\`: The day of the date
+- \`\${FOAM_TITLE}\`: The title of the note
+
+Go to https://github.com/foambubble/foam/blob/main/docs/user/features/daily-notes.md for more details.
+For more complex templates, including Javascript dynamic templates, see https://github.com/foambubble/foam/blob/main/docs/user/features/note-templates.md.
+`;
+
+export const CREATE_DAILY_NOTE_WARNING_RESPONSE = 'Create daily note template';
+
 /**
  * Create a daily note using the unified creation engine (supports JS templates)
  *
@@ -76,6 +106,38 @@ export function getDailyNoteFileName(date: Date): string {
  * @returns Whether the file was created and the URI
  */
 export async function createDailyNoteIfNotExists(targetDate: Date, foam: Foam) {
+  const templatePath = await getDailyNoteTemplateUri();
+
+  if (!templatePath) {
+    window
+      .showWarningMessage(
+        'No daily note template found. Using legacy configuration (deprecated). Create a daily note template to avoid this warning and customize your daily note.',
+        CREATE_DAILY_NOTE_WARNING_RESPONSE
+      )
+      .then(async action => {
+        if (action === CREATE_DAILY_NOTE_WARNING_RESPONSE) {
+          const newTemplateUri = Uri.joinPath(
+            workspace.workspaceFolders[0].uri,
+            '.foam',
+            'templates',
+            'daily-note.md'
+          );
+          await workspace.fs.writeFile(
+            newTemplateUri,
+            new TextEncoder().encode(DEFAULT_DAILY_NOTE_TEMPLATE)
+          );
+          await showInEditor(fromVsCodeUri(newTemplateUri));
+        }
+      });
+  }
+
+  // Set up variables for template processing
+  const formattedDate = dateFormat(targetDate, 'yyyy-mm-dd', false);
+  const variables = {
+    FOAM_TITLE: formattedDate,
+    title: formattedDate,
+  };
+
   const dailyNoteUri = getDailyNoteUri(targetDate);
   const titleFormat: string =
     getFoamVsCodeConfig('openDailyNote.titleFormat') ??
@@ -88,29 +150,15 @@ export async function createDailyNoteIfNotExists(targetDate: Date, foam: Foam) {
     false
   )}\n`;
 
-  const templatePath = await getDailyNoteTemplateUri();
-
-  // Set up variables for template processing
-  const formattedDate = dateFormat(targetDate, 'yyyy-mm-dd', false);
-  const variables = {
-    FOAM_TITLE: formattedDate,
-    title: formattedDate,
-  };
-
-  // Format date without timezone conversion to avoid off-by-one errors
-  const year = targetDate.getFullYear();
-  const month = String(targetDate.getMonth() + 1).padStart(2, '0');
-  const day = String(targetDate.getDate()).padStart(2, '0');
-  const dateString = `${year}-${month}-${day}`;
-
   return await createNote(
     {
       notePath: dailyNoteUri.toFsPath(),
       templatePath: templatePath,
-      text: templateFallbackText, // fallback if template doesn't exist
-      date: dateString, // YYYY-MM-DD format without timezone issues
+      text: templateFallbackText,
+      date: targetDate,
       variables: variables,
-      onFileExists: 'open', // existing behavior - open if exists
+      onFileExists: 'open',
+      onRelativeNotePath: 'resolve-from-root',
     },
     foam
   );

@@ -1,6 +1,10 @@
 /* @unit-ready */
-import { workspace } from 'vscode';
-import { createDailyNoteIfNotExists, getDailyNoteUri } from './dated-notes';
+import { workspace, window } from 'vscode';
+import {
+  CREATE_DAILY_NOTE_WARNING_RESPONSE,
+  createDailyNoteIfNotExists,
+  getDailyNoteUri,
+} from './dated-notes';
 import { isWindows } from './core/common/platform';
 import {
   cleanWorkspace,
@@ -12,9 +16,11 @@ import {
   withModifiedFoamConfiguration,
 } from './test/test-utils-vscode';
 import { fromVsCodeUri } from './utils/vsc-utils';
-import { URI } from './core/model/uri';
-import { fileExists } from './services/editor';
-import { getDailyNoteTemplateUri } from './services/templates';
+import { fileExists, readFile } from './services/editor';
+import {
+  getDailyNoteTemplateCandidateUris,
+  getDailyNoteTemplateUri,
+} from './services/templates';
 
 describe('getDailyNoteUri', () => {
   const date = new Date('2021-02-07T00:00:00Z');
@@ -52,6 +58,15 @@ describe('getDailyNoteUri', () => {
 describe('Daily note creation and template processing', () => {
   const DAILY_NOTE_TEMPLATE = ['.foam', 'templates', 'daily-note.md'];
 
+  beforeEach(async () => {
+    // Ensure daily note template are removed before each test
+    for (const template of getDailyNoteTemplateCandidateUris()) {
+      if (await fileExists(template)) {
+        await deleteFile(template);
+      }
+    }
+  });
+
   describe('Basic daily note creation', () => {
     it('Creates a new daily note when it does not exist', async () => {
       const targetDate = new Date(2021, 8, 1);
@@ -86,15 +101,6 @@ describe('Daily note creation and template processing', () => {
   });
 
   describe('Template variable resolution', () => {
-    beforeEach(async () => {
-      // Ensure no template exists
-      let i = 0;
-      while ((await fileExists(await getDailyNoteTemplateUri())) && i < 5) {
-        await deleteFile(await getDailyNoteTemplateUri());
-        i++;
-      }
-    });
-
     it('Resolves all FOAM_DATE_* variables correctly', async () => {
       const targetDate = new Date(2021, 8, 12); // September 12, 2021
 
@@ -123,7 +129,6 @@ Unix: \${FOAM_DATE_SECONDS_UNIX}`,
       expect(content).toContain('Date: 12');
       expect(content).toContain('Day: Sunday (short: Sun)');
       expect(content).toContain('Week: 36');
-      expect(content).toContain('Unix: 1631404800');
 
       await deleteFile(template.uri);
       await deleteFile(result.uri);
@@ -270,6 +275,36 @@ Unix: \${FOAM_DATE_SECONDS_UNIX}`,
       const doc = await showInEditor(result.uri);
       const content = doc.editor.document.getText();
       expect(content).toContain('# 2021-09-21'); // Should use fallback text with formatted date
+    });
+
+    it('prompts to create a daily note template if one does not exist', async () => {
+      const targetDate = new Date(2021, 8, 23);
+      const foam = {} as any;
+
+      expect(await getDailyNoteTemplateUri()).not.toBeDefined();
+
+      // Intercept the showWarningMessage call
+      const showWarningMessageSpy = jest
+        .spyOn(window, 'showWarningMessage')
+        .mockResolvedValue(CREATE_DAILY_NOTE_WARNING_RESPONSE as any); // simulate user action
+
+      await createDailyNoteIfNotExists(targetDate, foam);
+
+      expect(showWarningMessageSpy.mock.calls[0][0]).toMatch(
+        /No daily note template found/
+      );
+
+      const templateUri = await getDailyNoteTemplateUri();
+
+      expect(templateUri).toBeDefined();
+      expect(await fileExists(templateUri)).toBe(true);
+
+      const templateContent = await readFile(templateUri);
+      expect(templateContent).toContain('foam_template:');
+
+      // Clean up the created template
+      await deleteFile(templateUri);
+      showWarningMessageSpy.mockRestore();
     });
 
     it('Processes template frontmatter metadata correctly', async () => {

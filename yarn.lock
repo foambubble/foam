@@ -7828,9 +7828,9 @@ koa-static@^5.0.0:
     koa-send "^5.0.0"
 
 koa@^2.15.3:
-  version "2.15.3"
-  resolved "https://registry.npmjs.org/koa/-/koa-2.15.3.tgz"
-  integrity sha512-j/8tY9j5t+GVMLeioLaxweJiKUayFhlGqNTzf2ZGwL0ZCQijd2RLHK0SLW5Tsko8YyyqCZC2cojIb0/s62qTAg==
+  version "2.16.2"
+  resolved "https://registry.yarnpkg.com/koa/-/koa-2.16.2.tgz#1292a3b415a9b9f3dd6872c1835229630a4ecae3"
+  integrity sha512-+CCssgnrWKx9aI3OeZwroa/ckG4JICxvIFnSiOUyl2Uv+UTI+xIw0FfFrWS7cQFpoePpr9o8csss7KzsTzNL8Q==
   dependencies:
     accepts "^1.3.5"
     cache-content-type "^1.0.0"

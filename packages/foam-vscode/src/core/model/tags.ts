@@ -1,4 +1,4 @@
-import { FoamWorkspace } from './workspace';
+import { FoamWorkspace } from './workspace/foamWorkspace';
 import { IDisposable } from '../common/lifecycle';
 import { debounce } from 'lodash';
 import { Emitter } from '../common/event';

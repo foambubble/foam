@@ -7,7 +7,7 @@ import {
 } from '../services/config';
 import { ResourceLink, ResourceParser } from '../core/model/note';
 import { Foam } from '../core/model/foam';
-import { FoamWorkspace } from '../core/model/workspace';
+import { FoamWorkspace } from '../core/model/workspace/foamWorkspace';
 import { Range } from '../core/model/range';
 import { FoamGraph } from '../core/model/graph';
 import { OPEN_COMMAND } from './commands/open-resource';

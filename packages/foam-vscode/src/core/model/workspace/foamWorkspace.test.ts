@@ -1,7 +1,8 @@
-import { FoamWorkspace, TrieIdentifier } from './workspace';
-import { Logger } from '../utils/log';
-import { URI } from './uri';
-import { createTestNote, createTestWorkspace } from '../../test/test-utils';
+import { FoamWorkspace } from './foamWorkspace';
+import { Logger } from '../../utils/log';
+import { URI } from '.././uri';
+import { createTestNote, createTestWorkspace } from '../../../test/test-utils';
+import { TrieIdentifier } from './workspace';
 
 Logger.setLevel('error');
 

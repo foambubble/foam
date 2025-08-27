@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 import { Foam } from '../core/model/foam';
 import { Resource, ResourceParser } from '../core/model/note';
 import { Range } from '../core/model/range';
-import { FoamWorkspace, TrieIdentifier } from '../core/model/workspace';
+import { FoamWorkspace } from '../core/model/workspace/foamWorkspace';
 import { MarkdownLink } from '../core/services/markdown-link';
 import {
   fromVsCodeUri,
@@ -12,6 +12,7 @@ import {
   toVsCodeUri,
 } from '../utils/vsc-utils';
 import { isNone } from '../core/utils';
+import { TrieIdentifier } from '../core/model/workspace/workspace';
 
 const AMBIGUOUS_IDENTIFIER_CODE = 'ambiguous-identifier';
 const UNKNOWN_SECTION_CODE = 'unknown-section';

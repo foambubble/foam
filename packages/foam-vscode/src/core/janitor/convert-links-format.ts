@@ -1,6 +1,6 @@
 import { Resource, ResourceLink } from '../model/note';
 import { URI } from '../model/uri';
-import { FoamWorkspace } from '../model/workspace';
+import { FoamWorkspace } from '../model/workspace/foamWorkspace';
 import { isNone } from '../utils';
 import { MarkdownLink } from '../services/markdown-link';
 import { TextEdit } from '../services/text-edit';

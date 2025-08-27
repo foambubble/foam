@@ -1,6 +1,6 @@
 /* @unit-ready */
 import MarkdownIt from 'markdown-it';
-import { FoamWorkspace } from '../../core/model/workspace';
+import { FoamWorkspace } from '../../core/model/workspace/foamWorkspace';
 import { createMarkdownParser } from '../../core/services/markdown-parser';
 import {
   createFile,

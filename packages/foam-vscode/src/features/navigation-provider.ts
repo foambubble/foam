@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { toVsCodeRange, toVsCodeUri, fromVsCodeUri } from '../utils/vsc-utils';
 import { Foam } from '../core/model/foam';
-import { FoamWorkspace } from '../core/model/workspace';
+import { FoamWorkspace } from '../core/model/workspace/foamWorkspace';
 import { Resource, ResourceLink, ResourceParser } from '../core/model/note';
 import { URI } from '../core/model/uri';
 import { Range } from '../core/model/range';

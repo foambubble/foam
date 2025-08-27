@@ -1,7 +1,7 @@
 import { NoteLinkDefinition, Resource } from '../model/note';
 import { Range } from '../model/range';
 import { createMarkdownReferences } from '../services/markdown-provider';
-import { FoamWorkspace } from '../model/workspace';
+import { FoamWorkspace } from '../model/workspace/foamWorkspace';
 import { TextEdit } from '../services/text-edit';
 import { getLinkDefinitions } from '../services/markdown-parser';
 

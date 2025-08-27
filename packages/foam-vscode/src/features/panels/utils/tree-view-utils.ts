@@ -4,12 +4,12 @@ import { Resource } from '../../../core/model/note';
 import { toVsCodeUri } from '../../../utils/vsc-utils';
 import { Range } from '../../../core/model/range';
 import { URI } from '../../../core/model/uri';
-import { FoamWorkspace } from '../../../core/model/workspace';
 import { isSome } from '../../../core/utils';
 import { getBlockFor } from '../../../core/services/markdown-parser';
 import { Connection, FoamGraph } from '../../../core/model/graph';
 import { Logger } from '../../../core/utils/log';
 import { getNoteTooltip } from '../../../services/editor';
+import { FoamWorkspace } from 'packages/foam-vscode/src/core/model/workspace/foamWorkspace';
 
 export class BaseTreeItem extends vscode.TreeItem {
   resolveTreeItem(): Promise<vscode.TreeItem> {

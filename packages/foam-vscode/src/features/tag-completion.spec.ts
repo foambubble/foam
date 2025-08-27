@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { FoamTags } from '../core/model/tags';
-import { FoamWorkspace } from '../core/model/workspace';
+import { FoamWorkspace } from '../core/model/workspace/foamWorkspace';
 import { createTestNote } from '../test/test-utils';
 import {
   cleanWorkspace,

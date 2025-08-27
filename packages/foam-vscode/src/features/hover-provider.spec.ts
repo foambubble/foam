@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { createMarkdownParser } from '../core/services/markdown-parser';
 import { MarkdownResourceProvider } from '../core/services/markdown-provider';
 import { FoamGraph } from '../core/model/graph';
-import { FoamWorkspace } from '../core/model/workspace';
+import { FoamWorkspace } from '../core/model/workspace/foamWorkspace';
 import {
   cleanWorkspace,
   closeEditors,

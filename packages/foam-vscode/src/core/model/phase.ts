@@ -26,6 +26,10 @@ export class Phases {
   }
 
   public Next(phase: Phase): Phase | undefined {
+    if (phase === undefined) {
+      return this.First();
+    }
+
     if (phase === this.Last()) {
       return phase;
     }
@@ -38,6 +42,10 @@ export class Phases {
   }
 
   public Return(phase: Phase): Phase | undefined {
+    if (phase === undefined) {
+      return this.First();
+    }
+
     if (phase === this.First()) {
       return phase;
     }

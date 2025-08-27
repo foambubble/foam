@@ -2,7 +2,7 @@ import { convertLinkFormat } from '.';
 import { TEST_DATA_DIR } from '../../test/test-utils';
 import { MarkdownResourceProvider } from '../services/markdown-provider';
 import { Resource } from '../model/note';
-import { FoamWorkspace } from '../model/workspace';
+import { FoamWorkspace } from '../model/workspace/foamWorkspace';
 import { Logger } from '../utils/log';
 import fs from 'fs';
 import { URI } from '../model/uri';

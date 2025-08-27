@@ -1,6 +1,6 @@
 import { IDisposable } from '../common/lifecycle';
 import { IDataStore, IMatcher, IWatcher } from '../services/datastore';
-import { FoamWorkspace } from './workspace';
+import { FoamWorkspace } from './workspace/foamWorkspace';
 import { FoamGraph } from './graph';
 import { ResourceParser } from './note';
 import { ResourceProvider } from './provider';

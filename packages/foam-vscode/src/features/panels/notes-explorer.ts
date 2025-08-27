@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { Foam } from '../../core/model/foam';
-import { FoamWorkspace } from '../../core/model/workspace';
+import { FoamWorkspace } from '../../core/model/workspace/foamWorkspace';
 import {
   ResourceRangeTreeItem,
   ResourceTreeItem,

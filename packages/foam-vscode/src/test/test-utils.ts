@@ -5,7 +5,7 @@ import fs from 'fs';
 import { Logger } from '../core/utils/log';
 import { Range } from '../core/model/range';
 import { URI } from '../core/model/uri';
-import { FoamWorkspace } from '../core/model/workspace';
+import { FoamWorkspace } from '../core/model/workspace/foamWorkspace';
 import { MarkdownResourceProvider } from '../core/services/markdown-provider';
 import { NoteLinkDefinition, Resource } from '../core/model/note';
 import { createMarkdownParser } from '../core/services/markdown-parser';
@@ -122,6 +122,8 @@ export const createTestTrainNote = (params: {
   sections?: string[];
   root?: URI;
   type?: string;
+  nextReminder?: Date;
+  currentPhase?: Phase;
 }): TrainNote => {
   let phases = new Phases([
     new Phase('Phase 1', 1),
@@ -140,6 +142,9 @@ export const createTestTrainNote = (params: {
   result.title = note.title;
   result.type = params.type ?? 'train-note';
   result.uri = note.uri;
+  result.currentPhase = params.currentPhase;
+  result.nextReminder = params.nextReminder;
+
   return result;
 };
 

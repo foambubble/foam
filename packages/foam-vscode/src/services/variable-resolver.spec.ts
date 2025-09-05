@@ -289,7 +289,7 @@ describe('variable-resolver, resolveText', () => {
     editor.selection = new Selection(0, 11, 1, 0);
     const resolver = new Resolver(new Map(), new Date());
     expect(await resolver.resolveFromName('FOAM_SELECTED_TEXT')).toEqual(
-      'Content of note file'
+      'note file'
     );
     await deleteFile(file);
   });

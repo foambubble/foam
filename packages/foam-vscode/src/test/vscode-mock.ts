@@ -670,7 +670,12 @@ class MockTextDocument implements TextDocument {
   }
 
   getText(range?: Range): string {
-    // simplify by always returning the full content for now
+    // use the range to get specific parts if needed
+    if (range) {
+      const startOffset = this.offsetAt(range.start);
+      const endOffset = this.offsetAt(range.end);
+      return this._content.slice(startOffset, endOffset);
+    }
     return this._content;
   }
 

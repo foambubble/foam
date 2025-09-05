@@ -574,15 +574,18 @@
           "default": false
         },
         "foam.openDailyNote.fileExtension": {
+          "deprecationMessage": "This setting is deprecated and will be removed in future versions. Please use the daily-note template: https://github.com/foambubble/foam/blob/fe0228bdcc647e85682670656b5f09203b1c2518/docs/user/features/daily-notes.md",
           "type": "string",
           "default": "md"
         },
         "foam.openDailyNote.filenameFormat": {
+          "deprecationMessage": "This setting is deprecated and will be removed in future versions. Please use the daily-note template: https://github.com/foambubble/foam/blob/fe0228bdcc647e85682670656b5f09203b1c2518/docs/user/features/daily-notes.md",
           "type": "string",
           "default": "isoDate",
           "markdownDescription": "Specifies how the daily note filename is formatted. See the [dateformat docs](https://www.npmjs.com/package/dateformat) for valid formats"
         },
         "foam.openDailyNote.titleFormat": {
+          "deprecationMessage": "This setting is deprecated and will be removed in future versions. Please use the daily-note template: https://github.com/foambubble/foam/blob/fe0228bdcc647e85682670656b5f09203b1c2518/docs/user/features/daily-notes.md",
           "type": [
             "string",
             "null"
@@ -591,6 +594,7 @@
           "markdownDescription": "Specifies how the daily note title is formatted. Will default to the filename format if set to null. See the [dateformat docs](https://www.npmjs.com/package/dateformat) for valid formats"
         },
         "foam.openDailyNote.directory": {
+          "deprecationMessage": "This setting is deprecated and will be removed in future versions. Please use the daily-note template: https://github.com/foambubble/foam/blob/fe0228bdcc647e85682670656b5f09203b1c2518/docs/user/features/daily-notes.md",
           "type": [
             "string",
             "null"

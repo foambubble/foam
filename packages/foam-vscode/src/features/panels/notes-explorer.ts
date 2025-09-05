@@ -4,6 +4,7 @@ import { FoamWorkspace } from '../../core/model/workspace/foamWorkspace';
 import {
   ResourceRangeTreeItem,
   ResourceTreeItem,
+  TrainTreeItem,
   createBacklinkItemsForResource as createBacklinkTreeItemsForResource,
   expandAll,
 } from './utils/tree-view-utils';
@@ -14,6 +15,8 @@ import {
   FolderTreeItem,
   FolderTreeProvider,
 } from './utils/folder-tree-provider';
+import { TrainNote } from '../../core/model/train-note';
+import { URI } from '../../core/model/uri';
 
 export default async function activate(
   context: vscode.ExtensionContext,
@@ -84,6 +87,7 @@ export function findTreeItemByUri<I, T>(
 
 export type NotesTreeItems =
   | ResourceTreeItem
+  | TrainTreeItem
   | FolderTreeItem<Resource>
   | ResourceRangeTreeItem;
 
@@ -124,7 +128,9 @@ export class NotesProvider extends FolderTreeProvider<
   }
 
   getValues() {
-    return this.workspace.list();
+    return this.workspace
+      .list()
+      .concat(this.workspace.trainNoteWorkspace.list());
   }
 
   getFilterFn() {
@@ -143,34 +149,137 @@ export class NotesProvider extends FolderTreeProvider<
   }
 
   createValueTreeItem(
-    value: Resource,
+    value: Resource | TrainNote,
     parent: FolderTreeItem<Resource>
   ): NotesTreeItems {
-    const item = new ResourceTreeItem(value, this.workspace, {
-      parent,
+    return new TreeFactory().make(value, this.workspace, this.graph, {
+      parent: parent,
       collapsibleState:
         this.graph.getBacklinks(value.uri).length > 0
           ? vscode.TreeItemCollapsibleState.Collapsed
           : vscode.TreeItemCollapsibleState.None,
     });
-    item.id = value.uri.toString();
-    item.getChildren = async () => {
+  }
+}
+
+export class TreeFactory {
+  make(
+    value: Resource | TrainNote,
+    workspace: FoamWorkspace,
+    graph: FoamGraph,
+    options: {
+      collapsibleState?: vscode.TreeItemCollapsibleState;
+      parent?: FolderTreeItem<Resource>;
+    }
+  ) {
+    const builder =
+      value instanceof TrainNote
+        ? new TrainTreeItemBuilder(value, workspace)
+        : new ResourceTreeItemBuilder(value, workspace);
+
+    return builder
+      .setDescription()
+      .setWorkspace(workspace)
+      .setOptions(options.parent, options.collapsibleState)
+      .setGraph(graph)
+      .build();
+  }
+}
+
+abstract class TreeItemBuilder<Tvalue extends { uri: URI }, TtreeItem> {
+  protected value: Tvalue;
+  protected workspace: FoamWorkspace;
+  protected description: string;
+  protected graph: FoamGraph;
+  protected options: {
+    collapsibleState?: vscode.TreeItemCollapsibleState;
+    parent?: vscode.TreeItem;
+  };
+
+  constructor(value: Tvalue, workspace: FoamWorkspace) {
+    this.value = value;
+    this.workspace = workspace;
+  }
+
+  setOptions(
+    parent: FolderTreeItem<Resource>,
+    state: vscode.TreeItemCollapsibleState
+  ) {
+    this.options = {
+      collapsibleState: state,
+      parent: parent,
+    };
+    return this;
+  }
+
+  abstract setDescription(): this;
+
+  setWorkspace(ws: FoamWorkspace) {
+    this.workspace = ws;
+    return this;
+  }
+
+  setGraph(graph: FoamGraph) {
+    this.graph = graph;
+    return this;
+  }
+
+  setChildren(graph: FoamGraph) {
+    return async () => {
       const backlinks = await createBacklinkTreeItemsForResource(
         this.workspace,
-        this.graph,
-        item.uri
+        graph,
+        this.value.uri
       );
-      backlinks.forEach(item => {
-        item.description = item.label;
-        item.label = item.resource.title;
+      backlinks.forEach(b => {
+        b.description = b.label;
+        b.label = b.resource.title;
       });
       return backlinks;
     };
-    item.description =
-      value.uri.getName().toLocaleLowerCase() ===
-      value.title.toLocaleLowerCase()
+  }
+
+  abstract build(): TtreeItem;
+}
+
+class ResourceTreeItemBuilder extends TreeItemBuilder<
+  Resource,
+  ResourceTreeItem
+> {
+  setDescription() {
+    this.description =
+      this.value.uri.getName().toLowerCase() === this.value.title.toLowerCase()
         ? undefined
-        : value.uri.getBasename();
+        : this.value.uri.getBasename();
+    return this;
+  }
+
+  build(): ResourceTreeItem {
+    const item = new ResourceTreeItem(this.value, this.workspace, this.options);
+    item.id = this.value.uri.toString();
+    item.getChildren = this.setChildren(this.graph);
+    item.description = this.description;
+    return item;
+  }
+}
+
+export class TrainTreeItemBuilder extends TreeItemBuilder<
+  TrainNote,
+  TrainTreeItem
+> {
+  setDescription() {
+    this.description =
+      this.value.uri.getName().toLowerCase() === this.value.title.toLowerCase()
+        ? undefined
+        : this.value.uri.getBasename();
+    return this;
+  }
+
+  build(): TrainTreeItem {
+    const item = new TrainTreeItem(this.value, this.workspace, this.options);
+    item.id = this.value.uri.toString();
+    item.getChildren = this.setChildren(this.graph);
+    item.description = this.description;
     return item;
   }
 }

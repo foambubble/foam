@@ -9,6 +9,7 @@ import { getBlockFor } from '../../../core/services/markdown-parser';
 import { Connection, FoamGraph } from '../../../core/model/graph';
 import { Logger } from '../../../core/utils/log';
 import { getNoteTooltip } from '../../../services/editor';
+import { TrainNote } from 'packages/foam-vscode/src/core/model/train-note';
 import { FoamWorkspace } from 'packages/foam-vscode/src/core/model/workspace/foamWorkspace';
 
 export class BaseTreeItem extends vscode.TreeItem {
@@ -75,6 +76,20 @@ export class ResourceTreeItem extends UriTreeItem {
         : this.resource.title;
     }
     return this;
+  }
+}
+
+export class TrainTreeItem extends ResourceTreeItem {
+  constructor(
+    resource: TrainNote,
+    workspace: FoamWorkspace,
+    options: {
+      collapsibleState?: vscode.TreeItemCollapsibleState;
+      parent?: vscode.TreeItem;
+    } = {}
+  ) {
+    super(resource, workspace, options);
+    this.iconPath = new vscode.ThemeIcon('book');
   }
 }
 

@@ -257,6 +257,18 @@ describe('variable-resolver, resolveText', () => {
     expect(await resolver.resolveText(input)).toEqual(expected);
   });
 
+  it.each([
+    ['2021-10-12T00:00:00'],
+    ['2021-10-12T23:59:59'],
+    ['2021-10-12T12:34:56'],
+  ])('should resolve date variables in local time', async (d: string) => {
+    // Related to #1502
+    const resolver = new Resolver(new Map(), new Date(d));
+    expect(await resolver.resolve(new Variable('FOAM_DATE_DATE'))).toEqual(
+      '12'
+    );
+  });
+
   it('should do nothing for unknown Foam-specific variables', async () => {
     const input = `
         # $FOAM_FOO

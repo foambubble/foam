@@ -11,7 +11,6 @@ import {
   closeEditors,
   createFile,
   deleteFile,
-  getUriInWorkspace,
   showInEditor,
   withModifiedFoamConfiguration,
 } from './test/test-utils-vscode';
@@ -338,6 +337,67 @@ author: foam
 
       await deleteFile(template.uri);
       await deleteFile(result.uri);
+    });
+  });
+
+  describe('Issue #1499 - Double template application with absolute paths', () => {
+    it('should not apply template twice when reopening existing daily note with absolute filepath template', async () => {
+      const targetDate = new Date(2021, 8, 25);
+      const TEMPLATE_WITH_ABSOLUTE_FILEPATH = `---
+foam_template:
+  name: Daily note
+  description: Daily note template
+  filepath: '/\${FOAM_DATE_YEAR}-\${FOAM_DATE_MONTH}-\${FOAM_DATE_DATE}.md'
+---
+
+# \${FOAM_DATE_YEAR}-\${FOAM_DATE_MONTH}-\${FOAM_DATE_DATE} - DAILY NOTE
+
+Daily content here.`;
+
+      // Create the template with absolute filepath
+      const template = await createFile(
+        TEMPLATE_WITH_ABSOLUTE_FILEPATH,
+        DAILY_NOTE_TEMPLATE
+      );
+
+      const uri = getDailyNoteUri(targetDate);
+      const foam = {} as any; // Mock Foam instance
+
+      // First call: Create the daily note
+      const result1 = await createDailyNoteIfNotExists(targetDate, foam);
+      expect(result1.didCreateFile).toBe(true);
+
+      const doc1 = await showInEditor(uri);
+      const content1 = doc1.editor.document.getText();
+      expect(content1).toContain('# 2021-09-25 - DAILY NOTE');
+      expect(content1).toContain('Daily content here.');
+
+      // Count how many times the template content appears (should be once)
+      const templateOccurrences1 = (
+        content1.match(/# 2021-09-25 - DAILY NOTE/g) || []
+      ).length;
+      expect(templateOccurrences1).toBe(1);
+
+      await closeEditors();
+
+      // Second call: Open existing daily note (this should NOT apply template again)
+      const result2 = await createDailyNoteIfNotExists(targetDate, foam);
+      expect(result2.didCreateFile).toBe(false); // File already exists
+
+      const doc2 = await showInEditor(uri);
+      const content2 = doc2.editor.document.getText();
+
+      // Verify template is NOT applied twice
+      const templateOccurrences2 = (
+        content2.match(/# 2021-09-25 - DAILY NOTE/g) || []
+      ).length;
+      expect(templateOccurrences2).toBe(1); // Should still be 1, not 2
+
+      // Content should be identical to first time
+      expect(content2).toEqual(content1);
+
+      await deleteFile(template.uri);
+      await deleteFile(result1.uri);
     });
   });
 

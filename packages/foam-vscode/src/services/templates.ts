@@ -311,37 +311,45 @@ export const NoteFactory = {
       const onFileExists =
         createFnForOnFileExistsStrategy(onFileExistsStrategy);
 
+      let resolvedNewFilePath = asAbsoluteWorkspaceUri(newFilePath, true);
       /**
        * Make sure the path is absolute and doesn't exist
        */
-      while ((await fileExists(newFilePath)) || !newFilePath.isAbsolute()) {
+      while (
+        (await fileExists(resolvedNewFilePath)) ||
+        !newFilePath.isAbsolute()
+      ) {
         while (!newFilePath.isAbsolute()) {
           const proposedNewFilepath = await onRelativePath(newFilePath);
           if (proposedNewFilepath === undefined) {
-            return { didCreateFile: false, uri: newFilePath };
+            return { didCreateFile: false, uri: resolvedNewFilePath };
           }
           newFilePath = proposedNewFilepath;
         }
-        while (newFilePath.isAbsolute() && (await fileExists(newFilePath))) {
-          const proposedNewFilepath = await onFileExists(newFilePath);
+        resolvedNewFilePath = asAbsoluteWorkspaceUri(newFilePath, true);
+        while (
+          newFilePath.isAbsolute() &&
+          (await fileExists(resolvedNewFilePath))
+        ) {
+          const proposedNewFilepath = await onFileExists(resolvedNewFilePath);
           if (proposedNewFilepath === undefined) {
-            return { didCreateFile: false, uri: newFilePath };
+            return { didCreateFile: false, uri: resolvedNewFilePath };
           }
           newFilePath = proposedNewFilepath;
+          resolvedNewFilePath = asAbsoluteWorkspaceUri(newFilePath, true);
         }
       }
 
-      newFilePath = asAbsoluteWorkspaceUri(newFilePath, true);
       const expandedText = await resolver.resolveText(text);
       const selectedContent = findSelectionContent();
       await createDocAndFocus(
         new SnippetString(expandedText),
-        newFilePath,
+        resolvedNewFilePath,
         selectedContent ? ViewColumn.Beside : ViewColumn.Active
       );
 
       if (replaceSelectionWithLink && selectedContent !== undefined) {
-        const newNoteTitle = newFilePath.getName();
+        const newNoteTitle = resolvedNewFilePath.getName();
 
         // This should really use the FoamWorkspace.getIdentifier() function,
         // but for simplicity we just use newNoteTitle
@@ -352,7 +360,7 @@ export const NoteFactory = {
         );
       }
 
-      return { didCreateFile: true, uri: newFilePath };
+      return { didCreateFile: true, uri: resolvedNewFilePath };
     } catch (err) {
       if (err instanceof UserCancelledOperation) {
         return;

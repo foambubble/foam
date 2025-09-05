@@ -4,13 +4,26 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-## [0.27.2] - 2025-09-05
+## [0.27.4] - 2025-09-05
+
+Fixes and Improvements:
+
+- Fixed double template application when using absolute `filepath` properties (#1499)
+
+## [0.27.3] - 2025-09-05
 
 Fixes and Improvements:
 
 - Improved timezone handling for create-note when passing string date
 - Added debugging for daily note issue (#1505, #1502, #1494)
 - Deprecated daily note settings (use daily-note template instead)
+
+## [0.27.2] - 2025-07-25
+
+Fixes and Improvements:
+
+- Ensure absolute paths used in create-note command are relative to workspace
+- Improved Windows path handling in URIs
 
 ## [0.27.1] - 2025-07-24
 

@@ -178,6 +178,9 @@ export async function createNote(args: CreateNoteArgs, foam: Foam) {
     Logger.debug(`[createNote] args: ${JSON.stringify(args, null, 2)}`);
     Logger.debug(`[createNote] template: ${JSON.stringify(template, null, 2)}`);
     Logger.debug(`[createNote] resolver: ${JSON.stringify(resolver, null, 2)}`);
+    Logger.debug(
+      `[createNote] foamDate: ${foamDate.toISOString()} (timezone offset: ${foamDate.getTimezoneOffset()})`
+    );
   }
 
   // Process template using the new engine with unified resolver

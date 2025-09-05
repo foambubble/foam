@@ -1,3 +1,4 @@
+/* @unit-ready */
 import { Selection, window } from 'vscode';
 import { Resolver } from './variable-resolver';
 import { Variable } from '../core/common/snippetParser';
@@ -288,7 +289,7 @@ describe('variable-resolver, resolveText', () => {
     editor.selection = new Selection(0, 11, 1, 0);
     const resolver = new Resolver(new Map(), new Date());
     expect(await resolver.resolveFromName('FOAM_SELECTED_TEXT')).toEqual(
-      'note file'
+      'Content of note file'
     );
     await deleteFile(file);
   });

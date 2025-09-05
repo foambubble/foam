@@ -38,8 +38,13 @@ export class Resolver implements VariableResolver {
    */
   constructor(
     private givenValues: Map<string, string>,
-    public foamDate: Date
-  ) {}
+    public foamDate: Date,
+    foamTitle?: string
+  ) {
+    if (foamTitle) {
+      this.givenValues.set('FOAM_TITLE', foamTitle);
+    }
+  }
 
   /**
    * Adds a variable definition in the resolver

@@ -72,7 +72,24 @@ describe('variable-resolver, variable resolution', () => {
     expect(await resolver.resolveAll(variables)).toEqual(expected);
   });
 
-  it('should resolve FOAM_TITLE', async () => {
+  it('should resolve FOAM_TITLE if provided in constructor', async () => {
+    const foamTitle = 'My note title';
+
+    const expected = new Map<string, string>();
+    expected.set('FOAM_TITLE', foamTitle);
+    expected.set('FOAM_SLUG', 'my-note-title');
+
+    const variables = [new Variable('FOAM_TITLE'), new Variable('FOAM_SLUG')];
+
+    const resolver = new Resolver(
+      new Map<string, string>(),
+      new Date(),
+      foamTitle
+    );
+    expect(await resolver.resolveAll(variables)).toEqual(expected);
+  });
+
+  it('should resolve FOAM_TITLE if provided as variable', async () => {
     const foamTitle = 'My note title';
     const variables = [new Variable('FOAM_TITLE'), new Variable('FOAM_SLUG')];
 

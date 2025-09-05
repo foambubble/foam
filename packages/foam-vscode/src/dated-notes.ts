@@ -6,10 +6,7 @@ import { getDailyNoteTemplateUri } from './services/templates';
 import { getFoamVsCodeConfig } from './services/config';
 import { asAbsoluteWorkspaceUri, focusNote } from './services/editor';
 import { Foam } from './core/model/foam';
-import {
-  CREATE_NOTE_COMMAND,
-  createNote,
-} from './features/commands/create-note';
+import { createNote } from './features/commands/create-note';
 import { fromVsCodeUri } from './utils/vsc-utils';
 import { showInEditor } from './test/test-utils-vscode';
 

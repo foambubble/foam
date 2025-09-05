@@ -4,6 +4,14 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.27.2] - 2025-09-05
+
+Fixes and Improvements:
+
+- Improved timezone handling for create-note when passing string date
+- Added debugging for daily note issue (#1505, #1502, #1494)
+- Deprecated daily note settings (use daily-note template instead)
+
 ## [0.27.1] - 2025-07-24
 
 Fixes and Improvements:

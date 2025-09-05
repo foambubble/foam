@@ -30,7 +30,11 @@ Unit tests run in Node.js environment using Jest
 Integration tests require VS Code extension host
 
 Unit tests are named `*.test.ts` and integration tests are `*.spec.ts`. These test files live alongside the code in the `src` directory. An integration test is one that has a direct or indirect dependency on `vscode` module.
-There is a mock `vscode` module that can be used to run most integration tests without starting VS Code. Tests that can use this mock are start with the line `/* @unit-ready */`
+There is a mock `vscode` module that can be used to run most integration tests without starting VS Code. Tests that can use this mock are start with the line `/* @unit-ready */`.
+
+- If you are interested in a test inside a `*.test.ts` file, run `yarn test:unit`
+- If you are interested in a test inside a `*.spec.ts` file that starts with `/* @unit-ready */` run `yarn test:unit-with-specs`
+- If you are interested in a test inside a `*.spec.ts` file that does not include `/* @unit-ready */` run `yarn test`
 
 While in development we mostly want to use `yarn test:unit-with-specs`.
 When multiple tests are failing, look at all of them, but only focus on fixing the first one. Once that is fixed, run the test suite again and repeat the process.
@@ -41,6 +45,8 @@ Never mock anything that is inside `packages/foam-vscode/src/core/`.
 Use the utility functions from `test-utils.ts` and `test-utils-vscode.ts` and `test-datastore.ts`.
 
 To improve readability of the tests, set up the test and tear it down within the test case (as opposed to use other functions like `beforeEach` unless it's much better to do it that way)
+
+Never fix a test by adjusting the expectation if the expectation is correct, test must be fixed by addressing the issue with the code.
 
 ## Repository Structure
 

@@ -277,8 +277,8 @@ function resolveFoamCurrentDir() {
     if (workspace.workspaceFolders && workspace.workspaceFolders.length > 0) {
       return fromVsCodeUri(workspace.workspaceFolders[0].uri).toFsPath();
     }
-    // Final fallback to current working directory
-    return process.cwd();
+    // If no workspace is open, raise
+    throw new Error('No workspace is open');
   }
 }
 

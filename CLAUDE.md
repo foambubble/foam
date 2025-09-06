@@ -119,6 +119,8 @@ This allows features to:
 ## Development Workflow
 
 We build production code together. I handle implementation details while you guide architecture and catch complexity early.
+When working on an issue, check if a `.agent/tasks/<issue-id>-<sanitized-title>.md` exists. If not, suggest whether we should start by doing a research on it (using the `/research-issue <issue-id>`) command.
+Whenever we work together on a task, feel free to challenge my assumptions and ideas and be critical if useful.
 
 ## Core Workflow: Research → Plan → Implement → Validate
 

@@ -309,4 +309,64 @@ foam_template:
       expect(doc.getText()).toEqual(`this is my [[hello-world]]`);
     });
   });
+
+  describe('Template filepath with FOAM_CURRENT_DIR', () => {
+    it('should create note in current directory using FOAM_CURRENT_DIR variable', async () => {
+      // Create a test subdirectory and a file in it
+      const noteInSubdir = await createFile('Test content', [
+        'subdir',
+        'existing-note.md',
+      ]);
+
+      // Create a template with FOAM_CURRENT_DIR variable
+      const template = await createFile(
+        `---
+foam_template:
+  filepath: \${FOAM_CURRENT_DIR}/\${FOAM_SLUG}.md  
+---
+# \${FOAM_TITLE}
+
+Template content using FOAM_CURRENT_DIR`,
+        ['.foam', 'templates', 'foam-current-dir-template.md']
+      );
+
+      // Switch to the file in the subdirectory to set current editor context
+      await showInEditor(noteInSubdir.uri);
+
+      // Create a note using the template - FOAM_CURRENT_DIR should resolve to current editor directory
+      const resultInSubdir = await createNote(
+        {
+          templatePath: template.uri.path,
+          title: 'My New Note',
+        },
+        {} as any
+      );
+      // The note should be created in the subdir because FOAM_CURRENT_DIR resolves to current editor directory
+      expect(resultInSubdir.uri).toEqual(
+        noteInSubdir.uri.getDirectory().joinPath('my-new-note.md')
+      );
+
+      await closeEditors();
+      // Create a note using the template - FOAM_CURRENT_DIR should resolve to current editor directory
+      const resultInRoot = await createNote(
+        {
+          templatePath: template.uri.path,
+          title: 'My New Note',
+        },
+        {} as any
+      );
+      // The note should be created in the subdir because FOAM_CURRENT_DIR resolves to current editor directory
+      expect(resultInRoot.uri).toEqual(
+        fromVsCodeUri(workspace.workspaceFolders[0].uri).joinPath(
+          'my-new-note.md'
+        )
+      );
+
+      // Clean up
+      await deleteFile(template.uri);
+      await deleteFile(noteInSubdir.uri);
+      await deleteFile(resultInRoot.uri);
+      await deleteFile(resultInSubdir.uri);
+    });
+  });
 });

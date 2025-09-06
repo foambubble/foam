@@ -11,7 +11,6 @@ import { TemplateLoader } from '../../services/template-loader';
 import { Template } from '../../services/note-creation-types';
 import { Resolver } from '../../services/variable-resolver';
 import { asAbsoluteWorkspaceUri, fileExists } from '../../services/editor';
-import { isSome } from '../../core/utils';
 import { CommandDescriptor } from '../../utils/commands';
 import { Foam } from '../../core/model/foam';
 import { Location } from '../../core/model/location';

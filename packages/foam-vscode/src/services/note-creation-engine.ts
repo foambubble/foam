@@ -10,8 +10,7 @@ import {
   isPlaceholderTrigger,
 } from './note-creation-types';
 import { extractFoamTemplateFrontmatterMetadata } from '../utils/template-frontmatter-parser';
-import { asAbsoluteUri, URI } from '../core/model/uri';
-import { isAbsolute } from 'path';
+import { URI } from '../core/model/uri';
 
 /**
  * Unified engine for creating notes from both Markdown and JavaScript templates
@@ -57,9 +56,6 @@ export class NoteCreationEngine {
     template: Template & { type: 'javascript' },
     resolver: Resolver
   ): Promise<NoteCreationResult> {
-    // Convert resolver's variables back to extraParams for backward compatibility
-    const extraParams = resolver.getVariables();
-
     const templateContext: TemplateContext = {
       trigger,
       resolver,

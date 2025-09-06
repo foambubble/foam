@@ -246,6 +246,7 @@ In addition, you can also use variables provided by Foam:
 | `FOAM_TITLE`         | The title of the note. If used, Foam will prompt you to enter a title for the note.                                                                                                                                                          |
 | `FOAM_TITLE_SAFE`    | The title of the note in a file system safe format. If used, Foam will prompt you to enter a title for the note unless `FOAM_TITLE` has already caused the prompt.                                                                           |
 | `FOAM_SLUG`          | The sluggified title of the note (using the default github slug method). If used, Foam will prompt you to enter a title for the note unless `FOAM_TITLE` has already caused the prompt.                                                      |
+| `FOAM_CURRENT_DIR`   | The current editor's directory path. Resolves to the directory of the currently active file, or falls back to workspace root if no editor is active. Useful for creating notes in the current directory context.                             |
 | `FOAM_DATE_*`        | `FOAM_DATE_YEAR`, `FOAM_DATE_MONTH`, `FOAM_DATE_WEEK` etc. Foam-specific versions of [VS Code's datetime snippet variables](https://code.visualstudio.com/docs/editor/userdefinedsnippets#_variables). Prefer these versions over VS Code's. |
 
 ### `FOAM_DATE_*` variables
@@ -305,6 +306,30 @@ foam_template:
 
 # $FOAM_DATE_YEAR-$FOAM_DATE_MONTH-$FOAM_DATE_DATE Daily Notes
 ```
+
+##### Creating notes in the current directory
+
+To create notes in the same directory as your currently active file, use the `FOAM_CURRENT_DIR` variable in your template's `filepath`:
+
+```markdown
+---
+foam_template:
+  name: Current Directory Note
+  filepath: '$FOAM_CURRENT_DIR/$FOAM_SLUG.md'
+---
+
+# $FOAM_TITLE
+
+$FOAM_SELECTED_TEXT
+```
+
+**Best practices for filepath patterns:**
+
+- **Explicit current directory:** `$FOAM_CURRENT_DIR/$FOAM_SLUG.md` - Creates notes in the current editor's directory
+- **Workspace root:** `/$FOAM_SLUG.md` - Always creates notes in workspace root
+- **Subdirectories:** `$FOAM_CURRENT_DIR/meetings/$FOAM_SLUG.md` - Creates notes in subdirectories relative to current location
+
+The `FOAM_CURRENT_DIR` approach is recommended over relative paths (like `./file.md`) because it makes the template's behavior explicit and doesn't depend on configuration settings.
 
 #### `name` and `description` attributes
 

@@ -4,6 +4,12 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.27.5] - 2025-09-06
+
+Features:
+
+- Added `FOAM_CURRENT_DIR` template variable for explicit current directory context (#1507)
+
 ## [0.27.4] - 2025-09-05
 
 Fixes and Improvements:

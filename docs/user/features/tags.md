@@ -1,62 +1,81 @@
----
-tags: my-tag1 my-tag2 my-tag3/notes
----
-
 # Tags
 
-You can add tags to your notes to categorize or link notes together.
+Tags provide flexible categorization and organization for your notes beyond wikilinks and folders.
 
-## Creating a tag
+## Creating Tags
 
-There are two ways of creating a tag:
+### Inline Tags
 
-- Adding a `#tag` anywhere in the text of the note, for example: #my-tag1
-- Using the `tags: tag1, tag2` yaml frontmatter [[note-properties|note property]]. Notice `my-tag1` and `my-tag2` tags which are added to this document this way.
+Add tags directly in note content:
 
-Tags can also be hierarchical, so you can have `#parent/child` such as #my-tag3/info.
+```markdown
+# Machine Learning Fundamentals
 
-### Tag completion
+This covers basic algorithms and applications.
 
-Typing the `#` character will launch VS Code's "Intellisense." This provider will show a list of possible tags that match the character. If you are editing in the frontmatter [[note-properties|note property]], you can invoke tag completion on the `tags:` line by either typing the `#` character, or using the ["trigger suggest"](https://code.visualstudio.com/docs/editor/intellisense) keybinding (usually `ctrl+space`). If the `#` is used in the frontmatter, it will be removed when the tag is inserted.
-
-## Using *Tag Explorer*
-
-It's possible to navigate tags via the Tag Explorer panel. Expand the Tag Explorer view in the left side bar which will list all the tags found in current Foam environment. Then, each level of tags can be expanded until the options to search by tag and a list of all files containing a particular tag are shown.
-
-Tags can also be visualized in the Foam Graph Explorer. See [[graph-visualization]] for more info including how to change the color of nodes representing tags.
-
-## Styling tags
-
-It is possible to customize the way that tags look in the Markdown Preview panel that renders your Foam notes. This requires some knowledge of the CSS language, which is used to customize the styles of web technologies such as VSCode. A cursory introduction to CSS can be [found here](https://www.freecodecamp.org/news/get-started-with-css-in-5-minutes-e0804813fc3e/).
-
-1. Create a CSS file within your Foam project, for example in `.foam/css/custom-tag-style.css` or [.vscode/custom-tag-style.css](../../.vscode/custom-tag-style.css)
-2. Add CSS code that targets the `.foam-tag` class
-3. Add a rule for each [CSS property](https://www.w3schools.com/cssref/index.php) you would like applied to your tags.
-4. Open the `.vscode/settings.json` file (or the Settings browser with `ctrl+,`)
-5. Add the path to your new stylesheet to the `markdown.styles` setting.
-
-> Note: the file path for the stylesheet will be relative to the currently open folder in the workspace when changing this setting for the current workspace. If changing this setting for the user, then the file path will be relative to your global [VSCode settings](https://code.visualstudio.com/docs/getstarted/settings).
-
-The end result will be a CSS file that looks similar to the content below. Now you can make your tags standout in your note previews.
-
-```css
-.foam-tag{
-  color:#ffffff;
-  background-color: #000000;
-}
+#machine-learning #data-science #algorithms #beginner
 ```
 
-![custom tag style demo](../../assets/images/custom-tag-style.png)
+### Front Matter Tags
 
-## Using backlinks in place of tags
+Add tags in YAML front matter:
 
-Given the power of backlinks, some people prefer to use them as tags.
-For example you can tag your notes about books with [[book]].
+```markdown
+---
+tags: [machine-learning, data-science, algorithms, beginner]
+---
+```
 
-[note-properties|note property]: note-properties.md "Note Properties"
-[graph-visualization]: graph-visualization.md "Graph Visualization"
+### Hierarchical Tags
+
+Create tag hierarchies using forward slashes:
+
+```markdown
+#programming/languages/python
+#programming/frameworks/react
+#work/projects/website-redesign
+#personal/health/exercise
+```
+
+
+## Autocompletion
+
+Typing `#` shows existing tags. In front matter, use `Ctrl+Space` for tag suggestions.
+
+## Tag Explorer
+
+Use the Tag Explorer panel in VS Code's sidebar to:
+
+- Browse hierarchical tag structure
+- Filter by tag names
+- Click tags to see all associated notes
+- View tag usage counts
+
+Tags also appear in the [[graph-view]] with customizable colors.
+
+## Custom Tag Styling
+
+Customize tag appearance in markdown preview by adding CSS:
+
+1. Create `.foam/css/custom-tag-style.css`
+2. Add CSS targeting `.foam-tag` class:
+   ```css
+   .foam-tag {
+     color: #ffffff;
+     background-color: #000000;
+   }
+   ```
+3. Update `.vscode/settings.json`:
+   ```json
+   {
+     "markdown.styles": [".foam/css/custom-tag-style.css"]
+   }
+   ```
+
+## Tags vs Backlinks
+
+Some users prefer [[book]] backlinks instead of #book tags for categorization. Both approaches work - choose what fits your workflow.
 
 [//begin]: # "Autogenerated link references for markdown compatibility"
-[note-properties|note property]: note-properties.md "Note Properties"
-[graph-visualization]: graph-visualization.md "Graph Visualization"
+[graph-view]: graph-view.md "Graph Visualization"
 [//end]: # "Autogenerated link references"

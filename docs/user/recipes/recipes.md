@@ -30,7 +30,7 @@ A #recipe is a guide, tip or strategy for getting the most out of your Foam work
 
 ## Discover
 
-- Explore your notes using [[graph-visualization]]
+- Explore your notes using [[graph-view]]
 - Discover relationships with [[backlinking]]
 - Simulating [[unlinked-references]]
 
@@ -44,7 +44,7 @@ A #recipe is a guide, tip or strategy for getting the most out of your Foam work
 - Use shortcuts for [[creating-new-notes]]
 - Instantly create and access your [[daily-notes]]
 - Add and explore [[tags]]
-- Create [[note-templates]]
+- Create [[templates]]
 - Find [[orphans]]
 - Use custom [[note-macros]] to create weekly, monthly etc. notes
 - Draw [[diagrams-in-markdown]]
@@ -59,7 +59,7 @@ A #recipe is a guide, tip or strategy for getting the most out of your Foam work
   - _More..._
 - VS Code Advanced Features [[todo]] [[good-first-task]]
   - Focus with Zen Mode
-- Display content of other notes in the preview tab by [[including-notes]]
+- Display content of other notes in the preview tab by [[embeds]]
 
 ## Version control
 

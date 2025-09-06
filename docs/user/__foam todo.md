@@ -1,0 +1,6 @@
+- command to bootstrap workspace
+- make all extensions ON for attachments by default
+- improve settings description
+- add deprecation to daily note settings in package.json
+- JS filteres and hooks
+- plugins (compatibility with Obsidian?)

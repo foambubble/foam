@@ -355,7 +355,7 @@ Template content using FOAM_CURRENT_DIR`,
         },
         {} as any
       );
-      // The note should be created in the subdir because FOAM_CURRENT_DIR resolves to current editor directory
+      // The note should be created in the workspace root because FOAM_CURRENT_DIR resolves to workspace root when no editor is active
       expect(resultInRoot.uri).toEqual(
         fromVsCodeUri(workspace.workspaceFolders[0].uri).joinPath(
           'my-new-note.md'

@@ -9,7 +9,6 @@ import { Logger } from '../core/utils/log';
 import { URI } from '../core/model/uri';
 import { Resource } from '../core/model/note';
 import { randomString, wait } from './test-utils';
-import { FoamWorkspace } from '../core/model/workspace';
 import { Foam } from '../core/model/foam';
 
 Logger.setLevel('error');

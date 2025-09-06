@@ -243,12 +243,9 @@ describe('variable-resolver, variable resolution', () => {
 
   describe('FOAM_CURRENT_DIR', () => {
     it('should resolve to workspace root when no active editor', async () => {
-      const resolver = new Resolver(
-        new Map<string, string>(),
-        new Date()
-      );
+      const resolver = new Resolver(new Map<string, string>(), new Date());
       const result = await resolver.resolve(new Variable('FOAM_CURRENT_DIR'));
-      
+
       // Should resolve to some directory path
       expect(typeof result).toBe('string');
       expect(result.length).toBeGreaterThan(0);
@@ -256,18 +253,18 @@ describe('variable-resolver, variable resolution', () => {
 
     it('should resolve to current directory when editor is active', async () => {
       // Create a test file in a subdirectory
-      const testFile = await createFile('Test content', ['test-dir', 'test-file.md']);
-      
+      const testFile = await createFile('Test content', [
+        'test-dir',
+        'test-file.md',
+      ]);
+
       try {
         // Open the file to make it the active editor
         await showInEditor(testFile.uri);
-        
-        const resolver = new Resolver(
-          new Map<string, string>(),
-          new Date()
-        );
+
+        const resolver = new Resolver(new Map<string, string>(), new Date());
         const result = await resolver.resolve(new Variable('FOAM_CURRENT_DIR'));
-        
+
         // Should resolve to the test-dir directory
         expect(typeof result).toBe('string');
         expect(result).toContain('test-dir');
@@ -281,7 +278,7 @@ describe('variable-resolver, variable resolution', () => {
       const input = '${FOAM_CURRENT_DIR}';
       const resolver = new Resolver(new Map(), new Date());
       const result = await resolver.resolveText(input);
-      
+
       // Should resolve to a directory path, not remain as ${FOAM_CURRENT_DIR}
       expect(result).not.toEqual(input);
       expect(typeof result).toBe('string');

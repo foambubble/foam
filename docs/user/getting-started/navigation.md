@@ -133,30 +133,7 @@ Currently you cannot rename whole folders.
 
 With navigation mastered, you're ready to:
 
-1. **[Explore the graph view](graph-view.md)** - Visualize your knowledge network
+1. **[Explore the graph view](../features/graph-view.md)** - Visualize your knowledge network
 2. **[Learn about backlinks](../features/backlinks.md)** - Master bidirectional linking
 3. **[Set up templates](../features/templates.md)** - Standardize your note creation
 4. **[Use tags effectively](../features/tags.md)** - Add another layer of organization
-
-## Advanced Navigation Topics
-
-For power users, consider exploring:
-
-- Graph-based navigation strategies
-- Custom link types and conventions
-- Automated link generation
-- Integration with external knowledge bases
-- Multi-workspace navigation patterns
-
----
-
-## Suggestions for Further Refinement
-
-- Add section on link analytics (most connected notes, orphaned notes, etc.)
-- Include navigation keyboard shortcuts specific to Foam
-- Create troubleshooting flowchart for navigation issues
-- Add section on collaborative navigation in shared workspaces
-- Include performance tips for large knowledge bases
-- Create navigation workflow templates for different user types
-- Add section on mobile navigation apps and compatibility
-- Include accessibility considerations for navigation (screen readers, keyboard-only, etc.)

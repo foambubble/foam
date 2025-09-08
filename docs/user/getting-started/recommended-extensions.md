@@ -14,8 +14,7 @@ These extensions are not defined in `.vscode/extensions.json`, but have been use
 
 - [Emojisense](https://marketplace.visualstudio.com/items?itemName=bierner.emojisense) (provides emoji autocomplete and suggestions in markdown files)
 - [Markdown Emoji](https://marketplace.visualstudio.com/items?itemName=bierner.markdown-emoji) (adds `:smile:` syntax support, works with emojisense to provide autocomplete for this syntax)
-- [Markdown Preview Mermaid Support](https://marketplace.visualstudio.com/items?itemName=bierner.markdown-mermaid) (renders Mermaid diagrams in markdown preview for flowcharts, sequence diagrams, and more)
-- [Mermaid Markdown Syntax Highlighting](https://marketplace.visualstudio.com/items?itemName=bpruitt-goddard.mermaid-markdown-syntax-highlighting) (adds syntax highlighting for Mermaid code blocks in markdown)
+- [Mermaid diagrams Support](https://marketplace.visualstudio.com/items?itemName=MermaidChart.vscode-mermaid-chart) (adds syntax highlighting for Mermaid code blocks in markdown and renders Mermaid diagrams in markdown preview)
 - [Excalidraw whiteboard and sketching tool integration](https://marketplace.visualstudio.com/items?itemName=pomdtr.excalidraw-editor) (create and edit hand-drawn style diagrams and sketches directly in VS Code)
 - [VSCode PDF Viewing](https://marketplace.visualstudio.com/items?itemName=tomoki1207.pdf) (view PDF files directly within VS Code without external applications)
 - [Project Manager](https://marketplace.visualstudio.com/items?itemName=alefragnani.project-manager) (easily switch between multiple projects and workspaces)

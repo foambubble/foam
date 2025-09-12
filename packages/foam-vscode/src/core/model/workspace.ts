@@ -1,3 +1,4 @@
+import { join as pathJoin } from 'path';
 import { Resource, ResourceLink } from './note';
 import { URI } from './uri';
 import { isAbsolute, getExtension, changeExtension } from '../utils/path';
@@ -7,6 +8,16 @@ import { ResourceProvider } from './provider';
 import { IDisposable } from '../common/lifecycle';
 import { IDataStore } from '../services/datastore';
 import TrieMap from 'mnemonist/trie-map';
+
+export interface RootChecker {
+  where(path: string): string | null;
+}
+
+export class DummyRootChecker implements RootChecker {
+  where(path: string): string | null {
+    return '/';
+  }
+}
 
 export class FoamWorkspace implements IDisposable {
   private onDidAddEmitter = new Emitter<Resource>();
@@ -26,7 +37,10 @@ export class FoamWorkspace implements IDisposable {
   /**
    * @param defaultExtension: The default extension for notes in this workspace (e.g. `.md`)
    */
-  constructor(public defaultExtension: string = '.md') {}
+  constructor(
+    public defaultExtension: string = '.md',
+    private checker: RootChecker = new DummyRootChecker()
+  ) {}
 
   registerProvider(provider: ResourceProvider) {
     this.providers.push(provider);
@@ -163,6 +177,12 @@ export class FoamWorkspace implements IDisposable {
   }
 
   public find(reference: URI | string, baseUri?: URI): Resource | null {
+    const findAbsKey = (target: string): string | null => {
+      if (baseUri === undefined) return null;
+      const root: string | null = this.checker.where(baseUri.path);
+      return root !== null ? pathJoin(root, target) : null;
+    };
+
     if (reference instanceof URI) {
       return this._resources.get(this.getTrieIdentifier(reference)) ?? null;
     }
@@ -173,11 +193,14 @@ export class FoamWorkspace implements IDisposable {
     } else {
       const candidates = [path, path + this.defaultExtension];
       for (const candidate of candidates) {
-        const searchKey = isAbsolute(candidate)
-          ? candidate
+        const searchKey: string | null = isAbsolute(candidate)
+          ? findAbsKey(candidate)
           : isSome(baseUri)
           ? baseUri.resolve(candidate).path
           : null;
+        if (searchKey === null) {
+          continue;
+        }
         resource = this._resources.get(this.getTrieIdentifier(searchKey));
         if (resource) {
           break;
@@ -191,6 +214,11 @@ export class FoamWorkspace implements IDisposable {
       };
     }
     return resource ?? null;
+  }
+
+  public resolveRoot(baseUri: URI): URI | null {
+    const root = this.checker.where(baseUri.path);
+    return root !== null ? URI.parse(root) : null;
   }
 
   public resolveLink(resource: Resource, link: ResourceLink): URI {
@@ -290,9 +318,10 @@ export class FoamWorkspace implements IDisposable {
   static async fromProviders(
     providers: ResourceProvider[],
     dataStore: IDataStore,
-    defaultExtension: string = '.md'
+    defaultExtension: string = '.md',
+    checker: RootChecker = new DummyRootChecker()
   ): Promise<FoamWorkspace> {
-    const workspace = new FoamWorkspace(defaultExtension);
+    const workspace = new FoamWorkspace(defaultExtension, checker);
     await Promise.all(providers.map(p => workspace.registerProvider(p)));
     const files = await dataStore.list();
     await Promise.all(files.map(f => workspace.fetchAndSet(f)));

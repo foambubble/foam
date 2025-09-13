@@ -4,6 +4,12 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.27.6] - 2025-09-13
+
+Fixes and Improvements:
+
+- Fixed URI handling across scheme/authority (fixes #1404)
+
 ## [0.27.5] - 2025-09-06
 
 Features:

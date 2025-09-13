@@ -144,6 +144,7 @@ export async function createNote(args: CreateNoteArgs, foam: Foam) {
     if (!templateUri) {
       template = {
         type: 'markdown',
+        metadata: new Map(),
         content: args.text || DEFAULT_NEW_NOTE_TEXT,
       };
     } else if (await fileExists(templateUri)) {
@@ -159,10 +160,11 @@ export async function createNote(args: CreateNoteArgs, foam: Foam) {
 
   // If notePath is provided, add it to template metadata to avoid unnecessary title resolution
   if (args.notePath && template.type === 'markdown') {
-    template.metadata = template.metadata || new Map();
     template.metadata.set(
       'filepath',
-      args.notePath instanceof URI ? args.notePath.toFsPath() : args.notePath
+      typeof args.notePath === 'string'
+        ? args.notePath
+        : args.notePath.toFsPath()
     );
   }
 

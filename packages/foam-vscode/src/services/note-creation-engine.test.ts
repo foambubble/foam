@@ -70,6 +70,7 @@ Test content with title: \${FOAM_TITLE}`,
       // Create markdown template with date variables
       const template: Template = {
         type: 'markdown',
+        metadata: new Map(),
         content: `# Daily Note \${FOAM_DATE_YEAR}-\${FOAM_DATE_MONTH}-\${FOAM_DATE_DATE}
 
 Today is \${FOAM_DATE_DAY_NAME}`,
@@ -112,6 +113,7 @@ Today is \${FOAM_DATE_DAY_NAME}`,
       // Create markdown template
       const template: Template = {
         type: 'markdown',
+        metadata: new Map(),
         content: `# \${FOAM_TITLE}
 
 Created from placeholder link.
@@ -159,6 +161,7 @@ Content goes here.`,
       // Create markdown template without filepath metadata
       const template: Template = {
         type: 'markdown',
+        metadata: new Map(),
         content: `# \${FOAM_TITLE}
 
 Content without filepath metadata.`,

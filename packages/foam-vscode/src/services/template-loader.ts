@@ -71,7 +71,7 @@ export class TemplateLoader {
     return {
       type: 'markdown',
       content,
-      metadata: metadata.size > 0 ? metadata : undefined,
+      metadata,
     };
   }
 }

@@ -26,7 +26,7 @@ export type NoteCreationTrigger =
  * Template types supported by the note creation system
  */
 export type Template =
-  | { type: 'markdown'; content: string; metadata?: Map<string, string> }
+  | { type: 'markdown'; content: string; metadata: Map<string, string> }
   | {
       type: 'javascript';
       createNote: (context: TemplateContext) => Promise<NoteCreationResult>;

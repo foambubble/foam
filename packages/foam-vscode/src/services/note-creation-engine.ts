@@ -36,16 +36,22 @@ export class NoteCreationEngine {
     this.logTriggerInfo(trigger);
 
     let result: NoteCreationResult | null = null;
-    if (template.type === 'javascript') {
-      result = await this.executeJSTemplate(trigger, template, resolver);
-    } else {
-      result = await this.executeMarkdownTemplate(trigger, template, resolver);
+    switch (template.type) {
+      case 'javascript':
+        result = await this.executeJSTemplate(trigger, template, resolver);
+        break;
+      case 'markdown':
+        result = await this.executeMarkdownTemplate(
+          trigger,
+          template,
+          resolver
+        );
+        break;
+      default:
+        throw new Error(`Unsupported template type: ${(template as any).type}`);
     }
 
-    return {
-      ...result,
-      filepath: result.filepath,
-    };
+    return result;
   }
 
   /**

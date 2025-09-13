@@ -266,7 +266,7 @@ const createFnForOnRelativePathStrategy =
         const newProposedPath = await askUserForFilepathConfirmation(
           existingFile
         );
-        return newProposedPath && existingFile.with({ path: newProposedPath });
+        return newProposedPath && existingFile.forPath(newProposedPath);
       }
     }
   };
@@ -290,7 +290,7 @@ const createFnForOnFileExistsStrategy =
         const newProposedPath = await askUserForFilepathConfirmation(
           existingFile
         );
-        return newProposedPath && existingFile.with({ path: newProposedPath });
+        return newProposedPath && existingFile.forPath(newProposedPath);
       }
     }
   };
@@ -381,7 +381,7 @@ export const createTemplate = async (): Promise<void> => {
     validateInput: async value =>
       value.trim().length === 0
         ? 'Please enter a value'
-        : (await fileExists(URI.parse(value)))
+        : (await fileExists(getTemplatesDir().forPath(value)))
         ? 'File already exists'
         : undefined,
   });
@@ -389,7 +389,7 @@ export const createTemplate = async (): Promise<void> => {
     return;
   }
 
-  const filenameURI = defaultTemplate.with({ path: filename });
+  const filenameURI = defaultTemplate.forPath(filename);
   await workspace.fs.writeFile(
     toVsCodeUri(filenameURI),
     new TextEncoder().encode(DEFAULT_NEW_NOTE_TEMPLATE)
@@ -413,9 +413,9 @@ async function askUserForFilepathConfirmation(
     validateInput: async value =>
       value.trim().length === 0
         ? 'Please enter a value'
-        : (await fileExists(URI.parse(value)))
+        : (await fileExists(getTemplatesDir().forPath(value)))
         ? 'File already exists'
-        : !URI.parse(value).isAbsolute()
+        : !getTemplatesDir().forPath(value).isAbsolute()
         ? 'Path needs to be absolute'
         : undefined,
   });

@@ -87,6 +87,13 @@ export function isVirtualWorkspace(): boolean {
   });
 }
 
+export function getWorkspaceDefaultScheme(): string {
+  if (workspace.workspaceFolders === undefined) {
+    throw new Error('An open folder or workspace is required');
+  }
+  return workspace.workspaceFolders[0].uri.scheme;
+}
+
 export function findSelectionContent(): SelectionInfo | undefined {
   const editor = window.activeTextEditor;
   if (editor === undefined) {

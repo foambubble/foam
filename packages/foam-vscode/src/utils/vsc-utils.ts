@@ -11,7 +11,8 @@ export const toVsCodeRange = (r: FoamRange): Range =>
 
 export const toVsCodeUri = (u: FoamURI): Uri => Uri.from(u);
 
-export const fromVsCodeUri = (u: Uri): FoamURI => FoamURI.parse(u.toString());
+export const fromVsCodeUri = (u: Uri): FoamURI =>
+  FoamURI.parse(u.toString(), null);
 
 /**
  * A class that wraps context value, syncs it via setContext, and provides a typed interface to it.

@@ -7,13 +7,16 @@ describe('Foam URI', () => {
   describe('URI parsing', () => {
     const base = URI.file('/path/to/file.md');
     test.each([
-      ['https://www.google.com', URI.parse('https://www.google.com')],
-      ['/path/to/a/file.md', URI.parse('file:///path/to/a/file.md')],
-      ['../relative/file.md', URI.parse('file:///path/relative/file.md')],
+      ['https://www.google.com', URI.parse('https://www.google.com', 'file')],
+      ['/path/to/a/file.md', URI.parse('file:///path/to/a/file.md', 'file')],
+      [
+        '../relative/file.md',
+        URI.parse('file:///path/relative/file.md', 'file'),
+      ],
       ['#section', base.with({ fragment: 'section' })],
       [
         '../relative/file.md#section',
-        URI.parse('file:/path/relative/file.md#section'),
+        URI.parse('file:///path/relative/file.md#section', 'file'),
       ],
     ])('URI Parsing (%s)', (input, exp) => {
       const result = base.resolve(input);
@@ -25,8 +28,8 @@ describe('Foam URI', () => {
     });
 
     it('normalizes the Windows drive letter to upper case', () => {
-      const upperCase = URI.parse('file:///C:/this/is/a/Path');
-      const lowerCase = URI.parse('file:///c:/this/is/a/Path');
+      const upperCase = URI.parse('file:///C:/this/is/a/Path', 'file');
+      const lowerCase = URI.parse('file:///c:/this/is/a/Path', 'file');
       expect(upperCase.path).toEqual('/C:/this/is/a/Path');
       expect(lowerCase.path).toEqual('/C:/this/is/a/Path');
       expect(upperCase.toFsPath()).toEqual('C:\\this\\is\\a\\Path');
@@ -35,11 +38,11 @@ describe('Foam URI', () => {
 
     it('consistently parses file paths', () => {
       const win1 = URI.file('c:\\this\\is\\a\\path');
-      const win2 = URI.parse('c:\\this\\is\\a\\path');
+      const win2 = URI.parse('c:\\this\\is\\a\\path', 'file');
       expect(win1).toEqual(win2);
 
       const unix1 = URI.file('/this/is/a/path');
-      const unix2 = URI.parse('/this/is/a/path');
+      const unix2 = URI.parse('/this/is/a/path', 'file');
       expect(unix1).toEqual(unix2);
     });
 
@@ -193,15 +196,13 @@ describe('asAbsoluteUri', () => {
         );
       });
 
-      it('should use case-sensitive path comparison for Windows paths when checking if URI is already a subfolder', () => {
+      it('should use case-insensitive path comparison for Windows paths when checking if URI is already a subfolder', () => {
         const absolutePath = 'C:\\Workspace\\subfolder\\file.md'; // Different case
         const baseFolder = URI.file('C:\\workspace'); // lowercase
         const result = asAbsoluteUri(absolutePath, [baseFolder], true);
 
         // Should be forced to subfolder because case-sensitive comparison fails
-        expect(result.toFsPath()).toEqual(
-          'C:\\workspace\\C:\\Workspace\\subfolder\\file.md'
-        );
+        expect(result.toFsPath()).toEqual('C:\\Workspace\\subfolder\\file.md');
       });
 
       it('should not force Windows subfolder when URI is exactly a case-sensitive match', () => {

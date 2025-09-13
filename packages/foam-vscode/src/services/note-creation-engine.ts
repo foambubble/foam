@@ -70,7 +70,7 @@ export class NoteCreationEngine {
       this.validateNoteCreationResult(result);
 
       if (!(result.filepath instanceof URI)) {
-        result.filepath = URI.parse(result.filepath);
+        result.filepath = this.roots[0].forPath(result.filepath);
       }
       return result;
     } catch (error) {
@@ -108,7 +108,7 @@ export class NoteCreationEngine {
       (await this.generateDefaultFilepath(resolver));
 
     return {
-      filepath: URI.parse(filepath),
+      filepath: this.roots[0].forPath(filepath),
       content: cleanContent,
     };
   }

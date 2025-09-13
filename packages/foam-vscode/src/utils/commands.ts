@@ -14,7 +14,7 @@ export function describeCommand<T>(
 }
 
 export function commandAsURI<T>(command: CommandDescriptor<T>) {
-  return Uri.parse(`command:${command.name}`).with({
+  return Uri.parse(`command:${command.name}`, null).with({
     query: encodeURIComponent(JSON.stringify(command.params)),
   });
 }

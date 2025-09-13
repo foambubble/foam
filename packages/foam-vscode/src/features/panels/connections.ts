@@ -14,6 +14,7 @@ import {
 } from './utils/tree-view-utils';
 import { BaseTreeProvider } from './utils/base-tree-provider';
 import { isNone } from '../../core/utils';
+import { getWorkspaceDefaultScheme } from '../../services/editor';
 
 export default async function activate(
   context: vscode.ExtensionContext,
@@ -140,7 +141,7 @@ export class ConnectionsTreeDataProvider extends BaseTreeProvider<vscode.TreeIte
 
     const resourceItems = [];
     for (const [uriString, items] of byResource.entries()) {
-      const uri = URI.parse(uriString);
+      const uri = URI.parse(uriString, getWorkspaceDefaultScheme());
       const item = uri.isPlaceholder()
         ? new UriTreeItem(uri, {
             collapsibleState: vscode.TreeItemCollapsibleState.Expanded,

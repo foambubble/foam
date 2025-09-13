@@ -5,6 +5,7 @@
 // See LICENSE for details
 
 import { CharCode } from '../common/charCode';
+import { isNone } from '../utils';
 import * as pathUtils from '../utils/path';
 
 /**
@@ -44,13 +45,31 @@ export class URI {
     this.fragment = from.fragment ?? _empty;
   }
 
-  static parse(value: string): URI {
+  /**
+   * Parses a string value into a URI object.
+   * @param value the string value of the URI
+   * @param defaultScheme the default scheme to use if none is provided in the value.
+   * - if a `string`, it will be used as the default scheme
+   * - if a `URI`, its scheme will be used as the default scheme
+   * - if `null`, no default scheme should be used (which forces `value` to have a scheme)
+   * @returns the parsed URI object
+   * @throws if no scheme is provided in value and no default scheme is given
+   */
+  static parse(value: string, defaultScheme: URI | string | null): URI {
     const match = _regexp.exec(value);
     if (!match) {
       return new URI();
     }
+    defaultScheme =
+      defaultScheme instanceof URI
+        ? defaultScheme.scheme
+        : (defaultScheme as string | null);
+    const scheme = match[2] || defaultScheme;
+    if (isNone(scheme)) {
+      throw new Error(`Invalid URI: The URI scheme is missing: ${value}`);
+    }
     return new URI({
-      scheme: match[2] || 'file',
+      scheme,
       authority: percentDecode(match[4] ?? _empty),
       path: pathUtils.fromFsPath(percentDecode(match[5] ?? _empty))[0],
       query: percentDecode(match[7] ?? _empty),
@@ -73,7 +92,7 @@ export class URI {
   }
 
   resolve(value: string | URI, isDirectory = false): URI {
-    const uri = value instanceof URI ? value : URI.parse(value);
+    const uri = value instanceof URI ? value : URI.parse(value, 'file');
     if (!uri.isAbsolute()) {
       if (uri.scheme === 'file' || uri.scheme === 'placeholder') {
         let newUri = this.with({ fragment: uri.fragment });
@@ -124,6 +143,15 @@ export class URI {
     return new URI({ ...this, path });
   }
 
+  /**
+   * Creates a new URI with the specified changes.
+   * Note that this does not validate the resulting URI, e.g. you can
+   * set the path to a relative path.
+   * If you want to ensure that the path is properly formatted, use `forPath` instead.
+   *
+   * @param change an object that describes the desired changes to the URI.
+   * @returns a new URI instance with the updated fields
+   */
   with(change: {
     scheme?: string;
     authority?: string;
@@ -138,6 +166,20 @@ export class URI {
       query: change.query ?? this.query,
       fragment: change.fragment ?? this.fragment,
     });
+  }
+
+  /**
+   * Creates a new URI with the specified path.
+   * The difference between `with({ path })` and `forPath(path)` is that
+   * this function will ensure that the path is properly formatted (e.g. starting with a `/`)
+   * whereas `with` will take the path "as is".
+   *
+   * @param path the new path
+   * @returns a new URI instance with the updated path
+   */
+  forPath(path: string): URI {
+    const formattedPath = pathUtils.fromFsPath(percentDecode(path))[0];
+    return new URI({ ...this, path: formattedPath });
   }
 
   /**
@@ -412,11 +454,13 @@ export function asAbsoluteUri(
   const isDrivePath = /^[a-zA-Z]:/.test(path);
   // Check if this is already a POSIX absolute path
   if (path.startsWith('/') || isDrivePath) {
-    const uri = URI.parse(path); // Validate the path
+    const uri = baseFolders[0].forPath(path); // Validate the path
 
     if (forceSubfolder) {
       const isAlreadySubfolder = baseFolders.some(folder =>
-        uri.path.startsWith(folder.path)
+        isDrivePath
+          ? uri.path.toLowerCase().startsWith(folder.path.toLowerCase())
+          : uri.path.startsWith(folder.path)
       );
       if (!isAlreadySubfolder) {
         return baseFolders[0].joinPath(uri.path);

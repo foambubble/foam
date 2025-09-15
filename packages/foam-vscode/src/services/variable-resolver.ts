@@ -190,6 +190,12 @@ export class Resolver implements VariableResolver {
             String(this.foamDate.getDate().valueOf()).padStart(2, '0')
           );
           break;
+        case 'FOAM_DATE_DAY_ISO':
+          // ISO 8601 weekday: Monday=1, Sunday=7
+          value = Promise.resolve(
+            String(((this.foamDate.getDay() + 6) % 7) + 1)
+          );
+          break;
         case 'FOAM_DATE_WEEK': {
           // https://en.wikipedia.org/wiki/ISO_8601#Week_dates
           const date = new Date(this.foamDate);

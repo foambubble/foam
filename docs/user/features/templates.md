@@ -240,20 +240,31 @@ Markdown templates can use all the variables available in [VS Code Snippets](htt
 
 In addition, you can also use variables provided by Foam:
 
-| Name                 | Description                                                                                                                                                                                                                                  |
-| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `FOAM_SELECTED_TEXT` | Foam will fill it with selected text when creating a new note, if any text is selected. Selected text will be replaced with a wikilink to the new                                                                                            |
-| `FOAM_TITLE`         | The title of the note. If used, Foam will prompt you to enter a title for the note.                                                                                                                                                          |
-| `FOAM_TITLE_SAFE`    | The title of the note in a file system safe format. If used, Foam will prompt you to enter a title for the note unless `FOAM_TITLE` has already caused the prompt.                                                                           |
-| `FOAM_SLUG`          | The sluggified title of the note (using the default github slug method). If used, Foam will prompt you to enter a title for the note unless `FOAM_TITLE` has already caused the prompt.                                                      |
-| `FOAM_CURRENT_DIR`   | The current editor's directory path. Resolves to the directory of the currently active file, or falls back to workspace root if no editor is active. Useful for creating notes in the current directory context.                             |
-| `FOAM_DATE_*`        | `FOAM_DATE_YEAR`, `FOAM_DATE_MONTH`, `FOAM_DATE_WEEK` etc. Foam-specific versions of [VS Code's datetime snippet variables](https://code.visualstudio.com/docs/editor/userdefinedsnippets#_variables). Prefer these versions over VS Code's. |
+| Name                 | Description                                                                                                                                                                                                                                                       |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `FOAM_SELECTED_TEXT` | Foam will fill it with selected text when creating a new note, if any text is selected. Selected text will be replaced with a wikilink to the new                                                                                                                 |
+| `FOAM_TITLE`         | The title of the note. If used, Foam will prompt you to enter a title for the note.                                                                                                                                                                               |
+| `FOAM_TITLE_SAFE`    | The title of the note in a file system safe format. If used, Foam will prompt you to enter a title for the note unless `FOAM_TITLE` has already caused the prompt.                                                                                                |
+| `FOAM_SLUG`          | The sluggified title of the note (using the default github slug method). If used, Foam will prompt you to enter a title for the note unless `FOAM_TITLE` has already caused the prompt.                                                                           |
+| `FOAM_CURRENT_DIR`   | The current editor's directory path. Resolves to the directory of the currently active file, or falls back to workspace root if no editor is active. Useful for creating notes in the current directory context.                                                  |
+| `FOAM_DATE_*`        | `FOAM_DATE_YEAR`, `FOAM_DATE_MONTH`, `FOAM_DATE_WEEK`, `FOAM_DATE_DAY_ISO` etc. Foam-specific versions of [VS Code's datetime snippet variables](https://code.visualstudio.com/docs/editor/userdefinedsnippets#_variables). Prefer these versions over VS Code's. |
 
 ### `FOAM_DATE_*` variables
 
 Foam defines its own set of datetime variables that have a similar behaviour as [VS Code's datetime snippet variables](https://code.visualstudio.com/docs/editor/userdefinedsnippets#_variables).
 
-For example, `FOAM_DATE_YEAR` has the same behaviour as VS Code's `CURRENT_YEAR`, `FOAM_DATE_SECONDS_UNIX` has the same behaviour as `CURRENT_SECONDS_UNIX`, etc.
+Supported variables include:
+
+- `FOAM_DATE_YEAR`: 4-digit year (e.g. 2025)
+- `FOAM_DATE_MONTH`: 2-digit month (e.g. 09)
+- `FOAM_DATE_WEEK`: ISO 8601 week number (e.g. 37)
+- `FOAM_DATE_DAY_ISO`: ISO 8601 weekday number (1-7, where Monday=1, Sunday=7)
+- `FOAM_DATE_DATE`: 2-digit day of month (e.g. 15)
+- `FOAM_DATE_DAY_NAME`: Full weekday name (e.g. Monday)
+- `FOAM_DATE_DAY_NAME_SHORT`: Short weekday name (e.g. Mon)
+- `FOAM_DATE_HOUR`, `FOAM_DATE_MINUTE`, `FOAM_DATE_SECOND`, `FOAM_DATE_SECONDS_UNIX`, etc.
+
+For example, `FOAM_DATE_YEAR` has the same behaviour as VS Code's `CURRENT_YEAR`, `FOAM_DATE_SECONDS_UNIX` has the same behaviour as `CURRENT_SECONDS_UNIX`, etc. `FOAM_DATE_DAY_ISO` returns the ISO weekday number (Monday=1, Sunday=7), which is useful for ISO week date formats like `2025-W37-5`.
 
 By default, prefer using the `FOAM_DATE_` versions. The datetime used to compute the values will be the same for both `FOAM_DATE_` and VS Code's variables, with the exception of the creation notes using the daily note template.
 
@@ -386,6 +397,6 @@ existing_frontmatter: 'Existing Frontmatter block'
 This is the rest of the template
 ```
 
-[//begin]: # "Autogenerated link references for markdown compatibility"
-[daily-notes]: daily-notes.md "Daily Notes"
-[//end]: # "Autogenerated link references"
+[//begin]: # 'Autogenerated link references for markdown compatibility'
+[daily-notes]: daily-notes.md 'Daily Notes'
+[//end]: # 'Autogenerated link references'

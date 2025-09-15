@@ -91,7 +91,11 @@ export class MarkdownResourceProvider implements ResourceProvider {
             : './' + target;
         targetUri =
           workspace.find(path, resource.uri)?.uri ??
-          URI.placeholder(resource.uri.resolve(path).path);
+          URI.placeholder(
+            URI.parse(path).isAbsolute()
+              ? workspace.resolveRoot(resource.uri).joinPath(path).path
+              : resource.uri.resolve(path).path
+          );
         if (section && !targetUri.isPlaceholder()) {
           targetUri = targetUri.with({ fragment: section });
         }

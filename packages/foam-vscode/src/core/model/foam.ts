@@ -1,6 +1,6 @@
 import { IDisposable } from '../common/lifecycle';
 import { IDataStore, IMatcher, IWatcher } from '../services/datastore';
-import { FoamWorkspace } from './workspace';
+import { FoamWorkspace, RootChecker, DummyRootChecker } from './workspace';
 import { FoamGraph } from './graph';
 import { ResourceParser } from './note';
 import { ResourceProvider } from './provider';
@@ -26,14 +26,16 @@ export const bootstrap = async (
   dataStore: IDataStore,
   parser: ResourceParser,
   initialProviders: ResourceProvider[],
-  defaultExtension: string = '.md'
+  defaultExtension: string = '.md',
+  checker: RootChecker = new DummyRootChecker()
 ) => {
   const workspace = await withTimingAsync(
     () =>
       FoamWorkspace.fromProviders(
         initialProviders,
         dataStore,
-        defaultExtension
+        defaultExtension,
+        checker
       ),
     ms => Logger.info(`Workspace loaded in ${ms}ms`)
   );

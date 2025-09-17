@@ -4,6 +4,16 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.27.7] - 2025-09-13
+
+Features:
+
+- Added `FOAM_DATE_DAY_ISO` template variable for ISO weekday number (1-7, Monday=1)
+
+Fixes and Improvements:
+
+- Fixed root-path relative links opening new notes instead of existing files (#1505)
+
 ## [0.27.6] - 2025-09-13
 
 Fixes and Improvements:

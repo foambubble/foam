@@ -170,6 +170,51 @@ export const Uri = {
   },
 };
 
+// VS Code Location class
+export class Location {
+  constructor(public uri: Uri, public range: Range) {}
+}
+
+// VS Code SymbolKind enum
+export enum SymbolKind {
+  File = 0,
+  Module = 1,
+  Namespace = 2,
+  Package = 3,
+  Class = 4,
+  Method = 5,
+  Property = 6,
+  Field = 7,
+  Constructor = 8,
+  Enum = 9,
+  Interface = 10,
+  Function = 11,
+  Variable = 12,
+  Constant = 13,
+  String = 14,
+  Number = 15,
+  Boolean = 16,
+  Array = 17,
+  Object = 18,
+  Key = 19,
+  Null = 20,
+  EnumMember = 21,
+  Struct = 22,
+  Event = 23,
+  Operator = 24,
+  TypeParameter = 25,
+}
+
+// VS Code SymbolInformation class
+export class SymbolInformation {
+  constructor(
+    public name: string,
+    public kind: SymbolKind,
+    public containerName: string,
+    public location: Location
+  ) {}
+}
+
 // Selection extends Range
 export class Selection extends Range {
   public readonly anchor: Position;
@@ -1537,6 +1582,15 @@ export const commands = {
 export const languages = {
   registerCodeLensProvider(selector: any, provider: any): Disposable {
     // Mock code lens provider registration
+    return {
+      dispose: () => {
+        // No-op
+      },
+    };
+  },
+
+  registerWorkspaceSymbolProvider(provider: any): Disposable {
+    // Mock workspace symbol provider registration
     return {
       dispose: () => {
         // No-op

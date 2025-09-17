@@ -104,7 +104,6 @@ describe('Daily note creation and template processing', () => {
       const targetDate = new Date(2021, 8, 12); // September 12, 2021
 
       const template = await createFile(
-        // eslint-disable-next-line no-template-curly-in-string
         `# \${FOAM_DATE_YEAR}-\${FOAM_DATE_MONTH}-\${FOAM_DATE_DATE}
 
 Year: \${FOAM_DATE_YEAR} (short: \${FOAM_DATE_YEAR_SHORT})

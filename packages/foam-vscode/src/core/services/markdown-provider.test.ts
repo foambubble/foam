@@ -309,6 +309,101 @@ describe('Link resolution', () => {
       expect(ws.resolveLink(noteC, noteC.links[0])).toEqual(noteA.uri);
       expect(noteD.links).toEqual([]);
     });
+
+    describe('Workspace-relative paths (root-path relative)', () => {
+      it('should resolve workspace-relative paths starting with /', () => {
+        const noteA = createTestNote({
+          uri: '/workspace/dir1/page-a.md',
+          links: [{ to: '/dir2/page-b.md' }],
+        });
+        const noteB = createTestNote({
+          uri: '/workspace/dir2/page-b.md',
+        });
+
+        const ws = createTestWorkspace([URI.file('/workspace')]);
+
+        ws.set(noteA).set(noteB);
+        expect(ws.resolveLink(noteA, noteA.links[0])).toEqual(noteB.uri);
+      });
+
+      it('should resolve workspace-relative paths with nested directories', () => {
+        const noteA = createTestNote({
+          uri: '/workspace/project/notes/page-a.md',
+          links: [{ to: '/project/assets/image.png' }],
+        });
+        const assetB = createTestNote({
+          uri: '/workspace/project/assets/image.png',
+        });
+
+        const ws = createTestWorkspace([URI.file('/workspace')]);
+
+        ws.set(noteA).set(assetB);
+        expect(ws.resolveLink(noteA, noteA.links[0])).toEqual(assetB.uri);
+      });
+
+      it('should handle workspace-relative paths with fragments', () => {
+        const noteA = createTestNote({
+          uri: '/workspace/dir1/page-a.md',
+          links: [{ to: '/dir2/page-b.md#section' }],
+        });
+        const noteB = createTestNote({
+          uri: '/workspace/dir2/page-b.md',
+        });
+
+        const ws = createTestWorkspace([URI.file('/workspace')]);
+
+        ws.set(noteA).set(noteB);
+        const resolved = ws.resolveLink(noteA, noteA.links[0]);
+        expect(resolved).toEqual(noteB.uri.with({ fragment: 'section' }));
+      });
+
+      it('should fall back to placeholder for non-existent workspace-relative paths', () => {
+        const noteA = createTestNote({
+          uri: '/workspace/dir1/page-a.md',
+          links: [{ to: '/dir2/non-existent.md' }],
+        });
+
+        const ws = createTestWorkspace([URI.file('/workspace')]);
+
+        ws.set(noteA);
+        const resolved = ws.resolveLink(noteA, noteA.links[0]);
+        expect(resolved.isPlaceholder()).toBe(true);
+        expect(resolved.path).toEqual('/workspace/dir2/non-existent.md');
+      });
+
+      it('should work with multiple workspace roots', () => {
+        const noteA = createTestNote({
+          uri: '/workspace1/dir1/page-a.md',
+          links: [{ to: '/shared/page-b.md' }],
+        });
+        const noteB = createTestNote({
+          uri: '/workspace2/shared/page-b.md',
+        });
+
+        const ws = createTestWorkspace([
+          URI.file('/workspace1'),
+          URI.file('/workspace2'),
+        ]);
+
+        ws.set(noteA).set(noteB);
+        expect(ws.resolveLink(noteA, noteA.links[0])).toEqual(noteB.uri);
+      });
+
+      it('should preserve existing absolute path behavior when no workspace roots provided', () => {
+        const noteA = createTestNote({
+          uri: '/path/to/page-a.md',
+          links: [{ to: '/path/to/another/page-b.md' }],
+        });
+        const noteB = createTestNote({
+          uri: '/path/to/another/page-b.md',
+        });
+
+        const ws = createTestWorkspace();
+        ws.set(noteA).set(noteB);
+        // Default provider without workspace roots should work as before
+        expect(ws.resolveLink(noteA, noteA.links[0])).toEqual(noteB.uri);
+      });
+    });
   });
 });
 

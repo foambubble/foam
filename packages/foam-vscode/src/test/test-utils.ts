@@ -29,7 +29,7 @@ const position = Range.create(0, 0, 0, 100);
  */
 export const strToUri = URI.file;
 
-export const createTestWorkspace = () => {
+export const createTestWorkspace = (workspaceRoots: URI[] = []) => {
   const workspace = new FoamWorkspace();
   const parser = createMarkdownParser();
   const provider = new MarkdownResourceProvider(
@@ -37,7 +37,9 @@ export const createTestWorkspace = () => {
       read: _ => Promise.resolve(''),
       list: () => Promise.resolve([]),
     },
-    parser
+    parser,
+    ['.md'],
+    workspaceRoots
   );
   workspace.registerProvider(provider);
   return workspace;

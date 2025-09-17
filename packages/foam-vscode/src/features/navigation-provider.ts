@@ -115,21 +115,21 @@ export class NavigationProvider
    */
   private getTagReferences(tagLabel: string): vscode.Location[] {
     const references: vscode.Location[] = [];
-    const resourceUris = this.tags.tags.get(tagLabel);
-    for (const uri of resourceUris) {
-      const resource = this.workspace.get(uri);
-      // Find all tags in the resource that match the target tag label
-      const matchingTags = resource.tags.filter(tag => tag.label === tagLabel);
 
-      // Convert each matching tag to a VS Code location
-      for (const tag of matchingTags) {
-        references.push(
-          new vscode.Location(
-            toVsCodeUri(resource.uri),
-            toVsCodeRange(tag.range)
-          )
-        );
-      }
+    // Get tag locations from FoamTags
+    const tagLocations = this.tags.tags.get(tagLabel);
+    if (!tagLocations) {
+      return references;
+    }
+
+    // Convert each tag location to a VS Code location
+    for (const tagLocation of tagLocations) {
+      references.push(
+        new vscode.Location(
+          toVsCodeUri(tagLocation.uri),
+          toVsCodeRange(tagLocation.range)
+        )
+      );
     }
 
     return references;

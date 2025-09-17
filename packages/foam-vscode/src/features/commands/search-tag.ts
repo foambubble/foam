@@ -49,10 +49,8 @@ export default async function activate(
         }
 
         // Use VS Code's built-in search with the tag pattern
-        const searchQuery = `#${tagLabel}`;
-
         await vscode.commands.executeCommand('workbench.action.findInFiles', {
-          query: searchQuery,
+          query: `#${tagLabel}`,
           triggerSearch: true,
           matchWholeWord: false,
           isCaseSensitive: true,

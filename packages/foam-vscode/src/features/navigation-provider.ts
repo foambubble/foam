@@ -11,6 +11,7 @@ import { CREATE_NOTE_COMMAND } from './commands/create-note';
 import { commandAsURI } from '../utils/commands';
 import { Location } from '../core/model/location';
 import { getFoamDocSelectors } from '../services/editor';
+import { FoamTags } from '../core/model/tags';
 
 export default async function activate(
   context: vscode.ExtensionContext,
@@ -21,7 +22,8 @@ export default async function activate(
   const navigationProvider = new NavigationProvider(
     foam.workspace,
     foam.graph,
-    foam.services.parser
+    foam.services.parser,
+    foam.tags
   );
 
   context.subscriptions.push(
@@ -61,7 +63,8 @@ export class NavigationProvider
   constructor(
     private workspace: FoamWorkspace,
     private graph: FoamGraph,
-    private parser: ResourceParser
+    private parser: ResourceParser,
+    private tags: FoamTags
   ) {}
 
   /**
@@ -91,18 +94,20 @@ export class NavigationProvider
     const targetLink: ResourceLink | undefined = resource.links.find(link =>
       Range.containsPosition(link.range, position)
     );
-    if (!targetLink) {
-      return;
+    if (targetLink) {
+      const uri = this.workspace.resolveLink(resource, targetLink);
+      return this.graph
+        .getBacklinks(uri)
+        .map(
+          connection =>
+            new vscode.Location(
+              toVsCodeUri(connection.source),
+              toVsCodeRange(connection.link.range)
+            )
+        );
     }
 
-    const uri = this.workspace.resolveLink(resource, targetLink);
-
-    return this.graph.getBacklinks(uri).map(connection => {
-      return new vscode.Location(
-        toVsCodeUri(connection.source),
-        toVsCodeRange(connection.link.range)
-      );
-    });
+    return;
   }
 
   /**
@@ -110,9 +115,9 @@ export class NavigationProvider
    */
   private getTagReferences(tagLabel: string): vscode.Location[] {
     const references: vscode.Location[] = [];
-
-    // Iterate through all resources in the workspace
-    for (const resource of this.workspace.resources()) {
+    const resourceUris = this.tags.tags.get(tagLabel);
+    for (const uri of resourceUris) {
+      const resource = this.workspace.get(uri);
       // Find all tags in the resource that match the target tag label
       const matchingTags = resource.tags.filter(tag => tag.label === tagLabel);
 

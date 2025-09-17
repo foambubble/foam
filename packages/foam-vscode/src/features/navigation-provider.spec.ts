@@ -13,6 +13,7 @@ import { FoamGraph } from '../core/model/graph';
 import { commandAsURI } from '../utils/commands';
 import { CREATE_NOTE_COMMAND } from './commands/create-note';
 import { Location } from '../core/model/location';
+import { FoamTags } from '../core/model/tags';
 
 describe('Document navigation', () => {
   const parser = createMarkdownParser([]);
@@ -33,9 +34,10 @@ describe('Document navigation', () => {
       const { uri, content } = await createFile('');
       const ws = createTestWorkspace().set(parser.parse(uri, content));
       const graph = FoamGraph.fromWorkspace(ws);
+      const tags = FoamTags.fromWorkspace(ws);
 
       const doc = await vscode.workspace.openTextDocument(toVsCodeUri(uri));
-      const provider = new NavigationProvider(ws, graph, parser);
+      const provider = new NavigationProvider(ws, graph, parser, tags);
       const links = provider.provideDocumentLinks(doc);
 
       expect(links.length).toEqual(0);
@@ -47,9 +49,10 @@ describe('Document navigation', () => {
       );
       const ws = createTestWorkspace().set(parser.parse(uri, content));
       const graph = FoamGraph.fromWorkspace(ws);
+      const tags = FoamTags.fromWorkspace(ws);
 
       const doc = await vscode.workspace.openTextDocument(toVsCodeUri(uri));
-      const provider = new NavigationProvider(ws, graph, parser);
+      const provider = new NavigationProvider(ws, graph, parser, tags);
       const links = provider.provideDocumentLinks(doc);
 
       expect(links.length).toEqual(0);
@@ -62,9 +65,10 @@ describe('Document navigation', () => {
         .set(parser.parse(fileA.uri, fileA.content))
         .set(parser.parse(fileA.uri, fileB.content));
       const graph = FoamGraph.fromWorkspace(ws);
+      const tags = FoamTags.fromWorkspace(ws);
 
       const { doc } = await showInEditor(fileB.uri);
-      const provider = new NavigationProvider(ws, graph, parser);
+      const provider = new NavigationProvider(ws, graph, parser, tags);
       const links = provider.provideDocumentLinks(doc);
 
       expect(links.length).toEqual(0);
@@ -75,9 +79,10 @@ describe('Document navigation', () => {
       const noteA = parser.parse(fileA.uri, fileA.content);
       const ws = createTestWorkspace().set(noteA);
       const graph = FoamGraph.fromWorkspace(ws);
+      const tags = FoamTags.fromWorkspace(ws);
 
       const { doc } = await showInEditor(fileA.uri);
-      const provider = new NavigationProvider(ws, graph, parser);
+      const provider = new NavigationProvider(ws, graph, parser, tags);
       const links = provider.provideDocumentLinks(doc);
 
       expect(links.length).toEqual(1);
@@ -103,9 +108,10 @@ describe('Document navigation', () => {
         parser.parse(fileA.uri, fileA.content)
       );
       const graph = FoamGraph.fromWorkspace(ws);
+      const tags = FoamTags.fromWorkspace(ws);
 
       const { doc } = await showInEditor(fileA.uri);
-      const provider = new NavigationProvider(ws, graph, parser);
+      const provider = new NavigationProvider(ws, graph, parser, tags);
       const definitions = await provider.provideDefinition(
         doc,
         new vscode.Position(0, 22)
@@ -120,9 +126,10 @@ describe('Document navigation', () => {
         .set(parser.parse(fileA.uri, fileA.content))
         .set(parser.parse(fileB.uri, fileB.content));
       const graph = FoamGraph.fromWorkspace(ws);
+      const tags = FoamTags.fromWorkspace(ws);
 
       const { doc } = await showInEditor(fileB.uri);
-      const provider = new NavigationProvider(ws, graph, parser);
+      const provider = new NavigationProvider(ws, graph, parser, tags);
       const definitions = await provider.provideDefinition(
         doc,
         new vscode.Position(0, 22)
@@ -147,9 +154,10 @@ describe('Document navigation', () => {
         .set(parser.parse(fileA.uri, fileA.content))
         .set(parser.parse(fileB.uri, fileB.content));
       const graph = FoamGraph.fromWorkspace(ws);
+      const tags = FoamTags.fromWorkspace(ws);
 
       const { doc } = await showInEditor(fileB.uri);
-      const provider = new NavigationProvider(ws, graph, parser);
+      const provider = new NavigationProvider(ws, graph, parser, tags);
 
       const definitions = await provider.provideDefinition(
         doc,
@@ -170,9 +178,10 @@ describe('Document navigation', () => {
         .set(parser.parse(fileA.uri, fileA.content))
         .set(parser.parse(fileB.uri, fileB.content));
       const graph = FoamGraph.fromWorkspace(ws);
+      const tags = FoamTags.fromWorkspace(ws);
 
       const { doc } = await showInEditor(fileB.uri);
-      const provider = new NavigationProvider(ws, graph, parser);
+      const provider = new NavigationProvider(ws, graph, parser, tags);
       const definitions = await provider.provideDefinition(
         doc,
         new vscode.Position(0, 22)
@@ -193,9 +202,10 @@ describe('Document navigation', () => {
         .set(parser.parse(fileA.uri, fileA.content))
         .set(parser.parse(fileB.uri, fileB.content));
       const graph = FoamGraph.fromWorkspace(ws);
+      const tags = FoamTags.fromWorkspace(ws);
 
       const { doc } = await showInEditor(fileB.uri);
-      const provider = new NavigationProvider(ws, graph, parser);
+      const provider = new NavigationProvider(ws, graph, parser, tags);
       const definitions = await provider.provideDefinition(
         doc,
         new vscode.Position(3, 10)
@@ -223,9 +233,10 @@ describe('Document navigation', () => {
         .set(parser.parse(fileC.uri, fileC.content))
         .set(parser.parse(fileD.uri, fileD.content));
       const graph = FoamGraph.fromWorkspace(ws);
+      const tags = FoamTags.fromWorkspace(ws);
 
       const { doc } = await showInEditor(fileB.uri);
-      const provider = new NavigationProvider(ws, graph, parser);
+      const provider = new NavigationProvider(ws, graph, parser, tags);
 
       const refs = await provider.provideReferences(
         doc,
@@ -254,9 +265,10 @@ describe('Document navigation', () => {
         .set(parser.parse(fileB.uri, fileB.content))
         .set(parser.parse(fileC.uri, fileC.content));
       const graph = FoamGraph.fromWorkspace(ws);
+      const tags = FoamTags.fromWorkspace(ws);
 
       const { doc } = await showInEditor(fileA.uri);
-      const provider = new NavigationProvider(ws, graph, parser);
+      const provider = new NavigationProvider(ws, graph, parser, tags);
 
       // Test references for #tag1 (position 15 is within the #tag1 text)
       const tag1Refs = await provider.provideReferences(
@@ -282,9 +294,10 @@ describe('Document navigation', () => {
         parser.parse(fileA.uri, fileA.content)
       );
       const graph = FoamGraph.fromWorkspace(ws);
+      const tags = FoamTags.fromWorkspace(ws);
 
       const { doc } = await showInEditor(fileA.uri);
-      const provider = new NavigationProvider(ws, graph, parser);
+      const provider = new NavigationProvider(ws, graph, parser, tags);
 
       // Test references for #same-tag (clicking on first occurrence)
       const refs = await provider.provideReferences(
@@ -312,9 +325,10 @@ describe('Document navigation', () => {
         parser.parse(fileA.uri, fileA.content)
       );
       const graph = FoamGraph.fromWorkspace(ws);
+      const tags = FoamTags.fromWorkspace(ws);
 
       const { doc } = await showInEditor(fileA.uri);
-      const provider = new NavigationProvider(ws, graph, parser);
+      const provider = new NavigationProvider(ws, graph, parser, tags);
 
       // Position on "normal text" (not on a tag or link)
       const refs = await provider.provideReferences(

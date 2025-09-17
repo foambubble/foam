@@ -22,7 +22,11 @@ export default async function activate(
         // Handle both string and TagItem parameters
         if (typeof tagLabelOrItem === 'string') {
           tagLabel = tagLabelOrItem;
-        } else if (tagLabelOrItem && typeof tagLabelOrItem === 'object' && 'tag' in tagLabelOrItem) {
+        } else if (
+          tagLabelOrItem &&
+          typeof tagLabelOrItem === 'object' &&
+          'tag' in tagLabelOrItem
+        ) {
           tagLabel = tagLabelOrItem.tag;
         }
 

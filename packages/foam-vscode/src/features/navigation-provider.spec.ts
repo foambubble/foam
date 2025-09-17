@@ -244,7 +244,9 @@ describe('Document navigation', () => {
 
     it('should provide references for tags', async () => {
       const fileA = await createFile('This file has #tag1 and #tag2.');
-      const fileB = await createFile('This file also has #tag1 and other content.');
+      const fileB = await createFile(
+        'This file also has #tag1 and other content.'
+      );
       const fileC = await createFile('This file has #tag2 and #tag3.');
 
       const ws = createTestWorkspace()
@@ -272,10 +274,13 @@ describe('Document navigation', () => {
     });
 
     it('should provide references for tags with different positions', async () => {
-      const fileA = await createFile('Multiple #same-tag mentions #same-tag here.');
+      const fileA = await createFile(
+        'Multiple #same-tag mentions #same-tag here.'
+      );
 
-      const ws = createTestWorkspace()
-        .set(parser.parse(fileA.uri, fileA.content));
+      const ws = createTestWorkspace().set(
+        parser.parse(fileA.uri, fileA.content)
+      );
       const graph = FoamGraph.fromWorkspace(ws);
 
       const { doc } = await showInEditor(fileA.uri);
@@ -290,17 +295,22 @@ describe('Document navigation', () => {
       expect(refs.length).toEqual(2); // Both occurrences of #same-tag
 
       // Verify both ranges are correct
-      const sortedRefs = refs.sort((a, b) => a.range.start.character - b.range.start.character);
+      const sortedRefs = refs.sort(
+        (a, b) => a.range.start.character - b.range.start.character
+      );
 
       // First occurrence: "Multiple #same-tag mentions"
-      expect(sortedRefs[0].range.start.character).toBeLessThan(sortedRefs[1].range.start.character);
+      expect(sortedRefs[0].range.start.character).toBeLessThan(
+        sortedRefs[1].range.start.character
+      );
     });
 
     it('should not provide references when position is not on a tag', async () => {
       const fileA = await createFile('This file has #tag1 and normal text.');
 
-      const ws = createTestWorkspace()
-        .set(parser.parse(fileA.uri, fileA.content));
+      const ws = createTestWorkspace().set(
+        parser.parse(fileA.uri, fileA.content)
+      );
       const graph = FoamGraph.fromWorkspace(ws);
 
       const { doc } = await showInEditor(fileA.uri);

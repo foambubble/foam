@@ -112,7 +112,7 @@ export class NavigationProvider
    */
   private getTagReferences(tagLabel: string): vscode.Location[] {
     const references: vscode.Location[] = [];
-    const tagLocations = this.tags.tags.get(tagLabel);
+    const tagLocations = this.tags.tags.get(tagLabel) ?? [];
     for (const tagLocation of tagLocations) {
       references.push(
         new vscode.Location(

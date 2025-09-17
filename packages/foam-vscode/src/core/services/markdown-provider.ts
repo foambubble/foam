@@ -20,7 +20,8 @@ export class MarkdownResourceProvider implements ResourceProvider {
   constructor(
     private readonly dataStore: IDataStore,
     private readonly parser: ResourceParser,
-    public readonly noteExtensions: string[] = ['.md']
+    public readonly noteExtensions: string[] = ['.md'],
+    private readonly workspaceRoots: URI[] = []
   ) {}
 
   supports(uri: URI) {
@@ -82,16 +83,50 @@ export class MarkdownResourceProvider implements ResourceProvider {
         break;
       }
       case 'link': {
-        // force ambiguous links to be treated as relative
-        const path =
-          target.startsWith('/') ||
-          target.startsWith('./') ||
-          target.startsWith('../')
-            ? target
-            : './' + target;
-        targetUri =
-          workspace.find(path, resource.uri)?.uri ??
-          URI.placeholder(resource.uri.resolve(path).path);
+        let path: string;
+        let foundResource: Resource | null = null;
+
+        if (target.startsWith('/')) {
+          // Handle workspace-relative paths (root-path relative)
+          if (this.workspaceRoots.length > 0) {
+            // Try to resolve against each workspace root
+            for (const workspaceRoot of this.workspaceRoots) {
+              const candidatePath = target.substring(1); // Remove leading '/'
+              const absolutePath = workspaceRoot.joinPath(candidatePath);
+              const found = workspace.find(absolutePath);
+              if (found) {
+                foundResource = found;
+                break;
+              }
+            }
+
+            if (!foundResource) {
+              // Not found in any workspace root, create placeholder relative to first workspace root
+              const firstRoot = this.workspaceRoots[0];
+              const candidatePath = target.substring(1);
+              const absolutePath = firstRoot.joinPath(candidatePath);
+              targetUri = URI.placeholder(absolutePath.path);
+            } else {
+              targetUri = foundResource.uri;
+            }
+          } else {
+            // No workspace roots provided, fall back to existing behavior
+            path = target;
+            targetUri =
+              workspace.find(path, resource.uri)?.uri ??
+              URI.placeholder(resource.uri.resolve(path).path);
+          }
+        } else {
+          // Handle relative paths and non-root paths
+          path =
+            target.startsWith('./') || target.startsWith('../')
+              ? target
+              : './' + target;
+          targetUri =
+            workspace.find(path, resource.uri)?.uri ??
+            URI.placeholder(resource.uri.resolve(path).path);
+        }
+
         if (section && !targetUri.isPlaceholder()) {
           targetUri = targetUri.with({ fragment: section });
         }

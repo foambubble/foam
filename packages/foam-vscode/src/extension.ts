@@ -4,6 +4,7 @@ import { workspace, ExtensionContext, window, commands } from 'vscode';
 import { MarkdownResourceProvider } from './core/services/markdown-provider';
 import { bootstrap } from './core/model/foam';
 import { Logger } from './core/utils/log';
+import { fromVsCodeUri } from './utils/vsc-utils';
 
 import { features } from './features';
 import { VsCodeOutputLogger, exposeLogger } from './services/logging';
@@ -51,10 +52,16 @@ export async function activate(context: ExtensionContext) {
 
     const { notesExtensions, defaultExtension } = getNotesExtensions();
 
+    // Get workspace roots for workspace-relative path resolution
+    const workspaceRoots =
+      workspace.workspaceFolders?.map(folder => fromVsCodeUri(folder.uri)) ??
+      [];
+
     const markdownProvider = new MarkdownResourceProvider(
       dataStore,
       parser,
-      notesExtensions
+      notesExtensions,
+      workspaceRoots
     );
 
     const attachmentExtConfig = getAttachmentsExtensions();

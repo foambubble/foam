@@ -227,7 +227,7 @@ export class TagsProvider extends FolderTreeProvider<TagTreeItem, string> {
       const tagLocations = this.foamTags.tags.get(element.tag) ?? [];
       const resourceTagPromises = tagLocations.map(async tagLocation => {
         const note = this.workspace.get(tagLocation.uri);
-        return await ResourceRangeTreeItem.createStandardItem(
+        return ResourceRangeTreeItem.createStandardItem(
           this.workspace,
           note,
           tagLocation.range,

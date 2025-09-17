@@ -81,10 +81,7 @@ export class NavigationProvider
 
     // Check if position is on a tag first
     const targetTag = resource.tags.find(tag =>
-      Range.containsPosition(tag.range, {
-        line: position.line,
-        character: position.character,
-      })
+      Range.containsPosition(tag.range, position)
     );
     if (targetTag) {
       return this.getTagReferences(targetTag.label);
@@ -115,14 +112,7 @@ export class NavigationProvider
    */
   private getTagReferences(tagLabel: string): vscode.Location[] {
     const references: vscode.Location[] = [];
-
-    // Get tag locations from FoamTags
     const tagLocations = this.tags.tags.get(tagLabel);
-    if (!tagLocations) {
-      return references;
-    }
-
-    // Convert each tag location to a VS Code location
     for (const tagLocation of tagLocations) {
       references.push(
         new vscode.Location(
@@ -131,7 +121,6 @@ export class NavigationProvider
         )
       );
     }
-
     return references;
   }
 

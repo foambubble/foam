@@ -241,6 +241,80 @@ describe('Document navigation', () => {
         range: new vscode.Range(0, 23, 0, 23 + 9),
       });
     });
+
+    it('should provide references for tags', async () => {
+      const fileA = await createFile('This file has #tag1 and #tag2.');
+      const fileB = await createFile('This file also has #tag1 and other content.');
+      const fileC = await createFile('This file has #tag2 and #tag3.');
+
+      const ws = createTestWorkspace()
+        .set(parser.parse(fileA.uri, fileA.content))
+        .set(parser.parse(fileB.uri, fileB.content))
+        .set(parser.parse(fileC.uri, fileC.content));
+      const graph = FoamGraph.fromWorkspace(ws);
+
+      const { doc } = await showInEditor(fileA.uri);
+      const provider = new NavigationProvider(ws, graph, parser);
+
+      // Test references for #tag1 (position 15 is within the #tag1 text)
+      const tag1Refs = await provider.provideReferences(
+        doc,
+        new vscode.Position(0, 15)
+      );
+
+      expect(tag1Refs.length).toEqual(2); // #tag1 appears in fileA and fileB
+
+      // Sort references by file path for consistent testing
+      tag1Refs.sort((a, b) => a.uri.path.localeCompare(b.uri.path));
+
+      expect(tag1Refs[0].uri).toEqual(toVsCodeUri(fileA.uri));
+      expect(tag1Refs[1].uri).toEqual(toVsCodeUri(fileB.uri));
+    });
+
+    it('should provide references for tags with different positions', async () => {
+      const fileA = await createFile('Multiple #same-tag mentions #same-tag here.');
+
+      const ws = createTestWorkspace()
+        .set(parser.parse(fileA.uri, fileA.content));
+      const graph = FoamGraph.fromWorkspace(ws);
+
+      const { doc } = await showInEditor(fileA.uri);
+      const provider = new NavigationProvider(ws, graph, parser);
+
+      // Test references for #same-tag (clicking on first occurrence)
+      const refs = await provider.provideReferences(
+        doc,
+        new vscode.Position(0, 10) // Position within first #same-tag
+      );
+
+      expect(refs.length).toEqual(2); // Both occurrences of #same-tag
+
+      // Verify both ranges are correct
+      const sortedRefs = refs.sort((a, b) => a.range.start.character - b.range.start.character);
+
+      // First occurrence: "Multiple #same-tag mentions"
+      expect(sortedRefs[0].range.start.character).toBeLessThan(sortedRefs[1].range.start.character);
+    });
+
+    it('should not provide references when position is not on a tag', async () => {
+      const fileA = await createFile('This file has #tag1 and normal text.');
+
+      const ws = createTestWorkspace()
+        .set(parser.parse(fileA.uri, fileA.content));
+      const graph = FoamGraph.fromWorkspace(ws);
+
+      const { doc } = await showInEditor(fileA.uri);
+      const provider = new NavigationProvider(ws, graph, parser);
+
+      // Position on "normal text" (not on a tag or link)
+      const refs = await provider.provideReferences(
+        doc,
+        new vscode.Position(0, 30)
+      );
+
+      expect(refs).toBeUndefined();
+    });
+
     it.todo('should provide references for placeholders');
   });
 });

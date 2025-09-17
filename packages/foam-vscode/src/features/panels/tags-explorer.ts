@@ -99,6 +99,15 @@ export default async function activate(
           });
         }
       }
+    ),
+    vscode.commands.registerCommand(
+      'foam-vscode.search-tag-from-explorer',
+      async (tagItem: TagItem) => {
+        if (!tagItem || !tagItem.tag) {
+          return;
+        }
+        await vscode.commands.executeCommand('foam-vscode.search-tag', tagItem.tag);
+      }
     )
   );
 }

@@ -104,6 +104,14 @@
       }
     ],
     "menus": {
+      "view/item/context": [
+        {
+          "command": "foam-vscode.search-tag-from-explorer",
+          "when": "view == foam-vscode.tags-explorer && viewItem == tag",
+          "group": "inline",
+          "icon": "$(search)"
+        }
+      ],
       "view/title": [
         {
           "command": "foam-vscode.views.connections.show:backlinks",
@@ -351,6 +359,15 @@
       {
         "command": "foam-vscode.convert-link-style-incopy",
         "title": "Foam: Convert Link Format in Copy"
+      },
+      {
+        "command": "foam-vscode.search-tag",
+        "title": "Foam: Search Tag"
+      },
+      {
+        "command": "foam-vscode.search-tag-from-explorer",
+        "title": "Search Workspace for Tag",
+        "icon": "$(search)"
       },
       {
         "command": "foam-vscode.views.orphans.group-by:folder",

@@ -65,7 +65,7 @@ export class NavigationProvider
   ) {}
 
   /**
-   * Provide references for links and placeholders
+   * Provide references for links, placeholders, and tags
    */
   public provideReferences(
     document: vscode.TextDocument,
@@ -75,8 +75,24 @@ export class NavigationProvider
       fromVsCodeUri(document.uri),
       document.getText()
     );
+
+    // Check if position is on a tag first
+    const targetTag = resource.tags.find(tag =>
+      Range.containsPosition(tag.range, {
+        line: position.line,
+        character: position.character,
+      })
+    );
+    if (targetTag) {
+      return this.getTagReferences(targetTag.label);
+    }
+
+    // Check if position is on a link
     const targetLink: ResourceLink | undefined = resource.links.find(link =>
-      Range.containsPosition(link.range, position)
+      Range.containsPosition(link.range, {
+        line: position.line,
+        character: position.character,
+      })
     );
     if (!targetLink) {
       return;
@@ -90,6 +106,31 @@ export class NavigationProvider
         toVsCodeRange(connection.link.range)
       );
     });
+  }
+
+  /**
+   * Get all references for a given tag label across the workspace
+   */
+  private getTagReferences(tagLabel: string): vscode.Location[] {
+    const references: vscode.Location[] = [];
+
+    // Iterate through all resources in the workspace
+    for (const resource of this.workspace.resources()) {
+      // Find all tags in the resource that match the target tag label
+      const matchingTags = resource.tags.filter(tag => tag.label === tagLabel);
+
+      // Convert each matching tag to a VS Code location
+      for (const tag of matchingTags) {
+        references.push(
+          new vscode.Location(
+            toVsCodeUri(resource.uri),
+            toVsCodeRange(tag.range)
+          )
+        );
+      }
+    }
+
+    return references;
   }
 
   /**

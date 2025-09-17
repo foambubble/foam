@@ -164,7 +164,7 @@ export class TagsProvider extends FolderTreeProvider<TagTreeItem, string> {
 
   refresh(): void {
     this.tags = [...this.foamTags.tags]
-      .map(([tag, notes]) => ({ tag, notes }))
+      .map(([tag, resources]) => ({ tag, notes: resources.map(r => r.uri) }))
       .sort((a, b) => a.tag.localeCompare(b.tag));
     super.refresh();
   }
@@ -183,11 +183,13 @@ export class TagsProvider extends FolderTreeProvider<TagTreeItem, string> {
   }
 
   private countResourcesInSubtree(node: Folder<string>) {
-    const nChildren = walk(
-      node,
-      tag => this.foamTags.tags.get(tag)?.length ?? 0
-    ).reduce((acc, nResources) => acc + nResources, 0);
-    return nChildren;
+    const uniqueUris = new Set<string>();
+    walk(node, tag => {
+      const tagLocations = this.foamTags.tags.get(tag) ?? [];
+      tagLocations.forEach(location => uniqueUris.add(location.uri.toString()));
+      return 0; // Return value not used when collecting URIs
+    });
+    return uniqueUris.size;
   }
 
   createFolderTreeItem(
@@ -205,8 +207,9 @@ export class TagsProvider extends FolderTreeProvider<TagTreeItem, string> {
     node: Folder<string>
   ): TagItem {
     const nChildren = this.countResourcesInSubtree(node);
-    const resources = this.foamTags.tags.get(value) ?? [];
-    return new TagItem(node, nChildren, resources, parent);
+    const tagLocations = this.foamTags.tags.get(value) ?? [];
+    const resourceUris = tagLocations.map(location => location.uri);
+    return new TagItem(node, nChildren, resourceUris, parent);
   }
 
   async getChildren(element?: TagItem): Promise<TagTreeItem[]> {
@@ -219,20 +222,20 @@ export class TagsProvider extends FolderTreeProvider<TagTreeItem, string> {
     const subtags = await super.getChildren(element);
 
     // Compute the resources children
-    const resourceTags: ResourceRangeTreeItem[] = (element?.notes ?? [])
-      .map(uri => this.workspace.get(uri))
-      .reduce((acc, note) => {
-        const tags = note.tags.filter(t => t.label === element.tag);
-        const items = tags.map(t =>
-          ResourceRangeTreeItem.createStandardItem(
-            this.workspace,
-            note,
-            t.range,
-            'tag'
-          )
+    const resourceTags: ResourceRangeTreeItem[] = [];
+    if (element) {
+      const tagLocations = this.foamTags.tags.get(element.tag) ?? [];
+      const resourceTagPromises = tagLocations.map(async tagLocation => {
+        const note = this.workspace.get(tagLocation.uri);
+        return ResourceRangeTreeItem.createStandardItem(
+          this.workspace,
+          note,
+          tagLocation.range,
+          'tag'
         );
-        return [...acc, ...items];
-      }, []);
+      });
+      resourceTags.push(...(await Promise.all(resourceTagPromises)));
+    }
     const resources = (
       await groupRangesByResource(this.workspace, resourceTags)
     ).map(item => {

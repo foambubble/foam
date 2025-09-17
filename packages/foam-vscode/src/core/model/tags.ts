@@ -1,11 +1,12 @@
 import { FoamWorkspace } from './workspace';
-import { URI } from './uri';
 import { IDisposable } from '../common/lifecycle';
 import { debounce } from 'lodash';
 import { Emitter } from '../common/event';
+import { Tag } from './note';
+import { Location } from './location';
 
 export class FoamTags implements IDisposable {
-  public readonly tags: Map<string, URI[]> = new Map();
+  public readonly tags: Map<string, Location<Tag>[]> = new Map();
 
   private onDidUpdateEmitter = new Emitter<void>();
   onDidUpdate = this.onDidUpdateEmitter.event;
@@ -50,10 +51,10 @@ export class FoamTags implements IDisposable {
   update(): void {
     this.tags.clear();
     for (const resource of this.workspace.resources()) {
-      for (const tag of new Set(resource.tags.map(t => t.label))) {
-        const tagMeta = this.tags.get(tag) ?? [];
-        tagMeta.push(resource.uri);
-        this.tags.set(tag, tagMeta);
+      for (const tag of resource.tags) {
+        const tagLocations = this.tags.get(tag.label) ?? [];
+        tagLocations.push(Location.forObjectWithRange(resource.uri, tag));
+        this.tags.set(tag.label, tagLocations);
       }
     }
     this.onDidUpdateEmitter.fire();

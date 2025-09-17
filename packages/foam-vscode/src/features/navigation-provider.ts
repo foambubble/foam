@@ -11,6 +11,7 @@ import { CREATE_NOTE_COMMAND } from './commands/create-note';
 import { commandAsURI } from '../utils/commands';
 import { Location } from '../core/model/location';
 import { getFoamDocSelectors } from '../services/editor';
+import { FoamTags } from '../core/model/tags';
 
 export default async function activate(
   context: vscode.ExtensionContext,
@@ -21,7 +22,8 @@ export default async function activate(
   const navigationProvider = new NavigationProvider(
     foam.workspace,
     foam.graph,
-    foam.services.parser
+    foam.services.parser,
+    foam.tags
   );
 
   context.subscriptions.push(
@@ -61,11 +63,12 @@ export class NavigationProvider
   constructor(
     private workspace: FoamWorkspace,
     private graph: FoamGraph,
-    private parser: ResourceParser
+    private parser: ResourceParser,
+    private tags: FoamTags
   ) {}
 
   /**
-   * Provide references for links and placeholders
+   * Provide references for links, placeholders, and tags
    */
   public provideReferences(
     document: vscode.TextDocument,
@@ -75,21 +78,50 @@ export class NavigationProvider
       fromVsCodeUri(document.uri),
       document.getText()
     );
+
+    // Check if position is on a tag first
+    const targetTag = resource.tags.find(tag =>
+      Range.containsPosition(tag.range, position)
+    );
+    if (targetTag) {
+      return this.getTagReferences(targetTag.label);
+    }
+
+    // Check if position is on a link
     const targetLink: ResourceLink | undefined = resource.links.find(link =>
       Range.containsPosition(link.range, position)
     );
-    if (!targetLink) {
-      return;
+    if (targetLink) {
+      const uri = this.workspace.resolveLink(resource, targetLink);
+      return this.graph
+        .getBacklinks(uri)
+        .map(
+          connection =>
+            new vscode.Location(
+              toVsCodeUri(connection.source),
+              toVsCodeRange(connection.link.range)
+            )
+        );
     }
 
-    const uri = this.workspace.resolveLink(resource, targetLink);
+    return;
+  }
 
-    return this.graph.getBacklinks(uri).map(connection => {
-      return new vscode.Location(
-        toVsCodeUri(connection.source),
-        toVsCodeRange(connection.link.range)
+  /**
+   * Get all references for a given tag label across the workspace
+   */
+  private getTagReferences(tagLabel: string): vscode.Location[] {
+    const references: vscode.Location[] = [];
+    const tagLocations = this.tags.tags.get(tagLabel) ?? [];
+    for (const tagLocation of tagLocations) {
+      references.push(
+        new vscode.Location(
+          toVsCodeUri(tagLocation.uri),
+          toVsCodeRange(tagLocation.range)
+        )
       );
-    });
+    }
+    return references;
   }
 
   /**

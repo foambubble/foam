@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { Foam } from '../../core/model/foam';
+import { TagItem } from '../panels/tags-explorer';
 
 export const SEARCH_TAG_COMMAND = {
   command: 'foam-vscode.search-tag',
@@ -15,7 +16,16 @@ export default async function activate(
   context.subscriptions.push(
     vscode.commands.registerCommand(
       SEARCH_TAG_COMMAND.command,
-      async (tagLabel?: string) => {
+      async (tagLabelOrItem?: string | TagItem) => {
+        let tagLabel: string | undefined;
+
+        // Handle both string and TagItem parameters
+        if (typeof tagLabelOrItem === 'string') {
+          tagLabel = tagLabelOrItem;
+        } else if (tagLabelOrItem && typeof tagLabelOrItem === 'object' && 'tag' in tagLabelOrItem) {
+          tagLabel = tagLabelOrItem.tag;
+        }
+
         if (!tagLabel) {
           // If no tag provided, show tag picker
           const allTags = Array.from(foam.tags.tags.keys()).sort();

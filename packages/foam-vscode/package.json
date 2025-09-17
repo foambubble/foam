@@ -106,7 +106,7 @@
     "menus": {
       "view/item/context": [
         {
-          "command": "foam-vscode.search-tag-from-explorer",
+          "command": "foam-vscode.search-tag",
           "when": "view == foam-vscode.tags-explorer && viewItem == tag",
           "group": "inline",
           "icon": "$(search)"
@@ -362,11 +362,7 @@
       },
       {
         "command": "foam-vscode.search-tag",
-        "title": "Foam: Search Tag"
-      },
-      {
-        "command": "foam-vscode.search-tag-from-explorer",
-        "title": "Search Workspace for Tag",
+        "title": "Foam: Search Tag",
         "icon": "$(search)"
       },
       {

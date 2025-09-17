@@ -89,10 +89,7 @@ export class NavigationProvider
 
     // Check if position is on a link
     const targetLink: ResourceLink | undefined = resource.links.find(link =>
-      Range.containsPosition(link.range, {
-        line: position.line,
-        character: position.character,
-      })
+      Range.containsPosition(link.range, position)
     );
     if (!targetLink) {
       return;

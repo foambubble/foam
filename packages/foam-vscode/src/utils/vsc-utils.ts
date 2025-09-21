@@ -1,7 +1,8 @@
-import { Memento, Position, Range, Uri, commands } from 'vscode';
+import { Memento, Position, Range, Uri, TextEdit, commands } from 'vscode';
 import { Position as FoamPosition } from '../core/model/position';
 import { Range as FoamRange } from '../core/model/range';
 import { URI as FoamURI } from '../core/model/uri';
+import { TextEdit as FoamTextEdit } from '../core/services/text-edit';
 
 export const toVsCodePosition = (p: FoamPosition): Position =>
   new Position(p.line, p.character);
@@ -13,6 +14,9 @@ export const toVsCodeUri = (u: FoamURI): Uri => Uri.from(u);
 
 export const fromVsCodeUri = (u: Uri): FoamURI =>
   FoamURI.parse(u.toString(), null);
+
+export const toVsCodeTextEdit = (edit: FoamTextEdit): TextEdit =>
+  new TextEdit(toVsCodeRange(edit.range), edit.newText);
 
 /**
  * A class that wraps context value, syncs it via setContext, and provides a typed interface to it.

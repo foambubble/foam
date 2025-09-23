@@ -278,11 +278,9 @@ describe('Document navigation', () => {
 
       expect(tag1Refs.length).toEqual(2); // #tag1 appears in fileA and fileB
 
-      // Sort references by file path for consistent testing
-      tag1Refs.sort((a, b) => a.uri.path.localeCompare(b.uri.path));
-
-      expect(tag1Refs[0].uri).toEqual(toVsCodeUri(fileA.uri));
-      expect(tag1Refs[1].uri).toEqual(toVsCodeUri(fileB.uri));
+      const refUris = tag1Refs.map(ref => ref.uri);
+      expect(refUris).toContain(toVsCodeUri(fileA.uri));
+      expect(refUris).toContain(toVsCodeUri(fileB.uri));
     });
 
     it('should provide references for tags with different positions', async () => {

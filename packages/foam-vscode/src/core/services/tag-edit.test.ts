@@ -270,7 +270,7 @@ describe('TagEdit', () => {
       const result = TagEdit.validateTagRename(foamTags, 'oldtag', 'new tag');
 
       expect(result.isValid).toBe(false);
-      expect(result.message).toContain('cannot contain spaces');
+      expect(result.message).toContain('Invalid tag label');
     });
 
     it('should handle new tag name with # prefix', () => {
@@ -313,6 +313,174 @@ describe('TagEdit', () => {
       expect(result.sourceOccurrences).toBe(1);
       expect(result.targetOccurrences).toBe(1);
       expect(result.message).toContain('same as the current name');
+    });
+  });
+
+  describe('findChildTags', () => {
+    it('should find direct child tags', () => {
+      const ws = createTestWorkspace();
+
+      const page = createTestNote({
+        uri: '/page.md',
+        title: 'Page',
+        tags: ['project', 'project/frontend', 'project/backend', 'other'],
+      });
+
+      ws.set(page);
+
+      const foamTags = FoamTags.fromWorkspace(ws);
+      const childTags = TagEdit.findChildTags(foamTags, 'project');
+
+      expect(childTags).toEqual(['project/backend', 'project/frontend']);
+    });
+
+    it('should find nested child tags', () => {
+      const ws = createTestWorkspace();
+
+      const page = createTestNote({
+        uri: '/page.md',
+        title: 'Page',
+        tags: [
+          'project',
+          'project/frontend',
+          'project/frontend/react',
+          'project/backend',
+          'project/backend/api',
+          'other',
+        ],
+      });
+
+      ws.set(page);
+
+      const foamTags = FoamTags.fromWorkspace(ws);
+      const childTags = TagEdit.findChildTags(foamTags, 'project');
+
+      expect(childTags).toEqual([
+        'project/backend',
+        'project/backend/api',
+        'project/frontend',
+        'project/frontend/react',
+      ]);
+    });
+
+    it('should return empty array when no child tags exist', () => {
+      const ws = createTestWorkspace();
+
+      const page = createTestNote({
+        uri: '/page.md',
+        title: 'Page',
+        tags: ['project', 'other', 'standalone'],
+      });
+
+      ws.set(page);
+
+      const foamTags = FoamTags.fromWorkspace(ws);
+      const childTags = TagEdit.findChildTags(foamTags, 'project');
+
+      expect(childTags).toEqual([]);
+    });
+
+    it('should not return partial matches', () => {
+      const ws = createTestWorkspace();
+
+      const page = createTestNote({
+        uri: '/page.md',
+        title: 'Page',
+        tags: ['project', 'projectile', 'project-old'],
+      });
+
+      ws.set(page);
+
+      const foamTags = FoamTags.fromWorkspace(ws);
+      const childTags = TagEdit.findChildTags(foamTags, 'project');
+
+      expect(childTags).toEqual([]);
+    });
+  });
+
+  describe('createHierarchicalRenameEdits', () => {
+    it('should rename parent and all child tags', () => {
+      const ws = createTestWorkspace();
+
+      const pageA = createTestNote({
+        uri: '/page-a.md',
+        title: 'Page A',
+        tags: ['project', 'project/frontend'],
+      });
+
+      const pageB = createTestNote({
+        uri: '/page-b.md',
+        title: 'Page B',
+        tags: ['project/backend', 'other'],
+      });
+
+      ws.set(pageA);
+      ws.set(pageB);
+
+      const foamTags = FoamTags.fromWorkspace(ws);
+      const result = TagEdit.createHierarchicalRenameEdits(
+        foamTags,
+        'project',
+        'work'
+      );
+
+      expect(result.totalOccurrences).toBe(3); // project, project/frontend, project/backend
+      expect(result.edits).toHaveLength(3);
+
+      // Check that all expected tags are renamed
+      const editedTags = result.edits.map(edit => edit.edit.newText);
+      expect(editedTags).toContain('work');
+      expect(editedTags).toContain('work/frontend');
+      expect(editedTags).toContain('work/backend');
+    });
+
+    it('should handle nested hierarchies correctly', () => {
+      const ws = createTestWorkspace();
+
+      const page = createTestNote({
+        uri: '/page.md',
+        title: 'Page',
+        tags: ['project', 'project/frontend', 'project/frontend/react'],
+      });
+
+      ws.set(page);
+
+      const foamTags = FoamTags.fromWorkspace(ws);
+      const result = TagEdit.createHierarchicalRenameEdits(
+        foamTags,
+        'project',
+        'work'
+      );
+
+      expect(result.totalOccurrences).toBe(3);
+
+      const editedTags = result.edits.map(edit => edit.edit.newText);
+      expect(editedTags).toContain('work');
+      expect(editedTags).toContain('work/frontend');
+      expect(editedTags).toContain('work/frontend/react');
+    });
+
+    it('should work when parent tag has no children', () => {
+      const ws = createTestWorkspace();
+
+      const page = createTestNote({
+        uri: '/page.md',
+        title: 'Page',
+        tags: ['standalone', 'other'],
+      });
+
+      ws.set(page);
+
+      const foamTags = FoamTags.fromWorkspace(ws);
+      const result = TagEdit.createHierarchicalRenameEdits(
+        foamTags,
+        'standalone',
+        'single'
+      );
+
+      expect(result.totalOccurrences).toBe(1);
+      expect(result.edits).toHaveLength(1);
+      expect(result.edits[0].edit.newText).toBe('single');
     });
   });
 

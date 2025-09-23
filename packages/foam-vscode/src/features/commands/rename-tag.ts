@@ -215,6 +215,29 @@ async function executeRenameTag(
     throw new Error(finalValidation.message);
   }
 
+  // Check for child tags and offer hierarchical rename
+  const childTags = TagEdit.findChildTags(foam.tags, tagLabel);
+  const hasChildren = childTags.length > 0;
+  let useHierarchicalRename = false;
+
+  if (hasChildren) {
+    const childList = childTags.map(tag => `• ${tag}`).join('\n');
+    const choice = await vscode.window.showWarningMessage(
+      `Tag "${tagLabel}" has ${childTags.length} child tag${
+        childTags.length !== 1 ? 's' : ''
+      }:\n\n${childList}\n\nHow would you like to proceed?`,
+      { modal: true },
+      'Rename Only Parent',
+      'Rename All (Parent + Children)'
+    );
+
+    if (choice === 'Rename All (Parent + Children)') {
+      useHierarchicalRename = true;
+    } else if (choice !== 'Rename Only Parent') {
+      return; // User cancelled
+    }
+  }
+
   // Handle merge confirmation if needed (for input box flow)
   if (finalValidation.isMerge) {
     const confirmed = await vscode.window.showWarningMessage(
@@ -235,7 +258,7 @@ async function executeRenameTag(
   }
 
   // Perform the rename
-  await performTagRename(foam, tagLabel, cleanNewName);
+  await performTagRename(foam, tagLabel, cleanNewName, useHierarchicalRename);
 }
 
 /**
@@ -248,20 +271,20 @@ async function executeRenameTag(
  * @param foam The Foam instance containing workspace and tag information
  * @param oldTagLabel The current tag label to be renamed
  * @param newTagLabel The new tag label to rename to
+ * @param useHierarchicalRename Whether to rename child tags as well
  * @throws Error if workspace edits cannot be applied
  * @internal
  */
 async function performTagRename(
   foam: Foam,
   oldTagLabel: string,
-  newTagLabel: string
+  newTagLabel: string,
+  useHierarchicalRename: boolean = false
 ): Promise<void> {
-  // Generate all the edits
-  const tagEditResult = TagEdit.createRenameTagEdits(
-    foam.tags,
-    oldTagLabel,
-    newTagLabel
-  );
+  // Generate all the edits - use hierarchical method if requested
+  const tagEditResult = useHierarchicalRename
+    ? TagEdit.createHierarchicalRenameEdits(foam.tags, oldTagLabel, newTagLabel)
+    : TagEdit.createRenameTagEdits(foam.tags, oldTagLabel, newTagLabel);
 
   if (tagEditResult.totalOccurrences === 0) {
     vscode.window.showWarningMessage(

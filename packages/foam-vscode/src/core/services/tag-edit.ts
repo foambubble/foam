@@ -180,6 +180,81 @@ export abstract class TagEdit {
   }
 
   /**
+   * Find all child tags for a given parent tag.
+   *
+   * This method searches for tags that start with the parent tag followed by
+   * a forward slash, indicating they are hierarchical children.
+   *
+   * @param foamTags The FoamTags instance containing all tag information
+   * @param parentTag The parent tag to find children for (e.g., "project")
+   * @returns Array of child tag labels (e.g., ["project/frontend", "project/backend"])
+   */
+  public static findChildTags(foamTags: FoamTags, parentTag: string): string[] {
+    const childTags: string[] = [];
+    const parentPrefix = parentTag + '/';
+
+    for (const [tagLabel] of foamTags.tags) {
+      if (tagLabel.startsWith(parentPrefix)) {
+        childTags.push(tagLabel);
+      }
+    }
+
+    return childTags.sort();
+  }
+
+  /**
+   * Create text edits to rename a parent tag and all its children hierarchically.
+   *
+   * This method performs a comprehensive rename operation that updates both
+   * the parent tag and all child tags, maintaining the hierarchical structure
+   * with the new parent name.
+   *
+   * @param foamTags The FoamTags instance containing all tag locations
+   * @param oldParentTag The current parent tag label (without # prefix)
+   * @param newParentTag The new parent tag label (without # prefix)
+   * @returns TagEditResult containing all necessary workspace text edits
+   */
+  public static createHierarchicalRenameEdits(
+    foamTags: FoamTags,
+    oldParentTag: string,
+    newParentTag: string
+  ): TagEditResult {
+    const allEdits: WorkspaceTextEdit[] = [];
+    let totalOccurrences = 0;
+
+    // Rename the parent tag itself
+    const parentResult = this.createRenameTagEdits(
+      foamTags,
+      oldParentTag,
+      newParentTag
+    );
+    allEdits.push(...parentResult.edits);
+    totalOccurrences += parentResult.totalOccurrences;
+
+    // Find and rename all child tags
+    const childTags = this.findChildTags(foamTags, oldParentTag);
+    for (const childTag of childTags) {
+      // Replace the parent portion with the new parent name
+      const newChildTag = childTag.replace(
+        oldParentTag + '/',
+        newParentTag + '/'
+      );
+      const childResult = this.createRenameTagEdits(
+        foamTags,
+        childTag,
+        newChildTag
+      );
+      allEdits.push(...childResult.edits);
+      totalOccurrences += childResult.totalOccurrences;
+    }
+
+    return {
+      edits: allEdits,
+      totalOccurrences,
+    };
+  }
+
+  /**
    * Find the tag at a specific position in a document.
    *
    * @param foamTags The FoamTags instance containing all tag location data

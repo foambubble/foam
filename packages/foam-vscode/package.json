@@ -110,6 +110,20 @@
           "when": "view == foam-vscode.tags-explorer && viewItem == tag",
           "group": "inline",
           "icon": "$(search)"
+        },
+        {
+          "command": "foam-vscode.rename-tag",
+          "when": "view == foam-vscode.tags-explorer && viewItem == tag",
+          "group": "inline",
+          "icon": "$(edit)"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "foam-vscode.rename-tag",
+          "when": "editorTextFocus && resourceExtname == '.md'",
+          "group": "foam",
+          "title": "Rename Tag"
         }
       ],
       "view/title": [
@@ -364,6 +378,11 @@
         "command": "foam-vscode.search-tag",
         "title": "Foam: Search Tag",
         "icon": "$(search)"
+      },
+      {
+        "command": "foam-vscode.rename-tag",
+        "title": "Foam: Rename Tag",
+        "icon": "$(edit)"
       },
       {
         "command": "foam-vscode.views.orphans.group-by:folder",

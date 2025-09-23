@@ -11,6 +11,7 @@ import navigationProviders from './navigation-provider';
 import wikilinkDiagnostics from './wikilink-diagnostics';
 import refactor from './refactor';
 import workspaceSymbolProvider from './workspace-symbol-provider';
+import tagRenameProvider from './tag-rename-provider';
 
 export const features: FoamFeature[] = [
   ...Object.values(commands),
@@ -25,4 +26,5 @@ export const features: FoamFeature[] = [
   completionProvider,
   tagCompletionProvider,
   workspaceSymbolProvider,
+  tagRenameProvider,
 ];

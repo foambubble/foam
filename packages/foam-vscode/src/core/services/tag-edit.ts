@@ -1,44 +1,23 @@
 import { FoamTags } from '../model/tags';
-import { TextEdit } from './text-edit';
+import { TextEdit, WorkspaceTextEdit } from './text-edit';
 import { Location } from '../model/location';
 import { Tag } from '../model/note';
 import { URI } from '../model/uri';
 import { Range } from '../model/range';
 import { Position } from '../model/position';
-
-/**
- * A text edit with workspace context, combining a URI location with the edit operation.
- *
- * This interface uses composition to pair a text edit with its file location,
- * providing a self-contained unit for workspace-wide text modifications.
- */
-export interface WorkspaceTextEdit {
-  /** The URI of the file where this edit should be applied */
-  uri: URI;
-  /** The text edit operation to perform */
-  edit: TextEdit;
-}
+import { WORD_REGEX } from '../utils/hashtags';
 
 /**
  * Result object containing all information needed to perform a tag rename operation.
- *
- * This interface provides structured access to the text edits required to rename
- * a tag across the workspace, along with summary statistics.
  */
 export interface TagEditResult {
   /**
    * Array of workspace text edits to perform the tag rename operation.
-   *
-   * Each edit contains both the file URI and the specific text change needed,
-   * making it self-contained and easy to process.
    */
   edits: WorkspaceTextEdit[];
 
   /**
    * Total number of tag occurrences that will be renamed across all files.
-   *
-   * This count includes all instances of the tag, whether they appear as
-   * hashtags (#tag) or in YAML frontmatter.
    */
   totalOccurrences: number;
 }
@@ -51,10 +30,6 @@ export interface TagEditResult {
 export abstract class TagEdit {
   /**
    * Generate text edits to rename a tag across the workspace.
-   *
-   * This method finds all occurrences of a tag in the workspace and generates
-   * the necessary text edits to rename them all consistently. It works with
-   * both hashtag format (#tag) and YAML frontmatter format.
    *
    * @param foamTags The FoamTags instance containing all tag locations
    * @param oldTagLabel The current tag label to rename (without # prefix)
@@ -90,15 +65,10 @@ export abstract class TagEdit {
   /**
    * Create a single text edit for a tag location.
    *
-   * This internal method generates a TextEdit for a specific tag occurrence.
-   * It intelligently determines if the tag is a hashtag (includes #) or a YAML
-   * tag (no #) based on the range length and preserves the original format.
-   *
    * @param location The location of the tag to rename
    * @param oldTagLabel The current tag label to determine original format
    * @param newTagLabel The new tag label to replace with
    * @returns TextEdit for this specific tag occurrence
-   * @internal
    */
   private static createSingleTagEdit(
     location: Location<Tag>,
@@ -126,58 +96,91 @@ export abstract class TagEdit {
    * @param foamTags The FoamTags instance containing current tag information
    * @param oldTagLabel The tag being renamed (must exist in workspace)
    * @param newTagLabel The proposed new tag label (will be cleaned of # prefix)
-   * @returns Validation result object with success flag and optional error message
+   * @returns Validation result with merge information and statistics
    */
   public static validateTagRename(
     foamTags: FoamTags,
     oldTagLabel: string,
     newTagLabel: string
-  ): { isValid: boolean; message?: string } {
+  ): {
+    isValid: boolean;
+    isMerge: boolean;
+    sourceOccurrences: number;
+    targetOccurrences: number;
+    message?: string;
+  } {
+    const sourceOccurrences = foamTags.tags.get(oldTagLabel)?.length ?? 0;
+
     // Check if old tag exists
     if (!foamTags.tags.has(oldTagLabel)) {
       return {
         isValid: false,
+        isMerge: false,
+        sourceOccurrences: 0,
+        targetOccurrences: 0,
         message: `Tag "${oldTagLabel}" does not exist in the workspace.`,
       };
     }
 
+    // Clean the new tag label (remove # if present)
+    const cleanNewLabel = newTagLabel?.startsWith('#')
+      ? newTagLabel.substring(1)
+      : newTagLabel;
+
     // Check if new tag label is empty or invalid
-    if (!newTagLabel || newTagLabel.trim() === '') {
+    if (!cleanNewLabel || cleanNewLabel.trim() === '') {
       return {
         isValid: false,
+        isMerge: false,
+        sourceOccurrences,
+        targetOccurrences: 0,
         message: 'New tag label cannot be empty.',
       };
     }
 
-    // Clean the new tag label (remove # if present)
-    const cleanNewLabel = newTagLabel.startsWith('#')
-      ? newTagLabel.substring(1)
-      : newTagLabel;
-
-    // Check if new tag already exists (case-sensitive)
-    if (foamTags.tags.has(cleanNewLabel)) {
-      return {
-        isValid: false,
-        message: `Tag "${cleanNewLabel}" already exists. Choose a different name.`,
-      };
-    }
-
     // Check for invalid characters in tag label
-    if (cleanNewLabel.includes(' ')) {
+    const match = cleanNewLabel.match(WORD_REGEX);
+    if (!match || match[0] !== cleanNewLabel) {
       return {
         isValid: false,
-        message: 'Tag labels cannot contain spaces.',
+        isMerge: false,
+        sourceOccurrences,
+        targetOccurrences: 0,
+        message: 'Invalid tag label.',
       };
     }
 
-    return { isValid: true };
+    // Check if renaming to same tag (no-op)
+    if (cleanNewLabel === oldTagLabel) {
+      return {
+        isValid: false,
+        isMerge: false,
+        sourceOccurrences,
+        targetOccurrences: sourceOccurrences,
+        message: 'New tag name is the same as the current name.',
+      };
+    }
+
+    const targetOccurrences = foamTags.tags.get(cleanNewLabel)?.length ?? 0;
+    const isMerge = foamTags.tags.has(cleanNewLabel);
+
+    return {
+      isValid: true,
+      isMerge: isMerge,
+      sourceOccurrences,
+      targetOccurrences,
+      message: isMerge
+        ? `This will merge "${oldTagLabel}" (${sourceOccurrences} occurrence${
+            sourceOccurrences !== 1 ? 's' : ''
+          }) into "${cleanNewLabel}" (${targetOccurrences} occurrence${
+            targetOccurrences !== 1 ? 's' : ''
+          })`
+        : undefined,
+    };
   }
 
   /**
    * Find the tag at a specific position in a document.
-   *
-   * This method searches through all known tag locations to find a tag that
-   * contains the specified position.
    *
    * @param foamTags The FoamTags instance containing all tag location data
    * @param uri The URI of the file to search in

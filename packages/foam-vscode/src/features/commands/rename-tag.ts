@@ -2,13 +2,8 @@ import * as vscode from 'vscode';
 import { Foam } from '../../core/model/foam';
 import { TagEdit } from '../../core/services/tag-edit';
 import { TagItem } from '../panels/tags-explorer';
-import {
-  fromVsCodeUri,
-  toVsCodeRange,
-  toVsCodeUri,
-} from '../../utils/vsc-utils';
+import { fromVsCodeUri, toVsCodeWorkspaceEdit } from '../../utils/vsc-utils';
 import { Logger } from '../../core/utils/log';
-import { URI } from '../../core/model/uri';
 import { Position } from '../../core/model/position';
 
 /**
@@ -145,6 +140,25 @@ async function executeRenameTag(
     if (!validation.isValid) {
       throw new Error(validation.message);
     }
+
+    // Handle merge confirmation if needed
+    if (validation.isMerge) {
+      const confirmed = await vscode.window.showWarningMessage(
+        `Tag "${cleanValue}" already exists (${
+          validation.targetOccurrences
+        } occurrence${
+          validation.targetOccurrences !== 1 ? 's' : ''
+        }). Merge "${tagLabel}" (${validation.sourceOccurrences} occurrence${
+          validation.sourceOccurrences !== 1 ? 's' : ''
+        }) into it?`,
+        { modal: true },
+        'Merge Tags'
+      );
+
+      if (confirmed !== 'Merge Tags') {
+        throw new Error('Tag merge cancelled by user');
+      }
+    }
   }
 
   if (!finalNewTagName) {
@@ -156,18 +170,27 @@ async function executeRenameTag(
       })`,
       value: tagLabel,
       validateInput: (value: string) => {
-        if (!value || value.trim() === '') {
-          return 'Tag name cannot be empty';
-        }
-
-        const cleanValue = value.startsWith('#') ? value.substring(1) : value;
         const validation = TagEdit.validateTagRename(
           foam.tags,
           tagLabel!,
-          cleanValue
+          value
         );
 
-        return validation.isValid ? undefined : validation.message;
+        if (!validation.isValid) {
+          return validation.message;
+        }
+
+        // Show merge information but allow the input
+        if (validation.isMerge) {
+          return {
+            message: `Will merge into existing tag: ${value} - ${
+              validation.targetOccurrences
+            } occurrence${validation.targetOccurrences !== 1 ? 's' : ''}`,
+            severity: vscode.InputBoxValidationSeverity.Info,
+          };
+        }
+
+        return undefined;
       },
     });
 
@@ -180,6 +203,36 @@ async function executeRenameTag(
   const cleanNewName = finalNewTagName.startsWith('#')
     ? finalNewTagName.substring(1)
     : finalNewTagName;
+
+  // Final validation and merge confirmation for input box flow
+  const finalValidation = TagEdit.validateTagRename(
+    foam.tags,
+    tagLabel,
+    cleanNewName
+  );
+
+  if (!finalValidation.isValid) {
+    throw new Error(finalValidation.message);
+  }
+
+  // Handle merge confirmation if needed (for input box flow)
+  if (finalValidation.isMerge) {
+    const confirmed = await vscode.window.showWarningMessage(
+      `Tag "${cleanNewName}" already exists (${
+        finalValidation.targetOccurrences
+      } occurrence${
+        finalValidation.targetOccurrences !== 1 ? 's' : ''
+      }). Merge "${tagLabel}" (${finalValidation.sourceOccurrences} occurrence${
+        finalValidation.sourceOccurrences !== 1 ? 's' : ''
+      }) into it?`,
+      { modal: true },
+      'Merge Tags'
+    );
+
+    if (confirmed !== 'Merge Tags') {
+      return; // User cancelled merge
+    }
+  }
 
   // Perform the rename
   await performTagRename(foam, tagLabel, cleanNewName);
@@ -218,56 +271,29 @@ async function performTagRename(
   }
 
   // Convert to VS Code WorkspaceEdit
-  const workspaceEdit = new vscode.WorkspaceEdit();
-
-  // Group edits by URI
-  const editsByUri = new Map<string, vscode.TextEdit[]>();
-
-  for (const workspaceTextEdit of tagEditResult.edits) {
-    const resource = foam.workspace.get(workspaceTextEdit.uri);
-    if (!resource) {
-      Logger.warn(
-        `Could not resolve resource for tag rename: ${workspaceTextEdit.uri.toString()}`
-      );
-      continue;
-    }
-
-    const uriString = resource.uri.toString();
-    const existingEdits = editsByUri.get(uriString) || [];
-
-    const vscodeEdit = new vscode.TextEdit(
-      toVsCodeRange(workspaceTextEdit.edit.range),
-      workspaceTextEdit.edit.newText
-    );
-
-    existingEdits.push(vscodeEdit);
-    editsByUri.set(uriString, existingEdits);
-  }
-
-  // Apply grouped edits to workspace
-  for (const [uriString, vscodeEdits] of editsByUri) {
-    const resource = foam.workspace.get(URI.parse(uriString, 'file'));
-    if (resource) {
-      const uri = toVsCodeUri(resource.uri);
-      workspaceEdit.set(uri, vscodeEdits);
-    }
-  }
+  const workspaceEdit = toVsCodeWorkspaceEdit(
+    tagEditResult.edits,
+    foam.workspace
+  );
 
   // Apply the edits
   const success = await vscode.workspace.applyEdit(workspaceEdit);
 
   if (success) {
-    const files = editsByUri.size;
+    // Calculate unique file count from workspace edits
+    const uniqueFiles = new Set(
+      tagEditResult.edits.map(edit => edit.uri.toString())
+    ).size;
     const occurrences = tagEditResult.totalOccurrences;
 
     Logger.info(
-      `Successfully renamed tag "${oldTagLabel}" to "${newTagLabel}" (${occurrences} occurrences across ${files} files)`
+      `Successfully renamed tag "${oldTagLabel}" to "${newTagLabel}" (${occurrences} occurrences across ${uniqueFiles} files)`
     );
 
     vscode.window.showInformationMessage(
       `Renamed tag "${oldTagLabel}" to "${newTagLabel}" (${occurrences} occurrence${
         occurrences !== 1 ? 's' : ''
-      } across ${files} file${files !== 1 ? 's' : ''})`
+      } across ${uniqueFiles} file${uniqueFiles !== 1 ? 's' : ''})`
     );
   } else {
     throw new Error('Failed to apply workspace edits');

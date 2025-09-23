@@ -1,6 +1,7 @@
 import detectNewline from 'detect-newline';
 import { Position } from '../model/position';
 import { Range } from '../model/range';
+import { URI } from '../model/uri';
 
 export interface TextEdit {
   range: Range;
@@ -42,3 +43,16 @@ const getOffset = (
   }
   return offset + Math.min(position.character, lines[i]?.length ?? 0);
 };
+
+/**
+ * A text edit with workspace context, combining a URI location with the edit operation.
+ *
+ * This interface uses composition to pair a text edit with its file location,
+ * providing a self-contained unit for workspace-wide text modifications.
+ */
+export interface WorkspaceTextEdit {
+  /** The URI of the file where this edit should be applied */
+  uri: URI;
+  /** The text edit operation to perform */
+  edit: TextEdit;
+}

@@ -98,9 +98,7 @@ describe('TagEdit', () => {
       expect(result.edits).toHaveLength(2);
 
       // Filter edits for the specific page
-      const pageEdits = result.edits.filter(
-        e => e.uri.toString() === 'file:///page.md'
-      );
+      const pageEdits = result.edits.filter(e => e.uri.isEqual(page.uri));
       expect(pageEdits).toHaveLength(2);
       expect(pageEdits.map(e => e.edit)).toEqual([
         {
@@ -230,7 +228,7 @@ describe('TagEdit', () => {
       expect(result.message).toContain('cannot be empty');
     });
 
-    it('should reject rename to existing tag', () => {
+    it('should detect merge when renaming to existing tag', () => {
       const ws = createTestWorkspace();
 
       const page = createTestNote({
@@ -248,8 +246,13 @@ describe('TagEdit', () => {
         'existingtag'
       );
 
-      expect(result.isValid).toBe(false);
-      expect(result.message).toContain('already exists');
+      expect(result.isValid).toBe(true);
+      expect(result.isMerge).toBe(true);
+      expect(result.sourceOccurrences).toBe(1);
+      expect(result.targetOccurrences).toBe(1);
+      expect(result.message).toContain('merge');
+      expect(result.message).toContain('oldtag');
+      expect(result.message).toContain('existingtag');
     });
 
     it('should reject tag names with spaces', () => {
@@ -285,7 +288,31 @@ describe('TagEdit', () => {
       const result = TagEdit.validateTagRename(foamTags, 'oldtag', '#newtag');
 
       expect(result.isValid).toBe(true);
+      expect(result.isMerge).toBe(false);
+      expect(result.sourceOccurrences).toBe(1);
+      expect(result.targetOccurrences).toBe(0);
       expect(result.message).toBeUndefined();
+    });
+
+    it('should reject renaming to same tag name', () => {
+      const ws = createTestWorkspace();
+
+      const page = createTestNote({
+        uri: '/page.md',
+        title: 'Page',
+        tags: ['oldtag'],
+      });
+
+      ws.set(page);
+
+      const foamTags = FoamTags.fromWorkspace(ws);
+      const result = TagEdit.validateTagRename(foamTags, 'oldtag', 'oldtag');
+
+      expect(result.isValid).toBe(false);
+      expect(result.isMerge).toBe(false);
+      expect(result.sourceOccurrences).toBe(1);
+      expect(result.targetOccurrences).toBe(1);
+      expect(result.message).toContain('same as the current name');
     });
   });
 

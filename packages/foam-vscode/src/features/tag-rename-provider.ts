@@ -4,11 +4,9 @@ import { TagEdit } from '../core/services/tag-edit';
 import {
   fromVsCodeUri,
   toVsCodeRange,
-  toVsCodeTextEdit,
-  toVsCodeUri,
+  toVsCodeWorkspaceEdit,
 } from '../utils/vsc-utils';
 import { Logger } from '../core/utils/log';
-import { URI } from '../core/model/uri';
 import { Position } from '../core/model/position';
 
 /**
@@ -150,6 +148,14 @@ export class TagRenameProvider implements vscode.RenameProvider {
       throw new Error(validation.message);
     }
 
+    // For F2 rename, we don't support merge confirmation dialogs
+    // Direct users to use the command instead
+    if (validation.isMerge) {
+      throw new Error(
+        `Tag "${cleanNewName}" already exists. Use "Foam: Rename Tag" command to merge tags.`
+      );
+    }
+
     try {
       // Generate all the edits
       const tagEditResult = TagEdit.createRenameTagEdits(
@@ -159,35 +165,10 @@ export class TagRenameProvider implements vscode.RenameProvider {
       );
 
       // Convert to VS Code WorkspaceEdit
-      const workspaceEdit = new vscode.WorkspaceEdit();
-
-      // Group edits by URI
-      const editsByUri = new Map<string, vscode.TextEdit[]>();
-
-      for (const workspaceTextEdit of tagEditResult.edits) {
-        const resource = this.foam.workspace.get(workspaceTextEdit.uri);
-        if (!resource) {
-          Logger.warn(
-            `Could not resolve resource for tag rename: ${workspaceTextEdit.uri.toString()}`
-          );
-          continue;
-        }
-
-        const uriString = resource.uri.toString();
-        const existingEdits = editsByUri.get(uriString) || [];
-
-        existingEdits.push(toVsCodeTextEdit(workspaceTextEdit.edit));
-        editsByUri.set(uriString, existingEdits);
-      }
-
-      // Apply grouped edits to workspace
-      for (const [uriString, vscodeEdits] of editsByUri) {
-        const resource = this.foam.workspace.get(URI.parse(uriString, 'file'));
-        if (resource) {
-          const uri = toVsCodeUri(resource.uri);
-          workspaceEdit.set(uri, vscodeEdits);
-        }
-      }
+      const workspaceEdit = toVsCodeWorkspaceEdit(
+        tagEditResult.edits,
+        this.foam.workspace
+      );
 
       Logger.info(
         `Renaming tag "${oldTagLabel}" to "${cleanNewName}" (${tagEditResult.totalOccurrences} occurrences)`

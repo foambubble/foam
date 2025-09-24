@@ -6,7 +6,7 @@ import wikiLinkPlugin from 'remark-wiki-link';
 import frontmatterPlugin from 'remark-frontmatter';
 import { parse as parseYAML } from 'yaml';
 import visit from 'unist-util-visit';
-import { NoteLinkDefinition, Resource, ResourceParser } from '../model/note';
+import { NoteLinkDefinition, Resource, ResourceParser, ResourceLink } from '../model/note';
 import { Position } from '../model/position';
 import { Range } from '../model/range';
 import { extractHashtags, extractTagsFromProp, hash, isSome } from '../utils';
@@ -378,6 +378,38 @@ const wikilinkPlugin: ParserPlugin = {
         isEmbed: literalContent.startsWith('!'),
       });
     }
+    if (node.type === 'linkReference') {
+      const literalContent = noteSource.substring(
+        node.position!.start.offset!,
+        node.position!.end.offset!
+      );
+
+      const identifier = (node as any).identifier;
+
+      note.links.push({
+        type: 'link',
+        rawText: literalContent,
+        range: astPositionToFoamRange(node.position!),
+        isEmbed: false,
+        // Store reference identifier temporarily - will be resolved in onDidVisitTree
+        reference: identifier,
+      });
+    }
+  },
+  onDidVisitTree: (tree, note) => {
+    // Post-processing: Resolve reference identifiers to definitions
+    note.links.forEach(link => {
+      if (ResourceLink.isUnresolvedReference(link)) {
+        // This link was created from a linkReference node
+        const definition = note.definitions.find(
+          def => def.label === link.reference
+        );
+
+        // Set reference to definition object if found, otherwise keep as string
+        const referenceId = link.reference;
+        (link as any).reference = definition || referenceId;
+      }
+    });
   },
 };
 

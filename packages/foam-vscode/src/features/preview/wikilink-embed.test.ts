@@ -70,7 +70,9 @@ describe('Wikilink Note Embedding', () => {
       expect(match1[3]).toEqual('|300');
 
       // Width and height
-      const match2 = '![[image.png|300x200]]'.match(WIKILINK_EMBED_REGEX_GROUPS);
+      const match2 = '![[image.png|300x200]]'.match(
+        WIKILINK_EMBED_REGEX_GROUPS
+      );
       expect(match2[0]).toEqual('![[image.png|300x200]]');
       expect(match2[1]).toEqual(undefined);
       expect(match2[2]).toEqual('image.png');
@@ -85,7 +87,9 @@ describe('Wikilink Note Embedding', () => {
     });
 
     it('should parse wikilinks with modifiers and image parameters', () => {
-      const match = 'content![[image.png|300]]'.match(WIKILINK_EMBED_REGEX_GROUPS);
+      const match = 'content![[image.png|300]]'.match(
+        WIKILINK_EMBED_REGEX_GROUPS
+      );
       expect(match[0]).toEqual('content![[image.png|300]]');
       expect(match[1]).toEqual('content');
       expect(match[2]).toEqual('image.png');
@@ -93,7 +97,9 @@ describe('Wikilink Note Embedding', () => {
     });
 
     it('should parse wikilinks with multiple parameters', () => {
-      const match = '![[image.png|300|center]]'.match(WIKILINK_EMBED_REGEX_GROUPS);
+      const match = '![[image.png|300|center]]'.match(
+        WIKILINK_EMBED_REGEX_GROUPS
+      );
       expect(match[0]).toEqual('![[image.png|300|center]]');
       expect(match[1]).toEqual(undefined);
       expect(match[2]).toEqual('image.png');
@@ -109,7 +115,9 @@ describe('Wikilink Note Embedding', () => {
     });
 
     it('should parse complex filenames with parameters', () => {
-      const match = '![[folder/image-file.png|400px]]'.match(WIKILINK_EMBED_REGEX_GROUPS);
+      const match = '![[folder/image-file.png|400px]]'.match(
+        WIKILINK_EMBED_REGEX_GROUPS
+      );
       expect(match[0]).toEqual('![[folder/image-file.png|400px]]');
       expect(match[1]).toEqual(undefined);
       expect(match[2]).toEqual('folder/image-file.png');
@@ -161,7 +169,10 @@ describe('Wikilink Note Embedding', () => {
     });
 
     it('should parse width, alignment, and alt text', () => {
-      const result = parseImageParameters('image.png', '|300|left|My image description');
+      const result = parseImageParameters(
+        'image.png',
+        '|300|left|My image description'
+      );
       expect(result).toEqual({
         filename: 'image.png',
         width: '300',
@@ -171,7 +182,10 @@ describe('Wikilink Note Embedding', () => {
     });
 
     it('should parse width and alt text (no alignment)', () => {
-      const result = parseImageParameters('image.png', '|300|My image description');
+      const result = parseImageParameters(
+        'image.png',
+        '|300|My image description'
+      );
       expect(result).toEqual({
         filename: 'image.png',
         width: '300',
@@ -219,7 +233,10 @@ describe('Wikilink Note Embedding', () => {
     });
 
     it('should handle alt text with pipes', () => {
-      const result = parseImageParameters('image.png', '|300|center|Alt text with | pipes');
+      const result = parseImageParameters(
+        'image.png',
+        '|300|center|Alt text with | pipes'
+      );
       expect(result).toEqual({
         filename: 'image.png',
         width: '300',
@@ -243,55 +260,92 @@ describe('Wikilink Note Embedding', () => {
     it('should generate image with width only', () => {
       const params = { filename: 'image.png', width: '300' };
       const result = generateImageStyles(params, mockMd);
-      expect(result).toEqual('<img src="image.png" style="width: 300px; height: auto" alt="">');
+      expect(result).toEqual(
+        '<img src="image.png" style="width: 300px; height: auto" alt="">'
+      );
     });
 
     it('should generate image with width and height', () => {
       const params = { filename: 'image.png', width: '300', height: '200' };
       const result = generateImageStyles(params, mockMd);
-      expect(result).toEqual('<img src="image.png" style="width: 300px; height: 200px" alt="">');
+      expect(result).toEqual(
+        '<img src="image.png" style="width: 300px; height: 200px" alt="">'
+      );
     });
 
     it('should generate image with percentage width', () => {
       const params = { filename: 'image.png', width: '50%' };
       const result = generateImageStyles(params, mockMd);
-      expect(result).toEqual('<img src="image.png" style="width: 50%; height: auto" alt="">');
+      expect(result).toEqual(
+        '<img src="image.png" style="width: 50%; height: auto" alt="">'
+      );
     });
 
     it('should generate image with width and units preserved', () => {
       const params = { filename: 'image.png', width: '400px' };
       const result = generateImageStyles(params, mockMd);
-      expect(result).toEqual('<img src="image.png" style="width: 400px; height: auto" alt="">');
+      expect(result).toEqual(
+        '<img src="image.png" style="width: 400px; height: auto" alt="">'
+      );
     });
 
     it('should generate image with center alignment', () => {
-      const params = { filename: 'image.png', width: '300', align: 'center' as const };
+      const params = {
+        filename: 'image.png',
+        width: '300',
+        align: 'center' as const,
+      };
       const result = generateImageStyles(params, mockMd);
-      expect(result).toEqual('<div style="text-align: center;"><img src="image.png" style="width: 300px; height: auto" alt=""></div>');
+      expect(result).toEqual(
+        '<div style="text-align: center;"><img src="image.png" style="width: 300px; height: auto" alt=""></div>'
+      );
     });
 
     it('should generate image with left alignment', () => {
-      const params = { filename: 'image.png', width: '300', align: 'left' as const };
+      const params = {
+        filename: 'image.png',
+        width: '300',
+        align: 'left' as const,
+      };
       const result = generateImageStyles(params, mockMd);
-      expect(result).toEqual('<div style="text-align: left;"><img src="image.png" style="width: 300px; height: auto" alt=""></div>');
+      expect(result).toEqual(
+        '<div style="text-align: left;"><img src="image.png" style="width: 300px; height: auto" alt=""></div>'
+      );
     });
 
     it('should generate image with right alignment', () => {
-      const params = { filename: 'image.png', width: '300', align: 'right' as const };
+      const params = {
+        filename: 'image.png',
+        width: '300',
+        align: 'right' as const,
+      };
       const result = generateImageStyles(params, mockMd);
-      expect(result).toEqual('<div style="text-align: right;"><img src="image.png" style="width: 300px; height: auto" alt=""></div>');
+      expect(result).toEqual(
+        '<div style="text-align: right;"><img src="image.png" style="width: 300px; height: auto" alt=""></div>'
+      );
     });
 
     it('should generate image with alt text', () => {
-      const params = { filename: 'image.png', width: '300', alt: 'My image description' };
+      const params = {
+        filename: 'image.png',
+        width: '300',
+        alt: 'My image description',
+      };
       const result = generateImageStyles(params, mockMd);
-      expect(result).toEqual('<img src="image.png" style="width: 300px; height: auto" alt="My image description">');
+      expect(result).toEqual(
+        '<img src="image.png" style="width: 300px; height: auto" alt="My image description">'
+      );
     });
 
     it('should escape HTML in alt text', () => {
-      const params = { filename: 'image.png', alt: 'Image with <script>alert("xss")</script>' };
+      const params = {
+        filename: 'image.png',
+        alt: 'Image with <script>alert("xss")</script>',
+      };
       const result = generateImageStyles(params, mockMd);
-      expect(result).toEqual('<img src="image.png" alt="Image with &lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;">');
+      expect(result).toEqual(
+        '<img src="image.png" alt="Image with &lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;">'
+      );
     });
 
     it('should generate image with width, alignment, and alt text', () => {
@@ -299,22 +353,28 @@ describe('Wikilink Note Embedding', () => {
         filename: 'image.png',
         width: '300',
         align: 'center' as const,
-        alt: 'Centered image'
+        alt: 'Centered image',
       };
       const result = generateImageStyles(params, mockMd);
-      expect(result).toEqual('<div style="text-align: center;"><img src="image.png" style="width: 300px; height: auto" alt="Centered image"></div>');
+      expect(result).toEqual(
+        '<div style="text-align: center;"><img src="image.png" style="width: 300px; height: auto" alt="Centered image"></div>'
+      );
     });
 
     it('should handle em units', () => {
       const params = { filename: 'image.png', width: '20em' };
       const result = generateImageStyles(params, mockMd);
-      expect(result).toEqual('<img src="image.png" style="width: 20em; height: auto" alt="">');
+      expect(result).toEqual(
+        '<img src="image.png" style="width: 20em; height: auto" alt="">'
+      );
     });
 
     it('should handle decimal values', () => {
       const params = { filename: 'image.png', width: '300.5' };
       const result = generateImageStyles(params, mockMd);
-      expect(result).toEqual('<img src="image.png" style="width: 300.5px; height: auto" alt="">');
+      expect(result).toEqual(
+        '<img src="image.png" style="width: 300.5px; height: auto" alt="">'
+      );
     });
   });
 

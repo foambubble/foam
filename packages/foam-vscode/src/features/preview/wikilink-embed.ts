@@ -39,9 +39,8 @@ export const markdownItWikilinkEmbed = (
     regex: WIKILINK_EMBED_REGEX,
     replace: (wikilinkItem: string) => {
       try {
-        const [, noteEmbedModifier, wikilink, parametersString] = wikilinkItem.match(
-          WIKILINK_EMBED_REGEX_GROUPS
-        );
+        const [, noteEmbedModifier, wikilink, parametersString] =
+          wikilinkItem.match(WIKILINK_EMBED_REGEX_GROUPS);
 
         if (isVirtualWorkspace()) {
           return `
@@ -140,7 +139,10 @@ Embed for attachments is not supported
       toRender = md.render(content);
       break;
     case 'image':
-      const imageParams = parseImageParameters(includedNote.uri.path, parametersString);
+      const imageParams = parseImageParameters(
+        includedNote.uri.path,
+        parametersString
+      );
       const imageHtml = generateImageStyles(imageParams, md);
       content = `<div class="embed-container-image">${imageHtml}</div>`;
       toRender = content;
@@ -288,7 +290,10 @@ interface ImageParameters {
   alt?: string;
 }
 
-function parseImageParameters(wikilink: string, parametersString?: string): ImageParameters {
+function parseImageParameters(
+  wikilink: string,
+  parametersString?: string
+): ImageParameters {
   const result: ImageParameters = {
     filename: wikilink,
   };
@@ -309,7 +314,9 @@ function parseImageParameters(wikilink: string, parametersString?: string): Imag
   if (sizeParam) {
     // Parse size parameter: could be "300", "300x200", "50%", "300px", etc.
     // Check for width x height format (but not if it's just a unit like "px")
-    const dimensionMatch = sizeParam.match(/^(\d+(?:\.\d+)?(?:px|%|em|rem|vw|vh)?)\s*x\s*(\d+(?:\.\d+)?(?:px|%|em|rem|vw|vh)?)$/i);
+    const dimensionMatch = sizeParam.match(
+      /^(\d+(?:\.\d+)?(?:px|%|em|rem|vw|vh)?)\s*x\s*(\d+(?:\.\d+)?(?:px|%|em|rem|vw|vh)?)$/i
+    );
     if (dimensionMatch) {
       // Width x Height format
       result.width = dimensionMatch[1]?.trim();
@@ -360,7 +367,9 @@ function generateImageStyles(params: ImageParameters, md: markdownit): string {
   const altAttr = alt ? ` alt="${escapeHtml(alt)}"` : ' alt=""';
 
   // Generate the image HTML
-  const imageHtml = `<img src="${md.normalizeLink(filename)}"${styleAttr}${altAttr}>`;
+  const imageHtml = `<img src="${md.normalizeLink(
+    filename
+  )}"${styleAttr}${altAttr}>`;
 
   // Wrap with alignment if specified
   if (align) {

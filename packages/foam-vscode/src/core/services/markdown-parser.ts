@@ -6,7 +6,12 @@ import wikiLinkPlugin from 'remark-wiki-link';
 import frontmatterPlugin from 'remark-frontmatter';
 import { parse as parseYAML } from 'yaml';
 import visit from 'unist-util-visit';
-import { NoteLinkDefinition, Resource, ResourceParser, ResourceLink } from '../model/note';
+import {
+  NoteLinkDefinition,
+  Resource,
+  ResourceParser,
+  ResourceLink,
+} from '../model/note';
 import { Position } from '../model/position';
 import { Range } from '../model/range';
 import { extractHashtags, extractTagsFromProp, hash, isSome } from '../utils';
@@ -359,6 +364,7 @@ const wikilinkPlugin: ParserPlugin = {
         rawText: literalContent,
         range,
         isEmbed,
+        reference: (node as any).value,
       });
     }
     if (node.type === 'link' || node.type === 'image') {
@@ -397,16 +403,16 @@ const wikilinkPlugin: ParserPlugin = {
     }
   },
   onDidVisitTree: (tree, note) => {
-    // Post-processing: Resolve reference identifiers to definitions
+    // Post-processing: Resolve reference identifiers to definitions for all links
     note.links.forEach(link => {
       if (ResourceLink.isUnresolvedReference(link)) {
-        // This link was created from a linkReference node
+        // This link has a reference identifier (from linkReference or wikilink)
+        const referenceId = link.reference;
         const definition = note.definitions.find(
-          def => def.label === link.reference
+          def => def.label === referenceId
         );
 
         // Set reference to definition object if found, otherwise keep as string
-        const referenceId = link.reference;
         (link as any).reference = definition || referenceId;
       }
     });

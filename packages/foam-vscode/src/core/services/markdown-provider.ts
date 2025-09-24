@@ -83,6 +83,23 @@ export class MarkdownResourceProvider implements ResourceProvider {
         break;
       }
       case 'link': {
+        // Handle reference-style links first
+        if (ResourceLink.isResolvedReference(link)) {
+          // Reference resolved to a definition
+          const resolvedUri = resource.uri.resolve(link.reference.url);
+          targetUri =
+            workspace.find(resolvedUri, resource.uri)?.uri ??
+            URI.placeholder(resolvedUri.path);
+          if (section) {
+            targetUri = targetUri.with({ fragment: section });
+          }
+          break;
+        } else if (ResourceLink.isUnresolvedReference(link)) {
+          // Reference-style link with unresolved reference - treat as placeholder
+          targetUri = URI.placeholder(link.reference);
+          break;
+        }
+
         let path: string;
         let foundResource: Resource | null = null;
 

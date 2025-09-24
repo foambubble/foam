@@ -331,8 +331,8 @@ function parseImageParameters(
   const alignParam = params[1]?.trim().toLowerCase();
   if (alignParam && ['center', 'left', 'right'].includes(alignParam)) {
     result.align = alignParam as 'center' | 'left' | 'right';
-  } else if (alignParam && !alignParam.startsWith('class:')) {
-    // If not alignment and not a class, treat as alt text
+  } else if (alignParam) {
+    // If not alignment, treat as alt text
     result.alt = params.slice(1).join('|').trim();
   }
 

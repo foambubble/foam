@@ -103,6 +103,19 @@ describe('Markdown parsing', () => {
       expect(link.isEmbed).toBeFalsy();
     });
 
+    it('should set reference to alias for wikilinks with alias', () => {
+      const note = createNoteFromMarkdown(
+        'This is a [[target-file|Display Name]] wikilink.'
+      );
+      expect(note.links.length).toEqual(1);
+      const link = note.links[0];
+      expect(link.type).toEqual('wikilink');
+      expect(ResourceLink.isUnresolvedReference(link)).toBe(true);
+      if (ResourceLink.isUnresolvedReference(link)) {
+        expect(link.reference).toEqual('target-file');
+      }
+    });
+
     it('should skip wikilinks in codeblocks', () => {
       const noteA = createNoteFromMarkdown(`
 this is some text with our [[first-wikilink]].
@@ -197,7 +210,10 @@ This has [[wikilink]], [inline link](target.md), and [reference link][ref].
 
       expect(note.links[0].type).toEqual('wikilink');
       expect(note.links[0].rawText).toEqual('[[wikilink]]');
-      expect(ResourceLink.isRegularLink(note.links[0])).toBe(true);
+      expect(ResourceLink.isUnresolvedReference(note.links[0])).toBe(true);
+      if (ResourceLink.isUnresolvedReference(note.links[0])) {
+        expect(note.links[0].reference).toEqual('wikilink');
+      }
 
       expect(note.links[1].type).toEqual('link');
       expect(note.links[1].rawText).toEqual('[inline link](target.md)');

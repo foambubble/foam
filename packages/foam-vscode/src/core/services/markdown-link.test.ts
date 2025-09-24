@@ -523,4 +523,101 @@ describe('MarkdownLink', () => {
       expect(wikilinkEdit.range).toEqual(wikilink.range);
     });
   });
+
+  describe('parse links with resolved definitions', () => {
+    it('should parse wikilink with resolved definition - target and section from definition, alias from rawText', () => {
+      const link: ResourceLink = {
+        type: 'wikilink',
+        rawText: '[[my-note|Custom Display Text]]',
+        range: Range.create(0, 0),
+        isEmbed: false,
+        definition: {
+          label: 'my-note',
+          url: './docs/document.md#introduction',
+          title: 'Document Title'
+        }
+      };
+
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.target).toEqual('./docs/document.md');  // From definition.url (base)
+      expect(parsed.section).toEqual('introduction');       // From definition.url (fragment)
+      expect(parsed.alias).toEqual('Custom Display Text');  // From rawText
+    });
+
+    it('should parse reference-style link with resolved definition - target and section from definition, alias from rawText', () => {
+      const link: ResourceLink = {
+        type: 'link',
+        rawText: '[Click here to read][myref]',
+        range: Range.create(0, 0),
+        isEmbed: false,
+        definition: {
+          label: 'myref',
+          url: './document.md#section',
+          title: 'My Document'
+        }
+      };
+
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.target).toEqual('./document.md');     // From definition.url (base)
+      expect(parsed.section).toEqual('section');          // From definition.url (fragment)
+      expect(parsed.alias).toEqual('Click here to read'); // From rawText
+    });
+
+    it('should handle wikilink with resolved definition but no section in URL', () => {
+      const link: ResourceLink = {
+        type: 'wikilink',
+        rawText: '[[my-note#ignored-section|Display Text]]',
+        range: Range.create(0, 0),
+        isEmbed: false,
+        definition: {
+          label: 'my-note',
+          url: './docs/document.md',  // No fragment
+          title: 'Document Title'
+        }
+      };
+
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.target).toEqual('./docs/document.md'); // From definition.url
+      expect(parsed.section).toEqual('');                  // Empty - no fragment in definition.url
+      expect(parsed.alias).toEqual('Display Text');        // From rawText
+    });
+
+    it('should handle reference-style link with resolved definition but no alias in rawText', () => {
+      const link: ResourceLink = {
+        type: 'link',
+        rawText: '[text][ref]',
+        range: Range.create(0, 0),
+        isEmbed: false,
+        definition: {
+          label: 'ref',
+          url: './target.md#section',
+          title: 'Target'
+        }
+      };
+
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.target).toEqual('./target.md');  // From definition.url (base)
+      expect(parsed.section).toEqual('section');     // From definition.url (fragment)
+      expect(parsed.alias).toEqual('text');          // From rawText
+    });
+
+    it('should handle complex URLs in definitions', () => {
+      const link: ResourceLink = {
+        type: 'wikilink',
+        rawText: '[[note|Alias]]',
+        range: Range.create(0, 0),
+        isEmbed: false,
+        definition: {
+          label: 'note',
+          url: '../path/to/some file.md#complex section name',
+          title: 'Title'
+        }
+      };
+
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.target).toEqual('../path/to/some file.md'); // Base path
+      expect(parsed.section).toEqual('complex section name');   // Fragment with spaces
+      expect(parsed.alias).toEqual('Alias');                    // From rawText
+    });
+  });
 });

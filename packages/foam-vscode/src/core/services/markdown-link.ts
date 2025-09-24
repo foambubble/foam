@@ -1,4 +1,5 @@
 import { ResourceLink } from '../model/note';
+import { URI } from '../model/uri';
 import { TextEdit } from './text-edit';
 
 export abstract class MarkdownLink {
@@ -15,6 +16,17 @@ export abstract class MarkdownLink {
         const [, target, section, alias] = this.wikilinkRegex.exec(
           link.rawText
         );
+
+        // For wikilinks with resolved definitions, parse target and section from definition URL
+        if (ResourceLink.isResolvedReference(link)) {
+          const definitionUri = URI.parse(link.definition.url, 'tmp');
+          return {
+            target: definitionUri.path, // Base path from definition
+            section: definitionUri.fragment, // Fragment from definition
+            alias: alias ?? '', // Alias from rawText
+          };
+        }
+
         return {
           target: target?.replace(/\\/g, '') ?? '',
           section: section ?? '',
@@ -22,9 +34,34 @@ export abstract class MarkdownLink {
         };
       }
       if (link.type === 'link') {
-        const [, alias, target, section] = this.directLinkRegex.exec(
-          link.rawText
-        );
+        // For reference-style links with resolved definitions, parse target and section from definition URL
+        if (ResourceLink.isResolvedReference(link)) {
+          // Extract alias from rawText for reference-style links
+          const referenceMatch = /^\[([^\]]*)\]/.exec(link.rawText);
+          const alias = referenceMatch ? referenceMatch[1] : '';
+
+          // Parse target and section from definition URL
+          const definitionUri = URI.parse(link.definition.url, 'tmp');
+          return {
+            target: definitionUri.path, // Base path from definition
+            section: definitionUri.fragment, // Fragment from definition
+            alias: alias, // Alias from rawText
+          };
+        }
+
+        const match = this.directLinkRegex.exec(link.rawText);
+        if (!match) {
+          // This might be a reference-style link that wasn't resolved
+          // Try to extract just the alias text for reference-style links
+          const referenceMatch = /^\[([^\]]*)\]/.exec(link.rawText);
+          const alias = referenceMatch ? referenceMatch[1] : '';
+          return {
+            target: '',
+            section: '',
+            alias: alias,
+          };
+        }
+        const [, alias, target, section] = match;
         return {
           target: target ?? '',
           section: section ?? '',

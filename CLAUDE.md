@@ -178,6 +178,22 @@ When adding to `src/core/`:
 
 The extension supports both Node.js and browser environments via separate build targets.
 
+## Documentation Guidelines
+
+### User Documentation (`docs/user/`)
+
+Documentation in `docs/user/` must be written for non-technical users. The goal is to help novice users quickly start using features, not to explain technical implementation details.
+
+**Writing Guidelines:**
+
+- **Target audience**: Assume users are new to Foam and may not be technical
+- **Be concise**: Keep it short and to the point - every sentence must convey useful information
+- **Avoid repetition**: Don't repeat the same concept in different words
+- **Focus on "how to use"**: Show users what they can do and how to do it, not how it works internally
+- **Balance brevity with clarity**: Users won't read verbose documentation, but they need enough information to succeed
+- **Use examples**: Show practical use cases rather than abstract descriptions
+- **Start with the most common use case**: Lead with what most users will want to do first
+
 # GitHub CLI Integration
 
 To interact with the github repo we will be using the `gh` command.

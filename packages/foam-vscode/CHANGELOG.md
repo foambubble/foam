@@ -4,6 +4,20 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.28.0] - 2025-09-24
+
+Features:
+
+- Added workspace symbols for note aliases (#1461)
+- Added tag navigation and peek (#1510)
+- Added support for tag refactoring (#1513)
+- Added support for wikilink images styling (#1514)
+
+Fixes and Improvements:
+
+- Added support for image link title attribute (#1514)
+- Exposing FOAM_DATE_DAY_ISO variable (#1512 - thanks @ChThH)
+
 ## [0.27.7] - 2025-09-13
 
 Features:

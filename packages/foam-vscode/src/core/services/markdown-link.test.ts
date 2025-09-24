@@ -152,6 +152,94 @@ describe('MarkdownLink', () => {
     });
   });
 
+  describe('parse direct link with title attributes', () => {
+    it('should parse image with double-quoted title', () => {
+      const link = parser.parse(
+        getRandomURI(),
+        `![alt text](image.jpg "Title text")`
+      ).links[0];
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.target).toEqual('image.jpg');
+      expect(parsed.alias).toEqual('alt text');
+      expect(parsed.section).toEqual('');
+    });
+
+    it('should parse image with single-quoted title', () => {
+      const link = parser.parse(
+        getRandomURI(),
+        `![alt text](image.jpg 'Title text')`
+      ).links[0];
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.target).toEqual('image.jpg');
+      expect(parsed.alias).toEqual('alt text');
+      expect(parsed.section).toEqual('');
+    });
+
+    it('should handle sections with titles', () => {
+      const link = parser.parse(
+        getRandomURI(),
+        `![alt text](image.jpg#section "Title text")`
+      ).links[0];
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.target).toEqual('image.jpg');
+      expect(parsed.section).toEqual('section');
+      expect(parsed.alias).toEqual('alt text');
+    });
+
+    it('should handle URLs with spaces in titles', () => {
+      const link = parser.parse(
+        getRandomURI(),
+        `![alt](path/to/file.jpg "Title with spaces")`
+      ).links[0];
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.target).toEqual('path/to/file.jpg');
+      expect(parsed.alias).toEqual('alt');
+      expect(parsed.section).toEqual('');
+    });
+
+    it('should maintain compatibility with titleless images', () => {
+      const link = parser.parse(getRandomURI(), `![alt text](image.jpg)`)
+        .links[0];
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.target).toEqual('image.jpg');
+      expect(parsed.alias).toEqual('alt text');
+      expect(parsed.section).toEqual('');
+    });
+
+    it('should handle complex URLs with titles', () => {
+      const link = parser.parse(
+        getRandomURI(),
+        `![alt](path/to/image.jpg "Complex title with spaces")`
+      ).links[0];
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.target).toEqual('path/to/image.jpg');
+      expect(parsed.alias).toEqual('alt');
+      expect(parsed.section).toEqual('');
+    });
+
+    it('should parse regular links with titles', () => {
+      const link = parser.parse(
+        getRandomURI(),
+        `[link text](document.md "Link title")`
+      ).links[0];
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.target).toEqual('document.md');
+      expect(parsed.alias).toEqual('link text');
+      expect(parsed.section).toEqual('');
+    });
+
+    it('should handle titles with special characters', () => {
+      const link = parser.parse(
+        getRandomURI(),
+        `![alt](image.jpg "Title with special chars")`
+      ).links[0];
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.target).toEqual('image.jpg');
+      expect(parsed.alias).toEqual('alt');
+      expect(parsed.section).toEqual('');
+    });
+  });
+
   describe('rename wikilink', () => {
     it('should rename the target only', () => {
       const link = parser.parse(

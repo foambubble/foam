@@ -97,11 +97,7 @@ describe('Link resolution', () => {
       const ws = createTestWorkspace();
       const noteA = createTestNote({
         uri: '/somewhere/from/page-a.md',
-        links: [{ slug: 'page-b' }],
-      });
-      noteA.definitions.push({
-        label: 'page-b',
-        url: '../to/page-b.md',
+        links: [{ slug: 'page-b', definitionUrl: '../to/page-b.md' }],
       });
       const noteB = createTestNote({
         uri: '/somewhere/to/page-b.md',

@@ -48,8 +48,7 @@ export const createTestWorkspace = (workspaceRoots: URI[] = []) => {
 export const createTestNote = (params: {
   uri: string;
   title?: string;
-  definitions?: NoteLinkDefinition[];
-  links?: Array<{ slug: string } | { to: string }>;
+  links?: Array<{ slug: string; definitionUrl?: string } | { to: string }>;
   tags?: string[];
   aliases?: string[];
   text?: string;
@@ -63,7 +62,6 @@ export const createTestNote = (params: {
     type: params.type ?? 'note',
     properties: {},
     title: params.title ?? strToUri(params.uri).getBasename(),
-    definitions: params.definitions ?? [],
     sections: params.sections?.map(label => ({
       label,
       range: Range.create(0, 0, 1, 0),
@@ -92,6 +90,13 @@ export const createTestNote = (params: {
                 range: range,
                 rawText: `[[${link.slug}]]`,
                 isEmbed: false,
+                definition: link.definitionUrl
+                  ? {
+                      label: link.slug,
+                      url: link.definitionUrl,
+                      range: Range.create(0, 0, 0, 0),
+                    }
+                  : link.slug,
               }
             : {
                 type: 'link',

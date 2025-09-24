@@ -34,6 +34,13 @@ export abstract class ResourceLink {
   ): link is ResourceLink & { definition: NoteLinkDefinition } {
     return typeof link.definition === 'object' && link.definition !== null;
   }
+
+  /**
+   * Check if this is a regular inline link (not reference-style)
+   */
+  static isRegularLink(link: ResourceLink): boolean {
+    return link.definition === undefined;
+  }
 }
 
 export interface NoteLinkDefinition {
@@ -80,9 +87,6 @@ export interface Resource {
   tags: Tag[];
   aliases: Alias[];
   links: ResourceLink[];
-
-  // TODO to remove
-  definitions: NoteLinkDefinition[];
 }
 
 export interface ResourceParser {

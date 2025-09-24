@@ -157,7 +157,6 @@ This is a [reference-style link][ref1] and another [link][ref2].
       `);
 
       expect(note.links.length).toEqual(2);
-      expect(note.definitions.length).toEqual(2);
 
       const link1 = note.links[0];
       expect(link1.type).toEqual('link');
@@ -187,8 +186,6 @@ This is a [reference-style link][missing-ref].
       `);
 
       expect(note.links.length).toEqual(1);
-      expect(note.definitions.length).toEqual(1);
-
       const link = note.links[0];
       expect(link.type).toEqual('link');
       expect(link.rawText).toEqual('[reference-style link][missing-ref]');
@@ -206,7 +203,6 @@ This has [[wikilink]], [inline link](target.md), and [reference link][ref].
       `);
 
       expect(note.links.length).toEqual(3);
-      expect(note.definitions.length).toEqual(1);
 
       expect(note.links[0].type).toEqual('wikilink');
       expect(note.links[0].rawText).toEqual('[[wikilink]]');

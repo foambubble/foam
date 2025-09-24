@@ -93,7 +93,7 @@ async function updateWikilinkDefinitions(
   }
 
   const resource = fParser.parse(fromVsCodeUri(doc.uri), text);
-  const update = await generateLinkReferences(
+  const updates = await generateLinkReferences(
     resource,
     text,
     eol,
@@ -101,12 +101,14 @@ async function updateWikilinkDefinitions(
     setting === 'withExtensions'
   );
 
-  if (update) {
+  if (updates.length > 0) {
     await editor.edit(editBuilder => {
-      const gap = doc.lineAt(update.range.start.line - 1).isEmptyOrWhitespace
-        ? ''
-        : eol;
-      editBuilder.replace(toVsCodeRange(update.range), gap + update.newText);
+      updates.forEach(update => {
+        const gap = doc.lineAt(update.range.start.line - 1).isEmptyOrWhitespace
+          ? ''
+          : eol;
+        editBuilder.replace(toVsCodeRange(update.range), gap + update.newText);
+      });
     });
   }
 }

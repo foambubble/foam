@@ -57,15 +57,8 @@ export class MarkdownResourceProvider implements ResourceProvider {
     const { target, section } = MarkdownLink.analyzeLink(link);
     switch (link.type) {
       case 'wikilink': {
-        let definitionUri = undefined;
-        for (const def of resource.definitions) {
-          if (def.label === target) {
-            definitionUri = def.url;
-            break;
-          }
-        }
-        if (isSome(definitionUri)) {
-          const definedUri = resource.uri.resolve(definitionUri);
+        if (ResourceLink.isResolvedReference(link)) {
+          const definedUri = resource.uri.resolve(link.definition.url);
           targetUri =
             workspace.find(definedUri, resource.uri)?.uri ??
             URI.placeholder(definedUri.path);
@@ -75,10 +68,9 @@ export class MarkdownResourceProvider implements ResourceProvider {
               ? resource.uri
               : workspace.find(target, resource.uri)?.uri ??
                 URI.placeholder(target);
-
-          if (section) {
-            targetUri = targetUri.with({ fragment: section });
-          }
+        }
+        if (section) {
+          targetUri = targetUri.with({ fragment: section });
         }
         break;
       }
@@ -160,8 +152,12 @@ export function createMarkdownReferences(
   const resource = source instanceof URI ? workspace.find(source) : source;
 
   const definitions = resource.links
-    .filter(link => link.type === 'wikilink')
+    .filter(link => ResourceLink.isReferenceStyleLink(link))
     .map(link => {
+      if (ResourceLink.isResolvedReference(link)) {
+        return link.definition;
+      }
+
       const targetUri = workspace.resolveLink(resource, link);
       const target = workspace.find(targetUri);
       if (isNone(target)) {

@@ -5,7 +5,7 @@
 👀*This is an early stage project under rapid development. For updates join the [Foam community Discord](https://foambubble.github.io/join-discord/g)! 💬*
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-128-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-129-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 [![Visual Studio Marketplace Installs](https://img.shields.io/visual-studio-marketplace/i/foam.foam-vscode?label=VS%20Code%20Installs)](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode)
@@ -372,6 +372,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <tr>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/s-jacob-powell"><img src="https://avatars.githubusercontent.com/u/109111499?v=4?s=60" width="60px;" alt="S. Jacob Powell"/><br /><sub><b>S. Jacob Powell</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=s-jacob-powell" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/figdavi"><img src="https://avatars.githubusercontent.com/u/99026991?v=4?s=60" width="60px;" alt="Davi Figueiredo"/><br /><sub><b>Davi Figueiredo</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=figdavi" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/ChThH"><img src="https://avatars.githubusercontent.com/u/9499483?v=4?s=60" width="60px;" alt="CT Hall"/><br /><sub><b>CT Hall</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=ChThH" title="Code">💻</a></td>
     </tr>
   </tbody>
 </table>

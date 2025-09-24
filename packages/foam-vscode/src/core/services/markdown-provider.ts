@@ -86,7 +86,7 @@ export class MarkdownResourceProvider implements ResourceProvider {
         // Handle reference-style links first
         if (ResourceLink.isResolvedReference(link)) {
           // Reference resolved to a definition
-          const resolvedUri = resource.uri.resolve(link.reference.url);
+          const resolvedUri = resource.uri.resolve(link.definition.url);
           targetUri =
             workspace.find(resolvedUri, resource.uri)?.uri ??
             URI.placeholder(resolvedUri.path);
@@ -96,7 +96,7 @@ export class MarkdownResourceProvider implements ResourceProvider {
           break;
         } else if (ResourceLink.isUnresolvedReference(link)) {
           // Reference-style link with unresolved reference - treat as placeholder
-          targetUri = URI.placeholder(link.reference);
+          targetUri = URI.placeholder(link.definition);
           break;
         }
 

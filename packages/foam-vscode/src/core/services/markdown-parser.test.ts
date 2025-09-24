@@ -112,7 +112,7 @@ describe('Markdown parsing', () => {
       expect(link.type).toEqual('wikilink');
       expect(ResourceLink.isUnresolvedReference(link)).toBe(true);
       if (ResourceLink.isUnresolvedReference(link)) {
-        expect(link.reference).toEqual('target-file');
+        expect(link.definition).toEqual('target-file');
       }
     });
 
@@ -164,9 +164,9 @@ This is a [reference-style link][ref1] and another [link][ref2].
       expect(link1.rawText).toEqual('[reference-style link][ref1]');
       expect(ResourceLink.isResolvedReference(link1)).toBe(true);
       if (ResourceLink.isResolvedReference(link1)) {
-        expect(link1.reference.label).toEqual('ref1');
-        expect(link1.reference.url).toEqual('target1.md');
-        expect(link1.reference.title).toEqual('Target 1');
+        expect(link1.definition.label).toEqual('ref1');
+        expect(link1.definition.url).toEqual('target1.md');
+        expect(link1.definition.title).toEqual('Target 1');
       }
 
       const link2 = note.links[1];
@@ -174,8 +174,8 @@ This is a [reference-style link][ref1] and another [link][ref2].
       expect(link2.rawText).toEqual('[link][ref2]');
       expect(ResourceLink.isResolvedReference(link2)).toBe(true);
       if (ResourceLink.isResolvedReference(link2)) {
-        expect(link2.reference.label).toEqual('ref2');
-        expect(link2.reference.url).toEqual('target2.md');
+        expect(link2.definition.label).toEqual('ref2');
+        expect(link2.definition.url).toEqual('target2.md');
       }
     });
 
@@ -194,7 +194,7 @@ This is a [reference-style link][missing-ref].
       expect(link.rawText).toEqual('[reference-style link][missing-ref]');
       expect(ResourceLink.isUnresolvedReference(link)).toBe(true);
       if (ResourceLink.isUnresolvedReference(link)) {
-        expect(link.reference).toEqual('missing-ref');
+        expect(link.definition).toEqual('missing-ref');
       }
     });
 
@@ -212,12 +212,12 @@ This has [[wikilink]], [inline link](target.md), and [reference link][ref].
       expect(note.links[0].rawText).toEqual('[[wikilink]]');
       expect(ResourceLink.isUnresolvedReference(note.links[0])).toBe(true);
       if (ResourceLink.isUnresolvedReference(note.links[0])) {
-        expect(note.links[0].reference).toEqual('wikilink');
+        expect(note.links[0].definition).toEqual('wikilink');
       }
 
       expect(note.links[1].type).toEqual('link');
       expect(note.links[1].rawText).toEqual('[inline link](target.md)');
-      expect(ResourceLink.isRegularLink(note.links[1])).toBe(true);
+      expect(ResourceLink.isReferenceStyleLink(note.links[1])).toBe(false);
 
       expect(note.links[2].type).toEqual('link');
       expect(note.links[2].rawText).toEqual('[reference link][ref]');

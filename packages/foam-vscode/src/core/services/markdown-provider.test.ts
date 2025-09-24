@@ -308,7 +308,7 @@ describe('Link resolution', () => {
       expect(ws.resolveLink(noteB, noteB.links[0])).toEqual(noteA.uri);
       expect(ws.resolveLink(noteC, noteC.links[0])).toEqual(noteA.uri);
       expect(noteD.links.length).toEqual(1);
-      expect(noteD.links[0].reference).toEqual('note');  // Unresolved reference
+      expect(noteD.links[0].definition).toEqual('note'); // Unresolved reference
     });
 
     describe('Workspace-relative paths (root-path relative)', () => {

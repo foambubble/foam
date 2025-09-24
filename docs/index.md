@@ -278,6 +278,7 @@ Foam is an evolving project and we welcome contributions:
     <tr>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/s-jacob-powell"><img src="https://avatars.githubusercontent.com/u/109111499?v=4?s=60" width="60px;" alt="S. Jacob Powell"/><br /><sub><b>S. Jacob Powell</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=s-jacob-powell" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/figdavi"><img src="https://avatars.githubusercontent.com/u/99026991?v=4?s=60" width="60px;" alt="Davi Figueiredo"/><br /><sub><b>Davi Figueiredo</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=figdavi" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/ChThH"><img src="https://avatars.githubusercontent.com/u/9499483?v=4?s=60" width="60px;" alt="CT Hall"/><br /><sub><b>CT Hall</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=ChThH" title="Code">💻</a></td>
     </tr>
   </tbody>
 </table>

@@ -1175,6 +1175,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "ChThH",
+      "name": "CT Hall",
+      "avatar_url": "https://avatars.githubusercontent.com/u/9499483?v=4",
+      "profile": "https://github.com/ChThH",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,

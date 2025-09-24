@@ -25,7 +25,7 @@ export const WIKILINK_EMBED_REGEX =
 // so we capture the entire possible wikilink item (ex. content-card![[note]]) using WIKILINK_EMBED_REGEX and then
 // use WIKILINK_EMBED_REGEX_GROUPER to parse it into the modifier(content-card) and the wikilink(note)
 export const WIKILINK_EMBED_REGEX_GROUPS =
-  /((?:\w+)|(?:(?:\w+)-(?:\w+)))?!\[\[([^[\]]+?)\]\]/;
+  /((?:\w+)|(?:(?:\w+)-(?:\w+)))?!\[\[([^|[\]]+?)(\|[^[\]]+?)?\]\]/;
 export const CONFIG_EMBED_NOTE_TYPE = 'preview.embedNoteType';
 let refsStack: string[] = [];
 
@@ -39,7 +39,7 @@ export const markdownItWikilinkEmbed = (
     regex: WIKILINK_EMBED_REGEX,
     replace: (wikilinkItem: string) => {
       try {
-        const [, noteEmbedModifier, wikilink] = wikilinkItem.match(
+        const [, noteEmbedModifier, wikilink, parametersString] = wikilinkItem.match(
           WIKILINK_EMBED_REGEX_GROUPS
         );
 
@@ -82,7 +82,8 @@ export const markdownItWikilinkEmbed = (
           noteEmbedModifier,
           parser,
           workspace,
-          md
+          md,
+          parametersString
         );
         refsStack.pop();
         return refsStack.length === 0 ? md.render(content) : content;
@@ -102,7 +103,8 @@ function getNoteContent(
   noteEmbedModifier: string | undefined,
   parser: ResourceParser,
   workspace: FoamWorkspace,
-  md: markdownit
+  md: markdownit,
+  parametersString?: string
 ): string {
   let content = `Embed for [[${includedNote.uri.path}]]`;
   let toRender: string;
@@ -138,10 +140,10 @@ Embed for attachments is not supported
       toRender = md.render(content);
       break;
     case 'image':
-      content = `<div class="embed-container-image">${md.render(
-        `![](${md.normalizeLink(includedNote.uri.path)})`
-      )}</div>`;
-      toRender = md.render(content);
+      const imageParams = parseImageParameters(includedNote.uri.path, parametersString);
+      const imageHtml = generateImageStyles(imageParams, md);
+      content = `<div class="embed-container-image">${imageHtml}</div>`;
+      toRender = content;
       break;
     default:
       toRender = content;
@@ -278,4 +280,112 @@ function inlineFormatter(content: string, md: markdownit): string {
   return content;
 }
 
+interface ImageParameters {
+  filename: string;
+  width?: string;
+  height?: string;
+  align?: 'center' | 'left' | 'right';
+  alt?: string;
+}
+
+function parseImageParameters(wikilink: string, parametersString?: string): ImageParameters {
+  const result: ImageParameters = {
+    filename: wikilink,
+  };
+
+  if (!parametersString) {
+    return result;
+  }
+
+  // Remove the leading pipe and split by remaining pipes
+  const params = parametersString.slice(1).split('|');
+
+  if (params.length === 0) {
+    return result;
+  }
+
+  // First parameter is always size
+  const sizeParam = params[0]?.trim();
+  if (sizeParam) {
+    // Parse size parameter: could be "300", "300x200", "50%", "300px", etc.
+    // Check for width x height format (but not if it's just a unit like "px")
+    const dimensionMatch = sizeParam.match(/^(\d+(?:\.\d+)?(?:px|%|em|rem|vw|vh)?)\s*x\s*(\d+(?:\.\d+)?(?:px|%|em|rem|vw|vh)?)$/i);
+    if (dimensionMatch) {
+      // Width x Height format
+      result.width = dimensionMatch[1]?.trim();
+      result.height = dimensionMatch[2]?.trim();
+    } else {
+      // Width only
+      result.width = sizeParam;
+    }
+  }
+
+  // Second parameter could be alignment
+  const alignParam = params[1]?.trim().toLowerCase();
+  if (alignParam && ['center', 'left', 'right'].includes(alignParam)) {
+    result.align = alignParam as 'center' | 'left' | 'right';
+  } else if (alignParam && !alignParam.startsWith('class:')) {
+    // If not alignment and not a class, treat as alt text
+    result.alt = params.slice(1).join('|').trim();
+  }
+
+  // Third parameter onwards is alt text (if second wasn't alt text)
+  if (result.align && params.length > 2) {
+    result.alt = params.slice(2).join('|').trim();
+  }
+
+  return result;
+}
+
+function generateImageStyles(params: ImageParameters, md: markdownit): string {
+  const { filename, width, height, align, alt } = params;
+
+  // Build CSS styles for the image
+  const styles: string[] = [];
+
+  if (width) {
+    styles.push(`width: ${addDefaultUnit(width)}`);
+
+    // If only width is specified, set height to auto to maintain aspect ratio
+    if (!height) {
+      styles.push('height: auto');
+    }
+  }
+
+  if (height) {
+    styles.push(`height: ${addDefaultUnit(height)}`);
+  }
+
+  const styleAttr = styles.length > 0 ? ` style="${styles.join('; ')}"` : '';
+  const altAttr = alt ? ` alt="${escapeHtml(alt)}"` : ' alt=""';
+
+  // Generate the image HTML
+  const imageHtml = `<img src="${md.normalizeLink(filename)}"${styleAttr}${altAttr}>`;
+
+  // Wrap with alignment if specified
+  if (align) {
+    return `<div style="text-align: ${align};">${imageHtml}</div>`;
+  }
+
+  return imageHtml;
+}
+
+function addDefaultUnit(value: string): string {
+  // If no unit is specified and it's a pure number, add 'px'
+  if (/^\d+(\.\d+)?$/.test(value)) {
+    return value + 'px';
+  }
+  return value;
+}
+
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+export { parseImageParameters, generateImageStyles };
 export default markdownItWikilinkEmbed;

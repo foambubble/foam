@@ -6,36 +6,33 @@ export interface ResourceLink {
   rawText: string;
   range: Range;
   isEmbed: boolean;
-  reference?: string | NoteLinkDefinition;
+  definition?: string | NoteLinkDefinition;
 }
 
 export abstract class ResourceLink {
   /**
-   * Check if this is a regular inline/wikilink (no reference)
-   */
-  static isRegularLink(link: ResourceLink): boolean {
-    return link.reference === undefined;
-  }
-
-  /**
-   * Check if this is a reference-style link with unresolved reference
-   */
-  static isUnresolvedReference(link: ResourceLink): link is ResourceLink & { reference: string } {
-    return typeof link.reference === 'string';
-  }
-
-  /**
-   * Check if this is a reference-style link with resolved reference
-   */
-  static isResolvedReference(link: ResourceLink): link is ResourceLink & { reference: NoteLinkDefinition } {
-    return typeof link.reference === 'object' && link.reference !== null;
-  }
-
-  /**
    * Check if this is any kind of reference-style link (resolved or unresolved)
    */
   static isReferenceStyleLink(link: ResourceLink): boolean {
-    return link.reference !== undefined;
+    return link.definition !== undefined;
+  }
+
+  /**
+   * Check if this is a reference-style link with unresolved definition
+   */
+  static isUnresolvedReference(
+    link: ResourceLink
+  ): link is ResourceLink & { definition: string } {
+    return typeof link.definition === 'string';
+  }
+
+  /**
+   * Check if this is a reference-style link with resolved definition
+   */
+  static isResolvedReference(
+    link: ResourceLink
+  ): link is ResourceLink & { definition: NoteLinkDefinition } {
+    return typeof link.definition === 'object' && link.definition !== null;
   }
 }
 

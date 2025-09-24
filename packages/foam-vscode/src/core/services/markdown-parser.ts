@@ -364,7 +364,7 @@ const wikilinkPlugin: ParserPlugin = {
         rawText: literalContent,
         range,
         isEmbed,
-        reference: (node as any).value,
+        definition: (node as any).value,
       });
     }
     if (node.type === 'link' || node.type === 'image') {
@@ -398,7 +398,7 @@ const wikilinkPlugin: ParserPlugin = {
         range: astPositionToFoamRange(node.position!),
         isEmbed: false,
         // Store reference identifier temporarily - will be resolved in onDidVisitTree
-        reference: identifier,
+        definition: identifier,
       });
     }
   },
@@ -407,13 +407,13 @@ const wikilinkPlugin: ParserPlugin = {
     note.links.forEach(link => {
       if (ResourceLink.isUnresolvedReference(link)) {
         // This link has a reference identifier (from linkReference or wikilink)
-        const referenceId = link.reference;
+        const referenceId = link.definition;
         const definition = note.definitions.find(
           def => def.label === referenceId
         );
 
-        // Set reference to definition object if found, otherwise keep as string
-        (link as any).reference = definition || referenceId;
+        // Set definition to definition object if found, otherwise keep as string
+        (link as any).definition = definition || referenceId;
       }
     });
   },

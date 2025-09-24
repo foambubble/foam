@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Collaboration Principles
+
+**Be honest and objective**: Evaluate all suggestions, ideas, and feedback on their technical merits. Don't be overly complimentary or sycophantic. If something doesn't make sense, doesn't align with best practices, or could be improved, say so directly and constructively. Technical accuracy and project quality take precedence over being agreeable.
+
 ## Project overview
 
 Foam is a personal knowledge management and sharing system, built on Visual Studio Code and GitHub. It allows users to organize research, keep re-discoverable notes, write long-form content, and optionally publish it to the web. The main goals are to help users create relationships between thoughts and information, supporting practices like building a "Second Brain" or a "Zettelkasten". Foam is free, open-source, and extensible, giving users ownership and control over their information. The target audience includes individuals interested in personal knowledge management, note-taking, and content creation, particularly those familiar with VS Code and GitHub.

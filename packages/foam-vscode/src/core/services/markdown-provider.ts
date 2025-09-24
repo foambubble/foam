@@ -83,32 +83,26 @@ export class MarkdownResourceProvider implements ResourceProvider {
         break;
       }
       case 'link': {
-        // Handle reference-style links first
-        if (ResourceLink.isResolvedReference(link)) {
-          // Reference resolved to a definition
-          const resolvedUri = resource.uri.resolve(link.definition.url);
-          targetUri =
-            workspace.find(resolvedUri, resource.uri)?.uri ??
-            URI.placeholder(resolvedUri.path);
-          if (section) {
-            targetUri = targetUri.with({ fragment: section });
-          }
-          break;
-        } else if (ResourceLink.isUnresolvedReference(link)) {
+        if (ResourceLink.isUnresolvedReference(link)) {
           // Reference-style link with unresolved reference - treat as placeholder
           targetUri = URI.placeholder(link.definition);
           break;
         }
 
+        // Handle reference-style links first
+        const targetPath = ResourceLink.isResolvedReference(link)
+          ? link.definition.url
+          : target;
+
         let path: string;
         let foundResource: Resource | null = null;
 
-        if (target.startsWith('/')) {
+        if (targetPath.startsWith('/')) {
           // Handle workspace-relative paths (root-path relative)
           if (this.workspaceRoots.length > 0) {
             // Try to resolve against each workspace root
             for (const workspaceRoot of this.workspaceRoots) {
-              const candidatePath = target.substring(1); // Remove leading '/'
+              const candidatePath = targetPath.substring(1); // Remove leading '/'
               const absolutePath = workspaceRoot.joinPath(candidatePath);
               const found = workspace.find(absolutePath);
               if (found) {
@@ -120,7 +114,7 @@ export class MarkdownResourceProvider implements ResourceProvider {
             if (!foundResource) {
               // Not found in any workspace root, create placeholder relative to first workspace root
               const firstRoot = this.workspaceRoots[0];
-              const candidatePath = target.substring(1);
+              const candidatePath = targetPath.substring(1);
               const absolutePath = firstRoot.joinPath(candidatePath);
               targetUri = URI.placeholder(absolutePath.path);
             } else {
@@ -128,7 +122,7 @@ export class MarkdownResourceProvider implements ResourceProvider {
             }
           } else {
             // No workspace roots provided, fall back to existing behavior
-            path = target;
+            path = targetPath;
             targetUri =
               workspace.find(path, resource.uri)?.uri ??
               URI.placeholder(resource.uri.resolve(path).path);
@@ -136,9 +130,9 @@ export class MarkdownResourceProvider implements ResourceProvider {
         } else {
           // Handle relative paths and non-root paths
           path =
-            target.startsWith('./') || target.startsWith('../')
-              ? target
-              : './' + target;
+            targetPath.startsWith('./') || targetPath.startsWith('../')
+              ? targetPath
+              : './' + targetPath;
           targetUri =
             workspace.find(path, resource.uri)?.uri ??
             URI.placeholder(resource.uri.resolve(path).path);

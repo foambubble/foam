@@ -8,7 +8,7 @@ import { FoamWorkspace } from '../../core/model/workspace';
 import { Logger } from '../../core/utils/log';
 import { Resource, ResourceParser } from '../../core/model/note';
 import { getFoamVsCodeConfig } from '../../services/config';
-import { fromVsCodeUri, toVsCodeUri } from '../../utils/vsc-utils';
+import { fromVsCodeUri } from '../../utils/vsc-utils';
 import { MarkdownLink } from '../../core/services/markdown-link';
 import { URI } from '../../core/model/uri';
 import { Position } from '../../core/model/position';
@@ -138,7 +138,7 @@ Embed for attachments is not supported
 </div>`;
       toRender = md.render(content);
       break;
-    case 'image':
+    case 'image': {
       const imageParams = parseImageParameters(
         includedNote.uri.path,
         parametersString
@@ -147,6 +147,7 @@ Embed for attachments is not supported
       content = `<div class="embed-container-image">${imageHtml}</div>`;
       toRender = content;
       break;
+    }
     default:
       toRender = content;
   }

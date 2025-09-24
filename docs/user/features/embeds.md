@@ -75,3 +75,60 @@ Available options:
 - `full-inline`
 - `content-card`
 - `content-inline`
+
+## Image Sizing
+
+Resize images to make your documents more readable:
+
+```markdown
+![[image.png|300]]          # 300 pixels wide
+![[image.png|50%]]          # Half the container width
+```
+
+### Common Use Cases
+
+**Make large screenshots readable:**
+```markdown
+![[screenshot.png|600]]
+```
+
+**Create responsive images:**
+```markdown
+![[diagram.png|70%]]
+```
+
+**Size by width and height:**
+```markdown
+![[image.png|300x200]]
+```
+
+### Alignment
+
+Center, left, or right align images:
+
+```markdown
+![[image.png|300|center]]
+![[image.png|300|left]]
+![[image.png|300|right]]
+```
+
+### Alt Text
+
+Add descriptions for accessibility:
+
+```markdown
+![[chart.png|400|Monthly sales chart]]
+```
+
+### Units
+
+- `300` or `300px` - pixels (default)
+- `50%` - percentage of container
+- `20em` - relative to font size
+
+### Troubleshooting
+
+- Check image path: `![[path/to/image.png|300]]`
+- No spaces around pipes: `|300|` not `| 300 |`
+- Images only resize in preview mode, not edit mode
+- Use lowercase alignment: `center` not `Center`

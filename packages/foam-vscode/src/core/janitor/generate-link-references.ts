@@ -51,36 +51,24 @@ export const generateLinkReferences = async (
 
   // Add new definitions
   if (toAddWikilinkDefinitions.length > 0) {
-    let text = '';
+    const lastLine = currentNoteText.split(eol)[nLines - 1];
+    const isLastLineEmpty = lastLine.trim().length === 0;
+
+    let text = isLastLineEmpty ? '' : eol;
     for (const def of toAddWikilinkDefinitions) {
       // Choose the correct position for insertion, e.g., end of file or after last reference
       text = `${text}${eol}${NoteLinkDefinition.format(def)}`;
     }
     edits.push({
-      range: Range.create(nLines - 1, 0, nLines - 1, 0),
+      range: Range.create(
+        nLines - 1,
+        lastLine.length,
+        nLines - 1,
+        lastLine.length
+      ),
       newText: text,
     });
   }
 
-  // Optionally, handle updates to existing definitions if needed
-
   return edits;
-
-  // const lines = text.split(eol);
-  // // adjust padding based on whether there are existing definitions
-  // // and, if not, whether we are on an empty line at the end of the file
-  // const padding =
-  //   updatedWikilinkDefinitions.length === 0 || // no definitions
-  //   !Position.isEqual(targetRange.start, targetRange.end) // replace existing definitions
-  //     ? ''
-  //     : targetRange.start.character > 0 // not an empty line
-  //     ? `${eol}${eol}`
-  //     : eol;
-
-  // return existingReferences === newReferences
-  //   ? null
-  //   : {
-  //       newText: `${padding}${newReferences}`,
-  //       range: targetRange,
-  //     };
 };

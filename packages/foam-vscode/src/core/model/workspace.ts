@@ -161,7 +161,6 @@ export class FoamWorkspace implements IDisposable {
       path = reference as string;
     }
 
-    // let reversedPath = path.split('/').reverse().join('/');
     let reversedPath = normalize(path).split('/').reverse().join('/');
 
     if (reversedPath.indexOf('/') < 0) {

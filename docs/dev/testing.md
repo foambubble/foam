@@ -49,8 +49,8 @@ This dual-environment capability allows us to:
 
 ### Available Commands
 
-- **`yarn test:unit`**: Runs only `.test.ts` files (no VS Code dependencies)
-- **`yarn test:unit-with-specs`**: Runs `.test.ts` + `@unit-ready` marked `.spec.ts` files using mocks
+- **`yarn test:unit`**: Runs `.test.ts` files (no VS Code dependencies) + `@unit-ready` marked `.spec.ts` files using mocks
+- **`yarn test:unit-without-specs`**: Runs only `.test.ts` files
 - **`yarn test:e2e`**: Runs all `.spec.ts` files in full VS Code extension host
 - **`yarn test`**: Runs both unit and e2e test suites sequentially
 

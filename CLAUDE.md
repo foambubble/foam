@@ -25,7 +25,7 @@ All the following commands are to be executed from the `packages/foam-vscode` di
 ### Testing
 
 - `yarn test` - Run all tests (unit + integration)
-- `yarn test:unit-with-specs` - Run only unit tests (\*.test.ts files and the .spec.ts files marked a vscode-mock friendly)
+- `yarn test:unit` - Run unit tests (\*.test.ts files and the .spec.ts files marked a vscode-mock friendly)
 - `yarn test:e2e` - Run only integration tests (\*.spec.ts files)
 - `yarn lint` - Run linting
 - `yarn test-reset-workspace` to clean test workspace
@@ -37,11 +37,10 @@ When running tests, do not provide additional parameters, they are ignored by th
 Unit tests are named `*.test.ts` and integration tests are `*.spec.ts`. These test files live alongside the code in the `src` directory. An integration test is one that has a direct or indirect dependency on `vscode` module.
 There is a mock `vscode` module that can be used to run most integration tests without starting VS Code. Tests that can use this mock are start with the line `/* @unit-ready */`.
 
-- If you are interested in a test inside a `*.test.ts` file, run `yarn test:unit`
-- If you are interested in a test inside a `*.spec.ts` file that starts with `/* @unit-ready */` run `yarn test:unit-with-specs`
+- If you are interested in a test inside a `*.test.ts` file, run `yarn test:unit` or inside a `*.spec.ts` file that starts with `/* @unit-ready */` run `yarn test:unit`
 - If you are interested in a test inside a `*.spec.ts` file that does not include `/* @unit-ready */` run `yarn test`
 
-While in development we mostly want to use `yarn test:unit-with-specs`.
+While in development we mostly want to use `yarn test:unit`.
 When multiple tests are failing, look at all of them, but only focus on fixing the first one. Once that is fixed, run the test suite again and repeat the process.
 
 When writing tests keep mocking to a bare minimum. Code should be written in a way that is easily testable and if I/O is necessary, it should be done in appropriate temporary directories.

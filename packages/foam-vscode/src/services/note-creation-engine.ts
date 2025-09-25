@@ -13,6 +13,27 @@ import { extractFoamTemplateFrontmatterMetadata } from '../utils/template-frontm
 import { URI } from '../core/model/uri';
 
 /**
+ * Characters that are invalid in file names
+ * Based on UNALLOWED_CHARS from variable-resolver.ts but excluding forward slash
+ * which is needed for directory separators in filepaths
+ */
+const FILEPATH_UNALLOWED_CHARS = '\\#%&{}<>?*$!\'":@+`|=';
+
+/**
+ * Sanitizes a filepath by replacing invalid characters with dashes
+ * Note: Forward slashes (/) are preserved for directory separators
+ * @param filepath The filepath to sanitize
+ * @returns The sanitized filepath
+ */
+function sanitizeFilepath(filepath: string): string {
+  let sanitized = filepath;
+  FILEPATH_UNALLOWED_CHARS.split('').forEach(char => {
+    sanitized = sanitized.split(char).join('-');
+  });
+  return sanitized;
+}
+
+/**
  * Unified engine for creating notes from both Markdown and JavaScript templates
  */
 export class NoteCreationEngine {
@@ -109,9 +130,12 @@ export class NoteCreationEngine {
     ]);
 
     // Determine filepath - get variables from resolver for default generation
-    const filepath =
+    let filepath =
       metadata.get('filepath') ??
       (await this.generateDefaultFilepath(resolver));
+
+    // Sanitize the filepath to remove invalid characters
+    filepath = sanitizeFilepath(filepath);
 
     return {
       filepath: this.roots[0].forPath(filepath),

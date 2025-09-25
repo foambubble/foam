@@ -89,18 +89,26 @@ export class FoamWorkspace implements IDisposable {
 
   public listByIdentifier(identifier: string): Resource[] {
     let needle = this.getTrieIdentifier(identifier);
-
     const mdNeedle =
       getExtension(normalize(identifier)) !== this.defaultExtension
         ? this.getTrieIdentifier(identifier + this.defaultExtension)
         : undefined;
 
-    const resources: Resource[] = [];
+    let resources: Resource[] = [];
 
     this._resources.find(needle).forEach(elm => resources.push(elm[1]));
 
     if (mdNeedle) {
       this._resources.find(mdNeedle).forEach(elm => resources.push(elm[1]));
+    }
+
+    // if multiple resources found, try to filter exact case matches
+    if (resources.length > 1) {
+      resources = resources.filter(
+        r =>
+          r.uri.getBasename() === identifier ||
+          r.uri.getBasename() === identifier + this.defaultExtension
+      );
     }
 
     return resources.sort(Resource.sortByPath);
@@ -115,7 +123,7 @@ export class FoamWorkspace implements IDisposable {
     const amongst = [];
     const basename = forResource.getBasename();
 
-    this.listByIdentifier(basename).map(res => {
+    this.listByIdentifier(basename).forEach(res => {
       // skip self
       if (res.uri.isEqual(forResource)) {
         return;

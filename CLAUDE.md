@@ -32,6 +32,7 @@ All the following commands are to be executed from the `packages/foam-vscode` di
 
 Unit tests run in Node.js environment using Jest
 Integration tests require VS Code extension host
+When running tests, do not provide additional parameters, they are ignored by the custom runner script. You cannot run just a test, you have to run the whole suite.
 
 Unit tests are named `*.test.ts` and integration tests are `*.spec.ts`. These test files live alongside the code in the `src` directory. An integration test is one that has a direct or indirect dependency on `vscode` module.
 There is a mock `vscode` module that can be used to run most integration tests without starting VS Code. Tests that can use this mock are start with the line `/* @unit-ready */`.

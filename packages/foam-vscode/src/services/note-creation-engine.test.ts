@@ -474,4 +474,132 @@ Content without filepath metadata.`,
       });
     });
   });
+
+  describe('filepath sanitization', () => {
+    it('should sanitize invalid characters in filepath from template', async () => {
+      const { engine } = await setupFoamEngine();
+
+      const template: Template = {
+        type: 'markdown',
+        content: `---
+foam_template:
+  filepath: \${FOAM_TITLE}.md
+---
+# \${FOAM_TITLE}`,
+        metadata: new Map(),
+      };
+
+      const trigger = TriggerFactory.createCommandTrigger(
+        'foam-vscode.create-note'
+      );
+
+      // Title with many invalid characters (excluding / which is preserved for directories): \#%&{}<>?*$!'":@+`|=
+      const resolver = new Resolver(new Map(), new Date());
+      resolver.define('FOAM_TITLE', 'Test\\#%&{}<>?*$!\'"Title:@+`|=');
+
+      const result = await engine.processTemplate(trigger, template, resolver);
+
+      // All invalid characters should become dashes: Test + 14 invalid chars + Title + : + @+`|= (6 more total)
+      expect(result.filepath.path).toBe('Test--------------Title------.md');
+
+      // Content should remain unchanged
+      expect(result.content).toContain('# Test\\#%&{}<>?*$!\'"Title:@+`|=');
+    });
+
+    it('should not affect FOAM_TITLE when not used in filepath', async () => {
+      const { engine } = await setupFoamEngine();
+
+      // Template with static filepath, FOAM_TITLE only in content
+      const template: Template = {
+        type: 'markdown',
+        content: `---
+foam_template:
+  filepath: notes/static-file.md
+---
+# \${FOAM_TITLE}
+
+Content with \${FOAM_TITLE} should remain unchanged.`,
+        metadata: new Map(),
+      };
+
+      const trigger = TriggerFactory.createCommandTrigger(
+        'foam-vscode.create-note'
+      );
+
+      const resolver = new Resolver(new Map(), new Date());
+      resolver.define('FOAM_TITLE', 'Invalid "Characters" <Test>');
+
+      const result = await engine.processTemplate(trigger, template, resolver);
+
+      // Filepath should remain static (no sanitization needed)
+      expect(result.filepath.path).toBe('notes/static-file.md');
+
+      // Content should use original FOAM_TITLE with invalid characters
+      expect(result.content).toContain('# Invalid "Characters" <Test>');
+      expect(result.content).toContain(
+        'Content with Invalid "Characters" <Test> should remain'
+      );
+    });
+
+    it('should sanitize complex filepath patterns with multiple variables', async () => {
+      const { engine } = await setupFoamEngine();
+
+      const template: Template = {
+        type: 'markdown',
+        content: `---
+foam_template:
+  filepath: \${FOAM_DATE_YEAR}/\${FOAM_DATE_MONTH}/\${FOAM_TITLE}.md
+---
+# \${FOAM_TITLE}
+
+Date and title combination.`,
+        metadata: new Map(),
+      };
+
+      const trigger = TriggerFactory.createCommandTrigger(
+        'foam-vscode.create-note'
+      );
+
+      const testDate = new Date('2024-03-15');
+      const resolver = new Resolver(new Map(), testDate);
+      resolver.define('FOAM_TITLE', 'Note:With|Invalid*Chars');
+      resolver.define('FOAM_DATE_YEAR', '2024');
+      resolver.define('FOAM_DATE_MONTH', '03');
+
+      const result = await engine.processTemplate(trigger, template, resolver);
+
+      // Entire resolved filepath should be sanitized
+      expect(result.filepath.path).toBe('2024/03/Note-With-Invalid-Chars.md');
+
+      // Content should use original FOAM_TITLE
+      expect(result.content).toContain('# Note:With|Invalid*Chars');
+    });
+
+    it('should handle filepath with no invalid characters', async () => {
+      const { engine } = await setupFoamEngine();
+
+      const template: Template = {
+        type: 'markdown',
+        content: `---
+foam_template:
+  filepath: notes/\${FOAM_TITLE}.md
+---
+# \${FOAM_TITLE}`,
+        metadata: new Map(),
+      };
+
+      const trigger = TriggerFactory.createCommandTrigger(
+        'foam-vscode.create-note'
+      );
+
+      const resolver = new Resolver(new Map(), new Date());
+      resolver.define('FOAM_TITLE', 'ValidTitle123');
+
+      const result = await engine.processTemplate(trigger, template, resolver);
+
+      // No sanitization needed - should remain unchanged
+      expect(result.filepath.path).toBe('notes/ValidTitle123.md');
+      expect(result.content).toContain('# ValidTitle123');
+    });
+  });
 });

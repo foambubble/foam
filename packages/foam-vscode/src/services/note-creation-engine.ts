@@ -26,11 +26,10 @@ const FILEPATH_UNALLOWED_CHARS = '\\#%&{}<>?*$!\'":@+`|=';
  * @returns The sanitized filepath
  */
 function sanitizeFilepath(filepath: string): string {
-  let sanitized = filepath;
-  FILEPATH_UNALLOWED_CHARS.split('').forEach(char => {
-    sanitized = sanitized.split(char).join('-');
-  });
-  return sanitized;
+  // Escape special regex characters and create character class
+  const escapedChars = FILEPATH_UNALLOWED_CHARS.replace(/[\\^\-\]]/g, '\\$&');
+  const regex = new RegExp(`[${escapedChars}]`, 'g');
+  return filepath.replace(regex, '-');
 }
 
 /**

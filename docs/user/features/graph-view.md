@@ -50,7 +50,6 @@ A sample configuration object is provided below, you can provide as many or as l
 ```json
 "foam.graph.style": {
     "background": "#202020",
-    "deduplication": false,
     "fontSize": 12,
     "fontFamily": "Sans-Serif",
     "lineColor": "#277da1",
@@ -64,7 +63,6 @@ A sample configuration object is provided below, you can provide as many or as l
 ```
 
 - `background` background color of the graph, adjust to increase contrast
-- `deduplication` indicating whether to remove duplicate links between nodes
 - `fontSize` size of the title font for each node
 - `fontFamily` font of the title font for each node
 - `lineColor` color of the edges between nodes in the graph

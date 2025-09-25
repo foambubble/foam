@@ -4,6 +4,14 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.28.1] - 2025-09-25
+
+Fixes and Improvements:
+
+- Removed duplicate links in dataviz graph (#1511 - thanks @Tenormis)
+- Use letter case to further disambiguate note identifiers (#1519, #1303)
+- Sanitize `filepath` before creating note from template (#1520, #1216)
+
 ## [0.28.0] - 2025-09-24
 
 Features:

@@ -183,4 +183,41 @@ describe('Identifier computation', () => {
       workspace.getIdentifier(noteABis.uri, [noteB.uri, noteA.uri])
     ).toEqual('note-a');
   });
+
+  it('should handle case-sensitive filenames correctly (#1303)', () => {
+    const workspace = new FoamWorkspace('.md');
+    const noteUppercase = createTestNote({ uri: '/a/Note.md' });
+    const noteLowercase = createTestNote({ uri: '/b/note.md' });
+
+    workspace.set(noteUppercase).set(noteLowercase);
+
+    // Should find exact case matches
+    expect(workspace.listByIdentifier('Note').length).toEqual(1);
+    expect(workspace.listByIdentifier('Note')[0].uri.path).toEqual(
+      '/a/Note.md'
+    );
+
+    expect(workspace.listByIdentifier('note').length).toEqual(1);
+    expect(workspace.listByIdentifier('note')[0].uri.path).toEqual(
+      '/b/note.md'
+    );
+
+    // Should not treat them as the same identifier
+    expect(workspace.listByIdentifier('Note')[0]).not.toEqual(
+      workspace.listByIdentifier('note')[0]
+    );
+  });
+
+  it('should generate correct identifiers for case-sensitive files', () => {
+    const workspace = new FoamWorkspace('.md');
+    const noteUppercase = createTestNote({ uri: '/a/Note.md' });
+    const noteLowercase = createTestNote({ uri: '/b/note.md' });
+
+    workspace.set(noteUppercase).set(noteLowercase);
+
+    // Each should have a unique identifier without directory disambiguation
+    // since they differ by case, they are not considered conflicting
+    expect(workspace.getIdentifier(noteUppercase.uri)).toEqual('Note');
+    expect(workspace.getIdentifier(noteLowercase.uri)).toEqual('note');
+  });
 });

@@ -291,6 +291,19 @@ function augmentGraphInfo(graph) {
       });
     }
   });
+
+  const seen = new Set();
+  graph.links = graph.links.filter(link => {
+    const sourceId = getLinkNodeId(link.source);
+    const targetId = getLinkNodeId(link.target);
+    const key = `${sourceId} -> ${targetId}`;
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
+
   graph.links.forEach(link => {
     const a = graph.nodeInfo[link.source];
     const b = graph.nodeInfo[link.target];
@@ -299,6 +312,7 @@ function augmentGraphInfo(graph) {
     a.links.push(link);
     b.links.push(link);
   });
+
   return graph;
 }
 

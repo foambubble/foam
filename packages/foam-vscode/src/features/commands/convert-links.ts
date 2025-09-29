@@ -1,8 +1,9 @@
 import * as vscode from 'vscode';
 import { Foam } from '../../core/model/foam';
 import { ResourceLink } from '../../core/model/note';
-import { convertLinkFormat } from '../../core/janitor/convert-links-format';
-import { fromVsCodeUri } from '../../utils/vsc-utils';
+import { MarkdownLink } from '../../core/services/markdown-link';
+import { Range } from '../../core/model/range';
+import { fromVsCodeUri, toVsCodeRange } from '../../utils/vsc-utils';
 import { Logger } from '../../core/utils/log';
 
 export const CONVERT_WIKILINK_TO_MARKDOWN = {
@@ -43,70 +44,62 @@ export async function convertWikilinkToMarkdown(foam: Foam): Promise<void> {
 
   const document = activeEditor.document;
   const position = activeEditor.selection.active;
-  const line = document.lineAt(position.line);
-  const lineText = line.text;
-
-  // Find wikilink at cursor position
-  const wikilinkRegex = /\[\[([^\]]+)\]\]/g;
-  let match;
-  let targetRange: vscode.Range | undefined;
-  let wikilinkContent: string | undefined;
-
-  while ((match = wikilinkRegex.exec(lineText)) !== null) {
-    const startChar = match.index;
-    const endChar = match.index + match[0].length;
-    const range = new vscode.Range(
-      position.line,
-      startChar,
-      position.line,
-      endChar
-    );
-
-    // Check if cursor is within this wikilink
-    if (position.character >= startChar && position.character <= endChar) {
-      targetRange = range;
-      wikilinkContent = match[0];
-      break;
-    }
-  }
-
-  if (!targetRange || !wikilinkContent) {
-    vscode.window.showInformationMessage(
-      'No wikilink found at cursor position'
-    );
-    return;
-  }
 
   try {
-    // Parse the wikilink content to extract target and alias
-    const wikilinkMatch = wikilinkContent.match(
-      /^\[\[([^\|\]]+)(?:\|([^\]]+))?\]\]$/
+    // Parse the document to get all links using Foam's parser
+    const documentUri = fromVsCodeUri(document.uri);
+    const resource = foam.services.parser.parse(
+      documentUri,
+      document.getText()
     );
-    if (!wikilinkMatch) {
-      vscode.window.showInformationMessage('Invalid wikilink format');
+
+    // Find the link at cursor position
+    const targetLink: ResourceLink | undefined = resource.links.find(
+      link =>
+        link.type === 'wikilink' &&
+        Range.containsPosition(link.range, {
+          line: position.line,
+          character: position.character,
+        })
+    );
+
+    if (!targetLink) {
+      vscode.window.showInformationMessage(
+        'No wikilink found at cursor position'
+      );
       return;
     }
 
-    const targetId = wikilinkMatch[1].trim();
-    const alias = wikilinkMatch[2]?.trim();
+    // Parse the link to get target and alias information
+    const linkInfo = MarkdownLink.analyzeLink(targetLink);
 
     // Find the target resource in the workspace
-    const targetResource = foam.workspace.find(targetId);
+    const targetResource = foam.workspace.find(linkInfo.target);
     if (!targetResource) {
-      vscode.window.showErrorMessage(`Target resource "${targetId}" not found`);
+      vscode.window.showErrorMessage(
+        `Target resource "${linkInfo.target}" not found`
+      );
       return;
     }
 
-    // Create markdown link format
-    const currentFileUri = fromVsCodeUri(activeEditor.document.uri);
-    const currentDirectory = currentFileUri.getDirectory();
+    // Compute relative path from current file to target file
+    const currentDirectory = documentUri.getDirectory();
     const relativePath = targetResource.uri.relativeTo(currentDirectory).path;
-    const linkText = alias || targetResource.title;
-    const markdownLink = `[${linkText}](${relativePath})`;
 
-    // Replace the wikilink with markdown format
+    // Create the text edit using Foam's link creation utility
+    // For wikilinks without explicit alias, use the resource title as the link text
+    // Note: linkInfo.alias will be empty string for simple wikilinks like [[note-a]]
+    const alias = linkInfo.alias ? linkInfo.alias : targetResource.title;
+    const edit = MarkdownLink.createUpdateLinkEdit(targetLink, {
+      type: 'link',
+      target: relativePath,
+      alias: alias,
+    });
+
+    // Apply the edit to the document
     await activeEditor.edit(editBuilder => {
-      editBuilder.replace(targetRange!, markdownLink);
+      const range = toVsCodeRange(edit.range);
+      editBuilder.replace(range, edit.newText);
     });
   } catch (e) {
     Logger.debug('Wikilink to markdown conversion failed:', e);
@@ -127,87 +120,58 @@ export async function convertMarkdownToWikilink(foam: Foam): Promise<void> {
 
   const document = activeEditor.document;
   const position = activeEditor.selection.active;
-  const line = document.lineAt(position.line);
-  const lineText = line.text;
-
-  // Find markdown link at cursor position
-  const markdownLinkRegex = /\[([^\]]*)\]\(([^)]+)\)/g;
-  let match;
-  let targetRange: vscode.Range | undefined;
-  let markdownContent: string | undefined;
-
-  while ((match = markdownLinkRegex.exec(lineText)) !== null) {
-    const startChar = match.index;
-    const endChar = match.index + match[0].length;
-    const range = new vscode.Range(
-      position.line,
-      startChar,
-      position.line,
-      endChar
-    );
-
-    // Check if cursor is within this markdown link
-    if (position.character >= startChar && position.character <= endChar) {
-      targetRange = range;
-      markdownContent = match[0];
-      break;
-    }
-  }
-
-  if (!targetRange || !markdownContent) {
-    vscode.window.showInformationMessage(
-      'No markdown link found at cursor position'
-    );
-    return;
-  }
 
   try {
-    // Parse the markdown link content to extract text and URL
-    const markdownMatch = markdownContent.match(/^\[([^\]]*)\]\(([^)]+)\)$/);
-    if (!markdownMatch) {
-      vscode.window.showInformationMessage('Invalid markdown link format');
-      return;
-    }
+    // Parse the document to get all links using Foam's parser
+    const documentUri = fromVsCodeUri(document.uri);
+    const resource = foam.services.parser.parse(
+      documentUri,
+      document.getText()
+    );
 
-    const linkText = markdownMatch[1].trim();
-    let linkUrl = markdownMatch[2].trim();
+    // Find the link at cursor position
+    const targetLink: ResourceLink | undefined = resource.links.find(
+      link =>
+        link.type === 'link' && Range.containsPosition(link.range, position)
+    );
 
-    // Remove angle brackets if present
-    if (linkUrl.startsWith('<') && linkUrl.endsWith('>')) {
-      linkUrl = linkUrl.slice(1, -1);
-    }
-
-    // Try to find the resource by the link URL (identifier)
-    let targetResource = foam.workspace.find(linkUrl);
-
-    // If not found by identifier, try by full path
-    if (!targetResource) {
-      // Remove .md extension if present and try again
-      const withoutExt = linkUrl.replace(/\.md$/, '');
-      targetResource = foam.workspace.find(withoutExt);
-    }
-
-    if (!targetResource) {
-      vscode.window.showErrorMessage(
-        `Target resource for "${linkUrl}" not found`
+    if (!targetLink) {
+      vscode.window.showInformationMessage(
+        'No markdown link found at cursor position'
       );
       return;
     }
 
-    // Create wikilink format
-    const identifier = foam.workspace.getIdentifier(targetResource.uri);
-    let wikilinkContent;
+    // Parse the link to get target and alias information
+    const linkInfo = MarkdownLink.analyzeLink(targetLink);
 
-    // Use alias if the link text differs from the resource title
-    if (linkText && linkText !== targetResource.title) {
-      wikilinkContent = `[[${identifier}|${linkText}]]`;
-    } else {
-      wikilinkContent = `[[${identifier}]]`;
+    // Try to resolve the target resource from the link
+    const targetUri = foam.workspace.resolveLink(resource, targetLink);
+    const targetResource = foam.workspace.get(targetUri);
+
+    if (!targetResource) {
+      vscode.window.showErrorMessage(
+        `Target resource for "${linkInfo.target}" not found`
+      );
+      return;
     }
 
-    // Replace the markdown link with wikilink format
+    // Get the workspace identifier for the target resource
+    const identifier = foam.workspace.getIdentifier(targetResource.uri);
+
+    // Create the text edit using Foam's link creation utility
+    const edit = MarkdownLink.createUpdateLinkEdit(targetLink, {
+      type: 'wikilink',
+      target: identifier,
+      alias:
+        linkInfo.alias && linkInfo.alias !== targetResource.title
+          ? linkInfo.alias
+          : '',
+    });
+
+    // Apply the edit to the document
     await activeEditor.edit(editBuilder => {
-      editBuilder.replace(targetRange!, wikilinkContent);
+      editBuilder.replace(toVsCodeRange(edit.range), edit.newText);
     });
   } catch (e) {
     Logger.debug('Markdown to wikilink conversion failed:', e);

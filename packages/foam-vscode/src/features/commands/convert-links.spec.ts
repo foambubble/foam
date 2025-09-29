@@ -21,8 +21,6 @@ import {
 import { deleteFile } from '../../services/editor';
 
 describe('Link Conversion Commands', () => {
-  const root = fromVsCodeUri(vscode.workspace.workspaceFolders[0].uri);
-
   beforeAll(async () => {
     await cleanWorkspace();
   });
@@ -37,7 +35,7 @@ describe('Link Conversion Commands', () => {
 
   describe('Convert Wikilink to Markdown', () => {
     it('should convert simple wikilink to markdown link', async () => {
-      const noteA = await createFile('Note A', ['note-a.md']);
+      const noteA = await createFile('# Note A', ['note-a.md']);
       const { uri } = await createFile('Text before [[note-a]] text after');
       const { editor } = await showInEditor(uri);
 
@@ -56,6 +54,7 @@ describe('Link Conversion Commands', () => {
     });
 
     it('should convert wikilink with alias to markdown link', async () => {
+      // const noteA = await createFile('# Note A', ['note-a.md']);
       const { uri } = await createFile(
         'Text before [[note-a|Custom Title]] text after'
       );
@@ -90,6 +89,9 @@ describe('Link Conversion Commands', () => {
     });
 
     it('should handle wikilinks with spaces in filename', async () => {
+      const noteWithSpaces = await createFile('# Note With Spaces', [
+        'note with spaces.md',
+      ]);
       const { uri } = await createFile(
         'Text before [[note with spaces]] text after'
       );
@@ -104,7 +106,7 @@ describe('Link Conversion Commands', () => {
 
       const result = editor.document.getText();
       expect(result).toBe(
-        'Text before [Note With Spaces](note%20with%20spaces.md) text after'
+        'Text before [Note With Spaces](<note with spaces.md>) text after'
       );
     });
 

@@ -1260,7 +1260,6 @@ async function initializeFoamCommands(foam: Foam): Promise<void> {
   await foamCommands.openResource(mockContext, foamPromise);
   await foamCommands.updateGraphCommand(mockContext, foamPromise);
   await foamCommands.updateWikilinksCommand(mockContext, foamPromise);
-  await foamCommands.generateStandaloneNote(mockContext, foamPromise);
   await foamCommands.openDailyNoteForDateCommand(mockContext, foamPromise);
   await foamCommands.convertLinksCommand(mockContext, foamPromise);
 

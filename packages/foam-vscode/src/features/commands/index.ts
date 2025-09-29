@@ -10,7 +10,6 @@ export { default as openResource } from './open-resource';
 export { default as updateGraphCommand } from './update-graph';
 export { default as updateWikilinksCommand } from './update-wikilinks';
 export { default as createNote } from './create-note';
-export { default as generateStandaloneNote } from './convert-links-format-in-note';
 export { default as searchTagCommand } from './search-tag';
 export { default as renameTagCommand } from './rename-tag';
 export { default as convertLinksCommand } from './convert-links';

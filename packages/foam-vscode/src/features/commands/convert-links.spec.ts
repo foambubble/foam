@@ -18,7 +18,6 @@ describe('Link Conversion Commands', () => {
 
   beforeEach(async () => {
     await cleanWorkspace();
-    await vscode.commands.executeCommand('foam-vscode.update-graph');
     await closeEditors();
   });
 

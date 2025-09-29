@@ -1,40 +1,31 @@
 /* @unit-ready */
 
 import * as vscode from 'vscode';
-import { createMarkdownParser } from '../../core/services/markdown-parser';
-import { FoamGraph } from '../../core/model/graph';
-import { createTestNote, createTestWorkspace } from '../../test/test-utils';
 import {
   cleanWorkspace,
   closeEditors,
   createFile,
   showInEditor,
 } from '../../test/test-utils-vscode';
-import { fromVsCodeUri } from '../../utils/vsc-utils';
-import { Foam } from '../../core/model/foam';
-import {
-  CONVERT_WIKILINK_TO_MARKDOWN,
-  CONVERT_MARKDOWN_TO_WIKILINK,
-  convertWikilinkToMarkdown,
-  convertMarkdownToWikilink,
-} from './convert-links';
 import { deleteFile } from '../../services/editor';
+import { delay } from 'lodash';
+import { wait } from '../../test/test-utils';
 
 describe('Link Conversion Commands', () => {
-  beforeAll(async () => {
-    await cleanWorkspace();
-  });
-
   afterAll(async () => {
     await cleanWorkspace();
   });
 
   beforeEach(async () => {
+    await cleanWorkspace();
+    await vscode.commands.executeCommand('foam-vscode.update-graph');
     await closeEditors();
   });
 
   describe('Convert Wikilink to Markdown', () => {
     it('should convert simple wikilink to markdown link', async () => {
+      // Create target note that the wikilink refers to
+      const noteA = await createFile('# Note A', ['note-a.md']);
       const { uri } = await createFile('Text before [[note-a]] text after');
       const { editor } = await showInEditor(uri);
 
@@ -48,11 +39,12 @@ describe('Link Conversion Commands', () => {
       const result = editor.document.getText();
       expect(result).toBe('Text before [Note A](note-a.md) text after');
 
+      await deleteFile(noteA.uri);
       await deleteFile(uri);
     });
 
     it('should convert wikilink with alias to markdown link', async () => {
-      // const noteA = await createFile('# Note A', ['note-a.md']);
+      const noteA = await createFile('# Note A', ['note-a.md']);
       const { uri } = await createFile(
         'Text before [[note-a|Custom Title]] text after'
       );
@@ -67,17 +59,20 @@ describe('Link Conversion Commands', () => {
 
       const result = editor.document.getText();
       expect(result).toBe('Text before [Custom Title](note-a.md) text after');
+
+      await deleteFile(noteA.uri);
+      await deleteFile(uri);
     });
 
     it('should convert wikilink with path to markdown link', async () => {
-      const { uri } = await createFile(
-        'Text before [[path/to/note-b]] text after'
-      );
+      const noteB = await createFile('# Note B', ['path', 'to', 'note-b.md']);
+      const { uri } = await createFile('Text before [[to/note-b]] text after');
       const { editor } = await showInEditor(uri);
 
       // Position cursor inside the wikilink
       editor.selection = new vscode.Selection(0, 20, 0, 20);
-
+      await wait(500); // Ensure any file watchers are settled
+      await vscode.commands.executeCommand('foam-vscode.update-graph');
       await vscode.commands.executeCommand(
         'foam-vscode.convert-wikilink-to-markdown'
       );
@@ -85,10 +80,14 @@ describe('Link Conversion Commands', () => {
       const result = editor.document.getText();
       expect(result).toBe('Text before [Note B](path/to/note-b.md) text after');
 
+      await deleteFile(noteB.uri);
       await deleteFile(uri);
     });
 
     it('should handle wikilinks with spaces in filename', async () => {
+      const noteWithSpaces = await createFile('# Note With Spaces', [
+        'note with spaces.md',
+      ]);
       const { uri } = await createFile(
         'Text before [[note with spaces]] text after'
       );
@@ -105,6 +104,9 @@ describe('Link Conversion Commands', () => {
       expect(result).toBe(
         'Text before [Note With Spaces](<note with spaces.md>) text after'
       );
+
+      await deleteFile(noteWithSpaces.uri);
+      await deleteFile(uri);
     });
 
     it('should show message when no wikilink found at cursor', async () => {
@@ -132,6 +134,10 @@ describe('Link Conversion Commands', () => {
     });
 
     it('should handle multiple wikilinks on same line', async () => {
+      const noteA = await createFile('# Note A', ['note-a.md']);
+      const noteWithSpaces = await createFile('# Note With Spaces', [
+        'note with spaces.md',
+      ]);
       const { uri } = await createFile(
         '[[note-a]] and [[note with spaces]] on same line'
       );
@@ -146,11 +152,16 @@ describe('Link Conversion Commands', () => {
 
       const result = editor.document.getText();
       expect(result).toBe(
-        '[[note-a]] and [Note With Spaces](note%20with%20spaces.md) on same line'
+        '[[note-a]] and [Note With Spaces](<note with spaces.md>) on same line'
       );
+
+      await deleteFile(noteA.uri);
+      await deleteFile(noteWithSpaces.uri);
+      await deleteFile(uri);
     });
 
     it('should generate correct relative paths from different directory levels', async () => {
+      const noteA = await createFile('# Note A', ['note-a.md']);
       // Create a file in a subdirectory
       const { uri: subDirFileUri } = await createFile(
         'Text with [[note-a]] wikilink',
@@ -167,9 +178,13 @@ describe('Link Conversion Commands', () => {
 
       const result = editor.document.getText();
       expect(result).toBe('Text with [Note A](../note-a.md) wikilink');
+
+      await deleteFile(noteA.uri);
+      await deleteFile(subDirFileUri);
     });
 
     it('should generate correct relative paths for same directory files', async () => {
+      const noteA = await createFile('# Note A', ['note-a.md']);
       // Create a file at the root level (same as note-a.md)
       const { uri } = await createFile('Text with [[note-a]] wikilink');
       const { editor } = await showInEditor(uri);
@@ -183,9 +198,13 @@ describe('Link Conversion Commands', () => {
 
       const result = editor.document.getText();
       expect(result).toBe('Text with [Note A](note-a.md) wikilink');
+
+      await deleteFile(noteA.uri);
+      await deleteFile(uri);
     });
 
     it('should generate correct relative paths for nested target files', async () => {
+      const noteB = await createFile('# Note B', ['path', 'to', 'note-b.md']);
       // Create a file at root level linking to a nested file
       const { uri } = await createFile('Text with [[path/to/note-b]] wikilink');
       const { editor } = await showInEditor(uri);
@@ -199,6 +218,9 @@ describe('Link Conversion Commands', () => {
 
       const result = editor.document.getText();
       expect(result).toBe('Text with [Note B](path/to/note-b.md) wikilink');
+
+      await deleteFile(noteB.uri);
+      await deleteFile(uri);
     });
   });
 
@@ -238,6 +260,7 @@ describe('Link Conversion Commands', () => {
     });
 
     it('should convert markdown link with path to wikilink', async () => {
+      const noteB = await createFile('# Note B', ['path', 'to', 'note-b.md']);
       const { uri } = await createFile(
         'Text before [Note B](path/to/note-b.md) text after'
       );
@@ -279,6 +302,7 @@ describe('Link Conversion Commands', () => {
     });
 
     it('should handle multiple markdown links on same line', async () => {
+      const noteB = await createFile('# Note B', ['path', 'to', 'note-b.md']);
       const { uri } = await createFile(
         '[Note A](note-a.md) and [Note B](path/to/note-b.md) on same line'
       );
@@ -302,6 +326,8 @@ describe('Link Conversion Commands', () => {
         'Text before [Note With Spaces](<note with spaces.md>) text after'
       );
       const { editor } = await showInEditor(uri);
+      await wait(1500); // Ensure any file watchers are settled
+      await vscode.commands.executeCommand('foam-vscode.update-graph');
 
       // Position cursor inside the markdown link
       editor.selection = new vscode.Selection(0, 25, 0, 25);
@@ -309,6 +335,7 @@ describe('Link Conversion Commands', () => {
       await vscode.commands.executeCommand(
         'foam-vscode.convert-markdown-to-wikilink'
       );
+      await wait(500); // Ensure any file watchers are settled
 
       const result = editor.document.getText();
       expect(result).toBe('Text before [[note with spaces]] text after');

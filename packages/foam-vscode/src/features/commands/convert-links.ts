@@ -80,13 +80,9 @@ export async function convertWikilinkToMarkdown(foam: Foam): Promise<void> {
       return;
     }
 
-    // Compute relative path from current file to target file
     const currentDirectory = documentUri.getDirectory();
     const relativePath = targetResource.uri.relativeTo(currentDirectory).path;
 
-    // Create the text edit using Foam's link creation utility
-    // For wikilinks without explicit alias, use the resource title as the link text
-    // Note: linkInfo.alias will be empty string for simple wikilinks like [[note-a]]
     const alias = linkInfo.alias ? linkInfo.alias : targetResource.title;
     const edit = MarkdownLink.createUpdateLinkEdit(targetLink, {
       type: 'link',
@@ -94,7 +90,6 @@ export async function convertWikilinkToMarkdown(foam: Foam): Promise<void> {
       alias: alias,
     });
 
-    // Apply the edit to the document
     await activeEditor.edit(editBuilder => {
       const range = toVsCodeRange(edit.range);
       editBuilder.replace(range, edit.newText);
@@ -174,7 +169,7 @@ export async function convertMarkdownToWikilink(foam: Foam): Promise<void> {
   } catch (e) {
     Logger.debug('Markdown to wikilink conversion failed:', e);
     vscode.window.showErrorMessage(
-      'Failed to convert markdown link to wikilink'
+      'Failed to convert markdown link to wikilink: ' + e.message
     );
   }
 }

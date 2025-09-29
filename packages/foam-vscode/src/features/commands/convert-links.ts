@@ -76,9 +76,7 @@ export async function convertWikilinkToMarkdown(foam: Foam): Promise<void> {
     // Find the target resource in the workspace
     const targetResource = foam.workspace.find(linkInfo.target);
     if (!targetResource) {
-      vscode.window.showErrorMessage(
-        `Target resource "${linkInfo.target}" not found`
-      );
+      vscode.window.showErrorMessage(`Resource "${linkInfo.target}" not found`);
       return;
     }
 

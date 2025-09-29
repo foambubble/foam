@@ -35,7 +35,6 @@ describe('Link Conversion Commands', () => {
 
   describe('Convert Wikilink to Markdown', () => {
     it('should convert simple wikilink to markdown link', async () => {
-      const noteA = await createFile('# Note A', ['note-a.md']);
       const { uri } = await createFile('Text before [[note-a]] text after');
       const { editor } = await showInEditor(uri);
 
@@ -49,7 +48,6 @@ describe('Link Conversion Commands', () => {
       const result = editor.document.getText();
       expect(result).toBe('Text before [Note A](note-a.md) text after');
 
-      await deleteFile(noteA.uri);
       await deleteFile(uri);
     });
 
@@ -86,12 +84,11 @@ describe('Link Conversion Commands', () => {
 
       const result = editor.document.getText();
       expect(result).toBe('Text before [Note B](path/to/note-b.md) text after');
+
+      await deleteFile(uri);
     });
 
     it('should handle wikilinks with spaces in filename', async () => {
-      const noteWithSpaces = await createFile('# Note With Spaces', [
-        'note with spaces.md',
-      ]);
       const { uri } = await createFile(
         'Text before [[note with spaces]] text after'
       );
@@ -220,8 +217,7 @@ describe('Link Conversion Commands', () => {
       );
 
       const result = editor.document.getText();
-      expect(result).toMatch(/Text before \[\[.*\]\] text after/);
-      expect(result).toContain('note-a'); // Should use identifier
+      expect(result).toBe('Text before [[note-a]] text after');
     });
 
     it('should convert markdown link with different text to wikilink with alias', async () => {
@@ -238,8 +234,7 @@ describe('Link Conversion Commands', () => {
       );
 
       const result = editor.document.getText();
-      expect(result).toMatch(/Text before \[\[.*\|.*\]\] text after/);
-      expect(result).toContain('Custom Title'); // Should preserve as alias
+      expect(result).toBe('Text before [[note-a|Custom Title]] text after');
     });
 
     it('should convert markdown link with path to wikilink', async () => {
@@ -256,8 +251,7 @@ describe('Link Conversion Commands', () => {
       );
 
       const result = editor.document.getText();
-      expect(result).toMatch(/Text before \[\[.*\]\] text after/);
-      expect(result).toContain('path/to/note-b');
+      expect(result).toBe('Text before [[path/to/note-b]] text after');
     });
 
     it('should show message when no markdown link found at cursor', async () => {
@@ -298,11 +292,9 @@ describe('Link Conversion Commands', () => {
       );
 
       const result = editor.document.getText();
-      // First markdown link should remain unchanged
-      expect(result).toContain('[Note A](note-a.md)');
-      // Second markdown link should be converted
-      expect(result).toMatch(/and \[\[.*\]\] on same line/);
-      expect(result).toContain('path/to/note-b');
+      expect(result).toBe(
+        '[Note A](note-a.md) and [[path/to/note-b]] on same line'
+      );
     });
 
     it('should handle markdown links with angle brackets', async () => {
@@ -319,8 +311,7 @@ describe('Link Conversion Commands', () => {
       );
 
       const result = editor.document.getText();
-      expect(result).toMatch(/Text before \[\[.*\]\] text after/);
-      expect(result).toContain('note with spaces');
+      expect(result).toBe('Text before [[note with spaces]] text after');
     });
   });
 
@@ -401,7 +392,7 @@ describe('Link Conversion Commands', () => {
       );
 
       const result = editor.document.getText();
-      expect(result).toMatch(/Text before \[.*\]\(.*\.md\) text after/);
+      expect(result).toBe('Text before [Note A](note-a.md) text after');
     });
 
     it('should handle cursor at end of wikilink', async () => {
@@ -416,7 +407,7 @@ describe('Link Conversion Commands', () => {
       );
 
       const result = editor.document.getText();
-      expect(result).toMatch(/Text before \[.*\]\(.*\.md\) text after/);
+      expect(result).toBe('Text before [Note A](note-a.md) text after');
     });
 
     it('should handle cursor at start of markdown link', async () => {
@@ -433,7 +424,7 @@ describe('Link Conversion Commands', () => {
       );
 
       const result = editor.document.getText();
-      expect(result).toMatch(/Text before \[\[.*\]\] text after/);
+      expect(result).toBe('Text before [[note-a]] text after');
     });
 
     it('should handle cursor at end of markdown link', async () => {
@@ -450,7 +441,7 @@ describe('Link Conversion Commands', () => {
       );
 
       const result = editor.document.getText();
-      expect(result).toMatch(/Text before \[\[.*\]\] text after/);
+      expect(result).toBe('Text before [[note-a]] text after');
     });
   });
 });

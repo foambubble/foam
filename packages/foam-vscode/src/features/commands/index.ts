@@ -13,3 +13,4 @@ export { default as createNote } from './create-note';
 export { default as generateStandaloneNote } from './convert-links-format-in-note';
 export { default as searchTagCommand } from './search-tag';
 export { default as renameTagCommand } from './rename-tag';
+export { default as convertLinksCommand } from './convert-links';

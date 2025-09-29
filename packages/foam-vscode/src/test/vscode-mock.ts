@@ -854,6 +854,32 @@ class MockTextEditor implements TextEditor {
 
   async edit(callback: (editBuilder: any) => void): Promise<boolean> {
     // Simplified edit implementation
+    const edits: { range: Range; newText: string }[] = [];
+    const editBuilder = {
+      replace: (range: Range, newText: string) => {
+        edits.push({ range, newText });
+      },
+    };
+    callback(editBuilder);
+
+    // Apply edits in reverse order to avoid offset issues
+    const document = this.document as MockTextDocument;
+    let content = document.getText();
+    edits
+      .sort(
+        (a, b) =>
+          document.offsetAt(b.range.start) - document.offsetAt(a.range.start)
+      )
+      .forEach(edit => {
+        const startOffset = document.offsetAt(edit.range.start);
+        const endOffset = document.offsetAt(edit.range.end);
+        content =
+          content.substring(0, startOffset) +
+          edit.newText +
+          content.substring(endOffset);
+      });
+
+    document._updateContent(content);
     return true;
   }
 
@@ -1235,6 +1261,7 @@ async function initializeFoamCommands(foam: Foam): Promise<void> {
   await foamCommands.updateWikilinksCommand(mockContext, foamPromise);
   await foamCommands.generateStandaloneNote(mockContext, foamPromise);
   await foamCommands.openDailyNoteForDateCommand(mockContext, foamPromise);
+  await foamCommands.convertLinksCommand(mockContext, foamPromise);
 
   // Commands that only need context
   await foamCommands.copyWithoutBracketsCommand(mockContext);

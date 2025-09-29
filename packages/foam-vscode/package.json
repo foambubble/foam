@@ -526,6 +526,19 @@
             "Use alias if resource path is different from title"
           ]
         },
+        "foam.completion.linkFormat": {
+          "type": "string",
+          "default": "wikilink",
+          "description": "Controls the format of completed links",
+          "enum": [
+            "wikilink",
+            "link"
+          ],
+          "enumDescriptions": [
+            "Complete as wikilinks (e.g., [[note-name]])",
+            "Complete as markdown links (e.g., [Note Name](note-name.md))"
+          ]
+        },
         "foam.files.ignore": {
           "type": [
             "array"

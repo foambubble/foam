@@ -819,6 +819,7 @@ class MockTextDocument implements TextDocument {
       fs.writeFileSync(this.uri.fsPath, content);
     } catch (error) {
       Logger.error('vscode-mock: Failed to write file', error);
+      throw error;
     }
   }
 }
@@ -1372,8 +1373,10 @@ export const window = {
     message: string,
     ...items: string[]
   ): Promise<string | undefined> {
-    // Mock implementation - do nothing
-    return undefined;
+    throw new Error(
+      'showErrorMessage called - should be mocked in tests if error handling is expected. Message was: ' +
+        message
+    );
   },
 };
 

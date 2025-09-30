@@ -367,12 +367,12 @@
         "title": "Foam: Open Resource"
       },
       {
-        "command": "foam-vscode.convert-link-style-inplace",
-        "title": "Foam: Convert Link Style in Place"
+        "command": "foam-vscode.convert-wikilink-to-markdown",
+        "title": "Foam: Convert Wikilink to Markdown Link"
       },
       {
-        "command": "foam-vscode.convert-link-style-incopy",
-        "title": "Foam: Convert Link Format in Copy"
+        "command": "foam-vscode.convert-markdown-to-wikilink",
+        "title": "Foam: Convert Markdown Link to Wikilink"
       },
       {
         "command": "foam-vscode.search-tag",

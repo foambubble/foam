@@ -16,9 +16,13 @@ import {
 } from './settings';
 import { AttachmentResourceProvider } from './core/services/attachment-provider';
 import { VsCodeWatcher } from './services/watcher';
+import {
+  createMarkdownParser,
+  resourceFactory,
+  trainFactory,
+} from './core/services/markdown-parser';
 import VsCodeBasedParserCache from './services/cache';
 import { createMatcherAndDataStore } from './services/editor';
-import { createMarkdownParser } from './core/services/markdown-parser';
 import { Resource } from './core/model/note';
 import { TrainNote } from './core/model/train-note';
 
@@ -51,8 +55,14 @@ export async function activate(context: ExtensionContext) {
     const watcher = new VsCodeWatcher(
       workspace.createFileSystemWatcher('**/*')
     );
-    const resourceCache = new VsCodeBasedParserCache<Resource>(context);
-    const trainNoteCache = new VsCodeBasedParserCache<TrainNote>(context);
+    const resourceCache = new VsCodeBasedParserCache<Resource>(
+      context,
+      resourceFactory
+    );
+    const trainNoteCache = new VsCodeBasedParserCache<TrainNote>(
+      context,
+      trainFactory
+    );
     const parser = createMarkdownParser([], resourceCache, trainNoteCache);
 
     const { notesExtensions, defaultExtension } = getNotesExtensions();

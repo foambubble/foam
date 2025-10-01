@@ -18,13 +18,19 @@ export default class VsCodeBasedParserCache<T> implements ParserCache<T> {
   static CACHE_NAME = 'foam-cache';
   private _cache: LRU<string, ParserCacheEntry<T>>;
   private delayedSync = createDelayedSync<T>();
+  private factory: (uri: URI) => T;
 
-  constructor(private context: ExtensionContext, size = 10000) {
+  constructor(
+    private context: ExtensionContext,
+    factory: (uri: URI) => T,
+    size = 10000
+  ) {
     this._cache = new LRU({
       max: size,
       updateAgeOnGet: true,
       updateAgeOnHas: false,
     });
+    this.factory = factory;
     const source = context.workspaceState.get(
       VsCodeBasedParserCache.CACHE_NAME,
       []
@@ -50,10 +56,10 @@ export default class VsCodeBasedParserCache<T> implements ParserCache<T> {
       // instance of URI in the resource (we check instanceof in the code),
       // so to be sure we convert it here.
       const { checksum, target } = result;
-      const rehydrated = {
-        ...target,
-        uri: new URI(uri),
-      };
+
+      const rehydrated = this.factory(uri);
+      Object.assign(rehydrated, target, { uri: uri });
+
       return {
         checksum,
         target: rehydrated,

@@ -35,9 +35,7 @@ describe('Link Conversion Commands', () => {
 
       editor.selection = new vscode.Selection(0, 15, 0, 15);
 
-      await vscode.commands.executeCommand(
-        CONVERT_WIKILINK_TO_MDLINK.command
-      );
+      await vscode.commands.executeCommand(CONVERT_WIKILINK_TO_MDLINK.command);
 
       const result = editor.document.getText();
       expect(result).toBe('Text before [Note A](note-a.md) text after');
@@ -53,9 +51,7 @@ describe('Link Conversion Commands', () => {
 
       editor.selection = new vscode.Selection(0, 15, 0, 15);
 
-      await vscode.commands.executeCommand(
-        CONVERT_WIKILINK_TO_MDLINK.command
-      );
+      await vscode.commands.executeCommand(CONVERT_WIKILINK_TO_MDLINK.command);
 
       // Cursor should be at the end of the converted markdown link
       const expectedPosition = 'Text before [Note A](note-a.md)'.length;
@@ -75,9 +71,7 @@ describe('Link Conversion Commands', () => {
 
       const showInfoSpy = jest.spyOn(vscode.window, 'showInformationMessage');
 
-      await vscode.commands.executeCommand(
-        CONVERT_WIKILINK_TO_MDLINK.command
-      );
+      await vscode.commands.executeCommand(CONVERT_WIKILINK_TO_MDLINK.command);
 
       expect(showInfoSpy).toHaveBeenCalledWith(
         'No wikilink found at cursor position'
@@ -100,9 +94,7 @@ describe('Link Conversion Commands', () => {
         .mockResolvedValue(undefined);
 
       Logger.setLevel('off');
-      await vscode.commands.executeCommand(
-        CONVERT_WIKILINK_TO_MDLINK.command
-      );
+      await vscode.commands.executeCommand(CONVERT_WIKILINK_TO_MDLINK.command);
       Logger.setLevel('error');
 
       expect(showErrorSpy).toHaveBeenCalled();
@@ -121,9 +113,7 @@ describe('Link Conversion Commands', () => {
 
       editor.selection = new vscode.Selection(0, 15, 0, 15);
 
-      await vscode.commands.executeCommand(
-        CONVERT_MDLINK_TO_WIKILINK.command
-      );
+      await vscode.commands.executeCommand(CONVERT_MDLINK_TO_WIKILINK.command);
 
       const result = editor.document.getText();
       expect(result).toBe('Text before [[note-a]] text after');
@@ -139,9 +129,7 @@ describe('Link Conversion Commands', () => {
 
       editor.selection = new vscode.Selection(0, 15, 0, 15);
 
-      await vscode.commands.executeCommand(
-        CONVERT_MDLINK_TO_WIKILINK.command
-      );
+      await vscode.commands.executeCommand(CONVERT_MDLINK_TO_WIKILINK.command);
 
       // Cursor should be at the end of the converted wikilink
       const expectedPosition = 'Text before [[note-a]]'.length;
@@ -160,9 +148,7 @@ describe('Link Conversion Commands', () => {
 
       const showInfoSpy = jest.spyOn(vscode.window, 'showInformationMessage');
 
-      await vscode.commands.executeCommand(
-        CONVERT_MDLINK_TO_WIKILINK.command
-      );
+      await vscode.commands.executeCommand(CONVERT_MDLINK_TO_WIKILINK.command);
 
       expect(showInfoSpy).toHaveBeenCalledWith(
         'No markdown link found at cursor position'
@@ -177,12 +163,8 @@ describe('Link Conversion Commands', () => {
     it('should handle no active editor gracefully', async () => {
       await closeEditors();
 
-      await vscode.commands.executeCommand(
-        CONVERT_WIKILINK_TO_MDLINK.command
-      );
-      await vscode.commands.executeCommand(
-        CONVERT_MDLINK_TO_WIKILINK.command
-      );
+      await vscode.commands.executeCommand(CONVERT_WIKILINK_TO_MDLINK.command);
+      await vscode.commands.executeCommand(CONVERT_MDLINK_TO_WIKILINK.command);
 
       expect(true).toBe(true);
     });

@@ -46,6 +46,27 @@ describe('Link Conversion Commands', () => {
       await deleteFile(uri);
     });
 
+    it('should position cursor at end of converted text', async () => {
+      const noteA = await createFile('# Note A', ['note-a.md']);
+      const { uri } = await createFile('Text before [[note-a]] text after');
+      const { editor } = await showInEditor(uri);
+
+      editor.selection = new vscode.Selection(0, 15, 0, 15);
+
+      await vscode.commands.executeCommand(
+        CONVERT_WIKILINK_TO_MDLINK.command
+      );
+
+      // Cursor should be at the end of the converted markdown link
+      const expectedPosition = 'Text before [Note A](note-a.md)'.length;
+      expect(editor.selection.active).toEqual(
+        new vscode.Position(0, expectedPosition)
+      );
+
+      await deleteFile(noteA.uri);
+      await deleteFile(uri);
+    });
+
     it('should show info message when no wikilink at cursor', async () => {
       const { uri } = await createFile('Text with no wikilinks');
       const { editor } = await showInEditor(uri);
@@ -106,6 +127,27 @@ describe('Link Conversion Commands', () => {
 
       const result = editor.document.getText();
       expect(result).toBe('Text before [[note-a]] text after');
+
+      await deleteFile(uri);
+    });
+
+    it('should position cursor at end of converted text', async () => {
+      const { uri } = await createFile(
+        'Text before [Note A](note-a.md) text after'
+      );
+      const { editor } = await showInEditor(uri);
+
+      editor.selection = new vscode.Selection(0, 15, 0, 15);
+
+      await vscode.commands.executeCommand(
+        CONVERT_MDLINK_TO_WIKILINK.command
+      );
+
+      // Cursor should be at the end of the converted wikilink
+      const expectedPosition = 'Text before [[note-a]]'.length;
+      expect(editor.selection.active).toEqual(
+        new vscode.Position(0, expectedPosition)
+      );
 
       await deleteFile(uri);
     });

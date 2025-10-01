@@ -166,10 +166,22 @@ export async function convertWikilinkToMarkdown(foam: Foam): Promise<void> {
     }
 
     // Apply the edit to the document
-    await activeEditor.edit(editBuilder => {
-      const range = toVsCodeRange(edit.range);
+    const range = toVsCodeRange(edit.range);
+    const success = await activeEditor.edit(editBuilder => {
       editBuilder.replace(range, edit.newText);
     });
+
+    // Position cursor at the end of the updated text
+    if (success) {
+      const newEndPosition = new vscode.Position(
+        range.start.line,
+        range.start.character + edit.newText.length
+      );
+      activeEditor.selection = new vscode.Selection(
+        newEndPosition,
+        newEndPosition
+      );
+    }
   } catch (error) {
     Logger.error('Failed to convert wikilink to markdown link', error);
     vscode.window.showErrorMessage(
@@ -210,9 +222,22 @@ export async function convertMarkdownToWikilink(foam: Foam): Promise<void> {
     }
 
     // Apply the edit to the document
-    await activeEditor.edit(editBuilder => {
-      editBuilder.replace(toVsCodeRange(edit.range), edit.newText);
+    const range = toVsCodeRange(edit.range);
+    const success = await activeEditor.edit(editBuilder => {
+      editBuilder.replace(range, edit.newText);
     });
+
+    // Position cursor at the end of the updated text
+    if (success) {
+      const newEndPosition = new vscode.Position(
+        range.start.line,
+        range.start.character + edit.newText.length
+      );
+      activeEditor.selection = new vscode.Selection(
+        newEndPosition,
+        newEndPosition
+      );
+    }
   } catch (error) {
     Logger.error('Failed to convert markdown link to wikilink', error);
     vscode.window.showErrorMessage(

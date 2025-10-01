@@ -67,7 +67,7 @@ async function main() {
     ...config[platform],
     entryPoints: ['src/extension.ts'],
     bundle: true,
-    minify: false, //production,
+    minify: production,
     sourcemap: !production,
     sourcesContent: false,
     external: ['vscode'],

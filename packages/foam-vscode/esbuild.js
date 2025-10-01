@@ -25,6 +25,9 @@ const config = {
     platform: 'browser',
     format: 'cjs',
     outfile: `out/bundles/extension-web.js`,
+    define: {
+      global: 'globalThis',
+    },
     plugins: [
       polyfillPlugin.polyfillNode({
         // Options (optional)
@@ -64,7 +67,7 @@ async function main() {
     ...config[platform],
     entryPoints: ['src/extension.ts'],
     bundle: true,
-    minify: production,
+    minify: false, //production,
     sourcemap: !production,
     sourcesContent: false,
     external: ['vscode'],

@@ -9,6 +9,10 @@ import {
 } from '../../test/test-utils-vscode';
 import { deleteFile } from '../../services/editor';
 import { Logger } from '../../core/utils/log';
+import {
+  CONVERT_WIKILINK_TO_MDLINK,
+  CONVERT_MDLINK_TO_WIKILINK,
+} from './convert-links';
 
 Logger.setLevel('error');
 
@@ -32,7 +36,7 @@ describe('Link Conversion Commands', () => {
       editor.selection = new vscode.Selection(0, 15, 0, 15);
 
       await vscode.commands.executeCommand(
-        'foam-vscode.convert-wikilink-to-markdown'
+        CONVERT_WIKILINK_TO_MDLINK.command
       );
 
       const result = editor.document.getText();
@@ -51,7 +55,7 @@ describe('Link Conversion Commands', () => {
       const showInfoSpy = jest.spyOn(vscode.window, 'showInformationMessage');
 
       await vscode.commands.executeCommand(
-        'foam-vscode.convert-wikilink-to-markdown'
+        CONVERT_WIKILINK_TO_MDLINK.command
       );
 
       expect(showInfoSpy).toHaveBeenCalledWith(
@@ -76,7 +80,7 @@ describe('Link Conversion Commands', () => {
 
       Logger.setLevel('off');
       await vscode.commands.executeCommand(
-        'foam-vscode.convert-wikilink-to-markdown'
+        CONVERT_WIKILINK_TO_MDLINK.command
       );
       Logger.setLevel('error');
 
@@ -97,7 +101,7 @@ describe('Link Conversion Commands', () => {
       editor.selection = new vscode.Selection(0, 15, 0, 15);
 
       await vscode.commands.executeCommand(
-        'foam-vscode.convert-markdown-to-wikilink'
+        CONVERT_MDLINK_TO_WIKILINK.command
       );
 
       const result = editor.document.getText();
@@ -115,7 +119,7 @@ describe('Link Conversion Commands', () => {
       const showInfoSpy = jest.spyOn(vscode.window, 'showInformationMessage');
 
       await vscode.commands.executeCommand(
-        'foam-vscode.convert-markdown-to-wikilink'
+        CONVERT_MDLINK_TO_WIKILINK.command
       );
 
       expect(showInfoSpy).toHaveBeenCalledWith(
@@ -132,10 +136,10 @@ describe('Link Conversion Commands', () => {
       await closeEditors();
 
       await vscode.commands.executeCommand(
-        'foam-vscode.convert-wikilink-to-markdown'
+        CONVERT_WIKILINK_TO_MDLINK.command
       );
       await vscode.commands.executeCommand(
-        'foam-vscode.convert-markdown-to-wikilink'
+        CONVERT_MDLINK_TO_WIKILINK.command
       );
 
       expect(true).toBe(true);

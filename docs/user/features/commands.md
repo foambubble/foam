@@ -71,3 +71,25 @@ Examples:
   }
 }
 ```
+
+## Link Conversion Commands
+
+Foam provides commands to convert between wikilink and markdown link formats.
+
+### foam-vscode.convert-wikilink-to-mdlink
+
+Converts a wikilink at the cursor position to markdown link format with a relative path.
+
+Example: `[[my-note]]` → `[My Note](../path/to/my-note.md)`
+
+### foam-vscode.convert-mdlink-to-wikilink
+
+Converts a markdown link at the cursor position to wikilink format.
+
+Example: `[My Note](../path/to/my-note.md)` → `[[my-note]]`
+
+**Usage:**
+
+1. Place your cursor inside a wikilink or markdown link
+2. Open the command palette (`Ctrl+Shift+P` / `Cmd+Shift+P`)
+3. Type "Foam: Convert" and select the desired conversion command

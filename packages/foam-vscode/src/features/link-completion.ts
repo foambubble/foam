@@ -1,14 +1,13 @@
 import * as vscode from 'vscode';
 import { Foam } from '../core/model/foam';
 import { FoamGraph } from '../core/model/graph';
-import { Resource, ResourceLink } from '../core/model/note';
+import { Resource } from '../core/model/note';
 import { URI } from '../core/model/uri';
 import { FoamWorkspace } from '../core/model/workspace';
 import { getFoamVsCodeConfig } from '../services/config';
 import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
 import { getNoteTooltip, getFoamDocSelectors } from '../services/editor';
-import { convertLinkFormat } from '../core/janitor/convert-links-format';
-import { Logger } from '../core/utils/log';
+import { CONVERT_WIKILINK_TO_MDLINK } from './commands/convert-links';
 
 export const aliasCommitCharacters = ['#'];
 export const linkCommitCharacters = ['#', '|'];
@@ -220,10 +219,7 @@ export class WikilinkCompletionProvider
       item.range = replacementRange;
       item.command =
         linkFormat === 'link'
-          ? {
-              command: 'foam-vscode.convert-wikilink-to-markdown',
-              title: 'Convert to markdown after completion',
-            }
+          ? CONVERT_WIKILINK_TO_MDLINK
           : COMPLETION_CURSOR_MOVE;
       return item;
     });
@@ -245,8 +241,8 @@ export class WikilinkCompletionProvider
         item.command =
           linkFormat === 'link'
             ? {
-                command: 'foam-vscode.convert-wikilink-to-markdown',
-                title: 'Convert to markdown after completion',
+                command: CONVERT_WIKILINK_TO_MDLINK.command,
+                title: CONVERT_WIKILINK_TO_MDLINK.title,
               }
             : COMPLETION_CURSOR_MOVE;
 

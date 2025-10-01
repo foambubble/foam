@@ -367,11 +367,11 @@
         "title": "Foam: Open Resource"
       },
       {
-        "command": "foam-vscode.convert-wikilink-to-markdown",
+        "command": "foam-vscode.convert-wikilink-to-mdlink",
         "title": "Foam: Convert Wikilink to Markdown Link"
       },
       {
-        "command": "foam-vscode.convert-markdown-to-wikilink",
+        "command": "foam-vscode.convert-mdlink-to-wikilink",
         "title": "Foam: Convert Markdown Link to Wikilink"
       },
       {

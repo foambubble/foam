@@ -9,13 +9,13 @@ import { fromVsCodeUri, toVsCodeRange } from '../../utils/vsc-utils';
 import { Logger } from '../../core/utils/log';
 import { TextEdit } from '../../core/services/text-edit';
 
-export const CONVERT_WIKILINK_TO_MARKDOWN = {
-  command: 'foam-vscode.convert-wikilink-to-markdown',
+export const CONVERT_WIKILINK_TO_MDLINK = {
+  command: 'foam-vscode.convert-wikilink-to-mdlink',
   title: 'Foam: Convert Wikilink to Markdown Link',
 };
 
-export const CONVERT_MARKDOWN_TO_WIKILINK = {
-  command: 'foam-vscode.convert-markdown-to-wikilink',
+export const CONVERT_MDLINK_TO_WIKILINK = {
+  command: 'foam-vscode.convert-mdlink-to-wikilink',
   title: 'Foam: Convert Markdown Link to Wikilink',
 };
 
@@ -124,11 +124,11 @@ export default async function activate(
   const foam = await foamPromise;
 
   context.subscriptions.push(
-    vscode.commands.registerCommand(CONVERT_WIKILINK_TO_MARKDOWN.command, () =>
+    vscode.commands.registerCommand(CONVERT_WIKILINK_TO_MDLINK.command, () =>
       convertWikilinkToMarkdown(foam)
     ),
 
-    vscode.commands.registerCommand(CONVERT_MARKDOWN_TO_WIKILINK.command, () =>
+    vscode.commands.registerCommand(CONVERT_MDLINK_TO_WIKILINK.command, () =>
       convertMarkdownToWikilink(foam)
     )
   );

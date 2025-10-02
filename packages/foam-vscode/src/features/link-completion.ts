@@ -177,7 +177,7 @@ export class WikilinkCompletionProvider
     // Use safe range that VS Code accepts - replace content inside brackets only
     const replacementRange = new vscode.Range(
       position.line,
-      Math.max(0, position.character - (text.length - 2)),
+      position.character - (text.length - 2),
       position.line,
       position.character
     );

@@ -1,3 +1,5 @@
+/* @unit-ready */
+
 import * as vscode from 'vscode';
 import { createMarkdownParser } from '../core/services/markdown-parser';
 import { FoamGraph } from '../core/model/graph';
@@ -14,6 +16,7 @@ import {
   WikilinkCompletionProvider,
   SectionCompletionProvider,
 } from './link-completion';
+import { CONVERT_WIKILINK_TO_MDLINK } from './commands/convert-links';
 
 describe('Link Completion', () => {
   const parser = createMarkdownParser([]);
@@ -298,14 +301,20 @@ alias: alias-a
       'completion.linkFormat',
       'wikilink',
       async () => {
-        const links = await provider.provideCompletionItems(
-          doc,
-          new vscode.Position(0, 2)
-        );
+        await withModifiedFoamConfiguration(
+          'completion.useAlias',
+          'never',
+          async () => {
+            const links = await provider.provideCompletionItems(
+              doc,
+              new vscode.Position(0, 2)
+            );
 
-        expect(links.items.length).toBe(1);
-        expect(links.items[0].insertText).toBe(
-          workspace.getIdentifier(noteUri)
+            expect(links.items.length).toBe(1);
+            expect(links.items[0].insertText).toBe(
+              workspace.getIdentifier(noteUri)
+            );
+          }
         );
       }
     );
@@ -340,17 +349,19 @@ alias: alias-a
         expect(links.items.length).toBe(1);
         const insertText = String(links.items[0].insertText);
 
-        // In test environment, convertLinkFormat may fail due to workspace setup
-        // When it succeeds, we get markdown format: [My Note Title](my/path/to/test-note.md)
-        // When it fails, we fall back to wikilink format: my/path/to/test-note|My Note Title
-        const isMarkdownFormat = insertText.match(/^\[.*\]\(.*\)$/);
-        const isWikilinkWithAlias = insertText.includes('|My Note Title');
+        // In test environment, the command converts wikilink to markdown after insertion
+        // The insertText is the wikilink format, conversion happens via command
+        // So we expect just the identifier (no alias because linkFormat === 'link')
+        expect(insertText).toBe(workspace.getIdentifier(noteUri));
 
-        expect(isMarkdownFormat || isWikilinkWithAlias).toBeTruthy();
-        expect(insertText).toContain('My Note Title');
-
-        // Commit characters should be empty for both markdown and alias formats
+        // Commit characters should be empty when using conversion command
         expect(links.items[0].commitCharacters).toEqual([]);
+
+        // Verify command is attached for conversion
+        expect(links.items[0].command).toBeDefined();
+        expect(links.items[0].command.command).toBe(
+          CONVERT_WIKILINK_TO_MDLINK.command
+        );
       }
     );
   });
@@ -384,10 +395,17 @@ alias: alias-a
 
             expect(links.items.length).toBe(1);
             const insertText = links.items[0].insertText;
-            // Should be a markdown link format with the alias as text
-            expect(insertText).toMatch(/^\[.*\]\(.*\.md\)$/);
-            expect(insertText).toContain('My Different Title');
+
+            // When linkFormat is 'link', we don't use alias in insertText
+            // The conversion command handles the title mapping
+            expect(insertText).toBe(workspace.getIdentifier(noteUri));
             expect(links.items[0].commitCharacters).toEqual([]);
+
+            // Verify command is attached for conversion
+            expect(links.items[0].command).toBeDefined();
+            expect(links.items[0].command.command).toBe(
+              CONVERT_WIKILINK_TO_MDLINK.command
+            );
           }
         );
       }
@@ -423,10 +441,19 @@ alias: test-alias
         );
         expect(aliasCompletionItem).not.toBeNull();
         expect(aliasCompletionItem.label).toBe('test-alias');
-        // Should be a markdown link format
-        expect(aliasCompletionItem.insertText).toMatch(/^\[.*\]\(.*\.md\)$/);
-        expect(aliasCompletionItem.insertText).toContain('test-alias');
+
+        // Alias completions always use pipe syntax in insertText
+        // The conversion command will convert it to markdown format
+        expect(aliasCompletionItem.insertText).toBe(
+          'note-with-alias|test-alias'
+        );
         expect(aliasCompletionItem.commitCharacters).toEqual([]);
+
+        // Verify command is attached for conversion
+        expect(aliasCompletionItem.command).toBeDefined();
+        expect(aliasCompletionItem.command.command).toBe(
+          CONVERT_WIKILINK_TO_MDLINK.command
+        );
       }
     );
   });
@@ -468,9 +495,8 @@ alias: test-alias
           i => i.label === 'placeholder text'
         );
         expect(placeholderItem).not.toBeNull();
-        // This will fail with current code - it returns '[[placeholder text]]' instead of 'placeholder text'
+        // Placeholders should remain as plain text, not converted to wikilink format
         expect(placeholderItem.insertText).toBe('placeholder text');
-        expect(placeholderItem.insertText).not.toMatch(/^\[\[.*\]\]$/);
       }
     );
   });

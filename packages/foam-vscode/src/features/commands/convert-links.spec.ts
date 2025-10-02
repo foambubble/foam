@@ -6,6 +6,7 @@ import {
   closeEditors,
   createFile,
   showInEditor,
+  waitForNoteInFoamWorkspace,
 } from '../../test/test-utils-vscode';
 import { deleteFile } from '../../services/editor';
 import { Logger } from '../../core/utils/log';
@@ -32,6 +33,7 @@ describe('Link Conversion Commands', () => {
       const noteA = await createFile('# Note A', ['note-a.md']);
       const { uri } = await createFile('Text before [[note-a]] text after');
       const { editor } = await showInEditor(uri);
+      await waitForNoteInFoamWorkspace(noteA.uri);
 
       editor.selection = new vscode.Selection(0, 15, 0, 15);
 
@@ -48,6 +50,7 @@ describe('Link Conversion Commands', () => {
       const noteA = await createFile('# Note A', ['note-a.md']);
       const { uri } = await createFile('Text before [[note-a]] text after');
       const { editor } = await showInEditor(uri);
+      await waitForNoteInFoamWorkspace(noteA.uri);
 
       editor.selection = new vscode.Selection(0, 15, 0, 15);
 
@@ -106,10 +109,12 @@ describe('Link Conversion Commands', () => {
 
   describe('foam-vscode.convert-markdown-to-wikilink', () => {
     it('should convert markdown link to wikilink', async () => {
+      const noteA = await createFile('# Note A', ['note-a.md']);
       const { uri } = await createFile(
         'Text before [Note A](note-a.md) text after'
       );
       const { editor } = await showInEditor(uri);
+      await waitForNoteInFoamWorkspace(noteA.uri);
 
       editor.selection = new vscode.Selection(0, 15, 0, 15);
 
@@ -119,25 +124,32 @@ describe('Link Conversion Commands', () => {
       expect(result).toBe('Text before [[note-a]] text after');
 
       await deleteFile(uri);
+      await deleteFile(noteA.uri);
     });
 
     it('should position cursor at end of converted text', async () => {
+      const noteA = await createFile('# Note A', ['note-a.md']);
       const { uri } = await createFile(
         'Text before [Note A](note-a.md) text after'
       );
       const { editor } = await showInEditor(uri);
 
       editor.selection = new vscode.Selection(0, 15, 0, 15);
+      await waitForNoteInFoamWorkspace(noteA.uri);
 
       await vscode.commands.executeCommand(CONVERT_MDLINK_TO_WIKILINK.command);
 
       // Cursor should be at the end of the converted wikilink
       const expectedPosition = 'Text before [[note-a]]'.length;
+      expect(editor.document.getText()).toBe(
+        'Text before [[note-a]] text after'
+      );
       expect(editor.selection.active).toEqual(
         new vscode.Position(0, expectedPosition)
       );
 
       await deleteFile(uri);
+      await deleteFile(noteA.uri);
     });
 
     it('should show info message when no markdown link at cursor', async () => {

@@ -209,13 +209,17 @@ export class WikilinkCompletionProvider
 
       const useAlias =
         resourceIsDocument &&
+        linkFormat !== 'link' &&
         aliasSetting !== 'never' &&
-        wikilinkRequiresAlias(resource);
+        wikilinkRequiresAlias(resource, this.ws.defaultExtension);
 
       item.insertText = useAlias
         ? `${identifier}|${resource.title}`
         : identifier;
-      item.commitCharacters = useAlias ? [] : linkCommitCharacters;
+      // When using aliases or markdown link format, don't allow commit characters
+      // since we either have the full text or will convert it
+      item.commitCharacters =
+        useAlias || linkFormat === 'link' ? [] : linkCommitCharacters;
       item.range = replacementRange;
       item.command =
         linkFormat === 'link'
@@ -234,7 +238,9 @@ export class WikilinkCompletionProvider
         const identifier = this.ws.getIdentifier(resource.uri);
 
         item.insertText = `${identifier}|${a.title}`;
-        item.commitCharacters = aliasCommitCharacters;
+        // When using markdown link format, don't allow commit characters
+        item.commitCharacters =
+          linkFormat === 'link' ? [] : aliasCommitCharacters;
         item.range = replacementRange;
 
         // If link format is enabled, convert after completion
@@ -319,6 +325,11 @@ function getCompletionLinkFormatSetting() {
 }
 
 const normalize = (text: string) => text.toLocaleLowerCase().trim();
-function wikilinkRequiresAlias(resource: Resource) {
-  return normalize(resource.uri.getName()) !== normalize(resource.title);
+function wikilinkRequiresAlias(resource: Resource, defaultExtension: string) {
+  // Compare filename (without extension) to title
+  const nameWithoutExt = resource.uri.getName();
+  const titleWithoutExt = resource.title.endsWith(defaultExtension)
+    ? resource.title.slice(0, -defaultExtension.length)
+    : resource.title;
+  return normalize(nameWithoutExt) !== normalize(titleWithoutExt);
 }

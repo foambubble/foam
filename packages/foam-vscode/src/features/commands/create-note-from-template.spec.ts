@@ -1,9 +1,13 @@
 /* @unit-ready */
 import { commands, window, workspace } from 'vscode';
 import { toVsCodeUri } from '../../utils/vsc-utils';
-import { createFile } from '../../test/test-utils-vscode';
+import { cleanWorkspace, createFile } from '../../test/test-utils-vscode';
 
 describe('create-note-from-template command', () => {
+  beforeAll(async () => {
+    await cleanWorkspace();
+  });
+
   afterEach(() => {
     jest.clearAllMocks();
   });

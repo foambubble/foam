@@ -1,14 +1,9 @@
 import { Resource, ResourceLink } from '../model/note';
 import { URI } from '../model/uri';
-import { Range } from '../model/range';
 import { FoamWorkspace } from '../model/workspace';
 import { isNone } from '../utils';
 import { MarkdownLink } from '../services/markdown-link';
-
-export interface LinkReplace {
-  newText: string;
-  range: Range /* old range */;
-}
+import { TextEdit } from '../services/text-edit';
 
 /**
  * convert a link based on its workspace and the note containing it.
@@ -27,7 +22,7 @@ export function convertLinkFormat(
   targetFormat: 'wikilink' | 'link',
   workspace: FoamWorkspace,
   note: Resource | URI
-): LinkReplace {
+): TextEdit {
   const resource = note instanceof URI ? workspace.find(note) : note;
   const targetUri = workspace.resolveLink(resource, link);
   /* If it's already the target format or a placeholder, no transformation happens */

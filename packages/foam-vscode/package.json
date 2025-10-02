@@ -367,12 +367,12 @@
         "title": "Foam: Open Resource"
       },
       {
-        "command": "foam-vscode.convert-link-style-inplace",
-        "title": "Foam: Convert Link Style in Place"
+        "command": "foam-vscode.convert-wikilink-to-mdlink",
+        "title": "Foam: Convert Wikilink to Markdown Link"
       },
       {
-        "command": "foam-vscode.convert-link-style-incopy",
-        "title": "Foam: Convert Link Format in Copy"
+        "command": "foam-vscode.convert-mdlink-to-wikilink",
+        "title": "Foam: Convert Markdown Link to Wikilink"
       },
       {
         "command": "foam-vscode.search-tag",
@@ -524,6 +524,19 @@
           "enumDescriptions": [
             "Never use aliases in completion items",
             "Use alias if resource path is different from title"
+          ]
+        },
+        "foam.completion.linkFormat": {
+          "type": "string",
+          "default": "wikilink",
+          "description": "Controls the format of completed links",
+          "enum": [
+            "wikilink",
+            "link"
+          ],
+          "enumDescriptions": [
+            "Complete as wikilinks (e.g., [[note-name]])",
+            "Complete as markdown links (e.g., [Note Name](note-name.md))"
           ]
         },
         "foam.files.ignore": {

@@ -7,6 +7,7 @@ import { FoamWorkspace } from '../core/model/workspace';
 import { getFoamVsCodeConfig } from '../services/config';
 import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
 import { getNoteTooltip, getFoamDocSelectors } from '../services/editor';
+import { CONVERT_WIKILINK_TO_MDLINK } from './commands/convert-links';
 
 export const aliasCommitCharacters = ['#'];
 export const linkCommitCharacters = ['#', '|'];
@@ -169,15 +170,17 @@ export class WikilinkCompletionProvider
     }
 
     const text = requiresAutocomplete[0];
+    const labelStyle = getCompletionLabelSetting();
+    const aliasSetting = getCompletionAliasSetting();
+    const linkFormat = getCompletionLinkFormatSetting();
 
+    // Use safe range that VS Code accepts - replace content inside brackets only
     const replacementRange = new vscode.Range(
       position.line,
       position.character - (text.length - 2),
       position.line,
       position.character
     );
-    const labelStyle = getCompletionLabelSetting();
-    const aliasSetting = getCompletionAliasSetting();
 
     const resources = this.ws.list().map(resource => {
       const resourceIsDocument =
@@ -206,15 +209,22 @@ export class WikilinkCompletionProvider
 
       const useAlias =
         resourceIsDocument &&
+        linkFormat !== 'link' &&
         aliasSetting !== 'never' &&
-        wikilinkRequiresAlias(resource);
+        wikilinkRequiresAlias(resource, this.ws.defaultExtension);
 
       item.insertText = useAlias
         ? `${identifier}|${resource.title}`
         : identifier;
-      item.commitCharacters = useAlias ? [] : linkCommitCharacters;
+      // When using aliases or markdown link format, don't allow commit characters
+      // since we either have the full text or will convert it
+      item.commitCharacters =
+        useAlias || linkFormat === 'link' ? [] : linkCommitCharacters;
       item.range = replacementRange;
-      item.command = COMPLETION_CURSOR_MOVE;
+      item.command =
+        linkFormat === 'link'
+          ? CONVERT_WIKILINK_TO_MDLINK
+          : COMPLETION_CURSOR_MOVE;
       return item;
     });
     const aliases = this.ws.list().flatMap(resource =>
@@ -224,13 +234,27 @@ export class WikilinkCompletionProvider
           vscode.CompletionItemKind.Reference,
           resource.uri
         );
-        item.insertText = this.ws.getIdentifier(resource.uri) + '|' + a.title;
+
+        const identifier = this.ws.getIdentifier(resource.uri);
+
+        item.insertText = `${identifier}|${a.title}`;
+        // When using markdown link format, don't allow commit characters
+        item.commitCharacters =
+          linkFormat === 'link' ? [] : aliasCommitCharacters;
+        item.range = replacementRange;
+
+        // If link format is enabled, convert after completion
+        item.command =
+          linkFormat === 'link'
+            ? {
+                command: CONVERT_WIKILINK_TO_MDLINK.command,
+                title: CONVERT_WIKILINK_TO_MDLINK.title,
+              }
+            : COMPLETION_CURSOR_MOVE;
+
         item.detail = `Alias of ${vscode.workspace.asRelativePath(
           toVsCodeUri(resource.uri)
         )}`;
-        item.range = replacementRange;
-        item.command = COMPLETION_CURSOR_MOVE;
-        item.commitCharacters = aliasCommitCharacters;
         return item;
       })
     );
@@ -293,7 +317,19 @@ function getCompletionAliasSetting() {
   return aliasStyle;
 }
 
+function getCompletionLinkFormatSetting() {
+  const linkFormat: 'wikilink' | 'link' = getFoamVsCodeConfig(
+    'completion.linkFormat'
+  );
+  return linkFormat;
+}
+
 const normalize = (text: string) => text.toLocaleLowerCase().trim();
-function wikilinkRequiresAlias(resource: Resource) {
-  return normalize(resource.uri.getName()) !== normalize(resource.title);
+function wikilinkRequiresAlias(resource: Resource, defaultExtension: string) {
+  // Compare filename (without extension) to title
+  const nameWithoutExt = resource.uri.getName();
+  const titleWithoutExt = resource.title.endsWith(defaultExtension)
+    ? resource.title.slice(0, -defaultExtension.length)
+    : resource.title;
+  return normalize(nameWithoutExt) !== normalize(titleWithoutExt);
 }

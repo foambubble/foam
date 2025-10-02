@@ -6,7 +6,7 @@
 import * as os from 'os';
 import * as fs from 'fs';
 import * as path from 'path';
-import { Position } from '../core/model/position';
+import { Position as FoamPosition } from '../core/model/position';
 import { Range as FoamRange } from '../core/model/range';
 import { URI } from '../core/model/uri';
 import { Logger } from '../core/utils/log';
@@ -35,7 +35,117 @@ interface Thenable<T> {
 
 // ===== Basic VS Code Types =====
 
-export { Position };
+export class Position implements FoamPosition {
+  public readonly line: number;
+  public readonly character: number;
+  constructor(line: number, character: number) {
+    this.line = line;
+    this.character = character;
+  }
+  static create(line: number, character: number): Position {
+    return new Position(line, character);
+  }
+
+  // Instance methods
+  compareTo(other: Position): number {
+    if (this.line < other.line) return -1;
+    if (this.line > other.line) return 1;
+    if (this.character < other.character) return -1;
+    if (this.character > other.character) return 1;
+    return 0;
+  }
+
+  isAfter(other: Position): boolean {
+    return this.compareTo(other) > 0;
+  }
+
+  isAfterOrEqual(other: Position): boolean {
+    return this.compareTo(other) >= 0;
+  }
+
+  isBefore(other: Position): boolean {
+    return this.compareTo(other) < 0;
+  }
+
+  isBeforeOrEqual(other: Position): boolean {
+    return this.compareTo(other) <= 0;
+  }
+
+  isEqual(other: Position): boolean {
+    return this.compareTo(other) === 0;
+  }
+
+  translate(lineDelta?: number, characterDelta?: number): Position;
+  // eslint-disable-next-line no-dupe-class-members
+  translate(change: { lineDelta?: number; characterDelta?: number }): Position;
+  // eslint-disable-next-line no-dupe-class-members
+  translate(
+    lineDeltaOrChange?:
+      | number
+      | { lineDelta?: number; characterDelta?: number },
+    characterDelta?: number
+  ): Position {
+    let lineDelta: number;
+    let charDelta: number;
+
+    if (typeof lineDeltaOrChange === 'object') {
+      lineDelta = lineDeltaOrChange.lineDelta ?? 0;
+      charDelta = lineDeltaOrChange.characterDelta ?? 0;
+    } else {
+      lineDelta = lineDeltaOrChange ?? 0;
+      charDelta = characterDelta ?? 0;
+    }
+
+    return new Position(this.line + lineDelta, this.character + charDelta);
+  }
+
+  with(line?: number, character?: number): Position;
+  // eslint-disable-next-line no-dupe-class-members
+  with(change: { line?: number; character?: number }): Position;
+  // eslint-disable-next-line no-dupe-class-members
+  with(
+    lineOrChange?: number | { line?: number; character?: number },
+    character?: number
+  ): Position {
+    let line: number;
+    let char: number;
+
+    if (typeof lineOrChange === 'object') {
+      line = lineOrChange.line ?? this.line;
+      char = lineOrChange.character ?? this.character;
+    } else {
+      line = lineOrChange ?? this.line;
+      char = character ?? this.character;
+    }
+
+    return new Position(line, char);
+  }
+
+  // Static helper methods
+  static isAfter(a: Position, b: Position): boolean {
+    return a.isAfter(b);
+  }
+
+  static isAfterOrEqual(a: Position, b: Position): boolean {
+    return a.isAfterOrEqual(b);
+  }
+
+  static isBefore(a: Position, b: Position): boolean {
+    return a.isBefore(b);
+  }
+
+  static isBeforeOrEqual(a: Position, b: Position): boolean {
+    return a.isBeforeOrEqual(b);
+  }
+
+  static isEqual(a: Position, b: Position): boolean {
+    return a.isEqual(b);
+  }
+
+  static compareTo(a: Position, b: Position): number {
+    return a.compareTo(b);
+  }
+}
 
 // VS Code Range class
 export class Range implements FoamRange {
@@ -56,8 +166,8 @@ export class Range implements FoamRange {
     endCharacter?: number
   ) {
     if (typeof startOrLine === 'number') {
-      this.start = { line: startOrLine, character: endOrCharacter as number };
-      this.end = { line: endLine!, character: endCharacter! };
+      this.start = new Position(startOrLine, endOrCharacter as number);
+      this.end = new Position(endLine!, endCharacter!);
     } else {
       this.start = startOrLine;
       this.end = endOrCharacter as Position;
@@ -237,8 +347,8 @@ export class Selection extends Range {
     let active: Position;
 
     if (typeof anchorOrLine === 'number') {
-      anchor = { line: anchorOrLine, character: activeOrCharacter as number };
-      active = { line: activeLine!, character: activeCharacter! };
+      anchor = new Position(anchorOrLine, activeOrCharacter as number);
+      active = new Position(activeLine!, activeCharacter!);
     } else {
       anchor = anchorOrLine;
       active = activeOrCharacter as Position;
@@ -819,6 +929,7 @@ class MockTextDocument implements TextDocument {
       fs.writeFileSync(this.uri.fsPath, content);
     } catch (error) {
       Logger.error('vscode-mock: Failed to write file', error);
+      throw error;
     }
   }
 }
@@ -854,6 +965,32 @@ class MockTextEditor implements TextEditor {
 
   async edit(callback: (editBuilder: any) => void): Promise<boolean> {
     // Simplified edit implementation
+    const edits: { range: Range; newText: string }[] = [];
+    const editBuilder = {
+      replace: (range: Range, newText: string) => {
+        edits.push({ range, newText });
+      },
+    };
+    callback(editBuilder);
+
+    // Apply edits in reverse order to avoid offset issues
+    const document = this.document as MockTextDocument;
+    let content = document.getText();
+    edits
+      .sort(
+        (a, b) =>
+          document.offsetAt(b.range.start) - document.offsetAt(a.range.start)
+      )
+      .forEach(edit => {
+        const startOffset = document.offsetAt(edit.range.start);
+        const endOffset = document.offsetAt(edit.range.end);
+        content =
+          content.substring(0, startOffset) +
+          edit.newText +
+          content.substring(endOffset);
+      });
+
+    document._updateContent(content);
     return true;
   }
 
@@ -1114,6 +1251,33 @@ function createMockExtensionContext(): ExtensionContext {
   };
 }
 
+// ===== Extension API =====
+
+export interface Extension<T> {
+  id: string;
+  extensionPath: string;
+  isActive: boolean;
+  packageJSON: any;
+  exports: T;
+  activate(): Thenable<T>;
+}
+
+class MockExtension<T> implements Extension<T> {
+  constructor(
+    public id: string,
+    public exports: T,
+    public isActive: boolean = true
+  ) {}
+
+  extensionPath = '/mock/extension/path';
+  packageJSON = {};
+
+  activate(): Thenable<T> {
+    this.isActive = true;
+    return Promise.resolve(this.exports);
+  }
+}
+
 // ===== Foam Commands Lazy Initialization =====
 
 class TestFoam {
@@ -1233,8 +1397,8 @@ async function initializeFoamCommands(foam: Foam): Promise<void> {
   await foamCommands.openResource(mockContext, foamPromise);
   await foamCommands.updateGraphCommand(mockContext, foamPromise);
   await foamCommands.updateWikilinksCommand(mockContext, foamPromise);
-  await foamCommands.generateStandaloneNote(mockContext, foamPromise);
   await foamCommands.openDailyNoteForDateCommand(mockContext, foamPromise);
+  await foamCommands.convertLinksCommand(mockContext, foamPromise);
 
   // Commands that only need context
   await foamCommands.copyWithoutBracketsCommand(mockContext);
@@ -1345,8 +1509,10 @@ export const window = {
     message: string,
     ...items: string[]
   ): Promise<string | undefined> {
-    // Mock implementation - do nothing
-    return undefined;
+    throw new Error(
+      'showErrorMessage called - should be mocked in tests if error handling is expected. Message was: ' +
+        message
+    );
   },
 };
 
@@ -1596,6 +1762,37 @@ export const languages = {
         // No-op
       },
     };
+  },
+};
+
+// Extensions namespace
+export const extensions = {
+  getExtension<T = any>(extensionId: string): Extension<T> | undefined {
+    if (extensionId === 'foam.foam-vscode') {
+      return new MockExtension<any>(
+        extensionId,
+        {
+          get foam() {
+            return TestFoam.getInstance();
+          },
+        },
+        true
+      ) as Extension<T>;
+    }
+    return undefined;
+  },
+
+  get all(): Extension<any>[] {
+    const foamExtension = new MockExtension<any>(
+      'foam.foam-vscode',
+      {
+        get foam() {
+          return TestFoam.getInstance();
+        },
+      },
+      true
+    );
+    return [foamExtension];
   },
 };
 

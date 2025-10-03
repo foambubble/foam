@@ -4,6 +4,12 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.28.3] - 2025-10-03
+
+Fixes and Improvements:
+
+- Fixed sanitation of filepath for templates (#1529 #1526)
+
 ## [0.28.2] - 2025-10-01
 
 Fixes and Improvements:

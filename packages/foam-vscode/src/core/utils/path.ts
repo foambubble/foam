@@ -16,13 +16,16 @@ export function fromFsPath(path: string): [string, string] {
   let authority: string;
   if (isUNCShare(path)) {
     [path, authority] = parseUNCShare(path);
-    path = path.replace(/\\/g, '/');
   } else if (hasDrive(path)) {
-    path = '/' + path[0].toUpperCase() + path.substr(1).replace(/\\/g, '/');
+    path = '/' + path[0].toUpperCase() + path.substr(1);
   } else if (path[0] === '/' && hasDrive(path, 1)) {
     // POSIX representation of a Windows path: just normalize drive letter case
     path = '/' + path[1].toUpperCase() + path.substr(2);
   }
+
+  // Always normalize backslashes to forward slashes (filesystem → POSIX)
+  path = path.replace(/\\/g, '/');
+
   return [path, authority];
 }
 

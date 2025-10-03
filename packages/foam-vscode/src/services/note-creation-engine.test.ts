@@ -493,17 +493,17 @@ foam_template:
         'foam-vscode.create-note'
       );
 
-      // Title with many invalid characters (excluding / which is preserved for directories): \#%&{}<>?*$!'":@+`|=
+      // Title with many invalid characters
       const resolver = new Resolver(new Map(), new Date());
-      resolver.define('FOAM_TITLE', 'Test\\#%&{}<>?*$!\'"Title:@+`|=');
+      resolver.define('FOAM_TITLE', 'Test#%&{}<>?*$!\'"Title@+`|=');
 
       const result = await engine.processTemplate(trigger, template, resolver);
 
-      // All invalid characters should become dashes: Test + 14 invalid chars + Title + : + @+`|= (6 more total)
-      expect(result.filepath.path).toBe('Test--------------Title------.md');
+      // All invalid characters should become dashes
+      expect(result.filepath.path).toBe('Test-------------Title-----.md');
 
       // Content should remain unchanged
-      expect(result.content).toContain('# Test\\#%&{}<>?*$!\'"Title:@+`|=');
+      expect(result.content).toContain('# Test#%&{}<>?*$!\'"Title@+`|=');
     });
 
     it('should not affect FOAM_TITLE when not used in filepath', async () => {
@@ -569,7 +569,7 @@ Date and title combination.`,
       const result = await engine.processTemplate(trigger, template, resolver);
 
       // Entire resolved filepath should be sanitized
-      expect(result.filepath.path).toBe('2024/03/Note-With-Invalid-Chars.md');
+      expect(result.filepath.path).toBe('2024/03/Note:With-Invalid-Chars.md');
 
       // Content should use original FOAM_TITLE
       expect(result.content).toContain('# Note:With|Invalid*Chars');
@@ -600,6 +600,79 @@ foam_template:
       // No sanitization needed - should remain unchanged
       expect(result.filepath.path).toBe('notes/ValidTitle123.md');
       expect(result.content).toContain('# ValidTitle123');
+    });
+
+    it('should preserve backslashes as directory separators (Windows-style paths)', async () => {
+      const { engine } = await setupFoamEngine();
+
+      // Simulate a resolved filepath with Windows-style backslash separators
+      const template: Template = {
+        type: 'markdown',
+        content: `# MyNote`,
+        metadata: new Map([
+          ['filepath', 'areas\\dailies\\2024\\MyNote.md'], // Already resolved, has backslashes
+        ]),
+      };
+
+      const trigger = TriggerFactory.createCommandTrigger(
+        'foam-vscode.create-note'
+      );
+
+      const resolver = new Resolver(new Map(), new Date());
+
+      const result = await engine.processTemplate(trigger, template, resolver);
+
+      // Backslashes should be normalized to forward slashes
+      expect(result.filepath.path).toBe('areas/dailies/2024/MyNote.md');
+      expect(result.content).toContain('# MyNote');
+    });
+
+    it('should normalize mixed forward and backslashes', async () => {
+      const { engine } = await setupFoamEngine();
+
+      // Simulate a resolved filepath with mixed separators
+      const template: Template = {
+        type: 'markdown',
+        content: `# MyNote`,
+        metadata: new Map([
+          ['filepath', 'areas/dailies\\2024/MyNote.md'], // Mixed separators
+        ]),
+      };
+
+      const trigger = TriggerFactory.createCommandTrigger(
+        'foam-vscode.create-note'
+      );
+
+      const resolver = new Resolver(new Map(), new Date());
+
+      const result = await engine.processTemplate(trigger, template, resolver);
+
+      // Both separators should be normalized to forward slashes
+      expect(result.filepath.path).toBe('areas/dailies/2024/MyNote.md');
+      expect(result.content).toContain('# MyNote');
+    });
+
+    it('should sanitize invalid characters while normalizing backslash separators', async () => {
+      const { engine } = await setupFoamEngine();
+
+      // Simulate a resolved filepath with backslash separator and invalid chars
+      const template: Template = {
+        type: 'markdown',
+        content: `# Note:With*Invalid`,
+        metadata: new Map([['filepath', 'areas\\Note:With*Invalid.md']]), // Backslash + invalid chars
+      };
+
+      const trigger = TriggerFactory.createCommandTrigger(
+        'foam-vscode.create-note'
+      );
+
+      const resolver = new Resolver(new Map(), new Date());
+
+      const result = await engine.processTemplate(trigger, template, resolver);
+
+      // Backslash normalized to forward slash, invalid chars sanitized
+      expect(result.filepath.path).toBe('areas/Note:With-Invalid.md');
+      expect(result.content).toContain('# Note:With*Invalid');
     });
   });
 });

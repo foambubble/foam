@@ -14,14 +14,13 @@ import { URI } from '../core/model/uri';
 
 /**
  * Characters that are invalid in file names
- * Based on UNALLOWED_CHARS from variable-resolver.ts but excluding forward slash
- * which is needed for directory separators in filepaths
+ * Based on UNALLOWED_CHARS from variable-resolver.ts but excluding filepaths
+ * related chars
  */
-const FILEPATH_UNALLOWED_CHARS = '\\#%&{}<>?*$!\'":@+`|=';
+const FILEPATH_UNALLOWED_CHARS = '#%&{}<>?*$!\'"@+`|=';
 
 /**
  * Sanitizes a filepath by replacing invalid characters with dashes
- * Note: Forward slashes (/) are preserved for directory separators
  * @param filepath The filepath to sanitize
  * @returns The sanitized filepath
  */

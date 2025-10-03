@@ -62,7 +62,7 @@ Search for all occurrences of a tag across your workspace:
 
 Results appear in VS Code's search panel where you can navigate between matches.
 
-> Known limiation: this command leverages VS Code's search capability, so it's constrained by its use of regular expressions. The search is best-effort and some false search results might show up.
+> Known limitation: this command leverages VS Code's search capability, so it's constrained by its use of regular expressions. The search is best-effort and some false search results might show up.
 
 ## Custom Tag Styling
 

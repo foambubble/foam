@@ -7,6 +7,23 @@ export const SEARCH_TAG_COMMAND = {
   title: 'Foam: Search Tag',
 };
 
+/**
+ * Generates a regex search pattern that matches both inline tags (#tag) and YAML front matter tags.
+ *
+ * @param tagLabel The tag label to search for (without # prefix)
+ * @returns A regex pattern string that matches the tag in both formats
+ */
+export function generateTagSearchPattern(tagLabel: string): string {
+  // Escape special regex characters in tag label
+  const escapedTag = tagLabel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+  // Pattern matches three cases:
+  // 1. #tag - inline hashtags with word boundary
+  // 2. tags: [...tag...] - YAML front matter array format
+  // 3. ^\s*-\s+tag\s*$ - YAML front matter list format (tag is the only content after dash)
+  return `#${escapedTag}\\b|tags:.*?\\b${escapedTag}\\b|^\\s*-\\s+${escapedTag}\\b\\s*$`;
+}
+
 export default async function activate(
   context: vscode.ExtensionContext,
   foamPromise: Promise<Foam>
@@ -48,12 +65,15 @@ export default async function activate(
           }
         }
 
-        // Use VS Code's built-in search with the tag pattern
+        // Generate search pattern that matches both inline and YAML tags
+        const searchPattern = generateTagSearchPattern(tagLabel);
+
         await vscode.commands.executeCommand('workbench.action.findInFiles', {
-          query: `#${tagLabel}`,
+          query: searchPattern,
           triggerSearch: true,
           matchWholeWord: false,
           isCaseSensitive: true,
+          isRegex: true,
         });
       }
     )

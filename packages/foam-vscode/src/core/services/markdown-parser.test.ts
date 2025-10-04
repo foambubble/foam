@@ -3,7 +3,7 @@ import {
   getBlockFor,
   ParserPlugin,
 } from './markdown-parser';
-import { ResourceLink } from '../model/note';
+import { NoteLinkDefinition, ResourceLink } from '../model/note';
 import { Logger } from '../utils/log';
 import { URI } from '../model/uri';
 import { Range } from '../model/range';
@@ -160,16 +160,18 @@ This is a [reference-style link][ref1] and another [link][ref2].
       expect(link1.type).toEqual('link');
       expect(link1.rawText).toEqual('[reference-style link][ref1]');
       expect(ResourceLink.isResolvedReference(link1)).toBe(true);
-      expect(link1.definition.label).toEqual('ref1');
-      expect(link1.definition.url).toEqual('target1.md');
-      expect(link1.definition.title).toEqual('Target 1');
+      const definition1 = link1.definition as NoteLinkDefinition;
+      expect(definition1.label).toEqual('ref1');
+      expect(definition1.url).toEqual('target1.md');
+      expect(definition1.title).toEqual('Target 1');
 
       const link2 = note.links[1];
       expect(link2.type).toEqual('link');
       expect(link2.rawText).toEqual('[link][ref2]');
       expect(ResourceLink.isResolvedReference(link2)).toBe(true);
-      expect(link2.definition.label).toEqual('ref2');
-      expect(link2.definition.url).toEqual('target2.md');
+      const definition2 = link2.definition as NoteLinkDefinition;
+      expect(definition2.label).toEqual('ref2');
+      expect(definition2.url).toEqual('target2.md');
     });
 
     it('should handle reference-style links without matching definitions', () => {

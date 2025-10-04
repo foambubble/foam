@@ -534,14 +534,14 @@ describe('MarkdownLink', () => {
         definition: {
           label: 'my-note',
           url: './docs/document.md#introduction',
-          title: 'Document Title'
-        }
+          title: 'Document Title',
+        },
       };
 
       const parsed = MarkdownLink.analyzeLink(link);
-      expect(parsed.target).toEqual('./docs/document.md');  // From definition.url (base)
-      expect(parsed.section).toEqual('introduction');       // From definition.url (fragment)
-      expect(parsed.alias).toEqual('Custom Display Text');  // From rawText
+      expect(parsed.target).toEqual('./docs/document.md'); // From definition.url (base)
+      expect(parsed.section).toEqual('introduction'); // From definition.url (fragment)
+      expect(parsed.alias).toEqual('Custom Display Text'); // From rawText
     });
 
     it('should parse reference-style link with resolved definition - target and section from definition, alias from rawText', () => {
@@ -553,13 +553,13 @@ describe('MarkdownLink', () => {
         definition: {
           label: 'myref',
           url: './document.md#section',
-          title: 'My Document'
-        }
+          title: 'My Document',
+        },
       };
 
       const parsed = MarkdownLink.analyzeLink(link);
-      expect(parsed.target).toEqual('./document.md');     // From definition.url (base)
-      expect(parsed.section).toEqual('section');          // From definition.url (fragment)
+      expect(parsed.target).toEqual('./document.md'); // From definition.url (base)
+      expect(parsed.section).toEqual('section'); // From definition.url (fragment)
       expect(parsed.alias).toEqual('Click here to read'); // From rawText
     });
 
@@ -571,15 +571,15 @@ describe('MarkdownLink', () => {
         isEmbed: false,
         definition: {
           label: 'my-note',
-          url: './docs/document.md',  // No fragment
-          title: 'Document Title'
-        }
+          url: './docs/document.md', // No fragment
+          title: 'Document Title',
+        },
       };
 
       const parsed = MarkdownLink.analyzeLink(link);
       expect(parsed.target).toEqual('./docs/document.md'); // From definition.url
-      expect(parsed.section).toEqual('');                  // Empty - no fragment in definition.url
-      expect(parsed.alias).toEqual('Display Text');        // From rawText
+      expect(parsed.section).toEqual(''); // Empty - no fragment in definition.url
+      expect(parsed.alias).toEqual('Display Text'); // From rawText
     });
 
     it('should handle reference-style link with resolved definition but no alias in rawText', () => {
@@ -591,14 +591,14 @@ describe('MarkdownLink', () => {
         definition: {
           label: 'ref',
           url: './target.md#section',
-          title: 'Target'
-        }
+          title: 'Target',
+        },
       };
 
       const parsed = MarkdownLink.analyzeLink(link);
-      expect(parsed.target).toEqual('./target.md');  // From definition.url (base)
-      expect(parsed.section).toEqual('section');     // From definition.url (fragment)
-      expect(parsed.alias).toEqual('text');          // From rawText
+      expect(parsed.target).toEqual('./target.md'); // From definition.url (base)
+      expect(parsed.section).toEqual('section'); // From definition.url (fragment)
+      expect(parsed.alias).toEqual('text'); // From rawText
     });
 
     it('should handle complex URLs in definitions', () => {
@@ -610,14 +610,14 @@ describe('MarkdownLink', () => {
         definition: {
           label: 'note',
           url: '../path/to/some file.md#complex section name',
-          title: 'Title'
-        }
+          title: 'Title',
+        },
       };
 
       const parsed = MarkdownLink.analyzeLink(link);
       expect(parsed.target).toEqual('../path/to/some file.md'); // Base path
-      expect(parsed.section).toEqual('complex section name');   // Fragment with spaces
-      expect(parsed.alias).toEqual('Alias');                    // From rawText
+      expect(parsed.section).toEqual('complex section name'); // Fragment with spaces
+      expect(parsed.alias).toEqual('Alias'); // From rawText
     });
   });
 });

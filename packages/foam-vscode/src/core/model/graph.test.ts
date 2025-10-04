@@ -264,15 +264,10 @@ describe('Placeholders', () => {
     const ws = createTestWorkspace();
     const noteA = createTestNote({
       uri: '/somewhere/page-a.md',
-      links: [{ slug: 'page-b' }, { slug: 'page-c' }],
-    });
-    noteA.definitions.push({
-      label: 'page-b',
-      url: './page-b.md',
-    });
-    noteA.definitions.push({
-      label: 'page-c',
-      url: '/path/to/page-c.md',
+      links: [
+        { slug: 'page-b', definitionUrl: './page-b.md' },
+        { slug: 'page-c', definitionUrl: '/path/to/page-c.md' },
+      ],
     });
     ws.set(noteA).set(
       createTestNote({ uri: '/different/location/for/note-b.md' })

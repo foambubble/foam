@@ -57,15 +57,8 @@ export class MarkdownResourceProvider implements ResourceProvider {
     const { target, section } = MarkdownLink.analyzeLink(link);
     switch (link.type) {
       case 'wikilink': {
-        let definitionUri = undefined;
-        for (const def of resource.definitions) {
-          if (def.label === target) {
-            definitionUri = def.url;
-            break;
-          }
-        }
-        if (isSome(definitionUri)) {
-          const definedUri = resource.uri.resolve(definitionUri);
+        if (ResourceLink.isResolvedReference(link)) {
+          const definedUri = resource.uri.resolve(link.definition.url);
           targetUri =
             workspace.find(definedUri, resource.uri)?.uri ??
             URI.placeholder(definedUri.path);
@@ -75,23 +68,33 @@ export class MarkdownResourceProvider implements ResourceProvider {
               ? resource.uri
               : workspace.find(target, resource.uri)?.uri ??
                 URI.placeholder(target);
-
-          if (section) {
-            targetUri = targetUri.with({ fragment: section });
-          }
+        }
+        if (section) {
+          targetUri = targetUri.with({ fragment: section });
         }
         break;
       }
       case 'link': {
+        if (ResourceLink.isUnresolvedReference(link)) {
+          // Reference-style link with unresolved reference - treat as placeholder
+          targetUri = URI.placeholder(link.definition);
+          break;
+        }
+
+        // Handle reference-style links first
+        const targetPath = ResourceLink.isResolvedReference(link)
+          ? link.definition.url
+          : target;
+
         let path: string;
         let foundResource: Resource | null = null;
 
-        if (target.startsWith('/')) {
+        if (targetPath.startsWith('/')) {
           // Handle workspace-relative paths (root-path relative)
           if (this.workspaceRoots.length > 0) {
             // Try to resolve against each workspace root
             for (const workspaceRoot of this.workspaceRoots) {
-              const candidatePath = target.substring(1); // Remove leading '/'
+              const candidatePath = targetPath.substring(1); // Remove leading '/'
               const absolutePath = workspaceRoot.joinPath(candidatePath);
               const found = workspace.find(absolutePath);
               if (found) {
@@ -103,7 +106,7 @@ export class MarkdownResourceProvider implements ResourceProvider {
             if (!foundResource) {
               // Not found in any workspace root, create placeholder relative to first workspace root
               const firstRoot = this.workspaceRoots[0];
-              const candidatePath = target.substring(1);
+              const candidatePath = targetPath.substring(1);
               const absolutePath = firstRoot.joinPath(candidatePath);
               targetUri = URI.placeholder(absolutePath.path);
             } else {
@@ -111,7 +114,7 @@ export class MarkdownResourceProvider implements ResourceProvider {
             }
           } else {
             // No workspace roots provided, fall back to existing behavior
-            path = target;
+            path = targetPath;
             targetUri =
               workspace.find(path, resource.uri)?.uri ??
               URI.placeholder(resource.uri.resolve(path).path);
@@ -119,9 +122,9 @@ export class MarkdownResourceProvider implements ResourceProvider {
         } else {
           // Handle relative paths and non-root paths
           path =
-            target.startsWith('./') || target.startsWith('../')
-              ? target
-              : './' + target;
+            targetPath.startsWith('./') || targetPath.startsWith('../')
+              ? targetPath
+              : './' + targetPath;
           targetUri =
             workspace.find(path, resource.uri)?.uri ??
             URI.placeholder(resource.uri.resolve(path).path);
@@ -149,8 +152,12 @@ export function createMarkdownReferences(
   const resource = source instanceof URI ? workspace.find(source) : source;
 
   const definitions = resource.links
-    .filter(link => link.type === 'wikilink')
+    .filter(link => ResourceLink.isReferenceStyleLink(link))
     .map(link => {
+      if (ResourceLink.isResolvedReference(link)) {
+        return link.definition;
+      }
+
       const targetUri = workspace.resolveLink(resource, link);
       const target = workspace.find(targetUri);
       if (isNone(target)) {

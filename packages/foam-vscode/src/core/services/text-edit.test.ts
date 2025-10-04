@@ -72,4 +72,32 @@ describe('applyTextEdit', () => {
 
     expect(actual).toBe(expected);
   });
+
+  it('should apply multiple TextEdits in reverse order (VS Code behavior)', () => {
+    // This test shows why reverse order is important for range stability
+    const textEdits = [
+      // Edit near beginning - would affect later ranges if applied first
+      {
+        newText: `[PREFIX] `,
+        range: Range.create(0, 0, 0, 0),
+      },
+      // Edit in middle - range stays valid with reverse order
+      {
+        newText: `[MIDDLE] `,
+        range: Range.create(0, 11, 0, 11),
+      },
+      // Edit at end - applied first, doesn't affect other ranges
+      {
+        newText: ` [END]`,
+        range: Range.create(0, 15, 0, 15),
+      },
+    ];
+
+    const text = `this is my text`;
+    const expected = `[PREFIX] this is my [MIDDLE] text [END]`;
+
+    const actual = TextEdit.apply(text, textEdits);
+
+    expect(actual).toBe(expected);
+  });
 });

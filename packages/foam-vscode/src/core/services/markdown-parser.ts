@@ -6,7 +6,12 @@ import wikiLinkPlugin from 'remark-wiki-link';
 import frontmatterPlugin from 'remark-frontmatter';
 import { parse as parseYAML } from 'yaml';
 import visit from 'unist-util-visit';
-import { NoteLinkDefinition, Resource, ResourceParser } from '../model/note';
+import {
+  NoteLinkDefinition,
+  Resource,
+  ResourceLink,
+  ResourceParser,
+} from '../model/note';
 import { Position } from '../model/position';
 import { Range } from '../model/range';
 import { extractHashtags, extractTagsFromProp, hash, isSome } from '../utils';
@@ -41,19 +46,34 @@ export interface ParserCacheEntry {
  */
 export type ParserCache = ICache<URI, ParserCacheEntry>;
 
+const parser = unified()
+  .use(markdownParse, { gfm: true })
+  .use(frontmatterPlugin, ['yaml'])
+  .use(wikiLinkPlugin, { aliasDivider: '|' });
+
+export function getLinkDefinitions(markdown: string): NoteLinkDefinition[] {
+  const definitions: NoteLinkDefinition[] = [];
+  const tree = parser.parse(markdown);
+  visit(tree, node => {
+    if (node.type === 'definition') {
+      definitions.push({
+        label: (node as any).label,
+        url: (node as any).url,
+        title: (node as any).title,
+        range: astPositionToFoamRange(node.position!),
+      });
+    }
+  });
+  return definitions;
+}
+
 export function createMarkdownParser(
   extraPlugins: ParserPlugin[] = [],
   cache?: ParserCache
 ): ResourceParser {
-  const parser = unified()
-    .use(markdownParse, { gfm: true })
-    .use(frontmatterPlugin, ['yaml'])
-    .use(wikiLinkPlugin, { aliasDivider: '|' });
-
   const plugins = [
     titlePlugin,
     wikilinkPlugin,
-    definitionsPlugin,
     tagsPlugin,
     aliasesPlugin,
     sectionsPlugin,
@@ -89,8 +109,9 @@ export function createMarkdownParser(
         tags: [],
         aliases: [],
         links: [],
-        definitions: [],
       };
+
+      const localDefinitions: NoteLinkDefinition[] = [];
 
       for (const plugin of plugins) {
         try {
@@ -119,6 +140,15 @@ export function createMarkdownParser(
           }
         }
 
+        if (node.type === 'definition') {
+          localDefinitions.push({
+            label: (node as any).label,
+            url: (node as any).url,
+            title: (node as any).title,
+            range: astPositionToFoamRange(node.position!),
+          });
+        }
+
         for (const plugin of plugins) {
           try {
             plugin.visit?.(node, note, markdown);
@@ -134,6 +164,21 @@ export function createMarkdownParser(
           handleError(plugin, 'onDidVisitTree', uri, e);
         }
       }
+
+      // Post-processing: Resolve reference identifiers to definitions for all links
+      note.links.forEach(link => {
+        if (ResourceLink.isUnresolvedReference(link)) {
+          // This link has a reference identifier (from linkReference or wikilink)
+          const referenceId = link.definition;
+          const definition = localDefinitions.find(
+            def => def.label === referenceId
+          );
+
+          // Set definition to definition object if found, otherwise keep as string
+          (link as any).definition = definition || referenceId;
+        }
+      });
+
       Logger.debug('Result:', note);
       return note;
     },
@@ -359,6 +404,7 @@ const wikilinkPlugin: ParserPlugin = {
         rawText: literalContent,
         range,
         isEmbed,
+        definition: (node as any).value,
       });
     }
     if (node.type === 'link' || node.type === 'image') {
@@ -378,24 +424,27 @@ const wikilinkPlugin: ParserPlugin = {
         isEmbed: literalContent.startsWith('!'),
       });
     }
-  },
-};
+    if (node.type === 'linkReference') {
+      const literalContent = noteSource.substring(
+        node.position!.start.offset!,
+        node.position!.end.offset!
+      );
 
-const definitionsPlugin: ParserPlugin = {
-  name: 'definitions',
-  visit: (node, note) => {
-    if (node.type === 'definition') {
-      note.definitions.push({
-        label: (node as any).label,
-        url: (node as any).url,
-        title: (node as any).title,
+      const identifier = (node as any).identifier;
+
+      note.links.push({
+        type: 'link',
+        rawText: literalContent,
         range: astPositionToFoamRange(node.position!),
+        isEmbed: false,
+        // Store reference identifier temporarily - will be resolved in onDidVisitTree
+        definition: identifier,
       });
     }
   },
   onDidVisitTree: (tree, note) => {
-    const end = astPointToFoamPosition(tree.position.end);
-    note.definitions = getFoamDefinitions(note.definitions, end);
+    // This onDidVisitTree is now handled globally after all plugins have run
+    // and localDefinitions have been collected.
   },
 };
 
@@ -413,31 +462,6 @@ const handleError = (
     e
   );
 };
-
-function getFoamDefinitions(
-  defs: NoteLinkDefinition[],
-  fileEndPoint: Position
-): NoteLinkDefinition[] {
-  let previousLine = fileEndPoint.line;
-  const foamDefinitions = [];
-
-  // walk through each definition in reverse order
-  // (last one first)
-  for (const def of defs.reverse()) {
-    // if this definition is more than 2 lines above the
-    // previous one below it (or file end), that means we
-    // have exited the trailing definition block, and should bail
-    const start = def.range!.start.line;
-    if (start < previousLine - 2) {
-      break;
-    }
-
-    foamDefinitions.unshift(def);
-    previousLine = def.range!.end.line;
-  }
-
-  return foamDefinitions;
-}
 
 /**
  * Converts the 1-index Point object into the VS Code 0-index Position object

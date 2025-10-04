@@ -15,7 +15,28 @@ export abstract class TextEdit {
    * @param textEdit
    * @returns {string} text with the applied textEdit
    */
-  public static apply(text: string, textEdit: TextEdit): string {
+  public static apply(text: string, textEdit: TextEdit): string;
+  // eslint-disable-next-line no-dupe-class-members
+  public static apply(text: string, textEdits: TextEdit[]): string;
+  // eslint-disable-next-line no-dupe-class-members
+  public static apply(
+    text: string,
+    textEditOrEdits: TextEdit | TextEdit[]
+  ): string {
+    if (Array.isArray(textEditOrEdits)) {
+      // Apply edits in reverse order (end-to-beginning) to maintain range validity
+      // This matches VS Code's behavior for TextEdit application
+      const sortedEdits = [...textEditOrEdits].sort((a, b) =>
+        Position.compareTo(b.range.start, a.range.start)
+      );
+      let result = text;
+      for (const textEdit of sortedEdits) {
+        result = this.apply(result, textEdit);
+      }
+      return result;
+    }
+
+    const textEdit = textEditOrEdits;
     const eol = detectNewline.graceful(text);
     const lines = text.split(eol);
     const characters = text.split('');

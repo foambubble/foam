@@ -6,6 +6,7 @@ import { ResourceParser } from './note';
 import { ResourceProvider } from './provider';
 import { FoamTags } from './tags';
 import { FoamEmbeddings } from './embeddings';
+import { InMemoryEmbeddingCache } from './in-memory-embedding-cache';
 import { EmbeddingProvider } from '../services/embedding-provider';
 import { NoOpEmbeddingProvider } from '../services/noop-embedding-provider';
 import { Logger, withTiming, withTimingAsync } from '../utils/log';
@@ -57,7 +58,15 @@ export const bootstrap = async (
   const provider = embeddingProvider ?? new NoOpEmbeddingProvider();
   const isAvailable = await provider.isAvailable();
 
-  const embeddings = FoamEmbeddings.fromWorkspace(workspace, provider, true);
+  // Create embedding cache (in-memory for now, can be persisted later)
+  const embeddingCache = new InMemoryEmbeddingCache();
+
+  const embeddings = FoamEmbeddings.fromWorkspace(
+    workspace,
+    provider,
+    true,
+    embeddingCache
+  );
 
   if (isAvailable) {
     Logger.info('Embeddings service initialized');

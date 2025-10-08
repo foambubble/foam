@@ -1,7 +1,9 @@
 import { Emitter } from '../common/event';
 import { IDisposable } from '../common/lifecycle';
 import { Logger } from '../utils/log';
+import { hash, isSome } from '../utils';
 import { EmbeddingProvider, Embedding } from '../services/embedding-provider';
+import { EmbeddingCache } from './embedding-cache';
 import { FoamWorkspace } from './workspace';
 import { URI } from './uri';
 import { Resource } from './note';
@@ -33,7 +35,8 @@ export class FoamEmbeddings implements IDisposable {
 
   constructor(
     private readonly workspace: FoamWorkspace,
-    private readonly provider: EmbeddingProvider
+    private readonly provider: EmbeddingProvider,
+    private readonly cache?: EmbeddingCache
   ) {}
 
   /**
@@ -129,33 +132,68 @@ export class FoamEmbeddings implements IDisposable {
   /**
    * Update embeddings for a single resource
    * @param uri The URI of the resource to update
+   * @returns The embedding vector, or null if not found/not processed
    */
-  public async updateResource(uri: URI): Promise<void> {
+  public async updateResource(uri: URI): Promise<Embedding | null> {
     const resource = this.workspace.find(uri);
     if (!resource) {
       // Resource deleted, remove embedding
       this.embeddings.delete(uri.path);
+      if (this.cache) {
+        this.cache.del(uri);
+      }
       this.onDidUpdateEmitter.fire();
-      return;
+      return null;
     }
 
     // Skip non-note resources (attachments)
     if (resource.type !== 'note') {
-      return;
+      return null;
     }
 
     try {
       const text = this.extractTextFromResource(resource);
+      const textChecksum = hash(text);
+
+      // Check cache if available
+      if (this.cache && this.cache.has(uri)) {
+        const cached = this.cache.get(uri);
+        if (cached.checksum === textChecksum) {
+          Logger.debug(
+            `Skipping embedding for ${uri.toFsPath()} - content unchanged`
+          );
+          // Use cached embedding
+          const embedding: Embedding = {
+            vector: cached.embedding,
+            createdAt: Date.now(),
+          };
+          this.embeddings.set(uri.path, embedding);
+          return embedding;
+        }
+      }
+
+      // Generate new embedding
       const vector = await this.provider.embed(text);
 
-      this.embeddings.set(uri.path, {
+      const embedding: Embedding = {
         vector,
         createdAt: Date.now(),
-      });
+      };
+      this.embeddings.set(uri.path, embedding);
+
+      // Update cache
+      if (this.cache) {
+        this.cache.set(uri, {
+          checksum: textChecksum,
+          embedding: vector,
+        });
+      }
 
       this.onDidUpdateEmitter.fire();
+      return embedding;
     } catch (error) {
       Logger.error(`Failed to update embedding for ${uri.toFsPath()}`, error);
+      return null;
     }
   }
 
@@ -175,16 +213,45 @@ export class FoamEmbeddings implements IDisposable {
       `Building embeddings for ${resources.length} notes (${allResources.length} total resources)...`
     );
 
+    let skipped = 0;
+    let generated = 0;
+
     // Process embeddings sequentially to avoid overwhelming the service
     for (const resource of resources) {
       try {
         const text = this.extractTextFromResource(resource);
-        const vector = await this.provider.embed(text);
+        const textChecksum = hash(text);
 
+        // Check cache if available
+        if (this.cache && this.cache.has(resource.uri)) {
+          const cached = this.cache.get(resource.uri);
+          if (cached.checksum === textChecksum) {
+            // Reuse cached embedding
+            this.embeddings.set(resource.uri.path, {
+              vector: cached.embedding,
+              createdAt: Date.now(),
+            });
+            skipped++;
+            continue;
+          }
+        }
+
+        // Generate new embedding
+        const vector = await this.provider.embed(text);
         this.embeddings.set(resource.uri.path, {
           vector,
           createdAt: Date.now(),
         });
+
+        // Update cache
+        if (this.cache) {
+          this.cache.set(resource.uri, {
+            checksum: textChecksum,
+            embedding: vector,
+          });
+        }
+
+        generated++;
       } catch (error) {
         Logger.error(
           `Failed to generate embedding for ${resource.uri.toFsPath()}`,
@@ -195,9 +262,9 @@ export class FoamEmbeddings implements IDisposable {
 
     const end = Date.now();
     Logger.info(
-      `Embeddings built for ${this.embeddings.size}/${
-        resources.length
-      } notes in ${end - start}ms`
+      `Embeddings built: ${generated} generated, ${skipped} reused (${
+        this.embeddings.size
+      }/${resources.length} total) in ${end - start}ms`
     );
     this.onDidUpdateEmitter.fire();
   }
@@ -228,14 +295,16 @@ export class FoamEmbeddings implements IDisposable {
    * @param workspace The workspace to generate embeddings for
    * @param provider The embedding provider to use
    * @param keepMonitoring Whether to automatically update embeddings when workspace changes
+   * @param cache Optional cache for storing embeddings
    * @returns The FoamEmbeddings instance
    */
   public static fromWorkspace(
     workspace: FoamWorkspace,
     provider: EmbeddingProvider,
-    keepMonitoring: boolean = false
+    keepMonitoring: boolean = false,
+    cache?: EmbeddingCache
   ): FoamEmbeddings {
-    const embeddings = new FoamEmbeddings(workspace, provider);
+    const embeddings = new FoamEmbeddings(workspace, provider, cache);
 
     if (keepMonitoring) {
       // Update embeddings when resources change

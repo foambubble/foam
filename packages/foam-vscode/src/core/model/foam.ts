@@ -5,6 +5,9 @@ import { FoamGraph } from './graph';
 import { ResourceParser } from './note';
 import { ResourceProvider } from './provider';
 import { FoamTags } from './tags';
+import { FoamEmbeddings } from './embeddings';
+import { EmbeddingProvider } from '../services/embedding-provider';
+import { NoOpEmbeddingProvider } from '../services/noop-embedding-provider';
 import { Logger, withTiming, withTimingAsync } from '../utils/log';
 
 export interface Services {
@@ -18,6 +21,7 @@ export interface Foam extends IDisposable {
   workspace: FoamWorkspace;
   graph: FoamGraph;
   tags: FoamTags;
+  embeddings: FoamEmbeddings;
 }
 
 export const bootstrap = async (
@@ -26,7 +30,8 @@ export const bootstrap = async (
   dataStore: IDataStore,
   parser: ResourceParser,
   initialProviders: ResourceProvider[],
-  defaultExtension: string = '.md'
+  defaultExtension: string = '.md',
+  embeddingProvider?: EmbeddingProvider
 ) => {
   const workspace = await withTimingAsync(
     () =>
@@ -48,6 +53,20 @@ export const bootstrap = async (
     ms => Logger.info(`Tags loaded in ${ms}ms`)
   );
 
+  // Initialize embeddings with provider or fallback to no-op
+  const provider = embeddingProvider ?? new NoOpEmbeddingProvider();
+  const isAvailable = await provider.isAvailable();
+
+  const embeddings = FoamEmbeddings.fromWorkspace(workspace, provider, true);
+
+  if (isAvailable) {
+    Logger.info('Embeddings service initialized');
+  } else {
+    Logger.warn(
+      'Embedding provider not available. Semantic features will be disabled.'
+    );
+  }
+
   watcher?.onDidChange(async uri => {
     if (matcher.isMatch(uri)) {
       await workspace.fetchAndSet(uri);
@@ -67,6 +86,7 @@ export const bootstrap = async (
     workspace,
     graph,
     tags,
+    embeddings,
     services: {
       parser,
       dataStore,
@@ -75,6 +95,7 @@ export const bootstrap = async (
     dispose: () => {
       workspace.dispose();
       graph.dispose();
+      embeddings.dispose();
     },
   };
 

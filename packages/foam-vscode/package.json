@@ -385,6 +385,14 @@
         "icon": "$(edit)"
       },
       {
+        "command": "foam-vscode.show-similar-notes",
+        "title": "Foam: Show Similar Notes"
+      },
+      {
+        "command": "foam-vscode.build-embeddings",
+        "title": "Foam: Build Embeddings Index"
+      },
+      {
         "command": "foam-vscode.views.orphans.group-by:folder",
         "title": "Group By Folder",
         "icon": "$(list-tree)"

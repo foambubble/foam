@@ -139,6 +139,11 @@ export class FoamEmbeddings implements IDisposable {
       return;
     }
 
+    // Skip non-note resources (attachments)
+    if (resource.type !== 'note') {
+      return;
+    }
+
     try {
       const text = this.extractTextFromResource(resource);
       const vector = await this.provider.embed(text);
@@ -162,8 +167,13 @@ export class FoamEmbeddings implements IDisposable {
     const start = Date.now();
     this.embeddings.clear();
 
-    const resources = Array.from(this.workspace.resources());
-    Logger.info(`Building embeddings for ${resources.length} resources...`);
+    // Filter to only process notes (not attachments)
+    const allResources = Array.from(this.workspace.resources());
+    const resources = allResources.filter(r => r.type === 'note');
+
+    Logger.info(
+      `Building embeddings for ${resources.length} notes (${allResources.length} total resources)...`
+    );
 
     // Process embeddings sequentially to avoid overwhelming the service
     for (const resource of resources) {
@@ -187,7 +197,7 @@ export class FoamEmbeddings implements IDisposable {
     Logger.info(
       `Embeddings built for ${this.embeddings.size}/${
         resources.length
-      } resources in ${end - start}ms`
+      } notes in ${end - start}ms`
     );
     this.onDidUpdateEmitter.fire();
   }

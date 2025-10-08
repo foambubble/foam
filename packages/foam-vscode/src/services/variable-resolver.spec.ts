@@ -265,6 +265,77 @@ describe('variable-resolver, variable resolution', () => {
     });
   });
 
+  it('should resolve FOAM_DATE_WEEK_YEAR correctly for edge cases', async () => {
+    // Test cases where week year differs from calendar year
+    const testCases = [
+      {
+        date: new Date(2025, 0, 1),
+        weekYear: '2025',
+        calendarYear: 2025,
+        week: '01',
+        desc: 'Jan 1 2025 (Wed) - week 1 of 2025',
+      },
+      {
+        date: new Date(2024, 11, 30),
+        weekYear: '2025',
+        calendarYear: 2024,
+        week: '01',
+        desc: 'Dec 30 2024 (Mon) - week 1 of 2025',
+      },
+      {
+        date: new Date(2024, 0, 1),
+        weekYear: '2024',
+        calendarYear: 2024,
+        week: '01',
+        desc: 'Jan 1 2024 (Mon) - week 1 of 2024',
+      },
+      {
+        date: new Date(2023, 0, 1),
+        weekYear: '2022',
+        calendarYear: 2023,
+        week: '52',
+        desc: 'Jan 1 2023 (Sun) - week 52 of 2022',
+      },
+      {
+        date: new Date(2022, 0, 1),
+        weekYear: '2021',
+        calendarYear: 2022,
+        week: '52',
+        desc: 'Jan 1 2022 (Sat) - week 52 of 2021',
+      },
+    ];
+
+    for (const testCase of testCases) {
+      const resolver = new Resolver(new Map(), testCase.date);
+      const weekYear = await resolver.resolve(
+        new Variable('FOAM_DATE_WEEK_YEAR')
+      );
+      const week = await resolver.resolve(new Variable('FOAM_DATE_WEEK'));
+
+      expect(weekYear).toBe(testCase.weekYear);
+      expect(week).toBe(testCase.week.padStart(2, '0'));
+      expect(testCase.date.getFullYear()).toBe(testCase.calendarYear);
+    }
+  });
+
+  it('should resolve FOAM_DATE_WEEK_YEAR with FOAM_DATE_WEEK in template', async () => {
+    // Example: 2024-W01 format where Dec 30, 2024 is in week 1 of 2025
+    const date = new Date(2024, 11, 30); // Dec 30, 2024 (Monday)
+    const resolver = new Resolver(new Map(), date);
+
+    const variables = [
+      new Variable('FOAM_DATE_WEEK_YEAR'),
+      new Variable('FOAM_DATE_WEEK'),
+      new Variable('FOAM_DATE_YEAR'),
+    ];
+
+    const result = await resolver.resolveAll(variables);
+
+    expect(result.get('FOAM_DATE_WEEK_YEAR')).toBe('2025');
+    expect(result.get('FOAM_DATE_WEEK')).toBe('01');
+    expect(result.get('FOAM_DATE_YEAR')).toBe('2024');
+  });
+
   describe('FOAM_CURRENT_DIR', () => {
     it('should resolve to workspace root when no active editor', async () => {
       const resolver = new Resolver(new Map<string, string>(), new Date());

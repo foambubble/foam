@@ -6,6 +6,7 @@ import { FrontmatterWriter } from '../../../services/frontmatter-writer';
 import { WriteObserver } from '../../utils/observer';
 import { FoamWorkspace } from './foamWorkspace';
 import { Workspace, TrieIdentifier } from './workspace';
+import { Phase } from '../phase';
 
 export class TrainNoteWorkspace
   extends Workspace<TrainNote>
@@ -43,6 +44,10 @@ export class TrainNoteWorkspace
     return this.list().filter(note =>
       TrainNoteWorkspace.isLate(note.nextReminder)
     );
+  }
+
+  public get(phase: Phase) {
+    return this.list().filter(note => note.currentPhase === phase);
   }
 
   private IsTrainNote(resource: Resource): {

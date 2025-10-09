@@ -61,4 +61,8 @@ export class Phases {
     if (position > this.length || position < 0) return undefined;
     return this.phases[position];
   }
+
+  public list() {
+    return this.phases;
+  }
 }

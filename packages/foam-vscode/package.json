@@ -72,6 +72,12 @@
           "contextualTitle": "Foam"
         },
         {
+          "id": "foam-vscode.phases-explorer",
+          "name": "Phases",
+          "icon": "$(notebook)",
+          "contextualTitle": "Foam"
+        },
+        {
           "id": "foam-vscode.orphans",
           "name": "Orphans",
           "icon": "$(debug-gripper)",

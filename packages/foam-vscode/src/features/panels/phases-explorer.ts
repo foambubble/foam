@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
-import { FoamWorkspace } from '../../core/model/workspace';
+import { FoamWorkspace } from '../../core/model/workspace/foamWorkspace';
 import {
   ResourceRangeTreeItem,
   TrainTreeItem,
-  createBacklinkItemsForResource as createBacklinkTreeItemsForResource,
+  expandAll,
 } from './utils/tree-view-utils';
 import { FoamGraph } from '../../core/model/graph';
 import {
@@ -14,6 +14,7 @@ import {
 import { TrainNote } from '../../core/model/train-note';
 import { TrainTreeItemBuilder } from './notes-explorer';
 import { Foam } from '../../core/model/foam';
+import { URI } from '../../core/model/uri';
 
 export default async function activate(
   context: vscode.ExtensionContext,
@@ -34,42 +35,48 @@ export default async function activate(
       canSelectMany: true,
     }
   );
-
-  // const revealTextEditorItem = async () => {
-  //   const target = vscode.window.activeTextEditor?.document.uri;
-  //   if (treeView.visible) {
-  //     if (target) {
-  //       const item = await findTreeItemByUri(provider, target);
-  //       // Check if the item is already selected.
-  //       // This check is needed because always calling reveal() will
-  //       // cause the tree view to take the focus from the item when
-  //       // browsing the notes explorer
-  //       if (
-  //         item &&
-  //         !treeView.selection.find(
-  //           i => i.resourceUri?.path === item.resourceUri.path
-  //         )
-  //       ) {
-  //         treeView.reveal(item);
-  //       }
-  //     }
-  //   }
-  // };
+  const revealTextEditorItem = async () => {
+    const target = vscode.window.activeTextEditor?.document.uri;
+    if (treeView.visible) {
+      if (target) {
+        const item = await findTreeItemByUri(provider, target);
+        // Check if the item is already selected.
+        // This check is needed because always calling reveal() will
+        // cause the tree view to take the focus from the item when
+        // browsing the notes explorer
+        if (
+          item &&
+          !treeView.selection.find(
+            i => i.resourceUri?.path === item.resourceUri.path
+          )
+        ) {
+          treeView.reveal(item);
+        }
+      }
+    }
+  };
 
   context.subscriptions.push(
     treeView,
     provider,
     foam.graph.onDidUpdate(() => {
       provider.refresh();
-    })
-    // vscode.commands.registerCommand(
-    //   `foam-vscode.views.notes-explorer.expand-all`,
-    //   (...args) =>
-    //     expandAll(treeView, provider, node => node.contextValue === 'folder')
-    // ),
-    // vscode.window.onDidChangeActiveTextEditor(revealTextEditorItem),
-    // treeView.onDidChangeVisibility(revealTextEditorItem)
+    }),
+    vscode.commands.registerCommand(
+      `foam-vscode.views.phases-explorer.expand-all`,
+      (...args) =>
+        expandAll(treeView, provider, node => node.contextValue === 'folder')
+    ),
+    vscode.window.onDidChangeActiveTextEditor(revealTextEditorItem),
+    treeView.onDidChangeVisibility(revealTextEditorItem)
   );
+}
+
+function findTreeItemByUri<I, T>(
+  provider: FolderTreeProvider<I, T>,
+  target: vscode.Uri
+) {
+  return provider.findTreeItemByPath(target.fsPath.split('/'));
 }
 
 type TrainTreeItems = TrainTreeItem | ResourceRangeTreeItem;
@@ -113,5 +120,16 @@ export class PhasesProvider extends FolderTreeProvider<
       )
       .setGraph(this.graph)
       .build();
+  }
+
+  override getTreeItemsHierarchy(path: string[]): vscode.TreeItem[] {
+    const uri = URI.parse(path.join('/'));
+    const target = this.workspace.trainNoteWorkspace.get(uri);
+    if (target) {
+      return super.getTreeItemsHierarchy([
+        target.currentPhase.name,
+        target.title,
+      ]);
+    }
   }
 }

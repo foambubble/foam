@@ -74,7 +74,7 @@ export default async function activate(
   );
 }
 
-export function findTreeItemByUri<I, T>(
+function findTreeItemByUri<I, T>(
   provider: FolderTreeProvider<I, T>,
   target: vscode.Uri
 ) {

@@ -258,6 +258,7 @@ Supported variables include:
 - `FOAM_DATE_YEAR`: 4-digit year (e.g. 2025)
 - `FOAM_DATE_MONTH`: 2-digit month (e.g. 09)
 - `FOAM_DATE_WEEK`: ISO 8601 week number (e.g. 37)
+- `FOAM_DATE_WEEK_YEAR`: ISO 8601 week-numbering year (e.g. 2024) (may vary from calendar year near Jan 1)
 - `FOAM_DATE_DAY_ISO`: ISO 8601 weekday number (1-7, where Monday=1, Sunday=7)
 - `FOAM_DATE_DATE`: 2-digit day of month (e.g. 15)
 - `FOAM_DATE_DAY_NAME`: Full weekday name (e.g. Monday)

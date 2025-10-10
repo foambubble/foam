@@ -265,58 +265,25 @@ describe('variable-resolver, variable resolution', () => {
     });
   });
 
-  it('should resolve FOAM_DATE_WEEK_YEAR correctly for edge cases', async () => {
-    // Test cases where week year differs from calendar year
-    const testCases = [
-      {
-        date: new Date(2025, 0, 1),
-        weekYear: '2025',
-        calendarYear: 2025,
-        week: '01',
-        desc: 'Jan 1 2025 (Wed) - week 1 of 2025',
-      },
-      {
-        date: new Date(2024, 11, 30),
-        weekYear: '2025',
-        calendarYear: 2024,
-        week: '01',
-        desc: 'Dec 30 2024 (Mon) - week 1 of 2025',
-      },
-      {
-        date: new Date(2024, 0, 1),
-        weekYear: '2024',
-        calendarYear: 2024,
-        week: '01',
-        desc: 'Jan 1 2024 (Mon) - week 1 of 2024',
-      },
-      {
-        date: new Date(2023, 0, 1),
-        weekYear: '2022',
-        calendarYear: 2023,
-        week: '52',
-        desc: 'Jan 1 2023 (Sun) - week 52 of 2022',
-      },
-      {
-        date: new Date(2022, 0, 1),
-        weekYear: '2021',
-        calendarYear: 2022,
-        week: '52',
-        desc: 'Jan 1 2022 (Sat) - week 52 of 2021',
-      },
-    ];
-
-    for (const testCase of testCases) {
-      const resolver = new Resolver(new Map(), testCase.date);
+  test.each([
+    [new Date(2025, 0, 1), '2025', '01'], // Jan 1 2025 (Wed) - week 1 of 2025
+    [new Date(2024, 11, 30), '2025', '01'], // Dec 30 2024 (Mon) - week 1 of 2025
+    [new Date(2024, 0, 1), '2024', '01'], // Jan 1 2024 (Mon) - week 1 of 2024
+    [new Date(2023, 0, 1), '2022', '52'], // Jan 1 2023 (Sun) - week 52 of 2022
+    [new Date(2022, 0, 1), '2021', '52'], // Jan 1 2022 (Sat) - week 52 of 2021
+  ])(
+    'should resolve FOAM_DATE_WEEK_YEAR correctly',
+    async (date, expectedWeekYear, expectedWeek) => {
+      const resolver = new Resolver(new Map(), date);
       const weekYear = await resolver.resolve(
         new Variable('FOAM_DATE_WEEK_YEAR')
       );
       const week = await resolver.resolve(new Variable('FOAM_DATE_WEEK'));
 
-      expect(weekYear).toBe(testCase.weekYear);
-      expect(week).toBe(testCase.week.padStart(2, '0'));
-      expect(testCase.date.getFullYear()).toBe(testCase.calendarYear);
+      expect(weekYear).toBe(expectedWeekYear);
+      expect(week).toBe(expectedWeek);
     }
-  });
+  );
 
   it('should resolve FOAM_DATE_WEEK_YEAR with FOAM_DATE_WEEK in template', async () => {
     // Example: 2024-W01 format where Dec 30, 2024 is in week 1 of 2025

@@ -15,6 +15,7 @@ import { TrainNote } from '../../core/model/train-note';
 import { TrainTreeItemBuilder } from './notes-explorer';
 import { Foam } from '../../core/model/foam';
 import { URI } from '../../core/model/uri';
+import { Phase } from '../../core/model/phase';
 
 export default async function activate(
   context: vscode.ExtensionContext,
@@ -93,7 +94,24 @@ export class PhasesProvider extends FolderTreeProvider<
   }
 
   getValues() {
-    return this.workspace.trainNoteWorkspace.list();
+    const updatePhase = (notes: TrainNote[], phase: Phase): TrainNote[] => {
+      return notes.map(note => ({
+        ...note,
+        currentPhase: phase,
+      }));
+    };
+
+    const lates = updatePhase(
+      this.workspace.trainNoteWorkspace.late(),
+      new Phase('Late', -1)
+    );
+
+    const today = updatePhase(
+      this.workspace.trainNoteWorkspace.today(),
+      new Phase('Today', 0)
+    );
+
+    return this.workspace.trainNoteWorkspace.list().concat(lates, today);
   }
 
   getFilterFn() {

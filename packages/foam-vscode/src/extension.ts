@@ -18,8 +18,8 @@ import { AttachmentResourceProvider } from './core/services/attachment-provider'
 import { VsCodeWatcher } from './services/watcher';
 import {
   createMarkdownParser,
-  resourceFactory,
-  trainFactory,
+  resourceRehydration,
+  trainrehydration,
 } from './core/services/markdown-parser';
 import VsCodeBasedParserCache from './services/cache';
 import { createMatcherAndDataStore } from './services/editor';
@@ -57,11 +57,11 @@ export async function activate(context: ExtensionContext) {
     );
     const resourceCache = new VsCodeBasedParserCache<Resource>(
       context,
-      resourceFactory
+      resourceRehydration
     );
     const trainNoteCache = new VsCodeBasedParserCache<TrainNote>(
       context,
-      trainFactory
+      trainrehydration
     );
     const parser = createMarkdownParser([], resourceCache, trainNoteCache);
 

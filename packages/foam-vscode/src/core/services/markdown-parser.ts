@@ -100,6 +100,10 @@ export function createMarkdownParser(
   return new FrontmatterMarkdownDirector(parserMap);
 }
 
+export const resourceRehydration = (uri: URI, note: Resource): Resource => {
+  return Object.assign(resourceFactory(uri), note, { uri: uri });
+};
+
 export const resourceFactory = (uri: URI): Resource => {
   return {
     uri: uri,
@@ -118,6 +122,23 @@ export const trainFactory = (uri: URI): TrainNote => {
   var resource = resourceFactory(uri);
   Object.assign(trainNote, resource);
   trainNote.type = 'training-note';
+  return trainNote;
+};
+
+export const trainrehydration = (uri: URI, trainnote: TrainNote): TrainNote => {
+  var trainNote = new TrainNote(phases);
+  var resource = resourceRehydration(uri, trainnote);
+  Object.assign(trainNote, resource);
+  trainNote.type = 'training-note';
+  trainNote.currentPhase =
+    trainNote.currentPhase instanceof Phase
+      ? trainNote.currentPhase
+      : new Phase(trainnote.currentPhase.name, trainnote.currentPhase.days);
+  trainNote.nextReminder =
+    trainnote.nextReminder instanceof Date
+      ? trainnote.nextReminder
+      : new Date(trainnote.nextReminder);
+
   return trainNote;
 };
 

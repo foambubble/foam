@@ -73,7 +73,11 @@ export abstract class FolderTreeProvider<I, T> extends BaseTreeProvider<I> {
       name => {
         const node = parent.children[name];
         if (node.value != null) {
-          return this.createValueTreeItem(node.value, undefined, node);
+          return this.createValueTreeItem(
+            node.value,
+            item as FolderTreeItem<T>,
+            node
+          );
         } else {
           return this.createFolderTreeItem(
             node,

@@ -181,6 +181,7 @@ export class TreeFactory {
       .setDescription()
       .setWorkspace(workspace)
       .setOptions(options.parent, options.collapsibleState)
+      .setId(value.uri)
       .setGraph(graph)
       .build();
   }
@@ -191,6 +192,7 @@ abstract class TreeItemBuilder<Tvalue extends { uri: URI }, TtreeItem> {
   protected workspace: FoamWorkspace;
   protected description: string;
   protected graph: FoamGraph;
+  protected id: string;
   protected options: {
     collapsibleState?: vscode.TreeItemCollapsibleState;
     parent?: vscode.TreeItem;
@@ -216,6 +218,11 @@ abstract class TreeItemBuilder<Tvalue extends { uri: URI }, TtreeItem> {
 
   setWorkspace(ws: FoamWorkspace) {
     this.workspace = ws;
+    return this;
+  }
+
+  setId(uri: URI) {
+    this.id = uri.toString();
     return this;
   }
 
@@ -275,9 +282,15 @@ export class TrainTreeItemBuilder extends TreeItemBuilder<
     return this;
   }
 
+  override setId(uri: URI): this {
+    const parentId = this.options.parent?.id ?? '';
+    this.id = parentId ? `${parentId}/${uri.toString()}` : uri.toString();
+    return this;
+  }
+
   build(): TrainTreeItem {
     const item = new TrainTreeItem(this.value, this.workspace, this.options);
-    item.id = this.value.uri.toString();
+    item.id = this.id;
     item.getChildren = this.setChildren(this.graph);
     item.description = this.description;
     return item;

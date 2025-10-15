@@ -223,6 +223,24 @@ export function walk<T, R>(node: Folder<T>, fn: (value: T) => R): R[] {
 }
 
 function sortFolderTreeItems(a: vscode.TreeItem, b: vscode.TreeItem): number {
+  const priority = (label: string): number => {
+    if (label === 'Late' || label === 'Today') return 1;
+    return 0;
+  };
+
+  const prioA = priority(a.label.toString());
+  const prioB = priority(b.label.toString());
+
+  // Wenn einer Priorität hat, kommt er nach oben
+  if (prioA !== prioB) {
+    return prioB - prioA; // höhere Priorität zuerst
+  }
+
+  // Innerhalb der Prioritätsgruppe alphabetisch sortieren
+  if (prioA === 1 && prioB === 1) {
+    return a.label.toString().localeCompare(b.label.toString());
+  }
+
   // Both a and b are FolderTreeItem instances
   if (a instanceof FolderTreeItem && b instanceof FolderTreeItem) {
     return a.label.toString().localeCompare(b.label.toString());

@@ -15,9 +15,9 @@ import { URI } from '../core/model/uri';
 /**
  * Characters that are invalid in file names
  * Based on UNALLOWED_CHARS from variable-resolver.ts but excluding filepaths
- * related chars
+ * related chars and chars permissible in filepaths
  */
-const FILEPATH_UNALLOWED_CHARS = '#%&{}<>?*$!\'"@+`|=';
+const FILEPATH_UNALLOWED_CHARS = '<>?*"|';
 
 /**
  * Sanitizes a filepath by replacing invalid characters with dashes

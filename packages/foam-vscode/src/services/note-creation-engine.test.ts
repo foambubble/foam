@@ -499,8 +499,8 @@ foam_template:
 
       const result = await engine.processTemplate(trigger, template, resolver);
 
-      // All invalid characters should become dashes
-      expect(result.filepath.path).toBe('Test-------------Title-----.md');
+      // All invalid characters should become dashes, and valid should stay unchanged
+      expect(result.filepath.path).toBe("Test#%&{}----$!'-Title@+`-=.md");
 
       // Content should remain unchanged
       expect(result.content).toContain('# Test#%&{}<>?*$!\'"Title@+`|=');

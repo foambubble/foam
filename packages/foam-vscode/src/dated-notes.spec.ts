@@ -111,7 +111,7 @@ Month: \${FOAM_DATE_MONTH} (name: \${FOAM_DATE_MONTH_NAME}, short: \${FOAM_DATE_
 Date: \${FOAM_DATE_DATE}
 Day: \${FOAM_DATE_DAY_NAME} (short: \${FOAM_DATE_DAY_NAME_SHORT})
 Week: \${FOAM_DATE_WEEK}
-Week Year: \${FOAM_DATE_WEEK}
+Week Year: \${FOAM_DATE_WEEK_YEAR}
 Unix: \${FOAM_DATE_SECONDS_UNIX}`,
         DAILY_NOTE_TEMPLATE
       );

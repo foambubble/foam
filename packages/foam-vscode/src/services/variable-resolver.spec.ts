@@ -156,6 +156,13 @@ describe('variable-resolver, variable resolution', () => {
     expect(await resolver.resolveAll(variables)).toEqual(expected);
   });
 
+  function getISOWeekYear(date: Date): number {
+    const temp = new Date(date.getTime());
+    // Set to Thursday of this week (ISO 8601 defines week based on Thursday)
+    temp.setDate(temp.getDate() + 3 - ((temp.getDay() + 6) % 7));
+    return temp.getFullYear();
+  }
+
   it('should resolve FOAM_DATE_* properties with current day by default', async () => {
     const variables = [
       new Variable('FOAM_DATE_YEAR'),
@@ -171,6 +178,7 @@ describe('variable-resolver, variable resolution', () => {
       new Variable('FOAM_DATE_SECOND'),
       new Variable('FOAM_DATE_SECONDS_UNIX'),
       new Variable('FOAM_DATE_DAY_ISO'),
+      new Variable('FOAM_DATE_WEEK_YEAR'),
     ];
 
     const expected = new Map<string, string>();
@@ -188,6 +196,8 @@ describe('variable-resolver, variable resolution', () => {
       now.toLocaleString('default', { day: '2-digit' })
     );
     expected.set('FOAM_DATE_DAY_ISO', String(((now.getDay() + 6) % 7) + 1));
+    expected.set('FOAM_DATE_WEEK_YEAR', String(getISOWeekYear(now)));
+
     const givenValues = new Map<string, string>();
     const resolver = new Resolver(givenValues, new Date());
 
@@ -213,6 +223,7 @@ describe('variable-resolver, variable resolution', () => {
       new Variable('FOAM_DATE_SECONDS_UNIX'),
       new Variable('FOAM_DATE_WEEK'),
       new Variable('FOAM_DATE_DAY_ISO'),
+      new Variable('FOAM_DATE_WEEK_YEAR'),
     ];
 
     const expected = new Map<string, string>();
@@ -233,6 +244,7 @@ describe('variable-resolver, variable resolution', () => {
       (targetDate.getTime() / 1000).toString()
     );
     expected.set('FOAM_DATE_DAY_ISO', '5'); // Friday is 5 in ISO 8601
+    expected.set('FOAM_DATE_WEEK_YEAR', '2021');
 
     const givenValues = new Map<string, string>();
     const resolver = new Resolver(givenValues, targetDate);

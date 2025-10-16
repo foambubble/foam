@@ -128,6 +128,7 @@ Unix: \${FOAM_DATE_SECONDS_UNIX}`,
       expect(content).toContain('Date: 12');
       expect(content).toContain('Day: Sunday (short: Sun)');
       expect(content).toContain('Week: 36');
+      expect(content).toContain('Week Year: 2021');
 
       await deleteFile(template.uri);
       await deleteFile(result.uri);

@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { Foam } from '../../core/model/foam';
 import { fromVsCodeUri, toVsCodeUri } from '../../utils/vsc-utils';
 import { URI } from '../../core/model/uri';
+import { CancellationError } from '../../core/services/progress';
 
 export const SHOW_SIMILAR_NOTES_COMMAND = {
   command: 'foam-vscode.show-similar-notes',
@@ -25,18 +26,6 @@ export default async function activate(
 }
 
 async function showSimilarNotes(foam: Foam): Promise<void> {
-  // Check if embeddings have been built
-  if (!foam.embeddings.hasEmbeddings()) {
-    const selection = await vscode.window.showInformationMessage(
-      'Embeddings have not been built yet. Build embeddings to use semantic features.',
-      'Build Now'
-    );
-    if (selection === 'Build Now') {
-      await vscode.commands.executeCommand('foam-vscode.build-embeddings');
-    }
-    return;
-  }
-
   // Get the active editor
   const editor = vscode.window.activeTextEditor;
   if (!editor) {
@@ -54,11 +43,47 @@ async function showSimilarNotes(foam: Foam): Promise<void> {
     return;
   }
 
+  // Ensure embeddings are up-to-date (incremental update)
+  const status = await vscode.window.withProgress(
+    {
+      location: vscode.ProgressLocation.Window,
+      title: 'Updating embeddings...',
+      cancellable: true,
+    },
+    async (progress, token) => {
+      try {
+        await foam.embeddings.update(progressInfo => {
+          const increment = (1 / progressInfo.total) * 100;
+          progress.report({
+            increment: increment,
+            message: `${progressInfo.current}/${progressInfo.total}`,
+          });
+        }, token);
+        return 'complete';
+      } catch (error) {
+        if (error instanceof CancellationError) {
+          return 'cancelled';
+        }
+        // Log other errors but continue
+        vscode.window.showWarningMessage(
+          `Failed to update some embeddings: ${
+            error instanceof Error ? error.message : 'Unknown error'
+          }`
+        );
+        return 'error';
+      }
+    }
+  );
+
+  if (status !== 'complete') {
+    return;
+  }
+
   // Check if embedding exists for this resource
   const embedding = foam.embeddings.getEmbedding(uri);
   if (!embedding) {
     vscode.window.showInformationMessage(
-      'No embedding found for current note. Try rebuilding embeddings.'
+      'No embedding found for current note. The embedding provider may not be available.'
     );
     return;
   }

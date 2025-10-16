@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { Foam } from '../../core/model/foam';
+import { CancellationError } from '../../core/services/progress';
 
 export const BUILD_EMBEDDINGS_COMMAND = {
   command: 'foam-vscode.build-embeddings',
@@ -35,9 +36,9 @@ async function buildEmbeddings(foam: Foam): Promise<void> {
     {
       location: vscode.ProgressLocation.Notification,
       title: 'Building embeddings...',
-      cancellable: false,
+      cancellable: true,
     },
-    async progress => {
+    async (progress, token) => {
       try {
         await foam.embeddings.update(progressInfo => {
           const title = progressInfo.context?.title || 'Processing...';
@@ -46,7 +47,7 @@ async function buildEmbeddings(foam: Foam): Promise<void> {
             message: `${progressInfo.current}/${progressInfo.total}: ${title}`,
             increment: increment,
           });
-        });
+        }, token);
 
         const embeddingsBuilt = foam.embeddings.size();
 
@@ -54,6 +55,14 @@ async function buildEmbeddings(foam: Foam): Promise<void> {
           `✓ Successfully built embeddings for ${embeddingsBuilt} of ${resourceCount} notes`
         );
       } catch (error) {
+        // Handle cancellation gracefully
+        if (error instanceof CancellationError) {
+          vscode.window.showInformationMessage(
+            'Embedding build cancelled. You can run the command again to continue where you left off.'
+          );
+          return;
+        }
+
         const errorMessage =
           error instanceof Error ? error.message : 'Unknown error';
 

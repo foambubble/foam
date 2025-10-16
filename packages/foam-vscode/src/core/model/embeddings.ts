@@ -4,7 +4,11 @@ import { Logger } from '../utils/log';
 import { hash, isSome } from '../utils';
 import { EmbeddingProvider, Embedding } from '../services/embedding-provider';
 import { EmbeddingCache } from './embedding-cache';
-import { ProgressCallback } from '../services/progress';
+import {
+  ProgressCallback,
+  CancellationToken,
+  CancellationError,
+} from '../services/progress';
 import { FoamWorkspace } from './workspace';
 import { URI } from './uri';
 import { Resource } from './note';
@@ -209,15 +213,17 @@ export class FoamEmbeddings implements IDisposable {
   }
 
   /**
-   * Rebuild all embeddings from scratch
+   * Update embeddings for all notes, processing only missing or stale ones
    * @param onProgress Optional callback to report progress
+   * @param cancellationToken Optional token to cancel the operation
    * @returns Promise that resolves when all embeddings are updated
+   * @throws CancellationError if the operation is cancelled
    */
   public async update(
-    onProgress?: ProgressCallback<EmbeddingProgressContext>
+    onProgress?: ProgressCallback<EmbeddingProgressContext>,
+    cancellationToken?: CancellationToken
   ): Promise<void> {
     const start = Date.now();
-    this.embeddings.clear();
 
     // Filter to only process notes (not attachments)
     const allResources = Array.from(this.workspace.resources());
@@ -229,9 +235,18 @@ export class FoamEmbeddings implements IDisposable {
 
     let skipped = 0;
     let generated = 0;
+    let reused = 0;
 
     // Process embeddings sequentially to avoid overwhelming the service
     for (let i = 0; i < resources.length; i++) {
+      // Check for cancellation
+      if (cancellationToken?.isCancellationRequested) {
+        Logger.info(
+          `Embedding build cancelled. Processed ${i}/${resources.length} notes.`
+        );
+        throw new CancellationError('Embedding build cancelled');
+      }
+
       const resource = resources[i];
 
       onProgress?.({
@@ -251,7 +266,15 @@ export class FoamEmbeddings implements IDisposable {
         if (this.cache && this.cache.has(resource.uri)) {
           const cached = this.cache.get(resource.uri);
           if (cached.checksum === textChecksum) {
-            // Reuse cached embedding
+            // Check if we already have this embedding in memory
+            const existing = this.embeddings.get(resource.uri.path);
+            if (existing) {
+              // Already have current embedding, skip
+              reused++;
+              continue;
+            }
+
+            // Restore from cache
             this.embeddings.set(resource.uri.path, {
               vector: cached.embedding,
               createdAt: Date.now(),
@@ -287,7 +310,7 @@ export class FoamEmbeddings implements IDisposable {
 
     const end = Date.now();
     Logger.info(
-      `Embeddings built: ${generated} generated, ${skipped} reused (${
+      `Embeddings update complete: ${generated} generated, ${skipped} from cache, ${reused} already current (${
         this.embeddings.size
       }/${resources.length} total) in ${end - start}ms`
     );

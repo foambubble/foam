@@ -46,7 +46,6 @@ A #recipe is a guide, tip or strategy for getting the most out of your Foam work
 - Add and explore [[tags]]
 - Create [[templates]]
 - Find [[orphans]]
-- Use custom [[note-macros]] to create weekly, monthly etc. notes
 - Draw [[diagrams-in-markdown]]
 - Prettify your links, [[automatically-expand-urls-to-well-titled-links]]
 - Style your environment with [[custom-markdown-preview-styles]]
@@ -124,7 +123,6 @@ _See [[contribution-guide]] and [[how-to-write-recipes]]._
 [tags]: ../features/tags.md "Tags"
 [note-templates]: ../features/note-templates.md "Note Templates"
 [orphans]: ../tools/orphans.md "Orphaned Notes"
-[note-macros]: note-macros.md "Custom Note Macros"
 [diagrams-in-markdown]: diagrams-in-markdown.md "Diagrams in Markdown"
 [automatically-expand-urls-to-well-titled-links]: automatically-expand-urls-to-well-titled-links.md "Automatically Expand URLs to Well-Titled Links"
 [custom-markdown-preview-styles]: ../features/custom-markdown-preview-styles.md "Custom Markdown Preview Styles"

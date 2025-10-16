@@ -195,10 +195,10 @@ You can also use other VS Code extensions to manage the git synching if that's h
 
 With your workspace set up, you're ready to:
 
-1. **[Learn note-taking fundamentals](note-taking)** - Master Markdown and writing effective notes
+1. **[Learn note-taking fundamentals](note-taking-in-foam.md)** - Master Markdown and writing effective notes
 2. **[Explore navigation](navigation.md)** - Connect your thoughts with wikilinks
-3. **[Discover the graph view](graph-view.md)** - Visualize your knowledge network
-4. **[Set up templates](templates)** - Standardize your note creation process
+3. **[Discover the graph view](../features/graph-view.md)** - Visualize your knowledge network
+4. **[Set up templates](../features/templates.md)** - Standardize your note creation process
 
 ## Getting Help
 

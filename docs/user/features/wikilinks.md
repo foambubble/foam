@@ -28,7 +28,7 @@ Examples:
 
 ## Markdown Compatibility
 
-Foam can automatically generates [[link-reference-definitions]] at the bottom of files to make wikilinks compatible with standard Markdown processors.
+Foam can automatically generate [[link-reference-definitions]] at the bottom of files to make wikilinks compatible with standard Markdown processors.
 
 ## Related
 

@@ -38,7 +38,7 @@ The Foam extension adds knowledge management superpowers to VS Code.
 
 ## Step 3: Install Recommended Extensions
 
-While Foam works on its own, it is focused on the networking aspect of your notes. You might want to install additional extensions to improve the editing experience or the functionility of your notes.
+While Foam works on its own, it is focused on the networking aspect of your notes. You might want to install additional extensions to improve the editing experience or the functionality of your notes.
 
 ### Useful Extensions
 

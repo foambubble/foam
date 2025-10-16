@@ -4,6 +4,7 @@ import { Logger } from '../utils/log';
 import { hash, isSome } from '../utils';
 import { EmbeddingProvider, Embedding } from '../services/embedding-provider';
 import { EmbeddingCache } from './embedding-cache';
+import { ProgressCallback } from '../services/progress';
 import { FoamWorkspace } from './workspace';
 import { URI } from './uri';
 import { Resource } from './note';
@@ -14,6 +15,16 @@ import { Resource } from './note';
 export interface SimilarResource {
   uri: URI;
   similarity: number;
+}
+
+/**
+ * Context information for embedding progress
+ */
+export interface EmbeddingProgressContext {
+  /** URI of the current resource */
+  uri: URI;
+  /** Title of the current resource */
+  title: string;
 }
 
 /**
@@ -199,9 +210,12 @@ export class FoamEmbeddings implements IDisposable {
 
   /**
    * Rebuild all embeddings from scratch
+   * @param onProgress Optional callback to report progress
    * @returns Promise that resolves when all embeddings are updated
    */
-  public async update(): Promise<void> {
+  public async update(
+    onProgress?: ProgressCallback<EmbeddingProgressContext>
+  ): Promise<void> {
     const start = Date.now();
     this.embeddings.clear();
 
@@ -217,7 +231,18 @@ export class FoamEmbeddings implements IDisposable {
     let generated = 0;
 
     // Process embeddings sequentially to avoid overwhelming the service
-    for (const resource of resources) {
+    for (let i = 0; i < resources.length; i++) {
+      const resource = resources[i];
+
+      onProgress?.({
+        current: i + 1,
+        total: resources.length,
+        context: {
+          uri: resource.uri,
+          title: resource.title,
+        },
+      });
+
       try {
         const text = this.extractTextFromResource(resource);
         const textChecksum = hash(text);

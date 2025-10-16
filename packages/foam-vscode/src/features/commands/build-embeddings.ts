@@ -38,12 +38,15 @@ async function buildEmbeddings(foam: Foam): Promise<void> {
       cancellable: false,
     },
     async progress => {
-      progress.report({
-        message: `Processing ${resourceCount} resources`,
-      });
-
       try {
-        await foam.embeddings.update();
+        await foam.embeddings.update(progressInfo => {
+          const title = progressInfo.context?.title || 'Processing...';
+          const increment = (1 / progressInfo.total) * 100;
+          progress.report({
+            message: `${progressInfo.current}/${progressInfo.total}: ${title}`,
+            increment: increment,
+          });
+        });
 
         const embeddingsBuilt = foam.embeddings.size();
 

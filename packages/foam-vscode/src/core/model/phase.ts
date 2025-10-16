@@ -1,3 +1,5 @@
+import { isEqual } from 'lodash';
+
 export class Phase {
   name: string;
   days: number;
@@ -35,7 +37,7 @@ export class Phases {
     }
 
     for (let i = 0; i < this.phases.length; i++) {
-      if (this.phases[i] === phase) {
+      if (isEqual(this.phases[i], phase)) {
         return this.phases[++i];
       }
     }
@@ -51,7 +53,7 @@ export class Phases {
     }
 
     for (let i = 0; i < this.phases.length; i++) {
-      if (this.phases[i] === phase) {
+      if (isEqual(this.phases[i], phase)) {
         return this.phases[--i];
       }
     }

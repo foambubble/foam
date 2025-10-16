@@ -129,6 +129,7 @@ export const trainrehydration = (uri: URI, trainnote: TrainNote): TrainNote => {
   var trainNote = new TrainNote(phases);
   var resource = resourceRehydration(uri, trainnote);
   Object.assign(trainNote, resource);
+  trainNote.phases = phases;
   trainNote.type = 'training-note';
   trainNote.currentPhase =
     trainNote.currentPhase instanceof Phase

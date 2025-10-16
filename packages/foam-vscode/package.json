@@ -312,6 +312,10 @@
         {
           "command": "foam-vscode.completion-move-cursor",
           "when": "false"
+        },
+        {
+          "command": "foam-vscode.raise-phase",
+          "when": "editorLangId == markdown"
         }
       ]
     },
@@ -371,6 +375,10 @@
       {
         "command": "foam-vscode.open-resource",
         "title": "Foam: Open Resource"
+      },
+      {
+        "command": "foam-vscode.raise-phase",
+        "title": "Foam: Raise Phase"
       },
       {
         "command": "foam-vscode.convert-wikilink-to-mdlink",

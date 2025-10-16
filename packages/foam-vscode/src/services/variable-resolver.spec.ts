@@ -156,6 +156,13 @@ describe('variable-resolver, variable resolution', () => {
     expect(await resolver.resolveAll(variables)).toEqual(expected);
   });
 
+  function getISOWeekYear(date: Date): number {
+    const temp = new Date(date.getTime());
+    // Set to Thursday of this week (ISO 8601 defines week based on Thursday)
+    temp.setDate(temp.getDate() + 3 - ((temp.getDay() + 6) % 7));
+    return temp.getFullYear();
+  }
+
   it('should resolve FOAM_DATE_* properties with current day by default', async () => {
     const variables = [
       new Variable('FOAM_DATE_YEAR'),
@@ -171,6 +178,7 @@ describe('variable-resolver, variable resolution', () => {
       new Variable('FOAM_DATE_SECOND'),
       new Variable('FOAM_DATE_SECONDS_UNIX'),
       new Variable('FOAM_DATE_DAY_ISO'),
+      new Variable('FOAM_DATE_WEEK_YEAR'),
     ];
 
     const expected = new Map<string, string>();
@@ -188,6 +196,8 @@ describe('variable-resolver, variable resolution', () => {
       now.toLocaleString('default', { day: '2-digit' })
     );
     expected.set('FOAM_DATE_DAY_ISO', String(((now.getDay() + 6) % 7) + 1));
+    expected.set('FOAM_DATE_WEEK_YEAR', String(getISOWeekYear(now)));
+
     const givenValues = new Map<string, string>();
     const resolver = new Resolver(givenValues, new Date());
 
@@ -213,6 +223,7 @@ describe('variable-resolver, variable resolution', () => {
       new Variable('FOAM_DATE_SECONDS_UNIX'),
       new Variable('FOAM_DATE_WEEK'),
       new Variable('FOAM_DATE_DAY_ISO'),
+      new Variable('FOAM_DATE_WEEK_YEAR'),
     ];
 
     const expected = new Map<string, string>();
@@ -233,6 +244,7 @@ describe('variable-resolver, variable resolution', () => {
       (targetDate.getTime() / 1000).toString()
     );
     expected.set('FOAM_DATE_DAY_ISO', '5'); // Friday is 5 in ISO 8601
+    expected.set('FOAM_DATE_WEEK_YEAR', '2021');
 
     const givenValues = new Map<string, string>();
     const resolver = new Resolver(givenValues, targetDate);
@@ -263,6 +275,44 @@ describe('variable-resolver, variable resolution', () => {
         '01'
       );
     });
+  });
+
+  test.each([
+    [new Date(2025, 0, 1), '2025', '01'], // Jan 1 2025 (Wed) - week 1 of 2025
+    [new Date(2024, 11, 30), '2025', '01'], // Dec 30 2024 (Mon) - week 1 of 2025
+    [new Date(2024, 0, 1), '2024', '01'], // Jan 1 2024 (Mon) - week 1 of 2024
+    [new Date(2023, 0, 1), '2022', '52'], // Jan 1 2023 (Sun) - week 52 of 2022
+    [new Date(2022, 0, 1), '2021', '52'], // Jan 1 2022 (Sat) - week 52 of 2021
+  ])(
+    'should resolve FOAM_DATE_WEEK_YEAR correctly',
+    async (date, expectedWeekYear, expectedWeek) => {
+      const resolver = new Resolver(new Map(), date);
+      const weekYear = await resolver.resolve(
+        new Variable('FOAM_DATE_WEEK_YEAR')
+      );
+      const week = await resolver.resolve(new Variable('FOAM_DATE_WEEK'));
+
+      expect(weekYear).toBe(expectedWeekYear);
+      expect(week).toBe(expectedWeek);
+    }
+  );
+
+  it('should resolve FOAM_DATE_WEEK_YEAR with FOAM_DATE_WEEK in template', async () => {
+    // Example: 2024-W01 format where Dec 30, 2024 is in week 1 of 2025
+    const date = new Date(2024, 11, 30); // Dec 30, 2024 (Monday)
+    const resolver = new Resolver(new Map(), date);
+
+    const variables = [
+      new Variable('FOAM_DATE_WEEK_YEAR'),
+      new Variable('FOAM_DATE_WEEK'),
+      new Variable('FOAM_DATE_YEAR'),
+    ];
+
+    const result = await resolver.resolveAll(variables);
+
+    expect(result.get('FOAM_DATE_WEEK_YEAR')).toBe('2025');
+    expect(result.get('FOAM_DATE_WEEK')).toBe('01');
+    expect(result.get('FOAM_DATE_YEAR')).toBe('2024');
   });
 
   describe('FOAM_CURRENT_DIR', () => {

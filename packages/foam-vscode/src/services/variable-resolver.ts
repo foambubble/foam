@@ -23,6 +23,7 @@ const knownFoamVariables = new Set([
   'FOAM_DATE_DATE',
   'FOAM_DATE_DAY_ISO',
   'FOAM_DATE_WEEK',
+  'FOAM_DATE_WEEK_YEAR',
   'FOAM_DATE_DAY_NAME',
   'FOAM_DATE_DAY_NAME_SHORT',
   'FOAM_DATE_HOUR',
@@ -214,6 +215,18 @@ export class Resolver implements VariableResolver {
           const days = Math.round((thursday - janFirst) / 86400000); // 1 day = 86400000 ms
           const weekDay = Math.floor(days / 7) + 1;
           value = Promise.resolve(String(weekDay.valueOf()).padStart(2, '0'));
+          break;
+        }
+        case 'FOAM_DATE_WEEK_YEAR': {
+          // ISO 8601 week-numbering year
+          // The year that contains the Thursday of the current week
+          const date = new Date(this.foamDate);
+
+          // Find Thursday of this week starting on Monday
+          date.setDate(date.getDate() + 4 - (date.getDay() || 7));
+
+          // The year of this Thursday is the ISO week year
+          value = Promise.resolve(String(date.getFullYear()));
           break;
         }
         case 'FOAM_DATE_DAY_NAME':

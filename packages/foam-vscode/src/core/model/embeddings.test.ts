@@ -2,7 +2,7 @@ import { FoamEmbeddings } from './embeddings';
 import { FoamWorkspace } from './workspace';
 import {
   EmbeddingProvider,
-  EmbeddingModelInfo,
+  EmbeddingProviderInfo,
 } from '../services/embedding-provider';
 import { createTestNote } from '../../test/test-utils';
 import { URI } from './uri';
@@ -26,8 +26,12 @@ describe('FoamEmbeddings', () => {
       async isAvailable(): Promise<boolean> {
         return true;
       },
-      getModelInfo(): EmbeddingModelInfo {
-        return { name: 'test-model', dimensions: 384 };
+      getProviderInfo(): EmbeddingProviderInfo {
+        return {
+          name: 'Test Provider',
+          type: 'local',
+          model: { name: 'test-model', dimensions: 384 },
+        };
       },
     };
   });

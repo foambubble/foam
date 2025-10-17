@@ -1,4 +1,32 @@
 /**
+ * Information about an embedding provider and its model
+ */
+export interface EmbeddingProviderInfo {
+  /** Human-readable name of the provider (e.g., "Ollama", "OpenAI") */
+  name: string;
+
+  /** Type of provider */
+  type: 'local' | 'remote';
+
+  /** Model information */
+  model: {
+    /** Model name (e.g., "nomic-embed-text", "text-embedding-3-small") */
+    name: string;
+    /** Vector dimensions */
+    dimensions: number;
+  };
+
+  /** Optional description of the provider */
+  description?: string;
+
+  /** Backend endpoint/URL if applicable */
+  endpoint?: string;
+
+  /** Additional provider-specific metadata */
+  metadata?: Record<string, unknown>;
+}
+
+/**
  * Provider interface for generating text embeddings
  */
 export interface EmbeddingProvider {
@@ -16,20 +44,10 @@ export interface EmbeddingProvider {
   isAvailable(): Promise<boolean>;
 
   /**
-   * Get information about the embedding model
-   * @returns Model metadata including name and vector dimensions
+   * Get information about the provider and its model
+   * @returns Provider metadata including name, type, model info, and configuration
    */
-  getModelInfo(): EmbeddingModelInfo;
-}
-
-/**
- * Metadata about an embedding model
- */
-export interface EmbeddingModelInfo {
-  /** The name of the embedding model */
-  name: string;
-  /** The dimensionality of the embedding vectors */
-  dimensions: number;
+  getProviderInfo(): EmbeddingProviderInfo;
 }
 
 /**

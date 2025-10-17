@@ -37,13 +37,36 @@ describe('OllamaEmbeddingProvider', () => {
     });
   });
 
-  describe('getModelInfo', () => {
-    it('should return model information', () => {
+  describe('getProviderInfo', () => {
+    it('should return provider information', () => {
       const provider = new OllamaEmbeddingProvider();
-      const info = provider.getModelInfo();
+      const info = provider.getProviderInfo();
 
-      expect(info.name).toBe('nomic-embed-text');
-      expect(info.dimensions).toBe(768);
+      expect(info.name).toBe('Ollama');
+      expect(info.type).toBe('local');
+      expect(info.model.name).toBe('nomic-embed-text');
+      expect(info.model.dimensions).toBe(768);
+      expect(info.endpoint).toBe('http://localhost:11434');
+      expect(info.description).toBe('Local embedding provider using Ollama');
+      expect(info.metadata).toEqual({ timeout: 30000 });
+    });
+
+    it('should return custom model name when configured', () => {
+      const provider = new OllamaEmbeddingProvider({
+        model: 'custom-model',
+      });
+      const info = provider.getProviderInfo();
+
+      expect(info.model.name).toBe('custom-model');
+    });
+
+    it('should return custom endpoint when configured', () => {
+      const provider = new OllamaEmbeddingProvider({
+        url: 'http://custom:8080',
+      });
+      const info = provider.getProviderInfo();
+
+      expect(info.endpoint).toBe('http://custom:8080');
     });
   });
 

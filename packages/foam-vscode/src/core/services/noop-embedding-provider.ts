@@ -1,4 +1,4 @@
-import { EmbeddingProvider, EmbeddingModelInfo } from './embedding-provider';
+import { EmbeddingProvider, EmbeddingProviderInfo } from './embedding-provider';
 
 /**
  * A no-op embedding provider that does nothing.
@@ -13,10 +13,15 @@ export class NoOpEmbeddingProvider implements EmbeddingProvider {
     return false;
   }
 
-  getModelInfo(): EmbeddingModelInfo {
+  getProviderInfo(): EmbeddingProviderInfo {
     return {
-      name: 'none',
-      dimensions: 0,
+      name: 'None',
+      type: 'local',
+      model: {
+        name: 'none',
+        dimensions: 0,
+      },
+      description: 'No embedding provider configured',
     };
   }
 }

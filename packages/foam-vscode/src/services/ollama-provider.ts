@@ -1,6 +1,6 @@
 import {
   EmbeddingProvider,
-  EmbeddingModelInfo,
+  EmbeddingProviderInfo,
 } from '../core/services/embedding-provider';
 import { Logger } from '../core/utils/log';
 
@@ -37,15 +37,9 @@ interface OllamaEmbeddingResponse {
  */
 export class OllamaEmbeddingProvider implements EmbeddingProvider {
   private config: OllamaConfig;
-  private modelInfo: EmbeddingModelInfo;
 
   constructor(config: Partial<OllamaConfig> = {}) {
     this.config = { ...DEFAULT_OLLAMA_CONFIG, ...config };
-    this.modelInfo = {
-      name: this.config.model,
-      // nomic-embed-text produces 768-dimensional embeddings
-      dimensions: 768,
-    };
   }
 
   /**
@@ -135,10 +129,23 @@ export class OllamaEmbeddingProvider implements EmbeddingProvider {
   }
 
   /**
-   * Get model information
+   * Get provider information including model details
    */
-  getModelInfo(): EmbeddingModelInfo {
-    return this.modelInfo;
+  getProviderInfo(): EmbeddingProviderInfo {
+    return {
+      name: 'Ollama',
+      type: 'local',
+      model: {
+        name: this.config.model,
+        // nomic-embed-text produces 768-dimensional embeddings
+        dimensions: 768,
+      },
+      description: 'Local embedding provider using Ollama',
+      endpoint: this.config.url,
+      metadata: {
+        timeout: this.config.timeout,
+      },
+    };
   }
 
   /**

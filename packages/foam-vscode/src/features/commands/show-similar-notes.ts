@@ -29,7 +29,7 @@ async function showSimilarNotes(foam: Foam): Promise<void> {
   // Get the active editor
   const editor = vscode.window.activeTextEditor;
   if (!editor) {
-    vscode.window.showInformationMessage('No active editor found');
+    vscode.window.showInformationMessage('Please open a note first');
     return;
   }
 
@@ -39,7 +39,7 @@ async function showSimilarNotes(foam: Foam): Promise<void> {
   // Check if the resource exists in workspace
   const resource = foam.workspace.find(uri);
   if (!resource) {
-    vscode.window.showInformationMessage('Current file is not a Foam resource');
+    vscode.window.showInformationMessage('This file is not a note');
     return;
   }
 
@@ -47,7 +47,7 @@ async function showSimilarNotes(foam: Foam): Promise<void> {
   const status = await vscode.window.withProgress(
     {
       location: vscode.ProgressLocation.Window,
-      title: 'Updating embeddings...',
+      title: 'Analyzing notes...',
       cancellable: true,
     },
     async (progress, token) => {
@@ -66,7 +66,7 @@ async function showSimilarNotes(foam: Foam): Promise<void> {
         }
         // Log other errors but continue
         vscode.window.showWarningMessage(
-          `Failed to update some embeddings: ${
+          `Could not analyze some notes: ${
             error instanceof Error ? error.message : 'Unknown error'
           }`
         );
@@ -83,7 +83,7 @@ async function showSimilarNotes(foam: Foam): Promise<void> {
   const embedding = foam.embeddings.getEmbedding(uri);
   if (!embedding) {
     vscode.window.showInformationMessage(
-      'No embedding found for current note. The embedding provider may not be available.'
+      'This note hasn\'t been analyzed yet. Make sure Ollama is running and try the "Analyze Notes with AI" command.'
     );
     return;
   }

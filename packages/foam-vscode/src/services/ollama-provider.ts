@@ -69,7 +69,7 @@ export class OllamaEmbeddingProvider implements EmbeddingProvider {
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Ollama API error (${response.status}): ${errorText}`);
+        throw new Error(`AI service error (${response.status}): ${errorText}`);
       }
 
       const data: OllamaEmbeddingResponse = await response.json();
@@ -78,7 +78,7 @@ export class OllamaEmbeddingProvider implements EmbeddingProvider {
       if (error instanceof Error) {
         if (error.name === 'AbortError') {
           throw new Error(
-            `Ollama request timed out after ${this.config.timeout}ms`
+            'AI service took too long to respond. It may be busy processing another request.'
           );
         }
         if (
@@ -86,7 +86,7 @@ export class OllamaEmbeddingProvider implements EmbeddingProvider {
           error.message.includes('ECONNREFUSED')
         ) {
           throw new Error(
-            `Cannot connect to Ollama at ${this.config.url}. Make sure Ollama is running.`
+            `Cannot connect to Ollama at ${this.config.url}. Make sure Ollama is installed and running.`
           );
         }
       }

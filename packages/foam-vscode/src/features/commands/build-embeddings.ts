@@ -4,7 +4,7 @@ import { CancellationError } from '../../core/services/progress';
 
 export const BUILD_EMBEDDINGS_COMMAND = {
   command: 'foam-vscode.build-embeddings',
-  title: 'Foam: Build Embeddings Index',
+  title: 'Foam: Analyze Notes with AI',
 };
 
 export default async function activate(
@@ -37,7 +37,7 @@ async function buildEmbeddings(foam: Foam): Promise<void> {
   await vscode.window.withProgress(
     {
       location: vscode.ProgressLocation.Notification,
-      title: 'Building embeddings...',
+      title: 'Analyzing notes...',
       cancellable: true,
     },
     async (progress, token) => {
@@ -52,12 +52,12 @@ async function buildEmbeddings(foam: Foam): Promise<void> {
         }, token);
 
         vscode.window.showInformationMessage(
-          `✓ Successfully built embeddings for ${foam.embeddings.size()} of ${notesCount} notes`
+          `✓ Analyzed ${foam.embeddings.size()} of ${notesCount} notes`
         );
       } catch (error) {
         if (error instanceof CancellationError) {
           vscode.window.showInformationMessage(
-            'Embedding build cancelled. You can run the command again to continue where you left off.'
+            'Analysis cancelled. Run the command again to continue where you left off.'
           );
           return;
         }
@@ -66,7 +66,7 @@ async function buildEmbeddings(foam: Foam): Promise<void> {
           error instanceof Error ? error.message : 'Unknown error';
 
         vscode.window.showErrorMessage(
-          `Failed to build embeddings: ${errorMessage}.`
+          `Failed to analyze notes: ${errorMessage}`
         );
       }
     }

@@ -115,7 +115,7 @@
       },
       {
         "view": "foam-vscode.related-notes",
-        "contents": "No embeddings built yet.\n[Build Embeddings](command:foam-vscode.build-embeddings)\nBuild embeddings to see semantically similar notes.",
+        "contents": "Notes haven't been analyzed yet.\n[Analyze Notes](command:foam-vscode.build-embeddings)\nAnalyze your notes to discover similar content.",
         "when": "foam.relatedNotes.state == 'no-embedding'"
       },
       {

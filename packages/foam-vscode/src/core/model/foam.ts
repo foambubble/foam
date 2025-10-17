@@ -54,21 +54,15 @@ export const bootstrap = async (
     ms => Logger.info(`Tags loaded in ${ms}ms`)
   );
 
-  // Initialize embeddings with provider or fallback to no-op
-  const provider = embeddingProvider ?? new NoOpEmbeddingProvider();
-  const isAvailable = await provider.isAvailable();
-
-  // Create embedding cache (in-memory for now, can be persisted later)
-  const embeddingCache = new InMemoryEmbeddingCache();
-
+  embeddingProvider = embeddingProvider ?? new NoOpEmbeddingProvider();
   const embeddings = FoamEmbeddings.fromWorkspace(
     workspace,
-    provider,
+    embeddingProvider,
     true,
-    embeddingCache
+    new InMemoryEmbeddingCache()
   );
 
-  if (isAvailable) {
+  if (await embeddingProvider.isAvailable()) {
     Logger.info('Embeddings service initialized');
   } else {
     Logger.warn(

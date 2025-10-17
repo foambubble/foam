@@ -24,10 +24,12 @@ export default async function activate(
 }
 
 async function buildEmbeddings(foam: Foam): Promise<void> {
-  const resourceCount = foam.workspace.list().length;
+  const notesCount = foam.workspace
+    .list()
+    .filter(r => r.type === 'note').length;
 
-  if (resourceCount === 0) {
-    vscode.window.showInformationMessage('No resources found in workspace');
+  if (notesCount === 0) {
+    vscode.window.showInformationMessage('No notes found in workspace');
     return;
   }
 
@@ -49,13 +51,10 @@ async function buildEmbeddings(foam: Foam): Promise<void> {
           });
         }, token);
 
-        const embeddingsBuilt = foam.embeddings.size();
-
         vscode.window.showInformationMessage(
-          `✓ Successfully built embeddings for ${embeddingsBuilt} of ${resourceCount} notes`
+          `✓ Successfully built embeddings for ${foam.embeddings.size()} of ${notesCount} notes`
         );
       } catch (error) {
-        // Handle cancellation gracefully
         if (error instanceof CancellationError) {
           vscode.window.showInformationMessage(
             'Embedding build cancelled. You can run the command again to continue where you left off.'
@@ -66,20 +65,9 @@ async function buildEmbeddings(foam: Foam): Promise<void> {
         const errorMessage =
           error instanceof Error ? error.message : 'Unknown error';
 
-        vscode.window
-          .showErrorMessage(
-            `Failed to build embeddings: ${errorMessage}. Ensure Ollama is running and the model is available.`,
-            'Retry',
-            'Learn More'
-          )
-          .then(selection => {
-            if (selection === 'Retry') {
-              vscode.commands.executeCommand(BUILD_EMBEDDINGS_COMMAND.command);
-            } else if (selection === 'Learn More') {
-              // TODO replace with a proper documentation link in our docs
-              vscode.env.openExternal(vscode.Uri.parse('https://ollama.ai'));
-            }
-          });
+        vscode.window.showErrorMessage(
+          `Failed to build embeddings: ${errorMessage}.`
+        );
       }
     }
   );

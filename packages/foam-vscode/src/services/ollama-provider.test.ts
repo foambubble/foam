@@ -1,4 +1,7 @@
-import { OllamaEmbeddingProvider, DEFAULT_OLLAMA_CONFIG } from './ollama-provider';
+import {
+  OllamaEmbeddingProvider,
+  DEFAULT_OLLAMA_CONFIG,
+} from './ollama-provider';
 
 // Mock fetch globally
 global.fetch = jest.fn();

@@ -82,6 +82,12 @@
           "name": "Placeholders",
           "icon": "$(debug-disconnect)",
           "contextualTitle": "Foam"
+        },
+        {
+          "id": "foam-vscode.related-notes",
+          "name": "Related Notes (AI)",
+          "icon": "$(sparkle)",
+          "contextualTitle": "Foam"
         }
       ]
     },
@@ -101,6 +107,21 @@
       {
         "view": "foam-vscode.placeholders",
         "contents": "No placeholders found for selected resource or workspace."
+      },
+      {
+        "view": "foam-vscode.related-notes",
+        "contents": "Open a note to see related notes.",
+        "when": "foam.relatedNotes.state == 'no-note'"
+      },
+      {
+        "view": "foam-vscode.related-notes",
+        "contents": "No embeddings built yet.\n[Build Embeddings](command:foam-vscode.build-embeddings)\nBuild embeddings to see semantically similar notes.",
+        "when": "foam.relatedNotes.state == 'no-embedding'"
+      },
+      {
+        "view": "foam-vscode.related-notes",
+        "contents": "No similar notes found for the current note.",
+        "when": "foam.relatedNotes.state == 'ready'"
       }
     ],
     "menus": {

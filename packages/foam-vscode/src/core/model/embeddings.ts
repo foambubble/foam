@@ -167,7 +167,7 @@ export class FoamEmbeddings implements IDisposable {
     }
 
     try {
-      const text = this.extractTextFromResource(resource);
+      const text = await this.workspace.readAsMarkdown(resource.uri);
       const textChecksum = hash(text);
 
       // Check cache if available
@@ -328,11 +328,6 @@ export class FoamEmbeddings implements IDisposable {
 
     if (resource.title) {
       parts.push(resource.title);
-    }
-
-    // Use source content if available
-    if (resource.source && resource.source.text) {
-      parts.push(resource.source.text);
     }
 
     return parts.join('\n\n');

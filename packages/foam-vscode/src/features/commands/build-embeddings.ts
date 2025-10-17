@@ -1,6 +1,9 @@
 import * as vscode from 'vscode';
 import { Foam } from '../../core/model/foam';
 import { CancellationError } from '../../core/services/progress';
+import { TaskDeduplicator } from '../../core/utils/task-deduplicator';
+import { FoamWorkspace } from '../../core/model/workspace';
+import { FoamEmbeddings } from '../../core/model/embeddings';
 
 export const BUILD_EMBEDDINGS_COMMAND = {
   command: 'foam-vscode.build-embeddings',
@@ -12,23 +15,28 @@ export default async function activate(
   foamPromise: Promise<Foam>
 ) {
   const foam = await foamPromise;
+  // Deduplicate concurrent executions
+  const deduplicator = new TaskDeduplicator<
+    'complete' | 'cancelled' | 'error'
+  >();
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
       BUILD_EMBEDDINGS_COMMAND.command,
       async () => {
-        return await buildEmbeddings(foam);
+        return await deduplicator.run(() =>
+          buildEmbeddings(foam.workspace, foam.embeddings)
+        );
       }
     )
   );
 }
 
 async function buildEmbeddings(
-  foam: Foam
+  workspace: FoamWorkspace,
+  embeddings: FoamEmbeddings
 ): Promise<'complete' | 'cancelled' | 'error'> {
-  const notesCount = foam.workspace
-    .list()
-    .filter(r => r.type === 'note').length;
+  const notesCount = workspace.list().filter(r => r.type === 'note').length;
 
   if (notesCount === 0) {
     vscode.window.showInformationMessage('No notes found in workspace');
@@ -44,7 +52,7 @@ async function buildEmbeddings(
     },
     async (progress, token) => {
       try {
-        await foam.embeddings.update(progressInfo => {
+        await embeddings.update(progressInfo => {
           const title = progressInfo.context?.title || 'Processing...';
           const increment = (1 / progressInfo.total) * 100;
           progress.report({
@@ -54,7 +62,7 @@ async function buildEmbeddings(
         }, token);
 
         vscode.window.showInformationMessage(
-          `✓ Analyzed ${foam.embeddings.size()} of ${notesCount} notes`
+          `✓ Analyzed ${embeddings.size()} of ${notesCount} notes`
         );
         return 'complete';
       } catch (error) {

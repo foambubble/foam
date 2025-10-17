@@ -93,7 +93,7 @@ export class RelatedNotesTreeDataProvider extends BaseTreeProvider<vscode.TreeIt
 
     // Get similar notes (user can click "Build Embeddings" button if needed)
     const similar = this.embeddings.getSimilar(uri, 10);
-    this.relatedNotes = similar;
+    this.relatedNotes = similar.filter(n => n.similarity > 0.6);
     this.nValues = this.relatedNotes.length;
     super.refresh();
   }

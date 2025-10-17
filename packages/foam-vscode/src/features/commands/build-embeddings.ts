@@ -17,27 +17,29 @@ export default async function activate(
     vscode.commands.registerCommand(
       BUILD_EMBEDDINGS_COMMAND.command,
       async () => {
-        await buildEmbeddings(foam);
+        return await buildEmbeddings(foam);
       }
     )
   );
 }
 
-async function buildEmbeddings(foam: Foam): Promise<void> {
+async function buildEmbeddings(
+  foam: Foam
+): Promise<'complete' | 'cancelled' | 'error'> {
   const notesCount = foam.workspace
     .list()
     .filter(r => r.type === 'note').length;
 
   if (notesCount === 0) {
     vscode.window.showInformationMessage('No notes found in workspace');
-    return;
+    return 'complete';
   }
 
   // Show progress notification
-  await vscode.window.withProgress(
+  return await vscode.window.withProgress(
     {
-      location: vscode.ProgressLocation.Notification,
-      title: 'Analyzing notes...',
+      location: vscode.ProgressLocation.Window,
+      title: 'Analyzing notes',
       cancellable: true,
     },
     async (progress, token) => {
@@ -46,7 +48,7 @@ async function buildEmbeddings(foam: Foam): Promise<void> {
           const title = progressInfo.context?.title || 'Processing...';
           const increment = (1 / progressInfo.total) * 100;
           progress.report({
-            message: `${progressInfo.current}/${progressInfo.total}: ${title}`,
+            message: `${progressInfo.current}/${progressInfo.total} - ${title}`,
             increment: increment,
           });
         }, token);
@@ -54,12 +56,13 @@ async function buildEmbeddings(foam: Foam): Promise<void> {
         vscode.window.showInformationMessage(
           `✓ Analyzed ${foam.embeddings.size()} of ${notesCount} notes`
         );
+        return 'complete';
       } catch (error) {
         if (error instanceof CancellationError) {
           vscode.window.showInformationMessage(
             'Analysis cancelled. Run the command again to continue where you left off.'
           );
-          return;
+          return 'cancelled';
         }
 
         const errorMessage =
@@ -68,6 +71,7 @@ async function buildEmbeddings(foam: Foam): Promise<void> {
         vscode.window.showErrorMessage(
           `Failed to analyze notes: ${errorMessage}`
         );
+        return 'error';
       }
     }
   );

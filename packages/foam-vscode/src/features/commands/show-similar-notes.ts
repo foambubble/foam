@@ -3,6 +3,7 @@ import { Foam } from '../../core/model/foam';
 import { fromVsCodeUri, toVsCodeUri } from '../../utils/vsc-utils';
 import { URI } from '../../core/model/uri';
 import { CancellationError } from '../../core/services/progress';
+import { BUILD_EMBEDDINGS_COMMAND } from './build-embeddings';
 
 export const SHOW_SIMILAR_NOTES_COMMAND = {
   command: 'foam-vscode.show-similar-notes',
@@ -44,36 +45,8 @@ async function showSimilarNotes(foam: Foam): Promise<void> {
   }
 
   // Ensure embeddings are up-to-date (incremental update)
-  const status = await vscode.window.withProgress(
-    {
-      location: vscode.ProgressLocation.Window,
-      title: 'Analyzing notes...',
-      cancellable: true,
-    },
-    async (progress, token) => {
-      try {
-        await foam.embeddings.update(progressInfo => {
-          const increment = (1 / progressInfo.total) * 100;
-          progress.report({
-            increment: increment,
-            message: `${progressInfo.current}/${progressInfo.total}`,
-          });
-        }, token);
-        return 'complete';
-      } catch (error) {
-        if (error instanceof CancellationError) {
-          return 'cancelled';
-        }
-        // Log other errors but continue
-        vscode.window.showWarningMessage(
-          `Could not analyze some notes: ${
-            error instanceof Error ? error.message : 'Unknown error'
-          }`
-        );
-        return 'error';
-      }
-    }
-  );
+  const status: 'complete' | 'error' | 'cancelled' =
+    await vscode.commands.executeCommand(BUILD_EMBEDDINGS_COMMAND.command);
 
   if (status !== 'complete') {
     return;
@@ -83,7 +56,7 @@ async function showSimilarNotes(foam: Foam): Promise<void> {
   const embedding = foam.embeddings.getEmbedding(uri);
   if (!embedding) {
     vscode.window.showInformationMessage(
-      'This note hasn\'t been analyzed yet. Make sure Ollama is running and try the "Analyze Notes with AI" command.'
+      'This note hasn\'t been analyzed yet. Make sure the AI service is running and try the "Analyze Notes with AI" command.'
     );
     return;
   }

@@ -3,7 +3,6 @@ import { Foam } from '../../core/model/foam';
 import { URI } from '../../core/model/uri';
 import { CommandDescriptor } from '../../utils/commands';
 import { FoamWorkspace } from '../../core/model/workspace/foamWorkspace';
-import { isNone } from '../../core/utils';
 import { TrainNote, TrainNoteStepper } from '../../core/model/train-note';
 import { WriteObserver } from '../../core/utils/observer';
 import { TrainNoteWriter } from '../../core/services/Writer/train-note-writer';
@@ -16,7 +15,10 @@ export default async function activate(
   const foam = await foamPromise;
   context.subscriptions.push(
     vscode.commands.registerCommand(RAISE_COMMAND.command, args =>
-      raisePhase(foam.workspace, args)
+      changePhase(canIncrease, increase, {
+        workspace: foam.workspace,
+        uri: args,
+      })
     )
   );
 }
@@ -26,39 +28,45 @@ export interface RaisePhaseArgs {
    * The URI of the TrainNote to Raise
    * If present the active Document is ignored
    */
-  uri?: URI | string | vscode.Uri;
+  uri?: URI | string;
+  workspace: FoamWorkspace;
 }
 
 export const RAISE_COMMAND = {
   command: 'foam-vscode.raise-phase',
   title: 'Foam: Raise Phase',
 
-  forURI: (uri: URI): CommandDescriptor<RaisePhaseArgs> => {
+  forURI: (
+    uri: URI,
+    workspace: FoamWorkspace
+  ): CommandDescriptor<RaisePhaseArgs> => {
     return {
       name: RAISE_COMMAND.command,
       params: {
         uri: uri,
+        workspace: workspace,
       },
     };
   },
 };
 
-async function raisePhase(workspace: FoamWorkspace, args: RaisePhaseArgs) {
-  args = args ?? {};
+function changePhase(
+  canExecute: (args: RaisePhaseArgs) => { value?: TrainNote; msg: string },
+  execute: (trainNote: TrainNote) => void,
+  args: RaisePhaseArgs
+) {
+  SetPath(args);
 
-  const path = getPath(args);
-
-  const result = canIncrease(path, workspace);
-  if (isNone(result.value)) {
+  const result = canExecute(args);
+  if (!result.value) {
     vscode.window.showInformationMessage(result.msg);
     return;
   }
-
-  increase(result.value);
+  execute(result.value);
 }
 
-function canIncrease(path, workspace: FoamWorkspace) {
-  const result = workspace.trainNoteWorkspace.find(path);
+function canIncrease(args: RaisePhaseArgs) {
+  const result = args.workspace.trainNoteWorkspace.find(args.uri);
   if (result instanceof TrainNote) {
     return { value: result, msg: '' };
   }
@@ -73,7 +81,7 @@ function increase(trainNote: TrainNote) {
   stepper.increase(trainNote);
 }
 
-function getPath(args: RaisePhaseArgs) {
+function SetPath(args: RaisePhaseArgs) {
   const activeDocument = () => {
     const editor = vscode.window.activeTextEditor;
     if (editor) {
@@ -81,8 +89,7 @@ function getPath(args: RaisePhaseArgs) {
     }
   };
 
-  if (isNone(args.uri)) {
-    return activeDocument();
+  if (!args.uri) {
+    args.uri = activeDocument();
   }
-  return args.uri;
 }

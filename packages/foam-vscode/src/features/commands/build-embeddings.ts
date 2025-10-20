@@ -24,8 +24,13 @@ export default async function activate(
     vscode.commands.registerCommand(
       BUILD_EMBEDDINGS_COMMAND.command,
       async () => {
-        return await deduplicator.run(() =>
-          buildEmbeddings(foam.workspace, foam.embeddings)
+        return await deduplicator.run(
+          () => buildEmbeddings(foam.workspace, foam.embeddings),
+          () => {
+            vscode.window.showInformationMessage(
+              'Note analysis is already in progress - waiting for it to complete'
+            );
+          }
         );
       }
     )

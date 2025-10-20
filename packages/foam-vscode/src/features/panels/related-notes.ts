@@ -44,8 +44,7 @@ export default async function activate(
   context.subscriptions.push(
     provider,
     treeView,
-    foam.workspace.onDidAdd(() => updateTreeView()),
-    foam.workspace.onDidUpdate(() => updateTreeView()),
+    foam.embeddings.onDidUpdate(() => updateTreeView()),
     vscode.window.onDidChangeActiveTextEditor(() => updateTreeView()),
     provider.onDidChangeTreeData(() => {
       treeView.title = `Related Notes (${provider.nValues})`;

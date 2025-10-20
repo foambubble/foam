@@ -1,19 +1,22 @@
+import { Logger } from '../core/utils/log';
 import {
   OllamaEmbeddingProvider,
   DEFAULT_OLLAMA_CONFIG,
 } from './ollama-provider';
 
-// Mock fetch globally
-global.fetch = jest.fn();
+Logger.setLevel('error');
 
 describe('OllamaEmbeddingProvider', () => {
+  const originalFetch = global.fetch;
   beforeEach(() => {
+    global.fetch = jest.fn();
     jest.clearAllMocks();
     jest.useFakeTimers();
   });
 
   afterEach(() => {
     jest.useRealTimers();
+    global.fetch = originalFetch;
   });
 
   describe('constructor', () => {
@@ -105,7 +108,7 @@ describe('OllamaEmbeddingProvider', () => {
       const provider = new OllamaEmbeddingProvider();
 
       await expect(provider.embed('test')).rejects.toThrow(
-        'Ollama API error (500)'
+        'AI service error (500)'
       );
     });
 
@@ -123,19 +126,24 @@ describe('OllamaEmbeddingProvider', () => {
 
     it('should timeout after configured duration', async () => {
       (global.fetch as jest.Mock).mockImplementationOnce(
-        () =>
-          new Promise((_, reject) => {
-            setTimeout(() => reject(new Error('AbortError')), 35000);
+        (_url, options) =>
+          new Promise((_resolve, reject) => {
+            // Simulate abort signal being triggered
+            options.signal.addEventListener('abort', () => {
+              const error = new Error('The operation was aborted');
+              error.name = 'AbortError';
+              reject(error);
+            });
           })
       );
 
       const provider = new OllamaEmbeddingProvider({ timeout: 1000 });
       const embedPromise = provider.embed('test');
 
-      // Fast-forward time
+      // Fast-forward time to trigger timeout
       jest.advanceTimersByTime(1001);
 
-      await expect(embedPromise).rejects.toThrow('Cannot connect to Ollama');
+      await expect(embedPromise).rejects.toThrow('AI service took too long');
     });
   });
 
@@ -182,16 +190,21 @@ describe('OllamaEmbeddingProvider', () => {
 
     it('should timeout quickly (5s) when checking availability', async () => {
       (global.fetch as jest.Mock).mockImplementationOnce(
-        () =>
-          new Promise((_, reject) => {
-            setTimeout(() => reject(new Error('timeout')), 10000);
+        (_url, options) =>
+          new Promise((_resolve, reject) => {
+            // Simulate abort signal being triggered
+            options.signal.addEventListener('abort', () => {
+              const error = new Error('The operation was aborted');
+              error.name = 'AbortError';
+              reject(error);
+            });
           })
       );
 
       const provider = new OllamaEmbeddingProvider();
       const availabilityPromise = provider.isAvailable();
 
-      // Fast-forward time
+      // Fast-forward time to trigger timeout (5s for availability check)
       jest.advanceTimersByTime(5001);
 
       const result = await availabilityPromise;

@@ -316,6 +316,10 @@
         {
           "command": "foam-vscode.raise-phase",
           "when": "editorLangId == markdown"
+        },
+        {
+          "command": "foam-vscode.retry-phase",
+          "when": "editorLangId == markdown"
         }
       ]
     },
@@ -381,8 +385,12 @@
         "title": "Foam: Raise Phase"
       },
       {
-        "command": "foam-vscode.convert-wikilink-to-mdlink",
-        "title": "Foam: Convert Wikilink to Markdown Link"
+        "command": "foam-vscode.retry-phase",
+        "title": "Foam: Retry Phase"
+      },
+      {
+        "command": "foam-vscode.convert-link-style-inplace",
+        "title": "Foam: Convert Link Style in Place"
       },
       {
         "command": "foam-vscode.convert-mdlink-to-wikilink",

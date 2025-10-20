@@ -15,15 +15,21 @@ export default async function activate(
   const foam = await foamPromise;
   context.subscriptions.push(
     vscode.commands.registerCommand(RAISE_COMMAND.command, args =>
-      changePhase(canIncrease, increase, {
+      changePhase(canChange, increase, {
         workspace: foam.workspace,
         uri: args,
       })
-    )
+    ),
+    vscode.commands.registerCommand(RETRY_COMMAND.command, args => {
+      changePhase(canChange, decrease, {
+        workspace: foam.workspace,
+        uri: args,
+      });
+    })
   );
 }
 
-export interface RaisePhaseArgs {
+export interface ChangePhaseArgs {
   /**
    * The URI of the TrainNote to Raise
    * If present the active Document is ignored
@@ -39,7 +45,7 @@ export const RAISE_COMMAND = {
   forURI: (
     uri: URI,
     workspace: FoamWorkspace
-  ): CommandDescriptor<RaisePhaseArgs> => {
+  ): CommandDescriptor<ChangePhaseArgs> => {
     return {
       name: RAISE_COMMAND.command,
       params: {
@@ -50,10 +56,28 @@ export const RAISE_COMMAND = {
   },
 };
 
+export const RETRY_COMMAND = {
+  command: 'foam-vscode.retry-phase',
+  title: 'Foam: Retry Phase',
+
+  forURI: (
+    uri: URI,
+    workspace: FoamWorkspace
+  ): CommandDescriptor<ChangePhaseArgs> => {
+    return {
+      name: RETRY_COMMAND.command,
+      params: {
+        uri: uri,
+        workspace: workspace,
+      },
+    };
+  },
+};
+
 function changePhase(
-  canExecute: (args: RaisePhaseArgs) => { value?: TrainNote; msg: string },
+  canExecute: (args: ChangePhaseArgs) => { value?: TrainNote; msg: string },
   execute: (trainNote: TrainNote) => void,
-  args: RaisePhaseArgs
+  args: ChangePhaseArgs
 ) {
   SetPath(args);
 
@@ -65,7 +89,7 @@ function changePhase(
   execute(result.value);
 }
 
-function canIncrease(args: RaisePhaseArgs) {
+function canChange(args: ChangePhaseArgs) {
   const result = args.workspace.trainNoteWorkspace.find(args.uri);
   if (result instanceof TrainNote) {
     return { value: result, msg: '' };
@@ -81,7 +105,14 @@ function increase(trainNote: TrainNote) {
   stepper.increase(trainNote);
 }
 
-function SetPath(args: RaisePhaseArgs) {
+function decrease(trainNote: TrainNote) {
+  const stepper = new TrainNoteStepper(
+    new WriteObserver(new TrainNoteWriter(new FrontmatterWriter()))
+  );
+  stepper.decrease(trainNote);
+}
+
+function SetPath(args: ChangePhaseArgs) {
   const activeDocument = () => {
     const editor = vscode.window.activeTextEditor;
     if (editor) {

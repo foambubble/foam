@@ -316,7 +316,7 @@ async function resolveTrainingNote() {
   );
 
   if (response.label == 'Yes') {
-    frontmatter = ['---', 'type: training-note', '---'].join('\n');
+    frontmatter = ['---', 'type: training-note', '---'].join('\n') + '\n';
   } else if (response.label == 'No') {
     frontmatter = '';
   } else {

@@ -423,6 +423,12 @@ export enum DiagnosticSeverity {
   Hint = 3,
 }
 
+export enum ProgressLocation {
+  SourceControl = 1,
+  Window = 10,
+  Notification = 15,
+}
+
 // ===== Code Actions =====
 
 export class CodeActionKind {
@@ -586,6 +592,57 @@ export interface Event<T> {
 
 export interface Disposable {
   dispose(): void;
+}
+
+// ===== Cancellation =====
+
+export interface CancellationToken {
+  readonly isCancellationRequested: boolean;
+  readonly onCancellationRequested: Event<any>;
+}
+
+export class CancellationTokenSource {
+  private _token: CancellationToken | undefined;
+  private _emitter: EventEmitter<any> | undefined;
+  private _isCancelled = false;
+
+  get token(): CancellationToken {
+    if (!this._token) {
+      this._emitter = new EventEmitter<any>();
+      this._token = {
+        isCancellationRequested: this._isCancelled,
+        onCancellationRequested: this._emitter.event,
+      };
+    }
+    return this._token;
+  }
+
+  cancel(): void {
+    if (!this._isCancelled) {
+      this._isCancelled = true;
+      if (this._emitter) {
+        this._emitter.fire(undefined);
+      }
+      // Update token state
+      if (this._token) {
+        (this._token as any).isCancellationRequested = true;
+      }
+    }
+  }
+
+  dispose(): void {
+    if (this._emitter) {
+      this._emitter.dispose();
+      this._emitter = undefined;
+    }
+    this._token = undefined;
+  }
+}
+
+// ===== Progress =====
+
+export interface Progress<T> {
+  report(value: T): void;
 }
 
 export class EventEmitter<T> {
@@ -1399,13 +1456,14 @@ async function initializeFoamCommands(foam: Foam): Promise<void> {
   await foamCommands.updateWikilinksCommand(mockContext, foamPromise);
   await foamCommands.openDailyNoteForDateCommand(mockContext, foamPromise);
   await foamCommands.convertLinksCommand(mockContext, foamPromise);
+  await foamCommands.buildEmbeddingsCommand(mockContext, foamPromise);
+  await foamCommands.openDailyNoteCommand(mockContext, foamPromise);
+  await foamCommands.openDatedNote(mockContext, foamPromise);
 
   // Commands that only need context
   await foamCommands.copyWithoutBracketsCommand(mockContext);
   await foamCommands.createFromTemplateCommand(mockContext);
   await foamCommands.createNewTemplate(mockContext);
-  await foamCommands.openDailyNoteCommand(mockContext, foamPromise);
-  await foamCommands.openDatedNote(mockContext, foamPromise);
 
   Logger.info('Foam commands initialized successfully in mock environment');
 }
@@ -1513,6 +1571,31 @@ export const window = {
       'showErrorMessage called - should be mocked in tests if error handling is expected. Message was: ' +
         message
     );
+  },
+
+  async withProgress<R>(
+    options: {
+      location: ProgressLocation;
+      title?: string;
+      cancellable?: boolean;
+    },
+    task: (
+      progress: Progress<{ message?: string; increment?: number }>,
+      token: CancellationToken
+    ) => Thenable<R>
+  ): Promise<R> {
+    const tokenSource = new CancellationTokenSource();
+    const progress: Progress<{ message?: string; increment?: number }> = {
+      report: () => {
+        // No-op in mock, but can be overridden in tests
+      },
+    };
+
+    try {
+      return await task(progress, tokenSource.token);
+    } finally {
+      tokenSource.dispose();
+    }
   },
 };
 

@@ -20,7 +20,6 @@ import { URI } from '../model/uri';
 import { ICache } from '../utils/cache';
 import { FrontmatterMarkdownDirector } from './markdown-director';
 import { phases, TrainNote } from '../model/train-note';
-import { Phase } from '../model/phase';
 
 export interface ParserPlugin<T> {
   name?: string;
@@ -131,10 +130,10 @@ export const trainrehydration = (uri: URI, trainnote: TrainNote): TrainNote => {
   Object.assign(trainNote, resource);
   trainNote.phases = phases;
   trainNote.type = 'training-note';
-  trainNote.currentPhase =
-    trainNote.currentPhase instanceof Phase
-      ? trainNote.currentPhase
-      : new Phase(trainnote.currentPhase.name, trainnote.currentPhase.days);
+  trainNote.currentPhase = phases.find(
+    trainNote.currentPhase.name,
+    trainNote.currentPhase.days
+  );
   trainNote.nextReminder =
     trainnote.nextReminder instanceof Date
       ? trainnote.nextReminder
@@ -610,7 +609,12 @@ export const PhasePlugin: ParserPlugin<TrainNote> = {
   name: 'phase',
   onDidFindProperties: (properties, target, node: Node) => {
     if ('currentPhase' in properties) {
-      target.currentPhase = properties.currentPhase as Phase;
+      if (properties.currentPhase) {
+        target.currentPhase = target.phases.find(
+          properties.currentPhase.name,
+          properties.currentPhase.days
+        );
+      }
     }
   },
 };

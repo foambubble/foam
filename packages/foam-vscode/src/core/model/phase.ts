@@ -1,5 +1,3 @@
-import { isEqual } from 'lodash';
-
 export class Phase {
   name: string;
   days: number;
@@ -37,7 +35,7 @@ export class Phases {
     }
 
     for (let i = 0; i < this.phases.length; i++) {
-      if (isEqual(this.phases[i], phase)) {
+      if (this.phases[i] === phase) {
         return this.phases[++i];
       }
     }
@@ -53,7 +51,7 @@ export class Phases {
     }
 
     for (let i = 0; i < this.phases.length; i++) {
-      if (isEqual(this.phases[i], phase)) {
+      if (this.phases[i] === phase) {
         return this.phases[--i];
       }
     }
@@ -66,5 +64,11 @@ export class Phases {
 
   public list() {
     return this.phases;
+  }
+
+  public find(name: string, days: number): Phase {
+    return this.phases.find(
+      phase => phase.name === name && phase.days === days
+    );
   }
 }

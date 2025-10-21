@@ -93,3 +93,15 @@ Example: `[My Note](../path/to/my-note.md)` → `[[my-note]]`
 1. Place your cursor inside a wikilink or markdown link
 2. Open the command palette (`Ctrl+Shift+P` / `Cmd+Shift+P`)
 3. Type "Foam: Convert" and select the desired conversion command
+
+## foam-vscode.rais-phase
+
+This command increases the phase of the current Training Note. It operates on the file currently opened in the editor.
+If the file is a regular note, Foam will show an error message. Otherwise, the Training Note moves to the next phase.
+If the Training Note is already in the last phase, nothing will happen.
+
+## foam-vscode.retry-phase
+
+This command moves the phase back for the current Training Note. It operates on the file currently opened in the editor.
+If the file is a regular note, Foam will show an error message. Otherwise, the Training Note returns to the previous phase.
+If the Training Note is still in the first phase, nothing will happen.

@@ -248,6 +248,7 @@ In addition, you can also use variables provided by Foam:
 | `FOAM_SLUG`          | The sluggified title of the note (using the default github slug method). If used, Foam will prompt you to enter a title for the note unless `FOAM_TITLE` has already caused the prompt.                                                                           |
 | `FOAM_CURRENT_DIR`   | The current editor's directory path. Resolves to the directory of the currently active file, or falls back to workspace root if no editor is active. Useful for creating notes in the current directory context.                                                  |
 | `FOAM_DATE_*`        | `FOAM_DATE_YEAR`, `FOAM_DATE_MONTH`, `FOAM_DATE_WEEK`, `FOAM_DATE_DAY_ISO` etc. Foam-specific versions of [VS Code's datetime snippet variables](https://code.visualstudio.com/docs/editor/userdefinedsnippets#_variables). Prefer these versions over VS Code's. |
+| `FOAM_TRAINING_NOTE` | Foam automatically fills this with the relevant properties for Training Notes. For details, see `reminder-notes.md`. |
 
 ### `FOAM_DATE_*` variables
 

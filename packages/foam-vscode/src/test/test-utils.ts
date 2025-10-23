@@ -9,10 +9,48 @@ import { FoamWorkspace } from '../core/model/workspace';
 import { MarkdownResourceProvider } from '../core/services/markdown-provider';
 import { Resource } from '../core/model/note';
 import { createMarkdownParser } from '../core/services/markdown-parser';
+import { IDataStore } from '../core/services/datastore';
 
 export { default as waitForExpect } from 'wait-for-expect';
 
 Logger.setLevel('error');
+
+/**
+ * An in-memory data store for testing that stores file content in a Map.
+ * This allows tests to provide text content for notes without touching the filesystem.
+ */
+export class InMemoryDataStore implements IDataStore {
+  private files = new Map<string, string>();
+
+  /**
+   * Set the content for a file
+   */
+  set(uri: URI, content: string): void {
+    this.files.set(uri.path, content);
+  }
+
+  /**
+   * Delete a file
+   */
+  delete(uri: URI): void {
+    this.files.delete(uri.path);
+  }
+
+  /**
+   * Clear all files
+   */
+  clear(): void {
+    this.files.clear();
+  }
+
+  async list(): Promise<URI[]> {
+    return Array.from(this.files.keys()).map(path => URI.parse(path, 'file'));
+  }
+
+  async read(uri: URI): Promise<string | null> {
+    return this.files.get(uri.path) ?? null;
+  }
+}
 
 export const TEST_DATA_DIR = URI.file(__dirname).joinPath(
   '..',
@@ -29,11 +67,14 @@ const position = Range.create(0, 0, 0, 100);
  */
 export const strToUri = URI.file;
 
-export const createTestWorkspace = (workspaceRoots: URI[] = []) => {
+export const createTestWorkspace = (
+  workspaceRoots: URI[] = [],
+  dataStore?: IDataStore
+) => {
   const workspace = new FoamWorkspace();
   const parser = createMarkdownParser();
   const provider = new MarkdownResourceProvider(
-    {
+    dataStore ?? {
       read: _ => Promise.resolve(''),
       list: () => Promise.resolve([]),
     },
@@ -51,7 +92,6 @@ export const createTestNote = (params: {
   links?: Array<{ slug: string; definitionUrl?: string } | { to: string }>;
   tags?: string[];
   aliases?: string[];
-  text?: string;
   sections?: string[];
   root?: URI;
   type?: string;

@@ -1,286 +1,331 @@
 import { FoamEmbeddings } from './embeddings';
-import { FoamWorkspace } from './workspace';
 import {
   EmbeddingProvider,
   EmbeddingProviderInfo,
 } from '../services/embedding-provider';
-import { createTestNote } from '../../test/test-utils';
+import {
+  createTestWorkspace,
+  InMemoryDataStore,
+  waitForExpect,
+} from '../../test/test-utils';
 import { URI } from './uri';
 
-describe('FoamEmbeddings', () => {
-  let workspace: FoamWorkspace;
-  let mockProvider: EmbeddingProvider;
-
-  beforeEach(() => {
-    workspace = new FoamWorkspace();
-
-    // Create a simple mock provider
-    mockProvider = {
-      async embed(text: string): Promise<number[]> {
-        // Return a simple embedding based on text length
-        // In real tests, we'd return predictable vectors
-        const vector = new Array(384).fill(0);
-        vector[0] = text.length / 100; // Simple deterministic embedding
-        return vector;
-      },
-      async isAvailable(): Promise<boolean> {
-        return true;
-      },
-      getProviderInfo(): EmbeddingProviderInfo {
-        return {
-          name: 'Test Provider',
-          type: 'local',
-          model: { name: 'test-model', dimensions: 384 },
-        };
-      },
+// Helper to create a simple mock provider
+class MockProvider implements EmbeddingProvider {
+  async embed(text: string): Promise<number[]> {
+    const vector = new Array(384).fill(0);
+    vector[0] = text.length / 100; // Deterministic based on text length
+    return vector;
+  }
+  async isAvailable(): Promise<boolean> {
+    return true;
+  }
+  getProviderInfo(): EmbeddingProviderInfo {
+    return {
+      name: 'Test Provider',
+      type: 'local',
+      model: { name: 'test-model', dimensions: 384 },
     };
-  });
+  }
+}
 
-  afterEach(() => {
-    workspace.dispose();
-  });
+const ROOT = [URI.parse('/', 'file')];
 
+describe('FoamEmbeddings', () => {
   describe('cosineSimilarity', () => {
     it('should return 1 for identical vectors', () => {
-      const embeddings = new FoamEmbeddings(workspace, mockProvider);
+      const datastore = new InMemoryDataStore();
+      const workspace = createTestWorkspace(ROOT, datastore);
+      const embeddings = new FoamEmbeddings(workspace, new MockProvider());
       const vector = [1, 2, 3, 4, 5];
       const similarity = embeddings.cosineSimilarity(vector, vector);
       expect(similarity).toBeCloseTo(1.0, 5);
+      workspace.dispose();
     });
 
     it('should return 0 for orthogonal vectors', () => {
-      const embeddings = new FoamEmbeddings(workspace, mockProvider);
+      const datastore = new InMemoryDataStore();
+      const workspace = createTestWorkspace(ROOT, datastore);
+      const embeddings = new FoamEmbeddings(workspace, new MockProvider());
       const vec1 = [1, 0, 0];
       const vec2 = [0, 1, 0];
       const similarity = embeddings.cosineSimilarity(vec1, vec2);
       expect(similarity).toBeCloseTo(0.0, 5);
+      workspace.dispose();
     });
 
     it('should return -1 for opposite vectors', () => {
-      const embeddings = new FoamEmbeddings(workspace, mockProvider);
+      const datastore = new InMemoryDataStore();
+      const workspace = createTestWorkspace(ROOT, datastore);
+      const embeddings = new FoamEmbeddings(workspace, new MockProvider());
       const vec1 = [1, 0, 0];
       const vec2 = [-1, 0, 0];
       const similarity = embeddings.cosineSimilarity(vec1, vec2);
       expect(similarity).toBeCloseTo(-1.0, 5);
+      workspace.dispose();
     });
 
     it('should return 0 for zero vectors', () => {
-      const embeddings = new FoamEmbeddings(workspace, mockProvider);
+      const datastore = new InMemoryDataStore();
+      const workspace = createTestWorkspace(ROOT, datastore);
+      const embeddings = new FoamEmbeddings(workspace, new MockProvider());
       const vec1 = [0, 0, 0];
       const vec2 = [1, 2, 3];
       const similarity = embeddings.cosineSimilarity(vec1, vec2);
       expect(similarity).toBe(0);
+      workspace.dispose();
     });
 
     it('should throw error for vectors of different lengths', () => {
-      const embeddings = new FoamEmbeddings(workspace, mockProvider);
+      const datastore = new InMemoryDataStore();
+      const workspace = createTestWorkspace(ROOT, datastore);
+      const embeddings = new FoamEmbeddings(workspace, new MockProvider());
       const vec1 = [1, 2, 3];
       const vec2 = [1, 2];
       expect(() => embeddings.cosineSimilarity(vec1, vec2)).toThrow();
+      workspace.dispose();
     });
   });
 
   describe('updateResource', () => {
     it('should create embedding for a resource', async () => {
-      const embeddings = new FoamEmbeddings(workspace, mockProvider);
-      const note = createTestNote({
-        uri: '/path/to/note.md',
-        title: 'Test Note',
-        text: 'This is test content',
-      });
-      workspace.set(note);
+      const datastore = new InMemoryDataStore();
+      const workspace = createTestWorkspace(ROOT, datastore);
+      const embeddings = new FoamEmbeddings(workspace, new MockProvider());
 
-      await embeddings.updateResource(note.uri);
+      const noteUri = URI.parse('/path/to/note.md', 'file');
+      datastore.set(noteUri, '# Test Note\n\nThis is test content');
+      await workspace.fetchAndSet(noteUri);
 
-      const embedding = embeddings.getEmbedding(note.uri);
+      await embeddings.updateResource(noteUri);
+
+      const embedding = embeddings.getEmbedding(noteUri);
       expect(embedding).not.toBeNull();
       expect(embedding?.length).toBe(384);
+
+      workspace.dispose();
     });
 
     it('should remove embedding when resource is deleted', async () => {
-      const embeddings = new FoamEmbeddings(workspace, mockProvider);
-      const note = createTestNote({
-        uri: '/path/to/note.md',
-        title: 'Test Note',
-      });
-      workspace.set(note);
+      const datastore = new InMemoryDataStore();
+      const workspace = createTestWorkspace(ROOT, datastore);
+      const embeddings = new FoamEmbeddings(workspace, new MockProvider());
 
-      await embeddings.updateResource(note.uri);
-      expect(embeddings.getEmbedding(note.uri)).not.toBeNull();
+      const noteUri = URI.parse('/path/to/note.md', 'file');
+      datastore.set(noteUri, '# Test Note\n\nContent');
+      await workspace.fetchAndSet(noteUri);
 
-      workspace.delete(note.uri);
-      await embeddings.updateResource(note.uri);
+      await embeddings.updateResource(noteUri);
+      expect(embeddings.getEmbedding(noteUri)).not.toBeNull();
 
-      expect(embeddings.getEmbedding(note.uri)).toBeNull();
+      workspace.delete(noteUri);
+      await embeddings.updateResource(noteUri);
+
+      expect(embeddings.getEmbedding(noteUri)).toBeNull();
+
+      workspace.dispose();
     });
   });
 
   describe('hasEmbeddings', () => {
     it('should return false when no embeddings exist', () => {
-      const embeddings = new FoamEmbeddings(workspace, mockProvider);
+      const datastore = new InMemoryDataStore();
+      const workspace = createTestWorkspace(ROOT, datastore);
+      const embeddings = new FoamEmbeddings(workspace, new MockProvider());
       expect(embeddings.hasEmbeddings()).toBe(false);
+      workspace.dispose();
     });
 
     it('should return true when embeddings exist', async () => {
-      const embeddings = new FoamEmbeddings(workspace, mockProvider);
-      const note = createTestNote({ uri: '/path/to/note.md' });
-      workspace.set(note);
+      const datastore = new InMemoryDataStore();
+      const workspace = createTestWorkspace(ROOT, datastore);
+      const embeddings = new FoamEmbeddings(workspace, new MockProvider());
 
-      await embeddings.updateResource(note.uri);
+      const noteUri = URI.parse('/path/to/note.md', 'file');
+      datastore.set(noteUri, '# Note\n\nContent');
+      await workspace.fetchAndSet(noteUri);
+
+      await embeddings.updateResource(noteUri);
 
       expect(embeddings.hasEmbeddings()).toBe(true);
+
+      workspace.dispose();
     });
   });
 
   describe('getSimilar', () => {
     it('should return empty array when no embedding exists for target', () => {
-      const embeddings = new FoamEmbeddings(workspace, mockProvider);
-      const uri = URI.file('/path/to/note.md');
+      const datastore = new InMemoryDataStore();
+      const workspace = createTestWorkspace(ROOT, datastore);
+      const embeddings = new FoamEmbeddings(workspace, new MockProvider());
+      const uri = URI.parse('/path/to/note.md', 'file');
 
       const similar = embeddings.getSimilar(uri, 5);
 
       expect(similar).toEqual([]);
+      workspace.dispose();
     });
 
     it('should return similar notes sorted by similarity', async () => {
-      const embeddings = new FoamEmbeddings(workspace, mockProvider);
+      const datastore = new InMemoryDataStore();
+      const workspace = createTestWorkspace(ROOT, datastore);
+      const embeddings = new FoamEmbeddings(workspace, new MockProvider());
 
-      // Create notes with different content
-      const note1 = createTestNote({
-        uri: '/note1.md',
-        text: 'Short',
-      });
-      const note2 = createTestNote({
-        uri: '/note2.md',
-        text: 'Medium length text',
-      });
-      const note3 = createTestNote({
-        uri: '/note3.md',
-        text: 'Very long text content here',
-      });
+      // Create notes with different content lengths
+      const note1Uri = URI.parse('/note1.md', 'file');
+      const note2Uri = URI.parse('/note2.md', 'file');
+      const note3Uri = URI.parse('/note3.md', 'file');
 
-      workspace.set(note1);
-      workspace.set(note2);
-      workspace.set(note3);
+      datastore.set(note1Uri, '# Note 1\n\nShort');
+      datastore.set(note2Uri, '# Note 2\n\nMedium length text');
+      datastore.set(note3Uri, '# Note 3\n\nVery long text content here');
 
-      await embeddings.updateResource(note1.uri);
-      await embeddings.updateResource(note2.uri);
-      await embeddings.updateResource(note3.uri);
+      await workspace.fetchAndSet(note1Uri);
+      await workspace.fetchAndSet(note2Uri);
+      await workspace.fetchAndSet(note3Uri);
+
+      await embeddings.updateResource(note1Uri);
+      await embeddings.updateResource(note2Uri);
+      await embeddings.updateResource(note3Uri);
 
       // Get similar to note2
-      const similar = embeddings.getSimilar(note2.uri, 10);
+      const similar = embeddings.getSimilar(note2Uri, 10);
 
       expect(similar.length).toBe(2); // Excludes self
       expect(similar[0].uri.path).toBeTruthy();
       expect(similar[0].similarity).toBeGreaterThanOrEqual(
         similar[1].similarity
       );
+
+      workspace.dispose();
     });
 
     it('should respect topK parameter', async () => {
-      const embeddings = new FoamEmbeddings(workspace, mockProvider);
+      const datastore = new InMemoryDataStore();
+      const workspace = createTestWorkspace(ROOT, datastore);
+      const embeddings = new FoamEmbeddings(workspace, new MockProvider());
 
       // Create multiple notes
       for (let i = 0; i < 10; i++) {
-        const note = createTestNote({
-          uri: `/note${i}.md`,
-          text: `Content ${i}`,
-        });
-        workspace.set(note);
-        await embeddings.updateResource(note.uri);
+        const noteUri = URI.parse(`/note${i}.md`, 'file');
+        datastore.set(noteUri, `# Note ${i}\n\nContent ${i}`);
+        await workspace.fetchAndSet(noteUri);
+        await embeddings.updateResource(noteUri);
       }
 
-      const target = URI.file('/note0.md');
+      const target = URI.parse('/note0.md', 'file');
       const similar = embeddings.getSimilar(target, 3);
 
       expect(similar.length).toBe(3);
+
+      workspace.dispose();
     });
 
     it('should not include self in similar results', async () => {
-      const embeddings = new FoamEmbeddings(workspace, mockProvider);
-      const note = createTestNote({ uri: '/note.md' });
-      workspace.set(note);
-      await embeddings.updateResource(note.uri);
+      const datastore = new InMemoryDataStore();
+      const workspace = createTestWorkspace(ROOT, datastore);
+      const embeddings = new FoamEmbeddings(workspace, new MockProvider());
 
-      const similar = embeddings.getSimilar(note.uri, 10);
+      const noteUri = URI.parse('/note.md', 'file');
+      datastore.set(noteUri, '# Note\n\nContent');
+      await workspace.fetchAndSet(noteUri);
+      await embeddings.updateResource(noteUri);
 
-      expect(similar.find(s => s.uri.path === note.uri.path)).toBeUndefined();
+      const similar = embeddings.getSimilar(noteUri, 10);
+
+      expect(similar.find(s => s.uri.path === noteUri.path)).toBeUndefined();
+
+      workspace.dispose();
     });
   });
 
   describe('fromWorkspace with monitoring', () => {
     it('should automatically update when resource is added', async () => {
+      const datastore = new InMemoryDataStore();
+      const workspace = createTestWorkspace(ROOT, datastore);
       const embeddings = FoamEmbeddings.fromWorkspace(
         workspace,
-        mockProvider,
+        new MockProvider(),
         true
       );
 
-      const note = createTestNote({ uri: '/new-note.md' });
-      workspace.set(note);
+      const noteUri = URI.parse('/new-note.md', 'file');
+      datastore.set(noteUri, '# New Note\n\nContent');
+      await workspace.fetchAndSet(noteUri);
 
       // Give it a moment to process
       await new Promise(resolve => setTimeout(resolve, 100));
 
-      const embedding = embeddings.getEmbedding(note.uri);
+      const embedding = embeddings.getEmbedding(noteUri);
       expect(embedding).not.toBeNull();
 
       embeddings.dispose();
+      workspace.dispose();
     });
 
     it('should automatically update when resource is modified', async () => {
-      const note = createTestNote({
-        uri: '/note.md',
-        text: 'Original content',
-      });
-      workspace.set(note);
+      const datastore = new InMemoryDataStore();
+      const workspace = createTestWorkspace(ROOT, datastore);
+      const noteUri = URI.parse('/note.md', 'file');
+
+      datastore.set(noteUri, '# Note\n\nOriginal content');
+      await workspace.fetchAndSet(noteUri);
 
       const embeddings = FoamEmbeddings.fromWorkspace(
         workspace,
-        mockProvider,
+        new MockProvider(),
         true
       );
 
-      await embeddings.updateResource(note.uri);
-      const originalEmbedding = embeddings.getEmbedding(note.uri);
+      await embeddings.updateResource(noteUri);
+      const originalEmbedding = embeddings.getEmbedding(noteUri);
 
-      // Update note
-      const updatedNote = createTestNote({
-        uri: '/note.md',
-        text: 'Different content that is longer',
-      });
-      workspace.set(updatedNote);
+      // Update the content of the note to simulate a change
+      datastore.set(noteUri, '# Note\n\nDifferent content that is much longer');
 
-      // Give it a moment to process
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Trigger workspace update event
+      await workspace.fetchAndSet(noteUri);
 
-      const newEmbedding = embeddings.getEmbedding(note.uri);
-      expect(newEmbedding).not.toEqual(originalEmbedding);
+      // Wait for automatic update
+      await waitForExpect(
+        () => {
+          const newEmbedding = embeddings.getEmbedding(noteUri);
+          expect(newEmbedding).not.toEqual(originalEmbedding);
+        },
+        1000,
+        50
+      );
 
       embeddings.dispose();
+      workspace.dispose();
     });
 
     it('should automatically remove embedding when resource is deleted', async () => {
-      const note = createTestNote({ uri: '/note.md' });
-      workspace.set(note);
+      const datastore = new InMemoryDataStore();
+      const workspace = createTestWorkspace(ROOT, datastore);
+      const noteUri = URI.parse('/note.md', 'file');
+
+      datastore.set(noteUri, '# Note\n\nContent');
+      await workspace.fetchAndSet(noteUri);
 
       const embeddings = FoamEmbeddings.fromWorkspace(
         workspace,
-        mockProvider,
+        new MockProvider(),
         true
       );
 
-      await embeddings.updateResource(note.uri);
-      expect(embeddings.getEmbedding(note.uri)).not.toBeNull();
+      await embeddings.updateResource(noteUri);
+      expect(embeddings.getEmbedding(noteUri)).not.toBeNull();
 
-      workspace.delete(note.uri);
+      workspace.delete(noteUri);
 
       // Give it a moment to process
       await new Promise(resolve => setTimeout(resolve, 50));
 
-      expect(embeddings.getEmbedding(note.uri)).toBeNull();
+      expect(embeddings.getEmbedding(noteUri)).toBeNull();
 
       embeddings.dispose();
+      workspace.dispose();
     });
   });
 });

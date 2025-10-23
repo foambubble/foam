@@ -1465,6 +1465,11 @@ async function initializeFoamCommands(foam: Foam): Promise<void> {
   await foamCommands.createFromTemplateCommand(mockContext);
   await foamCommands.createNewTemplate(mockContext);
 
+  // Test-only command to reload workspace (since there's no file watcher in test mode)
+  mockState.commands.set('foam-vscode-test.reload-workspace', async () => {
+    await TestFoam.reloadFoamWorkspace();
+  });
+
   Logger.info('Foam commands initialized successfully in mock environment');
 }
 

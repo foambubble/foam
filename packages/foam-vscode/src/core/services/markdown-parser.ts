@@ -131,8 +131,8 @@ export const trainrehydration = (uri: URI, trainnote: TrainNote): TrainNote => {
   trainNote.phases = phases;
   trainNote.type = 'training-note';
   trainNote.currentPhase = phases.find(
-    trainNote.currentPhase.name,
-    trainNote.currentPhase.days
+    trainNote.currentPhase?.name,
+    trainNote.currentPhase?.days
   );
   trainNote.nextReminder =
     trainnote.nextReminder instanceof Date

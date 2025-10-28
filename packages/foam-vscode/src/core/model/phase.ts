@@ -66,7 +66,7 @@ export class Phases {
     return this.phases;
   }
 
-  public find(name: string, days: number): Phase {
+  public find(name?: string, days?: number): Phase {
     return this.phases.find(
       phase => phase.name === name && phase.days === days
     );

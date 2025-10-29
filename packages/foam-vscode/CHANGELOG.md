@@ -4,6 +4,16 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## 0.29.0
+
+Fixes and Improvements:
+
+- Improved support for wikilink references (#1531, #1116, #1504)
+- Improved tag search to include YAML tags (#1530, #1516)
+- Improved template filepath sanitization (#1533)
+- Added FOAM_DATE_WEEK_YEAR (#1532 - thanks @ChThH)
+- Fixed graph panel moving when revealed - graph now stays in its current location (#1540)
+
 ## [0.28.3] - 2025-10-03
 
 Fixes and Improvements:

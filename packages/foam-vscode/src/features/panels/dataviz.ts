@@ -21,13 +21,13 @@ export default async function activate(
 
   vscode.commands.registerCommand('foam-vscode.show-graph', async () => {
     if (panel) {
-      const columnToShowIn = vscode.window.activeTextEditor
-        ? vscode.window.activeTextEditor.viewColumn
-        : undefined;
-      panel.reveal(columnToShowIn);
+      panel.reveal();
     } else {
+      const columnToShowIn = vscode.window.activeTextEditor
+        ? vscode.ViewColumn.Beside
+        : vscode.ViewColumn.Two;
       const foam = await foamPromise;
-      panel = await createGraphPanel(foam, context);
+      panel = await createGraphPanel(foam, context, columnToShowIn);
       const onFoamChanged = _ => {
         updateGraph(panel, foam);
       };
@@ -111,11 +111,15 @@ function cutTitle(title: string): string {
   return title;
 }
 
-async function createGraphPanel(foam: Foam, context: vscode.ExtensionContext) {
+async function createGraphPanel(
+  foam: Foam,
+  context: vscode.ExtensionContext,
+  viewColumn?: vscode.ViewColumn
+) {
   const panel = vscode.window.createWebviewPanel(
     'foam-graph',
     'Foam Graph',
-    vscode.ViewColumn.Two,
+    viewColumn ?? vscode.ViewColumn.Two,
     {
       enableScripts: true,
       retainContextWhenHidden: true,

@@ -16,7 +16,7 @@ describe('Graph Panel', () => {
 
     // Open a note in column 1
     await vscode.window.showTextDocument(vscode.Uri.file(noteUri.toFsPath()), {
-      viewColumn: vscode.ViewColumn.One
+      viewColumn: vscode.ViewColumn.One,
     });
 
     // Execute show-graph command
@@ -59,7 +59,7 @@ describe('Graph Panel', () => {
 
     // Open a note in column 1
     await vscode.window.showTextDocument(vscode.Uri.file(noteUri.toFsPath()), {
-      viewColumn: vscode.ViewColumn.One
+      viewColumn: vscode.ViewColumn.One,
     });
 
     // Create graph (should be beside column 1, so in column 2)
@@ -77,11 +77,13 @@ describe('Graph Panel', () => {
     const { uri: note2Uri } = await createFile('# Note B', ['note-b.md']);
     await vscode.window.showTextDocument(vscode.Uri.file(note2Uri.toFsPath()), {
       viewColumn: vscode.ViewColumn.One,
-      preview: false
+      preview: false,
     });
 
     // Focus should be on note in column 1
-    expect(vscode.window.activeTextEditor?.viewColumn).toBe(vscode.ViewColumn.One);
+    expect(vscode.window.activeTextEditor?.viewColumn).toBe(
+      vscode.ViewColumn.One
+    );
 
     // Show graph again
     await vscode.commands.executeCommand('foam-vscode.show-graph');
@@ -100,9 +102,12 @@ describe('Graph Panel', () => {
     const { uri: readmeUri } = await createFile('# Readme', ['readme.md']);
 
     // Step 1-3: Open readme.md
-    await vscode.window.showTextDocument(vscode.Uri.file(readmeUri.toFsPath()), {
-      viewColumn: vscode.ViewColumn.One
-    });
+    await vscode.window.showTextDocument(
+      vscode.Uri.file(readmeUri.toFsPath()),
+      {
+        viewColumn: vscode.ViewColumn.One,
+      }
+    );
 
     // Step 4: Show graph (should appear beside the editor, not in column 1)
     await vscode.commands.executeCommand('foam-vscode.show-graph');
@@ -118,10 +123,13 @@ describe('Graph Panel', () => {
     expect(originalGraphColumn).toBeGreaterThan(vscode.ViewColumn.One);
 
     // Step 5: Return focus to readme.md
-    await vscode.window.showTextDocument(vscode.Uri.file(readmeUri.toFsPath()), {
-      viewColumn: vscode.ViewColumn.One,
-      preserveFocus: false
-    });
+    await vscode.window.showTextDocument(
+      vscode.Uri.file(readmeUri.toFsPath()),
+      {
+        viewColumn: vscode.ViewColumn.One,
+        preserveFocus: false,
+      }
+    );
 
     // Step 6: Open markdown preview (simulated by opening another document in the same group as graph)
     // In real scenario, this would be the markdown preview, but for testing we'll verify

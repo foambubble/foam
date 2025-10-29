@@ -23,11 +23,8 @@ export default async function activate(
     if (panel) {
       panel.reveal();
     } else {
-      const columnToShowIn = vscode.window.activeTextEditor
-        ? vscode.ViewColumn.Beside
-        : vscode.ViewColumn.Two;
       const foam = await foamPromise;
-      panel = await createGraphPanel(foam, context, columnToShowIn);
+      panel = await createGraphPanel(foam, context);
       const onFoamChanged = _ => {
         updateGraph(panel, foam);
       };
@@ -119,7 +116,7 @@ async function createGraphPanel(
   const panel = vscode.window.createWebviewPanel(
     'foam-graph',
     'Foam Graph',
-    viewColumn ?? vscode.ViewColumn.Two,
+    viewColumn ?? vscode.ViewColumn.Beside,
     {
       enableScripts: true,
       retainContextWhenHidden: true,

@@ -26,7 +26,6 @@ const asResource = (uri: URI): Resource => {
     sections: [],
     links: [],
     tags: [],
-    definitions: [],
   };
 };
 

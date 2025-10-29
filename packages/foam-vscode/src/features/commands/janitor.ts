@@ -106,7 +106,7 @@ async function runJanitor(foam: Foam) {
 
     const definitions =
       wikilinkSetting === 'off'
-        ? null
+        ? []
         : await generateLinkReferences(
             note,
             noteText,
@@ -114,11 +114,11 @@ async function runJanitor(foam: Foam) {
             foam.workspace,
             wikilinkSetting === 'withExtensions'
           );
-    if (definitions) {
+    if (definitions.length > 0) {
       updatedDefinitionListCount += 1;
     }
 
-    if (!heading && !definitions) {
+    if (!heading && definitions.length === 0) {
       return Promise.resolve();
     }
 
@@ -126,7 +126,7 @@ async function runJanitor(foam: Foam) {
     // Note: The ordering matters. Definitions need to be inserted
     // before heading, since inserting a heading changes line numbers below
     let text = noteText;
-    text = definitions ? TextEdit.apply(text, definitions) : text;
+    text = definitions.length > 0 ? TextEdit.apply(text, definitions) : text;
     text = heading ? TextEdit.apply(text, heading) : text;
 
     return workspace.fs.writeFile(toVsCodeUri(note.uri), Buffer.from(text));
@@ -148,7 +148,7 @@ async function runJanitor(foam: Foam) {
     const heading = await generateHeading(note, noteText, eol);
     const definitions =
       wikilinkSetting === 'off'
-        ? null
+        ? []
         : await generateLinkReferences(
             note,
             noteText,
@@ -157,19 +157,22 @@ async function runJanitor(foam: Foam) {
             wikilinkSetting === 'withExtensions'
           );
 
-    if (heading || definitions) {
+    if (heading || definitions.length > 0) {
       // Apply Edits
       /* eslint-disable */
       await editor.edit(editBuilder => {
         // Note: The ordering matters. Definitions need to be inserted
         // before heading, since inserting a heading changes line numbers below
-        if (definitions) {
+        if (definitions.length > 0) {
           updatedDefinitionListCount += 1;
-          const start = definitions.range.start;
-          const end = definitions.range.end;
+          // Apply all definition edits
+          definitions.forEach(definition => {
+            const start = definition.range.start;
+            const end = definition.range.end;
 
-          const range = Range.createFromPosition(start, end);
-          editBuilder.replace(toVsCodeRange(range), definitions!.newText);
+            const range = Range.createFromPosition(start, end);
+            editBuilder.replace(toVsCodeRange(range), definition.newText);
+          });
         }
 
         if (heading) {

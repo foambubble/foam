@@ -3,6 +3,7 @@ import {
   getBlockFor,
   ParserPlugin,
 } from './markdown-parser';
+import { NoteLinkDefinition, ResourceLink } from '../model/note';
 import { Logger } from '../utils/log';
 import { URI } from '../model/uri';
 import { Range } from '../model/range';
@@ -102,6 +103,17 @@ describe('Markdown parsing', () => {
       expect(link.isEmbed).toBeFalsy();
     });
 
+    it('should set reference to alias for wikilinks with alias', () => {
+      const note = createNoteFromMarkdown(
+        'This is a [[target-file|Display Name]] wikilink.'
+      );
+      expect(note.links.length).toEqual(1);
+      const link = note.links[0];
+      expect(link.type).toEqual('wikilink');
+      expect(ResourceLink.isUnresolvedReference(link)).toBe(true);
+      expect(link.definition).toEqual('target-file');
+    });
+
     it('should skip wikilinks in codeblocks', () => {
       const noteA = createNoteFromMarkdown(`
 this is some text with our [[first-wikilink]].
@@ -130,6 +142,74 @@ this is some text with our [[second-wikilink]].
         '[[first-wikilink]]',
         '[[second-wikilink]]',
       ]);
+    });
+
+    it('should detect reference-style links', () => {
+      const note = createNoteFromMarkdown(`
+# Test Document
+
+This is a [reference-style link][ref1] and another [link][ref2].
+
+[ref1]: target1.md "Target 1"
+[ref2]: target2.md "Target 2"
+      `);
+
+      expect(note.links.length).toEqual(2);
+
+      const link1 = note.links[0];
+      expect(link1.type).toEqual('link');
+      expect(link1.rawText).toEqual('[reference-style link][ref1]');
+      expect(ResourceLink.isResolvedReference(link1)).toBe(true);
+      const definition1 = link1.definition as NoteLinkDefinition;
+      expect(definition1.label).toEqual('ref1');
+      expect(definition1.url).toEqual('target1.md');
+      expect(definition1.title).toEqual('Target 1');
+
+      const link2 = note.links[1];
+      expect(link2.type).toEqual('link');
+      expect(link2.rawText).toEqual('[link][ref2]');
+      expect(ResourceLink.isResolvedReference(link2)).toBe(true);
+      const definition2 = link2.definition as NoteLinkDefinition;
+      expect(definition2.label).toEqual('ref2');
+      expect(definition2.url).toEqual('target2.md');
+    });
+
+    it('should handle reference-style links without matching definitions', () => {
+      const note = createNoteFromMarkdown(`
+This is a [reference-style link][missing-ref].
+
+[existing-ref]: target.md "Target"
+      `);
+
+      expect(note.links.length).toEqual(1);
+      const link = note.links[0];
+      expect(link.type).toEqual('link');
+      expect(link.rawText).toEqual('[reference-style link][missing-ref]');
+      expect(ResourceLink.isUnresolvedReference(link)).toBe(true);
+      expect(link.definition).toEqual('missing-ref');
+    });
+
+    it('should handle mixed link types', () => {
+      const note = createNoteFromMarkdown(`
+This has [[wikilink]], [inline link](target.md), and [reference link][ref].
+
+[ref]: reference-target.md "Reference Target"
+      `);
+
+      expect(note.links.length).toEqual(3);
+
+      expect(note.links[0].type).toEqual('wikilink');
+      expect(note.links[0].rawText).toEqual('[[wikilink]]');
+      expect(ResourceLink.isUnresolvedReference(note.links[0])).toBe(true);
+      expect(note.links[0].definition).toEqual('wikilink');
+
+      expect(note.links[1].type).toEqual('link');
+      expect(note.links[1].rawText).toEqual('[inline link](target.md)');
+      expect(ResourceLink.isReferenceStyleLink(note.links[1])).toBe(false);
+
+      expect(note.links[2].type).toEqual('link');
+      expect(note.links[2].rawText).toEqual('[reference link][ref]');
+      expect(ResourceLink.isResolvedReference(note.links[2])).toBe(true);
     });
   });
 

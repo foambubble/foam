@@ -6,6 +6,41 @@ export interface ResourceLink {
   rawText: string;
   range: Range;
   isEmbed: boolean;
+  definition?: string | NoteLinkDefinition;
+}
+
+export abstract class ResourceLink {
+  /**
+   * Check if this is any kind of reference-style link (resolved or unresolved)
+   */
+  static isReferenceStyleLink(link: ResourceLink): boolean {
+    return link.definition !== undefined;
+  }
+
+  /**
+   * Check if this is a reference-style link with unresolved definition
+   */
+  static isUnresolvedReference(
+    link: ResourceLink
+  ): link is ResourceLink & { definition: string } {
+    return typeof link.definition === 'string';
+  }
+
+  /**
+   * Check if this is a reference-style link with resolved definition
+   */
+  static isResolvedReference(
+    link: ResourceLink
+  ): link is ResourceLink & { definition: NoteLinkDefinition } {
+    return typeof link.definition === 'object' && link.definition !== null;
+  }
+
+  /**
+   * Check if this is a regular inline link (not reference-style)
+   */
+  static isRegularLink(link: ResourceLink): boolean {
+    return link.definition === undefined;
+  }
 }
 
 export interface NoteLinkDefinition {
@@ -52,9 +87,6 @@ export interface Resource {
   tags: Tag[];
   aliases: Alias[];
   links: ResourceLink[];
-
-  // TODO to remove
-  definitions: NoteLinkDefinition[];
 }
 
 export interface ResourceParser {

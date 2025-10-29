@@ -97,11 +97,7 @@ describe('Link resolution', () => {
       const ws = createTestWorkspace();
       const noteA = createTestNote({
         uri: '/somewhere/from/page-a.md',
-        links: [{ slug: 'page-b' }],
-      });
-      noteA.definitions.push({
-        label: 'page-b',
-        url: '../to/page-b.md',
+        links: [{ slug: 'page-b', definitionUrl: '../to/page-b.md' }],
       });
       const noteB = createTestNote({
         uri: '/somewhere/to/page-b.md',
@@ -307,7 +303,8 @@ describe('Link resolution', () => {
 
       expect(ws.resolveLink(noteB, noteB.links[0])).toEqual(noteA.uri);
       expect(ws.resolveLink(noteC, noteC.links[0])).toEqual(noteA.uri);
-      expect(noteD.links).toEqual([]);
+      expect(noteD.links.length).toEqual(1);
+      expect(noteD.links[0].definition).toEqual('note'); // Unresolved reference
     });
 
     describe('Workspace-relative paths (root-path relative)', () => {

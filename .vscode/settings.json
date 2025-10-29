@@ -30,5 +30,20 @@
   "search.mode": "reuseEditor",
   "[typescript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
-  }
+  },
+  "eslint.enable": true,
+  "eslint.run": "onType",
+  "eslint.alwaysShowStatus": true,
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact"
+  ],
+    "eslint.workingDirectories": [
+    { 
+      "directory": ".",
+      "changeProcessCWD": true
+    }
+  ]
 }

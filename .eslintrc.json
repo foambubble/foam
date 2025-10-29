@@ -6,7 +6,7 @@
     "sourceType": "module"
   },
   "env": { "node": true, "es6": true },
-  "plugins": ["jest"],
+  "plugins": ["jest", "@typescript-eslint", "import"],
   "extends": [
     "eslint:recommended",
     "plugin:import/typescript",

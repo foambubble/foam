@@ -701,6 +701,11 @@
           "type": "object",
           "description": "Custom graph styling settings. An example is present in the documentation.",
           "default": {}
+        },
+        "foam.graph.onStartup": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether to open the graph on startup."
         }
       }
     },

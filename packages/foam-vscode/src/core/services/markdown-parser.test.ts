@@ -144,6 +144,19 @@ this is some text with our [[second-wikilink]].
       ]);
     });
 
+    it('#1545 - should not detect single brackets as links', () => {
+      const note = createNoteFromMarkdown(`
+"She said [winning the award] was her best year."
+
+We use brackets ([ and ]) to surround links.
+
+This is not an easy task.[^1]
+
+[^1]: It would be easier if more papers were well written.
+      `);
+      expect(note.links.length).toEqual(0);
+    });
+
     it('should detect reference-style links', () => {
       const note = createNoteFromMarkdown(`
 # Test Document
@@ -181,12 +194,9 @@ This is a [reference-style link][missing-ref].
 [existing-ref]: target.md "Target"
       `);
 
-      expect(note.links.length).toEqual(1);
-      const link = note.links[0];
-      expect(link.type).toEqual('link');
-      expect(link.rawText).toEqual('[reference-style link][missing-ref]');
-      expect(ResourceLink.isUnresolvedReference(link)).toBe(true);
-      expect(link.definition).toEqual('missing-ref');
+      // Per CommonMark spec, reference links without matching definitions
+      // should be treated as plain text, not as links
+      expect(note.links.length).toEqual(0);
     });
 
     it('should handle mixed link types', () => {

@@ -175,14 +175,11 @@ async function getWebviewContent(
   const getWebviewUri = (fileName: string) =>
     panel.webview.asWebviewUri(vscode.Uri.joinPath(datavizUri, fileName));
 
-  const indexHtml =
-    vscode.env.uiKind === vscode.UIKind.Desktop
-      ? new TextDecoder('utf-8').decode(
-          await vscode.workspace.fs.readFile(
-            vscode.Uri.joinPath(datavizUri, 'index.html')
-          )
-        )
-      : await fetch(getWebviewUri('index.html').toString()).then(r => r.text());
+  const indexHtml = new TextDecoder('utf-8').decode(
+    await vscode.workspace.fs.readFile(
+      vscode.Uri.joinPath(datavizUri, 'index.html')
+    )
+  );
 
   // Replace the script paths with the appropriate webview URI.
   const filled = indexHtml.replace(

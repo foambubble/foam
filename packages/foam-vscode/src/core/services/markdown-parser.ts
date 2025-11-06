@@ -179,6 +179,14 @@ export function createMarkdownParser(
         }
       });
 
+      // For type: 'link', keep only if:
+      // - It's a direct link [text](url) - no definition field
+      // - It's a resolved reference - definition is an object
+      note.links = note.links.filter(
+        link =>
+          link.type === 'wikilink' || !ResourceLink.isUnresolvedReference(link)
+      );
+
       Logger.debug('Result:', note);
       return note;
     },

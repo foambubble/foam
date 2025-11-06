@@ -303,8 +303,9 @@ describe('Link resolution', () => {
 
       expect(ws.resolveLink(noteB, noteB.links[0])).toEqual(noteA.uri);
       expect(ws.resolveLink(noteC, noteC.links[0])).toEqual(noteA.uri);
-      expect(noteD.links.length).toEqual(1);
-      expect(noteD.links[0].definition).toEqual('note'); // Unresolved reference
+      // noteD has malformed URL with unencoded space, which gets treated as
+      // shortcut reference [note] without definition, now correctly filtered out
+      expect(noteD.links.length).toEqual(0);
     });
 
     describe('Workspace-relative paths (root-path relative)', () => {

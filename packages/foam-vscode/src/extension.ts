@@ -10,7 +10,7 @@ import { features } from './features';
 import { VsCodeOutputLogger, exposeLogger } from './services/logging';
 import {
   getAttachmentsExtensions,
-  getIgnoredFilesSetting,
+  getExcludedFilesSetting,
   getIncludeFilesSetting,
   getNotesExtensions,
 } from './settings';
@@ -35,7 +35,7 @@ export async function activate(context: ExtensionContext) {
 
     // Prepare Foam
     const includes = getIncludeFilesSetting().map(g => g.toString());
-    const excludes = getIgnoredFilesSetting().map(g => g.toString());
+    const excludes = getExcludedFilesSetting().map(g => g.toString());
     const { matcher, dataStore, includePatterns, excludePatterns } =
       await createMatcherAndDataStore(includes, excludes);
 
@@ -100,6 +100,7 @@ export async function activate(context: ExtensionContext) {
         if (
           [
             'foam.files.ignore',
+            'foam.files.exclude',
             'foam.files.include',
             'foam.files.attachmentExtensions',
             'foam.files.noteExtensions',

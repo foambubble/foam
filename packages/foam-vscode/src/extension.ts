@@ -10,7 +10,8 @@ import { features } from './features';
 import { VsCodeOutputLogger, exposeLogger } from './services/logging';
 import {
   getAttachmentsExtensions,
-  getIgnoredFilesSetting,
+  getExcludedFilesSetting,
+  getIncludeFilesSetting,
   getNotesExtensions,
 } from './settings';
 import { AttachmentResourceProvider } from './core/services/attachment-provider';
@@ -33,14 +34,15 @@ export async function activate(context: ExtensionContext) {
     }
 
     // Prepare Foam
-    const excludes = getIgnoredFilesSetting().map(g => g.toString());
-    const { matcher, dataStore, excludePatterns } =
-      await createMatcherAndDataStore(excludes);
+    const includes = getIncludeFilesSetting().map(g => g.toString());
+    const excludes = getExcludedFilesSetting().map(g => g.toString());
+    const { matcher, dataStore, includePatterns, excludePatterns } =
+      await createMatcherAndDataStore(includes, excludes);
 
     Logger.info('Loading from directories:');
     for (const folder of workspace.workspaceFolders) {
       Logger.info('- ' + folder.uri.fsPath);
-      Logger.info('  Include: **/*');
+      Logger.info('  Include: ' + includePatterns.get(folder.name).join(','));
       Logger.info('  Exclude: ' + excludePatterns.get(folder.name).join(','));
     }
 
@@ -98,6 +100,8 @@ export async function activate(context: ExtensionContext) {
         if (
           [
             'foam.files.ignore',
+            'foam.files.exclude',
+            'foam.files.include',
             'foam.files.attachmentExtensions',
             'foam.files.noteExtensions',
             'foam.files.defaultNoteExtension',

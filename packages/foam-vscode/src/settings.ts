@@ -39,11 +39,20 @@ export function getAttachmentsExtensions() {
     .map(ext => '.' + ext.trim());
 }
 
-/** Retrieve the list of file ignoring globs. */
-export function getIgnoredFilesSetting(): GlobPattern[] {
+/** Retrieve the list of file exclude globs. */
+export function getExcludedFilesSetting(): GlobPattern[] {
   return [
     '**/.foam/**',
-    ...workspace.getConfiguration().get('foam.files.ignore', []),
+    ...workspace.getConfiguration().get('foam.files.exclude', []),
+    ...workspace.getConfiguration().get('foam.files.ignore', []), // deprecated, for backward compatibility
     ...Object.keys(workspace.getConfiguration().get('files.exclude', {})),
   ].flatMap(expandAlternateGroups);
+}
+
+/** Retrieve the list of file include globs. */
+export function getIncludeFilesSetting(): GlobPattern[] {
+  return workspace
+    .getConfiguration()
+    .get('foam.files.include', ['**/*'])
+    .flatMap(expandAlternateGroups);
 }

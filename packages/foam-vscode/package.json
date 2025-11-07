@@ -549,7 +549,24 @@
             "**/_site/**/*",
             "**/node_modules/**/*"
           ],
-          "description": "Specifies the list of globs that will be ignored by Foam (e.g. they will not be considered when creating the graph). To ignore the all the content of a given folder, use `<folderName>/**/*`"
+          "description": "Specifies the list of globs that will be ignored by Foam (e.g. they will not be considered when creating the graph). To ignore all the content of a given folder, use `<folderName>/**/*`",
+          "deprecationMessage": "Use 'foam.files.exclude' instead. This setting will be removed in a future version."
+        },
+        "foam.files.exclude": {
+          "type": [
+            "array"
+          ],
+          "default": [],
+          "description": "Specifies the list of globs that will be excluded by Foam (e.g. they will not be considered when creating the graph). To exclude all the content of a given folder, use `<folderName>/**/*`. This setting is combined with 'foam.files.ignore' (deprecated) and 'files.exclude'."
+        },
+        "foam.files.include": {
+          "type": [
+            "array"
+          ],
+          "default": [
+            "**/*"
+          ],
+          "description": "Specifies the list of glob patterns for files to include in Foam. Files must match at least one include pattern and not match any exclude patterns. Use this to limit Foam to specific directories (e.g., [\"notes/**\"]) or file types (e.g., [\"**/*.md\"]). Defaults to all files."
         },
         "foam.files.attachmentExtensions": {
           "type": "string",

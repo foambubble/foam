@@ -35,7 +35,7 @@ describe('Graph Panel', () => {
     expect(graphPanel?.group.viewColumn).toBeGreaterThan(vscode.ViewColumn.One);
   });
 
-  it('should create graph in ViewColumn.Two when no active editor', async () => {
+  it('should create graph in ViewColumn.One when no active editor', async () => {
     // Make sure no editors are open
     await closeEditors();
 
@@ -51,7 +51,7 @@ describe('Graph Panel', () => {
       .find(tab => tab.label === 'Foam Graph');
 
     expect(graphPanel).toBeDefined();
-    expect(graphPanel?.group.viewColumn).toBe(vscode.ViewColumn.Two);
+    expect(graphPanel?.group.viewColumn).toBe(vscode.ViewColumn.One);
   });
 
   it('should reveal existing graph panel without moving it', async () => {

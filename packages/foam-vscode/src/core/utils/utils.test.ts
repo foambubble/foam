@@ -96,10 +96,7 @@ describe('hashtag extraction', () => {
 
   it('supports emojis that work without variant selector', () => {
     // These emojis should work with current implementation
-    expect(extractHashtags('#📥 #⭐').map(t => t.label)).toEqual([
-      '📥',
-      '⭐',
-    ]);
+    expect(extractHashtags('#📥 #⭐').map(t => t.label)).toEqual(['📥', '⭐']);
   });
 
   it('ignores hashes in plain text urls and links', () => {

@@ -80,6 +80,25 @@ describe('hashtag extraction', () => {
     ]);
   });
 
+  it('supports emoji tags with variant selectors (issue #1536)', () => {
+    expect(
+      extractHashtags('#🗃️/37-Education #🔖/37/Learning #🟣HOUSE #🟠MONEY').map(
+        t => t.label
+      )
+    ).toEqual(['🗃️/37-Education', '🔖/37/Learning', '🟣HOUSE', '🟠MONEY']);
+  });
+
+  it('supports individual emojis with variant selectors', () => {
+    // Test each emoji separately to debug
+    expect(extractHashtags('#🗃️').map(t => t.label)).toEqual(['🗃️']);
+    expect(extractHashtags('#🔖').map(t => t.label)).toEqual(['🔖']);
+  });
+
+  it('supports emojis that work without variant selector', () => {
+    // These emojis should work with current implementation
+    expect(extractHashtags('#📥 #⭐').map(t => t.label)).toEqual(['📥', '⭐']);
+  });
+
   it('ignores hashes in plain text urls and links', () => {
     expect(
       extractHashtags(`

@@ -3,6 +3,7 @@ import { Foam } from '../../core/model/foam';
 import { Logger } from '../../core/utils/log';
 import { fromVsCodeUri } from '../../utils/vsc-utils';
 import { isSome } from '../../core/utils';
+import { getFoamVsCodeConfig } from '../../services/config';
 
 export default async function activate(
   context: vscode.ExtensionContext,
@@ -48,6 +49,10 @@ export default async function activate(
       });
     }
   });
+  const shouldOpenGraphOnStartup = getFoamVsCodeConfig('graph.onStartup');
+  if (shouldOpenGraphOnStartup) {
+    vscode.commands.executeCommand('foam-vscode.show-graph');
+  }
 }
 
 function updateGraph(panel: vscode.WebviewPanel, foam: Foam) {

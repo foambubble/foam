@@ -39,10 +39,14 @@ describe('Include files settings', () => {
   });
 
   it('should return custom include patterns when configured', async () => {
-    await withModifiedFoamConfiguration('files.include', ['notes/**'], async () => {
-      const includes = getIncludeFilesSetting();
-      expect(includes).toEqual(['notes/**']);
-    });
+    await withModifiedFoamConfiguration(
+      'files.include',
+      ['notes/**'],
+      async () => {
+        const includes = getIncludeFilesSetting();
+        expect(includes).toEqual(['notes/**']);
+      }
+    );
   });
 
   it('should support multiple include patterns', async () => {

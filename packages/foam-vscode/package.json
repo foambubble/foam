@@ -551,6 +551,15 @@
           ],
           "description": "Specifies the list of globs that will be ignored by Foam (e.g. they will not be considered when creating the graph). To ignore the all the content of a given folder, use `<folderName>/**/*`"
         },
+        "foam.files.include": {
+          "type": [
+            "array"
+          ],
+          "default": [
+            "**/*"
+          ],
+          "description": "Specifies the list of glob patterns for files to include in Foam. Files must match at least one include pattern and not match any exclude patterns. Use this to limit Foam to specific directories (e.g., [\"notes/**\"]) or file types (e.g., [\"**/*.md\"]). Defaults to all files."
+        },
         "foam.files.attachmentExtensions": {
           "type": "string",
           "default": "pdf mp3 webm wav m4a mp4 avi mov rtf txt doc docx pages xls xlsx numbers ppt pptm pptx",

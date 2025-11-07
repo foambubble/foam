@@ -94,8 +94,15 @@ export class FileListBasedMatcher implements IMatcher {
   include: string[];
   exclude: string[];
 
-  constructor(files: URI[], private readonly listFiles: () => Promise<URI[]>) {
+  constructor(
+    files: URI[],
+    private readonly listFiles: () => Promise<URI[]>,
+    include: string[] = ['**/*'],
+    exclude: string[] = []
+  ) {
     this.files = files.map(f => f.path);
+    this.include = include;
+    this.exclude = exclude;
   }
 
   match(files: URI[]): URI[] {
@@ -110,9 +117,13 @@ export class FileListBasedMatcher implements IMatcher {
     this.files = (await this.listFiles()).map(f => f.path);
   }
 
-  static async createFromListFn(listFiles: () => Promise<URI[]>) {
+  static async createFromListFn(
+    listFiles: () => Promise<URI[]>,
+    include: string[] = ['**/*'],
+    exclude: string[] = []
+  ) {
     const files = await listFiles();
-    return new FileListBasedMatcher(files, listFiles);
+    return new FileListBasedMatcher(files, listFiles, include, exclude);
   }
 }
 

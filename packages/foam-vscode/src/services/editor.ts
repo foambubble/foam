@@ -225,14 +225,38 @@ export function asAbsoluteWorkspaceUri(
   return res;
 }
 
-export async function createMatcherAndDataStore(excludes: string[]): Promise<{
+export async function createMatcherAndDataStore(
+  includes: string[],
+  excludes: string[]
+): Promise<{
   matcher: IMatcher;
   dataStore: IDataStore;
+  includePatterns: Map<string, string[]>;
   excludePatterns: Map<string, string[]>;
 }> {
+  const includePatterns = new Map<string, string[]>();
   const excludePatterns = new Map<string, string[]>();
-  workspace.workspaceFolders.forEach(f => excludePatterns.set(f.name, []));
+  workspace.workspaceFolders.forEach(f => {
+    includePatterns.set(f.name, []);
+    excludePatterns.set(f.name, []);
+  });
 
+  // Process include patterns
+  for (const include of includes) {
+    const tokens = include.split('/');
+    const matchesFolder = workspace.workspaceFolders.find(
+      f => f.name === tokens[0]
+    );
+    if (matchesFolder) {
+      includePatterns.get(tokens[0]).push(tokens.slice(1).join('/'));
+    } else {
+      for (const [, value] of includePatterns.entries()) {
+        value.push(include);
+      }
+    }
+  }
+
+  // Process exclude patterns
   for (const exclude of excludes) {
     const tokens = exclude.split('/');
     const matchesFolder = workspace.workspaceFolders.find(
@@ -248,19 +272,41 @@ export async function createMatcherAndDataStore(excludes: string[]): Promise<{
   }
 
   const listFiles = async () => {
-    let files: Uri[] = [];
+    let allFiles: Uri[] = [];
+
     for (const folder of workspace.workspaceFolders) {
-      const uris = await workspace.findFiles(
-        new RelativePattern(folder.uri, '**/*'),
-        new RelativePattern(
-          folder.uri,
-          `{${excludePatterns.get(folder.name).join(',')}}`
-        )
+      const folderIncludes = includePatterns.get(folder.name);
+      const folderExcludes = excludePatterns.get(folder.name);
+      const excludePattern =
+        folderExcludes.length > 0
+          ? new RelativePattern(folder.uri, `{${folderExcludes.join(',')}}`)
+          : null;
+
+      // If includes are empty, include nothing
+      if (folderIncludes.length === 0) {
+        continue;
+      }
+
+      const filesFromAllPatterns: Uri[] = [];
+
+      // Apply each include pattern
+      for (const includePattern of folderIncludes) {
+        const uris = await workspace.findFiles(
+          new RelativePattern(folder.uri, includePattern),
+          excludePattern
+        );
+        filesFromAllPatterns.push(...uris);
+      }
+
+      // Deduplicate files (same file may match multiple patterns)
+      const uniqueFiles = Array.from(
+        new Map(filesFromAllPatterns.map(uri => [uri.fsPath, uri])).values()
       );
-      files = [...files, ...uris];
+
+      allFiles = [...allFiles, ...uniqueFiles];
     }
 
-    return files.map(fromVsCodeUri);
+    return allFiles.map(fromVsCodeUri);
   };
 
   const decoder = new TextDecoder('utf-8');
@@ -270,9 +316,14 @@ export async function createMatcherAndDataStore(excludes: string[]): Promise<{
   };
 
   const dataStore = new GenericDataStore(listFiles, readFile);
-  const matcher = isEmpty(excludes)
-    ? new AlwaysIncludeMatcher()
-    : await FileListBasedMatcher.createFromListFn(listFiles);
+  const matcher =
+    isEmpty(excludes) && includes.length === 1 && includes[0] === '**/*'
+      ? new AlwaysIncludeMatcher()
+      : await FileListBasedMatcher.createFromListFn(
+          listFiles,
+          includes,
+          excludes
+        );
 
-  return { matcher, dataStore, excludePatterns };
+  return { matcher, dataStore, includePatterns, excludePatterns };
 }

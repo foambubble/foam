@@ -47,3 +47,11 @@ export function getIgnoredFilesSetting(): GlobPattern[] {
     ...Object.keys(workspace.getConfiguration().get('files.exclude', {})),
   ].flatMap(expandAlternateGroups);
 }
+
+/** Retrieve the list of file include globs. */
+export function getIncludeFilesSetting(): GlobPattern[] {
+  return workspace
+    .getConfiguration()
+    .get('foam.files.include', ['**/*'])
+    .flatMap(expandAlternateGroups);
+}

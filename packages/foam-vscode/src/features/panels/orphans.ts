@@ -21,6 +21,7 @@ export default async function activate(
   const foam = await foamPromise;
 
   const { matcher } = await createMatcherAndDataStore(
+    ['**/*'],
     getOrphansConfig().exclude
   );
   const provider = new OrphanTreeView(

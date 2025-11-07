@@ -31,6 +31,7 @@ export default async function activate(
 ) {
   const foam = await foamPromise;
   const { matcher } = await createMatcherAndDataStore(
+    ['**/*'],
     getPlaceholdersConfig().exclude
   );
   const provider = new PlaceholderTreeView(

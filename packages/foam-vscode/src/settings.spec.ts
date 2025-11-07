@@ -39,14 +39,14 @@ describe('Include files settings', () => {
   });
 
   it('should return custom include patterns when configured', async () => {
-    withModifiedFoamConfiguration('files.include', ['notes/**'], async () => {
+    await withModifiedFoamConfiguration('files.include', ['notes/**'], async () => {
       const includes = getIncludeFilesSetting();
       expect(includes).toEqual(['notes/**']);
     });
   });
 
   it('should support multiple include patterns', async () => {
-    withModifiedFoamConfiguration(
+    await withModifiedFoamConfiguration(
       'files.include',
       ['docs/**', 'notes/**', '**/*.md'],
       async () => {
@@ -57,7 +57,7 @@ describe('Include files settings', () => {
   });
 
   it('should expand alternate groups in include patterns', async () => {
-    withModifiedFoamConfiguration(
+    await withModifiedFoamConfiguration(
       'files.include',
       ['**/*.{md,mdx,markdown}'],
       async () => {
@@ -71,7 +71,7 @@ describe('Include files settings', () => {
   });
 
   it('should return empty array when configured with empty array', async () => {
-    withModifiedFoamConfiguration('files.include', [], async () => {
+    await withModifiedFoamConfiguration('files.include', [], async () => {
       const includes = getIncludeFilesSetting();
       expect(includes).toEqual([]);
     });

@@ -1,6 +1,9 @@
 /* @unit-ready */
 import MarkdownIt from 'markdown-it';
-import { default as escapeWikilinkPipes, PIPE_PLACEHOLDER } from './escape-wikilink-pipes';
+import {
+  default as escapeWikilinkPipes,
+  PIPE_PLACEHOLDER,
+} from './escape-wikilink-pipes';
 
 describe('escape-wikilink-pipes plugin', () => {
   it('should render table with wikilink alias correctly', () => {
@@ -176,7 +179,9 @@ Another [[note2|alias2]] paragraph.
 
     const html = md.render(markdown);
 
-    expect(html).toContain('[[note-with-dashes|Alias with spaces &amp; special!]]');
+    expect(html).toContain(
+      '[[note-with-dashes|Alias with spaces &amp; special!]]'
+    );
   });
 
   it('should handle multiple rows with wikilink aliases', () => {

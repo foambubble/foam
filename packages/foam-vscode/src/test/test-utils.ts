@@ -7,7 +7,7 @@ import { Range } from '../core/model/range';
 import { URI } from '../core/model/uri';
 import { FoamWorkspace } from '../core/model/workspace';
 import { MarkdownResourceProvider } from '../core/services/markdown-provider';
-import { NoteLinkDefinition, Resource } from '../core/model/note';
+import { Resource } from '../core/model/note';
 import { createMarkdownParser } from '../core/services/markdown-parser';
 
 export { default as waitForExpect } from 'wait-for-expect';

@@ -78,7 +78,7 @@ export async function firstFrom<T>(
  * @param functions - The array of functions to execute.
  * @returns A generator yielding the results of the functions.
  */
-function* lazyExecutor<T>(functions: Array<() => T>): Generator<T> {
+export function* lazyExecutor<T>(functions: Array<() => T>): Generator<T> {
   for (const fn of functions) {
     yield fn();
   }

@@ -9,7 +9,7 @@ import {
 import { CommandDescriptor } from '../../utils/commands';
 import { FoamWorkspace } from '../../core/model/workspace';
 import { Resource } from '../../core/model/note';
-import { isSome, isNone } from '../../core/utils';
+import { isNone } from '../../core/utils';
 
 export default async function activate(
   context: vscode.ExtensionContext,

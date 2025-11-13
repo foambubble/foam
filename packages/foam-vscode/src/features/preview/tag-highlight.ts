@@ -3,8 +3,6 @@
 import markdownItRegex from 'markdown-it-regex';
 import { FoamWorkspace } from '../../core/model/workspace';
 import { Logger } from '../../core/utils/log';
-import { isNone } from '../../core/utils';
-import { commandAsURI } from '../../utils/commands';
 
 export const markdownItFoamTags = (
   md: markdownit,

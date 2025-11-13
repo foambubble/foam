@@ -1,5 +1,5 @@
 /* @unit-ready */
-import { env, Position, Selection, commands } from 'vscode';
+import { env, Selection, commands } from 'vscode';
 import { createFile, showInEditor } from '../../test/test-utils-vscode';
 import { removeBrackets, toTitleCase } from './copy-without-brackets';
 

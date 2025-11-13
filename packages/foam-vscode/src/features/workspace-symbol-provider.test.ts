@@ -49,8 +49,6 @@ describe('FoamWorkspaceSymbolProvider', () => {
   });
 
   describe('provideWorkspaceSymbols', () => {
-    const provider = new FoamWorkspaceSymbolProvider(new FoamWorkspace());
-
     it('should return empty array when workspace is empty', () => {
       const provider = new FoamWorkspaceSymbolProvider(new FoamWorkspace());
 

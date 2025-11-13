@@ -6,6 +6,7 @@ import { default as markdownItFoamTags } from './tag-highlight';
 import { default as markdownItWikilinkNavigation } from './wikilink-navigation';
 import { default as markdownItRemoveLinkReferences } from './remove-wikilink-references';
 import { default as markdownItWikilinkEmbed } from './wikilink-embed';
+import { default as escapeWikilinkPipes } from './escape-wikilink-pipes';
 
 export default async function activate(
   context: vscode.ExtensionContext,
@@ -16,6 +17,7 @@ export default async function activate(
   return {
     extendMarkdownIt: (md: markdownit) => {
       return [
+        escapeWikilinkPipes,
         markdownItWikilinkEmbed,
         markdownItFoamTags,
         markdownItWikilinkNavigation,

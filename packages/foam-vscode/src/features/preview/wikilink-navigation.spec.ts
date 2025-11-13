@@ -5,6 +5,7 @@ import { createTestNote } from '../../test/test-utils';
 import { getUriInWorkspace } from '../../test/test-utils-vscode';
 import { default as markdownItWikilinkNavigation } from './wikilink-navigation';
 import { default as markdownItRemoveLinkReferences } from './remove-wikilink-references';
+import { default as escapeWikilinkPipes } from './escape-wikilink-pipes';
 
 describe('Link generation in preview', () => {
   const noteA = createTestNote({
@@ -23,6 +24,7 @@ describe('Link generation in preview', () => {
   const ws = new FoamWorkspace().set(noteA).set(noteB);
 
   const md = [
+    escapeWikilinkPipes,
     markdownItWikilinkNavigation,
     markdownItRemoveLinkReferences,
   ].reduce((acc, extension) => extension(acc, ws), MarkdownIt());
@@ -90,5 +92,72 @@ describe('Link generation in preview', () => {
     expect(md.render(`[[placeholder#sec2|this note]]`)).toEqual(
       `<p><a class='foam-placeholder-link' title="Link to non-existing resource" href="javascript:void(0);">this note</a></p>\n`
     );
+  });
+
+  describe('wikilinks with aliases in tables', () => {
+    it('generates a link with alias inside a table cell', () => {
+      const table = `| Week | Week again |
+| --- | --- |
+| [[note-a|W44]] | [[note-b|W45]] |`;
+      const result = md.render(table);
+
+      // Should contain proper links with aliases
+      expect(result).toContain(
+        `<a class='foam-note-link' title='${noteA.title}' href='/path/to/note-a.md' data-href='/path/to/note-a.md'>W44</a>`
+      );
+      expect(result).toContain(
+        `<a class='foam-note-link' title='${noteB.title}' href='/path2/to/note-b.md' data-href='/path2/to/note-b.md'>W45</a>`
+      );
+    });
+
+    it('generates a link with alias and section inside a table cell', () => {
+      const table = `| Week |
+| --- |
+| [[note-b#sec1|Week 1]] |`;
+      const result = md.render(table);
+
+      expect(result).toContain(
+        `<a class='foam-note-link' title='${noteB.title}#sec1' href='/path2/to/note-b.md#sec1' data-href='/path2/to/note-b.md#sec1'>Week 1</a>`
+      );
+    });
+
+    it('generates placeholder link with alias inside a table cell', () => {
+      const table = `| Week |
+| --- |
+| [[nonexistent|Placeholder]] |`;
+      const result = md.render(table);
+
+      expect(result).toContain(
+        `<a class='foam-placeholder-link' title="Link to non-existing resource" href="javascript:void(0);">Placeholder</a>`
+      );
+    });
+
+    it('handles multiple wikilinks with aliases in the same table row', () => {
+      const table = `| Col1 | Col2 | Col3 |
+| --- | --- | --- |
+| [[note-a|A]] | [[note-b|B]] | [[placeholder|P]] |`;
+      const result = md.render(table);
+
+      expect(result).toContain(
+        `<a class='foam-note-link' title='${noteA.title}' href='/path/to/note-a.md' data-href='/path/to/note-a.md'>A</a>`
+      );
+      expect(result).toContain(
+        `<a class='foam-note-link' title='${noteB.title}' href='/path2/to/note-b.md' data-href='/path2/to/note-b.md'>B</a>`
+      );
+      expect(result).toContain(
+        `<a class='foam-placeholder-link' title="Link to non-existing resource" href="javascript:void(0);">P</a>`
+      );
+    });
+
+    it('handles wikilinks without aliases in tables (should still work)', () => {
+      const table = `| Week |
+| --- |
+| [[note-a]] |`;
+      const result = md.render(table);
+
+      expect(result).toContain(
+        `<a class='foam-note-link' title='${noteA.title}' href='/path/to/note-a.md' data-href='/path/to/note-a.md'>${noteA.title}</a>`
+      );
+    });
   });
 });

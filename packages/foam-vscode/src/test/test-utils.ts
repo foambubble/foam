@@ -115,7 +115,7 @@ export const createTestTrainNote = (params: {
   uri: string;
   title?: string;
   definitions?: NoteLinkDefinition[];
-  links?: Array<{ slug: string } | { to: string }>;
+  links?: Array<{ slug: string; definitionUrl?: string } | { to: string }>;
   tags?: string[];
   aliases?: string[];
   text?: string;
@@ -133,7 +133,6 @@ export const createTestTrainNote = (params: {
   var note = createTestNote(params);
   var result = new TrainNote(phases);
   result.aliases = note.aliases;
-  result.definitions = note.definitions;
   result.links = note.links;
   result.properties = note.properties;
   result.sections = note.sections;

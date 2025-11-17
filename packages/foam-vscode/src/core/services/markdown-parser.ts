@@ -103,7 +103,6 @@ const resourceFactory = (uri: URI): Resource => {
     type: 'note',
     properties: {},
     title: '',
-    definitions: [],
     sections: [],
     tags: [],
     aliases: [],
@@ -115,7 +114,6 @@ function NoteParser(extraPlugins: ParserPlugin<Resource>[]) {
   const plugins = [
     titlePlugin,
     wikilinkPlugin,
-    definitionsPlugin,
     tagsPlugin,
     aliasesPlugin,
     sectionsPlugin,
@@ -131,7 +129,6 @@ function TrainNoteParser() {
   const plugins = [
     titlePlugin,
     wikilinkPlugin,
-    definitionsPlugin,
     tagsPlugin,
     aliasesPlugin,
     sectionsPlugin,

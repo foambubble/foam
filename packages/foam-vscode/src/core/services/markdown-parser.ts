@@ -30,7 +30,10 @@ export interface ParserPlugin<T> {
   onWillVisitTree?: (tree: Node, target: T) => void;
   onDidVisitTree?: (tree: Node, target: T) => void;
   onDidFindProperties?: (properties: any, target: T, node: Node) => void;
-  onDidCollectLocalDefinitions?(localDefinitions: NoteLinkDefinition[], target: T)
+  onDidCollectLocalDefinitions?(
+    localDefinitions: NoteLinkDefinition[],
+    target: T
+  );
 }
 
 type Checksum = string;
@@ -165,39 +168,64 @@ export class FoamParser<T> implements ResourceParser<T> {
     this.invokePluginHook('onWillParseMarkdown', uri, markdown);
     const tree = parser.parse(markdown);
     const target: T = this.factory(uri);
-    const localDefinitions: NoteLinkDefinition[] = this.visitTree(uri, tree, target, markdown);
+    const localDefinitions: NoteLinkDefinition[] = this.visitTree(
+      uri,
+      tree,
+      target,
+      markdown
+    );
 
-    this.invokePluginHook('onDidCollectLocalDefinitions', uri, localDefinitions, target);
+    this.invokePluginHook(
+      'onDidCollectLocalDefinitions',
+      uri,
+      localDefinitions,
+      target
+    );
 
     Logger.debug('Result:', target);
     return target;
   }
 
-  private visitTree(uri: URI, tree, target: T, markdown: string): NoteLinkDefinition[] {
-    const localDefinitions: NoteLinkDefinition[] = [];
+  private visitTree(
+    uri: URI,
+    tree,
+    target: T,
+    markdown: string
+  ): NoteLinkDefinition[] {
+    let localDefinitions: NoteLinkDefinition[] = [];
     this.invokePluginHook('onWillVisitTree', uri, tree, target);
 
     visit(tree, node => {
-      
-      if (node.type === 'yaml') {
-        try {
-          this.parseProperties(node, uri, target);
-        } catch (e) {
-          Logger.warn(`Error while parsing YAML for [${uri.toString()}]`, e);
-        }
-      }
-
-      if (node.type === 'definition') {
-          localDefinitions.push({
-            label: (node as any).label,
-            url: (node as any).url,
-            title: (node as any).title,
-            range: astPositionToFoamRange(node.position!),
-          });
-        }
+      this.checkYaml(node, uri, target);
+      localDefinitions = this.checkDefinition(node);
       this.invokePluginHook('visit', uri, node, target, markdown);
     });
+
     this.invokePluginHook('onDidVisitTree', uri, tree, target);
+    return localDefinitions;
+  }
+
+  private checkYaml(node, uri: URI, target: T) {
+    if (node.type === 'yaml') {
+      try {
+        this.parseProperties(node, uri, target);
+      } catch (e) {
+        Logger.warn(`Error while parsing YAML for [${uri.toString()}]`, e);
+      }
+    }
+  }
+
+  private checkDefinition(node) {
+    const localDefinitions: NoteLinkDefinition[] = [];
+    if (node.type === 'definition') {
+      localDefinitions.push({
+        label: (node as any).label,
+        url: (node as any).url,
+        title: (node as any).title,
+        range: astPositionToFoamRange(node.position!),
+      });
+    }
+
     return localDefinitions;
   }
 
@@ -531,7 +559,7 @@ export const wikilinkPlugin: ParserPlugin<Resource> = {
       link =>
         link.type === 'wikilink' || !ResourceLink.isUnresolvedReference(link)
     );
-  }
+  },
 };
 
 export const propertiesPlugin: ParserPlugin<Resource> = {

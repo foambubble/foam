@@ -7,7 +7,7 @@ import { Range } from '../core/model/range';
 import { URI } from '../core/model/uri';
 import { FoamWorkspace } from '../core/model/workspace';
 import { MarkdownResourceProvider } from '../core/services/markdown-provider';
-import { Resource } from '../core/model/note';
+import { NoteLinkDefinition, Resource } from '../core/model/note';
 import { createMarkdownParser } from '../core/services/markdown-parser';
 import { TrainNote } from '../core/model/train-note';
 import { Phase, Phases } from '../core/model/phase';

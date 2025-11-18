@@ -1,5 +1,3 @@
-import { ConsoleWriter } from '../services/Writer/console-writer';
-import { WriteObserver } from '../utils/observer';
 import { Phase, Phases } from './phase';
 import { TrainNote, TrainNoteStepper } from './train-note';
 

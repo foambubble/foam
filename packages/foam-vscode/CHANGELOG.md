@@ -4,6 +4,17 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## 0.29.1
+
+Fixes and Improvements:
+
+- Load graph in code server (#1400)
+- Don't treat text in single brackets as links/placeholders if missing a ref (#1545, #1546)
+- Added option to show graph on startup (#1542)
+- Added include patterns for Foam notes (#1550, #1422)
+- Added support for emoji variants in tags (#1536, #1549)
+- Added support for wikilink with aliases within tables (#1544, #1552)
+
 ## 0.29.0
 
 Fixes and Improvements:

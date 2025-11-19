@@ -1,9 +1,10 @@
 # Foam for VSCode
 
-[![Version](https://img.shields.io/visual-studio-marketplace/v/foam.foam-vscode)](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode)
-[![Downloads](https://img.shields.io/visual-studio-marketplace/d/foam.foam-vscode)](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode)
-[![Visual Studio Marketplace Installs](https://img.shields.io/visual-studio-marketplace/i/foam.foam-vscode?label=VS%20Code%20Installs)](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode)
-[![Ratings](https://img.shields.io/visual-studio-marketplace/r/foam.foam-vscode)](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode)
+[![Version](https://img.shields.io/visual-studio-marketplace/v/foam.foam-vscode?cacheSeconds=3600)](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode)
+[![Downloads](https://img.shields.io/visual-studio-marketplace/d/foam.foam-vscode?cacheSeconds=3600)](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode)
+[![Visual Studio Marketplace Installs](https://img.shields.io/visual-studio-marketplace/i/foam.foam-vscode?label=VS%20Code%20Installs&cacheSeconds=3600)](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode)
+[![Ratings](https://img.shields.io/visual-studio-marketplace/r/foam.foam-vscode?cacheSeconds=3600)](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode)
+[![Discord Chat](https://img.shields.io/discord/729975036148056075?color=748AD9&label=discord%20chat&style=flat-square)](https://foambubble.github.io/join-discord/g)
 
 > You can join the Foam Community on the [Foam Discord](https://foambubble.github.io/join-discord/e)
 

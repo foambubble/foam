@@ -1,6 +1,6 @@
 # Sync notes with source control
 
-Source control is a way to precicely manage the history and content of a directory of files.
+Source control is a way to precisely manage the history and content of a directory of files.
 Often used for program code, this feature is very useful for note taking as well.
 
 There are (too) many ways to commit your changes to source control:

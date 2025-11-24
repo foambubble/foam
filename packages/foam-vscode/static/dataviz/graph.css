@@ -2,14 +2,6 @@ body {
   overflow: hidden;
 }
 
-.dg .c {
-  width: 10%;
-}
-
-.dg .property-name {
-  width: 90%;
-}
-
 .vscode-light .dg.main.taller-than-window .close-button {
 border-top: 1px solid #ddd;
 }

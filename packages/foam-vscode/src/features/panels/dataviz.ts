@@ -11,12 +11,23 @@ export default async function activate(
 ) {
   let panel: vscode.WebviewPanel | undefined = undefined;
   vscode.workspace.onDidChangeConfiguration(event => {
-    if (event.affectsConfiguration('foam.graph.style')) {
-      const style = getGraphStyle();
-      panel.webview.postMessage({
-        type: 'didUpdateStyle',
-        payload: style,
-      });
+    if (panel) {
+      if (event.affectsConfiguration('foam.graph.style')) {
+        const style = getGraphStyle();
+        panel.webview.postMessage({
+          type: 'didUpdateStyle',
+          payload: style,
+        });
+      }
+      if (event.affectsConfiguration('foam.graph.nodeFontSizeMultiplier')) {
+        const fontSizeMultiplier = vscode.workspace
+          .getConfiguration('foam.graph')
+          .get('nodeFontSizeMultiplier');
+        panel.webview.postMessage({
+          type: 'didUpdateNodeFontSizeMultiplier',
+          payload: fontSizeMultiplier,
+        });
+      }
     }
   });
 
@@ -138,6 +149,13 @@ async function createGraphPanel(
           panel.webview.postMessage({
             type: 'didUpdateStyle',
             payload: styles,
+          });
+          const fontSizeMultiplier = vscode.workspace
+            .getConfiguration('foam.graph')
+            .get('nodeFontSizeMultiplier');
+          panel.webview.postMessage({
+            type: 'didUpdateNodeFontSizeMultiplier',
+            payload: fontSizeMultiplier,
           });
           updateGraph(panel, foam);
           break;

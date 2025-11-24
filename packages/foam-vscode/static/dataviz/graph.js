@@ -4,6 +4,39 @@ const initGUI = () => {
   const gui = new dat.gui.GUI();
   const nodeTypeFilterFolder = gui.addFolder('Filter by type');
   const nodeTypeFilterControllers = new Map();
+  const forcesFolder = gui.addFolder('Forces');
+
+  forcesFolder
+    .add(model.forces, 'collide', 0, 4)
+    .step(0.1)
+    .name('Collide Force')
+    .onFinishChange(v => {
+      graph.d3Force('collide').radius(graph.nodeRelSize() * v);
+      graph.d3ReheatSimulation();
+    });
+  forcesFolder
+    .add(model.forces, 'repel', 0, 200)
+    .name('Repel Force')
+    .onFinishChange(v => {
+      model.forces.charge = -v;
+      graph.d3Force('charge').strength(-v);
+      graph.d3ReheatSimulation();
+    });
+  forcesFolder
+    .add(model.forces, 'link', 0, 100)
+    .step(1)
+    .name('Link Distance')
+    .onFinishChange(v => {
+      graph.d3Force('link').distance(v);
+      graph.d3ReheatSimulation();
+    });
+  forcesFolder
+    .add(model.forces, 'velocityDecay', 0, 1)
+    .step(0.01)
+    .name('Velocity Decay')
+    .onChange(v => {
+      graph.d3VelocityDecay(1 - v);
+    });
 
   return {
     /**
@@ -90,6 +123,13 @@ let model = {
     attachment: false,
     note: true,
     tag: true,
+  },
+  forces: {
+    collide: 2,
+    repel: 30,
+    charge: -30,
+    link: 30,
+    velocityDecay: 0.4,
   },
 };
 
@@ -200,7 +240,13 @@ function initDataviz(channel) {
     .linkHoverPrecision(8)
     .d3Force('x', d3.forceX())
     .d3Force('y', d3.forceY())
-    .d3Force('collide', d3.forceCollide(graph.nodeRelSize()))
+    .d3Force(
+      'collide',
+      d3.forceCollide(graph.nodeRelSize() * model.forces.collide)
+    )
+    .d3Force('charge', d3.forceManyBody().strength(model.forces.charge))
+    .d3Force('link', d3.forceLink(model.data.links).distance(model.forces.link))
+        .d3VelocityDecay(model.forces.velocityDecay)
     .linkWidth(() => model.style.lineWidth)
     .linkDirectionalParticles(1)
     .linkDirectionalParticleWidth(link =>
@@ -239,6 +285,7 @@ function initDataviz(channel) {
           textColor
         );
     })
+
     .onRenderFramePost(ctx => {
       painter.paint(ctx);
     })
@@ -364,6 +411,7 @@ function updateForceGraphDataFromModel(m) {
 
   // annoying we need to call this function, but I haven't found a good workaround
   graph.graphData(m.data);
+  graph.d3Force('link').links(m.data.links);
 }
 
 const getNodeSize = d3

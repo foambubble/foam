@@ -14,8 +14,8 @@ const initGUI = () => {
       update(m => m);
     });
 
-  selectionFolder.add(model.selection, 'refocusSpeedSlider', 0, 3000).step(50).name('Refocus Speed').onChange(v => {
-    model.selection.refocusSpeed = 3000 - v;
+  selectionFolder.add(model.selection, 'refocusDurationSlider', 0, 3000).step(50).name('Refocus Duration').onChange(v => {
+    model.selection.refocusDuration = v;
   });
 
   selectionFolder.add(model.selection, 'disableRefocus').name('Disable Refocus');
@@ -112,8 +112,8 @@ let model = {
     neighborDepth: 1,
     disableRefocus: false,
     disableZoom: false,
-    refocusSpeed: 2000,
-    refocusSpeedSlider: 1000,
+    refocusDuration: 2000,
+    refocusDurationSlider: 1000,
   }
 };
 
@@ -612,7 +612,7 @@ try {
         const node = graph.graphData().nodes.find(node => node.id === noteId);
         if (node) {
           if (!model.selection.disableRefocus) {
-            graph.centerAt(node.x, node.y, model.selection.refocusSpeed);
+            graph.centerAt(node.x, node.y, model.selection.refocusDuration);
           }
           if (!model.selection.disableZoom) {
             graph.zoom(3, 300);

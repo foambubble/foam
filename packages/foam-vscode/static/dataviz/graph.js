@@ -391,7 +391,7 @@ const getNodeSize = d3
 
 const getNodeLabelOpacity = d3
   .scaleLinear()
-  .domain([model.textFade, model.textFade + 0.8])
+  .domain([1.2, 2])
   .range([0, 1])
   .clamp(true);
 

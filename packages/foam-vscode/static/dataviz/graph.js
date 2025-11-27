@@ -246,7 +246,7 @@ function initDataviz(channel) {
     )
     .d3Force('charge', d3.forceManyBody().strength(model.forces.charge))
     .d3Force('link', d3.forceLink(model.data.links).distance(model.forces.link))
-        .d3VelocityDecay(model.forces.velocityDecay)
+    .d3VelocityDecay(1 - model.forces.velocityDecay)
     .linkWidth(() => model.style.lineWidth)
     .linkDirectionalParticles(1)
     .linkDirectionalParticleWidth(link =>
@@ -285,7 +285,6 @@ function initDataviz(channel) {
           textColor
         );
     })
-
     .onRenderFramePost(ctx => {
       painter.paint(ctx);
     })

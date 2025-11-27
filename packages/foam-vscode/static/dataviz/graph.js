@@ -1,5 +1,6 @@
 const CONTAINER_ID = 'graph';
 
+let nodeFontSizeController = null;
 const initGUI = () => {
   const gui = new dat.gui.GUI();
   const nodeTypeFilterFolder = gui.addFolder('Filter by type');
@@ -15,7 +16,7 @@ const initGUI = () => {
       getNodeLabelOpacity.domain([invertedValue, invertedValue + 0.8]);
     });
 
-  appearanceFolder
+  nodeFontSizeController = appearanceFolder
     .add(model, 'nodeFontSizeMultiplier', 0.5, 3)
     .step(0.1)
     .name('Node Font Size');
@@ -598,8 +599,8 @@ try {
         const multiplier = message.payload;
         if (typeof multiplier === 'number') {
           model.nodeFontSizeMultiplier = multiplier;
-          for (const controller of gui.__controllers) {
-            controller.updateDisplay();
+          if (nodeFontSizeController) {
+            nodeFontSizeController.updateDisplay();
           }
         }
         break;

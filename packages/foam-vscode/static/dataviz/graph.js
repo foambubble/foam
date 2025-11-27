@@ -18,8 +18,8 @@ const initGUI = () => {
     model.selection.refocusDuration = v;
   });
 
-  selectionFolder.add(model.selection, 'disableRefocus').name('Disable Refocus');
-  selectionFolder.add(model.selection, 'disableZoom').name('Disable Zoom');
+  selectionFolder.add(model.selection, 'enableRefocus').name('Refocus Enable');
+  selectionFolder.add(model.selection, 'enableZoom').name('Zoom Enable');
 
   return {
     /**
@@ -110,8 +110,8 @@ let model = {
 
   selection: {
     neighborDepth: 1,
-    disableRefocus: false,
-    disableZoom: false,
+    enableRefocus: true,
+    enableZoom: true,
     refocusDuration: 2000,
     refocusDurationSlider: 1000,
   }
@@ -611,10 +611,10 @@ try {
         const noteId = message.payload;
         const node = graph.graphData().nodes.find(node => node.id === noteId);
         if (node) {
-          if (!model.selection.disableRefocus) {
+          if (model.selection.enableRefocus) {
             graph.centerAt(node.x, node.y, model.selection.refocusDuration);
           }
-          if (!model.selection.disableZoom) {
+          if (model.selection.enableZoom) {
             graph.zoom(3, 300);
           }
           Actions.selectNode(noteId);

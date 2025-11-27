@@ -19,15 +19,6 @@ export default async function activate(
           payload: style,
         });
       }
-      if (event.affectsConfiguration('foam.graph.nodeFontSizeMultiplier')) {
-        const fontSizeMultiplier = vscode.workspace
-          .getConfiguration('foam.graph')
-          .get('nodeFontSizeMultiplier');
-        panel.webview.postMessage({
-          type: 'didUpdateNodeFontSizeMultiplier',
-          payload: fontSizeMultiplier,
-        });
-      }
     }
   });
 
@@ -149,13 +140,6 @@ async function createGraphPanel(
           panel.webview.postMessage({
             type: 'didUpdateStyle',
             payload: styles,
-          });
-          const fontSizeMultiplier = vscode.workspace
-            .getConfiguration('foam.graph')
-            .get('nodeFontSizeMultiplier');
-          panel.webview.postMessage({
-            type: 'didUpdateNodeFontSizeMultiplier',
-            payload: fontSizeMultiplier,
           });
           updateGraph(panel, foam);
           break;

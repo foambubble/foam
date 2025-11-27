@@ -723,12 +723,8 @@
           "type": "boolean",
           "default": false,
           "description": "Whether to open the graph on startup."
-        },
-        "foam.graph.nodeFontSizeMultiplier": {
-          "type": "number",
-          "default": 1,
-          "description": "A multiplier for the font size of the nodes in the graph."
         }
+
       }
     },
     "keybindings": [

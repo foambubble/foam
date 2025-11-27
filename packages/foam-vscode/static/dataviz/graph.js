@@ -14,10 +14,6 @@ const initGUI = () => {
       update(m => m);
     });
 
-  selectionFolder.add(model.selection, 'refocusDurationSlider', 0, 3000).step(50).name('Refocus Duration').onChange(v => {
-    model.selection.refocusDuration = v;
-  });
-
   selectionFolder.add(model.selection, 'enableRefocus').name('Refocus Enable');
   selectionFolder.add(model.selection, 'enableZoom').name('Zoom Enable');
 
@@ -112,8 +108,6 @@ let model = {
     neighborDepth: 1,
     enableRefocus: true,
     enableZoom: true,
-    refocusDuration: 2000,
-    refocusDurationSlider: 1000,
   }
 };
 
@@ -129,6 +123,10 @@ function getNeighbors(nodeId, depth) {
         for (const n of model.graph.nodeInfo[neighborId].neighbors) {
           newNeighbors.add(n);
         }
+      } else {
+        // Node is missing from nodeInfo (e.g., has been deleted). Skipping.
+        // This may make debugging difficult if nodes are unexpectedly missing from highlights.
+        console.debug(`getNeighbors: node '${neighborId}' not found in nodeInfo, skipping.`);
       }
     }
     for (const newNeighbor of newNeighbors) {
@@ -612,7 +610,7 @@ try {
         const node = graph.graphData().nodes.find(node => node.id === noteId);
         if (node) {
           if (model.selection.enableRefocus) {
-            graph.centerAt(node.x, node.y, model.selection.refocusDuration);
+            graph.centerAt(node.x, node.y, 300);
           }
           if (model.selection.enableZoom) {
             graph.zoom(3, 300);

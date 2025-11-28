@@ -11,14 +11,12 @@ export default async function activate(
 ) {
   let panel: vscode.WebviewPanel | undefined = undefined;
   vscode.workspace.onDidChangeConfiguration(event => {
-    if (panel) {
-      if (event.affectsConfiguration('foam.graph.style')) {
-        const style = getGraphStyle();
-        panel.webview.postMessage({
-          type: 'didUpdateStyle',
-          payload: style,
-        });
-      }
+    if (event.affectsConfiguration('foam.graph.style')) {
+      const style = getGraphStyle();
+      panel.webview.postMessage({
+        type: 'didUpdateStyle',
+        payload: style,
+      });
     }
   });
 

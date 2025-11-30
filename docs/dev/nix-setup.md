@@ -122,7 +122,7 @@ Solution:
 Install and run xvfb (X virtual framebuffer) in your NixOS VM:`
 
 ```bash
-nix-shell -p xvfb
+nix-shell -p xvfb-run
 xvfb-run <command>
 ```
 

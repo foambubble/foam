@@ -4,6 +4,18 @@ const initGUI = () => {
   const gui = new dat.gui.GUI();
   const nodeTypeFilterFolder = gui.addFolder('Filter by type');
   const nodeTypeFilterControllers = new Map();
+  const selectionFolder = gui.addFolder('Selection');
+
+  selectionFolder
+    .add(model.selection, 'neighborDepth', 1, 5)
+    .step(1)
+    .name('Neighbor Depth')
+    .onFinishChange(() => {
+      update(m => m);
+    });
+
+  selectionFolder.add(model.selection, 'enableRefocus').name('Refocus Enable');
+  selectionFolder.add(model.selection, 'enableZoom').name('Zoom Enable');
 
   return {
     /**
@@ -91,10 +103,38 @@ let model = {
     note: true,
     tag: true,
   },
+
+  selection: {
+    neighborDepth: 1,
+    enableRefocus: true,
+    enableZoom: true,
+  }
 };
 
 const graph = ForceGraph();
 const gui = initGUI();
+
+function getNeighbors(nodeId, depth) {
+  let neighbors = new Set([nodeId]);
+  for (let i = 0; i < depth; i++) {
+    let newNeighbors = new Set();
+    for (const neighborId of neighbors) {
+      if (model.graph.nodeInfo[neighborId]) {
+        for (const n of model.graph.nodeInfo[neighborId].neighbors) {
+          newNeighbors.add(n);
+        }
+      } else {
+        // Node is missing from nodeInfo (e.g., has been deleted). Skipping.
+        // This may make debugging difficult if nodes are unexpectedly missing from highlights.
+        console.debug(`getNeighbors: node '${neighborId}' not found in nodeInfo, skipping.`);
+      }
+    }
+    for (const newNeighbor of newNeighbors) {
+      neighbors.add(newNeighbor);
+    }
+  }
+  return neighbors;
+}
 
 function update(patch) {
   const startTime = performance.now();
@@ -105,20 +145,20 @@ function update(patch) {
   // compute highlighted elements
   const focusNodes = new Set();
   const focusLinks = new Set();
-  if (model.hoverNode) {
-    focusNodes.add(model.hoverNode);
-    const info = model.graph.nodeInfo[model.hoverNode];
-    info.neighbors.forEach(neighborId => focusNodes.add(neighborId));
-    info.links.forEach(link => focusLinks.add(link));
-  }
-  if (model.selectedNodes) {
-    model.selectedNodes.forEach(nodeId => {
-      focusNodes.add(nodeId);
-      const info = model.graph.nodeInfo[nodeId];
-      info.neighbors.forEach(neighborId => focusNodes.add(neighborId));
-      info.links.forEach(link => focusLinks.add(link));
-    });
-  }
+
+  const nodesToProcess = new Set([...model.selectedNodes, model.hoverNode].filter(Boolean));
+
+  nodesToProcess.forEach(nodeId => {
+    const neighbors = getNeighbors(nodeId, model.selection.neighborDepth);
+    neighbors.forEach(neighbor => focusNodes.add(neighbor));
+  });
+
+  model.graph.links.forEach(link => {
+    if (focusNodes.has(getLinkNodeId(link.source)) && focusNodes.has(getLinkNodeId(link.target))) {
+      focusLinks.add(link);
+    }
+  });
+
   model.focusNodes = focusNodes;
   model.focusLinks = focusLinks;
 
@@ -569,7 +609,12 @@ try {
         const noteId = message.payload;
         const node = graph.graphData().nodes.find(node => node.id === noteId);
         if (node) {
-          graph.centerAt(node.x, node.y, 300).zoom(3, 300);
+          if (model.selection.enableRefocus) {
+            graph.centerAt(node.x, node.y, 300);
+          }
+          if (model.selection.enableZoom) {
+            graph.zoom(3, 300);
+          }
           Actions.selectNode(noteId);
         }
         break;

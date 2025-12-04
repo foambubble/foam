@@ -1,14 +1,10 @@
 body {
   overflow: hidden;
 }
-
-.dg .c {
-  width: 10%;
-}
-
-.dg .property-name {
-  width: 90%;
-}
+/* 
+ [INFO] Custom width rules for dat.GUI controls (10% for controls, 90% for labels) were intentionally removed.
+ This change was made to better accommodate new sliders, and to use dat.GUI's default proportions, which allocate more space to controls. If you notice any display issues (especially with type filter checkboxes), please verify in both light and dark VS Code themes.
+*/
 
 .vscode-light .dg.main.taller-than-window .close-button {
 border-top: 1px solid #ddd;

@@ -139,6 +139,7 @@ async function createGraphPanel(
             type: 'didUpdateStyle',
             payload: styles,
           });
+
           updateGraph(panel, foam);
           break;
         }

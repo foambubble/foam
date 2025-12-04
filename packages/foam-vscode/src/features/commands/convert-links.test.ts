@@ -176,7 +176,11 @@ describe('Link Conversion Functions', () => {
         documentText,
         documentUri,
         linkPosition,
-        workspace,
+        {
+          resolveLink: workspace.resolveLink,
+          get: workspace.get,
+          getIdentifier: workspace.getTrieIdentifier().getIdentifier,
+        },
         parser
       );
 
@@ -199,7 +203,11 @@ describe('Link Conversion Functions', () => {
         documentText,
         documentUri,
         linkPosition,
-        workspace,
+        {
+          resolveLink: workspace.resolveLink,
+          get: workspace.get,
+          getIdentifier: workspace.getTrieIdentifier().getIdentifier,
+        },
         parser
       );
 
@@ -222,7 +230,11 @@ describe('Link Conversion Functions', () => {
         documentText,
         documentUri,
         linkPosition,
-        workspace,
+        {
+          resolveLink: workspace.resolveLink,
+          get: workspace.get,
+          getIdentifier: workspace.getTrieIdentifier().getIdentifier,
+        },
         parser
       );
 
@@ -242,7 +254,11 @@ describe('Link Conversion Functions', () => {
         documentText,
         documentUri,
         linkPosition,
-        workspace,
+        {
+          resolveLink: workspace.resolveLink,
+          get: workspace.get,
+          getIdentifier: workspace.getTrieIdentifier().getIdentifier,
+        },
         parser
       );
 
@@ -262,7 +278,11 @@ describe('Link Conversion Functions', () => {
           documentText,
           documentUri,
           linkPosition,
-          workspace,
+          {
+            resolveLink: workspace.resolveLink,
+            get: workspace.get,
+            getIdentifier: workspace.getTrieIdentifier().getIdentifier,
+          },
           parser
         );
       }).toThrow('Resource not found: /test/nonexistent.md');

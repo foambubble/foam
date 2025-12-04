@@ -1,7 +1,8 @@
-import { FoamWorkspace } from './workspace';
-import { Logger } from '../utils/log';
-import { URI } from './uri';
-import { createTestNote, createTestWorkspace } from '../../test/test-utils';
+import { FoamWorkspace } from './foamWorkspace';
+import { Logger } from '../../utils/log';
+import { URI } from '.././uri';
+import { createTestNote, createTestWorkspace } from '../../../test/test-utils';
+import { TrieIdentifier } from './workspace';
 
 Logger.setLevel('error');
 
@@ -57,7 +58,7 @@ describe('Workspace resources', () => {
     const ws = createTestWorkspace()
       .set(createTestNote({ uri: 'test-file.md' }))
       .set(createTestNote({ uri: 'file.md' }));
-    expect(ws.listByIdentifier('file').length).toEqual(1);
+    expect(ws.getTrieIdentifier().listByIdentifier('file').length).toEqual(1);
   });
 
   it('should support dendron-style names', () => {
@@ -74,7 +75,9 @@ describe('Workspace resources', () => {
       ['note.pdf', '/note.pdf'],
       ['note2', '/note2.md'],
     ]) {
-      expect(ws.listByIdentifier(reference)[0].uri.path).toEqual(path);
+      expect(
+        ws.getTrieIdentifier().listByIdentifier(reference)[0].uri.path
+      ).toEqual(path);
       expect(ws.find(reference).uri.path).toEqual(path);
     }
   });
@@ -109,9 +112,15 @@ describe('Identifier computation', () => {
     });
     const ws = new FoamWorkspace('.md').set(first).set(second).set(third);
 
-    expect(ws.getIdentifier(first.uri)).toEqual('to/page-a');
-    expect(ws.getIdentifier(second.uri)).toEqual('way/for/page-a');
-    expect(ws.getIdentifier(third.uri)).toEqual('path/for/page-a');
+    expect(ws.getTrieIdentifier().getIdentifier(first.uri)).toEqual(
+      'to/page-a'
+    );
+    expect(ws.getTrieIdentifier().getIdentifier(second.uri)).toEqual(
+      'way/for/page-a'
+    );
+    expect(ws.getTrieIdentifier().getIdentifier(third.uri)).toEqual(
+      'path/for/page-a'
+    );
   });
 
   it('should support sections in identifier computation', () => {
@@ -127,7 +136,9 @@ describe('Identifier computation', () => {
     const ws = new FoamWorkspace('.md').set(first).set(second).set(third);
 
     expect(
-      ws.getIdentifier(first.uri.with({ fragment: 'section name' }))
+      ws
+        .getTrieIdentifier()
+        .getIdentifier(first.uri.with({ fragment: 'section name' }))
     ).toEqual('to/page-a#section name');
   });
 
@@ -138,7 +149,7 @@ describe('Identifier computation', () => {
     [['/family/car/todo', '/other/todo'], 'project/car/todo'],
     [[], 'todo'],
   ])('should find shortest identifier', (haystack, id) => {
-    expect(FoamWorkspace.getShortestIdentifier(needle, haystack)).toEqual(id);
+    expect(TrieIdentifier.getShortest(needle, haystack)).toEqual(id);
   });
 
   it('should ignore same string in haystack', () => {
@@ -148,7 +159,7 @@ describe('Identifier computation', () => {
       '/other/todo',
       '/something/else',
     ];
-    const identifier = FoamWorkspace.getShortestIdentifier(needle, haystack);
+    const identifier = TrieIdentifier.getShortest(needle, haystack);
     expect(identifier).toEqual('car/todo');
   });
 
@@ -165,7 +176,7 @@ describe('Identifier computation', () => {
       '/other/todo',
       '/something/else',
     ];
-    const identifier = FoamWorkspace.getShortestIdentifier(needle, haystack);
+    const identifier = TrieIdentifier.getShortest(needle, haystack);
     expect(identifier).toEqual('project/car/todo');
   });
 
@@ -178,9 +189,13 @@ describe('Identifier computation', () => {
     const noteABis = createTestNote({ uri: '/path/to/another/note-a.md' });
 
     workspace.set(noteA).set(noteB).set(noteC).set(noteD);
-    expect(workspace.getIdentifier(noteABis.uri)).toEqual('another/note-a');
+    expect(workspace.getTrieIdentifier().getIdentifier(noteABis.uri)).toEqual(
+      'another/note-a'
+    );
     expect(
-      workspace.getIdentifier(noteABis.uri, [noteB.uri, noteA.uri])
+      workspace
+        .getTrieIdentifier()
+        .getIdentifier(noteABis.uri, [noteB.uri, noteA.uri])
     ).toEqual('note-a');
   });
 
@@ -192,20 +207,24 @@ describe('Identifier computation', () => {
     workspace.set(noteUppercase).set(noteLowercase);
 
     // Should find exact case matches
-    expect(workspace.listByIdentifier('Note').length).toEqual(1);
-    expect(workspace.listByIdentifier('Note')[0].uri.path).toEqual(
-      '/a/Note.md'
-    );
+    expect(
+      workspace.getTrieIdentifier().listByIdentifier('Note').length
+    ).toEqual(1);
+    expect(
+      workspace.getTrieIdentifier().listByIdentifier('Note')[0].uri.path
+    ).toEqual('/a/Note.md');
 
-    expect(workspace.listByIdentifier('note').length).toEqual(1);
-    expect(workspace.listByIdentifier('note')[0].uri.path).toEqual(
-      '/b/note.md'
-    );
+    expect(
+      workspace.getTrieIdentifier().listByIdentifier('note').length
+    ).toEqual(1);
+    expect(
+      workspace.getTrieIdentifier().listByIdentifier('note')[0].uri.path
+    ).toEqual('/b/note.md');
 
     // Should not treat them as the same identifier
-    expect(workspace.listByIdentifier('Note')[0]).not.toEqual(
-      workspace.listByIdentifier('note')[0]
-    );
+    expect(
+      workspace.getTrieIdentifier().listByIdentifier('Note')[0]
+    ).not.toEqual(workspace.getTrieIdentifier().listByIdentifier('note')[0]);
   });
 
   it('should generate correct identifiers for case-sensitive files', () => {
@@ -217,7 +236,11 @@ describe('Identifier computation', () => {
 
     // Each should have a unique identifier without directory disambiguation
     // since they differ by case, they are not considered conflicting
-    expect(workspace.getIdentifier(noteUppercase.uri)).toEqual('Note');
-    expect(workspace.getIdentifier(noteLowercase.uri)).toEqual('note');
+    expect(
+      workspace.getTrieIdentifier().getIdentifier(noteUppercase.uri)
+    ).toEqual('Note');
+    expect(
+      workspace.getTrieIdentifier().getIdentifier(noteLowercase.uri)
+    ).toEqual('note');
   });
 });

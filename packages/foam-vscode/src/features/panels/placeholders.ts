@@ -15,7 +15,7 @@ import { IMatcher } from '../../core/services/datastore';
 import { ContextMemento, fromVsCodeUri } from '../../utils/vsc-utils';
 import { FoamGraph } from '../../core/model/graph';
 import { URI } from '../../core/model/uri';
-import { FoamWorkspace } from '../../core/model/workspace';
+import { FoamWorkspace } from '../../core/model/workspace/foamWorkspace';
 import { FolderTreeItem } from './utils/folder-tree-provider';
 import { getIncludeFilesSetting } from '../../settings';
 

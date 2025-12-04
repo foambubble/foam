@@ -1,7 +1,7 @@
 import { debounce } from 'lodash';
 import { ResourceLink } from './note';
 import { URI } from './uri';
-import { FoamWorkspace } from './workspace';
+import { FoamWorkspace } from './workspace/foamWorkspace';
 import { IDisposable } from '../common/lifecycle';
 import { Logger } from '../utils/log';
 import { Emitter } from '../common/event';

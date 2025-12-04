@@ -4,7 +4,7 @@
 import { readFileSync } from 'fs';
 import { workspace as vsWorkspace } from 'vscode';
 import markdownItRegex from 'markdown-it-regex';
-import { FoamWorkspace } from '../../core/model/workspace';
+import { FoamWorkspace } from '../../core/model/workspace/foamWorkspace';
 import { Logger } from '../../core/utils/log';
 import { Resource, ResourceParser } from '../../core/model/note';
 import { getFoamVsCodeConfig } from '../../services/config';

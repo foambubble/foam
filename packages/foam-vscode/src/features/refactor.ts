@@ -33,10 +33,9 @@ export default async function activate(
           const { target } = MarkdownLink.analyzeLink(connection.link);
           switch (connection.link.type) {
             case 'wikilink': {
-              const identifier = foam.workspace.getIdentifier(
-                fromVsCodeUri(newUri),
-                [fromVsCodeUri(oldUri)]
-              );
+              const identifier = foam.workspace
+                .getTrieIdentifier()
+                .getIdentifier(fromVsCodeUri(newUri), [fromVsCodeUri(oldUri)]);
               const edit = MarkdownLink.createUpdateLinkEdit(connection.link, {
                 target: identifier,
               });

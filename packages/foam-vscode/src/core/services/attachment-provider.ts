@@ -1,6 +1,6 @@
 import { Resource, ResourceLink } from '../model/note';
 import { URI } from '../model/uri';
-import { FoamWorkspace } from '../model/workspace';
+import { FoamWorkspace } from '../model/workspace/foamWorkspace';
 import { IDisposable } from '../common/lifecycle';
 import { ResourceProvider } from '../model/provider';
 

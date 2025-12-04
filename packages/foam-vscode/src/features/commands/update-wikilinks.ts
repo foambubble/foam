@@ -13,7 +13,7 @@ import {
 } from 'vscode';
 import { isMdEditor, getFoamDocSelectors } from '../../services/editor';
 import { Foam } from '../../core/model/foam';
-import { FoamWorkspace } from '../../core/model/workspace';
+import { FoamWorkspace } from '../../core/model/workspace/foamWorkspace';
 import {
   LINK_REFERENCE_DEFINITION_FOOTER,
   LINK_REFERENCE_DEFINITION_HEADER,

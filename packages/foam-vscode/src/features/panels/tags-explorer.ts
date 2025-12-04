@@ -1,7 +1,7 @@
 import { URI } from '../../core/model/uri';
 import * as vscode from 'vscode';
 import { Foam } from '../../core/model/foam';
-import { FoamWorkspace } from '../../core/model/workspace';
+import { FoamWorkspace } from '../../core/model/workspace/foamWorkspace';
 import { FoamTags } from '../../core/model/tags';
 import {
   ResourceRangeTreeItem,

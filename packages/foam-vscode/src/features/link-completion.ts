@@ -3,7 +3,7 @@ import { Foam } from '../core/model/foam';
 import { FoamGraph } from '../core/model/graph';
 import { Resource } from '../core/model/note';
 import { URI } from '../core/model/uri';
-import { FoamWorkspace } from '../core/model/workspace';
+import { FoamWorkspace } from '../core/model/workspace/foamWorkspace';
 import { getFoamVsCodeConfig } from '../services/config';
 import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
 import { getNoteTooltip, getFoamDocSelectors } from '../services/editor';
@@ -186,7 +186,9 @@ export class WikilinkCompletionProvider
       const resourceIsDocument =
         ['attachment', 'image'].indexOf(resource.type) === -1;
 
-      const identifier = this.ws.getIdentifier(resource.uri);
+      const identifier = this.ws
+        .getTrieIdentifier()
+        .getIdentifier(resource.uri);
 
       const label = !resourceIsDocument
         ? identifier
@@ -235,7 +237,9 @@ export class WikilinkCompletionProvider
           resource.uri
         );
 
-        const identifier = this.ws.getIdentifier(resource.uri);
+        const identifier = this.ws
+          .getTrieIdentifier()
+          .getIdentifier(resource.uri);
 
         item.insertText = `${identifier}|${a.title}`;
         // When using markdown link format, don't allow commit characters

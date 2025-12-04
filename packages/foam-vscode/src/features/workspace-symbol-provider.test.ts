@@ -1,5 +1,5 @@
 import { FoamWorkspaceSymbolProvider } from './workspace-symbol-provider';
-import { FoamWorkspace } from '../core/model/workspace';
+import { FoamWorkspace } from '../core/model/workspace/foamWorkspace';
 import { Resource } from '../core/model/note';
 import { URI } from '../core/model/uri';
 import { Range } from '../core/model/range';

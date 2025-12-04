@@ -2,7 +2,7 @@
 
 import markdownItRegex from 'markdown-it-regex';
 import { ResourceParser } from '../../core/model/note';
-import { FoamWorkspace } from '../../core/model/workspace';
+import { FoamWorkspace } from '../../core/model/workspace/foamWorkspace';
 
 export const WIKILINK_EMBED_REGEX =
   /((?:(?:full|content)-(?:inline|card)|full|content|inline|card)?!\[\[[^[\]]+?\]\])/;

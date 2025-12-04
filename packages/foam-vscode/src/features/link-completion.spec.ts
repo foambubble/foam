@@ -162,7 +162,7 @@ describe('Link Completion', () => {
         );
 
         expect(links.items.map(i => i.label)).toEqual([
-          workspace.getIdentifier(noteUri),
+          workspace.getTrieIdentifier().getIdentifier(noteUri),
         ]);
       }
     );
@@ -190,7 +190,7 @@ describe('Link Completion', () => {
         );
 
         expect(links.items.map(i => i.insertText)).toEqual([
-          workspace.getIdentifier(noteUri),
+          workspace.getTrieIdentifier().getIdentifier(noteUri),
         ]);
       }
     );
@@ -205,7 +205,9 @@ describe('Link Completion', () => {
         );
 
         expect(links.items.map(i => i.insertText)).toEqual([
-          `${workspace.getIdentifier(noteUri)}|My Note Title`,
+          `${workspace
+            .getTrieIdentifier()
+            .getIdentifier(noteUri)}|My Note Title`,
         ]);
       }
     );
@@ -312,7 +314,7 @@ alias: alias-a
 
             expect(links.items.length).toBe(1);
             expect(links.items[0].insertText).toBe(
-              workspace.getIdentifier(noteUri)
+              workspace.getTrieIdentifier().getIdentifier(noteUri)
             );
           }
         );
@@ -352,7 +354,9 @@ alias: alias-a
         // In test environment, the command converts wikilink to markdown after insertion
         // The insertText is the wikilink format, conversion happens via command
         // So we expect just the identifier (no alias because linkFormat === 'link')
-        expect(insertText).toBe(workspace.getIdentifier(noteUri));
+        expect(insertText).toBe(
+          workspace.getTrieIdentifier().getIdentifier(noteUri)
+        );
 
         // Commit characters should be empty when using conversion command
         expect(links.items[0].commitCharacters).toEqual([]);
@@ -398,7 +402,9 @@ alias: alias-a
 
             // When linkFormat is 'link', we don't use alias in insertText
             // The conversion command handles the title mapping
-            expect(insertText).toBe(workspace.getIdentifier(noteUri));
+            expect(insertText).toBe(
+              workspace.getTrieIdentifier().getIdentifier(noteUri)
+            );
             expect(links.items[0].commitCharacters).toEqual([]);
 
             // Verify command is attached for conversion

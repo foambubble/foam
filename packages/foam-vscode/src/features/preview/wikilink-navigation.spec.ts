@@ -1,6 +1,6 @@
 /* @unit-ready */
 import MarkdownIt from 'markdown-it';
-import { FoamWorkspace } from '../../core/model/workspace';
+import { FoamWorkspace } from '../../core/model/workspace/foamWorkspace';
 import { createTestNote } from '../../test/test-utils';
 import { getUriInWorkspace } from '../../test/test-utils-vscode';
 import { default as markdownItWikilinkNavigation } from './wikilink-navigation';

@@ -1,7 +1,7 @@
 import { IDisposable } from '../common/lifecycle';
 import { Resource, ResourceLink } from './note';
 import { URI } from './uri';
-import { FoamWorkspace } from './workspace';
+import { FoamWorkspace } from './workspace/foamWorkspace';
 
 export interface ResourceProvider extends IDisposable {
   supports: (uri: URI) => boolean;

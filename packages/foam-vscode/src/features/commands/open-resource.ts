@@ -7,7 +7,7 @@ import {
   FilterDescriptor,
 } from '../../core/services/resource-filter';
 import { CommandDescriptor } from '../../utils/commands';
-import { FoamWorkspace } from '../../core/model/workspace';
+import { FoamWorkspace } from '../../core/model/workspace/foamWorkspace';
 import { Resource } from '../../core/model/note';
 import { isNone } from '../../core/utils';
 

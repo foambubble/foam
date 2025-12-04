@@ -14,7 +14,7 @@ import {
   TextEdit as FoamTextEdit,
   WorkspaceTextEdit,
 } from '../core/services/text-edit';
-import { FoamWorkspace } from '../core/model/workspace';
+import { FoamWorkspace } from '../core/model/workspace/foamWorkspace';
 import { Logger } from '../core/utils/log';
 
 export const toVsCodePosition = (p: FoamPosition): Position =>

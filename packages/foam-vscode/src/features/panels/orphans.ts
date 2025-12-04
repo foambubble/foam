@@ -11,7 +11,7 @@ import {
 } from './utils/grouped-resources-tree-data-provider';
 import { ResourceTreeItem, UriTreeItem } from './utils/tree-view-utils';
 import { IMatcher } from '../../core/services/datastore';
-import { FoamWorkspace } from '../../core/model/workspace';
+import { FoamWorkspace } from '../../core/model/workspace/foamWorkspace';
 import { FoamGraph } from '../../core/model/graph';
 import { URI } from '../../core/model/uri';
 import { imageExtensions } from '../../core/services/attachment-provider';

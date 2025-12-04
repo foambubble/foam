@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { URI } from '../../core/model/uri';
 import { Foam } from '../../core/model/foam';
-import { FoamWorkspace } from '../../core/model/workspace';
+import { FoamWorkspace } from '../../core/model/workspace/foamWorkspace';
 import { Connection, FoamGraph } from '../../core/model/graph';
 import { Range } from '../../core/model/range';
 import { ContextMemento, fromVsCodeUri } from '../../utils/vsc-utils';

@@ -20,6 +20,51 @@ const initGUI = () => {
     .add(model, 'nodeFontSizeMultiplier', 0.5, 3)
     .step(0.1)
     .name('Node Font Size');
+  const forcesFolder = gui.addFolder('Forces');
+
+  forcesFolder
+    .add(model.forces, 'collide', 0, 4)
+    .step(0.1)
+    .name('Collide Force')
+    .onFinishChange(v => {
+      graph.d3Force('collide').radius(graph.nodeRelSize() * v);
+      graph.d3ReheatSimulation();
+    });
+  forcesFolder
+    .add(model.forces, 'repel', 0, 200)
+    .name('Repel Force')
+    .onFinishChange(v => {
+      model.forces.charge = -v;
+      graph.d3Force('charge').strength(-v);
+      graph.d3ReheatSimulation();
+    });
+  forcesFolder
+    .add(model.forces, 'link', 0, 100)
+    .step(1)
+    .name('Link Distance')
+    .onFinishChange(v => {
+      graph.d3Force('link').distance(v);
+      graph.d3ReheatSimulation();
+    });
+  forcesFolder
+    .add(model.forces, 'velocityDecay', 0, 1)
+    .step(0.01)
+    .name('Velocity Decay')
+    .onChange(v => {
+      graph.d3VelocityDecay(1 - v);
+    });
+  const selectionFolder = gui.addFolder('Selection');
+
+  selectionFolder
+    .add(model.selection, 'neighborDepth', 1, 5)
+    .step(1)
+    .name('Neighbor Depth')
+    .onFinishChange(() => {
+      update(m => m);
+    });
+
+  selectionFolder.add(model.selection, 'enableRefocus').name('Refocus Enable');
+  selectionFolder.add(model.selection, 'enableZoom').name('Zoom Enable');
 
   return {
     /**
@@ -109,10 +154,44 @@ let model = {
   },
   textFade: 1.2,
   nodeFontSizeMultiplier: 1,
+  forces: {
+    collide: 2,
+    repel: 30,
+    charge: -30,
+    link: 30,
+    velocityDecay: 0.4,
+  },
+  selection: {
+    neighborDepth: 1,
+    enableRefocus: true,
+    enableZoom: true,
+  }
 };
 
 const graph = ForceGraph();
 const gui = initGUI();
+
+function getNeighbors(nodeId, depth) {
+  let neighbors = new Set([nodeId]);
+  for (let i = 0; i < depth; i++) {
+    let newNeighbors = new Set();
+    for (const neighborId of neighbors) {
+      if (model.graph.nodeInfo[neighborId]) {
+        for (const n of model.graph.nodeInfo[neighborId].neighbors) {
+          newNeighbors.add(n);
+        }
+      } else {
+        // Node is missing from nodeInfo (e.g., has been deleted). Skipping.
+        // This may make debugging difficult if nodes are unexpectedly missing from highlights.
+        console.debug(`getNeighbors: node '${neighborId}' not found in nodeInfo, skipping.`);
+      }
+    }
+    for (const newNeighbor of newNeighbors) {
+      neighbors.add(newNeighbor);
+    }
+  }
+  return neighbors;
+}
 
 function update(patch) {
   const startTime = performance.now();
@@ -123,20 +202,20 @@ function update(patch) {
   // compute highlighted elements
   const focusNodes = new Set();
   const focusLinks = new Set();
-  if (model.hoverNode) {
-    focusNodes.add(model.hoverNode);
-    const info = model.graph.nodeInfo[model.hoverNode];
-    info.neighbors.forEach(neighborId => focusNodes.add(neighborId));
-    info.links.forEach(link => focusLinks.add(link));
-  }
-  if (model.selectedNodes) {
-    model.selectedNodes.forEach(nodeId => {
-      focusNodes.add(nodeId);
-      const info = model.graph.nodeInfo[nodeId];
-      info.neighbors.forEach(neighborId => focusNodes.add(neighborId));
-      info.links.forEach(link => focusLinks.add(link));
-    });
-  }
+
+  const nodesToProcess = new Set([...model.selectedNodes, model.hoverNode].filter(Boolean));
+
+  nodesToProcess.forEach(nodeId => {
+    const neighbors = getNeighbors(nodeId, model.selection.neighborDepth);
+    neighbors.forEach(neighbor => focusNodes.add(neighbor));
+  });
+
+  model.graph.links.forEach(link => {
+    if (focusNodes.has(getLinkNodeId(link.source)) && focusNodes.has(getLinkNodeId(link.target))) {
+      focusLinks.add(link);
+    }
+  });
+
   model.focusNodes = focusNodes;
   model.focusLinks = focusLinks;
 
@@ -218,7 +297,13 @@ function initDataviz(channel) {
     .linkHoverPrecision(8)
     .d3Force('x', d3.forceX())
     .d3Force('y', d3.forceY())
-    .d3Force('collide', d3.forceCollide(graph.nodeRelSize()))
+    .d3Force(
+      'collide',
+      d3.forceCollide(graph.nodeRelSize() * model.forces.collide)
+    )
+    .d3Force('charge', d3.forceManyBody().strength(model.forces.charge))
+    .d3Force('link', d3.forceLink(model.data.links).distance(model.forces.link))
+    .d3VelocityDecay(1 - model.forces.velocityDecay)
     .linkWidth(() => model.style.lineWidth)
     .linkDirectionalParticles(1)
     .linkDirectionalParticleWidth(link =>
@@ -382,6 +467,7 @@ function updateForceGraphDataFromModel(m) {
 
   // annoying we need to call this function, but I haven't found a good workaround
   graph.graphData(m.data);
+  graph.d3Force('link').links(m.data.links);
 }
 
 const getNodeSize = d3
@@ -587,7 +673,12 @@ try {
         const noteId = message.payload;
         const node = graph.graphData().nodes.find(node => node.id === noteId);
         if (node) {
-          graph.centerAt(node.x, node.y, 300).zoom(3, 300);
+          if (model.selection.enableRefocus) {
+            graph.centerAt(node.x, node.y, 300);
+          }
+          if (model.selection.enableZoom) {
+            graph.zoom(3, 300);
+          }
           Actions.selectNode(noteId);
         }
         break;

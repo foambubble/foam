@@ -724,6 +724,7 @@
           "default": false,
           "description": "Whether to open the graph on startup."
         }
+
       }
     },
     "keybindings": [

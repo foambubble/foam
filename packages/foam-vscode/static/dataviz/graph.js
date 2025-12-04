@@ -1,9 +1,25 @@
 const CONTAINER_ID = 'graph';
 
+let nodeFontSizeController = null;
 const initGUI = () => {
   const gui = new dat.gui.GUI();
   const nodeTypeFilterFolder = gui.addFolder('Filter by type');
   const nodeTypeFilterControllers = new Map();
+  const appearanceFolder = gui.addFolder('Appearance');
+
+  appearanceFolder
+    .add(model, 'textFade', 0, 5)
+    .step(0.1)
+    .name('Text Fade')
+    .onFinishChange(v => {
+      const invertedValue = 5 - v;
+      getNodeLabelOpacity.domain([invertedValue, invertedValue + 0.8]);
+    });
+
+  nodeFontSizeController = appearanceFolder
+    .add(model, 'nodeFontSizeMultiplier', 0.5, 3)
+    .step(0.1)
+    .name('Node Font Size');
   const forcesFolder = gui.addFolder('Forces');
 
   forcesFolder
@@ -136,6 +152,8 @@ let model = {
     note: true,
     tag: true,
   },
+  textFade: 1.2,
+  nodeFontSizeMultiplier: 1,
   forces: {
     collide: 2,
     repel: 30,
@@ -301,7 +319,7 @@ function initDataviz(channel) {
       }
       const size = getNodeSize(info.neighbors.length);
       const { fill, border } = getNodeColor(node.id, model);
-      const fontSize = model.style.fontSize / globalScale;
+      const fontSize = (model.style.fontSize * model.nodeFontSizeMultiplier) / globalScale;
       const nodeState = getNodeState(node.id, model);
       const textColor = fill.copy({
         opacity:
@@ -667,6 +685,15 @@ try {
       case 'didUpdateStyle':
         const style = message.payload;
         Actions.updateStyle(style);
+        break;
+      case 'didUpdateNodeFontSizeMultiplier':
+        const multiplier = message.payload;
+        if (typeof multiplier === 'number') {
+          model.nodeFontSizeMultiplier = multiplier;
+          if (nodeFontSizeController) {
+            nodeFontSizeController.updateDisplay();
+          }
+        }
         break;
     }
   });

@@ -3,19 +3,41 @@
   "injectionSelector": "L:meta.paragraph.markdown, L:markup.heading.markdown, L:markup.list.unnumbered.markdown",
   "patterns": [
     {
-      "contentName": "string.other.link.title.markdown.foam",
+      "name": "meta.link.wikilink.markdown.foam",
       "begin": "\\[\\[",
+      "end": "\\]\\]",
       "beginCaptures": {
         "0": {
           "name": "punctuation.definition.metadata.markdown.foam"
         }
       },
-      "end": "\\]\\]",
       "endCaptures": {
         "0": {
           "name": "punctuation.definition.metadata.markdown.foam"
         }
-      }
+      },
+      "patterns": [
+        {
+          "comment": "Wikilink with alias: [[target|alias]]",
+          "match": "([^|\\]]+)(\\|)([^\\]]+)",
+          "captures": {
+            "1": {
+              "name": "comment.line.wikilink.target.markdown.foam"
+            },
+            "2": {
+              "name": "punctuation.definition.metadata.markdown.foam"
+            },
+            "3": {
+              "name": "string.other.link.title.markdown.foam"
+            }
+          }
+        },
+        {
+          "comment": "Wikilink without alias: [[target]]",
+          "match": "[^|\\]]+",
+          "name": "string.other.link.title.markdown.foam"
+        }
+      ]
     }
   ]
 }

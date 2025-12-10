@@ -13,5 +13,5 @@ export { default as createNote } from './create-note';
 export { default as searchTagCommand } from './search-tag';
 export { default as renameTagCommand } from './rename-tag';
 export { default as convertLinksCommand } from './convert-links';
-export { default as showSimilarNotesCommand } from './show-similar-notes';
-export { default as buildEmbeddingsCommand } from './build-embeddings';
+export { default as showSimilarNotesCommand } from '../../ai/vscode/commands/show-similar-notes';
+export { default as buildEmbeddingsCommand } from '../../ai/vscode/commands/build-embeddings';

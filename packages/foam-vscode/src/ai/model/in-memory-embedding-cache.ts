@@ -1,4 +1,4 @@
-import { URI } from './uri';
+import { URI } from '../../core/model/uri';
 import { EmbeddingCache, EmbeddingCacheEntry } from './embedding-cache';
 
 /**

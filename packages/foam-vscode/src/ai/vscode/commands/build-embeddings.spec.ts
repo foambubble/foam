@@ -4,9 +4,9 @@ import {
   createFile,
   deleteFile,
   waitForNoteInFoamWorkspace,
-} from '../../test/test-utils-vscode';
+} from '../../../test/test-utils-vscode';
 import { BUILD_EMBEDDINGS_COMMAND } from './build-embeddings';
-import { wait } from '../../test/test-utils';
+import { wait } from '../../../test/test-utils';
 
 describe('build-embeddings command', () => {
   describe('empty workspace', () => {

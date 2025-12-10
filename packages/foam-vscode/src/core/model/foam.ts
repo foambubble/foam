@@ -5,10 +5,10 @@ import { FoamGraph } from './graph';
 import { ResourceParser } from './note';
 import { ResourceProvider } from './provider';
 import { FoamTags } from './tags';
-import { FoamEmbeddings } from './embeddings';
-import { InMemoryEmbeddingCache } from './in-memory-embedding-cache';
-import { EmbeddingProvider } from '../services/embedding-provider';
-import { NoOpEmbeddingProvider } from '../services/noop-embedding-provider';
+import { FoamEmbeddings } from '../../ai/model/embeddings';
+import { InMemoryEmbeddingCache } from '../../ai/model/in-memory-embedding-cache';
+import { EmbeddingProvider } from '../../ai/services/embedding-provider';
+import { NoOpEmbeddingProvider } from '../../ai/services/noop-embedding-provider';
 import { Logger, withTiming, withTimingAsync } from '../utils/log';
 
 export interface Services {

@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
-import { Foam } from '../../core/model/foam';
-import { fromVsCodeUri, toVsCodeUri } from '../../utils/vsc-utils';
-import { URI } from '../../core/model/uri';
+import { Foam } from '../../../core/model/foam';
+import { fromVsCodeUri, toVsCodeUri } from '../../../utils/vsc-utils';
+import { URI } from '../../../core/model/uri';
 import { BUILD_EMBEDDINGS_COMMAND } from './build-embeddings';
 
 export const SHOW_SIMILAR_NOTES_COMMAND = {

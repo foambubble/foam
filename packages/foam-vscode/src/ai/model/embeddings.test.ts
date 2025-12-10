@@ -8,7 +8,7 @@ import {
   InMemoryDataStore,
   waitForExpect,
 } from '../../test/test-utils';
-import { URI } from './uri';
+import { URI } from '../../core/model/uri';
 
 // Helper to create a simple mock provider
 class MockProvider implements EmbeddingProvider {

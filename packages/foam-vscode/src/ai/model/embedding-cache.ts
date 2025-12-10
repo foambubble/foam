@@ -1,5 +1,5 @@
-import { URI } from './uri';
-import { ICache } from '../utils/cache';
+import { URI } from '../../core/model/uri';
+import { ICache } from '../../core/utils/cache';
 
 type Checksum = string;
 

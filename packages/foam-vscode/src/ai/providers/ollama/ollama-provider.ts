@@ -1,8 +1,8 @@
 import {
   EmbeddingProvider,
   EmbeddingProviderInfo,
-} from '../core/services/embedding-provider';
-import { Logger } from '../core/utils/log';
+} from '../../services/embedding-provider';
+import { Logger } from '../../../core/utils/log';
 
 /**
  * Configuration for Ollama embedding provider

@@ -19,7 +19,7 @@ import { VsCodeWatcher } from './services/watcher';
 import { createMarkdownParser } from './core/services/markdown-parser';
 import VsCodeBasedParserCache from './services/cache';
 import { createMatcherAndDataStore } from './services/editor';
-import { OllamaEmbeddingProvider } from './services/ollama-provider';
+import { OllamaEmbeddingProvider } from './ai/providers/ollama/ollama-provider';
 
 export async function activate(context: ExtensionContext) {
   const logger = new VsCodeOutputLogger();

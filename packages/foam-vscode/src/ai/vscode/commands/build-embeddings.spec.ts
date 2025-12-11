@@ -6,7 +6,6 @@ import {
   waitForNoteInFoamWorkspace,
 } from '../../../test/test-utils-vscode';
 import { BUILD_EMBEDDINGS_COMMAND } from './build-embeddings';
-import { wait } from '../../../test/test-utils';
 
 describe('build-embeddings command', () => {
   describe('empty workspace', () => {

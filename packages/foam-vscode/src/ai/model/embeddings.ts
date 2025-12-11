@@ -1,7 +1,7 @@
 import { Emitter } from '../../core/common/event';
 import { IDisposable } from '../../core/common/lifecycle';
 import { Logger } from '../../core/utils/log';
-import { hash, isSome } from '../../core/utils';
+import { hash } from '../../core/utils';
 import { EmbeddingProvider, Embedding } from '../services/embedding-provider';
 import { EmbeddingCache } from './embedding-cache';
 import {

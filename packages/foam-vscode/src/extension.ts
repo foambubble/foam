@@ -73,7 +73,10 @@ export async function activate(context: ExtensionContext) {
     );
 
     // Initialize embedding provider
-    const embeddingProvider = new OllamaEmbeddingProvider();
+    const aiEnabled = workspace.getConfiguration('foam.experimental').get('ai');
+    const embeddingProvider = aiEnabled
+      ? new OllamaEmbeddingProvider()
+      : undefined;
 
     const foamPromise = bootstrap(
       matcher,

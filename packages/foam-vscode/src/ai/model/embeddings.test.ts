@@ -125,6 +125,40 @@ describe('FoamEmbeddings', () => {
 
       workspace.dispose();
     });
+
+    it('should create different embeddings for different content', async () => {
+      const datastore = new InMemoryDataStore();
+      const workspace = createTestWorkspace(ROOT, datastore);
+      const embeddings = new FoamEmbeddings(workspace, new MockProvider());
+
+      const note1Uri = URI.parse('/note1.md', 'file');
+      const note2Uri = URI.parse('/note2.md', 'file');
+
+      // Same title, different content
+      datastore.set(note1Uri, '# Same Title\n\nShort content');
+      datastore.set(
+        note2Uri,
+        '# Same Title\n\nThis is much longer content that should produce a different embedding vector'
+      );
+
+      await workspace.fetchAndSet(note1Uri);
+      await workspace.fetchAndSet(note2Uri);
+
+      await embeddings.updateResource(note1Uri);
+      await embeddings.updateResource(note2Uri);
+
+      const embedding1 = embeddings.getEmbedding(note1Uri);
+      const embedding2 = embeddings.getEmbedding(note2Uri);
+
+      expect(embedding1).not.toBeNull();
+      expect(embedding2).not.toBeNull();
+
+      // Embeddings should be different because content is different
+      // Our mock provider uses text.length for the first vector component
+      expect(embedding1![0]).not.toBe(embedding2![0]);
+
+      workspace.dispose();
+    });
   });
 
   describe('hasEmbeddings', () => {

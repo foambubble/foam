@@ -11,7 +11,6 @@ import {
 } from '../../core/services/progress';
 import { FoamWorkspace } from '../../core/model/workspace';
 import { URI } from '../../core/model/uri';
-import { Resource } from '../../core/model/note';
 
 /**
  * Represents a similar resource with its similarity score
@@ -167,7 +166,8 @@ export class FoamEmbeddings implements IDisposable {
     }
 
     try {
-      const text = await this.workspace.readAsMarkdown(resource.uri);
+      const content = await this.workspace.readAsMarkdown(resource.uri);
+      const text = this.prepareTextForEmbedding(resource.title, content);
       const textChecksum = hash(text);
 
       // Check cache if available
@@ -259,7 +259,8 @@ export class FoamEmbeddings implements IDisposable {
       });
 
       try {
-        const text = this.extractTextFromResource(resource);
+        const content = await this.workspace.readAsMarkdown(resource.uri);
+        const text = this.prepareTextForEmbedding(resource.title, content);
         const textChecksum = hash(text);
 
         // Check cache if available
@@ -318,16 +319,20 @@ export class FoamEmbeddings implements IDisposable {
   }
 
   /**
-   * Extract text content from a resource for embedding
-   * @param resource The resource to extract text from
-   * @returns The text to embed
+   * Prepare text for embedding by combining title and content
+   * @param title The title of the note
+   * @param content The markdown content of the note
+   * @returns The combined text to embed
    */
-  private extractTextFromResource(resource: Resource): string {
-    // Combine title and content
+  private prepareTextForEmbedding(title: string, content: string): string {
     const parts: string[] = [];
 
-    if (resource.title) {
-      parts.push(resource.title);
+    if (title) {
+      parts.push(title);
+    }
+
+    if (content) {
+      parts.push(content);
     }
 
     return parts.join('\n\n');

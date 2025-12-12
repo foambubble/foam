@@ -219,7 +219,7 @@ describe('OllamaEmbeddingProvider - Integration - embed with real Ollama', () =>
   beforeEach(async () => {
     const available = await provider.isAvailable();
     if (!available) {
-      fail('Cannot run test - Ollama not available');
+      throw new Error('Cannot run test - Ollama not available');
     }
   });
 
@@ -263,7 +263,7 @@ describe('OllamaEmbeddingProvider - Integration - embed with real Ollama', () =>
   });
 
   it.each([10, 50, 60, 100, 300])(
-    'should handle text of various lenghts',
+    'should handle text of various lengths',
     async length => {
       const text = 'Lorem ipsum dolor sit amet. '.repeat(length);
       try {

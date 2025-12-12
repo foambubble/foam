@@ -78,7 +78,7 @@ describe('OllamaEmbeddingProvider', () => {
       const mockEmbedding = new Array(768).fill(0.1);
       (global.fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ embedding: mockEmbedding }),
+        json: async () => ({ embeddings: [mockEmbedding] }),
       });
 
       const provider = new OllamaEmbeddingProvider();
@@ -86,13 +86,13 @@ describe('OllamaEmbeddingProvider', () => {
 
       expect(result).toEqual(mockEmbedding);
       expect(global.fetch).toHaveBeenCalledWith(
-        'http://localhost:11434/api/embeddings',
+        'http://localhost:11434/api/embed',
         expect.objectContaining({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             model: 'nomic-embed-text',
-            prompt: 'test text',
+            input: ['test text'],
           }),
         })
       );
@@ -211,4 +211,71 @@ describe('OllamaEmbeddingProvider', () => {
       expect(result).toBe(false);
     });
   });
+});
+
+describe('OllamaEmbeddingProvider - Integration - embed with real Ollama', () => {
+  const provider = new OllamaEmbeddingProvider();
+
+  beforeEach(async () => {
+    const available = await provider.isAvailable();
+    if (!available) {
+      fail('Cannot run test - Ollama not available');
+    }
+  });
+
+  it('should handle text with unicode checkmark character', async () => {
+    const text = 'Task completed ✔';
+    const embedding = await provider.embed(text);
+
+    expect(embedding).toBeDefined();
+    expect(Array.isArray(embedding)).toBe(true);
+    expect(embedding.length).toBe(768); // nomic-embed-text dimension
+    expect(embedding.every(n => typeof n === 'number')).toBe(true);
+  });
+
+  it('should handle text with various unicode characters', async () => {
+    const text = 'Hello 🌍 with émojis and spëcial çharacters • bullet ✓ check';
+    const embedding = await provider.embed(text);
+
+    expect(embedding).toBeDefined();
+    expect(Array.isArray(embedding)).toBe(true);
+    expect(embedding.length).toBe(768);
+  });
+
+  it('should handle text with combining unicode characters', async () => {
+    // Test with combining diacriticals that could be represented differently
+    const text = 'café vs cafe\u0301'; // Two ways to represent é
+    const embedding = await provider.embed(text);
+
+    expect(embedding).toBeDefined();
+    expect(Array.isArray(embedding)).toBe(true);
+    expect(embedding.length).toBe(768);
+  });
+
+  it('should handle empty text', async () => {
+    const text = '';
+    const embedding = await provider.embed(text);
+
+    expect(embedding).toBeDefined();
+    expect(Array.isArray(embedding)).toBe(true);
+    // Note: Ollama returns empty array for empty text
+    expect(embedding.length).toBeGreaterThanOrEqual(0);
+  });
+
+  it.each([10, 50, 60, 100, 300])(
+    'should handle text of various lenghts',
+    async length => {
+      const text = 'Lorem ipsum dolor sit amet. '.repeat(length);
+      try {
+        const embedding = await provider.embed(text);
+        expect(embedding).toBeDefined();
+        expect(Array.isArray(embedding)).toBe(true);
+        expect(embedding.length).toBe(768);
+      } catch (error) {
+        throw new Error(
+          `Embedding failed for text of length ${text.length}: ${error}`
+        );
+      }
+    }
+  );
 });

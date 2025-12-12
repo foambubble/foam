@@ -29,7 +29,7 @@ export const DEFAULT_OLLAMA_CONFIG: OllamaConfig = {
  * Ollama API response for embeddings
  */
 interface OllamaEmbeddingResponse {
-  embedding: number[];
+  embeddings: number[][];
 }
 
 /**
@@ -46,6 +46,10 @@ export class OllamaEmbeddingProvider implements EmbeddingProvider {
    * Generate an embedding for the given text
    */
   async embed(text: string): Promise<number[]> {
+    // normalize text to suitable input (format and size)
+    // TODO we should better handle long texts by chunking them and averaging embeddings
+    const input = text.substring(0, 6000).normalize();
+
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(
@@ -53,14 +57,14 @@ export class OllamaEmbeddingProvider implements EmbeddingProvider {
         this.config.timeout
       );
 
-      const response = await fetch(`${this.config.url}/api/embeddings`, {
+      const response = await fetch(`${this.config.url}/api/embed`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           model: this.config.model,
-          prompt: text,
+          input: [input],
         }),
         signal: controller.signal,
       });
@@ -72,8 +76,13 @@ export class OllamaEmbeddingProvider implements EmbeddingProvider {
         throw new Error(`AI service error (${response.status}): ${errorText}`);
       }
 
-      const data: OllamaEmbeddingResponse = await response.json();
-      return data.embedding;
+      const data = await response.json();
+      if (data.embeddings == null) {
+        throw new Error(
+          `Invalid response from AI service: ${JSON.stringify(data)}`
+        );
+      }
+      return data.embeddings[0];
     } catch (error) {
       if (error instanceof Error) {
         if (error.name === 'AbortError') {

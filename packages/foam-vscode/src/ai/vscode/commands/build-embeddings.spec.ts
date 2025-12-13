@@ -32,14 +32,8 @@ describe('build-embeddings command', () => {
       const note1 = await createFile('# Note 1\nContent here', ['note1.md']);
       const note2 = await createFile('# Note 2\nMore content', ['note2.md']);
 
-      await vscode.commands.executeCommand('foam-vscode-test.reload-workspace');
       await waitForNoteInFoamWorkspace(note1.uri);
       await waitForNoteInFoamWorkspace(note2.uri);
-
-      // Update Foam workspace to discover the new files
-
-      // Give it a moment to process
-      await new Promise(resolve => setTimeout(resolve, 100));
 
       const showInfoSpy = jest
         .spyOn(vscode.window, 'showInformationMessage')

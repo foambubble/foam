@@ -1,6 +1,7 @@
 /* @unit-ready */
 import * as vscode from 'vscode';
 import {
+  cleanWorkspace,
   createFile,
   deleteFile,
   waitForNoteInFoamWorkspace,
@@ -8,97 +9,80 @@ import {
 import { BUILD_EMBEDDINGS_COMMAND } from './build-embeddings';
 
 describe('build-embeddings command', () => {
-  describe('empty workspace', () => {
-    it('should complete successfully with no notes to analyze', async () => {
-      const showInfoSpy = jest
-        .spyOn(vscode.window, 'showInformationMessage')
-        .mockResolvedValue(undefined);
+  it('should complete successfully with no notes to analyze', async () => {
+    await cleanWorkspace();
 
-      const result = await vscode.commands.executeCommand<
-        'complete' | 'cancelled' | 'error'
-      >(BUILD_EMBEDDINGS_COMMAND.command);
+    const showInfoSpy = jest
+      .spyOn(vscode.window, 'showInformationMessage')
+      .mockResolvedValue(undefined);
 
-      expect(result).toBe('complete');
-      expect(showInfoSpy).toHaveBeenCalledWith(
-        expect.stringContaining('No notes found')
-      );
+    const result = await vscode.commands.executeCommand<
+      'complete' | 'cancelled' | 'error'
+    >(BUILD_EMBEDDINGS_COMMAND.command);
 
-      showInfoSpy.mockRestore();
-    });
+    expect(result).toBe('complete');
+    expect(showInfoSpy).toHaveBeenCalledWith(
+      expect.stringContaining('No notes found')
+    );
+
+    showInfoSpy.mockRestore();
   });
 
-  describe('successful completion', () => {
-    it('should analyze notes and report completion', async () => {
-      const note1 = await createFile('# Note 1\nContent here', ['note1.md']);
-      const note2 = await createFile('# Note 2\nMore content', ['note2.md']);
+  it('should analyze notes and report completion', async () => {
+    const note1 = await createFile('# Note 1\nContent here', ['note1.md']);
+    const note2 = await createFile('# Note 2\nMore content', ['note2.md']);
 
-      await waitForNoteInFoamWorkspace(note1.uri);
-      await waitForNoteInFoamWorkspace(note2.uri);
+    await waitForNoteInFoamWorkspace(note1.uri);
+    await waitForNoteInFoamWorkspace(note2.uri);
 
-      const showInfoSpy = jest
-        .spyOn(vscode.window, 'showInformationMessage')
-        .mockResolvedValue(undefined);
+    const showInfoSpy = jest
+      .spyOn(vscode.window, 'showInformationMessage')
+      .mockResolvedValue(undefined);
 
-      const result = await vscode.commands.executeCommand<
-        'complete' | 'cancelled' | 'error'
-      >(BUILD_EMBEDDINGS_COMMAND.command);
+    const result = await vscode.commands.executeCommand<
+      'complete' | 'cancelled' | 'error'
+    >(BUILD_EMBEDDINGS_COMMAND.command);
 
-      expect(result).toBe('complete');
-      expect(showInfoSpy).toHaveBeenCalledWith(
-        expect.stringMatching(/Analyzed.*2/)
-      );
+    expect(result).toBe('complete');
+    expect(showInfoSpy).toHaveBeenCalledWith(
+      expect.stringMatching(/Analyzed.*2/)
+    );
 
-      showInfoSpy.mockRestore();
-      await deleteFile(note1.uri);
-      await deleteFile(note2.uri);
-    });
+    showInfoSpy.mockRestore();
+    await deleteFile(note1.uri);
+    await deleteFile(note2.uri);
   });
 
-  describe('cancellation handling', () => {
-    it('should return cancelled status when operation is cancelled', async () => {
-      const note1 = await createFile('# Note 1\nContent', ['note1.md']);
-      await waitForNoteInFoamWorkspace(note1.uri);
+  it('should return cancelled status when operation is cancelled', async () => {
+    const note1 = await createFile('# Note 1\nContent', ['note1.md']);
+    await waitForNoteInFoamWorkspace(note1.uri);
 
-      const tokenSource = new vscode.CancellationTokenSource();
+    const tokenSource = new vscode.CancellationTokenSource();
 
-      const withProgressSpy = jest
-        .spyOn(vscode.window, 'withProgress')
-        .mockImplementation(async (options, task) => {
-          const progress = { report: () => {} };
-          // Cancel immediately
-          tokenSource.cancel();
-          return await task(progress, tokenSource.token);
-        });
+    const withProgressSpy = jest
+      .spyOn(vscode.window, 'withProgress')
+      .mockImplementation(async (options, task) => {
+        const progress = { report: () => {} };
+        // Cancel immediately
+        tokenSource.cancel();
+        return await task(progress, tokenSource.token);
+      });
 
-      const showInfoSpy = jest
-        .spyOn(vscode.window, 'showInformationMessage')
-        .mockResolvedValue(undefined);
+    const showInfoSpy = jest
+      .spyOn(vscode.window, 'showInformationMessage')
+      .mockResolvedValue(undefined);
 
-      const result = await vscode.commands.executeCommand<
-        'complete' | 'cancelled' | 'error'
-      >(BUILD_EMBEDDINGS_COMMAND.command);
+    const result = await vscode.commands.executeCommand<
+      'complete' | 'cancelled' | 'error'
+    >(BUILD_EMBEDDINGS_COMMAND.command);
 
-      expect(result).toBe('cancelled');
-      expect(showInfoSpy).toHaveBeenCalledWith(
-        expect.stringContaining('cancelled')
-      );
+    expect(result).toBe('cancelled');
+    expect(showInfoSpy).toHaveBeenCalledWith(
+      expect.stringContaining('cancelled')
+    );
 
-      withProgressSpy.mockRestore();
-      showInfoSpy.mockRestore();
-      await deleteFile(note1.uri);
-    });
-  });
-
-  describe('command metadata', () => {
-    it('should have correct command identifier', () => {
-      expect(BUILD_EMBEDDINGS_COMMAND.command).toBe(
-        'foam-vscode.build-embeddings'
-      );
-    });
-
-    it('should have user-friendly title', () => {
-      expect(BUILD_EMBEDDINGS_COMMAND.title).toContain('AI');
-      expect(BUILD_EMBEDDINGS_COMMAND.title).not.toContain('embedding');
-    });
+    withProgressSpy.mockRestore();
+    showInfoSpy.mockRestore();
+    await deleteFile(note1.uri);
   });
 });

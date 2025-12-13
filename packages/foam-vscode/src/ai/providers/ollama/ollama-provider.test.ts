@@ -215,60 +215,53 @@ describe('OllamaEmbeddingProvider', () => {
 
 describe('OllamaEmbeddingProvider - Integration', () => {
   const provider = new OllamaEmbeddingProvider();
-  let isOllamaAvailable: boolean;
 
-  beforeAll(async () => {
-    await provider.isAvailable();
-    isOllamaAvailable = await provider.isAvailable();
+  it('should handle text with unicode characters and emojis', async () => {
+    if (!(await provider.isAvailable())) {
+      console.warn('Ollama is not available, skipping test');
+      return;
+    }
+    const text = 'Task completed ✔ 🚀: All systems go! 🌟';
+    const embedding = await provider.embed(text);
+
+    expect(embedding).toBeDefined();
+    expect(Array.isArray(embedding)).toBe(true);
+    expect(embedding.length).toBe(768); // nomic-embed-text dimension
+    expect(embedding.every(n => typeof n === 'number')).toBe(true);
   });
 
-  beforeEach(function () {
-    if (!isOllamaAvailable) {
-      console.warn('Skipping test because Ollama service is unavailable');
-      this.skip();
+  it('should handle text with various unicode characters', async () => {
+    if (!(await provider.isAvailable())) {
+      console.warn('Ollama is not available, skipping test');
+      return;
     }
+    const text = 'Hello 🌍 with émojis and spëcial çharacters • bullet ✓ check';
+    const embedding = await provider.embed(text);
+
+    expect(embedding).toBeDefined();
+    expect(Array.isArray(embedding)).toBe(true);
+    expect(embedding.length).toBe(768);
   });
 
-  (isOllamaAvailable ? it : it.skip)(
-    'should handle text with unicode characters and emojis',
-    async () => {
-      const text = 'Task completed ✔ 🚀: All systems go! 🌟';
-      const embedding = await provider.embed(text);
-
-      expect(embedding).toBeDefined();
-      expect(Array.isArray(embedding)).toBe(true);
-      expect(embedding.length).toBe(768); // nomic-embed-text dimension
-      expect(embedding.every(n => typeof n === 'number')).toBe(true);
+  it('should handle text with combining unicode characters', async () => {
+    if (!(await provider.isAvailable())) {
+      console.warn('Ollama is not available, skipping test');
+      return;
     }
-  );
+    // Test with combining diacriticals that could be represented differently
+    const text = 'café vs cafe\u0301'; // Two ways to represent é
+    const embedding = await provider.embed(text);
 
-  (isOllamaAvailable ? it : it.skip)(
-    'should handle text with various unicode characters',
-    async () => {
-      const text =
-        'Hello 🌍 with émojis and spëcial çharacters • bullet ✓ check';
-      const embedding = await provider.embed(text);
+    expect(embedding).toBeDefined();
+    expect(Array.isArray(embedding)).toBe(true);
+    expect(embedding.length).toBe(768);
+  });
 
-      expect(embedding).toBeDefined();
-      expect(Array.isArray(embedding)).toBe(true);
-      expect(embedding.length).toBe(768);
+  it('should handle empty text', async () => {
+    if (!(await provider.isAvailable())) {
+      console.warn('Ollama is not available, skipping test');
+      return;
     }
-  );
-
-  (isOllamaAvailable ? it : it.skip)(
-    'should handle text with combining unicode characters',
-    async () => {
-      // Test with combining diacriticals that could be represented differently
-      const text = 'café vs cafe\u0301'; // Two ways to represent é
-      const embedding = await provider.embed(text);
-
-      expect(embedding).toBeDefined();
-      expect(Array.isArray(embedding)).toBe(true);
-      expect(embedding.length).toBe(768);
-    }
-  );
-
-  (isOllamaAvailable ? it : it.skip)('should handle empty text', async () => {
     const text = '';
     const embedding = await provider.embed(text);
 
@@ -278,9 +271,13 @@ describe('OllamaEmbeddingProvider - Integration', () => {
     expect(embedding.length).toBeGreaterThanOrEqual(0);
   });
 
-  (isOllamaAvailable ? it.each : it.skip.each)([10, 50, 60, 100, 300])(
+  it.each([10, 50, 60, 100, 300])(
     'should handle text of various lengths',
     async length => {
+      if (!(await provider.isAvailable())) {
+        console.warn('Ollama is not available, skipping test');
+        return;
+      }
       const text = 'Lorem ipsum dolor sit amet. '.repeat(length);
       try {
         const embedding = await provider.embed(text);

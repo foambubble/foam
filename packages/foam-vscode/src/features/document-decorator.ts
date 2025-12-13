@@ -1,7 +1,7 @@
 import { debounce } from 'lodash';
 import * as vscode from 'vscode';
 import { ResourceParser } from '../core/model/note';
-import { FoamWorkspace } from '../core/model/workspace';
+import { FoamWorkspace } from '../core/model/workspace/foamWorkspace';
 import { Foam } from '../core/model/foam';
 import { Range } from '../core/model/range';
 import { fromVsCodeUri } from '../utils/vsc-utils';

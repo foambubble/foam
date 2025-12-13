@@ -1,6 +1,6 @@
 /* @unit-ready */
 import MarkdownIt from 'markdown-it';
-import { FoamWorkspace } from '../../core/model/workspace';
+import { FoamWorkspace } from '../../core/model/workspace/foamWorkspace';
 import { default as markdownItFoamTags } from './tag-highlight';
 
 describe('Stylable tag generation in preview', () => {

@@ -210,7 +210,11 @@ export async function convertMarkdownToWikilink(foam: Foam): Promise<void> {
         line: position.line,
         character: position.character,
       },
-      foam.workspace,
+      {
+        resolveLink: foam.workspace.resolveLink,
+        get: foam.workspace.get,
+        getIdentifier: foam.workspace.getTrieIdentifier().getIdentifier,
+      },
       foam.services.parser
     );
 

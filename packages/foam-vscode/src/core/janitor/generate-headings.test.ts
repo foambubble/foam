@@ -3,7 +3,7 @@ import { readFileFromFs, TEST_DATA_DIR } from '../../test/test-utils';
 import { MarkdownResourceProvider } from '../services/markdown-provider';
 import { Resource } from '../model/note';
 import { Range } from '../model/range';
-import { FoamWorkspace } from '../model/workspace';
+import { FoamWorkspace } from '../model/workspace/foamWorkspace';
 import { Logger } from '../utils/log';
 import detectNewline from 'detect-newline';
 import { createMarkdownParser } from '../services/markdown-parser';

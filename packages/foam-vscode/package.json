@@ -72,6 +72,12 @@
           "contextualTitle": "Foam"
         },
         {
+          "id": "foam-vscode.phases-explorer",
+          "name": "Phases",
+          "icon": "$(notebook)",
+          "contextualTitle": "Foam"
+        },
+        {
           "id": "foam-vscode.orphans",
           "name": "Orphans",
           "icon": "$(debug-gripper)",
@@ -306,6 +312,14 @@
         {
           "command": "foam-vscode.completion-move-cursor",
           "when": "false"
+        },
+        {
+          "command": "foam-vscode.raise-phase",
+          "when": "editorLangId == markdown"
+        },
+        {
+          "command": "foam-vscode.retry-phase",
+          "when": "editorLangId == markdown"
         }
       ]
     },
@@ -367,8 +381,16 @@
         "title": "Foam: Open Resource"
       },
       {
-        "command": "foam-vscode.convert-wikilink-to-mdlink",
-        "title": "Foam: Convert Wikilink to Markdown Link"
+        "command": "foam-vscode.raise-phase",
+        "title": "Foam: Raise Phase"
+      },
+      {
+        "command": "foam-vscode.retry-phase",
+        "title": "Foam: Retry Phase"
+      },
+      {
+        "command": "foam-vscode.convert-link-style-inplace",
+        "title": "Foam: Convert Link Style in Place"
       },
       {
         "command": "foam-vscode.convert-mdlink-to-wikilink",
@@ -799,7 +821,7 @@
     "dayjs": "^1.11.13",
     "detect-newline": "^3.1.0",
     "github-slugger": "^1.4.0",
-    "gray-matter": "^4.0.2",
+    "gray-matter": "^4.0.3",
     "js-sha1": "^0.7.0",
     "lodash": "^4.17.21",
     "lru-cache": "^7.14.1",

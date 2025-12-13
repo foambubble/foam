@@ -1,4 +1,4 @@
-import { FoamWorkspace } from '../../../core/model/workspace';
+import { FoamWorkspace } from 'packages/foam-vscode/src/core/model/workspace/foamWorkspace';
 import {
   AlwaysIncludeMatcher,
   IMatcher,

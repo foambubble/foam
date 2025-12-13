@@ -1,25 +1,21 @@
-import {
-  NoteLinkDefinition,
-  Resource,
-  ResourceLink,
-  ResourceParser,
-} from '../model/note';
+import { NoteLinkDefinition, Resource, ResourceLink } from '../model/note';
 import { isNone, isSome } from '../utils';
 import { Logger } from '../utils/log';
 import { URI } from '../model/uri';
-import { FoamWorkspace } from '../model/workspace';
+import { FoamWorkspace } from '../model/workspace/foamWorkspace';
 import { IDisposable } from '../common/lifecycle';
 import { ResourceProvider } from '../model/provider';
 import { MarkdownLink } from './markdown-link';
 import { IDataStore } from './datastore';
 import { uniqBy } from 'lodash';
+import { MarkdownDirector } from './markdown-director';
 
 export class MarkdownResourceProvider implements ResourceProvider {
   private disposables: IDisposable[] = [];
 
   constructor(
     private readonly dataStore: IDataStore,
-    private readonly parser: ResourceParser,
+    private readonly parser: MarkdownDirector<Resource>,
     public readonly noteExtensions: string[] = ['.md'],
     private readonly workspaceRoots: URI[] = []
   ) {}

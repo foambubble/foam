@@ -1,3 +1,4 @@
+import { describeIf } from 'packages/foam-vscode/src/test/test-utils';
 import { Logger } from '../../../core/utils/log';
 import {
   OllamaEmbeddingProvider,
@@ -213,69 +214,66 @@ describe('OllamaEmbeddingProvider', () => {
   });
 });
 
-describe('OllamaEmbeddingProvider - Integration - embed with real Ollama', () => {
+describe('OllamaEmbeddingProvider - Integration', async () => {
   const provider = new OllamaEmbeddingProvider();
+  const isOllamaAvailable = await provider.isAvailable();
 
-  beforeEach(async () => {
-    const available = await provider.isAvailable();
-    if (!available) {
-      throw new Error('Cannot run test - Ollama not available');
-    }
-  });
+  describeIf(isOllamaAvailable)('embed with real Ollama service', () => {
+    it('should handle text with unicode characters and emojis', async () => {
+      const text = 'Task completed ✔ 🚀: All systems go! 🌟';
+      const embedding = await provider.embed(text);
 
-  it('should handle text with unicode checkmark character', async () => {
-    const text = 'Task completed ✔';
-    const embedding = await provider.embed(text);
+      expect(embedding).toBeDefined();
+      expect(Array.isArray(embedding)).toBe(true);
+      expect(embedding.length).toBe(768); // nomic-embed-text dimension
+      expect(embedding.every(n => typeof n === 'number')).toBe(true);
+    });
 
-    expect(embedding).toBeDefined();
-    expect(Array.isArray(embedding)).toBe(true);
-    expect(embedding.length).toBe(768); // nomic-embed-text dimension
-    expect(embedding.every(n => typeof n === 'number')).toBe(true);
-  });
+    it('should handle text with various unicode characters', async () => {
+      const text =
+        'Hello 🌍 with émojis and spëcial çharacters • bullet ✓ check';
+      const embedding = await provider.embed(text);
 
-  it('should handle text with various unicode characters', async () => {
-    const text = 'Hello 🌍 with émojis and spëcial çharacters • bullet ✓ check';
-    const embedding = await provider.embed(text);
+      expect(embedding).toBeDefined();
+      expect(Array.isArray(embedding)).toBe(true);
+      expect(embedding.length).toBe(768);
+    });
 
-    expect(embedding).toBeDefined();
-    expect(Array.isArray(embedding)).toBe(true);
-    expect(embedding.length).toBe(768);
-  });
+    it('should handle text with combining unicode characters', async () => {
+      // Test with combining diacriticals that could be represented differently
+      const text = 'café vs cafe\u0301'; // Two ways to represent é
+      const embedding = await provider.embed(text);
 
-  it('should handle text with combining unicode characters', async () => {
-    // Test with combining diacriticals that could be represented differently
-    const text = 'café vs cafe\u0301'; // Two ways to represent é
-    const embedding = await provider.embed(text);
+      expect(embedding).toBeDefined();
+      expect(Array.isArray(embedding)).toBe(true);
+      expect(embedding.length).toBe(768);
+    });
 
-    expect(embedding).toBeDefined();
-    expect(Array.isArray(embedding)).toBe(true);
-    expect(embedding.length).toBe(768);
-  });
+    it('should handle empty text', async () => {
+      const text = '';
+      const embedding = await provider.embed(text);
 
-  it('should handle empty text', async () => {
-    const text = '';
-    const embedding = await provider.embed(text);
+      expect(embedding).toBeDefined();
+      expect(Array.isArray(embedding)).toBe(true);
+      // Note: Ollama returns empty array for empty text
+      expect(embedding.length).toBeGreaterThanOrEqual(0);
+    });
 
-    expect(embedding).toBeDefined();
-    expect(Array.isArray(embedding)).toBe(true);
-    // Note: Ollama returns empty array for empty text
-    expect(embedding.length).toBeGreaterThanOrEqual(0);
-  });
-
-  it.each([10, 50, 60, 100, 300])(
-    'should handle text of various lengths',
-    async length => {
-      const text = 'Lorem ipsum dolor sit amet. '.repeat(length);
-      try {
-        const embedding = await provider.embed(text);
-        expect(embedding).toBeDefined();
-        expect(Array.isArray(embedding)).toBe(true);
-        expect(embedding.length).toBe(768);
-      } catch (error) {
-        throw new Error(
-          `Embedding failed for text of length ${text.length}: ${error}`
-        );
+    it.each([10, 50, 60, 100, 300])(
+      'should handle text of various lengths',
+      async length => {
+        const text = 'Lorem ipsum dolor sit amet. '.repeat(length);
+        try {
+          const embedding = await provider.embed(text);
+          expect(embedding).toBeDefined();
+          expect(Array.isArray(embedding)).toBe(true);
+          expect(embedding.length).toBe(768);
+        } catch (error) {
+          throw new Error(
+            `Embedding failed for text of length ${text.length}: ${error}`
+          );
+        }
       }
-    }
-  );
+    );
+  });
 });

@@ -15,6 +15,11 @@ export { default as waitForExpect } from 'wait-for-expect';
 
 Logger.setLevel('error');
 
+export const describeIf = (condition: boolean) =>
+  condition ? describe : describe.skip;
+
+export const testIf = (condition: boolean) => (condition ? test : test.skip);
+
 /**
  * An in-memory data store for testing that stores file content in a Map.
  * This allows tests to provide text content for notes without touching the filesystem.

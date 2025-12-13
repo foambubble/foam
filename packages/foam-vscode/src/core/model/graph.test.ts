@@ -146,7 +146,6 @@ describe('Graph', () => {
     });
     const noteB = createTestNote({
       uri: '/somewhere/page-b.md',
-      text: '## Section 1\n\n## Section 2',
     });
     const ws = createTestWorkspace().set(noteA).set(noteB);
     const graph = FoamGraph.fromWorkspace(ws);

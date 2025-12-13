@@ -17,10 +17,12 @@ import { createMarkdownParser } from '../core/services/markdown-parser';
 import {
   GenericDataStore,
   AlwaysIncludeMatcher,
+  IWatcher,
 } from '../core/services/datastore';
 import { MarkdownResourceProvider } from '../core/services/markdown-provider';
 import { randomString } from './test-utils';
 import micromatch from 'micromatch';
+import { Emitter } from '../core/common/event';
 
 interface Thenable<T> {
   then<TResult>(
@@ -247,6 +249,13 @@ export function createVSCodeUri(foamUri: URI): Uri {
   };
 }
 
+/**
+ * Convert VS Code Uri to Foam URI
+ */
+export function fromVsCodeUri(vsCodeUri: Uri): URI {
+  return URI.file(vsCodeUri.fsPath);
+}
+
 // VS Code Uri static methods
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const Uri = {
@@ -423,6 +432,12 @@ export enum DiagnosticSeverity {
   Hint = 3,
 }
 
+export enum ProgressLocation {
+  SourceControl = 1,
+  Window = 10,
+  Notification = 15,
+}
+
 // ===== Code Actions =====
 
 export class CodeActionKind {
@@ -586,6 +601,57 @@ export interface Event<T> {
 
 export interface Disposable {
   dispose(): void;
+}
+
+// ===== Cancellation =====
+
+export interface CancellationToken {
+  readonly isCancellationRequested: boolean;
+  readonly onCancellationRequested: Event<any>;
+}
+
+export class CancellationTokenSource {
+  private _token: CancellationToken | undefined;
+  private _emitter: EventEmitter<any> | undefined;
+  private _isCancelled = false;
+
+  get token(): CancellationToken {
+    if (!this._token) {
+      this._emitter = new EventEmitter<any>();
+      this._token = {
+        isCancellationRequested: this._isCancelled,
+        onCancellationRequested: this._emitter.event,
+      };
+    }
+    return this._token;
+  }
+
+  cancel(): void {
+    if (!this._isCancelled) {
+      this._isCancelled = true;
+      if (this._emitter) {
+        this._emitter.fire(undefined);
+      }
+      // Update token state
+      if (this._token) {
+        (this._token as any).isCancellationRequested = true;
+      }
+    }
+  }
+
+  dispose(): void {
+    if (this._emitter) {
+      this._emitter.dispose();
+      this._emitter = undefined;
+    }
+    this._token = undefined;
+  }
+}
+
+// ===== Progress =====
+
+export interface Progress<T> {
+  report(value: T): void;
 }
 
 export class EventEmitter<T> {
@@ -791,11 +857,21 @@ class MockTextDocument implements TextDocument {
       this._content = content;
       // Write the content to file if provided
       try {
+        const existed = fs.existsSync(uri.fsPath);
         const dir = path.dirname(uri.fsPath);
         if (!fs.existsSync(dir)) {
           fs.mkdirSync(dir, { recursive: true });
         }
         fs.writeFileSync(uri.fsPath, content);
+
+        // Manually fire watcher events (can't use async workspace.fs in constructor)
+        for (const watcher of mockState.fileWatchers) {
+          if (existed) {
+            watcher._fireChange(uri);
+          } else {
+            watcher._fireCreate(uri);
+          }
+        }
       } catch (error) {
         // Ignore write errors in mock
       }
@@ -1115,10 +1191,31 @@ class MockFileSystem implements FileSystem {
   }
 
   async writeFile(uri: Uri, content: Uint8Array): Promise<void> {
+    // Check if file exists before writing
+    const existed = await this.exists(uri);
+
     // Ensure directory exists
     const dir = path.dirname(uri.fsPath);
     await fs.promises.mkdir(dir, { recursive: true });
     await fs.promises.writeFile(uri.fsPath, content);
+
+    // Fire watcher events
+    for (const watcher of mockState.fileWatchers) {
+      if (existed) {
+        watcher._fireChange(uri);
+      } else {
+        watcher._fireCreate(uri);
+      }
+    }
+  }
+
+  private async exists(uri: Uri): Promise<boolean> {
+    try {
+      await fs.promises.access(uri.fsPath);
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   async delete(uri: Uri, options?: { recursive?: boolean }): Promise<void> {
@@ -1132,6 +1229,11 @@ class MockFileSystem implements FileSystem {
       }
     } else {
       await fs.promises.unlink(uri.fsPath);
+    }
+
+    // Fire watcher events
+    for (const watcher of mockState.fileWatchers) {
+      watcher._fireDelete(uri);
     }
   }
 
@@ -1175,6 +1277,84 @@ class MockFileSystem implements FileSystem {
     options?: { overwrite?: boolean }
   ): Promise<void> {
     await fs.promises.rename(source.fsPath, target.fsPath);
+
+    // Fire watcher events (rename = delete + create)
+    for (const watcher of mockState.fileWatchers) {
+      watcher._fireDelete(source);
+      watcher._fireCreate(target);
+    }
+  }
+}
+
+// ===== File System Watcher =====
+
+export interface FileSystemWatcher extends Disposable {
+  onDidCreate: Event<Uri>;
+  onDidChange: Event<Uri>;
+  onDidDelete: Event<Uri>;
+  ignoreCreateEvents: boolean;
+  ignoreChangeEvents: boolean;
+  ignoreDeleteEvents: boolean;
+}
+
+class MockFileSystemWatcher implements FileSystemWatcher {
+  private onDidCreateEmitter = new Emitter<Uri>();
+  private onDidChangeEmitter = new Emitter<Uri>();
+  private onDidDeleteEmitter = new Emitter<Uri>();
+
+  onDidCreate = this.onDidCreateEmitter.event;
+  onDidChange = this.onDidChangeEmitter.event;
+  onDidDelete = this.onDidDeleteEmitter.event;
+
+  ignoreCreateEvents = false;
+  ignoreChangeEvents = false;
+  ignoreDeleteEvents = false;
+
+  constructor(private pattern: string) {
+    // Register this watcher in mockState (will be added to mockState)
+    if (mockState.fileWatchers) {
+      mockState.fileWatchers.push(this);
+    }
+  }
+
+  // Internal methods called by MockFileSystem
+  _fireCreate(uri: Uri) {
+    if (!this.ignoreCreateEvents && this.matches(uri)) {
+      this.onDidCreateEmitter.fire(uri);
+    }
+  }
+
+  _fireChange(uri: Uri) {
+    if (!this.ignoreChangeEvents && this.matches(uri)) {
+      this.onDidChangeEmitter.fire(uri);
+    }
+  }
+
+  _fireDelete(uri: Uri) {
+    if (!this.ignoreDeleteEvents && this.matches(uri)) {
+      this.onDidDeleteEmitter.fire(uri);
+    }
+  }
+
+  private matches(uri: Uri): boolean {
+    const workspaceFolder = mockState.workspaceFolders[0];
+    if (!workspaceFolder) return false;
+
+    const relativePath = path.relative(workspaceFolder.uri.fsPath, uri.fsPath);
+    // Use micromatch (already imported) for glob matching
+    return micromatch.isMatch(relativePath, this.pattern);
+  }
+
+  dispose() {
+    if (mockState.fileWatchers) {
+      const index = mockState.fileWatchers.indexOf(this);
+      if (index >= 0) {
+        mockState.fileWatchers.splice(index, 1);
+      }
+    }
+    this.onDidCreateEmitter.dispose();
+    this.onDidChangeEmitter.dispose();
+    this.onDidDeleteEmitter.dispose();
   }
 }
 
@@ -1343,17 +1523,41 @@ class TestFoam {
     // Create resource providers
     const providers = [new MarkdownResourceProvider(dataStore, parser)];
 
-    // Use the bootstrap function without file watcher (simpler for tests)
+    // Create file watcher for automatic workspace updates
+    const vsCodeWatcher = workspace.createFileSystemWatcher('**/*');
+
+    // Convert VS Code Uri events to Foam URI events
+    const onDidCreateEmitter = new Emitter<URI>();
+    const onDidChangeEmitter = new Emitter<URI>();
+    const onDidDeleteEmitter = new Emitter<URI>();
+
+    vsCodeWatcher.onDidCreate(uri =>
+      onDidCreateEmitter.fire(fromVsCodeUri(uri))
+    );
+    vsCodeWatcher.onDidChange(uri =>
+      onDidChangeEmitter.fire(fromVsCodeUri(uri))
+    );
+    vsCodeWatcher.onDidDelete(uri =>
+      onDidDeleteEmitter.fire(fromVsCodeUri(uri))
+    );
+
+    const foamWatcher: IWatcher = {
+      onDidCreate: onDidCreateEmitter.event,
+      onDidChange: onDidChangeEmitter.event,
+      onDidDelete: onDidDeleteEmitter.event,
+    };
+
+    // Use the bootstrap function with file watcher
     const foam = await bootstrap(
       matcher,
-      undefined,
+      foamWatcher,
       dataStore,
       parser,
       providers,
       '.md'
     );
 
-    Logger.info('Mock Foam instance created (manual reload for tests)');
+    Logger.info('Mock Foam instance created with file watcher');
     return foam;
   }
 
@@ -1399,13 +1603,14 @@ async function initializeFoamCommands(foam: Foam): Promise<void> {
   await foamCommands.updateWikilinksCommand(mockContext, foamPromise);
   await foamCommands.openDailyNoteForDateCommand(mockContext, foamPromise);
   await foamCommands.convertLinksCommand(mockContext, foamPromise);
+  await foamCommands.buildEmbeddingsCommand(mockContext, foamPromise);
+  await foamCommands.openDailyNoteCommand(mockContext, foamPromise);
+  await foamCommands.openDatedNote(mockContext, foamPromise);
 
   // Commands that only need context
   await foamCommands.copyWithoutBracketsCommand(mockContext);
   await foamCommands.createFromTemplateCommand(mockContext);
   await foamCommands.createNewTemplate(mockContext);
-  await foamCommands.openDailyNoteCommand(mockContext, foamPromise);
-  await foamCommands.openDatedNote(mockContext, foamPromise);
 
   Logger.info('Foam commands initialized successfully in mock environment');
 }
@@ -1420,6 +1625,7 @@ const mockState = {
   commands: new Map<string, (...args: any[]) => any>(),
   fileSystem: new MockFileSystem(),
   configuration: new MockWorkspaceConfiguration(),
+  fileWatchers: [] as MockFileSystemWatcher[],
 };
 
 // Window namespace
@@ -1514,6 +1720,31 @@ export const window = {
         message
     );
   },
+
+  async withProgress<R>(
+    options: {
+      location: ProgressLocation;
+      title?: string;
+      cancellable?: boolean;
+    },
+    task: (
+      progress: Progress<{ message?: string; increment?: number }>,
+      token: CancellationToken
+    ) => Thenable<R>
+  ): Promise<R> {
+    const tokenSource = new CancellationTokenSource();
+    const progress: Progress<{ message?: string; increment?: number }> = {
+      report: () => {
+        // No-op in mock, but can be overridden in tests
+      },
+    };
+
+    try {
+      return await task(progress, tokenSource.token);
+    } finally {
+      tokenSource.dispose();
+    }
+  },
 };
 
 // Workspace namespace
@@ -1526,6 +1757,10 @@ export const workspace = {
 
   get fs(): FileSystem {
     return mockState.fileSystem;
+  },
+
+  createFileSystemWatcher(globPattern: string): FileSystemWatcher {
+    return new MockFileSystemWatcher(globPattern);
   },
 
   getConfiguration(section?: string): WorkspaceConfiguration {

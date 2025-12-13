@@ -5,6 +5,10 @@ import { FoamGraph } from './graph';
 import { ResourceParser } from './note';
 import { ResourceProvider } from './provider';
 import { FoamTags } from './tags';
+import { FoamEmbeddings } from '../../ai/model/embeddings';
+import { InMemoryEmbeddingCache } from '../../ai/model/in-memory-embedding-cache';
+import { EmbeddingProvider } from '../../ai/services/embedding-provider';
+import { NoOpEmbeddingProvider } from '../../ai/services/noop-embedding-provider';
 import { Logger, withTiming, withTimingAsync } from '../utils/log';
 
 export interface Services {
@@ -18,6 +22,7 @@ export interface Foam extends IDisposable {
   workspace: FoamWorkspace;
   graph: FoamGraph;
   tags: FoamTags;
+  embeddings: FoamEmbeddings;
 }
 
 export const bootstrap = async (
@@ -26,7 +31,8 @@ export const bootstrap = async (
   dataStore: IDataStore,
   parser: ResourceParser,
   initialProviders: ResourceProvider[],
-  defaultExtension: string = '.md'
+  defaultExtension: string = '.md',
+  embeddingProvider?: EmbeddingProvider
 ) => {
   const workspace = await withTimingAsync(
     () =>
@@ -48,6 +54,22 @@ export const bootstrap = async (
     ms => Logger.info(`Tags loaded in ${ms}ms`)
   );
 
+  embeddingProvider = embeddingProvider ?? new NoOpEmbeddingProvider();
+  const embeddings = FoamEmbeddings.fromWorkspace(
+    workspace,
+    embeddingProvider,
+    true,
+    new InMemoryEmbeddingCache()
+  );
+
+  if (await embeddingProvider.isAvailable()) {
+    Logger.info('Embeddings service initialized');
+  } else {
+    Logger.warn(
+      'Embedding provider not available. Semantic features will be disabled.'
+    );
+  }
+
   watcher?.onDidChange(async uri => {
     if (matcher.isMatch(uri)) {
       await workspace.fetchAndSet(uri);
@@ -67,6 +89,7 @@ export const bootstrap = async (
     workspace,
     graph,
     tags,
+    embeddings,
     services: {
       parser,
       dataStore,
@@ -75,6 +98,7 @@ export const bootstrap = async (
     dispose: () => {
       workspace.dispose();
       graph.dispose();
+      embeddings.dispose();
     },
   };
 

@@ -25,115 +25,68 @@ function textForNote(text: string): string {
 describe('generateLinkReferences', () => {
   const parser = createMarkdownParser();
 
-  it('should add link references to a file that does not have them', async () => {
-    const workspace = createTestWorkspace([URI.file('/')]);
-    workspace.set(createTestNote({ uri: '/doc1.md', title: 'First' }));
-    workspace.set(createTestNote({ uri: '/doc2.md', title: 'Second' }));
-    workspace.set(
-      createTestNote({
-        uri: '/file-without-title.md',
-        title: 'file-without-title',
-      })
-    );
-    const noteText = `# Index
+  interface TestCase {
+    case: string;
+    input: string;
+    expected: string;
+  }
+
+  const testCases: TestCase[] = [
+    {
+      case: 'should add link references for wikilinks present in note',
+      input: `
+# Index
 [[doc1]] [[doc2]] [[file-without-title]]
-`;
-
-    const note = parser.parse(URI.file('/note.md'), textForNote(noteText));
-    const actual = await generateLinkReferences(
-      note,
-      noteText,
-      EOL,
-      workspace,
-      false
-    );
-    const updated = TextEdit.apply(noteText, actual);
-
-    expect(updated).toBe(
-      textForNote(`# Index
+`,
+      expected: `
+# Index
 [[doc1]] [[doc2]] [[file-without-title]]
 
 [doc1]: doc1 "First"
 [doc2]: doc2 "Second"
 [file-without-title]: file-without-title "file-without-title"
-`)
-    );
-  });
+`,
+    },
+    {
+      case: '#1558 - should keep a blank line before link references',
+      input: `
+# Test
 
-  it('#1558 - should add multiple link references without excessive blank lines', async () => {
-    const workspace = createTestWorkspace([URI.file('/')]);
-    workspace.set(createTestNote({ uri: '/Doc1.md', title: 'Doc1' }));
-    workspace.set(createTestNote({ uri: '/Doc2.md', title: 'Doc2' }));
+[[doc1]]
 
-    const noteText = `# Test
-
-[[Doc1]]
-
-[[Doc2]]
+[[doc2]]
 
 
 
-`;
+`,
+      expected: `
+# Test
 
-    const note = parser.parse(URI.file('/note.md'), textForNote(noteText));
-    const actual = await generateLinkReferences(
-      note,
-      noteText,
-      EOL,
-      workspace,
-      false
-    );
-    const updated = TextEdit.apply(noteText, actual);
+[[doc1]]
 
-    expect(updated).toBe(
-      textForNote(`# Test
+[[doc2]]
 
-[[Doc1]]
-
-[[Doc2]]
-
-[Doc1]: Doc1 "Doc1"
-[Doc2]: Doc2 "Doc2"
-`)
-    );
-  });
-
-  it('should remove link definitions for links not present in note', async () => {
-    const workspace = createTestWorkspace([URI.file('/')]);
-    workspace.set(createTestNote({ uri: '/doc1.md', title: 'First' }));
-    const noteText = `# Document
+[doc1]: doc1 "First"
+[doc2]: doc2 "Second"
+`,
+    },
+    {
+      case: 'should remove obsolete link definitions',
+      input: `
+# Document
 Some content here.
-[doc1]: doc1 'First Document'
-`;
-
-    const note = parser.parse(URI.file('/note.md'), textForNote(noteText));
-    const actual = await generateLinkReferences(
-      note,
-      noteText,
-      EOL,
-      workspace,
-      false
-    );
-    const updated = TextEdit.apply(noteText, actual);
-
-    expect(updated).toBe(
-      textForNote(`# Document
+[doc1]: doc1 "First"
+`,
+      expected: `
+# Document
 Some content here.
 
-`)
-    );
-  });
-
-  it('should add missing link definitions', async () => {
-    const workspace = createTestWorkspace([URI.file('/')]);
-    workspace.set(createTestNote({ uri: '/doc2.md', title: 'Second' }));
-    workspace.set(
-      createTestNote({
-        uri: '/file-without-title.md',
-        title: 'file-without-title',
-      })
-    );
-    const noteText = `# First Document
+`,
+    },
+    {
+      case: 'should add and remove link definitions as needed',
+      input: `
+# First Document
 
 Here's some [unrelated] content.
 
@@ -142,20 +95,9 @@ Here's some [unrelated] content.
 [[file-without-title]]
 
 [doc2]: doc2 'Second Document'
-`;
-
-    const note = parser.parse(URI.file('/note.md'), textForNote(noteText));
-    const actual = await generateLinkReferences(
-      note,
-      noteText,
-      EOL,
-      workspace,
-      false
-    );
-    const updated = TextEdit.apply(noteText, actual);
-
-    expect(updated).toBe(
-      textForNote(`# First Document
+`,
+      expected: `
+# First Document
 
 Here's some [unrelated] content.
 
@@ -166,15 +108,12 @@ Here's some [unrelated] content.
 
 
 [file-without-title]: file-without-title "file-without-title"
-`)
-    );
-  });
-
-  it('should not cause any changes if link reference definitions were up to date', async () => {
-    const workspace = createTestWorkspace([URI.file('/')])
-      .set(createTestNote({ uri: '/doc1.md', title: 'First' }))
-      .set(createTestNote({ uri: '/doc2.md', title: 'Second' }));
-    const noteText = `# Third Document
+`,
+    },
+    {
+      case: 'should not change correct link references',
+      input: `
+# Third Document
 All the link references are correct in this file.
 
 [[doc1]]
@@ -183,88 +122,59 @@ All the link references are correct in this file.
 
 [doc1]: doc1 "First"
 [doc2]: doc2 "Second"
-`;
+`,
+      expected: `
+# Third Document
+All the link references are correct in this file.
 
-    const note = parser.parse(URI.file('/note.md'), textForNote(noteText));
-    const actual = await generateLinkReferences(
-      note,
-      noteText,
-      EOL,
-      workspace,
-      false
-    );
-    const updated = TextEdit.apply(noteText, actual);
+[[doc1]]
+[[doc2]]
 
-    expect(actual).toEqual([]);
-    expect(updated).toEqual(noteText);
-  });
 
-  it('should put links with spaces in angel brackets', async () => {
-    const workspace = createTestWorkspace([URI.file('/')]).set(
-      createTestNote({
-        uri: '/Note being referred as angel.md',
-        title: 'Note being referred as angel',
-      })
-    );
-    const noteText = `# Angel reference
+[doc1]: doc1 "First"
+[doc2]: doc2 "Second"
+`,
+    },
+    {
+      case: 'should put links with spaces in angel brackets',
+      input: `
+# Angel reference
 
-[[Note being referred as angel]]
-`;
-    const note = parser.parse(URI.file('/note.md'), textForNote(noteText));
-    const actual = await generateLinkReferences(
-      note,
-      noteText,
-      EOL,
-      workspace,
-      false
-    );
-    const updated = TextEdit.apply(noteText, actual);
+[[Angel note]]
+`,
+      expected: `
+# Angel reference
 
-    expect(updated).toBe(
-      textForNote(`# Angel reference
+[[Angel note]]
 
-[[Note being referred as angel]]
-
-[Note being referred as angel]: <Note being referred as angel> "Note being referred as angel"
-`)
-    );
-  });
-
-  it('should not remove explicitly entered link references', async () => {
-    const workspace = createTestWorkspace([URI.file('/')]);
-    workspace.set(createTestNote({ uri: '/doc2.md', title: 'Second' }));
-    workspace.set(
-      createTestNote({
-        uri: '/file-without-title.md',
-        title: 'file-without-title',
-      })
-    );
-    const noteText = `# File with explicit link references
+[Angel note]: <Angel note> "Angel note"
+`,
+    },
+    {
+      case: 'should not remove explicitly entered link references',
+      input: `
+# File with explicit link references
 
 A Bug [^footerlink]. Here is [Another link][linkreference]
 
 [^footerlink]: https://foambubble.github.io/
 
 [linkreference]: https://foambubble.github.io/
-`;
+`,
+      expected: `
+# File with explicit link references
 
-    const note = parser.parse(URI.file('/note.md'), textForNote(noteText));
+A Bug [^footerlink]. Here is [Another link][linkreference]
 
-    const actual = await generateLinkReferences(
-      note,
-      noteText,
-      EOL,
-      workspace,
-      false
-    );
+[^footerlink]: https://foambubble.github.io/
 
-    expect(actual).toEqual([]);
-  });
-
-  it('should not remove explicitly entered link references and have an implicit link', async () => {
-    const workspace = createTestWorkspace([URI.file('/')]);
-    workspace.set(createTestNote({ uri: '/doc2.md', title: 'Second' }));
-    const noteText = `# File with explicit link references
+[linkreference]: https://foambubble.github.io/
+`,
+    },
+    {
+      case: 'should not change explicitly entered link references',
+      input: `
+# File with explicit link references
 
 A Bug [^footerlink]. Here is [Another link][linkreference].
 I also want a [[doc1]].
@@ -272,19 +182,47 @@ I also want a [[doc1]].
 [^footerlink]: https://foambubble.github.io/
 
 [linkreference]: https://foambubble.github.io/
-[doc1]: doc1 'First Document'
-`;
+`,
+      expected: `
+# File with explicit link references
 
-    const note = parser.parse(URI.file('/note.md'), textForNote(noteText));
+A Bug [^footerlink]. Here is [Another link][linkreference].
+I also want a [[doc1]].
 
-    const actual = await generateLinkReferences(
-      note,
-      noteText,
-      EOL,
-      workspace,
-      false
-    );
+[^footerlink]: https://foambubble.github.io/
 
-    expect(actual.length).toBe(0);
+[linkreference]: https://foambubble.github.io/
+
+[doc1]: doc1 "First"
+`,
+    },
+  ];
+
+  testCases.forEach(testCase => {
+    it(testCase.case, async () => {
+      const workspace = createTestWorkspace([URI.file('/')]);
+      const workspaceNotes = [
+        { uri: '/doc1.md', title: 'First' },
+        { uri: '/doc2.md', title: 'Second' },
+        { uri: '/file-without-title.md', title: 'file-without-title' },
+        { uri: '/Angel note.md', title: 'Angel note' },
+      ];
+      workspaceNotes.forEach(note => {
+        workspace.set(createTestNote({ uri: note.uri, title: note.title }));
+      });
+
+      const noteText = testCase.input;
+      const note = parser.parse(URI.file('/note.md'), textForNote(noteText));
+      const actual = await generateLinkReferences(
+        note,
+        noteText,
+        EOL,
+        workspace,
+        false
+      );
+      const updated = TextEdit.apply(noteText, actual);
+
+      expect(updated).toBe(textForNote(testCase.expected));
+    });
   });
 });

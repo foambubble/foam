@@ -19,7 +19,8 @@ export const generateLinkReferences = async (
     return [];
   }
 
-  const nLines = currentNoteText.split(eol).length;
+  const lines = currentNoteText.split(eol);
+  const nLines = lines.length;
 
   const updatedWikilinkDefinitions = createMarkdownReferences(
     workspace,
@@ -51,20 +52,24 @@ export const generateLinkReferences = async (
 
   // Add new definitions
   if (toAddWikilinkDefinitions.length > 0) {
-    const lastLine = currentNoteText.split(eol)[nLines - 1];
-    const isLastLineEmpty = lastLine.trim().length === 0;
-
-    let text = isLastLineEmpty ? '' : eol;
-    for (const def of toAddWikilinkDefinitions) {
-      // Choose the correct position for insertion, e.g., end of file or after last reference
-      text = `${text}${eol}${NoteLinkDefinition.format(def)}`;
+    // find the last non-empty line to append the definitions after it
+    const lastLineIndex = nLines - 1;
+    let insertLineIndex = lastLineIndex;
+    while (insertLineIndex > 0 && lines[insertLineIndex].trim() === '') {
+      insertLineIndex--;
     }
+
+    const definitions = toAddWikilinkDefinitions.map(def =>
+      NoteLinkDefinition.format(def)
+    );
+    const text = eol + eol + definitions.join(eol) + eol;
+
     edits.push({
       range: Range.create(
-        nLines - 1,
-        lastLine.length,
-        nLines - 1,
-        lastLine.length
+        insertLineIndex,
+        lines[insertLineIndex].length,
+        lastLineIndex,
+        lines[lastLineIndex].length
       ),
       newText: text,
     });

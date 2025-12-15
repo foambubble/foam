@@ -1,6 +1,5 @@
 import { generateLinkReferences } from '.';
 import { createTestNote, createTestWorkspace } from '../../test/test-utils';
-import { Range } from '../model/range';
 import { Logger } from '../utils/log';
 import { URI } from '../model/uri';
 import { EOL } from 'os';
@@ -196,9 +195,148 @@ I also want a [[doc1]].
 [doc1]: doc1 "First"
 `,
     },
+    {
+      case: 'should handle empty file with no wikilinks and no definitions',
+      input: `
+# Empty Document
+
+Just some text without any links.
+`,
+      expected: `
+# Empty Document
+
+Just some text without any links.
+`,
+    },
+    {
+      case: 'should handle wikilinks with aliases',
+      input: `
+# Document with aliases
+
+[[doc1|Custom Alias]] and [[doc2|Another Alias]]
+`,
+      expected: `
+# Document with aliases
+
+[[doc1|Custom Alias]] and [[doc2|Another Alias]]
+
+[doc1|Custom Alias]: doc1 "First"
+[doc2|Another Alias]: doc2 "Second"
+`,
+    },
+    {
+      case: 'should generate only one definition for multiple references to the same link',
+      input: `
+# Multiple references
+
+First mention: [[doc1]]
+Second mention: [[doc1]]
+Third mention: [[doc1]]
+`,
+      expected: `
+# Multiple references
+
+First mention: [[doc1]]
+Second mention: [[doc1]]
+Third mention: [[doc1]]
+
+[doc1]: doc1 "First"
+`,
+    },
+    {
+      case: 'should handle link definitions in the middle of content',
+      input: `
+# Document
+
+[[doc1]]
+
+[doc1]: doc1 "First"
+
+Some more content here.
+
+[[doc2]]
+`,
+      expected: `
+# Document
+
+[[doc1]]
+
+[doc1]: doc1 "First"
+
+Some more content here.
+
+[[doc2]]
+
+[doc2]: doc2 "Second"
+`,
+    },
+    {
+      case: 'should handle orphaned wikilinks without corresponding notes',
+      input: `
+# Document with broken links
+
+[[doc1]] [[nonexistent]] [[another-missing]]
+`,
+      expected: `
+# Document with broken links
+
+[[doc1]] [[nonexistent]] [[another-missing]]
+
+[doc1]: doc1 "First"
+`,
+    },
+    {
+      case: 'should handle file with only blank lines at end',
+      input: `
+
+`,
+      expected: `
+
+`,
+    },
+    {
+      case: 'should handle empty files',
+      input: '',
+      expected: '',
+    },
+    {
+      case: 'should handle link definitions with different quote styles',
+      input: `
+# Mixed quotes
+
+[[doc1]] [[doc2]]
+
+[doc1]: doc1 'First'
+[doc2]: doc2 "Second"
+`,
+      expected: `
+# Mixed quotes
+
+[[doc1]] [[doc2]]
+
+[doc1]: doc1 'First'
+[doc2]: doc2 "Second"
+`,
+    },
+    // TODO
+    //     {
+    //       case: 'should append new link references to existing ones without blank lines',
+    //       input: `
+    // [[doc1]] [[doc2]]
+
+    // [doc1]: doc1 "First"
+    // `,
+    //       expected: `
+    // [[doc1]] [[doc2]]
+
+    // [doc1]: doc1 "First"
+    // [doc2]: doc2 "Second"
+    // `,
+    //     },
   ];
 
   testCases.forEach(testCase => {
+    // eslint-disable-next-line jest/valid-title
     it(testCase.case, async () => {
       const workspace = createTestWorkspace([URI.file('/')]);
       const workspaceNotes = [

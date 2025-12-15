@@ -61,6 +61,14 @@ export abstract class NoteLinkDefinition {
 
     return text;
   }
+
+  static isEqual(def1: NoteLinkDefinition, def2: NoteLinkDefinition): boolean {
+    return (
+      def1.label === def2.label &&
+      def1.url === def2.url &&
+      def1.title === def2.title
+    );
+  }
 }
 
 export interface Tag {

@@ -82,6 +82,13 @@
           "name": "Placeholders",
           "icon": "$(debug-disconnect)",
           "contextualTitle": "Foam"
+        },
+        {
+          "when": "config.foam.experimental.ai",
+          "id": "foam-vscode.related-notes",
+          "name": "Related Notes (AI)",
+          "icon": "$(sparkle)",
+          "contextualTitle": "Foam"
         }
       ]
     },
@@ -101,6 +108,21 @@
       {
         "view": "foam-vscode.placeholders",
         "contents": "No placeholders found for selected resource or workspace."
+      },
+      {
+        "view": "foam-vscode.related-notes",
+        "contents": "Open a note to see related notes.",
+        "when": "config.foam.experimental.ai && foam.relatedNotes.state == 'no-note'"
+      },
+      {
+        "view": "foam-vscode.related-notes",
+        "contents": "Notes haven't been analyzed yet.\n[Analyze Notes](command:foam-vscode.build-embeddings)\nAnalyze your notes to discover similar content.",
+        "when": "config.foam.experimental.ai && foam.relatedNotes.state == 'no-embedding'"
+      },
+      {
+        "view": "foam-vscode.related-notes",
+        "contents": "No similar notes found for the current note.",
+        "when": "config.foam.experimental.ai && foam.relatedNotes.state == 'ready'"
       }
     ],
     "menus": {
@@ -383,6 +405,16 @@
         "command": "foam-vscode.rename-tag",
         "title": "Foam: Rename Tag",
         "icon": "$(edit)"
+      },
+      {
+        "command": "foam-vscode.show-similar-notes",
+        "title": "Foam: Show Similar Notes",
+        "when": "config.foam.experimental.ai"
+      },
+      {
+        "command": "foam-vscode.build-embeddings",
+        "title": "Foam: Build Embeddings Index",
+        "when": "config.foam.experimental.ai"
       },
       {
         "command": "foam-vscode.views.orphans.group-by:folder",
@@ -694,6 +726,7 @@
           "description": "Whether or not to navigate to the target daily note when a daily note snippet is selected."
         },
         "foam.preview.embedNoteType": {
+          "when": "config.foam.experimental.ai",
           "type": "string",
           "default": "full-card",
           "enum": [
@@ -724,7 +757,6 @@
           "default": false,
           "description": "Whether to open the graph on startup."
         }
-
       }
     },
     "keybindings": [

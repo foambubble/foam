@@ -80,7 +80,9 @@ export const waitForNoteInFoamWorkspace = async (uri: URI, timeout = 5000) => {
     }
     await wait(100);
   }
-  return false;
+  throw new Error(
+    `Timeout waiting for note ${uri.toString()} in Foam workspace`
+  );
 };
 
 /**

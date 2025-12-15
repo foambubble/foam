@@ -19,6 +19,7 @@ import { VsCodeWatcher } from './services/watcher';
 import { createMarkdownParser } from './core/services/markdown-parser';
 import VsCodeBasedParserCache from './services/cache';
 import { createMatcherAndDataStore } from './services/editor';
+import { OllamaEmbeddingProvider } from './ai/providers/ollama/ollama-provider';
 
 export async function activate(context: ExtensionContext) {
   const logger = new VsCodeOutputLogger();
@@ -71,13 +72,20 @@ export async function activate(context: ExtensionContext) {
       attachmentExtConfig
     );
 
+    // Initialize embedding provider
+    const aiEnabled = workspace.getConfiguration('foam.experimental').get('ai');
+    const embeddingProvider = aiEnabled
+      ? new OllamaEmbeddingProvider()
+      : undefined;
+
     const foamPromise = bootstrap(
       matcher,
       watcher,
       dataStore,
       parser,
       [markdownProvider, attachmentProvider],
-      defaultExtension
+      defaultExtension,
+      embeddingProvider
     );
 
     // Load the features

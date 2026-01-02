@@ -20,6 +20,17 @@ const initGUI = () => {
     .add(model, 'nodeFontSizeMultiplier', 0.5, 3)
     .step(0.1)
     .name('Node Font Size');
+  appearanceFolder
+    .add(model.style, 'colorByDirectory')
+    .name('Directory coloring')
+    .onFinishChange(v => {
+      model.style.colorByDirectory = v; // Update the actual model property
+      // Force a re-render by updating a dummy property on nodes
+      model.data.nodes.forEach(node => {
+        node.__forceUpdate = !node.__forceUpdate;
+      });
+      graph.graphData(model.data); // Trigger re-render with updated node data
+    });
   const forcesFolder = gui.addFolder('Forces');
 
   forcesFolder
@@ -119,6 +130,7 @@ const defaultStyle = {
     placeholder: getStyle('--vscode-list-deemphasizedForeground') ?? '#545454',
     tag: getStyle('--vscode-list-highlightForeground') ?? '#f9c74f',
   },
+  colorByDirectory: false,
 };
 
 let model = {
@@ -269,17 +281,19 @@ const Actions = {
     }
     model.style = {
       ...defaultStyle,
-      ...newStyle,
+      ...newStyle.style,
       lineColor:
-        newStyle.lineColor ||
-        (newStyle.node && newStyle.node.note) ||
+        newStyle.style?.lineColor ||
+        (newStyle.style?.node && newStyle.style?.node.note) ||
         defaultStyle.lineColor,
       node: {
         ...defaultStyle.node,
-        ...newStyle.node,
+        ...newStyle.style?.node,
       },
+      colorByDirectory: newStyle.colorByDirectory ?? false,
     };
     graph.backgroundColor(model.style.background);
+    gui.updateDisplay();
   },
   updateFilters: () => {
     update(m => {
@@ -321,14 +335,18 @@ function initDataviz(channel) {
       const { fill, border } = getNodeColor(node.id, model);
       const fontSize = (model.style.fontSize * model.nodeFontSizeMultiplier) / globalScale;
       const nodeState = getNodeState(node.id, model);
-      const textColor = fill.copy({
-        opacity:
-          nodeState === 'regular'
-            ? getNodeLabelOpacity(globalScale)
-            : nodeState === 'highlighted'
-            ? 1
-            : Math.min(getNodeLabelOpacity(globalScale), fill.opacity),
-      });
+      const opacity =
+        nodeState === 'regular'
+          ? getNodeLabelOpacity(globalScale)
+          : nodeState === 'highlighted'
+          ? 1
+          : Math.min(getNodeLabelOpacity(globalScale), fill.opacity);
+
+      const directoryColor = model.style.colorByDirectory
+        ? getDirectoryColorForNode(node.id, model)
+        : null;
+      const baseColor = directoryColor ? d3.rgb(directoryColor) : fill;
+      const textColor = baseColor.copy({ opacity: opacity });
       const label = info.title;
 
       painter
@@ -485,6 +503,37 @@ const getNodeLabelOpacity = d3
 function getNodeTypeColor(type, model) {
   const style = model.style;
   return style.node[type ?? 'note'] ?? style.node['note'];
+}
+
+const directoryColorMap = new Map();
+
+function getRandomColor() {
+  const hue = Math.floor(Math.random() * 360); // 0-359
+  const saturation = Math.floor(Math.random() * (70 - 50 + 1)) + 50; // 50-70%
+  const lightness = Math.floor(Math.random() * (70 - 50 + 1)) + 50; // 50-70%
+  return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+}
+
+function getDirectoryColorForNode(nodeId, model) {
+  let currentPath = nodeId;
+  const lastSegment = currentPath.split('/').pop();
+  if (lastSegment && lastSegment.includes('.')) { // Heuristic for filename
+    currentPath = currentPath.substring(0, currentPath.lastIndexOf('/'));
+  }
+  if (currentPath.length > 0 && !currentPath.endsWith('/')) {
+    currentPath += '/';
+  }
+  // If currentPath is empty, it represents the root, e.g. ""
+
+  // If we already have a color for this directory, return it
+  if (directoryColorMap.has(currentPath)) {
+    return directoryColorMap.get(currentPath);
+  }
+
+  // Otherwise, generate a new random color, store it, and return it
+  const newColor = getRandomColor();
+  directoryColorMap.set(currentPath, newColor);
+  return newColor;
 }
 
 function getNodeColor(nodeId, model) {

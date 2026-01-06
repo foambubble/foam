@@ -756,6 +756,11 @@
           "type": "boolean",
           "default": false,
           "description": "Whether to open the graph on startup."
+        },
+        "foam.graph.appearance.colorByDirectory": {
+          "type": "boolean",
+          "default": false,
+          "description": "When true, colours the node name in the graph with a random colour based on directory"
         }
       }
     },

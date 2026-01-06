@@ -204,5 +204,9 @@ async function getWebviewContent(
 }
 
 function getGraphStyle(): object {
-  return vscode.workspace.getConfiguration('foam.graph').get('style');
+  const config = vscode.workspace.getConfiguration('foam.graph');
+  return {
+    style: config.get('style'),
+    colorByDirectory: config.get('appearance.colorByDirectory', false),
+  };
 }

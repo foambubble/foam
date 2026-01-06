@@ -1,6 +1,7 @@
 const CONTAINER_ID = 'graph';
 
 let nodeFontSizeController = null;
+let colorByDirectoryController = null;
 const initGUI = () => {
   const gui = new dat.gui.GUI();
   const nodeTypeFilterFolder = gui.addFolder('Filter by type');
@@ -20,9 +21,10 @@ const initGUI = () => {
     .add(model, 'nodeFontSizeMultiplier', 0.5, 3)
     .step(0.1)
     .name('Node Font Size');
-  appearanceFolder
+  colorByDirectoryController = appearanceFolder
     .add(model.style, 'colorByDirectory')
     .name('Directory coloring')
+    .listen()
     .onFinishChange(v => {
       model.style.colorByDirectory = v; // Update the actual model property
       // Force a re-render by updating a dummy property on nodes
@@ -279,19 +281,27 @@ const Actions = {
     if (!newStyle) {
       return;
     }
-    model.style = {
+    // Mutate the existing model.style object instead of replacing it.
+    // This is so that the dat.gui controller, which is bound to the original
+    // object reference, receives the update.
+    const combinedStyle = {
       ...defaultStyle,
       ...newStyle.style,
-      lineColor:
-        newStyle.style?.lineColor ||
-        (newStyle.style?.node && newStyle.style?.node.note) ||
-        defaultStyle.lineColor,
-      node: {
-        ...defaultStyle.node,
-        ...newStyle.style?.node,
-      },
-      colorByDirectory: newStyle.colorByDirectory ?? false,
     };
+    Object.assign(model.style, combinedStyle);
+
+    model.style.lineColor =
+      newStyle.style?.lineColor ||
+      (newStyle.style?.node && newStyle.style?.node.note) ||
+      defaultStyle.lineColor;
+
+    model.style.node = {
+      ...defaultStyle.node,
+      ...newStyle.style?.node,
+    };
+
+    model.style.colorByDirectory = newStyle.colorByDirectory ?? false;
+
     graph.backgroundColor(model.style.background);
     gui.updateDisplay();
   },

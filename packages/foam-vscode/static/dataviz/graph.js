@@ -20,6 +20,17 @@ const initGUI = () => {
     .add(model, 'nodeFontSizeMultiplier', 0.5, 3)
     .step(0.1)
     .name('Node Font Size');
+  appearanceFolder
+    .add(model.style, 'colorMode', { 'None': 'none', 'Directory': 'directory' })
+    .name('Color by')
+    .onFinishChange(v => {
+      model.style.colorMode = v; // Update the actual model property
+      // Force a re-render by updating a dummy property on nodes
+      model.data.nodes.forEach(node => {
+        node.__forceUpdate = !node.__forceUpdate;
+      });
+      graph.graphData(model.data); // Trigger re-render with updated node data
+    });
   const forcesFolder = gui.addFolder('Forces');
 
   forcesFolder
@@ -119,6 +130,7 @@ const defaultStyle = {
     placeholder: getStyle('--vscode-list-deemphasizedForeground') ?? '#545454',
     tag: getStyle('--vscode-list-highlightForeground') ?? '#f9c74f',
   },
+  colorMode: 'none',
 };
 
 let model = {
@@ -166,6 +178,17 @@ let model = {
     enableRefocus: true,
     enableZoom: true,
   }
+};
+
+// Color mode handlers - maps mode names to functions
+const colorModeHandler = {
+  'none': null,
+  'directory': (nodeId) => getDirectoryColorForNode(nodeId),
+  // Future modes can be added here:
+  // 'tag': (nodeId, model) => getTagColorForNode(nodeId, model),
+  // 'placeholder': (nodeId, model) => getPlaceholderColorForNode(nodeId, model),
+  // 'image': (nodeId, model) => getImageColorForNode(nodeId, model),
+  // 'attachment': (nodeId, model) => getAttachmentColorForNode(nodeId, model),
 };
 
 const graph = ForceGraph();
@@ -269,17 +292,19 @@ const Actions = {
     }
     model.style = {
       ...defaultStyle,
-      ...newStyle,
+      ...newStyle.style,
       lineColor:
-        newStyle.lineColor ||
-        (newStyle.node && newStyle.node.note) ||
+        newStyle.style?.lineColor ||
+        (newStyle.style?.node && newStyle.style?.node.note) ||
         defaultStyle.lineColor,
       node: {
         ...defaultStyle.node,
-        ...newStyle.node,
+        ...newStyle.style?.node,
       },
+      colorMode: newStyle.colorMode ?? 'none',
     };
     graph.backgroundColor(model.style.background);
+    gui.updateDisplay();
   },
   updateFilters: () => {
     update(m => {
@@ -321,14 +346,18 @@ function initDataviz(channel) {
       const { fill, border } = getNodeColor(node.id, model);
       const fontSize = (model.style.fontSize * model.nodeFontSizeMultiplier) / globalScale;
       const nodeState = getNodeState(node.id, model);
-      const textColor = fill.copy({
-        opacity:
-          nodeState === 'regular'
-            ? getNodeLabelOpacity(globalScale)
-            : nodeState === 'highlighted'
+      const opacity =
+        nodeState === 'regular'
+          ? getNodeLabelOpacity(globalScale)
+          : nodeState === 'highlighted'
             ? 1
-            : Math.min(getNodeLabelOpacity(globalScale), fill.opacity),
-      });
+            : Math.min(getNodeLabelOpacity(globalScale), fill.opacity);
+
+      // Get the color handler function for the current mode
+      const colorFunction = colorModeHandler[model.style.colorMode];
+      const modifiedColor = colorFunction ? colorFunction(node.id, model) : null;
+      const baseColor = modifiedColor ? d3.rgb(modifiedColor) : fill;
+      const textColor = baseColor.copy({ opacity: opacity });
       const label = info.title;
 
       painter
@@ -485,6 +514,37 @@ const getNodeLabelOpacity = d3
 function getNodeTypeColor(type, model) {
   const style = model.style;
   return style.node[type ?? 'note'] ?? style.node['note'];
+}
+
+function hashString(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+  }
+  return Math.abs(hash);
+}
+
+function hashToHSL(hash) {
+  const hue = hash % 360;                    // 0-359
+  const saturation = 50 + (hash % 20);        // 50-69% (consistent range)
+  const lightness = 50 + ((hash >> 8) % 20);  // 50-69% (different range)
+  return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+}
+
+function getDirectoryColorForNode(nodeId) {
+  let currentPath = nodeId;
+  const lastSegment = currentPath.split('/').pop();
+  if (lastSegment && lastSegment.includes('.')) { // Heuristic for filename
+    currentPath = currentPath.substring(0, currentPath.lastIndexOf('/'));
+  }
+  if (currentPath.length > 0 && !currentPath.endsWith('/')) {
+    currentPath += '/';
+  }
+  // If currentPath is empty, it represents the root, e.g. ""
+
+  const hash = hashString(currentPath);
+  return hashToHSL(hash);
 }
 
 function getNodeColor(nodeId, model) {

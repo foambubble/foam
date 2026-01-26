@@ -90,7 +90,7 @@ You can customize it as you like, and you can use the following variables in the
 - \`\${FOAM_TITLE}\`: The title of the note
 
 Go to https://github.com/foambubble/foam/blob/main/docs/user/features/daily-notes.md for more details.
-For more complex templates, including Javascript dynamic templates, see https://github.com/foambubble/foam/blob/main/docs/user/features/note-templates.md.
+For more complex templates, including Javascript dynamic templates, see https://github.com/foambubble/foam/blob/main/docs/user/features/templates.md.
 `;
 
 export const CREATE_DAILY_NOTE_WARNING_RESPONSE = 'Create daily note template';

@@ -121,7 +121,7 @@ _See [[contribution-guide]] and [[how-to-write-recipes]]._
 [creating-new-notes]: ../getting-started/creating-new-notes.md "Creating New Notes"
 [daily-notes]: ../features/daily-notes.md "Daily Notes"
 [tags]: ../features/tags.md "Tags"
-[note-templates]: ../features/note-templates.md "Note Templates"
+[note-templates]: ../features/templates.md "Note Templates"
 [orphans]: ../tools/orphans.md "Orphaned Notes"
 [diagrams-in-markdown]: diagrams-in-markdown.md "Diagrams in Markdown"
 [automatically-expand-urls-to-well-titled-links]: automatically-expand-urls-to-well-titled-links.md "Automatically Expand URLs to Well-Titled Links"

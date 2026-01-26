@@ -39,5 +39,5 @@ Foam can automatically generate [[link-reference-definitions]] at the bottom of 
 [graph-visualization]: graph-visualization.md 'Graph Visualization'
 [link-reference-definitions]: link-reference-definitions.md 'Link Reference Definitions'
 [foam-file-format]: ../../dev/foam-file-format.md 'Foam File Format'
-[note-templates]: note-templates.md 'Note Templates'
+[note-templates]: templates.md 'Note Templates'
 [link-reference-definition-improvements]: ../../dev/proposals/link-reference-definition-improvements.md 'Link Reference Definition Improvements'

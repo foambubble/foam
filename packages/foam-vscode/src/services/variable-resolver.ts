@@ -291,11 +291,11 @@ function resolveFoamCurrentDir() {
   try {
     // Try to get the directory of the currently active editor
     const currentDir = getCurrentEditorDirectory();
-    return currentDir.toFsPath();
+    return currentDir.path;
   } catch (error) {
     // Fall back to workspace root if no active editor
     if (workspace.workspaceFolders && workspace.workspaceFolders.length > 0) {
-      return fromVsCodeUri(workspace.workspaceFolders[0].uri).toFsPath();
+      return workspace.workspaceFolders[0].uri.path;
     }
     // If no workspace is open, raise
     throw new Error('No workspace is open');

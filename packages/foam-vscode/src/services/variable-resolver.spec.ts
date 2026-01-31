@@ -358,6 +358,21 @@ describe('variable-resolver, variable resolution', () => {
       expect(typeof result).toBe('string');
       expect(result.length).toBeGreaterThan(0);
     });
+
+    it('should return POSIX-style paths without backslashes for YAML compatibility (issue #1573)', async () => {
+      // Example: "/c:/Users/name" instead of "C:\Users\name"
+      const resolver = new Resolver(new Map<string, string>(), new Date());
+      const result = await resolver.resolve(new Variable('FOAM_CURRENT_DIR'));
+
+      expect(typeof result).toBe('string');
+      expect(result.length).toBeGreaterThan(0);
+
+      // Must not contain backslashes (which break YAML on Windows)
+      expect(result).not.toContain('\\');
+
+      // Must use forward slashes as path separators
+      expect(result).toContain('/');
+    });
   });
 });
 

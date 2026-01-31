@@ -809,7 +809,7 @@
     "dts-cli": "^1.6.3",
     "esbuild": "^0.17.7",
     "esbuild-plugin-polyfill-node": "^0.3.0",
-    "eslint": "^8.33.0",
+    "eslint": "^9.26.0",
     "eslint-import-resolver-typescript": "^3.5.3",
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-jest": "^27.2.1",

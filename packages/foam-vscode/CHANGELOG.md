@@ -4,6 +4,18 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## 0.29.2
+
+Fixes and Improvements:
+
+- Fixed FOAM_CURRENT_DIR to use posix style paths (#1573)
+- Fixed highlight of alias in wikilinks (#1451)
+- Fixed excessive blank lines in link reference definitions (#1558, #1561)
+- Added node color mode dropdown in graph with options: 'none', 'Directory' (#1570)
+- Added appearance panel in graph webview (#1555)
+- Added forces panel in graph (#1554)
+- Added selection panel in graph (#1556)
+
 ## 0.29.1
 
 Fixes and Improvements:

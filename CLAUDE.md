@@ -150,7 +150,9 @@ Whenever we work together on a task, feel free to challenge my assumptions and i
 1. Get the issue information from github
 2. Define a step by step plan for addressing the issue
 3. Create tests for the feature
-4. Starting from the first test case, implement the feature so the test passes
+4. **IMPORTANT**: Run the tests to ensure they FAIL before implementing the fix (this validates the test is actually testing what we think it is)
+5. Implement the fix to make the test pass
+6. Run the tests again to verify the fix works
 
 ### Core Logic Changes
 

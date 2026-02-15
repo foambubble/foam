@@ -226,40 +226,39 @@ const getTextFromChildren = (root: Node): string => {
   return text;
 };
 
-function getPropertiesInfoFromYAML(yamlText: string): {
-  [key: string]: { key: string; value: string; text: string; line: number };
+function getTagPropertyInfo(yamlText: string): {
+  lines: string[];
+  line: number;
 } {
+<<<<<<< HEAD
   const yamlProps = `\n${yamlText}`
     .split(/[\n](\w+:)/g)
     .filter(item => item.trim() !== '');
+=======
+>>>>>>> ce03719 (Fix parsing of tags when colon exists in other properties)
   const lines = yamlText.split('\n');
-  let result: { line: number; key: string; text: string; value: string }[] = [];
-  for (let i = 0; i < yamlProps.length / 2; i++) {
-    const key = yamlProps[i * 2].replace(':', '');
-    const value = yamlProps[i * 2 + 1].trim();
-    const text = yamlProps[i * 2] + yamlProps[i * 2 + 1];
-    result.push({ key, value, text, line: -1 });
+  const startLine = lines.findIndex(line => line.trim().startsWith('tags:'));
+  if (startLine === -1) return { lines: [], line: -1 };
+
+  let endLine = startLine + 1;
+  while (endLine < lines.length && !lines[endLine].trim().includes(':')) {
+    endLine++;
   }
-  result = result.map(p => {
-    const line = lines.findIndex(l => l.startsWith(p.key + ':'));
-    return { ...p, line };
-  });
-  return result.reduce((acc, curr) => {
-    acc[curr.key] = curr;
-    return acc;
-  }, {});
+
+  return {
+    lines: lines.slice(startLine, endLine),
+    line: startLine,
+  };
 }
 
 const tagsPlugin: ParserPlugin = {
   name: 'tags',
   onDidFindProperties: (props, note, node) => {
     if (isSome(props.tags)) {
-      const tagPropertyInfo = getPropertiesInfoFromYAML((node as any).value)[
-        'tags'
-      ];
+      const tagPropertyInfo = getTagPropertyInfo((node as any).value);
       const tagPropertyStartLine =
         node.position!.start.line + tagPropertyInfo.line;
-      const tagPropertyLines = tagPropertyInfo.text.split('\n');
+      const tagPropertyLines = tagPropertyInfo.lines;
       const yamlTags = extractTagsFromProp(props.tags);
       for (const tag of yamlTags) {
         const tagLine = tagPropertyLines.findIndex(l => l.includes(tag));

@@ -663,6 +663,11 @@
           "type": "boolean",
           "default": true
         },
+        "foam.dateLocale": {
+          "type": "string",
+          "default": "default",
+          "description": "The locale used for date variables such as FOAM_DATE_DAY_NAME and FOAM_DATE_MONTH_NAME. Use 'default' to use the system locale, or a BCP 47 language tag (e.g. 'en-US', 'ja-JP')."
+        },
         "foam.openDailyNote.onStartup": {
           "type": "boolean",
           "default": false

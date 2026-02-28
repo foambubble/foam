@@ -3,6 +3,7 @@ import { window, workspace } from 'vscode';
 import { fromVsCodeUri } from '../utils/vsc-utils';
 import { UserCancelledOperation } from './errors';
 import { toSlug } from '../utils/slug';
+import { getFoamVsCodeConfig } from './config';
 import {
   SnippetParser,
   Variable,
@@ -177,16 +178,20 @@ export class Resolver implements VariableResolver {
             String(this.foamDate.getMonth().valueOf() + 1).padStart(2, '0')
           );
           break;
-        case 'FOAM_DATE_MONTH_NAME':
+        case 'FOAM_DATE_MONTH_NAME': {
+          const locale = getFoamVsCodeConfig<string>('dateLocale', 'default');
           value = Promise.resolve(
-            this.foamDate.toLocaleString('default', { month: 'long' })
+            this.foamDate.toLocaleString(locale, { month: 'long' })
           );
           break;
-        case 'FOAM_DATE_MONTH_NAME_SHORT':
+        }
+        case 'FOAM_DATE_MONTH_NAME_SHORT': {
+          const locale = getFoamVsCodeConfig<string>('dateLocale', 'default');
           value = Promise.resolve(
-            this.foamDate.toLocaleString('default', { month: 'short' })
+            this.foamDate.toLocaleString(locale, { month: 'short' })
           );
           break;
+        }
         case 'FOAM_DATE_DATE':
           value = Promise.resolve(
             String(this.foamDate.getDate().valueOf()).padStart(2, '0')
@@ -229,16 +234,20 @@ export class Resolver implements VariableResolver {
           value = Promise.resolve(String(date.getFullYear()));
           break;
         }
-        case 'FOAM_DATE_DAY_NAME':
+        case 'FOAM_DATE_DAY_NAME': {
+          const locale = getFoamVsCodeConfig<string>('dateLocale', 'default');
           value = Promise.resolve(
-            this.foamDate.toLocaleString('default', { weekday: 'long' })
+            this.foamDate.toLocaleString(locale, { weekday: 'long' })
           );
           break;
-        case 'FOAM_DATE_DAY_NAME_SHORT':
+        }
+        case 'FOAM_DATE_DAY_NAME_SHORT': {
+          const locale = getFoamVsCodeConfig<string>('dateLocale', 'default');
           value = Promise.resolve(
-            this.foamDate.toLocaleString('default', { weekday: 'short' })
+            this.foamDate.toLocaleString(locale, { weekday: 'short' })
           );
           break;
+        }
         case 'FOAM_DATE_HOUR':
           value = Promise.resolve(
             String(this.foamDate.getHours().valueOf()).padStart(2, '0')

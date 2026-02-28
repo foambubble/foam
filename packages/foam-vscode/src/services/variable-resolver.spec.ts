@@ -6,6 +6,7 @@ import {
   createFile,
   deleteFile,
   showInEditor,
+  withModifiedFoamConfiguration,
 } from '../test/test-utils-vscode';
 
 describe('variable-resolver, text substitution', () => {
@@ -313,6 +314,46 @@ describe('variable-resolver, variable resolution', () => {
     expect(result.get('FOAM_DATE_WEEK_YEAR')).toBe('2025');
     expect(result.get('FOAM_DATE_WEEK')).toBe('01');
     expect(result.get('FOAM_DATE_YEAR')).toBe('2024');
+  });
+
+  describe('foam.dateLocale', () => {
+    const targetDate = new Date(2021, 9, 15, 1, 2, 3); // Friday, October 15, 2021
+
+    it('should use en-US locale when foam.dateLocale is set to en-US', async () => {
+      await withModifiedFoamConfiguration('dateLocale', 'en-US', async () => {
+        const resolver = new Resolver(new Map(), targetDate);
+        expect(
+          await resolver.resolve(new Variable('FOAM_DATE_DAY_NAME'))
+        ).toBe('Friday');
+        expect(
+          await resolver.resolve(new Variable('FOAM_DATE_DAY_NAME_SHORT'))
+        ).toBe('Fri');
+        expect(
+          await resolver.resolve(new Variable('FOAM_DATE_MONTH_NAME'))
+        ).toBe('October');
+        expect(
+          await resolver.resolve(new Variable('FOAM_DATE_MONTH_NAME_SHORT'))
+        ).toBe('Oct');
+      });
+    });
+
+    it('should use ja-JP locale when foam.dateLocale is set to ja-JP', async () => {
+      await withModifiedFoamConfiguration('dateLocale', 'ja-JP', async () => {
+        const resolver = new Resolver(new Map(), targetDate);
+        expect(
+          await resolver.resolve(new Variable('FOAM_DATE_DAY_NAME'))
+        ).toBe('金曜日');
+        expect(
+          await resolver.resolve(new Variable('FOAM_DATE_DAY_NAME_SHORT'))
+        ).toBe('金');
+        expect(
+          await resolver.resolve(new Variable('FOAM_DATE_MONTH_NAME'))
+        ).toBe('10月');
+        expect(
+          await resolver.resolve(new Variable('FOAM_DATE_MONTH_NAME_SHORT'))
+        ).toBe('10月');
+      });
+    });
   });
 
   describe('FOAM_CURRENT_DIR', () => {

@@ -52,6 +52,25 @@ const config = {
           });
         },
       },
+      {
+        name: 'parse-entities-no-dom',
+        setup(build) {
+          // parse-entities maps ./decode-entity -> ./decode-entity.browser.js via
+          // its package.json `browser` field when platform=browser. That version
+          // uses document.createElement which is unavailable in VS Code Web
+          // Extension host (Web Worker). Intercept the import before esbuild
+          // applies the browser field remap and redirect to the Node.js version
+          // that uses a pure lookup table instead.
+          // Addresses #1566
+          build.onResolve({ filter: /\/decode-entity$/ }, args => {
+            if (args.resolveDir.includes('parse-entities')) {
+              return {
+                path: require.resolve('parse-entities/decode-entity.js'),
+              };
+            }
+          });
+        },
+      },
     ],
   },
   node: {

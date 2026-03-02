@@ -29,7 +29,7 @@ If at any time during these steps you need clarifying information from me, pleas
 
 Creates a markdown file with:
 
-- Issue summary and key details
+- Issue summary with link and key details
 - Research findings from codebase analysis
 - Identified possible root causes
 - Two ranked solution approaches with pros/cons

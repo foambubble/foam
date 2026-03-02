@@ -537,4 +537,84 @@ describe('Generation of markdown references', () => {
       '../dir1/page ~i.md',
     ]);
   });
+
+  it('should preserve section fragments for same-file section links', () => {
+    const workspace = createTestWorkspace();
+    const noteA = createNoteFromMarkdown(
+      '# Introduction\n\nLink to [[#introduction]]',
+      '/dir1/page-a.md'
+    );
+    workspace.set(noteA);
+
+    const references = createMarkdownReferences(workspace, noteA.uri, false);
+    expect(references).toContainEqual(
+      expect.objectContaining({
+        label: '#introduction',
+        url: '#introduction',
+      })
+    );
+  });
+
+  it('should preserve section fragments for cross-file wikilinks without extension', () => {
+    const workspace = createTestWorkspace();
+    const noteA = createNoteFromMarkdown(
+      'Link to [[page-b#conclusion]]',
+      '/dir1/page-a.md'
+    );
+    const noteB = createNoteFromMarkdown(
+      '# Conclusion\n\nContent',
+      '/dir1/page-b.md'
+    );
+    workspace.set(noteA).set(noteB);
+
+    const references = createMarkdownReferences(workspace, noteA.uri, false);
+    expect(references).toContainEqual(
+      expect.objectContaining({
+        label: 'page-b#conclusion',
+        url: 'page-b#conclusion',
+      })
+    );
+  });
+
+  it('should preserve section fragments for cross-file wikilinks with extension', () => {
+    const workspace = createTestWorkspace();
+    const noteA = createNoteFromMarkdown(
+      'Link to [[page-b#introduction]]',
+      '/dir1/page-a.md'
+    );
+    const noteB = createNoteFromMarkdown(
+      '# Introduction\n\nContent',
+      '/dir2/page-b.md'
+    );
+    workspace.set(noteA).set(noteB);
+
+    const references = createMarkdownReferences(workspace, noteA.uri, true);
+    expect(references).toContainEqual(
+      expect.objectContaining({
+        label: 'page-b#introduction',
+        url: '../dir2/page-b.md#introduction',
+      })
+    );
+  });
+
+  it('should preserve section fragments for embedded wikilinks with sections', () => {
+    const workspace = createTestWorkspace();
+    const noteA = createNoteFromMarkdown(
+      'Embed ![[page-b#summary]]',
+      '/dir1/page-a.md'
+    );
+    const noteB = createNoteFromMarkdown(
+      '# Summary\n\nContent',
+      '/dir1/page-b.md'
+    );
+    workspace.set(noteA).set(noteB);
+
+    const references = createMarkdownReferences(workspace, noteA.uri, false);
+    expect(references).toContainEqual(
+      expect.objectContaining({
+        label: 'page-b#summary',
+        url: 'page-b#summary',
+      })
+    );
+  });
 });

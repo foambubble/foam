@@ -62,15 +62,18 @@ export class MarkdownResourceProvider implements ResourceProvider {
           targetUri =
             workspace.find(definedUri, resource.uri)?.uri ??
             URI.placeholder(definedUri.path);
+          if (definedUri.fragment) {
+            targetUri = targetUri.with({ fragment: definedUri.fragment });
+          }
         } else {
           targetUri =
             target === ''
               ? resource.uri
               : workspace.find(target, resource.uri)?.uri ??
                 URI.placeholder(target);
-        }
-        if (section) {
-          targetUri = targetUri.with({ fragment: section });
+          if (section) {
+            targetUri = targetUri.with({ fragment: section });
+          }
         }
         break;
       }

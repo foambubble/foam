@@ -13,20 +13,12 @@ export abstract class MarkdownLink {
   public static analyzeLink(link: ResourceLink) {
     try {
       if (link.type === 'wikilink') {
+        // Wikilinks are always parsed from rawText. Any resolved definition is a
+        // Foam-generated rendering artifact, not authoritative content — the user's
+        // intent is expressed by the wikilink identifier itself.
         const [, target, section, alias] = this.wikilinkRegex.exec(
           link.rawText
         );
-
-        // For wikilinks with resolved definitions, parse target and section from definition URL
-        if (ResourceLink.isResolvedReference(link)) {
-          const definitionUri = URI.parse(link.definition.url, 'tmp');
-          return {
-            target: definitionUri.path, // Base path from definition
-            section: definitionUri.fragment, // Fragment from definition
-            alias: alias ?? '', // Alias from rawText
-          };
-        }
-
         return {
           target: target?.replace(/\\/g, '') ?? '',
           section: section ?? '',

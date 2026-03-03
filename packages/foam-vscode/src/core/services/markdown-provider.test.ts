@@ -106,6 +106,19 @@ describe('Link resolution', () => {
       expect(ws.resolveLink(noteA, noteA.links[0])).toEqual(noteB.uri);
     });
 
+    it('should include section fragment from a resolved wikilink definition when rawText has no section', () => {
+      const ws = createTestWorkspace();
+      const noteA = createTestNote({
+        uri: '/somewhere/from/page-a.md',
+        links: [{ slug: 'page-b', definitionUrl: '../to/page-b.md#mysection' }],
+      });
+      const noteB = createTestNote({ uri: '/somewhere/to/page-b.md' });
+      ws.set(noteA).set(noteB);
+      expect(ws.resolveLink(noteA, noteA.links[0])).toEqual(
+        noteB.uri.with({ fragment: 'mysection' })
+      );
+    });
+
     it('should support case insensitive wikilink resolution', () => {
       const noteA = createTestNote({
         uri: '/path/to/page-a.md',

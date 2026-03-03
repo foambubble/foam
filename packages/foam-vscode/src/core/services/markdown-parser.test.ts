@@ -422,6 +422,28 @@ this is some #text that includes #tags we #care-about.
       ]);
     });
 
+    it('can find tags when other fields has colon', () => {
+      // This is a regression test. Previously a colon in
+      // other fields would throw an error, causing tags
+      // to be empty.
+      const noteA = createNoteFromMarkdown(`
+---
+date: 2023-10-10T00:00:00.000Z
+tags: [hello, world,  this_is_good]
+---
+# this is a heading
+this is some #text that includes #tags we #care-about.
+    `);
+      expect(noteA.tags.map(t => t.label)).toEqual([
+        'hello',
+        'world',
+        'this_is_good',
+        'text',
+        'tags',
+        'care-about',
+      ]);
+    });
+
     it('provides a specific range for tags in yaml', () => {
       // For now it's enough to just get the YAML block range
       // in the future we might want to be more specific

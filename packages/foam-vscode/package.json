@@ -761,6 +761,11 @@
           "type": "boolean",
           "default": false,
           "description": "Whether to open the graph on startup."
+        },
+        "foam.graph.navigateToPreview": {
+          "type": "boolean",
+          "default": false,
+          "description": "When clicking a node in the graph, open the markdown preview instead of the source editor."
         }
       }
     },

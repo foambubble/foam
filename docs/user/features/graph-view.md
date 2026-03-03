@@ -27,6 +27,16 @@ With the Foam graph visualization you can:
 - navigate to a note by clicking on it's node while pressing `ctrl` or `cmd`
 - automatically center the graph on the currently edited note, to immediately see its connections
 
+### Preview Mode
+
+By default, clicking a node opens the source file in the editor. To open the markdown preview instead, enable the `foam.graph.navigateToPreview` setting:
+
+```json
+"foam.graph.navigateToPreview": true
+```
+
+This gives you a two-panel layout — graph on one side, rendered preview on the other — without a source editor in between. Non-markdown files (attachments, images, etc.) always open in the editor regardless of this setting.
+
 ## Filter View
 
 If you only wish to view certain types of notes or tags, or want to hide linked attachment nodes then you can apply filters to the graph.

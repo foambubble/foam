@@ -150,11 +150,23 @@ async function createGraphPanel(
           const selectedNote = foam.workspace.get(fromVsCodeUri(noteUri));
 
           if (isSome(selectedNote)) {
-            vscode.commands.executeCommand(
-              'vscode.open',
-              noteUri,
-              vscode.ViewColumn.One
+            const navigateToPreview = getFoamVsCodeConfig(
+              'graph.navigateToPreview',
+              false
             );
+            const command = getNodeNavigationCommand(
+              noteUri.path,
+              navigateToPreview
+            );
+            if (command === 'markdown.showPreview') {
+              vscode.commands.executeCommand(command, noteUri);
+            } else {
+              vscode.commands.executeCommand(
+                command,
+                noteUri,
+                vscode.ViewColumn.One
+              );
+            }
           }
           break;
         }
@@ -205,4 +217,14 @@ async function getWebviewContent(
 
 function getGraphStyle(): object {
   return vscode.workspace.getConfiguration('foam.graph').get('style');
+}
+
+export function getNodeNavigationCommand(
+  uriPath: string,
+  navigateToPreview: boolean
+): string {
+  if (navigateToPreview && uriPath.endsWith('.md')) {
+    return 'markdown.showPreview';
+  }
+  return 'vscode.open';
 }

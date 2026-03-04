@@ -4,6 +4,16 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## 0.30.0
+
+Fixes and Improvements:
+
+- Fixed decoding of HTML entities (#1483)
+- Added support for locale in date variables (#1566)
+- Added support for renaming headers (#1588)
+- Fixed removal of Foam frontmatter section from templates on Windows (#1575)
+- Added foam.graph.navigateToPreview setting (#684)
+
 ## 0.29.2
 
 Fixes and Improvements:

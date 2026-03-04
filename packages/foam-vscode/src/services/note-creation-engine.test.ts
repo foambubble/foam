@@ -25,11 +25,12 @@ async function setupFoamEngine() {
   const matcher = new Matcher([strToUri(tmpDir)], ['**/*.md']);
   const parser = createMarkdownParser();
   const provider = new MarkdownResourceProvider(dataStore, parser, ['.md']);
-  const foam = await bootstrap(matcher, undefined, dataStore, parser, [
+  const roots = [strToUri(tmpDir)];
+  const foam = await bootstrap(roots, matcher, undefined, dataStore, parser, [
     provider,
   ]);
-  const engine = new NoteCreationEngine(foam, [strToUri(tmpDir)]);
-  return { foam, engine };
+  const engine = new NoteCreationEngine(foam, roots);
+  return { foam, engine, tmpDir };
 }
 
 describe('NoteCreationEngine', () => {
@@ -673,6 +674,25 @@ foam_template:
       // Backslash normalized to forward slash, invalid chars sanitized
       expect(result.filepath.path).toBe('areas/Note:With-Invalid.md');
       expect(result.content).toContain('# Note:With*Invalid');
+    });
+  });
+
+  describe('filepath resolution via workspace.resolveUri', () => {
+    it('should not double an absolute filepath already under the workspace root', async () => {
+      const { engine, tmpDir } = await setupFoamEngine();
+      const root = strToUri(tmpDir);
+      const absolutePath = `${root.path}/journal/2025-10-20.md`;
+      const template: Template = {
+        type: 'markdown',
+        content: `# Daily Note`,
+        metadata: new Map([['filepath', absolutePath]]),
+      };
+      const trigger = TriggerFactory.createCommandTrigger(
+        'foam-vscode.open-daily-note'
+      );
+      const resolver = new Resolver(new Map(), new Date());
+      const result = await engine.processTemplate(trigger, template, resolver);
+      expect(result.filepath.path).toBe(absolutePath);
     });
   });
 });

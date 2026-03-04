@@ -71,7 +71,7 @@ export const createTestWorkspace = (
   workspaceRoots: URI[] = [],
   dataStore?: IDataStore
 ) => {
-  const workspace = new FoamWorkspace();
+  const workspace = new FoamWorkspace(workspaceRoots);
   const parser = createMarkdownParser();
   const provider = new MarkdownResourceProvider(
     dataStore ?? {

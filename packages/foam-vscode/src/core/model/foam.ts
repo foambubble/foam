@@ -1,5 +1,6 @@
 import { IDisposable } from '../common/lifecycle';
 import { IDataStore, IMatcher, IWatcher } from '../services/datastore';
+import { URI } from './uri';
 import { FoamWorkspace } from './workspace';
 import { FoamGraph } from './graph';
 import { ResourceParser } from './note';
@@ -26,6 +27,7 @@ export interface Foam extends IDisposable {
 }
 
 export const bootstrap = async (
+  roots: URI[],
   matcher: IMatcher,
   watcher: IWatcher | undefined,
   dataStore: IDataStore,
@@ -37,6 +39,7 @@ export const bootstrap = async (
   const workspace = await withTimingAsync(
     () =>
       FoamWorkspace.fromProviders(
+        roots,
         initialProviders,
         dataStore,
         defaultExtension

@@ -24,12 +24,67 @@ export class FoamWorkspace implements IDisposable {
   private _resources: TrieMap<string, Resource> = new TrieMap();
 
   /**
-   * @param defaultExtension: The default extension for notes in this workspace (e.g. `.md`)
+   * The root URIs of this workspace, in priority order.
+   * Used for resolving workspace-relative paths.
+   * First root is always used when a path must be resolved to exactly one root.
    */
-  constructor(public defaultExtension: string = '.md') {}
+  readonly roots: URI[];
+
+  /**
+   * @param roots The root URIs of the workspace (e.g. VS Code workspace folders)
+   * @param defaultExtension The default extension for notes in this workspace (e.g. `.md`)
+   */
+  constructor(roots: URI[] = [], public defaultExtension: string = '.md') {
+    this.roots = roots;
+  }
 
   registerProvider(provider: ResourceProvider) {
     this.providers.push(provider);
+  }
+
+  /**
+   * Resolves a path string to an absolute URI within this workspace.
+   *
+   * Resolution rules (in order):
+   * 1. Filesystem-absolute path already under a workspace root → returned as-is
+   * 2. Workspace-relative absolute path (starts with '/' but not under any root) →
+   *    resolved as roots[0].joinPath(path)
+   * 3. Relative path → resolved relative to `relativeTo` if provided, otherwise roots[0]
+   *
+   * When roots is empty, absolute paths are returned via URI.file() and relative paths
+   * require a `relativeTo` base.
+   */
+  resolveUri(filepath: string, relativeTo?: URI): URI {
+    const isDrivePath = /^[a-zA-Z]:/.test(filepath);
+    const isAbsolutePath = filepath.startsWith('/') || isDrivePath;
+
+    if (isAbsolutePath) {
+      if (this.roots.length === 0) {
+        return URI.file(filepath);
+      }
+      const isUnderRoot = this.roots.some(root =>
+        isDrivePath
+          ? filepath.toLowerCase().startsWith(root.path.toLowerCase() + '/')
+          : filepath.startsWith(root.path + '/') || filepath === root.path
+      );
+      if (isUnderRoot) {
+        return this.roots[0].forPath(filepath); // case 1: already absolute under root
+      }
+      return this.roots[0].joinPath(filepath); // case 2: workspace-relative absolute
+    }
+
+    // case 3: relative path
+    if (relativeTo) {
+      // relativeTo is a file URI — resolve against its parent directory
+      return relativeTo.getDirectory().joinPath(filepath);
+    }
+    if (this.roots.length === 0) {
+      throw new Error(
+        'Cannot resolve relative path without a relativeTo URI or workspace roots'
+      );
+    }
+    // roots[0] is a directory — join directly
+    return this.roots[0].joinPath(filepath);
   }
 
   set(resource: Resource) {
@@ -181,12 +236,14 @@ export class FoamWorkspace implements IDisposable {
     } else {
       const candidates = [path, path + this.defaultExtension];
       for (const candidate of candidates) {
-        const searchKey = isAbsolute(candidate)
-          ? candidate
+        const resolvedUri = isAbsolute(candidate)
+          ? this.resolveUri(candidate)
           : isSome(baseUri)
-          ? baseUri.resolve(candidate).path
+          ? baseUri.resolve(candidate)
           : null;
-        resource = this._resources.get(this.getTrieIdentifier(searchKey));
+        resource = resolvedUri
+          ? this._resources.get(this.getTrieIdentifier(resolvedUri))
+          : null;
         if (resource) {
           break;
         }
@@ -296,11 +353,12 @@ export class FoamWorkspace implements IDisposable {
   }
 
   static async fromProviders(
+    roots: URI[],
     providers: ResourceProvider[],
     dataStore: IDataStore,
     defaultExtension: string = '.md'
   ): Promise<FoamWorkspace> {
-    const workspace = new FoamWorkspace(defaultExtension);
+    const workspace = new FoamWorkspace(roots, defaultExtension);
     await Promise.all(providers.map(p => workspace.registerProvider(p)));
     const files = await dataStore.list();
     await Promise.all(files.map(f => workspace.fetchAndSet(f)));

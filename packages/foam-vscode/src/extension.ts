@@ -79,6 +79,7 @@ export async function activate(context: ExtensionContext) {
       : undefined;
 
     const foamPromise = bootstrap(
+      workspaceRoots,
       matcher,
       watcher,
       dataStore,

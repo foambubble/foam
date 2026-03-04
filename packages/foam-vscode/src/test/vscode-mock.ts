@@ -1554,6 +1554,7 @@ class TestFoam {
 
     // Use the bootstrap function with file watcher
     const foam = await bootstrap(
+      [fromVsCodeUri(workspaceFolder.uri)],
       matcher,
       foamWatcher,
       dataStore,

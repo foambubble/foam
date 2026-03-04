@@ -204,4 +204,33 @@ more_metadata: *info
     const result = removeFoamMetadata(input);
     expect(result).toEqual(expected);
   });
+
+  test('Removes Foam specific frontmatter when file uses CRLF line endings', () => {
+    const input =
+      '---\r\nfoo: bar\r\nfoam_template:\r\n  description: This is my note template\r\n  filepath: journal/note.md\r\n  name: My Note Template\r\n---\r\n\r\n# $FOAM_TITLE';
+
+    const expected = '---\r\nfoo: bar\r\n---\r\n\r\n# $FOAM_TITLE';
+
+    const result = removeFoamMetadata(input);
+    expect(result).toEqual(expected);
+  });
+});
+
+describe('extractFoamTemplateFrontmatterMetadata with CRLF', () => {
+  test('Removes foam_template block from mixed frontmatter with CRLF line endings', () => {
+    const input =
+      '---\r\ntype: daily-note\r\nfoam_template:\r\n  filepath: /daily-notes/note.md\r\n  name: Daily Note\r\n  description: Custom daily note template\r\n---\r\n\r\n# Content\r\n';
+
+    const expectedOutput =
+      '---\r\ntype: daily-note\r\n---\r\n\r\n# Content\r\n';
+
+    const expectedMetadata = new Map<string, string>();
+    expectedMetadata.set('filepath', '/daily-notes/note.md');
+    expectedMetadata.set('name', 'Daily Note');
+    expectedMetadata.set('description', 'Custom daily note template');
+
+    const [metadata, output] = extractFoamTemplateFrontmatterMetadata(input);
+    expect(metadata).toEqual(expectedMetadata);
+    expect(output).toEqual(expectedOutput);
+  });
 });

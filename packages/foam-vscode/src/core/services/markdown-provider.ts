@@ -20,8 +20,7 @@ export class MarkdownResourceProvider implements ResourceProvider {
   constructor(
     private readonly dataStore: IDataStore,
     private readonly parser: ResourceParser,
-    public readonly noteExtensions: string[] = ['.md'],
-    private readonly workspaceRoots: URI[] = []
+    public readonly noteExtensions: string[] = ['.md']
   ) {}
 
   supports(uri: URI) {
@@ -90,38 +89,11 @@ export class MarkdownResourceProvider implements ResourceProvider {
           : target;
 
         let path: string;
-        let foundResource: Resource | null = null;
 
         if (targetPath.startsWith('/')) {
-          // Handle workspace-relative paths (root-path relative)
-          if (this.workspaceRoots.length > 0) {
-            // Try to resolve against each workspace root
-            for (const workspaceRoot of this.workspaceRoots) {
-              const candidatePath = targetPath.substring(1); // Remove leading '/'
-              const absolutePath = workspaceRoot.joinPath(candidatePath);
-              const found = workspace.find(absolutePath);
-              if (found) {
-                foundResource = found;
-                break;
-              }
-            }
-
-            if (!foundResource) {
-              // Not found in any workspace root, create placeholder relative to first workspace root
-              const firstRoot = this.workspaceRoots[0];
-              const candidatePath = targetPath.substring(1);
-              const absolutePath = firstRoot.joinPath(candidatePath);
-              targetUri = URI.placeholder(absolutePath.path);
-            } else {
-              targetUri = foundResource.uri;
-            }
-          } else {
-            // No workspace roots provided, fall back to existing behavior
-            path = targetPath;
-            targetUri =
-              workspace.find(path, resource.uri)?.uri ??
-              URI.placeholder(resource.uri.resolve(path).path);
-          }
+          targetUri =
+            workspace.find(targetPath, resource.uri)?.uri ??
+            URI.placeholder(workspace.resolveUri(targetPath).path);
         } else {
           // Handle relative paths and non-root paths
           path =

@@ -79,8 +79,7 @@ export const createTestWorkspace = (
       list: () => Promise.resolve([]),
     },
     parser,
-    ['.md'],
-    workspaceRoots
+    ['.md']
   );
   workspace.registerProvider(provider);
   return workspace;

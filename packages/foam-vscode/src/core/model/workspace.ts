@@ -236,14 +236,31 @@ export class FoamWorkspace implements IDisposable {
     } else {
       const candidates = [path, path + this.defaultExtension];
       for (const candidate of candidates) {
-        const resolvedUri = isAbsolute(candidate)
-          ? this.resolveUri(candidate)
-          : isSome(baseUri)
-          ? baseUri.resolve(candidate)
-          : null;
-        resource = resolvedUri
-          ? this._resources.get(this.getTrieIdentifier(resolvedUri))
-          : null;
+        if (isAbsolute(candidate)) {
+          // Try roots[0] first (via resolveUri which handles already-under-root paths)
+          const resolvedUri = this.resolveUri(candidate);
+          resource =
+            this._resources.get(this.getTrieIdentifier(resolvedUri)) ?? null;
+          // For workspace-relative absolute paths in multi-root workspaces,
+          // also search remaining roots in case the resource lives in a different root
+          if (!resource && this.roots.length > 1) {
+            for (let i = 1; i < this.roots.length; i++) {
+              const altUri = this.roots[i].joinPath(candidate);
+              resource =
+                this._resources.get(this.getTrieIdentifier(altUri)) ?? null;
+              if (resource) {
+                break;
+              }
+            }
+          }
+        } else {
+          const resolvedUri = isSome(baseUri)
+            ? baseUri.resolve(candidate)
+            : null;
+          resource = resolvedUri
+            ? this._resources.get(this.getTrieIdentifier(resolvedUri))
+            : null;
+        }
         if (resource) {
           break;
         }

@@ -1,5 +1,6 @@
 import { Resolver } from './variable-resolver';
 import { Foam } from '../core/model/foam';
+import { URI } from '../core/model/uri';
 import { Logger } from '../core/utils/log';
 import {
   NoteCreationResult,
@@ -10,8 +11,6 @@ import {
   isPlaceholderTrigger,
 } from './note-creation-types';
 import { extractFoamTemplateFrontmatterMetadata } from '../utils/template-frontmatter-parser';
-import { URI } from '../core/model/uri';
-
 /**
  * Characters that are invalid in file names
  * Based on UNALLOWED_CHARS from variable-resolver.ts but excluding filepaths
@@ -35,7 +34,7 @@ function sanitizeFilepath(filepath: string): string {
  * Unified engine for creating notes from both Markdown and JavaScript templates
  */
 export class NoteCreationEngine {
-  constructor(private foam: Foam, private roots: URI[]) {}
+  constructor(private foam: Foam) {}
 
   /**
    * Processes a template and generates note content and filepath
@@ -95,7 +94,7 @@ export class NoteCreationEngine {
       this.validateNoteCreationResult(result);
 
       if (!(result.filepath instanceof URI)) {
-        result.filepath = this.roots[0].forPath(result.filepath);
+        result.filepath = this.foam.workspace.resolveUri(result.filepath as string);
       }
       return result;
     } catch (error) {
@@ -135,8 +134,15 @@ export class NoteCreationEngine {
     // Sanitize the filepath to remove invalid characters
     filepath = sanitizeFilepath(filepath);
 
+    // Only resolve absolute paths via workspace (fixes #1537 path doubling).
+    // Relative paths are left as-is for NoteFactory to resolve downstream,
+    // but backslashes are normalized to forward slashes (mirrors fromFsPath).
+    const isAbsolutePath =
+      filepath.startsWith('/') || /^[a-zA-Z]:/.test(filepath);
     return {
-      filepath: this.roots[0].forPath(filepath),
+      filepath: isAbsolutePath
+        ? this.foam.workspace.resolveUri(filepath)
+        : new URI({ scheme: 'file', path: filepath.replace(/\\/g, '/') }),
       content: cleanContent,
     };
   }

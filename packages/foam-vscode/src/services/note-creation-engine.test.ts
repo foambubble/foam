@@ -29,7 +29,7 @@ async function setupFoamEngine() {
   const foam = await bootstrap(roots, matcher, undefined, dataStore, parser, [
     provider,
   ]);
-  const engine = new NoteCreationEngine(foam, roots);
+  const engine = new NoteCreationEngine(foam);
   return { foam, engine, tmpDir };
 }
 
@@ -693,6 +693,22 @@ foam_template:
       const resolver = new Resolver(new Map(), new Date());
       const result = await engine.processTemplate(trigger, template, resolver);
       expect(result.filepath.path).toBe(absolutePath);
+    });
+
+    it('should resolve a workspace-relative absolute filepath under the workspace root (#1537)', async () => {
+      const { engine, tmpDir } = await setupFoamEngine();
+      const root = strToUri(tmpDir);
+      const template: Template = {
+        type: 'markdown',
+        content: `# Daily Note`,
+        metadata: new Map([['filepath', '/journal/2025-10-20.md']]),
+      };
+      const trigger = TriggerFactory.createCommandTrigger(
+        'foam-vscode.open-daily-note'
+      );
+      const resolver = new Resolver(new Map(), new Date());
+      const result = await engine.processTemplate(trigger, template, resolver);
+      expect(result.filepath.path).toBe(`${root.path}/journal/2025-10-20.md`);
     });
   });
 });

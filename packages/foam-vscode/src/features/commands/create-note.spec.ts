@@ -16,6 +16,12 @@ import { Location } from '../../core/model/location';
 import { Range } from '../../core/model/range';
 import { ResourceLink } from '../../core/model/note';
 import { createMarkdownParser } from '../../core/services/markdown-parser';
+import { FoamWorkspace } from '../../core/model/workspace';
+
+function makeFoamMock() {
+  const root = fromVsCodeUri(workspace.workspaceFolders[0].uri);
+  return { workspace: new FoamWorkspace([root]) } as any;
+}
 
 describe('create-note command', () => {
   afterEach(() => {
@@ -339,7 +345,7 @@ Template content using FOAM_CURRENT_DIR`,
           templatePath: template.uri.path,
           title: 'My New Note',
         },
-        {} as any
+        makeFoamMock()
       );
       // The note should be created in the subdir because FOAM_CURRENT_DIR resolves to current editor directory
       expect(resultInSubdir.uri).toEqual(
@@ -353,7 +359,7 @@ Template content using FOAM_CURRENT_DIR`,
           templatePath: template.uri.path,
           title: 'My New Note',
         },
-        {} as any
+        makeFoamMock()
       );
       // The note should be created in the workspace root because FOAM_CURRENT_DIR resolves to workspace root when no editor is active
       expect(resultInRoot.uri).toEqual(

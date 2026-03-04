@@ -26,13 +26,11 @@ export default async function activate(
 export class HeadingRenameProvider implements vscode.RenameProvider {
   constructor(private foam: Foam) {}
 
-  prepareRename(
+  async prepareRename(
     document: vscode.TextDocument,
     position: vscode.Position,
     _token: vscode.CancellationToken
-  ): vscode.ProviderResult<
-    vscode.Range | { range: vscode.Range; placeholder: string }
-  > {
+  ): Promise<vscode.Range | { range: vscode.Range; placeholder: string }> {
     const section = this.getSectionOnHeadingLine(document, position);
     if (!section) {
       throw new Error('Cannot rename: cursor is not on a heading');

@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import { createMarkdownParser } from '../core/services/markdown-parser';
-import { FoamWorkspace } from '../core/model/workspace';
 import { FoamGraph } from '../core/model/graph';
 import {
   cleanWorkspace,
@@ -8,12 +7,13 @@ import {
   createFile,
   showInEditor,
 } from '../test/test-utils-vscode';
+import { createTestWorkspace } from '../test/test-utils';
 import { toVsCodeUri } from '../utils/vsc-utils';
 import { HeadingRenameProvider } from './heading-rename-provider';
 
 const parser = createMarkdownParser([]);
 
-const buildFoamLike = (ws: FoamWorkspace) => ({
+const buildFoamLike = (ws: ReturnType<typeof createTestWorkspace>) => ({
   workspace: ws,
   graph: FoamGraph.fromWorkspace(ws),
   dispose: () => {},
@@ -29,7 +29,7 @@ describe('HeadingRenameProvider', () => {
     it('should return the heading label range and placeholder when cursor is on a heading', async () => {
       const fileA = await createFile('# My Heading\n\nSome content here.\n');
 
-      const ws = new FoamWorkspace().set(
+      const ws = createTestWorkspace().set(
         parser.parse(fileA.uri, fileA.content)
       );
       const foam = buildFoamLike(ws);
@@ -51,7 +51,7 @@ describe('HeadingRenameProvider', () => {
     it('should throw when cursor is not on a heading line', async () => {
       const fileA = await createFile('# My Heading\n\nSome body text.\n');
 
-      const ws = new FoamWorkspace().set(
+      const ws = createTestWorkspace().set(
         parser.parse(fileA.uri, fileA.content)
       );
       const foam = buildFoamLike(ws);
@@ -76,7 +76,7 @@ describe('HeadingRenameProvider', () => {
         `# Note B\n\nSee [[${fileA.name}#Old Heading]] for more.\n`
       );
 
-      const ws = new FoamWorkspace()
+      const ws = createTestWorkspace()
         .set(parser.parse(fileA.uri, fileA.content))
         .set(parser.parse(fileB.uri, fileB.content));
       const foam = buildFoamLike(ws);
@@ -109,7 +109,7 @@ describe('HeadingRenameProvider', () => {
         '# Old Heading\n\nJump to [[#Old Heading]].\n'
       );
 
-      const ws = new FoamWorkspace().set(
+      const ws = createTestWorkspace().set(
         parser.parse(fileA.uri, fileA.content)
       );
       const foam = buildFoamLike(ws);
@@ -139,7 +139,7 @@ describe('HeadingRenameProvider', () => {
         `See [[${fileA.name}#Another Heading]] only.\n`
       );
 
-      const ws = new FoamWorkspace()
+      const ws = createTestWorkspace()
         .set(parser.parse(fileA.uri, fileA.content))
         .set(parser.parse(fileB.uri, fileB.content));
       const foam = buildFoamLike(ws);
@@ -160,7 +160,7 @@ describe('HeadingRenameProvider', () => {
 
       // fileB's link points to "Another Heading", should not be changed
       const fileBEdits = edits.get(toVsCodeUri(fileB.uri));
-      expect(fileBEdits).toBeUndefined();
+      expect(fileBEdits ?? []).toHaveLength(0);
     });
 
     it('should update links using reference-style definitions', async () => {
@@ -169,7 +169,7 @@ describe('HeadingRenameProvider', () => {
         '',
         'See [the reference][ref1] for more.',
         '',
-        '[ref1]: note-a#Old Heading',
+        '[ref1]: <note-a#Old Heading>',
       ].join('\n');
 
       const fileA = await createFile('# Old Heading\n\nContent.\n', [
@@ -177,7 +177,7 @@ describe('HeadingRenameProvider', () => {
       ]);
       const fileB = await createFile(refLinkContent);
 
-      const ws = new FoamWorkspace()
+      const ws = createTestWorkspace()
         .set(parser.parse(fileA.uri, fileA.content))
         .set(parser.parse(fileB.uri, fileB.content));
       const foam = buildFoamLike(ws);
@@ -195,7 +195,7 @@ describe('HeadingRenameProvider', () => {
       expect(fileBEdits).toBeDefined();
       expect(fileBEdits).toHaveLength(1);
       // The edit should update the definition line, not the inline text
-      expect(fileBEdits[0].newText).toContain('[ref1]: note-a#New Heading');
+      expect(fileBEdits[0].newText).toContain('[ref1]: <note-a#New Heading>');
       expect(fileBEdits[0].newText).not.toContain('the reference');
     });
   });

@@ -149,6 +149,19 @@ export const createTestNote = (params: {
   };
 };
 
+const testParser = createMarkdownParser();
+
+/**
+ * Parses markdown text and returns the resulting Resource.
+ * Use this when you need accurate ranges, sections, and links
+ * (as opposed to createTestNote which constructs them manually).
+ */
+export const createNoteFromMarkdown = (
+  uri: string,
+  text: string,
+  root: URI = URI.file('/')
+): Resource => testParser.parse(root.resolve(uri), text);
+
 export const wait = (ms: number) =>
   new Promise(resolve => setTimeout(resolve, ms));
 

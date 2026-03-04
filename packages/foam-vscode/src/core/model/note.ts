@@ -1,5 +1,6 @@
 import { URI } from './uri';
 import { Range } from './range';
+import { Position } from './position';
 
 export interface ResourceLink {
   type: 'wikilink' | 'link';
@@ -130,5 +131,29 @@ export abstract class Resource {
       return resource.sections.find(s => s.label === label) ?? null;
     }
     return null;
+  }
+
+  /**
+   * Returns the deepest section whose range contains the given position, or
+   * undefined if the position does not fall within any section.
+   *
+   * Note: parent sections (e.g. h1) have ranges that extend to the end of the
+   * document and therefore overlap with their child sections (h2, h3, …).
+   * Iterating in reverse start-position order (sections are sorted by start)
+   * ensures the innermost/deepest section is returned.
+   */
+  public static getSectionAtPosition(
+    resource: Resource,
+    position: Position
+  ): Section | undefined {
+    if (!resource.sections) {
+      return undefined;
+    }
+    for (let i = resource.sections.length - 1; i >= 0; i--) {
+      if (Range.containsPosition(resource.sections[i].range, position)) {
+        return resource.sections[i];
+      }
+    }
+    return undefined;
   }
 }

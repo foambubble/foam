@@ -322,9 +322,9 @@ describe('variable-resolver, variable resolution', () => {
     it('should use en-US locale when foam.dateLocale is set to en-US', async () => {
       await withModifiedFoamConfiguration('dateLocale', 'en-US', async () => {
         const resolver = new Resolver(new Map(), targetDate);
-        expect(
-          await resolver.resolve(new Variable('FOAM_DATE_DAY_NAME'))
-        ).toBe('Friday');
+        expect(await resolver.resolve(new Variable('FOAM_DATE_DAY_NAME'))).toBe(
+          'Friday'
+        );
         expect(
           await resolver.resolve(new Variable('FOAM_DATE_DAY_NAME_SHORT'))
         ).toBe('Fri');
@@ -340,9 +340,9 @@ describe('variable-resolver, variable resolution', () => {
     it('should use ja-JP locale when foam.dateLocale is set to ja-JP', async () => {
       await withModifiedFoamConfiguration('dateLocale', 'ja-JP', async () => {
         const resolver = new Resolver(new Map(), targetDate);
-        expect(
-          await resolver.resolve(new Variable('FOAM_DATE_DAY_NAME'))
-        ).toBe('金曜日');
+        expect(await resolver.resolve(new Variable('FOAM_DATE_DAY_NAME'))).toBe(
+          '金曜日'
+        );
         expect(
           await resolver.resolve(new Variable('FOAM_DATE_DAY_NAME_SHORT'))
         ).toBe('金');

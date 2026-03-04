@@ -1385,6 +1385,7 @@ export interface ExtensionContext {
   logPath: string;
   extensionMode: number;
   extension: any;
+  languageModelAccessInformation: any;
 }
 
 function createMockExtensionContext(): ExtensionContext {
@@ -1427,6 +1428,10 @@ function createMockExtensionContext(): ExtensionContext {
     extension: {
       id: 'foam.foam-vscode',
       packageJSON: {},
+    },
+    languageModelAccessInformation: {
+      onDidChange: () => ({ dispose: () => {} }),
+      canSendRequest: () => undefined,
     },
   };
 }

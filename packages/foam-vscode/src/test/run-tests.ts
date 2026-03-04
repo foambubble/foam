@@ -23,6 +23,19 @@ function parseArgs(): {
     : { unit: true, e2e: true, excludeSpecs, jestArgs };
 }
 
+function getVSCodePlatform(): string {
+  switch (process.platform) {
+    case 'darwin':
+      return process.arch === 'arm64' ? 'darwin-arm64' : 'darwin';
+    case 'win32':
+      return process.arch === 'arm64'
+        ? 'win32-arm64-archive'
+        : 'win32-x64-archive';
+    default: // linux
+      return process.arch === 'arm64' ? 'linux-arm64' : 'linux-x64';
+  }
+}
+
 async function main() {
   const { unit, e2e, excludeSpecs, jestArgs } = parseArgs();
 
@@ -62,8 +75,10 @@ async function main() {
           '--disable-gpu',
           '--disable-extensions',
           '--disable-workspace-trust',
+          '--disable-updates',
         ],
-        version: '1.96.0',
+        platform: getVSCodePlatform(),
+        version: '1.109.0',
       });
     } catch (err) {
       console.log('Error occurred while running Foam e2e tests:', err);

@@ -62,15 +62,18 @@ export class MarkdownResourceProvider implements ResourceProvider {
           targetUri =
             workspace.find(definedUri, resource.uri)?.uri ??
             URI.placeholder(definedUri.path);
+          if (definedUri.fragment) {
+            targetUri = targetUri.with({ fragment: definedUri.fragment });
+          }
         } else {
           targetUri =
             target === ''
               ? resource.uri
               : workspace.find(target, resource.uri)?.uri ??
                 URI.placeholder(target);
-        }
-        if (section) {
-          targetUri = targetUri.with({ fragment: section });
+          if (section) {
+            targetUri = targetUri.with({ fragment: section });
+          }
         }
         break;
       }
@@ -171,6 +174,18 @@ export function createMarkdownReferences(
         return null;
       }
 
+      // Special handling for same-file section links (e.g., [[#section]])
+      if (target.uri.isEqual(resource.uri) && targetUri.fragment) {
+        return {
+          label: link.rawText.substring(
+            link.isEmbed ? 3 : 2,
+            link.rawText.length - 2
+          ),
+          url: `#${targetUri.fragment}`,
+          title: target.title,
+        };
+      }
+
       let relativeUri = target.uri.relativeTo(resource.uri.getDirectory());
       if (
         !includeExtension &&
@@ -186,6 +201,15 @@ export function createMarkdownReferences(
       const encodedURL = encodeURIComponent(linkName).replace(/%20/g, ' ');
 
       // [wikilink-text]: path/to/file.md "Page title"
+      // Build the base URL
+      let url = `${basePath ? basePath + '/' : ''}${encodedURL}`;
+
+      // Append fragment from targetUri if it exists
+      if (targetUri.fragment) {
+        url += `#${targetUri.fragment}`;
+      }
+
+      // [wikilink-text]: path/to/file.md#section "Page title"
       return {
         // embedded looks like ![[note-a]]
         // regular note looks like [[note-a]]
@@ -193,7 +217,7 @@ export function createMarkdownReferences(
           link.isEmbed ? 3 : 2,
           link.rawText.length - 2
         ),
-        url: `${basePath ? basePath + '/' : ''}${encodedURL}`,
+        url: url,
         title: target.title,
       };
     })

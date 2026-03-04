@@ -525,7 +525,7 @@ describe('MarkdownLink', () => {
   });
 
   describe('parse links with resolved definitions', () => {
-    it('should parse wikilink with resolved definition - target and section from definition, alias from rawText', () => {
+    it('should parse wikilink with resolved definition - target and section always from rawText', () => {
       const link: ResourceLink = {
         type: 'wikilink',
         rawText: '[[my-note|Custom Display Text]]',
@@ -539,9 +539,10 @@ describe('MarkdownLink', () => {
       };
 
       const parsed = MarkdownLink.analyzeLink(link);
-      expect(parsed.target).toEqual('./docs/document.md'); // From definition.url (base)
-      expect(parsed.section).toEqual('introduction'); // From definition.url (fragment)
-      expect(parsed.alias).toEqual('Custom Display Text'); // From rawText
+      // Wikilinks are always parsed from rawText; the resolved definition is ignored
+      expect(parsed.target).toEqual('my-note');
+      expect(parsed.section).toEqual('');
+      expect(parsed.alias).toEqual('Custom Display Text');
     });
 
     it('should parse reference-style link with resolved definition - target and section from definition, alias from rawText', () => {
@@ -563,7 +564,7 @@ describe('MarkdownLink', () => {
       expect(parsed.alias).toEqual('Click here to read'); // From rawText
     });
 
-    it('should handle wikilink with resolved definition but no section in URL', () => {
+    it('should handle wikilink with resolved definition - section always from rawText', () => {
       const link: ResourceLink = {
         type: 'wikilink',
         rawText: '[[my-note#ignored-section|Display Text]]',
@@ -577,9 +578,10 @@ describe('MarkdownLink', () => {
       };
 
       const parsed = MarkdownLink.analyzeLink(link);
-      expect(parsed.target).toEqual('./docs/document.md'); // From definition.url
-      expect(parsed.section).toEqual(''); // Empty - no fragment in definition.url
-      expect(parsed.alias).toEqual('Display Text'); // From rawText
+      // Wikilinks are always parsed from rawText; the resolved definition is ignored
+      expect(parsed.target).toEqual('my-note');
+      expect(parsed.section).toEqual('ignored-section');
+      expect(parsed.alias).toEqual('Display Text');
     });
 
     it('should handle reference-style link with resolved definition but no alias in rawText', () => {
@@ -601,7 +603,7 @@ describe('MarkdownLink', () => {
       expect(parsed.alias).toEqual('text'); // From rawText
     });
 
-    it('should handle complex URLs in definitions', () => {
+    it('should handle wikilink with complex URL in definition - always from rawText', () => {
       const link: ResourceLink = {
         type: 'wikilink',
         rawText: '[[note|Alias]]',
@@ -615,9 +617,10 @@ describe('MarkdownLink', () => {
       };
 
       const parsed = MarkdownLink.analyzeLink(link);
-      expect(parsed.target).toEqual('../path/to/some file.md'); // Base path
-      expect(parsed.section).toEqual('complex section name'); // Fragment with spaces
-      expect(parsed.alias).toEqual('Alias'); // From rawText
+      // Wikilinks are always parsed from rawText; the resolved definition is ignored
+      expect(parsed.target).toEqual('note');
+      expect(parsed.section).toEqual('');
+      expect(parsed.alias).toEqual('Alias');
     });
   });
 });

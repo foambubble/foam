@@ -8,6 +8,7 @@ import {
   deleteFile,
   expectSameUri,
   getUriInWorkspace,
+  makeFoamMock,
   showInEditor,
 } from '../../test/test-utils-vscode';
 import { fromVsCodeUri } from '../../utils/vsc-utils';
@@ -16,12 +17,6 @@ import { Location } from '../../core/model/location';
 import { Range } from '../../core/model/range';
 import { ResourceLink } from '../../core/model/note';
 import { createMarkdownParser } from '../../core/services/markdown-parser';
-import { FoamWorkspace } from '../../core/model/workspace';
-
-function makeFoamMock() {
-  const root = fromVsCodeUri(workspace.workspaceFolders[0].uri);
-  return { workspace: new FoamWorkspace([root]) } as any;
-}
 
 describe('create-note command', () => {
   afterEach(() => {

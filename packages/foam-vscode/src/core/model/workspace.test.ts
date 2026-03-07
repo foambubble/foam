@@ -224,7 +224,10 @@ describe('Identifier computation', () => {
 
 describe('find in multi-root workspaces', () => {
   it('should find a resource that lives in root[1] when not found in root[0]', () => {
-    const ws = new FoamWorkspace([URI.file('/workspace1'), URI.file('/workspace2')]);
+    const ws = new FoamWorkspace([
+      URI.file('/workspace1'),
+      URI.file('/workspace2'),
+    ]);
     const note = createTestNote({ uri: '/workspace2/shared/file.md' });
     ws.set(note);
 
@@ -234,7 +237,10 @@ describe('find in multi-root workspaces', () => {
   });
 
   it('should find root[0] resource first when the same relative path exists in both roots', () => {
-    const ws = new FoamWorkspace([URI.file('/workspace1'), URI.file('/workspace2')]);
+    const ws = new FoamWorkspace([
+      URI.file('/workspace1'),
+      URI.file('/workspace2'),
+    ]);
     const noteA = createTestNote({ uri: '/workspace1/shared/file.md' });
     const noteB = createTestNote({ uri: '/workspace2/shared/file.md' });
     ws.set(noteA).set(noteB);

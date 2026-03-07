@@ -94,7 +94,9 @@ export class NoteCreationEngine {
       this.validateNoteCreationResult(result);
 
       if (!(result.filepath instanceof URI)) {
-        result.filepath = this.foam.workspace.resolveUri(result.filepath as string);
+        result.filepath = this.foam.workspace.resolveUri(
+          result.filepath as string
+        );
       }
       return result;
     } catch (error) {

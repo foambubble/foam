@@ -704,7 +704,14 @@ foam_template:
       const matcher = new Matcher([root1, root2], ['**/*.md']);
       const parser = createMarkdownParser();
       const provider = new MarkdownResourceProvider(dataStore, parser, ['.md']);
-      const foam = await bootstrap([root1, root2], matcher, undefined, dataStore, parser, [provider]);
+      const foam = await bootstrap(
+        [root1, root2],
+        matcher,
+        undefined,
+        dataStore,
+        parser,
+        [provider]
+      );
       const engine = new NoteCreationEngine(foam);
 
       const template: Template = {
@@ -712,7 +719,9 @@ foam_template:
         content: `# Daily Note`,
         metadata: new Map([['filepath', '/journal/2025-10-20.md']]),
       };
-      const trigger = TriggerFactory.createCommandTrigger('foam-vscode.open-daily-note');
+      const trigger = TriggerFactory.createCommandTrigger(
+        'foam-vscode.open-daily-note'
+      );
       const resolver = new Resolver(new Map(), new Date());
       const result = await engine.processTemplate(trigger, template, resolver);
 

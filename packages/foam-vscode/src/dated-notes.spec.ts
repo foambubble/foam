@@ -11,6 +11,7 @@ import {
   closeEditors,
   createFile,
   deleteFile,
+  makeFoamMock,
   showInEditor,
   withModifiedFoamConfiguration,
 } from './test/test-utils-vscode';
@@ -20,12 +21,6 @@ import {
   getDailyNoteTemplateCandidateUris,
   getDailyNoteTemplateUri,
 } from './services/templates';
-import { FoamWorkspace } from './core/model/workspace';
-
-function makeFoamMock() {
-  const root = fromVsCodeUri(workspace.workspaceFolders[0].uri);
-  return { workspace: new FoamWorkspace([root]) } as any;
-}
 
 describe('getDailyNoteUri', () => {
   const date = new Date('2021-02-07T00:00:00Z');

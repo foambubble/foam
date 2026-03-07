@@ -1,4 +1,0 @@
-window.data = {
-  nodes: [],
-  edges: []
-};

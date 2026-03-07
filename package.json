@@ -6,7 +6,8 @@
   "license": "MIT",
   "private": "true",
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "packages/foam-vscode/webview-ui/graph"
   ],
   "scripts": {
     "version-extension": "lerna version",

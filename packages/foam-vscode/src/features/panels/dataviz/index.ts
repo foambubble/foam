@@ -1,9 +1,10 @@
 import * as vscode from 'vscode';
-import { Foam } from '../../core/model/foam';
-import { Logger } from '../../core/utils/log';
-import { fromVsCodeUri } from '../../utils/vsc-utils';
-import { isSome } from '../../core/utils';
-import { getFoamVsCodeConfig } from '../../services/config';
+import { Foam } from '../../../core/model/foam';
+import { Logger } from '../../../core/utils/log';
+import { fromVsCodeUri } from '../../../utils/vsc-utils';
+import { isSome } from '../../../core/utils';
+import { getFoamVsCodeConfig } from '../../../services/config';
+import type { StylePayload } from '@foam/graph/protocol';
 
 export default async function activate(
   context: vscode.ExtensionContext,
@@ -215,7 +216,7 @@ async function getWebviewContent(
   return filled;
 }
 
-function getGraphStyle(): object {
+function getGraphStyle(): StylePayload {
   return vscode.workspace.getConfiguration('foam.graph').get('style');
 }
 

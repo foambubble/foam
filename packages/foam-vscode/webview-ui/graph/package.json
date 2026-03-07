@@ -1,0 +1,44 @@
+{
+  "name": "@foam/graph",
+  "version": "0.1.0",
+  "description": "Foam graph visualization web component",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/foam-graph.ts",
+    "./protocol": "./src/protocol.ts"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": "./dist/foam-graph.js",
+      "./protocol": "./dist/protocol.js"
+    }
+  },
+  "files": [
+    "dist/",
+    "src/",
+    "!src/main.ts",
+    "!src/main.css"
+  ],
+  "scripts": {
+    "build": "node build.cjs",
+    "build:lib": "node build.cjs --lib",
+    "build:vscode": "node build.cjs --vscode",
+    "watch": "node build.cjs --vscode --watch",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "lit": "^3.0.0"
+  },
+  "devDependencies": {
+    "d3-color": "^3.1.0",
+    "d3-force": "^3.0.0",
+    "d3-scale": "^4.0.0",
+    "esbuild": "^0.25.0",
+    "force-graph": "^1.49.5",
+    "happy-dom": "^17.0.0",
+    "lit": "^3.0.0",
+    "typescript": "^4.9.5",
+    "vitest": "^3.0.0"
+  }
+}

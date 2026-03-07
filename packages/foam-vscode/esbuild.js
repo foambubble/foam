@@ -11,11 +11,14 @@ function getPlatform() {
   if (pArg) {
     return pArg.split('=')[1];
   }
-  throw new Error('No platform specified. Pass --platform <web|node>.');
+  throw new Error('No platform specified. Pass --platform <web|node|webview>.');
 }
 
 const platform = getPlatform();
-assert(['web', 'node'].includes(platform), 'Platform must be "web" or "node".');
+assert(
+  ['web', 'node'].includes(platform),
+  'Platform must be "web" or "node".'
+);
 
 const production = process.argv.includes('--production');
 const watch = process.argv.includes('--watch');
@@ -81,7 +84,7 @@ const config = {
   },
 };
 
-async function main() {
+async function buildExtension() {
   const ctx = await esbuild.context({
     ...config[platform],
     entryPoints: ['src/extension.ts'],
@@ -103,6 +106,10 @@ async function main() {
     await ctx.rebuild();
     await ctx.dispose();
   }
+}
+
+async function main() {
+  await buildExtension();
 }
 
 /**

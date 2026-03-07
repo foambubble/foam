@@ -3,6 +3,11 @@
   "compilerOptions": {
     "moduleResolution": "node",
     "esModuleInterop": true,
+    "baseUrl": ".",
+    "paths": {
+      "@foam/graph": ["./webview-ui/graph/src/foam-graph"],
+      "@foam/graph/*": ["./webview-ui/graph/src/*"]
+    },
     "outDir": "out",
     "lib": ["ES2019", "es2020.string", "DOM"],
     "sourceMap": true,

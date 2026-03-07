@@ -45,6 +45,9 @@ async function buildLibTarget() {
 async function buildVscodeTarget() {
   const outdir = path.join(dir, '../../static/dataviz');
 
+  // Ensure output directory exists
+  fs.mkdirSync(outdir, { recursive: true });
+
   // Copy index.html
   fs.copyFileSync(path.join(dir, 'index.html'), path.join(outdir, 'index.html'));
 

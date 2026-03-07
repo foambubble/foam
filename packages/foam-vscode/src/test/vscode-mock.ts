@@ -219,34 +219,44 @@ export interface Uri {
 
 // Adapter to convert Foam URI to VS Code Uri
 export function createVSCodeUri(foamUri: URI): Uri {
-  return {
-    scheme: foamUri.scheme,
-    authority: foamUri.authority,
-    path: foamUri.path,
-    query: foamUri.query,
-    fragment: foamUri.fragment,
-    fsPath: foamUri.toFsPath(),
-
-    with(change) {
-      const newFoamUri = foamUri.with(change);
-      return createVSCodeUri(newFoamUri);
+  const uri: Uri = Object.defineProperties(
+    {
+      scheme: foamUri.scheme,
+      authority: foamUri.authority,
+      path: foamUri.path,
+      query: foamUri.query,
+      fragment: foamUri.fragment,
+      fsPath: foamUri.toFsPath(),
     },
-
-    toString() {
-      return foamUri.toString();
-    },
-
-    toJSON() {
-      return {
-        scheme: foamUri.scheme,
-        authority: foamUri.authority,
-        path: foamUri.path,
-        query: foamUri.query,
-        fragment: foamUri.fragment,
-        fsPath: foamUri.toFsPath(),
-      };
-    },
-  };
+    {
+      with: {
+        value(change: Parameters<Uri['with']>[0]) {
+          return createVSCodeUri(foamUri.with(change));
+        },
+        enumerable: false,
+      },
+      toString: {
+        value() {
+          return foamUri.toString();
+        },
+        enumerable: false,
+      },
+      toJSON: {
+        value() {
+          return {
+            scheme: foamUri.scheme,
+            authority: foamUri.authority,
+            path: foamUri.path,
+            query: foamUri.query,
+            fragment: foamUri.fragment,
+            fsPath: foamUri.toFsPath(),
+          };
+        },
+        enumerable: false,
+      },
+    }
+  ) as Uri;
+  return uri;
 }
 
 /**

@@ -69,7 +69,8 @@ export const strToUri = URI.file;
 
 export const createTestWorkspace = (
   workspaceRoots: URI[] = [],
-  dataStore?: IDataStore
+  dataStore?: IDataStore,
+  directoryMode: 'resolve' | 'disabled' = 'resolve'
 ) => {
   const workspace = new FoamWorkspace(workspaceRoots);
   const parser = createMarkdownParser();
@@ -79,7 +80,8 @@ export const createTestWorkspace = (
       list: () => Promise.resolve([]),
     },
     parser,
-    ['.md']
+    ['.md'],
+    directoryMode
   );
   workspace.registerProvider(provider);
   return workspace;

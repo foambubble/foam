@@ -26,6 +26,18 @@ Examples:
 - External file: `[link text](other-file.md#section-name)`
 - Same document: `[link text](#section-name)`
 
+## Directory Links
+
+Linking to a folder name navigates to that folder's index file — either `index.md` or `README.md`. This works for both wikilinks and regular markdown links:
+
+- `[[projects]]` → opens `projects/index.md` (or `projects/README.md`)
+- `[Projects](projects)` → same
+- `[Projects](projects/)` → trailing slash is ignored
+
+If a file named `projects.md` exists alongside the `projects/` folder, it takes priority.
+
+To disable this behavior, set `foam.links.directory.mode` to `disabled` in your VS Code settings.
+
 ## Markdown Compatibility
 
 Foam can automatically generate [[link-reference-definitions]] at the bottom of files to make wikilinks compatible with standard Markdown processors.

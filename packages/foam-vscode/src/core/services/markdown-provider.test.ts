@@ -669,3 +669,177 @@ describe('Generation of markdown references', () => {
     );
   });
 });
+
+describe('Wikilink directory resolution', () => {
+  it('should resolve [[bar]] to bar/index.md when bar.md does not exist', () => {
+    const ws = createTestWorkspace();
+    const noteA = createTestNote({
+      uri: '/path/to/page-a.md',
+      links: [{ slug: 'bar' }],
+    });
+    const index = createTestNote({ uri: '/path/to/bar/index.md' });
+    ws.set(noteA).set(index);
+    expect(ws.resolveLink(noteA, noteA.links[0])).toEqual(index.uri);
+  });
+
+  it('should resolve [[bar]] to bar/README.md when only README exists', () => {
+    const ws = createTestWorkspace();
+    const noteA = createTestNote({
+      uri: '/path/to/page-a.md',
+      links: [{ slug: 'bar' }],
+    });
+    const readme = createTestNote({ uri: '/path/to/bar/README.md' });
+    ws.set(noteA).set(readme);
+    expect(ws.resolveLink(noteA, noteA.links[0])).toEqual(readme.uri);
+  });
+
+  it('should prefer bar.md over bar/index.md for [[bar]]', () => {
+    const ws = createTestWorkspace();
+    const noteA = createTestNote({
+      uri: '/path/to/page-a.md',
+      links: [{ slug: 'bar' }],
+    });
+    const file = createTestNote({ uri: '/path/to/bar.md' });
+    const index = createTestNote({ uri: '/path/to/bar/index.md' });
+    ws.set(noteA).set(file).set(index);
+    expect(ws.resolveLink(noteA, noteA.links[0])).toEqual(file.uri);
+  });
+
+  it('should apply fragment to resolved directory index for [[bar#section]]', () => {
+    const ws = createTestWorkspace();
+    const noteA = createTestNote({
+      uri: '/path/to/page-a.md',
+      links: [{ slug: 'bar#section' }],
+    });
+    const index = createTestNote({ uri: '/path/to/bar/index.md' });
+    ws.set(noteA).set(index);
+    const result = ws.resolveLink(noteA, noteA.links[0]);
+    expect(result.path).toEqual(index.uri.path);
+    expect(result.fragment).toEqual('section');
+  });
+
+  it('should not resolve [[bar]] to directory index when mode is disabled', () => {
+    const ws = createTestWorkspace([], undefined, 'disabled');
+    const noteA = createTestNote({
+      uri: '/path/to/page-a.md',
+      links: [{ slug: 'bar' }],
+    });
+    const index = createTestNote({ uri: '/path/to/bar/index.md' });
+    ws.set(noteA).set(index);
+    const result = ws.resolveLink(noteA, noteA.links[0]);
+    expect(result.isPlaceholder()).toBe(true);
+  });
+
+  it('should disambiguate [[zoo/bar]] to zoo/bar/index.md', () => {
+    const ws = createTestWorkspace();
+    const noteA = createTestNote({
+      uri: '/root/page-a.md',
+      links: [{ slug: 'zoo/bar' }],
+    });
+    const fooIndex = createTestNote({ uri: '/root/foo/bar/index.md' });
+    const zooIndex = createTestNote({ uri: '/root/zoo/bar/index.md' });
+    ws.set(noteA).set(fooIndex).set(zooIndex);
+    expect(ws.resolveLink(noteA, noteA.links[0])).toEqual(zooIndex.uri);
+  });
+});
+
+describe('Directory link resolution', () => {
+  it('should resolve a relative directory link to its index file', () => {
+    const ws = createTestWorkspace();
+    const noteA = createTestNote({
+      uri: '/path/to/page-a.md',
+      links: [{ to: 'bar' }],
+    });
+    const index = createTestNote({ uri: '/path/to/bar/index.md' });
+    ws.set(noteA).set(index);
+    expect(ws.resolveLink(noteA, noteA.links[0])).toEqual(index.uri);
+  });
+
+  it('should resolve a relative directory link to README when no index exists', () => {
+    const ws = createTestWorkspace();
+    const noteA = createTestNote({
+      uri: '/path/to/page-a.md',
+      links: [{ to: 'bar' }],
+    });
+    const readme = createTestNote({ uri: '/path/to/bar/README.md' });
+    ws.set(noteA).set(readme);
+    expect(ws.resolveLink(noteA, noteA.links[0])).toEqual(readme.uri);
+  });
+
+  it('should prefer a direct file over a directory index', () => {
+    const ws = createTestWorkspace();
+    const noteA = createTestNote({
+      uri: '/path/to/page-a.md',
+      links: [{ to: 'bar' }],
+    });
+    const file = createTestNote({ uri: '/path/to/bar.md' });
+    const index = createTestNote({ uri: '/path/to/bar/index.md' });
+    ws.set(noteA).set(file).set(index);
+    expect(ws.resolveLink(noteA, noteA.links[0])).toEqual(file.uri);
+  });
+
+  it('should treat trailing slash as interchangeable with no slash', () => {
+    const ws = createTestWorkspace();
+    const noteWithSlash = createTestNote({
+      uri: '/path/to/page-a.md',
+      links: [{ to: 'bar/' }],
+    });
+    const noteWithout = createTestNote({
+      uri: '/path/to/page-b.md',
+      links: [{ to: 'bar' }],
+    });
+    const index = createTestNote({ uri: '/path/to/bar/index.md' });
+    ws.set(noteWithSlash).set(noteWithout).set(index);
+    expect(ws.resolveLink(noteWithSlash, noteWithSlash.links[0])).toEqual(
+      index.uri
+    );
+    expect(ws.resolveLink(noteWithout, noteWithout.links[0])).toEqual(index.uri);
+  });
+
+  it('should resolve a root-relative directory link to its index file', () => {
+    const ws = createTestWorkspace([URI.file('/workspace')]);
+    const noteA = createTestNote({
+      uri: '/workspace/page-a.md',
+      links: [{ to: '/subdir' }],
+    });
+    const index = createTestNote({ uri: '/workspace/subdir/index.md' });
+    ws.set(noteA).set(index);
+    expect(ws.resolveLink(noteA, noteA.links[0])).toEqual(index.uri);
+  });
+
+  it('should return a placeholder when no file and no index exists', () => {
+    const ws = createTestWorkspace();
+    const noteA = createTestNote({
+      uri: '/path/to/page-a.md',
+      links: [{ to: 'bar' }],
+    });
+    ws.set(noteA);
+    const result = ws.resolveLink(noteA, noteA.links[0]);
+    expect(result.isPlaceholder()).toBe(true);
+  });
+
+  it('should apply a fragment to the resolved directory index', () => {
+    const ws = createTestWorkspace();
+    const noteA = createTestNote({
+      uri: '/path/to/page-a.md',
+      links: [{ to: 'bar#section' }],
+    });
+    const index = createTestNote({ uri: '/path/to/bar/index.md' });
+    ws.set(noteA).set(index);
+    const result = ws.resolveLink(noteA, noteA.links[0]);
+    expect(result.path).toEqual(index.uri.path);
+    expect(result.fragment).toEqual('section');
+  });
+
+  it('should not resolve directory links when mode is disabled', () => {
+    const ws = createTestWorkspace([], undefined, 'disabled');
+    const noteA = createTestNote({
+      uri: '/path/to/page-a.md',
+      links: [{ to: 'bar' }],
+    });
+    const index = createTestNote({ uri: '/path/to/bar/index.md' });
+    ws.set(noteA).set(index);
+    const result = ws.resolveLink(noteA, noteA.links[0]);
+    expect(result.isPlaceholder()).toBe(true);
+  });
+});

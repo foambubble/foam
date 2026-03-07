@@ -49,6 +49,11 @@ export function getExcludedFilesSetting(): GlobPattern[] {
   ].flatMap(expandAlternateGroups);
 }
 
+/** Retrieve the directory link resolution mode. */
+export function getDirectoryModeSetting(): 'resolve' | 'disabled' {
+  return getFoamVsCodeConfig('links.directory.mode', 'resolve');
+}
+
 /** Retrieve the list of file include globs. */
 export function getIncludeFilesSetting(): GlobPattern[] {
   return workspace

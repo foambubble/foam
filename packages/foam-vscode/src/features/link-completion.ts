@@ -8,6 +8,7 @@ import { getFoamVsCodeConfig } from '../services/config';
 import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
 import { getNoteTooltip, getFoamDocSelectors } from '../services/editor';
 import { CONVERT_WIKILINK_TO_MDLINK } from './commands/convert-links';
+import { getDirectoryModeSetting } from '../settings';
 
 export const aliasCommitCharacters = ['#'];
 export const linkCommitCharacters = ['#', '|'];
@@ -182,11 +183,23 @@ export class WikilinkCompletionProvider
       position.character
     );
 
+    const directoryMode = getDirectoryModeSetting();
+
     const resources = this.ws.list().map(resource => {
       const resourceIsDocument =
         ['attachment', 'image'].indexOf(resource.type) === -1;
 
-      const identifier = this.ws.getIdentifier(resource.uri);
+      // For index files (index.md, README.md), prefer the directory name as the completion
+      // identifier (e.g. [[bar]] instead of [[bar/index]]), unless a regular file already
+      // claims that name (e.g. bar.md exists), in which case fall back to the file identifier.
+      const directoryIdentifier =
+        resourceIsDocument && directoryMode === 'resolve'
+          ? this.ws.getDirectoryIdentifier(resource.uri)
+          : null;
+      const identifier =
+        directoryIdentifier && !this.ws.find(directoryIdentifier)
+          ? directoryIdentifier
+          : this.ws.getIdentifier(resource.uri);
 
       const label = !resourceIsDocument
         ? identifier

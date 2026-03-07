@@ -10,6 +10,7 @@ import { features } from './features';
 import { VsCodeOutputLogger, exposeLogger } from './services/logging';
 import {
   getAttachmentsExtensions,
+  getDirectoryModeSetting,
   getExcludedFilesSetting,
   getIncludeFilesSetting,
   getNotesExtensions,
@@ -59,10 +60,12 @@ export async function activate(context: ExtensionContext) {
       workspace.workspaceFolders?.map(folder => fromVsCodeUri(folder.uri)) ??
       [];
 
+    const directoryMode = getDirectoryModeSetting();
     const markdownProvider = new MarkdownResourceProvider(
       dataStore,
       parser,
-      notesExtensions
+      notesExtensions,
+      directoryMode
     );
 
     const attachmentExtConfig = getAttachmentsExtensions();

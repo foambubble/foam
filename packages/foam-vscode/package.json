@@ -653,6 +653,19 @@
             "Disable wikilink definitions generation"
           ]
         },
+        "foam.links.directory.mode": {
+          "type": "string",
+          "default": "resolve",
+          "description": "Controls how links to a directory name (e.g. [[bar]] or [label](bar)) are resolved. 'resolve' looks for an index file inside the directory (index.<ext> then README.<ext>). 'disabled' restores strict file-only resolution.",
+          "enum": [
+            "resolve",
+            "disabled"
+          ],
+          "enumDescriptions": [
+            "Resolve directory links to an index file (index.<ext> or README.<ext>) inside the directory",
+            "Disable directory link resolution; only exact file matches are used"
+          ]
+        },
         "foam.links.sync.enable": {
           "description": "Enable synching links when moving/renaming notes",
           "type": "boolean",

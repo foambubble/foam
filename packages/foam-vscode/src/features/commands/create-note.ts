@@ -185,10 +185,7 @@ export async function createNote(args: CreateNoteArgs, foam: Foam) {
   }
 
   // Process template using the new engine with unified resolver
-  const engine = new NoteCreationEngine(
-    foam,
-    workspace.workspaceFolders.map(folder => fromVsCodeUri(folder.uri))
-  );
+  const engine = new NoteCreationEngine(foam);
   const result = await engine.processTemplate(trigger, template, resolver);
 
   // Create the note using NoteFactory with the same resolver

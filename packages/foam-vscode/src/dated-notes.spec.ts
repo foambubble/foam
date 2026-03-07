@@ -11,6 +11,7 @@ import {
   closeEditors,
   createFile,
   deleteFile,
+  makeFoamMock,
   showInEditor,
   withModifiedFoamConfiguration,
 } from './test/test-utils-vscode';
@@ -70,7 +71,7 @@ describe('Daily note creation and template processing', () => {
     it('Creates a new daily note when it does not exist', async () => {
       const targetDate = new Date(2021, 8, 1);
       const uri = getDailyNoteUri(targetDate);
-      const foam = {} as any; // Mock Foam instance
+      const foam = makeFoamMock();
 
       const result = await createDailyNoteIfNotExists(targetDate, foam);
 
@@ -84,7 +85,7 @@ describe('Daily note creation and template processing', () => {
     it('Opens existing daily note when it already exists', async () => {
       const targetDate = new Date(2021, 8, 2);
       const uri = getDailyNoteUri(targetDate);
-      const foam = {} as any; // Mock Foam instance
+      const foam = makeFoamMock();
 
       // Create the file first
       await createFile('# Existing Note\n\nContent here', [uri.getBasename()]);
@@ -116,7 +117,7 @@ Unix: \${FOAM_DATE_SECONDS_UNIX}`,
         DAILY_NOTE_TEMPLATE
       );
 
-      const foam = {} as any; // Mock Foam instance
+      const foam = makeFoamMock();
       const result = await createDailyNoteIfNotExists(targetDate, foam);
 
       const doc = await showInEditor(result.uri);
@@ -144,7 +145,7 @@ Unix: \${FOAM_DATE_SECONDS_UNIX}`,
       );
 
       const uri = getDailyNoteUri(targetDate);
-      const foam = {} as any; // Mock Foam instance
+      const foam = makeFoamMock();
       const result = await createDailyNoteIfNotExists(targetDate, foam);
 
       const doc = await showInEditor(uri);
@@ -206,7 +207,7 @@ Unix: \${FOAM_DATE_SECONDS_UNIX}`,
         'fullDate',
         async () => {
           const uri = getDailyNoteUri(targetDate);
-          const foam = {} as any; // Mock Foam instance
+          const foam = makeFoamMock();
           const result = await createDailyNoteIfNotExists(targetDate, foam);
 
           const doc = await showInEditor(uri);
@@ -229,7 +230,7 @@ Unix: \${FOAM_DATE_SECONDS_UNIX}`,
       );
 
       const uri = getDailyNoteUri(targetDate);
-      const foam = {} as any; // Mock Foam instance
+      const foam = makeFoamMock();
       const result = await createDailyNoteIfNotExists(targetDate, foam);
 
       const doc = await showInEditor(uri);
@@ -255,7 +256,7 @@ Unix: \${FOAM_DATE_SECONDS_UNIX}`,
       );
 
       const uri = getDailyNoteUri(targetDate);
-      const foam = {} as any; // Mock Foam instance
+      const foam = makeFoamMock();
       const result = await createDailyNoteIfNotExists(targetDate, foam);
 
       const doc = await showInEditor(uri);
@@ -269,7 +270,7 @@ Unix: \${FOAM_DATE_SECONDS_UNIX}`,
 
     it('Falls back to default text when no template exists', async () => {
       const targetDate = new Date(2021, 8, 21);
-      const foam = {} as any; // Mock Foam instance
+      const foam = makeFoamMock();
       const result = await createDailyNoteIfNotExists(targetDate, foam);
 
       const doc = await showInEditor(result.uri);
@@ -279,7 +280,7 @@ Unix: \${FOAM_DATE_SECONDS_UNIX}`,
 
     it('prompts to create a daily note template if one does not exist', async () => {
       const targetDate = new Date(2021, 8, 23);
-      const foam = {} as any;
+      const foam = makeFoamMock();
 
       expect(await getDailyNoteTemplateUri()).not.toBeDefined();
 
@@ -322,7 +323,7 @@ Content here with \${FOAM_DATE_MONTH_NAME} \${FOAM_DATE_DATE}`,
       );
 
       const uri = getDailyNoteUri(targetDate);
-      const foam = {} as any; // Mock Foam instance
+      const foam = makeFoamMock();
       const result = await createDailyNoteIfNotExists(targetDate, foam);
 
       const doc = await showInEditor(uri);
@@ -362,7 +363,7 @@ Daily content here.`;
       );
 
       const uri = getDailyNoteUri(targetDate);
-      const foam = {} as any; // Mock Foam instance
+      const foam = makeFoamMock();
 
       // First call: Create the daily note
       const result1 = await createDailyNoteIfNotExists(targetDate, foam);

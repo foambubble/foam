@@ -128,132 +128,14 @@ describe('asAbsoluteUri', () => {
     ).toEqual(workspaceFolder2.joinPath('file'));
   });
 
-  describe('forceSubfolder parameter', () => {
-    it('should return the URI as-is when it is already a subfolder of a base folder', () => {
-      const absolutePath = '/workspace/subfolder/file.md';
-      const baseFolder = URI.file('/workspace');
-      const result = asAbsoluteUri(absolutePath, [baseFolder], true);
-
-      expect(result.path).toEqual('/workspace/subfolder/file.md');
-    });
-
-    it('should force URI to be a subfolder when forceSubfolder is true and URI is not a subfolder', () => {
-      const absolutePath = '/other/path/file.md';
-      const baseFolder = URI.file('/workspace');
-      const result = asAbsoluteUri(absolutePath, [baseFolder], true);
-
-      expect(result.path).toEqual('/workspace/other/path/file.md');
-    });
-
-    it('should use case-sensitive path comparison when checking if URI is already a subfolder', () => {
-      const absolutePath = '/Workspace/subfolder/file.md'; // Different case
-      const baseFolder = URI.file('/workspace'); // lowercase
-      const result = asAbsoluteUri(absolutePath, [baseFolder], true);
-
-      // Should be forced to subfolder because case-sensitive comparison fails
-      expect(result.path).toEqual('/workspace/Workspace/subfolder/file.md');
-    });
-
-    it('should not force subfolder when URI is exactly a case-sensitive match', () => {
-      const absolutePath = '/workspace/subfolder/file.md';
-      const baseFolder = URI.file('/workspace');
-      const result = asAbsoluteUri(absolutePath, [baseFolder], true);
-
-      // Should not be forced because it's already a subfolder (case matches)
-      expect(result.path).toEqual('/workspace/subfolder/file.md');
-    });
-
-    it('should handle multiple base folders when checking subfolder status', () => {
-      const absolutePath = '/project2/subfolder/file.md';
-      const baseFolder1 = URI.file('/project1');
-      const baseFolder2 = URI.file('/project2');
-      const result = asAbsoluteUri(
-        absolutePath,
-        [baseFolder1, baseFolder2],
-        true
-      );
-
-      // Should not be forced because it's already a subfolder of baseFolder2
-      expect(result.path).toEqual('/project2/subfolder/file.md');
-    });
-
-    describe('Windows paths', () => {
-      it('should return the Windows URI as-is when it is already a subfolder of a base folder', () => {
-        const absolutePath = 'C:\\workspace\\subfolder\\file.md';
-        const baseFolder = URI.file('C:\\workspace');
-        const result = asAbsoluteUri(absolutePath, [baseFolder], true);
-
-        expect(result.toFsPath()).toEqual('C:\\workspace\\subfolder\\file.md');
-      });
-
-      it('should force Windows URI to be a subfolder when forceSubfolder is true and URI is not a subfolder', () => {
-        const absolutePath = 'D:\\other\\path\\file.md';
-        const baseFolder = URI.file('C:\\workspace');
-        const result = asAbsoluteUri(absolutePath, [baseFolder], true);
-
-        expect(result.toFsPath()).toEqual(
-          'C:\\workspace\\D:\\other\\path\\file.md'
-        );
-      });
-
-      it('should use case-insensitive path comparison for Windows paths when checking if URI is already a subfolder', () => {
-        const absolutePath = 'C:\\Workspace\\subfolder\\file.md'; // Different case
-        const baseFolder = URI.file('C:\\workspace'); // lowercase
-        const result = asAbsoluteUri(absolutePath, [baseFolder], true);
-
-        // Should be forced to subfolder because case-sensitive comparison fails
-        expect(result.toFsPath()).toEqual('C:\\Workspace\\subfolder\\file.md');
-      });
-
-      it('should not force Windows subfolder when URI is exactly a case-sensitive match', () => {
-        const absolutePath = 'C:\\workspace\\subfolder\\file.md';
-        const baseFolder = URI.file('C:\\workspace');
-        const result = asAbsoluteUri(absolutePath, [baseFolder], true);
-
-        // Should not be forced because it's already a subfolder (case matches)
-        expect(result.toFsPath()).toEqual('C:\\workspace\\subfolder\\file.md');
-      });
-
-      it('should handle different drive letters as non-subfolders', () => {
-        const absolutePath = 'D:\\workspace\\subfolder\\file.md'; // Different drive
-        const baseFolder = URI.file('C:\\workspace'); // Same path, different drive
-        const result = asAbsoluteUri(absolutePath, [baseFolder], true);
-
-        // Should be forced because different drives are not subfolders
-        expect(result.toFsPath()).toEqual(
-          'C:\\workspace\\D:\\workspace\\subfolder\\file.md'
-        );
-      });
-
-      it('should handle Windows backslash paths in case-sensitive comparison', () => {
-        const absolutePath = 'C:\\Workspace\\subfolder\\file.md'; // Different case with backslashes
-        const baseFolder = URI.file('c:\\Workspace'); // lowercase with backslashes
-        const result = asAbsoluteUri(absolutePath, [baseFolder], true);
-
-        // Should be forced to subfolder because case-sensitive comparison fails
-        // Note: Drive letters are normalized to uppercase by URI.file()
-        expect(result.toFsPath()).toEqual('C:\\Workspace\\subfolder\\file.md');
-      });
-
-      it('should handle Windows backslash paths in case-sensitive comparison - reverse', () => {
-        const absolutePath = 'c:\\Workspace\\subfolder\\file.md'; // Different case with backslashes
-        const baseFolder = URI.file('C:\\Workspace'); // lowercase with backslashes
-        const result = asAbsoluteUri(absolutePath, [baseFolder], true);
-
-        // Should be forced to subfolder because case-sensitive comparison fails
-        // Note: Drive letters are normalized to uppercase by URI.file()
-        expect(result.toFsPath()).toEqual('C:\\Workspace\\subfolder\\file.md');
-      });
-
-      it('should handle forward slash absolute path also with windows base folders', () => {
-        // Using this format for the path works on both windows and unix
-        // and allows using absolute paths relative to the workspace root
-        const absolutePath = '/subfolder/file.md';
-        const baseFolder = URI.file('C:\\Workspace');
-        const result = asAbsoluteUri(absolutePath, [baseFolder], true);
-
-        expect(result.toFsPath()).toEqual('C:\\Workspace\\subfolder\\file.md');
-      });
-    });
+  it('should return absolute path as-is via forPath when path does not start from base folder', () => {
+    // Documents the INTENTIONAL behavior after forceSubfolder removal:
+    // An absolute path like '/journal/file.md' that does NOT start with the
+    // workspace root path is returned as-is (not joined under the workspace root).
+    const result = asAbsoluteUri(URI.file('/journal/file.md'), [
+      URI.file('/workspace'),
+    ]);
+    expect(result.path).toBe('/journal/file.md');
+    expect(result.scheme).toBe('file');
   });
 });

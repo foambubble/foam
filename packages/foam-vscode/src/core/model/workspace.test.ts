@@ -107,7 +107,7 @@ describe('Identifier computation', () => {
     const third = createTestNote({
       uri: '/another/path/for/page-a.md',
     });
-    const ws = new FoamWorkspace('.md').set(first).set(second).set(third);
+    const ws = new FoamWorkspace([], '.md').set(first).set(second).set(third);
 
     expect(ws.getIdentifier(first.uri)).toEqual('to/page-a');
     expect(ws.getIdentifier(second.uri)).toEqual('way/for/page-a');
@@ -124,7 +124,7 @@ describe('Identifier computation', () => {
     const third = createTestNote({
       uri: '/another/path/for/page-a.md',
     });
-    const ws = new FoamWorkspace('.md').set(first).set(second).set(third);
+    const ws = new FoamWorkspace([], '.md').set(first).set(second).set(third);
 
     expect(
       ws.getIdentifier(first.uri.with({ fragment: 'section name' }))
@@ -170,7 +170,7 @@ describe('Identifier computation', () => {
   });
 
   it('should ignore elements from the exclude list', () => {
-    const workspace = new FoamWorkspace('.md');
+    const workspace = new FoamWorkspace([], '.md');
     const noteA = createTestNote({ uri: '/path/to/note-a.md' });
     const noteB = createTestNote({ uri: '/path/to/note-b.md' });
     const noteC = createTestNote({ uri: '/path/to/note-c.md' });
@@ -185,7 +185,7 @@ describe('Identifier computation', () => {
   });
 
   it('should handle case-sensitive filenames correctly (#1303)', () => {
-    const workspace = new FoamWorkspace('.md');
+    const workspace = new FoamWorkspace([], '.md');
     const noteUppercase = createTestNote({ uri: '/a/Note.md' });
     const noteLowercase = createTestNote({ uri: '/b/note.md' });
 
@@ -209,7 +209,7 @@ describe('Identifier computation', () => {
   });
 
   it('should generate correct identifiers for case-sensitive files', () => {
-    const workspace = new FoamWorkspace('.md');
+    const workspace = new FoamWorkspace([], '.md');
     const noteUppercase = createTestNote({ uri: '/a/Note.md' });
     const noteLowercase = createTestNote({ uri: '/b/note.md' });
 
@@ -219,5 +219,157 @@ describe('Identifier computation', () => {
     // since they differ by case, they are not considered conflicting
     expect(workspace.getIdentifier(noteUppercase.uri)).toEqual('Note');
     expect(workspace.getIdentifier(noteLowercase.uri)).toEqual('note');
+  });
+});
+
+describe('find in multi-root workspaces', () => {
+  it('should find a resource that lives in root[1] when not found in root[0]', () => {
+    const ws = new FoamWorkspace([
+      URI.file('/workspace1'),
+      URI.file('/workspace2'),
+    ]);
+    const note = createTestNote({ uri: '/workspace2/shared/file.md' });
+    ws.set(note);
+
+    const found = ws.find('/shared/file.md');
+    expect(found).not.toBeNull();
+    expect(found.uri.path).toBe('/workspace2/shared/file.md');
+  });
+
+  it('should find root[0] resource first when the same relative path exists in both roots', () => {
+    const ws = new FoamWorkspace([
+      URI.file('/workspace1'),
+      URI.file('/workspace2'),
+    ]);
+    const noteA = createTestNote({ uri: '/workspace1/shared/file.md' });
+    const noteB = createTestNote({ uri: '/workspace2/shared/file.md' });
+    ws.set(noteA).set(noteB);
+
+    const found = ws.find('/shared/file.md');
+    expect(found).not.toBeNull();
+    expect(found.uri.path).toBe('/workspace1/shared/file.md');
+  });
+
+  it('should find via workspace-relative path in a 3-root workspace when resource is in root[2]', () => {
+    const ws = new FoamWorkspace([
+      URI.file('/workspace1'),
+      URI.file('/workspace2'),
+      URI.file('/workspace3'),
+    ]);
+    const note = createTestNote({ uri: '/workspace3/notes/file.md' });
+    ws.set(note);
+
+    const found = ws.find('/notes/file.md');
+    expect(found).not.toBeNull();
+    expect(found.uri.path).toBe('/workspace3/notes/file.md');
+  });
+});
+
+describe('resolveUri', () => {
+  const root = URI.file('/workspace');
+
+  it('should return an already-absolute path under the root as-is (case 1)', () => {
+    const ws = new FoamWorkspace([root]);
+    const result = ws.resolveUri('/workspace/journal/file.md');
+    expect(result.path).toBe('/workspace/journal/file.md');
+  });
+
+  it('should resolve a workspace-relative absolute path under the root (case 2)', () => {
+    const ws = new FoamWorkspace([root]);
+    const result = ws.resolveUri('/journal/file.md');
+    expect(result.path).toBe('/workspace/journal/file.md');
+  });
+
+  it('should resolve a relative path against roots[0] when no relativeTo is given (case 3)', () => {
+    const ws = new FoamWorkspace([root]);
+    const result = ws.resolveUri('journal/file.md');
+    expect(result.path).toBe('/workspace/journal/file.md');
+  });
+
+  it('should resolve a relative path against relativeTo when provided (case 3)', () => {
+    const ws = new FoamWorkspace([root]);
+    const base = URI.file('/workspace/subdir/note.md');
+    const result = ws.resolveUri('../other/file.md', base);
+    expect(result.path).toBe('/workspace/other/file.md');
+  });
+
+  it('should return an absolute path as URI.file when roots is empty', () => {
+    const ws = new FoamWorkspace([]);
+    const result = ws.resolveUri('/some/absolute/file.md');
+    expect(result.path).toBe('/some/absolute/file.md');
+  });
+
+  it('should handle the root path itself as under-root (case 1)', () => {
+    const ws = new FoamWorkspace([root]);
+    const result = ws.resolveUri('/workspace');
+    expect(result.path).toBe('/workspace');
+  });
+
+  it('should use first root when multiple roots exist and path is workspace-relative (case 2)', () => {
+    const root2 = URI.file('/other-root');
+    const ws = new FoamWorkspace([root, root2]);
+    const result = ws.resolveUri('/journal/file.md');
+    expect(result.path).toBe('/workspace/journal/file.md');
+  });
+
+  it('should detect a path already under root[1] as under-root and return it as-is', () => {
+    const root2 = URI.file('/workspace2');
+    const ws = new FoamWorkspace([root, root2]);
+    const result = ws.resolveUri('/workspace2/shared/file.md');
+    // Must NOT become '/workspace/workspace2/shared/file.md'
+    expect(result.path).toBe('/workspace2/shared/file.md');
+  });
+
+  describe('Windows drive paths', () => {
+    it('should recognize a backslash drive path already under the root as-is (case 1)', () => {
+      const winRoot = URI.file('C:\\workspace');
+      const ws = new FoamWorkspace([winRoot]);
+      // Raw backslash path: must be normalized before comparison, not doubled
+      const result = ws.resolveUri('C:\\workspace\\journal\\file.md');
+      expect(result.path).toBe('/C:/workspace/journal/file.md');
+    });
+
+    it('should not double a forward-slash drive path already under the root (case 1)', () => {
+      const winRoot = URI.file('C:\\workspace');
+      const ws = new FoamWorkspace([winRoot]);
+      const result = ws.resolveUri('/C:/workspace/journal/file.md');
+      expect(result.path).toBe('/C:/workspace/journal/file.md');
+    });
+  });
+});
+
+describe('find with workspace-relative absolute paths', () => {
+  it('should find a resource stored at a real absolute path via a workspace-relative path', () => {
+    const root = URI.file('/workspace');
+    const ws = new FoamWorkspace([root]);
+    const note = createTestNote({ uri: '/workspace/journal/file.md' });
+    ws.set(note);
+
+    // workspace-relative absolute path → should resolve to /workspace/journal/file.md
+    const found = ws.find('/journal/file.md');
+    expect(found).not.toBeNull();
+    expect(found.uri.path).toBe('/workspace/journal/file.md');
+  });
+
+  it('should find with .md extension appended to workspace-relative path', () => {
+    const root = URI.file('/workspace');
+    const ws = new FoamWorkspace([root]);
+    const note = createTestNote({ uri: '/workspace/journal/file.md' });
+    ws.set(note);
+
+    const found = ws.find('/journal/file');
+    expect(found).not.toBeNull();
+    expect(found.uri.path).toBe('/workspace/journal/file.md');
+  });
+
+  it('should still find an already-absolute filesystem path directly', () => {
+    const root = URI.file('/workspace');
+    const ws = new FoamWorkspace([root]);
+    const note = createTestNote({ uri: '/workspace/journal/file.md' });
+    ws.set(note);
+
+    const found = ws.find('/workspace/journal/file.md');
+    expect(found).not.toBeNull();
+    expect(found.uri.path).toBe('/workspace/journal/file.md');
   });
 });

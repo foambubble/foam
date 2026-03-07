@@ -311,7 +311,7 @@ export const NoteFactory = {
       const onFileExists =
         createFnForOnFileExistsStrategy(onFileExistsStrategy);
 
-      let resolvedNewFilePath = asAbsoluteWorkspaceUri(newFilePath, true);
+      let resolvedNewFilePath = asAbsoluteWorkspaceUri(newFilePath);
       /**
        * Make sure the path is absolute and doesn't exist
        */
@@ -326,7 +326,7 @@ export const NoteFactory = {
           }
           newFilePath = proposedNewFilepath;
         }
-        resolvedNewFilePath = asAbsoluteWorkspaceUri(newFilePath, true);
+        resolvedNewFilePath = asAbsoluteWorkspaceUri(newFilePath);
         while (
           newFilePath.isAbsolute() &&
           (await fileExists(resolvedNewFilePath))
@@ -336,7 +336,7 @@ export const NoteFactory = {
             return { didCreateFile: false, uri: resolvedNewFilePath };
           }
           newFilePath = proposedNewFilepath;
-          resolvedNewFilePath = asAbsoluteWorkspaceUri(newFilePath, true);
+          resolvedNewFilePath = asAbsoluteWorkspaceUri(newFilePath);
         }
       }
 

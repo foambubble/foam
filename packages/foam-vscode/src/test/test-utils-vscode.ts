@@ -10,8 +10,20 @@ import { URI } from '../core/model/uri';
 import { Resource } from '../core/model/note';
 import { randomString, wait } from './test-utils';
 import { Foam } from '../core/model/foam';
+import { FoamWorkspace } from '../core/model/workspace';
 
 Logger.setLevel('error');
+
+/**
+ * Creates a minimal Foam mock with a workspace rooted at all VS Code workspace folders.
+ * Shared by spec files that need a Foam instance without a full bootstrap.
+ */
+export function makeFoamMock() {
+  const roots = vscode.workspace.workspaceFolders.map(f =>
+    fromVsCodeUri(f.uri)
+  );
+  return { workspace: new FoamWorkspace(roots) } as any;
+}
 
 export const cleanWorkspace = async () => {
   const files = await vscode.workspace.findFiles('**', '{.vscode,.keep}');

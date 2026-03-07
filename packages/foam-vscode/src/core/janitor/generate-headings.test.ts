@@ -26,7 +26,7 @@ describe('generateHeadings', () => {
     );
     const parser = createMarkdownParser();
     const mdProvider = new MarkdownResourceProvider(dataStore, parser);
-    _workspace = await FoamWorkspace.fromProviders([mdProvider], dataStore);
+    _workspace = await FoamWorkspace.fromProviders([], [mdProvider], dataStore);
   });
 
   it.skip('should add heading to a file that does not have them', async () => {

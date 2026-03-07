@@ -435,38 +435,20 @@ function encodeURIComponentMinimal(path: string): string {
  *
  * @param uri the uri to evaluate
  * @param baseFolders the base folders to use
- * @param forceSubfolder if true, if the URI is not a subfolder of any baseFolder,
- * it will be forced to be a subfolder of the first base folder
  * @returns an absolute uri
- *
- * TODO this probably needs to be moved to the workspace service
  */
 export function asAbsoluteUri(
   uriOrPath: URI | string,
-  baseFolders: URI[],
-  forceSubfolder = false
+  baseFolders: URI[]
 ): URI {
   if (baseFolders.length === 0) {
     throw new Error('At least one base folder needed to compute URI');
   }
   const path = uriOrPath instanceof URI ? uriOrPath.path : uriOrPath;
 
-  const isDrivePath = /^[a-zA-Z]:/.test(path);
-  // Check if this is already a POSIX absolute path
-  if (path.startsWith('/') || isDrivePath) {
-    const uri = baseFolders[0].forPath(path); // Validate the path
-
-    if (forceSubfolder) {
-      const isAlreadySubfolder = baseFolders.some(folder =>
-        isDrivePath
-          ? uri.path.toLowerCase().startsWith(folder.path.toLowerCase())
-          : uri.path.startsWith(folder.path)
-      );
-      if (!isAlreadySubfolder) {
-        return baseFolders[0].joinPath(uri.path);
-      }
-    }
-    return uri;
+  // Check if this is already a POSIX absolute path or Windows drive path
+  if (path.startsWith('/') || /^[a-zA-Z]:/.test(path)) {
+    return baseFolders[0].forPath(path);
   }
   let tokens = path.split('/');
   while (tokens[0].trim() === '') {

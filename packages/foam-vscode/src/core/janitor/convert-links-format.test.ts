@@ -30,7 +30,7 @@ describe('generateStdMdLink', () => {
     );
     const parser = createMarkdownParser();
     const mdProvider = new MarkdownResourceProvider(dataStore, parser);
-    _workspace = await FoamWorkspace.fromProviders([mdProvider], dataStore);
+    _workspace = await FoamWorkspace.fromProviders([], [mdProvider], dataStore);
   });
 
   it('initialised test graph correctly', () => {

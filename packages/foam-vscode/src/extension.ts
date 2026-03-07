@@ -55,7 +55,6 @@ export async function activate(context: ExtensionContext) {
 
     const { notesExtensions, defaultExtension } = getNotesExtensions();
 
-    // Get workspace roots for workspace-relative path resolution
     const workspaceRoots =
       workspace.workspaceFolders?.map(folder => fromVsCodeUri(folder.uri)) ??
       [];
@@ -63,8 +62,7 @@ export async function activate(context: ExtensionContext) {
     const markdownProvider = new MarkdownResourceProvider(
       dataStore,
       parser,
-      notesExtensions,
-      workspaceRoots
+      notesExtensions
     );
 
     const attachmentExtConfig = getAttachmentsExtensions();
@@ -79,6 +77,7 @@ export async function activate(context: ExtensionContext) {
       : undefined;
 
     const foamPromise = bootstrap(
+      workspaceRoots,
       matcher,
       watcher,
       dataStore,

@@ -458,6 +458,84 @@ alias: test-alias
     );
   });
 
+  describe('Directory index completion', () => {
+    it('should use directory name as identifier when mode is resolve', async () => {
+      const workspace = createTestWorkspace();
+      workspace.set(createTestNote({ uri: '/root/bar/index.md' }));
+      const provider = new WikilinkCompletionProvider(
+        workspace,
+        FoamGraph.fromWorkspace(workspace)
+      );
+
+      const { uri } = await createFile('[[');
+      const { doc } = await showInEditor(uri);
+
+      await withModifiedFoamConfiguration(
+        'links.directory.mode',
+        'resolve',
+        async () => {
+          const links = await provider.provideCompletionItems(
+            doc,
+            new vscode.Position(0, 2)
+          );
+          expect(links.items.map(i => String(i.insertText))).toContain('bar');
+        }
+      );
+    });
+
+    it('should use file identifier when mode is disabled', async () => {
+      const workspace = createTestWorkspace();
+      workspace.set(createTestNote({ uri: '/root/bar/index.md' }));
+      const provider = new WikilinkCompletionProvider(
+        workspace,
+        FoamGraph.fromWorkspace(workspace)
+      );
+
+      const { uri } = await createFile('[[');
+      const { doc } = await showInEditor(uri);
+
+      await withModifiedFoamConfiguration(
+        'links.directory.mode',
+        'disabled',
+        async () => {
+          const links = await provider.provideCompletionItems(
+            doc,
+            new vscode.Position(0, 2)
+          );
+          expect(links.items.map(i => String(i.insertText))).toContain('index');
+        }
+      );
+    });
+
+    it('should fall back to file identifier when directory name is shadowed by a regular file', async () => {
+      const workspace = createTestWorkspace();
+      workspace.set(createTestNote({ uri: '/root/bar.md' }));
+      workspace.set(createTestNote({ uri: '/root/bar/index.md' }));
+      const provider = new WikilinkCompletionProvider(
+        workspace,
+        FoamGraph.fromWorkspace(workspace)
+      );
+
+      const { uri } = await createFile('[[');
+      const { doc } = await showInEditor(uri);
+
+      await withModifiedFoamConfiguration(
+        'links.directory.mode',
+        'resolve',
+        async () => {
+          const links = await provider.provideCompletionItems(
+            doc,
+            new vscode.Position(0, 2)
+          );
+          const insertTexts = links.items.map(i => String(i.insertText));
+          // bar.md gets 'bar', bar/index.md falls back to 'index' (not 'bar' again)
+          expect(insertTexts.filter(t => t === 'bar')).toHaveLength(1);
+          expect(insertTexts).toContain('index');
+        }
+      );
+    });
+  });
+
   it('should ignore linkFormat setting for placeholder completions', async () => {
     const { uri } = await createFile('[[');
     const { doc } = await showInEditor(uri);

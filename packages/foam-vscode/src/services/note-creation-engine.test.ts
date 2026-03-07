@@ -221,6 +221,24 @@ Content without filepath metadata.`,
       expect(result.content).toContain('Trigger: command');
       expect(result.filepath.path).toBe('js-generated-note.md');
     });
+
+    it('should preserve relative filepath from JS template so NoteFactory can apply onRelativePath strategy', async () => {
+      const { engine } = await setupFoamEngine();
+      const template: Template = {
+        type: 'javascript',
+        createNote: async () =>
+          ({ filepath: 'relative/note.md', content: '# Relative' } as any),
+      };
+      const resolver = new Resolver(new Map(), new Date());
+      const result = await engine.processTemplate(
+        TriggerFactory.createCommandTrigger('foam-vscode.create-note'),
+        template,
+        resolver
+      );
+      // Must remain non-absolute so NoteFactory's onRelativePath flow still runs
+      expect(result.filepath.isAbsolute()).toBe(false);
+      expect(result.filepath.path).toBe('relative/note.md');
+    });
   });
 
   describe('JavaScript template error handling', () => {

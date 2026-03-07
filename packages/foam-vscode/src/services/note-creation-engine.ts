@@ -94,9 +94,11 @@ export class NoteCreationEngine {
       this.validateNoteCreationResult(result);
 
       if (!(result.filepath instanceof URI)) {
-        result.filepath = this.foam.workspace.resolveUri(
-          result.filepath as string
-        );
+        const fp = result.filepath as string;
+        const isAbsolutePath = fp.startsWith('/') || /^[a-zA-Z]:/.test(fp);
+        result.filepath = isAbsolutePath
+          ? this.foam.workspace.resolveUri(fp)
+          : new URI({ scheme: 'file', path: fp.replace(/\\/g, '/') });
       }
       return result;
     } catch (error) {

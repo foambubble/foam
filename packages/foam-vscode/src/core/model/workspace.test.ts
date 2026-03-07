@@ -319,6 +319,23 @@ describe('resolveUri', () => {
     // Must NOT become '/workspace/workspace2/shared/file.md'
     expect(result.path).toBe('/workspace2/shared/file.md');
   });
+
+  describe('Windows drive paths', () => {
+    it('should recognize a backslash drive path already under the root as-is (case 1)', () => {
+      const winRoot = URI.file('C:\\workspace');
+      const ws = new FoamWorkspace([winRoot]);
+      // Raw backslash path: must be normalized before comparison, not doubled
+      const result = ws.resolveUri('C:\\workspace\\journal\\file.md');
+      expect(result.path).toBe('/C:/workspace/journal/file.md');
+    });
+
+    it('should not double a forward-slash drive path already under the root (case 1)', () => {
+      const winRoot = URI.file('C:\\workspace');
+      const ws = new FoamWorkspace([winRoot]);
+      const result = ws.resolveUri('/C:/workspace/journal/file.md');
+      expect(result.path).toBe('/C:/workspace/journal/file.md');
+    });
+  });
 });
 
 describe('find with workspace-relative absolute paths', () => {

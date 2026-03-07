@@ -57,19 +57,25 @@ Exceptions to the monorepo are:
 
 This project uses [Yarn workspaces](https://classic.yarnpkg.com/en/docs/workspaces/).
 
-Originally Foam had:
+The monorepo contains two Yarn workspace packages:
 
-- [/packages/foam-core](https://github.com/foambubble/foam/tree/ee7a8919761f168d3931079adf21c5ad4d63db59/packages/foam-core) - Powers the core functionality in Foam across all platforms.
-- [/packages/foam-vscode](https://github.com/foambubble/foam/tree/main/packages/foam-vscode) - The core VS Code plugin.
+- [/packages/foam-vscode](https://github.com/foambubble/foam/tree/main/packages/foam-vscode) - The VS Code extension.
+- [/packages/foam-vscode/webview-ui/graph](https://github.com/foambubble/foam/tree/main/packages/foam-vscode/webview-ui/graph) - The graph visualization web component (`@foam/graph`), published independently.
 
-To improve DX we have moved the `foam-core` module into `packages/foam-vscode/src/core`, but from a development point of view it's useful to think of the `foam-vscode/src/core` "submodule" as something that might be extracted in the future.
+#### foam-vscode
 
-For all intents and purposes this means two things:
+The extension's core business logic lives in `src/core/` and must remain platform-agnostic:
 
-1. nothing in `foam-vscode/src/core` should depend on files outside of this directory
-2. code in `foam-vscode/src/core` should NOT depend on `vscode` library
+1. Nothing in `foam-vscode/src/core` should depend on files outside of this directory.
+2. Code in `foam-vscode/src/core` must NOT depend on the `vscode` library.
 
-We have kept the yarn workspace for the time being as we might use it to pull out `foam-core` in the future, or we might need it for other packages that the VS Code plugin could depend upon (e.g. currently the graph visualization is inside the module, but it might be pulled out if its complexity increases).
+#### @foam/graph
+
+The graph webview is a standalone Lit web component that can be embedded outside of VS Code. Key points:
+
+- `src/protocol.ts` owns the message contract between the extension host and the webview. The extension imports from `@foam/graph/protocol`.
+- `static/dataviz/` is build output (gitignored) — the source lives in `webview-ui/graph/src/`.
+- Build and test commands: `yarn workspace @foam/graph build` / `yarn workspace @foam/graph test`.
 
 ### Testing
 

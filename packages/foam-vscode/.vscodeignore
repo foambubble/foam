@@ -5,10 +5,12 @@ out/**/*.test.*
 out/**/*.spec.*
 test-data/**
 src/**
+webview-ui/**
 jest.config.js
 esbuild.js
 .test-workspace
 .gitignore
+.claude/**
 vsc-extension-quickstart.md
 **/tsconfig.json
 **/.eslintrc.json

@@ -63,14 +63,19 @@ export class FoamWorkspace implements IDisposable {
         return URI.file(filepath);
       }
       // Normalize Windows drive paths to POSIX form (/C:/...) before comparison,
-    // since root.path is always in POSIX form. Raw backslash paths like
-    // C:\workspace\note.md would never match root.path otherwise.
-      const normalizedFilepath = isDrivePath ? URI.file(filepath).path : filepath;
+      // since root.path is always in POSIX form. Raw backslash paths like
+      // C:\workspace\note.md would never match root.path otherwise.
+      const normalizedFilepath = isDrivePath
+        ? URI.file(filepath).path
+        : filepath;
       const isUnderRoot = this.roots.some(root =>
         isDrivePath
-          ? normalizedFilepath.toLowerCase().startsWith(root.path.toLowerCase() + '/') ||
+          ? normalizedFilepath
+              .toLowerCase()
+              .startsWith(root.path.toLowerCase() + '/') ||
             normalizedFilepath.toLowerCase() === root.path.toLowerCase()
-          : normalizedFilepath.startsWith(root.path + '/') || normalizedFilepath === root.path
+          : normalizedFilepath.startsWith(root.path + '/') ||
+            normalizedFilepath === root.path
       );
       if (isUnderRoot) {
         return this.roots[0].forPath(normalizedFilepath); // case 1: already absolute under root

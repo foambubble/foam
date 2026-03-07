@@ -170,12 +170,19 @@ export class FoamWorkspace implements IDisposable {
 
     const dirPath = normalize(uri.getDirectory().path);
     const currentOwnerUri = this._directoryIndex.get(dirPath);
-    if (!currentOwnerUri || normalize(currentOwnerUri.path) !== normalize(uri.path)) return;
+    if (
+      !currentOwnerUri ||
+      normalize(currentOwnerUri.path) !== normalize(uri.path)
+    )
+      return;
 
     // Resource already removed from _resources — scan remaining for a next-best candidate
     const nextOwner = this.list()
       .filter(r => normalize(r.uri.getDirectory().path) === dirPath)
-      .map(r => ({ resource: r, priority: this._directoryIndexPriority(r.uri) }))
+      .map(r => ({
+        resource: r,
+        priority: this._directoryIndexPriority(r.uri),
+      }))
       .filter(({ priority }) => priority !== -1)
       .sort((a, b) => a.priority - b.priority)[0]?.resource;
 

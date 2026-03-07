@@ -793,7 +793,9 @@ describe('Directory link resolution', () => {
     expect(ws.resolveLink(noteWithSlash, noteWithSlash.links[0])).toEqual(
       index.uri
     );
-    expect(ws.resolveLink(noteWithout, noteWithout.links[0])).toEqual(index.uri);
+    expect(ws.resolveLink(noteWithout, noteWithout.links[0])).toEqual(
+      index.uri
+    );
   });
 
   it('should resolve a root-relative directory link to its index file', () => {

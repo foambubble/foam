@@ -22,7 +22,7 @@ import * as fs from 'fs';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import * as glob from 'glob';
 
-const rootDir = path.join(__dirname, '..', '..', '..');
+const rootDir = path.join(__dirname, '..', '..');
 
 function parseJestArgs(args: string[]): any {
   const config: any = {};

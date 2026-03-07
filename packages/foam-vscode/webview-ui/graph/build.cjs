@@ -51,6 +51,16 @@ async function buildVscodeTarget() {
   // Copy index.html
   fs.copyFileSync(path.join(dir, 'index.html'), path.join(outdir, 'index.html'));
 
+  // Copy protocol.ts into the extension source so the extension can import it
+  // without tsconfig path aliases (the file is gitignored as it is generated)
+  const protocolSrc = fs.readFileSync(path.join(dir, 'src/protocol.ts'), 'utf8');
+  const header =
+    '// This file is auto-generated from webview-ui/graph/src/protocol.ts — do not edit directly.\n\n';
+  fs.writeFileSync(
+    path.join(dir, '../../src/features/panels/dataviz/graph-protocol.ts'),
+    header + protocolSrc
+  );
+
   const ctx = await esbuild.context({
     entryPoints: [
       path.join(dir, 'src/main.ts'),

@@ -4,6 +4,17 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## 0.31.0
+
+Fixes and Improvements:
+
+- Fixed workspace-relative filepath resolution (#1537, #1590)
+
+Internal:
+
+- Rewrote graph webview from vanilla JavaScript to TypeScript using Lit web components
+- Extracted graph webview as `@foam/graph`, a standalone publishable web component
+
 ## 0.30.0
 
 Fixes and Improvements:

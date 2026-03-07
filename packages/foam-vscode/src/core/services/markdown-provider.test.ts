@@ -400,6 +400,44 @@ describe('Link resolution', () => {
         expect(ws.resolveLink(noteA, noteA.links[0])).toEqual(noteB.uri);
       });
 
+      it('should prefer root[0] when the workspace-relative path resolves to files in multiple roots', () => {
+        const noteA = createTestNote({
+          uri: '/workspace1/shared/file.md',
+        });
+        const noteB = createTestNote({
+          uri: '/workspace2/shared/file.md',
+        });
+        const linker = createTestNote({
+          uri: '/workspace1/dir/linker.md',
+          links: [{ to: '/shared/file.md' }],
+        });
+
+        const ws = createTestWorkspace([
+          URI.file('/workspace1'),
+          URI.file('/workspace2'),
+        ]);
+        ws.set(noteA).set(noteB).set(linker);
+
+        expect(ws.resolveLink(linker, linker.links[0])).toEqual(noteA.uri);
+      });
+
+      it('should create placeholder under root[0] when path does not exist in any root', () => {
+        const linker = createTestNote({
+          uri: '/workspace1/dir/linker.md',
+          links: [{ to: '/non-existent/file.md' }],
+        });
+
+        const ws = createTestWorkspace([
+          URI.file('/workspace1'),
+          URI.file('/workspace2'),
+        ]);
+        ws.set(linker);
+
+        const resolved = ws.resolveLink(linker, linker.links[0]);
+        expect(resolved.isPlaceholder()).toBe(true);
+        expect(resolved.path).toEqual('/workspace1/non-existent/file.md');
+      });
+
       it('should preserve existing absolute path behavior when no workspace roots provided', () => {
         const noteA = createTestNote({
           uri: '/path/to/page-a.md',

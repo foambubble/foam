@@ -222,6 +222,43 @@ describe('Identifier computation', () => {
   });
 });
 
+describe('find in multi-root workspaces', () => {
+  it('should find a resource that lives in root[1] when not found in root[0]', () => {
+    const ws = new FoamWorkspace([URI.file('/workspace1'), URI.file('/workspace2')]);
+    const note = createTestNote({ uri: '/workspace2/shared/file.md' });
+    ws.set(note);
+
+    const found = ws.find('/shared/file.md');
+    expect(found).not.toBeNull();
+    expect(found.uri.path).toBe('/workspace2/shared/file.md');
+  });
+
+  it('should find root[0] resource first when the same relative path exists in both roots', () => {
+    const ws = new FoamWorkspace([URI.file('/workspace1'), URI.file('/workspace2')]);
+    const noteA = createTestNote({ uri: '/workspace1/shared/file.md' });
+    const noteB = createTestNote({ uri: '/workspace2/shared/file.md' });
+    ws.set(noteA).set(noteB);
+
+    const found = ws.find('/shared/file.md');
+    expect(found).not.toBeNull();
+    expect(found.uri.path).toBe('/workspace1/shared/file.md');
+  });
+
+  it('should find via workspace-relative path in a 3-root workspace when resource is in root[2]', () => {
+    const ws = new FoamWorkspace([
+      URI.file('/workspace1'),
+      URI.file('/workspace2'),
+      URI.file('/workspace3'),
+    ]);
+    const note = createTestNote({ uri: '/workspace3/notes/file.md' });
+    ws.set(note);
+
+    const found = ws.find('/notes/file.md');
+    expect(found).not.toBeNull();
+    expect(found.uri.path).toBe('/workspace3/notes/file.md');
+  });
+});
+
 describe('resolveUri', () => {
   const root = URI.file('/workspace');
 
@@ -267,6 +304,14 @@ describe('resolveUri', () => {
     const ws = new FoamWorkspace([root, root2]);
     const result = ws.resolveUri('/journal/file.md');
     expect(result.path).toBe('/workspace/journal/file.md');
+  });
+
+  it('should detect a path already under root[1] as under-root and return it as-is', () => {
+    const root2 = URI.file('/workspace2');
+    const ws = new FoamWorkspace([root, root2]);
+    const result = ws.resolveUri('/workspace2/shared/file.md');
+    // Must NOT become '/workspace/workspace2/shared/file.md'
+    expect(result.path).toBe('/workspace2/shared/file.md');
   });
 });
 

@@ -695,6 +695,31 @@ foam_template:
       expect(result.filepath.path).toBe(absolutePath);
     });
 
+    it('should resolve a workspace-relative absolute filepath using root[0] as the base in a multi-root workspace', async () => {
+      const tmpDir1 = mkdtempSync(`${tmpdir()}/foam-test-`);
+      const tmpDir2 = mkdtempSync(`${tmpdir()}/foam-test-`);
+      const root1 = strToUri(tmpDir1);
+      const root2 = strToUri(tmpDir2);
+      const dataStore = new FileDataStore(readFileFromFs, tmpDir1);
+      const matcher = new Matcher([root1, root2], ['**/*.md']);
+      const parser = createMarkdownParser();
+      const provider = new MarkdownResourceProvider(dataStore, parser, ['.md']);
+      const foam = await bootstrap([root1, root2], matcher, undefined, dataStore, parser, [provider]);
+      const engine = new NoteCreationEngine(foam);
+
+      const template: Template = {
+        type: 'markdown',
+        content: `# Daily Note`,
+        metadata: new Map([['filepath', '/journal/2025-10-20.md']]),
+      };
+      const trigger = TriggerFactory.createCommandTrigger('foam-vscode.open-daily-note');
+      const resolver = new Resolver(new Map(), new Date());
+      const result = await engine.processTemplate(trigger, template, resolver);
+
+      // Workspace-relative path '/journal/...' should resolve against root[0]
+      expect(result.filepath.path).toBe(`${root1.path}/journal/2025-10-20.md`);
+    });
+
     it('should resolve a workspace-relative absolute filepath under the workspace root (#1537)', async () => {
       const { engine, tmpDir } = await setupFoamEngine();
       const root = strToUri(tmpDir);

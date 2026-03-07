@@ -128,4 +128,12 @@ describe('asAbsoluteUri', () => {
     ).toEqual(workspaceFolder2.joinPath('file'));
   });
 
+  it('should return absolute path as-is via forPath when path does not start from base folder', () => {
+    // Documents the INTENTIONAL behavior after forceSubfolder removal:
+    // An absolute path like '/journal/file.md' that does NOT start with the
+    // workspace root path is returned as-is (not joined under the workspace root).
+    const result = asAbsoluteUri(URI.file('/journal/file.md'), [URI.file('/workspace')]);
+    expect(result.path).toBe('/journal/file.md');
+    expect(result.scheme).toBe('file');
+  });
 });

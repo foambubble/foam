@@ -719,3 +719,124 @@ some text`);
     expect(nLines).toEqual(1);
   });
 });
+
+describe('block anchor extraction', () => {
+  it('should extract block anchor from a paragraph', () => {
+    const note = parser.parse(
+      URI.file('/path/note.md'),
+      `This is a paragraph ^myblock`
+    );
+    expect(note.blocks).toHaveLength(1);
+    expect(note.blocks[0].id).toBe('myblock');
+    expect(note.blocks[0].type).toBe('paragraph');
+  });
+
+  it('should extract block anchor from a list item, with range covering sub-items', () => {
+    const note = parser.parse(
+      URI.file('/path/note.md'),
+      `- Parent item ^myblock\n  - Child 1\n  - Child 2\n- Another item`
+    );
+    const block = note.blocks.find(b => b.id === 'myblock');
+    expect(block).toBeDefined();
+    expect(block.type).toBe('list-item');
+    // Range must cover all sub-items (lines 0-2, not just line 0)
+    expect(block.range.start.line).toBe(0);
+    expect(block.range.end.line).toBeGreaterThan(0);
+  });
+
+  it('should extract block anchor from a nested sub-item with range limited to its subtree', () => {
+    const note = parser.parse(
+      URI.file('/path/note.md'),
+      `- Parent item\n  - Child ^childblock\n    - Grandchild\n- Another item`
+    );
+    const block = note.blocks.find(b => b.id === 'childblock');
+    expect(block).toBeDefined();
+    expect(block.type).toBe('list-item');
+    expect(block.range.start.line).toBe(1);
+    expect(block.range.end.line).toBeGreaterThan(1); // includes grandchild
+    expect(block.range.end.line).toBeLessThan(3);    // excludes "Another item"
+  });
+
+  it('should extract block anchor from a heading', () => {
+    const note = parser.parse(
+      URI.file('/path/note.md'),
+      `## My Heading ^headingblock\n\nSome content`
+    );
+    const block = note.blocks.find(b => b.id === 'headingblock');
+    expect(block).toBeDefined();
+    expect(block.type).toBe('heading');
+    // heading block range is just the heading line, not the section content
+    expect(block.range.start.line).toBe(0);
+    expect(block.range.end.line).toBe(0);
+  });
+
+  it('should strip ^id from section label when heading has a block anchor', () => {
+    const note = parser.parse(
+      URI.file('/path/note.md'),
+      `## My Heading ^headingblock\n\nSome content`
+    );
+    expect(note.sections).toHaveLength(1);
+    expect(note.sections[0].label).toBe('My Heading');
+  });
+
+  it('should extract block anchor from a blockquote', () => {
+    const note = parser.parse(
+      URI.file('/path/note.md'),
+      `> This is a quote ^quoteblock`
+    );
+    const block = note.blocks.find(b => b.id === 'quoteblock');
+    expect(block).toBeDefined();
+    expect(block.type).toBe('blockquote');
+  });
+
+  it('should extract multiple block anchors from a file', () => {
+    const note = parser.parse(
+      URI.file('/path/note.md'),
+      `First paragraph ^first\n\nSecond paragraph ^second`
+    );
+    expect(note.blocks).toHaveLength(2);
+    expect(note.blocks.map(b => b.id)).toEqual(['first', 'second']);
+  });
+
+  it('should not extract blocks from elements without ^id', () => {
+    const note = parser.parse(
+      URI.file('/path/note.md'),
+      `Just a paragraph\n\n- A list item`
+    );
+    expect(note.blocks).toHaveLength(0);
+  });
+
+  it('should use first-wins for duplicate block IDs', () => {
+    const note = parser.parse(
+      URI.file('/path/note.md'),
+      `First paragraph ^dup\n\nSecond paragraph ^dup`
+    );
+    expect(note.blocks).toHaveLength(1);
+    expect(note.blocks[0].range.start.line).toBe(0);
+  });
+
+  it('should not extract footnote references as block anchors', () => {
+    const note = parser.parse(
+      URI.file('/path/note.md'),
+      `A paragraph with a footnote[^1]\n\n[^1]: The footnote text`
+    );
+    expect(note.blocks).toHaveLength(0);
+  });
+
+  it('should not extract ^id from the middle of a paragraph', () => {
+    const note = parser.parse(
+      URI.file('/path/note.md'),
+      `Text ^notanid more text after`
+    );
+    expect(note.blocks).toHaveLength(0);
+  });
+
+  it('should only accept valid block ID characters [a-zA-Z0-9-]', () => {
+    const note = parser.parse(
+      URI.file('/path/note.md'),
+      `Valid ^valid-id-123\n\nInvalid ^invalid_id`
+    );
+    expect(note.blocks).toHaveLength(1);
+    expect(note.blocks[0].id).toBe('valid-id-123');
+  });
+});

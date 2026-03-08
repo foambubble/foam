@@ -81,6 +81,41 @@ describe('MarkdownLink', () => {
       expect(parsed.section).toEqual('section');
       expect(parsed.alias).toEqual('');
     });
+    it('should parse block anchor', () => {
+      const link = parser.parse(getRandomURI(), `this is a [[note#^myblock]]`)
+        .links[0];
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.target).toEqual('note');
+      expect(parsed.section).toEqual('');
+      expect(parsed.blockId).toEqual('myblock');
+      expect(parsed.alias).toEqual('');
+    });
+    it('should parse self-referencing block anchor', () => {
+      const link = parser.parse(getRandomURI(), `this is a [[#^myblock]]`)
+        .links[0];
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.target).toEqual('');
+      expect(parsed.section).toEqual('');
+      expect(parsed.blockId).toEqual('myblock');
+      expect(parsed.alias).toEqual('');
+    });
+    it('should parse block anchor with alias', () => {
+      const link = parser.parse(
+        getRandomURI(),
+        `this is a [[note#^myblock|My Alias]]`
+      ).links[0];
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.target).toEqual('note');
+      expect(parsed.blockId).toEqual('myblock');
+      expect(parsed.alias).toEqual('My Alias');
+    });
+    it('should not treat ^ in the middle of section as a block anchor', () => {
+      const link = parser.parse(getRandomURI(), `this is a [[note#foo^bar]]`)
+        .links[0];
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.section).toEqual('foo^bar');
+      expect(parsed.blockId).toEqual('');
+    });
   });
 
   describe('parse direct link', () => {

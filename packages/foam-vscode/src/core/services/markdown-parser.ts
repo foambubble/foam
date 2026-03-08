@@ -7,6 +7,8 @@ import frontmatterPlugin from 'remark-frontmatter';
 import { parse as parseYAML } from 'yaml';
 import visit from 'unist-util-visit';
 import {
+  Block,
+  BlockType,
   NoteLinkDefinition,
   Resource,
   ResourceLink,
@@ -77,6 +79,7 @@ export function createMarkdownParser(
     tagsPlugin,
     aliasesPlugin,
     sectionsPlugin,
+    blocksPlugin,
     ...extraPlugins,
   ];
 
@@ -106,6 +109,7 @@ export function createMarkdownParser(
         properties: {},
         title: '',
         sections: [],
+        blocks: [],
         tags: [],
         aliases: [],
         links: [],
@@ -303,7 +307,9 @@ const sectionsPlugin: ParserPlugin = {
   visit: (node, note) => {
     if (node.type === 'heading') {
       const level = (node as any).depth;
-      const label = getTextFromChildren(node);
+      const rawLabel = getTextFromChildren(node);
+      // Strip trailing block anchor (e.g. "My Heading ^blockid" → "My Heading")
+      const label = rawLabel.replace(/\s\^[a-zA-Z0-9-]+$/, '');
       if (!label || !level) {
         return;
       }
@@ -341,6 +347,56 @@ const sectionsPlugin: ParserPlugin = {
     note.sections.sort((a, b) =>
       Position.compareTo(a.range.start, b.range.start)
     );
+  },
+};
+
+const BLOCK_ANCHOR_REGEX = /\s\^([a-zA-Z0-9-]+)$/;
+
+/**
+ * Returns the direct text content of a node, without descending into
+ * child list items or other nested block elements. For list items,
+ * only the text of the first paragraph child is considered so that
+ * anchors on sub-items are not attributed to the parent.
+ */
+const getDirectText = (node: Node): string => {
+  if (node.type === 'listItem') {
+    const firstPara = (node as any).children?.find(
+      (c: any) => c.type === 'paragraph'
+    );
+    return firstPara ? getTextFromChildren(firstPara) : '';
+  }
+  return getTextFromChildren(node);
+};
+
+const BLOCK_NODE_TYPES: Record<string, BlockType> = {
+  paragraph: 'paragraph',
+  listItem: 'list-item',
+  blockquote: 'blockquote',
+  heading: 'heading',
+};
+
+const blocksPlugin: ParserPlugin = {
+  name: 'blocks',
+  visit: (node, note) => {
+    const blockType = BLOCK_NODE_TYPES[node.type];
+    if (!blockType) {
+      return;
+    }
+    const text = getDirectText(node);
+    const match = BLOCK_ANCHOR_REGEX.exec(text);
+    if (!match) {
+      return;
+    }
+    const id = match[1];
+    // First-wins: ignore duplicate IDs
+    if (note.blocks.some(b => b.id === id)) {
+      return;
+    }
+    note.blocks.push({
+      id,
+      type: blockType,
+      range: astPositionToFoamRange(node.position!),
+    });
   },
 };
 

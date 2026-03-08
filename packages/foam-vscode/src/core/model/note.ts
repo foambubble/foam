@@ -87,12 +87,21 @@ export interface Section {
   range: Range;
 }
 
+export type BlockType = 'paragraph' | 'list-item' | 'blockquote' | 'code' | 'heading';
+
+export interface Block {
+  id: string;
+  range: Range;
+  type: BlockType;
+}
+
 export interface Resource {
   uri: URI;
   type: string;
   title: string;
   properties: any;
   sections: Section[];
+  blocks: Block[];
   tags: Tag[];
   aliases: Alias[];
   links: ResourceLink[];
@@ -129,6 +138,13 @@ export abstract class Resource {
   public static findSection(resource: Resource, label: string): Section | null {
     if (label) {
       return resource.sections.find(s => s.label === label) ?? null;
+    }
+    return null;
+  }
+
+  public static findBlock(resource: Resource, id: string): Block | null {
+    if (id) {
+      return resource.blocks.find(b => b.id === id) ?? null;
     }
     return null;
   }

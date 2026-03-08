@@ -106,7 +106,8 @@ export const createTestNote = (params: {
     sections: params.sections?.map(label => ({
       label,
       range: Range.create(0, 0, 1, 0),
-    })),
+    })) ?? [],
+    blocks: [],
     tags:
       params.tags?.map(t => ({
         label: t,

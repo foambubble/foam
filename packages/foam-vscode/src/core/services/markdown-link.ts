@@ -19,9 +19,12 @@ export abstract class MarkdownLink {
         const [, target, section, alias] = this.wikilinkRegex.exec(
           link.rawText
         );
+        // A fragment starting with ^ is a block anchor (e.g. #^myblock), not a section
+        const blockMatch = section?.match(/^\^([a-zA-Z0-9-]+)$/);
         return {
           target: target?.replace(/\\/g, '') ?? '',
-          section: section ?? '',
+          section: blockMatch ? '' : (section ?? ''),
+          blockId: blockMatch?.[1] ?? '',
           alias: alias ?? '',
         };
       }
@@ -34,9 +37,12 @@ export abstract class MarkdownLink {
 
           // Parse target and section from definition URL
           const definitionUri = URI.parse(link.definition.url, 'tmp');
+          const defFragment = definitionUri.fragment;
+          const defBlockMatch = defFragment?.match(/^\^([a-zA-Z0-9-]+)$/);
           return {
             target: definitionUri.path, // Base path from definition
-            section: definitionUri.fragment, // Fragment from definition
+            section: defBlockMatch ? '' : (defFragment ?? ''),
+            blockId: defBlockMatch?.[1] ?? '',
             alias: alias, // Alias from rawText
           };
         }
@@ -50,6 +56,7 @@ export abstract class MarkdownLink {
           return {
             target: '',
             section: '',
+            blockId: '',
             alias: alias,
           };
         }
@@ -57,6 +64,7 @@ export abstract class MarkdownLink {
         return {
           target: target ?? '',
           section: section ?? '',
+          blockId: '',
           alias: alias ?? '',
         };
       }

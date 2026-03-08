@@ -32,12 +32,49 @@ export class MarkdownResourceProvider implements ResourceProvider {
     let content = await this.dataStore.read(uri);
     if (isSome(content) && uri.fragment) {
       const resource = this.parser.parse(uri, content);
-      const section = Resource.findSection(resource, uri.fragment);
-      if (isSome(section)) {
-        const rows = content.split('\n');
-        content = rows
-          .slice(section.range.start.line, section.range.end.line)
-          .join('\n');
+      const rows = content.split('\n');
+
+      if (uri.fragment.startsWith('^')) {
+        const blockId = uri.fragment.slice(1);
+        const block = Resource.findBlock(resource, blockId);
+        if (isSome(block)) {
+          let range = block.range;
+          // For heading blocks, use the section's content range instead
+          if (block.type === 'heading') {
+            const headingText = rows[block.range.start.line];
+            const headingLabel = headingText
+              .replace(/^#+\s*/, '')
+              .replace(/\s\^[a-zA-Z0-9-]+$/, '');
+            const section = Resource.findSection(resource, headingLabel);
+            if (isSome(section)) {
+              range = section.range;
+              // Section ranges are exclusive at end (next heading start line)
+              content = rows
+                .slice(range.start.line, range.end.line)
+                .join('\n')
+                .replace(/\s\^[a-zA-Z0-9-]+$/m, '');
+            } else {
+              // Fallback: just the heading line
+              content = rows[block.range.start.line].replace(
+                /\s\^[a-zA-Z0-9-]+$/,
+                ''
+              );
+            }
+          } else {
+            // AST node ranges are inclusive at end, so use end.line + 1
+            const sliced = rows
+              .slice(range.start.line, range.end.line + 1)
+              .join('\n');
+            content = sliced.replace(/\s\^[a-zA-Z0-9-]+$/gm, '');
+          }
+        }
+      } else {
+        const section = Resource.findSection(resource, uri.fragment);
+        if (isSome(section)) {
+          content = rows
+            .slice(section.range.start.line, section.range.end.line)
+            .join('\n');
+        }
       }
     }
     return content;
@@ -54,7 +91,7 @@ export class MarkdownResourceProvider implements ResourceProvider {
     link: ResourceLink
   ) {
     let targetUri: URI | undefined;
-    const { target, section } = MarkdownLink.analyzeLink(link);
+    const { target, section, blockId } = MarkdownLink.analyzeLink(link);
     switch (link.type) {
       case 'wikilink': {
         if (ResourceLink.isResolvedReference(link)) {
@@ -72,7 +109,9 @@ export class MarkdownResourceProvider implements ResourceProvider {
               : workspace.find(target, resource.uri)?.uri ??
                 this._resolveDirectoryByIdentifier(workspace, target)?.uri ??
                 URI.placeholder(target);
-          if (section) {
+          if (blockId) {
+            targetUri = targetUri.with({ fragment: `^${blockId}` });
+          } else if (section) {
             targetUri = targetUri.with({ fragment: section });
           }
         }

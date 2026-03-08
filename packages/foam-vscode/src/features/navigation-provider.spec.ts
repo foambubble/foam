@@ -38,7 +38,7 @@ describe('Document navigation', () => {
 
       const doc = await vscode.workspace.openTextDocument(toVsCodeUri(uri));
       const provider = new NavigationProvider(ws, graph, parser, tags);
-      const links = provider.provideDocumentLinks(doc);
+      const links = await provider.provideDocumentLinks(doc);
 
       expect(links.length).toEqual(0);
     });
@@ -53,7 +53,7 @@ describe('Document navigation', () => {
 
       const doc = await vscode.workspace.openTextDocument(toVsCodeUri(uri));
       const provider = new NavigationProvider(ws, graph, parser, tags);
-      const links = provider.provideDocumentLinks(doc);
+      const links = await provider.provideDocumentLinks(doc);
 
       expect(links.length).toEqual(0);
     });
@@ -69,7 +69,7 @@ describe('Document navigation', () => {
 
       const { doc } = await showInEditor(fileB.uri);
       const provider = new NavigationProvider(ws, graph, parser, tags);
-      const links = provider.provideDocumentLinks(doc);
+      const links = await provider.provideDocumentLinks(doc);
 
       expect(links.length).toEqual(0);
     });
@@ -83,7 +83,7 @@ describe('Document navigation', () => {
 
       const { doc } = await showInEditor(fileA.uri);
       const provider = new NavigationProvider(ws, graph, parser, tags);
-      const links = provider.provideDocumentLinks(doc);
+      const links = await provider.provideDocumentLinks(doc);
 
       expect(links.length).toEqual(1);
       expect(links[0].target).toEqual(
@@ -98,6 +98,43 @@ describe('Document navigation', () => {
         )
       );
       expect(links[0].range).toEqual(new vscode.Range(0, 20, 0, 33));
+    });
+
+    it('should not create a "create note" link for a direct path link targeting an existing file not indexed in workspace', async () => {
+      await createFile('some content', ['.editorconfig']);
+      const noteA = await createFile(`link to [config](./.editorconfig).`);
+      // Note: .editorconfig is NOT added to workspace (no provider supports extensionless files)
+      const ws = createTestWorkspace().set(
+        parser.parse(noteA.uri, noteA.content)
+      );
+      const graph = FoamGraph.fromWorkspace(ws);
+      const tags = FoamTags.fromWorkspace(ws);
+
+      const { doc } = await showInEditor(noteA.uri);
+      const provider = new NavigationProvider(ws, graph, parser, tags);
+      const links = await provider.provideDocumentLinks(doc);
+
+      // The link should not be treated as a "create note" placeholder
+      expect(links.length).toEqual(0);
+    });
+
+    it('should not create a "create note" link for an absolute path link targeting an existing file not indexed in workspace', async () => {
+      const existingFile = await createFile('some content', ['.editorconfig']);
+      const absolutePath = existingFile.uri.toFsPath();
+      const noteA = await createFile(`link to [config](${absolutePath}).`);
+      // Note: .editorconfig is NOT added to workspace (no provider supports extensionless files)
+      const ws = createTestWorkspace().set(
+        parser.parse(noteA.uri, noteA.content)
+      );
+      const graph = FoamGraph.fromWorkspace(ws);
+      const tags = FoamTags.fromWorkspace(ws);
+
+      const { doc } = await showInEditor(noteA.uri);
+      const provider = new NavigationProvider(ws, graph, parser, tags);
+      const links = await provider.provideDocumentLinks(doc);
+
+      // The link should not be treated as a "create note" placeholder
+      expect(links.length).toEqual(0);
     });
   });
 
@@ -166,6 +203,55 @@ describe('Document navigation', () => {
 
       expect(definitions.length).toEqual(1);
       expect(definitions[0].targetUri).toEqual(toVsCodeUri(fileA.uri));
+    });
+
+    it('should create a definition for a direct path link targeting an existing file not indexed in workspace', async () => {
+      const existingFile = await createFile('some content', ['.editorconfig']);
+      const noteA = await createFile(`link to [config](./.editorconfig).`);
+      // Note: existingFile is NOT added to workspace (no provider supports extensionless files)
+      const ws = createTestWorkspace().set(
+        parser.parse(noteA.uri, noteA.content)
+      );
+      const graph = FoamGraph.fromWorkspace(ws);
+      const tags = FoamTags.fromWorkspace(ws);
+
+      const { doc } = await showInEditor(noteA.uri);
+      const provider = new NavigationProvider(ws, graph, parser, tags);
+
+      // Position within the link text: "link to [config](./.editorconfig)."
+      //                                          ^col 9
+      const definitions = await provider.provideDefinition(
+        doc,
+        new vscode.Position(0, 10)
+      );
+
+      expect(definitions).toBeDefined();
+      expect(definitions.length).toEqual(1);
+      expect(definitions[0].targetUri).toEqual(toVsCodeUri(existingFile.uri));
+    });
+
+    it('should create a definition for an absolute path link targeting an existing file not indexed in workspace', async () => {
+      const existingFile = await createFile('some content', ['.editorconfig']);
+      const absolutePath = existingFile.uri.toFsPath();
+      const noteA = await createFile(`link to [config](${absolutePath}).`);
+      // Note: existingFile is NOT added to workspace (no provider supports extensionless files)
+      const ws = createTestWorkspace().set(
+        parser.parse(noteA.uri, noteA.content)
+      );
+      const graph = FoamGraph.fromWorkspace(ws);
+      const tags = FoamTags.fromWorkspace(ws);
+
+      const { doc } = await showInEditor(noteA.uri);
+      const provider = new NavigationProvider(ws, graph, parser, tags);
+
+      const definitions = await provider.provideDefinition(
+        doc,
+        new vscode.Position(0, 10)
+      );
+
+      expect(definitions).toBeDefined();
+      expect(definitions.length).toEqual(1);
+      expect(definitions[0].targetUri).toEqual(toVsCodeUri(existingFile.uri));
     });
 
     it('should support wikilinks that have an alias', async () => {

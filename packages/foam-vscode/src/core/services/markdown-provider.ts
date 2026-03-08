@@ -108,13 +108,15 @@ export class MarkdownResourceProvider implements ResourceProvider {
             targetPath.startsWith('./') || targetPath.startsWith('../')
               ? targetPath
               : './' + targetPath;
-          const resolvedUri = resource.uri.resolve(path);
-          // Use getDirectory().joinPath() to avoid URI.resolve() inheriting the .md extension
-          const dirUri = resource.uri.getDirectory().joinPath(targetPath);
+          // Use getDirectory().joinPath() rather than URI.resolve() to avoid
+          // inheriting the parent's .md extension on files with no extension
+          // (e.g. dotfiles like .editorconfig, where posix.extname returns '').
+          // See: https://github.com/foambubble/foam/issues/1379
+          const directResolvedUri = resource.uri.getDirectory().joinPath(path);
           targetUri =
             workspace.find(path, resource.uri)?.uri ??
-            this._resolveAsDirectory(workspace, dirUri)?.uri ??
-            URI.placeholder(resolvedUri.path);
+            this._resolveAsDirectory(workspace, directResolvedUri)?.uri ??
+            URI.placeholder(directResolvedUri.path);
         }
 
         if (section && !targetUri.isPlaceholder()) {

@@ -10,7 +10,7 @@ import { Position } from '../core/model/position';
 import { CREATE_NOTE_COMMAND } from './commands/create-note';
 import { commandAsURI } from '../utils/commands';
 import { Location } from '../core/model/location';
-import { getFoamDocSelectors } from '../services/editor';
+import { fileExists, getFoamDocSelectors } from '../services/editor';
 import { FoamTags } from '../core/model/tags';
 
 export default async function activate(
@@ -127,10 +127,10 @@ export class NavigationProvider
   /**
    * Create definitions for resolved links
    */
-  public provideDefinition(
+  public async provideDefinition(
     document: vscode.TextDocument,
     position: vscode.Position
-  ): vscode.LocationLink[] {
+  ): Promise<vscode.LocationLink[]> {
     const resource = this.parser.parse(
       fromVsCodeUri(document.uri),
       document.getText()
@@ -144,6 +144,28 @@ export class NavigationProvider
 
     const uri = this.workspace.resolveLink(resource, targetLink);
     if (uri.isPlaceholder()) {
+      // For direct path links, check if the file actually exists on disk even
+      // though it's not indexed in the workspace (e.g. extensionless files like
+      // .editorconfig that no provider recognises). If so, open it directly.
+      // See: https://github.com/foambubble/foam/issues/1379
+      if (targetLink.type === 'link') {
+        const realUri = uri.with({ scheme: 'file' });
+        if (await fileExists(realUri)) {
+          return [
+            {
+              originSelectionRange: new vscode.Range(
+                targetLink.range.start.line,
+                targetLink.range.start.character,
+                targetLink.range.end.line,
+                targetLink.range.end.character
+              ),
+              targetUri: toVsCodeUri(realUri),
+              targetRange: new vscode.Range(0, 0, 0, 0),
+              targetSelectionRange: new vscode.Range(0, 0, 0, 0),
+            },
+          ];
+        }
+      }
       return;
     }
 
@@ -176,9 +198,9 @@ export class NavigationProvider
   /**
    * Create links for wikilinks and placeholders
    */
-  public provideDocumentLinks(
+  public async provideDocumentLinks(
     document: vscode.TextDocument
-  ): vscode.DocumentLink[] {
+  ): Promise<vscode.DocumentLink[]> {
     const documentUri = fromVsCodeUri(document.uri);
     const resource = this.parser.parse(documentUri, document.getText());
 
@@ -189,29 +211,43 @@ export class NavigationProvider
       })
     );
 
-    const links: vscode.DocumentLink[] = targets
-      .filter(o => o.target.isPlaceholder()) // links to resources are managed by the definition provider
-      .map(o => {
-        const command = CREATE_NOTE_COMMAND.forPlaceholder(
-          Location.forObjectWithRange(documentUri, o.link),
-          this.workspace.defaultExtension,
-          {
-            onFileExists: 'open',
-          }
-        );
+    const placeholders = targets.filter(o => o.target.isPlaceholder()); // links to resources are managed by the definition provider
 
-        const documentLink = new vscode.DocumentLink(
-          new vscode.Range(
-            o.link.range.start.line,
-            o.link.range.start.character + 2,
-            o.link.range.end.line,
-            o.link.range.end.character - 2
-          ),
-          commandAsURI(command)
-        );
-        documentLink.tooltip = `Create note for '${o.target.path}'`;
-        return documentLink;
-      });
+    const links: vscode.DocumentLink[] = (
+      await Promise.all(
+        placeholders.map(async o => {
+          // For direct path links, skip if the file actually exists on disk but
+          // isn't indexed (e.g. extensionless dotfiles). VS Code handles them natively.
+          // See: https://github.com/foambubble/foam/issues/1379
+          if (o.link.type === 'link') {
+            const realUri = o.target.with({ scheme: 'file' });
+            if (await fileExists(realUri)) {
+              return null;
+            }
+          }
+
+          const command = CREATE_NOTE_COMMAND.forPlaceholder(
+            Location.forObjectWithRange(documentUri, o.link),
+            this.workspace.defaultExtension,
+            {
+              onFileExists: 'open',
+            }
+          );
+
+          const documentLink = new vscode.DocumentLink(
+            new vscode.Range(
+              o.link.range.start.line,
+              o.link.range.start.character + 2,
+              o.link.range.end.line,
+              o.link.range.end.character - 2
+            ),
+            commandAsURI(command)
+          );
+          documentLink.tooltip = `Create note for '${o.target.path}'`;
+          return documentLink;
+        })
+      )
+    ).filter(Boolean);
 
     const tags: vscode.DocumentLink[] = resource.tags.map(tag => {
       const command = {

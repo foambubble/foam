@@ -152,6 +152,7 @@ export class FoamWorkspace implements IDisposable {
   }
 
   private _registerDirectoryIndex(resource: Resource): void {
+    if (resource.type !== 'note') return;
     const priority = this._directoryIndexPriority(resource.uri);
     if (priority === -1) return;
 

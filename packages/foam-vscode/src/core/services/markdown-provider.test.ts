@@ -438,6 +438,22 @@ describe('Link resolution', () => {
         expect(resolved.path).toEqual('/workspace1/non-existent/file.md');
       });
 
+      it('should resolve absolute directory link to index file in non-root[0] workspace root', () => {
+        const linker = createTestNote({
+          uri: '/workspace1/dir/linker.md',
+          links: [{ to: '/subdir' }],
+        });
+        const index = createTestNote({ uri: '/workspace2/subdir/index.md' });
+
+        const ws = createTestWorkspace([
+          URI.file('/workspace1'),
+          URI.file('/workspace2'),
+        ]);
+        ws.set(linker).set(index);
+
+        expect(ws.resolveLink(linker, linker.links[0])).toEqual(index.uri);
+      });
+
       it('should preserve existing absolute path behavior when no workspace roots provided', () => {
         const noteA = createTestNote({
           uri: '/path/to/page-a.md',

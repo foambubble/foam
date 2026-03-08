@@ -96,7 +96,11 @@ export class MarkdownResourceProvider implements ResourceProvider {
           const resolvedUri = workspace.resolveUri(targetPath);
           targetUri =
             workspace.find(targetPath, resource.uri)?.uri ??
-            this._resolveAsDirectory(workspace, resolvedUri)?.uri ??
+            workspace.roots
+              .map(root =>
+                this._resolveAsDirectory(workspace, root.joinPath(targetPath))
+              )
+              .find(Boolean)?.uri ??
             URI.placeholder(resolvedUri.path);
         } else {
           // Handle relative paths and non-root paths

@@ -437,6 +437,13 @@ describe('Directory index', () => {
     expect(ws.findByDirectory('/foo/bar')).toBeNull();
   });
 
+  it('should not register non-note resources (attachments, images) as directory index', () => {
+    const ws = createTestWorkspace();
+    ws.set(createTestNote({ uri: '/foo/bar/index.png', type: 'image' }));
+    ws.set(createTestNote({ uri: '/foo/bar/README.pdf', type: 'attachment' }));
+    expect(ws.findByDirectory('/foo/bar')).toBeNull();
+  });
+
   it('should track index files independently per directory', () => {
     const ws = createTestWorkspace();
     const indexA = createTestNote({ uri: '/foo/bar/index.md' });

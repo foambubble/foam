@@ -6,7 +6,7 @@ import { workspace as vsWorkspace } from 'vscode';
 import markdownItRegex from 'markdown-it-regex';
 import { FoamWorkspace } from '../../core/model/workspace';
 import { Logger } from '../../core/utils/log';
-import { Resource, ResourceParser } from '../../core/model/note';
+import { Resource, ResourceParser, Block } from '../../core/model/note';
 import { getFoamVsCodeConfig } from '../../services/config';
 import { fromVsCodeUri } from '../../utils/vsc-utils';
 import { MarkdownLink } from '../../core/services/markdown-link';
@@ -223,12 +223,20 @@ function fullExtractor(
   workspace: FoamWorkspace
 ): string {
   let noteText = readFileSync(note.uri.toFsPath()).toString();
-  const section = Resource.findSection(note, note.uri.fragment);
-  if (isSome(section)) {
-    const rows = noteText.split('\n');
-    noteText = rows
-      .slice(section.range.start.line, section.range.end.line)
-      .join('\n');
+  if (note.uri.fragment.startsWith('^')) {
+    const blockId = note.uri.fragment.slice(1);
+    const block = Resource.findBlock(note, blockId);
+    if (isSome(block)) {
+      noteText = extractBlockContent(noteText, note, block);
+    }
+  } else {
+    const section = Resource.findSection(note, note.uri.fragment);
+    if (isSome(section)) {
+      const rows = noteText.split('\n');
+      noteText = rows
+        .slice(section.range.start.line, section.range.end.line)
+        .join('\n');
+    }
   }
   noteText = withLinksRelativeToWorkspaceRoot(
     note.uri,
@@ -245,22 +253,30 @@ function contentExtractor(
   workspace: FoamWorkspace
 ): string {
   let noteText = readFileSync(note.uri.toFsPath()).toString();
-  let section = Resource.findSection(note, note.uri.fragment);
-  if (!note.uri.fragment) {
-    // if there's no fragment(section), the wikilink is linking to the entire note,
-    // in which case we need to remove the title. We could just use rows.shift()
-    // but should the note start with blank lines, it will only remove the first blank line
-    // leaving the title
-    // A better way is to find where the actual title starts by assuming it's at section[0]
-    // then we treat it as the same case as link to a section
-    section = note.sections.length ? note.sections[0] : null;
+  if (note.uri.fragment.startsWith('^')) {
+    const blockId = note.uri.fragment.slice(1);
+    const block = Resource.findBlock(note, blockId);
+    if (isSome(block)) {
+      noteText = extractBlockContent(noteText, note, block);
+    }
+  } else {
+    let section = Resource.findSection(note, note.uri.fragment);
+    if (!note.uri.fragment) {
+      // if there's no fragment(section), the wikilink is linking to the entire note,
+      // in which case we need to remove the title. We could just use rows.shift()
+      // but should the note start with blank lines, it will only remove the first blank line
+      // leaving the title
+      // A better way is to find where the actual title starts by assuming it's at section[0]
+      // then we treat it as the same case as link to a section
+      section = note.sections.length ? note.sections[0] : null;
+    }
+    let rows = noteText.split('\n');
+    if (isSome(section)) {
+      rows = rows.slice(section.range.start.line, section.range.end.line);
+    }
+    rows.shift();
+    noteText = rows.join('\n');
   }
-  let rows = noteText.split('\n');
-  if (isSome(section)) {
-    rows = rows.slice(section.range.start.line, section.range.end.line);
-  }
-  rows.shift();
-  noteText = rows.join('\n');
   noteText = withLinksRelativeToWorkspaceRoot(
     note.uri,
     noteText,
@@ -268,6 +284,37 @@ function contentExtractor(
     workspace
   );
   return noteText;
+}
+
+/**
+ * Extracts the content of a block from note text.
+ * For heading blocks, returns the section content (heading + body).
+ * For other blocks, returns the block content with block anchor markers stripped.
+ */
+function extractBlockContent(
+  noteText: string,
+  note: Resource,
+  block: Block
+): string {
+  const rows = noteText.split('\n');
+  if (block.type === 'heading') {
+    const headingText = rows[block.range.start.line];
+    const headingLabel = headingText
+      .replace(/^#+\s*/, '')
+      .replace(/\s\^[a-zA-Z0-9-]+$/, '');
+    const section = Resource.findSection(note, headingLabel);
+    if (isSome(section)) {
+      return rows
+        .slice(section.range.start.line, section.range.end.line)
+        .join('\n')
+        .replace(/\s\^[a-zA-Z0-9-]+$/m, '');
+    }
+    return headingText.replace(/\s\^[a-zA-Z0-9-]+$/, '');
+  }
+  return rows
+    .slice(block.range.start.line, block.range.end.line + 1)
+    .join('\n')
+    .replace(/\s\^[a-zA-Z0-9-]+$/gm, '');
 }
 
 /**

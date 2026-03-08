@@ -36,7 +36,8 @@ export default async function activate(
     vscode.languages.registerCompletionItemProvider(
       getFoamDocSelectors(),
       new SectionCompletionProvider(foam.workspace),
-      '#'
+      '#',
+      '^'
     ),
 
     /**

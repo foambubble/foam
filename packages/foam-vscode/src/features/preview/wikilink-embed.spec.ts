@@ -415,4 +415,61 @@ content-card![[note-e#Section 2]]`);
     await deleteFile(noteA);
     await deleteFile(noteB);
   });
+
+  it('should render only the block content when embedding a block anchor in full inline mode', async () => {
+    const note = await createFile(
+      `First paragraph
+
+Second paragraph ^target-block
+
+Third paragraph`,
+      ['note-with-block.md']
+    );
+    const parser = createMarkdownParser([]);
+    const ws = new FoamWorkspace().set(parser.parse(note.uri, note.content));
+
+    await withModifiedFoamConfiguration(
+      CONFIG_EMBED_NOTE_TYPE,
+      'full-inline',
+      () => {
+        const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser);
+        const res = md.render(`![[note-with-block#^target-block]]`);
+        expect(res).toContain('Second paragraph');
+        expect(res).not.toContain('First paragraph');
+        expect(res).not.toContain('Third paragraph');
+        // Block anchor marker should be stripped
+        expect(res).not.toContain('^target-block');
+      }
+    );
+
+    await deleteFile(note);
+  });
+
+  it('should render only the block content when embedding a block anchor in content inline mode', async () => {
+    const note = await createFile(
+      `First paragraph
+
+Second paragraph ^target-block
+
+Third paragraph`,
+      ['note-with-block-content.md']
+    );
+    const parser = createMarkdownParser([]);
+    const ws = new FoamWorkspace().set(parser.parse(note.uri, note.content));
+
+    await withModifiedFoamConfiguration(
+      CONFIG_EMBED_NOTE_TYPE,
+      'content-inline',
+      () => {
+        const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser);
+        const res = md.render(`![[note-with-block-content#^target-block]]`);
+        expect(res).toContain('Second paragraph');
+        expect(res).not.toContain('First paragraph');
+        expect(res).not.toContain('Third paragraph');
+        expect(res).not.toContain('^target-block');
+      }
+    );
+
+    await deleteFile(note);
+  });
 });

@@ -667,7 +667,7 @@
           ]
         },
         "foam.links.sync.enable": {
-          "description": "Enable synching links when moving/renaming notes",
+          "description": "Automatically update wikilinks when a note is renamed or moved. For standard markdown links, enable VS Code's built-in 'markdown.updateLinksOnFileMove.enabled' setting.",
           "type": "boolean",
           "default": true
         },

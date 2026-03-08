@@ -2,9 +2,11 @@ import * as vscode from 'vscode';
 import { Foam } from '../core/model/foam';
 import { MarkdownLink } from '../core/services/markdown-link';
 import { Logger } from '../core/utils/log';
-import { isAbsolute } from '../core/utils/path';
 import { getFoamVsCodeConfig } from '../services/config';
 import { fromVsCodeUri, toVsCodeRange, toVsCodeUri } from '../utils/vsc-utils';
+
+const MARKDOWN_LINK_NOTIFICATION_KEY =
+  'foam.links.sync.markdownLinkNotificationShown';
 
 export default async function activate(
   context: vscode.ExtensionContext,
@@ -18,6 +20,7 @@ export default async function activate(
         return;
       }
       const renameEdits = new vscode.WorkspaceEdit();
+      let hasMarkdownBacklinks = false;
       for (const { oldUri, newUri } of e.files) {
         if (
           (await vscode.workspace.fs.stat(oldUri)).type ===
@@ -29,8 +32,7 @@ export default async function activate(
           continue;
         }
         const connections = foam.graph.getBacklinks(fromVsCodeUri(oldUri));
-        connections.forEach(async connection => {
-          const { target } = MarkdownLink.analyzeLink(connection.link);
+        for (const connection of connections) {
           switch (connection.link.type) {
             case 'wikilink': {
               const identifier = foam.workspace.getIdentifier(
@@ -48,23 +50,11 @@ export default async function activate(
               break;
             }
             case 'link': {
-              const path = isAbsolute(target)
-                ? '/' + vscode.workspace.asRelativePath(newUri)
-                : fromVsCodeUri(newUri).relativeTo(
-                    connection.source.getDirectory()
-                  ).path;
-              const edit = MarkdownLink.createUpdateLinkEdit(connection.link, {
-                target: path,
-              });
-              renameEdits.replace(
-                toVsCodeUri(connection.source),
-                toVsCodeRange(edit.range),
-                edit.newText
-              );
+              hasMarkdownBacklinks = true;
               break;
             }
           }
-        });
+        }
       }
 
       try {
@@ -105,6 +95,34 @@ export default async function activate(
             e.newUri
           )}. Check the logs for error details.`
         );
+      }
+
+      // On the first rename where there are markdown backlinks, nudge the user
+      // to enable VS Code's built-in markdown link update setting if they haven't already.
+      if (
+        hasMarkdownBacklinks &&
+        !context.globalState.get(MARKDOWN_LINK_NOTIFICATION_KEY)
+      ) {
+        const vsCodeMarkdownSetting = vscode.workspace
+          .getConfiguration('markdown')
+          .get<string>('updateLinksOnFileMove.enabled', 'never');
+        if (vsCodeMarkdownSetting === 'never') {
+          const choice = await vscode.window.showInformationMessage(
+            "Foam updated your wikilinks. To also update standard markdown links on rename, enable VS Code's built-in setting.",
+            'Enable',
+            'Dismiss'
+          );
+          if (choice === 'Enable') {
+            await vscode.workspace
+              .getConfiguration('markdown')
+              .update(
+                'updateLinksOnFileMove.enabled',
+                'always',
+                vscode.ConfigurationTarget.Global
+              );
+          }
+        }
+        await context.globalState.update(MARKDOWN_LINK_NOTIFICATION_KEY, true);
       }
     })
   );

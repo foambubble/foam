@@ -198,15 +198,18 @@ describe('Note rename sync', () => {
     });
     beforeEach(closeEditors);
 
-    it('should rename relative direct links', async () => {
+    it('should not update markdown links on rename (delegated to VS Code built-in) - #1069', async () => {
+      const originalLink = `Link to [note](../f1/note-a.md) from note B.`;
       const noteA = await createFile(
         `Content of note A. Lorem etc etc etc etc`,
         ['refactor', 'direct-links', 'f1', 'note-a.md']
       );
-      const noteB = await createFile(
-        `Link to [note](../f1/note-a.md) from note B.`,
-        ['refactor', 'direct-links', 'f2', 'note-b.md']
-      );
+      const noteB = await createFile(originalLink, [
+        'refactor',
+        'direct-links',
+        'f2',
+        'note-b.md',
+      ]);
       const { doc } = await showInEditor(noteB.uri);
 
       const newUri = noteA.uri.resolve('../note-a.md');
@@ -215,11 +218,9 @@ describe('Note rename sync', () => {
       await runCommand(UPDATE_GRAPH_COMMAND_NAME);
       await renameFile(noteA.uri, newUri);
 
-      await waitForExpect(async () => {
-        expect(doc.getText().trim()).toEqual(
-          `Link to [note](../note-a.md) from note B.`
-        );
-      });
+      // Foam does not update markdown links; the link should remain unchanged
+      await wait(500);
+      expect(doc.getText().trim()).toEqual(originalLink);
 
       await deleteFile(newUri);
       await deleteFile(noteB.uri);

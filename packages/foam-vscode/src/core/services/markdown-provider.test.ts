@@ -473,6 +473,18 @@ describe('Link resolution', () => {
 });
 
 describe('Generation of markdown references', () => {
+  it('should generate correct reference URL when wikilink resolves to a directory index file', () => {
+    const workspace = createTestWorkspace();
+    const noteA = createNoteFromMarkdown('Link to [[bar]]', '/root/page-a.md');
+    const index = createTestNote({ uri: '/root/bar/index.md', title: 'Bar Index' });
+    workspace.set(noteA).set(index);
+
+    const references = createMarkdownReferences(workspace, noteA.uri, false);
+    expect(references).toHaveLength(1);
+    expect(references[0].url).toBe('bar/index');
+    expect(references[0].label).toBe('bar');
+  });
+
   it('should generate links without file extension when includeExtension = false', () => {
     const workspace = createTestWorkspace();
     const noteA = createNoteFromMarkdown(

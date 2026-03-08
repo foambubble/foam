@@ -15,6 +15,7 @@ import { isNone } from '../core/utils';
 
 const AMBIGUOUS_IDENTIFIER_CODE = 'ambiguous-identifier';
 const UNKNOWN_SECTION_CODE = 'unknown-section';
+const UNKNOWN_BLOCK_CODE = 'unknown-block';
 
 interface FoamCommand<T> {
   name: string;
@@ -130,7 +131,7 @@ export function updateDiagnostics(
 
     for (const link of resource.links) {
       if (link.type === 'wikilink') {
-        const { target, section } = MarkdownLink.analyzeLink(link);
+        const { target, section, blockId } = MarkdownLink.analyzeLink(link);
         const targets = workspace.listByIdentifier(target);
         if (targets.length > 1) {
           result.push({
@@ -176,6 +177,34 @@ export function updateDiagnostics(
                       toVsCodePosition(b.range.start)
                     ),
                     b.label
+                  )
+              ),
+            });
+          }
+        }
+        if (blockId && targets.length === 1) {
+          const resource = targets[0];
+          if (isNone(Resource.findBlock(resource, blockId))) {
+            const range = Range.create(
+              link.range.start.line,
+              link.range.start.character + target.length + 2,
+              link.range.end.line,
+              link.range.end.character
+            );
+            result.push({
+              code: UNKNOWN_BLOCK_CODE,
+              message: `Cannot find block "^${blockId}" in document, available blocks are:`,
+              range: toVsCodeRange(range),
+              severity: vscode.DiagnosticSeverity.Warning,
+              source: 'Foam',
+              relatedInformation: resource.blocks.map(
+                b =>
+                  new vscode.DiagnosticRelatedInformation(
+                    new vscode.Location(
+                      toVsCodeUri(resource.uri),
+                      toVsCodePosition(b.range.start)
+                    ),
+                    `^${b.id}`
                   )
               ),
             });
@@ -230,6 +259,14 @@ export class IdentifierResolver implements vscode.CodeActionProvider {
         }
         return [...acc, ...res];
       }
+      if (diagnostic.code === UNKNOWN_BLOCK_CODE) {
+        const res: vscode.CodeAction[] = [];
+        const blockIds = diagnostic.relatedInformation.map(info => info.message);
+        for (const blockId of blockIds) {
+          res.push(createReplaceBlockCommand(diagnostic, blockId));
+        }
+        return [...acc, ...res];
+      }
       return acc;
     }, [] as vscode.CodeAction[]);
   }
@@ -249,6 +286,33 @@ const createReplaceSectionCommand = (
     arguments: [
       {
         value: section,
+        range: new vscode.Range(
+          diagnostic.range.start.line,
+          diagnostic.range.start.character + 1,
+          diagnostic.range.end.line,
+          diagnostic.range.end.character - 2
+        ),
+      },
+    ],
+  };
+  action.diagnostics = [diagnostic];
+  return action;
+};
+
+const createReplaceBlockCommand = (
+  diagnostic: vscode.Diagnostic,
+  blockId: string
+): vscode.CodeAction => {
+  const action = new vscode.CodeAction(
+    `${blockId}`,
+    vscode.CodeActionKind.QuickFix
+  );
+  action.command = {
+    command: REPLACE_TEXT_COMMAND.name,
+    title: `Use block "${blockId}"`,
+    arguments: [
+      {
+        value: blockId,
         range: new vscode.Range(
           diagnostic.range.start.line,
           diagnostic.range.start.character + 1,

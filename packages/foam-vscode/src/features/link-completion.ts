@@ -121,6 +121,28 @@ export class SectionCompletionProvider
       position.character
     );
     if (resource) {
+      const fragmentSoFar = cursorPrefix.slice(
+        cursorPrefix.lastIndexOf('#') + 1
+      );
+      if (fragmentSoFar.startsWith('^')) {
+        // Block anchor completions
+        const items = resource.blocks.map(b => {
+          const label = `^${b.id}`;
+          const item = new ResourceCompletionItem(
+            label,
+            vscode.CompletionItemKind.Text,
+            resource.uri.with({ fragment: `^${b.id}` })
+          );
+          item.detail = b.type;
+          item.sortText = String(b.range.start.line).padStart(5, '0');
+          item.range = replacementRange;
+          item.commitCharacters = sectionCommitCharacters;
+          item.command = COMPLETION_CURSOR_MOVE;
+          return item;
+        });
+        return new vscode.CompletionList(items);
+      }
+      // Section completions
       const items = resource.sections.map(b => {
         const item = new ResourceCompletionItem(
           b.label,

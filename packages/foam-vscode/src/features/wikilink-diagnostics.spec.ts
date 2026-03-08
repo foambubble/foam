@@ -188,6 +188,66 @@ Content of section 2
   });
 });
 
+describe('Block diagnostics', () => {
+  it('should show no warning when block anchor exists', async () => {
+    const fileA = await createFile(
+      'A paragraph ^myblock',
+      ['note-with-block.md']
+    );
+    const fileB = await createFile(
+      `Link to [[${fileA.name}#^myblock]]`
+    );
+    const parser = createMarkdownParser([]);
+    const ws = new FoamWorkspace()
+      .set(parser.parse(fileA.uri, fileA.content))
+      .set(parser.parse(fileB.uri, fileB.content));
+
+    await showInEditor(fileB.uri);
+
+    const collection = vscode.languages.createDiagnosticCollection('foam-test');
+    updateDiagnostics(ws, parser, vscode.window.activeTextEditor.document, collection);
+    expect(countEntries(collection)).toEqual(0);
+  });
+
+  it('should show a warning when block anchor does not exist', async () => {
+    const fileA = await createFile(
+      'A paragraph ^existing',
+      ['note-for-block-diag.md']
+    );
+    const fileB = await createFile(
+      `Link to [[${fileA.name}#^ghost]]`
+    );
+    const parser = createMarkdownParser([]);
+    const ws = new FoamWorkspace()
+      .set(parser.parse(fileA.uri, fileA.content))
+      .set(parser.parse(fileB.uri, fileB.content));
+
+    await showInEditor(fileB.uri);
+
+    const collection = vscode.languages.createDiagnosticCollection('foam-test');
+    updateDiagnostics(ws, parser, vscode.window.activeTextEditor.document, collection);
+    expect(countEntries(collection)).toEqual(1);
+    const items = collection.get(toVsCodeUri(fileB.uri));
+    expect(items[0].severity).toEqual(vscode.DiagnosticSeverity.Warning);
+    expect(items[0].relatedInformation.map(info => info.message)).toEqual([
+      '^existing',
+    ]);
+  });
+
+  it('should show nothing on placeholders with block anchors', async () => {
+    const file = await createFile('Link to [[nonexistent#^ghost]]');
+    const parser = createMarkdownParser([]);
+    const ws = new FoamWorkspace().set(parser.parse(file.uri, file.content));
+
+    await showInEditor(file.uri);
+
+    const collection = vscode.languages.createDiagnosticCollection('foam-test');
+    updateDiagnostics(ws, parser, vscode.window.activeTextEditor.document, collection);
+    // No diagnostic when the note itself doesn't exist (placeholder)
+    expect(countEntries(collection)).toEqual(0);
+  });
+});
+
 const countEntries = (collection: vscode.DiagnosticCollection): number => {
   let count = 0;
   collection.forEach((i, diagnostics) => {

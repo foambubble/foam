@@ -1,7 +1,7 @@
 import { debounce } from 'lodash';
 import * as vscode from 'vscode';
 import { Foam } from '../core/model/foam';
-import { Resource, ResourceParser } from '../core/model/note';
+import { Resource, ResourceLink, ResourceParser } from '../core/model/note';
 import { Range } from '../core/model/range';
 import { FoamWorkspace } from '../core/model/workspace';
 import { MarkdownLink } from '../core/services/markdown-link';
@@ -157,12 +157,7 @@ export function updateDiagnostics(
         if (section && targets.length === 1) {
           const resource = targets[0];
           if (isNone(Resource.findSection(resource, section))) {
-            const range = Range.create(
-              link.range.start.line,
-              link.range.start.character + target.length + 2,
-              link.range.end.line,
-              link.range.end.character
-            );
+            const range = getFragmentDiagnosticRange(link, section);
             result.push({
               code: UNKNOWN_SECTION_CODE,
               message: `Cannot find section "${section}" in document, available sections are:`,
@@ -185,12 +180,7 @@ export function updateDiagnostics(
         if (blockId && targets.length === 1) {
           const resource = targets[0];
           if (isNone(Resource.findBlock(resource, blockId))) {
-            const range = Range.create(
-              link.range.start.line,
-              link.range.start.character + target.length + 2,
-              link.range.end.line,
-              link.range.end.character
-            );
+            const range = getFragmentDiagnosticRange(link, `^${blockId}`);
             result.push({
               code: UNKNOWN_BLOCK_CODE,
               message: `Cannot find block "^${blockId}" in document, available blocks are:`,
@@ -286,12 +276,7 @@ const createReplaceSectionCommand = (
     arguments: [
       {
         value: section,
-        range: new vscode.Range(
-          diagnostic.range.start.line,
-          diagnostic.range.start.character + 1,
-          diagnostic.range.end.line,
-          diagnostic.range.end.character - 2
-        ),
+        range: fragmentValueRange(diagnostic.range),
       },
     ],
   };
@@ -313,18 +298,53 @@ const createReplaceBlockCommand = (
     arguments: [
       {
         value: blockId,
-        range: new vscode.Range(
-          diagnostic.range.start.line,
-          diagnostic.range.start.character + 1,
-          diagnostic.range.end.line,
-          diagnostic.range.end.character - 2
-        ),
+        range: fragmentValueRange(diagnostic.range),
       },
     ],
   };
   action.diagnostics = [diagnostic];
   return action;
 };
+
+/**
+ * Returns the range covering `#fragment` in a wikilink. The range starts at
+ * `#` and ends immediately after the fragment text, before any alias `|` or
+ * closing `]]`. The caller supplies the already-parsed `fragment` string
+ * (e.g. `"Section 1"` or `"^blockid"`), so no secondary rawText scanning is
+ * needed.
+ */
+const getFragmentDiagnosticRange = (link: ResourceLink, fragment: string): Range => {
+  const hashPos = link.rawText.indexOf('#');
+  if (hashPos < 0) {
+    // No fragment — degenerate range at the link end
+    return Range.create(
+      link.range.end.line,
+      link.range.end.character,
+      link.range.end.line,
+      link.range.end.character
+    );
+  }
+
+  return Range.create(
+    link.range.start.line,
+    link.range.start.character + hashPos,
+    link.range.end.line,
+    link.range.start.character + hashPos + 1 + fragment.length
+  );
+};
+
+/**
+ * Given a diagnostic range that starts at `#` and ends just before `|` or
+ * `]]` (as guaranteed by `getFragmentDiagnosticRange`), return the range
+ * covering only the fragment value — i.e. everything after the `#`.
+ */
+const fragmentValueRange = (diagnosticRange: vscode.Range): vscode.Range =>
+  new vscode.Range(
+    diagnosticRange.start.line,
+    diagnosticRange.start.character + 1,
+    diagnosticRange.end.line,
+    diagnosticRange.end.character
+  );
 
 const createFindIdentifierCommand = (
   diagnostic: vscode.Diagnostic,

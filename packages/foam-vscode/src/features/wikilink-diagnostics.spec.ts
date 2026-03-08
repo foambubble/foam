@@ -8,7 +8,7 @@ import {
   showInEditor,
 } from '../test/test-utils-vscode';
 import { toVsCodeUri } from '../utils/vsc-utils';
-import { updateDiagnostics } from './wikilink-diagnostics';
+import { updateDiagnostics, IdentifierResolver } from './wikilink-diagnostics';
 
 describe('Wikilink diagnostics', () => {
   beforeEach(async () => {
@@ -245,6 +245,143 @@ describe('Block diagnostics', () => {
     updateDiagnostics(ws, parser, vscode.window.activeTextEditor.document, collection);
     // No diagnostic when the note itself doesn't exist (placeholder)
     expect(countEntries(collection)).toEqual(0);
+  });
+
+  it('should generate a quick-fix that preserves the # when correcting a block anchor', async () => {
+    const fileA = await createFile(
+      'A paragraph ^existing',
+      ['note-for-quickfix.md']
+    );
+    const fileB = await createFile(
+      `Link to [[${fileA.name}#^ghost]]`
+    );
+    const parser = createMarkdownParser([]);
+    const ws = new FoamWorkspace()
+      .set(parser.parse(fileA.uri, fileA.content))
+      .set(parser.parse(fileB.uri, fileB.content));
+
+    await showInEditor(fileB.uri);
+
+    const collection = vscode.languages.createDiagnosticCollection('foam-test');
+    updateDiagnostics(ws, parser, vscode.window.activeTextEditor.document, collection);
+
+    const diagnostics = collection.get(toVsCodeUri(fileB.uri));
+    expect(diagnostics).toHaveLength(1);
+
+    const resolver = new IdentifierResolver('.md');
+    const actions = resolver.provideCodeActions(
+      vscode.window.activeTextEditor.document,
+      diagnostics[0].range,
+      { diagnostics, only: null } as vscode.CodeActionContext,
+      null
+    );
+
+    expect(actions).toHaveLength(1);
+    const editArgs = actions[0].command.arguments[0];
+    // The value to replace with should be the block ID including ^
+    expect(editArgs.value).toBe('^existing');
+    // The replacement range should start AFTER the # (at the ^ character)
+    // and end BEFORE the closing ]]
+    const linkText = `[[${fileA.name}#^ghost]]`;
+    const hashPos = `Link to [[${fileA.name}`.length;
+    expect(editArgs.range.start.character).toBe(hashPos + 1); // after #
+    expect(editArgs.range.end.character).toBe(
+      `Link to [[${fileA.name}#^ghost]]`.length - 2
+    ); // before ]]
+
+    await vscode.window.activeTextEditor.edit(builder => {
+      builder.replace(editArgs.range, editArgs.value);
+    });
+
+    expect(vscode.window.activeTextEditor.document.getText()).toBe(
+      `Link to [[${fileA.name}#^existing]]`
+    );
+  });
+
+  it('should preserve the # when correcting a block anchor in an escaped wikilink target', async () => {
+    const fileA = await createFile(
+      'A paragraph ^existing',
+      ['Note with spaces.md']
+    );
+    const escapedTarget = 'Note\\ with\\ spaces';
+    const fileB = await createFile(`Link to [[${escapedTarget}#^ghost]]`);
+    const parser = createMarkdownParser([]);
+    const ws = new FoamWorkspace()
+      .set(parser.parse(fileA.uri, fileA.content))
+      .set(parser.parse(fileB.uri, fileB.content));
+
+    await showInEditor(fileB.uri);
+
+    const collection = vscode.languages.createDiagnosticCollection('foam-test');
+    updateDiagnostics(
+      ws,
+      parser,
+      vscode.window.activeTextEditor.document,
+      collection
+    );
+
+    const diagnostics = collection.get(toVsCodeUri(fileB.uri));
+    expect(diagnostics).toHaveLength(1);
+
+    const resolver = new IdentifierResolver('.md');
+    const actions = resolver.provideCodeActions(
+      vscode.window.activeTextEditor.document,
+      diagnostics[0].range,
+      { diagnostics, only: null } as vscode.CodeActionContext,
+      null
+    );
+
+    expect(actions).toHaveLength(1);
+    const editArgs = actions[0].command.arguments[0];
+
+    await vscode.window.activeTextEditor.edit(builder => {
+      builder.replace(editArgs.range, editArgs.value);
+    });
+
+    expect(vscode.window.activeTextEditor.document.getText()).toBe(
+      `Link to [[${escapedTarget}#^existing]]`
+    );
+  });
+
+  it('should preserve the alias when correcting a block anchor', async () => {
+    const fileA = await createFile(
+      'A paragraph ^existing',
+      ['note-for-alias-quickfix.md']
+    );
+    const fileB = await createFile(
+      `Link to [[${fileA.name}#^ghost|My Label]]`
+    );
+    const parser = createMarkdownParser([]);
+    const ws = new FoamWorkspace()
+      .set(parser.parse(fileA.uri, fileA.content))
+      .set(parser.parse(fileB.uri, fileB.content));
+
+    await showInEditor(fileB.uri);
+
+    const collection = vscode.languages.createDiagnosticCollection('foam-test');
+    updateDiagnostics(ws, parser, vscode.window.activeTextEditor.document, collection);
+
+    const diagnostics = collection.get(toVsCodeUri(fileB.uri));
+    expect(diagnostics).toHaveLength(1);
+
+    const resolver = new IdentifierResolver('.md');
+    const actions = resolver.provideCodeActions(
+      vscode.window.activeTextEditor.document,
+      diagnostics[0].range,
+      { diagnostics, only: null } as vscode.CodeActionContext,
+      null
+    );
+
+    expect(actions).toHaveLength(1);
+    const editArgs = actions[0].command.arguments[0];
+
+    await vscode.window.activeTextEditor.edit(builder => {
+      builder.replace(editArgs.range, editArgs.value);
+    });
+
+    expect(vscode.window.activeTextEditor.document.getText()).toBe(
+      `Link to [[${fileA.name}#^existing|My Label]]`
+    );
   });
 });
 

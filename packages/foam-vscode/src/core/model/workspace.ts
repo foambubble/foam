@@ -24,6 +24,16 @@ export class FoamWorkspace implements IDisposable {
   private _resources: TrieMap<string, Resource> = new TrieMap();
 
   /**
+   * Maps a normalized directory path to the URI of its directory index file owner.
+   * Only index and README files (with any configured note extension) are registered here.
+   * Priority: index > README. Maintained independently of the main trie.
+   */
+  private _directoryIndex: Map<string, URI> = new Map();
+
+  /** Basenames (without extension, lowercase) that qualify as directory index files, in priority order */
+  private static readonly DIRECTORY_INDEX_NAMES = ['index', 'readme'];
+
+  /**
    * The root URIs of this workspace, in priority order.
    * Used for resolving workspace-relative paths.
    * First root is always used when a path must be resolved to exactly one root.
@@ -102,6 +112,7 @@ export class FoamWorkspace implements IDisposable {
 
     // store resource
     this._resources.set(this.getTrieIdentifier(resource.uri.path), resource);
+    this._registerDirectoryIndex(resource);
 
     isSome(old)
       ? this.onDidUpdateEmitter.fire({ old: old, new: resource })
@@ -112,6 +123,7 @@ export class FoamWorkspace implements IDisposable {
   delete(uri: URI) {
     const deleted = this._resources.get(this.getTrieIdentifier(uri));
     this._resources.delete(this.getTrieIdentifier(uri));
+    this._unregisterDirectoryIndex(uri);
 
     isSome(deleted) && this.onDidDeleteEmitter.fire(deleted);
     return deleted ?? null;
@@ -120,11 +132,93 @@ export class FoamWorkspace implements IDisposable {
   clear() {
     const resources = Array.from(this._resources.values());
     this._resources.clear();
+    this._directoryIndex.clear();
 
     // Fire delete events for all resources
     resources.forEach(resource => {
       this.onDidDeleteEmitter.fire(resource);
     });
+  }
+
+  /**
+   * Returns the priority index of a URI as a directory index file (lower = higher priority).
+   * Returns -1 if the URI is not a directory index file.
+   */
+  private _directoryIndexPriority(uri: URI): number {
+    const ext = uri.getExtension();
+    if (!ext) return -1;
+    const name = uri.getBasename().slice(0, -ext.length).toLowerCase();
+    return FoamWorkspace.DIRECTORY_INDEX_NAMES.indexOf(name);
+  }
+
+  private _registerDirectoryIndex(resource: Resource): void {
+    if (resource.type !== 'note') return;
+    const priority = this._directoryIndexPriority(resource.uri);
+    if (priority === -1) return;
+
+    const dirPath = normalize(resource.uri.getDirectory().path);
+    const currentOwnerUri = this._directoryIndex.get(dirPath);
+    if (currentOwnerUri) {
+      const currentPriority = this._directoryIndexPriority(currentOwnerUri);
+      if (priority >= currentPriority) return; // current owner has equal or higher priority
+    }
+    this._directoryIndex.set(dirPath, resource.uri);
+  }
+
+  private _unregisterDirectoryIndex(uri: URI): void {
+    const priority = this._directoryIndexPriority(uri);
+    if (priority === -1) return;
+
+    const dirPath = normalize(uri.getDirectory().path);
+    const currentOwnerUri = this._directoryIndex.get(dirPath);
+    if (
+      !currentOwnerUri ||
+      normalize(currentOwnerUri.path) !== normalize(uri.path)
+    )
+      return;
+
+    // Resource already removed from _resources — scan remaining for a next-best candidate
+    const nextOwner = this.list()
+      .filter(r => normalize(r.uri.getDirectory().path) === dirPath)
+      .map(r => ({
+        resource: r,
+        priority: this._directoryIndexPriority(r.uri),
+      }))
+      .filter(({ priority }) => priority !== -1)
+      .sort((a, b) => a.priority - b.priority)[0]?.resource;
+
+    if (nextOwner) {
+      this._directoryIndex.set(dirPath, nextOwner.uri);
+    } else {
+      this._directoryIndex.delete(dirPath);
+    }
+  }
+
+  /**
+   * Returns the directory index file for the given directory path, or null if none exists.
+   * The directory path should be an absolute path string (e.g. resource.uri.getDirectory().path).
+   */
+  public findByDirectory(dirPath: string): Resource | null {
+    const ownerUri = this._directoryIndex.get(normalize(dirPath));
+    if (!ownerUri) return null;
+    return this._resources.get(this.getTrieIdentifier(ownerUri)) ?? null;
+  }
+
+  /**
+   * Returns all directory index resources whose directory path ends with the given identifier.
+   * Used to resolve wikilinks like [[bar]] or [[zoo/bar]] to directory index files.
+   * Results are sorted by path for deterministic ordering.
+   */
+  public listByDirectoryIdentifier(identifier: string): Resource[] {
+    const normalizedId = normalize(identifier);
+    const results: Resource[] = [];
+    for (const [dirPath, uri] of this._directoryIndex.entries()) {
+      if (dirPath === normalizedId || dirPath.endsWith('/' + normalizedId)) {
+        const resource = this._resources.get(this.getTrieIdentifier(uri));
+        if (resource) results.push(resource);
+      }
+    }
+    return results.sort(Resource.sortByPath);
   }
 
   public exists(uri: URI): boolean {
@@ -210,6 +304,24 @@ export class FoamWorkspace implements IDisposable {
       identifier += `#${forResource.fragment}`;
     }
     return identifier;
+  }
+
+  /**
+   * Returns the shortest unambiguous directory-style identifier for a directory index file
+   * (e.g. `bar` or `zoo/bar`), or null if the resource is not the current directory index owner.
+   *
+   * Use this when `foam.links.directory.completionStyle` is `"directory"`.
+   */
+  public getDirectoryIdentifier(forResource: URI): string | null {
+    const dirPath = normalize(forResource.getDirectory().path);
+    const ownerUri = this._directoryIndex.get(dirPath);
+    if (!ownerUri || normalize(ownerUri.path) !== normalize(forResource.path)) {
+      return null;
+    }
+    const otherDirPaths = Array.from(this._directoryIndex.keys()).filter(
+      dp => dp !== dirPath
+    );
+    return FoamWorkspace.getShortestIdentifier(dirPath, otherDirPaths);
   }
 
   /**

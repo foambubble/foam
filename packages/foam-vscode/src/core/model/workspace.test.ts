@@ -373,3 +373,124 @@ describe('find with workspace-relative absolute paths', () => {
     expect(found.uri.path).toBe('/workspace/journal/file.md');
   });
 });
+
+describe('Directory index', () => {
+  it('should resolve a directory to its index file', () => {
+    const ws = createTestWorkspace();
+    const index = createTestNote({ uri: '/foo/bar/index.md' });
+    ws.set(index);
+    expect(ws.findByDirectory('/foo/bar')).toEqual(index);
+  });
+
+  it('should resolve a directory to its README file', () => {
+    const ws = createTestWorkspace();
+    const readme = createTestNote({ uri: '/foo/bar/README.md' });
+    ws.set(readme);
+    expect(ws.findByDirectory('/foo/bar')).toEqual(readme);
+  });
+
+  it('should prefer index over README regardless of insertion order - index first', () => {
+    const ws = createTestWorkspace();
+    const index = createTestNote({ uri: '/foo/bar/index.md' });
+    const readme = createTestNote({ uri: '/foo/bar/README.md' });
+    ws.set(index).set(readme);
+    expect(ws.findByDirectory('/foo/bar')).toEqual(index);
+  });
+
+  it('should prefer index over README regardless of insertion order - README first', () => {
+    const ws = createTestWorkspace();
+    const index = createTestNote({ uri: '/foo/bar/index.md' });
+    const readme = createTestNote({ uri: '/foo/bar/README.md' });
+    ws.set(readme).set(index);
+    expect(ws.findByDirectory('/foo/bar')).toEqual(index);
+  });
+
+  it('should promote README when index is deleted', () => {
+    const ws = createTestWorkspace();
+    const index = createTestNote({ uri: '/foo/bar/index.md' });
+    const readme = createTestNote({ uri: '/foo/bar/README.md' });
+    ws.set(index).set(readme);
+    expect(ws.findByDirectory('/foo/bar')).toEqual(index);
+    ws.delete(index.uri);
+    expect(ws.findByDirectory('/foo/bar')).toEqual(readme);
+  });
+
+  it('should return null when the only index file is deleted', () => {
+    const ws = createTestWorkspace();
+    const index = createTestNote({ uri: '/foo/bar/index.md' });
+    ws.set(index);
+    expect(ws.findByDirectory('/foo/bar')).toEqual(index);
+    ws.delete(index.uri);
+    expect(ws.findByDirectory('/foo/bar')).toBeNull();
+  });
+
+  it('should return null for a directory with no index files', () => {
+    const ws = createTestWorkspace();
+    ws.set(createTestNote({ uri: '/foo/bar/page.md' }));
+    expect(ws.findByDirectory('/foo/bar')).toBeNull();
+  });
+
+  it('should not treat regular files as index files', () => {
+    const ws = createTestWorkspace();
+    ws.set(createTestNote({ uri: '/foo/bar/page.md' }));
+    ws.set(createTestNote({ uri: '/foo/bar/notes.md' }));
+    expect(ws.findByDirectory('/foo/bar')).toBeNull();
+  });
+
+  it('should not register non-note resources (attachments, images) as directory index', () => {
+    const ws = createTestWorkspace();
+    ws.set(createTestNote({ uri: '/foo/bar/index.png', type: 'image' }));
+    ws.set(createTestNote({ uri: '/foo/bar/README.pdf', type: 'attachment' }));
+    expect(ws.findByDirectory('/foo/bar')).toBeNull();
+  });
+
+  it('should track index files independently per directory', () => {
+    const ws = createTestWorkspace();
+    const indexA = createTestNote({ uri: '/foo/bar/index.md' });
+    const indexB = createTestNote({ uri: '/foo/baz/index.md' });
+    ws.set(indexA).set(indexB);
+    expect(ws.findByDirectory('/foo/bar')).toEqual(indexA);
+    expect(ws.findByDirectory('/foo/baz')).toEqual(indexB);
+  });
+
+  it('should clear directory index on workspace clear', () => {
+    const ws = createTestWorkspace();
+    ws.set(createTestNote({ uri: '/foo/bar/index.md' }));
+    ws.clear();
+    expect(ws.findByDirectory('/foo/bar')).toBeNull();
+  });
+
+  describe('getDirectoryIdentifier', () => {
+    it('should return null for a non-index file', () => {
+      const ws = createTestWorkspace();
+      const note = createTestNote({ uri: '/foo/bar/page.md' });
+      ws.set(note);
+      expect(ws.getDirectoryIdentifier(note.uri)).toBeNull();
+    });
+
+    it('should return the directory name when unambiguous', () => {
+      const ws = createTestWorkspace();
+      const index = createTestNote({ uri: '/foo/bar/index.md' });
+      ws.set(index);
+      expect(ws.getDirectoryIdentifier(index.uri)).toBe('bar');
+    });
+
+    it('should return a more specific path when directory name is ambiguous', () => {
+      const ws = createTestWorkspace();
+      const fooIndex = createTestNote({ uri: '/foo/bar/index.md' });
+      const zooIndex = createTestNote({ uri: '/zoo/bar/index.md' });
+      ws.set(fooIndex).set(zooIndex);
+      expect(ws.getDirectoryIdentifier(fooIndex.uri)).toBe('foo/bar');
+      expect(ws.getDirectoryIdentifier(zooIndex.uri)).toBe('zoo/bar');
+    });
+
+    it('should return null for a README.md when index.md owns the directory', () => {
+      const ws = createTestWorkspace();
+      const index = createTestNote({ uri: '/foo/bar/index.md' });
+      const readme = createTestNote({ uri: '/foo/bar/README.md' });
+      ws.set(index).set(readme);
+      expect(ws.getDirectoryIdentifier(readme.uri)).toBeNull();
+      expect(ws.getDirectoryIdentifier(index.uri)).toBe('bar');
+    });
+  });
+});

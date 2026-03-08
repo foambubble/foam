@@ -20,7 +20,8 @@ export class MarkdownResourceProvider implements ResourceProvider {
   constructor(
     private readonly dataStore: IDataStore,
     private readonly parser: ResourceParser,
-    public readonly noteExtensions: string[] = ['.md']
+    public readonly noteExtensions: string[] = ['.md'],
+    private readonly directoryMode: 'disabled' | 'resolve' = 'resolve'
   ) {}
 
   supports(uri: URI) {
@@ -69,6 +70,7 @@ export class MarkdownResourceProvider implements ResourceProvider {
             target === ''
               ? resource.uri
               : workspace.find(target, resource.uri)?.uri ??
+                this._resolveDirectoryByIdentifier(workspace, target)?.uri ??
                 URI.placeholder(target);
           if (section) {
             targetUri = targetUri.with({ fragment: section });
@@ -83,26 +85,36 @@ export class MarkdownResourceProvider implements ResourceProvider {
           break;
         }
 
-        // Handle reference-style links first
-        const targetPath = ResourceLink.isResolvedReference(link)
-          ? link.definition.url
-          : target;
+        // Handle reference-style links first; strip trailing slash (directory links)
+        const targetPath = (
+          ResourceLink.isResolvedReference(link) ? link.definition.url : target
+        ).replace(/\/$/, '');
 
         let path: string;
 
         if (targetPath.startsWith('/')) {
+          const resolvedUri = workspace.resolveUri(targetPath);
           targetUri =
             workspace.find(targetPath, resource.uri)?.uri ??
-            URI.placeholder(workspace.resolveUri(targetPath).path);
+            workspace.roots
+              .map(root =>
+                this._resolveAsDirectory(workspace, root.joinPath(targetPath))
+              )
+              .find(Boolean)?.uri ??
+            URI.placeholder(resolvedUri.path);
         } else {
           // Handle relative paths and non-root paths
           path =
             targetPath.startsWith('./') || targetPath.startsWith('../')
               ? targetPath
               : './' + targetPath;
+          const resolvedUri = resource.uri.resolve(path);
+          // Use getDirectory().joinPath() to avoid URI.resolve() inheriting the .md extension
+          const dirUri = resource.uri.getDirectory().joinPath(targetPath);
           targetUri =
             workspace.find(path, resource.uri)?.uri ??
-            URI.placeholder(resource.uri.resolve(path).path);
+            this._resolveAsDirectory(workspace, dirUri)?.uri ??
+            URI.placeholder(resolvedUri.path);
         }
 
         if (section && !targetUri.isPlaceholder()) {
@@ -112,6 +124,22 @@ export class MarkdownResourceProvider implements ResourceProvider {
       }
     }
     return targetUri;
+  }
+
+  private _resolveAsDirectory(
+    workspace: FoamWorkspace,
+    resolvedDirUri: URI
+  ): Resource | null {
+    if (this.directoryMode !== 'resolve') return null;
+    return workspace.findByDirectory(resolvedDirUri.path);
+  }
+
+  private _resolveDirectoryByIdentifier(
+    workspace: FoamWorkspace,
+    identifier: string
+  ): Resource | null {
+    if (this.directoryMode !== 'resolve') return null;
+    return workspace.listByDirectoryIdentifier(identifier)[0] ?? null;
   }
 
   dispose() {

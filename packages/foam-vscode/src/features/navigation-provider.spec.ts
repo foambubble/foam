@@ -216,6 +216,68 @@ describe('Document navigation', () => {
     });
   });
 
+  describe('directory link navigation', () => {
+    it('should navigate [[bar]] to bar/index.md', async () => {
+      const index = await createFile('# Bar Index', ['bar', 'index.md']);
+      const note = await createFile(`link to [[bar]]`);
+      const ws = createTestWorkspace()
+        .set(parser.parse(index.uri, index.content))
+        .set(parser.parse(note.uri, note.content));
+      const graph = FoamGraph.fromWorkspace(ws);
+      const tags = FoamTags.fromWorkspace(ws);
+
+      const { doc } = await showInEditor(note.uri);
+      const provider = new NavigationProvider(ws, graph, parser, tags);
+      const definitions = await provider.provideDefinition(
+        doc,
+        new vscode.Position(0, 10)
+      );
+
+      expect(definitions.length).toEqual(1);
+      expect(definitions[0].targetUri).toEqual(toVsCodeUri(index.uri));
+    });
+
+    it('should navigate [label](bar) to bar/index.md', async () => {
+      const index = await createFile('# Bar Index', ['bar', 'index.md']);
+      const note = await createFile(`link to [bar](bar)`);
+      const ws = createTestWorkspace()
+        .set(parser.parse(index.uri, index.content))
+        .set(parser.parse(note.uri, note.content));
+      const graph = FoamGraph.fromWorkspace(ws);
+      const tags = FoamTags.fromWorkspace(ws);
+
+      const { doc } = await showInEditor(note.uri);
+      const provider = new NavigationProvider(ws, graph, parser, tags);
+      const definitions = await provider.provideDefinition(
+        doc,
+        new vscode.Position(0, 10)
+      );
+
+      expect(definitions.length).toEqual(1);
+      expect(definitions[0].targetUri).toEqual(toVsCodeUri(index.uri));
+    });
+
+    it('should navigate [label](bar/) (trailing slash) to bar/index.md', async () => {
+      const index = await createFile('# Bar Index', ['bar', 'index.md']);
+      const note = await createFile(`link to [bar](bar/)`);
+      const ws = createTestWorkspace()
+        .set(parser.parse(index.uri, index.content))
+        .set(parser.parse(note.uri, note.content));
+      const graph = FoamGraph.fromWorkspace(ws);
+      const tags = FoamTags.fromWorkspace(ws);
+
+      const { doc } = await showInEditor(note.uri);
+      const provider = new NavigationProvider(ws, graph, parser, tags);
+      const definitions = await provider.provideDefinition(
+        doc,
+        new vscode.Position(0, 10)
+      );
+
+      expect(definitions.length).toEqual(1);
+      expect(definitions[0].targetUri).toEqual(toVsCodeUri(index.uri));
+    });
+  });
+
   describe('reference provider', () => {
     it('should provide references for wikilinks', async () => {
       const fileA = await createFile('The content of File A');

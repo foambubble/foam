@@ -222,19 +222,28 @@ export function updateDiagnostics(
       }
       // Only flag the duplicates (2nd occurrence onwards); the first is fine.
       for (const block of blocks.slice(1)) {
-        const line = block.range.end.line;
-        const lineText = document.lineAt(line).text;
-        const anchorStart = lineText.lastIndexOf('^' + id);
-        if (anchorStart < 0) {
+        // Search from start.line to end.line — list-item anchors appear on
+        // the start line while paragraph anchors appear on the end line.
+        let anchorLine = -1;
+        let anchorStart = -1;
+        for (let l = block.range.start.line; l <= block.range.end.line; l++) {
+          const idx = document.lineAt(l).text.lastIndexOf('^' + id);
+          if (idx >= 0) {
+            anchorLine = l;
+            anchorStart = idx;
+            break;
+          }
+        }
+        if (anchorLine < 0) {
           continue;
         }
         result.push({
           code: DUPLICATE_BLOCK_ID_CODE,
           message: `Duplicate block ID "^${id}" - ignored`,
           range: new vscode.Range(
-            line,
+            anchorLine,
             anchorStart,
-            line,
+            anchorLine,
             anchorStart + 1 + id.length
           ),
           severity: vscode.DiagnosticSeverity.Warning,
@@ -246,7 +255,7 @@ export function updateDiagnostics(
                 new vscode.DiagnosticRelatedInformation(
                   new vscode.Location(
                     document.uri,
-                    new vscode.Position(b.range.end.line, 0)
+                    new vscode.Position(b.range.start.line, 0)
                   ),
                   `Other occurrence of "^${id}"`
                 )

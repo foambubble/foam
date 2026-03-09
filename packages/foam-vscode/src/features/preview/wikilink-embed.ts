@@ -291,7 +291,7 @@ function contentExtractor(
  * For heading blocks, returns the section content (heading + body).
  * For other blocks, returns the block content with block anchor markers stripped.
  */
-function extractBlockContent(
+export function extractBlockContent(
   noteText: string,
   note: Resource,
   block: Block
@@ -299,10 +299,12 @@ function extractBlockContent(
   const rows = noteText.split('\n');
   if (block.type === 'heading') {
     const headingText = rows[block.range.start.line];
-    const headingLabel = headingText
-      .replace(/^#+\s*/, '')
-      .replace(/\s\^[a-zA-Z0-9-]+$/, '');
-    const section = Resource.findSection(note, headingLabel);
+    // Find the section by start line rather than reconstructing the label from
+    // raw markdown, which would retain inline formatting (e.g. **bold**) and
+    // fail to match the AST-parsed plain-text label stored in Resource.sections.
+    const section = note.sections.find(
+      s => s.range.start.line === block.range.start.line
+    );
     if (isSome(section)) {
       return rows
         .slice(section.range.start.line, section.range.end.line)

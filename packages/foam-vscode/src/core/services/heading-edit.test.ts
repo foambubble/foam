@@ -104,6 +104,34 @@ describe('HeadingEdit', () => {
       expect(uris).toEqual(['/note-b.md', '/note-c.md']);
     });
 
+    it('should update a direct markdown link with a block anchor reference', () => {
+      const ws = createTestWorkspace();
+      const noteA = createNoteFromMarkdown(
+        '/note-a.md',
+        `A paragraph ^oldblock`
+      );
+      const noteB = createNoteFromMarkdown(
+        '/note-b.md',
+        `[link text](/note-a.md#^oldblock)`
+      );
+      ws.set(noteA).set(noteB);
+      const graph = FoamGraph.fromWorkspace(ws);
+
+      const result = HeadingEdit.createRenameBlockEdits(
+        graph,
+        ws,
+        noteA.uri,
+        'oldblock',
+        'newblock'
+      );
+
+      expect(result.totalOccurrences).toBe(1);
+      expect(result.edits).toHaveLength(1);
+      expect(result.edits[0].uri.path).toBe('/note-b.md');
+      expect(result.edits[0].edit.newText).toContain('^newblock');
+      expect(result.edits[0].edit.newText).not.toContain('^oldblock');
+    });
+
     it('should return empty result when no backlinks reference the block', () => {
       const ws = createTestWorkspace();
       const noteA = createNoteFromMarkdown('/note-a.md', `A paragraph ^orphan`);

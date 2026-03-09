@@ -532,6 +532,37 @@ describe('Duplicate block ID diagnostics', () => {
     expect(actions[0].command.arguments[0].value).toMatch(/^\^[a-z0-9]+$/);
   });
 
+  it('should warn about duplicate block IDs on list items that have nested subitems', async () => {
+    // The ^id anchor appears on the list item's start line (line 0), while the
+    // block range.end points to the last nested subitem (line 1). The diagnostic
+    // must still find the anchor and highlight it on the correct line.
+    const file = await createFile(
+      '- first item ^dup\n  - subitem\n\n- second item ^dup\n'
+    );
+    const parser = createMarkdownParser([]);
+    const ws = new FoamWorkspace().set(parser.parse(file.uri, file.content));
+
+    await showInEditor(file.uri);
+
+    const collection = vscode.languages.createDiagnosticCollection('foam-test');
+    updateDiagnostics(
+      ws,
+      parser,
+      vscode.window.activeTextEditor.document,
+      collection
+    );
+    const items = collection.get(vscode.window.activeTextEditor.document.uri);
+    // Only the 2nd occurrence should be flagged
+    expect(items).toHaveLength(1);
+    expect(items[0].severity).toEqual(vscode.DiagnosticSeverity.Warning);
+    // The duplicate is the second list item (line 3, 0-based)
+    expect(items[0].range.start.line).toBe(3);
+    // Range covers '^dup' (4 chars)
+    expect(items[0].range.end.character - items[0].range.start.character).toBe(
+      4
+    );
+  });
+
   it('should not flag blocks when only one occurrence exists', async () => {
     const file = await createFile(
       'Para one ^alpha\n\nPara two ^beta\n\nPara three ^alpha-variant\n'

@@ -185,6 +185,26 @@ describe('MarkdownLink', () => {
       expect(parsed.section).toEqual('section');
       expect(parsed.alias).toEqual('');
     });
+    it('should parse block anchor from a direct markdown link', () => {
+      const link = parser.parse(
+        getRandomURI(),
+        `this is a [text](note.md#^myblock)`
+      ).links[0];
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.target).toEqual('note.md');
+      expect(parsed.section).toEqual('');
+      expect(parsed.blockId).toEqual('myblock');
+      expect(parsed.alias).toEqual('text');
+    });
+    it('should not treat a regular section fragment as a block anchor in a direct link', () => {
+      const link = parser.parse(
+        getRandomURI(),
+        `this is a [text](note.md#section)`
+      ).links[0];
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.section).toEqual('section');
+      expect(parsed.blockId).toEqual('');
+    });
   });
 
   describe('parse direct link with title attributes', () => {

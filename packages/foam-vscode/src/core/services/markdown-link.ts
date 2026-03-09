@@ -61,10 +61,11 @@ export abstract class MarkdownLink {
           };
         }
         const [, alias, target, section] = match;
+        const blockMatch = section?.match(/^\^([a-zA-Z0-9-]+)$/);
         return {
           target: target ?? '',
-          section: section ?? '',
-          blockId: '',
+          section: blockMatch ? '' : section ?? '',
+          blockId: blockMatch?.[1] ?? '',
           alias: alias ?? '',
         };
       }

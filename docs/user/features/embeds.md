@@ -20,6 +20,16 @@ You can embed specific sections of a note by referencing the heading:
 ![[note-name#Section Title]]
 ```
 
+## Embedding Blocks
+
+Embed a specific paragraph, list item, heading, or blockquote using a block anchor:
+
+```markdown
+![[note-name#^blockid]]
+```
+
+See [[block-anchors]] for how to add `^id` markers to your notes.
+
 ## Embed Types
 
 Foam supports different embedding scopes and styles that can be configured globally or overridden per embed.
@@ -132,3 +142,5 @@ Add descriptions for accessibility:
 - No spaces around pipes: `|300|` not `| 300 |`
 - Images only resize in preview mode, not edit mode
 - Use lowercase alignment: `center` not `Center`
+
+[block-anchors]: block-anchors.md 'Block Anchors'

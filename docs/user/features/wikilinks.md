@@ -26,6 +26,12 @@ Examples:
 - External file: `[link text](other-file.md#section-name)`
 - Same document: `[link text](#section-name)`
 
+## Block Links
+
+Link to a specific paragraph, list item, heading, or blockquote using `[[note-name#^blockid]]` syntax. Add a `^your-id` anchor at the end of any block element, then reference it from other notes.
+
+See [[block-anchors]] for full details.
+
 ## Directory Links
 
 Linking to a folder name navigates to that folder's index file — either `index.md` or `README.md`. This works for both wikilinks and regular markdown links:
@@ -50,6 +56,7 @@ Foam can automatically generate [[link-reference-definitions]] at the bottom of 
 
 ## Related
 
+- [[block-anchors]] - Linking to specific blocks within a note
 - [[foam-file-format]] - Technical details
 - [[templates]] - Creating new notes
 - [[link-reference-definition-improvements]] - Current limitations
@@ -59,3 +66,4 @@ Foam can automatically generate [[link-reference-definitions]] at the bottom of 
 [foam-file-format]: ../../dev/foam-file-format.md 'Foam File Format'
 [note-templates]: templates.md 'Note Templates'
 [link-reference-definition-improvements]: ../../dev/proposals/link-reference-definition-improvements.md 'Link Reference Definition Improvements'
+[block-anchors]: block-anchors.md 'Block Anchors'

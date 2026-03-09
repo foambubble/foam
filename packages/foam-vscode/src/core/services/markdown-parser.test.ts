@@ -954,19 +954,38 @@ describe('block anchor extraction', () => {
       expect(block.range.end.line).toBe(2);
     });
 
-    it('should not match a full-line block ID after code fence if separated by a blank line', () => {
+    it('should match a full-line block ID after code fence separated by one blank line', () => {
       const note = parser.parse(
         URI.file('/path/note.md'),
         '```js\ncode();\n```\n\n^mycode'
       );
-      // Blank line separates them; ^mycode is a standalone paragraph, not adjacent
-      expect(note.blocks.find(b => b.id === 'mycode')).toBeUndefined();
+      const block = note.blocks.find(b => b.id === 'mycode');
+      expect(block).toBeDefined();
+      expect(block.type).toBe('code');
     });
 
-    it('should not match a full-line block ID after table if separated by a blank line', () => {
+    it('should match a full-line block ID after table separated by one blank line', () => {
       const note = parser.parse(
         URI.file('/path/note.md'),
         '| A | B |\n| - | - |\n| 1 | 2 |\n\n^mytable'
+      );
+      const block = note.blocks.find(b => b.id === 'mytable');
+      expect(block).toBeDefined();
+      expect(block.type).toBe('table');
+    });
+
+    it('should not match a full-line block ID after code fence separated by two blank lines', () => {
+      const note = parser.parse(
+        URI.file('/path/note.md'),
+        '```js\ncode();\n```\n\n\n^mycode'
+      );
+      expect(note.blocks.find(b => b.id === 'mycode')).toBeUndefined();
+    });
+
+    it('should not match a full-line block ID after table separated by two blank lines', () => {
+      const note = parser.parse(
+        URI.file('/path/note.md'),
+        '| A | B |\n| - | - |\n| 1 | 2 |\n\n\n^mytable'
       );
       expect(note.blocks.find(b => b.id === 'mytable')).toBeUndefined();
     });

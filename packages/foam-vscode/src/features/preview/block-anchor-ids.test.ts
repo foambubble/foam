@@ -32,7 +32,9 @@ describe('block anchor id injection', () => {
 
     it('inserts a standalone anchor before a heading instead of setting id', () => {
       const result = md.render('## My Heading ^headingblock');
-      expect(result).toContain('<a id="__headingblock" aria-hidden="true"></a>');
+      expect(result).toContain(
+        '<a id="__headingblock" aria-hidden="true"></a>'
+      );
       expect(result).toContain('<h2>My Heading</h2>');
       // The anchor must appear before the heading tag
       expect(result.indexOf('<a id="headingblock"')).toBeLessThan(
@@ -101,10 +103,25 @@ describe('block anchor id injection', () => {
       );
     });
 
-    it('does not treat standalone ^id as anchor when separated from fence by blank line', () => {
+    it('treats standalone ^id as anchor when separated from fence by one blank line', () => {
       const result = md.render('```\ncode\n```\n\n^mycode');
-      // Blank line means it's a regular paragraph, not a block anchor
+      expect(result).toContain('<a id="__mycode" aria-hidden="true"></a>');
+      expect(result).not.toContain('^mycode');
+    });
+
+    it('does not treat standalone ^id as anchor when separated from fence by two blank lines', () => {
+      const result = md.render('```\ncode\n```\n\n\n^mycode');
       expect(result).not.toContain('<a id="__mycode"');
+    });
+
+    it('removes the ^id standalone paragraph and anchors the table when separated by one blank line', () => {
+      const result = md.render('| A | B |\n| - | - |\n| 1 | 2 |\n\n^mytable');
+      expect(result).toContain('<a id="__mytable" aria-hidden="true"></a>');
+      expect(result).toContain('<table>');
+      expect(result).not.toContain('^mytable');
+      expect(result.indexOf('<a id="__mytable"')).toBeLessThan(
+        result.indexOf('<table>')
+      );
     });
 
     it('removes the ^id table row and inserts an anchor before the table', () => {

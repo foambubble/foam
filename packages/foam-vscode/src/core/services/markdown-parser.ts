@@ -403,7 +403,10 @@ const blocksPlugin: ParserPlugin = {
     // Full-line block ID on a list item: the ^id is on its own line and remark
     // absorbs it via lazy continuation into the last listItem's paragraph.
     // Skip both the listItem and the paragraph — onDidVisitTree registers the list.
-    if (whitespace === '\n' && (blockType === 'list-item' || blockType === 'paragraph')) {
+    if (
+      whitespace === '\n' &&
+      (blockType === 'list-item' || blockType === 'paragraph')
+    ) {
       return;
     }
 
@@ -453,11 +456,13 @@ const blocksPlugin: ParserPlugin = {
         const current = children[i];
 
         // Case A: code/table — remark places the ^id as the next sibling paragraph.
+        // Allow up to one blank line between the block and the ^id paragraph so
+        // markdown formatters that insert blank lines don't break the syntax.
         if (FULL_LINE_SIBLING_TYPES[current.type]) {
           const next = children[i + 1];
           if (
             next?.type === 'paragraph' &&
-            next.position.start.line === current.position.end.line + 1
+            next.position.start.line <= current.position.end.line + 2
           ) {
             const nextText = getTextFromChildren(next).trim();
             const idMatch = STANDALONE_BLOCK_ANCHOR_RE.exec(nextText);

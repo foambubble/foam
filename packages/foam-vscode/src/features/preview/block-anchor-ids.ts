@@ -163,9 +163,12 @@ export const markdownItBlockAnchorIds = (md: markdownit) => {
       }
     }
 
-    // ── Pass 2: full-line anchor after a fence (code block) ────────────────
-    // Token stream: ... fence ... paragraph_open inline("^id") paragraph_close
-    // We insert an anchor before the fence and delete the paragraph.
+    // ── Pass 2: full-line anchor paragraph after a fence or table ─────────
+    // Handles the case where `^id` is a standalone paragraph following a fence
+    // or a table. With no blank line, tables absorb `^id` as a row (Pass 3);
+    // with a blank line, `^id` becomes a standalone paragraph caught here.
+    // One blank line between the block and `^id` is tolerated so that markdown
+    // formatters that insert blank lines around code/table blocks still work.
     for (let i = tokens.length - 1; i >= 2; i--) {
       const token = tokens[i];
       if (token.type !== 'inline') {
@@ -183,27 +186,54 @@ export const markdownItBlockAnchorIds = (md: markdownit) => {
       if (tokens[i + 1]?.type !== 'paragraph_close') {
         continue;
       }
-      // The token before paragraph_open must be a fence, and they must be
-      // adjacent (no blank line between them).
+
       const prevToken = tokens[i - 2];
-      if (prevToken?.type !== 'fence') {
-        continue;
-      }
-      // Use token.map ([startLine, endLine]) to ensure the paragraph starts
-      // on the line immediately after the fence ends.
-      const fenceEnd = prevToken.map?.[1];
       const paraStart = tokens[i - 1].map?.[0];
-      if (fenceEnd !== undefined && paraStart !== undefined && paraStart !== fenceEnd) {
+      let anchorBeforeIdx = -1;
+
+      if (prevToken?.type === 'fence') {
+        // Allow up to one blank line between the fence and the ^id paragraph.
+        const fenceEnd = prevToken.map?.[1];
+        if (
+          fenceEnd !== undefined &&
+          paraStart !== undefined &&
+          paraStart > fenceEnd + 1
+        ) {
+          continue;
+        }
+        anchorBeforeIdx = i - 2;
+      } else if (prevToken?.type === 'table_close') {
+        // ^id as standalone paragraph after a table (blank-line case).
+        const tableOpenIdx = findMatchingOpen(
+          tokens,
+          i - 3,
+          'table_open',
+          'table_close'
+        );
+        if (tableOpenIdx === -1) {
+          continue;
+        }
+        // Allow up to one blank line.
+        const tableEnd = tokens[tableOpenIdx].map?.[1];
+        if (
+          tableEnd !== undefined &&
+          paraStart !== undefined &&
+          paraStart > tableEnd + 1
+        ) {
+          continue;
+        }
+        anchorBeforeIdx = tableOpenIdx;
+      }
+
+      if (anchorBeforeIdx === -1) {
         continue;
       }
 
       const blockId = idMatch[1];
-      // Insert anchor before the fence (at i-2).
-      insertAnchor(state, tokens, i - 2, blockId);
-      // After the splice, paragraph_open is now at i-1+1 = i, inline at i+1,
-      // paragraph_close at i+2.
+      // insertAnchor shifts all tokens at indices >= anchorBeforeIdx up by 1,
+      // so the paragraph_open is now at i, inline at i+1, paragraph_close at i+2.
+      insertAnchor(state, tokens, anchorBeforeIdx, blockId);
       tokens.splice(i, 3);
-      // Move i back to account for the removed tokens.
       i -= 2;
     }
 
@@ -225,7 +255,12 @@ export const markdownItBlockAnchorIds = (md: markdownit) => {
         const blockId = tableIdMatch[1];
 
         // Find the tr_open that starts the row containing this td.
-        const trOpenIdx = findMatchingOpen(tokens, i - 1, 'tr_open', 'tr_close');
+        const trOpenIdx = findMatchingOpen(
+          tokens,
+          i - 1,
+          'tr_open',
+          'tr_close'
+        );
         if (trOpenIdx === -1) {
           continue;
         }

@@ -56,7 +56,7 @@ The anchor applies to the heading line itself, not the entire section below it.
 ^jobs-quote
 ```
 
-For multi-line blockquotes, place `^id` on its own line immediately after the last `>` line (no blank line):
+For multi-line blockquotes, place `^id` on its own line immediately after the last `>` line (useful if your markdown formatter requires an empty line to not merge the blockquote):
 
 ```markdown
 > We shall fight on the beaches,
@@ -66,7 +66,7 @@ For multi-line blockquotes, place `^id` on its own line immediately after the la
 
 ### Code block
 
-Place `^id` on its own line immediately after the closing fence (no blank line):
+Place `^id` on its own line after the closing fence. One blank line between the fence and `^id` is also accepted (useful if your markdown formatter adds one automatically):
 
 ````markdown
 ```python
@@ -78,7 +78,7 @@ def greet(name):
 
 ### Table
 
-Place `^id` on its own line immediately after the table (no blank line):
+Place `^id` on its own line after the table. One blank line is also accepted:
 
 ```markdown
 | Name  | Score |

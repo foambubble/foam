@@ -350,7 +350,11 @@ const sectionsPlugin: ParserPlugin = {
   },
 };
 
-const BLOCK_ANCHOR_REGEX = /\s\^([a-zA-Z0-9-]+)$/;
+// Captures the whitespace character before the anchor so we can distinguish
+// same-line ( ) from own-line (\n) markers.
+const BLOCK_ANCHOR_REGEX = /(\s)\^([a-zA-Z0-9-]+)$/;
+// Matches a paragraph that contains *only* a block anchor (full-line syntax).
+const STANDALONE_BLOCK_ANCHOR_RE = /^\^([a-zA-Z0-9-]+)$/;
 
 /**
  * Returns the direct text content of a node, without descending into
@@ -375,6 +379,13 @@ const BLOCK_NODE_TYPES: Record<string, BlockType> = {
   heading: 'heading',
 };
 
+// Block types where the ^id appears on its own line *after* the block (as a
+// sibling paragraph in the remark AST).
+const FULL_LINE_SIBLING_TYPES: Record<string, BlockType> = {
+  code: 'code',
+  table: 'table',
+};
+
 const blocksPlugin: ParserPlugin = {
   name: 'blocks',
   visit: (node, note) => {
@@ -387,7 +398,15 @@ const blocksPlugin: ParserPlugin = {
     if (!match) {
       return;
     }
-    const id = match[1];
+    const [, whitespace, id] = match;
+
+    // Full-line block ID on a list item: the ^id is on its own line and remark
+    // absorbs it via lazy continuation into the last listItem's paragraph.
+    // Skip both the listItem and the paragraph — onDidVisitTree registers the list.
+    if (whitespace === '\n' && (blockType === 'list-item' || blockType === 'paragraph')) {
+      return;
+    }
+
     const startLine = node.position!.start.line - 1; // convert AST 1-based to 0-based
     // A listItem and its first-paragraph child both start on the same line and
     // carry the same anchor. Skip the paragraph once the listItem is registered.
@@ -398,10 +417,89 @@ const blocksPlugin: ParserPlugin = {
     ) {
       return;
     }
+
+    // Full-line block ID on a blockquote: remark absorbs the ^id via lazy
+    // continuation, so the blockquote's end line includes the ^id line. Adjust
+    // the range to exclude that line so embeds don't include the raw marker.
+    const pos =
+      whitespace === '\n' && blockType === 'blockquote'
+        ? {
+            ...node.position!,
+            end: {
+              ...node.position!.end,
+              line: node.position!.end.line - 1,
+            },
+          }
+        : node.position!;
+
     note.blocks.push({
       id,
       type: blockType,
-      range: astPositionToFoamRange(node.position!),
+      range: astPositionToFoamRange(pos),
+    });
+  },
+
+  onDidVisitTree: (tree, note) => {
+    // Handle full-line block IDs for block types where the ^id appears as a
+    // standalone sibling paragraph immediately after the target block (code,
+    // table) or is absorbed into the last list item (list).
+    visit(tree, (parentNode: any) => {
+      if (!Array.isArray(parentNode.children)) {
+        return;
+      }
+      const children: any[] = parentNode.children;
+
+      for (let i = 0; i < children.length; i++) {
+        const current = children[i];
+
+        // Case A: code/table — remark places the ^id as the next sibling paragraph.
+        if (FULL_LINE_SIBLING_TYPES[current.type]) {
+          const next = children[i + 1];
+          if (
+            next?.type === 'paragraph' &&
+            next.position.start.line === current.position.end.line + 1
+          ) {
+            const nextText = getTextFromChildren(next).trim();
+            const idMatch = STANDALONE_BLOCK_ANCHOR_RE.exec(nextText);
+            if (idMatch) {
+              const id = idMatch[1];
+              if (!note.blocks.some(b => b.id === id)) {
+                note.blocks.push({
+                  id,
+                  type: FULL_LINE_SIBLING_TYPES[current.type],
+                  range: astPositionToFoamRange(current.position),
+                });
+              }
+            }
+          }
+        }
+
+        // Case B: list — remark absorbs the ^id into the last listItem's text
+        // as a new line. Register the ID for the *full list* instead.
+        if (current.type === 'list') {
+          const items: any[] = current.children ?? [];
+          const lastItem = items[items.length - 1];
+          if (!lastItem) continue;
+          const text = getDirectText(lastItem);
+          const match = /\n\^([a-zA-Z0-9-]+)$/.exec(text);
+          if (!match) continue;
+          const id = match[1];
+          if (note.blocks.some(b => b.id === id)) continue;
+          // Range covers the whole list minus the ^id line.
+          const adjustedPos = {
+            ...current.position,
+            end: {
+              ...current.position.end,
+              line: current.position.end.line - 1,
+            },
+          };
+          note.blocks.push({
+            id,
+            type: 'list',
+            range: astPositionToFoamRange(adjustedPos),
+          });
+        }
+      }
     });
   },
 };

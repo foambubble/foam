@@ -90,8 +90,10 @@ export interface Section {
 export type BlockType =
   | 'paragraph'
   | 'list-item'
+  | 'list'
   | 'blockquote'
   | 'code'
+  | 'table'
   | 'heading';
 
 export interface Block {

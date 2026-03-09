@@ -32,6 +32,15 @@ Place the anchor at the end of the item text. Foam anchors the entire item, incl
 - Add wet ingredients ^wet-step
 ```
 
+To anchor an entire list, place `^id` on its own line immediately after the last item (no blank line):
+
+```markdown
+- First item
+- Second item
+- Third item
+^shopping-list
+```
+
 ### Heading
 
 ```markdown
@@ -43,7 +52,40 @@ The anchor applies to the heading line itself, not the entire section below it.
 ### Blockquote
 
 ```markdown
-> The only way to do great work is to love what you do. ^jobs-quote
+> The only way to do great work is to love what you do.
+^jobs-quote
+```
+
+For multi-line blockquotes, place `^id` on its own line immediately after the last `>` line (no blank line):
+
+```markdown
+> We shall fight on the beaches,
+> we shall fight on the landing grounds.
+^churchill-beaches
+```
+
+### Code block
+
+Place `^id` on its own line immediately after the closing fence (no blank line):
+
+````markdown
+```python
+def greet(name):
+    return f"Hello, {name}"
+```
+^greet-function
+````
+
+### Table
+
+Place `^id` on its own line immediately after the table (no blank line):
+
+```markdown
+| Name  | Score |
+| ----- | ----- |
+| Alice | 95    |
+| Bob   | 87    |
+^results-table
 ```
 
 ## Linking to a Block

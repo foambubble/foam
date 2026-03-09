@@ -87,4 +87,48 @@ describe('block anchor id injection', () => {
       expect(result).toContain('<p>No anchor here</p>');
     });
   });
+
+  describe('full-line block IDs (Obsidian-compatible)', () => {
+    it('inserts anchor before a code fence with a standalone ^id paragraph after it', () => {
+      const result = md.render('```js\nconsole.log("hi");\n```\n^mycode');
+      expect(result).toContain('<a id="__mycode" aria-hidden="true"></a>');
+      expect(result).toContain('<code class="language-js">');
+      // The standalone ^id paragraph must not appear in the output
+      expect(result).not.toContain('^mycode');
+      // Anchor must appear before the code block
+      expect(result.indexOf('<a id="__mycode"')).toBeLessThan(
+        result.indexOf('<code')
+      );
+    });
+
+    it('does not treat standalone ^id as anchor when separated from fence by blank line', () => {
+      const result = md.render('```\ncode\n```\n\n^mycode');
+      // Blank line means it's a regular paragraph, not a block anchor
+      expect(result).not.toContain('<a id="__mycode"');
+    });
+
+    it('removes the ^id table row and inserts an anchor before the table', () => {
+      const result = md.render('| A | B |\n| - | - |\n| 1 | 2 |\n^mytable');
+      expect(result).toContain('<a id="__mytable" aria-hidden="true"></a>');
+      expect(result).toContain('<table>');
+      // The ^id row must not appear as a table cell
+      expect(result).not.toContain('^mytable');
+      // Anchor must appear before the table
+      expect(result.indexOf('<a id="__mytable"')).toBeLessThan(
+        result.indexOf('<table>')
+      );
+    });
+
+    it('strips ^id from the last list item and sets id on the list element', () => {
+      const result = md.render('- Item one\n- Item two\n^mylist');
+      expect(result).toContain('<ul id="__mylist">');
+      expect(result).not.toContain('^mylist');
+    });
+
+    it('strips ^id from the last ordered list item and sets id on the list', () => {
+      const result = md.render('1. First\n2. Second\n^orderedlist');
+      expect(result).toContain('<ol id="__orderedlist">');
+      expect(result).not.toContain('^orderedlist');
+    });
+  });
 });

@@ -915,4 +915,86 @@ describe('block anchor extraction', () => {
     expect(note.blocks).toHaveLength(1);
     expect(note.blocks[0].id).toBe('valid-id-123');
   });
+
+  describe('full-line block IDs (Obsidian-compatible)', () => {
+    it('should extract a full-line block ID after a code fence', () => {
+      const note = parser.parse(
+        URI.file('/path/note.md'),
+        '```js\nconsole.log("hi");\n```\n^mycode'
+      );
+      const block = note.blocks.find(b => b.id === 'mycode');
+      expect(block).toBeDefined();
+      expect(block.type).toBe('code');
+      expect(block.range.start.line).toBe(0);
+      expect(block.range.end.line).toBe(2);
+    });
+
+    it('should extract a full-line block ID after a table', () => {
+      const note = parser.parse(
+        URI.file('/path/note.md'),
+        '| A | B |\n| - | - |\n| 1 | 2 |\n^mytable'
+      );
+      const block = note.blocks.find(b => b.id === 'mytable');
+      expect(block).toBeDefined();
+      expect(block.type).toBe('table');
+      expect(block.range.start.line).toBe(0);
+      expect(block.range.end.line).toBe(2);
+    });
+
+    it('should extract a full-line block ID after a list (full list anchoring)', () => {
+      const note = parser.parse(
+        URI.file('/path/note.md'),
+        '- Item one\n- Item two\n- Item three\n^mylist'
+      );
+      const block = note.blocks.find(b => b.id === 'mylist');
+      expect(block).toBeDefined();
+      expect(block.type).toBe('list');
+      expect(block.range.start.line).toBe(0);
+      // Range should not include the ^id line
+      expect(block.range.end.line).toBe(2);
+    });
+
+    it('should not match a full-line block ID after code fence if separated by a blank line', () => {
+      const note = parser.parse(
+        URI.file('/path/note.md'),
+        '```js\ncode();\n```\n\n^mycode'
+      );
+      // Blank line separates them; ^mycode is a standalone paragraph, not adjacent
+      expect(note.blocks.find(b => b.id === 'mycode')).toBeUndefined();
+    });
+
+    it('should not match a full-line block ID after table if separated by a blank line', () => {
+      const note = parser.parse(
+        URI.file('/path/note.md'),
+        '| A | B |\n| - | - |\n| 1 | 2 |\n\n^mytable'
+      );
+      expect(note.blocks.find(b => b.id === 'mytable')).toBeUndefined();
+    });
+
+    it('should extract a full-line block ID after a blockquote', () => {
+      const note = parser.parse(
+        URI.file('/path/note.md'),
+        '> First line\n> Second line\n^myquote'
+      );
+      const block = note.blocks.find(b => b.id === 'myquote');
+      expect(block).toBeDefined();
+      expect(block.type).toBe('blockquote');
+      // Range should not include the ^id line
+      expect(block.range.start.line).toBe(0);
+      expect(block.range.end.line).toBe(1);
+    });
+
+    it('should handle multiple full-line block IDs in the same document', () => {
+      const note = parser.parse(
+        URI.file('/path/note.md'),
+        '```\ncode\n```\n^block1\n\n| A |\n| - |\n^block2'
+      );
+      const b1 = note.blocks.find(b => b.id === 'block1');
+      const b2 = note.blocks.find(b => b.id === 'block2');
+      expect(b1).toBeDefined();
+      expect(b1.type).toBe('code');
+      expect(b2).toBeDefined();
+      expect(b2.type).toBe('table');
+    });
+  });
 });

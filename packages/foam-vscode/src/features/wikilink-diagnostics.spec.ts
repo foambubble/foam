@@ -179,7 +179,7 @@ Content of section 2
     );
     expect(countEntries(collection)).toEqual(1);
     const items = collection.get(toVsCodeUri(fileB.uri));
-    expect(items[0].range).toEqual(new vscode.Range(0, 15, 0, 28));
+    expect(items[0].range).toEqual(new vscode.Range(0, 15, 0, 26));
     expect(items[0].severity).toEqual(vscode.DiagnosticSeverity.Warning);
     expect(items[0].relatedInformation.map(info => info.message)).toEqual([
       'Section 1',

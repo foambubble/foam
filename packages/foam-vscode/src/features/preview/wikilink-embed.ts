@@ -32,7 +32,8 @@ let refsStack: string[] = [];
 export const markdownItWikilinkEmbed = (
   md: markdownit,
   workspace: FoamWorkspace,
-  parser: ResourceParser
+  parser: ResourceParser,
+  getCurrentResource?: () => Resource | null
 ) => {
   return md.use(markdownItRegex, {
     name: 'embed-wikilinks',
@@ -50,7 +51,20 @@ export const markdownItWikilinkEmbed = (
           `;
         }
 
-        const includedNote = workspace.find(wikilink);
+        let includedNote = workspace.find(wikilink);
+
+        // Self-referencing embed (![[#section]] or ![[#^blockid]]): the path is
+        // empty so workspace.find returns null. Resolve against the current resource.
+        if (!includedNote && wikilink.startsWith('#') && getCurrentResource) {
+          const currentResource = getCurrentResource();
+          if (currentResource) {
+            const fragment = wikilink.slice(1); // strip leading '#'
+            includedNote = {
+              ...currentResource,
+              uri: currentResource.uri.with({ fragment }),
+            };
+          }
+        }
 
         if (!includedNote) {
           return `![[${wikilink}]]`;

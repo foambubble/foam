@@ -472,4 +472,70 @@ Third paragraph`,
 
     await deleteFile(note);
   });
+
+  it('should embed a section from the current note using a self-referencing link', async () => {
+    const note = await createFile(
+      `# Section 1
+Content of section one.
+
+# Section 2
+Content of section two.`,
+      ['self-ref-section.md']
+    );
+    const parser = createMarkdownParser([]);
+    const parsedNote = parser.parse(note.uri, note.content);
+    const ws = new FoamWorkspace().set(parsedNote);
+
+    await withModifiedFoamConfiguration(
+      CONFIG_EMBED_NOTE_TYPE,
+      'full-inline',
+      () => {
+        const md = markdownItWikilinkEmbed(
+          MarkdownIt(),
+          ws,
+          parser,
+          () => parsedNote
+        );
+        const res = md.render(`Intro. ![[#Section 2]]`);
+        expect(res).toContain('Content of section two');
+        expect(res).not.toContain('Content of section one');
+      }
+    );
+
+    await deleteFile(note);
+  });
+
+  it('should embed a block from the current note using a self-referencing block anchor link', async () => {
+    const note = await createFile(
+      `First paragraph
+
+Target block ^self-block
+
+Third paragraph`,
+      ['self-ref-block.md']
+    );
+    const parser = createMarkdownParser([]);
+    const parsedNote = parser.parse(note.uri, note.content);
+    const ws = new FoamWorkspace().set(parsedNote);
+
+    await withModifiedFoamConfiguration(
+      CONFIG_EMBED_NOTE_TYPE,
+      'full-inline',
+      () => {
+        const md = markdownItWikilinkEmbed(
+          MarkdownIt(),
+          ws,
+          parser,
+          () => parsedNote
+        );
+        const res = md.render(`Intro. ![[#^self-block]]`);
+        expect(res).toContain('Target block');
+        expect(res).not.toContain('First paragraph');
+        expect(res).not.toContain('Third paragraph');
+        expect(res).not.toContain('^self-block');
+      }
+    );
+
+    await deleteFile(note);
+  });
 });

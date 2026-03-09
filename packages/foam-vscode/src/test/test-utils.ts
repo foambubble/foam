@@ -103,10 +103,11 @@ export const createTestNote = (params: {
     type: params.type ?? 'note',
     properties: {},
     title: params.title ?? strToUri(params.uri).getBasename(),
-    sections: params.sections?.map(label => ({
-      label,
-      range: Range.create(0, 0, 1, 0),
-    })) ?? [],
+    sections:
+      params.sections?.map(label => ({
+        label,
+        range: Range.create(0, 0, 1, 0),
+      })) ?? [],
     blocks: [],
     tags:
       params.tags?.map(t => ({

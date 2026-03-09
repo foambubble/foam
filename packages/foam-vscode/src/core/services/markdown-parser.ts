@@ -393,7 +393,9 @@ const blocksPlugin: ParserPlugin = {
     // carry the same anchor. Skip the paragraph once the listItem is registered.
     // Using start line (not end line) handles nested subitems that extend the
     // parent listItem's end line beyond the anchor line.
-    if (note.blocks.some(b => b.id === id && b.range.start.line === startLine)) {
+    if (
+      note.blocks.some(b => b.id === id && b.range.start.line === startLine)
+    ) {
       return;
     }
     note.blocks.push({

@@ -23,7 +23,7 @@ export abstract class MarkdownLink {
         const blockMatch = section?.match(/^\^([a-zA-Z0-9-]+)$/);
         return {
           target: target?.replace(/\\/g, '') ?? '',
-          section: blockMatch ? '' : (section ?? ''),
+          section: blockMatch ? '' : section ?? '',
           blockId: blockMatch?.[1] ?? '',
           alias: alias ?? '',
         };
@@ -41,7 +41,7 @@ export abstract class MarkdownLink {
           const defBlockMatch = defFragment?.match(/^\^([a-zA-Z0-9-]+)$/);
           return {
             target: definitionUri.path, // Base path from definition
-            section: defBlockMatch ? '' : (defFragment ?? ''),
+            section: defBlockMatch ? '' : defFragment ?? '',
             blockId: defBlockMatch?.[1] ?? '',
             alias: alias, // Alias from rawText
           };

@@ -63,10 +63,7 @@ describe('HeadingEdit', () => {
         '/note-a.md',
         `Para one ^block1\n\nPara two ^block2`
       );
-      const noteB = createNoteFromMarkdown(
-        '/note-b.md',
-        `[[note-a#^block2]]`
-      );
+      const noteB = createNoteFromMarkdown('/note-b.md', `[[note-a#^block2]]`);
       ws.set(noteA).set(noteB);
       const graph = FoamGraph.fromWorkspace(ws);
 
@@ -84,7 +81,10 @@ describe('HeadingEdit', () => {
 
     it('should update block links across multiple files', () => {
       const ws = createTestWorkspace();
-      const noteA = createNoteFromMarkdown('/note-a.md', `A paragraph ^myblock`);
+      const noteA = createNoteFromMarkdown(
+        '/note-a.md',
+        `A paragraph ^myblock`
+      );
       const noteB = createNoteFromMarkdown('/note-b.md', `[[note-a#^myblock]]`);
       const noteC = createNoteFromMarkdown('/note-c.md', `[[note-a#^myblock]]`);
       ws.set(noteA).set(noteB).set(noteC);

@@ -1,5 +1,8 @@
 import { createMarkdownParser } from './markdown-parser';
-import { createMarkdownReferences, MarkdownResourceProvider } from './markdown-provider';
+import {
+  createMarkdownReferences,
+  MarkdownResourceProvider,
+} from './markdown-provider';
 import { Logger } from '../utils/log';
 import { URI } from '../model/uri';
 import {
@@ -927,9 +930,14 @@ describe('readAsMarkdown with block fragments', () => {
   it('should return only the block content for a paragraph block', async () => {
     const dataStore = new InMemoryDataStore();
     const uri = URI.file('/root/note.md');
-    dataStore.set(uri, 'First paragraph\n\nTarget paragraph ^myblock\n\nLast paragraph');
+    dataStore.set(
+      uri,
+      'First paragraph\n\nTarget paragraph ^myblock\n\nLast paragraph'
+    );
     const provider = new MarkdownResourceProvider(dataStore, mdParser);
-    const result = await provider.readAsMarkdown(uri.with({ fragment: '^myblock' }));
+    const result = await provider.readAsMarkdown(
+      uri.with({ fragment: '^myblock' })
+    );
     expect(result).toContain('Target paragraph');
     expect(result).not.toContain('First paragraph');
     expect(result).not.toContain('Last paragraph');
@@ -945,7 +953,9 @@ describe('readAsMarkdown with block fragments', () => {
       '- Other item\n- Parent item ^listblock\n  - Child 1\n  - Child 2\n- Another item'
     );
     const provider = new MarkdownResourceProvider(dataStore, mdParser);
-    const result = await provider.readAsMarkdown(uri.with({ fragment: '^listblock' }));
+    const result = await provider.readAsMarkdown(
+      uri.with({ fragment: '^listblock' })
+    );
     expect(result).toContain('Parent item');
     expect(result).toContain('Child 1');
     expect(result).toContain('Child 2');
@@ -962,7 +972,9 @@ describe('readAsMarkdown with block fragments', () => {
       '# Before\n\nSome text\n\n## My Heading ^headblock\n\nSection content\n\n# After'
     );
     const provider = new MarkdownResourceProvider(dataStore, mdParser);
-    const result = await provider.readAsMarkdown(uri.with({ fragment: '^headblock' }));
+    const result = await provider.readAsMarkdown(
+      uri.with({ fragment: '^headblock' })
+    );
     expect(result).toContain('My Heading');
     expect(result).toContain('Section content');
     expect(result).not.toContain('Before');
@@ -976,7 +988,9 @@ describe('readAsMarkdown with block fragments', () => {
     const content = 'A paragraph\n\nAnother paragraph';
     dataStore.set(uri, content);
     const provider = new MarkdownResourceProvider(dataStore, mdParser);
-    const result = await provider.readAsMarkdown(uri.with({ fragment: '^ghost' }));
+    const result = await provider.readAsMarkdown(
+      uri.with({ fragment: '^ghost' })
+    );
     expect(result).toEqual(content);
   });
 });

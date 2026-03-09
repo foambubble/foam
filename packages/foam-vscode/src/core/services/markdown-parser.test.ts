@@ -777,7 +777,7 @@ describe('block anchor extraction', () => {
     expect(block.type).toBe('list-item');
     expect(block.range.start.line).toBe(1);
     expect(block.range.end.line).toBeGreaterThan(1); // includes grandchild
-    expect(block.range.end.line).toBeLessThan(3);    // excludes "Another item"
+    expect(block.range.end.line).toBeLessThan(3); // excludes "Another item"
   });
 
   it('should extract block anchor from a heading', () => {

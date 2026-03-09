@@ -283,10 +283,9 @@ Another paragraph ^block-two
   });
 
   it('should return block IDs for another note when fragment starts with ^', async () => {
-    const { uri, content } = await createFile(
-      `A paragraph ^myblock`,
-      ['note-with-blocks.md']
-    );
+    const { uri, content } = await createFile(`A paragraph ^myblock`, [
+      'note-with-blocks.md',
+    ]);
     ws.set(parser.parse(uri, content));
 
     const text = '[[note-with-blocks#^';

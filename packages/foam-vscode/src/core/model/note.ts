@@ -87,7 +87,12 @@ export interface Section {
   range: Range;
 }
 
-export type BlockType = 'paragraph' | 'list-item' | 'blockquote' | 'code' | 'heading';
+export type BlockType =
+  | 'paragraph'
+  | 'list-item'
+  | 'blockquote'
+  | 'code'
+  | 'heading';
 
 export interface Block {
   id: string;

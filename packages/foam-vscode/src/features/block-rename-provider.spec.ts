@@ -151,9 +151,7 @@ describe('BlockRenameProvider', () => {
     });
 
     it('should not update links that reference a different block', async () => {
-      const fileA = await createFile(
-        'Para one ^block1\n\nPara two ^block2\n'
-      );
+      const fileA = await createFile('Para one ^block1\n\nPara two ^block2\n');
       const fileB = await createFile(`[[${fileA.name}#^block2]]\n`);
 
       const ws = createTestWorkspace()

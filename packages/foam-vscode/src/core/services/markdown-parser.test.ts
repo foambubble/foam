@@ -729,6 +729,29 @@ describe('block anchor extraction', () => {
     expect(note.blocks).toHaveLength(1);
     expect(note.blocks[0].id).toBe('myblock');
     expect(note.blocks[0].type).toBe('paragraph');
+    expect(note.blocks[0].range.start.line).toBe(0);
+    expect(note.blocks[0].range.end.line).toBe(0);
+  });
+
+  it('should extract block anchor from a multi-line paragraph', () => {
+    const note = parser.parse(
+      URI.file('/path/note.md'),
+      `Line one\nLine two ^multiblock`
+    );
+    expect(note.blocks).toHaveLength(1);
+    expect(note.blocks[0].id).toBe('multiblock');
+    expect(note.blocks[0].type).toBe('paragraph');
+    expect(note.blocks[0].range.start.line).toBe(0);
+    expect(note.blocks[0].range.end.line).toBe(1);
+  });
+
+  it('should support hyphens in block IDs', () => {
+    const note = parser.parse(
+      URI.file('/path/note.md'),
+      `A paragraph ^my-block-id`
+    );
+    expect(note.blocks).toHaveLength(1);
+    expect(note.blocks[0].id).toBe('my-block-id');
   });
 
   it('should extract block anchor from a list item, with range covering sub-items', () => {
@@ -787,6 +810,20 @@ describe('block anchor extraction', () => {
     const block = note.blocks.find(b => b.id === 'quoteblock');
     expect(block).toBeDefined();
     expect(block.type).toBe('blockquote');
+    expect(block.range.start.line).toBe(0);
+    expect(block.range.end.line).toBe(0);
+  });
+
+  it('should extract block anchor from a multi-line blockquote', () => {
+    const note = parser.parse(
+      URI.file('/path/note.md'),
+      `> Line one\n> Line two ^quotemulti`
+    );
+    const block = note.blocks.find(b => b.id === 'quotemulti');
+    expect(block).toBeDefined();
+    expect(block.type).toBe('blockquote');
+    expect(block.range.start.line).toBe(0);
+    expect(block.range.end.line).toBe(1);
   });
 
   it('should extract multiple block anchors from a file', () => {
@@ -842,6 +879,16 @@ describe('block anchor extraction', () => {
     );
     expect(note.blocks).toHaveLength(1);
     expect(note.blocks[0].id).toBe('listblock');
+  });
+
+  it('should register a blockquote block anchor only once (not once per node type)', () => {
+    const note = parser.parse(
+      URI.file('/path/note.md'),
+      `> Quote text ^quoteblock\n`
+    );
+    expect(note.blocks).toHaveLength(1);
+    expect(note.blocks[0].id).toBe('quoteblock');
+    expect(note.blocks[0].type).toBe('blockquote');
   });
 
   it('should not extract footnote references as block anchors', () => {

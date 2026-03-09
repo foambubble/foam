@@ -10,7 +10,7 @@ import { Position as FoamPosition } from '../core/model/position';
 import { Range as FoamRange } from '../core/model/range';
 import { URI } from '../core/model/uri';
 import { Logger } from '../core/utils/log';
-import { TextEdit } from '../core/services/text-edit';
+import { TextEdit as FoamTextEdit } from '../core/services/text-edit';
 import * as foamCommands from '../features/commands';
 import { Foam, bootstrap } from '../core/model/foam';
 import { createMarkdownParser } from '../core/services/markdown-parser';
@@ -1120,6 +1120,27 @@ class MockTextEditor implements TextEditor {
   }
 }
 
+// ===== TextEdit =====
+
+export class TextEdit {
+  constructor(
+    public range: Range,
+    public newText: string
+  ) {}
+
+  static replace(range: Range, newText: string): TextEdit {
+    return new TextEdit(range, newText);
+  }
+
+  static insert(position: Position, newText: string): TextEdit {
+    return new TextEdit(new Range(position, position), newText);
+  }
+
+  static delete(range: Range): TextEdit {
+    return new TextEdit(range, '');
+  }
+}
+
 // ===== WorkspaceEdit =====
 
 export class WorkspaceEdit {
@@ -1130,7 +1151,7 @@ export class WorkspaceEdit {
     if (!this._edits.has(key)) {
       this._edits.set(key, []);
     }
-    this._edits.get(key)!.push({ type: 'replace', range, newText });
+    this._edits.get(key)!.push(new TextEdit(range, newText));
   }
 
   insert(uri: Uri, position: Position, newText: string): void {
@@ -1138,7 +1159,9 @@ export class WorkspaceEdit {
     if (!this._edits.has(key)) {
       this._edits.set(key, []);
     }
-    this._edits.get(key)!.push({ type: 'insert', position, newText });
+    this._edits
+      .get(key)!
+      .push(new TextEdit(new Range(position, position), newText));
   }
 
   delete(uri: Uri, range: Range): void {
@@ -1146,7 +1169,7 @@ export class WorkspaceEdit {
     if (!this._edits.has(key)) {
       this._edits.set(key, []);
     }
-    this._edits.get(key)!.push({ type: 'delete', range });
+    this._edits.get(key)!.push(new TextEdit(range, ''));
   }
 
   renameFile(
@@ -1159,6 +1182,19 @@ export class WorkspaceEdit {
       this._edits.set(key, []);
     }
     this._edits.get(key)!.push({ type: 'rename', oldUri, newUri, options });
+  }
+
+  set(uri: Uri, edits: TextEdit[]): void {
+    const key = uri.toString();
+    if (!this._edits.has(key)) {
+      this._edits.set(key, []);
+    }
+    this._edits.get(key)!.push(...edits);
+  }
+
+  get(uri: Uri): TextEdit[] | undefined {
+    const key = uri.toString();
+    return this._edits.get(key) as TextEdit[] | undefined;
   }
 
   // Internal method to get edits for applying
@@ -1905,26 +1941,28 @@ export const workspace = {
         if (document instanceof MockTextDocument) {
           let content = document.getText();
 
-          // Apply edits in reverse order to maintain positions
-          const sortedEdits = edits.sort((a, b) => {
-            if (a.type === 'replace' && b.type === 'replace') {
-              return Position.compareTo(b.range.start, a.range.start);
-            }
-            // Add more sophisticated sorting for other edit types
-            return 0;
-          });
+          // Apply text edits in reverse order to maintain positions
+          const textEdits = edits.filter(e => e instanceof TextEdit || e.range);
+          const otherEdits = edits.filter(
+            e => !(e instanceof TextEdit || e.range)
+          );
 
-          for (const edit of sortedEdits) {
-            if (edit.type === 'replace') {
-              content = TextEdit.apply(content, {
-                newText: edit.newText,
-                range: edit.range,
-              });
-            } else if (edit.type === 'rename') {
+          textEdits.sort((a, b) =>
+            Position.compareTo(b.range.start, a.range.start)
+          );
+
+          for (const edit of textEdits) {
+            content = FoamTextEdit.apply(content, {
+              newText: edit.newText,
+              range: edit.range,
+            });
+          }
+
+          for (const edit of otherEdits) {
+            if (edit.type === 'rename') {
               // Handle file rename by physically moving the file
               await fs.promises.rename(edit.oldUri.fsPath, edit.newUri.fsPath);
             }
-            // Handle other edit types as needed
           }
 
           document._updateContent(content);

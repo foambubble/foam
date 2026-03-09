@@ -31,6 +31,9 @@
     "markdown.previewStyles": [
       "./static/preview/style.css"
     ],
+    "markdown.previewScripts": [
+      "./static/preview/block-anchor-scroll.js"
+    ],
     "grammars": [
       {
         "path": "./syntaxes/injection.json",

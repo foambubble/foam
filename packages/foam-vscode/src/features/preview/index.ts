@@ -7,6 +7,7 @@ import { default as markdownItWikilinkNavigation } from './wikilink-navigation';
 import { default as markdownItRemoveLinkReferences } from './remove-wikilink-references';
 import { default as markdownItWikilinkEmbed } from './wikilink-embed';
 import { default as escapeWikilinkPipes } from './escape-wikilink-pipes';
+import { default as markdownItBlockAnchorIds } from './block-anchor-ids';
 
 export default async function activate(
   context: vscode.ExtensionContext,
@@ -22,6 +23,7 @@ export default async function activate(
         markdownItFoamTags,
         markdownItWikilinkNavigation,
         markdownItRemoveLinkReferences,
+        markdownItBlockAnchorIds,
       ].reduce(
         (acc, extension) =>
           extension(acc, foam.workspace, foam.services.parser),

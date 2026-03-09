@@ -20,21 +20,35 @@ export const markdownItWikilinkNavigation = (
     regex: /(?=[^!])\[\[([^[\]]+?)\]\]/,
     replace: (wikilink: string) => {
       try {
-        const { target, section, alias } = MarkdownLink.analyzeLink({
+        const { target, section, blockId, alias } = MarkdownLink.analyzeLink({
           rawText: '[[' + wikilink + ']]',
           type: 'wikilink',
           range: Range.create(0, 0),
           isEmbed: false,
         });
-        const formattedSection = section ? `#${section}` : '';
-        const linkSection = section ? `#${toSlug(section)}` : '';
-        const label = isEmpty(alias) ? `${target}${formattedSection}` : alias;
+        // formattedFragment is shown to the user in link labels/titles.
+        // linkFragment is used in the href — block ids use the '__' prefix to
+        // match the id emitted by block-anchor-ids.ts and avoid '^' which is
+        // not a valid CSS identifier character.
+        const formattedFragment = blockId
+          ? `#^${blockId}`
+          : section
+          ? `#${section}`
+          : '';
+        const linkFragment = blockId
+          ? `#__${blockId}`
+          : section
+          ? `#${toSlug(section)}`
+          : '';
+        const label = isEmpty(alias) ? `${target}${formattedFragment}` : alias;
 
-        // [[#section]] links
+        // [[#section]] and [[#^blockid]] links (same-file self-references)
         if (target.length === 0) {
-          // we don't have a good way to check if the section exists within the
-          // open file, so we just create a regular link for it
-          return getResourceLink(section, linkSection, label);
+          // we don't have a good way to check if the section/block exists within
+          // the open file, so we just create a regular link for it.
+          // Title shows '^blockid' for user clarity; href uses '__blockid' prefix.
+          const fragmentTitle = blockId ? `^${blockId}` : section;
+          return getResourceLink(fragmentTitle, linkFragment, label);
         }
 
         const resource = workspace.find(target);
@@ -43,15 +57,15 @@ export const markdownItWikilinkNavigation = (
         }
 
         const resourceLabel = isEmpty(alias)
-          ? `${resource.title}${formattedSection}`
+          ? `${resource.title}${formattedFragment}`
           : alias;
         const resourceLink = `/${vscode.workspace.asRelativePath(
           toVsCodeUri(resource.uri),
           false
         )}`;
         return getResourceLink(
-          `${resource.title}${formattedSection}`,
-          `${resourceLink}${linkSection}`,
+          `${resource.title}${formattedFragment}`,
+          `${resourceLink}${linkFragment}`,
           resourceLabel
         );
       } catch (e) {

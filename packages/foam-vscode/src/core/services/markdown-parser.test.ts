@@ -3,7 +3,7 @@ import {
   getBlockFor,
   ParserPlugin,
 } from './markdown-parser';
-import { NoteLinkDefinition, ResourceLink } from '../model/note';
+import { NoteLinkDefinition, Resource, ResourceLink } from '../model/note';
 import { Logger } from '../utils/log';
 import { URI } from '../model/uri';
 import { Range } from '../model/range';
@@ -806,13 +806,42 @@ describe('block anchor extraction', () => {
     expect(note.blocks).toHaveLength(0);
   });
 
-  it('should use first-wins for duplicate block IDs', () => {
+  it('should keep all occurrences when duplicate block IDs are present', () => {
     const note = parser.parse(
       URI.file('/path/note.md'),
       `First paragraph ^dup\n\nSecond paragraph ^dup`
     );
-    expect(note.blocks).toHaveLength(1);
+    expect(note.blocks).toHaveLength(2);
     expect(note.blocks[0].range.start.line).toBe(0);
+    expect(note.blocks[1].range.start.line).toBe(2);
+  });
+
+  it('should use first-wins for duplicate block IDs when resolving', () => {
+    const note = parser.parse(
+      URI.file('/path/note.md'),
+      `First paragraph ^dup\n\nSecond paragraph ^dup`
+    );
+    const found = Resource.findBlock(note, 'dup');
+    expect(found).not.toBeNull();
+    expect(found.range.start.line).toBe(0);
+  });
+
+  it('should register a list item block anchor only once (not once per node type)', () => {
+    const note = parser.parse(
+      URI.file('/path/note.md'),
+      `- Item one ^listblock\n- Item two\n`
+    );
+    expect(note.blocks).toHaveLength(1);
+    expect(note.blocks[0].id).toBe('listblock');
+  });
+
+  it('should register a list item anchor only once even when it has nested subitems', () => {
+    const note = parser.parse(
+      URI.file('/path/note.md'),
+      `- this is item ^listblock\n  - subitem\n`
+    );
+    expect(note.blocks).toHaveLength(1);
+    expect(note.blocks[0].id).toBe('listblock');
   });
 
   it('should not extract footnote references as block anchors', () => {

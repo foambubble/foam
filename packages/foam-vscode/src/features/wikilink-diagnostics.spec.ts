@@ -385,6 +385,130 @@ describe('Block diagnostics', () => {
   });
 });
 
+describe('Duplicate block ID diagnostics', () => {
+  beforeEach(async () => {
+    await cleanWorkspace();
+    await closeEditors();
+  });
+
+  it('should show no warning when all block IDs in a file are unique', async () => {
+    const file = await createFile(
+      'Para one ^block1\n\nPara two ^block2\n'
+    );
+    const parser = createMarkdownParser([]);
+    const ws = new FoamWorkspace().set(parser.parse(file.uri, file.content));
+
+    await showInEditor(file.uri);
+
+    const collection = vscode.languages.createDiagnosticCollection('foam-test');
+    updateDiagnostics(ws, parser, vscode.window.activeTextEditor.document, collection);
+    expect(countEntries(collection)).toEqual(0);
+  });
+
+  it('should warn only on the duplicate (2nd+) occurrence, not the first', async () => {
+    const file = await createFile(
+      'Para one ^myblock\n\nPara two ^myblock\n'
+    );
+    const parser = createMarkdownParser([]);
+    const ws = new FoamWorkspace().set(parser.parse(file.uri, file.content));
+
+    await showInEditor(file.uri);
+
+    const collection = vscode.languages.createDiagnosticCollection('foam-test');
+    updateDiagnostics(ws, parser, vscode.window.activeTextEditor.document, collection);
+    const items = collection.get(vscode.window.activeTextEditor.document.uri);
+    // Only the 2nd occurrence is flagged
+    expect(items).toHaveLength(1);
+    expect(items[0].severity).toEqual(vscode.DiagnosticSeverity.Warning);
+    // Related info points to the first occurrence
+    expect(items[0].relatedInformation).toHaveLength(1);
+  });
+
+  it('should highlight the ^id text on the duplicate line', async () => {
+    const file = await createFile('First ^dup\n\nSecond ^dup\n');
+    const parser = createMarkdownParser([]);
+    const ws = new FoamWorkspace().set(parser.parse(file.uri, file.content));
+
+    await showInEditor(file.uri);
+
+    const collection = vscode.languages.createDiagnosticCollection('foam-test');
+    updateDiagnostics(ws, parser, vscode.window.activeTextEditor.document, collection);
+    const items = collection.get(vscode.window.activeTextEditor.document.uri);
+    expect(items).toHaveLength(1);
+    // Duplicate is the second paragraph (line 2)
+    expect(items[0].range.start.line).toBe(2);
+    // Range covers '^dup' (4 chars)
+    expect(items[0].range.end.character - items[0].range.start.character).toBe(4);
+  });
+
+  it('should not show a warning for a list item with a unique block ID', async () => {
+    const file = await createFile('- Item one ^listblock\n- Item two\n');
+    const parser = createMarkdownParser([]);
+    const ws = new FoamWorkspace().set(parser.parse(file.uri, file.content));
+
+    await showInEditor(file.uri);
+
+    const collection = vscode.languages.createDiagnosticCollection('foam-test');
+    updateDiagnostics(ws, parser, vscode.window.activeTextEditor.document, collection);
+    expect(countEntries(collection)).toEqual(0);
+  });
+
+  it('should not show a warning for a list item with nested subitems', async () => {
+    const file = await createFile(
+      '- this is item ^listblock\n  - subitem\n'
+    );
+    const parser = createMarkdownParser([]);
+    const ws = new FoamWorkspace().set(parser.parse(file.uri, file.content));
+
+    await showInEditor(file.uri);
+
+    const collection = vscode.languages.createDiagnosticCollection('foam-test');
+    updateDiagnostics(ws, parser, vscode.window.activeTextEditor.document, collection);
+    expect(countEntries(collection)).toEqual(0);
+  });
+
+  it('should offer a "Replace with new ID" quick fix for each duplicate', async () => {
+    const file = await createFile('Para one ^dup\n\nPara two ^dup\n');
+    const parser = createMarkdownParser([]);
+    const ws = new FoamWorkspace().set(parser.parse(file.uri, file.content));
+
+    await showInEditor(file.uri);
+
+    const collection = vscode.languages.createDiagnosticCollection('foam-test');
+    updateDiagnostics(ws, parser, vscode.window.activeTextEditor.document, collection);
+    const diagnostics = Array.from(
+      collection.get(vscode.window.activeTextEditor.document.uri) ?? []
+    );
+    expect(diagnostics).toHaveLength(1);
+
+    const resolver = new IdentifierResolver('.md');
+    const actions = resolver.provideCodeActions(
+      vscode.window.activeTextEditor.document,
+      diagnostics[0].range,
+      { diagnostics, only: null } as unknown as vscode.CodeActionContext,
+      null
+    );
+
+    expect(actions).toHaveLength(1);
+    expect(actions[0].title).toBe('Replace with new ID');
+    expect(actions[0].command.arguments[0].value).toMatch(/^\^[a-z0-9]+$/);
+  });
+
+  it('should not flag blocks when only one occurrence exists', async () => {
+    const file = await createFile(
+      'Para one ^alpha\n\nPara two ^beta\n\nPara three ^alpha-variant\n'
+    );
+    const parser = createMarkdownParser([]);
+    const ws = new FoamWorkspace().set(parser.parse(file.uri, file.content));
+
+    await showInEditor(file.uri);
+
+    const collection = vscode.languages.createDiagnosticCollection('foam-test');
+    updateDiagnostics(ws, parser, vscode.window.activeTextEditor.document, collection);
+    expect(countEntries(collection)).toEqual(0);
+  });
+});
+
 const countEntries = (collection: vscode.DiagnosticCollection): number => {
   let count = 0;
   collection.forEach((i, diagnostics) => {

@@ -95,6 +95,16 @@ export interface Block {
   type: BlockType;
 }
 
+export abstract class Block {
+  /**
+   * Generates a random block ID suitable for use as a `^blockid` anchor.
+   * Produces 6 lowercase alphanumeric characters, e.g. `"k4f2m1"`.
+   */
+  static generateId(): string {
+    return Math.random().toString(36).slice(2, 8);
+  }
+}
+
 export interface Resource {
   uri: URI;
   type: string;

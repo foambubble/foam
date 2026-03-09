@@ -388,8 +388,12 @@ const blocksPlugin: ParserPlugin = {
       return;
     }
     const id = match[1];
-    // First-wins: ignore duplicate IDs
-    if (note.blocks.some(b => b.id === id)) {
+    const startLine = node.position!.start.line - 1; // convert AST 1-based to 0-based
+    // A listItem and its first-paragraph child both start on the same line and
+    // carry the same anchor. Skip the paragraph once the listItem is registered.
+    // Using start line (not end line) handles nested subitems that extend the
+    // parent listItem's end line beyond the anchor line.
+    if (note.blocks.some(b => b.id === id && b.range.start.line === startLine)) {
       return;
     }
     note.blocks.push({

@@ -1,7 +1,12 @@
 import { debounce } from 'lodash';
 import * as vscode from 'vscode';
 import { Foam } from '../core/model/foam';
-import { Resource, ResourceLink, ResourceParser } from '../core/model/note';
+import {
+  Block,
+  Resource,
+  ResourceLink,
+  ResourceParser,
+} from '../core/model/note';
 import { Range } from '../core/model/range';
 import { FoamWorkspace } from '../core/model/workspace';
 import { MarkdownLink } from '../core/services/markdown-link';
@@ -16,6 +21,7 @@ import { isNone } from '../core/utils';
 const AMBIGUOUS_IDENTIFIER_CODE = 'ambiguous-identifier';
 const UNKNOWN_SECTION_CODE = 'unknown-section';
 const UNKNOWN_BLOCK_CODE = 'unknown-block';
+const DUPLICATE_BLOCK_ID_CODE = 'duplicate-block-id';
 
 interface FoamCommand<T> {
   name: string;
@@ -202,6 +208,53 @@ export function updateDiagnostics(
         }
       }
     }
+    // Detect duplicate block IDs within this document
+    const blocksByID = new Map<string, typeof resource.blocks>();
+    for (const block of resource.blocks) {
+      if (!blocksByID.has(block.id)) {
+        blocksByID.set(block.id, []);
+      }
+      blocksByID.get(block.id)!.push(block);
+    }
+    for (const [id, blocks] of blocksByID) {
+      if (blocks.length < 2) {
+        continue;
+      }
+      // Only flag the duplicates (2nd occurrence onwards); the first is fine.
+      for (const block of blocks.slice(1)) {
+        const line = block.range.end.line;
+        const lineText = document.lineAt(line).text;
+        const anchorStart = lineText.lastIndexOf('^' + id);
+        if (anchorStart < 0) {
+          continue;
+        }
+        result.push({
+          code: DUPLICATE_BLOCK_ID_CODE,
+          message: `Duplicate block ID "^${id}" - ignored`,
+          range: new vscode.Range(
+            line,
+            anchorStart,
+            line,
+            anchorStart + 1 + id.length
+          ),
+          severity: vscode.DiagnosticSeverity.Warning,
+          source: 'Foam',
+          relatedInformation: blocks
+            .filter(b => b !== block)
+            .map(
+              b =>
+                new vscode.DiagnosticRelatedInformation(
+                  new vscode.Location(
+                    document.uri,
+                    new vscode.Position(b.range.end.line, 0)
+                  ),
+                  `Other occurrence of "^${id}"`
+                )
+            ),
+        });
+      }
+    }
+
     if (result.length > 0) {
       collection.set(document.uri, result);
     }
@@ -251,11 +304,16 @@ export class IdentifierResolver implements vscode.CodeActionProvider {
       }
       if (diagnostic.code === UNKNOWN_BLOCK_CODE) {
         const res: vscode.CodeAction[] = [];
-        const blockIds = diagnostic.relatedInformation.map(info => info.message);
+        const blockIds = diagnostic.relatedInformation.map(
+          info => info.message
+        );
         for (const blockId of blockIds) {
           res.push(createReplaceBlockCommand(diagnostic, blockId));
         }
         return [...acc, ...res];
+      }
+      if (diagnostic.code === DUPLICATE_BLOCK_ID_CODE) {
+        return [...acc, createReplaceBlockIdCommand(diagnostic)];
       }
       return acc;
     }, [] as vscode.CodeAction[]);
@@ -313,7 +371,10 @@ const createReplaceBlockCommand = (
  * (e.g. `"Section 1"` or `"^blockid"`), so no secondary rawText scanning is
  * needed.
  */
-const getFragmentDiagnosticRange = (link: ResourceLink, fragment: string): Range => {
+const getFragmentDiagnosticRange = (
+  link: ResourceLink,
+  fragment: string
+): Range => {
   const hashPos = link.rawText.indexOf('#');
   if (hashPos < 0) {
     // No fragment — degenerate range at the link end
@@ -345,6 +406,28 @@ const fragmentValueRange = (diagnosticRange: vscode.Range): vscode.Range =>
     diagnosticRange.end.line,
     diagnosticRange.end.character
   );
+
+const createReplaceBlockIdCommand = (
+  diagnostic: vscode.Diagnostic
+): vscode.CodeAction => {
+  const newId = Block.generateId();
+  const action = new vscode.CodeAction(
+    'Replace with new ID',
+    vscode.CodeActionKind.QuickFix
+  );
+  action.command = {
+    command: REPLACE_TEXT_COMMAND.name,
+    title: 'Replace with new ID',
+    arguments: [
+      {
+        value: '^' + newId,
+        range: diagnostic.range,
+      },
+    ],
+  };
+  action.diagnostics = [diagnostic];
+  return action;
+};
 
 const createFindIdentifierCommand = (
   diagnostic: vscode.Diagnostic,

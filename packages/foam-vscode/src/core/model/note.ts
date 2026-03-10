@@ -98,7 +98,10 @@ export type BlockType =
 
 export interface Block {
   id: string;
+  /** The range of the block's content (excludes the `^id` marker). */
   range: Range;
+  /** The range of the `^id` marker itself */
+  markerRange: Range;
   type: BlockType;
 }
 

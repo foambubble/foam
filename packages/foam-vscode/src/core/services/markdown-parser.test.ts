@@ -1001,6 +1001,10 @@ describe('block anchor extraction', () => {
       // Range should not include the ^id line
       expect(block.range.start.line).toBe(0);
       expect(block.range.end.line).toBe(1);
+      // markerRange: line 2 (0-indexed), column 0 (^id on its own line)
+      expect(block.markerRange.start.line).toBe(2);
+      expect(block.markerRange.start.character).toBe(0);
+      expect(block.markerRange.end.character).toBe(1 + 'myquote'.length); // "^myquote"
     });
 
     it('should extract a full-line block ID after a blockquote separated by one blank line', () => {
@@ -1026,6 +1030,11 @@ describe('block anchor extraction', () => {
       // Range should not include the ^id line
       expect(block.range.start.line).toBe(0);
       expect(block.range.end.line).toBe(1);
+      // markerRange: line 2 (0-indexed), columns 2-9 (after "> ")
+      expect(block.markerRange.start.line).toBe(2);
+      expect(block.markerRange.start.character).toBe(2); // after "> "
+      expect(block.markerRange.end.line).toBe(2);
+      expect(block.markerRange.end.character).toBe(2 + 1 + 'myquote'.length); // "^myquote"
     });
 
     it('should handle multiple full-line block IDs in the same document', () => {

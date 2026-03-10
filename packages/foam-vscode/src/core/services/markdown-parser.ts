@@ -199,8 +199,9 @@ export function createMarkdownParser(
   const cachedParser: ResourceParser = {
     parse: (uri: URI, markdown: string): Resource => {
       const actualChecksum = hash(markdown);
-      if (cache.has(uri)) {
-        const { checksum, resource } = cache.get(uri);
+      const cached = cache.get(uri);
+      if (cached) {
+        const { checksum, resource } = cached;
         if (actualChecksum === checksum) {
           return resource;
         }
@@ -389,7 +390,7 @@ const FULL_LINE_SIBLING_TYPES: Record<string, BlockType> = {
 
 const blocksPlugin: ParserPlugin = {
   name: 'blocks',
-  visit: (node, note) => {
+  visit: (node, note, noteSource) => {
     const blockType = BLOCK_NODE_TYPES[node.type];
     if (!blockType) {
       return;
@@ -436,10 +437,38 @@ const blocksPlugin: ParserPlugin = {
           }
         : node.position!;
 
+    // The marker end position: for list-items the ^id is on the first
+    // paragraph's line, not necessarily the listItem's last line.
+    const markerEndPos =
+      blockType === 'list-item'
+        ? ((node as any).children?.find((c: any) => c.type === 'paragraph')
+            ?.position?.end ?? node.position!.end)
+        : node.position!.end;
+
+    const markerRange =
+      whitespace === '\n' && blockType === 'blockquote'
+        ? // Own-line marker: the ^id is on the last line, possibly prefixed by "> ".
+          // Find the actual column by scanning the source line.
+          (() => {
+            const markerLine = node.position!.end.line - 1; // 0-indexed
+            const sourceLine = noteSource.split('\n')[markerLine] ?? '';
+            const markerCol = sourceLine.indexOf(`^${id}`);
+            const col = markerCol >= 0 ? markerCol : 0;
+            return Range.create(markerLine, col, markerLine, col + id.length + 1);
+          })()
+        : // Inline marker: ' ^id' at the end of the element's last line.
+          Range.create(
+            markerEndPos.line - 1,
+            markerEndPos.column - 1 - (id.length + 2), // space + '^' + id
+            markerEndPos.line - 1,
+            markerEndPos.column - 1
+          );
+
     note.blocks.push({
       id,
       type: blockType,
       range: astPositionToFoamRange(pos),
+      markerRange,
     });
   },
 
@@ -474,6 +503,13 @@ const blocksPlugin: ParserPlugin = {
                   id,
                   type: FULL_LINE_SIBLING_TYPES[current.type],
                   range: astPositionToFoamRange(current.position),
+                  // Marker is the ^id paragraph on its own line.
+                  markerRange: Range.create(
+                    next.position.start.line - 1,
+                    0,
+                    next.position.start.line - 1,
+                    id.length + 1
+                  ),
                 });
               }
             }
@@ -503,6 +539,13 @@ const blocksPlugin: ParserPlugin = {
             id,
             type: 'list',
             range: astPositionToFoamRange(adjustedPos),
+            // Marker is ^id on the original last line of the list.
+            markerRange: Range.create(
+              current.position.end.line - 1,
+              0,
+              current.position.end.line - 1,
+              id.length + 1
+            ),
           });
         }
       }

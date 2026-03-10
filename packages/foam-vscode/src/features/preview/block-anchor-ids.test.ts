@@ -147,5 +147,31 @@ describe('block anchor id injection', () => {
       expect(result).toContain('<ol id="__orderedlist">');
       expect(result).not.toContain('^orderedlist');
     });
+
+    describe('blockquote block IDs', () => {
+      it('anchors a blockquote when ^id is on its own line right after (lazy continuation)', () => {
+        // markdown-it absorbs ^id into the blockquote via lazy continuation,
+        // so the id ends up as an attribute on <blockquote> rather than a
+        // standalone <a> element (which is used for the blank-line case).
+        const result = md.render('> First line\n> Second line\n^myquote');
+        expect(result).toContain('id="__myquote"');
+        expect(result).not.toContain('^myquote');
+      });
+
+      it('inserts anchor before a blockquote when ^id is separated by one blank line', () => {
+        const result = md.render('> First line\n> Second line\n\n^myquote');
+        expect(result).toContain('<a id="__myquote" aria-hidden="true"></a>');
+        expect(result).not.toContain('^myquote');
+        expect(result.indexOf('<a id="__myquote"')).toBeLessThan(
+          result.indexOf('<blockquote>')
+        );
+      });
+
+      it('sets an anchor when ^id is the last line inside the blockquote', () => {
+        const result = md.render('> First line\n> Second line\n> ^myquote');
+        expect(result).toContain('id="__myquote"');
+        expect(result).not.toContain('^myquote');
+      });
+    });
   });
 });

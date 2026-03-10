@@ -990,10 +990,35 @@ describe('block anchor extraction', () => {
       expect(note.blocks.find(b => b.id === 'mytable')).toBeUndefined();
     });
 
-    it('should extract a full-line block ID after a blockquote', () => {
+    it('should extract a full-line block ID right after a blockquote (lazy continuation, no blank line)', () => {
       const note = parser.parse(
         URI.file('/path/note.md'),
         '> First line\n> Second line\n^myquote'
+      );
+      const block = note.blocks.find(b => b.id === 'myquote');
+      expect(block).toBeDefined();
+      expect(block.type).toBe('blockquote');
+      // Range should not include the ^id line
+      expect(block.range.start.line).toBe(0);
+      expect(block.range.end.line).toBe(1);
+    });
+
+    it('should extract a full-line block ID after a blockquote separated by one blank line', () => {
+      const note = parser.parse(
+        URI.file('/path/note.md'),
+        '> First line\n> Second line\n\n^myquote'
+      );
+      const block = note.blocks.find(b => b.id === 'myquote');
+      expect(block).toBeDefined();
+      expect(block.type).toBe('blockquote');
+      expect(block.range.start.line).toBe(0);
+      expect(block.range.end.line).toBe(1);
+    });
+
+    it('should extract a full-line block ID as the last line inside a blockquote', () => {
+      const note = parser.parse(
+        URI.file('/path/note.md'),
+        '> First line\n> Second line\n> ^myquote'
       );
       const block = note.blocks.find(b => b.id === 'myquote');
       expect(block).toBeDefined();

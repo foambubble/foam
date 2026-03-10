@@ -384,6 +384,7 @@ const BLOCK_NODE_TYPES: Record<string, BlockType> = {
 const FULL_LINE_SIBLING_TYPES: Record<string, BlockType> = {
   code: 'code',
   table: 'table',
+  blockquote: 'blockquote',
 };
 
 const blocksPlugin: ParserPlugin = {

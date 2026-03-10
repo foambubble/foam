@@ -223,6 +223,27 @@ export const markdownItBlockAnchorIds = (md: markdownit) => {
           continue;
         }
         anchorBeforeIdx = tableOpenIdx;
+      } else if (prevToken?.type === 'blockquote_close') {
+        // ^id as standalone paragraph after a blockquote (blank-line case).
+        const bqOpenIdx = findMatchingOpen(
+          tokens,
+          i - 3,
+          'blockquote_open',
+          'blockquote_close'
+        );
+        if (bqOpenIdx === -1) {
+          continue;
+        }
+        // Allow up to one blank line.
+        const bqEnd = tokens[bqOpenIdx].map?.[1];
+        if (
+          bqEnd !== undefined &&
+          paraStart !== undefined &&
+          paraStart > bqEnd + 1
+        ) {
+          continue;
+        }
+        anchorBeforeIdx = bqOpenIdx;
       }
 
       if (anchorBeforeIdx === -1) {
@@ -297,46 +318,65 @@ export const markdownItBlockAnchorIds = (md: markdownit) => {
         continue;
       }
 
-      // List case: inline content ends with "\n^id" (own-line anchor in last item).
-      const listIdMatch = token.content.match(TRAILING_OWN_LINE_ANCHOR_RE);
-      if (listIdMatch) {
-        const blockId = listIdMatch[1];
+      // List/blockquote case: inline content ends with "\n^id".
+      // For lists: the ^id is absorbed into the last list item's inline content.
+      // For blockquotes: the ^id is on its own `> ^id` line or lazy-continuation
+      // line immediately after the blockquote (no blank line).
+      const ownLineMatch = token.content.match(TRAILING_OWN_LINE_ANCHOR_RE);
+      if (ownLineMatch) {
+        const blockId = ownLineMatch[1];
 
-        // Find the enclosing list open (bullet or ordered).
-        let listOpenIdx = -1;
-        let listOpenType = '';
+        // Walk backward to find the nearest enclosing block container.
+        // We stop at blockquote_open, bullet_list_open, or ordered_list_open,
+        // accounting for nesting depth of all three types.
+        let containerOpenIdx = -1;
+        let containerType = '';
+        let depth = 0;
         for (let j = i - 1; j >= 0; j--) {
+          const t = tokens[j];
           if (
-            tokens[j].type === 'bullet_list_open' ||
-            tokens[j].type === 'ordered_list_open'
+            t.type === 'blockquote_close' ||
+            t.type === 'bullet_list_close' ||
+            t.type === 'ordered_list_close'
           ) {
-            listOpenIdx = j;
-            listOpenType = tokens[j].type;
-            break;
+            depth++;
+          } else if (
+            t.type === 'blockquote_open' ||
+            t.type === 'bullet_list_open' ||
+            t.type === 'ordered_list_open'
+          ) {
+            if (depth === 0) {
+              containerOpenIdx = j;
+              containerType = t.type;
+              break;
+            }
+            depth--;
           }
         }
-        if (listOpenIdx === -1) {
+        if (containerOpenIdx === -1) {
           continue;
         }
 
-        // Find the matching list close to confirm this is the outermost list.
-        const listCloseType =
-          listOpenType === 'bullet_list_open'
-            ? 'bullet_list_close'
-            : 'ordered_list_close';
-        let listCloseIdx = -1;
-        for (let j = i + 1; j < tokens.length; j++) {
-          if (tokens[j].type === listCloseType) {
-            listCloseIdx = j;
-            break;
+        if (containerType !== 'blockquote_open') {
+          // List: verify a matching close exists after the inline token.
+          const listCloseType =
+            containerType === 'bullet_list_open'
+              ? 'bullet_list_close'
+              : 'ordered_list_close';
+          let listCloseIdx = -1;
+          for (let j = i + 1; j < tokens.length; j++) {
+            if (tokens[j].type === listCloseType) {
+              listCloseIdx = j;
+              break;
+            }
+          }
+          if (listCloseIdx === -1) {
+            continue;
           }
         }
-        if (listCloseIdx === -1) {
-          continue;
-        }
 
-        // Set the id on the list_open token.
-        tokens[listOpenIdx].attrSet('id', `__${blockId}`);
+        // Set the id on the container's open token.
+        tokens[containerOpenIdx].attrSet('id', `__${blockId}`);
 
         // Strip "\n^id" from the inline content and children.
         // The \n is a softbreak child token and ^id is a separate text child,

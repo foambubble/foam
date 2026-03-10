@@ -51,16 +51,29 @@ The anchor applies to the heading line itself, not the entire section below it.
 
 ### Blockquote
 
+Three placements are supported:
+
+**As the last line inside the blockquote:**
+
 ```markdown
 > The only way to do great work is to love what you do.
-^jobs-quote
+> ^jobs-quote
 ```
 
-For multi-line blockquotes, place `^id` on its own line immediately after the last `>` line (useful if your markdown formatter requires an empty line to not merge the blockquote):
+**On its own line immediately after the blockquote:**
 
 ```markdown
 > We shall fight on the beaches,
 > we shall fight on the landing grounds.
+^churchill-beaches
+```
+
+**After the blockquote with a blank line** (useful if your markdown formatter inserts one):
+
+```markdown
+> We shall fight on the beaches,
+> we shall fight on the landing grounds.
+
 ^churchill-beaches
 ```
 

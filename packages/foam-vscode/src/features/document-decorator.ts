@@ -18,8 +18,6 @@ const blockAnchorDecoration = vscode.window.createTextEditorDecorationType({
   opacity: '0.5',
 });
 
-const BLOCK_ANCHOR_LINE_REGEX = /(\s\^[a-zA-Z0-9-]+)$/;
-
 const updateDecorations =
   (parser: ResourceParser, workspace: FoamWorkspace) =>
   (editor: vscode.TextEditor) => {
@@ -46,18 +44,18 @@ const updateDecorations =
     });
     editor.setDecorations(placeholderDecoration, placeholderRanges);
 
-    const blockAnchorRanges = [];
-    for (let i = 0; i < editor.document.lineCount; i++) {
-      const line = editor.document.lineAt(i);
-      const match = BLOCK_ANCHOR_LINE_REGEX.exec(line.text);
-      if (match) {
-        const start = line.range.end.character - match[1].length;
-        blockAnchorRanges.push(
-          Range.create(i, start, i, line.range.end.character)
-        );
-      }
-    }
-    editor.setDecorations(blockAnchorDecoration, blockAnchorRanges);
+    editor.setDecorations(
+      blockAnchorDecoration,
+      note.blocks.map(
+        b =>
+          new vscode.Range(
+            b.markerRange.start.line,
+            b.markerRange.start.character,
+            b.markerRange.end.line,
+            b.markerRange.end.character
+          )
+      )
+    );
   };
 
 export default async function activate(

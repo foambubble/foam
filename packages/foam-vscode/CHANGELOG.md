@@ -4,6 +4,18 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## 0.32.0
+
+Features:
+
+- Added support for block-level identifiers, enabling `[[note#^id]]` and `![[note#^id]]` links and embeds (#1593)
+- Directory links now resolve to index files (e.g. `[[bar]]` resolves to `bar/index.md` or `bar/README.md`) (#1591)
+
+Fixes and Improvements:
+
+- Don't create a new note when a markdown link targets an existing file (#1379)
+- Delegate markdown link syncing on file move/rename to VS Code built-in (#1069)
+
 ## 0.31.0
 
 Fixes and Improvements:

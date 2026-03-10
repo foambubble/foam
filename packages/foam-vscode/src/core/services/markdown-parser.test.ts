@@ -344,6 +344,17 @@ source: https://example.com/page:123
       expect(note.properties.source).toBe('https://example.com/page:123');
       expect(note.tags[0].label).toEqual('test');
     });
+
+    it('#1455 - should parse tags when another field has a datetime value with colons', () => {
+      const note = createNoteFromMarkdown(`
+---
+date: 2025-04-11T00:01:00+01:00
+tags:
+    - new
+---
+`);
+      expect(note.tags.map(t => t.label)).toContain('new');
+    });
   });
 
   describe('Tags', () => {

@@ -1,1 +1,1 @@
-yarn lint
+npx yarn lint

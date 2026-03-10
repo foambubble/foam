@@ -460,10 +460,10 @@ const blocksPlugin: ParserPlugin = {
               col + id.length + 1
             );
           })()
-        : // Inline marker: ' ^id' at the end of the element's last line.
+        : // Inline marker: '^id' at the end of the element's last line (space excluded).
           Range.create(
             markerEndPos.line - 1,
-            markerEndPos.column - 1 - (id.length + 2), // space + '^' + id
+            markerEndPos.column - 1 - (id.length + 1), // '^' + id
             markerEndPos.line - 1,
             markerEndPos.column - 1
           );

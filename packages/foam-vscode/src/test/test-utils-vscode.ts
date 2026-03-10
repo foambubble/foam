@@ -25,10 +25,19 @@ export function makeFoamMock() {
   return { workspace: new FoamWorkspace(roots) } as any;
 }
 
-export const cleanWorkspace = async (timeout = 5000) => {
+/**
+ * Deletes all files in the workspace, except for .vscode and .keep files.
+ * Optionally waits for the Foam workspace to be empty after the cleanup.
+ *
+ * @param timeout if > 0, wait for the Foam workspace to be empty after cleanup, with this timeout
+ * @returns a promise that resolves when the cleanup (and optional wait) is complete
+ */
+export const cleanWorkspace = async (timeout = 0) => {
   const files = await vscode.workspace.findFiles('**', '{.vscode,.keep}');
   await Promise.all(files.map(f => deleteFile(fromVsCodeUri(f))));
-  await waitForEmptyFoamWorkspace(timeout);
+  if (timeout > 0) {
+    await waitForEmptyFoamWorkspace(timeout);
+  }
 };
 
 export const showInEditor = async (uri: URI) => {

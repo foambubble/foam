@@ -10,7 +10,7 @@ import { BUILD_EMBEDDINGS_COMMAND } from './build-embeddings';
 
 describe('build-embeddings command', () => {
   it('should complete successfully with no notes to analyze', async () => {
-    await cleanWorkspace();
+    await cleanWorkspace(5000);
 
     const showInfoSpy = jest
       .spyOn(vscode.window, 'showInformationMessage')
@@ -29,7 +29,7 @@ describe('build-embeddings command', () => {
   });
 
   it('should analyze notes and report completion', async () => {
-    await cleanWorkspace();
+    await cleanWorkspace(5000);
     const note1 = await createFile('# Note 1\nContent here', ['note1.md']);
     const note2 = await createFile('# Note 2\nMore content', ['note2.md']);
 
@@ -55,7 +55,7 @@ describe('build-embeddings command', () => {
   });
 
   it('should return cancelled status when operation is cancelled', async () => {
-    await cleanWorkspace();
+    await cleanWorkspace(5000);
     const note1 = await createFile('# Note 1\nContent', ['note1.md']);
     await waitForNoteInFoamWorkspace(note1.uri);
 

@@ -25,9 +25,10 @@ export function makeFoamMock() {
   return { workspace: new FoamWorkspace(roots) } as any;
 }
 
-export const cleanWorkspace = async () => {
+export const cleanWorkspace = async (timeout = 5000) => {
   const files = await vscode.workspace.findFiles('**', '{.vscode,.keep}');
   await Promise.all(files.map(f => deleteFile(fromVsCodeUri(f))));
+  await waitForEmptyFoamWorkspace(timeout);
 };
 
 export const showInEditor = async (uri: URI) => {
@@ -85,7 +86,6 @@ export const waitForNoteInFoamWorkspace = async (uri: URI, timeout = 5000) => {
   const foam = await getFoamFromVSCode();
   const workspace = foam.workspace;
 
-  // Wait for the workspace to discover the note
   while (Date.now() - start < timeout) {
     if (workspace.find(uri.path)) {
       return true;
@@ -94,6 +94,41 @@ export const waitForNoteInFoamWorkspace = async (uri: URI, timeout = 5000) => {
   }
   throw new Error(
     `Timeout waiting for note ${uri.toString()} in Foam workspace`
+  );
+};
+
+export const waitForNoteRemovedFromFoamWorkspace = async (
+  uri: URI,
+  timeout = 5000
+) => {
+  const start = Date.now();
+  const foam = await getFoamFromVSCode();
+  const workspace = foam.workspace;
+
+  while (Date.now() - start < timeout) {
+    if (!workspace.find(uri.path)) {
+      return true;
+    }
+    await wait(100);
+  }
+  throw new Error(
+    `Timeout waiting for note ${uri.toString()} to be removed from Foam workspace`
+  );
+};
+
+export const waitForEmptyFoamWorkspace = async (timeout = 5000) => {
+  const start = Date.now();
+  const foam = await getFoamFromVSCode();
+  const workspace = foam.workspace;
+
+  while (Date.now() - start < timeout) {
+    if (workspace.list().length === 0) {
+      return true;
+    }
+    await wait(100);
+  }
+  throw new Error(
+    `Timeout waiting for Foam workspace to be empty (${workspace.list().length} resources remaining)`
   );
 };
 

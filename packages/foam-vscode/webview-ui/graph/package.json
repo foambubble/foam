@@ -1,6 +1,6 @@
 {
   "name": "@foam/graph",
-  "version": "0.31.0",
+  "version": "0.32.0",
   "description": "Foam graph visualization web component",
   "license": "MIT",
   "type": "module",

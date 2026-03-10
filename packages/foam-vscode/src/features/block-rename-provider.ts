@@ -6,7 +6,11 @@ import { Resource } from '../core/model/note';
 import { HeadingEdit } from '../core/services/heading-edit';
 import { WorkspaceTextEdit } from '../core/services/text-edit';
 import { Logger } from '../core/utils/log';
-import { fromVsCodeUri, toVsCodeRange, toVsCodeWorkspaceEdit } from '../utils/vsc-utils';
+import {
+  fromVsCodeUri,
+  toVsCodeRange,
+  toVsCodeWorkspaceEdit,
+} from '../utils/vsc-utils';
 
 export default async function activate(
   context: vscode.ExtensionContext,

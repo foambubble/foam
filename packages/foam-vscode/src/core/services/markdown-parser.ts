@@ -199,9 +199,8 @@ export function createMarkdownParser(
   const cachedParser: ResourceParser = {
     parse: (uri: URI, markdown: string): Resource => {
       const actualChecksum = hash(markdown);
-      const cached = cache.get(uri);
-      if (cached) {
-        const { checksum, resource } = cached;
+      if (cache.has(uri)) {
+        const { checksum, resource } = cache.get(uri);
         if (actualChecksum === checksum) {
           return resource;
         }

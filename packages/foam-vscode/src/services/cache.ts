@@ -13,9 +13,15 @@ import { Logger } from '../core/utils/log';
  * It's not a perfect solution, but it's a good start.
  *
  * We use the URI and a checksum of the markdown file to cache the resource.
+ *
+ * Bump CACHE_VERSION whenever the cached Resource schema changes (e.g. new
+ * fields added to Block, ResourceLink, etc.) so stale persisted entries are
+ * discarded automatically on the next startup.
  */
 export default class VsCodeBasedParserCache implements ParserCache {
   static CACHE_NAME = 'foam-cache';
+  static CACHE_VERSION = 2;
+  static CACHE_VERSION_KEY = 'foam-cache-version';
   private _cache: LRU<string, ParserCacheEntry>;
 
   constructor(private context: ExtensionContext, size = 10000) {
@@ -24,15 +30,31 @@ export default class VsCodeBasedParserCache implements ParserCache {
       updateAgeOnGet: true,
       updateAgeOnHas: false,
     });
-    const source = context.workspaceState.get(
-      VsCodeBasedParserCache.CACHE_NAME,
-      []
+
+    const storedVersion = context.workspaceState.get<number>(
+      VsCodeBasedParserCache.CACHE_VERSION_KEY,
+      0
     );
-    try {
-      this._cache.load(source);
-    } catch (e) {
-      Logger.warn(`Failed to load cache: ${e}`);
+    if (storedVersion !== VsCodeBasedParserCache.CACHE_VERSION) {
+      Logger.debug(
+        `Cache version mismatch (stored: ${storedVersion}, current: ${VsCodeBasedParserCache.CACHE_VERSION}) — clearing cache`
+      );
       this.clear();
+      context.workspaceState.update(
+        VsCodeBasedParserCache.CACHE_VERSION_KEY,
+        VsCodeBasedParserCache.CACHE_VERSION
+      );
+    } else {
+      const source = context.workspaceState.get(
+        VsCodeBasedParserCache.CACHE_NAME,
+        []
+      );
+      try {
+        this._cache.load(source);
+      } catch (e) {
+        Logger.warn(`Failed to load cache: ${e}`);
+        this.clear();
+      }
     }
     Logger.debug('Cache size: ' + this._cache.size);
   }

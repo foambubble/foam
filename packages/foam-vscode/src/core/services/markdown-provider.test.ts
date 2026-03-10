@@ -476,7 +476,10 @@ describe('Generation of markdown references', () => {
   it('should generate correct reference URL when wikilink resolves to a directory index file', () => {
     const workspace = createTestWorkspace();
     const noteA = createNoteFromMarkdown('Link to [[bar]]', '/root/page-a.md');
-    const index = createTestNote({ uri: '/root/bar/index.md', title: 'Bar Index' });
+    const index = createTestNote({
+      uri: '/root/bar/index.md',
+      title: 'Bar Index',
+    });
     workspace.set(noteA).set(index);
 
     const references = createMarkdownReferences(workspace, noteA.uri, false);

@@ -20,19 +20,16 @@
     "test": "yarn workspace foam-vscode test",
     "test:unit": "yarn workspace foam-vscode test:unit",
     "lint": "lerna run lint",
-    "watch": "lerna run watch --concurrency 20"
+    "watch": "lerna run watch --concurrency 20",
+    "prepare": "husky"
   },
   "devDependencies": {
     "all-contributors-cli": "^6.16.1",
+    "husky": "^9.1.7",
     "lerna": "^6.4.1"
   },
   "engines": {
     "node": ">=18"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "yarn lint"
-    }
   },
   "prettier": {
     "arrowParens": "avoid",

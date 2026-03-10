@@ -128,7 +128,9 @@ export const waitForEmptyFoamWorkspace = async (timeout = 5000) => {
     await wait(100);
   }
   throw new Error(
-    `Timeout waiting for Foam workspace to be empty (${workspace.list().length} resources remaining)`
+    `Timeout waiting for Foam workspace to be empty (${
+      workspace.list().length
+    } resources remaining)`
   );
 };
 

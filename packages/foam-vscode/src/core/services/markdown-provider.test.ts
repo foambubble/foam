@@ -1,11 +1,15 @@
 import { createMarkdownParser } from './markdown-parser';
-import { createMarkdownReferences } from './markdown-provider';
+import {
+  createMarkdownReferences,
+  MarkdownResourceProvider,
+} from './markdown-provider';
 import { Logger } from '../utils/log';
 import { URI } from '../model/uri';
 import {
   createTestNote,
   createTestWorkspace,
   getRandomURI,
+  InMemoryDataStore,
 } from '../../test/test-utils';
 
 Logger.setLevel('error');
@@ -874,5 +878,119 @@ describe('Directory link resolution', () => {
     ws.set(noteA).set(index);
     const result = ws.resolveLink(noteA, noteA.links[0]);
     expect(result.isPlaceholder()).toBe(true);
+  });
+});
+
+describe('Block link resolution', () => {
+  it('should resolve [[note#^blockid]] to a URI with ^blockid fragment', () => {
+    const workspace = createTestWorkspace();
+    const noteA = createNoteFromMarkdown(
+      'Link to [[note-b#^myblock]]',
+      '/root/note-a.md'
+    );
+    const noteB = createNoteFromMarkdown(
+      'A paragraph ^myblock',
+      '/root/note-b.md'
+    );
+    workspace.set(noteA).set(noteB);
+    const result = workspace.resolveLink(noteA, noteA.links[0]);
+    expect(result.path).toEqual(noteB.uri.path);
+    expect(result.fragment).toEqual('^myblock');
+  });
+
+  it('should resolve [[#^blockid]] self-reference with ^blockid fragment', () => {
+    const workspace = createTestWorkspace();
+    const noteA = createNoteFromMarkdown(
+      'Self link [[#^myblock]]\n\nA paragraph ^myblock',
+      '/root/note-a.md'
+    );
+    workspace.set(noteA);
+    const result = workspace.resolveLink(noteA, noteA.links[0]);
+    expect(result.path).toEqual(noteA.uri.path);
+    expect(result.fragment).toEqual('^myblock');
+  });
+
+  it('should resolve [[note#^blockid]] even when block does not exist (preserve fragment)', () => {
+    const workspace = createTestWorkspace();
+    const noteA = createNoteFromMarkdown(
+      'Link to [[note-b#^ghost]]',
+      '/root/note-a.md'
+    );
+    const noteB = createNoteFromMarkdown('No anchors here', '/root/note-b.md');
+    workspace.set(noteA).set(noteB);
+    const result = workspace.resolveLink(noteA, noteA.links[0]);
+    expect(result.path).toEqual(noteB.uri.path);
+    expect(result.fragment).toEqual('^ghost');
+  });
+});
+
+describe('readAsMarkdown with block fragments', () => {
+  const mdParser = createMarkdownParser([]);
+
+  it('should return only the block content for a paragraph block', async () => {
+    const dataStore = new InMemoryDataStore();
+    const uri = URI.file('/root/note.md');
+    dataStore.set(
+      uri,
+      'First paragraph\n\nTarget paragraph ^myblock\n\nLast paragraph'
+    );
+    const provider = new MarkdownResourceProvider(dataStore, mdParser);
+    const result = await provider.readAsMarkdown(
+      uri.with({ fragment: '^myblock' })
+    );
+    expect(result).toContain('Target paragraph');
+    expect(result).not.toContain('First paragraph');
+    expect(result).not.toContain('Last paragraph');
+    // ^id marker should be stripped from output
+    expect(result).not.toContain('^myblock');
+  });
+
+  it('should return list item and sub-items for a list block', async () => {
+    const dataStore = new InMemoryDataStore();
+    const uri = URI.file('/root/note.md');
+    dataStore.set(
+      uri,
+      '- Other item\n- Parent item ^listblock\n  - Child 1\n  - Child 2\n- Another item'
+    );
+    const provider = new MarkdownResourceProvider(dataStore, mdParser);
+    const result = await provider.readAsMarkdown(
+      uri.with({ fragment: '^listblock' })
+    );
+    expect(result).toContain('Parent item');
+    expect(result).toContain('Child 1');
+    expect(result).toContain('Child 2');
+    expect(result).not.toContain('Other item');
+    expect(result).not.toContain('Another item');
+    expect(result).not.toContain('^listblock');
+  });
+
+  it('should return full section content for a heading block', async () => {
+    const dataStore = new InMemoryDataStore();
+    const uri = URI.file('/root/note.md');
+    dataStore.set(
+      uri,
+      '# Before\n\nSome text\n\n## My Heading ^headblock\n\nSection content\n\n# After'
+    );
+    const provider = new MarkdownResourceProvider(dataStore, mdParser);
+    const result = await provider.readAsMarkdown(
+      uri.with({ fragment: '^headblock' })
+    );
+    expect(result).toContain('My Heading');
+    expect(result).toContain('Section content');
+    expect(result).not.toContain('Before');
+    expect(result).not.toContain('After');
+    expect(result).not.toContain('^headblock');
+  });
+
+  it('should return full document when block fragment is not found', async () => {
+    const dataStore = new InMemoryDataStore();
+    const uri = URI.file('/root/note.md');
+    const content = 'A paragraph\n\nAnother paragraph';
+    dataStore.set(uri, content);
+    const provider = new MarkdownResourceProvider(dataStore, mdParser);
+    const result = await provider.readAsMarkdown(
+      uri.with({ fragment: '^ghost' })
+    );
+    expect(result).toEqual(content);
   });
 });

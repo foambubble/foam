@@ -259,6 +259,66 @@ Content of section 2
     );
   });
 
+  it('should return block IDs when fragment starts with ^', async () => {
+    const { uri, content } = await createFile(`
+A paragraph ^block-one
+
+Another paragraph ^block-two
+
+[[#^
+`);
+    ws.set(parser.parse(uri, content));
+
+    const { doc } = await showInEditor(uri);
+    const provider = new SectionCompletionProvider(ws);
+
+    const links = await provider.provideCompletionItems(
+      doc,
+      new vscode.Position(5, 5)
+    );
+
+    expect(new Set(links.items.map(i => i.label))).toEqual(
+      new Set(['^block-one', '^block-two'])
+    );
+  });
+
+  it('should return block IDs for another note when fragment starts with ^', async () => {
+    const { uri, content } = await createFile(`A paragraph ^myblock`, [
+      'note-with-blocks.md',
+    ]);
+    ws.set(parser.parse(uri, content));
+
+    const text = '[[note-with-blocks#^';
+    const { uri: fileUri } = await createFile(text);
+    const { doc } = await showInEditor(fileUri);
+    const provider = new SectionCompletionProvider(ws);
+
+    const links = await provider.provideCompletionItems(
+      doc,
+      new vscode.Position(0, text.length)
+    );
+
+    expect(links.items.map(i => i.label)).toContain('^myblock');
+    expect(links.items.find(i => i.label === '^myblock').detail).toBe(
+      'paragraph'
+    );
+  });
+
+  it('should return empty list when note has no block anchors', async () => {
+    const text = '[[file-name#^';
+    const { uri } = await createFile(text);
+    const { doc } = await showInEditor(uri);
+    const provider = new SectionCompletionProvider(ws);
+
+    const links = await provider.provideCompletionItems(
+      doc,
+      new vscode.Position(0, text.length)
+    );
+
+    // file-name.md has sections but no blocks
+    expect(links.items).toHaveLength(0);
+  });
+
   it('should return page alias', async () => {
     const { uri, content } = await createFile(
       `

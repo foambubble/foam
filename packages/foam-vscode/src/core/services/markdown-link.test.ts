@@ -81,6 +81,41 @@ describe('MarkdownLink', () => {
       expect(parsed.section).toEqual('section');
       expect(parsed.alias).toEqual('');
     });
+    it('should parse block anchor', () => {
+      const link = parser.parse(getRandomURI(), `this is a [[note#^myblock]]`)
+        .links[0];
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.target).toEqual('note');
+      expect(parsed.section).toEqual('');
+      expect(parsed.blockId).toEqual('myblock');
+      expect(parsed.alias).toEqual('');
+    });
+    it('should parse self-referencing block anchor', () => {
+      const link = parser.parse(getRandomURI(), `this is a [[#^myblock]]`)
+        .links[0];
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.target).toEqual('');
+      expect(parsed.section).toEqual('');
+      expect(parsed.blockId).toEqual('myblock');
+      expect(parsed.alias).toEqual('');
+    });
+    it('should parse block anchor with alias', () => {
+      const link = parser.parse(
+        getRandomURI(),
+        `this is a [[note#^myblock|My Alias]]`
+      ).links[0];
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.target).toEqual('note');
+      expect(parsed.blockId).toEqual('myblock');
+      expect(parsed.alias).toEqual('My Alias');
+    });
+    it('should not treat ^ in the middle of section as a block anchor', () => {
+      const link = parser.parse(getRandomURI(), `this is a [[note#foo^bar]]`)
+        .links[0];
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.section).toEqual('foo^bar');
+      expect(parsed.blockId).toEqual('');
+    });
   });
 
   describe('parse direct link', () => {
@@ -149,6 +184,26 @@ describe('MarkdownLink', () => {
       expect(parsed.target).toEqual('to/path.md');
       expect(parsed.section).toEqual('section');
       expect(parsed.alias).toEqual('');
+    });
+    it('should parse block anchor from a direct markdown link', () => {
+      const link = parser.parse(
+        getRandomURI(),
+        `this is a [text](note.md#^myblock)`
+      ).links[0];
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.target).toEqual('note.md');
+      expect(parsed.section).toEqual('');
+      expect(parsed.blockId).toEqual('myblock');
+      expect(parsed.alias).toEqual('text');
+    });
+    it('should not treat a regular section fragment as a block anchor in a direct link', () => {
+      const link = parser.parse(
+        getRandomURI(),
+        `this is a [text](note.md#section)`
+      ).links[0];
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.section).toEqual('section');
+      expect(parsed.blockId).toEqual('');
     });
   });
 
@@ -297,6 +352,16 @@ describe('MarkdownLink', () => {
     });
   });
 
+  describe('rename wikilink with block anchor', () => {
+    it('should preserve block anchor when renaming the target', () => {
+      const link = parser.parse(getRandomURI(), `[[note#^myblock]]`).links[0];
+      const edit = MarkdownLink.createUpdateLinkEdit(link, {
+        target: 'new-note',
+      });
+      expect(edit.newText).toEqual(`[[new-note#^myblock]]`);
+    });
+  });
+
   describe('rename direct link', () => {
     it('should rename the target only', () => {
       const link = parser.parse(getRandomURI(), `this is a [link](to/path.md)`)
@@ -340,6 +405,17 @@ describe('MarkdownLink', () => {
       });
       expect(edit.newText).toEqual(`[link](to/path.md)`);
       expect(edit.range).toEqual(link.range);
+    });
+  });
+
+  describe('rename direct link with block anchor', () => {
+    it('should preserve block anchor when renaming the target', () => {
+      const link = parser.parse(getRandomURI(), `[text](note.md#^myblock)`)
+        .links[0];
+      const edit = MarkdownLink.createUpdateLinkEdit(link, {
+        target: 'new-note.md',
+      });
+      expect(edit.newText).toEqual(`[text](new-note.md#^myblock)`);
     });
   });
 

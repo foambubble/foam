@@ -1,7 +1,12 @@
 import { debounce } from 'lodash';
 import * as vscode from 'vscode';
 import { Foam } from '../core/model/foam';
-import { Resource, ResourceParser } from '../core/model/note';
+import {
+  Block,
+  Resource,
+  ResourceLink,
+  ResourceParser,
+} from '../core/model/note';
 import { Range } from '../core/model/range';
 import { FoamWorkspace } from '../core/model/workspace';
 import { MarkdownLink } from '../core/services/markdown-link';
@@ -15,6 +20,8 @@ import { isNone } from '../core/utils';
 
 const AMBIGUOUS_IDENTIFIER_CODE = 'ambiguous-identifier';
 const UNKNOWN_SECTION_CODE = 'unknown-section';
+const UNKNOWN_BLOCK_CODE = 'unknown-block';
+const DUPLICATE_BLOCK_ID_CODE = 'duplicate-block-id';
 
 interface FoamCommand<T> {
   name: string;
@@ -130,7 +137,7 @@ export function updateDiagnostics(
 
     for (const link of resource.links) {
       if (link.type === 'wikilink') {
-        const { target, section } = MarkdownLink.analyzeLink(link);
+        const { target, section, blockId } = MarkdownLink.analyzeLink(link);
         const targets = workspace.listByIdentifier(target);
         if (targets.length > 1) {
           result.push({
@@ -156,12 +163,7 @@ export function updateDiagnostics(
         if (section && targets.length === 1) {
           const resource = targets[0];
           if (isNone(Resource.findSection(resource, section))) {
-            const range = Range.create(
-              link.range.start.line,
-              link.range.start.character + target.length + 2,
-              link.range.end.line,
-              link.range.end.character
-            );
+            const range = getFragmentDiagnosticRange(link, section);
             result.push({
               code: UNKNOWN_SECTION_CODE,
               message: `Cannot find section "${section}" in document, available sections are:`,
@@ -181,8 +183,67 @@ export function updateDiagnostics(
             });
           }
         }
+        if (blockId && targets.length === 1) {
+          const resource = targets[0];
+          if (isNone(Resource.findBlock(resource, blockId))) {
+            const range = getFragmentDiagnosticRange(link, `^${blockId}`);
+            result.push({
+              code: UNKNOWN_BLOCK_CODE,
+              message: `Cannot find block "^${blockId}" in document, available blocks are:`,
+              range: toVsCodeRange(range),
+              severity: vscode.DiagnosticSeverity.Warning,
+              source: 'Foam',
+              relatedInformation: resource.blocks.map(
+                b =>
+                  new vscode.DiagnosticRelatedInformation(
+                    new vscode.Location(
+                      toVsCodeUri(resource.uri),
+                      toVsCodeRange(b.markerRange)
+                    ),
+                    `^${b.id}`
+                  )
+              ),
+            });
+          }
+        }
       }
     }
+    // Detect duplicate block IDs within this document
+    const blocksByID = new Map<string, typeof resource.blocks>();
+    for (const block of resource.blocks) {
+      if (!blocksByID.has(block.id)) {
+        blocksByID.set(block.id, []);
+      }
+      blocksByID.get(block.id)!.push(block);
+    }
+    for (const [id, blocks] of blocksByID) {
+      if (blocks.length < 2) {
+        continue;
+      }
+      // Only flag the duplicates (2nd occurrence onwards); the first is fine.
+      for (const block of blocks.slice(1)) {
+        result.push({
+          code: DUPLICATE_BLOCK_ID_CODE,
+          message: `Duplicate block ID "^${id}" - ignored`,
+          range: toVsCodeRange(block.markerRange),
+          severity: vscode.DiagnosticSeverity.Warning,
+          source: 'Foam',
+          relatedInformation: blocks
+            .filter(b => b !== block)
+            .map(
+              b =>
+                new vscode.DiagnosticRelatedInformation(
+                  new vscode.Location(
+                    document.uri,
+                    toVsCodeRange(b.markerRange)
+                  ),
+                  `Other occurrence of "^${id}"`
+                )
+            ),
+        });
+      }
+    }
+
     if (result.length > 0) {
       collection.set(document.uri, result);
     }
@@ -230,6 +291,19 @@ export class IdentifierResolver implements vscode.CodeActionProvider {
         }
         return [...acc, ...res];
       }
+      if (diagnostic.code === UNKNOWN_BLOCK_CODE) {
+        const res: vscode.CodeAction[] = [];
+        const blockIds = diagnostic.relatedInformation.map(
+          info => info.message
+        );
+        for (const blockId of blockIds) {
+          res.push(createReplaceBlockCommand(diagnostic, blockId));
+        }
+        return [...acc, ...res];
+      }
+      if (diagnostic.code === DUPLICATE_BLOCK_ID_CODE) {
+        return [...acc, createReplaceBlockIdCommand(diagnostic)];
+      }
       return acc;
     }, [] as vscode.CodeAction[]);
   }
@@ -249,12 +323,94 @@ const createReplaceSectionCommand = (
     arguments: [
       {
         value: section,
-        range: new vscode.Range(
-          diagnostic.range.start.line,
-          diagnostic.range.start.character + 1,
-          diagnostic.range.end.line,
-          diagnostic.range.end.character - 2
-        ),
+        range: fragmentValueRange(diagnostic.range),
+      },
+    ],
+  };
+  action.diagnostics = [diagnostic];
+  return action;
+};
+
+const createReplaceBlockCommand = (
+  diagnostic: vscode.Diagnostic,
+  blockId: string
+): vscode.CodeAction => {
+  const action = new vscode.CodeAction(
+    `${blockId}`,
+    vscode.CodeActionKind.QuickFix
+  );
+  action.command = {
+    command: REPLACE_TEXT_COMMAND.name,
+    title: `Use block "${blockId}"`,
+    arguments: [
+      {
+        value: blockId,
+        range: fragmentValueRange(diagnostic.range),
+      },
+    ],
+  };
+  action.diagnostics = [diagnostic];
+  return action;
+};
+
+/**
+ * Returns the range covering `#fragment` in a wikilink. The range starts at
+ * `#` and ends immediately after the fragment text, before any alias `|` or
+ * closing `]]`. The caller supplies the already-parsed `fragment` string
+ * (e.g. `"Section 1"` or `"^blockid"`), so no secondary rawText scanning is
+ * needed.
+ */
+const getFragmentDiagnosticRange = (
+  link: ResourceLink,
+  fragment: string
+): Range => {
+  const hashPos = link.rawText.indexOf('#');
+  if (hashPos < 0) {
+    // No fragment — degenerate range at the link end
+    return Range.create(
+      link.range.end.line,
+      link.range.end.character,
+      link.range.end.line,
+      link.range.end.character
+    );
+  }
+
+  return Range.create(
+    link.range.start.line,
+    link.range.start.character + hashPos,
+    link.range.end.line,
+    link.range.start.character + hashPos + 1 + fragment.length
+  );
+};
+
+/**
+ * Given a diagnostic range that starts at `#` and ends just before `|` or
+ * `]]` (as guaranteed by `getFragmentDiagnosticRange`), return the range
+ * covering only the fragment value — i.e. everything after the `#`.
+ */
+const fragmentValueRange = (diagnosticRange: vscode.Range): vscode.Range =>
+  new vscode.Range(
+    diagnosticRange.start.line,
+    diagnosticRange.start.character + 1,
+    diagnosticRange.end.line,
+    diagnosticRange.end.character
+  );
+
+const createReplaceBlockIdCommand = (
+  diagnostic: vscode.Diagnostic
+): vscode.CodeAction => {
+  const newId = Block.generateId();
+  const action = new vscode.CodeAction(
+    'Replace with new ID',
+    vscode.CodeActionKind.QuickFix
+  );
+  action.command = {
+    command: REPLACE_TEXT_COMMAND.name,
+    title: 'Replace with new ID',
+    arguments: [
+      {
+        value: '^' + newId,
+        range: diagnostic.range,
       },
     ],
   };

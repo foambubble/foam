@@ -66,6 +66,7 @@ describe('FoamWorkspaceSymbolProvider', () => {
         title: 'Test Note',
         properties: {},
         sections: [],
+        blocks: [],
         tags: [],
         aliases: [
           {
@@ -92,6 +93,7 @@ describe('FoamWorkspaceSymbolProvider', () => {
         title: 'Test Note',
         properties: {},
         sections: [],
+        blocks: [],
         tags: [],
         aliases: [
           {
@@ -126,6 +128,7 @@ describe('FoamWorkspaceSymbolProvider', () => {
         title: 'Note 1',
         properties: {},
         sections: [],
+        blocks: [],
         tags: [],
         aliases: [
           {
@@ -142,6 +145,7 @@ describe('FoamWorkspaceSymbolProvider', () => {
         title: 'Note 2',
         properties: {},
         sections: [],
+        blocks: [],
         tags: [],
         aliases: [
           {
@@ -174,6 +178,7 @@ describe('FoamWorkspaceSymbolProvider', () => {
         title: 'Test Note',
         properties: {},
         sections: [],
+        blocks: [],
         tags: [],
         aliases: [
           {
@@ -206,6 +211,7 @@ describe('FoamWorkspaceSymbolProvider', () => {
         title: 'Test Note',
         properties: {},
         sections: [],
+        blocks: [],
         tags: [],
         aliases: [
           {

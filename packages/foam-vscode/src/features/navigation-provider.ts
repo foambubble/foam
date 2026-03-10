@@ -2,7 +2,13 @@ import * as vscode from 'vscode';
 import { toVsCodeRange, toVsCodeUri, fromVsCodeUri } from '../utils/vsc-utils';
 import { Foam } from '../core/model/foam';
 import { FoamWorkspace } from '../core/model/workspace';
-import { Resource, ResourceLink, ResourceParser } from '../core/model/note';
+import {
+  Block,
+  Resource,
+  ResourceLink,
+  ResourceParser,
+  Section,
+} from '../core/model/note';
 import { URI } from '../core/model/uri';
 import { Range } from '../core/model/range';
 import { FoamGraph } from '../core/model/graph';
@@ -170,14 +176,13 @@ export class NavigationProvider
     }
 
     const targetResource = this.workspace.get(uri);
-    const section = Resource.findSection(targetResource, uri.fragment);
+    const fragmentRange = resolveFragmentRange(targetResource, uri.fragment);
 
-    const targetRange = section
-      ? section.range
-      : Range.createFromPosition(Position.create(0, 0), Position.create(0, 0));
-    const targetSelectionRange = section
-      ? section.range
-      : Range.createFromPosition(targetRange.start);
+    const targetRange =
+      fragmentRange ??
+      Range.createFromPosition(Position.create(0, 0), Position.create(0, 0));
+    const targetSelectionRange =
+      fragmentRange ?? Range.createFromPosition(targetRange.start);
 
     const result: vscode.LocationLink = {
       originSelectionRange: new vscode.Range(
@@ -270,4 +275,22 @@ export class NavigationProvider
 
     return links.concat(tags);
   }
+}
+
+/**
+ * Returns the Range for a URI fragment, handling both section links
+ * (`#Heading`) and block anchor links (`#^blockid`).
+ * Returns null if the fragment is empty or not found.
+ */
+function resolveFragmentRange(
+  resource: Resource,
+  fragment: string
+): (Section | Block)['range'] | null {
+  if (!fragment) {
+    return null;
+  }
+  if (fragment.startsWith('^')) {
+    return Resource.findBlock(resource, fragment.slice(1))?.range ?? null;
+  }
+  return Resource.findSection(resource, fragment)?.range ?? null;
 }

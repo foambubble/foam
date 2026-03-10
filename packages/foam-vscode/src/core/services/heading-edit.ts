@@ -12,6 +12,128 @@ export interface HeadingEditResult {
 
 export abstract class HeadingEdit {
   /**
+   * Generate edits to update all links referencing block `^oldId` in the
+   * resource at `resourceUri`, renaming it to `^newId`.
+   *
+   * Does NOT include the edit to update the block anchor text itself — that is
+   * handled by the caller (the VS Code provider layer).
+   *
+   * Handles:
+   * - Wikilinks: `[[note#^oldId]]` → `[[note#^newId]]`
+   * - Direct markdown links: `[text](note.md#^oldId)` → `[text](note.md#^newId)`
+   * - Reference-style markdown links: updates the definition URL fragment
+   */
+  static createRenameBlockEdits(
+    graph: FoamGraph,
+    workspace: FoamWorkspace,
+    resourceUri: URI,
+    oldId: string,
+    newId: string
+  ): HeadingEditResult {
+    const backlinks = graph.getBacklinks(resourceUri);
+    const edits: WorkspaceTextEdit[] = [];
+    let totalOccurrences = 0;
+
+    for (const connection of backlinks) {
+      const link = connection.link;
+      let blockId: string;
+      try {
+        ({ blockId } = MarkdownLink.analyzeLink(link));
+      } catch {
+        continue;
+      }
+
+      if (link.type === 'link' && ResourceLink.isResolvedReference(link)) {
+        if (blockId !== oldId) {
+          continue;
+        }
+        const def = link.definition as NoteLinkDefinition;
+        if (!def.range) {
+          continue;
+        }
+        const hashIdx = def.url.lastIndexOf('#');
+        const newUrl =
+          hashIdx >= 0
+            ? def.url.slice(0, hashIdx + 1) + '^' + newId
+            : def.url + '#^' + newId;
+
+        totalOccurrences++;
+        edits.push({
+          uri: connection.source,
+          edit: {
+            range: def.range,
+            newText: NoteLinkDefinition.format({ ...def, url: newUrl }),
+          },
+        });
+      } else if (
+        link.type === 'wikilink' &&
+        ResourceLink.isResolvedReference(link)
+      ) {
+        const def = link.definition as NoteLinkDefinition;
+        const rawTextMatchesBlock = blockId === oldId;
+        const defHashIdx = def.url.lastIndexOf('#');
+        const defFragment =
+          defHashIdx >= 0 ? def.url.slice(defHashIdx + 1) : '';
+        const defBlockMatch = defFragment.match(/^\^([a-zA-Z0-9-]+)$/);
+        const defBlockId = defBlockMatch?.[1] ?? '';
+        const defMatchesBlock = defBlockId === oldId;
+
+        if (!rawTextMatchesBlock && !defMatchesBlock) {
+          continue;
+        }
+
+        totalOccurrences++;
+
+        if (rawTextMatchesBlock) {
+          edits.push({
+            uri: connection.source,
+            edit: MarkdownLink.createUpdateLinkEdit(link, {
+              section: '^' + newId,
+            }),
+          });
+        }
+
+        if (defMatchesBlock && def.range) {
+          const newUrl = def.url.slice(0, defHashIdx + 1) + '^' + newId;
+          const labelHashIdx = def.label.lastIndexOf('#');
+          const labelFragment =
+            labelHashIdx >= 0 ? def.label.slice(labelHashIdx + 1) : '';
+          const labelBlockMatch = labelFragment.match(/^\^([a-zA-Z0-9-]+)$/);
+          const newDefLabel =
+            labelBlockMatch?.[1] === oldId
+              ? def.label.slice(0, labelHashIdx + 1) + '^' + newId
+              : def.label;
+
+          edits.push({
+            uri: connection.source,
+            edit: {
+              range: def.range,
+              newText: NoteLinkDefinition.format({
+                ...def,
+                label: newDefLabel,
+                url: newUrl,
+              }),
+            },
+          });
+        }
+      } else {
+        if (blockId !== oldId) {
+          continue;
+        }
+        totalOccurrences++;
+        edits.push({
+          uri: connection.source,
+          edit: MarkdownLink.createUpdateLinkEdit(link, {
+            section: '^' + newId,
+          }),
+        });
+      }
+    }
+
+    return { edits, totalOccurrences };
+  }
+
+  /**
    * Generate edits to update all links referencing `oldLabel` section in
    * the resource at `resourceUri`, renaming it to `newLabel`.
    *

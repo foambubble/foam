@@ -82,6 +82,32 @@ describe('Link generation in preview', () => {
     );
   });
 
+  it('generates a link to a note with a specific block anchor', () => {
+    // label/title show '#^blockid' for user clarity; href uses bare '#blockid'
+    // so VS Code's querySelector-based scroll handler doesn't throw on '^'
+    expect(md.render(`[[note-b#^myblock]]`)).toEqual(
+      `<p><a class='foam-note-link' title='My second note#^myblock' href='/path2/to/note-b.md#__myblock' data-href='/path2/to/note-b.md#__myblock'>${noteB.title}#^myblock</a></p>\n`
+    );
+  });
+
+  it('generates a link to a note with a block anchor and an alias', () => {
+    expect(md.render(`[[note-b#^myblock|this block]]`)).toEqual(
+      `<p><a class='foam-note-link' title='My second note#^myblock' href='/path2/to/note-b.md#__myblock' data-href='/path2/to/note-b.md#__myblock'>this block</a></p>\n`
+    );
+  });
+
+  it('generates a self-referencing block anchor link', () => {
+    expect(md.render(`[[#^localblock]]`)).toEqual(
+      `<p><a class='foam-note-link' title='^localblock' href='#__localblock' data-href='#__localblock'>#^localblock</a></p>\n`
+    );
+  });
+
+  it('generates a placeholder link if the note does not exist and a block anchor is specified', () => {
+    expect(md.render(`[[ghost#^someid]]`)).toEqual(
+      `<p><a class='foam-placeholder-link' title="Link to non-existing resource" href="javascript:void(0);">ghost#^someid</a></p>\n`
+    );
+  });
+
   it('generates a placeholder link if the note does not exist and a section is specified', () => {
     expect(md.render(`[[placeholder#sec2]]`)).toEqual(
       `<p><a class='foam-placeholder-link' title="Link to non-existing resource" href="javascript:void(0);">placeholder#sec2</a></p>\n`

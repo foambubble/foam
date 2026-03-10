@@ -16,6 +16,13 @@ Foam is also meant to be extensible, so you can integrate with its internals to 
 
 ## Features
 
+### Block anchors
+
+Link or embed specific paragraphs, list items, headings, and blockquotes within a note using `[[note#^blockid]]` syntax.
+Add a `^id` marker to any block element, then reference it from anywhere in your knowledge base.
+Foam warns you about broken block links and duplicate IDs, with quick-fixes to resolve them.
+Rename a block ID with `F2` and all backlinks update automatically.
+
 ### Graph Visualization
 
 See how your notes are connected via a [graph](https://foambubble.github.io/foam/user/features/graph-visualization) with the `Foam: Show Graph` command.

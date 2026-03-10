@@ -7,6 +7,7 @@ Foam is a personal knowledge management system built on [Visual Studio Code](htt
 ## Key Features
 
 - **Wikilinks** - Connect thoughts with `[[double bracket]]` syntax
+- **Block anchors** - Link or embed specific paragraphs, list items, and headings with `[[note#^id]]`
 - **Embeds** - Include content from other notes with `![[note]]` syntax
 - **Backlinks** - Automatically discover connections between notes
 - **Graph visualization** - See your knowledge network visually
@@ -36,6 +37,7 @@ Foam is like a bathtub: _What you get out of it depends on what you put into it.
 ## Features
 
 - [[wikilinks]]
+- [[block-anchors]]
 - [[embeds]]
 - [[tags]]
 - [[backlinking]]
@@ -77,6 +79,7 @@ See [[publishing]] for more details.
 [sync-notes]: getting-started/sync-notes.md "Sync notes with source control"
 [keyboard-shortcuts]: getting-started/keyboard-shortcuts.md "Keyboard Shortcuts"
 [wikilinks]: features/wikilinks.md "Wikilinks"
+[block-anchors]: features/block-anchors.md "Block Anchors"
 [embeds]: features/embeds.md "Note Embeds"
 [tags]: features/tags.md "Tags"
 [backlinking]: features/backlinking.md "Backlinks"

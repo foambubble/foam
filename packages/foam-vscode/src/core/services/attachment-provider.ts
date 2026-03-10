@@ -24,6 +24,7 @@ const asResource = (uri: URI): Resource => {
     aliases: [],
     properties: { type: type },
     sections: [],
+    blocks: [],
     links: [],
     tags: [],
   };

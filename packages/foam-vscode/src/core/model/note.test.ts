@@ -1,7 +1,7 @@
 import { createNoteFromMarkdown } from '../../test/test-utils';
 import { Position } from './position';
 import { URI } from './uri';
-import { Resource } from './note';
+import { Resource, Block } from './note';
 
 describe('Resource', () => {
   describe('getSectionAtPosition', () => {
@@ -106,6 +106,26 @@ Content two.
         Position.create(99, 0)
       );
       expect(section).toBeUndefined();
+    });
+  });
+});
+
+describe('Block', () => {
+  describe('generateId', () => {
+    it('should return a non-empty string', () => {
+      expect(Block.generateId().length).toBeGreaterThan(0);
+    });
+
+    it('should only contain characters valid in a block anchor ([a-z0-9])', () => {
+      for (let i = 0; i < 50; i++) {
+        expect(Block.generateId()).toMatch(/^[a-z0-9]+$/);
+      }
+    });
+
+    it('should return different values on successive calls', () => {
+      const ids = new Set(Array.from({ length: 20 }, () => Block.generateId()));
+      // Extremely unlikely to collide 20 times in a row
+      expect(ids.size).toBeGreaterThan(1);
     });
   });
 });

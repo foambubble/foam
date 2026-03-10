@@ -6,6 +6,151 @@ import { FoamGraph } from '../model/graph';
 import { HeadingEdit } from './heading-edit';
 
 describe('HeadingEdit', () => {
+  describe('createRenameBlockEdits', () => {
+    it('should update a wikilink with a block anchor reference', () => {
+      const ws = createTestWorkspace();
+      const noteA = createNoteFromMarkdown(
+        '/note-a.md',
+        `A paragraph ^oldblock`
+      );
+      const noteB = createNoteFromMarkdown(
+        '/note-b.md',
+        `See [[note-a#^oldblock]] for details.`
+      );
+      ws.set(noteA).set(noteB);
+      const graph = FoamGraph.fromWorkspace(ws);
+
+      const result = HeadingEdit.createRenameBlockEdits(
+        graph,
+        ws,
+        noteA.uri,
+        'oldblock',
+        'newblock'
+      );
+
+      expect(result.totalOccurrences).toBe(1);
+      expect(result.edits).toHaveLength(1);
+      expect(result.edits[0].uri.path).toBe('/note-b.md');
+      expect(result.edits[0].edit.newText).toBe('[[note-a#^newblock]]');
+    });
+
+    it('should update a self-referencing block link within the same document', () => {
+      const ws = createTestWorkspace();
+      const noteA = createNoteFromMarkdown(
+        '/note-a.md',
+        `A paragraph ^myblock\n\nJump to [[#^myblock]].`
+      );
+      ws.set(noteA);
+      const graph = FoamGraph.fromWorkspace(ws);
+
+      const result = HeadingEdit.createRenameBlockEdits(
+        graph,
+        ws,
+        noteA.uri,
+        'myblock',
+        'renamedblock'
+      );
+
+      expect(result.totalOccurrences).toBe(1);
+      expect(result.edits).toHaveLength(1);
+      expect(result.edits[0].uri.path).toBe('/note-a.md');
+      expect(result.edits[0].edit.newText).toBe('[[#^renamedblock]]');
+    });
+
+    it('should not update links that reference a different block', () => {
+      const ws = createTestWorkspace();
+      const noteA = createNoteFromMarkdown(
+        '/note-a.md',
+        `Para one ^block1\n\nPara two ^block2`
+      );
+      const noteB = createNoteFromMarkdown('/note-b.md', `[[note-a#^block2]]`);
+      ws.set(noteA).set(noteB);
+      const graph = FoamGraph.fromWorkspace(ws);
+
+      const result = HeadingEdit.createRenameBlockEdits(
+        graph,
+        ws,
+        noteA.uri,
+        'block1',
+        'renamed'
+      );
+
+      expect(result.totalOccurrences).toBe(0);
+      expect(result.edits).toHaveLength(0);
+    });
+
+    it('should update block links across multiple files', () => {
+      const ws = createTestWorkspace();
+      const noteA = createNoteFromMarkdown(
+        '/note-a.md',
+        `A paragraph ^myblock`
+      );
+      const noteB = createNoteFromMarkdown('/note-b.md', `[[note-a#^myblock]]`);
+      const noteC = createNoteFromMarkdown('/note-c.md', `[[note-a#^myblock]]`);
+      ws.set(noteA).set(noteB).set(noteC);
+      const graph = FoamGraph.fromWorkspace(ws);
+
+      const result = HeadingEdit.createRenameBlockEdits(
+        graph,
+        ws,
+        noteA.uri,
+        'myblock',
+        'renamed'
+      );
+
+      expect(result.totalOccurrences).toBe(2);
+      expect(result.edits).toHaveLength(2);
+      const uris = result.edits.map(e => e.uri.path).sort();
+      expect(uris).toEqual(['/note-b.md', '/note-c.md']);
+    });
+
+    it('should update a direct markdown link with a block anchor reference', () => {
+      const ws = createTestWorkspace();
+      const noteA = createNoteFromMarkdown(
+        '/note-a.md',
+        `A paragraph ^oldblock`
+      );
+      const noteB = createNoteFromMarkdown(
+        '/note-b.md',
+        `[link text](/note-a.md#^oldblock)`
+      );
+      ws.set(noteA).set(noteB);
+      const graph = FoamGraph.fromWorkspace(ws);
+
+      const result = HeadingEdit.createRenameBlockEdits(
+        graph,
+        ws,
+        noteA.uri,
+        'oldblock',
+        'newblock'
+      );
+
+      expect(result.totalOccurrences).toBe(1);
+      expect(result.edits).toHaveLength(1);
+      expect(result.edits[0].uri.path).toBe('/note-b.md');
+      expect(result.edits[0].edit.newText).toContain('^newblock');
+      expect(result.edits[0].edit.newText).not.toContain('^oldblock');
+    });
+
+    it('should return empty result when no backlinks reference the block', () => {
+      const ws = createTestWorkspace();
+      const noteA = createNoteFromMarkdown('/note-a.md', `A paragraph ^orphan`);
+      ws.set(noteA);
+      const graph = FoamGraph.fromWorkspace(ws);
+
+      const result = HeadingEdit.createRenameBlockEdits(
+        graph,
+        ws,
+        noteA.uri,
+        'orphan',
+        'renamed'
+      );
+
+      expect(result.totalOccurrences).toBe(0);
+      expect(result.edits).toHaveLength(0);
+    });
+  });
+
   describe('createRenameSectionEdits', () => {
     it('should update a wikilink with a section reference', () => {
       const ws = createTestWorkspace();

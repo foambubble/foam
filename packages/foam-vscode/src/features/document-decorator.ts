@@ -13,6 +13,11 @@ const placeholderDecoration = vscode.window.createTextEditorDecorationType({
   cursor: 'pointer',
 });
 
+const blockAnchorDecoration = vscode.window.createTextEditorDecorationType({
+  rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
+  opacity: '0.5',
+});
+
 const updateDecorations =
   (parser: ResourceParser, workspace: FoamWorkspace) =>
   (editor: vscode.TextEditor) => {
@@ -38,6 +43,19 @@ const updateDecorations =
       }
     });
     editor.setDecorations(placeholderDecoration, placeholderRanges);
+
+    editor.setDecorations(
+      blockAnchorDecoration,
+      note.blocks.map(
+        b =>
+          new vscode.Range(
+            b.markerRange.start.line,
+            b.markerRange.start.character,
+            b.markerRange.end.line,
+            b.markerRange.end.character
+          )
+      )
+    );
   };
 
 export default async function activate(
@@ -61,6 +79,7 @@ export default async function activate(
 
   context.subscriptions.push(
     placeholderDecoration,
+    blockAnchorDecoration,
     vscode.window.onDidChangeActiveTextEditor(editor => {
       activeEditor = editor;
       immediatelyUpdateDecorations(activeEditor);

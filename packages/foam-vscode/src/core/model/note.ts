@@ -87,12 +87,41 @@ export interface Section {
   range: Range;
 }
 
+export type BlockType =
+  | 'paragraph'
+  | 'list-item'
+  | 'list'
+  | 'blockquote'
+  | 'code'
+  | 'table'
+  | 'heading';
+
+export interface Block {
+  id: string;
+  /** The range of the block's content (excludes the `^id` marker). */
+  range: Range;
+  /** The range of the `^id` marker itself */
+  markerRange: Range;
+  type: BlockType;
+}
+
+export abstract class Block {
+  /**
+   * Generates a random block ID suitable for use as a `^blockid` anchor.
+   * Produces 6 lowercase alphanumeric characters, e.g. `"k4f2m1"`.
+   */
+  static generateId(): string {
+    return Math.random().toString(36).slice(2, 8);
+  }
+}
+
 export interface Resource {
   uri: URI;
   type: string;
   title: string;
   properties: any;
   sections: Section[];
+  blocks: Block[];
   tags: Tag[];
   aliases: Alias[];
   links: ResourceLink[];
@@ -129,6 +158,13 @@ export abstract class Resource {
   public static findSection(resource: Resource, label: string): Section | null {
     if (label) {
       return resource.sections.find(s => s.label === label) ?? null;
+    }
+    return null;
+  }
+
+  public static findBlock(resource: Resource, id: string): Block | null {
+    if (id) {
+      return resource.blocks.find(b => b.id === id) ?? null;
     }
     return null;
   }

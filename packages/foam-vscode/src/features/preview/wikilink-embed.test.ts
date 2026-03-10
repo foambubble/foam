@@ -4,8 +4,11 @@ import {
   retrieveNoteConfig,
   parseImageParameters,
   generateImageStyles,
+  extractBlockContent,
 } from './wikilink-embed';
 import * as config from '../../services/config';
+import { createMarkdownParser } from '../../core/services/markdown-parser';
+import { getRandomURI } from '../../test/test-utils';
 
 describe('Wikilink Note Embedding', () => {
   afterEach(() => {
@@ -375,6 +378,56 @@ describe('Wikilink Note Embedding', () => {
       expect(result).toEqual(
         '<img src="image.png" style="width: 300.5px; height: auto" alt="">'
       );
+    });
+  });
+
+  describe('extractBlockContent', () => {
+    const parser = createMarkdownParser([]);
+
+    it('should return section content for a plain-text heading block', () => {
+      const noteText = `# My Heading ^blockid\n\nBody content.\n`;
+      const note = parser.parse(getRandomURI(), noteText);
+      const block = note.blocks.find(b => b.id === 'blockid');
+      expect(block).toBeDefined();
+      const result = extractBlockContent(noteText, note, block);
+      expect(result).toContain('My Heading');
+      expect(result).toContain('Body content');
+      expect(result).not.toContain('^blockid');
+    });
+
+    it('should return section content for a heading with inline formatting (e.g. **bold**)', () => {
+      // Before the fix, `headingLabel` was derived from raw text as `**Bold Title**`,
+      // which did not match the AST-parsed section label `Bold Title`, causing
+      // Resource.findSection to return null and falling back to the heading line only.
+      const noteText = `## **Bold Title** ^blockid\n\nBody content.\n`;
+      const note = parser.parse(getRandomURI(), noteText);
+      const block = note.blocks.find(b => b.id === 'blockid');
+      expect(block).toBeDefined();
+      const result = extractBlockContent(noteText, note, block);
+      expect(result).toContain('**Bold Title**');
+      expect(result).toContain('Body content');
+      expect(result).not.toContain('^blockid');
+    });
+
+    it('should return only the heading line when the section is not found', () => {
+      // Block type heading but no matching section (degenerate case)
+      const noteText = `# Standalone Heading ^blockid\n`;
+      const note = parser.parse(getRandomURI(), noteText);
+      const block = note.blocks.find(b => b.id === 'blockid');
+      expect(block).toBeDefined();
+      const result = extractBlockContent(noteText, note, block);
+      expect(result).toContain('Standalone Heading');
+      expect(result).not.toContain('^blockid');
+    });
+
+    it('should strip the ^id marker for a paragraph block', () => {
+      const noteText = `A simple paragraph. ^blockid\n`;
+      const note = parser.parse(getRandomURI(), noteText);
+      const block = note.blocks.find(b => b.id === 'blockid');
+      expect(block).toBeDefined();
+      const result = extractBlockContent(noteText, note, block);
+      expect(result).toContain('A simple paragraph.');
+      expect(result).not.toContain('^blockid');
     });
   });
 

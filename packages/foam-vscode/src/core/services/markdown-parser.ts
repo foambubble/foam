@@ -440,8 +440,8 @@ const blocksPlugin: ParserPlugin = {
     // paragraph's line, not necessarily the listItem's last line.
     const markerEndPos =
       blockType === 'list-item'
-        ? ((node as any).children?.find((c: any) => c.type === 'paragraph')
-            ?.position?.end ?? node.position!.end)
+        ? (node as any).children?.find((c: any) => c.type === 'paragraph')
+            ?.position?.end ?? node.position!.end
         : node.position!.end;
 
     const markerRange =
@@ -453,7 +453,12 @@ const blocksPlugin: ParserPlugin = {
             const sourceLine = noteSource.split('\n')[markerLine] ?? '';
             const markerCol = sourceLine.indexOf(`^${id}`);
             const col = markerCol >= 0 ? markerCol : 0;
-            return Range.create(markerLine, col, markerLine, col + id.length + 1);
+            return Range.create(
+              markerLine,
+              col,
+              markerLine,
+              col + id.length + 1
+            );
           })()
         : // Inline marker: ' ^id' at the end of the element's last line.
           Range.create(

@@ -39,7 +39,7 @@ describe('BlockRenameProvider', () => {
       const { doc } = await showInEditor(fileA.uri);
       const result = (await provider.prepareRename(
         doc,
-        new vscode.Position(0, 5),
+        new vscode.Position(0, 'A paragraph ^m'.length), // cursor on the anchor id
         new vscode.CancellationTokenSource().token
       )) as { range: vscode.Range; placeholder: string };
 

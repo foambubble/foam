@@ -1,14 +1,12 @@
 import * as vscode from 'vscode';
 import { Foam } from '../core/model/foam';
-import { Resource } from '../core/model/note';
+import { Position } from '../core/model/position';
 import { Range } from '../core/model/range';
+import { Resource } from '../core/model/note';
 import { HeadingEdit } from '../core/services/heading-edit';
 import { WorkspaceTextEdit } from '../core/services/text-edit';
 import { Logger } from '../core/utils/log';
-import { fromVsCodeUri, toVsCodeWorkspaceEdit } from '../utils/vsc-utils';
-
-/** Matches a block anchor `^id` at the end of a line (ignoring trailing whitespace). */
-const BLOCK_ANCHOR_REGEX = /\^([a-zA-Z0-9-]+)\s*$/;
+import { fromVsCodeUri, toVsCodeRange, toVsCodeWorkspaceEdit } from '../utils/vsc-utils';
 
 export default async function activate(
   context: vscode.ExtensionContext,
@@ -89,7 +87,7 @@ export class BlockRenameProvider implements vscode.RenameProvider {
   }
 
   /**
-   * If the cursor's line ends with a valid block anchor `^id` that exists in
+   * If the cursor is within the `markerRange` of a block anchor that exists in
    * the workspace resource, returns the block id and the VS Code range covering
    * only the id text (after the `^`). Returns undefined otherwise.
    */
@@ -97,25 +95,29 @@ export class BlockRenameProvider implements vscode.RenameProvider {
     document: vscode.TextDocument,
     position: vscode.Position
   ): { blockId: string; idRange: vscode.Range } | undefined {
-    const lineText = document.lineAt(position.line).text;
-    const match = BLOCK_ANCHOR_REGEX.exec(lineText);
-    if (!match) {
-      return undefined;
-    }
-
-    const blockId = match[1];
     const resource = this.foam.workspace.find(fromVsCodeUri(document.uri));
-    if (!resource || !Resource.findBlock(resource, blockId)) {
+    if (!resource) {
       return undefined;
     }
-
-    const caretCol = lineText.lastIndexOf('^');
-    const idRange = new vscode.Range(
-      position.line,
-      caretCol + 1,
-      position.line,
-      caretCol + 1 + blockId.length
+    const cursorPos = Position.create(position.line, position.character);
+    const block = resource.blocks.find(b =>
+      Range.containsPosition(b.markerRange, cursorPos)
     );
-    return { blockId, idRange };
+    if (!block) {
+      return undefined;
+    }
+    // idRange covers only the id text (after the `^`).
+    // markerRange.end.character - id.length gives the correct start regardless
+    // of whether the marker is inline (" ^id") or own-line ("^id").
+    const idStart = block.markerRange.end.character - block.id.length;
+    const idRange = toVsCodeRange(
+      Range.create(
+        block.markerRange.end.line,
+        idStart,
+        block.markerRange.end.line,
+        block.markerRange.end.character
+      )
+    );
+    return { blockId: block.id, idRange };
   }
 }

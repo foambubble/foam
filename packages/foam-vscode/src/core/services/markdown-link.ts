@@ -85,9 +85,11 @@ export abstract class MarkdownLink {
       isEmbed?: boolean;
     }
   ): TextEdit {
-    const { target, section, alias } = MarkdownLink.analyzeLink(link);
+    const { target, section, blockId, alias } = MarkdownLink.analyzeLink(link);
     const newTarget = delta.target ?? target;
-    const newSection = delta.section ?? section ?? '';
+    // Preserve the existing fragment (section or block anchor) when not overriding.
+    const existingFragment = blockId ? `^${blockId}` : section;
+    const newSection = delta.section ?? existingFragment ?? '';
     const newAlias = delta.alias ?? alias ?? '';
     const sectionDivider = newSection ? '#' : '';
     const aliasDivider = newAlias ? '|' : '';

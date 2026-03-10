@@ -352,6 +352,16 @@ describe('MarkdownLink', () => {
     });
   });
 
+  describe('rename wikilink with block anchor', () => {
+    it('should preserve block anchor when renaming the target', () => {
+      const link = parser.parse(getRandomURI(), `[[note#^myblock]]`).links[0];
+      const edit = MarkdownLink.createUpdateLinkEdit(link, {
+        target: 'new-note',
+      });
+      expect(edit.newText).toEqual(`[[new-note#^myblock]]`);
+    });
+  });
+
   describe('rename direct link', () => {
     it('should rename the target only', () => {
       const link = parser.parse(getRandomURI(), `this is a [link](to/path.md)`)
@@ -395,6 +405,17 @@ describe('MarkdownLink', () => {
       });
       expect(edit.newText).toEqual(`[link](to/path.md)`);
       expect(edit.range).toEqual(link.range);
+    });
+  });
+
+  describe('rename direct link with block anchor', () => {
+    it('should preserve block anchor when renaming the target', () => {
+      const link = parser.parse(getRandomURI(), `[text](note.md#^myblock)`)
+        .links[0];
+      const edit = MarkdownLink.createUpdateLinkEdit(link, {
+        target: 'new-note.md',
+      });
+      expect(edit.newText).toEqual(`[text](new-note.md#^myblock)`);
     });
   });
 

@@ -90,16 +90,31 @@ export const markdownItWikilinkEmbed = (
 
         refsStack.push(includedNote.uri.path.toLocaleLowerCase());
 
-        const content = getNoteContent(
-          includedNote,
-          noteEmbedModifier,
-          parser,
-          workspace,
-          md,
-          parametersString
-        );
-        refsStack.pop();
-        return refsStack.length === 0 ? md.render(content) : content;
+        let content: string;
+        try {
+          content = getNoteContent(
+            includedNote,
+            noteEmbedModifier,
+            parser,
+            workspace,
+            md,
+            parametersString
+          );
+        } catch (e) {
+          Logger.error(
+            `Error while including ${wikilinkItem} into the current document of the Preview panel`,
+            e
+          );
+          refsStack.pop();
+          return '';
+        }
+        // Render while the current note is still on the stack so that any
+        // embed patterns inside the content can detect cycles back to it.
+        try {
+          return md.render(content);
+        } finally {
+          refsStack.pop();
+        }
       } catch (e) {
         Logger.error(
           `Error while including ${wikilinkItem} into the current document of the Preview panel`,

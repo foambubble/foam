@@ -1,4 +1,7 @@
-import { computeWikilinkRenameEdits } from './refactor';
+import {
+  computeWikilinkRenameEdits,
+  computeDirectoryWikilinkRenameEdits,
+} from './refactor';
 import {
   createNoteFromMarkdown,
   createTestWorkspace,
@@ -128,7 +131,7 @@ describe('computeWikilinkRenameEdits', () => {
     expect(edits[0].edit.newText).toEqual('[[new-note-with-section#Section]]');
   });
 
-  it('does not return edits for markdown links', () => {
+  it('does not return edits for markdown links (delegated to VS Code built-in)', () => {
     const noteA = createNoteFromMarkdown('note-a.md', 'Content of A', root);
     const noteB = createNoteFromMarkdown(
       'note-b.md',
@@ -143,5 +146,253 @@ describe('computeWikilinkRenameEdits', () => {
     // Only the wikilink should produce an edit; the markdown link should be skipped
     expect(edits).toHaveLength(1);
     expect(edits[0].edit.newText).toEqual('[[renamed]]');
+  });
+});
+
+describe('computeDirectoryWikilinkRenameEdits', () => {
+  it('returns empty array when no Foam resources are inside the directory', () => {
+    const outside = createNoteFromMarkdown('outside.md', 'Content', root);
+    const foam = createFoam(outside);
+    const oldDirUri = URI.file('/empty-folder');
+    const newDirUri = URI.file('/renamed-folder');
+
+    const edits = computeDirectoryWikilinkRenameEdits(
+      foam,
+      oldDirUri,
+      newDirUri
+    );
+
+    expect(edits).toEqual([]);
+  });
+
+  it('updates qualified wikilinks pointing to files inside the renamed folder', () => {
+    // note-a exists in two folders, so it must be qualified as [[folderA/note-a]]
+    const noteA = createNoteFromMarkdown(
+      'folderA/note-a.md',
+      'Content of A',
+      root
+    );
+    const conflict = createNoteFromMarkdown(
+      'other/note-a.md',
+      'Conflicting note',
+      root
+    );
+    const outside = createNoteFromMarkdown(
+      'outside.md',
+      'Link to [[folderA/note-a]]',
+      root
+    );
+    const foam = createFoam(noteA, conflict, outside);
+    const oldDirUri = noteA.uri.getDirectory();
+    const newDirUri = URI.file('/folderB');
+
+    const edits = computeDirectoryWikilinkRenameEdits(
+      foam,
+      oldDirUri,
+      newDirUri
+    );
+
+    expect(edits).toHaveLength(1);
+    expect(edits[0].uri).toEqual(outside.uri);
+    expect(edits[0].edit.newText).toEqual('[[folderB/note-a]]');
+  });
+
+  it('produces a no-op edit for unique wikilinks that remain unique after rename', () => {
+    // unique-note has no basename conflicts — link is [[unique-note]] before and after
+    const noteA = createNoteFromMarkdown(
+      'folderA/unique-note.md',
+      'Content',
+      root
+    );
+    const outside = createNoteFromMarkdown(
+      'outside.md',
+      'Link to [[unique-note]]',
+      root
+    );
+    const foam = createFoam(noteA, outside);
+    const oldDirUri = noteA.uri.getDirectory();
+    const newDirUri = URI.file('/folderB');
+
+    const edits = computeDirectoryWikilinkRenameEdits(
+      foam,
+      oldDirUri,
+      newDirUri
+    );
+
+    expect(edits).toHaveLength(1);
+    expect(edits[0].edit.newText).toEqual('[[unique-note]]');
+  });
+
+  it('correctly disambiguates files within the renamed folder that share a basename', () => {
+    // Both files have basename 'note', forcing path-qualified identifiers
+    const noteA = createNoteFromMarkdown(
+      'folderA/note.md',
+      'Content of A',
+      root
+    );
+    const noteSub = createNoteFromMarkdown(
+      'folderA/sub/note.md',
+      'Content of Sub',
+      root
+    );
+    // Current identifiers: [[folderA/note]] and [[sub/note]]
+    const outside = createNoteFromMarkdown(
+      'outside.md',
+      'Links to [[folderA/note]] and [[sub/note]]',
+      root
+    );
+    const foam = createFoam(noteA, noteSub, outside);
+    const oldDirUri = noteA.uri.getDirectory();
+    const newDirUri = URI.file('/folderB');
+
+    const edits = computeDirectoryWikilinkRenameEdits(
+      foam,
+      oldDirUri,
+      newDirUri
+    );
+
+    // With the future workspace, folderB/note and folderB/sub/note correctly
+    // compete with each other — the naive exclude-only approach would return
+    // 'note' for both (ambiguous).
+    expect(edits.some(e => e.edit.newText === '[[folderB/note]]')).toBe(true);
+    expect(edits.every(e => e.edit.newText !== '[[note]]')).toBe(true);
+  });
+
+  it('updates wikilinks inside the folder pointing to other files inside the same folder', () => {
+    const noteA = createNoteFromMarkdown(
+      'folderA/note-a.md',
+      'Content of A',
+      root
+    );
+    const conflict = createNoteFromMarkdown(
+      'other/note-a.md',
+      'Conflicting',
+      root
+    );
+    // noteB is inside folderA and links to noteA (also inside folderA)
+    const noteB = createNoteFromMarkdown(
+      'folderA/note-b.md',
+      'Link to [[folderA/note-a]]',
+      root
+    );
+    const foam = createFoam(noteA, conflict, noteB);
+    const oldDirUri = noteA.uri.getDirectory();
+    const newDirUri = URI.file('/folderB');
+
+    const edits = computeDirectoryWikilinkRenameEdits(
+      foam,
+      oldDirUri,
+      newDirUri
+    );
+
+    // The edit goes to noteB's old URI (it will be renamed to folderB/note-b.md by VS Code)
+    expect(edits).toHaveLength(1);
+    expect(edits[0].uri).toEqual(noteB.uri);
+    expect(edits[0].edit.newText).toEqual('[[folderB/note-a]]');
+  });
+
+  it('updates directory-style wikilinks [[folderA]] → [[folderB]] when the directory is renamed', () => {
+    // folderA/index.md is the directory index, so it can be linked as [[folderA]]
+    const index = createNoteFromMarkdown(
+      'folderA/index.md',
+      'Index of folderA',
+      root
+    );
+    const outside = createNoteFromMarkdown(
+      'outside.md',
+      'Link to [[folderA]]',
+      root
+    );
+    const foam = createFoam(index, outside);
+    const oldDirUri = index.uri.getDirectory();
+    const newDirUri = URI.file('/folderB');
+
+    const edits = computeDirectoryWikilinkRenameEdits(
+      foam,
+      oldDirUri,
+      newDirUri
+    );
+
+    expect(edits).toHaveLength(1);
+    expect(edits[0].edit.newText).toEqual('[[folderB]]');
+  });
+
+  it('does not produce edits for links from inside the folder pointing outside', () => {
+    // noteA links to outside, but we only care about backlinks of noteA (there are none)
+    const noteA = createNoteFromMarkdown(
+      'folderA/note-a.md',
+      'Link to [[outside]]',
+      root
+    );
+    const outside = createNoteFromMarkdown('outside.md', 'Content', root);
+    const foam = createFoam(noteA, outside);
+    const oldDirUri = noteA.uri.getDirectory();
+    const newDirUri = URI.file('/folderB');
+
+    const edits = computeDirectoryWikilinkRenameEdits(
+      foam,
+      oldDirUri,
+      newDirUri
+    );
+
+    expect(edits).toEqual([]);
+  });
+
+  it('preserves aliases when updating wikilinks to files inside the renamed folder', () => {
+    const noteA = createNoteFromMarkdown(
+      'folderA/note-a.md',
+      'Content of A',
+      root
+    );
+    const conflict = createNoteFromMarkdown(
+      'other/note-a.md',
+      'Conflicting',
+      root
+    );
+    const outside = createNoteFromMarkdown(
+      'outside.md',
+      'Link to [[folderA/note-a|My Alias]]',
+      root
+    );
+    const foam = createFoam(noteA, conflict, outside);
+    const oldDirUri = noteA.uri.getDirectory();
+    const newDirUri = URI.file('/folderB');
+
+    const edits = computeDirectoryWikilinkRenameEdits(
+      foam,
+      oldDirUri,
+      newDirUri
+    );
+
+    expect(edits[0].edit.newText).toEqual('[[folderB/note-a|My Alias]]');
+  });
+
+  it('preserves section anchors when updating wikilinks to files inside the renamed folder', () => {
+    const noteA = createNoteFromMarkdown(
+      'folderA/note-a.md',
+      'Content of A',
+      root
+    );
+    const conflict = createNoteFromMarkdown(
+      'other/note-a.md',
+      'Conflicting',
+      root
+    );
+    const outside = createNoteFromMarkdown(
+      'outside.md',
+      'Link to [[folderA/note-a#Section]]',
+      root
+    );
+    const foam = createFoam(noteA, conflict, outside);
+    const oldDirUri = noteA.uri.getDirectory();
+    const newDirUri = URI.file('/folderB');
+
+    const edits = computeDirectoryWikilinkRenameEdits(
+      foam,
+      oldDirUri,
+      newDirUri
+    );
+
+    expect(edits[0].edit.newText).toEqual('[[folderB/note-a#Section]]');
   });
 });

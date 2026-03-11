@@ -1199,7 +1199,10 @@ export class WorkspaceEdit {
     const result: [Uri, TextEdit[]][] = [];
     for (const [key, edits] of this._edits) {
       const uri = createVSCodeUri(URI.parse(key, 'file'));
-      result.push([uri, edits.filter(e => e instanceof TextEdit || e.range) as TextEdit[]]);
+      result.push([
+        uri,
+        edits.filter(e => e instanceof TextEdit || e.range) as TextEdit[],
+      ]);
     }
     return result;
   }
@@ -1985,7 +1988,10 @@ export const workspace = {
           }
         }
       }
-      if (renames.length > 0 && mockState.onWillRenameFilesListeners.length > 0) {
+      if (
+        renames.length > 0 &&
+        mockState.onWillRenameFilesListeners.length > 0
+      ) {
         const event = { files: renames };
         for (const listener of mockState.onWillRenameFilesListeners) {
           const result = listener(event);

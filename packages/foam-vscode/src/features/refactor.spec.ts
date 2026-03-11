@@ -86,6 +86,69 @@ describe('Note rename sync', () => {
     });
   });
 
+  describe('directory renames', () => {
+    it('should sync qualified wikilinks when a folder is renamed', async () => {
+      // note-a exists in two folders, forcing a qualified [[folderA/note-a]] link
+      const noteA = await createFile('Content of A', [
+        'dir-rename',
+        'folderA',
+        'note-a.md',
+      ]);
+      await createFile('Conflicting note', [
+        'dir-rename',
+        'other',
+        'note-a.md',
+      ]);
+      const outside = await createFile('Link to [[folderA/note-a]]', [
+        'dir-rename',
+        'outside.md',
+      ]);
+
+      await wait(1000);
+      await runCommand(UPDATE_GRAPH_COMMAND_NAME);
+
+      const folderAUri = noteA.uri.getDirectory();
+      const folderBUri = folderAUri.getDirectory().joinPath('folderB');
+      await renameFile(folderAUri, folderBUri);
+
+      await waitForExpect(async () => {
+        expect((await readFile(outside.uri)).trim()).toEqual(
+          'Link to [[folderB/note-a]]'
+        );
+      }, 1000);
+
+      await deleteFile(outside.uri);
+    });
+
+    it('should not change unique wikilinks when a folder is renamed', async () => {
+      // unique-note has no basename conflict — identifier stays [[unique-note]]
+      const noteA = await createFile('Content of A', [
+        'dir-rename-unique',
+        'folderA',
+        'unique-note.md',
+      ]);
+      const outside = await createFile('Link to [[unique-note]]', [
+        'dir-rename-unique',
+        'outside.md',
+      ]);
+
+      await wait(1000);
+      await runCommand(UPDATE_GRAPH_COMMAND_NAME);
+
+      const folderAUri = noteA.uri.getDirectory();
+      const folderBUri = folderAUri.getDirectory().joinPath('folderB');
+      await renameFile(folderAUri, folderBUri);
+
+      await waitForExpect(async () => {
+        expect((await readFile(outside.uri)).trim()).toEqual(
+          'Link to [[unique-note]]'
+        );
+      }, 1000);
+
+      await deleteFile(outside.uri);
+    });
+  });
+
   describe('direct links', () => {
     beforeAll(async () => {
       await closeEditors();

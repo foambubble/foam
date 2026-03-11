@@ -1519,6 +1519,27 @@ class MockExtension<T> implements Extension<T> {
   }
 }
 
+// ===== File System Helpers =====
+
+async function collectFilesRecursively(dir: string): Promise<string[]> {
+  const files: string[] = [];
+  try {
+    const entries = await fs.promises.readdir(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        const subFiles = await collectFilesRecursively(fullPath);
+        files.push(...subFiles);
+      } else if (entry.isFile()) {
+        files.push(fullPath);
+      }
+    }
+  } catch {
+    // Ignore errors
+  }
+  return files;
+}
+
 // ===== Foam Commands Lazy Initialization =====
 
 class TestFoam {
@@ -2029,13 +2050,38 @@ export const workspace = {
         );
         for (const e of otherEdits) {
           if (e.type === 'rename') {
+            // Build the list of (oldUri, newUri) pairs to fire events for.
+            // For directory renames, expand to individual files; for files, it's a single pair.
+            let isDirectory = false;
+            try {
+              const stat = await fs.promises.stat(e.oldUri.fsPath);
+              isDirectory = stat.isDirectory();
+            } catch {
+              // Not a directory or doesn't exist
+            }
+
+            const filePairs: { oldFileUri: Uri; newFileUri: Uri }[] = [];
+            if (isDirectory) {
+              const oldFiles = await collectFilesRecursively(e.oldUri.fsPath);
+              for (const oldFilePath of oldFiles) {
+                const relPath = path.relative(e.oldUri.fsPath, oldFilePath);
+                const newFilePath = path.join(e.newUri.fsPath, relPath);
+                filePairs.push({
+                  oldFileUri: createVSCodeUri(URI.file(oldFilePath)),
+                  newFileUri: createVSCodeUri(URI.file(newFilePath)),
+                });
+              }
+            } else {
+              filePairs.push({ oldFileUri: e.oldUri, newFileUri: e.newUri });
+            }
+
             await fs.promises.rename(e.oldUri.fsPath, e.newUri.fsPath);
-            // Remove old document from registry
             mockState.openDocuments.delete(e.oldUri.toString());
-            // Fire file watcher events
-            for (const watcher of mockState.fileWatchers) {
-              watcher._fireDelete(e.oldUri);
-              watcher._fireCreate(e.newUri);
+            for (const { oldFileUri, newFileUri } of filePairs) {
+              for (const watcher of mockState.fileWatchers) {
+                watcher._fireDelete(oldFileUri);
+                watcher._fireCreate(newFileUri);
+              }
             }
           }
         }

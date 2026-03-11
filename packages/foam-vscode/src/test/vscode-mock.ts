@@ -12,6 +12,7 @@ import { URI } from '../core/model/uri';
 import { Logger } from '../core/utils/log';
 import { TextEdit as FoamTextEdit } from '../core/services/text-edit';
 import * as foamCommands from '../features/commands';
+import refactorActivate from '../features/refactor';
 import { Foam, bootstrap } from '../core/model/foam';
 import { createMarkdownParser } from '../core/services/markdown-parser';
 import {
@@ -1194,6 +1195,15 @@ export class WorkspaceEdit {
     return this._edits.get(key) as TextEdit[] | undefined;
   }
 
+  entries(): [Uri, TextEdit[]][] {
+    const result: [Uri, TextEdit[]][] = [];
+    for (const [key, edits] of this._edits) {
+      const uri = createVSCodeUri(URI.parse(key, 'file'));
+      result.push([uri, edits.filter(e => e instanceof TextEdit || e.range) as TextEdit[]]);
+    }
+    return result;
+  }
+
   // Internal method to get edits for applying
   _getEdits(): Map<string, any[]> {
     return this._edits;
@@ -1638,7 +1648,14 @@ class TestFoam {
   }
 }
 
+let foamCommandsInitialized = false;
+
 async function initializeFoamCommands(foam: Foam): Promise<void> {
+  if (foamCommandsInitialized) {
+    return;
+  }
+  foamCommandsInitialized = true;
+
   const mockContext = createMockExtensionContext();
 
   const foamPromise = Promise.resolve(foam);
@@ -1661,6 +1678,9 @@ async function initializeFoamCommands(foam: Foam): Promise<void> {
   await foamCommands.createFromTemplateCommand(mockContext);
   await foamCommands.createNewTemplate(mockContext);
 
+  // Features that register workspace event listeners
+  await refactorActivate(mockContext, foamPromise);
+
   Logger.info('Foam commands initialized successfully in mock environment');
 }
 
@@ -1675,6 +1695,8 @@ const mockState = {
   fileSystem: new MockFileSystem(),
   configuration: new MockWorkspaceConfiguration(),
   fileWatchers: [] as MockFileSystemWatcher[],
+  onWillRenameFilesListeners: [] as ((e: any) => any)[],
+  openDocuments: new Map<string, MockTextDocument>(),
 };
 
 // Window namespace
@@ -1903,6 +1925,22 @@ export const workspace = {
     };
   },
 
+  onWillRenameFiles(listener: (e: any) => any): Disposable {
+    mockState.onWillRenameFilesListeners.push(listener);
+    return {
+      dispose: () => {
+        const idx = mockState.onWillRenameFilesListeners.indexOf(listener);
+        if (idx >= 0) {
+          mockState.onWillRenameFilesListeners.splice(idx, 1);
+        }
+      },
+    };
+  },
+
+  onDidChangeConfiguration(listener: (e: any) => void): Disposable {
+    return { dispose: () => {} };
+  },
+
   async openTextDocument(
     uriOrFileNameOrOptions:
       | Uri
@@ -1924,45 +1962,76 @@ export const workspace = {
       content = uriOrFileNameOrOptions.content || '';
     }
 
-    // Always create a fresh document to ensure we get the latest content
+    // Return cached instance so edits via applyEdit are reflected in test references
+    const key = uri.toString();
+    const existing = mockState.openDocuments.get(key);
+    if (existing && content === undefined) {
+      return existing;
+    }
+
     const document = new MockTextDocument(uri, content);
+    mockState.openDocuments.set(key, document);
     return document;
   },
 
   async applyEdit(edit: WorkspaceEdit): Promise<boolean> {
     try {
+      // Collect rename operations and fire onWillRenameFiles before processing
+      const renames: { oldUri: Uri; newUri: Uri }[] = [];
+      for (const [, edits] of edit._getEdits()) {
+        for (const e of edits) {
+          if (e.type === 'rename') {
+            renames.push(e);
+          }
+        }
+      }
+      if (renames.length > 0 && mockState.onWillRenameFilesListeners.length > 0) {
+        const event = { files: renames };
+        for (const listener of mockState.onWillRenameFilesListeners) {
+          const result = listener(event);
+          if (result && typeof result.then === 'function') {
+            await result;
+          }
+        }
+      }
+
       for (const [uriString, edits] of edit._getEdits()) {
         const uri = createVSCodeUri(URI.parse(uriString, 'file'));
-        const document = await workspace.openTextDocument(uri);
 
-        if (document instanceof MockTextDocument) {
-          let content = document.getText();
-
-          // Apply text edits in reverse order to maintain positions
-          const textEdits = edits.filter(e => e instanceof TextEdit || e.range);
-          const otherEdits = edits.filter(
-            e => !(e instanceof TextEdit || e.range)
-          );
-
-          textEdits.sort((a, b) =>
-            Position.compareTo(b.range.start, a.range.start)
-          );
-
-          for (const edit of textEdits) {
-            content = FoamTextEdit.apply(content, {
-              newText: edit.newText,
-              range: edit.range,
-            });
+        // Apply text edits
+        const textEdits = edits.filter(e => e instanceof TextEdit || e.range);
+        if (textEdits.length > 0) {
+          const document = await workspace.openTextDocument(uri);
+          if (document instanceof MockTextDocument) {
+            let content = document.getText();
+            textEdits.sort((a, b) =>
+              Position.compareTo(b.range.start, a.range.start)
+            );
+            for (const e of textEdits) {
+              content = FoamTextEdit.apply(content, {
+                newText: e.newText,
+                range: e.range,
+              });
+            }
+            document._updateContent(content);
           }
+        }
 
-          for (const edit of otherEdits) {
-            if (edit.type === 'rename') {
-              // Handle file rename by physically moving the file
-              await fs.promises.rename(edit.oldUri.fsPath, edit.newUri.fsPath);
+        // Handle file renames
+        const otherEdits = edits.filter(
+          e => !(e instanceof TextEdit || e.range)
+        );
+        for (const e of otherEdits) {
+          if (e.type === 'rename') {
+            await fs.promises.rename(e.oldUri.fsPath, e.newUri.fsPath);
+            // Remove old document from registry
+            mockState.openDocuments.delete(e.oldUri.toString());
+            // Fire file watcher events
+            for (const watcher of mockState.fileWatchers) {
+              watcher._fireDelete(e.oldUri);
+              watcher._fireCreate(e.newUri);
             }
           }
-
-          document._updateContent(content);
         }
       }
 
@@ -2122,10 +2191,13 @@ export function initializeWorkspace(workspaceRoot: string): void {
 export function resetMockState(): void {
   // Clean up existing Foam instance
   TestFoam.dispose();
+  foamCommandsInitialized = false;
   mockState.activeTextEditor = undefined;
   mockState.visibleTextEditors = [];
   mockState.workspaceFolders = [];
   mockState.commands.clear();
+  mockState.onWillRenameFilesListeners = [];
+  mockState.openDocuments.clear();
   mockState.configuration = new MockWorkspaceConfiguration();
 
   // Create a default workspace folder for tests
@@ -2139,8 +2211,9 @@ export function resetMockState(): void {
 
   // Register built-in VS Code commands
   commands.registerCommand('workbench.action.closeAllEditors', () => {
-    // Reset active editor to simulate closing all editors
-    (window as any).activeTextEditor = undefined;
+    mockState.activeTextEditor = undefined;
+    mockState.visibleTextEditors = [];
+    mockState.openDocuments.clear();
     return Promise.resolve();
   });
 

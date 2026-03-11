@@ -4,9 +4,31 @@ import { MarkdownLink } from '../core/services/markdown-link';
 import { Logger } from '../core/utils/log';
 import { getFoamVsCodeConfig } from '../services/config';
 import { fromVsCodeUri, toVsCodeRange, toVsCodeUri } from '../utils/vsc-utils';
+import { URI } from '../core/model/uri';
+import { WorkspaceTextEdit } from '../core/services/text-edit';
 
 const MARKDOWN_LINK_NOTIFICATION_KEY =
   'foam.links.sync.markdownLinkNotificationShown';
+
+export function computeWikilinkRenameEdits(
+  foam: Foam,
+  oldUri: URI,
+  newUri: URI
+): WorkspaceTextEdit[] {
+  const edits: WorkspaceTextEdit[] = [];
+  const connections = foam.graph.getBacklinks(oldUri);
+  for (const connection of connections) {
+    if (connection.link.type !== 'wikilink') {
+      continue;
+    }
+    const identifier = foam.workspace.getIdentifier(newUri, [oldUri]);
+    const edit = MarkdownLink.createUpdateLinkEdit(connection.link, {
+      target: identifier,
+    });
+    edits.push({ uri: connection.source, edit });
+  }
+  return edits;
+}
 
 export default async function activate(
   context: vscode.ExtensionContext,
@@ -16,7 +38,7 @@ export default async function activate(
 
   context.subscriptions.push(
     vscode.workspace.onWillRenameFiles(async e => {
-      if (!getFoamVsCodeConfig<boolean>('links.sync.enable')) {
+      if (!getFoamVsCodeConfig<boolean>('links.sync.enable', true)) {
         return;
       }
       const renameEdits = new vscode.WorkspaceEdit();
@@ -31,29 +53,26 @@ export default async function activate(
           );
           continue;
         }
-        const connections = foam.graph.getBacklinks(fromVsCodeUri(oldUri));
-        for (const connection of connections) {
-          switch (connection.link.type) {
-            case 'wikilink': {
-              const identifier = foam.workspace.getIdentifier(
-                fromVsCodeUri(newUri),
-                [fromVsCodeUri(oldUri)]
-              );
-              const edit = MarkdownLink.createUpdateLinkEdit(connection.link, {
-                target: identifier,
-              });
-              renameEdits.replace(
-                toVsCodeUri(connection.source),
-                toVsCodeRange(edit.range),
-                edit.newText
-              );
-              break;
-            }
-            case 'link': {
-              hasMarkdownBacklinks = true;
-              break;
-            }
-          }
+        const foamOldUri = fromVsCodeUri(oldUri);
+        const foamNewUri = fromVsCodeUri(newUri);
+
+        const wikilinkEdits = computeWikilinkRenameEdits(
+          foam,
+          foamOldUri,
+          foamNewUri
+        );
+        for (const { uri, edit } of wikilinkEdits) {
+          renameEdits.replace(
+            toVsCodeUri(uri),
+            toVsCodeRange(edit.range),
+            edit.newText
+          );
+        }
+
+        if (
+          foam.graph.getBacklinks(foamOldUri).some(c => c.link.type === 'link')
+        ) {
+          hasMarkdownBacklinks = true;
         }
       }
 

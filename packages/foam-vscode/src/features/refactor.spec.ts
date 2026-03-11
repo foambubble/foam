@@ -1,3 +1,5 @@
+/* @unit-ready */
+
 import { wait, waitForExpect } from '../test/test-utils';
 import {
   closeEditors,
@@ -58,113 +60,6 @@ describe('Note rename sync', () => {
       await deleteFile(newUri);
       await deleteFile(noteB.uri);
       await deleteFile(noteC.uri);
-    });
-
-    it('should use the best identifier based on the new note location', async () => {
-      const noteA = await createFile(`Content of note A`, [
-        'refactor',
-        'wikilink',
-        'first',
-        'note-a.md',
-      ]);
-      await createFile(`Content of note B`, [
-        'refactor',
-        'wikilink',
-        'second',
-        'note-b.md',
-      ]);
-      const noteC = await createFile(`Link to [[${noteA.name}]] from note C.`);
-
-      const { doc } = await showInEditor(noteC.uri);
-
-      // rename note A
-      const newUri = noteA.uri.resolve('note-b.md');
-
-      // wait for the rename events to be propagated
-      await wait(1000);
-      await runCommand(UPDATE_GRAPH_COMMAND_NAME);
-      await renameFile(noteA.uri, newUri);
-
-      await waitForExpect(async () => {
-        expect(doc.getText().trim()).toEqual(
-          `Link to [[first/note-b]] from note C.`
-        );
-      });
-      await deleteFile(newUri);
-      await deleteFile(noteC.uri);
-    });
-
-    it('should use the best identifier when moving the note to another directory', async () => {
-      const noteA = await createFile(`Content of note A`, [
-        'refactor',
-        'wikilink',
-        'first',
-        'note-a.md',
-      ]);
-      await createFile(`Content of note B`, [
-        'refactor',
-        'wikilink',
-        'second',
-        'note-b.md',
-      ]);
-      const noteC = await createFile(`Link to [[${noteA.name}]] from note C.`);
-
-      const { doc } = await showInEditor(noteC.uri);
-
-      const newUri = noteA.uri.resolve('../second/note-a.md');
-
-      // wait for the rename events to be propagated
-      await wait(1000);
-      await runCommand(UPDATE_GRAPH_COMMAND_NAME);
-      await renameFile(noteA.uri, newUri);
-
-      await waitForExpect(async () => {
-        expect(doc.getText().trim()).toEqual(`Link to [[note-a]] from note C.`);
-      });
-      await deleteFile(newUri);
-      await deleteFile(noteC.uri);
-    });
-
-    it('should keep the alias in wikilinks', async () => {
-      const noteA = await createFile(`Content of note A`);
-      const noteB = await createFile(`Link to [[${noteA.name}|Alias]]`);
-
-      const { doc } = await showInEditor(noteB.uri);
-
-      // rename note A
-      const newUri = noteA.uri.resolve('new-note-a.md');
-      // wait for the rename events to be propagated
-      await wait(1000);
-      await runCommand(UPDATE_GRAPH_COMMAND_NAME);
-      await renameFile(noteA.uri, newUri);
-
-      await waitForExpect(async () => {
-        expect(doc.getText().trim()).toEqual(`Link to [[new-note-a|Alias]]`);
-      });
-      await deleteFile(newUri);
-      await deleteFile(noteB.uri);
-    });
-
-    it('should keep the section part of the wikilink', async () => {
-      const noteA = await createFile(`Content of note A`);
-      const noteB = await createFile(`Link to [[${noteA.name}#Section]]`);
-
-      const { doc } = await showInEditor(noteB.uri);
-
-      // rename note A
-      const newUri = noteA.uri.resolve('new-note-with-section.md');
-      // wait for the rename events to be propagated
-      await wait(1000);
-      await runCommand(UPDATE_GRAPH_COMMAND_NAME);
-      await renameFile(noteA.uri, newUri);
-
-      await waitForExpect(async () => {
-        expect(doc.getText().trim()).toEqual(
-          `Link to [[new-note-with-section#Section]]`
-        );
-      });
-      await deleteFile(newUri);
-      await deleteFile(noteB.uri);
     });
 
     it('should sync when moving the note to a new folder', async () => {

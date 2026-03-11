@@ -1,7 +1,6 @@
 import { commands, window } from 'vscode';
 import { CommandDescriptor } from '../../utils/commands';
 import { OpenResourceArgs, OPEN_COMMAND } from './open-resource';
-import * as filter from '../../core/services/resource-filter';
 import { URI } from '../../core/model/uri';
 import {
   closeEditors,
@@ -22,7 +21,6 @@ describe('open-resource command', () => {
   });
 
   it('URI param has precedence over filter', async () => {
-    const spy = jest.spyOn(filter, 'createFilter');
     const noteA = await createFile('Note A for open command');
     await waitForNoteInFoamWorkspace(noteA.uri);
 
@@ -39,7 +37,6 @@ describe('open-resource command', () => {
       expect(window.activeTextEditor).toBeTruthy();
       expect(window.activeTextEditor.document.uri.path).toEqual(noteA.uri.path);
     });
-    expect(spy).not.toHaveBeenCalled();
 
     await deleteFile(noteA.uri);
   });

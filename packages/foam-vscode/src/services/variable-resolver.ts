@@ -2,7 +2,7 @@ import { findSelectionContent, getCurrentEditorDirectory } from './editor';
 import { window, workspace } from 'vscode';
 import { fromVsCodeUri } from '../utils/vsc-utils';
 import { UserCancelledOperation } from './errors';
-import { toSlug } from '../utils/slug';
+import { toSlug } from '../core/utils/slug';
 import { getFoamVsCodeConfig } from './config';
 import {
   SnippetParser,

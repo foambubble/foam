@@ -1720,6 +1720,7 @@ const mockState = {
   configuration: new MockWorkspaceConfiguration(),
   fileWatchers: [] as MockFileSystemWatcher[],
   onWillRenameFilesListeners: [] as ((e: any) => any)[],
+  onDidRenameFilesListeners: [] as ((e: any) => any)[],
   openDocuments: new Map<string, MockTextDocument>(),
 };
 
@@ -1961,6 +1962,18 @@ export const workspace = {
     };
   },
 
+  onDidRenameFiles(listener: (e: any) => any): Disposable {
+    mockState.onDidRenameFilesListeners.push(listener);
+    return {
+      dispose: () => {
+        const idx = mockState.onDidRenameFilesListeners.indexOf(listener);
+        if (idx >= 0) {
+          mockState.onDidRenameFilesListeners.splice(idx, 1);
+        }
+      },
+    };
+  },
+
   onDidChangeConfiguration(listener: (e: any) => void): Disposable {
     return { dispose: () => {} };
   },
@@ -2083,6 +2096,17 @@ export const workspace = {
                 watcher._fireCreate(newFileUri);
               }
             }
+          }
+        }
+      }
+
+      // Fire onDidRenameFiles after all renames are complete
+      if (renames.length > 0 && mockState.onDidRenameFilesListeners.length > 0) {
+        const event = { files: renames };
+        for (const listener of mockState.onDidRenameFilesListeners) {
+          const result = listener(event);
+          if (result && typeof result.then === 'function') {
+            await result;
           }
         }
       }
@@ -2249,6 +2273,7 @@ export function resetMockState(): void {
   mockState.workspaceFolders = [];
   mockState.commands.clear();
   mockState.onWillRenameFilesListeners = [];
+  mockState.onDidRenameFilesListeners = [];
   mockState.openDocuments.clear();
   mockState.configuration = new MockWorkspaceConfiguration();
 

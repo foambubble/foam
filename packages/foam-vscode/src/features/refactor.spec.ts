@@ -94,7 +94,7 @@ describe('Note rename sync', () => {
         'folderA',
         'note-a.md',
       ]);
-      await createFile('Conflicting note', [
+      const otherNote = await createFile('Conflicting note', [
         'dir-rename',
         'other',
         'note-a.md',
@@ -118,6 +118,8 @@ describe('Note rename sync', () => {
       }, 1000);
 
       await deleteFile(outside.uri);
+      await deleteFile(folderBUri);
+      await deleteFile(otherNote.uri);
     });
 
     it('should not change unique wikilinks when a folder is renamed', async () => {
@@ -146,6 +148,7 @@ describe('Note rename sync', () => {
       }, 1000);
 
       await deleteFile(outside.uri);
+      await deleteFile(folderBUri);
     });
   });
 

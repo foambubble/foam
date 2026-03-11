@@ -167,6 +167,20 @@ export default async function activate(
           );
         }
 
+        // For directory renames, remove stale workspace entries for files under
+        // the old directory path. On macOS (FSEvents), the file watcher fires
+        // directory-level events rather than per-file events, so Foam never
+        // receives individual delete events for those files. We clean up here,
+        // synchronously, inside the awaited onWillRenameFiles handler, before
+        // VS Code performs the actual rename.
+        if (isDirectory) {
+          const oldDirPath = foamOldUri.path;
+          foam.workspace
+            .list()
+            .filter(r => r.uri.path.startsWith(oldDirPath + '/'))
+            .forEach(resource => foam.workspace.delete(resource.uri));
+        }
+
         if (!isDirectory) {
           if (
             foam.graph

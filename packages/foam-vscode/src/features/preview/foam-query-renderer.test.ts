@@ -41,6 +41,35 @@ describe('markdownItFoamQuery', () => {
     toRelativePath,
   });
 
+  describe('placeholder — empty blocks', () => {
+    it('renders a placeholder for an empty foam-query block', () => {
+      const result = md.render('```foam-query\n```');
+      expect(result).toContain('foam-query-placeholder');
+      expect(result).not.toContain('foam-query-results');
+    });
+
+    it('renders a placeholder for a whitespace-only foam-query block', () => {
+      const result = md.render('```foam-query\n   \n```');
+      expect(result).toContain('foam-query-placeholder');
+    });
+
+    it('placeholder includes a syntax example', () => {
+      const result = md.render('```foam-query\n```');
+      expect(result).toContain('filter:');
+    });
+
+    it('renders a placeholder for an empty foam-query-js block', () => {
+      const result = md.render('```foam-query-js\n```');
+      expect(result).toContain('foam-query-placeholder');
+      expect(result).not.toContain('foam-query-results');
+    });
+
+    it('placeholder for foam-query-js includes a code example', () => {
+      const result = md.render('```foam-query-js\n```');
+      expect(result).toContain('foam.pages');
+    });
+  });
+
   describe('pass-through', () => {
     it('leaves regular code fences unchanged', () => {
       const result = md.render('```typescript\nconst x = 1;\n```');

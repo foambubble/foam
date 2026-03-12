@@ -4,6 +4,20 @@ import { FoamGraph } from '../model/graph';
 import { QueryDescriptor, executeQuery } from '.';
 import { escapeHtml, renderResults } from './html';
 
+const DQL_PLACEHOLDER = `<div class="foam-query-placeholder">
+<p>Use <code>\`\`\`foam-query</code> blocks to write a query to list notes. For example:</p>
+<pre>\`\`\`foam-query
+filter: "#recipe"
+sort: title ASC
+\`\`\`</pre>
+<pre>\`\`\`foam-query
+filter: "#recipe"
+select: [title, tags, backlink-count]
+format: table
+\`\`\`</pre>
+<p>Read the full documentation <a href="https://github.com/foambubble/foam/blob/main/docs/user/features/foam-queries.md">here</a></p>
+</div>`;
+
 export function renderDqlQuery(
   content: string,
   workspace: FoamWorkspace,
@@ -11,6 +25,10 @@ export function renderDqlQuery(
   trusted: boolean,
   toRelativePath: (path: string) => string
 ): string {
+  if (content.trim() === '') {
+    return DQL_PLACEHOLDER;
+  }
+
   let descriptor: QueryDescriptor;
   try {
     descriptor = (parseYaml(content) as QueryDescriptor) ?? {};

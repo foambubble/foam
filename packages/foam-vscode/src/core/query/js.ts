@@ -30,6 +30,14 @@ const BLOCKED_GLOBALS = [
   'Function',
 ];
 
+const JS_PLACEHOLDER = `<div class="foam-query-placeholder">
+<p>Use <code>\`\`\`foam-query-js</code> blocks to write a script to query notes. For example:</p>
+<pre>\`\`\`foam-query-js
+render(foam.pages('#my-tag').sortBy('title').format('list'));
+\`\`\`</pre>
+<p>Read the full documentation <a href="https://github.com/foambubble/foam/blob/main/docs/user/features/foam-queries.md">here</a></p>
+</div>`;
+
 export function renderJsQuery(
   code: string,
   workspace: FoamWorkspace,
@@ -37,6 +45,10 @@ export function renderJsQuery(
   trusted: boolean,
   toRelativePath: (path: string) => string
 ): string {
+  if (code.trim() === '') {
+    return JS_PLACEHOLDER;
+  }
+
   if (!trusted) {
     return `<div class="foam-query-untrusted">foam-query-js requires a trusted workspace. <a href="command:workbench.action.manageTrustedDomain">Manage trust</a></div>`;
   }

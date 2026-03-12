@@ -29,6 +29,29 @@ See how your notes are connected via a [graph](https://foambubble.github.io/foam
 
 ![Graph Visualization](./assets/screenshots/feature-show-graph.gif)
 
+### Foam Queries
+
+Embed dynamic, auto-updating lists, tables, and counts of notes directly in the Markdown preview using `foam-query` code blocks.
+
+````markdown
+```foam-query
+filter: "#research"
+select: [title, tags, backlink-count]
+sort: backlink-count DESC
+format: table
+```
+````
+
+Use `foam-query-js` for scripted queries when you need more control (trusted workspaces only). See the [Foam Queries documentation](https://foambubble.github.io/foam/user/features/foam-queries) for the full reference.
+
+![Foam queries](./assets/screenshots/foam-query.gif)
+
+### Note embed
+
+Embed the content from other notes.
+
+![Note Embed](./assets/screenshots/feature-note-embed.gif)
+
 ### Link Autocompletion
 
 Foam helps you create the connections between your notes, and your placeholders as well.
@@ -65,12 +88,6 @@ See where a note is being referenced in your knowledge base.
 Navigate your rendered notes in the VS Code preview panel.
 
 ![Navigation in Preview](./assets/screenshots/feature-preview-navigation.gif)
-
-### Note embed
-
-Embed the content from other notes.
-
-![Note Embed](./assets/screenshots/feature-note-embed.gif)
 
 ### Support for sections
 

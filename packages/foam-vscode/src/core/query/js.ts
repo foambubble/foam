@@ -50,7 +50,16 @@ export function renderJsQuery(
     if (format === 'list') {
       return renderList(qr.select(['title', 'path']).toArray(), toRelativePath);
     }
-    return renderResults(qr.toArray(), desc, toRelativePath);
+    // Ensure path is fetched for link generation when title is selected,
+    // but pass the original descriptor to renderResults so path isn't shown as a column.
+    const needsPath =
+      desc.select &&
+      desc.select.includes('title') &&
+      !desc.select.includes('path');
+    const results = needsPath
+      ? qr.select([...desc.select, 'path']).toArray()
+      : qr.toArray();
+    return renderResults(results, desc, toRelativePath);
   };
 
   const render = (value: QueryResult | string | undefined | null) => {

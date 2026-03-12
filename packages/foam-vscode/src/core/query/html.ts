@@ -15,10 +15,10 @@ export function noteLink(
 ): string {
   try {
     const rel = toRelativePath(uriPath);
-    const href = `/${rel}`;
-    return `<a class='foam-note-link' title='${escapeHtml(
+    const href = encodeURI(`/${rel}`);
+    return `<a class="foam-note-link" title="${escapeHtml(
       title
-    )}' href='${href}' data-href='${href}'>${escapeHtml(title)}</a>`;
+    )}" href="${href}" data-href="${href}">${escapeHtml(title)}</a>`;
   } catch {
     return escapeHtml(title);
   }

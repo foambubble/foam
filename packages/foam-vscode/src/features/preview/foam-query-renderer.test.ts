@@ -110,7 +110,7 @@ describe('markdownItFoamQuery', () => {
       const result = md.render(
         '```foam-query\nfilter: "#research"\nsort: title ASC\nlimit: 1\n```'
       );
-      expect(result).toContain("class='foam-note-link'");
+      expect(result).toContain('class="foam-note-link"');
       expect(result).toContain('/notes/alpha.md');
     });
 
@@ -151,7 +151,7 @@ describe('markdownItFoamQuery', () => {
       const result = md.render(
         '```foam-query\nfilter: "#other"\nformat: table\nselect: [title, type]\n```'
       );
-      expect(result).toContain("class='foam-note-link'");
+      expect(result).toContain('class="foam-note-link"');
       expect(result).toContain('/notes/gamma.md');
     });
 
@@ -224,6 +224,20 @@ describe('markdownItFoamQuery', () => {
       );
       // require should be undefined in the sandbox
       expect(result).toContain('undefined');
+    });
+
+    it('title cells in JS table render as foam-note-link even when path is not selected', () => {
+      const result = md.render(
+        [
+          '```foam-query-js',
+          "render(foam.pages('#other').select(['title','type']).format('table'));",
+          '```',
+        ].join('\n')
+      );
+      expect(result).toContain('class="foam-note-link"');
+      expect(result).toContain('/notes/gamma.md');
+      // path should not appear as a table column
+      expect(result).not.toContain('<th>path</th>');
     });
 
     it('shows untrusted message when isTrusted returns false', () => {

@@ -39,6 +39,7 @@ Foam is like a bathtub: _What you get out of it depends on what you put into it.
 - [[wikilinks]]
 - [[block-anchors]]
 - [[embeds]]
+- [[foam-queries]]
 - [[tags]]
 - [[backlinking]]
 - [[daily-notes]]
@@ -81,6 +82,7 @@ See [[publishing]] for more details.
 [wikilinks]: features/wikilinks.md "Wikilinks"
 [block-anchors]: features/block-anchors.md "Block Anchors"
 [embeds]: features/embeds.md "Note Embeds"
+[foam-queries]: features/foam-queries.md "Foam Queries"
 [tags]: features/tags.md "Tags"
 [backlinking]: features/backlinking.md "Backlinks"
 [daily-notes]: features/daily-notes.md "Daily Notes"

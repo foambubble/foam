@@ -8,7 +8,9 @@ import { default as markdownItRemoveLinkReferences } from './remove-wikilink-ref
 import { default as markdownItWikilinkEmbed } from './wikilink-embed';
 import { default as escapeWikilinkPipes } from './escape-wikilink-pipes';
 import { default as markdownItBlockAnchorIds } from './block-anchor-ids';
-import { fromVsCodeUri } from '../../utils/vsc-utils';
+import { default as markdownItFoamQuery } from './foam-query-renderer';
+import { fromVsCodeUri, toVsCodeUri } from '../../utils/vsc-utils';
+import { URI } from '../../core/model/uri';
 
 export default async function activate(
   context: vscode.ExtensionContext,
@@ -16,10 +18,26 @@ export default async function activate(
 ) {
   const foam = await foamPromise;
 
+  // Refresh the markdown preview whenever the workspace changes so that
+  // foam-query embed blocks show up-to-date results in real time.
+  context.subscriptions.push(
+    foam.workspace.onDidAdd(() =>
+      vscode.commands.executeCommand('markdown.preview.refresh')
+    ),
+    foam.workspace.onDidUpdate(() =>
+      vscode.commands.executeCommand('markdown.preview.refresh')
+    ),
+    foam.workspace.onDidDelete(() =>
+      vscode.commands.executeCommand('markdown.preview.refresh')
+    )
+  );
+
   return {
     extendMarkdownIt: (md: markdownit) => {
       const ws = foam.workspace;
+      const graph = foam.graph;
       const parser = foam.services.parser;
+
       // Used to resolve self-referencing embeds (![[#section]], ![[#^blockid]]).
       // activeTextEditor is the best available proxy for the document being previewed.
       const getCurrentResource = () => {
@@ -32,6 +50,14 @@ export default async function activate(
       result = markdownItWikilinkNavigation(result, ws);
       result = markdownItRemoveLinkReferences(result, ws);
       result = markdownItBlockAnchorIds(result);
+      result = markdownItFoamQuery(result, ws, graph, {
+        isTrusted: () => vscode.workspace.isTrusted,
+        toRelativePath: (uriPath: string) =>
+          vscode.workspace.asRelativePath(
+            toVsCodeUri(URI.file(uriPath)),
+            false
+          ),
+      });
       return result;
     },
   };

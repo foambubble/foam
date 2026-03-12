@@ -2,12 +2,10 @@ import * as vscode from 'vscode';
 import { URI } from '../../core/model/uri';
 import { toVsCodeUri } from '../../utils/vsc-utils';
 import { Foam } from '../../core/model/foam';
-import {
-  createFilter,
-  FilterDescriptor,
-} from '../../core/services/resource-filter';
+import { QueryFilter, parseFilter } from '../../core/query';
 import { CommandDescriptor } from '../../utils/commands';
 import { FoamWorkspace } from '../../core/model/workspace';
+import { FoamGraph } from '../../core/model/graph';
 import { Resource } from '../../core/model/note';
 import { isNone } from '../../core/utils';
 
@@ -18,7 +16,7 @@ export default async function activate(
   const foam = await foamPromise;
   context.subscriptions.push(
     vscode.commands.registerCommand(OPEN_COMMAND.command, args => {
-      return openResource(foam.workspace, args);
+      return openResource(foam.workspace, foam.graph, args);
     })
   );
 }
@@ -34,7 +32,7 @@ export interface OpenResourceArgs {
    * The filter object that describes which notes to consider
    * for opening
    */
-  filter?: FilterDescriptor;
+  filter?: QueryFilter;
 }
 
 export const OPEN_COMMAND = {
@@ -51,7 +49,11 @@ export const OPEN_COMMAND = {
   },
 };
 
-async function openResource(workspace: FoamWorkspace, args?: OpenResourceArgs) {
+async function openResource(
+  workspace: FoamWorkspace,
+  graph: FoamGraph,
+  args?: OpenResourceArgs
+) {
   args = args ?? {};
 
   let item: { uri: URI } | null = null;
@@ -62,10 +64,13 @@ async function openResource(workspace: FoamWorkspace, args?: OpenResourceArgs) {
   }
 
   if (isNone(item) && args.filter) {
-    const resources = workspace.list();
-    const candidates = resources.filter(
-      createFilter(args.filter, vscode.workspace.isTrusted)
+    const predicate = parseFilter(
+      args.filter,
+      workspace,
+      graph,
+      vscode.workspace.isTrusted
     );
+    const candidates = workspace.list().filter(predicate);
 
     if (candidates.length === 0) {
       vscode.window.showInformationMessage(

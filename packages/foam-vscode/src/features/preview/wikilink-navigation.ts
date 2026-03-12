@@ -8,7 +8,7 @@ import { toVsCodeUri } from '../../utils/vsc-utils';
 import { MarkdownLink } from '../../core/services/markdown-link';
 import { Range } from '../../core/model/range';
 import { isEmpty } from 'lodash';
-import { toSlug } from '../../utils/slug';
+import { toSlug } from '../../core/utils/slug';
 import { isNone } from '../../core/utils';
 
 export const markdownItWikilinkNavigation = (

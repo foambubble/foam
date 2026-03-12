@@ -2,6 +2,8 @@
 
 Embeds allow you to include content from other notes directly into your current note. This is powerful for creating dynamic content that updates automatically when the source note changes.
 
+If you want to embed a dynamic list or table of notes instead of the content of one note, see [[foam-queries]].
+
 ## Basic Syntax
 
 Use the embed syntax with an exclamation mark before the wikilink:
@@ -144,3 +146,4 @@ Add descriptions for accessibility:
 - Use lowercase alignment: `center` not `Center`
 
 [block-anchors]: block-anchors.md 'Block Anchors'
+[foam-queries]: foam-queries.md 'Foam Queries'

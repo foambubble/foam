@@ -1,6 +1,6 @@
 import { TemplateContext } from './note-creation-types';
 import { URI } from '../core/model/uri';
-import { toSlug } from '../utils/slug';
+import { toSlug } from '../core/utils/slug';
 import { Logger } from '../core/utils/log';
 import dayjs from 'dayjs';
 

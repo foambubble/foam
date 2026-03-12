@@ -7,7 +7,6 @@ import frontmatterPlugin from 'remark-frontmatter';
 import { parse as parseYAML } from 'yaml';
 import visit from 'unist-util-visit';
 import {
-  Block,
   BlockType,
   NoteLinkDefinition,
   Resource,

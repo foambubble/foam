@@ -293,7 +293,6 @@ describe('Block diagnostics', () => {
     expect(editArgs.value).toBe('^existing');
     // The replacement range should start AFTER the # (at the ^ character)
     // and end BEFORE the closing ]]
-    const linkText = `[[${fileA.name}#^ghost]]`;
     const hashPos = `Link to [[${fileA.name}`.length;
     expect(editArgs.range.start.character).toBe(hashPos + 1); // after #
     expect(editArgs.range.end.character).toBe(

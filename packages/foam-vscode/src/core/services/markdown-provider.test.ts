@@ -706,7 +706,10 @@ describe('Generation of markdown references', () => {
 
   it('should generate unambiguous URL for path-qualified wikilink when both dir1/foo and dir2/foo exist (without extension)', () => {
     const workspace = createTestWorkspace();
-    const noteA = createNoteFromMarkdown('Link to [[dir2/foo]]', '/root/bar.md');
+    const noteA = createNoteFromMarkdown(
+      'Link to [[dir2/foo]]',
+      '/root/bar.md'
+    );
     workspace
       .set(noteA)
       .set(createNoteFromMarkdown('Foo in dir1', '/root/dir1/foo.md'))
@@ -720,7 +723,10 @@ describe('Generation of markdown references', () => {
 
   it('should generate unambiguous URL for path-qualified wikilink when both dir1/foo and dir2/foo exist (with extension)', () => {
     const workspace = createTestWorkspace();
-    const noteA = createNoteFromMarkdown('Link to [[dir2/foo]]', '/root/bar.md');
+    const noteA = createNoteFromMarkdown(
+      'Link to [[dir2/foo]]',
+      '/root/bar.md'
+    );
     workspace
       .set(noteA)
       .set(createNoteFromMarkdown('Foo in dir1', '/root/dir1/foo.md'))

@@ -26,13 +26,6 @@ export const DEFAULT_OLLAMA_CONFIG: OllamaConfig = {
 };
 
 /**
- * Ollama API response for embeddings
- */
-interface OllamaEmbeddingResponse {
-  embeddings: number[][];
-}
-
-/**
  * Embedding provider that uses Ollama for generating embeddings
  */
 export class OllamaEmbeddingProvider implements EmbeddingProvider {

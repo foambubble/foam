@@ -703,6 +703,34 @@ describe('Generation of markdown references', () => {
       })
     );
   });
+
+  it('should generate unambiguous URL for path-qualified wikilink when both dir1/foo and dir2/foo exist (without extension)', () => {
+    const workspace = createTestWorkspace();
+    const noteA = createNoteFromMarkdown('Link to [[dir2/foo]]', '/root/bar.md');
+    workspace
+      .set(noteA)
+      .set(createNoteFromMarkdown('Foo in dir1', '/root/dir1/foo.md'))
+      .set(createNoteFromMarkdown('Foo in dir2', '/root/dir2/foo.md'));
+
+    const references = createMarkdownReferences(workspace, noteA.uri, false);
+    expect(references).toHaveLength(1);
+    expect(references[0].label).toBe('dir2/foo');
+    expect(references[0].url).toBe('dir2/foo');
+  });
+
+  it('should generate unambiguous URL for path-qualified wikilink when both dir1/foo and dir2/foo exist (with extension)', () => {
+    const workspace = createTestWorkspace();
+    const noteA = createNoteFromMarkdown('Link to [[dir2/foo]]', '/root/bar.md');
+    workspace
+      .set(noteA)
+      .set(createNoteFromMarkdown('Foo in dir1', '/root/dir1/foo.md'))
+      .set(createNoteFromMarkdown('Foo in dir2', '/root/dir2/foo.md'));
+
+    const references = createMarkdownReferences(workspace, noteA.uri, true);
+    expect(references).toHaveLength(1);
+    expect(references[0].label).toBe('dir2/foo');
+    expect(references[0].url).toBe('dir2/foo.md');
+  });
 });
 
 describe('Wikilink directory resolution', () => {

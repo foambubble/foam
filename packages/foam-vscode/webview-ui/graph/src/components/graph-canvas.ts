@@ -5,14 +5,12 @@ import { forceX, forceY, forceCollide, forceManyBody, forceLink } from 'd3-force
 import { scaleLinear } from 'd3-scale';
 import { Painter } from '../lib/painter';
 import {
-  augmentGraphInfo,
   computeFocusSets,
   getNodeState,
   getLinkState,
   getLinkNodeId,
 } from '../lib/graph-utils';
 import { getNodeFillAndBorder, getLinkColor } from '../lib/colors';
-import type { GraphData } from '../../protocol';
 import type {
   AugmentedGraph,
   AugmentedLink,
@@ -31,7 +29,7 @@ export class GraphCanvas extends LitElement {
     }
   `;
 
-  @property({ type: Object }) rawGraph: GraphData | null = null;
+  @property({ type: Object }) augmentedGraph: AugmentedGraph | null = null;
   @property({ type: Object }) style: ResolvedStyle = {} as ResolvedStyle;
   @property({ type: Object }) showNodesOfType: Record<string, boolean> = {};
   @property({ type: Object }) forces: Forces = { collide: 2, repel: 30, link: 30, velocityDecay: 0.4 };
@@ -214,10 +212,9 @@ export class GraphCanvas extends LitElement {
       this.rs.nodeFontSizeMultiplier = this.nodeFontSizeMultiplier;
     }
 
-    if (changed.has('rawGraph')) {
-      if (!this.rawGraph) return;
-      const augmented = augmentGraphInfo(this.rawGraph);
-      this.rs.augmented = augmented;
+    if (changed.has('augmentedGraph')) {
+      if (!this.augmentedGraph) return;
+      this.rs.augmented = this.augmentedGraph;
       this._updateGraphData();
       this._updateFocusSets();
 

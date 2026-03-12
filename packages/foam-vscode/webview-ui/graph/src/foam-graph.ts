@@ -1,8 +1,9 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { getDefaultStyle } from './lib/defaults';
+import { augmentGraphInfo } from './lib/graph-utils';
 import type { GraphData, StylePayload } from './protocol';
-import type { ResolvedStyle, Forces, Selection } from './lib/types';
+import type { AugmentedGraph, ResolvedStyle, Forces, Selection } from './lib/types';
 import './components/graph-canvas';
 import './components/control-panel';
 
@@ -22,6 +23,7 @@ export class FoamGraph extends LitElement {
   @property({ type: Object }) graphStyle: StylePayload | null = null;
 
   // Internal control state
+  @state() private augmentedGraph: AugmentedGraph | null = null;
   @state() private showNodesOfType: Record<string, boolean> = {
     placeholder: true,
     image: false,
@@ -68,11 +70,12 @@ export class FoamGraph extends LitElement {
 
   updated(changed: Map<string, unknown>) {
     if (changed.has('graphData') && this.graphData) {
-      this._syncNodeTypes(this.graphData);
+      this.augmentedGraph = augmentGraphInfo(this.graphData);
+      this._syncNodeTypes(this.augmentedGraph);
     }
   }
 
-  private _syncNodeTypes(graph: GraphData) {
+  private _syncNodeTypes(graph: AugmentedGraph) {
     const types = new Set(Object.values(graph.nodeInfo).map(n => n.type));
     const updated = { ...this.showNodesOfType };
     let changed = false;
@@ -97,7 +100,7 @@ export class FoamGraph extends LitElement {
     const resolved = this.resolvedStyle;
     return html`
       <foam-graph-canvas
-        .rawGraph=${this.graphData}
+        .augmentedGraph=${this.augmentedGraph}
         .style=${resolved}
         .showNodesOfType=${this.showNodesOfType}
         .forces=${this.forces}

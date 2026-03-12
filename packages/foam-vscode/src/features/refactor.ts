@@ -259,6 +259,26 @@ export default async function activate(
         }
         await context.globalState.update(MARKDOWN_LINK_NOTIFICATION_KEY, true);
       }
+    }),
+
+    vscode.workspace.onWillDeleteFiles(async e => {
+      for (const uri of e.files) {
+        const stat = await vscode.workspace.fs.stat(uri);
+        if (stat.type !== vscode.FileType.Directory) {
+          continue;
+        }
+        // On platforms where the file watcher fires directory-level events
+        // (e.g. macOS FSEvents, Linux inotify), Foam never receives individual
+        // delete events for files inside a deleted directory. We clean up here,
+        // synchronously, inside the awaited onWillDeleteFiles handler, so that
+        // the workspace stays consistent. The delete events fired here allow
+        // downstream clients (graph, tags, etc.) to update their state.
+        const foamUri = fromVsCodeUri(uri);
+        foam.workspace
+          .list()
+          .filter(r => r.uri.path.startsWith(foamUri.path + '/'))
+          .forEach(resource => foam.workspace.delete(resource.uri));
+      }
     })
   );
 }

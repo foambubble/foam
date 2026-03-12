@@ -1275,6 +1275,18 @@ class MockFileSystem implements FileSystem {
   }
 
   async delete(uri: Uri, options?: { recursive?: boolean }): Promise<void> {
+    // Fire onWillDeleteFiles listeners before deleting, so handlers can
+    // clean up workspace state synchronously (mirrors VS Code's behaviour).
+    if (mockState.onWillDeleteFilesListeners.length > 0) {
+      const event = { files: [uri] };
+      for (const listener of mockState.onWillDeleteFilesListeners) {
+        const result = listener(event);
+        if (result && typeof result.then === 'function') {
+          await result;
+        }
+      }
+    }
+
     if (options?.recursive) {
       // Use rmdir with recursive option for older Node.js versions
       try {
@@ -1721,6 +1733,7 @@ const mockState = {
   fileWatchers: [] as MockFileSystemWatcher[],
   onWillRenameFilesListeners: [] as ((e: any) => any)[],
   onDidRenameFilesListeners: [] as ((e: any) => any)[],
+  onWillDeleteFilesListeners: [] as ((e: any) => any)[],
   openDocuments: new Map<string, MockTextDocument>(),
 };
 
@@ -1974,6 +1987,18 @@ export const workspace = {
     };
   },
 
+  onWillDeleteFiles(listener: (e: any) => any): Disposable {
+    mockState.onWillDeleteFilesListeners.push(listener);
+    return {
+      dispose: () => {
+        const idx = mockState.onWillDeleteFilesListeners.indexOf(listener);
+        if (idx >= 0) {
+          mockState.onWillDeleteFilesListeners.splice(idx, 1);
+        }
+      },
+    };
+  },
+
   onDidChangeConfiguration(listener: (e: any) => void): Disposable {
     return { dispose: () => {} };
   },
@@ -2101,7 +2126,10 @@ export const workspace = {
       }
 
       // Fire onDidRenameFiles after all renames are complete
-      if (renames.length > 0 && mockState.onDidRenameFilesListeners.length > 0) {
+      if (
+        renames.length > 0 &&
+        mockState.onDidRenameFilesListeners.length > 0
+      ) {
         const event = { files: renames };
         for (const listener of mockState.onDidRenameFilesListeners) {
           const result = listener(event);
@@ -2274,6 +2302,7 @@ export function resetMockState(): void {
   mockState.commands.clear();
   mockState.onWillRenameFilesListeners = [];
   mockState.onDidRenameFilesListeners = [];
+  mockState.onWillDeleteFilesListeners = [];
   mockState.openDocuments.clear();
   mockState.configuration = new MockWorkspaceConfiguration();
 

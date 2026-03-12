@@ -1,7 +1,5 @@
 # Frequently Asked Questions
 
-> ⚠️ Foam is still in preview. Expect the experience to be a little rough.
-
 - [Frequently Asked Questions](#frequently-asked-questions)
   - [Links/Graphs/BackLinks don't work. How do I enable them?](#linksgraphsbacklinks-dont-work-how-do-i-enable-them)
   - [I don't want Foam enabled for all my workspaces](#i-dont-want-foam-enabled-for-all-my-workspaces)

@@ -19,7 +19,7 @@
     "build": "lerna run build",
     "test": "yarn workspace foam-vscode test",
     "test:unit": "yarn workspace foam-vscode test:unit",
-    "lint": "lerna run lint",
+    "lint": "yarn workspace foam-vscode lint",
     "watch": "lerna run watch --concurrency 20",
     "prepare": "husky"
   },

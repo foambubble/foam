@@ -27,7 +27,15 @@ describe('markdownItFoamQuery', () => {
     root,
   });
 
-  const ws = new FoamWorkspace().set(noteA).set(noteB).set(noteC);
+  const noteD = createTestNote({
+    uri: 'notes/delta.md',
+    title: 'Delta',
+    tags: ['research'],
+    root,
+    properties: { status: 'published', date: '2024-01-01' },
+  });
+
+  const ws = new FoamWorkspace().set(noteA).set(noteB).set(noteC).set(noteD);
   const graph = FoamGraph.fromWorkspace(ws, false);
 
   const workspaceRoot = '/test-workspace';
@@ -117,7 +125,7 @@ describe('markdownItFoamQuery', () => {
       const result = md.render(
         '```foam-query\nfilter: "#research"\nformat: count\n```'
       );
-      expect(result).toContain('2 notes');
+      expect(result).toContain('3 notes');
     });
 
     it('renders singular "note" for a single result', () => {
@@ -165,15 +173,195 @@ describe('markdownItFoamQuery', () => {
       expect(result).not.toContain('Beta');
     });
 
-    it('renders all notes when filter is omitted', () => {
-      const result = md.render('```foam-query\nformat: count\n```');
-      expect(result).toContain('3 notes');
+    it('renders the selected field as text when title is not selected', () => {
+      const result = md.render(
+        '```foam-query\nfilter: "#research"\nselect: [path]\n```'
+      );
+      expect(result).toContain('<ul class="foam-query-results">');
+      expect(result).toContain('alpha.md');
+      expect(result).toContain('beta.md');
+      expect(result).not.toMatch(/<a[^>]*><\/a>/);
     });
 
-    it('renders a YAML parse error gracefully', () => {
+    it('renders all notes when filter is omitted', () => {
+      const result = md.render('```foam-query\nformat: count\n```');
+      expect(result).toContain('4 notes');
+    });
+
+    it('renders a YAML parse error gracefully when the whole block is invalid', () => {
       const result = md.render('```foam-query\n: bad: {\n```');
       expect(result).toContain('foam-query-error');
       expect(result).toContain('YAML parse error');
+      expect(result).toContain('foam-query-placeholder');
+    });
+
+    it('shows placeholder while typing a partial field name (not yet a mapping)', () => {
+      for (const partial of ['f', 'fi', 'filter']) {
+        const result = md.render(`\`\`\`foam-query\n${partial}\n\`\`\``);
+        expect(result).toContain('foam-query-placeholder');
+        expect(result).not.toContain('foam-query-results');
+      }
+    });
+
+    it('shows placeholder and a hint when filter has no value', () => {
+      const result = md.render('```foam-query\nfilter:\n```');
+      expect(result).toContain('foam-query-placeholder');
+      expect(result).toContain('foam-query-warning');
+      expect(result).toContain('*');
+      expect(result).not.toContain('foam-query-results');
+    });
+
+    it('shows filter hint even when other valid fields are present', () => {
+      const result = md.render('```foam-query\nfilter:\nformat: count\n```');
+      expect(result).toContain('foam-query-placeholder');
+      expect(result).toContain('foam-query-warning');
+      expect(result).not.toContain('foam-query-results');
+    });
+
+    it('renders partial results and a warning when only a later line is invalid', () => {
+      const result = md.render(
+        '```foam-query\nfilter: "#research"\nformat: [\n```'
+      );
+      expect(result).toContain('Alpha');
+      expect(result).toContain('Beta');
+      expect(result).not.toContain('Gamma');
+      expect(result).toContain('foam-query-warning');
+    });
+
+    it('falls back to placeholder when no valid content can be recovered', () => {
+      const result = md.render('```foam-query\n: bad: {\n: also bad: {\n```');
+      expect(result).toContain('foam-query-placeholder');
+      expect(result).toContain('foam-query-error');
+      expect(result).not.toContain('foam-query-results');
+    });
+
+    it('renders results and warns about unknown fields', () => {
+      const result = md.render(
+        '```foam-query\nfliter: "#research"\nformat: count\n```'
+      );
+      // filter is missing so all notes match
+      expect(result).toContain('4 notes');
+      expect(result).toContain('foam-query-warning');
+      expect(result).toContain('fliter');
+    });
+
+    it('warns once per unknown field', () => {
+      const result = md.render(
+        '```foam-query\nfliter: "#research"\nsorting: title ASC\nformat: count\n```'
+      );
+      expect(result).toContain('fliter');
+      expect(result).toContain('sorting');
+      expect(result).toContain('foam-query-warning');
+    });
+
+    describe('field value validation', () => {
+      it('shows placeholder and warning when filter has wrong type', () => {
+        const result = md.render('```foam-query\nfilter: [bad]\n```');
+        expect(result).toContain('foam-query-placeholder');
+        expect(result).toContain('foam-query-warning');
+        expect(result).not.toContain('foam-query-results');
+      });
+
+      it('warns and strips select when it is an empty array', () => {
+        const result = md.render(
+          '```foam-query\nfilter: "#research"\nselect: []\n```'
+        );
+        expect(result).toContain('foam-query-warning');
+        expect(result).toContain('select');
+        expect(result).toContain('Alpha');
+      });
+
+      it('warns and strips select when it is not an array', () => {
+        const result = md.render(
+          '```foam-query\nfilter: "#research"\nselect: title\n```'
+        );
+        expect(result).toContain('foam-query-warning');
+        expect(result).toContain('select');
+        expect(result).toContain('Alpha');
+      });
+
+      it('warns and strips sort when it is not a string', () => {
+        const result = md.render(
+          '```foam-query\nfilter: "#research"\nsort: 123\n```'
+        );
+        expect(result).toContain('foam-query-warning');
+        expect(result).toContain('sort');
+        expect(result).toContain('Alpha');
+      });
+
+      it('warns and strips limit when it is not a positive integer', () => {
+        const result = md.render(
+          '```foam-query\nfilter: "#research"\nlimit: -1\n```'
+        );
+        expect(result).toContain('foam-query-warning');
+        expect(result).toContain('limit');
+        expect(result).toContain('Alpha');
+        expect(result).toContain('Beta');
+      });
+
+      it('warns and strips format when it is not a valid value', () => {
+        const result = md.render(
+          '```foam-query\nfilter: "#research"\nformat: bad\n```'
+        );
+        expect(result).toContain('foam-query-warning');
+        expect(result).toContain('format');
+        expect(result).toContain('Alpha');
+      });
+    });
+
+    describe('properties dot notation in select', () => {
+      it('renders a property value as a table column', () => {
+        const result = md.render(
+          '```foam-query\nfilter: "#research"\nselect: [title, properties.status]\nformat: table\n```'
+        );
+        expect(result).toContain('<th>properties.status</th>');
+        expect(result).toContain('published'); // noteD has status: published
+      });
+
+      it('renders empty cell for notes missing the property', () => {
+        const result = md.render(
+          '```foam-query\nfilter: "#research"\nselect: [title, properties.status]\nformat: table\n```'
+        );
+        // Alpha and Beta have no status property — their cells should be empty
+        expect(result).toContain('<td></td>');
+        // No warning for missing property on a note
+        expect(result).not.toContain('foam-query-warning');
+      });
+
+      it('renders a property value in list format and skips notes without that property', () => {
+        const result = md.render(
+          '```foam-query\nfilter: "#research"\nselect: [properties.status]\n```'
+        );
+        expect(result).toContain('published'); // noteD has status
+        expect(result).not.toContain('<li></li>'); // no empty bullets for notes missing the property
+      });
+
+      it('accepts properties.X fields without warning', () => {
+        const result = md.render(
+          '```foam-query\nfilter: "#research"\nselect: [title, properties.anything]\nformat: table\n```'
+        );
+        expect(result).not.toContain('foam-query-warning');
+      });
+    });
+
+    describe('unknown fields in select', () => {
+      it('warns and strips unknown select elements, keeps valid ones', () => {
+        const result = md.render(
+          '```foam-query\nfilter: "#research"\nselect: [title, unknown_field]\nformat: table\n```'
+        );
+        expect(result).toContain('foam-query-warning');
+        expect(result).toContain('unknown_field');
+        expect(result).toContain('Alpha'); // valid field still renders
+        expect(result).not.toContain('<th>unknown_field</th>');
+      });
+
+      it('falls back to default select when all elements are unknown', () => {
+        const result = md.render(
+          '```foam-query\nfilter: "#research"\nselect: [bad1, bad2]\n```'
+        );
+        expect(result).toContain('foam-query-warning');
+        expect(result).toContain('Alpha'); // falls back to default (title)
+      });
     });
 
     it('title cells in tables render as foam-note-link anchors', () => {
@@ -200,7 +388,7 @@ describe('markdownItFoamQuery', () => {
       const result = md.render(
         "```foam-query-js\nrender(foam.pages('#research').format('count'));\n```"
       );
-      expect(result).toContain('2 notes');
+      expect(result).toContain('3 notes');
     });
 
     it('supports calling render() with a plain string', () => {

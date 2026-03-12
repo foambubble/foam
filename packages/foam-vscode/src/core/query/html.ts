@@ -40,6 +40,7 @@ function cellValue(
 
 export function renderList(
   results: ResourceView[],
+  fields: string[],
   toRelativePath: (path: string) => string
 ): string {
   if (results.length === 0) {
@@ -47,14 +48,28 @@ export function renderList(
   }
   const items = results
     .map(r => {
-      const title = String(r.title ?? '');
       const path = typeof r.path === 'string' ? r.path : '';
-      const link = path
-        ? noteLink(title, path, toRelativePath)
-        : escapeHtml(title);
-      return `<li>${link}</li>`;
+      const parts = fields
+        .map(field => {
+          const value = r[field];
+          if (field === 'title') {
+            const text =
+              value != null ? String(value) : path.split('/').pop() ?? path;
+            return path
+              ? noteLink(text, path, toRelativePath)
+              : escapeHtml(text);
+          }
+          if (Array.isArray(value)) return escapeHtml(value.join(', '));
+          return value != null ? escapeHtml(String(value)) : '';
+        })
+        .filter(Boolean);
+      return parts.length > 0 ? `<li>${parts.join(' · ')}</li>` : null;
     })
+    .filter((item): item is string => item !== null)
     .join('\n');
+  if (items.length === 0) {
+    return '<p class="foam-query-empty">No results</p>';
+  }
   return `<ul class="foam-query-results">\n${items}\n</ul>`;
 }
 
@@ -92,7 +107,6 @@ export function renderCount(results: ResourceView[]): string {
 
 /**
  * Renders query results as HTML based on the descriptor's format.
- * When format is 'list', results must contain at least 'title' and 'path'.
  */
 export function renderResults(
   results: ResourceView[],
@@ -112,6 +126,10 @@ export function renderResults(
     case 'count':
       return renderCount(results);
     default:
-      return renderList(results, toRelativePath);
+      return renderList(
+        results,
+        descriptor.select ?? ['title'],
+        toRelativePath
+      );
   }
 }

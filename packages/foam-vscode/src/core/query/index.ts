@@ -4,7 +4,7 @@ import { FoamGraph } from '../model/graph';
 import { Logger } from '../utils/log';
 
 export type QueryFilter =
-  | string // shorthand: "#tag", "[[note]]", "*", "/regex/"
+  | string // shorthand: "#tag", "[[note-id]]", "*", "/regex/"
   | {
       tag?: string;
       type?: string;
@@ -121,7 +121,7 @@ export function parseFilter(
         try {
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const resource = makeExpressionContext(r, graph);
-          // eslint-disable-next-line no-eval
+
           return Boolean(eval(expr));
         } catch (e) {
           Logger.warn(`[Query] expression error: ${e}`);
@@ -167,7 +167,7 @@ function parseShorthand(
     return r => r.tags.some(t => t.label === label);
   }
 
-  // "[[note-identifier]]"
+  // "[[note-id]]" — same identifier as used in wikilinks
   if (filter.startsWith('[[') && filter.endsWith(']]')) {
     const identifier = filter.slice(2, -2);
     const target = workspace.find(identifier);
@@ -209,13 +209,21 @@ function buildFullView(r: Resource, graph: FoamGraph): Record<string, unknown> {
   };
 }
 
+function resolveField(full: Record<string, unknown>, field: string): unknown {
+  const dot = field.indexOf('.');
+  if (dot === -1) return full[field];
+  const parent = full[field.slice(0, dot)];
+  if (parent == null || typeof parent !== 'object') return undefined;
+  return (parent as Record<string, unknown>)[field.slice(dot + 1)];
+}
+
 function projectResource(
   r: Resource,
   graph: FoamGraph,
   fields: string[]
 ): ResourceView {
   const full = buildFullView(r, graph);
-  return Object.fromEntries(fields.map(f => [f, full[f]]));
+  return Object.fromEntries(fields.map(f => [f, resolveField(full, f)]));
 }
 
 // --- Sorting ---

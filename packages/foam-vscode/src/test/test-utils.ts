@@ -96,12 +96,13 @@ export const createTestNote = (params: {
   sections?: string[];
   root?: URI;
   type?: string;
+  properties?: Record<string, unknown>;
 }): Resource => {
   const root = params.root ?? URI.file('/');
   return {
     uri: root.resolve(params.uri),
     type: params.type ?? 'note',
-    properties: {},
+    properties: params.properties ?? {},
     title: params.title ?? strToUri(params.uri).getBasename(),
     sections:
       params.sections?.map(label => ({

@@ -46,7 +46,7 @@ When you select more than one field, Foam renders a table by default.
 Use these shortcuts for common cases:
 
 - `"#tag"`: notes with that tag
-- `"[[note-name]]"`: notes linked to or from that note
+- `"[[note-id]]"`: notes linked to or from that note (use the same identifier as in wikilinks, e.g. the filename without extension)
 - `"/regex/"`: notes whose path matches the regular expression
 - `"*"`: all notes
 

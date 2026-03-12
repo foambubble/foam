@@ -8,6 +8,7 @@ import {
   Variable,
   VariableResolver,
 } from '../core/common/snippetParser';
+import dayjs from 'dayjs';
 
 const knownFoamVariables = new Set([
   'FOAM_TITLE',
@@ -15,6 +16,7 @@ const knownFoamVariables = new Set([
   'FOAM_SLUG',
   'FOAM_SELECTED_TEXT',
   'FOAM_CURRENT_DIR',
+  'FOAM_DATE_FORMAT',
   'FOAM_DATE_YEAR',
   'FOAM_DATE_YEAR_SHORT',
   'FOAM_DATE_MONTH',
@@ -164,6 +166,13 @@ export class Resolver implements VariableResolver {
         case 'FOAM_CURRENT_DIR':
           value = Promise.resolve(resolveFoamCurrentDir());
           break;
+        case 'FOAM_DATE_FORMAT': {
+          const fmt =
+            variable.children.map(c => c.toString()).join('') ||
+            'YYYY-MM-DDTHH:mm:ssZ';
+          value = Promise.resolve(dayjs(this.foamDate).format(fmt));
+          break;
+        }
         case 'FOAM_DATE_YEAR':
           value = Promise.resolve(String(this.foamDate.getFullYear()));
           break;

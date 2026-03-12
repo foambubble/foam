@@ -417,6 +417,32 @@ describe('variable-resolver, variable resolution', () => {
   });
 });
 
+describe('FOAM_DATE_FORMAT', () => {
+  const targetDate = new Date(2021, 9, 15, 1, 2, 3); // Friday, October 15, 2021 01:02:03
+
+  it('should resolve with ISO 8601 format by default', async () => {
+    const resolver = new Resolver(new Map(), targetDate);
+    const result = await resolver.resolveText('$FOAM_DATE_FORMAT');
+    // Should be local ISO 8601 with timezone offset, e.g. 2021-10-15T01:02:03+01:00
+    expect(result).toMatch(
+      /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/
+    );
+    expect(result).toContain('2021-10-15T01:02:03');
+  });
+
+  it('should resolve with a custom date-only format', async () => {
+    const resolver = new Resolver(new Map(), targetDate);
+    const result = await resolver.resolveText('${FOAM_DATE_FORMAT:YYYY-MM-DD}');
+    expect(result).toBe('2021-10-15');
+  });
+
+  it('should resolve with a custom time-only format', async () => {
+    const resolver = new Resolver(new Map(), targetDate);
+    const result = await resolver.resolveText('${FOAM_DATE_FORMAT:HH:mm:ss}');
+    expect(result).toBe('01:02:03');
+  });
+});
+
 describe('variable-resolver, resolveText', () => {
   it('should do nothing for template without Foam-specific variables', async () => {
     const input = `

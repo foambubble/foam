@@ -247,7 +247,20 @@ In addition, you can also use variables provided by Foam:
 | `FOAM_TITLE_SAFE`    | The title of the note in a file system safe format. If used, Foam will prompt you to enter a title for the note unless `FOAM_TITLE` has already caused the prompt.                                                                                                |
 | `FOAM_SLUG`          | The sluggified title of the note (using the default github slug method). If used, Foam will prompt you to enter a title for the note unless `FOAM_TITLE` has already caused the prompt.                                                                           |
 | `FOAM_CURRENT_DIR`   | The current editor's directory path. Resolves to the directory of the currently active file, or falls back to workspace root if no editor is active. Useful for creating notes in the current directory context.                                                  |
+| `FOAM_DATE_FORMAT`   | The Foam date formatted using a [dayjs format string](https://day.js.org/docs/en/display/format). Defaults to ISO 8601 with local timezone offset (e.g. `2026-03-12T22:06:55+01:00`). Use as `$FOAM_DATE_FORMAT` for the default, or `${FOAM_DATE_FORMAT:YYYY-MM-DD}` for a custom format. |
 | `FOAM_DATE_*`        | `FOAM_DATE_YEAR`, `FOAM_DATE_MONTH`, `FOAM_DATE_WEEK`, `FOAM_DATE_DAY_ISO` etc. Foam-specific versions of [VS Code's datetime snippet variables](https://code.visualstudio.com/docs/editor/userdefinedsnippets#_variables). Prefer these versions over VS Code's. |
+
+### `FOAM_DATE_FORMAT` variable
+
+`FOAM_DATE_FORMAT` lets you format the Foam date using a [dayjs format string](https://day.js.org/docs/en/display/format):
+
+- `$FOAM_DATE_FORMAT` — ISO 8601 local datetime with timezone offset, e.g. `2026-03-12T22:06:55+01:00`
+- `${FOAM_DATE_FORMAT:YYYY-MM-DD}` — date only, e.g. `2026-03-12`
+- `${FOAM_DATE_FORMAT:HH:mm}` — time only, e.g. `22:06`
+
+The format string (the part after `:`) uses [dayjs tokens](https://day.js.org/docs/en/display/format). Common tokens: `YYYY` (4-digit year), `MM` (month), `DD` (day), `HH` (hour), `mm` (minute), `ss` (second), `Z` (timezone offset).
+
+Like all `FOAM_DATE_*` variables, this uses the Foam date rather than the current time, so it works correctly with relative daily notes (e.g. `/tomorrow`).
 
 ### `FOAM_DATE_*` variables
 

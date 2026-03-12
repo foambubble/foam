@@ -136,6 +136,30 @@ describe('Document navigation', () => {
       // The link should not be treated as a "create note" placeholder
       expect(links.length).toEqual(0);
     });
+
+    it('should not create a "create note" link for a direct path link targeting a file in .foam directory (excluded from workspace indexing)', async () => {
+      const template = await createFile('Template content', [
+        '.foam',
+        'templates',
+        'template.md',
+      ]);
+      const noteA = await createFile(
+        `link to [template](.foam/templates/template.md).`
+      );
+      // Note: template is NOT added to workspace because .foam/** is excluded from indexing
+      const ws = createTestWorkspace().set(
+        parser.parse(noteA.uri, noteA.content)
+      );
+      const graph = FoamGraph.fromWorkspace(ws);
+      const tags = FoamTags.fromWorkspace(ws);
+
+      const { doc } = await showInEditor(noteA.uri);
+      const provider = new NavigationProvider(ws, graph, parser, tags);
+      const links = await provider.provideDocumentLinks(doc);
+
+      // The link should not be treated as a "create note" placeholder
+      expect(links.length).toEqual(0);
+    });
   });
 
   describe('definition provider', () => {

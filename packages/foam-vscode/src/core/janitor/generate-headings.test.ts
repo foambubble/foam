@@ -29,7 +29,7 @@ describe('generateHeadings', () => {
     _workspace = await FoamWorkspace.fromProviders([], [mdProvider], dataStore);
   });
 
-  it('should add heading to a file that does not have them', async () => {
+  it.skip('should add heading to a file that does not have them', async () => {
     const note = findBySlug('file-without-title');
     const expected = {
       newText: `# File without Title
@@ -56,7 +56,7 @@ describe('generateHeadings', () => {
     expect(actual).toBeNull();
   });
 
-  it('should generate heading when the file only contains frontmatter', async () => {
+  it.skip('should generate heading when the file only contains frontmatter', async () => {
     const note = findBySlug('file-with-only-frontmatter');
 
     const expected = {

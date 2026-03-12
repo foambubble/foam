@@ -4,6 +4,18 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## 0.33.0
+
+Features:
+
+- Add `foam-query` code blocks: embed dynamic, auto-updating note lists, tables, and counts in the Markdown preview (#1597)
+- Support renaming directories — wikilinks are updated when a folder is renamed (#1143)
+
+Fixes and Improvements:
+
+- Fix ctrl-click on links to files inside `.foam/` directory creating a new note instead of opening the file (#1589)
+- Improved wikilink embeds
+
 ## 0.32.0
 
 Features:

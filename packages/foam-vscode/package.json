@@ -618,6 +618,11 @@
           "default": "md",
           "description": "The default extension for new notes"
         },
+        "foam.templates.folder": {
+          "type": "string",
+          "default": ".foam/templates",
+          "description": "The folder where Foam looks for note templates, relative to the workspace root."
+        },
         "foam.files.newNotePath": {
           "type": "string",
           "default": "root",

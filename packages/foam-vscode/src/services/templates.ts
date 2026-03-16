@@ -28,11 +28,12 @@ import { isNone } from '../core/utils';
 /**
  * The templates directory
  */
-export const getTemplatesDir = () =>
-  fromVsCodeUri(workspace.workspaceFolders[0].uri).joinPath(
-    '.foam',
-    'templates'
+export const getTemplatesDir = () => {
+  const folder = getFoamVsCodeConfig('templates.folder', '.foam/templates');
+  return fromVsCodeUri(workspace.workspaceFolders[0].uri).joinPath(
+    ...folder.split('/')
   );
+};
 
 /**
  * Gets the candidate URIs for the default note template
@@ -106,8 +107,9 @@ export async function getTemplateMetadata(
 }
 
 export async function getTemplates(): Promise<URI[]> {
+  const folder = getFoamVsCodeConfig('templates.folder', '.foam/templates');
   const templates = await workspace
-    .findFiles('.foam/templates/**{.md,.js}', null)
+    .findFiles(`${folder}/**{.md,.js}`, null)
     .then(v => v.map(uri => fromVsCodeUri(uri)));
   return templates;
 }

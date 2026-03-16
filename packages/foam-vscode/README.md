@@ -1,3 +1,6 @@
+<div align="center">
+<img src="assets/icon/FOAM_ICON_256.png" width="100"/>
+
 # Foam for VSCode
 
 [![Version](https://img.shields.io/visual-studio-marketplace/v/foam.foam-vscode?cacheSeconds=3600)](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode)
@@ -6,7 +9,7 @@
 [![Ratings](https://img.shields.io/visual-studio-marketplace/r/foam.foam-vscode?cacheSeconds=3600)](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode)
 [![Discord Chat](https://img.shields.io/discord/729975036148056075?color=748AD9&label=discord%20chat&style=flat-square)](https://foambubble.github.io/join-discord/g)
 
-> You can join the Foam Community on the [Foam Discord](https://foambubble.github.io/join-discord/e)
+</div>
 
 [Foam](https://foambubble.github.io/foam) is a note-taking tool that lives within VS Code, which means you can pair it with your favorite extensions for a great editing experience.
 
@@ -16,13 +19,6 @@ Foam is also meant to be extensible, so you can integrate with its internals to 
 
 ## Features
 
-### Block anchors
-
-Link or embed specific paragraphs, list items, headings, and blockquotes within a note using `[[note#^blockid]]` syntax.
-Add a `^id` marker to any block element, then reference it from anywhere in your knowledge base.
-Foam warns you about broken block links and duplicate IDs, with quick-fixes to resolve them.
-Rename a block ID with `F2` and all backlinks update automatically.
-
 ### Graph Visualization
 
 See how your notes are connected via a [graph](https://foambubble.github.io/foam/user/features/graph-visualization) with the `Foam: Show Graph` command.
@@ -31,24 +27,21 @@ See how your notes are connected via a [graph](https://foambubble.github.io/foam
 
 ### Foam Queries
 
-Embed dynamic, auto-updating lists, tables, and counts of notes directly in the Markdown preview using `foam-query` code blocks.
-
-````markdown
-```foam-query
-filter: "#research"
-select: [title, tags, backlink-count]
-sort: backlink-count DESC
-format: table
-```
-````
-
-Use `foam-query-js` for scripted queries when you need more control (trusted workspaces only). See the [Foam Queries documentation](https://foambubble.github.io/foam/user/features/foam-queries) for the full reference.
+Embed dynamic, auto-updating lists, tables, and counts of notes directly in the Markdown preview using `foam-query` and `foam-query-js` code blocks.
+See the [Foam Queries documentation](https://foambubble.github.io/foam/user/features/foam-queries) for the full reference.
 
 ![Foam queries](./assets/screenshots/foam-query.gif)
 
+### Block IDs
+
+Link or embed specific paragraphs, list items, headings, and blockquotes within a note using `[[note#^blockid]]` syntax.
+Add a `^id` marker to any block element, then reference it from anywhere in your knowledge base.
+
+![Block IDs](./assets/screenshots/block-ids.gif)
+
 ### Note embed
 
-Embed the content from other notes.
+Embed the content from other notes. Embed entire notes, sections or even just blocks.
 
 ![Note Embed](./assets/screenshots/feature-note-embed.gif)
 
@@ -152,6 +145,7 @@ With references you can also make your notes navigable both in GitHub UI as well
 - Create a new note with the `Foam: Create New Note` command
   - This becomes very powerful when combined with [note templates](https://foambubble.github.io/foam/user/features/templates) and the `Foam: Create New Note from Template` command
 - See your workspace as a connected graph with the `Foam: Show Graph` command
+- And many [more](https://foambubble.github.io/foam/user/features/commands)
 
 ## Recipes
 
@@ -166,12 +160,6 @@ You really, _really_, **really** should read [Foam documentation](https://foambu
 3. When prompted to install recommended extensions, click **Install all** (or **Show Recommendations** if you want to review and install them one by one).
 
 This will also install `Foam`, but if you already have it installed, that's ok, just make sure you're up to date on the latest version.
-
-## Requirements
-
-High tolerance for alpha-grade software.
-Foam is still a Work in Progress.
-Rest assured it will never lock you in, nor compromise your files, but sometimes some features might break ;)
 
 ## Known Issues
 

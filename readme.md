@@ -1,11 +1,13 @@
-<img src="packages/foam-vscode/assets/icon/FOAM_ICON_256.png" width="100" align="right"/>
+<div align="center">
+
+<img src="packages/foam-vscode/assets/icon/FOAM_ICON_256.png" width="100"/>
 
 # Foam
 
-👀*This is an early stage project under rapid development. For updates join the [Foam community Discord](https://foambubble.github.io/join-discord/g)! 💬*
-
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+
 [![All Contributors](https://img.shields.io/badge/all_contributors-130-orange.svg?style=flat-square)](#contributors-)
+
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 [![Version](https://img.shields.io/visual-studio-marketplace/v/foam.foam-vscode?cacheSeconds=3600)](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode)
@@ -13,6 +15,9 @@
 [![Visual Studio Marketplace Installs](https://img.shields.io/visual-studio-marketplace/i/foam.foam-vscode?label=VS%20Code%20Installs&cacheSeconds=3600)](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode)
 [![Ratings](https://img.shields.io/visual-studio-marketplace/r/foam.foam-vscode?cacheSeconds=3600)](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode)
 [![Discord Chat](https://img.shields.io/discord/729975036148056075?color=748AD9&label=discord%20chat&style=flat-square)](https://foambubble.github.io/join-discord/g)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/foambubble/foam)
+
+</div>
 
 **Foam** is a personal knowledge management and sharing system inspired by [Roam Research](https://roamresearch.com/), built on [Visual Studio Code](https://code.visualstudio.com/) and [GitHub](https://github.com/).
 

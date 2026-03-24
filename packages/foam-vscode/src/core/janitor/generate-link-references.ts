@@ -62,7 +62,25 @@ export const generateLinkReferences = async (
     const definitions = toAddWikilinkDefinitions.map(def =>
       NoteLinkDefinition.format(def)
     );
-    const text = eol + eol + definitions.join(eol) + eol;
+    // Collect labels of wikilinks ([[...]]) in the note. These are the only definitions
+    // Foam manages directly — regular [text][ref] link references are user-controlled and
+    // should still be followed by a blank line before new wikilink definitions.
+    const wikilinkLabels = new Set(
+      note.links
+        .filter(link => link.type === 'wikilink')
+        .map(link =>
+          link.rawText.substring(link.isEmbed ? 3 : 2, link.rawText.length - 2)
+        )
+    );
+    // Suppress the double-blank-line prefix when appending to an existing Foam-managed
+    // wikilink definition block (i.e., the insertion point already has a sibling definition).
+    const isKeptFoamDefinitionAtInsert = existingWikilinkDefinitions.some(
+      def =>
+        wikilinkLabels.has(def.label) &&
+        def.range?.start.line === insertLineIndex
+    );
+    const prefix = isKeptFoamDefinitionAtInsert ? eol : eol + eol;
+    const text = prefix + definitions.join(eol) + eol;
 
     edits.push({
       range: Range.create(

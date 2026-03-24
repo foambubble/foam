@@ -318,21 +318,20 @@ Some more content here.
 [doc2]: doc2 "Second"
 `,
     },
-    // TODO
-    //     {
-    //       case: 'should append new link references to existing ones without blank lines',
-    //       input: `
-    // [[doc1]] [[doc2]]
+    {
+      case: '#1601 - should append new link references to existing ones without blank lines',
+      input: `
+[[doc1]] [[doc2]]
 
-    // [doc1]: doc1 "First"
-    // `,
-    //       expected: `
-    // [[doc1]] [[doc2]]
+[doc1]: doc1 "First"
+`,
+      expected: `
+[[doc1]] [[doc2]]
 
-    // [doc1]: doc1 "First"
-    // [doc2]: doc2 "Second"
-    // `,
-    //     },
+[doc1]: doc1 "First"
+[doc2]: doc2 "Second"
+`,
+    },
   ];
 
   testCases.forEach(testCase => {

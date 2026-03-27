@@ -4,6 +4,19 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## 0.34.0
+
+Features:
+
+- Allow configuring a custom template directory (#1437)
+- Add `FOAM_DATE_FORMAT` template variable for custom date formatting (#1315)
+
+Fixes and Improvements:
+
+- Restore tag filter in graph view (#1598)
+- Improve foam-query rendering and available fields
+- Fix double blank lines when updating link reference definitions (#1601)
+
 ## 0.33.0
 
 Features:

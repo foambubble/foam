@@ -98,11 +98,13 @@ export class ResourceRangeTreeItem extends BaseTreeItem {
   async resolveTreeItem(): Promise<ResourceRangeTreeItem> {
     const markdown =
       (await this.workspace.readAsMarkdown(this.resource.uri)) ?? '';
-    let { block, nLines } = getBlockFor(markdown, this.range.start);
+    const blockInfo = getBlockFor(markdown, this.range.start);
+    const { nLines } = blockInfo;
+    let { block } = blockInfo;
     // Long blocks need to be interrupted or they won't display in hover preview
     // We keep the extra lines so that the count in the preview is correct
     if (nLines > 15) {
-      let tmp = block.split('\n');
+      const tmp = block.split('\n');
       tmp.splice(15, 1, '\n'); // replace a line with a blank line to interrupt the block
       block = tmp.join('\n');
     }

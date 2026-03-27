@@ -119,7 +119,7 @@ export function parseFilter(
       const expr = filter.expression;
       predicates.push(r => {
         try {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+           
           const resource = makeExpressionContext(r, graph);
 
           return Boolean(eval(expr));

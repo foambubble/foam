@@ -16,9 +16,9 @@ export abstract class TextEdit {
    * @returns {string} text with the applied textEdit
    */
   public static apply(text: string, textEdit: TextEdit): string;
-  // eslint-disable-next-line no-dupe-class-members
+   
   public static apply(text: string, textEdits: TextEdit[]): string;
-  // eslint-disable-next-line no-dupe-class-members
+   
   public static apply(
     text: string,
     textEditOrEdits: TextEdit | TextEdit[]

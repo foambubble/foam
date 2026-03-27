@@ -14,3 +14,4 @@ docs/.sass-cache
 docs/.jekyll-metadata
 .test-workspace
 .agent/tasks
+.direnv

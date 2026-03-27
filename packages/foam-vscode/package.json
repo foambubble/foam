@@ -865,7 +865,7 @@
     "gray-matter": "^4.0.2",
     "js-sha1": "^0.7.0",
     "lodash": "^4.17.21",
-    "lru-cache": "^7.14.1",
+    "lru-cache": "^11.0.0",
     "markdown-it-regex": "^0.2.0",
     "mnemonist": "^0.39.8",
     "path-browserify": "^1.0.1",

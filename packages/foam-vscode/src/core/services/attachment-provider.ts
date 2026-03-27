@@ -57,8 +57,7 @@ export class AttachmentResourceProvider implements ResourceProvider {
 
   resolveLink(w: FoamWorkspace, resource: Resource, l: ResourceLink) {
     throw new Error('not supported');
-    // Silly workaround to make VS Code and es-lint happy
-    // eslint-disable-next-line
+    // Silly workaround to make VS Code happy
     return resource.uri;
   }
 

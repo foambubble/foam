@@ -1,4 +1,3 @@
-// eslint-disable-next-line import/no-extraneous-dependencies
 import { Point, Node, Position as AstPosition } from 'unist';
 import unified from 'unified';
 import markdownParse from 'remark-parse';

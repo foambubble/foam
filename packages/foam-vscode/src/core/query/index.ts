@@ -122,6 +122,7 @@ export function parseFilter(
            
           const resource = makeExpressionContext(r, graph);
 
+          // eslint-disable-next-line no-eval -- intentional: user-defined query expressions are evaluated at runtime
           return Boolean(eval(expr));
         } catch (e) {
           Logger.warn(`[Query] expression error: ${e}`);

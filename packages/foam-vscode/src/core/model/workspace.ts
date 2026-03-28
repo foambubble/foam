@@ -247,7 +247,7 @@ export class FoamWorkspace implements IDisposable {
   }
 
   public listByIdentifier(identifier: string): Resource[] {
-    let needle = this.getTrieIdentifier(identifier);
+    const needle = this.getTrieIdentifier(identifier);
     const mdNeedle =
       getExtension(normalize(identifier)) !== this.defaultExtension
         ? this.getTrieIdentifier(identifier + this.defaultExtension)

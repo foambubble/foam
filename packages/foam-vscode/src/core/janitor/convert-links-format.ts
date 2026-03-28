@@ -33,8 +33,10 @@ export function convertLinkFormat(
     };
   }
 
-  let { target, section, alias } = MarkdownLink.analyzeLink(link);
-  let sectionDivider = section ? '#' : '';
+  const analyzed = MarkdownLink.analyzeLink(link);
+  const { section } = analyzed;
+  let { target, alias } = analyzed;
+  const sectionDivider = section ? '#' : '';
 
   if (isNone(targetUri)) {
     throw new Error(
@@ -43,7 +45,7 @@ export function convertLinkFormat(
   }
 
   const targetRes = workspace.find(targetUri);
-  let relativeUri = targetRes.uri.relativeTo(resource.uri.getDirectory());
+  const relativeUri = targetRes.uri.relativeTo(resource.uri.getDirectory());
 
   if (targetFormat === 'wikilink') {
     return MarkdownLink.createUpdateLinkEdit(link, {

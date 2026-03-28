@@ -159,9 +159,11 @@ export abstract class FolderTreeProvider<I, T> extends BaseTreeProvider<I> {
 
   findTreeItemByPath(path: string[]): Promise<I> {
     const hierarchy = this.getTreeItemsHierarchy(path);
-    return hierarchy.length > 0
-      ? Promise.resolve(hierarchy.pop())
-      : Promise.resolve(null);
+    return (
+      hierarchy.length > 0
+        ? Promise.resolve(hierarchy.pop())
+        : Promise.resolve(null)
+    ) as Promise<I>;
   }
 
   /**

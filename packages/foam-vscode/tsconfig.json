@@ -1,13 +1,16 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "moduleResolution": "node",
+    "types": ["jest", "node"],
+    "rootDir": "src",
+    "module": "node16",
+    "moduleResolution": "node16",
     "esModuleInterop": true,
     "outDir": "out",
-    "lib": ["ES2019", "es2020.string", "DOM"],
+    "lib": ["ES2022", "DOM"],
     "sourceMap": true,
     "strict": false,
-    "downlevelIteration": true
+    "isolatedModules": true
   },
   "include": ["src", "types"],
   "exclude": ["node_modules", ".vscode-test"]

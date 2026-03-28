@@ -34,11 +34,11 @@
     "d3-color": "^3.1.0",
     "d3-force": "^3.0.0",
     "d3-scale": "^4.0.0",
-    "esbuild": "^0.25.0",
-    "force-graph": "^1.49.5",
-    "happy-dom": "^17.0.0",
+    "esbuild": "^0.27.0",
+    "force-graph": "^1.51.0",
+    "happy-dom": "^20.0.0",
     "lit": "^3.0.0",
-    "typescript": "^4.9.5",
+    "typescript": "^5.0.0",
     "vitest": "^3.0.0"
   }
 }

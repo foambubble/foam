@@ -27,7 +27,7 @@ export const WIKILINK_EMBED_REGEX =
 export const WIKILINK_EMBED_REGEX_GROUPS =
   /((?:\w+)|(?:(?:\w+)-(?:\w+)))?!\[\[([^|[\]]+?)(\|[^[\]]+?)?\]\]/;
 export const CONFIG_EMBED_NOTE_TYPE = 'preview.embedNoteType';
-let refsStack: string[] = [];
+const refsStack: string[] = [];
 
 export const markdownItWikilinkEmbed = (
   md: markdownit,
@@ -221,7 +221,7 @@ export function retrieveNoteConfig(explicitModifier: string | undefined): {
   noteScope: string;
   noteStyle: string;
 } {
-  let config = getFoamVsCodeConfig<string>(CONFIG_EMBED_NOTE_TYPE); // ex. full-inline
+  const config = getFoamVsCodeConfig<string>(CONFIG_EMBED_NOTE_TYPE); // ex. full-inline
   let [noteScope, noteStyle] = config.split('-');
 
   // an explicit modifier will always override corresponding user setting

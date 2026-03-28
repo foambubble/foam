@@ -1,5 +1,5 @@
 import { debounce } from 'lodash';
-import LRU from 'lru-cache';
+import { LRUCache } from 'lru-cache';
 import { ExtensionContext } from 'vscode';
 import { URI } from '../core/model/uri';
 import {
@@ -20,12 +20,12 @@ import { Logger } from '../core/utils/log';
  */
 export default class VsCodeBasedParserCache implements ParserCache {
   static CACHE_NAME = 'foam-cache';
-  static CACHE_VERSION = 2;
+  static CACHE_VERSION = 3;
   static CACHE_VERSION_KEY = 'foam-cache-version';
-  private _cache: LRU<string, ParserCacheEntry>;
+  private _cache: LRUCache<string, ParserCacheEntry>;
 
   constructor(private context: ExtensionContext, size = 10000) {
-    this._cache = new LRU({
+    this._cache = new LRUCache({
       max: size,
       updateAgeOnGet: true,
       updateAgeOnHas: false,
@@ -99,7 +99,7 @@ export default class VsCodeBasedParserCache implements ParserCache {
 }
 
 const delayedSync = debounce(
-  (cache: LRU<string, ParserCacheEntry>, context) => {
+  (cache: LRUCache<string, ParserCacheEntry>, context) => {
     Logger.debug('Updating parser cache');
     context.workspaceState.update(
       VsCodeBasedParserCache.CACHE_NAME,

@@ -79,9 +79,9 @@ export class Position implements FoamPosition {
   }
 
   translate(lineDelta?: number, characterDelta?: number): Position;
-  // eslint-disable-next-line no-dupe-class-members
+   
   translate(change: { lineDelta?: number; characterDelta?: number }): Position;
-  // eslint-disable-next-line no-dupe-class-members
+   
   translate(
     lineDeltaOrChange?:
       | number
@@ -103,9 +103,9 @@ export class Position implements FoamPosition {
   }
 
   with(line?: number, character?: number): Position;
-  // eslint-disable-next-line no-dupe-class-members
+   
   with(change: { line?: number; character?: number }): Position;
-  // eslint-disable-next-line no-dupe-class-members
+   
   with(
     lineOrChange?: number | { line?: number; character?: number },
     character?: number
@@ -268,7 +268,7 @@ export function fromVsCodeUri(vsCodeUri: Uri): URI {
 }
 
 // VS Code Uri static methods
-// eslint-disable-next-line @typescript-eslint/no-redeclare
+ 
 export const Uri = {
   file(path: string): Uri {
     return createVSCodeUri(URI.file(path));

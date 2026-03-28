@@ -3,12 +3,7 @@
   "compilerOptions": {
     "declaration": true,
     "declarationMap": true,
-    "baseUrl": ".",
     "module": "commonjs",
-    "target": "ES2019",
-    "paths": {
-      "foam-core": ["./packages/foam-core/src"],
-      "foam-vscode": ["./packages/foam-vscode/src"]
-    }
+    "target": "ES2022"
   }
 }

@@ -9,17 +9,15 @@
  *   and so on..
  */
 
-/* eslint-disable import/first */
+ 
 
 // Set before imports, see https://github.com/facebook/jest/issues/12162
 process.env.FORCE_COLOR = '1';
 process.env.NODE_ENV = 'test';
 
-// eslint-disable-next-line import/no-extraneous-dependencies
 import { runCLI } from '@jest/core';
 import path from 'path';
 import * as fs from 'fs';
-// eslint-disable-next-line import/no-extraneous-dependencies
 import * as glob from 'glob';
 
 const rootDir = path.join(__dirname, '..', '..');

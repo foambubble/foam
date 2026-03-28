@@ -78,7 +78,7 @@ async function main() {
           '--disable-updates',
         ],
         platform: getVSCodePlatform(),
-        version: '1.109.0',
+        version: '1.110.0',
       });
     } catch (err) {
       console.log('Error occurred while running Foam e2e tests:', err);

@@ -29,7 +29,7 @@
     "lerna": "^6.4.1"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   },
   "prettier": {
     "arrowParens": "avoid",
@@ -37,6 +37,5 @@
     "semi": true,
     "singleQuote": true,
     "trailingComma": "es5"
-  },
-  "dependencies": {}
+  }
 }

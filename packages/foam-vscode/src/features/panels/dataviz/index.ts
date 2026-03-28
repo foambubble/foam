@@ -34,21 +34,13 @@ export default async function activate(
       };
 
       const noteUpdatedListener = foam.graph.onDidUpdate(onFoamChanged);
+      const editorListener = vscode.window.onDidChangeActiveTextEditor(e => {
+        handleActiveEditorChange(panel, foam, e);
+      });
       panel.onDidDispose(() => {
         noteUpdatedListener.dispose();
+        editorListener.dispose();
         panel = undefined;
-      });
-
-      vscode.window.onDidChangeActiveTextEditor(e => {
-        if (e?.document?.uri?.scheme !== 'untitled') {
-          const note = foam.workspace.get(fromVsCodeUri(e.document.uri));
-          if (isSome(note)) {
-            panel.webview.postMessage({
-              type: 'didSelectNote',
-              payload: note.uri.path,
-            });
-          }
-        }
       });
     }
   });
@@ -218,6 +210,22 @@ async function getWebviewContent(
 
 function getGraphStyle(): StylePayload {
   return vscode.workspace.getConfiguration('foam.graph').get('style');
+}
+
+export function handleActiveEditorChange(
+  panel: vscode.WebviewPanel | undefined,
+  foam: Foam,
+  e: vscode.TextEditor | undefined
+) {
+  if (panel && e?.document?.uri && e.document.uri.scheme !== 'untitled') {
+    const note = foam.workspace.get(fromVsCodeUri(e.document.uri));
+    if (isSome(note)) {
+      panel.webview.postMessage({
+        type: 'didSelectNote',
+        payload: note.uri.path,
+      });
+    }
+  }
 }
 
 export function getNodeNavigationCommand(

@@ -9,7 +9,8 @@
     "outDir": "out",
     "lib": ["ES2022", "DOM"],
     "sourceMap": true,
-    "strict": false
+    "strict": false,
+    "isolatedModules": true
   },
   "include": ["src", "types"],
   "exclude": ["node_modules", ".vscode-test"]

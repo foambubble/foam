@@ -1,6 +1,9 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "ignoreDeprecations": "6.0",
+    "types": ["jest", "node"],
+    "rootDir": "src",
     "moduleResolution": "node",
     "esModuleInterop": true,
     "outDir": "out",

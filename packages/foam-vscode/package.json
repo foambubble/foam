@@ -8,7 +8,7 @@
     "type": "git"
   },
   "homepage": "https://github.com/foambubble/foam",
-  "version": "0.34.0",
+  "version": "0.35.0",
   "license": "MIT",
   "publisher": "foam",
   "engines": {
@@ -838,12 +838,12 @@
     "@vscode/test-web": "^0.0.80",
     "esbuild": "^0.27.0",
     "esbuild-plugin-polyfill-node": "^0.3.0",
-    "oxlint": "^1.57.0",
     "jest": "^29.7.0",
     "jest-extended": "^3.2.4",
     "markdown-it": "^12.0.4",
     "micromatch": "^4.0.8",
     "nodemon": "^3.1.14",
+    "oxlint": "^1.57.0",
     "rimraf": "^3.0.2",
     "ts-jest": "^29.4.6",
     "tslib": "^2.8.1",

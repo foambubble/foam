@@ -46,7 +46,7 @@ export interface StyleConfig {
  */
 export interface StylePayload {
   style?: StyleConfig;
-  colorMode?: 'none' | 'directory';
+  colorMode?: 'none' | 'directory' | 'type';
 }
 
 // Extension → Webview

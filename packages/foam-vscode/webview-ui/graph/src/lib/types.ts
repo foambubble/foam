@@ -29,7 +29,7 @@ export interface ResolvedStyle {
     tag: string;
     [key: string]: string;
   };
-  colorMode: 'none' | 'directory';
+  colorMode: 'none' | 'directory' | 'type';
 }
 
 export type NodeState = 'regular' | 'highlighted' | 'lessened';

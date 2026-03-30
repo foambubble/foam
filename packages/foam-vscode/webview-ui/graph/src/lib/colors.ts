@@ -34,18 +34,27 @@ export function getDirectoryColor(nodeId: string): string {
   return hashToHSL(hashString(currentPath));
 }
 
+export function getTypeColor(type: string, style: ResolvedStyle): string {
+  if (style.node[type] !== undefined) {
+    return style.node[type];
+  }
+  return hashToHSL(hashString(type));
+}
+
 export function getNodeFillAndBorder(
   nodeInfo: AugmentedNode,
   state: 'regular' | 'highlighted' | 'lessened',
   style: ResolvedStyle,
-  colorMode: 'none' | 'directory'
+  colorMode: 'none' | 'directory' | 'type'
 ): { fill: RGBColor; border: RGBColor } {
   let baseColor: string;
 
   if (nodeInfo.properties.color) {
     baseColor = nodeInfo.properties.color as string;
-  } else if (colorMode === 'directory') {
+  } else if (colorMode === 'directory' && nodeInfo.type !== 'placeholder') {
     baseColor = getDirectoryColor(nodeInfo.id);
+  } else if (colorMode === 'type') {
+    baseColor = getTypeColor(nodeInfo.type, style);
   } else {
     baseColor = getNodeTypeColor(nodeInfo.type, style);
   }

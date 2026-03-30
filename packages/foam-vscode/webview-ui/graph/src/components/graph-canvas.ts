@@ -51,7 +51,7 @@ export class GraphCanvas extends LitElement {
     selection: {} as Selection,
     textFade: 3.8,
     nodeFontSizeMultiplier: 1,
-    colorMode: 'none' as 'none' | 'directory',
+    colorMode: 'type' as 'none' | 'directory' | 'type',
   };
 
   private readonly getNodeSize = scaleLinear().domain([0, 30]).range([0.5, 2]).clamp(true);

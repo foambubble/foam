@@ -1,12 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { augmentGraphInfo } from './graph-utils';
-import type { GraphData } from '../protocol';
-
-const makeGraph = (overrides: Partial<GraphData> = {}): GraphData => ({
-  nodeInfo: {},
-  links: [],
-  ...overrides,
-});
+import { makeGraph } from '../test-utils';
 
 describe('augmentGraphInfo', () => {
   it('should copy note nodes into the augmented graph', () => {

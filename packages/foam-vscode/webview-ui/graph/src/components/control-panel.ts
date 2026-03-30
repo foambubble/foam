@@ -160,10 +160,11 @@ export class ControlPanel extends LitElement {
             <span>Color by</span>
             <select
               .value=${this.style.colorMode ?? 'none'}
-              @change=${(e: Event) => this._emit('style-change', { colorMode: (e.target as HTMLSelectElement).value as 'none' | 'directory' })}
+              @change=${(e: Event) => this._emit('style-change', { colorMode: (e.target as HTMLSelectElement).value as 'none' | 'directory' | 'type' })}
             >
               <option value="none">None</option>
               <option value="directory">Directory</option>
+              <option value="type">Type</option>
             </select>
           </label>
         </div>

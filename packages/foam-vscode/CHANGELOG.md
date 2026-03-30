@@ -4,6 +4,18 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## 0.35.0
+
+Fixes and Improvements:
+
+- Fix graph crash when switching editors after closing the graph panel (#1608)
+- Add color-by-type mode to graph view, grouping custom note types by distinct auto-generated colors (now the default)
+- Display tags with `#` prefix in graph view
+
+Internal:
+
+- Update dependencies (#1609)
+
 ## 0.34.0
 
 Features:

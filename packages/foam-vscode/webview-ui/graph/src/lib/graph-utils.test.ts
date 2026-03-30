@@ -14,6 +14,21 @@ describe('augmentGraphInfo', () => {
     expect(augmented.nodeInfo['note-1'].type).toBe('note');
   });
 
+  it('should prefix tag titles with #', () => {
+    const graph = makeGraph({
+      nodeInfo: {
+        'note-1': {
+          id: 'note-1', type: 'note', title: 'Note 1', properties: {},
+          tags: [{ label: 'my-tag' }, { label: 'parent/child' }],
+        },
+      },
+    });
+    const augmented = augmentGraphInfo(graph);
+    expect(augmented.nodeInfo['my-tag'].title).toBe('#my-tag');
+    expect(augmented.nodeInfo['parent'].title).toBe('#parent');
+    expect(augmented.nodeInfo['parent/child'].title).toBe('#parent/child');
+  });
+
   it('should create tag nodes in nodeInfo for each unique tag', () => {
     const graph = makeGraph({
       nodeInfo: {

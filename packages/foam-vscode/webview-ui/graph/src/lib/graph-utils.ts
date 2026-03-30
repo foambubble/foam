@@ -26,7 +26,7 @@ export function augmentGraphInfo(graph: GraphData): AugmentedGraph {
         if (!augmented.nodeInfo[label]) {
           augmented.nodeInfo[label] = {
             id: label,
-            title: label,
+            title: '#' + label,
             type: 'tag',
             properties: {},
             tags: [],

@@ -20,13 +20,13 @@ import { createMarkdownParser } from '../../core/services/markdown-parser';
 
 describe('create-note command', () => {
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('uses sensible defaults to work even without params', async () => {
-    const spy = jest
+    const spy = vi
       .spyOn(window, 'showInputBox')
-      .mockImplementationOnce(jest.fn(() => Promise.resolve('Test note')));
+      .mockImplementationOnce(vi.fn(() => Promise.resolve('Test note')));
 
     await commands.executeCommand('foam-vscode.create-note');
     expect(spy).toHaveBeenCalled();
@@ -122,9 +122,9 @@ describe('create-note command', () => {
     });
     expect(window.activeTextEditor).toBeUndefined();
 
-    const spy = jest
+    const spy = vi
       .spyOn(window, 'showInputBox')
-      .mockImplementationOnce(jest.fn(() => Promise.resolve(undefined)));
+      .mockImplementationOnce(vi.fn(() => Promise.resolve(undefined)));
     await closeEditors();
     await commands.executeCommand('foam-vscode.create-note', {
       notePath: target.uri,
@@ -191,9 +191,9 @@ describe('create-note command', () => {
 
     await closeEditors();
     await showInEditor(base.uri);
-    const spy = jest
+    const spy = vi
       .spyOn(window, 'showInputBox')
-      .mockImplementationOnce(jest.fn(() => Promise.resolve(undefined)));
+      .mockImplementationOnce(vi.fn(() => Promise.resolve(undefined)));
     await commands.executeCommand('foam-vscode.create-note', {
       notePath: 'ask-me-about-it.md',
       text: 'test asking',

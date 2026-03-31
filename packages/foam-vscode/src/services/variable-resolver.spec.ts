@@ -114,9 +114,9 @@ describe('variable-resolver, variable resolution', () => {
     const foamTitle = 'My note title';
     const variables = [new Variable('FOAM_TITLE'), new Variable('FOAM_SLUG')];
 
-    jest
+    vi
       .spyOn(window, 'showInputBox')
-      .mockImplementationOnce(jest.fn(() => Promise.resolve(foamTitle)));
+      .mockImplementationOnce(vi.fn(() => Promise.resolve(foamTitle)));
 
     const expected = new Map<string, string>();
     expected.set('FOAM_TITLE', foamTitle);
@@ -498,9 +498,9 @@ describe('variable-resolver, resolveText', () => {
   it('should append FOAM_SELECTED_TEXT with a newline to the template if there is selected text but FOAM_SELECTED_TEXT is not referenced and the template ends in a newline', async () => {
     const foamTitle = 'My note title';
 
-    jest
+    vi
       .spyOn(window, 'showInputBox')
-      .mockImplementationOnce(jest.fn(() => Promise.resolve(foamTitle)));
+      .mockImplementationOnce(vi.fn(() => Promise.resolve(foamTitle)));
 
     const input = `# \${FOAM_TITLE}\n`;
 
@@ -515,9 +515,9 @@ describe('variable-resolver, resolveText', () => {
   it('should append FOAM_SELECTED_TEXT with a newline to the template if there is selected text but FOAM_SELECTED_TEXT is not referenced and the template ends in multiple newlines', async () => {
     const foamTitle = 'My note title';
 
-    jest
+    vi
       .spyOn(window, 'showInputBox')
-      .mockImplementationOnce(jest.fn(() => Promise.resolve(foamTitle)));
+      .mockImplementationOnce(vi.fn(() => Promise.resolve(foamTitle)));
 
     const input = `# \${FOAM_TITLE}\n\n`;
 
@@ -532,9 +532,9 @@ describe('variable-resolver, resolveText', () => {
   it('should append FOAM_SELECTED_TEXT without a newline to the template if there is selected text but FOAM_SELECTED_TEXT is not referenced and the template does not end in a newline', async () => {
     const foamTitle = 'My note title';
 
-    jest
+    vi
       .spyOn(window, 'showInputBox')
-      .mockImplementationOnce(jest.fn(() => Promise.resolve(foamTitle)));
+      .mockImplementationOnce(vi.fn(() => Promise.resolve(foamTitle)));
 
     const input = `# \${FOAM_TITLE}`;
 
@@ -549,9 +549,9 @@ describe('variable-resolver, resolveText', () => {
   it('should not append FOAM_SELECTED_TEXT to a template if there is no selected text and is not referenced', async () => {
     const foamTitle = 'My note title';
 
-    jest
+    vi
       .spyOn(window, 'showInputBox')
-      .mockImplementationOnce(jest.fn(() => Promise.resolve(foamTitle)));
+      .mockImplementationOnce(vi.fn(() => Promise.resolve(foamTitle)));
 
     const input = `
         # \${FOAM_TITLE}

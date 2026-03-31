@@ -72,7 +72,7 @@ describe('Link Conversion Commands', () => {
 
       editor.selection = new vscode.Selection(0, 5, 0, 5);
 
-      const showInfoSpy = jest.spyOn(vscode.window, 'showInformationMessage');
+      const showInfoSpy = vi.spyOn(vscode.window, 'showInformationMessage');
 
       await vscode.commands.executeCommand(CONVERT_WIKILINK_TO_MDLINK.command);
 
@@ -92,7 +92,7 @@ describe('Link Conversion Commands', () => {
 
       editor.selection = new vscode.Selection(0, 20, 0, 20);
 
-      const showErrorSpy = jest
+      const showErrorSpy = vi
         .spyOn(vscode.window, 'showErrorMessage')
         .mockResolvedValue(undefined);
 
@@ -158,7 +158,7 @@ describe('Link Conversion Commands', () => {
 
       editor.selection = new vscode.Selection(0, 5, 0, 5);
 
-      const showInfoSpy = jest.spyOn(vscode.window, 'showInformationMessage');
+      const showInfoSpy = vi.spyOn(vscode.window, 'showInformationMessage');
 
       await vscode.commands.executeCommand(CONVERT_MDLINK_TO_WIKILINK.command);
 

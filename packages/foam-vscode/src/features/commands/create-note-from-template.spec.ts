@@ -9,13 +9,13 @@ describe('create-note-from-template command', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('offers to create template when none are available', async () => {
-    const spy = jest
+    const spy = vi
       .spyOn(window, 'showQuickPick')
-      .mockImplementationOnce(jest.fn(() => Promise.resolve(undefined)));
+      .mockImplementationOnce(vi.fn(() => Promise.resolve(undefined)));
 
     await commands.executeCommand('foam-vscode.create-note-from-template');
 
@@ -37,9 +37,9 @@ describe('create-note-from-template command', () => {
       'template-b.md',
     ]);
 
-    const spy = jest
+    const spy = vi
       .spyOn(window, 'showQuickPick')
-      .mockImplementationOnce(jest.fn(() => Promise.resolve(undefined)));
+      .mockImplementationOnce(vi.fn(() => Promise.resolve(undefined)));
 
     await commands.executeCommand('foam-vscode.create-note-from-template');
 
@@ -70,9 +70,9 @@ Template A
       ['.foam', 'templates', 'template-a.md']
     );
 
-    const spy = jest
+    const spy = vi
       .spyOn(window, 'showQuickPick')
-      .mockImplementationOnce(jest.fn(() => Promise.resolve(undefined)));
+      .mockImplementationOnce(vi.fn(() => Promise.resolve(undefined)));
 
     await commands.executeCommand('foam-vscode.create-note-from-template');
 

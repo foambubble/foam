@@ -12,7 +12,7 @@ describe('build-embeddings command', () => {
   it('should complete successfully with no notes to analyze', async () => {
     await cleanWorkspace(5000);
 
-    const showInfoSpy = jest
+    const showInfoSpy = vi
       .spyOn(vscode.window, 'showInformationMessage')
       .mockResolvedValue(undefined);
 
@@ -36,7 +36,7 @@ describe('build-embeddings command', () => {
     await waitForNoteInFoamWorkspace(note1.uri);
     await waitForNoteInFoamWorkspace(note2.uri);
 
-    const showInfoSpy = jest
+    const showInfoSpy = vi
       .spyOn(vscode.window, 'showInformationMessage')
       .mockResolvedValue(undefined);
 
@@ -61,7 +61,7 @@ describe('build-embeddings command', () => {
 
     const tokenSource = new vscode.CancellationTokenSource();
 
-    const withProgressSpy = jest
+    const withProgressSpy = vi
       .spyOn(vscode.window, 'withProgress')
       .mockImplementation(async (options, task) => {
         const progress = { report: () => {} };
@@ -70,7 +70,7 @@ describe('build-embeddings command', () => {
         return await task(progress, tokenSource.token);
       });
 
-    const showInfoSpy = jest
+    const showInfoSpy = vi
       .spyOn(vscode.window, 'showInformationMessage')
       .mockResolvedValue(undefined);
 

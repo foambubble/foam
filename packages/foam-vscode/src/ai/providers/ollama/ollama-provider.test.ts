@@ -9,13 +9,13 @@ Logger.setLevel('error');
 describe('OllamaEmbeddingProvider', () => {
   const originalFetch = global.fetch;
   beforeEach(() => {
-    global.fetch = jest.fn();
-    jest.clearAllMocks();
-    jest.useFakeTimers();
+    global.fetch = vi.fn() as typeof global.fetch;
+    vi.clearAllMocks();
+    vi.useFakeTimers();
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
     global.fetch = originalFetch;
   });
 
@@ -76,7 +76,7 @@ describe('OllamaEmbeddingProvider', () => {
   describe('embed', () => {
     it('should successfully generate embeddings', async () => {
       const mockEmbedding = new Array(768).fill(0.1);
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ embeddings: [mockEmbedding] }),
       });
@@ -99,7 +99,7 @@ describe('OllamaEmbeddingProvider', () => {
     });
 
     it('should throw error on non-ok response', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as any).mockResolvedValueOnce({
         ok: false,
         status: 500,
         text: async () => 'Internal server error',
@@ -113,7 +113,7 @@ describe('OllamaEmbeddingProvider', () => {
     });
 
     it('should throw error on connection refused', async () => {
-      (global.fetch as jest.Mock).mockRejectedValueOnce(
+      (global.fetch as any).mockRejectedValueOnce(
         new Error('fetch failed')
       );
 
@@ -125,7 +125,7 @@ describe('OllamaEmbeddingProvider', () => {
     });
 
     it('should timeout after configured duration', async () => {
-      (global.fetch as jest.Mock).mockImplementationOnce(
+      (global.fetch as any).mockImplementationOnce(
         (_url, options) =>
           new Promise((_resolve, reject) => {
             // Simulate abort signal being triggered
@@ -141,7 +141,7 @@ describe('OllamaEmbeddingProvider', () => {
       const embedPromise = provider.embed('test');
 
       // Fast-forward time to trigger timeout
-      jest.advanceTimersByTime(1001);
+      vi.advanceTimersByTime(1001);
 
       await expect(embedPromise).rejects.toThrow('AI service took too long');
     });
@@ -149,7 +149,7 @@ describe('OllamaEmbeddingProvider', () => {
 
   describe('isAvailable', () => {
     it('should return true when Ollama is available', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as any).mockResolvedValueOnce({
         ok: true,
       });
 
@@ -166,7 +166,7 @@ describe('OllamaEmbeddingProvider', () => {
     });
 
     it('should return false when Ollama is not available', async () => {
-      (global.fetch as jest.Mock).mockRejectedValueOnce(
+      (global.fetch as any).mockRejectedValueOnce(
         new Error('Connection refused')
       );
 
@@ -177,7 +177,7 @@ describe('OllamaEmbeddingProvider', () => {
     });
 
     it('should return false when Ollama returns non-ok status', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as any).mockResolvedValueOnce({
         ok: false,
         status: 404,
       });
@@ -189,7 +189,7 @@ describe('OllamaEmbeddingProvider', () => {
     });
 
     it('should timeout quickly (5s) when checking availability', async () => {
-      (global.fetch as jest.Mock).mockImplementationOnce(
+      (global.fetch as any).mockImplementationOnce(
         (_url, options) =>
           new Promise((_resolve, reject) => {
             // Simulate abort signal being triggered
@@ -205,7 +205,7 @@ describe('OllamaEmbeddingProvider', () => {
       const availabilityPromise = provider.isAvailable();
 
       // Fast-forward time to trigger timeout (5s for availability check)
-      jest.advanceTimersByTime(5001);
+      vi.advanceTimersByTime(5001);
 
       const result = await availabilityPromise;
       expect(result).toBe(false);

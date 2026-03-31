@@ -12,7 +12,7 @@ import { getRandomURI } from '../../test/test-utils';
 
 describe('Wikilink Note Embedding', () => {
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Wikilink Parsing', () => {
@@ -433,7 +433,7 @@ describe('Wikilink Note Embedding', () => {
 
   describe('Config Parsing', () => {
     it('should use preview.embedNoteType if an explicit modifier is not passed in', () => {
-      jest
+      vi
         .spyOn(config, 'getFoamVsCodeConfig')
         .mockReturnValueOnce('full-card');
 
@@ -443,7 +443,7 @@ describe('Wikilink Note Embedding', () => {
     });
 
     it('should use explicit modifier over user settings if passed in', () => {
-      jest
+      vi
         .spyOn(config, 'getFoamVsCodeConfig')
         .mockReturnValueOnce('full-inline')
         .mockReturnValueOnce('full-inline')

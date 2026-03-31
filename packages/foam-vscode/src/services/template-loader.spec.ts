@@ -8,7 +8,7 @@ describe('TemplateLoader', () => {
   describe('workspace trust', () => {
     it('should throw error when loading JS template in untrusted workspace', async () => {
       const templateLoader = new TemplateLoader();
-      const mockIsTrusted = jest.spyOn(workspace, 'isTrusted', 'get');
+      const mockIsTrusted = vi.spyOn(workspace, 'isTrusted', 'get');
       mockIsTrusted.mockReturnValue(false);
 
       const { uri } = await createFile(
@@ -28,7 +28,7 @@ describe('TemplateLoader', () => {
 
     it('should load JS template successfully in trusted workspace', async () => {
       const templateLoader = new TemplateLoader();
-      const mockIsTrusted = jest.spyOn(workspace, 'isTrusted', 'get');
+      const mockIsTrusted = vi.spyOn(workspace, 'isTrusted', 'get');
       mockIsTrusted.mockReturnValue(true);
 
       const jsTemplateContent = `
@@ -58,7 +58,7 @@ describe('TemplateLoader', () => {
 
     it('should load markdown template regardless of workspace trust', async () => {
       const templateLoader = new TemplateLoader();
-      const mockIsTrusted = jest.spyOn(workspace, 'isTrusted', 'get');
+      const mockIsTrusted = vi.spyOn(workspace, 'isTrusted', 'get');
       mockIsTrusted.mockReturnValue(false);
 
       const mdTemplateContent = `---

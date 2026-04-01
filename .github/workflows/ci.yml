@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Actions Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Check spelling with custom config file
         uses: crate-ci/typos@v1.14.8
         with:
@@ -24,13 +24,13 @@ jobs:
     runs-on: ubuntu-22.04
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v4
       - name: Setup Node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '22'
       - name: Restore Dependencies and VS Code test instance
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             node_modules
@@ -53,13 +53,13 @@ jobs:
     #   OS: ${{ matrix.os }}
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v4
       - name: Setup Node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '22'
       - name: Restore Dependencies and VS Code test instance
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             node_modules
@@ -71,6 +71,6 @@ jobs:
       - name: Build Packages
         run: yarn build
       - name: Run Tests
-        uses: GabrielBB/xvfb-action@v1.4
+        uses: GabrielBB/xvfb-action@v1.7
         with:
           run: yarn test

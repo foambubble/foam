@@ -50,7 +50,6 @@ export default defineConfig({
     include: ['src/**/*.test.ts', ...unitReadySpecs],
     exclude: ['src/test/web/**', 'node_modules/**', '.vscode-test/**'],
     testTimeout: 20000,
-    fileParallelism: false,
     clearMocks: true,
     reporter: 'verbose',
   },

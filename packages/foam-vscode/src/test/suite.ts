@@ -25,6 +25,9 @@ const rootDir = path.join(__dirname, '../..');
 export async function run(): Promise<void> {
   const errWrite = process.stderr.write;
 
+  // Redirect stderr → stdout so VS Code's internal warnings appear inline with
+  // test output rather than on a separate stream (which the test harness may
+  // suppress or emit out of order). Lines are capped to avoid log flooding.
   let remaining = '';
   process.stderr.write = (buffer: string) => {
     const lines = (remaining + buffer).split('\n');

@@ -57,6 +57,12 @@ async function getExpect() {
 
 // ---------------------------------------------------------------------------
 // vi object backed by @vitest/spy (no worker context required)
+//
+// `vi` from 'vitest' crashes outside a worker ("Vitest failed to access its
+// internal state"), so we build a minimal shim from the lower-level packages.
+// spy/mock functions work fine; module-mocking and fake timers require Vitest's
+// module system and are left as no-ops — tests that need them should not run
+// in this pool.
 // ---------------------------------------------------------------------------
 const vi = {
   fn: viFn,

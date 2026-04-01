@@ -27,8 +27,10 @@ async function main() {
 
     const testWorkspace = path.join(extensionDevelopmentPath, '.test-workspace');
 
-    // Pre-populate isolated user data dir to disable local file history,
-    // which otherwise races with test files being deleted during cleanup.
+    // Use an isolated user data dir so the test VS Code instance doesn't touch
+    // the real user profile. Pre-populate it with settings that disable local
+    // file history, which otherwise races with test files being deleted during
+    // cleanup and produces ENOENT errors in the output.
     const userDataDir = path.join(extensionDevelopmentPath, '.vscode-test-user-data');
     const userSettingsDir = path.join(userDataDir, 'User');
     mkdirSync(userSettingsDir, { recursive: true });
@@ -43,9 +45,7 @@ async function main() {
       extensionTestsPath,
       launchArgs: [
         testWorkspace,
-        // Isolate test instance from the real user profile so VS Code's local
-        // file history doesn't try to snapshot (and race with) test temp files.
-        `--user-data-dir=${path.join(extensionDevelopmentPath, '.vscode-test-user-data')}`,
+        `--user-data-dir=${userDataDir}`,
         '--disable-gpu',
         '--disable-extensions',
         '--disable-workspace-trust',

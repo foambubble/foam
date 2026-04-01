@@ -34,6 +34,8 @@ function getUnitReadySpecFiles(): string[] {
 const excludeSpecs = process.env.EXCLUDE_SPECS === 'true';
 const unitReadySpecs = excludeSpecs ? [] : getUnitReadySpecFiles();
 
+const isCI = !!process.env.CI;
+
 export default defineConfig({
   resolve: {
     alias: {
@@ -52,5 +54,8 @@ export default defineConfig({
     testTimeout: 20000,
     fileParallelism: false,
     clearMocks: true,
+    reporters: isCI
+      ? ['verbose', ['junit', { outputFile: 'test-results/unit-junit.xml' }]]
+      : ['verbose'],
   },
 });

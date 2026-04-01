@@ -63,6 +63,7 @@ export async function run(): Promise<void> {
   try {
     const { startVitest } = await import('vitest/node');
 
+    const isCI = !!process.env.CI;
     const vitest = await startVitest('test', [], {
       root: rootDir,
       include: ['src/**/*.spec.ts'],
@@ -75,7 +76,9 @@ export async function run(): Promise<void> {
       testTimeout: 30000,
       fileParallelism: false,
       watch: false,
-      reporter: 'verbose',
+      reporters: isCI
+        ? ['verbose', ['junit', { outputFile: 'test-results/e2e-junit.xml' }]]
+        : ['verbose'],
     } as any, { configFile: false } as any);
 
     if (!vitest) {

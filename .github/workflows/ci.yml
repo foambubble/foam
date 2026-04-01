@@ -74,3 +74,17 @@ jobs:
         uses: GabrielBB/xvfb-action@v1.4
         with:
           run: yarn test
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: packages/foam-vscode/test-results/*.xml
+          retention-days: 7
+      - name: Publish Test Report
+        uses: mikepenz/action-junit-report@v4
+        if: always()
+        with:
+          report_paths: 'packages/foam-vscode/test-results/*.xml'
+          check_name: 'Test Results'
+          fail_on_failure: false

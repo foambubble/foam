@@ -16,7 +16,7 @@
 process.env.FORCE_COLOR = '1';
 process.env.NODE_ENV = 'test';
 
-import rf from 'rimraf';
+import { rmSync, readdirSync, existsSync } from 'fs';
 import { cleanWorkspace } from './test-utils-vscode';
 import path from 'path';
 
@@ -37,9 +37,12 @@ export async function run(): Promise<void> {
   const testWorkspace = path.join(__dirname, '..', '..', '.test-workspace');
 
   // Clean test workspace
-  rf.sync(path.join(testWorkspace, '*'));
-  rf.sync(path.join(testWorkspace, '.vscode'));
-  rf.sync(path.join(testWorkspace, '.foam'));
+  if (existsSync(testWorkspace)) {
+    for (const entry of readdirSync(testWorkspace)) {
+      if (entry === '.keep') continue;
+      rmSync(path.join(testWorkspace, entry), { recursive: true, force: true });
+    }
+  }
 
   // Foam-specific: disable link reference definitions during tests
   try {

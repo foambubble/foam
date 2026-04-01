@@ -12,7 +12,7 @@ import waitForExpect from 'wait-for-expect';
 
 describe('open-resource command', () => {
   beforeEach(async () => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
     await closeEditors();
   });
 
@@ -74,7 +74,7 @@ describe('open-resource command', () => {
   });
 
   it('User is notified if no resource is found with filter', async () => {
-    const spy = jest.spyOn(window, 'showInformationMessage');
+    const spy = vi.spyOn(window, 'showInformationMessage');
 
     const command: CommandDescriptor<OpenResourceArgs> = {
       name: OPEN_COMMAND.command,
@@ -90,7 +90,7 @@ describe('open-resource command', () => {
   });
 
   it('User is notified if no resource is found with URI', async () => {
-    const spy = jest.spyOn(window, 'showInformationMessage');
+    const spy = vi.spyOn(window, 'showInformationMessage');
 
     const command: CommandDescriptor<OpenResourceArgs> = {
       name: OPEN_COMMAND.command,
@@ -111,9 +111,9 @@ describe('open-resource command', () => {
     await waitForNoteInFoamWorkspace(noteA.uri);
     await waitForNoteInFoamWorkspace(noteB.uri);
 
-    const spy = jest
+    const spy = vi
       .spyOn(window, 'showQuickPick')
-      .mockImplementationOnce(jest.fn(() => Promise.resolve(undefined)));
+      .mockImplementationOnce(vi.fn(() => Promise.resolve(undefined)));
 
     const command: CommandDescriptor<OpenResourceArgs> = {
       name: OPEN_COMMAND.command,

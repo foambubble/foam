@@ -15,6 +15,14 @@
 // Set before imports
 process.env.FORCE_COLOR = '1';
 process.env.NODE_ENV = 'test';
+// Vitest's TTY renderer uses ANSI cursor-movement codes to overwrite lines
+// in-place (live-updating view). The VS Code extension host pipes stdout
+// through its own capture layer, so the live-render frames are lost and
+// only the final cleared state survives — individual test names never
+// appear. Force non-TTY unconditionally so the verbose reporter prints
+// each result as a plain new line that persists in the output.
+(process.stdout as any).isTTY = false;
+(process.stderr as any).isTTY = false;
 
 import { rmSync, readdirSync, existsSync } from 'fs';
 import { cleanWorkspace } from './test-utils-vscode';
@@ -63,7 +71,6 @@ export async function run(): Promise<void> {
   try {
     const { startVitest } = await import('vitest/node');
 
-    const isCI = !!process.env.CI;
     const vitest = await startVitest('test', [], {
       root: rootDir,
       include: ['src/**/*.spec.ts'],
@@ -76,9 +83,7 @@ export async function run(): Promise<void> {
       testTimeout: 30000,
       fileParallelism: false,
       watch: false,
-      reporters: isCI
-        ? ['verbose', ['junit', { outputFile: 'test-results/e2e-junit.xml' }]]
-        : ['verbose'],
+      reporter: 'verbose',
     } as any, { configFile: false } as any);
 
     if (!vitest) {

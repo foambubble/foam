@@ -123,8 +123,16 @@ export default function createPool(ctx: any) {
       }
     },
 
-    /** clearMocks: true — clear after every test */
-    onAfterRunTask() {
+    /** Notify reporters of each completed test case and clear mocks. */
+    onAfterRunTask(task: any) {
+      // In Vitest 3.x the verbose reporter (non-TTY) prints tests via
+      // onTestCaseResult as they finish, not via onTestModuleEnd/printTestModule.
+      if (task?.type === 'test') {
+        const testCase = ctx.state?.getReportedEntity?.(task);
+        if (testCase) {
+          ctx.report?.('onTestCaseResult', testCase).catch(() => {});
+        }
+      }
       for (const m of mocks) m.mockClear();
     },
 
@@ -143,11 +151,24 @@ export default function createPool(ctx: any) {
       }
     },
 
-    /** Forward task result packs to Vitest's state manager */
+    /** Forward task result packs to Vitest's state manager and reporters */
     onTaskUpdate(packs: any[]) {
       if (!packs.length) return;
       try { ctx.state?.updateTasks?.(packs); } catch (e) {
         console.warn('[vitest-pool-vscode] updateTasks error:', (e as Error).message);
+      }
+      // Broadcast onTestModuleEnd for completed file tasks so reporters can
+      // emit per-file summaries and handle failures (TTY path uses printTestModule).
+      for (const pack of packs) {
+        const [id, result] = pack;
+        if (!result || result.state === 'run') continue;
+        const task = ctx.state?.idMap?.get(id);
+        if (task?.type === 'suite' && 'filepath' in task) {
+          const testModule = ctx.state?.getReportedEntity?.(task);
+          if (testModule) {
+            ctx.report?.('onTestModuleEnd', testModule).catch(() => {});
+          }
+        }
       }
       ctx.report?.('onTaskUpdate', packs).catch(() => {});
     },

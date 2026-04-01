@@ -15,4 +15,3 @@ docs/.sass-cache
 docs/.jekyll-metadata
 .test-workspace
 .agent/tasks
-packages/foam-vscode/test-results/

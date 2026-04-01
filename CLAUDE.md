@@ -30,7 +30,7 @@ All the following commands are to be executed from the `packages/foam-vscode` di
 - `yarn lint` - Run linting
 - `yarn test-reset-workspace` to clean test workspace
 
-Unit tests run in Node.js environment using Jest
+Unit tests run in Node.js environment using Vitest
 Integration tests require VS Code extension host
 When running tests, do not provide additional parameters, they are ignored by the custom runner script. You cannot run just a test, you have to run the whole suite.
 
@@ -79,7 +79,7 @@ Commands (run from repo root or `packages/foam-vscode`):
 - `yarn workspace @foam/graph build:vscode` - Build VS Code bundle only
 - `yarn workspace @foam/graph build:lib` - Build publishable ESM bundle only
 - `yarn workspace @foam/graph watch` - Watch mode for webview development
-- `yarn workspace @foam/graph test` - Run webview tests (Vitest, not Jest)
+- `yarn workspace @foam/graph test` - Run webview tests (Vitest)
 
 ### File Naming Patterns
 
@@ -132,7 +132,7 @@ This allows features to:
 
 ### Testing Conventions
 
-- `*.test.ts` - Unit tests using Jest
+- `*.test.ts` - Unit tests using Vitest
 - `*.spec.ts` - Integration tests requiring VS Code extension host
 - Tests live alongside source code in `src/`
 - Test cases should be phrased in terms of aspects of the feature being tested (expected behaviors), as they serve both as validation of the code as well as documentation of what the expected behavior for the code is in different situations. They should include the happy paths and edge cases.
@@ -196,7 +196,7 @@ When adding to `src/core/`:
 ## Dependencies
 
 - **Runtime**: VS Code API, markdown parsing, file watching
-- **Development**: TypeScript, Jest, ESLint, esbuild
+- **Development**: TypeScript, Vitest, ESLint, esbuild
 - **Key Libraries**: remark (markdown parsing), lru-cache, lodash
 - **Graph webview**: Lit (web components), force-graph, d3-force/scale/color, Vitest, happy-dom
 

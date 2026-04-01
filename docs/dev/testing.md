@@ -10,7 +10,7 @@ We use two distinct types of test files, each serving different purposes:
 
 - **Purpose**: Test business logic and algorithms in complete isolation
 - **Dependencies**: No VS Code APIs dependencies
-- **Environment**: Pure Jest with Node.js
+- **Environment**: Vitest with Node.js
 - **Speed**: Very fast execution
 - **Location**: Throughout the codebase alongside source files
 
@@ -19,7 +19,7 @@ We use two distinct types of test files, each serving different purposes:
 - **Purpose**: Test features that integrate with VS Code APIs and user workflows
 - **Dependencies**: Will likely depend on VS Code APIs (`vscode` module), otherwise avoid incurring the performance hit
 - **Environment**: Can run in TWO environments:
-  - **Mock Environment**: Jest with VS Code API mocks (fast)
+  - **Mock Environment**: Vitest with VS Code API mocks (fast)
   - **Real VS Code**: Full VS Code extension host (slow but comprehensive)
 - **Speed**: Depends on environment (see performance section below)
 - **Location**: Primarily in `src/features/` and service layers
@@ -41,8 +41,8 @@ This dual-environment capability allows us to:
 
 | Test Type             | Environment            | Typical Duration | VS Code APIs     |
 | --------------------- | ---------------------- | ---------------- | ---------------- |
-| **`.test.ts`**        | Pure Jest              | fastest          | **No**           |
-| **`.spec.ts` (mock)** | Jest + VS Code Mocks   | fast             | **Yes** (mocked) |
+| **`.test.ts`**        | Vitest (Node.js)       | fastest          | **No**           |
+| **`.spec.ts` (mock)** | Vitest + VS Code Mocks | fast             | **Yes** (mocked) |
 | **`.spec.ts` (real)** | VS Code Extension Host | sloooooow.       | **Yes** (real)   |
 
 ## Running Tests
@@ -131,7 +131,7 @@ This testing strategy gives us the best of both worlds: fast feedback during dev
 
 ## Graph Webview (`@foam/graph`)
 
-The webview component has its own test stack, separate from the extension's Jest setup.
+The webview component has its own test stack, separate from the extension tests.
 
 - **Framework**: [Vitest](https://vitest.dev/) with [happy-dom](https://github.com/capricorn86/happy-dom) for a browser-like environment
 - **Location**: Test files live in `packages/foam-vscode/webview-ui/graph/src/`

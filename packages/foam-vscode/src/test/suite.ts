@@ -1,5 +1,5 @@
 /**
- * E2E test suite runner — executes all *.test.ts and *.spec.ts files
+ * E2E test suite runner — executes all *.spec.ts files
  * inside the VS Code extension host using Vitest's programmatic API.
  *
  * We use the following convention in Foam:
@@ -41,6 +41,19 @@ export async function run(): Promise<void> {
   rf.sync(path.join(testWorkspace, '.vscode'));
   rf.sync(path.join(testWorkspace, '.foam'));
 
+  // Foam-specific: disable link reference definitions during tests
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const vscode = require('vscode');
+    if (vscode?.workspace) {
+      await vscode.workspace
+        .getConfiguration()
+        .update('foam.edit.linkReferenceDefinitions', 'off');
+    }
+  } catch (e) {
+    // vscode not available outside extension host — ignore
+  }
+
   try {
     const { startVitest } = await import('vitest/node');
 
@@ -51,6 +64,7 @@ export async function run(): Promise<void> {
       // Custom in-process pool: runs tests in the extension host main process
       // so that require('vscode') resolves via VS Code's Module._load patch.
       pool: path.join(rootDir, 'src/test/support/vitest-pool-vscode.ts'),
+      poolOptions: { vscode: { outDir: 'out' } },
       globals: true,
       testTimeout: 30000,
       fileParallelism: false,

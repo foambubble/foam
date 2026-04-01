@@ -9,6 +9,10 @@
  *
  * By running tests directly in the main process we replicate the behaviour
  * of the old Jest `runInBand: true` setup.
+ *
+ * Configuration (via poolOptions.vscode in vitest config):
+ *   srcDir  — source directory, relative to root (default: 'src')
+ *   outDir  — tsc output directory, relative to root (default: 'out')
  */
 
 import path from 'path';
@@ -36,7 +40,7 @@ const __filename = fileURLToPath(import.meta.url);
 const _require = createRequire(__filename);
 
 // ---------------------------------------------------------------------------
-// Build standalone expect() — initialised on first runTests call
+// Build standalone expect() — initialised on first use
 // ---------------------------------------------------------------------------
 let _expect: any = null;
 
@@ -73,10 +77,11 @@ const vi = {
 // ---------------------------------------------------------------------------
 export default function createPool(ctx: any) {
   const rootDir = ctx.config.root as string;
-  const srcDir = path.join(rootDir, 'src');
-  const outDir = path.join(rootDir, 'out');
+  const opts = (ctx.config.poolOptions as any)?.vscode ?? {};
+  const srcDir = path.join(rootDir, (opts.srcDir as string) ?? 'src');
+  const outDir = path.join(rootDir, (opts.outDir as string) ?? 'out');
 
-  /** Convert a source .ts path to the compiled .js path in out/ */
+  /** Convert a source .ts path to the compiled .js path in outDir. */
   function toCompiledPath(srcFilepath: string): string {
     const rel = path.relative(srcDir, srcFilepath);
     return path.join(outDir, rel.replace(/\.ts$/, '.js'));
@@ -95,7 +100,9 @@ export default function createPool(ctx: any) {
       testTimeout: 30000,
       hookTimeout: 10000,
       teardownTimeout: 1000,
-      setupFiles: [] as string[],
+      // Map any configured setupFiles through toCompiledPath so they run
+      // inside the extension host process alongside the test files.
+      setupFiles: ((ctx.config.setupFiles as string[]) ?? []).map(toCompiledPath),
       sequence: { shuffle: false, concurrent: false, hooks: 'stack' as const },
     },
 
@@ -142,41 +149,19 @@ export default function createPool(ctx: any) {
 
   async function execTests(specs: any[]) {
     const expect = await getExpect();
-
-    // Install globals expected by compiled test files (globals: true)
     Object.assign(globalThis, {
       describe, it, test,
       beforeAll, afterAll, beforeEach, afterEach,
       expect, vi,
     });
-
     const files = specs.map((s: any) => s.moduleId ?? s[1]);
     await startTests(files, runner as any);
   }
 
   return {
     name: 'vscode',
-
-    async runTests(specs: any[]) {
-      // Workspace configuration
-      try {
-        const vscode = _require('vscode');
-        if (vscode?.workspace) {
-          await vscode.workspace
-            .getConfiguration()
-            .update('foam.edit.linkReferenceDefinitions', 'off');
-        }
-      } catch (e) {
-        console.warn('[vitest-pool-vscode] Could not configure vscode workspace:', e);
-      }
-
-      await execTests(specs);
-    },
-
-    async collectTests(specs: any[]) {
-      await execTests(specs);
-    },
-
+    async runTests(specs: any[]) { await execTests(specs); },
+    async collectTests(specs: any[]) { await execTests(specs); },
     async close() {},
   };
 }

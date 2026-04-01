@@ -1,4 +1,5 @@
 import path from 'path';
+import { mkdirSync, writeFileSync } from 'fs';
 import { runTests } from 'vscode-test';
 
 function getVSCodePlatform(): string {
@@ -26,12 +27,25 @@ async function main() {
 
     const testWorkspace = path.join(extensionDevelopmentPath, '.test-workspace');
 
+    // Pre-populate isolated user data dir to disable local file history,
+    // which otherwise races with test files being deleted during cleanup.
+    const userDataDir = path.join(extensionDevelopmentPath, '.vscode-test-user-data');
+    const userSettingsDir = path.join(userDataDir, 'User');
+    mkdirSync(userSettingsDir, { recursive: true });
+    writeFileSync(
+      path.join(userSettingsDir, 'settings.json'),
+      JSON.stringify({ 'workbench.localHistory.enabled': false })
+    );
+
     // Download VS Code, unzip it and run the integration test
     await runTests({
       extensionDevelopmentPath,
       extensionTestsPath,
       launchArgs: [
         testWorkspace,
+        // Isolate test instance from the real user profile so VS Code's local
+        // file history doesn't try to snapshot (and race with) test temp files.
+        `--user-data-dir=${path.join(extensionDevelopmentPath, '.vscode-test-user-data')}`,
         '--disable-gpu',
         '--disable-extensions',
         '--disable-workspace-trust',

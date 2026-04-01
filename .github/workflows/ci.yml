@@ -22,25 +22,15 @@ jobs:
   lint:
     name: Lint
     runs-on: ubuntu-22.04
-    timeout-minutes: 10
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v6
-      - name: Setup Node
-        uses: actions/setup-node@v6
+      - name: Run oxlint
+        uses: oxc-project/oxlint-action@v3.0.0
         with:
-          node-version: '22'
-      - name: Restore Dependencies and VS Code test instance
-        uses: actions/cache@v5
-        with:
-          path: |
-            node_modules
-            */*/node_modules
-            packages/foam-vscode/.vscode-test
-          key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock', 'packages/foam-vscode/src/test/run-tests.ts') }}-${{ secrets.CACHE_VERSION }}
-      - name: Install Dependencies
-        run: yarn
-      - name: Check Lint Rules
-        run: yarn lint
+          working-directory: packages/foam-vscode
+          config: .oxlintrc.json
+          all-files: 'true'
 
   test:
     name: Build and Test
@@ -71,6 +61,4 @@ jobs:
       - name: Build Packages
         run: yarn build
       - name: Run Tests
-        uses: GabrielBB/xvfb-action@v1.7
-        with:
-          run: yarn test
+        run: xvfb-run --auto-servernum yarn test

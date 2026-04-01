@@ -40,7 +40,7 @@ export async function run(): Promise<void> {
   process.stderr.write = (buffer: string) => {
     const lines = (remaining + buffer).split('\n');
     remaining = lines.pop() as string;
-    lines.forEach(l => console.log(l.substr(0, 300)));
+    lines.forEach(l => { if (l.trim()) console.log(l.substr(0, 300)); });
     return true;
   };
 

@@ -23,25 +23,42 @@ export default async function activate(
     }
   });
 
+  const attachPanelListeners = (p: vscode.WebviewPanel, foam: Foam) => {
+    const onFoamChanged = _ => {
+      updateGraph(p, foam);
+    };
+    const noteUpdatedListener = foam.graph.onDidUpdate(onFoamChanged);
+    const editorListener = vscode.window.onDidChangeActiveTextEditor(e => {
+      handleActiveEditorChange(p, foam, e);
+    });
+    p.onDidDispose(() => {
+      noteUpdatedListener.dispose();
+      editorListener.dispose();
+      panel = undefined;
+    });
+  };
+
+  context.subscriptions.push(
+    vscode.window.registerWebviewPanelSerializer('foam-graph', {
+      async deserializeWebviewPanel(
+        webviewPanel: vscode.WebviewPanel,
+        _state: unknown
+      ) {
+        panel = webviewPanel;
+        const foam = await foamPromise;
+        await setupGraphPanel(webviewPanel, foam, context);
+        attachPanelListeners(webviewPanel, foam);
+      },
+    })
+  );
+
   vscode.commands.registerCommand('foam-vscode.show-graph', async () => {
     if (panel) {
       panel.reveal();
     } else {
       const foam = await foamPromise;
       panel = await createGraphPanel(foam, context);
-      const onFoamChanged = _ => {
-        updateGraph(panel, foam);
-      };
-
-      const noteUpdatedListener = foam.graph.onDidUpdate(onFoamChanged);
-      const editorListener = vscode.window.onDidChangeActiveTextEditor(e => {
-        handleActiveEditorChange(panel, foam, e);
-      });
-      panel.onDidDispose(() => {
-        noteUpdatedListener.dispose();
-        editorListener.dispose();
-        panel = undefined;
-      });
+      attachPanelListeners(panel, foam);
     }
   });
   const shouldOpenGraphOnStartup = getFoamVsCodeConfig('graph.onStartup');
@@ -123,6 +140,15 @@ async function createGraphPanel(
     }
   );
 
+  await setupGraphPanel(panel, foam, context);
+  return panel;
+}
+
+async function setupGraphPanel(
+  panel: vscode.WebviewPanel,
+  foam: Foam,
+  context: vscode.ExtensionContext
+) {
   panel.webview.html = await getWebviewContent(context, panel);
 
   panel.webview.onDidReceiveMessage(
@@ -172,8 +198,6 @@ async function createGraphPanel(
     undefined,
     context.subscriptions
   );
-
-  return panel;
 }
 
 async function getWebviewContent(

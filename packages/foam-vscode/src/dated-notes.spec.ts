@@ -285,7 +285,7 @@ Unix: \${FOAM_DATE_SECONDS_UNIX}`,
       expect(await getDailyNoteTemplateUri()).not.toBeDefined();
 
       // Intercept the showWarningMessage call
-      const showWarningMessageSpy = jest
+      const showWarningMessageSpy = vi
         .spyOn(window, 'showWarningMessage')
         .mockResolvedValue(CREATE_DAILY_NOTE_WARNING_RESPONSE as any); // simulate user action
 

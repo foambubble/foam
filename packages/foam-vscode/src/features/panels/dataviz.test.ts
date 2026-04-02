@@ -6,7 +6,7 @@ import { getNodeNavigationCommand, handleActiveEditorChange } from './dataviz';
 describe('handleActiveEditorChange', () => {
   const makePanel = () =>
     ({
-      webview: { postMessage: jest.fn() },
+      webview: { postMessage: vi.fn() },
     } as unknown as vscode.WebviewPanel);
 
   const makeWorkspace = () => new FoamWorkspace([URI.file('/')]);

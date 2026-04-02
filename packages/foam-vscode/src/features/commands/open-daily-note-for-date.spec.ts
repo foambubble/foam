@@ -4,9 +4,9 @@ import { commands, window } from 'vscode';
 
 describe('open-daily-note-for-date command', () => {
   it('offers to pick which date to use', async () => {
-    const spy = jest
+    const spy = vi
       .spyOn(window, 'showQuickPick')
-      .mockImplementationOnce(jest.fn(() => Promise.resolve(undefined)));
+      .mockImplementationOnce(vi.fn(() => Promise.resolve(undefined)));
 
     await commands.executeCommand('foam-vscode.open-daily-note-for-date');
 

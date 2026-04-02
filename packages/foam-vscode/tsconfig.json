@@ -1,7 +1,7 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "types": ["jest", "node"],
+    "types": ["node", "vitest/globals"],
     "rootDir": "src",
     "module": "node16",
     "moduleResolution": "node16",
@@ -10,8 +10,9 @@
     "lib": ["ES2022", "DOM"],
     "sourceMap": true,
     "strict": false,
-    "isolatedModules": true
+    "isolatedModules": true,
+    "skipLibCheck": true
   },
   "include": ["src", "types"],
-  "exclude": ["node_modules", ".vscode-test"]
+  "exclude": ["node_modules", ".vscode-test", "src/test/support/vitest-setup*.ts", "src/test/support/vitest-pool*.ts"]
 }

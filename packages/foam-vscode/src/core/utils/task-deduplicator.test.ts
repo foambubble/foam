@@ -4,7 +4,7 @@ describe('TaskDeduplicator', () => {
   describe('run', () => {
     it('should execute a task and return its result', async () => {
       const deduplicator = new TaskDeduplicator<string>();
-      const task = jest.fn(async () => 'result');
+      const task = vi.fn(async () => 'result');
 
       const result = await deduplicator.run(task);
 
@@ -40,7 +40,7 @@ describe('TaskDeduplicator', () => {
 
     it('should call onDuplicate callback for concurrent calls', async () => {
       const deduplicator = new TaskDeduplicator<string>();
-      const onDuplicate = jest.fn();
+      const onDuplicate = vi.fn();
 
       const task = async () => {
         await new Promise(resolve => setTimeout(resolve, 10));
@@ -60,8 +60,8 @@ describe('TaskDeduplicator', () => {
 
     it('should not call onDuplicate for the first call', async () => {
       const deduplicator = new TaskDeduplicator<string>();
-      const onDuplicate = jest.fn();
-      const task = jest.fn(async () => 'result');
+      const onDuplicate = vi.fn();
+      const task = vi.fn(async () => 'result');
 
       await deduplicator.run(task, onDuplicate);
 
@@ -85,7 +85,7 @@ describe('TaskDeduplicator', () => {
     it('should propagate errors from the task', async () => {
       const deduplicator = new TaskDeduplicator<string>();
       const error = new Error('Task failed');
-      const task = jest.fn(async () => {
+      const task = vi.fn(async () => {
         throw error;
       });
 
@@ -112,10 +112,10 @@ describe('TaskDeduplicator', () => {
 
     it('should clear running task after error', async () => {
       const deduplicator = new TaskDeduplicator<string>();
-      const task1 = jest.fn(async () => {
+      const task1 = vi.fn(async () => {
         throw new Error('Task failed');
       });
-      const task2 = jest.fn(async () => 'success');
+      const task2 = vi.fn(async () => 'success');
 
       // First task fails
       await expect(deduplicator.run(task1)).rejects.toThrow('Task failed');
@@ -180,7 +180,7 @@ describe('TaskDeduplicator', () => {
 
     it('should return false after task completes', async () => {
       const deduplicator = new TaskDeduplicator<string>();
-      const task = jest.fn(async () => 'result');
+      const task = vi.fn(async () => 'result');
 
       await deduplicator.run(task);
 
@@ -189,7 +189,7 @@ describe('TaskDeduplicator', () => {
 
     it('should return false after task fails', async () => {
       const deduplicator = new TaskDeduplicator<string>();
-      const task = jest.fn(async () => {
+      const task = vi.fn(async () => {
         throw new Error('Failed');
       });
 
@@ -256,7 +256,7 @@ describe('TaskDeduplicator', () => {
   describe('edge cases', () => {
     it('should handle tasks that resolve immediately', async () => {
       const deduplicator = new TaskDeduplicator<string>();
-      const task = jest.fn(async () => 'immediate');
+      const task = vi.fn(async () => 'immediate');
 
       const result = await deduplicator.run(task);
 
@@ -266,7 +266,7 @@ describe('TaskDeduplicator', () => {
 
     it('should handle tasks that throw synchronously', async () => {
       const deduplicator = new TaskDeduplicator<string>();
-      const task = jest.fn(() => {
+      const task = vi.fn(() => {
         throw new Error('Sync error');
       });
 

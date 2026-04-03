@@ -35,14 +35,23 @@ export class FolderTreeItem<T> extends vscode.TreeItem {
  * the values in the folder, and how to filter them.
  */
 export abstract class FolderTreeProvider<I, T> extends BaseTreeProvider<I> {
-  private root: Folder<T>;
+  protected root: Folder<T>;
   public nValues = 0;
 
   refresh(): void {
     const values = this.getValues();
     this.nValues = values.length;
     this.createTree(values, this.getFilterFn());
+    this.postCreateTree();
     super.refresh();
+  }
+
+  /**
+   * Hook called after the tree is created, before the change event is fired.
+   * Subclasses can override this to post-process the tree (e.g. pruning empty folders).
+   */
+  protected postCreateTree(): void {
+    // no-op by default
   }
 
   getParent(element: I | FolderTreeItem<T>): vscode.ProviderResult<I> {
@@ -218,6 +227,19 @@ export function walk<T, R>(node: Folder<T>, fn: (value: T) => R): R[] {
   traverse(node);
 
   return results;
+}
+
+/**
+ * Removes folder nodes that have no values in their subtree.
+ * Returns true if the node should be kept.
+ */
+export function pruneEmptyFolders<T>(node: Folder<T>): boolean {
+  for (const key of Object.keys(node.children)) {
+    if (!pruneEmptyFolders(node.children[key])) {
+      delete node.children[key];
+    }
+  }
+  return node.value != null || Object.keys(node.children).length > 0;
 }
 
 function sortFolderTreeItems(a: vscode.TreeItem, b: vscode.TreeItem): number {

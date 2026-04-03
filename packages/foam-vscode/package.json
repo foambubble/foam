@@ -228,18 +228,33 @@
           "group": "navigation"
         },
         {
-          "command": "foam-vscode.views.notes-explorer.show:notes",
-          "when": "view == foam-vscode.notes-explorer && foam-vscode.views.notes-explorer.show == 'all'",
+          "command": "foam-vscode.views.notes-explorer.collapse-all",
+          "when": "view == foam-vscode.notes-explorer && foam-vscode.views.notes-explorer.view-mode != 'flat'",
           "group": "navigation"
         },
         {
-          "command": "foam-vscode.views.notes-explorer.show:all",
-          "when": "view == foam-vscode.notes-explorer && foam-vscode.views.notes-explorer.show == 'notes-only'",
-          "group": "navigation"
-        },
-        {
-          "command": "foam-vscode.views.notes-explorer.expand-all",
+          "command": "foam-vscode.views.notes-explorer.connections:toggle",
           "when": "view == foam-vscode.notes-explorer",
+          "group": "navigation"
+        },
+        {
+          "command": "foam-vscode.views.notes-explorer.show:toggle",
+          "when": "view == foam-vscode.notes-explorer",
+          "group": "navigation"
+        },
+        {
+          "command": "foam-vscode.views.notes-explorer.view:toggle",
+          "when": "view == foam-vscode.notes-explorer",
+          "group": "navigation"
+        },
+        {
+          "command": "foam-vscode.views.notes-explorer.set-filter",
+          "when": "view == foam-vscode.notes-explorer",
+          "group": "navigation"
+        },
+        {
+          "command": "foam-vscode.views.notes-explorer.clear-filter",
+          "when": "view == foam-vscode.notes-explorer && foam-vscode.views.notes-explorer.filter-active",
           "group": "navigation"
         }
       ],
@@ -310,18 +325,6 @@
         },
         {
           "command": "foam-vscode.views.placeholders.expand-all",
-          "when": "false"
-        },
-        {
-          "command": "foam-vscode.views.notes-explorer.show:all",
-          "when": "false"
-        },
-        {
-          "command": "foam-vscode.views.notes-explorer.show:notes",
-          "when": "false"
-        },
-        {
-          "command": "foam-vscode.views.notes-explorer.expand-all",
           "when": "false"
         },
         {
@@ -500,19 +503,34 @@
         "icon": "$(expand-all)"
       },
       {
-        "command": "foam-vscode.views.notes-explorer.show:all",
-        "title": "Show all resources",
-        "icon": "$(files)"
+        "command": "foam-vscode.views.notes-explorer.show:toggle",
+        "title": "Toggle: Show All / Notes Only",
+        "icon": "$(markdown)"
       },
       {
-        "command": "foam-vscode.views.notes-explorer.expand-all",
-        "title": "Expand all",
-        "icon": "$(expand-all)"
+        "command": "foam-vscode.views.notes-explorer.collapse-all",
+        "title": "Collapse all",
+        "icon": "$(collapse-all)"
       },
       {
-        "command": "foam-vscode.views.notes-explorer.show:notes",
-        "title": "Show only notes",
-        "icon": "$(file)"
+        "command": "foam-vscode.views.notes-explorer.set-filter",
+        "title": "Filter Notes",
+        "icon": "$(filter)"
+      },
+      {
+        "command": "foam-vscode.views.notes-explorer.clear-filter",
+        "title": "Clear Filter",
+        "icon": "$(filter-filled)"
+      },
+      {
+        "command": "foam-vscode.views.notes-explorer.connections:toggle",
+        "title": "Toggle Connections",
+        "icon": "$(arrow-swap)"
+      },
+      {
+        "command": "foam-vscode.views.notes-explorer.view:toggle",
+        "title": "Toggle: Hierarchy / Flat List",
+        "icon": "$(list-tree)"
       },
       {
         "command": "foam-vscode.create-new-template",

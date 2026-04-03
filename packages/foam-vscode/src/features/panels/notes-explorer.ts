@@ -5,14 +5,15 @@ import {
   ResourceRangeTreeItem,
   ResourceTreeItem,
   createBacklinkItemsForResource as createBacklinkTreeItemsForResource,
-  expandAll,
 } from './utils/tree-view-utils';
 import { Resource } from '../../core/model/note';
 import { FoamGraph } from '../../core/model/graph';
 import { ContextMemento } from '../../utils/vsc-utils';
 import {
+  Folder,
   FolderTreeItem,
   FolderTreeProvider,
+  pruneEmptyFolders,
 } from './utils/folder-tree-provider';
 
 export default async function activate(
@@ -30,7 +31,6 @@ export default async function activate(
     'foam-vscode.notes-explorer',
     {
       treeDataProvider: provider,
-      showCollapseAll: true,
       canSelectMany: true,
     }
   );
@@ -55,6 +55,22 @@ export default async function activate(
     }
   };
 
+  const applyFilter = async (text: string) => {
+    provider.setFilter(text);
+    provider.refresh();
+    treeView.message = text ? `Filtering: "${text}"` : undefined;
+    vscode.commands.executeCommand(
+      'setContext',
+      'foam-vscode.views.notes-explorer.filter-active',
+      !!text
+    );
+    if (!text) {
+      await vscode.commands.executeCommand(
+        'workbench.actions.treeView.foam-vscode.notes-explorer.collapseAll'
+      );
+    }
+  };
+
   context.subscriptions.push(
     treeView,
     provider,
@@ -62,9 +78,62 @@ export default async function activate(
       provider.refresh();
     }),
     vscode.commands.registerCommand(
-      `foam-vscode.views.notes-explorer.expand-all`,
-      (...args) =>
-        expandAll(treeView, provider, node => node.contextValue === 'folder')
+      `foam-vscode.views.notes-explorer.collapse-all`,
+      () =>
+        vscode.commands.executeCommand(
+          'workbench.actions.treeView.foam-vscode.notes-explorer.collapseAll'
+        )
+    ),
+    vscode.commands.registerCommand(
+      `foam-vscode.views.notes-explorer.connections:toggle`,
+      async () => {
+        await provider.showConnections.update(
+          provider.showConnections.get() === 'show' ? 'hide' : 'show'
+        );
+        provider.refresh();
+      }
+    ),
+    vscode.commands.registerCommand(
+      `foam-vscode.views.notes-explorer.show:toggle`,
+      async () => {
+        await provider.show.update(
+          provider.show.get() === 'all' ? 'notes-only' : 'all'
+        );
+        provider.refresh();
+      }
+    ),
+    vscode.commands.registerCommand(
+      `foam-vscode.views.notes-explorer.view:toggle`,
+      async () => {
+        await provider.viewMode.update(
+          provider.viewMode.get() === 'hierarchy' ? 'flat' : 'hierarchy'
+        );
+        provider.refresh();
+      }
+    ),
+    vscode.commands.registerCommand(
+      `foam-vscode.views.notes-explorer.set-filter`,
+      () => {
+        const inputBox = vscode.window.createInputBox();
+        inputBox.prompt = 'Filter notes by title or path';
+        inputBox.value = provider.getFilter();
+        inputBox.placeholder = 'Type to filter...';
+
+        const disposables = [
+          inputBox.onDidChangeValue(text => applyFilter(text)),
+          inputBox.onDidAccept(() => inputBox.hide()),
+          inputBox.onDidHide(() => {
+            disposables.forEach(d => d.dispose());
+            inputBox.dispose();
+          }),
+        ];
+
+        inputBox.show();
+      }
+    ),
+    vscode.commands.registerCommand(
+      `foam-vscode.views.notes-explorer.clear-filter`,
+      () => applyFilter('')
     ),
     vscode.window.onDidChangeActiveTextEditor(revealTextEditorItem),
     treeView.onDidChangeVisibility(revealTextEditorItem)
@@ -92,6 +161,9 @@ export class NotesProvider extends FolderTreeProvider<
   Resource
 > {
   public show: ContextMemento<'all' | 'notes-only'>;
+  public showConnections: ContextMemento<'show' | 'hide'>;
+  public viewMode: ContextMemento<'hierarchy' | 'flat'>;
+  private filterText: string = '';
 
   constructor(
     private workspace: FoamWorkspace,
@@ -102,25 +174,83 @@ export class NotesProvider extends FolderTreeProvider<
     this.show = new ContextMemento<'all' | 'notes-only'>(
       this.state,
       `foam-vscode.views.notes-explorer.show`,
-      'all'
+      'notes-only'
     );
+    this.showConnections = new ContextMemento<'show' | 'hide'>(
+      this.state,
+      `foam-vscode.views.notes-explorer.connections`,
+      'hide'
+    );
+    this.viewMode = new ContextMemento<'hierarchy' | 'flat'>(
+      this.state,
+      `foam-vscode.views.notes-explorer.view-mode`,
+      'flat'
+    );
+  }
 
-    this.disposables.push(
-      vscode.commands.registerCommand(
-        `foam-vscode.views.notes-explorer.show:all`,
-        () => {
-          this.show.update('all');
-          this.refresh();
-        }
-      ),
-      vscode.commands.registerCommand(
-        `foam-vscode.views.notes-explorer.show:notes`,
-        () => {
-          this.show.update('notes-only');
-          this.refresh();
-        }
-      )
-    );
+  setFilter(text: string) {
+    this.filterText = text;
+  }
+
+  getFilter(): string {
+    return this.filterText;
+  }
+
+  protected postCreateTree(): void {
+    if (this.filterText && this.root) {
+      pruneEmptyFolders(this.root);
+    }
+  }
+
+  createFolderTreeItem(
+    node: Folder<Resource>,
+    name: string,
+    parent: FolderTreeItem<Resource>
+  ): FolderTreeItem<Resource> {
+    const item = super.createFolderTreeItem(node, name, parent);
+    if (this.filterText) {
+      item.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+      // Assign a unique id so VS Code treats this as a new item and
+      // honours collapsibleState = Expanded rather than its cached state
+      item.id = `filtered:${node.path.join('/')}`;
+    }
+    return item;
+  }
+
+  async getChildren(item?: NotesTreeItems): Promise<NotesTreeItems[]> {
+    if (this.viewMode.get() === 'flat' && item == null) {
+      const filterFn = this.getFilterFn();
+      return this.getValues()
+        .filter(filterFn)
+        .map(v => this.createValueTreeItem(v, undefined))
+        .sort((a, b) =>
+          (a as ResourceTreeItem).label
+            .toString()
+            .localeCompare((b as ResourceTreeItem).label.toString())
+        ) as NotesTreeItems[];
+    }
+    return super.getChildren(item);
+  }
+
+  findTreeItemByPath(path: string[]): Promise<NotesTreeItems> {
+    if (this.viewMode.get() === 'flat') {
+      const fullPath = path.join('/');
+      const filterFn = this.getFilterFn();
+      const value = this.getValues().find(v => {
+        if (!filterFn(v)) return false;
+        const relPath = vscode.workspace.asRelativePath(
+          v.uri.path,
+          vscode.workspace.workspaceFolders.length > 1
+        );
+        return relPath === fullPath;
+      });
+      return Promise.resolve(
+        value
+          ? (this.createValueTreeItem(value, undefined) as NotesTreeItems)
+          : null
+      );
+    }
+    return super.findTreeItemByPath(path);
   }
 
   getValues() {
@@ -128,9 +258,23 @@ export class NotesProvider extends FolderTreeProvider<
   }
 
   getFilterFn() {
-    return this.show.get() === 'notes-only'
-      ? res => res.type !== 'image' && res.type !== 'attachment'
-      : () => true;
+    const showFilter =
+      this.show.get() === 'notes-only'
+        ? (res: Resource) => res.type !== 'image' && res.type !== 'attachment'
+        : () => true;
+
+    if (!this.filterText) {
+      return showFilter;
+    }
+
+    const needle = this.filterText.toLowerCase();
+    return (res: Resource) => {
+      if (!showFilter(res)) return false;
+      return (
+        res.title.toLowerCase().includes(needle) ||
+        res.uri.path.toLowerCase().includes(needle)
+      );
+    };
   }
 
   valueToPath(value: Resource) {
@@ -146,10 +290,11 @@ export class NotesProvider extends FolderTreeProvider<
     value: Resource,
     parent: FolderTreeItem<Resource>
   ): NotesTreeItems {
+    const connectionsVisible = this.showConnections.get() === 'show';
     const item = new ResourceTreeItem(value, this.workspace, {
       parent,
       collapsibleState:
-        this.graph.getBacklinks(value.uri).length > 0
+        connectionsVisible && this.graph.getBacklinks(value.uri).length > 0
           ? vscode.TreeItemCollapsibleState.Collapsed
           : vscode.TreeItemCollapsibleState.None,
     });
@@ -166,11 +311,23 @@ export class NotesProvider extends FolderTreeProvider<
       });
       return backlinks;
     };
-    item.description =
-      value.uri.getName().toLocaleLowerCase() ===
-      value.title.toLocaleLowerCase()
+    const baseDescription = (() => {
+      if (this.viewMode.get() === 'flat') {
+        const parts = this.valueToPath(value);
+        return parts.length > 1 ? parts.slice(0, -1).join('/') : undefined;
+      }
+      return value.uri.getName().toLocaleLowerCase() ===
+        value.title.toLocaleLowerCase()
         ? undefined
         : value.uri.getBasename();
+    })();
+
+    const links = this.graph.getLinks(value.uri).length;
+    const backlinks = this.graph.getBacklinks(value.uri).length;
+    const counts =
+      links > 0 || backlinks > 0 ? `↑${links} ↓${backlinks}` : undefined;
+    item.description =
+      [baseDescription, counts].filter(Boolean).join(' - ') || undefined;
     return item;
   }
 }

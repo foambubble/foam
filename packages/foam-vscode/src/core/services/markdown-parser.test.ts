@@ -355,6 +355,17 @@ tags:
 `);
       expect(note.tags.map(t => t.label)).toContain('new');
     });
+
+    it('#1615 - should detect tags when a hyphenated property appears before tags', () => {
+      const note = createNoteFromMarkdown(`
+---
+date-created: 2024-01-01
+tags: hello, world
+---
+`);
+      expect(note.tags.map(t => t.label)).toContain('hello');
+      expect(note.tags.map(t => t.label)).toContain('world');
+    });
   });
 
   describe('Tags', () => {

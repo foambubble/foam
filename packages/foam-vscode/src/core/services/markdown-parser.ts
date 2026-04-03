@@ -228,28 +228,34 @@ const getTextFromChildren = (root: Node): string => {
   return text;
 };
 
+// Matches a top-level YAML key: starts at column 0 with a non-hyphen, non-space,
+// non-comment character, and contains a colon (e.g. "tags:", "date-created:").
+const YAML_KEY_LINE_RE = /^([^-\s#][^:]*?):\s*(.*)/;
+
 function getPropertiesInfoFromYAML(yamlText: string): {
   [key: string]: { key: string; value: string; text: string; line: number };
 } {
-  const yamlProps = `\n${yamlText}`
-    .split(/[\n](\w+:)/g)
-    .filter(item => item.trim() !== '');
   const lines = yamlText.split('\n');
-  let result: { line: number; key: string; text: string; value: string }[] = [];
-  for (let i = 0; i < yamlProps.length / 2; i++) {
-    const key = yamlProps[i * 2].replace(':', '');
-    const value = yamlProps[i * 2 + 1].trim();
-    const text = yamlProps[i * 2] + yamlProps[i * 2 + 1];
-    result.push({ key, value, text, line: -1 });
+  const result: {
+    [key: string]: { key: string; value: string; text: string; line: number };
+  } = {};
+  for (let lineIdx = 0; lineIdx < lines.length; lineIdx++) {
+    const match = lines[lineIdx].match(YAML_KEY_LINE_RE);
+    if (!match) {
+      continue;
+    }
+    const key = match[1];
+    let text = lines[lineIdx];
+    let j = lineIdx + 1;
+    // Collect continuation lines: everything that isn't the start of a new key
+    while (j < lines.length && !YAML_KEY_LINE_RE.test(lines[j])) {
+      text += '\n' + lines[j];
+      j++;
+    }
+    const value = text.slice(key.length + 1).trim();
+    result[key] = { key, value, text, line: lineIdx };
   }
-  result = result.map(p => {
-    const line = lines.findIndex(l => l.startsWith(p.key + ':'));
-    return { ...p, line };
-  });
-  return result.reduce((acc, curr) => {
-    acc[curr.key] = curr;
-    return acc;
-  }, {});
+  return result;
 }
 
 const tagsPlugin: ParserPlugin = {

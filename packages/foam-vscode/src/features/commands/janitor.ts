@@ -8,7 +8,7 @@ import {
 import detectNewline from 'detect-newline';
 import { Foam } from '../../core/model/foam';
 import { Resource } from '../../core/model/note';
-import { generateHeading, generateLinkReferences } from '../../core/janitor';
+import { generateHeading, generateLinkReferences } from '../../janitor';
 import { Range } from '../../core/model/range';
 import { TextEdit } from '../../core/services/text-edit';
 import {

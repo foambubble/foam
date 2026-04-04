@@ -1,13 +1,13 @@
 import { convertLinkFormat } from '.';
-import { TEST_DATA_DIR } from '../../test/test-utils';
-import { MarkdownResourceProvider } from '../services/markdown-provider';
-import { Resource } from '../model/note';
-import { FoamWorkspace } from '../model/workspace';
-import { Logger } from '../utils/log';
+import { TEST_DATA_DIR } from '../test/test-utils';
+import { MarkdownResourceProvider } from '../core/services/markdown-provider';
+import { Resource } from '../core/model/note';
+import { FoamWorkspace } from '../core/model/workspace';
+import { Logger } from '../core/utils/log';
 import fs from 'fs';
-import { URI } from '../model/uri';
-import { createMarkdownParser } from '../services/markdown-parser';
-import { FileDataStore } from '../../test/test-datastore';
+import { URI } from '../core/model/uri';
+import { createMarkdownParser } from '../core/services/markdown-parser';
+import { FileDataStore } from '../test/test-datastore';
 
 Logger.setLevel('error');
 

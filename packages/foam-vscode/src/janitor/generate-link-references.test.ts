@@ -1,10 +1,10 @@
 import { generateLinkReferences } from '.';
-import { createTestNote, createTestWorkspace } from '../../test/test-utils';
-import { Logger } from '../utils/log';
-import { URI } from '../model/uri';
+import { createTestNote, createTestWorkspace } from '../test/test-utils';
+import { Logger } from '../core/utils/log';
+import { URI } from '../core/model/uri';
 import { EOL } from 'os';
-import { createMarkdownParser } from '../services/markdown-parser';
-import { TextEdit } from '../services/text-edit';
+import { createMarkdownParser } from '../core/services/markdown-parser';
+import { TextEdit } from '../core/services/text-edit';
 
 Logger.setLevel('error');
 

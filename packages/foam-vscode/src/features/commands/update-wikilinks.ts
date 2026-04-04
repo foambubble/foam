@@ -18,7 +18,7 @@ import {
   LINK_REFERENCE_DEFINITION_FOOTER,
   LINK_REFERENCE_DEFINITION_HEADER,
   generateLinkReferences,
-} from '../../core/janitor/generate-link-references';
+} from '../../janitor/generate-link-references';
 import { fromVsCodeUri, toVsCodeRange } from '../../utils/vsc-utils';
 import { getEditorEOL } from '../../services/editor';
 import { ResourceParser } from '../../core/model/note';

@@ -1,13 +1,13 @@
 import { generateHeading } from '.';
-import { readFileFromFs, TEST_DATA_DIR } from '../../test/test-utils';
-import { MarkdownResourceProvider } from '../services/markdown-provider';
-import { Resource } from '../model/note';
-import { Range } from '../model/range';
-import { FoamWorkspace } from '../model/workspace';
-import { Logger } from '../utils/log';
+import { readFileFromFs, TEST_DATA_DIR } from '../test/test-utils';
+import { MarkdownResourceProvider } from '../core/services/markdown-provider';
+import { Resource } from '../core/model/note';
+import { Range } from '../core/model/range';
+import { FoamWorkspace } from '../core/model/workspace';
+import { Logger } from '../core/utils/log';
 import detectNewline from 'detect-newline';
-import { createMarkdownParser } from '../services/markdown-parser';
-import { FileDataStore } from '../../test/test-datastore';
+import { createMarkdownParser } from '../core/services/markdown-parser';
+import { FileDataStore } from '../test/test-datastore';
 
 Logger.setLevel('error');
 

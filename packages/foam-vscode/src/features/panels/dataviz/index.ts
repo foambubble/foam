@@ -232,8 +232,10 @@ async function getWebviewContent(
   return filled;
 }
 
-function getGraphStyle(): StylePayload {
-  return vscode.workspace.getConfiguration('foam.graph').get('style');
+export function getGraphStyle(): StylePayload {
+  const styleConfig =
+    vscode.workspace.getConfiguration('foam.graph').get('style') ?? {};
+  return { style: styleConfig };
 }
 
 export function handleActiveEditorChange(

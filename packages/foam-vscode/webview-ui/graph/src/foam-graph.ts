@@ -2,6 +2,7 @@ import { LitElement, html, css, nothing } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { getDefaultStyle } from './lib/defaults';
 import { augmentGraphInfo } from './lib/graph-utils';
+import { mergeStylePayloads, resolveStyle } from './lib/style';
 import type { GraphData, StylePayload } from './protocol';
 import type { AugmentedGraph, ResolvedStyle, Forces, Selection } from './lib/types';
 import './components/graph-canvas';
@@ -38,34 +39,8 @@ export class FoamGraph extends LitElement {
   @state() private localStylePatch: StylePayload = {};
 
   private get resolvedStyle(): ResolvedStyle {
-    return this._resolveStyle(this._mergedStylePayload);
-  }
-
-  private get _mergedStylePayload(): StylePayload {
-    // graphStyle from the outside takes precedence; localStylePatch layers on top
-    return {
-      ...this.graphStyle,
-      ...this.localStylePatch,
-      style: { ...this.graphStyle?.style, ...this.localStylePatch?.style },
-    };
-  }
-
-  private _resolveStyle(payload: StylePayload | null): ResolvedStyle {
-    const defaults = getDefaultStyle();
-    if (!payload) return defaults;
-    return {
-      ...defaults,
-      ...payload.style,
-      lineColor:
-        payload.style?.lineColor ||
-        payload.style?.node?.note ||
-        defaults.lineColor,
-      node: {
-        ...defaults.node,
-        ...payload.style?.node,
-      },
-      colorMode: payload.colorMode ?? defaults.colorMode,
-    };
+    const merged = mergeStylePayloads(this.graphStyle, this.localStylePatch);
+    return resolveStyle(merged, getDefaultStyle());
   }
 
   updated(changed: Map<string, unknown>) {

@@ -4,6 +4,25 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## 0.36.0
+
+Features:
+
+- Add support for footnotes in markdown preview
+- Various improvements to notes explorer, including filtering
+
+Fixes and Improvements:
+
+- Fix `foam.graph.style` settings being silently ignored in the graph view (#1620)
+- Fix parsing of YAML properties with non-simple keys (#1615)
+- Restore graph webview content on VS Code reopen
+
+Internal:
+
+- Migrate from Jest to Vitest (#1612)
+- Refactor: extract janitor from core to top-level domain
+- Update dependencies (#1619, #1623)
+
 ## 0.35.0
 
 Fixes and Improvements:

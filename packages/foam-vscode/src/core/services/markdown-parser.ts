@@ -56,6 +56,10 @@ export function getLinkDefinitions(markdown: string): NoteLinkDefinition[] {
   const tree = parser.parse(markdown);
   visit(tree, node => {
     if (node.type === 'definition') {
+      const label: string = (node as any).label ?? '';
+      if (label.startsWith('^')) {
+        return; // skip footnote definitions
+      }
       definitions.push({
         label: (node as any).label,
         url: (node as any).url,
@@ -143,6 +147,12 @@ export function createMarkdownParser(
         }
 
         if (node.type === 'definition') {
+          const label: string = (node as any).label ?? '';
+          if (label.startsWith('^')) {
+            // Footnote definitions ([^label]: text) are parsed as definition nodes
+            // by remark-parse; skip them to avoid treating footnotes as link definitions.
+            return;
+          }
           localDefinitions.push({
             label: (node as any).label,
             url: (node as any).url,
@@ -650,12 +660,16 @@ const wikilinkPlugin: ParserPlugin = {
       });
     }
     if (node.type === 'linkReference') {
+      const identifier: string = (node as any).identifier ?? '';
+      if (identifier.startsWith('^')) {
+        // Footnote references ([^label]) are parsed as linkReference nodes
+        // by remark-parse; skip them to avoid treating footnotes as links.
+        return;
+      }
       const literalContent = noteSource.substring(
         node.position!.start.offset!,
         node.position!.end.offset!
       );
-
-      const identifier = (node as any).identifier;
 
       note.links.push({
         type: 'link',

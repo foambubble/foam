@@ -9,6 +9,7 @@ import { default as markdownItWikilinkEmbed } from './wikilink-embed';
 import { default as escapeWikilinkPipes } from './escape-wikilink-pipes';
 import { default as markdownItBlockAnchorIds } from './block-anchor-ids';
 import { default as markdownItFoamQuery } from './foam-query-renderer';
+import markdownItFootnote from 'markdown-it-footnote';
 import { fromVsCodeUri, toVsCodeUri } from '../../utils/vsc-utils';
 import { URI } from '../../core/model/uri';
 
@@ -45,6 +46,7 @@ export default async function activate(
         return editor ? ws.find(fromVsCodeUri(editor.document.uri)) : null;
       };
       let result = escapeWikilinkPipes(md);
+      result = result.use(markdownItFootnote);
       result = markdownItWikilinkEmbed(result, ws, parser, getCurrentResource);
       result = markdownItFoamTags(result, ws);
       result = markdownItWikilinkNavigation(result, ws);

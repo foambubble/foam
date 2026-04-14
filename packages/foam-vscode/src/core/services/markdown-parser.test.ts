@@ -221,6 +221,35 @@ This has [[wikilink]], [inline link](target.md), and [reference link][ref].
       expect(note.links[2].rawText).toEqual('[reference link][ref]');
       expect(ResourceLink.isResolvedReference(note.links[2])).toBe(true);
     });
+
+    it('should not treat footnote definitions as link definitions', () => {
+      const note = createNoteFromMarkdown(
+        `Text with footnote[^1]\n\n[^1]: The footnote content`
+      );
+      expect(note.links).toHaveLength(0);
+    });
+
+    it('should not treat footnote references as links', () => {
+      const note = createNoteFromMarkdown(
+        `Text[^note] and more text.\n\n[^note]: Explanation here`
+      );
+      expect(note.links).toHaveLength(0);
+    });
+
+    it('should not treat multiple adjacent footnote references as links', () => {
+      const note = createNoteFromMarkdown(
+        `Text[^1][^2]\n\n[^1]: First footnote\n\n[^2]: Second footnote`
+      );
+      expect(note.links).toHaveLength(0);
+    });
+
+    it('should not confuse footnote definitions with regular link definitions', () => {
+      const note = createNoteFromMarkdown(
+        `[ref]: /path/to/file.md\n[text][ref]\n\nFootnote[^1]\n\n[^1]: footnote`
+      );
+      expect(note.links).toHaveLength(1);
+      expect(note.links[0].type).toBe('link');
+    });
   });
 
   describe('Note Title', () => {

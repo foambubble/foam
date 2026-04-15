@@ -4,6 +4,18 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## 0.37.0
+
+Features:
+
+- Added support for footnotes
+
+Fixes and Improvements:
+
+- Rework graph view controls panel
+- Improve graph hover interaction
+- Improve link reference definitions management
+
 ## 0.36.0
 
 Features:

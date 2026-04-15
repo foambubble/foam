@@ -1,14 +1,14 @@
-import { Uri, window, workspace } from 'vscode';
-import { joinPath } from './core/utils/path';
 import dateFormat from 'dateformat';
-import { URI } from './core/model/uri';
-import { getDailyNoteTemplateUri } from './services/templates';
-import { getFoamVsCodeConfig } from './services/config';
-import { asAbsoluteWorkspaceUri, focusNote } from './services/editor';
-import { Foam } from './core/model/foam';
-import { createNote } from './features/commands/create-note';
-import { fromVsCodeUri } from './utils/vsc-utils';
-import { showInEditor } from './test/test-utils-vscode';
+import { Uri, window, workspace } from 'vscode';
+import { joinPath } from '../core/utils/path';
+import { URI } from '../core/model/uri';
+import { Foam } from '../core/model/foam';
+import { getDailyNoteTemplateUri } from '../services/templates';
+import { getFoamVsCodeConfig } from '../services/config';
+import { asAbsoluteWorkspaceUri, focusNote } from '../services/editor';
+import { createNote } from '../features/commands/create-note';
+import { fromVsCodeUri } from '../utils/vsc-utils';
+import { showInEditor } from '../test/test-utils-vscode';
 
 /**
  * Open the daily note file.

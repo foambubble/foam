@@ -1,5 +1,5 @@
 import { ExtensionContext, commands, window, QuickPickItem } from 'vscode';
-import { openDailyNoteFor } from '../../dated-notes';
+import { openDailyNoteFor } from '../dated-notes';
 import { FoamWorkspace } from '../../core/model/workspace';
 import { range } from 'lodash';
 import dateFormat from 'dateformat';

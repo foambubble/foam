@@ -7,7 +7,7 @@ import {
   CompletionList,
   CompletionTriggerKind,
 } from 'vscode';
-import { getDailyNoteFileName } from '../dated-notes';
+import { getDailyNoteFileName } from './dated-notes';
 import { getFoamVsCodeConfig } from '../services/config';
 
 export default async function activate(context: ExtensionContext) {

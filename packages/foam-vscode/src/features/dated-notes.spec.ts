@@ -5,7 +5,7 @@ import {
   createDailyNoteIfNotExists,
   getDailyNoteUri,
 } from './dated-notes';
-import { isWindows } from './core/common/platform';
+import { isWindows } from '../core/common/platform';
 import {
   cleanWorkspace,
   closeEditors,
@@ -14,13 +14,13 @@ import {
   makeFoamMock,
   showInEditor,
   withModifiedFoamConfiguration,
-} from './test/test-utils-vscode';
-import { fromVsCodeUri } from './utils/vsc-utils';
-import { fileExists, readFile } from './services/editor';
+} from '../test/test-utils-vscode';
+import { fromVsCodeUri } from '../utils/vsc-utils';
+import { fileExists, readFile } from '../services/editor';
 import {
   getDailyNoteTemplateCandidateUris,
   getDailyNoteTemplateUri,
-} from './services/templates';
+} from '../services/templates';
 
 describe('getDailyNoteUri', () => {
   const date = new Date('2021-02-07T00:00:00Z');
@@ -139,7 +139,6 @@ Unix: \${FOAM_DATE_SECONDS_UNIX}`,
       const targetDate = new Date(2021, 8, 13);
 
       const template = await createFile(
-         
         '# Daily Note: ${FOAM_TITLE}\n\nToday is ${FOAM_TITLE}.',
         DAILY_NOTE_TEMPLATE
       );
@@ -224,7 +223,6 @@ Unix: \${FOAM_DATE_SECONDS_UNIX}`,
       const targetDate = new Date(2021, 8, 19);
 
       const template = await createFile(
-         
         'hello ${FOAM_DATE_MONTH_NAME} ${FOAM_DATE_DATE} hello',
         DAILY_NOTE_TEMPLATE
       );

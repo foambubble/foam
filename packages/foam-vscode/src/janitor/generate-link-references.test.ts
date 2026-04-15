@@ -79,7 +79,6 @@ Some content here.
       expected: `
 # Document
 Some content here.
-
 `,
     },
     {
@@ -103,8 +102,6 @@ Here's some [unrelated] content.
 [unrelated]: http://unrelated.com 'This link should not be changed'
 
 [[file-without-title]]
-
-
 
 [file-without-title]: file-without-title "file-without-title"
 `,
@@ -330,6 +327,114 @@ Some more content here.
 
 [doc1]: doc1 "First"
 [doc2]: doc2 "Second"
+`,
+    },
+    {
+      case: '#1622 - should not remove external hyperlink reference when it is referenced in the body',
+      input: `
+I link to an [interesting external topic][1] and an [[doc1]]
+
+[1]: <http://test.com/my-interesting-but-long-external-topic-link> "Interesting Topic"
+`,
+      expected: `
+I link to an [interesting external topic][1] and an [[doc1]]
+
+[1]: <http://test.com/my-interesting-but-long-external-topic-link> "Interesting Topic"
+
+[doc1]: doc1 "First"
+`,
+    },
+    {
+      case: '#1622 - should not remove orphan external hyperlink reference definition',
+      input: `
+# My Note
+
+Some content here.
+
+[1]: <http://test.com/my-interesting-but-long-external-topic-link> "Interesting Topic"
+`,
+      expected: `
+# My Note
+
+Some content here.
+
+[1]: <http://test.com/my-interesting-but-long-external-topic-link> "Interesting Topic"
+`,
+    },
+    {
+      case: 'should remove multiple consecutive stale definitions without leaving blank lines',
+      input: `
+[[doc1]]
+
+[stale1]: stale1 "Stale1"
+[stale2]: stale2 "Stale2"
+`,
+      expected: `
+[[doc1]]
+
+[doc1]: doc1 "First"
+`,
+    },
+    {
+      case: 'should remove stale definition between two kept definitions without leaving a blank line',
+      input: `
+[[doc1]] [[doc2]]
+
+[doc1]: doc1 "First"
+[stale]: stale "Stale"
+[doc2]: doc2 "Second"
+`,
+      expected: `
+[[doc1]] [[doc2]]
+
+[doc1]: doc1 "First"
+[doc2]: doc2 "Second"
+`,
+    },
+    {
+      case: 'should add new definition with blank line when stale was the only existing definition',
+      input: `
+[[doc1]]
+
+[stale]: stale "Stale"
+`,
+      expected: `
+[[doc1]]
+
+[doc1]: doc1 "First"
+`,
+    },
+    {
+      case: 'should append new definition without blank line when stale was first in a block with kept definitions after',
+      input: `
+[[doc1]] [[doc2]]
+
+[stale]: stale "Stale"
+[doc1]: doc1 "First"
+`,
+      expected: `
+[[doc1]] [[doc2]]
+
+[doc1]: doc1 "First"
+[doc2]: doc2 "Second"
+`,
+    },
+    {
+      case: '#1622 - should remove stale wikilink definition but preserve orphan external definition',
+      input: `
+# My Note
+
+Some content here.
+
+[doc2]: doc2 "Second"
+[1]: <http://test.com/my-interesting-but-long-external-topic-link> "Interesting Topic"
+`,
+      expected: `
+# My Note
+
+Some content here.
+
+[1]: <http://test.com/my-interesting-but-long-external-topic-link> "Interesting Topic"
 `,
     },
   ];

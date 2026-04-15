@@ -1,4 +1,4 @@
-import { NoteLinkDefinition, Resource } from '../core/model/note';
+import { NoteLinkDefinition, Resource, ResourceLink } from '../core/model/note';
 import { Range } from '../core/model/range';
 import { createMarkdownReferences } from '../core/services/markdown-provider';
 import { FoamWorkspace } from '../core/model/workspace';
@@ -37,25 +37,52 @@ export const generateLinkReferences = async (
       )
   );
   const toRemovedWikilinkDefinitions = existingWikilinkDefinitions.filter(
-    existingDef =>
-      !updatedWikilinkDefinitions.some(
-        newDef => newDef.label === existingDef.label
-      )
+    existingDef => {
+      // Keep if it's in the updated set
+      if (updatedWikilinkDefinitions.some(newDef => newDef.label === existingDef.label)) {
+        return false;
+      }
+      // Keep if the URL looks like an external resource — even if it's not referenced
+      // in the note body (orphan). The rationale is that Foam only manages definitions
+      // it creates (relative paths to workspace notes) and should not silently delete
+      // user-written external references.
+      // NOTE: this is debatable — an unreferenced external definition is arguably dead
+      // content and could be cleaned up. Revisit if users find it surprising.
+      if (existingDef.url.includes('://')) {
+        return false;
+      }
+      // Keep if a link in the note references this definition label (Option C)
+      if (note.links.some(link => ResourceLink.isResolvedReference(link) && link.definition.label === existingDef.label)) {
+        return false;
+      }
+      return true;
+    }
   );
 
   const edits: TextEdit[] = [];
 
-  // Remove old definitions
+  // Remove old definitions (extend range to consume the trailing newline so no blank line is left)
   for (const def of toRemovedWikilinkDefinitions) {
-    edits.push({ range: def.range, newText: '' });
+    edits.push({
+      range: Range.create(def.range.start.line, 0, def.range.end.line + 1, 0),
+      newText: '',
+    });
   }
 
   // Add new definitions
   if (toAddWikilinkDefinitions.length > 0) {
-    // find the last non-empty line to append the definitions after it
+    // find the last non-empty line to append the definitions after it,
+    // skipping lines that are being deleted
+    const deletedLines = new Set(
+      toRemovedWikilinkDefinitions.map(d => d.range.start.line)
+    );
     const lastLineIndex = nLines - 1;
     let insertLineIndex = lastLineIndex;
-    while (insertLineIndex > 0 && lines[insertLineIndex].trim() === '') {
+    while (
+      insertLineIndex > 0 &&
+      (lines[insertLineIndex].trim() === '' ||
+        deletedLines.has(insertLineIndex))
+    ) {
       insertLineIndex--;
     }
 

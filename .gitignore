@@ -14,4 +14,3 @@ docs/_site
 docs/.sass-cache
 docs/.jekyll-metadata
 .test-workspace
-.agent/tasks

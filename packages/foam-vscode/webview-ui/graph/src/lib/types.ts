@@ -42,6 +42,8 @@ export interface Forces {
   velocityDecay: number;
 }
 
+export type LinkAnimation = 'forward' | 'off' | 'reverse';
+
 export interface Selection {
   neighborDepth: number;
   enableRefocus: boolean;

@@ -10,7 +10,7 @@ export function getDefaultStyle(): ResolvedStyle {
     fontSize: parseInt(getCSSVar('--vscode-font-size') || '12') - 2,
     fontFamily: 'Sans-Serif',
     lineColor: getCSSVar('--vscode-editor-foreground') || '#277da1',
-    lineWidth: 0.2,
+    lineWidth: 0.4,
     particleWidth: 1.0,
     highlightedForeground:
       getCSSVar('--vscode-list-highlightForeground') || '#f9c74f',

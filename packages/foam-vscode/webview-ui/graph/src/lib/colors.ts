@@ -68,9 +68,21 @@ export function getNodeFillAndBorder(
       const transparent = typeFill.copy({ opacity: 0.05 }) as RGBColor;
       return { fill: transparent, border: transparent };
     }
-    case 'highlighted':
-      return { fill: typeFill, border: rgb(style.highlightedForeground) };
+    case 'highlighted': {
+      const highlight = rgb(style.highlightedForeground);
+      return { fill: highlight, border: highlight };
+    }
   }
+}
+
+export function getNodeLabelColor(
+  fill: RGBColor,
+  state: 'regular' | 'highlighted' | 'lessened',
+  opacity: number,
+  style: ResolvedStyle
+): RGBColor {
+  if (state === 'highlighted') return rgb(style.lineColor).copy({ opacity }) as RGBColor;
+  return fill.copy({ opacity }) as RGBColor;
 }
 
 export function getLinkColor(
@@ -82,12 +94,12 @@ export function getLinkColor(
   switch (linkState) {
     case 'regular':
       if (sourceType === 'tag' && targetType === 'tag') {
-        return getNodeTypeColor('tag', style);
+        return hsl(getNodeTypeColor('tag', style)).copy({ opacity: 0.4 }).toString();
       }
-      return style.lineColor;
+      return hsl(style.lineColor).copy({ opacity: 0.4 }).toString();
     case 'highlighted':
       return style.highlightedForeground;
     case 'lessened':
-      return hsl(style.lineColor).copy({ opacity: 0.5 }).toString();
+      return hsl(style.lineColor).copy({ opacity: 0.05 }).toString();
   }
 }

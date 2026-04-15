@@ -1,7 +1,13 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import ForceGraph from 'force-graph';
-import { forceX, forceY, forceCollide, forceManyBody, forceLink } from 'd3-force';
+import {
+  forceX,
+  forceY,
+  forceCollide,
+  forceManyBody,
+  forceLink,
+} from 'd3-force';
 import { scaleLinear } from 'd3-scale';
 import { Painter } from '../lib/painter';
 import {
@@ -10,13 +16,14 @@ import {
   getLinkState,
   getLinkNodeId,
 } from '../lib/graph-utils';
-import { getNodeFillAndBorder, getLinkColor } from '../lib/colors';
+import { getNodeFillAndBorder, getLinkColor, getNodeLabelColor } from '../lib/colors';
 import type {
   AugmentedGraph,
   AugmentedLink,
   ResolvedStyle,
   Forces,
   Selection,
+  LinkAnimation,
 } from '../lib/types';
 
 @customElement('foam-graph-canvas')
@@ -32,10 +39,22 @@ export class GraphCanvas extends LitElement {
   @property({ type: Object }) augmentedGraph: AugmentedGraph | null = null;
   @property({ type: Object }) style: ResolvedStyle = {} as ResolvedStyle;
   @property({ type: Object }) showNodesOfType: Record<string, boolean> = {};
-  @property({ type: Object }) forces: Forces = { collide: 2, repel: 30, link: 30, velocityDecay: 0.4 };
-  @property({ type: Object }) selection: Selection = { neighborDepth: 1, enableRefocus: true, enableZoom: true };
-  @property({ type: Number }) textFade: number = 3.8;
+  @property({ type: Object }) forces: Forces = {
+    collide: 2,
+    repel: 30,
+    link: 30,
+    velocityDecay: 0.4,
+  };
+  @property({ type: Object }) selection: Selection = {
+    neighborDepth: 1,
+    enableRefocus: true,
+    enableZoom: true,
+  };
+  @property({ type: Number }) textFade: number = 0;
   @property({ type: Number }) nodeFontSizeMultiplier: number = 1;
+  @property({ type: Number }) nodeSizeMultiplier: number = 1;
+  @property({ type: Number }) linkWidthMultiplier: number = 2;
+  @property({ type: String }) animateLinks: LinkAnimation = 'forward';
 
   // Mutable rendering state — closed over by canvas callbacks
   private rs = {
@@ -49,15 +68,25 @@ export class GraphCanvas extends LitElement {
     showNodesOfType: {} as Record<string, boolean>,
     forces: {} as Forces,
     selection: {} as Selection,
-    textFade: 3.8,
+    textFade: 0,
     nodeFontSizeMultiplier: 1,
+    nodeSizeMultiplier: 1,
+    linkWidthMultiplier: 2,
+    animateLinks: 'forward' as LinkAnimation,
     colorMode: 'type' as 'none' | 'directory' | 'type',
   };
 
-  private readonly getNodeSize = scaleLinear().domain([0, 30]).range([0.5, 2]).clamp(true);
-  private readonly getNodeLabelOpacity = scaleLinear().domain([1.2, 2.0]).range([0, 1]).clamp(true);
+  private readonly getNodeSize = scaleLinear()
+    .domain([0, 30])
+    .range([0.6, 3])
+    .clamp(true);
+  private readonly getNodeLabelOpacity = scaleLinear()
+    .domain([1.2, 2.0])
+    .range([0, 1])
+    .clamp(true);
 
-  private graphInstance: ReturnType<ReturnType<typeof ForceGraph>> | null = null;
+  private graphInstance: ReturnType<ReturnType<typeof ForceGraph>> | null =
+    null;
   private firstGraphLoad = true;
 
   protected createRenderRoot() {
@@ -70,7 +99,9 @@ export class GraphCanvas extends LitElement {
   }
 
   firstUpdated() {
-    const container = this.shadowRoot!.getElementById('canvas-container') as HTMLDivElement;
+    const container = this.shadowRoot!.getElementById(
+      'canvas-container'
+    ) as HTMLDivElement;
     const painter = new Painter();
 
     this.graphInstance = ForceGraph()(container)
@@ -79,13 +110,24 @@ export class GraphCanvas extends LitElement {
       .linkHoverPrecision(8)
       .d3Force('x', forceX())
       .d3Force('y', forceY())
-      .d3Force('collide', forceCollide(4 /* default nodeRelSize */ * this.rs.forces.collide || 8))
-      .d3Force('charge', forceManyBody().strength(-(this.rs.forces.repel || 30)))
-      .d3Force('link', forceLink(this.rs.data.links as any).distance(this.rs.forces.link || 30))
+      .d3Force(
+        'collide',
+        forceCollide(4 /* default nodeRelSize */ * this.rs.forces.collide || 8)
+      )
+      .d3Force(
+        'charge',
+        forceManyBody().strength(-(this.rs.forces.repel || 30))
+      )
+      .d3Force(
+        'link',
+        forceLink(this.rs.data.links as any).distance(this.rs.forces.link || 30)
+      )
       .d3VelocityDecay(1 - (this.rs.forces.velocityDecay ?? 0.4))
-      .linkWidth(() => this.rs.style.lineWidth)
+      .linkWidth(() => this.rs.style.lineWidth * this.rs.linkWidthMultiplier)
       .linkDirectionalParticles(1)
+      .linkDirectionalParticleSpeed(this.rs.animateLinks === 'reverse' ? -0.004 : 0.004)
       .linkDirectionalParticleWidth(link => {
+        if (this.rs.animateLinks === 'off') return 0;
         const state = getLinkState(
           link as AugmentedLink,
           this.rs.focusNodes,
@@ -93,53 +135,62 @@ export class GraphCanvas extends LitElement {
         );
         return state === 'highlighted' ? this.rs.style.particleWidth : 0;
       })
-      .nodeCanvasObject((node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
-        const info = this.rs.augmented?.nodeInfo[node.id];
-        if (!info) return;
+      .nodeCanvasObject(
+        (node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
+          const info = this.rs.augmented?.nodeInfo[node.id];
+          if (!info) return;
 
-        const size = this.getNodeSize(info.neighbors.length);
-        const state = getNodeState(
-          node.id,
-          this.rs.selectedNodes,
-          this.rs.hoverNode,
-          this.rs.focusNodes
-        );
-        const { fill, border } = getNodeFillAndBorder(
-          info,
-          state,
-          this.rs.style,
-          this.rs.colorMode
-        );
-        const fontSize =
-          (this.rs.style.fontSize * this.rs.nodeFontSizeMultiplier) / globalScale;
-        const opacity =
-          state === 'highlighted'
-            ? 1
-            : state === 'regular'
+          const size = this.getNodeSize(info.neighbors.length) * this.rs.nodeSizeMultiplier;
+          const state = getNodeState(
+            node.id,
+            this.rs.selectedNodes,
+            this.rs.hoverNode,
+            this.rs.focusNodes
+          );
+          const { fill, border } = getNodeFillAndBorder(
+            info,
+            state,
+            this.rs.style,
+            this.rs.colorMode
+          );
+          const fontSize =
+            (this.rs.style.fontSize * this.rs.nodeFontSizeMultiplier) /
+            Math.max(globalScale, 1);
+          const opacity =
+            state === 'highlighted'
+              ? 1
+              : state === 'regular'
               ? this.getNodeLabelOpacity(globalScale)
               : Math.min(this.getNodeLabelOpacity(globalScale), fill.opacity);
 
-        const textColor = fill.copy({ opacity });
+          const textColor = getNodeLabelColor(fill, state, opacity, this.rs.style);
 
-        painter
-          .circle(node.x, node.y, size, fill, border)
-          .text(
-            info.title,
-            node.x,
-            node.y + size + 1,
-            fontSize,
-            this.rs.style.fontFamily,
-            textColor as any
-          );
-      })
+          painter
+            .circle(node.x, node.y, size, fill, border)
+            .text(
+              info.title,
+              node.x,
+              node.y + size + 1,
+              fontSize,
+              this.rs.style.fontFamily,
+              textColor as any
+            );
+        }
+      )
       .onRenderFramePost((ctx: CanvasRenderingContext2D) => {
         painter.paint(ctx);
       })
       .linkColor((link: any) => {
         const augLink = link as AugmentedLink;
-        const state = getLinkState(augLink, this.rs.focusNodes, this.rs.focusLinks);
-        const srcInfo = this.rs.augmented?.nodeInfo[getLinkNodeId(augLink.source)];
-        const tgtInfo = this.rs.augmented?.nodeInfo[getLinkNodeId(augLink.target)];
+        const state = getLinkState(
+          augLink,
+          this.rs.focusNodes,
+          this.rs.focusLinks
+        );
+        const srcInfo =
+          this.rs.augmented?.nodeInfo[getLinkNodeId(augLink.source)];
+        const tgtInfo =
+          this.rs.augmented?.nodeInfo[getLinkNodeId(augLink.target)];
         return getLinkColor(
           state,
           srcInfo?.type ?? 'note',
@@ -190,7 +241,9 @@ export class GraphCanvas extends LitElement {
         (this.graphInstance.d3Force('collide') as any)?.radius(
           this.graphInstance.nodeRelSize() * this.forces.collide
         );
-        (this.graphInstance.d3Force('charge') as any)?.strength(-this.forces.repel);
+        (this.graphInstance.d3Force('charge') as any)?.strength(
+          -this.forces.repel
+        );
         (this.graphInstance.d3Force('link') as any)?.distance(this.forces.link);
         this.graphInstance.d3VelocityDecay(1 - this.forces.velocityDecay);
         this.graphInstance.d3ReheatSimulation();
@@ -204,12 +257,30 @@ export class GraphCanvas extends LitElement {
 
     if (changed.has('textFade')) {
       this.rs.textFade = this.textFade;
-      const invertedValue = 5 - this.textFade;
+      const invertedValue = 3 - this.textFade;
       this.getNodeLabelOpacity.domain([invertedValue, invertedValue + 0.8]);
     }
 
     if (changed.has('nodeFontSizeMultiplier')) {
       this.rs.nodeFontSizeMultiplier = this.nodeFontSizeMultiplier;
+    }
+
+    if (changed.has('nodeSizeMultiplier')) {
+      this.rs.nodeSizeMultiplier = this.nodeSizeMultiplier;
+    }
+
+    if (changed.has('linkWidthMultiplier')) {
+      this.rs.linkWidthMultiplier = this.linkWidthMultiplier;
+      this.graphInstance?.linkWidth(
+        () => this.rs.style.lineWidth * this.rs.linkWidthMultiplier
+      );
+    }
+
+    if (changed.has('animateLinks')) {
+      this.rs.animateLinks = this.animateLinks;
+      this.graphInstance?.linkDirectionalParticleSpeed(
+        this.animateLinks === 'reverse' ? -0.004 : 0.004
+      );
     }
 
     if (changed.has('augmentedGraph')) {

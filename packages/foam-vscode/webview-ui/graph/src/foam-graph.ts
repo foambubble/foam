@@ -4,7 +4,7 @@ import { getDefaultStyle } from './lib/defaults';
 import { augmentGraphInfo } from './lib/graph-utils';
 import { mergeStylePayloads, resolveStyle } from './lib/style';
 import type { GraphData, StylePayload } from './protocol';
-import type { AugmentedGraph, ResolvedStyle, Forces, Selection } from './lib/types';
+import type { AugmentedGraph, ResolvedStyle, Forces, Selection, LinkAnimation } from './lib/types';
 import './components/graph-canvas';
 import './components/control-panel';
 
@@ -32,9 +32,12 @@ export class FoamGraph extends LitElement {
     note: true,
     tag: true,
   };
-  @state() private textFade: number = 3.8;
+  @state() private textFade: number = 0;
   @state() private nodeFontSizeMultiplier: number = 1;
-  @state() private forces: Forces = { collide: 2, repel: 30, link: 30, velocityDecay: 0.4 };
+  @state() private nodeSizeMultiplier: number = 2;
+  @state() private linkWidthMultiplier: number = 2;
+  @state() private animateLinks: LinkAnimation = 'forward';
+  @state() private forces: Forces = { collide: 1, repel: 10, link: 30, velocityDecay: 0.4 };
   @state() private selection: Selection = { neighborDepth: 1, enableRefocus: true, enableZoom: true };
   @state() private localStylePatch: StylePayload = {};
 
@@ -61,14 +64,24 @@ export class FoamGraph extends LitElement {
         changed = true;
       }
     }
+    const specialTypes = new Set(['tag', 'attachment', 'image', 'placeholder']);
     for (const type of Object.keys(updated)) {
-      if (!types.has(type)) {
+      if (!types.has(type) && !specialTypes.has(type)) {
         delete updated[type];
         changed = true;
       }
     }
 
     if (changed) this.showNodesOfType = updated;
+  }
+
+  private get _nodeTypeCounts(): Record<string, number> {
+    if (!this.augmentedGraph) return {};
+    const counts: Record<string, number> = {};
+    for (const node of Object.values(this.augmentedGraph.nodeInfo)) {
+      counts[node.type] = (counts[node.type] ?? 0) + 1;
+    }
+    return counts;
   }
 
   render() {
@@ -82,19 +95,29 @@ export class FoamGraph extends LitElement {
         .selection=${this.selection}
         .textFade=${this.textFade}
         .nodeFontSizeMultiplier=${this.nodeFontSizeMultiplier}
+        .nodeSizeMultiplier=${this.nodeSizeMultiplier}
+        .linkWidthMultiplier=${this.linkWidthMultiplier}
+        .animateLinks=${this.animateLinks}
         @node-click=${(e: CustomEvent) => this._onNodeClick(e.detail)}
       ></foam-graph-canvas>
       <foam-control-panel
         .style=${resolved}
         .showNodesOfType=${this.showNodesOfType}
+        .nodeTypeCounts=${this._nodeTypeCounts}
         .textFade=${this.textFade}
         .nodeFontSizeMultiplier=${this.nodeFontSizeMultiplier}
+        .nodeSizeMultiplier=${this.nodeSizeMultiplier}
+        .linkWidthMultiplier=${this.linkWidthMultiplier}
+        .animateLinks=${this.animateLinks}
         .forces=${this.forces}
         .selection=${this.selection}
         @style-change=${(e: CustomEvent) => this._onStyleChange(e.detail)}
         @show-nodes-of-type-change=${(e: CustomEvent) => (this.showNodesOfType = e.detail)}
         @text-fade-change=${(e: CustomEvent) => (this.textFade = e.detail)}
         @font-size-multiplier-change=${(e: CustomEvent) => (this.nodeFontSizeMultiplier = e.detail)}
+        @node-size-multiplier-change=${(e: CustomEvent) => (this.nodeSizeMultiplier = e.detail)}
+        @link-width-multiplier-change=${(e: CustomEvent) => (this.linkWidthMultiplier = e.detail)}
+        @animate-links-change=${(e: CustomEvent) => (this.animateLinks = e.detail)}
         @forces-change=${(e: CustomEvent) => (this.forces = e.detail)}
         @selection-change=${(e: CustomEvent) => (this.selection = e.detail)}
       ></foam-control-panel>

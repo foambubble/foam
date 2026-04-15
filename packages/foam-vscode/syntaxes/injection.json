@@ -1,7 +1,14 @@
 {
   "scopeName": "foam.wikilink.injection",
-  "injectionSelector": "L:meta.paragraph.markdown, L:markup.heading.markdown, L:markup.list.unnumbered.markdown",
+  "injectionSelector": "L:meta.paragraph.markdown, L:markup.heading.markdown, L:markup.list.unnumbered.markdown, L:markup.list.numbered.markdown",
   "patterns": [
+    {
+      "comment": "Footnote reference: [^id] (not a definition line [^id]: ...)",
+      "match": "\\[(\\^[^\\]]+)\\](?!:)",
+      "captures": {
+        "1": { "name": "string.other.link.title.markdown.foam" }
+      }
+    },
     {
       "name": "meta.link.wikilink.markdown.foam",
       "begin": "\\[\\[",

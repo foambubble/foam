@@ -75,6 +75,7 @@ describe('FoamWorkspaceSymbolProvider', () => {
           },
         ],
         links: [],
+        footnotes: [],
       };
       workspace.set(resource);
 
@@ -106,6 +107,7 @@ describe('FoamWorkspaceSymbolProvider', () => {
           },
         ],
         links: [],
+        footnotes: [],
       };
       workspace.set(resource);
 
@@ -137,6 +139,7 @@ describe('FoamWorkspaceSymbolProvider', () => {
           },
         ],
         links: [],
+        footnotes: [],
       };
 
       const resource2: Resource = {
@@ -154,6 +157,7 @@ describe('FoamWorkspaceSymbolProvider', () => {
           },
         ],
         links: [],
+        footnotes: [],
       };
 
       workspace.set(resource1);
@@ -191,6 +195,7 @@ describe('FoamWorkspaceSymbolProvider', () => {
           },
         ],
         links: [],
+        footnotes: [],
       };
       workspace.set(resource);
 
@@ -220,6 +225,7 @@ describe('FoamWorkspaceSymbolProvider', () => {
           },
         ],
         links: [],
+        footnotes: [],
       };
       workspace.set(resource);
 

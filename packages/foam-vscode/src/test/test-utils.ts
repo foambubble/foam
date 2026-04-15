@@ -150,6 +150,7 @@ export const createTestNote = (params: {
               };
         })
       : [],
+    footnotes: [],
   };
 };
 

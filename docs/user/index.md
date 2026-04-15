@@ -37,6 +37,7 @@ Foam is like a bathtub: _What you get out of it depends on what you put into it.
 ## Features
 
 - [[wikilinks]]
+- [[footnotes]]
 - [[block-anchors]]
 - [[embeds]]
 - [[foam-queries]]
@@ -80,6 +81,7 @@ See [[publishing]] for more details.
 [sync-notes]: getting-started/sync-notes.md "Sync notes with source control"
 [keyboard-shortcuts]: getting-started/keyboard-shortcuts.md "Keyboard Shortcuts"
 [wikilinks]: features/wikilinks.md "Wikilinks"
+[footnotes]: features/footnotes.md "Footnotes"
 [block-anchors]: features/block-anchors.md "Block Anchors"
 [embeds]: features/embeds.md "Note Embeds"
 [foam-queries]: features/foam-queries.md "Foam Queries"

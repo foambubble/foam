@@ -4,7 +4,7 @@ import { ResourceParser } from '../core/model/note';
 import { FoamWorkspace } from '../core/model/workspace';
 import { Foam } from '../core/model/foam';
 import { Range } from '../core/model/range';
-import { fromVsCodeUri } from '../utils/vsc-utils';
+import { fromVsCodeUri, toVsCodeRange } from '../utils/vsc-utils';
 
 const placeholderDecoration = vscode.window.createTextEditorDecorationType({
   rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
@@ -16,6 +16,12 @@ const placeholderDecoration = vscode.window.createTextEditorDecorationType({
 const blockAnchorDecoration = vscode.window.createTextEditorDecorationType({
   rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
   opacity: '0.5',
+});
+
+const footnoteDecoration = vscode.window.createTextEditorDecorationType({
+  rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
+  textDecoration: 'none',
+  cursor: 'pointer',
 });
 
 const updateDecorations =
@@ -43,6 +49,13 @@ const updateDecorations =
       }
     });
     editor.setDecorations(placeholderDecoration, placeholderRanges);
+
+    editor.setDecorations(
+      footnoteDecoration,
+      note.footnotes
+        .filter(f => f.definitionRange !== null)
+        .flatMap(f => f.references.map(r => toVsCodeRange(r)))
+    );
 
     editor.setDecorations(
       blockAnchorDecoration,
@@ -80,6 +93,7 @@ export default async function activate(
   context.subscriptions.push(
     placeholderDecoration,
     blockAnchorDecoration,
+    footnoteDecoration,
     vscode.window.onDidChangeActiveTextEditor(editor => {
       activeEditor = editor;
       immediatelyUpdateDecorations(activeEditor);

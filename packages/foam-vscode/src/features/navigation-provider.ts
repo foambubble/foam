@@ -4,6 +4,7 @@ import { Foam } from '../core/model/foam';
 import { FoamWorkspace } from '../core/model/workspace';
 import {
   Block,
+  Footnote,
   Resource,
   ResourceLink,
   ResourceParser,
@@ -41,6 +42,10 @@ export default async function activate(
       getFoamDocSelectors(),
       navigationProvider
     ),
+    vscode.languages.registerHoverProvider(
+      getFoamDocSelectors(),
+      navigationProvider
+    ),
     vscode.languages.registerReferenceProvider(
       getFoamDocSelectors(),
       navigationProvider
@@ -64,6 +69,7 @@ export class NavigationProvider
   implements
     vscode.DefinitionProvider,
     vscode.DocumentLinkProvider,
+    vscode.HoverProvider,
     vscode.ReferenceProvider
 {
   constructor(
@@ -145,6 +151,21 @@ export class NavigationProvider
       Range.containsPosition(link.range, position)
     );
     if (!targetLink) {
+      const footnote = Footnote.findByPosition(resource, position);
+      if (footnote?.definitionRange) {
+        return [
+          {
+            originSelectionRange: toVsCodeRange(
+              footnote.references.find(r =>
+                Range.containsPosition(r, position)
+              )!
+            ),
+            targetUri: document.uri,
+            targetRange: toVsCodeRange(footnote.definitionRange),
+            targetSelectionRange: toVsCodeRange(footnote.definitionRange),
+          },
+        ];
+      }
       return;
     }
 
@@ -274,6 +295,31 @@ export class NavigationProvider
     });
 
     return links.concat(tags);
+  }
+
+  /**
+   * Show footnote content on hover over a footnote reference
+   */
+  public provideHover(
+    document: vscode.TextDocument,
+    position: vscode.Position
+  ): vscode.ProviderResult<vscode.Hover> {
+    const resource = this.parser.parse(
+      fromVsCodeUri(document.uri),
+      document.getText()
+    );
+    const footnote = Footnote.findByPosition(resource, position);
+    if (!footnote?.definitionRange) {
+      return;
+    }
+    const defLine = document.lineAt(footnote.definitionRange.start.line).text;
+    const content = defLine.replace(/\[/g, '\\[');
+    return new vscode.Hover(
+      new vscode.MarkdownString(content),
+      toVsCodeRange(
+        footnote.references.find(r => Range.containsPosition(r, position))!
+      )
+    );
   }
 }
 

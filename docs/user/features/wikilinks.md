@@ -56,6 +56,7 @@ Foam can automatically generate [[link-reference-definitions]] at the bottom of 
 
 ## Related
 
+- [[footnotes]] - Adding references and side notes
 - [[block-anchors]] - Linking to specific blocks within a note
 - [[foam-file-format]] - Technical details
 - [[templates]] - Creating new notes
@@ -66,4 +67,5 @@ Foam can automatically generate [[link-reference-definitions]] at the bottom of 
 [foam-file-format]: ../../dev/foam-file-format.md 'Foam File Format'
 [note-templates]: templates.md 'Note Templates'
 [link-reference-definition-improvements]: ../../dev/proposals/link-reference-definition-improvements.md 'Link Reference Definition Improvements'
+[footnotes]: footnotes.md 'Footnotes'
 [block-anchors]: block-anchors.md 'Block Anchors'

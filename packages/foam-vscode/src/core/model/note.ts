@@ -115,6 +115,31 @@ export abstract class Block {
   }
 }
 
+export interface Footnote {
+  /** The footnote identifier, e.g. `"1"` for `[^1]` */
+  id: string;
+  /** Range of the full definition line, e.g. `[^1]: text`. Null if definition is missing. */
+  definitionRange: Range | null;
+  /** Ranges of each inline reference, e.g. `[^1]` occurrences */
+  references: Range[];
+}
+
+export abstract class Footnote {
+  static findByPosition(
+    resource: Resource,
+    position: Position
+  ): Footnote | null {
+    for (const footnote of resource.footnotes) {
+      for (const ref of footnote.references) {
+        if (Range.containsPosition(ref, position)) {
+          return footnote;
+        }
+      }
+    }
+    return null;
+  }
+}
+
 export interface Resource {
   uri: URI;
   type: string;
@@ -125,6 +150,7 @@ export interface Resource {
   tags: Tag[];
   aliases: Alias[];
   links: ResourceLink[];
+  footnotes: Footnote[];
 }
 
 export interface ResourceParser {

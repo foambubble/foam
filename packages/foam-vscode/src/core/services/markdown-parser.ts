@@ -7,6 +7,7 @@ import { parse as parseYAML } from 'yaml';
 import visit from 'unist-util-visit';
 import {
   BlockType,
+  Footnote,
   NoteLinkDefinition,
   Resource,
   ResourceLink,
@@ -115,6 +116,7 @@ export function createMarkdownParser(
         tags: [],
         aliases: [],
         links: [],
+        footnotes: [],
       };
 
       const localDefinitions: NoteLinkDefinition[] = [];
@@ -151,6 +153,9 @@ export function createMarkdownParser(
           if (label.startsWith('^')) {
             // Footnote definitions ([^label]: text) are parsed as definition nodes
             // by remark-parse; skip them to avoid treating footnotes as link definitions.
+            // Footnote positions are captured via regex scan after tree traversal
+            // because remark-parse v8 doesn't reliably emit footnote definition nodes
+            // for multi word content.
             return;
           }
           localDefinitions.push({
@@ -198,6 +203,45 @@ export function createMarkdownParser(
         link =>
           link.type === 'wikilink' || !ResourceLink.isUnresolvedReference(link)
       );
+
+      // remark-parse v8 has no footnote plugin, so we scan the raw source for
+      // both definitions ([^id]: ...) and references ([^id]).
+      // AST-based reference detection via linkReference nodes is unreliable
+      // because consecutive refs like [^1][^2] are parsed as a single
+      // reference-style link, silently dropping the first reference.
+      const footnoteMap = new Map<string, Footnote>();
+      const markdownLines = markdown.split('\n');
+      for (let i = 0; i < markdownLines.length; i++) {
+        const line = markdownLines[i];
+        const defMatch = line.match(FOOTNOTE_DEF_RE);
+        if (defMatch) {
+          const id = defMatch[1];
+          const existing = footnoteMap.get(id);
+          if (existing) {
+            existing.definitionRange ??= Range.create(i, 0, i, line.length);
+          } else {
+            footnoteMap.set(id, {
+              id,
+              definitionRange: Range.create(i, 0, i, line.length),
+              references: [],
+            });
+          }
+          continue; // skip reference scan on definition lines
+        }
+        FOOTNOTE_REF_RE.lastIndex = 0;
+        let m: RegExpExecArray;
+        while ((m = FOOTNOTE_REF_RE.exec(line)) !== null) {
+          const id = m[1];
+          const ref = Range.create(i, m.index, i, m.index + m[0].length);
+          const entry = footnoteMap.get(id);
+          if (entry) {
+            entry.references.push(ref);
+          } else {
+            footnoteMap.set(id, { id, definitionRange: null, references: [ref] });
+          }
+        }
+      }
+      note.footnotes = Array.from(footnoteMap.values());
 
       Logger.debug('Result:', note);
       return note;
@@ -664,6 +708,7 @@ const wikilinkPlugin: ParserPlugin = {
       if (identifier.startsWith('^')) {
         // Footnote references ([^label]) are parsed as linkReference nodes
         // by remark-parse; skip them to avoid treating footnotes as links.
+        // Footnote positions are captured via regex scan after tree traversal.
         return;
       }
       const literalContent = noteSource.substring(
@@ -686,6 +731,11 @@ const wikilinkPlugin: ParserPlugin = {
     // and localDefinitions have been collected.
   },
 };
+
+// Matches a footnote definition line: [^id]: content
+const FOOTNOTE_DEF_RE = /^[ ]{0,3}\[\^([^\]]+)\]:/;
+// Matches a footnote reference: [^id]
+const FOOTNOTE_REF_RE = /\[\^([^\]]+)\]/g;
 
 const handleError = (
   plugin: ParserPlugin,

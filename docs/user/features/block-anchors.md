@@ -141,4 +141,5 @@ If you accidentally use the same `^id` twice in one file, Foam flags the duplica
 ## Related
 
 - [[wikilinks]] - General linking
+- [[footnotes]] - Adding references and side notes
 - [[embeds]] - Embedding notes and blocks

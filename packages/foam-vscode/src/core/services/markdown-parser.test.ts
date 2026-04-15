@@ -252,6 +252,61 @@ This has [[wikilink]], [inline link](target.md), and [reference link][ref].
     });
   });
 
+  describe('Footnotes', () => {
+    it('should capture a footnote with its definition and reference ranges', () => {
+      const note = createNoteFromMarkdown(
+        `Text with footnote[^1]\n\n[^1]: The footnote content`
+      );
+      expect(note.footnotes).toHaveLength(1);
+      expect(note.footnotes[0].id).toBe('1');
+      expect(note.footnotes[0].definitionRange).not.toBeNull();
+      expect(note.footnotes[0].references).toHaveLength(1);
+    });
+
+    it('should capture multiple distinct footnotes', () => {
+      const note = createNoteFromMarkdown(
+        `Text[^1][^2]\n\n[^1]: First footnote\n\n[^2]: Second footnote`
+      );
+      expect(note.footnotes).toHaveLength(2);
+      expect(note.footnotes.map(f => f.id).sort()).toEqual(['1', '2']);
+    });
+
+    it('should capture each reference when consecutive footnotes appear side by side', () => {
+      const note = createNoteFromMarkdown(
+        `Text[^1][^2][^3][^4]\n\n[^1]: a\n\n[^2]: b\n\n[^3]: c\n\n[^4]: d`
+      );
+      expect(note.footnotes).toHaveLength(4);
+      for (const f of note.footnotes) {
+        expect(f.references).toHaveLength(1);
+        expect(f.definitionRange).not.toBeNull();
+      }
+    });
+
+    it('should capture multiple references to the same footnote', () => {
+      const note = createNoteFromMarkdown(
+        `See[^note] and also[^note].\n\n[^note]: Explanation here`
+      );
+      expect(note.footnotes).toHaveLength(1);
+      expect(note.footnotes[0].references).toHaveLength(2);
+    });
+
+    it('should capture a footnote reference even without a definition', () => {
+      const note = createNoteFromMarkdown(`Text[^1] with no definition`);
+      expect(note.footnotes).toHaveLength(1);
+      expect(note.footnotes[0].id).toBe('1');
+      expect(note.footnotes[0].definitionRange).toBeNull();
+      expect(note.footnotes[0].references).toHaveLength(1);
+    });
+
+    it('should not include footnotes in note.links', () => {
+      const note = createNoteFromMarkdown(
+        `Text[^1]\n\n[^1]: footnote\n\n[[wikilink]]`
+      );
+      expect(note.links).toHaveLength(1);
+      expect(note.links[0].type).toBe('wikilink');
+    });
+  });
+
   describe('Note Title', () => {
     it('should initialize note title if heading exists', () => {
       const note = createNoteFromMarkdown(`

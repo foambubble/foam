@@ -1,3 +1,5 @@
+/* @unit-ready */
+
 import * as vscode from 'vscode';
 import { createMarkdownParser } from '../core/services/markdown-parser';
 import { createTestWorkspace } from '../test/test-utils';

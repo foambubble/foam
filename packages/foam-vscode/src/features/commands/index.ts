@@ -1,7 +1,7 @@
 export { default as copyWithoutBracketsCommand } from './copy-without-brackets';
 export { default as createFromTemplateCommand } from './create-note-from-template';
 export { default as createNewTemplate } from './create-new-template';
-export { default as janitorCommand } from './janitor';
+export { default as janitorCommand } from '../../janitor/vscode/commands';
 export { default as openDailyNoteCommand } from './open-daily-note';
 export { default as openDailyNoteForDateCommand } from './open-daily-note-for-date';
 export { default as openDatedNote } from './open-dated-note';

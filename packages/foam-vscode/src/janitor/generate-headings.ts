@@ -4,15 +4,11 @@ import { Range } from '../core/model/range';
 import { TextEdit } from '../core/services/text-edit';
 import { getHeadingFromFileName } from '../core/utils';
 
-export const generateHeading = async (
+export const generateHeading = (
   note: Resource,
   noteText: string,
   eol: string
-): Promise<TextEdit | null> => {
-  if (!note) {
-    return null;
-  }
-
+): TextEdit | null => {
   // TODO now the note.title defaults to file name at parsing time, so this check
   // doesn't work anymore. Decide:
   // - whether do we actually want to continue generate the headings
@@ -39,9 +35,7 @@ export const generateHeading = async (
   const paddingEnd = newLineExistsAfterFrontmatter ? eol : `${eol}${eol}`;
 
   return {
-    newText: `${paddingStart}# ${getHeadingFromFileName(
-      note.uri.getName()
-    )}${paddingEnd}`,
+    newText: `${paddingStart}# ${getHeadingFromFileName(note.uri.getName())}${paddingEnd}`,
     range: Range.create(contentStartLine, 0, contentStartLine, 0),
   };
 };

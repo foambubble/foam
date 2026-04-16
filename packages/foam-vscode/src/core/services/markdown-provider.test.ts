@@ -5,6 +5,7 @@ import {
 } from './markdown-provider';
 import { Logger } from '../utils/log';
 import { URI } from '../model/uri';
+import { FoamGraph } from '../model/graph';
 import {
   createTestNote,
   createTestWorkspace,
@@ -955,6 +956,56 @@ describe('Block link resolution', () => {
     const result = workspace.resolveLink(noteA, noteA.links[0]);
     expect(result.path).toEqual(noteB.uri.path);
     expect(result.fragment).toEqual('^ghost');
+  });
+});
+
+describe('External link resolution', () => {
+  it('should return the external URI for inline external links', () => {
+    const workspace = createTestWorkspace();
+    const noteA = createNoteFromMarkdown(
+      'Visit [Google](https://google.com)',
+      '/root/note-a.md'
+    );
+    workspace.set(noteA);
+    expect(noteA.links.length).toEqual(1);
+    expect(noteA.links[0].type).toEqual('external');
+    const resolved = workspace.resolveLink(noteA, noteA.links[0]);
+    expect(resolved.scheme).toEqual('https');
+    expect(resolved.isPlaceholder()).toBe(false);
+  });
+
+  it('should return the external URI for reference-style links with external URLs', () => {
+    const workspace = createTestWorkspace();
+    const noteA = createNoteFromMarkdown(
+      'I link to [an external topic][1]\n\n[1]: http://test.com/my-long-link',
+      '/root/note-a.md'
+    );
+    workspace.set(noteA);
+    expect(noteA.links.length).toEqual(1);
+    expect(noteA.links[0].type).toEqual('external');
+    const resolved = workspace.resolveLink(noteA, noteA.links[0]);
+    expect(resolved.scheme).toEqual('http');
+    expect(resolved.isPlaceholder()).toBe(false);
+  });
+
+  it('should not create graph connections for external links', () => {
+    const workspace = createTestWorkspace();
+    const noteA = createNoteFromMarkdown(
+      'Visit [Google](https://google.com) and [[note-b]]',
+      '/root/note-a.md'
+    );
+    const noteB = createNoteFromMarkdown('Note B', '/root/note-b.md');
+    workspace.set(noteA).set(noteB);
+    const graph = FoamGraph.fromWorkspace(workspace);
+
+    // Only the wikilink to note-b creates a connection
+    const connections = graph.getLinks(noteA.uri);
+    expect(connections.length).toEqual(1);
+    expect(connections[0].target.path).toEqual(noteB.uri.path);
+
+    // No placeholders for external links
+    expect(graph.placeholders.size).toEqual(0);
+    graph.dispose();
   });
 });
 

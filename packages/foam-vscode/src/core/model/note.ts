@@ -3,7 +3,7 @@ import { Range } from './range';
 import { Position } from './position';
 
 export interface ResourceLink {
-  type: 'wikilink' | 'link';
+  type: 'wikilink' | 'link' | 'external';
   rawText: string;
   range: Range;
   isEmbed: boolean;

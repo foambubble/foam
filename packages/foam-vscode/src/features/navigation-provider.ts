@@ -170,6 +170,9 @@ export class NavigationProvider
     }
 
     const uri = this.workspace.resolveLink(resource, targetLink);
+    if (targetLink.type === 'external') {
+      return;
+    }
     if (uri.isPlaceholder()) {
       // For direct path links, check if the file actually exists on disk even
       // though it's not indexed in the workspace (e.g. extensionless files like

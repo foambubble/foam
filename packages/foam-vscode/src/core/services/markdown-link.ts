@@ -28,6 +28,15 @@ export abstract class MarkdownLink {
           alias: alias ?? '',
         };
       }
+      if (link.type === 'external') {
+        const url =
+          typeof link.definition === 'string'
+            ? link.definition
+            : ResourceLink.isResolvedReference(link)
+              ? link.definition.url
+              : link.rawText;
+        return { target: url, section: '', blockId: '', alias: '' };
+      }
       if (link.type === 'link') {
         // For reference-style links with resolved definitions, parse target and section from definition URL
         if (ResourceLink.isResolvedReference(link)) {
@@ -85,6 +94,9 @@ export abstract class MarkdownLink {
       isEmbed?: boolean;
     }
   ): TextEdit {
+    if (link.type === 'external') {
+      throw new Error('Cannot update an external link');
+    }
     const { target, section, blockId, alias } = MarkdownLink.analyzeLink(link);
     const newTarget = delta.target ?? target;
     // Preserve the existing fragment (section or block anchor) when not overriding.

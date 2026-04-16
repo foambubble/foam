@@ -193,6 +193,14 @@ export function createMarkdownParser(
 
           // Set definition to definition object if found, otherwise keep as string
           (link as any).definition = definition || referenceId;
+
+          // If the resolved definition points to an external URL, promote to 'external' type
+          if (definition && link.type === 'link') {
+            const resolvedUri = URI.parse(definition.url, 'tmp');
+            if (resolvedUri.scheme !== 'file' && resolvedUri.scheme !== 'tmp') {
+              (link as any).type = 'external';
+            }
+          }
         }
       });
 
@@ -201,7 +209,9 @@ export function createMarkdownParser(
       // - It's a resolved reference - definition is an object
       note.links = note.links.filter(
         link =>
-          link.type === 'wikilink' || !ResourceLink.isUnresolvedReference(link)
+          link.type === 'wikilink' ||
+          link.type === 'external' ||
+          !ResourceLink.isUnresolvedReference(link)
       );
 
       // remark-parse v8 has no footnote plugin, so we scan the raw source for
@@ -689,13 +699,23 @@ const wikilinkPlugin: ParserPlugin = {
     if (node.type === 'link' || node.type === 'image') {
       const targetUri = (node as any).url;
       const uri = note.uri.resolve(targetUri);
-      if (uri.scheme !== 'file' || uri.path === note.uri.path) {
+      if (uri.path === note.uri.path) {
         return;
       }
       const literalContent = noteSource.substring(
         node.position!.start.offset!,
         node.position!.end.offset!
       );
+      if (uri.scheme !== 'file') {
+        note.links.push({
+          type: 'external',
+          rawText: literalContent,
+          range: astPositionToFoamRange(node.position!),
+          isEmbed: literalContent.startsWith('!'),
+          definition: targetUri,
+        });
+        return;
+      }
       note.links.push({
         type: 'link',
         rawText: literalContent,

@@ -24,6 +24,9 @@ export function convertLinkFormat(
   note: Resource | URI
 ): TextEdit {
   const resource = note instanceof URI ? workspace.find(note) : note;
+  if (link.type === 'external') {
+    return { newText: link.rawText, range: link.range };
+  }
   const targetUri = workspace.resolveLink(resource, link);
   /* If it's already the target format or a placeholder, no transformation happens */
   if (link.type === targetFormat || targetUri.scheme === 'placeholder') {

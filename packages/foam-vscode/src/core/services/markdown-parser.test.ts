@@ -23,11 +23,13 @@ describe('Markdown parsing', () => {
   });
 
   describe('Links', () => {
-    it('should skip external links', () => {
+    it('should store external links with type external', () => {
       const note = createNoteFromMarkdown(
         `this is a [link to google](https://www.google.com)`
       );
-      expect(note.links.length).toEqual(0);
+      expect(note.links.length).toEqual(1);
+      expect(note.links[0].type).toEqual('external');
+      expect(note.links[0].definition).toEqual('https://www.google.com');
     });
 
     it('should skip links to a section within the file', () => {
@@ -220,6 +222,53 @@ This has [[wikilink]], [inline link](target.md), and [reference link][ref].
       expect(note.links[2].type).toEqual('link');
       expect(note.links[2].rawText).toEqual('[reference link][ref]');
       expect(ResourceLink.isResolvedReference(note.links[2])).toBe(true);
+    });
+
+    it('should detect inline external links as external type', () => {
+      const note = createNoteFromMarkdown(
+        'Visit [Google](https://google.com) and [Docs](http://docs.example.com/page).'
+      );
+      expect(note.links.length).toEqual(2);
+
+      const link1 = note.links[0];
+      expect(link1.type).toEqual('external');
+      expect(link1.rawText).toEqual('[Google](https://google.com)');
+      expect(link1.definition).toEqual('https://google.com');
+
+      const link2 = note.links[1];
+      expect(link2.type).toEqual('external');
+      expect(link2.definition).toEqual('http://docs.example.com/page');
+    });
+
+    it('should detect reference-style links with external URLs as external type', () => {
+      const note = createNoteFromMarkdown(`
+I link to an [interesting topic][1] and an [[internal-note]]
+
+[1]: http://test.com/my-long-external-link 'Interesting Topic'
+[internal-note]: internal-note.md 'Internal Note'
+      `);
+
+      // external reference-style link
+      const externalLink = note.links.find(l => l.rawText === '[interesting topic][1]');
+      expect(externalLink).toBeDefined();
+      expect(externalLink.type).toEqual('external');
+      expect(ResourceLink.isResolvedReference(externalLink)).toBe(true);
+      const def = externalLink.definition as NoteLinkDefinition;
+      expect(def.url).toEqual('http://test.com/my-long-external-link');
+
+      // internal wikilink is unaffected
+      const internalLink = note.links.find(l => l.type === 'wikilink');
+      expect(internalLink).toBeDefined();
+    });
+
+    it('should not create a placeholder for reference-style links with external URLs', () => {
+      const note = createNoteFromMarkdown(`
+[interesting topic][1]
+
+[1]: http://test.com/external
+      `);
+      expect(note.links.length).toEqual(1);
+      expect(note.links[0].type).toEqual('external');
     });
 
     it('should not treat footnote definitions as link definitions', () => {

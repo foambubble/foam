@@ -91,6 +91,15 @@ export class MarkdownResourceProvider implements ResourceProvider {
     link: ResourceLink
   ) {
     let targetUri: URI | undefined;
+    if (link.type === 'external') {
+      const url =
+        typeof link.definition === 'string'
+          ? link.definition
+          : ResourceLink.isResolvedReference(link)
+            ? link.definition.url
+            : link.rawText;
+      return URI.parse(url, 'external');
+    }
     const { target, section, blockId } = MarkdownLink.analyzeLink(link);
     switch (link.type) {
       case 'wikilink': {

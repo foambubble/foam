@@ -20,7 +20,7 @@ import { Logger } from '../core/utils/log';
  */
 export default class VsCodeBasedParserCache implements ParserCache {
   static CACHE_NAME = 'foam-cache';
-  static CACHE_VERSION = 3;
+  static CACHE_VERSION = 4;
   static CACHE_VERSION_KEY = 'foam-cache-version';
   private _cache: LRUCache<string, ParserCacheEntry>;
 

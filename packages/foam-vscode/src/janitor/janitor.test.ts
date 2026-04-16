@@ -32,16 +32,17 @@ describe('computeNonDirtyEdits', () => {
     expect(result).toHaveLength(0);
   });
 
-  it('does not add a heading (heading generation is currently a no-op when note has a title)', async () => {
-    // generateHeading returns null whenever note.title is set, which it always
-    // is after parsing (title defaults to filename). See the TODO in generate-headings.ts.
+  it('adds a heading to a note that is missing one', async () => {
     const content = 'No heading here.\n';
     const { workspace } = await makeWorkspace([{ uri: '/note.md', content }]);
     const note = workspace.find(URI.file('/note.md'))!;
 
     const result = await computeNonDirtyEdits([note], workspace, 'off');
 
-    expect(result).toHaveLength(0);
+    expect(result).toHaveLength(1);
+    expect(result[0].addedHeading).toBe(true);
+    expect(result[0].addedDefinitions).toBe(false);
+    expect(result[0].updatedText).toContain('# Note');
   });
 
   it('adds link definitions when wikilink setting is noExtensions', async () => {
@@ -77,9 +78,7 @@ describe('computeNonDirtyEdits', () => {
     expect(result).toHaveLength(0);
   });
 
-  it('adds definitions (heading generation is a no-op but definitions are applied)', async () => {
-    // generateHeading is currently a no-op when note.title is set (see generate-headings.ts TODO),
-    // so only definitions are added.
+  it('adds both heading and definitions in a single pass', async () => {
     const content = 'No heading.\n\n[[other]]\n';
     const { workspace } = await makeWorkspace([
       { uri: '/note.md', content },
@@ -87,15 +86,12 @@ describe('computeNonDirtyEdits', () => {
     ]);
     const note = workspace.find(URI.file('/note.md'))!;
 
-    const result = await computeNonDirtyEdits(
-      [note],
-      workspace,
-      'noExtensions'
-    );
+    const result = await computeNonDirtyEdits([note], workspace, 'noExtensions');
 
     expect(result).toHaveLength(1);
-    expect(result[0].addedHeading).toBe(false);
+    expect(result[0].addedHeading).toBe(true);
     expect(result[0].addedDefinitions).toBe(true);
+    expect(result[0].updatedText).toContain('# Note');
     expect(result[0].updatedText).toContain('[other]: other');
   });
 
@@ -123,33 +119,21 @@ describe('computeDirtyEdits', () => {
     const { workspace } = await makeWorkspace([{ uri: '/note.md', content }]);
     const note = workspace.find(URI.file('/note.md'))!;
 
-    const result = await computeDirtyEdits(
-      note,
-      content,
-      '\n',
-      workspace,
-      'off'
-    );
+    const result = computeDirtyEdits(note, content, '\n', workspace, 'off');
 
     expect(result.heading).toBeNull();
     expect(result.definitions).toHaveLength(0);
   });
 
-  it('returns null heading even when note has no markdown heading (heading generation is a no-op when note has a title)', async () => {
-    // generateHeading returns null when note.title is set (see generate-headings.ts TODO).
+  it('returns a heading edit for a note missing one', async () => {
     const content = 'No heading here.\n';
     const { workspace } = await makeWorkspace([{ uri: '/note.md', content }]);
     const note = workspace.find(URI.file('/note.md'))!;
 
-    const result = await computeDirtyEdits(
-      note,
-      content,
-      '\n',
-      workspace,
-      'off'
-    );
+    const result = computeDirtyEdits(note, content, '\n', workspace, 'off');
 
-    expect(result.heading).toBeNull();
+    expect(result.heading).not.toBeNull();
+    expect(result.heading!.newText).toContain('# Note');
     expect(result.definitions).toHaveLength(0);
   });
 
@@ -161,13 +145,7 @@ describe('computeDirtyEdits', () => {
     ]);
     const note = workspace.find(URI.file('/note.md'))!;
 
-    const result = await computeDirtyEdits(
-      note,
-      content,
-      '\n',
-      workspace,
-      'noExtensions'
-    );
+    const result = computeDirtyEdits(note, content, '\n', workspace, 'noExtensions');
 
     expect(result.heading).toBeNull();
     expect(result.definitions.length).toBeGreaterThan(0);
@@ -183,18 +161,12 @@ describe('computeDirtyEdits', () => {
     ]);
     const note = workspace.find(URI.file('/note.md'))!;
 
-    const result = await computeDirtyEdits(
-      note,
-      content,
-      '\n',
-      workspace,
-      'off'
-    );
+    const result = computeDirtyEdits(note, content, '\n', workspace, 'off');
 
     expect(result.definitions).toHaveLength(0);
   });
 
-  it('returns definitions even when heading generation is a no-op', async () => {
+  it('returns both heading and definitions when both are needed', async () => {
     const content = 'No heading.\n\n[[other]]\n';
     const { workspace } = await makeWorkspace([
       { uri: '/note.md', content },
@@ -202,15 +174,9 @@ describe('computeDirtyEdits', () => {
     ]);
     const note = workspace.find(URI.file('/note.md'))!;
 
-    const result = await computeDirtyEdits(
-      note,
-      content,
-      '\n',
-      workspace,
-      'noExtensions'
-    );
+    const result = computeDirtyEdits(note, content, '\n', workspace, 'noExtensions');
 
-    expect(result.heading).toBeNull();
+    expect(result.heading).not.toBeNull();
     expect(result.definitions.length).toBeGreaterThan(0);
   });
 });

@@ -9,18 +9,12 @@ export const generateHeading = (
   noteText: string,
   eol: string
 ): TextEdit | null => {
-  // TODO now the note.title defaults to file name at parsing time, so this check
-  // doesn't work anymore. Decide:
-  // - whether do we actually want to continue generate the headings
-  // - whether it should be under a config option
-  // A possible approach would be around having a `sections` field in the note, and inspect
-  // it to see if there is an h1 title. Alternatively parse directly the markdown in this function.
-  if (note.title) {
+  if (note.sections.some(s => s.level === 1)) {
     return null;
   }
 
   const fm = matter(noteText);
-  const contentStartLine = fm.matter.split(eol).length;
+  const contentStartLine = fm.matter ? fm.matter.split(eol).length : 0;
   const frontmatterExists = contentStartLine > 0;
 
   let newLineExistsAfterFrontmatter = false;

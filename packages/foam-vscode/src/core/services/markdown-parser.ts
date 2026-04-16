@@ -391,6 +391,7 @@ const sectionsPlugin: ParserPlugin = {
         const section = sectionStack.pop();
         note.sections.push({
           label: section.label,
+          level: section.level,
           range: Range.createFromPosition(section.start, start),
         });
       }
@@ -409,6 +410,7 @@ const sectionsPlugin: ParserPlugin = {
       const section = sectionStack.pop();
       note.sections.push({
         label: section.label,
+        level: section.level,
         range: { start: section.start, end },
       });
     }

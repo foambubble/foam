@@ -647,10 +647,13 @@ This is the content of section 2.
       `);
       expect(note.sections).toHaveLength(3);
       expect(note.sections[0].label).toEqual('Section 1');
+      expect(note.sections[0].level).toEqual(1);
       expect(note.sections[0].range).toEqual(Range.create(1, 0, 9, 0));
       expect(note.sections[1].label).toEqual('Section 1.1');
+      expect(note.sections[1].level).toEqual(2);
       expect(note.sections[1].range).toEqual(Range.create(5, 0, 9, 0));
       expect(note.sections[2].label).toEqual('Section 2');
+      expect(note.sections[2].level).toEqual(1);
       expect(note.sections[2].range).toEqual(Range.create(9, 0, 13, 0));
     });
 
@@ -666,6 +669,24 @@ This is the content of section with url`);
       expect(note.sections).toHaveLength(2);
       expect(note.sections[0].label).toEqual('Section with wikilink');
       expect(note.sections[1].label).toEqual('Section with url');
+    });
+
+    it('should capture heading levels h1 through h6', () => {
+      const note = createNoteFromMarkdown(`
+# H1
+## H2
+### H3
+#### H4
+##### H5
+###### H6
+`);
+      expect(note.sections).toHaveLength(6);
+      expect(note.sections[0].level).toEqual(1);
+      expect(note.sections[1].level).toEqual(2);
+      expect(note.sections[2].level).toEqual(3);
+      expect(note.sections[3].level).toEqual(4);
+      expect(note.sections[4].level).toEqual(5);
+      expect(note.sections[5].level).toEqual(6);
     });
   });
 

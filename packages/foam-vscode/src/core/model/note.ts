@@ -84,6 +84,7 @@ export interface Alias {
 
 export interface Section {
   label: string;
+  level: number;
   range: Range;
 }
 

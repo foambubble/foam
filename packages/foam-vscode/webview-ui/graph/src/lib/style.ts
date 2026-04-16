@@ -36,5 +36,6 @@ export function resolveStyle(
       ...payload.style?.node,
     },
     colorMode: payload.colorMode ?? defaults.colorMode,
+    groups: payload.groups ?? defaults.groups,
   };
 }

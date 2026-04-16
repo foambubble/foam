@@ -1,6 +1,8 @@
 import { rgb, hsl } from 'd3-color';
 import type { RGBColor } from 'd3-color';
 import type { AugmentedNode, ResolvedStyle } from './types';
+import type { GroupRule } from '../protocol';
+import { resolveGroupColor } from './groups';
 
 export function getNodeTypeColor(type: string, style: ResolvedStyle): string {
   return style.node[type] ?? style.node['note'];
@@ -15,7 +17,7 @@ export function hashString(str: string): number {
   return Math.abs(hash);
 }
 
-function hashToHSL(hash: number): string {
+export function hashToHSL(hash: number): string {
   const hue = hash % 360;
   const saturation = 50 + (hash % 20);
   const lightness = 50 + ((hash >> 8) % 20);
@@ -45,19 +47,21 @@ export function getNodeFillAndBorder(
   nodeInfo: AugmentedNode,
   state: 'regular' | 'highlighted' | 'lessened',
   style: ResolvedStyle,
-  colorMode: 'none' | 'directory' | 'type'
+  colorMode: 'none' | 'directory' | 'type',
+  groups: GroupRule[] = []
 ): { fill: RGBColor; border: RGBColor } {
   let baseColor: string;
 
   if (nodeInfo.properties.color) {
     baseColor = nodeInfo.properties.color as string;
-  } else if (colorMode === 'directory' && nodeInfo.type !== 'placeholder') {
+  } else if (colorMode === 'directory' && nodeInfo.type !== 'placeholder' && nodeInfo.type !== 'tag') {
     baseColor = getDirectoryColor(nodeInfo.id);
-  } else if (colorMode === 'type') {
-    baseColor = getTypeColor(nodeInfo.type, style);
   } else {
-    baseColor = getNodeTypeColor(nodeInfo.type, style);
+    baseColor = getTypeColor(nodeInfo.type, style);
   }
+
+  const groupColor = resolveGroupColor(nodeInfo, groups);
+  if (groupColor) baseColor = groupColor;
 
   const typeFill = rgb(baseColor);
 

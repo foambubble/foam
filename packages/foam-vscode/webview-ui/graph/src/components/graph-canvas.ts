@@ -25,6 +25,8 @@ import type {
   Selection,
   LinkAnimation,
 } from '../lib/types';
+import type { GroupRule } from '../protocol';
+import { matchesGroup } from '../lib/groups';
 
 @customElement('foam-graph-canvas')
 export class GraphCanvas extends LitElement {
@@ -55,6 +57,7 @@ export class GraphCanvas extends LitElement {
   @property({ type: Number }) nodeSizeMultiplier: number = 1;
   @property({ type: Number }) linkWidthMultiplier: number = 2;
   @property({ type: String }) animateLinks: LinkAnimation = 'forward';
+  @property({ type: Array }) groups: GroupRule[] = [];
 
   // Mutable rendering state — closed over by canvas callbacks
   private rs = {
@@ -74,6 +77,7 @@ export class GraphCanvas extends LitElement {
     linkWidthMultiplier: 2,
     animateLinks: 'forward' as LinkAnimation,
     colorMode: 'type' as 'none' | 'directory' | 'type',
+    groups: [] as GroupRule[],
   };
 
   private readonly getNodeSize = scaleLinear()
@@ -102,6 +106,10 @@ export class GraphCanvas extends LitElement {
     const container = this.shadowRoot!.getElementById(
       'canvas-container'
     ) as HTMLDivElement;
+    container.addEventListener('mouseleave', () => {
+      this.rs.hoverNode = null;
+      this._updateFocusSets();
+    });
     const painter = new Painter();
 
     this.graphInstance = ForceGraph()(container)
@@ -151,7 +159,8 @@ export class GraphCanvas extends LitElement {
             info,
             state,
             this.rs.style,
-            this.rs.colorMode
+            this.rs.colorMode,
+            this.rs.groups
           );
           const fontSize =
             (this.rs.style.fontSize * this.rs.nodeFontSizeMultiplier) /
@@ -255,6 +264,11 @@ export class GraphCanvas extends LitElement {
       this._updateFocusSets();
     }
 
+    if (changed.has('groups')) {
+      this.rs.groups = this.groups;
+      if (this.rs.augmented) this._updateGraphData();
+    }
+
     if (changed.has('textFade')) {
       this.rs.textFade = this.textFade;
       const invertedValue = 3 - this.textFade;
@@ -340,7 +354,12 @@ export class GraphCanvas extends LitElement {
 
     const nodeIdsToAdd = new Set(
       Object.values(this.rs.augmented.nodeInfo)
-        .filter(n => this.rs.showNodesOfType[n.type])
+        .filter(n => {
+          if (!this.rs.showNodesOfType[n.type]) return false;
+          const matching = this.rs.groups.filter(g => matchesGroup(n, g));
+          if (matching.length > 0 && matching.every(g => !g.enabled)) return false;
+          return true;
+        })
         .map(n => n.id)
     );
 

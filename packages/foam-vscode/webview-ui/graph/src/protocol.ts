@@ -40,13 +40,25 @@ export interface StyleConfig {
   };
 }
 
-/**
- * The payload for the didUpdateStyle message.
- * Matches the shape of the foam.graph.style VS Code configuration object.
- */
+export type GroupMatchProperty = 'type' | 'path' | 'tag' | 'title' | string;
+
+export interface GroupMatch {
+  property: GroupMatchProperty;
+  value: string;
+}
+
+export interface GroupRule {
+  id: string;
+  label: string;
+  color: string;
+  enabled: boolean;
+  match: GroupMatch;
+}
+
 export interface StylePayload {
   style?: StyleConfig;
   colorMode?: 'none' | 'directory' | 'type';
+  groups?: GroupRule[];
 }
 
 // Extension → Webview

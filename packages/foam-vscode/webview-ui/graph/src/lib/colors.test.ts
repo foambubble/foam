@@ -64,6 +64,26 @@ describe('color by directory', () => {
     // should stay visible even when directory coloring is active
     expect(fillOf(graph.placeholder, 'directory')).not.toBe(fillOf(graph.workA, 'directory'));
   });
+
+  it('tags keep their own color regardless of directory', () => {
+    // tags are not file-based, so directory coloring does not apply to them
+    expect(fillOf(graph.tagNode, 'directory')).toBe(fillOf(graph.tagNode, 'type'));
+  });
+});
+
+describe('color by none', () => {
+  it('uses type color — same type means same color', () => {
+    expect(fillOf(graph.projectA, 'none')).toBe(fillOf(graph.projectB, 'none'));
+  });
+
+  it('uses type color — different types mean different colors', () => {
+    expect(fillOf(graph.projectA, 'none')).not.toBe(fillOf(graph.noteA, 'none'));
+  });
+
+  it('special types (tag, attachment, placeholder) retain their own color', () => {
+    expect(fillOf(graph.tagNode,     'none')).not.toBe(fillOf(graph.noteA, 'none'));
+    expect(fillOf(graph.placeholder, 'none')).not.toBe(fillOf(graph.noteA, 'none'));
+  });
 });
 
 describe('node properties.color takes precedence over colorMode', () => {
@@ -78,6 +98,44 @@ describe('node properties.color takes precedence over colorMode', () => {
     // redNode and workA are both in /work/, but redNode has an explicit color
     expect(fillOf(redNode,      'directory')).not.toBe(fillOf(graph.workA, 'directory'));
     expect(fillOf(redNode, 'directory')).toBe(rgb('red').toString());
+  });
+});
+
+describe('group color overrides colorMode', () => {
+  const makeGroup = (color: string, type: string) => ({
+    id: 'g1', label: 'test', color, enabled: true,
+    match: { property: 'type' as const, value: type },
+  });
+
+  it('an enabled matching group overrides type color', () => {
+    const group = makeGroup('#ff0000', 'project');
+    const style = makeStyle();
+    const result = getNodeFillAndBorder(graph.projectA, 'regular', style, 'type', [group]);
+    expect(result.fill.toString()).toBe(rgb('#ff0000').toString());
+  });
+
+  it('an enabled matching group overrides directory color', () => {
+    const group = makeGroup('#ff0000', 'note');
+    const style = makeStyle();
+    const result = getNodeFillAndBorder(graph.workA, 'regular', style, 'directory', [group]);
+    expect(result.fill.toString()).toBe(rgb('#ff0000').toString());
+  });
+
+  it('a disabled group does not override color', () => {
+    const group = { ...makeGroup('#ff0000', 'project'), enabled: false };
+    const style = makeStyle();
+    const result = getNodeFillAndBorder(graph.projectA, 'regular', style, 'type', [group]);
+    expect(result.fill.toString()).not.toBe(rgb('#ff0000').toString());
+  });
+
+  it('last matching group wins when multiple groups match', () => {
+    const style = makeStyle();
+    const groups = [
+      makeGroup('#ff0000', 'project'),
+      makeGroup('#00ff00', 'project'),
+    ];
+    const result = getNodeFillAndBorder(graph.projectA, 'regular', style, 'type', groups);
+    expect(result.fill.toString()).toBe(rgb('#00ff00').toString());
   });
 });
 

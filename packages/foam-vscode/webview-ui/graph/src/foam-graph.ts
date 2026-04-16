@@ -1,9 +1,9 @@
-import { LitElement, html, css, nothing } from 'lit';
+import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { getDefaultStyle } from './lib/defaults';
 import { augmentGraphInfo } from './lib/graph-utils';
 import { mergeStylePayloads, resolveStyle } from './lib/style';
-import type { GraphData, StylePayload } from './protocol';
+import type { GraphData, StylePayload, GroupRule } from './protocol';
 import type { AugmentedGraph, ResolvedStyle, Forces, Selection, LinkAnimation } from './lib/types';
 import './components/graph-canvas';
 import './components/control-panel';
@@ -40,6 +40,7 @@ export class FoamGraph extends LitElement {
   @state() private forces: Forces = { collide: 1, repel: 10, link: 30, velocityDecay: 0.4 };
   @state() private selection: Selection = { neighborDepth: 1, enableRefocus: true, enableZoom: true };
   @state() private localStylePatch: StylePayload = {};
+  @state() private groups: GroupRule[] = [];
 
   private get resolvedStyle(): ResolvedStyle {
     const merged = mergeStylePayloads(this.graphStyle, this.localStylePatch);
@@ -49,12 +50,21 @@ export class FoamGraph extends LitElement {
   updated(changed: Map<string, unknown>) {
     if (changed.has('graphData') && this.graphData) {
       this.augmentedGraph = augmentGraphInfo(this.graphData);
+    }
+    if ((changed.has('graphData') || changed.has('graphStyle')) && this.augmentedGraph) {
       this._syncNodeTypes(this.augmentedGraph);
+    }
+    if (changed.has('graphStyle') && this.graphStyle?.groups) {
+      this.groups = this.graphStyle.groups;
     }
   }
 
   private _syncNodeTypes(graph: AugmentedGraph) {
-    const types = new Set(Object.values(graph.nodeInfo).map(n => n.type));
+    const specialTypes = new Set(['tag', 'attachment', 'image', 'placeholder', 'note']);
+    const types = new Set([
+      ...Object.values(graph.nodeInfo).map(n => n.type),
+      ...Object.keys(this.resolvedStyle.node).filter(t => !specialTypes.has(t)),
+    ]);
     const updated = { ...this.showNodesOfType };
     let changed = false;
 
@@ -64,9 +74,9 @@ export class FoamGraph extends LitElement {
         changed = true;
       }
     }
-    const specialTypes = new Set(['tag', 'attachment', 'image', 'placeholder']);
+    const keepTypes = new Set(['tag', 'attachment', 'image', 'placeholder']);
     for (const type of Object.keys(updated)) {
-      if (!types.has(type) && !specialTypes.has(type)) {
+      if (!types.has(type) && !keepTypes.has(type)) {
         delete updated[type];
         changed = true;
       }
@@ -91,6 +101,7 @@ export class FoamGraph extends LitElement {
         .augmentedGraph=${this.augmentedGraph}
         .style=${resolved}
         .showNodesOfType=${this.showNodesOfType}
+        .groups=${this.groups}
         .forces=${this.forces}
         .selection=${this.selection}
         .textFade=${this.textFade}
@@ -104,6 +115,8 @@ export class FoamGraph extends LitElement {
         .style=${resolved}
         .showNodesOfType=${this.showNodesOfType}
         .nodeTypeCounts=${this._nodeTypeCounts}
+        .augmentedGraph=${this.augmentedGraph}
+        .groups=${this.groups}
         .textFade=${this.textFade}
         .nodeFontSizeMultiplier=${this.nodeFontSizeMultiplier}
         .nodeSizeMultiplier=${this.nodeSizeMultiplier}
@@ -113,6 +126,7 @@ export class FoamGraph extends LitElement {
         .selection=${this.selection}
         @style-change=${(e: CustomEvent) => this._onStyleChange(e.detail)}
         @show-nodes-of-type-change=${(e: CustomEvent) => (this.showNodesOfType = e.detail)}
+        @groups-change=${(e: CustomEvent) => (this.groups = e.detail)}
         @text-fade-change=${(e: CustomEvent) => (this.textFade = e.detail)}
         @font-size-multiplier-change=${(e: CustomEvent) => (this.nodeFontSizeMultiplier = e.detail)}
         @node-size-multiplier-change=${(e: CustomEvent) => (this.nodeSizeMultiplier = e.detail)}

@@ -1,4 +1,4 @@
-import type { NodeInfo } from '../protocol';
+import type { NodeInfo, GroupRule } from '../protocol';
 
 export interface AugmentedNode extends NodeInfo {
   neighbors: string[];
@@ -30,6 +30,7 @@ export interface ResolvedStyle {
     [key: string]: string;
   };
   colorMode: 'none' | 'directory' | 'type';
+  groups: GroupRule[];
 }
 
 export type NodeState = 'regular' | 'highlighted' | 'lessened';

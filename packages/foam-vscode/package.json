@@ -844,7 +844,6 @@
     "publish-extension": "yarn publish-extension-vscode && yarn publish-extension-openvsx"
   },
   "devDependencies": {
-    "@types/dateformat": "^3.0.1",
     "@types/lodash": "^4.17.24",
     "@types/markdown-it": "^12.0.1",
     "@types/micromatch": "^4.0.10",
@@ -868,7 +867,6 @@
     "wait-for-expect": "^3.0.2"
   },
   "dependencies": {
-    "dateformat": "4.5.1",
     "dayjs": "^1.11.13",
     "detect-newline": "^3.1.0",
     "github-slugger": "^1.4.0",

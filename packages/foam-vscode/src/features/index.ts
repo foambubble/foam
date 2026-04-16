@@ -1,7 +1,7 @@
 import { FoamFeature } from '../types';
 import * as commands from './commands';
 import * as panels from './panels';
-import dateSnippets from './date-snippets';
+import dateSnippets from './daily-notes/index';
 import hoverProvider from './hover-provider';
 import preview from './preview';
 import completionProvider from './link-completion';

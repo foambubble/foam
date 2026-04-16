@@ -1,5 +1,5 @@
 /* @unit-ready */
-import dateFormat from 'dateformat';
+import dayjs from 'dayjs';
 import { commands, window } from 'vscode';
 
 describe('open-daily-note-for-date command', () => {
@@ -14,7 +14,7 @@ describe('open-daily-note-for-date command', () => {
       expect.objectContaining([
         expect.objectContaining({
           label: expect.stringContaining(
-            dateFormat(new Date(), 'mmm dd, yyyy')
+            dayjs(new Date()).format('MMM DD, YYYY')
           ),
         }),
       ]),

@@ -4,8 +4,8 @@ import {
   CREATE_DAILY_NOTE_WARNING_RESPONSE,
   createDailyNoteIfNotExists,
   getDailyNoteUri,
-} from './dated-notes';
-import { isWindows } from '../core/common/platform';
+} from './daily-note-service';
+import { isWindows } from '../../core/common/platform';
 import {
   cleanWorkspace,
   closeEditors,
@@ -14,13 +14,13 @@ import {
   makeFoamMock,
   showInEditor,
   withModifiedFoamConfiguration,
-} from '../test/test-utils-vscode';
-import { fromVsCodeUri } from '../utils/vsc-utils';
-import { fileExists, readFile } from '../services/editor';
+} from '../../test/test-utils-vscode';
+import { fromVsCodeUri } from '../../utils/vsc-utils';
+import { fileExists, readFile } from '../../services/editor';
 import {
   getDailyNoteTemplateCandidateUris,
   getDailyNoteTemplateUri,
-} from '../services/templates';
+} from '../../services/templates';
 
 describe('getDailyNoteUri', () => {
   const date = new Date('2021-02-07T00:00:00Z');
@@ -59,7 +59,7 @@ describe('Daily note creation and template processing', () => {
   const DAILY_NOTE_TEMPLATE = ['.foam', 'templates', 'daily-note.md'];
 
   beforeEach(async () => {
-    // Ensure daily note template are removed before each test
+    // Ensure daily note templates are removed before each test
     for (const template of getDailyNoteTemplateCandidateUris()) {
       if (await fileExists(template)) {
         await deleteFile(template);
@@ -273,7 +273,7 @@ Unix: \${FOAM_DATE_SECONDS_UNIX}`,
 
       const doc = await showInEditor(result.uri);
       const content = doc.editor.document.getText();
-      expect(content).toContain('# 2021-09-21'); // Should use fallback text with formatted date
+      expect(content).toContain('# 2021-09-21');
     });
 
     it('prompts to create a daily note template if one does not exist', async () => {
@@ -282,10 +282,9 @@ Unix: \${FOAM_DATE_SECONDS_UNIX}`,
 
       expect(await getDailyNoteTemplateUri()).not.toBeDefined();
 
-      // Intercept the showWarningMessage call
       const showWarningMessageSpy = vi
         .spyOn(window, 'showWarningMessage')
-        .mockResolvedValue(CREATE_DAILY_NOTE_WARNING_RESPONSE as any); // simulate user action
+        .mockResolvedValue(CREATE_DAILY_NOTE_WARNING_RESPONSE as any);
 
       await createDailyNoteIfNotExists(targetDate, foam);
 
@@ -301,7 +300,6 @@ Unix: \${FOAM_DATE_SECONDS_UNIX}`,
       const templateContent = await readFile(templateUri);
       expect(templateContent).toContain('foam_template:');
 
-      // Clean up the created template
       await deleteFile(templateUri);
       showWarningMessageSpy.mockRestore();
     });
@@ -327,7 +325,6 @@ Content here with \${FOAM_DATE_MONTH_NAME} \${FOAM_DATE_DATE}`,
       const doc = await showInEditor(uri);
       const content = doc.editor.document.getText();
 
-      // Should not contain the frontmatter separator in final content
       expect(content).toContain(`---
 tags: [daily, journal]
 author: foam
@@ -354,7 +351,6 @@ foam_template:
 
 Daily content here.`;
 
-      // Create the template with absolute filepath
       const template = await createFile(
         TEMPLATE_WITH_ABSOLUTE_FILEPATH,
         DAILY_NOTE_TEMPLATE
@@ -372,7 +368,6 @@ Daily content here.`;
       expect(content1).toContain('# 2021-09-25 - DAILY NOTE');
       expect(content1).toContain('Daily content here.');
 
-      // Count how many times the template content appears (should be once)
       const templateOccurrences1 = (
         content1.match(/# 2021-09-25 - DAILY NOTE/g) || []
       ).length;
@@ -380,20 +375,17 @@ Daily content here.`;
 
       await closeEditors();
 
-      // Second call: Open existing daily note (this should NOT apply template again)
+      // Second call: reopen — must NOT apply the template again
       const result2 = await createDailyNoteIfNotExists(targetDate, foam);
-      expect(result2.didCreateFile).toBe(false); // File already exists
+      expect(result2.didCreateFile).toBe(false);
 
       const doc2 = await showInEditor(uri);
       const content2 = doc2.editor.document.getText();
 
-      // Verify template is NOT applied twice
       const templateOccurrences2 = (
         content2.match(/# 2021-09-25 - DAILY NOTE/g) || []
       ).length;
-      expect(templateOccurrences2).toBe(1); // Should still be 1, not 2
-
-      // Content should be identical to first time
+      expect(templateOccurrences2).toBe(1);
       expect(content2).toEqual(content1);
 
       await deleteFile(template.uri);

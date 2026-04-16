@@ -1,8 +1,8 @@
 import { ExtensionContext, commands, window, QuickPickItem } from 'vscode';
-import { openDailyNoteFor } from '../dated-notes';
+import { openDailyNoteFor } from '../daily-notes/daily-note-service';
 import { FoamWorkspace } from '../../core/model/workspace';
 import { range } from 'lodash';
-import dateFormat from 'dateformat';
+import dayjs from 'dayjs';
 import { Foam } from '../../core/model/foam';
 
 export default async function activate(
@@ -36,8 +36,8 @@ class DateItem implements QuickPickItem {
   public alwaysShow?: boolean;
   constructor(public date: Date, offset: number, public exists: boolean) {
     const icon = exists ? '$(calendar)' : '$(new-file)';
-    this.label = `${icon} ${dateFormat(date, 'mmm dd, yyyy')}`;
-    this.detail = dateFormat(date, 'dddd');
+    this.label = `${icon} ${dayjs(date).format('MMM DD, YYYY')}`;
+    this.detail = dayjs(date).format('dddd');
     if (offset === 0) {
       this.detail = 'Today';
     } else if (offset === -1) {
@@ -45,9 +45,9 @@ class DateItem implements QuickPickItem {
     } else if (offset === 1) {
       this.detail = 'Tomorrow';
     } else if (offset > -8 && offset < -1) {
-      this.detail = `Last ${dateFormat(date, 'dddd')}`;
+      this.detail = `Last ${dayjs(date).format('dddd')}`;
     } else if (offset > 1 && offset < 8) {
-      this.detail = `Next ${dateFormat(date, 'dddd')}`;
+      this.detail = `Next ${dayjs(date).format('dddd')}`;
     }
   }
 }
@@ -62,7 +62,7 @@ function generateDateItems(ws: FoamWorkspace): DateItem[] {
     // TODO this is only compatible with default settings as it would
     // be otherwise hard to "guess" the daily note path
     // Ideally we would read the daily note path from the config or template to properly match
-    const noteBasename = dateFormat(date, 'yyyy-mm-dd', false);
+    const noteBasename = dayjs(date).format('YYYY-MM-DD');
     const exists = ws.find(noteBasename) ? true : false;
     return new DateItem(date, offset, exists);
   });

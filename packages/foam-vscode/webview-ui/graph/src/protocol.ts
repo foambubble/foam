@@ -55,15 +55,44 @@ export interface GroupRule {
   match: GroupMatch;
 }
 
-export interface StylePayload {
+export interface GraphStyle {
   style?: StyleConfig;
   colorMode?: 'none' | 'directory' | 'type';
   groups?: GroupRule[];
+  showNodesOfType?: Record<string, boolean>;
+}
+
+/** Config for a built-in special type (tag, attachment, image, placeholder) */
+export interface BuiltinTypeConfig {
+  enabled?: boolean;
+  color?: string;
+}
+
+/**
+ * A named, pre-configured graph view.
+ * Also used as raw command args for `foam-vscode.show-graph`.
+ * Merge order: foam.graph.style → named view → inline config.
+ */
+export interface GraphViewConfig {
+  name?: string;
+  colorBy?: 'none' | 'directory' | 'type';
+  groups?: GroupRule[];
+  /** Visibility and color for built-in types: tag, attachment, image, placeholder */
+  show?: Record<string, BuiltinTypeConfig>;
+  background?: string;
+  fontSize?: number;
+  fontFamily?: string;
+  lineColor?: string;
+}
+
+export interface ShowGraphArgs {
+  view?: string;
+  config?: GraphViewConfig;
 }
 
 // Extension → Webview
 export type ExtensionMessage =
-  | { type: 'didUpdateStyle'; payload: StylePayload }
+  | { type: 'didUpdateStyle'; payload: GraphStyle }
   | { type: 'didUpdateGraphData'; payload: GraphData }
   | { type: 'didSelectNote'; payload: string };
 

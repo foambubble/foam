@@ -796,6 +796,25 @@
           "description": "Custom graph styling settings. An example is present in the documentation.",
           "default": {}
         },
+        "foam.graph.views": {
+          "type": "array",
+          "default": [],
+          "description": "Named graph views. A view named \"Default\" is applied automatically when the graph opens with no arguments. Other views can be opened via keybindings by passing { \"view\": \"<name>\" } as command args.",
+          "items": {
+            "type": "object",
+            "required": ["name"],
+            "properties": {
+              "name": { "type": "string", "description": "Display name. Use \"Default\" to apply this view whenever the graph opens with no arguments." },
+              "colorBy": { "type": "string", "enum": ["none", "directory", "type"], "description": "Default node coloring strategy." },
+              "groups": { "type": "array", "description": "Custom group rules for coloring and visibility." },
+              "show": { "type": "object", "description": "Visibility and color overrides for built-in types: tag, attachment, image, placeholder. E.g. { \"tag\": { \"enabled\": false }, \"placeholder\": { \"color\": \"#ff0000\" } }" },
+              "background": { "type": "string" },
+              "fontSize": { "type": "number" },
+              "fontFamily": { "type": "string" },
+              "lineColor": { "type": "string" }
+            }
+          }
+        },
         "foam.graph.onStartup": {
           "type": "boolean",
           "default": false,

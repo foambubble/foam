@@ -1,13 +1,13 @@
-import type { StylePayload } from '../protocol';
+import type { GraphStyle } from '../protocol';
 import type { ResolvedStyle } from './types';
 
 /**
- * Merges two StylePayloads, with `patch` taking precedence over `base`.
+ * Merges two GraphStyles, with `patch` taking precedence over `base`.
  */
-export function mergeStylePayloads(
-  base: StylePayload | null,
-  patch: StylePayload
-): StylePayload {
+export function mergeStyles(
+  base: GraphStyle | null,
+  patch: GraphStyle
+): GraphStyle {
   return {
     ...base,
     ...patch,
@@ -16,11 +16,11 @@ export function mergeStylePayloads(
 }
 
 /**
- * Resolves a StylePayload into a fully-populated ResolvedStyle by merging
+ * Resolves a GraphStyle into a fully-populated ResolvedStyle by merging
  * user-supplied values on top of the provided defaults.
  */
 export function resolveStyle(
-  payload: StylePayload | null,
+  payload: GraphStyle | null,
   defaults: ResolvedStyle
 ): ResolvedStyle {
   if (!payload) return defaults;

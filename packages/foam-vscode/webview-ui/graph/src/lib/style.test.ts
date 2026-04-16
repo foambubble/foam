@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { resolveStyle, mergeStylePayloads } from './style';
+import { resolveStyle, mergeStyles } from './style';
 import { makeStyle } from '../test-utils';
-import type { StylePayload } from '../protocol';
+import type { GraphStyle } from '../protocol';
 
 describe('resolveStyle', () => {
   const defaults = makeStyle();
@@ -70,31 +70,31 @@ describe('resolveStyle', () => {
   // This meant payload.style was always undefined and user settings were silently
   // dropped in favour of theme defaults.
   it('does not apply settings when payload.style is absent (documents the #1620 failure mode)', () => {
-    const buggyPayload = { background: '#ff0000' } as unknown as StylePayload;
+    const buggyPayload = { background: '#ff0000' } as unknown as GraphStyle;
     const result = resolveStyle(buggyPayload, defaults);
     expect(result.background).toBe(defaults.background);
     expect(result.background).not.toBe('#ff0000');
   });
 });
 
-describe('mergeStylePayloads', () => {
+describe('mergeStyles', () => {
   it('patch overrides base style properties', () => {
-    const base: StylePayload = { style: { background: '#111111', fontSize: 10 } };
-    const patch: StylePayload = { style: { background: '#222222' } };
-    const merged = mergeStylePayloads(base, patch);
+    const base: GraphStyle = { style: { background: '#111111', fontSize: 10 } };
+    const patch: GraphStyle = { style: { background: '#222222' } };
+    const merged = mergeStyles(base, patch);
     expect(merged.style?.background).toBe('#222222');
     expect(merged.style?.fontSize).toBe(10);
   });
 
   it('patch overrides colorMode', () => {
-    const base: StylePayload = { colorMode: 'none' };
-    const patch: StylePayload = { colorMode: 'directory' };
-    expect(mergeStylePayloads(base, patch).colorMode).toBe('directory');
+    const base: GraphStyle = { colorMode: 'none' };
+    const patch: GraphStyle = { colorMode: 'directory' };
+    expect(mergeStyles(base, patch).colorMode).toBe('directory');
   });
 
   it('handles null base', () => {
-    const patch: StylePayload = { style: { background: '#ff0000' } };
-    const merged = mergeStylePayloads(null, patch);
+    const patch: GraphStyle = { style: { background: '#ff0000' } };
+    const merged = mergeStyles(null, patch);
     expect(merged.style?.background).toBe('#ff0000');
   });
 });

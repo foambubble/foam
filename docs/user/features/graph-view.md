@@ -1,10 +1,8 @@
 # Graph Visualization
 
-The graph view is one of Foam's most powerful features. It transforms your collection of notes into a visual network, revealing connections between ideas that might not be obvious when reading individual notes. This guide will teach you how to use the graph view to explore, understand, and expand your knowledge base.
+The graph view transforms your notes into a visual network, revealing connections between ideas. To open it, run the `Foam: Show Graph` command.
 
-To see the graph execute the `Foam: Show Graph` command.
-
-Your files, such as notes and documents, are shown as the nodes of the graph along with the tags defined in your notes. The edges of the graph represent either a link between two files or a file that contains a certain tag. A node in the graph will grow in size with the number of connections it has, representing stronger or more defined concepts and topics.
+Files and tags appear as nodes; links between files and file-to-tag relationships are the edges. A node grows in size with the number of connections it has.
 
 ### The `Show Graph` command
 
@@ -37,25 +35,122 @@ By default, clicking a node opens the source file in the editor. To open the mar
 
 This gives you a two-panel layout — graph on one side, rendered preview on the other — without a source editor in between. Non-markdown files (attachments, images, etc.) always open in the editor regardless of this setting.
 
-## Filter View
+## Groups
 
-If you only wish to view certain types of notes or tags, or want to hide linked attachment nodes then you can apply filters to the graph.
+The **Groups** panel (top-right of the graph) controls which nodes are visible and how they are colored. It has three parts:
 
-- Open the graph view using the `Foam: Show Graph` command
-- Click the button in the top right corner of the graph view that says "Open Controls"
-- Expand the "Filter By Type" dropdown to view the selection of types that you can filter by
-- Uncheck the checkbox for any type you want to hide
-- The types displayed in this dropdown are defined by [[note-properties]] which includes Foam-standard types as well as custom types defined by you!
+**Color by** — sets the default coloring strategy for nodes:
 
-![Graph filtering demo](../../assets/images/graph-filter.gif)
+- `None` — each node type gets its own color
+- `Type` — colors by the note's `type` frontmatter property
+- `Directory` — colors by the directory the file lives in
 
-## Custom Graph Styles
+**Built-in types** — checkboxes and color dots for `tag`, `attachment`, `image`, and `placeholder` nodes. Uncheck to hide, click the colored dot to change the color.
 
-The Foam graph will use the current VS Code theme by default, but it's possible to customize it with the `foam.graph.style` setting.
+**Custom groups** — rules you define to color (and optionally hide) a subset of notes. Each group matches notes by a property and assigns a color. Click `+ Add group` to create one.
 
-![Graph style demo](../../assets/images/graph-style.gif)
+A group matches notes by:
 
-A sample configuration object is provided below, you can provide as many or as little configuration as you wish:
+- `type` — exact match on the note's type (e.g. `project`)
+- `path` — substring match on the file path (e.g. `journal`)
+- `tag` — exact match on a tag (e.g. `daily`)
+- `title` — substring match on the note title
+- Any frontmatter key — exact match on a custom property
+
+Use `/regex/` syntax for pattern matching: e.g. `/^2024/` matches paths starting with `2024`.
+
+Groups layer on top of the default coloring — last matching group wins. Unchecking a group hides notes that only belong to that group.
+
+## Named Views
+
+Define pre-configured graph views in `foam.graph.views`. A view named **`"Default"`** is applied automatically whenever the graph opens — use it to set your preferred starting configuration.
+
+```json
+"foam.graph.views": [
+  {
+    "name": "Default",
+    "colorBy": "directory",
+    "show": {
+      "tag": { "enabled": false },
+      "placeholder": { "enabled": false }
+    }
+  },
+  {
+    "name": "Journal",
+    "colorBy": "directory",
+    "show": {
+      "tag": { "enabled": false },
+      "placeholder": { "enabled": false }
+    },
+    "groups": [
+      {
+        "id": "journal",
+        "label": "path=journal",
+        "color": "#6bcb77",
+        "enabled": true,
+        "match": { "property": "path", "value": "journal" }
+      }
+    ]
+  }
+]
+```
+
+Open a named view via a keybinding in `keybindings.json`:
+
+```json
+{
+  "key": "ctrl+shift+j",
+  "command": "foam-vscode.show-graph",
+  "args": { "view": "Journal" }
+}
+```
+
+You can also pass a config inline without a named view:
+
+```json
+{
+  "key": "ctrl+shift+g",
+  "command": "foam-vscode.show-graph",
+  "args": {
+    "config": {
+      "colorBy": "type",
+      "show": { "placeholder": { "enabled": false } }
+    }
+  }
+}
+```
+
+**View config fields:**
+
+| Field        | Description                                                                            |
+| ------------ | -------------------------------------------------------------------------------------- |
+| `name`       | Display name shown in the panel title. Use `"Default"` to apply automatically on open. |
+| `colorBy`    | `"none"`, `"directory"`, or `"type"`                                                   |
+| `groups`     | Array of custom group rules (see Groups section above)                                 |
+| `show`       | Per built-in type config: `{ "tag": { "enabled": true, "color": "#ff0000" } }`         |
+| `background` | Background color override                                                              |
+| `fontSize`   | Font size override                                                                     |
+| `fontFamily` | Font family override                                                                   |
+| `lineColor`  | Edge color override                                                                    |
+
+All fields are optional. When both `view` and `config` are provided, `config` is merged on top of the named view.
+
+## What's Next?
+
+With graph view mastery, you're ready to explore advanced Foam features:
+
+1. **[[wikilinks]]** - Understand bidirectional connections
+2. **[[templates]]** - Use templates effectively to standardize your note creation
+3. **[[tags]]** - Organize your notes with tags
+4. **[[daily-notes]]** - Set up daily notes to establish capture routines
+
+---
+
+## Legacy: `foam.graph.style`
+
+> **Deprecated.** Configure the graph via `foam.graph.views` instead (see above). Define a `"Default"` view to replace any settings you have in `foam.graph.style`.
+
+`foam.graph.style` still works and is applied as the base layer before any view config:
 
 ```json
 "foam.graph.style": {
@@ -68,75 +163,16 @@ A sample configuration object is provided below, you can provide as many or as l
     "highlightedForeground": "#f9c74f",
     "node": {
         "note": "#277da1",
-    }
-}
-```
-
-- `background` background color of the graph, adjust to increase contrast
-- `fontSize` size of the title font for each node
-- `fontFamily` font of the title font for each node
-- `lineColor` color of the edges between nodes in the graph
-- `lineWidth` thickness of the edges between nodes
-- `particleWidth` size of the particle animation showing link direction when highlighting a node
-- `highlightedForeground` color of highlighted nodes and edges when hovering over a node
-- to style individual types of nodes jump to the next section: [Style Nodes By Type](#style-nodes-by-type)
-
-### Style Nodes by Type
-
-It is possible to customize the style of a node based on the `type` property in the YAML frontmatter of the corresponding document.
-
-There are a few default node types defined by Foam that are displayed in the graph:
-
-- `note` defines the color for regular nodes whose documents have not overridden the `type` property.
-- `placeholder` defines the color for links that don't match any existing note. This is a [[placeholder]] because no file with such name exists.
-  - see [[wikilinks]] for more info <!--NOTE: this placeholder link should NOT have an associated file. This is to demonstrate the custom coloring-->
-- `tag` defines the color for nodes representing #tags, allowing tags to be used as graph nodes similar to backlinks.
-  - see [[tags]] for more info
-- `feature` shows an example of how you can use note types to customize the graph. It defines the color for the notes of type `feature`
-  - see [[note-properties]] for details
-
-For example the following `backlinking.md` note:
-
-```markdown
----
-type: feature
----
-# Backlinking
-
-...
-```
-
-And the following `settings.json`:
-
-```json
-"foam.graph.style": {
-    "background": "#202020",
-    "node": {
-        "note": "#277da1",
         "placeholder": "#545454",
-        "tag": "#f9c74f",
-        "feature": "red",
+        "tag": "#f9c74f"
     }
 }
 ```
 
-Will result in the following graph:
+![Graph style demo](../../assets/images/graph-style.gif)
 
-![Style node by type](../../assets/images/style-node-by-type.png)
-
-## What's Next?
-
-With graph view mastery, you're ready to explore advanced Foam features:
-
-1. **[[wikilinks]]** - Understand bidirectional connections
-2. **[[templates]]** - Use templates effectively to standardize your note creation
-3. **[[tags]]** - Organize your notes with tags
-4. **[[daily-notes]]** - Set up daily notes to establish capture routines
-
-[//begin]: # "Autogenerated link references for markdown compatibility"
-[note-properties]: note-properties.md "Note Properties"
-[wikilinks]: wikilinks.md "Wikilinks"
-[tags]: tags.md "Tags"
-[templates]: templates.md "Note Templates"
-[daily-notes]: daily-notes.md "Daily Notes"
-[//end]: # "Autogenerated link references"
+[note-properties]: note-properties.md 'Note Properties'
+[wikilinks]: wikilinks.md 'Wikilinks'
+[tags]: tags.md 'Tags'
+[templates]: templates.md 'Note Templates'
+[daily-notes]: daily-notes.md 'Daily Notes'

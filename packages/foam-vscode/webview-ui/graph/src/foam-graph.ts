@@ -2,8 +2,8 @@ import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { getDefaultStyle } from './lib/defaults';
 import { augmentGraphInfo } from './lib/graph-utils';
-import { mergeStylePayloads, resolveStyle } from './lib/style';
-import type { GraphData, StylePayload, GroupRule } from './protocol';
+import { mergeStyles, resolveStyle } from './lib/style';
+import type { GraphData, GraphStyle, GroupRule } from './protocol';
 import type { AugmentedGraph, ResolvedStyle, Forces, Selection, LinkAnimation } from './lib/types';
 import './components/graph-canvas';
 import './components/control-panel';
@@ -21,7 +21,7 @@ export class FoamGraph extends LitElement {
 
   // Public API
   @property({ type: Object }) graphData: GraphData | null = null;
-  @property({ type: Object }) graphStyle: StylePayload | null = null;
+  @property({ type: Object }) graphStyle: GraphStyle | null = null;
 
   // Internal control state
   @state() private augmentedGraph: AugmentedGraph | null = null;
@@ -39,11 +39,11 @@ export class FoamGraph extends LitElement {
   @state() private animateLinks: LinkAnimation = 'forward';
   @state() private forces: Forces = { collide: 1, repel: 10, link: 30, velocityDecay: 0.4 };
   @state() private selection: Selection = { neighborDepth: 1, enableRefocus: true, enableZoom: true };
-  @state() private localStylePatch: StylePayload = {};
+  @state() private localStylePatch: GraphStyle = {};
   @state() private groups: GroupRule[] = [];
 
   private get resolvedStyle(): ResolvedStyle {
-    const merged = mergeStylePayloads(this.graphStyle, this.localStylePatch);
+    const merged = mergeStyles(this.graphStyle, this.localStylePatch);
     return resolveStyle(merged, getDefaultStyle());
   }
 
@@ -56,6 +56,9 @@ export class FoamGraph extends LitElement {
     }
     if (changed.has('graphStyle') && this.graphStyle?.groups) {
       this.groups = this.graphStyle.groups;
+    }
+    if (changed.has('graphStyle') && this.graphStyle?.showNodesOfType) {
+      this.showNodesOfType = { ...this.showNodesOfType, ...this.graphStyle.showNodesOfType };
     }
   }
 

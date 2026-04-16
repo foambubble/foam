@@ -5,6 +5,9 @@ import {
   getGraphStyle,
   getNodeNavigationCommand,
   handleActiveEditorChange,
+  mergeStyles,
+  viewConfigToStyle,
+  resolveViewStyle,
 } from './dataviz';
 
 describe('handleActiveEditorChange', () => {
@@ -108,5 +111,141 @@ describe('getGraphStyle', () => {
     const payload = getGraphStyle();
 
     expect(payload.style).toEqual({});
+  });
+});
+
+describe('mergeStyles', () => {
+  it('patch overrides base style properties', () => {
+    const merged = mergeStyles(
+      { style: { background: '#111111', fontSize: 10 } },
+      { style: { background: '#222222' } }
+    );
+    expect(merged.style?.background).toBe('#222222');
+    expect(merged.style?.fontSize).toBe(10);
+  });
+
+  it('patch overrides colorMode', () => {
+    const merged = mergeStyles({ colorMode: 'none' }, { colorMode: 'directory' });
+    expect(merged.colorMode).toBe('directory');
+  });
+
+  it('base colorMode is kept when patch does not specify one', () => {
+    const merged = mergeStyles({ colorMode: 'type' }, { style: { background: '#ff0000' } });
+    expect(merged.colorMode).toBe('type');
+  });
+
+  it('patch overrides groups', () => {
+    const group = { id: 'g1', label: 'G1', color: '#ff0000', enabled: true, match: { property: 'type', value: 'note' } };
+    const merged = mergeStyles({ groups: [] }, { groups: [group] });
+    expect(merged.groups).toEqual([group]);
+  });
+
+  it('showNodesOfType is merged (not replaced)', () => {
+    const merged = mergeStyles(
+      { showNodesOfType: { tag: true, placeholder: false } },
+      { showNodesOfType: { placeholder: true } }
+    );
+    expect(merged.showNodesOfType).toEqual({ tag: true, placeholder: true });
+  });
+});
+
+describe('viewConfigToStyle', () => {
+  it('maps colorBy to colorMode', () => {
+    const style = viewConfigToStyle({ colorBy: 'directory' });
+    expect(style.colorMode).toBe('directory');
+  });
+
+  it('maps show.enabled to showNodesOfType', () => {
+    const style = viewConfigToStyle({ show: { tag: { enabled: false }, placeholder: { enabled: true } } });
+    expect(style.showNodesOfType).toEqual({ tag: false, placeholder: true });
+  });
+
+  it('defaults show.enabled to true when not specified', () => {
+    const style = viewConfigToStyle({ show: { tag: {} } });
+    expect(style.showNodesOfType?.tag).toBe(true);
+  });
+
+  it('maps show.color to style.node', () => {
+    const style = viewConfigToStyle({ show: { tag: { color: '#ff0000' } } });
+    expect(style.style?.node?.tag).toBe('#ff0000');
+  });
+
+  it('omits style.node when no colors are set', () => {
+    const style = viewConfigToStyle({ show: { tag: { enabled: false } } });
+    expect(style.style?.node).toBeUndefined();
+  });
+
+  it('passes groups through', () => {
+    const group = { id: 'g1', label: 'G1', color: '#ff0000', enabled: true, match: { property: 'type', value: 'note' } };
+    const style = viewConfigToStyle({ groups: [group] });
+    expect(style.groups).toEqual([group]);
+  });
+
+  it('maps visual overrides to style', () => {
+    const style = viewConfigToStyle({ background: '#123456', fontSize: 14, fontFamily: 'Mono', lineColor: '#aabbcc' });
+    expect(style.style?.background).toBe('#123456');
+    expect(style.style?.fontSize).toBe(14);
+    expect(style.style?.fontFamily).toBe('Mono');
+    expect(style.style?.lineColor).toBe('#aabbcc');
+  });
+});
+
+describe('resolveViewStyle', () => {
+  const mockViews = (views: unknown[]) => {
+    vi.spyOn(vscode.workspace, 'getConfiguration').mockReturnValue({
+      get: (key: string) => {
+        if (key === 'style') return {};
+        if (key === 'views') return views;
+        return undefined;
+      },
+    } as any);
+  };
+
+  it('returns base graph style when no args given and no Default view exists', () => {
+    mockViews([]);
+    const { style, view } = resolveViewStyle();
+    expect(style.style).toEqual({});
+    expect(view).toBeUndefined();
+  });
+
+  it('applies Default named view when no args given', () => {
+    mockViews([{ name: 'Default', colorBy: 'directory' }]);
+    const { style } = resolveViewStyle();
+    expect(style.colorMode).toBe('directory');
+  });
+
+  it('applies named view by view arg', () => {
+    mockViews([{ name: 'Journal', colorBy: 'type' }]);
+    const { style, view } = resolveViewStyle({ view: 'Journal' });
+    expect(style.colorMode).toBe('type');
+    expect(view).toBe('Journal');
+  });
+
+  it('unknown view name falls back to base style', () => {
+    mockViews([]);
+    const { style } = resolveViewStyle({ view: 'NonExistent' });
+    expect(style.style).toEqual({});
+    expect(style.colorMode).toBeUndefined();
+  });
+
+  it('inline config is applied on top of named view', () => {
+    mockViews([{ name: 'Journal', colorBy: 'directory', background: '#111111' }]);
+    const { style } = resolveViewStyle({ view: 'Journal', config: { colorBy: 'type' } });
+    expect(style.colorMode).toBe('type');
+    expect(style.style?.background).toBe('#111111');
+  });
+
+  it('inline config without view name skips Default view lookup', () => {
+    mockViews([{ name: 'Default', colorBy: 'directory' }]);
+    const { style } = resolveViewStyle({ config: { colorBy: 'type' } });
+    // Default is skipped because config was explicitly provided
+    expect(style.colorMode).toBe('type');
+  });
+
+  it('named view show.enabled is applied to showNodesOfType', () => {
+    mockViews([{ name: 'Clean', show: { tag: { enabled: false }, placeholder: { enabled: false } } }]);
+    const { style } = resolveViewStyle({ view: 'Clean' });
+    expect(style.showNodesOfType?.tag).toBe(false);
+    expect(style.showNodesOfType?.placeholder).toBe(false);
   });
 });

@@ -4,7 +4,11 @@ import { Logger } from '../../../core/utils/log';
 import { fromVsCodeUri } from '../../../utils/vsc-utils';
 import { isSome } from '../../../core/utils';
 import { getFoamVsCodeConfig } from '../../../services/config';
-import type { StylePayload } from './graph-protocol';
+import type {
+  GraphStyle,
+  GraphViewConfig,
+  ShowGraphArgs,
+} from './graph-protocol';
 
 export default async function activate(
   context: vscode.ExtensionContext,
@@ -46,21 +50,27 @@ export default async function activate(
       ) {
         panel = webviewPanel;
         const foam = await foamPromise;
-        await setupGraphPanel(webviewPanel, foam, context);
+        await setupGraphPanel(webviewPanel, foam, context, undefined);
         attachPanelListeners(webviewPanel, foam);
       },
     })
   );
 
-  vscode.commands.registerCommand('foam-vscode.show-graph', async () => {
-    if (panel) {
-      panel.reveal();
-    } else {
-      const foam = await foamPromise;
-      panel = await createGraphPanel(foam, context);
-      attachPanelListeners(panel, foam);
+  vscode.commands.registerCommand(
+    'foam-vscode.show-graph',
+    async (args?: ShowGraphArgs) => {
+      const { style, view } = resolveViewStyle(args);
+      if (panel) {
+        panel.title = view ? `Foam Graph: ${view}` : 'Foam Graph';
+        panel.webview.postMessage({ type: 'didUpdateStyle', payload: style });
+        panel.reveal();
+      } else {
+        const foam = await foamPromise;
+        panel = await createGraphPanel(foam, context, { initialStyle: style, view });
+        attachPanelListeners(panel, foam);
+      }
     }
-  });
+  );
   const shouldOpenGraphOnStartup = getFoamVsCodeConfig('graph.onStartup');
   if (shouldOpenGraphOnStartup) {
     vscode.commands.executeCommand('foam-vscode.show-graph');
@@ -128,26 +138,28 @@ function cutTitle(title: string): string {
 async function createGraphPanel(
   foam: Foam,
   context: vscode.ExtensionContext,
-  viewColumn?: vscode.ViewColumn
+  options: { initialStyle?: GraphStyle; view?: string } = {}
 ) {
+  const title = options.view ? `Foam Graph: ${options.view}` : 'Foam Graph';
   const panel = vscode.window.createWebviewPanel(
     'foam-graph',
-    'Foam Graph',
-    viewColumn ?? vscode.ViewColumn.Beside,
+    title,
+    vscode.ViewColumn.Beside,
     {
       enableScripts: true,
       retainContextWhenHidden: true,
     }
   );
 
-  await setupGraphPanel(panel, foam, context);
+  await setupGraphPanel(panel, foam, context, options.initialStyle);
   return panel;
 }
 
 async function setupGraphPanel(
   panel: vscode.WebviewPanel,
   foam: Foam,
-  context: vscode.ExtensionContext
+  context: vscode.ExtensionContext,
+  initialStyle?: GraphStyle
 ) {
   panel.webview.html = await getWebviewContent(context, panel);
 
@@ -155,10 +167,10 @@ async function setupGraphPanel(
     async message => {
       switch (message.type) {
         case 'webviewDidLoad': {
-          const styles = getGraphStyle();
+          const style = initialStyle ?? getGraphStyle();
           panel.webview.postMessage({
             type: 'didUpdateStyle',
-            payload: styles,
+            payload: style,
           });
 
           updateGraph(panel, foam);
@@ -232,10 +244,75 @@ async function getWebviewContent(
   return filled;
 }
 
-export function getGraphStyle(): StylePayload {
+export function getGraphStyle(): GraphStyle {
   const styleConfig =
     vscode.workspace.getConfiguration('foam.graph').get('style') ?? {};
   return { style: styleConfig };
+}
+
+export function viewConfigToStyle(config: GraphViewConfig): GraphStyle {
+  const nodeColors = config.show
+    ? Object.fromEntries(
+        Object.entries(config.show)
+          .filter(([, cfg]) => cfg.color)
+          .map(([type, cfg]) => [type, cfg.color!])
+      )
+    : undefined;
+
+  const showNodesOfType = config.show
+    ? Object.fromEntries(
+        Object.entries(config.show).map(([type, cfg]) => [type, cfg.enabled ?? true])
+      )
+    : undefined;
+
+  const styleProps: Record<string, unknown> = {};
+  if (config.background !== undefined) styleProps.background = config.background;
+  if (config.fontSize !== undefined) styleProps.fontSize = config.fontSize;
+  if (config.fontFamily !== undefined) styleProps.fontFamily = config.fontFamily;
+  if (config.lineColor !== undefined) styleProps.lineColor = config.lineColor;
+  if (nodeColors && Object.keys(nodeColors).length > 0) styleProps.node = nodeColors;
+
+  return {
+    ...(config.colorBy !== undefined ? { colorMode: config.colorBy } : {}),
+    ...(config.groups !== undefined ? { groups: config.groups } : {}),
+    ...(showNodesOfType !== undefined ? { showNodesOfType } : {}),
+    ...(Object.keys(styleProps).length > 0 ? { style: styleProps } : {}),
+  };
+}
+
+export function mergeStyles(base: GraphStyle, patch: GraphStyle): GraphStyle {
+  return {
+    colorMode: patch.colorMode ?? base.colorMode,
+    groups: patch.groups ?? base.groups,
+    showNodesOfType: { ...base.showNodesOfType, ...patch.showNodesOfType },
+    style: { ...base.style, ...patch.style },
+  };
+}
+
+export function resolveViewStyle(args?: ShowGraphArgs): {
+  style: GraphStyle;
+  view?: string;
+} {
+  const views: GraphViewConfig[] =
+    vscode.workspace.getConfiguration('foam.graph').get('views') ?? [];
+
+  let style: GraphStyle = getGraphStyle();
+
+  // If no view name given and no inline config, fall back to the "Default" named view
+  const namedView = args?.view ?? (args?.config ? undefined : 'Default');
+
+  if (namedView) {
+    const view = views.find(v => v.name === namedView);
+    if (view) {
+      style = mergeStyles(style, viewConfigToStyle(view));
+    }
+  }
+
+  if (args?.config) {
+    style = mergeStyles(style, viewConfigToStyle(args.config));
+  }
+
+  return { style, view: args?.view };
 }
 
 export function handleActiveEditorChange(

@@ -5,7 +5,9 @@ import {
   commands,
   ProgressLocation,
 } from 'vscode';
+import detectNewline from 'detect-newline';
 import { Foam } from '../../core/model/foam';
+import { TextEdit } from '../../core/services/text-edit';
 import { Range } from '../../core/model/range';
 import {
   toVsCodePosition,
@@ -13,11 +15,7 @@ import {
   toVsCodeUri,
 } from '../../utils/vsc-utils';
 import { getWikilinkDefinitionSetting } from '../../features/commands/update-wikilinks';
-import {
-  computeNonDirtyEdits,
-  computeDirtyEdits,
-  JanitorResult,
-} from '../janitor';
+import { computeNoteEdits, WikilinkDefinitionSetting } from '../janitor';
 
 export default async function activate(
   context: ExtensionContext,
@@ -28,6 +26,12 @@ export default async function activate(
       janitor(await foamPromise)
     )
   );
+}
+
+interface JanitorResult {
+  updatedHeadingCount: number;
+  updatedDefinitionListCount: number;
+  changedAnyFiles: number;
 }
 
 async function janitor(foam: Foam) {
@@ -92,23 +96,22 @@ async function runJanitor(foam: Foam): Promise<JanitorResult> {
   let updatedHeadingCount = 0;
   let updatedDefinitionListCount = 0;
 
-  // Apply text edits to non-dirty notes via the file system
-  const nonDirtyEdits = await computeNonDirtyEdits(
-    nonDirtyNotes,
-    foam.workspace,
-    wikilinkSetting
-  );
-
+  // Apply edits to non-dirty notes via the file system
   await Promise.all(
-    nonDirtyEdits.map(({ uri, updatedText }) =>
-      workspace.fs.writeFile(toVsCodeUri(uri), Buffer.from(updatedText))
-    )
-  );
+    nonDirtyNotes.map(async note => {
+      const noteText = await foam.workspace.readAsMarkdown(note.uri);
+      const eol = detectNewline(noteText) ?? '\n';
+      const edits = computeNoteEdits(note, noteText, eol, foam.workspace, wikilinkSetting);
+      if (edits.length === 0) return;
 
-  for (const { addedHeading, addedDefinitions } of nonDirtyEdits) {
-    if (addedHeading) updatedHeadingCount += 1;
-    if (addedDefinitions) updatedDefinitionListCount += 1;
-  }
+      const { addedHeading, addedDefinitions } = classifyEdits(edits, noteText);
+      if (addedHeading) updatedHeadingCount += 1;
+      if (addedDefinitions) updatedDefinitionListCount += 1;
+
+      const updatedText = TextEdit.apply(noteText, edits);
+      await workspace.fs.writeFile(toVsCodeUri(note.uri), Buffer.from(updatedText));
+    })
+  );
 
   // Handle dirty editors in serial — VS Code only allows edits on active editors
   for (const doc of dirtyTextDocuments) {
@@ -120,37 +123,19 @@ async function runJanitor(foam: Foam): Promise<JanitorResult> {
     const noteText = doc.getText();
     const eol = doc.eol.toString();
 
-    const { heading, definitions } = computeDirtyEdits(
-      note,
-      noteText,
-      eol,
-      foam.workspace,
-      wikilinkSetting
-    );
+    const edits = computeNoteEdits(note, noteText, eol, foam.workspace, wikilinkSetting);
+    if (edits.length === 0) continue;
 
-    if (heading || definitions.length > 0) {
-      await editor.edit(editBuilder => {
-        // Note: ordering matters — definitions before heading
-        if (definitions.length > 0) {
-          updatedDefinitionListCount += 1;
-          definitions.forEach(definition => {
-            const range = Range.createFromPosition(
-              definition.range.start,
-              definition.range.end
-            );
-            editBuilder.replace(toVsCodeRange(range), definition.newText);
-          });
-        }
+    const { addedHeading, addedDefinitions } = classifyEdits(edits, noteText);
+    if (addedHeading) updatedHeadingCount += 1;
+    if (addedDefinitions) updatedDefinitionListCount += 1;
 
-        if (heading) {
-          updatedHeadingCount += 1;
-          editBuilder.replace(
-            toVsCodePosition(heading.range.start),
-            heading.newText
-          );
-        }
-      });
-    }
+    await editor.edit(editBuilder => {
+      for (const edit of edits) {
+        const range = Range.createFromPosition(edit.range.start, edit.range.end);
+        editBuilder.replace(toVsCodeRange(range), edit.newText);
+      }
+    });
   }
 
   return {
@@ -158,4 +143,15 @@ async function runJanitor(foam: Foam): Promise<JanitorResult> {
     updatedDefinitionListCount,
     changedAnyFiles: updatedHeadingCount + updatedDefinitionListCount,
   };
+}
+
+/**
+ * Infers whether the edit set adds a heading and/or definitions.
+ * A heading edit inserts at position 0 (or after frontmatter) with newText starting with '#'.
+ * Definition edits contain '[': patterns.
+ */
+function classifyEdits(edits: TextEdit[], noteText: string): { addedHeading: boolean; addedDefinitions: boolean } {
+  const addedHeading = edits.some(e => e.newText.trimStart().startsWith('#'));
+  const addedDefinitions = edits.some(e => e.newText.includes('[') && !e.newText.trimStart().startsWith('#'));
+  return { addedHeading, addedDefinitions };
 }

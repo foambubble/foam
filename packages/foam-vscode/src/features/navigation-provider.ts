@@ -169,6 +169,12 @@ export class NavigationProvider
       return;
     }
 
+    // Resolved reference-style links (wikilinks and markdown links with [ref]: definitions)
+    // are handled by provideDocumentLinks, which emits a DocumentLink pointing directly at
+    // the target file. Returning here avoids a duplicate "2 definitions" picker.
+    if (ResourceLink.isResolvedReference(targetLink)) {
+      return;
+    }
     const uri = this.workspace.resolveLink(resource, targetLink);
     if (targetLink.type === 'external') {
       return;
@@ -242,6 +248,25 @@ export class NavigationProvider
 
     const placeholders = targets.filter(o => o.target.isPlaceholder()); // links to resources are managed by the definition provider
 
+    // For resolved reference-style links (wikilinks and markdown links), VS Code's
+    // built-in Markdown provider intercepts cmd+click and navigates to the definition
+    // line ([ref]: url) instead of the target file. We override this by emitting an
+    // explicit DocumentLink pointing directly at the resolved target.
+    const resolvedReferenceLinks: vscode.DocumentLink[] = targets
+      .filter(
+        o =>
+          ResourceLink.isResolvedReference(o.link) &&
+          !o.target.isPlaceholder()
+      )
+      .map(o => {
+        const dl = new vscode.DocumentLink(
+          toVsCodeRange(o.link.range),
+          toVsCodeUri(o.target.asPlain())
+        );
+        dl.tooltip = o.target.getBasename();
+        return dl;
+      });
+
     const links: vscode.DocumentLink[] = (
       await Promise.all(
         placeholders.map(async o => {
@@ -297,7 +322,7 @@ export class NavigationProvider
       return documentLink;
     });
 
-    return links.concat(tags);
+    return links.concat(resolvedReferenceLinks).concat(tags);
   }
 
   /**

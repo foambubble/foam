@@ -4,6 +4,17 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## 0.38.0
+
+Features:
+
+- Support for node groups in graph view
+
+Fixes and Improvements:
+
+- Added support for modeling external links
+- Direct navigation via wikilink restored (#1294)
+
 ## 0.37.0
 
 Features:

@@ -5,8 +5,12 @@ import { URI } from '../../core/model/uri';
 import { Foam } from '../../core/model/foam';
 import { getDailyNoteTemplateUri } from '../../vscode/services/template-service';
 import { NoteFactory } from '../../vscode/services/note-factory';
-import { getFoamVsCodeConfig } from '../../services/config';
-import { asAbsoluteWorkspaceUri, focusNote, readFile } from '../../services/editor';
+import { getFoamVsCodeConfig } from '../../vscode/config';
+import {
+  asAbsoluteWorkspaceUri,
+  focusNote,
+  readFile,
+} from '../../services/editor';
 import { resolveDailyNote } from '../../core/templates/daily-note-resolver';
 import { Resolver } from '../../core/templates/variable-resolver';
 import { fromVsCodeUri } from '../../utils/vsc-utils';
@@ -235,5 +239,10 @@ export async function createDailyNoteIfNotExists(targetDate: Date, foam: Foam) {
 
   // Foam variables are already resolved; pass a date-only Resolver so that
   // any remaining VS Code snippet syntax in the content is preserved as-is.
-  return NoteFactory.createNote(result.filepath, result.content, resolver, 'open');
+  return NoteFactory.createNote(
+    result.filepath,
+    result.content,
+    resolver,
+    'open'
+  );
 }

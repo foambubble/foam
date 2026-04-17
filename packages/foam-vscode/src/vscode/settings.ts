@@ -1,6 +1,6 @@
 import { workspace, GlobPattern } from 'vscode';
 import { uniq } from 'lodash';
-import { getFoamVsCodeConfig } from '../services/config';
+import { getFoamVsCodeConfig } from './config';
 import { expandAlternateGroups } from '../utils/globExpand';
 
 /**

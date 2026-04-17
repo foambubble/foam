@@ -11,8 +11,12 @@ import { TemplateLoader } from '../../core/templates/template-loader';
 import { Template } from '../../core/templates/note-creation-types';
 import { Resolver } from '../../core/templates/variable-resolver';
 import { VsCodeVariableProvider } from '../../vscode/services/vscode-variable-provider';
-import { asAbsoluteWorkspaceUri, fileExists, readFile } from '../../services/editor';
-import { getFoamVsCodeConfig } from '../../services/config';
+import {
+  asAbsoluteWorkspaceUri,
+  fileExists,
+  readFile,
+} from '../../services/editor';
+import { getFoamVsCodeConfig } from '../../vscode/config';
 import { CommandDescriptor } from '../../utils/commands';
 import { Foam } from '../../core/model/foam';
 import { Location } from '../../core/model/location';

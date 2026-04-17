@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { Foam } from '../../core/model/foam';
 import { Logger } from '../../core/utils/log';
-import { getFoamVsCodeConfig } from '../../services/config';
+import { getFoamVsCodeConfig } from '../config';
 import {
   fromVsCodeUri,
   toVsCodeRange,

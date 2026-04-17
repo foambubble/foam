@@ -1,15 +1,10 @@
-import {
-  QuickPickItem,
-  commands,
-  window,
-  workspace,
-} from 'vscode';
+import { QuickPickItem, commands, window, workspace } from 'vscode';
 import { URI } from '../../core/model/uri';
 import { getDailyNoteTemplateCandidateUris } from '../../core/templates/template-discovery';
 import { extractFoamTemplateFrontmatterMetadata } from '../../core/utils/template-frontmatter-parser';
 import { fromVsCodeUri, toVsCodeUri } from '../../utils/vsc-utils';
 import { fileExists, focusNote, readFile } from '../../services/editor';
-import { getFoamVsCodeConfig } from '../../services/config';
+import { getFoamVsCodeConfig } from '../config';
 
 const DEFAULT_NEW_NOTE_TEMPLATE = `# \${1:$TM_FILENAME_BASE}
 

@@ -5,7 +5,7 @@ import {
   CompletionList,
   CompletionTriggerKind,
 } from 'vscode';
-import { getFoamVsCodeConfig } from '../../services/config';
+import { getFoamVsCodeConfig } from '../../vscode/config';
 import {
   DailyNoteSnippet,
   getDayOfWeekSnippets,
@@ -48,7 +48,10 @@ export const fixedSnippetsProvider: CompletionItemProvider = {
     );
     const today = new Date();
     const range = document.getWordRangeAtPosition(position, /\S+/);
-    const snippets = [...getFixedSnippets(today), ...getDayOfWeekSnippets(today)];
+    const snippets = [
+      ...getFixedSnippets(today),
+      ...getDayOfWeekSnippets(today),
+    ];
     return snippets.map(s => {
       const item = makeCompletionItem(s, afterCompletion);
       item.range = range;

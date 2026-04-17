@@ -1,5 +1,5 @@
 import { ExtensionContext, commands } from 'vscode';
-import { getFoamVsCodeConfig } from '../../services/config';
+import { getFoamVsCodeConfig } from '../../vscode/config';
 import { openDailyNoteFor } from '../daily-notes/daily-note-service';
 import { Foam } from '../../core/model/foam';
 

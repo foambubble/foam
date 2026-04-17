@@ -12,7 +12,7 @@ import {
   replaceSelection,
 } from '../../services/editor';
 
-import { getFoamVsCodeConfig } from '../../services/config';
+import { getFoamVsCodeConfig } from '../config';
 import { toVsCodeUri } from '../../utils/vsc-utils';
 import { isNone } from '../../core/utils';
 

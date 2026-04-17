@@ -4,7 +4,7 @@ import { fromVsCodeUri, toVsCodeRange } from '../utils/vsc-utils';
 import {
   ConfigurationMonitor,
   monitorFoamVsCodeConfig,
-} from '../services/config';
+} from '../vscode/config';
 import { ResourceLink, ResourceParser } from '../core/model/note';
 import { Foam } from '../core/model/foam';
 import { FoamWorkspace } from '../core/model/workspace';

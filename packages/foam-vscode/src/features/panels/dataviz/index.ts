@@ -3,7 +3,7 @@ import { Foam } from '../../../core/model/foam';
 import { Logger } from '../../../core/utils/log';
 import { fromVsCodeUri } from '../../../utils/vsc-utils';
 import { isSome } from '../../../core/utils';
-import { getFoamVsCodeConfig } from '../../../services/config';
+import { getFoamVsCodeConfig } from '../../../vscode/config';
 import type {
   GraphStyle,
   GraphViewConfig,
@@ -66,7 +66,10 @@ export default async function activate(
         panel.reveal();
       } else {
         const foam = await foamPromise;
-        panel = await createGraphPanel(foam, context, { initialStyle: style, view });
+        panel = await createGraphPanel(foam, context, {
+          initialStyle: style,
+          view,
+        });
         attachPanelListeners(panel, foam);
       }
     }
@@ -261,16 +264,22 @@ export function viewConfigToStyle(config: GraphViewConfig): GraphStyle {
 
   const showNodesOfType = config.show
     ? Object.fromEntries(
-        Object.entries(config.show).map(([type, cfg]) => [type, cfg.enabled ?? true])
+        Object.entries(config.show).map(([type, cfg]) => [
+          type,
+          cfg.enabled ?? true,
+        ])
       )
     : undefined;
 
   const styleProps: Record<string, unknown> = {};
-  if (config.background !== undefined) styleProps.background = config.background;
+  if (config.background !== undefined)
+    styleProps.background = config.background;
   if (config.fontSize !== undefined) styleProps.fontSize = config.fontSize;
-  if (config.fontFamily !== undefined) styleProps.fontFamily = config.fontFamily;
+  if (config.fontFamily !== undefined)
+    styleProps.fontFamily = config.fontFamily;
   if (config.lineColor !== undefined) styleProps.lineColor = config.lineColor;
-  if (nodeColors && Object.keys(nodeColors).length > 0) styleProps.node = nodeColors;
+  if (nodeColors && Object.keys(nodeColors).length > 0)
+    styleProps.node = nodeColors;
 
   return {
     ...(config.colorBy !== undefined ? { colorMode: config.colorBy } : {}),

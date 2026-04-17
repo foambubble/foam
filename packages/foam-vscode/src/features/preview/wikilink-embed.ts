@@ -7,7 +7,7 @@ import markdownItRegex from 'markdown-it-regex';
 import { FoamWorkspace } from '../../core/model/workspace';
 import { Logger } from '../../core/utils/log';
 import { Resource, ResourceParser, Block } from '../../core/model/note';
-import { getFoamVsCodeConfig } from '../../services/config';
+import { getFoamVsCodeConfig } from '../../vscode/config';
 import { fromVsCodeUri } from '../../utils/vsc-utils';
 import { MarkdownLink } from '../../core/services/markdown-link';
 import { URI } from '../../core/model/uri';

@@ -6,7 +6,7 @@ import {
   generateImageStyles,
   extractBlockContent,
 } from './wikilink-embed';
-import * as config from '../../services/config';
+import * as config from '../../vscode/config';
 import { createMarkdownParser } from '../../core/services/markdown-parser';
 import { getRandomURI } from '../../test/test-utils';
 
@@ -433,9 +433,7 @@ describe('Wikilink Note Embedding', () => {
 
   describe('Config Parsing', () => {
     it('should use preview.embedNoteType if an explicit modifier is not passed in', () => {
-      vi
-        .spyOn(config, 'getFoamVsCodeConfig')
-        .mockReturnValueOnce('full-card');
+      vi.spyOn(config, 'getFoamVsCodeConfig').mockReturnValueOnce('full-card');
 
       const { noteScope, noteStyle } = retrieveNoteConfig(undefined);
       expect(noteScope).toEqual('full');
@@ -443,8 +441,7 @@ describe('Wikilink Note Embedding', () => {
     });
 
     it('should use explicit modifier over user settings if passed in', () => {
-      vi
-        .spyOn(config, 'getFoamVsCodeConfig')
+      vi.spyOn(config, 'getFoamVsCodeConfig')
         .mockReturnValueOnce('full-inline')
         .mockReturnValueOnce('full-inline')
         .mockReturnValueOnce('full-inline');

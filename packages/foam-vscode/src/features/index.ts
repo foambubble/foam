@@ -9,7 +9,8 @@ import tagCompletionProvider from './tag-completion';
 import linkDecorations from './document-decorator';
 import navigationProviders from './navigation-provider';
 import wikilinkDiagnostics from '../janitor/vscode/wikilink-diagnostics';
-import refactor from './refactor';
+import refactor from '../vscode/features/refactor';
+import convertLinks from '../vscode/features/convert-links';
 import workspaceSymbolProvider from './workspace-symbol-provider';
 import tagRenameProvider from './tag-rename-provider';
 import headingRenameProvider from './heading-rename-provider';
@@ -19,6 +20,7 @@ export const features: FoamFeature[] = [
   ...Object.values(commands),
   ...Object.values(panels),
   refactor,
+  convertLinks,
   navigationProviders,
   wikilinkDiagnostics,
   dateSnippets,

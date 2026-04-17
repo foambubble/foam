@@ -66,6 +66,27 @@ describe('Link Conversion Commands', () => {
       await deleteFile(uri);
     });
 
+    it('should use title#section as alias when wikilink has a section', async () => {
+      const noteA = await createFile('# Note A\n## Introduction', ['note-a.md']);
+      const { uri } = await createFile(
+        'Text before [[note-a#Introduction]] text after'
+      );
+      const { editor } = await showInEditor(uri);
+      await waitForNoteInFoamWorkspace(noteA.uri);
+
+      editor.selection = new vscode.Selection(0, 15, 0, 15);
+
+      await vscode.commands.executeCommand(CONVERT_WIKILINK_TO_MDLINK.command);
+
+      const result = editor.document.getText();
+      expect(result).toBe(
+        'Text before [Note A#Introduction](note-a.md#Introduction) text after'
+      );
+
+      await deleteFile(noteA.uri);
+      await deleteFile(uri);
+    });
+
     it('should show info message when no wikilink at cursor', async () => {
       const { uri } = await createFile('Text with no wikilinks');
       const { editor } = await showInEditor(uri);
@@ -147,6 +168,25 @@ describe('Link Conversion Commands', () => {
       expect(editor.selection.active).toEqual(
         new vscode.Position(0, expectedPosition)
       );
+
+      await deleteFile(uri);
+      await deleteFile(noteA.uri);
+    });
+
+    it('should drop alias when it equals title#section default', async () => {
+      const noteA = await createFile('# Note A', ['note-a.md']);
+      const { uri } = await createFile(
+        'Text before [Note A#Introduction](note-a.md#Introduction) text after'
+      );
+      const { editor } = await showInEditor(uri);
+      await waitForNoteInFoamWorkspace(noteA.uri);
+
+      editor.selection = new vscode.Selection(0, 15, 0, 15);
+
+      await vscode.commands.executeCommand(CONVERT_MDLINK_TO_WIKILINK.command);
+
+      const result = editor.document.getText();
+      expect(result).toBe('Text before [[note-a#Introduction]] text after');
 
       await deleteFile(uri);
       await deleteFile(noteA.uri);

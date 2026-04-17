@@ -12,7 +12,8 @@ import { URI } from '../core/model/uri';
 import { Logger } from '../core/utils/log';
 import { TextEdit as FoamTextEdit } from '../core/services/text-edit';
 import * as foamCommands from '../features/commands';
-import refactorActivate from '../features/refactor';
+import refactorActivate from '../vscode/features/refactor';
+import convertLinksActivate from '../vscode/features/convert-links';
 import { Foam, bootstrap } from '../core/model/foam';
 import { createMarkdownParser } from '../core/services/markdown-parser';
 import {
@@ -1704,7 +1705,7 @@ async function initializeFoamCommands(foam: Foam): Promise<void> {
   await foamCommands.updateGraphCommand(mockContext, foamPromise);
   await foamCommands.updateWikilinksCommand(mockContext, foamPromise);
   await foamCommands.openDailyNoteForDateCommand(mockContext, foamPromise);
-  await foamCommands.convertLinksCommand(mockContext, foamPromise);
+  await convertLinksActivate(mockContext, foamPromise);
   await foamCommands.buildEmbeddingsCommand(mockContext, foamPromise);
   await foamCommands.openDailyNoteCommand(mockContext, foamPromise);
   await foamCommands.openDatedNote(mockContext, foamPromise);

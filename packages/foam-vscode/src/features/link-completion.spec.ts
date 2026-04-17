@@ -16,7 +16,7 @@ import {
   WikilinkCompletionProvider,
   SectionCompletionProvider,
 } from './link-completion';
-import { CONVERT_WIKILINK_TO_MDLINK } from './commands/convert-links';
+import { CONVERT_WIKILINK_TO_MDLINK } from '../vscode/features/convert-links';
 
 describe('Link Completion', () => {
   const parser = createMarkdownParser([]);

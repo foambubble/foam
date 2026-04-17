@@ -1,32 +1,32 @@
 import {
   computeWikilinkRenameEdits,
   computeDirectoryWikilinkRenameEdits,
-} from './refactor';
+} from './link-integrity';
 import {
   createNoteFromMarkdown,
   createTestWorkspace,
-} from '../test/test-utils';
-import { FoamGraph } from '../core/model/graph';
-import { URI } from '../core/model/uri';
-import { Foam } from '../core/model/foam';
-import { Resource } from '../core/model/note';
+} from '../../test/test-utils';
+import { FoamGraph } from '../model/graph';
+import { URI } from '../model/uri';
+import { Resource } from '../model/note';
 
 const root = URI.file('/workspace');
 
-function createFoam(...notes: Resource[]): Foam {
+function createWorkspaceAndGraph(...notes: Resource[]) {
   const workspace = createTestWorkspace([root]);
   notes.forEach(n => workspace.set(n));
   const graph = FoamGraph.fromWorkspace(workspace);
-  return { workspace, graph } as unknown as Foam;
+  return { workspace, graph };
 }
 
 describe('computeWikilinkRenameEdits', () => {
   it('returns empty array when the note has no backlinks', () => {
     const noteA = createNoteFromMarkdown('note-a.md', 'Content of A', root);
-    const foam = createFoam(noteA);
+    const { workspace, graph } = createWorkspaceAndGraph(noteA);
 
     const edits = computeWikilinkRenameEdits(
-      foam,
+      workspace,
+      graph,
       noteA.uri,
       root.resolve('renamed.md')
     );
@@ -41,10 +41,10 @@ describe('computeWikilinkRenameEdits', () => {
       'Link to [[note-a]]',
       root
     );
-    const foam = createFoam(noteA, noteB);
+    const { workspace, graph } = createWorkspaceAndGraph(noteA, noteB);
     const newUri = root.resolve('renamed-note-a.md');
 
-    const edits = computeWikilinkRenameEdits(foam, noteA.uri, newUri);
+    const edits = computeWikilinkRenameEdits(workspace, graph, noteA.uri, newUri);
 
     expect(edits).toHaveLength(1);
     expect(edits[0].uri).toEqual(noteB.uri);
@@ -67,11 +67,11 @@ describe('computeWikilinkRenameEdits', () => {
       'Link to [[note-a]]',
       root
     );
-    const foam = createFoam(noteA, noteB, noteC);
+    const { workspace, graph } = createWorkspaceAndGraph(noteA, noteB, noteC);
     // Rename note-a to first/note-b — now ambiguous with second/note-b
     const newUri = root.resolve('refactor/wikilink/first/note-b.md');
 
-    const edits = computeWikilinkRenameEdits(foam, noteA.uri, newUri);
+    const edits = computeWikilinkRenameEdits(workspace, graph, noteA.uri, newUri);
 
     expect(edits[0].edit.newText).toEqual('[[first/note-b]]');
   });
@@ -92,11 +92,11 @@ describe('computeWikilinkRenameEdits', () => {
       'Link to [[note-a]]',
       root
     );
-    const foam = createFoam(noteA, noteB, noteC);
+    const { workspace, graph } = createWorkspaceAndGraph(noteA, noteB, noteC);
     // Moving note-a into second/ — still unique, so short identifier suffices
     const newUri = root.resolve('refactor/wikilink/second/note-a.md');
 
-    const edits = computeWikilinkRenameEdits(foam, noteA.uri, newUri);
+    const edits = computeWikilinkRenameEdits(workspace, graph, noteA.uri, newUri);
 
     expect(edits[0].edit.newText).toEqual('[[note-a]]');
   });
@@ -108,10 +108,10 @@ describe('computeWikilinkRenameEdits', () => {
       'Link to [[note-a|Alias]]',
       root
     );
-    const foam = createFoam(noteA, noteB);
+    const { workspace, graph } = createWorkspaceAndGraph(noteA, noteB);
     const newUri = root.resolve('new-note-a.md');
 
-    const edits = computeWikilinkRenameEdits(foam, noteA.uri, newUri);
+    const edits = computeWikilinkRenameEdits(workspace, graph, noteA.uri, newUri);
 
     expect(edits[0].edit.newText).toEqual('[[new-note-a|Alias]]');
   });
@@ -123,10 +123,10 @@ describe('computeWikilinkRenameEdits', () => {
       'Link to [[note-a#Section]]',
       root
     );
-    const foam = createFoam(noteA, noteB);
+    const { workspace, graph } = createWorkspaceAndGraph(noteA, noteB);
     const newUri = root.resolve('new-note-with-section.md');
 
-    const edits = computeWikilinkRenameEdits(foam, noteA.uri, newUri);
+    const edits = computeWikilinkRenameEdits(workspace, graph, noteA.uri, newUri);
 
     expect(edits[0].edit.newText).toEqual('[[new-note-with-section#Section]]');
   });
@@ -138,10 +138,10 @@ describe('computeWikilinkRenameEdits', () => {
       'Link to [[note-a]] and [direct](./note-a.md)',
       root
     );
-    const foam = createFoam(noteA, noteB);
+    const { workspace, graph } = createWorkspaceAndGraph(noteA, noteB);
     const newUri = root.resolve('renamed.md');
 
-    const edits = computeWikilinkRenameEdits(foam, noteA.uri, newUri);
+    const edits = computeWikilinkRenameEdits(workspace, graph, noteA.uri, newUri);
 
     // Only the wikilink should produce an edit; the markdown link should be skipped
     expect(edits).toHaveLength(1);
@@ -152,12 +152,13 @@ describe('computeWikilinkRenameEdits', () => {
 describe('computeDirectoryWikilinkRenameEdits', () => {
   it('returns empty array when no Foam resources are inside the directory', () => {
     const outside = createNoteFromMarkdown('outside.md', 'Content', root);
-    const foam = createFoam(outside);
+    const { workspace, graph } = createWorkspaceAndGraph(outside);
     const oldDirUri = URI.file('/empty-folder');
     const newDirUri = URI.file('/renamed-folder');
 
     const edits = computeDirectoryWikilinkRenameEdits(
-      foam,
+      workspace,
+      graph,
       oldDirUri,
       newDirUri
     );
@@ -182,12 +183,13 @@ describe('computeDirectoryWikilinkRenameEdits', () => {
       'Link to [[folderA/note-a]]',
       root
     );
-    const foam = createFoam(noteA, conflict, outside);
+    const { workspace, graph } = createWorkspaceAndGraph(noteA, conflict, outside);
     const oldDirUri = noteA.uri.getDirectory();
     const newDirUri = URI.file('/folderB');
 
     const edits = computeDirectoryWikilinkRenameEdits(
-      foam,
+      workspace,
+      graph,
       oldDirUri,
       newDirUri
     );
@@ -209,12 +211,13 @@ describe('computeDirectoryWikilinkRenameEdits', () => {
       'Link to [[unique-note]]',
       root
     );
-    const foam = createFoam(noteA, outside);
+    const { workspace, graph } = createWorkspaceAndGraph(noteA, outside);
     const oldDirUri = noteA.uri.getDirectory();
     const newDirUri = URI.file('/folderB');
 
     const edits = computeDirectoryWikilinkRenameEdits(
-      foam,
+      workspace,
+      graph,
       oldDirUri,
       newDirUri
     );
@@ -241,12 +244,13 @@ describe('computeDirectoryWikilinkRenameEdits', () => {
       'Links to [[folderA/note]] and [[sub/note]]',
       root
     );
-    const foam = createFoam(noteA, noteSub, outside);
+    const { workspace, graph } = createWorkspaceAndGraph(noteA, noteSub, outside);
     const oldDirUri = noteA.uri.getDirectory();
     const newDirUri = URI.file('/folderB');
 
     const edits = computeDirectoryWikilinkRenameEdits(
-      foam,
+      workspace,
+      graph,
       oldDirUri,
       newDirUri
     );
@@ -275,12 +279,13 @@ describe('computeDirectoryWikilinkRenameEdits', () => {
       'Link to [[folderA/note-a]]',
       root
     );
-    const foam = createFoam(noteA, conflict, noteB);
+    const { workspace, graph } = createWorkspaceAndGraph(noteA, conflict, noteB);
     const oldDirUri = noteA.uri.getDirectory();
     const newDirUri = URI.file('/folderB');
 
     const edits = computeDirectoryWikilinkRenameEdits(
-      foam,
+      workspace,
+      graph,
       oldDirUri,
       newDirUri
     );
@@ -303,12 +308,13 @@ describe('computeDirectoryWikilinkRenameEdits', () => {
       'Link to [[folderA]]',
       root
     );
-    const foam = createFoam(index, outside);
+    const { workspace, graph } = createWorkspaceAndGraph(index, outside);
     const oldDirUri = index.uri.getDirectory();
     const newDirUri = URI.file('/folderB');
 
     const edits = computeDirectoryWikilinkRenameEdits(
-      foam,
+      workspace,
+      graph,
       oldDirUri,
       newDirUri
     );
@@ -325,12 +331,13 @@ describe('computeDirectoryWikilinkRenameEdits', () => {
       root
     );
     const outside = createNoteFromMarkdown('outside.md', 'Content', root);
-    const foam = createFoam(noteA, outside);
+    const { workspace, graph } = createWorkspaceAndGraph(noteA, outside);
     const oldDirUri = noteA.uri.getDirectory();
     const newDirUri = URI.file('/folderB');
 
     const edits = computeDirectoryWikilinkRenameEdits(
-      foam,
+      workspace,
+      graph,
       oldDirUri,
       newDirUri
     );
@@ -354,12 +361,13 @@ describe('computeDirectoryWikilinkRenameEdits', () => {
       'Link to [[folderA/note-a|My Alias]]',
       root
     );
-    const foam = createFoam(noteA, conflict, outside);
+    const { workspace, graph } = createWorkspaceAndGraph(noteA, conflict, outside);
     const oldDirUri = noteA.uri.getDirectory();
     const newDirUri = URI.file('/folderB');
 
     const edits = computeDirectoryWikilinkRenameEdits(
-      foam,
+      workspace,
+      graph,
       oldDirUri,
       newDirUri
     );
@@ -383,12 +391,13 @@ describe('computeDirectoryWikilinkRenameEdits', () => {
       'Link to [[folderA/note-a#Section]]',
       root
     );
-    const foam = createFoam(noteA, conflict, outside);
+    const { workspace, graph } = createWorkspaceAndGraph(noteA, conflict, outside);
     const oldDirUri = noteA.uri.getDirectory();
     const newDirUri = URI.file('/folderB');
 
     const edits = computeDirectoryWikilinkRenameEdits(
-      foam,
+      workspace,
+      graph,
       oldDirUri,
       newDirUri
     );

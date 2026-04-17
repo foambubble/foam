@@ -17,10 +17,11 @@ import {
 } from '../../test/test-utils-vscode';
 import { fromVsCodeUri } from '../../utils/vsc-utils';
 import { fileExists, readFile } from '../../services/editor';
+import { getDailyNoteTemplateCandidateUris } from '../../core/templates/template-discovery';
 import {
-  getDailyNoteTemplateCandidateUris,
   getDailyNoteTemplateUri,
-} from '../../services/templates';
+  getTemplatesDir,
+} from '../../vscode/services/template-service';
 
 describe('getDailyNoteUri', () => {
   const date = new Date('2021-02-07T00:00:00Z');
@@ -60,7 +61,7 @@ describe('Daily note creation and template processing', () => {
 
   beforeEach(async () => {
     // Ensure daily note templates are removed before each test
-    for (const template of getDailyNoteTemplateCandidateUris()) {
+    for (const template of getDailyNoteTemplateCandidateUris(getTemplatesDir())) {
       if (await fileExists(template)) {
         await deleteFile(template);
       }

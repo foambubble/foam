@@ -7,14 +7,14 @@ import {
   isCommandTrigger,
   isPlaceholderTrigger,
 } from './note-creation-types';
-import { readFileFromFs, strToUri } from '../test/test-utils';
-import { bootstrap } from '../core/model/foam';
-import { FileDataStore, Matcher } from '../test/test-datastore';
-import { MarkdownResourceProvider } from '../core/services/markdown-provider';
-import { createMarkdownParser } from '../core/services/markdown-parser';
-import { Logger } from '../core/utils/log';
+import { readFileFromFs, strToUri } from '../../test/test-utils';
+import { bootstrap } from '../model/foam';
+import { FileDataStore, Matcher } from '../../test/test-datastore';
+import { MarkdownResourceProvider } from '../services/markdown-provider';
+import { createMarkdownParser } from '../services/markdown-parser';
+import { Logger } from '../utils/log';
 import { Resolver } from './variable-resolver';
-import { URI } from '../core/model/uri';
+import { URI } from '../model/uri';
 
 Logger.setLevel('off');
 

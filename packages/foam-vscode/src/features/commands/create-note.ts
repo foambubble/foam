@@ -3,14 +3,16 @@ import { URI } from '../../core/model/uri';
 import {
   askUserForTemplate,
   getDefaultTemplateUri,
-  NoteFactory,
-} from '../../services/templates';
-import { NoteCreationEngine } from '../../services/note-creation-engine';
-import { TriggerFactory } from '../../services/note-creation-triggers';
-import { TemplateLoader } from '../../services/template-loader';
-import { Template } from '../../services/note-creation-types';
-import { Resolver } from '../../services/variable-resolver';
-import { asAbsoluteWorkspaceUri, fileExists } from '../../services/editor';
+} from '../../vscode/services/template-service';
+import { NoteFactory } from '../../vscode/services/note-factory';
+import { NoteCreationEngine } from '../../core/templates/note-creation-engine';
+import { TriggerFactory } from '../../core/templates/note-creation-triggers';
+import { TemplateLoader } from '../../core/templates/template-loader';
+import { Template } from '../../core/templates/note-creation-types';
+import { Resolver } from '../../core/templates/variable-resolver';
+import { VsCodeVariableProvider } from '../../vscode/services/vscode-variable-provider';
+import { asAbsoluteWorkspaceUri, fileExists, readFile } from '../../services/editor';
+import { getFoamVsCodeConfig } from '../../services/config';
 import { CommandDescriptor } from '../../utils/commands';
 import { Foam } from '../../core/model/foam';
 import { Location } from '../../core/model/location';
@@ -133,7 +135,7 @@ export async function createNote(args: CreateNoteArgs, foam: Foam) {
   }
 
   // Load template using the new system
-  const templateLoader = new TemplateLoader();
+  const templateLoader = new TemplateLoader(readFile, workspace.isTrusted);
   let template: Template;
 
   try {
@@ -165,10 +167,13 @@ export async function createNote(args: CreateNoteArgs, foam: Foam) {
   }
 
   // Create resolver with all variables upfront
+  const locale = getFoamVsCodeConfig<string>('dateLocale', 'default');
   const resolver = new Resolver(
     new Map(Object.entries(args.variables ?? {})),
     foamDate,
-    args.title
+    args.title,
+    locale,
+    new VsCodeVariableProvider()
   );
 
   if (Logger.getLevel() === 'debug') {

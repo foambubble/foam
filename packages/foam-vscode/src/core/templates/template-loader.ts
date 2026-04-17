@@ -1,6 +1,4 @@
-import { workspace } from 'vscode';
-import { URI } from '../core/model/uri';
-import { readFile } from './editor';
+import { URI } from '../model/uri';
 import {
   Template,
   TemplateContext,
@@ -15,8 +13,11 @@ import { JSTemplateLoader } from './js-template-loader';
 export class TemplateLoader {
   private jsTemplateLoader: JSTemplateLoader;
 
-  constructor() {
-    this.jsTemplateLoader = new JSTemplateLoader();
+  constructor(
+    private readonly readFile: (uri: URI) => Promise<string>,
+    private readonly isTrusted: boolean
+  ) {
+    this.jsTemplateLoader = new JSTemplateLoader(readFile);
   }
 
   /**
@@ -26,7 +27,7 @@ export class TemplateLoader {
    */
   async loadTemplate(template: URI): Promise<Template> {
     if (template.path.endsWith('.js')) {
-      if (!workspace.isTrusted) {
+      if (!this.isTrusted) {
         throw new Error(
           'JavaScript templates can only be used in trusted workspaces for security reasons'
         );
@@ -63,7 +64,7 @@ export class TemplateLoader {
    * Loads a Markdown template
    */
   private async loadMarkdownTemplate(template: URI): Promise<Template> {
-    const content = await readFile(template);
+    const content = await this.readFile(template);
 
     // Extract metadata from frontmatter if present
     const [metadata] = extractFoamTemplateFrontmatterMetadata(content);

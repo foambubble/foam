@@ -1,13 +1,5 @@
-/* @unit-ready */
-import { Selection, window } from 'vscode';
 import { Resolver } from './variable-resolver';
-import { Variable } from '../core/common/snippetParser';
-import {
-  createFile,
-  deleteFile,
-  showInEditor,
-  withModifiedFoamConfiguration,
-} from '../test/test-utils-vscode';
+import { Variable } from '../common/snippetParser';
 
 describe('variable-resolver, text substitution', () => {
   it('should do nothing if no Foam-specific variables are used', async () => {
@@ -40,8 +32,6 @@ describe('variable-resolver, text substitution', () => {
 
   it('should correctly substitute variables that are substrings of one another', async () => {
     // FOAM_TITLE is a substring of FOAM_TITLE_NON_EXISTENT_VARIABLE
-    // If we're not careful with how we substitute the values
-    // we can end up putting the FOAM_TITLE in place FOAM_TITLE_NON_EXISTENT_VARIABLE should be.
     const input = `
         # \${FOAM_TITLE}
         # $FOAM_TITLE
@@ -83,11 +73,10 @@ describe('variable-resolver, variable resolution', () => {
       expect(result).toBe(iso);
     }
   });
+
   it('should do nothing for unknown Foam-specific variables', async () => {
     const variables = [new Variable('FOAM_FOO')];
-
     const expected = new Map<string, string>();
-
     const givenValues = new Map<string, string>();
     const resolver = new Resolver(givenValues, new Date());
     expect(await resolver.resolveAll(variables)).toEqual(expected);
@@ -107,23 +96,6 @@ describe('variable-resolver, variable resolution', () => {
       new Date(),
       foamTitle
     );
-    expect(await resolver.resolveAll(variables)).toEqual(expected);
-  });
-
-  it('should resolve FOAM_TITLE if provided as variable', async () => {
-    const foamTitle = 'My note title';
-    const variables = [new Variable('FOAM_TITLE'), new Variable('FOAM_SLUG')];
-
-    vi
-      .spyOn(window, 'showInputBox')
-      .mockImplementationOnce(vi.fn(() => Promise.resolve(foamTitle)));
-
-    const expected = new Map<string, string>();
-    expected.set('FOAM_TITLE', foamTitle);
-    expected.set('FOAM_SLUG', 'my-note-title');
-
-    const givenValues = new Map<string, string>();
-    const resolver = new Resolver(givenValues, new Date());
     expect(await resolver.resolveAll(variables)).toEqual(expected);
   });
 
@@ -159,7 +131,6 @@ describe('variable-resolver, variable resolution', () => {
 
   function getISOWeekYear(date: Date): number {
     const temp = new Date(date.getTime());
-    // Set to Thursday of this week (ISO 8601 defines week based on Thursday)
     temp.setDate(temp.getDate() + 3 - ((temp.getDay() + 6) % 7));
     return temp.getFullYear();
   }
@@ -255,8 +226,6 @@ describe('variable-resolver, variable resolution', () => {
 
   describe('FOAM_DATE_WEEK', () => {
     it('should start counting weeks from 1', async () => {
-      // week number starts from 1, not 0
-      // the first "partial week" of the year is really the last of the previous
       const resolver = new Resolver(
         new Map<string, string>(),
         new Date(2021, 0, 1, 1, 2, 3)
@@ -267,7 +236,6 @@ describe('variable-resolver, variable resolution', () => {
     });
 
     it('should pad week number to 2 digits', async () => {
-      // week number is 2-digit
       const resolver = new Resolver(
         new Map<string, string>(),
         new Date(2021, 0, 7, 1, 2, 3)
@@ -299,7 +267,6 @@ describe('variable-resolver, variable resolution', () => {
   );
 
   it('should resolve FOAM_DATE_WEEK_YEAR with FOAM_DATE_WEEK in template', async () => {
-    // Example: 2024-W01 format where Dec 30, 2024 is in week 1 of 2025
     const date = new Date(2024, 11, 30); // Dec 30, 2024 (Monday)
     const resolver = new Resolver(new Map(), date);
 
@@ -319,100 +286,36 @@ describe('variable-resolver, variable resolution', () => {
   describe('foam.dateLocale', () => {
     const targetDate = new Date(2021, 9, 15, 1, 2, 3); // Friday, October 15, 2021
 
-    it('should use en-US locale when foam.dateLocale is set to en-US', async () => {
-      await withModifiedFoamConfiguration('dateLocale', 'en-US', async () => {
-        const resolver = new Resolver(new Map(), targetDate);
-        expect(await resolver.resolve(new Variable('FOAM_DATE_DAY_NAME'))).toBe(
-          'Friday'
-        );
-        expect(
-          await resolver.resolve(new Variable('FOAM_DATE_DAY_NAME_SHORT'))
-        ).toBe('Fri');
-        expect(
-          await resolver.resolve(new Variable('FOAM_DATE_MONTH_NAME'))
-        ).toBe('October');
-        expect(
-          await resolver.resolve(new Variable('FOAM_DATE_MONTH_NAME_SHORT'))
-        ).toBe('Oct');
-      });
+    it('should use en-US locale when passed to Resolver', async () => {
+      const resolver = new Resolver(new Map(), targetDate, undefined, 'en-US');
+      expect(await resolver.resolve(new Variable('FOAM_DATE_DAY_NAME'))).toBe(
+        'Friday'
+      );
+      expect(
+        await resolver.resolve(new Variable('FOAM_DATE_DAY_NAME_SHORT'))
+      ).toBe('Fri');
+      expect(
+        await resolver.resolve(new Variable('FOAM_DATE_MONTH_NAME'))
+      ).toBe('October');
+      expect(
+        await resolver.resolve(new Variable('FOAM_DATE_MONTH_NAME_SHORT'))
+      ).toBe('Oct');
     });
 
-    it('should use ja-JP locale when foam.dateLocale is set to ja-JP', async () => {
-      await withModifiedFoamConfiguration('dateLocale', 'ja-JP', async () => {
-        const resolver = new Resolver(new Map(), targetDate);
-        expect(await resolver.resolve(new Variable('FOAM_DATE_DAY_NAME'))).toBe(
-          '金曜日'
-        );
-        expect(
-          await resolver.resolve(new Variable('FOAM_DATE_DAY_NAME_SHORT'))
-        ).toBe('金');
-        expect(
-          await resolver.resolve(new Variable('FOAM_DATE_MONTH_NAME'))
-        ).toBe('10月');
-        expect(
-          await resolver.resolve(new Variable('FOAM_DATE_MONTH_NAME_SHORT'))
-        ).toBe('10月');
-      });
-    });
-  });
-
-  describe('FOAM_CURRENT_DIR', () => {
-    it('should resolve to workspace root when no active editor', async () => {
-      const resolver = new Resolver(new Map<string, string>(), new Date());
-      const result = await resolver.resolve(new Variable('FOAM_CURRENT_DIR'));
-
-      // Should resolve to some directory path
-      expect(typeof result).toBe('string');
-      expect(result.length).toBeGreaterThan(0);
-    });
-
-    it('should resolve to current directory when editor is active', async () => {
-      // Create a test file in a subdirectory
-      const testFile = await createFile('Test content', [
-        'test-dir',
-        'test-file.md',
-      ]);
-
-      try {
-        // Open the file to make it the active editor
-        await showInEditor(testFile.uri);
-
-        const resolver = new Resolver(new Map<string, string>(), new Date());
-        const result = await resolver.resolve(new Variable('FOAM_CURRENT_DIR'));
-
-        // Should resolve to the test-dir directory
-        expect(typeof result).toBe('string');
-        expect(result).toContain('test-dir');
-      } finally {
-        // Clean up
-        await deleteFile(testFile.uri);
-      }
-    });
-
-    it('should be included in known foam variables', async () => {
-      const input = '${FOAM_CURRENT_DIR}';
-      const resolver = new Resolver(new Map(), new Date());
-      const result = await resolver.resolveText(input);
-
-      // Should resolve to a directory path, not remain as ${FOAM_CURRENT_DIR}
-      expect(result).not.toEqual(input);
-      expect(typeof result).toBe('string');
-      expect(result.length).toBeGreaterThan(0);
-    });
-
-    it('should return POSIX-style paths without backslashes for YAML compatibility (issue #1573)', async () => {
-      // Example: "/c:/Users/name" instead of "C:\Users\name"
-      const resolver = new Resolver(new Map<string, string>(), new Date());
-      const result = await resolver.resolve(new Variable('FOAM_CURRENT_DIR'));
-
-      expect(typeof result).toBe('string');
-      expect(result.length).toBeGreaterThan(0);
-
-      // Must not contain backslashes (which break YAML on Windows)
-      expect(result).not.toContain('\\');
-
-      // Must use forward slashes as path separators
-      expect(result).toContain('/');
+    it('should use ja-JP locale when passed to Resolver', async () => {
+      const resolver = new Resolver(new Map(), targetDate, undefined, 'ja-JP');
+      expect(await resolver.resolve(new Variable('FOAM_DATE_DAY_NAME'))).toBe(
+        '金曜日'
+      );
+      expect(
+        await resolver.resolve(new Variable('FOAM_DATE_DAY_NAME_SHORT'))
+      ).toBe('金');
+      expect(
+        await resolver.resolve(new Variable('FOAM_DATE_MONTH_NAME'))
+      ).toBe('10月');
+      expect(
+        await resolver.resolve(new Variable('FOAM_DATE_MONTH_NAME_SHORT'))
+      ).toBe('10月');
     });
   });
 });
@@ -423,7 +326,6 @@ describe('FOAM_DATE_FORMAT', () => {
   it('should resolve with ISO 8601 format by default', async () => {
     const resolver = new Resolver(new Map(), targetDate);
     const result = await resolver.resolveText('$FOAM_DATE_FORMAT');
-    // Should be local ISO 8601 with timezone offset, e.g. 2021-10-15T01:02:03+01:00
     expect(result).toMatch(
       /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/
     );
@@ -454,7 +356,6 @@ describe('variable-resolver, resolveText', () => {
       `;
 
     const expected = input;
-
     const resolver = new Resolver(new Map(), new Date());
     expect(await resolver.resolveText(input)).toEqual(expected);
   });
@@ -481,88 +382,6 @@ describe('variable-resolver, resolveText', () => {
 
     const expected = input;
     const resolver = new Resolver(new Map(), new Date());
-    expect(await resolver.resolveText(input)).toEqual(expected);
-  });
-
-  it('should resolve FOAM_SELECTED_TEXT with the editor selection', async () => {
-    const file = await createFile('Content of note file');
-    const { editor } = await showInEditor(file.uri);
-    editor.selection = new Selection(0, 11, 1, 0);
-    const resolver = new Resolver(new Map(), new Date());
-    expect(await resolver.resolveFromName('FOAM_SELECTED_TEXT')).toEqual(
-      'note file'
-    );
-    await deleteFile(file);
-  });
-
-  it('should append FOAM_SELECTED_TEXT with a newline to the template if there is selected text but FOAM_SELECTED_TEXT is not referenced and the template ends in a newline', async () => {
-    const foamTitle = 'My note title';
-
-    vi
-      .spyOn(window, 'showInputBox')
-      .mockImplementationOnce(vi.fn(() => Promise.resolve(foamTitle)));
-
-    const input = `# \${FOAM_TITLE}\n`;
-
-    const expected = `# My note title\nSelected text\n`;
-
-    const givenValues = new Map<string, string>();
-    givenValues.set('FOAM_SELECTED_TEXT', 'Selected text');
-    const resolver = new Resolver(givenValues, new Date());
-    expect(await resolver.resolveText(input)).toEqual(expected);
-  });
-
-  it('should append FOAM_SELECTED_TEXT with a newline to the template if there is selected text but FOAM_SELECTED_TEXT is not referenced and the template ends in multiple newlines', async () => {
-    const foamTitle = 'My note title';
-
-    vi
-      .spyOn(window, 'showInputBox')
-      .mockImplementationOnce(vi.fn(() => Promise.resolve(foamTitle)));
-
-    const input = `# \${FOAM_TITLE}\n\n`;
-
-    const expected = `# My note title\n\nSelected text\n`;
-
-    const givenValues = new Map<string, string>();
-    givenValues.set('FOAM_SELECTED_TEXT', 'Selected text');
-    const resolver = new Resolver(givenValues, new Date());
-    expect(await resolver.resolveText(input)).toEqual(expected);
-  });
-
-  it('should append FOAM_SELECTED_TEXT without a newline to the template if there is selected text but FOAM_SELECTED_TEXT is not referenced and the template does not end in a newline', async () => {
-    const foamTitle = 'My note title';
-
-    vi
-      .spyOn(window, 'showInputBox')
-      .mockImplementationOnce(vi.fn(() => Promise.resolve(foamTitle)));
-
-    const input = `# \${FOAM_TITLE}`;
-
-    const expected = '# My note title\nSelected text';
-
-    const givenValues = new Map<string, string>();
-    givenValues.set('FOAM_SELECTED_TEXT', 'Selected text');
-    const resolver = new Resolver(givenValues, new Date());
-    expect(await resolver.resolveText(input)).toEqual(expected);
-  });
-
-  it('should not append FOAM_SELECTED_TEXT to a template if there is no selected text and is not referenced', async () => {
-    const foamTitle = 'My note title';
-
-    vi
-      .spyOn(window, 'showInputBox')
-      .mockImplementationOnce(vi.fn(() => Promise.resolve(foamTitle)));
-
-    const input = `
-        # \${FOAM_TITLE}
-        `;
-
-    const expected = `
-        # My note title
-        `;
-
-    const givenValues = new Map<string, string>();
-    const resolver = new Resolver(givenValues, new Date());
     expect(await resolver.resolveText(input)).toEqual(expected);
   });
 });

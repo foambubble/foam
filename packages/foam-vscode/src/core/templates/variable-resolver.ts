@@ -1,13 +1,9 @@
-import { findSelectionContent, getCurrentEditorDirectory } from './editor';
-import { window, workspace } from 'vscode';
-import { UserCancelledOperation } from './errors';
-import { toSlug } from '../core/utils/slug';
-import { getFoamVsCodeConfig } from './config';
+import { toSlug } from '../utils/slug';
 import {
   SnippetParser,
   Variable,
   VariableResolver,
-} from '../core/common/snippetParser';
+} from '../common/snippetParser';
 import dayjs from 'dayjs';
 
 const knownFoamVariables = new Set([
@@ -34,51 +30,49 @@ const knownFoamVariables = new Set([
   'FOAM_DATE_SECONDS_UNIX',
 ]);
 
+/**
+ * Interface for resolving environment-specific variables.
+ * Implement this for each host environment (VS Code, CLI, etc.).
+ */
+export interface VariableProvider {
+  /** Obtain a note title interactively or from environment context. */
+  resolveTitle(): Promise<string>;
+  /** Return selected text in the current editor, or '' if not applicable. */
+  resolveSelectedText(): string;
+  /** Return the current working directory path. */
+  resolveCurrentDir(): string;
+}
+
 export class Resolver implements VariableResolver {
   private promises = new Map<string, Promise<string | undefined>>();
+
   /**
-   * Create a resolver
-   *
-   * @param givenValues the map of variable name to value
-   * @param foamDate the date used to fill FOAM_DATE_* variables
+   * @param givenValues pre-supplied variable values (e.g. FOAM_TITLE for daily notes)
+   * @param foamDate date used for FOAM_DATE_* variables
+   * @param foamTitle convenience shorthand for givenValues.set('FOAM_TITLE', ...)
+   * @param locale locale string for date formatting, defaults to 'default'
+   * @param variableProvider environment-specific provider for interactive variables
    */
   constructor(
     private givenValues: Map<string, string>,
     public foamDate: Date,
-    foamTitle?: string
+    foamTitle?: string,
+    private locale: string = 'default',
+    private variableProvider?: VariableProvider
   ) {
     if (foamTitle) {
       this.givenValues.set('FOAM_TITLE', foamTitle);
     }
   }
 
-  /**
-   * Adds a variable definition in the resolver
-   *
-   * @param name the name of the variable
-   * @param value the value of the variable
-   */
   define(name: string, value: string) {
     this.givenValues.set(name, value);
   }
 
-  /**
-   * Gets all defined variables as a plain object
-   * Useful for passing to JavaScript templates that expect extraParams
-   *
-   * @returns Record containing all defined variables
-   */
   getVariables(): Record<string, string> {
     return Object.fromEntries(this.givenValues);
   }
 
-  /**
-   * Process a string, replacing the variables with their values
-   *
-   * @param text the text to resolve
-   * @returns an array, where the first element is the resolution map,
-   *          and the second is the processed text
-   */
   async resolveText(text: string): Promise<string> {
     let snippet = new SnippetParser().parse(text, false, false);
     let foamVariablesInTemplate = new Set(
@@ -88,18 +82,14 @@ export class Resolver implements VariableResolver {
         .filter(name => knownFoamVariables.has(name))
     );
 
-    // Add FOAM_SELECTED_TEXT to the template text if required
-    // and re-parse the template text.
+    // Append FOAM_SELECTED_TEXT to the template if it was provided as a given
+    // value but not already present in the template.
     if (
       this.givenValues.has('FOAM_SELECTED_TEXT') &&
       !foamVariablesInTemplate.has('FOAM_SELECTED_TEXT')
     ) {
       const token = '$FOAM_SELECTED_TEXT';
-      if (text.endsWith('\n')) {
-        text = `${text}${token}\n`;
-      } else {
-        text = `${text}\n${token}`;
-      }
+      text = text.endsWith('\n') ? `${text}${token}\n` : `${text}\n${token}`;
       snippet = new SnippetParser().parse(text, false, false);
       foamVariablesInTemplate = new Set(
         snippet
@@ -113,15 +103,8 @@ export class Resolver implements VariableResolver {
     return snippet.snippetTextWithVariablesSubstituted(foamVariablesInTemplate);
   }
 
-  /**
-   * Resolves a list of variables
-   *
-   * @param variables a list of variables to resolve
-   * @returns a Map of variable name to its value
-   */
   async resolveAll(variables: Variable[]): Promise<Map<string, string>> {
     await Promise.all(variables.map(variable => variable.resolve(this)));
-
     const resolvedValues = new Map<string, string>();
     variables.forEach(variable => {
       if (variable.children.length > 0) {
@@ -131,16 +114,9 @@ export class Resolver implements VariableResolver {
     return resolvedValues;
   }
 
-  /**
-   * Resolve a variable
-   *
-   * @param name the variable name
-   * @returns the resolved value, or the name of the variable if nothing is found
-   */
   async resolveFromName(name: string): Promise<string> {
     const variable = new Variable(name);
     await variable.resolve(this);
-
     return (variable.children[0] ?? name).toString();
   }
 
@@ -152,7 +128,9 @@ export class Resolver implements VariableResolver {
       let value: Promise<string | undefined> = Promise.resolve(undefined);
       switch (name) {
         case 'FOAM_TITLE':
-          value = resolveFoamTitle();
+          value = this.variableProvider
+            ? this.variableProvider.resolveTitle()
+            : Promise.resolve(undefined);
           break;
         case 'FOAM_TITLE_SAFE':
           value = resolveFoamTitleSafe(this);
@@ -161,10 +139,18 @@ export class Resolver implements VariableResolver {
           value = toSlug(await this.resolve(new Variable('FOAM_TITLE')));
           break;
         case 'FOAM_SELECTED_TEXT':
-          value = Promise.resolve(resolveFoamSelectedText());
+          value = Promise.resolve(
+            this.variableProvider
+              ? this.variableProvider.resolveSelectedText()
+              : ''
+          );
           break;
         case 'FOAM_CURRENT_DIR':
-          value = Promise.resolve(resolveFoamCurrentDir());
+          value = Promise.resolve(
+            this.variableProvider
+              ? this.variableProvider.resolveCurrentDir()
+              : undefined
+          );
           break;
         case 'FOAM_DATE_FORMAT': {
           const fmt =
@@ -186,76 +172,54 @@ export class Resolver implements VariableResolver {
             String(this.foamDate.getMonth().valueOf() + 1).padStart(2, '0')
           );
           break;
-        case 'FOAM_DATE_MONTH_NAME': {
-          const locale = getFoamVsCodeConfig<string>('dateLocale', 'default');
+        case 'FOAM_DATE_MONTH_NAME':
           value = Promise.resolve(
-            this.foamDate.toLocaleString(locale, { month: 'long' })
+            this.foamDate.toLocaleString(this.locale, { month: 'long' })
           );
           break;
-        }
-        case 'FOAM_DATE_MONTH_NAME_SHORT': {
-          const locale = getFoamVsCodeConfig<string>('dateLocale', 'default');
+        case 'FOAM_DATE_MONTH_NAME_SHORT':
           value = Promise.resolve(
-            this.foamDate.toLocaleString(locale, { month: 'short' })
+            this.foamDate.toLocaleString(this.locale, { month: 'short' })
           );
           break;
-        }
         case 'FOAM_DATE_DATE':
           value = Promise.resolve(
             String(this.foamDate.getDate().valueOf()).padStart(2, '0')
           );
           break;
         case 'FOAM_DATE_DAY_ISO':
-          // ISO 8601 weekday: Monday=1, Sunday=7
           value = Promise.resolve(
             String(((this.foamDate.getDay() + 6) % 7) + 1)
           );
           break;
         case 'FOAM_DATE_WEEK': {
-          // https://en.wikipedia.org/wiki/ISO_8601#Week_dates
           const date = new Date(this.foamDate);
-
-          // Find Thursday of this week starting on Monday
           date.setDate(date.getDate() + 4 - (date.getDay() || 7));
           const thursday = date.getTime();
-
-          // Find January 1st
-          date.setMonth(0); // January
-          date.setDate(1); // 1st
+          date.setMonth(0);
+          date.setDate(1);
           const janFirst = date.getTime();
-
-          // Round the amount of days to compensate for daylight saving time
-          const days = Math.round((thursday - janFirst) / 86400000); // 1 day = 86400000 ms
+          const days = Math.round((thursday - janFirst) / 86400000);
           const weekDay = Math.floor(days / 7) + 1;
           value = Promise.resolve(String(weekDay.valueOf()).padStart(2, '0'));
           break;
         }
         case 'FOAM_DATE_WEEK_YEAR': {
-          // ISO 8601 week-numbering year
-          // The year that contains the Thursday of the current week
           const date = new Date(this.foamDate);
-
-          // Find Thursday of this week starting on Monday
           date.setDate(date.getDate() + 4 - (date.getDay() || 7));
-
-          // The year of this Thursday is the ISO week year
           value = Promise.resolve(String(date.getFullYear()));
           break;
         }
-        case 'FOAM_DATE_DAY_NAME': {
-          const locale = getFoamVsCodeConfig<string>('dateLocale', 'default');
+        case 'FOAM_DATE_DAY_NAME':
           value = Promise.resolve(
-            this.foamDate.toLocaleString(locale, { weekday: 'long' })
+            this.foamDate.toLocaleString(this.locale, { weekday: 'long' })
           );
           break;
-        }
-        case 'FOAM_DATE_DAY_NAME_SHORT': {
-          const locale = getFoamVsCodeConfig<string>('dateLocale', 'default');
+        case 'FOAM_DATE_DAY_NAME_SHORT':
           value = Promise.resolve(
-            this.foamDate.toLocaleString(locale, { weekday: 'short' })
+            this.foamDate.toLocaleString(this.locale, { weekday: 'short' })
           );
           break;
-        }
         case 'FOAM_DATE_HOUR':
           value = Promise.resolve(
             String(this.foamDate.getHours().valueOf()).padStart(2, '0')
@@ -282,61 +246,12 @@ export class Resolver implements VariableResolver {
       }
       this.promises.set(name, value);
     }
-    const result = this.promises.get(name);
-    return result;
+    return this.promises.get(name);
   }
 }
 
-async function resolveFoamTitle() {
-  const title = await window.showInputBox({
-    prompt: `Enter a title for the new note`,
-    value: 'Title of my New Note',
-    validateInput: value =>
-      value.trim().length === 0 ? 'Please enter a title' : undefined,
-  });
-  if (title === undefined) {
-    throw new UserCancelledOperation('User did not provide a note title');
-  }
-  return title;
-}
-
-function resolveFoamSelectedText() {
-  return findSelectionContent()?.content ?? '';
-}
-
-function resolveFoamCurrentDir() {
-  try {
-    // Try to get the directory of the currently active editor
-    const currentDir = getCurrentEditorDirectory();
-    return currentDir.path;
-  } catch (error) {
-    // Fall back to workspace root if no active editor
-    if (workspace.workspaceFolders && workspace.workspaceFolders.length > 0) {
-      return workspace.workspaceFolders[0].uri.path;
-    }
-    // If no workspace is open, raise
-    throw new Error('No workspace is open');
-  }
-}
-
-/**
- * Common chars that is better to avoid in file names.
- * Inspired by:
- *   https://www.mtu.edu/umc/services/websites/writing/characters-avoid/
- *   https://stackoverflow.com/questions/1976007/what-characters-are-forbidden-in-windows-and-linux-directory-names
- * Even if some might be allowed in Win or Linux, to keep things more compatible and less error prone
- * we don't allow them
- * Also see https://github.com/foambubble/foam/issues/1042
- */
 const UNALLOWED_CHARS = '/\\#%&{}<>?*$!\'":@+`|=';
 
-/**
- * Uses the title to generate a file path.
- * It sanitizes the title to remove special characters and spaces.
- *
- * @param resolver the resolver to use
- * @returns the string path of the new note
- */
 export const resolveFoamTitleSafe = async (resolver: Resolver) => {
   let safeTitle = await resolver.resolveFromName('FOAM_TITLE');
   UNALLOWED_CHARS.split('').forEach(char => {

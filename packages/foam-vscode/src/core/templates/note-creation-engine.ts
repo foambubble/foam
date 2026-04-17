@@ -1,7 +1,7 @@
 import { Resolver } from './variable-resolver';
-import { Foam } from '../core/model/foam';
-import { URI } from '../core/model/uri';
-import { Logger } from '../core/utils/log';
+import { Foam } from '../model/foam';
+import { URI } from '../model/uri';
+import { Logger } from '../utils/log';
 import {
   NoteCreationResult,
   NoteCreationTrigger,

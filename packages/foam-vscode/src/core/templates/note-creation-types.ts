@@ -1,8 +1,8 @@
-import { Location } from '../core/model/location';
-import { ResourceLink } from '../core/model/note';
-import { Foam } from '../core/model/foam';
+import { Location } from '../model/location';
+import { ResourceLink } from '../model/note';
+import { Foam } from '../model/foam';
 import { Resolver } from './variable-resolver';
-import { URI } from '../core/model/uri';
+import { URI } from '../model/uri';
 
 /**
  * Union type for different trigger scenarios that can initiate note creation

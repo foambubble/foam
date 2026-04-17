@@ -1,6 +1,6 @@
-import { URI } from '../core/model/uri';
-import { Location } from '../core/model/location';
-import { ResourceLink } from '../core/model/note';
+import { URI } from '../model/uri';
+import { Location } from '../model/location';
+import { ResourceLink } from '../model/note';
 import { NoteCreationTrigger } from './note-creation-types';
 
 /**

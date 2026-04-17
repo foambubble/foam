@@ -1,9 +1,8 @@
 import * as vm from 'vm';
-import { readFile } from './editor';
-import { URI } from '../core/model/uri';
+import { URI } from '../model/uri';
 import { CreateNoteFunction, TemplateContext } from './note-creation-types';
 import { createTemplateSandbox, BLOCKED_GLOBALS } from './js-template-sandbox';
-import { Logger } from '../core/utils/log';
+import { Logger } from '../utils/log';
 
 /**
  * Error thrown when there are issues loading or executing JavaScript templates
@@ -25,6 +24,10 @@ export class JSTemplateLoader {
     displayErrors: true,
   };
 
+  constructor(
+    private readonly readFile: (uri: URI) => Promise<string>
+  ) {}
+
   /**
    * Loads and returns a note creation function from a JavaScript template file
    *
@@ -35,7 +38,7 @@ export class JSTemplateLoader {
     try {
       Logger.info(`Loading JavaScript template: ${template.path}`);
 
-      const templateCode = await readFile(template);
+      const templateCode = await this.readFile(template);
 
       if (!templateCode) {
         throw new JSTemplateError(

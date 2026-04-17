@@ -3,10 +3,12 @@ import { Uri, window, workspace } from 'vscode';
 import { joinPath } from '../../core/utils/path';
 import { URI } from '../../core/model/uri';
 import { Foam } from '../../core/model/foam';
-import { getDailyNoteTemplateUri } from '../../services/templates';
+import { getDailyNoteTemplateUri } from '../../vscode/services/template-service';
+import { NoteFactory } from '../../vscode/services/note-factory';
 import { getFoamVsCodeConfig } from '../../services/config';
-import { asAbsoluteWorkspaceUri, focusNote } from '../../services/editor';
-import { createNote } from '../commands/create-note';
+import { asAbsoluteWorkspaceUri, focusNote, readFile } from '../../services/editor';
+import { resolveDailyNote } from '../../core/templates/daily-note-resolver';
+import { Resolver } from '../../core/templates/variable-resolver';
 import { fromVsCodeUri } from '../../utils/vsc-utils';
 
 // ─── Format conversion ────────────────────────────────────────────────────────
@@ -175,9 +177,9 @@ export const CREATE_DAILY_NOTE_WARNING_RESPONSE = 'Create daily note template';
  * Creates a daily note using the unified creation engine (supports JS templates).
  */
 export async function createDailyNoteIfNotExists(targetDate: Date, foam: Foam) {
-  const templatePath = await getDailyNoteTemplateUri();
+  const templateUri = await getDailyNoteTemplateUri();
 
-  if (!templatePath) {
+  if (!templateUri) {
     window
       .showWarningMessage(
         'No daily note template found. Using legacy configuration (deprecated). Create a daily note template to avoid this warning and customize your daily note.',
@@ -200,32 +202,38 @@ export async function createDailyNoteIfNotExists(targetDate: Date, foam: Foam) {
       });
   }
 
+  const locale = getFoamVsCodeConfig<string>('dateLocale', 'default');
   const formattedDate = dayjs(targetDate).format('YYYY-MM-DD');
-  const variables = {
-    FOAM_TITLE: formattedDate,
-    title: formattedDate,
-  };
+  const variables = new Map([['FOAM_TITLE', formattedDate]]);
+  const resolver = new Resolver(variables, targetDate, undefined, locale);
 
-  const dailyNoteUri = getDailyNoteUri(targetDate);
-  const titleFormat: string =
-    getFoamVsCodeConfig('openDailyNote.titleFormat') ??
-    getFoamVsCodeConfig('openDailyNote.filenameFormat') ??
-    'isoDate';
+  if (!templateUri) {
+    // Legacy fallback: derive filepath and content from deprecated config
+    const titleFormat: string =
+      getFoamVsCodeConfig('openDailyNote.titleFormat') ??
+      getFoamVsCodeConfig('openDailyNote.filenameFormat') ??
+      'isoDate';
+    const fallbackText = `# ${dayjs(targetDate).format(
+      convertDateformatToDayjs(titleFormat)
+    )}\n`;
+    const dailyNoteUri = getDailyNoteUri(targetDate);
+    return NoteFactory.createNote(dailyNoteUri, fallbackText, resolver, 'open');
+  }
 
-  const templateFallbackText = `# ${dayjs(targetDate).format(
-    convertDateformatToDayjs(titleFormat)
-  )}\n`;
-
-  return await createNote(
+  const result = await resolveDailyNote(
+    targetDate,
+    templateUri,
+    foam,
+    readFile,
     {
-      notePath: dailyNoteUri.toFsPath(),
-      templatePath: templatePath,
-      text: templateFallbackText,
-      date: targetDate,
-      variables: variables,
-      onFileExists: 'open',
-      onRelativeNotePath: 'resolve-from-root',
-    },
-    foam
+      locale,
+      isTrusted: workspace.isTrusted,
+      fallbackFilepath: getDailyNoteUri(targetDate),
+      variables,
+    }
   );
+
+  // Foam variables are already resolved; pass a date-only Resolver so that
+  // any remaining VS Code snippet syntax in the content is preserved as-is.
+  return NoteFactory.createNote(result.filepath, result.content, resolver, 'open');
 }

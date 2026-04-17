@@ -14,7 +14,7 @@ import {
   getExcludedFilesSetting,
   getIncludeFilesSetting,
   getNotesExtensions,
-} from './settings';
+} from './vscode/settings';
 import { AttachmentResourceProvider } from './core/services/attachment-provider';
 import { VsCodeWatcher } from './services/watcher';
 import { createMarkdownParser } from './core/services/markdown-parser';

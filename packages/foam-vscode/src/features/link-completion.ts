@@ -8,7 +8,7 @@ import { getFoamVsCodeConfig } from '../services/config';
 import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
 import { getNoteTooltip, getFoamDocSelectors } from '../services/editor';
 import { CONVERT_WIKILINK_TO_MDLINK } from '../vscode/features/convert-links';
-import { getDirectoryModeSetting } from '../settings';
+import { getDirectoryModeSetting } from '../vscode/settings';
 
 export const aliasCommitCharacters = ['#'];
 export const linkCommitCharacters = ['#', '|'];

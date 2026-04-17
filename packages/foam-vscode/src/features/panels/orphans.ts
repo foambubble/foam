@@ -4,7 +4,7 @@ import { createMatcherAndDataStore } from '../../services/editor';
 import {
   getAttachmentsExtensions,
   getIncludeFilesSetting,
-} from '../../settings';
+} from '../../vscode/settings';
 import {
   GroupedResourcesConfig,
   GroupedResourcesTreeDataProvider,

@@ -1,6 +1,6 @@
 /* @unit-ready */
 import { getNotesExtensions, getIncludeFilesSetting } from './settings';
-import { withModifiedFoamConfiguration } from './test/test-utils-vscode';
+import { withModifiedFoamConfiguration } from '../test/test-utils-vscode';
 
 describe('Default note settings', () => {
   it('should default to .md', async () => {

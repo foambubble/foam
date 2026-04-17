@@ -17,7 +17,7 @@ import { FoamGraph } from '../../core/model/graph';
 import { URI } from '../../core/model/uri';
 import { FoamWorkspace } from '../../core/model/workspace';
 import { FolderTreeItem } from './utils/folder-tree-provider';
-import { getIncludeFilesSetting } from '../../settings';
+import { getIncludeFilesSetting } from '../../vscode/settings';
 
 /** Retrieve the placeholders configuration */
 export function getPlaceholdersConfig(): GroupedResourcesConfig {

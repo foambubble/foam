@@ -1,7 +1,7 @@
 import { workspace, GlobPattern } from 'vscode';
 import { uniq } from 'lodash';
-import { getFoamVsCodeConfig } from './services/config';
-import { expandAlternateGroups } from './utils/globExpand';
+import { getFoamVsCodeConfig } from '../services/config';
+import { expandAlternateGroups } from '../utils/globExpand';
 
 /**
  * Gets the notes extensions and default extension from the config.

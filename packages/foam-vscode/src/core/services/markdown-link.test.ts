@@ -185,6 +185,66 @@ describe('MarkdownLink', () => {
       expect(parsed.section).toEqual('section');
       expect(parsed.alias).toEqual('');
     });
+    it('should parse section with spaces in angle-bracket link', () => {
+      const link: ResourceLink = {
+        type: 'link',
+        rawText: '[link](<to/path.md#My Section>)',
+        range: Range.create(0, 0),
+        isEmbed: false,
+      };
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.target).toEqual('to/path.md');
+      expect(parsed.section).toEqual('My Section');
+      expect(parsed.alias).toEqual('link');
+    });
+    it('should parse section with spaces in regular link', () => {
+      const link: ResourceLink = {
+        type: 'link',
+        rawText: '[link](to/path.md#My Section)',
+        range: Range.create(0, 0),
+        isEmbed: false,
+      };
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.target).toEqual('to/path.md');
+      expect(parsed.section).toEqual('My Section');
+      expect(parsed.alias).toEqual('link');
+    });
+    it('should parse target with spaces in regular link', () => {
+      const link: ResourceLink = {
+        type: 'link',
+        rawText: '[link](path with spaces.md)',
+        range: Range.create(0, 0),
+        isEmbed: false,
+      };
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.target).toEqual('path with spaces.md');
+      expect(parsed.section).toEqual('');
+      expect(parsed.alias).toEqual('link');
+    });
+    it('should parse section with spaces in angle-bracket link with spaced target', () => {
+      const link: ResourceLink = {
+        type: 'link',
+        rawText: '[link](<path with spaces.md#My Section>)',
+        range: Range.create(0, 0),
+        isEmbed: false,
+      };
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.target).toEqual('path with spaces.md');
+      expect(parsed.section).toEqual('My Section');
+      expect(parsed.alias).toEqual('link');
+    });
+    it('should parse section with spaces followed by a title attribute', () => {
+      const link: ResourceLink = {
+        type: 'link',
+        rawText: '[link](to/path.md#My Section "title")',
+        range: Range.create(0, 0),
+        isEmbed: false,
+      };
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.target).toEqual('to/path.md');
+      expect(parsed.section).toEqual('My Section');
+      expect(parsed.alias).toEqual('link');
+    });
     it('should parse block anchor from a direct markdown link', () => {
       const link = parser.parse(
         getRandomURI(),

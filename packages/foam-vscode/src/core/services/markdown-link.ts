@@ -7,7 +7,7 @@ export abstract class MarkdownLink {
     /\[\[([^#|]+)?#?([^|]+)?\|?(.*)?\]\]/
   );
   private static directLinkRegex = new RegExp(
-    /\[(.*)\]\(<?([^#>]*?)(?:#([^>\s"'()]*))?(?:\s+(?:"[^"]*"|'[^']*'))?>?\)/
+    /\[(.*)\]\((?:<([^#>]*)(?:#([^>]*))?>\s*|([^#>]*?)(?:#([^)>"']*))?(?:\s+(?:"[^"]*"|'[^']*'))?)\)/
   );
 
   public static analyzeLink(link: ResourceLink) {
@@ -69,11 +69,14 @@ export abstract class MarkdownLink {
             alias: alias,
           };
         }
-        const [, alias, target, section] = match;
+        const [, alias, angleTarget, angleSection, plainTarget, plainSection] =
+          match;
+        const target = angleTarget ?? plainTarget ?? '';
+        const section = angleSection ?? plainSection ?? '';
         const blockMatch = section?.match(/^\^([a-zA-Z0-9-]+)$/);
         return {
-          target: target ?? '',
-          section: blockMatch ? '' : section ?? '',
+          target,
+          section: blockMatch ? '' : section,
           blockId: blockMatch?.[1] ?? '',
           alias: alias ?? '',
         };

@@ -2,7 +2,7 @@ import { Block, Resource, ResourceLink } from '../core/model/note';
 import { Range } from '../core/model/range';
 import { FoamWorkspace } from '../core/model/workspace';
 import { MarkdownLink } from '../core/services/markdown-link';
-import { LintIssue } from '../core/services/text-edit';
+import { LintIssue } from './janitor';
 import { isNone } from '../core/utils';
 
 export const AMBIGUOUS_IDENTIFIER_CODE = 'ambiguous-identifier';

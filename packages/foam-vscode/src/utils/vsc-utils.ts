@@ -16,9 +16,9 @@ import { Range as FoamRange } from '../core/model/range';
 import { URI as FoamURI } from '../core/model/uri';
 import {
   TextEdit as FoamTextEdit,
-  LintIssue,
   WorkspaceTextEdit,
 } from '../core/services/text-edit';
+import { LintIssue } from '../janitor/janitor';
 import { FoamWorkspace } from '../core/model/workspace';
 import { Logger } from '../core/utils/log';
 

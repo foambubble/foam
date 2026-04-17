@@ -2,7 +2,7 @@ import { URI } from '../core/model/uri';
 import { Logger } from '../core/utils/log';
 import { createMarkdownParser } from '../core/services/markdown-parser';
 import { FoamWorkspace } from '../core/model/workspace';
-import { checkLinks, checkDuplicateBlocks } from './check-links';
+import { checkLinks, checkDuplicateBlocks } from './rule-check-links';
 
 Logger.setLevel('error');
 

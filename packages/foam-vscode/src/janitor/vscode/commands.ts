@@ -5,16 +5,20 @@ import {
   commands,
   ProgressLocation,
 } from 'vscode';
-import detectNewline from 'detect-newline';
 import { Foam } from '../../core/model/foam';
 import { TextEdit } from '../../core/services/text-edit';
 import { Range } from '../../core/model/range';
 import {
+  fromVsCodeUri,
   toVsCodeRange,
   toVsCodeUri,
 } from '../../utils/vsc-utils';
 import { getWikilinkDefinitionSetting } from '../../features/commands/update-wikilinks';
-import { lintNote } from '../janitor';
+import {
+  lintWorkspace,
+  missingHeadingRule,
+  staleDefinitionsRule,
+} from '../janitor';
 
 export default async function activate(
   context: ExtensionContext,
@@ -70,7 +74,11 @@ async function janitor(foam: Foam) {
 }
 
 async function runJanitor(foam: Foam): Promise<JanitorResult> {
-  const notes = foam.workspace.list().filter(r => r.uri.isMarkdown());
+  const wikilinkSetting = getWikilinkDefinitionSetting();
+  const rules = [
+    missingHeadingRule(),
+    ...(wikilinkSetting !== 'off' ? [staleDefinitionsRule(wikilinkSetting)] : []),
+  ];
 
   const dirtyTextDocuments = workspace.textDocuments.filter(
     textDocument =>
@@ -78,52 +86,36 @@ async function runJanitor(foam: Foam): Promise<JanitorResult> {
         textDocument.languageId === 'mdx') &&
       textDocument.isDirty
   );
-
   const dirtyFsPaths = new Set(
     dirtyTextDocuments.map(doc => doc.uri.fsPath)
   );
 
-  const dirtyNotes = notes.filter(note =>
-    dirtyFsPaths.has(note.uri.toFsPath())
-  );
-  const nonDirtyNotes = notes.filter(
-    note => !dirtyFsPaths.has(note.uri.toFsPath())
-  );
-
-  const wikilinkSetting = getWikilinkDefinitionSetting();
+  const allIssues = await lintWorkspace(foam.workspace, rules);
 
   let updatedHeadingCount = 0;
   let updatedDefinitionListCount = 0;
 
   // Apply edits to non-dirty notes via the file system
   await Promise.all(
-    nonDirtyNotes.map(async note => {
-      const noteText = await foam.workspace.readAsMarkdown(note.uri);
-      const eol = detectNewline(noteText) ?? '\n';
-      const issues = lintNote(note, noteText, eol, foam.workspace, wikilinkSetting);
-      if (issues.length === 0) return;
+    allIssues.entries
+      .filter(({ uri }) => !dirtyFsPaths.has(uri.toFsPath()))
+      .map(async ({ uri, issues }) => {
+        if (issues.some(i => i.code === 'missing-heading')) updatedHeadingCount += 1;
+        if (issues.some(i => i.code === 'stale-definitions')) updatedDefinitionListCount += 1;
 
-      if (issues.some(i => i.code === 'missing-heading')) updatedHeadingCount += 1;
-      if (issues.some(i => i.code === 'stale-definitions')) updatedDefinitionListCount += 1;
-
-      const edits = issues.flatMap(i => i.fix?.map(f => f.edit) ?? []);
-      const updatedText = TextEdit.apply(noteText, edits);
-      await workspace.fs.writeFile(toVsCodeUri(note.uri), Buffer.from(updatedText));
-    })
+        const noteText = await foam.workspace.readAsMarkdown(uri);
+        const edits = issues.flatMap(i => i.fix?.map(f => f.edit) ?? []);
+        const updatedText = TextEdit.apply(noteText, edits);
+        await workspace.fs.writeFile(toVsCodeUri(uri), Buffer.from(updatedText));
+      })
   );
 
   // Handle dirty editors in serial — VS Code only allows edits on active editors
   for (const doc of dirtyTextDocuments) {
     const editor = await window.showTextDocument(doc);
-    const note = dirtyNotes.find(
-      n => n.uri.toFsPath() === editor.document.uri.fsPath
-    )!;
-
-    const noteText = doc.getText();
-    const eol = doc.eol.toString();
-
-    const issues = lintNote(note, noteText, eol, foam.workspace, wikilinkSetting);
-    if (issues.length === 0) continue;
+    const foamUri = fromVsCodeUri(editor.document.uri);
+    const issues = allIssues.get(foamUri);
+    if (!issues || issues.length === 0) continue;
 
     if (issues.some(i => i.code === 'missing-heading')) updatedHeadingCount += 1;
     if (issues.some(i => i.code === 'stale-definitions')) updatedDefinitionListCount += 1;
@@ -144,4 +136,3 @@ async function runJanitor(foam: Foam): Promise<JanitorResult> {
     changedAnyFiles: updatedHeadingCount + updatedDefinitionListCount,
   };
 }
-

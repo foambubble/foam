@@ -10,12 +10,11 @@ import { Foam } from '../../core/model/foam';
 import { TextEdit } from '../../core/services/text-edit';
 import { Range } from '../../core/model/range';
 import {
-  toVsCodePosition,
   toVsCodeRange,
   toVsCodeUri,
 } from '../../utils/vsc-utils';
 import { getWikilinkDefinitionSetting } from '../../features/commands/update-wikilinks';
-import { computeNoteEdits, WikilinkDefinitionSetting } from '../janitor';
+import { lintNote } from '../janitor';
 
 export default async function activate(
   context: ExtensionContext,
@@ -101,13 +100,13 @@ async function runJanitor(foam: Foam): Promise<JanitorResult> {
     nonDirtyNotes.map(async note => {
       const noteText = await foam.workspace.readAsMarkdown(note.uri);
       const eol = detectNewline(noteText) ?? '\n';
-      const edits = computeNoteEdits(note, noteText, eol, foam.workspace, wikilinkSetting);
-      if (edits.length === 0) return;
+      const issues = lintNote(note, noteText, eol, foam.workspace, wikilinkSetting);
+      if (issues.length === 0) return;
 
-      const { addedHeading, addedDefinitions } = classifyEdits(edits, noteText);
-      if (addedHeading) updatedHeadingCount += 1;
-      if (addedDefinitions) updatedDefinitionListCount += 1;
+      if (issues.some(i => i.code === 'missing-heading')) updatedHeadingCount += 1;
+      if (issues.some(i => i.code === 'stale-definitions')) updatedDefinitionListCount += 1;
 
+      const edits = issues.flatMap(i => i.fix?.map(f => f.edit) ?? []);
       const updatedText = TextEdit.apply(noteText, edits);
       await workspace.fs.writeFile(toVsCodeUri(note.uri), Buffer.from(updatedText));
     })
@@ -123,17 +122,18 @@ async function runJanitor(foam: Foam): Promise<JanitorResult> {
     const noteText = doc.getText();
     const eol = doc.eol.toString();
 
-    const edits = computeNoteEdits(note, noteText, eol, foam.workspace, wikilinkSetting);
-    if (edits.length === 0) continue;
+    const issues = lintNote(note, noteText, eol, foam.workspace, wikilinkSetting);
+    if (issues.length === 0) continue;
 
-    const { addedHeading, addedDefinitions } = classifyEdits(edits, noteText);
-    if (addedHeading) updatedHeadingCount += 1;
-    if (addedDefinitions) updatedDefinitionListCount += 1;
+    if (issues.some(i => i.code === 'missing-heading')) updatedHeadingCount += 1;
+    if (issues.some(i => i.code === 'stale-definitions')) updatedDefinitionListCount += 1;
 
     await editor.edit(editBuilder => {
-      for (const edit of edits) {
-        const range = Range.createFromPosition(edit.range.start, edit.range.end);
-        editBuilder.replace(toVsCodeRange(range), edit.newText);
+      for (const issue of issues) {
+        for (const fix of issue.fix ?? []) {
+          const range = Range.createFromPosition(fix.edit.range.start, fix.edit.range.end);
+          editBuilder.replace(toVsCodeRange(range), fix.edit.newText);
+        }
       }
     });
   }
@@ -145,13 +145,3 @@ async function runJanitor(foam: Foam): Promise<JanitorResult> {
   };
 }
 
-/**
- * Infers whether the edit set adds a heading and/or definitions.
- * A heading edit inserts at position 0 (or after frontmatter) with newText starting with '#'.
- * Definition edits contain '[': patterns.
- */
-function classifyEdits(edits: TextEdit[], noteText: string): { addedHeading: boolean; addedDefinitions: boolean } {
-  const addedHeading = edits.some(e => e.newText.trimStart().startsWith('#'));
-  const addedDefinitions = edits.some(e => e.newText.includes('[') && !e.newText.trimStart().startsWith('#'));
-  return { addedHeading, addedDefinitions };
-}

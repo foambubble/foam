@@ -6,7 +6,7 @@ import {
   createTestWorkspace,
   createNoteFromMarkdown,
 } from '../test/test-utils';
-import { computeNoteEdits } from './janitor';
+import { computeNoteEdits, lintNote } from './janitor';
 
 Logger.setLevel('error');
 
@@ -20,6 +20,50 @@ const makeWorkspace = async (notes: { uri: string; content: string }[]) => {
   }
   return { workspace, dataStore };
 };
+
+describe('lintNote', () => {
+  it('returns no issues for a clean note', async () => {
+    const content = '# Already has a heading\n\nSome content.\n';
+    const { workspace } = await makeWorkspace([{ uri: '/note.md', content }]);
+    const note = workspace.find(URI.file('/note.md'))!;
+
+    const issues = lintNote(note, content, '\n', workspace, 'off');
+
+    expect(issues).toHaveLength(0);
+  });
+
+  it('returns a missing-heading issue with a fix for a note without h1', async () => {
+    const content = 'No heading here.\n';
+    const { workspace } = await makeWorkspace([{ uri: '/note.md', content }]);
+    const note = workspace.find(URI.file('/note.md'))!;
+
+    const issues = lintNote(note, content, '\n', workspace, 'off');
+
+    expect(issues).toHaveLength(1);
+    expect(issues[0].code).toEqual('missing-heading');
+    expect(issues[0].fix).toHaveLength(1);
+    expect(issues[0].fix![0].uri.path).toEqual('/note.md');
+    const result = TextEdit.apply(content, [issues[0].fix![0].edit]);
+    expect(result).toEqual('# Note\n\nNo heading here.\n');
+  });
+
+  it('returns stale-definitions issues with fixes when wikilinks are present', async () => {
+    const content = '# Note\n\n[[other]]\n';
+    const { workspace } = await makeWorkspace([
+      { uri: '/note.md', content },
+      { uri: '/other.md', content: '# Other\n' },
+    ]);
+    const note = workspace.find(URI.file('/note.md'))!;
+
+    const issues = lintNote(note, content, '\n', workspace, 'withoutExtensions');
+
+    expect(issues.some(i => i.code === 'stale-definitions')).toBe(true);
+    expect(issues.every(i => i.fix !== undefined)).toBe(true);
+    const edits = issues.flatMap(i => i.fix!.map(f => f.edit));
+    const result = TextEdit.apply(content, edits);
+    expect(result).toContain('[other]: other');
+  });
+});
 
 describe('computeNoteEdits', () => {
   it('returns no edits for a note that needs no changes', async () => {
@@ -77,7 +121,7 @@ describe('computeNoteEdits', () => {
       content,
       '\n',
       workspace,
-      'noExtensions'
+      'withoutExtensions'
     );
 
     expect(edits.length).toBeGreaterThan(0);
@@ -111,7 +155,7 @@ describe('computeNoteEdits', () => {
       content,
       '\n',
       workspace,
-      'noExtensions'
+      'withoutExtensions'
     );
 
     expect(edits.length).toBeGreaterThan(1);

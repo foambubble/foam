@@ -8,7 +8,7 @@ import completionProvider from './link-completion';
 import tagCompletionProvider from './tag-completion';
 import linkDecorations from './document-decorator';
 import navigationProviders from './navigation-provider';
-import wikilinkDiagnostics from './wikilink-diagnostics';
+import wikilinkDiagnostics from '../janitor/vscode/wikilink-diagnostics';
 import refactor from './refactor';
 import workspaceSymbolProvider from './workspace-symbol-provider';
 import tagRenameProvider from './tag-rename-provider';

@@ -6,12 +6,17 @@ import {
   TextEdit,
   WorkspaceEdit,
   commands,
+  Diagnostic,
+  DiagnosticSeverity,
+  DiagnosticRelatedInformation,
+  Location,
 } from 'vscode';
 import { Position as FoamPosition } from '../core/model/position';
 import { Range as FoamRange } from '../core/model/range';
 import { URI as FoamURI } from '../core/model/uri';
 import {
   TextEdit as FoamTextEdit,
+  LintIssue,
   WorkspaceTextEdit,
 } from '../core/services/text-edit';
 import { FoamWorkspace } from '../core/model/workspace';
@@ -78,6 +83,31 @@ export const toVsCodeWorkspaceEdit = (
   }
 
   return workspaceEdit;
+};
+
+/**
+ * Converts a platform-agnostic LintIssue to a VS Code Diagnostic.
+ * Severity is always Warning; source is always 'Foam'.
+ * relatedInfo entries are mapped directly using their message field.
+ */
+export const lintIssueToDiagnostic = (issue: LintIssue): Diagnostic => {
+  const diagnostic = new Diagnostic(
+    toVsCodeRange(issue.range),
+    issue.message,
+    DiagnosticSeverity.Warning
+  );
+  diagnostic.code = issue.code;
+  diagnostic.source = 'Foam';
+  if (issue.relatedInfo) {
+    diagnostic.relatedInformation = issue.relatedInfo.map(
+      info =>
+        new DiagnosticRelatedInformation(
+          new Location(toVsCodeUri(info.uri), toVsCodeRange(info.range)),
+          info.message
+        )
+    );
+  }
+  return diagnostic;
 };
 
 /**

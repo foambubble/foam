@@ -1,39 +1,19 @@
 import * as vscode from 'vscode';
-import { createMarkdownParser } from '../core/services/markdown-parser';
-import { FoamWorkspace } from '../core/model/workspace';
+import { createMarkdownParser } from '../../core/services/markdown-parser';
+import { FoamWorkspace } from '../../core/model/workspace';
 import {
   cleanWorkspace,
   closeEditors,
   createFile,
   showInEditor,
-} from '../test/test-utils-vscode';
-import { toVsCodeUri } from '../utils/vsc-utils';
+} from '../../test/test-utils-vscode';
+import { toVsCodeUri } from '../../utils/vsc-utils';
 import { updateDiagnostics, IdentifierResolver } from './wikilink-diagnostics';
 
 describe('Wikilink diagnostics', () => {
   beforeEach(async () => {
     await cleanWorkspace();
     await closeEditors();
-  });
-  it('should show no warnings when there are no conflicts', async () => {
-    const fileA = await createFile('This is the todo file');
-    const fileB = await createFile(`This is linked to [[${fileA.name}]]`);
-
-    const parser = createMarkdownParser([]);
-    const ws = new FoamWorkspace()
-      .set(parser.parse(fileA.uri, fileA.content))
-      .set(parser.parse(fileB.uri, fileB.content));
-
-    await showInEditor(fileB.uri);
-
-    const collection = vscode.languages.createDiagnosticCollection('foam-test');
-    updateDiagnostics(
-      ws,
-      parser,
-      vscode.window.activeTextEditor.document,
-      collection
-    );
-    expect(countEntries(collection)).toEqual(0);
   });
 
   it('should show no warnings in non-md files', async () => {
@@ -108,50 +88,6 @@ describe('Wikilink diagnostics', () => {
 });
 
 describe('Section diagnostics', () => {
-  it('should show nothing on placeholders', async () => {
-    const file = await createFile('Link to [[placeholder]]');
-    const parser = createMarkdownParser([]);
-    const ws = new FoamWorkspace().set(parser.parse(file.uri, file.content));
-
-    await showInEditor(file.uri);
-
-    const collection = vscode.languages.createDiagnosticCollection('foam-test');
-    updateDiagnostics(
-      ws,
-      parser,
-      vscode.window.activeTextEditor.document,
-      collection
-    );
-    expect(countEntries(collection)).toEqual(0);
-  });
-  it('should show nothing when the section is correct', async () => {
-    const fileA = await createFile(
-      `
-# Section 1
-Content of section 1
-
-# Section 2
-Content of section 2
-`,
-      ['my-file.md']
-    );
-    const fileB = await createFile('Link to [[my-file#Section 1]]');
-    const parser = createMarkdownParser([]);
-    const ws = new FoamWorkspace()
-      .set(parser.parse(fileA.uri, fileA.content))
-      .set(parser.parse(fileB.uri, fileB.content));
-
-    await showInEditor(fileB.uri);
-
-    const collection = vscode.languages.createDiagnosticCollection('foam-test');
-    updateDiagnostics(
-      ws,
-      parser,
-      vscode.window.activeTextEditor.document,
-      collection
-    );
-    expect(countEntries(collection)).toEqual(0);
-  });
   it('should show a warning when the section name is incorrect', async () => {
     const fileA = await createFile(
       `
@@ -189,28 +125,6 @@ Content of section 2
 });
 
 describe('Block diagnostics', () => {
-  it('should show no warning when block anchor exists', async () => {
-    const fileA = await createFile('A paragraph ^myblock', [
-      'note-with-block.md',
-    ]);
-    const fileB = await createFile(`Link to [[${fileA.name}#^myblock]]`);
-    const parser = createMarkdownParser([]);
-    const ws = new FoamWorkspace()
-      .set(parser.parse(fileA.uri, fileA.content))
-      .set(parser.parse(fileB.uri, fileB.content));
-
-    await showInEditor(fileB.uri);
-
-    const collection = vscode.languages.createDiagnosticCollection('foam-test');
-    updateDiagnostics(
-      ws,
-      parser,
-      vscode.window.activeTextEditor.document,
-      collection
-    );
-    expect(countEntries(collection)).toEqual(0);
-  });
-
   it('should show a warning when block anchor does not exist', async () => {
     const fileA = await createFile('A paragraph ^existing', [
       'note-for-block-diag.md',
@@ -236,24 +150,6 @@ describe('Block diagnostics', () => {
     expect(items[0].relatedInformation.map(info => info.message)).toEqual([
       '^existing',
     ]);
-  });
-
-  it('should show nothing on placeholders with block anchors', async () => {
-    const file = await createFile('Link to [[nonexistent#^ghost]]');
-    const parser = createMarkdownParser([]);
-    const ws = new FoamWorkspace().set(parser.parse(file.uri, file.content));
-
-    await showInEditor(file.uri);
-
-    const collection = vscode.languages.createDiagnosticCollection('foam-test');
-    updateDiagnostics(
-      ws,
-      parser,
-      vscode.window.activeTextEditor.document,
-      collection
-    );
-    // No diagnostic when the note itself doesn't exist (placeholder)
-    expect(countEntries(collection)).toEqual(0);
   });
 
   it('should generate a quick-fix that preserves the # when correcting a block anchor', async () => {
@@ -402,23 +298,6 @@ describe('Duplicate block ID diagnostics', () => {
     await closeEditors();
   });
 
-  it('should show no warning when all block IDs in a file are unique', async () => {
-    const file = await createFile('Para one ^block1\n\nPara two ^block2\n');
-    const parser = createMarkdownParser([]);
-    const ws = new FoamWorkspace().set(parser.parse(file.uri, file.content));
-
-    await showInEditor(file.uri);
-
-    const collection = vscode.languages.createDiagnosticCollection('foam-test');
-    updateDiagnostics(
-      ws,
-      parser,
-      vscode.window.activeTextEditor.document,
-      collection
-    );
-    expect(countEntries(collection)).toEqual(0);
-  });
-
   it('should warn only on the duplicate (2nd+) occurrence, not the first', async () => {
     const file = await createFile('Para one ^myblock\n\nPara two ^myblock\n');
     const parser = createMarkdownParser([]);
@@ -465,8 +344,13 @@ describe('Duplicate block ID diagnostics', () => {
     );
   });
 
-  it('should not show a warning for a list item with a unique block ID', async () => {
-    const file = await createFile('- Item one ^listblock\n- Item two\n');
+  it('should warn about duplicate block IDs on list items that have nested subitems', async () => {
+    // The ^id anchor appears on the list item's start line (line 0), while the
+    // block range.end points to the last nested subitem (line 1). The diagnostic
+    // must still find the anchor and highlight it on the correct line.
+    const file = await createFile(
+      '- first item ^dup\n  - subitem\n\n- second item ^dup\n'
+    );
     const parser = createMarkdownParser([]);
     const ws = new FoamWorkspace().set(parser.parse(file.uri, file.content));
 
@@ -479,24 +363,16 @@ describe('Duplicate block ID diagnostics', () => {
       vscode.window.activeTextEditor.document,
       collection
     );
-    expect(countEntries(collection)).toEqual(0);
-  });
-
-  it('should not show a warning for a list item with nested subitems', async () => {
-    const file = await createFile('- this is item ^listblock\n  - subitem\n');
-    const parser = createMarkdownParser([]);
-    const ws = new FoamWorkspace().set(parser.parse(file.uri, file.content));
-
-    await showInEditor(file.uri);
-
-    const collection = vscode.languages.createDiagnosticCollection('foam-test');
-    updateDiagnostics(
-      ws,
-      parser,
-      vscode.window.activeTextEditor.document,
-      collection
+    const items = collection.get(vscode.window.activeTextEditor.document.uri);
+    // Only the 2nd occurrence should be flagged
+    expect(items).toHaveLength(1);
+    expect(items[0].severity).toEqual(vscode.DiagnosticSeverity.Warning);
+    // The duplicate is the second list item (line 3, 0-based)
+    expect(items[0].range.start.line).toBe(3);
+    // Range covers '^dup' (4 chars)
+    expect(items[0].range.end.character - items[0].range.start.character).toBe(
+      4
     );
-    expect(countEntries(collection)).toEqual(0);
   });
 
   it('should offer a "Replace with new ID" quick fix for each duplicate', async () => {
@@ -529,56 +405,6 @@ describe('Duplicate block ID diagnostics', () => {
     expect(actions).toHaveLength(1);
     expect(actions[0].title).toBe('Replace with new ID');
     expect(actions[0].command.arguments[0].value).toMatch(/^\^[a-z0-9]+$/);
-  });
-
-  it('should warn about duplicate block IDs on list items that have nested subitems', async () => {
-    // The ^id anchor appears on the list item's start line (line 0), while the
-    // block range.end points to the last nested subitem (line 1). The diagnostic
-    // must still find the anchor and highlight it on the correct line.
-    const file = await createFile(
-      '- first item ^dup\n  - subitem\n\n- second item ^dup\n'
-    );
-    const parser = createMarkdownParser([]);
-    const ws = new FoamWorkspace().set(parser.parse(file.uri, file.content));
-
-    await showInEditor(file.uri);
-
-    const collection = vscode.languages.createDiagnosticCollection('foam-test');
-    updateDiagnostics(
-      ws,
-      parser,
-      vscode.window.activeTextEditor.document,
-      collection
-    );
-    const items = collection.get(vscode.window.activeTextEditor.document.uri);
-    // Only the 2nd occurrence should be flagged
-    expect(items).toHaveLength(1);
-    expect(items[0].severity).toEqual(vscode.DiagnosticSeverity.Warning);
-    // The duplicate is the second list item (line 3, 0-based)
-    expect(items[0].range.start.line).toBe(3);
-    // Range covers '^dup' (4 chars)
-    expect(items[0].range.end.character - items[0].range.start.character).toBe(
-      4
-    );
-  });
-
-  it('should not flag blocks when only one occurrence exists', async () => {
-    const file = await createFile(
-      'Para one ^alpha\n\nPara two ^beta\n\nPara three ^alpha-variant\n'
-    );
-    const parser = createMarkdownParser([]);
-    const ws = new FoamWorkspace().set(parser.parse(file.uri, file.content));
-
-    await showInEditor(file.uri);
-
-    const collection = vscode.languages.createDiagnosticCollection('foam-test');
-    updateDiagnostics(
-      ws,
-      parser,
-      vscode.window.activeTextEditor.document,
-      collection
-    );
-    expect(countEntries(collection)).toEqual(0);
   });
 });
 

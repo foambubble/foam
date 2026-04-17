@@ -77,3 +77,32 @@ export interface WorkspaceTextEdit {
   /** The text edit operation to perform */
   edit: TextEdit;
 }
+
+/** A platform-agnostic pointer to a related location, used for hints in lint issues. */
+export interface LintRelatedInfo {
+  uri: URI;
+  range: Range;
+  message: string;
+}
+
+/**
+ * A lint issue found in a note, modelled after ESLint's rule output.
+ *
+ * Every issue has a code, a human-readable message, and the range in the
+ * source file where the problem is. Issues that can be fixed automatically
+ * carry a `fix` — an array of workspace edits (may span multiple files).
+ * Issues without a `fix` require human judgment to resolve.
+ *
+ * `relatedInfo` carries optional hints (e.g. candidate targets for an
+ * ambiguous link) that a VS Code adapter can surface as DiagnosticRelatedInformation.
+ */
+export interface LintIssue {
+  /** Machine-readable identifier, e.g. 'missing-heading', 'ambiguous-identifier' */
+  code: string;
+  message: string;
+  range: Range;
+  /** Present when the issue can be fixed automatically. May touch multiple files. */
+  fix?: WorkspaceTextEdit[];
+  /** Optional hints pointing to related locations (e.g. candidate targets). */
+  relatedInfo?: LintRelatedInfo[];
+}

@@ -7,10 +7,12 @@ Add a single-package CLI entry to `packages/foam-vscode` and use it to drive the
 ## Steps
 
 - [completed] Confirm the single-package CLI direction and rebase the branch onto `main`
-- [in_progress] Research existing workspace-loading and build patterns to reuse for a Node CLI
-- [pending] Add CLI entrypoints and a first `publish` command under `src/cli`
-- [pending] Extend the build to emit a CLI artifact and expose package scripts
-- [pending] Verify unit coverage and run an end-to-end CLI publish flow
+- [completed] Research existing workspace-loading and build patterns to reuse for a Node CLI
+- [completed] Add CLI entrypoints and a first `publish` command under `src/cli`
+- [completed] Extend the build to emit a CLI artifact and expose package scripts
+- [completed] Verify unit coverage and run an end-to-end CLI publish flow
+- [completed] Research how Foam docs are currently published and define the clean interface point for merging this branch
+- [completed] Add merge-readiness follow-ups for docs integration, starting with CI smoke coverage rather than switching deployment
 
 ## Current Publish Slice
 
@@ -58,6 +60,10 @@ Add a single-package CLI entry to `packages/foam-vscode` and use it to drive the
 - Keep the CLI in the same package as the extension, but maintain code boundaries: `src/cli/**` may depend on CLI-safe modules (`src/core/**`, `src/publish/**`) and must not depend on `vscode` or extension feature code.
 - Favor one CLI executable with subcommands over separate bins per command.
 - Keep CLI argument parsing lightweight in v1 unless complexity actually justifies a parser dependency.
+- For Foam's own docs, treat `docs/` as publish source content and the generated site as a disposable build artifact. Do not move the site scaffold into the repo tree or couple merge readiness to a deployment switch.
+- Keep the existing `foam-template` sync workflow separate from docs-site publication. That workflow distributes source docs, not the rendered website.
+- Before switching Foam's public docs to the new path, add CI smoke coverage that exercises `foam publish` against `./docs` so the branch can merge without taking ownership of Pages deployment yet.
+- Prefer a repo-root dogfood command for Foam's own docs so CI and humans use the same entrypoint instead of depending on the workspace-local script cwd.
 - Test strategy:
   - Favor unit tests first for pure build-time logic in `src/publish`.
   - Test the pipeline in slices: route generation, publish filtering, backlink derivation, output manifest generation, and representative note transforms.
@@ -74,5 +80,6 @@ Add a single-package CLI entry to `packages/foam-vscode` and use it to drive the
   - `yarn lint` passes in `packages/foam-vscode` with the existing skipped-test warning in `src/vscode/features/notes/connections.spec.ts`.
   - `yarn build:cli` passes in `packages/foam-vscode`.
   - `node packages/foam-vscode/out/cli/index.js publish ./docs --out ./.tmp/<site>` materializes a runnable Starlight site.
+  - `yarn publish:docs-site` passes from the repo root and materializes Foam's docs site from `./docs`.
   - `astro build` succeeds from the CLI-generated site output when run against the repo-installed dependencies.
   - `yarn publish-site ./docs --out ./.tmp/<site>` succeeds from `packages/foam-vscode` after the Starlight package removal.

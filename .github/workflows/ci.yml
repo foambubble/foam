@@ -62,3 +62,32 @@ jobs:
         run: yarn build
       - name: Run Tests
         run: xvfb-run --auto-servernum yarn test
+
+  publish-docs-smoke:
+    name: Publish Docs Smoke
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      - name: Restore Dependencies and VS Code test instance
+        uses: actions/cache@v5
+        with:
+          path: |
+            node_modules
+            */*/node_modules
+            packages/foam-vscode/.vscode-test
+          key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock', 'packages/foam-vscode/src/test/run-tests.ts') }}-${{ secrets.CACHE_VERSION }}
+      - name: Install Dependencies
+        run: yarn
+      - name: Publish Foam Docs Site
+        run: yarn publish:docs-site
+      - name: Verify Generated Site Shape
+        run: |
+          test -f ./.tmp/foam-docs-site/package.json
+          test -f ./.tmp/foam-docs-site/generated/site-config.json
+          test -f ./.tmp/foam-docs-site/public/publish-routes.json
+          test -f ./.tmp/foam-docs-site/src/content/docs/index.md

@@ -11,9 +11,13 @@ import { Range as FoamRange } from '../core/model/range';
 import { URI } from '../core/model/uri';
 import { Logger } from '../core/utils/log';
 import { TextEdit as FoamTextEdit } from '../core/services/text-edit';
-import * as foamCommands from '../features/commands';
-import refactorActivate from '../vscode/features/editing/refactor';
-import convertLinksActivate from '../vscode/features/editing/convert-links';
+import dailyNotes from '../vscode/features/daily-notes';
+import editing from '../vscode/features/editing';
+import navigation from '../vscode/features/navigation';
+import notes from '../vscode/features/notes';
+import tags from '../vscode/features/tags';
+import janitorCommand from '../janitor/vscode/commands';
+import buildEmbeddingsCommand from '../ai/vscode/commands/build-embeddings';
 import { Foam, bootstrap } from '../core/model/foam';
 import { createMarkdownParser } from '../core/services/markdown-parser';
 import {
@@ -1696,27 +1700,13 @@ async function initializeFoamCommands(foam: Foam): Promise<void> {
   const mockContext = createMockExtensionContext();
 
   const foamPromise = Promise.resolve(foam);
-  // Initialize all command modules
-  // Commands that need Foam instance
-  await foamCommands.createNote(mockContext, foamPromise);
-  await foamCommands.janitorCommand(mockContext, foamPromise);
-  await foamCommands.openRandomNoteCommand(mockContext, foamPromise);
-  await foamCommands.openResource(mockContext, foamPromise);
-  await foamCommands.updateGraphCommand(mockContext, foamPromise);
-  await foamCommands.updateWikilinksCommand(mockContext, foamPromise);
-  await foamCommands.openDailyNoteForDateCommand(mockContext, foamPromise);
-  await convertLinksActivate(mockContext, foamPromise);
-  await foamCommands.buildEmbeddingsCommand(mockContext, foamPromise);
-  await foamCommands.openDailyNoteCommand(mockContext, foamPromise);
-  await foamCommands.openDatedNote(mockContext, foamPromise);
-
-  // Commands that only need context
-  await foamCommands.copyWithoutBracketsCommand(mockContext);
-  await foamCommands.createFromTemplateCommand(mockContext);
-  await foamCommands.createNewTemplate(mockContext);
-
-  // Features that register workspace event listeners
-  await refactorActivate(mockContext, foamPromise);
+  await dailyNotes(mockContext, foamPromise);
+  await editing(mockContext, foamPromise);
+  await navigation(mockContext, foamPromise);
+  await notes(mockContext, foamPromise);
+  await tags(mockContext, foamPromise);
+  await janitorCommand(mockContext, foamPromise);
+  await buildEmbeddingsCommand(mockContext, foamPromise);
 
   Logger.info('Foam commands initialized successfully in mock environment');
 }

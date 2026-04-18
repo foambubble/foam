@@ -6,7 +6,7 @@ import { bootstrap } from './core/model/foam';
 import { Logger } from './core/utils/log';
 import { fromVsCodeUri } from './utils/vsc-utils';
 
-import { features } from './features';
+import { features } from './vscode/features';
 import { VsCodeOutputLogger, exposeLogger } from './services/logging';
 import {
   getAttachmentsExtensions,

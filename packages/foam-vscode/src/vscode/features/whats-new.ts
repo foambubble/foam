@@ -63,9 +63,14 @@ export default async function activate(context: ExtensionContext) {
 
   const title = parseWhatsNewTitle(content);
   const message = title ? `What's new in Foam: ${title}` : "What's new in Foam";
-  const choice = await window.showInformationMessage(message, 'Show me', 'Dismiss');
 
-  if (choice === 'Show me') {
-    await showWhatsNew(context.extensionUri);
-  }
+  // Fire-and-forget: the notification must not block extension activation,
+  // because activate() is awaited by Promise.all in extension.ts.
+  // If we awaited here, the extension would never finish activating until
+  // the user clicks a button.
+  window.showInformationMessage(message, 'Show me', 'Dismiss').then(choice => {
+    if (choice === 'Show me') {
+      showWhatsNew(context.extensionUri);
+    }
+  });
 }

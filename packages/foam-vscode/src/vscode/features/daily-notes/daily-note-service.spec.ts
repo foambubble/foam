@@ -22,6 +22,7 @@ import {
   getDailyNoteTemplateUri,
   getTemplatesDir,
 } from '../../../vscode/services/template-service';
+import { URI } from '../../../core/model/uri';
 
 describe('getDailyNoteUri', () => {
   const date = new Date('2021-02-07T00:00:00Z');
@@ -61,7 +62,9 @@ describe('Daily note creation and template processing', () => {
 
   beforeEach(async () => {
     // Ensure daily note templates are removed before each test
-    for (const template of getDailyNoteTemplateCandidateUris(getTemplatesDir())) {
+    for (const template of getDailyNoteTemplateCandidateUris(
+      getTemplatesDir()
+    )) {
       if (await fileExists(template)) {
         await deleteFile(template);
       }
@@ -293,7 +296,15 @@ Unix: \${FOAM_DATE_SECONDS_UNIX}`,
         /No daily note template found/
       );
 
-      const templateUri = await getDailyNoteTemplateUri();
+      // The warning handler is fire-and-forget, so wait for the template
+      // file to be created asynchronously
+      let templateUri: URI;
+      const deadline = Date.now() + 5000;
+      while (Date.now() < deadline) {
+        templateUri = await getDailyNoteTemplateUri();
+        if (templateUri) break;
+        await new Promise(r => setTimeout(r, 50));
+      }
 
       expect(templateUri).toBeDefined();
       expect(await fileExists(templateUri)).toBe(true);

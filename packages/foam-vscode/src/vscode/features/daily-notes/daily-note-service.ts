@@ -13,7 +13,6 @@ import {
 } from '../../services/editor';
 import { resolveDailyNote } from '../../../core/templates/daily-note-resolver';
 import { Resolver } from '../../../core/templates/variable-resolver';
-import { fromVsCodeUri } from '../../utils/vsc-utils';
 
 // ─── Format conversion ────────────────────────────────────────────────────────
 
@@ -184,6 +183,8 @@ export async function createDailyNoteIfNotExists(targetDate: Date, foam: Foam) {
   const templateUri = await getDailyNoteTemplateUri();
 
   if (!templateUri) {
+    // Fire-and-forget: must not block daily note creation.
+    // The user can click the button to create a template at any time.
     window
       .showWarningMessage(
         'No daily note template found. Using legacy configuration (deprecated). Create a daily note template to avoid this warning and customize your daily note.',
@@ -201,7 +202,6 @@ export async function createDailyNoteIfNotExists(targetDate: Date, foam: Foam) {
             newTemplateUri,
             new TextEncoder().encode(DEFAULT_DAILY_NOTE_TEMPLATE)
           );
-          await focusNote(fromVsCodeUri(newTemplateUri), false);
         }
       });
   }

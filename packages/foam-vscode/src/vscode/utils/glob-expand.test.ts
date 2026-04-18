@@ -1,4 +1,4 @@
-import { expandAlternateGroups } from './globExpand';
+import { expandAlternateGroups } from './glob-expand';
 
 describe('testExpandAlternateGroupsForGlobs', () => {
   it('expands simple alternates', () => {

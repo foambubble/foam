@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 import { URI } from '../../../core/model/uri';
 import { IMatcher } from '../../../core/services/datastore';
 import { UriTreeItem } from './tree-view-utils';
-import { ContextMemento } from '../utils/vsc-utils';
+import { ContextMemento } from '../vsc-utils';
 import {
   FolderTreeItem,
   FolderTreeProvider,

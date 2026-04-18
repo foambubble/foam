@@ -4,7 +4,7 @@ import {
   closeEditors,
   createFile,
   showInEditor,
-} from '../test/test-utils-vscode';
+} from '../../test/test-utils-vscode';
 import {
   asAbsoluteWorkspaceUri,
   getCurrentEditorDirectory,

@@ -13,7 +13,7 @@ import {
 } from './editor';
 
 import { getFoamVsCodeConfig } from '../config';
-import { toVsCodeUri } from '../vscode/utils/vsc-utils';
+import { toVsCodeUri } from '../utils/vsc-utils';
 import { isNone } from '../../core/utils';
 
 export type OnFileExistStrategy =

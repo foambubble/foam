@@ -57,7 +57,7 @@ async function buildVscodeTarget() {
   const header =
     '// This file is auto-generated from webview-ui/graph/src/protocol.ts — do not edit directly.\n\n';
   fs.writeFileSync(
-    path.join(dir, '../../src/features/panels/dataviz/graph-protocol.ts'),
+    path.join(dir, '../../src/vscode/features/graph-webview/graph-protocol.ts'),
     header + protocolSrc
   );
 

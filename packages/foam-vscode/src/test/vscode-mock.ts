@@ -11,13 +11,6 @@ import { Range as FoamRange } from '../core/model/range';
 import { URI } from '../core/model/uri';
 import { Logger } from '../core/utils/log';
 import { TextEdit as FoamTextEdit } from '../core/services/text-edit';
-import dailyNotes from '../vscode/features/daily-notes';
-import editing from '../vscode/features/editing';
-import navigation from '../vscode/features/navigation';
-import notes from '../vscode/features/notes';
-import tags from '../vscode/features/tags';
-import janitor from '../vscode/features/janitor';
-import ai from '../vscode/features/ai';
 import { Foam, bootstrap } from '../core/model/foam';
 import { createMarkdownParser } from '../core/services/markdown-parser';
 import {
@@ -588,6 +581,13 @@ export enum TreeItemCollapsibleState {
   None = 0,
   Collapsed = 1,
   Expanded = 2,
+}
+
+export enum DecorationRangeBehavior {
+  OpenOpen = 0,
+  ClosedClosed = 1,
+  OpenClosed = 2,
+  ClosedOpen = 3,
 }
 
 // ===== Theme Classes =====
@@ -1461,7 +1461,7 @@ export interface ExtensionContext {
   languageModelAccessInformation: any;
 }
 
-function createMockExtensionContext(): ExtensionContext {
+export function createMockExtensionContext(): ExtensionContext {
   return {
     subscriptions: [],
     workspaceState: {
@@ -1689,26 +1689,8 @@ class TestFoam {
   }
 }
 
-let foamCommandsInitialized = false;
-
-async function initializeFoamCommands(foam: Foam): Promise<void> {
-  if (foamCommandsInitialized) {
-    return;
-  }
-  foamCommandsInitialized = true;
-
-  const mockContext = createMockExtensionContext();
-
-  const foamPromise = Promise.resolve(foam);
-  await dailyNotes(mockContext, foamPromise);
-  await editing(mockContext, foamPromise);
-  await navigation(mockContext, foamPromise);
-  await notes(mockContext, foamPromise);
-  await tags(mockContext, foamPromise);
-  await janitor(mockContext, foamPromise);
-  await ai(mockContext, foamPromise);
-
-  Logger.info('Foam commands initialized successfully in mock environment');
+export async function getTestFoam(): Promise<Foam> {
+  return TestFoam.getInstance();
 }
 
 // ===== VS Code Namespaces =====
@@ -1740,6 +1722,27 @@ export const window = {
 
   get visibleTextEditors(): TextEditor[] {
     return mockState.visibleTextEditors;
+  },
+
+  createTextEditorDecorationType(_options: any): any {
+    return { dispose: () => {} };
+  },
+
+  createTreeView(viewId: string, options: any): any {
+    const noop = () => ({ dispose: () => {} });
+    return { dispose: () => {}, onDidChangeSelection: noop, onDidChangeVisibility: noop, onDidExpandElement: noop, onDidCollapseElement: noop };
+  },
+
+  registerTreeDataProvider(_viewId: string, _provider: any): Disposable {
+    return { dispose: () => {} };
+  },
+
+  onDidChangeActiveTextEditor(listener: (editor: any) => any): Disposable {
+    return { dispose: () => {} };
+  },
+
+  onDidChangeVisibleTextEditors(listener: (editors: any[]) => any): Disposable {
+    return { dispose: () => {} };
   },
 
   async showInputBox(options?: {
@@ -1994,6 +1997,10 @@ export const workspace = {
     return { dispose: () => {} };
   },
 
+  onDidChangeTextDocument(listener: (e: any) => void): Disposable {
+    return { dispose: () => {} };
+  },
+
   async openTextDocument(
     uriOrFileNameOrOptions:
       | Uri
@@ -2180,11 +2187,6 @@ export const commands = {
     command: string,
     ...args: any[]
   ): Promise<T> {
-    // Auto-initialize Foam commands if this is a foam-vscode command
-    if (command.startsWith('foam-vscode.')) {
-      await initializeFoamCommands(await TestFoam.getInstance());
-    }
-
     const handler = mockState.commands.get(command);
     if (!handler) {
       throw new Error(`Command '${command}' not found`);
@@ -2211,6 +2213,44 @@ export const languages = {
       dispose: () => {
         // No-op
       },
+    };
+  },
+
+  registerCompletionItemProvider(selector: any, provider: any, ...triggerChars: string[]): Disposable {
+    return { dispose: () => {} };
+  },
+
+  registerDefinitionProvider(selector: any, provider: any): Disposable {
+    return { dispose: () => {} };
+  },
+
+  registerDocumentLinkProvider(selector: any, provider: any): Disposable {
+    return { dispose: () => {} };
+  },
+
+  registerHoverProvider(selector: any, provider: any): Disposable {
+    return { dispose: () => {} };
+  },
+
+  registerReferenceProvider(selector: any, provider: any): Disposable {
+    return { dispose: () => {} };
+  },
+
+  registerRenameProvider(selector: any, provider: any): Disposable {
+    return { dispose: () => {} };
+  },
+
+  registerCodeActionsProvider(selector: any, provider: any, metadata?: any): Disposable {
+    return { dispose: () => {} };
+  },
+
+  createDiagnosticCollection(_name?: string): any {
+    const items = new Map<any, any[]>();
+    return {
+      set: (uri: any, diagnostics: any[]) => items.set(uri, diagnostics),
+      delete: (uri: any) => items.delete(uri),
+      clear: () => items.clear(),
+      dispose: () => items.clear(),
     };
   },
 };
@@ -2286,7 +2326,6 @@ export function initializeWorkspace(workspaceRoot: string): void {
 export function resetMockState(): void {
   // Clean up existing Foam instance
   TestFoam.dispose();
-  foamCommandsInitialized = false;
   mockState.activeTextEditor = undefined;
   mockState.visibleTextEditors = [];
   mockState.workspaceFolders = [];
@@ -2333,9 +2372,6 @@ resetMockState();
 export async function forceCleanup(): Promise<void> {
   // Clean up existing Foam instance
   TestFoam.dispose();
-
-  // Clear all registered commands
-  mockState.commands.clear();
 
   // Clear all event listeners by resetting emitters
   mockState.activeTextEditor = undefined;

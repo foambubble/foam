@@ -339,6 +339,10 @@
     },
     "commands": [
       {
+        "command": "foam-vscode.show-whats-new",
+        "title": "Foam: Show What's New"
+      },
+      {
         "command": "foam-vscode.create-note",
         "title": "Foam: Create New Note"
       },

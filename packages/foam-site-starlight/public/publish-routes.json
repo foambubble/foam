@@ -1,0 +1,358 @@
+[
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/404.md",
+    "route": "/404"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/dev/about-docs.md",
+    "route": "/dev/about-docs"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/dev/build-vs-assemble.md",
+    "route": "/dev/build-vs-assemble"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/dev/code-of-conduct.md",
+    "route": "/dev/code-of-conduct"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/dev/contribution-guide.md",
+    "route": "/dev/contribution-guide"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/dev/devcontainers.md",
+    "route": "/dev/devcontainers"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/dev/foam-file-format.md",
+    "route": "/dev/foam-file-format"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/dev/good-first-task.md",
+    "route": "/dev/good-first-task"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/dev/mdx-by-default.md",
+    "route": "/dev/mdx-by-default"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/dev/proposals/foam-core.md",
+    "route": "/dev/proposals/foam-core"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/dev/proposals/foam-publish-module-plan.md",
+    "route": "/dev/proposals/foam-publish-module-plan"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/dev/proposals/improved-static-site-generation.md",
+    "route": "/dev/proposals/improved-static-site-generation"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/dev/proposals/inclusion-of-notes.md",
+    "route": "/dev/proposals/inclusion-of-notes"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/dev/proposals/link-reference-definition-improvements.md",
+    "route": "/dev/proposals/link-reference-definition-improvements"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/dev/proposals/materialized-backlinks.md",
+    "route": "/dev/proposals/materialized-backlinks"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/dev/proposals/roadmap.md",
+    "route": "/dev/proposals/roadmap"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/dev/proposals/static-site-publishing-research.md",
+    "route": "/dev/proposals/static-site-publishing-research"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/dev/proposals/wikilinks-in-foam.md",
+    "route": "/dev/proposals/wikilinks-in-foam"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/dev/publishing-permissions.md",
+    "route": "/dev/publishing-permissions"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/dev/releasing-foam.md",
+    "route": "/dev/releasing-foam"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/dev/testing.md",
+    "route": "/dev/testing"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/dev/todo.md",
+    "route": "/dev/todo"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/dev/unlinked-references.md",
+    "route": "/dev/unlinked-references"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/inbox.md",
+    "route": "/inbox"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/index.md",
+    "route": "/"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/principles.md",
+    "route": "/principles"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/features/backlinking.md",
+    "route": "/user/features/backlinking"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/features/block-anchors.md",
+    "route": "/user/features/block-anchors"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/features/commands.md",
+    "route": "/user/features/commands"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/features/custom-markdown-preview-styles.md",
+    "route": "/user/features/custom-markdown-preview-styles"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/features/custom-snippets.md",
+    "route": "/user/features/custom-snippets"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/features/daily-notes.md",
+    "route": "/user/features/daily-notes"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/features/embeds.md",
+    "route": "/user/features/embeds"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/features/foam-queries.md",
+    "route": "/user/features/foam-queries"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/features/footnotes.md",
+    "route": "/user/features/footnotes"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/features/graph-view.md",
+    "route": "/user/features/graph-view"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/features/link-reference-definitions.md",
+    "route": "/user/features/link-reference-definitions"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/features/note-properties.md",
+    "route": "/user/features/note-properties"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/features/paste-images-from-clipboard.md",
+    "route": "/user/features/paste-images-from-clipboard"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/features/resource-filters.md",
+    "route": "/user/features/resource-filters"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/features/spell-checking.md",
+    "route": "/user/features/spell-checking"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/features/tags.md",
+    "route": "/user/features/tags"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/features/templates.md",
+    "route": "/user/features/templates"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/features/wikilinks.md",
+    "route": "/user/features/wikilinks"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/frequently-asked-questions.md",
+    "route": "/user/frequently-asked-questions"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/getting-started/first-workspace.md",
+    "route": "/user/getting-started/first-workspace"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/getting-started/get-started-with-vscode.md",
+    "route": "/user/getting-started/get-started-with-vscode"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/getting-started/installation.md",
+    "route": "/user/getting-started/installation"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/getting-started/keyboard-shortcuts.md",
+    "route": "/user/getting-started/keyboard-shortcuts"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/getting-started/navigation.md",
+    "route": "/user/getting-started/navigation"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/getting-started/note-taking-in-foam.md",
+    "route": "/user/getting-started/note-taking-in-foam"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/getting-started/recommended-extensions.md",
+    "route": "/user/getting-started/recommended-extensions"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/getting-started/sync-notes.md",
+    "route": "/user/getting-started/sync-notes"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/index.md",
+    "route": "/user"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/publishing/generate-gatsby-site.md",
+    "route": "/user/publishing/generate-gatsby-site"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/publishing/math-support-with-katex.md",
+    "route": "/user/publishing/math-support-with-katex"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/publishing/math-support-with-mathjax.md",
+    "route": "/user/publishing/math-support-with-mathjax"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/publishing/publish-to-azure-devops-wiki.md",
+    "route": "/user/publishing/publish-to-azure-devops-wiki"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/publishing/publish-to-github-pages.md",
+    "route": "/user/publishing/publish-to-github-pages"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/publishing/publish-to-github.md",
+    "route": "/user/publishing/publish-to-github"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/publishing/publish-to-gitlab-pages.md",
+    "route": "/user/publishing/publish-to-gitlab-pages"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/publishing/publish-to-netlify-with-eleventy.md",
+    "route": "/user/publishing/publish-to-netlify-with-eleventy"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/publishing/publish-to-vercel.md",
+    "route": "/user/publishing/publish-to-vercel"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/publishing/publishing.md",
+    "route": "/user/publishing/publishing"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/recipes/add-images-to-notes.md",
+    "route": "/user/recipes/add-images-to-notes"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/recipes/automatic-git-syncing.md",
+    "route": "/user/recipes/automatic-git-syncing"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/recipes/automatically-expand-urls-to-well-titled-links.md",
+    "route": "/user/recipes/automatically-expand-urls-to-well-titled-links"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/recipes/capture-notes-with-drafts-pro.md",
+    "route": "/user/recipes/capture-notes-with-drafts-pro"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/recipes/capture-notes-with-shortcuts-and-github-actions.md",
+    "route": "/user/recipes/capture-notes-with-shortcuts-and-github-actions"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/recipes/diagrams-in-markdown.md",
+    "route": "/user/recipes/diagrams-in-markdown"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/recipes/export-to-pdf.md",
+    "route": "/user/recipes/export-to-pdf"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/recipes/generate-material-for-mkdocs-site.md",
+    "route": "/user/recipes/generate-material-for-mkdocs-site"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/recipes/how-to-write-recipes.md",
+    "route": "/user/recipes/how-to-write-recipes"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/recipes/markup-converter.md",
+    "route": "/user/recipes/markup-converter"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/recipes/migrating-from-obsidian.md",
+    "route": "/user/recipes/migrating-from-obsidian"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/recipes/migrating-from-onenote.md",
+    "route": "/user/recipes/migrating-from-onenote"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/recipes/migrating-from-roam.md",
+    "route": "/user/recipes/migrating-from-roam"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/recipes/predefined-user-snippets.md",
+    "route": "/user/recipes/predefined-user-snippets"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/recipes/real-time-collaboration.md",
+    "route": "/user/recipes/real-time-collaboration"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/recipes/recipes.md",
+    "route": "/user/recipes/recipes"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/recipes/search-for-notes.md",
+    "route": "/user/recipes/search-for-notes"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/recipes/shows-image-preview-on-hover.md",
+    "route": "/user/recipes/shows-image-preview-on-hover"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/recipes/take-notes-from-mobile-phone.md",
+    "route": "/user/recipes/take-notes-from-mobile-phone"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/recipes/web-clipper.md",
+    "route": "/user/recipes/web-clipper"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/recipes/write-your-notes-in-github-gist.md",
+    "route": "/user/recipes/write-your-notes-in-github-gist"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/tools/cli.md",
+    "route": "/user/tools/cli"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/tools/foam-logging-in-vscode.md",
+    "route": "/user/tools/foam-logging-in-vscode"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/tools/orphans.md",
+    "route": "/user/tools/orphans"
+  },
+  {
+    "sourcePath": "/Users/riccardo/.codex/worktrees/a57a/foam/docs/user/tools/workspace-janitor.md",
+    "route": "/user/tools/workspace-janitor"
+  }
+]

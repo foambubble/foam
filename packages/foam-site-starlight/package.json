@@ -1,0 +1,18 @@
+{
+  "name": "foam-site-starlight",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "generate": "node --import tsx ./scripts/generate-docs.ts",
+    "dev": "yarn generate && astro dev",
+    "build": "yarn generate && astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "@astrojs/starlight": "^0.38.3",
+    "astro": "^6.1.7"
+  },
+  "devDependencies": {
+    "tsx": "^4.21.0"
+  }
+}

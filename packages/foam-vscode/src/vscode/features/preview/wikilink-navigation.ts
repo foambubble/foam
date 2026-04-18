@@ -2,14 +2,14 @@
 
 import markdownItRegex from 'markdown-it-regex';
 import * as vscode from 'vscode';
-import { FoamWorkspace } from '../../core/model/workspace';
-import { Logger } from '../../core/utils/log';
-import { toVsCodeUri } from '../../utils/vsc-utils';
-import { MarkdownLink } from '../../core/services/markdown-link';
-import { Range } from '../../core/model/range';
+import { FoamWorkspace } from '../../../core/model/workspace';
+import { Logger } from '../../../core/utils/log';
+import { toVsCodeUri } from '../../../utils/vsc-utils';
+import { MarkdownLink } from '../../../core/services/markdown-link';
+import { Range } from '../../../core/model/range';
 import { isEmpty } from 'lodash';
-import { toSlug } from '../../core/utils/slug';
-import { isNone } from '../../core/utils';
+import { toSlug } from '../../../core/utils/slug';
+import { isNone } from '../../../core/utils';
 
 export const markdownItWikilinkNavigation = (
   md: markdownit,

@@ -1,8 +1,8 @@
 /* @unit-ready */
 import MarkdownIt from 'markdown-it';
-import { FoamWorkspace } from '../../core/model/workspace';
-import { createTestNote } from '../../test/test-utils';
-import { getUriInWorkspace } from '../../test/test-utils-vscode';
+import { FoamWorkspace } from '../../../core/model/workspace';
+import { createTestNote } from '../../../test/test-utils';
+import { getUriInWorkspace } from '../../../test/test-utils-vscode';
 import { default as markdownItWikilinkNavigation } from './wikilink-navigation';
 import { default as markdownItRemoveLinkReferences } from './remove-wikilink-references';
 import { default as escapeWikilinkPipes } from './escape-wikilink-pipes';

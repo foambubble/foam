@@ -1,11 +1,11 @@
 /*global markdownit:readonly*/
 
-import { FoamWorkspace } from '../../core/model/workspace';
-import { FoamGraph } from '../../core/model/graph';
-import { Logger } from '../../core/utils/log';
-import { renderDqlQuery } from '../../core/query/dql';
-import { renderJsQuery } from '../../core/query/js';
-import { escapeHtml } from '../../core/query/html';
+import { FoamWorkspace } from '../../../core/model/workspace';
+import { FoamGraph } from '../../../core/model/graph';
+import { Logger } from '../../../core/utils/log';
+import { renderDqlQuery } from '../../../core/query/dql';
+import { renderJsQuery } from '../../../core/query/js';
+import { escapeHtml } from '../../../core/query/html';
 
 export function markdownItFoamQuery(
   md: markdownit,

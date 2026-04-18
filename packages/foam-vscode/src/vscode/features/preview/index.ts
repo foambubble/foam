@@ -1,7 +1,7 @@
 /*global markdownit:readonly*/
 
 import * as vscode from 'vscode';
-import { Foam } from '../../core/model/foam';
+import { Foam } from '../../../core/model/foam';
 import { default as markdownItFoamTags } from './tag-highlight';
 import { default as markdownItWikilinkNavigation } from './wikilink-navigation';
 import { default as markdownItRemoveLinkReferences } from './remove-wikilink-references';
@@ -10,8 +10,8 @@ import { default as escapeWikilinkPipes } from './escape-wikilink-pipes';
 import { default as markdownItBlockAnchorIds } from './block-anchor-ids';
 import { default as markdownItFoamQuery } from './foam-query-renderer';
 import markdownItFootnote from 'markdown-it-footnote';
-import { fromVsCodeUri, toVsCodeUri } from '../../utils/vsc-utils';
-import { URI } from '../../core/model/uri';
+import { fromVsCodeUri, toVsCodeUri } from '../../../utils/vsc-utils';
+import { URI } from '../../../core/model/uri';
 
 export default async function activate(
   context: vscode.ExtensionContext,

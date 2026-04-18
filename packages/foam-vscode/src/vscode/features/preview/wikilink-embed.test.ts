@@ -6,9 +6,9 @@ import {
   generateImageStyles,
   extractBlockContent,
 } from './wikilink-embed';
-import * as config from '../../vscode/config';
-import { createMarkdownParser } from '../../core/services/markdown-parser';
-import { getRandomURI } from '../../test/test-utils';
+import * as config from '../../config';
+import { createMarkdownParser } from '../../../core/services/markdown-parser';
+import { getRandomURI } from '../../../test/test-utils';
 
 describe('Wikilink Note Embedding', () => {
   afterEach(() => {

@@ -3,7 +3,7 @@ import * as commands from './commands';
 import * as panels from './panels';
 import dateSnippets from '../vscode/features/daily-notes/index';
 import hoverProvider from '../vscode/features/navigation/hover-provider';
-import preview from './preview';
+import preview from '../vscode/features/preview';
 import completionProvider from '../vscode/features/navigation/link-completion';
 import tagCompletionProvider from '../vscode/features/tags/tag-completion';
 import linkDecorations from '../vscode/features/editing/document-decorator';

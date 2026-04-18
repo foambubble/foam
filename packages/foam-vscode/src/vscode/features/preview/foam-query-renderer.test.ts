@@ -1,8 +1,8 @@
 import MarkdownIt from 'markdown-it';
-import { FoamWorkspace } from '../../core/model/workspace';
-import { FoamGraph } from '../../core/model/graph';
-import { URI } from '../../core/model/uri';
-import { createTestNote } from '../../test/test-utils';
+import { FoamWorkspace } from '../../../core/model/workspace';
+import { FoamGraph } from '../../../core/model/graph';
+import { URI } from '../../../core/model/uri';
+import { createTestNote } from '../../../test/test-utils';
 import { markdownItFoamQuery } from './foam-query-renderer';
 
 describe('markdownItFoamQuery', () => {

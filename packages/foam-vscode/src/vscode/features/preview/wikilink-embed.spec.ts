@@ -1,12 +1,12 @@
 /* @unit-ready */
 import MarkdownIt from 'markdown-it';
-import { FoamWorkspace } from '../../core/model/workspace';
-import { createMarkdownParser } from '../../core/services/markdown-parser';
+import { FoamWorkspace } from '../../../core/model/workspace';
+import { createMarkdownParser } from '../../../core/services/markdown-parser';
 import {
   createFile,
   deleteFile,
   withModifiedFoamConfiguration,
-} from '../../test/test-utils-vscode';
+} from '../../../test/test-utils-vscode';
 import {
   default as markdownItWikilinkEmbed,
   CONFIG_EMBED_NOTE_TYPE,

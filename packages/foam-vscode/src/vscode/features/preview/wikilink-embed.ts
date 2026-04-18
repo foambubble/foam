@@ -4,20 +4,20 @@
 import { readFileSync } from 'fs';
 import { workspace as vsWorkspace } from 'vscode';
 import markdownItRegex from 'markdown-it-regex';
-import { FoamWorkspace } from '../../core/model/workspace';
-import { Logger } from '../../core/utils/log';
-import { Resource, ResourceParser, Block } from '../../core/model/note';
-import { getFoamVsCodeConfig } from '../../vscode/config';
-import { fromVsCodeUri } from '../../utils/vsc-utils';
-import { MarkdownLink } from '../../core/services/markdown-link';
-import { URI } from '../../core/model/uri';
-import { Position } from '../../core/model/position';
-import { TextEdit } from '../../core/services/text-edit';
-import { isNone, isSome } from '../../core/utils';
+import { FoamWorkspace } from '../../../core/model/workspace';
+import { Logger } from '../../../core/utils/log';
+import { Resource, ResourceParser, Block } from '../../../core/model/note';
+import { getFoamVsCodeConfig } from '../../config';
+import { fromVsCodeUri } from '../../../utils/vsc-utils';
+import { MarkdownLink } from '../../../core/services/markdown-link';
+import { URI } from '../../../core/model/uri';
+import { Position } from '../../../core/model/position';
+import { TextEdit } from '../../../core/services/text-edit';
+import { isNone, isSome } from '../../../core/utils';
 import {
   asAbsoluteWorkspaceUri,
   isVirtualWorkspace,
-} from '../../services/editor';
+} from '../../../services/editor';
 
 export const WIKILINK_EMBED_REGEX =
   /((?:(?:full|content)-(?:inline|card)|full|content|inline|card)?!\[\[[^[\]]+?\]\])/;

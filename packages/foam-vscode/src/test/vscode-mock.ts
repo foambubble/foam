@@ -17,7 +17,7 @@ import navigation from '../vscode/features/navigation';
 import notes from '../vscode/features/notes';
 import tags from '../vscode/features/tags';
 import janitor from '../vscode/features/janitor';
-import buildEmbeddingsCommand from '../ai/vscode/commands/build-embeddings';
+import ai from '../vscode/features/ai';
 import { Foam, bootstrap } from '../core/model/foam';
 import { createMarkdownParser } from '../core/services/markdown-parser';
 import {
@@ -1706,7 +1706,7 @@ async function initializeFoamCommands(foam: Foam): Promise<void> {
   await notes(mockContext, foamPromise);
   await tags(mockContext, foamPromise);
   await janitor(mockContext, foamPromise);
-  await buildEmbeddingsCommand(mockContext, foamPromise);
+  await ai(mockContext, foamPromise);
 
   Logger.info('Foam commands initialized successfully in mock environment');
 }

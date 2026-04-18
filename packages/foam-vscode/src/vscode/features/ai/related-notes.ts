@@ -2,9 +2,9 @@ import * as vscode from 'vscode';
 import { Foam } from '../../../core/model/foam';
 import { FoamWorkspace } from '../../../core/model/workspace';
 import { URI } from '../../../core/model/uri';
-import { fromVsCodeUri } from '../../vscode/utils/vsc-utils';
-import { BaseTreeProvider } from '../../../vscode/utils/tree-views/base-tree-provider';
-import { ResourceTreeItem } from '../../../vscode/utils/tree-views/tree-view-utils';
+import { fromVsCodeUri } from '../../utils/vsc-utils';
+import { BaseTreeProvider } from '../../utils/tree-views/base-tree-provider';
+import { ResourceTreeItem } from '../../utils/tree-views/tree-view-utils';
 import { FoamEmbeddings } from '../../../ai/model/embeddings';
 
 export default async function activate(

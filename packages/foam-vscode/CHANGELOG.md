@@ -4,6 +4,20 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## 0.38.1
+
+Fixes and Improvements:
+
+- Added `Section.level` in `Resource` model
+- Improved parsing of sections with space in name
+- Re-enabled generate headings for janitor
+
+Internal:
+
+- Major refactoring of code in preparation to better isolate VS Code specific integration from core business logic
+- Unified janitor's interface, rules, and result model
+- Updated libraries (force-graph v. 1.51.4 supports negative particle movement speed)
+
 ## 0.38.0
 
 Features:

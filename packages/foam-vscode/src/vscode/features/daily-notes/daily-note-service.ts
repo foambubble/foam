@@ -1,19 +1,19 @@
 import dayjs from 'dayjs';
 import { Uri, window, workspace } from 'vscode';
-import { joinPath } from '../../core/utils/path';
-import { URI } from '../../core/model/uri';
-import { Foam } from '../../core/model/foam';
-import { getDailyNoteTemplateUri } from '../../vscode/services/template-service';
-import { NoteFactory } from '../../vscode/services/note-factory';
-import { getFoamVsCodeConfig } from '../../vscode/config';
+import { joinPath } from '../../../core/utils/path';
+import { URI } from '../../../core/model/uri';
+import { Foam } from '../../../core/model/foam';
+import { getDailyNoteTemplateUri } from '../../../vscode/services/template-service';
+import { NoteFactory } from '../../../vscode/services/note-factory';
+import { getFoamVsCodeConfig } from '../../../vscode/config';
 import {
   asAbsoluteWorkspaceUri,
   focusNote,
   readFile,
-} from '../../services/editor';
-import { resolveDailyNote } from '../../core/templates/daily-note-resolver';
-import { Resolver } from '../../core/templates/variable-resolver';
-import { fromVsCodeUri } from '../../utils/vsc-utils';
+} from '../../../services/editor';
+import { resolveDailyNote } from '../../../core/templates/daily-note-resolver';
+import { Resolver } from '../../../core/templates/variable-resolver';
+import { fromVsCodeUri } from '../../../utils/vsc-utils';
 
 // ─── Format conversion ────────────────────────────────────────────────────────
 

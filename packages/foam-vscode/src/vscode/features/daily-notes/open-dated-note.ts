@@ -1,10 +1,10 @@
 import { ExtensionContext, commands } from 'vscode';
-import { Foam } from '../../core/model/foam';
-import { getFoamVsCodeConfig } from '../../vscode/config';
+import { Foam } from '../../../core/model/foam';
+import { getFoamVsCodeConfig } from '../../../vscode/config';
 import {
   createDailyNoteIfNotExists,
   openDailyNoteFor,
-} from '../daily-notes/daily-note-service';
+} from './daily-note-service';
 
 export default async function activate(
   context: ExtensionContext,

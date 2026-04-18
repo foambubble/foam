@@ -5,13 +5,13 @@ import {
   CompletionList,
   CompletionTriggerKind,
 } from 'vscode';
-import { getFoamVsCodeConfig } from '../../vscode/config';
+import { getFoamVsCodeConfig } from '../../../vscode/config';
 import {
   DailyNoteSnippet,
   getDayOfWeekSnippets,
   getFixedSnippets,
   getRelativeSnippet,
-} from './daily-note-snippets';
+} from '../../../daily-note/daily-note-snippets';
 import { getDailyNoteLink } from './daily-note-service';
 
 const RELATIVE_UNITS: Array<'d' | 'w' | 'm' | 'y'> = ['d', 'w', 'm', 'y'];

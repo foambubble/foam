@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 import { FoamWorkspaceSymbolProvider } from './workspace-symbol-provider';
-import { createTestNote, createTestWorkspace } from '../test/test-utils';
+import { createTestNote, createTestWorkspace } from '../../../test/test-utils';
 
 describe('FoamWorkspaceSymbolProvider Integration', () => {
   let provider: FoamWorkspaceSymbolProvider;

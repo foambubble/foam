@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
-import { Foam } from '../core/model/foam';
-import { FoamWorkspace } from '../core/model/workspace';
-import { toVsCodeRange, toVsCodeUri } from '../utils/vsc-utils';
+import { Foam } from '../../../core/model/foam';
+import { FoamWorkspace } from '../../../core/model/workspace';
+import { toVsCodeRange, toVsCodeUri } from '../../../utils/vsc-utils';
 
 export default async function activate(
   context: vscode.ExtensionContext,

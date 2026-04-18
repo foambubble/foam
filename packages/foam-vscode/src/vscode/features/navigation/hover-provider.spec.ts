@@ -1,18 +1,18 @@
 import * as vscode from 'vscode';
-import { createMarkdownParser } from '../core/services/markdown-parser';
-import { MarkdownResourceProvider } from '../core/services/markdown-provider';
-import { FoamGraph } from '../core/model/graph';
-import { FoamWorkspace } from '../core/model/workspace';
+import { createMarkdownParser } from '../../../core/services/markdown-parser';
+import { MarkdownResourceProvider } from '../../../core/services/markdown-provider';
+import { FoamGraph } from '../../../core/model/graph';
+import { FoamWorkspace } from '../../../core/model/workspace';
 import {
   cleanWorkspace,
   closeEditors,
   createFile,
   showInEditor,
-} from '../test/test-utils-vscode';
-import { toVsCodeUri } from '../utils/vsc-utils';
+} from '../../../test/test-utils-vscode';
+import { toVsCodeUri } from '../../../utils/vsc-utils';
 import { HoverProvider } from './hover-provider';
-import { readFileFromFs } from '../test/test-utils';
-import { FileDataStore } from '../test/test-datastore';
+import { readFileFromFs } from '../../../test/test-utils';
+import { FileDataStore } from '../../../test/test-datastore';
 
 // We can't use createTestWorkspace from /packages/foam-vscode/src/test/test-utils.ts
 // because we need a MarkdownResourceProvider with a real instance of FileDataStore.

@@ -1,22 +1,22 @@
 /* @unit-ready */
 
 import * as vscode from 'vscode';
-import { createMarkdownParser } from '../core/services/markdown-parser';
-import { FoamGraph } from '../core/model/graph';
-import { createTestNote, createTestWorkspace } from '../test/test-utils';
+import { createMarkdownParser } from '../../../core/services/markdown-parser';
+import { FoamGraph } from '../../../core/model/graph';
+import { createTestNote, createTestWorkspace } from '../../../test/test-utils';
 import {
   cleanWorkspace,
   closeEditors,
   createFile,
   showInEditor,
   withModifiedFoamConfiguration,
-} from '../test/test-utils-vscode';
-import { fromVsCodeUri } from '../utils/vsc-utils';
+} from '../../../test/test-utils-vscode';
+import { fromVsCodeUri } from '../../../utils/vsc-utils';
 import {
   WikilinkCompletionProvider,
   SectionCompletionProvider,
 } from './link-completion';
-import { CONVERT_WIKILINK_TO_MDLINK } from '../vscode/features/convert-links';
+import { CONVERT_WIKILINK_TO_MDLINK } from '../convert-links';
 
 describe('Link Completion', () => {
   const parser = createMarkdownParser([]);

@@ -9,7 +9,7 @@ import {
   createFile,
   showInEditor,
 } from '../test/test-utils-vscode';
-import { NavigationProvider } from './navigation-provider';
+import { NavigationProvider } from '../vscode/features/navigation/navigation-provider';
 import { FoamGraph } from '../core/model/graph';
 import { FoamTags } from '../core/model/tags';
 import { toVsCodeUri } from '../utils/vsc-utils';

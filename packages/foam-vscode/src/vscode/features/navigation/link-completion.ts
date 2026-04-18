@@ -1,14 +1,14 @@
 import * as vscode from 'vscode';
-import { Foam } from '../core/model/foam';
-import { FoamGraph } from '../core/model/graph';
-import { Resource } from '../core/model/note';
-import { URI } from '../core/model/uri';
-import { FoamWorkspace } from '../core/model/workspace';
-import { getFoamVsCodeConfig } from '../vscode/config';
-import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
-import { getNoteTooltip, getFoamDocSelectors } from '../services/editor';
-import { CONVERT_WIKILINK_TO_MDLINK } from '../vscode/features/convert-links';
-import { getDirectoryModeSetting } from '../vscode/settings';
+import { Foam } from '../../../core/model/foam';
+import { FoamGraph } from '../../../core/model/graph';
+import { Resource } from '../../../core/model/note';
+import { URI } from '../../../core/model/uri';
+import { FoamWorkspace } from '../../../core/model/workspace';
+import { getFoamVsCodeConfig } from '../../config';
+import { fromVsCodeUri, toVsCodeUri } from '../../../utils/vsc-utils';
+import { getNoteTooltip, getFoamDocSelectors } from '../../../services/editor';
+import { CONVERT_WIKILINK_TO_MDLINK } from '../convert-links';
+import { getDirectoryModeSetting } from '../../settings';
 
 export const aliasCommitCharacters = ['#'];
 export const linkCommitCharacters = ['#', '|'];

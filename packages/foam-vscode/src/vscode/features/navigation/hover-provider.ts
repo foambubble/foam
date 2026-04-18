@@ -1,21 +1,21 @@
 import { uniqWith } from 'lodash';
 import * as vscode from 'vscode';
-import { fromVsCodeUri, toVsCodeRange } from '../utils/vsc-utils';
+import { fromVsCodeUri, toVsCodeRange } from '../../../utils/vsc-utils';
 import {
   ConfigurationMonitor,
   monitorFoamVsCodeConfig,
-} from '../vscode/config';
-import { ResourceLink, ResourceParser } from '../core/model/note';
-import { Foam } from '../core/model/foam';
-import { FoamWorkspace } from '../core/model/workspace';
-import { Range } from '../core/model/range';
-import { FoamGraph } from '../core/model/graph';
-import { OPEN_COMMAND } from './commands/open-resource';
-import { CREATE_NOTE_COMMAND } from './commands/create-note';
-import { commandAsURI } from '../utils/commands';
-import { Location } from '../core/model/location';
-import { getNoteTooltip, getFoamDocSelectors } from '../services/editor';
-import { isSome } from '../core/utils';
+} from '../../config';
+import { ResourceLink, ResourceParser } from '../../../core/model/note';
+import { Foam } from '../../../core/model/foam';
+import { FoamWorkspace } from '../../../core/model/workspace';
+import { Range } from '../../../core/model/range';
+import { FoamGraph } from '../../../core/model/graph';
+import { OPEN_COMMAND } from './open-resource';
+import { CREATE_NOTE_COMMAND } from '../../../features/commands/create-note';
+import { commandAsURI } from '../../../utils/commands';
+import { Location } from '../../../core/model/location';
+import { getNoteTooltip, getFoamDocSelectors } from '../../../services/editor';
+import { isSome } from '../../../core/utils';
 
 export const CONFIG_KEY = 'links.hover.enable';
 

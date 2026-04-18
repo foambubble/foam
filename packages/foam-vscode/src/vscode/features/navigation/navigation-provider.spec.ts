@@ -1,19 +1,19 @@
 import * as vscode from 'vscode';
-import { createTestWorkspace } from '../test/test-utils';
+import { createTestWorkspace } from '../../../test/test-utils';
 import {
   cleanWorkspace,
   closeEditors,
   createFile,
   showInEditor,
-} from '../test/test-utils-vscode';
+} from '../../../test/test-utils-vscode';
 import { NavigationProvider } from './navigation-provider';
-import { toVsCodeUri } from '../utils/vsc-utils';
-import { createMarkdownParser } from '../core/services/markdown-parser';
-import { FoamGraph } from '../core/model/graph';
-import { commandAsURI } from '../utils/commands';
-import { CREATE_NOTE_COMMAND } from './commands/create-note';
-import { Location } from '../core/model/location';
-import { FoamTags } from '../core/model/tags';
+import { toVsCodeUri } from '../../../utils/vsc-utils';
+import { createMarkdownParser } from '../../../core/services/markdown-parser';
+import { FoamGraph } from '../../../core/model/graph';
+import { commandAsURI } from '../../../utils/commands';
+import { CREATE_NOTE_COMMAND } from '../../../features/commands/create-note';
+import { Location } from '../../../core/model/location';
+import { FoamTags } from '../../../core/model/tags';
 
 describe('Document navigation', () => {
   const parser = createMarkdownParser([]);

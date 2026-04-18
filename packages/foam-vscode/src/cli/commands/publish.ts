@@ -1,0 +1,154 @@
+import path from 'node:path';
+
+import { Logger } from '../../core/utils/log';
+import { buildSite } from '../../publish';
+import { writeStarlightSite } from '../../publish/targets/starlight';
+import { loadWorkspaceFromDirectory } from '../support/filesystem';
+
+interface ParsedArgs {
+  options: Map<string, string | boolean>;
+  positionals: string[];
+}
+
+const PUBLISH_HELP = `Usage: foam publish [workspace-dir] --out <dir> [options]
+
+Options:
+  --target <name>         Publish target to materialize (default: starlight)
+  --out <dir>             Output directory for the generated site
+  --title <text>          Site title
+  --description <text>    Site description
+  --homepage <route>      Homepage route or source path
+  --site-url <url>        Public site URL for Astro/Starlight metadata
+  --help                  Show publish command help
+`;
+
+export interface PublishCommandOptions {
+  workspaceDir: string;
+  outputDir: string;
+  target: string;
+  title?: string;
+  description?: string;
+  homepage?: string;
+  siteUrl?: string;
+}
+
+function getStringOption(
+  options: Map<string, string | boolean>,
+  name: string
+) {
+  const value = options.get(name);
+  return typeof value === 'string' ? value : undefined;
+}
+
+function parseArgs(argv: string[]): ParsedArgs {
+  const options = new Map<string, string | boolean>();
+  const positionals: string[] = [];
+
+  for (let index = 0; index < argv.length; index++) {
+    const arg = argv[index];
+    if (arg === '--') {
+      positionals.push(...argv.slice(index + 1));
+      break;
+    }
+
+    if (arg.startsWith('--')) {
+      const [name, inlineValue] = arg.slice(2).split('=', 2);
+      if (inlineValue !== undefined) {
+        options.set(name, inlineValue);
+        continue;
+      }
+
+      const nextArg = argv[index + 1];
+      if (nextArg && !nextArg.startsWith('-')) {
+        options.set(name, nextArg);
+        index++;
+        continue;
+      }
+
+      options.set(name, true);
+      continue;
+    }
+
+    if (arg === '-h') {
+      options.set('help', true);
+      continue;
+    }
+
+    positionals.push(arg);
+  }
+
+  return {
+    options,
+    positionals,
+  };
+}
+
+export function renderPublishHelp() {
+  return PUBLISH_HELP;
+}
+
+export function parsePublishCommandArgs(argv: string[]): PublishCommandOptions {
+  const parsed = parseArgs(argv);
+  const target = getStringOption(parsed.options, 'target') ?? 'starlight';
+  const outputDir = getStringOption(parsed.options, 'out');
+
+  if (parsed.options.has('help')) {
+    throw new Error(renderPublishHelp());
+  }
+
+  if (!outputDir) {
+    throw new Error('Missing required option "--out".');
+  }
+
+  if (parsed.positionals.length > 1) {
+    throw new Error(
+      `Expected at most one workspace directory, received ${parsed.positionals.length}.`
+    );
+  }
+
+  return {
+    workspaceDir: parsed.positionals[0] ?? process.cwd(),
+    outputDir,
+    target,
+    title: getStringOption(parsed.options, 'title'),
+    description: getStringOption(parsed.options, 'description'),
+    homepage: getStringOption(parsed.options, 'homepage'),
+    siteUrl: getStringOption(parsed.options, 'site-url'),
+  };
+}
+
+export async function runPublishCommand(options: PublishCommandOptions) {
+  const workspaceDir = path.resolve(options.workspaceDir);
+  const outputDir = path.resolve(options.outputDir);
+
+  if (options.target !== 'starlight') {
+    throw new Error(
+      `Unsupported publish target "${options.target}". Expected "starlight".`
+    );
+  }
+
+  const loaded = await loadWorkspaceFromDirectory(workspaceDir, {
+    excludedPaths: [outputDir],
+  });
+
+  const artifactSet = await buildSite({
+    workspace: loaded.workspace,
+    include: resource => resource.properties.publish !== false,
+    site: {
+      title: options.title,
+      description: options.description,
+      homepage: options.homepage,
+    },
+  });
+
+  await writeStarlightSite({
+    artifactSet,
+    outputDir,
+    siteUrl: options.siteUrl,
+  });
+
+  Logger.info(
+    `Published ${artifactSet.notes.length} notes and ${artifactSet.assets.length} assets to ${outputDir}`
+  );
+}
+

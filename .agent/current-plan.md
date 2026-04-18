@@ -2,15 +2,15 @@
 
 ## Goal
 
-Build a minimal end-to-end static-site spike that proves the current publishing slice can drive a navigable site.
+Add a single-package CLI entry to `packages/foam-vscode` and use it to drive the existing publish pipeline, starting with `foam publish --target starlight`.
 
 ## Steps
 
-- [completed] Update the plan for the end-to-end site spike
-- [completed] Inspect the repo for existing site/web scaffolding and choose the spike location
-- [completed] Scaffold a minimal Astro/Starlight site consumer
-- [completed] Wire the current publish output into the site build path
-- [completed] Run the site locally and verify basic navigation
+- [completed] Confirm the single-package CLI direction and rebase the branch onto `main`
+- [in_progress] Research existing workspace-loading and build patterns to reuse for a Node CLI
+- [pending] Add CLI entrypoints and a first `publish` command under `src/cli`
+- [pending] Extend the build to emit a CLI artifact and expose package scripts
+- [pending] Verify unit coverage and run an end-to-end CLI publish flow
 
 ## Current Publish Slice
 
@@ -39,13 +39,25 @@ Build a minimal end-to-end static-site spike that proves the current publishing 
 - the Starlight consumer should keep only source/config in git and treat `.astro`, generated docs content, copied assets, and route manifests as build artifacts
 - the Starlight consumer now ignores generated docs content, copied assets, route manifests, and Astro internals via `packages/foam-site-starlight/.gitignore`
 - the Starlight adapter now skips Foam's `/404` route so the framework can own not-found handling
+- runnable Starlight project materialization now lives in `packages/foam-vscode/src/publish/targets/starlight`
+- the target writes project scaffold files (`package.json`, `astro.config.mjs`, `tsconfig.json`, `src/content.config.ts`) alongside generated docs, assets, and manifests
+- `packages/foam-site-starlight` is now only a thin harness that builds a workspace and calls the Starlight target in content-only mode
+- the next slice should move execution into a CLI inside `packages/foam-vscode`, so the Starlight harness becomes optional and later removable
+- a first CLI now exists under `packages/foam-vscode/src/cli`, with a `publish` command that loads a workspace and materializes the `starlight` target
+- the package build now emits a CLI artifact at `packages/foam-vscode/out/cli/index.js`
+- the Starlight harness package can now be removed; the CLI path is the product path
+- `packages/foam-site-starlight` has been removed; the supported path is now `yarn workspace foam-vscode publish-site ...`
 
 ## Notes
 
 - Keep the recommendation aligned with Foam's "build vs assemble" principle.
 - Prefer a TypeScript publishing layer that preserves Foam semantics while keeping the site framework optional.
 - Keep publish work API-first: define stable publish semantics and typed outputs in `src/publish` before adding renderer-specific behavior or configuration surfaces.
+- Treat a publish target as a runnable output, not just transformed content. For `starlight`, `foam publish` should be able to materialize a Starlight-ready project in the target directory, with generated content plus the minimal app/package setup required to install and run it there.
 - Make publish configuration fully programmable in code: any supported behavior should be easy to express directly through the `src/publish` API, with YAML/query-style forms treated as convenience layers over that API.
+- Keep the CLI in the same package as the extension, but maintain code boundaries: `src/cli/**` may depend on CLI-safe modules (`src/core/**`, `src/publish/**`) and must not depend on `vscode` or extension feature code.
+- Favor one CLI executable with subcommands over separate bins per command.
+- Keep CLI argument parsing lightweight in v1 unless complexity actually justifies a parser dependency.
 - Test strategy:
   - Favor unit tests first for pure build-time logic in `src/publish`.
   - Test the pipeline in slices: route generation, publish filtering, backlink derivation, output manifest generation, and representative note transforms.
@@ -58,5 +70,9 @@ Build a minimal end-to-end static-site spike that proves the current publishing 
   - Reuse `src/core/**` rather than duplicating resolution logic.
   - Stop and refactor if tests start needing heavy mocking or the module begins depending on renderer concerns.
 - Verification:
-  - `yarn workspace foam-site-starlight generate` passes after the cleanup.
-  - `node /Users/riccardo/.nvm/versions/node/v22.17.0/bin/node /Users/riccardo/.nvm/versions/node/v20.11.1/lib/node_modules/yarn/lib/cli.js workspace foam-site-starlight build` passes.
+  - `yarn test:unit` passes in `packages/foam-vscode`.
+  - `yarn lint` passes in `packages/foam-vscode` with the existing skipped-test warning in `src/vscode/features/notes/connections.spec.ts`.
+  - `yarn build:cli` passes in `packages/foam-vscode`.
+  - `node packages/foam-vscode/out/cli/index.js publish ./docs --out ./.tmp/<site>` materializes a runnable Starlight site.
+  - `astro build` succeeds from the CLI-generated site output when run against the repo-installed dependencies.
+  - `yarn publish-site ./docs --out ./.tmp/<site>` succeeds from `packages/foam-vscode` after the Starlight package removal.

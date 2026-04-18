@@ -102,18 +102,18 @@ Suggested outputs:
 - JSON indexes for search, backlinks, graph, and route metadata
 - copied static assets and attachments
 
-## 2. `packages/foam-site-starlight`
+## 2. Starlight Target
 
-Add a site package or starter that consumes the output of `foam-publish`.
+Add a Starlight target inside the Foam publishing layer that materializes a runnable site directory.
 
 Responsibilities:
 
-- render the transformed notes as a polished website
-- provide navigation, layout, SEO, and search UI
-- add Foam-specific components such as backlinks, graph views, and hover previews
-- expose theming and site-level customization
+- render the transformed notes into a Starlight-compatible content tree
+- write the site scaffold needed to run Astro and Starlight in the output directory
+- provide navigation, layout, SEO, and search UI through the generated Starlight app
+- keep Foam-specific semantics in the publish layer rather than in the site framework
 
-This package should stay thin. It is an implementation of the publishing output, not the source of truth for Foam semantics.
+This target should stay thin. It is an implementation of the publishing output, not the source of truth for Foam semantics.
 
 ## 3. CLI and Automation
 
@@ -136,7 +136,7 @@ The first version should follow this pipeline:
 3. Parse notes and resolve Foam constructs
 4. Emit transformed Markdown for the site
 5. Emit derived JSON indexes
-6. Let Astro and Starlight build the final static HTML
+6. Let the generated Astro and Starlight site build the final static HTML
 
 In shorthand:
 

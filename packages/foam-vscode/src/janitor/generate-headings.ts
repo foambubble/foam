@@ -14,15 +14,15 @@ export const generateHeading = (
   }
 
   const fm = matter(noteText);
-  const contentStartLine = fm.matter ? fm.matter.split(eol).length : 0;
+  // fm.matter is the raw content between the --- delimiters (excludes both delimiters),
+  // so add 1 to skip the opening --- and land after the closing ---.
+  const contentStartLine = fm.matter ? fm.matter.split(eol).length + 1 : 0;
   const frontmatterExists = contentStartLine > 0;
 
   let newLineExistsAfterFrontmatter = false;
   if (frontmatterExists) {
     const lines = noteText.split(eol);
-    const index = contentStartLine - 1;
-    const line = lines[index];
-    newLineExistsAfterFrontmatter = line === '';
+    newLineExistsAfterFrontmatter = lines[contentStartLine] === '';
   }
 
   const paddingStart = frontmatterExists ? eol : '';

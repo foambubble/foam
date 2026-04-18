@@ -54,6 +54,19 @@ describe('missingHeadingRule', () => {
     const result = TextEdit.apply(content, [issues[0].fix![0].edit]);
     expect(result).toEqual('# Note\n\nNo heading here.\n');
   });
+
+  it('inserts heading after frontmatter for a note with only frontmatter', async () => {
+    const content = '---\nnoTitle: true\n---\n';
+    const { workspace } = await makeWorkspace([{ uri: '/note.md', content }]);
+    const note = workspace.find(URI.file('/note.md'))!;
+    const rule = missingHeadingRule();
+
+    const issues = rule.check(note, content, '\n', workspace);
+
+    expect(issues).toHaveLength(1);
+    const result = TextEdit.apply(content, [issues[0].fix![0].edit]);
+    expect(result).toEqual('---\nnoTitle: true\n---\n\n# Note\n');
+  });
 });
 
 describe('staleDefinitionsRule', () => {
@@ -218,11 +231,11 @@ describe('computeNoteEdits', () => {
 
     expect(edits).toHaveLength(1);
     expect(edits[0].newText).toContain('# Note');
-    expect(edits[0].range.start.line).toEqual(2);
+    expect(edits[0].range.start.line).toEqual(3);
     expect(edits[0].range.start.character).toEqual(0);
     const result = TextEdit.apply(content, edits);
     expect(result).toEqual(
-      '---\ntitle: foo\n\n# Note\n\n---\nNo heading here.\n'
+      '---\ntitle: foo\n---\n\n# Note\n\nNo heading here.\n'
     );
   });
 

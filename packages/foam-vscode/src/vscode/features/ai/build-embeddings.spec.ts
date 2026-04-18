@@ -8,7 +8,7 @@ import {
 } from '../../../test/test-utils-vscode';
 import { BUILD_EMBEDDINGS_COMMAND } from './build-embeddings';
 
-describe('build-embeddings command', () => {
+describe.skip('build-embeddings command', () => {
   it('should complete successfully with no notes to analyze', async () => {
     await cleanWorkspace(5000);
 

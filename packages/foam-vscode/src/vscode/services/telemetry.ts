@@ -35,17 +35,46 @@ function bucketNoteCount(count: number): WorkspaceStatsBucket {
 
 export class TelemetryService implements IDisposable {
   private reporter: TelemetryReporter;
+  private sessionWithCommandFired = false;
+  private sessionWithNoteFired = false;
 
   constructor() {
     this.reporter = new TelemetryReporter(CONNECTION_STRING);
   }
 
   /**
+   * Track the start of a session. Fired once per activation, before Foam loads.
+   * Used as the canonical "active session" metric.
+   */
+  trackSession(): void {
+    Logger.debug('[telemetry] session-started');
+    this.reporter.sendTelemetryEvent('session-started');
+  }
+
+  /**
    * Track a command invocation. Only the command name is recorded — no arguments.
+   * Also fires a one-time `session-with-command` event on the first command of the session,
+   * which marks this as a session where the user genuinely used Foam.
    */
   trackCommand(command: string): void {
+    if (!this.sessionWithCommandFired) {
+      Logger.debug('[telemetry] session-with-command');
+      this.reporter.sendTelemetryEvent('session-with-command');
+      this.sessionWithCommandFired = true;
+    }
     Logger.debug(`[telemetry] command: ${command}`);
     this.reporter.sendTelemetryEvent('command', { command });
+  }
+
+  /**
+   * Track the first time a markdown file is opened in this session.
+   * Fired once per session as a proxy for "this is a notes workspace, not just a codebase".
+   */
+  trackNoteOpened(): void {
+    if (this.sessionWithNoteFired) return;
+    Logger.debug('[telemetry] session-with-note');
+    this.reporter.sendTelemetryEvent('session-with-note');
+    this.sessionWithNoteFired = true;
   }
 
   /**

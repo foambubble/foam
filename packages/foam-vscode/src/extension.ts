@@ -1,6 +1,6 @@
 /*global markdownit:readonly*/
 
-import { workspace, ExtensionContext, window, commands } from 'vscode';
+import { workspace, ExtensionContext, window, commands, TextEditor } from 'vscode';
 import { MarkdownResourceProvider, Logger, Config } from '@foam/core';
 import { bootstrap } from './core/model/foam';
 import { fromVsCodeUri } from './vscode/utils/vsc-utils';
@@ -25,6 +25,7 @@ export async function activate(context: ExtensionContext) {
 
   const telemetry = initTelemetry();
   context.subscriptions.push(telemetry);
+  telemetry.trackSession();
 
   try {
     Logger.info('Starting Foam');
@@ -33,6 +34,14 @@ export async function activate(context: ExtensionContext) {
       Logger.info('No workspace open. Foam will not start');
       return;
     }
+
+    context.subscriptions.push(
+      window.onDidChangeActiveTextEditor((editor: TextEditor | undefined) => {
+        if (editor?.document.languageId === 'markdown') {
+          telemetry.trackNoteOpened();
+        }
+      })
+    );
 
     // Prepare Foam
     const includes = Config.getFilesInclude();

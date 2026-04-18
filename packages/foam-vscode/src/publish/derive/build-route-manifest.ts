@@ -8,21 +8,47 @@ const DIRECTORY_INDEX_NAMES = new Set(['index', 'readme']);
 
 const trimSlashes = (value: string) => value.replace(/^\/+|\/+$/g, '');
 
-const getRelativePath = (uri: URI, workspace: FoamWorkspace) => {
+const getWorkspaceRoot = (uri: URI, workspace: FoamWorkspace) => {
   const matchingRoot =
     workspace.roots.find(
       root => uri.path === root.path || uri.path.startsWith(root.path + '/')
     ) ?? null;
 
+  return matchingRoot;
+};
+
+export const isWithinPath = (uri: URI, parent: URI) => {
+  return uri.path === parent.path || uri.path.startsWith(parent.path + '/');
+};
+
+export const getWorkspaceRelativePath = (uri: URI, workspace: FoamWorkspace) => {
+  const matchingRoot = getWorkspaceRoot(uri, workspace);
+
   if (matchingRoot) {
-    return uri.relativeTo(matchingRoot).path;
+    return trimSlashes(uri.relativeTo(matchingRoot).path);
   }
 
   return trimSlashes(uri.path);
 };
 
-export const getNoteRoute = (resource: Resource, workspace: FoamWorkspace) => {
-  const relativePath = getRelativePath(resource.uri, workspace);
+export const getContentRelativePath = (
+  uri: URI,
+  workspace: FoamWorkspace,
+  contentRoot?: URI | null
+) => {
+  if (contentRoot && isWithinPath(uri, contentRoot)) {
+    return trimSlashes(uri.relativeTo(contentRoot).path);
+  }
+
+  return getWorkspaceRelativePath(uri, workspace);
+};
+
+export const getNoteRoute = (
+  resource: Resource,
+  workspace: FoamWorkspace,
+  contentRoot?: URI | null
+) => {
+  const relativePath = getContentRelativePath(resource.uri, workspace, contentRoot);
   const withoutExtension = changeExtension(
     relativePath,
     resource.uri.getExtension(),
@@ -49,19 +75,20 @@ export const getAssetOutputPath = (
   resource: Resource,
   workspace: FoamWorkspace
 ) => {
-  const relativePath = trimSlashes(getRelativePath(resource.uri, workspace));
+  const relativePath = getWorkspaceRelativePath(resource.uri, workspace);
   return `assets/${relativePath}`;
 };
 
 export const buildRouteManifest = (
   resources: Resource[],
-  workspace: FoamWorkspace
+  workspace: FoamWorkspace,
+  contentRoot?: URI | null
 ): PublishedRoute[] =>
   resources
     .filter(resource => resource.type === 'note')
     .map(resource => ({
       sourceUri: resource.uri,
-      route: getNoteRoute(resource, workspace),
+      route: getNoteRoute(resource, workspace, contentRoot),
     }))
     .sort(
       (left, right) =>

@@ -75,6 +75,7 @@ describe('publish starlight target', () => {
           route: '/linked',
         },
       ],
+      diagnostics: [],
     };
 
     await writeStarlightSite({

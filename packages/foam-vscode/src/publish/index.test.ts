@@ -31,6 +31,7 @@ describe('publish buildSite', () => {
       description: undefined,
       homepageRoute: '/folder/note-b',
     });
+    expect(result.diagnostics).toEqual([]);
     expect(result.routes).toEqual(
       expect.arrayContaining([
         { sourceUri: noteAUri, route: '/note-a' },
@@ -85,6 +86,7 @@ describe('publish buildSite', () => {
         outputPath: 'assets/files/doc.pdf',
       },
     ]);
+    expect(result.diagnostics).toEqual([]);
     const publishedNote = result.notes.find(note => note.route === '/note-a');
     expect(publishedNote?.markdown).toContain('[Manual](/assets/files/doc.pdf)');
   });
@@ -148,6 +150,7 @@ describe('publish buildSite', () => {
       description: 'A programmable publish surface',
       homepageRoute: '/welcome',
     });
+    expect(result.diagnostics).toEqual([]);
     expect(result.routes).toEqual(
       expect.arrayContaining([
         { sourceUri: homeUri, route: '/welcome' },
@@ -169,5 +172,69 @@ describe('publish buildSite', () => {
     });
     expect(result.notes.find(note => note.route === '/guide')?.properties).toEqual({});
     expect(result.notes.find(note => note.route === '/draft')).toBeUndefined();
+  });
+
+  it('routes notes relative to contentRoot and reports links outside the published scope', async () => {
+    const root = URI.file('/');
+    const dataStore = new InMemoryDataStore();
+    const workspace = createTestWorkspace([root], dataStore);
+
+    const homeUri = root.joinPath('user', 'index.md');
+    const guideUri = root.joinPath('user', 'guide.md');
+    const internalUri = root.joinPath('dev', 'internal.md');
+
+    const homeContent = [
+      '# Home',
+      '',
+      'See [[guide]] and [Internal](../dev/internal.md).',
+    ].join('\n');
+    const guideContent = '# Guide';
+    const internalContent = '# Internal';
+
+    dataStore.set(homeUri, homeContent);
+    dataStore.set(guideUri, guideContent);
+    dataStore.set(internalUri, internalContent);
+
+    workspace
+      .set(createNoteFromMarkdown('user/index.md', homeContent, root))
+      .set(createNoteFromMarkdown('user/guide.md', guideContent, root))
+      .set(createNoteFromMarkdown('dev/internal.md', internalContent, root));
+
+    const result = await buildSite({
+      workspace,
+      graph: FoamGraph.fromWorkspace(workspace),
+      contentRoot: 'user',
+    });
+
+    expect(result.site).toEqual({
+      title: undefined,
+      description: undefined,
+      homepageRoute: '/',
+    });
+    expect(result.routes).toEqual(
+      expect.arrayContaining([
+        { sourceUri: homeUri, route: '/' },
+        { sourceUri: guideUri, route: '/guide' },
+      ])
+    );
+    expect(result.routes.find(route => route.sourceUri.path === internalUri.path)).toBeUndefined();
+    expect(result.notes.find(note => note.sourceUri.path === homeUri.path)?.markdown).toContain(
+      '[Guide](/guide)'
+    );
+    expect(result.notes.find(note => note.sourceUri.path === homeUri.path)?.markdown).toContain(
+      '[Internal](../dev/internal.md)'
+    );
+    expect(result.diagnostics).toEqual([
+      {
+        level: 'warning',
+        code: 'unresolved-link',
+        sourceUri: homeUri,
+        sourceRoute: '/',
+        link: '[Internal](../dev/internal.md)',
+        target: internalUri.path,
+        message:
+          'Resolved [Internal](../dev/internal.md) but the target note is outside the published content scope.',
+      },
+    ]);
   });
 });

@@ -6,6 +6,7 @@ import { FoamWorkspace } from '../core/model/workspace';
 export interface PublishRuntimeContext {
   workspace: FoamWorkspace;
   graph: FoamGraph;
+  contentRoot: URI | null;
 }
 
 export interface PublishSiteContext extends PublishRuntimeContext {
@@ -37,6 +38,7 @@ export interface PublishSiteConfig {
 export interface PublishConfig {
   workspace: FoamWorkspace;
   graph?: FoamGraph;
+  contentRoot?: string | URI;
   include?: PublishIncludeMatcher;
   site?: PublishSiteConfig;
 }
@@ -73,11 +75,22 @@ export interface PublishedSite {
   homepageRoute: string | null;
 }
 
+export interface PublishedDiagnostic {
+  level: 'warning';
+  code: 'unresolved-link';
+  sourceUri: URI;
+  sourceRoute?: string;
+  link: string;
+  target: string;
+  message: string;
+}
+
 export interface PublishArtifactSet {
   site: PublishedSite;
   notes: PublishedNote[];
   assets: PublishedAsset[];
   routes: PublishedRoute[];
+  diagnostics: PublishedDiagnostic[];
 }
 
 export interface PublishContext extends PublishRuntimeContext {

@@ -17,6 +17,7 @@ Options:
   --out <dir>             Output directory for the generated site
   --title <text>          Site title
   --description <text>    Site description
+  --content-root <path>   Note subtree to publish relative to the workspace root
   --homepage <route>      Homepage route or source path
   --site-url <url>        Public site URL for Astro/Starlight metadata
   --help                  Show publish command help
@@ -28,6 +29,7 @@ export interface PublishCommandOptions {
   target: string;
   title?: string;
   description?: string;
+  contentRoot?: string;
   homepage?: string;
   siteUrl?: string;
 }
@@ -112,6 +114,7 @@ export function parsePublishCommandArgs(argv: string[]): PublishCommandOptions {
     target,
     title: getStringOption(parsed.options, 'title'),
     description: getStringOption(parsed.options, 'description'),
+    contentRoot: getStringOption(parsed.options, 'content-root'),
     homepage: getStringOption(parsed.options, 'homepage'),
     siteUrl: getStringOption(parsed.options, 'site-url'),
   };
@@ -133,6 +136,7 @@ export async function runPublishCommand(options: PublishCommandOptions) {
 
   const artifactSet = await buildSite({
     workspace: loaded.workspace,
+    contentRoot: options.contentRoot,
     include: resource => resource.properties.publish !== false,
     site: {
       title: options.title,
@@ -147,8 +151,17 @@ export async function runPublishCommand(options: PublishCommandOptions) {
     siteUrl: options.siteUrl,
   });
 
+  for (const diagnostic of artifactSet.diagnostics) {
+    Logger.warn(diagnostic.message);
+  }
+
+  if (artifactSet.diagnostics.length > 0) {
+    Logger.warn(
+      `Publish completed with ${artifactSet.diagnostics.length} warning(s).`
+    );
+  }
+
   Logger.info(
     `Published ${artifactSet.notes.length} notes and ${artifactSet.assets.length} assets to ${outputDir}`
   );
 }
-

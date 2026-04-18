@@ -13,6 +13,9 @@ Add a single-package CLI entry to `packages/foam-vscode` and use it to drive the
 - [completed] Verify unit coverage and run an end-to-end CLI publish flow
 - [completed] Research how Foam docs are currently published and define the clean interface point for merging this branch
 - [completed] Add merge-readiness follow-ups for docs integration, starting with CI smoke coverage rather than switching deployment
+- [completed] Replace the temporary CLI prefix filter with a real `contentRoot` publish concept
+- [completed] Add unresolved-link diagnostics so publish can report out-of-scope or missing targets without blocking the build
+- [completed] Add a repo-root dogfood command for the user docs site and verify the generated Starlight project builds end to end
 
 ## Current Publish Slice
 
@@ -64,6 +67,8 @@ Add a single-package CLI entry to `packages/foam-vscode` and use it to drive the
 - Keep the existing `foam-template` sync workflow separate from docs-site publication. That workflow distributes source docs, not the rendered website.
 - Before switching Foam's public docs to the new path, add CI smoke coverage that exercises `foam publish` against `./docs` so the branch can merge without taking ownership of Pages deployment yet.
 - Prefer a repo-root dogfood command for Foam's own docs so CI and humans use the same entrypoint instead of depending on the workspace-local script cwd.
+- For the public docs site, publish from `./docs` with `contentRoot = user/` rather than treating `docs/user` as a separate workspace; that preserves shared assets while making routes relative to the user docs subtree.
+- Publish diagnostics should be automatic output, not a config surface: unresolved or out-of-scope links stay as source links in the published markdown and are reported as warnings at the end of the publish run.
 - Test strategy:
   - Favor unit tests first for pure build-time logic in `src/publish`.
   - Test the pipeline in slices: route generation, publish filtering, backlink derivation, output manifest generation, and representative note transforms.
@@ -80,6 +85,7 @@ Add a single-package CLI entry to `packages/foam-vscode` and use it to drive the
   - `yarn lint` passes in `packages/foam-vscode` with the existing skipped-test warning in `src/vscode/features/notes/connections.spec.ts`.
   - `yarn build:cli` passes in `packages/foam-vscode`.
   - `node packages/foam-vscode/out/cli/index.js publish ./docs --out ./.tmp/<site>` materializes a runnable Starlight site.
-  - `yarn publish:docs-site` passes from the repo root and materializes Foam's docs site from `./docs`.
+  - `yarn publish:docs-site` passes from the repo root and materializes the public user-docs site from `./docs` using `contentRoot = user`, so published routes are rooted at `/`.
   - `astro build` succeeds from the CLI-generated site output when run against the repo-installed dependencies.
   - `yarn publish-site ./docs --out ./.tmp/<site>` succeeds from `packages/foam-vscode` after the Starlight package removal.
+  - Running `yarn install && yarn build` inside the generated `.tmp/foam-docs-site` succeeds, producing a deployable static site with search and sitemap output.

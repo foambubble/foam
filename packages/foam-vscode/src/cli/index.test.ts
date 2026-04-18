@@ -6,21 +6,28 @@ import { tmpdir } from 'node:os';
 import { runCli } from './index';
 
 describe('foam CLI', () => {
-  it('publishes a workspace to a runnable Starlight site', async () => {
+  it('publishes a content-rooted workspace to a runnable Starlight site', async () => {
     const tempRoot = mkdtempSync(path.join(tmpdir(), 'foam-cli-'));
     const workspaceDir = path.join(tempRoot, 'workspace');
     const outputDir = path.join(tempRoot, 'site');
 
     try {
+      fs.mkdirSync(path.join(workspaceDir, 'user'), { recursive: true });
+      fs.mkdirSync(path.join(workspaceDir, 'dev'), { recursive: true });
       fs.mkdirSync(path.join(workspaceDir, 'images'), { recursive: true });
       fs.writeFileSync(
-        path.join(workspaceDir, 'index.md'),
-        ['# Home', '', '![Logo](./images/logo.png)'].join('\n'),
+        path.join(workspaceDir, 'user', 'index.md'),
+        ['# Home', '', '![Logo](../images/logo.png)'].join('\n'),
         'utf8'
       );
       fs.writeFileSync(
-        path.join(workspaceDir, 'draft.md'),
+        path.join(workspaceDir, 'user', 'draft.md'),
         ['---', 'publish: false', '---', '', '# Draft'].join('\n'),
+        'utf8'
+      );
+      fs.writeFileSync(
+        path.join(workspaceDir, 'dev', 'internal.md'),
+        '# Internal',
         'utf8'
       );
       fs.writeFileSync(path.join(workspaceDir, 'images', 'logo.png'), 'png', 'utf8');
@@ -38,6 +45,8 @@ describe('foam CLI', () => {
           outputDir,
           '--title',
           'CLI Site',
+          '--content-root',
+          'user',
           '--site-url',
           'https://example.com',
         ],
@@ -53,7 +62,14 @@ describe('foam CLI', () => {
         fs.existsSync(path.join(outputDir, 'src', 'content', 'docs', 'index.md'))
       ).toBe(true);
       expect(
-        fs.existsSync(path.join(outputDir, 'src', 'content', 'docs', 'draft.md'))
+        fs.existsSync(
+          path.join(outputDir, 'src', 'content', 'docs', 'draft.md')
+        )
+      ).toBe(false);
+      expect(
+        fs.existsSync(
+          path.join(outputDir, 'src', 'content', 'docs', 'dev', 'internal.md')
+        )
       ).toBe(false);
       expect(
         fs.readFileSync(
@@ -74,6 +90,19 @@ describe('foam CLI', () => {
         homepageRoute: '/',
         siteUrl: 'https://example.com',
       });
+      expect(
+        JSON.parse(
+          fs.readFileSync(
+            path.join(outputDir, 'public', 'publish-routes.json'),
+            'utf8'
+          )
+        )
+      ).toEqual([
+        {
+          sourcePath: path.join(workspaceDir, 'user', 'index.md'),
+          route: '/',
+        },
+      ]);
       expect(logs).toEqual([]);
       expect(
         fs.readFileSync(path.join(outputDir, 'package.json'), 'utf8')

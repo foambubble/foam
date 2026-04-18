@@ -13,15 +13,22 @@ export const buildSite = async (
   const context = createPublishContext(config);
   const resources = collectPublishedResources(context);
   const noteResources = collectPublishedNotes(context);
-  const routes = buildRouteManifest(resources, context.workspace);
-  const notes = await Promise.all(
+  const routes = buildRouteManifest(
+    resources,
+    context.workspace,
+    context.contentRoot
+  );
+  const transformedNotes = await Promise.all(
     noteResources.map(note => transformNote(note, context))
   );
+  const notes = transformedNotes.map(result => result.note);
+  const diagnostics = transformedNotes.flatMap(result => result.diagnostics);
 
   return {
     site: buildPublishedSite(context, noteResources, routes),
     notes,
     assets: buildAssetManifest(resources, context.workspace),
     routes,
+    diagnostics,
   };
 };

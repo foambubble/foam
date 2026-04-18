@@ -65,20 +65,19 @@ function escapeFrontmatter(value: string) {
   return value.replace(/"/g, '\\"');
 }
 
-function renderFrontmatter(note: { route: string; title: string; sourceUri: URI }) {
+function renderFrontmatter(note: { title: string; sourceUri: URI }) {
   const lines = [
     '---',
     `title: "${escapeFrontmatter(note.title)}"`,
     `description: "Published from ${escapeFrontmatter(note.sourceUri.path)}"`,
   ];
 
-  if (note.route === '/404') {
-    lines.push('sidebar:');
-    lines.push('  hidden: true');
-  }
-
   lines.push('---', '');
   return lines.join('\n');
+}
+
+function isFrameworkHandledRoute(route: string) {
+  return route === '/404';
 }
 
 function renderBacklinks(
@@ -108,6 +107,10 @@ async function writeDocs(
   artifactSet: Awaited<ReturnType<typeof buildSite>>
 ) {
   for (const note of artifactSet.notes) {
+    if (isFrameworkHandledRoute(note.route)) {
+      continue;
+    }
+
     const relativePath = routeToDocPath(note.route);
     const outputPath = path.join(OUTPUT_DOCS_DIR, relativePath);
     await fs.mkdir(path.dirname(outputPath), { recursive: true });
@@ -178,10 +181,12 @@ async function main() {
   await fs.writeFile(
     manifestPath,
     JSON.stringify(
-      artifactSet.routes.map(route => ({
-        sourcePath: route.sourceUri.path,
-        route: route.route,
-      })),
+      artifactSet.routes
+        .filter(route => !isFrameworkHandledRoute(route.route))
+        .map(route => ({
+          sourcePath: route.sourceUri.path,
+          route: route.route,
+        })),
       null,
       2
     ),

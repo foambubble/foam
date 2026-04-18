@@ -36,6 +36,9 @@ Build a minimal end-to-end static-site spike that proves the current publishing 
 - basic navigation was verified by fetching the homepage and a deeper route
 - the spike still uses generator-level asset rewriting and copying for ordinary markdown image paths
 - Starlight root-level sidebar autogeneration works best when left to the default config; a custom `autogenerate.directory: '.'` group renders empty in this version
+- the Starlight consumer should keep only source/config in git and treat `.astro`, generated docs content, copied assets, and route manifests as build artifacts
+- the Starlight consumer now ignores generated docs content, copied assets, route manifests, and Astro internals via `packages/foam-site-starlight/.gitignore`
+- the Starlight adapter now skips Foam's `/404` route so the framework can own not-found handling
 
 ## Notes
 
@@ -52,3 +55,6 @@ Build a minimal end-to-end static-site spike that proves the current publishing 
   - Keep `src/publish/**` free of `vscode` imports.
   - Reuse `src/core/**` rather than duplicating resolution logic.
   - Stop and refactor if tests start needing heavy mocking or the module begins depending on renderer concerns.
+- Verification:
+  - `yarn workspace foam-site-starlight generate` passes after the cleanup.
+  - `node /Users/riccardo/.nvm/versions/node/v22.17.0/bin/node /Users/riccardo/.nvm/versions/node/v20.11.1/lib/node_modules/yarn/lib/cli.js workspace foam-site-starlight build` passes.

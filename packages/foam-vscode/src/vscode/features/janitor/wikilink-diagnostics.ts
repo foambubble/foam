@@ -1,14 +1,14 @@
 import { debounce } from 'lodash';
 import * as vscode from 'vscode';
-import { Foam } from '../../core/model/foam';
-import { Block, ResourceParser } from '../../core/model/note';
-import { FoamWorkspace } from '../../core/model/workspace';
+import { Foam } from '../../../core/model/foam';
+import { Block, ResourceParser } from '../../../core/model/note';
+import { FoamWorkspace } from '../../../core/model/workspace';
 import {
   fromVsCodeUri,
   toVsCodeRange,
   toVsCodeUri,
   lintIssueToDiagnostic,
-} from '../vscode/utils/vsc-utils';
+} from '../../utils/vsc-utils';
 import {
   AMBIGUOUS_IDENTIFIER_CODE,
   UNKNOWN_SECTION_CODE,
@@ -16,7 +16,7 @@ import {
   DUPLICATE_BLOCK_ID_CODE,
   checkLinks,
   checkDuplicateBlocks,
-} from '../rule-check-links';
+} from '../../../janitor/rule-check-links';
 
 interface FoamCommand<T> {
   name: string;

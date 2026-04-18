@@ -1,13 +1,13 @@
 import * as vscode from 'vscode';
-import { createMarkdownParser } from '../../core/services/markdown-parser';
-import { FoamWorkspace } from '../../core/model/workspace';
+import { createMarkdownParser } from '../../../core/services/markdown-parser';
+import { FoamWorkspace } from '../../../core/model/workspace';
 import {
   cleanWorkspace,
   closeEditors,
   createFile,
   showInEditor,
-} from '../../test/test-utils-vscode';
-import { toVsCodeUri } from '../vscode/utils/vsc-utils';
+} from '../../../test/test-utils-vscode';
+import { toVsCodeUri } from '../../utils/vsc-utils';
 import { updateDiagnostics, IdentifierResolver } from './wikilink-diagnostics';
 
 describe('Wikilink diagnostics', () => {

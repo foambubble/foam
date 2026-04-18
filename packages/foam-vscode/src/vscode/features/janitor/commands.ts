@@ -5,20 +5,20 @@ import {
   commands,
   ProgressLocation,
 } from 'vscode';
-import { Foam } from '../../core/model/foam';
-import { TextEdit } from '../../core/services/text-edit';
-import { Range } from '../../core/model/range';
+import { Foam } from '../../../core/model/foam';
+import { TextEdit } from '../../../core/services/text-edit';
+import { Range } from '../../../core/model/range';
 import {
   fromVsCodeUri,
   toVsCodeRange,
   toVsCodeUri,
-} from '../vscode/utils/vsc-utils';
-import { getWikilinkDefinitionSetting } from '../../vscode/features/editing/update-wikilinks';
+} from '../../utils/vsc-utils';
+import { getWikilinkDefinitionSetting } from '../editing/update-wikilinks';
 import {
   lintWorkspace,
   missingHeadingRule,
   staleDefinitionsRule,
-} from '../janitor';
+} from '../../../janitor/janitor';
 
 export default async function activate(
   context: ExtensionContext,

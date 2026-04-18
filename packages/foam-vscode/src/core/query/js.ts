@@ -43,7 +43,8 @@ export function renderJsQuery(
   workspace: FoamWorkspace,
   graph: FoamGraph,
   trusted: boolean,
-  toRelativePath: (path: string) => string
+  toRelativePath: (path: string) => string,
+  currentResource?: URI | null
 ): string {
   if (code.trim() === '') {
     return JS_PLACEHOLDER;
@@ -118,11 +119,24 @@ export function renderJsQuery(
     foam: {
       pages: (filter?: QueryFilter | string) =>
         new QueryResult(workspace, graph, trusted, filter as QueryFilter),
+      current: null as URI | null,
     },
   });
 
   try {
     const context = vm.createContext(sandbox);
+    // Reconstruct foam.current inside the VM context so it is a proper URI
+    // instance from the context's perspective (instanceof checks do not
+    // work correctly across contexts, so we recreate it).
+    if (currentResource) {
+      new vm.Script(
+        `foam.current = new URI({ scheme: ${JSON.stringify(
+          currentResource.scheme
+        )}, authority: ${JSON.stringify(
+          currentResource.authority
+        )}, path: ${JSON.stringify(currentResource.path)} });`
+      ).runInContext(context);
+    }
     new vm.Script(code).runInContext(context, { timeout: EXECUTION_TIMEOUT });
   } catch (e) {
     return `<div class="foam-query-error">Script error: ${escapeHtml(

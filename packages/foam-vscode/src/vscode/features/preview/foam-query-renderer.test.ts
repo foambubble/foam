@@ -2,7 +2,7 @@ import MarkdownIt from 'markdown-it';
 import { FoamWorkspace } from '../../../core/model/workspace';
 import { FoamGraph } from '../../../core/model/graph';
 import { URI } from '../../../core/model/uri';
-import { createTestNote } from '../../../test/test-utils';
+import { createTestNote, createTestWorkspace } from '../../../test/test-utils';
 import { markdownItFoamQuery } from './foam-query-renderer';
 
 describe('markdownItFoamQuery', () => {
@@ -380,6 +380,89 @@ describe('markdownItFoamQuery', () => {
       const typeCell = result.match(/<td>([^<]+)<\/td>/)?.[1];
       expect(typeCell).toBeDefined();
       expect(typeCell).not.toContain('<a');
+    });
+  });
+
+  describe('foam-query — DQL $current', () => {
+    const targetNote = createTestNote({ uri: '/test-workspace/target.md', title: 'Target' });
+    const linkingNote = createTestNote({
+      uri: '/test-workspace/linking.md',
+      title: 'Linking',
+      links: [{ slug: 'target' }],
+    });
+    const ws3 = createTestWorkspace().set(targetNote).set(linkingNote);
+    const graph3 = FoamGraph.fromWorkspace(ws3, false);
+
+    it('links_to: "$current" matches notes linking to the current note', () => {
+      const mdWithCurrent = markdownItFoamQuery(MarkdownIt(), ws3, graph3, {
+        isTrusted: () => true,
+        toRelativePath,
+        getCurrentResource: () => targetNote,
+      });
+      const result = mdWithCurrent.render(
+        '```foam-query\nfilter:\n  links_to: "$current"\nformat: count\n```'
+      );
+      expect(result).toContain('1 note');
+    });
+
+    it('links_from: "$current" matches notes linked from the current note', () => {
+      const mdWithCurrent = markdownItFoamQuery(MarkdownIt(), ws3, graph3, {
+        isTrusted: () => true,
+        toRelativePath,
+        getCurrentResource: () => linkingNote,
+      });
+      const result = mdWithCurrent.render(
+        '```foam-query\nfilter:\n  links_from: "$current"\nformat: count\n```'
+      );
+      expect(result).toContain('1 note');
+    });
+
+    it('shows a warning when $current is used but no current resource is available', () => {
+      const result = md.render(
+        '```foam-query\nfilter:\n  links_to: "$current"\nformat: count\n```'
+      );
+      expect(result).toContain('foam-query-warning');
+    });
+  });
+
+  describe('foam.current', () => {
+    it('is null when no getCurrentResource is provided', () => {
+      const result = md.render(
+        '```foam-query-js\nrender(String(foam.current));\n```'
+      );
+      expect(result).toContain('null');
+    });
+
+    it('exposes the URI of the current resource when provided', () => {
+      const mdWithCurrent = markdownItFoamQuery(MarkdownIt(), ws, graph, {
+        isTrusted: () => true,
+        toRelativePath,
+        getCurrentResource: () => noteA,
+      });
+      const result = mdWithCurrent.render(
+        '```foam-query-js\nrender(foam.current.path);\n```'
+      );
+      expect(result).toContain(noteA.uri.path);
+    });
+
+    it('can be used as a filter to query pages linking to the current note', () => {
+      const targetNote = createTestNote({ uri: '/test-workspace/target.md', title: 'Target' });
+      const linkingNote = createTestNote({
+        uri: '/test-workspace/linking.md',
+        title: 'Linking',
+        links: [{ slug: 'target' }],
+      });
+      const ws2 = createTestWorkspace().set(targetNote).set(linkingNote);
+      const graph2 = FoamGraph.fromWorkspace(ws2, false);
+      const mdWithCurrent = markdownItFoamQuery(MarkdownIt(), ws2, graph2, {
+        isTrusted: () => true,
+        toRelativePath,
+        getCurrentResource: () => targetNote,
+      });
+      const result = mdWithCurrent.render(
+        "```foam-query-js\nrender(foam.pages({links_to: foam.current}).format('count'));\n```"
+      );
+      expect(result).toContain('1 note');
     });
   });
 

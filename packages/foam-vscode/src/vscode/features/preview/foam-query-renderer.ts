@@ -6,6 +6,7 @@ import { Logger } from '../../../core/utils/log';
 import { renderDqlQuery } from '../../../core/query/dql';
 import { renderJsQuery } from '../../../core/query/js';
 import { escapeHtml } from '../../../core/query/html';
+import { Resource } from '../../../core/model/note';
 
 export function markdownItFoamQuery(
   md: markdownit,
@@ -14,9 +15,10 @@ export function markdownItFoamQuery(
   options: {
     isTrusted: () => boolean;
     toRelativePath: (path: string) => string;
+    getCurrentResource?: () => Resource | null;
   }
 ): markdownit {
-  const { isTrusted, toRelativePath } = options;
+  const { isTrusted, toRelativePath, getCurrentResource } = options;
 
   const defaultFence: any =
     md.renderer.rules.fence ??
@@ -38,14 +40,16 @@ export function markdownItFoamQuery(
             workspace,
             graph,
             isTrusted(),
-            toRelativePath
+            toRelativePath,
+            getCurrentResource?.()?.uri ?? null
           )
         : renderJsQuery(
             token.content,
             workspace,
             graph,
             isTrusted(),
-            toRelativePath
+            toRelativePath,
+            getCurrentResource?.()?.uri ?? null
           );
     } catch (e) {
       Logger.error(`[foam-query] error rendering ${info} block`, e);

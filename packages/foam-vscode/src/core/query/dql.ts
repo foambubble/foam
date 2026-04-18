@@ -1,8 +1,9 @@
 import { parse as parseYaml } from 'yaml';
 import { FoamWorkspace } from '../model/workspace';
 import { FoamGraph } from '../model/graph';
-import { QueryDescriptor, executeQuery, ALL_QUERY_FIELDS } from '.';
+import { QueryDescriptor, QueryFilter, executeQuery, ALL_QUERY_FIELDS } from '.';
 import { escapeHtml, renderResults } from './html';
+import { URI } from '../model/uri';
 
 const DQL_PLACEHOLDER = `<div class="foam-query-placeholder">
 <p>Use <code>\`\`\`foam-query</code> blocks to write a query to list notes. For example:</p>
@@ -107,12 +108,57 @@ function renderWarnings(warnings: string[]): string {
   return `<div class="foam-query-warning">${items}</div>`;
 }
 
+const CURRENT_SENTINEL = '$current';
+
+/**
+ * Walks a QueryFilter recursively and replaces any `links_to` or `links_from`
+ * value of `"$current"` with the provided URI. Returns a warning string if
+ * `$current` is used but no current resource is available.
+ */
+function resolveCurrentSentinel(
+  filter: QueryFilter,
+  currentResource: URI | null | undefined,
+  warnings: string[]
+): QueryFilter {
+  if (typeof filter === 'string') {
+    return filter;
+  }
+  const resolved = { ...filter };
+  for (const key of ['links_to', 'links_from'] as const) {
+    if (resolved[key] === CURRENT_SENTINEL) {
+      if (currentResource) {
+        resolved[key] = currentResource;
+      } else {
+        warnings.push(
+          `Filter uses <code>${CURRENT_SENTINEL}</code> but no note is currently active — no results will be shown`
+        );
+        resolved[key] = undefined;
+      }
+    }
+  }
+  if (resolved.and) {
+    resolved.and = resolved.and.map(f =>
+      resolveCurrentSentinel(f, currentResource, warnings)
+    );
+  }
+  if (resolved.or) {
+    resolved.or = resolved.or.map(f =>
+      resolveCurrentSentinel(f, currentResource, warnings)
+    );
+  }
+  if (resolved.not) {
+    resolved.not = resolveCurrentSentinel(resolved.not, currentResource, warnings);
+  }
+  return resolved;
+}
+
 export function renderDqlQuery(
   content: string,
   workspace: FoamWorkspace,
   graph: FoamGraph,
   trusted: boolean,
-  toRelativePath: (path: string) => string
+  toRelativePath: (path: string) => string,
+  currentResource?: URI | null
 ): string {
   if (content.trim() === '') {
     return DQL_PLACEHOLDER;
@@ -208,7 +254,14 @@ export function renderDqlQuery(
     }
   }
 
-  const descriptor = parsed as QueryDescriptor;
+  let descriptor = parsed as QueryDescriptor;
+
+  if (descriptor.filter) {
+    descriptor = {
+      ...descriptor,
+      filter: resolveCurrentSentinel(descriptor.filter, currentResource, warnings),
+    };
+  }
 
   // Ensure path is always fetched when title is selected so link generation
   // works in both list and table formats, even if the user didn't select path.

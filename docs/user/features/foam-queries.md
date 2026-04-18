@@ -80,10 +80,19 @@ Supported filter keys:
 - `type`: notes of this type (e.g. `type: "daily-note"`)
 - `path`: notes whose path matches this regex (e.g. `path: "^/projects/"`)
 - `title`: notes whose title matches this regex
-- `links_to`: notes that link to the given note identifier
-- `links_from`: notes that are linked from the given note identifier
+- `links_to`: notes that link to the given note identifier. Use `"$current"` to refer to the note containing the query
+- `links_from`: notes that are linked from the given note identifier. Use `"$current"` to refer to the note containing the query
 - `expression`: a JavaScript expression evaluated against each note, e.g. `"resource.tags.length > 2"`. Only evaluated in trusted workspaces.
 - `and`, `or`, `not`: combine filters logically
+
+Use `"$current"` in `links_to` or `links_from` to query relative to the note containing the query block:
+
+````markdown
+```foam-query
+filter:
+  links_to: "$current"
+```
+````
 
 ## Displayed Fields
 
@@ -140,6 +149,24 @@ render(recentResearch);
 ````
 
 `foam.pages(filter?)` returns a query builder. Omit the filter to include all notes.
+
+`foam.current` is the URI of the note containing the query. Use it to write queries that are relative to the current note:
+
+````markdown
+```foam-query-js
+// Show all notes that link to this note
+render(foam.pages({ links_to: foam.current }).sortBy('title'));
+```
+````
+
+````markdown
+```foam-query-js
+// Show all notes that this note links to
+render(foam.pages({ links_from: foam.current }).sortBy('title'));
+```
+````
+
+`foam.current` is `null` if no document is active in the editor.
 
 Available builder methods:
 

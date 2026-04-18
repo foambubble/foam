@@ -59,6 +59,7 @@ export default async function activate(
             toVsCodeUri(URI.file(uriPath)),
             false
           ),
+        getCurrentResource,
       });
       return result;
     },

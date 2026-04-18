@@ -2,6 +2,7 @@ import { Resource } from '../model/note';
 import { FoamWorkspace } from '../model/workspace';
 import { FoamGraph } from '../model/graph';
 import { Logger } from '../utils/log';
+import { URI } from '../model/uri';
 
 export type QueryFilter =
   | string // shorthand: "#tag", "[[note-id]]", "*", "/regex/"
@@ -10,8 +11,8 @@ export type QueryFilter =
       type?: string;
       path?: string; // regex
       title?: string; // regex
-      links_to?: string; // note identifier — this resource has an outbound link to it
-      links_from?: string; // note identifier — this resource is linked from it
+      links_to?: string | URI; // note identifier or URI — this resource has an outbound link to it
+      links_from?: string | URI; // note identifier or URI — this resource is linked from it
       expression?: string; // JS expression; requires trusted workspace
       and?: QueryFilter[];
       or?: QueryFilter[];

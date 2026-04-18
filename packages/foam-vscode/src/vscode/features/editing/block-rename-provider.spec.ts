@@ -9,7 +9,7 @@ import {
   showInEditor,
 } from '../../../test/test-utils-vscode';
 import { createTestWorkspace } from '../../../test/test-utils';
-import { toVsCodeUri } from '../../../utils/vsc-utils';
+import { toVsCodeUri } from '../../utils/vsc-utils';
 import { BlockRenameProvider } from './block-rename-provider';
 
 const parser = createMarkdownParser([]);

@@ -12,7 +12,7 @@ import {
   fromVsCodeUri,
   toVsCodeRange,
   toVsCodeUri,
-} from '../../utils/vsc-utils';
+} from '../vscode/utils/vsc-utils';
 import { getWikilinkDefinitionSetting } from '../../vscode/features/editing/update-wikilinks';
 import {
   lintWorkspace,

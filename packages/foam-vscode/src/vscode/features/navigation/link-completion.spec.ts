@@ -11,7 +11,7 @@ import {
   showInEditor,
   withModifiedFoamConfiguration,
 } from '../../../test/test-utils-vscode';
-import { fromVsCodeUri } from '../../../utils/vsc-utils';
+import { fromVsCodeUri } from '../../utils/vsc-utils';
 import {
   WikilinkCompletionProvider,
   SectionCompletionProvider,

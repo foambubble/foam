@@ -1,5 +1,5 @@
 import { Selection, workspace } from 'vscode';
-import { fromVsCodeUri } from '../utils/vsc-utils';
+import { fromVsCodeUri } from '../vscode/utils/vsc-utils';
 import {
   closeEditors,
   createFile,

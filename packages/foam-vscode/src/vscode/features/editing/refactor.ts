@@ -6,7 +6,7 @@ import {
   fromVsCodeUri,
   toVsCodeRange,
   toVsCodeUri,
-} from '../../../utils/vsc-utils';
+} from '../../utils/vsc-utils';
 import {
   computeWikilinkRenameEdits,
   computeDirectoryWikilinkRenameEdits,

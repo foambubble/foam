@@ -19,7 +19,7 @@ import {
   ContextMemento,
   MapBasedMemento,
   fromVsCodeUri,
-} from '../../../utils/vsc-utils';
+} from '../../utils/vsc-utils';
 
 const TAG_SEPARATOR = '/';
 export default async function activate(

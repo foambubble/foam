@@ -8,7 +8,7 @@ import {
 } from '../../utils/tree-views/tree-view-utils';
 import { Resource } from '../../../core/model/note';
 import { FoamGraph } from '../../../core/model/graph';
-import { ContextMemento } from '../../../utils/vsc-utils';
+import { ContextMemento } from '../../utils/vsc-utils';
 import {
   Folder,
   FolderTreeItem,

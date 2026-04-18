@@ -9,7 +9,7 @@ import {
   fromVsCodeUri,
   toVsCodeRange,
   toVsCodeWorkspaceEdit,
-} from '../../../utils/vsc-utils';
+} from '../../utils/vsc-utils';
 
 export default async function activate(
   context: vscode.ExtensionContext,

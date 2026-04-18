@@ -4,7 +4,7 @@ import { Foam } from '../../../core/model/foam';
 import { FoamWorkspace } from '../../../core/model/workspace';
 import { Connection, FoamGraph } from '../../../core/model/graph';
 import { Range } from '../../../core/model/range';
-import { ContextMemento, fromVsCodeUri } from '../../../utils/vsc-utils';
+import { ContextMemento, fromVsCodeUri } from '../../utils/vsc-utils';
 import {
   BaseTreeItem,
   ResourceRangeTreeItem,

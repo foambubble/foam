@@ -17,12 +17,12 @@ import {
   readFile,
 } from '../../../services/editor';
 import { getFoamVsCodeConfig } from '../../../vscode/config';
-import { CommandDescriptor } from '../../../utils/commands';
+import { CommandDescriptor } from '../../utils/commands';
 import { Foam } from '../../../core/model/foam';
 import { Location } from '../../../core/model/location';
 import { MarkdownLink } from '../../../core/services/markdown-link';
 import { ResourceLink } from '../../../core/model/note';
-import { toVsCodeRange, toVsCodeUri } from '../../../utils/vsc-utils';
+import { toVsCodeRange, toVsCodeUri } from '../../utils/vsc-utils';
 import { Logger } from '../../../core/utils/log';
 
 export default async function activate(

@@ -8,7 +8,7 @@ import {
   createFile,
   showInEditor,
 } from '../../../test/test-utils-vscode';
-import { fromVsCodeUri } from '../../../utils/vsc-utils';
+import { fromVsCodeUri } from '../../utils/vsc-utils';
 import { TagCompletionProvider } from './tag-completion';
 
 describe('Tag Completion', () => {

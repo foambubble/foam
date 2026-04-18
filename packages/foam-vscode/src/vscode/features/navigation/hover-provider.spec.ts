@@ -9,7 +9,7 @@ import {
   createFile,
   showInEditor,
 } from '../../../test/test-utils-vscode';
-import { toVsCodeUri } from '../../../utils/vsc-utils';
+import { toVsCodeUri } from '../../utils/vsc-utils';
 import { HoverProvider } from './hover-provider';
 import { readFileFromFs } from '../../../test/test-utils';
 import { FileDataStore } from '../../../test/test-datastore';

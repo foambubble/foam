@@ -7,7 +7,7 @@ import {
   createFile,
   showInEditor,
 } from '../../test/test-utils-vscode';
-import { toVsCodeUri } from '../../utils/vsc-utils';
+import { toVsCodeUri } from '../vscode/utils/vsc-utils';
 import { updateDiagnostics, IdentifierResolver } from './wikilink-diagnostics';
 
 describe('Wikilink diagnostics', () => {

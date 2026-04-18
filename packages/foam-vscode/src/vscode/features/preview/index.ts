@@ -10,7 +10,7 @@ import { default as escapeWikilinkPipes } from './escape-wikilink-pipes';
 import { default as markdownItBlockAnchorIds } from './block-anchor-ids';
 import { default as markdownItFoamQuery } from './foam-query-renderer';
 import markdownItFootnote from 'markdown-it-footnote';
-import { fromVsCodeUri, toVsCodeUri } from '../../../utils/vsc-utils';
+import { fromVsCodeUri, toVsCodeUri } from '../../utils/vsc-utils';
 import { URI } from '../../../core/model/uri';
 
 export default async function activate(

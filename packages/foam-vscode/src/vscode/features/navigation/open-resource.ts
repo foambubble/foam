@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
 import { URI } from '../../../core/model/uri';
-import { toVsCodeUri } from '../../../utils/vsc-utils';
+import { toVsCodeUri } from '../../utils/vsc-utils';
 import { Foam } from '../../../core/model/foam';
 import { QueryFilter, parseFilter } from '../../../core/query';
-import { CommandDescriptor } from '../../../utils/commands';
+import { CommandDescriptor } from '../../utils/commands';
 import { FoamWorkspace } from '../../../core/model/workspace';
 import { FoamGraph } from '../../../core/model/graph';
 import { Resource } from '../../../core/model/note';

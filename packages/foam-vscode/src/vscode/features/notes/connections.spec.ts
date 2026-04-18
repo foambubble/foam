@@ -8,7 +8,7 @@ import {
   getUriInWorkspace,
 } from '../../../test/test-utils-vscode';
 import { ConnectionsTreeDataProvider } from './connections';
-import { MapBasedMemento, toVsCodeUri } from '../../../utils/vsc-utils';
+import { MapBasedMemento, toVsCodeUri } from '../../utils/vsc-utils';
 import { FoamGraph } from '../../../core/model/graph';
 import {
   ResourceRangeTreeItem,

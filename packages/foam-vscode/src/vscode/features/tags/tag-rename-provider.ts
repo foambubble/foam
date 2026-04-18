@@ -5,7 +5,7 @@ import {
   fromVsCodeUri,
   toVsCodeRange,
   toVsCodeWorkspaceEdit,
-} from '../../../utils/vsc-utils';
+} from '../../utils/vsc-utils';
 import { Logger } from '../../../core/utils/log';
 import { Position } from '../../../core/model/position';
 

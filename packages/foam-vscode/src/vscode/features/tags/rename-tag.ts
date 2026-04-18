@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { Foam } from '../../../core/model/foam';
 import { TagEdit } from '../../../core/services/tag-edit';
 import { TagItem } from './tags-explorer';
-import { fromVsCodeUri, toVsCodeWorkspaceEdit } from '../../../utils/vsc-utils';
+import { fromVsCodeUri, toVsCodeWorkspaceEdit } from '../../utils/vsc-utils';
 import { Logger } from '../../../core/utils/log';
 import { Position } from '../../../core/model/position';
 

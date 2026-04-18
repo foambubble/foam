@@ -4,7 +4,7 @@ import { workspace, ExtensionContext, window, commands } from 'vscode';
 import { MarkdownResourceProvider } from './core/services/markdown-provider';
 import { bootstrap } from './core/model/foam';
 import { Logger } from './core/utils/log';
-import { fromVsCodeUri } from './utils/vsc-utils';
+import { fromVsCodeUri } from './vscode/utils/vsc-utils';
 
 import { features } from './vscode/features';
 import { VsCodeOutputLogger, exposeLogger } from './services/logging';

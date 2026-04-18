@@ -5,7 +5,7 @@ import {
   cleanWorkspace,
   getUriInWorkspace,
 } from '../../../test/test-utils-vscode';
-import { MapBasedMemento } from '../../../utils/vsc-utils';
+import { MapBasedMemento } from '../../utils/vsc-utils';
 import { FoamWorkspace } from '../../../core/model/workspace';
 import { FoamGraph } from '../../../core/model/graph';
 import { Resource } from '../../../core/model/note';

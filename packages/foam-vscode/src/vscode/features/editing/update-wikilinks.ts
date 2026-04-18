@@ -19,7 +19,7 @@ import {
   LINK_REFERENCE_DEFINITION_HEADER,
   generateLinkReferences,
 } from '../../../janitor/generate-link-references';
-import { fromVsCodeUri, toVsCodeRange } from '../../../utils/vsc-utils';
+import { fromVsCodeUri, toVsCodeRange } from '../../utils/vsc-utils';
 import { getEditorEOL } from '../../../services/editor';
 import { ResourceParser } from '../../../core/model/note';
 import { IMatcher } from '../../../core/services/datastore';

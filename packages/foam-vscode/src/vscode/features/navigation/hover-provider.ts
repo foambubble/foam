@@ -1,6 +1,6 @@
 import { uniqWith } from 'lodash';
 import * as vscode from 'vscode';
-import { fromVsCodeUri, toVsCodeRange } from '../../../utils/vsc-utils';
+import { fromVsCodeUri, toVsCodeRange } from '../../utils/vsc-utils';
 import {
   ConfigurationMonitor,
   monitorFoamVsCodeConfig,
@@ -12,7 +12,7 @@ import { Range } from '../../../core/model/range';
 import { FoamGraph } from '../../../core/model/graph';
 import { OPEN_COMMAND } from './open-resource';
 import { CREATE_NOTE_COMMAND } from '../notes/create-note';
-import { commandAsURI } from '../../../utils/commands';
+import { commandAsURI } from '../../utils/commands';
 import { Location } from '../../../core/model/location';
 import { getNoteTooltip, getFoamDocSelectors } from '../../../services/editor';
 import { isSome } from '../../../core/utils';

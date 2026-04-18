@@ -4,7 +4,7 @@
 import * as vscode from 'vscode';
 import path from 'path';
 import { TextDecoder, TextEncoder } from 'util';
-import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
+import { fromVsCodeUri, toVsCodeUri } from '../vscode/utils/vsc-utils';
 import { Logger } from '../core/utils/log';
 import { URI } from '../core/model/uri';
 import { Resource } from '../core/model/note';

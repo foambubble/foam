@@ -12,7 +12,7 @@ import {
 import { NavigationProvider } from '../navigation/navigation-provider';
 import { FoamGraph } from '../../../core/model/graph';
 import { FoamTags } from '../../../core/model/tags';
-import { toVsCodeUri } from '../../../utils/vsc-utils';
+import { toVsCodeUri } from '../../utils/vsc-utils';
 
 describe('Document decorator', () => {
   const parser = createMarkdownParser([]);

@@ -16,7 +16,7 @@ import {
 } from 'vscode';
 import { getExcerpt, stripFrontMatter, stripImages } from '../core/utils/md';
 import { isSome } from '../core/utils/core';
-import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
+import { fromVsCodeUri, toVsCodeUri } from '../vscode/utils/vsc-utils';
 import { asAbsoluteUri, URI } from '../core/model/uri';
 import { getFoamVsCodeConfig } from '../vscode/config';
 import {

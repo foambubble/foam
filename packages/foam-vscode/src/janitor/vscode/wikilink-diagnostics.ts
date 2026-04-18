@@ -8,7 +8,7 @@ import {
   toVsCodeRange,
   toVsCodeUri,
   lintIssueToDiagnostic,
-} from '../../utils/vsc-utils';
+} from '../vscode/utils/vsc-utils';
 import {
   AMBIGUOUS_IDENTIFIER_CODE,
   UNKNOWN_SECTION_CODE,

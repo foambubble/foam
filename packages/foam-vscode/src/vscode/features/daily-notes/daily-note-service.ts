@@ -13,7 +13,7 @@ import {
 } from '../../../services/editor';
 import { resolveDailyNote } from '../../../core/templates/daily-note-resolver';
 import { Resolver } from '../../../core/templates/variable-resolver';
-import { fromVsCodeUri } from '../../../utils/vsc-utils';
+import { fromVsCodeUri } from '../../utils/vsc-utils';
 
 // ─── Format conversion ────────────────────────────────────────────────────────
 

@@ -12,7 +12,7 @@ import {
   groupRangesByResource,
 } from '../../utils/tree-views/tree-view-utils';
 import { IMatcher } from '../../../core/services/datastore';
-import { ContextMemento, fromVsCodeUri } from '../../../utils/vsc-utils';
+import { ContextMemento, fromVsCodeUri } from '../../utils/vsc-utils';
 import { FoamGraph } from '../../../core/model/graph';
 import { URI } from '../../../core/model/uri';
 import { FoamWorkspace } from '../../../core/model/workspace';

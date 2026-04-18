@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { groupBy } from 'lodash';
 import { Resource } from '../../../core/model/note';
-import { toVsCodeUri } from '../../../utils/vsc-utils';
+import { toVsCodeUri } from '../utils/vsc-utils';
 import { Range } from '../../../core/model/range';
 import { URI } from '../../../core/model/uri';
 import { FoamWorkspace } from '../../../core/model/workspace';

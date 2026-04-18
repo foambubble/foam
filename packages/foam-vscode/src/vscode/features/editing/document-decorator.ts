@@ -4,7 +4,7 @@ import { ResourceParser } from '../../../core/model/note';
 import { FoamWorkspace } from '../../../core/model/workspace';
 import { Foam } from '../../../core/model/foam';
 import { Range } from '../../../core/model/range';
-import { fromVsCodeUri, toVsCodeRange } from '../../../utils/vsc-utils';
+import { fromVsCodeUri, toVsCodeRange } from '../../utils/vsc-utils';
 
 const placeholderDecoration = vscode.window.createTextEditorDecorationType({
   rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,

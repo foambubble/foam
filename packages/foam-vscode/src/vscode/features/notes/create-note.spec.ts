@@ -11,7 +11,7 @@ import {
   makeFoamMock,
   showInEditor,
 } from '../../../test/test-utils-vscode';
-import { fromVsCodeUri } from '../../../utils/vsc-utils';
+import { fromVsCodeUri } from '../../utils/vsc-utils';
 import { CREATE_NOTE_COMMAND, createNote } from './create-note';
 import { Location } from '../../../core/model/location';
 import { Range } from '../../../core/model/range';

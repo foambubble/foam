@@ -14,6 +14,7 @@ import { createMarkdownParser } from '@foam/core';
 import VsCodeBasedParserCache from './vscode/services/cache';
 import { createMatcherAndDataStore } from './vscode/services/editor';
 import { OllamaEmbeddingProvider } from './ai/providers/ollama/ollama-provider';
+import { initTelemetry } from './vscode/services/telemetry';
 
 export async function activate(context: ExtensionContext) {
   const logger = new VsCodeOutputLogger();
@@ -21,6 +22,9 @@ export async function activate(context: ExtensionContext) {
   exposeLogger(context, logger);
 
   Config.setDefaultConfig(new VsCodeFoamConfig());
+
+  const telemetry = initTelemetry();
+  context.subscriptions.push(telemetry);
 
   try {
     Logger.info('Starting Foam');
@@ -93,7 +97,22 @@ export async function activate(context: ExtensionContext) {
     );
 
     const foam = await foamPromise;
-    Logger.info(`Loaded ${foam.workspace.list().length} resources`);
+    const noteCount = foam.workspace.list().length;
+    Logger.info(`Loaded ${noteCount} resources`);
+
+    const allFiles = await dataStore.list();
+    const hasTemplates = allFiles.some(uri =>
+      uri.path.includes('.foam/templates')
+    );
+    const hasDailyNoteTemplate = allFiles.some(uri =>
+      uri.path.includes('.foam/templates/daily-note.')
+    );
+    const hasAI = !!workspace.getConfiguration('foam.experimental').get('ai');
+    const graphViewCount: number =
+      workspace.getConfiguration('foam').get<unknown[]>('graph.views', []).length;
+
+    telemetry.trackConfigSnapshot();
+    telemetry.trackWorkspaceStats(noteCount, hasTemplates, hasDailyNoteTemplate, hasAI, graphViewCount);
 
     context.subscriptions.push(
       foam,

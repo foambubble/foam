@@ -933,6 +933,8 @@
     "wait-for-expect": "^3.0.2"
   },
   "dependencies": {
+    "@microsoft/applicationinsights-common": "3.4.1",
+    "@vscode/extension-telemetry": "1.5.1",
     "dayjs": "^1.11.13",
     "detect-newline": "^3.1.0",
     "github-slugger": "^1.4.0",

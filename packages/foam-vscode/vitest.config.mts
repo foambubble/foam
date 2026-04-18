@@ -46,6 +46,10 @@ export default defineConfig({
       // Order matters: longer prefix first.
       '@foam/core/test': path.join(__dirname, '../foam-core/test/test-utils.ts'),
       '@foam/core': path.join(__dirname, '../foam-core/src/index.ts'),
+      '@vscode/extension-telemetry': path.join(
+        __dirname,
+        'src/test/extension-telemetry-mock.ts'
+      ),
     },
   },
   test: {

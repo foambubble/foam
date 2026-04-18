@@ -8,6 +8,7 @@ import {
 import { Foam } from '@foam/core';
 import { TextEdit } from '@foam/core';
 import { Range } from '@foam/core';
+import { getTelemetry } from '../../services/telemetry';
 import {
   fromVsCodeUri,
   toVsCodeRange,
@@ -25,9 +26,10 @@ export default async function activate(
   foamPromise: Promise<Foam>
 ) {
   context.subscriptions.push(
-    commands.registerCommand('foam-vscode.lint', async () =>
-      lint(await foamPromise)
-    )
+    commands.registerCommand('foam-vscode.lint', async () => {
+      getTelemetry()?.trackCommand('foam-vscode.lint');
+      return lint(await foamPromise);
+    })
   );
 }
 

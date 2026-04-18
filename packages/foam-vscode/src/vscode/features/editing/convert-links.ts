@@ -4,6 +4,7 @@ import { Range } from '@foam/core';
 import { Logger } from '@foam/core';
 import { fromVsCodeUri, toVsCodeRange } from '../../utils/vsc-utils';
 import { MarkdownLink } from '@foam/core';
+import { getTelemetry } from '../../services/telemetry';
 
 export const CONVERT_WIKILINK_TO_MDLINK = {
   command: 'foam-vscode.convert-wikilink-to-mdlink',
@@ -22,13 +23,15 @@ export default async function activate(
   const foam = await foamPromise;
 
   context.subscriptions.push(
-    vscode.commands.registerCommand(CONVERT_WIKILINK_TO_MDLINK.command, () =>
-      convertWikilinkToMarkdown(foam)
-    ),
+    vscode.commands.registerCommand(CONVERT_WIKILINK_TO_MDLINK.command, () => {
+      getTelemetry()?.trackCommand(CONVERT_WIKILINK_TO_MDLINK.command);
+      return convertWikilinkToMarkdown(foam);
+    }),
 
-    vscode.commands.registerCommand(CONVERT_MDLINK_TO_WIKILINK.command, () =>
-      convertMarkdownToWikilink(foam)
-    )
+    vscode.commands.registerCommand(CONVERT_MDLINK_TO_WIKILINK.command, () => {
+      getTelemetry()?.trackCommand(CONVERT_MDLINK_TO_WIKILINK.command);
+      return convertMarkdownToWikilink(foam);
+    })
   );
 }
 

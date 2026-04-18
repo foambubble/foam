@@ -22,7 +22,7 @@ import { getIncludeFilesSetting } from '../../../vscode/settings';
 /** Retrieve the placeholders configuration */
 export function getPlaceholdersConfig(): GroupedResourcesConfig {
   const placeholderCfg = vscode.workspace.getConfiguration('foam.placeholders');
-  const exclude: string[] = placeholderCfg.get('exclude');
+  const exclude: string[] = placeholderCfg.get('exclude') ?? [];
   return { exclude };
 }
 

@@ -56,7 +56,7 @@ export default async function activate(
 /** Retrieve the orphans configuration */
 export function getOrphansConfig(): GroupedResourcesConfig {
   const orphansConfig = vscode.workspace.getConfiguration('foam.orphans');
-  const exclude: string[] = orphansConfig.get('exclude');
+  const exclude: string[] = orphansConfig.get('exclude') ?? [];
   return { exclude };
 }
 

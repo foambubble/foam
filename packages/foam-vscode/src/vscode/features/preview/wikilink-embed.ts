@@ -17,7 +17,7 @@ import { isNone, isSome } from '../../../core/utils';
 import {
   asAbsoluteWorkspaceUri,
   isVirtualWorkspace,
-} from '../../../services/editor';
+} from '../../services/editor';
 
 export const WIKILINK_EMBED_REGEX =
   /((?:(?:full|content)-(?:inline|card)|full|content|inline|card)?!\[\[[^[\]]+?\]\])/;

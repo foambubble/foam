@@ -7,7 +7,7 @@ import {
   createFile,
   waitForNoteInFoamWorkspace,
 } from '../../../test/test-utils-vscode';
-import { deleteFile } from '../../../services/editor';
+import { deleteFile } from '../../services/editor';
 import waitForExpect from 'wait-for-expect';
 
 describe('open-resource command', () => {

@@ -10,7 +10,7 @@ import {
   asAbsoluteWorkspaceUri,
   focusNote,
   readFile,
-} from '../../../services/editor';
+} from '../../services/editor';
 import { resolveDailyNote } from '../../../core/templates/daily-note-resolver';
 import { Resolver } from '../../../core/templates/variable-resolver';
 import { fromVsCodeUri } from '../../utils/vsc-utils';

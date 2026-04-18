@@ -7,7 +7,7 @@ import { Logger } from './core/utils/log';
 import { fromVsCodeUri } from './vscode/utils/vsc-utils';
 
 import { features } from './vscode/features';
-import { VsCodeOutputLogger, exposeLogger } from './services/logging';
+import { VsCodeOutputLogger, exposeLogger } from './vscode/services/logging';
 import {
   getAttachmentsExtensions,
   getDirectoryModeSetting,
@@ -16,10 +16,10 @@ import {
   getNotesExtensions,
 } from './vscode/settings';
 import { AttachmentResourceProvider } from './core/services/attachment-provider';
-import { VsCodeWatcher } from './services/watcher';
+import { VsCodeWatcher } from './vscode/services/watcher';
 import { createMarkdownParser } from './core/services/markdown-parser';
-import VsCodeBasedParserCache from './services/cache';
-import { createMatcherAndDataStore } from './services/editor';
+import VsCodeBasedParserCache from './vscode/services/cache';
+import { createMatcherAndDataStore } from './vscode/services/editor';
 import { OllamaEmbeddingProvider } from './ai/providers/ollama/ollama-provider';
 
 export async function activate(context: ExtensionContext) {

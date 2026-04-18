@@ -1,5 +1,5 @@
 import { Selection, workspace } from 'vscode';
-import { fromVsCodeUri } from '../vscode/utils/vsc-utils';
+import { fromVsCodeUri } from '../utils/vsc-utils';
 import {
   closeEditors,
   createFile,
@@ -10,7 +10,7 @@ import {
   getCurrentEditorDirectory,
   replaceSelection,
 } from './editor';
-import { URI } from '../core/model/uri';
+import { URI } from '../../core/model/uri';
 
 describe('Editor utils', () => {
   beforeAll(closeEditors);

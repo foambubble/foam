@@ -16,7 +16,7 @@ import {
   withModifiedFoamConfiguration,
 } from '../../../test/test-utils-vscode';
 import { fromVsCodeUri } from '../../utils/vsc-utils';
-import { fileExists, readFile } from '../../../services/editor';
+import { fileExists, readFile } from '../../services/editor';
 import { getDailyNoteTemplateCandidateUris } from '../../../core/templates/template-discovery';
 import {
   getDailyNoteTemplateUri,

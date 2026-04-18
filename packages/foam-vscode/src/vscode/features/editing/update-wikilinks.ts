@@ -11,7 +11,7 @@ import {
   workspace,
   Position,
 } from 'vscode';
-import { isMdEditor, getFoamDocSelectors } from '../../../services/editor';
+import { isMdEditor, getFoamDocSelectors } from '../../services/editor';
 import { Foam } from '../../../core/model/foam';
 import { FoamWorkspace } from '../../../core/model/workspace';
 import {
@@ -20,7 +20,7 @@ import {
   generateLinkReferences,
 } from '../../../janitor/generate-link-references';
 import { fromVsCodeUri, toVsCodeRange } from '../../utils/vsc-utils';
-import { getEditorEOL } from '../../../services/editor';
+import { getEditorEOL } from '../../services/editor';
 import { ResourceParser } from '../../../core/model/note';
 import { IMatcher } from '../../../core/services/datastore';
 

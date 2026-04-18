@@ -1,9 +1,9 @@
-import { IDisposable } from '../core/common/lifecycle';
-import { Emitter } from '../core/common/event';
-import { IWatcher } from '../core/services/datastore';
-import { URI } from '../core/model/uri';
+import { IDisposable } from '../../core/common/lifecycle';
+import { Emitter } from '../../core/common/event';
+import { IWatcher } from '../../core/services/datastore';
+import { URI } from '../../core/model/uri';
 import { FileSystemWatcher } from 'vscode';
-import { fromVsCodeUri } from '../vscode/utils/vsc-utils';
+import { fromVsCodeUri } from '../utils/vsc-utils';
 
 export class VsCodeWatcher implements IWatcher, IDisposable {
   public onDidCreateEmitter = new Emitter<URI>();

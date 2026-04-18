@@ -1,6 +1,6 @@
 import { window, workspace } from 'vscode';
-import { findSelectionContent, getCurrentEditorDirectory } from '../../services/editor';
-import { UserCancelledOperation } from '../../services/errors';
+import { findSelectionContent, getCurrentEditorDirectory } from './editor';
+import { UserCancelledOperation } from './errors';
 import { VariableProvider } from '../../core/templates/variable-resolver';
 
 export type { VariableProvider };

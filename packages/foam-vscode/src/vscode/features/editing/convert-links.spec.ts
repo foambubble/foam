@@ -8,7 +8,7 @@ import {
   showInEditor,
   waitForNoteInFoamWorkspace,
 } from '../../../test/test-utils-vscode';
-import { deleteFile } from '../../../services/editor';
+import { deleteFile } from '../../services/editor';
 import { Logger } from '../../../core/utils/log';
 import {
   CONVERT_WIKILINK_TO_MDLINK,

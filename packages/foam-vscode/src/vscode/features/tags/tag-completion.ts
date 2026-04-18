@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { Foam } from '../../../core/model/foam';
 import { FoamTags } from '../../../core/model/tags';
 import { isInFrontMatter, isOnYAMLKeywordLine } from '../../../core/utils/md';
-import { getFoamDocSelectors } from '../../../services/editor';
+import { getFoamDocSelectors } from '../../services/editor';
 
 // this regex is different from HASHTAG_REGEX in that it does not look for a
 // #+character. It uses a negative look-ahead for `# `

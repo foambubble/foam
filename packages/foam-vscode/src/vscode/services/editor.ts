@@ -14,18 +14,18 @@ import {
   WorkspaceEdit,
   MarkdownString,
 } from 'vscode';
-import { getExcerpt, stripFrontMatter, stripImages } from '../core/utils/md';
-import { isSome } from '../core/utils/core';
-import { fromVsCodeUri, toVsCodeUri } from '../vscode/utils/vsc-utils';
-import { asAbsoluteUri, URI } from '../core/model/uri';
-import { getFoamVsCodeConfig } from '../vscode/config';
+import { getExcerpt, stripFrontMatter, stripImages } from '../../core/utils/md';
+import { isSome } from '../../core/utils/core';
+import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
+import { asAbsoluteUri, URI } from '../../core/model/uri';
+import { getFoamVsCodeConfig } from '../config';
 import {
   AlwaysIncludeMatcher,
   FileListBasedMatcher,
   GenericDataStore,
   IDataStore,
   IMatcher,
-} from '../core/services/datastore';
+} from '../../core/services/datastore';
 
 interface SelectionInfo {
   document: TextDocument;

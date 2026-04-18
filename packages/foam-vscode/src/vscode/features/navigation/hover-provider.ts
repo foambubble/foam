@@ -14,7 +14,7 @@ import { OPEN_COMMAND } from './open-resource';
 import { CREATE_NOTE_COMMAND } from '../notes/create-note';
 import { commandAsURI } from '../../utils/commands';
 import { Location } from '../../../core/model/location';
-import { getNoteTooltip, getFoamDocSelectors } from '../../../services/editor';
+import { getNoteTooltip, getFoamDocSelectors } from '../../services/editor';
 import { isSome } from '../../../core/utils';
 
 export const CONFIG_KEY = 'links.hover.enable';

@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { Foam } from '../../../core/model/foam';
-import { createMatcherAndDataStore } from '../../../services/editor';
+import { createMatcherAndDataStore } from '../../services/editor';
 import {
   getAttachmentsExtensions,
   getIncludeFilesSetting,

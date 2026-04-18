@@ -15,7 +15,7 @@ import {
   asAbsoluteWorkspaceUri,
   fileExists,
   readFile,
-} from '../../../services/editor';
+} from '../../services/editor';
 import { getFoamVsCodeConfig } from '../../../vscode/config';
 import { CommandDescriptor } from '../../utils/commands';
 import { Foam } from '../../../core/model/foam';

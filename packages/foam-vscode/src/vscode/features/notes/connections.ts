@@ -14,7 +14,7 @@ import {
 } from '../../utils/tree-views/tree-view-utils';
 import { BaseTreeProvider } from '../../utils/tree-views/base-tree-provider';
 import { isNone } from '../../../core/utils';
-import { getWorkspaceDefaultScheme } from '../../../services/editor';
+import { getWorkspaceDefaultScheme } from '../../services/editor';
 
 export default async function activate(
   context: vscode.ExtensionContext,

@@ -3,7 +3,7 @@ import { URI } from '../../core/model/uri';
 import { getDailyNoteTemplateCandidateUris } from '../../core/templates/template-discovery';
 import { extractFoamTemplateFrontmatterMetadata } from '../../core/utils/template-frontmatter-parser';
 import { fromVsCodeUri, toVsCodeUri } from '../vscode/utils/vsc-utils';
-import { fileExists, focusNote, readFile } from '../../services/editor';
+import { fileExists, focusNote, readFile } from './editor';
 import { getFoamVsCodeConfig } from '../config';
 
 const DEFAULT_NEW_NOTE_TEMPLATE = `# \${1:$TM_FILENAME_BASE}

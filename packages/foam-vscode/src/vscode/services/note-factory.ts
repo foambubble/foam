@@ -1,7 +1,7 @@
 import { SnippetString, ViewColumn, commands, window } from 'vscode';
 import { URI } from '../../core/model/uri';
 import { Resolver } from '../../core/templates/variable-resolver';
-import { UserCancelledOperation } from '../../services/errors';
+import { UserCancelledOperation } from './errors';
 import {
   asAbsoluteWorkspaceUri,
   createDocAndFocus,
@@ -10,7 +10,7 @@ import {
   findSelectionContent,
   getCurrentEditorDirectory,
   replaceSelection,
-} from '../../services/editor';
+} from './editor';
 
 import { getFoamVsCodeConfig } from '../config';
 import { toVsCodeUri } from '../vscode/utils/vsc-utils';

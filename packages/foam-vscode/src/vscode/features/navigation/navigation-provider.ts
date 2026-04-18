@@ -17,7 +17,7 @@ import { Position } from '../../../core/model/position';
 import { CREATE_NOTE_COMMAND } from '../notes/create-note';
 import { commandAsURI } from '../../utils/commands';
 import { Location } from '../../../core/model/location';
-import { fileExists, getFoamDocSelectors } from '../../../services/editor';
+import { fileExists, getFoamDocSelectors } from '../../services/editor';
 import { FoamTags } from '../../../core/model/tags';
 
 export default async function activate(

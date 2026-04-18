@@ -1,12 +1,12 @@
 import { debounce } from 'lodash';
 import { LRUCache } from 'lru-cache';
 import { ExtensionContext } from 'vscode';
-import { URI } from '../core/model/uri';
+import { URI } from '../../core/model/uri';
 import {
   ParserCache,
   ParserCacheEntry,
-} from '../core/services/markdown-parser';
-import { Logger } from '../core/utils/log';
+} from '../../core/services/markdown-parser';
+import { Logger } from '../../core/utils/log';
 
 /**
  * This is a best effort implementation to cache resources.

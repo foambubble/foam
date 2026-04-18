@@ -10,7 +10,7 @@ import {
 } from '../../test/test-utils-vscode';
 import { Resolver } from '../../core/templates/variable-resolver';
 import { VsCodeVariableProvider } from './vscode-variable-provider';
-import { fileExists } from '../../services/editor';
+import { fileExists } from './editor';
 
 describe('NoteFactory.createNote', () => {
   beforeEach(async () => {

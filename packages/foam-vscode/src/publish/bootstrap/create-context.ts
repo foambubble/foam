@@ -5,8 +5,13 @@ import { buildAssetManifest, buildRouteManifest } from '../derive/build-route-ma
 import { PublishConfig, PublishContext } from '../types';
 
 export const createPublishContext = (config: PublishConfig): PublishContext => {
-  const include = getIncludeMatcher(config);
   const graph = config.graph ?? FoamGraph.fromWorkspace(config.workspace);
+  const includeMatcher = getIncludeMatcher(config);
+  const runtimeContext = {
+    workspace: config.workspace,
+    graph,
+  };
+  const include = (resource: Resource) => includeMatcher(resource, runtimeContext);
   const resources = config.workspace.list().filter((resource: Resource) => {
     if (resource.type !== 'note') {
       return true;
@@ -19,8 +24,8 @@ export const createPublishContext = (config: PublishConfig): PublishContext => {
   const assets = buildAssetManifest(resources, config.workspace);
 
   return {
-    workspace: config.workspace,
-    graph,
+    ...runtimeContext,
+    site: config.site,
     include,
     noteRoutes: new Map(routes.map(route => [route.sourceUri.path, route.route])),
     assetPaths: new Map(

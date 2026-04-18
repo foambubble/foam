@@ -16,6 +16,7 @@ const SOURCE_ASSETS_DIR = path.join(SOURCE_ROOT, 'assets');
 const OUTPUT_DOCS_DIR = path.resolve(__dirname, '../src/content/docs');
 const OUTPUT_PUBLIC_DIR = path.resolve(__dirname, '../public');
 const OUTPUT_ASSETS_DIR = path.join(OUTPUT_PUBLIC_DIR, 'assets');
+const OUTPUT_GENERATED_DIR = path.resolve(__dirname, '../generated');
 
 class FsDataStore {
   constructor(private readonly baseDir: string) {}
@@ -65,11 +66,17 @@ function escapeFrontmatter(value: string) {
   return value.replace(/"/g, '\\"');
 }
 
-function renderFrontmatter(note: { title: string; sourceUri: URI }) {
+function renderFrontmatter(note: {
+  title: string;
+  description?: string;
+  sourceUri: URI;
+}) {
   const lines = [
     '---',
     `title: "${escapeFrontmatter(note.title)}"`,
-    `description: "Published from ${escapeFrontmatter(note.sourceUri.path)}"`,
+    `description: "${escapeFrontmatter(
+      note.description ?? `Published from ${note.sourceUri.path}`
+    )}"`,
   ];
 
   lines.push('---', '');
@@ -111,6 +118,10 @@ async function writeDocs(
       continue;
     }
 
+    if (artifactSet.site.homepageRoute && artifactSet.site.homepageRoute !== '/' && note.route === '/') {
+      continue;
+    }
+
     const relativePath = routeToDocPath(note.route);
     const outputPath = path.join(OUTPUT_DOCS_DIR, relativePath);
     await fs.mkdir(path.dirname(outputPath), { recursive: true });
@@ -122,6 +133,24 @@ async function writeDocs(
       )}`,
       'utf8'
     );
+  }
+
+  if (artifactSet.site.homepageRoute && artifactSet.site.homepageRoute !== '/') {
+    const homepageNote = artifactSet.notes.find(
+      note => note.route === artifactSet.site.homepageRoute
+    );
+
+    if (homepageNote) {
+      const outputPath = path.join(OUTPUT_DOCS_DIR, 'index.md');
+      await fs.mkdir(path.dirname(outputPath), { recursive: true });
+      await fs.writeFile(
+        outputPath,
+        `${renderFrontmatter(homepageNote)}${rewriteStaticAssetPaths(
+          homepageNote.markdown
+        )}${renderBacklinks(homepageNote.backlinks)}`,
+        'utf8'
+      );
+    }
   }
 }
 
@@ -157,6 +186,26 @@ async function copyDirectory(sourceDir: string, targetDir: string) {
   }
 }
 
+async function writeSiteConfig(
+  artifactSet: Awaited<ReturnType<typeof buildSite>>
+) {
+  const outputPath = path.join(OUTPUT_GENERATED_DIR, 'site-config.json');
+  await fs.mkdir(path.dirname(outputPath), { recursive: true });
+  await fs.writeFile(
+    outputPath,
+    JSON.stringify(
+      {
+        title: artifactSet.site.title,
+        description: artifactSet.site.description,
+        homepageRoute: artifactSet.site.homepageRoute,
+      },
+      null,
+      2
+    ),
+    'utf8'
+  );
+}
+
 async function main() {
   const rootUri = URI.file(SOURCE_ROOT);
   const dataStore = new FsDataStore(SOURCE_ROOT);
@@ -168,13 +217,22 @@ async function main() {
     dataStore
   );
 
-  const artifactSet = await buildSite({ workspace });
+  const artifactSet = await buildSite({
+    workspace,
+    include: resource => resource.properties.publish !== false,
+    site: {
+      title: 'Foam Site Spike',
+      description: 'Static-site spike powered by Foam publishing output.',
+      homepage: note => note.uri.path.endsWith('/index.md'),
+    },
+  });
 
   await ensureCleanDir(OUTPUT_DOCS_DIR);
   await ensureCleanDir(OUTPUT_ASSETS_DIR);
   await writeDocs(artifactSet);
   await copyAssets(artifactSet);
   await copyDirectory(SOURCE_ASSETS_DIR, OUTPUT_ASSETS_DIR);
+  await writeSiteConfig(artifactSet);
 
   const manifestPath = path.join(OUTPUT_PUBLIC_DIR, 'publish-routes.json');
   await fs.mkdir(path.dirname(manifestPath), { recursive: true });

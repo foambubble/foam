@@ -1,6 +1,11 @@
 import { Resource } from '../core/model/note';
-import { PublishConfig } from './types';
+import { PublishConfig, PublishIncludeMatcher } from './types';
 
-export const getIncludeMatcher = (config: PublishConfig) => {
-  return config.include ?? ((resource: Resource) => resource.type === 'note');
+export const getIncludeMatcher = (config: PublishConfig): PublishIncludeMatcher => {
+  return (
+    config.include ??
+    ((resource: Resource) => {
+      return resource.type === 'note';
+    })
+  );
 };

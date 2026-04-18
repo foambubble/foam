@@ -1,4 +1,5 @@
 .astro/
+generated/
 public/assets/
 public/publish-routes.json
 src/content/docs/

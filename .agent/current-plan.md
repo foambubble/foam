@@ -44,6 +44,8 @@ Build a minimal end-to-end static-site spike that proves the current publishing 
 
 - Keep the recommendation aligned with Foam's "build vs assemble" principle.
 - Prefer a TypeScript publishing layer that preserves Foam semantics while keeping the site framework optional.
+- Keep publish work API-first: define stable publish semantics and typed outputs in `src/publish` before adding renderer-specific behavior or configuration surfaces.
+- Make publish configuration fully programmable in code: any supported behavior should be easy to express directly through the `src/publish` API, with YAML/query-style forms treated as convenience layers over that API.
 - Test strategy:
   - Favor unit tests first for pure build-time logic in `src/publish`.
   - Test the pipeline in slices: route generation, publish filtering, backlink derivation, output manifest generation, and representative note transforms.

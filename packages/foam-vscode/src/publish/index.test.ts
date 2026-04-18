@@ -26,6 +26,11 @@ describe('publish buildSite', () => {
       graph: FoamGraph.fromWorkspace(workspace),
     });
 
+    expect(result.site).toEqual({
+      title: undefined,
+      description: undefined,
+      homepageRoute: '/folder/note-b',
+    });
     expect(result.routes).toEqual(
       expect.arrayContaining([
         { sourceUri: noteAUri, route: '/note-a' },
@@ -82,5 +87,87 @@ describe('publish buildSite', () => {
     ]);
     const publishedNote = result.notes.find(note => note.route === '/note-a');
     expect(publishedNote?.markdown).toContain('[Manual](/assets/files/doc.pdf)');
+  });
+
+  it('supports programmable site metadata, homepage selection, and filtering', async () => {
+    const root = URI.file('/');
+    const dataStore = new InMemoryDataStore();
+    const workspace = createTestWorkspace([root], dataStore);
+
+    const homeUri = root.joinPath('welcome.md');
+    const hiddenUri = root.joinPath('draft.md');
+    const guideUri = root.joinPath('guide.md');
+
+    const homeContent = [
+      '---',
+      'title: Welcome',
+      'description: Start here',
+      'home: true',
+      'publish: true',
+      '---',
+      '',
+      '# Welcome',
+    ].join('\n');
+    const hiddenContent = [
+      '---',
+      'title: Draft',
+      'publish: false',
+      '---',
+      '',
+      '# Draft',
+    ].join('\n');
+    const guideContent = ['# Guide'].join('\n');
+
+    dataStore.set(homeUri, homeContent);
+    dataStore.set(hiddenUri, hiddenContent);
+    dataStore.set(guideUri, guideContent);
+
+    workspace
+      .set(createNoteFromMarkdown('welcome.md', homeContent, root))
+      .set(createNoteFromMarkdown('draft.md', hiddenContent, root))
+      .set(createNoteFromMarkdown('guide.md', guideContent, root));
+
+    const graph = FoamGraph.fromWorkspace(workspace);
+    const result = await buildSite({
+      workspace,
+      graph,
+      include: (resource, context) => {
+        expect(context.workspace).toBe(workspace);
+        expect(context.graph).toBe(graph);
+        return resource.properties.publish !== false;
+      },
+      site: {
+        title: ({ notes }) => `Published Notes (${notes.length})`,
+        description: 'A programmable publish surface',
+        homepage: note => note.properties.home === true,
+      },
+    });
+
+    expect(result.site).toEqual({
+      title: 'Published Notes (2)',
+      description: 'A programmable publish surface',
+      homepageRoute: '/welcome',
+    });
+    expect(result.routes).toEqual(
+      expect.arrayContaining([
+        { sourceUri: homeUri, route: '/welcome' },
+        { sourceUri: guideUri, route: '/guide' },
+      ])
+    );
+    expect(result.routes.find(route => route.sourceUri.path === hiddenUri.path)).toBeUndefined();
+
+    const publishedHome = result.notes.find(note => note.route === '/welcome');
+    expect(publishedHome).toMatchObject({
+      title: 'Welcome',
+      description: 'Start here',
+      properties: {
+        title: 'Welcome',
+        description: 'Start here',
+        home: true,
+        publish: true,
+      },
+    });
+    expect(result.notes.find(note => note.route === '/guide')?.properties).toEqual({});
+    expect(result.notes.find(note => note.route === '/draft')).toBeUndefined();
   });
 });

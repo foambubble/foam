@@ -12,8 +12,8 @@ import { URI } from '../core/model/uri';
 import { Logger } from '../core/utils/log';
 import { TextEdit as FoamTextEdit } from '../core/services/text-edit';
 import * as foamCommands from '../features/commands';
-import refactorActivate from '../vscode/features/refactor';
-import convertLinksActivate from '../vscode/features/convert-links';
+import refactorActivate from '../vscode/features/editing/refactor';
+import convertLinksActivate from '../vscode/features/editing/convert-links';
 import { Foam, bootstrap } from '../core/model/foam';
 import { createMarkdownParser } from '../core/services/markdown-parser';
 import {

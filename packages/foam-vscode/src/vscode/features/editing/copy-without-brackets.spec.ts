@@ -1,6 +1,6 @@
 /* @unit-ready */
 import { env, Selection, commands } from 'vscode';
-import { createFile, showInEditor } from '../../test/test-utils-vscode';
+import { createFile, showInEditor } from '../../../test/test-utils-vscode';
 import { removeBrackets, toTitleCase } from './copy-without-brackets';
 
 describe('copy-without-brackets command', () => {

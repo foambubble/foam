@@ -1,6 +1,6 @@
 /* @unit-ready */
 
-import { wait, waitForExpect } from '../test/test-utils';
+import { wait, waitForExpect } from '../../../test/test-utils';
 import {
   closeEditors,
   createFile,
@@ -10,8 +10,8 @@ import {
   showInEditor,
   runCommand,
   deleteFile,
-} from '../test/test-utils-vscode';
-import { UPDATE_GRAPH_COMMAND_NAME } from './commands/update-graph';
+} from '../../../test/test-utils-vscode';
+import { UPDATE_GRAPH_COMMAND_NAME } from '../../../features/commands/update-graph';
 
 describe('Note rename sync', () => {
   beforeAll(async () => {

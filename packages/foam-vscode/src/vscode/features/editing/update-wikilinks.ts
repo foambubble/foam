@@ -11,18 +11,18 @@ import {
   workspace,
   Position,
 } from 'vscode';
-import { isMdEditor, getFoamDocSelectors } from '../../services/editor';
-import { Foam } from '../../core/model/foam';
-import { FoamWorkspace } from '../../core/model/workspace';
+import { isMdEditor, getFoamDocSelectors } from '../../../services/editor';
+import { Foam } from '../../../core/model/foam';
+import { FoamWorkspace } from '../../../core/model/workspace';
 import {
   LINK_REFERENCE_DEFINITION_FOOTER,
   LINK_REFERENCE_DEFINITION_HEADER,
   generateLinkReferences,
-} from '../../janitor/generate-link-references';
-import { fromVsCodeUri, toVsCodeRange } from '../../utils/vsc-utils';
-import { getEditorEOL } from '../../services/editor';
-import { ResourceParser } from '../../core/model/note';
-import { IMatcher } from '../../core/services/datastore';
+} from '../../../janitor/generate-link-references';
+import { fromVsCodeUri, toVsCodeRange } from '../../../utils/vsc-utils';
+import { getEditorEOL } from '../../../services/editor';
+import { ResourceParser } from '../../../core/model/note';
+import { IMatcher } from '../../../core/services/datastore';
 
 export default async function activate(
   context: ExtensionContext,

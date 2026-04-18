@@ -1,15 +1,15 @@
 /* @unit-ready */
 import * as vscode from 'vscode';
-import { createMarkdownParser } from '../core/services/markdown-parser';
-import { FoamGraph } from '../core/model/graph';
+import { createMarkdownParser } from '../../../core/services/markdown-parser';
+import { FoamGraph } from '../../../core/model/graph';
 import {
   cleanWorkspace,
   closeEditors,
   createFile,
   showInEditor,
-} from '../test/test-utils-vscode';
-import { createTestWorkspace } from '../test/test-utils';
-import { toVsCodeUri } from '../utils/vsc-utils';
+} from '../../../test/test-utils-vscode';
+import { createTestWorkspace } from '../../../test/test-utils';
+import { toVsCodeUri } from '../../../utils/vsc-utils';
 import { BlockRenameProvider } from './block-rename-provider';
 
 const parser = createMarkdownParser([]);

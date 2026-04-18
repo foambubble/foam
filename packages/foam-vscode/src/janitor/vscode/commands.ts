@@ -13,7 +13,7 @@ import {
   toVsCodeRange,
   toVsCodeUri,
 } from '../../utils/vsc-utils';
-import { getWikilinkDefinitionSetting } from '../../features/commands/update-wikilinks';
+import { getWikilinkDefinitionSetting } from '../../vscode/features/editing/update-wikilinks';
 import {
   lintWorkspace,
   missingHeadingRule,

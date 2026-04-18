@@ -1,15 +1,15 @@
 import * as vscode from 'vscode';
-import { Foam } from '../core/model/foam';
-import { Resource, Section } from '../core/model/note';
-import { HeadingEdit } from '../core/services/heading-edit';
-import { Logger } from '../core/utils/log';
-import { Position } from '../core/model/position';
-import { Range } from '../core/model/range';
+import { Foam } from '../../../core/model/foam';
+import { Resource, Section } from '../../../core/model/note';
+import { HeadingEdit } from '../../../core/services/heading-edit';
+import { Logger } from '../../../core/utils/log';
+import { Position } from '../../../core/model/position';
+import { Range } from '../../../core/model/range';
 import {
   fromVsCodeUri,
   toVsCodeRange,
   toVsCodeWorkspaceEdit,
-} from '../utils/vsc-utils';
+} from '../../../utils/vsc-utils';
 
 export default async function activate(
   context: vscode.ExtensionContext,

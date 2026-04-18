@@ -1,4 +1,4 @@
-export { default as copyWithoutBracketsCommand } from './copy-without-brackets';
+export { default as copyWithoutBracketsCommand } from '../../vscode/features/editing/copy-without-brackets';
 export { default as createFromTemplateCommand } from './create-note-from-template';
 export { default as createNewTemplate } from './create-new-template';
 export { default as janitorCommand } from '../../janitor/vscode/commands';
@@ -8,7 +8,7 @@ export { default as openDatedNote } from '../../vscode/features/daily-notes/open
 export { default as openRandomNoteCommand } from '../../vscode/features/navigation/open-random-note';
 export { default as openResource } from '../../vscode/features/navigation/open-resource';
 export { default as updateGraphCommand } from './update-graph';
-export { default as updateWikilinksCommand } from './update-wikilinks';
+export { default as updateWikilinksCommand } from '../../vscode/features/editing/update-wikilinks';
 export { default as createNote } from './create-note';
 export { default as searchTagCommand } from '../../vscode/features/tags/search-tag';
 export { default as renameTagCommand } from '../../vscode/features/tags/rename-tag';

@@ -6,15 +6,15 @@ import hoverProvider from '../vscode/features/navigation/hover-provider';
 import preview from './preview';
 import completionProvider from '../vscode/features/navigation/link-completion';
 import tagCompletionProvider from '../vscode/features/tags/tag-completion';
-import linkDecorations from './document-decorator';
+import linkDecorations from '../vscode/features/editing/document-decorator';
 import navigationProviders from '../vscode/features/navigation/navigation-provider';
 import wikilinkDiagnostics from '../janitor/vscode/wikilink-diagnostics';
-import refactor from '../vscode/features/refactor';
-import convertLinks from '../vscode/features/convert-links';
+import refactor from '../vscode/features/editing/refactor';
+import convertLinks from '../vscode/features/editing/convert-links';
 import workspaceSymbolProvider from '../vscode/features/navigation/workspace-symbol-provider';
 import tagRenameProvider from '../vscode/features/tags/tag-rename-provider';
-import headingRenameProvider from './heading-rename-provider';
-import blockRenameProvider from './block-rename-provider';
+import headingRenameProvider from '../vscode/features/editing/heading-rename-provider';
+import blockRenameProvider from '../vscode/features/editing/block-rename-provider';
 
 export const features: FoamFeature[] = [
   ...Object.values(commands),

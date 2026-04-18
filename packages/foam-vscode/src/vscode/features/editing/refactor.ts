@@ -1,16 +1,16 @@
 import * as vscode from 'vscode';
-import { Foam } from '../../core/model/foam';
-import { Logger } from '../../core/utils/log';
-import { getFoamVsCodeConfig } from '../config';
+import { Foam } from '../../../core/model/foam';
+import { Logger } from '../../../core/utils/log';
+import { getFoamVsCodeConfig } from '../../config';
 import {
   fromVsCodeUri,
   toVsCodeRange,
   toVsCodeUri,
-} from '../../utils/vsc-utils';
+} from '../../../utils/vsc-utils';
 import {
   computeWikilinkRenameEdits,
   computeDirectoryWikilinkRenameEdits,
-} from '../../core/services/link-integrity';
+} from '../../../core/services/link-integrity';
 
 const MARKDOWN_LINK_NOTIFICATION_KEY =
   'foam.links.sync.markdownLinkNotificationShown';

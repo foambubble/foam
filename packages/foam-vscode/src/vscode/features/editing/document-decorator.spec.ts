@@ -1,18 +1,18 @@
 /* @unit-ready */
 
 import * as vscode from 'vscode';
-import { createMarkdownParser } from '../core/services/markdown-parser';
-import { createTestWorkspace } from '../test/test-utils';
+import { createMarkdownParser } from '../../../core/services/markdown-parser';
+import { createTestWorkspace } from '../../../test/test-utils';
 import {
   cleanWorkspace,
   closeEditors,
   createFile,
   showInEditor,
-} from '../test/test-utils-vscode';
-import { NavigationProvider } from '../vscode/features/navigation/navigation-provider';
-import { FoamGraph } from '../core/model/graph';
-import { FoamTags } from '../core/model/tags';
-import { toVsCodeUri } from '../utils/vsc-utils';
+} from '../../../test/test-utils-vscode';
+import { NavigationProvider } from '../navigation/navigation-provider';
+import { FoamGraph } from '../../../core/model/graph';
+import { FoamTags } from '../../../core/model/tags';
+import { toVsCodeUri } from '../../../utils/vsc-utils';
 
 describe('Document decorator', () => {
   const parser = createMarkdownParser([]);

@@ -1,14 +1,14 @@
 import * as vscode from 'vscode';
-import { FoamTags } from '../core/model/tags';
-import { FoamWorkspace } from '../core/model/workspace';
-import { createTestNote } from '../test/test-utils';
+import { FoamTags } from '../../../core/model/tags';
+import { FoamWorkspace } from '../../../core/model/workspace';
+import { createTestNote } from '../../../test/test-utils';
 import {
   cleanWorkspace,
   closeEditors,
   createFile,
   showInEditor,
-} from '../test/test-utils-vscode';
-import { fromVsCodeUri } from '../utils/vsc-utils';
+} from '../../../test/test-utils-vscode';
+import { fromVsCodeUri } from '../../../utils/vsc-utils';
 import { TagCompletionProvider } from './tag-completion';
 
 describe('Tag Completion', () => {

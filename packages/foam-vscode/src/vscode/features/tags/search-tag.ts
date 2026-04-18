@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import { Foam } from '../../core/model/foam';
-import { TagItem } from '../panels/tags-explorer';
+import { Foam } from '../../../core/model/foam';
+import { TagItem } from './tags-explorer';
 
 export const SEARCH_TAG_COMMAND = {
   command: 'foam-vscode.search-tag',

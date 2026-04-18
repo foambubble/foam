@@ -5,14 +5,14 @@ import dateSnippets from './daily-notes/index';
 import hoverProvider from './hover-provider';
 import preview from './preview';
 import completionProvider from './link-completion';
-import tagCompletionProvider from './tag-completion';
+import tagCompletionProvider from '../vscode/features/tags/tag-completion';
 import linkDecorations from './document-decorator';
 import navigationProviders from './navigation-provider';
 import wikilinkDiagnostics from '../janitor/vscode/wikilink-diagnostics';
 import refactor from '../vscode/features/refactor';
 import convertLinks from '../vscode/features/convert-links';
 import workspaceSymbolProvider from './workspace-symbol-provider';
-import tagRenameProvider from './tag-rename-provider';
+import tagRenameProvider from '../vscode/features/tags/tag-rename-provider';
 import headingRenameProvider from './heading-rename-provider';
 import blockRenameProvider from './block-rename-provider';
 

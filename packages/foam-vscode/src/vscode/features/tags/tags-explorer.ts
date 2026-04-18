@@ -1,25 +1,25 @@
-import { URI } from '../../core/model/uri';
+import { URI } from '../../../core/model/uri';
 import * as vscode from 'vscode';
-import { Foam } from '../../core/model/foam';
-import { FoamWorkspace } from '../../core/model/workspace';
-import { FoamTags } from '../../core/model/tags';
+import { Foam } from '../../../core/model/foam';
+import { FoamWorkspace } from '../../../core/model/workspace';
+import { FoamTags } from '../../../core/model/tags';
 import {
   ResourceRangeTreeItem,
   ResourceTreeItem,
   expandAll,
   groupRangesByResource,
-} from './utils/tree-view-utils';
+} from '../../../features/panels/utils/tree-view-utils';
 import {
   Folder,
   FolderTreeItem,
   FolderTreeProvider,
   walk,
-} from './utils/folder-tree-provider';
+} from '../../../features/panels/utils/folder-tree-provider';
 import {
   ContextMemento,
   MapBasedMemento,
   fromVsCodeUri,
-} from '../../utils/vsc-utils';
+} from '../../../utils/vsc-utils';
 
 const TAG_SEPARATOR = '/';
 export default async function activate(

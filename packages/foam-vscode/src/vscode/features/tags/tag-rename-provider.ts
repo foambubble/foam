@@ -1,13 +1,13 @@
 import * as vscode from 'vscode';
-import { Foam } from '../core/model/foam';
-import { TagEdit } from '../core/services/tag-edit';
+import { Foam } from '../../../core/model/foam';
+import { TagEdit } from '../../../core/services/tag-edit';
 import {
   fromVsCodeUri,
   toVsCodeRange,
   toVsCodeWorkspaceEdit,
-} from '../utils/vsc-utils';
-import { Logger } from '../core/utils/log';
-import { Position } from '../core/model/position';
+} from '../../../utils/vsc-utils';
+import { Logger } from '../../../core/utils/log';
+import { Position } from '../../../core/model/position';
 
 /**
  * Activates the tag rename provider for native F2 rename support.

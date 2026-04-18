@@ -16,6 +16,8 @@ Add a single-package CLI entry to `packages/foam-vscode` and use it to drive the
 - [completed] Replace the temporary CLI prefix filter with a real `contentRoot` publish concept
 - [completed] Add unresolved-link diagnostics so publish can report out-of-scope or missing targets without blocking the build
 - [completed] Add a repo-root dogfood command for the user docs site and verify the generated Starlight project builds end to end
+- [completed] Verify the GitHub Pages Actions path and custom-domain requirements for publishing the generated docs site
+- [completed] Add the first docs deployment workflow for `docs.foamnotes.com`
 
 ## Current Publish Slice
 
@@ -85,7 +87,8 @@ Add a single-package CLI entry to `packages/foam-vscode` and use it to drive the
   - `yarn lint` passes in `packages/foam-vscode` with the existing skipped-test warning in `src/vscode/features/notes/connections.spec.ts`.
   - `yarn build:cli` passes in `packages/foam-vscode`.
   - `node packages/foam-vscode/out/cli/index.js publish ./docs --out ./.tmp/<site>` materializes a runnable Starlight site.
-  - `yarn publish:docs-site` passes from the repo root and materializes the public user-docs site from `./docs` using `contentRoot = user`, so published routes are rooted at `/`.
-  - `astro build` succeeds from the CLI-generated site output when run against the repo-installed dependencies.
-  - `yarn publish-site ./docs --out ./.tmp/<site>` succeeds from `packages/foam-vscode` after the Starlight package removal.
-  - Running `yarn install && yarn build` inside the generated `.tmp/foam-docs-site` succeeds, producing a deployable static site with search and sitemap output.
+- `yarn publish:docs-site` passes from the repo root and materializes the public user-docs site from `./docs` using `contentRoot = user`, so published routes are rooted at `/`.
+- `astro build` succeeds from the CLI-generated site output when run against the repo-installed dependencies.
+- `yarn publish-site ./docs --out ./.tmp/<site>` succeeds from `packages/foam-vscode` after the Starlight package removal.
+- Running `yarn install && yarn build` inside the generated `.tmp/foam-docs-site` succeeds, producing a deployable static site with search and sitemap output.
+- The repo includes a dedicated GitHub Pages workflow that publishes the generated docs artifact from GitHub Actions, so the repository can be switched from branch-based Pages deployment to Actions-based deployment for `docs.foamnotes.com`.

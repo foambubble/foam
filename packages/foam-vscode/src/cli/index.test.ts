@@ -14,10 +14,11 @@ describe('foam CLI', () => {
     try {
       fs.mkdirSync(path.join(workspaceDir, 'user'), { recursive: true });
       fs.mkdirSync(path.join(workspaceDir, 'dev'), { recursive: true });
-      fs.mkdirSync(path.join(workspaceDir, 'images'), { recursive: true });
+      fs.mkdirSync(path.join(workspaceDir, 'files'), { recursive: true });
+      fs.mkdirSync(path.join(workspaceDir, 'private'), { recursive: true });
       fs.writeFileSync(
         path.join(workspaceDir, 'user', 'index.md'),
-        ['# Home', '', '![Logo](../images/logo.png)'].join('\n'),
+        ['# Home', '', '[Manual](../files/manual.pdf)'].join('\n'),
         'utf8'
       );
       fs.writeFileSync(
@@ -30,7 +31,16 @@ describe('foam CLI', () => {
         '# Internal',
         'utf8'
       );
-      fs.writeFileSync(path.join(workspaceDir, 'images', 'logo.png'), 'png', 'utf8');
+      fs.writeFileSync(
+        path.join(workspaceDir, 'files', 'manual.pdf'),
+        'pdf',
+        'utf8'
+      );
+      fs.writeFileSync(
+        path.join(workspaceDir, 'private', 'secret.pdf'),
+        'secret',
+        'utf8'
+      );
 
       const logs: string[] = [];
       const errors: string[] = [];
@@ -72,11 +82,16 @@ describe('foam CLI', () => {
         )
       ).toBe(false);
       expect(
+        fs.existsSync(
+          path.join(outputDir, 'public', 'assets', 'private', 'secret.pdf')
+        )
+      ).toBe(false);
+      expect(
         fs.readFileSync(
-          path.join(outputDir, 'public', 'assets', 'images', 'logo.png'),
+          path.join(outputDir, 'public', 'assets', 'files', 'manual.pdf'),
           'utf8'
         )
-      ).toBe('png');
+      ).toBe('pdf');
       expect(
         JSON.parse(
           fs.readFileSync(

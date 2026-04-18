@@ -3,7 +3,10 @@ import path from 'node:path';
 
 import { URI } from '../../core/model/uri';
 import { FoamWorkspace } from '../../core/model/workspace';
-import { AttachmentResourceProvider } from '../../core/services/attachment-provider';
+import {
+  AttachmentResourceProvider,
+  defaultAttachmentExtensions,
+} from '../../core/services/attachment-provider';
 import { IDataStore } from '../../core/services/datastore';
 import { createMarkdownParser } from '../../core/services/markdown-parser';
 import { MarkdownResourceProvider } from '../../core/services/markdown-provider';
@@ -94,7 +97,7 @@ export async function loadWorkspaceFromDirectory(
   const parser = createMarkdownParser();
   const providers = [
     new MarkdownResourceProvider(dataStore, parser, options.noteExtensions),
-    new AttachmentResourceProvider(),
+    new AttachmentResourceProvider(defaultAttachmentExtensions),
   ];
   const workspace = await FoamWorkspace.fromProviders(
     [rootUri],
@@ -108,4 +111,3 @@ export async function loadWorkspaceFromDirectory(
     workspace,
   };
 }
-

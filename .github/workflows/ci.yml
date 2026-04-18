@@ -63,8 +63,8 @@ jobs:
       - name: Run Tests
         run: xvfb-run --auto-servernum yarn test
 
-  publish-docs-smoke:
-    name: Publish Docs Smoke
+  docs-site-verify:
+    name: Docs Site Verify
     runs-on: ubuntu-22.04
     timeout-minutes: 10
     steps:

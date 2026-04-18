@@ -96,6 +96,10 @@ export interface PublishArtifactSet {
 export interface PublishContext extends PublishRuntimeContext {
   site?: PublishSiteConfig;
   include: (resource: Resource) => boolean;
+  includeAsset: (resource: Resource) => boolean;
+  resources: Resource[];
+  notes: Resource[];
+  assets: Resource[];
   noteRoutes: Map<string, string>;
   assetPaths: Map<string, string>;
 }

@@ -13,6 +13,28 @@ export const imageExtensions = [
   '.webp',
 ];
 
+export const defaultAttachmentExtensions = [
+  '.pdf',
+  '.mp3',
+  '.webm',
+  '.wav',
+  '.m4a',
+  '.mp4',
+  '.avi',
+  '.mov',
+  '.rtf',
+  '.txt',
+  '.doc',
+  '.docx',
+  '.pages',
+  '.xls',
+  '.xlsx',
+  '.numbers',
+  '.ppt',
+  '.pptm',
+  '.pptx',
+];
+
 const asResource = (uri: URI): Resource => {
   const type = imageExtensions.includes(uri.getExtension())
     ? 'image'

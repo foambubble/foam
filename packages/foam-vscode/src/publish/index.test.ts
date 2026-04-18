@@ -237,4 +237,82 @@ describe('publish buildSite', () => {
       },
     ]);
   });
+
+  it('publishes only linked assets while still allowing shared assets outside contentRoot', async () => {
+    const root = URI.file('/');
+    const dataStore = new InMemoryDataStore();
+    const workspace = createTestWorkspace([root], dataStore);
+
+    const homeUri = root.joinPath('user', 'index.md');
+    const linkedAssetUri = root.joinPath('assets', 'logo.png');
+    const unrelatedAssetUri = root.joinPath('private', 'secret.pdf');
+    const homeContent = ['# Home', '', '![Logo](../assets/logo.png)'].join('\n');
+
+    dataStore.set(homeUri, homeContent);
+
+    workspace
+      .set(createNoteFromMarkdown('user/index.md', homeContent, root))
+      .set(
+        createTestNote({
+          uri: '/assets/logo.png',
+          title: 'logo.png',
+          type: 'image',
+        })
+      )
+      .set(
+        createTestNote({
+          uri: '/private/secret.pdf',
+          title: 'secret.pdf',
+          type: 'attachment',
+        })
+      );
+
+    const result = await buildSite({
+      workspace,
+      graph: FoamGraph.fromWorkspace(workspace),
+      contentRoot: 'user',
+    });
+
+    expect(result.assets).toEqual([
+      {
+        sourceUri: linkedAssetUri,
+        outputPath: 'assets/assets/logo.png',
+      },
+    ]);
+    expect(result.assets.find(asset => asset.sourceUri.path === unrelatedAssetUri.path)).toBeUndefined();
+    expect(result.notes[0].markdown).toContain('![Logo](/assets/assets/logo.png)');
+  });
+
+  it('resolves homepage source paths relative to the workspace', async () => {
+    const root = URI.file('/');
+    const dataStore = new InMemoryDataStore();
+    const workspace = createTestWorkspace([root], dataStore);
+
+    const homeUri = root.joinPath('user', 'index.md');
+    const guideUri = root.joinPath('user', 'guide.md');
+    const homeContent = '# Home';
+    const guideContent = '# Guide';
+
+    dataStore.set(homeUri, homeContent);
+    dataStore.set(guideUri, guideContent);
+
+    workspace
+      .set(createNoteFromMarkdown('user/index.md', homeContent, root))
+      .set(createNoteFromMarkdown('user/guide.md', guideContent, root));
+
+    const result = await buildSite({
+      workspace,
+      graph: FoamGraph.fromWorkspace(workspace),
+      contentRoot: 'user',
+      site: {
+        homepage: 'user/guide.md',
+      },
+    });
+
+    expect(result.site).toEqual({
+      title: undefined,
+      description: undefined,
+      homepageRoute: '/guide',
+    });
+  });
 });

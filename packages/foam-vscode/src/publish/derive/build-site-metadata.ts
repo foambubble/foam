@@ -13,13 +13,14 @@ const resolveValue = <TValue>(
   context: PublishSiteContext
 ): TValue | undefined => {
   if (typeof value === 'function') {
-    return value(context);
+    return (value as (context: PublishSiteContext) => TValue)(context);
   }
 
   return value;
 };
 
 const resolveRouteFromString = (
+  context: PublishContext,
   value: string,
   routes: PublishedRoute[]
 ): string | null => {
@@ -28,7 +29,15 @@ const resolveRouteFromString = (
     return directRoute.route;
   }
 
-  const sourcePath = routes.find(route => route.sourceUri.path === value);
+  const candidatePaths = [
+    value,
+    context.workspace.resolveUri(value).path,
+    context.contentRoot?.joinPath(value).path,
+  ].filter((path): path is string => path !== undefined);
+
+  const sourcePath = routes.find(route =>
+    candidatePaths.includes(route.sourceUri.path)
+  );
   return sourcePath?.route ?? null;
 };
 
@@ -40,6 +49,7 @@ const resolveHomepageRoute = (
   const siteContext: PublishSiteContext = {
     workspace: context.workspace,
     graph: context.graph,
+    contentRoot: context.contentRoot,
     notes,
     routes,
   };
@@ -51,7 +61,7 @@ const resolveHomepageRoute = (
   const homepage = context.site.homepage;
 
   if (typeof homepage === 'string') {
-    return resolveRouteFromString(homepage, routes);
+    return resolveRouteFromString(context, homepage, routes);
   }
 
   if (homepage instanceof URI) {
@@ -78,6 +88,7 @@ export const buildPublishedSite = (
   const siteContext: PublishSiteContext = {
     workspace: context.workspace,
     graph: context.graph,
+    contentRoot: context.contentRoot,
     notes,
     routes,
   };

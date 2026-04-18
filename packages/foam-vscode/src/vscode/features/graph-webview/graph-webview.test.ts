@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import { URI } from '../../core/model/uri';
-import { FoamWorkspace } from '../../core/model/workspace';
+import { URI } from '../../../core/model/uri';
+import { FoamWorkspace } from '../../../core/model/workspace';
 import {
   getGraphStyle,
   getNodeNavigationCommand,
@@ -8,7 +8,7 @@ import {
   mergeStyles,
   viewConfigToStyle,
   resolveViewStyle,
-} from './dataviz';
+} from '.';
 
 describe('handleActiveEditorChange', () => {
   const makePanel = () =>

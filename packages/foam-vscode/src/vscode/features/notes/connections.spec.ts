@@ -1,19 +1,19 @@
 /* @unit-ready */
 import { workspace, window } from 'vscode';
-import { createTestNote, createTestWorkspace } from '../../test/test-utils';
+import { createTestNote, createTestWorkspace } from '../../../test/test-utils';
 import {
   cleanWorkspace,
   closeEditors,
   createNote,
   getUriInWorkspace,
-} from '../../test/test-utils-vscode';
+} from '../../../test/test-utils-vscode';
 import { ConnectionsTreeDataProvider } from './connections';
-import { MapBasedMemento, toVsCodeUri } from '../../utils/vsc-utils';
-import { FoamGraph } from '../../core/model/graph';
+import { MapBasedMemento, toVsCodeUri } from '../../../utils/vsc-utils';
+import { FoamGraph } from '../../../core/model/graph';
 import {
   ResourceRangeTreeItem,
   ResourceTreeItem,
-} from './utils/tree-view-utils';
+} from '../../utils/tree-views/tree-view-utils';
 
 describe('Backlinks panel', () => {
   beforeAll(async () => {

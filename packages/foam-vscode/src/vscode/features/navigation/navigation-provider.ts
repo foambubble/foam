@@ -14,7 +14,7 @@ import { URI } from '../../../core/model/uri';
 import { Range } from '../../../core/model/range';
 import { FoamGraph } from '../../../core/model/graph';
 import { Position } from '../../../core/model/position';
-import { CREATE_NOTE_COMMAND } from '../../../features/commands/create-note';
+import { CREATE_NOTE_COMMAND } from '../notes/create-note';
 import { commandAsURI } from '../../../utils/commands';
 import { Location } from '../../../core/model/location';
 import { fileExists, getFoamDocSelectors } from '../../../services/editor';

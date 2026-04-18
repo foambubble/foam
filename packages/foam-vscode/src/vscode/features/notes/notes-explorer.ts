@@ -1,20 +1,20 @@
 import * as vscode from 'vscode';
-import { Foam } from '../../core/model/foam';
-import { FoamWorkspace } from '../../core/model/workspace';
+import { Foam } from '../../../core/model/foam';
+import { FoamWorkspace } from '../../../core/model/workspace';
 import {
   ResourceRangeTreeItem,
   ResourceTreeItem,
   createBacklinkItemsForResource as createBacklinkTreeItemsForResource,
-} from './utils/tree-view-utils';
-import { Resource } from '../../core/model/note';
-import { FoamGraph } from '../../core/model/graph';
-import { ContextMemento } from '../../utils/vsc-utils';
+} from '../../utils/tree-views/tree-view-utils';
+import { Resource } from '../../../core/model/note';
+import { FoamGraph } from '../../../core/model/graph';
+import { ContextMemento } from '../../../utils/vsc-utils';
 import {
   Folder,
   FolderTreeItem,
   FolderTreeProvider,
   pruneEmptyFolders,
-} from './utils/folder-tree-provider';
+} from '../../utils/tree-views/folder-tree-provider';
 
 export default async function activate(
   context: vscode.ExtensionContext,

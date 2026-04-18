@@ -1,23 +1,23 @@
 import * as vscode from 'vscode';
-import { Foam } from '../../core/model/foam';
-import { createMatcherAndDataStore } from '../../services/editor';
+import { Foam } from '../../../core/model/foam';
+import { createMatcherAndDataStore } from '../../../services/editor';
 import {
   GroupedResourcesConfig,
   GroupedResourcesTreeDataProvider,
-} from './utils/grouped-resources-tree-data-provider';
+} from '../../utils/tree-views/grouped-resources-tree-data-provider';
 import {
   UriTreeItem,
   createBacklinkItemsForResource,
   expandAll,
   groupRangesByResource,
-} from './utils/tree-view-utils';
-import { IMatcher } from '../../core/services/datastore';
-import { ContextMemento, fromVsCodeUri } from '../../utils/vsc-utils';
-import { FoamGraph } from '../../core/model/graph';
-import { URI } from '../../core/model/uri';
-import { FoamWorkspace } from '../../core/model/workspace';
-import { FolderTreeItem } from './utils/folder-tree-provider';
-import { getIncludeFilesSetting } from '../../vscode/settings';
+} from '../../utils/tree-views/tree-view-utils';
+import { IMatcher } from '../../../core/services/datastore';
+import { ContextMemento, fromVsCodeUri } from '../../../utils/vsc-utils';
+import { FoamGraph } from '../../../core/model/graph';
+import { URI } from '../../../core/model/uri';
+import { FoamWorkspace } from '../../../core/model/workspace';
+import { FolderTreeItem } from '../../utils/tree-views/folder-tree-provider';
+import { getIncludeFilesSetting } from '../../../vscode/settings';
 
 /** Retrieve the placeholders configuration */
 export function getPlaceholdersConfig(): GroupedResourcesConfig {

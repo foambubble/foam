@@ -1,20 +1,20 @@
 import * as vscode from 'vscode';
-import { Foam } from '../../core/model/foam';
-import { createMatcherAndDataStore } from '../../services/editor';
+import { Foam } from '../../../core/model/foam';
+import { createMatcherAndDataStore } from '../../../services/editor';
 import {
   getAttachmentsExtensions,
   getIncludeFilesSetting,
-} from '../../vscode/settings';
+} from '../../../vscode/settings';
 import {
   GroupedResourcesConfig,
   GroupedResourcesTreeDataProvider,
-} from './utils/grouped-resources-tree-data-provider';
-import { ResourceTreeItem, UriTreeItem } from './utils/tree-view-utils';
-import { IMatcher } from '../../core/services/datastore';
-import { FoamWorkspace } from '../../core/model/workspace';
-import { FoamGraph } from '../../core/model/graph';
-import { URI } from '../../core/model/uri';
-import { imageExtensions } from '../../core/services/attachment-provider';
+} from '../../utils/tree-views/grouped-resources-tree-data-provider';
+import { ResourceTreeItem, UriTreeItem } from '../../utils/tree-views/tree-view-utils';
+import { IMatcher } from '../../../core/services/datastore';
+import { FoamWorkspace } from '../../../core/model/workspace';
+import { FoamGraph } from '../../../core/model/graph';
+import { URI } from '../../../core/model/uri';
+import { imageExtensions } from '../../../core/services/attachment-provider';
 
 const EXCLUDE_TYPES = ['image', 'attachment'];
 export default async function activate(

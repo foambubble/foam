@@ -8,13 +8,13 @@ import {
   ResourceTreeItem,
   expandAll,
   groupRangesByResource,
-} from '../../../features/panels/utils/tree-view-utils';
+} from '../../utils/tree-views/tree-view-utils';
 import {
   Folder,
   FolderTreeItem,
   FolderTreeProvider,
   walk,
-} from '../../../features/panels/utils/folder-tree-provider';
+} from '../../utils/tree-views/folder-tree-provider';
 import {
   ContextMemento,
   MapBasedMemento,

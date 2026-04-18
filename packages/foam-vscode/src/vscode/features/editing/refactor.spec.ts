@@ -11,7 +11,7 @@ import {
   runCommand,
   deleteFile,
 } from '../../../test/test-utils-vscode';
-import { UPDATE_GRAPH_COMMAND_NAME } from '../../../features/commands/update-graph';
+import { UPDATE_GRAPH_COMMAND_NAME } from '../notes/update-graph';
 
 describe('Note rename sync', () => {
   beforeAll(async () => {

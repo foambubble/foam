@@ -3,7 +3,7 @@ import { Foam } from '../../../core/model/foam';
 import { Logger } from '../../../core/utils/log';
 import { fromVsCodeUri } from '../../../utils/vsc-utils';
 import { isSome } from '../../../core/utils';
-import { getFoamVsCodeConfig } from '../../../vscode/config';
+import { getFoamVsCodeConfig } from '../../config';
 import type {
   GraphStyle,
   GraphViewConfig,

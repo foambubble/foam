@@ -1,29 +1,29 @@
 import { workspace, commands, WorkspaceEdit, ExtensionContext } from 'vscode';
-import { URI } from '../../core/model/uri';
+import { URI } from '../../../core/model/uri';
 import {
   askUserForTemplate,
   getDefaultTemplateUri,
-} from '../../vscode/services/template-service';
-import { NoteFactory } from '../../vscode/services/note-factory';
-import { NoteCreationEngine } from '../../core/templates/note-creation-engine';
-import { TriggerFactory } from '../../core/templates/note-creation-triggers';
-import { TemplateLoader } from '../../core/templates/template-loader';
-import { Template } from '../../core/templates/note-creation-types';
-import { Resolver } from '../../core/templates/variable-resolver';
-import { VsCodeVariableProvider } from '../../vscode/services/vscode-variable-provider';
+} from '../../../vscode/services/template-service';
+import { NoteFactory } from '../../../vscode/services/note-factory';
+import { NoteCreationEngine } from '../../../core/templates/note-creation-engine';
+import { TriggerFactory } from '../../../core/templates/note-creation-triggers';
+import { TemplateLoader } from '../../../core/templates/template-loader';
+import { Template } from '../../../core/templates/note-creation-types';
+import { Resolver } from '../../../core/templates/variable-resolver';
+import { VsCodeVariableProvider } from '../../../vscode/services/vscode-variable-provider';
 import {
   asAbsoluteWorkspaceUri,
   fileExists,
   readFile,
-} from '../../services/editor';
-import { getFoamVsCodeConfig } from '../../vscode/config';
-import { CommandDescriptor } from '../../utils/commands';
-import { Foam } from '../../core/model/foam';
-import { Location } from '../../core/model/location';
-import { MarkdownLink } from '../../core/services/markdown-link';
-import { ResourceLink } from '../../core/model/note';
-import { toVsCodeRange, toVsCodeUri } from '../../utils/vsc-utils';
-import { Logger } from '../../core/utils/log';
+} from '../../../services/editor';
+import { getFoamVsCodeConfig } from '../../../vscode/config';
+import { CommandDescriptor } from '../../../utils/commands';
+import { Foam } from '../../../core/model/foam';
+import { Location } from '../../../core/model/location';
+import { MarkdownLink } from '../../../core/services/markdown-link';
+import { ResourceLink } from '../../../core/model/note';
+import { toVsCodeRange, toVsCodeUri } from '../../../utils/vsc-utils';
+import { Logger } from '../../../core/utils/log';
 
 export default async function activate(
   context: ExtensionContext,

@@ -1,17 +1,17 @@
 /* @unit-ready */
 import * as vscode from 'vscode';
-import { createTestNote, createTestWorkspace } from '../../test/test-utils';
+import { createTestNote, createTestWorkspace } from '../../../test/test-utils';
 import {
   cleanWorkspace,
   getUriInWorkspace,
-} from '../../test/test-utils-vscode';
-import { MapBasedMemento } from '../../utils/vsc-utils';
-import { FoamWorkspace } from '../../core/model/workspace';
-import { FoamGraph } from '../../core/model/graph';
-import { Resource } from '../../core/model/note';
+} from '../../../test/test-utils-vscode';
+import { MapBasedMemento } from '../../../utils/vsc-utils';
+import { FoamWorkspace } from '../../../core/model/workspace';
+import { FoamGraph } from '../../../core/model/graph';
+import { Resource } from '../../../core/model/note';
 import { NotesProvider } from './notes-explorer';
-import { ResourceTreeItem } from './utils/tree-view-utils';
-import { FolderTreeItem } from './utils/folder-tree-provider';
+import { ResourceTreeItem } from '../../utils/tree-views/tree-view-utils';
+import { FolderTreeItem } from '../../utils/tree-views/folder-tree-provider';
 
 let ws: FoamWorkspace;
 let graph: FoamGraph;

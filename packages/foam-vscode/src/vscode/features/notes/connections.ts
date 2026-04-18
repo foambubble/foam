@@ -1,20 +1,20 @@
 import * as vscode from 'vscode';
-import { URI } from '../../core/model/uri';
-import { Foam } from '../../core/model/foam';
-import { FoamWorkspace } from '../../core/model/workspace';
-import { Connection, FoamGraph } from '../../core/model/graph';
-import { Range } from '../../core/model/range';
-import { ContextMemento, fromVsCodeUri } from '../../utils/vsc-utils';
+import { URI } from '../../../core/model/uri';
+import { Foam } from '../../../core/model/foam';
+import { FoamWorkspace } from '../../../core/model/workspace';
+import { Connection, FoamGraph } from '../../../core/model/graph';
+import { Range } from '../../../core/model/range';
+import { ContextMemento, fromVsCodeUri } from '../../../utils/vsc-utils';
 import {
   BaseTreeItem,
   ResourceRangeTreeItem,
   ResourceTreeItem,
   UriTreeItem,
   createConnectionItemsForResource,
-} from './utils/tree-view-utils';
-import { BaseTreeProvider } from './utils/base-tree-provider';
-import { isNone } from '../../core/utils';
-import { getWorkspaceDefaultScheme } from '../../services/editor';
+} from '../../utils/tree-views/tree-view-utils';
+import { BaseTreeProvider } from '../../utils/tree-views/base-tree-provider';
+import { isNone } from '../../../core/utils';
+import { getWorkspaceDefaultScheme } from '../../../services/editor';
 
 export default async function activate(
   context: vscode.ExtensionContext,

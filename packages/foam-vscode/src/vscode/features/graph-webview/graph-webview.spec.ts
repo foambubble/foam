@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import { closeEditors, createFile } from '../../test/test-utils-vscode';
-import { wait } from '../../test/test-utils';
+import { closeEditors, createFile } from '../../../test/test-utils-vscode';
+import { wait } from '../../../test/test-utils';
 
 describe('Graph Panel', () => {
   beforeEach(async () => {

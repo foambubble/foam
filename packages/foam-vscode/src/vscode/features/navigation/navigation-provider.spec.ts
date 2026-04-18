@@ -11,7 +11,7 @@ import { toVsCodeUri } from '../../../utils/vsc-utils';
 import { createMarkdownParser } from '../../../core/services/markdown-parser';
 import { FoamGraph } from '../../../core/model/graph';
 import { commandAsURI } from '../../../utils/commands';
-import { CREATE_NOTE_COMMAND } from '../../../features/commands/create-note';
+import { CREATE_NOTE_COMMAND } from '../notes/create-note';
 import { Location } from '../../../core/model/location';
 import { FoamTags } from '../../../core/model/tags';
 

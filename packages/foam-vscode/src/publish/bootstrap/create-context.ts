@@ -1,13 +1,14 @@
 import { FoamGraph } from '../../core/model/graph';
 import { Resource, ResourceLink } from '../../core/model/note';
 import { URI } from '../../core/model/uri';
-import { getIncludeMatcher } from '../config';
+import { FoamWorkspace } from '../../core/model/workspace';
+import { getIncludeAssetMatcher, getIncludeMatcher } from '../config';
 import {
   buildAssetManifest,
   buildRouteManifest,
   isWithinPath,
 } from '../derive/build-route-manifest';
-import { PublishConfig, PublishContext } from '../types';
+import { PublishAssetMatcher, PublishConfig, PublishContext } from '../types';
 
 const resolveContentRoot = (config: PublishConfig): URI | null => {
   if (!config.contentRoot) {
@@ -26,10 +27,14 @@ const isPublishableAssetLink = (link: ResourceLink) =>
 
 const collectLinkedAssets = (
   notes: Resource[],
-  workspace: PublishConfig['workspace'],
-  includeAsset: (resource: Resource) => boolean
+  graph: FoamGraph,
+  workspace: FoamWorkspace,
+  contentRoot: URI | null,
+  includeAsset: PublishAssetMatcher
 ): Resource[] => {
+  // Assets enter the publish graph only if a published note links to them.
   const assets = new Map<string, Resource>();
+  const linkedFromByAsset = new Map<string, Resource[]>();
 
   notes.forEach(note => {
     note.links.forEach(link => {
@@ -43,10 +48,24 @@ const collectLinkedAssets = (
       }
 
       const resource = workspace.find(resolvedUri);
+      if (!resource || resource.type === 'note') {
+        return;
+      }
+
+      const linkedFrom = linkedFromByAsset.get(resource.uri.path) ?? [];
+      if (!linkedFrom.some(candidate => candidate.uri.isEqual(note.uri))) {
+        linkedFrom.push(note);
+        linkedFromByAsset.set(resource.uri.path, linkedFrom);
+      }
+
       if (
-        !resource ||
-        resource.type === 'note' ||
-        !includeAsset(resource)
+        !includeAsset(resource, {
+          workspace,
+          graph,
+          contentRoot,
+          publishedNotes: notes,
+          linkedFrom,
+        })
       ) {
         return;
       }
@@ -61,6 +80,7 @@ const collectLinkedAssets = (
 export const createPublishContext = (config: PublishConfig): PublishContext => {
   const graph = config.graph ?? FoamGraph.fromWorkspace(config.workspace);
   const includeMatcher = getIncludeMatcher(config);
+  const includeAssetMatcher = getIncludeAssetMatcher(config);
   const contentRoot = resolveContentRoot(config);
   const runtimeContext = {
     workspace: config.workspace,
@@ -74,14 +94,24 @@ export const createPublishContext = (config: PublishConfig): PublishContext => {
 
     return includeMatcher(resource, runtimeContext);
   };
-  const includeAsset = (resource: Resource) =>
-    config.include ? includeMatcher(resource, runtimeContext) : true;
   const notes = config.workspace
     .list()
     .filter(
       (resource: Resource) => resource.type === 'note' && include(resource)
     );
-  const linkedAssets = collectLinkedAssets(notes, config.workspace, includeAsset);
+  const linkedAssets = collectLinkedAssets(
+    notes,
+    graph,
+    config.workspace,
+    contentRoot,
+    includeAssetMatcher
+  );
+  const includeAsset = (resource: Resource) =>
+    includeAssetMatcher(resource, {
+      ...runtimeContext,
+      publishedNotes: notes,
+      linkedFrom: [],
+    });
   const resources = [...notes, ...linkedAssets];
 
   const routes = buildRouteManifest(resources, config.workspace, contentRoot);

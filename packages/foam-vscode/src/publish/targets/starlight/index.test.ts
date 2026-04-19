@@ -91,6 +91,15 @@ describe('publish starlight target', () => {
       fs.readFileSync(path.join(tmpDir, 'site', 'astro.config.mjs'), 'utf8')
     ).toContain("site: siteConfig.siteUrl");
     expect(
+      fs.readFileSync(path.join(tmpDir, 'site', 'astro.config.mjs'), 'utf8')
+    ).toContain("Footer: './src/components/FoamFooter.astro'");
+    expect(
+      fs.readFileSync(
+        path.join(tmpDir, 'site', 'src', 'components', 'FoamFooter.astro'),
+        'utf8'
+      )
+    ).toContain('Powered by <a href="https://foamnotes.com">Foam</a>');
+    expect(
       fs.readFileSync(
         path.join(tmpDir, 'site', 'src', 'content', 'docs', 'index.md'),
         'utf8'

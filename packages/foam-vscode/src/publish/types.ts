@@ -23,6 +23,30 @@ export type PublishIncludeMatcher = (
   context: PublishRuntimeContext
 ) => boolean;
 
+/**
+ * Context passed to `includeAsset`.
+ *
+ * Assets are only evaluated after they have been reached from links inside
+ * notes that already passed `include`.
+ */
+export interface PublishAssetContext extends PublishRuntimeContext {
+  /** The note set that made it into the published site. */
+  publishedNotes: Resource[];
+  /** Published notes that currently link to this asset. */
+  linkedFrom: Resource[];
+}
+
+/**
+ * Programmable asset filter.
+ *
+ * This is the asset-selection API for publish. Convenience helpers such as
+ * `publishAssets.content()` produce values of this type.
+ */
+export type PublishAssetMatcher = (
+  resource: Resource,
+  context: PublishAssetContext
+) => boolean;
+
 export type PublishHomepageMatcher =
   | string
   | URI
@@ -39,7 +63,14 @@ export interface PublishConfig {
   workspace: FoamWorkspace;
   graph?: FoamGraph;
   contentRoot?: string | URI;
+  /**
+   * Selects which notes are publishable.
+   */
   include?: PublishIncludeMatcher;
+  /**
+   * Selects which linked assets are publishable.
+   */
+  includeAsset?: PublishAssetMatcher;
   site?: PublishSiteConfig;
 }
 
@@ -96,6 +127,9 @@ export interface PublishArtifactSet {
 export interface PublishContext extends PublishRuntimeContext {
   site?: PublishSiteConfig;
   include: (resource: Resource) => boolean;
+  /**
+   * Resolved asset matcher used during publish.
+   */
   includeAsset: (resource: Resource) => boolean;
   resources: Resource[];
   notes: Resource[];

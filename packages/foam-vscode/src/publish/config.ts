@@ -1,5 +1,6 @@
 import { Resource } from '../core/model/note';
-import { PublishConfig, PublishIncludeMatcher } from './types';
+import { publishAssets } from './asset-filters';
+import { PublishAssetMatcher, PublishConfig, PublishIncludeMatcher } from './types';
 
 export const getIncludeMatcher = (config: PublishConfig): PublishIncludeMatcher => {
   return (
@@ -8,4 +9,13 @@ export const getIncludeMatcher = (config: PublishConfig): PublishIncludeMatcher 
       return resource.type === 'note';
     })
   );
+};
+
+/**
+ * Resolves the asset matcher used during publish.
+ */
+export const getIncludeAssetMatcher = (
+  config: PublishConfig
+): PublishAssetMatcher => {
+  return config.includeAsset ?? publishAssets.workspace();
 };

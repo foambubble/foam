@@ -6,6 +6,7 @@ import { transformNote } from './transform/transform-note';
 import { PublishArtifactSet, PublishConfig } from './types';
 
 export * from './types';
+export * from './asset-filters';
 
 export const buildSite = async (
   config: PublishConfig

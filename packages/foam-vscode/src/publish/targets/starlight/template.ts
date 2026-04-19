@@ -38,9 +38,46 @@ export default defineConfig({
       description:
         siteConfig.description ??
         '${DEFAULT_DESCRIPTION}',
+      components: {
+        Footer: './src/components/FoamFooter.astro',
+      },
     }),
   ],
 });
+`,
+  'src/components/FoamFooter.astro': `---
+import type { Props } from '@astrojs/starlight/props';
+import Default from '@astrojs/starlight/components/Footer.astro';
+
+const props = Astro.props as Props;
+---
+
+<Default {...props} />
+
+<div class="foam-powered-by">
+  Powered by <a href="https://foamnotes.com">Foam</a>
+</div>
+
+<style>
+  .foam-powered-by {
+    border-top: 1px solid var(--sl-color-hairline-light);
+    color: var(--sl-color-text-secondary);
+    font-size: var(--sl-text-xs);
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    text-align: center;
+  }
+
+  .foam-powered-by a {
+    color: inherit;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .foam-powered-by a:hover {
+    text-decoration: underline;
+  }
+</style>
 `,
   'src/content.config.ts': `import { defineCollection } from 'astro:content';
 import { docsLoader } from '@astrojs/starlight/loaders';
@@ -61,4 +98,3 @@ export const collections = {
     2
   ) + '\n',
 } as const;
-

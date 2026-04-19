@@ -142,7 +142,7 @@ Whether these commands land in an existing Foam CLI package or a new CLI wrapper
 The logical API should look like this. During the initial in-repo phase, it would be exported from `packages/foam-vscode/src/publish`. After extraction, the same API can become the public surface of `packages/foam-publish`.
 
 ```typescript
-import { buildSite } from './publish';
+import { buildSite, publishAssets } from './publish';
 
 await buildSite({
   workspaceRoot: '/notes/my-foam',
@@ -152,6 +152,7 @@ await buildSite({
     mode: 'folder-based',
     publicGlobs: ['docs/**', 'garden/**'],
   },
+  includeAsset: publishAssets.content(),
   features: {
     backlinks: true,
     graph: true,

@@ -1,0 +1,71 @@
+name: Deploy Docs
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - docs/**/*
+      - package.json
+      - yarn.lock
+      - packages/foam-vscode/package.json
+      - packages/foam-vscode/esbuild.js
+      - packages/foam-vscode/src/**/*
+      - .github/workflows/deploy-docs.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      - name: Restore Dependencies and VS Code test instance
+        uses: actions/cache@v5
+        with:
+          path: |
+            node_modules
+            */*/node_modules
+            packages/foam-vscode/.vscode-test
+          key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock', 'packages/foam-vscode/src/test/run-tests.ts') }}-${{ secrets.CACHE_VERSION }}
+      - name: Install Dependencies
+        run: yarn
+      - name: Publish Foam Docs Site
+        run: yarn publish:docs-site
+      - name: Install Generated Site Dependencies
+        working-directory: ./.tmp/foam-docs-site
+        run: yarn install
+      - name: Build Generated Site
+        working-directory: ./.tmp/foam-docs-site
+        run: yarn build
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+      - name: Upload Pages Artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: ./.tmp/foam-docs-site/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

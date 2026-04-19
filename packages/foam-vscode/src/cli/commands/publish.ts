@@ -121,7 +121,6 @@ export function parsePublishCommandArgs(argv: string[]): PublishCommandOptions {
 }
 
 export async function runPublishCommand(options: PublishCommandOptions) {
-  const workspaceDir = path.resolve(options.workspaceDir);
   const outputDir = path.resolve(options.outputDir);
 
   if (options.target !== 'starlight') {
@@ -130,7 +129,7 @@ export async function runPublishCommand(options: PublishCommandOptions) {
     );
   }
 
-  const loaded = await loadWorkspaceFromDirectory(workspaceDir, {
+  const loaded = await loadWorkspaceFromDirectory(options.workspaceDir, {
     excludedPaths: [outputDir],
   });
 

@@ -1,3 +1,4 @@
+import { URI } from '../model/uri';
 import { CharCode } from '../common/charCode';
 import { posix } from 'path';
 import { isNone } from './core';
@@ -148,6 +149,13 @@ export function joinPath(...paths: string[]): string {
  */
 export function relativeTo(path: string, basePath: string): string {
   return posix.relative(basePath, path);
+}
+
+/**
+ * Returns true when `path` is equal to or nested under `parent`.
+ */
+export function isWithinPath(path: URI, parent: URI): boolean {
+  return path.path === parent.path || path.path.startsWith(parent.path + '/');
 }
 
 function hasDrive(path: string, idx = 0): boolean {

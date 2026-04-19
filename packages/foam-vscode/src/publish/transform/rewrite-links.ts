@@ -19,6 +19,10 @@ const getLinkText = (
   const analyzed = MarkdownLink.analyzeLink(link);
   const sourceRoute = context.noteRoutes.get(note.uri.path);
 
+  if (!sourceRoute) {
+    throw new Error(`Missing published source route for ${note.uri.path}`);
+  }
+
   if (resolvedUri.isPlaceholder()) {
     return {
       diagnostic: {

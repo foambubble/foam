@@ -110,7 +110,7 @@ export interface PublishedDiagnostic {
   level: 'warning';
   code: 'unresolved-link';
   sourceUri: URI;
-  sourceRoute?: string;
+  sourceRoute: string;
   link: string;
   target: string;
   message: string;
@@ -127,13 +127,11 @@ export interface PublishArtifactSet {
 export interface PublishContext extends PublishRuntimeContext {
   site?: PublishSiteConfig;
   include: (resource: Resource) => boolean;
-  /**
-   * Resolved asset matcher used during publish.
-   */
-  includeAsset: (resource: Resource) => boolean;
   resources: Resource[];
   notes: Resource[];
   assets: Resource[];
+  publishedRoutes: PublishedRoute[];
+  publishedAssets: PublishedAsset[];
   noteRoutes: Map<string, string>;
   assetPaths: Map<string, string>;
 }

@@ -2,11 +2,11 @@ import { FoamGraph } from '../../core/model/graph';
 import { Resource, ResourceLink } from '../../core/model/note';
 import { URI } from '../../core/model/uri';
 import { FoamWorkspace } from '../../core/model/workspace';
+import { isWithinPath } from '../../core/utils/path';
 import { getIncludeAssetMatcher, getIncludeMatcher } from '../config';
 import {
   buildAssetManifest,
   buildRouteManifest,
-  isWithinPath,
 } from '../derive/build-route-manifest';
 import { PublishAssetMatcher, PublishConfig, PublishContext } from '../types';
 
@@ -106,28 +106,29 @@ export const createPublishContext = (config: PublishConfig): PublishContext => {
     contentRoot,
     includeAssetMatcher
   );
-  const includeAsset = (resource: Resource) =>
-    includeAssetMatcher(resource, {
-      ...runtimeContext,
-      publishedNotes: notes,
-      linkedFrom: [],
-    });
   const resources = [...notes, ...linkedAssets];
 
-  const routes = buildRouteManifest(resources, config.workspace, contentRoot);
-  const assetManifest = buildAssetManifest(resources, config.workspace);
+  const publishedRoutes = buildRouteManifest(
+    resources,
+    config.workspace,
+    contentRoot
+  );
+  const publishedAssets = buildAssetManifest(resources, config.workspace);
 
   return {
     ...runtimeContext,
     site: config.site,
     include,
-    includeAsset,
     resources,
     notes,
     assets: linkedAssets,
-    noteRoutes: new Map(routes.map(route => [route.sourceUri.path, route.route])),
+    publishedRoutes,
+    publishedAssets,
+    noteRoutes: new Map(
+      publishedRoutes.map(route => [route.sourceUri.path, route.route])
+    ),
     assetPaths: new Map(
-      assetManifest.map(asset => [asset.sourceUri.path, `/${asset.outputPath}`])
+      publishedAssets.map(asset => [asset.sourceUri.path, `/${asset.outputPath}`])
     ),
   };
 };

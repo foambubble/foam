@@ -1,5 +1,5 @@
 import { Resource } from '../core/model/note';
-import { isWithinPath } from './derive/build-route-manifest';
+import { isWithinPath } from '../core/utils/path';
 import { PublishAssetContext, PublishAssetMatcher } from './types';
 
 const includeAssetsInWorkspace = (): PublishAssetMatcher => {

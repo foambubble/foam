@@ -1,6 +1,4 @@
 import { createPublishContext } from './bootstrap/create-context';
-import { collectPublishedNotes, collectPublishedResources } from './collect/collect-notes';
-import { buildAssetManifest, buildRouteManifest } from './derive/build-route-manifest';
 import { buildPublishedSite } from './derive/build-site-metadata';
 import { transformNote } from './transform/transform-note';
 import { PublishArtifactSet, PublishConfig } from './types';
@@ -12,24 +10,17 @@ export const buildSite = async (
   config: PublishConfig
 ): Promise<PublishArtifactSet> => {
   const context = createPublishContext(config);
-  const resources = collectPublishedResources(context);
-  const noteResources = collectPublishedNotes(context);
-  const routes = buildRouteManifest(
-    resources,
-    context.workspace,
-    context.contentRoot
-  );
   const transformedNotes = await Promise.all(
-    noteResources.map(note => transformNote(note, context))
+    context.notes.map(note => transformNote(note, context))
   );
   const notes = transformedNotes.map(result => result.note);
   const diagnostics = transformedNotes.flatMap(result => result.diagnostics);
 
   return {
-    site: buildPublishedSite(context, noteResources, routes),
+    site: buildPublishedSite(context, context.notes, context.publishedRoutes),
     notes,
-    assets: buildAssetManifest(resources, context.workspace),
-    routes,
+    assets: context.publishedAssets,
+    routes: context.publishedRoutes,
     diagnostics,
   };
 };

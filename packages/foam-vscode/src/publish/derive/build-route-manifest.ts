@@ -1,4 +1,4 @@
-import { changeExtension } from '../../core/utils/path';
+import { changeExtension, isWithinPath } from '../../core/utils/path';
 import { Resource } from '../../core/model/note';
 import { URI } from '../../core/model/uri';
 import { FoamWorkspace } from '../../core/model/workspace';
@@ -15,10 +15,6 @@ const getWorkspaceRoot = (uri: URI, workspace: FoamWorkspace) => {
     ) ?? null;
 
   return matchingRoot;
-};
-
-export const isWithinPath = (uri: URI, parent: URI) => {
-  return uri.path === parent.path || uri.path.startsWith(parent.path + '/');
 };
 
 export const getWorkspaceRelativePath = (uri: URI, workspace: FoamWorkspace) => {

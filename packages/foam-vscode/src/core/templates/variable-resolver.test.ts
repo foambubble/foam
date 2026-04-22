@@ -294,9 +294,9 @@ describe('variable-resolver, variable resolution', () => {
       expect(
         await resolver.resolve(new Variable('FOAM_DATE_DAY_NAME_SHORT'))
       ).toBe('Fri');
-      expect(
-        await resolver.resolve(new Variable('FOAM_DATE_MONTH_NAME'))
-      ).toBe('October');
+      expect(await resolver.resolve(new Variable('FOAM_DATE_MONTH_NAME'))).toBe(
+        'October'
+      );
       expect(
         await resolver.resolve(new Variable('FOAM_DATE_MONTH_NAME_SHORT'))
       ).toBe('Oct');
@@ -310,9 +310,9 @@ describe('variable-resolver, variable resolution', () => {
       expect(
         await resolver.resolve(new Variable('FOAM_DATE_DAY_NAME_SHORT'))
       ).toBe('金');
-      expect(
-        await resolver.resolve(new Variable('FOAM_DATE_MONTH_NAME'))
-      ).toBe('10月');
+      expect(await resolver.resolve(new Variable('FOAM_DATE_MONTH_NAME'))).toBe(
+        '10月'
+      );
       expect(
         await resolver.resolve(new Variable('FOAM_DATE_MONTH_NAME_SHORT'))
       ).toBe('10月');
@@ -334,8 +334,10 @@ describe('FOAM_DATE_FORMAT', () => {
 
   it('should resolve with a custom date-only format', async () => {
     const resolver = new Resolver(new Map(), targetDate);
-    const result = await resolver.resolveText('${FOAM_DATE_FORMAT:YYYY-MM-DD}');
-    expect(result).toBe('2021-10-15');
+    const result = await resolver.resolveText(
+      '${FOAM_DATE_FORMAT:YYYY-MM-DD-WW}'
+    );
+    expect(result).toBe('2021-10-15-41');
   });
 
   it('should resolve with a custom time-only format', async () => {

@@ -5,6 +5,12 @@ import {
   VariableResolver,
 } from '../common/snippetParser';
 import dayjs from 'dayjs';
+import advancedFormat from 'dayjs/plugin/advancedFormat';
+import isoWeek from 'dayjs/plugin/isoWeek';
+
+// isoWeek adds ISO week number support; advancedFormat exposes the W/WW tokens
+dayjs.extend(isoWeek);
+dayjs.extend(advancedFormat);
 
 const knownFoamVariables = new Set([
   'FOAM_TITLE',

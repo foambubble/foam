@@ -3,6 +3,7 @@ import { workspace, window } from 'vscode';
 import {
   CREATE_DAILY_NOTE_WARNING_RESPONSE,
   createDailyNoteIfNotExists,
+  getDailyNoteFileName,
   getDailyNoteUri,
 } from './daily-note-service';
 import { isWindows } from '../../../core/common/platform';
@@ -171,6 +172,32 @@ Unix: \${FOAM_DATE_SECONDS_UNIX}`,
         async () => {
           const uri = getDailyNoteUri(targetDate);
           expect(uri.getBasename()).toBe('2021-09-14.md');
+        }
+      );
+    });
+
+    it('Supports WW (ISO week number) in filenameFormat', async () => {
+      // 2021-09-14 is in ISO week 37 of 2021
+      const targetDate = new Date(2021, 8, 14);
+
+      await withModifiedFoamConfiguration(
+        'openDailyNote.filenameFormat',
+        'yyyy/yy-WW',
+        async () => {
+          expect(getDailyNoteFileName(targetDate)).toBe('2021/21-37.md');
+        }
+      );
+    });
+
+    it('Supports W (ISO week number without padding) in filenameFormat', async () => {
+      // 2021-09-14 is in ISO week 37 of 2021
+      const targetDate = new Date(2021, 8, 14);
+
+      await withModifiedFoamConfiguration(
+        'openDailyNote.filenameFormat',
+        'yyyy-W',
+        async () => {
+          expect(getDailyNoteFileName(targetDate)).toBe('2021-37.md');
         }
       );
     });

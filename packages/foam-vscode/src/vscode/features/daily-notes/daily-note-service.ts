@@ -39,12 +39,14 @@ const DATEFORMAT_NAMED_MASKS: Record<string, string> = {
  *   mmmm → MMMM, mmm → MMM, mm → MM, m → M
  *   dddd → dddd, ddd → ddd (day names — same in both)
  *   dd → DD, d → D  (day-of-month; dateformat's 'd' ≠ dayjs 'd' which is dow)
+ *   WW → WW, W → W  (ISO week number — same token in both; requires isoWeek +
+ *                     advancedFormat plugins loaded above)
  */
 function convertDateformatToDayjs(format: string): string {
   if (DATEFORMAT_NAMED_MASKS[format]) {
     return DATEFORMAT_NAMED_MASKS[format];
   }
-  return format.replace(/yyyy|yy|mmmm|mmm|mm|m|dddd|ddd|dd|d/g, token => {
+  return format.replace(/yyyy|yy|mmmm|mmm|mm|m|dddd|ddd|dd|d|WW|W/g, token => {
     switch (token) {
       case 'yyyy':
         return 'YYYY';
@@ -66,6 +68,10 @@ function convertDateformatToDayjs(format: string): string {
         return 'DD';
       case 'd':
         return 'D';
+      case 'WW':
+        return 'WW'; // ISO week number, zero-padded (requires isoWeek + advancedFormat plugins)
+      case 'W':
+        return 'W'; // ISO week number, unpadded (requires isoWeek + advancedFormat plugins)
       default:
         return token;
     }

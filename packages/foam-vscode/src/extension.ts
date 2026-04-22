@@ -49,7 +49,8 @@ export async function activate(context: ExtensionContext) {
     }
 
     const watcher = new VsCodeWatcher(
-      workspace.createFileSystemWatcher('**/*')
+      workspace.createFileSystemWatcher('**/*'),
+      workspace.onDidSaveTextDocument
     );
     const parserCache = new VsCodeBasedParserCache(context);
     const parser = createMarkdownParser([], parserCache);

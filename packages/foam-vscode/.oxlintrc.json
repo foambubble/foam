@@ -52,7 +52,7 @@
       }
     },
     {
-      "files": ["src/core/**/*.ts"],
+      "files": ["src/core/**/*.ts", "src/janitor/**/*.ts", "src/ai/**/*.ts", "src/daily-note/**/*.ts"],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -64,7 +64,7 @@
               },
               {
                 "name": "vscode",
-                "message": "Core submodule must not depend on VS Code."
+                "message": "Domain modules must not depend on VS Code."
               }
             ]
           }

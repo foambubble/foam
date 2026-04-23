@@ -4,6 +4,7 @@ import { Logger } from '../../../core/utils/log';
 import { fromVsCodeUri } from '../../utils/vsc-utils';
 import { isSome } from '../../../core/utils';
 import { getFoamVsCodeConfig } from '../../config';
+import { buildGraphData } from '../../../services/graph-data-builder';
 import type {
   GraphStyle,
   GraphViewConfig,
@@ -89,43 +90,11 @@ function updateGraph(panel: vscode.WebviewPanel, foam: Foam) {
 }
 
 function generateGraphData(foam: Foam) {
-  const graph = {
-    nodeInfo: {},
-    edges: new Set(),
-  };
-
-  foam.workspace.list().forEach(n => {
-    const type = n.type === 'note' ? n.properties.type ?? 'note' : n.type;
-    const title = n.type === 'note' ? n.title : n.uri.getBasename();
-    graph.nodeInfo[n.uri.path] = {
-      id: n.uri.path,
-      type: type,
-      uri: n.uri,
-      title: cutTitle(title),
-      properties: n.properties,
-      tags: n.tags,
-    };
+  return buildGraphData(foam.workspace.list(), foam.graph.getAllConnections(), {
+    resourceToId: uri => uri.path,
+    transformTitle: title => cutTitle(title),
+    includePlaceholders: true,
   });
-  foam.graph.getAllConnections().forEach(c => {
-    graph.edges.add({
-      source: c.source.path,
-      target: c.target.path,
-    });
-    if (c.target.isPlaceholder()) {
-      graph.nodeInfo[c.target.path] = {
-        id: c.target.path,
-        type: 'placeholder',
-        uri: c.target,
-        title: c.target.path,
-        properties: {},
-      };
-    }
-  });
-
-  return {
-    nodeInfo: graph.nodeInfo,
-    links: Array.from(graph.edges),
-  };
 }
 
 function cutTitle(title: string): string {

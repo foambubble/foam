@@ -1,4 +1,5 @@
 import { createPublishContext } from './bootstrap/create-context';
+import { buildPublishedGraph } from './derive/build-site-graph';
 import { buildPublishedSite } from './derive/build-site-metadata';
 import { transformNote } from './transform/transform-note';
 import { PublishArtifactSet, PublishConfig } from './types';
@@ -18,6 +19,7 @@ export const buildSite = async (
 
   return {
     site: buildPublishedSite(context, context.notes, context.publishedRoutes),
+    graph: buildPublishedGraph(context, context.notes, context.publishedRoutes),
     notes,
     assets: context.publishedAssets,
     routes: context.publishedRoutes,

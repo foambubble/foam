@@ -57,9 +57,9 @@ function renderBacklinks(
   }
 
   const items = backlinks
-    .map(link => `- [${link.title}](${link.route})`)
+    .map(link => `  <a href="${link.route}">${link.title}</a>`)
     .join('\n');
-  return `\n\n## Backlinks\n\n${items}\n`;
+  return `\n\n<div class="backlinks">\n<p class="backlinks-label">LINKS TO THIS PAGE</p>\n${items}\n</div>\n`;
 }
 
 function rewriteStaticAssetPaths(markdown: string) {
@@ -67,9 +67,12 @@ function rewriteStaticAssetPaths(markdown: string) {
     .replace(/\]\(((?:\.\.\/)*assets\/[^)]+)\)/g, (_match, assetPath) => {
       return `](/${String(assetPath).replace(/^(?:\.\.\/)+/, '')})`;
     })
-    .replace(/(src|href)="((?:\.\.\/)*assets\/)/g, (_match, attr, assetPath) => {
-      return `${attr}="/${String(assetPath).replace(/^(?:\.\.\/)+/, '')}`;
-    });
+    .replace(
+      /(src|href)="((?:\.\.\/)*assets\/)/g,
+      (_match, attr, assetPath) => {
+        return `${attr}="/${String(assetPath).replace(/^(?:\.\.\/)+/, '')}`;
+      }
+    );
 }
 
 function isFrameworkHandledRoute(route: string) {
@@ -83,11 +86,13 @@ async function ensureCleanDir(dir: string) {
 
 async function writeTemplateFiles(outputDir: string) {
   await Promise.all(
-    Object.entries(STARLIGHT_TEMPLATE_FILES).map(async ([relativePath, content]) => {
-      const outputPath = path.join(outputDir, relativePath);
-      await fs.mkdir(path.dirname(outputPath), { recursive: true });
-      await fs.writeFile(outputPath, content, 'utf8');
-    })
+    Object.entries(STARLIGHT_TEMPLATE_FILES).map(
+      async ([relativePath, content]) => {
+        const outputPath = path.join(outputDir, relativePath);
+        await fs.mkdir(path.dirname(outputPath), { recursive: true });
+        await fs.writeFile(outputPath, content, 'utf8');
+      }
+    )
   );
 }
 
@@ -212,7 +217,10 @@ export async function writeStarlightSite(options: StarlightTargetOptions) {
   await ensureCleanDir(generatedDir);
   await writeDocs(options.outputDir, options.artifactSet);
   await copyAssets(options.outputDir, options.artifactSet);
-  await writeSiteConfig(options.outputDir, options.artifactSet, options.siteUrl);
+  await writeSiteConfig(
+    options.outputDir,
+    options.artifactSet,
+    options.siteUrl
+  );
   await writeRoutesManifest(options.outputDir, options.artifactSet);
 }
-

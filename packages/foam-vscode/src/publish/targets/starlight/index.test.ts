@@ -149,7 +149,7 @@ describe('publish starlight target', () => {
         path.join(tmpDir, 'site', 'src', 'components', 'FoamFooter.astro'),
         'utf8'
       )
-    ).toContain('Powered by <a href="https://foamnotes.com">Foam</a>');
+    ).toContain('Published with <a href="https://foamnotes.com">Foam</a>');
     expect(
       fs.readFileSync(
         path.join(tmpDir, 'site', 'src', 'content', 'docs', 'index.md'),
@@ -161,7 +161,7 @@ describe('publish starlight target', () => {
         path.join(tmpDir, 'site', 'src', 'content', 'docs', 'linked.md'),
         'utf8'
       )
-    ).toContain('## Backlinks');
+    ).toContain('<div class="backlinks">');
     expect(
       fs.existsSync(
         path.join(tmpDir, 'site', 'src', 'content', 'docs', '404.md')

@@ -72,17 +72,15 @@ describe('color by directory', () => {
 });
 
 describe('color by none', () => {
-  it('uses type color — same type means same color', () => {
-    expect(fillOf(graph.projectA, 'none')).toBe(fillOf(graph.projectB, 'none'));
+  it('all nodes get the same color regardless of type', () => {
+    expect(fillOf(graph.projectA,   'none')).toBe(fillOf(graph.noteA,   'none'));
+    expect(fillOf(graph.tagNode,    'none')).toBe(fillOf(graph.noteA,   'none'));
+    expect(fillOf(graph.placeholder,'none')).toBe(fillOf(graph.noteA,   'none'));
+    expect(fillOf(graph.workA,      'none')).toBe(fillOf(graph.homeA,   'none'));
   });
 
-  it('uses type color — different types mean different colors', () => {
-    expect(fillOf(graph.projectA, 'none')).not.toBe(fillOf(graph.noteA, 'none'));
-  });
-
-  it('special types (tag, attachment, placeholder) retain their own color', () => {
-    expect(fillOf(graph.tagNode,     'none')).not.toBe(fillOf(graph.noteA, 'none'));
-    expect(fillOf(graph.placeholder, 'none')).not.toBe(fillOf(graph.noteA, 'none'));
+  it('all nodes get the same color regardless of directory', () => {
+    expect(fillOf(graph.workA, 'none')).toBe(fillOf(graph.homeA, 'none'));
   });
 });
 
@@ -98,6 +96,10 @@ describe('node properties.color takes precedence over colorMode', () => {
     // redNode and workA are both in /work/, but redNode has an explicit color
     expect(fillOf(redNode,      'directory')).not.toBe(fillOf(graph.workA, 'directory'));
     expect(fillOf(redNode, 'directory')).toBe(rgb('red').toString());
+  });
+
+  it('overrides none coloring', () => {
+    expect(fillOf(redNode, 'none')).toBe(rgb('red').toString());
   });
 });
 

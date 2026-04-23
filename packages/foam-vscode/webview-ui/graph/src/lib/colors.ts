@@ -54,6 +54,8 @@ export function getNodeFillAndBorder(
 
   if (nodeInfo.properties.color) {
     baseColor = nodeInfo.properties.color as string;
+  } else if (colorMode === 'none') {
+    baseColor = style.node['note'];
   } else if (colorMode === 'directory' && nodeInfo.type !== 'placeholder' && nodeInfo.type !== 'tag') {
     baseColor = getDirectoryColor(nodeInfo.id);
   } else {

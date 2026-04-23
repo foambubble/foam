@@ -70,7 +70,9 @@ export default defineConfig({
       sidebar,
       components: {
         Footer: './src/components/FoamFooter.astro',
+        PageFrame: './src/components/FoamPageFrame.astro',
         PageSidebar: './src/components/FoamPageSidebar.astro',
+        Sidebar: './src/components/FoamSidebar.astro',
       },
       customCss: ['./src/styles/custom.css'],
     }),
@@ -344,6 +346,146 @@ const selectedRoute =
   }
 </style>
 `,
+  'src/components/FoamPageFrame.astro': `---
+import MobileMenuToggle from 'virtual:starlight/components/MobileMenuToggle';
+
+const { hasSidebar } = Astro.locals.starlightRoute;
+---
+
+<div class="page sl-flex">
+\t{
+\t\thasSidebar && (
+\t\t\t<nav class="sidebar print:hidden" aria-label={Astro.locals.t('sidebarNav.accessibleLabel')}>
+\t\t\t\t<MobileMenuToggle />
+\t\t\t\t<div id="starlight__sidebar" class="sidebar-pane">
+\t\t\t\t\t<div class="sidebar-content sl-flex">
+\t\t\t\t\t\t<slot name="sidebar" />
+\t\t\t\t\t</div>
+\t\t\t\t</div>
+\t\t\t</nav>
+\t\t)
+\t}
+\t<div class="main-frame"><slot /></div>
+</div>
+
+<style>
+\t@layer starlight.core {
+\t\t.page {
+\t\t\tflex-direction: column;
+\t\t\tmin-height: 100vh;
+\t\t}
+
+\t\t.sidebar-pane {
+\t\t\tvisibility: var(--sl-sidebar-visibility, hidden);
+\t\t\tposition: fixed;
+\t\t\tz-index: var(--sl-z-index-menu);
+\t\t\tinset-block: 0 0;
+\t\t\tinset-inline-start: 0;
+\t\t\twidth: 100%;
+\t\t\tbackground-color: var(--sl-color-black);
+\t\t\toverflow-y: auto;
+\t\t}
+
+\t\t:global([aria-expanded='true']) ~ .sidebar-pane {
+\t\t\t--sl-sidebar-visibility: visible;
+\t\t}
+
+\t\t.sidebar-content {
+\t\t\theight: 100%;
+\t\t\tmin-height: max-content;
+\t\t\tpadding: 1rem var(--sl-sidebar-pad-x) 0;
+\t\t\tflex-direction: column;
+\t\t\tgap: 1rem;
+\t\t}
+
+\t\t@media (min-width: 50rem) {
+\t\t\t.sidebar-content::after {
+\t\t\t\tcontent: '';
+\t\t\t\tpadding-bottom: 1px;
+\t\t\t}
+\t\t}
+
+\t\t.main-frame {
+\t\t\tpadding-top: var(--sl-mobile-toc-height);
+\t\t\tpadding-inline-start: var(--sl-content-inline-start);
+\t\t}
+
+\t\t@media (min-width: 50rem) {
+\t\t\t.sidebar-pane {
+\t\t\t\t--sl-sidebar-visibility: visible;
+\t\t\t\twidth: var(--sl-sidebar-width);
+\t\t\t\tbackground-color: var(--sl-color-bg-sidebar);
+\t\t\t\tborder-inline-end: 1px solid var(--sl-color-hairline-shade);
+\t\t\t}
+\t\t}
+\t}
+</style>
+`,
+  'src/components/FoamSidebar.astro': `---
+import type { Props } from '@astrojs/starlight/props';
+import Default from '@astrojs/starlight/components/Sidebar.astro';
+import Search from 'virtual:starlight/components/Search';
+import ThemeSelect from 'virtual:starlight/components/ThemeSelect';
+import siteConfig from '../../generated/site-config.json';
+
+const props = Astro.props as Props;
+const homepageHref = import.meta.env.BASE_URL || '/';
+---
+
+<div class="foam-sidebar-header">
+  <div class="foam-sidebar-title-row">
+    <a href={homepageHref} class="foam-site-title">{siteConfig.title ?? 'Foam Site'}</a>
+    <ThemeSelect />
+  </div>
+  <Search />
+</div>
+
+<Default {...props} />
+
+<style>
+  .foam-sidebar-header {
+    border-bottom: 1px solid var(--sl-color-hairline-light);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    padding: 1rem var(--sl-sidebar-pad-x) 0.75rem;
+  }
+
+  .foam-sidebar-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .foam-site-title {
+    color: var(--sl-color-white);
+    font-size: var(--sl-text-lg);
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .foam-site-title:hover {
+    color: var(--sl-color-text-accent);
+  }
+
+  .foam-sidebar-header :global(site-search),
+  .foam-sidebar-header :global(button[data-open-modal]) {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .foam-sidebar-title-row :global(starlight-theme-select select) {
+    width: 0rem !important;
+    padding-inline-end: 0 !important;
+  }
+
+  .foam-sidebar-title-row :global(starlight-theme-select .caret) {
+    display: none;
+  }
+</style>
+`,
   'src/components/FoamFooter.astro': `---
 import type { Props } from '@astrojs/starlight/props';
 import Default from '@astrojs/starlight/components/Footer.astro';
@@ -384,6 +526,15 @@ const props = Astro.props as Props;
 </style>
 `,
   'src/styles/custom.css': `
+:root {
+  --sl-nav-height: 0rem;
+}
+
+/* Reposition the mobile menu button since there is no nav bar */
+starlight-menu-button button {
+  top: calc((var(--sl-mobile-toc-height) - var(--sl-menu-button-size)) / 2);
+}
+
 .backlinks {
   border-top: 1px solid var(--sl-color-hairline-light);
   margin-top: 2rem;

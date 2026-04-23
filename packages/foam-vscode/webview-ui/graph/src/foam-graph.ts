@@ -22,6 +22,7 @@ export class FoamGraph extends LitElement {
   // Public API
   @property({ type: Object }) graphData: GraphData | null = null;
   @property({ type: Object }) graphStyle: GraphStyle | null = null;
+  @property({ type: Boolean }) showControls = true;
 
   // Internal control state
   @state() private augmentedGraph: AugmentedGraph | null = null;
@@ -38,7 +39,11 @@ export class FoamGraph extends LitElement {
   @state() private linkWidthMultiplier: number = 2;
   @state() private animateLinks: LinkAnimation = 'forward';
   @state() private forces: Forces = { collide: 1, repel: 10, link: 30, velocityDecay: 0.4 };
-  @state() private selection: Selection = { neighborDepth: 1, enableRefocus: true, enableZoom: true };
+  @property({ type: Object }) selection: Selection = {
+    neighborDepth: 1,
+    enableRefocus: true,
+    enableZoom: true,
+  };
   @state() private localStylePatch: GraphStyle = {};
   @state() private groups: GroupRule[] = [];
 
@@ -114,30 +119,32 @@ export class FoamGraph extends LitElement {
         .animateLinks=${this.animateLinks}
         @node-click=${(e: CustomEvent) => this._onNodeClick(e.detail)}
       ></foam-graph-canvas>
-      <foam-control-panel
-        .style=${resolved}
-        .showNodesOfType=${this.showNodesOfType}
-        .nodeTypeCounts=${this._nodeTypeCounts}
-        .augmentedGraph=${this.augmentedGraph}
-        .groups=${this.groups}
-        .textFade=${this.textFade}
-        .nodeFontSizeMultiplier=${this.nodeFontSizeMultiplier}
-        .nodeSizeMultiplier=${this.nodeSizeMultiplier}
-        .linkWidthMultiplier=${this.linkWidthMultiplier}
-        .animateLinks=${this.animateLinks}
-        .forces=${this.forces}
-        .selection=${this.selection}
-        @style-change=${(e: CustomEvent) => this._onStyleChange(e.detail)}
-        @show-nodes-of-type-change=${(e: CustomEvent) => (this.showNodesOfType = e.detail)}
-        @groups-change=${(e: CustomEvent) => (this.groups = e.detail)}
-        @text-fade-change=${(e: CustomEvent) => (this.textFade = e.detail)}
-        @font-size-multiplier-change=${(e: CustomEvent) => (this.nodeFontSizeMultiplier = e.detail)}
-        @node-size-multiplier-change=${(e: CustomEvent) => (this.nodeSizeMultiplier = e.detail)}
-        @link-width-multiplier-change=${(e: CustomEvent) => (this.linkWidthMultiplier = e.detail)}
-        @animate-links-change=${(e: CustomEvent) => (this.animateLinks = e.detail)}
-        @forces-change=${(e: CustomEvent) => (this.forces = e.detail)}
-        @selection-change=${(e: CustomEvent) => (this.selection = e.detail)}
-      ></foam-control-panel>
+      ${this.showControls
+        ? html`<foam-control-panel
+            .style=${resolved}
+            .showNodesOfType=${this.showNodesOfType}
+            .nodeTypeCounts=${this._nodeTypeCounts}
+            .augmentedGraph=${this.augmentedGraph}
+            .groups=${this.groups}
+            .textFade=${this.textFade}
+            .nodeFontSizeMultiplier=${this.nodeFontSizeMultiplier}
+            .nodeSizeMultiplier=${this.nodeSizeMultiplier}
+            .linkWidthMultiplier=${this.linkWidthMultiplier}
+            .animateLinks=${this.animateLinks}
+            .forces=${this.forces}
+            .selection=${this.selection}
+            @style-change=${(e: CustomEvent) => this._onStyleChange(e.detail)}
+            @show-nodes-of-type-change=${(e: CustomEvent) => (this.showNodesOfType = e.detail)}
+            @groups-change=${(e: CustomEvent) => (this.groups = e.detail)}
+            @text-fade-change=${(e: CustomEvent) => (this.textFade = e.detail)}
+            @font-size-multiplier-change=${(e: CustomEvent) => (this.nodeFontSizeMultiplier = e.detail)}
+            @node-size-multiplier-change=${(e: CustomEvent) => (this.nodeSizeMultiplier = e.detail)}
+            @link-width-multiplier-change=${(e: CustomEvent) => (this.linkWidthMultiplier = e.detail)}
+            @animate-links-change=${(e: CustomEvent) => (this.animateLinks = e.detail)}
+            @forces-change=${(e: CustomEvent) => (this.forces = e.detail)}
+            @selection-change=${(e: CustomEvent) => (this.selection = e.detail)}
+          ></foam-control-panel>`
+        : null}
     `;
   }
 

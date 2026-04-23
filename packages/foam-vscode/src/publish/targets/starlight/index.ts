@@ -28,6 +28,10 @@ function routeToDocPath(route: string) {
   return `${route.replace(/^\/+/, '')}.md`;
 }
 
+function stripLeadingH1(markdown: string) {
+  return markdown.replace(/^#[^#][^\n]*\n?/, '').replace(/^\n+/, '');
+}
+
 function escapeFrontmatter(value: string) {
   return value.replace(/"/g, '\\"');
 }
@@ -109,7 +113,7 @@ async function writeDocs(outputDir: string, artifactSet: PublishArtifactSet) {
     await fs.writeFile(
       outputPath,
       `${renderFrontmatter(note)}${rewriteStaticAssetPaths(
-        note.markdown
+        stripLeadingH1(note.markdown)
       )}${renderBacklinks(note.backlinks)}`,
       'utf8'
     );
@@ -129,7 +133,7 @@ async function writeDocs(outputDir: string, artifactSet: PublishArtifactSet) {
       await fs.writeFile(
         outputPath,
         `${renderFrontmatter(homepageNote)}${rewriteStaticAssetPaths(
-          homepageNote.markdown
+          stripLeadingH1(homepageNote.markdown)
         )}${renderBacklinks(homepageNote.backlinks)}`,
         'utf8'
       );

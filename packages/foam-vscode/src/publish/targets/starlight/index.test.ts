@@ -8,6 +8,57 @@ import { PublishArtifactSet } from '../../types';
 import { writeStarlightSite } from './index';
 
 describe('publish starlight target', () => {
+  it('strips leading h1 from note markdown to avoid duplicate title', async () => {
+    const tmpDir = mkdtempSync(path.join(tmpdir(), 'foam-starlight-strip-h1-'));
+
+    const artifactSet: PublishArtifactSet = {
+      site: { title: 'Site', description: '', homepageRoute: null },
+      notes: [
+        {
+          sourceUri: URI.file(path.join(tmpDir, 'note.md')),
+          route: '/note',
+          title: 'My Note',
+          description: '',
+          properties: {},
+          markdown: '# My Note\n\nSome content here.',
+          backlinks: [],
+        },
+        {
+          sourceUri: URI.file(path.join(tmpDir, 'other.md')),
+          route: '/other',
+          title: 'Other',
+          description: '',
+          properties: {},
+          markdown: '## Not a top-level h1\n\nContent.',
+          backlinks: [],
+        },
+      ],
+      assets: [],
+      routes: [
+        { sourceUri: URI.file(path.join(tmpDir, 'note.md')), route: '/note' },
+        { sourceUri: URI.file(path.join(tmpDir, 'other.md')), route: '/other' },
+      ],
+      diagnostics: [],
+    };
+
+    await writeStarlightSite({ artifactSet, outputDir: path.join(tmpDir, 'site') });
+
+    const noteContent = fs.readFileSync(
+      path.join(tmpDir, 'site', 'src', 'content', 'docs', 'note.md'),
+      'utf8'
+    );
+    // H1 should be stripped; body content should remain
+    expect(noteContent).not.toContain('# My Note');
+    expect(noteContent).toContain('Some content here.');
+
+    const otherContent = fs.readFileSync(
+      path.join(tmpDir, 'site', 'src', 'content', 'docs', 'other.md'),
+      'utf8'
+    );
+    // H2 should not be stripped
+    expect(otherContent).toContain('## Not a top-level h1');
+  });
+
   it('writes a runnable Starlight project from publish artifacts', async () => {
     const tmpDir = mkdtempSync(path.join(tmpdir(), 'foam-starlight-target-'));
     const assetSourcePath = path.join(tmpDir, 'fixtures', 'image.png');

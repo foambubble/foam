@@ -104,6 +104,112 @@ describe('publish starlight target', () => {
     )).toBe(true);
   });
 
+  it('strips YAML frontmatter from note markdown to avoid double rendering', async () => {
+    const tmpDir = mkdtempSync(path.join(tmpdir(), 'foam-starlight-frontmatter-'));
+
+    const artifactSet: PublishArtifactSet = {
+      site: { title: 'Site', description: '', homepageRoute: null },
+      graph: { nodeInfo: {}, links: [] },
+      notes: [
+        {
+          sourceUri: URI.file(path.join(tmpDir, 'note.md')),
+          route: '/note',
+          title: 'My Note',
+          description: '',
+          properties: { author: 'Alice', status: 'draft' },
+          markdown: '---\ntitle: My Note\nauthor: Alice\nstatus: draft\n---\n\n# My Note\n\nBody content.',
+          backlinks: [],
+        },
+      ],
+      assets: [],
+      routes: [{ sourceUri: URI.file(path.join(tmpDir, 'note.md')), route: '/note' }],
+      diagnostics: [],
+    };
+
+    await writeStarlightSite({ artifactSet, outputDir: path.join(tmpDir, 'site') });
+
+    const content = fs.readFileSync(
+      path.join(tmpDir, 'site', 'src', 'content', 'docs', 'note.md'),
+      'utf8'
+    );
+    // The original YAML block must not appear in the body
+    expect(content).not.toMatch(/^---[\s\S]*?author: Alice[\s\S]*?---/m);
+    expect(content).toContain('Body content.');
+  });
+
+  it('renders note properties after the title, skipping title and description', async () => {
+    const tmpDir = mkdtempSync(path.join(tmpdir(), 'foam-starlight-props-'));
+
+    const artifactSet: PublishArtifactSet = {
+      site: { title: 'Site', description: '', homepageRoute: null },
+      graph: { nodeInfo: {}, links: [] },
+      notes: [
+        {
+          sourceUri: URI.file(path.join(tmpDir, 'note.md')),
+          route: '/note',
+          title: 'My Note',
+          description: 'A note',
+          properties: {
+            title: 'My Note',
+            description: 'A note',
+            author: 'Alice',
+            tags: ['foam', 'notes'],
+            status: 'draft',
+          },
+          markdown: '# My Note\n\nSome content here.',
+          backlinks: [],
+        },
+        {
+          sourceUri: URI.file(path.join(tmpDir, 'empty-props.md')),
+          route: '/empty-props',
+          title: 'Empty',
+          description: '',
+          properties: {},
+          markdown: 'No properties.',
+          backlinks: [],
+        },
+      ],
+      assets: [],
+      routes: [
+        { sourceUri: URI.file(path.join(tmpDir, 'note.md')), route: '/note' },
+        { sourceUri: URI.file(path.join(tmpDir, 'empty-props.md')), route: '/empty-props' },
+      ],
+      diagnostics: [],
+    };
+
+    await writeStarlightSite({ artifactSet, outputDir: path.join(tmpDir, 'site') });
+
+    const noteContent = fs.readFileSync(
+      path.join(tmpDir, 'site', 'src', 'content', 'docs', 'note.md'),
+      'utf8'
+    );
+    // Properties section should be rendered
+    expect(noteContent).toContain('class="note-properties"');
+    // title and description are excluded
+    expect(noteContent).not.toMatch(/note-property-key[^>]*>title</);
+    expect(noteContent).not.toMatch(/note-property-key[^>]*>description</);
+    // Other properties are included
+    expect(noteContent).toContain('>author<');
+    expect(noteContent).toContain('>Alice<');
+    expect(noteContent).toContain('>status<');
+    expect(noteContent).toContain('>draft<');
+    // Array values are rendered as chips
+    expect(noteContent).toContain('class="note-property-chip"');
+    expect(noteContent).toContain('>foam<');
+    expect(noteContent).toContain('>notes<');
+    // Properties section appears before the body content
+    const propertiesIndex = noteContent.indexOf('note-properties');
+    const bodyIndex = noteContent.indexOf('Some content here.');
+    expect(propertiesIndex).toBeLessThan(bodyIndex);
+
+    // Notes with no non-excluded properties have no properties section
+    const emptyContent = fs.readFileSync(
+      path.join(tmpDir, 'site', 'src', 'content', 'docs', 'empty-props.md'),
+      'utf8'
+    );
+    expect(emptyContent).not.toContain('note-properties');
+  });
+
   it('writes a runnable Starlight project from publish artifacts', async () => {
     const tmpDir = mkdtempSync(path.join(tmpdir(), 'foam-starlight-target-'));
     const assetSourcePath = path.join(tmpDir, 'fixtures', 'image.png');

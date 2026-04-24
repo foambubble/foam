@@ -29,6 +29,10 @@ function routeToDocPath(route: string) {
   return `${route.replace(/^\/+/, '')}.md`;
 }
 
+function stripFrontmatter(markdown: string) {
+  return markdown.replace(/^---\n[\s\S]*?\n---\n?/, '').replace(/^\n+/, '');
+}
+
 function stripLeadingH1(markdown: string) {
   return markdown.replace(/^#[^#][^\n]*\n?/, '').replace(/^\n+/, '');
 }
@@ -48,6 +52,36 @@ function renderFrontmatter(note: PublishArtifactSet['notes'][number]) {
 
   lines.push('---', '');
   return lines.join('\n');
+}
+
+const EXCLUDED_PROPERTIES = new Set(['title', 'description']);
+
+function renderPropertyValue(value: unknown): string {
+  if (Array.isArray(value)) {
+    return value
+      .map(v => `<span class="note-property-chip">${String(v)}</span>`)
+      .join('');
+  }
+  return String(value);
+}
+
+function renderProperties(properties: Record<string, unknown>) {
+  const entries = Object.entries(properties).filter(
+    ([key, value]) => !EXCLUDED_PROPERTIES.has(key) && value !== null && value !== undefined && value !== ''
+  );
+
+  if (entries.length === 0) {
+    return '';
+  }
+
+  const rows = entries
+    .map(
+      ([key, value]) =>
+        `  <div class="note-property-row"><span class="note-property-key">${key}</span><span class="note-property-value">${renderPropertyValue(value)}</span></div>`
+    )
+    .join('\n');
+
+  return `<div class="note-properties">\n${rows}\n</div>\n\n`;
 }
 
 function renderBacklinks(
@@ -118,8 +152,8 @@ async function writeDocs(outputDir: string, artifactSet: PublishArtifactSet) {
     await fs.mkdir(path.dirname(outputPath), { recursive: true });
     await fs.writeFile(
       outputPath,
-      `${renderFrontmatter(note)}${rewriteStaticAssetPaths(
-        stripLeadingH1(note.markdown)
+      `${renderFrontmatter(note)}${renderProperties(note.properties)}${rewriteStaticAssetPaths(
+        stripLeadingH1(stripFrontmatter(note.markdown))
       )}${renderBacklinks(note.backlinks)}`,
       'utf8'
     );
@@ -138,7 +172,7 @@ async function writeDocs(outputDir: string, artifactSet: PublishArtifactSet) {
       await fs.mkdir(path.dirname(outputPath), { recursive: true });
       await fs.writeFile(
         outputPath,
-        `${renderFrontmatter(homepageNote)}${rewriteStaticAssetPaths(
+        `${renderFrontmatter(homepageNote)}${renderProperties(homepageNote.properties)}${rewriteStaticAssetPaths(
           stripLeadingH1(homepageNote.markdown)
         )}${renderBacklinks(homepageNote.backlinks)}`,
         'utf8'

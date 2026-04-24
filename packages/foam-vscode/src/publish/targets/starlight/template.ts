@@ -523,6 +523,47 @@ starlight-menu-button button {
   display: block;
   font-size: var(--sl-text-sm);
 }
+
+.note-properties {
+  border-bottom: 1px solid var(--sl-color-hairline-light);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+}
+
+.note-property-row {
+  align-items: baseline;
+  display: flex;
+  flex-wrap: wrap;
+  font-size: var(--sl-text-sm);
+  gap: 0.4rem;
+}
+
+.note-property-key {
+  color: var(--sl-color-text-secondary);
+  flex-shrink: 0;
+  font-weight: 600;
+  min-width: 6rem;
+}
+
+.note-property-value {
+  align-items: center;
+  color: var(--sl-color-text);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.note-property-chip {
+  background: var(--sl-color-bg-nav);
+  border: 1px solid var(--sl-color-hairline-light);
+  border-radius: 999px;
+  color: var(--sl-color-text-accent);
+  font-size: var(--sl-text-xs);
+  padding: 0.1rem 0.55rem;
+}
 `,
   'src/content.config.ts': `import { defineCollection } from 'astro:content';
 import { docsLoader } from '@astrojs/starlight/loaders';

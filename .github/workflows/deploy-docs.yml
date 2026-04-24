@@ -5,12 +5,12 @@ on:
     branches:
       - main
     paths:
-      - docs/**/*
+      - docs/user/**/*
+      - packages/foam-vscode/src/publish/**/*
+      - packages/foam-vscode/src/cli/**/*
+      - packages/foam-vscode/esbuild.js
       - package.json
       - yarn.lock
-      - packages/foam-vscode/package.json
-      - packages/foam-vscode/esbuild.js
-      - packages/foam-vscode/src/**/*
       - .github/workflows/deploy-docs.yml
   workflow_dispatch:
 

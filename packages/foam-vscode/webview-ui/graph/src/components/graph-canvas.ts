@@ -204,6 +204,7 @@ export class GraphCanvas extends LitElement {
       .onNodeHover((node: any) => {
         this.rs.hoverNode = node?.id ?? null;
         this._updateFocusSets();
+        container.style.cursor = node ? 'pointer' : 'default';
       })
       .onNodeClick((node: any, event: MouseEvent) => {
         const isAppend = event.getModifierState('Shift');

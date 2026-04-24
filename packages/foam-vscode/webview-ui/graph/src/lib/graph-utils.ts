@@ -98,19 +98,18 @@ export function computeFocusSets(
   const focusNodes = new Set<string>();
   const focusLinks = new Set<AugmentedLink>();
 
-  const nodesToProcess = [...selectedNodes, hoverNode].filter(
-    Boolean
-  ) as string[];
+  const originNodes = [...selectedNodes, hoverNode].filter(Boolean) as string[];
 
-  for (const nodeId of nodesToProcess) {
+  for (const nodeId of originNodes) {
     const neighbors = getNeighbors(nodeId, neighborDepth, nodeInfo);
     for (const n of neighbors) focusNodes.add(n);
   }
 
+  const originSet = new Set(originNodes);
   for (const link of links) {
     const src = getLinkNodeId(link.source);
     const tgt = getLinkNodeId(link.target);
-    if (focusNodes.has(src) && focusNodes.has(tgt)) {
+    if (originSet.has(src) || originSet.has(tgt)) {
       focusLinks.add(link);
     }
   }
@@ -164,10 +163,17 @@ export function computeGraphStates(
     nodeStates.set(id, getNodeState(id, selectedNodes, hoverNode, focusNodes));
   }
 
+  const highlightedLinks = new Set(
+    [...focusLinks].map(l => `${getLinkNodeId(l.source)}->${getLinkNodeId(l.target)}`)
+  );
   const linkStates = new Map<string, LinkState>();
   for (const link of augmentedGraph.links) {
     const key = `${getLinkNodeId(link.source)}->${getLinkNodeId(link.target)}`;
-    linkStates.set(key, getLinkState(link, focusNodes, focusLinks));
+    if (focusNodes.size === 0) {
+      linkStates.set(key, 'regular');
+    } else {
+      linkStates.set(key, highlightedLinks.has(key) ? 'highlighted' : 'lessened');
+    }
   }
 
   return { nodeStates, linkStates };

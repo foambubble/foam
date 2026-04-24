@@ -214,7 +214,10 @@ describe('computeGraphStates', () => {
     expect(nodeStates.get('note-4')).toBe('regular');  // neighbor of note-3
   });
 
-  it('should mark links between focus nodes as highlighted and others as lessened', () => {
+  it('should highlight only links that touch the selected node', () => {
+    // note-1 selected; note-2 and note-3 are both neighbors of note-1
+    // link note-1->note-2 touches the origin → highlighted
+    // link note-2->note-3 is between two neighbors but not the origin → lessened
     const graph = augmentGraphInfo(makeGraph({
       nodeInfo: {
         'note-1': { id: 'note-1', type: 'note', title: 'Note 1', properties: {}, tags: [] },
@@ -223,14 +226,16 @@ describe('computeGraphStates', () => {
       },
       links: [
         { source: 'note-1', target: 'note-2' },
+        { source: 'note-1', target: 'note-3' },
         { source: 'note-2', target: 'note-3' },
       ],
     }));
 
     const { linkStates } = computeGraphStates(graph, new Set(['note-1']), null, 1);
 
-    expect(linkStates.get('note-1->note-2')).toBe('highlighted'); // both endpoints in focus
-    expect(linkStates.get('note-2->note-3')).toBe('lessened');    // note-3 not in focus
+    expect(linkStates.get('note-1->note-2')).toBe('highlighted'); // touches origin
+    expect(linkStates.get('note-1->note-3')).toBe('highlighted'); // touches origin
+    expect(linkStates.get('note-2->note-3')).toBe('lessened');    // between two neighbors, not origin
   });
 
   it('should expand neighborhood with neighborDepth=2', () => {

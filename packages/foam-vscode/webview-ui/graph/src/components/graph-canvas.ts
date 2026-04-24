@@ -19,6 +19,7 @@ import { getNodeFillAndBorder, getLinkColor, getNodeLabelColor } from '../lib/co
 import type {
   AugmentedGraph,
   AugmentedLink,
+  GraphScope,
   GraphStates,
   ResolvedStyle,
   Forces,
@@ -51,8 +52,6 @@ export class GraphCanvas extends LitElement {
     neighborDepth: 1,
     centerOnSelect: true,
     zoomOnSelect: true,
-    focusGraph: false,
-    focusDepth: 1,
   };
   @property({ type: Number }) textFade: number = 0;
   @property({ type: Number }) nodeFontSizeMultiplier: number = 1;
@@ -61,7 +60,7 @@ export class GraphCanvas extends LitElement {
   @property({ type: String }) animateLinks: LinkAnimation = 'forward';
   @property({ type: Array }) groups: GroupRule[] = [];
   @property({ type: String }) focusNodeId: string | null = null;
-  @property({ type: Number }) focusDepth: number = 1;
+  @property({ type: Object }) graphScope: GraphScope = 'full';
 
   // Mutable rendering state — closed over by canvas callbacks
   private rs = {
@@ -82,7 +81,7 @@ export class GraphCanvas extends LitElement {
     colorMode: 'type' as 'none' | 'directory' | 'type',
     groups: [] as GroupRule[],
     focusNodeId: null as string | null,
-    focusDepth: 1,
+    graphScope: 'full' as GraphScope,
   };
 
   private readonly getNodeSize = scaleLinear()
@@ -297,8 +296,8 @@ export class GraphCanvas extends LitElement {
       if (this.rs.augmented) this._updateGraphData();
     }
 
-    if (changed.has('focusDepth')) {
-      this.rs.focusDepth = this.focusDepth;
+    if (changed.has('graphScope')) {
+      this.rs.graphScope = this.graphScope;
       if (this.rs.augmented && this.rs.focusNodeId) this._updateGraphData();
     }
 
@@ -365,8 +364,9 @@ export class GraphCanvas extends LitElement {
         .map(n => n.id)
     );
 
-    if (this.rs.focusNodeId) {
-      const focusSet = getFocusSubset(this.rs.augmented, this.rs.focusNodeId, this.rs.focusDepth);
+    if (this.rs.focusNodeId && this.rs.graphScope !== 'full') {
+      const depth = (this.rs.graphScope as { depth: number }).depth;
+      const focusSet = getFocusSubset(this.rs.augmented, this.rs.focusNodeId, depth);
       for (const id of nodeIdsToAdd) {
         if (!focusSet.has(id)) nodeIdsToAdd.delete(id);
       }

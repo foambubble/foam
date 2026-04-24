@@ -227,26 +227,6 @@ const selectedRoute =
     },
   });
 
-  const attachControlPanelHider = graph => {
-    const hide = () => {
-      graph.showControls = false;
-      const controlPanel = graph.shadowRoot?.querySelector('foam-control-panel');
-      if (controlPanel instanceof HTMLElement) {
-        controlPanel.style.display = 'none';
-      }
-    };
-
-    hide();
-    requestAnimationFrame(hide);
-    window.setTimeout(hide, 0);
-
-    if (graph.shadowRoot && graph.dataset.foamGraphObserverAttached !== 'true') {
-      const observer = new MutationObserver(hide);
-      observer.observe(graph.shadowRoot, { childList: true, subtree: true });
-      graph.dataset.foamGraphObserverAttached = 'true';
-    }
-  };
-
   const toSiteUrl = route =>
     new URL(
       joinBasePath(siteBasePath, normalizeRoute(route)),
@@ -263,31 +243,20 @@ const selectedRoute =
 
   const initGraph = async graph => {
     try {
-      attachControlPanelHider(graph);
-
-      graph.graphData = await graphDataPromise;
-      graph.graphStyle = buildGraphStyle();
-      graph.selection = {
-        ...graph.selection,
-        enableRefocus: false,
-        enableZoom: false,
-      };
-      attachControlPanelHider(graph);
-
       const currentRoute = normalizeRoute(
         graph.dataset.currentRoute || window.location.pathname,
         siteBasePath
       );
 
-      requestAnimationFrame(() => {
-        if (typeof graph.selectNote === 'function') {
-          graph.selectNote(currentRoute);
-        }
-      });
+      graph.graphData = await graphDataPromise;
+      graph.graphStyle = buildGraphStyle();
+      graph.showControls = false;
+      graph.focusNodeId = currentRoute;
+      graph.graphScope = { depth: 1 };
+      graph.selection = { neighborDepth: 1, centerOnSelect: false, zoomOnSelect: false };
 
       const themeObserver = new MutationObserver(() => {
         graph.graphStyle = buildGraphStyle();
-        attachControlPanelHider(graph);
       });
       themeObserver.observe(document.documentElement, {
         attributes: true,

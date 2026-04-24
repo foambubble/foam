@@ -4,7 +4,7 @@ import { getDefaultStyle } from './lib/defaults';
 import { augmentGraphInfo } from './lib/graph-utils';
 import { mergeStyles, resolveStyle } from './lib/style';
 import type { GraphData, GraphStyle, GroupRule } from './protocol';
-import type { AugmentedGraph, ResolvedStyle, Forces, Selection, LinkAnimation } from './lib/types';
+import type { AugmentedGraph, ResolvedStyle, Forces, Selection, GraphScope, LinkAnimation } from './lib/types';
 import './components/graph-canvas';
 import './components/control-panel';
 
@@ -23,6 +23,8 @@ export class FoamGraph extends LitElement {
   @property({ type: Object }) graphData: GraphData | null = null;
   @property({ type: Object }) graphStyle: GraphStyle | null = null;
   @property({ type: Boolean }) showControls = true;
+  @property({ type: String }) focusNodeId: string | null = null;
+  @property({ type: Object }) graphScope: GraphScope = 'full';
 
   // Internal control state
   @state() private augmentedGraph: AugmentedGraph | null = null;
@@ -44,8 +46,6 @@ export class FoamGraph extends LitElement {
     neighborDepth: 1,
     centerOnSelect: true,
     zoomOnSelect: true,
-    focusGraph: false,
-    focusDepth: 1,
   };
   @state() private localStylePatch: GraphStyle = {};
   @state() private groups: GroupRule[] = [];
@@ -120,8 +120,8 @@ export class FoamGraph extends LitElement {
         .nodeSizeMultiplier=${this.nodeSizeMultiplier}
         .linkWidthMultiplier=${this.linkWidthMultiplier}
         .animateLinks=${this.animateLinks}
-        .focusNodeId=${this.selection.focusGraph ? this.selectedNodeId : null}
-        .focusDepth=${this.selection.focusDepth}
+        .focusNodeId=${this.focusNodeId ?? (this.graphScope !== 'full' ? this.selectedNodeId : null)}
+        .graphScope=${this.graphScope}
         @node-click=${(e: CustomEvent) => this._onNodeClick(e.detail)}
       ></foam-graph-canvas>
       ${this.showControls
@@ -138,6 +138,8 @@ export class FoamGraph extends LitElement {
             .animateLinks=${this.animateLinks}
             .forces=${this.forces}
             .selection=${this.selection}
+            .graphScope=${this.graphScope}
+            @graph-scope-change=${(e: CustomEvent) => (this.graphScope = e.detail)}
             @style-change=${(e: CustomEvent) => this._onStyleChange(e.detail)}
             @show-nodes-of-type-change=${(e: CustomEvent) => (this.showNodesOfType = e.detail)}
             @groups-change=${(e: CustomEvent) => (this.groups = e.detail)}

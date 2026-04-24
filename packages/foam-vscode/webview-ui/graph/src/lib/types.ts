@@ -51,10 +51,10 @@ export interface Forces {
 
 export type LinkAnimation = 'forward' | 'off' | 'reverse';
 
+export type GraphScope = 'full' | { depth: number };
+
 export interface Selection {
   neighborDepth: number;
   centerOnSelect: boolean;
   zoomOnSelect: boolean;
-  focusGraph: boolean;
-  focusDepth: number;
 }

@@ -7,6 +7,7 @@ import type {
   ResolvedStyle,
   Forces,
   Selection,
+  GraphScope,
   AugmentedGraph,
 } from '../lib/types';
 import type { GroupRule, GroupMatch } from '../protocol';
@@ -338,9 +339,8 @@ export class ControlPanel extends LitElement {
     neighborDepth: 1,
     centerOnSelect: true,
     zoomOnSelect: true,
-    focusGraph: false,
-    focusDepth: 1,
   };
+  @property({ type: Object }) graphScope: GraphScope = 'full';
 
   private static readonly _SPECIAL_TYPES = [
     'tag',
@@ -796,15 +796,16 @@ export class ControlPanel extends LitElement {
           <label class="checkbox-row">
             <input
               type="checkbox"
-              .checked=${this.selection.focusGraph}
+              .checked=${this.graphScope !== 'full'}
               @change=${(e: Event) =>
-                this._emitSelectionChange({
-                  focusGraph: (e.target as HTMLInputElement).checked,
-                })}
+                this._emit(
+                  'graph-scope-change',
+                  (e.target as HTMLInputElement).checked ? { depth: 1 } : 'full'
+                )}
             />
             <span>Focus graph</span>
           </label>
-          ${this.selection.focusGraph
+          ${this.graphScope !== 'full'
             ? html`<label class="slider-row">
                 <span>Focus depth</span>
                 <input
@@ -812,15 +813,13 @@ export class ControlPanel extends LitElement {
                   min="1"
                   max="3"
                   step="1"
-                  .value=${String(this.selection.focusDepth)}
+                  .value=${String((this.graphScope as { depth: number }).depth)}
                   @input=${(e: Event) =>
-                    this._emitSelectionChange({
-                      focusDepth: parseInt(
-                        (e.target as HTMLInputElement).value
-                      ),
+                    this._emit('graph-scope-change', {
+                      depth: parseInt((e.target as HTMLInputElement).value),
                     })}
                 />
-                <span class="value">${this.selection.focusDepth}</span>
+                <span class="value">${(this.graphScope as { depth: number }).depth}</span>
               </label>`
             : null}
         </div>

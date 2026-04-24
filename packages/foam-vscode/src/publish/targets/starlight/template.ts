@@ -564,6 +564,33 @@ starlight-menu-button button {
   font-size: var(--sl-text-xs);
   padding: 0.1rem 0.55rem;
 }
+
+/* TOC: style like left sidebar */
+starlight-toc nav h2 {
+  color: var(--sl-color-white);
+  font-size: var(--sl-text-xs);
+  font-weight: 600;
+  letter-spacing: 0.075em;
+  text-transform: uppercase;
+  margin: 0 0 0.5rem;
+}
+
+starlight-toc a {
+  color: var(--sl-color-gray-2);
+  font-size: var(--sl-text-sm);
+  text-decoration: none;
+}
+
+starlight-toc a:hover {
+  background-color: var(--sl-color-bg-sidebar);
+  color: var(--sl-color-white);
+}
+
+starlight-toc a[aria-current='true'] {
+  background-color: var(--sl-color-bg-sidebar);
+  color: var(--sl-color-text-accent);
+  font-weight: 600;
+}
 `,
   'src/content.config.ts': `import { defineCollection } from 'astro:content';
 import { docsLoader } from '@astrojs/starlight/loaders';

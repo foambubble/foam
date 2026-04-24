@@ -12,6 +12,7 @@ import { scaleLinear } from 'd3-scale';
 import { Painter } from '../lib/painter';
 import {
   computeGraphStates,
+  getFocusSubset,
   getLinkNodeId,
 } from '../lib/graph-utils';
 import { getNodeFillAndBorder, getLinkColor, getNodeLabelColor } from '../lib/colors';
@@ -48,8 +49,10 @@ export class GraphCanvas extends LitElement {
   };
   @property({ type: Object }) selection: Selection = {
     neighborDepth: 1,
-    enableRefocus: true,
-    enableZoom: true,
+    centerOnSelect: true,
+    zoomOnSelect: true,
+    focusGraph: false,
+    focusDepth: 1,
   };
   @property({ type: Number }) textFade: number = 0;
   @property({ type: Number }) nodeFontSizeMultiplier: number = 1;
@@ -57,6 +60,8 @@ export class GraphCanvas extends LitElement {
   @property({ type: Number }) linkWidthMultiplier: number = 2;
   @property({ type: String }) animateLinks: LinkAnimation = 'forward';
   @property({ type: Array }) groups: GroupRule[] = [];
+  @property({ type: String }) focusNodeId: string | null = null;
+  @property({ type: Number }) focusDepth: number = 1;
 
   // Mutable rendering state — closed over by canvas callbacks
   private rs = {
@@ -76,6 +81,8 @@ export class GraphCanvas extends LitElement {
     animateLinks: 'forward' as LinkAnimation,
     colorMode: 'type' as 'none' | 'directory' | 'type',
     groups: [] as GroupRule[],
+    focusNodeId: null as string | null,
+    focusDepth: 1,
   };
 
   private readonly getNodeSize = scaleLinear()
@@ -285,6 +292,16 @@ export class GraphCanvas extends LitElement {
       );
     }
 
+    if (changed.has('focusNodeId')) {
+      this.rs.focusNodeId = this.focusNodeId;
+      if (this.rs.augmented) this._updateGraphData();
+    }
+
+    if (changed.has('focusDepth')) {
+      this.rs.focusDepth = this.focusDepth;
+      if (this.rs.augmented && this.rs.focusNodeId) this._updateGraphData();
+    }
+
     if (changed.has('augmentedGraph')) {
       if (!this.augmentedGraph) return;
       this.rs.augmented = this.augmentedGraph;
@@ -308,10 +325,10 @@ export class GraphCanvas extends LitElement {
     const nodes = this.graphInstance.graphData().nodes as any[];
     const node = nodes.find(n => n.id === noteId);
     if (node) {
-      if (this.rs.selection.enableRefocus) {
+      if (this.rs.selection.centerOnSelect) {
         this.graphInstance.centerAt(node.x, node.y, 300);
       }
-      if (this.rs.selection.enableZoom) {
+      if (this.rs.selection.zoomOnSelect) {
         this.graphInstance.zoom(3, 300);
       }
       this._selectNode(noteId, false);
@@ -347,6 +364,13 @@ export class GraphCanvas extends LitElement {
         })
         .map(n => n.id)
     );
+
+    if (this.rs.focusNodeId) {
+      const focusSet = getFocusSubset(this.rs.augmented, this.rs.focusNodeId, this.rs.focusDepth);
+      for (const id of nodeIdsToAdd) {
+        if (!focusSet.has(id)) nodeIdsToAdd.delete(id);
+      }
+    }
 
     const nodeIdsToRemove = new Set<string>();
     for (const node of this.rs.data.nodes) {

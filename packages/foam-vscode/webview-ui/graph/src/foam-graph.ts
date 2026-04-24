@@ -26,6 +26,7 @@ export class FoamGraph extends LitElement {
 
   // Internal control state
   @state() private augmentedGraph: AugmentedGraph | null = null;
+  @state() private selectedNodeId: string | null = null;
   @state() private showNodesOfType: Record<string, boolean> = {
     placeholder: true,
     image: false,
@@ -41,8 +42,10 @@ export class FoamGraph extends LitElement {
   @state() private forces: Forces = { collide: 1, repel: 10, link: 30, velocityDecay: 0.4 };
   @property({ type: Object }) selection: Selection = {
     neighborDepth: 1,
-    enableRefocus: true,
-    enableZoom: true,
+    centerOnSelect: true,
+    zoomOnSelect: true,
+    focusGraph: false,
+    focusDepth: 1,
   };
   @state() private localStylePatch: GraphStyle = {};
   @state() private groups: GroupRule[] = [];
@@ -117,6 +120,8 @@ export class FoamGraph extends LitElement {
         .nodeSizeMultiplier=${this.nodeSizeMultiplier}
         .linkWidthMultiplier=${this.linkWidthMultiplier}
         .animateLinks=${this.animateLinks}
+        .focusNodeId=${this.selection.focusGraph ? this.selectedNodeId : null}
+        .focusDepth=${this.selection.focusDepth}
         @node-click=${(e: CustomEvent) => this._onNodeClick(e.detail)}
       ></foam-graph-canvas>
       ${this.showControls
@@ -154,6 +159,7 @@ export class FoamGraph extends LitElement {
   }
 
   private _onNodeClick(nodeId: string) {
+    this.selectedNodeId = nodeId;
     this.dispatchEvent(new CustomEvent('node-click', { detail: nodeId, bubbles: true, composed: true }));
   }
 

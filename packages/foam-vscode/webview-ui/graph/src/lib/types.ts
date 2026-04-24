@@ -53,6 +53,8 @@ export type LinkAnimation = 'forward' | 'off' | 'reverse';
 
 export interface Selection {
   neighborDepth: number;
-  enableRefocus: boolean;
-  enableZoom: boolean;
+  centerOnSelect: boolean;
+  zoomOnSelect: boolean;
+  focusGraph: boolean;
+  focusDepth: number;
 }

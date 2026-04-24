@@ -144,6 +144,14 @@ export function getLinkState(
   return 'lessened';
 }
 
+export function getFocusSubset(
+  augmentedGraph: AugmentedGraph,
+  focusNodeId: string,
+  focusDepth: number
+): Set<string> {
+  return getNeighbors(focusNodeId, focusDepth, augmentedGraph.nodeInfo);
+}
+
 export function computeGraphStates(
   augmentedGraph: AugmentedGraph,
   selectedNodes: Set<string>,

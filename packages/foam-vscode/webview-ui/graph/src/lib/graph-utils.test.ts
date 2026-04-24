@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { augmentGraphInfo, computeGraphStates } from './graph-utils';
+import { augmentGraphInfo, computeGraphStates, getFocusSubset } from './graph-utils';
 import { makeGraph } from '../test-utils';
 
 describe('augmentGraphInfo', () => {
@@ -258,5 +258,66 @@ describe('computeGraphStates', () => {
     expect(nodeStates.get('note-2')).toBe('regular');  // depth-1 neighbor
     expect(nodeStates.get('note-3')).toBe('regular');  // depth-2 neighbor
     expect(nodeStates.get('note-4')).toBe('lessened'); // unreachable
+  });
+});
+
+describe('getFocusSubset', () => {
+  it('should return the focus node and its depth-1 neighbors', () => {
+    const graph = augmentGraphInfo(makeGraph({
+      nodeInfo: {
+        'note-1': { id: 'note-1', type: 'note', title: 'Note 1', properties: {}, tags: [] },
+        'note-2': { id: 'note-2', type: 'note', title: 'Note 2', properties: {}, tags: [] },
+        'note-3': { id: 'note-3', type: 'note', title: 'Note 3', properties: {}, tags: [] },
+        'note-4': { id: 'note-4', type: 'note', title: 'Note 4', properties: {}, tags: [] },
+      },
+      links: [
+        { source: 'note-1', target: 'note-2' },
+        { source: 'note-1', target: 'note-3' },
+      ],
+    }));
+
+    const subset = getFocusSubset(graph, 'note-1', 1);
+
+    expect(subset.has('note-1')).toBe(true);
+    expect(subset.has('note-2')).toBe(true);
+    expect(subset.has('note-3')).toBe(true);
+    expect(subset.has('note-4')).toBe(false); // disconnected
+  });
+
+  it('should return only the focus node itself when it has no neighbors', () => {
+    const graph = augmentGraphInfo(makeGraph({
+      nodeInfo: {
+        'note-1': { id: 'note-1', type: 'note', title: 'Note 1', properties: {}, tags: [] },
+        'note-2': { id: 'note-2', type: 'note', title: 'Note 2', properties: {}, tags: [] },
+      },
+    }));
+
+    const subset = getFocusSubset(graph, 'note-1', 1);
+
+    expect(subset.has('note-1')).toBe(true);
+    expect(subset.has('note-2')).toBe(false);
+    expect(subset.size).toBe(1);
+  });
+
+  it('should expand to depth-2 neighbors when focusDepth=2', () => {
+    const graph = augmentGraphInfo(makeGraph({
+      nodeInfo: {
+        'note-1': { id: 'note-1', type: 'note', title: 'Note 1', properties: {}, tags: [] },
+        'note-2': { id: 'note-2', type: 'note', title: 'Note 2', properties: {}, tags: [] },
+        'note-3': { id: 'note-3', type: 'note', title: 'Note 3', properties: {}, tags: [] },
+        'note-4': { id: 'note-4', type: 'note', title: 'Note 4', properties: {}, tags: [] },
+      },
+      links: [
+        { source: 'note-1', target: 'note-2' },
+        { source: 'note-2', target: 'note-3' },
+      ],
+    }));
+
+    const subset = getFocusSubset(graph, 'note-1', 2);
+
+    expect(subset.has('note-1')).toBe(true);
+    expect(subset.has('note-2')).toBe(true);
+    expect(subset.has('note-3')).toBe(true);  // depth-2
+    expect(subset.has('note-4')).toBe(false); // unreachable
   });
 });

@@ -1,5 +1,5 @@
 import type { GraphData } from '../protocol';
-import type { AugmentedGraph, AugmentedNode, AugmentedLink } from './types';
+import type { AugmentedGraph, AugmentedNode, AugmentedLink, GraphStates, NodeState, LinkState } from './types';
 
 export function getLinkNodeId(endpoint: string | AugmentedNode): string {
   return typeof endpoint === 'object' ? endpoint.id : endpoint;
@@ -143,4 +143,32 @@ export function getLinkState(
     }
   }
   return 'lessened';
+}
+
+export function computeGraphStates(
+  augmentedGraph: AugmentedGraph,
+  selectedNodes: Set<string>,
+  hoverNode: string | null,
+  neighborDepth: number
+): GraphStates {
+  const { focusNodes, focusLinks } = computeFocusSets(
+    selectedNodes,
+    hoverNode,
+    neighborDepth,
+    augmentedGraph.nodeInfo,
+    augmentedGraph.links
+  );
+
+  const nodeStates = new Map<string, NodeState>();
+  for (const id of Object.keys(augmentedGraph.nodeInfo)) {
+    nodeStates.set(id, getNodeState(id, selectedNodes, hoverNode, focusNodes));
+  }
+
+  const linkStates = new Map<string, LinkState>();
+  for (const link of augmentedGraph.links) {
+    const key = `${getLinkNodeId(link.source)}->${getLinkNodeId(link.target)}`;
+    linkStates.set(key, getLinkState(link, focusNodes, focusLinks));
+  }
+
+  return { nodeStates, linkStates };
 }

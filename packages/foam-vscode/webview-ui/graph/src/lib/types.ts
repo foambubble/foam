@@ -36,6 +36,12 @@ export interface ResolvedStyle {
 export type NodeState = 'regular' | 'highlighted' | 'lessened';
 export type LinkState = 'regular' | 'highlighted' | 'lessened';
 
+export interface GraphStates {
+  nodeStates: Map<string, NodeState>;
+  /** Keyed by "sourceId->targetId" for identity-safe lookup across copied link objects. */
+  linkStates: Map<string, LinkState>;
+}
+
 export interface Forces {
   collide: number;
   repel: number;

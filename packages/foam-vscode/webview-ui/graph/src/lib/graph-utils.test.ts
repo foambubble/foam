@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { augmentGraphInfo } from './graph-utils';
+import { augmentGraphInfo, computeGraphStates } from './graph-utils';
 import { makeGraph } from '../test-utils';
 
 describe('augmentGraphInfo', () => {
@@ -138,5 +138,120 @@ describe('augmentGraphInfo', () => {
 
     expect(augmented.nodeInfo['my-tag'].neighbors).toContain('note-1');
     expect(augmented.nodeInfo['note-1'].neighbors).toContain('my-tag');
+  });
+});
+
+describe('computeGraphStates', () => {
+  it('should mark all nodes and links as regular when nothing is selected', () => {
+    const graph = augmentGraphInfo(makeGraph({
+      nodeInfo: {
+        'note-1': { id: 'note-1', type: 'note', title: 'Note 1', properties: {}, tags: [] },
+        'note-2': { id: 'note-2', type: 'note', title: 'Note 2', properties: {}, tags: [] },
+      },
+      links: [{ source: 'note-1', target: 'note-2' }],
+    }));
+
+    const { nodeStates, linkStates } = computeGraphStates(graph, new Set(), null, 1);
+
+    expect(nodeStates.get('note-1')).toBe('regular');
+    expect(nodeStates.get('note-2')).toBe('regular');
+    expect(linkStates.get('note-1->note-2')).toBe('regular');
+  });
+
+  it('should highlight the selected node and mark unrelated nodes as lessened', () => {
+    const graph = augmentGraphInfo(makeGraph({
+      nodeInfo: {
+        'note-1': { id: 'note-1', type: 'note', title: 'Note 1', properties: {}, tags: [] },
+        'note-2': { id: 'note-2', type: 'note', title: 'Note 2', properties: {}, tags: [] },
+        'note-3': { id: 'note-3', type: 'note', title: 'Note 3', properties: {}, tags: [] },
+      },
+      links: [{ source: 'note-1', target: 'note-2' }],
+    }));
+
+    const { nodeStates } = computeGraphStates(graph, new Set(['note-1']), null, 1);
+
+    expect(nodeStates.get('note-1')).toBe('highlighted');
+    expect(nodeStates.get('note-2')).toBe('regular');  // neighbor
+    expect(nodeStates.get('note-3')).toBe('lessened'); // unrelated
+  });
+
+  it('should highlight the hovered node the same way as a selected node', () => {
+    const graph = augmentGraphInfo(makeGraph({
+      nodeInfo: {
+        'note-1': { id: 'note-1', type: 'note', title: 'Note 1', properties: {}, tags: [] },
+        'note-2': { id: 'note-2', type: 'note', title: 'Note 2', properties: {}, tags: [] },
+        'note-3': { id: 'note-3', type: 'note', title: 'Note 3', properties: {}, tags: [] },
+      },
+      links: [{ source: 'note-1', target: 'note-2' }],
+    }));
+
+    const { nodeStates } = computeGraphStates(graph, new Set(), 'note-1', 1);
+
+    expect(nodeStates.get('note-1')).toBe('highlighted');
+    expect(nodeStates.get('note-2')).toBe('regular');
+    expect(nodeStates.get('note-3')).toBe('lessened');
+  });
+
+  it('should use the union of neighborhoods when multiple nodes are selected', () => {
+    const graph = augmentGraphInfo(makeGraph({
+      nodeInfo: {
+        'note-1': { id: 'note-1', type: 'note', title: 'Note 1', properties: {}, tags: [] },
+        'note-2': { id: 'note-2', type: 'note', title: 'Note 2', properties: {}, tags: [] },
+        'note-3': { id: 'note-3', type: 'note', title: 'Note 3', properties: {}, tags: [] },
+        'note-4': { id: 'note-4', type: 'note', title: 'Note 4', properties: {}, tags: [] },
+      },
+      links: [
+        { source: 'note-1', target: 'note-2' },
+        { source: 'note-3', target: 'note-4' },
+      ],
+    }));
+
+    const { nodeStates } = computeGraphStates(graph, new Set(['note-1', 'note-3']), null, 1);
+
+    expect(nodeStates.get('note-1')).toBe('highlighted');
+    expect(nodeStates.get('note-2')).toBe('regular');  // neighbor of note-1
+    expect(nodeStates.get('note-3')).toBe('highlighted');
+    expect(nodeStates.get('note-4')).toBe('regular');  // neighbor of note-3
+  });
+
+  it('should mark links between focus nodes as highlighted and others as lessened', () => {
+    const graph = augmentGraphInfo(makeGraph({
+      nodeInfo: {
+        'note-1': { id: 'note-1', type: 'note', title: 'Note 1', properties: {}, tags: [] },
+        'note-2': { id: 'note-2', type: 'note', title: 'Note 2', properties: {}, tags: [] },
+        'note-3': { id: 'note-3', type: 'note', title: 'Note 3', properties: {}, tags: [] },
+      },
+      links: [
+        { source: 'note-1', target: 'note-2' },
+        { source: 'note-2', target: 'note-3' },
+      ],
+    }));
+
+    const { linkStates } = computeGraphStates(graph, new Set(['note-1']), null, 1);
+
+    expect(linkStates.get('note-1->note-2')).toBe('highlighted'); // both endpoints in focus
+    expect(linkStates.get('note-2->note-3')).toBe('lessened');    // note-3 not in focus
+  });
+
+  it('should expand neighborhood with neighborDepth=2', () => {
+    const graph = augmentGraphInfo(makeGraph({
+      nodeInfo: {
+        'note-1': { id: 'note-1', type: 'note', title: 'Note 1', properties: {}, tags: [] },
+        'note-2': { id: 'note-2', type: 'note', title: 'Note 2', properties: {}, tags: [] },
+        'note-3': { id: 'note-3', type: 'note', title: 'Note 3', properties: {}, tags: [] },
+        'note-4': { id: 'note-4', type: 'note', title: 'Note 4', properties: {}, tags: [] },
+      },
+      links: [
+        { source: 'note-1', target: 'note-2' },
+        { source: 'note-2', target: 'note-3' },
+      ],
+    }));
+
+    const { nodeStates } = computeGraphStates(graph, new Set(['note-1']), null, 2);
+
+    expect(nodeStates.get('note-1')).toBe('highlighted');
+    expect(nodeStates.get('note-2')).toBe('regular');  // depth-1 neighbor
+    expect(nodeStates.get('note-3')).toBe('regular');  // depth-2 neighbor
+    expect(nodeStates.get('note-4')).toBe('lessened'); // unreachable
   });
 });

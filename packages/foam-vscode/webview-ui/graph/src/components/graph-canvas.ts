@@ -11,15 +11,14 @@ import {
 import { scaleLinear } from 'd3-scale';
 import { Painter } from '../lib/painter';
 import {
-  computeFocusSets,
-  getNodeState,
-  getLinkState,
+  computeGraphStates,
   getLinkNodeId,
 } from '../lib/graph-utils';
 import { getNodeFillAndBorder, getLinkColor, getNodeLabelColor } from '../lib/colors';
 import type {
   AugmentedGraph,
   AugmentedLink,
+  GraphStates,
   ResolvedStyle,
   Forces,
   Selection,
@@ -65,8 +64,7 @@ export class GraphCanvas extends LitElement {
     data: { nodes: [] as { id: string }[], links: [] as AugmentedLink[] },
     selectedNodes: new Set<string>(),
     hoverNode: null as string | null,
-    focusNodes: new Set<string>(),
-    focusLinks: new Set<AugmentedLink>(),
+    graphStates: null as GraphStates | null,
     style: {} as ResolvedStyle,
     showNodesOfType: {} as Record<string, boolean>,
     forces: {} as Forces,
@@ -136,11 +134,9 @@ export class GraphCanvas extends LitElement {
       .linkDirectionalParticleSpeed(this.rs.animateLinks === 'reverse' ? -0.004 : 0.004)
       .linkDirectionalParticleWidth(link => {
         if (this.rs.animateLinks === 'off') return 0;
-        const state = getLinkState(
-          link as AugmentedLink,
-          this.rs.focusNodes,
-          this.rs.focusLinks
-        );
+        const augLink = link as AugmentedLink;
+        const key = `${getLinkNodeId(augLink.source)}->${getLinkNodeId(augLink.target)}`;
+        const state = this.rs.graphStates?.linkStates.get(key) ?? 'regular';
         return state === 'highlighted' ? this.rs.style.particleWidth : 0;
       })
       .nodeCanvasObject(
@@ -149,12 +145,7 @@ export class GraphCanvas extends LitElement {
           if (!info) return;
 
           const size = this.getNodeSize(info.neighbors.length) * this.rs.nodeSizeMultiplier;
-          const state = getNodeState(
-            node.id,
-            this.rs.selectedNodes,
-            this.rs.hoverNode,
-            this.rs.focusNodes
-          );
+          const state = this.rs.graphStates?.nodeStates.get(node.id) ?? 'regular';
           const { fill, border } = getNodeFillAndBorder(
             info,
             state,
@@ -191,11 +182,8 @@ export class GraphCanvas extends LitElement {
       })
       .linkColor((link: any) => {
         const augLink = link as AugmentedLink;
-        const state = getLinkState(
-          augLink,
-          this.rs.focusNodes,
-          this.rs.focusLinks
-        );
+        const key = `${getLinkNodeId(augLink.source)}->${getLinkNodeId(augLink.target)}`;
+        const state = this.rs.graphStates?.linkStates.get(key) ?? 'regular';
         const srcInfo =
           this.rs.augmented?.nodeInfo[getLinkNodeId(augLink.source)];
         const tgtInfo =
@@ -332,15 +320,12 @@ export class GraphCanvas extends LitElement {
 
   private _updateFocusSets() {
     if (!this.rs.augmented) return;
-    const { focusNodes, focusLinks } = computeFocusSets(
+    this.rs.graphStates = computeGraphStates(
+      this.rs.augmented,
       this.rs.selectedNodes,
       this.rs.hoverNode,
-      this.rs.selection.neighborDepth,
-      this.rs.augmented.nodeInfo,
-      this.rs.augmented.links
+      this.rs.selection.neighborDepth
     );
-    this.rs.focusNodes = focusNodes;
-    this.rs.focusLinks = focusLinks;
   }
 
   private _selectNode(nodeId: string | null, isAppend: boolean) {

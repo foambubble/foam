@@ -140,10 +140,10 @@ const selectedRoute =
 
   <div class="right-sidebar-panel sl-hidden lg:sl-block">
     <div class="sl-container">
-      <foam-graph
+      <!-- foam-graph
         class="foam-sidebar-graph"
         data-current-route={selectedRoute}
-      ></foam-graph>
+      ></foam-graph -->
 
       {toc && <TableOfContents />}
     </div>

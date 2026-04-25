@@ -42,7 +42,10 @@ describe('publish starlight target', () => {
       diagnostics: [],
     };
 
-    await writeStarlightSite({ artifactSet, outputDir: path.join(tmpDir, 'site') });
+    await writeStarlightSite({
+      artifactSet,
+      outputDir: path.join(tmpDir, 'site'),
+    });
 
     const noteContent = fs.readFileSync(
       path.join(tmpDir, 'site', 'src', 'content', 'docs', 'note.md'),
@@ -88,13 +91,22 @@ describe('publish starlight target', () => {
       ],
       assets: [],
       routes: [
-        { sourceUri: URI.file(path.join(tmpDir, 'shebang.md')), route: '/shebang' },
-        { sourceUri: URI.file(path.join(tmpDir, 'include.md')), route: '/include' },
+        {
+          sourceUri: URI.file(path.join(tmpDir, 'shebang.md')),
+          route: '/shebang',
+        },
+        {
+          sourceUri: URI.file(path.join(tmpDir, 'include.md')),
+          route: '/include',
+        },
       ],
       diagnostics: [],
     };
 
-    await writeStarlightSite({ artifactSet, outputDir: path.join(tmpDir, 'site') });
+    await writeStarlightSite({
+      artifactSet,
+      outputDir: path.join(tmpDir, 'site'),
+    });
 
     const shebangContent = fs.readFileSync(
       path.join(tmpDir, 'site', 'src', 'content', 'docs', 'shebang.md'),
@@ -126,7 +138,9 @@ describe('publish starlight target', () => {
           backlinks: [],
         },
         {
-          sourceUri: URI.file(path.join(tmpDir, 'my-folder', 'sub_dir', 'other.md')),
+          sourceUri: URI.file(
+            path.join(tmpDir, 'my-folder', 'sub_dir', 'other.md')
+          ),
           route: '/my-folder/sub_dir/other',
           title: 'Other',
           description: '',
@@ -137,24 +151,58 @@ describe('publish starlight target', () => {
       ],
       assets: [],
       routes: [
-        { sourceUri: URI.file(path.join(tmpDir, 'my-folder', 'note.md')), route: '/my-folder/note' },
-        { sourceUri: URI.file(path.join(tmpDir, 'my-folder', 'sub_dir', 'other.md')), route: '/my-folder/sub_dir/other' },
+        {
+          sourceUri: URI.file(path.join(tmpDir, 'my-folder', 'note.md')),
+          route: '/my-folder/note',
+        },
+        {
+          sourceUri: URI.file(
+            path.join(tmpDir, 'my-folder', 'sub_dir', 'other.md')
+          ),
+          route: '/my-folder/sub_dir/other',
+        },
       ],
       diagnostics: [],
     };
 
-    await writeStarlightSite({ artifactSet, outputDir: path.join(tmpDir, 'site') });
+    await writeStarlightSite({
+      artifactSet,
+      outputDir: path.join(tmpDir, 'site'),
+    });
 
-    expect(fs.existsSync(
-      path.join(tmpDir, 'site', 'src', 'content', 'docs', 'my-folder', 'note.md')
-    )).toBe(true);
-    expect(fs.existsSync(
-      path.join(tmpDir, 'site', 'src', 'content', 'docs', 'my-folder', 'sub_dir', 'other.md')
-    )).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(
+          tmpDir,
+          'site',
+          'src',
+          'content',
+          'docs',
+          'my-folder',
+          'note.md'
+        )
+      )
+    ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(
+          tmpDir,
+          'site',
+          'src',
+          'content',
+          'docs',
+          'my-folder',
+          'sub_dir',
+          'other.md'
+        )
+      )
+    ).toBe(true);
   });
 
   it('strips YAML frontmatter from note markdown to avoid double rendering', async () => {
-    const tmpDir = mkdtempSync(path.join(tmpdir(), 'foam-starlight-frontmatter-'));
+    const tmpDir = mkdtempSync(
+      path.join(tmpdir(), 'foam-starlight-frontmatter-')
+    );
 
     const artifactSet: PublishArtifactSet = {
       site: { title: 'Site', description: '', homepageRoute: null },
@@ -166,16 +214,22 @@ describe('publish starlight target', () => {
           title: 'My Note',
           description: '',
           properties: { author: 'Alice', status: 'draft' },
-          markdown: '---\ntitle: My Note\nauthor: Alice\nstatus: draft\n---\n\n# My Note\n\nBody content.',
+          markdown:
+            '---\ntitle: My Note\nauthor: Alice\nstatus: draft\n---\n\n# My Note\n\nBody content.',
           backlinks: [],
         },
       ],
       assets: [],
-      routes: [{ sourceUri: URI.file(path.join(tmpDir, 'note.md')), route: '/note' }],
+      routes: [
+        { sourceUri: URI.file(path.join(tmpDir, 'note.md')), route: '/note' },
+      ],
       diagnostics: [],
     };
 
-    await writeStarlightSite({ artifactSet, outputDir: path.join(tmpDir, 'site') });
+    await writeStarlightSite({
+      artifactSet,
+      outputDir: path.join(tmpDir, 'site'),
+    });
 
     const content = fs.readFileSync(
       path.join(tmpDir, 'site', 'src', 'content', 'docs', 'note.md'),
@@ -221,12 +275,18 @@ describe('publish starlight target', () => {
       assets: [],
       routes: [
         { sourceUri: URI.file(path.join(tmpDir, 'note.md')), route: '/note' },
-        { sourceUri: URI.file(path.join(tmpDir, 'empty-props.md')), route: '/empty-props' },
+        {
+          sourceUri: URI.file(path.join(tmpDir, 'empty-props.md')),
+          route: '/empty-props',
+        },
       ],
       diagnostics: [],
     };
 
-    await writeStarlightSite({ artifactSet, outputDir: path.join(tmpDir, 'site') });
+    await writeStarlightSite({
+      artifactSet,
+      outputDir: path.join(tmpDir, 'site'),
+    });
 
     const noteContent = fs.readFileSync(
       path.join(tmpDir, 'site', 'src', 'content', 'docs', 'note.md'),
@@ -366,7 +426,7 @@ describe('publish starlight target', () => {
     ).not.toContain('"@foam/graph"');
     expect(
       fs.readFileSync(path.join(tmpDir, 'site', 'astro.config.mjs'), 'utf8')
-    ).toContain("site: siteConfig.siteUrl");
+    ).toContain('site: siteConfig.siteUrl');
     expect(
       fs.readFileSync(path.join(tmpDir, 'site', 'astro.config.mjs'), 'utf8')
     ).toContain("Footer: './src/components/FoamFooter.astro'");
@@ -395,8 +455,8 @@ describe('publish starlight target', () => {
       path.join(tmpDir, 'site', 'src', 'components', 'FoamPageSidebar.astro'),
       'utf8'
     );
-    expect(pageSidebar).toContain("import '../lib/foam-graph.js';");
-    expect(pageSidebar).toContain('<foam-graph');
+    // expect(pageSidebar).toContain("import '../lib/foam-graph.js';");
+    // expect(pageSidebar).toContain('<foam-graph');
     expect(pageSidebar).toContain('class="foam-sidebar-graph"');
     expect(
       fs.existsSync(

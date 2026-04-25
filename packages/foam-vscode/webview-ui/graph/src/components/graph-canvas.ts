@@ -11,23 +11,19 @@ import {
 import { scaleLinear } from 'd3-scale';
 import { Painter } from '../lib/painter';
 import {
-  computeGraphStates,
-  getFocusSubset,
-  getLinkNodeId,
-} from '../lib/graph-utils';
-import { getNodeFillAndBorder, getLinkColor, getNodeLabelColor } from '../lib/colors';
+  getNodeFillAndBorder,
+  getLinkColor,
+  getNodeLabelColor,
+} from '../lib/colors';
+import { GraphModelLink } from '../lib/types';
 import type {
-  AugmentedGraph,
-  AugmentedLink,
-  GraphScope,
   GraphStates,
   ResolvedStyle,
   Forces,
-  Selection,
   LinkAnimation,
 } from '../lib/types';
 import type { GroupRule } from '../protocol';
-import { matchesGroup } from '../lib/groups';
+import type { VisibleGraph } from '../lib/graph-view-model';
 
 @customElement('foam-graph-canvas')
 export class GraphCanvas extends LitElement {
@@ -39,19 +35,18 @@ export class GraphCanvas extends LitElement {
     }
   `;
 
-  @property({ type: Object }) augmentedGraph: AugmentedGraph | null = null;
+  /**
+   * Pre-filtered graph data ready for rendering. `nodeInfo` should contain only
+   * visible nodes.
+   */
+  @property({ type: Object }) visibleGraph: VisibleGraph | null = null;
+  @property({ type: Object }) graphStates: GraphStates | null = null;
   @property({ type: Object }) style: ResolvedStyle = {} as ResolvedStyle;
-  @property({ type: Object }) showNodesOfType: Record<string, boolean> = {};
   @property({ type: Object }) forces: Forces = {
     collide: 2,
     repel: 30,
     link: 30,
     velocityDecay: 0.4,
-  };
-  @property({ type: Object }) selection: Selection = {
-    neighborDepth: 1,
-    centerOnSelect: true,
-    zoomOnSelect: true,
   };
   @property({ type: Number }) textFade: number = 0;
   @property({ type: Number }) nodeFontSizeMultiplier: number = 1;
@@ -59,20 +54,14 @@ export class GraphCanvas extends LitElement {
   @property({ type: Number }) linkWidthMultiplier: number = 2;
   @property({ type: String }) animateLinks: LinkAnimation = 'forward';
   @property({ type: Array }) groups: GroupRule[] = [];
-  @property({ type: String }) focusNodeId: string | null = null;
-  @property({ type: Object }) graphScope: GraphScope = 'full';
 
-  // Mutable rendering state — closed over by canvas callbacks
+  // Mutable rendering state closed over by force-graph callbacks.
   private rs = {
-    augmented: null as AugmentedGraph | null,
-    data: { nodes: [] as { id: string }[], links: [] as AugmentedLink[] },
-    selectedNodes: new Set<string>(),
-    hoverNode: null as string | null,
+    nodeInfo: {} as VisibleGraph['nodeInfo'],
+    data: { nodes: [] as { id: string }[], links: [] as GraphModelLink[] },
     graphStates: null as GraphStates | null,
     style: {} as ResolvedStyle,
-    showNodesOfType: {} as Record<string, boolean>,
     forces: {} as Forces,
-    selection: {} as Selection,
     textFade: 0,
     nodeFontSizeMultiplier: 1,
     nodeSizeMultiplier: 1,
@@ -80,8 +69,6 @@ export class GraphCanvas extends LitElement {
     animateLinks: 'forward' as LinkAnimation,
     colorMode: 'type' as 'none' | 'directory' | 'type',
     groups: [] as GroupRule[],
-    focusNodeId: null as string | null,
-    graphScope: 'full' as GraphScope,
   };
 
   private readonly getNodeSize = scaleLinear()
@@ -96,11 +83,9 @@ export class GraphCanvas extends LitElement {
   private graphInstance: ReturnType<ReturnType<typeof ForceGraph>> | null =
     null;
   private firstGraphLoad = true;
-
-  protected createRenderRoot() {
-    // Use shadow DOM but pass through so the force-graph canvas fills the host
-    return super.createRenderRoot();
-  }
+  private readonly onResize = () => {
+    this.graphInstance?.width(window.innerWidth).height(window.innerHeight);
+  };
 
   render() {
     return html`<div id="canvas-container"></div>`;
@@ -111,8 +96,7 @@ export class GraphCanvas extends LitElement {
       'canvas-container'
     ) as HTMLDivElement;
     container.addEventListener('mouseleave', () => {
-      this.rs.hoverNode = null;
-      this._updateFocusSets();
+      this._emit('canvas-node-hover', null);
     });
     const painter = new Painter();
 
@@ -137,21 +121,25 @@ export class GraphCanvas extends LitElement {
       .d3VelocityDecay(1 - (this.rs.forces.velocityDecay ?? 0.4))
       .linkWidth(() => this.rs.style.lineWidth * this.rs.linkWidthMultiplier)
       .linkDirectionalParticles(1)
-      .linkDirectionalParticleSpeed(this.rs.animateLinks === 'reverse' ? -0.004 : 0.004)
+      .linkDirectionalParticleSpeed(
+        this.rs.animateLinks === 'reverse' ? -0.004 : 0.004
+      )
       .linkDirectionalParticleWidth(link => {
         if (this.rs.animateLinks === 'off') return 0;
-        const augLink = link as AugmentedLink;
-        const key = `${getLinkNodeId(augLink.source)}->${getLinkNodeId(augLink.target)}`;
+        const graphLink = link as GraphModelLink;
+        const key = GraphModelLink.getKey(graphLink);
         const state = this.rs.graphStates?.linkStates.get(key) ?? 'regular';
         return state === 'highlighted' ? this.rs.style.particleWidth : 0;
       })
       .nodeCanvasObject(
         (node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
-          const info = this.rs.augmented?.nodeInfo[node.id];
+          const info = this.rs.nodeInfo[node.id];
           if (!info) return;
 
-          const size = this.getNodeSize(info.neighbors.length) * this.rs.nodeSizeMultiplier;
-          const state = this.rs.graphStates?.nodeStates.get(node.id) ?? 'regular';
+          const size =
+            this.getNodeSize(info.neighbors.length) * this.rs.nodeSizeMultiplier;
+          const state =
+            this.rs.graphStates?.nodeStates.get(node.id) ?? 'regular';
           const { fill, border } = getNodeFillAndBorder(
             info,
             state,
@@ -169,7 +157,12 @@ export class GraphCanvas extends LitElement {
               ? this.getNodeLabelOpacity(globalScale)
               : Math.min(this.getNodeLabelOpacity(globalScale), fill.opacity);
 
-          const textColor = getNodeLabelColor(fill, state, opacity, this.rs.style);
+          const textColor = getNodeLabelColor(
+            fill,
+            state,
+            opacity,
+            this.rs.style
+          );
 
           painter
             .circle(node.x, node.y, size, fill, border)
@@ -187,13 +180,13 @@ export class GraphCanvas extends LitElement {
         painter.paint(ctx);
       })
       .linkColor((link: any) => {
-        const augLink = link as AugmentedLink;
-        const key = `${getLinkNodeId(augLink.source)}->${getLinkNodeId(augLink.target)}`;
+        const graphLink = link as GraphModelLink;
+        const key = GraphModelLink.getKey(graphLink);
         const state = this.rs.graphStates?.linkStates.get(key) ?? 'regular';
         const srcInfo =
-          this.rs.augmented?.nodeInfo[getLinkNodeId(augLink.source)];
+          this.rs.nodeInfo[GraphModelLink.getNodeId(graphLink.source)];
         const tgtInfo =
-          this.rs.augmented?.nodeInfo[getLinkNodeId(augLink.target)];
+          this.rs.nodeInfo[GraphModelLink.getNodeId(graphLink.target)];
         return getLinkColor(
           state,
           srcInfo?.type ?? 'note',
@@ -202,28 +195,28 @@ export class GraphCanvas extends LitElement {
         );
       })
       .onNodeHover((node: any) => {
-        this.rs.hoverNode = node?.id ?? null;
-        this._updateFocusSets();
+        const nodeId = node?.id ?? null;
+        this._emit('canvas-node-hover', nodeId);
         container.style.cursor = node ? 'pointer' : 'default';
       })
       .onNodeClick((node: any, event: MouseEvent) => {
-        const isAppend = event.getModifierState('Shift');
-        this._selectNode(node.id, isAppend);
-        this.dispatchEvent(new CustomEvent('node-click', { detail: node.id }));
+        this._emit('canvas-node-click', {
+          nodeId: node.id,
+          append: event.getModifierState('Shift'),
+        });
       })
       .onBackgroundClick((event: MouseEvent) => {
-        if (!event.getModifierState('Shift')) {
-          this._selectNode(null, false);
-        }
+        this._emit('canvas-background-click', {
+          append: event.getModifierState('Shift'),
+        });
       });
 
-    window.addEventListener('resize', () => {
-      this.graphInstance?.width(window.innerWidth).height(window.innerHeight);
-    });
+    window.addEventListener('resize', this.onResize);
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
+    window.removeEventListener('resize', this.onResize);
     (this.graphInstance as any)?._destructor?.();
   }
 
@@ -234,9 +227,8 @@ export class GraphCanvas extends LitElement {
       this.graphInstance?.backgroundColor(this.style.background);
     }
 
-    if (changed.has('showNodesOfType')) {
-      this.rs.showNodesOfType = this.showNodesOfType;
-      if (this.rs.augmented) this._updateGraphData();
+    if (changed.has('graphStates')) {
+      this.rs.graphStates = this.graphStates;
     }
 
     if (changed.has('forces')) {
@@ -254,14 +246,8 @@ export class GraphCanvas extends LitElement {
       }
     }
 
-    if (changed.has('selection')) {
-      this.rs.selection = this.selection;
-      this._updateFocusSets();
-    }
-
     if (changed.has('groups')) {
       this.rs.groups = this.groups;
-      if (this.rs.augmented) this._updateGraphData();
     }
 
     if (changed.has('textFade')) {
@@ -292,23 +278,16 @@ export class GraphCanvas extends LitElement {
       );
     }
 
-    if (changed.has('focusNodeId')) {
-      this.rs.focusNodeId = this.focusNodeId;
-      if (this.rs.augmented) this._updateGraphData();
-    }
+    if (changed.has('visibleGraph')) {
+      const nextGraph: VisibleGraph = this.visibleGraph ?? {
+        nodeInfo: {},
+        nodes: [],
+        links: [],
+      };
+      this.rs.nodeInfo = nextGraph.nodeInfo;
+      this._updateGraphData(nextGraph);
 
-    if (changed.has('graphScope')) {
-      this.rs.graphScope = this.graphScope;
-      if (this.rs.augmented && this.rs.focusNodeId) this._updateGraphData();
-    }
-
-    if (changed.has('augmentedGraph')) {
-      if (!this.augmentedGraph) return;
-      this.rs.augmented = this.augmentedGraph;
-      this._updateGraphData();
-      this._updateFocusSets();
-
-      if (this.firstGraphLoad && this.graphInstance) {
+      if (this.visibleGraph && this.firstGraphLoad && this.graphInstance) {
         this.firstGraphLoad = false;
         this.graphInstance.zoom(this.graphInstance.zoom() * 1.5);
         this.graphInstance.cooldownTicks(100);
@@ -320,60 +299,34 @@ export class GraphCanvas extends LitElement {
     }
   }
 
-  selectNote(noteId: string) {
+  /** Centers the viewport on a currently visible node. */
+  centerOnNode(nodeId: string, zoom?: number, duration = 300) {
     if (!this.graphInstance) return;
     const nodes = this.graphInstance.graphData().nodes as any[];
-    const node = nodes.find(n => n.id === noteId);
-    if (node) {
-      if (this.rs.selection.centerOnSelect) {
-        this.graphInstance.centerAt(node.x, node.y, 300);
-      }
-      if (this.rs.selection.zoomOnSelect) {
-        this.graphInstance.zoom(3, 300);
-      }
-      this._selectNode(noteId, false);
+    const node = nodes.find(n => n.id === nodeId);
+    if (!node) return;
+    this.graphInstance.centerAt(node.x, node.y, duration);
+    if (zoom !== undefined) {
+      this.graphInstance.zoom(zoom, duration);
     }
   }
 
-  private _updateFocusSets() {
-    if (!this.rs.augmented) return;
-    this.rs.graphStates = computeGraphStates(
-      this.rs.augmented,
-      this.rs.selectedNodes,
-      this.rs.hoverNode,
-      this.rs.selection.neighborDepth
-    );
+  /** Fits the current graph into the available canvas area. */
+  zoomToFit(duration = 500) {
+    this.graphInstance?.zoomToFit(duration);
   }
 
-  private _selectNode(nodeId: string | null, isAppend: boolean) {
-    if (!isAppend) this.rs.selectedNodes.clear();
-    if (nodeId != null) this.rs.selectedNodes.add(nodeId);
-    this._updateFocusSets();
+  /** Sets the current zoom level without changing the graph data. */
+  zoom(zoom: number, duration = 300) {
+    this.graphInstance?.zoom(zoom, duration);
   }
 
-  private _updateGraphData() {
-    if (!this.rs.augmented || !this.graphInstance) return;
+  private _updateGraphData(visibleGraph: VisibleGraph) {
+    if (!this.graphInstance) return;
 
-    const nodeIdsToAdd = new Set(
-      Object.values(this.rs.augmented.nodeInfo)
-        .filter(n => {
-          if (!this.rs.showNodesOfType[n.type]) return false;
-          const matching = this.rs.groups.filter(g => matchesGroup(n, g));
-          if (matching.length > 0 && matching.every(g => !g.enabled)) return false;
-          return true;
-        })
-        .map(n => n.id)
-    );
-
-    if (this.rs.focusNodeId && this.rs.graphScope !== 'full') {
-      const depth = (this.rs.graphScope as { depth: number }).depth;
-      const focusSet = getFocusSubset(this.rs.augmented, this.rs.focusNodeId, depth);
-      for (const id of nodeIdsToAdd) {
-        if (!focusSet.has(id)) nodeIdsToAdd.delete(id);
-      }
-    }
-
+    const nodeIdsToAdd = new Set(visibleGraph.nodes.map(node => node.id));
     const nodeIdsToRemove = new Set<string>();
+
     for (const node of this.rs.data.nodes) {
       if (nodeIdsToAdd.has(node.id)) {
         nodeIdsToAdd.delete(node.id);
@@ -383,35 +336,22 @@ export class GraphCanvas extends LitElement {
     }
 
     for (const id of nodeIdsToRemove) {
-      const idx = this.rs.data.nodes.findIndex(n => n.id === id);
+      const idx = this.rs.data.nodes.findIndex(node => node.id === id);
       if (idx !== -1) this.rs.data.nodes.splice(idx, 1);
     }
     for (const id of nodeIdsToAdd) {
       this.rs.data.nodes.push({ id });
     }
 
-    const nodeIdSet = new Set(this.rs.data.nodes.map(n => n.id));
-    this.rs.data.links = this.rs.augmented.links
-      .filter(link => {
-        return (
-          nodeIdSet.has(getLinkNodeId(link.source)) &&
-          nodeIdSet.has(getLinkNodeId(link.target))
-        );
-      })
-      .map(link => ({ ...link }));
-
-    this.rs.hoverNode =
-      this.rs.augmented.nodeInfo[this.rs.hoverNode ?? ''] != null
-        ? this.rs.hoverNode
-        : null;
-    this.rs.selectedNodes = new Set(
-      [...this.rs.selectedNodes].filter(
-        id => this.rs.augmented!.nodeInfo[id] != null
-      )
-    );
-
+    this.rs.data.links = visibleGraph.links.map(link => ({ ...link }));
     this.graphInstance.graphData(this.rs.data as any);
     (this.graphInstance.d3Force('link') as any)?.links(this.rs.data.links);
+  }
+
+  private _emit(eventName: string, detail: unknown) {
+    this.dispatchEvent(
+      new CustomEvent(eventName, { detail, bubbles: true, composed: true })
+    );
   }
 }
 

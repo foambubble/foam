@@ -1,30 +1,33 @@
 import type { GraphData } from '../protocol';
-import type { AugmentedGraph, AugmentedNode, AugmentedLink, GraphStates, NodeState, LinkState } from './types';
+import {
+  GraphModelLink,
+  type GraphModel,
+  type GraphModelNode,
+  type GraphStates,
+  type NodeState,
+  type LinkState,
+} from './types';
 
-export function getLinkNodeId(endpoint: string | AugmentedNode): string {
-  return typeof endpoint === 'object' ? endpoint.id : endpoint;
-}
-
-export function augmentGraphInfo(graph: GraphData): AugmentedGraph {
-  const augmented: AugmentedGraph = { nodeInfo: {}, links: [] };
+export function createGraphModel(graph: GraphData): GraphModel {
+  const model: GraphModel = { nodeInfo: {}, links: [] };
 
   // Copy nodes with initialized neighbors/links
   for (const node of Object.values(graph.nodeInfo)) {
-    augmented.nodeInfo[node.id] = { ...node, neighbors: [], links: [] };
+    model.nodeInfo[node.id] = { ...node, neighbors: [], links: [] };
   }
 
   // Copy links
-  augmented.links = graph.links.map(l => ({ ...l }));
+  model.links = graph.links.map(l => ({ ...l }));
 
   // Process tags: create tag nodes and hierarchy links
-  for (const node of Object.values(augmented.nodeInfo)) {
+  for (const node of Object.values(model.nodeInfo)) {
     if (!node.tags?.length) continue;
     for (const tag of node.tags) {
       const subtags = tag.label.split('/');
       for (let i = 0; i < subtags.length; i++) {
         const label = subtags.slice(0, i + 1).join('/');
-        if (!augmented.nodeInfo[label]) {
-          augmented.nodeInfo[label] = {
+        if (!model.nodeInfo[label]) {
+          model.nodeInfo[label] = {
             id: label,
             title: '#' + label,
             type: 'tag',
@@ -36,26 +39,26 @@ export function augmentGraphInfo(graph: GraphData): AugmentedGraph {
         }
         if (i > 0) {
           const parent = subtags.slice(0, i).join('/');
-          augmented.links.push({ source: parent, target: label });
+          model.links.push({ source: parent, target: label });
         }
       }
-      augmented.links.push({ source: tag.label, target: node.id });
+      model.links.push({ source: tag.label, target: node.id });
     }
   }
 
   // Deduplicate links
   const seen = new Set<string>();
-  augmented.links = augmented.links.filter(link => {
-    const key = `${getLinkNodeId(link.source)} -> ${getLinkNodeId(link.target)}`;
+  model.links = model.links.filter(link => {
+    const key = GraphModelLink.getKey(link);
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
   });
 
   // Build neighbor relationships
-  for (const link of augmented.links) {
-    const a = augmented.nodeInfo[getLinkNodeId(link.source)];
-    const b = augmented.nodeInfo[getLinkNodeId(link.target)];
+  for (const link of model.links) {
+    const a = model.nodeInfo[GraphModelLink.getNodeId(link.source)];
+    const b = model.nodeInfo[GraphModelLink.getNodeId(link.target)];
     if (a && b) {
       a.neighbors.push(b.id);
       b.neighbors.push(a.id);
@@ -64,13 +67,13 @@ export function augmentGraphInfo(graph: GraphData): AugmentedGraph {
     }
   }
 
-  return augmented;
+  return model;
 }
 
 export function getNeighbors(
   nodeId: string,
   depth: number,
-  nodeInfo: Record<string, AugmentedNode>
+  nodeInfo: Record<string, GraphModelNode>
 ): Set<string> {
   let neighbors = new Set([nodeId]);
   for (let i = 0; i < depth; i++) {
@@ -92,11 +95,11 @@ export function computeFocusSets(
   selectedNodes: Set<string>,
   hoverNode: string | null,
   neighborDepth: number,
-  nodeInfo: Record<string, AugmentedNode>,
-  links: AugmentedLink[]
-): { focusNodes: Set<string>; focusLinks: Set<AugmentedLink> } {
+  nodeInfo: Record<string, GraphModelNode>,
+  links: GraphModelLink[]
+): { focusNodes: Set<string>; focusLinks: Set<GraphModelLink> } {
   const focusNodes = new Set<string>();
-  const focusLinks = new Set<AugmentedLink>();
+  const focusLinks = new Set<GraphModelLink>();
 
   const originNodes = [...selectedNodes, hoverNode].filter(Boolean) as string[];
 
@@ -107,8 +110,8 @@ export function computeFocusSets(
 
   const originSet = new Set(originNodes);
   for (const link of links) {
-    const src = getLinkNodeId(link.source);
-    const tgt = getLinkNodeId(link.target);
+    const src = GraphModelLink.getNodeId(link.source);
+    const tgt = GraphModelLink.getNodeId(link.target);
     if (originSet.has(src) || originSet.has(tgt)) {
       focusLinks.add(link);
     }
@@ -129,15 +132,18 @@ export function getNodeState(
 }
 
 export function getLinkState(
-  link: AugmentedLink,
+  link: GraphModelLink,
   focusNodes: Set<string>,
-  focusLinks: Set<AugmentedLink>
+  focusLinks: Set<GraphModelLink>
 ): 'regular' | 'highlighted' | 'lessened' {
   if (focusNodes.size === 0) return 'regular';
-  const src = getLinkNodeId(link.source);
-  const tgt = getLinkNodeId(link.target);
+  const src = GraphModelLink.getNodeId(link.source);
+  const tgt = GraphModelLink.getNodeId(link.target);
   for (const fl of focusLinks) {
-    if (getLinkNodeId(fl.source) === src && getLinkNodeId(fl.target) === tgt) {
+    if (
+      GraphModelLink.getNodeId(fl.source) === src &&
+      GraphModelLink.getNodeId(fl.target) === tgt
+    ) {
       return 'highlighted';
     }
   }
@@ -145,15 +151,15 @@ export function getLinkState(
 }
 
 export function getFocusSubset(
-  augmentedGraph: AugmentedGraph,
+  graphModel: GraphModel,
   focusNodeId: string,
   focusDepth: number
 ): Set<string> {
-  return getNeighbors(focusNodeId, focusDepth, augmentedGraph.nodeInfo);
+  return getNeighbors(focusNodeId, focusDepth, graphModel.nodeInfo);
 }
 
 export function computeGraphStates(
-  augmentedGraph: AugmentedGraph,
+  graphModel: GraphModel,
   selectedNodes: Set<string>,
   hoverNode: string | null,
   neighborDepth: number
@@ -162,21 +168,21 @@ export function computeGraphStates(
     selectedNodes,
     hoverNode,
     neighborDepth,
-    augmentedGraph.nodeInfo,
-    augmentedGraph.links
+    graphModel.nodeInfo,
+    graphModel.links
   );
 
   const nodeStates = new Map<string, NodeState>();
-  for (const id of Object.keys(augmentedGraph.nodeInfo)) {
+  for (const id of Object.keys(graphModel.nodeInfo)) {
     nodeStates.set(id, getNodeState(id, selectedNodes, hoverNode, focusNodes));
   }
 
   const highlightedLinks = new Set(
-    [...focusLinks].map(l => `${getLinkNodeId(l.source)}->${getLinkNodeId(l.target)}`)
+    [...focusLinks].map(link => GraphModelLink.getKey(link))
   );
   const linkStates = new Map<string, LinkState>();
-  for (const link of augmentedGraph.links) {
-    const key = `${getLinkNodeId(link.source)}->${getLinkNodeId(link.target)}`;
+  for (const link of graphModel.links) {
+    const key = GraphModelLink.getKey(link);
     if (focusNodes.size === 0) {
       linkStates.set(key, 'regular');
     } else {

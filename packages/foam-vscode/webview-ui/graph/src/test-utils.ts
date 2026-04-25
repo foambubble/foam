@@ -1,5 +1,5 @@
 import type { GraphData } from './protocol';
-import type { AugmentedNode, ResolvedStyle } from './lib/types';
+import type { GraphModelNode, ResolvedStyle } from './lib/types';
 import { getNodeFillAndBorder } from './lib/colors';
 
 export const makeStyle = (overrides: Partial<ResolvedStyle> = {}): ResolvedStyle => ({
@@ -19,7 +19,7 @@ export const makeStyle = (overrides: Partial<ResolvedStyle> = {}): ResolvedStyle
   ...overrides,
 });
 
-export const makeNode = (overrides: Partial<AugmentedNode> = {}): AugmentedNode => ({
+export const makeNode = (overrides: Partial<GraphModelNode> = {}): GraphModelNode => ({
   id: '/path/to/note.md',
   type: 'note',
   title: 'Note',
@@ -37,7 +37,7 @@ export const makeGraph = (overrides: Partial<GraphData> = {}): GraphData => ({
 });
 
 export const fillOf = (
-  node: AugmentedNode,
+  node: GraphModelNode,
   mode: ResolvedStyle['colorMode'],
   style = makeStyle()
 ) => getNodeFillAndBorder(node, 'regular', style, mode).fill.toString();

@@ -1,17 +1,48 @@
 import { describe, it, expect } from 'vitest';
-import { augmentGraphInfo, computeGraphStates, getFocusSubset } from './graph-utils';
+import { createGraphModel, computeGraphStates, getFocusSubset } from './graph-utils';
 import { makeGraph } from '../test-utils';
+import { GraphModelLink } from './types';
 
-describe('augmentGraphInfo', () => {
-  it('should copy note nodes into the augmented graph', () => {
+describe('GraphModelLink', () => {
+  it('computes the same key for string and object endpoints', () => {
+    expect(GraphModelLink.getKey({ source: 'note-1', target: 'note-2' })).toBe(
+      'note-1->note-2'
+    );
+    expect(
+      GraphModelLink.getKey({
+        source: {
+          id: 'note-1',
+          type: 'note',
+          title: 'Note 1',
+          properties: {},
+          tags: [],
+          neighbors: [],
+          links: [],
+        },
+        target: {
+          id: 'note-2',
+          type: 'note',
+          title: 'Note 2',
+          properties: {},
+          tags: [],
+          neighbors: [],
+          links: [],
+        },
+      })
+    ).toBe('note-1->note-2');
+  });
+});
+
+describe('createGraphModel', () => {
+  it('should copy note nodes into the graph model', () => {
     const graph = makeGraph({
       nodeInfo: {
         'note-1': { id: 'note-1', type: 'note', title: 'Note 1', properties: {}, tags: [] },
       },
     });
-    const augmented = augmentGraphInfo(graph);
-    expect(augmented.nodeInfo['note-1']).toBeDefined();
-    expect(augmented.nodeInfo['note-1'].type).toBe('note');
+    const graphModel = createGraphModel(graph);
+    expect(graphModel.nodeInfo['note-1']).toBeDefined();
+    expect(graphModel.nodeInfo['note-1'].type).toBe('note');
   });
 
   it('should prefix tag titles with #', () => {
@@ -23,10 +54,10 @@ describe('augmentGraphInfo', () => {
         },
       },
     });
-    const augmented = augmentGraphInfo(graph);
-    expect(augmented.nodeInfo['my-tag'].title).toBe('#my-tag');
-    expect(augmented.nodeInfo['parent'].title).toBe('#parent');
-    expect(augmented.nodeInfo['parent/child'].title).toBe('#parent/child');
+    const graphModel = createGraphModel(graph);
+    expect(graphModel.nodeInfo['my-tag'].title).toBe('#my-tag');
+    expect(graphModel.nodeInfo['parent'].title).toBe('#parent');
+    expect(graphModel.nodeInfo['parent/child'].title).toBe('#parent/child');
   });
 
   it('should create tag nodes in nodeInfo for each unique tag', () => {
@@ -39,15 +70,15 @@ describe('augmentGraphInfo', () => {
       },
     });
 
-    const augmented = augmentGraphInfo(graph);
+    const graphModel = createGraphModel(graph);
 
-    expect(augmented.nodeInfo['my-tag']).toBeDefined();
-    expect(augmented.nodeInfo['my-tag'].type).toBe('tag');
+    expect(graphModel.nodeInfo['my-tag']).toBeDefined();
+    expect(graphModel.nodeInfo['my-tag'].type).toBe('tag');
   });
 
   it('should expose tag type in nodeInfo so filter panel can show it', () => {
-    // This documents the fix: _syncNodeTypes must receive the augmented graph,
-    // not the raw graph, because tag nodes only exist after augmentation.
+    // This documents the fix: _syncNodeTypes must receive the graph model,
+    // not the raw graph, because tag nodes only exist after the model is created.
     const graph = makeGraph({
       nodeInfo: {
         'note-1': {
@@ -60,9 +91,9 @@ describe('augmentGraphInfo', () => {
     const rawTypes = new Set(Object.values(graph.nodeInfo).map(n => n.type));
     expect(rawTypes.has('tag')).toBe(false); // tag absent in raw data
 
-    const augmented = augmentGraphInfo(graph);
-    const augmentedTypes = new Set(Object.values(augmented.nodeInfo).map(n => n.type));
-    expect(augmentedTypes.has('tag')).toBe(true); // tag present after augmentation
+    const graphModel = createGraphModel(graph);
+    const graphModelTypes = new Set(Object.values(graphModel.nodeInfo).map(n => n.type));
+    expect(graphModelTypes.has('tag')).toBe(true); // tag present after model creation
   });
 
   it('should create intermediate nodes for hierarchical tags', () => {
@@ -75,12 +106,12 @@ describe('augmentGraphInfo', () => {
       },
     });
 
-    const augmented = augmentGraphInfo(graph);
+    const graphModel = createGraphModel(graph);
 
-    expect(augmented.nodeInfo['parent']).toBeDefined();
-    expect(augmented.nodeInfo['parent'].type).toBe('tag');
-    expect(augmented.nodeInfo['parent/child']).toBeDefined();
-    expect(augmented.nodeInfo['parent/child'].type).toBe('tag');
+    expect(graphModel.nodeInfo['parent']).toBeDefined();
+    expect(graphModel.nodeInfo['parent'].type).toBe('tag');
+    expect(graphModel.nodeInfo['parent/child']).toBeDefined();
+    expect(graphModel.nodeInfo['parent/child'].type).toBe('tag');
   });
 
   it('should create a link from tag to note', () => {
@@ -93,9 +124,9 @@ describe('augmentGraphInfo', () => {
       },
     });
 
-    const augmented = augmentGraphInfo(graph);
+    const graphModel = createGraphModel(graph);
 
-    const tagToNoteLink = augmented.links.find(
+    const tagToNoteLink = graphModel.links.find(
       l => l.source === 'my-tag' && l.target === 'note-1'
     );
     expect(tagToNoteLink).toBeDefined();
@@ -116,9 +147,9 @@ describe('augmentGraphInfo', () => {
       links: [{ source: 'note-1', target: 'note-1' }], // duplicate
     });
 
-    const augmented = augmentGraphInfo(graph);
+    const graphModel = createGraphModel(graph);
 
-    const dupes = augmented.links.filter(
+    const dupes = graphModel.links.filter(
       l => l.source === 'note-1' && l.target === 'note-1'
     );
     expect(dupes.length).toBe(1);
@@ -134,16 +165,16 @@ describe('augmentGraphInfo', () => {
       },
     });
 
-    const augmented = augmentGraphInfo(graph);
+    const graphModel = createGraphModel(graph);
 
-    expect(augmented.nodeInfo['my-tag'].neighbors).toContain('note-1');
-    expect(augmented.nodeInfo['note-1'].neighbors).toContain('my-tag');
+    expect(graphModel.nodeInfo['my-tag'].neighbors).toContain('note-1');
+    expect(graphModel.nodeInfo['note-1'].neighbors).toContain('my-tag');
   });
 });
 
 describe('computeGraphStates', () => {
   it('should mark all nodes and links as regular when nothing is selected', () => {
-    const graph = augmentGraphInfo(makeGraph({
+    const graph = createGraphModel(makeGraph({
       nodeInfo: {
         'note-1': { id: 'note-1', type: 'note', title: 'Note 1', properties: {}, tags: [] },
         'note-2': { id: 'note-2', type: 'note', title: 'Note 2', properties: {}, tags: [] },
@@ -159,7 +190,7 @@ describe('computeGraphStates', () => {
   });
 
   it('should highlight the selected node and mark unrelated nodes as lessened', () => {
-    const graph = augmentGraphInfo(makeGraph({
+    const graph = createGraphModel(makeGraph({
       nodeInfo: {
         'note-1': { id: 'note-1', type: 'note', title: 'Note 1', properties: {}, tags: [] },
         'note-2': { id: 'note-2', type: 'note', title: 'Note 2', properties: {}, tags: [] },
@@ -176,7 +207,7 @@ describe('computeGraphStates', () => {
   });
 
   it('should highlight the hovered node the same way as a selected node', () => {
-    const graph = augmentGraphInfo(makeGraph({
+    const graph = createGraphModel(makeGraph({
       nodeInfo: {
         'note-1': { id: 'note-1', type: 'note', title: 'Note 1', properties: {}, tags: [] },
         'note-2': { id: 'note-2', type: 'note', title: 'Note 2', properties: {}, tags: [] },
@@ -193,7 +224,7 @@ describe('computeGraphStates', () => {
   });
 
   it('should use the union of neighborhoods when multiple nodes are selected', () => {
-    const graph = augmentGraphInfo(makeGraph({
+    const graph = createGraphModel(makeGraph({
       nodeInfo: {
         'note-1': { id: 'note-1', type: 'note', title: 'Note 1', properties: {}, tags: [] },
         'note-2': { id: 'note-2', type: 'note', title: 'Note 2', properties: {}, tags: [] },
@@ -218,7 +249,7 @@ describe('computeGraphStates', () => {
     // note-1 selected; note-2 and note-3 are both neighbors of note-1
     // link note-1->note-2 touches the origin → highlighted
     // link note-2->note-3 is between two neighbors but not the origin → lessened
-    const graph = augmentGraphInfo(makeGraph({
+    const graph = createGraphModel(makeGraph({
       nodeInfo: {
         'note-1': { id: 'note-1', type: 'note', title: 'Note 1', properties: {}, tags: [] },
         'note-2': { id: 'note-2', type: 'note', title: 'Note 2', properties: {}, tags: [] },
@@ -239,7 +270,7 @@ describe('computeGraphStates', () => {
   });
 
   it('should expand neighborhood with neighborDepth=2', () => {
-    const graph = augmentGraphInfo(makeGraph({
+    const graph = createGraphModel(makeGraph({
       nodeInfo: {
         'note-1': { id: 'note-1', type: 'note', title: 'Note 1', properties: {}, tags: [] },
         'note-2': { id: 'note-2', type: 'note', title: 'Note 2', properties: {}, tags: [] },
@@ -263,7 +294,7 @@ describe('computeGraphStates', () => {
 
 describe('getFocusSubset', () => {
   it('should return the focus node and its depth-1 neighbors', () => {
-    const graph = augmentGraphInfo(makeGraph({
+    const graph = createGraphModel(makeGraph({
       nodeInfo: {
         'note-1': { id: 'note-1', type: 'note', title: 'Note 1', properties: {}, tags: [] },
         'note-2': { id: 'note-2', type: 'note', title: 'Note 2', properties: {}, tags: [] },
@@ -285,7 +316,7 @@ describe('getFocusSubset', () => {
   });
 
   it('should return only the focus node itself when it has no neighbors', () => {
-    const graph = augmentGraphInfo(makeGraph({
+    const graph = createGraphModel(makeGraph({
       nodeInfo: {
         'note-1': { id: 'note-1', type: 'note', title: 'Note 1', properties: {}, tags: [] },
         'note-2': { id: 'note-2', type: 'note', title: 'Note 2', properties: {}, tags: [] },
@@ -300,7 +331,7 @@ describe('getFocusSubset', () => {
   });
 
   it('should expand to depth-2 neighbors when focusDepth=2', () => {
-    const graph = augmentGraphInfo(makeGraph({
+    const graph = createGraphModel(makeGraph({
       nodeInfo: {
         'note-1': { id: 'note-1', type: 'note', title: 'Note 1', properties: {}, tags: [] },
         'note-2': { id: 'note-2', type: 'note', title: 'Note 2', properties: {}, tags: [] },

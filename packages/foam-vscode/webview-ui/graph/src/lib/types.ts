@@ -1,18 +1,30 @@
 import type { NodeInfo, GroupRule } from '../protocol';
 
-export interface AugmentedNode extends NodeInfo {
+export interface GraphModelNode extends NodeInfo {
   neighbors: string[];
-  links: AugmentedLink[];
+  links: GraphModelLink[];
 }
 
-export interface AugmentedLink {
-  source: string | AugmentedNode;
-  target: string | AugmentedNode;
+export interface GraphModelLink {
+  source: string | GraphModelNode;
+  target: string | GraphModelNode;
 }
 
-export interface AugmentedGraph {
-  nodeInfo: Record<string, AugmentedNode>;
-  links: AugmentedLink[];
+export abstract class GraphModelLink {
+  static getNodeId(endpoint: GraphModelLink['source']): string {
+    return typeof endpoint === 'object' ? endpoint.id : endpoint;
+  }
+
+  static getKey(link: GraphModelLink): string {
+    return `${GraphModelLink.getNodeId(link.source)}->${GraphModelLink.getNodeId(
+      link.target
+    )}`;
+  }
+}
+
+export interface GraphModel {
+  nodeInfo: Record<string, GraphModelNode>;
+  links: GraphModelLink[];
 }
 
 export interface ResolvedStyle {

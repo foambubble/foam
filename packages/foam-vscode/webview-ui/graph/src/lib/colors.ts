@@ -1,6 +1,6 @@
 import { rgb, hsl } from 'd3-color';
 import type { RGBColor } from 'd3-color';
-import type { AugmentedNode, ResolvedStyle } from './types';
+import type { GraphModelNode, ResolvedStyle } from './types';
 import type { GroupRule } from '../protocol';
 import { resolveGroupColor } from './groups';
 
@@ -44,7 +44,7 @@ export function getTypeColor(type: string, style: ResolvedStyle): string {
 }
 
 export function getNodeFillAndBorder(
-  nodeInfo: AugmentedNode,
+  nodeInfo: GraphModelNode,
   state: 'regular' | 'highlighted' | 'lessened',
   style: ResolvedStyle,
   colorMode: 'none' | 'directory' | 'type',

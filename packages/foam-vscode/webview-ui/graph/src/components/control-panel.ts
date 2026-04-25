@@ -1,16 +1,15 @@
 import { LitElement, html, css } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
+import { customElement, property } from 'lit/decorators.js';
 import './autocomplete-input';
-import { getTypeColor, hashString, hashToHSL } from '../lib/colors';
-import { matchesGroup } from '../lib/groups';
-import type {
-  ResolvedStyle,
-  Forces,
-  Selection,
-  GraphScope,
-  AugmentedGraph,
-} from '../lib/types';
+import { getTypeColor } from '../lib/colors';
+import type { ResolvedStyle, Forces, Selection, GraphScope } from '../lib/types';
 import type { GroupRule, GroupMatch } from '../protocol';
+
+export interface GroupDraft {
+  active: boolean;
+  property: GroupMatch['property'];
+  value: string;
+}
 
 @customElement('foam-control-panel')
 export class ControlPanel extends LitElement {
@@ -317,12 +316,16 @@ export class ControlPanel extends LitElement {
   @property({ type: Object }) style: ResolvedStyle = {} as ResolvedStyle;
   @property({ type: Object }) showNodesOfType: Record<string, boolean> = {};
   @property({ type: Object }) nodeTypeCounts: Record<string, number> = {};
+  @property({ type: Object }) groupMatchCounts: Record<string, number> = {};
+  @property({ type: Array }) autocompleteOptions: string[] = [];
+  @property({ type: Number }) previewMatchCount: number = 0;
+  @property({ type: Object }) groupDraft: GroupDraft = {
+    active: false,
+    property: 'type',
+    value: '',
+  };
   @property({ type: Array }) groups: GroupRule[] = [];
-  @property({ type: Object }) augmentedGraph: AugmentedGraph | null = null;
 
-  @state() private _addingGroup = false;
-  @state() private _newGroupProperty: GroupMatch['property'] = 'type';
-  @state() private _newGroupValue = '';
   @property({ type: Number }) textFade: number = 0;
   @property({ type: Number }) nodeFontSizeMultiplier: number = 1;
   @property({ type: Number }) nodeSizeMultiplier: number = 1.5;
@@ -361,43 +364,6 @@ export class ControlPanel extends LitElement {
     tag: 'exact or /regex/',
     title: 'substring or /regex/',
   };
-
-  private _groupMatchCount(group: GroupRule): number {
-    if (!this.augmentedGraph) return 0;
-    return Object.values(this.augmentedGraph.nodeInfo).filter(n =>
-      matchesGroup(n, group)
-    ).length;
-  }
-
-  private get _autocompleteOptions(): string[] {
-    if (!this.augmentedGraph) return [];
-    const nodes = Object.values(this.augmentedGraph.nodeInfo);
-    if (this._newGroupProperty === 'type') {
-      return [...new Set(nodes.map(n => n.type))]
-        .filter(t => !ControlPanel._SPECIAL_TYPES.includes(t))
-        .sort();
-    }
-    if (this._newGroupProperty === 'tag') {
-      return [
-        ...new Set(nodes.flatMap(n => (n.tags ?? []).map(t => t.label))),
-      ].sort();
-    }
-    return [];
-  }
-
-  private get _previewMatchCount(): number {
-    if (!this.augmentedGraph || !this._newGroupValue) return 0;
-    const rule: GroupRule = {
-      id: '',
-      label: '',
-      color: '',
-      enabled: true,
-      match: { property: this._newGroupProperty, value: this._newGroupValue },
-    };
-    return Object.values(this.augmentedGraph.nodeInfo).filter(n =>
-      matchesGroup(n, rule)
-    ).length;
-  }
 
   private get _specialTypes() {
     return ControlPanel._SPECIAL_TYPES.filter(t => t in this.showNodesOfType);
@@ -439,10 +405,10 @@ export class ControlPanel extends LitElement {
                   type="checkbox"
                   .checked=${this.showNodesOfType[type]}
                   @change=${(e: Event) =>
-                    this._emitShowNodesOfTypeChange(
+                    this._emit('toggle-node-type', {
                       type,
-                      (e.target as HTMLInputElement).checked
-                    )}
+                      visible: (e.target as HTMLInputElement).checked,
+                    })}
                 />
                 <span style="flex:1"
                   >${ControlPanel._SPECIAL_LABELS[type]}
@@ -496,7 +462,7 @@ export class ControlPanel extends LitElement {
                 />
                 <span
                   style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
-                  >${group.label} (${this._groupMatchCount(group)})</span
+                  >${group.label} (${this.groupMatchCounts[group.id] ?? 0})</span
                 >
                 <span
                   class="group-dot"
@@ -535,16 +501,17 @@ export class ControlPanel extends LitElement {
               </div>
             `
           )}
-          ${this._addingGroup
+          ${this.groupDraft.active
             ? html`
                 <div class="add-group-form">
                   <div class="add-group-form-row">
                     <select
-                      .value=${this._newGroupProperty}
+                      .value=${this.groupDraft.property}
                       @change=${(e: Event) =>
-                        (this._newGroupProperty = (
-                          e.target as HTMLSelectElement
-                        ).value)}
+                        this._emitDraftChange({
+                          property: (e.target as HTMLSelectElement)
+                            .value as GroupMatch['property'],
+                        })}
                     >
                       <option value="type">type</option>
                       <option value="path">path</option>
@@ -552,33 +519,36 @@ export class ControlPanel extends LitElement {
                       <option value="title">title</option>
                     </select>
                     <foam-autocomplete-input
-                      .value=${this._newGroupValue}
-                      .options=${this._autocompleteOptions}
+                      .value=${this.groupDraft.value}
+                      .options=${this.autocompleteOptions}
                       placeholder=${ControlPanel._MATCH_HINT[
-                        this._newGroupProperty
+                        this.groupDraft.property
                       ] ?? 'exact'}
                       @value-change=${(e: CustomEvent<string>) =>
-                        (this._newGroupValue = e.detail)}
+                        this._emitDraftChange({ value: e.detail })}
                       @keydown=${(e: KeyboardEvent) => {
-                        if (e.key === 'Enter') this._confirmAddGroup();
+                        if (e.key === 'Enter') this._emit('add-group', null);
                       }}
                     ></foam-autocomplete-input>
                   </div>
                   <div class="add-group-form-actions">
-                    ${this._newGroupValue
+                    ${this.groupDraft.value
                       ? html`<span style="opacity:0.6;font-size:11px;flex:1"
-                          >${this._previewMatchCount}
-                          note${this._previewMatchCount === 1 ? '' : 's'}
+                          >${this.previewMatchCount}
+                          note${this.previewMatchCount === 1 ? '' : 's'}
                           match</span
                         >`
                       : html`<span style="flex:1"></span>`}
                     <button
                       class="btn btn-secondary"
-                      @click=${() => (this._addingGroup = false)}
+                      @click=${() => this._emit('cancel-draft', null)}
                     >
                       Cancel
                     </button>
-                    <button class="btn" @click=${this._confirmAddGroup}>
+                    <button
+                      class="btn"
+                      @click=${() => this._emit('add-group', null)}
+                    >
                       Add
                     </button>
                   </div>
@@ -587,10 +557,7 @@ export class ControlPanel extends LitElement {
             : html`
                 <button
                   class="add-group-btn"
-                  @click=${() => {
-                    this._addingGroup = true;
-                    this._newGroupValue = '';
-                  }}
+                  @click=${() => this._emit('start-draft', null)}
                 >
                   + Add group
                 </button>
@@ -833,13 +800,6 @@ export class ControlPanel extends LitElement {
     );
   }
 
-  private _emitShowNodesOfTypeChange(type: string, checked: boolean) {
-    this._emit('show-nodes-of-type-change', {
-      ...this.showNodesOfType,
-      [type]: checked,
-    });
-  }
-
   private _emitForcesChange(patch: Partial<Forces>) {
     this._emit('forces-change', { ...this.forces, ...patch });
   }
@@ -853,29 +813,15 @@ export class ControlPanel extends LitElement {
   }
 
   private _updateGroup(index: number, patch: Partial<GroupRule>) {
-    const updated = this.groups.map((g, i) =>
-      i === index ? { ...g, ...patch } : g
-    );
-    this._emit('groups-change', updated);
+    this._emit('update-group', { index, patch });
   }
 
   private _deleteGroup(index: number) {
-    const updated = this.groups.filter((_, i) => i !== index);
-    this._emit('groups-change', updated);
+    this._emit('delete-group', index);
   }
 
-  private _confirmAddGroup() {
-    if (!this._newGroupValue) return;
-    const label = `${this._newGroupProperty}=${this._newGroupValue}`;
-    const newGroup: GroupRule = {
-      id: `group-${Date.now()}`,
-      label,
-      color: hashToHSL(hashString(label)),
-      enabled: true,
-      match: { property: this._newGroupProperty, value: this._newGroupValue },
-    };
-    this._emit('groups-change', [...this.groups, newGroup]);
-    this._addingGroup = false;
+  private _emitDraftChange(patch: Partial<GroupDraft>) {
+    this._emit('draft-change', { ...this.groupDraft, ...patch, active: true });
   }
 
   private _emitSelectionChange(patch: Partial<Selection>) {

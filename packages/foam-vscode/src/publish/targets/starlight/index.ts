@@ -34,7 +34,7 @@ function stripFrontmatter(markdown: string) {
 }
 
 function stripLeadingH1(markdown: string) {
-  return markdown.replace(/^#[^#][^\n]*\n?/, '').replace(/^\n+/, '');
+  return markdown.replace(/^# [^\n]*\n?/, '').replace(/^\n+/, '');
 }
 
 function escapeFrontmatter(value: string) {

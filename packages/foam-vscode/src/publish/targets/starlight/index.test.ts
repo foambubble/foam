@@ -60,6 +60,55 @@ describe('publish starlight target', () => {
     expect(otherContent).toContain('## Not a top-level h1');
   });
 
+  it('does not strip lines that start with # but are not headings', async () => {
+    const tmpDir = mkdtempSync(path.join(tmpdir(), 'foam-starlight-non-h1-'));
+
+    const artifactSet: PublishArtifactSet = {
+      site: { title: 'Site', description: '', homepageRoute: null },
+      graph: { nodeInfo: {}, links: [] },
+      notes: [
+        {
+          sourceUri: URI.file(path.join(tmpDir, 'shebang.md')),
+          route: '/shebang',
+          title: 'Shebang',
+          description: '',
+          properties: {},
+          markdown: '#!/usr/bin/env bash\n\necho "hello"',
+          backlinks: [],
+        },
+        {
+          sourceUri: URI.file(path.join(tmpDir, 'include.md')),
+          route: '/include',
+          title: 'Include',
+          description: '',
+          properties: {},
+          markdown: '#include <stdio.h>\n\nint main() {}',
+          backlinks: [],
+        },
+      ],
+      assets: [],
+      routes: [
+        { sourceUri: URI.file(path.join(tmpDir, 'shebang.md')), route: '/shebang' },
+        { sourceUri: URI.file(path.join(tmpDir, 'include.md')), route: '/include' },
+      ],
+      diagnostics: [],
+    };
+
+    await writeStarlightSite({ artifactSet, outputDir: path.join(tmpDir, 'site') });
+
+    const shebangContent = fs.readFileSync(
+      path.join(tmpDir, 'site', 'src', 'content', 'docs', 'shebang.md'),
+      'utf8'
+    );
+    expect(shebangContent).toContain('#!/usr/bin/env bash');
+
+    const includeContent = fs.readFileSync(
+      path.join(tmpDir, 'site', 'src', 'content', 'docs', 'include.md'),
+      'utf8'
+    );
+    expect(includeContent).toContain('#include <stdio.h>');
+  });
+
   it('writes nested notes into correct folder structure', async () => {
     const tmpDir = mkdtempSync(path.join(tmpdir(), 'foam-starlight-nested-'));
 

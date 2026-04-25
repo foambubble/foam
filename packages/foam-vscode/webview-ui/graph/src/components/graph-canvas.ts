@@ -25,6 +25,34 @@ import type {
 import type { GroupRule } from '../protocol';
 import type { VisibleGraph } from '../lib/graph-view-model';
 
+export interface GraphViewportSize {
+  width: number;
+  height: number;
+}
+
+export function measureGraphViewport(
+  element: HTMLElement,
+  fallback: GraphViewportSize
+): GraphViewportSize {
+  const rect = element.getBoundingClientRect();
+  const parent = element.parentElement;
+  const parentRect = parent?.getBoundingClientRect();
+  return {
+    width:
+      rect.width ||
+      element.clientWidth ||
+      parentRect?.width ||
+      parent?.clientWidth ||
+      fallback.width,
+    height:
+      rect.height ||
+      element.clientHeight ||
+      parentRect?.height ||
+      parent?.clientHeight ||
+      fallback.height,
+  };
+}
+
 @customElement('foam-graph-canvas')
 export class GraphCanvas extends LitElement {
   static styles = css`
@@ -32,6 +60,11 @@ export class GraphCanvas extends LitElement {
       display: block;
       position: absolute;
       inset: 0;
+    }
+
+    #canvas-container {
+      width: 100%;
+      height: 100%;
     }
   `;
 
@@ -83,9 +116,8 @@ export class GraphCanvas extends LitElement {
   private graphInstance: ReturnType<ReturnType<typeof ForceGraph>> | null =
     null;
   private firstGraphLoad = true;
-  private readonly onResize = () => {
-    this.graphInstance?.width(window.innerWidth).height(window.innerHeight);
-  };
+  private resizeObserver: ResizeObserver | null = null;
+  private readonly onResize = () => this.resizeGraphToViewport();
 
   render() {
     return html`<div id="canvas-container"></div>`;
@@ -211,11 +243,18 @@ export class GraphCanvas extends LitElement {
         });
       });
 
+    this.resizeGraphToViewport();
+    if ('ResizeObserver' in window) {
+      this.resizeObserver = new ResizeObserver(() => this.resizeGraphToViewport());
+      this.resizeObserver.observe(this);
+    }
     window.addEventListener('resize', this.onResize);
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
+    this.resizeObserver?.disconnect();
+    this.resizeObserver = null;
     window.removeEventListener('resize', this.onResize);
     (this.graphInstance as any)?._destructor?.();
   }
@@ -319,6 +358,16 @@ export class GraphCanvas extends LitElement {
   /** Sets the current zoom level without changing the graph data. */
   zoom(zoom: number, duration = 300) {
     this.graphInstance?.zoom(zoom, duration);
+  }
+
+  private resizeGraphToViewport() {
+    if (!this.graphInstance) return;
+    const { width, height } = measureGraphViewport(this, {
+      width: window.innerWidth,
+      height: window.innerHeight,
+    });
+    if (width <= 0 || height <= 0) return;
+    this.graphInstance.width(width).height(height);
   }
 
   private _updateGraphData(visibleGraph: VisibleGraph) {

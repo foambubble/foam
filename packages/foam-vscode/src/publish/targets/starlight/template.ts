@@ -87,45 +87,11 @@ import siteConfig from '../../generated/site-config.json';
 
 const { toc } = Astro.locals.starlightRoute;
 
-function normalizeBasePath(value) {
-  const trimmed = String(value ?? '/')
-    .replace(/\\/+$/g, '')
-    .replace(/^\\/+$/g, '')
-    .trim();
-  return trimmed.length > 0 ? '/' + trimmed.replace(/^\\/+/, '') : '';
-}
-
-function stripBasePath(pathname, basePath) {
-  if (!basePath) {
-    return pathname;
-  }
-
-  if (pathname === basePath) {
-    return '/';
-  }
-
-  if (pathname.startsWith(basePath + '/')) {
-    return pathname.slice(basePath.length) || '/';
-  }
-
-  return pathname;
-}
-
-function normalizeRoute(value, basePath = '') {
-  const pathname = String(value ?? '').split(/[?#]/, 1)[0] || '/';
-  const withoutBase = stripBasePath(pathname, basePath);
-
-  if (withoutBase === '/') {
-    return '/';
-  }
-
-  return withoutBase.replace(/\\/+$/, '') || '/';
-}
-
-const currentRoute = normalizeRoute(
-  Astro.url.pathname,
-  normalizeBasePath(import.meta.env.BASE_URL)
-);
+const basePath = (import.meta.env.BASE_URL || '/').replace(/\\/+$/, '');
+const pathname = Astro.url.pathname.replace(/\\/+$/, '') || '/';
+const currentRoute = basePath && pathname.startsWith(basePath)
+  ? pathname.slice(basePath.length) || '/'
+  : pathname;
 const selectedRoute =
   currentRoute === '/' && siteConfig.homepageRoute
     ? siteConfig.homepageRoute
@@ -154,49 +120,9 @@ const selectedRoute =
 <script>
   import '@foam/graph';
 
-  const normalizeBasePath = value => {
-    const trimmed = String(value ?? '/')
-      .replace(/\\/+$/g, '')
-      .replace(/^\\/+$/g, '')
-      .trim();
-    return trimmed.length > 0 ? '/' + trimmed.replace(/^\\/+/, '') : '';
-  };
-
-  const stripBasePath = (pathname, basePath) => {
-    if (!basePath) {
-      return pathname;
-    }
-
-    if (pathname === basePath) {
-      return '/';
-    }
-
-    if (pathname.startsWith(basePath + '/')) {
-      return pathname.slice(basePath.length) || '/';
-    }
-
-    return pathname;
-  };
-
-  const normalizeRoute = (value, basePath = '') => {
-    const pathname = String(value ?? '').split(/[?#]/, 1)[0] || '/';
-    const withoutBase = stripBasePath(pathname, basePath);
-
-    if (withoutBase === '/') {
-      return '/';
-    }
-
-    return withoutBase.replace(/\\/+$/, '') || '/';
-  };
-
-  const joinBasePath = (basePath, route) => (basePath ? basePath + route : route);
   const readCssVar = name =>
     getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-  const siteBasePath = normalizeBasePath(import.meta.env.BASE_URL);
-  const graphDataUrl = new URL(
-    joinBasePath(siteBasePath, '/foam-graph.json'),
-    window.location.origin
-  ).toString();
+  const basePath = (import.meta.env.BASE_URL || '/').replace(/\\/+$/, '');
 
   const buildGraphStyle = () => ({
     colorMode: 'none',
@@ -228,26 +154,16 @@ const selectedRoute =
     },
   });
 
-  const toSiteUrl = route =>
-    new URL(
-      joinBasePath(siteBasePath, normalizeRoute(route)),
-      window.location.origin
-    ).toString();
-
-  const graphDataPromise = fetch(graphDataUrl).then(async response => {
+  const graphDataPromise = fetch(basePath + '/foam-graph.json').then(response => {
     if (!response.ok) {
       throw new Error('Failed to load published graph data.');
     }
-
     return response.json();
   });
 
   const initGraph = async graph => {
     try {
-      const currentRoute = normalizeRoute(
-        graph.dataset.currentRoute || window.location.pathname,
-        siteBasePath
-      );
+      const currentRoute = graph.dataset.currentRoute;
 
       graph.graphData = await graphDataPromise;
       graph.graphStyle = buildGraphStyle();
@@ -265,12 +181,9 @@ const selectedRoute =
       });
 
       graph.addEventListener('node-click', event => {
-        const targetRoute = normalizeRoute(event.detail);
-        if (targetRoute === currentRoute) {
-          return;
+        if (event.detail !== currentRoute) {
+          window.location.assign(basePath + event.detail);
         }
-
-        window.location.assign(toSiteUrl(targetRoute));
       });
     } catch (error) {
       graph.hidden = true;

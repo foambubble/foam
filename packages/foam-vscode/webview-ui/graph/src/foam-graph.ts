@@ -48,6 +48,13 @@ export class FoamGraph extends LitElement {
   @property({ type: Object }) graphScope: GraphScope = 'full';
   @property({ type: Number }) maxFitZoom: number | null = null;
   @property({ type: Object }) labels: Labels = { fade: 0 };
+  @property({ type: Object }) forces: Forces = {
+    collide: 1,
+    repel: 10,
+    link: 30,
+    velocityDecay: 0.4,
+  };
+  @property({ type: Number }) linkWidthMultiplier: number = 2;
   @property({ type: Object }) selection: Selection = {
     neighborDepth: 1,
     centerOnSelect: true,
@@ -69,14 +76,7 @@ export class FoamGraph extends LitElement {
   };
   @state() private nodeFontSizeMultiplier: number = 1;
   @state() private nodeSizeMultiplier: number = 2;
-  @state() private linkWidthMultiplier: number = 2;
   @state() private animateLinks: LinkAnimation = 'forward';
-  @state() private forces: Forces = {
-    collide: 1,
-    repel: 10,
-    link: 30,
-    velocityDecay: 0.4,
-  };
   @state() private localStylePatch: GraphStyle = {};
   @state() private groups: GroupRule[] = [];
   @state() private groupDraft: GroupDraft = {

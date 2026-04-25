@@ -134,10 +134,11 @@ const selectedRoute =
       fontFamily: 'inherit',
       fontSize: 8,
       lineColor:
+        readCssVar('--sl-color-text') ||
         readCssVar('--sl-color-text-secondary') ||
-        readCssVar('--sl-color-hairline-light') ||
         '#94a3b8',
       lineWidth: 0.8,
+      particleWidth: 3,
       highlightedForeground:
         readCssVar('--sl-color-text-accent') || '#38bdf8',
       node: {
@@ -172,7 +173,8 @@ const selectedRoute =
       graph.graphScope = { depth: 1 };
       graph.maxFitZoom = 1.4;
       graph.labels = 'always';
-      graph.linkWidthMultiplier = 3;
+      graph.forces = { collide: 3, repel: 400, link: 50, velocityDecay: 0.4 };
+      graph.linkWidthMultiplier = 1.5;
       graph.selection = { neighborDepth: 1, centerOnSelect: false, zoomOnSelect: false };
 
       const themeObserver = new MutationObserver(() => {

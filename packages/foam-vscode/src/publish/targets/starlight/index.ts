@@ -37,7 +37,26 @@ function stripFrontmatter(markdown: string) {
 }
 
 function stripLeadingH1(markdown: string) {
-  return markdown.replace(/^# [^\n]*\n?/, '').replace(/^\n+/, '');
+  const lines = markdown.split('\n');
+  let inComment = false;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (inComment) {
+      if (line.includes('-->')) inComment = false;
+      continue;
+    }
+    if (line.includes('<!--')) {
+      if (!line.includes('-->')) inComment = true;
+      continue;
+    }
+    if (line.trim() === '') continue;
+    if (/^# /.test(line)) {
+      lines.splice(i, 1);
+      return lines.join('\n').replace(/^\n+/, '');
+    }
+    break;
+  }
+  return markdown;
 }
 
 function escapeFrontmatter(value: string) {

@@ -14,11 +14,14 @@ const GRAPH_DATA_PATH = path.join(PUBLIC_DIR, 'foam-graph.json');
 const GENERATED_DIR = 'generated';
 const ROUTES_MANIFEST_PATH = path.join(PUBLIC_DIR, 'publish-routes.json');
 
+const GRAPH_BUNDLE_PATH = path.join('src', 'lib', 'foam-graph.js');
+
 export interface StarlightTargetOptions {
   artifactSet: PublishArtifactSet;
   outputDir: string;
   includeProjectScaffold?: boolean;
   siteUrl?: string;
+  graphBundlePath?: string;
 }
 
 function routeToDocPath(route: string) {
@@ -250,6 +253,12 @@ async function writeGraphData(
   );
 }
 
+async function writeGraphBundle(outputDir: string, bundlePath: string) {
+  const outputPath = path.join(outputDir, GRAPH_BUNDLE_PATH);
+  await fs.mkdir(path.dirname(outputPath), { recursive: true });
+  await fs.copyFile(bundlePath, outputPath);
+}
+
 export async function writeStarlightSite(options: StarlightTargetOptions) {
   const includeProjectScaffold = options.includeProjectScaffold ?? true;
   const docsDir = path.join(options.outputDir, DOCS_DIR);
@@ -266,6 +275,9 @@ export async function writeStarlightSite(options: StarlightTargetOptions) {
   await writeDocs(options.outputDir, options.artifactSet);
   await copyAssets(options.outputDir, options.artifactSet);
   await writeGraphData(options.outputDir, options.artifactSet);
+  if (options.graphBundlePath) {
+    await writeGraphBundle(options.outputDir, options.graphBundlePath);
+  }
   await writeSiteConfig(
     options.outputDir,
     options.artifactSet,

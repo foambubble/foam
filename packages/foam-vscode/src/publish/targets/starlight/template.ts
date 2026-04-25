@@ -1,7 +1,5 @@
 const DEFAULT_TITLE = 'Foam Site';
 const DEFAULT_DESCRIPTION = 'Published from a Foam knowledge base.';
-const GRAPH_COMPONENT_VERSION = '0.38.1';
-
 export const STARLIGHT_TEMPLATE_FILES = {
   '.gitignore': ['node_modules/', 'dist/', '.astro/'].join('\n') + '\n',
   'package.json':
@@ -16,10 +14,8 @@ export const STARLIGHT_TEMPLATE_FILES = {
           preview: 'astro preview',
         },
         dependencies: {
-          '@foam/graph': `^${GRAPH_COMPONENT_VERSION}`,
           '@astrojs/starlight': '^0.38.3',
           astro: '^6.1.7',
-          lit: '^3.0.0',
         },
       },
       null,
@@ -107,10 +103,10 @@ const selectedRoute =
 
   <div class="right-sidebar-panel sl-hidden lg:sl-block">
     <div class="sl-container">
-      <!-- foam-graph
+      <foam-graph
         class="foam-sidebar-graph"
         data-current-route={selectedRoute}
-      ></foam-graph -->
+      ></foam-graph>
 
       {toc && <TableOfContents />}
     </div>
@@ -118,7 +114,7 @@ const selectedRoute =
 </>
 
 <script>
-  import '@foam/graph';
+  import '../lib/foam-graph.js';
 
   const readCssVar = name =>
     getComputedStyle(document.documentElement).getPropertyValue(name).trim();

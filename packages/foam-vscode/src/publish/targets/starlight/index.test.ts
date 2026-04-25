@@ -348,10 +348,14 @@ describe('publish starlight target', () => {
       diagnostics: [],
     };
 
+    const graphBundlePath = path.join(tmpDir, 'foam-graph.standalone.js');
+    fs.writeFileSync(graphBundlePath, '/* foam-graph standalone bundle */');
+
     await writeStarlightSite({
       artifactSet,
       outputDir: path.join(tmpDir, 'site'),
       siteUrl: 'https://example.com',
+      graphBundlePath,
     });
 
     expect(
@@ -359,7 +363,7 @@ describe('publish starlight target', () => {
     ).toContain('"@astrojs/starlight"');
     expect(
       fs.readFileSync(path.join(tmpDir, 'site', 'package.json'), 'utf8')
-    ).toContain('"@foam/graph"');
+    ).not.toContain('"@foam/graph"');
     expect(
       fs.readFileSync(path.join(tmpDir, 'site', 'astro.config.mjs'), 'utf8')
     ).toContain("site: siteConfig.siteUrl");
@@ -387,12 +391,13 @@ describe('publish starlight target', () => {
         'utf8'
       )
     ).toContain('<div class="backlinks">');
-    expect(
-      fs.readFileSync(
-        path.join(tmpDir, 'site', 'src', 'components', 'FoamPageSidebar.astro'),
-        'utf8'
-      )
-    ).toContain("import '@foam/graph';");
+    const pageSidebar = fs.readFileSync(
+      path.join(tmpDir, 'site', 'src', 'components', 'FoamPageSidebar.astro'),
+      'utf8'
+    );
+    expect(pageSidebar).toContain("import '../lib/foam-graph.js';");
+    expect(pageSidebar).toContain('<foam-graph');
+    expect(pageSidebar).toContain('class="foam-sidebar-graph"');
     expect(
       fs.existsSync(
         path.join(tmpDir, 'site', 'src', 'content', 'docs', '404.md')
@@ -442,5 +447,11 @@ describe('publish starlight target', () => {
         )
       )
     ).toEqual(artifactSet.graph);
+    expect(
+      fs.readFileSync(
+        path.join(tmpDir, 'site', 'src', 'lib', 'foam-graph.js'),
+        'utf8'
+      )
+    ).toBe('/* foam-graph standalone bundle */');
   });
 });

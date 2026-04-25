@@ -65,6 +65,8 @@ export type LinkAnimation = 'forward' | 'off' | 'reverse';
 
 export type GraphScope = 'full' | { depth: number };
 
+export type Labels = 'always' | { fade: number };
+
 export interface Selection {
   neighborDepth: number;
   centerOnSelect: boolean;

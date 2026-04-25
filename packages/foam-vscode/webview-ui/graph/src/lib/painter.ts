@@ -19,6 +19,7 @@ export class Painter {
   private circlesByColor: Map<RGBColor, Circle[]> = new Map();
   private bordersByColor: Map<RGBColor, Circle[]> = new Map();
   private texts: Label[] = [];
+  private screenTexts: Label[] = [];
 
   private _addCircle(
     x: number,
@@ -59,6 +60,20 @@ export class Painter {
     return this;
   }
 
+  screenText(
+    text: string,
+    x: number,
+    y: number,
+    size: number,
+    family: string,
+    color: RGBColor
+  ): this {
+    if (color.opacity > 0) {
+      this.screenTexts.push({ x, y, text, size, family, color });
+    }
+    return this;
+  }
+
   paint(ctx: CanvasRenderingContext2D): this {
     // Draw borders first, then fills
     for (const target of [this.bordersByColor, this.circlesByColor]) {
@@ -83,6 +98,21 @@ export class Painter {
       ctx.fillText(label.text, label.x, label.y);
     }
     this.texts = [];
+
+    if (this.screenTexts.length > 0) {
+      ctx.save();
+      const devicePixelRatio = window.devicePixelRatio || 1;
+      ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      for (const label of this.screenTexts) {
+        ctx.font = `${label.size}px ${label.family}`;
+        ctx.fillStyle = label.color.toString();
+        ctx.fillText(label.text, label.x, label.y);
+      }
+      ctx.restore();
+      this.screenTexts = [];
+    }
 
     return this;
   }

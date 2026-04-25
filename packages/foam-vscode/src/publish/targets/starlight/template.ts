@@ -133,7 +133,11 @@ const selectedRoute =
       background: readCssVar('--sl-color-bg-nav') || '#111827',
       fontFamily: 'inherit',
       fontSize: 8,
-      lineColor: readCssVar('--sl-color-hairline-light') || '#334155',
+      lineColor:
+        readCssVar('--sl-color-text-secondary') ||
+        readCssVar('--sl-color-hairline-light') ||
+        '#94a3b8',
+      lineWidth: 0.8,
       highlightedForeground:
         readCssVar('--sl-color-text-accent') || '#38bdf8',
       node: {
@@ -166,6 +170,9 @@ const selectedRoute =
       graph.showControls = false;
       graph.focusNodeId = currentRoute;
       graph.graphScope = { depth: 1 };
+      graph.maxFitZoom = 1.4;
+      graph.labels = 'always';
+      graph.linkWidthMultiplier = 3;
       graph.selection = { neighborDepth: 1, centerOnSelect: false, zoomOnSelect: false };
 
       const themeObserver = new MutationObserver(() => {

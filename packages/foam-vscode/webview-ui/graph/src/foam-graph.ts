@@ -18,6 +18,7 @@ import type {
   GraphModel,
   ResolvedStyle,
   Forces,
+  Labels,
   Selection,
   GraphScope,
   LinkAnimation,
@@ -45,6 +46,8 @@ export class FoamGraph extends LitElement {
   @property({ type: Boolean }) showControls = true;
   @property({ type: String }) focusNodeId: string | null = null;
   @property({ type: Object }) graphScope: GraphScope = 'full';
+  @property({ type: Number }) maxFitZoom: number | null = null;
+  @property({ type: Object }) labels: Labels = { fade: 0 };
   @property({ type: Object }) selection: Selection = {
     neighborDepth: 1,
     centerOnSelect: true,
@@ -64,7 +67,6 @@ export class FoamGraph extends LitElement {
     note: true,
     tag: true,
   };
-  @state() private textFade: number = 0;
   @state() private nodeFontSizeMultiplier: number = 1;
   @state() private nodeSizeMultiplier: number = 2;
   @state() private linkWidthMultiplier: number = 2;
@@ -174,11 +176,12 @@ export class FoamGraph extends LitElement {
         .style=${resolved}
         .groups=${this.groups}
         .forces=${this.forces}
-        .textFade=${this.textFade}
+        .labels=${this.labels}
         .nodeFontSizeMultiplier=${this.nodeFontSizeMultiplier}
         .nodeSizeMultiplier=${this.nodeSizeMultiplier}
         .linkWidthMultiplier=${this.linkWidthMultiplier}
         .animateLinks=${this.animateLinks}
+        .maxFitZoom=${this.maxFitZoom}
         @canvas-node-click=${(e: CustomEvent) =>
           this._onCanvasNodeClick(e.detail)}
         @canvas-node-hover=${(e: CustomEvent) =>
@@ -196,7 +199,7 @@ export class FoamGraph extends LitElement {
             .previewMatchCount=${previewMatchCount}
             .groupDraft=${this.groupDraft}
             .groups=${this.groups}
-            .textFade=${this.textFade}
+            .textFade=${typeof this.labels === 'object' ? this.labels.fade : 0}
             .nodeFontSizeMultiplier=${this.nodeFontSizeMultiplier}
             .nodeSizeMultiplier=${this.nodeSizeMultiplier}
             .linkWidthMultiplier=${this.linkWidthMultiplier}
@@ -221,7 +224,7 @@ export class FoamGraph extends LitElement {
               (this.groupDraft = { ...this.groupDraft, active: false })}
             @draft-change=${(e: CustomEvent) => (this.groupDraft = e.detail)}
             @add-group=${() => this._onAddGroup()}
-            @text-fade-change=${(e: CustomEvent) => (this.textFade = e.detail)}
+            @text-fade-change=${(e: CustomEvent) => (this.labels = { fade: e.detail })}
             @font-size-multiplier-change=${(e: CustomEvent) =>
               (this.nodeFontSizeMultiplier = e.detail)}
             @node-size-multiplier-change=${(e: CustomEvent) =>

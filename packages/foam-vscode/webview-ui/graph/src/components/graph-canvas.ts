@@ -20,6 +20,7 @@ import type {
   GraphStates,
   ResolvedStyle,
   Forces,
+  Labels,
   LinkAnimation,
 } from '../lib/types';
 import type { GroupRule } from '../protocol';
@@ -28,6 +29,16 @@ import type { VisibleGraph } from '../lib/graph-view-model';
 export interface GraphViewportSize {
   width: number;
   height: number;
+}
+
+export interface ViewportPoint {
+  x: number;
+  y: number;
+}
+
+export interface GraphBounds {
+  x: [number, number];
+  y: [number, number];
 }
 
 export function measureGraphViewport(
@@ -51,6 +62,55 @@ export function measureGraphViewport(
       parent?.clientHeight ||
       fallback.height,
   };
+}
+
+export function graphPointToViewport(
+  transform: DOMMatrixReadOnly,
+  x: number,
+  y: number,
+  devicePixelRatio: number
+): ViewportPoint {
+  const ratio = devicePixelRatio || 1;
+  return {
+    x: (transform.a * x + transform.c * y + transform.e) / ratio,
+    y: (transform.b * x + transform.d * y + transform.f) / ratio,
+  };
+}
+
+export function computeLabelFontSize(
+  baseFontSize: number,
+  multiplier: number
+): number {
+  return baseFontSize * multiplier;
+}
+
+export function computeLabelOpacity(
+  state: string,
+  globalScale: number,
+  fillOpacity: number,
+  getOpacity: (scale: number) => number,
+  labels: Labels
+): number {
+  if (labels === 'always' || state === 'highlighted') return 1;
+  const opacity = getOpacity(globalScale);
+  return state === 'regular' ? opacity : Math.min(opacity, fillOpacity);
+}
+
+export function computeFitZoom(
+  bounds: GraphBounds,
+  viewport: GraphViewportSize,
+  padding: number,
+  maxZoom?: number | null
+): number {
+  const availableWidth = Math.max(viewport.width - padding * 2, 1);
+  const availableHeight = Math.max(viewport.height - padding * 2, 1);
+  const graphWidth = Math.max(bounds.x[1] - bounds.x[0], 1e-12);
+  const graphHeight = Math.max(bounds.y[1] - bounds.y[0], 1e-12);
+  const fitZoom = Math.max(
+    1e-12,
+    Math.min(1e12, availableWidth / graphWidth, availableHeight / graphHeight)
+  );
+  return maxZoom == null ? fitZoom : Math.min(fitZoom, maxZoom);
 }
 
 @customElement('foam-graph-canvas')
@@ -81,12 +141,13 @@ export class GraphCanvas extends LitElement {
     link: 30,
     velocityDecay: 0.4,
   };
-  @property({ type: Number }) textFade: number = 0;
+  @property({ type: Object }) labels: Labels = { fade: 0 };
   @property({ type: Number }) nodeFontSizeMultiplier: number = 1;
   @property({ type: Number }) nodeSizeMultiplier: number = 1;
   @property({ type: Number }) linkWidthMultiplier: number = 2;
   @property({ type: String }) animateLinks: LinkAnimation = 'forward';
   @property({ type: Array }) groups: GroupRule[] = [];
+  @property({ type: Number }) maxFitZoom: number | null = null;
 
   // Mutable rendering state closed over by force-graph callbacks.
   private rs = {
@@ -95,7 +156,6 @@ export class GraphCanvas extends LitElement {
     graphStates: null as GraphStates | null,
     style: {} as ResolvedStyle,
     forces: {} as Forces,
-    textFade: 0,
     nodeFontSizeMultiplier: 1,
     nodeSizeMultiplier: 1,
     linkWidthMultiplier: 2,
@@ -179,15 +239,17 @@ export class GraphCanvas extends LitElement {
             this.rs.colorMode,
             this.rs.groups
           );
-          const fontSize =
-            (this.rs.style.fontSize * this.rs.nodeFontSizeMultiplier) /
-            Math.max(globalScale, 1);
-          const opacity =
-            state === 'highlighted'
-              ? 1
-              : state === 'regular'
-              ? this.getNodeLabelOpacity(globalScale)
-              : Math.min(this.getNodeLabelOpacity(globalScale), fill.opacity);
+          const fontSize = computeLabelFontSize(
+            this.rs.style.fontSize,
+            this.rs.nodeFontSizeMultiplier
+          );
+          const opacity = computeLabelOpacity(
+            state,
+            globalScale,
+            fill.opacity,
+            scale => this.getNodeLabelOpacity(scale),
+            this.labels
+          );
 
           const textColor = getNodeLabelColor(
             fill,
@@ -196,12 +258,19 @@ export class GraphCanvas extends LitElement {
             this.rs.style
           );
 
+          const labelPosition = graphPointToViewport(
+            ctx.getTransform(),
+            node.x,
+            node.y + size + 1,
+            window.devicePixelRatio || 1
+          );
+
           painter
             .circle(node.x, node.y, size, fill, border)
-            .text(
+            .screenText(
               info.title,
-              node.x,
-              node.y + size + 1,
+              labelPosition.x,
+              labelPosition.y,
               fontSize,
               this.rs.style.fontFamily,
               textColor as any
@@ -289,10 +358,11 @@ export class GraphCanvas extends LitElement {
       this.rs.groups = this.groups;
     }
 
-    if (changed.has('textFade')) {
-      this.rs.textFade = this.textFade;
-      const invertedValue = 3 - this.textFade;
-      this.getNodeLabelOpacity.domain([invertedValue, invertedValue + 0.8]);
+    if (changed.has('labels')) {
+      if (typeof this.labels === 'object') {
+        const invertedValue = 3 - this.labels.fade;
+        this.getNodeLabelOpacity.domain([invertedValue, invertedValue + 0.8]);
+      }
     }
 
     if (changed.has('nodeFontSizeMultiplier')) {
@@ -332,7 +402,7 @@ export class GraphCanvas extends LitElement {
         this.graphInstance.cooldownTicks(100);
         this.graphInstance.onEngineStop(() => {
           this.graphInstance!.onEngineStop(() => {});
-          this.graphInstance!.zoomToFit(500);
+          this.zoomToFit(500);
         });
       }
     }
@@ -352,7 +422,28 @@ export class GraphCanvas extends LitElement {
 
   /** Fits the current graph into the available canvas area. */
   zoomToFit(duration = 500) {
-    this.graphInstance?.zoomToFit(duration);
+    if (!this.graphInstance) return;
+    if (this.maxFitZoom == null) {
+      this.graphInstance.zoomToFit(duration);
+      return;
+    }
+
+    const graphInstance = this.graphInstance as any;
+    const bounds = graphInstance.getGraphBbox?.() as GraphBounds | null;
+    if (!bounds) return;
+
+    const center = {
+      x: (bounds.x[0] + bounds.x[1]) / 2,
+      y: (bounds.y[0] + bounds.y[1]) / 2,
+    };
+    const viewport = measureGraphViewport(this, {
+      width: window.innerWidth,
+      height: window.innerHeight,
+    });
+    const zoom = computeFitZoom(bounds, viewport, 10, this.maxFitZoom);
+
+    this.graphInstance.centerAt(center.x, center.y, duration);
+    this.graphInstance.zoom(zoom, duration);
   }
 
   /** Sets the current zoom level without changing the graph data. */

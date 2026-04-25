@@ -89,7 +89,7 @@ describe('foam-graph', () => {
     const visibleGraph = (element as any).visibleGraph;
     const graphStates = (element as any).graphStates;
 
-    (element as any).textFade = 1;
+    element.labels = { fade: 1 };
     element.render();
 
     expect((element as any).visibleGraph).toBe(visibleGraph);
@@ -193,5 +193,16 @@ describe('foam-graph', () => {
     expect((element as any).groups.map((group: { id: string }) => group.id)).toEqual([
       'configured',
     ]);
+  });
+
+  it('passes labels setting to the canvas', () => {
+    const element = new FoamGraph();
+    element.showControls = false;
+    element.labels = 'always';
+
+    const t = element.render() as TemplateResult;
+
+    expect(t.strings.join('')).toContain('.labels=');
+    expect(t.values).toContain('always');
   });
 });

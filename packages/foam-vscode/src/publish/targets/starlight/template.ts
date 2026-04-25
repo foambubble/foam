@@ -27,6 +27,7 @@ export const STARLIGHT_TEMPLATE_FILES = {
     ) + '\n',
   'astro.config.mjs': `import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 
@@ -56,7 +57,7 @@ function buildSidebar(dir, prefix = '') {
     });
 }
 
-const docsDir = new URL('./src/content/docs', import.meta.url).pathname;
+const docsDir = fileURLToPath(new URL('./src/content/docs', import.meta.url));
 const sidebar = buildSidebar(docsDir);
 
 export default defineConfig({

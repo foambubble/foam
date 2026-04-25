@@ -8,6 +8,8 @@ on:
       - docs/user/**/*
       - packages/foam-vscode/src/publish/**/*
       - packages/foam-vscode/src/cli/**/*
+      - packages/foam-vscode/webview-ui/graph/src/**/*
+      - packages/foam-vscode/webview-ui/graph/build.cjs
       - packages/foam-vscode/esbuild.js
       - package.json
       - yarn.lock

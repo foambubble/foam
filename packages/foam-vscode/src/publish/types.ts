@@ -106,6 +106,29 @@ export interface PublishedSite {
   homepageRoute: string | null;
 }
 
+/**
+ * Runtime-compatible with the `GraphData` payload expected by `@foam/graph`.
+ * Publish keeps a local copy of the shape so targets can emit graph JSON
+ * without depending on the site package at build time.
+ */
+export interface PublishedGraphNode {
+  id: string;
+  type: string;
+  title: string;
+  properties: { color?: string; [key: string]: unknown };
+  tags: Array<{ label: string }>;
+}
+
+export interface PublishedGraphLink {
+  source: string;
+  target: string;
+}
+
+export interface PublishedGraphData {
+  nodeInfo: Record<string, PublishedGraphNode>;
+  links: PublishedGraphLink[];
+}
+
 export interface PublishedDiagnostic {
   level: 'warning';
   code: 'unresolved-link';
@@ -118,6 +141,7 @@ export interface PublishedDiagnostic {
 
 export interface PublishArtifactSet {
   site: PublishedSite;
+  graph: PublishedGraphData;
   notes: PublishedNote[];
   assets: PublishedAsset[];
   routes: PublishedRoute[];

@@ -42,6 +42,19 @@ async function buildLibTarget() {
   });
 }
 
+async function buildStandaloneTarget() {
+  console.log('Building standalone (ESM, all deps bundled)...');
+  await esbuild.build({
+    entryPoints: [path.join(dir, 'src/foam-graph.ts')],
+    bundle: true,
+    format: 'esm',
+    outfile: path.join(dir, 'dist/foam-graph.standalone.js'),
+    platform: 'browser',
+    minify: true,
+    sourcemap: false,
+  });
+}
+
 async function buildVscodeTarget() {
   const outdir = path.join(dir, '../../static/dataviz');
 
@@ -87,7 +100,10 @@ async function buildVscodeTarget() {
 }
 
 async function main() {
-  if (buildLib) await buildLibTarget();
+  if (buildLib) {
+    await buildLibTarget();
+    await buildStandaloneTarget();
+  }
   if (buildVscode) await buildVscodeTarget();
 }
 

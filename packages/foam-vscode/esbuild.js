@@ -1,5 +1,7 @@
 // also see https://code.visualstudio.com/api/working-with-extensions/bundling-extension
 const assert = require('assert');
+const fs = require('fs');
+const path = require('path');
 const esbuild = require('esbuild');
 const polyfillPlugin = require('esbuild-plugin-polyfill-node');
 
@@ -138,8 +140,20 @@ async function buildExtension() {
   }
 }
 
+function copyGraphBundleForCli() {
+  const src = path.join(__dirname, 'webview-ui/graph/dist/foam-graph.standalone.js');
+  const dest = path.join(__dirname, 'out/cli/foam-graph.standalone.js');
+  if (fs.existsSync(src)) {
+    fs.mkdirSync(path.dirname(dest), { recursive: true });
+    fs.copyFileSync(src, dest);
+  }
+}
+
 async function main() {
   await buildExtension();
+  if (entry === 'cli') {
+    copyGraphBundleForCli();
+  }
 }
 
 /**

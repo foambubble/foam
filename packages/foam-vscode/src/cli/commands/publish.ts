@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import path from 'node:path';
 
 import { Logger } from '../../core/utils/log';
@@ -144,10 +145,15 @@ export async function runPublishCommand(options: PublishCommandOptions) {
     },
   });
 
+  const graphBundlePath = path.join(__dirname, 'foam-graph.standalone.js');
+
   await writeStarlightSite({
     artifactSet,
     outputDir,
     siteUrl: options.siteUrl,
+    graphBundlePath: fs.existsSync(graphBundlePath)
+      ? graphBundlePath
+      : undefined,
   });
 
   for (const diagnostic of artifactSet.diagnostics) {

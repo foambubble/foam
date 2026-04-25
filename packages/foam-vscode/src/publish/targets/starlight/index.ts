@@ -10,14 +10,18 @@ const DEFAULT_DESCRIPTION = 'Published from a Foam knowledge base.';
 const DOCS_DIR = path.join('src', 'content', 'docs');
 const PUBLIC_DIR = 'public';
 const ASSETS_DIR = path.join(PUBLIC_DIR, 'assets');
+const GRAPH_DATA_PATH = path.join(PUBLIC_DIR, 'foam-graph.json');
 const GENERATED_DIR = 'generated';
 const ROUTES_MANIFEST_PATH = path.join(PUBLIC_DIR, 'publish-routes.json');
+
+const GRAPH_BUNDLE_PATH = path.join('src', 'lib', 'foam-graph.js');
 
 export interface StarlightTargetOptions {
   artifactSet: PublishArtifactSet;
   outputDir: string;
   includeProjectScaffold?: boolean;
   siteUrl?: string;
+  graphBundlePath?: string;
 }
 
 function routeToDocPath(route: string) {
@@ -26,6 +30,14 @@ function routeToDocPath(route: string) {
   }
 
   return `${route.replace(/^\/+/, '')}.md`;
+}
+
+function stripFrontmatter(markdown: string) {
+  return markdown.replace(/^---\n[\s\S]*?\n---\n?/, '').replace(/^\n+/, '');
+}
+
+function stripLeadingH1(markdown: string) {
+  return markdown.replace(/^# [^\n]*\n?/, '').replace(/^\n+/, '');
 }
 
 function escapeFrontmatter(value: string) {
@@ -45,6 +57,36 @@ function renderFrontmatter(note: PublishArtifactSet['notes'][number]) {
   return lines.join('\n');
 }
 
+const EXCLUDED_PROPERTIES = new Set(['title', 'description']);
+
+function renderPropertyValue(value: unknown): string {
+  if (Array.isArray(value)) {
+    return value
+      .map(v => `<span class="note-property-chip">${String(v)}</span>`)
+      .join('');
+  }
+  return String(value);
+}
+
+function renderProperties(properties: Record<string, unknown>) {
+  const entries = Object.entries(properties).filter(
+    ([key, value]) => !EXCLUDED_PROPERTIES.has(key) && value !== null && value !== undefined && value !== ''
+  );
+
+  if (entries.length === 0) {
+    return '';
+  }
+
+  const rows = entries
+    .map(
+      ([key, value]) =>
+        `  <div class="note-property-row"><span class="note-property-key">${key}</span><span class="note-property-value">${renderPropertyValue(value)}</span></div>`
+    )
+    .join('\n');
+
+  return `<div class="note-properties">\n${rows}\n</div>\n\n`;
+}
+
 function renderBacklinks(
   backlinks: PublishArtifactSet['notes'][number]['backlinks']
 ) {
@@ -53,9 +95,9 @@ function renderBacklinks(
   }
 
   const items = backlinks
-    .map(link => `- [${link.title}](${link.route})`)
+    .map(link => `  <a href="${link.route}">${link.title}</a>`)
     .join('\n');
-  return `\n\n## Backlinks\n\n${items}\n`;
+  return `\n\n<div class="backlinks">\n<p class="backlinks-label">LINKS TO THIS PAGE</p>\n${items}\n</div>\n`;
 }
 
 function rewriteStaticAssetPaths(markdown: string) {
@@ -63,9 +105,12 @@ function rewriteStaticAssetPaths(markdown: string) {
     .replace(/\]\(((?:\.\.\/)*assets\/[^)]+)\)/g, (_match, assetPath) => {
       return `](/${String(assetPath).replace(/^(?:\.\.\/)+/, '')})`;
     })
-    .replace(/(src|href)="((?:\.\.\/)*assets\/)/g, (_match, attr, assetPath) => {
-      return `${attr}="/${String(assetPath).replace(/^(?:\.\.\/)+/, '')}`;
-    });
+    .replace(
+      /(src|href)="((?:\.\.\/)*assets\/)/g,
+      (_match, attr, assetPath) => {
+        return `${attr}="/${String(assetPath).replace(/^(?:\.\.\/)+/, '')}`;
+      }
+    );
 }
 
 function isFrameworkHandledRoute(route: string) {
@@ -79,11 +124,13 @@ async function ensureCleanDir(dir: string) {
 
 async function writeTemplateFiles(outputDir: string) {
   await Promise.all(
-    Object.entries(STARLIGHT_TEMPLATE_FILES).map(async ([relativePath, content]) => {
-      const outputPath = path.join(outputDir, relativePath);
-      await fs.mkdir(path.dirname(outputPath), { recursive: true });
-      await fs.writeFile(outputPath, content, 'utf8');
-    })
+    Object.entries(STARLIGHT_TEMPLATE_FILES).map(
+      async ([relativePath, content]) => {
+        const outputPath = path.join(outputDir, relativePath);
+        await fs.mkdir(path.dirname(outputPath), { recursive: true });
+        await fs.writeFile(outputPath, content, 'utf8');
+      }
+    )
   );
 }
 
@@ -108,8 +155,8 @@ async function writeDocs(outputDir: string, artifactSet: PublishArtifactSet) {
     await fs.mkdir(path.dirname(outputPath), { recursive: true });
     await fs.writeFile(
       outputPath,
-      `${renderFrontmatter(note)}${rewriteStaticAssetPaths(
-        note.markdown
+      `${renderFrontmatter(note)}${renderProperties(note.properties)}${rewriteStaticAssetPaths(
+        stripLeadingH1(stripFrontmatter(note.markdown))
       )}${renderBacklinks(note.backlinks)}`,
       'utf8'
     );
@@ -128,8 +175,8 @@ async function writeDocs(outputDir: string, artifactSet: PublishArtifactSet) {
       await fs.mkdir(path.dirname(outputPath), { recursive: true });
       await fs.writeFile(
         outputPath,
-        `${renderFrontmatter(homepageNote)}${rewriteStaticAssetPaths(
-          homepageNote.markdown
+        `${renderFrontmatter(homepageNote)}${renderProperties(homepageNote.properties)}${rewriteStaticAssetPaths(
+          stripLeadingH1(homepageNote.markdown)
         )}${renderBacklinks(homepageNote.backlinks)}`,
         'utf8'
       );
@@ -193,6 +240,25 @@ async function writeRoutesManifest(
   );
 }
 
+async function writeGraphData(
+  outputDir: string,
+  artifactSet: PublishArtifactSet
+) {
+  const outputPath = path.join(outputDir, GRAPH_DATA_PATH);
+  await fs.mkdir(path.dirname(outputPath), { recursive: true });
+  await fs.writeFile(
+    outputPath,
+    JSON.stringify(artifactSet.graph, null, 2),
+    'utf8'
+  );
+}
+
+async function writeGraphBundle(outputDir: string, bundlePath: string) {
+  const outputPath = path.join(outputDir, GRAPH_BUNDLE_PATH);
+  await fs.mkdir(path.dirname(outputPath), { recursive: true });
+  await fs.copyFile(bundlePath, outputPath);
+}
+
 export async function writeStarlightSite(options: StarlightTargetOptions) {
   const includeProjectScaffold = options.includeProjectScaffold ?? true;
   const docsDir = path.join(options.outputDir, DOCS_DIR);
@@ -208,7 +274,14 @@ export async function writeStarlightSite(options: StarlightTargetOptions) {
   await ensureCleanDir(generatedDir);
   await writeDocs(options.outputDir, options.artifactSet);
   await copyAssets(options.outputDir, options.artifactSet);
-  await writeSiteConfig(options.outputDir, options.artifactSet, options.siteUrl);
+  await writeGraphData(options.outputDir, options.artifactSet);
+  if (options.graphBundlePath) {
+    await writeGraphBundle(options.outputDir, options.graphBundlePath);
+  }
+  await writeSiteConfig(
+    options.outputDir,
+    options.artifactSet,
+    options.siteUrl
+  );
   await writeRoutesManifest(options.outputDir, options.artifactSet);
 }
-

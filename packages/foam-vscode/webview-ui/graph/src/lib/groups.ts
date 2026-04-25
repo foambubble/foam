@@ -1,4 +1,4 @@
-import type { AugmentedNode } from './types';
+import type { GraphModelNode } from './types';
 import type { GroupRule } from '../protocol';
 
 /**
@@ -19,7 +19,7 @@ function makeRegexMatcher(value: string): ((s: string) => boolean) | null {
   return null;
 }
 
-export function matchesGroup(node: AugmentedNode, rule: GroupRule): boolean {
+export function matchesGroup(node: GraphModelNode, rule: GroupRule): boolean {
   const { property, value } = rule.match;
   const regex = makeRegexMatcher(value);
   switch (property) {
@@ -43,7 +43,7 @@ export function matchesGroup(node: AugmentedNode, rule: GroupRule): boolean {
  * Last match wins — more specific rules should be placed later in the list.
  */
 export function resolveGroupColor(
-  node: AugmentedNode,
+  node: GraphModelNode,
   groups: GroupRule[]
 ): string | undefined {
   let color: string | undefined;

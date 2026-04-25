@@ -1,18 +1,30 @@
 import type { NodeInfo, GroupRule } from '../protocol';
 
-export interface AugmentedNode extends NodeInfo {
+export interface GraphModelNode extends NodeInfo {
   neighbors: string[];
-  links: AugmentedLink[];
+  links: GraphModelLink[];
 }
 
-export interface AugmentedLink {
-  source: string | AugmentedNode;
-  target: string | AugmentedNode;
+export interface GraphModelLink {
+  source: string | GraphModelNode;
+  target: string | GraphModelNode;
 }
 
-export interface AugmentedGraph {
-  nodeInfo: Record<string, AugmentedNode>;
-  links: AugmentedLink[];
+export abstract class GraphModelLink {
+  static getNodeId(endpoint: GraphModelLink['source']): string {
+    return typeof endpoint === 'object' ? endpoint.id : endpoint;
+  }
+
+  static getKey(link: GraphModelLink): string {
+    return `${GraphModelLink.getNodeId(link.source)}->${GraphModelLink.getNodeId(
+      link.target
+    )}`;
+  }
+}
+
+export interface GraphModel {
+  nodeInfo: Record<string, GraphModelNode>;
+  links: GraphModelLink[];
 }
 
 export interface ResolvedStyle {
@@ -36,6 +48,12 @@ export interface ResolvedStyle {
 export type NodeState = 'regular' | 'highlighted' | 'lessened';
 export type LinkState = 'regular' | 'highlighted' | 'lessened';
 
+export interface GraphStates {
+  nodeStates: Map<string, NodeState>;
+  /** Keyed by "sourceId->targetId" for identity-safe lookup across copied link objects. */
+  linkStates: Map<string, LinkState>;
+}
+
 export interface Forces {
   collide: number;
   repel: number;
@@ -45,8 +63,10 @@ export interface Forces {
 
 export type LinkAnimation = 'forward' | 'off' | 'reverse';
 
+export type GraphScope = 'full' | { depth: number };
+
 export interface Selection {
   neighborDepth: number;
-  enableRefocus: boolean;
-  enableZoom: boolean;
+  centerOnSelect: boolean;
+  zoomOnSelect: boolean;
 }

@@ -1,10 +1,30 @@
 import { LitElement, html, css } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
+import { customElement, property, query, state } from 'lit/decorators.js';
 import { getDefaultStyle } from './lib/defaults';
-import { augmentGraphInfo } from './lib/graph-utils';
+import { createGraphModel, computeGraphStates } from './lib/graph-utils';
+import {
+  computeAutocompleteOptions,
+  computeGroupMatchCounts,
+  computeNodeTypeCounts,
+  computePreviewMatchCount,
+  computeVisibleGraph,
+  deriveNodeTypeFilters,
+  type VisibleGraph,
+} from './lib/graph-view-model';
 import { mergeStyles, resolveStyle } from './lib/style';
-import type { GraphData, GraphStyle, GroupRule } from './protocol';
-import type { AugmentedGraph, ResolvedStyle, Forces, Selection, LinkAnimation } from './lib/types';
+import { hashString, hashToHSL } from './lib/colors';
+import type { GraphData, GraphStyle, GroupMatch, GroupRule } from './protocol';
+import type {
+  GraphModel,
+  ResolvedStyle,
+  Forces,
+  Selection,
+  GraphScope,
+  LinkAnimation,
+  GraphStates,
+} from './lib/types';
+import type { GraphCanvas } from './components/graph-canvas';
+import type { GroupDraft } from './components/control-panel';
 import './components/graph-canvas';
 import './components/control-panel';
 
@@ -22,9 +42,21 @@ export class FoamGraph extends LitElement {
   // Public API
   @property({ type: Object }) graphData: GraphData | null = null;
   @property({ type: Object }) graphStyle: GraphStyle | null = null;
+  @property({ type: Boolean }) showControls = true;
+  @property({ type: String }) focusNodeId: string | null = null;
+  @property({ type: Object }) graphScope: GraphScope = 'full';
+  @property({ type: Object }) selection: Selection = {
+    neighborDepth: 1,
+    centerOnSelect: true,
+    zoomOnSelect: true,
+  };
 
-  // Internal control state
-  @state() private augmentedGraph: AugmentedGraph | null = null;
+  @query('foam-graph-canvas') private canvas!: GraphCanvas;
+
+  // Internal app state
+  @state() private graphModel: GraphModel | null = null;
+  @state() private selectedNodeIds = new Set<string>();
+  @state() private hoverNodeId: string | null = null;
   @state() private showNodesOfType: Record<string, boolean> = {
     placeholder: true,
     image: false,
@@ -37,117 +69,254 @@ export class FoamGraph extends LitElement {
   @state() private nodeSizeMultiplier: number = 2;
   @state() private linkWidthMultiplier: number = 2;
   @state() private animateLinks: LinkAnimation = 'forward';
-  @state() private forces: Forces = { collide: 1, repel: 10, link: 30, velocityDecay: 0.4 };
-  @state() private selection: Selection = { neighborDepth: 1, enableRefocus: true, enableZoom: true };
+  @state() private forces: Forces = {
+    collide: 1,
+    repel: 10,
+    link: 30,
+    velocityDecay: 0.4,
+  };
   @state() private localStylePatch: GraphStyle = {};
   @state() private groups: GroupRule[] = [];
+  @state() private groupDraft: GroupDraft = {
+    active: false,
+    property: 'type',
+    value: '',
+  };
+  // Pipeline: GraphData -> GraphModel -> VisibleGraph plus GraphStates for rendering.
+  @state() private visibleGraph: VisibleGraph | null = null;
+  @state() private graphStates: GraphStates | null = null;
 
   private get resolvedStyle(): ResolvedStyle {
     const merged = mergeStyles(this.graphStyle, this.localStylePatch);
     return resolveStyle(merged, getDefaultStyle());
   }
 
+  private get visibleFocusNodeId(): string | null {
+    if (this.focusNodeId) return this.focusNodeId;
+    if (this.graphScope === 'full') return null;
+    return [...this.selectedNodeIds][0] ?? null;
+  }
+
   updated(changed: Map<string, unknown>) {
-    if (changed.has('graphData') && this.graphData) {
-      this.augmentedGraph = augmentGraphInfo(this.graphData);
+    let shouldRecomputeVisibleGraph = false;
+    let shouldRecomputeGraphStates = false;
+
+    if (changed.has('graphData')) {
+      this.graphModel = this.graphData
+        ? createGraphModel(this.graphData)
+        : null;
+      this._pruneInteractionState();
+      shouldRecomputeVisibleGraph = true;
+      shouldRecomputeGraphStates = true;
     }
-    if ((changed.has('graphData') || changed.has('graphStyle')) && this.augmentedGraph) {
-      this._syncNodeTypes(this.augmentedGraph);
-    }
+
     if (changed.has('graphStyle') && this.graphStyle?.groups) {
       this.groups = this.graphStyle.groups;
+      shouldRecomputeVisibleGraph = true;
     }
+
     if (changed.has('graphStyle') && this.graphStyle?.showNodesOfType) {
-      this.showNodesOfType = { ...this.showNodesOfType, ...this.graphStyle.showNodesOfType };
-    }
-  }
-
-  private _syncNodeTypes(graph: AugmentedGraph) {
-    const specialTypes = new Set(['tag', 'attachment', 'image', 'placeholder', 'note']);
-    const types = new Set([
-      ...Object.values(graph.nodeInfo).map(n => n.type),
-      ...Object.keys(this.resolvedStyle.node).filter(t => !specialTypes.has(t)),
-    ]);
-    const updated = { ...this.showNodesOfType };
-    let changed = false;
-
-    for (const type of types) {
-      if (updated[type] == null) {
-        updated[type] = type !== 'image' && type !== 'attachment';
-        changed = true;
-      }
-    }
-    const keepTypes = new Set(['tag', 'attachment', 'image', 'placeholder']);
-    for (const type of Object.keys(updated)) {
-      if (!types.has(type) && !keepTypes.has(type)) {
-        delete updated[type];
-        changed = true;
-      }
+      this.showNodesOfType = {
+        ...this.showNodesOfType,
+        ...this.graphStyle.showNodesOfType,
+      };
+      shouldRecomputeVisibleGraph = true;
     }
 
-    if (changed) this.showNodesOfType = updated;
-  }
-
-  private get _nodeTypeCounts(): Record<string, number> {
-    if (!this.augmentedGraph) return {};
-    const counts: Record<string, number> = {};
-    for (const node of Object.values(this.augmentedGraph.nodeInfo)) {
-      counts[node.type] = (counts[node.type] ?? 0) + 1;
+    if (
+      (changed.has('graphData') || changed.has('graphStyle')) &&
+      this.graphModel
+    ) {
+      this.showNodesOfType = deriveNodeTypeFilters(
+        this.graphModel,
+        this.resolvedStyle,
+        this.showNodesOfType
+      );
+      shouldRecomputeVisibleGraph = true;
     }
-    return counts;
+
+    if (changed.has('focusNodeId') || changed.has('graphScope')) {
+      shouldRecomputeVisibleGraph = true;
+    }
+
+    if (changed.has('selection') || changed.has('hoverNodeId')) {
+      shouldRecomputeGraphStates = true;
+    }
+
+    if (shouldRecomputeVisibleGraph) {
+      this._recomputeVisibleGraph();
+    }
+    if (shouldRecomputeGraphStates) {
+      this._recomputeGraphStates();
+    }
   }
 
   render() {
     const resolved = this.resolvedStyle;
+    const groupMatchCounts = this.graphModel
+      ? computeGroupMatchCounts(this.graphModel, this.groups)
+      : {};
+    const autocompleteOptions = this.graphModel
+      ? computeAutocompleteOptions(this.graphModel, this.groupDraft.property)
+      : [];
+    const previewMatchCount = this.graphModel
+      ? computePreviewMatchCount(
+          this.graphModel,
+          this.groupDraft.property,
+          this.groupDraft.value
+        )
+      : 0;
+
     return html`
       <foam-graph-canvas
-        .augmentedGraph=${this.augmentedGraph}
+        .visibleGraph=${this.visibleGraph}
+        .graphStates=${this.graphStates}
         .style=${resolved}
-        .showNodesOfType=${this.showNodesOfType}
         .groups=${this.groups}
         .forces=${this.forces}
-        .selection=${this.selection}
         .textFade=${this.textFade}
         .nodeFontSizeMultiplier=${this.nodeFontSizeMultiplier}
         .nodeSizeMultiplier=${this.nodeSizeMultiplier}
         .linkWidthMultiplier=${this.linkWidthMultiplier}
         .animateLinks=${this.animateLinks}
-        @node-click=${(e: CustomEvent) => this._onNodeClick(e.detail)}
+        @canvas-node-click=${(e: CustomEvent) =>
+          this._onCanvasNodeClick(e.detail)}
+        @canvas-node-hover=${(e: CustomEvent) =>
+          (this.hoverNodeId = e.detail)}
+        @canvas-background-click=${(e: CustomEvent) =>
+          this._onCanvasBackgroundClick(e.detail)}
       ></foam-graph-canvas>
-      <foam-control-panel
-        .style=${resolved}
-        .showNodesOfType=${this.showNodesOfType}
-        .nodeTypeCounts=${this._nodeTypeCounts}
-        .augmentedGraph=${this.augmentedGraph}
-        .groups=${this.groups}
-        .textFade=${this.textFade}
-        .nodeFontSizeMultiplier=${this.nodeFontSizeMultiplier}
-        .nodeSizeMultiplier=${this.nodeSizeMultiplier}
-        .linkWidthMultiplier=${this.linkWidthMultiplier}
-        .animateLinks=${this.animateLinks}
-        .forces=${this.forces}
-        .selection=${this.selection}
-        @style-change=${(e: CustomEvent) => this._onStyleChange(e.detail)}
-        @show-nodes-of-type-change=${(e: CustomEvent) => (this.showNodesOfType = e.detail)}
-        @groups-change=${(e: CustomEvent) => (this.groups = e.detail)}
-        @text-fade-change=${(e: CustomEvent) => (this.textFade = e.detail)}
-        @font-size-multiplier-change=${(e: CustomEvent) => (this.nodeFontSizeMultiplier = e.detail)}
-        @node-size-multiplier-change=${(e: CustomEvent) => (this.nodeSizeMultiplier = e.detail)}
-        @link-width-multiplier-change=${(e: CustomEvent) => (this.linkWidthMultiplier = e.detail)}
-        @animate-links-change=${(e: CustomEvent) => (this.animateLinks = e.detail)}
-        @forces-change=${(e: CustomEvent) => (this.forces = e.detail)}
-        @selection-change=${(e: CustomEvent) => (this.selection = e.detail)}
-      ></foam-control-panel>
+      ${this.showControls
+        ? html`<foam-control-panel
+            .style=${resolved}
+            .showNodesOfType=${this.showNodesOfType}
+            .nodeTypeCounts=${computeNodeTypeCounts(this.graphModel)}
+            .groupMatchCounts=${groupMatchCounts}
+            .autocompleteOptions=${autocompleteOptions}
+            .previewMatchCount=${previewMatchCount}
+            .groupDraft=${this.groupDraft}
+            .groups=${this.groups}
+            .textFade=${this.textFade}
+            .nodeFontSizeMultiplier=${this.nodeFontSizeMultiplier}
+            .nodeSizeMultiplier=${this.nodeSizeMultiplier}
+            .linkWidthMultiplier=${this.linkWidthMultiplier}
+            .animateLinks=${this.animateLinks}
+            .forces=${this.forces}
+            .selection=${this.selection}
+            .graphScope=${this.graphScope}
+            @graph-scope-change=${(e: CustomEvent) =>
+              (this.graphScope = e.detail)}
+            @style-change=${(e: CustomEvent) => this._onStyleChange(e.detail)}
+            @toggle-node-type=${(e: CustomEvent) =>
+              this._onToggleNodeType(e.detail)}
+            @update-group=${(e: CustomEvent) => this._onUpdateGroup(e.detail)}
+            @delete-group=${(e: CustomEvent) => this._onDeleteGroup(e.detail)}
+            @start-draft=${() =>
+              (this.groupDraft = {
+                active: true,
+                property: this.groupDraft.property,
+                value: '',
+              })}
+            @cancel-draft=${() =>
+              (this.groupDraft = { ...this.groupDraft, active: false })}
+            @draft-change=${(e: CustomEvent) => (this.groupDraft = e.detail)}
+            @add-group=${() => this._onAddGroup()}
+            @text-fade-change=${(e: CustomEvent) => (this.textFade = e.detail)}
+            @font-size-multiplier-change=${(e: CustomEvent) =>
+              (this.nodeFontSizeMultiplier = e.detail)}
+            @node-size-multiplier-change=${(e: CustomEvent) =>
+              (this.nodeSizeMultiplier = e.detail)}
+            @link-width-multiplier-change=${(e: CustomEvent) =>
+              (this.linkWidthMultiplier = e.detail)}
+            @animate-links-change=${(e: CustomEvent) =>
+              (this.animateLinks = e.detail)}
+            @forces-change=${(e: CustomEvent) => (this.forces = e.detail)}
+            @selection-change=${(e: CustomEvent) =>
+              (this.selection = e.detail)}
+          ></foam-control-panel>`
+        : null}
     `;
   }
 
   selectNote(noteId: string) {
-    const canvas = this.shadowRoot?.querySelector('foam-graph-canvas') as any;
-    canvas?.selectNote(noteId);
+    this._selectNode(noteId, false);
+    if (!this.visibleGraph?.nodeInfo[noteId]) return;
+    if (this.selection.centerOnSelect) {
+      this.canvas?.centerOnNode(
+        noteId,
+        this.selection.zoomOnSelect ? 3 : undefined,
+        300
+      );
+    } else if (this.selection.zoomOnSelect) {
+      this.canvas?.zoom(3, 300);
+    }
   }
 
-  private _onNodeClick(nodeId: string) {
-    this.dispatchEvent(new CustomEvent('node-click', { detail: nodeId, bubbles: true, composed: true }));
+  private _onCanvasNodeClick(detail: { nodeId: string; append: boolean }) {
+    this._selectNode(detail.nodeId, detail.append);
+    this.dispatchEvent(
+      new CustomEvent('node-click', {
+        detail: detail.nodeId,
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
+  private _onCanvasBackgroundClick(detail: { append: boolean }) {
+    if (!detail.append) {
+      this.selectedNodeIds = new Set();
+      this._recomputeGraphStates();
+      this._recomputeVisibleGraphIfSelectionAffectsScope();
+    }
+  }
+
+  private _selectNode(nodeId: string, append: boolean) {
+    const next = append ? new Set(this.selectedNodeIds) : new Set<string>();
+    next.add(nodeId);
+    this.selectedNodeIds = next;
+    this._recomputeGraphStates();
+    this._recomputeVisibleGraphIfSelectionAffectsScope();
+  }
+
+  private _onToggleNodeType(detail: { type: string; visible: boolean }) {
+    this.showNodesOfType = {
+      ...this.showNodesOfType,
+      [detail.type]: detail.visible,
+    };
+    this._recomputeVisibleGraph();
+  }
+
+  private _onUpdateGroup(detail: { index: number; patch: Partial<GroupRule> }) {
+    this.groups = this.groups.map((group, index) =>
+      index === detail.index ? { ...group, ...detail.patch } : group
+    );
+    this._recomputeVisibleGraph();
+  }
+
+  private _onDeleteGroup(index: number) {
+    this.groups = this.groups.filter((_, i) => i !== index);
+    this._recomputeVisibleGraph();
+  }
+
+  private _onAddGroup() {
+    if (!this.groupDraft.value) return;
+    const label = `${this.groupDraft.property}=${this.groupDraft.value}`;
+    this.groups = [
+      ...this.groups,
+      {
+        id: `group-${Date.now()}`,
+        label,
+        color: hashToHSL(hashString(label)),
+        enabled: true,
+        match: {
+          property: this.groupDraft.property,
+          value: this.groupDraft.value,
+        },
+      },
+    ];
+    this.groupDraft = { ...this.groupDraft, active: false, value: '' };
+    this._recomputeVisibleGraph();
   }
 
   private _onStyleChange(patch: Partial<ResolvedStyle>) {
@@ -157,6 +326,51 @@ export class FoamGraph extends LitElement {
       ...(colorMode !== undefined ? { colorMode } : {}),
       style: { ...this.localStylePatch?.style, ...styleProps },
     };
+  }
+
+  private _pruneInteractionState() {
+    if (!this.graphModel) {
+      this.selectedNodeIds = new Set();
+      this.hoverNodeId = null;
+      return;
+    }
+    this.selectedNodeIds = new Set(
+      [...this.selectedNodeIds].filter(
+        id => this.graphModel!.nodeInfo[id] != null
+      )
+    );
+    if (this.hoverNodeId && !this.graphModel.nodeInfo[this.hoverNodeId]) {
+      this.hoverNodeId = null;
+    }
+  }
+
+  private _recomputeVisibleGraph() {
+    this.visibleGraph = this.graphModel
+      ? computeVisibleGraph(
+          this.graphModel,
+          this.showNodesOfType,
+          this.groups,
+          this.visibleFocusNodeId,
+          this.graphScope
+        )
+      : null;
+  }
+
+  private _recomputeGraphStates() {
+    this.graphStates = this.graphModel
+      ? computeGraphStates(
+          this.graphModel,
+          this.selectedNodeIds,
+          this.hoverNodeId,
+          this.selection.neighborDepth
+        )
+      : null;
+  }
+
+  private _recomputeVisibleGraphIfSelectionAffectsScope() {
+    if (!this.focusNodeId && this.graphScope !== 'full') {
+      this._recomputeVisibleGraph();
+    }
   }
 }
 

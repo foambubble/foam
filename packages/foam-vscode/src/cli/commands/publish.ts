@@ -146,6 +146,7 @@ export async function runPublishCommand(options: PublishCommandOptions) {
   });
 
   const graphBundlePath = path.join(__dirname, 'foam-graph.standalone.js');
+  const faviconPath = path.join(__dirname, '..', '..', 'assets', 'icon', 'foam-icon.svg');
 
   await writeStarlightSite({
     artifactSet,
@@ -154,6 +155,7 @@ export async function runPublishCommand(options: PublishCommandOptions) {
     graphBundlePath: fs.existsSync(graphBundlePath)
       ? graphBundlePath
       : undefined,
+    faviconPath: fs.existsSync(faviconPath) ? faviconPath : undefined,
   });
 
   for (const diagnostic of artifactSet.diagnostics) {

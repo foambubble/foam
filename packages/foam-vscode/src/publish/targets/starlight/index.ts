@@ -16,12 +16,15 @@ const ROUTES_MANIFEST_PATH = path.join(PUBLIC_DIR, 'publish-routes.json');
 
 const GRAPH_BUNDLE_PATH = path.join('src', 'lib', 'foam-graph.js');
 
+const FAVICON_PATH = path.join(PUBLIC_DIR, 'favicon.svg');
+
 export interface StarlightTargetOptions {
   artifactSet: PublishArtifactSet;
   outputDir: string;
   includeProjectScaffold?: boolean;
   siteUrl?: string;
   graphBundlePath?: string;
+  faviconPath?: string;
 }
 
 function routeToDocPath(route: string) {
@@ -278,6 +281,12 @@ async function writeGraphBundle(outputDir: string, bundlePath: string) {
   await fs.copyFile(bundlePath, outputPath);
 }
 
+async function writeFavicon(outputDir: string, faviconPath: string) {
+  const outputPath = path.join(outputDir, FAVICON_PATH);
+  await fs.mkdir(path.dirname(outputPath), { recursive: true });
+  await fs.copyFile(faviconPath, outputPath);
+}
+
 export async function writeStarlightSite(options: StarlightTargetOptions) {
   const includeProjectScaffold = options.includeProjectScaffold ?? true;
   const docsDir = path.join(options.outputDir, DOCS_DIR);
@@ -296,6 +305,9 @@ export async function writeStarlightSite(options: StarlightTargetOptions) {
   await writeGraphData(options.outputDir, options.artifactSet);
   if (options.graphBundlePath) {
     await writeGraphBundle(options.outputDir, options.graphBundlePath);
+  }
+  if (options.faviconPath) {
+    await writeFavicon(options.outputDir, options.faviconPath);
   }
   await writeSiteConfig(
     options.outputDir,

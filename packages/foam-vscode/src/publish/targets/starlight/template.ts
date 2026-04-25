@@ -72,6 +72,7 @@ export default defineConfig({
         Sidebar: './src/components/FoamSidebar.astro',
       },
       pagination: false,
+      favicon: '/favicon.svg',
       customCss: ['./src/styles/custom.css'],
     }),
   ],

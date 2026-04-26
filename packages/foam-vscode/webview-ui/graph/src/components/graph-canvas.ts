@@ -229,7 +229,8 @@ export class GraphCanvas extends LitElement {
           if (!info) return;
 
           const size =
-            this.getNodeSize(info.neighbors.length) * this.rs.nodeSizeMultiplier;
+            this.getNodeSize(info.neighbors.length) *
+            this.rs.nodeSizeMultiplier;
           const state =
             this.rs.graphStates?.nodeStates.get(node.id) ?? 'regular';
           const { fill, border } = getNodeFillAndBorder(
@@ -295,6 +296,19 @@ export class GraphCanvas extends LitElement {
           this.rs.style
         );
       })
+      .nodePointerAreaPaint(
+        (node: any, color: string, ctx: CanvasRenderingContext2D) => {
+          const info = this.rs.nodeInfo[node.id];
+          if (!info) return;
+          const size =
+            this.getNodeSize(info.neighbors.length) *
+            this.rs.nodeSizeMultiplier;
+          ctx.fillStyle = color;
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, size, 0, 2 * Math.PI);
+          ctx.fill();
+        }
+      )
       .onNodeHover((node: any) => {
         const nodeId = node?.id ?? null;
         this._emit('canvas-node-hover', nodeId);
@@ -314,7 +328,9 @@ export class GraphCanvas extends LitElement {
 
     this.resizeGraphToViewport();
     if ('ResizeObserver' in window) {
-      this.resizeObserver = new ResizeObserver(() => this.resizeGraphToViewport());
+      this.resizeObserver = new ResizeObserver(() =>
+        this.resizeGraphToViewport()
+      );
       this.resizeObserver.observe(this);
     }
     window.addEventListener('resize', this.onResize);

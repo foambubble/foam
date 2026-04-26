@@ -18,6 +18,7 @@ const vscode = (() => {
 })();
 
 const element = document.createElement('foam-graph') as FoamGraph;
+element.showControls = true;
 document.getElementById('app')!.appendChild(element);
 
 window.addEventListener('message', (event: MessageEvent) => {

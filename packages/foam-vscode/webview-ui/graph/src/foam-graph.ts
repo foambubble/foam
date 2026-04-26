@@ -43,7 +43,7 @@ export class FoamGraph extends LitElement {
   // Public API
   @property({ type: Object }) graphData: GraphData | null = null;
   @property({ type: Object }) graphStyle: GraphStyle | null = null;
-  @property({ type: Boolean }) showControls = true;
+  @property({ type: Boolean }) showControls = false;
   @property({ type: String }) focusNodeId: string | null = null;
   @property({ type: Object }) graphScope: GraphScope = 'full';
   @property({ type: Number }) maxFitZoom: number | null = null;

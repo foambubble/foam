@@ -170,7 +170,6 @@ const selectedRoute =
 
       graph.graphData = await graphDataPromise;
       graph.graphStyle = buildGraphStyle();
-      graph.showControls = false;
       graph.focusNodeId = currentRoute;
       graph.graphScope = { depth: 1 };
       graph.maxFitZoom = 1.4;

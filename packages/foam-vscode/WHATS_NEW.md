@@ -8,7 +8,13 @@ The graph view has been significantly improved:
 - **Node groups** let you visually cluster notes in a flexible way
 - Added **Graph Views**
 
-[Learn more about the graph view](https://github.com/foambubble/foam/blob/main/docs/user/features/graph-view.md)
+[Learn more about the graph view](https://docs.foamnotes.com/features/graph-view/)
+
+## Block references
+
+In case you missed it, some time ago we added full support for referencing and embedding blocks in the editor and the preview.
+
+[Learn more about blocks](https://docs.foamnotes.com/features/block-anchors/)
 
 ## Foam Queries
 
@@ -24,13 +30,13 @@ select: [title, path]
 
 Results render inline as a linked list of matching notes. The query updates automatically as your notes change.
 
-[Learn more about Foam Queries](https://github.com/foambubble/foam/blob/main/docs/user/features/foam-queries.md)
+[Learn more about Foam Queries](https://docs.foamnotes.com/features/foam-queries/)
 
 ## Footnotes
 
 Foam now supports footnotes with proper rendering and navigation in editor and the Markdown preview.
 
-[Learn more about footnotes](https://github.com/foambubble/foam/blob/main/docs/user/features/footnotes.md)
+[Learn more about footnotes](https://docs.foamnotes.com/features/footnotes/)
 
 ## Notes Explorer filtering
 

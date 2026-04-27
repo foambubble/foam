@@ -4,6 +4,20 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## 0.39.0
+
+Features:
+
+- Added ability to publish Foam docs as a site via Astro integration (#1627)
+- Added "What's New" notification to surface release highlights to users
+- Major improvements to `foam-graph` component: standalone lib build, graph focus, backlink panel, node/link state extraction, show/hide controls (#1632)
+
+Fixes and Improvements:
+
+- Fix symlink support by augmenting file watcher with `onDidSaveTextDocument` (#1630)
+- Reintroduce support for ISO week in date variables (#1629)
+- Reference current resource in `foam-query` (#1625)
+
 ## 0.38.1
 
 Fixes and Improvements:

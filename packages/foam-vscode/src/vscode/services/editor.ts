@@ -14,10 +14,10 @@ import {
   WorkspaceEdit,
   MarkdownString,
 } from 'vscode';
-import { getExcerpt, stripFrontMatter, stripImages } from '../../core/utils/md';
-import { isSome } from '../../core/utils/core';
+import { getExcerpt, stripFrontMatter, stripImages } from '@foam/core';
+import { isSome } from '@foam/core';
 import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
-import { asAbsoluteUri, URI } from '../../core/model/uri';
+import { asAbsoluteUri, URI } from '@foam/core';
 import { getFoamVsCodeConfig } from '../config';
 import {
   AlwaysIncludeMatcher,
@@ -25,7 +25,7 @@ import {
   GenericDataStore,
   IDataStore,
   IMatcher,
-} from '../../core/services/datastore';
+} from '@foam/core';
 
 interface SelectionInfo {
   document: TextDocument;

@@ -1,14 +1,14 @@
 import * as vscode from 'vscode';
 import { groupBy } from 'lodash';
-import { Resource } from '../../../core/model/note';
+import { Resource } from '@foam/core';
 import { toVsCodeUri } from '../vsc-utils';
-import { Range } from '../../../core/model/range';
-import { URI } from '../../../core/model/uri';
-import { FoamWorkspace } from '../../../core/model/workspace';
-import { isSome } from '../../../core/utils';
-import { getBlockFor } from '../../../core/services/markdown-parser';
-import { Connection, FoamGraph } from '../../../core/model/graph';
-import { Logger } from '../../../core/utils/log';
+import { Range } from '@foam/core';
+import { URI } from '@foam/core';
+import { FoamWorkspace } from '@foam/core';
+import { isSome } from '@foam/core';
+import { getBlockFor } from '@foam/core';
+import { Connection, FoamGraph } from '@foam/core';
+import { Logger } from '@foam/core';
 import { getNoteTooltip } from '../../services/editor';
 
 export class BaseTreeItem extends vscode.TreeItem {

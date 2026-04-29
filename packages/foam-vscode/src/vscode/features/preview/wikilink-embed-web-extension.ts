@@ -1,8 +1,8 @@
 /*global markdownit:readonly*/
 
 import markdownItRegex from 'markdown-it-regex';
-import { ResourceParser } from '../../../core/model/note';
-import { FoamWorkspace } from '../../../core/model/workspace';
+import { ResourceParser } from '@foam/core';
+import { FoamWorkspace } from '@foam/core';
 
 export const WIKILINK_EMBED_REGEX =
   /((?:(?:full|content)-(?:inline|card)|full|content|inline|card)?!\[\[[^[\]]+?\]\])/;

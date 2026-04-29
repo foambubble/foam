@@ -1,5 +1,5 @@
 import { ExtensionContext } from 'vscode';
-import { Foam } from '../../../core/model/foam';
+import { Foam } from '@foam/core';
 import createNote from './create-note';
 import createFromTemplateCommand from './create-note-from-template';
 import createNewTemplate from './create-new-template';

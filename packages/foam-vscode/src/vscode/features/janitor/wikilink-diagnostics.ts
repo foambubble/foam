@@ -1,8 +1,8 @@
 import { debounce } from 'lodash';
 import * as vscode from 'vscode';
-import { Foam } from '../../../core/model/foam';
-import { Block, ResourceParser } from '../../../core/model/note';
-import { FoamWorkspace } from '../../../core/model/workspace';
+import { Foam } from '@foam/core';
+import { Block, ResourceParser } from '@foam/core';
+import { FoamWorkspace } from '@foam/core';
 import {
   fromVsCodeUri,
   toVsCodeRange,

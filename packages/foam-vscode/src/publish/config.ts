@@ -1,4 +1,4 @@
-import { Resource } from '../core/model/note';
+import { Resource } from '@foam/core';
 import { publishAssets } from './asset-filters';
 import { PublishAssetMatcher, PublishConfig, PublishIncludeMatcher } from './types';
 

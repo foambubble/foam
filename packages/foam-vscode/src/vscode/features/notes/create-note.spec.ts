@@ -1,6 +1,6 @@
 /* @unit-ready */
 import { commands, window, workspace } from 'vscode';
-import { URI } from '../../../core/model/uri';
+import { URI } from '@foam/core';
 import { asAbsoluteWorkspaceUri, readFile } from '../../services/editor';
 import {
   closeEditors,
@@ -13,10 +13,10 @@ import {
 } from '../../../test/test-utils-vscode';
 import { fromVsCodeUri } from '../../utils/vsc-utils';
 import { CREATE_NOTE_COMMAND, createNote } from './create-note';
-import { Location } from '../../../core/model/location';
-import { Range } from '../../../core/model/range';
-import { ResourceLink } from '../../../core/model/note';
-import { createMarkdownParser } from '../../../core/services/markdown-parser';
+import { Location } from '@foam/core';
+import { Range } from '@foam/core';
+import { ResourceLink } from '@foam/core';
+import { createMarkdownParser } from '@foam/core';
 
 describe('create-note command', () => {
   afterEach(() => {

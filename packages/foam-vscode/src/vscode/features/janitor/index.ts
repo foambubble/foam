@@ -1,5 +1,5 @@
 import { ExtensionContext } from 'vscode';
-import { Foam } from '../../../core/model/foam';
+import { Foam } from '@foam/core';
 import janitorCommand from './commands';
 import wikilinkDiagnostics from './wikilink-diagnostics';
 

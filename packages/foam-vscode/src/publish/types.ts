@@ -1,7 +1,7 @@
-import { FoamGraph } from '../core/model/graph';
-import { Resource } from '../core/model/note';
-import { URI } from '../core/model/uri';
-import { FoamWorkspace } from '../core/model/workspace';
+import { FoamGraph } from '@foam/core';
+import { Resource } from '@foam/core';
+import { URI } from '@foam/core';
+import { FoamWorkspace } from '@foam/core';
 
 export interface PublishRuntimeContext {
   workspace: FoamWorkspace;

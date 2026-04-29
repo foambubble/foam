@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { URI } from '../../core/model/uri';
+import { URI } from '@foam/core';
 import { VsCodeWatcher } from './watcher';
 
 // Minimal stubs for VS Code types used by VsCodeWatcher

@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
-import { Foam } from '../../../core/model/foam';
-import { FoamTags } from '../../../core/model/tags';
-import { isInFrontMatter, isOnYAMLKeywordLine } from '../../../core/utils/md';
+import { Foam } from '@foam/core';
+import { FoamTags } from '@foam/core';
+import { isInFrontMatter, isOnYAMLKeywordLine } from '@foam/core';
 import { getFoamDocSelectors } from '../../services/editor';
 
 // this regex is different from HASHTAG_REGEX in that it does not look for a

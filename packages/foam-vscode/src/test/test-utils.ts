@@ -2,14 +2,14 @@
  * This file should not depend on VS Code as it's used for unit tests
  */
 import fs from 'fs';
-import { Logger } from '../core/utils/log';
-import { Range } from '../core/model/range';
-import { URI } from '../core/model/uri';
-import { FoamWorkspace } from '../core/model/workspace';
-import { MarkdownResourceProvider } from '../core/services/markdown-provider';
-import { Resource } from '../core/model/note';
-import { createMarkdownParser } from '../core/services/markdown-parser';
-import { IDataStore } from '../core/services/datastore';
+import { Logger } from '@foam/core';
+import { Range } from '@foam/core';
+import { URI } from '@foam/core';
+import { FoamWorkspace } from '@foam/core';
+import { MarkdownResourceProvider } from '@foam/core';
+import { Resource } from '@foam/core';
+import { createMarkdownParser } from '@foam/core';
+import { IDataStore } from '@foam/core';
 
 export { default as waitForExpect } from 'wait-for-expect';
 

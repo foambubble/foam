@@ -3,7 +3,7 @@ import { mkdtempSync } from 'fs';
 import path from 'path';
 import { tmpdir } from 'os';
 
-import { URI } from '../../../core/model/uri';
+import { URI } from '@foam/core';
 import { PublishArtifactSet } from '../../types';
 import { writeStarlightSite } from './index';
 

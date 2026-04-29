@@ -1,13 +1,13 @@
 import * as vscode from 'vscode';
-import { Foam } from '../../../core/model/foam';
-import { FoamWorkspace } from '../../../core/model/workspace';
+import { Foam } from '@foam/core';
+import { FoamWorkspace } from '@foam/core';
 import {
   ResourceRangeTreeItem,
   ResourceTreeItem,
   createBacklinkItemsForResource as createBacklinkTreeItemsForResource,
 } from '../../utils/tree-views/tree-view-utils';
-import { Resource } from '../../../core/model/note';
-import { FoamGraph } from '../../../core/model/graph';
+import { Resource } from '@foam/core';
+import { FoamGraph } from '@foam/core';
 import { ContextMemento } from '../../utils/vsc-utils';
 import {
   Folder,

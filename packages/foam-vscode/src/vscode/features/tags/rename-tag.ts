@@ -1,10 +1,10 @@
 import * as vscode from 'vscode';
-import { Foam } from '../../../core/model/foam';
-import { TagEdit } from '../../../core/services/tag-edit';
+import { Foam } from '@foam/core';
+import { TagEdit } from '@foam/core';
 import { TagItem } from './tags-explorer';
 import { fromVsCodeUri, toVsCodeWorkspaceEdit } from '../../utils/vsc-utils';
-import { Logger } from '../../../core/utils/log';
-import { Position } from '../../../core/model/position';
+import { Logger } from '@foam/core';
+import { Position } from '@foam/core';
 
 /**
  * Command definition for the tag rename functionality.

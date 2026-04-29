@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
 import { Foam } from '../../../core/model/foam';
-import { CancellationError } from '../../../core/services/progress';
-import { TaskDeduplicator } from '../../../core/utils/task-deduplicator';
-import { FoamWorkspace } from '../../../core/model/workspace';
+import { CancellationError } from '@foam/core';
+import { TaskDeduplicator } from '@foam/core';
+import { FoamWorkspace } from '@foam/core';
 import { FoamEmbeddings } from '../../../ai/model/embeddings';
 
 export const BUILD_EMBEDDINGS_COMMAND = {

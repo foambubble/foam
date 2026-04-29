@@ -1,5 +1,5 @@
 import { ExtensionContext, Uri, commands, window, workspace } from 'vscode';
-import { hash } from '../../core/utils/core';
+import { hash } from '@foam/core';
 
 export const WHATS_NEW_LAST_SEEN_KEY = 'foam.whatsNew.lastSeen';
 

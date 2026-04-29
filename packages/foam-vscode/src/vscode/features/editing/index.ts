@@ -1,5 +1,5 @@
 import { ExtensionContext } from 'vscode';
-import { Foam } from '../../../core/model/foam';
+import { Foam } from '@foam/core';
 import linkDecorations from './document-decorator';
 import refactor from './refactor';
 import convertLinks from './convert-links';

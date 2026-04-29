@@ -1,5 +1,5 @@
 import { ExtensionContext } from 'vscode';
-import { Foam } from '../../../core/model/foam';
+import { Foam } from '@foam/core';
 import navigationProviders from './navigation-provider';
 import hoverProvider from './hover-provider';
 import completionProvider from './link-completion';

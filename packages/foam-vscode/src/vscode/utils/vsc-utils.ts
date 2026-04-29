@@ -11,16 +11,16 @@ import {
   DiagnosticRelatedInformation,
   Location,
 } from 'vscode';
-import { Position as FoamPosition } from '../../core/model/position';
-import { Range as FoamRange } from '../../core/model/range';
-import { URI as FoamURI } from '../../core/model/uri';
+import { Position as FoamPosition } from '@foam/core';
+import { Range as FoamRange } from '@foam/core';
+import { URI as FoamURI } from '@foam/core';
 import {
   TextEdit as FoamTextEdit,
   WorkspaceTextEdit,
-} from '../../core/services/text-edit';
+} from '@foam/core';
 import { LintIssue } from '../../janitor/janitor';
-import { FoamWorkspace } from '../../core/model/workspace';
-import { Logger } from '../../core/utils/log';
+import { FoamWorkspace } from '@foam/core';
+import { Logger } from '@foam/core';
 
 export const toVsCodePosition = (p: FoamPosition): Position =>
   new Position(p.line, p.character);

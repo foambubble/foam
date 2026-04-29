@@ -8,7 +8,7 @@ import {
   getUriInWorkspace,
   showInEditor,
 } from '../../test/test-utils-vscode';
-import { Resolver } from '../../core/templates/variable-resolver';
+import { Resolver } from '@foam/core';
 import { VsCodeVariableProvider } from './vscode-variable-provider';
 import { fileExists } from './editor';
 

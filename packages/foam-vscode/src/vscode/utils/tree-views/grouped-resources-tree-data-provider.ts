@@ -1,7 +1,7 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { URI } from '../../../core/model/uri';
-import { IMatcher } from '../../../core/services/datastore';
+import { URI } from '@foam/core';
+import { IMatcher } from '@foam/core';
 import { UriTreeItem } from './tree-view-utils';
 import { ContextMemento } from '../vsc-utils';
 import {

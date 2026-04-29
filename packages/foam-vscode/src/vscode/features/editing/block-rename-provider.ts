@@ -1,10 +1,10 @@
 import * as vscode from 'vscode';
-import { Foam } from '../../../core/model/foam';
-import { Position } from '../../../core/model/position';
-import { Range } from '../../../core/model/range';
-import { HeadingEdit } from '../../../core/services/heading-edit';
-import { WorkspaceTextEdit } from '../../../core/services/text-edit';
-import { Logger } from '../../../core/utils/log';
+import { Foam } from '@foam/core';
+import { Position } from '@foam/core';
+import { Range } from '@foam/core';
+import { HeadingEdit } from '@foam/core';
+import { WorkspaceTextEdit } from '@foam/core';
+import { Logger } from '@foam/core';
 import {
   fromVsCodeUri,
   toVsCodeRange,

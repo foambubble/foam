@@ -1,7 +1,7 @@
-import { changeExtension, isWithinPath } from '../../core/utils/path';
-import { Resource } from '../../core/model/note';
-import { URI } from '../../core/model/uri';
-import { FoamWorkspace } from '../../core/model/workspace';
+import { changeExtension, isWithinPath } from '@foam/core';
+import { Resource } from '@foam/core';
+import { URI } from '@foam/core';
+import { FoamWorkspace } from '@foam/core';
 import { PublishedAsset, PublishedRoute } from '../types';
 
 const DIRECTORY_INDEX_NAMES = new Set(['index', 'readme']);

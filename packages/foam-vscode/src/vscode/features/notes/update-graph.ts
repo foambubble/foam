@@ -1,5 +1,5 @@
 import { commands, ExtensionContext } from 'vscode';
-import { Foam } from '../../../core/model/foam';
+import { Foam } from '@foam/core';
 
 export const UPDATE_GRAPH_COMMAND_NAME = 'foam-vscode.update-graph';
 

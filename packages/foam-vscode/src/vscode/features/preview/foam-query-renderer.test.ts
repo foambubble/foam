@@ -1,7 +1,7 @@
 import MarkdownIt from 'markdown-it';
-import { FoamWorkspace } from '../../../core/model/workspace';
-import { FoamGraph } from '../../../core/model/graph';
-import { URI } from '../../../core/model/uri';
+import { FoamWorkspace } from '@foam/core';
+import { FoamGraph } from '@foam/core';
+import { URI } from '@foam/core';
 import { createTestNote, createTestWorkspace } from '../../../test/test-utils';
 import { markdownItFoamQuery } from './foam-query-renderer';
 

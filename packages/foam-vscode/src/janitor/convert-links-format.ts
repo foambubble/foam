@@ -1,9 +1,9 @@
-import { Resource, ResourceLink } from '../core/model/note';
-import { URI } from '../core/model/uri';
-import { FoamWorkspace } from '../core/model/workspace';
-import { isNone } from '../core/utils';
-import { MarkdownLink } from '../core/services/markdown-link';
-import { TextEdit } from '../core/services/text-edit';
+import { Resource, ResourceLink } from '@foam/core';
+import { URI } from '@foam/core';
+import { FoamWorkspace } from '@foam/core';
+import { isNone } from '@foam/core';
+import { MarkdownLink } from '@foam/core';
+import { TextEdit } from '@foam/core';
 
 /**
  * convert a link based on its workspace and the note containing it.

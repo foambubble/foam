@@ -1,7 +1,7 @@
-import { IDisposable } from '../../core/common/lifecycle';
-import { Emitter } from '../../core/common/event';
-import { IWatcher } from '../../core/services/datastore';
-import { URI } from '../../core/model/uri';
+import { IDisposable } from '@foam/core';
+import { Emitter } from '@foam/core';
+import { IWatcher } from '@foam/core';
+import { URI } from '@foam/core';
 import { Event, FileSystemWatcher, TextDocument } from 'vscode';
 import { fromVsCodeUri } from '../utils/vsc-utils';
 

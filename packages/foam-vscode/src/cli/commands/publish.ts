@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { Logger } from '../../core/utils/log';
+import { Logger } from '@foam/core';
 import { buildSite } from '../../publish';
 import { writeStarlightSite } from '../../publish/targets/starlight';
 import { loadWorkspaceFromDirectory } from '../support/filesystem';

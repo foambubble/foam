@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
-import { Foam } from '../../../core/model/foam';
-import { Logger } from '../../../core/utils/log';
+import { Foam } from '@foam/core';
+import { Logger } from '@foam/core';
 import { fromVsCodeUri } from '../../utils/vsc-utils';
-import { isSome } from '../../../core/utils';
+import { isSome } from '@foam/core';
 import { getFoamVsCodeConfig } from '../../config';
 import { buildGraphData } from '../../../services/graph-data-builder';
 import type {

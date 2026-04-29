@@ -8,12 +8,12 @@ import {
 } from '../../../test/test-utils-vscode';
 import { NavigationProvider } from './navigation-provider';
 import { toVsCodeUri } from '../../utils/vsc-utils';
-import { createMarkdownParser } from '../../../core/services/markdown-parser';
-import { FoamGraph } from '../../../core/model/graph';
+import { createMarkdownParser } from '@foam/core';
+import { FoamGraph } from '@foam/core';
 import { commandAsURI } from '../../utils/commands';
 import { CREATE_NOTE_COMMAND } from '../notes/create-note';
-import { Location } from '../../../core/model/location';
-import { FoamTags } from '../../../core/model/tags';
+import { Location } from '@foam/core';
+import { FoamTags } from '@foam/core';
 
 describe('Document navigation', () => {
   const parser = createMarkdownParser([]);

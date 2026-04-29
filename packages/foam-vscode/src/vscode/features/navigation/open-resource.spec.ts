@@ -1,7 +1,7 @@
 import { commands, window } from 'vscode';
 import { CommandDescriptor } from '../../utils/commands';
 import { OpenResourceArgs, OPEN_COMMAND } from './open-resource';
-import { URI } from '../../../core/model/uri';
+import { URI } from '@foam/core';
 import {
   closeEditors,
   createFile,

@@ -1,5 +1,5 @@
-import { FoamGraph } from '../core/model/graph';
-import { URI } from '../core/model/uri';
+import { FoamGraph } from '@foam/core';
+import { URI } from '@foam/core';
 import { createTestNote, createTestWorkspace } from '../test/test-utils';
 import { publishAssets } from './asset-filters';
 import { getIncludeAssetMatcher } from './config';

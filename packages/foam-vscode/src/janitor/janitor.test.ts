@@ -1,6 +1,6 @@
-import { URI } from '../core/model/uri';
-import { Logger } from '../core/utils/log';
-import { TextEdit } from '../core/services/text-edit';
+import { URI } from '@foam/core';
+import { Logger } from '@foam/core';
+import { TextEdit } from '@foam/core';
 import {
   InMemoryDataStore,
   createTestWorkspace,

@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { IDisposable } from '../../../core/common/lifecycle';
+import { IDisposable } from '@foam/core';
 
 /**
  * This class is a wrapper around vscode.TreeDataProvider that adds a few

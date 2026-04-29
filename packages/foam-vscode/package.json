@@ -923,6 +923,7 @@
     "wait-for-expect": "^3.0.2"
   },
   "dependencies": {
+    "@foam/core": "*",
     "dayjs": "^1.11.13",
     "detect-newline": "^3.1.0",
     "github-slugger": "^1.4.0",

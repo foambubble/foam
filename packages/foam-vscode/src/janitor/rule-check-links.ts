@@ -1,9 +1,9 @@
-import { Block, Resource, ResourceLink } from '../core/model/note';
-import { Range } from '../core/model/range';
-import { FoamWorkspace } from '../core/model/workspace';
-import { MarkdownLink } from '../core/services/markdown-link';
+import { Block, Resource, ResourceLink } from '@foam/core';
+import { Range } from '@foam/core';
+import { FoamWorkspace } from '@foam/core';
+import { MarkdownLink } from '@foam/core';
 import { LintIssue } from './janitor';
-import { isNone } from '../core/utils';
+import { isNone } from '@foam/core';
 
 export const AMBIGUOUS_IDENTIFIER_CODE = 'ambiguous-identifier';
 export const UNKNOWN_SECTION_CODE = 'unknown-section';

@@ -5,9 +5,9 @@ import {
   commands,
   ProgressLocation,
 } from 'vscode';
-import { Foam } from '../../../core/model/foam';
-import { TextEdit } from '../../../core/services/text-edit';
-import { Range } from '../../../core/model/range';
+import { Foam } from '@foam/core';
+import { TextEdit } from '@foam/core';
+import { Range } from '@foam/core';
 import {
   fromVsCodeUri,
   toVsCodeRange,

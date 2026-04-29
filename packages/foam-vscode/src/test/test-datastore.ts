@@ -1,9 +1,9 @@
 import micromatch from 'micromatch';
-import { Logger } from '../core/utils/log';
-import { IDataStore, IMatcher } from '../core/services/datastore';
-import { URI } from '../core/model/uri';
-import { isWindows } from '../core/common/platform';
-import { asAbsolutePaths } from '../core/utils/path';
+import { Logger } from '@foam/core';
+import { IDataStore, IMatcher } from '@foam/core';
+import { URI } from '@foam/core';
+import { isWindows } from '@foam/core';
+import { asAbsolutePaths } from '@foam/core';
 import fs from 'fs';
 import path from 'path';
 

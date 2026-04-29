@@ -1,8 +1,8 @@
 import { FoamWorkspaceSymbolProvider } from './workspace-symbol-provider';
-import { FoamWorkspace } from '../../../core/model/workspace';
-import { Resource } from '../../../core/model/note';
-import { URI } from '../../../core/model/uri';
-import { Range } from '../../../core/model/range';
+import { FoamWorkspace } from '@foam/core';
+import { Resource } from '@foam/core';
+import { URI } from '@foam/core';
+import { Range } from '@foam/core';
 import * as vscode from 'vscode';
 
 describe('FoamWorkspaceSymbolProvider', () => {

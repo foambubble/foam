@@ -1,9 +1,9 @@
 import { ExtensionContext, commands, window, QuickPickItem } from 'vscode';
 import { openDailyNoteFor } from './daily-note-service';
-import { FoamWorkspace } from '../../../core/model/workspace';
+import { FoamWorkspace } from '@foam/core';
 import { range } from 'lodash';
 import dayjs from 'dayjs';
-import { Foam } from '../../../core/model/foam';
+import { Foam } from '@foam/core';
 
 export default async function activate(
   context: ExtensionContext,

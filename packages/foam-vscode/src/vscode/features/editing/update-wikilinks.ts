@@ -12,8 +12,8 @@ import {
   Position,
 } from 'vscode';
 import { isMdEditor, getFoamDocSelectors } from '../../services/editor';
-import { Foam } from '../../../core/model/foam';
-import { FoamWorkspace } from '../../../core/model/workspace';
+import { Foam } from '@foam/core';
+import { FoamWorkspace } from '@foam/core';
 import {
   LINK_REFERENCE_DEFINITION_FOOTER,
   LINK_REFERENCE_DEFINITION_HEADER,
@@ -21,8 +21,8 @@ import {
 } from '../../../janitor/generate-link-references';
 import { fromVsCodeUri, toVsCodeRange } from '../../utils/vsc-utils';
 import { getEditorEOL } from '../../services/editor';
-import { ResourceParser } from '../../../core/model/note';
-import { IMatcher } from '../../../core/services/datastore';
+import { ResourceParser } from '@foam/core';
+import { IMatcher } from '@foam/core';
 
 export default async function activate(
   context: ExtensionContext,

@@ -1,5 +1,5 @@
 import { ExtensionContext } from 'vscode';
-import { Foam } from '../../../core/model/foam';
+import { Foam } from '@foam/core';
 import tagCompletionProvider from './tag-completion';
 import tagRenameProvider from './tag-rename-provider';
 import tagsExplorer from './tags-explorer';

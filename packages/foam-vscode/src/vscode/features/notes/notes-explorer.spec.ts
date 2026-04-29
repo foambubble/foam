@@ -6,9 +6,9 @@ import {
   getUriInWorkspace,
 } from '../../../test/test-utils-vscode';
 import { MapBasedMemento } from '../../utils/vsc-utils';
-import { FoamWorkspace } from '../../../core/model/workspace';
-import { FoamGraph } from '../../../core/model/graph';
-import { Resource } from '../../../core/model/note';
+import { FoamWorkspace } from '@foam/core';
+import { FoamGraph } from '@foam/core';
+import { Resource } from '@foam/core';
 import { NotesProvider } from './notes-explorer';
 import { ResourceTreeItem } from '../../utils/tree-views/tree-view-utils';
 import { FolderTreeItem } from '../../utils/tree-views/folder-tree-provider';

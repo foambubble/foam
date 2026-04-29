@@ -6,22 +6,22 @@
 import * as os from 'os';
 import * as fs from 'fs';
 import * as path from 'path';
-import { Position as FoamPosition } from '../core/model/position';
-import { Range as FoamRange } from '../core/model/range';
-import { URI } from '../core/model/uri';
-import { Logger } from '../core/utils/log';
-import { TextEdit as FoamTextEdit } from '../core/services/text-edit';
-import { Foam, bootstrap } from '../core/model/foam';
-import { createMarkdownParser } from '../core/services/markdown-parser';
+import { Position as FoamPosition } from '@foam/core';
+import { Range as FoamRange } from '@foam/core';
+import { URI } from '@foam/core';
+import { Logger } from '@foam/core';
+import { TextEdit as FoamTextEdit } from '@foam/core';
+import { Foam, bootstrap } from '@foam/core';
+import { createMarkdownParser } from '@foam/core';
 import {
   GenericDataStore,
   AlwaysIncludeMatcher,
   IWatcher,
-} from '../core/services/datastore';
-import { MarkdownResourceProvider } from '../core/services/markdown-provider';
+} from '@foam/core';
+import { MarkdownResourceProvider } from '@foam/core';
 import { randomString } from './test-utils';
 import micromatch from 'micromatch';
-import { Emitter } from '../core/common/event';
+import { Emitter } from '@foam/core';
 
 interface Thenable<T> {
   then<TResult>(

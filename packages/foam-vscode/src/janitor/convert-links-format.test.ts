@@ -4,8 +4,8 @@ import {
   createNoteFromMarkdown,
   createTestWorkspace,
 } from '../test/test-utils';
-import { URI } from '../core/model/uri';
-import { Logger } from '../core/utils/log';
+import { URI } from '@foam/core';
+import { Logger } from '@foam/core';
 
 Logger.setLevel('error');
 

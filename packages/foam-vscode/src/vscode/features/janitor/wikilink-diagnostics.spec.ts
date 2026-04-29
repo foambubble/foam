@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import { createMarkdownParser } from '../../../core/services/markdown-parser';
-import { FoamWorkspace } from '../../../core/model/workspace';
+import { createMarkdownParser } from '@foam/core';
+import { FoamWorkspace } from '@foam/core';
 import {
   cleanWorkspace,
   closeEditors,

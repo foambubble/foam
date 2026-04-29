@@ -9,7 +9,7 @@ import {
   waitForNoteInFoamWorkspace,
 } from '../../../test/test-utils-vscode';
 import { deleteFile } from '../../services/editor';
-import { Logger } from '../../../core/utils/log';
+import { Logger } from '@foam/core';
 import {
   CONVERT_WIKILINK_TO_MDLINK,
   CONVERT_MDLINK_TO_WIKILINK,

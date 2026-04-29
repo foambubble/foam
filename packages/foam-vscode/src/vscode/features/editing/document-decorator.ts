@@ -1,9 +1,9 @@
 import { debounce } from 'lodash';
 import * as vscode from 'vscode';
-import { ResourceParser } from '../../../core/model/note';
-import { FoamWorkspace } from '../../../core/model/workspace';
-import { Foam } from '../../../core/model/foam';
-import { Range } from '../../../core/model/range';
+import { ResourceParser } from '@foam/core';
+import { FoamWorkspace } from '@foam/core';
+import { Foam } from '@foam/core';
+import { Range } from '@foam/core';
 import { fromVsCodeUri, toVsCodeRange } from '../../utils/vsc-utils';
 
 const placeholderDecoration = vscode.window.createTextEditorDecorationType({

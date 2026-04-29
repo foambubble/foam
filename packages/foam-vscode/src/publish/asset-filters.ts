@@ -1,5 +1,5 @@
-import { Resource } from '../core/model/note';
-import { isWithinPath } from '../core/utils/path';
+import { Resource } from '@foam/core';
+import { isWithinPath } from '@foam/core';
 import { PublishAssetContext, PublishAssetMatcher } from './types';
 
 const includeAssetsInWorkspace = (): PublishAssetMatcher => {

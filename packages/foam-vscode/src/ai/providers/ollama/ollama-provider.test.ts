@@ -1,4 +1,4 @@
-import { Logger } from '../../../core/utils/log';
+import { Logger } from '@foam/core';
 import {
   OllamaEmbeddingProvider,
   DEFAULT_OLLAMA_CONFIG,

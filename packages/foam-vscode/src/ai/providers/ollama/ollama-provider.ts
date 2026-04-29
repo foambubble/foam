@@ -2,7 +2,7 @@ import {
   EmbeddingProvider,
   EmbeddingProviderInfo,
 } from '../../services/embedding-provider';
-import { Logger } from '../../../core/utils/log';
+import { Logger } from '@foam/core';
 
 /**
  * Configuration for Ollama embedding provider

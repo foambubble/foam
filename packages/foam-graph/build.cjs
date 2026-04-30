@@ -56,7 +56,7 @@ async function buildStandaloneTarget() {
 }
 
 async function buildVscodeTarget() {
-  const outdir = path.join(dir, '../../static/dataviz');
+  const outdir = path.join(dir, '../foam-vscode/static/dataviz');
 
   // Ensure output directory exists
   fs.mkdirSync(outdir, { recursive: true });
@@ -68,9 +68,9 @@ async function buildVscodeTarget() {
   // without tsconfig path aliases (the file is gitignored as it is generated)
   const protocolSrc = fs.readFileSync(path.join(dir, 'src/protocol.ts'), 'utf8');
   const header =
-    '// This file is auto-generated from webview-ui/graph/src/protocol.ts — do not edit directly.\n\n';
+    '// This file is auto-generated from packages/foam-graph/src/protocol.ts — do not edit directly.\n\n';
   fs.writeFileSync(
-    path.join(dir, '../../src/vscode/features/graph-webview/graph-protocol.ts'),
+    path.join(dir, '../foam-vscode/src/vscode/features/graph-webview/graph-protocol.ts'),
     header + protocolSrc
   );
 

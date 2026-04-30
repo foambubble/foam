@@ -25,7 +25,9 @@
     "build:lib": "node build.cjs --lib",
     "build:vscode": "node build.cjs --vscode",
     "watch": "node build.cjs --vscode --watch",
-    "test": "vitest run"
+    "test": "yarn test:unit && yarn test:e2e",
+    "test:unit": "vitest run",
+    "test:e2e": "echo 'No e2e tests for @foam/graph'"
   },
   "peerDependencies": {
     "lit": "^3.0.0"

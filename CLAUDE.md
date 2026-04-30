@@ -63,14 +63,14 @@ This is a monorepo using Yarn workspaces with the main VS Code extension in `pac
 - `packages/foam-vscode/src/features/` - VS Code-specific features and UI
 - `packages/foam-vscode/src/services/` - service implementations, might have VS Code dependency, but we try keep that to a minimum
 - `packages/foam-vscode/src/test/` - Test utilities and mocks
-- `packages/foam-vscode/webview-ui/graph/` - Graph visualization web component (`@foam/graph`)
+- `packages/foam-graph/` - Graph visualization web component (`@foam/graph`)
 - `docs/` - Documentation and user guides
 
 ### Graph Webview (`@foam/graph`)
 
 The graph webview is a standalone Yarn workspace and publishable web component built with Lit.
 
-- Source lives in `webview-ui/graph/src/`; `static/dataviz/` is **build output** (gitignored), not source
+- Source lives in `packages/foam-graph/src/`; `packages/foam-vscode/static/dataviz/` is **build output** (gitignored), not source
 - `src/protocol.ts` owns the message contract between extension host and webview — the extension imports from `@foam/graph/protocol`
 - The extension's `tsconfig.json` uses `paths` to resolve `@foam/graph/*` to TypeScript source for type checking; esbuild resolves via package exports at bundle time
 

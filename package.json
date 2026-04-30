@@ -6,8 +6,7 @@
   "license": "MIT",
   "private": "true",
   "workspaces": [
-    "packages/*",
-    "packages/foam-vscode/webview-ui/graph"
+    "packages/*"
   ],
   "scripts": {
     "version-extension": "lerna version",
@@ -18,9 +17,10 @@
     "reset": "yarn && yarn clean && yarn build",
     "clean": "lerna run clean",
     "build": "lerna run build",
-    "test": "yarn workspace foam-vscode test",
-    "test:unit": "yarn workspace foam-vscode test:unit",
-    "lint": "yarn workspace foam-vscode lint",
+    "test": "lerna run test",
+    "test:unit": "lerna run test:unit",
+    "test:e2e": "lerna run test:e2e",
+    "lint": "lerna run lint",
     "watch": "lerna run watch --concurrency 20",
     "prepare": "husky"
   },

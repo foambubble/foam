@@ -6,7 +6,6 @@ out/**/*.test.*
 out/**/*.spec.*
 test-data/**
 src/**
-webview-ui/**
 jest.config.js
 vitest.config.mts
 esbuild.js

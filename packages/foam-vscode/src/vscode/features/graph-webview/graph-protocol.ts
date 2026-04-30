@@ -1,4 +1,4 @@
-// This file is auto-generated from webview-ui/graph/src/protocol.ts — do not edit directly.
+// This file is auto-generated from packages/foam-graph/src/protocol.ts — do not edit directly.
 
 /**
  * Shared message types between the extension host and the graph webview.

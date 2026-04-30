@@ -9,7 +9,7 @@
 
 - Ensure that you have all the [[recommended-extensions]] installed in Visual Studio Code
 - Reload Visual Studio Code by running `Cmd` + `Shift` + `P` (`Ctrl` + `Shift` + `P` for Windows), type "reload" and run the **Developer: Reload Window** command to for the updated extensions take effect
-- Check the formatting rules for links on [[foam-file-format]] and [[wikilinks]]
+- Check the formatting rules for links on [[wikilinks]]
 
 ## I don't want Foam enabled for all my workspaces
 
@@ -23,5 +23,4 @@ If you want a different front-end look to your published foam and a way to see y
 - [foam-gatsby-kb](https://github.com/hikerpig/foam-template-gatsby-kb) by [hikerpig](https://github.com/hikerpig)
 
 [recommended-extensions]: getting-started/recommended-extensions.md 'Recommended Extensions'
-[foam-file-format]: ../dev/foam-file-format.md 'Foam File Format'
 [wikilinks]: features/wikilinks.md 'Wikilinks'

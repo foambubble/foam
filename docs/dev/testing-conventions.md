@@ -129,12 +129,12 @@ When adding new tests:
 
 This testing strategy gives us the best of both worlds: fast feedback during development and comprehensive integration verification when needed.
 
-## Graph Webview (`@foam/graph`)
+## Graph Webview (`@foam/graph-view`)
 
 The webview component has its own test stack, separate from the extension tests.
 
 - **Framework**: [Vitest](https://vitest.dev/) with [happy-dom](https://github.com/capricorn86/happy-dom) for a browser-like environment
 - **Location**: Test files live in `packages/foam-graph/src/`
-- **Command**: `yarn workspace @foam/graph test`
+- **Command**: `yarn workspace @foam/graph-view test`
 
 The webview tests focus on the framework-agnostic library code in `src/lib/` (graph utilities, color logic, painter). Lit component rendering tests can be added as the component grows.

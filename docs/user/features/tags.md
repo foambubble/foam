@@ -85,6 +85,6 @@ Customize tag appearance in markdown preview by adding CSS:
 
 ## Tags vs Backlinks
 
-Some users prefer [[book]] backlinks instead of #book tags for categorization. Both approaches work - choose what fits your workflow.
+Some users prefer backlinks (e.g. linking to a `book` note) instead of #book tags for categorization. Both approaches work — choose what fits your workflow.
 
 [graph-view]: graph-view.md 'Graph Visualization'

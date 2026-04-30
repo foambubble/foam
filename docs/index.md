@@ -289,7 +289,7 @@ Foam is an evolving project and we welcome contributions:
 
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
-Foam was inspired by [Roam Research](https://roamresearch.com/) and [Zettelkasten methodology](https://zettelkasten.de/posts/overview).
+Foam was inspired by [Zettelkasten methodology](https://zettelkasten.de/posts/overview).
 
 Foam builds on [Visual Studio Code](https://code.visualstudio.com/), [GitHub](https://github.com/), and our [[recommended-extensions]].
 

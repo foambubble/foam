@@ -19,20 +19,19 @@ A #recipe is a guide, tip or strategy for getting the most out of your Foam work
 
 ## Contribute
 
-- Start by reading [[contribution-guide]]
+- Start by reading the [contribution guide](https://github.com/foambubble/foam/blob/main/docs/dev/contribution-guide.md)
 - If you discover features not listed here, we'd love to have them! [[how-to-write-recipes]].
 
 ## Take smart notes
 
-- Introduction to Zettelkasten [[todo]]
 - Clip webpages with [[web-clipper]]
 - Convert Microsoft Word files into Markdown with [[markup-converter]]
 
 ## Discover
 
+- [[search-and-navigate-notes]]
 - Explore your notes using [[graph-view]]
 - Discover relationships with [[backlinking]]
-- Simulating [[unlinked-references]]
 
 ## Organise
 
@@ -51,18 +50,18 @@ A #recipe is a guide, tip or strategy for getting the most out of your Foam work
 - Style your environment with [[custom-markdown-preview-styles]]
 - Paste and link [[add-images-to-notes]]
 - [[shows-image-preview-on-hover]]
-- [Markdown All-in-One](https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one) features [[todo]] [[good-first-task]]
+- [Markdown All-in-One](https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one) features
   - Manage checklists
   - Automatic Table of Contents
   - Live preview markdown
   - _More..._
-- VS Code Advanced Features [[todo]] [[good-first-task]]
+- VS Code Advanced Features
   - Focus with Zen Mode
 - Display content of other notes in the preview tab by [[embeds]]
 
 ## Version control
 
-- Quick commits with VS Code's built in [[git-integration]]
+- Quick commits with VS Code's built-in source control
 - Store your workspace in an auto-synced GitHub repo with [[write-your-notes-in-github-gist]]
 - Sync your GitHub repo automatically using the [GitDoc VSCode Plugin](https://marketplace.visualstudio.com/items?itemName=vsls-contrib.gitdoc) [[automatic-git-syncing]].
 
@@ -87,7 +86,7 @@ A #recipe is a guide, tip or strategy for getting the most out of your Foam work
 
 - Give your team push access to your [GitHub repo](https://docs.github.com/en/account-and-profile/setting-up-and-managing-your-personal-account-on-github/managing-access-to-your-personal-repositories/inviting-collaborators-to-a-personal-repository)
 - Real-time collaboration via VS Code Live Share [[real-time-collaboration]]
-- Accept patches via GitHub PRs [[todo]]
+- Accept patches via GitHub PRs
 
 ## Workflow
 
@@ -98,50 +97,47 @@ A #recipe is a guide, tip or strategy for getting the most out of your Foam work
 
 Creative ideas welcome!
 
-- Support [Anki](https://apps.ankiweb.net/) cards from notes like [Remnote](https://www.remnote.io/) [[todo]]
+- Support [Anki](https://apps.ankiweb.net/) cards from notes like [Remnote](https://www.remnote.io/)
 
-_See [[contribution-guide]] and [[how-to-write-recipes]]._
+_See [[how-to-write-recipes]] and the [contribution guide](https://github.com/foambubble/foam/blob/main/docs/dev/contribution-guide.md)._
 
 ## Other
 
 Thought of a recipe but don't see a category for them? Add them here and we'll organise them once we detect a theme.
 
-_See [[contribution-guide]] and [[how-to-write-recipes]]._
+_See [[how-to-write-recipes]] and the [contribution guide](https://github.com/foambubble/foam/blob/main/docs/dev/contribution-guide.md)._
 
-[contribution-guide]: ../../dev/contribution-guide.md "Contribution Guide"
-[how-to-write-recipes]: how-to-write-recipes.md "How to Write Recipes"
-[todo]: ../../dev/todo.md "Todo"
-[web-clipper]: web-clipper.md "Web Clipper"
-[markup-converter]: markup-converter.md "Markup Converter"
-[graph-visualization]: ../features/graph-visualization.md "Graph Visualization"
-[backlinking]: ../features/backlinking.md "Backlinking"
-[unlinked-references]: ../../dev/unlinked-references.md "Unlinked references (stub)"
-[wikilinks]: ../features/wikilinks.md "Wikilinks"
-[commands]: ../features/commands.md "Foam Commands"
-[daily-notes]: ../features/daily-notes.md "Daily Notes"
-[tags]: ../features/tags.md "Tags"
-[note-templates]: ../features/templates.md "Note Templates"
-[orphans]: ../tools/orphans.md "Orphaned Notes"
-[diagrams-in-markdown]: diagrams-in-markdown.md "Diagrams in Markdown"
-[automatically-expand-urls-to-well-titled-links]: automatically-expand-urls-to-well-titled-links.md "Automatically Expand URLs to Well-Titled Links"
-[custom-markdown-preview-styles]: ../features/custom-markdown-preview-styles.md "Custom Markdown Preview Styles"
-[add-images-to-notes]: add-images-to-notes.md "Add images to your notes"
-[shows-image-preview-on-hover]: shows-image-preview-on-hover.md "Shows Image Preview on Hover"
-[good-first-task]: ../../dev/good-first-task.md "Good First Task"
-[including-notes]: ../features/including-notes.md "Including notes in a note"
-[write-your-notes-in-github-gist]: write-your-notes-in-github-gist.md "Write your notes in GitHub Gist"
-[automatic-git-syncing]: automatic-git-syncing.md "Automatically Sync with Git"
-[publish-to-github-pages]: ../publishing/publish-to-github-pages.md "GitHub Pages"
-[publish-to-gitlab-pages]: ../publishing/publish-to-gitlab-pages.md "GitLab Pages"
-[publish-to-azure-devops-wiki]: ../publishing/publish-to-azure-devops-wiki.md "Publish to Azure DevOps Wiki"
-[publish-to-vercel]: ../publishing/publish-to-vercel.md "Publish to Vercel"
-[publish-to-netlify-with-eleventy]: ../publishing/publish-to-netlify-with-eleventy.md "Publish to Netlify with Eleventy"
-[generate-gatsby-site]: ../publishing/generate-gatsby-site.md "Generate a site using Gatsby"
-[generate-material-for-mkdocs-site]: generate-material-for-mkdocs-site.md "Generate a site using the Material for MkDocs theme"
-[publish-to-github]: ../publishing/publish-to-github.md "Publish to GitHub"
-[math-support-with-mathjax]: ../publishing/math-support-with-mathjax.md "Math Support"
-[math-support-with-katex]: ../publishing/math-support-with-katex.md "Katex Math Rendering"
-[export-to-pdf]: export-to-pdf.md "Export to PDF"
-[real-time-collaboration]: real-time-collaboration.md "Real-time Collaboration"
-[capture-notes-with-drafts-pro]: capture-notes-with-drafts-pro.md "Capture Notes With Drafts Pro"
-[capture-notes-with-shortcuts-and-github-actions]: capture-notes-with-shortcuts-and-github-actions.md "Capture Notes With Shortcuts and GitHub Actions"
+[how-to-write-recipes]: how-to-write-recipes.md 'How to Write Recipes'
+[search-and-navigate-notes]: search-and-navigate-notes.md 'Search and Navigate Notes'
+[web-clipper]: web-clipper.md 'Web Clipper'
+[markup-converter]: markup-converter.md 'Markup Converter'
+[backlinking]: ../features/backlinking.md 'Backlinking'
+[wikilinks]: ../features/wikilinks.md 'Wikilinks'
+[commands]: ../features/commands.md 'Foam Commands'
+[daily-notes]: ../features/daily-notes.md 'Daily Notes'
+[tags]: ../features/tags.md 'Tags'
+[orphans]: ../tools/orphans.md 'Orphaned Notes'
+[diagrams-in-markdown]: diagrams-in-markdown.md 'Diagrams in Markdown'
+[automatically-expand-urls-to-well-titled-links]: automatically-expand-urls-to-well-titled-links.md 'Automatically Expand URLs to Well-Titled Links'
+[custom-markdown-preview-styles]: ../features/custom-markdown-preview-styles.md 'Custom Markdown Preview Styles'
+[add-images-to-notes]: add-images-to-notes.md 'Add images to your notes'
+[shows-image-preview-on-hover]: shows-image-preview-on-hover.md 'Shows Image Preview on Hover'
+[write-your-notes-in-github-gist]: write-your-notes-in-github-gist.md 'Write your notes in GitHub Gist'
+[automatic-git-syncing]: automatic-git-syncing.md 'Automatically Sync with Git'
+[publish-to-github-pages]: ../publishing/publish-to-github-pages.md 'GitHub Pages'
+[publish-to-gitlab-pages]: ../publishing/publish-to-gitlab-pages.md 'GitLab Pages'
+[publish-to-azure-devops-wiki]: ../publishing/publish-to-azure-devops-wiki.md 'Publish to Azure DevOps Wiki'
+[publish-to-vercel]: ../publishing/publish-to-vercel.md 'Publish to Vercel'
+[publish-to-netlify-with-eleventy]: ../publishing/publish-to-netlify-with-eleventy.md 'Publish to Netlify with Eleventy'
+[generate-gatsby-site]: ../publishing/generate-gatsby-site.md 'Generate a site using Gatsby'
+[generate-material-for-mkdocs-site]: generate-material-for-mkdocs-site.md 'Generate a site using the Material for MkDocs theme'
+[publish-to-github]: ../publishing/publish-to-github.md 'Publish to GitHub'
+[math-support-with-mathjax]: ../publishing/math-support-with-mathjax.md 'Math Support'
+[math-support-with-katex]: ../publishing/math-support-with-katex.md 'Katex Math Rendering'
+[export-to-pdf]: export-to-pdf.md 'Export to PDF'
+[real-time-collaboration]: real-time-collaboration.md 'Real-time Collaboration'
+[capture-notes-with-drafts-pro]: capture-notes-with-drafts-pro.md 'Capture Notes With Drafts Pro'
+[capture-notes-with-shortcuts-and-github-actions]: capture-notes-with-shortcuts-and-github-actions.md 'Capture Notes With Shortcuts and GitHub Actions'
+[graph-view]: ../features/graph-view.md 'Graph Visualization'
+[templates]: ../features/templates.md 'Note Templates'
+[embeds]: ../features/embeds.md 'Note Embeds'

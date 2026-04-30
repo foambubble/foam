@@ -13,7 +13,7 @@ Example: [[graph-view]]
 
 ## Placeholders
 
-Wikilinks to non-existent files create [[placeholder]] links, styled differently to show they need files created. They're useful for planning your knowledge structure.
+Wikilinks to non-existent files create placeholder links, styled differently to show they need files created. They're useful for planning your knowledge structure.
 
 View placeholders in the graph with `Foam: Show Graph` command or in the `Placeholders` panel.
 
@@ -50,22 +50,46 @@ When you rename or move a note or folder, Foam automatically updates all wikilin
 
 For standard markdown links (e.g. `[text](path/to/note.md)`), VS Code has a built-in feature that handles this. Enable it in VS Code settings: set `markdown.updateLinksOnFileMove.enabled` to `always` or `prompt`.
 
+## Path vs Identifier Links
+
+Wikilinks come in two forms:
+
+- **Identifier links** — `[[filename]]`, `[[folder/filename]]` — identify a resource by name, resolved relative to the whole workspace
+- **Path links** — `[[./file]]`, `[[../other/file]]`, `[[/from/root]]` — identify a resource by its file path
+
+The rule: if the link starts with `/` or `.`, it's a path reference; otherwise it's an identifier.
+
+For identifier links, you can use any suffix that uniquely identifies the file. Given `projects/house/todo.md` and `work/todo.md`, the identifiers `[[todo]]` (ambiguous), `[[house/todo]]` (unique), and `[[projects/house/todo]]` (unique) are all valid — Foam picks the shortest unambiguous form.
+
+## Ambiguous Links
+
+When the same filename exists in multiple locations, `[[todo]]` is ambiguous. Foam resolves it alphabetically (deterministic), and shows a warning diagnostic so you can use a more specific identifier like `[[house/todo]]`.
+
 ## Markdown Compatibility
 
 Foam can automatically generate [[link-reference-definitions]] at the bottom of files to make wikilinks compatible with standard Markdown processors.
+
+## Compatibility with Other Apps
+
+| Wikilink                       | Obsidian                        | Foam                            |
+| ------------------------------ | ------------------------------- | ------------------------------- |
+| `[[notes]]`                    | ✔ unique identifier in repo     | ✔ unique identifier in repo     |
+| `[[/work/notes]]`              | ✔ valid path from repo root     | ✔ valid path from repo root     |
+| `[[work/notes]]`               | ✔ valid path from repo root     | ✔ valid identifier in repo      |
+| `[[project/house/todo]]`       | ✔ valid path from repo root     | ✔ valid unique identifier       |
+| `[[/project/house/todo]]`      | ✔ valid path from repo root     | ✔ valid path from repo root     |
+| `[[house/todo]]`               | ✔ valid unique identifier       | ✔ valid unique identifier       |
+| `[[todo]]` (ambiguous)         | ✘ ambiguous identifier          | ✘ ambiguous identifier          |
+| `[[/house/todo]]` (wrong path) | ✘ incorrect path from repo root | ✘ incorrect path from repo root |
 
 ## Related
 
 - [[footnotes]] - Adding references and side notes
 - [[block-anchors]] - Linking to specific blocks within a note
-- [[foam-file-format]] - Technical details
 - [[templates]] - Creating new notes
-- [[link-reference-definition-improvements]] - Current limitations
 
-[graph-visualization]: graph-visualization.md 'Graph Visualization'
 [link-reference-definitions]: link-reference-definitions.md 'Link Reference Definitions'
-[foam-file-format]: ../../dev/foam-file-format.md 'Foam File Format'
-[note-templates]: templates.md 'Note Templates'
-[link-reference-definition-improvements]: ../../dev/proposals/link-reference-definition-improvements.md 'Link Reference Definition Improvements'
 [footnotes]: footnotes.md 'Footnotes'
 [block-anchors]: block-anchors.md 'Block Anchors'
+[graph-view]: graph-view.md "Graph Visualization"
+[templates]: templates.md "Note Templates"

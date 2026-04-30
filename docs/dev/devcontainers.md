@@ -9,5 +9,3 @@ Foam provides a [devcontainer](https://devcontainer.ai/) configuration to make i
 3. Run **Dev Containers: Reopen in Container** from the command palette.
 
 This will build a Docker image with Node 18 and install dependencies using `yarn install`. Once ready you can run the usual build and test commands from the integrated terminal.
-
-

@@ -205,5 +205,7 @@ With your workspace set up, you're ready to:
 If you encounter setup issues:
 
 - Check the [Installation Guide](installation.md) for prerequisites
-- Visit the [FAQ](../faq.md) for common workspace problems
+- Visit the [[frequently-asked-questions]] for common workspace problems
 - Join the [Foam Community Discord](https://foambubble.github.io/join-discord/w)
+
+[frequently-asked-questions]: ../frequently-asked-questions.md 'Frequently Asked Questions'

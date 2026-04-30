@@ -4,14 +4,14 @@ With this #recipe you can create notes on your iOS device, which will automatica
 
 ## Context
 
-* You use [Foam for VSCode](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode) to manage your notes
-* You wish to adopt a practice such as [A writing inbox for transient and incomplete notes](https://notes.andymatuschak.org/A%20writing%20inbox%20for%20transient%20and%20incomplete%20notes)
-* You wish to use [Shortcuts](https://support.apple.com/guide/shortcuts/welcome/ios) to capture quick notes into your Foam notes from your iOS device
+- You use [Foam for VSCode](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode) to manage your notes
+- You wish to adopt a practice such as [A writing inbox for transient and incomplete notes](https://notes.andymatuschak.org/A%20writing%20inbox%20for%20transient%20and%20incomplete%20notes)
+- You wish to use [Shortcuts](https://support.apple.com/guide/shortcuts/welcome/ios) to capture quick notes into your Foam notes from your iOS device
 
 ## Other tools
 
-* We assume you are familiar with how to use GitHub (if you are using Foam this is implicit)
-* You have an iOS device.
+- We assume you are familiar with how to use GitHub (if you are using Foam this is implicit)
+- You have an iOS device.
 
 ## Instructions
 
@@ -57,6 +57,7 @@ curl \
 ```
 
 4. Copy this [Shortcut](https://www.icloud.com/shortcuts/57d2ed90c40e43a5badcc174ebfaaf1d) to your iOS devices and edit the contents of the last step, `GetContentsOfURL`
+
    - Make sure you update the URL of the shortcut step with the `owner`, `repository`, `workflow-id` (from the previous step)
    - Make sure you update the headers of the shortcut step, replaceing `[GITHUB_TOKEN]` with your Personal Access Token (from step 2)
 

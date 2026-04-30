@@ -133,7 +133,10 @@ Currently you cannot rename whole folders.
 
 With navigation mastered, you're ready to:
 
-1. **[Explore the graph view](../features/graph-view.md)** - Visualize your knowledge network
-2. **[Learn about backlinks](../features/backlinking.md)** - Master bidirectional linking
-3. **[Set up templates](../features/templates.md)** - Standardize your note creation
-4. **[Use tags effectively](../features/tags.md)** - Add another layer of organization
+1. **[Search and navigate notes](../recipes/search-and-navigate-notes.md)** - All the ways to find and browse notes
+2. **[Explore the graph view](../features/graph-view.md)** - Visualize your knowledge network
+3. **[Learn about backlinks](../features/backlinking.md)** - Master bidirectional linking
+4. **[Set up templates](../features/templates.md)** - Standardize your note creation
+5. **[Use tags effectively](../features/tags.md)** - Add another layer of organization
+
+[graph-view]: ../features/graph-view.md 'Graph Visualization'

@@ -27,7 +27,7 @@ find -name "*.docx" -type f -exec sh -c '
 ### Windows (PowerShell)
 
 ```powershell
-Get-ChildItem . -Filter *.docx | 
+Get-ChildItem . -Filter *.docx |
 Foreach-Object {
     pandoc --extract-media=./ --from docx --to markdown $_ -o $_.Name.Replace('.docx', '.md')
 }

@@ -171,7 +171,6 @@ With graph view mastery, you're ready to explore advanced Foam features:
 
 ![Graph style demo](../../assets/images/graph-style.gif)
 
-[note-properties]: note-properties.md 'Note Properties'
 [wikilinks]: wikilinks.md 'Wikilinks'
 [tags]: tags.md 'Tags'
 [templates]: templates.md 'Note Templates'

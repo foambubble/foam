@@ -39,3 +39,6 @@ This point[^caveat] is elaborated elsewhere.[^caveat]
 
 - [[wikilinks]] - Linking between notes
 - [[block-anchors]] - Linking to specific blocks within a note
+
+[wikilinks]: wikilinks.md "Wikilinks"
+[block-anchors]: block-anchors.md "Block Anchors"

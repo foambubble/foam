@@ -143,3 +143,7 @@ If you accidentally use the same `^id` twice in one file, Foam flags the duplica
 - [[wikilinks]] - General linking
 - [[footnotes]] - Adding references and side notes
 - [[embeds]] - Embedding notes and blocks
+
+[wikilinks]: wikilinks.md "Wikilinks"
+[footnotes]: footnotes.md "Footnotes"
+[embeds]: embeds.md "Note Embeds"

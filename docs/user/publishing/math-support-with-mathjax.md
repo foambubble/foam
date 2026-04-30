@@ -7,18 +7,21 @@ layout: mathjax
 Published Foam pages don't support math formulas by default. To enable this feature, you can add the following code snippet to the end of `_layouts/page.html`:
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
+<script
+  src="https://cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
+  type="text/javascript"
+></script>
 <script type="text/x-mathjax-config">
-    MathJax.Hub.Config({
-        tex2jax: {
-            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
-            inlineMath: [['$','$']]
-        }
-    });
+  MathJax.Hub.Config({
+      tex2jax: {
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+          inlineMath: [['$','$']]
+      }
+  });
 </script>
 ```
 
-This approach uses the [MathJax](https://www.mathjax.org/) library to render anything delimited by ```$``` (customizable in the snippet above) pairs to inline math and ```$$``` to blocks of math (like a html div tag) using with the AMS-LaTeX dialect embedded within MathJax.
+This approach uses the [MathJax](https://www.mathjax.org/) library to render anything delimited by `$` (customizable in the snippet above) pairs to inline math and `$$` to blocks of math (like a html div tag) using with the AMS-LaTeX dialect embedded within MathJax.
 
 Example of inline math using `$...$`:
 
@@ -30,7 +33,7 @@ Example of a math block using `$$...$$`:
 
 Becomes:
 
-$$ f_{\mathbf{X}}\left(x_{1}, \ldots, x_{k}\right)=\frac{\exp \left(-\frac{1}{2}(\mathbf{x}-\boldsymbol{\mu})^{\mathrm{T}} \mathbf{\Sigma}^{-1}(\mathbf{x}-\boldsymbol{\mu})\right)}{\sqrt{(2 \pi)^{k}|\mathbf{\Sigma}|}} $$
+$$ f*{\mathbf{X}}\left(x*{1}, \ldots, x\_{k}\right)=\frac{\exp \left(-\frac{1}{2}(\mathbf{x}-\boldsymbol{\mu})^{\mathrm{T}} \mathbf{\Sigma}^{-1}(\mathbf{x}-\boldsymbol{\mu})\right)}{\sqrt{(2 \pi)^{k}|\mathbf{\Sigma}|}} $$
 
 ## Alternative approaches
 

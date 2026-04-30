@@ -9,10 +9,7 @@ Foam already has a publishing story, but it is spread across older templates and
 Relevant existing material in this repository:
 
 - [Publishing pages](../../user/publishing/publishing.md) says Foam should remain valid Markdown and be publishable by many tools, while leaving room for a more Foam-aware publishing path later.
-- [Build vs Assemble](../build-vs-assemble.md) argues for composing focused tools instead of locking Foam into a monolith.
-- [Link reference definition improvements](link-reference-definition-improvements.md) already points toward a build-time publishing step that can rewrite links for different targets.
-- [Materialized backlinks](materialized-backlinks.md) identifies backlinks as an important portability and publishing feature.
-- [Roadmap](roadmap.md) already calls out improved static-site generation, search in published workspaces, graph in published workspaces, and publishing permissions.
+- Improved static-site generation, search in published workspaces, graph in published workspaces, and publishing permissions are all established goals.
 
 That gives a fairly clear constraint set:
 

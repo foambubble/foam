@@ -19,7 +19,7 @@
 
 </div>
 
-**Foam** is a personal knowledge management and sharing system inspired by [Roam Research](https://roamresearch.com/), built on [Visual Studio Code](https://code.visualstudio.com/) and [GitHub](https://github.com/).
+**Foam** is a personal knowledge management and sharing system built on [Visual Studio Code](https://code.visualstudio.com/) and [GitHub](https://github.com/).
 
 You can use **Foam** for organising your research, keeping re-discoverable notes, writing long-form content and, optionally, publishing it to the web.
 

@@ -64,6 +64,7 @@ export default defineConfig({
       description:
         siteConfig.description ??
         '${DEFAULT_DESCRIPTION}',
+      social: [],
       sidebar,
       components: {
         Footer: './src/components/FoamFooter.astro',

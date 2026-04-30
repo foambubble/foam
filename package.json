@@ -13,7 +13,7 @@
     "package-extension": "yarn workspace foam-vscode package-extension",
     "install-extension": "yarn workspace foam-vscode install-extension",
     "publish-extension": "yarn workspace foam-vscode publish-extension",
-    "publish:docs-site": "yarn workspace @foam/graph-view build && yarn workspace foam-vscode build:cli && node packages/foam-vscode/out/cli/index.js publish ./docs --out ./.tmp/foam-docs-site --title \"Foam\" --description \"Using Foam\" --content-root user --site-url https://docs.foamnotes.com",
+    "publish:docs-site": "yarn workspace @foam/core build && yarn workspace @foam/graph-view build && yarn workspace foam-vscode build:cli && node packages/foam-vscode/out/cli/index.js publish ./docs --out ./.tmp/foam-docs-site --title \"Foam\" --description \"Using Foam\" --content-root user --site-url https://docs.foamnotes.com",
     "reset": "yarn && yarn clean && yarn build",
     "clean": "lerna run clean",
     "build": "lerna run build",

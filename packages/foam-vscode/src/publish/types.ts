@@ -107,7 +107,7 @@ export interface PublishedSite {
 }
 
 /**
- * Runtime-compatible with the `GraphData` payload expected by `@foam/graph`.
+ * Runtime-compatible with the `GraphData` payload expected by `@foam/graph-view`.
  * Publish keeps a local copy of the shape so targets can emit graph JSON
  * without depending on the site package at build time.
  */

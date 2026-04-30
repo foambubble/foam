@@ -9,7 +9,7 @@ import type {
   GraphStyle,
   GraphViewConfig,
   ShowGraphArgs,
-} from './graph-protocol';
+} from '@foam/graph-view/protocol' with { 'resolution-mode': 'import' };
 
 export default async function activate(
   context: vscode.ExtensionContext,

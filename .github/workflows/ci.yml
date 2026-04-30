@@ -60,8 +60,12 @@ jobs:
         run: yarn
       - name: Build Packages
         run: yarn build
-      - name: Run Tests
-        run: xvfb-run --auto-servernum yarn test
+      - name: Test @foam/core
+        run: yarn workspace @foam/core test
+      - name: Test @foam/graph-view
+        run: yarn workspace @foam/graph-view test
+      - name: Test foam-vscode
+        run: xvfb-run --auto-servernum yarn workspace foam-vscode test
 
   docs-site-verify:
     name: Docs Site Verify

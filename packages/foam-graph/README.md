@@ -1,8 +1,8 @@
-# @foam/graph
+# @foam/graph-view
 
 Graph visualization web component for [Foam](https://foambubble.github.io/foam), built with [Lit](https://lit.dev) and [force-graph](https://github.com/vasturiano/force-graph).
 
-Published as a standalone ESM package and also bundled for use inside the Foam VS Code extension webview.
+Bundled for use inside the Foam VS Code extension webview.
 
 ## What's inside
 
@@ -13,8 +13,8 @@ Published as a standalone ESM package and also bundled for use inside the Foam V
 ## Usage
 
 ```ts
-import '@foam/graph';                        // register the web component
-import type { GraphData } from '@foam/graph/protocol';  // message types
+import '@foam/graph-view';                        // register the web component
+import type { GraphData } from '@foam/graph-view/protocol';  // message types
 ```
 
 ## Development
@@ -22,8 +22,8 @@ import type { GraphData } from '@foam/graph/protocol';  // message types
 From the repo root:
 
 ```sh
-yarn workspace @foam/graph test:unit     # run unit tests
-yarn workspace @foam/graph build         # build lib + VS Code bundle
-yarn workspace @foam/graph watch         # watch mode (VS Code bundle)
-yarn workspace @foam/graph lint          # lint
+yarn workspace @foam/graph-view test:unit     # run unit tests
+yarn workspace @foam/graph-view build         # build lib + VS Code bundle
+yarn workspace @foam/graph-view watch         # watch mode (VS Code bundle)
+yarn workspace @foam/graph-view lint          # lint
 ```

@@ -506,7 +506,7 @@ describe('publish starlight target', () => {
     ).toContain('"@astrojs/starlight"');
     expect(
       fs.readFileSync(path.join(tmpDir, 'site', 'package.json'), 'utf8')
-    ).not.toContain('"@foam/graph"');
+    ).not.toContain('"@foam/graph-view"');
     expect(
       fs.readFileSync(path.join(tmpDir, 'site', 'astro.config.mjs'), 'utf8')
     ).toContain('site: siteConfig.siteUrl');

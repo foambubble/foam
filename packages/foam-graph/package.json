@@ -1,18 +1,13 @@
 {
-  "name": "@foam/graph",
+  "name": "@foam/graph-view",
   "version": "0.39.0",
   "description": "Foam graph visualization web component",
+  "private": true,
   "license": "MIT",
   "type": "module",
   "exports": {
     ".": "./src/foam-graph.ts",
     "./protocol": "./src/protocol.ts"
-  },
-  "publishConfig": {
-    "exports": {
-      ".": "./dist/foam-graph.js",
-      "./protocol": "./dist/protocol.js"
-    }
   },
   "files": [
     "dist/",
@@ -27,7 +22,7 @@
     "watch": "node build.cjs --vscode --watch",
     "test": "yarn test:unit && yarn test:e2e",
     "test:unit": "vitest run",
-    "test:e2e": "echo 'No e2e tests for @foam/graph'",
+    "test:e2e": "echo 'No e2e tests for @foam/graph-view'",
     "lint": "oxlint src"
   },
   "peerDependencies": {

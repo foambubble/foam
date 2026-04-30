@@ -541,6 +541,13 @@ describe('publish starlight target', () => {
     // expect(pageSidebar).toContain("import '../lib/foam-graph.js';");
     // expect(pageSidebar).toContain('<foam-graph');
     expect(pageSidebar).toContain('class="foam-sidebar-graph"');
+    expect(pageSidebar).toContain('const graphData = await graphDataPromise;');
+    expect(pageSidebar).toContain('graph.graphData = graphData;');
+    expect(pageSidebar).toContain('await graph.updateComplete;');
+    expect(pageSidebar).toContain(
+      'if (currentRoute && graphData.nodeInfo[currentRoute]) {'
+    );
+    expect(pageSidebar).toContain('graph.selectNote(currentRoute);');
     expect(
       fs.existsSync(
         path.join(tmpDir, 'site', 'src', 'content', 'docs', '404.md')

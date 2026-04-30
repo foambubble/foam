@@ -168,8 +168,9 @@ const selectedRoute =
   const initGraph = async graph => {
     try {
       const currentRoute = graph.dataset.currentRoute;
+      const graphData = await graphDataPromise;
 
-      graph.graphData = await graphDataPromise;
+      graph.graphData = graphData;
       graph.graphStyle = buildGraphStyle();
       graph.focusNodeId = currentRoute;
       graph.graphScope = { depth: 1 };
@@ -178,6 +179,11 @@ const selectedRoute =
       graph.forces = { collide: 3, repel: 400, link: 50, velocityDecay: 0.4 };
       graph.linkWidthMultiplier = 1.5;
       graph.selection = { neighborDepth: 1, centerOnSelect: false, zoomOnSelect: false };
+
+      await graph.updateComplete;
+      if (currentRoute && graphData.nodeInfo[currentRoute]) {
+        graph.selectNote(currentRoute);
+      }
 
       const themeObserver = new MutationObserver(() => {
         graph.graphStyle = buildGraphStyle();

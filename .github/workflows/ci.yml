@@ -87,6 +87,8 @@ jobs:
           key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock', 'packages/foam-vscode/src/test/run-tests.ts') }}-${{ secrets.CACHE_VERSION }}
       - name: Install Dependencies
         run: yarn
+      - name: Build @foam/core
+        run: yarn workspace @foam/core build
       - name: Publish Foam Docs Site
         run: yarn publish:docs-site
       - name: Verify Generated Site Shape

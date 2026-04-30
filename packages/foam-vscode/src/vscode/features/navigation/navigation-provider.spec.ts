@@ -58,7 +58,7 @@ describe('Document navigation', () => {
       expect(links.length).toEqual(0);
     });
 
-    it('should not create links for wikilinks, as this is managed by the definition provider', async () => {
+    it('should not create links for wikilinks without link reference definitions, as this is managed by the definition provider', async () => {
       const fileA = await createFile('# File A', ['file-a.md']);
       const fileB = await createFile(`this is a link to [[${fileA.name}]].`);
       const ws = createTestWorkspace()
@@ -72,6 +72,25 @@ describe('Document navigation', () => {
       const links = await provider.provideDocumentLinks(doc);
 
       expect(links.length).toEqual(0);
+    });
+
+    it('should create a document link for a wikilink that has a Foam-generated link reference definition (fix #1294)', async () => {
+      const fileA = await createFile('# File A', ['file-a.md']);
+      const relativePath = `./${fileA.base}`;
+      const content = `this is a link to [[${fileA.name}]].\n\n[${fileA.name}]: ${relativePath} "File A"`;
+      const fileB = await createFile(content);
+      const ws = createTestWorkspace()
+        .set(parser.parse(fileA.uri, fileA.content))
+        .set(parser.parse(fileB.uri, fileB.content));
+      const graph = FoamGraph.fromWorkspace(ws);
+      const tags = FoamTags.fromWorkspace(ws);
+
+      const { doc } = await showInEditor(fileB.uri);
+      const provider = new NavigationProvider(ws, graph, parser, tags);
+      const links = await provider.provideDocumentLinks(doc);
+
+      expect(links.length).toEqual(1);
+      expect(links[0].target).toEqual(toVsCodeUri(fileA.uri));
     });
 
     it('should create links for placeholders', async () => {
@@ -163,6 +182,30 @@ describe('Document navigation', () => {
   });
 
   describe('definition provider', () => {
+    it('should not create a definition for a wikilink that has a Foam-generated link reference definition (fix #1294)', async () => {
+      const fileA = await createFile('# File A', ['file-a.md']);
+      const relativePath = `./${fileA.base}`;
+      const content = `this is a link to [[${fileA.name}]].\n\n[${fileA.name}]: ${relativePath} "File A"`;
+      const fileB = await createFile(content);
+      const ws = createTestWorkspace()
+        .set(parser.parse(fileA.uri, fileA.content))
+        .set(parser.parse(fileB.uri, fileB.content));
+      const graph = FoamGraph.fromWorkspace(ws);
+      const tags = FoamTags.fromWorkspace(ws);
+
+      const { doc } = await showInEditor(fileB.uri);
+      const provider = new NavigationProvider(ws, graph, parser, tags);
+      // Position is on the wikilink [[file-a]] at col 20 (inside the brackets)
+      const definitions = await provider.provideDefinition(
+        doc,
+        new vscode.Position(0, 22)
+      );
+
+      // Must return undefined so VS Code doesn't show a "2 definitions" picker.
+      // Navigation is handled by provideDocumentLinks instead.
+      expect(definitions).toBeUndefined();
+    });
+
     it('should not create a definition for a placeholder', async () => {
       const fileA = await createFile(`this is a link to [[placeholder]].`);
       const ws = createTestWorkspace().set(

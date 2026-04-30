@@ -1,0 +1,29 @@
+{
+  "name": "@foam/cli",
+  "version": "0.39.0",
+  "description": "Foam CLI for publishing knowledge bases",
+  "private": true,
+  "license": "MIT",
+  "bin": {
+    "foam": "./out/index.js"
+  },
+  "scripts": {
+    "build": "node esbuild.js",
+    "clean": "rimraf out",
+    "test": "yarn test:unit",
+    "test:unit": "vitest run",
+    "test:e2e": "echo 'No e2e tests for @foam/cli'",
+    "lint": "oxlint src"
+  },
+  "dependencies": {
+    "@foam/core": "*"
+  },
+  "devDependencies": {
+    "@types/node": "^18.0.0",
+    "esbuild": "^0.27.0",
+    "oxlint": "^1.57.0",
+    "rimraf": "^3.0.2",
+    "typescript": "^5.8.0",
+    "vitest": "^3.0.0"
+  }
+}

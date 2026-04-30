@@ -4,7 +4,7 @@ import { Logger } from '@foam/core';
 import { fromVsCodeUri } from '../../utils/vsc-utils';
 import { isSome } from '@foam/core';
 import { getFoamVsCodeConfig } from '../../config';
-import { buildGraphData } from '../../../services/graph-data-builder';
+import { buildGraphData } from '@foam/core';
 import type {
   GraphStyle,
   GraphViewConfig,

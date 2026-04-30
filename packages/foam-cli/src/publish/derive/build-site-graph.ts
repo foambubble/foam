@@ -1,5 +1,5 @@
 import { Resource } from '@foam/core';
-import { buildGraphData } from '../../services/graph-data-builder';
+import { buildGraphData } from '@foam/core';
 import {
   PublishContext,
   PublishedGraphData,

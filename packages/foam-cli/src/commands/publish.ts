@@ -2,8 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { Logger } from '@foam/core';
-import { buildSite } from '../../publish';
-import { writeStarlightSite } from '../../publish/targets/starlight';
+import { buildSite } from '../publish';
+import { writeStarlightSite } from '../publish/targets/starlight';
 import { loadWorkspaceFromDirectory } from '../support/filesystem';
 
 interface ParsedArgs {
@@ -146,7 +146,7 @@ export async function runPublishCommand(options: PublishCommandOptions) {
   });
 
   const graphBundlePath = path.join(__dirname, 'foam-graph.standalone.js');
-  const faviconPath = path.join(__dirname, '..', '..', 'assets', 'icon', 'foam-icon.svg');
+  const faviconPath = path.join(__dirname, 'assets', 'foam-icon.svg');
 
   await writeStarlightSite({
     artifactSet,

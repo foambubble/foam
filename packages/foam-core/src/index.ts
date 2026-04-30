@@ -105,6 +105,14 @@ export { TaskDeduplicator } from './utils/task-deduplicator';
 export type { Progress, ProgressCallback } from './services/progress';
 export { CancellationError } from './services/progress';
 
+// Graph builder
+export { buildGraphData } from './services/graph-data-builder';
+export type {
+  GraphNodeData,
+  BuiltGraphData,
+  GraphBuilderOptions,
+} from './services/graph-data-builder';
+
 // Common
 export type { IDisposable } from './common/lifecycle';
 export { Emitter } from './common/event';

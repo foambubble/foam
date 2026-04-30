@@ -141,7 +141,7 @@ async function buildExtension() {
 }
 
 function copyGraphBundleForCli() {
-  const src = path.join(__dirname, '../foam-graph/dist/foam-graph.standalone.js');
+  const src = path.join(__dirname, '../foam-graph/out/foam-graph.standalone.js');
   const dest = path.join(__dirname, 'out/cli/foam-graph.standalone.js');
   if (fs.existsSync(src)) {
     fs.mkdirSync(path.dirname(dest), { recursive: true });

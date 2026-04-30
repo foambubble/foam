@@ -6,11 +6,17 @@
   "license": "MIT",
   "type": "module",
   "exports": {
-    ".": "./src/foam-graph.ts",
-    "./protocol": "./src/protocol.ts"
+    ".": {
+      "types": "./out/foam-graph.d.ts",
+      "default": "./out/foam-graph.js"
+    },
+    "./protocol": {
+      "types": "./out/protocol.d.ts",
+      "default": "./out/protocol.js"
+    }
   },
   "files": [
-    "dist/",
+    "out/",
     "src/",
     "!src/main.ts",
     "!src/main.css"
@@ -19,6 +25,7 @@
     "build": "node build.cjs",
     "build:lib": "node build.cjs --lib",
     "build:vscode": "node build.cjs --vscode",
+    "clean": "rimraf out dist",
     "watch": "node build.cjs --vscode --watch",
     "test": "yarn test:unit && yarn test:e2e",
     "test:unit": "vitest run",
@@ -37,6 +44,7 @@
     "force-graph": "^1.51.0",
     "happy-dom": "^20.0.0",
     "lit": "^3.0.0",
+    "rimraf": "^6.1.3",
     "typescript": "^5.0.0",
     "vitest": "^3.0.0"
   }

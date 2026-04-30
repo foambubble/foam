@@ -1,0 +1,24 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["eslint", "typescript", "unicorn", "oxc"],
+  "env": {
+    "node": true,
+    "es2022": true
+  },
+  "rules": {
+    "no-unused-vars": "off",
+    "no-use-before-define": "off",
+    "no-unused-expressions": [
+      "error",
+      { "allowShortCircuit": true, "allowTernary": true }
+    ],
+    "typescript/no-use-before-define": "off",
+    "typescript/no-explicit-any": "off",
+    "typescript/no-non-null-assertion": "off",
+    "typescript/explicit-function-return-type": "off",
+    "typescript/no-unused-vars": "off",
+    "typescript/no-require-imports": "off",
+    "typescript/no-unsafe-declaration-merging": "off",
+    "unicorn/no-new-array": "off"
+  }
+}

@@ -27,13 +27,15 @@
     "watch": "node build.cjs --vscode --watch",
     "test": "yarn test:unit && yarn test:e2e",
     "test:unit": "vitest run",
-    "test:e2e": "echo 'No e2e tests for @foam/graph'"
+    "test:e2e": "echo 'No e2e tests for @foam/graph'",
+    "lint": "oxlint src"
   },
   "peerDependencies": {
     "lit": "^3.0.0"
   },
   "devDependencies": {
     "d3-color": "^3.1.0",
+    "oxlint": "^1.57.0",
     "d3-force": "^3.0.0",
     "d3-scale": "^4.0.0",
     "esbuild": "^0.27.0",

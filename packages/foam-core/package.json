@@ -13,10 +13,12 @@
     "clean": "rimraf out",
     "test": "yarn test:unit && yarn test:e2e",
     "test:unit": "vitest run",
-    "test:e2e": "echo 'No e2e tests for @foam/core'"
+    "test:e2e": "echo 'No e2e tests for @foam/core'",
+    "lint": "oxlint src"
   },
   "devDependencies": {
     "@types/micromatch": "^4.0.10",
+    "oxlint": "^1.57.0",
     "micromatch": "^4.0.8",
     "rimraf": "^3.0.2",
     "typescript": "^5.8.0",

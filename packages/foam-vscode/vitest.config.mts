@@ -51,6 +51,6 @@ export default defineConfig({
     exclude: ['src/test/web/**', 'node_modules/**', '.vscode-test/**'],
     testTimeout: 20000,
     clearMocks: true,
-    reporter: 'verbose',
+    reporters: process.env.CI ? ['dot'] : ['verbose'],
   },
 });

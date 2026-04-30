@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import { URI } from '../../../core/model/uri';
-import { FoamWorkspace } from '../../../core/model/workspace';
+import { URI } from '@foam/core';
+import { FoamWorkspace } from '@foam/core';
 import {
   getGraphStyle,
   getNodeNavigationCommand,

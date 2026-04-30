@@ -1,0 +1,11 @@
+{
+  "ignorePatterns": ["**/*.js", "out/**"],
+  "overrides": [
+    {
+      "files": ["src/**/*.test.ts"],
+      "rules": {
+        "no-restricted-imports": "off"
+      }
+    }
+  ]
+}

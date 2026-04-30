@@ -1,13 +1,13 @@
 import * as vscode from 'vscode';
-import { URI } from '../../../core/model/uri';
+import { URI } from '@foam/core';
 import { toVsCodeUri } from '../../utils/vsc-utils';
-import { Foam } from '../../../core/model/foam';
-import { QueryFilter, parseFilter } from '../../../core/query';
+import { Foam } from '@foam/core';
+import { QueryFilter, parseFilter } from '@foam/core';
 import { CommandDescriptor } from '../../utils/commands';
-import { FoamWorkspace } from '../../../core/model/workspace';
-import { FoamGraph } from '../../../core/model/graph';
-import { Resource } from '../../../core/model/note';
-import { isNone } from '../../../core/utils';
+import { FoamWorkspace } from '@foam/core';
+import { FoamGraph } from '@foam/core';
+import { Resource } from '@foam/core';
+import { isNone } from '@foam/core';
 
 export default async function activate(
   context: vscode.ExtensionContext,

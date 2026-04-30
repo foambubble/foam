@@ -4,16 +4,16 @@
 import { readFileSync } from 'fs';
 import { workspace as vsWorkspace } from 'vscode';
 import markdownItRegex from 'markdown-it-regex';
-import { FoamWorkspace } from '../../../core/model/workspace';
-import { Logger } from '../../../core/utils/log';
-import { Resource, ResourceParser, Block } from '../../../core/model/note';
+import { FoamWorkspace } from '@foam/core';
+import { Logger } from '@foam/core';
+import { Resource, ResourceParser, Block } from '@foam/core';
 import { getFoamVsCodeConfig } from '../../config';
 import { fromVsCodeUri } from '../../utils/vsc-utils';
-import { MarkdownLink } from '../../../core/services/markdown-link';
-import { URI } from '../../../core/model/uri';
-import { Position } from '../../../core/model/position';
-import { TextEdit } from '../../../core/services/text-edit';
-import { isNone, isSome } from '../../../core/utils';
+import { MarkdownLink } from '@foam/core';
+import { URI } from '@foam/core';
+import { Position } from '@foam/core';
+import { TextEdit } from '@foam/core';
+import { isNone, isSome } from '@foam/core';
 import {
   asAbsoluteWorkspaceUri,
   isVirtualWorkspace,

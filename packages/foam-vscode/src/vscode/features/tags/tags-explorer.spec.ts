@@ -2,8 +2,8 @@
 import { createTestNote } from '../../../test/test-utils';
 import { cleanWorkspace, closeEditors } from '../../../test/test-utils-vscode';
 import { TagItem, TagsProvider } from './tags-explorer';
-import { FoamTags } from '../../../core/model/tags';
-import { FoamWorkspace } from '../../../core/model/workspace';
+import { FoamTags } from '@foam/core';
+import { FoamWorkspace } from '@foam/core';
 import { ResourceTreeItem } from '../../utils/tree-views/tree-view-utils';
 
 describe('Tags tree panel', () => {

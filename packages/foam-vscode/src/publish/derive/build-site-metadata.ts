@@ -1,5 +1,5 @@
-import { Resource } from '../../core/model/note';
-import { URI } from '../../core/model/uri';
+import { Resource } from '@foam/core';
+import { URI } from '@foam/core';
 import {
   PublishContext,
   PublishedRoute,

@@ -1,7 +1,7 @@
 /* @unit-ready */
 
 import * as vscode from 'vscode';
-import { createMarkdownParser } from '../../../core/services/markdown-parser';
+import { createMarkdownParser } from '@foam/core';
 import { createTestWorkspace } from '../../../test/test-utils';
 import {
   cleanWorkspace,
@@ -10,8 +10,8 @@ import {
   showInEditor,
 } from '../../../test/test-utils-vscode';
 import { NavigationProvider } from '../navigation/navigation-provider';
-import { FoamGraph } from '../../../core/model/graph';
-import { FoamTags } from '../../../core/model/tags';
+import { FoamGraph } from '@foam/core';
+import { FoamTags } from '@foam/core';
 import { toVsCodeUri } from '../../utils/vsc-utils';
 
 describe('Document decorator', () => {

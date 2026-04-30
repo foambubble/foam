@@ -6,21 +6,21 @@
   "license": "MIT",
   "private": "true",
   "workspaces": [
-    "packages/*",
-    "packages/foam-vscode/webview-ui/graph"
+    "packages/*"
   ],
   "scripts": {
     "version-extension": "lerna version",
     "package-extension": "yarn workspace foam-vscode package-extension",
     "install-extension": "yarn workspace foam-vscode install-extension",
     "publish-extension": "yarn workspace foam-vscode publish-extension",
-    "publish:docs-site": "yarn workspace @foam/graph build:lib && yarn workspace foam-vscode build:cli && node packages/foam-vscode/out/cli/index.js publish ./docs --out ./.tmp/foam-docs-site --title \"Foam\" --description \"Using Foam\" --content-root user --site-url https://docs.foamnotes.com",
+    "publish:docs-site": "yarn workspace @foam/graph-view build && yarn workspace foam-vscode build:cli && node packages/foam-vscode/out/cli/index.js publish ./docs --out ./.tmp/foam-docs-site --title \"Foam\" --description \"Using Foam\" --content-root user --site-url https://docs.foamnotes.com",
     "reset": "yarn && yarn clean && yarn build",
     "clean": "lerna run clean",
     "build": "lerna run build",
-    "test": "yarn workspace foam-vscode test",
-    "test:unit": "yarn workspace foam-vscode test:unit",
-    "lint": "yarn workspace foam-vscode lint",
+    "test": "lerna run test",
+    "test:unit": "lerna run test:unit",
+    "test:e2e": "lerna run test:e2e",
+    "lint": "lerna run lint",
     "watch": "lerna run watch --concurrency 20",
     "prepare": "husky"
   },

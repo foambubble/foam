@@ -1,4 +1,4 @@
-import { Resource } from '../../core/model/note';
+import { Resource } from '@foam/core';
 import { buildGraphData } from '../../services/graph-data-builder';
 import {
   PublishContext,

@@ -8,7 +8,7 @@ import {
   InMemoryDataStore,
   waitForExpect,
 } from '../../test/test-utils';
-import { URI } from '../../core/model/uri';
+import { URI } from '@foam/core';
 
 // Helper to create a simple mock provider
 class MockProvider implements EmbeddingProvider {

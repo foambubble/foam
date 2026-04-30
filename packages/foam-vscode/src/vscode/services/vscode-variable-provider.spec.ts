@@ -1,8 +1,8 @@
 /* @unit-ready */
 import { Selection, window } from 'vscode';
-import { Resolver } from '../../core/templates/variable-resolver';
+import { Resolver } from '@foam/core';
 import { VsCodeVariableProvider } from './vscode-variable-provider';
-import { Variable } from '../../core/common/snippetParser';
+import { Variable } from '@foam/core';
 import {
   createFile,
   deleteFile,

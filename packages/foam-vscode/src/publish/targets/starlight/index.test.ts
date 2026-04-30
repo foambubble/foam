@@ -3,7 +3,7 @@ import { mkdtempSync } from 'fs';
 import path from 'path';
 import { tmpdir } from 'os';
 
-import { URI } from '../../../core/model/uri';
+import { URI } from '@foam/core';
 import { PublishArtifactSet } from '../../types';
 import { writeStarlightSite } from './index';
 
@@ -506,7 +506,7 @@ describe('publish starlight target', () => {
     ).toContain('"@astrojs/starlight"');
     expect(
       fs.readFileSync(path.join(tmpDir, 'site', 'package.json'), 'utf8')
-    ).not.toContain('"@foam/graph"');
+    ).not.toContain('"@foam/graph-view"');
     expect(
       fs.readFileSync(path.join(tmpDir, 'site', 'astro.config.mjs'), 'utf8')
     ).toContain('site: siteConfig.siteUrl');

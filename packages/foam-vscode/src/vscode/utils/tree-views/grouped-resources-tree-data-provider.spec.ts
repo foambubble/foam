@@ -1,14 +1,14 @@
-import { FoamWorkspace } from '../../../core/model/workspace';
+import { FoamWorkspace } from '@foam/core';
 import {
   AlwaysIncludeMatcher,
   IMatcher,
   SubstringExcludeMatcher,
-} from '../../../core/services/datastore';
+} from '@foam/core';
 import { createTestNote } from '../../../test/test-utils';
 import { ResourceTreeItem, UriTreeItem } from './tree-view-utils';
 import { randomString } from '../../../test/test-utils';
 import { MapBasedMemento } from '../vsc-utils';
-import { URI } from '../../../core/model/uri';
+import { URI } from '@foam/core';
 import { TreeItem } from 'vscode';
 import { GroupedResourcesTreeDataProvider } from './grouped-resources-tree-data-provider';
 

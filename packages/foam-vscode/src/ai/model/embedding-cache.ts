@@ -1,5 +1,5 @@
-import { URI } from '../../core/model/uri';
-import { ICache } from '../../core/utils/cache';
+import { URI } from '@foam/core';
+import { ICache } from '@foam/core';
 
 type Checksum = string;
 

@@ -1,5 +1,5 @@
-import { Connection } from '../../core/model/graph';
-import { Resource } from '../../core/model/note';
+import { Connection } from '@foam/core';
+import { Resource } from '@foam/core';
 import { PublishContext, PublishedBacklink } from '../types';
 
 const toPublishedBacklink = (

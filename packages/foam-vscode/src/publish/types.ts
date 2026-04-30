@@ -1,7 +1,7 @@
-import { FoamGraph } from '../core/model/graph';
-import { Resource } from '../core/model/note';
-import { URI } from '../core/model/uri';
-import { FoamWorkspace } from '../core/model/workspace';
+import { FoamGraph } from '@foam/core';
+import { Resource } from '@foam/core';
+import { URI } from '@foam/core';
+import { FoamWorkspace } from '@foam/core';
 
 export interface PublishRuntimeContext {
   workspace: FoamWorkspace;
@@ -107,7 +107,7 @@ export interface PublishedSite {
 }
 
 /**
- * Runtime-compatible with the `GraphData` payload expected by `@foam/graph`.
+ * Runtime-compatible with the `GraphData` payload expected by `@foam/graph-view`.
  * Publish keeps a local copy of the shape so targets can emit graph JSON
  * without depending on the site package at build time.
  */

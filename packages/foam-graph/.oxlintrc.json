@@ -1,0 +1,15 @@
+{
+  "env": {
+    "browser": true,
+    "es2022": true
+  },
+  "ignorePatterns": ["**/*.js", "dist/**"],
+  "overrides": [
+    {
+      "files": ["src/**/*.test.ts"],
+      "rules": {
+        "no-restricted-imports": "off"
+      }
+    }
+  ]
+}

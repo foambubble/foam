@@ -1,5 +1,5 @@
 import { ExtensionContext } from 'vscode';
-import { Foam } from '../../../core/model/foam';
+import { Foam } from '@foam/core';
 import dateSnippets from './date-snippets';
 import openDailyNoteCommand from './open-daily-note';
 import openDailyNoteForDateCommand from './open-daily-note-for-date';

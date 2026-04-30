@@ -1,4 +1,4 @@
-import { URI } from '../../core/model/uri';
+import { URI } from '@foam/core';
 import { EmbeddingCache, EmbeddingCacheEntry } from './embedding-cache';
 
 /**

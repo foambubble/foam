@@ -1,8 +1,8 @@
 import dayjs from 'dayjs';
 import { Uri, window, workspace } from 'vscode';
-import { joinPath } from '../../../core/utils/path';
-import { URI } from '../../../core/model/uri';
-import { Foam } from '../../../core/model/foam';
+import { joinPath } from '@foam/core';
+import { URI } from '@foam/core';
+import { Foam } from '@foam/core';
 import { getDailyNoteTemplateUri } from '../../../vscode/services/template-service';
 import { NoteFactory } from '../../../vscode/services/note-factory';
 import { getFoamVsCodeConfig } from '../../../vscode/config';
@@ -11,8 +11,8 @@ import {
   focusNote,
   readFile,
 } from '../../services/editor';
-import { resolveDailyNote } from '../../../core/templates/daily-note-resolver';
-import { Resolver } from '../../../core/templates/variable-resolver';
+import { resolveDailyNote } from '@foam/core';
+import { Resolver } from '@foam/core';
 
 // ─── Format conversion ────────────────────────────────────────────────────────
 

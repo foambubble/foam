@@ -1,4 +1,4 @@
-import { Resource } from '../../core/model/note';
+import { Resource } from '@foam/core';
 import { buildBacklinks } from '../derive/build-backlink-index';
 import { PublishContext, PublishedDiagnostic, PublishedNote } from '../types';
 import { rewriteLinks } from './rewrite-links';

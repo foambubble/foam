@@ -1,7 +1,7 @@
-import { URI } from '../core/model/uri';
-import { Logger } from '../core/utils/log';
-import { createMarkdownParser } from '../core/services/markdown-parser';
-import { FoamWorkspace } from '../core/model/workspace';
+import { URI } from '@foam/core';
+import { Logger } from '@foam/core';
+import { createMarkdownParser } from '@foam/core';
+import { FoamWorkspace } from '@foam/core';
 import { checkLinks, checkDuplicateBlocks } from './rule-check-links';
 
 Logger.setLevel('error');

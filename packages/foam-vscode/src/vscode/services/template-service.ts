@@ -1,7 +1,7 @@
 import { QuickPickItem, commands, window, workspace } from 'vscode';
-import { URI } from '../../core/model/uri';
-import { getDailyNoteTemplateCandidateUris } from '../../core/templates/template-discovery';
-import { extractFoamTemplateFrontmatterMetadata } from '../../core/utils/template-frontmatter-parser';
+import { URI } from '@foam/core';
+import { getDailyNoteTemplateCandidateUris } from '@foam/core';
+import { extractFoamTemplateFrontmatterMetadata } from '@foam/core';
 import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
 import { fileExists, focusNote, readFile } from './editor';
 import { getFoamVsCodeConfig } from '../config';

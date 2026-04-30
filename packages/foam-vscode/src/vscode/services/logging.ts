@@ -1,6 +1,6 @@
 import { workspace, window, commands, ExtensionContext } from 'vscode';
-import { IDisposable } from '../../core/common/lifecycle';
-import { BaseLogger, ILogger, LogLevel } from '../../core/utils/log';
+import { IDisposable } from '@foam/core';
+import { BaseLogger, ILogger, LogLevel } from '@foam/core';
 
 function getFoamLoggerLevel(): LogLevel {
   return workspace.getConfiguration('foam.logging').get('level') ?? 'info';

@@ -1,0 +1,11 @@
+{
+  "feature1": {
+    "setting1": {
+      "value": true,
+      "extraValue": "go foam"
+    }
+  },
+  "feature2": {
+    "value": 12
+  }
+}

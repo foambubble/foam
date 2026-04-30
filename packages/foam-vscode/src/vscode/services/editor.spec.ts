@@ -10,7 +10,7 @@ import {
   getCurrentEditorDirectory,
   replaceSelection,
 } from './editor';
-import { URI } from '../../core/model/uri';
+import { URI } from '@foam/core';
 
 describe('Editor utils', () => {
   beforeAll(closeEditors);

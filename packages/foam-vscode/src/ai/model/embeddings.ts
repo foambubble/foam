@@ -1,16 +1,16 @@
-import { Emitter } from '../../core/common/event';
-import { IDisposable } from '../../core/common/lifecycle';
-import { Logger } from '../../core/utils/log';
-import { hash } from '../../core/utils';
+import { Emitter } from '@foam/core';
+import { IDisposable } from '@foam/core';
+import { Logger } from '@foam/core';
+import { hash } from '@foam/core';
 import { EmbeddingProvider, Embedding } from '../services/embedding-provider';
 import { EmbeddingCache } from './embedding-cache';
 import {
   ProgressCallback,
   CancellationToken,
   CancellationError,
-} from '../../core/services/progress';
-import { FoamWorkspace } from '../../core/model/workspace';
-import { URI } from '../../core/model/uri';
+} from '@foam/core';
+import { FoamWorkspace } from '@foam/core';
+import { URI } from '@foam/core';
 
 /**
  * Represents a similar resource with its similarity score

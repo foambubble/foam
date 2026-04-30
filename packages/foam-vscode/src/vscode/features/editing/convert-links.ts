@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
-import { Foam } from '../../../core/model/foam';
-import { Range } from '../../../core/model/range';
-import { Logger } from '../../../core/utils/log';
+import { Foam } from '@foam/core';
+import { Range } from '@foam/core';
+import { Logger } from '@foam/core';
 import { fromVsCodeUri, toVsCodeRange } from '../../utils/vsc-utils';
-import { MarkdownLink } from '../../../core/services/markdown-link';
+import { MarkdownLink } from '@foam/core';
 
 export const CONVERT_WIKILINK_TO_MDLINK = {
   command: 'foam-vscode.convert-wikilink-to-mdlink',

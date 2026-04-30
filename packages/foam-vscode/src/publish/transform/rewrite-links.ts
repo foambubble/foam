@@ -1,6 +1,6 @@
-import { Resource, ResourceLink } from '../../core/model/note';
-import { TextEdit } from '../../core/services/text-edit';
-import { MarkdownLink } from '../../core/services/markdown-link';
+import { Resource, ResourceLink } from '@foam/core';
+import { TextEdit } from '@foam/core';
+import { MarkdownLink } from '@foam/core';
 import { PublishContext, PublishedDiagnostic } from '../types';
 
 const getLinkText = (

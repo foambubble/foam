@@ -5,17 +5,17 @@ import {
   ConfigurationMonitor,
   monitorFoamVsCodeConfig,
 } from '../../config';
-import { ResourceLink, ResourceParser } from '../../../core/model/note';
-import { Foam } from '../../../core/model/foam';
-import { FoamWorkspace } from '../../../core/model/workspace';
-import { Range } from '../../../core/model/range';
-import { FoamGraph } from '../../../core/model/graph';
+import { ResourceLink, ResourceParser } from '@foam/core';
+import { Foam } from '@foam/core';
+import { FoamWorkspace } from '@foam/core';
+import { Range } from '@foam/core';
+import { FoamGraph } from '@foam/core';
 import { OPEN_COMMAND } from './open-resource';
 import { CREATE_NOTE_COMMAND } from '../notes/create-note';
 import { commandAsURI } from '../../utils/commands';
-import { Location } from '../../../core/model/location';
+import { Location } from '@foam/core';
 import { getNoteTooltip, getFoamDocSelectors } from '../../services/editor';
-import { isSome } from '../../../core/utils';
+import { isSome } from '@foam/core';
 
 export const CONFIG_KEY = 'links.hover.enable';
 

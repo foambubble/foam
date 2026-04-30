@@ -1,10 +1,10 @@
 import { generateLinkReferences } from '.';
 import { createTestNote, createTestWorkspace } from '../test/test-utils';
-import { Logger } from '../core/utils/log';
-import { URI } from '../core/model/uri';
+import { Logger } from '@foam/core';
+import { URI } from '@foam/core';
 import { EOL } from 'os';
-import { createMarkdownParser } from '../core/services/markdown-parser';
-import { TextEdit } from '../core/services/text-edit';
+import { createMarkdownParser } from '@foam/core';
+import { TextEdit } from '@foam/core';
 
 Logger.setLevel('error');
 

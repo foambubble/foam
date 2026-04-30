@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { toVsCodeRange, toVsCodeUri, fromVsCodeUri } from '../../utils/vsc-utils';
-import { Foam } from '../../../core/model/foam';
-import { FoamWorkspace } from '../../../core/model/workspace';
+import { Foam } from '@foam/core';
+import { FoamWorkspace } from '@foam/core';
 import {
   Block,
   Footnote,
@@ -9,16 +9,16 @@ import {
   ResourceLink,
   ResourceParser,
   Section,
-} from '../../../core/model/note';
-import { URI } from '../../../core/model/uri';
-import { Range } from '../../../core/model/range';
-import { FoamGraph } from '../../../core/model/graph';
-import { Position } from '../../../core/model/position';
+} from '@foam/core';
+import { URI } from '@foam/core';
+import { Range } from '@foam/core';
+import { FoamGraph } from '@foam/core';
+import { Position } from '@foam/core';
 import { CREATE_NOTE_COMMAND } from '../notes/create-note';
 import { commandAsURI } from '../../utils/commands';
-import { Location } from '../../../core/model/location';
+import { Location } from '@foam/core';
 import { fileExists, getFoamDocSelectors } from '../../services/editor';
-import { FoamTags } from '../../../core/model/tags';
+import { FoamTags } from '@foam/core';
 
 export default async function activate(
   context: vscode.ExtensionContext,

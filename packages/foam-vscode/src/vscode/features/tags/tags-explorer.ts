@@ -1,8 +1,8 @@
-import { URI } from '../../../core/model/uri';
+import { URI } from '@foam/core';
 import * as vscode from 'vscode';
-import { Foam } from '../../../core/model/foam';
-import { FoamWorkspace } from '../../../core/model/workspace';
-import { FoamTags } from '../../../core/model/tags';
+import { Foam } from '@foam/core';
+import { FoamWorkspace } from '@foam/core';
+import { FoamTags } from '@foam/core';
 import {
   ResourceRangeTreeItem,
   ResourceTreeItem,

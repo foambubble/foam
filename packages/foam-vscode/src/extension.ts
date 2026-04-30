@@ -1,9 +1,8 @@
 /*global markdownit:readonly*/
 
 import { workspace, ExtensionContext, window, commands } from 'vscode';
-import { MarkdownResourceProvider } from './core/services/markdown-provider';
+import { MarkdownResourceProvider, Logger } from '@foam/core';
 import { bootstrap } from './core/model/foam';
-import { Logger } from './core/utils/log';
 import { fromVsCodeUri } from './vscode/utils/vsc-utils';
 
 import { features } from './vscode/features';
@@ -15,9 +14,9 @@ import {
   getIncludeFilesSetting,
   getNotesExtensions,
 } from './vscode/settings';
-import { AttachmentResourceProvider } from './core/services/attachment-provider';
+import { AttachmentResourceProvider } from '@foam/core';
 import { VsCodeWatcher } from './vscode/services/watcher';
-import { createMarkdownParser } from './core/services/markdown-parser';
+import { createMarkdownParser } from '@foam/core';
 import VsCodeBasedParserCache from './vscode/services/cache';
 import { createMatcherAndDataStore } from './vscode/services/editor';
 import { OllamaEmbeddingProvider } from './ai/providers/ollama/ollama-provider';

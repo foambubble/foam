@@ -1,10 +1,10 @@
 import detectNewline from 'detect-newline';
-import { FoamWorkspace } from '../core/model/workspace';
-import { Resource } from '../core/model/note';
-import { Range } from '../core/model/range';
-import { URI } from '../core/model/uri';
-import { TextEdit, WorkspaceTextEdit } from '../core/services/text-edit';
-import { ProgressCallback } from '../core/services/progress';
+import { FoamWorkspace } from '@foam/core';
+import { Resource } from '@foam/core';
+import { Range } from '@foam/core';
+import { URI } from '@foam/core';
+import { TextEdit, WorkspaceTextEdit } from '@foam/core';
+import { ProgressCallback } from '@foam/core';
 import { missingHeadingRule } from './rule-missing-heading';
 import { staleDefinitionsRule } from './rule-stale-definitions';
 

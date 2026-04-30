@@ -1,8 +1,8 @@
-import { FoamGraph } from '../../core/model/graph';
-import { Resource, ResourceLink } from '../../core/model/note';
-import { URI } from '../../core/model/uri';
-import { FoamWorkspace } from '../../core/model/workspace';
-import { isWithinPath } from '../../core/utils/path';
+import { FoamGraph } from '@foam/core';
+import { Resource, ResourceLink } from '@foam/core';
+import { URI } from '@foam/core';
+import { FoamWorkspace } from '@foam/core';
+import { isWithinPath } from '@foam/core';
 import { getIncludeAssetMatcher, getIncludeMatcher } from '../config';
 import {
   buildAssetManifest,

@@ -1,5 +1,5 @@
-import { URI } from '../core/model/uri';
-import { Logger } from '../core/utils/log';
+import { URI } from '@foam/core';
+import { Logger } from '@foam/core';
 import { Matcher, toMatcherPathFormat } from './test-datastore';
 import { TEST_DATA_DIR } from './test-utils';
 

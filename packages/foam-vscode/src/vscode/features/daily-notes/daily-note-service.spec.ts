@@ -6,7 +6,7 @@ import {
   getDailyNoteFileName,
   getDailyNoteUri,
 } from './daily-note-service';
-import { isWindows } from '../../../core/common/platform';
+import { isWindows } from '@foam/core';
 import {
   cleanWorkspace,
   closeEditors,
@@ -18,12 +18,12 @@ import {
 } from '../../../test/test-utils-vscode';
 import { fromVsCodeUri } from '../../utils/vsc-utils';
 import { fileExists, readFile } from '../../services/editor';
-import { getDailyNoteTemplateCandidateUris } from '../../../core/templates/template-discovery';
+import { getDailyNoteTemplateCandidateUris } from '@foam/core';
 import {
   getDailyNoteTemplateUri,
   getTemplatesDir,
 } from '../../../vscode/services/template-service';
-import { URI } from '../../../core/model/uri';
+import { URI } from '@foam/core';
 
 describe('getDailyNoteUri', () => {
   const date = new Date('2021-02-07T00:00:00Z');

@@ -1,7 +1,7 @@
 import { window, workspace } from 'vscode';
 import { findSelectionContent, getCurrentEditorDirectory } from './editor';
 import { UserCancelledOperation } from './errors';
-import { VariableProvider } from '../../core/templates/variable-resolver';
+import { VariableProvider } from '@foam/core';
 
 export type { VariableProvider };
 

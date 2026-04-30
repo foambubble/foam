@@ -5,8 +5,8 @@
   "tasks": [
     {
       "label": "watch: foam-vscode",
-      "type": "npm",
-      "script": "watch",
+      "type": "shell",
+      "command": "source ~/.nvm/nvm.sh && nvm use && yarn workspace foam-vscode watch",
       "problemMatcher": {
         "owner": "typescript",
         "fileLocation": ["relative", "${workspaceFolder}"],

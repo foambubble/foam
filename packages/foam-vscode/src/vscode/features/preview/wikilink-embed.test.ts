@@ -7,7 +7,7 @@ import {
   extractBlockContent,
 } from './wikilink-embed';
 import * as config from '../../config';
-import { createMarkdownParser } from '../../../core/services/markdown-parser';
+import { createMarkdownParser } from '@foam/core';
 import { getRandomURI } from '../../../test/test-utils';
 
 describe('Wikilink Note Embedding', () => {

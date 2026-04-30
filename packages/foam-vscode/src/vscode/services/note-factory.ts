@@ -1,6 +1,6 @@
 import { SnippetString, ViewColumn, commands, window } from 'vscode';
-import { URI } from '../../core/model/uri';
-import { Resolver } from '../../core/templates/variable-resolver';
+import { URI } from '@foam/core';
+import { Resolver } from '@foam/core';
 import { UserCancelledOperation } from './errors';
 import {
   asAbsoluteWorkspaceUri,
@@ -14,7 +14,7 @@ import {
 
 import { getFoamVsCodeConfig } from '../config';
 import { toVsCodeUri } from '../utils/vsc-utils';
-import { isNone } from '../../core/utils';
+import { isNone } from '@foam/core';
 
 export type OnFileExistStrategy =
   | 'open'

@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
-import { URI } from '../../../core/model/uri';
-import { Foam } from '../../../core/model/foam';
-import { FoamWorkspace } from '../../../core/model/workspace';
-import { Connection, FoamGraph } from '../../../core/model/graph';
-import { Range } from '../../../core/model/range';
+import { URI } from '@foam/core';
+import { Foam } from '@foam/core';
+import { FoamWorkspace } from '@foam/core';
+import { Connection, FoamGraph } from '@foam/core';
+import { Range } from '@foam/core';
 import { ContextMemento, fromVsCodeUri } from '../../utils/vsc-utils';
 import {
   BaseTreeItem,
@@ -13,7 +13,7 @@ import {
   createConnectionItemsForResource,
 } from '../../utils/tree-views/tree-view-utils';
 import { BaseTreeProvider } from '../../utils/tree-views/base-tree-provider';
-import { isNone } from '../../../core/utils';
+import { isNone } from '@foam/core';
 import { getWorkspaceDefaultScheme } from '../../services/editor';
 
 export default async function activate(

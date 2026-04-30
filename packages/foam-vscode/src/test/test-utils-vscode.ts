@@ -5,12 +5,12 @@ import * as vscode from 'vscode';
 import path from 'path';
 import { TextDecoder, TextEncoder } from 'util';
 import { fromVsCodeUri, toVsCodeUri } from '../vscode/utils/vsc-utils';
-import { Logger } from '../core/utils/log';
-import { URI } from '../core/model/uri';
-import { Resource } from '../core/model/note';
+import { Logger } from '@foam/core';
+import { URI } from '@foam/core';
+import { Resource } from '@foam/core';
 import { randomString, wait } from './test-utils';
-import { Foam } from '../core/model/foam';
-import { FoamWorkspace } from '../core/model/workspace';
+import { Foam } from '@foam/core';
+import { FoamWorkspace } from '@foam/core';
 
 Logger.setLevel('error');
 

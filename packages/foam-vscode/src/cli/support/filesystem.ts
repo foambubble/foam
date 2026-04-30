@@ -1,15 +1,15 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-import { URI } from '../../core/model/uri';
-import { FoamWorkspace } from '../../core/model/workspace';
+import { URI } from '@foam/core';
+import { FoamWorkspace } from '@foam/core';
 import {
   AttachmentResourceProvider,
   defaultAttachmentExtensions,
-} from '../../core/services/attachment-provider';
-import { IDataStore } from '../../core/services/datastore';
-import { createMarkdownParser } from '../../core/services/markdown-parser';
-import { MarkdownResourceProvider } from '../../core/services/markdown-provider';
+} from '@foam/core';
+import { IDataStore } from '@foam/core';
+import { createMarkdownParser } from '@foam/core';
+import { MarkdownResourceProvider } from '@foam/core';
 
 const DEFAULT_EXCLUDED_DIR_NAMES = new Set([
   '.astro',

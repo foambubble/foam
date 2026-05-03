@@ -1,11 +1,11 @@
-import { URI } from '@foam/core';
-import { Logger } from '@foam/core';
-import { TextEdit } from '@foam/core';
+import { URI } from '../model/uri';
+import { Logger } from '../utils/log';
+import { TextEdit } from '../services/text-edit';
 import {
   InMemoryDataStore,
   createTestWorkspace,
   createNoteFromMarkdown,
-} from '../test/test-utils';
+} from '../../test/test-utils';
 import {
   computeNoteEdits,
   lintNote,

@@ -18,7 +18,7 @@ import {
   lintWorkspace,
   missingHeadingRule,
   staleDefinitionsRule,
-} from '../../../janitor/janitor';
+} from '@foam/core';
 
 export default async function activate(
   context: ExtensionContext,

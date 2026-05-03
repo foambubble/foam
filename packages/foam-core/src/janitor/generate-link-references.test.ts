@@ -1,24 +1,15 @@
-import { generateLinkReferences } from '.';
-import { createTestNote, createTestWorkspace } from '../test/test-utils';
-import { Logger } from '@foam/core';
-import { URI } from '@foam/core';
+import { generateLinkReferences } from './generate-link-references';
+import { createTestNote, createTestWorkspace } from '../../test/test-utils';
+import { Logger } from '../utils/log';
+import { URI } from '../model/uri';
 import { EOL } from 'os';
-import { createMarkdownParser } from '@foam/core';
-import { TextEdit } from '@foam/core';
+import { createMarkdownParser } from '../services/markdown-parser';
+import { TextEdit } from '../services/text-edit';
 
 Logger.setLevel('error');
 
-/**
- * Will adjust a text line separator to match
- * what is used by the note
- * Necessary when running tests on windows
- *
- * @param note the note we are adjusting for
- * @param text starting text, using a \n line separator
- */
 function textForNote(text: string): string {
-  const eol = EOL;
-  return text.split('\n').join(eol);
+  return text.split('\n').join(EOL);
 }
 
 describe('generateLinkReferences', () => {
@@ -440,7 +431,6 @@ Some content here.
   ];
 
   testCases.forEach(testCase => {
-    // eslint-disable-next-line jest/valid-title
     it(testCase.case, async () => {
       const workspace = createTestWorkspace([URI.file('/')]);
       const workspaceNotes = [

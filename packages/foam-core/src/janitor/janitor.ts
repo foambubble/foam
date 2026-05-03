@@ -1,42 +1,27 @@
 import detectNewline from 'detect-newline';
-import { FoamWorkspace } from '@foam/core';
-import { Resource } from '@foam/core';
-import { Range } from '@foam/core';
-import { URI } from '@foam/core';
-import { TextEdit, WorkspaceTextEdit } from '@foam/core';
-import { ProgressCallback } from '@foam/core';
+import { FoamWorkspace } from '../model/workspace';
+import { Resource } from '../model/note';
+import { Range } from '../model/range';
+import { URI } from '../model/uri';
+import { TextEdit, WorkspaceTextEdit } from '../services/text-edit';
+import { ProgressCallback } from '../services/progress';
 import { missingHeadingRule } from './rule-missing-heading';
 import { staleDefinitionsRule } from './rule-stale-definitions';
 
 export { missingHeadingRule } from './rule-missing-heading';
 export { staleDefinitionsRule } from './rule-stale-definitions';
 
-/** A platform-agnostic pointer to a related location, used for hints in lint issues. */
 export interface LintRelatedInfo {
   uri: URI;
   range: Range;
   message: string;
 }
 
-/**
- * A lint issue found in a note, modelled after ESLint's rule output.
- *
- * Every issue has a code, a human-readable message, and the range in the
- * source file where the problem is. Issues that can be fixed automatically
- * carry a `fix` — an array of workspace edits (may span multiple files).
- * Issues without a `fix` require human judgment to resolve.
- *
- * `relatedInfo` carries optional hints (e.g. candidate targets for an
- * ambiguous link) that a VS Code adapter can surface as DiagnosticRelatedInformation.
- */
 export interface LintIssue {
-  /** Machine-readable identifier, e.g. 'missing-heading', 'ambiguous-identifier' */
   code: string;
   message: string;
   range: Range;
-  /** Present when the issue can be fixed automatically. May touch multiple files. */
   fix?: WorkspaceTextEdit[];
-  /** Optional hints pointing to related locations (e.g. candidate targets). */
   relatedInfo?: LintRelatedInfo[];
 }
 
@@ -52,14 +37,6 @@ export interface LintRule {
   ): LintIssue[];
 }
 
-/**
- * Checks a note for structural issues and returns them as LintIssues.
- * Each issue that can be auto-fixed carries a `fix` (a WorkspaceTextEdit).
- *
- * Current rules:
- * - missing-heading: note has no h1 section
- * - stale-definitions: wikilink reference definitions are missing or outdated
- */
 export function lintNote(
   note: Resource,
   noteText: string,
@@ -74,10 +51,6 @@ export function lintNote(
   return rules.flatMap(rule => rule.check(note, noteText, eol, workspace));
 }
 
-/**
- * Computes the raw TextEdits needed to bring a note into a clean state.
- * Used internally by the janitor command to apply all fixes at once.
- */
 export function computeNoteEdits(
   note: Resource,
   noteText: string,
@@ -90,10 +63,6 @@ export function computeNoteEdits(
   );
 }
 
-/**
- * The result of linting a workspace. Provides URI-native lookup over
- * the set of notes that have issues; clean notes are omitted.
- */
 export class WorkspaceLintResult {
   readonly entries: ReadonlyArray<{ uri: URI; issues: LintIssue[] }>;
   private readonly index: Map<string, LintIssue[]>;
@@ -112,10 +81,6 @@ export class WorkspaceLintResult {
   }
 }
 
-/**
- * Lints all markdown notes in the workspace using the given rules.
- * Returns one entry per note that has at least one issue; clean notes are omitted.
- */
 export async function lintWorkspace(
   workspace: FoamWorkspace,
   rules: LintRule[],

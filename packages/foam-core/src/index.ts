@@ -113,6 +113,28 @@ export type {
   GraphBuilderOptions,
 } from './services/graph-data-builder';
 
+// Janitor / lint
+export {
+  lintNote,
+  lintWorkspace,
+  computeNoteEdits,
+  missingHeadingRule,
+  staleDefinitionsRule,
+  WorkspaceLintResult,
+} from './janitor/janitor';
+export type {
+  LintRule,
+  LintIssue,
+  LintRelatedInfo,
+  WikilinkDefinitionSetting,
+} from './janitor/janitor';
+export { generateHeading } from './janitor/generate-headings';
+export {
+  generateLinkReferences,
+  LINK_REFERENCE_DEFINITION_HEADER,
+  LINK_REFERENCE_DEFINITION_FOOTER,
+} from './janitor/generate-link-references';
+
 // Common
 export type { IDisposable } from './common/lifecycle';
 export { Emitter } from './common/event';

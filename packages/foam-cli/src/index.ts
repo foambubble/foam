@@ -9,6 +9,7 @@ import { runNoteCommand } from './commands/note';
 import { runLinksCommand } from './commands/links';
 import { runOutlineCommand } from './commands/outline';
 import { runDailyCommand } from './commands/daily';
+import { runLintCommand } from './commands/lint';
 import { runGrepCommand } from './commands/grep';
 import { runSearchCommand } from './commands/search';
 import { runRenameCommand } from './commands/rename';
@@ -17,6 +18,7 @@ const CLI_HELP = `Usage: foam <command> [options]
 
 Commands:
   publish     Materialize a publish target from a Foam workspace
+  lint        Check workspace for issues
   list        List notes, tags, orphans, placeholders, deadends, or templates
   note        Show, create, move, delete, or get the id of a note
   outline     Show the heading structure of a note
@@ -61,6 +63,9 @@ export async function runCli(
 
         await runPublishCommand(parsePublishCommandArgs(commandArgs));
         return 0;
+      }
+      case 'lint': {
+        return runLintCommand(commandArgs, logger);
       }
       case 'list': {
         return runListCommand(commandArgs, logger);

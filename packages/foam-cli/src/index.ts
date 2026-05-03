@@ -13,6 +13,7 @@ import { runLintCommand } from './commands/lint';
 import { runGrepCommand } from './commands/grep';
 import { runSearchCommand } from './commands/search';
 import { runRenameCommand } from './commands/rename';
+import { runTagCommand } from './commands/tag';
 
 const CLI_HELP = `Usage: foam <command> [options]
 
@@ -24,6 +25,7 @@ Commands:
   outline     Show the heading structure of a note
   links       Show links to/from a note (alias: connections)
   daily       Show or create the daily note for a date
+  tag         List, rename, search, or suggest tags
   grep        Search note content (grep-style, no graph needed)
   search      Search by title, alias, tag, or frontmatter property
   rename      Rename a note, tag, section, or block anchor (with link rewriting)
@@ -82,6 +84,9 @@ export async function runCli(
       }
       case 'daily': {
         return runDailyCommand(commandArgs, logger);
+      }
+      case 'tag': {
+        return runTagCommand(commandArgs, logger);
       }
       case 'grep': {
         return runGrepCommand(commandArgs, logger);

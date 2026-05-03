@@ -10,6 +10,7 @@ import { runLinksCommand } from './commands/links';
 import { runOutlineCommand } from './commands/outline';
 import { runDailyCommand } from './commands/daily';
 import { runGrepCommand } from './commands/grep';
+import { runSearchCommand } from './commands/search';
 import { runRenameCommand } from './commands/rename';
 
 const CLI_HELP = `Usage: foam <command> [options]
@@ -22,6 +23,7 @@ Commands:
   links       Show links to/from a note (alias: connections)
   daily       Show or create the daily note for a date
   grep        Search note content (grep-style, no graph needed)
+  search      Search by title, alias, tag, or frontmatter property
   rename      Rename a note, tag, section, or block anchor (with link rewriting)
 
 Global options:
@@ -78,6 +80,9 @@ export async function runCli(
       }
       case 'grep': {
         return runGrepCommand(commandArgs, logger);
+      }
+      case 'search': {
+        return runSearchCommand(commandArgs, logger);
       }
       case 'rename': {
         return runRenameCommand(commandArgs, logger);

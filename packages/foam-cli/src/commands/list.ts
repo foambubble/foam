@@ -1,5 +1,6 @@
 import path from 'node:path';
-import { FoamGraph, FoamTags, FoamWorkspace, getTemplatesDir } from '@foam/core';
+import fs from 'node:fs/promises';
+import { createMarkdownParser, FoamGraph, FoamTags, FoamWorkspace, getTemplatesDir } from '@foam/core';
 import { loadWorkspaceFromDirectory } from '../support/filesystem';
 import {
   parseArgs,
@@ -141,8 +142,6 @@ export function listPlaceholders(
 }
 
 export async function listTemplates(rootDir: string) {
-  const { createMarkdownParser } = await import('@foam/core');
-  const fs = await import('node:fs/promises');
   const parser = createMarkdownParser();
   const templatesDir = getTemplatesDir(rootDir).toFsPath();
 

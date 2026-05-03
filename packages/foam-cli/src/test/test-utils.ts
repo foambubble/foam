@@ -1,4 +1,7 @@
 import fs from 'fs';
+import { mkdtempSync } from 'fs';
+import path from 'path';
+import { tmpdir } from 'os';
 import { type ILogger, Logger, NoOpLogger } from '@foam/core';
 import { Range } from '@foam/core';
 import { URI } from '@foam/core';
@@ -7,6 +10,7 @@ import { MarkdownResourceProvider } from '@foam/core';
 import { Resource } from '@foam/core';
 import { createMarkdownParser } from '@foam/core';
 import { IDataStore } from '@foam/core';
+import { loadWorkspaceFromDirectory } from '../support/filesystem';
 
 Logger.setLevel('error');
 
@@ -136,6 +140,34 @@ export const createNoteFromMarkdown = (
 
 export const readFileFromFs = async (uri: URI) =>
   (await fs.promises.readFile(uri.toFsPath())).toString();
+
+/**
+ * Creates a temporary workspace directory seeded with the given files,
+ * loads it as a Foam workspace, and returns everything needed for testing.
+ *
+ * Usage:
+ *   const { rootDir, workspace, foam, cleanup } = await createTmpWorkspace({
+ *     'note.md': '# Note\n\nsome content',
+ *     'ref.md': '[[note]]',
+ *   });
+ *   try { ... } finally { cleanup(); }
+ */
+export async function createTmpWorkspace(
+  files: Record<string, string>,
+  prefix = 'foam-test-'
+) {
+  const rootDir = mkdtempSync(path.join(tmpdir(), prefix));
+  for (const [name, content] of Object.entries(files)) {
+    const filePath = path.join(rootDir, name);
+    fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    fs.writeFileSync(filePath, content, 'utf8');
+  }
+  const result = await loadWorkspaceFromDirectory(rootDir);
+  return {
+    ...result,
+    cleanup: () => fs.rmSync(rootDir, { recursive: true, force: true }),
+  };
+}
 
 /**
  * A test logger that captures info/error output as instance properties.

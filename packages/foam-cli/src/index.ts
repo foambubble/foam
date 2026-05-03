@@ -10,6 +10,7 @@ import { runLinksCommand } from './commands/links';
 import { runOutlineCommand } from './commands/outline';
 import { runDailyCommand } from './commands/daily';
 import { runGrepCommand } from './commands/grep';
+import { runRenameCommand } from './commands/rename';
 
 const CLI_HELP = `Usage: foam <command> [options]
 
@@ -21,6 +22,7 @@ Commands:
   links       Show links to/from a note (alias: connections)
   daily       Show or create the daily note for a date
   grep        Search note content (grep-style, no graph needed)
+  rename      Rename a note, tag, section, or block anchor (with link rewriting)
 
 Global options:
   --workspace <dir>   Workspace root (default: FOAM_WORKSPACE env var, then cwd)
@@ -76,6 +78,9 @@ export async function runCli(
       }
       case 'grep': {
         return runGrepCommand(commandArgs, logger);
+      }
+      case 'rename': {
+        return runRenameCommand(commandArgs, logger);
       }
       default:
         logger.error(`Unknown command "${command}".\n\n${renderCliHelp()}`);

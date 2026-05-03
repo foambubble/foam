@@ -53,8 +53,8 @@ function formatOutlineText(data: ReturnType<typeof outlineData>): string {
   if (data.sections.length === 0) return '(no headings)';
   return data.sections
     .map(s => {
-      const prefix = s.level === 1 ? '#' : '  '.repeat(s.level - 1) + '##'.slice(0, s.level > 1 ? 2 : 1);
-      return `${'#'.repeat(s.level)} ${s.label}`;
+      const indent = s.level === 1 ? '' : '  '.repeat(s.level - 1);
+      return `${indent}${'#'.repeat(s.level)} ${s.label}`;
     })
     .join('\n');
 }

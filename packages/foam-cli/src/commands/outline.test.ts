@@ -63,7 +63,7 @@ describe('runOutlineCommand', () => {
     expect(logger.logs[0]).toContain('foam outline');
   });
 
-  it('prints outline as text', async () => {
+  it('prints outline as text with correct indentation', async () => {
     const tempDir = mkdtempSync(path.join(tmpdir(), 'foam-outline-test-'));
     try {
       fs.writeFileSync(
@@ -74,11 +74,11 @@ describe('runOutlineCommand', () => {
       const logger = new TestLogger();
       const code = await runOutlineCommand(['a', '--workspace', tempDir], logger);
       expect(code).toBe(0);
-      const out = logger.logs.join('\n');
-      expect(out).toContain('Title');
-      expect(out).toContain('Goals');
-      expect(out).toContain('Phase 1');
-      expect(out).toContain('References');
+      const lines = logger.logs.join('\n').split('\n');
+      expect(lines[0]).toBe('# Title');
+      expect(lines[1]).toBe('  ## Goals');
+      expect(lines[2]).toBe('    ### Phase 1');
+      expect(lines[3]).toBe('  ## References');
     } finally {
       fs.rmSync(tempDir, { recursive: true, force: true });
     }

@@ -12,6 +12,7 @@ import {
   TemplateLoader,
   TextEdit,
   URI,
+  WorkspaceTextEdit,
   computeWikilinkRenameEdits,
   getNewNoteTemplateCandidateUris,
   getTemplatesDir,
@@ -113,6 +114,14 @@ export function noteIdData(
   };
 }
 
+async function applyEditsToFiles(edits: WorkspaceTextEdit[]): Promise<void> {
+  for (const { uri, edits: fileEdits } of WorkspaceTextEdit.groupByUri(edits)) {
+    const content = await fs.readFile(uri.toFsPath(), 'utf8');
+    const updated = TextEdit.apply(content, fileEdits);
+    await fs.writeFile(uri.toFsPath(), updated, 'utf8');
+  }
+}
+
 // ─── Domain: create ───────────────────────────────────────────────────────────
 
 export async function noteCreate(
@@ -209,14 +218,7 @@ export async function noteMove(
   }
 
   const edits = computeWikilinkRenameEdits(workspace, graph, oldUri, newUri);
-
-  // Apply link edits to referencing files
-  for (const { uri, edit } of edits) {
-    const filePath = uri.toFsPath();
-    const content = await fs.readFile(filePath, 'utf8');
-    const updated = TextEdit.apply(content, edit);
-    await fs.writeFile(filePath, updated, 'utf8');
-  }
+  await applyEditsToFiles(edits);
 
   // Move the file itself
   await fs.mkdir(path.dirname(newUri.toFsPath()), { recursive: true });

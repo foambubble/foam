@@ -7,6 +7,7 @@ import {
   FoamWorkspace,
   TextEdit,
   URI,
+  WorkspaceTextEdit,
   computeWikilinkRenameEdits,
   HeadingEdit,
   TagEdit,
@@ -45,29 +46,9 @@ Options (all subcommands):
 async function applyEditsToFiles(
   edits: { uri: URI; edit: TextEdit }[]
 ): Promise<void> {
-  // Group edits by file to avoid multiple reads of the same file
-  const byFile = new Map<string, { uri: URI; edits: TextEdit[] }>();
-  for (const { uri, edit } of edits) {
-    const fsPath = uri.toFsPath();
-    if (!byFile.has(fsPath)) {
-      byFile.set(fsPath, { uri, edits: [] });
-    }
-    byFile.get(fsPath)!.edits.push(edit);
-  }
-
-  for (const { uri, edits: fileEdits } of byFile.values()) {
+  for (const { uri, edits: fileEdits } of WorkspaceTextEdit.groupByUri(edits)) {
     let content = await fs.readFile(uri.toFsPath(), 'utf8');
-    // Apply edits in reverse order (bottom-up) to preserve earlier offsets
-    const sorted = [...fileEdits].sort((a, b) => {
-      const aStart = a.range.start;
-      const bStart = b.range.start;
-      return bStart.line !== aStart.line
-        ? bStart.line - aStart.line
-        : bStart.character - aStart.character;
-    });
-    for (const edit of sorted) {
-      content = TextEdit.apply(content, edit);
-    }
+    content = TextEdit.apply(content, fileEdits);
     await fs.writeFile(uri.toFsPath(), content, 'utf8');
   }
 }

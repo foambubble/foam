@@ -416,6 +416,31 @@ describe('runNoteCommand', () => {
     }
   });
 
+  it('move: rewrites multiple links in the same referencing file', async () => {
+    const { rootDir, cleanup } = await createTmpWorkspace(
+      {
+        'alpha.md': '# Alpha',
+        'ref.md': ['# Ref', '', 'First [[alpha]]', 'Second [[alpha]]'].join('\n'),
+      },
+      'foam-note-test-'
+    );
+    try {
+      const logger = new TestLogger();
+      const code = await runNoteCommand(
+        ['move', 'alpha', '--to', 'renamed-note.md', '--workspace', rootDir],
+        logger
+      );
+
+      expect(code).toBe(0);
+      const refContent = fs.readFileSync(path.join(rootDir, 'ref.md'), 'utf8');
+      expect(refContent).toContain('First [[renamed-note]]');
+      expect(refContent).toContain('Second [[renamed-note]]');
+      expect(refContent).not.toContain('[[alpha]]');
+    } finally {
+      cleanup();
+    }
+  });
+
   it('delete: requires --force in non-TTY context', async () => {
     const { rootDir, cleanup } = await createTmpWorkspace(
       { 'alpha.md': '# Alpha' },

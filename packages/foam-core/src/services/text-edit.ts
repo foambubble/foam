@@ -78,3 +78,27 @@ export interface WorkspaceTextEdit {
   edit: TextEdit;
 }
 
+export interface WorkspaceTextEditGroup {
+  uri: URI;
+  edits: TextEdit[];
+}
+
+export abstract class WorkspaceTextEdit {
+  public static groupByUri(
+    edits: WorkspaceTextEdit[]
+  ): WorkspaceTextEditGroup[] {
+    const groups = new Map<string, WorkspaceTextEditGroup>();
+
+    for (const { uri, edit } of edits) {
+      const key = uri.toString();
+      const group = groups.get(key);
+      if (group) {
+        group.edits.push(edit);
+      } else {
+        groups.set(key, { uri, edits: [edit] });
+      }
+    }
+
+    return Array.from(groups.values());
+  }
+}

@@ -47,8 +47,8 @@ export {
   imageExtensions,
   defaultAttachmentExtensions,
 } from './services/attachment-provider';
-export { TextEdit } from './services/text-edit';
-export type { WorkspaceTextEdit } from './services/text-edit';
+export { TextEdit, WorkspaceTextEdit } from './services/text-edit';
+export type { WorkspaceTextEditGroup } from './services/text-edit';
 export { MarkdownLink } from './services/markdown-link';
 export { HeadingEdit } from './services/heading-edit';
 export type { HeadingEditResult } from './services/heading-edit';

@@ -1,15 +1,16 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-import { URI } from '@foam/core';
-import { FoamWorkspace } from '@foam/core';
 import {
+  URI,
   AttachmentResourceProvider,
   defaultAttachmentExtensions,
+  IDataStore,
+  createMarkdownParser,
+  MarkdownResourceProvider,
+  bootstrap,
+  AlwaysIncludeMatcher,
 } from '@foam/core';
-import { IDataStore } from '@foam/core';
-import { createMarkdownParser } from '@foam/core';
-import { MarkdownResourceProvider } from '@foam/core';
 
 const DEFAULT_EXCLUDED_DIR_NAMES = new Set([
   '.astro',
@@ -99,15 +100,42 @@ export async function loadWorkspaceFromDirectory(
     new MarkdownResourceProvider(dataStore, parser, options.noteExtensions),
     new AttachmentResourceProvider(defaultAttachmentExtensions),
   ];
-  const workspace = await FoamWorkspace.fromProviders(
+  // TODO: MAJOR GAP — The CLI has no concept of Foam workspace configuration.
+  // All Foam settings live in VS Code's settings.json under the `foam.*` namespace,
+  // and the CLI cannot read them. This affects correctness across every command:
+  //
+  //   • foam.files.include / foam.files.exclude — the CLI uses AlwaysIncludeMatcher,
+  //     which includes every file under the workspace root (minus hardcoded dir names
+  //     like .git and node_modules). VS Code builds a FileListBasedMatcher from the
+  //     user's globs. A workspace with draft/ or archive/ excluded in VS Code will
+  //     have those files silently indexed here.
+  //   • foam.openDailyNote.directory / filenameFormat — `foam daily` won't know the
+  //     correct path without reading this config.
+  //   • foam.files.defaultNoteExtension — note creation may use the wrong extension.
+  //   • foam.templates.directory — template lookup will look in the wrong place.
+  //   • foam.links.wikilinkPathStrategy — identifier resolution may differ from VS Code.
+  //
+  // Until a configuration layer is added, the CLI workspace view will diverge from
+  // what the user sees in VS Code. See the Known Issues section in foam-cli-spec.md
+  // for the proposed fix (reading .vscode/settings.json with a .foam/config.json
+  // override).
+  const matcher = new AlwaysIncludeMatcher();
+  const foam = await bootstrap(
     [rootUri],
+    matcher,
+    undefined,
+    dataStore,
+    parser,
     providers,
-    dataStore
+    '.md',
+    'debug'
   );
 
   return {
     rootDir,
     rootUri,
-    workspace,
+    workspace: foam.workspace,
+    foam,
+    dataStore,
   };
 }

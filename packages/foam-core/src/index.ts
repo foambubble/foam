@@ -67,7 +67,7 @@ export { TriggerFactory } from './templates/note-creation-triggers';
 export { resolveDailyNote } from './templates/daily-note-resolver';
 export type { ResolveDailyNoteOptions } from './templates/daily-note-resolver';
 export { TemplateLoader } from './templates/template-loader';
-export { getDailyNoteTemplateCandidateUris } from './templates/template-discovery';
+export { getDailyNoteTemplateCandidateUris, getNewNoteTemplateCandidateUris, getTemplatesDir } from './templates/template-discovery';
 export { Resolver } from './templates/variable-resolver';
 export type { VariableProvider } from './templates/variable-resolver';
 

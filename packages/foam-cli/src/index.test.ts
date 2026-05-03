@@ -4,6 +4,7 @@ import path from 'node:path';
 import { tmpdir } from 'node:os';
 
 import { runCli } from './index';
+import { TestLogger } from './test/test-utils';
 
 describe('foam CLI', () => {
   it('publishes a content-rooted workspace to a runnable Starlight site', async () => {
@@ -42,8 +43,7 @@ describe('foam CLI', () => {
         'utf8'
       );
 
-      const logs: string[] = [];
-      const errors: string[] = [];
+      const logger = new TestLogger();
 
       const exitCode = await runCli(
         [
@@ -60,14 +60,11 @@ describe('foam CLI', () => {
           '--site-url',
           'https://example.com',
         ],
-        {
-          log: value => logs.push(String(value)),
-          error: value => errors.push(String(value)),
-        }
+        logger
       );
 
       expect(exitCode).toBe(0);
-      expect(errors).toEqual([]);
+      expect(logger.errors).toEqual([]);
       expect(
         fs.existsSync(path.join(outputDir, 'src', 'content', 'docs', 'index.md'))
       ).toBe(true);
@@ -118,7 +115,7 @@ describe('foam CLI', () => {
           route: '/',
         },
       ]);
-      expect(logs).toEqual([]);
+      expect(logger.logs).toEqual([]);
       expect(
         fs.readFileSync(path.join(outputDir, 'package.json'), 'utf8')
       ).toContain('"@astrojs/starlight"');

@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { Logger } from '@foam/core';
+import { type ILogger, Logger, NoOpLogger } from '@foam/core';
 import { Range } from '@foam/core';
 import { URI } from '@foam/core';
 import { FoamWorkspace } from '@foam/core';
@@ -136,3 +136,19 @@ export const createNoteFromMarkdown = (
 
 export const readFileFromFs = async (uri: URI) =>
   (await fs.promises.readFile(uri.toFsPath())).toString();
+
+/**
+ * A test logger that captures info/error output as instance properties.
+ */
+export class TestLogger implements ILogger {
+  logs: string[] = [];
+  errors: string[] = [];
+  private _noop = new NoOpLogger();
+
+  debug() {}
+  info(msg?: any) { this.logs.push(String(msg)); }
+  warn() {}
+  error(msg?: any) { this.errors.push(String(msg)); }
+  getLevel() { return this._noop.getLevel(); }
+  setLevel(l: Parameters<ILogger['setLevel']>[0]) { this._noop.setLevel(l); }
+}

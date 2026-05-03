@@ -1,0 +1,434 @@
+import fs from 'node:fs';
+import { mkdtempSync } from 'node:fs';
+import path from 'node:path';
+import { tmpdir } from 'node:os';
+import { FoamGraph, FoamWorkspace, URI } from '@foam/core';
+import {
+  createTestNote,
+  createTestWorkspace,
+  TestLogger,
+} from '../test/test-utils';
+import {
+  noteShowData,
+  noteIdData,
+  noteCreate,
+  noteMove,
+  noteDelete,
+  runNoteCommand,
+} from './note';
+import { resolveNote } from '../support/workspace';
+
+// Minimal foam + dataStore stub for noteCreate tests (no templates)
+function makeStubFoamAndStore(rootDir: string) {
+  const rootUri = URI.file(rootDir);
+  const workspace = createTestWorkspace([rootUri]);
+  const foam: any = {
+    workspace,
+    graph: FoamGraph.fromWorkspace(workspace),
+    tags: null,
+    services: { dataStore: { read: async () => null }, parser: null, matcher: null },
+    dispose: () => {},
+  };
+  const dataStore: any = { read: async () => null };
+  return { foam, dataStore };
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+const ROOT = URI.file('/workspace');
+
+function makeWorkspace(
+  notes: ReturnType<typeof createTestNote>[]
+): FoamWorkspace {
+  const ws = createTestWorkspace([ROOT]);
+  for (const note of notes) {
+    ws.set(note);
+  }
+  return ws;
+}
+
+// ─── resolveNote ──────────────────────────────────────────────────────────────
+
+describe('resolveNote', () => {
+  it('resolves by identifier', () => {
+    const ws = makeWorkspace([
+      createTestNote({ uri: '/workspace/alpha.md', title: 'Alpha', root: ROOT }),
+    ]);
+    const result = resolveNote(ws, 'alpha', undefined);
+    expect(result.title).toBe('Alpha');
+  });
+
+  it('throws for unknown identifier', () => {
+    const ws = makeWorkspace([]);
+    expect(() => resolveNote(ws, 'missing', undefined)).toThrow('not found');
+  });
+
+  it('throws for ambiguous identifier with candidate list', () => {
+    const ws = makeWorkspace([
+      createTestNote({ uri: '/workspace/notes/alpha.md', root: ROOT }),
+      createTestNote({ uri: '/workspace/archive/alpha.md', root: ROOT }),
+    ]);
+    expect(() => resolveNote(ws, 'alpha', undefined)).toThrow('Ambiguous');
+  });
+
+  it('resolves by --path flag, ignoring identifier', () => {
+    const ws = makeWorkspace([
+      createTestNote({ uri: '/workspace/alpha.md', title: 'Alpha', root: ROOT }),
+    ]);
+    const result = resolveNote(ws, undefined, '/workspace/alpha.md');
+    expect(result.title).toBe('Alpha');
+  });
+
+  it('throws when --path target does not exist in workspace', () => {
+    const ws = makeWorkspace([]);
+    expect(() => resolveNote(ws, undefined, '/workspace/missing.md')).toThrow('not found');
+  });
+});
+
+// ─── noteShowData ─────────────────────────────────────────────────────────────
+
+describe('noteShowData', () => {
+  it('returns metadata fields', () => {
+    const ws = makeWorkspace([
+      createTestNote({
+        uri: '/workspace/alpha.md',
+        title: 'Alpha',
+        tags: ['work'],
+        aliases: ['a'],
+        root: ROOT,
+      }),
+    ]);
+    const graph = FoamGraph.fromWorkspace(ws);
+    const data = noteShowData(ws, graph, 'alpha', undefined, '/workspace', {});
+    expect(data.id).toBe('alpha');
+    expect(data.title).toBe('Alpha');
+    expect(data.tags).toEqual(['work']);
+    expect(data.aliases).toEqual(['a']);
+    expect(data.path).toBe('alpha.md');
+  });
+
+  it('includes links when includeLinks=true', () => {
+    const ws = makeWorkspace([
+      createTestNote({ uri: '/workspace/a.md', links: [{ slug: 'b' }], root: ROOT }),
+      createTestNote({ uri: '/workspace/b.md', root: ROOT }),
+    ]);
+    const graph = FoamGraph.fromWorkspace(ws);
+    const data = noteShowData(ws, graph, 'a', undefined, '/workspace', { includeLinks: true });
+    expect(data.links?.outgoing).toContain('b');
+    const dataB = noteShowData(ws, graph, 'b', undefined, '/workspace', { includeLinks: true });
+    expect(dataB.links?.incoming).toContain('a');
+  });
+});
+
+// ─── noteIdData ───────────────────────────────────────────────────────────────
+
+describe('noteIdData', () => {
+  it('returns id and uri', () => {
+    const ws = makeWorkspace([
+      createTestNote({ uri: '/workspace/alpha.md', root: ROOT }),
+    ]);
+    const data = noteIdData(ws, 'alpha', undefined);
+    expect(data.id).toBe('alpha');
+    expect(data.uri).toContain('alpha.md');
+  });
+});
+
+// ─── noteCreate ───────────────────────────────────────────────────────────────
+
+describe('noteCreate', () => {
+  it('creates a note file with title as H1', async () => {
+    const tempDir = mkdtempSync(path.join(tmpdir(), 'foam-note-test-'));
+    try {
+      const { foam, dataStore } = makeStubFoamAndStore(tempDir);
+      const result = await noteCreate(tempDir, foam, dataStore, { title: 'My Note' });
+      expect(result.id).toBe('my-note');
+      expect(fs.existsSync(result.uri)).toBe(true);
+      const content = fs.readFileSync(result.uri, 'utf8');
+      expect(content).toContain('# My Note');
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  it('creates note in a subdirectory when --dir is given', async () => {
+    const tempDir = mkdtempSync(path.join(tmpdir(), 'foam-note-test-'));
+    try {
+      const { foam, dataStore } = makeStubFoamAndStore(tempDir);
+      const result = await noteCreate(tempDir, foam, dataStore, { title: 'Sub Note', dir: 'notes' });
+      expect(result.path).toBe(path.join('notes', 'sub-note.md'));
+      expect(fs.existsSync(result.uri)).toBe(true);
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  it('includes extra properties in frontmatter', async () => {
+    const tempDir = mkdtempSync(path.join(tmpdir(), 'foam-note-test-'));
+    try {
+      const { foam, dataStore } = makeStubFoamAndStore(tempDir);
+      const result = await noteCreate(tempDir, foam, dataStore, {
+        title: 'Prop Note',
+        properties: { status: 'active', priority: '1' },
+      });
+      const content = fs.readFileSync(result.uri, 'utf8');
+      expect(content).toContain('status: active');
+      expect(content).toContain('priority: 1');
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  it('errors if file already exists', async () => {
+    const tempDir = mkdtempSync(path.join(tmpdir(), 'foam-note-test-'));
+    try {
+      const { foam, dataStore } = makeStubFoamAndStore(tempDir);
+      await noteCreate(tempDir, foam, dataStore, { title: 'Dup' });
+      await expect(noteCreate(tempDir, foam, dataStore, { title: 'Dup' })).rejects.toThrow('already exists');
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+});
+
+// ─── noteMove ─────────────────────────────────────────────────────────────────
+
+describe('noteMove', () => {
+  it('moves the file and rewrites wikilinks', async () => {
+    const tempDir = mkdtempSync(path.join(tmpdir(), 'foam-note-test-'));
+    try {
+      fs.writeFileSync(path.join(tempDir, 'alpha.md'), '# Alpha', 'utf8');
+      fs.writeFileSync(path.join(tempDir, 'ref.md'), '# Ref\n\n[[alpha]]', 'utf8');
+
+      const { loadWorkspaceFromDirectory } = await import('../support/filesystem');
+      const { workspace, rootDir } = await loadWorkspaceFromDirectory(tempDir);
+      const graph = FoamGraph.fromWorkspace(workspace);
+
+      const result = await noteMove(workspace, graph, rootDir, 'alpha', undefined, 'renamed.md');
+
+      expect(result.old_id).toBe('alpha');
+      expect(result.id).toBe('renamed');
+      expect(fs.existsSync(path.join(tempDir, 'renamed.md'))).toBe(true);
+      expect(fs.existsSync(path.join(tempDir, 'alpha.md'))).toBe(false);
+      expect(result.updated_links).toBe(1);
+
+      const refContent = fs.readFileSync(path.join(tempDir, 'ref.md'), 'utf8');
+      expect(refContent).toContain('[[renamed]]');
+      expect(refContent).not.toContain('[[alpha]]');
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  it('errors if destination already exists', async () => {
+    const tempDir = mkdtempSync(path.join(tmpdir(), 'foam-note-test-'));
+    try {
+      fs.writeFileSync(path.join(tempDir, 'alpha.md'), '# Alpha', 'utf8');
+      fs.writeFileSync(path.join(tempDir, 'beta.md'), '# Beta', 'utf8');
+
+      const { loadWorkspaceFromDirectory } = await import('../support/filesystem');
+      const { workspace, rootDir } = await loadWorkspaceFromDirectory(tempDir);
+      const graph = FoamGraph.fromWorkspace(workspace);
+
+      await expect(
+        noteMove(workspace, graph, rootDir, 'alpha', undefined, 'beta.md')
+      ).rejects.toThrow('already exists');
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+});
+
+// ─── noteDelete ───────────────────────────────────────────────────────────────
+
+describe('noteDelete', () => {
+  it('moves note to .foam/trash/ by default', async () => {
+    const tempDir = mkdtempSync(path.join(tmpdir(), 'foam-note-test-'));
+    try {
+      fs.writeFileSync(path.join(tempDir, 'alpha.md'), '# Alpha', 'utf8');
+
+      const { loadWorkspaceFromDirectory } = await import('../support/filesystem');
+      const { workspace, rootDir } = await loadWorkspaceFromDirectory(tempDir);
+
+      const result = await noteDelete(workspace, rootDir, 'alpha', undefined, {});
+      expect(result.trashed_uri).toBeTruthy();
+      expect(result.trash_uri).toContain('.foam');
+      expect(fs.existsSync(path.join(tempDir, 'alpha.md'))).toBe(false);
+      expect(fs.existsSync(result.trash_uri!)).toBe(true);
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  it('permanently deletes with --permanent', async () => {
+    const tempDir = mkdtempSync(path.join(tmpdir(), 'foam-note-test-'));
+    try {
+      fs.writeFileSync(path.join(tempDir, 'alpha.md'), '# Alpha', 'utf8');
+
+      const { loadWorkspaceFromDirectory } = await import('../support/filesystem');
+      const { workspace, rootDir } = await loadWorkspaceFromDirectory(tempDir);
+
+      const result = await noteDelete(workspace, rootDir, 'alpha', undefined, { permanent: true });
+      expect(result.deleted_uri).toBeTruthy();
+      expect(fs.existsSync(path.join(tempDir, 'alpha.md'))).toBe(false);
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+});
+
+// ─── runNoteCommand (integration) ─────────────────────────────────────────────
+
+describe('runNoteCommand', () => {
+  it('shows help with --help', async () => {
+    const logger = new TestLogger();
+    const code = await runNoteCommand(['--help'], logger);
+    expect(code).toBe(0);
+    expect(logger.logs[0]).toContain('foam note');
+  });
+
+  it('returns exit 1 for unknown subcommand', async () => {
+    const logger = new TestLogger();
+    const code = await runNoteCommand(['bogus'], logger);
+    expect(code).toBe(1);
+    expect(logger.errors[0]).toContain('Unknown subcommand');
+  });
+
+  it('show: prints text metadata for a note', async () => {
+    const tempDir = mkdtempSync(path.join(tmpdir(), 'foam-note-test-'));
+    try {
+      fs.writeFileSync(path.join(tempDir, 'alpha.md'), '# Alpha\n\n#work', 'utf8');
+      const logger = new TestLogger();
+      const code = await runNoteCommand(
+        ['show', 'alpha', '--workspace', tempDir],
+        logger
+      );
+      expect(code).toBe(0);
+      const out = logger.logs.join('\n');
+      expect(out).toContain('ID:');
+      expect(out).toContain('alpha');
+      expect(out).toContain('Alpha');
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  it('show: prints JSON metadata', async () => {
+    const tempDir = mkdtempSync(path.join(tmpdir(), 'foam-note-test-'));
+    try {
+      fs.writeFileSync(path.join(tempDir, 'alpha.md'), '# Alpha', 'utf8');
+      const logger = new TestLogger();
+      const code = await runNoteCommand(
+        ['show', 'alpha', '--workspace', tempDir, '--format', 'json'],
+        logger
+      );
+      expect(code).toBe(0);
+      const result = JSON.parse(logger.logs[0]);
+      expect(result).toHaveProperty('id', 'alpha');
+      expect(result).toHaveProperty('title', 'Alpha');
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  it('show: prints raw content with --content', async () => {
+    const tempDir = mkdtempSync(path.join(tmpdir(), 'foam-note-test-'));
+    try {
+      fs.writeFileSync(path.join(tempDir, 'alpha.md'), '# Alpha\n\nHello world', 'utf8');
+      const logger = new TestLogger();
+      const code = await runNoteCommand(
+        ['show', 'alpha', '--workspace', tempDir, '--content'],
+        logger
+      );
+      expect(code).toBe(0);
+      expect(logger.logs[0]).toContain('Hello world');
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  it('id: prints the identifier', async () => {
+    const tempDir = mkdtempSync(path.join(tmpdir(), 'foam-note-test-'));
+    try {
+      fs.writeFileSync(path.join(tempDir, 'alpha.md'), '# Alpha', 'utf8');
+      const logger = new TestLogger();
+      const code = await runNoteCommand(
+        ['id', 'alpha', '--workspace', tempDir],
+        logger
+      );
+      expect(code).toBe(0);
+      expect(logger.logs[0].trim()).toBe('alpha');
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  it('create: creates a note and reports path + id', async () => {
+    const tempDir = mkdtempSync(path.join(tmpdir(), 'foam-note-test-'));
+    try {
+      const logger = new TestLogger();
+      const code = await runNoteCommand(
+        ['create', '--title', 'New Note', '--workspace', tempDir],
+        logger
+      );
+      expect(code).toBe(0);
+      expect(logger.logs[0]).toContain('Created:');
+      expect(logger.logs[0]).toContain('new-note');
+      expect(fs.existsSync(path.join(tempDir, 'new-note.md'))).toBe(true);
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  it('move: moves note and reports updated links', async () => {
+    const tempDir = mkdtempSync(path.join(tmpdir(), 'foam-note-test-'));
+    try {
+      fs.writeFileSync(path.join(tempDir, 'alpha.md'), '# Alpha', 'utf8');
+      fs.writeFileSync(path.join(tempDir, 'ref.md'), '[[alpha]]', 'utf8');
+      const logger = new TestLogger();
+      const code = await runNoteCommand(
+        ['move', 'alpha', '--to', 'renamed.md', '--workspace', tempDir],
+        logger
+      );
+      expect(code).toBe(0);
+      expect(logger.logs[0]).toContain('Moved:');
+      expect(logger.logs[0]).toContain('renamed');
+      expect(fs.existsSync(path.join(tempDir, 'renamed.md'))).toBe(true);
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  it('delete: requires --force in non-TTY context', async () => {
+    const tempDir = mkdtempSync(path.join(tmpdir(), 'foam-note-test-'));
+    try {
+      fs.writeFileSync(path.join(tempDir, 'alpha.md'), '# Alpha', 'utf8');
+      const logger = new TestLogger();
+      const code = await runNoteCommand(
+        ['delete', 'alpha', '--workspace', tempDir],
+        logger
+        // no opts.stdin → process.stdin.isTTY is false in test env
+      );
+      expect(code).toBe(1);
+      expect(logger.errors[0]).toContain('--force');
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  it('delete: trashes note with --force', async () => {
+    const tempDir = mkdtempSync(path.join(tmpdir(), 'foam-note-test-'));
+    try {
+      fs.writeFileSync(path.join(tempDir, 'alpha.md'), '# Alpha', 'utf8');
+      const logger = new TestLogger();
+      const code = await runNoteCommand(
+        ['delete', 'alpha', '--force', '--workspace', tempDir],
+        logger
+      );
+      expect(code).toBe(0);
+      expect(logger.logs[0]).toContain('Trashed:');
+      expect(fs.existsSync(path.join(tempDir, 'alpha.md'))).toBe(false);
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+});

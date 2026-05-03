@@ -83,7 +83,7 @@ export async function renameNote(
   newName: string,
   targetPath?: string
 ): Promise<{ old_uri: string; new_uri: string; old_id: string; id: string; updated_links: number }> {
-  const resource = resolveNote(workspace, identifier, pathFlag);
+  const resource = resolveNote(workspace, identifier, pathFlag, rootDir);
   const oldUri = resource.uri;
 
   let newFsPath: string;
@@ -168,7 +168,7 @@ export async function renameSection(
   oldLabel: string,
   newLabel: string
 ): Promise<{ uri: string; id: string; updated_links: number }> {
-  const resource = resolveNote(workspace, identifier, pathFlag);
+  const resource = resolveNote(workspace, identifier, pathFlag, rootDir);
   const result = HeadingEdit.createRenameSectionEdits(
     graph,
     workspace,
@@ -211,7 +211,7 @@ export async function renameBlock(
   oldId: string,
   newId: string
 ): Promise<{ uri: string; id: string; updated_links: number }> {
-  const resource = resolveNote(workspace, identifier, pathFlag);
+  const resource = resolveNote(workspace, identifier, pathFlag, rootDir);
   const result = HeadingEdit.createRenameBlockEdits(
     graph,
     workspace,

@@ -114,9 +114,9 @@ export function formatGrepText(
         lines.push('--');
       }
 
-      for (const ctxLine of match.context_before ?? []) {
-        const ctxLineNum = match.line - (match.context_before!.length - (match.context_before!.indexOf(ctxLine)));
-        lines.push(`${rel}-${ctxLineNum}- ${ctxLine}`);
+      for (let i = 0; i < (match.context_before ?? []).length; i++) {
+        const ctxLineNum = match.line - match.context_before!.length + i;
+        lines.push(`${rel}-${ctxLineNum}- ${match.context_before![i]}`);
       }
     }
 

@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import { mkdtempSync } from 'node:fs';
 import path from 'node:path';
 import { tmpdir } from 'node:os';
-import { grepFiles, runGrepCommand } from './grep';
+import { grepFiles, formatGrepText, runGrepCommand } from './grep';
 import { TestLogger } from '../test/test-utils';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -83,6 +83,21 @@ describe('grepFiles', () => {
       expect(results).toHaveLength(1);
       expect(results[0].context_before).toEqual(['line one', 'line two']);
       expect(results[0].context_after).toEqual(['line four', 'line five']);
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('assigns correct line numbers to context lines when surrounding text is identical', async () => {
+    // Lines 1 and 2 are identical — indexOf would return 0 for both, producing wrong line numbers.
+    const dir = makeWorkspace({ 'a.md': 'repeated\nrepeated\nbefore match\nMATCH\n' });
+    try {
+      const results = await grepFiles([path.join(dir, 'a.md')], 'MATCH', { context: 3 });
+      const out = formatGrepText(results, dir, { context: 3 });
+      const lines = out.split('\n');
+      expect(lines).toContain('a.md-1- repeated');
+      expect(lines).toContain('a.md-2- repeated');
+      expect(lines).toContain('a.md-3- before match');
     } finally {
       fs.rmSync(dir, { recursive: true, force: true });
     }

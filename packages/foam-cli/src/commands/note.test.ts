@@ -72,17 +72,25 @@ describe('resolveNote', () => {
     expect(() => resolveNote(ws, 'alpha', undefined)).toThrow('Ambiguous');
   });
 
-  it('resolves by --path flag, ignoring identifier', () => {
+  it('resolves by --path flag with an absolute path', () => {
     const ws = makeWorkspace([
       createTestNote({ uri: '/workspace/alpha.md', title: 'Alpha', root: ROOT }),
     ]);
-    const result = resolveNote(ws, undefined, '/workspace/alpha.md');
+    const result = resolveNote(ws, undefined, '/workspace/alpha.md', '/workspace');
+    expect(result.title).toBe('Alpha');
+  });
+
+  it('resolves by --path flag with a relative path against the workspace root', () => {
+    const ws = makeWorkspace([
+      createTestNote({ uri: '/workspace/alpha.md', title: 'Alpha', root: ROOT }),
+    ]);
+    const result = resolveNote(ws, undefined, 'alpha.md', '/workspace');
     expect(result.title).toBe('Alpha');
   });
 
   it('throws when --path target does not exist in workspace', () => {
     const ws = makeWorkspace([]);
-    expect(() => resolveNote(ws, undefined, '/workspace/missing.md')).toThrow('not found');
+    expect(() => resolveNote(ws, undefined, '/workspace/missing.md', '/workspace')).toThrow('not found');
   });
 });
 
@@ -247,6 +255,22 @@ describe('noteDelete', () => {
       expect(result.trash_uri).toContain('.foam');
       expect(fs.existsSync(path.join(rootDir, 'alpha.md'))).toBe(false);
       expect(fs.existsSync(result.trash_uri!)).toBe(true);
+    } finally {
+      cleanup();
+    }
+  });
+
+  it('generates collision-safe trash paths for notes with the same filename', async () => {
+    const { rootDir, workspace, cleanup } = await createTmpWorkspace(
+      { 'notes/todo.md': '# Todo', 'archive/todo.md': '# Archived Todo' },
+      'foam-note-test-'
+    );
+    try {
+      await noteDelete(workspace, rootDir, undefined, path.join(rootDir, 'notes', 'todo.md'), {});
+      await noteDelete(workspace, rootDir, undefined, path.join(rootDir, 'archive', 'todo.md'), {});
+
+      expect(fs.existsSync(path.join(rootDir, '.foam', 'trash', 'notes', 'todo.md'))).toBe(true);
+      expect(fs.existsSync(path.join(rootDir, '.foam', 'trash', 'archive', 'todo.md'))).toBe(true);
     } finally {
       cleanup();
     }

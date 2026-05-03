@@ -34,7 +34,7 @@ export function linksData(
   pathFlag: string | undefined,
   rootDir: string
 ) {
-  const resource = resolveNote(workspace, identifier, pathFlag);
+  const resource = resolveNote(workspace, identifier, pathFlag, rootDir);
   const id = workspace.getIdentifier(resource.uri);
 
   const outgoing = graph.getLinks(resource.uri).map(c => {

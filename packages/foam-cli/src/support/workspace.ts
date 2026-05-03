@@ -15,10 +15,11 @@ export function uriToWorkspacePath(uri: URI, rootDir: string): string {
 export function resolveNote(
   workspace: InstanceType<typeof FoamWorkspace>,
   identifier: string | undefined,
-  pathFlag: string | undefined
+  pathFlag: string | undefined,
+  rootDir?: string
 ) {
   if (pathFlag) {
-    const uri = URI.file(path.resolve(pathFlag));
+    const uri = URI.file(path.resolve(rootDir ?? process.cwd(), pathFlag));
     const resource = workspace.find(uri);
     if (!resource) {
       throw new Error(`Note not found at path: ${pathFlag}`);

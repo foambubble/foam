@@ -27,9 +27,10 @@ Options:
 export function outlineData(
   workspace: InstanceType<typeof FoamWorkspace>,
   identifier: string | undefined,
-  pathFlag: string | undefined
+  pathFlag: string | undefined,
+  rootDir?: string
 ) {
-  const resource = resolveNote(workspace, identifier, pathFlag);
+  const resource = resolveNote(workspace, identifier, pathFlag, rootDir);
   const id = workspace.getIdentifier(resource.uri);
 
   return {
@@ -90,8 +91,8 @@ export async function runOutlineCommand(
   }
 
   try {
-    const { workspace } = await loadWorkspaceFromDirectory(workspaceDir);
-    const data = outlineData(workspace, identifier, pathFlag);
+    const { workspace, rootDir } = await loadWorkspaceFromDirectory(workspaceDir);
+    const data = outlineData(workspace, identifier, pathFlag, rootDir);
 
     if (format === 'json') {
       logger.info(JSON.stringify(data, null, 2));

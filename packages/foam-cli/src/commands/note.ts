@@ -54,7 +54,7 @@ export function noteShowData(
   rootDir: string,
   opts: { includeLinks?: boolean }
 ) {
-  const resource = resolveNote(workspace, identifier, pathFlag);
+  const resource = resolveNote(workspace, identifier, pathFlag, rootDir);
   const id = workspace.getIdentifier(resource.uri);
   const relPath = path.relative(rootDir, resource.uri.toFsPath());
 
@@ -103,9 +103,10 @@ function formatNoteShowText(data: ReturnType<typeof noteShowData>): string {
 export function noteIdData(
   workspace: InstanceType<typeof FoamWorkspace>,
   identifier: string | undefined,
-  pathFlag: string | undefined
+  pathFlag: string | undefined,
+  rootDir?: string
 ) {
-  const resource = resolveNote(workspace, identifier, pathFlag);
+  const resource = resolveNote(workspace, identifier, pathFlag, rootDir);
   return {
     id: workspace.getIdentifier(resource.uri),
     uri: resource.uri.toFsPath(),
@@ -191,7 +192,7 @@ export async function noteMove(
   pathFlag: string | undefined,
   toPath: string
 ): Promise<{ old_uri: string; new_uri: string; old_id: string; id: string; updated_links: number }> {
-  const resource = resolveNote(workspace, identifier, pathFlag);
+  const resource = resolveNote(workspace, identifier, pathFlag, rootDir);
   const oldUri = resource.uri;
   const newUri = URI.file(path.resolve(rootDir, toPath));
 
@@ -246,7 +247,7 @@ export async function noteDelete(
   pathFlag: string | undefined,
   opts: { permanent?: boolean }
 ): Promise<{ trashed_uri?: string; deleted_uri?: string; trash_uri?: string }> {
-  const resource = resolveNote(workspace, identifier, pathFlag);
+  const resource = resolveNote(workspace, identifier, pathFlag, rootDir);
   const filePath = resource.uri.toFsPath();
 
   if (opts.permanent) {
@@ -254,10 +255,10 @@ export async function noteDelete(
     return { deleted_uri: filePath };
   }
 
-  // Move to .foam/trash/
-  const trashDir = path.join(rootDir, '.foam', 'trash');
-  await fs.mkdir(trashDir, { recursive: true });
-  const trashPath = path.join(trashDir, path.basename(filePath));
+  // Move to .foam/trash/, preserving the workspace-relative path to avoid collisions
+  const relPath = path.relative(rootDir, filePath);
+  const trashPath = path.join(rootDir, '.foam', 'trash', relPath);
+  await fs.mkdir(path.dirname(trashPath), { recursive: true });
   await fs.rename(filePath, trashPath);
   return { trashed_uri: filePath, trash_uri: trashPath };
 }
@@ -319,7 +320,7 @@ export async function runNoteCommand(
     const identifier = parsed.positionals[0];
 
     if (subcommand === 'id') {
-      const data = noteIdData(workspace, identifier, pathFlag);
+      const data = noteIdData(workspace, identifier, pathFlag, rootDir);
       if (format === 'json') {
         logger.info(JSON.stringify(data, null, 2));
       } else {
@@ -376,7 +377,7 @@ export async function runNoteCommand(
     if (subcommand === 'delete') {
       const force = getFlag(parsed, 'force');
       const permanent = getFlag(parsed, 'permanent');
-      const resource = resolveNote(workspace, identifier, pathFlag);
+      const resource = resolveNote(workspace, identifier, pathFlag, rootDir);
 
       if (!force) {
         // Refuse if not a TTY (scripts must pass --force)

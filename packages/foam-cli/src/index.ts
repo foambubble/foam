@@ -1,4 +1,4 @@
-import { ConsoleLogger, type ILogger, Logger } from '@foam/core';
+import { type ILogger, Logger, LogLevel, BaseLogger } from '@foam/core';
 import {
   parsePublishCommandArgs,
   renderPublishHelp,
@@ -18,7 +18,6 @@ import { runTagCommand } from './commands/tag';
 const CLI_HELP = `Usage: foam <command> [options]
 
 Commands:
-  publish     Materialize a publish target from a Foam workspace
   lint        Check workspace for issues
   list        List notes, tags, orphans, placeholders, deadends, or templates
   note        Show, create, move, delete, or get the id of a note
@@ -42,6 +41,13 @@ export type { ILogger as CliLogger } from '@foam/core';
 
 export function renderCliHelp() {
   return CLI_HELP;
+}
+
+class ConsoleLogger extends BaseLogger {
+  log(level: LogLevel, msg?: string, ...params: any[]): void {
+    const formattedMsg = level === 'info' ? msg : `[${level}] ${msg}`;
+    console[level](formattedMsg, ...params);
+  }
 }
 
 export async function runCli(

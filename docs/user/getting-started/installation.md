@@ -50,6 +50,16 @@ Other extensions:
 - **Paste Image** - Easily insert images from clipboard
 - **Todo Tree** - Track TODO items across your workspace
 
+## Optional: Install the Foam CLI
+
+The Foam CLI lets you work with your workspace from the terminal — search notes, manage tags, create daily notes, and more — without opening VS Code.
+
+```bash
+npm install -g @foam/cli
+```
+
+Once installed, run `foam --help` to see available commands, or see the [[cli|CLI documentation]] for details.
+
 ## What's Next?
 
 Now that Foam is installed, you're ready to:
@@ -75,3 +85,4 @@ If you encounter issues:
 [navigation]: navigation.md 'Navigation in Foam'
 [graph-view]: ../features/graph-view.md 'Graph Visualization'
 [frequently-asked-questions]: ../frequently-asked-questions.md 'Frequently Asked Questions'
+[cli]: ../tools/cli.md 'Foam CLI'

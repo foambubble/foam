@@ -2,7 +2,6 @@
   "name": "@foam/cli",
   "version": "0.39.0",
   "description": "Foam CLI for publishing knowledge bases",
-  "private": true,
   "license": "MIT",
   "bin": {
     "foam": "./out/index.js"

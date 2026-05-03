@@ -230,4 +230,20 @@ describe('runGrepCommand', () => {
       fs.rmSync(dir, { recursive: true, force: true });
     }
   });
+
+  it('returns an empty JSON array with no matches', async () => {
+    const dir = makeWorkspace({ 'a.md': 'nothing\n' });
+    try {
+      const logger = new TestLogger();
+      const code = await runGrepCommand(
+        ['xyzzy', '--format', 'json', '--workspace', dir],
+        logger
+      );
+
+      expect(code).toBe(0);
+      expect(JSON.parse(logger.logs[0])).toEqual([]);
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
 });

@@ -194,7 +194,7 @@ export async function runGrepCommand(
         }
         return entry;
       });
-      if (output.length > 0) logger.info(JSON.stringify(output, null, 2));
+      logger.info(JSON.stringify(output, null, 2));
     } else {
       const text = formatGrepText(matches, workspaceDir, {
         noLineNumber,

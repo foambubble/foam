@@ -399,4 +399,20 @@ describe('runSearchCommand', () => {
       cleanup();
     }
   });
+
+  it('returns an empty JSON array with no matches', async () => {
+    const { rootDir, cleanup } = await createTmpWorkspace({ 'a.md': '# Alpha\n' });
+    try {
+      const logger = new TestLogger();
+      const code = await runSearchCommand(
+        ['xyzzy-no-match', '--format', 'json', '--workspace', rootDir],
+        logger
+      );
+
+      expect(code).toBe(0);
+      expect(JSON.parse(logger.logs[0])).toEqual([]);
+    } finally {
+      cleanup();
+    }
+  });
 });

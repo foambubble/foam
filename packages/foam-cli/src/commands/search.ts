@@ -227,7 +227,7 @@ export async function runSearchCommand(
         }
         return entry;
       });
-      if (output.length > 0) logger.info(JSON.stringify(output, null, 2));
+      logger.info(JSON.stringify(output, null, 2));
     } else {
       const text = formatSearchText(matches, rootDir, { noLineNumber });
       if (text) logger.info(text);

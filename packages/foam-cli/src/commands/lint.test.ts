@@ -190,7 +190,7 @@ describe('runLintCommand', () => {
         path.join(rootDir, 'no-heading.md'),
         'utf8'
       );
-      expect(fixedContent).toContain('# no-heading');
+      expect(fixedContent).toContain('# No Heading');
     } finally {
       cleanup();
     }

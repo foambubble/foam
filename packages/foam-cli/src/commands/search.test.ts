@@ -41,7 +41,7 @@ describe('searchWorkspace', () => {
 
   it('filters by alias', async () => {
     const { rootDir, workspace, cleanup } = await createTmpWorkspace({
-      'project-management.md': '---\naliases: [pm]\n---\n# Project Management\n',
+      'project-management.md': '---\nalias: [pm]\n---\n# Project Management\n',
       'ideas.md': '# Ideas\n',
     });
     try {

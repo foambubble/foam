@@ -4,7 +4,7 @@ const fs = require('fs');
 const pkgPath = './package.json';
 const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
 const originalName = pkg.name;
-const originalDependencies = pkg.dependencies;
+const originalDependencies = { ...pkg.dependencies };
 
 // The CLI bundle is fully self-contained (esbuild bundles all deps),
 // so workspace-only packages like @foam/core must be stripped before publishing

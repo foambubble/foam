@@ -18,7 +18,7 @@ import {
   TextEdit as FoamTextEdit,
   WorkspaceTextEdit,
 } from '@foam/core';
-import { LintIssue } from '../../janitor/janitor';
+import { LintIssue } from '@foam/core';
 import { FoamWorkspace } from '@foam/core';
 import { Logger } from '@foam/core';
 

@@ -1,5 +1,8 @@
 import fs from 'fs';
-import { Logger } from '@foam/core';
+import { mkdtempSync } from 'fs';
+import path from 'path';
+import { tmpdir } from 'os';
+import { type ILogger, Logger, NoOpLogger } from '@foam/core';
 import { Range } from '@foam/core';
 import { URI } from '@foam/core';
 import { FoamWorkspace } from '@foam/core';
@@ -7,6 +10,7 @@ import { MarkdownResourceProvider } from '@foam/core';
 import { Resource } from '@foam/core';
 import { createMarkdownParser } from '@foam/core';
 import { IDataStore } from '@foam/core';
+import { loadWorkspaceFromDirectory } from '../support/filesystem';
 
 Logger.setLevel('error');
 
@@ -134,5 +138,79 @@ export const createNoteFromMarkdown = (
   root: URI = URI.file('/')
 ): Resource => testParser.parse(root.resolve(uri), text);
 
+export const createInMemoryWorkspace = (
+  notes: Resource[],
+  root: URI = URI.file('/workspace')
+) => {
+  const ws = createTestWorkspace([root]);
+  for (const note of notes) ws.set(note);
+  return { workspace: ws, root };
+};
+
 export const readFileFromFs = async (uri: URI) =>
   (await fs.promises.readFile(uri.toFsPath())).toString();
+
+/**
+ * Creates a temporary workspace directory seeded with the given files,
+ * loads it as a Foam workspace, and returns everything needed for testing.
+ *
+ * Usage:
+ *   const { rootDir, workspace, foam, cleanup } = await createTmpWorkspace({
+ *     'note.md': '# Note\n\nsome content',
+ *     'ref.md': '[[note]]',
+ *   });
+ *   try { ... } finally { cleanup(); }
+ */
+export async function createTmpWorkspace(
+  files: Record<string, string>,
+  prefix = 'foam-test-'
+) {
+  const rootDir = mkdtempSync(path.join(tmpdir(), prefix));
+  for (const [name, content] of Object.entries(files)) {
+    const filePath = path.join(rootDir, name);
+    fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    fs.writeFileSync(filePath, content, 'utf8');
+  }
+  const result = await loadWorkspaceFromDirectory(rootDir);
+  return {
+    ...result,
+    cleanup: () => fs.rmSync(rootDir, { recursive: true, force: true }),
+  };
+}
+
+/**
+ * Creates a temporary workspace, runs `fn` with it, and cleans up afterwards.
+ *
+ * Usage:
+ *   await withTmpWorkspace({ 'note.md': '# Note' }, async ({ rootDir, workspace }) => {
+ *     // ...
+ *   });
+ */
+export async function withTmpWorkspace<T>(
+  files: Record<string, string>,
+  fn: (ctx: Awaited<ReturnType<typeof createTmpWorkspace>>) => Promise<T>,
+  prefix = 'foam-test-'
+): Promise<T> {
+  const ctx = await createTmpWorkspace(files, prefix);
+  try {
+    return await fn(ctx);
+  } finally {
+    ctx.cleanup();
+  }
+}
+
+/**
+ * A test logger that captures info/error output as instance properties.
+ */
+export class TestLogger implements ILogger {
+  logs: string[] = [];
+  errors: string[] = [];
+  private _noop = new NoOpLogger();
+
+  debug() {}
+  info(msg?: any) { this.logs.push(String(msg)); }
+  warn() {}
+  error(msg?: any) { this.errors.push(String(msg)); }
+  getLevel() { return this._noop.getLevel(); }
+  setLevel(l: Parameters<ILogger['setLevel']>[0]) { this._noop.setLevel(l); }
+}

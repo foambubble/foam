@@ -1,35 +1,63 @@
-import { Logger } from '@foam/core';
+import { type ILogger, Logger, LogLevel, BaseLogger } from '@foam/core';
 import {
   parsePublishCommandArgs,
   renderPublishHelp,
   runPublishCommand,
 } from './commands/publish';
+import { runListCommand } from './commands/list';
+import { runNoteCommand } from './commands/note';
+import { runLinksCommand } from './commands/links';
+import { runOutlineCommand } from './commands/outline';
+import { runDailyCommand } from './commands/daily';
+import { runLintCommand } from './commands/lint';
+import { runGrepCommand } from './commands/grep';
+import { runSearchCommand } from './commands/search';
+import { runRenameCommand } from './commands/rename';
+import { runTagCommand } from './commands/tag';
 
 const CLI_HELP = `Usage: foam <command> [options]
 
 Commands:
-  publish   Materialize a publish target from a Foam workspace
+  lint        Check workspace for issues
+  list        List notes, tags, orphans, placeholders, deadends, or templates
+  note        Show, create, move, delete, or get the id of a note
+  outline     Show the heading structure of a note
+  links       Show links to/from a note (alias: connections)
+  daily       Show or create the daily note for a date
+  tag         List, rename, search, or suggest tags
+  grep        Search note content (grep-style, no graph needed)
+  search      Search by title, alias, tag, or frontmatter property
+  rename      Rename a note, tag, section, or block anchor (with link rewriting)
+
+Global options:
+  --workspace <dir>   Workspace root (default: FOAM_WORKSPACE env var, then cwd)
+  --format <fmt>      Output format: text (default) or json
+  --help              Show help
 
 Run "foam <command> --help" for command-specific help.
 `;
 
-export interface CliLogger {
-  error(message?: unknown): void;
-  log(message?: unknown): void;
-}
+export type { ILogger as CliLogger } from '@foam/core';
 
 export function renderCliHelp() {
   return CLI_HELP;
 }
 
+class ConsoleLogger extends BaseLogger {
+  log(level: LogLevel, msg?: string, ...params: any[]): void {
+    const formattedMsg = level === 'info' ? msg : `[${level}] ${msg}`;
+    console[level](formattedMsg, ...params);
+  }
+}
+
 export async function runCli(
   argv: string[],
-  logger: CliLogger = console
+  logger: ILogger = new ConsoleLogger()
 ): Promise<number> {
   const [command, ...commandArgs] = argv;
 
   if (!command || command === 'help' || command === '--help' || command === '-h') {
-    logger.log(renderCliHelp());
+    logger.info(renderCliHelp());
     return 0;
   }
 
@@ -37,12 +65,43 @@ export async function runCli(
     switch (command) {
       case 'publish': {
         if (commandArgs.includes('--help') || commandArgs.includes('-h')) {
-          logger.log(renderPublishHelp());
+          logger.info(renderPublishHelp());
           return 0;
         }
 
         await runPublishCommand(parsePublishCommandArgs(commandArgs));
         return 0;
+      }
+      case 'lint': {
+        return runLintCommand(commandArgs, logger);
+      }
+      case 'list': {
+        return runListCommand(commandArgs, logger);
+      }
+      case 'note': {
+        return runNoteCommand(commandArgs, logger);
+      }
+      case 'outline': {
+        return runOutlineCommand(commandArgs, logger);
+      }
+      case 'links':
+      case 'connections': {
+        return runLinksCommand(commandArgs, logger);
+      }
+      case 'daily': {
+        return runDailyCommand(commandArgs, logger);
+      }
+      case 'tag': {
+        return runTagCommand(commandArgs, logger);
+      }
+      case 'grep': {
+        return runGrepCommand(commandArgs, logger);
+      }
+      case 'search': {
+        return runSearchCommand(commandArgs, logger);
+      }
+      case 'rename': {
+        return runRenameCommand(commandArgs, logger);
       }
       default:
         logger.error(`Unknown command "${command}".\n\n${renderCliHelp()}`);

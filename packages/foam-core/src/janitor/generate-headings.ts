@@ -1,8 +1,8 @@
 import matter from 'gray-matter';
-import { Resource } from '@foam/core';
-import { Range } from '@foam/core';
-import { TextEdit } from '@foam/core';
-import { getHeadingFromFileName } from '@foam/core';
+import { Resource } from '../model/note';
+import { Range } from '../model/range';
+import { TextEdit } from '../services/text-edit';
+import { getHeadingFromFileName } from '../utils/index';
 
 export const generateHeading = (
   note: Resource,

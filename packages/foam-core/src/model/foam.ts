@@ -28,7 +28,8 @@ export const bootstrap = async (
   dataStore: IDataStore,
   parser: ResourceParser,
   initialProviders: ResourceProvider[],
-  defaultExtension: string = '.md'
+  defaultExtension: string = '.md',
+  timingLogLevel: 'debug' | 'info' | 'off' = 'info'
 ) => {
   const workspace = await withTimingAsync(
     () =>
@@ -38,17 +39,26 @@ export const bootstrap = async (
         dataStore,
         defaultExtension
       ),
-    ms => Logger.info(`Workspace loaded in ${ms}ms`)
+    ms =>
+      timingLogLevel === 'off'
+        ? null
+        : Logger[timingLogLevel](`Workspace loaded in ${ms}ms`)
   );
 
   const graph = withTiming(
     () => FoamGraph.fromWorkspace(workspace, true),
-    ms => Logger.info(`Graph loaded in ${ms}ms`)
+    ms =>
+      timingLogLevel === 'off'
+        ? null
+        : Logger[timingLogLevel](`Graph loaded in ${ms}ms`)
   );
 
   const tags = withTiming(
     () => FoamTags.fromWorkspace(workspace, true),
-    ms => Logger.info(`Tags loaded in ${ms}ms`)
+    ms =>
+      timingLogLevel === 'off'
+        ? null
+        : Logger[timingLogLevel](`Tags loaded in ${ms}ms`)
   );
 
   watcher?.onDidChange(async uri => {

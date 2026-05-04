@@ -1,6 +1,7 @@
 import { Range } from '../model/range';
+import { URI } from '../model/uri';
 import { Logger } from '../utils/log';
-import { TextEdit } from './text-edit';
+import { TextEdit, WorkspaceTextEdit } from './text-edit';
 
 Logger.setLevel('error');
 
@@ -99,5 +100,36 @@ describe('applyTextEdit', () => {
     const actual = TextEdit.apply(text, textEdits);
 
     expect(actual).toBe(expected);
+  });
+});
+
+describe('WorkspaceTextEdit.groupByUri', () => {
+  it('groups edits by URI while preserving URI and edit order', () => {
+    const firstUri = URI.file('/workspace/first.md');
+    const secondUri = URI.file('/workspace/second.md');
+    const firstEdit = {
+      newText: 'a',
+      range: Range.create(0, 0, 0, 0),
+    };
+    const secondEdit = {
+      newText: 'b',
+      range: Range.create(1, 0, 1, 0),
+    };
+    const thirdEdit = {
+      newText: 'c',
+      range: Range.create(0, 0, 0, 0),
+    };
+
+    const groups = WorkspaceTextEdit.groupByUri([
+      { uri: firstUri, edit: firstEdit },
+      { uri: secondUri, edit: thirdEdit },
+      { uri: firstUri, edit: secondEdit },
+    ]);
+
+    expect(groups).toHaveLength(2);
+    expect(groups[0].uri).toBe(firstUri);
+    expect(groups[0].edits).toEqual([firstEdit, secondEdit]);
+    expect(groups[1].uri).toBe(secondUri);
+    expect(groups[1].edits).toEqual([thirdEdit]);
   });
 });

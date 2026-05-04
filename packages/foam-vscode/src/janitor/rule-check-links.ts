@@ -1,8 +1,7 @@
-import { Block, Resource, ResourceLink } from '@foam/core';
+import { Block, LintIssue, Resource, ResourceLink } from '@foam/core';
 import { Range } from '@foam/core';
 import { FoamWorkspace } from '@foam/core';
 import { MarkdownLink } from '@foam/core';
-import { LintIssue } from './janitor';
 import { isNone } from '@foam/core';
 
 export const AMBIGUOUS_IDENTIFIER_CODE = 'ambiguous-identifier';

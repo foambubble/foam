@@ -1,6 +1,6 @@
-import { generateHeading } from '.';
-import { createNoteFromMarkdown } from '../test/test-utils';
-import { Logger } from '@foam/core';
+import { generateHeading } from './generate-headings';
+import { createNoteFromMarkdown } from '../../test/test-utils';
+import { Logger } from '../utils/log';
 
 Logger.setLevel('error');
 

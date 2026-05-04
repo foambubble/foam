@@ -87,4 +87,7 @@ Customize tag appearance in markdown preview by adding CSS:
 
 Some users prefer backlinks (e.g. linking to a `book` note) instead of #book tags for categorization. Both approaches work — choose what fits your workflow.
 
+To manage tags from the terminal, see [[tag|CLI tag command]].
+
 [graph-view]: graph-view.md 'Graph Visualization'
+[tag]: ../tools/cli/tag.md 'foam tag'

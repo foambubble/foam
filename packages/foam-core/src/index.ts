@@ -47,8 +47,8 @@ export {
   imageExtensions,
   defaultAttachmentExtensions,
 } from './services/attachment-provider';
-export { TextEdit } from './services/text-edit';
-export type { WorkspaceTextEdit } from './services/text-edit';
+export { TextEdit, WorkspaceTextEdit } from './services/text-edit';
+export type { WorkspaceTextEditGroup } from './services/text-edit';
 export { MarkdownLink } from './services/markdown-link';
 export { HeadingEdit } from './services/heading-edit';
 export type { HeadingEditResult } from './services/heading-edit';
@@ -67,7 +67,7 @@ export { TriggerFactory } from './templates/note-creation-triggers';
 export { resolveDailyNote } from './templates/daily-note-resolver';
 export type { ResolveDailyNoteOptions } from './templates/daily-note-resolver';
 export { TemplateLoader } from './templates/template-loader';
-export { getDailyNoteTemplateCandidateUris } from './templates/template-discovery';
+export { getDailyNoteTemplateCandidateUris, getNewNoteTemplateCandidateUris, getTemplatesDir } from './templates/template-discovery';
 export { Resolver } from './templates/variable-resolver';
 export type { VariableProvider } from './templates/variable-resolver';
 
@@ -112,6 +112,28 @@ export type {
   BuiltGraphData,
   GraphBuilderOptions,
 } from './services/graph-data-builder';
+
+// Janitor / lint
+export {
+  lintNote,
+  lintWorkspace,
+  computeNoteEdits,
+  missingHeadingRule,
+  staleDefinitionsRule,
+  WorkspaceLintResult,
+} from './janitor/janitor';
+export type {
+  LintRule,
+  LintIssue,
+  LintRelatedInfo,
+  WikilinkDefinitionSetting,
+} from './janitor/janitor';
+export { generateHeading } from './janitor/generate-headings';
+export {
+  generateLinkReferences,
+  LINK_REFERENCE_DEFINITION_HEADER,
+  LINK_REFERENCE_DEFINITION_FOOTER,
+} from './janitor/generate-link-references';
 
 // Common
 export type { IDisposable } from './common/lifecycle';

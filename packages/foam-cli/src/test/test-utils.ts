@@ -138,6 +138,17 @@ export const createNoteFromMarkdown = (
   root: URI = URI.file('/')
 ): Resource => testParser.parse(root.resolve(uri), text);
 
+export const TEST_WORKSPACE_ROOT = URI.file('/workspace');
+
+export const createInMemoryWorkspace = (
+  notes: Resource[],
+  root: URI = TEST_WORKSPACE_ROOT
+): ReturnType<typeof createTestWorkspace> => {
+  const ws = createTestWorkspace([root]);
+  for (const note of notes) ws.set(note);
+  return ws;
+};
+
 export const readFileFromFs = async (uri: URI) =>
   (await fs.promises.readFile(uri.toFsPath())).toString();
 

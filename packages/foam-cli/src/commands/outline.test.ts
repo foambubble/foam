@@ -1,16 +1,7 @@
-import { FoamWorkspace, URI } from '@foam/core';
-import { createNoteFromMarkdown, createTestWorkspace, withTmpWorkspace, TestLogger } from '../test/test-utils';
+import { createNoteFromMarkdown, createInMemoryWorkspace, TEST_WORKSPACE_ROOT, withTmpWorkspace, TestLogger } from '../test/test-utils';
 import { outlineData, runOutlineCommand } from './outline';
 
-const ROOT = URI.file('/workspace');
-
-function makeWorkspace(
-  notes: ReturnType<typeof createNoteFromMarkdown>[]
-): FoamWorkspace {
-  const ws = createTestWorkspace([ROOT]);
-  for (const note of notes) ws.set(note);
-  return ws;
-}
+const ROOT = TEST_WORKSPACE_ROOT;
 
 // ─── outlineData ──────────────────────────────────────────────────────────────
 
@@ -21,7 +12,7 @@ describe('outlineData', () => {
       '# Title\n\n## Section A\n\n### Subsection\n\n## Section B\n',
       ROOT
     );
-    const ws = makeWorkspace([note]);
+    const ws = createInMemoryWorkspace([note]);
     const data = outlineData(ws, 'a', undefined);
     expect(data.id).toBe('a');
     const labels = data.sections.map(s => s.label);
@@ -36,7 +27,7 @@ describe('outlineData', () => {
 
   it('returns empty sections for a note with no headings', () => {
     const note = createNoteFromMarkdown('/workspace/b.md', 'Just text\n', ROOT);
-    const ws = makeWorkspace([note]);
+    const ws = createInMemoryWorkspace([note]);
     const data = outlineData(ws, 'b', undefined);
     expect(data.sections).toHaveLength(0);
   });

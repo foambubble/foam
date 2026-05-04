@@ -1,22 +1,14 @@
-import { FoamGraph, FoamWorkspace, URI } from '@foam/core';
-import { createTestNote, createTestWorkspace, withTmpWorkspace, TestLogger } from '../test/test-utils';
+import { FoamGraph } from '@foam/core';
+import { createTestNote, createInMemoryWorkspace, TEST_WORKSPACE_ROOT, withTmpWorkspace, TestLogger } from '../test/test-utils';
 import { linksData, runLinksCommand } from './links';
 
-const ROOT = URI.file('/workspace');
-
-function makeWorkspace(
-  notes: ReturnType<typeof createTestNote>[]
-): FoamWorkspace {
-  const ws = createTestWorkspace([ROOT]);
-  for (const note of notes) ws.set(note);
-  return ws;
-}
+const ROOT = TEST_WORKSPACE_ROOT;
 
 // ─── linksData ────────────────────────────────────────────────────────────────
 
 describe('linksData', () => {
   it('returns outgoing and incoming connections', () => {
-    const ws = makeWorkspace([
+    const ws = createInMemoryWorkspace([
       createTestNote({ uri: '/workspace/a.md', links: [{ slug: 'b' }], root: ROOT }),
       createTestNote({ uri: '/workspace/b.md', root: ROOT }),
     ]);
@@ -32,7 +24,7 @@ describe('linksData', () => {
   });
 
   it('includes placeholder targets in outgoing', () => {
-    const ws = makeWorkspace([
+    const ws = createInMemoryWorkspace([
       createTestNote({ uri: '/workspace/a.md', links: [{ slug: 'missing' }], root: ROOT }),
     ]);
     const graph = FoamGraph.fromWorkspace(ws);

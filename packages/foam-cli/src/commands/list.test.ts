@@ -1,8 +1,9 @@
 import path from 'node:path';
-import { FoamGraph, FoamTags, FoamWorkspace, URI } from '@foam/core';
+import { FoamGraph, FoamTags, URI } from '@foam/core';
 import {
   createTestNote,
-  createTestWorkspace,
+  createInMemoryWorkspace,
+  TEST_WORKSPACE_ROOT,
   withTmpWorkspace,
   TestLogger,
 } from '../test/test-utils';
@@ -16,25 +17,13 @@ import {
   runListCommand,
 } from './list';
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-const ROOT = URI.file('/workspace');
-
-function makeWorkspace(
-  notes: ReturnType<typeof createTestNote>[]
-): FoamWorkspace {
-  const ws = createTestWorkspace([ROOT]);
-  for (const note of notes) {
-    ws.set(note);
-  }
-  return ws;
-}
+const ROOT = TEST_WORKSPACE_ROOT;
 
 // ─── listNotes ────────────────────────────────────────────────────────────────
 
 describe('listNotes', () => {
   it('returns all notes with id, path, title, type, tags', () => {
-    const ws = makeWorkspace([
+    const ws = createInMemoryWorkspace([
       createTestNote({ uri: '/workspace/a.md', title: 'A', root: ROOT }),
       createTestNote({ uri: '/workspace/b.md', title: 'B', root: ROOT }),
     ]);
@@ -45,7 +34,7 @@ describe('listNotes', () => {
   });
 
   it('filters by type', () => {
-    const ws = makeWorkspace([
+    const ws = createInMemoryWorkspace([
       createTestNote({ uri: '/workspace/a.md', title: 'A', type: 'note', root: ROOT }),
       createTestNote({ uri: '/workspace/b.md', title: 'B', type: 'daily-note', root: ROOT }),
     ]);
@@ -55,7 +44,7 @@ describe('listNotes', () => {
   });
 
   it('filters by tag (AND for multiple tags)', () => {
-    const ws = makeWorkspace([
+    const ws = createInMemoryWorkspace([
       createTestNote({ uri: '/workspace/a.md', tags: ['work', 'project'], root: ROOT }),
       createTestNote({ uri: '/workspace/b.md', tags: ['work'], root: ROOT }),
     ]);
@@ -65,7 +54,7 @@ describe('listNotes', () => {
   });
 
   it('limits results', () => {
-    const ws = makeWorkspace([
+    const ws = createInMemoryWorkspace([
       createTestNote({ uri: '/workspace/a.md', root: ROOT }),
       createTestNote({ uri: '/workspace/b.md', root: ROOT }),
       createTestNote({ uri: '/workspace/c.md', root: ROOT }),
@@ -75,7 +64,7 @@ describe('listNotes', () => {
   });
 
   it('includes relative path from workspace root', () => {
-    const ws = makeWorkspace([
+    const ws = createInMemoryWorkspace([
       createTestNote({ uri: '/workspace/notes/a.md', title: 'A', root: ROOT }),
     ]);
     const result = listNotes(ws, '/workspace', {});
@@ -87,7 +76,7 @@ describe('listNotes', () => {
 
 describe('listTags', () => {
   it('returns tag name and count', () => {
-    const ws = makeWorkspace([
+    const ws = createInMemoryWorkspace([
       createTestNote({ uri: '/workspace/a.md', tags: ['foo', 'bar'], root: ROOT }),
       createTestNote({ uri: '/workspace/b.md', tags: ['foo'], root: ROOT }),
     ]);
@@ -98,7 +87,7 @@ describe('listTags', () => {
   });
 
   it('filters by prefix', () => {
-    const ws = makeWorkspace([
+    const ws = createInMemoryWorkspace([
       createTestNote({ uri: '/workspace/a.md', tags: ['work/project', 'personal'], root: ROOT }),
     ]);
     const foamTags = FoamTags.fromWorkspace(ws);
@@ -107,7 +96,7 @@ describe('listTags', () => {
   });
 
   it('sorts by count descending when sort=count', () => {
-    const ws = makeWorkspace([
+    const ws = createInMemoryWorkspace([
       createTestNote({ uri: '/workspace/a.md', tags: ['foo', 'bar'], root: ROOT }),
       createTestNote({ uri: '/workspace/b.md', tags: ['foo'], root: ROOT }),
     ]);
@@ -117,7 +106,7 @@ describe('listTags', () => {
   });
 
   it('sorts by name ascending by default', () => {
-    const ws = makeWorkspace([
+    const ws = createInMemoryWorkspace([
       createTestNote({ uri: '/workspace/a.md', tags: ['zzz', 'aaa'], root: ROOT }),
     ]);
     const foamTags = FoamTags.fromWorkspace(ws);
@@ -131,7 +120,7 @@ describe('listTags', () => {
 
 describe('listOrphans', () => {
   it('returns notes with no incoming and no outgoing links', () => {
-    const ws = makeWorkspace([
+    const ws = createInMemoryWorkspace([
       createTestNote({ uri: '/workspace/linked.md', links: [{ slug: 'target' }], root: ROOT }),
       createTestNote({ uri: '/workspace/target.md', root: ROOT }),
       createTestNote({ uri: '/workspace/orphan.md', root: ROOT }),
@@ -150,7 +139,7 @@ describe('listOrphans', () => {
 
 describe('listDeadends', () => {
   it('returns notes with no outgoing links', () => {
-    const ws = makeWorkspace([
+    const ws = createInMemoryWorkspace([
       createTestNote({ uri: '/workspace/linked.md', links: [{ slug: 'target' }], root: ROOT }),
       createTestNote({ uri: '/workspace/target.md', root: ROOT }),
     ]);
@@ -166,7 +155,7 @@ describe('listDeadends', () => {
 
 describe('listPlaceholders', () => {
   it('returns placeholder ids with referencing notes', () => {
-    const ws = makeWorkspace([
+    const ws = createInMemoryWorkspace([
       createTestNote({ uri: '/workspace/a.md', links: [{ slug: 'missing-note' }], root: ROOT }),
     ]);
     const graph = FoamGraph.fromWorkspace(ws);

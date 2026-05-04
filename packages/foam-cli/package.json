@@ -15,15 +15,17 @@
     "test:e2e": "echo 'No e2e tests for @foam/cli'",
     "lint": "oxlint src"
   },
-  "dependencies": {
-    "@foam/core": "^0.40.1"
-  },
   "devDependencies": {
+    "@types/micromatch": "^4.0.9",
     "@types/node": "^18.0.0",
     "esbuild": "^0.27.0",
     "oxlint": "^1.57.0",
     "rimraf": "^3.0.2",
     "typescript": "^5.8.0",
     "vitest": "^3.0.0"
+  },
+  "dependencies": {
+    "@foam/core": "^0.40.1",
+    "micromatch": "^4.0.8"
   }
 }

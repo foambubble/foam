@@ -1,19 +1,13 @@
 /*global markdownit:readonly*/
 
 import { workspace, ExtensionContext, window, commands } from 'vscode';
-import { MarkdownResourceProvider, Logger } from '@foam/core';
+import { MarkdownResourceProvider, Logger, Config } from '@foam/core';
 import { bootstrap } from './core/model/foam';
 import { fromVsCodeUri } from './vscode/utils/vsc-utils';
 
 import { features } from './vscode/features';
 import { VsCodeOutputLogger, exposeLogger } from './vscode/services/logging';
-import {
-  getAttachmentsExtensions,
-  getDirectoryModeSetting,
-  getExcludedFilesSetting,
-  getIncludeFilesSetting,
-  getNotesExtensions,
-} from './vscode/settings';
+import { VsCodeFoamConfig } from './vscode/config';
 import { AttachmentResourceProvider } from '@foam/core';
 import { VsCodeWatcher } from './vscode/services/watcher';
 import { createMarkdownParser } from '@foam/core';
@@ -26,6 +20,8 @@ export async function activate(context: ExtensionContext) {
   Logger.setDefaultLogger(logger);
   exposeLogger(context, logger);
 
+  Config.setDefaultConfig(new VsCodeFoamConfig());
+
   try {
     Logger.info('Starting Foam');
 
@@ -35,8 +31,8 @@ export async function activate(context: ExtensionContext) {
     }
 
     // Prepare Foam
-    const includes = getIncludeFilesSetting().map(g => g.toString());
-    const excludes = getExcludedFilesSetting().map(g => g.toString());
+    const includes = Config.getFilesInclude();
+    const excludes = Config.getFilesExclude();
     const { matcher, dataStore, includePatterns, excludePatterns } =
       await createMatcherAndDataStore(includes, excludes);
 
@@ -54,13 +50,14 @@ export async function activate(context: ExtensionContext) {
     const parserCache = new VsCodeBasedParserCache(context);
     const parser = createMarkdownParser([], parserCache);
 
-    const { notesExtensions, defaultExtension } = getNotesExtensions();
+    const notesExtensions = Config.getNotesExtensions();
+    const defaultExtension = Config.getDefaultNoteExtension();
 
     const workspaceRoots =
       workspace.workspaceFolders?.map(folder => fromVsCodeUri(folder.uri)) ??
       [];
 
-    const directoryMode = getDirectoryModeSetting();
+    const directoryMode = Config.getLinksDirectoryMode();
     const markdownProvider = new MarkdownResourceProvider(
       dataStore,
       parser,
@@ -68,7 +65,7 @@ export async function activate(context: ExtensionContext) {
       directoryMode
     );
 
-    const attachmentExtConfig = getAttachmentsExtensions();
+    const attachmentExtConfig = Config.getAttachmentExtensions();
     const attachmentProvider = new AttachmentResourceProvider(
       attachmentExtConfig
     );

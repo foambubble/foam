@@ -8,7 +8,7 @@ import { getFoamVsCodeConfig } from '../../config';
 import { fromVsCodeUri, toVsCodeUri } from '../../utils/vsc-utils';
 import { getNoteTooltip, getFoamDocSelectors } from '../../services/editor';
 import { CONVERT_WIKILINK_TO_MDLINK } from '../editing/convert-links';
-import { getDirectoryModeSetting } from '../../settings';
+import { Config } from '@foam/core';
 
 export const aliasCommitCharacters = ['#'];
 export const linkCommitCharacters = ['#', '|'];
@@ -206,7 +206,7 @@ export class WikilinkCompletionProvider
       position.character
     );
 
-    const directoryMode = getDirectoryModeSetting();
+    const directoryMode = Config.getLinksDirectoryMode();
 
     const resources = this.ws.list().map(resource => {
       const resourceIsDocument =

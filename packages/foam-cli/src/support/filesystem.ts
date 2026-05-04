@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import micromatch from 'micromatch';
 
 import {
   URI,
@@ -10,7 +11,9 @@ import {
   MarkdownResourceProvider,
   bootstrap,
   AlwaysIncludeMatcher,
+  Config,
 } from '@foam/core';
+import { readFoamConfig } from './config';
 
 const DEFAULT_EXCLUDED_DIR_NAMES = new Set([
   '.astro',
@@ -30,13 +33,30 @@ const isWithinPath = (candidate: string, parent: string) => {
 class NodeFileDataStore implements IDataStore {
   constructor(
     private readonly rootDir: string,
-    private readonly excludedPaths: string[]
+    private readonly excludedPaths: string[],
+    private readonly includeGlobs: string[] = ['**/*'],
+    private readonly excludeGlobs: string[] = []
   ) {}
 
   async list() {
     const files: string[] = [];
     await collectFiles(this.rootDir, files, this.excludedPaths);
-    return files.map(file => URI.file(file));
+    const uris = files.map(file => URI.file(file));
+    if (
+      this.includeGlobs.length === 1 &&
+      this.includeGlobs[0] === '**/*' &&
+      this.excludeGlobs.length === 0
+    ) {
+      return uris;
+    }
+    return uris.filter(uri => {
+      const rel = path.relative(this.rootDir, uri.toFsPath());
+      const included = micromatch.isMatch(rel, this.includeGlobs);
+      const excluded =
+        this.excludeGlobs.length > 0 &&
+        micromatch.isMatch(rel, this.excludeGlobs);
+      return included && !excluded;
+    });
   }
 
   async read(uri: URI) {
@@ -88,37 +108,30 @@ export async function loadWorkspaceFromDirectory(
 ) {
   const rootDir = path.resolve(workspaceDir);
   const rootUri = URI.file(rootDir);
-  const dataStore = new NodeFileDataStore(rootDir, [
-    ...new Set(
-      (options.excludedPaths ?? []).map(excludedPath =>
-        path.resolve(excludedPath)
-      )
-    ),
-  ]);
+
+  const foamConfig = readFoamConfig(rootDir);
+  Config.setDefaultConfig(foamConfig);
+
+  const dataStore = new NodeFileDataStore(
+    rootDir,
+    [
+      ...new Set(
+        (options.excludedPaths ?? []).map(excludedPath =>
+          path.resolve(excludedPath)
+        )
+      ),
+    ],
+    Config.getFilesInclude(),
+    Config.getFilesExclude()
+  );
+
+  const noteExtensions = options.noteExtensions ?? Config.getNotesExtensions();
   const parser = createMarkdownParser();
   const providers = [
-    new MarkdownResourceProvider(dataStore, parser, options.noteExtensions),
+    new MarkdownResourceProvider(dataStore, parser, noteExtensions),
     new AttachmentResourceProvider(defaultAttachmentExtensions),
   ];
-  // TODO: MAJOR GAP — The CLI has no concept of Foam workspace configuration.
-  // All Foam settings live in VS Code's settings.json under the `foam.*` namespace,
-  // and the CLI cannot read them. This affects correctness across every command:
-  //
-  //   • foam.files.include / foam.files.exclude — the CLI uses AlwaysIncludeMatcher,
-  //     which includes every file under the workspace root (minus hardcoded dir names
-  //     like .git and node_modules). VS Code builds a FileListBasedMatcher from the
-  //     user's globs. A workspace with draft/ or archive/ excluded in VS Code will
-  //     have those files silently indexed here.
-  //   • foam.openDailyNote.directory / filenameFormat — `foam daily` won't know the
-  //     correct path without reading this config.
-  //   • foam.files.defaultNoteExtension — note creation may use the wrong extension.
-  //   • foam.templates.directory — template lookup will look in the wrong place.
-  //   • foam.links.wikilinkPathStrategy — identifier resolution may differ from VS Code.
-  //
-  // Until a configuration layer is added, the CLI workspace view will diverge from
-  // what the user sees in VS Code. See the Known Issues section in foam-cli-spec.md
-  // for the proposed fix (reading .vscode/settings.json with a .foam/config.json
-  // override).
+
   const matcher = new AlwaysIncludeMatcher();
   const foam = await bootstrap(
     [rootUri],
@@ -127,7 +140,7 @@ export async function loadWorkspaceFromDirectory(
     dataStore,
     parser,
     providers,
-    '.md',
+    Config.getDefaultNoteExtension(),
     'debug'
   );
 

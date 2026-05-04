@@ -1,44 +1,76 @@
 import fs from 'node:fs';
-import { mkdtempSync } from 'node:fs';
 import path from 'node:path';
+import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
+import { Config } from '@foam/core';
+import { withTmpWorkspace } from '../test/test-utils';
 import { loadWorkspaceFromDirectory } from './filesystem';
 
 describe('loadWorkspaceFromDirectory', () => {
   it('excludes .git, node_modules, and other default excluded directories', async () => {
-    const tempDir = mkdtempSync(path.join(tmpdir(), 'foam-filesystem-test-'));
-    try {
-      fs.writeFileSync(path.join(tempDir, 'note.md'), '# Note', 'utf8');
-      fs.mkdirSync(path.join(tempDir, '.git'), { recursive: true });
-      fs.writeFileSync(path.join(tempDir, '.git', 'note.md'), '# In git', 'utf8');
-      fs.mkdirSync(path.join(tempDir, 'node_modules', 'pkg'), { recursive: true });
-      fs.writeFileSync(path.join(tempDir, 'node_modules', 'pkg', 'readme.md'), '# Pkg', 'utf8');
-      fs.mkdirSync(path.join(tempDir, '.yarn'), { recursive: true });
-      fs.writeFileSync(path.join(tempDir, '.yarn', 'note.md'), '# In yarn', 'utf8');
-
-      const { workspace } = await loadWorkspaceFromDirectory(tempDir);
-      const uris = workspace.list().map(r => r.uri.toFsPath());
-
-      expect(uris.some(u => u.includes('note.md') && !u.includes('.git') && !u.includes('node_modules'))).toBe(true);
-      expect(uris.every(u => !u.includes('.git'))).toBe(true);
-      expect(uris.every(u => !u.includes('node_modules'))).toBe(true);
-      expect(uris.every(u => !u.includes('.yarn'))).toBe(true);
-    } finally {
-      fs.rmSync(tempDir, { recursive: true, force: true });
-    }
+    await withTmpWorkspace(
+      {
+        'note.md': '# Note',
+        '.git/note.md': '# In git',
+        'node_modules/pkg/readme.md': '# Pkg',
+        '.yarn/note.md': '# In yarn',
+      },
+      async ({ workspace }) => {
+        const uris = workspace.list().map(r => r.uri.toFsPath());
+        expect(uris.some(u => u.endsWith('note.md'))).toBe(true);
+        expect(uris.every(u => !u.includes('.git'))).toBe(true);
+        expect(uris.every(u => !u.includes('node_modules'))).toBe(true);
+        expect(uris.every(u => !u.includes('.yarn'))).toBe(true);
+      }
+    );
   });
 
-  // TODO: implement once a CLI configuration layer exists (see Known Issues in foam-cli-spec.md).
-  // loadWorkspaceFromDirectory should read foam.* settings from .vscode/settings.json
-  // (with optional .foam/config.json overrides) and apply them when loading the workspace.
-  // At minimum the following should be covered:
-  //   - foam.files.include / foam.files.exclude are used to build the file matcher
-  //   - foam.openDailyNote.directory / filenameFormat are returned as config
-  //   - foam.files.defaultNoteExtension is used as the default extension
-  //   - foam.templates.directory is returned as config
-  it.skip('reads foam configuration from .vscode/settings.json', async () => {});
-  it.skip('reads foam configuration from .foam/config.json when present', async () => {});
-  it.skip('respects foam.files.exclude from configuration (excludes matching paths from workspace)', async () => {});
+  it('reads foam configuration from .vscode/settings.json and applies it', async () => {
+    await withTmpWorkspace(
+      {
+        '.vscode/settings.json': JSON.stringify({
+          'foam.files.defaultNoteExtension': 'mdx',
+          'foam.openDailyNote.directory': 'journals',
+          'foam.templates.folder': 'my-templates',
+        }),
+        'note.mdx': '# MDX Note',
+      },
+      async ({ workspace }) => {
+        const uris = workspace.list().map(r => r.uri.toFsPath());
+        expect(uris.some(u => u.endsWith('note.mdx'))).toBe(true);
+        expect(Config.getDefaultNoteExtension()).toBe('.mdx');
+        expect(Config.getDailyNoteDirectory()).toBe('journals');
+        expect(Config.getTemplatesFolder()).toBe('my-templates');
+      }
+    );
+  });
+
+  it('uses defaults when .vscode/settings.json is absent', async () => {
+    await withTmpWorkspace({ 'note.md': '# Note' }, async ({ workspace }) => {
+      const uris = workspace.list().map(r => r.uri.toFsPath());
+      expect(uris.some(u => u.endsWith('note.md'))).toBe(true);
+      expect(Config.getDefaultNoteExtension()).toBe('.md');
+      expect(Config.getDailyNoteDirectory()).toBeNull();
+      expect(Config.getTemplatesFolder()).toBe('.foam/templates');
+    });
+  });
+
+  it('respects foam.files.exclude from configuration', async () => {
+    await withTmpWorkspace(
+      {
+        '.vscode/settings.json': JSON.stringify({
+          'foam.files.exclude': ['draft/**'],
+        }),
+        'note.md': '# Note',
+        'draft/wip.md': '# WIP',
+      },
+      async ({ workspace }) => {
+        const uris = workspace.list().map(r => r.uri.toFsPath());
+        expect(uris.some(u => u.endsWith('note.md'))).toBe(true);
+        expect(uris.every(u => !u.includes('draft'))).toBe(true);
+      }
+    );
+  });
 
   it('respects explicitly excluded paths', async () => {
     const tempDir = mkdtempSync(path.join(tmpdir(), 'foam-filesystem-test-'));

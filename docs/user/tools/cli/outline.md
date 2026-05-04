@@ -22,13 +22,13 @@ Show the outline of a note:
 
 ```bash
 foam outline my-note
-# # Introduction
-# ## Background
-# ## Goals
-# # Implementation
-# ## Phase 1
-# ## Phase 2
-# # Conclusion
+# Introduction
+  ## Background
+  ## Goals
+# Implementation
+  ## Phase 1
+  ## Phase 2
+# Conclusion
 ```
 
 Get the outline as JSON (includes line numbers):

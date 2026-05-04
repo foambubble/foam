@@ -13,7 +13,7 @@ foam note <subcommand> [options]
 Print metadata for a note.
 
 ```bash
-foam note show <identifier> [--links] [--content]
+foam note show (<identifier> | --path <path>) [--links] [--content]
 ```
 
 | Option          | Description                                       |
@@ -38,7 +38,7 @@ foam note show my-note
 Print the Foam identifier for a note.
 
 ```bash
-foam note id <identifier>
+foam note id (<identifier> | --path <path>)
 ```
 
 Useful for resolving how Foam identifies a note when there could be ambiguity:
@@ -76,7 +76,7 @@ foam note create --title "Meeting Notes" --dir meetings
 Move a note to a new path, rewriting all wikilinks that point to it.
 
 ```bash
-foam note move <identifier> --to <new-path>
+foam note move (<identifier> | --path <path>) --to <new-path>
 ```
 
 | Option          | Description                                   |
@@ -96,7 +96,7 @@ foam note move my-note --to archive/my-note.md
 Delete a note.
 
 ```bash
-foam note delete <identifier> [--force] [--permanent]
+foam note delete (<identifier> | --path <path>) [--force] [--permanent]
 ```
 
 By default, deleted notes are moved to `.foam/trash/` rather than permanently removed. You will be prompted to confirm unless `--force` is passed.

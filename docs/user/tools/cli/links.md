@@ -3,7 +3,7 @@
 Show links to and from a note.
 
 ```
-foam links <identifier> [options]
+foam links (<identifier> | --path <path>) [options]
 ```
 
 Displays the outgoing links (notes this note links to) and incoming links (notes that link to this note, also called backlinks). The command can also be invoked as `foam connections`.

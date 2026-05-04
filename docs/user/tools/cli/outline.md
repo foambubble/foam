@@ -3,7 +3,7 @@
 Show the heading structure of a note.
 
 ```
-foam outline <identifier> [options]
+foam outline (<identifier> | --path <path>) [options]
 ```
 
 Prints the headings in a note in order, indented to reflect their level. Useful for getting a quick overview of a long note's structure.

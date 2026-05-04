@@ -15,7 +15,7 @@ All subcommands update every wikilink that references the renamed item across th
 Rename a note file and rewrite all wikilinks pointing to it.
 
 ```bash
-foam rename note <identifier> <new-name>
+foam rename note (<identifier> | --path <path>) <new-name>
 ```
 
 | Option                 | Description                            |
@@ -60,7 +60,7 @@ foam rename tag project/active project/in-progress
 Rename a heading section in a note and rewrite all `[[note#Section]]` links pointing to it.
 
 ```bash
-foam rename section <identifier> <old-label> <new-label>
+foam rename section (<identifier> | --path <path>) <old-label> <new-label>
 ```
 
 | Option          | Description               |
@@ -79,7 +79,7 @@ foam rename section my-note "Background" "Context"
 Rename a block anchor in a note and rewrite all `[[note#^id]]` links pointing to it.
 
 ```bash
-foam rename block <identifier> <old-id> <new-id>
+foam rename block (<identifier> | --path <path>) <old-id> <new-id>
 ```
 
 | Option          | Description               |

@@ -1,4 +1,19 @@
-# Graph revamp, Queries, Footnotes, and more
+# Foam CLI
+
+## Foam CLI
+
+Foam now ships a command-line interface — interact with your workspace from the terminal without opening VS Code.
+
+```bash
+# Run without installing
+npx @foam/cli <command> [options]
+
+# Or install globally
+npm install -g @foam/cli
+foam <command> [options]
+```
+
+[Learn more about the command-line interface](https://docs.foamnotes.com/tools/cli/)
 
 ## Graph revamp
 

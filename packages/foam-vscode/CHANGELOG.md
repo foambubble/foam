@@ -4,6 +4,16 @@ All notable changes to the "foam-vscode" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## 0.40.0
+
+Features:
+
+- Foam CLI: interact with your workspace from the terminal without VS Code (`foam lint`, `foam list`, `foam note`, `foam daily`, `foam links`, and more) (#1636)
+
+Internal:
+
+- Extracted `@foam/core` and `@foam/graph-view` as standalone Yarn workspace packages (#1634)
+
 ## 0.39.0
 
 Features:

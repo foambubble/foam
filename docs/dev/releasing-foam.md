@@ -5,8 +5,9 @@
 2. Sanity checks
    - `yarn reset`
    - `yarn test`
-3. Update change log
+3. Update change log and if necessary the whatsnew message
    - `./packages/foam-vscode/CHANGELOG.md`
+   - `./packages/foam-vscode/WHATSNEW.md`
    - `git add *`
    - `git commit -m"Preparation for next release"`
 4. Update version

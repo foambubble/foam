@@ -21,6 +21,7 @@
     "test:unit": "lerna run test:unit",
     "test:e2e": "lerna run test:e2e",
     "lint": "lerna run lint",
+    "format": "prettier --write \"**/*.ts\"",
     "watch": "lerna run watch --concurrency 20",
     "prepare": "husky"
   },
@@ -34,7 +35,7 @@
   },
   "prettier": {
     "arrowParens": "avoid",
-    "printWidth": 80,
+    "printWidth": 100,
     "semi": true,
     "singleQuote": true,
     "trailingComma": "es5"

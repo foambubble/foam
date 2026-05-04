@@ -4,7 +4,6 @@ import path from 'node:path';
 import {
   URI,
   AttachmentResourceProvider,
-  defaultAttachmentExtensions,
   IDataStore,
   IMatcher,
   createMarkdownParser,
@@ -119,7 +118,7 @@ export async function loadWorkspaceFromDirectory(
   const parser = createMarkdownParser();
   const providers = [
     new MarkdownResourceProvider(dataStore, parser, noteExtensions),
-    new AttachmentResourceProvider(defaultAttachmentExtensions),
+    new AttachmentResourceProvider(Config.getAttachmentExtensions()),
   ];
 
   const foam = await bootstrap(

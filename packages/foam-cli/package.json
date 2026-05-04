@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "@foam/core": "^0.40.1",
+    "jsonc-parser": "^3.3.1",
     "micromatch": "^4.0.8"
   }
 }

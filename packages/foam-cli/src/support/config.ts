@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { parse as parseJsonc } from 'jsonc-parser';
 import { IFoamConfig } from '@foam/core';
 
 interface FoamConfigData {
@@ -69,9 +70,13 @@ export function readFoamConfig(workspaceDir: string): StaticFoamConfig {
   let raw: Record<string, unknown> = {};
 
   try {
-    raw = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
-  } catch {
-    // file absent or malformed — use defaults
+    raw = parseJsonc(fs.readFileSync(settingsPath, 'utf8')) ?? {};
+  } catch (e) {
+    // ENOENT is expected when the workspace has no .vscode/settings.json — use defaults.
+    // Any other error (permissions, I/O) is unexpected and should propagate.
+    if ((e as NodeJS.ErrnoException).code !== 'ENOENT') {
+      throw e;
+    }
   }
 
   const defaultNoteExtension =

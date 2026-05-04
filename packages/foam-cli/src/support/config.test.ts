@@ -39,6 +39,28 @@ describe('readFoamConfig', () => {
     }
   });
 
+  it('parses settings.json that contains comments and trailing commas (JSONC)', () => {
+    withTmpConfig(
+      // written as a raw string via the helper — we'll write it manually below
+      {},
+      dir => {
+        // overwrite with actual JSONC content (comments + trailing comma)
+        fs.writeFileSync(
+          path.join(dir, '.vscode', 'settings.json'),
+          `{
+  // daily notes go here
+  "foam.openDailyNote.directory": "journals", // trailing comma below
+  "foam.files.defaultNoteExtension": "mdx",
+}`,
+          'utf8'
+        );
+        const cfg = readFoamConfig(dir);
+        expect(cfg.getDailyNoteDirectory()).toBe('journals');
+        expect(cfg.getDefaultNoteExtension()).toBe('.mdx');
+      }
+    );
+  });
+
   it('returns defaults when .vscode/settings.json is malformed JSON', () => {
     const dir = mkdtempSync(path.join(tmpdir(), 'foam-config-test-'));
     try {

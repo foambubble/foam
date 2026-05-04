@@ -2,7 +2,6 @@
   "name": "@foam/core",
   "version": "0.40.0",
   "description": "Platform-agnostic core logic for Foam",
-  "private": true,
   "license": "MIT",
   "main": "out/index.js",
   "types": "out/index.d.ts",
@@ -14,6 +13,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "publish-core": "node publish.js",
     "clean": "rimraf out",
     "test": "yarn test:unit && yarn test:e2e",
     "test:unit": "vitest run",

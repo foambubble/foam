@@ -55,7 +55,7 @@ Other extensions:
 The Foam CLI lets you work with your workspace from the terminal — search notes, manage tags, create daily notes, and more — without opening VS Code.
 
 ```bash
-npm install -g @foam/cli
+npm install -g foam-cli
 ```
 
 Once installed, run `foam --help` to see available commands, or see the [[cli|CLI documentation]] for details.

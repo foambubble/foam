@@ -8,6 +8,7 @@
   },
   "scripts": {
     "build": "node esbuild.js",
+    "publish-cli": "node publish.js",
     "clean": "rimraf out",
     "test": "yarn test:unit",
     "test:unit": "vitest run",

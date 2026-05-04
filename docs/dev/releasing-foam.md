@@ -14,8 +14,9 @@
    - `$ yarn version-extension <version>` (where `version` is `patch/minor/major`)
 5. Package extension
    - `$ yarn package-extension`
-6. Publish extension
+6. Publish extension and CLI
    - `$ yarn publish-extension`
+   - `$ yarn publish-cli`
 7. Update the release notes in GitHub
    - in GitHub, top right, click on "releases"
    - select "tags" in top left

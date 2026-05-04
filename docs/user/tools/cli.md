@@ -5,7 +5,7 @@ The `foam` command line tool lets you work with your Foam workspace from the ter
 ## Installation
 
 ```bash
-npm install -g @foam/cli
+npm install -g foam-cli
 ```
 
 ## Usage

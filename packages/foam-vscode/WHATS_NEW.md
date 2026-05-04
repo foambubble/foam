@@ -6,10 +6,10 @@ Foam now ships a command-line interface — interact with your workspace from th
 
 ```bash
 # Run without installing
-npx @foam/cli <command> [options]
+npx foam-cli <command> [options]
 
 # Or install globally
-npm install -g @foam/cli
+npm install -g foam-cli
 foam <command> [options]
 ```
 

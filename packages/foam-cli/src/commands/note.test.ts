@@ -1,9 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { FoamGraph, URI } from '@foam/core';
+import { FoamGraph } from '@foam/core';
 import {
   createTestNote,
-  createTestWorkspace,
   createInMemoryWorkspace,
   withTmpWorkspace,
   TestLogger,
@@ -17,21 +16,6 @@ import {
   runNoteCommand,
 } from './note';
 import { resolveNote } from '../support/workspace';
-
-// Minimal foam + dataStore stub for noteCreate tests (no templates)
-function makeStubFoamAndStore(rootDir: string) {
-  const rootUri = URI.file(rootDir);
-  const workspace = createTestWorkspace([rootUri]);
-  const foam: any = {
-    workspace,
-    graph: FoamGraph.fromWorkspace(workspace),
-    tags: null,
-    services: { dataStore: { read: async () => null }, parser: null, matcher: null },
-    dispose: () => {},
-  };
-  const dataStore: any = { read: async () => null };
-  return { foam, dataStore };
-}
 
 // ─── resolveNote ──────────────────────────────────────────────────────────────
 
@@ -125,8 +109,7 @@ describe('noteIdData', () => {
 
 describe('noteCreate', () => {
   it('creates a note file with title as H1', () =>
-    withTmpWorkspace({}, async ({ rootDir }) => {
-      const { foam, dataStore } = makeStubFoamAndStore(rootDir);
+    withTmpWorkspace({}, async ({ rootDir, foam, dataStore }) => {
       const result = await noteCreate(rootDir, foam, dataStore, { title: 'My Note' });
       expect(result.id).toBe('my-note');
       expect(fs.existsSync(result.uri)).toBe(true);
@@ -134,16 +117,14 @@ describe('noteCreate', () => {
     }, 'foam-note-test-'));
 
   it('creates note in a subdirectory when --dir is given', () =>
-    withTmpWorkspace({}, async ({ rootDir }) => {
-      const { foam, dataStore } = makeStubFoamAndStore(rootDir);
+    withTmpWorkspace({}, async ({ rootDir, foam, dataStore }) => {
       const result = await noteCreate(rootDir, foam, dataStore, { title: 'Sub Note', dir: 'notes' });
       expect(result.path).toBe(path.join('notes', 'sub-note.md'));
       expect(fs.existsSync(result.uri)).toBe(true);
     }, 'foam-note-test-'));
 
   it('includes extra properties in frontmatter', () =>
-    withTmpWorkspace({}, async ({ rootDir }) => {
-      const { foam, dataStore } = makeStubFoamAndStore(rootDir);
+    withTmpWorkspace({}, async ({ rootDir, foam, dataStore }) => {
       const result = await noteCreate(rootDir, foam, dataStore, {
         title: 'Prop Note',
         properties: { status: 'active', priority: '1' },
@@ -154,8 +135,7 @@ describe('noteCreate', () => {
     }, 'foam-note-test-'));
 
   it('errors if file already exists', () =>
-    withTmpWorkspace({}, async ({ rootDir }) => {
-      const { foam, dataStore } = makeStubFoamAndStore(rootDir);
+    withTmpWorkspace({}, async ({ rootDir, foam, dataStore }) => {
       await noteCreate(rootDir, foam, dataStore, { title: 'Dup' });
       await expect(noteCreate(rootDir, foam, dataStore, { title: 'Dup' })).rejects.toThrow('already exists');
     }, 'foam-note-test-'));

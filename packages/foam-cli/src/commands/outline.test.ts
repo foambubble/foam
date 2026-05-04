@@ -1,5 +1,5 @@
 import { FoamWorkspace, URI } from '@foam/core';
-import { createNoteFromMarkdown, createTestWorkspace, createTmpWorkspace, TestLogger } from '../test/test-utils';
+import { createNoteFromMarkdown, createTestWorkspace, withTmpWorkspace, TestLogger } from '../test/test-utils';
 import { outlineData, runOutlineCommand } from './outline';
 
 const ROOT = URI.file('/workspace');
@@ -59,29 +59,23 @@ describe('runOutlineCommand', () => {
     expect(logger.logs[0]).toContain('foam outline');
   });
 
-  it('prints outline as text with correct indentation', async () => {
-    const { rootDir, cleanup } = await createTmpWorkspace({
-      'a.md': '# Title\n\n## Goals\n\n### Phase 1\n\n## References\n',
-    });
-    try {
-      const logger = new TestLogger();
-      const code = await runOutlineCommand(['a', '--workspace', rootDir], logger);
-      expect(code).toBe(0);
-      const lines = logger.logs.join('\n').split('\n');
-      expect(lines[0]).toBe('# Title');
-      expect(lines[1]).toBe('  ## Goals');
-      expect(lines[2]).toBe('    ### Phase 1');
-      expect(lines[3]).toBe('  ## References');
-    } finally {
-      cleanup();
-    }
-  });
+  it('prints outline as text with correct indentation', () =>
+    withTmpWorkspace(
+      { 'a.md': '# Title\n\n## Goals\n\n### Phase 1\n\n## References\n' },
+      async ({ rootDir }) => {
+        const logger = new TestLogger();
+        const code = await runOutlineCommand(['a', '--workspace', rootDir], logger);
+        expect(code).toBe(0);
+        const lines = logger.logs.join('\n').split('\n');
+        expect(lines[0]).toBe('# Title');
+        expect(lines[1]).toBe('  ## Goals');
+        expect(lines[2]).toBe('    ### Phase 1');
+        expect(lines[3]).toBe('  ## References');
+      }
+    ));
 
-  it('returns JSON with id, uri, sections', async () => {
-    const { rootDir, cleanup } = await createTmpWorkspace({
-      'a.md': '# Title\n\n## Goals\n',
-    });
-    try {
+  it('returns JSON with id, uri, sections', () =>
+    withTmpWorkspace({ 'a.md': '# Title\n\n## Goals\n' }, async ({ rootDir }) => {
       const logger = new TestLogger();
       const code = await runOutlineCommand(['a', '--format', 'json', '--workspace', rootDir], logger);
       expect(code).toBe(0);
@@ -91,8 +85,5 @@ describe('runOutlineCommand', () => {
       expect(result.sections[0]).toHaveProperty('label');
       expect(result.sections[0]).toHaveProperty('level');
       expect(result.sections[0]).toHaveProperty('range');
-    } finally {
-      cleanup();
-    }
-  });
+    }));
 });

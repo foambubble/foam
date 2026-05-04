@@ -1,10 +1,9 @@
 import path from 'node:path';
 import { FoamGraph, FoamTags, FoamWorkspace, URI } from '@foam/core';
 import {
-  InMemoryDataStore,
   createTestNote,
   createTestWorkspace,
-  createTmpWorkspace,
+  withTmpWorkspace,
   TestLogger,
 } from '../test/test-utils';
 import {
@@ -181,39 +180,34 @@ describe('listPlaceholders', () => {
 // ─── listTemplates ────────────────────────────────────────────────────────────
 
 describe('listTemplates', () => {
-  it('returns empty array when templates dir does not exist', async () => {
-    const { rootDir, cleanup } = await createTmpWorkspace({});
-    try {
+  it('returns empty array when templates dir does not exist', () =>
+    withTmpWorkspace({}, async ({ rootDir }) => {
       const result = await listTemplates(rootDir);
       expect(result).toEqual([]);
-    } finally {
-      cleanup();
-    }
-  });
+    }));
 
-  it('returns templates from .foam/templates with description from frontmatter', async () => {
-    const { rootDir, cleanup } = await createTmpWorkspace({
-      '.foam/templates/meeting.md': [
-        '---',
-        'foam_template:',
-        '  description: Template for meeting notes',
-        '---',
-        '',
-        '# Meeting',
-      ].join('\n'),
-      '.foam/templates/default.md': '# Default',
-    });
-    try {
-      const result = await listTemplates(rootDir);
-      const names = result.map(t => t.name);
-      expect(names).toContain('meeting');
-      expect(names).toContain('default');
-      const meeting = result.find(t => t.name === 'meeting')!;
-      expect(meeting.description).toBe('Template for meeting notes');
-    } finally {
-      cleanup();
-    }
-  });
+  it('returns templates from .foam/templates with description from frontmatter', () =>
+    withTmpWorkspace(
+      {
+        '.foam/templates/meeting.md': [
+          '---',
+          'foam_template:',
+          '  description: Template for meeting notes',
+          '---',
+          '',
+          '# Meeting',
+        ].join('\n'),
+        '.foam/templates/default.md': '# Default',
+      },
+      async ({ rootDir }) => {
+        const result = await listTemplates(rootDir);
+        const names = result.map(t => t.name);
+        expect(names).toContain('meeting');
+        expect(names).toContain('default');
+        const meeting = result.find(t => t.name === 'meeting')!;
+        expect(meeting.description).toBe('Template for meeting notes');
+      }
+    ));
 });
 
 // ─── runListCommand (integration) ────────────────────────────────────────────
@@ -234,23 +228,18 @@ describe('runListCommand', () => {
     expect(logger.errors[0]).toContain('Unknown subcommand');
   });
 
-  it('lists notes in a real workspace directory as text', async () => {
-    const { rootDir, cleanup } = await createTmpWorkspace({ 'alpha.md': '# Alpha', 'beta.md': '# Beta' });
-    try {
+  it('lists notes in a real workspace directory as text', () =>
+    withTmpWorkspace({ 'alpha.md': '# Alpha', 'beta.md': '# Beta' }, async ({ rootDir }) => {
       const logger = new TestLogger();
       const code = await runListCommand(['notes', '--workspace', rootDir], logger);
       expect(code).toBe(0);
       const out = logger.logs.join('\n');
       expect(out).toContain('alpha.md');
       expect(out).toContain('beta.md');
-    } finally {
-      cleanup();
-    }
-  });
+    }));
 
-  it('lists notes as JSON', async () => {
-    const { rootDir, cleanup } = await createTmpWorkspace({ 'alpha.md': '# Alpha\n\n#work' });
-    try {
+  it('lists notes as JSON', () =>
+    withTmpWorkspace({ 'alpha.md': '# Alpha\n\n#work' }, async ({ rootDir }) => {
       const logger = new TestLogger();
       const code = await runListCommand(['notes', '--workspace', rootDir, '--format', 'json'], logger);
       expect(code).toBe(0);
@@ -260,41 +249,30 @@ describe('runListCommand', () => {
       expect(result[0]).toHaveProperty('uri');
       expect(result[0]).toHaveProperty('title');
       expect(result[0]).toHaveProperty('tags');
-    } finally {
-      cleanup();
-    }
-  });
+    }));
 
-  it('lists tags in a real workspace directory', async () => {
-    const { rootDir, cleanup } = await createTmpWorkspace({ 'a.md': '# A\n\n#project #work', 'b.md': '# B\n\n#work' });
-    try {
+  it('lists tags in a real workspace directory', () =>
+    withTmpWorkspace({ 'a.md': '# A\n\n#project #work', 'b.md': '# B\n\n#work' }, async ({ rootDir }) => {
       const logger = new TestLogger();
       const code = await runListCommand(['tags', '--workspace', rootDir], logger);
       expect(code).toBe(0);
       const out = logger.logs.join('\n');
       expect(out).toContain('#work');
       expect(out).toContain('#project');
-    } finally {
-      cleanup();
-    }
-  });
+    }));
 
-  it('lists orphans in a real workspace directory', async () => {
-    const { rootDir, cleanup } = await createTmpWorkspace({
-      'linked.md': '# Linked\n\n[[target]]',
-      'target.md': '# Target',
-      'orphan.md': '# Orphan',
-    });
-    try {
-      const logger = new TestLogger();
-      const code = await runListCommand(['orphans', '--workspace', rootDir], logger);
-      expect(code).toBe(0);
-      const out = logger.logs.join('\n');
-      expect(out).toContain('orphan.md');
-      expect(out).not.toContain('linked.md');
-      expect(out).not.toContain('target.md');
-    } finally {
-      cleanup();
-    }
-  });
+  it('lists orphans in a real workspace directory', () =>
+    withTmpWorkspace(
+      { 'linked.md': '# Linked\n\n[[target]]', 'target.md': '# Target', 'orphan.md': '# Orphan' },
+      async ({ rootDir }) => {
+        const logger = new TestLogger();
+        const code = await runListCommand(['orphans', '--workspace', rootDir], logger);
+        expect(code).toBe(0);
+        const out = logger.logs.join('\n');
+        expect(out).toContain('orphan.md');
+        expect(out).not.toContain('linked.md');
+        expect(out).not.toContain('target.md');
+      }
+    ));
 });
+

@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { createTmpWorkspace, TestLogger } from '../test/test-utils';
+import { withTmpWorkspace, TestLogger } from '../test/test-utils';
 import {
   cleanTag,
   runTagCommand,
@@ -33,59 +33,36 @@ describe('runTagCommand', () => {
     expect(logger.errors[0]).toContain('Unknown subcommand');
   });
 
-  it('list: delegates to list tags', async () => {
-    const { rootDir, cleanup } = await createTmpWorkspace({
-      'a.md': '# A\n\n#project',
-    });
-    try {
+  it('list: delegates to list tags', () =>
+    withTmpWorkspace({ 'a.md': '# A\n\n#project' }, async ({ rootDir }) => {
       const logger = new TestLogger();
       const code = await runTagCommand(['list', '--workspace', rootDir], logger);
-
       expect(code).toBe(0);
       expect(logger.logs[0]).toContain('#project');
-    } finally {
-      cleanup();
-    }
-  });
+    }));
 
-  it('rename: renames a tag and reports text output', async () => {
-    const { rootDir, cleanup } = await createTmpWorkspace({
-      'a.md': '# A\n\n#project',
-    });
-    try {
+  it('rename: renames a tag and reports text output', () =>
+    withTmpWorkspace({ 'a.md': '# A\n\n#project' }, async ({ rootDir }) => {
       const logger = new TestLogger();
       const code = await runTagCommand(
         ['rename', 'project', 'work', '--workspace', rootDir],
         logger
       );
-
       expect(code).toBe(0);
       expect(logger.logs[0]).toContain('#project');
       expect(logger.logs[0]).toContain('#work');
       expect(fs.readFileSync(path.join(rootDir, 'a.md'), 'utf8')).toContain('#work');
-    } finally {
-      cleanup();
-    }
-  });
+    }));
 
-  it('search: delegates to search by tag', async () => {
-    const { rootDir, cleanup } = await createTmpWorkspace({
-      'a.md': '# A\n\n#project',
-      'b.md': '# B\n\n#personal',
-    });
-    try {
+  it('search: delegates to search by tag', () =>
+    withTmpWorkspace({ 'a.md': '# A\n\n#project', 'b.md': '# B\n\n#personal' }, async ({ rootDir }) => {
       const logger = new TestLogger();
       const code = await runTagCommand(
         ['search', '#project', '--workspace', rootDir],
         logger
       );
-
       expect(code).toBe(0);
       expect(logger.logs.join('\n')).toContain('a.md:1: # A');
       expect(logger.logs.join('\n')).not.toContain('b.md');
-    } finally {
-      cleanup();
-    }
-  });
-
+    }));
 });

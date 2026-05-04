@@ -170,6 +170,27 @@ export async function createTmpWorkspace(
 }
 
 /**
+ * Creates a temporary workspace, runs `fn` with it, and cleans up afterwards.
+ *
+ * Usage:
+ *   await withTmpWorkspace({ 'note.md': '# Note' }, async ({ rootDir, workspace }) => {
+ *     // ...
+ *   });
+ */
+export async function withTmpWorkspace<T>(
+  files: Record<string, string>,
+  fn: (ctx: Awaited<ReturnType<typeof createTmpWorkspace>>) => Promise<T>,
+  prefix = 'foam-test-'
+): Promise<T> {
+  const ctx = await createTmpWorkspace(files, prefix);
+  try {
+    return await fn(ctx);
+  } finally {
+    ctx.cleanup();
+  }
+}
+
+/**
  * A test logger that captures info/error output as instance properties.
  */
 export class TestLogger implements ILogger {

@@ -1,5 +1,5 @@
 import { FoamGraph, FoamWorkspace, URI } from '@foam/core';
-import { createTestNote, createTestWorkspace, createTmpWorkspace, TestLogger } from '../test/test-utils';
+import { createTestNote, createTestWorkspace, withTmpWorkspace, TestLogger } from '../test/test-utils';
 import { linksData, runLinksCommand } from './links';
 
 const ROOT = URI.file('/workspace');
@@ -67,37 +67,28 @@ describe('runLinksCommand', () => {
     expect(logger.errors[0]).toContain('identifier');
   });
 
-  it('shows both directions by default as text', async () => {
-    const { rootDir, cleanup } = await createTmpWorkspace({ 'a.md': '# A\n\n[[b]]', 'b.md': '# B' });
-    try {
+  it('shows both directions by default as text', () =>
+    withTmpWorkspace({ 'a.md': '# A\n\n[[b]]', 'b.md': '# B' }, async ({ rootDir }) => {
       const logger = new TestLogger();
       const code = await runLinksCommand(['a', '--workspace', rootDir], logger);
       expect(code).toBe(0);
       const out = logger.logs.join('\n');
       expect(out).toContain('Outgoing');
       expect(out).toContain('Incoming');
-    } finally {
-      cleanup();
-    }
-  });
+    }));
 
-  it('shows only outgoing with --outgoing', async () => {
-    const { rootDir, cleanup } = await createTmpWorkspace({ 'a.md': '# A\n\n[[b]]', 'b.md': '# B' });
-    try {
+  it('shows only outgoing with --outgoing', () =>
+    withTmpWorkspace({ 'a.md': '# A\n\n[[b]]', 'b.md': '# B' }, async ({ rootDir }) => {
       const logger = new TestLogger();
       const code = await runLinksCommand(['a', '--outgoing', '--workspace', rootDir], logger);
       expect(code).toBe(0);
       const out = logger.logs.join('\n');
       expect(out).toContain('Outgoing');
       expect(out).not.toContain('Incoming');
-    } finally {
-      cleanup();
-    }
-  });
+    }));
 
-  it('returns JSON with id, outgoing, incoming', async () => {
-    const { rootDir, cleanup } = await createTmpWorkspace({ 'a.md': '# A\n\n[[b]]', 'b.md': '# B' });
-    try {
+  it('returns JSON with id, outgoing, incoming', () =>
+    withTmpWorkspace({ 'a.md': '# A\n\n[[b]]', 'b.md': '# B' }, async ({ rootDir }) => {
       const logger = new TestLogger();
       const code = await runLinksCommand(['a', '--format', 'json', '--workspace', rootDir], logger);
       expect(code).toBe(0);
@@ -105,8 +96,5 @@ describe('runLinksCommand', () => {
       expect(result).toHaveProperty('id', 'a');
       expect(Array.isArray(result.outgoing)).toBe(true);
       expect(Array.isArray(result.incoming)).toBe(true);
-    } finally {
-      cleanup();
-    }
-  });
+    }));
 });

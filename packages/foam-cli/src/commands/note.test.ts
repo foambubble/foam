@@ -5,7 +5,6 @@ import {
   createTestNote,
   createTestWorkspace,
   createInMemoryWorkspace,
-  TEST_WORKSPACE_ROOT,
   withTmpWorkspace,
   TestLogger,
 } from '../test/test-utils';
@@ -34,51 +33,49 @@ function makeStubFoamAndStore(rootDir: string) {
   return { foam, dataStore };
 }
 
-const ROOT = TEST_WORKSPACE_ROOT;
-
 // ─── resolveNote ──────────────────────────────────────────────────────────────
 
 describe('resolveNote', () => {
   it('resolves by identifier', () => {
-    const ws = createInMemoryWorkspace([
-      createTestNote({ uri: '/workspace/alpha.md', title: 'Alpha', root: ROOT }),
+    const { workspace: ws } = createInMemoryWorkspace([
+      createTestNote({ uri: '/workspace/alpha.md', title: 'Alpha' }),
     ]);
     const result = resolveNote(ws, 'alpha', undefined);
     expect(result.title).toBe('Alpha');
   });
 
   it('throws for unknown identifier', () => {
-    const ws = createInMemoryWorkspace([]);
+    const { workspace: ws } = createInMemoryWorkspace([]);
     expect(() => resolveNote(ws, 'missing', undefined)).toThrow('not found');
   });
 
   it('throws for ambiguous identifier with candidate list', () => {
-    const ws = createInMemoryWorkspace([
-      createTestNote({ uri: '/workspace/notes/alpha.md', root: ROOT }),
-      createTestNote({ uri: '/workspace/archive/alpha.md', root: ROOT }),
+    const { workspace: ws } = createInMemoryWorkspace([
+      createTestNote({ uri: '/workspace/notes/alpha.md' }),
+      createTestNote({ uri: '/workspace/archive/alpha.md' }),
     ]);
     expect(() => resolveNote(ws, 'alpha', undefined)).toThrow('Ambiguous');
   });
 
   it('resolves by --path flag with an absolute path', () => {
-    const ws = createInMemoryWorkspace([
-      createTestNote({ uri: '/workspace/alpha.md', title: 'Alpha', root: ROOT }),
+    const { workspace: ws, root } = createInMemoryWorkspace([
+      createTestNote({ uri: '/workspace/alpha.md', title: 'Alpha' }),
     ]);
-    const result = resolveNote(ws, undefined, '/workspace/alpha.md', '/workspace');
+    const result = resolveNote(ws, undefined, '/workspace/alpha.md', root.toFsPath());
     expect(result.title).toBe('Alpha');
   });
 
   it('resolves by --path flag with a relative path against the workspace root', () => {
-    const ws = createInMemoryWorkspace([
-      createTestNote({ uri: '/workspace/alpha.md', title: 'Alpha', root: ROOT }),
+    const { workspace: ws, root } = createInMemoryWorkspace([
+      createTestNote({ uri: '/workspace/alpha.md', title: 'Alpha' }),
     ]);
-    const result = resolveNote(ws, undefined, 'alpha.md', '/workspace');
+    const result = resolveNote(ws, undefined, 'alpha.md', root.toFsPath());
     expect(result.title).toBe('Alpha');
   });
 
   it('throws when --path target does not exist in workspace', () => {
-    const ws = createInMemoryWorkspace([]);
-    expect(() => resolveNote(ws, undefined, '/workspace/missing.md', '/workspace')).toThrow('not found');
+    const { workspace: ws, root } = createInMemoryWorkspace([]);
+    expect(() => resolveNote(ws, undefined, '/workspace/missing.md', root.toFsPath())).toThrow('not found');
   });
 });
 
@@ -86,17 +83,11 @@ describe('resolveNote', () => {
 
 describe('noteShowData', () => {
   it('returns metadata fields', () => {
-    const ws = createInMemoryWorkspace([
-      createTestNote({
-        uri: '/workspace/alpha.md',
-        title: 'Alpha',
-        tags: ['work'],
-        aliases: ['a'],
-        root: ROOT,
-      }),
+    const { workspace: ws, root } = createInMemoryWorkspace([
+      createTestNote({ uri: '/workspace/alpha.md', title: 'Alpha', tags: ['work'], aliases: ['a'] }),
     ]);
     const graph = FoamGraph.fromWorkspace(ws);
-    const data = noteShowData(ws, graph, 'alpha', undefined, '/workspace', {});
+    const data = noteShowData(ws, graph, 'alpha', undefined, root.toFsPath(), {});
     expect(data.id).toBe('alpha');
     expect(data.title).toBe('Alpha');
     expect(data.tags).toEqual(['work']);
@@ -105,14 +96,14 @@ describe('noteShowData', () => {
   });
 
   it('includes links when includeLinks=true', () => {
-    const ws = createInMemoryWorkspace([
-      createTestNote({ uri: '/workspace/a.md', links: [{ slug: 'b' }], root: ROOT }),
-      createTestNote({ uri: '/workspace/b.md', root: ROOT }),
+    const { workspace: ws, root } = createInMemoryWorkspace([
+      createTestNote({ uri: '/workspace/a.md', links: [{ slug: 'b' }] }),
+      createTestNote({ uri: '/workspace/b.md' }),
     ]);
     const graph = FoamGraph.fromWorkspace(ws);
-    const data = noteShowData(ws, graph, 'a', undefined, '/workspace', { includeLinks: true });
+    const data = noteShowData(ws, graph, 'a', undefined, root.toFsPath(), { includeLinks: true });
     expect(data.links?.outgoing).toContain('b');
-    const dataB = noteShowData(ws, graph, 'b', undefined, '/workspace', { includeLinks: true });
+    const dataB = noteShowData(ws, graph, 'b', undefined, root.toFsPath(), { includeLinks: true });
     expect(dataB.links?.incoming).toContain('a');
   });
 });
@@ -121,8 +112,8 @@ describe('noteShowData', () => {
 
 describe('noteIdData', () => {
   it('returns id and uri', () => {
-    const ws = createInMemoryWorkspace([
-      createTestNote({ uri: '/workspace/alpha.md', root: ROOT }),
+    const { workspace: ws } = createInMemoryWorkspace([
+      createTestNote({ uri: '/workspace/alpha.md' }),
     ]);
     const data = noteIdData(ws, 'alpha', undefined);
     expect(data.id).toBe('alpha');

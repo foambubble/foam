@@ -1,18 +1,17 @@
-import { createNoteFromMarkdown, createInMemoryWorkspace, TEST_WORKSPACE_ROOT, withTmpWorkspace, TestLogger } from '../test/test-utils';
+import { createNoteFromMarkdown, createInMemoryWorkspace, withTmpWorkspace, TestLogger } from '../test/test-utils';
 import { outlineData, runOutlineCommand } from './outline';
-
-const ROOT = TEST_WORKSPACE_ROOT;
 
 // ─── outlineData ──────────────────────────────────────────────────────────────
 
 describe('outlineData', () => {
   it('returns sections with label and level', () => {
+    const { workspace: ws, root } = createInMemoryWorkspace([]);
     const note = createNoteFromMarkdown(
       '/workspace/a.md',
       '# Title\n\n## Section A\n\n### Subsection\n\n## Section B\n',
-      ROOT
+      root
     );
-    const ws = createInMemoryWorkspace([note]);
+    ws.set(note);
     const data = outlineData(ws, 'a', undefined);
     expect(data.id).toBe('a');
     const labels = data.sections.map(s => s.label);
@@ -26,8 +25,8 @@ describe('outlineData', () => {
   });
 
   it('returns empty sections for a note with no headings', () => {
-    const note = createNoteFromMarkdown('/workspace/b.md', 'Just text\n', ROOT);
-    const ws = createInMemoryWorkspace([note]);
+    const { workspace: ws, root } = createInMemoryWorkspace([]);
+    ws.set(createNoteFromMarkdown('/workspace/b.md', 'Just text\n', root));
     const data = outlineData(ws, 'b', undefined);
     expect(data.sections).toHaveLength(0);
   });

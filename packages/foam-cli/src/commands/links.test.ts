@@ -1,34 +1,32 @@
 import { FoamGraph } from '@foam/core';
-import { createTestNote, createInMemoryWorkspace, TEST_WORKSPACE_ROOT, withTmpWorkspace, TestLogger } from '../test/test-utils';
+import { createTestNote, createInMemoryWorkspace, withTmpWorkspace, TestLogger } from '../test/test-utils';
 import { linksData, runLinksCommand } from './links';
-
-const ROOT = TEST_WORKSPACE_ROOT;
 
 // ─── linksData ────────────────────────────────────────────────────────────────
 
 describe('linksData', () => {
   it('returns outgoing and incoming connections', () => {
-    const ws = createInMemoryWorkspace([
-      createTestNote({ uri: '/workspace/a.md', links: [{ slug: 'b' }], root: ROOT }),
-      createTestNote({ uri: '/workspace/b.md', root: ROOT }),
+    const { workspace: ws, root } = createInMemoryWorkspace([
+      createTestNote({ uri: '/workspace/a.md', links: [{ slug: 'b' }] }),
+      createTestNote({ uri: '/workspace/b.md' }),
     ]);
     const graph = FoamGraph.fromWorkspace(ws);
 
-    const dataA = linksData(ws, graph, 'a', undefined, '/workspace');
+    const dataA = linksData(ws, graph, 'a', undefined, root.toFsPath());
     expect(dataA.outgoing.map(c => c.id)).toContain('b');
     expect(dataA.incoming).toHaveLength(0);
 
-    const dataB = linksData(ws, graph, 'b', undefined, '/workspace');
+    const dataB = linksData(ws, graph, 'b', undefined, root.toFsPath());
     expect(dataB.outgoing).toHaveLength(0);
     expect(dataB.incoming.map(c => c.id)).toContain('a');
   });
 
   it('includes placeholder targets in outgoing', () => {
-    const ws = createInMemoryWorkspace([
-      createTestNote({ uri: '/workspace/a.md', links: [{ slug: 'missing' }], root: ROOT }),
+    const { workspace: ws, root } = createInMemoryWorkspace([
+      createTestNote({ uri: '/workspace/a.md', links: [{ slug: 'missing' }] }),
     ]);
     const graph = FoamGraph.fromWorkspace(ws);
-    const data = linksData(ws, graph, 'a', undefined, '/workspace');
+    const data = linksData(ws, graph, 'a', undefined, root.toFsPath());
     expect(data.outgoing).toHaveLength(1);
     expect(data.outgoing[0].id).toContain('missing');
   });

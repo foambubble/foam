@@ -1,6 +1,6 @@
 {
   "name": "@foam/cli",
-  "version": "0.40.0",
+  "version": "0.40.1",
   "description": "Foam CLI for publishing knowledge bases",
   "license": "MIT",
   "bin": {
@@ -16,7 +16,7 @@
     "lint": "oxlint src"
   },
   "dependencies": {
-    "@foam/core": "^0.40.0"
+    "@foam/core": "^0.40.1"
   },
   "devDependencies": {
     "@types/node": "^18.0.0",

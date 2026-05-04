@@ -1,10 +1,7 @@
 import * as vscode from 'vscode';
 import { Foam } from '@foam/core';
 import { createMatcherAndDataStore } from '../../services/editor';
-import {
-  getAttachmentsExtensions,
-  getIncludeFilesSetting,
-} from '../../../vscode/settings';
+import { Config } from '@foam/core';
 import {
   GroupedResourcesConfig,
   GroupedResourcesTreeDataProvider,
@@ -24,7 +21,7 @@ export default async function activate(
   const foam = await foamPromise;
 
   const { matcher } = await createMatcherAndDataStore(
-    getIncludeFilesSetting().map(g => g.toString()),
+    Config.getFilesInclude(),
     getOrphansConfig().exclude
   );
   const provider = new OrphanTreeView(
@@ -89,6 +86,6 @@ export class OrphanTreeView extends GroupedResourcesTreeDataProvider {
 }
 
 function isAttachment(uri: URI) {
-  const ext = [...getAttachmentsExtensions(), ...imageExtensions];
+  const ext = [...Config.getAttachmentExtensions(), ...imageExtensions];
   return ext.includes(uri.getExtension());
 }

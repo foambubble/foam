@@ -78,6 +78,10 @@ export { renderDqlQuery } from './query/dql';
 export { renderJsQuery } from './query/js';
 export { escapeHtml, noteLink, renderList, renderTable, renderCount, renderResults } from './query/html';
 
+// Config
+export type { IFoamConfig } from './config';
+export { Config, DefaultFoamConfig } from './config';
+
 // Utilities
 export { Logger, BaseLogger, ConsoleLogger, NoOpLogger } from './utils/log';
 export type { ILogger, LogLevel, LogLevelThreshold } from './utils/log';

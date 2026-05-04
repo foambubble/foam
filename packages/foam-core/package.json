@@ -21,8 +21,6 @@
     "lint": "oxlint src"
   },
   "devDependencies": {
-    "@types/micromatch": "^4.0.10",
-    "micromatch": "^4.0.8",
     "oxlint": "^1.57.0",
     "rimraf": "^3.0.2",
     "typescript": "^5.8.0",

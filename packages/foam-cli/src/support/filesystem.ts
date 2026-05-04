@@ -4,13 +4,15 @@ import path from 'node:path';
 import {
   URI,
   AttachmentResourceProvider,
-  defaultAttachmentExtensions,
   IDataStore,
+  IMatcher,
   createMarkdownParser,
   MarkdownResourceProvider,
   bootstrap,
-  AlwaysIncludeMatcher,
+  Config,
 } from '@foam/core';
+import { readFoamConfig } from './config';
+import { GlobMatcher } from './glob-matcher';
 
 const DEFAULT_EXCLUDED_DIR_NAMES = new Set([
   '.astro',
@@ -27,16 +29,18 @@ const isWithinPath = (candidate: string, parent: string) => {
   );
 };
 
-class NodeFileDataStore implements IDataStore {
+export class NodeFileDataStore implements IDataStore {
   constructor(
     private readonly rootDir: string,
-    private readonly excludedPaths: string[]
+    private readonly excludedPaths: string[],
+    private readonly matcher: IMatcher
   ) {}
 
   async list() {
     const files: string[] = [];
     await collectFiles(this.rootDir, files, this.excludedPaths);
-    return files.map(file => URI.file(file));
+    const uris = files.map(file => URI.file(file));
+    return uris.filter(uri => this.matcher.isMatch(uri));
   }
 
   async read(uri: URI) {
@@ -88,38 +92,35 @@ export async function loadWorkspaceFromDirectory(
 ) {
   const rootDir = path.resolve(workspaceDir);
   const rootUri = URI.file(rootDir);
-  const dataStore = new NodeFileDataStore(rootDir, [
-    ...new Set(
-      (options.excludedPaths ?? []).map(excludedPath =>
-        path.resolve(excludedPath)
-      )
-    ),
-  ]);
+
+  const foamConfig = readFoamConfig(rootDir);
+  Config.setDefaultConfig(foamConfig);
+
+  const matcher = new GlobMatcher(
+    Config.getFilesInclude(),
+    Config.getFilesExclude(),
+    rootUri
+  );
+
+  const dataStore = new NodeFileDataStore(
+    rootDir,
+    [
+      ...new Set(
+        (options.excludedPaths ?? []).map(excludedPath =>
+          path.resolve(excludedPath)
+        )
+      ),
+    ],
+    matcher
+  );
+
+  const noteExtensions = options.noteExtensions ?? Config.getNotesExtensions();
   const parser = createMarkdownParser();
   const providers = [
-    new MarkdownResourceProvider(dataStore, parser, options.noteExtensions),
-    new AttachmentResourceProvider(defaultAttachmentExtensions),
+    new MarkdownResourceProvider(dataStore, parser, noteExtensions),
+    new AttachmentResourceProvider(Config.getAttachmentExtensions()),
   ];
-  // TODO: MAJOR GAP — The CLI has no concept of Foam workspace configuration.
-  // All Foam settings live in VS Code's settings.json under the `foam.*` namespace,
-  // and the CLI cannot read them. This affects correctness across every command:
-  //
-  //   • foam.files.include / foam.files.exclude — the CLI uses AlwaysIncludeMatcher,
-  //     which includes every file under the workspace root (minus hardcoded dir names
-  //     like .git and node_modules). VS Code builds a FileListBasedMatcher from the
-  //     user's globs. A workspace with draft/ or archive/ excluded in VS Code will
-  //     have those files silently indexed here.
-  //   • foam.openDailyNote.directory / filenameFormat — `foam daily` won't know the
-  //     correct path without reading this config.
-  //   • foam.files.defaultNoteExtension — note creation may use the wrong extension.
-  //   • foam.templates.directory — template lookup will look in the wrong place.
-  //   • foam.links.wikilinkPathStrategy — identifier resolution may differ from VS Code.
-  //
-  // Until a configuration layer is added, the CLI workspace view will diverge from
-  // what the user sees in VS Code. See the Known Issues section in foam-cli-spec.md
-  // for the proposed fix (reading .vscode/settings.json with a .foam/config.json
-  // override).
-  const matcher = new AlwaysIncludeMatcher();
+
   const foam = await bootstrap(
     [rootUri],
     matcher,
@@ -127,7 +128,7 @@ export async function loadWorkspaceFromDirectory(
     dataStore,
     parser,
     providers,
-    '.md',
+    Config.getDefaultNoteExtension(),
     'debug'
   );
 

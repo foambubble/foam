@@ -17,7 +17,7 @@ import { FoamGraph } from '@foam/core';
 import { URI } from '@foam/core';
 import { FoamWorkspace } from '@foam/core';
 import { FolderTreeItem } from '../../utils/tree-views/folder-tree-provider';
-import { getIncludeFilesSetting } from '../../../vscode/settings';
+import { Config } from '@foam/core';
 
 /** Retrieve the placeholders configuration */
 export function getPlaceholdersConfig(): GroupedResourcesConfig {
@@ -32,7 +32,7 @@ export default async function activate(
 ) {
   const foam = await foamPromise;
   const { matcher } = await createMatcherAndDataStore(
-    getIncludeFilesSetting().map(g => g.toString()),
+    Config.getFilesInclude(),
     getPlaceholdersConfig().exclude
   );
   const provider = new PlaceholderTreeView(

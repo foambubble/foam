@@ -92,6 +92,7 @@ export function listOrphans(
   rootDir: string
 ) {
   return workspace.list().filter(r => {
+    if (r.type !== 'note') return false;
     const outgoing = graph.getLinks(r.uri);
     const incoming = graph.getBacklinks(r.uri);
     return outgoing.length === 0 && incoming.length === 0;
@@ -109,6 +110,7 @@ export function listDeadends(
   rootDir: string
 ) {
   return workspace.list().filter(r => {
+    if (r.type !== 'note') return false;
     const outgoing = graph.getLinks(r.uri);
     return outgoing.length === 0;
   }).map(r => ({

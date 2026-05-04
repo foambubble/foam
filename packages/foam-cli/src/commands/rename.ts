@@ -5,6 +5,7 @@ import {
   FoamGraph,
   FoamTags,
   FoamWorkspace,
+  Resource,
   TextEdit,
   URI,
   WorkspaceTextEdit,
@@ -150,6 +151,30 @@ export async function renameSection(
   newLabel: string
 ): Promise<{ uri: string; id: string; updated_links: number }> {
   const resource = resolveNote(workspace, identifier, pathFlag, rootDir);
+
+  const section = Resource.findSection(resource, oldLabel);
+  if (!section) {
+    throw new Error(`Section "${oldLabel}" not found in ${resource.uri.toFsPath()}`);
+  }
+
+  // Build a TextEdit for the heading line using the section's start position
+  const filePath = resource.uri.toFsPath();
+  const content = await fs.readFile(filePath, 'utf8');
+  const lines = content.split('\n');
+  const headingLine = lines[section.range.start.line];
+  const match = headingLine.match(/^(#{1,6}\s+)/);
+  const prefix = match ? match[1] : '';
+  const headingEdit: WorkspaceTextEdit = {
+    uri: resource.uri,
+    edit: {
+      range: {
+        start: { line: section.range.start.line, character: prefix.length },
+        end: { line: section.range.start.line, character: headingLine.length },
+      },
+      newText: newLabel,
+    },
+  };
+
   const result = HeadingEdit.createRenameSectionEdits(
     graph,
     workspace,
@@ -158,21 +183,7 @@ export async function renameSection(
     newLabel
   );
 
-  // Update the heading text in the note itself
-  const filePath = resource.uri.toFsPath();
-  let content = await fs.readFile(filePath, 'utf8');
-  const lines = content.split('\n');
-  for (let i = 0; i < lines.length; i++) {
-    const match = lines[i].match(/^(#{1,6}\s+)(.+)$/);
-    if (match && match[2].trim() === oldLabel) {
-      lines[i] = match[1] + newLabel;
-      break;
-    }
-  }
-  content = lines.join('\n');
-  await fs.writeFile(filePath, content, 'utf8');
-
-  await applyEditsToFiles(result.edits);
+  await applyEditsToFiles([headingEdit, ...result.edits]);
 
   return {
     uri: resource.uri.toFsPath(),
@@ -201,16 +212,17 @@ export async function renameBlock(
     newId
   );
 
-  // Update the block anchor text in the note itself
-  const filePath = resource.uri.toFsPath();
-  let content = await fs.readFile(filePath, 'utf8');
-  content = content.replace(
-    new RegExp(`\\^${oldId}(?=\\s|$)`, 'g'),
-    `^${newId}`
-  );
-  await fs.writeFile(filePath, content, 'utf8');
+  const block = Resource.findBlock(resource, oldId);
+  if (!block) {
+    throw new Error(`Block ^${oldId} not found in ${resource.uri.toFsPath()}`);
+  }
 
-  await applyEditsToFiles(result.edits);
+  const anchorEdit: WorkspaceTextEdit = {
+    uri: resource.uri,
+    edit: { range: block.markerRange, newText: `^${newId}` },
+  };
+
+  await applyEditsToFiles([anchorEdit, ...result.edits]);
 
   return {
     uri: resource.uri.toFsPath(),

@@ -26,6 +26,10 @@ describe('parseDateArg', () => {
   it('throws for an invalid date string', () => {
     expect(() => parseDateArg('not-a-date')).toThrow('Invalid date');
   });
+
+  it('throws for a calendar-rollover date and hints at the normalized date', () => {
+    expect(() => parseDateArg('2026-02-31')).toThrow('did you mean 2026-03-03');
+  });
 });
 
 // ─── defaultDailyNotePath ─────────────────────────────────────────────────────

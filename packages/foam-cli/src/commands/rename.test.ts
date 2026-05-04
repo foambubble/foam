@@ -172,6 +172,24 @@ describe('renameSection', () => {
       cleanup();
     }
   });
+
+  it('renames a section whose label contains regex special characters', async () => {
+    const { rootDir, workspace, cleanup } = await createTmpWorkspace({
+      'note.md': '# Note\n\n## C++ Tips & Tricks (v2)\n\nsome text\n',
+      'ref.md': '[[note#C++ Tips & Tricks (v2)]]',
+    });
+    try {
+      const graph = FoamGraph.fromWorkspace(workspace);
+      const result = await renameSection(workspace, graph, rootDir, 'note', undefined, 'C++ Tips & Tricks (v2)', 'C++ Tips & Tricks (v3)');
+
+      const noteContent = fs.readFileSync(path.join(rootDir, 'note.md'), 'utf8');
+      expect(noteContent).toContain('## C++ Tips & Tricks (v3)');
+      expect(noteContent).not.toContain('## C++ Tips & Tricks (v2)');
+      expect(result.updated_links).toBe(1);
+    } finally {
+      cleanup();
+    }
+  });
 });
 
 // ─── renameBlock ──────────────────────────────────────────────────────────────

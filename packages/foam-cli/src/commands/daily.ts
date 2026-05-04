@@ -38,9 +38,14 @@ const DEFAULT_JOURNALS_DIR = 'journals';
 
 export function parseDateArg(dateStr: string | undefined): Date {
   if (!dateStr) return new Date();
-  const d = new Date(dateStr + 'T00:00:00'); // local midnight
-  if (isNaN(d.getTime())) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
     throw new Error(`Invalid date "${dateStr}". Expected YYYY-MM-DD.`);
+  }
+  const d = new Date(dateStr + 'T00:00:00'); // local midnight
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const roundtrip = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  if (roundtrip !== dateStr) {
+    throw new Error(`Invalid date "${dateStr}" (did you mean ${roundtrip}?). Expected YYYY-MM-DD.`);
   }
   return d;
 }

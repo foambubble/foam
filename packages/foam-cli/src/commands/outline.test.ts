@@ -1,9 +1,5 @@
-import fs from 'node:fs';
-import { mkdtempSync } from 'node:fs';
-import path from 'node:path';
-import { tmpdir } from 'node:os';
 import { FoamWorkspace, URI } from '@foam/core';
-import { createNoteFromMarkdown, createTestWorkspace, TestLogger } from '../test/test-utils';
+import { createNoteFromMarkdown, createTestWorkspace, createTmpWorkspace, TestLogger } from '../test/test-utils';
 import { outlineData, runOutlineCommand } from './outline';
 
 const ROOT = URI.file('/workspace');
@@ -64,15 +60,12 @@ describe('runOutlineCommand', () => {
   });
 
   it('prints outline as text with correct indentation', async () => {
-    const tempDir = mkdtempSync(path.join(tmpdir(), 'foam-outline-test-'));
+    const { rootDir, cleanup } = await createTmpWorkspace({
+      'a.md': '# Title\n\n## Goals\n\n### Phase 1\n\n## References\n',
+    });
     try {
-      fs.writeFileSync(
-        path.join(tempDir, 'a.md'),
-        '# Title\n\n## Goals\n\n### Phase 1\n\n## References\n',
-        'utf8'
-      );
       const logger = new TestLogger();
-      const code = await runOutlineCommand(['a', '--workspace', tempDir], logger);
+      const code = await runOutlineCommand(['a', '--workspace', rootDir], logger);
       expect(code).toBe(0);
       const lines = logger.logs.join('\n').split('\n');
       expect(lines[0]).toBe('# Title');
@@ -80,23 +73,17 @@ describe('runOutlineCommand', () => {
       expect(lines[2]).toBe('    ### Phase 1');
       expect(lines[3]).toBe('  ## References');
     } finally {
-      fs.rmSync(tempDir, { recursive: true, force: true });
+      cleanup();
     }
   });
 
   it('returns JSON with id, uri, sections', async () => {
-    const tempDir = mkdtempSync(path.join(tmpdir(), 'foam-outline-test-'));
+    const { rootDir, cleanup } = await createTmpWorkspace({
+      'a.md': '# Title\n\n## Goals\n',
+    });
     try {
-      fs.writeFileSync(
-        path.join(tempDir, 'a.md'),
-        '# Title\n\n## Goals\n',
-        'utf8'
-      );
       const logger = new TestLogger();
-      const code = await runOutlineCommand(
-        ['a', '--format', 'json', '--workspace', tempDir],
-        logger
-      );
+      const code = await runOutlineCommand(['a', '--format', 'json', '--workspace', rootDir], logger);
       expect(code).toBe(0);
       const result = JSON.parse(logger.logs[0]);
       expect(result).toHaveProperty('id', 'a');
@@ -105,7 +92,7 @@ describe('runOutlineCommand', () => {
       expect(result.sections[0]).toHaveProperty('level');
       expect(result.sections[0]).toHaveProperty('range');
     } finally {
-      fs.rmSync(tempDir, { recursive: true, force: true });
+      cleanup();
     }
   });
 });

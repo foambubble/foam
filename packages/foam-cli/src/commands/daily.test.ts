@@ -1,9 +1,7 @@
 import fs from 'node:fs';
-import { mkdtempSync } from 'node:fs';
 import path from 'node:path';
-import { tmpdir } from 'node:os';
 import { parseDateArg, defaultDailyNotePath, runDailyCommand } from './daily';
-import { TestLogger } from '../test/test-utils';
+import { createTmpWorkspace, TestLogger } from '../test/test-utils';
 
 // ─── parseDateArg ─────────────────────────────────────────────────────────────
 
@@ -59,124 +57,95 @@ describe('runDailyCommand', () => {
   });
 
   it('shows the resolved path and [does not exist] for a future date', async () => {
-    const tempDir = mkdtempSync(path.join(tmpdir(), 'foam-daily-test-'));
+    const { rootDir, cleanup } = await createTmpWorkspace({});
     try {
       const logger = new TestLogger();
-      const code = await runDailyCommand(
-        ['--date', '2099-12-31', '--workspace', tempDir],
-        logger
-      );
+      const code = await runDailyCommand(['--date', '2099-12-31', '--workspace', rootDir], logger);
       expect(code).toBe(0);
-      const out = logger.logs[0];
-      expect(out).toContain('2099-12-31.md');
-      expect(out).toContain('[does not exist]');
+      expect(logger.logs[0]).toContain('2099-12-31.md');
+      expect(logger.logs[0]).toContain('[does not exist]');
     } finally {
-      fs.rmSync(tempDir, { recursive: true, force: true });
+      cleanup();
     }
   });
 
   it('shows [exists] when the daily note already exists', async () => {
-    const tempDir = mkdtempSync(path.join(tmpdir(), 'foam-daily-test-'));
+    const { rootDir, cleanup } = await createTmpWorkspace({
+      'journals/2026-05-01.md': '# 2026-05-01\n',
+    });
     try {
-      const journalsDir = path.join(tempDir, 'journals');
-      fs.mkdirSync(journalsDir, { recursive: true });
-      fs.writeFileSync(path.join(journalsDir, '2026-05-01.md'), '# 2026-05-01\n', 'utf8');
-
       const logger = new TestLogger();
-      const code = await runDailyCommand(
-        ['--date', '2026-05-01', '--workspace', tempDir],
-        logger
-      );
+      const code = await runDailyCommand(['--date', '2026-05-01', '--workspace', rootDir], logger);
       expect(code).toBe(0);
       expect(logger.logs[0]).toContain('[exists]');
     } finally {
-      fs.rmSync(tempDir, { recursive: true, force: true });
+      cleanup();
     }
   });
 
   it('--create creates the file when it does not exist', async () => {
-    const tempDir = mkdtempSync(path.join(tmpdir(), 'foam-daily-test-'));
+    const { rootDir, cleanup } = await createTmpWorkspace({});
     try {
       const logger = new TestLogger();
-      const code = await runDailyCommand(
-        ['--date', '2099-12-31', '--create', '--workspace', tempDir],
-        logger
-      );
+      const code = await runDailyCommand(['--date', '2099-12-31', '--create', '--workspace', rootDir], logger);
       expect(code).toBe(0);
-      const notePath = path.join(tempDir, 'journals', '2099-12-31.md');
-      expect(fs.existsSync(notePath)).toBe(true);
+      expect(fs.existsSync(path.join(rootDir, 'journals', '2099-12-31.md'))).toBe(true);
       expect(logger.logs[0]).toContain('2099-12-31');
     } finally {
-      fs.rmSync(tempDir, { recursive: true, force: true });
+      cleanup();
     }
   });
 
   it('--path-only prints the bare path', async () => {
-    const tempDir = mkdtempSync(path.join(tmpdir(), 'foam-daily-test-'));
+    const { rootDir, cleanup } = await createTmpWorkspace({});
     try {
       const logger = new TestLogger();
-      const code = await runDailyCommand(
-        ['--date', '2099-12-31', '--path-only', '--workspace', tempDir],
-        logger
-      );
+      const code = await runDailyCommand(['--date', '2099-12-31', '--path-only', '--workspace', rootDir], logger);
       expect(code).toBe(0);
       expect(logger.logs[0]).toContain('2099-12-31.md');
       expect(logger.logs[0]).not.toContain('[');
     } finally {
-      fs.rmSync(tempDir, { recursive: true, force: true });
+      cleanup();
     }
   });
 
   it('returns JSON with id, uri, exists', async () => {
-    const tempDir = mkdtempSync(path.join(tmpdir(), 'foam-daily-test-'));
+    const { rootDir, cleanup } = await createTmpWorkspace({});
     try {
       const logger = new TestLogger();
-      const code = await runDailyCommand(
-        ['--date', '2099-12-31', '--format', 'json', '--workspace', tempDir],
-        logger
-      );
+      const code = await runDailyCommand(['--date', '2099-12-31', '--format', 'json', '--workspace', rootDir], logger);
       expect(code).toBe(0);
       const result = JSON.parse(logger.logs[0]);
       expect(result).toHaveProperty('id');
       expect(result).toHaveProperty('uri');
       expect(result).toHaveProperty('exists', false);
     } finally {
-      fs.rmSync(tempDir, { recursive: true, force: true });
+      cleanup();
     }
   });
 
   it('uses a daily-note.md template when present', async () => {
-    const tempDir = mkdtempSync(path.join(tmpdir(), 'foam-daily-test-'));
+    const { rootDir, cleanup } = await createTmpWorkspace({
+      '.foam/templates/daily-note.md': [
+        '---',
+        'foam_template:',
+        '  filepath: "journals/$FOAM_DATE_YEAR-$FOAM_DATE_MONTH-$FOAM_DATE_DATE.md"',
+        '---',
+        '',
+        '# $FOAM_DATE_YEAR-$FOAM_DATE_MONTH-$FOAM_DATE_DATE',
+        '',
+        '## Notes',
+      ].join('\n'),
+    });
     try {
-      const templatesDir = path.join(tempDir, '.foam', 'templates');
-      fs.mkdirSync(templatesDir, { recursive: true });
-      fs.writeFileSync(
-        path.join(templatesDir, 'daily-note.md'),
-        [
-          '---',
-          'foam_template:',
-          '  filepath: "journals/$FOAM_DATE_YEAR-$FOAM_DATE_MONTH-$FOAM_DATE_DATE.md"',
-          '---',
-          '',
-          '# $FOAM_DATE_YEAR-$FOAM_DATE_MONTH-$FOAM_DATE_DATE',
-          '',
-          '## Notes',
-        ].join('\n'),
-        'utf8'
-      );
-
       const logger = new TestLogger();
-      const code = await runDailyCommand(
-        ['--date', '2099-12-31', '--create', '--workspace', tempDir],
-        logger
-      );
+      const code = await runDailyCommand(['--date', '2099-12-31', '--create', '--workspace', rootDir], logger);
       expect(code).toBe(0);
-      const notePath = path.join(tempDir, 'journals', '2099-12-31.md');
+      const notePath = path.join(rootDir, 'journals', '2099-12-31.md');
       expect(fs.existsSync(notePath)).toBe(true);
-      const content = fs.readFileSync(notePath, 'utf8');
-      expect(content).toContain('## Notes');
+      expect(fs.readFileSync(notePath, 'utf8')).toContain('## Notes');
     } finally {
-      fs.rmSync(tempDir, { recursive: true, force: true });
+      cleanup();
     }
   });
 });

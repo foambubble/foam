@@ -1,9 +1,5 @@
-import fs from 'node:fs';
-import { mkdtempSync } from 'node:fs';
-import path from 'node:path';
-import { tmpdir } from 'node:os';
 import { FoamGraph, FoamWorkspace, URI } from '@foam/core';
-import { createTestNote, createTestWorkspace, TestLogger } from '../test/test-utils';
+import { createTestNote, createTestWorkspace, createTmpWorkspace, TestLogger } from '../test/test-utils';
 import { linksData, runLinksCommand } from './links';
 
 const ROOT = URI.file('/workspace');
@@ -72,54 +68,45 @@ describe('runLinksCommand', () => {
   });
 
   it('shows both directions by default as text', async () => {
-    const tempDir = mkdtempSync(path.join(tmpdir(), 'foam-links-test-'));
+    const { rootDir, cleanup } = await createTmpWorkspace({ 'a.md': '# A\n\n[[b]]', 'b.md': '# B' });
     try {
-      fs.writeFileSync(path.join(tempDir, 'a.md'), '# A\n\n[[b]]', 'utf8');
-      fs.writeFileSync(path.join(tempDir, 'b.md'), '# B', 'utf8');
       const logger = new TestLogger();
-      const code = await runLinksCommand(['a', '--workspace', tempDir], logger);
+      const code = await runLinksCommand(['a', '--workspace', rootDir], logger);
       expect(code).toBe(0);
       const out = logger.logs.join('\n');
       expect(out).toContain('Outgoing');
       expect(out).toContain('Incoming');
     } finally {
-      fs.rmSync(tempDir, { recursive: true, force: true });
+      cleanup();
     }
   });
 
   it('shows only outgoing with --outgoing', async () => {
-    const tempDir = mkdtempSync(path.join(tmpdir(), 'foam-links-test-'));
+    const { rootDir, cleanup } = await createTmpWorkspace({ 'a.md': '# A\n\n[[b]]', 'b.md': '# B' });
     try {
-      fs.writeFileSync(path.join(tempDir, 'a.md'), '# A\n\n[[b]]', 'utf8');
-      fs.writeFileSync(path.join(tempDir, 'b.md'), '# B', 'utf8');
       const logger = new TestLogger();
-      const code = await runLinksCommand(['a', '--outgoing', '--workspace', tempDir], logger);
+      const code = await runLinksCommand(['a', '--outgoing', '--workspace', rootDir], logger);
       expect(code).toBe(0);
       const out = logger.logs.join('\n');
       expect(out).toContain('Outgoing');
       expect(out).not.toContain('Incoming');
     } finally {
-      fs.rmSync(tempDir, { recursive: true, force: true });
+      cleanup();
     }
   });
 
   it('returns JSON with id, outgoing, incoming', async () => {
-    const tempDir = mkdtempSync(path.join(tmpdir(), 'foam-links-test-'));
+    const { rootDir, cleanup } = await createTmpWorkspace({ 'a.md': '# A\n\n[[b]]', 'b.md': '# B' });
     try {
-      fs.writeFileSync(path.join(tempDir, 'a.md'), '# A\n\n[[b]]', 'utf8');
-      fs.writeFileSync(path.join(tempDir, 'b.md'), '# B', 'utf8');
       const logger = new TestLogger();
-      const code = await runLinksCommand(
-        ['a', '--format', 'json', '--workspace', tempDir],
-        logger
-      );
+      const code = await runLinksCommand(['a', '--format', 'json', '--workspace', rootDir], logger);
       expect(code).toBe(0);
       const result = JSON.parse(logger.logs[0]);
       expect(result).toHaveProperty('id', 'a');
       expect(Array.isArray(result.outgoing)).toBe(true);
       expect(Array.isArray(result.incoming)).toBe(true);
     } finally {
-      fs.rmSync(tempDir, { recursive: true, force: true });
+      cleanup();
     }
   });
 });

@@ -1,7 +1,5 @@
 import fs from 'node:fs';
-import { mkdtempSync } from 'node:fs';
 import path from 'node:path';
-import { tmpdir } from 'node:os';
 import { FoamGraph, FoamWorkspace, URI } from '@foam/core';
 import {
   createTestNote,
@@ -146,36 +144,35 @@ describe('noteIdData', () => {
 
 describe('noteCreate', () => {
   it('creates a note file with title as H1', async () => {
-    const tempDir = mkdtempSync(path.join(tmpdir(), 'foam-note-test-'));
+    const { rootDir, cleanup } = await createTmpWorkspace({}, 'foam-note-test-');
     try {
-      const { foam, dataStore } = makeStubFoamAndStore(tempDir);
-      const result = await noteCreate(tempDir, foam, dataStore, { title: 'My Note' });
+      const { foam, dataStore } = makeStubFoamAndStore(rootDir);
+      const result = await noteCreate(rootDir, foam, dataStore, { title: 'My Note' });
       expect(result.id).toBe('my-note');
       expect(fs.existsSync(result.uri)).toBe(true);
-      const content = fs.readFileSync(result.uri, 'utf8');
-      expect(content).toContain('# My Note');
+      expect(fs.readFileSync(result.uri, 'utf8')).toContain('# My Note');
     } finally {
-      fs.rmSync(tempDir, { recursive: true, force: true });
+      cleanup();
     }
   });
 
   it('creates note in a subdirectory when --dir is given', async () => {
-    const tempDir = mkdtempSync(path.join(tmpdir(), 'foam-note-test-'));
+    const { rootDir, cleanup } = await createTmpWorkspace({}, 'foam-note-test-');
     try {
-      const { foam, dataStore } = makeStubFoamAndStore(tempDir);
-      const result = await noteCreate(tempDir, foam, dataStore, { title: 'Sub Note', dir: 'notes' });
+      const { foam, dataStore } = makeStubFoamAndStore(rootDir);
+      const result = await noteCreate(rootDir, foam, dataStore, { title: 'Sub Note', dir: 'notes' });
       expect(result.path).toBe(path.join('notes', 'sub-note.md'));
       expect(fs.existsSync(result.uri)).toBe(true);
     } finally {
-      fs.rmSync(tempDir, { recursive: true, force: true });
+      cleanup();
     }
   });
 
   it('includes extra properties in frontmatter', async () => {
-    const tempDir = mkdtempSync(path.join(tmpdir(), 'foam-note-test-'));
+    const { rootDir, cleanup } = await createTmpWorkspace({}, 'foam-note-test-');
     try {
-      const { foam, dataStore } = makeStubFoamAndStore(tempDir);
-      const result = await noteCreate(tempDir, foam, dataStore, {
+      const { foam, dataStore } = makeStubFoamAndStore(rootDir);
+      const result = await noteCreate(rootDir, foam, dataStore, {
         title: 'Prop Note',
         properties: { status: 'active', priority: '1' },
       });
@@ -183,18 +180,18 @@ describe('noteCreate', () => {
       expect(content).toContain('status: active');
       expect(content).toContain('priority: 1');
     } finally {
-      fs.rmSync(tempDir, { recursive: true, force: true });
+      cleanup();
     }
   });
 
   it('errors if file already exists', async () => {
-    const tempDir = mkdtempSync(path.join(tmpdir(), 'foam-note-test-'));
+    const { rootDir, cleanup } = await createTmpWorkspace({}, 'foam-note-test-');
     try {
-      const { foam, dataStore } = makeStubFoamAndStore(tempDir);
-      await noteCreate(tempDir, foam, dataStore, { title: 'Dup' });
-      await expect(noteCreate(tempDir, foam, dataStore, { title: 'Dup' })).rejects.toThrow('already exists');
+      const { foam, dataStore } = makeStubFoamAndStore(rootDir);
+      await noteCreate(rootDir, foam, dataStore, { title: 'Dup' });
+      await expect(noteCreate(rootDir, foam, dataStore, { title: 'Dup' })).rejects.toThrow('already exists');
     } finally {
-      fs.rmSync(tempDir, { recursive: true, force: true });
+      cleanup();
     }
   });
 });

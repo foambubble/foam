@@ -61,7 +61,7 @@ describe('readFoamConfig', () => {
     );
   });
 
-  it('returns defaults when .vscode/settings.json is malformed JSON', () => {
+  it('returns defaults when .vscode/settings.json is malformed (jsonc-parser is tolerant)', () => {
     const dir = mkdtempSync(path.join(tmpdir(), 'foam-config-test-'));
     try {
       fs.mkdirSync(path.join(dir, '.vscode'), { recursive: true });

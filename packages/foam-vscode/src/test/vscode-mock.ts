@@ -1413,7 +1413,10 @@ class MockFileSystemWatcher implements FileSystemWatcher {
     const workspaceFolder = mockState.workspaceFolders[0];
     if (!workspaceFolder) return false;
 
-    const relativePath = path.relative(workspaceFolder.uri.fsPath, uri.fsPath);
+    const relativePath = path
+      .relative(workspaceFolder.uri.fsPath, uri.fsPath)
+      .split(path.sep)
+      .join('/');
     // Use micromatch (already imported) for glob matching
     return micromatch.isMatch(relativePath, this.pattern);
   }
@@ -1901,10 +1904,10 @@ export const workspace = {
 
         for (const entry of entries) {
           const fullPath = path.join(dir, entry.name);
-          const relativePath = path.relative(
-            workspaceFolder.uri.fsPath,
-            fullPath
-          );
+          const relativePath = path
+            .relative(workspaceFolder.uri.fsPath, fullPath)
+            .split(path.sep)
+            .join('/');
 
           if (entry.isDirectory()) {
             const subFiles = await findFilesRecursive(fullPath);

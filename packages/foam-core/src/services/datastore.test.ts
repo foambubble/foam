@@ -7,6 +7,7 @@ Logger.setLevel('error');
 
 const testFolder = TEST_DATA_DIR.joinPath('test-datastore');
 
+
 describe('Matcher', () => {
   it('generates globs with the base dir provided', () => {
     const matcher = new Matcher([testFolder], ['*'], []);

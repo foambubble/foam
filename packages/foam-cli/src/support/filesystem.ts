@@ -1,19 +1,19 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import micromatch from 'micromatch';
 
 import {
   URI,
   AttachmentResourceProvider,
   defaultAttachmentExtensions,
   IDataStore,
+  IMatcher,
   createMarkdownParser,
   MarkdownResourceProvider,
   bootstrap,
-  AlwaysIncludeMatcher,
   Config,
 } from '@foam/core';
 import { readFoamConfig } from './config';
+import { GlobMatcher } from './glob-matcher';
 
 const DEFAULT_EXCLUDED_DIR_NAMES = new Set([
   '.astro',
@@ -30,33 +30,18 @@ const isWithinPath = (candidate: string, parent: string) => {
   );
 };
 
-class NodeFileDataStore implements IDataStore {
+export class NodeFileDataStore implements IDataStore {
   constructor(
     private readonly rootDir: string,
     private readonly excludedPaths: string[],
-    private readonly includeGlobs: string[] = ['**/*'],
-    private readonly excludeGlobs: string[] = []
+    private readonly matcher: IMatcher
   ) {}
 
   async list() {
     const files: string[] = [];
     await collectFiles(this.rootDir, files, this.excludedPaths);
     const uris = files.map(file => URI.file(file));
-    if (
-      this.includeGlobs.length === 1 &&
-      this.includeGlobs[0] === '**/*' &&
-      this.excludeGlobs.length === 0
-    ) {
-      return uris;
-    }
-    return uris.filter(uri => {
-      const rel = path.relative(this.rootDir, uri.toFsPath());
-      const included = micromatch.isMatch(rel, this.includeGlobs);
-      const excluded =
-        this.excludeGlobs.length > 0 &&
-        micromatch.isMatch(rel, this.excludeGlobs);
-      return included && !excluded;
-    });
+    return uris.filter(uri => this.matcher.isMatch(uri));
   }
 
   async read(uri: URI) {
@@ -112,6 +97,12 @@ export async function loadWorkspaceFromDirectory(
   const foamConfig = readFoamConfig(rootDir);
   Config.setDefaultConfig(foamConfig);
 
+  const matcher = new GlobMatcher(
+    Config.getFilesInclude(),
+    Config.getFilesExclude(),
+    rootUri
+  );
+
   const dataStore = new NodeFileDataStore(
     rootDir,
     [
@@ -121,8 +112,7 @@ export async function loadWorkspaceFromDirectory(
         )
       ),
     ],
-    Config.getFilesInclude(),
-    Config.getFilesExclude()
+    matcher
   );
 
   const noteExtensions = options.noteExtensions ?? Config.getNotesExtensions();
@@ -132,7 +122,6 @@ export async function loadWorkspaceFromDirectory(
     new AttachmentResourceProvider(defaultAttachmentExtensions),
   ];
 
-  const matcher = new AlwaysIncludeMatcher();
   const foam = await bootstrap(
     [rootUri],
     matcher,

@@ -11,6 +11,7 @@
   "scripts": {
     "changeset": "changeset",
     "version-packages": "changeset version",
+    "tag-release": "node scripts/tag-release.js",
     "package-extension": "yarn workspace foam-vscode package-extension",
     "install-extension": "yarn workspace foam-vscode install-extension",
     "publish-extension": "yarn workspace foam-vscode publish-extension",

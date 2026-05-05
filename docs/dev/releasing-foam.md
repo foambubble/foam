@@ -29,10 +29,9 @@ The `/update-changelog` slash command can draft fragments retroactively for comm
    - Inspect the generated `CHANGELOG.md` and version bumps
    - Update `./packages/foam-vscode/WHATSNEW.md` if the extension changed meaningfully
    - `git add -A && git commit -m "Release"`
-   - Tag each package that was bumped, using the unprefixed package name:
-     - `git tag vscode@<new-version>` for `foam-vscode`
-     - `git tag cli@<new-version>` for `@foam/cli`
-     - `git tag core@<new-version>` for `@foam/core`
+   - Create per-package tags (`vscode@<version>`, `cli@<version>`, `core@<version>`):
+     - `yarn tag-release`
+     - The script reads each package's current version from `package.json` and skips any tag that already exists.
 6. Package the extension
    - `yarn package-extension`
 7. Publish

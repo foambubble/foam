@@ -9,7 +9,8 @@
     "packages/*"
   ],
   "scripts": {
-    "version-extension": "lerna version",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
     "package-extension": "yarn workspace foam-vscode package-extension",
     "install-extension": "yarn workspace foam-vscode install-extension",
     "publish-extension": "yarn workspace foam-vscode publish-extension",
@@ -27,6 +28,8 @@
     "prepare": "husky"
   },
   "devDependencies": {
+    "@changesets/changelog-github": "^0.7.0",
+    "@changesets/cli": "^2.31.0",
     "all-contributors-cli": "^6.16.1",
     "husky": "^9.1.7",
     "lerna": "^6.4.1"

@@ -10,6 +10,11 @@ vi.stubGlobal('__CLI_VERSION__', '0.40.2');
 // Mock https so no real network calls are made
 vi.mock('https');
 
+// Pin colors off so notice-format assertions are deterministic regardless of
+// whether the test runner reports a TTY.
+import { setColorsEnabled } from './colors';
+setColorsEnabled(false);
+
 import https from 'https';
 import {
   getCurrentVersion,

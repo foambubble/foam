@@ -4,6 +4,7 @@ import {
   fetchLatestVersion,
   isNewerVersion,
 } from '../support/version';
+import { bold, dim, success } from '../support/colors';
 
 const UPDATE_HELP = `Usage: foam update
 
@@ -23,23 +24,23 @@ export async function runUpdateCommand(
   }
 
   const current = getCurrentVersion();
-  logger.info(`Current version: ${current}`);
+  logger.info(`${bold('Current version:')} ${current}`);
 
   let latest: string | null = null;
   try {
     latest = await fetchLatestVersion();
   } catch {
-    logger.info('Could not reach npm registry to check for updates.');
+    logger.info(dim('Could not reach npm registry to check for updates.'));
   }
 
   if (latest !== null) {
     if (isNewerVersion(latest, current)) {
-      logger.info(`Latest version:  ${latest}`);
+      logger.info(`${bold('Latest version: ')} ${latest}`);
     } else {
-      logger.info(`You are already on the latest version.`);
+      logger.info(success('You are already on the latest version.'));
     }
   }
 
-  logger.info(`\nTo update, run:\n  npm install -g foam-cli@latest`);
+  logger.info(`\n${bold('To update, run:')}\n  ${bold('npm install -g foam-cli@latest')}`);
   return 0;
 }

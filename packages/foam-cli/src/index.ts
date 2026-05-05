@@ -12,6 +12,7 @@ import { runRenameCommand } from './commands/rename';
 import { runTagCommand } from './commands/tag';
 import { runUpdateCommand } from './commands/update';
 import { checkForUpdateNotice } from './support/version';
+import { setColorsEnabled } from './support/colors';
 
 const CLI_HELP = `Usage: foam <command> [options]
 
@@ -31,6 +32,8 @@ Commands:
 Global options:
   --workspace <dir>   Workspace root (default: FOAM_WORKSPACE env var, then cwd)
   --format <fmt>      Output format: text (default) or json
+  --color             Force colored output (overrides TTY detection)
+  --no-color          Disable colored output
   --help              Show help
 
 Run "foam <command> --help" for command-specific help.
@@ -40,6 +43,15 @@ export type { ILogger as CliLogger } from '@foam/core';
 
 export function renderCliHelp() {
   return CLI_HELP;
+}
+
+function hasJsonFormat(argv: string[]): boolean {
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (a === '--format=json') return true;
+    if (a === '--format' && argv[i + 1] === 'json') return true;
+  }
+  return false;
 }
 
 class ConsoleLogger extends BaseLogger {
@@ -60,9 +72,19 @@ export async function runCli(
     return 0;
   }
 
+  const isJsonOutput = hasJsonFormat(argv);
+
+  // Configure colors: --no-color and --color override env/TTY auto-detection,
+  // and JSON output always disables colors so machine consumers get clean output.
+  if (argv.includes('--no-color') || isJsonOutput) {
+    setColorsEnabled(false);
+  } else if (argv.includes('--color')) {
+    setColorsEnabled(true);
+  }
+
   // Show a passive update notice when the cache says a newer version is available.
   // Suppressed for the update command itself, JSON output, and non-TTY environments.
-  if (command !== 'update' && !commandArgs.includes('--format json') && process.stdout.isTTY) {
+  if (command !== 'update' && !isJsonOutput && process.stdout.isTTY) {
     const notice = checkForUpdateNotice();
     if (notice) logger.info(notice);
   }

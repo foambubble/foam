@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as https from 'https';
 import * as os from 'os';
 import * as path from 'path';
+import { bold, dim, warning } from './colors';
 
 declare const __CLI_VERSION__: string;
 
@@ -90,8 +91,8 @@ export function fetchLatestVersion(): Promise<string> {
 
 export function formatUpdateNotice(latestVersion: string): string {
   return (
-    `\nA new version of foam-cli is available: ${latestVersion} (current: ${getCurrentVersion()})\n` +
-    `Run: npm install -g foam-cli@latest\n`
+    `\n${warning('A new version of foam-cli is available:')} ${bold(latestVersion)} ${dim(`(current: ${getCurrentVersion()})`)}\n` +
+    `Run: ${bold('npm install -g foam-cli@latest')}\n`
   );
 }
 

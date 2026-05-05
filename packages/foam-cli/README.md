@@ -1,54 +1,35 @@
 # @foam/cli
 
-Command-line interface for Foam knowledge bases.
+Command-line interface for Foam knowledge bases. Interact with your Foam workspace from the terminal — no VS Code required.
 
-## Overview
-
-The Foam CLI exposes commands for humans, agents and scripts to interact with a Foam workspace from the terminal — no VS Code required. Targets three audiences:
-
-- **Humans**: quick terminal operations (create a note, run lint, check today's daily note path)
-- **Agents**: interact with a Foam workspace the way it would via MCP
-- **Scripts / CI**: scriptable output via `--format json`, pipeable results, non-zero exit codes on failure
-
-Commands follow the same `foam <command> [args] [options]` pattern.
-
-## Design Principles
-
-1. **Human output by default, JSON on request**: every read command supports `--format json`. Default output is concise human-readable text (paths, counts, tables).
-2. **`--flag value` syntax**: standard Unix-style flags throughout. `parameter=value` style is not used (that's the Obsidian CLI's convention, suited to their TUI; it doesn't fit a standard CLI).
-3. **Note targeting**: positional `<identifier>` resolves via Foam's identifier resolution (same as wikilinks — short name or alias). Use `--path <path>` for an exact path (relative to workspace root, or absolute). Errors if identifier is ambiguous.
-4. **Shared domain layer with MCP**: the same pure functions used by MCP tools are called here. CLI adds argument parsing + output formatting only.
-5. **Exit codes**: `0` success, `1` error, `2` lint/check found issues (CI-friendly: `foam lint || echo "issues found"`).
-
----
-
-## Running locally
+## Installation
 
 ```bash
-# From the foam-cli package directory
-cd packages/foam-cli
-
-# Build
-yarn build
-
-# Run
-node out/index.js <command>
+npm install -g foam-cli
 ```
 
-Or set `FOAM_WORKSPACE` so you don't have to pass `--workspace` every time:
+Or run without installing:
 
 ```bash
-export FOAM_WORKSPACE=/path/to/your/notes
-node out/index.js list notes
+npx foam-cli <command>
 ```
 
-For convenience you can create an alias in your shell:
+## Quick start
 
 ```bash
-alias foam="node /path/to/foam/packages/foam-cli/out/index.js"
+cd /path/to/your/notes
+
+# See available commands
+foam
+
+# List all notes
+foam list notes
+
+# Run lint
+foam lint
 ```
 
-After making changes to the source, re-run `yarn build` to pick them up.
+You can also pass `--workspace <dir>` on any command or set `FOAM_WORKSPACE` to avoid changing directory.
 
 ## Usage
 
@@ -224,3 +205,20 @@ foam publish --out ./site
 foam publish /path/to/workspace --out ./site --title "My Notes"
 foam publish --out ./site --content-root notes/ --site-url https://example.com
 ```
+
+## Contributing / running from source
+
+```bash
+# From the foam-cli package directory
+cd packages/foam-cli
+yarn build
+node out/index.js <command>
+```
+
+For convenience you can alias it in your shell:
+
+```bash
+alias foam="node /path/to/foam/packages/foam-cli/out/index.js"
+```
+
+After making changes to the source, re-run `yarn build` to pick them up.

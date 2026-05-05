@@ -61,7 +61,7 @@ export function isNewerVersion(candidate: string, current: string): boolean {
   return cPat > rPat;
 }
 
-export function fetchLatestVersion(): Promise<string> {
+export function fetchLatestVersion(options: { allowProcessExit?: boolean } = {}): Promise<string> {
   return new Promise((resolve, reject) => {
     const req = https.get(
       `https://registry.npmjs.org/${NPM_PACKAGE}/latest`,
@@ -88,15 +88,18 @@ export function fetchLatestVersion(): Promise<string> {
       req.destroy();
       reject(new Error('Registry request timed out'));
     });
-    // Allow the process to exit even if this request is still pending
-    req.on('socket', (socket: { unref: () => void }) => socket.unref());
+    if (options.allowProcessExit) {
+      // Allow the process to exit even if this request is still pending
+      req.on('socket', (socket: { unref: () => void }) => socket.unref());
+    }
   });
 }
 
 export function formatUpdateNotice(latestVersion: string): string {
   return (
-    `\n${warning('A new version of foam-cli is available:')} ${bold(latestVersion)} ${dim(`(current: ${getCurrentVersion()})`)}\n` +
-    `Run: ${bold('npm install -g foam-cli@latest')}\n`
+    `\n${warning('A new release of foam-cli is available:')} ${dim(getCurrentVersion())} → ${bold(
+      latestVersion
+    )}\n` + `To upgrade, run: ${bold('npm install -g foam-cli@latest')}\n`
   );
 }
 
@@ -104,12 +107,11 @@ export function checkForUpdateNotice(): string | null {
   const cache = readUpdateCheckCache();
 
   const shouldFetch =
-    !cache ||
-    Date.now() - new Date(cache.lastChecked).getTime() > CHECK_INTERVAL_MS;
+    !cache || Date.now() - new Date(cache.lastChecked).getTime() > CHECK_INTERVAL_MS;
 
   if (shouldFetch) {
     // Fire-and-forget background refresh — never awaited
-    fetchLatestVersion()
+    fetchLatestVersion({ unref: true })
       .then(latestVersion => {
         writeUpdateCheckCache({
           ...cache,
@@ -128,9 +130,7 @@ export function checkForUpdateNotice(): string | null {
 
   // Rate-limit: show the notice at most once per NOTIFY_INTERVAL_MS, regardless
   // of how often the user invokes the CLI.
-  const lastNotifiedMs = cache.lastNotified
-    ? new Date(cache.lastNotified).getTime()
-    : 0;
+  const lastNotifiedMs = cache.lastNotified ? new Date(cache.lastNotified).getTime() : 0;
   if (Date.now() - lastNotifiedMs < NOTIFY_INTERVAL_MS) {
     return null;
   }

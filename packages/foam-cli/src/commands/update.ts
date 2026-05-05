@@ -35,12 +35,13 @@ export async function runUpdateCommand(
 
   if (latest !== null) {
     if (isNewerVersion(latest, current)) {
-      logger.info(`${bold('Latest version: ')} ${latest}`);
+      logger.info(`${bold('Latest version:')}  ${latest}`);
+      logger.info(`\n${bold('To update, run:')}\n  ${bold('npm install -g foam-cli@latest')}`);
     } else {
       logger.info(success('You are already on the latest version.'));
     }
+  } else {
+    logger.info(`\n${bold('To update, run:')}\n  ${bold('npm install -g foam-cli@latest')}`);
   }
-
-  logger.info(`\n${bold('To update, run:')}\n  ${bold('npm install -g foam-cli@latest')}`);
   return 0;
 }

@@ -5,9 +5,9 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const PACKAGES = [
-  // { dir: 'packages/foam-vscode', tagPrefix: 'vscode' },
+  { dir: 'packages/foam-vscode', tagPrefix: 'vscode' },
   { dir: 'packages/foam-cli', tagPrefix: 'cli' },
-  // { dir: 'packages/foam-core', tagPrefix: 'core' },
+  { dir: 'packages/foam-core', tagPrefix: 'core' },
 ];
 
 const repoRoot = path.resolve(__dirname, '..');

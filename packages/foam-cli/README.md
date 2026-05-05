@@ -196,16 +196,6 @@ foam rename section my-note "Old Heading" "New Heading"
 foam rename block my-note old-anchor new-anchor
 ```
 
-### `publish`
-
-Build a static site from your workspace (Astro/Starlight target).
-
-```bash
-foam publish --out ./site
-foam publish /path/to/workspace --out ./site --title "My Notes"
-foam publish --out ./site --content-root notes/ --site-url https://example.com
-```
-
 ## Contributing / running from source
 
 ```bash

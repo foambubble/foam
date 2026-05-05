@@ -36,6 +36,7 @@ All commands accept `--format json` for machine-readable output, useful for scri
 | [[rename]]  | Rename notes, tags, sections, or block anchors    |
 | [[search]]  | Search notes by title, tag, or frontmatter        |
 | [[tag]]     | List, rename, or search tags                      |
+| [[update]]  | Check for a newer version of foam-cli             |
 
 [daily]: cli/daily.md 'foam daily'
 [grep]: cli/grep.md 'foam grep'
@@ -47,3 +48,4 @@ All commands accept `--format json` for machine-readable output, useful for scri
 [rename]: cli/rename.md 'foam rename'
 [search]: cli/search.md 'foam search'
 [tag]: cli/tag.md 'foam tag'
+[update]: cli/update.md 'foam update'

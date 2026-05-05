@@ -11,7 +11,7 @@ import { runSearchCommand } from './commands/search';
 import { runRenameCommand } from './commands/rename';
 import { runTagCommand } from './commands/tag';
 import { runUpdateCommand } from './commands/update';
-import { checkForUpdateNotice } from './support/version';
+import { checkForUpdateNotice, getCurrentVersion } from './support/version';
 import { setColorsEnabled } from './support/colors';
 
 const CLI_HELP = `Usage: foam <command> [options]
@@ -35,6 +35,7 @@ Global options:
   --color             Force colored output (overrides TTY detection)
   --no-color          Disable colored output
   --help              Show help
+  --version, -v       Show foam-cli version
 
 Run "foam <command> --help" for command-specific help.
 `;
@@ -67,11 +68,6 @@ export async function runCli(
 ): Promise<number> {
   const [command, ...commandArgs] = argv;
 
-  if (!command || command === 'help' || command === '--help' || command === '-h') {
-    logger.info(renderCliHelp());
-    return 0;
-  }
-
   const isJsonOutput = hasJsonFormat(argv);
 
   // Configure colors: --no-color and --color override env/TTY auto-detection,
@@ -82,11 +78,35 @@ export async function runCli(
     setColorsEnabled(true);
   }
 
-  // Show a passive update notice when the cache says a newer version is available.
+  // Compute the update notice up front (reads cache + writes lastNotified),
+  // but defer printing until after the command output so the notice doesn't
+  // push the user's actual output off-screen.
   // Suppressed for the update command itself, JSON output, and non-TTY environments.
-  if (command !== 'update' && !isJsonOutput && process.stdout.isTTY) {
-    const notice = checkForUpdateNotice();
-    if (notice) logger.info(notice);
+  // Rate-limited inside checkForUpdateNotice() (at most once per 24h).
+  const updateNotice =
+    command !== 'update' && !isJsonOutput && process.stdout.isTTY
+      ? checkForUpdateNotice()
+      : null;
+
+  const exitCode = await dispatch(command, commandArgs, logger);
+
+  if (updateNotice) logger.info(updateNotice);
+  return exitCode;
+}
+
+async function dispatch(
+  command: string | undefined,
+  commandArgs: string[],
+  logger: ILogger
+): Promise<number> {
+  if (!command || command === 'help' || command === '--help' || command === '-h') {
+    logger.info(renderCliHelp());
+    return 0;
+  }
+
+  if (command === '--version' || command === '-v') {
+    logger.info(getCurrentVersion());
+    return 0;
   }
 
   try {

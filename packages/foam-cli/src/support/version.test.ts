@@ -231,7 +231,7 @@ describe('checkForUpdateNotice', () => {
     expect(checkForUpdateNotice()).toBeNull();
   });
 
-  it('returns a notice string when cache has a newer version', () => {
+  it('returns a notice string when cache has a newer version and no lastNotified', () => {
     writeUpdateCheckCache({
       lastChecked: new Date().toISOString(),
       latestVersion: '0.41.0',
@@ -240,5 +240,42 @@ describe('checkForUpdateNotice', () => {
     expect(notice).not.toBeNull();
     expect(notice).toContain('0.41.0');
     expect(notice).toContain('npm install -g foam-cli@latest');
+  });
+
+  it('writes lastNotified after emitting the notice', () => {
+    writeUpdateCheckCache({
+      lastChecked: new Date().toISOString(),
+      latestVersion: '0.41.0',
+    });
+    const before = Date.now();
+    checkForUpdateNotice();
+    const after = Date.now();
+    const cache = readUpdateCheckCache();
+    expect(cache?.lastNotified).toBeDefined();
+    const notifiedMs = new Date(cache!.lastNotified!).getTime();
+    expect(notifiedMs).toBeGreaterThanOrEqual(before);
+    expect(notifiedMs).toBeLessThanOrEqual(after);
+  });
+
+  it('returns null when lastNotified is within the rate-limit window (24h)', () => {
+    writeUpdateCheckCache({
+      lastChecked: new Date().toISOString(),
+      latestVersion: '0.41.0',
+      // notified 1 hour ago
+      lastNotified: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+    });
+    expect(checkForUpdateNotice()).toBeNull();
+  });
+
+  it('returns a notice when lastNotified is older than the rate-limit window', () => {
+    writeUpdateCheckCache({
+      lastChecked: new Date().toISOString(),
+      latestVersion: '0.41.0',
+      // notified 25 hours ago
+      lastNotified: new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString(),
+    });
+    const notice = checkForUpdateNotice();
+    expect(notice).not.toBeNull();
+    expect(notice).toContain('0.41.0');
   });
 });

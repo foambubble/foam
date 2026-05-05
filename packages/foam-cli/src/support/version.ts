@@ -9,10 +9,13 @@ declare const __CLI_VERSION__: string;
 export interface UpdateCheckCache {
   lastChecked: string;
   latestVersion: string;
+  /** ISO timestamp of the last time the update notice was shown to the user. */
+  lastNotified?: string;
 }
 
 const NPM_PACKAGE = 'foam-cli';
 const CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
+const NOTIFY_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 export function getCurrentVersion(): string {
   return __CLI_VERSION__;
@@ -28,7 +31,8 @@ export function readUpdateCheckCache(): UpdateCheckCache | null {
     const data = JSON.parse(raw);
     if (
       typeof data.lastChecked === 'string' &&
-      typeof data.latestVersion === 'string'
+      typeof data.latestVersion === 'string' &&
+      (data.lastNotified === undefined || typeof data.lastNotified === 'string')
     ) {
       return data as UpdateCheckCache;
     }
@@ -108,6 +112,7 @@ export function checkForUpdateNotice(): string | null {
     fetchLatestVersion()
       .then(latestVersion => {
         writeUpdateCheckCache({
+          ...cache,
           lastChecked: new Date().toISOString(),
           latestVersion,
         });
@@ -117,9 +122,23 @@ export function checkForUpdateNotice(): string | null {
       });
   }
 
-  if (cache && isNewerVersion(cache.latestVersion, getCurrentVersion())) {
-    return formatUpdateNotice(cache.latestVersion);
+  if (!cache || !isNewerVersion(cache.latestVersion, getCurrentVersion())) {
+    return null;
   }
 
-  return null;
+  // Rate-limit: show the notice at most once per NOTIFY_INTERVAL_MS, regardless
+  // of how often the user invokes the CLI.
+  const lastNotifiedMs = cache.lastNotified
+    ? new Date(cache.lastNotified).getTime()
+    : 0;
+  if (Date.now() - lastNotifiedMs < NOTIFY_INTERVAL_MS) {
+    return null;
+  }
+
+  writeUpdateCheckCache({
+    ...cache,
+    lastNotified: new Date().toISOString(),
+  });
+
+  return formatUpdateNotice(cache.latestVersion);
 }

@@ -10,6 +10,7 @@ import type { CliLogger, Format } from '../support/types';
 import { loadWorkspaceFromDirectory } from '../support/filesystem';
 import { uriToWorkspacePath } from '../support/workspace';
 import type { FoamWorkspace } from '@foam/core';
+import { dim, path as pathColor } from '../support/colors';
 
 // ─── Help ─────────────────────────────────────────────────────────────────────
 
@@ -150,9 +151,9 @@ export function formatSearchText(
     .map(m => {
       const rel = path.relative(rootDir, m.uri);
       if (opts.noLineNumber) {
-        return `${rel}: ${m.text}`;
+        return `${pathColor(rel)}${dim(':')} ${m.text}`;
       }
-      return `${rel}:${m.line}: ${m.text}`;
+      return `${pathColor(rel)}${dim(`:${m.line}:`)} ${m.text}`;
     })
     .join('\n');
 }

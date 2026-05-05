@@ -11,6 +11,7 @@ import {
 } from '../support/args';
 import type { CliLogger, Format } from '../support/types';
 import { uriToWorkspacePath } from '../support/workspace';
+import { dim, path as pathColor } from '../support/colors';
 
 // ─── Help ────────────────────────────────────────────────────────────────────
 
@@ -183,50 +184,62 @@ export async function listTemplates(rootDir: string) {
 
 // ─── Formatters ──────────────────────────────────────────────────────────────
 
+// Colorize a value while preserving column width: pad first (using raw width),
+// then color only the value, then append the padding. ANSI codes have zero
+// visible width, so coloring after padding keeps alignment intact.
+function padAndColorPath(value: string, totalWidth: number): string {
+  const padding = ' '.repeat(Math.max(0, totalWidth - value.length));
+  return `${pathColor(value)}${padding}`;
+}
+
 function formatNotesText(
   notes: ReturnType<typeof listNotes>
 ): string {
-  if (notes.length === 0) return '(no notes found)';
+  if (notes.length === 0) return dim('(no notes found)');
   const maxPath = Math.max(...notes.map(n => n.path.length));
   return notes
-    .map(n => `${n.path.padEnd(maxPath + 2)}${n.title}`)
+    .map(n => `${padAndColorPath(n.path, maxPath + 2)}${n.title}`)
     .join('\n');
 }
 
 function formatTagsText(tags: ReturnType<typeof listTags>): string {
-  if (tags.length === 0) return '(no tags found)';
+  if (tags.length === 0) return dim('(no tags found)');
   const maxTag = Math.max(...tags.map(t => t.tag.length + 1)); // +1 for '#'
   return tags
-    .map(t => `#${t.tag}`.padEnd(maxTag + 2) + `(${t.count} note${t.count === 1 ? '' : 's'})`)
+    .map(t => {
+      const tagText = `#${t.tag}`;
+      const count = `(${t.count} note${t.count === 1 ? '' : 's'})`;
+      return `${padAndColorPath(tagText, maxTag + 2)}${dim(count)}`;
+    })
     .join('\n');
 }
 
 function formatOrphansText(
   items: ReturnType<typeof listOrphans>
 ): string {
-  if (items.length === 0) return '(no orphans found)';
+  if (items.length === 0) return dim('(no orphans found)');
   const maxPath = Math.max(...items.map(n => n.path.length));
   return items
-    .map(n => `${n.path.padEnd(maxPath + 2)}${n.title}`)
+    .map(n => `${padAndColorPath(n.path, maxPath + 2)}${n.title}`)
     .join('\n');
 }
 
 function formatDeadendsText(items: ReturnType<typeof listDeadends>): string {
-  if (items.length === 0) return '(no dead-end notes found)';
+  if (items.length === 0) return dim('(no dead-end notes found)');
   const maxPath = Math.max(...items.map(n => n.path.length));
   return items
-    .map(n => `${n.path.padEnd(maxPath + 2)}${n.title}`)
+    .map(n => `${padAndColorPath(n.path, maxPath + 2)}${n.title}`)
     .join('\n');
 }
 
 function formatPlaceholdersText(
   items: ReturnType<typeof listPlaceholders>
 ): string {
-  if (items.length === 0) return '(no placeholders found)';
+  if (items.length === 0) return dim('(no placeholders found)');
   return items
     .map(p => {
-      const refs = p.referenced_by.map(r => r.path).join(', ');
-      return `${p.placeholder_id}\n  referenced by: ${refs}`;
+      const refs = p.referenced_by.map(r => pathColor(r.path)).join(dim(', '));
+      return `${pathColor(p.placeholder_id)}\n  ${dim('referenced by:')} ${refs}`;
     })
     .join('\n');
 }
@@ -234,11 +247,11 @@ function formatPlaceholdersText(
 function formatTemplatesText(
   templates: Awaited<ReturnType<typeof listTemplates>>
 ): string {
-  if (templates.length === 0) return '(no templates found)';
+  if (templates.length === 0) return dim('(no templates found)');
   const maxName = Math.max(...templates.map(t => t.name.length));
   return templates
     .map(t =>
-      `${t.name.padEnd(maxName + 2)}${t.description ?? ''}`
+      `${padAndColorPath(t.name, maxName + 2)}${t.description ?? ''}`
     )
     .join('\n');
 }

@@ -15,6 +15,7 @@ import {
   resolveWorkspaceDir,
 } from '../support/args';
 import type { CliLogger, Format } from '../support/types';
+import { dim, path as pathColor, success } from '../support/colors';
 
 // ─── Help ─────────────────────────────────────────────────────────────────────
 
@@ -163,8 +164,8 @@ export async function runDailyCommand(
     if (format === 'json') {
       logger.info(JSON.stringify({ id, uri: notePath, exists }, null, 2));
     } else {
-      const status = exists ? '[exists]' : '[does not exist]';
-      logger.info(`${relPath}  ${status}`);
+      const status = exists ? success('[exists]') : dim('[does not exist]');
+      logger.info(`${pathColor(relPath)}  ${status}`);
     }
 
     return 0;

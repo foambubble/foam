@@ -8,6 +8,7 @@ import {
 } from '../support/args';
 import type { CliLogger, Format } from '../support/types';
 import { resolveNote } from '../support/workspace';
+import { dim } from '../support/colors';
 
 // ─── Help ─────────────────────────────────────────────────────────────────────
 
@@ -50,11 +51,11 @@ export function outlineData(
 // ─── Formatters ───────────────────────────────────────────────────────────────
 
 function formatOutlineText(data: ReturnType<typeof outlineData>): string {
-  if (data.sections.length === 0) return '(no headings)';
+  if (data.sections.length === 0) return dim('(no headings)');
   return data.sections
     .map(s => {
       const indent = s.level === 1 ? '' : '  '.repeat(s.level - 1);
-      return `${indent}${'#'.repeat(s.level)} ${s.label}`;
+      return `${indent}${dim('#'.repeat(s.level))} ${s.label}`;
     })
     .join('\n');
 }

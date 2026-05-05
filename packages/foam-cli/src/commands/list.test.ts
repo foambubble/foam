@@ -1,5 +1,8 @@
 import path from 'node:path';
 import { FoamGraph, FoamTags } from '@foam/core';
+import { setColorsEnabled } from '../support/colors';
+
+setColorsEnabled(false);
 import {
   createTestNote,
   createInMemoryWorkspace,

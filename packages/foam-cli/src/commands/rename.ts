@@ -22,6 +22,7 @@ import {
 } from '../support/args';
 import type { CliLogger, Format } from '../support/types';
 import { resolveNote } from '../support/workspace';
+import { dim, path as pathColor, success } from '../support/colors';
 
 // ─── Help ────────────────────────────────────────────────────────────────────
 
@@ -278,7 +279,7 @@ export async function runRenameCommand(
         logger.info(JSON.stringify(result, null, 2));
       } else {
         logger.info(
-          `Renamed: #${result.old_tag} → #${result.new_tag}  (${result.updated_notes} note${result.updated_notes === 1 ? '' : 's'} updated)`
+          `${success('Renamed:')} ${pathColor(`#${result.old_tag}`)} ${dim('→')} ${pathColor(`#${result.new_tag}`)}  ${dim(`(${result.updated_notes} note${result.updated_notes === 1 ? '' : 's'} updated)`)}`
         );
       }
       return 0;
@@ -300,7 +301,7 @@ export async function runRenameCommand(
         logger.info(JSON.stringify(result, null, 2));
       } else {
         logger.info(
-          `Renamed: ${path.relative(rootDir, result.old_uri)} → ${path.relative(rootDir, result.new_uri)}  (id: ${result.id}, ${result.updated_links} link${result.updated_links === 1 ? '' : 's'} updated)`
+          `${success('Renamed:')} ${pathColor(path.relative(rootDir, result.old_uri))} ${dim('→')} ${pathColor(path.relative(rootDir, result.new_uri))}  ${dim(`(id: ${result.id}, ${result.updated_links} link${result.updated_links === 1 ? '' : 's'} updated)`)}`
         );
       }
       return 0;
@@ -320,7 +321,7 @@ export async function runRenameCommand(
         logger.info(JSON.stringify(result, null, 2));
       } else {
         logger.info(
-          `Renamed section "${oldLabel}" → "${newLabel}" in ${path.relative(rootDir, result.uri)}  (${result.updated_links} link${result.updated_links === 1 ? '' : 's'} updated)`
+          `${success('Renamed section')} "${oldLabel}" ${dim('→')} "${newLabel}" in ${pathColor(path.relative(rootDir, result.uri))}  ${dim(`(${result.updated_links} link${result.updated_links === 1 ? '' : 's'} updated)`)}`
         );
       }
       return 0;
@@ -338,7 +339,7 @@ export async function runRenameCommand(
         logger.info(JSON.stringify(result, null, 2));
       } else {
         logger.info(
-          `Renamed block ^${oldBlockId} → ^${newBlockId} in ${path.relative(rootDir, result.uri)}  (${result.updated_links} link${result.updated_links === 1 ? '' : 's'} updated)`
+          `${success('Renamed block')} ${pathColor(`^${oldBlockId}`)} ${dim('→')} ${pathColor(`^${newBlockId}`)} in ${pathColor(path.relative(rootDir, result.uri))}  ${dim(`(${result.updated_links} link${result.updated_links === 1 ? '' : 's'} updated)`)}`
         );
       }
       return 0;

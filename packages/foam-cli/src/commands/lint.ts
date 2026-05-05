@@ -18,6 +18,7 @@ import {
   type LintIssue,
   type LintRule,
 } from '@foam/core';
+import { bold, dim, path as pathColor, warning } from '../support/colors';
 
 // ─── Help ─────────────────────────────────────────────────────────────────────
 
@@ -76,25 +77,26 @@ export function formatLintText(results: LintResult[]): string {
   let totalFixable = 0;
 
   for (const result of results) {
-    lines.push(result.path);
+    lines.push(pathColor(result.path));
     for (const issue of result.issues) {
-      const severity = 'warning';
-      const fixNote = issue.fixable ? ' (fixable)' : '';
-      lines.push(`  ${issue.line}:${issue.column}  ${severity}  ${issue.message}${fixNote}  ${issue.code}`);
+      const fixNote = issue.fixable ? dim(' (fixable)') : '';
+      lines.push(
+        `  ${dim(`${issue.line}:${issue.column}`)}  ${warning('warning')}  ${issue.message}${fixNote}  ${dim(issue.code)}`
+      );
       totalWarnings++;
       if (issue.fixable) totalFixable++;
     }
   }
 
   const total = totalErrors + totalWarnings;
-  const summary = [
-    `${total} problem${total === 1 ? '' : 's'}`,
+  const head = `${total} problem${total === 1 ? '' : 's'}`;
+  const breakdown = [
     `(${totalErrors} error${totalErrors === 1 ? '' : 's'}, ${totalWarnings} warning${totalWarnings === 1 ? '' : 's'}`,
     totalFixable > 0 ? `, ${totalFixable} fixable with --fix)` : `)`,
   ].join(' ');
 
   lines.push('');
-  lines.push(summary);
+  lines.push(`${total > 0 ? bold(head) : head} ${breakdown}`);
   return lines.join('\n');
 }
 

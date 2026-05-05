@@ -1,6 +1,9 @@
 import { FoamGraph } from '@foam/core';
 import { createTestNote, createInMemoryWorkspace, withTmpWorkspace, TestLogger } from '../test/test-utils';
 import { linksData, runLinksCommand } from './links';
+import { setColorsEnabled } from '../support/colors';
+
+setColorsEnabled(false);
 
 // ─── linksData ────────────────────────────────────────────────────────────────
 

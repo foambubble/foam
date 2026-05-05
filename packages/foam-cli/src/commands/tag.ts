@@ -10,6 +10,7 @@ import type { CliLogger, Format } from '../support/types';
 import { runListCommand } from './list';
 import { renameTag } from './rename';
 import { runSearchCommand } from './search';
+import { dim, path as pathColor, success } from '../support/colors';
 
 // Help
 
@@ -109,7 +110,7 @@ export async function runTagCommand(
         logger.info(JSON.stringify(result, null, 2));
       } else {
         logger.info(
-          `Renamed: #${result.old_tag} -> #${result.new_tag}  (${result.updated_notes} note${result.updated_notes === 1 ? '' : 's'} updated)`
+          `${success('Renamed:')} ${pathColor(`#${result.old_tag}`)} ${dim('->')} ${pathColor(`#${result.new_tag}`)}  ${dim(`(${result.updated_notes} note${result.updated_notes === 1 ? '' : 's'} updated)`)}`
         );
       }
       return 0;

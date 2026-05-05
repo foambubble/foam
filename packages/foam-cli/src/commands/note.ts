@@ -26,6 +26,7 @@ import {
 } from '../support/args';
 import type { CliLogger, Format } from '../support/types';
 import { resolveNote } from '../support/workspace';
+import { bold, dim, path as pathColor } from '../support/colors';
 
 // ─── Help ────────────────────────────────────────────────────────────────────
 
@@ -81,20 +82,26 @@ export function noteShowData(
 
 function formatNoteShowText(data: ReturnType<typeof noteShowData>): string {
   const lines = [
-    `ID:       ${data.id}`,
-    `Title:    ${data.title}`,
-    `Path:     ${data.path}`,
-    `Type:     ${data.type}`,
+    `${bold('ID:      ')} ${pathColor(data.id)}`,
+    `${bold('Title:   ')} ${data.title}`,
+    `${bold('Path:    ')} ${pathColor(data.path)}`,
+    `${bold('Type:    ')} ${data.type}`,
   ];
   if (data.tags.length > 0) {
-    lines.push(`Tags:     ${data.tags.map(t => `#${t}`).join(' ')}`);
+    lines.push(`${bold('Tags:    ')} ${data.tags.map(t => pathColor(`#${t}`)).join(' ')}`);
   }
   if (data.aliases.length > 0) {
-    lines.push(`Aliases:  ${data.aliases.join(', ')}`);
+    lines.push(`${bold('Aliases: ')} ${data.aliases.join(dim(', '))}`);
   }
   if ('links' in data && data.links) {
-    lines.push(`Links →   ${data.links.outgoing.join(', ') || '(none)'}`);
-    lines.push(`Links ←   ${data.links.incoming.join(', ') || '(none)'}`);
+    const outgoing = data.links.outgoing.length > 0
+      ? data.links.outgoing.map(pathColor).join(dim(', '))
+      : dim('(none)');
+    const incoming = data.links.incoming.length > 0
+      ? data.links.incoming.map(pathColor).join(dim(', '))
+      : dim('(none)');
+    lines.push(`${bold('Links →  ')} ${outgoing}`);
+    lines.push(`${bold('Links ←  ')} ${incoming}`);
   }
   return lines.join('\n');
 }

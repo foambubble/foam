@@ -9,6 +9,7 @@ import {
 } from '../support/args';
 import type { CliLogger, Format } from '../support/types';
 import { resolveNote } from '../support/workspace';
+import { bold, dim, path as pathColor } from '../support/colors';
 
 // ─── Help ─────────────────────────────────────────────────────────────────────
 
@@ -75,14 +76,19 @@ function formatLinksText(
 ): string {
   const lines: string[] = [];
 
+  const padAndColorId = (id: string, totalWidth: number) => {
+    const padding = ' '.repeat(Math.max(0, totalWidth - id.length));
+    return `${pathColor(id)}${padding}`;
+  };
+
   if (opts.outgoing) {
-    lines.push(`Outgoing (${data.outgoing.length}):`);
+    lines.push(`${bold('Outgoing')} ${dim(`(${data.outgoing.length}):`)}`);
     if (data.outgoing.length === 0) {
-      lines.push('  (none)');
+      lines.push(`  ${dim('(none)')}`);
     } else {
       const maxId = Math.max(...data.outgoing.map(c => c.id.length));
       for (const c of data.outgoing) {
-        lines.push(`  → ${c.id.padEnd(maxId + 2)}${c.path}`);
+        lines.push(`  ${dim('→')} ${padAndColorId(c.id, maxId + 2)}${dim(c.path)}`);
       }
     }
   }
@@ -92,13 +98,13 @@ function formatLinksText(
   }
 
   if (opts.incoming) {
-    lines.push(`Incoming (${data.incoming.length}):`);
+    lines.push(`${bold('Incoming')} ${dim(`(${data.incoming.length}):`)}`);
     if (data.incoming.length === 0) {
-      lines.push('  (none)');
+      lines.push(`  ${dim('(none)')}`);
     } else {
       const maxId = Math.max(...data.incoming.map(c => c.id.length));
       for (const c of data.incoming) {
-        lines.push(`  ← ${c.id.padEnd(maxId + 2)}${c.path}`);
+        lines.push(`  ${dim('←')} ${padAndColorId(c.id, maxId + 2)}${dim(c.path)}`);
       }
     }
   }

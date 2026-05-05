@@ -2,6 +2,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { parseDateArg, defaultDailyNotePath, runDailyCommand } from './daily';
 import { withTmpWorkspace, TestLogger } from '../test/test-utils';
+import { setColorsEnabled } from '../support/colors';
+
+setColorsEnabled(false);
 
 // ─── parseDateArg ─────────────────────────────────────────────────────────────
 

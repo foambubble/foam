@@ -2,6 +2,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { withTmpWorkspace, TestLogger } from '../test/test-utils';
+import { setColorsEnabled } from '../support/colors';
+
+setColorsEnabled(false);
 import {
   cleanTag,
   runTagCommand,

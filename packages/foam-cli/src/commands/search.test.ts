@@ -5,6 +5,9 @@ import {
   type PropertyFilter,
 } from './search';
 import { withTmpWorkspace, TestLogger } from '../test/test-utils';
+import { setColorsEnabled } from '../support/colors';
+
+setColorsEnabled(false);
 
 // ─── searchWorkspace (domain) ─────────────────────────────────────────────────
 

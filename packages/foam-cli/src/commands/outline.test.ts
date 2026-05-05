@@ -1,5 +1,8 @@
 import { createNoteFromMarkdown, createInMemoryWorkspace, withTmpWorkspace, TestLogger } from '../test/test-utils';
 import { outlineData, runOutlineCommand } from './outline';
+import { setColorsEnabled } from '../support/colors';
+
+setColorsEnabled(false);
 
 // ─── outlineData ──────────────────────────────────────────────────────────────
 

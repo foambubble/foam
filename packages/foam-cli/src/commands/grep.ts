@@ -8,6 +8,7 @@ import {
 } from '../support/args';
 import type { CliLogger, Format } from '../support/types';
 import { loadWorkspaceFromDirectory } from '../support/filesystem';
+import { dim, path as pathColor } from '../support/colors';
 
 // ─── Help ─────────────────────────────────────────────────────────────────────
 
@@ -111,24 +112,24 @@ export function formatGrepText(
     if (context > 0) {
       // Separator between match groups
       if (prevUri !== null && (prevUri !== match.uri || match.line > prevMatchLine + context * 2 + 1)) {
-        lines.push('--');
+        lines.push(dim('--'));
       }
 
       for (let i = 0; i < (match.context_before ?? []).length; i++) {
         const ctxLineNum = match.line - match.context_before!.length + i;
-        lines.push(`${rel}-${ctxLineNum}- ${match.context_before![i]}`);
+        lines.push(`${pathColor(rel)}${dim(`-${ctxLineNum}-`)} ${match.context_before![i]}`);
       }
     }
 
     if (opts.noLineNumber) {
-      lines.push(`${rel}: ${match.text}`);
+      lines.push(`${pathColor(rel)}${dim(':')} ${match.text}`);
     } else {
-      lines.push(`${rel}:${match.line}: ${match.text}`);
+      lines.push(`${pathColor(rel)}${dim(`:${match.line}:`)} ${match.text}`);
     }
 
     if (context > 0) {
       for (let i = 0; i < (match.context_after ?? []).length; i++) {
-        lines.push(`${rel}-${match.line + 1 + i}- ${match.context_after![i]}`);
+        lines.push(`${pathColor(rel)}${dim(`-${match.line + 1 + i}-`)} ${match.context_after![i]}`);
       }
     }
 

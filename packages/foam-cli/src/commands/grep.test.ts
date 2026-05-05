@@ -1,6 +1,9 @@
 import path from 'node:path';
 import { grepFiles, formatGrepText, runGrepCommand } from './grep';
 import { withTmpWorkspace, TestLogger } from '../test/test-utils';
+import { setColorsEnabled } from '../support/colors';
+
+setColorsEnabled(false);
 
 // ─── grepFiles (domain) ───────────────────────────────────────────────────────
 

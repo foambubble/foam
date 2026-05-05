@@ -33,8 +33,8 @@ export default async function activate(
       updateGraph(p, foam);
     };
     const noteUpdatedListener = foam.graph.onDidUpdate(onFoamChanged);
-    const editorListener = vscode.window.onDidChangeActiveTextEditor(e => {
-      handleActiveEditorChange(p, foam, e);
+    const editorListener = vscode.window.tabGroups.onDidChangeTabGroups(() => {
+      handleActiveEditorChange(p, foam);
     });
     p.onDidDispose(() => {
       noteUpdatedListener.dispose();
@@ -157,17 +157,25 @@ async function setupGraphPanel(
               'graph.navigateToPreview',
               false
             );
-            const command = getNodeNavigationCommand(
-              noteUri.path,
-              navigateToPreview
-            );
-            if (command === 'markdown.showPreview') {
-              vscode.commands.executeCommand(command, noteUri);
+            
+            if ((navigateToPreview && noteUri.path.endsWith('.md'))) {
+              vscode.commands.executeCommand(
+                "vscode.openWith",
+                noteUri,
+                'vscode.markdown.preview.editor',
+                {
+                  viewColumn: vscode.ViewColumn.One,
+                  preview: true
+                }
+              );
             } else {
               vscode.commands.executeCommand(
-                command,
+                "vscode.open",
                 noteUri,
-                vscode.ViewColumn.One
+                {
+                  viewColumn: vscode.ViewColumn.One,
+                  preview: true
+                }
               );
             }
           }
@@ -295,11 +303,11 @@ export function resolveViewStyle(args?: ShowGraphArgs): {
 
 export function handleActiveEditorChange(
   panel: vscode.WebviewPanel | undefined,
-  foam: Foam,
-  e: vscode.TextEditor | undefined
+  foam: Foam
 ) {
-  if (panel && e?.document?.uri && e.document.uri.scheme !== 'untitled') {
-    const note = foam.workspace.get(fromVsCodeUri(e.document.uri));
+  const tab = vscode.window.tabGroups.activeTabGroup.activeTab;
+  if (panel &&(tab.input instanceof vscode.TabInputCustom || tab.input instanceof vscode.TabInputText ) && tab.input.uri && tab.input.uri.scheme !== 'untitled') {
+    const note = foam.workspace.get(fromVsCodeUri(tab.input.uri));
     if (isSome(note)) {
       panel.webview.postMessage({
         type: 'didSelectNote',
@@ -307,14 +315,4 @@ export function handleActiveEditorChange(
       });
     }
   }
-}
-
-export function getNodeNavigationCommand(
-  uriPath: string,
-  navigateToPreview: boolean
-): string {
-  if (navigateToPreview && uriPath.endsWith('.md')) {
-    return 'markdown.showPreview';
-  }
-  return 'vscode.open';
 }

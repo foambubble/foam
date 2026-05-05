@@ -10,10 +10,10 @@
 
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
-[![Version](https://img.shields.io/visual-studio-marketplace/v/foam.foam-vscode?cacheSeconds=3600)](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode)
-[![Downloads](https://img.shields.io/visual-studio-marketplace/d/foam.foam-vscode?cacheSeconds=3600)](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode)
-[![Visual Studio Marketplace Installs](https://img.shields.io/visual-studio-marketplace/i/foam.foam-vscode?label=VS%20Code%20Installs&cacheSeconds=3600)](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode)
-[![Ratings](https://img.shields.io/visual-studio-marketplace/r/foam.foam-vscode?cacheSeconds=3600)](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode)
+[![Version](https://vsmarketplacebadges.dev/version/foam.foam-vscode.svg)](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode)
+[![Downloads](https://vsmarketplacebadges.dev/downloads/foam.foam-vscode.svg)](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode)
+[![Visual Studio Marketplace Installs](https://vsmarketplacebadges.dev/installs/foam.foam-vscode.svg)](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode)
+[![Ratings](https://vsmarketplacebadges.dev/rating/foam.foam-vscode.svg)](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode)
 [![Discord Chat](https://img.shields.io/discord/729975036148056075?color=748AD9&label=discord%20chat&style=flat-square)](https://foambubble.github.io/join-discord/g)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/foambubble/foam)
 

@@ -47,6 +47,8 @@ When multiple tests are failing, look at all of them, but only focus on fixing t
 When writing tests keep mocking to a bare minimum. Code should be written in a way that is easily testable and if I/O is necessary, it should be done in appropriate temporary directories.
 Never mock anything that is inside `packages/foam-vscode/src/core/`.
 
+Do not use dynamic imports (`await import(...)` or `import(...)`) anywhere — neither in source code nor in tests. Use static top-level imports instead. If a module needs lazy initialization, refactor to make it explicit rather than reaching for a dynamic import.
+
 Use the utility functions from `test-utils.ts` and `test-utils-vscode.ts` and `test-datastore.ts`.
 
 To improve readability of the tests, set up the test and tear it down within the test case (as opposed to use other functions like `beforeEach` unless it's much better to do it that way)

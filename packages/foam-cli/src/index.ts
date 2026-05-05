@@ -1,9 +1,5 @@
 import { type ILogger, Logger, LogLevel, BaseLogger } from '@foam/core';
-import {
-  parsePublishCommandArgs,
-  renderPublishHelp,
-  runPublishCommand,
-} from './commands/publish';
+import { parsePublishCommandArgs, renderPublishHelp, runPublishCommand } from './commands/publish';
 import { runListCommand } from './commands/list';
 import { runNoteCommand } from './commands/note';
 import { runLinksCommand } from './commands/links';
@@ -14,6 +10,8 @@ import { runGrepCommand } from './commands/grep';
 import { runSearchCommand } from './commands/search';
 import { runRenameCommand } from './commands/rename';
 import { runTagCommand } from './commands/tag';
+import { runUpdateCommand } from './commands/update';
+import { checkForUpdateNotice } from './support/version';
 
 const CLI_HELP = `Usage: foam <command> [options]
 
@@ -24,10 +22,11 @@ Commands:
   outline     Show the heading structure of a note
   links       Show links to/from a note (alias: connections)
   daily       Show or create the daily note for a date
-  tag         List, rename, search, or suggest tags
+  tag         List, rename, or search tags
   grep        Search note content (grep-style, no graph needed)
   search      Search by title, alias, tag, or frontmatter property
   rename      Rename a note, tag, section, or block anchor (with link rewriting)
+  update      Check for updates and show the install command
 
 Global options:
   --workspace <dir>   Workspace root (default: FOAM_WORKSPACE env var, then cwd)
@@ -59,6 +58,13 @@ export async function runCli(
   if (!command || command === 'help' || command === '--help' || command === '-h') {
     logger.info(renderCliHelp());
     return 0;
+  }
+
+  // Show a passive update notice when the cache says a newer version is available.
+  // Suppressed for the update command itself, JSON output, and non-TTY environments.
+  if (command !== 'update' && !commandArgs.includes('--format json') && process.stdout.isTTY) {
+    const notice = checkForUpdateNotice();
+    if (notice) logger.info(notice);
   }
 
   try {
@@ -102,6 +108,9 @@ export async function runCli(
       }
       case 'rename': {
         return runRenameCommand(commandArgs, logger);
+      }
+      case 'update': {
+        return runUpdateCommand(commandArgs, logger);
       }
       default:
         logger.error(`Unknown command "${command}".\n\n${renderCliHelp()}`);

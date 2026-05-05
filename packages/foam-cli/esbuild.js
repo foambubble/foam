@@ -6,6 +6,8 @@ const production = process.argv.includes('--production');
 const watch = process.argv.includes('--watch');
 
 async function main() {
+  const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8'));
+
   const ctx = await esbuild.context({
     entryPoints: ['src/index.ts'],
     bundle: true,
@@ -22,6 +24,9 @@ async function main() {
     sourcesContent: false,
     banner: {
       js: '#!/usr/bin/env node',
+    },
+    define: {
+      __CLI_VERSION__: JSON.stringify(pkg.version),
     },
   });
 

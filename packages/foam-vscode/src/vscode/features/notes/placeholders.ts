@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { Foam } from '@foam/core';
+import { Foam, listPlaceholders } from '@foam/core';
 import { createMatcherAndDataStore } from '../../services/editor';
 import {
   GroupedResourcesConfig,
@@ -141,6 +141,6 @@ export class PlaceholderTreeView extends GroupedResourcesTreeDataProvider {
             .filter(uri => uri.isPlaceholder())
         : [];
     }
-    return this.graph.getAllNodes().filter(uri => uri.isPlaceholder());
+    return listPlaceholders(this.workspace, this.graph).map(p => p.uri);
   }
 }

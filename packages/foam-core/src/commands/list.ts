@@ -85,15 +85,40 @@ export function listTags(
   return entries;
 }
 
+export interface OrphansOptions {
+  /**
+   * Types to exclude from the result. Defaults to `['attachment', 'image']`
+   * — only `note`-typed resources are eligible to be orphans.
+   */
+  excludeTypes?: string[];
+  /**
+   * When true, outgoing links whose target type is one of `excludeTypes`
+   * (e.g. attachments and images) don't count toward "has outgoing links".
+   * A note that only links to images is treated as an orphan. Defaults to
+   * `false`.
+   */
+  ignoreOutgoingExcludedTypes?: boolean;
+}
+
+const DEFAULT_EXCLUDE_TYPES = ['attachment', 'image'];
+
 export function listOrphans(
   workspace: FoamWorkspace,
-  graph: FoamGraph
+  graph: FoamGraph,
+  opts: OrphansOptions = {}
 ): NoteSummary[] {
+  const excludeTypes = opts.excludeTypes ?? DEFAULT_EXCLUDE_TYPES;
+  const ignoreOutgoingExcluded = opts.ignoreOutgoingExcludedTypes ?? false;
+
   return workspace
     .list()
     .filter(r => {
-      if (r.type !== 'note') return false;
-      const outgoing = graph.getLinks(r.uri);
+      if (excludeTypes.includes(r.type)) return false;
+      const outgoing = ignoreOutgoingExcluded
+        ? graph
+            .getLinks(r.uri)
+            .filter(c => !excludeTypes.includes(workspace.find(c.target)?.type))
+        : graph.getLinks(r.uri);
       const incoming = graph.getBacklinks(r.uri);
       return outgoing.length === 0 && incoming.length === 0;
     })
@@ -106,13 +131,21 @@ export function listOrphans(
 
 export function listDeadends(
   workspace: FoamWorkspace,
-  graph: FoamGraph
+  graph: FoamGraph,
+  opts: OrphansOptions = {}
 ): NoteSummary[] {
+  const excludeTypes = opts.excludeTypes ?? DEFAULT_EXCLUDE_TYPES;
+  const ignoreOutgoingExcluded = opts.ignoreOutgoingExcludedTypes ?? false;
+
   return workspace
     .list()
     .filter(r => {
-      if (r.type !== 'note') return false;
-      const outgoing = graph.getLinks(r.uri);
+      if (excludeTypes.includes(r.type)) return false;
+      const outgoing = ignoreOutgoingExcluded
+        ? graph
+            .getLinks(r.uri)
+            .filter(c => !excludeTypes.includes(workspace.find(c.target)?.type))
+        : graph.getLinks(r.uri);
       return outgoing.length === 0;
     })
     .map(r => ({

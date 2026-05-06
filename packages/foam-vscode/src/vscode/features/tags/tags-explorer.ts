@@ -1,4 +1,4 @@
-import { URI } from '@foam/core';
+import { URI, listTags, type TagItem as CoreTagItem } from '@foam/core';
 import * as vscode from 'vscode';
 import { Foam } from '@foam/core';
 import { FoamWorkspace } from '@foam/core';
@@ -116,10 +116,7 @@ export class TagsProvider extends FolderTreeProvider<TagTreeItem, string> {
     'folder'
   );
 
-  private tags: {
-    tag: string;
-    notes: URI[];
-  }[];
+  private tags: CoreTagItem[];
 
   constructor(
     private foamTags: FoamTags,
@@ -163,9 +160,8 @@ export class TagsProvider extends FolderTreeProvider<TagTreeItem, string> {
   }
 
   refresh(): void {
-    this.tags = [...this.foamTags.tags]
-      .map(([tag, resources]) => ({ tag, notes: resources.map(r => r.uri) }))
-      .sort((a, b) => a.tag.localeCompare(b.tag));
+    // listTags sorts by name by default — matches previous behavior.
+    this.tags = listTags(this.foamTags, {});
     super.refresh();
   }
 

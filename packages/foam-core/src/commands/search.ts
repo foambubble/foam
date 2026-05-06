@@ -1,5 +1,6 @@
 import { FoamWorkspace } from '../model/workspace';
 import { URI } from '../model/uri';
+import { isSubsequence } from '../utils/string';
 
 export interface SearchMatch {
   id: string;
@@ -27,7 +28,18 @@ export interface SearchOptions {
   type?: string;
   limit?: number;
   context?: number;
+  /**
+   * How to match `query` against titles and aliases.
+   *
+   * - `'substring'` (default): the query must appear as a contiguous substring,
+   *   case-insensitive. Suitable for `foam search` and similar UX.
+   * - `'subsequence'`: the query characters must appear in the candidate in
+   *   order but not necessarily contiguous, case-insensitive. Matches VS
+   *   Code's `Ctrl+T` symbol-search behavior — `"alt"` matches `"alternative"`.
+   */
+  matchMode?: 'substring' | 'subsequence';
 }
+
 
 /**
  * Searches the Foam workspace index by title, alias, tag, and/or frontmatter
@@ -66,11 +78,16 @@ export function searchWorkspace(
 
   if (opts.query) {
     const q = opts.query.toLowerCase();
-    resources = resources.filter(r => {
-      if (r.title?.toLowerCase().includes(q)) return true;
-      if (r.aliases.some(a => a.title.toLowerCase().includes(q))) return true;
-      return false;
-    });
+    const matches = (candidate: string | undefined): boolean => {
+      if (!candidate) return false;
+      const c = candidate.toLowerCase();
+      return opts.matchMode === 'subsequence'
+        ? isSubsequence(q, c)
+        : c.includes(q);
+    };
+    resources = resources.filter(
+      r => matches(r.title) || r.aliases.some(a => matches(a.title))
+    );
   }
 
   resources = resources.slice(0, limit);

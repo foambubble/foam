@@ -8,7 +8,7 @@
     "type": "git"
   },
   "homepage": "https://github.com/foambubble/foam",
-  "version": "0.40.2",
+  "version": "0.40.3",
   "license": "MIT",
   "publisher": "foam",
   "engines": {
@@ -918,8 +918,8 @@
     "wait-for-expect": "^3.0.2"
   },
   "dependencies": {
-    "@foam/core": "^0.40.2",
-    "@foam/graph-view": "^0.40.0",
+    "@foam/core": "*",
+    "@foam/graph-view": "*",
     "dayjs": "^1.11.13",
     "detect-newline": "^3.1.0",
     "github-slugger": "^1.4.0",

@@ -1,4 +1,12 @@
-# @foam/cli
+# Change Log
+
+## 0.41.1
+
+### Patch Changes
+
+- Internal: Consolidated release scripts and updated developer documentation
+
+- Internal: Added a `commands/` module to `@foam/core` exposing high-level workspace operations (`listNotes`, `listTags`, `listOrphans`, `listDeadends`, `listPlaceholders`, `linksData`, `outlineData`, `searchWorkspace`, `noteShowData`, `noteCreate`, `noteMove`, `noteDelete`, `renameNote`, `renameTag`, `renameSection`, `renameBlock`, `resolveNote`, frontmatter helpers). The CLI and VS Code extension now consume these shared functions instead of maintaining parallel implementations
 
 ## 0.41.0
 

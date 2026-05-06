@@ -1,6 +1,6 @@
 {
   "name": "@foam/cli",
-  "version": "0.41.0",
+  "version": "0.41.1",
   "description": "Foam CLI for publishing knowledge bases",
   "license": "MIT",
   "bin": {
@@ -28,7 +28,7 @@
     "vitest": "^3.0.0"
   },
   "dependencies": {
-    "@foam/core": "^0.40.2",
+    "@foam/core": "*",
     "jsonc-parser": "^3.3.1",
     "micromatch": "^4.0.8"
   }

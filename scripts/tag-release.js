@@ -22,33 +22,34 @@ function tagExists(tag) {
   return out === tag;
 }
 
+function tagOne({ dir, tagPrefix }) {
+  const version = readVersion(dir);
+  const tag = `${tagPrefix}@${version}`;
+  if (tagExists(tag)) {
+    console.log(`Already existed (skipped): ${tag}`);
+    return { tag, created: false };
+  }
+  execSync(`git tag ${tag}`, { cwd: repoRoot, stdio: 'inherit' });
+  console.log(`Created tag: ${tag}`);
+  return { tag, created: true };
+}
+
 function main() {
-  const created = [];
-  const skipped = [];
+  const onlyPrefix = process.argv[2];
+  const targets = onlyPrefix
+    ? PACKAGES.filter(p => p.tagPrefix === onlyPrefix)
+    : PACKAGES;
 
-  for (const { dir, tagPrefix } of PACKAGES) {
-    const version = readVersion(dir);
-    const tag = `${tagPrefix}@${version}`;
-
-    if (tagExists(tag)) {
-      skipped.push(tag);
-      continue;
-    }
-
-    execSync(`git tag ${tag}`, { cwd: repoRoot, stdio: 'inherit' });
-    created.push(tag);
+  if (onlyPrefix && targets.length === 0) {
+    console.error(`Unknown tag prefix: ${onlyPrefix}. Known: ${PACKAGES.map(p => p.tagPrefix).join(', ')}`);
+    process.exit(1);
   }
 
-  if (created.length > 0) {
-    console.log(`Created tags: ${created.join(', ')}`);
-  }
-  if (skipped.length > 0) {
-    console.log(`Already existed (skipped): ${skipped.join(', ')}`);
-  }
-  if (created.length === 0 && skipped.length === PACKAGES.length) {
-    console.log('Nothing to tag — all package versions already have tags.');
-  }
-  if (created.length > 0) {
+  const results = targets.map(tagOne);
+  const anyCreated = results.some(r => r.created);
+  if (!anyCreated) {
+    console.log('Nothing to tag.');
+  } else {
     console.log('\nPush with: git push --tags');
   }
 }

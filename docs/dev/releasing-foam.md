@@ -4,15 +4,17 @@ Foam uses [Changesets](https://github.com/changesets/changesets) to manage versi
 
 ## During development
 
-When merging a PR, add a changeset fragment describing the change:
+Each PR that affects users of a published package should include a changeset fragment. Create it as part of the PR (not after merging):
 
 ```
 yarn changeset
 ```
 
-Pick the affected package(s) and bump type (`patch` / `minor` / `major`), then write the user-facing entry. Commit the generated `.changeset/<name>.md` alongside the change.
+Pick the affected package(s) and bump type (`patch` / `minor` / `major`), then write the user-facing entry. Commit the generated `.changeset/<name>.md` alongside the code change in the same PR.
 
-The `/update-changelog` slash command can draft fragments retroactively for commits already on `main` that lack one.
+One changeset per PR is the norm. If a PR touches multiple packages, declare them together in a single fragment — changesets will bump each independently.
+
+If a fragment was missed, the `/update-changelog` slash command can draft one retroactively for commits already on `main`.
 
 ## Cutting a release
 
@@ -32,18 +34,16 @@ The `/update-changelog` slash command can draft fragments retroactively for comm
    - Create per-package tags (`vscode@<version>`, `cli@<version>`, `core@<version>`):
      - `yarn tag-release`
      - The script reads each package's current version from `package.json` and skips any tag that already exists.
-6. Package the extension
-   - `yarn package-extension`
-7. Publish
-   - `yarn publish-extension` (publishes to VS Marketplace and OpenVSX)
-   - `yarn publish-cli` (publishes `@foam/cli` to npm as `foam-cli`)
-8. Push
+6. Publish
+   - `yarn publish-extension` (packages and publishes to VS Marketplace and OpenVSX)
+   - `yarn publish-cli` (packages and publishes `@foam/cli` to npm as `foam-cli`)
+7. Push
    - `git push && git push --tags`
-9. Update the release notes in GitHub
+8. Update the release notes in GitHub
    - In GitHub, top right, click on "releases"
    - Select "tags" in top left
    - Select the tag that was just released, click "edit" and copy release information from `CHANGELOG.md`
    - Publish (no need to attach artifacts)
-10. Announce on Discord
+9. Announce on Discord
 
 Steps 1 to 8 should really be replaced by a GitHub action...

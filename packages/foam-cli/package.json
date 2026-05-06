@@ -9,7 +9,9 @@
   "scripts": {
     "build": "node esbuild.js",
     "foam": "node out/index.js",
-    "publish-cli": "node publish.js",
+    "prepublishOnly": "yarn clean && node esbuild.js --production",
+    "publish": "node publish.js",
+    "tag-release": "node ../../scripts/tag-release.js cli",
     "clean": "rimraf out",
     "test": "yarn test:unit",
     "test:unit": "vitest run",

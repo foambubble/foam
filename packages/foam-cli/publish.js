@@ -16,9 +16,7 @@ fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
 
 const { execSync } = require('child_process');
 try {
-  execSync('node esbuild.js --production && npm publish --registry https://registry.npmjs.org/', {
-    stdio: 'inherit',
-  });
+  execSync('npm publish --registry https://registry.npmjs.org/', { stdio: 'inherit' });
 } finally {
   pkg.name = originalName;
   pkg.dependencies = originalDependencies;

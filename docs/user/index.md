@@ -67,7 +67,7 @@ See [[publishing]] for more details.
 
 ## Tools
 
-- [[cli]]
+- [[cli]] — work with your workspace from the terminal (`search`, `list`, `daily`, `lint`, and more)
 - [[workspace-janitor]]
 - [[orphans]]
 - [[foam-logging-in-vscode]]

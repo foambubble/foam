@@ -53,17 +53,16 @@ Exceptions to the monorepo are:
 
 This project uses [Yarn workspaces](https://classic.yarnpkg.com/en/docs/workspaces/).
 
-The monorepo contains two Yarn workspace packages:
+The monorepo contains four Yarn workspace packages:
 
 - [/packages/foam-vscode](https://github.com/foambubble/foam/tree/main/packages/foam-vscode) - The VS Code extension.
+- [/packages/foam-core](https://github.com/foambubble/foam/tree/main/packages/foam-core) - Platform-agnostic core logic (`@foam/core`, published to npm as `foam-core`).
+- [/packages/foam-cli](https://github.com/foambubble/foam/tree/main/packages/foam-cli) - The CLI (`@foam/cli`, published to npm as `foam-cli`).
 - [/packages/foam-graph](https://github.com/foambubble/foam/tree/main/packages/foam-graph) - The graph visualization web component (`@foam/graph-view`).
 
-#### foam-vscode
+#### @foam/core
 
-The extension's core business logic lives in `src/core/` and must remain platform-agnostic:
-
-1. Nothing in `foam-vscode/src/core` should depend on files outside of this directory.
-2. Code in `foam-vscode/src/core` must NOT depend on the `vscode` library.
+Platform-agnostic core logic shared by the extension, CLI, and any future surface. Must remain free of any dependency on the `vscode` library.
 
 #### @foam/graph-view
 
@@ -101,6 +100,7 @@ After you have made your changes to your copy of the project, it is time to try 
 2. Github should show you an button called "Compare & pull request" linking your forked repository to the community repository.
 3. Click that button and confirm that your repository is going to be merged into the community repository. See [this guide](https://blog.robsewell.com/blog/how-to-fork-a-github-repository-and-contribute-to-an-open-source-project/) for more specifics.
 4. Add as many relevant details to the PR message to make it clear to the project maintainers and other members of the community what you have accomplished with your new changes. Link to any issues the changes are related to.
+   - If your change affects users of any published package (extension, CLI, or `@foam/core`), include a changeset in the PR. Run `yarn changeset` from the repo root, pick the affected packages and bump type, and commit the generated `.changeset/*.md` file alongside your code. The accumulated changesets become the next release's CHANGELOG entries when a maintainer runs `yarn version-packages`.
 5. Your PR will then need to be reviewed and accepted by the other members of the community. Any discussion about the changes will occur in your PR thread.
 6. Once reviewed and accept you can complete the merge request!
 7. Finally rest and watch the sun rise on a grateful universe... Or start tackling the other open issues ;)

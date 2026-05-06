@@ -27,7 +27,7 @@ describe('listNotes', () => {
       createTestNote({ uri: '/workspace/a.md', title: 'A' }),
       createTestNote({ uri: '/workspace/b.md', title: 'B' }),
     ]);
-    const result = listNotes(ws, root.toFsPath(), {});
+    const result = listNotes(ws, {});
     expect(result).toHaveLength(2);
     expect(result.find(r => r.id === 'a')).toMatchObject({ title: 'A', type: 'note' });
     expect(result.find(r => r.id === 'b')).toMatchObject({ title: 'B', type: 'note' });
@@ -38,7 +38,7 @@ describe('listNotes', () => {
       createTestNote({ uri: '/workspace/a.md', title: 'A', type: 'note' }),
       createTestNote({ uri: '/workspace/b.md', title: 'B', type: 'daily-note' }),
     ]);
-    const result = listNotes(ws, root.toFsPath(), { type: 'daily-note' });
+    const result = listNotes(ws, { type: 'daily-note' });
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe('b');
   });
@@ -48,7 +48,7 @@ describe('listNotes', () => {
       createTestNote({ uri: '/workspace/a.md', tags: ['work', 'project'] }),
       createTestNote({ uri: '/workspace/b.md', tags: ['work'] }),
     ]);
-    const result = listNotes(ws, root.toFsPath(), { tags: ['work', 'project'] });
+    const result = listNotes(ws, { tags: ['work', 'project'] });
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe('a');
   });
@@ -59,16 +59,16 @@ describe('listNotes', () => {
       createTestNote({ uri: '/workspace/b.md' }),
       createTestNote({ uri: '/workspace/c.md' }),
     ]);
-    const result = listNotes(ws, root.toFsPath(), { limit: 2 });
+    const result = listNotes(ws, { limit: 2 });
     expect(result).toHaveLength(2);
   });
 
-  it('includes relative path from workspace root', () => {
-    const { workspace: ws, root } = createInMemoryWorkspace([
+  it('includes URI of each resource', () => {
+    const { workspace: ws } = createInMemoryWorkspace([
       createTestNote({ uri: '/workspace/notes/a.md', title: 'A' }),
     ]);
-    const result = listNotes(ws, root.toFsPath(), {});
-    expect(result[0].path).toBe(path.join('notes', 'a.md'));
+    const result = listNotes(ws, {});
+    expect(result[0].uri.path).toBe('/workspace/notes/a.md');
   });
 });
 
@@ -126,7 +126,7 @@ describe('listOrphans', () => {
       createTestNote({ uri: '/workspace/orphan.md' }),
     ]);
     const graph = FoamGraph.fromWorkspace(ws);
-    const result = listOrphans(ws, graph, root.toFsPath());
+    const result = listOrphans(ws, graph);
     // orphan has no connections; linked has outgoing; target has incoming
     const ids = result.map(r => r.id);
     expect(ids).toContain('orphan');
@@ -144,7 +144,7 @@ describe('listDeadends', () => {
       createTestNote({ uri: '/workspace/target.md' }),
     ]);
     const graph = FoamGraph.fromWorkspace(ws);
-    const result = listDeadends(ws, graph, root.toFsPath());
+    const result = listDeadends(ws, graph);
     const ids = result.map(r => r.id);
     expect(ids).toContain('target');
     expect(ids).not.toContain('linked');
@@ -159,7 +159,7 @@ describe('listPlaceholders', () => {
       createTestNote({ uri: '/workspace/a.md', links: [{ slug: 'missing-note' }] }),
     ]);
     const graph = FoamGraph.fromWorkspace(ws);
-    const result = listPlaceholders(ws, graph, root.toFsPath());
+    const result = listPlaceholders(ws, graph);
     expect(result).toHaveLength(1);
     expect(result[0].placeholder_id).toBe('missing-note');
     expect(result[0].referenced_by.map(r => r.id)).toContain('a');
@@ -170,8 +170,8 @@ describe('listPlaceholders', () => {
 
 describe('listTemplates', () => {
   it('returns empty array when templates dir does not exist', () =>
-    withTmpWorkspace({}, async ({ rootDir }) => {
-      const result = await listTemplates(rootDir);
+    withTmpWorkspace({}, async ({ rootUri }) => {
+      const result = await listTemplates(rootUri);
       expect(result).toEqual([]);
     }));
 
@@ -188,8 +188,8 @@ describe('listTemplates', () => {
         ].join('\n'),
         '.foam/templates/default.md': '# Default',
       },
-      async ({ rootDir }) => {
-        const result = await listTemplates(rootDir);
+      async ({ rootUri }) => {
+        const result = await listTemplates(rootUri);
         const names = result.map(t => t.name);
         expect(names).toContain('meeting');
         expect(names).toContain('default');

@@ -1,6 +1,11 @@
 import { Resource, ResourceLink } from './note';
 import { URI } from './uri';
-import { isAbsolute, getExtension, changeExtension } from '../utils/path';
+import {
+  isAbsolute,
+  getExtension,
+  changeExtension,
+  fromFsPath,
+} from '../utils/path';
 import { isSome } from '../utils';
 import { Emitter } from '../common/event';
 import { ResourceProvider } from './provider';
@@ -55,48 +60,59 @@ export class FoamWorkspace implements IDisposable {
   /**
    * Resolves a path string to an absolute URI within this workspace.
    *
+   * Filesystem inputs (Windows drive paths, UNC paths, backslash separators)
+   * are normalized to POSIX via {@link fromFsPath}, then classified.
+   *
    * Resolution rules (in order):
    * 1. Filesystem-absolute path already under a workspace root → returned as-is
    * 2. Workspace-relative absolute path (starts with '/' but not under any root) →
    *    resolved as roots[0].joinPath(path)
    * 3. Relative path → resolved relative to `relativeTo` if provided, otherwise roots[0]
    *
-   * When roots is empty, absolute paths are returned via URI.file() and relative paths
-   * require a `relativeTo` base.
+   * Throws when `roots` is empty and no `relativeTo` is provided — there's
+   * no base URI to derive scheme/authority from. Callers must construct a
+   * workspace with at least one root or supply a `relativeTo` URI.
    */
   resolveUri(filepath: string, relativeTo?: URI): URI {
-    const isDrivePath = /^[a-zA-Z]:/.test(filepath);
-    const isAbsolutePath = filepath.startsWith('/') || isDrivePath;
+    // Normalize the input to a POSIX path. After this:
+    // - Windows drive paths look like `/C:/foo`
+    // - UNC paths have their share split into `authority`
+    // - all separators are forward slashes
+    const [normalized] = fromFsPath(filepath);
 
-    if (isAbsolutePath) {
+    if (isAbsolute(normalized)) {
       if (this.roots.length === 0) {
-        return URI.file(filepath);
+        // No workspace root to derive from. Fall back to `relativeTo` when
+        // available so the result inherits its scheme/authority. With
+        // neither, we have no source URI — caller must provide one.
+        if (relativeTo) {
+          return relativeTo.forPath(normalized);
+        }
+        throw new Error(
+          'Cannot resolve absolute path without workspace roots or a relativeTo URI'
+        );
       }
-      // Normalize Windows drive paths to POSIX form (/C:/...) before comparison,
-      // since root.path is always in POSIX form. Raw backslash paths like
-      // C:\workspace\note.md would never match root.path otherwise.
-      const normalizedFilepath = isDrivePath
-        ? URI.file(filepath).path
-        : filepath;
+      // Drive paths require case-insensitive comparison against root.path
+      // (Windows filesystems are case-insensitive); POSIX paths use exact
+      // comparison.
+      const isDrivePath = normalized.length >= 3 && normalized[2] === ':';
       const isUnderRoot = this.roots.some(root =>
         isDrivePath
-          ? normalizedFilepath
-              .toLowerCase()
-              .startsWith(root.path.toLowerCase() + '/') ||
-            normalizedFilepath.toLowerCase() === root.path.toLowerCase()
-          : normalizedFilepath.startsWith(root.path + '/') ||
-            normalizedFilepath === root.path
+          ? normalized.toLowerCase().startsWith(root.path.toLowerCase() + '/') ||
+            normalized.toLowerCase() === root.path.toLowerCase()
+          : normalized.startsWith(root.path + '/') ||
+            normalized === root.path
       );
       if (isUnderRoot) {
-        return this.roots[0].forPath(normalizedFilepath); // case 1: already absolute under root
+        return this.roots[0].forPath(normalized); // case 1: already absolute under root
       }
-      return this.roots[0].joinPath(normalizedFilepath); // case 2: workspace-relative absolute
+      return this.roots[0].joinPath(normalized); // case 2: workspace-relative absolute
     }
 
     // case 3: relative path
     if (relativeTo) {
       // relativeTo is a file URI — resolve against its parent directory
-      return relativeTo.getDirectory().joinPath(filepath);
+      return relativeTo.getDirectory().joinPath(normalized);
     }
     if (this.roots.length === 0) {
       throw new Error(
@@ -104,7 +120,7 @@ export class FoamWorkspace implements IDisposable {
       );
     }
     // roots[0] is a directory — join directly
-    return this.roots[0].joinPath(filepath);
+    return this.roots[0].joinPath(normalized);
   }
 
   set(resource: Resource) {
@@ -360,7 +376,7 @@ export class FoamWorkspace implements IDisposable {
       for (const candidate of candidates) {
         if (isAbsolute(candidate)) {
           // Try roots[0] first (via resolveUri which handles already-under-root paths)
-          const resolvedUri = this.resolveUri(candidate);
+          const resolvedUri = this.resolveUri(candidate, baseUri);
           resource =
             this._resources.get(this.getTrieIdentifier(resolvedUri)) ?? null;
           // For workspace-relative absolute paths in multi-root workspaces,

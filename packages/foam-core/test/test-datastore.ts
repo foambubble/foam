@@ -44,6 +44,30 @@ export class FileDataStore implements IDataStore {
       return null;
     }
   }
+
+  async write(uri: URI, content: string): Promise<void> {
+    const fsPath = uri.toFsPath();
+    fs.mkdirSync(path.dirname(fsPath), { recursive: true });
+    fs.writeFileSync(fsPath, content, 'utf8');
+  }
+
+  async delete(uri: URI): Promise<void> {
+    try {
+      fs.unlinkSync(uri.toFsPath());
+    } catch (err: any) {
+      if (err.code !== 'ENOENT') throw err;
+    }
+  }
+
+  async move(from: URI, to: URI): Promise<void> {
+    const toFs = to.toFsPath();
+    fs.mkdirSync(path.dirname(toFs), { recursive: true });
+    fs.renameSync(from.toFsPath(), toFs);
+  }
+
+  async exists(uri: URI): Promise<boolean> {
+    return fs.existsSync(uri.toFsPath());
+  }
 }
 
 export const toMatcherPathFormat = isWindows

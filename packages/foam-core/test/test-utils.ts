@@ -45,8 +45,18 @@ const position = Range.create(0, 0, 0, 100);
 
 export const strToUri = URI.file;
 
+/**
+ * Default root for test workspaces. Tests that don't care about specific
+ * workspace roots get one automatically so absolute-path resolution works
+ * via the under-root branch of `resolveUri`.
+ *
+ * Tests that need to exercise multi-root behavior or specific paths can
+ * pass their own `workspaceRoots`.
+ */
+const DEFAULT_TEST_ROOT = URI.file('/');
+
 export const createTestWorkspace = (
-  workspaceRoots: URI[] = [],
+  workspaceRoots: URI[] = [DEFAULT_TEST_ROOT],
   dataStore?: IDataStore,
   directoryMode: 'resolve' | 'disabled' = 'resolve'
 ) => {
@@ -56,6 +66,10 @@ export const createTestWorkspace = (
     dataStore ?? {
       read: _ => Promise.resolve(''),
       list: () => Promise.resolve([]),
+      write: () => Promise.resolve(),
+      delete: () => Promise.resolve(),
+      move: () => Promise.resolve(),
+      exists: () => Promise.resolve(false),
     },
     parser,
     ['.md'],

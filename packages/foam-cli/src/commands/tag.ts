@@ -96,11 +96,11 @@ export async function runTagCommand(
         return 1;
       }
 
-      const { rootDir, foam } = await loadWorkspaceFromDirectory(workspaceDir);
+      const { foam, dataStore } = await loadWorkspaceFromDirectory(workspaceDir);
       const tags = FoamTags.fromWorkspace(foam.workspace);
       const result = await renameTag(
         tags,
-        rootDir,
+        dataStore,
         oldTag,
         newTag,
         getFlag(parsed, 'force')

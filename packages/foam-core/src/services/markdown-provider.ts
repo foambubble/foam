@@ -141,7 +141,7 @@ export class MarkdownResourceProvider implements ResourceProvider {
         let path: string;
 
         if (targetPath.startsWith('/')) {
-          const resolvedUri = workspace.resolveUri(targetPath);
+          const resolvedUri = workspace.resolveUri(targetPath, resource.uri);
           targetUri =
             workspace.find(targetPath, resource.uri)?.uri ??
             workspace.roots

@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { FoamGraph, FoamTags } from '@foam/core';
+import { FoamGraph, FoamTags, URI, resolveNote } from '@foam/core';
 import { withTmpWorkspace, TestLogger } from '../test/test-utils';
 import { setColorsEnabled } from '../support/colors';
 
@@ -17,9 +17,10 @@ import {
 
 describe('renameNote', () => {
   it('renames the file and rewrites wikilinks pointing to it', () =>
-    withTmpWorkspace({ 'alpha.md': '# Alpha', 'ref.md': '[[alpha]]' }, async ({ rootDir, workspace }) => {
+    withTmpWorkspace({ 'alpha.md': '# Alpha', 'ref.md': '[[alpha]]' }, async ({ rootDir, workspace, dataStore }) => {
       const graph = FoamGraph.fromWorkspace(workspace);
-      const result = await renameNote(workspace, graph, rootDir, 'alpha', undefined, 'renamed');
+      const resource = resolveNote(workspace, { identifier: 'alpha' });
+      const result = await renameNote(workspace, graph, dataStore, resource, 'renamed');
 
       expect(result.old_id).toBe('alpha');
       expect(result.id).toBe('renamed');
@@ -28,10 +29,12 @@ describe('renameNote', () => {
       expect(fs.readFileSync(path.join(rootDir, 'ref.md'), 'utf8')).toContain('[[renamed]]');
     }));
 
-  it('moves to a different directory when --target-path is given', () =>
-    withTmpWorkspace({ 'alpha.md': '# Alpha', 'archive/.keep': '' }, async ({ rootDir, workspace }) => {
+  it('moves to a different directory when targetDir is given', () =>
+    withTmpWorkspace({ 'alpha.md': '# Alpha', 'archive/.keep': '' }, async ({ rootDir, workspace, dataStore }) => {
       const graph = FoamGraph.fromWorkspace(workspace);
-      const result = await renameNote(workspace, graph, rootDir, 'alpha', undefined, 'alpha', 'archive');
+      const resource = resolveNote(workspace, { identifier: 'alpha' });
+      const targetDir = URI.file(path.join(rootDir, 'archive'));
+      const result = await renameNote(workspace, graph, dataStore, resource, 'alpha', targetDir);
 
       expect(fs.existsSync(path.join(rootDir, 'archive', 'alpha.md'))).toBe(true);
       expect(fs.existsSync(path.join(rootDir, 'alpha.md'))).toBe(false);
@@ -39,21 +42,21 @@ describe('renameNote', () => {
     }));
 
   it('errors when destination already exists', () =>
-    withTmpWorkspace({ 'alpha.md': '# Alpha', 'beta.md': '# Beta' }, async ({ rootDir, workspace }) => {
+    withTmpWorkspace({ 'alpha.md': '# Alpha', 'beta.md': '# Beta' }, async ({ workspace, dataStore }) => {
       const graph = FoamGraph.fromWorkspace(workspace);
+      const resource = resolveNote(workspace, { identifier: 'alpha' });
       await expect(
-        renameNote(workspace, graph, rootDir, 'alpha', undefined, 'beta')
+        renameNote(workspace, graph, dataStore, resource, 'beta')
       ).rejects.toThrow('already exists');
     }));
 
   it('errors when identifier is ambiguous', () =>
     withTmpWorkspace(
       { 'notes/alpha.md': '# Alpha', 'archive/alpha.md': '# Alpha (archived)' },
-      async ({ rootDir, workspace }) => {
-        const graph = FoamGraph.fromWorkspace(workspace);
-        await expect(
-          renameNote(workspace, graph, rootDir, 'alpha', undefined, 'renamed')
-        ).rejects.toThrow('Ambiguous');
+      async ({ workspace }) => {
+        expect(() =>
+          resolveNote(workspace, { identifier: 'alpha' })
+        ).toThrow('Ambiguous');
       }
     ));
 });
@@ -62,9 +65,9 @@ describe('renameNote', () => {
 
 describe('renameTag', () => {
   it('renames a tag across all files', () =>
-    withTmpWorkspace({ 'a.md': '# A\n\n#project', 'b.md': '# B\n\n#project' }, async ({ rootDir, foam }) => {
+    withTmpWorkspace({ 'a.md': '# A\n\n#project', 'b.md': '# B\n\n#project' }, async ({ rootDir, foam, dataStore }) => {
       const tags = FoamTags.fromWorkspace(foam.workspace);
-      const result = await renameTag(tags, rootDir, 'project', 'work', false);
+      const result = await renameTag(tags, dataStore, 'project', 'work', false);
 
       expect(result.old_tag).toBe('project');
       expect(result.new_tag).toBe('work');
@@ -76,27 +79,27 @@ describe('renameTag', () => {
   it('renames child tags hierarchically', () =>
     withTmpWorkspace(
       { 'a.md': '# A\n\n#project #project/frontend', 'b.md': '# B\n\n#project/backend' },
-      async ({ rootDir, foam }) => {
+      async ({ rootDir, foam, dataStore }) => {
         const tags = FoamTags.fromWorkspace(foam.workspace);
-        await renameTag(tags, rootDir, 'project', 'work', false);
+        await renameTag(tags, dataStore, 'project', 'work', false);
 
         expect(fs.readFileSync(path.join(rootDir, 'a.md'), 'utf8')).toContain('#work/frontend');
         expect(fs.readFileSync(path.join(rootDir, 'b.md'), 'utf8')).toContain('#work/backend');
       }
     ));
 
-  it('errors when merging into existing tag without --force', () =>
-    withTmpWorkspace({ 'a.md': '# A\n\n#project', 'b.md': '# B\n\n#work' }, async ({ rootDir, foam }) => {
+  it('errors when merging into existing tag without force', () =>
+    withTmpWorkspace({ 'a.md': '# A\n\n#project', 'b.md': '# B\n\n#work' }, async ({ rootDir, foam, dataStore }) => {
       const tags = FoamTags.fromWorkspace(foam.workspace);
       await expect(
-        renameTag(tags, rootDir, 'project', 'work', false)
-      ).rejects.toThrow('--force');
+        renameTag(tags, dataStore, 'project', 'work', false)
+      ).rejects.toThrow(/will merge/);
     }));
 
   it('merges tags when --force is given', () =>
-    withTmpWorkspace({ 'a.md': '# A\n\n#project', 'b.md': '# B\n\n#work' }, async ({ rootDir, foam }) => {
+    withTmpWorkspace({ 'a.md': '# A\n\n#project', 'b.md': '# B\n\n#work' }, async ({ rootDir, foam, dataStore }) => {
       const tags = FoamTags.fromWorkspace(foam.workspace);
-      const result = await renameTag(tags, rootDir, 'project', 'work', true);
+      const result = await renameTag(tags, dataStore, 'project', 'work', true);
 
       expect(result.old_tag).toBe('project');
       expect(result.new_tag).toBe('work');
@@ -111,9 +114,10 @@ describe('renameSection', () => {
   it('renames heading text and rewrites section links', () =>
     withTmpWorkspace(
       { 'note.md': '# Note\n\n## Goals\n\nsome text\n', 'ref.md': '[[note#Goals]]' },
-      async ({ rootDir, workspace }) => {
+      async ({ rootDir, workspace, dataStore }) => {
         const graph = FoamGraph.fromWorkspace(workspace);
-        const result = await renameSection(workspace, graph, rootDir, 'note', undefined, 'Goals', 'Objectives');
+        const resource = resolveNote(workspace, { identifier: 'note' });
+        const result = await renameSection(workspace, graph, dataStore, resource, 'Goals', 'Objectives');
 
         const noteContent = fs.readFileSync(path.join(rootDir, 'note.md'), 'utf8');
         expect(noteContent).toContain('## Objectives');
@@ -128,9 +132,10 @@ describe('renameSection', () => {
         'note.md': '# Note\n\n## C++ Tips & Tricks (v2)\n\nsome text\n',
         'ref.md': '[[note#C++ Tips & Tricks (v2)]]',
       },
-      async ({ rootDir, workspace }) => {
+      async ({ rootDir, workspace, dataStore }) => {
         const graph = FoamGraph.fromWorkspace(workspace);
-        const result = await renameSection(workspace, graph, rootDir, 'note', undefined, 'C++ Tips & Tricks (v2)', 'C++ Tips & Tricks (v3)');
+        const resource = resolveNote(workspace, { identifier: 'note' });
+        const result = await renameSection(workspace, graph, dataStore, resource, 'C++ Tips & Tricks (v2)', 'C++ Tips & Tricks (v3)');
 
         const noteContent = fs.readFileSync(path.join(rootDir, 'note.md'), 'utf8');
         expect(noteContent).toContain('## C++ Tips & Tricks (v3)');
@@ -146,9 +151,10 @@ describe('renameBlock', () => {
   it('renames block anchor and rewrites block links', () =>
     withTmpWorkspace(
       { 'note.md': '# Note\n\nsome text ^intro\n', 'ref.md': '[[note#^intro]]' },
-      async ({ rootDir, workspace }) => {
+      async ({ rootDir, workspace, dataStore }) => {
         const graph = FoamGraph.fromWorkspace(workspace);
-        const result = await renameBlock(workspace, graph, rootDir, 'note', undefined, 'intro', 'overview');
+        const resource = resolveNote(workspace, { identifier: 'note' });
+        const result = await renameBlock(workspace, graph, dataStore, resource, 'intro', 'overview');
 
         const noteContent = fs.readFileSync(path.join(rootDir, 'note.md'), 'utf8');
         expect(noteContent).toContain('^overview');

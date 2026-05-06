@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { parseDateArg, defaultDailyNotePath, runDailyCommand } from './daily';
+import { URI } from '@foam/core';
+import { parseDateArg, defaultDailyNoteUri, runDailyCommand } from './daily';
 import { withTmpWorkspace, TestLogger } from '../test/test-utils';
 import { setColorsEnabled } from '../support/colors';
 
@@ -33,19 +34,19 @@ describe('parseDateArg', () => {
   });
 });
 
-// ─── defaultDailyNotePath ─────────────────────────────────────────────────────
+// ─── defaultDailyNoteUri ──────────────────────────────────────────────────────
 
-describe('defaultDailyNotePath', () => {
+describe('defaultDailyNoteUri', () => {
   it('returns journals/YYYY-MM-DD.md', () => {
     const date = new Date('2026-05-01T00:00:00');
-    const result = defaultDailyNotePath(date, '/workspace');
-    expect(result).toBe(path.join('/workspace', 'journals', '2026-05-01.md'));
+    const result = defaultDailyNoteUri(date, URI.file('/workspace'));
+    expect(result.path).toBe('/workspace/journals/2026-05-01.md');
   });
 
   it('zero-pads month and day', () => {
     const date = new Date('2026-03-07T00:00:00');
-    const result = defaultDailyNotePath(date, '/workspace');
-    expect(result).toContain('2026-03-07.md');
+    const result = defaultDailyNoteUri(date, URI.file('/workspace'));
+    expect(result.path).toContain('2026-03-07.md');
   });
 });
 

@@ -395,7 +395,9 @@ content-card![[note-e#Section 2]]`);
     const noteBText = 'This is the text of note B which includes ![[note-a]]';
     const noteB = await createFile(noteBText, ['preview', 'note-b.md']);
 
-    const ws = new FoamWorkspace()
+    // Use the notes' parent dir as the workspace root so the absolute-path
+    // embed wikilinks emitted internally resolve correctly.
+    const ws = new FoamWorkspace([noteA.uri.getDirectory()])
       .set(parser.parse(noteA.uri, noteA.content))
       .set(parser.parse(noteB.uri, noteB.content));
 

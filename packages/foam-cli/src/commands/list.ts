@@ -1,6 +1,19 @@
 import path from 'node:path';
 import fs from 'node:fs/promises';
-import { createMarkdownParser, FoamGraph, FoamTags, FoamWorkspace, getTemplatesDir } from '@foam/core';
+import {
+  createMarkdownParser,
+  FoamGraph,
+  FoamTags,
+  FoamWorkspace,
+  URI,
+  getTemplatesDir,
+  listNotes,
+  listTags,
+  listOrphans,
+  listDeadends,
+  listPlaceholders,
+  uriToWorkspacePath,
+} from '@foam/core';
 import { loadWorkspaceFromDirectory } from '../support/filesystem';
 import {
   parseArgs,
@@ -10,8 +23,21 @@ import {
   resolveWorkspaceDir,
 } from '../support/args';
 import type { CliLogger, Format } from '../support/types';
-import { uriToWorkspacePath } from '../support/workspace';
 import { dim, path as pathColor } from '../support/colors';
+import {
+  serializeNoteItem,
+  serializeNoteSummary,
+  serializePlaceholder,
+} from '../support/serializers';
+
+// Re-export domain functions for any external consumers
+export {
+  listNotes,
+  listTags,
+  listOrphans,
+  listDeadends,
+  listPlaceholders,
+} from '@foam/core';
 
 // ─── Help ────────────────────────────────────────────────────────────────────
 
@@ -30,127 +56,19 @@ Options:
   --help               Show this help
 `;
 
-// ─── Domain functions ────────────────────────────────────────────────────────
+// ─── listTemplates (CLI-only — uses Node fs to scan disk) ────────────────────
 
-export function listNotes(
-  workspace: InstanceType<typeof FoamWorkspace>,
-  rootDir: string,
-  opts: { type?: string; tags?: string[]; limit?: number }
-) {
-  let resources = workspace.list();
-
-  if (opts.type) {
-    resources = resources.filter(r => r.type === opts.type);
-  }
-
-  if (opts.tags && opts.tags.length > 0) {
-    resources = resources.filter(r =>
-      opts.tags!.every(tag => r.tags.some(t => t.label === tag))
-    );
-  }
-
-  if (opts.limit !== undefined) {
-    resources = resources.slice(0, opts.limit);
-  }
-
-  return resources.map(r => ({
-    id: workspace.getIdentifier(r.uri),
-    uri: r.uri.toFsPath(),
-    path: uriToWorkspacePath(r.uri, rootDir),
-    title: r.title,
-    type: r.type,
-    tags: r.tags.map(t => t.label),
-  }));
-}
-
-export function listTags(
-  foamTags: InstanceType<typeof FoamTags>,
-  opts: { prefix?: string; sort?: 'count' | 'name'; limit?: number }
-) {
-  let entries = Array.from(foamTags.tags.entries()).map(([tag, locations]) => ({
-    tag,
-    count: locations.length,
-  }));
-
-  if (opts.prefix) {
-    entries = entries.filter(e => e.tag.startsWith(opts.prefix!));
-  }
-
-  entries.sort((a, b) =>
-    opts.sort === 'count' ? b.count - a.count : a.tag.localeCompare(b.tag)
-  );
-
-  if (opts.limit !== undefined) {
-    entries = entries.slice(0, opts.limit);
-  }
-
-  return entries;
-}
-
-export function listOrphans(
-  workspace: InstanceType<typeof FoamWorkspace>,
-  graph: InstanceType<typeof FoamGraph>,
-  rootDir: string
-) {
-  return workspace.list().filter(r => {
-    if (r.type !== 'note') return false;
-    const outgoing = graph.getLinks(r.uri);
-    const incoming = graph.getBacklinks(r.uri);
-    return outgoing.length === 0 && incoming.length === 0;
-  }).map(r => ({
-    id: workspace.getIdentifier(r.uri),
-    uri: r.uri.toFsPath(),
-    path: uriToWorkspacePath(r.uri, rootDir),
-    title: r.title,
-  }));
-}
-
-export function listDeadends(
-  workspace: InstanceType<typeof FoamWorkspace>,
-  graph: InstanceType<typeof FoamGraph>,
-  rootDir: string
-) {
-  return workspace.list().filter(r => {
-    if (r.type !== 'note') return false;
-    const outgoing = graph.getLinks(r.uri);
-    return outgoing.length === 0;
-  }).map(r => ({
-    id: workspace.getIdentifier(r.uri),
-    uri: r.uri.toFsPath(),
-    path: uriToWorkspacePath(r.uri, rootDir),
-    title: r.title,
-  }));
-}
-
-export function listPlaceholders(
-  workspace: InstanceType<typeof FoamWorkspace>,
-  graph: InstanceType<typeof FoamGraph>,
-  rootDir: string
-) {
-  return Array.from(graph.placeholders.values()).map(placeholderUri => {
-    const backlinks = graph.getBacklinks(placeholderUri);
-    return {
-      placeholder_id: placeholderUri.path.split('/').pop()!,
-      referenced_by: backlinks.map(conn => {
-        const src = workspace.find(conn.source);
-        return {
-          id: workspace.getIdentifier(conn.source),
-          uri: conn.source.toFsPath(),
-          path: uriToWorkspacePath(conn.source, rootDir),
-          title: src?.title ?? '',
-        };
-      }),
-    };
-  });
-}
-
-export async function listTemplates(rootDir: string) {
+export async function listTemplates(rootUri: URI) {
   const parser = createMarkdownParser();
-  const templatesDir = getTemplatesDir(rootDir).toFsPath();
+  const templatesDir = getTemplatesDir(rootUri).toFsPath();
 
   try {
     const entries = await fs.readdir(templatesDir, { withFileTypes: true });
-    const templates: Array<{ name: string; path: string; description?: string }> = [];
+    const templates: Array<{
+      name: string;
+      path: string;
+      description?: string;
+    }> = [];
 
     for (const entry of entries) {
       if (!entry.isFile()) continue;
@@ -193,12 +111,14 @@ function padAndColorPath(value: string, totalWidth: number): string {
 }
 
 function formatNotesText(
-  notes: ReturnType<typeof listNotes>
+  notes: ReturnType<typeof listNotes>,
+  workspace: FoamWorkspace
 ): string {
   if (notes.length === 0) return dim('(no notes found)');
-  const maxPath = Math.max(...notes.map(n => n.path.length));
+  const paths = notes.map(n => uriToWorkspacePath(n.uri, workspace));
+  const maxPath = Math.max(...paths.map(p => p.length));
   return notes
-    .map(n => `${padAndColorPath(n.path, maxPath + 2)}${n.title}`)
+    .map((n, i) => `${padAndColorPath(paths[i], maxPath + 2)}${n.title}`)
     .join('\n');
 }
 
@@ -214,31 +134,29 @@ function formatTagsText(tags: ReturnType<typeof listTags>): string {
     .join('\n');
 }
 
-function formatOrphansText(
-  items: ReturnType<typeof listOrphans>
+function formatSummariesText(
+  items: ReturnType<typeof listOrphans>,
+  workspace: FoamWorkspace,
+  emptyMessage: string
 ): string {
-  if (items.length === 0) return dim('(no orphans found)');
-  const maxPath = Math.max(...items.map(n => n.path.length));
+  if (items.length === 0) return dim(emptyMessage);
+  const paths = items.map(n => uriToWorkspacePath(n.uri, workspace));
+  const maxPath = Math.max(...paths.map(p => p.length));
   return items
-    .map(n => `${padAndColorPath(n.path, maxPath + 2)}${n.title}`)
-    .join('\n');
-}
-
-function formatDeadendsText(items: ReturnType<typeof listDeadends>): string {
-  if (items.length === 0) return dim('(no dead-end notes found)');
-  const maxPath = Math.max(...items.map(n => n.path.length));
-  return items
-    .map(n => `${padAndColorPath(n.path, maxPath + 2)}${n.title}`)
+    .map((n, i) => `${padAndColorPath(paths[i], maxPath + 2)}${n.title}`)
     .join('\n');
 }
 
 function formatPlaceholdersText(
-  items: ReturnType<typeof listPlaceholders>
+  items: ReturnType<typeof listPlaceholders>,
+  workspace: FoamWorkspace
 ): string {
   if (items.length === 0) return dim('(no placeholders found)');
   return items
     .map(p => {
-      const refs = p.referenced_by.map(r => pathColor(r.path)).join(dim(', '));
+      const refs = p.referenced_by
+        .map(r => pathColor(uriToWorkspacePath(r.uri, workspace)))
+        .join(dim(', '));
       return `${pathColor(p.placeholder_id)}\n  ${dim('referenced by:')} ${refs}`;
     })
     .join('\n');
@@ -250,9 +168,7 @@ function formatTemplatesText(
   if (templates.length === 0) return dim('(no templates found)');
   const maxName = Math.max(...templates.map(t => t.name.length));
   return templates
-    .map(t =>
-      `${padAndColorPath(t.name, maxName + 2)}${t.description ?? ''}`
-    )
+    .map(t => `${padAndColorPath(t.name, maxName + 2)}${t.description ?? ''}`)
     .join('\n');
 }
 
@@ -279,15 +195,27 @@ export async function runListCommand(
   const format: Format = (getString(parsed, 'format') as Format) ?? 'text';
   const workspaceDir = resolveWorkspaceDir(parsed);
 
-  const validSubcommands = ['notes', 'tags', 'orphans', 'deadends', 'placeholders', 'templates'];
+  const validSubcommands = [
+    'notes',
+    'tags',
+    'orphans',
+    'deadends',
+    'placeholders',
+    'templates',
+  ];
   if (!validSubcommands.includes(what)) {
-    logger.error(`Unknown subcommand "${what}". Expected one of: ${validSubcommands.join(', ')}\n\n${LIST_HELP}`);
+    logger.error(
+      `Unknown subcommand "${what}". Expected one of: ${validSubcommands.join(', ')}\n\n${LIST_HELP}`
+    );
     return 1;
   }
 
   try {
+    const { rootUri, workspace } =
+      await loadWorkspaceFromDirectory(workspaceDir);
+
     if (what === 'templates') {
-      const templates = await listTemplates(workspaceDir);
+      const templates = await listTemplates(rootUri);
       if (format === 'json') {
         logger.info(JSON.stringify(templates, null, 2));
       } else {
@@ -296,17 +224,25 @@ export async function runListCommand(
       return 0;
     }
 
-    const { rootDir, workspace } = await loadWorkspaceFromDirectory(workspaceDir);
-
     if (what === 'notes') {
       const typeFilter = getString(parsed, 'type');
       const tagFlags = getStrings(parsed, 'tag');
       const limit = parseLimit(getString(parsed, 'limit'));
-      const notes = listNotes(workspace, rootDir, { type: typeFilter, tags: tagFlags, limit });
+      const notes = listNotes(workspace, {
+        type: typeFilter,
+        tags: tagFlags,
+        limit,
+      });
       if (format === 'json') {
-        logger.info(JSON.stringify(notes, null, 2));
+        logger.info(
+          JSON.stringify(
+            notes.map(n => serializeNoteItem(n, workspace)),
+            null,
+            2
+          )
+        );
       } else {
-        logger.info(formatNotesText(notes));
+        logger.info(formatNotesText(notes, workspace));
       }
       return 0;
     }
@@ -329,31 +265,51 @@ export async function runListCommand(
     }
 
     if (what === 'orphans') {
-      const items = listOrphans(workspace, graph, rootDir);
+      const items = listOrphans(workspace, graph);
       if (format === 'json') {
-        logger.info(JSON.stringify(items, null, 2));
+        logger.info(
+          JSON.stringify(
+            items.map(n => serializeNoteSummary(n, workspace)),
+            null,
+            2
+          )
+        );
       } else {
-        logger.info(formatOrphansText(items));
+        logger.info(formatSummariesText(items, workspace, '(no orphans found)'));
       }
       return 0;
     }
 
     if (what === 'deadends') {
-      const items = listDeadends(workspace, graph, rootDir);
+      const items = listDeadends(workspace, graph);
       if (format === 'json') {
-        logger.info(JSON.stringify(items, null, 2));
+        logger.info(
+          JSON.stringify(
+            items.map(n => serializeNoteSummary(n, workspace)),
+            null,
+            2
+          )
+        );
       } else {
-        logger.info(formatDeadendsText(items));
+        logger.info(
+          formatSummariesText(items, workspace, '(no dead-end notes found)')
+        );
       }
       return 0;
     }
 
     if (what === 'placeholders') {
-      const items = listPlaceholders(workspace, graph, rootDir);
+      const items = listPlaceholders(workspace, graph);
       if (format === 'json') {
-        logger.info(JSON.stringify(items, null, 2));
+        logger.info(
+          JSON.stringify(
+            items.map(p => serializePlaceholder(p, workspace)),
+            null,
+            2
+          )
+        );
       } else {
-        logger.info(formatPlaceholdersText(items));
+        logger.info(formatPlaceholdersText(items, workspace));
       }
       return 0;
     }

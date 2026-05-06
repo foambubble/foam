@@ -202,6 +202,29 @@ export function getErrorMessage(err: any): string {
   return String(err);
 }
 
+/**
+ * A typed error for predictable failure modes that callers (CLI, MCP, VS Code)
+ * map to user-facing error responses. The `code` is a stable string identifier
+ * — see `FoamErrorCode` below for the canonical set.
+ */
+export class FoamError extends Error {
+  constructor(
+    public readonly code: FoamErrorCode,
+    message: string,
+    public readonly data?: Record<string, unknown>
+  ) {
+    super(message);
+    this.name = 'FoamError';
+  }
+}
+
+export type FoamErrorCode =
+  | 'resource_not_found'
+  | 'ambiguous_identifier'
+  | 'resource_exists'
+  | 'invalid_input'
+  | 'io_error';
+
 export class NotImplementedError extends Error {
   constructor(message?: string) {
     super('NotImplemented');

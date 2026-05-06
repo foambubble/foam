@@ -1,3 +1,4 @@
+import { resolveNote } from '@foam/core';
 import { createNoteFromMarkdown, createInMemoryWorkspace, withTmpWorkspace, TestLogger } from '../test/test-utils';
 import { outlineData, runOutlineCommand } from './outline';
 import { setColorsEnabled } from '../support/colors';
@@ -15,7 +16,8 @@ describe('outlineData', () => {
       root
     );
     ws.set(note);
-    const data = outlineData(ws, 'a', undefined);
+    const resource = resolveNote(ws, { identifier: 'a' });
+    const data = outlineData(ws, resource);
     expect(data.id).toBe('a');
     const labels = data.sections.map(s => s.label);
     expect(labels).toContain('Title');
@@ -30,7 +32,8 @@ describe('outlineData', () => {
   it('returns empty sections for a note with no headings', () => {
     const { workspace: ws, root } = createInMemoryWorkspace([]);
     ws.set(createNoteFromMarkdown('/workspace/b.md', 'Just text\n', root));
-    const data = outlineData(ws, 'b', undefined);
+    const resource = resolveNote(ws, { identifier: 'b' });
+    const data = outlineData(ws, resource);
     expect(data.sections).toHaveLength(0);
   });
 });

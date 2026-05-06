@@ -1,15 +1,24 @@
-import path from 'node:path';
-import { FoamGraph, FoamWorkspace } from '@foam/core';
+import {
+  FoamGraph,
+  FoamWorkspace,
+  linksData,
+  resolveNote,
+  uriToWorkspacePath,
+} from '@foam/core';
 import { loadWorkspaceFromDirectory } from '../support/filesystem';
+import { serializeLinkEntry } from '../support/serializers';
 import {
   parseArgs,
   getString,
   getFlag,
   resolveWorkspaceDir,
+  noteRefFromCliArgs,
 } from '../support/args';
 import type { CliLogger, Format } from '../support/types';
-import { resolveNote } from '../support/workspace';
 import { bold, dim, path as pathColor } from '../support/colors';
+
+// Re-export domain function
+export { linksData } from '@foam/core';
 
 // ─── Help ─────────────────────────────────────────────────────────────────────
 
@@ -26,52 +35,11 @@ Options:
   --help               Show this help
 `;
 
-// ─── Domain ───────────────────────────────────────────────────────────────────
-
-export function linksData(
-  workspace: InstanceType<typeof FoamWorkspace>,
-  graph: InstanceType<typeof FoamGraph>,
-  identifier: string | undefined,
-  pathFlag: string | undefined,
-  rootDir: string
-) {
-  const resource = resolveNote(workspace, identifier, pathFlag, rootDir);
-  const id = workspace.getIdentifier(resource.uri);
-
-  const outgoing = graph.getLinks(resource.uri).map(c => {
-    const target = workspace.find(c.target);
-    return {
-      id: workspace.getIdentifier(c.target),
-      uri: c.target.toFsPath(),
-      path: path.relative(rootDir, c.target.toFsPath()),
-      title: target?.title ?? '',
-      label: c.link.rawText,
-    };
-  });
-
-  const incoming = graph.getBacklinks(resource.uri).map(c => {
-    const source = workspace.find(c.source);
-    return {
-      id: workspace.getIdentifier(c.source),
-      uri: c.source.toFsPath(),
-      path: path.relative(rootDir, c.source.toFsPath()),
-      title: source?.title ?? '',
-      label: c.link.rawText,
-    };
-  });
-
-  return {
-    id,
-    uri: resource.uri.toFsPath(),
-    outgoing,
-    incoming,
-  };
-}
-
 // ─── Formatters ───────────────────────────────────────────────────────────────
 
 function formatLinksText(
   data: ReturnType<typeof linksData>,
+  workspace: FoamWorkspace,
   opts: { outgoing: boolean; incoming: boolean }
 ): string {
   const lines: string[] = [];
@@ -88,7 +56,8 @@ function formatLinksText(
     } else {
       const maxId = Math.max(...data.outgoing.map(c => c.id.length));
       for (const c of data.outgoing) {
-        lines.push(`  ${dim('→')} ${padAndColorId(c.id, maxId + 2)}${dim(c.path)}`);
+        const p = uriToWorkspacePath(c.uri, workspace);
+        lines.push(`  ${dim('→')} ${padAndColorId(c.id, maxId + 2)}${dim(p)}`);
       }
     }
   }
@@ -104,7 +73,8 @@ function formatLinksText(
     } else {
       const maxId = Math.max(...data.incoming.map(c => c.id.length));
       for (const c of data.incoming) {
-        lines.push(`  ${dim('←')} ${padAndColorId(c.id, maxId + 2)}${dim(c.path)}`);
+        const p = uriToWorkspacePath(c.uri, workspace);
+        lines.push(`  ${dim('←')} ${padAndColorId(c.id, maxId + 2)}${dim(p)}`);
       }
     }
   }
@@ -151,17 +121,35 @@ export async function runLinksCommand(
   }
 
   try {
-    const { rootDir, workspace } = await loadWorkspaceFromDirectory(workspaceDir);
+    const { rootDir, workspace } =
+      await loadWorkspaceFromDirectory(workspaceDir);
+    const ref = noteRefFromCliArgs(identifier, pathFlag, rootDir);
+    const resource = resolveNote(workspace, ref);
     const graph = FoamGraph.fromWorkspace(workspace);
-    const data = linksData(workspace, graph, identifier, pathFlag, rootDir);
+    const data = linksData(workspace, graph, resource);
 
     if (format === 'json') {
-      const output: any = { id: data.id, uri: data.uri };
-      if (showOutgoing) output.outgoing = data.outgoing;
-      if (showIncoming) output.incoming = data.incoming;
+      const output: any = {
+        id: data.id,
+        uri: data.uri.toFsPath(),
+        path: uriToWorkspacePath(data.uri, workspace),
+      };
+      if (showOutgoing)
+        output.outgoing = data.outgoing.map(e =>
+          serializeLinkEntry(e, workspace)
+        );
+      if (showIncoming)
+        output.incoming = data.incoming.map(e =>
+          serializeLinkEntry(e, workspace)
+        );
       logger.info(JSON.stringify(output, null, 2));
     } else {
-      logger.info(formatLinksText(data, { outgoing: showOutgoing, incoming: showIncoming }));
+      logger.info(
+        formatLinksText(data, workspace, {
+          outgoing: showOutgoing,
+          incoming: showIncoming,
+        })
+      );
     }
     return 0;
   } catch (err) {

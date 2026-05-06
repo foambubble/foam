@@ -1,17 +1,15 @@
-import fs from 'node:fs/promises';
 import path from 'node:path';
 
 import {
+  FoamError,
   FoamGraph,
   FoamTags,
-  FoamWorkspace,
-  Resource,
-  TextEdit,
   URI,
-  WorkspaceTextEdit,
-  computeWikilinkRenameEdits,
-  HeadingEdit,
-  TagEdit,
+  renameNote,
+  renameTag,
+  renameSection,
+  renameBlock,
+  resolveNote,
 } from '@foam/core';
 import { loadWorkspaceFromDirectory } from '../support/filesystem';
 import {
@@ -19,10 +17,18 @@ import {
   getString,
   getFlag,
   resolveWorkspaceDir,
+  noteRefFromCliArgs,
 } from '../support/args';
 import type { CliLogger, Format } from '../support/types';
-import { resolveNote } from '../support/workspace';
 import { dim, path as pathColor, success } from '../support/colors';
+
+// Re-export domain functions
+export {
+  renameNote,
+  renameTag,
+  renameSection,
+  renameBlock,
+} from '@foam/core';
 
 // ─── Help ────────────────────────────────────────────────────────────────────
 
@@ -42,195 +48,6 @@ Options (all subcommands):
   --format <fmt>       text (default) or json
   --help               Show this help
 `;
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-async function applyEditsToFiles(
-  edits: { uri: URI; edit: TextEdit }[]
-): Promise<void> {
-  for (const { uri, edits: fileEdits } of WorkspaceTextEdit.groupByUri(edits)) {
-    let content = await fs.readFile(uri.toFsPath(), 'utf8');
-    content = TextEdit.apply(content, fileEdits);
-    await fs.writeFile(uri.toFsPath(), content, 'utf8');
-  }
-}
-
-// ─── Domain: rename note ──────────────────────────────────────────────────────
-
-export async function renameNote(
-  workspace: InstanceType<typeof FoamWorkspace>,
-  graph: InstanceType<typeof FoamGraph>,
-  rootDir: string,
-  identifier: string | undefined,
-  pathFlag: string | undefined,
-  newName: string,
-  targetPath?: string
-): Promise<{ old_uri: string; new_uri: string; old_id: string; id: string; updated_links: number }> {
-  const resource = resolveNote(workspace, identifier, pathFlag, rootDir);
-  const oldUri = resource.uri;
-
-  let newFsPath: string;
-  if (targetPath) {
-    newFsPath = path.resolve(rootDir, targetPath, `${newName}${path.extname(oldUri.toFsPath())}`);
-  } else {
-    newFsPath = path.join(path.dirname(oldUri.toFsPath()), `${newName}${path.extname(oldUri.toFsPath())}`);
-  }
-  const newUri = URI.file(newFsPath);
-
-  if (oldUri.isEqual(newUri)) {
-    throw new Error('Source and destination are the same.');
-  }
-
-  try {
-    await fs.access(newFsPath);
-    throw new Error(`Destination already exists: ${newFsPath}`);
-  } catch (err: any) {
-    if (err.code !== 'ENOENT') throw err;
-  }
-
-  const edits = computeWikilinkRenameEdits(workspace, graph, oldUri, newUri);
-  await applyEditsToFiles(edits);
-
-  await fs.mkdir(path.dirname(newFsPath), { recursive: true });
-  await fs.rename(oldUri.toFsPath(), newFsPath);
-
-  const oldId = workspace.getIdentifier(oldUri);
-  workspace.delete(oldUri);
-  workspace.set({ ...resource, uri: newUri });
-  const newId = workspace.getIdentifier(newUri);
-
-  return {
-    old_uri: oldUri.toFsPath(),
-    new_uri: newFsPath,
-    old_id: oldId,
-    id: newId,
-    updated_links: edits.length,
-  };
-}
-
-// ─── Domain: rename tag ───────────────────────────────────────────────────────
-
-export async function renameTag(
-  tags: InstanceType<typeof FoamTags>,
-  rootDir: string,
-  oldTag: string,
-  newTag: string,
-  force: boolean
-): Promise<{ old_tag: string; new_tag: string; updated_notes: number }> {
-  const cleanOld = oldTag.startsWith('#') ? oldTag.slice(1) : oldTag;
-  const cleanNew = newTag.startsWith('#') ? newTag.slice(1) : newTag;
-
-  const validation = TagEdit.validateTagRename(tags, cleanOld, cleanNew);
-  if (!validation.isValid) {
-    throw new Error(validation.message ?? 'Invalid tag rename.');
-  }
-  if (validation.isMerge && !force) {
-    throw new Error(
-      `${validation.message}\nUse --force to proceed with the merge.`
-    );
-  }
-
-  const result = TagEdit.createHierarchicalRenameEdits(tags, cleanOld, cleanNew);
-  await applyEditsToFiles(result.edits);
-
-  return {
-    old_tag: cleanOld,
-    new_tag: cleanNew,
-    updated_notes: new Set(result.edits.map(e => e.uri.toFsPath())).size,
-  };
-}
-
-// ─── Domain: rename section ───────────────────────────────────────────────────
-
-export async function renameSection(
-  workspace: InstanceType<typeof FoamWorkspace>,
-  graph: InstanceType<typeof FoamGraph>,
-  rootDir: string,
-  identifier: string | undefined,
-  pathFlag: string | undefined,
-  oldLabel: string,
-  newLabel: string
-): Promise<{ uri: string; id: string; updated_links: number }> {
-  const resource = resolveNote(workspace, identifier, pathFlag, rootDir);
-
-  const section = Resource.findSection(resource, oldLabel);
-  if (!section) {
-    throw new Error(`Section "${oldLabel}" not found in ${resource.uri.toFsPath()}`);
-  }
-
-  // Build a TextEdit for the heading line using the section's start position
-  const filePath = resource.uri.toFsPath();
-  const content = await fs.readFile(filePath, 'utf8');
-  const lines = content.split('\n');
-  const headingLine = lines[section.range.start.line];
-  const match = headingLine.match(/^(#{1,6}\s+)/);
-  const prefix = match ? match[1] : '';
-  const headingEdit: WorkspaceTextEdit = {
-    uri: resource.uri,
-    edit: {
-      range: {
-        start: { line: section.range.start.line, character: prefix.length },
-        end: { line: section.range.start.line, character: headingLine.length },
-      },
-      newText: newLabel,
-    },
-  };
-
-  const result = HeadingEdit.createRenameSectionEdits(
-    graph,
-    workspace,
-    resource.uri,
-    oldLabel,
-    newLabel
-  );
-
-  await applyEditsToFiles([headingEdit, ...result.edits]);
-
-  return {
-    uri: resource.uri.toFsPath(),
-    id: workspace.getIdentifier(resource.uri),
-    updated_links: result.totalOccurrences,
-  };
-}
-
-// ─── Domain: rename block ─────────────────────────────────────────────────────
-
-export async function renameBlock(
-  workspace: InstanceType<typeof FoamWorkspace>,
-  graph: InstanceType<typeof FoamGraph>,
-  rootDir: string,
-  identifier: string | undefined,
-  pathFlag: string | undefined,
-  oldId: string,
-  newId: string
-): Promise<{ uri: string; id: string; updated_links: number }> {
-  const resource = resolveNote(workspace, identifier, pathFlag, rootDir);
-  const result = HeadingEdit.createRenameBlockEdits(
-    graph,
-    workspace,
-    resource.uri,
-    oldId,
-    newId
-  );
-
-  const block = Resource.findBlock(resource, oldId);
-  if (!block) {
-    throw new Error(`Block ^${oldId} not found in ${resource.uri.toFsPath()}`);
-  }
-
-  const anchorEdit: WorkspaceTextEdit = {
-    uri: resource.uri,
-    edit: { range: block.markerRange, newText: `^${newId}` },
-  };
-
-  await applyEditsToFiles([anchorEdit, ...result.edits]);
-
-  return {
-    uri: resource.uri.toFsPath(),
-    id: workspace.getIdentifier(resource.uri),
-    updated_links: result.totalOccurrences,
-  };
-}
 
 // ─── Command runner ───────────────────────────────────────────────────────────
 
@@ -272,9 +89,10 @@ export async function runRenameCommand(
         logger.error('Usage: foam rename tag <old> <new>');
         return 1;
       }
-      const { rootDir, foam } = await loadWorkspaceFromDirectory(workspaceDir);
+      const { foam, dataStore } =
+        await loadWorkspaceFromDirectory(workspaceDir);
       const tags = FoamTags.fromWorkspace(foam.workspace);
-      const result = await renameTag(tags, rootDir, oldTag, newTag, force);
+      const result = await renameTag(tags, dataStore, oldTag, newTag, force);
       if (format === 'json') {
         logger.info(JSON.stringify(result, null, 2));
       } else {
@@ -285,8 +103,11 @@ export async function runRenameCommand(
       return 0;
     }
 
-    const { rootDir, workspace } = await loadWorkspaceFromDirectory(workspaceDir);
+    const { rootDir, workspace, dataStore } =
+      await loadWorkspaceFromDirectory(workspaceDir);
     const identifier = parsed.positionals[0];
+    const ref = noteRefFromCliArgs(identifier, pathFlag, rootDir);
+    const resource = resolveNote(workspace, ref);
 
     if (subcommand === 'note') {
       const newName = parsed.positionals[1];
@@ -295,13 +116,39 @@ export async function runRenameCommand(
         return 1;
       }
       const targetPath = getString(parsed, 'target-path');
+      const targetDir = targetPath
+        ? URI.file(
+            path.isAbsolute(targetPath)
+              ? targetPath
+              : path.resolve(rootDir, targetPath)
+          )
+        : undefined;
       const graph = FoamGraph.fromWorkspace(workspace);
-      const result = await renameNote(workspace, graph, rootDir, identifier, pathFlag, newName, targetPath);
+      const result = await renameNote(
+        workspace,
+        graph,
+        dataStore,
+        resource,
+        newName,
+        targetDir
+      );
       if (format === 'json') {
-        logger.info(JSON.stringify(result, null, 2));
+        logger.info(
+          JSON.stringify(
+            {
+              old_uri: result.old_uri.toFsPath(),
+              new_uri: result.new_uri.toFsPath(),
+              old_id: result.old_id,
+              id: result.id,
+              updated_links: result.updated_links,
+            },
+            null,
+            2
+          )
+        );
       } else {
         logger.info(
-          `${success('Renamed:')} ${pathColor(path.relative(rootDir, result.old_uri))} ${dim('→')} ${pathColor(path.relative(rootDir, result.new_uri))}  ${dim(`(id: ${result.id}, ${result.updated_links} link${result.updated_links === 1 ? '' : 's'} updated)`)}`
+          `${success('Renamed:')} ${pathColor(path.relative(rootDir, result.old_uri.toFsPath()))} ${dim('→')} ${pathColor(path.relative(rootDir, result.new_uri.toFsPath()))}  ${dim(`(id: ${result.id}, ${result.updated_links} link${result.updated_links === 1 ? '' : 's'} updated)`)}`
         );
       }
       return 0;
@@ -313,15 +160,34 @@ export async function runRenameCommand(
       const oldLabel = parsed.positionals[1];
       const newLabel = parsed.positionals[2];
       if (!oldLabel || !newLabel) {
-        logger.error('Usage: foam rename section <identifier> <old-label> <new-label>');
+        logger.error(
+          'Usage: foam rename section <identifier> <old-label> <new-label>'
+        );
         return 1;
       }
-      const result = await renameSection(workspace, graph, rootDir, identifier, pathFlag, oldLabel, newLabel);
+      const result = await renameSection(
+        workspace,
+        graph,
+        dataStore,
+        resource,
+        oldLabel,
+        newLabel
+      );
       if (format === 'json') {
-        logger.info(JSON.stringify(result, null, 2));
+        logger.info(
+          JSON.stringify(
+            {
+              uri: result.uri.toFsPath(),
+              id: result.id,
+              updated_links: result.updated_links,
+            },
+            null,
+            2
+          )
+        );
       } else {
         logger.info(
-          `${success('Renamed section')} "${oldLabel}" ${dim('→')} "${newLabel}" in ${pathColor(path.relative(rootDir, result.uri))}  ${dim(`(${result.updated_links} link${result.updated_links === 1 ? '' : 's'} updated)`)}`
+          `${success('Renamed section')} "${oldLabel}" ${dim('→')} "${newLabel}" in ${pathColor(path.relative(rootDir, result.uri.toFsPath()))}  ${dim(`(${result.updated_links} link${result.updated_links === 1 ? '' : 's'} updated)`)}`
         );
       }
       return 0;
@@ -331,15 +197,34 @@ export async function runRenameCommand(
       const oldBlockId = parsed.positionals[1];
       const newBlockId = parsed.positionals[2];
       if (!oldBlockId || !newBlockId) {
-        logger.error('Usage: foam rename block <identifier> <old-id> <new-id>');
+        logger.error(
+          'Usage: foam rename block <identifier> <old-id> <new-id>'
+        );
         return 1;
       }
-      const result = await renameBlock(workspace, graph, rootDir, identifier, pathFlag, oldBlockId, newBlockId);
+      const result = await renameBlock(
+        workspace,
+        graph,
+        dataStore,
+        resource,
+        oldBlockId,
+        newBlockId
+      );
       if (format === 'json') {
-        logger.info(JSON.stringify(result, null, 2));
+        logger.info(
+          JSON.stringify(
+            {
+              uri: result.uri.toFsPath(),
+              id: result.id,
+              updated_links: result.updated_links,
+            },
+            null,
+            2
+          )
+        );
       } else {
         logger.info(
-          `${success('Renamed block')} ${pathColor(`^${oldBlockId}`)} ${dim('→')} ${pathColor(`^${newBlockId}`)} in ${pathColor(path.relative(rootDir, result.uri))}  ${dim(`(${result.updated_links} link${result.updated_links === 1 ? '' : 's'} updated)`)}`
+          `${success('Renamed block')} ${pathColor(`^${oldBlockId}`)} ${dim('→')} ${pathColor(`^${newBlockId}`)} in ${pathColor(path.relative(rootDir, result.uri.toFsPath()))}  ${dim(`(${result.updated_links} link${result.updated_links === 1 ? '' : 's'} updated)`)}`
         );
       }
       return 0;
@@ -347,6 +232,10 @@ export async function runRenameCommand(
 
     return 0;
   } catch (err) {
+    if (err instanceof FoamError && err.data?.isMerge) {
+      logger.error(`${err.message}\nUse --force to proceed with the merge.`);
+      return 1;
+    }
     logger.error(err instanceof Error ? err.message : String(err));
     return 1;
   }

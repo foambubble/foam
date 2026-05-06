@@ -1,14 +1,18 @@
-import { FoamWorkspace } from '@foam/core';
+import { outlineData, resolveNote } from '@foam/core';
 import { loadWorkspaceFromDirectory } from '../support/filesystem';
+import { serializeOutline } from '../support/serializers';
 import {
   parseArgs,
   getString,
   getFlag,
   resolveWorkspaceDir,
+  noteRefFromCliArgs,
 } from '../support/args';
 import type { CliLogger, Format } from '../support/types';
-import { resolveNote } from '../support/workspace';
 import { dim } from '../support/colors';
+
+// Re-export domain function
+export { outlineData } from '@foam/core';
 
 // ─── Help ─────────────────────────────────────────────────────────────────────
 
@@ -22,31 +26,6 @@ Options:
   --format <fmt>       text (default) or json
   --help               Show this help
 `;
-
-// ─── Domain ───────────────────────────────────────────────────────────────────
-
-export function outlineData(
-  workspace: InstanceType<typeof FoamWorkspace>,
-  identifier: string | undefined,
-  pathFlag: string | undefined,
-  rootDir?: string
-) {
-  const resource = resolveNote(workspace, identifier, pathFlag, rootDir);
-  const id = workspace.getIdentifier(resource.uri);
-
-  return {
-    id,
-    uri: resource.uri.toFsPath(),
-    sections: resource.sections.map(s => ({
-      label: s.label,
-      level: s.level,
-      range: {
-        start: { line: s.range.start.line, character: s.range.start.character },
-        end: { line: s.range.end.line, character: s.range.end.character },
-      },
-    })),
-  };
-}
 
 // ─── Formatters ───────────────────────────────────────────────────────────────
 
@@ -87,16 +66,21 @@ export async function runOutlineCommand(
   const pathFlag = getString(parsed, 'path');
 
   if (!identifier && !pathFlag) {
-    logger.error('Provide a note identifier or --path <path>.\n\n' + OUTLINE_HELP);
+    logger.error(
+      'Provide a note identifier or --path <path>.\n\n' + OUTLINE_HELP
+    );
     return 1;
   }
 
   try {
-    const { workspace, rootDir } = await loadWorkspaceFromDirectory(workspaceDir);
-    const data = outlineData(workspace, identifier, pathFlag, rootDir);
+    const { rootDir, workspace } =
+      await loadWorkspaceFromDirectory(workspaceDir);
+    const ref = noteRefFromCliArgs(identifier, pathFlag, rootDir);
+    const resource = resolveNote(workspace, ref);
+    const data = outlineData(workspace, resource);
 
     if (format === 'json') {
-      logger.info(JSON.stringify(data, null, 2));
+      logger.info(JSON.stringify(serializeOutline(data, workspace), null, 2));
     } else {
       logger.info(formatOutlineText(data));
     }

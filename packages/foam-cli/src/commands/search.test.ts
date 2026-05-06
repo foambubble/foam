@@ -4,7 +4,12 @@ import {
   runSearchCommand,
   type PropertyFilter,
 } from './search';
-import { withTmpWorkspace, TestLogger } from '../test/test-utils';
+import {
+  createInMemoryWorkspace,
+  createTestNote,
+  withTmpWorkspace,
+  TestLogger,
+} from '../test/test-utils';
 import { setColorsEnabled } from '../support/colors';
 
 setColorsEnabled(false);
@@ -15,8 +20,8 @@ describe('searchWorkspace', () => {
   it('returns all notes when no filters given', () =>
     withTmpWorkspace(
       { 'alpha.md': '# Alpha\n\nSome content.', 'beta.md': '# Beta\n\nSome content.' },
-      async ({ rootDir, workspace }) => {
-        const results = searchWorkspace(workspace, rootDir, {});
+      async ({ workspace }) => {
+        const results = searchWorkspace(workspace, {});
         expect(results.length).toBe(2);
       }
     ));
@@ -24,8 +29,8 @@ describe('searchWorkspace', () => {
   it('filters by title query (case-insensitive substring)', () =>
     withTmpWorkspace(
       { 'project-management.md': '# Project Management\n', 'ideas.md': '# Project Ideas\n', 'diary.md': '# Diary\n' },
-      async ({ rootDir, workspace }) => {
-        const results = searchWorkspace(workspace, rootDir, { query: 'project' });
+      async ({ workspace }) => {
+        const results = searchWorkspace(workspace, { query: 'project' });
         const titles = results.map(r => r.title);
         expect(titles).toContain('Project Management');
         expect(titles).toContain('Project Ideas');
@@ -36,8 +41,8 @@ describe('searchWorkspace', () => {
   it('filters by alias', () =>
     withTmpWorkspace(
       { 'project-management.md': '---\nalias: [pm]\n---\n# Project Management\n', 'ideas.md': '# Ideas\n' },
-      async ({ rootDir, workspace }) => {
-        const results = searchWorkspace(workspace, rootDir, { query: 'pm' });
+      async ({ workspace }) => {
+        const results = searchWorkspace(workspace, { query: 'pm' });
         expect(results).toHaveLength(1);
         expect(results[0].title).toBe('Project Management');
       }
@@ -46,8 +51,8 @@ describe('searchWorkspace', () => {
   it('filters by single tag', () =>
     withTmpWorkspace(
       { 'a.md': '# A\n\n#work\n', 'b.md': '# B\n\n#personal\n' },
-      async ({ rootDir, workspace }) => {
-        const results = searchWorkspace(workspace, rootDir, { tags: ['work'] });
+      async ({ workspace }) => {
+        const results = searchWorkspace(workspace, { tags: ['work'] });
         expect(results).toHaveLength(1);
         expect(results[0].title).toBe('A');
       }
@@ -56,8 +61,8 @@ describe('searchWorkspace', () => {
   it('filters by multiple tags (AND)', () =>
     withTmpWorkspace(
       { 'a.md': '# A\n\n#work #project\n', 'b.md': '# B\n\n#work\n', 'c.md': '# C\n\n#project\n' },
-      async ({ rootDir, workspace }) => {
-        const results = searchWorkspace(workspace, rootDir, { tags: ['work', 'project'] });
+      async ({ workspace }) => {
+        const results = searchWorkspace(workspace, { tags: ['work', 'project'] });
         expect(results).toHaveLength(1);
         expect(results[0].title).toBe('A');
       }
@@ -66,9 +71,9 @@ describe('searchWorkspace', () => {
   it('filters by frontmatter property with value', () =>
     withTmpWorkspace(
       { 'active.md': '---\nstatus: active\n---\n# Active\n', 'draft.md': '---\nstatus: draft\n---\n# Draft\n' },
-      async ({ rootDir, workspace }) => {
+      async ({ workspace }) => {
         const filters: PropertyFilter[] = [{ key: 'status', value: 'active' }];
-        const results = searchWorkspace(workspace, rootDir, { properties: filters });
+        const results = searchWorkspace(workspace, { properties: filters });
         expect(results).toHaveLength(1);
         expect(results[0].title).toBe('Active');
       }
@@ -77,9 +82,9 @@ describe('searchWorkspace', () => {
   it('filters by frontmatter property existence (no value)', () =>
     withTmpWorkspace(
       { 'has-status.md': '---\nstatus: done\n---\n# Has Status\n', 'no-status.md': '# No Status\n' },
-      async ({ rootDir, workspace }) => {
+      async ({ workspace }) => {
         const filters: PropertyFilter[] = [{ key: 'status' }];
-        const results = searchWorkspace(workspace, rootDir, { properties: filters });
+        const results = searchWorkspace(workspace, { properties: filters });
         expect(results).toHaveLength(1);
         expect(results[0].title).toBe('Has Status');
       }
@@ -88,8 +93,8 @@ describe('searchWorkspace', () => {
   it('filters by type', () =>
     withTmpWorkspace(
       { 'note.md': '# Note\n', 'journals/2026-05-01.md': '# Daily\n' },
-      async ({ rootDir, workspace }) => {
-        const results = searchWorkspace(workspace, rootDir, { type: 'note' });
+      async ({ workspace }) => {
+        const results = searchWorkspace(workspace, { type: 'note' });
         // Both are parsed as 'note' type (daily-note detection needs config);
         // just verify the type filter applies without error
         results.forEach(r => expect(r.type).toBe('note'));
@@ -99,8 +104,8 @@ describe('searchWorkspace', () => {
   it('respects limit', () =>
     withTmpWorkspace(
       { 'a.md': '# A\n', 'b.md': '# B\n', 'c.md': '# C\n' },
-      async ({ rootDir, workspace }) => {
-        const results = searchWorkspace(workspace, rootDir, { limit: 2 });
+      async ({ workspace }) => {
+        const results = searchWorkspace(workspace, { limit: 2 });
         expect(results.length).toBeLessThanOrEqual(2);
       }
     ));
@@ -108,12 +113,12 @@ describe('searchWorkspace', () => {
   it('returns match with id, uri, title, type, tags, properties, line, text', () =>
     withTmpWorkspace(
       { 'project.md': '---\nstatus: active\n---\n# Project\n\n#work\n' },
-      async ({ rootDir, workspace }) => {
-        const results = searchWorkspace(workspace, rootDir, { query: 'project' });
+      async ({ workspace }) => {
+        const results = searchWorkspace(workspace, { query: 'project' });
         expect(results).toHaveLength(1);
         const r = results[0];
         expect(r.id).toBe('project');
-        expect(r.uri).toContain('project.md');
+        expect(r.uri.path).toContain('project.md');
         expect(r.title).toBe('Project');
         expect(r.line).toBe(1);
         expect(r.text).toBe('# Project');
@@ -123,15 +128,15 @@ describe('searchWorkspace', () => {
     ));
 
   it('includes empty context arrays when context > 0', () =>
-    withTmpWorkspace({ 'a.md': '# Alpha\n' }, async ({ rootDir, workspace }) => {
-      const results = searchWorkspace(workspace, rootDir, { context: 2 });
+    withTmpWorkspace({ 'a.md': '# Alpha\n' }, async ({ workspace }) => {
+      const results = searchWorkspace(workspace, { context: 2 });
       expect(results[0].context_before).toEqual([]);
       expect(results[0].context_after).toEqual([]);
     }));
 
   it('returns empty when query matches nothing', () =>
-    withTmpWorkspace({ 'a.md': '# Alpha\n' }, async ({ rootDir, workspace }) => {
-      const results = searchWorkspace(workspace, rootDir, { query: 'xyzzy-no-match' });
+    withTmpWorkspace({ 'a.md': '# Alpha\n' }, async ({ workspace }) => {
+      const results = searchWorkspace(workspace, { query: 'xyzzy-no-match' });
       expect(results).toHaveLength(0);
     }));
 });
@@ -140,37 +145,32 @@ describe('searchWorkspace', () => {
 
 describe('formatSearchText', () => {
   it('returns empty string for no matches', () => {
-    const out = formatSearchText([], '/workspace', {});
+    const { workspace } = createInMemoryWorkspace([]);
+    const out = formatSearchText([], workspace, {});
     expect(out).toBe('');
   });
 
   it('formats as path:line: text by default', () => {
-    const match = {
-      id: 'project',
-      uri: '/workspace/notes/project.md',
-      title: 'Project',
-      type: 'note',
-      tags: [],
-      properties: {},
-      line: 1,
-      text: '# Project',
-    };
-    const out = formatSearchText([match], '/workspace', {});
+    const { workspace } = createInMemoryWorkspace([
+      createTestNote({
+        uri: '/workspace/notes/project.md',
+        title: 'Project',
+      }),
+    ]);
+    const matches = searchWorkspace(workspace, { query: 'Project' });
+    const out = formatSearchText(matches, workspace, {});
     expect(out).toBe('notes/project.md:1: # Project');
   });
 
   it('omits line number with noLineNumber', () => {
-    const match = {
-      id: 'project',
-      uri: '/workspace/notes/project.md',
-      title: 'Project',
-      type: 'note',
-      tags: [],
-      properties: {},
-      line: 1,
-      text: '# Project',
-    };
-    const out = formatSearchText([match], '/workspace', { noLineNumber: true });
+    const { workspace } = createInMemoryWorkspace([
+      createTestNote({
+        uri: '/workspace/notes/project.md',
+        title: 'Project',
+      }),
+    ]);
+    const matches = searchWorkspace(workspace, { query: 'Project' });
+    const out = formatSearchText(matches, workspace, { noLineNumber: true });
     expect(out).toBe('notes/project.md: # Project');
   });
 });

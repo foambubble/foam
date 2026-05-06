@@ -146,3 +146,70 @@ export type { Event } from './common/event';
 export { CancellationTokenSource } from './common/cancellation';
 export type { CancellationToken } from './common/cancellation';
 export { Variable } from './common/snippetParser';
+export { FoamError } from './common/errors';
+export type { FoamErrorCode } from './common/errors';
+
+// Commands (high-level workspace operations, used by CLI / MCP / VS Code)
+export {
+  uriToWorkspacePath,
+  getRootUriFor,
+  resolveNote,
+} from './commands/workspace';
+export type { NoteRef } from './commands/workspace';
+export {
+  listNotes,
+  listTags,
+  listOrphans,
+  listDeadends,
+  listPlaceholders,
+} from './commands/list';
+export type {
+  NoteItem,
+  NoteSummary,
+  TagItem,
+  PlaceholderItem,
+} from './commands/list';
+export { linksData } from './commands/links';
+export type { LinkEntry, LinksResult } from './commands/links';
+export { outlineData } from './commands/outline';
+export type { OutlineSection, OutlineResult } from './commands/outline';
+export { searchWorkspace } from './commands/search';
+export type {
+  SearchMatch,
+  PropertyFilter,
+  SearchOptions,
+} from './commands/search';
+export {
+  noteShowData,
+  noteIdData,
+  noteCreate,
+  noteMove,
+  noteDelete,
+} from './commands/note';
+export type {
+  NoteDetail,
+  NoteIdResult,
+  NoteCreateResult,
+  NoteMoveResult,
+  NoteDeleteResult,
+} from './commands/note';
+export {
+  renameNote,
+  renameTag,
+  renameSection,
+  renameBlock,
+} from './commands/rename';
+export type {
+  RenameNoteResult,
+  RenameTagResult,
+  RenameSectionResult,
+  RenameBlockResult,
+} from './commands/rename';
+export {
+  parseFrontmatter,
+  stringifyFrontmatter,
+  mergeFrontmatter,
+  addTagsToFrontmatter,
+  removeTagsFromFrontmatter,
+} from './commands/frontmatter';
+export type { FrontmatterResult } from './commands/frontmatter';

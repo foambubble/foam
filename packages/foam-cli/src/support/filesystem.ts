@@ -50,6 +50,35 @@ export class NodeFileDataStore implements IDataStore {
       return null;
     }
   }
+
+  async write(uri: URI, content: string): Promise<void> {
+    const fsPath = uri.toFsPath();
+    await fs.mkdir(path.dirname(fsPath), { recursive: true });
+    await fs.writeFile(fsPath, content, 'utf8');
+  }
+
+  async delete(uri: URI): Promise<void> {
+    try {
+      await fs.unlink(uri.toFsPath());
+    } catch (err: any) {
+      if (err.code !== 'ENOENT') throw err;
+    }
+  }
+
+  async move(from: URI, to: URI): Promise<void> {
+    const toFs = to.toFsPath();
+    await fs.mkdir(path.dirname(toFs), { recursive: true });
+    await fs.rename(from.toFsPath(), toFs);
+  }
+
+  async exists(uri: URI): Promise<boolean> {
+    try {
+      await fs.access(uri.toFsPath());
+      return true;
+    } catch {
+      return false;
+    }
+  }
 }
 
 async function collectFiles(

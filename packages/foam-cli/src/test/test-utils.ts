@@ -21,7 +21,7 @@ export class InMemoryDataStore implements IDataStore {
     this.files.set(uri.path, content);
   }
 
-  delete(uri: URI): void {
+  async delete(uri: URI): Promise<void> {
     this.files.delete(uri.path);
   }
 
@@ -36,14 +36,33 @@ export class InMemoryDataStore implements IDataStore {
   async read(uri: URI): Promise<string | null> {
     return this.files.get(uri.path) ?? null;
   }
+
+  async write(uri: URI, content: string): Promise<void> {
+    this.files.set(uri.path, content);
+  }
+
+  async move(from: URI, to: URI): Promise<void> {
+    const content = this.files.get(from.path);
+    if (content === undefined) {
+      throw new Error(`Source file not found: ${from.path}`);
+    }
+    this.files.delete(from.path);
+    this.files.set(to.path, content);
+  }
+
+  async exists(uri: URI): Promise<boolean> {
+    return this.files.has(uri.path);
+  }
 }
 
 const position = Range.create(0, 0, 0, 100);
 
 export const strToUri = URI.file;
 
+const DEFAULT_TEST_ROOT = URI.file('/');
+
 export const createTestWorkspace = (
-  workspaceRoots: URI[] = [],
+  workspaceRoots: URI[] = [DEFAULT_TEST_ROOT],
   dataStore?: IDataStore,
   directoryMode: 'resolve' | 'disabled' = 'resolve'
 ) => {
@@ -53,6 +72,10 @@ export const createTestWorkspace = (
     dataStore ?? {
       read: _ => Promise.resolve(''),
       list: () => Promise.resolve([]),
+      write: () => Promise.resolve(),
+      delete: () => Promise.resolve(),
+      move: () => Promise.resolve(),
+      exists: () => Promise.resolve(false),
     },
     parser,
     ['.md'],

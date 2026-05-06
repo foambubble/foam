@@ -304,12 +304,41 @@ export async function createMatcherAndDataStore(
   };
 
   const decoder = new TextDecoder('utf-8');
+  const encoder = new TextEncoder();
   const readFile = async (uri: URI) => {
     const content = await workspace.fs.readFile(toVsCodeUri(uri));
     return decoder.decode(content);
   };
+  const writeFile = async (uri: URI, content: string) => {
+    await workspace.fs.createDirectory(toVsCodeUri(uri.getDirectory()));
+    await workspace.fs.writeFile(toVsCodeUri(uri), encoder.encode(content));
+  };
+  const deleteFile = async (uri: URI) => {
+    await workspace.fs.delete(toVsCodeUri(uri));
+  };
+  const moveFile = async (from: URI, to: URI) => {
+    await workspace.fs.createDirectory(toVsCodeUri(to.getDirectory()));
+    await workspace.fs.rename(toVsCodeUri(from), toVsCodeUri(to), {
+      overwrite: false,
+    });
+  };
+  const fileExists = async (uri: URI) => {
+    try {
+      await workspace.fs.stat(toVsCodeUri(uri));
+      return true;
+    } catch {
+      return false;
+    }
+  };
 
-  const dataStore = new GenericDataStore(listFiles, readFile);
+  const dataStore = new GenericDataStore(
+    listFiles,
+    readFile,
+    writeFile,
+    deleteFile,
+    moveFile,
+    fileExists
+  );
   const matcher =
     isEmpty(excludes) && includes.length === 1 && includes[0] === '**/*'
       ? new AlwaysIncludeMatcher()

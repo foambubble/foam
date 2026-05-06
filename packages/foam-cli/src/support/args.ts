@@ -11,6 +11,9 @@
  * Repeatable flags (e.g. --tag foo --tag bar) are collected via getStrings().
  */
 
+import path from 'node:path';
+import { type NoteRef, URI, FoamError } from '@foam/core';
+
 export interface ParsedArgs {
   options: Map<string, string | boolean>;
   /** All values for each flag name, in order. Used for repeatable flags. */
@@ -111,5 +114,33 @@ export function resolveWorkspaceDir(
     getString(parsedOrOptions as any, 'workspace') ??
     process.env['FOAM_WORKSPACE'] ??
     process.cwd()
+  );
+}
+
+/**
+ * Builds a {@link NoteRef} from CLI inputs: a positional `<identifier>`
+ * argument and/or a `--path <path>` flag. The path is resolved against
+ * `rootDir` if relative.
+ *
+ * Throws `invalid_input` when neither is provided. The CLI runner is
+ * responsible for catching this and rendering the appropriate help text.
+ */
+export function noteRefFromCliArgs(
+  identifier: string | undefined,
+  pathFlag: string | undefined,
+  rootDir: string
+): NoteRef {
+  if (pathFlag) {
+    const abs = path.isAbsolute(pathFlag)
+      ? pathFlag
+      : path.resolve(rootDir, pathFlag);
+    return { uri: URI.file(abs) };
+  }
+  if (identifier) {
+    return { identifier };
+  }
+  throw new FoamError(
+    'invalid_input',
+    'Provide a note identifier or --path <path>.'
   );
 }

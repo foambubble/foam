@@ -293,10 +293,36 @@ describe('resolveUri', () => {
     expect(result.path).toBe('/workspace/other/file.md');
   });
 
-  it('should return an absolute path as URI.file when roots is empty', () => {
+  it('throws on absolute path when roots is empty and no relativeTo is given', () => {
     const ws = new FoamWorkspace([]);
-    const result = ws.resolveUri('/some/absolute/file.md');
-    expect(result.path).toBe('/some/absolute/file.md');
+    expect(() => ws.resolveUri('/some/absolute/file.md')).toThrow(
+      /workspace roots/
+    );
+  });
+
+  it('falls back to relativeTo for absolute path when roots is empty', () => {
+    const ws = new FoamWorkspace([]);
+    const vfsBase = new URI({
+      scheme: 'vscode-vfs',
+      authority: 'github',
+      path: '/elsewhere/note.md',
+    });
+
+    const fromVfs = ws.resolveUri('/some/absolute/file.md', vfsBase);
+    expect(fromVfs.path).toBe('/some/absolute/file.md');
+    expect(fromVfs.scheme).toBe('vscode-vfs');
+    expect(fromVfs.authority).toBe('github');
+
+    const memfsBase = new URI({
+      scheme: 'memfs',
+      authority: 'sandbox',
+      path: '/other/note.md',
+    });
+
+    const fromMemfs = ws.resolveUri('/some/absolute/file.md', memfsBase);
+    expect(fromMemfs.path).toBe('/some/absolute/file.md');
+    expect(fromMemfs.scheme).toBe('memfs');
+    expect(fromMemfs.authority).toBe('sandbox');
   });
 
   it('should handle the root path itself as under-root (case 1)', () => {

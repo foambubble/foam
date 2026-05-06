@@ -67,8 +67,10 @@ const position = Range.create(0, 0, 0, 100);
  */
 export const strToUri = URI.file;
 
+const DEFAULT_TEST_ROOT = URI.file('/');
+
 export const createTestWorkspace = (
-  workspaceRoots: URI[] = [],
+  workspaceRoots: URI[] = [DEFAULT_TEST_ROOT],
   dataStore?: IDataStore,
   directoryMode: 'resolve' | 'disabled' = 'resolve'
 ) => {
@@ -78,6 +80,10 @@ export const createTestWorkspace = (
     dataStore ?? {
       read: _ => Promise.resolve(''),
       list: () => Promise.resolve([]),
+      write: () => Promise.resolve(),
+      delete: () => Promise.resolve(),
+      move: () => Promise.resolve(),
+      exists: () => Promise.resolve(false),
     },
     parser,
     ['.md'],

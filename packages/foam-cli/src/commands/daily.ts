@@ -1,4 +1,3 @@
-import fs from 'node:fs/promises';
 import path from 'node:path';
 
 import {
@@ -51,30 +50,29 @@ export function parseDateArg(dateStr: string | undefined): Date {
   return d;
 }
 
-export function defaultDailyNotePath(date: Date, rootDir: string): string {
+export function defaultDailyNoteUri(date: Date, rootUri: URI): URI {
   const pad = (n: number) => String(n).padStart(2, '0');
   const y = date.getFullYear();
   const m = pad(date.getMonth() + 1);
   const d = pad(date.getDate());
   const filename = `${y}-${m}-${d}.md`;
-  return path.join(rootDir, DEFAULT_JOURNALS_DIR, filename);
+  return rootUri.joinPath(DEFAULT_JOURNALS_DIR, filename);
 }
 
 /**
- * Resolve the daily note path using the template if one exists,
+ * Resolve the daily note URI using the template if one exists,
  * otherwise fall back to journals/YYYY-MM-DD.md.
  */
-export async function resolveDailyNotePath(
+export async function resolveDailyNoteUri(
   date: Date,
-  rootDir: string,
+  rootUri: URI,
   foam: Awaited<ReturnType<typeof loadWorkspaceFromDirectory>>['foam'],
   dataStore: Awaited<ReturnType<typeof loadWorkspaceFromDirectory>>['dataStore']
-): Promise<string> {
-  const templatesDir = getTemplatesDir(rootDir);
+): Promise<URI> {
+  const templatesDir = getTemplatesDir(rootUri);
   const candidates = getDailyNoteTemplateCandidateUris(templatesDir);
 
-  const fallbackPath = defaultDailyNotePath(date, rootDir);
-  const fallbackUri = URI.file(fallbackPath);
+  const fallbackUri = defaultDailyNoteUri(date, rootUri);
 
   for (const templateUri of candidates) {
     const content = await dataStore.read(templateUri);
@@ -86,11 +84,11 @@ export async function resolveDailyNotePath(
       return text ?? '';
     }, { fallbackFilepath: fallbackUri });
 
-    return foam.workspace.resolveUri(result.filepath.path).toFsPath();
+    return foam.workspace.resolveUri(result.filepath.path);
   }
 
   // No template found — use default path
-  return fallbackPath;
+  return fallbackUri;
 }
 
 // ─── Command runner ───────────────────────────────────────────────────────────
@@ -114,22 +112,17 @@ export async function runDailyCommand(
 
   try {
     const date = parseDateArg(dateStr);
-    const { rootDir, foam, dataStore, workspace } =
+    const { rootDir, rootUri, foam, dataStore, workspace } =
       await loadWorkspaceFromDirectory(workspaceDir);
 
-    const notePath = await resolveDailyNotePath(date, rootDir, foam, dataStore);
+    const noteUri = await resolveDailyNoteUri(date, rootUri, foam, dataStore);
+    const notePath = noteUri.toFsPath();
 
-    let exists = false;
-    try {
-      await fs.access(notePath);
-      exists = true;
-    } catch {
-      exists = false;
-    }
+    let exists = await dataStore.exists(noteUri);
 
     if (shouldCreate && !exists) {
       // Find the template to get content, then write
-      const templatesDir = getTemplatesDir(rootDir);
+      const templatesDir = getTemplatesDir(rootUri);
       const candidates = getDailyNoteTemplateCandidateUris(templatesDir);
       let content = `# ${formatDateTitle(date)}\n`;
 
@@ -139,22 +132,22 @@ export async function runDailyCommand(
         const result = await resolveDailyNote(date, templateUri, foam, async uri => {
           const text = await dataStore.read(uri);
           return text ?? '';
-        }, { fallbackFilepath: URI.file(notePath) });
+        }, { fallbackFilepath: noteUri });
         content = result.content;
         break;
       }
 
-      await fs.mkdir(path.dirname(notePath), { recursive: true });
-      await fs.writeFile(notePath, content, 'utf8');
+      await dataStore.write(noteUri, content);
       exists = true;
     }
 
     const relPath = path.relative(rootDir, notePath);
 
     // Get the Foam identifier if the note exists in the workspace
-    const noteUri = URI.file(notePath);
     const resource = workspace.find(noteUri);
-    const id = resource ? workspace.getIdentifier(noteUri) : path.basename(notePath, '.md');
+    const id = resource
+      ? workspace.getIdentifier(noteUri)
+      : path.basename(notePath, '.md');
 
     if (pathOnly) {
       logger.info(notePath);

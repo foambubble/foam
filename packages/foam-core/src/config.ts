@@ -78,6 +78,20 @@ export class DefaultFoamConfig implements IFoamConfig {
   getSupportedLanguages() { return ['markdown']; }
 }
 
+/**
+ * Static accessor for the active {@link IFoamConfig}.
+ *
+ * The config is global state seeded with {@link DefaultFoamConfig} at module
+ * load. Hosts (CLI's `loadWorkspaceFromDirectory`, the VS Code extension's
+ * `activate`) call {@link setDefaultConfig} to install workspace-aware
+ * settings before any command runs.
+ *
+ * If a caller forgets to initialize, `Config` returns the defaults silently
+ * — that's the deliberate fallback so that small isolated calls (tests,
+ * library consumers) work without ceremony. The cost is that user-configured
+ * settings won't take effect; hosts must call `setDefaultConfig` exactly
+ * once at bootstrap.
+ */
 export class Config {
   private static defaultConfig: IFoamConfig = new DefaultFoamConfig();
 

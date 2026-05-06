@@ -1,6 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { TextEdit } from '@foam/core';
+import { TextEdit, uriToWorkspacePath } from '@foam/core';
 import {
   parseArgs,
   getString,
@@ -10,7 +10,6 @@ import {
 } from '../support/args';
 import type { CliLogger, Format } from '../support/types';
 import { loadWorkspaceFromDirectory } from '../support/filesystem';
-import { uriToWorkspacePath } from '../support/workspace';
 import {
   lintWorkspace,
   missingHeadingRule,
@@ -138,7 +137,7 @@ export async function runLintCommand(
 
     const results: LintResult[] = lintResult.entries.map(({ uri, issues }) => ({
       uri: uri.toFsPath(),
-      path: uriToWorkspacePath(uri, rootDir),
+      path: uriToWorkspacePath(uri, workspace),
       issues: issues.map((issue: LintIssue) => ({
         code: issue.code,
         message: issue.message,

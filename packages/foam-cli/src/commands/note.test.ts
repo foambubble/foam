@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { FoamGraph } from '@foam/core';
+import { FoamGraph, URI, resolveNote } from '@foam/core';
 import { setColorsEnabled } from '../support/colors';
 
 setColorsEnabled(false);
@@ -18,7 +18,6 @@ import {
   noteDelete,
   runNoteCommand,
 } from './note';
-import { resolveNote } from '../support/workspace';
 
 // ─── resolveNote ──────────────────────────────────────────────────────────────
 
@@ -27,13 +26,13 @@ describe('resolveNote', () => {
     const { workspace: ws } = createInMemoryWorkspace([
       createTestNote({ uri: '/workspace/alpha.md', title: 'Alpha' }),
     ]);
-    const result = resolveNote(ws, 'alpha', undefined);
+    const result = resolveNote(ws, { identifier: 'alpha' });
     expect(result.title).toBe('Alpha');
   });
 
   it('throws for unknown identifier', () => {
     const { workspace: ws } = createInMemoryWorkspace([]);
-    expect(() => resolveNote(ws, 'missing', undefined)).toThrow('not found');
+    expect(() => resolveNote(ws, { identifier: 'missing' })).toThrow('not found');
   });
 
   it('throws for ambiguous identifier with candidate list', () => {
@@ -41,28 +40,22 @@ describe('resolveNote', () => {
       createTestNote({ uri: '/workspace/notes/alpha.md' }),
       createTestNote({ uri: '/workspace/archive/alpha.md' }),
     ]);
-    expect(() => resolveNote(ws, 'alpha', undefined)).toThrow('Ambiguous');
+    expect(() => resolveNote(ws, { identifier: 'alpha' })).toThrow('Ambiguous');
   });
 
-  it('resolves by --path flag with an absolute path', () => {
-    const { workspace: ws, root } = createInMemoryWorkspace([
+  it('resolves by uri', () => {
+    const { workspace: ws } = createInMemoryWorkspace([
       createTestNote({ uri: '/workspace/alpha.md', title: 'Alpha' }),
     ]);
-    const result = resolveNote(ws, undefined, '/workspace/alpha.md', root.toFsPath());
+    const result = resolveNote(ws, { uri: URI.file('/workspace/alpha.md') });
     expect(result.title).toBe('Alpha');
   });
 
-  it('resolves by --path flag with a relative path against the workspace root', () => {
-    const { workspace: ws, root } = createInMemoryWorkspace([
-      createTestNote({ uri: '/workspace/alpha.md', title: 'Alpha' }),
-    ]);
-    const result = resolveNote(ws, undefined, 'alpha.md', root.toFsPath());
-    expect(result.title).toBe('Alpha');
-  });
-
-  it('throws when --path target does not exist in workspace', () => {
-    const { workspace: ws, root } = createInMemoryWorkspace([]);
-    expect(() => resolveNote(ws, undefined, '/workspace/missing.md', root.toFsPath())).toThrow('not found');
+  it('throws when uri target does not exist in workspace', () => {
+    const { workspace: ws } = createInMemoryWorkspace([]);
+    expect(() =>
+      resolveNote(ws, { uri: URI.file('/workspace/missing.md') })
+    ).toThrow('not found');
   });
 });
 
@@ -74,12 +67,13 @@ describe('noteShowData', () => {
       createTestNote({ uri: '/workspace/alpha.md', title: 'Alpha', tags: ['work'], aliases: ['a'] }),
     ]);
     const graph = FoamGraph.fromWorkspace(ws);
-    const data = noteShowData(ws, graph, 'alpha', undefined, root.toFsPath(), {});
+    const resource = resolveNote(ws, { identifier: 'alpha' });
+    const data = noteShowData(ws, graph, resource, {});
     expect(data.id).toBe('alpha');
     expect(data.title).toBe('Alpha');
     expect(data.tags).toEqual(['work']);
     expect(data.aliases).toEqual(['a']);
-    expect(data.path).toBe('alpha.md');
+    expect(data.uri.path).toBe('/workspace/alpha.md');
   });
 
   it('includes links when includeLinks=true', () => {
@@ -88,9 +82,11 @@ describe('noteShowData', () => {
       createTestNote({ uri: '/workspace/b.md' }),
     ]);
     const graph = FoamGraph.fromWorkspace(ws);
-    const data = noteShowData(ws, graph, 'a', undefined, root.toFsPath(), { includeLinks: true });
+    const a = resolveNote(ws, { identifier: 'a' });
+    const data = noteShowData(ws, graph, a, { includeLinks: true });
     expect(data.links?.outgoing).toContain('b');
-    const dataB = noteShowData(ws, graph, 'b', undefined, root.toFsPath(), { includeLinks: true });
+    const b = resolveNote(ws, { identifier: 'b' });
+    const dataB = noteShowData(ws, graph, b, { includeLinks: true });
     expect(dataB.links?.incoming).toContain('a');
   });
 });
@@ -102,9 +98,10 @@ describe('noteIdData', () => {
     const { workspace: ws } = createInMemoryWorkspace([
       createTestNote({ uri: '/workspace/alpha.md' }),
     ]);
-    const data = noteIdData(ws, 'alpha', undefined);
+    const resource = resolveNote(ws, { identifier: 'alpha' });
+    const data = noteIdData(ws, resource);
     expect(data.id).toBe('alpha');
-    expect(data.uri).toContain('alpha.md');
+    expect(data.uri.path).toContain('alpha.md');
   });
 });
 
@@ -112,35 +109,42 @@ describe('noteIdData', () => {
 
 describe('noteCreate', () => {
   it('creates a note file with title as H1', () =>
-    withTmpWorkspace({}, async ({ rootDir, foam, dataStore }) => {
-      const result = await noteCreate(rootDir, foam, dataStore, { title: 'My Note' });
+    withTmpWorkspace({}, async ({ foam, dataStore }) => {
+      const result = await noteCreate(foam, dataStore, { title: 'My Note' });
       expect(result.id).toBe('my-note');
-      expect(fs.existsSync(result.uri)).toBe(true);
-      expect(fs.readFileSync(result.uri, 'utf8')).toContain('# My Note');
+      expect(fs.existsSync(result.uri.toFsPath())).toBe(true);
+      expect(fs.readFileSync(result.uri.toFsPath(), 'utf8')).toContain(
+        '# My Note'
+      );
     }, 'foam-note-test-'));
 
   it('creates note in a subdirectory when --dir is given', () =>
     withTmpWorkspace({}, async ({ rootDir, foam, dataStore }) => {
-      const result = await noteCreate(rootDir, foam, dataStore, { title: 'Sub Note', dir: 'notes' });
-      expect(result.path).toBe(path.join('notes', 'sub-note.md'));
-      expect(fs.existsSync(result.uri)).toBe(true);
+      const result = await noteCreate(foam, dataStore, {
+        title: 'Sub Note',
+        dir: 'notes',
+      });
+      expect(path.relative(rootDir, result.uri.toFsPath())).toBe(
+        path.join('notes', 'sub-note.md')
+      );
+      expect(fs.existsSync(result.uri.toFsPath())).toBe(true);
     }, 'foam-note-test-'));
 
   it('includes extra properties in frontmatter', () =>
-    withTmpWorkspace({}, async ({ rootDir, foam, dataStore }) => {
-      const result = await noteCreate(rootDir, foam, dataStore, {
+    withTmpWorkspace({}, async ({ foam, dataStore }) => {
+      const result = await noteCreate(foam, dataStore, {
         title: 'Prop Note',
         properties: { status: 'active', priority: '1' },
       });
-      const content = fs.readFileSync(result.uri, 'utf8');
+      const content = fs.readFileSync(result.uri.toFsPath(), 'utf8');
       expect(content).toContain('status: active');
       expect(content).toContain('priority: 1');
     }, 'foam-note-test-'));
 
   it('errors if file already exists', () =>
-    withTmpWorkspace({}, async ({ rootDir, foam, dataStore }) => {
-      await noteCreate(rootDir, foam, dataStore, { title: 'Dup' });
-      await expect(noteCreate(rootDir, foam, dataStore, { title: 'Dup' })).rejects.toThrow('already exists');
+    withTmpWorkspace({}, async ({ rootUri, foam, dataStore }) => {
+      await noteCreate(foam, dataStore, { title: 'Dup' });
+      await expect(noteCreate(foam, dataStore, { title: 'Dup' })).rejects.toThrow('already exists');
     }, 'foam-note-test-'));
 });
 
@@ -150,9 +154,11 @@ describe('noteMove', () => {
   it('moves the file and rewrites wikilinks', () =>
     withTmpWorkspace(
       { 'alpha.md': '# Alpha', 'ref.md': '# Ref\n\n[[alpha]]' },
-      async ({ rootDir, workspace }) => {
+      async ({ rootDir, workspace, dataStore }) => {
         const graph = FoamGraph.fromWorkspace(workspace);
-        const result = await noteMove(workspace, graph, rootDir, 'alpha', undefined, 'renamed.md');
+        const resource = resolveNote(workspace, { identifier: 'alpha' });
+        const newUri = URI.file(path.join(rootDir, 'renamed.md'));
+        const result = await noteMove(workspace, graph, dataStore, resource, newUri);
 
         expect(result.old_id).toBe('alpha');
         expect(result.id).toBe('renamed');
@@ -170,10 +176,12 @@ describe('noteMove', () => {
   it('errors if destination already exists', () =>
     withTmpWorkspace(
       { 'alpha.md': '# Alpha', 'beta.md': '# Beta' },
-      async ({ rootDir, workspace }) => {
+      async ({ rootDir, workspace, dataStore }) => {
         const graph = FoamGraph.fromWorkspace(workspace);
+        const resource = resolveNote(workspace, { identifier: 'alpha' });
+        const newUri = URI.file(path.join(rootDir, 'beta.md'));
         await expect(
-          noteMove(workspace, graph, rootDir, 'alpha', undefined, 'beta.md')
+          noteMove(workspace, graph, dataStore, resource, newUri)
         ).rejects.toThrow('already exists');
       },
       'foam-note-test-'
@@ -184,20 +192,27 @@ describe('noteMove', () => {
 
 describe('noteDelete', () => {
   it('moves note to .foam/trash/ by default', () =>
-    withTmpWorkspace({ 'alpha.md': '# Alpha' }, async ({ rootDir, workspace }) => {
-      const result = await noteDelete(workspace, rootDir, 'alpha', undefined, {});
-      expect(result.trashed_uri).toBeTruthy();
-      expect(result.trash_uri).toContain('.foam');
+    withTmpWorkspace({ 'alpha.md': '# Alpha' }, async ({ rootDir, workspace, dataStore }) => {
+      const resource = resolveNote(workspace, { identifier: 'alpha' });
+      const result = await noteDelete(workspace, dataStore, resource, {});
+      expect(result.trashed).toBe(true);
+      expect(result.uri.path).toContain('.foam');
       expect(fs.existsSync(path.join(rootDir, 'alpha.md'))).toBe(false);
-      expect(fs.existsSync(result.trash_uri!)).toBe(true);
+      expect(fs.existsSync(result.uri.toFsPath())).toBe(true);
     }, 'foam-note-test-'));
 
   it('generates collision-safe trash paths for notes with the same filename', () =>
     withTmpWorkspace(
       { 'notes/todo.md': '# Todo', 'archive/todo.md': '# Archived Todo' },
-      async ({ rootDir, workspace }) => {
-        await noteDelete(workspace, rootDir, undefined, path.join(rootDir, 'notes', 'todo.md'), {});
-        await noteDelete(workspace, rootDir, undefined, path.join(rootDir, 'archive', 'todo.md'), {});
+      async ({ rootDir, workspace, dataStore }) => {
+        const notesTodo = resolveNote(workspace, {
+          uri: URI.file(path.join(rootDir, 'notes', 'todo.md')),
+        });
+        await noteDelete(workspace, dataStore, notesTodo, {});
+        const archiveTodo = resolveNote(workspace, {
+          uri: URI.file(path.join(rootDir, 'archive', 'todo.md')),
+        });
+        await noteDelete(workspace, dataStore, archiveTodo, {});
 
         expect(fs.existsSync(path.join(rootDir, '.foam', 'trash', 'notes', 'todo.md'))).toBe(true);
         expect(fs.existsSync(path.join(rootDir, '.foam', 'trash', 'archive', 'todo.md'))).toBe(true);
@@ -206,9 +221,11 @@ describe('noteDelete', () => {
     ));
 
   it('permanently deletes with --permanent', () =>
-    withTmpWorkspace({ 'alpha.md': '# Alpha' }, async ({ rootDir, workspace }) => {
-      const result = await noteDelete(workspace, rootDir, 'alpha', undefined, { permanent: true });
-      expect(result.deleted_uri).toBeTruthy();
+    withTmpWorkspace({ 'alpha.md': '# Alpha' }, async ({ rootDir, workspace, dataStore }) => {
+      const resource = resolveNote(workspace, { identifier: 'alpha' });
+      const result = await noteDelete(workspace, dataStore, resource, { permanent: true });
+      expect(result.trashed).toBe(false);
+      expect(result.uri.path).toContain('alpha.md');
       expect(fs.existsSync(path.join(rootDir, 'alpha.md'))).toBe(false);
     }, 'foam-note-test-'));
 });

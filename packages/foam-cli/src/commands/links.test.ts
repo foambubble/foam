@@ -1,4 +1,4 @@
-import { FoamGraph } from '@foam/core';
+import { FoamGraph, resolveNote } from '@foam/core';
 import { createTestNote, createInMemoryWorkspace, withTmpWorkspace, TestLogger } from '../test/test-utils';
 import { linksData, runLinksCommand } from './links';
 import { setColorsEnabled } from '../support/colors';
@@ -15,11 +15,13 @@ describe('linksData', () => {
     ]);
     const graph = FoamGraph.fromWorkspace(ws);
 
-    const dataA = linksData(ws, graph, 'a', undefined, root.toFsPath());
+    const a = resolveNote(ws, { identifier: 'a' });
+    const dataA = linksData(ws, graph, a);
     expect(dataA.outgoing.map(c => c.id)).toContain('b');
     expect(dataA.incoming).toHaveLength(0);
 
-    const dataB = linksData(ws, graph, 'b', undefined, root.toFsPath());
+    const b = resolveNote(ws, { identifier: 'b' });
+    const dataB = linksData(ws, graph, b);
     expect(dataB.outgoing).toHaveLength(0);
     expect(dataB.incoming.map(c => c.id)).toContain('a');
   });
@@ -29,7 +31,8 @@ describe('linksData', () => {
       createTestNote({ uri: '/workspace/a.md', links: [{ slug: 'missing' }] }),
     ]);
     const graph = FoamGraph.fromWorkspace(ws);
-    const data = linksData(ws, graph, 'a', undefined, root.toFsPath());
+    const a = resolveNote(ws, { identifier: 'a' });
+    const data = linksData(ws, graph, a);
     expect(data.outgoing).toHaveLength(1);
     expect(data.outgoing[0].id).toContain('missing');
   });

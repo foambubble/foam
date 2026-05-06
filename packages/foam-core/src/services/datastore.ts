@@ -18,6 +18,29 @@ export interface IDataStore {
    * Returns `null` in case of errors while reading
    */
   read: (uri: URI) => Promise<string | null>;
+
+  /**
+   * Write content to the file. Creates parent directories as needed.
+   * Overwrites existing files.
+   */
+  write: (uri: URI, content: string) => Promise<void>;
+
+  /**
+   * Delete the file at the given URI. No-op if it doesn't exist.
+   */
+  delete: (uri: URI) => Promise<void>;
+
+  /**
+   * Move (rename) a file from one URI to another. Creates destination
+   * parent directories as needed. Atomic where the underlying filesystem
+   * supports it.
+   */
+  move: (from: URI, to: URI) => Promise<void>;
+
+  /**
+   * Returns true if the file exists at the given URI.
+   */
+  exists: (uri: URI) => Promise<boolean>;
 }
 
 export interface IWatcher {
@@ -64,7 +87,11 @@ export interface IMatcher {
 export class GenericDataStore implements IDataStore {
   constructor(
     private readonly listFiles: () => Promise<URI[]>,
-    private readFile: (uri: URI) => Promise<string>
+    private readFile: (uri: URI) => Promise<string>,
+    private readonly writeFile?: (uri: URI, content: string) => Promise<void>,
+    private readonly deleteFile?: (uri: URI) => Promise<void>,
+    private readonly moveFile?: (from: URI, to: URI) => Promise<void>,
+    private readonly fileExists?: (uri: URI) => Promise<boolean>
   ) {}
 
   async list(): Promise<URI[]> {
@@ -80,6 +107,34 @@ export class GenericDataStore implements IDataStore {
       );
       return null;
     }
+  }
+
+  async write(uri: URI, content: string): Promise<void> {
+    if (!this.writeFile) {
+      throw new Error('GenericDataStore: write not supported');
+    }
+    return this.writeFile(uri, content);
+  }
+
+  async delete(uri: URI): Promise<void> {
+    if (!this.deleteFile) {
+      throw new Error('GenericDataStore: delete not supported');
+    }
+    return this.deleteFile(uri);
+  }
+
+  async move(from: URI, to: URI): Promise<void> {
+    if (!this.moveFile) {
+      throw new Error('GenericDataStore: move not supported');
+    }
+    return this.moveFile(from, to);
+  }
+
+  async exists(uri: URI): Promise<boolean> {
+    if (!this.fileExists) {
+      throw new Error('GenericDataStore: exists not supported');
+    }
+    return this.fileExists(uri);
   }
 }
 

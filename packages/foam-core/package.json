@@ -13,8 +13,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "prepublishOnly": "yarn clean && yarn build",
-    "publish": "node publish.js",
+    "release": "node release.js",
     "tag-release": "node ../../scripts/tag-release.js core",
     "clean": "rimraf out",
     "test": "yarn test:unit && yarn test:e2e",

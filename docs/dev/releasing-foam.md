@@ -35,8 +35,9 @@ If a fragment was missed, the `/update-changelog` slash command can draft one re
      - `yarn tag-release`
      - The script reads each package's current version from `package.json` and skips any tag that already exists.
 6. Publish
-   - `yarn publish-extension` (packages and publishes to VS Marketplace and OpenVSX)
-   - `yarn publish-cli` (packages and publishes `@foam/cli` to npm as `foam-cli`)
+   - `yarn release-extension` (packages and publishes to VS Marketplace and OpenVSX)
+   - `yarn release-cli` (packages and publishes `@foam/cli` to npm as `foam-cli`)
+   - `yarn release-core` (publishes `@foam/core` to npm)
 7. Push
    - `git push && git push --tags`
 8. Update the release notes in GitHub

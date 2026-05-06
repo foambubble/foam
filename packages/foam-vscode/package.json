@@ -886,10 +886,9 @@
     "watch": "nodemon --watch 'src/**/*.ts' --watch '../foam-core/src/**/*.ts' --watch '../foam-graph/src/**/*.ts' --exec 'yarn build' --ext ts",
     "tag-release": "node ../../scripts/tag-release.js vscode",
     "package": "npx @vscode/vsce@3.6.0 package --yarn",
-    "vscode:prepublish": "yarn clean && yarn build:node --production && yarn build:web --production",
-    "publish:openvsx": "npx ovsx publish foam-vscode-$npm_package_version.vsix -p $OPENVSX_TOKEN",
     "publish:vscode": "npx vsce publish --packagePath foam-vscode-$npm_package_version.vsix",
-    "publish": "yarn package && yarn publish:vscode && yarn publish:openvsx",
+    "publish:openvsx": "npx ovsx publish foam-vscode-$npm_package_version.vsix -p $OPENVSX_TOKEN",
+    "release": "node release.js",
     "open-in-browser": "vscode-test-web --quality=stable --browser=chromium --extensionDevelopmentPath=. ",
     "install-extension": "code --install-extension ./foam-vscode-$npm_package_version.vsix",
     "vscode:start-debugging": "yarn clean && yarn watch"

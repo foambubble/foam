@@ -91,6 +91,26 @@ Test files follow `*.test.ts` for unit tests and `*.spec.ts` for integration tes
 
 Code in `packages/foam-vscode/src/core/` MUST NOT depend on the `vscode` library or any files outside the core directory. This maintains platform independence.
 
+### URIs throughout, paths only at the edges
+
+Domain code (everything in `@foam/core` and the platform-agnostic layers of `foam-cli`, `foam-mcp`, `foam-vscode`) takes and returns `URI` objects, not path strings. This is consistent with the existing core API: `FoamWorkspace.find(uri: URI)`, `FoamGraph.getLinks(uri: URI)`, `Resource.uri: URI`.
+
+```typescript
+// ✅ Good
+function listOrphans(workspace, graph, rootUri: URI): NoteItem[]
+
+// ❌ Avoid
+function listOrphans(workspace, graph, rootDir: string): NoteItem[]
+```
+
+Path strings only appear at:
+
+1. **I/O boundaries** — `IDataStore` implementations convert URI ↔ filesystem path (`URI.file(...)`, `uri.toFsPath()`).
+2. **External wire formats** — CLI argument parsing, MCP tool inputs/outputs, JSON serialization.
+3. **Display fields in return values** — e.g. `NoteItem.path` for human-readable workspace-relative paths, alongside the `URI`.
+
+For path manipulation inside `@foam/core`, use the POSIX-safe utilities in `packages/foam-core/src/utils/path.ts` (`relativeTo`, `joinPath`, `getBasename`, `getExtension`, `getDirectory`) — never import Node's `path` module, since `@foam/core` runs in both Node and browser contexts.
+
 ## Architecture Overview
 
 ### Core Abstractions

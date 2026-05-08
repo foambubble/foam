@@ -540,4 +540,112 @@ Third paragraph`,
 
     await deleteFile(note);
   });
+
+  it('resolves a self-referencing block embed inside a transitively embedded note (issue #1642)', async () => {
+    // Note A embeds note B. Note B contains `![[#^target]]`, which is a
+    // self-reference to a block in B itself. The current-note context must
+    // follow the embed chain — when we resolve B's self-ref, "current note"
+    // should be B, not the editor's active note (A).
+    const noteB = await createFile(
+      `Intro of B.
+
+The actual target block in B ^target
+
+![[#^target]]
+`,
+      ['issue-1642-nested', 'note-b.md']
+    );
+    const noteA = await createFile(
+      `Note A header.
+
+![[note-b]]
+`,
+      ['issue-1642-nested', 'note-a.md']
+    );
+
+    const localParser = createMarkdownParser([]);
+    const parsedA = localParser.parse(noteA.uri, noteA.content);
+    const parsedB = localParser.parse(noteB.uri, noteB.content);
+
+    const ws = new FoamWorkspace([noteA.uri.getDirectory()])
+      .set(parsedA)
+      .set(parsedB);
+
+    await withModifiedFoamConfiguration(
+      CONFIG_EMBED_NOTE_TYPE,
+      'full-card',
+      () => {
+        // Active editor is A — that's the only thing getCurrentResource
+        // can see. The embed of B must establish B as the current-note
+        // context for resolving B's `![[#^target]]`.
+        const md = markdownItWikilinkEmbed(
+          MarkdownIt(),
+          ws,
+          localParser,
+          () => parsedA
+        );
+        const res = md.render(noteA.content);
+        expect(res).toContain('The actual target block in B');
+        // The self-ref inside B must NOT fall back to A's context.
+        // Symptoms of the bug: (1) "Note A header." appears twice because
+        // A's full content got rendered as the inner embed, (2) a cyclic
+        // link warning is emitted because the inner embed re-resolved to A.
+        expect(res).not.toContain('Cyclic link detected');
+        const noteAHeaderOccurrences = (res.match(/Note A header\./g) ?? [])
+          .length;
+        expect(noteAHeaderOccurrences).toBe(1);
+        // The literal markdown should also not survive (the embed should
+        // render successfully, not fall through to the bare text).
+        expect(res).not.toContain('![[#^target]]');
+      }
+    );
+
+    await deleteFile(noteA);
+    await deleteFile(noteB);
+  });
+
+  it('renders embedded content through the same plugin pipeline as the outer document (issue #1642)', async () => {
+    // The plugin pipeline applied to the outer document must also be
+    // applied to embedded content. We register a probe plugin that
+    // marks every paragraph it sees, then assert the marker shows up
+    // both at the top level AND inside the embed.
+    const source = await createFile(
+      `Source intro.
+
+A paragraph block ^target
+`,
+      ['issue-1642-plugins', 'source.md']
+    );
+
+    const localParser = createMarkdownParser([]);
+    const parsedSource = localParser.parse(source.uri, source.content);
+
+    const ws = new FoamWorkspace([source.uri.getDirectory()]).set(parsedSource);
+
+    await withModifiedFoamConfiguration(
+      CONFIG_EMBED_NOTE_TYPE,
+      'full-card',
+      () => {
+        const md = MarkdownIt();
+        // Probe plugin: tag every paragraph_open token with a class.
+        md.renderer.rules.paragraph_open = () =>
+          '<p class="probe-marker">';
+
+        markdownItWikilinkEmbed(md, ws, localParser, () => parsedSource);
+
+        const res = md.render(`Outer paragraph. ![[source#^target]]`);
+
+        // The outer paragraph runs through the probe — sanity check.
+        expect(res).toContain('class="probe-marker"');
+        // The embedded paragraph must also run through the probe.
+        // Today the inner render is re-entrant and fragile; after the
+        // fix, embedded content is rendered through the same `md`
+        // (or an equivalently-configured one), so the probe applies.
+        const probeCount = (res.match(/class="probe-marker"/g) ?? []).length;
+        expect(probeCount).toBeGreaterThanOrEqual(2);
+      }
+    );
+
+    await deleteFile(source);
+  });
 });

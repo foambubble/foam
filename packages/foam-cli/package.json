@@ -12,9 +12,9 @@
     "release": "node release.js",
     "tag-release": "node ../../scripts/tag-release.js cli",
     "clean": "rimraf out",
-    "test": "yarn test:unit",
+    "test": "yarn test:unit && yarn test:e2e",
     "test:unit": "vitest run",
-    "test:e2e": "echo 'No e2e tests for @foam/cli'",
+    "test:e2e": "yarn build && vitest run --config vitest.e2e.config.ts",
     "lint": "oxlint src"
   },
   "devDependencies": {
@@ -28,6 +28,8 @@
   },
   "dependencies": {
     "@foam/core": "*",
+    "@foam/mcp": "*",
+    "chokidar": "^3.5.3",
     "jsonc-parser": "^3.3.1",
     "micromatch": "^4.0.8"
   }

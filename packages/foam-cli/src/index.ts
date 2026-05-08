@@ -11,6 +11,7 @@ import { runSearchCommand } from './commands/search';
 import { runRenameCommand } from './commands/rename';
 import { runTagCommand } from './commands/tag';
 import { runUpdateCommand } from './commands/update';
+import { parseMcpArgs, MCP_HELP, runMcpCommand } from './commands/mcp';
 import { checkForUpdateNotice, getCurrentVersion } from './support/version';
 import { setColorsEnabled } from './support/colors';
 
@@ -27,6 +28,7 @@ Commands:
   grep        Search note content (grep-style, no graph needed)
   search      Search by title, alias, tag, or frontmatter property
   rename      Rename a note, tag, section, or block anchor (with link rewriting)
+  mcp         Run an MCP server (Model Context Protocol) over stdio for AI agents
   update      Check for updates and show the install command
 
 Global options:
@@ -154,13 +156,22 @@ async function dispatch(
       case 'update': {
         return runUpdateCommand(commandArgs, logger);
       }
+      case 'mcp': {
+        if (commandArgs.includes('--help') || commandArgs.includes('-h')) {
+          logger.info(MCP_HELP);
+          return 0;
+        }
+        return runMcpCommand(parseMcpArgs(commandArgs), logger);
+      }
       default:
         logger.error(`Unknown command "${command}".\n\n${renderCliHelp()}`);
         return 1;
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
+    const stack = error instanceof Error ? error.stack : undefined;
     logger.error(message);
+    if (process.env.FOAM_DEBUG && stack) logger.error(stack);
     return 1;
   }
 }

@@ -18,7 +18,10 @@ async function main() {
     mainFields: ['module', 'main'],
     format: 'cjs',
     outfile: 'out/index.js',
-    external: [],
+    // fsevents is an optional native dep of chokidar (macOS only). esbuild
+    // can't bundle .node binaries — mark it external so chokidar's runtime
+    // try/catch handles its absence gracefully on other platforms.
+    external: ['fsevents'],
     minify: production,
     sourcemap: !production,
     sourcesContent: false,

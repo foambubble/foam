@@ -6,6 +6,7 @@ import {
   AttachmentResourceProvider,
   IDataStore,
   IMatcher,
+  IWatcher,
   createMarkdownParser,
   MarkdownResourceProvider,
   bootstrap,
@@ -117,7 +118,14 @@ export interface LoadWorkspaceOptions {
 
 export async function loadWorkspaceFromDirectory(
   workspaceDir: string,
-  options: LoadWorkspaceOptions = {}
+  options: LoadWorkspaceOptions & {
+    /**
+     * Optional watcher to keep the in-memory graph in sync with on-disk
+     * changes. Used by long-running consumers (e.g. the MCP server). One-shot
+     * commands (most CLI subcommands) leave this undefined and read a snapshot.
+     */
+    watcher?: IWatcher;
+  } = {}
 ) {
   const rootDir = path.resolve(workspaceDir);
   const rootUri = URI.file(rootDir);
@@ -153,12 +161,12 @@ export async function loadWorkspaceFromDirectory(
   const foam = await bootstrap(
     [rootUri],
     matcher,
-    undefined,
+    options.watcher,
     dataStore,
     parser,
     providers,
     Config.getDefaultNoteExtension(),
-    'debug'
+    options.watcher ? 'info' : 'debug'
   );
 
   return {

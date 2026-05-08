@@ -1,4 +1,4 @@
-import { FoamGraph } from '../model/graph';
+import { Connection, FoamGraph } from '../model/graph';
 import { Resource } from '../model/note';
 import { FoamWorkspace } from '../model/workspace';
 import { URI } from '../model/uri';
@@ -52,5 +52,100 @@ export function linksData(
     uri: resource.uri,
     outgoing,
     incoming,
+  };
+}
+
+export type TraversalDirection = 'links' | 'backlinks' | 'both';
+
+export interface TraversalNode {
+  uri: URI;
+  title: string;
+  type: string;
+  /** Distance in hops from the start URI (0 for the start node itself). */
+  distance: number;
+}
+
+export interface TraversalEdge {
+  source: URI;
+  target: URI;
+  label?: string;
+}
+
+export interface TraversalResult {
+  nodes: TraversalNode[];
+  edges: TraversalEdge[];
+}
+
+/**
+ * Performs a breadth-first traversal of the graph starting at `start`,
+ * following links, backlinks, or both up to `depth` hops.
+ *
+ * Each node is visited at most once; the reported `distance` is the
+ * shortest hop count to reach it. Edges are reported once per direction
+ * even if encountered through multiple paths.
+ */
+export function traverseGraph(
+  workspace: FoamWorkspace,
+  graph: FoamGraph,
+  start: URI,
+  depth: number,
+  direction: TraversalDirection
+): TraversalResult {
+  const visited = new Map<string, TraversalNode>();
+  const edgeKeys = new Set<string>();
+  const edges: TraversalEdge[] = [];
+
+  const startResource = workspace.find(start);
+  visited.set(start.path, {
+    uri: start,
+    title: startResource?.title ?? '',
+    type: startResource?.type ?? 'placeholder',
+    distance: 0,
+  });
+
+  let frontier: URI[] = [start];
+  for (let hop = 0; hop < depth && frontier.length > 0; hop++) {
+    const next: URI[] = [];
+    for (const uri of frontier) {
+      const connections: { conn: Connection; target: URI }[] = [];
+      if (direction === 'links' || direction === 'both') {
+        for (const c of graph.getLinks(uri)) {
+          connections.push({ conn: c, target: c.target });
+        }
+      }
+      if (direction === 'backlinks' || direction === 'both') {
+        for (const c of graph.getBacklinks(uri)) {
+          connections.push({ conn: c, target: c.source });
+        }
+      }
+
+      for (const { conn, target } of connections) {
+        const edgeKey = `${conn.source.path}➜${conn.target.path}`;
+        if (!edgeKeys.has(edgeKey)) {
+          edgeKeys.add(edgeKey);
+          edges.push({
+            source: conn.source,
+            target: conn.target,
+            label: conn.link.rawText,
+          });
+        }
+        if (!visited.has(target.path)) {
+          const resource = workspace.find(target);
+          visited.set(target.path, {
+            uri: target,
+            title: resource?.title ?? '',
+            type: resource?.type ?? 'placeholder',
+            distance: hop + 1,
+          });
+          next.push(target);
+        }
+      }
+    }
+    frontier = next;
+  }
+
+  return {
+    nodes: Array.from(visited.values()),
+    edges,
   };
 }

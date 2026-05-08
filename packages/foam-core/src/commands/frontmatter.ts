@@ -14,9 +14,16 @@ export interface FrontmatterResult {
  */
 export function parseFrontmatter(content: string): FrontmatterResult {
   const parsed = matter(content);
-  // gray-matter returns the raw `matter` field (the YAML text) — if it's
-  // empty there was no frontmatter block.
-  const hasFrontmatter = parsed.matter.trim().length > 0;
+  // gray-matter exposes the raw frontmatter block as `parsed.matter` — but
+  // it's a non-enumerable property, and gray-matter's internal cache returns
+  // an Object.assign copy on hits, which strips non-enumerable fields. So
+  // `parsed.matter` is undefined on cache hits even when frontmatter exists.
+  // Fall back to inferring presence from `parsed.data`, which is always
+  // populated when frontmatter parsed successfully.
+  const matterText = (parsed as { matter?: string }).matter ?? '';
+  const hasFrontmatter =
+    matterText.trim().length > 0 ||
+    (parsed.data !== undefined && Object.keys(parsed.data).length > 0);
   return {
     properties: parsed.data ?? {},
     body: parsed.content,

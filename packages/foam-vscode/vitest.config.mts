@@ -38,6 +38,14 @@ export default defineConfig({
   resolve: {
     alias: {
       vscode: path.join(__dirname, 'src/test/vscode-mock.ts'),
+      // Resolve @foam/core to TS source under vitest so the test-utils
+      // subpath export shares module identity with the main entry.
+      // Without this, `@foam/core` resolves to compiled out/ while
+      // `@foam/core/test` (which relative-imports ../src/...) resolves
+      // to source — two instances of URI etc., breaking `instanceof`.
+      // Order matters: longer prefix first.
+      '@foam/core/test': path.join(__dirname, '../foam-core/test/test-utils.ts'),
+      '@foam/core': path.join(__dirname, '../foam-core/src/index.ts'),
     },
   },
   test: {

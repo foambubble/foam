@@ -18,14 +18,16 @@ Logger.setLevel('error');
 export class InMemoryDataStore implements IDataStore {
   private files = new Map<string, string>();
 
+  /**
+   * Sync helper for test setup — populate without going through the async API.
+   */
   set(uri: URI, content: string): void {
     this.files.set(uri.path, content);
   }
 
-  delete(uri: URI): void {
-    this.files.delete(uri.path);
-  }
-
+  /**
+   * Sync helper to clear all files.
+   */
   clear(): void {
     this.files.clear();
   }
@@ -36,6 +38,27 @@ export class InMemoryDataStore implements IDataStore {
 
   async read(uri: URI): Promise<string | null> {
     return this.files.get(uri.path) ?? null;
+  }
+
+  async write(uri: URI, content: string): Promise<void> {
+    this.files.set(uri.path, content);
+  }
+
+  async delete(uri: URI): Promise<void> {
+    this.files.delete(uri.path);
+  }
+
+  async move(from: URI, to: URI): Promise<void> {
+    const content = this.files.get(from.path);
+    if (content === undefined) {
+      throw new Error(`InMemoryDataStore.move: source not found: ${from.path}`);
+    }
+    this.files.delete(from.path);
+    this.files.set(to.path, content);
+  }
+
+  async exists(uri: URI): Promise<boolean> {
+    return this.files.has(uri.path);
   }
 }
 

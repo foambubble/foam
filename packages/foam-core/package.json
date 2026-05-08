@@ -9,6 +9,10 @@
     ".": {
       "types": "./out/index.d.ts",
       "default": "./out/index.js"
+    },
+    "./test": {
+      "types": "./test/test-utils.ts",
+      "default": "./test/test-utils.ts"
     }
   },
   "scripts": {

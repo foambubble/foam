@@ -104,6 +104,7 @@ export {
   changeExtension,
   isWithinPath,
   asAbsolutePaths,
+  relativeTo,
 } from './utils/path';
 export { isWindows, isMacintosh, isLinux } from './common/platform';
 export { TaskDeduplicator } from './utils/task-deduplicator';
@@ -171,8 +172,15 @@ export type {
   PlaceholderItem,
   OrphansOptions,
 } from './commands/list';
-export { linksData } from './commands/links';
-export type { LinkEntry, LinksResult } from './commands/links';
+export { linksData, traverseGraph } from './commands/links';
+export type {
+  LinkEntry,
+  LinksResult,
+  TraversalDirection,
+  TraversalNode,
+  TraversalEdge,
+  TraversalResult,
+} from './commands/links';
 export { outlineData } from './commands/outline';
 export type { OutlineSection, OutlineResult } from './commands/outline';
 export { searchWorkspace } from './commands/search';

@@ -1,0 +1,33 @@
+{
+  "name": "@foam/mcp",
+  "version": "0.1.0",
+  "description": "Model Context Protocol server library for Foam — exposes the Foam knowledge graph to AI agents",
+  "license": "MIT",
+  "main": "out/index.js",
+  "types": "out/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./out/index.d.ts",
+      "default": "./out/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rimraf out",
+    "test": "yarn test:unit",
+    "test:unit": "vitest run",
+    "lint": "oxlint src"
+  },
+  "devDependencies": {
+    "@types/node": "^18.0.0",
+    "oxlint": "^1.57.0",
+    "rimraf": "^3.0.2",
+    "typescript": "^5.8.0",
+    "vitest": "^3.0.0"
+  },
+  "dependencies": {
+    "@foam/core": "*",
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "zod": "^4.0.0"
+  }
+}

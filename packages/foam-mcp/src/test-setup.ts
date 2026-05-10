@@ -10,15 +10,18 @@ import {
   URI,
 } from '@foam/core';
 import { InMemoryDataStore } from '@foam/core/test';
-import { FoamMcpServer } from '../src';
+import { FoamMcpServer } from './server';
 
-export interface TestHarness {
+export interface McpTestContext {
   client: Client;
   server: FoamMcpServer;
   foam: Foam;
   dataStore: InMemoryDataStore;
   rootUri: URI;
-  callTool: (name: string, args?: Record<string, unknown>) => Promise<{
+  callTool: (
+    name: string,
+    args?: Record<string, unknown>
+  ) => Promise<{
     isError?: boolean;
     content: Array<{ type: string; text?: string }>;
   }>;
@@ -27,25 +30,51 @@ export interface TestHarness {
     name: string,
     args?: Record<string, unknown>
   ) => Promise<T>;
-  close: () => Promise<void>;
+}
+
+export interface McpTestOptions {
+  rootPath?: string;
+  readOnly?: boolean;
 }
 
 /**
- * Builds a fully-wired in-memory MCP server + client pair for testing tools.
- * Files in `seed` are written to the data store before `bootstrap()` so the
- * graph and tags are populated.
+ * Builds an in-memory `Foam` + `FoamMcpServer` + `Client` triple wired over
+ * `InMemoryTransport`, runs `fn`, and tears the whole thing down — even if
+ * `fn` throws.
+ *
+ * Tests should always go through this helper rather than constructing a
+ * server by hand: it owns the lifecycle and guarantees `client.close()` /
+ * `server.close()` run on every code path.
+ *
+ * Usage:
+ *   await withMcpServer(SEED, async ctx => {
+ *     const items = await ctx.callToolJson('list_resources');
+ *     // ...
+ *   });
  */
-export async function buildTestHarness(
+export async function withMcpServer<T>(
   seed: Record<string, string>,
-  opts: { rootPath?: string; readOnly?: boolean } = {}
-): Promise<TestHarness> {
+  fn: (ctx: McpTestContext) => Promise<T>
+): Promise<T>;
+export async function withMcpServer<T>(
+  seed: Record<string, string>,
+  opts: McpTestOptions,
+  fn: (ctx: McpTestContext) => Promise<T>
+): Promise<T>;
+export async function withMcpServer<T>(
+  seed: Record<string, string>,
+  optsOrFn: McpTestOptions | ((ctx: McpTestContext) => Promise<T>),
+  maybeFn?: (ctx: McpTestContext) => Promise<T>
+): Promise<T> {
+  const fn = typeof optsOrFn === 'function' ? optsOrFn : maybeFn!;
+  const opts = typeof optsOrFn === 'function' ? {} : optsOrFn;
+
   const rootPath = opts.rootPath ?? '/workspace';
   const rootUri = URI.file(rootPath);
   const dataStore = new InMemoryDataStore();
 
   for (const [relative, content] of Object.entries(seed)) {
-    const uri = rootUri.joinPath(relative);
-    dataStore.set(uri, content);
+    dataStore.set(rootUri.joinPath(relative), content);
   }
 
   const parser = createMarkdownParser();
@@ -88,10 +117,10 @@ export async function buildTestHarness(
       content: Array<{ type: string; text?: string }>;
     }>;
 
-  const callToolJson = async <T = unknown>(
+  const callToolJson = async <U = unknown>(
     name: string,
     args?: Record<string, unknown>
-  ): Promise<T> => {
+  ): Promise<U> => {
     const result = await callTool(name, args);
     if (result.isError) {
       throw new Error(
@@ -100,10 +129,10 @@ export async function buildTestHarness(
     }
     const text = result.content[0]?.text;
     if (!text) throw new Error(`Tool ${name} returned no text content`);
-    return JSON.parse(text) as T;
+    return JSON.parse(text) as U;
   };
 
-  return {
+  const ctx: McpTestContext = {
     client,
     server,
     foam,
@@ -111,9 +140,12 @@ export async function buildTestHarness(
     rootUri,
     callTool,
     callToolJson,
-    close: async () => {
-      await client.close();
-      await server.close();
-    },
   };
+
+  try {
+    return await fn(ctx);
+  } finally {
+    await client.close();
+    await server.close();
+  }
 }

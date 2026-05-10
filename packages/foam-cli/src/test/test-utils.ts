@@ -184,21 +184,53 @@ export const readFileFromFs = async (uri: URI) =>
  *   });
  *   try { ... } finally { cleanup(); }
  */
-export async function createTmpWorkspace(
+/**
+ * Creates a temporary directory and writes the given files to it. Used as
+ * a building block by `createTmpWorkspace` (which also bootstraps Foam) and
+ * by tests that just need files on disk (e.g. e2e tests that spawn the CLI).
+ */
+export function createTmpDir(
   files: Record<string, string>,
   prefix = 'foam-test-'
-) {
+): { rootDir: string; cleanup: () => void } {
   const rootDir = mkdtempSync(path.join(tmpdir(), prefix));
   for (const [name, content] of Object.entries(files)) {
     const filePath = path.join(rootDir, name);
     fs.mkdirSync(path.dirname(filePath), { recursive: true });
     fs.writeFileSync(filePath, content, 'utf8');
   }
-  const result = await loadWorkspaceFromDirectory(rootDir);
   return {
-    ...result,
+    rootDir,
     cleanup: () => fs.rmSync(rootDir, { recursive: true, force: true }),
   };
+}
+
+/**
+ * Runs `fn` against a freshly-created temp directory containing the given
+ * files, then cleans it up. Use this when you need files on disk but don't
+ * need a bootstrapped Foam workspace (e.g. e2e tests that spawn the CLI
+ * subprocess and let it load the workspace itself).
+ */
+export async function withTmpDir<T>(
+  files: Record<string, string>,
+  fn: (rootDir: string) => Promise<T>,
+  prefix = 'foam-test-'
+): Promise<T> {
+  const { rootDir, cleanup } = createTmpDir(files, prefix);
+  try {
+    return await fn(rootDir);
+  } finally {
+    cleanup();
+  }
+}
+
+export async function createTmpWorkspace(
+  files: Record<string, string>,
+  prefix = 'foam-test-'
+) {
+  const { rootDir, cleanup } = createTmpDir(files, prefix);
+  const result = await loadWorkspaceFromDirectory(rootDir);
+  return { ...result, cleanup };
 }
 
 /**

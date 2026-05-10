@@ -28,7 +28,7 @@ Claude Desktop / mcp.json config:
     "mcpServers": {
       "foam": {
         "command": "npx",
-        "args": ["foam-cli", "mcp", "--workspace", "/path/to/vault"]
+        "args": ["foam-cli", "mcp", "--workspace", "/path/to/workspace"]
       }
     }
   }

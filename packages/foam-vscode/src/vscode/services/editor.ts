@@ -266,7 +266,10 @@ export async function createMatcherAndDataStore(
   }
 
   const listFiles = async () => {
-    let allFiles: Uri[] = [];
+    // Avoid spreading large arrays as variadic arguments (e.g. `arr.push(...other)`
+    // or `[...a, ...b]`): on V8 this overflows the call stack around ~125k items,
+    // which is reachable on large vaults with many attachments. See issue #1645.
+    const allFiles: Uri[] = [];
 
     for (const folder of workspace.workspaceFolders) {
       const folderIncludes = includePatterns.get(folder.name);
@@ -281,23 +284,24 @@ export async function createMatcherAndDataStore(
         continue;
       }
 
-      const filesFromAllPatterns: Uri[] = [];
+      const seen = new Map<string, Uri>();
 
-      // Apply each include pattern
+      // Apply each include pattern, deduplicating across patterns
       for (const includePattern of folderIncludes) {
         const uris = await workspace.findFiles(
           new RelativePattern(folder.uri, includePattern),
           excludePattern
         );
-        filesFromAllPatterns.push(...uris);
+        for (const uri of uris) {
+          if (!seen.has(uri.fsPath)) {
+            seen.set(uri.fsPath, uri);
+          }
+        }
       }
 
-      // Deduplicate files (same file may match multiple patterns)
-      const uniqueFiles = Array.from(
-        new Map(filesFromAllPatterns.map(uri => [uri.fsPath, uri])).values()
-      );
-
-      allFiles = [...allFiles, ...uniqueFiles];
+      for (const uri of seen.values()) {
+        allFiles.push(uri);
+      }
     }
 
     return allFiles.map(fromVsCodeUri);

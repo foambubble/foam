@@ -1,6 +1,7 @@
 /*global markdownit:readonly*/
 
 import * as vscode from 'vscode';
+import MarkdownIt from 'markdown-it';
 import { Foam } from '@foam/core';
 import { default as markdownItFoamTags } from './tag-highlight';
 import { default as markdownItWikilinkNavigation } from './wikilink-navigation';
@@ -40,28 +41,45 @@ export default async function activate(
       const parser = foam.services.parser;
 
       // Used to resolve self-referencing embeds (![[#section]], ![[#^blockid]]).
-      // activeTextEditor is the best available proxy for the document being previewed.
+      // The active text editor is the most reliable signal when the user
+      // initiated the preview — clicking into the preview panel can clear
+      // `activeTextEditor`, but that's a secondary case the user can work
+      // around by clicking back into the source.
       const getCurrentResource = () => {
         const editor = vscode.window.activeTextEditor;
         return editor ? ws.find(fromVsCodeUri(editor.document.uri)) : null;
       };
-      let result = escapeWikilinkPipes(md);
-      result = result.use(markdownItFootnote);
-      result = markdownItWikilinkEmbed(result, ws, parser, getCurrentResource);
-      result = markdownItFoamTags(result, ws);
-      result = markdownItWikilinkNavigation(result, ws);
-      result = markdownItRemoveLinkReferences(result, ws);
-      result = markdownItBlockAnchorIds(result);
-      result = markdownItFoamQuery(result, ws, graph, {
-        isTrusted: () => vscode.workspace.isTrusted,
-        toRelativePath: (uriPath: string) =>
-          vscode.workspace.asRelativePath(
-            toVsCodeUri(URI.file(uriPath)),
-            false
-          ),
-        getCurrentResource,
-      });
-      return result;
+
+      // Factory used by wikilink-embed to render embedded note content in a
+      // fresh markdown-it instance — avoids re-entering the outer `md`
+      // mid-render (which corrupts stateful plugins like VS Code's
+      // source-map). The inner instance gets the same Foam plugin pipeline.
+      const buildFoamPipeline = (target: markdownit): markdownit => {
+        let r = escapeWikilinkPipes(target);
+        r = r.use(markdownItFootnote);
+        r = markdownItWikilinkEmbed(r, ws, parser, getCurrentResource, () =>
+          // html: true so the card/inline embed wrappers (which inject
+          // `<div class="embed-container-note">...`) survive the inner
+          // render as raw HTML rather than being escaped to text.
+          buildFoamPipeline(MarkdownIt({ html: true }))
+        );
+        r = markdownItFoamTags(r, ws);
+        r = markdownItWikilinkNavigation(r, ws);
+        r = markdownItRemoveLinkReferences(r, ws);
+        r = markdownItBlockAnchorIds(r);
+        r = markdownItFoamQuery(r, ws, graph, {
+          isTrusted: () => vscode.workspace.isTrusted,
+          toRelativePath: (uriPath: string) =>
+            vscode.workspace.asRelativePath(
+              toVsCodeUri(URI.file(uriPath)),
+              false
+            ),
+          getCurrentResource,
+        });
+        return r;
+      };
+
+      return buildFoamPipeline(md);
     },
   };
 }

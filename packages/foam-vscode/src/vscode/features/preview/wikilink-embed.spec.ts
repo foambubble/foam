@@ -604,13 +604,15 @@ The actual target block in B ^target
     await deleteFile(noteB);
   });
 
-  it('renders embedded content through the same plugin pipeline as the outer document (issue #1642)', async () => {
-    // The plugin pipeline applied to the outer document must also be
-    // applied to embedded content. We register a probe plugin that
-    // marks every paragraph it sees, then assert the marker shows up
-    // both at the top level AND inside the embed.
+  it('uses the factory-supplied markdown-it for embedded content so Foam plugins apply inside embeds (issue #1642)', async () => {
+    // Embedded content must be rendered through the factory's markdown-it
+    // (which carries the Foam plugin pipeline), not by re-entering the
+    // outer instance. This test pins that contract: a custom rule
+    // installed only on factory-built instances must appear in the
+    // embed's output, and the outer instance (which lacks that rule)
+    // must not be used for the inner render.
     const source = await createFile(
-      `Source intro.
+      `Outer paragraph.
 
 A paragraph block ^target
 `,
@@ -619,30 +621,82 @@ A paragraph block ^target
 
     const localParser = createMarkdownParser([]);
     const parsedSource = localParser.parse(source.uri, source.content);
-
     const ws = new FoamWorkspace([source.uri.getDirectory()]).set(parsedSource);
 
     await withModifiedFoamConfiguration(
       CONFIG_EMBED_NOTE_TYPE,
       'full-card',
       () => {
-        const md = MarkdownIt();
-        // Probe plugin: tag every paragraph_open token with a class.
-        md.renderer.rules.paragraph_open = () =>
-          '<p class="probe-marker">';
+        // Outer instance has NO probe. The inner factory installs the probe
+        // on every fresh instance — simulating the production setup where
+        // index.ts re-runs the Foam plugin pipeline on each factory call.
+        const outerMd = MarkdownIt();
+        const createInnerMd = () => {
+          const inner = MarkdownIt({ html: true });
+          inner.renderer.rules.paragraph_open = () =>
+            '<p class="inner-probe">';
+          return inner;
+        };
 
-        markdownItWikilinkEmbed(md, ws, localParser, () => parsedSource);
+        markdownItWikilinkEmbed(
+          outerMd,
+          ws,
+          localParser,
+          () => parsedSource,
+          createInnerMd
+        );
 
-        const res = md.render(`Outer paragraph. ![[source#^target]]`);
+        const res = outerMd.render(`Outer paragraph. ![[source#^target]]`);
 
-        // The outer paragraph runs through the probe — sanity check.
-        expect(res).toContain('class="probe-marker"');
-        // The embedded paragraph must also run through the probe.
-        // Today the inner render is re-entrant and fragile; after the
-        // fix, embedded content is rendered through the same `md`
-        // (or an equivalently-configured one), so the probe applies.
-        const probeCount = (res.match(/class="probe-marker"/g) ?? []).length;
-        expect(probeCount).toBeGreaterThanOrEqual(2);
+        // The outer paragraph went through outerMd (no probe).
+        expect(res).not.toMatch(/<p class="inner-probe">Outer paragraph/);
+        // The embedded paragraph MUST go through the factory-built inner
+        // instance — the probe rule should mark "A paragraph block".
+        expect(res).toMatch(/<p class="inner-probe">A paragraph block/);
+      }
+    );
+
+    await deleteFile(source);
+  });
+
+  it('emits the embed wrapper as raw HTML rather than escaped text (issue #1642)', async () => {
+    // The card/inline formatters wrap embedded content in
+    // `<div class="embed-container-note">...</div>`. When rendered through
+    // the inner markdown-it factory, that block-level HTML must survive
+    // intact — not be escaped as text in the final preview output.
+    const source = await createFile(
+      `Mix dry ingredients thoroughly ^dry-step
+
+Add wet ingredients ^wet-step
+
+![[#^wet-step]]
+`,
+      ['issue-1642-raw-html.md']
+    );
+    const localParser = createMarkdownParser([]);
+    const parsedSource = localParser.parse(source.uri, source.content);
+    const ws = new FoamWorkspace([source.uri.getDirectory()]).set(parsedSource);
+
+    await withModifiedFoamConfiguration(
+      CONFIG_EMBED_NOTE_TYPE,
+      'full-card',
+      () => {
+        // Use a factory matching production (html: true) so the inner
+        // render preserves the wrapper div. Without `html: true` the
+        // inner render escapes `<div>` to `&lt;div&gt;` and the user sees
+        // literal HTML tags in the preview.
+        const md = markdownItWikilinkEmbed(
+          MarkdownIt(),
+          ws,
+          localParser,
+          () => parsedSource,
+          () => MarkdownIt({ html: true })
+        );
+        const res = md.render(source.content);
+
+        // The wrapper must appear as a real HTML element, not as escaped text.
+        expect(res).toContain('<div class="embed-container-note">');
+        expect(res).not.toContain('&lt;div class=&quot;embed-container-note');
       }
     );
 

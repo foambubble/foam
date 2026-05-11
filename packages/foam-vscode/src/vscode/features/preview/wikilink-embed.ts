@@ -31,51 +31,36 @@ export const CONFIG_EMBED_NOTE_TYPE = 'preview.embedNoteType';
 // Stack of notes currently being rendered as embeds. Used both for cycle
 // detection and so that self-referencing wikilinks (![[#section]],
 // ![[#^blockid]]) inside an embedded note resolve against the embedded note
-// rather than the editor's active note.
+// rather than the editor's active note. Module-level so it survives across
+// the regex callbacks of nested embed rendering, which use the same plugin
+// configuration (built fresh per outer render via `createInnerMd`).
 const noteStack: Resource[] = [];
-
-// Pending embeds awaiting rendering. The regex callback emits a sentinel
-// placeholder into the inline stream; after `md.render` completes for the
-// outer document, the wrapper substitutes each placeholder for its rendered
-// HTML. This avoids re-entering `md.render` mid-parse, which would corrupt
-// per-render state in stateful plugins (the original cause of issue #1642).
-const pendingEmbeds = new Map<string, PendingEmbed>();
-let nextEmbedId = 0;
-
-interface PendingEmbed {
-  // Markdown source to render in place of the placeholder.
-  content: string;
-  // The resource the embed resolved to. Pushed onto noteStack while its
-  // content renders so nested self-refs resolve correctly.
-  note: Resource;
-}
-
-// ASCII-only sentinel — survives markdown-it's parse and HTML escape passes
-// without mutation, and is unlikely to collide with real content.
-const EMBED_PLACEHOLDER_PREFIX = 'xFOAMEMBEDx';
-const EMBED_PLACEHOLDER_SUFFIX = 'xENDFOAMEMBEDx';
-const EMBED_PLACEHOLDER_REGEX = new RegExp(
-  `${EMBED_PLACEHOLDER_PREFIX}(\\d+)${EMBED_PLACEHOLDER_SUFFIX}`,
-  'g'
-);
 
 export const markdownItWikilinkEmbed = (
   md: markdownit,
   workspace: FoamWorkspace,
   parser: ResourceParser,
-  getCurrentResource?: () => Resource | null
+  getCurrentResource?: (env?: any) => Resource | null,
+  // Factory that builds a fresh markdown-it instance configured with the
+  // same Foam plugin pipeline as the outer one. Used to render embedded
+  // note content without re-entering the outer instance (which corrupts
+  // per-render state in stateful plugins — original cause of issue #1642).
+  // When omitted (tests or web extension), inner renders fall back to
+  // re-entering `md`; that's the legacy behaviour.
+  createInnerMd?: () => markdownit
 ) => {
   // The "current note" for resolving self-referencing embeds. While we're
-  // inside an embed (i.e. noteStack is non-empty) the top of the stack wins;
-  // otherwise we fall back to the editor's active note via getCurrentResource.
+  // inside an embed (noteStack non-empty) the top of the stack wins;
+  // otherwise we fall back to `getCurrentResource`, which may consult the
+  // markdown-it `env` to identify the document being rendered.
   const resolveCurrentNote = (): Resource | null => {
     if (noteStack.length > 0) {
       return noteStack[noteStack.length - 1];
     }
-    return getCurrentResource ? getCurrentResource() : null;
+    return getCurrentResource ? getCurrentResource(undefined) : null;
   };
 
-  md.use(markdownItRegex, {
+  return md.use(markdownItRegex, {
     name: 'embed-wikilinks',
     regex: WIKILINK_EMBED_REGEX,
     replace: (wikilinkItem: string) => {
@@ -93,14 +78,10 @@ export const markdownItWikilinkEmbed = (
 
         let includedNote = workspace.find(wikilink);
 
-        // Self-referencing embed (![[#section]] or ![[#^blockid]]): the path is
-        // empty so workspace.find returns null. Resolve against the current
-        // note context — which may be a transitively embedded note, not just
-        // the editor's active resource.
         if (!includedNote && wikilink.startsWith('#')) {
           const currentResource = resolveCurrentNote();
           if (currentResource) {
-            const fragment = wikilink.slice(1); // strip leading '#'
+            const fragment = wikilink.slice(1);
             includedNote = {
               ...currentResource,
               uri: currentResource.uri.with({ fragment }),
@@ -112,9 +93,6 @@ export const markdownItWikilinkEmbed = (
           return `![[${wikilink}]]`;
         }
 
-        // A self-referencing fragment (![[#section]] / ![[#^block]]) shares
-        // its path with the current note on top of the stack — that's a
-        // fragment lookup, not a recursive embed, so skip cycle detection.
         const isSelfRefFragment = wikilink.startsWith('#');
         const cyclicLinkDetected =
           !isSelfRefFragment &&
@@ -143,9 +121,6 @@ export const markdownItWikilinkEmbed = (
 
         let content: string;
         try {
-          // We need the content as markdown — getNoteContent today calls
-          // formatter() which may wrap content in HTML; that's still markdown
-          // (block-level HTML is allowed in markdown) and will render fine.
           content = getNoteContent(
             includedNote,
             noteEmbedModifier,
@@ -162,9 +137,17 @@ export const markdownItWikilinkEmbed = (
           return '';
         }
 
-        const id = `${nextEmbedId++}`;
-        pendingEmbeds.set(id, { content, note: includedNote });
-        return `${EMBED_PLACEHOLDER_PREFIX}${id}${EMBED_PLACEHOLDER_SUFFIX}`;
+        noteStack.push(includedNote);
+        try {
+          // Render the embedded content through a fresh markdown-it
+          // instance when a factory is available; that keeps Foam plugins
+          // active inside embeds while avoiding re-entrancy into the outer
+          // `md` (which is mid-render).
+          const innerMd = createInnerMd ? createInnerMd() : md;
+          return innerMd.render(content);
+        } finally {
+          noteStack.pop();
+        }
       } catch (e) {
         Logger.error(
           `Error while including ${wikilinkItem} into the current document of the Preview panel`,
@@ -174,45 +157,6 @@ export const markdownItWikilinkEmbed = (
       }
     },
   });
-
-  // Wrap md.render so that after the outer document is rendered, we
-  // substitute placeholders with the rendered HTML of each embedded note.
-  // The substitution itself triggers further `originalRender` calls, but
-  // those happen *after* the outer render has fully completed — no
-  // re-entrancy into a render that's still mid-flight.
-  const originalRender = md.render.bind(md);
-
-  // Recursively expand placeholders. The note is pushed onto the stack
-  // *before* its content is rendered, so any embeds discovered during
-  // that nested render see the correct chain (cycle detection,
-  // self-ref resolution).
-  const expandPlaceholders = (html: string, env: any, depth: number): string =>
-    html.replace(EMBED_PLACEHOLDER_REGEX, (_, id) => {
-      const pending = pendingEmbeds.get(id);
-      if (!pending) {
-        return '';
-      }
-      pendingEmbeds.delete(id);
-      if (depth > 50) {
-        // Safety net; cycle detection should already prevent runaway
-        // recursion in well-formed inputs.
-        return '';
-      }
-      noteStack.push(pending.note);
-      try {
-        const innerHtml = originalRender(pending.content, env);
-        return expandPlaceholders(innerHtml, env, depth + 1);
-      } finally {
-        noteStack.pop();
-      }
-    });
-
-  md.render = (src: string, env?: any): string => {
-    const html = originalRender(src, env);
-    return expandPlaceholders(html, env, 0);
-  };
-
-  return md;
 };
 
 function getNoteContent(

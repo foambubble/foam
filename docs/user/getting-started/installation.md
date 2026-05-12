@@ -75,7 +75,7 @@ Now that Foam is installed, you're ready to:
 If you encounter issues:
 
 - Check the [[frequently-asked-questions]] for common problems
-- Visit the [Foam Community Discord](https://foambubble.github.io/join-discord/w)
+- Visit the [Foam Community Discord](https://discord.com/invite/HV2tn2FpEk)
 - Browse [GitHub Issues](https://github.com/foambubble/foam/issues) for known problems
 - Ask questions in [GitHub Discussions](https://github.com/foambubble/foam/discussions)
 

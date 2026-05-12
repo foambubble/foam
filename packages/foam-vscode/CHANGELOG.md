@@ -1222,24 +1222,24 @@ Bug Fixes:
 
 New experimental features:
 
-- Introduced [foam local plugins](https://foambubble.github.io/foam/foam-local-plugins)
+- Introduced foam local plugins
 
 ## [0.3.1] - 2020-07-26
 
 Fixes and improvements:
 
-- Fix [Daily Notes](https://foambubble.github.io/foam/daily-notes) command on Windows.
+- Fix [Daily Notes](https://docs.foamnotes.com/features/daily-notes/) command on Windows.
 
 ## [0.3.0] - 2020-07-25
 
 Features:
 
-- [Daily Notes](https://foambubble.github.io/foam/daily-notes)
-- [Janitor](https://foambubble.github.io/foam/workspace-janitor) for updating headings and link references across your workspace
+- [Daily Notes](https://docs.foamnotes.com/features/daily-notes/)
+- [Janitor](https://docs.foamnotes.com/tools/workspace-janitor/) for updating headings and link references across your workspace
 
 Fixes and improvements:
 
-- [Configuration setting for generating link reference definitions with file extension](https://foambubble.github.io/foam/link-reference-definitions#configuration) to support standard markdown tools, such as GitHub web UI
+- [Configuration setting for generating link reference definitions with file extension](https://docs.foamnotes.com/features/link-reference-definitions/#enabling-reference-definitions) to support standard markdown tools, such as GitHub web UI
 - [Improvements to how new notes are indexed](https://github.com/foambubble/foam/pull/156)
 
 ## [0.2.0] - 2020-07-12

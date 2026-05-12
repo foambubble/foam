@@ -206,6 +206,6 @@ If you encounter setup issues:
 
 - Check the [Installation Guide](installation.md) for prerequisites
 - Visit the [[frequently-asked-questions]] for common workspace problems
-- Join the [Foam Community Discord](https://foambubble.github.io/join-discord/w)
+- Join the [Foam Community Discord](https://discord.com/invite/HV2tn2FpEk)
 
 [frequently-asked-questions]: ../frequently-asked-questions.md 'Frequently Asked Questions'

@@ -22,7 +22,7 @@ Foam is a personal knowledge management system built on [Visual Studio Code](htt
 Foam is like a bathtub: _What you get out of it depends on what you put into it._
 
 <p class="announcement">
-  <b>New!</b> Join <a href="https://foambubble.github.io/join-discord/w" target="_blank">Foam community Discord</a> for users and contributors!
+  <b>New!</b> Join <a href="https://discord.com/invite/HV2tn2FpEk" target="_blank">Foam community Discord</a> for users and contributors!
 </p>
 
 <div class="website-only">

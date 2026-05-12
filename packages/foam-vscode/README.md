@@ -1,5 +1,5 @@
 <div align="center">
-<img src="assets/icon/FOAM_ICON_256.png" width="100"/>
+<img src="assets/icon/foam-icon.svg" width="100"/>
 
 # Foam for VSCode
 
@@ -7,11 +7,11 @@
 [![Downloads](https://vsmarketplacebadges.dev/downloads/foam.foam-vscode.svg)](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode)
 [![Visual Studio Marketplace Installs](https://vsmarketplacebadges.dev/installs/foam.foam-vscode.svg)](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode)
 [![Ratings](https://vsmarketplacebadges.dev/rating/foam.foam-vscode.svg)](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode)
-[![Discord Chat](https://img.shields.io/discord/729975036148056075?color=748AD9&label=discord%20chat&style=flat-square)](https://foambubble.github.io/join-discord/g)
+[![Discord Chat](https://img.shields.io/discord/729975036148056075?color=748AD9&label=discord%20chat&style=flat-square)](https://discord.com/invite/HV2tn2FpEk)
 
 </div>
 
-[Foam](https://foambubble.github.io/foam) is a note-taking tool that lives within VS Code, which means you can pair it with your favorite extensions for a great editing experience.
+[Foam](https://foamnotes.com) is a note-taking tool that lives within VS Code, which means you can pair it with your favorite extensions for a great editing experience.
 
 Foam is open source, and allows you to create a local first, markdown based, personal knowledge base. You can also use it to publish your notes.
 
@@ -21,14 +21,14 @@ Foam is also meant to be extensible, so you can integrate with its internals to 
 
 ### Graph Visualization
 
-See how your notes are connected via a [graph](https://foambubble.github.io/foam/user/features/graph-visualization) with the `Foam: Show Graph` command.
+See how your notes are connected via a [graph](https://docs.foamnotes.com/features/graph-view/) with the `Foam: Show Graph` command.
 
 ![Graph Visualization](./assets/screenshots/feature-show-graph.gif)
 
 ### Foam Queries
 
 Embed dynamic, auto-updating lists, tables, and counts of notes directly in the Markdown preview using `foam-query` and `foam-query-js` code blocks.
-See the [Foam Queries documentation](https://foambubble.github.io/foam/user/features/foam-queries) for the full reference.
+See the [Foam Queries documentation](https://docs.foamnotes.com/features/foam-queries/) for the full reference.
 
 ![Foam queries](./assets/screenshots/foam-query.gif)
 
@@ -93,7 +93,7 @@ Foam supports link aliasing, so you can have a `[[wikilink]]`, or a `[[wikilink|
 
 ### Templates
 
-Use [custom templates](https://foambubble.github.io/foam/user/features/templates) to have avoid repetitve work on your notes.
+Use [custom templates](https://docs.foamnotes.com/features/templates/) to have avoid repetitve work on your notes.
 
 ![Templates](./assets/screenshots/feature-templates.gif)
 
@@ -106,7 +106,7 @@ See for each occurrence the context in which it lives, as well as a preview of t
 
 ### Tag Explorer Panel
 
-Tag your notes and navigate them with the [Tag Explorer](https://foambubble.github.io/foam/user/features/tags).
+Tag your notes and navigate them with the [Tag Explorer](https://docs.foamnotes.com/features/tags/).
 Foam also supports hierarchical tags.
 
 ![Tag Explorer Panel](./assets/screenshots/feature-tags-panel.gif)
@@ -127,13 +127,13 @@ Foam highlights wikilinks and placeholder differently, to help you visualize you
 
 ### Daily note
 
-Create a journal with [daily notes](https://foambubble.github.io/foam/user/features/daily-notes).
+Create a journal with [daily notes](https://docs.foamnotes.com/features/daily-notes/).
 
 ![Daily Note](./assets/screenshots/feature-daily-note.gif)
 
 ### Generate references for your wikilinks
 
-Create markdown [references](https://foambubble.github.io/foam/user/features/link-reference-definitions) for `[[wikilinks]]`, to use your notes in a non-Foam workspace.
+Create markdown [references](https://docs.foamnotes.com/features/link-reference-definitions/) for `[[wikilinks]]`, to use your notes in a non-Foam workspace.
 With references you can also make your notes navigable both in GitHub UI as well as GitHub Pages.
 
 ![Generate references](./assets/screenshots/feature-definitions-generation.gif)
@@ -143,17 +143,17 @@ With references you can also make your notes navigable both in GitHub UI as well
 - Explore your knowledge base with the `Foam: Open Random Note` command
 - Access your daily note with the `Foam: Open Daily Note` command
 - Create a new note with the `Foam: Create New Note` command
-  - This becomes very powerful when combined with [note templates](https://foambubble.github.io/foam/user/features/templates) and the `Foam: Create New Note from Template` command
+  - This becomes very powerful when combined with [note templates](https://docs.foamnotes.com/features/templates/) and the `Foam: Create New Note from Template` command
 - See your workspace as a connected graph with the `Foam: Show Graph` command
-- And many [more](https://foambubble.github.io/foam/user/features/commands)
+- And many [more](https://docs.foamnotes.com/features/commands/)
 
 ## Recipes
 
-People use Foam in different ways for different use cases, check out the [recipes](https://foambubble.github.io/foam/user/recipes/recipes) page for inspiration!
+People use Foam in different ways for different use cases, check out the [recipes](https://docs.foamnotes.com/recipes/recipes/) page for inspiration!
 
 ## Getting started
 
-You really, _really_, **really** should read [Foam documentation](https://foambubble.github.io/foam), but if you can't be bothered, this is how to get started:
+You really, _really_, **really** should read [Foam documentation](https://foamnotes.com), but if you can't be bothered, this is how to get started:
 
 1. [Create a GitHub repository from foam-template](https://github.com/foambubble/foam-template/generate). If you want to keep your thoughts to yourself, remember to set the repository private.
 2. Clone the repository and open it in VS Code.

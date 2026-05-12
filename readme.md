@@ -14,7 +14,7 @@
 [![Downloads](https://vsmarketplacebadges.dev/downloads/foam.foam-vscode.svg)](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode)
 [![Visual Studio Marketplace Installs](https://vsmarketplacebadges.dev/installs/foam.foam-vscode.svg)](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode)
 [![Ratings](https://vsmarketplacebadges.dev/rating/foam.foam-vscode.svg)](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode)
-[![Discord Chat](https://img.shields.io/discord/729975036148056075?color=748AD9&label=discord%20chat&style=flat-square)](https://foambubble.github.io/join-discord/g)
+[![Discord Chat](https://img.shields.io/discord/729975036148056075?color=748AD9&label=discord%20chat&style=flat-square)](https://discord.com/invite/HV2tn2FpEk)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/foambubble/foam)
 
 </div>
@@ -29,7 +29,7 @@ You can use **Foam** for organising your research, keeping re-discoverable notes
 
 ### Graph Visualization
 
-See how your notes are connected via a [graph](https://foambubble.github.io/foam/user/features/graph-visualization) with the `Foam: Show Graph` command.
+See how your notes are connected via a [graph](https://docs.foamnotes.com/features/graph-view/) with the `Foam: Show Graph` command.
 
 ![Graph Visualization](./assets/screenshots/feature-show-graph.gif)
 
@@ -87,7 +87,7 @@ Foam supports link aliasing, so you can have a `[[wikilink]]`, or a `[[wikilink|
 
 ### Templates
 
-Use [custom templates](https://foambubble.github.io/foam/user/features/templates) to have avoid repetitve work on your notes.
+Use [custom templates](https://docs.foamnotes.com/features/templates/) to have avoid repetitve work on your notes.
 
 ![Templates](./assets/screenshots/feature-templates.gif)
 
@@ -100,7 +100,7 @@ See for each occurrence the context in which it lives, as well as a preview of t
 
 ### Tag Explorer Panel
 
-Tag your notes and navigate them with the [Tag Explorer](https://foambubble.github.io/foam/user/features/tags).
+Tag your notes and navigate them with the [Tag Explorer](https://docs.foamnotes.com/features/tags/).
 Foam also supports hierarchical tags.
 
 ![Tag Explorer Panel](./assets/screenshots/feature-tags-panel.gif)
@@ -121,13 +121,13 @@ Foam highlights wikilinks and placeholder differently, to help you visualize you
 
 ### Daily note
 
-Create a journal with [daily notes](https://foambubble.github.io/foam/user/features/daily-notes).
+Create a journal with [daily notes](https://docs.foamnotes.com/features/daily-notes/).
 
 ![Daily Note](./assets/screenshots/feature-daily-note.gif)
 
 ### Generate references for your wikilinks
 
-Create markdown [references](https://foambubble.github.io/foam/user/features/link-reference-definitions) for `[[wikilinks]]`, to use your notes in a non-Foam workspace.
+Create markdown [references](https://docs.foamnotes.com/features/link-reference-definitions/) for `[[wikilinks]]`, to use your notes in a non-Foam workspace.
 With references you can also make your notes navigable both in GitHub UI as well as GitHub Pages.
 
 ![Generate references](./assets/screenshots/feature-definitions-generation.gif)
@@ -137,12 +137,12 @@ With references you can also make your notes navigable both in GitHub UI as well
 - Explore your knowledge base with the `Foam: Open Random Note` command
 - Access your daily note with the `Foam: Open Daily Note` command
 - Create a new note with the `Foam: Create New Note` command
-  - This becomes very powerful when combined with [note templates](https://foambubble.github.io/foam/user/features/templates) and the `Foam: Create New Note from Template` command
+  - This becomes very powerful when combined with [note templates](https://docs.foamnotes.com/features/templates/) and the `Foam: Create New Note from Template` command
 - See your workspace as a connected graph with the `Foam: Show Graph` command
 
 ## Recipes
 
-People use Foam in different ways for different use cases, check out the [recipes](https://foambubble.github.io/foam/user/recipes/recipes) page for inspiration!
+People use Foam in different ways for different use cases, check out the [recipes](https://docs.foamnotes.com/recipes/recipes/) page for inspiration!
 
 ## Getting started
 
@@ -178,15 +178,15 @@ See the [CHANGELOG](./packages/foam-vscode/CHANGELOG.md).
 
 ## Learn more
 
-**Head over to the 👉[Published version of this Foam workspace](https://foambubble.github.io/foam#whats-in-a-foam)** to see Foam in action and read the rest of the documentation!
+**Head over to the 👉[Foam documentation site](https://foamnotes.com)** to see Foam in action and read the rest of the documentation!
 
 Quick links to next documentation sections
 
-- [What's in a Foam?](https://foambubble.github.io/foam#whats-in-a-foam)
-- [Getting started](https://foambubble.github.io/foam#getting-started)
-- [Features](https://foambubble.github.io/foam#features)
-- [Call To Adventure](https://foambubble.github.io/foam#call-to-adventure)
-- [Thanks and attribution](https://foambubble.github.io/foam#thanks-and-attribution)
+- [Foam homepage](https://foamnotes.com)
+- [Getting started](https://docs.foamnotes.com/getting-started/installation/)
+- [Features](https://docs.foamnotes.com/#features)
+- [Recipes](https://docs.foamnotes.com/recipes/recipes/)
+- [Frequently Asked Questions](https://docs.foamnotes.com/frequently-asked-questions/)
 
 You can also browse the [docs folder](https://github.com/foambubble/foam/tree/main/docs).
 
@@ -198,11 +198,11 @@ Foam is licensed under the [MIT license](LICENSE).
 
 ## Contribution Guide
 
-See the [Contribution Guide](https://foambubble.github.io/foam/dev/contribution-guide)
+See the [Contribution Guide](https://github.com/foambubble/foam/blob/main/docs/dev/contribution-guide.md)
 
 ## Code of conduct
 
-See the [Code of Conduct](https://foambubble.github.io/foam/dev/code-of-conduct)
+See the [Code of Conduct](https://github.com/foambubble/foam/blob/main/docs/dev/code-of-conduct.md)
 
 ## Contributors ✨
 

@@ -18,7 +18,7 @@ We understand that diving in an unfamiliar codebase may seem scary,
 to make it easier for new contributors we provide some resources:
 
 You can also see [existing issues](https://github.com/foambubble/foam/issues) and help out!
-Finally, the easiest way to help, is to use it and provide feedback by [submitting issues](https://github.com/foambubble/foam/issues/new/choose) or participating in the [Foam Community Discord](https://foambubble.github.io/join-discord/g)!
+Finally, the easiest way to help, is to use it and provide feedback by [submitting issues](https://github.com/foambubble/foam/issues/new/choose) or participating in the [Foam Community Discord](https://discord.com/invite/HV2tn2FpEk)!
 
 ## Contributing
 

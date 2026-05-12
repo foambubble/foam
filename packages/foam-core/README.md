@@ -1,6 +1,6 @@
 # @foam/core
 
-Platform-agnostic core library for [Foam](https://foambubble.github.io/foam). Contains the business logic, data models, and services that power Foam, with no dependency on VS Code or any specific runtime environment.
+Platform-agnostic core library for [Foam](https://foamnotes.com). Contains the business logic, data models, and services that power Foam, with no dependency on VS Code or any specific runtime environment.
 
 ## What's inside
 

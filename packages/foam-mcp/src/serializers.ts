@@ -1,4 +1,4 @@
-import { URI, relativeTo } from '@foam/core';
+import { FoamError, URI, isWithinPath, relativeTo } from '@foam/core';
 import type {
   NoteItem,
   NoteSummary,
@@ -20,9 +20,22 @@ import type {
  *   - workspace-relative paths (`notes/foo.md`) — resolved against `rootUri`
  */
 export function parseUriInput(input: string, rootUri: URI): URI {
-  if (input.startsWith('file://')) return URI.parse(input, 'file');
-  if (input.startsWith('/')) return URI.file(input);
-  return rootUri.joinPath(input);
+  let uri: URI;
+  if (input.startsWith('file://')) uri = URI.parse(input, 'file');
+  else if (input.startsWith('/')) uri = URI.file(input);
+  else uri = rootUri.joinPath(input);
+
+  // Containment: the resolved URI must live inside `rootUri`. This blocks
+  // absolute paths, `file://` URIs, and `..`-segments that would otherwise
+  // give MCP callers arbitrary filesystem access via the data store.
+  if (uri.scheme !== rootUri.scheme || !isWithinPath(uri, rootUri)) {
+    throw new FoamError(
+      'invalid_input',
+      `URI is outside the workspace root: ${input}`,
+      { uri: input }
+    );
+  }
+  return uri;
 }
 
 /**

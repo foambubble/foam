@@ -109,6 +109,92 @@ describe('resource tools', () => {
     }));
 });
 
+describe('resource tools — path traversal containment', () => {
+  it('read_resource rejects absolute paths outside the workspace', () =>
+    withMcpServer(SEED, async ctx => {
+      const result = await ctx.callTool('read_resource', {
+        uri: '/etc/passwd',
+      });
+      expect(result.isError).toBe(true);
+      const err = JSON.parse(result.content[0].text!);
+      expect(err.code).toBe('invalid_input');
+    }));
+
+  it('read_resource rejects file:// URIs outside the workspace', () =>
+    withMcpServer(SEED, async ctx => {
+      const result = await ctx.callTool('read_resource', {
+        uri: 'file:///etc/passwd',
+      });
+      expect(result.isError).toBe(true);
+      const err = JSON.parse(result.content[0].text!);
+      expect(err.code).toBe('invalid_input');
+    }));
+
+  it('read_resource rejects relative paths that escape the workspace', () =>
+    withMcpServer(SEED, async ctx => {
+      const result = await ctx.callTool('read_resource', {
+        uri: '../../etc/passwd',
+      });
+      expect(result.isError).toBe(true);
+      const err = JSON.parse(result.content[0].text!);
+      expect(err.code).toBe('invalid_input');
+    }));
+
+  it('read_resource still accepts absolute paths inside the workspace', () =>
+    withMcpServer(SEED, async ctx => {
+      const result = await ctx.callToolJson<{ content: string }>(
+        'read_resource',
+        { uri: '/workspace/a.md' }
+      );
+      expect(result.content).toBe(SEED['a.md']);
+    }));
+
+  it('update_resource rejects absolute paths outside the workspace', () =>
+    withMcpServer(SEED, async ctx => {
+      const result = await ctx.callTool('update_resource', {
+        uri: '/tmp/path-traversal-write.txt',
+        content: 'pwned',
+      });
+      expect(result.isError).toBe(true);
+      const err = JSON.parse(result.content[0].text!);
+      expect(err.code).toBe('invalid_input');
+    }));
+
+  it('delete_resource rejects absolute paths outside the workspace', () =>
+    withMcpServer(SEED, async ctx => {
+      const result = await ctx.callTool('delete_resource', {
+        uri: '/etc/passwd',
+        confirm: true,
+        permanent: true,
+      });
+      expect(result.isError).toBe(true);
+      const err = JSON.parse(result.content[0].text!);
+      expect(err.code).toBe('invalid_input');
+    }));
+
+  it('move_resource rejects uri outside the workspace', () =>
+    withMcpServer(SEED, async ctx => {
+      const result = await ctx.callTool('move_resource', {
+        uri: '/etc/passwd',
+        new_path: 'renamed.md',
+      });
+      expect(result.isError).toBe(true);
+      const err = JSON.parse(result.content[0].text!);
+      expect(err.code).toBe('invalid_input');
+    }));
+
+  it('move_resource rejects new_path outside the workspace', () =>
+    withMcpServer(SEED, async ctx => {
+      const result = await ctx.callTool('move_resource', {
+        uri: 'a.md',
+        new_path: '/etc/escaped.md',
+      });
+      expect(result.isError).toBe(true);
+      const err = JSON.parse(result.content[0].text!);
+      expect(err.code).toBe('invalid_input');
+    }));
+});
+
 describe('resource tools (read-only mode)', () => {
   it('write tools are not registered in read-only mode', () =>
     withMcpServer(SEED, { readOnly: true }, async ctx => {

@@ -26,12 +26,19 @@ export function parseUriInput(input: string, rootUri: URI): URI {
 }
 
 /**
- * Converts a URI to its wire-format string. Workspace-relative POSIX path
- * if under `rootUri`, otherwise an absolute path.
+ * Converts a URI to its wire-format string.
+ *
+ * - Placeholder URIs (broken wikilink targets) become `placeholder:<id>` —
+ *   they have no real filesystem location, so trying to make them
+ *   workspace-relative produces nonsense like `../../../<cwd>/<id>`.
+ * - File URIs become a workspace-relative POSIX path when under `rootUri`,
+ *   otherwise an absolute path.
  */
 export function uriToOutputString(uri: URI, rootUri: URI): string {
-  const rel = relativeTo(uri.path, rootUri.path);
-  return rel;
+  if (uri.scheme === 'placeholder') {
+    return `placeholder:${uri.path}`;
+  }
+  return relativeTo(uri.path, rootUri.path);
 }
 
 // ─── JSON shapes ─────────────────────────────────────────────────────────────

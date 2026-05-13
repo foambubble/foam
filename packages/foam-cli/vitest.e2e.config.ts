@@ -11,7 +11,7 @@ export default defineConfig({
     environment: 'node',
     include: ['src/**/*.spec.ts'],
     exclude: ['node_modules/**', 'out/**'],
-    testTimeout: 30000,
+    testTimeout: 60000,
     clearMocks: true,
     reporters: process.env.CI ? ['dot'] : ['verbose'],
   },

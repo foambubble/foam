@@ -1,3 +1,4 @@
+import { FoamError } from '../common/errors';
 import { URI } from '../model/uri';
 import {
   Template,
@@ -28,8 +29,10 @@ export class TemplateLoader {
   async loadTemplate(template: URI): Promise<Template> {
     if (template.path.endsWith('.js')) {
       if (!this.isTrusted) {
-        throw new Error(
-          'JavaScript templates can only be used in trusted workspaces for security reasons'
+        throw new FoamError(
+          'untrusted_workspace',
+          `JavaScript template ${template.path} was not executed: the workspace is not trusted. JS templates can run arbitrary code, so they only execute in trusted workspaces.`,
+          { templatePath: template.path }
         );
       }
       return await this.loadJavaScriptTemplate(template);

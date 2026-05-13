@@ -1,3 +1,4 @@
+import { FoamError } from '../common/errors';
 import { URI } from '../model/uri';
 import { TemplateLoader } from './template-loader';
 
@@ -21,9 +22,12 @@ describe('TemplateLoader', () => {
       });
       const loader = new TemplateLoader(readFile, false);
 
-      await expect(loader.loadTemplate(uri)).rejects.toThrow(
-        'JavaScript templates can only be used in trusted workspaces for security reasons'
-      );
+      await expect(loader.loadTemplate(uri)).rejects.toMatchObject({
+        name: 'FoamError',
+        code: 'untrusted_workspace',
+        data: { templatePath: uri.path },
+      });
+      await expect(loader.loadTemplate(uri)).rejects.toBeInstanceOf(FoamError);
     });
 
     it('should load JS template successfully in trusted workspace', async () => {

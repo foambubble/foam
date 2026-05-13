@@ -223,6 +223,7 @@ export type FoamErrorCode =
   | 'ambiguous_identifier'
   | 'resource_exists'
   | 'invalid_input'
+  | 'untrusted_workspace'
   | 'io_error';
 
 export class NotImplementedError extends Error {

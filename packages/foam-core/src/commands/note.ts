@@ -141,6 +141,10 @@ async function applyEditsToFiles(
  * workspace the caller can pass an absolute `dir` to target a specific
  * root.
  *
+ * `isTrusted` controls whether JavaScript templates (`new-note.js`) may
+ * execute. Callers driven by untrusted input (MCP agents, CLI by default)
+ * must pass `false`; the VS Code path passes `workspace.isTrusted`.
+ *
  * Errors with `resource_exists` if the destination file already exists.
  */
 export async function noteCreate(
@@ -150,7 +154,8 @@ export async function noteCreate(
     title?: string;
     dir?: string;
     properties?: Record<string, string>;
-  }
+  },
+  isTrusted: boolean
 ): Promise<NoteCreateResult> {
   const title = opts.title ?? 'untitled';
   const rootUri = foam.workspace.roots[0];
@@ -186,7 +191,7 @@ export async function noteCreate(
 
     const loader = new TemplateLoader(
       async uri => (await dataStore.read(uri)) ?? '',
-      true
+      isTrusted
     );
     const template = await loader.loadTemplate(templateUri);
     const resolver = new Resolver(new Map(), new Date(), title);

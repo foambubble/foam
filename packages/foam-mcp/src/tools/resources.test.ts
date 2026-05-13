@@ -195,6 +195,40 @@ describe('resource tools — path traversal containment', () => {
     }));
 });
 
+describe('resource tools — JS template execution', () => {
+  // A `.foam/templates/new-note.js` would otherwise be picked up and
+  // executed by `noteCreate`. The MCP server is agent-driven and never
+  // trusted, so the JS template must be refused.
+  const JS_TEMPLATE_SEED = {
+    'existing.md': '# existing',
+    '.foam/templates/new-note.js': `
+      module.exports = async () => ({
+        filepath: 'pwned.md',
+        content: 'should not appear',
+      });
+    `,
+  };
+
+  it('create_resource refuses to execute JS templates', () =>
+    withMcpServer(JS_TEMPLATE_SEED, async ctx => {
+      const result = await ctx.callTool('create_resource', { title: 'hello' });
+      expect(result.isError).toBe(true);
+      const err = JSON.parse(result.content[0].text!);
+      expect(err.code).toBe('untrusted_workspace');
+      expect(err.data?.templatePath).toBe('/workspace/.foam/templates/new-note.js');
+    }));
+
+  it('create_resource still works when no JS template is present', () =>
+    withMcpServer({ 'existing.md': '# existing' }, async ctx => {
+      const result = await ctx.callToolJson<{ uri: string; title: string }>(
+        'create_resource',
+        { title: 'hello' }
+      );
+      expect(result.uri).toBe('hello.md');
+      expect(result.title).toBe('hello');
+    }));
+});
+
 describe('resource tools (read-only mode)', () => {
   it('write tools are not registered in read-only mode', () =>
     withMcpServer(SEED, { readOnly: true }, async ctx => {

@@ -3,6 +3,7 @@ import path from 'node:path';
 import readline from 'node:readline';
 
 import {
+  FoamError,
   FoamGraph,
   FoamWorkspace,
   URI,
@@ -51,6 +52,11 @@ Options (all subcommands):
   --workspace <dir>    Workspace root (default: FOAM_WORKSPACE env var, then cwd)
   --format <fmt>       text (default) or json
   --help               Show this help
+
+Options (create):
+  --trust              Allow JavaScript templates (new-note.js) to execute.
+                       Off by default — only opt in when you authored the
+                       templates in this workspace yourself.
 `;
 
 // ─── Formatters ──────────────────────────────────────────────────────────────
@@ -135,11 +141,24 @@ export async function runNoteCommand(
       }
       const { rootDir: createRootDir, foam, dataStore } =
         await loadWorkspaceFromDirectory(workspaceDir);
-      const result = await noteCreate(foam, dataStore, {
-        title,
-        dir,
-        properties,
-      });
+      const isTrusted = getFlag(parsed, 'trust');
+      let result;
+      try {
+        result = await noteCreate(
+          foam,
+          dataStore,
+          { title, dir, properties },
+          isTrusted
+        );
+      } catch (err) {
+        if (err instanceof FoamError && err.code === 'untrusted_workspace') {
+          logger.error(
+            `${err.message}\n\nRe-run with --trust if you authored the template yourself.`
+          );
+          return 1;
+        }
+        throw err;
+      }
       if (format === 'json') {
         logger.info(
           JSON.stringify(

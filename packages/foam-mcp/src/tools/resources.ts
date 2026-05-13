@@ -124,11 +124,17 @@ export function registerResourceTools(
       },
     },
     withToolErrorHandling(async args => {
-      const result = await noteCreate(foam, dataStore, {
-        title: args.title,
-        dir: args.dir,
-        properties: args.properties,
-      });
+      // MCP is agent-driven; never grant JS-template execution rights.
+      const result = await noteCreate(
+        foam,
+        dataStore,
+        {
+          title: args.title,
+          dir: args.dir,
+          properties: args.properties,
+        },
+        false
+      );
       const resource = foam.workspace.find(result.uri);
       return json({
         uri: uriToOutputString(result.uri, rootUri),

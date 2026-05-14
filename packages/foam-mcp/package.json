@@ -1,6 +1,7 @@
 {
   "name": "@foam/mcp",
   "version": "0.1.0",
+  "private": true,
   "description": "Model Context Protocol server library for Foam — exposes the Foam knowledge graph to AI agents",
   "license": "MIT",
   "main": "out/index.js",

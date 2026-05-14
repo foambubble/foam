@@ -1,5 +1,23 @@
 # Change Log
 
+## 0.41.1
+
+### Patch Changes
+
+- Internal: Improved frontmatter handling and added `traverseGraph` helper for graph traversal
+
+- Ensure path resolution stays within the workspace root to prevent path traversal in MCP and CLI tools
+
+- Internal: Added a POSIX-safe path utility module so `@foam/core` no longer depends on Node's `path` module, keeping it browser- and mobile-safe
+
+- Screen user-supplied regex patterns in query filters with `safe-regex2` to reject catastrophically backtracking patterns before evaluation
+
+- Internal: Exposed test utilities via `@foam/core/test` so downstream packages share a single set of fixtures and helpers
+
+- Internal: Extracted MCP server logic into a standalone `@foam/mcp` package
+
+- Workspace is no longer trusted by default in MCP and CLI contexts, preventing untrusted query expressions and JS templates from executing
+
 ## 0.41.0
 
 ### Minor Changes

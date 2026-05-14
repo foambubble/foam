@@ -7,5 +7,5 @@
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["@foam/graph-view"]
+  "ignore": ["@foam/graph-view", "@foam/mcp"]
 }

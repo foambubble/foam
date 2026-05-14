@@ -1,5 +1,19 @@
 # Change Log
 
+## 0.42.0
+
+### Minor Changes
+
+- Expose `foam-mcp` as a subcommand of the CLI, allowing AI agents to interact with a Foam workspace via the Model Context Protocol
+
+### Patch Changes
+
+- Internal: Added end-to-end tests for the MCP server via `mcp-tools-inspector` and improved CLI/MCP test coverage
+
+- Workspace is no longer trusted by default in MCP and CLI contexts, preventing untrusted query expressions and JS templates from executing
+
+- @foam/core@0.41.1
+
 ## 0.41.1
 
 ### Patch Changes

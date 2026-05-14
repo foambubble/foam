@@ -1,5 +1,18 @@
 # Change Log
 
+## 0.40.4
+
+### Patch Changes
+
+Fixes and Improvements:
+
+- Fix wikilink embed handling, including self-referencing embeds ([#1642](https://github.com/foambubble/foam/issues/1642))
+
+Internal:
+
+- Avoid spread operator in editor service to fix an error in certain VS Code environments ([#1645](https://github.com/foambubble/foam/issues/1645))
+- @foam/core@0.41.1
+
 ## 0.40.3
 
 Internal:

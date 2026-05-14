@@ -136,6 +136,40 @@ describe('parseFilter — structured keys', () => {
     expect(pred(noteB)).toBe(false);
   });
 
+  it('path filter rejects catastrophically backtracking regexes and matches nothing', () => {
+    // Note path ends in `a`, so `(a+)+$` *would* match if executed —
+    // a `false` result proves the regex was rejected before evaluation.
+    const noteA = createTestNote({ uri: '/aaa' });
+    const { workspace, graph } = makeWorkspaceAndGraph([noteA]);
+
+    const pred = parseFilter({ path: '(a+)+$' }, workspace, graph, false);
+    expect(pred(noteA)).toBe(false);
+  });
+
+  it('title filter rejects catastrophically backtracking regexes and matches nothing', () => {
+    const noteA = createTestNote({ uri: '/a.md', title: 'aaaa' });
+    const { workspace, graph } = makeWorkspaceAndGraph([noteA]);
+
+    const pred = parseFilter({ title: '(a+)+$' }, workspace, graph, false);
+    expect(pred(noteA)).toBe(false);
+  });
+
+  it('"/regex/" shorthand rejects catastrophically backtracking regexes and matches nothing', () => {
+    const noteA = createTestNote({ uri: '/aaa' });
+    const { workspace, graph } = makeWorkspaceAndGraph([noteA]);
+
+    const pred = parseFilter('/(a+)+$/', workspace, graph, false);
+    expect(pred(noteA)).toBe(false);
+  });
+
+  it('path filter rejects invalid regex syntax and matches nothing', () => {
+    const noteA = createTestNote({ uri: '/a.md' });
+    const { workspace, graph } = makeWorkspaceAndGraph([noteA]);
+
+    const pred = parseFilter({ path: '[unclosed' }, workspace, graph, false);
+    expect(pred(noteA)).toBe(false);
+  });
+
   it('links_to filter matches notes that have an outbound link to the identifier', () => {
     const noteA = createTestNote({ uri: '/a.md', links: [{ slug: 'b' }] });
     const noteB = createTestNote({ uri: '/b.md' });

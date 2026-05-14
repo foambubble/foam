@@ -1,8 +1,30 @@
+import safeRegex from 'safe-regex2';
 import { Resource } from '../model/note';
 import { FoamWorkspace } from '../model/workspace';
 import { FoamGraph } from '../model/graph';
 import { Logger } from '../utils/log';
 import { URI } from '../model/uri';
+
+/**
+ * Builds a RegExp from a user-supplied pattern, rejecting patterns that
+ * are statically flagged as catastrophically backtracking or that fail to
+ * compile. Returns `undefined` on rejection so callers can fall back to a
+ * non-matching predicate.
+ */
+function tryBuildUserRegex(pattern: string, source: string): RegExp | undefined {
+  if (!safeRegex(pattern)) {
+    Logger.warn(
+      `[Query] ${source}: pattern rejected as potentially catastrophic: "${pattern}"`
+    );
+    return undefined;
+  }
+  try {
+    return new RegExp(pattern);
+  } catch (e) {
+    Logger.warn(`[Query] ${source}: invalid regex "${pattern}": ${e}`);
+    return undefined;
+  }
+}
 
 export type QueryFilter =
   | string // shorthand: "#tag", "[[note-id]]", "*", "/regex/"
@@ -76,13 +98,13 @@ export function parseFilter(
   }
 
   if (filter.path !== undefined) {
-    const re = new RegExp(filter.path);
-    predicates.push(r => re.test(r.uri.path));
+    const re = tryBuildUserRegex(filter.path, 'path filter');
+    predicates.push(re ? r => re.test(r.uri.path) : () => false);
   }
 
   if (filter.title !== undefined) {
-    const re = new RegExp(filter.title);
-    predicates.push(r => re.test(r.title));
+    const re = tryBuildUserRegex(filter.title, 'title filter');
+    predicates.push(re ? r => re.test(r.title) : () => false);
   }
 
   if (filter.links_to !== undefined) {
@@ -185,8 +207,8 @@ function parseShorthand(
 
   // "/regex/"
   if (filter.startsWith('/') && filter.endsWith('/') && filter.length > 2) {
-    const re = new RegExp(filter.slice(1, -1));
-    return r => re.test(r.uri.path);
+    const re = tryBuildUserRegex(filter.slice(1, -1), 'shorthand /regex/');
+    return re ? r => re.test(r.uri.path) : () => false;
   }
 
   Logger.warn(`[Query] unrecognized shorthand filter: "${filter}"`);

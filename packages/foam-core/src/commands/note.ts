@@ -17,7 +17,12 @@ import { FoamWorkspace } from '../model/workspace';
 import { URI } from '../model/uri';
 import { IDataStore } from '../services/datastore';
 import { FoamError } from '../common/errors';
-import { getBasename, isAbsolute, relativeTo } from '../utils/path';
+import {
+  getBasename,
+  isAbsolute,
+  isWithinPath,
+  relativeTo,
+} from '../utils/path';
 import { getRootUriFor } from './workspace';
 
 // ─── Return types ─────────────────────────────────────────────────────────────
@@ -164,15 +169,24 @@ export async function noteCreate(
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
-  // Resolve the target directory relative to the workspace root. If `dir`
-  // is absolute we replace the path; otherwise we join. Either way the
-  // resulting URI keeps the workspace root's scheme/authority — this is
-  // what makes the command browser-safe.
+  // Resolve the target directory relative to the workspace root. Absolute
+  // `dir` paths replace the root path; relative paths are joined. Either
+  // form is then checked for containment: a `dir` that escapes the root
+  // (absolute `/etc/cron.hourly`, relative `../../etc`) is rejected so
+  // CLI/MCP callers can't use note creation as an arbitrary-write
+  // primitive.
   const targetDirUri = opts.dir
     ? isAbsolute(opts.dir)
       ? rootUri.forPath(opts.dir)
       : rootUri.joinPath(opts.dir)
     : rootUri;
+  if (!isWithinPath(targetDirUri, rootUri)) {
+    throw new FoamError(
+      'invalid_input',
+      `dir is outside the workspace root: ${opts.dir}`,
+      { dir: opts.dir }
+    );
+  }
   let targetUri = targetDirUri.joinPath(`${stem}.md`);
 
   const extraProps = opts.properties ?? {};
@@ -205,6 +219,17 @@ export async function noteCreate(
     targetUri = foam.workspace.resolveUri(result.filepath.path);
     content = result.content;
     break;
+  }
+
+  // Re-check containment after template processing: a markdown template's
+  // frontmatter `filepath:` could otherwise override the target with an
+  // escaping path.
+  if (!isWithinPath(targetUri, rootUri)) {
+    throw new FoamError(
+      'invalid_input',
+      `Resolved target path is outside the workspace root: ${targetUri.path}`,
+      { uri: targetUri.path }
+    );
   }
 
   if (await dataStore.exists(targetUri)) {

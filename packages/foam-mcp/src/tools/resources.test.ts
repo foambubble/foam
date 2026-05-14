@@ -218,6 +218,37 @@ describe('resource tools — JS template execution', () => {
       expect(err.data?.templatePath).toBe('/workspace/.foam/templates/new-note.js');
     }));
 
+  it('create_resource rejects absolute dir outside the workspace', () =>
+    withMcpServer({ 'existing.md': '# existing' }, async ctx => {
+      const result = await ctx.callTool('create_resource', {
+        title: 'shell',
+        dir: '/etc/cron.hourly',
+      });
+      expect(result.isError).toBe(true);
+      const err = JSON.parse(result.content[0].text!);
+      expect(err.code).toBe('invalid_input');
+    }));
+
+  it('create_resource rejects relative dir that escapes the workspace', () =>
+    withMcpServer({ 'existing.md': '# existing' }, async ctx => {
+      const result = await ctx.callTool('create_resource', {
+        title: 'shell',
+        dir: '../../etc',
+      });
+      expect(result.isError).toBe(true);
+      const err = JSON.parse(result.content[0].text!);
+      expect(err.code).toBe('invalid_input');
+    }));
+
+  it('create_resource accepts a relative dir inside the workspace', () =>
+    withMcpServer({ 'existing.md': '# existing' }, async ctx => {
+      const result = await ctx.callToolJson<{ uri: string }>(
+        'create_resource',
+        { title: 'hello', dir: 'subdir' }
+      );
+      expect(result.uri).toBe('subdir/hello.md');
+    }));
+
   it('create_resource still works when no JS template is present', () =>
     withMcpServer({ 'existing.md': '# existing' }, async ctx => {
       const result = await ctx.callToolJson<{ uri: string; title: string }>(

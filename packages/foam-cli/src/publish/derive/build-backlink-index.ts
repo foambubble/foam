@@ -26,9 +26,15 @@ const toPublishedBacklink = (
 export const buildBacklinks = (
   note: Resource,
   context: PublishContext
-): PublishedBacklink[] =>
-  context.graph
-    .getBacklinks(note.uri)
-    .map(connection => toPublishedBacklink(connection, context))
-    .filter((backlink): backlink is PublishedBacklink => backlink !== null)
-    .sort((left, right) => left.route.localeCompare(right.route));
+): PublishedBacklink[] => {
+  const bySource = new Map<string, PublishedBacklink>();
+  for (const connection of context.graph.getBacklinks(note.uri)) {
+    const backlink = toPublishedBacklink(connection, context);
+    if (backlink && !bySource.has(backlink.sourceUri.path)) {
+      bySource.set(backlink.sourceUri.path, backlink);
+    }
+  }
+  return Array.from(bySource.values()).sort((left, right) =>
+    left.route.localeCompare(right.route)
+  );
+};

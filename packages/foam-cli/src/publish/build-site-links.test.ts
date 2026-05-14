@@ -58,6 +58,44 @@ describe('publish buildSite link handling', () => {
     ]);
   });
 
+  it('deduplicates backlinks when the same source note links to a target multiple times', async () => {
+    const root = URI.file('/');
+    const dataStore = new InMemoryDataStore();
+    const workspace = createTestWorkspace([root], dataStore);
+
+    const noteAUri = root.joinPath('note-a.md');
+    const noteBUri = root.joinPath('note-b.md');
+    const noteAContent = [
+      '# Note A',
+      '',
+      'First reference to [[note-b]].',
+      '',
+      'Second reference to [[note-b]] again.',
+    ].join('\n');
+    const noteBContent = '# Note B';
+
+    dataStore.set(noteAUri, noteAContent);
+    dataStore.set(noteBUri, noteBContent);
+
+    workspace
+      .set(createNoteFromMarkdown('note-a.md', noteAContent, root))
+      .set(createNoteFromMarkdown('note-b.md', noteBContent, root));
+
+    const result = await buildSite({
+      workspace,
+      graph: FoamGraph.fromWorkspace(workspace),
+    });
+
+    const publishedNoteB = result.notes.find(note => note.route === '/note-b');
+    expect(publishedNoteB?.backlinks).toEqual([
+      {
+        route: '/note-a',
+        title: 'Note A',
+        sourceUri: noteAUri,
+      },
+    ]);
+  });
+
   it('routes notes relative to contentRoot and reports links outside the published scope', async () => {
     const root = URI.file('/');
     const dataStore = new InMemoryDataStore();

@@ -1,5 +1,5 @@
 <div align="center">
-<img src="assets/icon/foam-icon.svg" width="100"/>
+<img src="assets/icon/FOAM_ICON_256.png" width="100"/>
 
 # Foam for VSCode
 

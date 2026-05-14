@@ -107,15 +107,16 @@ Show, create, move, or delete a note.
 
 ```bash
 foam note show my-note
-foam note show my-note --links          # include incoming/outgoing links
-foam note show my-note --content        # print raw file content
-foam note id my-note                    # print Foam identifier
+foam note show my-note --links                     # include incoming/outgoing links
+foam note show my-note --content                   # print raw file content
+foam note id my-note                               # print Foam identifier
 foam note create --title "My Note"
 foam note create --title "My Note" --dir subdir --property status=draft
+foam note create --title "My Note" --trust         # allow JS templates to execute
 foam note move my-note --to new-name.md
-foam note delete my-note               # moves to .foam/trash/ (prompts for confirmation)
-foam note delete my-note --force       # skip confirmation
-foam note delete my-note --permanent   # delete permanently
+foam note delete my-note                           # moves to .foam/trash/ (prompts for confirmation)
+foam note delete my-note --force                   # skip confirmation
+foam note delete my-note --permanent               # delete permanently
 ```
 
 ### `outline`

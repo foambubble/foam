@@ -86,10 +86,7 @@ async function createNote({ trigger, foam, resolver, foamDate }) {
   // if you need a variable you can use the resolver
   // const title = await resolver.resolveFromName('FOAM_TITLE');
 
-  console.log(
-    'Creating note for today: ' + formattedDay,
-    JSON.stringify(trigger)
-  );
+  console.log('Creating note for today: ' + formattedDay, JSON.stringify(trigger));
 
   let content = `# Daily Note - ${formattedDay}
 
@@ -208,21 +205,23 @@ return {
 
 ### Security and limitations
 
-JavaScript templates run in a best-effort secured environment:
+JavaScript templates execute real JavaScript. Foam guards where and when
+they run, but the in-process sandbox is **not** a security boundary — a
+malicious template can escape it. Trust controls are the real protection:
 
-- ✅ Can only run from trusted VS Code workspaces
-- ✅ Can access Foam workspace and utilities
-- ✅ Can use standard JavaScript features
-- ✅ Have a 30-second execution timeout
-- ❌ Cannot access the file system directly
-- ❌ Cannot make network requests
-- ❌ Cannot access Node.js modules
+- ✅ Only run in **trusted** VS Code workspaces
+- ✅ When using the `foam` CLI, only run with the `--trust` flag
+- ❌ **Never run under the MCP server.** `foam mcp` and the
+  `create_resource` tool refuse `.js` templates with an
+  `untrusted_workspace` error
+- ⏱ 10-second execution timeout
 
-This increases the chances that templates stay safe while still being powerful enough for complex logic.
+> ⚠️ **Treat a `new-note.js` like a script you'd execute by hand.
+> ** Only use JS templates from workspaces whose contributors you trust.
 
-STILL - PLEASE BE AWARE YOU ARE EXECUTING CODE ON YOUR MACHINE. THIS SANDBOX IS NOT MEANT TO BE THE ULTIMATE SECURITY SOLUTION.
-
-**YOU MUST TRUST THE REPO CONTRIBUTORS**
+If you don't need the power of arbitrary JavaScript, prefer a Markdown
+template — those run everywhere (CLI, MCP, web extension) and have no
+trust requirement.
 
 ## Markdown templates
 
@@ -240,15 +239,15 @@ Markdown templates can use all the variables available in [VS Code Snippets](htt
 
 In addition, you can also use variables provided by Foam:
 
-| Name                 | Description                                                                                                                                                                                                                                                       |
-| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `FOAM_SELECTED_TEXT` | Foam will fill it with selected text when creating a new note, if any text is selected. Selected text will be replaced with a wikilink to the new                                                                                                                 |
-| `FOAM_TITLE`         | The title of the note. If used, Foam will prompt you to enter a title for the note.                                                                                                                                                                               |
-| `FOAM_TITLE_SAFE`    | The title of the note in a file system safe format. If used, Foam will prompt you to enter a title for the note unless `FOAM_TITLE` has already caused the prompt.                                                                                                |
-| `FOAM_SLUG`          | The sluggified title of the note (using the default github slug method). If used, Foam will prompt you to enter a title for the note unless `FOAM_TITLE` has already caused the prompt.                                                                           |
-| `FOAM_CURRENT_DIR`   | The current editor's directory path. Resolves to the directory of the currently active file, or falls back to workspace root if no editor is active. Useful for creating notes in the current directory context.                                                  |
+| Name                 | Description                                                                                                                                                                                                                                                                                |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `FOAM_SELECTED_TEXT` | Foam will fill it with selected text when creating a new note, if any text is selected. Selected text will be replaced with a wikilink to the new                                                                                                                                          |
+| `FOAM_TITLE`         | The title of the note. If used, Foam will prompt you to enter a title for the note.                                                                                                                                                                                                        |
+| `FOAM_TITLE_SAFE`    | The title of the note in a file system safe format. If used, Foam will prompt you to enter a title for the note unless `FOAM_TITLE` has already caused the prompt.                                                                                                                         |
+| `FOAM_SLUG`          | The sluggified title of the note (using the default github slug method). If used, Foam will prompt you to enter a title for the note unless `FOAM_TITLE` has already caused the prompt.                                                                                                    |
+| `FOAM_CURRENT_DIR`   | The current editor's directory path. Resolves to the directory of the currently active file, or falls back to workspace root if no editor is active. Useful for creating notes in the current directory context.                                                                           |
 | `FOAM_DATE_FORMAT`   | The Foam date formatted using a [dayjs format string](https://day.js.org/docs/en/display/format). Defaults to ISO 8601 with local timezone offset (e.g. `2026-03-12T22:06:55+01:00`). Use as `$FOAM_DATE_FORMAT` for the default, or `${FOAM_DATE_FORMAT:YYYY-MM-DD}` for a custom format. |
-| `FOAM_DATE_*`        | `FOAM_DATE_YEAR`, `FOAM_DATE_MONTH`, `FOAM_DATE_WEEK`, `FOAM_DATE_DAY_ISO` etc. Foam-specific versions of [VS Code's datetime snippet variables](https://code.visualstudio.com/docs/editor/userdefinedsnippets#_variables). Prefer these versions over VS Code's. |
+| `FOAM_DATE_*`        | `FOAM_DATE_YEAR`, `FOAM_DATE_MONTH`, `FOAM_DATE_WEEK`, `FOAM_DATE_DAY_ISO` etc. Foam-specific versions of [VS Code's datetime snippet variables](https://code.visualstudio.com/docs/editor/userdefinedsnippets#_variables). Prefer these versions over VS Code's.                          |
 
 ### `FOAM_DATE_FORMAT` variable
 

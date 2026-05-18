@@ -27,6 +27,7 @@
     "lint": "lerna run lint",
     "format": "prettier --write \"**/*.ts\"",
     "watch": "lerna run watch --concurrency 20",
+    "foam": "yarn workspace @foam/cli foam",
     "prepare": "husky"
   },
   "devDependencies": {

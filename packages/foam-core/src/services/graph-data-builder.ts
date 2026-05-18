@@ -1,6 +1,6 @@
-import type { Resource } from '@foam/core';
-import type { Connection } from '@foam/core';
-import type { URI } from '@foam/core';
+import type { Resource } from '../model/note';
+import type { Connection } from '../model/graph';
+import type { URI } from '../model/uri';
 
 export interface GraphNodeData {
   id: string;

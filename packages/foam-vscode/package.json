@@ -894,6 +894,8 @@
     "vscode:start-debugging": "yarn clean && yarn watch"
   },
   "devDependencies": {
+    "@foam/core": "*",
+    "@foam/graph-view": "*",
     "@types/lodash": "^4.17.24",
     "@types/markdown-it": "^12.0.1",
     "@types/micromatch": "^4.0.10",
@@ -917,8 +919,6 @@
     "wait-for-expect": "^3.0.2"
   },
   "dependencies": {
-    "@foam/core": "*",
-    "@foam/graph-view": "*",
     "dayjs": "^1.11.13",
     "detect-newline": "^3.1.0",
     "github-slugger": "^1.4.0",

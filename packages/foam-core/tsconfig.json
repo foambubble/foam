@@ -2,7 +2,7 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "types": ["node", "vitest/globals"],
-    "rootDir": "src",
+    "rootDir": ".",
     "module": "node16",
     "moduleResolution": "node16",
     "esModuleInterop": true,
@@ -13,6 +13,6 @@
     "isolatedModules": true,
     "skipLibCheck": true
   },
-  "include": ["src"],
+  "include": ["src", "test"],
   "exclude": ["node_modules", "src/**/*.test.ts", "src/**/*.spec.ts"]
 }

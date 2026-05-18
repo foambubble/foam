@@ -15,10 +15,10 @@ const run = cmd => execSync(cmd, { stdio: 'inherit' });
 run('yarn clean');
 run('node esbuild.js --production');
 
-// 2. Adjust package.json for the public registry:
-//    - rename to `foam-cli` (workspace name `@foam/cli` is monorepo-internal)
-//    - drop `@foam/core` and `@foam/mcp` from dependencies — esbuild bundles
-//      both into the published file, and neither is published to npm
+// 2. Rename to `foam-cli` for the public registry (the workspace name
+//    `@foam/cli` is monorepo-internal). Workspace deps `@foam/core` and
+//    `@foam/mcp` live in `devDependencies` and so are already excluded from
+//    the published manifest; esbuild bundles their code into the output.
 //
 //    We modify package.json in place (npm only reads from cwd) but keep an
 //    on-disk backup at package.json.bak first. If the process is killed
@@ -31,8 +31,6 @@ fs.writeFileSync(backupPath, originalContent);
 
 const pkg = JSON.parse(originalContent);
 pkg.name = 'foam-cli';
-delete pkg.dependencies['@foam/core'];
-delete pkg.dependencies['@foam/mcp'];
 fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
 
 // 3. Publish, restoring package.json afterwards no matter what, and only

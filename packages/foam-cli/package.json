@@ -18,6 +18,8 @@
     "lint": "oxlint src"
   },
   "devDependencies": {
+    "@foam/core": "*",
+    "@foam/mcp": "*",
     "@modelcontextprotocol/inspector": "^0.17.0",
     "@types/micromatch": "^4.0.9",
     "@types/node": "^18.0.0",
@@ -28,8 +30,6 @@
     "vitest": "^3.0.0"
   },
   "dependencies": {
-    "@foam/core": "*",
-    "@foam/mcp": "*",
     "chokidar": "^3.5.3",
     "jsonc-parser": "^3.3.1",
     "micromatch": "^4.0.8"

@@ -3,16 +3,16 @@
   "version": "0.41.1",
   "description": "Platform-agnostic core logic for Foam",
   "license": "MIT",
-  "main": "out/index.js",
-  "types": "out/index.d.ts",
+  "main": "out/src/index.js",
+  "types": "out/src/index.d.ts",
   "exports": {
     ".": {
-      "types": "./out/index.d.ts",
-      "default": "./out/index.js"
+      "types": "./out/src/index.d.ts",
+      "default": "./out/src/index.js"
     },
     "./test": {
-      "types": "./test/test-utils.ts",
-      "default": "./test/test-utils.ts"
+      "types": "./out/test/test-utils.d.ts",
+      "default": "./out/test/test-utils.js"
     }
   },
   "scripts": {

@@ -70,6 +70,6 @@ Get results as JSON:
 foam lint --format json
 ```
 
-See also [[workspace-janitor]] for running the janitor from VS Code.
+See also [[workspace-lint]] for running lint from VS Code.
 
-[workspace-janitor]: ../workspace-janitor.md 'Workspace Janitor'
+[workspace-lint]: ../workspace-lint.md 'Workspace Lint'

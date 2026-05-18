@@ -25,55 +25,55 @@ export default async function activate(
   foamPromise: Promise<Foam>
 ) {
   context.subscriptions.push(
-    commands.registerCommand('foam-vscode.janitor', async () =>
-      janitor(await foamPromise)
+    commands.registerCommand('foam-vscode.lint', async () =>
+      lint(await foamPromise)
     )
   );
 }
 
-interface JanitorResult {
+interface LintResult {
   updatedHeadingCount: number;
   updatedDefinitionListCount: number;
   changedAnyFiles: number;
 }
 
-async function janitor(foam: Foam) {
+async function lint(foam: Foam) {
   try {
     const noOfFiles = foam.workspace.list().filter(Boolean).length;
 
     if (noOfFiles === 0) {
       return window.showInformationMessage(
-        "Foam Janitor didn't find any notes to clean up."
+        "Foam Lint didn't find any notes to clean up."
       );
     }
 
     const outcome = await window.withProgress(
       {
         location: ProgressLocation.Notification,
-        title: `Running Foam Janitor across ${noOfFiles} files!`,
+        title: `Running Foam Lint across ${noOfFiles} files!`,
       },
-      () => runJanitor(foam)
+      () => runLint(foam)
     );
 
     if (!outcome.changedAnyFiles) {
       window.showInformationMessage(
-        `Foam Janitor checked ${noOfFiles} files, and found nothing to clean up!`
+        `Foam Lint checked ${noOfFiles} files, and found nothing to clean up!`
       );
     } else {
       window.showInformationMessage(
-        `Foam Janitor checked ${noOfFiles} files and updated ${outcome.updatedDefinitionListCount} out-of-date definition lists and added ${outcome.updatedHeadingCount} missing headings. Please check the changes before committing them into version control!`
+        `Foam Lint checked ${noOfFiles} files and updated ${outcome.updatedDefinitionListCount} out-of-date definition lists and added ${outcome.updatedHeadingCount} missing headings. Please check the changes before committing them into version control!`
       );
     }
   } catch (e) {
     window.showErrorMessage(
-      `Foam Janitor attempted to clean your workspace but ran into an error. Please check that we didn't break anything before committing any changes to version control, and pass the following error message to the Foam team on GitHub issues:
+      `Foam Lint attempted to clean your workspace but ran into an error. Please check that we didn't break anything before committing any changes to version control, and pass the following error message to the Foam team on GitHub issues:
     ${e.message}
     ${e.stack}`
     );
   }
 }
 
-async function runJanitor(foam: Foam): Promise<JanitorResult> {
+async function runLint(foam: Foam): Promise<LintResult> {
   const wikilinkSetting = getWikilinkDefinitionSetting();
   const rules = [
     missingHeadingRule(),

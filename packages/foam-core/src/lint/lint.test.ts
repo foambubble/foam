@@ -12,7 +12,7 @@ import {
   lintWorkspace,
   missingHeadingRule,
   staleDefinitionsRule,
-} from './janitor';
+} from './lint';
 
 Logger.setLevel('error');
 

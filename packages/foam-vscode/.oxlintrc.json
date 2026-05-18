@@ -33,7 +33,7 @@
       }
     },
     {
-      "files": ["src/core/**/*.ts", "src/janitor/**/*.ts", "src/ai/**/*.ts", "src/daily-note/**/*.ts"],
+      "files": ["src/core/**/*.ts", "src/lint/**/*.ts", "src/ai/**/*.ts", "src/daily-note/**/*.ts"],
       "rules": {
         "no-restricted-imports": [
           "error",

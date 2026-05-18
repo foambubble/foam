@@ -13,7 +13,7 @@ import editing from '../vscode/features/editing';
 import navigation from '../vscode/features/navigation';
 import notes from '../vscode/features/notes';
 import tags from '../vscode/features/tags';
-import janitor from '../vscode/features/janitor';
+import lint from '../vscode/features/lint';
 
 export async function initializeFoamFeatures(foam: Foam): Promise<void> {
   const context = createMockExtensionContext();
@@ -24,7 +24,7 @@ export async function initializeFoamFeatures(foam: Foam): Promise<void> {
   await navigation(context, foamPromise);
   await notes(context, foamPromise);
   await tags(context, foamPromise);
-  await janitor(context, foamPromise);
+  await lint(context, foamPromise);
   // AI features require embeddings which are not available in the mock environment
 
   Logger.info('Foam features initialized in mock environment');

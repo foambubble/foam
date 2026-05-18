@@ -68,7 +68,7 @@ See [[publishing]] for more details.
 ## Tools
 
 - [[cli]] — work with your workspace from the terminal (`search`, `list`, `daily`, `lint`, and more)
-- [[workspace-janitor]]
+- [[workspace-lint]]
 - [[orphans]]
 - [[foam-logging-in-vscode]]
 
@@ -103,6 +103,6 @@ See [[publishing]] for more details.
 [publish-to-vercel]: publishing/publish-to-vercel.md 'Publish to Vercel'
 [publishing]: publishing/publish-to-github-pages.md 'Publishing'
 [cli]: tools/cli.md 'Command Line Interface'
-[workspace-janitor]: tools/workspace-janitor.md 'Janitor'
+[workspace-lint]: tools/workspace-lint.md 'Lint'
 [orphans]: tools/orphans.md 'Orphaned Notes'
 [foam-logging-in-vscode]: tools/foam-logging-in-vscode.md 'Foam logging in VsCode'

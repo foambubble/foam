@@ -1,4 +1,4 @@
-import { LintIssue, LintRule } from './janitor';
+import { LintIssue, LintRule } from './lint';
 import { generateLinkReferences } from './generate-link-references';
 
 export function staleDefinitionsRule(

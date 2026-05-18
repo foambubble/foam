@@ -16,7 +16,7 @@ import {
   DUPLICATE_BLOCK_ID_CODE,
   checkLinks,
   checkDuplicateBlocks,
-} from '../../../janitor/rule-check-links';
+} from '../../../lint/rule-check-links';
 
 interface FoamCommand<T> {
   name: string;

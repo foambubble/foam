@@ -1,7 +1,7 @@
 # GitHub Pages
 
 1. In VSCode workspace settings set `"foam.edit.linkReferenceDefinitions": "withoutExtensions"`
-2. Execute the “Foam: Run Janitor” command from the command palette.
+2. Execute the “Foam: Lint Workspace” command from the command palette.
 3. [Turn **GitHub Pages** on in your repository settings](https://guides.github.com/features/pages/).
    - The default GitHub Pages template is called [Primer](https://github.com/pages-themes/primer). See Primer docs for how to customise html layouts and templates.
    - GitHub Pages is built on [Jekyll](https://jekyllrb.com/), so it supports things like permalinks, front matter metadata etc.

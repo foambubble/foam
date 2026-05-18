@@ -1,4 +1,4 @@
-import { LintIssue, LintRule } from './janitor';
+import { LintIssue, LintRule } from './lint';
 import { generateHeading } from './generate-headings';
 
 export function missingHeadingRule(): LintRule {

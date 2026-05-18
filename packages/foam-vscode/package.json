@@ -379,8 +379,8 @@
         "title": "Foam: Open Random Note"
       },
       {
-        "command": "foam-vscode.janitor",
-        "title": "Foam: Run Janitor (Experimental)"
+        "command": "foam-vscode.lint",
+        "title": "Foam: Lint Workspace (Experimental)"
       },
       {
         "command": "foam-vscode.copy-without-brackets",

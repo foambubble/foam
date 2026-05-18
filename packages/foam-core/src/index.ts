@@ -119,7 +119,7 @@ export type {
   GraphBuilderOptions,
 } from './services/graph-data-builder';
 
-// Janitor / lint
+// Lint
 export {
   lintNote,
   lintWorkspace,
@@ -127,19 +127,19 @@ export {
   missingHeadingRule,
   staleDefinitionsRule,
   WorkspaceLintResult,
-} from './janitor/janitor';
+} from './lint/lint';
 export type {
   LintRule,
   LintIssue,
   LintRelatedInfo,
   WikilinkDefinitionSetting,
-} from './janitor/janitor';
-export { generateHeading } from './janitor/generate-headings';
+} from './lint/lint';
+export { generateHeading } from './lint/generate-headings';
 export {
   generateLinkReferences,
   LINK_REFERENCE_DEFINITION_HEADER,
   LINK_REFERENCE_DEFINITION_FOOTER,
-} from './janitor/generate-link-references';
+} from './lint/generate-link-references';
 
 // Common
 export type { IDisposable } from './common/lifecycle';

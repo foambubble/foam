@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.42.1
+
+### Patch Changes
+
+- Fix published site rendering a page multiple times when it had multiple connections to the same target
+
 ## 0.42.0
 
 ### Minor Changes

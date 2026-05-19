@@ -1,6 +1,6 @@
 {
   "name": "@foam/core",
-  "version": "0.41.1",
+  "version": "0.41.2",
   "description": "Platform-agnostic core logic for Foam",
   "license": "MIT",
   "main": "out/src/index.js",

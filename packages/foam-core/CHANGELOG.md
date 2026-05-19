@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.41.2
+
+### Patch Changes
+
+- Renamed the "workspace janitor" feature to "workspace lint", including commands and documentation
+
 ## 0.41.1
 
 ### Patch Changes

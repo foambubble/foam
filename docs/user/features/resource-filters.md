@@ -7,7 +7,7 @@ A filter supports the following parameters:
 - `tag`: include a resource if it has the given tag (e.g. `{"tag": "#research"}`)
 - `type`: include a resource if it is of the given type (e.g. `{"type": "daily-note"}`)
 - `path`: include a resource if its path matches the given regex (e.g. `{"path": "/projects/*"}`). **Note that this parameter supports regex and not globs.**
-- `expression`: include a resource if it makes the given expression `true`, where `resource` represents the resource being evaluated (e.g. `{"expression": "resource.type ==='weekly-note'"}`)
+- `jexl`: include a resource if the given [Jexl](https://github.com/TomFrost/Jexl) expression is truthy, where `resource` represents the resource being evaluated (e.g. `{"jexl": "resource.type == 'weekly-note'"}`)
 - `title`: include a resource if the title matches the given regex (e.g. `{"title": "Team meeting:*"}`)
 
 A filter also supports some logical operators:

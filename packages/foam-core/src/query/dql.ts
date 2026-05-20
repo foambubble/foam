@@ -273,7 +273,16 @@ export function renderDqlQuery(
     ? { ...descriptor, select: [...descriptor.select, 'path'] }
     : descriptor;
 
-  const results = executeQuery(execDescriptor, workspace, graph, { trusted });
+  const { results, warnings: filterWarnings } = executeQuery(
+    execDescriptor,
+    workspace,
+    graph,
+    { trusted }
+  );
+  // Filter warnings are plain text (they contain raw user input like
+  // `filter.path`); escape before pushing into the HTML-fragment channel
+  // shared with DQL-level validators above.
+  warnings.push(...filterWarnings.map(escapeHtml));
   return (
     renderWarnings(warnings) +
     renderResults(results, descriptor, toRelativePath)

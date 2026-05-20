@@ -21,7 +21,7 @@ describe('parseFilter — shorthand strings', () => {
     const { workspace, graph } = makeWorkspaceAndGraph([
       createTestNote({ uri: '/a.md' }),
     ]);
-    const pred = parseFilter(undefined, workspace, graph, false);
+    const { predicate: pred } = parseFilter(undefined, workspace, graph, false);
     expect(pred(workspace.list()[0])).toBe(true);
   });
 
@@ -29,7 +29,7 @@ describe('parseFilter — shorthand strings', () => {
     const { workspace, graph } = makeWorkspaceAndGraph([
       createTestNote({ uri: '/a.md' }),
     ]);
-    const pred = parseFilter('*', workspace, graph, false);
+    const { predicate: pred } = parseFilter('*', workspace, graph, false);
     expect(pred(workspace.list()[0])).toBe(true);
   });
 
@@ -38,7 +38,7 @@ describe('parseFilter — shorthand strings', () => {
     const noteB = createTestNote({ uri: '/b.md', tags: ['other'] });
     const { workspace, graph } = makeWorkspaceAndGraph([noteA, noteB]);
 
-    const pred = parseFilter('#research', workspace, graph, false);
+    const { predicate: pred } = parseFilter('#research', workspace, graph, false);
     expect(pred(noteA)).toBe(true);
     expect(pred(noteB)).toBe(false);
   });
@@ -55,7 +55,7 @@ describe('parseFilter — shorthand strings', () => {
       noteD,
     ]);
 
-    const pred = parseFilter('[[b]]', workspace, graph, false);
+    const { predicate: pred } = parseFilter('[[b]]', workspace, graph, false);
     expect(pred(noteA)).toBe(true); // noteA links TO noteB
     expect(pred(noteB)).toBe(false); // noteB is the reference node, not a neighbor
     expect(pred(noteC)).toBe(true); // noteC is linked FROM noteB (outlink of noteB)
@@ -66,7 +66,7 @@ describe('parseFilter — shorthand strings', () => {
     const noteA = createTestNote({ uri: '/a.md' });
     const { workspace, graph } = makeWorkspaceAndGraph([noteA]);
 
-    const pred = parseFilter('[[nonexistent]]', workspace, graph, false);
+    const { predicate: pred } = parseFilter('[[nonexistent]]', workspace, graph, false);
     expect(pred(noteA)).toBe(false);
   });
 
@@ -75,7 +75,7 @@ describe('parseFilter — shorthand strings', () => {
     const noteB = createTestNote({ uri: '/journal/today.md' });
     const { workspace, graph } = makeWorkspaceAndGraph([noteA, noteB]);
 
-    const pred = parseFilter('/projects/', workspace, graph, false);
+    const { predicate: pred } = parseFilter('/projects/', workspace, graph, false);
     expect(pred(noteA)).toBe(true);
     expect(pred(noteB)).toBe(false);
   });
@@ -87,13 +87,13 @@ describe('parseFilter — structured keys', () => {
     const noteB = createTestNote({ uri: '/b.md', tags: ['other'] });
     const { workspace, graph } = makeWorkspaceAndGraph([noteA, noteB]);
 
-    const predWithHash = parseFilter(
+    const { predicate: predWithHash } = parseFilter(
       { tag: '#research' },
       workspace,
       graph,
       false
     );
-    const predWithout = parseFilter(
+    const { predicate: predWithout } = parseFilter(
       { tag: 'research' },
       workspace,
       graph,
@@ -111,7 +111,7 @@ describe('parseFilter — structured keys', () => {
     const noteB = createTestNote({ uri: '/b.md', type: 'note' });
     const { workspace, graph } = makeWorkspaceAndGraph([noteA, noteB]);
 
-    const pred = parseFilter({ type: 'daily-note' }, workspace, graph, false);
+    const { predicate: pred } = parseFilter({ type: 'daily-note' }, workspace, graph, false);
     expect(pred(noteA)).toBe(true);
     expect(pred(noteB)).toBe(false);
   });
@@ -121,7 +121,7 @@ describe('parseFilter — structured keys', () => {
     const noteB = createTestNote({ uri: '/notes/current.md' });
     const { workspace, graph } = makeWorkspaceAndGraph([noteA, noteB]);
 
-    const pred = parseFilter({ path: '^/archive' }, workspace, graph, false);
+    const { predicate: pred } = parseFilter({ path: '^/archive' }, workspace, graph, false);
     expect(pred(noteA)).toBe(true);
     expect(pred(noteB)).toBe(false);
   });
@@ -131,7 +131,7 @@ describe('parseFilter — structured keys', () => {
     const noteB = createTestNote({ uri: '/b.md', title: 'Project plan' });
     const { workspace, graph } = makeWorkspaceAndGraph([noteA, noteB]);
 
-    const pred = parseFilter({ title: '^Meeting' }, workspace, graph, false);
+    const { predicate: pred } = parseFilter({ title: '^Meeting' }, workspace, graph, false);
     expect(pred(noteA)).toBe(true);
     expect(pred(noteB)).toBe(false);
   });
@@ -142,7 +142,7 @@ describe('parseFilter — structured keys', () => {
     const noteA = createTestNote({ uri: '/aaa' });
     const { workspace, graph } = makeWorkspaceAndGraph([noteA]);
 
-    const pred = parseFilter({ path: '(a+)+$' }, workspace, graph, false);
+    const { predicate: pred } = parseFilter({ path: '(a+)+$' }, workspace, graph, false);
     expect(pred(noteA)).toBe(false);
   });
 
@@ -150,7 +150,7 @@ describe('parseFilter — structured keys', () => {
     const noteA = createTestNote({ uri: '/a.md', title: 'aaaa' });
     const { workspace, graph } = makeWorkspaceAndGraph([noteA]);
 
-    const pred = parseFilter({ title: '(a+)+$' }, workspace, graph, false);
+    const { predicate: pred } = parseFilter({ title: '(a+)+$' }, workspace, graph, false);
     expect(pred(noteA)).toBe(false);
   });
 
@@ -158,7 +158,7 @@ describe('parseFilter — structured keys', () => {
     const noteA = createTestNote({ uri: '/aaa' });
     const { workspace, graph } = makeWorkspaceAndGraph([noteA]);
 
-    const pred = parseFilter('/(a+)+$/', workspace, graph, false);
+    const { predicate: pred } = parseFilter('/(a+)+$/', workspace, graph, false);
     expect(pred(noteA)).toBe(false);
   });
 
@@ -166,7 +166,7 @@ describe('parseFilter — structured keys', () => {
     const noteA = createTestNote({ uri: '/a.md' });
     const { workspace, graph } = makeWorkspaceAndGraph([noteA]);
 
-    const pred = parseFilter({ path: '[unclosed' }, workspace, graph, false);
+    const { predicate: pred } = parseFilter({ path: '[unclosed' }, workspace, graph, false);
     expect(pred(noteA)).toBe(false);
   });
 
@@ -176,7 +176,7 @@ describe('parseFilter — structured keys', () => {
     const noteC = createTestNote({ uri: '/c.md' });
     const { workspace, graph } = makeWorkspaceAndGraph([noteA, noteB, noteC]);
 
-    const pred = parseFilter({ links_to: 'b' }, workspace, graph, false);
+    const { predicate: pred } = parseFilter({ links_to: 'b' }, workspace, graph, false);
     expect(pred(noteA)).toBe(true); // noteA links to noteB
     expect(pred(noteB)).toBe(false); // noteB doesn't link to noteB
     expect(pred(noteC)).toBe(false); // noteC doesn't link to noteB
@@ -188,7 +188,7 @@ describe('parseFilter — structured keys', () => {
     const noteC = createTestNote({ uri: '/c.md' });
     const { workspace, graph } = makeWorkspaceAndGraph([noteA, noteB, noteC]);
 
-    const pred = parseFilter({ links_from: 'a' }, workspace, graph, false);
+    const { predicate: pred } = parseFilter({ links_from: 'a' }, workspace, graph, false);
     expect(pred(noteA)).toBe(false); // noteA is the source, not the target
     expect(pred(noteB)).toBe(true); // noteB is linked from noteA
     expect(pred(noteC)).toBe(false); // noteC is not linked from noteA
@@ -198,7 +198,7 @@ describe('parseFilter — structured keys', () => {
     const noteA = createTestNote({ uri: '/a.md' });
     const { workspace, graph } = makeWorkspaceAndGraph([noteA]);
 
-    const pred = parseFilter(
+    const { predicate: pred } = parseFilter(
       { links_to: 'nonexistent' },
       workspace,
       graph,
@@ -211,7 +211,7 @@ describe('parseFilter — structured keys', () => {
     const noteA = createTestNote({ uri: '/a.md' });
     const { workspace, graph } = makeWorkspaceAndGraph([noteA]);
 
-    const pred = parseFilter(
+    const { predicate: pred } = parseFilter(
       { links_from: 'nonexistent' },
       workspace,
       graph,
@@ -240,7 +240,7 @@ describe('parseFilter — logical operators', () => {
     });
     const { workspace, graph } = makeWorkspaceAndGraph([noteA, noteB, noteC]);
 
-    const pred = parseFilter(
+    const { predicate: pred } = parseFilter(
       { and: [{ tag: 'research' }, { type: 'note' }] },
       workspace,
       graph,
@@ -257,7 +257,7 @@ describe('parseFilter — logical operators', () => {
     const noteC = createTestNote({ uri: '/c.md', type: 'note' });
     const { workspace, graph } = makeWorkspaceAndGraph([noteA, noteB, noteC]);
 
-    const pred = parseFilter(
+    const { predicate: pred } = parseFilter(
       { or: [{ type: 'daily-note' }, { type: 'weekly-note' }] },
       workspace,
       graph,
@@ -273,7 +273,7 @@ describe('parseFilter — logical operators', () => {
     const noteB = createTestNote({ uri: '/b.md', type: 'note' });
     const { workspace, graph } = makeWorkspaceAndGraph([noteA, noteB]);
 
-    const pred = parseFilter(
+    const { predicate: pred } = parseFilter(
       { not: { type: 'daily-note' } },
       workspace,
       graph,
@@ -289,7 +289,7 @@ describe('parseFilter — logical operators', () => {
     const noteC = createTestNote({ uri: '/c.md', tags: ['draft'] });
     const { workspace, graph } = makeWorkspaceAndGraph([noteA, noteB, noteC]);
 
-    const pred = parseFilter(
+    const { predicate: pred } = parseFilter(
       { and: [{ tag: 'research' }, { not: { tag: 'draft' } }] },
       workspace,
       graph,
@@ -301,29 +301,126 @@ describe('parseFilter — logical operators', () => {
   });
 });
 
-describe('parseFilter — expression', () => {
-  it('expression is skipped (all pass) when workspace is not trusted', () => {
+describe('parseFilter — jexl', () => {
+  it('matches resources whose context satisfies the jexl expression', () => {
     const noteA = createTestNote({ uri: '/a.md', type: 'type-1' });
     const noteB = createTestNote({ uri: '/b.md', type: 'type-2' });
     const { workspace, graph } = makeWorkspaceAndGraph([noteA, noteB]);
 
-    const pred = parseFilter(
-      { expression: 'resource.type === "type-1"' },
+    const { predicate: pred } = parseFilter(
+      { jexl: 'resource.type == "type-1"' },
       workspace,
       graph,
       false
     );
     expect(pred(noteA)).toBe(true);
-    expect(pred(noteB)).toBe(true);
+    expect(pred(noteB)).toBe(false);
   });
 
-  it('expression is evaluated when workspace is trusted', () => {
+  it('jexl is evaluated regardless of the trusted flag', () => {
     const noteA = createTestNote({ uri: '/a.md', type: 'type-1' });
     const noteB = createTestNote({ uri: '/b.md', type: 'type-2' });
     const { workspace, graph } = makeWorkspaceAndGraph([noteA, noteB]);
 
-    const pred = parseFilter(
+    const { predicate: pred } = parseFilter(
+      { jexl: 'resource.type == "type-1"' },
+      workspace,
+      graph,
+      false
+    );
+    expect(pred(noteA)).toBe(true);
+    expect(pred(noteB)).toBe(false);
+  });
+
+  it('jexl can access graph-derived backlinks', () => {
+    const noteA = createTestNote({ uri: '/a.md', links: [{ slug: 'b' }] });
+    const noteB = createTestNote({ uri: '/b.md' });
+    const noteC = createTestNote({ uri: '/c.md' });
+    const { workspace, graph } = makeWorkspaceAndGraph([noteA, noteB, noteC]);
+
+    const { predicate: pred } = parseFilter(
+      { jexl: 'resource.backlinks|length > 0' },
+      workspace,
+      graph,
+      false
+    );
+    expect(pred(noteA)).toBe(false);
+    expect(pred(noteB)).toBe(true);
+    expect(pred(noteC)).toBe(false);
+  });
+
+  it('jexl runtime error excludes the resource and does not throw', () => {
+    const noteA = createTestNote({ uri: '/a.md' });
+    const { workspace, graph } = makeWorkspaceAndGraph([noteA]);
+
+    // Referencing a non-callable as a function — should fail to evaluate.
+    const { predicate: pred } = parseFilter(
+      { jexl: 'resource.title.notAFunction()' },
+      workspace,
+      graph,
+      false
+    );
+    expect(pred(noteA)).toBe(false);
+  });
+
+  it('jexl syntax error excludes the resource and does not throw', () => {
+    const noteA = createTestNote({ uri: '/a.md' });
+    const { workspace, graph } = makeWorkspaceAndGraph([noteA]);
+
+    const { predicate: pred } = parseFilter(
+      { jexl: '!!!invalid syntax!!!' },
+      workspace,
+      graph,
+      false
+    );
+    expect(pred(noteA)).toBe(false);
+  });
+
+  it('jexl cannot reach host globals via prototype walk', () => {
+    const noteA = createTestNote({ uri: '/a.md' });
+    const { workspace, graph } = makeWorkspaceAndGraph([noteA]);
+
+    // Classic sandbox-escape attempt. Jexl has no member-access to
+    // constructors, so this must not match and must not throw.
+    const { predicate: pred } = parseFilter(
+      {
+        jexl: 'resource.constructor.constructor("return process")() != null',
+      },
+      workspace,
+      graph,
+      false
+    );
+    expect(pred(noteA)).toBe(false);
+  });
+});
+
+describe('parseFilter — expression (deprecated)', () => {
+  it('expression is not evaluated and matches nothing', () => {
+    const noteA = createTestNote({ uri: '/a.md', type: 'type-1' });
+    const noteB = createTestNote({ uri: '/b.md', type: 'type-2' });
+    const { workspace, graph } = makeWorkspaceAndGraph([noteA, noteB]);
+
+    const { predicate: pred } = parseFilter(
       { expression: 'resource.type === "type-1"' },
+      workspace,
+      graph,
+      true
+    );
+    expect(pred(noteA)).toBe(false);
+    expect(pred(noteB)).toBe(false);
+  });
+
+  it('when both expression and jexl are present, jexl takes effect and expression is ignored', () => {
+    const noteA = createTestNote({ uri: '/a.md', type: 'type-1' });
+    const noteB = createTestNote({ uri: '/b.md', type: 'type-2' });
+    const { workspace, graph } = makeWorkspaceAndGraph([noteA, noteB]);
+
+    const { predicate: pred } = parseFilter(
+      {
+        // would match nothing — proves it's ignored
+        expression: 'false',
+        jexl: 'resource.type == "type-1"',
+      },
       workspace,
       graph,
       true
@@ -331,35 +428,155 @@ describe('parseFilter — expression', () => {
     expect(pred(noteA)).toBe(true);
     expect(pred(noteB)).toBe(false);
   });
+});
 
-  it('expression can access graph-derived backlinks', () => {
-    const noteA = createTestNote({ uri: '/a.md', links: [{ slug: 'b' }] });
-    const noteB = createTestNote({ uri: '/b.md' });
-    const noteC = createTestNote({ uri: '/c.md' });
-    const { workspace, graph } = makeWorkspaceAndGraph([noteA, noteB, noteC]);
-
-    const pred = parseFilter(
-      { expression: 'resource.backlinks.length > 0' },
-      workspace,
-      graph,
-      true
-    );
-    expect(pred(noteA)).toBe(false); // noteA has no backlinks
-    expect(pred(noteB)).toBe(true); // noteB is linked from noteA
-    expect(pred(noteC)).toBe(false);
-  });
-
-  it('expression runtime error excludes the resource and does not throw', () => {
-    const noteA = createTestNote({ uri: '/a.md' });
+describe('parseFilter — warnings', () => {
+  it('clean filter reports no warnings', () => {
+    const noteA = createTestNote({ uri: '/a.md', tags: ['research'] });
     const { workspace, graph } = makeWorkspaceAndGraph([noteA]);
 
-    const pred = parseFilter(
-      { expression: 'throw new Error("boom")' },
+    const { warnings } = parseFilter(
+      { tag: 'research' },
       workspace,
       graph,
-      true
+      false
     );
-    expect(pred(noteA)).toBe(false);
+    expect(warnings).toEqual([]);
+  });
+
+  it('reports a warning when a path regex is catastrophically backtracking', () => {
+    const { workspace, graph } = makeWorkspaceAndGraph([
+      createTestNote({ uri: '/a.md' }),
+    ]);
+    const { warnings } = parseFilter(
+      { path: '(a+)+$' },
+      workspace,
+      graph,
+      false
+    );
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toContain('path filter');
+    expect(warnings[0]).toContain('(a+)+$');
+  });
+
+  it('reports a warning when a title regex has invalid syntax', () => {
+    const { workspace, graph } = makeWorkspaceAndGraph([
+      createTestNote({ uri: '/a.md' }),
+    ]);
+    const { warnings } = parseFilter(
+      { title: '[unclosed' },
+      workspace,
+      graph,
+      false
+    );
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toContain('title filter');
+  });
+
+  it('reports a warning when links_to target is missing', () => {
+    const { workspace, graph } = makeWorkspaceAndGraph([
+      createTestNote({ uri: '/a.md' }),
+    ]);
+    const { warnings } = parseFilter(
+      { links_to: 'ghost' },
+      workspace,
+      graph,
+      false
+    );
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toContain('links_to');
+    expect(warnings[0]).toContain('ghost');
+  });
+
+  it('reports a warning when jexl fails to compile', () => {
+    const { workspace, graph } = makeWorkspaceAndGraph([
+      createTestNote({ uri: '/a.md' }),
+    ]);
+    const { warnings } = parseFilter(
+      { jexl: ') unclosed' },
+      workspace,
+      graph,
+      false
+    );
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toContain('jexl');
+  });
+
+  it('reports a deprecation warning when the legacy expression field is used', () => {
+    const { workspace, graph } = makeWorkspaceAndGraph([
+      createTestNote({ uri: '/a.md' }),
+    ]);
+    const { warnings } = parseFilter(
+      { expression: 'resource.type === "x"' },
+      workspace,
+      graph,
+      false
+    );
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toContain('expression');
+    expect(warnings[0]).toContain('deprecated');
+  });
+
+  it('aggregates warnings from nested and/or/not branches', () => {
+    const { workspace, graph } = makeWorkspaceAndGraph([
+      createTestNote({ uri: '/a.md' }),
+    ]);
+    const { warnings } = parseFilter(
+      {
+        and: [
+          { links_to: 'ghost-a' },
+          { or: [{ links_from: 'ghost-b' }, { jexl: '!!!' }] },
+          { not: { path: '(a+)+$' } },
+        ],
+      },
+      workspace,
+      graph,
+      false
+    );
+    expect(warnings).toHaveLength(4);
+    expect(warnings.some(w => w.includes('ghost-a'))).toBe(true);
+    expect(warnings.some(w => w.includes('ghost-b'))).toBe(true);
+    expect(warnings.some(w => w.includes('jexl'))).toBe(true);
+    expect(warnings.some(w => w.includes('path filter'))).toBe(true);
+  });
+
+  it('reports a warning when a shorthand "[[id]]" target is missing', () => {
+    const { workspace, graph } = makeWorkspaceAndGraph([
+      createTestNote({ uri: '/a.md' }),
+    ]);
+    const { warnings } = parseFilter(
+      '[[ghost]]',
+      workspace,
+      graph,
+      false
+    );
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toContain('ghost');
+  });
+
+  it('reports a warning when a shorthand regex is rejected', () => {
+    const { workspace, graph } = makeWorkspaceAndGraph([
+      createTestNote({ uri: '/a.md' }),
+    ]);
+    const { warnings } = parseFilter('/(a+)+$/', workspace, graph, false);
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toContain('shorthand');
+  });
+});
+
+describe('executeQuery — warnings', () => {
+  it('threads filter warnings through to the execution result', () => {
+    const { workspace, graph } = makeWorkspaceAndGraph([
+      createTestNote({ uri: '/a.md' }),
+    ]);
+    const { warnings } = executeQuery(
+      { filter: { links_to: 'ghost' } },
+      workspace,
+      graph,
+      { trusted: false }
+    );
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toContain('ghost');
   });
 });
 
@@ -374,7 +591,7 @@ describe('executeQuery — projection', () => {
     });
     const { workspace, graph } = makeWorkspaceAndGraph([noteA]);
 
-    const results = executeQuery(
+    const { results } = executeQuery(
       { select: ['title', 'tags'] },
       workspace,
       graph,
@@ -389,7 +606,7 @@ describe('executeQuery — projection', () => {
     const noteA = createTestNote({ uri: '/a.md', title: 'Alpha' });
     const { workspace, graph } = makeWorkspaceAndGraph([noteA]);
 
-    const [result] = executeQuery({}, workspace, graph, { trusted: false });
+    const { results: [result] } = executeQuery({}, workspace, graph, { trusted: false });
     expect(result).toHaveProperty('title');
     expect(result).toHaveProperty('path');
     expect(Object.keys(result)).toHaveLength(2);
@@ -400,7 +617,7 @@ describe('executeQuery — projection', () => {
     const noteB = createTestNote({ uri: '/b.md' });
     const { workspace, graph } = makeWorkspaceAndGraph([noteA, noteB]);
 
-    const results = executeQuery(
+    const { results } = executeQuery(
       { filter: { path: '/b.md' }, select: ['title', 'backlink-count'] },
       workspace,
       graph,
@@ -418,7 +635,7 @@ describe('executeQuery — projection', () => {
     const noteC = createTestNote({ uri: '/c.md' });
     const { workspace, graph } = makeWorkspaceAndGraph([noteA, noteB, noteC]);
 
-    const results = executeQuery(
+    const { results } = executeQuery(
       { filter: { path: '/a.md' }, select: ['title', 'outlink-count'] },
       workspace,
       graph,
@@ -431,7 +648,7 @@ describe('executeQuery — projection', () => {
     const noteA = createTestNote({ uri: '/a.md' });
     const { workspace, graph } = makeWorkspaceAndGraph([noteA]);
 
-    const [result] = executeQuery(
+    const { results: [result] } = executeQuery(
       { select: ['title', 'nonexistent'] },
       workspace,
       graph,
@@ -450,7 +667,7 @@ describe('executeQuery — sorting', () => {
     ];
     const { workspace, graph } = makeWorkspaceAndGraph(notes);
 
-    const results = executeQuery(
+    const { results } = executeQuery(
       { sort: 'title', select: ['title'] },
       workspace,
       graph,
@@ -467,7 +684,7 @@ describe('executeQuery — sorting', () => {
     ];
     const { workspace, graph } = makeWorkspaceAndGraph(notes);
 
-    const results = executeQuery(
+    const { results } = executeQuery(
       { sort: 'title DESC', select: ['title'] },
       workspace,
       graph,
@@ -483,10 +700,13 @@ describe('executeQuery — sorting', () => {
     ];
     const { workspace, graph } = makeWorkspaceAndGraph(notes);
 
-    const baseline = executeQuery({ select: ['title'] }, workspace, graph, {
-      trusted: false,
-    });
-    const sorted = executeQuery(
+    const { results: baseline } = executeQuery(
+      { select: ['title'] },
+      workspace,
+      graph,
+      { trusted: false }
+    );
+    const { results: sorted } = executeQuery(
       { sort: 'nonexistent', select: ['title'] },
       workspace,
       graph,
@@ -506,7 +726,7 @@ describe('executeQuery — pagination', () => {
 
   it('limit returns at most N results', () => {
     const { workspace, graph } = makeWorkspaceAndGraph(notes);
-    const results = executeQuery(
+    const { results } = executeQuery(
       { sort: 'title', limit: 2, select: ['title'] },
       workspace,
       graph,
@@ -518,7 +738,7 @@ describe('executeQuery — pagination', () => {
 
   it('offset skips the first N results', () => {
     const { workspace, graph } = makeWorkspaceAndGraph(notes);
-    const results = executeQuery(
+    const { results } = executeQuery(
       { sort: 'title', offset: 2, select: ['title'] },
       workspace,
       graph,
@@ -529,7 +749,7 @@ describe('executeQuery — pagination', () => {
 
   it('limit and offset together', () => {
     const { workspace, graph } = makeWorkspaceAndGraph(notes);
-    const results = executeQuery(
+    const { results } = executeQuery(
       { sort: 'title', offset: 1, limit: 2, select: ['title'] },
       workspace,
       graph,
@@ -540,7 +760,7 @@ describe('executeQuery — pagination', () => {
 
   it('limit larger than result count returns all results', () => {
     const { workspace, graph } = makeWorkspaceAndGraph(notes);
-    const results = executeQuery(
+    const { results } = executeQuery(
       { limit: 100, select: ['title'] },
       workspace,
       graph,
@@ -553,7 +773,7 @@ describe('executeQuery — pagination', () => {
 describe('executeQuery — end to end', () => {
   it('returns empty array for an empty workspace', () => {
     const { workspace, graph } = makeWorkspaceAndGraph([]);
-    const results = executeQuery({}, workspace, graph, { trusted: false });
+    const { results } = executeQuery({}, workspace, graph, { trusted: false });
     expect(results).toEqual([]);
   });
 
@@ -561,7 +781,7 @@ describe('executeQuery — end to end', () => {
     const noteA = createTestNote({ uri: '/a.md', type: 'note' });
     const { workspace, graph } = makeWorkspaceAndGraph([noteA]);
 
-    const results = executeQuery(
+    const { results } = executeQuery(
       { filter: { type: 'daily-note' } },
       workspace,
       graph,
@@ -585,7 +805,7 @@ describe('executeQuery — end to end', () => {
       sort: 'title DESC',
       limit: 2,
     };
-    const results = executeQuery(query, workspace, graph, { trusted: false });
+    const { results } = executeQuery(query, workspace, graph, { trusted: false });
     expect(results).toHaveLength(2);
     expect(results.map(r => r.title)).toEqual(['Gamma', 'Beta']);
   });

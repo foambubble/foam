@@ -64,12 +64,17 @@ async function openResource(
   }
 
   if (isNone(item) && args.filter) {
-    const predicate = parseFilter(
+    const { predicate, warnings } = parseFilter(
       args.filter,
       workspace,
       graph,
       vscode.workspace.isTrusted
     );
+    if (warnings.length > 0) {
+      vscode.window.showWarningMessage(
+        `Foam filter:\n${warnings.map(w => `• ${w}`).join('\n')}`
+      );
+    }
     const candidates = workspace.list().filter(predicate);
 
     if (candidates.length === 0) {

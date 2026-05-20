@@ -26,6 +26,7 @@
     "lint": "oxlint src"
   },
   "devDependencies": {
+    "@types/jexl": "^2.3.4",
     "oxlint": "^1.57.0",
     "rimraf": "^3.0.2",
     "typescript": "^5.8.0",
@@ -37,6 +38,7 @@
     "detect-newline": "^3.1.0",
     "github-slugger": "^1.4.0",
     "gray-matter": "^4.0.2",
+    "jexl": "^2.3.0",
     "js-sha1": "^0.7.0",
     "lodash": "^4.17.21",
     "lru-cache": "^11.0.0",

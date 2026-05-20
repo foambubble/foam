@@ -1,3 +1,4 @@
+import jexl from 'jexl';
 import safeRegex from 'safe-regex2';
 import { Resource } from '../model/note';
 import { FoamWorkspace } from '../model/workspace';
@@ -5,24 +6,32 @@ import { FoamGraph } from '../model/graph';
 import { Logger } from '../utils/log';
 import { URI } from '../model/uri';
 
+const queryJexl = new jexl.Jexl();
+queryJexl.addTransform('length', (v: unknown) =>
+  v == null ? 0 : (v as { length: number }).length
+);
+queryJexl.addTransform('lower', (v: unknown) => String(v).toLowerCase());
+queryJexl.addTransform('upper', (v: unknown) => String(v).toUpperCase());
+
 /**
- * Builds a RegExp from a user-supplied pattern, rejecting patterns that
- * are statically flagged as catastrophically backtracking or that fail to
- * compile. Returns `undefined` on rejection so callers can fall back to a
- * non-matching predicate.
+ * Builds a RegExp from a user-supplied pattern. Returns either the compiled
+ * regex or a user-facing warning string explaining why it was rejected
+ * (catastrophic backtracking, invalid syntax). The caller is responsible for
+ * logging and/or surfacing the warning.
  */
-function tryBuildUserRegex(pattern: string, source: string): RegExp | undefined {
+function tryBuildUserRegex(
+  pattern: string,
+  source: string
+): { regex: RegExp } | { warning: string } {
   if (!safeRegex(pattern)) {
-    Logger.warn(
-      `[Query] ${source}: pattern rejected as potentially catastrophic: "${pattern}"`
-    );
-    return undefined;
+    return {
+      warning: `${source}: pattern rejected as potentially catastrophic: "${pattern}"`,
+    };
   }
   try {
-    return new RegExp(pattern);
+    return { regex: new RegExp(pattern) };
   } catch (e) {
-    Logger.warn(`[Query] ${source}: invalid regex "${pattern}": ${e}`);
-    return undefined;
+    return { warning: `${source}: invalid regex "${pattern}": ${e}` };
   }
 }
 
@@ -35,7 +44,14 @@ export type QueryFilter =
       title?: string; // regex
       links_to?: string | URI; // note identifier or URI — this resource has an outbound link to it
       links_from?: string | URI; // note identifier or URI — this resource is linked from it
-      expression?: string; // JS expression; requires trusted workspace
+      jexl?: string; // Jexl expression evaluated against `{ resource }`
+      /**
+       * @deprecated Replaced by `jexl`. The previous implementation used
+       * `eval()` and is no longer evaluated — this field is kept on the
+       * schema only so old query bodies fail loudly rather than being
+       * silently re-interpreted. Use `jexl` instead.
+       */
+      expression?: string;
       and?: QueryFilter[];
       or?: QueryFilter[];
       not?: QueryFilter;
@@ -59,6 +75,23 @@ const DEFAULT_SELECT = ['title', 'path'];
 type Predicate = (r: Resource) => boolean;
 
 /**
+ * Result of parsing a filter. `warnings` collects user-facing strings
+ * describing each parse-time problem (rejected regex, deprecated field,
+ * unresolved link target, Jexl compile error, ...). An empty array means
+ * the filter parsed cleanly. Warnings are plain text — callers wrap them
+ * for their output medium (HTML for the markdown preview, log line, etc.).
+ */
+export interface FilterResult {
+  predicate: Predicate;
+  warnings: string[];
+}
+
+export interface QueryExecutionResult {
+  results: ResourceView[];
+  warnings: string[];
+}
+
+/**
  * Builds a resource context for use in JS expressions.
  * Augments the raw Resource with graph-derived fields so users can write
  * `resource.backlinks.length > 3` in expressions.
@@ -73,19 +106,30 @@ function makeExpressionContext(r: Resource, graph: FoamGraph) {
   };
 }
 
+/**
+ * Logs a parse-time warning and returns it for surfacing to the caller.
+ * The log channel keeps the full story for debugging; the returned string
+ * lets callers render the same message in their output medium.
+ */
+function warn(message: string): string {
+  Logger.warn(`[Query] ${message}`);
+  return message;
+}
+
 export function parseFilter(
   filter: QueryFilter | undefined,
   workspace: FoamWorkspace,
   graph: FoamGraph,
   trusted: boolean
-): Predicate {
-  if (filter === undefined) return () => true;
+): FilterResult {
+  if (filter === undefined) return { predicate: () => true, warnings: [] };
 
   if (typeof filter === 'string') {
     return parseShorthand(filter, workspace, graph);
   }
 
   const predicates: Predicate[] = [];
+  const warnings: string[] = [];
 
   if (filter.tag !== undefined) {
     const label = filter.tag.startsWith('#') ? filter.tag.slice(1) : filter.tag;
@@ -98,20 +142,32 @@ export function parseFilter(
   }
 
   if (filter.path !== undefined) {
-    const re = tryBuildUserRegex(filter.path, 'path filter');
-    predicates.push(re ? r => re.test(r.uri.path) : () => false);
+    const built = tryBuildUserRegex(filter.path, 'path filter');
+    if ('regex' in built) {
+      const re = built.regex;
+      predicates.push(r => re.test(r.uri.path));
+    } else {
+      warnings.push(warn(built.warning));
+      predicates.push(() => false);
+    }
   }
 
   if (filter.title !== undefined) {
-    const re = tryBuildUserRegex(filter.title, 'title filter');
-    predicates.push(re ? r => re.test(r.title) : () => false);
+    const built = tryBuildUserRegex(filter.title, 'title filter');
+    if ('regex' in built) {
+      const re = built.regex;
+      predicates.push(r => re.test(r.title));
+    } else {
+      warnings.push(warn(built.warning));
+      predicates.push(() => false);
+    }
   }
 
   if (filter.links_to !== undefined) {
     const target = workspace.find(filter.links_to);
     if (!target) {
-      Logger.warn(
-        `[Query] links_to: "${filter.links_to}" not found in workspace`
+      warnings.push(
+        warn(`links_to: "${filter.links_to}" not found in workspace`)
       );
       predicates.push(() => false);
     } else {
@@ -125,8 +181,8 @@ export function parseFilter(
   if (filter.links_from !== undefined) {
     const source = workspace.find(filter.links_from);
     if (!source) {
-      Logger.warn(
-        `[Query] links_from: "${filter.links_from}" not found in workspace`
+      warnings.push(
+        warn(`links_from: "${filter.links_from}" not found in workspace`)
       );
       predicates.push(() => false);
     } else {
@@ -137,58 +193,84 @@ export function parseFilter(
     }
   }
 
-  if (filter.expression !== undefined) {
-    if (trusted) {
-      const expr = filter.expression;
+  if (filter.jexl !== undefined) {
+    let compiled: ReturnType<typeof queryJexl.compile> | undefined;
+    try {
+      compiled = queryJexl.compile(filter.jexl);
+    } catch (e) {
+      warnings.push(warn(`jexl compile error: ${e}`));
+    }
+    if (compiled === undefined) {
+      predicates.push(() => false);
+    } else {
+      const expr = compiled;
       predicates.push(r => {
         try {
-           
-          const resource = makeExpressionContext(r, graph);
-
-          // eslint-disable-next-line no-eval -- intentional: user-defined query expressions are evaluated at runtime
-          return Boolean(eval(expr));
+          return Boolean(
+            expr.evalSync({ resource: makeExpressionContext(r, graph) })
+          );
         } catch (e) {
-          Logger.warn(`[Query] expression error: ${e}`);
+          // Runtime errors fire per-resource and would be noisy if surfaced
+          // to the rendered preview; log-only is intentional.
+          Logger.warn(`[Query] jexl runtime error: ${e}`);
           return false;
         }
       });
-    } else {
-      Logger.warn(
-        '[Query] expression filter skipped — workspace is not trusted'
-      );
     }
+  } else if (filter.expression !== undefined) {
+    // The `expression` field used to be evaluated with `eval()`, which is RCE
+    // in any trusted workspace. The field is preserved on the schema so legacy
+    // queries fail loudly — they match nothing rather than being silently
+    // re-evaluated by the jexl engine with different semantics.
+    warnings.push(
+      warn(
+        'the `expression` filter is deprecated and no longer evaluated; use `jexl` instead'
+      )
+    );
+    predicates.push(() => false);
   }
 
   if (filter.and !== undefined) {
     const subs = filter.and.map(f => parseFilter(f, workspace, graph, trusted));
-    predicates.push(r => subs.every(p => p(r)));
+    subs.forEach(s => warnings.push(...s.warnings));
+    predicates.push(r => subs.every(s => s.predicate(r)));
   }
 
   if (filter.or !== undefined) {
     const subs = filter.or.map(f => parseFilter(f, workspace, graph, trusted));
-    predicates.push(r => subs.some(p => p(r)));
+    subs.forEach(s => warnings.push(...s.warnings));
+    predicates.push(r => subs.some(s => s.predicate(r)));
   }
 
   if (filter.not !== undefined) {
     const sub = parseFilter(filter.not, workspace, graph, trusted);
-    predicates.push(r => !sub(r));
+    warnings.push(...sub.warnings);
+    predicates.push(r => !sub.predicate(r));
   }
 
-  if (predicates.length === 0) return () => true;
-  return r => predicates.every(p => p(r));
+  const predicate: Predicate =
+    predicates.length === 0
+      ? () => true
+      : r => predicates.every(p => p(r));
+  return { predicate, warnings };
 }
 
 function parseShorthand(
   filter: string,
   workspace: FoamWorkspace,
   graph: FoamGraph
-): Predicate {
-  if (filter === '*' || filter === '') return () => true;
+): FilterResult {
+  if (filter === '*' || filter === '') {
+    return { predicate: () => true, warnings: [] };
+  }
 
   // "#tag"
   if (filter.startsWith('#')) {
     const label = filter.slice(1);
-    return r => r.tags.some(t => t.label === label);
+    return {
+      predicate: r => r.tags.some(t => t.label === label),
+      warnings: [],
+    };
   }
 
   // "[[note-id]]" — same identifier as used in wikilinks
@@ -196,23 +278,37 @@ function parseShorthand(
     const identifier = filter.slice(2, -2);
     const target = workspace.find(identifier);
     if (!target) {
-      Logger.warn(`[Query] [[${identifier}]] not found in workspace`);
-      return () => false;
+      return {
+        predicate: () => false,
+        warnings: [warn(`[[${identifier}]] not found in workspace`)],
+      };
     }
     const targetPath = target.uri.path;
-    return r =>
-      graph.getLinks(r.uri).some(c => c.target.path === targetPath) ||
-      graph.getBacklinks(r.uri).some(c => c.source.path === targetPath);
+    return {
+      predicate: r =>
+        graph.getLinks(r.uri).some(c => c.target.path === targetPath) ||
+        graph.getBacklinks(r.uri).some(c => c.source.path === targetPath),
+      warnings: [],
+    };
   }
 
   // "/regex/"
   if (filter.startsWith('/') && filter.endsWith('/') && filter.length > 2) {
-    const re = tryBuildUserRegex(filter.slice(1, -1), 'shorthand /regex/');
-    return re ? r => re.test(r.uri.path) : () => false;
+    const built = tryBuildUserRegex(filter.slice(1, -1), 'shorthand /regex/');
+    if ('regex' in built) {
+      const re = built.regex;
+      return { predicate: r => re.test(r.uri.path), warnings: [] };
+    }
+    return {
+      predicate: () => false,
+      warnings: [warn(built.warning)],
+    };
   }
 
-  Logger.warn(`[Query] unrecognized shorthand filter: "${filter}"`);
-  return () => true;
+  return {
+    predicate: () => true,
+    warnings: [warn(`unrecognized shorthand filter: "${filter}"`)],
+  };
 }
 
 // --- Projection ---
@@ -372,7 +468,10 @@ export class QueryResult {
       filter: this._descriptor.filter,
       select: ALL_QUERY_FIELDS,
     };
-    let results = executeQuery(baseDescriptor, this.workspace, this.graph, {
+    // Warnings are already logged via `Logger.warn` inside parseFilter; the
+    // fluent JS API surface stays narrow (no warning channel) — DQL renders
+    // get warnings through the executeQuery return value instead.
+    let { results } = executeQuery(baseDescriptor, this.workspace, this.graph, {
       trusted: this.trusted,
     });
 
@@ -409,8 +508,8 @@ export function executeQuery(
   workspace: FoamWorkspace,
   graph: FoamGraph,
   options: { trusted: boolean }
-): ResourceView[] {
-  const predicate = parseFilter(
+): QueryExecutionResult {
+  const { predicate, warnings } = parseFilter(
     query.filter,
     workspace,
     graph,
@@ -440,5 +539,5 @@ export function executeQuery(
     results = results.slice(0, query.limit);
   }
 
-  return results;
+  return { results, warnings };
 }

@@ -82,10 +82,10 @@ Supported filter keys:
 - `title`: notes whose title matches this regex
 - `links_to`: notes that link to the given note identifier. Use `"$current"` to refer to the note containing the query
 - `links_from`: notes that are linked from the given note identifier. Use `"$current"` to refer to the note containing the query
-- `expression`: a JavaScript expression evaluated against each note, e.g. `"resource.tags.length > 2"`. Only evaluated in trusted workspaces.
+- `jexl`: a [Jexl](https://github.com/TomFrost/Jexl) expression evaluated against each note, e.g. `"resource.tags|length > 2"`. The expression has access to `resource` (with fields `title`, `path`, `type`, `tags`, `properties`, `backlinks`, `outlinks`) and the built-in transforms `length`, `lower`, `upper`. Note: Jexl uses `==` (not `===`) and `|length` (not `.length`). The previous `expression` field is deprecated and no longer evaluated.
 - `and`, `or`, `not`: combine filters logically
-
-Use `"$current"` in `links_to` or `links_from` to query relative to the note containing the query block:
+- _`expression`: REMOVED. A JavaScript expression that used to be evaluated against each note. Replaced by jexl for security reasons; legacy queries match nothing_
+- Use `"$current"` in `links_to` or `links_from` to query relative to the note containing the query block:
 
 ````markdown
 ```foam-query
@@ -183,8 +183,8 @@ Call `render(...)` to show output in the preview. You can pass a query builder o
 ## Trust And Limitations
 
 - `foam-query-js` requires a trusted workspace
-- `expression` filters are only evaluated in trusted workspaces
+- `jexl` filters run in any workspace — Jexl is sandboxed and has no access to host globals
 - Queries render in Markdown preview, not directly in the editor
 - Query results link back to the matching notes
 
-[embeds]: embeds.md "Note Embeds"
+[embeds]: embeds.md 'Note Embeds'

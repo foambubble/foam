@@ -34,7 +34,7 @@ That's pretty much it!
 
 You can add [[recipes]] by creating a pull request to [foambubble/foam](https://github.com/foambubble/foam) on GitHub.
 
-Read more in our [contribution guide](https://github.com/foambubble/foam/blob/main/docs/dev/contribution-guide.md).
+Read more in our [contribution guide](https://github.com/foambubble/foam/blob/main/CONTRIBUTING.md).
 
 [recommended-extensions]: ../getting-started/recommended-extensions.md 'Recommended Extensions'
 [recipes]: recipes.md 'Recipes'

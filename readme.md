@@ -198,7 +198,7 @@ Foam is licensed under the [MIT license](LICENSE).
 
 ## Contribution Guide
 
-See the [Contribution Guide](https://github.com/foambubble/foam/blob/main/docs/dev/contribution-guide.md)
+See the [Contribution Guide](https://github.com/foambubble/foam/blob/main/CONTRIBUTING.md)
 
 ## Code of conduct
 

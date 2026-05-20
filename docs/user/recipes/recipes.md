@@ -19,7 +19,7 @@ A #recipe is a guide, tip or strategy for getting the most out of your Foam work
 
 ## Contribute
 
-- Start by reading the [contribution guide](https://github.com/foambubble/foam/blob/main/docs/dev/contribution-guide.md)
+- Start by reading the [contribution guide](https://github.com/foambubble/foam/blob/main/CONTRIBUTING.md)
 - If you discover features not listed here, we'd love to have them! [[how-to-write-recipes]].
 
 ## Take smart notes
@@ -99,13 +99,13 @@ Creative ideas welcome!
 
 - Support [Anki](https://apps.ankiweb.net/) cards from notes like [Remnote](https://www.remnote.io/)
 
-_See [[how-to-write-recipes]] and the [contribution guide](https://github.com/foambubble/foam/blob/main/docs/dev/contribution-guide.md)._
+_See [[how-to-write-recipes]] and the [contribution guide](https://github.com/foambubble/foam/blob/main/CONTRIBUTING.md)._
 
 ## Other
 
 Thought of a recipe but don't see a category for them? Add them here and we'll organise them once we detect a theme.
 
-_See [[how-to-write-recipes]] and the [contribution guide](https://github.com/foambubble/foam/blob/main/docs/dev/contribution-guide.md)._
+_See [[how-to-write-recipes]] and the [contribution guide](https://github.com/foambubble/foam/blob/main/CONTRIBUTING.md)._
 
 [how-to-write-recipes]: how-to-write-recipes.md 'How to Write Recipes'
 [search-and-navigate-notes]: search-and-navigate-notes.md 'Search and Navigate Notes'

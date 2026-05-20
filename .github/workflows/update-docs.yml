@@ -38,7 +38,7 @@ jobs:
 
           # Set the commit message format
           echo "message=Docs sync @ $(cd foam; git log --pretty='format:%h %s')" >> $GITHUB_OUTPUT
-      - uses: peter-evans/create-pull-request@v4
+      - uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.FOAM_DOCS_SYNC_TOKEN }}
           path: foam-template

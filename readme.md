@@ -5,9 +5,7 @@
 # Foam
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-
-[![All Contributors](https://img.shields.io/badge/all_contributors-130-orange.svg?style=flat-square)](#contributors-)
-
+[![All Contributors](https://img.shields.io/badge/all_contributors-131-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 [![Version](https://vsmarketplacebadges.dev/version/foam.foam-vscode.svg)](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode)
@@ -380,6 +378,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/figdavi"><img src="https://avatars.githubusercontent.com/u/99026991?v=4?s=60" width="60px;" alt="Davi Figueiredo"/><br /><sub><b>Davi Figueiredo</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=figdavi" title="Documentation">📖</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/ChThH"><img src="https://avatars.githubusercontent.com/u/9499483?v=4?s=60" width="60px;" alt="CT Hall"/><br /><sub><b>CT Hall</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=ChThH" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/meestahp"><img src="https://avatars.githubusercontent.com/u/177708514?v=4?s=60" width="60px;" alt="meestahp"/><br /><sub><b>meestahp</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=meestahp" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/qwloh"><img src="https://avatars.githubusercontent.com/u/14256866?v=4?s=60" width="60px;" alt="qwloh"/><br /><sub><b>qwloh</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=qwloh" title="Documentation">📖</a></td>
     </tr>
   </tbody>
 </table>

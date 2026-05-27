@@ -60,6 +60,27 @@ card![[my-note]] # Bordered container
 inline![[my-note]] # Seamless integration
 ```
 
+#### Custom Card Styling
+
+Customize the appearance of the bordered container in markdown preview by adding CSS:
+
+1. Create `.foam/css/custom-styles.css`
+2. Add CSS targeting `.embed-container-note` class:
+   ```css
+   .embed-container-note {
+      border: 1px solid #d1d9e0;
+      box-sizing: border-box;
+      padding: 4px 16px;
+      border-radius: 6px;
+   }
+   ```
+3. Update `.vscode/settings.json`:
+   ```json
+   {
+     "markdown.styles": [".foam/css/custom-styles.css"]
+   }
+   ```
+
 ### Combined Modifiers
 
 You can combine scope and style modifiers:

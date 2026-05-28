@@ -7,6 +7,7 @@ import {
   fromFsPath,
 } from '../utils/path';
 import { isSome } from '../utils';
+import { mapWithConcurrency } from '../utils/core';
 import { Emitter } from '../common/event';
 import { ResourceProvider } from './provider';
 import { IDisposable } from '../common/lifecycle';
@@ -511,12 +512,15 @@ export class FoamWorkspace implements IDisposable {
     roots: URI[],
     providers: ResourceProvider[],
     dataStore: IDataStore,
-    defaultExtension: string = '.md'
+    defaultExtension: string = '.md',
+    fetchConcurrency: number = 256
   ): Promise<FoamWorkspace> {
     const workspace = new FoamWorkspace(roots, defaultExtension);
     await Promise.all(providers.map(p => workspace.registerProvider(p)));
     const files = await dataStore.list();
-    await Promise.all(files.map(f => workspace.fetchAndSet(f)));
+    await mapWithConcurrency(files, fetchConcurrency, f =>
+      workspace.fetchAndSet(f)
+    );
     return workspace;
   }
 }

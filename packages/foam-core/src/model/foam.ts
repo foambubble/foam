@@ -29,7 +29,8 @@ export const bootstrap = async (
   parser: ResourceParser,
   initialProviders: ResourceProvider[],
   defaultExtension: string = '.md',
-  timingLogLevel: 'debug' | 'info' | 'off' = 'info'
+  timingLogLevel: 'debug' | 'info' | 'off' = 'info',
+  fetchConcurrency: number = 256
 ) => {
   const workspace = await withTimingAsync(
     () =>
@@ -37,28 +38,20 @@ export const bootstrap = async (
         roots,
         initialProviders,
         dataStore,
-        defaultExtension
+        defaultExtension,
+        fetchConcurrency
       ),
-    ms =>
-      timingLogLevel === 'off'
-        ? null
-        : Logger[timingLogLevel](`Workspace loaded in ${ms}ms`)
+    ms => (timingLogLevel === 'off' ? null : Logger[timingLogLevel](`Workspace loaded in ${ms}ms`))
   );
 
   const graph = withTiming(
     () => FoamGraph.fromWorkspace(workspace, true),
-    ms =>
-      timingLogLevel === 'off'
-        ? null
-        : Logger[timingLogLevel](`Graph loaded in ${ms}ms`)
+    ms => (timingLogLevel === 'off' ? null : Logger[timingLogLevel](`Graph loaded in ${ms}ms`))
   );
 
   const tags = withTiming(
     () => FoamTags.fromWorkspace(workspace, true),
-    ms =>
-      timingLogLevel === 'off'
-        ? null
-        : Logger[timingLogLevel](`Tags loaded in ${ms}ms`)
+    ms => (timingLogLevel === 'off' ? null : Logger[timingLogLevel](`Tags loaded in ${ms}ms`))
   );
 
   watcher?.onDidChange(async uri => {

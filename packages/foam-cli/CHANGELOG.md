@@ -1,5 +1,16 @@
 # Change Log
 
+## 0.43.0
+
+### Minor Changes
+
+- `foam query` now picks up the latest `@foam/core` changes:
+
+  - New `foam-query` source fields: `body`, `content`, and `section[Label]` ([#1654](https://github.com/foambubble/foam/issues/1654)).
+  - The `expression` filter has been replaced with a sandboxed `jexl` filter; queries using `expression` will no longer match and will log a warning — migrate by renaming to `jexl` (e.g. `resource.tags.length > 2` → `resource.tags|length > 2`, `===` → `==`).
+  - Parse-time filter warnings (rejected regex, unresolved link target, Jexl compile error, deprecated `expression` field) are now surfaced alongside query results instead of being silently logged.
+  - Workspace bootstrap limits the number of notes processed concurrently to avoid exhausting file descriptors on large workspaces (possible fix for [#1167](https://github.com/foambubble/foam/issues/1167)).
+
 ## 0.42.1
 
 ### Patch Changes

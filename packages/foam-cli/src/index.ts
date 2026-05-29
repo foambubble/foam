@@ -3,6 +3,7 @@ import { parsePublishCommandArgs, renderPublishHelp, runPublishCommand } from '.
 import { runListCommand } from './commands/list';
 import { runNoteCommand } from './commands/note';
 import { runLinksCommand } from './commands/links';
+import { runGraphCommand } from './commands/graph';
 import { runOutlineCommand } from './commands/outline';
 import { runDailyCommand } from './commands/daily';
 import { runLintCommand } from './commands/lint';
@@ -23,6 +24,7 @@ Commands:
   note        Show, create, move, delete, or get the id of a note
   outline     Show the heading structure of a note
   links       Show links to/from a note (alias: connections)
+  graph       Export the workspace link graph as JSON
   daily       Show or create the daily note for a date
   tag         List, rename, or search tags
   grep        Search note content (grep-style, no graph needed)
@@ -137,6 +139,9 @@ async function dispatch(
       case 'links':
       case 'connections': {
         return runLinksCommand(commandArgs, logger);
+      }
+      case 'graph': {
+        return runGraphCommand(commandArgs, logger);
       }
       case 'daily': {
         return runDailyCommand(commandArgs, logger);

@@ -3,6 +3,7 @@
 import markdownItRegex from 'markdown-it-regex';
 import { ResourceParser } from '@foam/core';
 import { FoamWorkspace } from '@foam/core';
+import type { WikilinkEmbedOptions } from './wikilink-embed';
 
 export const WIKILINK_EMBED_REGEX =
   /((?:(?:full|content)-(?:inline|card)|full|content|inline|card)?!\[\[[^[\]]+?\]\])/;
@@ -10,7 +11,8 @@ export const WIKILINK_EMBED_REGEX =
 export const markdownItWikilinkEmbed = (
   md: markdownit,
   workspace: FoamWorkspace,
-  parser: ResourceParser
+  parser: ResourceParser,
+  _options?: WikilinkEmbedOptions
 ) => {
   return md.use(markdownItRegex, {
     name: 'embed-wikilinks',

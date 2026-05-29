@@ -1,4 +1,52 @@
-import { QueryDescriptor, ResourceView } from '.';
+import {
+  QueryDescriptor,
+  ResourceView,
+  requiresSource,
+  DEFAULT_SELECT,
+  DEFAULT_LIST_SELECT,
+} from '.';
+import { RenderContext } from './render-context';
+import { URI } from '../model/uri';
+
+/**
+ * Markdown → HTML callback injected by the host. When omitted, markdown-bearing
+ * cells fall back to escaped raw text (CLI / MCP behaviour). `sourceUri`
+ * identifies the resource the markdown came from — used by adapters to
+ * rewrite intra-note links and to guard against rendering cycles.
+ */
+export interface MarkdownRenderOptions {
+  sourceUri?: URI;
+}
+export type MarkdownRenderer = (
+  markdown: string,
+  opts?: MarkdownRenderOptions
+) => string;
+
+function renderCell(
+  field: string,
+  value: unknown,
+  row: ResourceView,
+  renderMarkdown?: MarkdownRenderer,
+  context?: RenderContext
+): string {
+  if (value == null) return '';
+  if (renderMarkdown && requiresSource(field)) {
+    const sourceUri = row.uri;
+    const entered = context ? context.enter(sourceUri) : false;
+    if (context && !entered) {
+      return `<span class="foam-query-cycle">cycle: <code>${escapeHtml(
+        sourceUri.path
+      )}</code></span>`;
+    }
+    try {
+      return renderMarkdown(String(value), { sourceUri });
+    } finally {
+      if (entered) context!.exit(sourceUri);
+    }
+  }
+  if (Array.isArray(value)) return escapeHtml(value.join(', '));
+  return escapeHtml(String(value));
+}
 
 export function escapeHtml(text: string): string {
   return String(text)
@@ -24,43 +72,51 @@ export function noteLink(
   }
 }
 
+/** Title → basename → `<untitled>`, so a title link is never visibly empty. */
+function titleText(value: unknown, uriPath: string): string {
+  if (value != null && String(value).length > 0) return String(value);
+  const basename = uriPath.split('/').filter(Boolean).pop();
+  return basename && basename.length > 0 ? basename : '<untitled>';
+}
+
 function cellValue(
   field: string,
   value: unknown,
   row: ResourceView,
-  toRelativePath: (path: string) => string
+  toRelativePath: (path: string) => string,
+  renderMarkdown?: MarkdownRenderer,
+  context?: RenderContext
 ): string {
-  if (field === 'title' && typeof row.path === 'string' && row.path) {
-    return noteLink(String(value ?? ''), row.path, toRelativePath);
+  if (field === 'title') {
+    return noteLink(
+      titleText(value, row.uri.path),
+      row.uri.path,
+      toRelativePath
+    );
   }
-  if (Array.isArray(value)) return escapeHtml(value.join(', '));
-  if (value === undefined || value === null) return '';
-  return escapeHtml(String(value));
+  return renderCell(field, value, row, renderMarkdown, context);
 }
 
 export function renderList(
   results: ResourceView[],
   fields: string[],
-  toRelativePath: (path: string) => string
+  toRelativePath: (path: string) => string,
+  renderMarkdown?: MarkdownRenderer,
+  context?: RenderContext
 ): string {
   if (results.length === 0) {
     return '<p class="foam-query-empty">No results</p>';
   }
   const items = results
     .map(r => {
-      const path = typeof r.path === 'string' ? r.path : '';
+      const path = r.uri.path;
       const parts = fields
         .map(field => {
           const value = r[field];
           if (field === 'title') {
-            const text =
-              value != null ? String(value) : path.split('/').pop() ?? path;
-            return path
-              ? noteLink(text, path, toRelativePath)
-              : escapeHtml(text);
+            return noteLink(titleText(value, path), path, toRelativePath);
           }
-          if (Array.isArray(value)) return escapeHtml(value.join(', '));
-          return value != null ? escapeHtml(String(value)) : '';
+          return renderCell(field, value, r, renderMarkdown, context);
         })
         .filter(Boolean);
       return parts.length > 0 ? `<li>${parts.join(' · ')}</li>` : null;
@@ -76,7 +132,9 @@ export function renderList(
 export function renderTable(
   results: ResourceView[],
   fields: string[],
-  toRelativePath: (path: string) => string
+  toRelativePath: (path: string) => string,
+  renderMarkdown?: MarkdownRenderer,
+  context?: RenderContext
 ): string {
   if (results.length === 0) {
     return '<p class="foam-query-empty">No results</p>';
@@ -85,7 +143,17 @@ export function renderTable(
   const rows = results
     .map(r => {
       const cells = fields
-        .map(f => `<td>${cellValue(f, r[f], r, toRelativePath)}</td>`)
+        .map(
+          f =>
+            `<td>${cellValue(
+              f,
+              r[f],
+              r,
+              toRelativePath,
+              renderMarkdown,
+              context
+            )}</td>`
+        )
         .join('');
       return `<tr>${cells}</tr>`;
     })
@@ -111,7 +179,9 @@ export function renderCount(results: ResourceView[]): string {
 export function renderResults(
   results: ResourceView[],
   descriptor: QueryDescriptor,
-  toRelativePath: (path: string) => string
+  toRelativePath: (path: string) => string,
+  renderMarkdown?: MarkdownRenderer,
+  context?: RenderContext
 ): string {
   const format =
     descriptor.format ??
@@ -120,16 +190,20 @@ export function renderResults(
     case 'table':
       return renderTable(
         results,
-        descriptor.select ?? ['title', 'path'],
-        toRelativePath
+        descriptor.select ?? DEFAULT_SELECT,
+        toRelativePath,
+        renderMarkdown,
+        context
       );
     case 'count':
       return renderCount(results);
     default:
       return renderList(
         results,
-        descriptor.select ?? ['title'],
-        toRelativePath
+        descriptor.select ?? DEFAULT_LIST_SELECT,
+        toRelativePath,
+        renderMarkdown,
+        context
       );
   }
 }

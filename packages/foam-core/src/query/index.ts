@@ -5,6 +5,7 @@ import { FoamWorkspace } from '../model/workspace';
 import { FoamGraph } from '../model/graph';
 import { Logger } from '../utils/log';
 import { URI } from '../model/uri';
+import { stripFrontMatter } from '../utils/md';
 
 const queryJexl = new jexl.Jexl();
 queryJexl.addTransform('length', (v: unknown) =>
@@ -66,9 +67,15 @@ export interface QueryDescriptor {
   format?: 'table' | 'list' | 'count';
 }
 
-export type ResourceView = Record<string, unknown>;
+/**
+ * A row in a query result. The URI is structurally guaranteed — it's the
+ * resource's identity, present on every projected row regardless of the
+ * `select` clause. All other fields are user-selected.
+ */
+export type ResourceView = { uri: URI } & Record<string, unknown>;
 
-const DEFAULT_SELECT = ['title', 'path'];
+export const DEFAULT_SELECT = ['title', 'path'];
+export const DEFAULT_LIST_SELECT = ['title'];
 
 // --- Filter ---
 
@@ -313,6 +320,52 @@ function parseShorthand(
 
 // --- Projection ---
 
+/**
+ * Synchronous reader returning the raw markdown source of a resource.
+ * Injected by the host (VS Code, CLI, MCP) so the query layer stays
+ * independent of `IDataStore`'s async API. When omitted, source-derived
+ * fields (`body`, `content`, `section[...]`) resolve to `undefined`.
+ */
+export type SourceReader = (uri: URI) => string | null | undefined;
+
+const SECTION_FIELD_RE = /^section\[([^\]]+)\]$/;
+
+/**
+ * Returns true for fields whose value is derived from the resource's raw
+ * source text (`body`, `content`, `section[Label]`, and — eventually —
+ * `block[id]`). These fields require a `SourceReader` to resolve and are
+ * rendered as markdown rather than escaped as scalars. Centralised here so
+ * we add a new content-bearing field by editing one place.
+ */
+export function requiresSource(field: string): boolean {
+  return (
+    field === 'body' || field === 'content' || SECTION_FIELD_RE.test(field)
+  );
+}
+
+function stripH1Title(source: string): string {
+  const lines = source.split(/\r?\n/);
+  let i = 0;
+  while (i < lines.length && lines[i].trim() === '') i++;
+  if (i < lines.length && /^#\s+/.test(lines[i])) {
+    let next = i + 1;
+    if (next < lines.length && lines[next].trim() === '') next++;
+    return lines.slice(next).join('\n');
+  }
+  return source;
+}
+
+function getSectionContent(r: Resource, source: string, label: string): string | undefined {
+  // Case-sensitive: matches `Resource.findSection` so labels work the same way
+  // in `section[Foo]` selects as in `![[note#Foo]]` embeds.
+  const section = r.sections.find(s => s.label === label);
+  if (!section) return undefined;
+  // Section range is half-open at end.line; start.line is the heading row, so
+  // skip it.
+  const lines = source.split(/\r?\n/);
+  return lines.slice(section.range.start.line + 1, section.range.end.line).join('\n');
+}
+
 function buildFullView(r: Resource, graph: FoamGraph): Record<string, unknown> {
   return {
     title: r.title,
@@ -329,7 +382,26 @@ function buildFullView(r: Resource, graph: FoamGraph): Record<string, unknown> {
   };
 }
 
-function resolveField(full: Record<string, unknown>, field: string): unknown {
+function resolveField(
+  r: Resource,
+  full: Record<string, unknown>,
+  field: string,
+  getSource: () => string | undefined
+): unknown {
+  if (field === 'body') {
+    const src = getSource();
+    return src === undefined ? undefined : stripFrontMatter(src);
+  }
+  if (field === 'content') {
+    const src = getSource();
+    return src === undefined ? undefined : stripH1Title(stripFrontMatter(src));
+  }
+  const sectionMatch = SECTION_FIELD_RE.exec(field);
+  if (sectionMatch) {
+    const src = getSource();
+    if (src === undefined) return undefined;
+    return getSectionContent(r, src, sectionMatch[1]);
+  }
   const dot = field.indexOf('.');
   if (dot === -1) return full[field];
   const parent = full[field.slice(0, dot)];
@@ -340,10 +412,30 @@ function resolveField(full: Record<string, unknown>, field: string): unknown {
 function projectResource(
   r: Resource,
   graph: FoamGraph,
-  fields: string[]
+  fields: string[],
+  readSource?: SourceReader
 ): ResourceView {
   const full = buildFullView(r, graph);
-  return Object.fromEntries(fields.map(f => [f, resolveField(full, f)]));
+  const needsSource = fields.some(requiresSource);
+  let cached: string | undefined;
+  let cacheLoaded = false;
+  const getSource = (): string | undefined => {
+    if (!needsSource || !readSource) return undefined;
+    if (!cacheLoaded) {
+      const raw = readSource(r.uri);
+      cached = raw == null ? undefined : raw;
+      cacheLoaded = true;
+    }
+    return cached;
+  };
+  // `uri` is stamped on every row regardless of `select` — see the
+  // `ResourceView` type. Renderers rely on it to generate links and resolve
+  // source-derived cells without forcing the user to add `path` to `select`.
+  const projected: ResourceView = { uri: r.uri };
+  for (const f of fields) {
+    projected[f] = resolveField(r, full, f, getSource);
+  }
+  return projected;
 }
 
 // --- Sorting ---
@@ -397,7 +489,8 @@ export class QueryResult {
     private readonly workspace: FoamWorkspace,
     private readonly graph: FoamGraph,
     private readonly trusted: boolean,
-    filter?: QueryFilter
+    filter?: QueryFilter,
+    private readonly readSource?: SourceReader
   ) {
     this._descriptor = { filter };
   }
@@ -411,7 +504,8 @@ export class QueryResult {
       this.workspace,
       this.graph,
       this.trusted,
-      this._descriptor.filter
+      this._descriptor.filter,
+      this.readSource
     );
     c._descriptor = { ...this._descriptor };
     c._jsPredicates = [...this._jsPredicates];
@@ -459,21 +553,40 @@ export class QueryResult {
   }
 
   /**
-   * Executes the query and returns projected ResourceViews.
-   * JS predicates (.where()) are applied before projection/sort/paginate
-   * so they have access to all fields.
+   * Executes the query and returns projected ResourceViews. `.where(...)`
+   * predicates may reference source-derived fields, so they force the slow
+   * path: fetch the full view, filter, then sort/limit. Without `.where`,
+   * sort/offset/limit are pushed into `executeQuery` so source is read only
+   * for the surviving slice.
    */
   toArray(): ResourceView[] {
-    const baseDescriptor: QueryDescriptor = {
-      filter: this._descriptor.filter,
-      select: ALL_QUERY_FIELDS,
-    };
-    // Warnings are already logged via `Logger.warn` inside parseFilter; the
-    // fluent JS API surface stays narrow (no warning channel) — DQL renders
-    // get warnings through the executeQuery return value instead.
-    let { results } = executeQuery(baseDescriptor, this.workspace, this.graph, {
-      trusted: this.trusted,
-    });
+    const userSelect = this._descriptor.select ?? DEFAULT_SELECT;
+
+    if (this._jsPredicates.length === 0) {
+      return executeQuery(
+        {
+          filter: this._descriptor.filter,
+          select: userSelect,
+          sort: this._descriptor.sort,
+          offset: this._descriptor.offset,
+          limit: this._descriptor.limit,
+        },
+        this.workspace,
+        this.graph,
+        { trusted: this.trusted, readSource: this.readSource }
+      ).results;
+    }
+
+    const sourceDerived = userSelect.filter(requiresSource);
+    let results = executeQuery(
+      {
+        filter: this._descriptor.filter,
+        select: [...ALL_QUERY_FIELDS, ...sourceDerived],
+      },
+      this.workspace,
+      this.graph,
+      { trusted: this.trusted, readSource: this.readSource }
+    ).results;
 
     for (const pred of this._jsPredicates) {
       try {
@@ -496,8 +609,11 @@ export class QueryResult {
     if (this._descriptor.limit !== undefined)
       results = results.slice(0, this._descriptor.limit);
 
-    const fields = this._descriptor.select ?? DEFAULT_SELECT;
-    return results.map(r => Object.fromEntries(fields.map(f => [f, r[f]])));
+    return results.map(r => {
+      const view: ResourceView = { uri: r.uri };
+      for (const f of userSelect) view[f] = r[f];
+      return view;
+    });
   }
 }
 
@@ -507,7 +623,7 @@ export function executeQuery(
   query: QueryDescriptor,
   workspace: FoamWorkspace,
   graph: FoamGraph,
-  options: { trusted: boolean }
+  options: { trusted: boolean; readSource?: SourceReader }
 ): QueryExecutionResult {
   const { predicate, warnings } = parseFilter(
     query.filter,
@@ -517,14 +633,19 @@ export function executeQuery(
   );
   const fields = query.select ?? DEFAULT_SELECT;
 
-  let results = workspace
-    .list()
-    .filter(predicate)
-    .map(r => projectResource(r, graph, fields));
+  // Sort + offset + limit before reading source — otherwise a query with
+  // `select: [body]` over a broad filter would synchronously read every
+  // matched note. Sort keys can't be source-derived so this is safe.
+  const cheapFields = fields.filter(f => !requiresSource(f));
+  const matched = workspace.list().filter(predicate);
+
+  let slice = matched.map(r =>
+    projectResource(r, graph, cheapFields, undefined)
+  );
 
   if (query.sort) {
     const { field, direction } = parseSortDescriptor(query.sort);
-    results = [...results].sort((a, b) => {
+    slice = [...slice].sort((a, b) => {
       const cmp = compareValues(a[field], b[field]);
       return direction === 'desc' ? -cmp : cmp;
     });
@@ -532,12 +653,34 @@ export function executeQuery(
 
   const offset = query.offset ?? 0;
   if (offset > 0) {
-    results = results.slice(offset);
+    slice = slice.slice(offset);
+  }
+  if (query.limit !== undefined) {
+    slice = slice.slice(0, query.limit);
   }
 
-  if (query.limit !== undefined) {
-    results = results.slice(0, query.limit);
+  const sourceFields = fields.filter(requiresSource);
+  if (sourceFields.length === 0) {
+    return { results: slice, warnings };
   }
+
+  // Map keeps the row→Resource lookup at O(1) per surviving row.
+  const byPath = new Map<string, Resource>();
+  for (const r of matched) byPath.set(r.uri.path, r);
+
+  const results = slice.map(row => {
+    const resource = byPath.get(row.uri.path);
+    if (!resource) return row;
+    const sourceProjection = projectResource(
+      resource,
+      graph,
+      sourceFields,
+      options.readSource
+    );
+    const merged: ResourceView = { ...row };
+    for (const f of sourceFields) merged[f] = sourceProjection[f];
+    return merged;
+  });
 
   return { results, warnings };
 }

@@ -5,10 +5,15 @@ import {
   parseImageParameters,
   generateImageStyles,
   extractBlockContent,
+  withLinksRelativeToWorkspaceRoot,
 } from './wikilink-embed';
 import * as config from '../../config';
 import { createMarkdownParser } from '@foam/core';
-import { getRandomURI } from '../../../test/test-utils';
+import {
+  createTestNote,
+  createTestWorkspace,
+  getRandomURI,
+} from '../../../test/test-utils';
 
 describe('Wikilink Note Embedding', () => {
   afterEach(() => {
@@ -457,6 +462,51 @@ describe('Wikilink Note Embedding', () => {
       ({ noteScope, noteStyle } = retrieveNoteConfig('card'));
       expect(noteScope).toEqual('full');
       expect(noteStyle).toEqual('card');
+    });
+  });
+
+  describe('withLinksRelativeToWorkspaceRoot — fragment preservation', () => {
+    const parser = createMarkdownParser();
+
+    function makeWs() {
+      const noteA = createTestNote({
+        uri: '/ws/notes/alpha.md',
+        title: 'Alpha',
+        sections: ['Question'],
+      });
+      const noteB = createTestNote({
+        uri: '/ws/notes/beta.md',
+        title: 'Beta',
+      });
+      return createTestWorkspace().set(noteA).set(noteB);
+    }
+
+    it('preserves a section fragment on a rewritten wikilink', () => {
+      const ws = makeWs();
+      const noteUri = ws.list()[0].uri;
+      const text = 'See [[beta#Section]] for context.\n';
+      const out = withLinksRelativeToWorkspaceRoot(noteUri, text, parser, ws);
+      // The bare slug `beta` becomes the absolute path; the `#Section`
+      // fragment must survive.
+      expect(out).toContain('/ws/notes/beta.md#Section');
+      expect(out).not.toMatch(/\[\[beta\]\]/);
+    });
+
+    it('preserves a block anchor fragment on a rewritten wikilink', () => {
+      const ws = makeWs();
+      const noteUri = ws.list()[0].uri;
+      const text = 'See [[beta#^block1]] anchor.\n';
+      const out = withLinksRelativeToWorkspaceRoot(noteUri, text, parser, ws);
+      expect(out).toContain('/ws/notes/beta.md#^block1');
+    });
+
+    it('leaves links without a fragment unchanged in shape', () => {
+      const ws = makeWs();
+      const noteUri = ws.list()[0].uri;
+      const text = 'See [[beta]].\n';
+      const out = withLinksRelativeToWorkspaceRoot(noteUri, text, parser, ws);
+      expect(out).toContain('/ws/notes/beta.md');
+      expect(out).not.toContain('#');
     });
   });
 });

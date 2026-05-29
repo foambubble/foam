@@ -72,11 +72,16 @@ export { Resolver } from './templates/variable-resolver';
 export type { VariableProvider } from './templates/variable-resolver';
 
 // Query
-export type { QueryFilter, QueryDescriptor, ResourceView } from './query/index';
-export { parseFilter, QueryResult, executeQuery, ALL_QUERY_FIELDS } from './query/index';
+export type { QueryFilter, QueryDescriptor, ResourceView, SourceReader } from './query/index';
+export { parseFilter, QueryResult, executeQuery, ALL_QUERY_FIELDS, requiresSource } from './query/index';
 export { renderDqlQuery } from './query/dql';
+export type { RenderDqlQueryOptions } from './query/dql';
 export { renderJsQuery } from './query/js';
+export type { RenderJsQueryOptions } from './query/js';
 export { escapeHtml, noteLink, renderList, renderTable, renderCount, renderResults } from './query/html';
+export type { MarkdownRenderer, MarkdownRenderOptions } from './query/html';
+export type { RenderContext } from './query/render-context';
+export { createRenderContext } from './query/render-context';
 
 // Config
 export type { IFoamConfig } from './config';

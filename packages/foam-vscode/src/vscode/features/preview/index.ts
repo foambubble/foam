@@ -13,6 +13,7 @@ import { default as markdownItFoamQuery } from './foam-query-renderer';
 import markdownItFootnote from 'markdown-it-footnote';
 import { fromVsCodeUri, toVsCodeUri } from '../../utils/vsc-utils';
 import { URI } from '@foam/core';
+import { createRenderContext } from '@foam/core';
 
 export default async function activate(
   context: vscode.ExtensionContext,
@@ -40,29 +41,37 @@ export default async function activate(
       const graph = foam.graph;
       const parser = foam.services.parser;
 
-      // Used to resolve self-referencing embeds (![[#section]], ![[#^blockid]]).
-      // The active text editor is the most reliable signal when the user
-      // initiated the preview — clicking into the preview panel can clear
-      // `activeTextEditor`, but that's a secondary case the user can work
-      // around by clicking back into the source.
+      // One render context per `extendMarkdownIt` call — shared between the
+      // embed and query plugins so embed↔query cycles get caught.
+      const renderContext = createRenderContext();
+
+      // For `$current` in foam-query and for self-fragment embeds. The
+      // context's top wins so a foam-query inside note B's body sees B,
+      // not the active editor's note.
       const getCurrentResource = () => {
+        const stack = renderContext.current();
+        if (stack.length > 0) {
+          return ws.find(stack[stack.length - 1]) ?? null;
+        }
         const editor = vscode.window.activeTextEditor;
         return editor ? ws.find(fromVsCodeUri(editor.document.uri)) : null;
       };
 
-      // Factory used by wikilink-embed to render embedded note content in a
-      // fresh markdown-it instance — avoids re-entering the outer `md`
-      // mid-render (which corrupts stateful plugins like VS Code's
-      // source-map). The inner instance gets the same Foam plugin pipeline.
+      // Inherit the outer md's html setting (VS Code tracks
+      // `markdown.preview.unsafe` there) so source-derived cells respect the
+      // same lockdown as the rest of the preview.
+      const outerHtmlOption = (md as { options?: { html?: boolean } }).options
+        ?.html ?? true;
+
       const buildFoamPipeline = (target: markdownit): markdownit => {
         let r = escapeWikilinkPipes(target);
         r = r.use(markdownItFootnote);
-        r = markdownItWikilinkEmbed(r, ws, parser, getCurrentResource, () =>
-          // html: true so the card/inline embed wrappers (which inject
-          // `<div class="embed-container-note">...`) survive the inner
-          // render as raw HTML rather than being escaped to text.
-          buildFoamPipeline(MarkdownIt({ html: true }))
-        );
+        r = markdownItWikilinkEmbed(r, ws, parser, {
+          getCurrentResource,
+          createInnerMd: () =>
+            buildFoamPipeline(MarkdownIt({ html: outerHtmlOption })),
+          renderContext,
+        });
         r = markdownItFoamTags(r, ws);
         r = markdownItWikilinkNavigation(r, ws);
         r = markdownItRemoveLinkReferences(r, ws);
@@ -75,6 +84,10 @@ export default async function activate(
               false
             ),
           getCurrentResource,
+          createInnerMd: () =>
+            buildFoamPipeline(MarkdownIt({ html: outerHtmlOption })),
+          parser,
+          renderContext,
         });
         return r;
       };

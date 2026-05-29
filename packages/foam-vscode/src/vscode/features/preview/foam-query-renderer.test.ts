@@ -2,6 +2,8 @@ import MarkdownIt from 'markdown-it';
 import { FoamWorkspace } from '@foam/core';
 import { FoamGraph } from '@foam/core';
 import { URI } from '@foam/core';
+import { createMarkdownParser } from '@foam/core';
+import { createRenderContext } from '@foam/core';
 import { createTestNote, createTestWorkspace } from '../../../test/test-utils';
 import { markdownItFoamQuery } from './foam-query-renderer';
 
@@ -47,6 +49,7 @@ describe('markdownItFoamQuery', () => {
   const md = markdownItFoamQuery(MarkdownIt(), ws, graph, {
     isTrusted: () => true,
     toRelativePath,
+    renderContext: createRenderContext(),
   });
 
   describe('placeholder — empty blocks', () => {
@@ -398,6 +401,7 @@ describe('markdownItFoamQuery', () => {
         isTrusted: () => true,
         toRelativePath,
         getCurrentResource: () => targetNote,
+        renderContext: createRenderContext(),
       });
       const result = mdWithCurrent.render(
         '```foam-query\nfilter:\n  links_to: "$current"\nformat: count\n```'
@@ -410,6 +414,7 @@ describe('markdownItFoamQuery', () => {
         isTrusted: () => true,
         toRelativePath,
         getCurrentResource: () => linkingNote,
+        renderContext: createRenderContext(),
       });
       const result = mdWithCurrent.render(
         '```foam-query\nfilter:\n  links_from: "$current"\nformat: count\n```'
@@ -438,6 +443,7 @@ describe('markdownItFoamQuery', () => {
         isTrusted: () => true,
         toRelativePath,
         getCurrentResource: () => noteA,
+        renderContext: createRenderContext(),
       });
       const result = mdWithCurrent.render(
         '```foam-query-js\nrender(foam.current.path);\n```'
@@ -458,6 +464,7 @@ describe('markdownItFoamQuery', () => {
         isTrusted: () => true,
         toRelativePath,
         getCurrentResource: () => targetNote,
+        renderContext: createRenderContext(),
       });
       const result = mdWithCurrent.render(
         "```foam-query-js\nrender(foam.pages({links_to: foam.current}).format('count'));\n```"
@@ -544,11 +551,298 @@ describe('markdownItFoamQuery', () => {
       const untrustedMd = markdownItFoamQuery(MarkdownIt(), ws, graph, {
         isTrusted: () => false,
         toRelativePath,
+        renderContext: createRenderContext(),
       });
       const result = untrustedMd.render(
         '```foam-query-js\nrender("hello");\n```'
       );
       expect(result).toContain('foam-query-untrusted');
+    });
+  });
+
+  // End-to-end coverage for `body` / `content` / `section[Label]` selection
+  // through the real fence pipeline. Source reads and inner-markdown rendering
+  // are dependency-injected so the test doesn't touch the filesystem.
+
+  describe('source-derived fields end to end', () => {
+    // Build a fresh workspace with real (parsed-from-markdown) notes so the
+    // section ranges line up with the source we hand back from `readSource`.
+    const parser = createMarkdownParser();
+    const aSource = [
+      '---',
+      'status: to_ask',
+      '---',
+      '# Alpha',
+      '',
+      'See [[beta]] for context.',
+      '',
+      '## Question',
+      '',
+      'What is X?',
+      '',
+    ].join('\n');
+    const bSource = '# Beta\n\nbeta body\n';
+
+    const alphaUri = URI.file('/test-workspace/notes/alpha.md');
+    const betaUri = URI.file('/test-workspace/notes/beta.md');
+    const parsedA = parser.parse(alphaUri, aSource);
+    const parsedB = parser.parse(betaUri, bSource);
+    const ws2 = new FoamWorkspace().set(parsedA).set(parsedB);
+    const graph2 = FoamGraph.fromWorkspace(ws2, false);
+
+    const sources: Record<string, string> = {
+      [alphaUri.path]: aSource,
+      [betaUri.path]: bSource,
+    };
+    const readSource = (uri: URI) => sources[uri.path] ?? null;
+
+    // Toy inner markdown: emits identifiable wrappers without depending on
+    // the real markdown-it Foam pipeline.
+    const createInnerMd = () =>
+      ({
+        render: (text: string) => `<INNER>${text}</INNER>`,
+      } as unknown as MarkdownIt);
+
+    const mdWithSource = markdownItFoamQuery(MarkdownIt(), ws2, graph2, {
+      isTrusted: () => true,
+      toRelativePath,
+      readSource,
+      createInnerMd,
+      renderContext: createRenderContext(),
+    });
+
+    it('renders `body` cells through the inner markdown-it instance', () => {
+      const result = mdWithSource.render(
+        '```foam-query\nfilter:\n  path: alpha\nselect: [body]\n```'
+      );
+      // The toy renderer wraps cell content with <INNER>…</INNER>, which is
+      // only emitted when the cell was routed through `renderMarkdown`.
+      expect(result).toContain('<INNER>');
+      expect(result).toContain('# Alpha');
+      // Frontmatter must not leak into the rendered cell.
+      expect(result).not.toContain('status: to_ask');
+    });
+
+    it('renders `content` cells with the H1 stripped', () => {
+      const result = mdWithSource.render(
+        '```foam-query\nfilter:\n  path: alpha\nselect: [title, content]\n```'
+      );
+      expect(result).toContain('<INNER>');
+      // `content` removes the H1 line.
+      expect(result).not.toContain('<INNER># Alpha');
+      expect(result).toContain('See [[beta]] for context.');
+    });
+
+    it('renders `section[Label]` cells with the heading stripped (case-sensitive match)', () => {
+      const result = mdWithSource.render(
+        "```foam-query\nfilter:\n  path: alpha\nselect:\n  - 'section[Question]'\n```"
+      );
+      expect(result).toContain('What is X?');
+      expect(result).not.toContain('## Question');
+    });
+
+    it('rewrites wikilinks inside source-derived cells to absolute workspace paths', () => {
+      // The rendered `body` of /alpha.md contains `[[beta]]`. When this cell
+      // is rendered from somewhere else in the preview, the link target must
+      // resolve against alpha's location, not the surrounding page's. The
+      // rewrite stage converts `[[beta]]` to a workspace-absolute reference
+      // before the inner markdown-it sees it.
+      const captured: string[] = [];
+      const captureInnerMd = () =>
+        ({
+          render: (text: string) => {
+            captured.push(text);
+            return text;
+          },
+        } as unknown as MarkdownIt);
+
+      const mdWithRewrite = markdownItFoamQuery(MarkdownIt(), ws2, graph2, {
+        isTrusted: () => true,
+        toRelativePath,
+        readSource,
+        createInnerMd: captureInnerMd,
+        parser,
+        renderContext: createRenderContext(),
+      });
+
+      mdWithRewrite.render(
+        '```foam-query\nfilter:\n  path: alpha\nselect: [body]\n```'
+      );
+
+      // Exactly one cell rendered through the inner md (the body of alpha).
+      expect(captured).toHaveLength(1);
+      // The original `[[beta]]` slug should have been rewritten to point at
+      // beta's absolute path inside the workspace.
+      expect(captured[0]).not.toContain('[[beta]]');
+      expect(captured[0]).toContain('/notes/beta.md');
+    });
+
+    it('detects a self-referencing query cycle and emits a warning instead of recursing', () => {
+      // alpha's body contains a foam-query that matches alpha itself. The
+      // outer render asks for alpha's body; the inner render of that body
+      // would try to render alpha's body again, which would loop forever
+      // without cycle protection.
+      const cyclicSource = [
+        '# Alpha',
+        '',
+        '```foam-query',
+        'filter:',
+        '  path: alpha',
+        'select: [body]',
+        '```',
+        '',
+      ].join('\n');
+      const cyclicSources = { [alphaUri.path]: cyclicSource };
+      const cyclicReadSource = (uri: URI) => cyclicSources[uri.path] ?? null;
+
+      const parsedAlpha = parser.parse(alphaUri, cyclicSource);
+      const wsCyc = new FoamWorkspace().set(parsedAlpha);
+      const graphCyc = FoamGraph.fromWorkspace(wsCyc, false);
+
+      // Inner md gets the *same* query plugin so the recursion path is real,
+      // and the *same* RenderContext so the outer push is visible inside.
+      // Without a shared context the cycle detection wouldn't trip.
+      const sharedContext = createRenderContext();
+      const buildPlugin = () =>
+        markdownItFoamQuery(MarkdownIt(), wsCyc, graphCyc, {
+          isTrusted: () => true,
+          toRelativePath,
+          readSource: cyclicReadSource,
+          createInnerMd: buildPlugin,
+          parser,
+          renderContext: sharedContext,
+        });
+
+      const result = buildPlugin().render(
+        '```foam-query\nfilter:\n  path: alpha\nselect: [body]\n```'
+      );
+
+      // Cycle warning was emitted instead of overflowing the stack.
+      expect(result).toContain('foam-query-cycle');
+      expect(result).toContain(alphaUri.path);
+    });
+
+    it('a query inside a source-derived cell sees the source note as `$current`, not the outer page', () => {
+      // Setup: note alpha has a query body that asks for notes linking to
+      // `$current` (i.e. linking to alpha). Note gamma links to alpha. When
+      // the outer render returns alpha (via the title query), alpha's body
+      // is rendered through the inner md, and inside that body the inner
+      // query must see alpha as `$current` so it finds gamma.
+      //
+      // Without the fix, `$current` would resolve to whatever the outer
+      // `getCurrentResource` returns (we pass `null`) and the inner query
+      // would emit "no current note" warnings instead of finding gamma.
+      // alpha's body contains a foam-query whose `$current` placeholder
+      // should resolve to alpha when the inner pipeline renders this body.
+      const alphaSrc = [
+        '# Alpha',
+        '',
+        '```foam-query',
+        'filter:',
+        '  links_to: $current',
+        'select: [title]',
+        '```',
+        '',
+      ].join('\n');
+      // Use `createTestNote` so the workspace has a provider and `FoamGraph`
+      // can resolve links — we only need the link wiring here, not real
+      // section parsing.
+      const alphaNote = createTestNote({
+        uri: '/test-workspace/cur-alpha.md',
+        title: 'Alpha',
+      });
+      const gammaNote = createTestNote({
+        uri: '/test-workspace/cur-gamma.md',
+        title: 'Gamma',
+        links: [{ slug: 'cur-alpha' }],
+      });
+      const wsCur = createTestWorkspace().set(alphaNote).set(gammaNote);
+      const graphCur = FoamGraph.fromWorkspace(wsCur, false);
+
+      const sources: Record<string, string> = {
+        [alphaNote.uri.path]: alphaSrc,
+      };
+      const sharedContext = createRenderContext();
+
+      // `getCurrentResource` resolves from the context first (matches the
+      // production wiring in features/preview/index.ts) and otherwise
+      // returns null — there is no outer "active editor" in this test.
+      const getCurrent = () => {
+        const stack = sharedContext.current();
+        if (stack.length > 0) {
+          return wsCur.find(stack[stack.length - 1]) ?? null;
+        }
+        return null;
+      };
+
+      const buildPlugin = () =>
+        markdownItFoamQuery(MarkdownIt(), wsCur, graphCur, {
+          isTrusted: () => true,
+          toRelativePath,
+          readSource: (uri: URI) => sources[uri.path] ?? null,
+          createInnerMd: buildPlugin,
+          parser,
+          renderContext: sharedContext,
+          getCurrentResource: getCurrent,
+        });
+
+      const result = buildPlugin().render(
+        '```foam-query\nfilter:\n  path: cur-alpha\nselect: [body]\n```'
+      );
+
+      // Inner query finds gamma because `$current` resolved to alpha.
+      expect(result).toContain('Gamma');
+      // Should NOT contain the "no current note" warning.
+      expect(result).not.toContain('no note is currently active');
+    });
+
+    it('when the inner md has html disabled, raw HTML in a body cell is escaped instead of injected', () => {
+      // Security guard: a query cell renders another note's source through
+      // the inner markdown-it. If the host built the inner md with `html:
+      // false` (mirroring the user's `markdown.preview.unsafe` lockdown),
+      // raw `<script>` in a note's body must come out escaped — not as a
+      // live DOM node — even when the cell is selected via `body`.
+      const safeSrc = '# Alpha\n\n<script>alert(1)</script>\n';
+      const safeSources = { [alphaUri.path]: safeSrc };
+      const parsedSafe = parser.parse(alphaUri, safeSrc);
+      const wsSafe = new FoamWorkspace().set(parsedSafe);
+      const graphSafe = FoamGraph.fromWorkspace(wsSafe, false);
+      // Build the inner md with html: false (real markdown-it instance so
+      // the html option is honoured by the renderer).
+      const safeInnerMd = () => MarkdownIt({ html: false });
+      const mdSafe = markdownItFoamQuery(MarkdownIt(), wsSafe, graphSafe, {
+        isTrusted: () => true,
+        toRelativePath,
+        readSource: (uri: URI) => safeSources[uri.path] ?? null,
+        createInnerMd: safeInnerMd,
+        parser,
+        renderContext: createRenderContext(),
+      });
+
+      const html = mdSafe.render(
+        '```foam-query\nfilter:\n  path: alpha\nselect: [body]\n```'
+      );
+      // The literal `<script>` must not appear as raw HTML — it should be
+      // escaped to `&lt;script&gt;` by the inner markdown-it.
+      expect(html).not.toContain('<script>');
+      expect(html).toContain('&lt;script&gt;');
+    });
+
+    it('falls back to escaped raw markdown when createInnerMd is not provided', () => {
+      const mdWithoutInner = markdownItFoamQuery(MarkdownIt(), ws2, graph2, {
+        isTrusted: () => true,
+        toRelativePath,
+        readSource,
+        renderContext: createRenderContext(),
+        // no createInnerMd
+      });
+      const result = mdWithoutInner.render(
+        "```foam-query\nfilter:\n  path: alpha\nselect: [body]\n```"
+      );
+      expect(result).not.toContain('<INNER>');
+      // Raw markdown shown escaped — the `#` survives but no HTML tags emitted
+      // by the cell.
+      expect(result).toContain('# Alpha');
     });
   });
 });

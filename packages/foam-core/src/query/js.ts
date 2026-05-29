@@ -3,10 +3,16 @@ import { FoamWorkspace } from '../model/workspace';
 import { FoamGraph } from '../model/graph';
 import { Logger } from '../utils/log';
 import { URI } from '../model/uri';
-import { QueryFilter, QueryResult } from '.';
+import { QueryFilter, QueryResult, SourceReader, requiresSource } from '.';
 import { toSlug } from '../utils/slug';
 import dayjs from 'dayjs';
-import { escapeHtml, renderList, renderResults } from './html';
+import {
+  escapeHtml,
+  renderList,
+  renderResults,
+  MarkdownRenderer,
+} from './html';
+import { RenderContext } from './render-context';
 
 const EXECUTION_TIMEOUT = 10_000;
 
@@ -38,14 +44,31 @@ render(foam.pages('#my-tag').sortBy('title').format('list'));
 <p>Read the full documentation <a href="https://github.com/foambubble/foam/blob/main/docs/user/features/foam-queries.md">here</a></p>
 </div>`;
 
+export interface RenderJsQueryOptions {
+  workspace: FoamWorkspace;
+  graph: FoamGraph;
+  trusted: boolean;
+  toRelativePath: (path: string) => string;
+  currentResource?: URI | null;
+  readSource?: SourceReader;
+  renderMarkdown?: MarkdownRenderer;
+  context?: RenderContext;
+}
+
 export function renderJsQuery(
   code: string,
-  workspace: FoamWorkspace,
-  graph: FoamGraph,
-  trusted: boolean,
-  toRelativePath: (path: string) => string,
-  currentResource?: URI | null
+  opts: RenderJsQueryOptions
 ): string {
+  const {
+    workspace,
+    graph,
+    trusted,
+    toRelativePath,
+    currentResource,
+    readSource,
+    renderMarkdown,
+    context,
+  } = opts;
   if (code.trim() === '') {
     return JS_PLACEHOLDER;
   }
@@ -62,23 +85,21 @@ export function renderJsQuery(
       desc.format ?? (desc.select && desc.select.length > 1 ? 'table' : 'list');
     if (format === 'list') {
       const listFields = desc.select ?? ['title'];
-      const needsPath =
-        listFields.includes('title') && !listFields.includes('path');
-      const data = needsPath
-        ? qr.select([...listFields, 'path']).toArray()
-        : qr.select(listFields).toArray();
-      return renderList(data, listFields, toRelativePath);
+      return renderList(
+        qr.select(listFields).toArray(),
+        listFields,
+        toRelativePath,
+        renderMarkdown,
+        context
+      );
     }
-    // Ensure path is fetched for link generation when title is selected,
-    // but pass the original descriptor to renderResults so path isn't shown as a column.
-    const needsPath =
-      desc.select &&
-      desc.select.includes('title') &&
-      !desc.select.includes('path');
-    const results = needsPath
-      ? qr.select([...desc.select, 'path']).toArray()
-      : qr.toArray();
-    return renderResults(results, desc, toRelativePath);
+    return renderResults(
+      qr.toArray(),
+      desc,
+      toRelativePath,
+      renderMarkdown,
+      context
+    );
   };
 
   const render = (value: QueryResult | string | undefined | null) => {
@@ -118,7 +139,13 @@ export function renderJsQuery(
     render,
     foam: {
       pages: (filter?: QueryFilter | string) =>
-        new QueryResult(workspace, graph, trusted, filter as QueryFilter),
+        new QueryResult(
+          workspace,
+          graph,
+          trusted,
+          filter as QueryFilter,
+          readSource
+        ),
       current: null as URI | null,
     },
   });

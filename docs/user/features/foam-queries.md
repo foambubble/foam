@@ -105,9 +105,12 @@ You can select these fields:
 - `aliases`
 - `sections`
 - `blocks`
-- `properties`
+- `properties` (use `properties.<name>` to pick one)
 - `backlink-count`
 - `outlink-count`
+- `body` — the full note text (frontmatter removed, H1 title kept), rendered as markdown
+- `content` — same as `body` but without the H1 title; useful when the title is already shown in another column
+- `section[Label]` — the content of the named section (heading removed), rendered as markdown
 
 Example table:
 
@@ -119,6 +122,38 @@ sort: backlink-count DESC
 format: table
 ```
 ````
+
+### Including note content in results
+
+To show the full text of each matching note, select `body` or `content`:
+
+````markdown
+```foam-query
+filter:
+  jexl: "resource.properties.status == 'to_ask'"
+select: [title, body]
+```
+````
+
+To show just a named section, use `section[Label]`. Labels may contain spaces:
+
+````markdown
+```foam-query
+filter:
+  jexl: "resource.properties.status == 'to_ask'"
+format: table
+select:
+  - title
+  - section[Question]
+  - properties.status
+```
+````
+
+When you write `select:` as a block sequence (each field on its own line, prefixed with `-`), you can use `section[My Label]` directly. If you use the inline form `select: [...]`, YAML treats `[` and `]` as collection delimiters, so quote the value: `select: [title, 'section[My Label]']`.
+
+Section labels are matched **case-sensitively** — `section[Question]` will not match a heading written `## question`.
+
+> `body`, `content`, and `section[...]` aren't supported in VS Code Web — you'll see an inline warning in their place. Everything else works.
 
 ## Count Queries
 
@@ -179,6 +214,8 @@ Available builder methods:
 - `toArray()`: return results as a plain array for use in custom logic
 
 Call `render(...)` to show output in the preview. You can pass a query builder or a plain string.
+
+> Using `.where` together with `body`/`content`/`section[...]` is slow on large workspaces — narrow your results with a regular `foam-query` filter first when you can.
 
 ## Trust And Limitations
 

@@ -2,6 +2,7 @@
 import MarkdownIt from 'markdown-it';
 import { FoamWorkspace } from '@foam/core';
 import { createMarkdownParser } from '@foam/core';
+import { createRenderContext } from '@foam/core';
 import {
   createFile,
   deleteFile,
@@ -25,7 +26,9 @@ describe('Displaying included notes in preview', () => {
       CONFIG_EMBED_NOTE_TYPE,
       'full-inline',
       () => {
-        const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser);
+        const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser, {
+          renderContext: createRenderContext(),
+        });
 
         expect(
           md.render(`This is the root node. 
@@ -52,7 +55,9 @@ describe('Displaying included notes in preview', () => {
       CONFIG_EMBED_NOTE_TYPE,
       'full-card',
       () => {
-        const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser);
+        const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser, {
+          renderContext: createRenderContext(),
+        });
 
         const res = md.render(`This is the root node. ![[note-a]]`);
         expect(res).toContain('This is the root node');
@@ -81,7 +86,9 @@ This is the third section of note E
     );
     const parser = createMarkdownParser([]);
     const ws = new FoamWorkspace().set(parser.parse(note.uri, note.content));
-    const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser);
+    const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser, {
+          renderContext: createRenderContext(),
+        });
 
     await withModifiedFoamConfiguration(
       CONFIG_EMBED_NOTE_TYPE,
@@ -124,7 +131,9 @@ This is the third section of note E
       CONFIG_EMBED_NOTE_TYPE,
       'full-card',
       () => {
-        const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser);
+        const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser, {
+          renderContext: createRenderContext(),
+        });
 
         const res = md.render(
           `This is the root node. ![[note-e-container#Section 3]]`
@@ -155,7 +164,9 @@ This is the first section of note E`,
       CONFIG_EMBED_NOTE_TYPE,
       'content-inline',
       () => {
-        const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser);
+        const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser, {
+          renderContext: createRenderContext(),
+        });
 
         expect(
           md.render(`This is the root node. 
@@ -189,7 +200,9 @@ This is the first section of note E
       CONFIG_EMBED_NOTE_TYPE,
       'content-card',
       () => {
-        const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser);
+        const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser, {
+          renderContext: createRenderContext(),
+        });
 
         const res = md.render(`This is the root node. ![[note-e.md]]`);
 
@@ -224,7 +237,9 @@ This is the first subsection of note E
       CONFIG_EMBED_NOTE_TYPE,
       'content-inline',
       () => {
-        const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser);
+        const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser, {
+          renderContext: createRenderContext(),
+        });
 
         expect(
           md.render(`This is the root node. 
@@ -260,7 +275,9 @@ This is the first subsection of note E`,
       CONFIG_EMBED_NOTE_TYPE,
       'content-inline',
       () => {
-        const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser);
+        const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser, {
+          renderContext: createRenderContext(),
+        });
 
         expect(
           md.render(`This is the root node. 
@@ -293,7 +310,9 @@ This is the third section of note E
     );
     const parser = createMarkdownParser([]);
     const ws = new FoamWorkspace().set(parser.parse(note.uri, note.content));
-    const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser);
+    const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser, {
+          renderContext: createRenderContext(),
+        });
 
     await withModifiedFoamConfiguration(
       CONFIG_EMBED_NOTE_TYPE,
@@ -333,7 +352,9 @@ This is the second section of note E
     );
     const parser = createMarkdownParser([]);
     const ws = new FoamWorkspace().set(parser.parse(note.uri, note.content));
-    const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser);
+    const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser, {
+          renderContext: createRenderContext(),
+        });
 
     await withModifiedFoamConfiguration(
       CONFIG_EMBED_NOTE_TYPE,
@@ -357,7 +378,8 @@ content-card![[note-e#Section 2]]`);
     const md = markdownItWikilinkEmbed(
       MarkdownIt(),
       new FoamWorkspace(),
-      parser
+      parser,
+      { renderContext: createRenderContext() }
     );
 
     expect(md.render(`This is the root node. ![[non-existing-note]]`)).toMatch(
@@ -377,7 +399,9 @@ content-card![[note-e#Section 2]]`);
       CONFIG_EMBED_NOTE_TYPE,
       'full-inline',
       () => {
-        const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser);
+        const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser, {
+          renderContext: createRenderContext(),
+        });
         expect(md.render(`This is the root node. ![[note]]`)).toMatch(
           `<p>This is the root node. <p>This is the text of note A which includes ![[does-not-exist]]</p>
 </p>`
@@ -405,7 +429,9 @@ content-card![[note-e#Section 2]]`);
       CONFIG_EMBED_NOTE_TYPE,
       'full-card',
       () => {
-        const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser);
+        const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser, {
+          renderContext: createRenderContext(),
+        });
         const res = md.render(noteBText);
 
         expect(res).toContain('This is the text of note B which includes');
@@ -416,6 +442,42 @@ content-card![[note-e#Section 2]]`);
 
     await deleteFile(noteA);
     await deleteFile(noteB);
+  });
+
+  it('refuses to recurse into an embed of a URI already on the shared render context', async () => {
+    // Simulates the case where another plugin (e.g. foam-query rendering a
+    // `body` cell for note A) has already pushed A onto the context. The
+    // embed plugin must see that A is being rendered, emit a cycle warning,
+    // and not recursively render A's body again. Without this, an A→body
+    // containing ![[A]] would overflow the stack.
+    const noteA = await createFile('Body of A — ![[note-a]]', [
+      'preview',
+      'note-a.md',
+    ]);
+    const ws = new FoamWorkspace([noteA.uri.getDirectory()]).set(
+      parser.parse(noteA.uri, noteA.content)
+    );
+
+    const ctx = createRenderContext();
+    ctx.enter(noteA.uri); // pre-push, as if a query were rendering A's body
+
+    await withModifiedFoamConfiguration(
+      CONFIG_EMBED_NOTE_TYPE,
+      'full-card',
+      () => {
+        const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser, {
+          renderContext: ctx,
+        });
+        const res = md.render('![[note-a]]');
+
+        // The embed must emit a cycle warning, not the note's body again.
+        expect(res).toContain('Cyclic link detected for wikilink');
+        // The body should NOT appear inside the embed's output.
+        expect(res).not.toContain('Body of A');
+      }
+    );
+
+    await deleteFile(noteA);
   });
 
   it('should render only the block content when embedding a block anchor in full inline mode', async () => {
@@ -434,7 +496,9 @@ Third paragraph`,
       CONFIG_EMBED_NOTE_TYPE,
       'full-inline',
       () => {
-        const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser);
+        const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser, {
+          renderContext: createRenderContext(),
+        });
         const res = md.render(`![[note-with-block#^target-block]]`);
         expect(res).toContain('Second paragraph');
         expect(res).not.toContain('First paragraph');
@@ -463,7 +527,9 @@ Third paragraph`,
       CONFIG_EMBED_NOTE_TYPE,
       'content-inline',
       () => {
-        const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser);
+        const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser, {
+          renderContext: createRenderContext(),
+        });
         const res = md.render(`![[note-with-block-content#^target-block]]`);
         expect(res).toContain('Second paragraph');
         expect(res).not.toContain('First paragraph');
@@ -492,12 +558,10 @@ Content of section two.`,
       CONFIG_EMBED_NOTE_TYPE,
       'full-inline',
       () => {
-        const md = markdownItWikilinkEmbed(
-          MarkdownIt(),
-          ws,
-          parser,
-          () => parsedNote
-        );
+        const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser, {
+          getCurrentResource: () => parsedNote,
+          renderContext: createRenderContext(),
+        });
         const res = md.render(`Intro. ![[#Section 2]]`);
         expect(res).toContain('Content of section two');
         expect(res).not.toContain('Content of section one');
@@ -524,12 +588,10 @@ Third paragraph`,
       CONFIG_EMBED_NOTE_TYPE,
       'full-inline',
       () => {
-        const md = markdownItWikilinkEmbed(
-          MarkdownIt(),
-          ws,
-          parser,
-          () => parsedNote
-        );
+        const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser, {
+          getCurrentResource: () => parsedNote,
+          renderContext: createRenderContext(),
+        });
         const res = md.render(`Intro. ![[#^self-block]]`);
         expect(res).toContain('Target block');
         expect(res).not.toContain('First paragraph');
@@ -578,12 +640,10 @@ The actual target block in B ^target
         // Active editor is A — that's the only thing getCurrentResource
         // can see. The embed of B must establish B as the current-note
         // context for resolving B's `![[#^target]]`.
-        const md = markdownItWikilinkEmbed(
-          MarkdownIt(),
-          ws,
-          localParser,
-          () => parsedA
-        );
+        const md = markdownItWikilinkEmbed(MarkdownIt(), ws, localParser, {
+          getCurrentResource: () => parsedA,
+          renderContext: createRenderContext(),
+        });
         const res = md.render(noteA.content);
         expect(res).toContain('The actual target block in B');
         // The self-ref inside B must NOT fall back to A's context.
@@ -638,13 +698,11 @@ A paragraph block ^target
           return inner;
         };
 
-        markdownItWikilinkEmbed(
-          outerMd,
-          ws,
-          localParser,
-          () => parsedSource,
-          createInnerMd
-        );
+        markdownItWikilinkEmbed(outerMd, ws, localParser, {
+          getCurrentResource: () => parsedSource,
+          createInnerMd,
+          renderContext: createRenderContext(),
+        });
 
         const res = outerMd.render(`Outer paragraph. ![[source#^target]]`);
 
@@ -685,13 +743,11 @@ Add wet ingredients ^wet-step
         // render preserves the wrapper div. Without `html: true` the
         // inner render escapes `<div>` to `&lt;div&gt;` and the user sees
         // literal HTML tags in the preview.
-        const md = markdownItWikilinkEmbed(
-          MarkdownIt(),
-          ws,
-          localParser,
-          () => parsedSource,
-          () => MarkdownIt({ html: true })
-        );
+        const md = markdownItWikilinkEmbed(MarkdownIt(), ws, localParser, {
+          getCurrentResource: () => parsedSource,
+          createInnerMd: () => MarkdownIt({ html: true }),
+          renderContext: createRenderContext(),
+        });
         const res = md.render(source.content);
 
         // The wrapper must appear as a real HTML element, not as escaped text.

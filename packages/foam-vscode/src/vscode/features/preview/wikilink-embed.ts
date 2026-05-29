@@ -2,22 +2,18 @@
 
 // eslint-disable-next-line no-restricted-imports
 import { readFileSync } from 'fs';
-import { workspace as vsWorkspace } from 'vscode';
 import markdownItRegex from 'markdown-it-regex';
 import { FoamWorkspace } from '@foam/core';
 import { Logger } from '@foam/core';
 import { Resource, ResourceParser, Block } from '@foam/core';
 import { getFoamVsCodeConfig } from '../../config';
-import { fromVsCodeUri } from '../../utils/vsc-utils';
 import { MarkdownLink } from '@foam/core';
 import { URI } from '@foam/core';
 import { Position } from '@foam/core';
 import { TextEdit } from '@foam/core';
 import { isNone, isSome } from '@foam/core';
-import {
-  asAbsoluteWorkspaceUri,
-  isVirtualWorkspace,
-} from '../../services/editor';
+import { RenderContext } from '@foam/core';
+import { isVirtualWorkspace } from '../../services/editor';
 
 export const WIKILINK_EMBED_REGEX =
   /((?:(?:full|content)-(?:inline|card)|full|content|inline|card)?!\[\[[^[\]]+?\]\])/;
@@ -28,34 +24,34 @@ export const WIKILINK_EMBED_REGEX_GROUPS =
   /((?:\w+)|(?:(?:\w+)-(?:\w+)))?!\[\[([^|[\]]+?)(\|[^[\]]+?)?\]\]/;
 export const CONFIG_EMBED_NOTE_TYPE = 'preview.embedNoteType';
 
-// Stack of notes currently being rendered as embeds. Used both for cycle
-// detection and so that self-referencing wikilinks (![[#section]],
-// ![[#^blockid]]) inside an embedded note resolve against the embedded note
-// rather than the editor's active note. Module-level so it survives across
-// the regex callbacks of nested embed rendering, which use the same plugin
-// configuration (built fresh per outer render via `createInnerMd`).
-const noteStack: Resource[] = [];
+/**
+ * Options for the wikilink embed plugin. Pass the same `renderContext` into
+ * `markdownItFoamQuery` so embed↔query cycles get caught.
+ */
+export interface WikilinkEmbedOptions {
+  /** Fallback for resolving `![[#section]]` / `$current`, used when the
+   * render context stack is empty (i.e. top-level render). */
+  getCurrentResource?: (env?: any) => Resource | null;
+  /** Fresh markdown-it carrying the full Foam pipeline (issue #1642 — avoids
+   * re-entering the outer `md` while it's mid-render). */
+  createInnerMd?: () => markdownit;
+  renderContext: RenderContext;
+}
 
 export const markdownItWikilinkEmbed = (
   md: markdownit,
   workspace: FoamWorkspace,
   parser: ResourceParser,
-  getCurrentResource?: (env?: any) => Resource | null,
-  // Factory that builds a fresh markdown-it instance configured with the
-  // same Foam plugin pipeline as the outer one. Used to render embedded
-  // note content without re-entering the outer instance (which corrupts
-  // per-render state in stateful plugins — original cause of issue #1642).
-  // When omitted (tests or web extension), inner renders fall back to
-  // re-entering `md`; that's the legacy behaviour.
-  createInnerMd?: () => markdownit
+  options: WikilinkEmbedOptions
 ) => {
-  // The "current note" for resolving self-referencing embeds. While we're
-  // inside an embed (noteStack non-empty) the top of the stack wins;
-  // otherwise we fall back to `getCurrentResource`, which may consult the
-  // markdown-it `env` to identify the document being rendered.
+  const { getCurrentResource, createInnerMd, renderContext } = options;
+  // Top of the render-context stack wins — keeps `![[#section]]` inside an
+  // embed resolving against the embedded note, not the outer page.
   const resolveCurrentNote = (): Resource | null => {
-    if (noteStack.length > 0) {
-      return noteStack[noteStack.length - 1];
+    const stack = renderContext.current();
+    if (stack.length > 0) {
+      const top = stack[stack.length - 1];
+      return workspace.find(top) ?? null;
     }
     return getCurrentResource ? getCurrentResource(undefined) : null;
   };
@@ -94,18 +90,10 @@ export const markdownItWikilinkEmbed = (
         }
 
         const isSelfRefFragment = wikilink.startsWith('#');
-        const cyclicLinkDetected =
-          !isSelfRefFragment &&
-          noteStack.some(
-            n =>
-              n.uri.path.toLocaleLowerCase() ===
-              includedNote.uri.path.toLocaleLowerCase()
-          );
-
-        if (cyclicLinkDetected) {
-          const stackPaths = noteStack.map(n =>
-            n.uri.path.toLocaleLowerCase()
-          );
+        const cycleWarning = (): string => {
+          const stackPaths = renderContext
+            .current()
+            .map(u => u.path.toLocaleLowerCase());
           return `
 <div class="foam-cyclic-link-warning">
   Cyclic link detected for wikilink: ${wikilink}
@@ -117,6 +105,13 @@ export const markdownItWikilinkEmbed = (
   </div>
 </div>
           `;
+        };
+
+        // The URI on the stack may have been pushed by another embed or by
+        // a foam-query rendering this note's body — either way, recursing
+        // would loop.
+        if (!isSelfRefFragment && renderContext.has(includedNote.uri)) {
+          return cycleWarning();
         }
 
         let content: string;
@@ -137,16 +132,24 @@ export const markdownItWikilinkEmbed = (
           return '';
         }
 
-        noteStack.push(includedNote);
+        // Self-references (`![[#section]]`) point at the current note by
+        // design; don't push or `enter` would refuse and the legitimate
+        // inner render would be skipped.
+        const entered = isSelfRefFragment
+          ? false
+          : renderContext.enter(includedNote.uri);
+        // Defensive: `has` was false above but `enter` says otherwise — bail
+        // rather than risk infinite recursion.
+        if (!isSelfRefFragment && !entered) {
+          return cycleWarning();
+        }
         try {
-          // Render the embedded content through a fresh markdown-it
-          // instance when a factory is available; that keeps Foam plugins
-          // active inside embeds while avoiding re-entrancy into the outer
-          // `md` (which is mid-render).
           const innerMd = createInnerMd ? createInnerMd() : md;
           return innerMd.render(content);
         } finally {
-          noteStack.pop();
+          if (entered) {
+            renderContext.exit(includedNote.uri);
+          }
         }
       } catch (e) {
         Logger.error(
@@ -217,16 +220,15 @@ Embed for attachments is not supported
   return toRender;
 }
 
-function withLinksRelativeToWorkspaceRoot(
+export function withLinksRelativeToWorkspaceRoot(
   noteUri: URI,
   noteText: string,
   parser: ResourceParser,
   workspace: FoamWorkspace
 ): string {
-  const note = parser.parse(
-    fromVsCodeUri(vsWorkspace.workspaceFolders[0].uri),
-    noteText
-  );
+  // Re-parse only to pick up link positions inside `noteText` — the URI is
+  // just stamped onto `Resource.uri`, which we don't read.
+  const note = parser.parse(noteUri, noteText);
   const edits = note.links
     .map(link => {
       const info = MarkdownLink.analyzeLink(link);
@@ -236,9 +238,11 @@ function withLinksRelativeToWorkspaceRoot(
       if (isNone(resource)) {
         return null;
       }
-      const pathFromRoot = asAbsoluteWorkspaceUri(resource.uri).path;
+      // `createUpdateLinkEdit` preserves the link's existing fragment when
+      // only `target` is provided, so `[[beta#Section]]` rewrites to
+      // `[[/path/to/beta.md#Section]]`.
       return MarkdownLink.createUpdateLinkEdit(link, {
-        target: pathFromRoot,
+        target: resource.uri.path,
       });
     })
     .filter(linkEdits => !isNone(linkEdits))

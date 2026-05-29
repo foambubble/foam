@@ -71,6 +71,18 @@ const config = {
           },
         },
         {
+          name: 'foam-query-renderer',
+          setup(build) {
+            build.onResolve({ filter: /foam-query-renderer/ }, args => {
+              return {
+                path: require.resolve(
+                  args.resolveDir + '/foam-query-renderer-web-extension.ts'
+                ),
+              };
+            });
+          },
+        },
+        {
           name: 'parse-entities-no-dom',
           setup(build) {
             // parse-entities maps ./decode-entity -> ./decode-entity.browser.js via

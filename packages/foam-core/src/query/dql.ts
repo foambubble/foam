@@ -1,7 +1,16 @@
 import { parse as parseYaml } from 'yaml';
 import { FoamWorkspace } from '../model/workspace';
 import { FoamGraph } from '../model/graph';
-import { QueryDescriptor, QueryFilter, executeQuery, ALL_QUERY_FIELDS } from '.';
+import {
+  QueryDescriptor,
+  QueryFilter,
+  executeQuery,
+  ALL_QUERY_FIELDS,
+  SourceReader,
+  requiresSource,
+} from '.';
+import { MarkdownRenderer } from './html';
+import { RenderContext } from './render-context';
 import { escapeHtml, renderResults } from './html';
 import { URI } from '../model/uri';
 
@@ -152,14 +161,31 @@ function resolveCurrentSentinel(
   return resolved;
 }
 
+export interface RenderDqlQueryOptions {
+  workspace: FoamWorkspace;
+  graph: FoamGraph;
+  trusted: boolean;
+  toRelativePath: (path: string) => string;
+  currentResource?: URI | null;
+  readSource?: SourceReader;
+  renderMarkdown?: MarkdownRenderer;
+  context?: RenderContext;
+}
+
 export function renderDqlQuery(
   content: string,
-  workspace: FoamWorkspace,
-  graph: FoamGraph,
-  trusted: boolean,
-  toRelativePath: (path: string) => string,
-  currentResource?: URI | null
+  opts: RenderDqlQueryOptions
 ): string {
+  const {
+    workspace,
+    graph,
+    trusted,
+    toRelativePath,
+    currentResource,
+    readSource,
+    renderMarkdown,
+    context,
+  } = opts;
   if (content.trim() === '') {
     return DQL_PLACEHOLDER;
   }
@@ -231,19 +257,22 @@ export function renderDqlQuery(
     return DQL_PLACEHOLDER + renderWarnings(warnings);
   }
 
-  // Validate individual elements of the select array.
-  // Allow known fields and properties.X dot-notation; strip and warn otherwise.
+  // Strip and warn on unknown `select` entries.
   if (Array.isArray(parsed.select)) {
     const validFields = ALL_QUERY_FIELDS.join(', ');
     const valid: string[] = [];
     for (const field of parsed.select as string[]) {
-      if (ALL_QUERY_FIELDS.includes(field) || /^properties\..+$/.test(field)) {
+      if (
+        ALL_QUERY_FIELDS.includes(field) ||
+        /^properties\..+$/.test(field) ||
+        requiresSource(field)
+      ) {
         valid.push(field);
       } else {
         warnings.push(
           `Unknown select field <code>${escapeHtml(
             field
-          )}</code> — available: ${validFields}, or <code>properties.fieldname</code>`
+          )}</code> — available: ${validFields}, <code>body</code>, <code>content</code>, <code>section[Label]</code>, or <code>properties.fieldname</code>`
         );
       }
     }
@@ -263,21 +292,11 @@ export function renderDqlQuery(
     };
   }
 
-  // Ensure path is always fetched when title is selected so link generation
-  // works in both list and table formats, even if the user didn't select path.
-  const needsPath =
-    descriptor.select &&
-    descriptor.select.includes('title') &&
-    !descriptor.select.includes('path');
-  const execDescriptor: QueryDescriptor = needsPath
-    ? { ...descriptor, select: [...descriptor.select, 'path'] }
-    : descriptor;
-
   const { results, warnings: filterWarnings } = executeQuery(
-    execDescriptor,
+    descriptor,
     workspace,
     graph,
-    { trusted }
+    { trusted, readSource }
   );
   // Filter warnings are plain text (they contain raw user input like
   // `filter.path`); escape before pushing into the HTML-fragment channel
@@ -285,6 +304,6 @@ export function renderDqlQuery(
   warnings.push(...filterWarnings.map(escapeHtml));
   return (
     renderWarnings(warnings) +
-    renderResults(results, descriptor, toRelativePath)
+    renderResults(results, descriptor, toRelativePath, renderMarkdown, context)
   );
 }

@@ -1,7 +1,9 @@
 import { Logger } from '../utils/log';
 import { FoamGraph } from '../model/graph';
 import { createTestNote, createTestWorkspace } from '../../test/test-utils';
-import { executeQuery, parseFilter, QueryDescriptor } from '.';
+import { executeQuery, parseFilter, QueryDescriptor, QueryResult } from '.';
+import { createMarkdownParser } from '../services/markdown-parser';
+import { URI } from '../model/uri';
 
 Logger.setLevel('error');
 
@@ -583,7 +585,7 @@ describe('executeQuery — warnings', () => {
 // ─── executeQuery ─────────────────────────────────────────────────────────────
 
 describe('executeQuery — projection', () => {
-  it('returns only the selected fields', () => {
+  it('returns the selected fields plus the implicit `uri` handle', () => {
     const noteA = createTestNote({
       uri: '/a.md',
       title: 'Alpha',
@@ -598,18 +600,25 @@ describe('executeQuery — projection', () => {
       { trusted: false }
     );
     expect(results).toHaveLength(1);
-    expect(results[0]).toEqual({ title: 'Alpha', tags: ['t1'] });
+    expect(results[0].title).toBe('Alpha');
+    expect(results[0].tags).toEqual(['t1']);
+    // `uri` is always projected — the URI is the resource's identity, not
+    // just another field. Renderers, JS query consumers, and link generation
+    // rely on it being present unconditionally.
+    expect(results[0].uri).toBe(noteA.uri);
     expect(results[0]).not.toHaveProperty('path');
   });
 
-  it('defaults to [title, path] when select is omitted', () => {
+  it('defaults to [title, path] when select is omitted (plus implicit `uri`)', () => {
     const noteA = createTestNote({ uri: '/a.md', title: 'Alpha' });
     const { workspace, graph } = makeWorkspaceAndGraph([noteA]);
 
     const { results: [result] } = executeQuery({}, workspace, graph, { trusted: false });
     expect(result).toHaveProperty('title');
     expect(result).toHaveProperty('path');
-    expect(Object.keys(result)).toHaveLength(2);
+    expect(result.uri).toBe(noteA.uri);
+    // title + path + uri
+    expect(Object.keys(result)).toHaveLength(3);
   });
 
   it('computed field backlink-count reflects graph state', () => {
@@ -808,5 +817,529 @@ describe('executeQuery — end to end', () => {
     const { results } = executeQuery(query, workspace, graph, { trusted: false });
     expect(results).toHaveLength(2);
     expect(results.map(r => r.title)).toEqual(['Gamma', 'Beta']);
+  });
+});
+
+// ─── source-derived fields: body / content / section[Label] ───────────────────
+//
+// These tests pin the behaviour of selectable fields that derive from the raw
+// note text. The query layer is given an injected `readSource(uri)` callback so
+// it can stay independent of `IDataStore`'s async API and of file I/O.
+
+describe('executeQuery — source-derived fields', () => {
+  const parser = createMarkdownParser();
+
+  function parseNote(uriPath: string, markdown: string) {
+    const uri = URI.file(uriPath);
+    return parser.parse(uri, markdown);
+  }
+
+  it('`body` returns the note text minus frontmatter, keeping the H1 title', () => {
+    const markdown = `---\nstatus: to_ask\n---\n# Question\n\nWhat is X?\n`;
+    const note = parseNote('/q.md', markdown);
+    const workspace = createTestWorkspace();
+    workspace.set(note);
+    const graph = FoamGraph.fromWorkspace(workspace, false);
+
+    const { results } = executeQuery(
+      { select: ['body'] },
+      workspace,
+      graph,
+      { trusted: false, readSource: () => markdown }
+    );
+    expect(results).toHaveLength(1);
+    expect(results[0].body).toContain('# Question');
+    expect(results[0].body).toContain('What is X?');
+    expect(results[0].body).not.toContain('status: to_ask');
+    expect(results[0].body).not.toContain('---');
+  });
+
+  it('`content` strips frontmatter AND the H1 title', () => {
+    const markdown = `---\nstatus: to_ask\n---\n# Question\n\nWhat is X?\n`;
+    const note = parseNote('/q.md', markdown);
+    const workspace = createTestWorkspace();
+    workspace.set(note);
+    const graph = FoamGraph.fromWorkspace(workspace, false);
+
+    const { results } = executeQuery(
+      { select: ['content'] },
+      workspace,
+      graph,
+      { trusted: false, readSource: () => markdown }
+    );
+    expect(results[0].content).toContain('What is X?');
+    expect(results[0].content).not.toContain('# Question');
+    expect(results[0].content).not.toContain('status: to_ask');
+  });
+
+  it('strips a CRLF-delimited frontmatter block (Windows-authored notes)', () => {
+    // Use \r\n line endings everywhere — gray-matter handles them, the
+    // previous hand-rolled splitter did not, so this catches the regression.
+    const markdown =
+      '---\r\nstatus: to_ask\r\n---\r\n# Question\r\n\r\nWhat is X?\r\n';
+    const note = parseNote('/q.md', markdown);
+    const workspace = createTestWorkspace();
+    workspace.set(note);
+    const graph = FoamGraph.fromWorkspace(workspace, false);
+
+    const { results } = executeQuery(
+      { select: ['body', 'content'] },
+      workspace,
+      graph,
+      { trusted: false, readSource: () => markdown }
+    );
+    expect(results[0].body).not.toContain('status: to_ask');
+    expect(results[0].body).not.toContain('---');
+    // Body must start at the H1, not with leftover CR from the closing
+    // delimiter line.
+    expect(results[0].body).toMatch(/^# Question/);
+    expect(results[0].content).not.toContain('# Question');
+    expect(results[0].content).toContain('What is X?');
+    // Content must start at the body, not with leftover CR from the H1 line.
+    expect(results[0].content).toMatch(/^What is X\?/);
+  });
+
+  it('strips CRLF frontmatter when the note has no trailing newline', () => {
+    // The hand-rolled splitter scans for `\n---\n` which fails when the
+    // closing delimiter is followed by `\r\n` and there is no terminating
+    // newline at the end of the document — a common shape for hand-edited
+    // files saved without a final EOL.
+    const markdown = '---\r\nstatus: x\r\n---\r\nbody line';
+    const note = parseNote('/q.md', markdown);
+    const workspace = createTestWorkspace();
+    workspace.set(note);
+    const graph = FoamGraph.fromWorkspace(workspace, false);
+
+    const { results } = executeQuery(
+      { select: ['body'] },
+      workspace,
+      graph,
+      { trusted: false, readSource: () => markdown }
+    );
+    expect(results[0].body).toBe('body line');
+  });
+
+  it('`section[Label]` returns the matching section content with heading stripped', () => {
+    const markdown =
+      `# Top\n\n## Question\n\nWhat is X?\n\n### Followup\n\nWhy?\n\n## Other\n\nElse.\n`;
+    const note = parseNote('/q.md', markdown);
+    const workspace = createTestWorkspace();
+    workspace.set(note);
+    const graph = FoamGraph.fromWorkspace(workspace, false);
+
+    const { results } = executeQuery(
+      { select: ['section[Question]'] },
+      workspace,
+      graph,
+      { trusted: false, readSource: () => markdown }
+    );
+    // Heading line dropped; sub-section preserved; sibling "Other" not included.
+    const value = results[0]['section[Question]'] as string;
+    expect(value).toContain('What is X?');
+    expect(value).toContain('### Followup');
+    expect(value).toContain('Why?');
+    expect(value).not.toContain('## Question');
+    expect(value).not.toContain('## Other');
+    expect(value).not.toContain('Else.');
+  });
+
+  it('`section[Label]` supports labels with spaces', () => {
+    const markdown = `# Top\n\n## My Section\n\nBody here.\n`;
+    const note = parseNote('/q.md', markdown);
+    const workspace = createTestWorkspace();
+    workspace.set(note);
+    const graph = FoamGraph.fromWorkspace(workspace, false);
+
+    const { results } = executeQuery(
+      { select: ['section[My Section]'] },
+      workspace,
+      graph,
+      { trusted: false, readSource: () => markdown }
+    );
+    expect(results[0]['section[My Section]']).toContain('Body here.');
+  });
+
+  it('`section[Label]` returns undefined when the label is missing', () => {
+    const markdown = `# Top\n\n## Foo\n\nx\n`;
+    const note = parseNote('/q.md', markdown);
+    const workspace = createTestWorkspace();
+    workspace.set(note);
+    const graph = FoamGraph.fromWorkspace(workspace, false);
+
+    const { results } = executeQuery(
+      { select: ['section[Missing]'] },
+      workspace,
+      graph,
+      { trusted: false, readSource: () => markdown }
+    );
+    expect(results[0]['section[Missing]']).toBeUndefined();
+  });
+
+  it('reads each note source at most once even when multiple source-derived fields are selected', () => {
+    const markdown = `# T\n\n## S\n\nx\n`;
+    const note = parseNote('/q.md', markdown);
+    const workspace = createTestWorkspace();
+    workspace.set(note);
+    const graph = FoamGraph.fromWorkspace(workspace, false);
+
+    let reads = 0;
+    executeQuery(
+      { select: ['body', 'content', 'section[S]'] },
+      workspace,
+      graph,
+      {
+        trusted: false,
+        readSource: () => {
+          reads++;
+          return markdown;
+        },
+      }
+    );
+    expect(reads).toBe(1);
+  });
+
+  it('does not call readSource when no source-derived field is selected', () => {
+    const note = parseNote('/q.md', `# T\n\nbody\n`);
+    const workspace = createTestWorkspace();
+    workspace.set(note);
+    const graph = FoamGraph.fromWorkspace(workspace, false);
+
+    let reads = 0;
+    executeQuery(
+      { select: ['title', 'path'] },
+      workspace,
+      graph,
+      {
+        trusted: false,
+        readSource: () => {
+          reads++;
+          return '';
+        },
+      }
+    );
+    expect(reads).toBe(0);
+  });
+
+  it('`body` strips a YAML frontmatter block so it is not rendered as a cell', () => {
+    const markdown = `---\nstatus: to_ask\ntitle: Q\n---\n# Question\n\nWhat is X?\n`;
+    const note = parseNote('/q.md', markdown);
+    const workspace = createTestWorkspace();
+    workspace.set(note);
+    const graph = FoamGraph.fromWorkspace(workspace, false);
+
+    const { results } = executeQuery(
+      { select: ['body'] },
+      workspace,
+      graph,
+      { trusted: false, readSource: () => markdown }
+    );
+    const body = results[0].body as string;
+    expect(body).not.toContain('---');
+    expect(body).not.toContain('status: to_ask');
+    expect(body).toContain('# Question');
+  });
+
+  it('`content` returns the source (modulo trim) when there is no H1 title', () => {
+    const markdown = `Just a paragraph with no heading.\n\nAnother line.\n`;
+    const note = parseNote('/q.md', markdown);
+    const workspace = createTestWorkspace();
+    workspace.set(note);
+    const graph = FoamGraph.fromWorkspace(workspace, false);
+
+    const { results } = executeQuery(
+      { select: ['content'] },
+      workspace,
+      graph,
+      { trusted: false, readSource: () => markdown }
+    );
+    // `stripFrontMatter` trims whitespace at the ends; the body stays intact.
+    expect(results[0].content).toBe(markdown.trim());
+  });
+
+  it('`section[Label]` returns the first matching section when the label is duplicated', () => {
+    const markdown =
+      `# Top\n\n## Notes\n\nfirst block\n\n## Notes\n\nsecond block\n`;
+    const note = parseNote('/q.md', markdown);
+    const workspace = createTestWorkspace();
+    workspace.set(note);
+    const graph = FoamGraph.fromWorkspace(workspace, false);
+
+    const { results } = executeQuery(
+      { select: ['section[Notes]'] },
+      workspace,
+      graph,
+      { trusted: false, readSource: () => markdown }
+    );
+    const value = results[0]['section[Notes]'] as string;
+    expect(value).toContain('first block');
+    expect(value).not.toContain('second block');
+  });
+
+  it('`section[Label]` matches the section name case-sensitively', () => {
+    // Embeds (`![[note#Section]]`) match section labels case-sensitively;
+    // queries follow the same convention so users can copy labels between
+    // them without surprises.
+    const markdown = `# Top\n\n## Question\n\nWhat is X?\n`;
+    const note = parseNote('/q.md', markdown);
+    const workspace = createTestWorkspace();
+    workspace.set(note);
+    const graph = FoamGraph.fromWorkspace(workspace, false);
+
+    const { results } = executeQuery(
+      {
+        select: ['section[Question]', 'section[question]', 'section[QUESTION]'],
+      },
+      workspace,
+      graph,
+      { trusted: false, readSource: () => markdown }
+    );
+    expect(results[0]['section[Question]']).toContain('What is X?');
+    expect(results[0]['section[question]']).toBeUndefined();
+    expect(results[0]['section[QUESTION]']).toBeUndefined();
+  });
+
+  it('`section[Label]` returns content for the last section even with no trailing newline', () => {
+    // Boundary case: when the section is the last thing in the file there's
+    // no following heading to bound it. `Resource.sections[].range.end` for
+    // the trailing section points at EOF — make sure we still slice the
+    // body correctly and don't accidentally slice past the end.
+    const markdown = '# Top\n\n## Last\n\nthe last line';
+    const note = parseNote('/q.md', markdown);
+    const workspace = createTestWorkspace();
+    workspace.set(note);
+    const graph = FoamGraph.fromWorkspace(workspace, false);
+
+    const { results } = executeQuery(
+      { select: ['section[Last]'] },
+      workspace,
+      graph,
+      { trusted: false, readSource: () => markdown }
+    );
+    expect(results[0]['section[Last]']).toContain('the last line');
+    expect(results[0]['section[Last]']).not.toContain('## Last');
+  });
+
+  it('`section[Label]` handles CRLF line endings', () => {
+    const markdown = '# Top\r\n\r\n## Foo\r\n\r\ninside foo\r\n';
+    const note = parseNote('/q.md', markdown);
+    const workspace = createTestWorkspace();
+    workspace.set(note);
+    const graph = FoamGraph.fromWorkspace(workspace, false);
+
+    const { results } = executeQuery(
+      { select: ['section[Foo]'] },
+      workspace,
+      graph,
+      { trusted: false, readSource: () => markdown }
+    );
+    expect(results[0]['section[Foo]']).toContain('inside foo');
+    expect(results[0]['section[Foo]']).not.toContain('## Foo');
+  });
+
+  it('applies limit before reading source so a `limit: 1` query reads at most one body', () => {
+    // DoS guard: without this, a workspace-wide query like
+    // `filter: '*', select: [body], limit: 1` would synchronously read and
+    // project every matching note before slicing the results, even though
+    // only one row is ever shown.
+    const notes = [
+      parseNote('/a.md', '# A\n\na body\n'),
+      parseNote('/b.md', '# B\n\nb body\n'),
+      parseNote('/c.md', '# C\n\nc body\n'),
+      parseNote('/d.md', '# D\n\nd body\n'),
+    ];
+    const workspace = createTestWorkspace();
+    notes.forEach(n => workspace.set(n));
+    const graph = FoamGraph.fromWorkspace(workspace, false);
+
+    let reads = 0;
+    executeQuery(
+      { filter: '*', select: ['body'], limit: 1 },
+      workspace,
+      graph,
+      {
+        trusted: false,
+        readSource: () => {
+          reads++;
+          return 'whatever';
+        },
+      }
+    );
+    expect(reads).toBe(1);
+  });
+
+  it('applies offset + limit before reading source', () => {
+    const notes = [
+      parseNote('/a.md', '# A\n'),
+      parseNote('/b.md', '# B\n'),
+      parseNote('/c.md', '# C\n'),
+      parseNote('/d.md', '# D\n'),
+    ];
+    const workspace = createTestWorkspace();
+    notes.forEach(n => workspace.set(n));
+    const graph = FoamGraph.fromWorkspace(workspace, false);
+
+    let reads = 0;
+    executeQuery(
+      { filter: '*', select: ['body'], offset: 1, limit: 2 },
+      workspace,
+      graph,
+      {
+        trusted: false,
+        readSource: () => {
+          reads++;
+          return 'whatever';
+        },
+      }
+    );
+    // Two rows survive the slice → at most two source reads.
+    expect(reads).toBe(2);
+  });
+
+  it('sorting on a non-source field still applies limit before reading source', () => {
+    // Sorting needs the full pre-projection set in row order to be correct,
+    // but the sort key (`title`) is not source-derived, so we can sort the
+    // skeleton rows first and only read source for the surviving slice.
+    const notes = [
+      parseNote('/c.md', '# C\n'),
+      parseNote('/a.md', '# A\n'),
+      parseNote('/b.md', '# B\n'),
+    ];
+    const workspace = createTestWorkspace();
+    notes.forEach(n => workspace.set(n));
+    const graph = FoamGraph.fromWorkspace(workspace, false);
+
+    let reads = 0;
+    const { results } = executeQuery(
+      {
+        filter: '*',
+        select: ['title', 'body'],
+        sort: 'title ASC',
+        limit: 1,
+      },
+      workspace,
+      graph,
+      {
+        trusted: false,
+        readSource: () => {
+          reads++;
+          return 'whatever';
+        },
+      }
+    );
+    // Only the top-of-sort note's source should be read.
+    expect(reads).toBe(1);
+    expect(results).toHaveLength(1);
+    expect(results[0].title).toBe('A');
+  });
+
+  it('source-derived fields resolve to undefined when no readSource is provided', () => {
+    const note = parseNote('/q.md', `# T\n\nbody\n`);
+    const workspace = createTestWorkspace();
+    workspace.set(note);
+    const graph = FoamGraph.fromWorkspace(workspace, false);
+
+    const { results } = executeQuery(
+      { select: ['title', 'body', 'content', 'section[S]'] },
+      workspace,
+      graph,
+      { trusted: false }
+    );
+    expect(results[0].title).toBe('T');
+    expect(results[0].body).toBeUndefined();
+    expect(results[0].content).toBeUndefined();
+    expect(results[0]['section[S]']).toBeUndefined();
+  });
+});
+
+// ─── QueryResult (foam-query-js) — source projection ─────────────────────────
+//
+// The fluent JS builder must avoid the same DoS shape that `executeQuery`
+// now guards against: selecting `body` with a `limit` over a large workspace
+// shouldn't read every matched note's source before slicing. Pinned here
+// because the JS path historically applied sort/limit *after* projection.
+
+describe('QueryResult.toArray — source-derived fields', () => {
+  const parser = createMarkdownParser();
+  const parseNote = (uriPath: string, markdown: string) =>
+    parser.parse(URI.file(uriPath), markdown);
+
+  it('a .select([body]).limit(1) chain reads at most one source', () => {
+    const notes = [
+      parseNote('/a.md', '# A\n'),
+      parseNote('/b.md', '# B\n'),
+      parseNote('/c.md', '# C\n'),
+      parseNote('/d.md', '# D\n'),
+    ];
+    const workspace = createTestWorkspace();
+    notes.forEach(n => workspace.set(n));
+    const graph = FoamGraph.fromWorkspace(workspace, false);
+
+    let reads = 0;
+    const readSource = () => {
+      reads++;
+      return 'whatever';
+    };
+
+    const qr = new QueryResult(workspace, graph, true, '*', readSource);
+    qr.select(['body']).limit(1).toArray();
+    expect(reads).toBe(1);
+  });
+
+  it('.sortBy + .limit reads sources only for the surviving slice', () => {
+    const notes = [
+      parseNote('/c.md', '# C\n'),
+      parseNote('/a.md', '# A\n'),
+      parseNote('/b.md', '# B\n'),
+    ];
+    const workspace = createTestWorkspace();
+    notes.forEach(n => workspace.set(n));
+    const graph = FoamGraph.fromWorkspace(workspace, false);
+
+    let reads = 0;
+    const readSource = () => {
+      reads++;
+      return 'whatever';
+    };
+
+    const qr = new QueryResult(workspace, graph, true, '*', readSource);
+    const out = qr
+      .select(['title', 'body'])
+      .sortBy('title', 'asc')
+      .limit(1)
+      .toArray();
+    expect(reads).toBe(1);
+    expect(out).toHaveLength(1);
+    expect(out[0].title).toBe('A');
+  });
+
+  it('falls back to read-all when a .where predicate is present (predicate may read source)', () => {
+    // A JS predicate could legitimately reference `r.body`, so we can't push
+    // limit down — the predicate has to see every matched row, with source
+    // populated, before sort/limit. Document the trade-off via this test:
+    // adding `.where` opts out of the limit-before-read optimisation.
+    const notes = [
+      parseNote('/a.md', '# A\n'),
+      parseNote('/b.md', '# B\n'),
+      parseNote('/c.md', '# C\n'),
+    ];
+    const workspace = createTestWorkspace();
+    notes.forEach(n => workspace.set(n));
+    const graph = FoamGraph.fromWorkspace(workspace, false);
+
+    let reads = 0;
+    const readSource = () => {
+      reads++;
+      return 'whatever';
+    };
+
+    const qr = new QueryResult(workspace, graph, true, '*', readSource);
+    qr.select(['body'])
+      .where(() => true)
+      .limit(1)
+      .toArray();
+    // All three matched rows had their source read so the predicate could
+    // see them. Surfacing this in a test keeps the behaviour intentional
+    // rather than accidental.
+    expect(reads).toBe(3);
   });
 });

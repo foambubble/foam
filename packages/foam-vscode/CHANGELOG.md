@@ -1,5 +1,15 @@
 # Change Log
 
+## 0.42.0
+
+### Minor Changes
+
+- `foam-query` blocks can now select note content as a field: `body` (full text with the H1 title kept), `content` (without the title), and `section[Label]` (the content of a named section, heading stripped).
+
+### Patch Changes
+
+- Updated the default value of `foam.files.exclude` to cover common build, cache, and virtual-env directories.
+
 ## 0.41.0
 
 ### Minor Changes

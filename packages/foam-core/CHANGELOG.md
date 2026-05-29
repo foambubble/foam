@@ -1,5 +1,19 @@
 # Change Log
 
+## 0.42.0
+
+### Minor Changes
+
+- `parseFilter` and `executeQuery` now return parse-time warnings alongside their primary result, so callers can surface filter problems. Markdown preview now renders these warnings above query results.
+
+- `foam-query` blocks can now select note content as a field: `body` (full text with the H1 title kept), `content` (without the title), and `section[Label]` (the content of a named section, heading stripped).
+
+### Patch Changes
+
+- Replace the `eval()`-backed `expression` query filter with a sandboxed `jexl` filter. The `expression` field is deprecated and no longer evaluated — queries using it now match nothing and log a warning.
+
+- Limit the number of notes processed concurrently during workspace bootstrap to avoid exhausting file descriptors on large workspaces (possible fix for [#1167](https://github.com/foambubble/foam/issues/1167)).
+
 ## 0.41.2
 
 ### Patch Changes

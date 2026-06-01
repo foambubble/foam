@@ -116,12 +116,8 @@ export async function activate(context: ExtensionContext) {
     const hasDailyNoteTemplate = allFiles.some(uri =>
       uri.path.includes('.foam/templates/daily-note.')
     );
-    const hasAI = !!workspace.getConfiguration('foam.experimental').get('ai');
-    const graphViewCount: number =
-      workspace.getConfiguration('foam').get<unknown[]>('graph.views', []).length;
-
     telemetry.trackConfigSnapshot();
-    telemetry.trackWorkspaceStats(noteCount, hasTemplates, hasDailyNoteTemplate, hasAI, graphViewCount);
+    telemetry.trackWorkspaceStats(noteCount, hasTemplates, hasDailyNoteTemplate);
 
     context.subscriptions.push(
       foam,

@@ -116,6 +116,17 @@ export { isWindows, isMacintosh, isLinux } from './common/platform';
 export { TaskDeduplicator } from './utils/task-deduplicator';
 export type { Progress, ProgressCallback } from './services/progress';
 export { CancellationError } from './services/progress';
+export type {
+  ITelemetryReporter,
+  WorkspaceSizeBucket,
+  DurationBucket,
+} from './services/telemetry';
+export {
+  NoopTelemetryReporter,
+  RecordingTelemetryReporter,
+  bucketNoteCount,
+  bucketDuration,
+} from './services/telemetry';
 
 // Graph builder
 export { buildGraphData } from './services/graph-data-builder';

@@ -8,6 +8,8 @@ import {
   ALL_QUERY_FIELDS,
   SourceReader,
   requiresSource,
+  SelectEntry,
+  normalizeSelectEntry,
 } from '.';
 import { MarkdownRenderer } from './html';
 import { RenderContext } from './render-context';
@@ -260,18 +262,34 @@ export function renderDqlQuery(
   // Strip and warn on unknown `select` entries.
   if (Array.isArray(parsed.select)) {
     const validFields = ALL_QUERY_FIELDS.join(', ');
-    const valid: string[] = [];
-    for (const field of parsed.select as string[]) {
-      if (
-        ALL_QUERY_FIELDS.includes(field) ||
-        /^properties\..+$/.test(field) ||
-        requiresSource(field)
+    const valid: SelectEntry[] = [];
+    for (const entry of parsed.select as unknown[]) {
+      let field: string | undefined;
+      let label: string | undefined;
+      if (typeof entry === 'string') {
+        field = entry;
+      } else if (
+        entry !== null &&
+        typeof entry === 'object' &&
+        !Array.isArray(entry) &&
+        typeof (entry as { field?: unknown }).field === 'string'
       ) {
-        valid.push(field);
+        field = (entry as { field: string }).field;
+        const rawLabel = (entry as { label?: unknown }).label;
+        if (typeof rawLabel === 'string') label = rawLabel;
+      }
+      if (
+        field !== undefined &&
+        (ALL_QUERY_FIELDS.includes(field) ||
+          /^properties\..+$/.test(field) ||
+          requiresSource(field))
+      ) {
+        valid.push(normalizeSelectEntry(label ? { field, label } : field));
       } else {
+        const shown = field ?? JSON.stringify(entry);
         warnings.push(
           `Unknown select field <code>${escapeHtml(
-            field
+            shown
           )}</code> — available: ${validFields}, <code>body</code>, <code>content</code>, <code>section[Label]</code>, or <code>properties.fieldname</code>`
         );
       }
@@ -279,11 +297,11 @@ export function renderDqlQuery(
     if (valid.length === 0) {
       delete parsed.select; // fall back to default
     } else {
-      parsed.select = valid;
+      (parsed as Record<string, unknown>).select = valid;
     }
   }
 
-  let descriptor = parsed as QueryDescriptor;
+  let descriptor = parsed as unknown as QueryDescriptor;
 
   if (descriptor.filter) {
     descriptor = {

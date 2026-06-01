@@ -58,13 +58,38 @@ export type QueryFilter =
       not?: QueryFilter;
     };
 
+const SECTION_FIELD_RE = /^section\[([^\]]+)\]$/;
+
+export type SelectInput = string | { field: string; label?: string };
+export type SelectEntry = { field: string; label: string };
+
 export interface QueryDescriptor {
   filter?: QueryFilter;
-  select?: string[];
+  select?: SelectInput[];
   sort?: string; // "field [ASC|DESC]"
   limit?: number;
   offset?: number;
   format?: 'table' | 'list' | 'count';
+}
+
+const PROPERTIES_PREFIX_RE = /^properties\.(.+)$/;
+
+export function beautifyFieldLabel(field: string): string {
+  const section = SECTION_FIELD_RE.exec(field);
+  if (section) return section[1];
+  const property = PROPERTIES_PREFIX_RE.exec(field);
+  if (property) return property[1];
+  return field;
+}
+
+export function normalizeSelectEntry(input: SelectInput): SelectEntry {
+  if (typeof input === 'string') {
+    return { field: input, label: beautifyFieldLabel(input) };
+  }
+  return {
+    field: input.field,
+    label: input.label ?? beautifyFieldLabel(input.field),
+  };
 }
 
 /**
@@ -74,8 +99,13 @@ export interface QueryDescriptor {
  */
 export type ResourceView = { uri: URI } & Record<string, unknown>;
 
-export const DEFAULT_SELECT = ['title', 'path'];
-export const DEFAULT_LIST_SELECT = ['title'];
+export const DEFAULT_SELECT: SelectEntry[] = [
+  { field: 'title', label: 'title' },
+  { field: 'path', label: 'path' },
+];
+export const DEFAULT_LIST_SELECT: SelectEntry[] = [
+  { field: 'title', label: 'title' },
+];
 
 // --- Filter ---
 
@@ -328,8 +358,6 @@ function parseShorthand(
  */
 export type SourceReader = (uri: URI) => string | null | undefined;
 
-const SECTION_FIELD_RE = /^section\[([^\]]+)\]$/;
-
 /**
  * Returns true for fields whose value is derived from the resource's raw
  * source text (`body`, `content`, `section[Label]`, and — eventually —
@@ -540,9 +568,12 @@ export class QueryResult {
     return c;
   }
 
-  select(fields: string[]): QueryResult {
+  select(fields: SelectInput[]): QueryResult {
     const c = this.clone();
-    c._descriptor = { ...c._descriptor, select: fields };
+    c._descriptor = {
+      ...c._descriptor,
+      select: fields.map(normalizeSelectEntry),
+    };
     return c;
   }
 
@@ -560,7 +591,10 @@ export class QueryResult {
    * for the surviving slice.
    */
   toArray(): ResourceView[] {
-    const userSelect = this._descriptor.select ?? DEFAULT_SELECT;
+    const userSelect = (this._descriptor.select ?? DEFAULT_SELECT).map(
+      normalizeSelectEntry
+    );
+    const userFields = userSelect.map(e => e.field);
 
     if (this._jsPredicates.length === 0) {
       return executeQuery(
@@ -577,11 +611,15 @@ export class QueryResult {
       ).results;
     }
 
-    const sourceDerived = userSelect.filter(requiresSource);
+    const sourceDerived = userFields.filter(requiresSource);
+    const fullSelect: SelectEntry[] = [
+      ...ALL_QUERY_FIELDS.map(f => ({ field: f, label: f })),
+      ...sourceDerived.map(f => ({ field: f, label: f })),
+    ];
     let results = executeQuery(
       {
         filter: this._descriptor.filter,
-        select: [...ALL_QUERY_FIELDS, ...sourceDerived],
+        select: fullSelect,
       },
       this.workspace,
       this.graph,
@@ -611,7 +649,7 @@ export class QueryResult {
 
     return results.map(r => {
       const view: ResourceView = { uri: r.uri };
-      for (const f of userSelect) view[f] = r[f];
+      for (const f of userFields) view[f] = r[f];
       return view;
     });
   }
@@ -631,7 +669,9 @@ export function executeQuery(
     graph,
     options.trusted
   );
-  const fields = query.select ?? DEFAULT_SELECT;
+  const fields = (query.select ?? DEFAULT_SELECT)
+    .map(normalizeSelectEntry)
+    .map(e => e.field);
 
   // Sort + offset + limit before reading source — otherwise a query with
   // `select: [body]` over a broad filter would synchronously read every

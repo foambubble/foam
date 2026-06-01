@@ -188,3 +188,114 @@ describe('renderDqlQuery — end to end with source-derived fields', () => {
     expect(html).toContain('&lt;script&gt;');
   });
 });
+
+describe('renderDqlQuery — column header labels', () => {
+  function thText(html: string): string[] {
+    return Array.from(html.matchAll(/<th>([\s\S]*?)<\/th>/g)).map(m => m[1]);
+  }
+
+  it('beautifies section[X] headers by default', () => {
+    const { workspace, graph } = makeWorkspaceAndGraph([
+      createTestNote({ uri: '/a.md', title: 'A' }),
+    ]);
+    const html = renderDqlQuery(
+      `filter: '*'\nselect: [title, 'section[Decision]']\nformat: table`,
+      { workspace, graph, trusted: false, toRelativePath: p => p }
+    );
+    expect(thText(html)).toEqual(['title', 'Decision']);
+  });
+
+  it('beautifies properties.X headers by default', () => {
+    const { workspace, graph } = makeWorkspaceAndGraph([
+      createTestNote({ uri: '/a.md', title: 'A' }),
+    ]);
+    const html = renderDqlQuery(
+      `filter: '*'\nselect: [title, properties.Status]\nformat: table`,
+      { workspace, graph, trusted: false, toRelativePath: p => p }
+    );
+    expect(thText(html)).toEqual(['title', 'Status']);
+  });
+
+  it('uses the explicit label from { field, label } object form', () => {
+    const { workspace, graph } = makeWorkspaceAndGraph([
+      createTestNote({ uri: '/a.md', title: 'A' }),
+    ]);
+    const html = renderDqlQuery(
+      [
+        `filter: '*'`,
+        `select:`,
+        `  - title`,
+        `  - field: section[Decision]`,
+        `    label: Chosen Decision`,
+        `  - field: properties.Status`,
+        `    label: Question status`,
+        `format: table`,
+      ].join('\n'),
+      { workspace, graph, trusted: false, toRelativePath: p => p }
+    );
+    expect(thText(html)).toEqual([
+      'title',
+      'Chosen Decision',
+      'Question status',
+    ]);
+  });
+
+  it('escapes label HTML in headers', () => {
+    const { workspace, graph } = makeWorkspaceAndGraph([
+      createTestNote({ uri: '/a.md', title: 'A' }),
+    ]);
+    const html = renderDqlQuery(
+      [
+        `filter: '*'`,
+        `select:`,
+        `  - field: title`,
+        `    label: '<script>x</script>'`,
+        `format: table`,
+      ].join('\n'),
+      { workspace, graph, trusted: false, toRelativePath: p => p }
+    );
+    expect(html).not.toContain('<script>x</script>');
+    expect(html).toContain('&lt;script&gt;x&lt;/script&gt;');
+  });
+
+  it('keeps sort working against the raw field expression when a label is set', () => {
+    const { workspace, graph } = makeWorkspaceAndGraph([
+      createTestNote({ uri: '/a.md', title: 'A', properties: { rank: 2 } }),
+      createTestNote({ uri: '/b.md', title: 'B', properties: { rank: 1 } }),
+    ]);
+    const html = renderDqlQuery(
+      [
+        `filter: '*'`,
+        `select:`,
+        `  - title`,
+        `  - field: properties.rank`,
+        `    label: Rank`,
+        `sort: properties.rank ASC`,
+        `format: table`,
+      ].join('\n'),
+      { workspace, graph, trusted: false, toRelativePath: p => p }
+    );
+    // First data row should be B (rank 1)
+    const firstRowIdx = html.indexOf('<tbody>');
+    const tbody = html.slice(firstRowIdx);
+    const firstRow = tbody.slice(0, tbody.indexOf('</tr>'));
+    expect(firstRow).toContain('>B<');
+  });
+
+  it('rejects an object entry without a `field` key', () => {
+    const { workspace, graph } = makeWorkspaceAndGraph([
+      createTestNote({ uri: '/a.md', title: 'A' }),
+    ]);
+    const html = renderDqlQuery(
+      [
+        `filter: '*'`,
+        `select:`,
+        `  - title`,
+        `  - label: orphan`,
+        `format: table`,
+      ].join('\n'),
+      { workspace, graph, trusted: false, toRelativePath: p => p }
+    );
+    expect(html).toContain('Unknown select field');
+  });
+});

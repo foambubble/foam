@@ -4,6 +4,9 @@ import {
   requiresSource,
   DEFAULT_SELECT,
   DEFAULT_LIST_SELECT,
+  SelectEntry,
+  SelectInput,
+  normalizeSelectEntry,
 } from '.';
 import { RenderContext } from './render-context';
 import { URI } from '../model/uri';
@@ -99,7 +102,7 @@ function cellValue(
 
 export function renderList(
   results: ResourceView[],
-  fields: string[],
+  fields: SelectInput[],
   toRelativePath: (path: string) => string,
   renderMarkdown?: MarkdownRenderer,
   context?: RenderContext
@@ -107,11 +110,12 @@ export function renderList(
   if (results.length === 0) {
     return '<p class="foam-query-empty">No results</p>';
   }
+  const entries = fields.map(normalizeSelectEntry);
   const items = results
     .map(r => {
       const path = r.uri.path;
-      const parts = fields
-        .map(field => {
+      const parts = entries
+        .map(({ field }) => {
           const value = r[field];
           if (field === 'title') {
             return noteLink(titleText(value, path), path, toRelativePath);
@@ -131,7 +135,7 @@ export function renderList(
 
 export function renderTable(
   results: ResourceView[],
-  fields: string[],
+  fields: SelectInput[],
   toRelativePath: (path: string) => string,
   renderMarkdown?: MarkdownRenderer,
   context?: RenderContext
@@ -139,15 +143,18 @@ export function renderTable(
   if (results.length === 0) {
     return '<p class="foam-query-empty">No results</p>';
   }
-  const headers = fields.map(f => `<th>${escapeHtml(f)}</th>`).join('');
+  const entries = fields.map(normalizeSelectEntry);
+  const headers = entries
+    .map(e => `<th>${escapeHtml(e.label)}</th>`)
+    .join('');
   const rows = results
     .map(r => {
-      const cells = fields
+      const cells = entries
         .map(
-          f =>
+          ({ field }) =>
             `<td>${cellValue(
-              f,
-              r[f],
+              field,
+              r[field],
               r,
               toRelativePath,
               renderMarkdown,

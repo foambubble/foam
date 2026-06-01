@@ -84,7 +84,7 @@ export function renderJsQuery(
     const format =
       desc.format ?? (desc.select && desc.select.length > 1 ? 'table' : 'list');
     if (format === 'list') {
-      const listFields = desc.select ?? ['title'];
+      const listFields = desc.select ?? [{ field: 'title', label: 'title' }];
       return renderList(
         qr.select(listFields).toArray(),
         listFields,

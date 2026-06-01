@@ -155,6 +155,25 @@ Section labels are matched **case-sensitively** — `section[Question]` will not
 
 > `body`, `content`, and `section[...]` aren't supported in VS Code Web — you'll see an inline warning in their place. Everything else works.
 
+### Customising table column headers
+
+By default the table header shows the field expression. For `section[Decision]` and `properties.Status` the wrapper is stripped automatically so you see `Decision` and `Status`. To set an explicit label, use the object form for that entry:
+
+````markdown
+```foam-query
+filter: "#decisions"
+format: table
+select:
+  - title
+  - field: section[Decision]
+    label: Chosen Decision
+  - field: properties.Status
+    label: Question status
+```
+````
+
+Plain strings and `{ field, label }` objects can be mixed in the same `select`.
+
 ## Count Queries
 
 Use `count` when you only need the number of matches:
@@ -209,7 +228,7 @@ Available builder methods:
 - `sortBy(field, direction?)`: sort by field, direction is `'asc'` (default) or `'desc'`
 - `limit(n)`: return at most `n` results
 - `offset(n)`: skip the first `n` results
-- `select(fields)`: project to the given fields
+- `select(fields)`: project to the given fields. Each entry can be a plain string (e.g. `'title'`) or an object `{ field, label }` to customise the table column header, e.g. `.select(['title', { field: 'properties.Status', label: 'State' }])`
 - `format(fmt)`: set the output format (`'list'`, `'table'`, or `'count'`)
 - `toArray()`: return results as a plain array for use in custom logic
 

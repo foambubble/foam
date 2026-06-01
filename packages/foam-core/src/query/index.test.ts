@@ -1343,3 +1343,51 @@ describe('QueryResult.toArray — source-derived fields', () => {
     expect(reads).toBe(3);
   });
 });
+
+describe('QueryResult.select — label support', () => {
+  it('accepts a mix of strings and { field, label } objects and normalises both', () => {
+    const notes = [createTestNote({ uri: '/a.md', title: 'A' })];
+    const { workspace, graph } = makeWorkspaceAndGraph(notes);
+
+    const qr = new QueryResult(workspace, graph, false, '*').select([
+      'title',
+      { field: 'properties.Status', label: 'State' },
+      'section[Decision]',
+    ]);
+
+    expect(qr.descriptor.select).toEqual([
+      { field: 'title', label: 'title' },
+      { field: 'properties.Status', label: 'State' },
+      { field: 'section[Decision]', label: 'Decision' },
+    ]);
+  });
+
+  it('derives the label by beautifying the field when none is supplied', () => {
+    const notes = [createTestNote({ uri: '/a.md', title: 'A' })];
+    const { workspace, graph } = makeWorkspaceAndGraph(notes);
+
+    const qr = new QueryResult(workspace, graph, false, '*').select([
+      { field: 'properties.Status' },
+      { field: 'section[Decision]' },
+    ]);
+
+    expect(qr.descriptor.select).toEqual([
+      { field: 'properties.Status', label: 'Status' },
+      { field: 'section[Decision]', label: 'Decision' },
+    ]);
+  });
+
+  it('projects rows under the raw field key, not the label', () => {
+    const notes = [
+      createTestNote({ uri: '/a.md', title: 'A', properties: { Status: 'open' } }),
+    ];
+    const { workspace, graph } = makeWorkspaceAndGraph(notes);
+
+    const rows = new QueryResult(workspace, graph, false, '*')
+      .select([{ field: 'properties.Status', label: 'State' }])
+      .toArray();
+
+    expect(rows[0]['properties.Status']).toBe('open');
+    expect(rows[0]['State']).toBeUndefined();
+  });
+});

@@ -317,7 +317,7 @@ describe('markdownItFoamQuery', () => {
         const result = md.render(
           '```foam-query\nfilter: "#research"\nselect: [title, properties.status]\nformat: table\n```'
         );
-        expect(result).toContain('<th>properties.status</th>');
+        expect(result).toContain('<th>status</th>');
         expect(result).toContain('published'); // noteD has status: published
       });
 

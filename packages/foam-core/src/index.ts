@@ -72,8 +72,8 @@ export { Resolver } from './templates/variable-resolver';
 export type { VariableProvider } from './templates/variable-resolver';
 
 // Query
-export type { QueryFilter, QueryDescriptor, ResourceView, SourceReader } from './query/index';
-export { parseFilter, QueryResult, executeQuery, ALL_QUERY_FIELDS, requiresSource } from './query/index';
+export type { QueryFilter, QueryDescriptor, ResourceView, SourceReader, SelectInput, SelectEntry } from './query/index';
+export { parseFilter, QueryResult, executeQuery, ALL_QUERY_FIELDS, requiresSource, beautifyFieldLabel, normalizeSelectEntry } from './query/index';
 export { renderDqlQuery } from './query/dql';
 export type { RenderDqlQueryOptions } from './query/dql';
 export { renderJsQuery } from './query/js';

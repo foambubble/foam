@@ -31,6 +31,7 @@ interface FoamConfigData {
   graphTitleMaxLength: number;
   graphStyle: object;
   supportedLanguages: string[];
+  telemetryEnabled: boolean;
 }
 
 export class StaticFoamConfig implements IFoamConfig {
@@ -63,6 +64,7 @@ export class StaticFoamConfig implements IFoamConfig {
   getGraphTitleMaxLength() { return this.data.graphTitleMaxLength; }
   getGraphStyle() { return this.data.graphStyle; }
   getSupportedLanguages() { return this.data.supportedLanguages; }
+  getTelemetryEnabled() { return this.data.telemetryEnabled; }
 }
 
 export function readFoamConfig(workspaceDir: string): StaticFoamConfig {
@@ -126,6 +128,7 @@ export function readFoamConfig(workspaceDir: string): StaticFoamConfig {
     graphTitleMaxLength: getNumber(raw, 'foam.graph.titleMaxLength', 24),
     graphStyle: getObject(raw, 'foam.graph.style'),
     supportedLanguages: getStringArray(raw, 'foam.supportedLanguages', ['markdown']),
+    telemetryEnabled: true,
   });
 }
 

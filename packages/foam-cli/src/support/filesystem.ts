@@ -11,8 +11,11 @@ import {
   MarkdownResourceProvider,
   bootstrap,
   Config,
+  DefaultFoamConfig,
+  cascadeFoamConfig,
 } from '@foam/core';
 import { readFoamConfig } from './config';
+import { readEnvConfigSource, readUserConfigSource } from './user-config';
 import { GlobMatcher } from './glob-matcher';
 
 const DEFAULT_EXCLUDED_DIR_NAMES = new Set([
@@ -130,7 +133,16 @@ export async function loadWorkspaceFromDirectory(
   const rootDir = path.resolve(workspaceDir);
   const rootUri = URI.file(rootDir);
 
-  const foamConfig = readFoamConfig(rootDir);
+  // Cascade: env vars beat the Foam user config file, which beats workspace
+  // settings, which beat built-in defaults. The last entry must be fully
+  // resolved so every getter has a final answer.
+  const workspaceSource = readFoamConfig(rootDir);
+  const userSource = readUserConfigSource();
+  const envSource = readEnvConfigSource();
+  const foamConfig = cascadeFoamConfig(
+    [envSource, userSource, workspaceSource],
+    new DefaultFoamConfig()
+  );
   Config.setDefaultConfig(foamConfig);
 
   const matcher = new GlobMatcher(

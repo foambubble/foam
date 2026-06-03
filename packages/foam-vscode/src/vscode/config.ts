@@ -196,6 +196,13 @@ export class VsCodeFoamConfig implements IFoamConfig {
       .getConfiguration('foam')
       .get('supportedLanguages', ['markdown']);
   }
+
+  getTelemetryEnabled(): boolean {
+    // The extension defers to VS Code's global telemetry signal — handled by
+    // @vscode/extension-telemetry directly. The Foam-level flag is irrelevant
+    // here, so always return the default (`true`); the real gate is upstream.
+    return true;
+  }
 }
 
 export interface ConfigurationMonitor<T> extends Disposable {

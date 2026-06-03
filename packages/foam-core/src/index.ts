@@ -84,8 +84,8 @@ export type { RenderContext } from './query/render-context';
 export { createRenderContext } from './query/render-context';
 
 // Config
-export type { IFoamConfig } from './config';
-export { Config, DefaultFoamConfig } from './config';
+export type { IFoamConfig, IFoamConfigSource } from './config';
+export { Config, DefaultFoamConfig, cascadeFoamConfig } from './config';
 
 // Utilities
 export { Logger, BaseLogger, ConsoleLogger, NoOpLogger } from './utils/log';

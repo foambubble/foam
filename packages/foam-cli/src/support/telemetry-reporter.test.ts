@@ -19,6 +19,9 @@ function makeReporter(overrides: Partial<{
     coreVersion: '0.42.0',
     installationId: 'install-id-123',
     clock: () => '2026-06-03T10:00:00.000Z',
+    poster:
+      overrides.poster ??
+      vi.fn<HttpPoster>().mockResolvedValue({ status: 200 }),
     ...overrides,
   });
 }
@@ -131,6 +134,108 @@ describe('AppInsightsReporter', () => {
     await reporter.flush();
 
     expect(poster).toHaveBeenCalledOnce();
+  });
+
+  describe('forComponent', () => {
+    it('returns an independent reporter that emits events tagged with the new component', async () => {
+      const poster = vi.fn<HttpPoster>().mockResolvedValue({ status: 200 });
+      const cli = makeReporter({ poster });
+      const mcp = cli.forComponent('mcp') as AppInsightsReporter;
+
+      mcp.trackEvent('mcp.session-started');
+      await mcp.flush();
+
+      const env = JSON.parse(poster.mock.calls[0][1]);
+      expect(env.data.baseData.properties['foam.component']).toBe('mcp');
+    });
+
+    it('forks have independent queues — flushing one does not drain the other', async () => {
+      const poster = vi.fn<HttpPoster>().mockResolvedValue({ status: 200 });
+      const cli = makeReporter({ poster });
+      const mcp = cli.forComponent('mcp') as AppInsightsReporter;
+
+      cli.trackEvent('cli.command-invoked', { command: 'graph' });
+      mcp.trackEvent('mcp.session-started');
+
+      // Flushing the fork only sends its own event.
+      const mcpSent = await mcp.flush();
+      expect(mcpSent).toBe(1);
+      expect(poster).toHaveBeenCalledOnce();
+      const mcpEnv = JSON.parse(poster.mock.calls[0][1]);
+      expect(mcpEnv.data.baseData.name).toBe('mcp.session-started');
+
+      // The CLI event is still queued and only flushed when the parent is.
+      const cliSent = await cli.flush();
+      expect(cliSent).toBe(1);
+      const cliEnv = JSON.parse(poster.mock.calls[1][1]);
+      expect(cliEnv.data.baseData.name).toBe('cli.command-invoked');
+    });
+
+    it('preserves the installation ID on the fork', async () => {
+      const poster = vi.fn<HttpPoster>().mockResolvedValue({ status: 200 });
+      const cli = makeReporter({ poster });
+      const mcp = cli.forComponent('mcp') as AppInsightsReporter;
+
+      mcp.trackEvent('mcp.session-started');
+      await mcp.flush();
+
+      const env = JSON.parse(poster.mock.calls[0][1]);
+      expect(env.tags['ai.user.id']).toBe('install-id-123');
+    });
+  });
+
+  describe('anonymous', () => {
+    it('omits the installation ID tag', async () => {
+      const poster = vi.fn<HttpPoster>().mockResolvedValue({ status: 200 });
+      const cli = makeReporter({ poster });
+      const anon = cli.anonymous() as AppInsightsReporter;
+
+      anon.trackEvent('cli.first-run', { consent: 'granted' });
+      await anon.flush();
+
+      const env = JSON.parse(poster.mock.calls[0][1]);
+      expect(env.tags['ai.user.id']).toBeUndefined();
+    });
+
+    it('omits os.platform and node.version from properties', async () => {
+      const poster = vi.fn<HttpPoster>().mockResolvedValue({ status: 200 });
+      const cli = makeReporter({ poster });
+      const anon = cli.anonymous() as AppInsightsReporter;
+
+      anon.trackEvent('cli.first-run', { consent: 'granted' });
+      await anon.flush();
+
+      const env = JSON.parse(poster.mock.calls[0][1]);
+      const props = env.data.baseData.properties;
+      // foam.* properties are kept (they're version info, not identity)
+      expect(props['foam.component']).toBe('cli');
+      expect(props['foam.version']).toBe('0.43.0');
+      // identifying environment props are stripped
+      expect(props['os.platform']).toBeUndefined();
+      expect(props['node.version']).toBeUndefined();
+      // event-specific properties pass through
+      expect(props.consent).toBe('granted');
+    });
+
+    it('parent reporter still emits identifying properties on its own events', async () => {
+      const poster = vi.fn<HttpPoster>().mockResolvedValue({ status: 200 });
+      const cli = makeReporter({ poster });
+      const anon = cli.anonymous() as AppInsightsReporter;
+
+      anon.trackEvent('cli.first-run', { consent: 'granted' });
+      await anon.flush();
+      const anonEnv = JSON.parse(poster.mock.calls[0][1]);
+      expect(anonEnv.tags['ai.user.id']).toBeUndefined();
+      expect(anonEnv.data.baseData.properties['os.platform']).toBeUndefined();
+
+      cli.trackEvent('cli.command-invoked', { command: 'graph' });
+      await cli.flush();
+      const cmdEnv = JSON.parse(poster.mock.calls[1][1]);
+      expect(cmdEnv.tags['ai.user.id']).toBe('install-id-123');
+      expect(cmdEnv.data.baseData.properties['os.platform']).toBe(
+        process.platform
+      );
+    });
   });
 
   describe('trackError', () => {

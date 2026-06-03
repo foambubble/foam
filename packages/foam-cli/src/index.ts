@@ -1,4 +1,12 @@
-import { type ILogger, Logger, LogLevel, BaseLogger } from '@foam/core';
+import {
+  type ILogger,
+  type ITelemetryReporter,
+  Logger,
+  LogLevel,
+  BaseLogger,
+  NoopTelemetryReporter,
+  TELEMETRY_CONNECTION_STRING,
+} from '@foam/core';
 import { parsePublishCommandArgs, renderPublishHelp, runPublishCommand } from './commands/publish';
 import { runListCommand } from './commands/list';
 import { runNoteCommand } from './commands/note';
@@ -18,10 +26,11 @@ import { checkForUpdateNotice, getCurrentVersion } from './support/version';
 import { setColorsEnabled } from './support/colors';
 import {
   CommandRunResult,
-  TelemetryContext,
   shouldSkipTelemetry,
   withTelemetry,
 } from './support/with-telemetry';
+import { AppInsightsReporter, httpsPoster } from './support/telemetry-reporter';
+import { getCoreVersion } from './support/version';
 
 const CLI_HELP = `Usage: foam <command> [options]
 
@@ -74,9 +83,15 @@ class ConsoleLogger extends BaseLogger {
   }
 }
 
+/**
+ * Entrypoint usable in-process. Production binary calls this from `main()`
+ * with a real {@link AppInsightsReporter}; tests omit `reporter` and get
+ * {@link NoopTelemetryReporter} — the safe default that never POSTs.
+ */
 export async function runCli(
   argv: string[],
-  logger: ILogger = new ConsoleLogger()
+  logger: ILogger = new ConsoleLogger(),
+  reporter: ITelemetryReporter = NoopTelemetryReporter
 ): Promise<number> {
   const [command, ...commandArgs] = argv;
 
@@ -104,7 +119,9 @@ export async function runCli(
     ? toExitCode(await dispatch(command, commandArgs, logger))
     : await withTelemetry({
         command: command!,
-        run: ctx => dispatch(command, commandArgs, logger, ctx),
+        reporter,
+        run: effectiveReporter =>
+          dispatch(command, commandArgs, logger, effectiveReporter),
       });
 
   if (updateNotice) logger.info(updateNotice);
@@ -119,7 +136,7 @@ async function dispatch(
   command: string | undefined,
   commandArgs: string[],
   logger: ILogger,
-  telemetryCtx?: TelemetryContext
+  reporter: ITelemetryReporter = NoopTelemetryReporter
 ): Promise<CommandRunResult> {
   if (!command || command === 'help' || command === '--help' || command === '-h') {
     logger.info(renderCliHelp());
@@ -184,7 +201,11 @@ async function dispatch(
           logger.info(MCP_HELP);
           return 0;
         }
-        return runMcpCommand(parseMcpArgs(commandArgs), logger, telemetryCtx);
+        return runMcpCommand(
+          parseMcpArgs(commandArgs),
+          logger,
+          reporter.forComponent('mcp')
+        );
       }
       case 'config': {
         return runConfigCommand(commandArgs, logger);
@@ -204,7 +225,21 @@ async function dispatch(
 
 async function main() {
   Logger.setLevel('info');
-  const exitCode = await runCli(process.argv.slice(2));
+  // Production opt-in: the single place that wires the real reporter.
+  // Any other caller of runCli (tests, embeddings) gets the noop default
+  // unless they explicitly inject something else.
+  const reporter = new AppInsightsReporter({
+    connectionString: TELEMETRY_CONNECTION_STRING,
+    component: 'cli',
+    componentVersion: getCurrentVersion(),
+    coreVersion: getCoreVersion(),
+    poster: httpsPoster,
+  });
+  const exitCode = await runCli(
+    process.argv.slice(2),
+    undefined,
+    reporter
+  );
   process.exitCode = exitCode;
 }
 

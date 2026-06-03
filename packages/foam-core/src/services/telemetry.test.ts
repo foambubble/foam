@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   NoopTelemetryReporter,
-  RecordingTelemetryReporter,
+  InMemoryTelemetryReporter,
   TELEMETRY_CONNECTION_STRING,
   buildAppInsightsEnvelope,
   bucketDuration,
@@ -19,9 +19,9 @@ describe('NoopTelemetryReporter', () => {
   });
 });
 
-describe('RecordingTelemetryReporter', () => {
+describe('InMemoryTelemetryReporter', () => {
   it('captures events with their properties', () => {
-    const reporter = new RecordingTelemetryReporter();
+    const reporter = new InMemoryTelemetryReporter();
     reporter.trackEvent('a');
     reporter.trackEvent('b', { k: 'v' });
 
@@ -32,7 +32,7 @@ describe('RecordingTelemetryReporter', () => {
   });
 
   it('captures errors and reduces them to constructor name', () => {
-    const reporter = new RecordingTelemetryReporter();
+    const reporter = new InMemoryTelemetryReporter();
     class CustomError extends Error {}
     reporter.trackError('ctx', new CustomError('msg'), { extra: '1' });
     reporter.trackError('ctx2', 'not-an-error');
@@ -44,7 +44,7 @@ describe('RecordingTelemetryReporter', () => {
   });
 
   it('reset clears both events and errors', () => {
-    const reporter = new RecordingTelemetryReporter();
+    const reporter = new InMemoryTelemetryReporter();
     reporter.trackEvent('a');
     reporter.trackError('ctx', new Error());
     reporter.reset();
@@ -252,15 +252,15 @@ describe('parseAppInsightsConnectionString', () => {
   });
 
   it('throws when InstrumentationKey is missing', () => {
-    expect(() =>
-      parseAppInsightsConnectionString('IngestionEndpoint=https://x.com')
-    ).toThrow(/InstrumentationKey/);
+    expect(() => parseAppInsightsConnectionString('IngestionEndpoint=https://x.com')).toThrow(
+      /InstrumentationKey/
+    );
   });
 
   it('throws when IngestionEndpoint is missing', () => {
-    expect(() =>
-      parseAppInsightsConnectionString('InstrumentationKey=k')
-    ).toThrow(/IngestionEndpoint/);
+    expect(() => parseAppInsightsConnectionString('InstrumentationKey=k')).toThrow(
+      /IngestionEndpoint/
+    );
   });
 
   it('parses the constant TELEMETRY_CONNECTION_STRING successfully', () => {
@@ -327,8 +327,6 @@ describe('buildAppInsightsEnvelope', () => {
       timestamp: '2026-06-03T10:00:00.000Z',
     }) as { name: string };
 
-    expect(envelope.name).toBe(
-      'Microsoft.ApplicationInsights.aaabbbccc.Event'
-    );
+    expect(envelope.name).toBe('Microsoft.ApplicationInsights.aaabbbccc.Event');
   });
 });

@@ -12,6 +12,28 @@
 export interface ITelemetryReporter {
   trackEvent(name: string, properties?: Record<string, string>): void;
   trackError(context: string, error: unknown, properties?: Record<string, string>): void;
+  /**
+   * Returns a sibling reporter that emits events tagged with a different
+   * component. Implementations share underlying state (queue, identity)
+   * where it makes sense — only the `foam.component` tag differs.
+   */
+  forComponent(component: string): ITelemetryReporter;
+  /**
+   * Returns a sibling reporter that suppresses identity-revealing common
+   * properties (the installation ID, the OS platform, the Node version).
+   * Used by `cli.first-run`, which carries opt-out rate but must remain
+   * unattributable to a specific installation.
+   */
+  anonymous(): ITelemetryReporter;
+  /**
+   * Releases any resources held by this reporter and ensures pending work
+   * (queued events, in-flight POSTs, etc.) is completed. Must be safe to
+   * call multiple times and on a never-used reporter.
+   *
+   * Async because real reporters need to await network I/O before exit.
+   * Not assignable to {@link IDisposable} — that contract is synchronous.
+   */
+  dispose(): Promise<void>;
 }
 
 export const NoopTelemetryReporter: ITelemetryReporter = {
@@ -21,13 +43,22 @@ export const NoopTelemetryReporter: ITelemetryReporter = {
   trackError() {
     /* noop */
   },
+  forComponent() {
+    return NoopTelemetryReporter;
+  },
+  anonymous() {
+    return NoopTelemetryReporter;
+  },
+  async dispose() {
+    /* noop */
+  },
 };
 
 /**
- * Test helper: records every call so tests can assert on the resulting event stream.
- * Not intended for production use.
+ * Test helper: records every call so tests can assert on the resulting
+ * event stream. Not intended for production use.
  */
-export class RecordingTelemetryReporter implements ITelemetryReporter {
+export class InMemoryTelemetryReporter implements ITelemetryReporter {
   readonly events: Array<{
     name: string;
     properties?: Record<string, string>;
@@ -45,6 +76,18 @@ export class RecordingTelemetryReporter implements ITelemetryReporter {
   trackError(context: string, error: unknown, properties?: Record<string, string>): void {
     const errorType = error instanceof Error ? error.constructor.name : 'UnknownError';
     this.errors.push({ context, errorType, properties });
+  }
+
+  forComponent(): ITelemetryReporter {
+    return new InMemoryTelemetryReporter();
+  }
+
+  anonymous(): ITelemetryReporter {
+    return new InMemoryTelemetryReporter();
+  }
+
+  async dispose(): Promise<void> {
+    /* noop — there's nothing to release; events stay in memory for assertions */
   }
 
   reset(): void {

@@ -59,6 +59,9 @@ function callTool(
   const result = spawnSync(process.execPath, args, {
     encoding: 'utf8',
     timeout: 30000,
+    // Disable telemetry: this spec spawns the real CLI binary, which would
+    // otherwise POST to App Insights on every test run.
+    env: { ...process.env, FOAM_TELEMETRY: '0' },
   });
   if (result.status !== 0) {
     throw new Error(

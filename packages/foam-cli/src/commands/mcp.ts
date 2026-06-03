@@ -4,15 +4,11 @@ import {
   ITelemetryReporter,
   Logger,
   NoopTelemetryReporter,
-  TELEMETRY_CONNECTION_STRING,
 } from '@foam/core';
 import { loadWorkspaceFromDirectory } from '../support/filesystem';
 import { NodeWatcher } from '../support/watcher';
 import { parseArgs, getFlag, resolveWorkspaceDir } from '../support/args';
 import type { CliLogger } from '../support/types';
-import type { TelemetryContext } from '../support/with-telemetry';
-import { AppInsightsReporter } from '../support/telemetry-reporter';
-import { getCoreVersion, getCurrentVersion } from '../support/version';
 
 export const MCP_HELP = `Usage: foam mcp [options]
 
@@ -63,7 +59,7 @@ export function parseMcpArgs(argv: string[]): McpArgs {
 export async function runMcpCommand(
   args: McpArgs,
   logger: CliLogger,
-  telemetryCtx?: TelemetryContext
+  reporter: ITelemetryReporter = NoopTelemetryReporter
 ): Promise<number> {
   // The MCP transport owns stdout — anything written there is interpreted
   // as protocol messages. Send our own logs to stderr only.
@@ -96,25 +92,13 @@ export async function runMcpCommand(
     } connections`
   );
 
-  // Build an mcp-component reporter for `mcp.*` events. Reuses the CLI's
-  // installation ID + connection string so events from this server share
-  // identity with the surrounding `cli.command-invoked` event the dispatcher
-  // already queued.
-  const mcpReporter: ITelemetryReporter = telemetryCtx?.enabled
-    ? new AppInsightsReporter({
-        connectionString: TELEMETRY_CONNECTION_STRING,
-        component: 'mcp',
-        componentVersion: getCurrentVersion(),
-        coreVersion: getCoreVersion(),
-        installationId: telemetryCtx.installationId,
-      })
-    : NoopTelemetryReporter;
-
+  // The dispatcher already forked the reporter for component='mcp' — this
+  // command just routes it into FoamMcpServer.
   const server = new FoamMcpServer({
     foam,
     rootUri,
     readOnly: args.readOnly,
-    telemetry: mcpReporter,
+    telemetry: reporter,
   });
 
   const transport = new StdioServerTransport();
@@ -135,10 +119,9 @@ export async function runMcpCommand(
   logger.error('[foam-mcp] Shutting down.');
   await server.close();
   await watcher.dispose();
-  // Flush any pending mcp.* events before exit. The reporter has its own
-  // dispose; the cli.* reporter belongs to withTelemetry's lifecycle.
-  if ('dispose' in mcpReporter && typeof mcpReporter.dispose === 'function') {
-    await mcpReporter.dispose();
-  }
+  // Flush any pending mcp.* events before exit. The reporter shares its
+  // queue with the surrounding cli.* reporter (forks share state), so
+  // disposing here drains everything queued by both lifecycles.
+  await reporter.dispose();
   return 0;
 }

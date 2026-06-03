@@ -2,26 +2,17 @@ import {
   ConsentInput,
   ITelemetryReporter,
   NoopTelemetryReporter,
-  TELEMETRY_CONNECTION_STRING,
   bucketDuration,
   decideConsent,
 } from '@foam/core';
 import { promptFirstRunConsent } from './first-run';
 import { State } from './state';
-import { AppInsightsReporter } from './telemetry-reporter';
-import { getCoreVersion, getCurrentVersion } from './version';
 import {
   readEnvConfigSource,
   readRawUserConfig,
   writeRawUserConfig,
 } from './user-config';
 
-/**
- * Commands for which we do not emit any telemetry. The opt-out command is
- * the obvious one — firing telemetry for the command that disables telemetry
- * is gross. `--help` / `--version` paths are handled by short-circuiting
- * before withTelemetry is called.
- */
 const TELEMETRY_SKIP_COMMANDS = new Set(['config']);
 
 export function shouldSkipTelemetry(command: string | undefined): boolean {
@@ -39,31 +30,17 @@ export type CommandRunResult =
   | number
   | { exitCode: number; telemetryProperties?: Record<string, string> };
 
-/**
- * Resolved telemetry context made available to the command. Commands that
- * need to emit telemetry under a different `component` (notably the `mcp`
- * subcommand, which hosts a `FoamMcpServer` that emits `mcp.*`) read the
- * installation ID + enabled flag from here and construct their own reporter.
- */
-export interface TelemetryContext {
-  /** True when telemetry is on for this run. */
-  enabled: boolean;
-  /** The installation ID, when telemetry is enabled; undefined otherwise. */
-  installationId: string | undefined;
-}
-
 export interface WithTelemetryOptions {
   command: string;
-  run: (ctx: TelemetryContext) => Promise<CommandRunResult>;
-  /** For tests: replaces the AppInsightsReporter. */
-  reporterFactory?: (installationId: string | undefined) => ITelemetryReporter;
+  /**
+   * Reporter the command should use for `cli.*` events. `withTelemetry`
+   * may substitute `NoopTelemetryReporter` if the user has opted out —
+   * the `run` callback always receives the *effective* reporter.
+   */
+  reporter: ITelemetryReporter;
+  run: (reporter: ITelemetryReporter) => Promise<CommandRunResult>;
   /** For tests: replaces the first-run prompt. */
   promptOverride?: () => Promise<'granted' | 'declined' | 'no-prompt'>;
-}
-
-interface RuntimeReporter extends ITelemetryReporter {
-  flush?(): Promise<number>;
-  dispose?(): Promise<void>;
 }
 
 /**
@@ -72,9 +49,11 @@ interface RuntimeReporter extends ITelemetryReporter {
  *
  * Sequence:
  *   1. Resolve consent (env, stored config, first-run prompt if applicable)
- *   2. On first run: fire `cli.first-run` on an anonymous reporter and *await*
- *      flush before continuing, then persist the consent + installation ID
- *   3. Build the session reporter (real or noop based on consent)
+ *   2. On first run: fire `cli.first-run` on `reporter.anonymous()` and
+ *      *await* flush before continuing, then persist the consent + create
+ *      the installation ID (if telemetry will be enabled)
+ *   3. Pass the effective reporter (the injected one, or noop if declined)
+ *      down to the command's run function
  *   4. Run the command, capture duration + exit code
  *   5. Fire `cli.command-invoked`
  *   6. Await final flush
@@ -85,59 +64,47 @@ export async function withTelemetry(
   const consentInput = await resolveConsentInput(opts.promptOverride);
   const decision = decideConsent(consentInput);
 
-  // Persist the user's choice on a first run (regardless of env override),
-  // and ensure an installation ID exists. Both must happen *before* we
-  // build the main reporter.
   const isFirstRun =
     consentInput.kind === 'first-run-prompted' ||
     consentInput.kind === 'first-run-no-prompt';
-  let installationId: string | undefined;
 
   if (isFirstRun && decision.consent !== undefined) {
-    // Fire cli.first-run anonymously and *await* — it's a high-value event.
-    const anonReporter = (opts.reporterFactory ?? defaultReporterFactory)(
-      undefined
-    ) as RuntimeReporter;
+    // High-value event: fire on an anonymous sibling and *await* dispose
+    // before continuing (dispose flushes pending events for real reporters
+    // and is a noop for the recording/noop variants).
+    const anonReporter = opts.reporter.anonymous();
     anonReporter.trackEvent('cli.first-run', { consent: decision.consent });
-    if (anonReporter.flush) {
-      await anonReporter.flush();
-    }
+    await anonReporter.dispose();
 
-    // Persist the user choice (write to config) and create the installation ID.
-    // We do this after the anonymous flush, but it doesn't actually matter:
-    // the anonymous event carries no ID so the order is observationally identical.
+    // Persist the user choice and create the installation ID. The choice
+    // is persisted regardless of env override so subsequent runs know
+    // what the user actually said.
     const userSaid =
       decision.consent === 'declined'
         ? false
-        : decision.consent === 'granted'
-          ? true
-          : // default_on: persist as enabled so subsequent runs don't re-prompt
-            true;
+        : // 'granted' or 'default_on': persist as enabled
+          true;
     persistConsent(userSaid);
 
     if (decision.enabled) {
-      installationId = State.getOrCreateInstallationId().id;
+      State.getOrCreateInstallationId();
     }
   } else if (decision.enabled) {
-    installationId = State.getOrCreateInstallationId().id;
+    State.getOrCreateInstallationId();
   }
 
-  // Build the session reporter for the actual command.
-  const reporter: RuntimeReporter = decision.enabled
-    ? ((opts.reporterFactory ?? defaultReporterFactory)(
-        installationId
-      ) as RuntimeReporter)
-    : (NoopTelemetryReporter as RuntimeReporter);
+  // Effective reporter: the injected one if telemetry is on; noop otherwise.
+  // The injected reporter has the installation ID baked in by its
+  // constructor — we don't re-thread it here.
+  const reporter: ITelemetryReporter = decision.enabled
+    ? opts.reporter
+    : NoopTelemetryReporter;
 
   const startedAt = Date.now();
   let exitCode = 1;
   let extraProps: Record<string, string> | undefined;
-  const ctx: TelemetryContext = {
-    enabled: decision.enabled,
-    installationId,
-  };
   try {
-    const result = await opts.run(ctx);
+    const result = await opts.run(reporter);
     if (typeof result === 'number') {
       exitCode = result;
     } else {
@@ -155,9 +122,7 @@ export async function withTelemetry(
       exitCode: String(exitCode),
       ...extraProps,
     });
-    if (reporter.flush) {
-      await reporter.flush();
-    }
+    await reporter.dispose();
   }
   return exitCode;
 }
@@ -200,16 +165,4 @@ function persistConsent(enabled: boolean): void {
   const raw = readRawUserConfig();
   raw['telemetry.enabled'] = enabled;
   writeRawUserConfig(raw);
-}
-
-function defaultReporterFactory(
-  installationId: string | undefined
-): ITelemetryReporter {
-  return new AppInsightsReporter({
-    connectionString: TELEMETRY_CONNECTION_STRING,
-    component: 'cli',
-    componentVersion: getCurrentVersion(),
-    coreVersion: getCoreVersion(),
-    installationId,
-  });
 }

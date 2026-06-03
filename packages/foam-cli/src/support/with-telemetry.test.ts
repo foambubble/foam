@@ -2,36 +2,33 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { RecordingTelemetryReporter, ITelemetryReporter } from '@foam/core';
+import { ITelemetryReporter, InMemoryTelemetryReporter } from '@foam/core';
 import { withTelemetry, shouldSkipTelemetry } from './with-telemetry';
 import { readRawUserConfig } from './user-config';
 import { State } from './state';
 
 /**
- * Helper: wires up a Recording reporter through withTelemetry, capturing both
- * the anonymous-first-run reporter and the session reporter so we can assert
- * on what each one received.
+ * InMemoryTelemetryReporter wrapper that captures the anonymous fork
+ * `withTelemetry` creates for `cli.first-run`. Forks have independent
+ * event arrays, so tests assert on `recorder.anonForks` for first-run
+ * events and on `recorder.events` for the session reporter's events.
  */
-function setupReporters() {
-  const anon = new RecordingTelemetryReporter();
-  const session = new RecordingTelemetryReporter();
-  let nextIsAnon = true;
-  const reporterFactory = (installationId: string | undefined): ITelemetryReporter => {
-    if (installationId === undefined) {
-      nextIsAnon = false;
-      return wrapWithFlush(anon);
-    }
-    return wrapWithFlush(session);
-  };
-  return { anon, session, reporterFactory, nextIsAnonRef: () => nextIsAnon };
+class CapturingRecorder extends InMemoryTelemetryReporter {
+  readonly anonForks: InMemoryTelemetryReporter[] = [];
+  anonymous(): ITelemetryReporter {
+    const fork = new InMemoryTelemetryReporter();
+    this.anonForks.push(fork);
+    return fork;
+  }
 }
 
-function wrapWithFlush(rec: RecordingTelemetryReporter): ITelemetryReporter & {
-  flush: () => Promise<number>;
-} {
-  return Object.assign(rec, {
-    flush: async () => rec.events.length + rec.errors.length,
-  });
+function makeRecorder(): CapturingRecorder {
+  return new CapturingRecorder();
+}
+
+/** Convenience: flatten events across the recorder and every anonymous fork. */
+function allEvents(rec: CapturingRecorder) {
+  return [...rec.events, ...rec.anonForks.flatMap(f => f.events)];
 }
 
 describe('shouldSkipTelemetry', () => {
@@ -59,20 +56,25 @@ describe('withTelemetry', () => {
 
   describe('first run', () => {
     it('fires cli.first-run with consent=granted when the prompt is accepted, then fires cli.command-invoked', async () => {
-      const { anon, session, reporterFactory } = setupReporters();
+      const reporter = makeRecorder();
 
       const exitCode = await withTelemetry({
         command: 'graph',
+        reporter,
         run: async () => 0,
-        reporterFactory,
         promptOverride: async () => 'granted',
       });
 
       expect(exitCode).toBe(0);
-      expect(anon.events).toEqual([
-        { name: 'cli.first-run', properties: { consent: 'granted' } },
-      ]);
-      expect(session.events).toContainEqual(
+      // cli.first-run lives on the anonymous fork (independent queue),
+      // cli.command-invoked lives on the session reporter (the recorder itself).
+      expect(reporter.anonForks[0].events).toContainEqual(
+        expect.objectContaining({
+          name: 'cli.first-run',
+          properties: { consent: 'granted' },
+        })
+      );
+      expect(reporter.events).toContainEqual(
         expect.objectContaining({
           name: 'cli.command-invoked',
           properties: expect.objectContaining({
@@ -83,50 +85,53 @@ describe('withTelemetry', () => {
       );
     });
 
-    it('fires cli.first-run with consent=declined and no further events on the session reporter', async () => {
-      const { anon, session, reporterFactory } = setupReporters();
+    it('fires cli.first-run with consent=declined and emits nothing further', async () => {
+      const reporter = makeRecorder();
 
       await withTelemetry({
         command: 'graph',
+        reporter,
         run: async () => 0,
-        reporterFactory,
         promptOverride: async () => 'declined',
       });
 
-      expect(anon.events).toEqual([
-        { name: 'cli.first-run', properties: { consent: 'declined' } },
-      ]);
-      // Session reporter is the Noop — our factory was only called for the
-      // anonymous reporter, never for an installationId-carrying one.
-      expect(session.events).toEqual([]);
+      const firstRun = reporter.anonForks[0].events.filter(e => e.name === 'cli.first-run');
+      expect(firstRun).toHaveLength(1);
+      expect(firstRun[0].properties).toEqual({ consent: 'declined' });
+
+      // Declined → session reporter gets nothing (no command-invoked)
+      expect(allEvents(reporter).find(e => e.name === 'cli.command-invoked')).toBeUndefined();
     });
 
     it('fires cli.first-run with consent=default_on when no prompt is possible', async () => {
-      const { anon, session, reporterFactory } = setupReporters();
+      const reporter = makeRecorder();
 
       await withTelemetry({
         command: 'graph',
+        reporter,
         run: async () => 0,
-        reporterFactory,
         promptOverride: async () => 'no-prompt',
       });
 
-      expect(anon.events).toEqual([
-        { name: 'cli.first-run', properties: { consent: 'default_on' } },
-      ]);
+      expect(reporter.anonForks[0].events).toContainEqual(
+        expect.objectContaining({
+          name: 'cli.first-run',
+          properties: { consent: 'default_on' },
+        })
+      );
       // default_on enables telemetry → cli.command-invoked goes to the session reporter
-      expect(session.events).toContainEqual(
+      expect(reporter.events).toContainEqual(
         expect.objectContaining({ name: 'cli.command-invoked' })
       );
     });
 
     it('persists the user choice so the next run is a subsequent-run path', async () => {
-      const { reporterFactory } = setupReporters();
+      const reporter = makeRecorder();
 
       await withTelemetry({
         command: 'graph',
+        reporter,
         run: async () => 0,
-        reporterFactory,
         promptOverride: async () => 'declined',
       });
 
@@ -134,12 +139,12 @@ describe('withTelemetry', () => {
     });
 
     it('creates the installation ID exactly when enabled (not on declined)', async () => {
-      const { reporterFactory } = setupReporters();
+      const reporter = makeRecorder();
 
       await withTelemetry({
         command: 'graph',
+        reporter,
         run: async () => 0,
-        reporterFactory,
         promptOverride: async () => 'declined',
       });
 
@@ -148,12 +153,12 @@ describe('withTelemetry', () => {
     });
 
     it('creates the installation ID when granted', async () => {
-      const { reporterFactory } = setupReporters();
+      const reporter = makeRecorder();
 
       await withTelemetry({
         command: 'graph',
+        reporter,
         run: async () => 0,
-        reporterFactory,
         promptOverride: async () => 'granted',
       });
 
@@ -173,19 +178,20 @@ describe('withTelemetry', () => {
         JSON.stringify({ installationId: 'existing-uuid' })
       );
 
-      const { anon, session, reporterFactory } = setupReporters();
+      const reporter = makeRecorder();
 
       await withTelemetry({
         command: 'graph',
+        reporter,
         run: async () => 0,
-        reporterFactory,
         promptOverride: async () => {
           throw new Error('should not prompt on subsequent run');
         },
       });
 
-      expect(anon.events).toEqual([]); // no first-run event
-      expect(session.events).toContainEqual(
+      // Subsequent run: no anonymous fork should be created at all.
+      expect(reporter.anonForks).toHaveLength(0);
+      expect(reporter.events).toContainEqual(
         expect.objectContaining({ name: 'cli.command-invoked' })
       );
     });
@@ -196,17 +202,17 @@ describe('withTelemetry', () => {
         JSON.stringify({ 'telemetry.enabled': false })
       );
 
-      const { anon, session, reporterFactory } = setupReporters();
+      const reporter = makeRecorder();
 
       await withTelemetry({
         command: 'graph',
+        reporter,
         run: async () => 0,
-        reporterFactory,
         promptOverride: async () => 'granted', // ignored
       });
 
-      expect(anon.events).toEqual([]);
-      expect(session.events).toEqual([]);
+      // Telemetry disabled → withTelemetry swaps in Noop, recorder captures nothing
+      expect(reporter.events).toEqual([]);
     });
   });
 
@@ -218,13 +224,13 @@ describe('withTelemetry', () => {
       );
       process.env.FOAM_TELEMETRY = '0';
 
-      const { session, reporterFactory } = setupReporters();
+      const reporter = makeRecorder();
       await withTelemetry({
         command: 'graph',
+        reporter,
         run: async () => 0,
-        reporterFactory,
       });
-      expect(session.events).toEqual([]);
+      expect(reporter.events).toEqual([]);
     });
 
     it('FOAM_TELEMETRY=1 enables the session reporter even when stored consent is false', async () => {
@@ -234,13 +240,13 @@ describe('withTelemetry', () => {
       );
       process.env.FOAM_TELEMETRY = '1';
 
-      const { session, reporterFactory } = setupReporters();
+      const reporter = makeRecorder();
       await withTelemetry({
         command: 'graph',
+        reporter,
         run: async () => 0,
-        reporterFactory,
       });
-      expect(session.events).toContainEqual(
+      expect(reporter.events).toContainEqual(
         expect.objectContaining({ name: 'cli.command-invoked' })
       );
     });
@@ -248,43 +254,42 @@ describe('withTelemetry', () => {
 
   describe('command lifecycle', () => {
     it('captures the command exit code', async () => {
-      const { session, reporterFactory } = setupReporters();
+      const reporter = makeRecorder();
       const exitCode = await withTelemetry({
         command: 'graph',
+        reporter,
         run: async () => 2,
-        reporterFactory,
         promptOverride: async () => 'granted',
       });
 
       expect(exitCode).toBe(2);
-      const event = session.events.find(e => e.name === 'cli.command-invoked');
+      const event = reporter.events.find(e => e.name === 'cli.command-invoked');
       expect(event?.properties?.exitCode).toBe('2');
     });
 
     it('fires cli.command-invoked even when the command throws', async () => {
-      const { session, reporterFactory } = setupReporters();
+      const reporter = makeRecorder();
       await expect(
         withTelemetry({
           command: 'graph',
+          reporter,
           run: async () => {
             throw new Error('boom');
           },
-          reporterFactory,
           promptOverride: async () => 'granted',
         })
       ).rejects.toThrow('boom');
 
-      const invokedEvent = session.events.find(
-        e => e.name === 'cli.command-invoked'
-      );
+      const invokedEvent = reporter.events.find(e => e.name === 'cli.command-invoked');
       expect(invokedEvent).toBeDefined();
       expect(invokedEvent?.properties?.exitCode).toBe('1');
     });
 
     it('attaches telemetryProperties from the result object to cli.command-invoked', async () => {
-      const { session, reporterFactory } = setupReporters();
+      const reporter = makeRecorder();
       await withTelemetry({
         command: 'note',
+        reporter,
         run: async () => ({
           exitCode: 0,
           telemetryProperties: {
@@ -292,11 +297,10 @@ describe('withTelemetry', () => {
             'template-format': 'md',
           },
         }),
-        reporterFactory,
         promptOverride: async () => 'granted',
       });
 
-      const event = session.events.find(e => e.name === 'cli.command-invoked');
+      const event = reporter.events.find(e => e.name === 'cli.command-invoked');
       expect(event?.properties).toMatchObject({
         command: 'note',
         exitCode: '0',
@@ -306,45 +310,45 @@ describe('withTelemetry', () => {
     });
 
     it('still accepts a bare number return for backward compatibility', async () => {
-      const { session, reporterFactory } = setupReporters();
+      const reporter = makeRecorder();
       const exitCode = await withTelemetry({
         command: 'graph',
+        reporter,
         run: async () => 0,
-        reporterFactory,
         promptOverride: async () => 'granted',
       });
       expect(exitCode).toBe(0);
-      const event = session.events.find(e => e.name === 'cli.command-invoked');
+      const event = reporter.events.find(e => e.name === 'cli.command-invoked');
       expect(event?.properties).not.toHaveProperty('template-type');
     });
 
     it('uses the object return exitCode for the event', async () => {
-      const { session, reporterFactory } = setupReporters();
+      const reporter = makeRecorder();
       const exitCode = await withTelemetry({
         command: 'note',
+        reporter,
         run: async () => ({ exitCode: 2 }),
-        reporterFactory,
         promptOverride: async () => 'granted',
       });
       expect(exitCode).toBe(2);
-      const event = session.events.find(e => e.name === 'cli.command-invoked');
+      const event = reporter.events.find(e => e.name === 'cli.command-invoked');
       expect(event?.properties?.exitCode).toBe('2');
     });
 
     it('records an error event when the command throws', async () => {
-      const { session, reporterFactory } = setupReporters();
+      const reporter = makeRecorder();
       await expect(
         withTelemetry({
           command: 'graph',
+          reporter,
           run: async () => {
             throw new TypeError('bad type');
           },
-          reporterFactory,
           promptOverride: async () => 'granted',
         })
       ).rejects.toThrow();
 
-      expect(session.errors).toContainEqual(
+      expect(reporter.errors).toContainEqual(
         expect.objectContaining({
           context: 'dispatch',
           errorType: 'TypeError',
@@ -352,5 +356,40 @@ describe('withTelemetry', () => {
       );
     });
 
+    it('passes the effective reporter to the run function', async () => {
+      const reporter = makeRecorder();
+      let received: ITelemetryReporter | undefined;
+      await withTelemetry({
+        command: 'graph',
+        reporter,
+        run: async r => {
+          received = r;
+          return 0;
+        },
+        promptOverride: async () => 'granted',
+      });
+      // The run callback gets the same reporter instance (telemetry was enabled).
+      expect(received).toBe(reporter);
+    });
+
+    it('passes Noop to run when telemetry is disabled', async () => {
+      fs.writeFileSync(
+        path.join(tempDir, 'config.json'),
+        JSON.stringify({ 'telemetry.enabled': false })
+      );
+
+      const reporter = makeRecorder();
+      let received: ITelemetryReporter | undefined;
+      await withTelemetry({
+        command: 'graph',
+        reporter,
+        run: async r => {
+          received = r;
+          return 0;
+        },
+      });
+      // Telemetry disabled → run receives the Noop, not our recorder
+      expect(received).not.toBe(reporter);
+    });
   });
 });

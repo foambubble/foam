@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import {
   Foam,
   FoamError,
@@ -19,14 +18,14 @@ import {
   serializeNoteItem,
   serializeNoteDetail,
 } from '../serializers';
-import { withToolErrorHandling } from '../errors';
+import type { ToolRegistrar } from '../server';
 
 const json = (data: unknown) => ({
   content: [{ type: 'text' as const, text: JSON.stringify(data) }],
 });
 
 export function registerResourceTools(
-  server: McpServer,
+  register: ToolRegistrar,
   foam: Foam,
   dataStore: IDataStore,
   rootUri: URI,
@@ -34,7 +33,7 @@ export function registerResourceTools(
 ) {
   const { readOnly = false } = opts;
   // ─── list_resources ────────────────────────────────────────────────────────
-  server.registerTool(
+  register(
     'list_resources',
     {
       description:
@@ -45,18 +44,18 @@ export function registerResourceTools(
         limit: z.number().int().positive().optional(),
       },
     },
-    withToolErrorHandling(async args => {
+    async args => {
       const items = listNotes(foam.workspace, {
         type: args.type,
         tags: args.tag ? [args.tag] : undefined,
         limit: args.limit,
       });
       return json(items.map(i => serializeNoteItem(i, rootUri)));
-    })
+    }
   );
 
   // ─── get_resource ──────────────────────────────────────────────────────────
-  server.registerTool(
+  register(
     'get_resource',
     {
       description:
@@ -66,7 +65,7 @@ export function registerResourceTools(
         identifier: z.string().optional(),
       },
     },
-    withToolErrorHandling(async args => {
+    async args => {
       if (!args.uri && !args.identifier) {
         throw new FoamError(
           'invalid_input',
@@ -81,11 +80,11 @@ export function registerResourceTools(
         includeLinks: true,
       });
       return json(serializeNoteDetail(detail, rootUri));
-    })
+    }
   );
 
   // ─── read_resource ─────────────────────────────────────────────────────────
-  server.registerTool(
+  register(
     'read_resource',
     {
       description: 'Read the raw markdown content of a resource.',
@@ -93,7 +92,7 @@ export function registerResourceTools(
         uri: z.string(),
       },
     },
-    withToolErrorHandling(async args => {
+    async args => {
       const uri = parseUriInput(args.uri, rootUri);
       const content = await dataStore.read(uri);
       if (content === null) {
@@ -104,7 +103,7 @@ export function registerResourceTools(
         );
       }
       return json({ uri: uriToOutputString(uri, rootUri), content });
-    })
+    }
   );
 
   if (readOnly) {
@@ -112,7 +111,7 @@ export function registerResourceTools(
   }
 
   // ─── create_resource ───────────────────────────────────────────────────────
-  server.registerTool(
+  register(
     'create_resource',
     {
       description:
@@ -123,7 +122,7 @@ export function registerResourceTools(
         properties: z.record(z.string(), z.string()).optional(),
       },
     },
-    withToolErrorHandling(async args => {
+    async args => {
       // MCP is agent-driven; never grant JS-template execution rights.
       const result = await noteCreate(
         foam,
@@ -141,11 +140,11 @@ export function registerResourceTools(
         id: result.id,
         title: resource?.title ?? args.title ?? '',
       });
-    })
+    }
   );
 
   // ─── update_resource ───────────────────────────────────────────────────────
-  server.registerTool(
+  register(
     'update_resource',
     {
       description:
@@ -157,7 +156,7 @@ export function registerResourceTools(
         merge_properties: z.boolean().optional(),
       },
     },
-    withToolErrorHandling(async args => {
+    async args => {
       const uri = parseUriInput(args.uri, rootUri);
       if (args.content === undefined && args.properties === undefined) {
         throw new FoamError(
@@ -182,11 +181,11 @@ export function registerResourceTools(
       }
       await dataStore.write(uri, nextContent);
       return json({ uri: uriToOutputString(uri, rootUri) });
-    })
+    }
   );
 
   // ─── delete_resource ───────────────────────────────────────────────────────
-  server.registerTool(
+  register(
     'delete_resource',
     {
       description:
@@ -197,7 +196,7 @@ export function registerResourceTools(
         permanent: z.boolean().optional(),
       },
     },
-    withToolErrorHandling(async args => {
+    async args => {
       if (args.confirm !== true) {
         throw new FoamError(
           'invalid_input',
@@ -214,11 +213,11 @@ export function registerResourceTools(
         trashed: result.trashed,
         location: uriToOutputString(result.uri, rootUri),
       });
-    })
+    }
   );
 
   // ─── move_resource ─────────────────────────────────────────────────────────
-  server.registerTool(
+  register(
     'move_resource',
     {
       description:
@@ -228,7 +227,7 @@ export function registerResourceTools(
         new_path: z.string(),
       },
     },
-    withToolErrorHandling(async args => {
+    async args => {
       const oldUri = parseUriInput(args.uri, rootUri);
       const newUri = parseUriInput(args.new_path, rootUri);
       const resource = resolveNote(foam.workspace, { uri: oldUri });
@@ -244,6 +243,6 @@ export function registerResourceTools(
         new_uri: uriToOutputString(result.new_uri, rootUri),
         updated_links: result.updated_links,
       });
-    })
+    }
   );
 }

@@ -1,19 +1,18 @@
 import { z } from 'zod';
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { Foam, URI, searchWorkspace } from '@foam/core';
 import { serializeSearchMatch } from '../serializers';
-import { withToolErrorHandling } from '../errors';
+import type { ToolRegistrar } from '../server';
 
 const json = (data: unknown) => ({
   content: [{ type: 'text' as const, text: JSON.stringify(data) }],
 });
 
 export function registerSearchTools(
-  server: McpServer,
+  register: ToolRegistrar,
   foam: Foam,
   rootUri: URI
 ) {
-  server.registerTool(
+  register(
     'search_resources',
     {
       description: 'Search resources by title, alias, tag, or property.',
@@ -22,16 +21,16 @@ export function registerSearchTools(
         limit: z.number().int().positive().optional(),
       },
     },
-    withToolErrorHandling(async args => {
+    async args => {
       const matches = searchWorkspace(foam.workspace, {
         query: args.query,
         limit: args.limit,
       });
       return json(matches.map(m => serializeSearchMatch(m, rootUri)));
-    })
+    }
   );
 
-  server.registerTool(
+  register(
     'search_by_property',
     {
       description:
@@ -42,12 +41,12 @@ export function registerSearchTools(
         limit: z.number().int().positive().optional(),
       },
     },
-    withToolErrorHandling(async args => {
+    async args => {
       const matches = searchWorkspace(foam.workspace, {
         properties: [{ key: args.property, value: args.value }],
         limit: args.limit,
       });
       return json(matches.map(m => serializeSearchMatch(m, rootUri)));
-    })
+    }
   );
 }

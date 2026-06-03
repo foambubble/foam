@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import {
   Foam,
   FoamError,
@@ -17,14 +16,14 @@ import {
   uriToOutputString,
   serializeNoteItem,
 } from '../serializers';
-import { withToolErrorHandling } from '../errors';
+import type { ToolRegistrar } from '../server';
 
 const json = (data: unknown) => ({
   content: [{ type: 'text' as const, text: JSON.stringify(data) }],
 });
 
 export function registerTagTools(
-  server: McpServer,
+  register: ToolRegistrar,
   foam: Foam,
   dataStore: IDataStore,
   rootUri: URI,
@@ -32,7 +31,7 @@ export function registerTagTools(
 ) {
   const { readOnly = false } = opts;
   // ─── list_tags ─────────────────────────────────────────────────────────────
-  server.registerTool(
+  register(
     'list_tags',
     {
       description: 'List all tags with usage counts.',
@@ -41,18 +40,18 @@ export function registerTagTools(
         limit: z.number().int().positive().optional(),
       },
     },
-    withToolErrorHandling(async args => {
+    async args => {
       const tags = listTags(foam.tags, {
         prefix: args.prefix,
         sort: 'count',
         limit: args.limit,
       });
       return json(tags);
-    })
+    }
   );
 
   // ─── search_by_tag ─────────────────────────────────────────────────────────
-  server.registerTool(
+  register(
     'search_by_tag',
     {
       description: 'Find resources tagged with the given tag.',
@@ -61,7 +60,7 @@ export function registerTagTools(
         limit: z.number().int().positive().optional(),
       },
     },
-    withToolErrorHandling(async args => {
+    async args => {
       const cleanTag = args.tag.startsWith('#') ? args.tag.slice(1) : args.tag;
       const matches = searchWorkspace(foam.workspace, {
         tags: [cleanTag],
@@ -77,7 +76,7 @@ export function registerTagTools(
           tags: m.tags,
         }))
       );
-    })
+    }
   );
 
   if (readOnly) {
@@ -85,7 +84,7 @@ export function registerTagTools(
   }
 
   // ─── add_tags ──────────────────────────────────────────────────────────────
-  server.registerTool(
+  register(
     'add_tags',
     {
       description:
@@ -95,7 +94,7 @@ export function registerTagTools(
         tags: z.array(z.string()).min(1),
       },
     },
-    withToolErrorHandling(async args => {
+    async args => {
       const uri = parseUriInput(args.uri, rootUri);
       const existing = await dataStore.read(uri);
       if (existing === null) {
@@ -108,11 +107,11 @@ export function registerTagTools(
       const { content, tags } = addTagsToFrontmatter(existing, args.tags);
       await dataStore.write(uri, content);
       return json({ uri: uriToOutputString(uri, rootUri), tags });
-    })
+    }
   );
 
   // ─── remove_tags ───────────────────────────────────────────────────────────
-  server.registerTool(
+  register(
     'remove_tags',
     {
       description: 'Remove tags from a note\'s frontmatter.',
@@ -121,7 +120,7 @@ export function registerTagTools(
         tags: z.array(z.string()).min(1),
       },
     },
-    withToolErrorHandling(async args => {
+    async args => {
       const uri = parseUriInput(args.uri, rootUri);
       const existing = await dataStore.read(uri);
       if (existing === null) {
@@ -134,11 +133,11 @@ export function registerTagTools(
       const { content, tags } = removeTagsFromFrontmatter(existing, args.tags);
       await dataStore.write(uri, content);
       return json({ uri: uriToOutputString(uri, rootUri), tags });
-    })
+    }
   );
 
   // ─── rename_tag ────────────────────────────────────────────────────────────
-  server.registerTool(
+  register(
     'rename_tag',
     {
       description:
@@ -149,7 +148,7 @@ export function registerTagTools(
         force: z.boolean().optional(),
       },
     },
-    withToolErrorHandling(async args => {
+    async args => {
       const result = await renameTag(
         foam.tags,
         dataStore,
@@ -162,6 +161,6 @@ export function registerTagTools(
         new_tag: result.new_tag,
         updated_resources: result.updated_notes,
       });
-    })
+    }
   );
 }

@@ -18,6 +18,7 @@ import { checkForUpdateNotice, getCurrentVersion } from './support/version';
 import { setColorsEnabled } from './support/colors';
 import {
   CommandRunResult,
+  TelemetryContext,
   shouldSkipTelemetry,
   withTelemetry,
 } from './support/with-telemetry';
@@ -103,7 +104,7 @@ export async function runCli(
     ? toExitCode(await dispatch(command, commandArgs, logger))
     : await withTelemetry({
         command: command!,
-        run: () => dispatch(command, commandArgs, logger),
+        run: ctx => dispatch(command, commandArgs, logger, ctx),
       });
 
   if (updateNotice) logger.info(updateNotice);
@@ -117,7 +118,8 @@ function toExitCode(result: CommandRunResult): number {
 async function dispatch(
   command: string | undefined,
   commandArgs: string[],
-  logger: ILogger
+  logger: ILogger,
+  telemetryCtx?: TelemetryContext
 ): Promise<CommandRunResult> {
   if (!command || command === 'help' || command === '--help' || command === '-h') {
     logger.info(renderCliHelp());
@@ -182,7 +184,7 @@ async function dispatch(
           logger.info(MCP_HELP);
           return 0;
         }
-        return runMcpCommand(parseMcpArgs(commandArgs), logger);
+        return runMcpCommand(parseMcpArgs(commandArgs), logger, telemetryCtx);
       }
       case 'config': {
         return runConfigCommand(commandArgs, logger);

@@ -39,9 +39,22 @@ export type CommandRunResult =
   | number
   | { exitCode: number; telemetryProperties?: Record<string, string> };
 
+/**
+ * Resolved telemetry context made available to the command. Commands that
+ * need to emit telemetry under a different `component` (notably the `mcp`
+ * subcommand, which hosts a `FoamMcpServer` that emits `mcp.*`) read the
+ * installation ID + enabled flag from here and construct their own reporter.
+ */
+export interface TelemetryContext {
+  /** True when telemetry is on for this run. */
+  enabled: boolean;
+  /** The installation ID, when telemetry is enabled; undefined otherwise. */
+  installationId: string | undefined;
+}
+
 export interface WithTelemetryOptions {
   command: string;
-  run: () => Promise<CommandRunResult>;
+  run: (ctx: TelemetryContext) => Promise<CommandRunResult>;
   /** For tests: replaces the AppInsightsReporter. */
   reporterFactory?: (installationId: string | undefined) => ITelemetryReporter;
   /** For tests: replaces the first-run prompt. */
@@ -119,8 +132,12 @@ export async function withTelemetry(
   const startedAt = Date.now();
   let exitCode = 1;
   let extraProps: Record<string, string> | undefined;
+  const ctx: TelemetryContext = {
+    enabled: decision.enabled,
+    installationId,
+  };
   try {
-    const result = await opts.run();
+    const result = await opts.run(ctx);
     if (typeof result === 'number') {
       exitCode = result;
     } else {

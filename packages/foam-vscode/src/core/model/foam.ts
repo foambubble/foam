@@ -51,9 +51,7 @@ export const bootstrap = async (
   if (await embeddingProvider.isAvailable()) {
     Logger.info('Embeddings service initialized');
   } else {
-    Logger.warn(
-      'Embedding provider not available. Semantic features will be disabled.'
-    );
+    Logger.debug('Embedding provider not available. Semantic features will be disabled.');
   }
 
   return {

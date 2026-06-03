@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { RecordingTelemetryReporter, ITelemetryReporter } from '@foam/core';
 import { withTelemetry, shouldSkipTelemetry } from './with-telemetry';
 import { readRawUserConfig } from './user-config';
-import { readState } from './state';
+import { State } from './state';
 
 /**
  * Helper: wires up a Recording reporter through withTelemetry, capturing both
@@ -144,7 +144,7 @@ describe('withTelemetry', () => {
       });
 
       // Declined: no telemetry → no installation ID needed
-      expect(readState().installationId).toBeUndefined();
+      expect(State.read().installationId).toBeUndefined();
     });
 
     it('creates the installation ID when granted', async () => {
@@ -157,7 +157,7 @@ describe('withTelemetry', () => {
         promptOverride: async () => 'granted',
       });
 
-      expect(typeof readState().installationId).toBe('string');
+      expect(typeof State.read().installationId).toBe('string');
     });
   });
 

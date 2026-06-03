@@ -1,18 +1,9 @@
-import * as fs from 'fs';
 import * as https from 'https';
-import * as os from 'os';
-import * as path from 'path';
 import { bold, dim, warning } from './colors';
+import { State } from './state';
 
 declare const __CLI_VERSION__: string;
 declare const __CORE_VERSION__: string;
-
-export interface UpdateCheckCache {
-  lastChecked: string;
-  latestVersion: string;
-  /** ISO timestamp of the last time the update notice was shown to the user. */
-  lastNotified?: string;
-}
 
 const NPM_PACKAGE = 'foam-cli';
 const CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
@@ -24,37 +15,6 @@ export function getCurrentVersion(): string {
 
 export function getCoreVersion(): string {
   return __CORE_VERSION__;
-}
-
-export function getUpdateCheckCachePath(): string {
-  return path.join(os.homedir(), '.config', 'foam', 'update-check.json');
-}
-
-export function readUpdateCheckCache(): UpdateCheckCache | null {
-  try {
-    const raw = fs.readFileSync(getUpdateCheckCachePath(), 'utf8');
-    const data = JSON.parse(raw);
-    if (
-      typeof data.lastChecked === 'string' &&
-      typeof data.latestVersion === 'string' &&
-      (data.lastNotified === undefined || typeof data.lastNotified === 'string')
-    ) {
-      return data as UpdateCheckCache;
-    }
-    return null;
-  } catch {
-    return null;
-  }
-}
-
-export function writeUpdateCheckCache(data: UpdateCheckCache): void {
-  try {
-    const cachePath = getUpdateCheckCachePath();
-    fs.mkdirSync(path.dirname(cachePath), { recursive: true });
-    fs.writeFileSync(cachePath, JSON.stringify(data), 'utf8');
-  } catch {
-    // non-critical, swallow
-  }
 }
 
 export function isNewerVersion(candidate: string, current: string): boolean {
@@ -109,7 +69,7 @@ export function formatUpdateNotice(latestVersion: string): string {
 }
 
 export function checkForUpdateNotice(): string | null {
-  const cache = readUpdateCheckCache();
+  const cache = State.readUpdateCheck();
 
   const shouldFetch =
     !cache || Date.now() - new Date(cache.lastChecked).getTime() > CHECK_INTERVAL_MS;
@@ -118,7 +78,7 @@ export function checkForUpdateNotice(): string | null {
     // Fire-and-forget background refresh — never awaited
     fetchLatestVersion({ unref: true })
       .then(latestVersion => {
-        writeUpdateCheckCache({
+        State.writeUpdateCheck({
           ...cache,
           lastChecked: new Date().toISOString(),
           latestVersion,
@@ -140,7 +100,7 @@ export function checkForUpdateNotice(): string | null {
     return null;
   }
 
-  writeUpdateCheckCache({
+  State.writeUpdateCheck({
     ...cache,
     lastNotified: new Date().toISOString(),
   });

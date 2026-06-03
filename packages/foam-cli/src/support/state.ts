@@ -3,65 +3,98 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { getUserConfigDir } from './user-config';
 
+export interface UpdateCheckCache {
+  lastChecked: string;
+  latestVersion: string;
+  /** ISO timestamp of the last time the update notice was shown. */
+  lastNotified?: string;
+}
+
 /**
- * Tool-managed state stored alongside the user config. Not user-edited.
- * Currently holds only the anonymous installation ID; future tool-managed
- * values (e.g. lastSeenVersion) can be added as additional keys.
+ * Tool-managed state persisted in `state.json`. Not user-edited. The
+ * canonical inventory of everything the CLI persists about itself —
+ * every slice's keys live here.
  */
 export interface FoamState {
-  installationId: string;
+  installationId?: string;
+  updateCheck?: UpdateCheckCache;
 }
 
-export function getStatePath(): string {
-  return path.join(getUserConfigDir(), 'state.json');
-}
+class StateStore {
+  getPath(): string {
+    return path.join(getUserConfigDir(), 'state.json');
+  }
 
-/**
- * Reads the state file. Missing file returns an empty object — the caller
- * decides how to interpret missing keys.
- */
-export function readState(): Partial<FoamState> {
-  const statePath = getStatePath();
-  try {
-    return JSON.parse(fs.readFileSync(statePath, 'utf8'));
-  } catch (e) {
-    if ((e as NodeJS.ErrnoException).code === 'ENOENT') {
-      return {};
+  read(): FoamState {
+    try {
+      return JSON.parse(fs.readFileSync(this.getPath(), 'utf8'));
+    } catch (e) {
+      if ((e as NodeJS.ErrnoException).code === 'ENOENT') {
+        return {};
+      }
+      throw e;
     }
-    throw e;
+  }
+
+  /**
+   * Read-modify-write: merges `patch` into the current state and writes
+   * atomically. Unknown keys are preserved so an older binary doesn't drop
+   * state written by a newer one. Two concurrent patches to different
+   * slices can race (last writer wins on what it read) — acceptable at
+   * CLI scale.
+   */
+  patch(patch: Partial<FoamState>): void {
+    const next: FoamState = { ...this.read(), ...patch };
+    const statePath = this.getPath();
+    fs.mkdirSync(path.dirname(statePath), { recursive: true });
+
+    const tmpPath = statePath + '.tmp';
+    fs.writeFileSync(tmpPath, JSON.stringify(next, null, 2) + '\n');
+    fs.renameSync(tmpPath, statePath);
+  }
+
+  /**
+   * Returns the existing installation ID, or generates and persists a new
+   * one. `isNew` lets the caller distinguish "first run ever"
+   * from "subsequent run on the same machine".
+   * An empty-string ID is treated as missing — defensive against
+   * partial writes from an earlier crash.
+   */
+  getOrCreateInstallationId(): { id: string; isNew: boolean } {
+    const current = this.read().installationId;
+    if (typeof current === 'string' && current.length > 0) {
+      return { id: current, isNew: false };
+    }
+    const id = crypto.randomUUID();
+    this.patch({ installationId: id });
+    return { id, isNew: true };
+  }
+
+  readUpdateCheck(): UpdateCheckCache | null {
+    try {
+      const data = this.read().updateCheck;
+      if (
+        data &&
+        typeof data.lastChecked === 'string' &&
+        typeof data.latestVersion === 'string' &&
+        (data.lastNotified === undefined || typeof data.lastNotified === 'string')
+      ) {
+        return data;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  }
+
+  /** Failures are swallowed — the update-check feature must never fail the CLI. */
+  writeUpdateCheck(cache: UpdateCheckCache): void {
+    try {
+      this.patch({ updateCheck: cache });
+    } catch {
+      // non-critical
+    }
   }
 }
 
-/**
- * Writes the state file atomically (write-then-rename) so a crash mid-write
- * doesn't leave a corrupted file. Creates the config dir if needed.
- */
-export function writeState(state: Partial<FoamState>): void {
-  const dir = getUserConfigDir();
-  const statePath = getStatePath();
-  fs.mkdirSync(dir, { recursive: true });
-
-  const tmpPath = statePath + '.tmp';
-  fs.writeFileSync(tmpPath, JSON.stringify(state, null, 2) + '\n');
-  fs.renameSync(tmpPath, statePath);
-}
-
-/**
- * Returns the existing installation ID, or generates and persists a new one.
- *
- * The boolean indicates whether this call *created* the ID — used by the
- * first-run flow to decide whether to prompt for consent.
- */
-export function getOrCreateInstallationId(): {
-  id: string;
-  isNew: boolean;
-} {
-  const state = readState();
-  if (typeof state.installationId === 'string' && state.installationId.length > 0) {
-    return { id: state.installationId, isNew: false };
-  }
-
-  const id = crypto.randomUUID();
-  writeState({ ...state, installationId: id });
-  return { id, isNew: true };
-}
+export const State = new StateStore();

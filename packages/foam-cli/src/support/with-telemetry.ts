@@ -7,7 +7,7 @@ import {
   decideConsent,
 } from '@foam/core';
 import { promptFirstRunConsent } from './first-run';
-import { getOrCreateInstallationId } from './state';
+import { State } from './state';
 import { AppInsightsReporter } from './telemetry-reporter';
 import { getCoreVersion, getCurrentVersion } from './version';
 import {
@@ -116,10 +116,10 @@ export async function withTelemetry(
     persistConsent(userSaid);
 
     if (decision.enabled) {
-      installationId = getOrCreateInstallationId().id;
+      installationId = State.getOrCreateInstallationId().id;
     }
   } else if (decision.enabled) {
-    installationId = getOrCreateInstallationId().id;
+    installationId = State.getOrCreateInstallationId().id;
   }
 
   // Build the session reporter for the actual command.

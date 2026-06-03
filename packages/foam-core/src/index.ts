@@ -120,12 +120,22 @@ export type {
   ITelemetryReporter,
   WorkspaceSizeBucket,
   DurationBucket,
+  ConsentValue,
+  ConsentInput,
+  ConsentDecision,
+  AppInsightsConnection,
+  AppInsightsEventInput,
 } from './services/telemetry';
 export {
   NoopTelemetryReporter,
   RecordingTelemetryReporter,
   bucketNoteCount,
   bucketDuration,
+  TELEMETRY_CONNECTION_STRING,
+  TELEMETRY_FIRST_RUN_NOTICE,
+  decideConsent,
+  parseAppInsightsConnectionString,
+  buildAppInsightsEnvelope,
 } from './services/telemetry';
 
 // Graph builder

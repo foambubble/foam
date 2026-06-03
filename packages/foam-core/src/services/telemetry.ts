@@ -11,11 +11,7 @@
 
 export interface ITelemetryReporter {
   trackEvent(name: string, properties?: Record<string, string>): void;
-  trackError(
-    context: string,
-    error: unknown,
-    properties?: Record<string, string>
-  ): void;
+  trackError(context: string, error: unknown, properties?: Record<string, string>): void;
 }
 
 export const NoopTelemetryReporter: ITelemetryReporter = {
@@ -46,13 +42,8 @@ export class RecordingTelemetryReporter implements ITelemetryReporter {
     this.events.push({ name, properties });
   }
 
-  trackError(
-    context: string,
-    error: unknown,
-    properties?: Record<string, string>
-  ): void {
-    const errorType =
-      error instanceof Error ? error.constructor.name : 'UnknownError';
+  trackError(context: string, error: unknown, properties?: Record<string, string>): void {
+    const errorType = error instanceof Error ? error.constructor.name : 'UnknownError';
     this.errors.push({ context, errorType, properties });
   }
 
@@ -89,13 +80,7 @@ export function bucketNoteCount(count: number): WorkspaceSizeBucket {
   return '10000+';
 }
 
-export type DurationBucket =
-  | '<10ms'
-  | '<50ms'
-  | '<500ms'
-  | '<5s'
-  | '<30s'
-  | '30s+';
+export type DurationBucket = '<10ms' | '<50ms' | '<500ms' | '<5s' | '<30s' | '30s+';
 
 export function bucketDuration(ms: number): DurationBucket {
   if (ms < 10) return '<10ms';
@@ -104,4 +89,208 @@ export function bucketDuration(ms: number): DurationBucket {
   if (ms < 5000) return '<5s';
   if (ms < 30000) return '<30s';
   return '30s+';
+}
+
+// =============================================================================
+// First-run consent and connection string
+// =============================================================================
+
+/**
+ * The Azure Application Insights connection string used by every Foam component.
+ *
+ * Not a secret: ingestion-only credentials — anyone can write events, no one
+ * can read them via this string
+ */
+export const TELEMETRY_CONNECTION_STRING =
+  'InstrumentationKey=58799bee-3769-4118-87f7-00947bd5db7b;IngestionEndpoint=https://northeurope-2.in.applicationinsights.azure.com/;LiveEndpoint=https://northeurope.livediagnostics.monitor.azure.com/;ApplicationId=dc5e45aa-1fb1-4ff5-9924-0ca0ef60f43f';
+
+/**
+ * Text shown by the CLI on first run when an interactive prompt is possible.
+ * Printed to stderr before reading the user's choice from stdin.
+ */
+export const TELEMETRY_FIRST_RUN_NOTICE = `Foam collects anonymous usage data to help improve the tool — which
+commands the user runs, how long they take, and the bucketed size of
+the workspace (e.g. "201-500 notes", never the actual count). Foam
+never collects note content, file names, paths, or anything that could
+identify the user. See https://docs.foamnotes.com/user/tools/telemetry
+for full details.
+
+Telemetry is on by default. It can be disabled now (n), kept it
+on (Y), or changed later by updating the config or with FOAM_TELEMETRY=0.`;
+
+/**
+ * Outcome of the first-run consent flow, emitted as a property on
+ * `cli.first-run`. The event fires for every outcome so we can measure
+ * opt-out rate; after it fires, only the reporter for the rest of the
+ * session honors the choice.
+ */
+export type ConsentValue = 'granted' | 'declined' | 'default_on';
+
+/**
+ * Inputs to the pure {@link decideConsent} function. A discriminated union
+ * so each variant carries exactly the inputs that case needs.
+ */
+export type ConsentInput =
+  | {
+      /** A previous run already recorded a choice; we are not on a first run. */
+      kind: 'subsequent-run';
+      storedConsent: boolean;
+      envOverride: boolean | undefined;
+    }
+  | {
+      /** First run, prompt was shown and the user answered. */
+      kind: 'first-run-prompted';
+      promptResult: 'granted' | 'declined';
+      envOverride: boolean | undefined;
+    }
+  | {
+      /** First run, but no prompt was possible (no TTY, CI, piped stdin). */
+      kind: 'first-run-no-prompt';
+      envOverride: boolean | undefined;
+    };
+
+/**
+ * The result of resolving consent for a given run.
+ *
+ * - `enabled`: whether telemetry is on for the rest of this process.
+ * - `consent`: the `ConsentValue` to emit with `cli.first-run`. Defined only
+ *   on the two first-run variants; on subsequent runs no first-run event
+ *   should fire, so `consent` is undefined.
+ */
+export interface ConsentDecision {
+  enabled: boolean;
+  consent: ConsentValue | undefined;
+}
+
+/**
+ * Resolves whether telemetry is enabled for this run, and (on first runs)
+ * what `consent` value to record on the `cli.first-run` event.
+ *
+ * Precedence: env var override > stored value (subsequent run) or prompt
+ * result / default (first run).
+ *
+ * Pure — no I/O, no env reads. The caller composes the inputs.
+ */
+export function decideConsent(input: ConsentInput): ConsentDecision {
+  switch (input.kind) {
+    case 'subsequent-run': {
+      const enabled = input.envOverride ?? input.storedConsent;
+      return { enabled, consent: undefined };
+    }
+    case 'first-run-prompted': {
+      const promptedEnabled = input.promptResult === 'granted';
+      const enabled = input.envOverride ?? promptedEnabled;
+      return {
+        enabled,
+        consent: promptedEnabled ? 'granted' : 'declined',
+      };
+    }
+    case 'first-run-no-prompt': {
+      // No prompt was possible — default to on. Record `default_on` so we
+      // can distinguish "explicitly accepted" from "couldn't ask".
+      const enabled = input.envOverride ?? true;
+      return { enabled, consent: 'default_on' };
+    }
+  }
+}
+
+// =============================================================================
+// App Insights envelope construction
+// =============================================================================
+
+/**
+ * Parsed form of an App Insights connection string (`key1=value1;key2=value2;...`).
+ *
+ * Connection strings always carry `InstrumentationKey` and `IngestionEndpoint`;
+ * `LiveEndpoint` and `ApplicationId` are commonly present but not strictly
+ * required.
+ */
+export interface AppInsightsConnection {
+  instrumentationKey: string;
+  ingestionEndpoint: string;
+  liveEndpoint?: string;
+  applicationId?: string;
+}
+
+/**
+ * Parses an App Insights connection string. Throws on missing required fields
+ * (`InstrumentationKey`, `IngestionEndpoint`).
+ */
+export function parseAppInsightsConnectionString(connectionString: string): AppInsightsConnection {
+  const pairs = connectionString
+    .split(';')
+    .map(p => p.trim())
+    .filter(p => p.length > 0);
+
+  const parsed: Record<string, string> = {};
+  for (const pair of pairs) {
+    const eqIdx = pair.indexOf('=');
+    if (eqIdx <= 0) continue;
+    const key = pair.slice(0, eqIdx).trim();
+    const value = pair.slice(eqIdx + 1).trim();
+    parsed[key.toLowerCase()] = value;
+  }
+
+  const instrumentationKey = parsed['instrumentationkey'];
+  const ingestionEndpoint = parsed['ingestionendpoint'];
+
+  if (!instrumentationKey) {
+    throw new Error('App Insights connection string is missing InstrumentationKey');
+  }
+  if (!ingestionEndpoint) {
+    throw new Error('App Insights connection string is missing IngestionEndpoint');
+  }
+
+  return {
+    instrumentationKey,
+    ingestionEndpoint: ingestionEndpoint.replace(/\/$/, ''),
+    liveEndpoint: parsed['liveendpoint']?.replace(/\/$/, ''),
+    applicationId: parsed['applicationid'],
+  };
+}
+
+/**
+ * Inputs for building an App Insights `Event` envelope. The caller is
+ * responsible for filtering out forbidden properties (user paths, file
+ * names, etc.) before calling — this function does not sanitize.
+ */
+export interface AppInsightsEventInput {
+  instrumentationKey: string;
+  eventName: string;
+  properties?: Record<string, string>;
+  /** ISO-8601 timestamp; defaults to "now" via the caller. */
+  timestamp: string;
+  /** Optional SDK identifier — appears in `tags["ai.internal.sdkVersion"]`. */
+  sdkVersion?: string;
+  /** Optional anonymous user id — appears in `tags["ai.user.id"]`. */
+  userId?: string;
+}
+
+/**
+ * Builds a single App Insights "Event" telemetry envelope ready to POST to
+ * the ingestion endpoint as a JSON line. The Track API accepts either a
+ * single envelope or a newline-separated batch.
+ *
+ * Pure — returns a plain object. Network and serialization happen in the
+ * reporter.
+ */
+export function buildAppInsightsEnvelope(input: AppInsightsEventInput): Record<string, unknown> {
+  const tags: Record<string, string> = {};
+  if (input.sdkVersion) tags['ai.internal.sdkVersion'] = input.sdkVersion;
+  if (input.userId) tags['ai.user.id'] = input.userId;
+
+  return {
+    name: `Microsoft.ApplicationInsights.${input.instrumentationKey.replace(/-/g, '')}.Event`,
+    time: input.timestamp,
+    iKey: input.instrumentationKey,
+    tags,
+    data: {
+      baseType: 'EventData',
+      baseData: {
+        ver: 2,
+        name: input.eventName,
+        properties: input.properties ?? {},
+      },
+    },
+  };
 }

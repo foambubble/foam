@@ -4,11 +4,9 @@ import {
   IDisposable,
   ITelemetryReporter,
   Logger,
+  TELEMETRY_CONNECTION_STRING,
   bucketNoteCount,
 } from '@foam/core';
-
-const CONNECTION_STRING =
-  'InstrumentationKey=58799bee-3769-4118-87f7-00947bd5db7b;IngestionEndpoint=https://northeurope-2.in.applicationinsights.azure.com/;LiveEndpoint=https://northeurope.livediagnostics.monitor.azure.com/;ApplicationId=dc5e45aa-1fb1-4ff5-9924-0ca0ef60f43f';
 
 const EVENT_PREFIX = 'vscode.';
 
@@ -23,7 +21,7 @@ export class TelemetryService implements ITelemetryReporter, IDisposable {
   private sessionWithNoteFired = false;
 
   constructor() {
-    this.reporter = new TelemetryReporter(CONNECTION_STRING);
+    this.reporter = new TelemetryReporter(TELEMETRY_CONNECTION_STRING);
   }
 
   trackEvent(name: string, properties?: Record<string, string>): void {

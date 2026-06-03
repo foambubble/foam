@@ -17,6 +17,7 @@ import {
 } from '@foam/core';
 import { loadWorkspaceFromDirectory } from '../support/filesystem';
 import { serializeNoteDetail } from '../support/serializers';
+import type { CommandRunResult } from '../support/with-telemetry';
 import {
   parseArgs,
   getString,
@@ -100,7 +101,7 @@ export async function runNoteCommand(
   argv: string[],
   logger: CliLogger,
   opts: { stdin?: NodeJS.ReadStream } = {}
-): Promise<number> {
+): Promise<CommandRunResult> {
   const [subcommand, ...rest] = argv;
 
   if (!subcommand || subcommand === '--help' || subcommand === '-h') {
@@ -171,7 +172,14 @@ export async function runNoteCommand(
         const relPath = path.relative(createRootDir, result.uri.toFsPath());
         logger.info(`Created: ${relPath}  (id: ${result.id})`);
       }
-      return 0;
+      const telemetryProperties: Record<string, string> = {};
+      if (result.templateType) {
+        telemetryProperties['template-type'] = result.templateType;
+      }
+      if (result.templateFormat) {
+        telemetryProperties['template-format'] = result.templateFormat;
+      }
+      return { exitCode: 0, telemetryProperties };
     }
 
     const { rootDir, workspace, dataStore } =

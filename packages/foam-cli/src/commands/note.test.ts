@@ -293,15 +293,44 @@ describe('runNoteCommand', () => {
   it('create: creates a note and reports path + id', () =>
     withTmpWorkspace({}, async ({ rootDir }) => {
       const logger = new TestLogger();
-      const code = await runNoteCommand(
+      const result = await runNoteCommand(
         ['create', '--title', 'New Note', '--workspace', rootDir],
         logger
       );
-      expect(code).toBe(0);
+      expect(typeof result === 'object' && result.exitCode).toBe(0);
       expect(logger.logs[0]).toContain('Created:');
       expect(logger.logs[0]).toContain('new-note');
       expect(fs.existsSync(path.join(rootDir, 'new-note.md'))).toBe(true);
     }, 'foam-note-test-'));
+
+  it('create: omits template-type and template-format when there is no template', () =>
+    withTmpWorkspace({}, async ({ rootDir }) => {
+      const logger = new TestLogger();
+      const result = await runNoteCommand(
+        ['create', '--title', 'New Note', '--workspace', rootDir],
+        logger
+      );
+      expect(typeof result === 'object' && result.telemetryProperties).toEqual({});
+    }, 'foam-note-test-'));
+
+  it('create: reports template-type=default + template-format=md when the markdown template is used', () =>
+    withTmpWorkspace(
+      {
+        '.foam/templates/new-note.md': '# {{FOAM_TITLE}}\n',
+      },
+      async ({ rootDir }) => {
+        const logger = new TestLogger();
+        const result = await runNoteCommand(
+          ['create', '--title', 'New Note', '--workspace', rootDir],
+          logger
+        );
+        expect(typeof result === 'object' && result.telemetryProperties).toEqual({
+          'template-type': 'default',
+          'template-format': 'md',
+        });
+      },
+      'foam-note-test-'
+    ));
 
   it('move: moves note and reports updated links', () =>
     withTmpWorkspace(

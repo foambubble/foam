@@ -13,8 +13,14 @@ import { runRenameCommand } from './commands/rename';
 import { runTagCommand } from './commands/tag';
 import { runUpdateCommand } from './commands/update';
 import { parseMcpArgs, MCP_HELP, runMcpCommand } from './commands/mcp';
+import { runConfigCommand } from './commands/config';
 import { checkForUpdateNotice, getCurrentVersion } from './support/version';
 import { setColorsEnabled } from './support/colors';
+import {
+  CommandRunResult,
+  shouldSkipTelemetry,
+  withTelemetry,
+} from './support/with-telemetry';
 
 const CLI_HELP = `Usage: foam <command> [options]
 
@@ -32,6 +38,7 @@ Commands:
   rename      Rename a note, tag, section, or block anchor (with link rewriting)
   mcp         Run an MCP server (Model Context Protocol) over stdio for AI agents
   update      Check for updates and show the install command
+  config      Manage user-level Foam configuration (~/.config/foam/config.json)
 
 Global options:
   --workspace <dir>   Workspace root (default: FOAM_WORKSPACE env var, then cwd)
@@ -92,17 +99,26 @@ export async function runCli(
       ? checkForUpdateNotice()
       : null;
 
-  const exitCode = await dispatch(command, commandArgs, logger);
+  const exitCode = shouldSkipTelemetry(command)
+    ? toExitCode(await dispatch(command, commandArgs, logger))
+    : await withTelemetry({
+        command: command!,
+        run: () => dispatch(command, commandArgs, logger),
+      });
 
   if (updateNotice) logger.info(updateNotice);
   return exitCode;
+}
+
+function toExitCode(result: CommandRunResult): number {
+  return typeof result === 'number' ? result : result.exitCode;
 }
 
 async function dispatch(
   command: string | undefined,
   commandArgs: string[],
   logger: ILogger
-): Promise<number> {
+): Promise<CommandRunResult> {
   if (!command || command === 'help' || command === '--help' || command === '-h') {
     logger.info(renderCliHelp());
     return 0;
@@ -167,6 +183,9 @@ async function dispatch(
           return 0;
         }
         return runMcpCommand(parseMcpArgs(commandArgs), logger);
+      }
+      case 'config': {
+        return runConfigCommand(commandArgs, logger);
       }
       default:
         logger.error(`Unknown command "${command}".\n\n${renderCliHelp()}`);

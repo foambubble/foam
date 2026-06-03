@@ -5,6 +5,7 @@ import * as path from 'path';
 import { bold, dim, warning } from './colors';
 
 declare const __CLI_VERSION__: string;
+declare const __CORE_VERSION__: string;
 
 export interface UpdateCheckCache {
   lastChecked: string;
@@ -19,6 +20,10 @@ const NOTIFY_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 export function getCurrentVersion(): string {
   return __CLI_VERSION__;
+}
+
+export function getCoreVersion(): string {
+  return __CORE_VERSION__;
 }
 
 export function getUpdateCheckCachePath(): string {

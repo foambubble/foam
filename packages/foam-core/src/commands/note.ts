@@ -46,6 +46,20 @@ export interface NoteIdResult {
 export interface NoteCreateResult {
   id: string;
   uri: URI;
+  /**
+   * Which template family produced the note's content. Omitted when no
+   * template was applied (the note got the minimal `# title` fallback body).
+   *
+   * - `default`: `new-note.md` or `new-note.js` from `.foam/templates/` was used.
+   * - `custom`: reserved for future flows where the caller picks a named
+   *   template; the current `note create` API does not take a template name.
+   */
+  templateType?: 'default' | 'custom';
+  /**
+   * The format of the applied template. Omitted whenever `templateType`
+   * is omitted (the two travel together).
+   */
+  templateFormat?: 'md' | 'js';
 }
 
 export interface NoteMoveResult {
@@ -199,6 +213,7 @@ export async function noteCreate(
   const templatesDir = getTemplatesDir(rootUri);
   const candidates = getNewNoteTemplateCandidateUris(templatesDir);
 
+  let appliedTemplateFormat: 'md' | 'js' | undefined;
   for (const templateUri of candidates) {
     const templateContent = await dataStore.read(templateUri);
     if (templateContent === null) continue;
@@ -218,6 +233,7 @@ export async function noteCreate(
 
     targetUri = foam.workspace.resolveUri(result.filepath.path);
     content = result.content;
+    appliedTemplateFormat = templateUri.path.endsWith('.js') ? 'js' : 'md';
     break;
   }
 
@@ -246,6 +262,9 @@ export async function noteCreate(
   return {
     id,
     uri: targetUri,
+    ...(appliedTemplateFormat
+      ? { templateType: 'default', templateFormat: appliedTemplateFormat }
+      : {}),
   };
 }
 

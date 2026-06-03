@@ -40,6 +40,37 @@ export function getUserConfigPath(): string {
 }
 
 /**
+ * Reads the raw on-disk config object (or `{}` if no file exists). Distinct
+ * from {@link readUserConfigSource}, which returns the typed `IFoamConfigSource`;
+ * this returns the raw object so writers can round-trip unknown keys safely.
+ */
+export function readRawUserConfig(): Record<string, unknown> {
+  const configPath = getUserConfigPath();
+  try {
+    return JSON.parse(fs.readFileSync(configPath, 'utf8'));
+  } catch (e) {
+    if ((e as NodeJS.ErrnoException).code === 'ENOENT') {
+      return {};
+    }
+    throw e;
+  }
+}
+
+/**
+ * Writes the raw config object atomically (write-then-rename). Preserves
+ * any keys the caller already merged in.
+ */
+export function writeRawUserConfig(raw: Record<string, unknown>): void {
+  const dir = getUserConfigDir();
+  const configPath = getUserConfigPath();
+  fs.mkdirSync(dir, { recursive: true });
+
+  const tmpPath = configPath + '.tmp';
+  fs.writeFileSync(tmpPath, JSON.stringify(raw, null, 2) + '\n');
+  fs.renameSync(tmpPath, configPath);
+}
+
+/**
  * Reads `~/.config/foam/config.json` and returns it as a partial config
  * source. Missing file → empty source (no opinions). Invalid JSON → throws.
  *

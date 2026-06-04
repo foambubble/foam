@@ -284,6 +284,19 @@ export async function createMatcherAndDataStore(
         continue;
       }
 
+      // Common case: a single include pattern returns unique URIs from
+      // findFiles, so we can skip the per-file dedup work.
+      if (folderIncludes.length === 1) {
+        const uris = await workspace.findFiles(
+          new RelativePattern(folder.uri, folderIncludes[0]),
+          excludePattern
+        );
+        for (const uri of uris) {
+          allFiles.push(uri);
+        }
+        continue;
+      }
+
       const seen = new Map<string, Uri>();
 
       // Apply each include pattern, deduplicating across patterns
@@ -293,8 +306,9 @@ export async function createMatcherAndDataStore(
           excludePattern
         );
         for (const uri of uris) {
-          if (!seen.has(uri.fsPath)) {
-            seen.set(uri.fsPath, uri);
+          const key = uri.toString();
+          if (!seen.has(key)) {
+            seen.set(key, uri);
           }
         }
       }

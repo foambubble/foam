@@ -138,9 +138,15 @@ export class FoamMcpServer {
   }
 
   private fireSessionStarted(): void {
+    const resources = this.foam.workspace.list();
+    const noteCount = resources.filter(r => r.type === 'note').length;
+    const attachmentCount = resources.filter(
+      r => r.type === 'image' || r.type === 'attachment'
+    ).length;
     const properties: Record<string, string> = {
       mode: this.readOnly ? 'read' : 'read-write',
-      workspaceSize: bucketNoteCount(this.foam.workspace.list().length),
+      noteCount: bucketNoteCount(noteCount),
+      attachmentCount: bucketNoteCount(attachmentCount),
     };
     const clientImpl = this.mcp.server.getClientVersion();
     if (clientImpl?.name) {

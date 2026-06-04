@@ -106,8 +106,12 @@ export async function activate(context: ExtensionContext) {
     );
 
     const foam = await foamPromise;
-    const noteCount = foam.workspace.list().length;
-    Logger.info(`Loaded ${noteCount} resources`);
+    const resources = foam.workspace.list();
+    const noteCount = resources.filter(r => r.type === 'note').length;
+    const attachmentCount = resources.filter(
+      r => r.type === 'image' || r.type === 'attachment'
+    ).length;
+    Logger.info(`Loaded ${resources.length} resources`);
 
     const allFiles = await dataStore.list();
     const hasTemplates = allFiles.some(uri =>
@@ -117,7 +121,12 @@ export async function activate(context: ExtensionContext) {
       uri.path.includes('.foam/templates/daily-note.')
     );
     telemetry.trackConfigSnapshot();
-    telemetry.trackWorkspaceStats(noteCount, hasTemplates, hasDailyNoteTemplate);
+    telemetry.trackWorkspaceStats(
+      noteCount,
+      attachmentCount,
+      hasTemplates,
+      hasDailyNoteTemplate
+    );
 
     context.subscriptions.push(
       foam,

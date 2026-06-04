@@ -87,7 +87,7 @@ All events are sent to a single Azure Application Insights resource owned by the
 | `vscode.command`              | Every Foam command invocation               | `command` (identifier only — no arguments)                                                                                                                                                 |
 | `vscode.feature`              | First time a feature activates in a session | `feature`; enum/boolean values only                                                                                                                                                        |
 | `vscode.config-snapshot`      | Once per session                            | selected enum/boolean settings — e.g. `graph.onStartup`, `completion.linkFormat`, `links.hover.enable`, `graph.viewsConfigured` (count, not names). Free-text settings are never included. |
-| `vscode.workspace-stats`      | Once per session                            | `noteCount` (bucket), `hasTemplates`, `hasDailyNoteTemplate`                                                                                                                               |
+| `vscode.workspace-stats`      | Once per session                            | `noteCount` and `attachmentCount` (both bucketed), `hasTemplates`, `hasDailyNoteTemplate`                                                                                                  |
 | `vscode.error`                | An unhandled error in a Foam feature        | `context` (feature name), `errorType` (error class name only — no message, no stack)                                                                                                       |
 
 ### CLI events (`cli.*`)
@@ -102,7 +102,7 @@ All events are sent to a single Azure Application Insights resource owned by the
 
 | Event | When it fires | Properties |
 |---|---|---|
-| `mcp.session-started` | Once per server start | `client` (e.g. `claude-desktop`, `cursor`, omitted if not exposed); `workspaceSize`; `mode` (`read` or `read-write` — whether the server was started with `--read-only`) |
+| `mcp.session-started` | Once per server start | `client` (e.g. `claude-desktop`, `cursor`, omitted if not exposed); `noteCount` and `attachmentCount` (both bucketed); `mode` (`read` or `read-write` — whether the server was started with `--read-only`) |
 | `mcp.session-with-tool` | First tool call in a session | none |
 | `mcp.tool-invoked` | Every tool call (sent unsampled) | `tool` (name only — arguments never recorded), `durationBucket`, `outcome` (`success` / `error`) |
 | `mcp.error` | An unhandled error during MCP dispatch | `context`, `tool`, `errorType` |

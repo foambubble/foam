@@ -16,13 +16,14 @@ describe('FoamMcpServer telemetry', () => {
       });
     });
 
-    it('carries mode=read-write by default and includes workspaceSize', async () => {
+    it('carries mode=read-write by default and includes bucketed noteCount + attachmentCount', async () => {
       const reporter = new InMemoryTelemetryReporter();
       await withMcpServer(SEED, { telemetry: reporter }, async () => {
         const event = reporter.events.find(e => e.name === 'mcp.session-started');
         expect(event?.properties?.mode).toBe('read-write');
-        // SEED has 2 notes → falls into the 1-10 bucket
-        expect(event?.properties?.workspaceSize).toBe('1-10');
+        // SEED has 2 notes → 1-10 bucket; no attachments → 0 bucket
+        expect(event?.properties?.noteCount).toBe('1-10');
+        expect(event?.properties?.attachmentCount).toBe('0');
       });
     });
 

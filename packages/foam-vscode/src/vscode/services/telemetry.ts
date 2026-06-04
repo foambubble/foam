@@ -118,14 +118,21 @@ export class TelemetryService implements IDisposable {
 
   /**
    * Once per session: bucketed workspace shape. No paths or note titles.
+   *
+   * `noteCount` is markdown notes only; `attachmentCount` covers images +
+   * other attachments. Keeping them separate lets analytics distinguish
+   * "heavy writer" workspaces from "image-heavy scratchpad" workspaces,
+   * which otherwise look identical when collapsed into a single total.
    */
   trackWorkspaceStats(
     noteCount: number,
+    attachmentCount: number,
     hasTemplates: boolean,
     hasDailyNoteTemplate: boolean
   ): void {
     this.trackEvent('workspace-stats', {
       noteCount: bucketNoteCount(noteCount),
+      attachmentCount: bucketNoteCount(attachmentCount),
       hasTemplates: String(hasTemplates),
       hasDailyNoteTemplate: String(hasDailyNoteTemplate),
     });

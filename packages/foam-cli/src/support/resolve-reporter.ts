@@ -5,8 +5,14 @@ import { readEnvConfigSource, readRawUserConfig, writeRawUserConfig } from './us
 import { shouldSkipTelemetry } from './with-telemetry';
 
 export interface ResolveReporterOptions {
-  /** Command name parsed from argv, or undefined when none was given. */
+  /**
+   * Command name parsed from argv, or undefined when none was given.
+   */
   command: string | undefined;
+  /**
+   * Args after the command word
+   */
+  commandArgs?: readonly string[];
   /**
    * Factory for the real reporter.
    */
@@ -36,10 +42,7 @@ export interface ResolveReporterOptions {
 export async function resolveCliReporter(
   opts: ResolveReporterOptions
 ): Promise<ITelemetryReporter> {
-  // `config` (and bare/help invocations) opt out of telemetry entirely —
-  // including the first-run prompt, because the user may be about to set
-  // the preference and we shouldn't nag them mid-flight.
-  if (shouldSkipTelemetry(opts.command)) {
+  if (shouldSkipTelemetry(opts.command, opts.commandArgs)) {
     return NoopTelemetryReporter;
   }
 

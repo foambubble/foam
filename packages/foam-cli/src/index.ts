@@ -116,7 +116,7 @@ export async function runCli(
       ? checkForUpdateNotice()
       : null;
 
-  const exitCode = shouldSkipTelemetry(command)
+  const exitCode = shouldSkipTelemetry(command, commandArgs)
     ? toExitCode(await dispatch(command, commandArgs, logger))
     : await withTelemetry({
         command: command!,
@@ -235,7 +235,7 @@ async function dispatch(
 async function main() {
   Logger.setLevel('info');
   const argv = process.argv.slice(2);
-  const [command] = argv;
+  const [command, ...commandArgs] = argv;
 
   // Production opt-in: this is the single place that resolves consent and
   // wires the real reporter. Other callers of `runCli` (tests, embeddings)
@@ -243,6 +243,7 @@ async function main() {
   // enabled, so we don't construct a real reporter when the user opted out.
   const reporter = await resolveCliReporter({
     command,
+    commandArgs,
     buildReporter: installationId =>
       new AppInsightsReporter({
         connectionString: TELEMETRY_CONNECTION_STRING,

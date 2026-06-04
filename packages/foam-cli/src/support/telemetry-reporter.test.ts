@@ -125,6 +125,22 @@ describe('AppInsightsReporter', () => {
     await expect(reporter.flush()).resolves.toBe(1);
   });
 
+  it('resolves within the timeout cap even when the poster hangs forever', async () => {
+    // Simulates a stalled ingestion endpoint (corporate proxy, DNS hang,
+    // black-holed network) — must never delay the CLI's exit.
+    const hangingPoster: HttpPoster = () => new Promise(() => {});
+    const reporter = makeReporter({ poster: hangingPoster });
+
+    reporter.trackEvent('cli.command-invoked', { command: 'graph' });
+
+    const startedAt = Date.now();
+    await reporter.flush();
+    const elapsed = Date.now() - startedAt;
+
+    // The cap is 1000ms internally; allow a small margin for timer slack.
+    expect(elapsed).toBeLessThan(1500);
+  }, 2000);
+
   it('clears the queue after flush — events are not sent twice', async () => {
     const poster = vi.fn<HttpPoster>().mockResolvedValue({ status: 200 });
     const reporter = makeReporter({ poster });

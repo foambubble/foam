@@ -17,15 +17,25 @@ export type HttpPoster = (
 ) => Promise<{ status: number }>;
 
 /**
+ * Hard cap on flush latency. Telemetry is best-effort by contract — a slow
+ * or stalled ingestion endpoint must never delay the user's command.
+ */
+const FLUSH_TIMEOUT_MS = 1000;
+
+/**
  * Real HTTPS POST to the App Insights ingestion endpoint. Production code
  * paths pass this explicitly into `AppInsightsReporter` — there is no
  * default for `poster`, so a forgotten wiring never silently posts.
+ *
+ * Aborted after {@link FLUSH_TIMEOUT_MS} so corporate proxies / DNS stalls
+ * can't hold the process open until the OS TCP timeout.
  */
 export const httpsPoster: HttpPoster = async (url, body) => {
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-json-stream' },
     body,
+    signal: AbortSignal.timeout(FLUSH_TIMEOUT_MS),
   });
   return { status: res.status };
 };
@@ -136,7 +146,9 @@ export class AppInsightsReporter implements ITelemetryReporter {
 
   /**
    * POSTs every queued event in a single newline-separated batch.
-   * Resolves once the POST completes (or fails — failures are swallowed).
+   * Resolves once the POST completes, fails, or {@link FLUSH_TIMEOUT_MS}
+   * elapses — whichever comes first. Failures (including timeout) are
+   * swallowed and logged at debug.
    *
    * Returns the number of events sent. Useful for tests; production code
    * can ignore it.
@@ -149,15 +161,29 @@ export class AppInsightsReporter implements ITelemetryReporter {
     const body = batch.map(b => JSON.stringify(b.envelope)).join('\n');
     const url = `${this.conn.ingestionEndpoint}/v2/track`;
 
-    try {
-      const res = await this.poster(url, body);
-      if (res.status >= 400) {
-        Logger.debug(`[telemetry] flush returned ${res.status}`);
+    const post = this.poster(url, body).then(
+      res => {
+        if (res.status >= 400) {
+          Logger.debug(`[telemetry] flush returned ${res.status}`);
+        }
+      },
+      e => {
+        const msg = e instanceof Error ? e.message : String(e);
+        Logger.debug(`[telemetry] flush failed: ${msg}`);
       }
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      Logger.debug(`[telemetry] flush failed: ${msg}`);
-    }
+    );
+
+    const timeout = new Promise<void>(resolve => {
+      const handle = setTimeout(() => {
+        Logger.debug(`[telemetry] flush timed out after ${FLUSH_TIMEOUT_MS}ms`);
+        resolve();
+      }, FLUSH_TIMEOUT_MS);
+      // Don't let a pending timer hold the event loop open if the post
+      // resolves first — the timer is purely a deadline, not a task.
+      handle.unref?.();
+    });
+
+    await Promise.race([post, timeout]);
 
     return batch.length;
   }

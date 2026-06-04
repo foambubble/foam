@@ -149,8 +149,8 @@ describe('resolveCliReporter', () => {
       expect(State.read().installationId).toBeUndefined();
     });
 
-    it('builds the reporter with installationId=undefined when declined', async () => {
-      let receivedId: string | undefined | 'NOT_CALLED' = 'NOT_CALLED';
+    it('builds the reporter with an empty installationId when declined (anonymous fork strips identity anyway)', async () => {
+      let receivedId: string | 'NOT_CALLED' = 'NOT_CALLED';
       await resolveCliReporter({
         command: 'graph',
         buildReporter: id => {
@@ -160,9 +160,9 @@ describe('resolveCliReporter', () => {
         promptOverride: async () => 'declined',
       });
 
-      // Reporter is still built (to host the anonymous first-run fork) but
-      // with no identity baked in.
-      expect(receivedId).toBeUndefined();
+      // The reporter is built (to host the anonymous first-run fork) but
+      // we don't create an installation ID for a run we'll discard.
+      expect(receivedId).toBe('');
     });
 
     it('passes the installation ID to buildReporter when granted', async () => {

@@ -7,7 +7,15 @@ import { VsCodeWatcher } from './watcher';
 type Listener<T> = (value: T) => void;
 
 function makeUri(path: string) {
-  return { toString: () => `file://${path}`, fsPath: path } as any;
+  return {
+    scheme: 'file',
+    authority: '',
+    path,
+    query: '',
+    fragment: '',
+    fsPath: path,
+    toString: () => `file://${path}`,
+  } as any;
 }
 
 function makeFsWatcher() {

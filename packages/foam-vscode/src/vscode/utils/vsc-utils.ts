@@ -13,7 +13,7 @@ import {
 } from 'vscode';
 import { Position as FoamPosition } from '@foam/core';
 import { Range as FoamRange } from '@foam/core';
-import { URI as FoamURI } from '@foam/core';
+import { URI as FoamURI, fromFsPath } from '@foam/core';
 import {
   TextEdit as FoamTextEdit,
   WorkspaceTextEdit,
@@ -31,7 +31,13 @@ export const toVsCodeRange = (r: FoamRange): Range =>
 export const toVsCodeUri = (u: FoamURI): Uri => Uri.from(u);
 
 export const fromVsCodeUri = (u: Uri): FoamURI =>
-  FoamURI.parse(u.toString(), null);
+  new FoamURI({
+    scheme: u.scheme,
+    authority: u.authority,
+    path: fromFsPath(u.path)[0],
+    query: u.query,
+    fragment: u.fragment,
+  });
 
 export const toVsCodeTextEdit = (edit: FoamTextEdit): TextEdit =>
   new TextEdit(toVsCodeRange(edit.range), edit.newText);

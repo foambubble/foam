@@ -110,6 +110,7 @@ export {
   isWithinPath,
   asAbsolutePaths,
   relativeTo,
+  fromFsPath,
 } from './utils/path';
 export { isWindows, isMacintosh, isLinux } from './common/platform';
 export { TaskDeduplicator } from './utils/task-deduplicator';

@@ -94,8 +94,8 @@ All events are sent to a single Azure Application Insights resource owned by the
 
 | Event | When it fires | Properties |
 |---|---|---|
-| `cli.command-invoked` | Once per CLI invocation, after the command completes | `command`, `durationBucket`, `exitCode`. Some commands attach extra properties — e.g. `note create` and `daily --create` attach `template-type` (one of `default`, `daily-note`, `custom`) and `template-format` (`md` / `js`). Both are omitted when no template was applied (e.g. a `note create` that fell back to the minimal `# title` body). |
-| `cli.error` | A CLI command exits with an unhandled error | `command`, `context`, `errorType` |
+| `cli.command-invoked` | Once per CLI invocation, after the command completes | `command`, `durationBucket`, `exitCode`. On a non-zero exit caused by a caught command failure, also `errorType` (the JS error class name, e.g. `Error`, `TypeError`) and `errorContext` (currently always `dispatch`). Some commands attach extra properties — e.g. `note create` and `daily --create` attach `template-type` (one of `default`, `daily-note`, `custom`) and `template-format` (`md` / `js`). Both are omitted when no template was applied (e.g. a `note create` that fell back to the minimal `# title` body). |
+| `cli.error` | A CLI invocation exits with an error that escapes the dispatcher (e.g. argv parsing crash before a command is selected). Most command failures are recorded as `errorType`/`errorContext` on `cli.command-invoked` instead. | `command`, `context`, `errorType` |
 | `cli.first-run` | Exactly once per installation, after the consent choice is recorded. Carries no `installationId`, no `os.platform`, no `node.version`. | `consent`: `granted` / `declined` (from the prompt), or `default_on` (no prompt was possible — non-TTY / CI / piped) |
 
 ### MCP events (`mcp.*`)

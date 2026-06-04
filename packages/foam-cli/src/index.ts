@@ -220,7 +220,15 @@ async function dispatch(
     const stack = error instanceof Error ? error.stack : undefined;
     logger.error(message);
     if (process.env.FOAM_DEBUG && stack) logger.error(stack);
-    return 1;
+    // Surface the failure structurally so `cli.command-invoked` records what
+    // went wrong. Without this, every caught command failure looks identical
+    // (`exitCode=1`) in telemetry — the actual failure mode is invisible.
+    const errorType =
+      error instanceof Error ? error.constructor.name : 'UnknownError';
+    return {
+      exitCode: 1,
+      telemetryProperties: { errorType, errorContext: 'dispatch' },
+    };
   }
 }
 

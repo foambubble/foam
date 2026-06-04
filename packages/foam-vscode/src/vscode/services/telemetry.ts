@@ -2,7 +2,6 @@ import { TelemetryReporter } from '@vscode/extension-telemetry';
 import { workspace } from 'vscode';
 import {
   IDisposable,
-  ITelemetryReporter,
   Logger,
   TELEMETRY_CONNECTION_STRING,
   bucketNoteCount,
@@ -11,11 +10,11 @@ import {
 const EVENT_PREFIX = 'vscode.';
 
 /**
- * VS Code adapter for {@link ITelemetryReporter}. Wraps the Azure App Insights
- * client from `@vscode/extension-telemetry` and prefixes every event with `vscode.`
+ * VS Code telemetry adapter. Wraps the Azure App Insights client from
+ * `@vscode/extension-telemetry` and prefixes every event with `vscode.`
  * so the same App Insights resource can host events from CLI and MCP without collision.
  */
-export class TelemetryService implements ITelemetryReporter, IDisposable {
+export class TelemetryService implements IDisposable {
   private reporter: TelemetryReporter;
   private sessionWithCommandFired = false;
   private sessionWithNoteFired = false;
@@ -132,8 +131,8 @@ export class TelemetryService implements ITelemetryReporter, IDisposable {
     });
   }
 
-  dispose(): void {
-    this.reporter.dispose();
+  async dispose(): Promise<void> {
+    await this.reporter.dispose();
   }
 }
 

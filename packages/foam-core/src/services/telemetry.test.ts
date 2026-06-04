@@ -212,6 +212,26 @@ describe('decideConsent', () => {
       ).toEqual({ enabled: true, consent: 'default_on' });
     });
   });
+
+  describe('first run with env-var override (prompt skipped)', () => {
+    it('honors the env var and reports no consent value to record', () => {
+      // No durable user signal: `consent` must be undefined so callers
+      // suppress `cli.first-run` and skip persistence.
+      expect(
+        decideConsent({
+          kind: 'first-run-env-override',
+          envOverride: false,
+        })
+      ).toEqual({ enabled: false, consent: undefined });
+
+      expect(
+        decideConsent({
+          kind: 'first-run-env-override',
+          envOverride: true,
+        })
+      ).toEqual({ enabled: true, consent: undefined });
+    });
+  });
 });
 
 describe('parseAppInsightsConnectionString', () => {

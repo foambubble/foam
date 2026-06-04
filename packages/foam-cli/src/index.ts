@@ -29,6 +29,7 @@ import {
   shouldSkipTelemetry,
   withTelemetry,
 } from './support/with-telemetry';
+import { resolveCliReporter } from './support/resolve-reporter';
 import { AppInsightsReporter, httpsPoster } from './support/telemetry-reporter';
 import { getCoreVersion } from './support/version';
 
@@ -225,21 +226,27 @@ async function dispatch(
 
 async function main() {
   Logger.setLevel('info');
-  // Production opt-in: the single place that wires the real reporter.
-  // Any other caller of runCli (tests, embeddings) gets the noop default
-  // unless they explicitly inject something else.
-  const reporter = new AppInsightsReporter({
-    connectionString: TELEMETRY_CONNECTION_STRING,
-    component: 'cli',
-    componentVersion: getCurrentVersion(),
-    coreVersion: getCoreVersion(),
-    poster: httpsPoster,
+  const argv = process.argv.slice(2);
+  const [command] = argv;
+
+  // Production opt-in: this is the single place that resolves consent and
+  // wires the real reporter. Other callers of `runCli` (tests, embeddings)
+  // pass a noop directly. The factory only runs if telemetry is effectively
+  // enabled, so we don't construct a real reporter when the user opted out.
+  const reporter = await resolveCliReporter({
+    command,
+    buildReporter: installationId =>
+      new AppInsightsReporter({
+        connectionString: TELEMETRY_CONNECTION_STRING,
+        component: 'cli',
+        componentVersion: getCurrentVersion(),
+        coreVersion: getCoreVersion(),
+        poster: httpsPoster,
+        installationId,
+      }),
   });
-  const exitCode = await runCli(
-    process.argv.slice(2),
-    undefined,
-    reporter
-  );
+
+  const exitCode = await runCli(argv, undefined, reporter);
   process.exitCode = exitCode;
 }
 

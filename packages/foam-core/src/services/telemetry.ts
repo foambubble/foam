@@ -190,6 +190,16 @@ export type ConsentInput =
       /** First run, but no prompt was possible (no TTY, CI, piped stdin). */
       kind: 'first-run-no-prompt';
       envOverride: boolean | undefined;
+    }
+  | {
+      /**
+       * First run, but the env var was set so the prompt was skipped — the
+       * user answered via env. Treated as ephemeral: callers should not
+       * persist this and should suppress `cli.first-run` (no durable user
+       * signal to record).
+       */
+      kind: 'first-run-env-override';
+      envOverride: boolean;
     };
 
 /**
@@ -233,6 +243,12 @@ export function decideConsent(input: ConsentInput): ConsentDecision {
       // can distinguish "explicitly accepted" from "couldn't ask".
       const enabled = input.envOverride ?? true;
       return { enabled, consent: 'default_on' };
+    }
+    case 'first-run-env-override': {
+      // Env var alone decided this run. No durable user signal — `consent`
+      // is undefined so callers know to suppress `cli.first-run` and skip
+      // persistence. The next un-overridden run will prompt for real.
+      return { enabled: input.envOverride, consent: undefined };
     }
   }
 }

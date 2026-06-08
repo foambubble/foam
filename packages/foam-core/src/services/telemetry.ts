@@ -17,7 +17,10 @@ export interface ITelemetryReporter {
    * component. Implementations share underlying state (queue, identity)
    * where it makes sense — only the `foam.component` tag differs.
    */
-  forComponent(component: string): ITelemetryReporter;
+  forComponent(
+    component: string,
+    forkOpts?: { autoFlush?: { maxQueueSize: number } }
+  ): ITelemetryReporter;
   /**
    * Returns a sibling reporter that suppresses identity-revealing common
    * properties (the installation ID, the OS platform, the Node version).

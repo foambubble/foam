@@ -22,6 +22,7 @@ export type HttpPoster = (
  */
 const FLUSH_TIMEOUT_MS = 1000;
 
+
 /**
  * Real HTTPS POST to the App Insights ingestion endpoint. Production code
  * paths pass this explicitly into `AppInsightsReporter` — there is no
@@ -40,6 +41,16 @@ export const httpsPoster: HttpPoster = async (url, body) => {
   return { status: res.status };
 };
 
+/**
+ * Policy for draining the queue mid-session
+ */
+export interface AutoFlushOptions {
+  /**
+   * Fire a background flush as soon as the queue reaches this size.
+   */
+  maxQueueSize: number;
+}
+
 export interface AppInsightsReporterOptions {
   connectionString: string;
   component: 'cli' | 'mcp';
@@ -51,6 +62,13 @@ export interface AppInsightsReporterOptions {
   poster: HttpPoster;
   /** Defaults to () => new Date().toISOString(). */
   clock?: () => string;
+  /**
+   * When set, the reporter drains its queue automatically. When omitted, 
+   * the queue only drains on explicit `flush()` / `dispose()`
+   *
+   * Not propagated by {@link AppInsightsReporter.forComponent}
+   */
+  autoFlush?: AutoFlushOptions;
 }
 
 interface QueuedEnvelope {
@@ -101,6 +119,11 @@ export class AppInsightsReporter implements ITelemetryReporter {
     });
     this.queue.push({ envelope });
     Logger.debug(`[telemetry] queued ${name}`);
+    const cap = this.opts.autoFlush?.maxQueueSize;
+    if (cap !== undefined && this.queue.length >= cap) {
+      // Fire-and-forget: failures are already swallowed inside flush().
+      void this.flush();
+    }
   }
 
   trackError(
@@ -121,12 +144,19 @@ export class AppInsightsReporter implements ITelemetryReporter {
    * Returns an independent reporter scoped to a different component.
    * Inherits connection/identity from this one; has its own queue.
    * The new reporter must be disposed separately.
+   *
+   * `autoFlush` is **not** propagated: each fork must opt in explicitly
+   * because the parent and the child might have different lifetimes
    */
-  forComponent(component: string): ITelemetryReporter {
+  forComponent(
+    component: string,
+    forkOpts?: { autoFlush?: AutoFlushOptions }
+  ): ITelemetryReporter {
     return new AppInsightsReporter(
       {
         ...this.opts,
         component: component as AppInsightsReporterOptions['component'],
+        autoFlush: forkOpts?.autoFlush,
       },
       this.anonymized
     );
@@ -136,10 +166,11 @@ export class AppInsightsReporter implements ITelemetryReporter {
    * Returns an independent reporter that drops the installation ID tag
    * and skips OS / Node version in common properties. Used for
    * `cli.first-run`. Must be disposed separately.
+   * `autoFlush` is not enabled for the anonymous fork
    */
   anonymous(): ITelemetryReporter {
     return new AppInsightsReporter(
-      { ...this.opts, installationId: undefined },
+      { ...this.opts, installationId: undefined, autoFlush: undefined },
       true
     );
   }

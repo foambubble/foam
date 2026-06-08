@@ -202,10 +202,11 @@ async function dispatch(
           logger.info(MCP_HELP);
           return 0;
         }
+        // The MCP server is long-lived so opt the fork into auto-flushing
         return runMcpCommand(
           parseMcpArgs(commandArgs),
           logger,
-          reporter.forComponent('mcp')
+          reporter.forComponent('mcp', { autoFlush: { maxQueueSize: 10 } })
         );
       }
       case 'config': {

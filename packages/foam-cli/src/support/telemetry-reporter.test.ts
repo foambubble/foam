@@ -11,6 +11,7 @@ function makeReporter(overrides: Partial<{
   installationId: string | undefined;
   poster: HttpPoster;
   clock: () => string;
+  autoFlush: { maxQueueSize: number } | undefined;
 }> = {}) {
   return new AppInsightsReporter({
     connectionString: TEST_CONN,
@@ -125,6 +126,97 @@ describe('AppInsightsReporter', () => {
     await expect(reporter.flush()).resolves.toBe(1);
   });
 
+  describe('auto-flush', () => {
+    const THRESHOLD = 3;
+
+    it('does not auto-flush by default', async () => {
+      const poster = vi.fn<HttpPoster>().mockResolvedValue({ status: 200 });
+      const reporter = makeReporter({ poster });
+
+      // 50 events buffered, no autoFlush opt-in → nothing sent yet.
+      for (let i = 0; i < 50; i++) {
+        reporter.trackEvent('cli.command-invoked', { command: `c-${i}` });
+      }
+      expect(poster).toHaveBeenCalledTimes(0);
+      await reporter.flush();
+      expect(poster).toHaveBeenCalledTimes(1);
+
+      // Another 50 events — still buffered, no auto-flush.
+      for (let i = 0; i < 50; i++) {
+        reporter.trackEvent('cli.command-invoked', { command: `c2-${i}` });
+      }
+      expect(poster).toHaveBeenCalledTimes(1);
+      await reporter.dispose();
+      expect(poster).toHaveBeenCalledTimes(2);
+    });
+
+    it('flushes automatically once the queue reaches autoFlush.maxQueueSize', () => {
+      const poster = vi.fn<HttpPoster>().mockResolvedValue({ status: 200 });
+      const reporter = makeReporter({
+        poster,
+        autoFlush: { maxQueueSize: THRESHOLD },
+      });
+
+      // One under the threshold — still buffered, nothing sent.
+      for (let i = 0; i < THRESHOLD - 1; i++) {
+        reporter.trackEvent('mcp.tool-invoked', { tool: `t-${i}` });
+      }
+      expect(poster).not.toHaveBeenCalled();
+
+      // Crossing the threshold fires a background flush. `flush()` calls
+      // `poster(url, body)` synchronously before awaiting the POST, so the
+      // call is observable on `poster.mock` immediately — no need to await
+      reporter.trackEvent('mcp.tool-invoked', { tool: 'trip' });
+      expect(poster).toHaveBeenCalledOnce();
+      const body = poster.mock.calls[0][1];
+      expect(body.split('\n')).toHaveLength(THRESHOLD);
+    });
+
+    it('drains the queue when auto-flush fires — a subsequent manual flush is a no-op', async () => {
+      const poster = vi.fn<HttpPoster>().mockResolvedValue({ status: 200 });
+      const reporter = makeReporter({
+        poster,
+        autoFlush: { maxQueueSize: THRESHOLD },
+      });
+
+      for (let i = 0; i < THRESHOLD; i++) {
+        reporter.trackEvent('mcp.tool-invoked', { tool: `t-${i}` });
+      }
+
+      // Auto-flush already drained the queue synchronously
+      // A follow-up flush() finds nothing to send and posts no second batch.
+      const extraSent = await reporter.flush();
+      expect(extraSent).toBe(0);
+      expect(poster).toHaveBeenCalledOnce();
+    });
+
+    it('continues accepting events after an auto-flush', async () => {
+      const poster = vi.fn<HttpPoster>().mockResolvedValue({ status: 200 });
+      const reporter = makeReporter({
+        poster,
+        autoFlush: { maxQueueSize: THRESHOLD },
+      });
+
+      for (let i = 0; i < THRESHOLD; i++) {
+        reporter.trackEvent('mcp.tool-invoked', { tool: `t-${i}` });
+      }
+      // Auto-flush already shipped the first batch synchronously.
+      expect(poster).toHaveBeenCalledOnce();
+
+      // The next event sits below the threshold — the explicit flush
+      // below is what ships it.
+      reporter.trackEvent('mcp.tool-invoked', { tool: 'post-flush' });
+      expect(poster).toHaveBeenCalledOnce();
+      await reporter.flush();
+
+      expect(poster).toHaveBeenCalledTimes(2);
+      const secondBody = poster.mock.calls[1][1];
+      expect(secondBody.split('\n')).toHaveLength(1);
+      const env = JSON.parse(secondBody);
+      expect(env.data.baseData.properties.tool).toBe('post-flush');
+    });
+  });
+
   it('resolves within the timeout cap even when the poster hangs forever', async () => {
     // Simulates a stalled ingestion endpoint (corporate proxy, DNS hang,
     // black-holed network) — must never delay the CLI's exit.
@@ -197,6 +289,40 @@ describe('AppInsightsReporter', () => {
 
       const env = JSON.parse(poster.mock.calls[0][1]);
       expect(env.tags['ai.user.id']).toBe('install-id-123');
+    });
+
+    it('enables auto-flush on the fork when the caller asks for it', () => {
+      const poster = vi.fn<HttpPoster>().mockResolvedValue({ status: 200 });
+      const cli = makeReporter({ poster });
+      const mcp = cli.forComponent('mcp', {
+        autoFlush: { maxQueueSize: 2 },
+      }) as AppInsightsReporter;
+
+      mcp.trackEvent('mcp.tool-invoked', { tool: 'a' });
+      expect(poster).not.toHaveBeenCalled();
+
+      mcp.trackEvent('mcp.tool-invoked', { tool: 'b' });
+      expect(poster).toHaveBeenCalledOnce();
+      expect(poster.mock.calls[0][1].split('\n')).toHaveLength(2);
+    });
+
+    it('does not propagate autoFlush from the parent', async () => {
+      const poster = vi.fn<HttpPoster>().mockResolvedValue({ status: 200 });
+      const parent = makeReporter({
+        poster,
+        autoFlush: { maxQueueSize: 2 },
+      });
+      const mcp = parent.forComponent('mcp') as AppInsightsReporter;
+
+      // Push more events than the parent's cap
+      for (let i = 0; i < 10; i++) {
+        mcp.trackEvent('mcp.tool-invoked', { tool: `t-${i}` });
+      }
+      expect(poster).not.toHaveBeenCalled();
+
+      // Confirm the events are still there waiting for an explicit flush.
+      const sent = await mcp.flush();
+      expect(sent).toBe(10);
     });
   });
 

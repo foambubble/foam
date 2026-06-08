@@ -1,7 +1,7 @@
 import { ConsentInput, ITelemetryReporter, NoopTelemetryReporter, decideConsent } from '@foam/core';
 import { promptFirstRunConsent } from './first-run';
 import { State } from './state';
-import { readEnvConfigSource, readRawUserConfig, writeRawUserConfig } from './user-config';
+import { readEnvTelemetryOverride, readRawUserConfig, writeRawUserConfig } from './user-config';
 import { shouldSkipTelemetry } from './with-telemetry';
 
 export interface ResolveReporterOptions {
@@ -72,7 +72,7 @@ export async function resolveCliReporter(
 async function resolveConsentInput(
   promptOverride?: () => Promise<'granted' | 'declined' | 'no-prompt'>
 ): Promise<ConsentInput> {
-  const envOverride = readEnvConfigSource().getTelemetryEnabled?.() ?? undefined;
+  const envOverride = readEnvTelemetryOverride();
   const rawConfig = readRawUserConfig();
   const storedRaw = rawConfig['telemetry.enabled'];
 

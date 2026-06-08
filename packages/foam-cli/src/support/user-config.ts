@@ -1,7 +1,6 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { IFoamConfigSource } from '@foam/core';
 
 /**
  * Resolves the directory holding Foam's user config and state files.
@@ -40,9 +39,8 @@ export function getUserConfigPath(): string {
 }
 
 /**
- * Reads the raw on-disk config object (or `{}` if no file exists). Distinct
- * from {@link readUserConfigSource}, which returns the typed `IFoamConfigSource`;
- * this returns the raw object so writers can round-trip unknown keys safely.
+ * Reads the raw on-disk config object (or `{}` if no file exists). Returns
+ * the raw object so writers can round-trip unknown keys safely.
  */
 export function readRawUserConfig(): Record<string, unknown> {
   const configPath = getUserConfigPath();
@@ -71,67 +69,20 @@ export function writeRawUserConfig(raw: Record<string, unknown>): void {
 }
 
 /**
- * Reads `~/.config/foam/config.json` and returns it as a partial config
- * source. Missing file → empty source (no opinions). Invalid JSON → throws.
+ * Reads `FOAM_TELEMETRY` and returns the user's opt-in/out preference.
  *
- * The on-disk format uses flat dotted keys (VS Code-style), e.g.:
- *   { "telemetry.enabled": false }
- */
-export function readUserConfigSource(): IFoamConfigSource {
-  const configPath = getUserConfigPath();
-
-  let raw: Record<string, unknown>;
-  try {
-    raw = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-  } catch (e) {
-    if ((e as NodeJS.ErrnoException).code === 'ENOENT') {
-      return {};
-    }
-    throw e;
-  }
-
-  return buildUserConfigSource(raw);
-}
-
-/**
- * Pure: turns a parsed config-file object into a partial config source.
- * Exported for direct testing without touching the filesystem.
- */
-export function buildUserConfigSource(
-  raw: Record<string, unknown>
-): IFoamConfigSource {
-  const source: IFoamConfigSource = {};
-
-  const telemetryEnabled = raw['telemetry.enabled'];
-  if (typeof telemetryEnabled === 'boolean') {
-    source.getTelemetryEnabled = () => telemetryEnabled;
-  }
-
-  return source;
-}
-
-/**
- * Builds an `IFoamConfigSource` from `FOAM_TELEMETRY`. Recognized falsy values:
- * `0`, `false`, `off`, `no` (case-insensitive). Truthy values: `1`, `true`,
- * `on`, `yes`. Anything else is ignored (no opinion).
+ * Recognized falsy values: `0`, `false`, `off`, `no` (case-insensitive).
+ * Recognized truthy values: `1`, `true`, `on`, `yes`. Anything else (or
+ * unset) returns `undefined` — "no opinion."
  *
  * Pure: only reads `process.env`.
  */
-export function readEnvConfigSource(): IFoamConfigSource {
+export function readEnvTelemetryOverride(): boolean | undefined {
   const raw = process.env.FOAM_TELEMETRY;
-  if (raw === undefined) {
-    return {};
-  }
+  if (raw === undefined) return undefined;
 
   const normalized = raw.trim().toLowerCase();
-  const falsy = ['0', 'false', 'off', 'no'];
-  const truthy = ['1', 'true', 'on', 'yes'];
-
-  if (falsy.includes(normalized)) {
-    return { getTelemetryEnabled: () => false };
-  }
-  if (truthy.includes(normalized)) {
-    return { getTelemetryEnabled: () => true };
-  }
-  return {};
+  if (['0', 'false', 'off', 'no'].includes(normalized)) return false;
+  if (['1', 'true', 'on', 'yes'].includes(normalized)) return true;
+  return undefined;
 }

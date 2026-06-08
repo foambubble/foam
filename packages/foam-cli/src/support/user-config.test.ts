@@ -1,13 +1,10 @@
-import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import {
-  buildUserConfigSource,
   getUserConfigDir,
   getUserConfigPath,
-  readEnvConfigSource,
-  readUserConfigSource,
+  readEnvTelemetryOverride,
 } from './user-config';
 
 describe('getUserConfigDir', () => {
@@ -44,83 +41,36 @@ describe('getUserConfigDir', () => {
   });
 });
 
-describe('readUserConfigSource', () => {
-  let tempDir: string;
-  const originalEnv = { ...process.env };
-
-  beforeEach(() => {
-    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'foam-cfg-'));
-    process.env.FOAM_CONFIG_HOME = tempDir;
-  });
-
-  afterEach(() => {
-    process.env = { ...originalEnv };
-    fs.rmSync(tempDir, { recursive: true, force: true });
-  });
-
-  it('returns empty source when the file is missing', () => {
-    const source = readUserConfigSource();
-    expect(source.getTelemetryEnabled).toBeUndefined();
-  });
-
-  it('reads telemetry.enabled when set', () => {
-    fs.writeFileSync(
-      path.join(tempDir, 'config.json'),
-      JSON.stringify({ 'telemetry.enabled': false })
-    );
-    const source = readUserConfigSource();
-    expect(source.getTelemetryEnabled?.()).toBe(false);
-  });
-
-  it('returns no opinion when telemetry.enabled is not a boolean', () => {
-    fs.writeFileSync(
-      path.join(tempDir, 'config.json'),
-      JSON.stringify({ 'telemetry.enabled': 'maybe' })
-    );
-    const source = readUserConfigSource();
-    expect(source.getTelemetryEnabled).toBeUndefined();
-  });
-
-  it('throws on invalid JSON', () => {
-    fs.writeFileSync(path.join(tempDir, 'config.json'), '{ not valid');
-    expect(() => readUserConfigSource()).toThrow();
-  });
-
-  it('resolves the config path under the configured dir', () => {
-    expect(getUserConfigPath()).toBe(path.join(tempDir, 'config.json'));
-  });
-});
-
-describe('buildUserConfigSource', () => {
-  it('only emits getters for known keys with valid types', () => {
-    const source = buildUserConfigSource({
-      'telemetry.enabled': true,
-      'unrelated.key': 'ignored',
-    });
-
-    expect(source.getTelemetryEnabled?.()).toBe(true);
-    // unrelated keys must not produce getters
-    expect(Object.keys(source)).toEqual(['getTelemetryEnabled']);
-  });
-});
-
-describe('readEnvConfigSource', () => {
+describe('getUserConfigPath', () => {
   const originalEnv = { ...process.env };
 
   afterEach(() => {
     process.env = { ...originalEnv };
   });
 
-  it('returns empty source when FOAM_TELEMETRY is not set', () => {
+  it('resolves to config.json under the configured dir', () => {
+    process.env.FOAM_CONFIG_HOME = '/tmp/foam-test';
+    expect(getUserConfigPath()).toBe(path.join('/tmp/foam-test', 'config.json'));
+  });
+});
+
+describe('readEnvTelemetryOverride', () => {
+  const originalEnv = { ...process.env };
+
+  afterEach(() => {
+    process.env = { ...originalEnv };
+  });
+
+  it('returns undefined when FOAM_TELEMETRY is not set', () => {
     delete process.env.FOAM_TELEMETRY;
-    expect(readEnvConfigSource()).toEqual({});
+    expect(readEnvTelemetryOverride()).toBeUndefined();
   });
 
   it.each(['0', 'false', 'off', 'no', 'FALSE', '  Off  '])(
     'parses %s as disabled',
     raw => {
       process.env.FOAM_TELEMETRY = raw;
-      expect(readEnvConfigSource().getTelemetryEnabled?.()).toBe(false);
+      expect(readEnvTelemetryOverride()).toBe(false);
     }
   );
 
@@ -128,12 +78,12 @@ describe('readEnvConfigSource', () => {
     'parses %s as enabled',
     raw => {
       process.env.FOAM_TELEMETRY = raw;
-      expect(readEnvConfigSource().getTelemetryEnabled?.()).toBe(true);
+      expect(readEnvTelemetryOverride()).toBe(true);
     }
   );
 
-  it('ignores unrecognized values', () => {
+  it('returns undefined for unrecognized values', () => {
     process.env.FOAM_TELEMETRY = 'maybe';
-    expect(readEnvConfigSource()).toEqual({});
+    expect(readEnvTelemetryOverride()).toBeUndefined();
   });
 });

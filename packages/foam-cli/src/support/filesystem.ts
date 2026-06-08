@@ -15,7 +15,6 @@ import {
   cascadeFoamConfig,
 } from '@foam/core';
 import { readFoamConfig } from './config';
-import { readEnvConfigSource, readUserConfigSource } from './user-config';
 import { GlobMatcher } from './glob-matcher';
 
 const DEFAULT_EXCLUDED_DIR_NAMES = new Set([
@@ -133,14 +132,13 @@ export async function loadWorkspaceFromDirectory(
   const rootDir = path.resolve(workspaceDir);
   const rootUri = URI.file(rootDir);
 
-  // Cascade: env vars beat the Foam user config file, which beats workspace
-  // settings, which beat built-in defaults. The last entry must be fully
-  // resolved so every getter has a final answer.
+  // Cascade: workspace settings beat built-in defaults. The fallback must be
+  // a fully-resolved config so every getter has a final answer. User-level
+  // and env-level cascade layers don't exist today; the only env-driven
+  // config is the telemetry opt-out, which is read directly in resolveCliReporter.
   const workspaceSource = readFoamConfig(rootDir);
-  const userSource = readUserConfigSource();
-  const envSource = readEnvConfigSource();
   const foamConfig = cascadeFoamConfig(
-    [envSource, userSource, workspaceSource],
+    [workspaceSource],
     new DefaultFoamConfig()
   );
   Config.setDefaultConfig(foamConfig);

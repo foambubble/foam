@@ -10,7 +10,7 @@ describe('cascadeFoamConfig', () => {
     const config = cascadeFoamConfig([], new DefaultFoamConfig());
 
     expect(config.getCompletionLinkFormat()).toBe('wikilink');
-    expect(config.getTelemetryEnabled()).toBe(true);
+    expect(config.getDateLocale()).toBe('default');
     expect(config.getFilesInclude()).toEqual(['**/*']);
   });
 
@@ -20,7 +20,7 @@ describe('cascadeFoamConfig', () => {
     };
     const workspaceSource: IFoamConfigSource = {
       getCompletionLinkFormat: () => 'wikilink',
-      getTelemetryEnabled: () => false,
+      getDateLocale: () => 'fr-FR',
     };
 
     const config = cascadeFoamConfig(
@@ -30,16 +30,16 @@ describe('cascadeFoamConfig', () => {
 
     // workspace wins for keys it defines
     expect(config.getCompletionLinkFormat()).toBe('wikilink');
-    expect(config.getTelemetryEnabled()).toBe(false);
+    expect(config.getDateLocale()).toBe('fr-FR');
   });
 
   it('skips a source whose getter returns undefined and tries the next', () => {
     const partialUser: IFoamConfigSource = {
       // Explicitly defined but returns undefined — should be skipped.
-      getTelemetryEnabled: () => undefined as unknown as boolean,
+      getDateLocale: () => undefined as unknown as string,
     };
     const workspaceSource: IFoamConfigSource = {
-      getTelemetryEnabled: () => false,
+      getDateLocale: () => 'fr-FR',
     };
 
     const config = cascadeFoamConfig(
@@ -47,7 +47,7 @@ describe('cascadeFoamConfig', () => {
       new DefaultFoamConfig()
     );
 
-    expect(config.getTelemetryEnabled()).toBe(false);
+    expect(config.getDateLocale()).toBe('fr-FR');
   });
 
   it('falls through past every partial source to the fallback', () => {
@@ -70,17 +70,11 @@ describe('cascadeFoamConfig', () => {
     // Passing an existing IFoamConfig (e.g. another DefaultFoamConfig)
     // as a source should work — every getter is defined.
     const defaults = new DefaultFoamConfig();
-    const override: IFoamConfigSource = { getTelemetryEnabled: () => false };
+    const override: IFoamConfigSource = { getDateLocale: () => 'fr-FR' };
 
     const config = cascadeFoamConfig([override, defaults], new DefaultFoamConfig());
 
-    expect(config.getTelemetryEnabled()).toBe(false);
+    expect(config.getDateLocale()).toBe('fr-FR');
     expect(config.getCompletionLinkFormat()).toBe('wikilink');
-  });
-});
-
-describe('DefaultFoamConfig', () => {
-  it('provides getTelemetryEnabled defaulting to true', () => {
-    expect(new DefaultFoamConfig().getTelemetryEnabled()).toBe(true);
   });
 });

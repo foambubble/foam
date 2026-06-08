@@ -43,9 +43,6 @@ export interface IFoamConfig {
 
   // Languages
   getSupportedLanguages(): string[];
-
-  // Telemetry
-  getTelemetryEnabled(): boolean;
 }
 
 /**
@@ -113,7 +110,6 @@ export function cascadeFoamConfig(
     getGraphTitleMaxLength: () => get('getGraphTitleMaxLength'),
     getGraphStyle: () => get('getGraphStyle'),
     getSupportedLanguages: () => get('getSupportedLanguages'),
-    getTelemetryEnabled: () => get('getTelemetryEnabled'),
   };
 }
 
@@ -148,7 +144,6 @@ export class DefaultFoamConfig implements IFoamConfig {
   getGraphTitleMaxLength() { return 24; }
   getGraphStyle() { return {}; }
   getSupportedLanguages() { return ['markdown']; }
-  getTelemetryEnabled() { return true; }
 }
 
 /**
@@ -199,5 +194,4 @@ export class Config {
   static getGraphTitleMaxLength(): number { return Config.defaultConfig.getGraphTitleMaxLength(); }
   static getGraphStyle(): object { return Config.defaultConfig.getGraphStyle(); }
   static getSupportedLanguages(): string[] { return Config.defaultConfig.getSupportedLanguages(); }
-  static getTelemetryEnabled(): boolean { return Config.defaultConfig.getTelemetryEnabled(); }
 }

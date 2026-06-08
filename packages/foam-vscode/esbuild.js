@@ -37,6 +37,23 @@ assert(
 const production = process.argv.includes('--production');
 const watch = process.argv.includes('--watch');
 
+// Versions baked into the bundle at build time so telemetry can attach
+// `foam.version` / `foam.coreVersion` without runtime package.json reads.
+// Mirrors the pattern used by `packages/foam-cli/esbuild.js`.
+const pkg = JSON.parse(
+  fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8')
+);
+const corePkg = JSON.parse(
+  fs.readFileSync(
+    path.join(__dirname, '../foam-core/package.json'),
+    'utf8'
+  )
+);
+const versionDefines = {
+  __FOAM_VSCODE_VERSION__: JSON.stringify(pkg.version),
+  __CORE_VERSION__: JSON.stringify(corePkg.version),
+};
+
 const config = {
   extension: {
     web: {
@@ -45,6 +62,7 @@ const config = {
       outfile: `out/bundles/extension-web.js`,
       define: {
         global: 'globalThis',
+        ...versionDefines,
       },
       plugins: [
         polyfillPlugin.polyfillNode({
@@ -109,6 +127,7 @@ const config = {
       platform: 'node',
       format: 'cjs',
       outfile: `out/bundles/extension-node.js`,
+      define: versionDefines,
       plugins: [],
       entryPoints: ['src/extension.ts'],
       external: ['vscode'],

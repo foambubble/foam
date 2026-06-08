@@ -16,6 +16,11 @@ import { createMatcherAndDataStore } from './vscode/services/editor';
 import { OllamaEmbeddingProvider } from './ai/providers/ollama/ollama-provider';
 import { initTelemetry } from './vscode/services/telemetry';
 
+// Injected by esbuild's `define` (and the vitest config), so telemetry can
+// attach version dimensions without a runtime package.json read
+declare const __FOAM_VSCODE_VERSION__: string;
+declare const __CORE_VERSION__: string;
+
 export async function activate(context: ExtensionContext) {
   const logger = new VsCodeOutputLogger();
   Logger.setDefaultLogger(logger);
@@ -23,7 +28,10 @@ export async function activate(context: ExtensionContext) {
 
   Config.setDefaultConfig(new VsCodeFoamConfig());
 
-  const telemetry = initTelemetry();
+  const telemetry = initTelemetry({
+    foamVersion: __FOAM_VSCODE_VERSION__,
+    coreVersion: __CORE_VERSION__,
+  });
   context.subscriptions.push(telemetry);
   telemetry.trackSession();
 

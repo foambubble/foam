@@ -9,18 +9,45 @@ import {
 
 const EVENT_PREFIX = 'vscode.';
 
+export interface TelemetryServiceOptions {
+  /** Version of the foam-vscode extension (from its `package.json`). */
+  foamVersion: string;
+  /** Version of `@foam/core` (from its `package.json`). */
+  coreVersion: string;
+}
+
 /**
  * VS Code telemetry adapter. Wraps the Azure App Insights client from
  * `@vscode/extension-telemetry` and prefixes every event with `vscode.`
- * so the same App Insights resource can host events from CLI and MCP without collision.
+ * so the same App Insights resource can host events from CLI and MCP
+ * without collision.
+ *
+ * Attaches Foam's common dimensions (`foam.component`, `foam.version`,
+ * `foam.coreVersion`) to every event via the library's `commonProperties`
+ * hook, so CLI / MCP / VS Code events can be filtered by the same
+ * dimension names. The library additionally attaches its own `common.*`
+ * set (extension name/version, OS, VS Code version, machine ID) — see
+ * `docs/user/tools/telemetry.md` for the full list.
  */
 export class TelemetryService implements IDisposable {
   private reporter: TelemetryReporter;
   private sessionWithCommandFired = false;
   private sessionWithNoteFired = false;
 
-  constructor() {
-    this.reporter = new TelemetryReporter(TELEMETRY_CONNECTION_STRING);
+  constructor(opts: TelemetryServiceOptions) {
+    this.reporter = new TelemetryReporter(
+      TELEMETRY_CONNECTION_STRING,
+      undefined,
+      undefined,
+      undefined,
+      {
+        commonProperties: {
+          'foam.component': 'vscode',
+          'foam.version': opts.foamVersion,
+          'foam.coreVersion': opts.coreVersion,
+        },
+      }
+    );
   }
 
   trackEvent(name: string, properties?: Record<string, string>): void {
@@ -146,8 +173,8 @@ export class TelemetryService implements IDisposable {
 // Singleton — initialized once in extension.ts, then imported where needed.
 let _telemetry: TelemetryService | null = null;
 
-export function initTelemetry(): TelemetryService {
-  _telemetry = new TelemetryService();
+export function initTelemetry(opts: TelemetryServiceOptions): TelemetryService {
+  _telemetry = new TelemetryService(opts);
   return _telemetry;
 }
 

@@ -118,26 +118,6 @@ describe('withTelemetry', () => {
     expect(event?.properties?.exitCode).toBe('2');
   });
 
-  it('records an error event when the command throws', async () => {
-    const reporter = new InMemoryTelemetryReporter();
-    await expect(
-      withTelemetry({
-        command: 'graph',
-        reporter,
-        run: async () => {
-          throw new TypeError('bad type');
-        },
-      })
-    ).rejects.toThrow();
-
-    expect(reporter.errors).toContainEqual(
-      expect.objectContaining({
-        context: 'dispatch',
-        errorType: 'TypeError',
-      })
-    );
-  });
-
   it('passes the reporter through to the run callback', async () => {
     const reporter = new InMemoryTelemetryReporter();
     let received: ITelemetryReporter | undefined;

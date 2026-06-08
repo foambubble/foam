@@ -91,7 +91,6 @@ export interface WithTelemetryOptions {
 /**
  * Wraps a command run with the lifecycle telemetry: measures duration,
  * captures the exit code, and emits `cli.command-invoked` on completion.
- * Also reports thrown errors via `trackError` before re-raising.
  *
  * Consent and reporter selection are not this wrapper's concern — the
  * caller has already decided whether `reporter` is a real one or
@@ -110,9 +109,6 @@ export async function withTelemetry(opts: WithTelemetryOptions): Promise<number>
       exitCode = result.exitCode;
       extraProps = result.telemetryProperties;
     }
-  } catch (e) {
-    reporter.trackError('dispatch', e, { command: opts.command });
-    throw e;
   } finally {
     const durationBucket = bucketDuration(Date.now() - startedAt);
     reporter.trackEvent('cli.command-invoked', {

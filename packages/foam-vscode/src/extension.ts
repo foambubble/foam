@@ -15,6 +15,10 @@ import VsCodeBasedParserCache from './vscode/services/cache';
 import { createMatcherAndDataStore } from './vscode/services/editor';
 import { OllamaEmbeddingProvider } from './ai/providers/ollama/ollama-provider';
 import { initTelemetry } from './vscode/services/telemetry';
+import {
+  getDailyNoteTemplateUri,
+  getDefaultTemplateUri,
+} from './vscode/services/template-service';
 
 // Injected by esbuild's `define` (and the vitest config), so telemetry can
 // attach version dimensions without a runtime package.json read
@@ -121,13 +125,10 @@ export async function activate(context: ExtensionContext) {
     ).length;
     Logger.info(`Loaded ${resources.length} resources`);
 
-    const allFiles = await dataStore.list();
-    const hasTemplates = allFiles.some(uri =>
-      uri.path.includes('.foam/templates')
-    );
-    const hasDailyNoteTemplate = allFiles.some(uri =>
-      uri.path.includes('.foam/templates/daily-note.')
-    );
+    const hasDailyNoteTemplate =
+      (await getDailyNoteTemplateUri()) !== undefined;
+    const hasTemplates =
+      hasDailyNoteTemplate || (await getDefaultTemplateUri()) !== undefined;
     telemetry.trackConfigSnapshot();
     telemetry.trackWorkspaceStats(
       noteCount,

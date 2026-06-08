@@ -119,9 +119,6 @@ export async function runMcpCommand(
   logger.error('[foam-mcp] Shutting down.');
   await server.close();
   await watcher.dispose();
-  // Flush any pending mcp.* events before exit. The reporter shares its
-  // queue with the surrounding cli.* reporter (forks share state), so
-  // disposing here drains everything queued by both lifecycles.
   await reporter.dispose();
   return 0;
 }

@@ -150,7 +150,11 @@ export class FoamMcpServer {
     };
     const clientImpl = this.mcp.server.getClientVersion();
     if (clientImpl?.name) {
-      properties.client = clientImpl.name;
+      // The client picks its own `name` — it's untrusted text. We don't
+      // want an arbitrarily long string flowing into telemetry, so cap it.
+      // 32 chars is enough for every known client (`claude-desktop`,
+      // `cursor`, `cline`, …) and bounds the worst case.
+      properties.client = clientImpl.name.slice(0, 32);
     }
     this.telemetry.trackEvent('mcp.session-started', properties);
   }

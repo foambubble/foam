@@ -104,10 +104,10 @@ export type WorkspaceSizeBucket =
   | '11-50'
   | '51-200'
   | '201-500'
-  | '500-1000'
-  | '1000-2000'
-  | '2000-5000'
-  | '5000-10000'
+  | '501-1000'
+  | '1001-2000'
+  | '2001-5000'
+  | '5001-10000'
   | '10000+';
 
 export function bucketNoteCount(count: number): WorkspaceSizeBucket {
@@ -116,10 +116,10 @@ export function bucketNoteCount(count: number): WorkspaceSizeBucket {
   if (count <= 50) return '11-50';
   if (count <= 200) return '51-200';
   if (count <= 500) return '201-500';
-  if (count <= 1000) return '500-1000';
-  if (count <= 2000) return '1000-2000';
-  if (count <= 5000) return '2000-5000';
-  if (count <= 10000) return '5000-10000';
+  if (count <= 1000) return '501-1000';
+  if (count <= 2000) return '1001-2000';
+  if (count <= 5000) return '2001-5000';
+  if (count <= 10000) return '5001-10000';
   return '10000+';
 }
 
@@ -158,7 +158,7 @@ never collects note content, file names, paths, or anything that could
 identify the user. See https://docs.foamnotes.com/user/tools/telemetry
 for full details.
 
-Telemetry is on by default. It can be disabled now (n), kept it
+Telemetry is on by default. It can be disabled now (n), left
 on (Y), or changed later by updating the config or with FOAM_TELEMETRY=0.`;
 
 /**

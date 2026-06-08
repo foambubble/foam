@@ -51,10 +51,12 @@ export interface NoteCreateResult {
    * template was applied (the note got the minimal `# title` fallback body).
    *
    * - `default`: `new-note.md` or `new-note.js` from `.foam/templates/` was used.
+   * - `daily-note`: `daily-note.md` or `daily-note.js` from `.foam/templates/`
+   *   was used (only emitted by `daily --create`, not `note create`).
    * - `custom`: reserved for future flows where the caller picks a named
    *   template; the current `note create` API does not take a template name.
    */
-  templateType?: 'default' | 'custom';
+  templateType?: 'default' | 'daily-note' | 'custom';
   /**
    * The format of the applied template. Omitted whenever `templateType`
    * is omitted (the two travel together).

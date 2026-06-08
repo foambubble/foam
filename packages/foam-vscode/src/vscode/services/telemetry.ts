@@ -104,13 +104,6 @@ export class TelemetryService implements IDisposable {
   }
 
   /**
-   * Fired the first time a feature is activated within a session.
-   */
-  trackFeature(feature: string, properties?: Record<string, string>): void {
-    this.trackEvent('feature', { feature, ...properties });
-  }
-
-  /**
    * Once per session: the values of selected enum/boolean settings.
    * Free-text settings (paths, templates) are never included.
    */

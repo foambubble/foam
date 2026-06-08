@@ -11,6 +11,19 @@ export interface UpdateCheckCache {
 }
 
 /**
+ * Records whether a `cli.first-run` event has been emitted for this
+ * install, and what the strongest outcome so far was.
+ *
+ * - undefined — never fired.
+ * - `'tty'` — only the non-interactive default-on path has fired. A later
+ *   interactive run is still allowed to fire an upgrade event (`granted`
+ *   or `declined`).
+ * - `'user'` — the user has answered an interactive prompt at some point.
+ *   The decision is final; no further events fire.
+ */
+export type ConsentEventState = 'tty' | 'user';
+
+/**
  * Tool-managed state persisted in `state.json`. Not user-edited. The
  * canonical inventory of everything the CLI persists about itself —
  * every slice's keys live here.
@@ -18,6 +31,7 @@ export interface UpdateCheckCache {
 export interface FoamState {
   installationId?: string;
   updateCheck?: UpdateCheckCache;
+  consentEventFired?: ConsentEventState;
 }
 
 class StateStore {

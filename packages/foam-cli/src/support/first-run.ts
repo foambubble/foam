@@ -39,12 +39,15 @@ export async function promptFirstRunConsent(
   options: FirstRunPromptOptions = {}
 ): Promise<FirstRunPromptResult> {
   const isInteractive = options.isInteractive ?? defaultIsInteractive;
+  const stderr = (options.stderr ?? process.stderr) as Writable;
+
   if (!isInteractive()) {
+    // No TTY — we can't ask, but we do a runtime disclosure by printing the notice anyway
+    stderr.write(TELEMETRY_FIRST_RUN_NOTICE + '\n');
     return 'no-prompt';
   }
 
   const stdin = (options.stdin ?? process.stdin) as Readable;
-  const stderr = (options.stderr ?? process.stderr) as Writable;
 
   stderr.write(TELEMETRY_FIRST_RUN_NOTICE + '\n\nEnable telemetry? [Y/n]: ');
 

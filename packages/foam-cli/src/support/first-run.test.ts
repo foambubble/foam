@@ -42,14 +42,28 @@ describe('promptFirstRunConsent', () => {
     return { stdin, stderr };
   }
 
-  it('returns no-prompt when isInteractive is false', async () => {
-    const { stdin, stderr } = makeStreams('y\n');
+  it('returns no-prompt when isInteractive is false and still writes the notice to stderr', async () => {
+    // Non-interactive callers (MCP launched by Claude Desktop / Cursor,
+    // CI pipelines, piped scripts) cannot answer a prompt — but they still
+    // deserve a runtime disclosure of what telemetry is being collected.
+    // The stderr notice is the user-visible part of "we won't ask, but
+    // we'll tell".
+    const stdin = new PassThrough();
+    const stderr = new PassThrough();
+    const chunks: Buffer[] = [];
+    stderr.on('data', c => chunks.push(c));
+
     const result = await promptFirstRunConsent({
       stdin,
       stderr,
       isInteractive: () => false,
     });
+
     expect(result).toBe('no-prompt');
+    const out = Buffer.concat(chunks).toString('utf8');
+    expect(out).toContain('Foam collects anonymous usage data');
+    // No interactive prompt suffix — there's nobody to answer.
+    expect(out).not.toContain('Enable telemetry? [Y/n]:');
   });
 
   it('reads stdin and returns granted on empty answer', async () => {

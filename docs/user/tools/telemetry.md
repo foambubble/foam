@@ -41,7 +41,7 @@ Foam respects VS Code's global telemetry setting. Open Settings, search for `tel
 
 On the first run, the CLI prints a notice describing what is collected and asks you to confirm. The default is **enabled** — pressing Enter accepts it. Your choice is saved in `~/.config/foam/config.json` and not asked again.
 
-If the CLI is run non-interactively (CI, piped input, etc.), it cannot prompt — it defaults to enabled and records that fact so you know.
+If the CLI is run non-interactively (CI, piped input, MCP launched by Claude Desktop / Cursor, etc.), it cannot prompt — it prints the notice to stderr and defaults to enabled **for that session only**. No choice is persisted, so the next interactive CLI run will still ask. To make the choice durable in a non-interactive context, set `FOAM_TELEMETRY=0` or `FOAM_TELEMETRY=1` in the environment, or edit `~/.config/foam/config.json` directly.
 
 You can change your choice at any time:
 
@@ -113,7 +113,7 @@ You can disable VS Code's telemetry — and therefore everything Foam sends from
 | Event | When it fires | Properties |
 |---|---|---|
 | `cli.command-invoked` | Once per CLI invocation that runs a known command, after it completes. Skipped for `--help`, `--version`, `foam config`, and unknown commands (typos) — those never emit telemetry. | `command`, `durationBucket`, `exitCode`. When the command threw an error caught by the dispatcher, also `errorType` (error class name only — no message, no stack) and `errorContext` (where it was caught — `dispatch`). Some commands attach extra properties — e.g. `note create` and `daily --create` attach `template-type` (one of `default`, `daily-note`, `custom`) and `template-format` (`md` / `js`). Both are omitted when no template was applied (e.g. a `note create` that fell back to the minimal `# title` body). `daily` additionally attaches `mode`: `create` when a new daily note was written this invocation, `open` for read-only lookups and for `--create` against a note that already existed (nothing was written). |
-| `cli.first-run` | Exactly once per installation, after the consent choice is recorded. Carries no `installationId`, no `os.platform`, no `node.version`. | `consent`: `granted` / `declined` (from the prompt), or `default_on` (no prompt was possible — non-TTY / CI / piped) |
+| `cli.first-run` | At most twice per installation: once for the strongest consent outcome we've recorded so far. Anonymous — carries no `installationId`, no `os.platform`, no `node.version`. An install that runs headlessly first (e.g. MCP) fires once with `default_on`; if the same install later answers an interactive CLI prompt, a second event fires with `granted` / `declined` (the "upgrade"). Subsequent runs of either kind are deduped via state.json. | `consent`: `granted` / `declined` (from an interactive prompt), or `default_on` (non-interactive first encounter) |
 
 ### MCP events (`mcp.*`)
 

@@ -107,7 +107,7 @@ describe('resolveCliReporter', () => {
       );
     });
 
-    it('fires cli.first-run with consent=default_on when no prompt is possible', async () => {
+    it('fires cli.first-run with consent=default_on but does not persist on the no-prompt path', async () => {
       const recorder = new CapturingRecorder();
       const reporter = await resolveCliReporter({
         command: 'graph',
@@ -122,6 +122,8 @@ describe('resolveCliReporter', () => {
           properties: { consent: 'default_on' },
         })
       );
+      expect(readRawUserConfig()['telemetry.enabled']).toBeUndefined();
+      expect(State.read().consentEventFired).toBe('tty');
     });
 
     it('persists the user choice so the next run is a subsequent-run path', async () => {
@@ -179,6 +181,93 @@ describe('resolveCliReporter', () => {
 
       expect(typeof receivedId).toBe('string');
       expect(receivedId).toBe(State.read().installationId);
+    });
+
+    it('records consentEventFired=user when the user answered an interactive prompt', async () => {
+      const recorder = new CapturingRecorder();
+      await resolveCliReporter({
+        command: 'graph',
+        buildReporter: () => recorder,
+        promptOverride: async () => 'granted',
+      });
+      expect(State.read().consentEventFired).toBe('user');
+    });
+
+    it('records consentEventFired=user even when the user declined', async () => {
+      const recorder = new CapturingRecorder();
+      await resolveCliReporter({
+        command: 'graph',
+        buildReporter: () => recorder,
+        promptOverride: async () => 'declined',
+      });
+      expect(State.read().consentEventFired).toBe('user');
+    });
+  });
+
+  describe('cli.first-run dedup via state.consentEventFired', () => {
+    function writeConsentState(state: 'tty' | 'user') {
+      fs.writeFileSync(
+        path.join(tempDir, 'state.json'),
+        JSON.stringify({ consentEventFired: state })
+      );
+    }
+
+    it('does not re-fire on a repeat no-prompt run after a previous default_on', async () => {
+      writeConsentState('tty');
+
+      const recorder = new CapturingRecorder();
+      await resolveCliReporter({
+        command: 'graph',
+        buildReporter: () => recorder,
+        promptOverride: async () => 'no-prompt',
+      });
+
+      expect(allEvents(recorder)).toEqual([]);
+      expect(State.read().consentEventFired).toBe('tty');
+    });
+
+    it('fires an upgrade event when the user finally answers interactively after prior no-prompt runs', async () => {
+      // The motivating story: user runs `foam mcp` headlessly first (state
+      // = 'tty'), then later runs an interactive `foam list`. We want
+      // `cli.first-run { granted | declined }` to fire so the user can
+      // provide an explicit answer.
+      writeConsentState('tty');
+
+      const recorder = new CapturingRecorder();
+      await resolveCliReporter({
+        command: 'graph',
+        buildReporter: () => recorder,
+        promptOverride: async () => 'granted',
+      });
+
+      expect(recorder.anonForks[0].events).toContainEqual(
+        expect.objectContaining({
+          name: 'cli.first-run',
+          properties: { consent: 'granted' },
+        })
+      );
+      expect(State.read().consentEventFired).toBe('user');
+      // The interactive answer also persists telemetry.enabled the normal way.
+      expect(readRawUserConfig()['telemetry.enabled']).toBe(true);
+    });
+
+    it('does not re-fire a no-prompt event once the user has answered interactively (consentEventFired=user is terminal)', async () => {
+      // Defensive: in practice `consentEventFired = 'user'` co-occurs with
+      // `telemetry.enabled` persisted, so the no-prompt path wouldn't be
+      // reached on a subsequent run. But if some external tool clears
+      // `telemetry.enabled` without clearing the state flag, dedup must
+      // still hold.
+      writeConsentState('user');
+
+      const recorder = new CapturingRecorder();
+      await resolveCliReporter({
+        command: 'graph',
+        buildReporter: () => recorder,
+        promptOverride: async () => 'no-prompt',
+      });
+
+      expect(allEvents(recorder)).toEqual([]);
+      expect(State.read().consentEventFired).toBe('user');
     });
   });
 

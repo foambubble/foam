@@ -165,10 +165,14 @@ Telemetry is on by default. It can be disabled now (n), left
 on (Y), or changed later by updating the config or with FOAM_TELEMETRY=0.`;
 
 /**
- * Outcome of the first-run consent flow, emitted as a property on
- * `cli.first-run`. The event fires for every outcome so we can measure
- * opt-out rate; after it fires, only the reporter for the rest of the
- * session honors the choice.
+ * Outcome of the first-run consent flow, emitted as the `consent` property
+ * on `cli.first-run`.
+ *
+ * `granted` / `declined` come from an interactive prompt and are also
+ * persisted to user config so the next run is a `subsequent-run`.
+ *
+ * `default_on` describes the non-interactive default — we couldn't ask,
+ * so telemetry runs for the session but no choice is persisted.
  */
 export type ConsentValue = 'granted' | 'declined' | 'default_on';
 

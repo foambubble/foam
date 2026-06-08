@@ -49,24 +49,69 @@ export async function resolveCliReporter(
   const input = await resolveConsentInput(opts.promptOverride);
   const decision = decideConsent(input);
 
-  const isFirstRun = input.kind === 'first-run-prompted' || input.kind === 'first-run-no-prompt';
-  if (isFirstRun) {
-    // The anonymous fork strips identity, so we don't need a real ID here.
-    const parent = opts.buildReporter('');
-    const anonReporter = parent.anonymous();
-    await parent.dispose();
+  // Decide whether this run should emit a `cli.first-run` event. The
+  // contract is "at most one event per consent outcome" — tracked durably
+  // in state.json via `consentEventFired`:
+  //   - undefined → no event ever fired. Any first-run path is eligible.
+  //   - 'tty'     → a non-interactive default-on event fired. A *later*
+  //                 interactive run can fire an upgrade event (granted/
+  //                 declined) but a repeat no-prompt run is suppressed.
+  //   - 'user'    → the user answered an interactive prompt. The decision
+  //                 is final; no further events on any path.
+  //
+  // Persistence of `telemetry.enabled` (in user config) is independent and
+  // only happens on `first-run-prompted` — the no-prompt path never
+  // persists a choice the user didn't make, so the next interactive run
+  // still prompts for real.
+  if (input.kind === 'first-run-prompted' || input.kind === 'first-run-no-prompt') {
+    const priorConsentEvent = State.read().consentEventFired;
+    const newConsentState = input.kind === 'first-run-prompted' ? 'user' : 'tty';
+    const shouldEmit = shouldEmitConsentEvent(priorConsentEvent, newConsentState);
 
-    anonReporter.trackEvent('cli.first-run', { consent: decision.consent });
-    await anonReporter.dispose();
+    if (shouldEmit) {
+      // The anonymous fork strips identity, so we don't need a real ID here.
+      const parent = opts.buildReporter('');
+      const anonReporter = parent.anonymous();
+      await parent.dispose();
 
-    // `granted` / `default_on` → persist enabled=true; `declined` → false.
-    const userSaid = decision.consent !== 'declined';
-    persistConsent(userSaid);
+      anonReporter.trackEvent('cli.first-run', { consent: decision.consent });
+      await anonReporter.dispose();
+
+      State.patch({ consentEventFired: newConsentState });
+    }
+
+    if (input.kind === 'first-run-prompted') {
+      // `granted` → persist enabled=true; `declined` → false.
+      const userSaid = decision.consent !== 'declined';
+      persistConsent(userSaid);
+    }
   }
 
   return decision.enabled
     ? opts.buildReporter(State.getOrCreateInstallationId().id)
     : NoopTelemetryReporter;
+}
+
+/**
+ * `cli.first-run` dedup rules. Returns true iff the incoming consent
+ * outcome is strictly stronger than what we've already recorded.
+ *
+ *   prior     | incoming | emit?
+ *   ----------|----------|------
+ *   undefined | tty      | yes
+ *   undefined | user     | yes
+ *   tty       | tty      | no  (repeat no-prompt — already counted)
+ *   tty       | user     | yes (upgrade — user finally answered)
+ *   user      | tty      | no  (the user previously answered)
+ *   user      | user     | no  (already answered)
+ */
+function shouldEmitConsentEvent(
+  prior: 'tty' | 'user' | undefined,
+  incoming: 'tty' | 'user'
+): boolean {
+  if (prior === undefined) return true;
+  if (prior === 'tty' && incoming === 'user') return true;
+  return false;
 }
 
 async function resolveConsentInput(

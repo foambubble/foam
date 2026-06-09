@@ -74,6 +74,7 @@ export {
   requiresSource,
   beautifyFieldLabel,
   normalizeSelectEntry,
+  tryBuildUserRegex,
 } from './query/index';
 export { renderDqlQuery } from './query/dql';
 export type { RenderDqlQueryOptions } from './query/dql';

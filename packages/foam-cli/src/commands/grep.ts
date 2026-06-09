@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { tryBuildUserRegex } from '@foam/core';
 import {
   parseArgs,
   getString,
@@ -52,7 +53,9 @@ export async function grepFiles(
 ): Promise<GrepMatch[]> {
   const limit = opts.limit ?? 20;
   const context = opts.context ?? 0;
-  const regex = new RegExp(pattern, 'i');
+  const built = tryBuildUserRegex(pattern, 'grep pattern', 'i');
+  if ('warning' in built) throw new Error(built.warning);
+  const regex = built.regex;
   const results: GrepMatch[] = [];
   let matchedFiles = 0;
 

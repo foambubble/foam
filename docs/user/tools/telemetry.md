@@ -41,7 +41,7 @@ Foam respects VS Code's global telemetry setting. Open Settings, search for `tel
 
 On the first run, the CLI prints a notice describing what is collected and asks you to confirm. The default is **enabled** — pressing Enter accepts it. Your choice is saved in `~/.config/foam/config.json` and not asked again.
 
-If the CLI is run non-interactively (CI, piped input, MCP launched by Claude Desktop / Cursor, etc.), it cannot prompt — it prints the notice to stderr and defaults to enabled **for that session only**. No choice is persisted, so the next interactive CLI run will still ask. To make the choice durable in a non-interactive context, set `FOAM_TELEMETRY=0` or `FOAM_TELEMETRY=1` in the environment, or edit `~/.config/foam/config.json` directly.
+If the CLI is run non-interactively (CI, piped input, MCP launched by Claude Desktop / Cursor, etc.), it cannot prompt — it prints a disclosure to stderr and defaults to enabled **for that session only**. No choice is persisted, so the next interactive CLI run will still ask. To make the choice durable in a non-interactive context, set `FOAM_TELEMETRY=0` or `FOAM_TELEMETRY=1` in the environment, or edit `~/.config/foam/config.json` directly.
 
 You can change your choice at any time:
 

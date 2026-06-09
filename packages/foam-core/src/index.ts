@@ -145,6 +145,7 @@ export {
   bucketDuration,
   TELEMETRY_CONNECTION_STRING,
   TELEMETRY_FIRST_RUN_NOTICE,
+  TELEMETRY_NON_INTERACTIVE_NOTICE,
   decideConsent,
   parseAppInsightsConnectionString,
   buildAppInsightsEnvelope,

@@ -173,6 +173,14 @@ Telemetry is on by default. It can be disabled now (n), left
 on (Y), or changed later by updating the config or with FOAM_TELEMETRY=0.`;
 
 /**
+ * One-line disclosure printed to stderr on every non-interactive run when
+ * consent has not yet been resolved. Non-interactive callers (CI, MCP, piped
+ * scripts) can't answer a prompt, so we keep the disclosure short — enough
+ * to flag that telemetry is on without burying logs.
+ */
+export const TELEMETRY_NON_INTERACTIVE_NOTICE = 'Foam telemetry is on.';
+
+/**
  * Outcome of the first-run consent flow, emitted as the `consent` property
  * on `cli.first-run`.
  *

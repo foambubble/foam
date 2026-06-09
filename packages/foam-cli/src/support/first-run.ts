@@ -1,6 +1,9 @@
 import readline from 'node:readline';
 import { Readable, Writable } from 'node:stream';
-import { TELEMETRY_FIRST_RUN_NOTICE } from '@foam/core';
+import {
+  TELEMETRY_FIRST_RUN_NOTICE,
+  TELEMETRY_NON_INTERACTIVE_NOTICE,
+} from '@foam/core';
 
 /**
  * Result of the first-run prompt:
@@ -42,8 +45,10 @@ export async function promptFirstRunConsent(
   const stderr = (options.stderr ?? process.stderr) as Writable;
 
   if (!isInteractive()) {
-    // No TTY — we can't ask, but we do a runtime disclosure by printing the notice anyway
-    stderr.write(TELEMETRY_FIRST_RUN_NOTICE + '\n');
+    // No TTY — we can't ask, but we do a runtime disclosure with a short
+    // one-liner. Printed every run by design: callers running headless
+    // should always know telemetry is on for this process.
+    stderr.write(TELEMETRY_NON_INTERACTIVE_NOTICE + '\n');
     return 'no-prompt';
   }
 

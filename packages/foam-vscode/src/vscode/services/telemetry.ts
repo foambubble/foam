@@ -122,9 +122,8 @@ export class TelemetryService implements IDisposable {
       'links.sync.enable': String(cfg.get('links.sync.enable', false)),
       'completion.linkFormat': cfg.get('completion.linkFormat', 'wikilink'),
       'completion.useAlias': String(cfg.get('completion.useAlias', false)),
-      'files.defaultNoteExtension': cfg.get(
-        'files.defaultNoteExtension',
-        '.md'
+      'files.defaultNoteExtension': bucketNoteExtension(
+        cfg.get('files.defaultNoteExtension', 'md')
       ),
       'ai.enabled': String(cfg.get('experimental.ai', false)),
       'edit.linkReferenceDefinitions': cfg.get(
@@ -161,6 +160,34 @@ export class TelemetryService implements IDisposable {
   async dispose(): Promise<void> {
     await this.reporter.dispose();
   }
+}
+
+/**
+ * `files.defaultNoteExtension` is a free-string user setting — clamp it to a
+ * known allowlist so telemetry can't be turned into an unbounded dimension.
+ * Anything we don't recognize collapses to `other`.
+ */
+const KNOWN_NOTE_EXTENSIONS = new Set([
+  'md',
+  'markdown',
+  'mdx',
+  'mdown',
+  'mkd',
+  'mkdn',
+  'txt',
+  'text',
+  'rst',
+  'org',
+  'adoc',
+  'asciidoc',
+  'ipynb',
+  'qmd',
+  'rmd',
+]);
+
+function bucketNoteExtension(raw: string): string {
+  const normalized = raw.trim().toLowerCase().replace(/^\./, '');
+  return KNOWN_NOTE_EXTENSIONS.has(normalized) ? normalized : 'other';
 }
 
 // Singleton — initialized once in extension.ts, then imported where needed.

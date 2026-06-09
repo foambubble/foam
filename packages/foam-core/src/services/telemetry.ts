@@ -126,14 +126,22 @@ export function bucketNoteCount(count: number): WorkspaceSizeBucket {
   return '10000+';
 }
 
-export type DurationBucket = '<10ms' | '<50ms' | '<500ms' | '<5s' | '<30s' | '30s+';
+export type DurationBucket =
+  | '0-10ms'
+  | '11-50ms'
+  | '51-300ms'
+  | '301-1000ms'
+  | '1-5s'
+  | '5-30s'
+  | '30s+';
 
 export function bucketDuration(ms: number): DurationBucket {
-  if (ms < 10) return '<10ms';
-  if (ms < 50) return '<50ms';
-  if (ms < 500) return '<500ms';
-  if (ms < 5000) return '<5s';
-  if (ms < 30000) return '<30s';
+  if (ms <= 10) return '0-10ms';
+  if (ms <= 50) return '11-50ms';
+  if (ms <= 300) return '51-300ms';
+  if (ms <= 1000) return '301-1000ms';
+  if (ms <= 5000) return '1-5s';
+  if (ms <= 30000) return '5-30s';
   return '30s+';
 }
 

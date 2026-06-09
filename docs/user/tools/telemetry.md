@@ -69,7 +69,7 @@ The properties below are attached to every event.
 | `foam.coreVersion` | CLI, MCP, VS Code     | `0.4.1`                    | Version of `@foam/core`                                                                |
 | `node.version`     | CLI, MCP              | `22.5.0`                   | Node runtime version (CLI/MCP only — VS Code reports it via `common.platformversion`)  |
 | `os.platform`      | CLI, MCP              | `darwin`, `linux`, `win32` | Operating system family (CLI/MCP only — VS Code reports it via `common.os`)            |
-| `installationId`   | CLI, MCP              | (random UUID)              | Anonymous installation ID shared across CLI and MCP. Omitted on the `cli.first-run` event. |
+| `installationId`   | CLI, MCP              | (random UUID)              | Anonymous installation ID shared across CLI and MCP. Sent on the App Insights envelope as the `ai.user.id` tag, not as an event property. Omitted on the `cli.first-run` event. |
 
 VS Code events additionally carry the `common.*` properties added by Microsoft's `@vscode/extension-telemetry` library — these are not controlled by Foam:
 

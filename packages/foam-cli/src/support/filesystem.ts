@@ -11,6 +11,8 @@ import {
   MarkdownResourceProvider,
   bootstrap,
   Config,
+  DefaultFoamConfig,
+  cascadeFoamConfig,
 } from '@foam/core';
 import { readFoamConfig } from './config';
 import { GlobMatcher } from './glob-matcher';
@@ -130,7 +132,15 @@ export async function loadWorkspaceFromDirectory(
   const rootDir = path.resolve(workspaceDir);
   const rootUri = URI.file(rootDir);
 
-  const foamConfig = readFoamConfig(rootDir);
+  // Cascade: workspace settings beat built-in defaults. The fallback must be
+  // a fully-resolved config so every getter has a final answer. User-level
+  // and env-level cascade layers don't exist today; the only env-driven
+  // config is the telemetry opt-out, which is read directly in resolveCliReporter.
+  const workspaceSource = readFoamConfig(rootDir);
+  const foamConfig = cascadeFoamConfig(
+    [workspaceSource],
+    new DefaultFoamConfig()
+  );
   Config.setDefaultConfig(foamConfig);
 
   const matcher = new GlobMatcher(

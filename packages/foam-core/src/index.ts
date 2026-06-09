@@ -3,18 +3,8 @@ export { URI, asAbsoluteUri } from './model/uri';
 export { Range } from './model/range';
 export { Position } from './model/position';
 export { Location } from './model/location';
-export {
-  Resource,
-  ResourceLink,
-  NoteLinkDefinition,
-  Block,
-  Footnote,
-} from './model/note';
-export type {
-  ResourceParser,
-  Tag,
-  Section,
-} from './model/note';
+export { Resource, ResourceLink, NoteLinkDefinition, Block, Footnote } from './model/note';
+export type { ResourceParser, Tag, Section } from './model/note';
 export { FoamWorkspace } from './model/workspace';
 export { FoamGraph } from './model/graph';
 export type { Connection } from './model/graph';
@@ -31,16 +21,8 @@ export {
   AlwaysIncludeMatcher,
   SubstringExcludeMatcher,
 } from './services/datastore';
-export {
-  createMarkdownParser,
-  getLinkDefinitions,
-  getBlockFor,
-} from './services/markdown-parser';
-export type {
-  ParserPlugin,
-  ParserCache,
-  ParserCacheEntry,
-} from './services/markdown-parser';
+export { createMarkdownParser, getLinkDefinitions, getBlockFor } from './services/markdown-parser';
+export type { ParserPlugin, ParserCache, ParserCacheEntry } from './services/markdown-parser';
 export { MarkdownResourceProvider, createMarkdownReferences } from './services/markdown-provider';
 export {
   AttachmentResourceProvider,
@@ -67,25 +49,52 @@ export { TriggerFactory } from './templates/note-creation-triggers';
 export { resolveDailyNote } from './templates/daily-note-resolver';
 export type { ResolveDailyNoteOptions } from './templates/daily-note-resolver';
 export { TemplateLoader } from './templates/template-loader';
-export { getDailyNoteTemplateCandidateUris, getNewNoteTemplateCandidateUris, getTemplatesDir } from './templates/template-discovery';
+export {
+  getDailyNoteTemplateCandidateUris,
+  getNewNoteTemplateCandidateUris,
+  getTemplatesDir,
+} from './templates/template-discovery';
 export { Resolver } from './templates/variable-resolver';
 export type { VariableProvider } from './templates/variable-resolver';
 
 // Query
-export type { QueryFilter, QueryDescriptor, ResourceView, SourceReader, SelectInput, SelectEntry } from './query/index';
-export { parseFilter, QueryResult, executeQuery, ALL_QUERY_FIELDS, requiresSource, beautifyFieldLabel, normalizeSelectEntry } from './query/index';
+export type {
+  QueryFilter,
+  QueryDescriptor,
+  ResourceView,
+  SourceReader,
+  SelectInput,
+  SelectEntry,
+} from './query/index';
+export {
+  parseFilter,
+  QueryResult,
+  executeQuery,
+  ALL_QUERY_FIELDS,
+  requiresSource,
+  beautifyFieldLabel,
+  normalizeSelectEntry,
+  tryBuildUserRegex,
+} from './query/index';
 export { renderDqlQuery } from './query/dql';
 export type { RenderDqlQueryOptions } from './query/dql';
 export { renderJsQuery } from './query/js';
 export type { RenderJsQueryOptions } from './query/js';
-export { escapeHtml, noteLink, renderList, renderTable, renderCount, renderResults } from './query/html';
+export {
+  escapeHtml,
+  noteLink,
+  renderList,
+  renderTable,
+  renderCount,
+  renderResults,
+} from './query/html';
 export type { MarkdownRenderer, MarkdownRenderOptions } from './query/html';
 export type { RenderContext } from './query/render-context';
 export { createRenderContext } from './query/render-context';
 
 // Config
-export type { IFoamConfig } from './config';
-export { Config, DefaultFoamConfig } from './config';
+export type { IFoamConfig, IFoamConfigSource } from './config';
+export { Config, DefaultFoamConfig, cascadeFoamConfig } from './config';
 
 // Utilities
 export { Logger, BaseLogger, ConsoleLogger, NoOpLogger } from './utils/log';
@@ -103,7 +112,10 @@ export {
 export type { ICache } from './utils/cache';
 export { isNotNull, isSome, isNone, isNumeric, hash, firstFrom, lazyExecutor } from './utils/core';
 export { getHeadingFromFileName } from './utils/index';
-export { extractFoamTemplateFrontmatterMetadata, removeFoamMetadata } from './utils/template-frontmatter-parser';
+export {
+  extractFoamTemplateFrontmatterMetadata,
+  removeFoamMetadata,
+} from './utils/template-frontmatter-parser';
 export {
   joinPath,
   changeExtension,
@@ -116,6 +128,28 @@ export { isWindows, isMacintosh, isLinux } from './common/platform';
 export { TaskDeduplicator } from './utils/task-deduplicator';
 export type { Progress, ProgressCallback } from './services/progress';
 export { CancellationError } from './services/progress';
+export type {
+  ITelemetryReporter,
+  WorkspaceSizeBucket,
+  DurationBucket,
+  ConsentValue,
+  ConsentInput,
+  ConsentDecision,
+  AppInsightsConnection,
+  AppInsightsEventInput,
+} from './services/telemetry';
+export {
+  NoopTelemetryReporter,
+  InMemoryTelemetryReporter,
+  bucketNoteCount,
+  bucketDuration,
+  TELEMETRY_CONNECTION_STRING,
+  TELEMETRY_FIRST_RUN_NOTICE,
+  TELEMETRY_NON_INTERACTIVE_NOTICE,
+  decideConsent,
+  parseAppInsightsConnectionString,
+  buildAppInsightsEnvelope,
+} from './services/telemetry';
 
 // Graph builder
 export { buildGraphData } from './services/graph-data-builder';
@@ -134,12 +168,7 @@ export {
   staleDefinitionsRule,
   WorkspaceLintResult,
 } from './lint/lint';
-export type {
-  LintRule,
-  LintIssue,
-  LintRelatedInfo,
-  WikilinkDefinitionSetting,
-} from './lint/lint';
+export type { LintRule, LintIssue, LintRelatedInfo, WikilinkDefinitionSetting } from './lint/lint';
 export { generateHeading } from './lint/generate-headings';
 export {
   generateLinkReferences,
@@ -158,19 +187,9 @@ export { FoamError } from './common/errors';
 export type { FoamErrorCode } from './common/errors';
 
 // Commands (high-level workspace operations, used by CLI / MCP / VS Code)
-export {
-  uriToWorkspacePath,
-  getRootUriFor,
-  resolveNote,
-} from './commands/workspace';
+export { uriToWorkspacePath, getRootUriFor, resolveNote } from './commands/workspace';
 export type { NoteRef } from './commands/workspace';
-export {
-  listNotes,
-  listTags,
-  listOrphans,
-  listDeadends,
-  listPlaceholders,
-} from './commands/list';
+export { listNotes, listTags, listOrphans, listDeadends, listPlaceholders } from './commands/list';
 export type {
   NoteItem,
   NoteSummary,
@@ -190,18 +209,8 @@ export type {
 export { outlineData } from './commands/outline';
 export type { OutlineSection, OutlineResult } from './commands/outline';
 export { searchWorkspace } from './commands/search';
-export type {
-  SearchMatch,
-  PropertyFilter,
-  SearchOptions,
-} from './commands/search';
-export {
-  noteShowData,
-  noteIdData,
-  noteCreate,
-  noteMove,
-  noteDelete,
-} from './commands/note';
+export type { SearchMatch, PropertyFilter, SearchOptions } from './commands/search';
+export { noteShowData, noteIdData, noteCreate, noteMove, noteDelete } from './commands/note';
 export type {
   NoteDetail,
   NoteIdResult,
@@ -209,12 +218,7 @@ export type {
   NoteMoveResult,
   NoteDeleteResult,
 } from './commands/note';
-export {
-  renameNote,
-  renameTag,
-  renameSection,
-  renameBlock,
-} from './commands/rename';
+export { renameNote, renameTag, renameSection, renameBlock } from './commands/rename';
 export type {
   RenameNoteResult,
   RenameTagResult,

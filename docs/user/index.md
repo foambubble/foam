@@ -71,6 +71,7 @@ See [[publishing]] for more details.
 - [[workspace-lint]]
 - [[orphans]]
 - [[foam-logging-in-vscode]]
+- [[telemetry]]
 
 [frequently-asked-questions]: frequently-asked-questions.md 'Frequently Asked Questions'
 [installation]: getting-started/installation.md 'Installation'
@@ -106,3 +107,4 @@ See [[publishing]] for more details.
 [workspace-lint]: tools/workspace-lint.md 'Lint'
 [orphans]: tools/orphans.md 'Orphaned Notes'
 [foam-logging-in-vscode]: tools/foam-logging-in-vscode.md 'Foam logging in VsCode'
+[telemetry]: tools/telemetry.md 'Telemetry'

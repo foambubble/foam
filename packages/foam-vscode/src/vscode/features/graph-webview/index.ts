@@ -5,6 +5,7 @@ import { fromVsCodeUri } from '../../utils/vsc-utils';
 import { isSome } from '@foam/core';
 import { getFoamVsCodeConfig } from '../../config';
 import { buildGraphData } from '@foam/core';
+import { getTelemetry } from '../../services/telemetry';
 import type {
   GraphStyle,
   GraphViewConfig,
@@ -60,6 +61,7 @@ export default async function activate(
   vscode.commands.registerCommand(
     'foam-vscode.show-graph',
     async (args?: ShowGraphArgs) => {
+      getTelemetry()?.trackCommand('foam-vscode.show-graph');
       const { style, view } = resolveViewStyle(args);
       if (panel) {
         panel.title = view ? `Foam Graph: ${view}` : 'Foam Graph';

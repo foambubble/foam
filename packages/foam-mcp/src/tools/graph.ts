@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import {
   Foam,
   URI,
@@ -19,7 +18,7 @@ import {
   serializeTraversalResult,
   uriToOutputString,
 } from '../serializers';
-import { withToolErrorHandling } from '../errors';
+import type { ToolRegistrar } from '../server';
 
 const json = (data: unknown) => ({
   content: [{ type: 'text' as const, text: JSON.stringify(data) }],
@@ -28,14 +27,14 @@ const json = (data: unknown) => ({
 const MAX_TRAVERSAL_DEPTH = 5;
 
 export function registerGraphTools(
-  server: McpServer,
+  register: ToolRegistrar,
   foam: Foam,
   rootUri: URI,
   opts: { readOnly?: boolean } = {}
 ) {
   const { readOnly = false } = opts;
   // ─── get_connections ───────────────────────────────────────────────────────
-  server.registerTool(
+  register(
     'get_connections',
     {
       description:
@@ -45,7 +44,7 @@ export function registerGraphTools(
         direction: z.enum(['links', 'backlinks', 'both']).optional(),
       },
     },
-    withToolErrorHandling(async args => {
+    async args => {
       const uri = parseUriInput(args.uri, rootUri);
       const resource = resolveNote(foam.workspace, { uri });
       const data = linksData(foam.workspace, foam.graph, resource);
@@ -60,11 +59,11 @@ export function registerGraphTools(
             ? []
             : data.incoming.map(l => serializeLinkEntry(l, rootUri)),
       });
-    })
+    }
   );
 
   // ─── get_orphans ───────────────────────────────────────────────────────────
-  server.registerTool(
+  register(
     'get_orphans',
     {
       description:
@@ -73,16 +72,16 @@ export function registerGraphTools(
         exclude_types: z.array(z.string()).optional(),
       },
     },
-    withToolErrorHandling(async args => {
+    async args => {
       const items = listOrphans(foam.workspace, foam.graph, {
         excludeTypes: args.exclude_types,
       });
       return json(items.map(i => serializeNoteSummary(i, rootUri)));
-    })
+    }
   );
 
   // ─── get_deadends ──────────────────────────────────────────────────────────
-  server.registerTool(
+  register(
     'get_deadends',
     {
       description: 'List notes with incoming links but no outgoing links.',
@@ -90,30 +89,30 @@ export function registerGraphTools(
         exclude_types: z.array(z.string()).optional(),
       },
     },
-    withToolErrorHandling(async args => {
+    async args => {
       const items = listDeadends(foam.workspace, foam.graph, {
         excludeTypes: args.exclude_types,
       });
       return json(items.map(i => serializeNoteSummary(i, rootUri)));
-    })
+    }
   );
 
   // ─── get_placeholders ──────────────────────────────────────────────────────
-  server.registerTool(
+  register(
     'get_placeholders',
     {
       description:
         'List placeholder URIs (broken wikilinks pointing at nonexistent notes) and the notes that reference each one.',
       inputSchema: {},
     },
-    withToolErrorHandling(async () => {
+    async () => {
       const items = listPlaceholders(foam.workspace, foam.graph);
       return json(items.map(i => serializePlaceholderItem(i, rootUri)));
-    })
+    }
   );
 
   // ─── traverse_graph ────────────────────────────────────────────────────────
-  server.registerTool(
+  register(
     'traverse_graph',
     {
       description:
@@ -124,7 +123,7 @@ export function registerGraphTools(
         direction: z.enum(['links', 'backlinks', 'both']),
       },
     },
-    withToolErrorHandling(async args => {
+    async args => {
       const start = parseUriInput(args.uri, rootUri);
       const result = traverseGraph(
         foam.workspace,
@@ -134,18 +133,18 @@ export function registerGraphTools(
         args.direction
       );
       return json(serializeTraversalResult(result, rootUri));
-    })
+    }
   );
 
   // ─── get_graph_summary ─────────────────────────────────────────────────────
-  server.registerTool(
+  register(
     'get_graph_summary',
     {
       description:
         'Workspace-level metrics: counts, top connected notes, top tags.',
       inputSchema: {},
     },
-    withToolErrorHandling(async () => {
+    async () => {
       const allResources = foam.workspace.list();
       const noteCount = allResources.filter(r => r.type === 'note').length;
       const attachmentCount = allResources.length - noteCount;
@@ -187,17 +186,17 @@ export function registerGraphTools(
         most_connected: mostConnected,
         most_used_tags: mostUsedTags,
       });
-    })
+    }
   );
 
   // ─── get_workspace_info ────────────────────────────────────────────────────
-  server.registerTool(
+  register(
     'get_workspace_info',
     {
       description: 'High-level counts for the workspace.',
       inputSchema: {},
     },
-    withToolErrorHandling(async () => {
+    async () => {
       const all = foam.workspace.list();
       const noteCount = all.filter(r => r.type === 'note').length;
       return json({
@@ -212,6 +211,6 @@ export function registerGraphTools(
         resource_count: listNotes(foam.workspace, {}).length,
         read_only: readOnly,
       });
-    })
+    }
   );
 }

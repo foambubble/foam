@@ -24,6 +24,7 @@ import { MarkdownLink } from '@foam/core';
 import { ResourceLink } from '@foam/core';
 import { toVsCodeRange, toVsCodeUri } from '../../utils/vsc-utils';
 import { Logger } from '@foam/core';
+import { getTelemetry } from '../../services/telemetry';
 
 export default async function activate(
   context: ExtensionContext,
@@ -31,9 +32,10 @@ export default async function activate(
 ) {
   const foam = await foamPromise;
   context.subscriptions.push(
-    commands.registerCommand(CREATE_NOTE_COMMAND.command, args =>
-      createNote(args, foam)
-    )
+    commands.registerCommand(CREATE_NOTE_COMMAND.command, args => {
+      getTelemetry()?.trackCommand(CREATE_NOTE_COMMAND.command);
+      return createNote(args, foam);
+    })
   );
 }
 

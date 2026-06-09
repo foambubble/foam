@@ -1,11 +1,22 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { URI } from '@foam/core';
-import { parseDateArg, defaultDailyNoteUri, runDailyCommand } from './daily';
+import { defaultDailyNoteUri, parseDateArg, runDailyCommand } from './daily';
+import type { CommandRunResult } from '../support/with-telemetry';
 import { withTmpWorkspace, TestLogger } from '../test/test-utils';
 import { setColorsEnabled } from '../support/colors';
 
 setColorsEnabled(false);
+
+function exitCodeOf(result: CommandRunResult): number {
+  return typeof result === 'number' ? result : result.exitCode;
+}
+
+function telemetryOf(
+  result: CommandRunResult
+): Record<string, string> | undefined {
+  return typeof result === 'number' ? undefined : result.telemetryProperties;
+}
 
 // ─── parseDateArg ─────────────────────────────────────────────────────────────
 
@@ -56,7 +67,7 @@ describe('runDailyCommand', () => {
   it('prints help with --help', async () => {
     const logger = new TestLogger();
     const code = await runDailyCommand(['--help'], logger);
-    expect(code).toBe(0);
+    expect(exitCodeOf(code)).toBe(0);
     expect(logger.logs[0]).toContain('foam daily');
   });
 
@@ -64,7 +75,7 @@ describe('runDailyCommand', () => {
     withTmpWorkspace({}, async ({ rootDir }) => {
       const logger = new TestLogger();
       const code = await runDailyCommand(['--date', '2099-12-31', '--workspace', rootDir], logger);
-      expect(code).toBe(0);
+      expect(exitCodeOf(code)).toBe(0);
       expect(logger.logs[0]).toContain('2099-12-31.md');
       expect(logger.logs[0]).toContain('[does not exist]');
     }));
@@ -73,7 +84,7 @@ describe('runDailyCommand', () => {
     withTmpWorkspace({ 'journals/2026-05-01.md': '# 2026-05-01\n' }, async ({ rootDir }) => {
       const logger = new TestLogger();
       const code = await runDailyCommand(['--date', '2026-05-01', '--workspace', rootDir], logger);
-      expect(code).toBe(0);
+      expect(exitCodeOf(code)).toBe(0);
       expect(logger.logs[0]).toContain('[exists]');
     }));
 
@@ -81,7 +92,7 @@ describe('runDailyCommand', () => {
     withTmpWorkspace({}, async ({ rootDir }) => {
       const logger = new TestLogger();
       const code = await runDailyCommand(['--date', '2099-12-31', '--create', '--workspace', rootDir], logger);
-      expect(code).toBe(0);
+      expect(exitCodeOf(code)).toBe(0);
       expect(fs.existsSync(path.join(rootDir, 'journals', '2099-12-31.md'))).toBe(true);
       expect(logger.logs[0]).toContain('2099-12-31');
     }));
@@ -90,7 +101,7 @@ describe('runDailyCommand', () => {
     withTmpWorkspace({}, async ({ rootDir }) => {
       const logger = new TestLogger();
       const code = await runDailyCommand(['--date', '2099-12-31', '--path-only', '--workspace', rootDir], logger);
-      expect(code).toBe(0);
+      expect(exitCodeOf(code)).toBe(0);
       expect(logger.logs[0]).toContain('2099-12-31.md');
       expect(logger.logs[0]).not.toContain('[');
     }));
@@ -99,14 +110,14 @@ describe('runDailyCommand', () => {
     withTmpWorkspace({}, async ({ rootDir }) => {
       const logger = new TestLogger();
       const code = await runDailyCommand(['--date', '2099-12-31', '--format', 'json', '--workspace', rootDir], logger);
-      expect(code).toBe(0);
+      expect(exitCodeOf(code)).toBe(0);
       const result = JSON.parse(logger.logs[0]);
       expect(result).toHaveProperty('id');
       expect(result).toHaveProperty('uri');
       expect(result).toHaveProperty('exists', false);
     }));
 
-  it('uses a daily-note.md template when present', () =>
+  it('uses a daily-note.md template when present and attaches template telemetry', () =>
     withTmpWorkspace(
       {
         '.foam/templates/daily-note.md': [
@@ -123,10 +134,65 @@ describe('runDailyCommand', () => {
       async ({ rootDir }) => {
         const logger = new TestLogger();
         const code = await runDailyCommand(['--date', '2099-12-31', '--create', '--workspace', rootDir], logger);
-        expect(code).toBe(0);
+        expect(exitCodeOf(code)).toBe(0);
         const notePath = path.join(rootDir, 'journals', '2099-12-31.md');
         expect(fs.existsSync(notePath)).toBe(true);
         expect(fs.readFileSync(notePath, 'utf8')).toContain('## Notes');
+        expect(telemetryOf(code)).toEqual({
+          mode: 'create',
+          'template-type': 'daily-note',
+          'template-format': 'md',
+        });
+      }
+    ));
+
+  it('--create without a template emits mode=create but no template-* (fallback body)', () =>
+    withTmpWorkspace({}, async ({ rootDir }) => {
+      const logger = new TestLogger();
+      const code = await runDailyCommand(
+        ['--date', '2099-12-31', '--create', '--workspace', rootDir],
+        logger
+      );
+      expect(exitCodeOf(code)).toBe(0);
+      // telemetry should not include template properties
+      expect(telemetryOf(code)).toEqual({ mode: 'create' });
+    }));
+
+  it('without --create emits mode=open (read-only lookup, nothing written)', () =>
+    withTmpWorkspace({}, async ({ rootDir }) => {
+      const logger = new TestLogger();
+      const code = await runDailyCommand(
+        ['--date', '2099-12-31', '--workspace', rootDir],
+        logger
+      );
+      expect(exitCodeOf(code)).toBe(0);
+      expect(telemetryOf(code)).toEqual({ mode: 'open' });
+    }));
+
+  it('--create against an existing daily note emits mode=open (nothing was written this run)', () =>
+    withTmpWorkspace(
+      {
+        'journals/2026-05-01.md': '# 2026-05-01\n',
+        '.foam/templates/daily-note.md': [
+          '---',
+          'foam_template:',
+          '  filepath: "journals/$FOAM_DATE_YEAR-$FOAM_DATE_MONTH-$FOAM_DATE_DATE.md"',
+          '---',
+          '',
+          '# from template',
+        ].join('\n'),
+      },
+      async ({ rootDir }) => {
+        const logger = new TestLogger();
+        const code = await runDailyCommand(
+          ['--date', '2026-05-01', '--create', '--workspace', rootDir],
+          logger
+        );
+        expect(exitCodeOf(code)).toBe(0);
+        // The note pre-existed, so --create was a no-op — `mode` reflects
+        // what actually happened, not the user's intent.
+        expect(telemetryOf(code)).toEqual({ mode: 'open' });
       }
     ));
 });
+

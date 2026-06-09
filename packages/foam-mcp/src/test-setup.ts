@@ -6,6 +6,7 @@ import {
   createMarkdownParser,
   Foam,
   IDataStore,
+  ITelemetryReporter,
   MarkdownResourceProvider,
   URI,
 } from '@foam/core';
@@ -35,6 +36,18 @@ export interface McpTestContext {
 export interface McpTestOptions {
   rootPath?: string;
   readOnly?: boolean;
+  /**
+   * Telemetry reporter passed into `FoamMcpServer`. Tests that don't pass
+   * one get a noop (the default). Tests that do can assert on the events
+   * the reporter received.
+   */
+  telemetry?: ITelemetryReporter;
+  /**
+   * Client info advertised on the MCP `initialize` handshake. Affects the
+   * `client` property on `mcp.session-started`. Defaults to a generic
+   * identity used by all existing tests.
+   */
+  clientName?: string;
 }
 
 /**
@@ -99,6 +112,7 @@ export async function withMcpServer<T>(
     foam,
     rootUri,
     readOnly: opts.readOnly,
+    telemetry: opts.telemetry,
   });
 
   const [clientTransport, serverTransport] =
@@ -106,7 +120,7 @@ export async function withMcpServer<T>(
   await server.connect(serverTransport);
 
   const client = new Client(
-    { name: 'foam-mcp-test', version: '0.0.0' },
+    { name: opts.clientName ?? 'foam-mcp-test', version: '0.0.0' },
     { capabilities: {} }
   );
   await client.connect(clientTransport);

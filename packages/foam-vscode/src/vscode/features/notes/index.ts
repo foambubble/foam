@@ -14,7 +14,7 @@ export default async function activate(
   foamPromise: Promise<Foam>
 ) {
   await createNote(context, foamPromise);
-  await createFromTemplateCommand(context);
+  await createFromTemplateCommand(context, foamPromise);
   await createNewTemplate(context);
   await updateGraphCommand(context, foamPromise);
   await notesExplorer(context, foamPromise);

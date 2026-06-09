@@ -14,6 +14,7 @@ import {
   resolveWorkspaceDir,
 } from '../support/args';
 import type { CliLogger, Format } from '../support/types';
+import type { CommandRunResult } from '../support/with-telemetry';
 import { dim, path as pathColor, success } from '../support/colors';
 
 // ─── Help ─────────────────────────────────────────────────────────────────────
@@ -96,7 +97,7 @@ export async function resolveDailyNoteUri(
 export async function runDailyCommand(
   argv: string[],
   logger: CliLogger
-): Promise<number> {
+): Promise<CommandRunResult> {
   const parsed = parseArgs(argv);
 
   if (getFlag(parsed, 'help') || argv[0] === '--help' || argv[0] === '-h') {
@@ -110,62 +111,96 @@ export async function runDailyCommand(
   const shouldCreate = getFlag(parsed, 'create');
   const pathOnly = getFlag(parsed, 'path-only');
 
-  try {
-    const date = parseDateArg(dateStr);
-    const { rootDir, rootUri, foam, dataStore, workspace } =
-      await loadWorkspaceFromDirectory(workspaceDir);
+  const date = parseDateArg(dateStr);
+  const { rootDir, rootUri, foam, dataStore, workspace } =
+    await loadWorkspaceFromDirectory(workspaceDir);
 
-    const noteUri = await resolveDailyNoteUri(date, rootUri, foam, dataStore);
-    const notePath = noteUri.toFsPath();
+  const noteUri = await resolveDailyNoteUri(date, rootUri, foam, dataStore);
+  const notePath = noteUri.toFsPath();
 
-    let exists = await dataStore.exists(noteUri);
+  let exists = await dataStore.exists(noteUri);
+  // Telemetry state: we want to distinguish four scenarios on
+  // `cli.command-invoked`:
+  //   1. read-only lookup (`--create` not passed, or note already existed)
+  //   2. created a new note using the user's daily-note template
+  //   3. created a new note from the built-in `# title` fallback (no template)
+  // `mode` reflects what actually happened (did we write a file this run),
+  // not the user's intent — `--create` against an existing note resolves
+  // to `open` because nothing was written.
+  let wroteFile = false;
+  let appliedTemplate: URI | undefined;
 
-    if (shouldCreate && !exists) {
-      // Find the template to get content, then write
-      const templatesDir = getTemplatesDir(rootUri);
-      const candidates = getDailyNoteTemplateCandidateUris(templatesDir);
-      let content = `# ${formatDateTitle(date)}\n`;
+  if (shouldCreate && !exists) {
+    // Find the template to get content, then write
+    const templatesDir = getTemplatesDir(rootUri);
+    const candidates = getDailyNoteTemplateCandidateUris(templatesDir);
+    let content = `# ${formatDateTitle(date)}\n`;
 
-      for (const templateUri of candidates) {
-        const templateContent = await dataStore.read(templateUri);
-        if (templateContent === null) continue;
-        const result = await resolveDailyNote(date, templateUri, foam, async uri => {
-          const text = await dataStore.read(uri);
-          return text ?? '';
-        }, { fallbackFilepath: noteUri });
-        content = result.content;
-        break;
-      }
-
-      await dataStore.write(noteUri, content);
-      exists = true;
+    for (const templateUri of candidates) {
+      const templateContent = await dataStore.read(templateUri);
+      if (templateContent === null) continue;
+      const result = await resolveDailyNote(date, templateUri, foam, async uri => {
+        const text = await dataStore.read(uri);
+        return text ?? '';
+      }, { fallbackFilepath: noteUri });
+      content = result.content;
+      appliedTemplate = templateUri;
+      break;
     }
 
-    const relPath = path.relative(rootDir, notePath);
-
-    // Get the Foam identifier if the note exists in the workspace
-    const resource = workspace.find(noteUri);
-    const id = resource
-      ? workspace.getIdentifier(noteUri)
-      : path.basename(notePath, '.md');
-
-    if (pathOnly) {
-      logger.info(notePath);
-      return 0;
-    }
-
-    if (format === 'json') {
-      logger.info(JSON.stringify({ id, uri: notePath, exists }, null, 2));
-    } else {
-      const status = exists ? success('[exists]') : dim('[does not exist]');
-      logger.info(`${pathColor(relPath)}  ${status}`);
-    }
-
-    return 0;
-  } catch (err) {
-    logger.error(err instanceof Error ? err.message : String(err));
-    return 1;
+    await dataStore.write(noteUri, content);
+    exists = true;
+    wroteFile = true;
   }
+
+  const relPath = path.relative(rootDir, notePath);
+
+  // Get the Foam identifier if the note exists in the workspace
+  const resource = workspace.find(noteUri);
+  const id = resource
+    ? workspace.getIdentifier(noteUri)
+    : path.basename(notePath, '.md');
+
+  if (pathOnly) {
+    logger.info(notePath);
+    return { exitCode: 0, telemetryProperties: buildTelemetryProperties(wroteFile, appliedTemplate) };
+  }
+
+  if (format === 'json') {
+    logger.info(JSON.stringify({ id, uri: notePath, exists }, null, 2));
+  } else {
+    const status = exists ? success('[exists]') : dim('[does not exist]');
+    logger.info(`${pathColor(relPath)}  ${status}`);
+  }
+
+  return { exitCode: 0, telemetryProperties: buildTelemetryProperties(wroteFile, appliedTemplate) };
+}
+
+/**
+ * Builds the `cli.command-invoked` extras for `daily`.
+ *
+ * Always emits `mode`: `create` when this invocation wrote a new daily
+ * note, `open` otherwise (read-only lookup, or `--create` against an
+ * existing note where nothing was written).
+ *
+ * When `mode === 'create'` and a user-configured daily-note template was
+ * applied, also emits `template-type: 'daily-note'` and `template-format`
+ * derived from the template extension. Omits the template-* pair on the
+ * built-in `# title` fallback path (same as in `note create`).
+ */
+function buildTelemetryProperties(
+  wroteFile: boolean,
+  appliedTemplate: URI | undefined
+): Record<string, string> {
+  const props: Record<string, string> = {
+    mode: wroteFile ? 'create' : 'open',
+  };
+  if (wroteFile && appliedTemplate) {
+    const fsPath = appliedTemplate.toFsPath();
+    props['template-type'] = 'daily-note';
+    props['template-format'] = fsPath.endsWith('.js') ? 'js' : 'md';
+  }
+  return props;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

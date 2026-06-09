@@ -20,9 +20,10 @@ queryJexl.addTransform('upper', (v: unknown) => String(v).toUpperCase());
  * (catastrophic backtracking, invalid syntax). The caller is responsible for
  * logging and/or surfacing the warning.
  */
-function tryBuildUserRegex(
+export function tryBuildUserRegex(
   pattern: string,
-  source: string
+  source: string,
+  flags?: string
 ): { regex: RegExp } | { warning: string } {
   if (!safeRegex(pattern)) {
     return {
@@ -30,7 +31,7 @@ function tryBuildUserRegex(
     };
   }
   try {
-    return { regex: new RegExp(pattern) };
+    return { regex: new RegExp(pattern, flags) };
   } catch (e) {
     return { warning: `${source}: invalid regex "${pattern}": ${e}` };
   }

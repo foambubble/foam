@@ -19,12 +19,11 @@ import https from 'https';
 import {
   getCurrentVersion,
   isNewerVersion,
-  readUpdateCheckCache,
-  writeUpdateCheckCache,
   fetchLatestVersion,
   formatUpdateNotice,
   checkForUpdateNotice,
 } from './version';
+import { State } from './state';
 
 // ─── getCurrentVersion ────────────────────────────────────────────────────────
 
@@ -62,58 +61,65 @@ describe('isNewerVersion', () => {
   });
 });
 
-// ─── readUpdateCheckCache / writeUpdateCheckCache ─────────────────────────────
-// These tests use the real filesystem with a temp directory. They set the
-// FOAM_CACHE_DIR env var to redirect the cache path, relying on os.homedir()
-// being the base for the default cache path. Instead we use a wrapper trick:
-// write real files to temp dirs and call the functions using real paths by
-// exercising writeUpdateCheckCache → readUpdateCheckCache round-trips.
-
-describe('readUpdateCheckCache and writeUpdateCheckCache', () => {
+// ─── State.readUpdateCheck / State.writeUpdateCheck ───────────────────────────
+describe('State.readUpdateCheck and State.writeUpdateCheck', () => {
   let tmpDir: string;
 
   beforeEach(() => {
     tmpDir = mkdtempSync(path.join(tmpdir(), 'foam-version-test-'));
-    // Override HOME so getUpdateCheckCachePath() returns a path inside tmpDir
-    process.env.HOME = tmpDir;
+    process.env.FOAM_CONFIG_HOME = tmpDir;
   });
 
   afterEach(() => {
+    delete process.env.FOAM_CONFIG_HOME;
     rmSync(tmpDir, { recursive: true, force: true });
     vi.restoreAllMocks();
   });
 
-  it('returns null when the cache file does not exist', () => {
-    expect(readUpdateCheckCache()).toBeNull();
+  it('returns null when state.json does not exist', () => {
+    expect(State.readUpdateCheck()).toBeNull();
   });
 
-  it('returns null when the cache file contains invalid JSON', () => {
-    const cachePath = path.join(tmpDir, '.config', 'foam', 'update-check.json');
-    fs.mkdirSync(path.dirname(cachePath), { recursive: true });
-    fs.writeFileSync(cachePath, '{ not valid json', 'utf8');
-    expect(readUpdateCheckCache()).toBeNull();
+  it('returns null when state.json contains invalid JSON', () => {
+    const statePath = path.join(tmpDir, 'state.json');
+    fs.writeFileSync(statePath, '{ not valid json', 'utf8');
+    expect(State.readUpdateCheck()).toBeNull();
   });
 
-  it('returns null when the cache file has unexpected shape', () => {
-    const cachePath = path.join(tmpDir, '.config', 'foam', 'update-check.json');
-    fs.mkdirSync(path.dirname(cachePath), { recursive: true });
-    fs.writeFileSync(cachePath, JSON.stringify({ foo: 'bar' }), 'utf8');
-    expect(readUpdateCheckCache()).toBeNull();
+  it('returns null when state.json has no updateCheck entry', () => {
+    const statePath = path.join(tmpDir, 'state.json');
+    fs.writeFileSync(statePath, JSON.stringify({ installationId: 'x' }), 'utf8');
+    expect(State.readUpdateCheck()).toBeNull();
+  });
+
+  it('returns null when updateCheck has an unexpected shape', () => {
+    const statePath = path.join(tmpDir, 'state.json');
+    fs.writeFileSync(statePath, JSON.stringify({ updateCheck: { foo: 'bar' } }), 'utf8');
+    expect(State.readUpdateCheck()).toBeNull();
   });
 
   it('round-trips: writeUpdateCheckCache then readUpdateCheckCache', () => {
     const data = { lastChecked: '2026-01-01T00:00:00.000Z', latestVersion: '0.41.0' };
-    writeUpdateCheckCache(data);
-    expect(readUpdateCheckCache()).toEqual(data);
+    State.writeUpdateCheck(data);
+    expect(State.readUpdateCheck()).toEqual(data);
+  });
+
+  it('preserves other state keys (notably installationId)', () => {
+    const statePath = path.join(tmpDir, 'state.json');
+    fs.writeFileSync(statePath, JSON.stringify({ installationId: 'preserve-me' }), 'utf8');
+    State.writeUpdateCheck({
+      lastChecked: '2026-01-01T00:00:00.000Z',
+      latestVersion: '0.41.0',
+    });
+    const after = JSON.parse(fs.readFileSync(statePath, 'utf8'));
+    expect(after.installationId).toBe('preserve-me');
+    expect(after.updateCheck.latestVersion).toBe('0.41.0');
   });
 
   it('swallows write errors without throwing', () => {
-    const cachePath = path.join(tmpDir, '.config', 'foam', 'update-check.json');
-    // Make the path a directory so writeFileSync will fail
-    fs.mkdirSync(cachePath, { recursive: true });
-    expect(() =>
-      writeUpdateCheckCache({ lastChecked: '', latestVersion: '' })
-    ).not.toThrow();
+    // Make state.json a directory so the atomic rename will fail.
+    fs.mkdirSync(path.join(tmpDir, 'state.json'), { recursive: true });
+    expect(() => State.writeUpdateCheck({ lastChecked: '', latestVersion: '' })).not.toThrow();
   });
 });
 
@@ -195,7 +201,7 @@ describe('checkForUpdateNotice', () => {
 
   beforeEach(() => {
     tmpDir = mkdtempSync(path.join(tmpdir(), 'foam-version-test-'));
-    process.env.HOME = tmpDir;
+    process.env.FOAM_CONFIG_HOME = tmpDir;
     // Prevent background fetch from making real network calls
     vi.mocked(https.get).mockImplementation((_url: any, _opts: any, _cb: any) => {
       const { EventEmitter } = require('node:events');
@@ -207,6 +213,7 @@ describe('checkForUpdateNotice', () => {
   });
 
   afterEach(() => {
+    delete process.env.FOAM_CONFIG_HOME;
     rmSync(tmpDir, { recursive: true, force: true });
     vi.restoreAllMocks();
   });
@@ -216,7 +223,7 @@ describe('checkForUpdateNotice', () => {
   });
 
   it('returns null when cache says current version is latest', () => {
-    writeUpdateCheckCache({
+    State.writeUpdateCheck({
       lastChecked: new Date().toISOString(),
       latestVersion: '0.40.2',
     });
@@ -224,7 +231,7 @@ describe('checkForUpdateNotice', () => {
   });
 
   it('returns null when cache says an older version is "latest"', () => {
-    writeUpdateCheckCache({
+    State.writeUpdateCheck({
       lastChecked: new Date().toISOString(),
       latestVersion: '0.39.0',
     });
@@ -232,7 +239,7 @@ describe('checkForUpdateNotice', () => {
   });
 
   it('returns a notice string when cache has a newer version and no lastNotified', () => {
-    writeUpdateCheckCache({
+    State.writeUpdateCheck({
       lastChecked: new Date().toISOString(),
       latestVersion: '0.41.0',
     });
@@ -243,14 +250,14 @@ describe('checkForUpdateNotice', () => {
   });
 
   it('writes lastNotified after emitting the notice', () => {
-    writeUpdateCheckCache({
+    State.writeUpdateCheck({
       lastChecked: new Date().toISOString(),
       latestVersion: '0.41.0',
     });
     const before = Date.now();
     checkForUpdateNotice();
     const after = Date.now();
-    const cache = readUpdateCheckCache();
+    const cache = State.readUpdateCheck();
     expect(cache?.lastNotified).toBeDefined();
     const notifiedMs = new Date(cache!.lastNotified!).getTime();
     expect(notifiedMs).toBeGreaterThanOrEqual(before);
@@ -258,7 +265,7 @@ describe('checkForUpdateNotice', () => {
   });
 
   it('returns null when lastNotified is within the rate-limit window (24h)', () => {
-    writeUpdateCheckCache({
+    State.writeUpdateCheck({
       lastChecked: new Date().toISOString(),
       latestVersion: '0.41.0',
       // notified 1 hour ago
@@ -268,7 +275,7 @@ describe('checkForUpdateNotice', () => {
   });
 
   it('returns a notice when lastNotified is older than the rate-limit window', () => {
-    writeUpdateCheckCache({
+    State.writeUpdateCheck({
       lastChecked: new Date().toISOString(),
       latestVersion: '0.41.0',
       // notified 25 hours ago

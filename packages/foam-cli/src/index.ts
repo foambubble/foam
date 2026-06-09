@@ -1,4 +1,12 @@
-import { type ILogger, Logger, LogLevel, BaseLogger } from '@foam/core';
+import {
+  type ILogger,
+  type ITelemetryReporter,
+  Logger,
+  LogLevel,
+  BaseLogger,
+  NoopTelemetryReporter,
+  TELEMETRY_CONNECTION_STRING,
+} from '@foam/core';
 import { parsePublishCommandArgs, renderPublishHelp, runPublishCommand } from './commands/publish';
 import { runListCommand } from './commands/list';
 import { runNoteCommand } from './commands/note';
@@ -13,8 +21,17 @@ import { runRenameCommand } from './commands/rename';
 import { runTagCommand } from './commands/tag';
 import { runUpdateCommand } from './commands/update';
 import { parseMcpArgs, MCP_HELP, runMcpCommand } from './commands/mcp';
+import { runConfigCommand } from './commands/config';
 import { checkForUpdateNotice, getCurrentVersion } from './support/version';
 import { setColorsEnabled } from './support/colors';
+import {
+  CommandRunResult,
+  shouldSkipTelemetry,
+  withTelemetry,
+} from './support/with-telemetry';
+import { resolveCliReporter } from './support/resolve-reporter';
+import { AppInsightsReporter, httpsPoster } from './support/telemetry-reporter';
+import { getCoreVersion } from './support/version';
 
 const CLI_HELP = `Usage: foam <command> [options]
 
@@ -32,6 +49,7 @@ Commands:
   rename      Rename a note, tag, section, or block anchor (with link rewriting)
   mcp         Run an MCP server (Model Context Protocol) over stdio for AI agents
   update      Check for updates and show the install command
+  config      Manage user-level Foam configuration (~/.config/foam/config.json)
 
 Global options:
   --workspace <dir>   Workspace root (default: FOAM_WORKSPACE env var, then cwd)
@@ -66,9 +84,15 @@ class ConsoleLogger extends BaseLogger {
   }
 }
 
+/**
+ * Entrypoint usable in-process. Production binary calls this from `main()`
+ * with a real {@link AppInsightsReporter}; tests omit `reporter` and get
+ * {@link NoopTelemetryReporter} — the safe default that never POSTs.
+ */
 export async function runCli(
   argv: string[],
-  logger: ILogger = new ConsoleLogger()
+  logger: ILogger = new ConsoleLogger(),
+  reporter: ITelemetryReporter = NoopTelemetryReporter
 ): Promise<number> {
   const [command, ...commandArgs] = argv;
 
@@ -92,17 +116,29 @@ export async function runCli(
       ? checkForUpdateNotice()
       : null;
 
-  const exitCode = await dispatch(command, commandArgs, logger);
+  const exitCode = shouldSkipTelemetry(command, commandArgs)
+    ? toExitCode(await dispatch(command, commandArgs, logger))
+    : await withTelemetry({
+        command: command!,
+        reporter,
+        run: effectiveReporter =>
+          dispatch(command, commandArgs, logger, effectiveReporter),
+      });
 
   if (updateNotice) logger.info(updateNotice);
   return exitCode;
 }
 
+function toExitCode(result: CommandRunResult): number {
+  return typeof result === 'number' ? result : result.exitCode;
+}
+
 async function dispatch(
   command: string | undefined,
   commandArgs: string[],
-  logger: ILogger
-): Promise<number> {
+  logger: ILogger,
+  reporter: ITelemetryReporter = NoopTelemetryReporter
+): Promise<CommandRunResult> {
   if (!command || command === 'help' || command === '--help' || command === '-h') {
     logger.info(renderCliHelp());
     return 0;
@@ -166,7 +202,15 @@ async function dispatch(
           logger.info(MCP_HELP);
           return 0;
         }
-        return runMcpCommand(parseMcpArgs(commandArgs), logger);
+        // The MCP server is long-lived so opt the fork into auto-flushing
+        return runMcpCommand(
+          parseMcpArgs(commandArgs),
+          logger,
+          reporter.forComponent('mcp', { autoFlush: { maxQueueSize: 10 } })
+        );
+      }
+      case 'config': {
+        return runConfigCommand(commandArgs, logger);
       }
       default:
         logger.error(`Unknown command "${command}".\n\n${renderCliHelp()}`);
@@ -177,13 +221,42 @@ async function dispatch(
     const stack = error instanceof Error ? error.stack : undefined;
     logger.error(message);
     if (process.env.FOAM_DEBUG && stack) logger.error(stack);
-    return 1;
+    // Surface the failure structurally so `cli.command-invoked` records what
+    // went wrong. Without this, every caught command failure looks identical
+    // (`exitCode=1`) in telemetry — the actual failure mode is invisible.
+    const errorType =
+      error instanceof Error ? error.constructor.name : 'UnknownError';
+    return {
+      exitCode: 1,
+      telemetryProperties: { errorType, errorContext: 'dispatch' },
+    };
   }
 }
 
 async function main() {
   Logger.setLevel('info');
-  const exitCode = await runCli(process.argv.slice(2));
+  const argv = process.argv.slice(2);
+  const [command, ...commandArgs] = argv;
+
+  // Production opt-in: this is the single place that resolves consent and
+  // wires the real reporter. Other callers of `runCli` (tests, embeddings)
+  // pass a noop directly. The factory only runs if telemetry is effectively
+  // enabled, so we don't construct a real reporter when the user opted out.
+  const reporter = await resolveCliReporter({
+    command,
+    commandArgs,
+    buildReporter: installationId =>
+      new AppInsightsReporter({
+        connectionString: TELEMETRY_CONNECTION_STRING,
+        component: 'cli',
+        componentVersion: getCurrentVersion(),
+        coreVersion: getCoreVersion(),
+        poster: httpsPoster,
+        installationId,
+      }),
+  });
+
+  const exitCode = await runCli(argv, undefined, reporter);
   process.exitCode = exitCode;
 }
 

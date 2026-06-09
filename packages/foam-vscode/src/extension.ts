@@ -1,6 +1,6 @@
 /*global markdownit:readonly*/
 
-import { workspace, ExtensionContext, window, commands } from 'vscode';
+import { workspace, ExtensionContext, window, commands, TextEditor } from 'vscode';
 import { MarkdownResourceProvider, Logger, Config } from '@foam/core';
 import { bootstrap } from './core/model/foam';
 import { fromVsCodeUri } from './vscode/utils/vsc-utils';
@@ -14,6 +14,16 @@ import { createMarkdownParser } from '@foam/core';
 import VsCodeBasedParserCache from './vscode/services/cache';
 import { createMatcherAndDataStore } from './vscode/services/editor';
 import { OllamaEmbeddingProvider } from './ai/providers/ollama/ollama-provider';
+import { initTelemetry } from './vscode/services/telemetry';
+import {
+  getDailyNoteTemplateUri,
+  getDefaultTemplateUri,
+} from './vscode/services/template-service';
+
+// Injected by esbuild's `define` (and the vitest config), so telemetry can
+// attach version dimensions without a runtime package.json read
+declare const __FOAM_VSCODE_VERSION__: string;
+declare const __CORE_VERSION__: string;
 
 export async function activate(context: ExtensionContext) {
   const logger = new VsCodeOutputLogger();
@@ -22,6 +32,13 @@ export async function activate(context: ExtensionContext) {
 
   Config.setDefaultConfig(new VsCodeFoamConfig());
 
+  const telemetry = initTelemetry({
+    foamVersion: __FOAM_VSCODE_VERSION__,
+    coreVersion: __CORE_VERSION__,
+  });
+  context.subscriptions.push(telemetry);
+  telemetry.trackSession();
+
   try {
     Logger.info('Starting Foam');
 
@@ -29,6 +46,14 @@ export async function activate(context: ExtensionContext) {
       Logger.info('No workspace open. Foam will not start');
       return;
     }
+
+    context.subscriptions.push(
+      window.onDidChangeActiveTextEditor((editor: TextEditor | undefined) => {
+        if (editor?.document.languageId === 'markdown') {
+          telemetry.trackNoteOpened();
+        }
+      })
+    );
 
     // Prepare Foam
     const includes = Config.getFilesInclude();
@@ -93,7 +118,24 @@ export async function activate(context: ExtensionContext) {
     );
 
     const foam = await foamPromise;
-    Logger.info(`Loaded ${foam.workspace.list().length} resources`);
+    const resources = foam.workspace.list();
+    const noteCount = resources.filter(r => r.type === 'note').length;
+    const attachmentCount = resources.filter(
+      r => r.type === 'image' || r.type === 'attachment'
+    ).length;
+    Logger.info(`Loaded ${resources.length} resources`);
+
+    const hasDailyNoteTemplate =
+      (await getDailyNoteTemplateUri()) !== undefined;
+    const hasTemplates =
+      hasDailyNoteTemplate || (await getDefaultTemplateUri()) !== undefined;
+    telemetry.trackConfigSnapshot();
+    telemetry.trackWorkspaceStats(
+      noteCount,
+      attachmentCount,
+      hasTemplates,
+      hasDailyNoteTemplate
+    );
 
     context.subscriptions.push(
       foam,

@@ -46,7 +46,19 @@ export default defineConfig({
       // Order matters: longer prefix first.
       '@foam/core/test': path.join(__dirname, '../foam-core/test/test-utils.ts'),
       '@foam/core': path.join(__dirname, '../foam-core/src/index.ts'),
+      '@vscode/extension-telemetry': path.join(
+        __dirname,
+        'src/test/extension-telemetry-mock.ts'
+      ),
     },
+  },
+  // Mirror the version constants injected by esbuild at build time so
+  // source files that read them (e.g. extension.ts for telemetry) don't
+  // hit a runtime ReferenceError in tests. Literal sentinel values keep
+  // tests independent of the actual package versions.
+  define: {
+    __FOAM_VSCODE_VERSION__: JSON.stringify('0.0.0-test'),
+    __CORE_VERSION__: JSON.stringify('0.0.0-test'),
   },
   test: {
     globals: true,

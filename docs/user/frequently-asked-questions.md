@@ -4,6 +4,7 @@
   - [Links/Graphs/BackLinks don't work. How do I enable them?](#linksgraphsbacklinks-dont-work-how-do-i-enable-them)
   - [I don't want Foam enabled for all my workspaces](#i-dont-want-foam-enabled-for-all-my-workspaces)
   - [I want to publish the graph view to GitHub pages or Vercel](#i-want-to-publish-the-graph-view-to-github-pages-or-vercel)
+  - [Does Foam collect any data?](#does-foam-collect-any-data)
 
 ## Links/Graphs/BackLinks don't work. How do I enable them?
 
@@ -22,5 +23,17 @@ If you want a different front-end look to your published foam and a way to see y
 - [foam-gatsby](https://github.com/mathieudutour/foam-gatsby-template) by [Mathieu Dutour](https://github.com/mathieudutour)
 - [foam-gatsby-kb](https://github.com/hikerpig/foam-template-gatsby-kb) by [hikerpig](https://github.com/hikerpig)
 
+## Does Foam collect any data?
+
+Foam collects anonymous usage data (which commands are used, which features are configured) to help prioritize development. No note content, file names, or personal information is ever collected.
+
+Foam follows VS Code's global telemetry setting (`telemetry.telemetryLevel`). If you have disabled telemetry in VS Code, Foam will not send any data.
+
+To inspect what is being sent, set the Foam log level to `Debug` (run `Foam: Set log level` from the command palette) — telemetry events will appear in the Foam output channel. See [[foam-logging-in-vscode]] for details.
+
+See [[telemetry]] for the full list of collected data and opt-out instructions.
+
 [recommended-extensions]: getting-started/recommended-extensions.md 'Recommended Extensions'
 [wikilinks]: features/wikilinks.md 'Wikilinks'
+[telemetry]: tools/telemetry.md 'Telemetry'
+[foam-logging-in-vscode]: tools/foam-logging-in-vscode.md 'Foam logging in VsCode'

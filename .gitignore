@@ -16,3 +16,4 @@ docs/.jekyll-metadata
 .test-workspace
 .agent/current-plan.md
 .tmp
+.agent/tasks

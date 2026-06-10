@@ -79,7 +79,7 @@ describe('FoamMcpServer telemetry', () => {
           outcome: 'success',
         });
         expect(invoked[0].properties?.durationBucket).toMatch(
-          /^<10ms|<50ms|<500ms|<5s|<30s|30s\+$/
+          /^(0-10ms|11-50ms|51-300ms|301-1000ms|1-5s|5-30s|30s\+)$/
         );
       });
     });

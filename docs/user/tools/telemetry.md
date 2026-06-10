@@ -26,7 +26,7 @@ Every event includes:
 At a high level:
 
 - **VS Code extension** sends a small set of session events: that Foam loaded, which commands you ran, your enum/boolean settings, and bucketed workspace size (e.g. "201-500 notes"). No file names, paths, or note titles.
-- **CLI** sends one event per invocation: which command ran, how long it took (bucketed: `<10ms`, `<50ms`, `<500ms`, `<5s`, `<30s`, `30s+`), and bucketed workspace size.
+- **CLI** sends one event per invocation: which command ran, how long it took (bucketed: `0-10ms`, `11-50ms`, `51-300ms`, `301-1000ms`, `1-5s`, `5-30s`, `30s+`), and bucketed workspace size.
 - **MCP** sends one event per tool call the LLM makes: which tool was called, how long it took, and whether it succeeded. Tool arguments and returned content are never sent.
 
 The full event list is at the [bottom of this page](#full-event-list).
@@ -118,7 +118,7 @@ You can disable VS Code's telemetry — and therefore everything Foam sends from
 
 | Event | When it fires | Properties |
 |---|---|---|
-| `mcp.session-started` | Once per server start | `client` (e.g. `claude-desktop`, `cursor`, omitted if not exposed); `noteCount` and `attachmentCount` (both bucketed); `mode` (`read` or `read-write` — whether the server was started with `--read-only`) |
+| `mcp.session-started` | Once per server start | `client` (e.g. `claude-desktop`, `cursor`, omitted if not exposed); `noteCount` and `attachmentCount` (both bucketed); `mode` (`read` or `read-write` — `read-write` is set when the CLI is started with `--allow-writes`; the default is `read`) |
 | `mcp.session-with-tool` | First tool call in a session | none |
 | `mcp.tool-invoked` | Every tool call (sent unsampled) | `tool` (name only — arguments never recorded), `durationBucket`, `outcome` (`success` / `error`) |
 | `mcp.error` | An unhandled error during MCP dispatch. Rare in practice: tool handlers are wrapped to convert throws into structured `isError: true` results, which surface as `outcome: 'error'` on `mcp.tool-invoked`. `mcp.error` is the safety net for anything that escapes that wrapping. | `context`, `tool`, `errorType` |

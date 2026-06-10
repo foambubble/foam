@@ -31,13 +31,13 @@ If a fragment was missed, the `/update-changelog` slash command can draft one re
    - Inspect the generated `CHANGELOG.md` and version bumps
    - Update `./packages/foam-vscode/WHATSNEW.md` if the extension changed meaningfully
    - `git add -A && git commit -m "Release"`
-   - Create per-package tags (`vscode@<version>`, `cli@<version>`, `core@<version>`):
-     - `yarn tag-release`
+   - `yarn tag-release` - Create per-package tags (`vscode@<version>`, `cli@<version>`, `core@<version>`):
      - The script reads each package's current version from `package.json` and skips any tag that already exists.
 6. Publish
-   - `yarn release-extension` (packages and publishes to VS Marketplace and OpenVSX)
-   - `yarn release-cli` (packages and publishes `@foam/cli` to npm as `foam-cli`)
-   - `yarn release-core` (publishes `@foam/core` to npm)
+   - `yarn release` to release them all, otherwise
+     - `yarn release-extension` (packages and publishes to VS Marketplace and OpenVSX)
+     - `yarn release-cli` (packages and publishes `@foam/cli` to npm as `foam-cli`)
+     - `yarn release-core` (publishes `@foam/core` to npm)
 7. Push
    - `git push && git push --tags`
 8. Update the release notes in GitHub

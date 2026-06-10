@@ -31,6 +31,7 @@ All commands accept `--format json` for machine-readable output, useful for scri
 | [[links]]   | Show links to and from a note                     |
 | [[lint]]    | Check notes for issues                            |
 | [[list]]    | List notes, tags, orphans, placeholders, and more |
+| [[mcp]]     | Expose the workspace to AI agents via MCP         |
 | [[note]]    | Show, create, move, or delete notes               |
 | [[outline]] | Show the heading structure of a note              |
 | [[rename]]  | Rename notes, tags, sections, or block anchors    |
@@ -43,6 +44,7 @@ All commands accept `--format json` for machine-readable output, useful for scri
 [links]: cli/links.md 'foam links'
 [lint]: cli/lint.md 'foam lint'
 [list]: cli/list.md 'foam list'
+[mcp]: cli/mcp.md 'foam mcp'
 [note]: cli/note.md 'foam note'
 [outline]: cli/outline.md 'foam outline'
 [rename]: cli/rename.md 'foam rename'

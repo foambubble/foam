@@ -197,6 +197,32 @@ foam rename section my-note "Old Heading" "New Heading"
 foam rename block my-note old-anchor new-anchor
 ```
 
+### `mcp`
+
+Start an [MCP](https://modelcontextprotocol.io) server over stdio so AI agents (Claude Desktop, Cursor, Zed, …) can read your workspace as a knowledge graph.
+
+```bash
+foam mcp --workspace /path/to/notes                 # read-only (default)
+foam mcp --workspace /path/to/notes --allow-writes  # let the agent edit notes too
+```
+
+Wire it into your MCP client config:
+
+```json
+{
+  "mcpServers": {
+    "foam": {
+      "command": "npx",
+      "args": ["foam-cli", "mcp", "--workspace", "/path/to/notes"]
+    }
+  }
+}
+```
+
+The server is long-running and watches the filesystem so external edits are reflected in subsequent tool calls. Logs go to stderr (stdout is reserved for MCP traffic); set `FOAM_LOG_LEVEL=debug` for verbose output.
+
+See the [user docs](../../docs/user/tools/cli/mcp.md) for the full tool list.
+
 ## Contributing / running from source
 
 ```bash

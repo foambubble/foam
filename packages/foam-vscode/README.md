@@ -153,6 +153,8 @@ People use Foam in different ways for different use cases, check out the [recipe
 
 ## Getting started
 
+> Already using Obsidian? An Obsidian vault is usually already a Foam workspace — see [Coming from Obsidian](https://docs.foamnotes.com/recipes/migrating-from-obsidian/).
+
 You really, _really_, **really** should read [Foam documentation](https://foamnotes.com), but if you can't be bothered, this is how to get started:
 
 1. [Create a GitHub repository from foam-template](https://github.com/foambubble/foam-template/generate). If you want to keep your thoughts to yourself, remember to set the repository private.

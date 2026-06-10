@@ -35,6 +35,8 @@ Foam is like a bathtub: _What you get out of it depends on what you put into it.
 - [[keyboard-shortcuts]]
 - [[search-and-navigate-notes]]
 
+Coming from Obsidian? See [[migrating-from-obsidian]].
+
 ## Features
 
 - [[wikilinks]]
@@ -82,6 +84,7 @@ See [[publishing]] for more details.
 [sync-notes]: getting-started/sync-notes.md 'Sync notes with source control'
 [keyboard-shortcuts]: getting-started/keyboard-shortcuts.md 'Keyboard Shortcuts'
 [search-and-navigate-notes]: recipes/search-and-navigate-notes.md 'Search and Navigate Notes'
+[migrating-from-obsidian]: recipes/migrating-from-obsidian.md 'Coming from Obsidian'
 [wikilinks]: features/wikilinks.md 'Wikilinks'
 [footnotes]: features/footnotes.md 'Footnotes'
 [block-anchors]: features/block-anchors.md 'Block Anchors'

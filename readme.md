@@ -144,6 +144,8 @@ People use Foam in different ways for different use cases, check out the [recipe
 
 ## Getting started
 
+> Already using Obsidian? An Obsidian vault is usually already a Foam workspace — see [Coming from Obsidian](https://docs.foamnotes.com/recipes/migrating-from-obsidian/).
+
 Whether you want to build a [Second Brain](https://www.buildingasecondbrain.com/) or a [Zettelkasten](https://zettelkasten.de/posts/overview/), write a book, or just get better at long-term learning, **Foam** can help you organise your thoughts if you follow these simple rules:
 
 1. Create a single **Foam** workspace for all your knowledge and research following the [[Getting started]] guide.

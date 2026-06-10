@@ -65,6 +65,8 @@ For a minimal setup:
 
 That's all, you can start working with your markdown files and Foam will take care of the rest.
 
+> Already have an Obsidian vault? You can open it directly in VS Code — see [[migrating-from-obsidian]].
+
 ## Ideas for your knowledge base
 
 ### 1. Customize Your Settings
@@ -209,3 +211,4 @@ If you encounter setup issues:
 - Join the [Foam Community Discord](https://discord.com/invite/HV2tn2FpEk)
 
 [frequently-asked-questions]: ../frequently-asked-questions.md 'Frequently Asked Questions'
+[migrating-from-obsidian]: ../recipes/migrating-from-obsidian.md "Coming from Obsidian"

@@ -26,6 +26,8 @@ A #recipe is a guide, tip or strategy for getting the most out of your Foam work
 
 - Clip webpages with [[web-clipper]]
 - Convert Microsoft Word files into Markdown with [[markup-converter]]
+- Coming from Obsidian? See [[migrating-from-obsidian]]
+- Coming from OneNote? See [[migrating-from-onenote]]
 
 ## Discover
 
@@ -111,6 +113,8 @@ _See [[how-to-write-recipes]] and the [contribution guide](https://github.com/fo
 [search-and-navigate-notes]: search-and-navigate-notes.md 'Search and Navigate Notes'
 [web-clipper]: web-clipper.md 'Web Clipper'
 [markup-converter]: markup-converter.md 'Markup Converter'
+[migrating-from-obsidian]: migrating-from-obsidian.md 'Coming from Obsidian'
+[migrating-from-onenote]: migrating-from-onenote.md 'Migrating from OneNote'
 [backlinking]: ../features/backlinking.md 'Backlinking'
 [wikilinks]: ../features/wikilinks.md 'Wikilinks'
 [commands]: ../features/commands.md 'Foam Commands'

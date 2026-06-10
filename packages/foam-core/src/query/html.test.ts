@@ -1,4 +1,4 @@
-import { renderList, renderTable, renderResults } from './html';
+import { escapeHtml, renderList, renderTable, renderResults } from './html';
 import { ResourceView } from '.';
 import { URI } from '../model/uri';
 
@@ -129,5 +129,11 @@ describe('renderList / renderTable — title fallback', () => {
     const rows: ResourceView[] = [{ uri: URI.file('/') }];
     const html = renderTable(rows, ['title'], identity);
     expect(html).toContain('untitled');
+  });
+});
+
+describe('escapeHtml', () => {
+  it('escapes the five HTML special characters so output is safe inside both double- and single-quoted attributes', () => {
+    expect(escapeHtml(`& < > " '`)).toBe('&amp; &lt; &gt; &quot; &#39;');
   });
 });

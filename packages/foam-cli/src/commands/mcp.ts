@@ -20,10 +20,12 @@ The server is long-running: it loads the workspace once at startup and
 watches the filesystem for changes so subsequent tool calls reflect the
 latest state.
 
+By default the server is read-only — pass --allow-writes to expose write
+tools (create/update/delete/move resources and tag mutations).
+
 Options:
   --workspace <dir>   Workspace root (default: FOAM_WORKSPACE env var, then cwd)
-  --read-only         Skip registering write tools (create/update/delete/move
-                      resources and tag mutations).
+  --allow-writes      Register write tools. Off by default.
   --help              Show this help
 
 Claude Desktop / mcp.json config:
@@ -45,14 +47,14 @@ Logging:
 
 export interface McpArgs {
   workspaceDir: string;
-  readOnly: boolean;
+  allowWrites: boolean;
 }
 
 export function parseMcpArgs(argv: string[]): McpArgs {
   const args = parseArgs(argv);
   return {
     workspaceDir: resolveWorkspaceDir(args),
-    readOnly: getFlag(args, 'read-only'),
+    allowWrites: getFlag(args, 'allow-writes'),
   };
 }
 
@@ -97,7 +99,7 @@ export async function runMcpCommand(
   const server = new FoamMcpServer({
     foam,
     rootUri,
-    readOnly: args.readOnly,
+    mode: args.allowWrites ? 'read-write' : 'read',
     telemetry: reporter,
   });
 

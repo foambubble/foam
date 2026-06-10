@@ -262,7 +262,7 @@ describe('resource tools — JS template execution', () => {
 
 describe('resource tools (read-only mode)', () => {
   it('write tools are not registered in read-only mode', () =>
-    withMcpServer(SEED, { readOnly: true }, async ctx => {
+    withMcpServer(SEED, { mode: 'read' }, async ctx => {
       const list = await ctx.client.listTools();
       const names = list.tools.map(t => t.name);
       expect(names).not.toContain('update_resource');
@@ -272,7 +272,7 @@ describe('resource tools (read-only mode)', () => {
     }));
 
   it('read tools still work in read-only mode', () =>
-    withMcpServer(SEED, { readOnly: true }, async ctx => {
+    withMcpServer(SEED, { mode: 'read' }, async ctx => {
       const items = await ctx.callToolJson<Array<unknown>>('list_resources');
       expect(items.length).toBe(3);
     }));

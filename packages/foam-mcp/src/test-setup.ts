@@ -11,7 +11,7 @@ import {
   URI,
 } from '@foam/core';
 import { InMemoryDataStore } from '@foam/core/test';
-import { FoamMcpServer } from './server';
+import { FoamMcpServer, FoamMcpServerMode } from './server';
 
 export interface McpTestContext {
   client: Client;
@@ -35,7 +35,9 @@ export interface McpTestContext {
 
 export interface McpTestOptions {
   rootPath?: string;
-  readOnly?: boolean;
+  /** Server mode. Defaults to `'read-write'` so existing tests exercise the
+   *  full tool surface without opting in. */
+  mode?: FoamMcpServerMode;
   /**
    * Telemetry reporter passed into `FoamMcpServer`. Tests that don't pass
    * one get a noop (the default). Tests that do can assert on the events
@@ -111,7 +113,7 @@ export async function withMcpServer<T>(
   const server = new FoamMcpServer({
     foam,
     rootUri,
-    readOnly: opts.readOnly,
+    mode: opts.mode ?? 'read-write',
     telemetry: opts.telemetry,
   });
 

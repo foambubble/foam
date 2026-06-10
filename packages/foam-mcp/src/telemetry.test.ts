@@ -27,9 +27,9 @@ describe('FoamMcpServer telemetry', () => {
       });
     });
 
-    it('reports mode=read when readOnly is set', async () => {
+    it('reports mode=read when mode is read', async () => {
       const reporter = new InMemoryTelemetryReporter();
-      await withMcpServer(SEED, { telemetry: reporter, readOnly: true }, async () => {
+      await withMcpServer(SEED, { telemetry: reporter, mode: 'read' }, async () => {
         const event = reporter.events.find(e => e.name === 'mcp.session-started');
         expect(event?.properties?.mode).toBe('read');
       });

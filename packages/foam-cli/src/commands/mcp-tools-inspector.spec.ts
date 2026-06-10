@@ -108,7 +108,7 @@ describe('foam mcp tools (Inspector integration)', () => {
   });
 
   describe('graph tools', () => {
-    it('get_workspace_info reports the right counts and read_only=false', () => {
+    it('get_workspace_info reports the right counts and read_only=true (CLI default)', () => {
       const info = parseJson<{
         note_count: number;
         orphan_count: number;
@@ -120,7 +120,7 @@ describe('foam mcp tools (Inspector integration)', () => {
       expect(info.orphan_count).toBe(1);
       expect(info.placeholder_count).toBe(1);
       expect(info.connection_count).toBeGreaterThan(0);
-      expect(info.read_only).toBe(false);
+      expect(info.read_only).toBe(true);
     });
 
     it('get_orphans returns the orphan note', () => {
@@ -270,6 +270,6 @@ describe('foam mcp tools (Inspector integration)', () => {
   // expectations if run in the same describe. They're already covered by
   // the in-process tests in foam-mcp/src/tools/resources.test.ts and
   // tags.test.ts; the fast-feedback Inspector smoke for writes is in
-  // mcp.spec.ts (`respects --read-only`). If we want full Inspector
+  // mcp.spec.ts (`--allow-writes`). If we want full Inspector
   // coverage of writes too, we'd build a fresh fixture per write test.
 });

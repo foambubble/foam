@@ -145,9 +145,9 @@ describe('foam mcp (CLI e2e)', () => {
       })
     ), 30000);
 
-  it('respects --read-only by skipping write tools entirely', () =>
+  it('defaults to read-only — no write tools without --allow-writes', () =>
     withTmpDir({ 'a.md': '# A\n' }, workspaceDir =>
-      withCliMcpServer(workspaceDir, ['--read-only'], async ctx => {
+      withCliMcpServer(workspaceDir, [], async ctx => {
         const list = await ctx.client.listTools();
         const names = list.tools.map(t => t.name);
         expect(names).not.toContain('update_resource');
@@ -162,6 +162,23 @@ describe('foam mcp (CLI e2e)', () => {
           arguments: {},
         })) as { content: Array<{ text: string }> };
         expect(JSON.parse(info.content[0].text).read_only).toBe(true);
+      })
+    ), 30000);
+
+  it('--allow-writes registers write tools and disables read-only advertisement', () =>
+    withTmpDir({ 'a.md': '# A\n' }, workspaceDir =>
+      withCliMcpServer(workspaceDir, ['--allow-writes'], async ctx => {
+        const list = await ctx.client.listTools();
+        const names = list.tools.map(t => t.name);
+        expect(names).toContain('update_resource');
+        expect(names).toContain('delete_resource');
+
+        expect(ctx.client.getInstructions()).toBeUndefined();
+        const info = (await ctx.client.callTool({
+          name: 'get_workspace_info',
+          arguments: {},
+        })) as { content: Array<{ text: string }> };
+        expect(JSON.parse(info.content[0].text).read_only).toBe(false);
       })
     ), 30000);
 });

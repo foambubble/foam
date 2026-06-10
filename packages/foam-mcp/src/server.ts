@@ -25,16 +25,21 @@ import { registerStructureTools } from './tools/structure';
  */
 export type ToolRegistrar = McpServer['registerTool'];
 
+/**
+ * Server access mode. `'read'` exposes only read tools; `'read-write'`
+ * additionally registers write tools (create/update/delete/move resource
+ * and add/remove/rename tags). Required — consumers must make an explicit
+ * choice rather than rely on a default.
+ */
+export type FoamMcpServerMode = 'read' | 'read-write';
+
 export interface FoamMcpServerOptions {
   /** Already-bootstrapped Foam instance. */
   foam: Foam;
   /** Workspace root used to resolve relative URIs at the wire boundary. */
   rootUri: URI;
-  /**
-   * If true, skip registering write tools (create/update/delete/move
-   * resource and add/remove/rename tags). Defaults to false.
-   */
-  readOnly?: boolean;
+  /** Access mode. See {@link FoamMcpServerMode}. */
+  mode: FoamMcpServerMode;
   /**
    * Reporter receiving `mcp.*` events. Defaults to a noop so unhosted
    * consumers (tests, embedded uses) don't have to wire telemetry in.
@@ -64,25 +69,25 @@ export class FoamMcpServer {
   private readonly mcp: McpServer;
   private readonly telemetry: ITelemetryReporter;
   private readonly foam: Foam;
-  private readonly readOnly: boolean;
+  private readonly mode: FoamMcpServerMode;
   private sessionWithToolFired = false;
 
   constructor(opts: FoamMcpServerOptions) {
+    const readOnly = opts.mode === 'read';
     this.mcp = new McpServer(
       { name: pkg.name, version: pkg.version },
       {
         capabilities: { tools: {} },
-        instructions: opts.readOnly ? READ_ONLY_INSTRUCTIONS : undefined,
+        instructions: readOnly ? READ_ONLY_INSTRUCTIONS : undefined,
       }
     );
 
     this.telemetry = opts.telemetry ?? NoopTelemetryReporter;
     this.foam = opts.foam;
-    this.readOnly = opts.readOnly ?? false;
+    this.mode = opts.mode;
 
     const { foam, rootUri } = opts;
     const dataStore = foam.services.dataStore;
-    const readOnly = this.readOnly;
     const register = this.makeRegisterTool();
 
     // Read-only tools always registered.
@@ -144,7 +149,7 @@ export class FoamMcpServer {
       r => r.type === 'image' || r.type === 'attachment'
     ).length;
     const properties: Record<string, string> = {
-      mode: this.readOnly ? 'read' : 'read-write',
+      mode: this.mode,
       noteCount: bucketNoteCount(noteCount),
       attachmentCount: bucketNoteCount(attachmentCount),
     };

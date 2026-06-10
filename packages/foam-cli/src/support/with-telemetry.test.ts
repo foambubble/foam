@@ -34,7 +34,7 @@ describe('shouldSkipTelemetry', () => {
 
   it('skips when --help or -h appears anywhere in the args (the command never runs)', () => {
     expect(shouldSkipTelemetry('publish', ['--help'])).toBe(true);
-    expect(shouldSkipTelemetry('mcp', ['--read-only', '--help'])).toBe(true);
+    expect(shouldSkipTelemetry('mcp', ['--allow-writes', '--help'])).toBe(true);
     expect(shouldSkipTelemetry('lint', ['-h'])).toBe(true);
     expect(shouldSkipTelemetry('note', ['show', '--help'])).toBe(true);
   });

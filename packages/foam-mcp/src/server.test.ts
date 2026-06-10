@@ -64,8 +64,8 @@ describe('FoamMcpServer lifecycle', () => {
       }
     }));
 
-  it('readOnly mode does not register write tools', () =>
-    withMcpServer(SEED, { readOnly: true }, async ctx => {
+  it('read mode does not register write tools', () =>
+    withMcpServer(SEED, { mode: 'read' }, async ctx => {
       const list = await ctx.client.listTools();
       const names = list.tools.map(t => t.name);
       const writeTools = [
@@ -85,7 +85,7 @@ describe('FoamMcpServer lifecycle', () => {
     }));
 
   it('advertises read-only mode in initialize.instructions and get_workspace_info', () =>
-    withMcpServer(SEED, { readOnly: true }, async ctx => {
+    withMcpServer(SEED, { mode: 'read' }, async ctx => {
       expect(ctx.client.getInstructions()).toContain('read-only');
 
       const result = (await ctx.client.callTool({
@@ -96,7 +96,7 @@ describe('FoamMcpServer lifecycle', () => {
       expect(info.read_only).toBe(true);
     }));
 
-  it('non-readOnly mode reports read_only=false and no instructions', () =>
+  it('read-write mode reports read_only=false and no instructions', () =>
     withMcpServer(SEED, async ctx => {
       expect(ctx.client.getInstructions()).toBeUndefined();
       const result = (await ctx.client.callTool({

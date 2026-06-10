@@ -1,5 +1,13 @@
 # Change Log
 
+## 0.44.0
+
+### Minor Changes
+
+- New `foam graph` command exports the workspace link graph as JSON to stdout, in a d3-force–compatible shape.
+
+- Added anonymous usage telemetry. See the telemetry documentation for the full event schema and how to opt out ([#1664](https://github.com/foambubble/foam/issues/1664)).
+
 ## 0.43.0
 
 ### Minor Changes

@@ -1,5 +1,20 @@
 # Change Log
 
+## 0.43.0
+
+### Minor Changes
+
+- Added anonymous usage telemetry to help prioritize improvements. See the telemetry documentation for the full event schema and how to opt out ([#1664](https://github.com/foambubble/foam/issues/1664)).
+
+### Patch Changes
+
+- Internal: Lowered a noisy bootstrap log from warning to debug.
+
+- Performance: speed up workspace file scans on large workspaces, addressing extension-host stalls reported in [#1624](https://github.com/foambubble/foam/issues/1624).
+
+  - `fromVsCodeUri` is ~5× faster
+  - The matcher's file listing skips per-file deduplication when a folder has a single include pattern.
+
 ## 0.42.0
 
 ### Minor Changes

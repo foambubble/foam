@@ -1,5 +1,18 @@
 # Change Log
 
+## 0.43.0
+
+### Minor Changes
+
+- Foam queries now support custom column labels in table results, letting you rename headers in `foam-query` output ([#1658](https://github.com/foambubble/foam/issues/1658)).
+
+### Patch Changes
+
+- Performance: speed up workspace file scans on large workspaces, addressing extension-host stalls reported in [#1624](https://github.com/foambubble/foam/issues/1624).
+
+  - `fromVsCodeUri` is ~5× faster — it now copies fields directly from the VS Code `Uri` instead of round-tripping through `toString()` + `URI.parse`. Called once per file during every workspace scan and tree refresh.
+  - The matcher's file listing skips per-file deduplication when a folder has a single include pattern (the common case), avoiding repeated `Uri.fsPath` computation. In the multi-pattern fallback, dedup keys off `Uri.toString()` (memoized by VS Code) instead of `fsPath`.
+
 ## 0.42.0
 
 ### Minor Changes

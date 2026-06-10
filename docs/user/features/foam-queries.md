@@ -188,7 +188,7 @@ format: count
 
 ## JavaScript Queries
 
-Use `foam-query-js` when YAML is not enough. JavaScript queries only run in a trusted workspace.
+Use `foam-query-js` when YAML is not enough. JavaScript queries only run in a [trusted workspace](https://code.visualstudio.com/docs/editor/workspace-trust). In a trusted workspace, a `foam-query-js` block runs with the same permissions as the rest of VS Code — it can read and write files, make network requests, and run any code your editor can. Treat blocks the same way you'd treat any script you'd download and run: only enable a trusted workspace for notes you author or trust.
 
 ````markdown
 ```foam-query-js
@@ -238,9 +238,9 @@ Call `render(...)` to show output in the preview. You can pass a query builder o
 
 ## Trust And Limitations
 
-- `foam-query-js` requires a trusted workspace
-- `jexl` filters run in any workspace — Jexl is sandboxed and has no access to host globals
-- Queries render in Markdown preview, not directly in the editor
-- Query results link back to the matching notes
+- `foam-query-js` requires a [trusted workspace](https://code.visualstudio.com/docs/editor/workspace-trust). In a trusted workspace it runs with full editor permissions — no internal sandbox. If you don't trust the source of your notes, keep the workspace untrusted.
+- `jexl` filters run in any workspace — Jexl is sandboxed by language design (no host globals, no file system, no network).
+- Queries render in Markdown preview, not directly in the editor.
+- Query results link back to the matching notes.
 
 [embeds]: embeds.md 'Note Embeds'

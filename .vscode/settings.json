@@ -24,5 +24,6 @@
   "search.mode": "reuseEditor",
   "[typescript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
-  }
+  },
+  "search.useGlobalIgnoreFiles": true
 }

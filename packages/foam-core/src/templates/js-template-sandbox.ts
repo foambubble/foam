@@ -5,23 +5,14 @@ import { Logger } from '../utils/log';
 import dayjs from 'dayjs';
 
 /**
- * Creates a sandbox environment for JavaScript template execution
- * This provides utility functions and safe globals for template functions
+ * Builds the globals and helpers exposed to a JavaScript template — the
+ * template-facing API surface (date/string utilities, a logging console, the
+ * `URI` type, etc.).
+ *
+ * This is NOT a security sandbox. 
  */
-export function createTemplateSandbox(context: TemplateContext) {
+export function createTemplateGlobals(context: TemplateContext) {
   return {
-    // Common JavaScript globals (safe subset)
-    Date,
-    Math,
-    Object,
-    Array,
-    String,
-    Number,
-    Boolean,
-    JSON,
-    RegExp,
-    Error,
-
     // Console for debugging (logs to Foam output channel)
     console: {
       log: (...args: any[]) =>
@@ -38,26 +29,3 @@ export function createTemplateSandbox(context: TemplateContext) {
     URI,
   };
 }
-
-/**
- * List of globals that should NOT be available in the template sandbox
- * for security reasons
- */
-export const BLOCKED_GLOBALS = [
-  'require',
-  'module',
-  'exports',
-  '__dirname',
-  '__filename',
-  'global',
-  'process',
-  'Buffer',
-  'setImmediate',
-  'clearImmediate',
-  'setInterval',
-  'clearInterval',
-  'setTimeout',
-  'clearTimeout',
-  'eval',
-  'Function',
-];

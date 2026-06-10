@@ -1,7 +1,7 @@
 import * as vm from 'vm';
 import { URI } from '../model/uri';
 import { CreateNoteFunction, TemplateContext } from './note-creation-types';
-import { createTemplateSandbox, BLOCKED_GLOBALS } from './js-template-sandbox';
+import { createTemplateGlobals } from './js-template-sandbox';
 import { Logger } from '../utils/log';
 
 /**
@@ -15,7 +15,11 @@ export class JSTemplateError extends Error {
 }
 
 /**
- * Loader for JavaScript template functions with secure VM execution
+ * Loader for JavaScript template functions.
+ *
+ * Execution uses Node's `vm` module. This is NOT a security sandbox — `vm` is
+ * not a security boundary, but provides a clean global namespace and 
+ * a wall-clock execution timeout that interrupts an accidental infinite loop. 
  */
 export class JSTemplateLoader {
   private static readonly EXECUTION_TIMEOUT = 10000; // 10 seconds
@@ -61,7 +65,9 @@ export class JSTemplateLoader {
 
   /**
    * Creates a note creation function from JavaScript code
-   *
+   * SECURITY: This is not a sandbox; this runs with full RCE potential and
+   * should only be called behind a trust gate (e.g. VS Code Workspace Trust).
+   * 
    * @param code The JavaScript code containing the createNote function
    * @param template Path for error reporting
    * @returns The createNote function
@@ -74,11 +80,9 @@ export class JSTemplateLoader {
       // Validate the code structure
       this.validateTemplateCode(code, template);
 
-      // Create the VM context with sandbox
-      const sandbox = this.createVMSandbox();
-      const context = vm.createContext(sandbox);
+      const context = vm.createContext({});
 
-      // Execute the template code in the sandbox
+      // Execute the template's top-level code to define `createNote`.
       const script = new vm.Script(code, {
         filename: template.toFsPath(),
         lineOffset: 0,
@@ -96,12 +100,11 @@ export class JSTemplateLoader {
         );
       }
 
-      // Wrap the function to inject the sandbox context
+      // Wrap the function so each invocation refreshes the injected globals
+      // with the current note context.
       return async (noteContext: TemplateContext) => {
         try {
-          // Update the sandbox with the current context
-          const contextSandbox = createTemplateSandbox(noteContext);
-          Object.assign(context, contextSandbox);
+          Object.assign(context, createTemplateGlobals(noteContext));
 
           // Execute the template function
           const result = await createNote(noteContext);
@@ -132,24 +135,11 @@ export class JSTemplateLoader {
   }
 
   /**
-   * Creates a secure VM sandbox with limited globals
-   */
-  private createVMSandbox() {
-    const sandbox: Record<string, any> = {};
-
-    // Block dangerous globals
-    BLOCKED_GLOBALS.forEach(globalName => {
-      sandbox[globalName] = undefined;
-    });
-
-    return sandbox;
-  }
-
-  /**
-   * Validates that the template code has the expected structure
+   * Checks that the template source defines a `createNote` function, so a
+   * common authoring mistake fails with a clear message before the code runs.
+   * This is a structural sanity check, not a security control.
    */
   private validateTemplateCode(code: string, template: URI): void {
-    // Check for createNote function
     if (
       !code.includes('function createNote') &&
       !code.includes('createNote =')
@@ -158,26 +148,6 @@ export class JSTemplateLoader {
         'Template must define a createNote function',
         template.path
       );
-    }
-
-    // Check for potentially dangerous patterns
-    const dangerousPatterns = [
-      /require\s*\(/,
-      /import\s+/,
-      /eval\s*\(/,
-      /Function\s*\(/,
-      /process\./,
-      /__dirname/,
-      /__filename/,
-    ];
-
-    for (const pattern of dangerousPatterns) {
-      if (pattern.test(code)) {
-        throw new JSTemplateError(
-          `Template contains potentially unsafe code: ${pattern.source}`,
-          template.path
-        );
-      }
     }
   }
 

@@ -16,26 +16,6 @@ import { RenderContext } from './render-context';
 
 const EXECUTION_TIMEOUT = 10_000;
 
-// Globals that must not be accessible in the query sandbox.
-const BLOCKED_GLOBALS = [
-  'require',
-  'module',
-  'exports',
-  '__dirname',
-  '__filename',
-  'global',
-  'process',
-  'Buffer',
-  'setImmediate',
-  'clearImmediate',
-  'setInterval',
-  'clearInterval',
-  'setTimeout',
-  'clearTimeout',
-  'eval',
-  'Function',
-];
-
 const JS_PLACEHOLDER = `<div class="foam-query-placeholder">
 <p>Use <code>\`\`\`foam-query-js</code> blocks to write a script to query notes. For example:</p>
 <pre>\`\`\`foam-query-js
@@ -110,21 +90,12 @@ export function renderJsQuery(
     }
   };
 
-  const sandbox: Record<string, unknown> = {};
-  BLOCKED_GLOBALS.forEach(g => {
-    sandbox[g] = undefined;
-  });
-  Object.assign(sandbox, {
-    Date,
-    Math,
-    Object,
-    Array,
-    String,
-    Number,
-    Boolean,
-    JSON,
-    RegExp,
-    Error,
+  // Globals and helpers exposed to the query script. This is the query API
+  // surface, NOT a security sandbox — see the runInContext note below.
+  // Only non-native values are injected: the ECMAScript built-ins (Object,
+  // Array, Date, JSON, ...) already exist in every vm realm, and injecting host
+  // copies would break in-context `instanceof`.
+  const sandbox: Record<string, unknown> = {
     console: {
       log: (...args: unknown[]) =>
         Logger.info(`[foam-query-js] ${args[0]}`, ...args.slice(1)),
@@ -148,7 +119,7 @@ export function renderJsQuery(
         ),
       current: null as URI | null,
     },
-  });
+  };
 
   try {
     const context = vm.createContext(sandbox);
@@ -164,6 +135,9 @@ export function renderJsQuery(
         )}, path: ${JSON.stringify(currentResource.path)} });`
       ).runInContext(context);
     }
+    // SECURITY: `vm` is not a sandbox; this runs user code with full RCE
+    // potential. The `if (!trusted)` guard at the top of this function is the
+    // only boundary — this must never be reached for an untrusted workspace.
     new vm.Script(code).runInContext(context, { timeout: EXECUTION_TIMEOUT });
   } catch (e) {
     return `<div class="foam-query-error">Script error: ${escapeHtml(

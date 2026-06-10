@@ -132,23 +132,26 @@ export default async function activate(
         const vsCodeMarkdownSetting = vscode.workspace
           .getConfiguration('markdown')
           .get<string>('updateLinksOnFileMove.enabled', 'never');
+        void context.globalState.update(MARKDOWN_LINK_NOTIFICATION_KEY, true);
         if (vsCodeMarkdownSetting === 'never') {
-          const choice = await vscode.window.showInformationMessage(
-            "Foam updated your wikilinks. To also update standard markdown links on rename, enable VS Code's built-in setting.",
-            'Enable',
-            'Dismiss'
-          );
-          if (choice === 'Enable') {
-            await vscode.workspace
-              .getConfiguration('markdown')
-              .update(
-                'updateLinksOnFileMove.enabled',
-                'always',
-                vscode.ConfigurationTarget.Global
-              );
-          }
+          void vscode.window
+            .showInformationMessage(
+              "Foam updated your wikilinks. To also update standard markdown links on rename, enable VS Code's built-in setting.",
+              'Enable',
+              'Dismiss'
+            )
+            .then(choice => {
+              if (choice === 'Enable') {
+                return vscode.workspace
+                  .getConfiguration('markdown')
+                  .update(
+                    'updateLinksOnFileMove.enabled',
+                    'always',
+                    vscode.ConfigurationTarget.Global
+                  );
+              }
+            });
         }
-        await context.globalState.update(MARKDOWN_LINK_NOTIFICATION_KEY, true);
       }
     }),
 

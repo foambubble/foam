@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.43.1
+
+### Patch Changes
+
+- Fix `Checking for Markdown links to update` running on every Markdown file edit by no longer blocking the event handler on the user notification ([#1666](https://github.com/foambubble/foam/issues/1666)).
+
 ## 0.43.0
 
 ### Minor Changes

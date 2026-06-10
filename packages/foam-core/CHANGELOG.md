@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.43.1
+
+### Patch Changes
+
+- `foam-query` HTML output now escapes single quotes in addition to the other HTML metacharacters, preventing attribute-value injection from note content.
+
 ## 0.43.0
 
 ### Minor Changes

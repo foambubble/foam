@@ -1,6 +1,10 @@
 import * as vscode from 'vscode';
 import { Foam, listPlaceholders } from '@foam/core';
-import { createMatcherAndDataStore } from '../../services/editor';
+import {
+  createMatcherAndDataStore,
+  getActiveTabUri,
+  onDidChangeActiveTab,
+} from '../../services/editor';
 import {
   GroupedResourcesConfig,
   GroupedResourcesTreeDataProvider,
@@ -12,7 +16,7 @@ import {
   groupRangesByResource,
 } from '../../utils/tree-views/tree-view-utils';
 import { IMatcher } from '@foam/core';
-import { ContextMemento, fromVsCodeUri } from '../../utils/vsc-utils';
+import { ContextMemento } from '../../utils/vsc-utils';
 import { FoamGraph } from '@foam/core';
 import { URI } from '@foam/core';
 import { FoamWorkspace } from '@foam/core';
@@ -70,7 +74,7 @@ export default async function activate(
             node.contextValue === 'folder'
         )
     ),
-    vscode.window.onDidChangeActiveTextEditor(() => {
+    onDidChangeActiveTab(() => {
       if (provider.show.get() === 'for-current-file') {
         provider.refresh();
       }
@@ -133,10 +137,10 @@ export class PlaceholderTreeView extends GroupedResourcesTreeDataProvider {
 
   getUris(): URI[] {
     if (this.show.get() === 'for-current-file') {
-      const currentFile = vscode.window.activeTextEditor?.document.uri;
+      const currentFile = getActiveTabUri(this.workspace);
       return currentFile
         ? this.graph
-            .getLinks(fromVsCodeUri(currentFile))
+            .getLinks(currentFile)
             .map(link => link.target)
             .filter(uri => uri.isPlaceholder())
         : [];

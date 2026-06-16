@@ -8,7 +8,11 @@ import {
 } from '../../utils/tree-views/tree-view-utils';
 import { Resource } from '@foam/core';
 import { FoamGraph } from '@foam/core';
-import { ContextMemento } from '../../utils/vsc-utils';
+import { ContextMemento, toVsCodeUri } from '../../utils/vsc-utils';
+import {
+  getActiveTabUri,
+  onDidChangeActiveTab,
+} from '../../services/editor';
 import {
   Folder,
   FolderTreeItem,
@@ -34,11 +38,11 @@ export default async function activate(
       canSelectMany: true,
     }
   );
-  const revealTextEditorItem = async () => {
-    const target = vscode.window.activeTextEditor?.document.uri;
+  const revealActiveNoteItem = async () => {
+    const target = getActiveTabUri(foam.workspace);
     if (treeView.visible) {
       if (target) {
-        const item = await findTreeItemByUri(provider, target);
+        const item = await findTreeItemByUri(provider, toVsCodeUri(target));
         // Check if the item is already selected.
         // This check is needed because always calling reveal() will
         // cause the tree view to take the focus from the item when
@@ -135,8 +139,8 @@ export default async function activate(
       `foam-vscode.views.notes-explorer.clear-filter`,
       () => applyFilter('')
     ),
-    vscode.window.onDidChangeActiveTextEditor(revealTextEditorItem),
-    treeView.onDidChangeVisibility(revealTextEditorItem)
+    onDidChangeActiveTab(revealActiveNoteItem),
+    treeView.onDidChangeVisibility(revealActiveNoteItem)
   );
 }
 

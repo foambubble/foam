@@ -1,6 +1,6 @@
 import { ExtensionContext, commands, window } from 'vscode';
 import { Foam } from '@foam/core';
-import { focusNote } from '../../services/editor';
+import { focusNote, getActiveTabUri } from '../../services/editor';
 import { getTelemetry } from '../../services/telemetry';
 
 export default async function activate(
@@ -11,7 +11,7 @@ export default async function activate(
     commands.registerCommand('foam-vscode.open-random-note', async () => {
       getTelemetry()?.trackCommand('foam-vscode.open-random-note');
       const foam = await foamPromise;
-      const currentFile = window.activeTextEditor?.document.uri.path;
+      const currentFile = getActiveTabUri(foam.workspace)?.path;
       const notes = foam.workspace.list().filter(r => r.uri.isMarkdown());
       if (notes.length <= 1) {
         window.showInformationMessage(

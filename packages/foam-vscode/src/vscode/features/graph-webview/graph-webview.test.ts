@@ -1,16 +1,17 @@
 import * as vscode from 'vscode';
 import { URI } from '@foam/core';
 import { FoamWorkspace } from '@foam/core';
+import { createTestNote, createTestWorkspace } from '../../../test/test-utils';
 import {
   getGraphStyle,
   getNodeNavigationCommand,
-  handleActiveEditorChange,
+  handleActiveResourceChange,
   mergeStyles,
   viewConfigToStyle,
   resolveViewStyle,
 } from '.';
 
-describe('handleActiveEditorChange', () => {
+describe('handleActiveResourceChange', () => {
   const makePanel = () =>
     ({
       webview: { postMessage: vi.fn() },
@@ -20,19 +21,16 @@ describe('handleActiveEditorChange', () => {
 
   it('does not throw when panel is undefined', () => {
     const foam = { workspace: makeWorkspace() } as any;
-    const editor = {
-      document: { uri: vscode.Uri.file('/some/note.md') },
-    } as vscode.TextEditor;
     expect(() =>
-      handleActiveEditorChange(undefined, foam, editor)
+      handleActiveResourceChange(undefined, foam, URI.file('/some/note.md'))
     ).not.toThrow();
   });
 
-  it('does not throw when editor is undefined', () => {
+  it('does not throw when uri is undefined', () => {
     const panel = makePanel();
     const foam = { workspace: makeWorkspace() } as any;
     expect(() =>
-      handleActiveEditorChange(panel, foam, undefined)
+      handleActiveResourceChange(panel, foam, undefined)
     ).not.toThrow();
     expect(panel.webview.postMessage).not.toHaveBeenCalled();
   });
@@ -40,11 +38,31 @@ describe('handleActiveEditorChange', () => {
   it('does not post message for untitled documents', () => {
     const panel = makePanel();
     const foam = { workspace: makeWorkspace() } as any;
-    const editor = {
-      document: { uri: vscode.Uri.parse('untitled:untitled-1') },
-    } as vscode.TextEditor;
-    expect(() => handleActiveEditorChange(panel, foam, editor)).not.toThrow();
+    const uri = new URI({ scheme: 'untitled', path: 'untitled-1' });
+    expect(() => handleActiveResourceChange(panel, foam, uri)).not.toThrow();
     expect(panel.webview.postMessage).not.toHaveBeenCalled();
+  });
+
+  it('does not post message nor throw for files not in the workspace', () => {
+    const panel = makePanel();
+    const foam = { workspace: makeWorkspace() } as any;
+    expect(() =>
+      handleActiveResourceChange(panel, foam, URI.file('/not/a/note.json'))
+    ).not.toThrow();
+    expect(panel.webview.postMessage).not.toHaveBeenCalled();
+  });
+
+  it('posts a didSelectNote message for notes in the workspace', () => {
+    const panel = makePanel();
+    const ws = createTestWorkspace();
+    const note = createTestNote({ uri: '/notes/note-a.md' });
+    ws.set(note);
+    const foam = { workspace: ws } as any;
+    handleActiveResourceChange(panel, foam, note.uri);
+    expect(panel.webview.postMessage).toHaveBeenCalledWith({
+      type: 'didSelectNote',
+      payload: note.uri.path,
+    });
   });
 });
 

@@ -1,7 +1,8 @@
 import * as vscode from 'vscode';
 import { Foam } from '../../../core/model/foam';
-import { fromVsCodeUri, toVsCodeUri } from '../../utils/vsc-utils';
+import { toVsCodeUri } from '../../utils/vsc-utils';
 import { URI } from '@foam/core';
+import { getActiveTabUri } from '../../services/editor';
 import { BUILD_EMBEDDINGS_COMMAND } from './build-embeddings';
 
 export const SHOW_SIMILAR_NOTES_COMMAND = {
@@ -26,15 +27,11 @@ export default async function activate(
 }
 
 async function showSimilarNotes(foam: Foam): Promise<void> {
-  // Get the active editor
-  const editor = vscode.window.activeTextEditor;
-  if (!editor) {
+  const uri = getActiveTabUri(foam.workspace);
+  if (!uri) {
     vscode.window.showInformationMessage('Please open a note first');
     return;
   }
-
-  // Get the URI of the active document
-  const uri = fromVsCodeUri(editor.document.uri);
 
   // Check if the resource exists in workspace
   const resource = foam.workspace.find(uri);

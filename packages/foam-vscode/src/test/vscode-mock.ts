@@ -1748,6 +1748,17 @@ export const window = {
     return { dispose: () => {} };
   },
 
+  tabGroups: {
+    activeTabGroup: { activeTab: undefined as any, tabs: [] as any[] },
+    all: [] as any[],
+    onDidChangeTabs(_listener: (e: any) => any): Disposable {
+      return { dispose: () => {} };
+    },
+    onDidChangeTabGroups(_listener: (e: any) => any): Disposable {
+      return { dispose: () => {} };
+    },
+  },
+
   async showInputBox(options?: {
     value?: string;
     prompt?: string;

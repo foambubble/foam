@@ -15,11 +15,11 @@ import {
   FolderTreeProvider,
   walk,
 } from '../../utils/tree-views/folder-tree-provider';
+import { ContextMemento, MapBasedMemento } from '../../utils/vsc-utils';
 import {
-  ContextMemento,
-  MapBasedMemento,
-  fromVsCodeUri,
-} from '../../utils/vsc-utils';
+  getActiveTabUri,
+  onDidChangeActiveTab,
+} from '../../services/editor';
 
 const TAG_SEPARATOR = '/';
 export default async function activate(
@@ -41,7 +41,7 @@ export default async function activate(
       provider.refresh();
       treeView.title = baseTitle + ` (${foam.tags.tags.size})`;
     }),
-    vscode.window.onDidChangeActiveTextEditor(() => {
+    onDidChangeActiveTab(() => {
       if (provider.show.get() === 'for-current-file') {
         provider.refresh();
       }
@@ -167,8 +167,10 @@ export class TagsProvider extends FolderTreeProvider<TagTreeItem, string> {
 
   getValues(): string[] {
     if (this.show.get() === 'for-current-file') {
-      const uriInEditor = vscode.window.activeTextEditor?.document.uri;
-      const currentResource = this.workspace.find(fromVsCodeUri(uriInEditor));
+      const currentFile = getActiveTabUri(this.workspace);
+      const currentResource = currentFile
+        ? this.workspace.find(currentFile)
+        : null;
       return currentResource?.tags.map(t => t.label) ?? [];
     }
     return Array.from(this.tags.values()).map(tag => tag.tag);

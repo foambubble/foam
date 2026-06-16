@@ -1,5 +1,6 @@
 import { isEmpty } from 'lodash';
 import {
+  Disposable,
   EndOfLine,
   FileType,
   RelativePattern,
@@ -17,7 +18,7 @@ import {
 import { getExcerpt, stripFrontMatter, stripImages } from '@foam/core';
 import { isSome } from '@foam/core';
 import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
-import { asAbsoluteUri, URI } from '@foam/core';
+import { asAbsoluteUri, FoamWorkspace, URI } from '@foam/core';
 import { getFoamVsCodeConfig } from '../config';
 import {
   AlwaysIncludeMatcher,
@@ -62,6 +63,129 @@ export const getFoamDocSelectors = () =>
       { language: lang, scheme: 'untitled' }, // Untitled files
     ]
   );
+
+/**
+ * Resolves the URI of the currently active tab, falling back to the active text
+ * editor. Supports custom editors and notebooks, whose
+ * tab inputs carry a URI but do not surface as text editors.
+ *
+ * Webview panel tabs  carry no URI at all —
+ * the only signal is the tab label, which conventionally contains the file's
+ * basename, possibly with a prefix (e.g. "Preview note-a.md").
+ * When a workspace is provided, the label (and its space-delimited suffixes
+ * that look like a file name) is resolved like a wikilink identifier.
+ *
+ * Returns `undefined` when the active tab cannot be mapped to a file (settings
+ * page, terminal, unrecognized webview, ...). 
+ *
+ * Exported separately from `getActiveTabUri()` so it can be unit-tested without
+ * mocking the `tabGroups` namespace.
+ */
+export function pickTabUri(
+  tab: { input?: unknown; label?: string } | undefined,
+  editor: { activeUri?: Uri; visibleUris?: Uri[] } | undefined,
+  fWorkspace?: FoamWorkspace
+): URI | undefined {
+  const input = tab?.input;
+  if (
+    input &&
+    typeof input === 'object' &&
+    'uri' in input &&
+    input.uri != null
+  ) {
+    return fromVsCodeUri(input.uri as Uri);
+  }
+  if (fWorkspace && tab?.label) {
+    for (const candidate of labelToFileNameCandidates(tab.label)) {
+      const resource = fWorkspace.find(candidate);
+      if (resource) {
+        return resource.uri;
+      }
+    }
+  }
+  if (isBuiltinMarkdownPreview(input) && editor?.visibleUris?.length) {
+    const sole = soleMarkdownUri(editor.visibleUris);
+    if (sole) {
+      return fromVsCodeUri(sole);
+    }
+  }
+  return editor?.activeUri ? fromVsCodeUri(editor.activeUri) : undefined;
+}
+
+function isBuiltinMarkdownPreview(input: unknown): boolean {
+  return (
+    !!input &&
+    typeof input === 'object' &&
+    'viewType' in input &&
+    typeof input.viewType === 'string' &&
+    input.viewType.endsWith('markdown.preview')
+  );
+}
+
+function soleMarkdownUri(uris: Uri[]): Uri | undefined {
+  const markdown = uris.filter(u => u.path.endsWith('.md'));
+  return markdown.length === 1 ? markdown[0] : undefined;
+}
+
+/**
+ * Returns the parts of a tab label worth resolving as a file name: the full
+ * label first  then progressively shorter space-delimited suffixes — longest (most
+ * specific) first, so "Preview my note.md" matches `my note.md` before
+ * `note.md`. Suffixes must end with an extension to avoid retargeting on
+ * arbitrary webview titles (e.g. "Foam Graph" must not match `Graph.md`).
+ */
+function labelToFileNameCandidates(label: string): string[] {
+  const words = label.split(' ');
+  const candidates = [label];
+  for (let i = 1; i < words.length; i++) {
+    const candidate = words.slice(i).join(' ');
+    if (/\.\w+$/.test(candidate)) {
+      candidates.push(candidate);
+    }
+  }
+  return candidates;
+}
+
+/**
+ * Returns the URI of the file shown in the currently active tab, regardless of
+ * whether it's opened in a text editor, a custom editor, a notebook, or a
+ * webview panel whose label matches a note in the given workspace.
+ * Returns `undefined` if the active tab cannot be mapped to a file.
+ */
+export function getActiveTabUri(fWorkspace?: FoamWorkspace): URI | undefined {
+  return pickTabUri(
+    window.tabGroups?.activeTabGroup?.activeTab,
+    {
+      activeUri: window.activeTextEditor?.document.uri,
+      visibleUris: window.visibleTextEditors?.map(e => e.document.uri),
+    },
+    fWorkspace
+  );
+}
+
+/**
+ * Registers a listener invoked whenever the active tab may have changed:
+ * the active text editor changed, a tab changed within a group (switching
+ * tabs, including custom editors and webviews), or the focused tab group
+ * changed (switching between split editor groups — which does not fire
+ * `onDidChangeTabs`). Use together with `getActiveTabUri()` to track the
+ * note the user is currently on.
+ *
+ * The listener may fire multiple times per user interaction (opening a file
+ * typically fires both `onDidChangeActiveTextEditor` and `onDidChangeTabs`). 
+ * Dedupe is delegated to consumers to avoid unnecessary complexity 
+ * and overhead when it's not needed.
+ */
+export function onDidChangeActiveTab(listener: () => void): Disposable {
+  const subscriptions = [
+    window.onDidChangeActiveTextEditor(() => listener()),
+    window.tabGroups.onDidChangeTabs(() => listener()),
+    window.tabGroups.onDidChangeTabGroups(() => listener()),
+  ];
+  return {
+    dispose: () => subscriptions.forEach(s => s.dispose()),
+  };
+}
 
 // Check if the editor's document is a supported language
 export function isMdEditor(editor: TextEditor): boolean {

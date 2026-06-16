@@ -4,7 +4,7 @@ import { Foam } from '@foam/core';
 import { FoamWorkspace } from '@foam/core';
 import { Connection, FoamGraph } from '@foam/core';
 import { Range } from '@foam/core';
-import { ContextMemento, fromVsCodeUri } from '../../utils/vsc-utils';
+import { ContextMemento } from '../../utils/vsc-utils';
 import {
   BaseTreeItem,
   ResourceRangeTreeItem,
@@ -14,7 +14,11 @@ import {
 } from '../../utils/tree-views/tree-view-utils';
 import { BaseTreeProvider } from '../../utils/tree-views/base-tree-provider';
 import { isNone } from '@foam/core';
-import { getWorkspaceDefaultScheme } from '../../services/editor';
+import {
+  getActiveTabUri,
+  getWorkspaceDefaultScheme,
+  onDidChangeActiveTab,
+} from '../../services/editor';
 
 export default async function activate(
   context: vscode.ExtensionContext,
@@ -32,20 +36,25 @@ export default async function activate(
     showCollapseAll: true,
   });
 
-  const updateTreeView = async () => {
-    provider.target = vscode.window.activeTextEditor
-      ? fromVsCodeUri(vscode.window.activeTextEditor?.document.uri)
-      : undefined;
+  const onActiveTabChanged = async () => {
+    const next = getActiveTabUri(foam.workspace);
+    if (next === undefined) {
+      return;
+    }
+    if (provider.target?.toString() === next.toString()) {
+      return;
+    }
+    provider.target = next;
     await provider.refresh();
   };
 
-  updateTreeView();
+  onActiveTabChanged();
 
   context.subscriptions.push(
     provider,
     treeView,
-    foam.graph.onDidUpdate(() => updateTreeView()),
-    vscode.window.onDidChangeActiveTextEditor(() => updateTreeView()),
+    foam.graph.onDidUpdate(() => provider.refresh()),
+    onDidChangeActiveTab(() => onActiveTabChanged()),
     provider.onDidChangeTreeData(() => {
       treeView.title = ` ${provider.show.get()} (${provider.nValues})`;
     })

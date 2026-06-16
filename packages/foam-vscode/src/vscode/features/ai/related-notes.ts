@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { Foam } from '../../../core/model/foam';
 import { FoamWorkspace } from '@foam/core';
 import { URI } from '@foam/core';
-import { fromVsCodeUri } from '../../utils/vsc-utils';
+import { getActiveTabUri, onDidChangeActiveTab } from '../../services/editor';
 import { BaseTreeProvider } from '../../utils/tree-views/base-tree-provider';
 import { ResourceTreeItem } from '../../utils/tree-views/tree-view-utils';
 import { FoamEmbeddings } from '../../../ai/model/embeddings';
@@ -24,11 +24,7 @@ export default async function activate(
     showCollapseAll: false,
   });
 
-  const updateTreeView = async () => {
-    const activeEditor = vscode.window.activeTextEditor;
-    provider.target = activeEditor
-      ? fromVsCodeUri(activeEditor.document.uri)
-      : undefined;
+  const refreshView = async () => {
     await provider.refresh();
 
     // Update context for conditional viewsWelcome messages
@@ -39,13 +35,26 @@ export default async function activate(
     );
   };
 
-  updateTreeView();
+  const onActiveTabChanged = async () => {
+    const next = getActiveTabUri(foam.workspace);
+    if (next === undefined) {
+      return;
+    }
+    if (provider.target?.toString() === next.toString()) {
+      return;
+    }
+    provider.target = next;
+    await refreshView();
+  };
+
+  provider.target = getActiveTabUri(foam.workspace);
+  refreshView();
 
   context.subscriptions.push(
     provider,
     treeView,
-    foam.embeddings.onDidUpdate(() => updateTreeView()),
-    vscode.window.onDidChangeActiveTextEditor(() => updateTreeView()),
+    foam.embeddings.onDidUpdate(() => refreshView()),
+    onDidChangeActiveTab(() => onActiveTabChanged()),
     provider.onDidChangeTreeData(() => {
       treeView.title = `Related Notes (${provider.nValues})`;
     })

@@ -1,9 +1,10 @@
 import * as vscode from 'vscode';
-import { Foam } from '@foam/core';
+import { Foam, URI } from '@foam/core';
 import { Logger } from '@foam/core';
 import { fromVsCodeUri } from '../../utils/vsc-utils';
 import { isSome } from '@foam/core';
 import { getFoamVsCodeConfig } from '../../config';
+import { getActiveTabUri, onDidChangeActiveTab } from '../../services/editor';
 import { buildGraphData } from '@foam/core';
 import { getTelemetry } from '../../services/telemetry';
 import type {
@@ -34,8 +35,8 @@ export default async function activate(
       updateGraph(p, foam);
     };
     const noteUpdatedListener = foam.graph.onDidUpdate(onFoamChanged);
-    const editorListener = vscode.window.onDidChangeActiveTextEditor(e => {
-      handleActiveEditorChange(p, foam, e);
+    const editorListener = onDidChangeActiveTab(() => {
+      handleActiveResourceChange(p, foam, getActiveTabUri(foam.workspace));
     });
     p.onDidDispose(() => {
       noteUpdatedListener.dispose();
@@ -295,13 +296,13 @@ export function resolveViewStyle(args?: ShowGraphArgs): {
   return { style, view: args?.view };
 }
 
-export function handleActiveEditorChange(
+export function handleActiveResourceChange(
   panel: vscode.WebviewPanel | undefined,
   foam: Foam,
-  e: vscode.TextEditor | undefined
+  uri: URI | undefined
 ) {
-  if (panel && e?.document?.uri && e.document.uri.scheme !== 'untitled') {
-    const note = foam.workspace.get(fromVsCodeUri(e.document.uri));
+  if (panel && uri && uri.scheme !== 'untitled') {
+    const note = foam.workspace.find(uri);
     if (isSome(note)) {
       panel.webview.postMessage({
         type: 'didSelectNote',

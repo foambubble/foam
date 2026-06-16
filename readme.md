@@ -27,7 +27,7 @@ You can use **Foam** for organising your research, keeping re-discoverable notes
 
 ### Graph Visualization
 
-See how your notes are connected via a [graph](https://docs.foamnotes.com/features/graph-view/) with the `Foam: Show Graph` command.
+See how your notes are connected via a [graph](https://docs.foam.md/features/graph-view/) with the `Foam: Show Graph` command.
 
 ![Graph Visualization](./assets/screenshots/feature-show-graph.gif)
 
@@ -85,7 +85,7 @@ Foam supports link aliasing, so you can have a `[[wikilink]]`, or a `[[wikilink|
 
 ### Templates
 
-Use [custom templates](https://docs.foamnotes.com/features/templates/) to have avoid repetitve work on your notes.
+Use [custom templates](https://docs.foam.md/features/templates/) to have avoid repetitve work on your notes.
 
 ![Templates](./assets/screenshots/feature-templates.gif)
 
@@ -98,7 +98,7 @@ See for each occurrence the context in which it lives, as well as a preview of t
 
 ### Tag Explorer Panel
 
-Tag your notes and navigate them with the [Tag Explorer](https://docs.foamnotes.com/features/tags/).
+Tag your notes and navigate them with the [Tag Explorer](https://docs.foam.md/features/tags/).
 Foam also supports hierarchical tags.
 
 ![Tag Explorer Panel](./assets/screenshots/feature-tags-panel.gif)
@@ -119,13 +119,13 @@ Foam highlights wikilinks and placeholder differently, to help you visualize you
 
 ### Daily note
 
-Create a journal with [daily notes](https://docs.foamnotes.com/features/daily-notes/).
+Create a journal with [daily notes](https://docs.foam.md/features/daily-notes/).
 
 ![Daily Note](./assets/screenshots/feature-daily-note.gif)
 
 ### Generate references for your wikilinks
 
-Create markdown [references](https://docs.foamnotes.com/features/link-reference-definitions/) for `[[wikilinks]]`, to use your notes in a non-Foam workspace.
+Create markdown [references](https://docs.foam.md/features/link-reference-definitions/) for `[[wikilinks]]`, to use your notes in a non-Foam workspace.
 With references you can also make your notes navigable both in GitHub UI as well as GitHub Pages.
 
 ![Generate references](./assets/screenshots/feature-definitions-generation.gif)
@@ -135,16 +135,16 @@ With references you can also make your notes navigable both in GitHub UI as well
 - Explore your knowledge base with the `Foam: Open Random Note` command
 - Access your daily note with the `Foam: Open Daily Note` command
 - Create a new note with the `Foam: Create New Note` command
-  - This becomes very powerful when combined with [note templates](https://docs.foamnotes.com/features/templates/) and the `Foam: Create New Note from Template` command
+  - This becomes very powerful when combined with [note templates](https://docs.foam.md/features/templates/) and the `Foam: Create New Note from Template` command
 - See your workspace as a connected graph with the `Foam: Show Graph` command
 
 ## Recipes
 
-People use Foam in different ways for different use cases, check out the [recipes](https://docs.foamnotes.com/recipes/recipes/) page for inspiration!
+People use Foam in different ways for different use cases, check out the [recipes](https://docs.foam.md/recipes/recipes/) page for inspiration!
 
 ## Getting started
 
-> Already using Obsidian? An Obsidian vault is usually already a Foam workspace — see [Coming from Obsidian](https://docs.foamnotes.com/recipes/migrating-from-obsidian/).
+> Already using Obsidian? An Obsidian vault is usually already a Foam workspace — see [Coming from Obsidian](https://docs.foam.md/recipes/migrating-from-obsidian/).
 
 Whether you want to build a [Second Brain](https://www.buildingasecondbrain.com/) or a [Zettelkasten](https://zettelkasten.de/posts/overview/), write a book, or just get better at long-term learning, **Foam** can help you organise your thoughts if you follow these simple rules:
 
@@ -178,15 +178,15 @@ See the [CHANGELOG](./packages/foam-vscode/CHANGELOG.md).
 
 ## Learn more
 
-**Head over to the 👉[Foam documentation site](https://foamnotes.com)** to see Foam in action and read the rest of the documentation!
+**Head over to the 👉[Foam documentation site](https://foam.md)** to see Foam in action and read the rest of the documentation!
 
 Quick links to next documentation sections
 
-- [Foam homepage](https://foamnotes.com)
-- [Getting started](https://docs.foamnotes.com/getting-started/installation/)
-- [Features](https://docs.foamnotes.com/#features)
-- [Recipes](https://docs.foamnotes.com/recipes/recipes/)
-- [Frequently Asked Questions](https://docs.foamnotes.com/frequently-asked-questions/)
+- [Foam homepage](https://foam.md)
+- [Getting started](https://docs.foam.md/getting-started/installation/)
+- [Features](https://docs.foam.md/#features)
+- [Recipes](https://docs.foam.md/recipes/recipes/)
+- [Frequently Asked Questions](https://docs.foam.md/frequently-asked-questions/)
 
 You can also browse the [docs folder](https://github.com/foambubble/foam/tree/main/docs).
 

@@ -1,6 +1,6 @@
 # @foam/graph-view
 
-Graph visualization web component for [Foam](https://foamnotes.com), built with [Lit](https://lit.dev) and [force-graph](https://github.com/vasturiano/force-graph).
+Graph visualization web component for [Foam](https://foam.md), built with [Lit](https://lit.dev) and [force-graph](https://github.com/vasturiano/force-graph).
 
 Bundled for use inside the Foam VS Code extension webview.
 

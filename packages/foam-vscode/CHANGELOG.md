@@ -1278,18 +1278,18 @@ New experimental features:
 
 Fixes and improvements:
 
-- Fix [Daily Notes](https://docs.foamnotes.com/features/daily-notes/) command on Windows.
+- Fix [Daily Notes](https://docs.foam.md/features/daily-notes/) command on Windows.
 
 ## [0.3.0] - 2020-07-25
 
 Features:
 
-- [Daily Notes](https://docs.foamnotes.com/features/daily-notes/)
-- [Janitor](https://docs.foamnotes.com/tools/workspace-janitor/) for updating headings and link references across your workspace
+- [Daily Notes](https://docs.foam.md/features/daily-notes/)
+- [Janitor](https://docs.foam.md/tools/workspace-janitor/) for updating headings and link references across your workspace
 
 Fixes and improvements:
 
-- [Configuration setting for generating link reference definitions with file extension](https://docs.foamnotes.com/features/link-reference-definitions/#enabling-reference-definitions) to support standard markdown tools, such as GitHub web UI
+- [Configuration setting for generating link reference definitions with file extension](https://docs.foam.md/features/link-reference-definitions/#enabling-reference-definitions) to support standard markdown tools, such as GitHub web UI
 - [Improvements to how new notes are indexed](https://github.com/foambubble/foam/pull/156)
 
 ## [0.2.0] - 2020-07-12

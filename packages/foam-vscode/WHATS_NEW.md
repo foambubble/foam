@@ -13,7 +13,7 @@ npm install -g foam-cli
 foam <command> [options]
 ```
 
-[Learn more about the command-line interface](https://docs.foamnotes.com/tools/cli/)
+[Learn more about the command-line interface](https://docs.foam.md/tools/cli/)
 
 ## Graph revamp
 
@@ -23,13 +23,13 @@ The graph view has been significantly improved:
 - **Node groups** let you visually cluster notes in a flexible way
 - Added **Graph Views**
 
-[Learn more about the graph view](https://docs.foamnotes.com/features/graph-view/)
+[Learn more about the graph view](https://docs.foam.md/features/graph-view/)
 
 ## Block references
 
 In case you missed it, some time ago we added full support for referencing and embedding blocks in the editor and the preview.
 
-[Learn more about blocks](https://docs.foamnotes.com/features/block-anchors/)
+[Learn more about blocks](https://docs.foam.md/features/block-anchors/)
 
 ## Foam Queries
 
@@ -45,13 +45,13 @@ select: [title, path]
 
 Results render inline as a linked list of matching notes. The query updates automatically as your notes change.
 
-[Learn more about Foam Queries](https://docs.foamnotes.com/features/foam-queries/)
+[Learn more about Foam Queries](https://docs.foam.md/features/foam-queries/)
 
 ## Footnotes
 
 Foam now supports footnotes with proper rendering and navigation in editor and the Markdown preview.
 
-[Learn more about footnotes](https://docs.foamnotes.com/features/footnotes/)
+[Learn more about footnotes](https://docs.foam.md/features/footnotes/)
 
 ## Notes Explorer filtering
 

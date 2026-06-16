@@ -392,7 +392,7 @@ const props = Astro.props as Props;
 <Default {...props} />
 
 <div class="foam-powered-by">
-  Published with <a href="https://foamnotes.com">Foam</a>
+  Published with <a href="https://foam.md">Foam</a>
 </div>
 
 <style>

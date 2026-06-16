@@ -166,7 +166,7 @@ export const TELEMETRY_FIRST_RUN_NOTICE = `Foam collects anonymous usage data to
 commands the user runs, how long they take, and the bucketed size of
 the workspace (e.g. "201-500 notes", never the actual count). Foam
 never collects note content, file names, paths, or anything that could
-identify the user. See https://docs.foamnotes.com/user/tools/telemetry
+identify the user. See https://docs.foam.md/user/tools/telemetry
 for full details.
 
 Telemetry is on by default. It can be disabled now (n), left

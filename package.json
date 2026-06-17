@@ -17,7 +17,7 @@
     "release-extension": "yarn workspace foam-vscode release",
     "release-cli": "yarn workspace @foam/cli release",
     "release-core": "yarn workspace @foam/core release",
-    "release": "yarn release-core && yarn release-cli && yarn release-extension && yarn tag-release",
+    "release": "npm login && yarn release-core && yarn release-cli && yarn release-extension && yarn tag-release",
     "publish:docs-site": "yarn build && node packages/foam-cli/out/index.js publish ./docs --out ./.tmp/foam-docs-site --title \"Foam\" --description \"Using Foam\" --content-root user --site-url https://docs.foam.md",
     "reset": "yarn && yarn clean && yarn build",
     "clean": "lerna run clean",

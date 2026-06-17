@@ -104,7 +104,7 @@ You can disable VS Code's telemetry — and therefore everything Foam sends from
 | `vscode.session-with-note`    | First markdown file opened in a session     | none                                                                                                                                                                                       |
 | `vscode.command`              | Every Foam command invocation               | `command` (identifier only — no arguments)                                                                                                                                                 |
 | `vscode.config-snapshot`      | Once per session                            | selected enum/boolean settings — e.g. `graph.onStartup`, `completion.linkFormat`, `links.hover.enable`, `graph.viewsConfigured` (count, not names). Free-text settings are never included. |
-| `vscode.workspace-stats`      | Once per session                            | `noteCount` and `attachmentCount` (both bucketed), `hasTemplates`, `hasDailyNoteTemplate`                                                                                                  |
+| `vscode.workspace-stats`      | Once per session                            | `noteCount` and `attachmentCount` (both bucketed), `numTemplates` (count of files in the templates folder), `hasDailyNoteTemplate`                                                          |
 | `vscode.error`                | An unhandled error in a Foam feature        | `context` (feature name), `errorType` (error class name only — no message, no stack)                                                                                                       |
 
 ### CLI events (`cli.*`)

@@ -15,10 +15,7 @@ import VsCodeBasedParserCache from './vscode/services/cache';
 import { createMatcherAndDataStore } from './vscode/services/editor';
 import { OllamaEmbeddingProvider } from './ai/providers/ollama/ollama-provider';
 import { initTelemetry } from './vscode/services/telemetry';
-import {
-  getDailyNoteTemplateUri,
-  getDefaultTemplateUri,
-} from './vscode/services/template-service';
+import { getDailyNoteTemplateUri } from './vscode/services/template-service';
 
 // Injected by esbuild's `define` (and the vitest config), so telemetry can
 // attach version dimensions without a runtime package.json read
@@ -31,15 +28,14 @@ export async function activate(context: ExtensionContext) {
   exposeLogger(context, logger);
 
   Config.setDefaultConfig(new VsCodeFoamConfig());
-
-  const telemetry = initTelemetry({
-    foamVersion: __FOAM_VSCODE_VERSION__,
-    coreVersion: __CORE_VERSION__,
-  });
-  context.subscriptions.push(telemetry);
-  telemetry.trackSession();
-
   try {
+    const telemetry = initTelemetry({
+      foamVersion: __FOAM_VSCODE_VERSION__,
+      coreVersion: __CORE_VERSION__,
+    });
+    context.subscriptions.push(telemetry);
+    telemetry.trackSession();
+
     Logger.info('Starting Foam');
 
     if (workspace.workspaceFolders === undefined) {
@@ -79,8 +75,7 @@ export async function activate(context: ExtensionContext) {
     const defaultExtension = Config.getDefaultNoteExtension();
 
     const workspaceRoots =
-      workspace.workspaceFolders?.map(folder => fromVsCodeUri(folder.uri)) ??
-      [];
+      workspace.workspaceFolders?.map(folder => fromVsCodeUri(folder.uri)) ?? [];
 
     const directoryMode = Config.getLinksDirectoryMode();
     const markdownProvider = new MarkdownResourceProvider(
@@ -91,15 +86,11 @@ export async function activate(context: ExtensionContext) {
     );
 
     const attachmentExtConfig = Config.getAttachmentExtensions();
-    const attachmentProvider = new AttachmentResourceProvider(
-      attachmentExtConfig
-    );
+    const attachmentProvider = new AttachmentResourceProvider(attachmentExtConfig);
 
     // Initialize embedding provider
     const aiEnabled = workspace.getConfiguration('foam.experimental').get('ai');
-    const embeddingProvider = aiEnabled
-      ? new OllamaEmbeddingProvider()
-      : undefined;
+    const embeddingProvider = aiEnabled ? new OllamaEmbeddingProvider() : undefined;
 
     const foamPromise = bootstrap(
       workspaceRoots,
@@ -113,9 +104,7 @@ export async function activate(context: ExtensionContext) {
     );
 
     // Load the features
-    const featuresPromises = features.map(feature =>
-      feature(context, foamPromise)
-    );
+    const featuresPromises = features.map(feature => feature(context, foamPromise));
 
     const foam = await foamPromise;
     const resources = foam.workspace.list();
@@ -125,26 +114,17 @@ export async function activate(context: ExtensionContext) {
     ).length;
     Logger.info(`Loaded ${resources.length} resources`);
 
-    const hasDailyNoteTemplate =
-      (await getDailyNoteTemplateUri()) !== undefined;
-    const hasTemplates =
-      hasDailyNoteTemplate || (await getDefaultTemplateUri()) !== undefined;
+    const hasDailyNoteTemplate = (await getDailyNoteTemplateUri()) !== undefined;
+    const numTemplates = (await getTemplates()).length;
     telemetry.trackConfigSnapshot();
-    telemetry.trackWorkspaceStats(
-      noteCount,
-      attachmentCount,
-      hasTemplates,
-      hasDailyNoteTemplate
-    );
+    telemetry.trackWorkspaceStats(noteCount, attachmentCount, numTemplates, hasDailyNoteTemplate);
 
     context.subscriptions.push(
       foam,
       watcher,
       markdownProvider,
       attachmentProvider,
-      commands.registerCommand('foam-vscode.clear-cache', () =>
-        parserCache.clear()
-      ),
+      commands.registerCommand('foam-vscode.clear-cache', () => parserCache.clear()),
       workspace.onDidChangeConfiguration(e => {
         if (
           [
@@ -156,9 +136,7 @@ export async function activate(context: ExtensionContext) {
             'foam.files.defaultNoteExtension',
           ].some(setting => e.affectsConfiguration(setting))
         ) {
-          window.showInformationMessage(
-            'Foam: Reload the window to use the updated settings'
-          );
+          window.showInformationMessage('Foam: Reload the window to use the updated settings');
         }
       })
     );
@@ -175,8 +153,6 @@ export async function activate(context: ExtensionContext) {
     };
   } catch (e) {
     Logger.error('An error occurred while bootstrapping Foam', e);
-    window.showErrorMessage(
-      `An error occurred while bootstrapping Foam. ${e.stack}`
-    );
+    window.showErrorMessage(`An error occurred while bootstrapping Foam. ${e.stack}`);
   }
 }

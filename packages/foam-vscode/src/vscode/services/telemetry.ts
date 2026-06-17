@@ -146,13 +146,13 @@ export class TelemetryService implements IDisposable {
   trackWorkspaceStats(
     noteCount: number,
     attachmentCount: number,
-    hasTemplates: boolean,
+    numTemplates: number,
     hasDailyNoteTemplate: boolean
   ): void {
     this.trackEvent('workspace-stats', {
       noteCount: bucketNoteCount(noteCount),
       attachmentCount: bucketNoteCount(attachmentCount),
-      hasTemplates: String(hasTemplates),
+      numTemplates: String(numTemplates),
       hasDailyNoteTemplate: String(hasDailyNoteTemplate),
     });
   }

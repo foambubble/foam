@@ -1,5 +1,19 @@
 # Change Log
 
+## 0.44.0
+
+### Minor Changes
+
+- Added support for saved queries (CLI and MCP) and Smart Folders (VS Code) — the new Smart Folders panel lets you view a subset of your notes via saved filters, using the same query syntax as `foam-query` blocks ([#462](https://github.com/foambubble/foam/issues/462))
+
+### Patch Changes
+
+- Improved heuristic for detecting the active editor so features like related notes, placeholders, and the graph webview track the right note more reliably ([#1635](https://github.com/foambubble/foam/issues/1635))
+
+- JavaScript code in templates and queries now requires a trusted context (e.g. a trusted workspace) — the previous sandbox did not actually isolate execution and has been removed
+
+- Internal: Report the number of user templates in telemetry and simplified the activation flow
+
 ## 0.43.1
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.46.0
+
+### Minor Changes
+
+- Added support for saved queries (CLI and MCP) and Smart Folders (VS Code) — the new Smart Folders panel lets you view a subset of your notes via saved filters, using the same query syntax as `foam-query` blocks ([#462](https://github.com/foambubble/foam/issues/462))
+
 ## 0.45.0
 
 ### Minor Changes

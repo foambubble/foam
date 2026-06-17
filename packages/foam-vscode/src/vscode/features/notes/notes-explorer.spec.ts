@@ -64,7 +64,7 @@ describe('Notes Explorer - flat view', () => {
   it('shows only notes (excludes images and attachments)', async () => {
     const provider = new NotesProvider(ws, graph, new MapBasedMemento());
     await provider.viewMode.update('flat');
-    await provider.show.update('notes-only');
+    await provider.include.update('notes-only');
     provider.refresh();
 
     const items = (await provider.getChildren()) as ResourceTreeItem[];
@@ -77,7 +77,7 @@ describe('Notes Explorer - flat view', () => {
   it('shows all resource types when show is set to "all"', async () => {
     const provider = new NotesProvider(ws, graph, new MapBasedMemento());
     await provider.viewMode.update('flat');
-    await provider.show.update('all');
+    await provider.include.update('all');
     provider.refresh();
 
     const items = (await provider.getChildren()) as ResourceTreeItem[];
@@ -89,7 +89,7 @@ describe('Notes Explorer - flat view', () => {
   it('shows items sorted alphabetically by title', async () => {
     const provider = new NotesProvider(ws, graph, new MapBasedMemento());
     await provider.viewMode.update('flat');
-    await provider.show.update('notes-only');
+    await provider.include.update('notes-only');
     provider.refresh();
 
     const items = (await provider.getChildren()) as ResourceTreeItem[];
@@ -100,7 +100,7 @@ describe('Notes Explorer - flat view', () => {
   it('shows the folder path as description for notes in sub-folders', async () => {
     const provider = new NotesProvider(ws, graph, new MapBasedMemento());
     await provider.viewMode.update('flat');
-    await provider.show.update('notes-only');
+    await provider.include.update('notes-only');
     provider.refresh();
 
     const items = (await provider.getChildren()) as ResourceTreeItem[];
@@ -111,7 +111,7 @@ describe('Notes Explorer - flat view', () => {
   it('root-level notes have no folder path prefix in description', async () => {
     const provider = new NotesProvider(ws, graph, new MapBasedMemento());
     await provider.viewMode.update('flat');
-    await provider.show.update('notes-only');
+    await provider.include.update('notes-only');
     provider.refresh();
 
     const items = (await provider.getChildren()) as ResourceTreeItem[];
@@ -179,7 +179,7 @@ describe('Notes Explorer - text filtering', () => {
   it('filters notes by path segment', async () => {
     const provider = new NotesProvider(ws, graph, new MapBasedMemento());
     await provider.viewMode.update('flat');
-    await provider.show.update('notes-only');
+    await provider.include.update('notes-only');
     provider.setFilter('sub');
     provider.refresh();
 
@@ -255,7 +255,7 @@ describe('Notes Explorer - connections', () => {
   it('hides backlink children and shows count badge when connections are hidden', async () => {
     const provider = new NotesProvider(ws, graph, new MapBasedMemento());
     await provider.viewMode.update('flat');
-    await provider.show.update('notes-only');
+    await provider.include.update('notes-only');
     await provider.showConnections.update('hide');
     provider.refresh();
 
@@ -271,7 +271,7 @@ describe('Notes Explorer - connections', () => {
   it('shows outgoing link count in badge when connections are hidden', async () => {
     const provider = new NotesProvider(ws, graph, new MapBasedMemento());
     await provider.viewMode.update('flat');
-    await provider.show.update('notes-only');
+    await provider.include.update('notes-only');
     await provider.showConnections.update('hide');
     provider.refresh();
 
@@ -284,7 +284,7 @@ describe('Notes Explorer - connections', () => {
   it('makes items with backlinks collapsible when connections are shown', async () => {
     const provider = new NotesProvider(ws, graph, new MapBasedMemento());
     await provider.viewMode.update('flat');
-    await provider.show.update('notes-only');
+    await provider.include.update('notes-only');
     await provider.showConnections.update('show');
     provider.refresh();
 
@@ -302,7 +302,7 @@ describe('Notes Explorer - connections', () => {
   it('shows no connection badge for notes with no links or backlinks', async () => {
     const provider = new NotesProvider(ws, graph, new MapBasedMemento());
     await provider.viewMode.update('flat');
-    await provider.show.update('notes-only');
+    await provider.include.update('notes-only');
     await provider.showConnections.update('hide');
     provider.refresh();
 

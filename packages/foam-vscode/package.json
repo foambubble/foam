@@ -178,107 +178,122 @@
         {
           "command": "foam-vscode.views.connections.show:backlinks",
           "when": "view == foam-vscode.connections && foam-vscode.views.connections.show == 'all links'",
-          "group": "navigation"
+          "group": "navigation@1"
         },
         {
           "command": "foam-vscode.views.connections.show:forward-links",
           "when": "view == foam-vscode.connections && foam-vscode.views.connections.show == 'backlinks'",
-          "group": "navigation"
+          "group": "navigation@1"
         },
         {
           "command": "foam-vscode.views.connections.show:all-links",
           "when": "view == foam-vscode.connections && foam-vscode.views.connections.show == 'forward links'",
-          "group": "navigation"
+          "group": "navigation@1"
+        },
+        {
+          "command": "foam-vscode.views.connections.include:notes-only",
+          "when": "view == foam-vscode.connections && foam-vscode.views.connections.include == 'all'",
+          "group": "navigation@2"
+        },
+        {
+          "command": "foam-vscode.views.connections.include:all",
+          "when": "view == foam-vscode.connections && foam-vscode.views.connections.include == 'notes-only'",
+          "group": "navigation@2"
         },
         {
           "command": "foam-vscode.views.orphans.group-by:folder",
           "when": "view == foam-vscode.orphans && foam-vscode.views.orphans.group-by == 'off'",
-          "group": "navigation"
+          "group": "navigation@1"
         },
         {
           "command": "foam-vscode.views.orphans.group-by:off",
           "when": "view == foam-vscode.orphans && foam-vscode.views.orphans.group-by == 'folder'",
-          "group": "navigation"
+          "group": "navigation@1"
         },
         {
           "command": "foam-vscode.views.tags-explorer.show:for-current-file",
           "when": "view == foam-vscode.tags-explorer && foam-vscode.views.tags-explorer.show == 'all'",
-          "group": "navigation"
+          "group": "navigation@1"
         },
         {
           "command": "foam-vscode.views.tags-explorer.show:all",
           "when": "view == foam-vscode.tags-explorer && foam-vscode.views.tags-explorer.show == 'for-current-file'",
-          "group": "navigation"
+          "group": "navigation@1"
         },
         {
           "command": "foam-vscode.views.tags-explorer.group-by:folder",
           "when": "view == foam-vscode.tags-explorer && foam-vscode.views.tags-explorer.group-by == 'off'",
-          "group": "navigation"
+          "group": "navigation@2"
         },
         {
           "command": "foam-vscode.views.tags-explorer.group-by:off",
           "when": "view == foam-vscode.tags-explorer && foam-vscode.views.tags-explorer.group-by == 'folder'",
-          "group": "navigation"
+          "group": "navigation@2"
         },
         {
           "command": "foam-vscode.views.tags-explorer.expand-all",
           "when": "view == foam-vscode.tags-explorer",
-          "group": "navigation"
+          "group": "navigation@3"
         },
         {
           "command": "foam-vscode.views.placeholders.show:for-current-file",
           "when": "view == foam-vscode.placeholders && foam-vscode.views.placeholders.show == 'all'",
-          "group": "navigation"
+          "group": "navigation@1"
         },
         {
           "command": "foam-vscode.views.placeholders.show:all",
           "when": "view == foam-vscode.placeholders && foam-vscode.views.placeholders.show == 'for-current-file'",
-          "group": "navigation"
+          "group": "navigation@1"
         },
         {
           "command": "foam-vscode.views.placeholders.group-by:folder",
           "when": "view == foam-vscode.placeholders && foam-vscode.views.placeholders.group-by == 'off'",
-          "group": "navigation"
+          "group": "navigation@2"
         },
         {
           "command": "foam-vscode.views.placeholders.group-by:off",
           "when": "view == foam-vscode.placeholders && foam-vscode.views.placeholders.group-by == 'folder'",
-          "group": "navigation"
+          "group": "navigation@2"
         },
         {
           "command": "foam-vscode.views.placeholders.expand-all",
           "when": "view == foam-vscode.placeholders",
-          "group": "navigation"
-        },
-        {
-          "command": "foam-vscode.views.notes-explorer.collapse-all",
-          "when": "view == foam-vscode.notes-explorer && foam-vscode.views.notes-explorer.view-mode != 'flat'",
-          "group": "navigation"
+          "group": "navigation@3"
         },
         {
           "command": "foam-vscode.views.notes-explorer.connections:toggle",
           "when": "view == foam-vscode.notes-explorer",
-          "group": "navigation"
+          "group": "navigation@1"
         },
         {
-          "command": "foam-vscode.views.notes-explorer.show:toggle",
-          "when": "view == foam-vscode.notes-explorer",
-          "group": "navigation"
+          "command": "foam-vscode.views.notes-explorer.include:notes-only",
+          "when": "view == foam-vscode.notes-explorer && foam-vscode.views.notes-explorer.include == 'all'",
+          "group": "navigation@2"
+        },
+        {
+          "command": "foam-vscode.views.notes-explorer.include:all",
+          "when": "view == foam-vscode.notes-explorer && foam-vscode.views.notes-explorer.include == 'notes-only'",
+          "group": "navigation@2"
         },
         {
           "command": "foam-vscode.views.notes-explorer.view:toggle",
           "when": "view == foam-vscode.notes-explorer",
-          "group": "navigation"
+          "group": "navigation@3"
         },
         {
           "command": "foam-vscode.views.notes-explorer.set-filter",
           "when": "view == foam-vscode.notes-explorer",
-          "group": "navigation"
+          "group": "navigation@4"
         },
         {
           "command": "foam-vscode.views.notes-explorer.clear-filter",
           "when": "view == foam-vscode.notes-explorer && foam-vscode.views.notes-explorer.filter-active",
-          "group": "navigation"
+          "group": "navigation@5"
+        },
+        {
+          "command": "foam-vscode.views.notes-explorer.collapse-all",
+          "when": "view == foam-vscode.notes-explorer && foam-vscode.views.notes-explorer.view-mode != 'flat'",
+          "group": "navigation@6"
         },
         {
           "command": "foam-vscode.views.smart-folders.create",
@@ -320,6 +335,22 @@
         },
         {
           "command": "foam-vscode.views.connections.show:forward-links",
+          "when": "false"
+        },
+        {
+          "command": "foam-vscode.views.connections.include:notes-only",
+          "when": "false"
+        },
+        {
+          "command": "foam-vscode.views.connections.include:all",
+          "when": "false"
+        },
+        {
+          "command": "foam-vscode.views.notes-explorer.include:notes-only",
+          "when": "false"
+        },
+        {
+          "command": "foam-vscode.views.notes-explorer.include:all",
           "when": "false"
         },
         {
@@ -502,6 +533,16 @@
         "icon": "$(arrow-swap)"
       },
       {
+        "command": "foam-vscode.views.connections.include:notes-only",
+        "title": "Show notes only",
+        "icon": "$(markdown)"
+      },
+      {
+        "command": "foam-vscode.views.connections.include:all",
+        "title": "Show all files",
+        "icon": "$(file-media)"
+      },
+      {
         "command": "foam-vscode.views.orphans.group-by:off",
         "title": "Flat list",
         "icon": "$(list-flat)"
@@ -562,9 +603,14 @@
         "icon": "$(expand-all)"
       },
       {
-        "command": "foam-vscode.views.notes-explorer.show:toggle",
-        "title": "Toggle: Show All / Notes Only",
+        "command": "foam-vscode.views.notes-explorer.include:notes-only",
+        "title": "Show notes only",
         "icon": "$(markdown)"
+      },
+      {
+        "command": "foam-vscode.views.notes-explorer.include:all",
+        "title": "Show all files",
+        "icon": "$(file-media)"
       },
       {
         "command": "foam-vscode.views.notes-explorer.collapse-all",

@@ -63,7 +63,7 @@ export default async function activate(
 
 export class ConnectionsTreeDataProvider extends BaseTreeProvider<vscode.TreeItem> {
   public show: ContextMemento<'all links' | 'backlinks' | 'forward links'>;
-  public hideNonNoteLinks: ContextMemento<boolean>;
+  public include: ContextMemento<'notes-only' | 'all'>;
   public target?: URI = undefined;
   public nValues = 0;
   private connectionItems: ResourceRangeTreeItem[] = [];
@@ -80,10 +80,10 @@ export class ConnectionsTreeDataProvider extends BaseTreeProvider<vscode.TreeIte
       `foam-vscode.views.connections.show`,
       'all links'
     );
-    this.hideNonNoteLinks = new ContextMemento<boolean>(
+    this.include = new ContextMemento<'notes-only' | 'all'>(
       this.state,
-      `foam-vscode.views.connections.hideNonNoteLinks`,
-      false
+      `foam-vscode.views.connections.include`,
+      'all'
     );
     if (!registerCommands) {
       return;
@@ -102,16 +102,16 @@ export class ConnectionsTreeDataProvider extends BaseTreeProvider<vscode.TreeIte
         this.refresh();
       }),
       vscode.commands.registerCommand(
-        `foam-vscode.views.connections.hideNonNoteLinks:enable`,
+        `foam-vscode.views.connections.include:notes-only`,
         () => {
-          this.hideNonNoteLinks.update(true);
+          this.include.update('notes-only');
           this.refresh();
         }
       ),
       vscode.commands.registerCommand(
-        `foam-vscode.views.connections.hideNonNoteLinks:disable`,
+        `foam-vscode.views.connections.include:all`,
         () => {
-          this.hideNonNoteLinks.update(false);
+          this.include.update('all');
           this.refresh();
         }
       )
@@ -131,7 +131,7 @@ export class ConnectionsTreeDataProvider extends BaseTreeProvider<vscode.TreeIte
             (connection: Connection) => {
               const isBacklink = connection.target.asPlain().isEqual(this.target);
 
-              if (this.hideNonNoteLinks.get()) {
+              if (this.include.get() === 'notes-only') {
                 const otherEnd = isBacklink ? connection.source : connection.target;
                 const other = this.workspace.find(otherEnd);
                 if (other && other.type !== 'note') {

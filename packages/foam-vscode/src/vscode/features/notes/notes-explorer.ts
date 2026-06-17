@@ -98,11 +98,16 @@ export default async function activate(
       }
     ),
     vscode.commands.registerCommand(
-      `foam-vscode.views.notes-explorer.show:toggle`,
+      `foam-vscode.views.notes-explorer.include:notes-only`,
       async () => {
-        await provider.show.update(
-          provider.show.get() === 'all' ? 'notes-only' : 'all'
-        );
+        await provider.include.update('notes-only');
+        provider.refresh();
+      }
+    ),
+    vscode.commands.registerCommand(
+      `foam-vscode.views.notes-explorer.include:all`,
+      async () => {
+        await provider.include.update('all');
         provider.refresh();
       }
     ),
@@ -164,7 +169,7 @@ export class NotesProvider extends FolderTreeProvider<
   NotesTreeItems,
   Resource
 > {
-  public show: ContextMemento<'all' | 'notes-only'>;
+  public include: ContextMemento<'all' | 'notes-only'>;
   public showConnections: ContextMemento<'show' | 'hide'>;
   public viewMode: ContextMemento<'hierarchy' | 'flat'>;
   private filterText: string = '';
@@ -175,9 +180,9 @@ export class NotesProvider extends FolderTreeProvider<
     private state: vscode.Memento
   ) {
     super();
-    this.show = new ContextMemento<'all' | 'notes-only'>(
+    this.include = new ContextMemento<'all' | 'notes-only'>(
       this.state,
-      `foam-vscode.views.notes-explorer.show`,
+      `foam-vscode.views.notes-explorer.include`,
       'notes-only'
     );
     this.showConnections = new ContextMemento<'show' | 'hide'>(
@@ -263,7 +268,7 @@ export class NotesProvider extends FolderTreeProvider<
 
   getFilterFn() {
     const showFilter =
-      this.show.get() === 'notes-only'
+      this.include.get() === 'notes-only'
         ? (res: Resource) => res.type !== 'image' && res.type !== 'attachment'
         : () => true;
 

@@ -141,7 +141,7 @@ describe('Backlinks panel', () => {
     second.dispose();
   });
 
-  describe('hide non-note links', () => {
+  describe('include filter', () => {
     const setup = () => {
       const localRootUri = getUriInWorkspace('hide-non-note-root.md');
       const localWs = createTestWorkspace();
@@ -184,10 +184,10 @@ describe('Backlinks panel', () => {
       return { localProvider, linkingNote, image, attachment, cleanup };
     };
 
-    it('hides image and attachment links when enabled', async () => {
+    it('hides image and attachment links when include is notes-only', async () => {
       const { localProvider, linkingNote, image, attachment, cleanup } =
         setup();
-      await localProvider.hideNonNoteLinks.update(true);
+      await localProvider.include.update('notes-only');
       await localProvider.refresh();
       const items = (await localProvider.getChildren()) as ResourceTreeItem[];
       const paths = items.map(i => i.resource.uri.path);
@@ -197,7 +197,7 @@ describe('Backlinks panel', () => {
       cleanup();
     });
 
-    it('shows image and attachment links when disabled (default)', async () => {
+    it('shows image and attachment links when include is all (default)', async () => {
       const { localProvider, linkingNote, image, attachment, cleanup } =
         setup();
       await localProvider.refresh();

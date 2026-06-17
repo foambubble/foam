@@ -20,6 +20,7 @@ import {
   getActiveTabUri,
   onDidChangeActiveTab,
 } from '../../services/editor';
+import { instrumentTreeView } from '../../services/telemetry';
 
 const TAG_SEPARATOR = '/';
 export default async function activate(
@@ -37,6 +38,7 @@ export default async function activate(
   treeView.title = baseTitle + ` (${foam.tags.tags.size})`;
   context.subscriptions.push(
     treeView,
+    ...instrumentTreeView(treeView, 'tags-explorer'),
     foam.tags.onDidUpdate(() => {
       provider.refresh();
       treeView.title = baseTitle + ` (${foam.tags.tags.size})`;

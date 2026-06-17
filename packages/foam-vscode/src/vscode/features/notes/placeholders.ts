@@ -22,6 +22,7 @@ import { URI } from '@foam/core';
 import { FoamWorkspace } from '@foam/core';
 import { FolderTreeItem } from '../../utils/tree-views/folder-tree-provider';
 import { Config } from '@foam/core';
+import { instrumentTreeView } from '../../services/telemetry';
 
 /** Retrieve the placeholders configuration */
 export function getPlaceholdersConfig(): GroupedResourcesConfig {
@@ -56,6 +57,7 @@ export default async function activate(
 
   context.subscriptions.push(
     treeView,
+    ...instrumentTreeView(treeView, 'placeholders'),
     provider,
     foam.graph.onDidUpdate(() => {
       provider.refresh();

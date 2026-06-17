@@ -6,6 +6,7 @@ import { bootstrap } from './core/model/foam';
 import { fromVsCodeUri } from './vscode/utils/vsc-utils';
 
 import { features } from './vscode/features';
+import { FoamFeatureResult } from './types';
 import { VsCodeOutputLogger, exposeLogger } from './vscode/services/logging';
 import { VsCodeFoamConfig } from './vscode/config';
 import { AttachmentResourceProvider } from '@foam/core';
@@ -15,7 +16,6 @@ import VsCodeBasedParserCache from './vscode/services/cache';
 import { createMatcherAndDataStore } from './vscode/services/editor';
 import { OllamaEmbeddingProvider } from './ai/providers/ollama/ollama-provider';
 import { initTelemetry } from './vscode/services/telemetry';
-import { getDailyNoteTemplateUri, getTemplates } from './vscode/services/template-service';
 
 // Injected by esbuild's `define` (and the vitest config), so telemetry can
 // attach version dimensions without a runtime package.json read
@@ -114,10 +114,16 @@ export async function activate(context: ExtensionContext) {
     ).length;
     Logger.info(`Loaded ${resources.length} resources`);
 
-    const hasDailyNoteTemplate = (await getDailyNoteTemplateUri()) !== undefined;
-    const numTemplates = (await getTemplates()).length;
+    const feats = (await Promise.all(featuresPromises)).filter(
+      (r): r is FoamFeatureResult => r != null
+    );
+
+    const featureTelemetry = feats.reduce(
+      (acc, r) => ({ ...acc, ...r.telemetry }),
+      {} as Record<string, string>
+    );
     telemetry.trackConfigSnapshot();
-    telemetry.trackWorkspaceStats(noteCount, attachmentCount, numTemplates, hasDailyNoteTemplate);
+    telemetry.trackWorkspaceStats(noteCount, attachmentCount, featureTelemetry);
 
     context.subscriptions.push(
       foam,
@@ -141,11 +147,9 @@ export async function activate(context: ExtensionContext) {
       })
     );
 
-    const feats = (await Promise.all(featuresPromises)).filter(r => r != null);
-
     return {
       extendMarkdownIt: (md: markdownit) => {
-        return feats.reduce((acc: markdownit, r: any) => {
+        return feats.reduce((acc: markdownit, r) => {
           return r.extendMarkdownIt ? r.extendMarkdownIt(acc) : acc;
         }, md);
       },

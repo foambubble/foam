@@ -19,6 +19,7 @@ import {
   getWorkspaceDefaultScheme,
   onDidChangeActiveTab,
 } from '../../services/editor';
+import { instrumentTreeView } from '../../services/telemetry';
 
 export default async function activate(
   context: vscode.ExtensionContext,
@@ -52,6 +53,7 @@ export default async function activate(
   context.subscriptions.push(
     provider,
     treeView,
+    ...instrumentTreeView(treeView, 'connections'),
     foam.graph.onDidUpdate(() => provider.refresh()),
     onDidChangeActiveTab(() => onActiveTabChanged()),
     provider.onDidChangeTreeData(() => {

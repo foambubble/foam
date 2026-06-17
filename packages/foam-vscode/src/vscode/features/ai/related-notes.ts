@@ -6,6 +6,7 @@ import { getActiveTabUri, onDidChangeActiveTab } from '../../services/editor';
 import { BaseTreeProvider } from '../../utils/tree-views/base-tree-provider';
 import { ResourceTreeItem } from '../../utils/tree-views/tree-view-utils';
 import { FoamEmbeddings } from '../../../ai/model/embeddings';
+import { instrumentTreeView } from '../../services/telemetry';
 
 export default async function activate(
   context: vscode.ExtensionContext,
@@ -53,6 +54,7 @@ export default async function activate(
   context.subscriptions.push(
     provider,
     treeView,
+    ...instrumentTreeView(treeView, 'related-notes'),
     foam.embeddings.onDidUpdate(() => refreshView()),
     onDidChangeActiveTab(() => onActiveTabChanged()),
     provider.onDidChangeTreeData(() => {

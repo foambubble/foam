@@ -10,6 +10,7 @@ import { ResourceTreeItem, UriTreeItem } from '../../utils/tree-views/tree-view-
 import { IMatcher } from '@foam/core';
 import { FoamWorkspace } from '@foam/core';
 import { FoamGraph } from '@foam/core';
+import { instrumentTreeView } from '../../services/telemetry';
 export default async function activate(
   context: vscode.ExtensionContext,
   foamPromise: Promise<Foam>
@@ -39,6 +40,7 @@ export default async function activate(
     vscode.window.registerTreeDataProvider('foam-vscode.orphans', provider),
     provider,
     treeView,
+    ...instrumentTreeView(treeView, 'orphans'),
     foam.graph.onDidUpdate(() => {
       provider.refresh();
       treeView.title = baseTitle + ` (${provider.nValues})`;

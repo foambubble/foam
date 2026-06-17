@@ -19,6 +19,7 @@ import {
   FolderTreeProvider,
   pruneEmptyFolders,
 } from '../../utils/tree-views/folder-tree-provider';
+import { instrumentTreeView } from '../../services/telemetry';
 
 export default async function activate(
   context: vscode.ExtensionContext,
@@ -77,6 +78,7 @@ export default async function activate(
 
   context.subscriptions.push(
     treeView,
+    ...instrumentTreeView(treeView, 'notes-explorer'),
     provider,
     foam.graph.onDidUpdate(() => {
       provider.refresh();

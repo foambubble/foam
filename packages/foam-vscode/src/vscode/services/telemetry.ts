@@ -1,5 +1,5 @@
 import { TelemetryReporter } from '@vscode/extension-telemetry';
-import { workspace } from 'vscode';
+import { Disposable, TreeView, workspace } from 'vscode';
 import {
   IDisposable,
   Logger,
@@ -33,6 +33,8 @@ export class TelemetryService implements IDisposable {
   private reporter: TelemetryReporter;
   private sessionWithCommandFired = false;
   private sessionWithNoteFired = false;
+  private panelVisibleFired = new Set<string>();
+  private panelInteractionFired = new Set<string>();
 
   constructor(opts: TelemetryServiceOptions) {
     this.reporter = new TelemetryReporter(
@@ -104,6 +106,30 @@ export class TelemetryService implements IDisposable {
   }
 
   /**
+   * Fired the first time a given tree view becomes visible in a session.
+   * Proxy for "the user actually looks at this panel" — distinguishes
+   * panels users keep open from ones they ignore. Subsequent visibility
+   * changes for the same panel are dropped.
+   */
+  trackPanelVisible(panel: string): void {
+    if (this.panelVisibleFired.has(panel)) return;
+    this.panelVisibleFired.add(panel);
+    this.trackEvent('panel-visible', { panel });
+  }
+
+  /**
+   * Fired the first time the user interacts with a given panel in a session
+   * (click, selection change). Subsequent interactions for the same panel
+   * are dropped — the goal is "did they engage at all", not interaction
+   * volume. If we want intensity later, add a separate event.
+   */
+  trackPanelInteraction(panel: string): void {
+    if (this.panelInteractionFired.has(panel)) return;
+    this.panelInteractionFired.add(panel);
+    this.trackEvent('panel-interaction', { panel });
+  }
+
+  /**
    * Once per session: the values of selected enum/boolean settings.
    * Free-text settings (paths, templates) are never included.
    */
@@ -143,17 +169,22 @@ export class TelemetryService implements IDisposable {
    * "heavy writer" workspaces from "image-heavy scratchpad" workspaces,
    * which otherwise look identical when collapsed into a single total.
    */
+  /**
+   * `extras` carries per-feature contributions (smart-folder count, etc.)
+   * already pre-formatted by the caller. The two positional args remain
+   * because they're computed centrally from the workspace; everything else
+   * comes through the bag so the event schema can grow without churning
+   * this signature.
+   */
   trackWorkspaceStats(
     noteCount: number,
     attachmentCount: number,
-    numTemplates: number,
-    hasDailyNoteTemplate: boolean
+    extras: Record<string, string> = {}
   ): void {
     this.trackEvent('workspace-stats', {
       noteCount: bucketNoteCount(noteCount),
       attachmentCount: bucketNoteCount(attachmentCount),
-      numTemplates: String(numTemplates),
-      hasDailyNoteTemplate: String(hasDailyNoteTemplate),
+      ...extras,
     });
   }
 
@@ -200,4 +231,24 @@ export function initTelemetry(opts: TelemetryServiceOptions): TelemetryService {
 
 export function getTelemetry(): TelemetryService | null {
   return _telemetry;
+}
+
+/**
+ * Wires `trackPanelVisible` + `trackPanelInteraction` into a tree view's
+ * visibility and selection events. Returns the disposables — caller must
+ * register them (typically `context.subscriptions.push(...)`). No-ops if
+ * the telemetry singleton hasn't been initialized.
+ */
+export function instrumentTreeView<T>(
+  treeView: TreeView<T>,
+  panelId: string
+): Disposable[] {
+  return [
+    treeView.onDidChangeVisibility(e => {
+      if (e.visible) getTelemetry()?.trackPanelVisible(panelId);
+    }),
+    treeView.onDidChangeSelection(() =>
+      getTelemetry()?.trackPanelInteraction(panelId)
+    ),
+  ];
 }

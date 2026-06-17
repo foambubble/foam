@@ -1,6 +1,8 @@
 import * as vscode from 'vscode';
 import { Foam } from '@foam/core';
+import { FoamFeatureResult } from '../../../types';
 import { fromVsCodeUri, toVsCodeUri } from '../../utils/vsc-utils';
+import { instrumentTreeView } from '../../services/telemetry';
 import { SmartFolderStorage } from './smart-folder-storage';
 import {
   SmartFolderErrorTreeItem,
@@ -15,7 +17,7 @@ import {
 export default async function activate(
   context: vscode.ExtensionContext,
   foamPromise: Promise<Foam>
-) {
+): Promise<FoamFeatureResult> {
   const foam = await foamPromise;
 
   const root = vscode.workspace.workspaceFolders?.[0]
@@ -42,6 +44,7 @@ export default async function activate(
 
   context.subscriptions.push(
     treeView,
+    ...instrumentTreeView(treeView, 'smart-folders'),
     storage,
     provider,
     storage.onDidUpdate(refresh),
@@ -78,6 +81,12 @@ export default async function activate(
       refresh
     )
   );
+
+  return {
+    telemetry: {
+      smartFolderCount: String(storage.list().length),
+    },
+  };
 }
 
 async function pickSmartFolderUri(storage: SmartFolderStorage) {

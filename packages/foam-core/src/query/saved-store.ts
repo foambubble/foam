@@ -53,7 +53,7 @@ export class QueryStore {
     return uri.path.startsWith(dir + '/') && /\.ya?ml$/i.test(uri.path);
   }
 
-  /** Load every parseable query file; unparseable ones are silently skipped. */
+  /** Load every parseable query file; unparsable ones are silently skipped. */
   async loadAll(): Promise<LoadedQuery[]> {
     const uris = await this.listQueryFiles();
     const loaded = await Promise.all(uris.map(uri => this.load(uri)));

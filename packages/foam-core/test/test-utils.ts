@@ -1,4 +1,5 @@
 import fs from 'fs';
+import micromatch from 'micromatch';
 import { Logger } from '../src/utils/log';
 import { Range } from '../src/model/range';
 import { URI } from '../src/model/uri';
@@ -32,8 +33,15 @@ export class InMemoryDataStore implements IDataStore {
     this.files.clear();
   }
 
-  async list(): Promise<URI[]> {
-    return Array.from(this.files.keys()).map(path => URI.parse(path, 'file'));
+  async list(pattern?: string): Promise<URI[]> {
+    const paths = Array.from(this.files.keys());
+    if (!pattern) {
+      return paths.map(p => URI.parse(p, 'file'));
+    }
+    // Workspace-relative pattern → match any file whose path ends with a
+    // segment matching the pattern. `**/<pattern>` does that via micromatch.
+    const matched = micromatch(paths, [`**/${pattern}`]);
+    return matched.map(p => URI.parse(p, 'file'));
   }
 
   async read(uri: URI): Promise<string | null> {

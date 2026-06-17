@@ -87,6 +87,13 @@
           "contextualTitle": "Foam"
         },
         {
+          "id": "foam-vscode.smart-folders",
+          "name": "Smart Folders",
+          "icon": "$(folder-library)",
+          "contextualTitle": "Foam",
+          "initialSize": 0
+        },
+        {
           "when": "config.foam.experimental.ai",
           "id": "foam-vscode.related-notes",
           "name": "Related Notes (AI)",
@@ -111,6 +118,10 @@
       {
         "view": "foam-vscode.placeholders",
         "contents": "No placeholders found for selected resource or workspace."
+      },
+      {
+        "view": "foam-vscode.smart-folders",
+        "contents": "Smart Folders are saved queries stored in `.foam/queries/`. They group your notes by tag, link, or any other criteria you can express in a query.\n[Create Smart Folder](command:foam-vscode.views.smart-folders.create)\nLearn more about [Smart Folders](https://docs.foam.md/features/smart-folders) and [Foam Queries](https://docs.foam.md/features/foam-queries)."
       },
       {
         "view": "foam-vscode.related-notes",
@@ -141,6 +152,18 @@
           "when": "view == foam-vscode.tags-explorer && viewItem == tag",
           "group": "inline",
           "icon": "$(edit)"
+        },
+        {
+          "command": "foam-vscode.views.smart-folders.edit",
+          "when": "view == foam-vscode.smart-folders && (viewItem == smart-folder || viewItem == smart-folder-error)",
+          "group": "inline@1",
+          "icon": "$(edit)"
+        },
+        {
+          "command": "foam-vscode.views.smart-folders.delete",
+          "when": "view == foam-vscode.smart-folders && (viewItem == smart-folder || viewItem == smart-folder-error)",
+          "group": "inline@2",
+          "icon": "$(trash)"
         }
       ],
       "editor/context": [
@@ -256,6 +279,26 @@
           "command": "foam-vscode.views.notes-explorer.clear-filter",
           "when": "view == foam-vscode.notes-explorer && foam-vscode.views.notes-explorer.filter-active",
           "group": "navigation"
+        },
+        {
+          "command": "foam-vscode.views.smart-folders.create",
+          "when": "view == foam-vscode.smart-folders",
+          "group": "navigation@1"
+        },
+        {
+          "command": "foam-vscode.views.smart-folders.group-by:folder",
+          "when": "view == foam-vscode.smart-folders && foam-vscode.views.smart-folders.group-by == 'off'",
+          "group": "navigation@2"
+        },
+        {
+          "command": "foam-vscode.views.smart-folders.group-by:off",
+          "when": "view == foam-vscode.smart-folders && foam-vscode.views.smart-folders.group-by == 'folder'",
+          "group": "navigation@2"
+        },
+        {
+          "command": "foam-vscode.views.smart-folders.refresh",
+          "when": "view == foam-vscode.smart-folders",
+          "group": "navigation@3"
         }
       ],
       "commandPalette": [
@@ -333,6 +376,18 @@
         },
         {
           "command": "foam-vscode.completion-move-cursor",
+          "when": "false"
+        },
+        {
+          "command": "foam-vscode.views.smart-folders.group-by:folder",
+          "when": "false"
+        },
+        {
+          "command": "foam-vscode.views.smart-folders.group-by:off",
+          "when": "false"
+        },
+        {
+          "command": "foam-vscode.views.smart-folders.refresh",
           "when": "false"
         }
       ]
@@ -543,6 +598,36 @@
       {
         "command": "foam-vscode.completion-move-cursor",
         "title": "Foam: Move cursor after completion"
+      },
+      {
+        "command": "foam-vscode.views.smart-folders.create",
+        "title": "Foam: Create Smart Folder",
+        "icon": "$(add)"
+      },
+      {
+        "command": "foam-vscode.views.smart-folders.edit",
+        "title": "Foam: Edit Smart Folder",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "foam-vscode.views.smart-folders.delete",
+        "title": "Foam: Delete Smart Folder",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "foam-vscode.views.smart-folders.refresh",
+        "title": "Refresh Smart Folders",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "foam-vscode.views.smart-folders.group-by:folder",
+        "title": "Group By Folder",
+        "icon": "$(list-tree)"
+      },
+      {
+        "command": "foam-vscode.views.smart-folders.group-by:off",
+        "title": "Flat list",
+        "icon": "$(list-flat)"
       }
     ],
     "configuration": {

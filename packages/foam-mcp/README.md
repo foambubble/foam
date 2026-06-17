@@ -10,7 +10,7 @@ End users should use [`foam-cli`](../foam-cli)'s `foam mcp` subcommand, which wi
 
 ```typescript
 import { FoamMcpServer, StdioServerTransport } from '@foam/mcp';
-import { bootstrap, URI } from '@foam/core';
+import { bootstrap, QueryStore, URI } from '@foam/core';
 
 const rootUri = URI.file('/path/to/workspace');
 
@@ -26,10 +26,14 @@ const foam = await bootstrap(
   'off'
 );
 
+// Saved queries — backs the list_queries / get_query / run_query tools.
+const queryStore = new QueryStore(dataStore, rootUri);
+
 const server = new FoamMcpServer({
   foam,
   rootUri,
   mode: 'read',   // 'read' or 'read-write' — required
+  queryStore,
 });
 
 await server.connect(new StdioServerTransport());
@@ -87,6 +91,14 @@ Tools are organised into five modules, each registered by the server constructor
 | Tool          | Mode | Description                              |
 | ------------- | ---- | ---------------------------------------- |
 | `get_outline` | read | Heading structure of a note              |
+
+### Saved queries
+
+| Tool            | Mode | Description                                                                                |
+| --------------- | ---- | ------------------------------------------------------------------------------------------ |
+| `list_queries`  | read | List saved queries (the YAML files under `.foam/queries/`) with match counts               |
+| `get_query`     | read | Return the descriptor + metadata for a saved query by id                                   |
+| `run_query`     | read | Execute a saved query by `id` **or** an ad-hoc `descriptor` (exactly one)                  |
 
 ## URI convention at the wire boundary
 

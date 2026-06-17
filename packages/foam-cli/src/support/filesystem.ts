@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import micromatch from 'micromatch';
 
 import {
   URI,
@@ -39,10 +40,16 @@ export class NodeFileDataStore implements IDataStore {
     private readonly matcher: IMatcher
   ) {}
 
-  async list() {
+  async list(pattern?: string) {
     const files: string[] = [];
     await collectFiles(this.rootDir, files, this.excludedPaths);
-    const uris = files.map(file => URI.file(file));
+    let uris = files.map(file => URI.file(file));
+    if (pattern) {
+      const absoluteGlob = path.posix.join(this.rootDir, pattern);
+      const matched = micromatch(uris.map(u => u.toFsPath()), [absoluteGlob]);
+      const matchedSet = new Set(matched);
+      uris = uris.filter(u => matchedSet.has(u.toFsPath()));
+    }
     return uris.filter(uri => this.matcher.isMatch(uri));
   }
 

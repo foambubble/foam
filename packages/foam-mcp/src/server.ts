@@ -4,6 +4,7 @@ import {
   Foam,
   ITelemetryReporter,
   NoopTelemetryReporter,
+  QueryStore,
   URI,
   bucketNoteCount,
 } from '@foam/core';
@@ -12,6 +13,7 @@ import { withToolErrorHandling } from './errors';
 import { withToolTelemetry } from './telemetry';
 import { registerResourceTools } from './tools/resources';
 import { registerGraphTools } from './tools/graph';
+import { registerQueryTools } from './tools/queries';
 import { registerTagTools } from './tools/tags';
 import { registerSearchTools } from './tools/search';
 import { registerStructureTools } from './tools/structure';
@@ -40,6 +42,10 @@ export interface FoamMcpServerOptions {
   rootUri: URI;
   /** Access mode. See {@link FoamMcpServerMode}. */
   mode: FoamMcpServerMode;
+  /**
+   * Store for saved queries (Smart Folders). 
+   */
+  queryStore: QueryStore;
   /**
    * Reporter receiving `mcp.*` events. Defaults to a noop so unhosted
    * consumers (tests, embedded uses) don't have to wire telemetry in.
@@ -94,6 +100,7 @@ export class FoamMcpServer {
     registerStructureTools(register, foam, rootUri);
     registerGraphTools(register, foam, rootUri, { readOnly });
     registerSearchTools(register, foam, rootUri);
+    registerQueryTools(register, foam, opts.queryStore, rootUri);
 
     // Modules that mix read and write tools accept a `readOnly` flag and
     // skip registering the writers entirely. Clients that list tools see

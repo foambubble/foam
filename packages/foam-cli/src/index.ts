@@ -17,6 +17,7 @@ import { runDailyCommand } from './commands/daily';
 import { runLintCommand } from './commands/lint';
 import { runGrepCommand } from './commands/grep';
 import { runSearchCommand } from './commands/search';
+import { runQueryCommand } from './commands/query';
 import { runRenameCommand } from './commands/rename';
 import { runTagCommand } from './commands/tag';
 import { runUpdateCommand } from './commands/update';
@@ -47,6 +48,7 @@ Commands:
   grep        Search note content (grep-style, no graph needed)
   search      Search by title, alias, tag, or frontmatter property
   rename      Rename a note, tag, section, or block anchor (with link rewriting)
+  query       List, run, or show saved queries (a.k.a. Smart Folders)
   mcp         Run an MCP server (Model Context Protocol) over stdio for AI agents
   update      Check for updates and show the install command
   config      Manage user-level Foam configuration (~/.config/foam/config.json)
@@ -190,6 +192,9 @@ async function dispatch(
       }
       case 'search': {
         return runSearchCommand(commandArgs, logger);
+      }
+      case 'query': {
+        return runQueryCommand(commandArgs, logger);
       }
       case 'rename': {
         return runRenameCommand(commandArgs, logger);

@@ -7,10 +7,15 @@ import { Event } from '../common/event';
  */
 export interface IDataStore {
   /**
-   * List the files matching the given glob from the
-   * store
+   * List the URIs known to this store.
+   *
+   * With no argument, returns the full set of URIs the store can see (the
+   * usual workspace enumeration).
+   *
+   * When a workspace-relative glob `pattern` is passed, the store **must**
+   * return only URIs matching that glob. 
    */
-  list: () => Promise<URI[]>;
+  list: (pattern?: string) => Promise<URI[]>;
 
   /**
    * Read the content of the file from the store
@@ -86,7 +91,7 @@ export interface IMatcher {
 
 export class GenericDataStore implements IDataStore {
   constructor(
-    private readonly listFiles: () => Promise<URI[]>,
+    private readonly listFiles: (pattern?: string) => Promise<URI[]>,
     private readFile: (uri: URI) => Promise<string>,
     private readonly writeFile?: (uri: URI, content: string) => Promise<void>,
     private readonly deleteFile?: (uri: URI) => Promise<void>,
@@ -94,8 +99,8 @@ export class GenericDataStore implements IDataStore {
     private readonly fileExists?: (uri: URI) => Promise<boolean>
   ) {}
 
-  async list(): Promise<URI[]> {
-    return this.listFiles();
+  async list(pattern?: string): Promise<URI[]> {
+    return this.listFiles(pattern);
   }
 
   async read(uri: URI) {

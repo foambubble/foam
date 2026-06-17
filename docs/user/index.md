@@ -44,6 +44,7 @@ Coming from Obsidian? See [[migrating-from-obsidian]].
 - [[block-anchors]]
 - [[embeds]]
 - [[foam-queries]]
+- [[smart-folders]]
 - [[tags]]
 - [[backlinking]]
 - [[daily-notes]]
@@ -90,6 +91,7 @@ See [[publishing]] for more details.
 [block-anchors]: features/block-anchors.md 'Block Anchors'
 [embeds]: features/embeds.md 'Note Embeds'
 [foam-queries]: features/foam-queries.md 'Foam Queries'
+[smart-folders]: features/smart-folders.md 'Smart Folders'
 [tags]: features/tags.md 'Tags'
 [backlinking]: features/backlinking.md 'Backlinks'
 [daily-notes]: features/daily-notes.md 'Daily Notes'

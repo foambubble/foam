@@ -2,6 +2,7 @@ import fs from 'fs';
 import { mkdtempSync } from 'fs';
 import path from 'path';
 import { tmpdir } from 'os';
+import micromatch from 'micromatch';
 import { type ILogger, Logger, NoOpLogger } from '@foam/core';
 import { Range } from '@foam/core';
 import { URI } from '@foam/core';
@@ -29,8 +30,13 @@ export class InMemoryDataStore implements IDataStore {
     this.files.clear();
   }
 
-  async list(): Promise<URI[]> {
-    return Array.from(this.files.keys()).map(path => URI.parse(path, 'file'));
+  async list(pattern?: string): Promise<URI[]> {
+    const paths = Array.from(this.files.keys());
+    if (!pattern) {
+      return paths.map(p => URI.parse(p, 'file'));
+    }
+    const matched = micromatch(paths, [`**/${pattern}`]);
+    return matched.map(p => URI.parse(p, 'file'));
   }
 
   async read(uri: URI): Promise<string | null> {

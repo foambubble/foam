@@ -29,9 +29,14 @@ export class FileDataStore implements IDataStore {
     private readonly basedir: string
   ) {}
 
-  async list(): Promise<URI[]> {
+  async list(pattern?: string): Promise<URI[]> {
     const res = getFiles(this.basedir);
-    return res.map(URI.file);
+    if (!pattern) {
+      return res.map(URI.file);
+    }
+    const absoluteGlob = path.posix.join(this.basedir, pattern);
+    const matches = micromatch(res, [absoluteGlob]);
+    return matches.map(URI.file);
   }
 
   async read(uri: URI) {

@@ -8,6 +8,7 @@ import preview from './preview';
 import graphWebview from './graph-webview';
 import lint from './lint';
 import ai from './ai';
+import smartFolders from './smart-folders';
 import whatsNew from './whats-new';
 
 export const features: FoamFeature[] = [
@@ -17,6 +18,7 @@ export const features: FoamFeature[] = [
   navigation,
   notes,
   tags,
+  smartFolders,
   preview,
   graphWebview,
   lint,

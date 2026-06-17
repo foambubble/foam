@@ -80,6 +80,22 @@ export { renderDqlQuery } from './query/dql';
 export type { RenderDqlQueryOptions } from './query/dql';
 export { renderJsQuery } from './query/js';
 export type { RenderJsQueryOptions } from './query/js';
+export type { Query, ParseQueryResult } from './query/saved';
+export {
+  parseQuery,
+  serializeQuery,
+  idFromQueryFilename,
+  filenameFromQueryId,
+  humanizeQueryId,
+  sanitizeQueryId,
+} from './query/saved';
+export type { LoadedQuery, QueryDataStoreOps } from './query/saved-store';
+export {
+  QueryStore,
+  QUERIES_DIR,
+  QUERIES_GLOB,
+  createQueryDataStore,
+} from './query/saved-store';
 export {
   escapeHtml,
   noteLink,

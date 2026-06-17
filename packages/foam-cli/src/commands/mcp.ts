@@ -6,6 +6,7 @@ import {
   NoopTelemetryReporter,
 } from '@foam/core';
 import { loadWorkspaceFromDirectory } from '../support/filesystem';
+import { createNodeQueryStore } from '../support/node-query-store';
 import { NodeWatcher } from '../support/watcher';
 import { parseArgs, getFlag, resolveWorkspaceDir } from '../support/args';
 import type { CliLogger } from '../support/types';
@@ -100,6 +101,7 @@ export async function runMcpCommand(
     foam,
     rootUri,
     mode: args.allowWrites ? 'read-write' : 'read',
+    queryStore: createNodeQueryStore(rootUri),
     telemetry: reporter,
   });
 

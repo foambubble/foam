@@ -8,6 +8,7 @@ import {
   IDataStore,
   ITelemetryReporter,
   MarkdownResourceProvider,
+  QueryStore,
   URI,
 } from '@foam/core';
 import { InMemoryDataStore } from '@foam/core/test';
@@ -114,6 +115,7 @@ export async function withMcpServer<T>(
     foam,
     rootUri,
     mode: opts.mode ?? 'read-write',
+    queryStore: new QueryStore(dataStore as IDataStore, rootUri),
     telemetry: opts.telemetry,
   });
 

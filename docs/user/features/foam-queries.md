@@ -1,10 +1,37 @@
 # Foam Queries
 
-Foam Queries let you show dynamic lists, tables, and counts of notes inside the Markdown preview.
+A Foam Query selects notes by tag, link, property, or other criteria. Queries answer questions like "show my research notes", "list notes linked to this topic", or "count notes in this folder".
 
-Use them when you want a note to answer questions such as "show my research notes", "list notes linked to this topic", or "count notes in this folder".
+Queries are surfaced in two places:
+
+- **Inline in a note** — write a `foam-query` block to render results in the Markdown preview.
+- **Saved on disk** — drop a YAML file in `.foam/queries/` to reuse the same query across contexts. VS Code surfaces saved queries as [[smart-folders]] in the side bar.
+
+The query syntax is the same in both. The rest of this page documents that syntax.
 
 For static note embeds, see [[embeds]].
+
+## Saved Queries
+
+Save a query as a YAML file at `.foam/queries/<id>.yaml` to reuse it. The filename (without extension) is the id; rename the file to rename the query.
+
+A saved query inlines the query fields at the root of the YAML, plus two optional wrapper fields:
+
+```yaml
+name: Work in Progress           # optional; defaults to a humanized form of the filename
+description: Notes I am editing  # optional
+filter:
+  and:
+    - tag: "#wip"
+    - not:
+        tag: "#archive"
+sort: title ASC
+limit: 50
+```
+
+The minimal valid file is one line: `filter: "#wip"`.
+
+A saved query file is interchangeable with a `foam-query` block — copy the body of one straight into the other.
 
 ## Basic Query
 
@@ -244,3 +271,4 @@ Call `render(...)` to show output in the preview. You can pass a query builder o
 - Query results link back to the matching notes.
 
 [embeds]: embeds.md 'Note Embeds'
+[smart-folders]: smart-folders.md 'Smart Folders'

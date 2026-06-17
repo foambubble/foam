@@ -120,18 +120,20 @@ export const lintIssueToDiagnostic = (issue: LintIssue): Diagnostic => {
  * A class that wraps context value, syncs it via setContext, and provides a typed interface to it.
  */
 export class ContextMemento<T> {
+  private defaultValue: T;
   constructor(
     private data: Memento,
     private key: string,
     defaultValue: T,
     resetToDefault: boolean = false
   ) {
+    this.defaultValue = defaultValue;
     resetToDefault && this.data.update(this.key, defaultValue);
     const value = data.get(key) ?? defaultValue;
     commands.executeCommand('setContext', this.key, value);
   }
   public get(): T {
-    return this.data.get(this.key);
+    return this.data.get<T>(this.key) ?? this.defaultValue;
   }
   public async update(value: T): Promise<void> {
     this.data.update(this.key, value);

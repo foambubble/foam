@@ -25,12 +25,7 @@ export default async function activate(
   foamPromise: Promise<Foam>
 ) {
   const foam = await foamPromise;
-
-  const provider = new ConnectionsTreeDataProvider(
-    foam.workspace,
-    foam.graph,
-    context.globalState
-  );
+  const provider = new ConnectionsTreeDataProvider(foam.workspace, foam.graph, context.globalState);
   const treeView = vscode.window.createTreeView('foam-vscode.connections', {
     treeDataProvider: provider,
     showCollapseAll: true,
@@ -49,20 +44,26 @@ export default async function activate(
   };
 
   onActiveTabChanged();
-
+  const titleMapping = {
+    'all links': 'Connections - all',
+    backlinks: 'Connections - backlinks',
+    'forward links': 'Connections - links',
+  };
   context.subscriptions.push(
     provider,
     treeView,
     foam.graph.onDidUpdate(() => provider.refresh()),
     onDidChangeActiveTab(() => onActiveTabChanged()),
     provider.onDidChangeTreeData(() => {
-      treeView.title = ` ${provider.show.get()} (${provider.nValues})`;
+      treeView.title =
+        (titleMapping[provider.show.get()] || 'Connections') + ` (${provider.nValues})`;
     })
   );
 }
 
 export class ConnectionsTreeDataProvider extends BaseTreeProvider<vscode.TreeItem> {
   public show: ContextMemento<'all links' | 'backlinks' | 'forward links'>;
+  public hideNonNoteLinks: ContextMemento<boolean>;
   public target?: URI = undefined;
   public nValues = 0;
   private connectionItems: ResourceRangeTreeItem[] = [];
@@ -77,31 +78,40 @@ export class ConnectionsTreeDataProvider extends BaseTreeProvider<vscode.TreeIte
     this.show = new ContextMemento<'all links' | 'backlinks' | 'forward links'>(
       this.state,
       `foam-vscode.views.connections.show`,
-      'all links',
-      true
+      'all links'
+    );
+    this.hideNonNoteLinks = new ContextMemento<boolean>(
+      this.state,
+      `foam-vscode.views.connections.hideNonNoteLinks`,
+      false
     );
     if (!registerCommands) {
       return;
     }
     this.disposables.push(
+      vscode.commands.registerCommand(`foam-vscode.views.connections.show:all-links`, () => {
+        this.show.update('all links');
+        this.refresh();
+      }),
+      vscode.commands.registerCommand(`foam-vscode.views.connections.show:backlinks`, () => {
+        this.show.update('backlinks');
+        this.refresh();
+      }),
+      vscode.commands.registerCommand(`foam-vscode.views.connections.show:forward-links`, () => {
+        this.show.update('forward links');
+        this.refresh();
+      }),
       vscode.commands.registerCommand(
-        `foam-vscode.views.connections.show:all-links`,
+        `foam-vscode.views.connections.hideNonNoteLinks:enable`,
         () => {
-          this.show.update('all links');
+          this.hideNonNoteLinks.update(true);
           this.refresh();
         }
       ),
       vscode.commands.registerCommand(
-        `foam-vscode.views.connections.show:backlinks`,
+        `foam-vscode.views.connections.hideNonNoteLinks:disable`,
         () => {
-          this.show.update('backlinks');
-          this.refresh();
-        }
-      ),
-      vscode.commands.registerCommand(
-        `foam-vscode.views.connections.show:forward-links`,
-        () => {
-          this.show.update('forward links');
+          this.hideNonNoteLinks.update(false);
           this.refresh();
         }
       )
@@ -119,9 +129,16 @@ export class ConnectionsTreeDataProvider extends BaseTreeProvider<vscode.TreeIte
             this.graph,
             uri,
             (connection: Connection) => {
-              const isBacklink = connection.target
-                .asPlain()
-                .isEqual(this.target);
+              const isBacklink = connection.target.asPlain().isEqual(this.target);
+
+              if (this.hideNonNoteLinks.get()) {
+                const otherEnd = isBacklink ? connection.source : connection.target;
+                const other = this.workspace.find(otherEnd);
+                if (other && other.type !== 'note') {
+                  return false;
+                }
+              }
+
               return (
                 this.show.get() === 'all links' ||
                 (isBacklink && this.show.get() === 'backlinks') ||
@@ -159,9 +176,7 @@ export class ConnectionsTreeDataProvider extends BaseTreeProvider<vscode.TreeIte
             collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
           });
       const children = items.sort((a, b) => {
-        return (
-          a.variant.localeCompare(b.variant) || Range.isBefore(a.range, b.range)
-        );
+        return a.variant.localeCompare(b.variant) || Range.isBefore(a.range, b.range);
       });
       item.getChildren = () => Promise.resolve(children);
       item.description = `(${items.length}) ${item.description}`;

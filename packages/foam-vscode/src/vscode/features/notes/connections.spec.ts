@@ -130,6 +130,86 @@ describe('Backlinks panel', () => {
       ],
     });
   });
+  it('remembers the show choice across instances', async () => {
+    const memento = new MapBasedMemento();
+    const first = new ConnectionsTreeDataProvider(ws, graph, memento, false);
+    await first.show.update('backlinks');
+    first.dispose();
+
+    const second = new ConnectionsTreeDataProvider(ws, graph, memento, false);
+    expect(second.show.get()).toEqual('backlinks');
+    second.dispose();
+  });
+
+  describe('hide non-note links', () => {
+    const setup = () => {
+      const localRootUri = getUriInWorkspace('hide-non-note-root.md');
+      const localWs = createTestWorkspace();
+      // target note links to an image and an attachment (forward links),
+      // and is itself linked from another note (backlink — a regular note)
+      const target = createTestNote({
+        root: localRootUri,
+        uri: './target.md',
+        links: [{ to: './photo.png' }, { to: './spec.pdf' }],
+      });
+      const linkingNote = createTestNote({
+        root: localRootUri,
+        uri: './linker.md',
+        links: [{ slug: 'target' }],
+      });
+      const image = createTestNote({
+        root: localRootUri,
+        uri: './photo.png',
+        type: 'image',
+      });
+      const attachment = createTestNote({
+        root: localRootUri,
+        uri: './spec.pdf',
+        type: 'attachment',
+      });
+      localWs.set(target).set(linkingNote).set(image).set(attachment);
+      const localGraph = FoamGraph.fromWorkspace(localWs, true);
+      const localProvider = new ConnectionsTreeDataProvider(
+        localWs,
+        localGraph,
+        new MapBasedMemento(),
+        false
+      );
+      localProvider.target = target.uri;
+      const cleanup = () => {
+        localProvider.dispose();
+        localGraph.dispose();
+        localWs.dispose();
+      };
+      return { localProvider, linkingNote, image, attachment, cleanup };
+    };
+
+    it('hides image and attachment links when enabled', async () => {
+      const { localProvider, linkingNote, image, attachment, cleanup } =
+        setup();
+      await localProvider.hideNonNoteLinks.update(true);
+      await localProvider.refresh();
+      const items = (await localProvider.getChildren()) as ResourceTreeItem[];
+      const paths = items.map(i => i.resource.uri.path);
+      expect(paths).toContain(linkingNote.uri.path);
+      expect(paths).not.toContain(image.uri.path);
+      expect(paths).not.toContain(attachment.uri.path);
+      cleanup();
+    });
+
+    it('shows image and attachment links when disabled (default)', async () => {
+      const { localProvider, linkingNote, image, attachment, cleanup } =
+        setup();
+      await localProvider.refresh();
+      const items = (await localProvider.getChildren()) as ResourceTreeItem[];
+      const paths = items.map(i => i.resource.uri.path);
+      expect(paths).toContain(linkingNote.uri.path);
+      expect(paths).toContain(image.uri.path);
+      expect(paths).toContain(attachment.uri.path);
+      cleanup();
+    });
+  });
+
   it('refreshes upon changes in the workspace', async () => {
     let notes: ResourceTreeItem[] = [];
     provider.target = noteA.uri;

@@ -15,7 +15,7 @@ import VsCodeBasedParserCache from './vscode/services/cache';
 import { createMatcherAndDataStore } from './vscode/services/editor';
 import { OllamaEmbeddingProvider } from './ai/providers/ollama/ollama-provider';
 import { initTelemetry } from './vscode/services/telemetry';
-import { getDailyNoteTemplateUri } from './vscode/services/template-service';
+import { getDailyNoteTemplateUri, getTemplates } from './vscode/services/template-service';
 
 // Injected by esbuild's `define` (and the vitest config), so telemetry can
 // attach version dimensions without a runtime package.json read

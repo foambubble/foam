@@ -1,4 +1,27 @@
-# Foam CLI
+# Smart Folders
+
+## Smart Folders
+
+The new **Smart Folders** panel allows you to use filters to view a subset of your notes.
+
+Filters use the same query syntax as `foam-query` blocks.
+
+For example this will create the "Work in Progress" smart folder:
+
+```yaml
+# .foam/queries/work-in-progress.yaml
+name: Work in Progress
+filter:
+  and:
+    - tag: '#wip'
+    - not:
+        tag: '#archive'
+sort: title ASC
+```
+
+Queries used for Smart Folders are also exposed in the CLI and via MCP tools.
+
+[Learn more about Smart Folders](https://docs.foam.md/features/smart-folders/)
 
 ## Foam CLI
 

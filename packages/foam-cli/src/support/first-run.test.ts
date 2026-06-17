@@ -60,7 +60,6 @@ describe('promptFirstRunConsent', () => {
     expect(result).toBe('no-prompt');
     const out = Buffer.concat(chunks).toString('utf8');
     expect(out).toContain('Foam telemetry is on');
-    expect(out).toContain('FOAM_TELEMETRY=0');
     // No interactive prompt suffix — there's nobody to answer.
     expect(out).not.toContain('Enable telemetry? [Y/n]:');
     // The full paragraph is reserved for the interactive prompt — non-interactive

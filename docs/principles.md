@@ -37,7 +37,7 @@ This principle may seem like it contradicts [Foam wants you to own your thoughts
 
 - **Foam is a collection of ideas.** Foam was released to the public not to share the few good ideas in it, but to learn many good ideas from others. As you improve your own workflow, share your work on your own Foam blog.
 - **Foam is open for contributions.** If you use a tool or workflow that you like that fits these principles, please contribute them back to the Foam template as [[recipes]], [[recommended-extensions]] or documentation in [this workspace](https://github.com/foambubble/foam). See also: [[contribution-guide]].
-- **Foam is open source.** Feel free to fork it, improve it and remix it. Just don't sell it, as per our [license](LICENSE.txt).
+- **Foam is open source.** Feel free to fork it, improve it and remix it under the terms of our [MIT license](LICENSE.txt).
 - **No idea is too big.** If it doesn't fit with Foam's core workflow, we might make it a [[recipes]] page instead.
 
 ## Foam is for hackers, not only for programmers

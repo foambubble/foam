@@ -1,5 +1,15 @@
 # Change Log
 
+## 0.44.1
+
+### Patch Changes
+
+- Tweak rendering of embedded notes in the preview ([#1661](https://github.com/foambubble/foam/issues/1661))
+
+- Fix bug where Connections panel settings were not persisted across sessions ([#1647](https://github.com/foambubble/foam/issues/1647))
+
+- Consolidate panel commands, icons, and sorting; add a toggle in the Connections panel to switch between all connections and notes-only
+
 ## 0.44.0
 
 ### Minor Changes

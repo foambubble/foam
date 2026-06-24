@@ -12,7 +12,7 @@
 
 - `foam mcp` now defaults to read-only. Pass `--allow-writes` to expose the write tools (`create_resource`, `update_resource`, `delete_resource`, `move_resource`, `add_tags`, `remove_tags`, `rename_tag`) to the AI agent. The previous `--read-only` flag has been removed.
 
-  Documentation for the `foam mcp` subcommand has also been added — see [the user docs](https://foambubble.github.io/foam/user/tools/cli/mcp).
+  Documentation for the `foam mcp` subcommand has also been added — see [the user docs](https://docs.foam.md/tools/cli/mcp).
 
 ## 0.44.0
 

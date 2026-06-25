@@ -11,6 +11,8 @@ import {
   renderList,
   renderResults,
   MarkdownRenderer,
+  QueryRender,
+  ToHref,
 } from './html';
 import { RenderContext } from './render-context';
 
@@ -28,7 +30,7 @@ export interface RenderJsQueryOptions {
   workspace: FoamWorkspace;
   graph: FoamGraph;
   trusted: boolean;
-  toRelativePath: (path: string) => string;
+  toHref: ToHref;
   currentResource?: URI | null;
   readSource?: SourceReader;
   renderMarkdown?: MarkdownRenderer;
@@ -38,23 +40,28 @@ export interface RenderJsQueryOptions {
 export function renderJsQuery(
   code: string,
   opts: RenderJsQueryOptions
-): string {
+): QueryRender {
   const {
     workspace,
     graph,
     trusted,
-    toRelativePath,
+    toHref,
     currentResource,
     readSource,
     renderMarkdown,
     context,
   } = opts;
+  // JS scripts can call `render()` zero or more times with arbitrary values,
+  // so the output is always an opaque concatenation as far as the consumer
+  const opaque = (html: string): QueryRender => ({ html, shape: 'unknown' });
   if (code.trim() === '') {
-    return JS_PLACEHOLDER;
+    return opaque(JS_PLACEHOLDER);
   }
 
   if (!trusted) {
-    return `<div class="foam-query-untrusted">foam-query-js requires a trusted workspace. <a href="command:workbench.action.manageTrustedDomain">Manage trust</a></div>`;
+    return opaque(
+      `<div class="foam-query-untrusted">foam-query-js requires a trusted workspace. <a href="command:workbench.action.manageTrustedDomain">Manage trust</a></div>`
+    );
   }
 
   const htmlParts: string[] = [];
@@ -68,18 +75,18 @@ export function renderJsQuery(
       return renderList(
         qr.select(listFields).toArray(),
         listFields,
-        toRelativePath,
+        toHref,
         renderMarkdown,
         context
-      );
+      ).html;
     }
     return renderResults(
       qr.toArray(),
       desc,
-      toRelativePath,
+      toHref,
       renderMarkdown,
       context
-    );
+    ).html;
   };
 
   const render = (value: QueryResult | string | undefined | null) => {
@@ -140,13 +147,15 @@ export function renderJsQuery(
     // only boundary — this must never be reached for an untrusted workspace.
     new vm.Script(code).runInContext(context, { timeout: EXECUTION_TIMEOUT });
   } catch (e) {
-    return `<div class="foam-query-error">Script error: ${escapeHtml(
-      String(e)
-    )}</div>`;
+    return opaque(
+      `<div class="foam-query-error">Script error: ${escapeHtml(
+        String(e)
+      )}</div>`
+    );
   }
 
-  return (
+  return opaque(
     htmlParts.join('\n') ||
-    '<p class="foam-query-empty">No output. Did you forget to call render()?</p>'
+      '<p class="foam-query-empty">No output. Did you forget to call render()?</p>'
   );
 }

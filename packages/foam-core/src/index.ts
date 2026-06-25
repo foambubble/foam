@@ -104,7 +104,14 @@ export {
   renderCount,
   renderResults,
 } from './query/html';
-export type { MarkdownRenderer, MarkdownRenderOptions } from './query/html';
+export type {
+  FoamQueryRenderEvent,
+  MarkdownRenderer,
+  MarkdownRenderOptions,
+  QueryRender,
+  QueryResultShape,
+  ToHref,
+} from './query/html';
 export type { RenderContext } from './query/render-context';
 export { createRenderContext } from './query/render-context';
 

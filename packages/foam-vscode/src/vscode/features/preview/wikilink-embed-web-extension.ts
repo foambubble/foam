@@ -7,6 +7,7 @@ import type { WikilinkEmbedOptions } from './wikilink-embed';
 
 export const WIKILINK_EMBED_REGEX =
   /((?:(?:full|content)-(?:inline|card)|full|content|inline|card)?!\[\[[^[\]]+?\]\])/;
+export const CONFIG_EMBED_NOTE_TYPE = 'preview.embedNoteType';
 
 export const markdownItWikilinkEmbed = (
   md: markdownit,

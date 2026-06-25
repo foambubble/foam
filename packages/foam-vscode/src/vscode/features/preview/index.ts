@@ -1,19 +1,13 @@
 /*global markdownit:readonly*/
 
 import * as vscode from 'vscode';
-import MarkdownIt from 'markdown-it';
-import { Foam } from '@foam/core';
-import { default as markdownItFoamTags } from './tag-highlight';
-import { default as markdownItWikilinkNavigation } from './wikilink-navigation';
-import { default as markdownItRemoveLinkReferences } from './remove-wikilink-references';
-import { default as markdownItWikilinkEmbed } from './wikilink-embed';
-import { default as escapeWikilinkPipes } from './escape-wikilink-pipes';
-import { default as markdownItBlockAnchorIds } from './block-anchor-ids';
-import { default as markdownItFoamQuery } from './foam-query-renderer';
-import markdownItFootnote from 'markdown-it-footnote';
+import { Foam, URI, createRenderContext } from '@foam/core';
 import { fromVsCodeUri, toVsCodeUri } from '../../utils/vsc-utils';
-import { URI } from '@foam/core';
-import { createRenderContext } from '@foam/core';
+import { createFoamMarkdownIt } from './foam-markdown-it';
+import { createVsCodeLinkResolver } from './link-resolvers';
+import { getFoamVsCodeConfig } from '../../config';
+import { isVirtualWorkspace } from '../../services/editor';
+import { CONFIG_EMBED_NOTE_TYPE } from './wikilink-embed';
 
 export default async function activate(
   context: vscode.ExtensionContext,
@@ -57,42 +51,30 @@ export default async function activate(
         return editor ? ws.find(fromVsCodeUri(editor.document.uri)) : null;
       };
 
-      // Inherit the outer md's html setting (VS Code tracks
-      // `markdown.preview.unsafe` there) so source-derived cells respect the
-      // same lockdown as the rest of the preview.
-      const outerHtmlOption = (md as { options?: { html?: boolean } }).options
-        ?.html ?? true;
-
-      const buildFoamPipeline = (target: markdownit): markdownit => {
-        let r = escapeWikilinkPipes(target);
-        r = r.use(markdownItFootnote);
-        r = markdownItWikilinkEmbed(r, ws, parser, {
-          getCurrentResource,
-          createInnerMd: () =>
-            buildFoamPipeline(MarkdownIt({ html: outerHtmlOption })),
-          renderContext,
-        });
-        r = markdownItFoamTags(r, ws);
-        r = markdownItWikilinkNavigation(r, ws);
-        r = markdownItRemoveLinkReferences(r, ws);
-        r = markdownItBlockAnchorIds(r);
-        r = markdownItFoamQuery(r, ws, graph, {
-          isTrusted: () => vscode.workspace.isTrusted,
-          toRelativePath: (uriPath: string) =>
-            vscode.workspace.asRelativePath(
-              toVsCodeUri(URI.file(uriPath)),
-              false
-            ),
-          getCurrentResource,
-          createInnerMd: () =>
-            buildFoamPipeline(MarkdownIt({ html: outerHtmlOption })),
+      return createFoamMarkdownIt(
+        {
+          workspace: ws,
+          graph,
           parser,
+          linkResolver: createVsCodeLinkResolver(),
+          getCurrentResource,
+          isTrusted: () => vscode.workspace.isTrusted,
+          // Build the full href shape the preview webview expects:
+          // a leading-slash workspace-relative path, percent-encoded.
+          // The URI's fragment is dropped here because foam-query result
+          // titles always link to the note as a whole — they don't carry a
+          // section target. If that changes, append `#${uri.fragment}`.
+          toHref: (uri: URI) =>
+            encodeURI(
+              `/${vscode.workspace.asRelativePath(toVsCodeUri(uri), false)}`
+            ),
+          isVirtualWorkspace: () => isVirtualWorkspace(),
+          getEmbedNoteType: () =>
+            getFoamVsCodeConfig<string>(CONFIG_EMBED_NOTE_TYPE),
           renderContext,
-        });
-        return r;
-      };
-
-      return buildFoamPipeline(md);
+        },
+        md
+      );
     },
   };
 }

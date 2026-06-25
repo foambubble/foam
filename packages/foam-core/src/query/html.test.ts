@@ -1,4 +1,4 @@
-import { escapeHtml, renderList, renderTable, renderResults } from './html';
+import { escapeHtml, noteLink, renderList, renderTable, renderResults } from './html';
 import { ResourceView } from '.';
 import { URI } from '../model/uri';
 
@@ -6,8 +6,13 @@ import { URI } from '../model/uri';
 // `section[...]`) through the injected `renderMarkdown` callback. Other fields
 // keep going through `escapeHtml`. Absent callback → escaped raw markdown.
 
+// `toHref` test stub: produces a stable href shape for assertions. The contract
+// is "host returns the full href string", so the stub returns the URI path
+// (callers asserted on `href="/notes/alpha.md"` before the API change and the
+// same assertions still hold).
+const pathHref = (uri: URI) => uri.path;
+
 describe('renderList / renderTable — markdown-bearing fields', () => {
-  const identity = (p: string) => p;
   const fakeMd = (md: string) => `<p>RENDERED:${md}</p>`;
 
   const rows: ResourceView[] = [
@@ -21,23 +26,23 @@ describe('renderList / renderTable — markdown-bearing fields', () => {
   ];
 
   it('renderList pipes `body` through renderMarkdown', () => {
-    const html = renderList(rows, ['title', 'body'], identity, fakeMd);
+    const html = renderList(rows, ['title', 'body'], pathHref, fakeMd).html;
     expect(html).toContain('RENDERED:# Q1');
     expect(html).not.toContain('&lt;p&gt;'); // not double-escaped
   });
 
   it('renderList pipes `content` through renderMarkdown', () => {
-    const html = renderList(rows, ['content'], identity, fakeMd);
+    const html = renderList(rows, ['content'], pathHref, fakeMd).html;
     expect(html).toContain('RENDERED:What is X?');
   });
 
   it('renderList pipes `section[...]` through renderMarkdown', () => {
-    const html = renderList(rows, ['section[Question]'], identity, fakeMd);
+    const html = renderList(rows, ['section[Question]'], pathHref, fakeMd).html;
     expect(html).toContain('RENDERED:What is X?');
   });
 
   it('renderTable pipes markdown fields through renderMarkdown in cells', () => {
-    const html = renderTable(rows, ['title', 'body'], identity, fakeMd);
+    const html = renderTable(rows, ['title', 'body'], pathHref, fakeMd).html;
     expect(html).toContain('RENDERED:# Q1');
   });
 
@@ -49,7 +54,7 @@ describe('renderList / renderTable — markdown-bearing fields', () => {
         body: '<script>alert(1)</script>',
       },
     ];
-    const html = renderList(rowsWithHtmlInBody, ['body'], identity);
+    const html = renderList(rowsWithHtmlInBody, ['body'], pathHref).html;
     expect(html).not.toContain('<script>');
     expect(html).toContain('&lt;script&gt;');
   });
@@ -58,10 +63,10 @@ describe('renderList / renderTable — markdown-bearing fields', () => {
     const rowsWithHtmlInTitle: ResourceView[] = [
       { uri: URI.file('/x.md'), title: '<b>raw</b>' },
     ];
-    const html = renderList(
+    const { html } = renderList(
       rowsWithHtmlInTitle,
       ['title'],
-      identity,
+      pathHref,
       fakeMd
     );
     expect(html).not.toContain('RENDERED:');
@@ -70,44 +75,43 @@ describe('renderList / renderTable — markdown-bearing fields', () => {
 });
 
 describe('renderResults — format dispatch with markdown fields', () => {
-  const identity = (p: string) => p;
   const fakeMd = (md: string) => `<p>R:${md}</p>`;
 
   it('list format threads renderMarkdown to the list renderer', () => {
     const rows: ResourceView[] = [
       { uri: URI.file('/q1.md'), title: 'Q1', body: '# Q1' },
     ];
-    const html = renderResults(
+    const { html, shape } = renderResults(
       rows,
       { select: ['body'], format: 'list' },
-      identity,
+      pathHref,
       fakeMd
     );
     expect(html).toContain('R:# Q1');
+    expect(shape).toBe('list');
   });
 
   it('table format threads renderMarkdown to the table renderer', () => {
     const rows: ResourceView[] = [
       { uri: URI.file('/q1.md'), title: 'Q1', body: '# Q1' },
     ];
-    const html = renderResults(
+    const { html, shape } = renderResults(
       rows,
       { select: ['title', 'body'], format: 'table' },
-      identity,
+      pathHref,
       fakeMd
     );
     expect(html).toContain('R:# Q1');
+    expect(shape).toBe('table');
   });
 });
 
 describe('renderList / renderTable — title fallback', () => {
-  const identity = (p: string) => p;
-
   it('renderList falls back to the basename when the title is missing', () => {
     const rows: ResourceView[] = [
       { uri: URI.file('/notes/alpha.md') /* no title */ },
     ];
-    const html = renderList(rows, ['title'], identity);
+    const html = renderList(rows, ['title'], pathHref).html;
     expect(html).toContain('alpha.md');
   });
 
@@ -115,7 +119,7 @@ describe('renderList / renderTable — title fallback', () => {
     const rows: ResourceView[] = [
       { uri: URI.file('/notes/alpha.md') /* no title */ },
     ];
-    const html = renderTable(rows, ['title'], identity);
+    const html = renderTable(rows, ['title'], pathHref).html;
     expect(html).toContain('foam-note-link');
     // The cell text — not just the href — must contain the basename.
     // Match the visible link content between `>...<` so we don't pass on the
@@ -127,7 +131,7 @@ describe('renderList / renderTable — title fallback', () => {
     // Defensive fallback for an effectively unnamed resource — the cell must
     // still contain visible text rather than an empty anchor.
     const rows: ResourceView[] = [{ uri: URI.file('/') }];
-    const html = renderTable(rows, ['title'], identity);
+    const html = renderTable(rows, ['title'], pathHref).html;
     expect(html).toContain('untitled');
   });
 });
@@ -135,5 +139,59 @@ describe('renderList / renderTable — title fallback', () => {
 describe('escapeHtml', () => {
   it('escapes the five HTML special characters so output is safe inside both double- and single-quoted attributes', () => {
     expect(escapeHtml(`& < > " '`)).toBe('&amp; &lt; &gt; &quot; &#39;');
+  });
+});
+
+describe('noteLink', () => {
+  it('uses the href returned by toHref as-is — the host owns the full href shape', () => {
+    const html = noteLink(
+      'Alpha',
+      URI.file('/notes/alpha.md'),
+      uri => `/${uri.path.replace(/^\//, '')}`
+    );
+    expect(html).toContain('href="/notes/alpha.md"');
+    expect(html).toContain('data-href="/notes/alpha.md"');
+  });
+
+  it('lets toHref return a `#fragment` so callers can target in-page anchors directly', () => {
+    const html = noteLink('Alpha', URI.file('/notes/alpha.md'), () => '#note-alpha');
+    expect(html).toContain('href="#note-alpha"');
+    expect(html).toContain('data-href="#note-alpha"');
+  });
+
+  it('renders escaped plain text when toHref returns null (the "no link" signal)', () => {
+    const html = noteLink('Alpha & co', URI.file('/notes/alpha.md'), () => null);
+    expect(html).toBe('Alpha &amp; co');
+  });
+
+  it('also falls back to escaped plain text when toHref throws (safety net)', () => {
+    const html = noteLink('Alpha & co', URI.file('/notes/alpha.md'), () => {
+      throw new Error('boom');
+    });
+    expect(html).toBe('Alpha &amp; co');
+  });
+
+  it('exposes the URI fragment to toHref so callers can build per-section anchors', () => {
+    const uri = URI.file('/notes/alpha.md').with({ fragment: 'intro' });
+    const html = noteLink('Alpha intro', uri, u =>
+      u.fragment ? `#${u.path}--${u.fragment}` : `#${u.path}`
+    );
+    expect(html).toContain('href="#/notes/alpha.md--intro"');
+  });
+
+  it('escapes a host-supplied href containing an HTML attribute breaker', () => {
+    // The toHref contract says hosts return the href verbatim — including
+    // potentially-unsafe characters like `"` (e.g. a CLI handing back
+    // `uri.path` for a workspace where a note is named `Q "Quoted" Memo.md`).
+    // `noteLink` applies attribute-boundary escaping so a quote can't close
+    // the `href=` attribute and inject markup.
+    const html = noteLink(
+      'Quoted',
+      URI.file('/notes/q.md'),
+      () => '/path/with"quote.md'
+    );
+    expect(html).toContain('href="/path/with&quot;quote.md"');
+    expect(html).toContain('data-href="/path/with&quot;quote.md"');
+    expect(html).not.toContain('with"quote');
   });
 });

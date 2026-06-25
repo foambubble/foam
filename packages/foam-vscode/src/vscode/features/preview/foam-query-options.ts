@@ -4,6 +4,7 @@ import { Resource } from '@foam/core';
 import { ResourceParser } from '@foam/core';
 import { SourceReader } from '@foam/core';
 import { RenderContext } from '@foam/core';
+import { FoamQueryRenderEvent, ToHref } from '@foam/core';
 
 /**
  * Options for both the production and web-extension flavours of
@@ -13,7 +14,12 @@ import { RenderContext } from '@foam/core';
  */
 export interface FoamQueryOptions {
   isTrusted: () => boolean;
-  toRelativePath: (path: string) => string;
+  /**
+   * Builds the `href` value for a note link emitted by query results. Receives
+   * the full `URI` (including any `fragment`), returns the raw href string or
+   * `null` to render the title as plain text.
+   */
+  toHref: ToHref;
   getCurrentResource?: () => Resource | null;
 
   /**
@@ -38,4 +44,11 @@ export interface FoamQueryOptions {
    * plugin too — otherwise embed↔query cycles aren't caught.
    */
   renderContext: RenderContext;
+
+  /**
+   * Hook fired after each foam-query fence renders. The returned string
+   * replaces the HTML the fence rule would have emitted, giving the host a
+   * chance to wrap, decorate, or strip query output without inspecting it.
+   */
+  onDidRender?: (event: FoamQueryRenderEvent) => string;
 }

@@ -7,7 +7,6 @@ import {
   extractBlockContent,
   withLinksRelativeToWorkspaceRoot,
 } from './wikilink-embed';
-import * as config from '../../config';
 import { createMarkdownParser } from '@foam/core';
 import {
   createTestNote,
@@ -438,28 +437,29 @@ describe('Wikilink Note Embedding', () => {
 
   describe('Config Parsing', () => {
     it('should use preview.embedNoteType if an explicit modifier is not passed in', () => {
-      vi.spyOn(config, 'getFoamVsCodeConfig').mockReturnValueOnce('full-card');
-
-      const { noteScope, noteStyle } = retrieveNoteConfig(undefined);
+      const { noteScope, noteStyle } = retrieveNoteConfig(
+        undefined,
+        () => 'full-card'
+      );
       expect(noteScope).toEqual('full');
       expect(noteStyle).toEqual('card');
     });
 
     it('should use explicit modifier over user settings if passed in', () => {
-      vi.spyOn(config, 'getFoamVsCodeConfig')
-        .mockReturnValueOnce('full-inline')
-        .mockReturnValueOnce('full-inline')
-        .mockReturnValueOnce('full-inline');
+      const getDefault = () => 'full-inline';
 
-      let { noteScope, noteStyle } = retrieveNoteConfig('content-card');
+      let { noteScope, noteStyle } = retrieveNoteConfig(
+        'content-card',
+        getDefault
+      );
       expect(noteScope).toEqual('content');
       expect(noteStyle).toEqual('card');
 
-      ({ noteScope, noteStyle } = retrieveNoteConfig('content'));
+      ({ noteScope, noteStyle } = retrieveNoteConfig('content', getDefault));
       expect(noteScope).toEqual('content');
       expect(noteStyle).toEqual('inline');
 
-      ({ noteScope, noteStyle } = retrieveNoteConfig('card'));
+      ({ noteScope, noteStyle } = retrieveNoteConfig('card', getDefault));
       expect(noteScope).toEqual('full');
       expect(noteStyle).toEqual('card');
     });

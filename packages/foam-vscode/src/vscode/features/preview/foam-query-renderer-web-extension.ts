@@ -38,7 +38,7 @@ export function markdownItFoamQuery(
   graph: FoamGraph,
   options: FoamQueryOptions
 ): markdownit {
-  const { isTrusted, toRelativePath, getCurrentResource } = options;
+  const { isTrusted, toHref, getCurrentResource, onDidRender } = options;
 
   const defaultFence: any =
     md.renderer.rules.fence ??
@@ -61,20 +61,21 @@ export function markdownItFoamQuery(
         workspace,
         graph,
         trusted: isTrusted(),
-        toRelativePath,
+        toHref,
         currentResource: getCurrentResource?.()?.uri ?? null,
       };
-      return (
-        prefix +
-        (info === 'foam-query'
+      const { html: inner, shape } =
+        info === 'foam-query'
           ? renderDqlQuery(token.content, queryOpts)
-          : renderJsQuery(token.content, queryOpts))
-      );
+          : renderJsQuery(token.content, queryOpts);
+      const html = prefix + inner;
+      return onDidRender ? onDidRender({ info, html, shape }) : html;
     } catch (e) {
       Logger.error(`[foam-query] error rendering ${info} block`, e);
-      return `<div class="foam-query-error">Query error: ${escapeHtml(
+      const html = `<div class="foam-query-error">Query error: ${escapeHtml(
         String(e)
       )}</div>`;
+      return onDidRender ? onDidRender({ info, html, shape: 'error' }) : html;
     }
   };
 

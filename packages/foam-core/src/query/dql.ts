@@ -11,7 +11,7 @@ import {
   SelectEntry,
   normalizeSelectEntry,
 } from '.';
-import { MarkdownRenderer } from './html';
+import { MarkdownRenderer, QueryRender, ToHref } from './html';
 import { RenderContext } from './render-context';
 import { escapeHtml, renderResults } from './html';
 import { URI } from '../model/uri';
@@ -167,7 +167,7 @@ export interface RenderDqlQueryOptions {
   workspace: FoamWorkspace;
   graph: FoamGraph;
   trusted: boolean;
-  toRelativePath: (path: string) => string;
+  toHref: ToHref;
   currentResource?: URI | null;
   readSource?: SourceReader;
   renderMarkdown?: MarkdownRenderer;
@@ -177,19 +177,20 @@ export interface RenderDqlQueryOptions {
 export function renderDqlQuery(
   content: string,
   opts: RenderDqlQueryOptions
-): string {
+): QueryRender {
   const {
     workspace,
     graph,
     trusted,
-    toRelativePath,
+    toHref,
     currentResource,
     readSource,
     renderMarkdown,
     context,
   } = opts;
+  const bailout = (html: string): QueryRender => ({ html, shape: 'unknown' });
   if (content.trim() === '') {
-    return DQL_PLACEHOLDER;
+    return bailout(DQL_PLACEHOLDER);
   }
 
   const warnings: string[] = [];
@@ -215,17 +216,17 @@ export function renderDqlQuery(
       }
     }
     if (!recovered) {
-      return (
+      return bailout(
         DQL_PLACEHOLDER +
-        `<div class="foam-query-error">YAML parse error: ${escapeHtml(
-          (e as Error).message
-        )}</div>`
+          `<div class="foam-query-error">YAML parse error: ${escapeHtml(
+            (e as Error).message
+          )}</div>`
       );
     }
   }
 
   if (typeof parsed !== 'object' || Array.isArray(parsed)) {
-    return DQL_PLACEHOLDER;
+    return bailout(DQL_PLACEHOLDER);
   }
 
   let filterIsEmpty = false;
@@ -256,7 +257,7 @@ export function renderDqlQuery(
   }
 
   if (Object.keys(parsed).length === 0 || filterIsEmpty) {
-    return DQL_PLACEHOLDER + renderWarnings(warnings);
+    return bailout(DQL_PLACEHOLDER + renderWarnings(warnings));
   }
 
   // Strip and warn on unknown `select` entries.
@@ -320,8 +321,11 @@ export function renderDqlQuery(
   // `filter.path`); escape before pushing into the HTML-fragment channel
   // shared with DQL-level validators above.
   warnings.push(...filterWarnings.map(escapeHtml));
-  return (
-    renderWarnings(warnings) +
-    renderResults(results, descriptor, toRelativePath, renderMarkdown, context)
-  );
+  const inner = renderResults(results, descriptor, toHref, renderMarkdown, context);
+  // Warnings stay merged into the HTML — see `FoamQueryRenderEvent` doc.
+  // The `shape` describes the underlying result, not the prepended warnings.
+  return {
+    html: renderWarnings(warnings) + inner.html,
+    shape: inner.shape,
+  };
 }

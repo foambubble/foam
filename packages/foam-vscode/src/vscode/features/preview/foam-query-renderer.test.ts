@@ -41,14 +41,20 @@ describe('markdownItFoamQuery', () => {
   const graph = FoamGraph.fromWorkspace(ws, false);
 
   const workspaceRoot = '/test-workspace';
-  const toRelativePath = (uriPath: string) =>
-    uriPath.startsWith(workspaceRoot)
-      ? uriPath.slice(workspaceRoot.length)
-      : uriPath;
+  // The renderer's `toHref` contract is "return the full href value". Tests
+  // assert on the previous shape — workspace-relative path with a leading
+  // slash — so the stub builds it directly instead of relying on `noteLink`
+  // to prepend `/` (it no longer does).
+  const toHref = (uri: { path: string }) => {
+    const rel = uri.path.startsWith(workspaceRoot)
+      ? uri.path.slice(workspaceRoot.length)
+      : uri.path;
+    return `/${rel.replace(/^\//, '')}`;
+  };
 
   const md = markdownItFoamQuery(MarkdownIt(), ws, graph, {
     isTrusted: () => true,
-    toRelativePath,
+    toHref,
     renderContext: createRenderContext(),
   });
 
@@ -399,7 +405,7 @@ describe('markdownItFoamQuery', () => {
     it('links_to: "$current" matches notes linking to the current note', () => {
       const mdWithCurrent = markdownItFoamQuery(MarkdownIt(), ws3, graph3, {
         isTrusted: () => true,
-        toRelativePath,
+        toHref,
         getCurrentResource: () => targetNote,
         renderContext: createRenderContext(),
       });
@@ -412,7 +418,7 @@ describe('markdownItFoamQuery', () => {
     it('links_from: "$current" matches notes linked from the current note', () => {
       const mdWithCurrent = markdownItFoamQuery(MarkdownIt(), ws3, graph3, {
         isTrusted: () => true,
-        toRelativePath,
+        toHref,
         getCurrentResource: () => linkingNote,
         renderContext: createRenderContext(),
       });
@@ -441,7 +447,7 @@ describe('markdownItFoamQuery', () => {
     it('exposes the URI of the current resource when provided', () => {
       const mdWithCurrent = markdownItFoamQuery(MarkdownIt(), ws, graph, {
         isTrusted: () => true,
-        toRelativePath,
+        toHref,
         getCurrentResource: () => noteA,
         renderContext: createRenderContext(),
       });
@@ -462,7 +468,7 @@ describe('markdownItFoamQuery', () => {
       const graph2 = FoamGraph.fromWorkspace(ws2, false);
       const mdWithCurrent = markdownItFoamQuery(MarkdownIt(), ws2, graph2, {
         isTrusted: () => true,
-        toRelativePath,
+        toHref,
         getCurrentResource: () => targetNote,
         renderContext: createRenderContext(),
       });
@@ -550,7 +556,7 @@ describe('markdownItFoamQuery', () => {
     it('shows untrusted message when isTrusted returns false', () => {
       const untrustedMd = markdownItFoamQuery(MarkdownIt(), ws, graph, {
         isTrusted: () => false,
-        toRelativePath,
+        toHref,
         renderContext: createRenderContext(),
       });
       const result = untrustedMd.render(
@@ -605,7 +611,7 @@ describe('markdownItFoamQuery', () => {
 
     const mdWithSource = markdownItFoamQuery(MarkdownIt(), ws2, graph2, {
       isTrusted: () => true,
-      toRelativePath,
+      toHref,
       readSource,
       createInnerMd,
       renderContext: createRenderContext(),
@@ -658,7 +664,7 @@ describe('markdownItFoamQuery', () => {
 
       const mdWithRewrite = markdownItFoamQuery(MarkdownIt(), ws2, graph2, {
         isTrusted: () => true,
-        toRelativePath,
+        toHref,
         readSource,
         createInnerMd: captureInnerMd,
         parser,
@@ -706,7 +712,7 @@ describe('markdownItFoamQuery', () => {
       const buildPlugin = () =>
         markdownItFoamQuery(MarkdownIt(), wsCyc, graphCyc, {
           isTrusted: () => true,
-          toRelativePath,
+          toHref,
           readSource: cyclicReadSource,
           createInnerMd: buildPlugin,
           parser,
@@ -778,7 +784,7 @@ describe('markdownItFoamQuery', () => {
       const buildPlugin = () =>
         markdownItFoamQuery(MarkdownIt(), wsCur, graphCur, {
           isTrusted: () => true,
-          toRelativePath,
+          toHref,
           readSource: (uri: URI) => sources[uri.path] ?? null,
           createInnerMd: buildPlugin,
           parser,
@@ -812,7 +818,7 @@ describe('markdownItFoamQuery', () => {
       const safeInnerMd = () => MarkdownIt({ html: false });
       const mdSafe = markdownItFoamQuery(MarkdownIt(), wsSafe, graphSafe, {
         isTrusted: () => true,
-        toRelativePath,
+        toHref,
         readSource: (uri: URI) => safeSources[uri.path] ?? null,
         createInnerMd: safeInnerMd,
         parser,
@@ -831,7 +837,7 @@ describe('markdownItFoamQuery', () => {
     it('falls back to escaped raw markdown when createInnerMd is not provided', () => {
       const mdWithoutInner = markdownItFoamQuery(MarkdownIt(), ws2, graph2, {
         isTrusted: () => true,
-        toRelativePath,
+        toHref,
         readSource,
         renderContext: createRenderContext(),
         // no createInnerMd

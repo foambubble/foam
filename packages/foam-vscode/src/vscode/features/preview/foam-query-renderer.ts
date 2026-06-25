@@ -24,11 +24,12 @@ export function markdownItFoamQuery(
 ): markdownit {
   const {
     isTrusted,
-    toRelativePath,
+    toHref,
     getCurrentResource,
     createInnerMd,
     parser,
     renderContext,
+    onDidRender,
   } = options;
 
   // Synchronous read: the markdown-it fence rule is sync but `IDataStore.read`
@@ -87,20 +88,25 @@ export function markdownItFoamQuery(
         workspace,
         graph,
         trusted: isTrusted(),
-        toRelativePath,
+        toHref,
         currentResource: getCurrentResource?.()?.uri ?? null,
         readSource,
         renderMarkdown,
         context: renderContext,
       };
-      return info === 'foam-query'
-        ? renderDqlQuery(token.content, queryOpts)
-        : renderJsQuery(token.content, queryOpts);
+      const { html, shape } =
+        info === 'foam-query'
+          ? renderDqlQuery(token.content, queryOpts)
+          : renderJsQuery(token.content, queryOpts);
+      return onDidRender
+        ? onDidRender({ info, html, shape })
+        : html;
     } catch (e) {
       Logger.error(`[foam-query] error rendering ${info} block`, e);
-      return `<div class="foam-query-error">Query error: ${escapeHtml(
+      const html = `<div class="foam-query-error">Query error: ${escapeHtml(
         String(e)
       )}</div>`;
+      return onDidRender ? onDidRender({ info, html, shape: 'error' }) : html;
     }
   };
 

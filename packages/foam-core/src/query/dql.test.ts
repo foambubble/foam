@@ -23,9 +23,9 @@ describe('renderDqlQuery — warning escaping', () => {
     // The filter targets a note identifier containing an HTML payload. The
     // resulting "not found" warning embeds this string; if it were rendered
     // unescaped the preview would inject the tag into the DOM.
-    const html = renderDqlQuery(
+    const { html } = renderDqlQuery(
       `filter:\n  links_to: '<img src=x onerror=alert(1)>'`,
-      { workspace, graph, trusted: false, toRelativePath: p => p }
+      { workspace, graph, trusted: false, toHref: uri => uri.path }
     );
 
     expect(html).not.toContain('<img src=x');
@@ -36,9 +36,9 @@ describe('renderDqlQuery — warning escaping', () => {
     const { workspace, graph } = makeWorkspaceAndGraph([
       createTestNote({ uri: '/a.md' }),
     ]);
-    const html = renderDqlQuery(
+    const { html } = renderDqlQuery(
       `filter:\n  path: '<script>(a+)+$'`,
-      { workspace, graph, trusted: false, toRelativePath: p => p }
+      { workspace, graph, trusted: false, toHref: uri => uri.path }
     );
     expect(html).not.toContain('<script>');
     expect(html).toContain('&lt;script&gt;');
@@ -50,9 +50,9 @@ describe('renderDqlQuery — source-derived select fields', () => {
     const { workspace, graph } = makeWorkspaceAndGraph([
       createTestNote({ uri: '/a.md', title: 'A' }),
     ]);
-    const html = renderDqlQuery(
+    const { html } = renderDqlQuery(
       `filter: '*'\nselect: [title, body, content]`,
-      { workspace, graph, trusted: false, toRelativePath: p => p }
+      { workspace, graph, trusted: false, toHref: uri => uri.path }
     );
     expect(html).not.toContain('Unknown select field');
   });
@@ -61,9 +61,9 @@ describe('renderDqlQuery — source-derived select fields', () => {
     const { workspace, graph } = makeWorkspaceAndGraph([
       createTestNote({ uri: '/a.md', title: 'A' }),
     ]);
-    const html = renderDqlQuery(
+    const { html } = renderDqlQuery(
       `filter: '*'\nselect: [title, 'section[My Section]']`,
-      { workspace, graph, trusted: false, toRelativePath: p => p }
+      { workspace, graph, trusted: false, toHref: uri => uri.path }
     );
     expect(html).not.toContain('Unknown select field');
   });
@@ -72,9 +72,9 @@ describe('renderDqlQuery — source-derived select fields', () => {
     const { workspace, graph } = makeWorkspaceAndGraph([
       createTestNote({ uri: '/a.md', title: 'A' }),
     ]);
-    const html = renderDqlQuery(
+    const { html } = renderDqlQuery(
       `filter: '*'\nselect: [title, 'section[]']`,
-      { workspace, graph, trusted: false, toRelativePath: p => p }
+      { workspace, graph, trusted: false, toHref: uri => uri.path }
     );
     expect(html).toContain('Unknown select field');
   });
@@ -83,9 +83,9 @@ describe('renderDqlQuery — source-derived select fields', () => {
     const { workspace, graph } = makeWorkspaceAndGraph([
       createTestNote({ uri: '/a.md', title: 'A' }),
     ]);
-    const html = renderDqlQuery(
+    const { html } = renderDqlQuery(
       `filter: '*'\nselect: [title, 'section[Foo']`,
-      { workspace, graph, trusted: false, toRelativePath: p => p }
+      { workspace, graph, trusted: false, toHref: uri => uri.path }
     );
     expect(html).toContain('Unknown select field');
   });
@@ -116,11 +116,11 @@ describe('renderDqlQuery — end to end with source-derived fields', () => {
       '/q.md',
       `---\nstatus: to_ask\n---\n# Question\n\nWhat is X?\n`
     );
-    const html = renderDqlQuery(`filter: '*'\nselect: [body]`, {
+    const { html } = renderDqlQuery(`filter: '*'\nselect: [body]`, {
       workspace,
       graph,
       trusted: false,
-      toRelativePath: p => p,
+      toHref: uri => uri.path,
       readSource: () => markdown,
       renderMarkdown: fakeMd,
     });
@@ -135,11 +135,11 @@ describe('renderDqlQuery — end to end with source-derived fields', () => {
       '/q.md',
       `# Question\n\nWhat is X?\n`
     );
-    const html = renderDqlQuery(`filter: '*'\nselect: [title, content]`, {
+    const { html } = renderDqlQuery(`filter: '*'\nselect: [title, content]`, {
       workspace,
       graph,
       trusted: false,
-      toRelativePath: p => p,
+      toHref: uri => uri.path,
       readSource: () => markdown,
       renderMarkdown: fakeMd,
     });
@@ -155,13 +155,13 @@ describe('renderDqlQuery — end to end with source-derived fields', () => {
       '/q.md',
       `# Top\n\n## Question\n\nWhat is X?\n\n## Other\n\nElse.\n`
     );
-    const html = renderDqlQuery(
+    const { html } = renderDqlQuery(
       `filter: '*'\nselect:\n  - 'section[Question]'`,
       {
         workspace,
         graph,
         trusted: false,
-        toRelativePath: p => p,
+        toHref: uri => uri.path,
         readSource: () => markdown,
         renderMarkdown: fakeMd,
       }
@@ -176,11 +176,11 @@ describe('renderDqlQuery — end to end with source-derived fields', () => {
       '/q.md',
       `# Question\n\n<script>x</script>\n`
     );
-    const html = renderDqlQuery(`filter: '*'\nselect: [body]`, {
+    const { html } = renderDqlQuery(`filter: '*'\nselect: [body]`, {
       workspace,
       graph,
       trusted: false,
-      toRelativePath: p => p,
+      toHref: uri => uri.path,
       readSource: () => markdown,
       // no renderMarkdown
     });
@@ -198,9 +198,9 @@ describe('renderDqlQuery — column header labels', () => {
     const { workspace, graph } = makeWorkspaceAndGraph([
       createTestNote({ uri: '/a.md', title: 'A' }),
     ]);
-    const html = renderDqlQuery(
+    const { html } = renderDqlQuery(
       `filter: '*'\nselect: [title, 'section[Decision]']\nformat: table`,
-      { workspace, graph, trusted: false, toRelativePath: p => p }
+      { workspace, graph, trusted: false, toHref: uri => uri.path }
     );
     expect(thText(html)).toEqual(['title', 'Decision']);
   });
@@ -209,9 +209,9 @@ describe('renderDqlQuery — column header labels', () => {
     const { workspace, graph } = makeWorkspaceAndGraph([
       createTestNote({ uri: '/a.md', title: 'A' }),
     ]);
-    const html = renderDqlQuery(
+    const { html } = renderDqlQuery(
       `filter: '*'\nselect: [title, properties.Status]\nformat: table`,
-      { workspace, graph, trusted: false, toRelativePath: p => p }
+      { workspace, graph, trusted: false, toHref: uri => uri.path }
     );
     expect(thText(html)).toEqual(['title', 'Status']);
   });
@@ -220,7 +220,7 @@ describe('renderDqlQuery — column header labels', () => {
     const { workspace, graph } = makeWorkspaceAndGraph([
       createTestNote({ uri: '/a.md', title: 'A' }),
     ]);
-    const html = renderDqlQuery(
+    const { html } = renderDqlQuery(
       [
         `filter: '*'`,
         `select:`,
@@ -231,7 +231,7 @@ describe('renderDqlQuery — column header labels', () => {
         `    label: Question status`,
         `format: table`,
       ].join('\n'),
-      { workspace, graph, trusted: false, toRelativePath: p => p }
+      { workspace, graph, trusted: false, toHref: uri => uri.path }
     );
     expect(thText(html)).toEqual([
       'title',
@@ -244,7 +244,7 @@ describe('renderDqlQuery — column header labels', () => {
     const { workspace, graph } = makeWorkspaceAndGraph([
       createTestNote({ uri: '/a.md', title: 'A' }),
     ]);
-    const html = renderDqlQuery(
+    const { html } = renderDqlQuery(
       [
         `filter: '*'`,
         `select:`,
@@ -252,7 +252,7 @@ describe('renderDqlQuery — column header labels', () => {
         `    label: '<script>x</script>'`,
         `format: table`,
       ].join('\n'),
-      { workspace, graph, trusted: false, toRelativePath: p => p }
+      { workspace, graph, trusted: false, toHref: uri => uri.path }
     );
     expect(html).not.toContain('<script>x</script>');
     expect(html).toContain('&lt;script&gt;x&lt;/script&gt;');
@@ -263,7 +263,7 @@ describe('renderDqlQuery — column header labels', () => {
       createTestNote({ uri: '/a.md', title: 'A', properties: { rank: 2 } }),
       createTestNote({ uri: '/b.md', title: 'B', properties: { rank: 1 } }),
     ]);
-    const html = renderDqlQuery(
+    const { html } = renderDqlQuery(
       [
         `filter: '*'`,
         `select:`,
@@ -273,7 +273,7 @@ describe('renderDqlQuery — column header labels', () => {
         `sort: properties.rank ASC`,
         `format: table`,
       ].join('\n'),
-      { workspace, graph, trusted: false, toRelativePath: p => p }
+      { workspace, graph, trusted: false, toHref: uri => uri.path }
     );
     // First data row should be B (rank 1)
     const firstRowIdx = html.indexOf('<tbody>');
@@ -286,7 +286,7 @@ describe('renderDqlQuery — column header labels', () => {
     const { workspace, graph } = makeWorkspaceAndGraph([
       createTestNote({ uri: '/a.md', title: 'A' }),
     ]);
-    const html = renderDqlQuery(
+    const { html } = renderDqlQuery(
       [
         `filter: '*'`,
         `select:`,
@@ -294,7 +294,7 @@ describe('renderDqlQuery — column header labels', () => {
         `  - label: orphan`,
         `format: table`,
       ].join('\n'),
-      { workspace, graph, trusted: false, toRelativePath: p => p }
+      { workspace, graph, trusted: false, toHref: uri => uri.path }
     );
     expect(html).toContain('Unknown select field');
   });

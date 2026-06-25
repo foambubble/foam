@@ -6,14 +6,12 @@ import markdownItRegex from 'markdown-it-regex';
 import { FoamWorkspace } from '@foam/core';
 import { Logger } from '@foam/core';
 import { Resource, ResourceParser, Block } from '@foam/core';
-import { getFoamVsCodeConfig } from '../../config';
 import { MarkdownLink } from '@foam/core';
 import { URI } from '@foam/core';
 import { Position } from '@foam/core';
 import { TextEdit } from '@foam/core';
 import { isNone, isSome } from '@foam/core';
 import { RenderContext } from '@foam/core';
-import { isVirtualWorkspace } from '../../services/editor';
 
 export const WIKILINK_EMBED_REGEX =
   /((?:(?:full|content)-(?:inline|card)|full|content|inline|card)?!\[\[[^[\]]+?\]\])/;
@@ -36,6 +34,17 @@ export interface WikilinkEmbedOptions {
    * re-entering the outer `md` while it's mid-render). */
   createInnerMd?: () => markdownit;
   renderContext: RenderContext;
+  /**
+   * Whether the host is a virtual workspace (no local filesystem). When true,
+   * embeds render a "not supported" warning instead of reading source files.
+   * Defaults to `() => false`.
+   */
+  isVirtualWorkspace?: () => boolean;
+  /**
+   * Returns the configured embed note type (e.g. `full-inline`, `content-card`).
+   * Defaults to `() => 'full-card'`.
+   */
+  getEmbedNoteType?: () => string;
 }
 
 export const markdownItWikilinkEmbed = (
@@ -44,7 +53,13 @@ export const markdownItWikilinkEmbed = (
   parser: ResourceParser,
   options: WikilinkEmbedOptions
 ) => {
-  const { getCurrentResource, createInnerMd, renderContext } = options;
+  const {
+    getCurrentResource,
+    createInnerMd,
+    renderContext,
+    isVirtualWorkspace = () => false,
+    getEmbedNoteType = () => 'full-card',
+  } = options;
   // Top of the render-context stack wins — keeps `![[#section]]` inside an
   // embed resolving against the embedded note, not the outer page.
   const resolveCurrentNote = (): Resource | null => {
@@ -122,6 +137,7 @@ export const markdownItWikilinkEmbed = (
             parser,
             workspace,
             md,
+            getEmbedNoteType,
             parametersString
           );
         } catch (e) {
@@ -168,6 +184,7 @@ function getNoteContent(
   parser: ResourceParser,
   workspace: FoamWorkspace,
   md: markdownit,
+  getEmbedNoteType: () => string,
   parametersString?: string
 ): string {
   let content = `Embed for [[${includedNote.uri.path}]]`;
@@ -175,7 +192,10 @@ function getNoteContent(
 
   switch (includedNote.type) {
     case 'note': {
-      const { noteScope, noteStyle } = retrieveNoteConfig(noteEmbedModifier);
+      const { noteScope, noteStyle } = retrieveNoteConfig(
+        noteEmbedModifier,
+        getEmbedNoteType
+      );
 
       const extractor: EmbedNoteExtractor =
         noteScope === 'full'
@@ -254,11 +274,14 @@ export function withLinksRelativeToWorkspaceRoot(
   return text;
 }
 
-export function retrieveNoteConfig(explicitModifier: string | undefined): {
+export function retrieveNoteConfig(
+  explicitModifier: string | undefined,
+  getEmbedNoteType: () => string
+): {
   noteScope: string;
   noteStyle: string;
 } {
-  const config = getFoamVsCodeConfig<string>(CONFIG_EMBED_NOTE_TYPE); // ex. full-inline
+  const config = getEmbedNoteType(); // ex. full-inline
   let [noteScope, noteStyle] = config.split('-');
 
   // an explicit modifier will always override corresponding user setting

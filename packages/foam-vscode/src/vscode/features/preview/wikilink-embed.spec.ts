@@ -12,8 +12,11 @@ import {
   default as markdownItWikilinkEmbed,
   CONFIG_EMBED_NOTE_TYPE,
 } from './wikilink-embed';
+import { getFoamVsCodeConfig } from '../../config';
 
 const parser = createMarkdownParser();
+const getEmbedNoteType = () =>
+  getFoamVsCodeConfig<string>(CONFIG_EMBED_NOTE_TYPE);
 
 describe('Displaying included notes in preview', () => {
   it('should render an included note in full inline mode', async () => {
@@ -28,6 +31,7 @@ describe('Displaying included notes in preview', () => {
       () => {
         const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser, {
           renderContext: createRenderContext(),
+          getEmbedNoteType,
         });
 
         expect(
@@ -57,6 +61,7 @@ describe('Displaying included notes in preview', () => {
       () => {
         const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser, {
           renderContext: createRenderContext(),
+          getEmbedNoteType,
         });
 
         const res = md.render(`This is the root node. ![[note-a]]`);
@@ -88,6 +93,7 @@ This is the third section of note E
     const ws = new FoamWorkspace().set(parser.parse(note.uri, note.content));
     const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser, {
           renderContext: createRenderContext(),
+          getEmbedNoteType,
         });
 
     await withModifiedFoamConfiguration(
@@ -133,6 +139,7 @@ This is the third section of note E
       () => {
         const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser, {
           renderContext: createRenderContext(),
+          getEmbedNoteType,
         });
 
         const res = md.render(
@@ -166,6 +173,7 @@ This is the first section of note E`,
       () => {
         const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser, {
           renderContext: createRenderContext(),
+          getEmbedNoteType,
         });
 
         expect(
@@ -202,6 +210,7 @@ This is the first section of note E
       () => {
         const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser, {
           renderContext: createRenderContext(),
+          getEmbedNoteType,
         });
 
         const res = md.render(`This is the root node. ![[note-e.md]]`);
@@ -239,6 +248,7 @@ This is the first subsection of note E
       () => {
         const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser, {
           renderContext: createRenderContext(),
+          getEmbedNoteType,
         });
 
         expect(
@@ -277,6 +287,7 @@ This is the first subsection of note E`,
       () => {
         const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser, {
           renderContext: createRenderContext(),
+          getEmbedNoteType,
         });
 
         expect(
@@ -312,6 +323,7 @@ This is the third section of note E
     const ws = new FoamWorkspace().set(parser.parse(note.uri, note.content));
     const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser, {
           renderContext: createRenderContext(),
+          getEmbedNoteType,
         });
 
     await withModifiedFoamConfiguration(
@@ -354,6 +366,7 @@ This is the second section of note E
     const ws = new FoamWorkspace().set(parser.parse(note.uri, note.content));
     const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser, {
           renderContext: createRenderContext(),
+          getEmbedNoteType,
         });
 
     await withModifiedFoamConfiguration(
@@ -379,7 +392,7 @@ content-card![[note-e#Section 2]]`);
       MarkdownIt(),
       new FoamWorkspace(),
       parser,
-      { renderContext: createRenderContext() }
+      { renderContext: createRenderContext(), getEmbedNoteType }
     );
 
     expect(md.render(`This is the root node. ![[non-existing-note]]`)).toMatch(
@@ -401,6 +414,7 @@ content-card![[note-e#Section 2]]`);
       () => {
         const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser, {
           renderContext: createRenderContext(),
+          getEmbedNoteType,
         });
         expect(md.render(`This is the root node. ![[note]]`)).toMatch(
           `<p>This is the root node. <p>This is the text of note A which includes ![[does-not-exist]]</p>
@@ -431,6 +445,7 @@ content-card![[note-e#Section 2]]`);
       () => {
         const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser, {
           renderContext: createRenderContext(),
+          getEmbedNoteType,
         });
         const res = md.render(noteBText);
 
@@ -498,6 +513,7 @@ Third paragraph`,
       () => {
         const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser, {
           renderContext: createRenderContext(),
+          getEmbedNoteType,
         });
         const res = md.render(`![[note-with-block#^target-block]]`);
         expect(res).toContain('Second paragraph');
@@ -529,6 +545,7 @@ Third paragraph`,
       () => {
         const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser, {
           renderContext: createRenderContext(),
+          getEmbedNoteType,
         });
         const res = md.render(`![[note-with-block-content#^target-block]]`);
         expect(res).toContain('Second paragraph');
@@ -561,6 +578,7 @@ Content of section two.`,
         const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser, {
           getCurrentResource: () => parsedNote,
           renderContext: createRenderContext(),
+          getEmbedNoteType,
         });
         const res = md.render(`Intro. ![[#Section 2]]`);
         expect(res).toContain('Content of section two');
@@ -591,6 +609,7 @@ Third paragraph`,
         const md = markdownItWikilinkEmbed(MarkdownIt(), ws, parser, {
           getCurrentResource: () => parsedNote,
           renderContext: createRenderContext(),
+          getEmbedNoteType,
         });
         const res = md.render(`Intro. ![[#^self-block]]`);
         expect(res).toContain('Target block');
@@ -643,6 +662,7 @@ The actual target block in B ^target
         const md = markdownItWikilinkEmbed(MarkdownIt(), ws, localParser, {
           getCurrentResource: () => parsedA,
           renderContext: createRenderContext(),
+          getEmbedNoteType,
         });
         const res = md.render(noteA.content);
         expect(res).toContain('The actual target block in B');
@@ -702,6 +722,7 @@ A paragraph block ^target
           getCurrentResource: () => parsedSource,
           createInnerMd,
           renderContext: createRenderContext(),
+          getEmbedNoteType,
         });
 
         const res = outerMd.render(`Outer paragraph. ![[source#^target]]`);
@@ -747,6 +768,7 @@ Add wet ingredients ^wet-step
           getCurrentResource: () => parsedSource,
           createInnerMd: () => MarkdownIt({ html: true }),
           renderContext: createRenderContext(),
+          getEmbedNoteType,
         });
         const res = md.render(source.content);
 

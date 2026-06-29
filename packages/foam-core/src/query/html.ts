@@ -109,17 +109,24 @@ function titleText(value: unknown, uriPath: string): string {
 }
 
 function cellValue(
-  field: string,
+  entry: SelectEntry,
   value: unknown,
   row: ResourceView,
   toHref: ToHref,
   renderMarkdown?: MarkdownRenderer,
   context?: RenderContext
 ): string {
-  if (field === 'title') {
-    return noteLink(titleText(value, row.uri.path), row.uri, toHref);
+  if (entry.link) {
+    // `title` falls back through frontmatter→H1→basename so a row never
+    // produces a visibly empty anchor; other fields just use their value
+    // and only fall back when null/empty.
+    const text =
+      entry.field === 'title' || value == null || String(value).length === 0
+        ? titleText(value, row.uri.path)
+        : String(value);
+    return noteLink(text, row.uri, toHref);
   }
-  return renderCell(field, value, row, renderMarkdown, context);
+  return renderCell(entry.field, value, row, renderMarkdown, context);
 }
 
 /**
@@ -192,13 +199,7 @@ export function renderList(
   const items = results
     .map(r => {
       const parts = entries
-        .map(({ field }) => {
-          const value = r[field];
-          if (field === 'title') {
-            return noteLink(titleText(value, r.uri.path), r.uri, toHref);
-          }
-          return renderCell(field, value, r, renderMarkdown, context);
-        })
+        .map(entry => cellValue(entry, r[entry.field], r, toHref, renderMarkdown, context))
         .filter(Boolean);
       return parts.length > 0 ? `<li>${parts.join(' · ')}</li>` : null;
     })
@@ -231,10 +232,10 @@ export function renderTable(
     .map(r => {
       const cells = entries
         .map(
-          ({ field }) =>
+          entry =>
             `<td>${cellValue(
-              field,
-              r[field],
+              entry,
+              r[entry.field],
               r,
               toHref,
               renderMarkdown,

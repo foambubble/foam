@@ -125,8 +125,11 @@ filter:
 
 You can select these fields:
 
-- `title`
-- `path`
+- `title` — frontmatter `title` if set, otherwise the first H1 heading, otherwise the filename
+- `path` — full workspace-relative path including the filename and extension
+- `filename` — the file's name without the extension. Useful when `title` is overridden by frontmatter or an H1 and you still want the on-disk name
+- `folder` — the containing folder, e.g. `/projects`
+- `extension` — the file extension including the leading dot, e.g. `.md`, or empty string if none
 - `type`
 - `tags`
 - `aliases`
@@ -201,6 +204,25 @@ select:
 
 Plain strings and `{ field, label }` objects can be mixed in the same `select`.
 
+### Making cells clickable
+
+By default the `title` column is rendered as a clickable link to the matching note. Every other field is rendered as plain text. You can override that on a per-entry basis with `link`:
+
+````markdown
+```foam-query
+filter: "#projects"
+format: table
+select:
+  - field: title
+    link: false             # render title as plain text
+  - field: filename
+    link: true              # make filename clickable instead
+  - properties.Status
+```
+````
+
+`link: true` and `link: false` work for any field, and the link target is always the row's note.
+
 ## Count Queries
 
 Use `count` when you only need the number of matches:
@@ -255,7 +277,7 @@ Available builder methods:
 - `sortBy(field, direction?)`: sort by field, direction is `'asc'` (default) or `'desc'`
 - `limit(n)`: return at most `n` results
 - `offset(n)`: skip the first `n` results
-- `select(fields)`: project to the given fields. Each entry can be a plain string (e.g. `'title'`) or an object `{ field, label }` to customise the table column header, e.g. `.select(['title', { field: 'properties.Status', label: 'State' }])`
+- `select(fields)`: project to the given fields. Each entry can be a plain string (e.g. `'title'`) or an object `{ field, label?, link? }` to customise the column header or toggle the per-cell link, e.g. `.select(['title', { field: 'filename', link: true }, { field: 'properties.Status', label: 'State' }])`
 - `format(fmt)`: set the output format (`'list'`, `'table'`, or `'count'`)
 - `toArray()`: return results as a plain array for use in custom logic
 

@@ -240,6 +240,42 @@ describe('renderDqlQuery — column header labels', () => {
     ]);
   });
 
+  it('plumbs `link: true` through YAML so non-title fields become clickable', () => {
+    const { workspace, graph } = makeWorkspaceAndGraph([
+      createTestNote({ uri: '/projects/alpha.md', title: 'Alpha' }),
+    ]);
+    const { html } = renderDqlQuery(
+      [
+        `filter: '*'`,
+        `select:`,
+        `  - field: filename`,
+        `    link: true`,
+        `format: table`,
+      ].join('\n'),
+      { workspace, graph, trusted: false, toHref: uri => uri.path }
+    );
+    expect(html).toContain('foam-note-link');
+    expect(html).toContain('>alpha<');
+  });
+
+  it('plumbs `link: false` through YAML so the title cell becomes plain text', () => {
+    const { workspace, graph } = makeWorkspaceAndGraph([
+      createTestNote({ uri: '/a.md', title: 'A' }),
+    ]);
+    const { html } = renderDqlQuery(
+      [
+        `filter: '*'`,
+        `select:`,
+        `  - field: title`,
+        `    link: false`,
+        `format: table`,
+      ].join('\n'),
+      { workspace, graph, trusted: false, toHref: uri => uri.path }
+    );
+    expect(html).not.toContain('foam-note-link');
+    expect(html).toContain('>A<');
+  });
+
   it('escapes label HTML in headers', () => {
     const { workspace, graph } = makeWorkspaceAndGraph([
       createTestNote({ uri: '/a.md', title: 'A' }),

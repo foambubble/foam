@@ -5,10 +5,10 @@ import {
   createTestWorkspace,
   InMemoryDataStore,
 } from '../../test/test-utils';
-import { createPublishContext } from './create-context';
+import { createExportContext } from './create-context';
 
-describe('createPublishContext', () => {
-  it('publishes an asset once when multiple notes link to it and grows linkedFrom context', () => {
+describe('createExportContext', () => {
+  it('exports an asset once when multiple notes link to it and grows linkedFrom context', () => {
     const root = URI.file('/');
     const dataStore = new InMemoryDataStore();
     const workspace = createTestWorkspace([root], dataStore);
@@ -33,11 +33,11 @@ describe('createPublishContext', () => {
         })
       );
 
-    const context = createPublishContext({
+    const context = createExportContext({
       workspace,
-      includeAsset: (_asset, publishContext) => {
+      includeAsset: (_asset, exportContext) => {
         linkedFromSnapshots.push(
-          publishContext.linkedFrom.map(note => note.uri.path).sort()
+          exportContext.linkedFrom.map(note => note.uri.path).sort()
         );
         return true;
       },
@@ -81,11 +81,11 @@ describe('createPublishContext', () => {
         })
       );
 
-    const context = createPublishContext({
+    const context = createExportContext({
       workspace,
-      includeAsset: (_asset, publishContext) => {
+      includeAsset: (_asset, exportContext) => {
         linkedFromSnapshots.push(
-          publishContext.linkedFrom.map(note => note.uri.path)
+          exportContext.linkedFrom.map(note => note.uri.path)
         );
         return true;
       },

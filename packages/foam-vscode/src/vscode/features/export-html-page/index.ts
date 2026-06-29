@@ -7,31 +7,46 @@ import { collectNoteSet } from './note-set';
 import { renderReport } from './render-report';
 import { slugForUri } from './slug';
 
-export const PUBLISH_HTML_PAGE_COMMAND = 'foam-vscode.publish-html-page';
+export const EXPORT_HTML_PAGE_COMMAND = 'foam-vscode.export-html-page';
+const DEPRECATED_PUBLISH_HTML_PAGE_COMMAND = 'foam-vscode.publish-html-page';
 const DEFAULT_DEPTH = 2;
 
 export default async function activate(
   context: vscode.ExtensionContext,
   foamPromise: Promise<Foam>
 ) {
+  const handler = async (commandId: string) => {
+    getTelemetry()?.trackCommand(commandId);
+    const foam = await foamPromise;
+    try {
+      await runExportHtmlPage(foam);
+    } catch (err) {
+      vscode.window.showErrorMessage(
+        `Foam: failed to export HTML page — ${
+          err instanceof Error ? err.message : String(err)
+        }`
+      );
+    }
+  };
+
   context.subscriptions.push(
-    vscode.commands.registerCommand(PUBLISH_HTML_PAGE_COMMAND, async () => {
-      getTelemetry()?.trackCommand(PUBLISH_HTML_PAGE_COMMAND);
-      const foam = await foamPromise;
-      try {
-        await runPublishHtmlPage(foam);
-      } catch (err) {
-        vscode.window.showErrorMessage(
-          `Foam: failed to publish HTML page — ${
-            err instanceof Error ? err.message : String(err)
-          }`
+    vscode.commands.registerCommand(
+      EXPORT_HTML_PAGE_COMMAND,
+      () => handler(EXPORT_HTML_PAGE_COMMAND)
+    ),
+    vscode.commands.registerCommand(
+      DEPRECATED_PUBLISH_HTML_PAGE_COMMAND,
+      () => {
+        vscode.window.showWarningMessage(
+          'The "Foam: Export to HTML page" command has been renamed to "Foam: Export to HTML page". The old name will be removed in a future release.'
         );
+        return handler(DEPRECATED_PUBLISH_HTML_PAGE_COMMAND);
       }
-    })
+    )
   );
 }
 
-async function runPublishHtmlPage(foam: Foam): Promise<void> {
+async function runExportHtmlPage(foam: Foam): Promise<void> {
   const entryPoint = await pickEntryPoint(foam);
   if (!entryPoint) return;
 
@@ -127,7 +142,7 @@ async function pickEntryPoint(foam: Foam): Promise<URI | undefined> {
   choices.push({ label: '$(search) Pick a note from the workspace…' });
 
   const picked = await vscode.window.showQuickPick(choices, {
-    title: 'Foam: Publish to HTML page — choose entry point',
+    title: 'Foam: Export to HTML page — choose entry point',
     placeHolder: 'Pick the note the report should start from',
   });
   if (!picked) return undefined;
@@ -148,7 +163,7 @@ async function pickWorkspaceNote(foam: Foam): Promise<URI | undefined> {
     }))
     .sort((a, b) => a.label.localeCompare(b.label));
   const picked = await vscode.window.showQuickPick(items, {
-    title: 'Foam: Publish to HTML page — choose entry point',
+    title: 'Foam: Export to HTML page — choose entry point',
     placeHolder: 'Type to search for a note',
     matchOnDescription: true,
   });
@@ -157,7 +172,7 @@ async function pickWorkspaceNote(foam: Foam): Promise<URI | undefined> {
 
 async function pickDepth(): Promise<number | undefined> {
   const input = await vscode.window.showInputBox({
-    title: 'Foam: Publish to HTML page — traversal depth',
+    title: 'Foam: Export to HTML page — traversal depth',
     prompt: 'How many levels of outgoing links to follow from the entry point',
     value: String(DEFAULT_DEPTH),
     validateInput: value => {
@@ -186,7 +201,7 @@ async function pickIncludedNotes(
     };
   });
   const picked = await vscode.window.showQuickPick(items, {
-    title: `Foam: Publish to HTML page — choose notes to include (${items.length} found)`,
+    title: `Foam: Export to HTML page — choose notes to include (${items.length} found)`,
     placeHolder: 'Uncheck notes to exclude from the report',
     canPickMany: true,
     matchOnDescription: true,
@@ -196,7 +211,7 @@ async function pickIncludedNotes(
 
 async function pickTitle(defaultValue: string): Promise<string | undefined> {
   const input = await vscode.window.showInputBox({
-    title: 'Foam: Publish to HTML page — title',
+    title: 'Foam: Export to HTML page — title',
     prompt: 'Title shown at the top of the report (and used for the default filename)',
     value: defaultValue,
     validateInput: value =>

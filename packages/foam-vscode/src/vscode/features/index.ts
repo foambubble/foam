@@ -10,7 +10,7 @@ import lint from './lint';
 import ai from './ai';
 import smartFolders from './smart-folders';
 import whatsNew from './whats-new';
-import publishHtmlPage from './publish-html-page';
+import exportHtmlPage from './export-html-page';
 
 export const features: FoamFeature[] = [
   whatsNew,
@@ -24,5 +24,5 @@ export const features: FoamFeature[] = [
   graphWebview,
   lint,
   ai,
-  publishHtmlPage,
+  exportHtmlPage,
 ];

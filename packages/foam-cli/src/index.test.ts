@@ -7,7 +7,7 @@ import { runCli } from './index';
 import { TestLogger } from './test/test-utils';
 
 describe('foam CLI', () => {
-  it('publishes a content-rooted workspace to a runnable Starlight site', async () => {
+  it('exports a content-rooted workspace to a runnable Starlight site', async () => {
     const tempRoot = mkdtempSync(path.join(tmpdir(), 'foam-cli-'));
     const workspaceDir = path.join(tempRoot, 'workspace');
     const outputDir = path.join(tempRoot, 'site');
@@ -47,7 +47,7 @@ describe('foam CLI', () => {
 
       const exitCode = await runCli(
         [
-          'publish',
+          'export',
           workspaceDir,
           '--target',
           'starlight',
@@ -98,14 +98,14 @@ describe('foam CLI', () => {
         )
       ).toEqual({
         title: 'CLI Site',
-        description: 'Published from a Foam knowledge base.',
+        description: 'Exported from a Foam knowledge base.',
         homepageRoute: '/',
         siteUrl: 'https://example.com',
       });
       expect(
         JSON.parse(
           fs.readFileSync(
-            path.join(outputDir, 'public', 'publish-routes.json'),
+            path.join(outputDir, 'public', 'export-routes.json'),
             'utf8'
           )
         )
@@ -119,6 +119,34 @@ describe('foam CLI', () => {
       expect(
         fs.readFileSync(path.join(outputDir, 'package.json'), 'utf8')
       ).toContain('"@astrojs/starlight"');
+    } finally {
+      fs.rmSync(tempRoot, { recursive: true, force: true });
+    }
+  });
+
+  it('accepts the deprecated `publish` alias and warns', async () => {
+    const tempRoot = mkdtempSync(path.join(tmpdir(), 'foam-cli-'));
+    const workspaceDir = path.join(tempRoot, 'workspace');
+    const outputDir = path.join(tempRoot, 'site');
+
+    try {
+      fs.mkdirSync(workspaceDir, { recursive: true });
+      fs.writeFileSync(
+        path.join(workspaceDir, 'index.md'),
+        '# Home',
+        'utf8'
+      );
+
+      const logger = new TestLogger();
+      const exitCode = await runCli(
+        ['publish', workspaceDir, '--out', outputDir, '--target', 'starlight'],
+        logger
+      );
+
+      expect(exitCode).toBe(0);
+      expect(logger.warnings.join('\n')).toContain(
+        '`foam publish` has been renamed to `foam export`'
+      );
     } finally {
       fs.rmSync(tempRoot, { recursive: true, force: true });
     }

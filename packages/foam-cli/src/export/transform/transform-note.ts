@@ -1,16 +1,16 @@
 import { Resource } from '@foam/core';
 import { buildBacklinks } from '../derive/build-backlink-index';
-import { PublishContext, PublishedDiagnostic, PublishedNote } from '../types';
+import { ExportContext, ExportedDiagnostic, ExportedNote } from '../types';
 import { rewriteLinks } from './rewrite-links';
 
 interface TransformedNote {
-  note: PublishedNote;
-  diagnostics: PublishedDiagnostic[];
+  note: ExportedNote;
+  diagnostics: ExportedDiagnostic[];
 }
 
 export const transformNote = async (
   note: Resource,
-  context: PublishContext
+  context: ExportContext
 ): Promise<TransformedNote> => {
   const markdown = (await context.workspace.readAsMarkdown(note.uri)) ?? '';
   const route = context.noteRoutes.get(note.uri.path);
@@ -23,7 +23,7 @@ export const transformNote = async (
   const rewritten = rewriteLinks(markdown, note, context);
 
   if (!route) {
-    throw new Error(`Missing published route for ${note.uri.path}`);
+    throw new Error(`Missing exported route for ${note.uri.path}`);
   }
 
   return {

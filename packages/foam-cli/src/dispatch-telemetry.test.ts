@@ -18,15 +18,15 @@ import { TestLogger } from './test/test-utils';
 describe('dispatch failure telemetry', () => {
   it('records errorType on cli.command-invoked when a command throws and dispatch catches', async () => {
     const reporter = new InMemoryTelemetryReporter();
-    // `publish` without required args throws inside parsePublishCommandArgs.
+    // `export` without required args throws inside parseExportCommandArgs.
     // dispatch swallows the throw and returns exit code 1.
-    const exitCode = await runCli(['publish'], new TestLogger(), reporter);
+    const exitCode = await runCli(['export'], new TestLogger(), reporter);
 
     expect(exitCode).toBe(1);
     const event = reporter.events.find(e => e.name === 'cli.command-invoked');
     expect(event).toBeDefined();
     expect(event?.properties).toMatchObject({
-      command: 'publish',
+      command: 'export',
       exitCode: '1',
       errorType: 'Error',
     });
@@ -34,7 +34,7 @@ describe('dispatch failure telemetry', () => {
 
   it('records errorContext=dispatch on the same event so the failure stage is identifiable', async () => {
     const reporter = new InMemoryTelemetryReporter();
-    await runCli(['publish'], new TestLogger(), reporter);
+    await runCli(['export'], new TestLogger(), reporter);
 
     const event = reporter.events.find(e => e.name === 'cli.command-invoked');
     expect(event?.properties?.errorContext).toBe('dispatch');

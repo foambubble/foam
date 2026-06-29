@@ -1,28 +1,28 @@
 import { Resource } from '@foam/core';
 import { URI } from '@foam/core';
 import {
-  PublishContext,
-  PublishedRoute,
-  PublishedSite,
-  PublishSiteContext,
-  PublishValueResolver,
+  ExportContext,
+  ExportedRoute,
+  ExportedSite,
+  ExportSiteContext,
+  ExportValueResolver,
 } from '../types';
 
 const resolveValue = <TValue>(
-  value: PublishValueResolver<TValue, PublishSiteContext> | undefined,
-  context: PublishSiteContext
+  value: ExportValueResolver<TValue, ExportSiteContext> | undefined,
+  context: ExportSiteContext
 ): TValue | undefined => {
   if (typeof value === 'function') {
-    return (value as (context: PublishSiteContext) => TValue)(context);
+    return (value as (context: ExportSiteContext) => TValue)(context);
   }
 
   return value;
 };
 
 const resolveRouteFromString = (
-  context: PublishContext,
+  context: ExportContext,
   value: string,
-  routes: PublishedRoute[]
+  routes: ExportedRoute[]
 ): string | null => {
   const directRoute = routes.find(route => route.route === value);
   if (directRoute) {
@@ -42,11 +42,11 @@ const resolveRouteFromString = (
 };
 
 const resolveHomepageRoute = (
-  context: PublishContext,
+  context: ExportContext,
   notes: Resource[],
-  routes: PublishedRoute[]
+  routes: ExportedRoute[]
 ): string | null => {
-  const siteContext: PublishSiteContext = {
+  const siteContext: ExportSiteContext = {
     workspace: context.workspace,
     graph: context.graph,
     contentRoot: context.contentRoot,
@@ -80,12 +80,12 @@ const resolveHomepageRoute = (
   return context.noteRoutes.get(matchingNote.uri.path) ?? null;
 };
 
-export const buildPublishedSite = (
-  context: PublishContext,
+export const buildExportedSite = (
+  context: ExportContext,
   notes: Resource[],
-  routes: PublishedRoute[]
-): PublishedSite => {
-  const siteContext: PublishSiteContext = {
+  routes: ExportedRoute[]
+): ExportedSite => {
+  const siteContext: ExportSiteContext = {
     workspace: context.workspace,
     graph: context.graph,
     contentRoot: context.contentRoot,

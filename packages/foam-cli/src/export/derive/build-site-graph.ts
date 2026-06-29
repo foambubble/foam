@@ -1,16 +1,16 @@
 import { Resource } from '@foam/core';
 import { buildGraphData } from '@foam/core';
 import {
-  PublishContext,
-  PublishedGraphData,
-  PublishedRoute,
+  ExportContext,
+  ExportedGraphData,
+  ExportedRoute,
 } from '../types';
 
-export const buildPublishedGraph = (
-  context: PublishContext,
+export const buildExportedGraph = (
+  context: ExportContext,
   notes: Resource[],
-  routes: PublishedRoute[]
-): PublishedGraphData => {
+  routes: ExportedRoute[]
+): ExportedGraphData => {
   const routeBySourcePath = new Map(
     routes.map(route => [route.sourceUri.path, route.route])
   );

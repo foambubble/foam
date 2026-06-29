@@ -4,14 +4,14 @@ import path from 'path';
 import { tmpdir } from 'os';
 
 import { URI } from '@foam/core';
-import { PublishArtifactSet } from '../../types';
+import { ExportArtifactSet } from '../../types';
 import { writeStarlightSite } from './index';
 
-describe('publish starlight target', () => {
+describe('export starlight target', () => {
   it('strips leading h1 from note markdown to avoid duplicate title', async () => {
     const tmpDir = mkdtempSync(path.join(tmpdir(), 'foam-starlight-strip-h1-'));
 
-    const artifactSet: PublishArtifactSet = {
+    const artifactSet: ExportArtifactSet = {
       site: { title: 'Site', description: '', homepageRoute: null },
       graph: { nodeInfo: {}, links: [] },
       notes: [
@@ -66,7 +66,7 @@ describe('publish starlight target', () => {
   it('does not strip lines that start with # but are not headings', async () => {
     const tmpDir = mkdtempSync(path.join(tmpdir(), 'foam-starlight-non-h1-'));
 
-    const artifactSet: PublishArtifactSet = {
+    const artifactSet: ExportArtifactSet = {
       site: { title: 'Site', description: '', homepageRoute: null },
       graph: { nodeInfo: {}, links: [] },
       notes: [
@@ -124,7 +124,7 @@ describe('publish starlight target', () => {
   it('strips H1 preceded by HTML comments', async () => {
     const tmpDir = mkdtempSync(path.join(tmpdir(), 'foam-starlight-comment-h1-'));
 
-    const artifactSet: PublishArtifactSet = {
+    const artifactSet: ExportArtifactSet = {
       site: { title: 'Site', description: '', homepageRoute: null },
       graph: { nodeInfo: {}, links: [] },
       notes: [
@@ -167,7 +167,7 @@ describe('publish starlight target', () => {
       path.join(tmpdir(), 'foam-starlight-content-before-h1-')
     );
 
-    const artifactSet: PublishArtifactSet = {
+    const artifactSet: ExportArtifactSet = {
       site: { title: 'Site', description: '', homepageRoute: null },
       graph: { nodeInfo: {}, links: [] },
       notes: [
@@ -207,7 +207,7 @@ describe('publish starlight target', () => {
   it('writes nested notes into correct folder structure', async () => {
     const tmpDir = mkdtempSync(path.join(tmpdir(), 'foam-starlight-nested-'));
 
-    const artifactSet: PublishArtifactSet = {
+    const artifactSet: ExportArtifactSet = {
       site: { title: 'Site', description: '', homepageRoute: null },
       graph: { nodeInfo: {}, links: [] },
       notes: [
@@ -287,7 +287,7 @@ describe('publish starlight target', () => {
       path.join(tmpdir(), 'foam-starlight-frontmatter-')
     );
 
-    const artifactSet: PublishArtifactSet = {
+    const artifactSet: ExportArtifactSet = {
       site: { title: 'Site', description: '', homepageRoute: null },
       graph: { nodeInfo: {}, links: [] },
       notes: [
@@ -326,7 +326,7 @@ describe('publish starlight target', () => {
   it('renders note properties after the title, skipping title and description', async () => {
     const tmpDir = mkdtempSync(path.join(tmpdir(), 'foam-starlight-props-'));
 
-    const artifactSet: PublishArtifactSet = {
+    const artifactSet: ExportArtifactSet = {
       site: { title: 'Site', description: '', homepageRoute: null },
       graph: { nodeInfo: {}, links: [] },
       notes: [
@@ -402,13 +402,13 @@ describe('publish starlight target', () => {
     expect(emptyContent).not.toContain('note-properties');
   });
 
-  it('writes a runnable Starlight project from publish artifacts', async () => {
+  it('writes a runnable Starlight project from export artifacts', async () => {
     const tmpDir = mkdtempSync(path.join(tmpdir(), 'foam-starlight-target-'));
     const assetSourcePath = path.join(tmpDir, 'fixtures', 'image.png');
     fs.mkdirSync(path.dirname(assetSourcePath), { recursive: true });
     fs.writeFileSync(assetSourcePath, 'asset-content', 'utf8');
 
-    const artifactSet: PublishArtifactSet = {
+    const artifactSet: ExportArtifactSet = {
       site: {
         title: 'Published Notes',
         description: 'A generated site',
@@ -575,7 +575,7 @@ describe('publish starlight target', () => {
     expect(
       JSON.parse(
         fs.readFileSync(
-          path.join(tmpDir, 'site', 'public', 'publish-routes.json'),
+          path.join(tmpDir, 'site', 'public', 'export-routes.json'),
           'utf8'
         )
       )

@@ -1,13 +1,13 @@
 import { Resource } from '@foam/core';
 import { isWithinPath } from '@foam/core';
-import { PublishAssetContext, PublishAssetMatcher } from './types';
+import { ExportAssetContext, ExportAssetMatcher } from './types';
 
-const includeAssetsInWorkspace = (): PublishAssetMatcher => {
+const includeAssetsInWorkspace = (): ExportAssetMatcher => {
   return () => true;
 };
 
-const includeAssetsInContentRoot = (): PublishAssetMatcher => {
-  return (resource: Resource, context: PublishAssetContext) => {
+const includeAssetsInContentRoot = (): ExportAssetMatcher => {
+  return (resource: Resource, context: ExportAssetContext) => {
     if (!context.contentRoot) {
       return true;
     }
@@ -17,19 +17,19 @@ const includeAssetsInContentRoot = (): PublishAssetMatcher => {
 };
 
 /**
- * Convenience factories for common publish asset filters.
+ * Convenience factories for common export asset filters.
  *
  * These helpers produce `includeAsset` functions. They do not change the
- * publish API surface, which stays centered on `includeAsset`.
+ * export API surface, which stays centered on `includeAsset`.
  *
  * @example
  * await buildSite({
  *   workspace,
  *   contentRoot: 'docs/user',
- *   includeAsset: publishAssets.content(),
+ *   includeAsset: exportAssets.content(),
  * });
  */
-export const publishAssets = {
+export const exportAssets = {
   workspace: includeAssetsInWorkspace,
   content: includeAssetsInContentRoot,
 };

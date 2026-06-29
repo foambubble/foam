@@ -23,11 +23,6 @@ describe('foam CLI', () => {
         'utf8'
       );
       fs.writeFileSync(
-        path.join(workspaceDir, 'user', 'draft.md'),
-        ['---', 'publish: false', '---', '', '# Draft'].join('\n'),
-        'utf8'
-      );
-      fs.writeFileSync(
         path.join(workspaceDir, 'dev', 'internal.md'),
         '# Internal',
         'utf8'
@@ -68,11 +63,6 @@ describe('foam CLI', () => {
       expect(
         fs.existsSync(path.join(outputDir, 'src', 'content', 'docs', 'index.md'))
       ).toBe(true);
-      expect(
-        fs.existsSync(
-          path.join(outputDir, 'src', 'content', 'docs', 'draft.md')
-        )
-      ).toBe(false);
       expect(
         fs.existsSync(
           path.join(outputDir, 'src', 'content', 'docs', 'dev', 'internal.md')

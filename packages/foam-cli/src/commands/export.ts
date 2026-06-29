@@ -137,7 +137,6 @@ export async function runExportCommand(options: ExportCommandOptions) {
   const artifactSet = await buildSite({
     workspace: loaded.workspace,
     contentRoot: options.contentRoot,
-    include: resource => resource.properties.publish !== false,
     site: {
       title: options.title,
       description: options.description,

@@ -621,6 +621,54 @@ describe('executeQuery — projection', () => {
     expect(Object.keys(result)).toHaveLength(3);
   });
 
+  it('projects filename (basename without extension), folder, and extension from the URI', () => {
+    const noteA = createTestNote({
+      uri: '/projects/alpha.md',
+      title: 'Alpha Project',
+    });
+    const noteB = createTestNote({
+      uri: '/notes/no-ext',
+      title: 'Extensionless',
+    });
+    const { workspace, graph } = makeWorkspaceAndGraph([noteA, noteB]);
+
+    const { results } = executeQuery(
+      { select: ['path', 'filename', 'folder', 'extension'] },
+      workspace,
+      graph,
+      { trusted: false }
+    );
+    const byPath = Object.fromEntries(results.map(r => [r.path, r]));
+
+    expect(byPath['/projects/alpha.md'].filename).toBe('alpha');
+    expect(byPath['/projects/alpha.md'].folder).toBe('/projects');
+    expect(byPath['/projects/alpha.md'].extension).toBe('.md');
+
+    // Files with no extension expose '' so users can filter on it explicitly.
+    expect(byPath['/notes/no-ext'].filename).toBe('no-ext');
+    expect(byPath['/notes/no-ext'].folder).toBe('/notes');
+    expect(byPath['/notes/no-ext'].extension).toBe('');
+  });
+
+  it('filename is independent of the resolved title', () => {
+    // The user-facing point of `filename`: when frontmatter or H1 overrides
+    // the title, you can still ask for the on-disk name.
+    const noteA = createTestNote({
+      uri: '/projects/alpha.md',
+      title: 'Completely Different Title',
+    });
+    const { workspace, graph } = makeWorkspaceAndGraph([noteA]);
+
+    const { results } = executeQuery(
+      { select: ['title', 'filename'] },
+      workspace,
+      graph,
+      { trusted: false }
+    );
+    expect(results[0].title).toBe('Completely Different Title');
+    expect(results[0].filename).toBe('alpha');
+  });
+
   it('computed field backlink-count reflects graph state', () => {
     const noteA = createTestNote({ uri: '/a.md', links: [{ slug: 'b' }] });
     const noteB = createTestNote({ uri: '/b.md' });
@@ -1356,9 +1404,9 @@ describe('QueryResult.select — label support', () => {
     ]);
 
     expect(qr.descriptor.select).toEqual([
-      { field: 'title', label: 'title' },
-      { field: 'properties.Status', label: 'State' },
-      { field: 'section[Decision]', label: 'Decision' },
+      { field: 'title', label: 'title', link: true },
+      { field: 'properties.Status', label: 'State', link: false },
+      { field: 'section[Decision]', label: 'Decision', link: false },
     ]);
   });
 
@@ -1372,8 +1420,8 @@ describe('QueryResult.select — label support', () => {
     ]);
 
     expect(qr.descriptor.select).toEqual([
-      { field: 'properties.Status', label: 'Status' },
-      { field: 'section[Decision]', label: 'Decision' },
+      { field: 'properties.Status', label: 'Status', link: false },
+      { field: 'section[Decision]', label: 'Decision', link: false },
     ]);
   });
 

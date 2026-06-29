@@ -6,6 +6,7 @@ import { FoamGraph } from '../model/graph';
 import { Logger } from '../utils/log';
 import { URI } from '../model/uri';
 import { stripFrontMatter } from '../utils/md';
+import { getDirectory, getExtension, getName } from '../utils/path';
 
 const queryJexl = new jexl.Jexl();
 queryJexl.addTransform('length', (v: unknown) =>
@@ -61,8 +62,16 @@ export type QueryFilter =
 
 const SECTION_FIELD_RE = /^section\[([^\]]+)\]$/;
 
-export type SelectInput = string | { field: string; label?: string };
-export type SelectEntry = { field: string; label: string };
+export type SelectInput =
+  | string
+  | { field: string; label?: string; link?: boolean };
+/**
+ * Normalised projection entry. Every field is resolved — renderers read
+ * `link` directly without re-deriving the default. The "title links by
+ * default, everything else is plain text" rule lives in `normalizeSelectEntry`,
+ * not in the rendering layer.
+ */
+export type SelectEntry = { field: string; label: string; link: boolean };
 
 export interface QueryDescriptor {
   filter?: QueryFilter;
@@ -83,13 +92,23 @@ export function beautifyFieldLabel(field: string): string {
   return field;
 }
 
+/** Default link behaviour: only `title` is clickable unless overridden. */
+function defaultLinkFor(field: string): boolean {
+  return field === 'title';
+}
+
 export function normalizeSelectEntry(input: SelectInput): SelectEntry {
   if (typeof input === 'string') {
-    return { field: input, label: beautifyFieldLabel(input) };
+    return {
+      field: input,
+      label: beautifyFieldLabel(input),
+      link: defaultLinkFor(input),
+    };
   }
   return {
     field: input.field,
     label: input.label ?? beautifyFieldLabel(input.field),
+    link: input.link ?? defaultLinkFor(input.field),
   };
 }
 
@@ -101,11 +120,11 @@ export function normalizeSelectEntry(input: SelectInput): SelectEntry {
 export type ResourceView = { uri: URI } & Record<string, unknown>;
 
 export const DEFAULT_SELECT: SelectEntry[] = [
-  { field: 'title', label: 'title' },
-  { field: 'path', label: 'path' },
+  { field: 'title', label: 'title', link: true },
+  { field: 'path', label: 'path', link: false },
 ];
 export const DEFAULT_LIST_SELECT: SelectEntry[] = [
-  { field: 'title', label: 'title' },
+  { field: 'title', label: 'title', link: true },
 ];
 
 // --- Filter ---
@@ -399,6 +418,9 @@ function buildFullView(r: Resource, graph: FoamGraph): Record<string, unknown> {
   return {
     title: r.title,
     path: r.uri.path,
+    filename: getName(r.uri.path),
+    folder: getDirectory(r.uri.path),
+    extension: getExtension(r.uri.path),
     type: r.type,
     tags: r.tags.map(t => t.label),
     aliases: r.aliases.map(a => a.title),
@@ -494,6 +516,9 @@ function parseSortDescriptor(sort: string): {
 export const ALL_QUERY_FIELDS = [
   'title',
   'path',
+  'filename',
+  'folder',
+  'extension',
   'type',
   'tags',
   'aliases',
@@ -614,8 +639,8 @@ export class QueryResult {
 
     const sourceDerived = userFields.filter(requiresSource);
     const fullSelect: SelectEntry[] = [
-      ...ALL_QUERY_FIELDS.map(f => ({ field: f, label: f })),
-      ...sourceDerived.map(f => ({ field: f, label: f })),
+      ...ALL_QUERY_FIELDS.map(f => normalizeSelectEntry(f)),
+      ...sourceDerived.map(f => normalizeSelectEntry(f)),
     ];
     let results = executeQuery(
       {

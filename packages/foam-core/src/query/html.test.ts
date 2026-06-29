@@ -136,6 +136,70 @@ describe('renderList / renderTable — title fallback', () => {
   });
 });
 
+describe('renderList / renderTable — per-entry link override', () => {
+  const rows: ResourceView[] = [
+    {
+      uri: URI.file('/notes/alpha.md'),
+      title: 'Alpha',
+      filename: 'alpha',
+      folder: '/notes',
+    },
+  ];
+
+  it('renderTable links a non-title field when the entry sets link: true', () => {
+    // Opt-in: a user who explicitly wants `filename` clickable can ask for it
+    // without losing the "filename is data" default behaviour.
+    const html = renderTable(
+      rows,
+      ['title', { field: 'filename', link: true }],
+      pathHref
+    ).html;
+    // Both the title cell AND the filename cell now contain anchors.
+    expect(html.match(/foam-note-link/g)?.length).toBe(2);
+    // Title anchor uses the title text; filename anchor uses the filename value.
+    expect(html).toMatch(/>Alpha</);
+    expect(html).toMatch(/>alpha</);
+  });
+
+  it('renderTable renders title as plain text when the entry sets link: false', () => {
+    // Opt-out: the explicit override on `title` keeps the cell text-only.
+    const html = renderTable(
+      rows,
+      [{ field: 'title', link: false }],
+      pathHref
+    ).html;
+    expect(html).not.toContain('foam-note-link');
+    // The title text is still visible — opt-out only removes the anchor.
+    expect(html).toContain('Alpha');
+  });
+
+  it('renderList links a non-title field when the entry sets link: true', () => {
+    const html = renderList(
+      rows,
+      [{ field: 'filename', link: true }],
+      pathHref
+    ).html;
+    expect(html).toContain('foam-note-link');
+    expect(html).toContain('>alpha<');
+  });
+
+  it('renderList renders title as plain text when the entry sets link: false', () => {
+    const html = renderList(
+      rows,
+      [{ field: 'title', link: false }],
+      pathHref
+    ).html;
+    expect(html).not.toContain('foam-note-link');
+    expect(html).toContain('Alpha');
+  });
+
+  it('non-title fields stay plain text without an explicit link: true', () => {
+    // Default behaviour is unchanged: `filename` as a bare string is data.
+    const html = renderTable(rows, ['title', 'filename'], pathHref).html;
+    expect(html.match(/foam-note-link/g)?.length).toBe(1); // only title
+  });
+});
+
 describe('escapeHtml', () => {
   it('escapes the five HTML special characters so output is safe inside both double- and single-quoted attributes', () => {
     expect(escapeHtml(`& < > " '`)).toBe('&amp; &lt; &gt; &quot; &#39;');

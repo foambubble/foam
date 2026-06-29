@@ -267,6 +267,7 @@ export function renderDqlQuery(
     for (const entry of parsed.select as unknown[]) {
       let field: string | undefined;
       let label: string | undefined;
+      let link: boolean | undefined;
       if (typeof entry === 'string') {
         field = entry;
       } else if (
@@ -278,6 +279,8 @@ export function renderDqlQuery(
         field = (entry as { field: string }).field;
         const rawLabel = (entry as { label?: unknown }).label;
         if (typeof rawLabel === 'string') label = rawLabel;
+        const rawLink = (entry as { link?: unknown }).link;
+        if (typeof rawLink === 'boolean') link = rawLink;
       }
       if (
         field !== undefined &&
@@ -285,7 +288,11 @@ export function renderDqlQuery(
           /^properties\..+$/.test(field) ||
           requiresSource(field))
       ) {
-        valid.push(normalizeSelectEntry(label ? { field, label } : field));
+        const input =
+          label !== undefined || link !== undefined
+            ? { field, label, link }
+            : field;
+        valid.push(normalizeSelectEntry(input));
       } else {
         const shown = field ?? JSON.stringify(entry);
         warnings.push(

@@ -144,18 +144,18 @@ All the link references are correct in this file.
 
 A Bug [^footerlink]. Here is [Another link][linkreference]
 
-[^footerlink]: https://foambubble.github.io/
+[^footerlink]: https://foam.md/
 
-[linkreference]: https://foambubble.github.io/
+[linkreference]: https://foam.md/
 `,
       expected: `
 # File with explicit link references
 
 A Bug [^footerlink]. Here is [Another link][linkreference]
 
-[^footerlink]: https://foambubble.github.io/
+[^footerlink]: https://foam.md/
 
-[linkreference]: https://foambubble.github.io/
+[linkreference]: https://foam.md/
 `,
     },
     {
@@ -166,9 +166,9 @@ A Bug [^footerlink]. Here is [Another link][linkreference]
 A Bug [^footerlink]. Here is [Another link][linkreference].
 I also want a [[doc1]].
 
-[^footerlink]: https://foambubble.github.io/
+[^footerlink]: https://foam.md/
 
-[linkreference]: https://foambubble.github.io/
+[linkreference]: https://foam.md/
 `,
       expected: `
 # File with explicit link references
@@ -176,9 +176,9 @@ I also want a [[doc1]].
 A Bug [^footerlink]. Here is [Another link][linkreference].
 I also want a [[doc1]].
 
-[^footerlink]: https://foambubble.github.io/
+[^footerlink]: https://foam.md/
 
-[linkreference]: https://foambubble.github.io/
+[linkreference]: https://foam.md/
 
 [doc1]: doc1 "First"
 `,

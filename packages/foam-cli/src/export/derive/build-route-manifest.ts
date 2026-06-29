@@ -2,7 +2,7 @@ import { changeExtension, isWithinPath } from '@foam/core';
 import { Resource } from '@foam/core';
 import { URI } from '@foam/core';
 import { FoamWorkspace } from '@foam/core';
-import { PublishedAsset, PublishedRoute } from '../types';
+import { ExportedAsset, ExportedRoute } from '../types';
 
 const DIRECTORY_INDEX_NAMES = new Set(['index', 'readme']);
 
@@ -79,7 +79,7 @@ export const buildRouteManifest = (
   resources: Resource[],
   workspace: FoamWorkspace,
   contentRoot?: URI | null
-): PublishedRoute[] =>
+): ExportedRoute[] =>
   resources
     .filter(resource => resource.type === 'note')
     .map(resource => ({
@@ -95,7 +95,7 @@ export const buildRouteManifest = (
 export const buildAssetManifest = (
   resources: Resource[],
   workspace: FoamWorkspace
-): PublishedAsset[] =>
+): ExportedAsset[] =>
   resources
     .filter(resource => resource.type !== 'note')
     .map(resource => ({

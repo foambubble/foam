@@ -2,8 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { Logger } from '@foam/core';
-import { buildSite } from '../publish';
-import { writeStarlightSite } from '../publish/targets/starlight';
+import { buildSite } from '../export';
+import { writeStarlightSite } from '../export/targets/starlight';
 import { loadWorkspaceFromDirectory } from '../support/filesystem';
 
 interface ParsedArgs {
@@ -11,20 +11,20 @@ interface ParsedArgs {
   positionals: string[];
 }
 
-const PUBLISH_HELP = `Usage: foam publish [workspace-dir] --out <dir> [options]
+const EXPORT_HELP = `Usage: foam export [workspace-dir] --out <dir> [options]
 
 Options:
-  --target <name>         Publish target to materialize (default: starlight)
+  --target <name>         Export target to materialize (default: starlight)
   --out <dir>             Output directory for the generated site
   --title <text>          Site title
   --description <text>    Site description
-  --content-root <path>   Note subtree to publish relative to the workspace root
+  --content-root <path>   Note subtree to export relative to the workspace root
   --homepage <route>      Homepage route or source path
   --site-url <url>        Public site URL for Astro/Starlight metadata
-  --help                  Show publish command help
+  --help                  Show export command help
 `;
 
-export interface PublishCommandOptions {
+export interface ExportCommandOptions {
   workspaceDir: string;
   outputDir: string;
   target: string;
@@ -86,17 +86,17 @@ function parseArgs(argv: string[]): ParsedArgs {
   };
 }
 
-export function renderPublishHelp() {
-  return PUBLISH_HELP;
+export function renderExportHelp() {
+  return EXPORT_HELP;
 }
 
-export function parsePublishCommandArgs(argv: string[]): PublishCommandOptions {
+export function parseExportCommandArgs(argv: string[]): ExportCommandOptions {
   const parsed = parseArgs(argv);
   const target = getStringOption(parsed.options, 'target') ?? 'starlight';
   const outputDir = getStringOption(parsed.options, 'out');
 
   if (parsed.options.has('help')) {
-    throw new Error(renderPublishHelp());
+    throw new Error(renderExportHelp());
   }
 
   if (!outputDir) {
@@ -121,12 +121,12 @@ export function parsePublishCommandArgs(argv: string[]): PublishCommandOptions {
   };
 }
 
-export async function runPublishCommand(options: PublishCommandOptions) {
+export async function runExportCommand(options: ExportCommandOptions) {
   const outputDir = path.resolve(options.outputDir);
 
   if (options.target !== 'starlight') {
     throw new Error(
-      `Unsupported publish target "${options.target}". Expected "starlight".`
+      `Unsupported export target "${options.target}". Expected "starlight".`
     );
   }
 
@@ -164,11 +164,11 @@ export async function runPublishCommand(options: PublishCommandOptions) {
 
   if (artifactSet.diagnostics.length > 0) {
     Logger.warn(
-      `Publish completed with ${artifactSet.diagnostics.length} warning(s).`
+      `Export completed with ${artifactSet.diagnostics.length} warning(s).`
     );
   }
 
   Logger.info(
-    `Published ${artifactSet.notes.length} notes and ${artifactSet.assets.length} assets to ${outputDir}`
+    `Exported ${artifactSet.notes.length} notes and ${artifactSet.assets.length} assets to ${outputDir}`
   );
 }

@@ -1,10 +1,10 @@
 import { FoamGraph } from '@foam/core';
 import { URI } from '@foam/core';
 import { createTestNote, createTestWorkspace } from '../test/test-utils';
-import { publishAssets } from './asset-filters';
+import { exportAssets } from './asset-filters';
 import { getIncludeAssetMatcher } from './config';
 
-describe('publish asset filters', () => {
+describe('export asset filters', () => {
   it('defaults to including linked assets from the workspace', () => {
     const root = URI.file('/');
     const workspace = createTestWorkspace([root]);
@@ -20,7 +20,7 @@ describe('publish asset filters', () => {
         workspace,
         graph,
         contentRoot: URI.file('/user'),
-        publishedNotes: [],
+        exportedNotes: [],
         linkedFrom: [],
       })
     ).toBe(true);
@@ -37,11 +37,11 @@ describe('publish asset filters', () => {
     });
 
     expect(
-      publishAssets.content()(asset, {
+      exportAssets.content()(asset, {
         workspace,
         graph,
         contentRoot: null,
-        publishedNotes: [],
+        exportedNotes: [],
         linkedFrom: [],
       })
     ).toBe(true);
@@ -62,14 +62,14 @@ describe('publish asset filters', () => {
       type: 'image',
     });
 
-    const matcher = publishAssets.content();
+    const matcher = exportAssets.content();
 
     expect(
       matcher(includedAsset, {
         workspace,
         graph,
         contentRoot: URI.file('/user'),
-        publishedNotes: [],
+        exportedNotes: [],
         linkedFrom: [],
       })
     ).toBe(true);
@@ -78,7 +78,7 @@ describe('publish asset filters', () => {
         workspace,
         graph,
         contentRoot: URI.file('/user'),
-        publishedNotes: [],
+        exportedNotes: [],
         linkedFrom: [],
       })
     ).toBe(false);

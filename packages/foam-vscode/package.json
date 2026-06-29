@@ -433,8 +433,8 @@
         "title": "Foam: Create New Note"
       },
       {
-        "command": "foam-vscode.publish-html-page",
-        "title": "Foam: Publish to HTML page"
+        "command": "foam-vscode.export-html-page",
+        "title": "Foam: Export to HTML page"
       },
       {
         "command": "foam-vscode.clear-cache",

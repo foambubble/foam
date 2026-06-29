@@ -1,15 +1,15 @@
 import { Resource, ResourceLink } from '@foam/core';
 import { TextEdit } from '@foam/core';
 import { MarkdownLink } from '@foam/core';
-import { PublishContext, PublishedDiagnostic } from '../types';
+import { ExportContext, ExportedDiagnostic } from '../types';
 
 const getLinkText = (
   link: ResourceLink,
   note: Resource,
-  context: PublishContext
+  context: ExportContext
 ):
   | { target: string; alias: string; section?: string }
-  | { diagnostic: PublishedDiagnostic }
+  | { diagnostic: ExportedDiagnostic }
   | null => {
   if (link.type === 'external') {
     return null;
@@ -20,7 +20,7 @@ const getLinkText = (
   const sourceRoute = context.noteRoutes.get(note.uri.path);
 
   if (!sourceRoute) {
-    throw new Error(`Missing published source route for ${note.uri.path}`);
+    throw new Error(`Missing exported source route for ${note.uri.path}`);
   }
 
   if (resolvedUri.isPlaceholder()) {
@@ -32,7 +32,7 @@ const getLinkText = (
         sourceRoute,
         link: link.rawText,
         target: analyzed.target || resolvedUri.path,
-        message: `Could not resolve publish target for ${link.rawText}.`,
+        message: `Could not resolve export target for ${link.rawText}.`,
       },
     };
   }
@@ -51,7 +51,7 @@ const getLinkText = (
           sourceRoute,
           link: link.rawText,
           target: targetResource.uri.path,
-          message: `Resolved ${link.rawText} but the target note is outside the published content scope.`,
+          message: `Resolved ${link.rawText} but the target note is outside the exported content scope.`,
         },
       };
     }
@@ -85,7 +85,7 @@ const getLinkText = (
       sourceRoute,
       link: link.rawText,
       target: analyzed.target || resolvedUri.path,
-      message: `Resolved ${link.rawText} but the target is not publishable.`,
+      message: `Resolved ${link.rawText} but the target is not exportable.`,
     },
   };
 };
@@ -93,9 +93,9 @@ const getLinkText = (
 export const rewriteLinks = (
   markdown: string,
   note: Resource,
-  context: PublishContext
+  context: ExportContext
 ) => {
-  const diagnostics: PublishedDiagnostic[] = [];
+  const diagnostics: ExportedDiagnostic[] = [];
   const edits = note.links
     .map(link => {
       const rewritten = getLinkText(link, note, context);

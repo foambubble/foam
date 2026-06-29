@@ -6,10 +6,10 @@ import {
   createTestWorkspace,
   InMemoryDataStore,
 } from '../test/test-utils';
-import { publishAssets } from './asset-filters';
+import { exportAssets } from './asset-filters';
 import { buildSite } from './index';
 
-describe('publish buildSite asset handling', () => {
+describe('export buildSite asset handling', () => {
   it('rewrites attachment links to asset output paths', async () => {
     const root = URI.file('/');
     const dataStore = new InMemoryDataStore();
@@ -44,11 +44,11 @@ describe('publish buildSite asset handling', () => {
     ]);
     expect(result.diagnostics).toEqual([]);
 
-    const publishedNote = result.notes.find(note => note.route === '/note-a');
-    expect(publishedNote?.markdown).toContain('[Manual](/assets/files/doc.pdf)');
+    const exportedNote = result.notes.find(note => note.route === '/note-a');
+    expect(exportedNote?.markdown).toContain('[Manual](/assets/files/doc.pdf)');
   });
 
-  it('publishes only linked assets while still allowing shared assets outside contentRoot', async () => {
+  it('exports only linked assets while still allowing shared assets outside contentRoot', async () => {
     const root = URI.file('/');
     const dataStore = new InMemoryDataStore();
     const workspace = createTestWorkspace([root], dataStore);
@@ -133,7 +133,7 @@ describe('publish buildSite asset handling', () => {
       workspace,
       graph: FoamGraph.fromWorkspace(workspace),
       contentRoot: 'user',
-      includeAsset: publishAssets.content(),
+      includeAsset: exportAssets.content(),
     });
 
     expect(result.assets).toEqual([
@@ -193,7 +193,7 @@ describe('publish buildSite asset handling', () => {
       contentRoot: 'user',
       includeAsset: (asset, context) => {
         expect(context.contentRoot?.path).toBe('/user');
-        expect(context.publishedNotes.map(note => note.uri.path)).toEqual([
+        expect(context.exportedNotes.map(note => note.uri.path)).toEqual([
           homeUri.path,
         ]);
         expect(context.linkedFrom.map(note => note.uri.path)).toEqual([

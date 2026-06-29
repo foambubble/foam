@@ -265,12 +265,13 @@ export async function withTmpWorkspace<T>(
  */
 export class TestLogger implements ILogger {
   logs: string[] = [];
+  warnings: string[] = [];
   errors: string[] = [];
   private _noop = new NoOpLogger();
 
   debug() {}
   info(msg?: any) { this.logs.push(String(msg)); }
-  warn() {}
+  warn(msg?: any) { this.warnings.push(String(msg)); }
   error(msg?: any) { this.errors.push(String(msg)); }
   getLevel() { return this._noop.getLevel(); }
   setLevel(l: Parameters<ILogger['setLevel']>[0]) { this._noop.setLevel(l); }

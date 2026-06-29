@@ -7,7 +7,7 @@ import {
 } from '../test/test-utils';
 import { buildSite } from './index';
 
-describe('publish buildSite metadata and homepage selection', () => {
+describe('export buildSite metadata and homepage selection', () => {
   it('supports programmable site metadata, homepage selection, and filtering', async () => {
     const root = URI.file('/');
     const dataStore = new InMemoryDataStore();
@@ -56,15 +56,15 @@ describe('publish buildSite metadata and homepage selection', () => {
         return resource.properties.publish !== false;
       },
       site: {
-        title: ({ notes }) => `Published Notes (${notes.length})`,
-        description: 'A programmable publish surface',
+        title: ({ notes }) => `Exported Notes (${notes.length})`,
+        description: 'A programmable export surface',
         homepage: note => note.properties.home === true,
       },
     });
 
     expect(result.site).toEqual({
-      title: 'Published Notes (2)',
-      description: 'A programmable publish surface',
+      title: 'Exported Notes (2)',
+      description: 'A programmable export surface',
       homepageRoute: '/welcome',
     });
     expect(result.diagnostics).toEqual([]);
@@ -78,8 +78,8 @@ describe('publish buildSite metadata and homepage selection', () => {
       result.routes.find(route => route.sourceUri.path === hiddenUri.path)
     ).toBeUndefined();
 
-    const publishedHome = result.notes.find(note => note.route === '/welcome');
-    expect(publishedHome).toMatchObject({
+    const exportedHome = result.notes.find(note => note.route === '/welcome');
+    expect(exportedHome).toMatchObject({
       title: 'Welcome',
       description: 'Start here',
       properties: {

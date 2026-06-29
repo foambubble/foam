@@ -7,8 +7,8 @@ import {
 } from '../test/test-utils';
 import { buildSite } from './index';
 
-describe('publish buildSite link handling', () => {
-  it('rewrites note links to published routes and derives backlinks', async () => {
+describe('export buildSite link handling', () => {
+  it('rewrites note links to exported routes and derives backlinks', async () => {
     const root = URI.file('/');
     const dataStore = new InMemoryDataStore();
     const workspace = createTestWorkspace([root], dataStore);
@@ -43,13 +43,13 @@ describe('publish buildSite link handling', () => {
       ])
     );
 
-    const publishedNoteA = result.notes.find(note => note.route === '/note-a');
-    const publishedNoteB = result.notes.find(
+    const exportedNoteA = result.notes.find(note => note.route === '/note-a');
+    const exportedNoteB = result.notes.find(
       note => note.route === '/folder/note-b'
     );
 
-    expect(publishedNoteA?.markdown).toContain('[Note B](/folder/note-b)');
-    expect(publishedNoteB?.backlinks).toEqual([
+    expect(exportedNoteA?.markdown).toContain('[Note B](/folder/note-b)');
+    expect(exportedNoteB?.backlinks).toEqual([
       {
         route: '/note-a',
         title: 'Note A',
@@ -86,8 +86,8 @@ describe('publish buildSite link handling', () => {
       graph: FoamGraph.fromWorkspace(workspace),
     });
 
-    const publishedNoteB = result.notes.find(note => note.route === '/note-b');
-    expect(publishedNoteB?.backlinks).toEqual([
+    const exportedNoteB = result.notes.find(note => note.route === '/note-b');
+    expect(exportedNoteB?.backlinks).toEqual([
       {
         route: '/note-a',
         title: 'Note A',
@@ -96,7 +96,7 @@ describe('publish buildSite link handling', () => {
     ]);
   });
 
-  it('routes notes relative to contentRoot and reports links outside the published scope', async () => {
+  it('routes notes relative to contentRoot and reports links outside the exported scope', async () => {
     const root = URI.file('/');
     const dataStore = new InMemoryDataStore();
     const workspace = createTestWorkspace([root], dataStore);
@@ -157,7 +157,7 @@ describe('publish buildSite link handling', () => {
         link: '[Internal](../dev/internal.md)',
         target: internalUri.path,
         message:
-          'Resolved [Internal](../dev/internal.md) but the target note is outside the published content scope.',
+          'Resolved [Internal](../dev/internal.md) but the target note is outside the exported content scope.',
       },
     ]);
   });

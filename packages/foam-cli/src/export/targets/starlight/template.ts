@@ -1,11 +1,11 @@
 const DEFAULT_TITLE = 'Foam Site';
-const DEFAULT_DESCRIPTION = 'Published from a Foam knowledge base.';
+const DEFAULT_DESCRIPTION = 'Exported from a Foam knowledge base.';
 export const STARLIGHT_TEMPLATE_FILES = {
   '.gitignore': ['node_modules/', 'dist/', '.astro/'].join('\n') + '\n',
   'package.json':
     JSON.stringify(
       {
-        name: 'foam-published-site',
+        name: 'foam-exported-site',
         version: '0.0.0',
         private: true,
         scripts: {
@@ -160,7 +160,7 @@ const selectedRoute =
 
   const graphDataPromise = fetch(basePath + '/foam-graph.json').then(response => {
     if (!response.ok) {
-      throw new Error('Failed to load published graph data.');
+      throw new Error('Failed to load exported graph data.');
     }
     return response.json();
   });

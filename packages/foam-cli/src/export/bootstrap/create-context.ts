@@ -8,9 +8,9 @@ import {
   buildAssetManifest,
   buildRouteManifest,
 } from '../derive/build-route-manifest';
-import { PublishAssetMatcher, PublishConfig, PublishContext } from '../types';
+import { ExportAssetMatcher, ExportConfig, ExportContext } from '../types';
 
-const resolveContentRoot = (config: PublishConfig): URI | null => {
+const resolveContentRoot = (config: ExportConfig): URI | null => {
   if (!config.contentRoot) {
     return null;
   }
@@ -22,7 +22,7 @@ const resolveContentRoot = (config: PublishConfig): URI | null => {
   return config.workspace.resolveUri(config.contentRoot).asPlain();
 };
 
-const isPublishableAssetLink = (link: ResourceLink) =>
+const isExportableAssetLink = (link: ResourceLink) =>
   link.type === 'wikilink' || link.type === 'link';
 
 const collectLinkedAssets = (
@@ -30,15 +30,15 @@ const collectLinkedAssets = (
   graph: FoamGraph,
   workspace: FoamWorkspace,
   contentRoot: URI | null,
-  includeAsset: PublishAssetMatcher
+  includeAsset: ExportAssetMatcher
 ): Resource[] => {
-  // Assets enter the publish graph only if a published note links to them.
+  // Assets enter the export graph only if an exported note links to them.
   const assets = new Map<string, Resource>();
   const linkedFromByAsset = new Map<string, Resource[]>();
 
   notes.forEach(note => {
     note.links.forEach(link => {
-      if (!isPublishableAssetLink(link)) {
+      if (!isExportableAssetLink(link)) {
         return;
       }
 
@@ -63,7 +63,7 @@ const collectLinkedAssets = (
           workspace,
           graph,
           contentRoot,
-          publishedNotes: notes,
+          exportedNotes: notes,
           linkedFrom,
         })
       ) {
@@ -77,7 +77,7 @@ const collectLinkedAssets = (
   return Array.from(assets.values());
 };
 
-export const createPublishContext = (config: PublishConfig): PublishContext => {
+export const createExportContext = (config: ExportConfig): ExportContext => {
   const graph = config.graph ?? FoamGraph.fromWorkspace(config.workspace);
   const includeMatcher = getIncludeMatcher(config);
   const includeAssetMatcher = getIncludeAssetMatcher(config);
@@ -108,12 +108,12 @@ export const createPublishContext = (config: PublishConfig): PublishContext => {
   );
   const resources = [...notes, ...linkedAssets];
 
-  const publishedRoutes = buildRouteManifest(
+  const exportedRoutes = buildRouteManifest(
     resources,
     config.workspace,
     contentRoot
   );
-  const publishedAssets = buildAssetManifest(resources, config.workspace);
+  const exportedAssets = buildAssetManifest(resources, config.workspace);
 
   return {
     ...runtimeContext,
@@ -122,13 +122,13 @@ export const createPublishContext = (config: PublishConfig): PublishContext => {
     resources,
     notes,
     assets: linkedAssets,
-    publishedRoutes,
-    publishedAssets,
+    exportedRoutes,
+    exportedAssets,
     noteRoutes: new Map(
-      publishedRoutes.map(route => [route.sourceUri.path, route.route])
+      exportedRoutes.map(route => [route.sourceUri.path, route.route])
     ),
     assetPaths: new Map(
-      publishedAssets.map(asset => [asset.sourceUri.path, `/${asset.outputPath}`])
+      exportedAssets.map(asset => [asset.sourceUri.path, `/${asset.outputPath}`])
     ),
   };
 };

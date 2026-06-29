@@ -1,25 +1,25 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-import { PublishArtifactSet } from '../../types';
+import { ExportArtifactSet } from '../../types';
 import { STARLIGHT_TEMPLATE_FILES } from './template';
 
 const DEFAULT_TITLE = 'Foam Site';
-const DEFAULT_DESCRIPTION = 'Published from a Foam knowledge base.';
+const DEFAULT_DESCRIPTION = 'Exported from a Foam knowledge base.';
 
 const DOCS_DIR = path.join('src', 'content', 'docs');
 const PUBLIC_DIR = 'public';
 const ASSETS_DIR = path.join(PUBLIC_DIR, 'assets');
 const GRAPH_DATA_PATH = path.join(PUBLIC_DIR, 'foam-graph.json');
 const GENERATED_DIR = 'generated';
-const ROUTES_MANIFEST_PATH = path.join(PUBLIC_DIR, 'publish-routes.json');
+const ROUTES_MANIFEST_PATH = path.join(PUBLIC_DIR, 'export-routes.json');
 
 const GRAPH_BUNDLE_PATH = path.join('src', 'lib', 'foam-graph.js');
 
 const FAVICON_PATH = path.join(PUBLIC_DIR, 'favicon.svg');
 
 export interface StarlightTargetOptions {
-  artifactSet: PublishArtifactSet;
+  artifactSet: ExportArtifactSet;
   outputDir: string;
   includeProjectScaffold?: boolean;
   siteUrl?: string;
@@ -66,12 +66,12 @@ function escapeFrontmatter(value: string) {
   return value.replace(/"/g, '\\"');
 }
 
-function renderFrontmatter(note: PublishArtifactSet['notes'][number]) {
+function renderFrontmatter(note: ExportArtifactSet['notes'][number]) {
   const lines = [
     '---',
     `title: "${escapeFrontmatter(note.title)}"`,
     `description: "${escapeFrontmatter(
-      note.description ?? `Published from ${note.sourceUri.path}`
+      note.description ?? `Exported from ${note.sourceUri.path}`
     )}"`,
   ];
 
@@ -110,7 +110,7 @@ function renderProperties(properties: Record<string, unknown>) {
 }
 
 function renderBacklinks(
-  backlinks: PublishArtifactSet['notes'][number]['backlinks']
+  backlinks: ExportArtifactSet['notes'][number]['backlinks']
 ) {
   if (backlinks.length === 0) {
     return '';
@@ -156,7 +156,7 @@ async function writeTemplateFiles(outputDir: string) {
   );
 }
 
-async function writeDocs(outputDir: string, artifactSet: PublishArtifactSet) {
+async function writeDocs(outputDir: string, artifactSet: ExportArtifactSet) {
   const docsDir = path.join(outputDir, DOCS_DIR);
 
   for (const note of artifactSet.notes) {
@@ -206,7 +206,7 @@ async function writeDocs(outputDir: string, artifactSet: PublishArtifactSet) {
   }
 }
 
-async function copyAssets(outputDir: string, artifactSet: PublishArtifactSet) {
+async function copyAssets(outputDir: string, artifactSet: ExportArtifactSet) {
   const assetsDir = path.join(outputDir, ASSETS_DIR);
 
   for (const asset of artifactSet.assets) {
@@ -219,7 +219,7 @@ async function copyAssets(outputDir: string, artifactSet: PublishArtifactSet) {
 
 async function writeSiteConfig(
   outputDir: string,
-  artifactSet: PublishArtifactSet,
+  artifactSet: ExportArtifactSet,
   siteUrl?: string
 ) {
   const outputPath = path.join(outputDir, GENERATED_DIR, 'site-config.json');
@@ -242,7 +242,7 @@ async function writeSiteConfig(
 
 async function writeRoutesManifest(
   outputDir: string,
-  artifactSet: PublishArtifactSet
+  artifactSet: ExportArtifactSet
 ) {
   const outputPath = path.join(outputDir, ROUTES_MANIFEST_PATH);
   await fs.mkdir(path.dirname(outputPath), { recursive: true });
@@ -264,7 +264,7 @@ async function writeRoutesManifest(
 
 async function writeGraphData(
   outputDir: string,
-  artifactSet: PublishArtifactSet
+  artifactSet: ExportArtifactSet
 ) {
   const outputPath = path.join(outputDir, GRAPH_DATA_PATH);
   await fs.mkdir(path.dirname(outputPath), { recursive: true });

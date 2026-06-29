@@ -7,8 +7,8 @@ import {
 } from '../../test/test-utils';
 import { buildSite } from '../index';
 
-describe('publish buildSite graph data', () => {
-  it('derives graph data from published routes only', async () => {
+describe('export buildSite graph data', () => {
+  it('derives graph data from exported routes only', async () => {
     const root = URI.file('/');
     const dataStore = new InMemoryDataStore();
     const workspace = createTestWorkspace([root], dataStore);

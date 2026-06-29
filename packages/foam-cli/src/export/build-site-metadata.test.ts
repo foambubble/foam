@@ -22,7 +22,7 @@ describe('export buildSite metadata and homepage selection', () => {
       'title: Welcome',
       'description: Start here',
       'home: true',
-      'publish: true',
+      'draft: false',
       '---',
       '',
       '# Welcome',
@@ -30,7 +30,7 @@ describe('export buildSite metadata and homepage selection', () => {
     const hiddenContent = [
       '---',
       'title: Draft',
-      'publish: false',
+      'draft: true',
       '---',
       '',
       '# Draft',
@@ -53,7 +53,7 @@ describe('export buildSite metadata and homepage selection', () => {
       include: (resource, context) => {
         expect(context.workspace).toBe(workspace);
         expect(context.graph).toBe(graph);
-        return resource.properties.publish !== false;
+        return resource.properties.draft !== true;
       },
       site: {
         title: ({ notes }) => `Exported Notes (${notes.length})`,
@@ -86,7 +86,7 @@ describe('export buildSite metadata and homepage selection', () => {
         title: 'Welcome',
         description: 'Start here',
         home: true,
-        publish: true,
+        draft: false,
       },
     });
     expect(result.notes.find(note => note.route === '/guide')?.properties).toEqual(

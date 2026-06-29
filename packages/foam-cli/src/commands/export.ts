@@ -1,9 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { Logger } from '@foam/core';
-import { buildSite } from '../export';
-import { writeStarlightSite } from '../export/targets/starlight';
+import { Logger, buildSite } from '@foam/core';
+import { StarlightTarget } from '../export-targets/starlight/target';
 import { loadWorkspaceFromDirectory } from '../support/filesystem';
 
 interface ParsedArgs {
@@ -134,21 +133,10 @@ export async function runExportCommand(options: ExportCommandOptions) {
     excludedPaths: [outputDir],
   });
 
-  const artifactSet = await buildSite({
-    workspace: loaded.workspace,
-    contentRoot: options.contentRoot,
-    site: {
-      title: options.title,
-      description: options.description,
-      homepage: options.homepage,
-    },
-  });
-
   const graphBundlePath = path.join(__dirname, 'foam-graph.standalone.js');
   const faviconPath = path.join(__dirname, 'assets', 'foam-icon.svg');
 
-  await writeStarlightSite({
-    artifactSet,
+  const target = new StarlightTarget({
     outputDir,
     siteUrl: options.siteUrl,
     graphBundlePath: fs.existsSync(graphBundlePath)
@@ -156,6 +144,19 @@ export async function runExportCommand(options: ExportCommandOptions) {
       : undefined,
     faviconPath: fs.existsSync(faviconPath) ? faviconPath : undefined,
   });
+
+  const artifactSet = await buildSite(
+    {
+      workspace: loaded.workspace,
+      contentRoot: options.contentRoot,
+      site: {
+        title: options.title,
+        description: options.description,
+        homepage: options.homepage,
+      },
+    },
+    target
+  );
 
   for (const diagnostic of artifactSet.diagnostics) {
     Logger.warn(diagnostic.message);

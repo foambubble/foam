@@ -1,4 +1,4 @@
-import { FoamWorkspace, FoamGraph, URI } from '@foam/core';
+import { FoamWorkspace, FoamGraph, URI, traverseGraph } from '@foam/core';
 
 /**
  * Breadth-first traversal of outgoing links starting at `entryPoint`, up to
@@ -23,33 +23,6 @@ export function collectNoteSet(
     return [];
   }
 
-  const visited = new Set<string>([entry.uri.toString()]);
-  const ordered: URI[] = [entry.uri];
-
-  let frontier: URI[] = [entry.uri];
-  for (let level = 0; level < depth; level++) {
-    const nextFrontier: URI[] = [];
-    for (const uri of frontier) {
-      const links = graph.getLinks(uri);
-      for (const conn of links) {
-        const target = workspace.find(conn.target);
-        if (!target || target.type !== 'note') {
-          continue;
-        }
-        const key = target.uri.toString();
-        if (visited.has(key)) {
-          continue;
-        }
-        visited.add(key);
-        ordered.push(target.uri);
-        nextFrontier.push(target.uri);
-      }
-    }
-    if (nextFrontier.length === 0) {
-      break;
-    }
-    frontier = nextFrontier;
-  }
-
-  return ordered;
+  const result = traverseGraph(workspace, graph, entry.uri, depth, 'links');
+  return result.nodes.filter(n => n.type === 'note').map(n => n.uri);
 }

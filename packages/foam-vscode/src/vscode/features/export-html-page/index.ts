@@ -1,11 +1,11 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs/promises';
-import { Foam, URI, toSlug } from '@foam/core';
+import { buildSite, Foam, selectByUris, toSlug, URI } from '@foam/core';
 import { fromVsCodeUri, toVsCodeUri } from '../../utils/vsc-utils';
 import { getTelemetry } from '../../services/telemetry';
 import { collectNoteSet } from './note-set';
-import { renderReport } from './render-report';
 import { slugForUri } from './slug';
+import { HtmlPageTarget } from './target/target';
 
 export const EXPORT_HTML_PAGE_COMMAND = 'foam-vscode.export-html-page';
 const DEPRECATED_PUBLISH_HTML_PAGE_COMMAND = 'foam-vscode.publish-html-page';
@@ -88,15 +88,13 @@ async function runExportHtmlPage(foam: Foam): Promise<void> {
       cancellable: false,
     },
     async () => {
-      const noteContent = await loadNoteContents(foam, selected);
-      const html = await renderReport({
+      const target = new HtmlPageTarget({
+        title,
+        generatedAt: new Date(),
         workspace: foam.workspace,
         graph: foam.graph,
         parser: foam.services.parser,
         noteUris: selected,
-        noteContent,
-        title,
-        generatedAt: new Date(),
         readAttachment: async (uri: URI) => {
           try {
             return await fs.readFile(uri.toFsPath());
@@ -104,8 +102,19 @@ async function runExportHtmlPage(foam: Foam): Promise<void> {
             return null;
           }
         },
+        onEmit: async (html: string) => {
+          await fs.writeFile(savePath.toFsPath(), html, 'utf8');
+        },
       });
-      await fs.writeFile(savePath.toFsPath(), html, 'utf8');
+
+      await buildSite(
+        {
+          workspace: foam.workspace,
+          graph: foam.graph,
+          select: selectByUris(selected),
+        },
+        target
+      );
     }
   );
 
@@ -236,15 +245,3 @@ async function pickSaveLocation(
   return result ? fromVsCodeUri(result) : undefined;
 }
 
-async function loadNoteContents(
-  foam: Foam,
-  uris: URI[]
-): Promise<Map<string, string>> {
-  const entries = await Promise.all(
-    uris.map(async uri => {
-      const text = await foam.services.dataStore.read(uri);
-      return [uri.toString(), text ?? ''] as const;
-    })
-  );
-  return new Map(entries);
-}

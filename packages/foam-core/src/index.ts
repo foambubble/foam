@@ -182,6 +182,53 @@ export type {
   GraphBuilderOptions,
 } from './services/graph-data-builder';
 
+// Export pipeline (workspace → static-site artifact set)
+export { buildSite } from './export';
+export { exportAssets } from './export/asset-filters';
+export {
+  selectAll,
+  selectWhere,
+  selectByUris,
+} from './export/selectors';
+export {
+  getWorkspaceRelativePath,
+  getContentRelativePath,
+} from './export/derive/build-route-manifest';
+export { slugifyUrlSegment, slugifyUrlPath } from './export/slug';
+export type { SlugifyUrlPathOptions } from './export/slug';
+export type {
+  ExportConfig,
+  ExportSiteConfig,
+  ExportSelector,
+  ExportAssetMatcher,
+  ExportAssetContext,
+  ExportHomepageMatcher,
+  ExportValueResolver,
+  ExportRuntimeContext,
+  ExportSiteContext,
+  ExportContext,
+  ExportArtifactSet,
+  ExportedNote,
+  ExportedAsset,
+  ExportedRoute,
+  ExportedSite,
+  ExportedBacklink,
+  ExportedDiagnostic,
+  ExportedGraphData,
+  ExportedGraphNode,
+  ExportedGraphLink,
+} from './export/types';
+export type {
+  PublishTarget,
+  PublishLocator,
+  PublishLocation,
+  AssetStrategy,
+  AssetResolution,
+  SourceLinkRewriter,
+  ResolvedLink,
+  LinkRewriteResult,
+} from './export/target';
+
 // Lint
 export {
   lintNote,

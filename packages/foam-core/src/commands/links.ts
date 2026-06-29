@@ -83,6 +83,11 @@ export interface TraversalResult {
  * Each node is visited at most once; the reported `distance` is the
  * shortest hop count to reach it. Edges are reported once per direction
  * even if encountered through multiple paths.
+ *
+ * Traversal is at note granularity: fragments (`#section`, `#^block`) are
+ * not part of node identity. Two links to `[[other#a]]` and `[[other#b]]`
+ * visit `other` once, and the URIs in the returned `nodes` / `edges` are
+ * fragment-free so consumers can dedupe / look up by URI consistently.
  */
 export function traverseGraph(
   workspace: FoamWorkspace,
@@ -95,15 +100,16 @@ export function traverseGraph(
   const edgeKeys = new Set<string>();
   const edges: TraversalEdge[] = [];
 
-  const startResource = workspace.find(start);
-  visited.set(start.path, {
-    uri: start,
+  const startPlain = start.asPlain();
+  const startResource = workspace.find(startPlain);
+  visited.set(startPlain.path, {
+    uri: startPlain,
     title: startResource?.title ?? '',
     type: startResource?.type ?? 'placeholder',
     distance: 0,
   });
 
-  let frontier: URI[] = [start];
+  let frontier: URI[] = [startPlain];
   for (let hop = 0; hop < depth && frontier.length > 0; hop++) {
     const next: URI[] = [];
     for (const uri of frontier) {
@@ -120,24 +126,27 @@ export function traverseGraph(
       }
 
       for (const { conn, target } of connections) {
-        const edgeKey = `${conn.source.path}➜${conn.target.path}`;
+        const sourcePlain = conn.source.asPlain();
+        const targetPlain = conn.target.asPlain();
+        const edgeKey = `${sourcePlain.path}➜${targetPlain.path}`;
         if (!edgeKeys.has(edgeKey)) {
           edgeKeys.add(edgeKey);
           edges.push({
-            source: conn.source,
-            target: conn.target,
+            source: sourcePlain,
+            target: targetPlain,
             label: conn.link.rawText,
           });
         }
-        if (!visited.has(target.path)) {
-          const resource = workspace.find(target);
-          visited.set(target.path, {
-            uri: target,
+        const nodePlain = target.asPlain();
+        if (!visited.has(nodePlain.path)) {
+          const resource = workspace.find(nodePlain);
+          visited.set(nodePlain.path, {
+            uri: nodePlain,
             title: resource?.title ?? '',
             type: resource?.type ?? 'placeholder',
             distance: hop + 1,
           });
-          next.push(target);
+          next.push(nodePlain);
         }
       }
     }

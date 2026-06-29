@@ -11,7 +11,7 @@ Logger.setLevel('error');
 
 const FILE_WITH_DIFFERENT_LINK_FORMATS = `# File with different link formats
 
-markdown link [home page](https://foambubble.github.io/)
+markdown link [home page](https://foam.md/)
 
 wikilink to file [[first-document]].
 

@@ -1,6 +1,8 @@
 import { debounce } from 'lodash';
 import { LRUCache } from 'lru-cache';
 import { ExtensionContext } from 'vscode';
+import { promises as fs } from 'fs';
+import * as path from 'path';
 import { URI } from '@foam/core';
 import {
   ParserCache,
@@ -19,49 +21,84 @@ import { Logger } from '@foam/core';
  * discarded automatically on the next startup.
  */
 export default class VsCodeBasedParserCache implements ParserCache {
-  static CACHE_NAME = 'foam-cache';
+  static CACHE_FILENAME = 'parser-cache.json';
   static CACHE_VERSION = 5;
   static CACHE_VERSION_KEY = 'foam-cache-version';
   private _cache: LRUCache<string, ParserCacheEntry>;
+  private _syncing = false;
+  private _needsSync = false;
 
-  constructor(private context: ExtensionContext, size = 10000) {
+  private constructor(private context: ExtensionContext, size = 10000) {
     this._cache = new LRUCache({
       max: size,
       updateAgeOnGet: true,
       updateAgeOnHas: false,
     });
+  }
 
-    const storedVersion = context.workspaceState.get<number>(
+  static async create(context: ExtensionContext, size = 10000): Promise<VsCodeBasedParserCache> {
+    const instance = new VsCodeBasedParserCache(context, size);
+    await instance.load();
+    return instance;
+  }
+
+  private getCachePath(): string | undefined {
+    if (!this.context.storageUri) {
+      return undefined;
+    }
+    return path.join(this.context.storageUri.fsPath, VsCodeBasedParserCache.CACHE_FILENAME);
+  }
+
+  private async load() {
+    const storedVersion = this.context.workspaceState.get<number>(
       VsCodeBasedParserCache.CACHE_VERSION_KEY,
       0
     );
+
+    const cachePath = this.getCachePath();
+
     if (storedVersion !== VsCodeBasedParserCache.CACHE_VERSION) {
       Logger.debug(
         `Cache version mismatch (stored: ${storedVersion}, current: ${VsCodeBasedParserCache.CACHE_VERSION}) — clearing cache`
       );
-      this.clear();
-      context.workspaceState.update(
+      await this.clear();
+      this.context.workspaceState.update(
         VsCodeBasedParserCache.CACHE_VERSION_KEY,
         VsCodeBasedParserCache.CACHE_VERSION
       );
-    } else {
-      const source = context.workspaceState.get(
-        VsCodeBasedParserCache.CACHE_NAME,
-        []
-      );
-      try {
-        this._cache.load(source);
-      } catch (e) {
-        Logger.warn(`Failed to load cache: ${e}`);
-        this.clear();
+      Logger.debug('Cache size: ' + this._cache.size);
+      return;
+    }
+
+    if (!cachePath) {
+      return;
+    }
+
+    try {
+      const data = await fs.readFile(cachePath, 'utf8');
+      const source = JSON.parse(data);
+      this._cache.load(source);
+    } catch (e: any) {
+      if (e.code !== 'ENOENT') {
+        Logger.warn(`Failed to load cache from ${cachePath}: ${e}`);
+        await this.clear();
       }
     }
     Logger.debug('Cache size: ' + this._cache.size);
   }
 
-  clear(): void {
+  async clear(): Promise<void> {
     this._cache.clear();
-    this.context.workspaceState.update(VsCodeBasedParserCache.CACHE_NAME, []);
+    const cachePath = this.getCachePath();
+    if (cachePath) {
+      try {
+        await fs.unlink(cachePath);
+      } catch (e: any) {
+        if (e.code !== 'ENOENT') {
+          Logger.warn(`Failed to clear cache file at ${cachePath}: ${e}`);
+        }
+      }
+    }
   }
 
   get(uri: URI): ParserCacheEntry {
@@ -89,22 +126,46 @@ export default class VsCodeBasedParserCache implements ParserCache {
 
   set(uri: URI, entry: ParserCacheEntry): void {
     this._cache.set(uri.toString(), entry);
-    delayedSync(this._cache, this.context);
+    this.scheduleSync();
   }
 
   del(uri: URI): void {
     this._cache.delete(uri.toString());
-    delayedSync(this._cache, this.context);
+    this.scheduleSync();
+  }
+
+  private scheduleSync = debounce(() => {
+    this.performSync();
+  }, 1000);
+
+  private async performSync() {
+    if (this._syncing) {
+      this._needsSync = true;
+      return;
+    }
+
+    const cachePath = this.getCachePath();
+    if (!cachePath) return;
+
+    this._syncing = true;
+    this._needsSync = false;
+
+    try {
+      Logger.debug('Updating parser cache file');
+      await fs.mkdir(path.dirname(cachePath), { recursive: true });
+      const dumped = this._cache.dump();
+      const payload = JSON.stringify(dumped);
+      // Write to a tmp file and rename for atomic write
+      const tmpPath = cachePath + '.tmp';
+      await fs.writeFile(tmpPath, payload, 'utf8');
+      await fs.rename(tmpPath, cachePath);
+    } catch (e: any) {
+      Logger.warn(`Failed to sync parser cache: ${e}`);
+    } finally {
+      this._syncing = false;
+      if (this._needsSync) {
+        this.performSync();
+      }
+    }
   }
 }
-
-const delayedSync = debounce(
-  (cache: LRUCache<string, ParserCacheEntry>, context) => {
-    Logger.debug('Updating parser cache');
-    context.workspaceState.update(
-      VsCodeBasedParserCache.CACHE_NAME,
-      cache.dump()
-    );
-  },
-  1000
-);

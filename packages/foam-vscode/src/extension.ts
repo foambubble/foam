@@ -68,7 +68,7 @@ export async function activate(context: ExtensionContext) {
       workspace.createFileSystemWatcher('**/*'),
       workspace.onDidSaveTextDocument
     );
-    const parserCache = new VsCodeBasedParserCache(context);
+    const parserCache = await VsCodeBasedParserCache.create(context);
     const parser = createMarkdownParser([], parserCache);
 
     const notesExtensions = Config.getNotesExtensions();

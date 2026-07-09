@@ -328,6 +328,14 @@ export function deleteFile(uri: URI) {
   return workspace.fs.delete(toVsCodeUri(uri), { recursive: true });
 }
 
+export async function writeFile(uri: URI, content: string): Promise<void> {
+  await workspace.fs.createDirectory(toVsCodeUri(uri.getDirectory()));
+  await workspace.fs.writeFile(
+    toVsCodeUri(uri),
+    new TextEncoder().encode(content)
+  );
+}
+
 /**
  * Turns a relative URI into an absolute URI for the given workspace.
  * @param uriOrPath the uri or path to evaluate

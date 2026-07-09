@@ -8,41 +8,26 @@ import { slugForUri } from './slug';
 import { HtmlPageTarget } from './target/target';
 
 export const EXPORT_HTML_PAGE_COMMAND = 'foam-vscode.export-html-page';
-const DEPRECATED_PUBLISH_HTML_PAGE_COMMAND = 'foam-vscode.publish-html-page';
 const DEFAULT_DEPTH = 2;
 
 export default async function activate(
   context: vscode.ExtensionContext,
   foamPromise: Promise<Foam>
 ) {
-  const handler = async (commandId: string) => {
-    getTelemetry()?.trackCommand(commandId);
-    const foam = await foamPromise;
-    try {
-      await runExportHtmlPage(foam);
-    } catch (err) {
-      vscode.window.showErrorMessage(
-        `Foam: failed to export HTML page — ${
-          err instanceof Error ? err.message : String(err)
-        }`
-      );
-    }
-  };
-
   context.subscriptions.push(
-    vscode.commands.registerCommand(
-      EXPORT_HTML_PAGE_COMMAND,
-      () => handler(EXPORT_HTML_PAGE_COMMAND)
-    ),
-    vscode.commands.registerCommand(
-      DEPRECATED_PUBLISH_HTML_PAGE_COMMAND,
-      () => {
-        vscode.window.showWarningMessage(
-          'The "Foam: Export to HTML page" command has been renamed to "Foam: Export to HTML page". The old name will be removed in a future release.'
+    vscode.commands.registerCommand(EXPORT_HTML_PAGE_COMMAND, async () => {
+      getTelemetry()?.trackCommand(EXPORT_HTML_PAGE_COMMAND);
+      const foam = await foamPromise;
+      try {
+        await runExportHtmlPage(foam);
+      } catch (err) {
+        vscode.window.showErrorMessage(
+          `Foam: failed to export HTML page — ${
+            err instanceof Error ? err.message : String(err)
+          }`
         );
-        return handler(DEPRECATED_PUBLISH_HTML_PAGE_COMMAND);
       }
-    )
+    })
   );
 }
 

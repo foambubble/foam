@@ -89,8 +89,12 @@ export async function activate(context: ExtensionContext) {
     const attachmentProvider = new AttachmentResourceProvider(attachmentExtConfig);
 
     // Initialize embedding provider
-    const aiEnabled = workspace.getConfiguration('foam.experimental').get('ai');
-    const embeddingProvider = aiEnabled ? new OllamaEmbeddingProvider() : undefined;
+    const experimentalEnabled = workspace
+      .getConfiguration('foam')
+      .get('experimental');
+    const embeddingProvider = experimentalEnabled
+      ? new OllamaEmbeddingProvider()
+      : undefined;
 
     const foamPromise = bootstrap(
       workspaceRoots,

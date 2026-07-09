@@ -114,31 +114,4 @@ describe('foam CLI', () => {
     }
   });
 
-  it('accepts the deprecated `publish` alias and warns', async () => {
-    const tempRoot = mkdtempSync(path.join(tmpdir(), 'foam-cli-'));
-    const workspaceDir = path.join(tempRoot, 'workspace');
-    const outputDir = path.join(tempRoot, 'site');
-
-    try {
-      fs.mkdirSync(workspaceDir, { recursive: true });
-      fs.writeFileSync(
-        path.join(workspaceDir, 'index.md'),
-        '# Home',
-        'utf8'
-      );
-
-      const logger = new TestLogger();
-      const exitCode = await runCli(
-        ['publish', workspaceDir, '--out', outputDir, '--target', 'starlight'],
-        logger
-      );
-
-      expect(exitCode).toBe(0);
-      expect(logger.warnings.join('\n')).toContain(
-        '`foam publish` has been renamed to `foam export`'
-      );
-    } finally {
-      fs.rmSync(tempRoot, { recursive: true, force: true });
-    }
-  });
 });

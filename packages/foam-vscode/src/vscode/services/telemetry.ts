@@ -151,7 +151,7 @@ export class TelemetryService implements IDisposable {
       'files.defaultNoteExtension': bucketNoteExtension(
         cfg.get('files.defaultNoteExtension', 'md')
       ),
-      'ai.enabled': String(cfg.get('experimental.ai', false)),
+      'experimental.enabled': String(cfg.get('experimental', false)),
       'edit.linkReferenceDefinitions': cfg.get(
         'edit.linkReferenceDefinitions',
         'off'

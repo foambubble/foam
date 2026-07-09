@@ -11,7 +11,6 @@ import { ITelemetryReporter, bucketDuration } from '@foam/core';
  */
 export const KNOWN_COMMANDS = new Set([
   'export',
-  'publish',
   'lint',
   'list',
   'note',

@@ -49,7 +49,6 @@ Commands:
   search      Search by title, alias, tag, or frontmatter property
   rename      Rename a note, tag, section, or block anchor (with link rewriting)
   query       List, run, or show saved queries (a.k.a. Smart Folders)
-  export      Export the workspace as a static site (e.g. Astro/Starlight)
   mcp         Run an MCP server (Model Context Protocol) over stdio for AI agents
   update      Check for updates and show the install command
   config      Manage user-level Foam configuration (~/.config/foam/config.json)
@@ -154,13 +153,7 @@ async function dispatch(
 
   try {
     switch (command) {
-      case 'publish':
       case 'export': {
-        if (command === 'publish') {
-          logger.warn(
-            '`foam publish` has been renamed to `foam export`. The `publish` alias will be removed in a future release.'
-          );
-        }
         if (commandArgs.includes('--help') || commandArgs.includes('-h')) {
           logger.info(renderExportHelp());
           return 0;

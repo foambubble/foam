@@ -36,7 +36,7 @@
     "@changesets/cli": "^2.31.0",
     "all-contributors-cli": "^6.16.1",
     "husky": "^9.1.7",
-    "lerna": "^6.4.1",
+    "lerna": "^8.2.2",
     "vite-tsconfig-paths": "^6.1.1"
   },
   "engines": {

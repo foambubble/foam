@@ -68,7 +68,7 @@ export async function activate(context: ExtensionContext) {
       workspace.createFileSystemWatcher('**/*'),
       workspace.onDidSaveTextDocument
     );
-    const parserCache = new VsCodeBasedParserCache(context);
+    const parserCache = await VsCodeBasedParserCache.create(context);
     const parser = createMarkdownParser([], parserCache);
 
     const notesExtensions = Config.getNotesExtensions();
@@ -128,6 +128,7 @@ export async function activate(context: ExtensionContext) {
     context.subscriptions.push(
       foam,
       watcher,
+      parserCache,
       markdownProvider,
       attachmentProvider,
       commands.registerCommand('foam-vscode.clear-cache', () => parserCache.clear()),

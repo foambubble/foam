@@ -197,11 +197,18 @@ export const runCommand = async <T>(command: string, args: T = undefined) =>
  * @param value the value to set the configuration to
  * @param fn the function to execute
  */
-export const withModifiedConfiguration = async (key, value, fn: () => void) => {
+export const withModifiedConfiguration = async (
+  key,
+  value,
+  fn: () => void | Promise<void>
+) => {
   const old = vscode.workspace.getConfiguration().inspect(key);
   await vscode.workspace.getConfiguration().update(key, value);
-  await fn();
-  await vscode.workspace.getConfiguration().update(key, old.workspaceValue);
+  try {
+    await fn();
+  } finally {
+    await vscode.workspace.getConfiguration().update(key, old.workspaceValue);
+  }
 };
 
 /**
@@ -212,8 +219,11 @@ export const withModifiedConfiguration = async (key, value, fn: () => void) => {
  * @param value the value to set the configuration to
  * @param fn the function to execute
  */
-export const withModifiedFoamConfiguration = (key, value, fn: () => void) =>
-  withModifiedConfiguration(`foam.${key}`, value, fn);
+export const withModifiedFoamConfiguration = (
+  key,
+  value,
+  fn: () => void | Promise<void>
+) => withModifiedConfiguration(`foam.${key}`, value, fn);
 
 /**
  * Utility function to check if two URIs are the same.

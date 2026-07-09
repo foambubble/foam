@@ -25,6 +25,8 @@ process.env.NODE_ENV = 'test';
 (process.stderr as any).isTTY = false;
 
 import { rmSync, readdirSync, existsSync } from 'fs';
+import { Config } from '@foam/core';
+import { VsCodeFoamConfig } from '../vscode/config';
 import { cleanWorkspace } from './test-utils-vscode';
 import path from 'path';
 
@@ -32,6 +34,13 @@ const rootDir = path.join(__dirname, '../..');
 
 export async function run(): Promise<void> {
   const errWrite = process.stderr.write;
+
+  // The extension under test runs from the esbuild bundle, which carries its
+  // own inlined copy of @foam/core — its activation wires the bundle's Config,
+  // not the node_modules instance the compiled specs import. Wire this module
+  // graph's Config the same way extension.ts does, so specs reading through
+  // Config see the real VS Code configuration.
+  Config.setDefaultConfig(new VsCodeFoamConfig());
 
   // Redirect stderr → stdout so VS Code's internal warnings appear inline with
   // test output rather than on a separate stream (which the test harness may

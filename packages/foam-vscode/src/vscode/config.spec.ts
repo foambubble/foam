@@ -9,13 +9,13 @@ describe('VsCodeFoamConfig — notes extensions', () => {
   });
 
   it('always includes the default extension in the notes extensions list', async () => {
-    withModifiedFoamConfiguration(
+    await withModifiedFoamConfiguration(
       'files.defaultNoteExtension',
       'mdxx',
       async () => {
         expect(Config.getNotesExtensions()).toEqual(['.mdxx']);
 
-        withModifiedFoamConfiguration(
+        await withModifiedFoamConfiguration(
           'files.notesExtensions',
           'md markdown',
           async () => {

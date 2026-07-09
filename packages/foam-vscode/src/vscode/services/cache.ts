@@ -1,8 +1,6 @@
 import { debounce } from 'lodash';
 import { LRUCache } from 'lru-cache';
-import { ExtensionContext } from 'vscode';
-import { promises as fs } from 'fs';
-import * as path from 'path';
+import { ExtensionContext, workspace, Uri } from 'vscode';
 import { URI } from '@foam/core';
 import {
   ParserCache,
@@ -42,11 +40,11 @@ export default class VsCodeBasedParserCache implements ParserCache {
     return instance;
   }
 
-  private getCachePath(): string | undefined {
+  private getCacheUri(): Uri | undefined {
     if (!this.context.storageUri) {
       return undefined;
     }
-    return path.join(this.context.storageUri.fsPath, VsCodeBasedParserCache.CACHE_FILENAME);
+    return Uri.joinPath(this.context.storageUri, VsCodeBasedParserCache.CACHE_FILENAME);
   }
 
   private async load() {
@@ -55,7 +53,7 @@ export default class VsCodeBasedParserCache implements ParserCache {
       0
     );
 
-    const cachePath = this.getCachePath();
+    const cacheUri = this.getCacheUri();
 
     if (storedVersion !== VsCodeBasedParserCache.CACHE_VERSION) {
       Logger.debug(
@@ -70,17 +68,18 @@ export default class VsCodeBasedParserCache implements ParserCache {
       return;
     }
 
-    if (!cachePath) {
+    if (!cacheUri) {
       return;
     }
 
     try {
-      const data = await fs.readFile(cachePath, 'utf8');
-      const source = JSON.parse(data);
+      const data = await workspace.fs.readFile(cacheUri);
+      const content = Buffer.from(data).toString('utf8');
+      const source = JSON.parse(content);
       this._cache.load(source);
     } catch (e: any) {
-      if (e.code !== 'ENOENT') {
-        Logger.warn(`Failed to load cache from ${cachePath}: ${e}`);
+      if (e.code !== 'FileNotFound' && e.name !== 'EntryNotFound (FileSystemError)') {
+        Logger.warn(`Failed to load cache from ${cacheUri.toString()}: ${e}`);
         await this.clear();
       }
     }
@@ -89,13 +88,13 @@ export default class VsCodeBasedParserCache implements ParserCache {
 
   async clear(): Promise<void> {
     this._cache.clear();
-    const cachePath = this.getCachePath();
-    if (cachePath) {
+    const cacheUri = this.getCacheUri();
+    if (cacheUri) {
       try {
-        await fs.unlink(cachePath);
+        await workspace.fs.delete(cacheUri);
       } catch (e: any) {
-        if (e.code !== 'ENOENT') {
-          Logger.warn(`Failed to clear cache file at ${cachePath}: ${e}`);
+        if (e.code !== 'FileNotFound' && e.name !== 'EntryNotFound (FileSystemError)') {
+          Logger.warn(`Failed to clear cache file at ${cacheUri.toString()}: ${e}`);
         }
       }
     }
@@ -144,21 +143,23 @@ export default class VsCodeBasedParserCache implements ParserCache {
       return;
     }
 
-    const cachePath = this.getCachePath();
-    if (!cachePath) return;
+    const cacheUri = this.getCacheUri();
+    if (!cacheUri) return;
 
     this._syncing = true;
     this._needsSync = false;
 
     try {
       Logger.debug('Updating parser cache file');
-      await fs.mkdir(path.dirname(cachePath), { recursive: true });
+      if (this.context.storageUri) {
+        await workspace.fs.createDirectory(this.context.storageUri);
+      }
       const dumped = this._cache.dump();
       const payload = JSON.stringify(dumped);
-      // Write to a tmp file and rename for atomic write
-      const tmpPath = cachePath + '.tmp';
-      await fs.writeFile(tmpPath, payload, 'utf8');
-      await fs.rename(tmpPath, cachePath);
+      const data = Buffer.from(payload, 'utf8');
+      
+      // VS Code fs.writeFile is atomic per file system provider implementation
+      await workspace.fs.writeFile(cacheUri, data);
     } catch (e: any) {
       Logger.warn(`Failed to sync parser cache: ${e}`);
     } finally {

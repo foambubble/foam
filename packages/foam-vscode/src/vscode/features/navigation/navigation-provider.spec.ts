@@ -10,6 +10,7 @@ import { NavigationProvider } from './navigation-provider';
 import { toVsCodeUri } from '../../utils/vsc-utils';
 import { createMarkdownParser } from '@foam/core';
 import { FoamGraph } from '@foam/core';
+import { URI } from '@foam/core';
 import { commandAsURI } from '../../utils/commands';
 import { CREATE_NOTE_COMMAND } from '../notes/create-note';
 import { Location } from '@foam/core';
@@ -179,6 +180,7 @@ describe('Document navigation', () => {
       // The link should not be treated as a "create note" placeholder
       expect(links.length).toEqual(0);
     });
+
   });
 
   describe('definition provider', () => {
@@ -366,6 +368,94 @@ describe('Document navigation', () => {
 
       expect(definitions.length).toEqual(1);
       expect(definitions[0].targetUri).toEqual(toVsCodeUri(fileA.uri));
+    });
+  });
+
+  // Attachments (PDFs, docs, etc.) and images must be surfaced as DocumentLinks
+  // and NOT as definitions, so clicks route through VS Code's URI-opening
+  // pipeline (which honors `workbench.editorAssociations`) rather than the
+  // text-editor pipeline. See: https://github.com/foambubble/foam/issues/1675
+  describe('attachment and image navigation', () => {
+    const makeAttachment = (uri: URI, type: 'attachment' | 'image') => ({
+      uri,
+      type,
+      title: uri.getBasename(),
+      properties: { type },
+      aliases: [],
+      sections: [],
+      blocks: [],
+      links: [],
+      tags: [],
+      footnotes: [],
+    });
+
+    it('surfaces a wikilink resolving to an attachment as a document link, not a definition', async () => {
+      const pdf = await createFile('%PDF-1.4 fake', ['report.pdf']);
+      const noteA = await createFile(`see [[${pdf.base}]] for details.`);
+      const ws = createTestWorkspace()
+        .set(makeAttachment(pdf.uri, 'attachment'))
+        .set(parser.parse(noteA.uri, noteA.content));
+      const graph = FoamGraph.fromWorkspace(ws);
+      const tags = FoamTags.fromWorkspace(ws);
+
+      const { doc } = await showInEditor(noteA.uri);
+      const provider = new NavigationProvider(ws, graph, parser, tags);
+
+      const links = await provider.provideDocumentLinks(doc);
+      expect(links.length).toEqual(1);
+      expect(links[0].target).toEqual(toVsCodeUri(pdf.uri));
+
+      const definitions = await provider.provideDefinition(
+        doc,
+        new vscode.Position(0, 8)
+      );
+      expect(definitions).toBeUndefined();
+    });
+
+    it('surfaces a markdown link resolving to an attachment as a document link, not a definition', async () => {
+      const pdf = await createFile('%PDF-1.4 fake', ['report.pdf']);
+      const noteA = await createFile(`see [the report](./${pdf.base}).`);
+      const ws = createTestWorkspace()
+        .set(makeAttachment(pdf.uri, 'attachment'))
+        .set(parser.parse(noteA.uri, noteA.content));
+      const graph = FoamGraph.fromWorkspace(ws);
+      const tags = FoamTags.fromWorkspace(ws);
+
+      const { doc } = await showInEditor(noteA.uri);
+      const provider = new NavigationProvider(ws, graph, parser, tags);
+
+      const links = await provider.provideDocumentLinks(doc);
+      expect(links.length).toEqual(1);
+      expect(links[0].target).toEqual(toVsCodeUri(pdf.uri));
+
+      const definitions = await provider.provideDefinition(
+        doc,
+        new vscode.Position(0, 8)
+      );
+      expect(definitions).toBeUndefined();
+    });
+
+    it('surfaces a wikilink resolving to an image as a document link, not a definition', async () => {
+      const img = await createFile('fake png', ['photo.png']);
+      const noteA = await createFile(`see [[${img.base}]] here.`);
+      const ws = createTestWorkspace()
+        .set(makeAttachment(img.uri, 'image'))
+        .set(parser.parse(noteA.uri, noteA.content));
+      const graph = FoamGraph.fromWorkspace(ws);
+      const tags = FoamTags.fromWorkspace(ws);
+
+      const { doc } = await showInEditor(noteA.uri);
+      const provider = new NavigationProvider(ws, graph, parser, tags);
+
+      const links = await provider.provideDocumentLinks(doc);
+      expect(links.length).toEqual(1);
+      expect(links[0].target).toEqual(toVsCodeUri(img.uri));
+
+      const definitions = await provider.provideDefinition(
+        doc,
+        new vscode.Position(0, 8)
+      );
+      expect(definitions).toBeUndefined();
     });
   });
 

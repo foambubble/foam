@@ -206,6 +206,16 @@ export class NavigationProvider
     }
 
     const targetResource = this.workspace.get(uri);
+
+    // Attachments (PDFs, docs, etc.) and images are surfaced as DocumentLinks.
+    // See: https://github.com/foambubble/foam/issues/1675
+    if (
+      targetResource?.type === 'attachment' ||
+      targetResource?.type === 'image'
+    ) {
+      return;
+    }
+
     const fragmentRange = resolveFragmentRange(targetResource, uri.fragment);
 
     const targetRange =
@@ -258,6 +268,26 @@ export class NavigationProvider
           ResourceLink.isResolvedReference(o.link) &&
           !o.target.isPlaceholder()
       )
+      .map(o => {
+        const dl = new vscode.DocumentLink(
+          toVsCodeRange(o.link.range),
+          toVsCodeUri(o.target.asPlain())
+        );
+        dl.tooltip = o.target.getBasename();
+        return dl;
+      });
+
+    // Resolved links to attachments (PDFs, docs, etc.) and images are surfaced as
+    // DocumentLinks.
+    // See: https://github.com/foambubble/foam/issues/1675
+    const attachmentLinks: vscode.DocumentLink[] = targets
+      .filter(o => {
+        if (o.target.isPlaceholder()) return false;
+        if (o.link.type === 'external') return false;
+        if (ResourceLink.isResolvedReference(o.link)) return false;
+        const resource = this.workspace.get(o.target);
+        return resource?.type === 'attachment' || resource?.type === 'image';
+      })
       .map(o => {
         const dl = new vscode.DocumentLink(
           toVsCodeRange(o.link.range),
@@ -322,7 +352,10 @@ export class NavigationProvider
       return documentLink;
     });
 
-    return links.concat(resolvedReferenceLinks).concat(tags);
+    return links
+      .concat(resolvedReferenceLinks)
+      .concat(attachmentLinks)
+      .concat(tags);
   }
 
   /**

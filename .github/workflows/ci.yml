@@ -97,6 +97,6 @@ jobs:
         run: |
           test -f ./.tmp/foam-docs-site/package.json
           test -f ./.tmp/foam-docs-site/generated/site-config.json
-          test -f ./.tmp/foam-docs-site/public/publish-routes.json
+          test -f ./.tmp/foam-docs-site/public/export-routes.json
           test -f ./.tmp/foam-docs-site/src/content/docs/index.md
           test ! -e ./.tmp/foam-docs-site/src/content/docs/dev

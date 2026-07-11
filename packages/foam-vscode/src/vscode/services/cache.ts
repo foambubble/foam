@@ -4,7 +4,7 @@ import { ExtensionContext } from 'vscode';
 import { URI } from '@foam/core';
 import { ParserCache, ParserCacheEntry } from '@foam/core';
 import { Logger } from '@foam/core';
-import { deleteFile, readFile, writeFile } from './editor';
+import { deleteFile, dirExists, readFile, writeFile } from './editor';
 import { fromVsCodeUri } from '../utils/vsc-utils';
 
 /**
@@ -47,7 +47,9 @@ export default class VsCodeBasedParserCache implements ParserCache {
 
   private constructor(private context: ExtensionContext, size: number) {
     this._cacheDir = context.storageUri
-      ? fromVsCodeUri(context.storageUri).joinPath(VsCodeBasedParserCache.CACHE_DIR_NAME)
+      ? fromVsCodeUri(context.storageUri).joinPath(
+          VsCodeBasedParserCache.CACHE_DIR_NAME
+        )
       : undefined;
     this._cache = new LRUCache({
       max: size,
@@ -63,7 +65,10 @@ export default class VsCodeBasedParserCache implements ParserCache {
     });
   }
 
-  static async create(context: ExtensionContext, size = 10000): Promise<VsCodeBasedParserCache> {
+  static async create(
+    context: ExtensionContext,
+    size = 10000
+  ): Promise<VsCodeBasedParserCache> {
     const instance = new VsCodeBasedParserCache(context, size);
     await instance.load();
     return instance;
@@ -79,6 +84,14 @@ export default class VsCodeBasedParserCache implements ParserCache {
         `Cache version mismatch (stored: ${storedVersion}, current: ${VsCodeBasedParserCache.CACHE_VERSION}) — clearing cache`
       );
       await this.clear();
+      if (this._cacheDir && (await dirExists(this._cacheDir))) {
+        // deleting the outdated files failed: don't stamp the new version,
+        // or the stale entries would be loaded as current data next startup
+        Logger.warn(
+          'Could not remove the outdated parser cache — will retry on next startup'
+        );
+        return;
+      }
       await this.context.workspaceState.update(
         VsCodeBasedParserCache.CACHE_VERSION_KEY,
         VsCodeBasedParserCache.CACHE_VERSION
@@ -101,7 +114,9 @@ export default class VsCodeBasedParserCache implements ParserCache {
    * Returns whether any entries were imported.
    */
   private async importLegacyWorkspaceState(): Promise<boolean> {
-    const source = this.context.workspaceState.get<any[]>(VsCodeBasedParserCache.LEGACY_STATE_KEY);
+    const source = this.context.workspaceState.get<any[]>(
+      VsCodeBasedParserCache.LEGACY_STATE_KEY
+    );
     if (source === undefined) {
       return false;
     }
@@ -112,19 +127,30 @@ export default class VsCodeBasedParserCache implements ParserCache {
         for (const key of this._cache.keys()) {
           this._dirty.add(bucketOf(key));
         }
-        this.scheduleSync();
+        // persist the re-sharded entries before the legacy blob is removed
+        // below, so a crash in between cannot lose the whole cache
+        await this.performSync();
         imported = true;
-        Logger.info(`Migrated parser cache from workspace state (${this._cache.size} entries)`);
+        Logger.info(
+          `Migrated parser cache from workspace state (${this._cache.size} entries)`
+        );
       } catch (e) {
-        Logger.warn(`Failed to migrate parser cache from workspace state: ${e}`);
+        Logger.warn(
+          `Failed to migrate parser cache from workspace state: ${e}`
+        );
       }
     }
-    await this.context.workspaceState.update(VsCodeBasedParserCache.LEGACY_STATE_KEY, undefined);
+    await this.context.workspaceState.update(
+      VsCodeBasedParserCache.LEGACY_STATE_KEY,
+      undefined
+    );
     return imported;
   }
 
   private bucketUri(index: number): URI {
-    return this._cacheDir.joinPath(`bucket-${index.toString(16).padStart(2, '0')}.json`);
+    return this._cacheDir.joinPath(
+      `bucket-${index.toString(16).padStart(2, '0')}.json`
+    );
   }
 
   private async loadBuckets(): Promise<void> {
@@ -132,7 +158,9 @@ export default class VsCodeBasedParserCache implements ParserCache {
       return;
     }
     await Promise.all(
-      [...Array(VsCodeBasedParserCache.BUCKET_COUNT).keys()].map(index => this.loadBucket(index))
+      [...Array(VsCodeBasedParserCache.BUCKET_COUNT).keys()].map(index =>
+        this.loadBucket(index)
+      )
     );
   }
 
@@ -163,7 +191,10 @@ export default class VsCodeBasedParserCache implements ParserCache {
     if (this._cacheDir) {
       await deleteQuietly(this._cacheDir);
     }
-    await this.context.workspaceState.update(VsCodeBasedParserCache.LEGACY_STATE_KEY, undefined);
+    await this.context.workspaceState.update(
+      VsCodeBasedParserCache.LEGACY_STATE_KEY,
+      undefined
+    );
   }
 
   get(uri: URI): ParserCacheEntry {
@@ -207,8 +238,10 @@ export default class VsCodeBasedParserCache implements ParserCache {
    * Persists any pending change immediately, bypassing the debounce.
    */
   async flush(): Promise<void> {
-    this.scheduleSync.flush();
-    await this._pendingWrite;
+    // sync directly instead of flushing the debounce: buckets dirtied by
+    // eviction (or by a failed write) have no scheduled sync to flush
+    this.scheduleSync.cancel();
+    await this.performSync();
   }
 
   /**
@@ -225,7 +258,9 @@ export default class VsCodeBasedParserCache implements ParserCache {
 
   private performSync(): Promise<void> {
     // writes are chained so two syncs can never interleave
-    this._pendingWrite = this._pendingWrite.then(() => this.writeDirtyBuckets());
+    this._pendingWrite = this._pendingWrite.then(() =>
+      this.writeDirtyBuckets()
+    );
     return this._pendingWrite;
   }
 
@@ -252,14 +287,13 @@ export default class VsCodeBasedParserCache implements ParserCache {
             await writeFile(this.bucketUri(index), JSON.stringify(entries));
           }
         } catch (e) {
+          // the bucket stays dirty and is retried on the next sync or flush;
+          // rescheduling here would retry a persistent failure forever
           Logger.warn(`Failed to write cache bucket ${index}: ${e}`);
-          this._dirty.add(index); // retried on the next sync
+          this._dirty.add(index);
         }
       })
     );
-    if (this._dirty.size > 0) {
-      this.scheduleSync();
-    }
   }
 }
 

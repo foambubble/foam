@@ -76,7 +76,7 @@ export const getFoamDocSelectors = () =>
  * that look like a file name) is resolved like a wikilink identifier.
  *
  * Returns `undefined` when the active tab cannot be mapped to a file (settings
- * page, terminal, unrecognized webview, ...). 
+ * page, terminal, unrecognized webview, ...).
  *
  * Exported separately from `getActiveTabUri()` so it can be unit-tested without
  * mocking the `tabGroups` namespace.
@@ -172,8 +172,8 @@ export function getActiveTabUri(fWorkspace?: FoamWorkspace): URI | undefined {
  * note the user is currently on.
  *
  * The listener may fire multiple times per user interaction (opening a file
- * typically fires both `onDidChangeActiveTextEditor` and `onDidChangeTabs`). 
- * Dedupe is delegated to consumers to avoid unnecessary complexity 
+ * typically fires both `onDidChangeActiveTextEditor` and `onDidChangeTabs`).
+ * Dedupe is delegated to consumers to avoid unnecessary complexity
  * and overhead when it's not needed.
  */
 export function onDidChangeActiveTab(listener: () => void): Disposable {
@@ -315,6 +315,15 @@ export async function fileExists(uri: URI): Promise<boolean> {
   }
 }
 
+export async function dirExists(uri: URI): Promise<boolean> {
+  try {
+    const stat = await workspace.fs.stat(toVsCodeUri(uri));
+    return stat.type === FileType.Directory;
+  } catch (e) {
+    return false;
+  }
+}
+
 export async function readFile(uri: URI): Promise<string | undefined> {
   if (await fileExists(uri)) {
     return workspace.fs
@@ -328,12 +337,11 @@ export function deleteFile(uri: URI) {
   return workspace.fs.delete(toVsCodeUri(uri), { recursive: true });
 }
 
+const utf8Encoder = new TextEncoder();
+
 export async function writeFile(uri: URI, content: string): Promise<void> {
   await workspace.fs.createDirectory(toVsCodeUri(uri.getDirectory()));
-  await workspace.fs.writeFile(
-    toVsCodeUri(uri),
-    new TextEncoder().encode(content)
-  );
+  await workspace.fs.writeFile(toVsCodeUri(uri), utf8Encoder.encode(content));
 }
 
 /**
@@ -454,14 +462,9 @@ export async function createMatcherAndDataStore(
   };
 
   const decoder = new TextDecoder('utf-8');
-  const encoder = new TextEncoder();
   const readFile = async (uri: URI) => {
     const content = await workspace.fs.readFile(toVsCodeUri(uri));
     return decoder.decode(content);
-  };
-  const writeFile = async (uri: URI, content: string) => {
-    await workspace.fs.createDirectory(toVsCodeUri(uri.getDirectory()));
-    await workspace.fs.writeFile(toVsCodeUri(uri), encoder.encode(content));
   };
   const deleteFile = async (uri: URI) => {
     await workspace.fs.delete(toVsCodeUri(uri));

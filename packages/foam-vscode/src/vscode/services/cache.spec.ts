@@ -16,7 +16,17 @@ describe('VsCodeBasedParserCache', () => {
     } as unknown as ExtensionContext;
   };
 
-  const createTmpStorageDir = () => fs.mkdtempSync(path.join(os.tmpdir(), 'foam-cache-spec-'));
+  const tmpDirs: string[] = [];
+  const createTmpStorageDir = () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'foam-cache-spec-'));
+    tmpDirs.push(dir);
+    return dir;
+  };
+  afterEach(() => {
+    for (const dir of tmpDirs.splice(0)) {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
 
   const createEntry = (name: string): { uri: URI; entry: ParserCacheEntry } => {
     const resource = createTestNote({ uri: `/notes/${name}.md` });
@@ -38,9 +48,21 @@ describe('VsCodeBasedParserCache', () => {
     return snapshot;
   };
 
+  const countPersistedEntries = (storageDir: string): number => {
+    let count = 0;
+    for (const content of snapshotBucketFiles(storageDir).values()) {
+      count += JSON.parse(content).length;
+    }
+    return count;
+  };
+
+  const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
   it('starts empty when no persisted cache exists', async () => {
     const storageDir = createTmpStorageDir();
-    const cache = await VsCodeBasedParserCache.create(createContext(storageDir));
+    const cache = await VsCodeBasedParserCache.create(
+      createContext(storageDir)
+    );
     const { uri } = createEntry('some-note');
     expect(cache.has(uri)).toBe(false);
     expect(cache.get(uri)).toBeUndefined();
@@ -48,7 +70,9 @@ describe('VsCodeBasedParserCache', () => {
 
   it('returns entries with a rehydrated URI instance', async () => {
     const storageDir = createTmpStorageDir();
-    const cache = await VsCodeBasedParserCache.create(createContext(storageDir));
+    const cache = await VsCodeBasedParserCache.create(
+      createContext(storageDir)
+    );
     const { uri, entry } = createEntry('a-note');
     cache.set(uri, entry);
     const result = cache.get(uri);
@@ -114,7 +138,9 @@ describe('VsCodeBasedParserCache', () => {
     await cache.flush();
 
     const after = snapshotBucketFiles(storageDir);
-    const changed = [...after.keys()].filter(file => before.get(file) !== after.get(file));
+    const changed = [...after.keys()].filter(
+      file => before.get(file) !== after.get(file)
+    );
     expect(changed.length).toEqual(1);
   });
 
@@ -183,19 +209,131 @@ describe('VsCodeBasedParserCache', () => {
       VsCodeBasedParserCache.CACHE_VERSION_KEY,
       VsCodeBasedParserCache.CACHE_VERSION
     );
-    await context.workspaceState.update(VsCodeBasedParserCache.LEGACY_STATE_KEY, [
-      [uri.toString(), { value: entry }],
-    ]);
+    await context.workspaceState.update(
+      VsCodeBasedParserCache.LEGACY_STATE_KEY,
+      [[uri.toString(), { value: entry }]]
+    );
 
     const cache = await VsCodeBasedParserCache.create(context);
     expect(cache.has(uri)).toBe(true);
     expect(cache.get(uri).checksum).toEqual(entry.checksum);
-    expect(context.workspaceState.get(VsCodeBasedParserCache.LEGACY_STATE_KEY)).toBeUndefined();
+    expect(
+      context.workspaceState.get(VsCodeBasedParserCache.LEGACY_STATE_KEY)
+    ).toBeUndefined();
 
     // the migrated entries are re-persisted in the sharded layout
     await cache.flush();
     const reloaded = await VsCodeBasedParserCache.create(context);
     expect(reloaded.has(uri)).toBe(true);
+  });
+
+  it('persists migrated legacy entries before removing the old key', async () => {
+    const storageDir = createTmpStorageDir();
+    const context = createContext(storageDir);
+    const { uri, entry } = createEntry('legacy-note');
+    await context.workspaceState.update(
+      VsCodeBasedParserCache.CACHE_VERSION_KEY,
+      VsCodeBasedParserCache.CACHE_VERSION
+    );
+    await context.workspaceState.update(
+      VsCodeBasedParserCache.LEGACY_STATE_KEY,
+      [[uri.toString(), { value: entry }]]
+    );
+
+    await VsCodeBasedParserCache.create(context);
+
+    // the sharded files must exist as soon as create() resolves: the legacy
+    // blob is already gone, so a crash before a later debounced sync would
+    // otherwise lose the whole cache
+    expect(fs.existsSync(bucketDirOf(storageDir))).toBe(true);
+    const reloaded = await VsCodeBasedParserCache.create(context);
+    expect(reloaded.has(uri)).toBe(true);
+  });
+
+  it('does not stamp the new cache version if clearing the old cache fails', async () => {
+    const storageDir = createTmpStorageDir();
+    const context = createContext(storageDir);
+
+    const cache = await VsCodeBasedParserCache.create(context);
+    const { uri, entry } = createEntry('a-note');
+    cache.set(uri, entry);
+    await cache.flush();
+
+    await context.workspaceState.update(
+      VsCodeBasedParserCache.CACHE_VERSION_KEY,
+      VsCodeBasedParserCache.CACHE_VERSION - 1
+    );
+
+    // make the bucket files undeletable, so the version-mismatch clear fails
+    fs.chmodSync(bucketDirOf(storageDir), 0o555);
+    try {
+      await VsCodeBasedParserCache.create(context);
+      // the version must not be stamped, so the clear is retried next startup
+      expect(
+        context.workspaceState.get(VsCodeBasedParserCache.CACHE_VERSION_KEY)
+      ).toEqual(VsCodeBasedParserCache.CACHE_VERSION - 1);
+    } finally {
+      fs.chmodSync(bucketDirOf(storageDir), 0o755);
+    }
+
+    // once deleting works again, the stale entries are gone for good
+    const recovered = await VsCodeBasedParserCache.create(context);
+    expect(recovered.has(uri)).toBe(false);
+    expect(
+      context.workspaceState.get(VsCodeBasedParserCache.CACHE_VERSION_KEY)
+    ).toEqual(VsCodeBasedParserCache.CACHE_VERSION);
+  });
+
+  it('retries a failed write on the next flush, without background retries', async () => {
+    const storageDir = createTmpStorageDir();
+    const context = createContext(storageDir);
+
+    const cache = await VsCodeBasedParserCache.create(context);
+    const { uri, entry } = createEntry('a-note');
+    cache.set(uri, entry);
+    await cache.flush();
+
+    const bucketDir = bucketDirOf(storageDir);
+    const [bucketFile] = fs.readdirSync(bucketDir);
+    const bucketPath = path.join(bucketDir, bucketFile);
+    const staleContent = fs.readFileSync(bucketPath, 'utf8');
+
+    // make the write fail
+    fs.chmodSync(bucketPath, 0o444);
+    fs.chmodSync(bucketDir, 0o555);
+    cache.set(uri, { ...entry, checksum: 'updated-checksum' });
+    await cache.flush();
+    fs.chmodSync(bucketDir, 0o755);
+    fs.chmodSync(bucketPath, 0o644);
+
+    // no self-rescheduled retry may fire in the background...
+    await sleep(1500);
+    expect(fs.readFileSync(bucketPath, 'utf8')).toEqual(staleContent);
+
+    // ...but the change is still pending and lands on the next flush
+    await cache.flush();
+    expect(fs.readFileSync(bucketPath, 'utf8')).not.toEqual(staleContent);
+    const reloaded = await VsCodeBasedParserCache.create(context);
+    expect(reloaded.get(uri).checksum).toEqual('updated-checksum');
+  });
+
+  it('flush() persists buckets that only became dirty through eviction', async () => {
+    const storageDir = createTmpStorageDir();
+    const context = createContext(storageDir);
+
+    const cache = await VsCodeBasedParserCache.create(context, 10);
+    const notes = [...Array(10).keys()].map(i => createEntry(`note-${i}`));
+    for (const { uri, entry } of notes) {
+      cache.set(uri, entry);
+    }
+    await cache.flush();
+    expect(countPersistedEntries(storageDir)).toEqual(10);
+
+    // reloading with a smaller capacity evicts the overflow; the evictions
+    // mark buckets dirty without going through set()/del()
+    const reloaded = await VsCodeBasedParserCache.create(context, 5);
+    await reloaded.flush();
+    expect(countPersistedEntries(storageDir)).toEqual(5);
   });
 
   it('discards the persisted cache when the version changes', async () => {
@@ -214,9 +352,9 @@ describe('VsCodeBasedParserCache', () => {
 
     const reloaded = await VsCodeBasedParserCache.create(context);
     expect(reloaded.has(uri)).toBe(false);
-    expect(context.workspaceState.get(VsCodeBasedParserCache.CACHE_VERSION_KEY)).toEqual(
-      VsCodeBasedParserCache.CACHE_VERSION
-    );
+    expect(
+      context.workspaceState.get(VsCodeBasedParserCache.CACHE_VERSION_KEY)
+    ).toEqual(VsCodeBasedParserCache.CACHE_VERSION);
   });
 
   it('operates in-memory when no storage is available', async () => {

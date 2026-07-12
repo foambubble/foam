@@ -3,5 +3,9 @@ export interface ICache<K, V> {
   has(key: K): boolean;
   set(key: K, data: V): void;
   del(key: K): void;
-  clear(): void;
+  /**
+   * May be async when clearing also removes persisted state; callers that
+   * need the cache to be gone must await the result.
+   */
+  clear(): void | Promise<void>;
 }

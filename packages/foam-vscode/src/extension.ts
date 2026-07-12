@@ -1,6 +1,12 @@
 /*global markdownit:readonly*/
 
-import { workspace, ExtensionContext, window, commands, TextEditor } from 'vscode';
+import {
+  workspace,
+  ExtensionContext,
+  window,
+  commands,
+  TextEditor,
+} from 'vscode';
 import { MarkdownResourceProvider, Logger, Config } from '@foam/core';
 import { bootstrap } from './core/model/foam';
 import { fromVsCodeUri } from './vscode/utils/vsc-utils';
@@ -68,14 +74,15 @@ export async function activate(context: ExtensionContext) {
       workspace.createFileSystemWatcher('**/*'),
       workspace.onDidSaveTextDocument
     );
-    const parserCache = new VsCodeBasedParserCache(context);
+    const parserCache = await VsCodeBasedParserCache.create(context);
     const parser = createMarkdownParser([], parserCache);
 
     const notesExtensions = Config.getNotesExtensions();
     const defaultExtension = Config.getDefaultNoteExtension();
 
     const workspaceRoots =
-      workspace.workspaceFolders?.map(folder => fromVsCodeUri(folder.uri)) ?? [];
+      workspace.workspaceFolders?.map(folder => fromVsCodeUri(folder.uri)) ??
+      [];
 
     const directoryMode = Config.getLinksDirectoryMode();
     const markdownProvider = new MarkdownResourceProvider(
@@ -86,7 +93,9 @@ export async function activate(context: ExtensionContext) {
     );
 
     const attachmentExtConfig = Config.getAttachmentExtensions();
-    const attachmentProvider = new AttachmentResourceProvider(attachmentExtConfig);
+    const attachmentProvider = new AttachmentResourceProvider(
+      attachmentExtConfig
+    );
 
     // Initialize embedding provider
     const experimentalEnabled = workspace
@@ -108,7 +117,9 @@ export async function activate(context: ExtensionContext) {
     );
 
     // Load the features
-    const featuresPromises = features.map(feature => feature(context, foamPromise));
+    const featuresPromises = features.map(feature =>
+      feature(context, foamPromise)
+    );
 
     const foam = await foamPromise;
     const resources = foam.workspace.list();
@@ -132,9 +143,12 @@ export async function activate(context: ExtensionContext) {
     context.subscriptions.push(
       foam,
       watcher,
+      parserCache,
       markdownProvider,
       attachmentProvider,
-      commands.registerCommand('foam-vscode.clear-cache', () => parserCache.clear()),
+      commands.registerCommand('foam-vscode.clear-cache', () =>
+        parserCache.clear()
+      ),
       workspace.onDidChangeConfiguration(e => {
         if (
           [
@@ -146,7 +160,9 @@ export async function activate(context: ExtensionContext) {
             'foam.files.defaultNoteExtension',
           ].some(setting => e.affectsConfiguration(setting))
         ) {
-          window.showInformationMessage('Foam: Reload the window to use the updated settings');
+          window.showInformationMessage(
+            'Foam: Reload the window to use the updated settings'
+          );
         }
       })
     );
@@ -161,6 +177,8 @@ export async function activate(context: ExtensionContext) {
     };
   } catch (e) {
     Logger.error('An error occurred while bootstrapping Foam', e);
-    window.showErrorMessage(`An error occurred while bootstrapping Foam. ${e.stack}`);
+    window.showErrorMessage(
+      `An error occurred while bootstrapping Foam. ${e.stack}`
+    );
   }
 }

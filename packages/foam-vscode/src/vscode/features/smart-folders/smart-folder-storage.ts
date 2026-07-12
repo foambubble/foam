@@ -12,6 +12,7 @@ import {
   idFromQueryFilename,
 } from '@foam/core';
 import { fromVsCodeUri, toVsCodeUri } from '../../utils/vsc-utils';
+import { writeFile } from '../../services/editor';
 
 /**
  * VS Code adapter for the core {@link QueryStore}: adds a
@@ -121,7 +122,6 @@ export class SmartFolderStorage implements IDisposable {
 
 function createVsCodeQueryOps(workspaceRoot: URI) {
   const decoder = new TextDecoder('utf-8');
-  const encoder = new TextEncoder();
 
   return {
     list: async (pattern: string): Promise<URI[]> => {
@@ -134,15 +134,7 @@ function createVsCodeQueryOps(workspaceRoot: URI) {
       const bytes = await vscode.workspace.fs.readFile(toVsCodeUri(uri));
       return decoder.decode(bytes);
     },
-    write: async (uri: URI, content: string) => {
-      await vscode.workspace.fs.createDirectory(
-        toVsCodeUri(uri.getDirectory())
-      );
-      await vscode.workspace.fs.writeFile(
-        toVsCodeUri(uri),
-        encoder.encode(content)
-      );
-    },
+    write: writeFile,
     delete: async (uri: URI) => {
       await vscode.workspace.fs.delete(toVsCodeUri(uri));
     },

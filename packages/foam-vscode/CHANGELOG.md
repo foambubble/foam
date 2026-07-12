@@ -1,5 +1,15 @@
 # Change Log
 
+## 0.44.2
+
+### Patch Changes
+
+- Internal: Upgraded to Lerna 8, bumped grouped npm/yarn dependencies ([#1680](https://github.com/foambubble/foam/pull/1680)), and updated documentation links to foam.md.
+
+- Attachment links now honor `workbench.editorAssociations`, so files open in the editor you configured for their type ([#1675](https://github.com/foambubble/foam/issues/1675)).
+
+- Performance: sharded the parser cache into per-bucket files under the extension storage so only changed notes are re-persisted, fixing startup and typing lag on large workspaces ([#1681](https://github.com/foambubble/foam/pull/1681)).
+
 ## 0.44.1
 
 ### Patch Changes

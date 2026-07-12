@@ -1,5 +1,15 @@
 # Change Log
 
+## 0.45.0
+
+### Minor Changes
+
+- `foam-query` blocks can now select more note fields: `title`, `path`, `filename`, `folder`, and `extension`. Each selected column can also toggle whether it renders as a clickable link with `link: true`/`link: false` ([#1672](https://github.com/foambubble/foam/issues/1672)).
+
+### Patch Changes
+
+- Fixed graph traversal so links that differ only by their heading fragment (e.g. `[[note#a]]` and `[[note#b]]`) resolve to the same note instead of being visited twice.
+
 ## 0.44.0
 
 ### Minor Changes

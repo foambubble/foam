@@ -1202,6 +1202,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "ryanncode",
+      "name": "Ryan N",
+      "avatar_url": "https://avatars.githubusercontent.com/u/118120847?v=4",
+      "profile": "https://firstsynth.dev",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,

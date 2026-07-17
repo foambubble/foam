@@ -104,10 +104,7 @@ async function updateWikilinkDefinitions(
   if (updates.length > 0) {
     await editor.edit(editBuilder => {
       updates.forEach(update => {
-        const gap = doc.lineAt(update.range.start.line - 1).isEmptyOrWhitespace
-          ? ''
-          : eol;
-        editBuilder.replace(toVsCodeRange(update.range), gap + update.newText);
+        editBuilder.replace(toVsCodeRange(update.range), update.newText);
       });
     });
   }

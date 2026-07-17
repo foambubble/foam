@@ -96,8 +96,8 @@ export class MarkdownResourceProvider implements ResourceProvider {
         typeof link.definition === 'string'
           ? link.definition
           : ResourceLink.isResolvedReference(link)
-            ? link.definition.url
-            : link.rawText;
+          ? link.definition.url
+          : link.rawText;
       return URI.parse(url, 'external');
     }
     const { target, section, blockId } = MarkdownLink.analyzeLink(link);
@@ -207,6 +207,11 @@ export function createMarkdownReferences(
   const definitions = resource.links
     .filter(link => ResourceLink.isReferenceStyleLink(link))
     .map(link => {
+      if (link.type === 'external') {
+        // no need to create definitions for external links
+        return null;
+      }
+
       if (ResourceLink.isResolvedReference(link)) {
         return link.definition;
       }

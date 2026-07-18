@@ -5,7 +5,7 @@
 # Foam
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-132-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-133-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 [![Version](https://vsmarketplacebadges.dev/version/foam.foam-vscode.svg)](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode)
@@ -382,6 +382,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/meestahp"><img src="https://avatars.githubusercontent.com/u/177708514?v=4?s=60" width="60px;" alt="meestahp"/><br /><sub><b>meestahp</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=meestahp" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/qwloh"><img src="https://avatars.githubusercontent.com/u/14256866?v=4?s=60" width="60px;" alt="qwloh"/><br /><sub><b>qwloh</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=qwloh" title="Documentation">📖</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://firstsynth.dev"><img src="https://avatars.githubusercontent.com/u/118120847?v=4?s=60" width="60px;" alt="Ryan N"/><br /><sub><b>Ryan N</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=ryanncode" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="http://hals.app"><img src="https://avatars.githubusercontent.com/u/3185998?v=4?s=60" width="60px;" alt="Nils Henrik Hals"/><br /><sub><b>Nils Henrik Hals</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=Strepto" title="Code">💻</a></td>
     </tr>
   </tbody>
 </table>

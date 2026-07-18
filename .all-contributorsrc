@@ -1211,6 +1211,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "Strepto",
+      "name": "Nils Henrik Hals",
+      "avatar_url": "https://avatars.githubusercontent.com/u/3185998?v=4",
+      "profile": "http://hals.app",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,

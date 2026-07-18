@@ -574,6 +574,29 @@ describe('Generation of markdown references', () => {
     ]);
   });
 
+  it('should ignore external links when generating markdown references', () => {
+    const workspace = createTestWorkspace();
+    const noteA = createNoteFromMarkdown(
+      'Visit [Foam][docs] and [[page-b]]\n\n[docs]: https://foam.md/docs',
+      '/dir1/page-a.md'
+    );
+    const noteB = createNoteFromMarkdown(
+      'Content of note B',
+      '/dir1/page-b.md'
+    );
+    workspace.set(noteA).set(noteB);
+
+    const warnSpy = vi.spyOn(Logger, 'warn');
+    const references = createMarkdownReferences(workspace, noteA.uri, false);
+
+    expect(references).toHaveLength(1);
+    expect(references[0].label).toBe('page-b');
+    expect(references[0].url).toBe('page-b');
+    expect(warnSpy).not.toHaveBeenCalled();
+
+    warnSpy.mockRestore();
+  });
+
   it('should not generate links for placeholders', () => {
     const workspace = createTestWorkspace();
     const noteA = createNoteFromMarkdown(

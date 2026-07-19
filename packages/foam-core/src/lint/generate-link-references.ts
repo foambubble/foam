@@ -86,6 +86,7 @@ export const generateLinkReferences = (
         def.range?.start.line === insertLineIndex
     );
     const prefix = isKeptFoamDefinitionAtInsert ? eol : eol + eol;
+    // The generated edit owns its surrounding EOLs; callers apply it verbatim.
     const text = prefix + definitions.join(eol) + eol;
 
     edits.push({

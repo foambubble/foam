@@ -1,4 +1,5 @@
 import { IDisposable } from '../common/lifecycle';
+import { Event } from '../common/event';
 import { IDataStore, IMatcher, IWatcher } from '../services/datastore';
 import { URI } from './uri';
 import { FoamWorkspace } from './workspace';
@@ -13,6 +14,13 @@ export interface Services {
   parser: ResourceParser;
   matcher: IMatcher;
 }
+
+/**
+ * How long to wait for file-create events to settle before refreshing the
+ * matcher so that a burst of creates does not trigger one full workspace 
+ * scan per create
+ */
+const CREATE_DEBOUNCE_MS = 100;
 
 export interface Foam extends IDisposable {
   services: Services;
@@ -54,20 +62,41 @@ export const bootstrap = async (
     ms => (timingLogLevel === 'off' ? null : Logger[timingLogLevel](`Tags loaded in ${ms}ms`))
   );
 
-  watcher?.onDidChange(async uri => {
-    if (matcher.isMatch(uri)) {
-      await workspace.fetchAndSet(uri);
-    }
-  });
-  watcher?.onDidCreate(async uri => {
-    await matcher.refresh();
-    if (matcher.isMatch(uri)) {
-      await workspace.fetchAndSet(uri);
-    }
-  });
-  watcher?.onDidDelete(uri => {
-    workspace.delete(uri);
-  });
+  const subscriptions: IDisposable[] = [];
+
+  if (watcher) {
+    subscriptions.push(
+      watcher.onDidChange(async uri => {
+        if (matcher.isMatch(uri)) {
+          await workspace.fetchAndSet(uri);
+        }
+      })
+    );
+
+    // Coalesce a burst of creates into a single refresh, then
+    // process every accumulated URI. (issue #1668)
+    const onDidCreateBatch = Event.debounce<URI, URI[]>(
+      watcher.onDidCreate,
+      (batch, uri) => (batch ? [...batch, uri] : [uri]),
+      CREATE_DEBOUNCE_MS
+    );
+    subscriptions.push(
+      onDidCreateBatch(async uris => {
+        await matcher.refresh();
+        for (const uri of uris) {
+          if (matcher.isMatch(uri)) {
+            await workspace.fetchAndSet(uri);
+          }
+        }
+      })
+    );
+
+    subscriptions.push(
+      watcher.onDidDelete(uri => {
+        workspace.delete(uri);
+      })
+    );
+  }
 
   const foam: Foam = {
     workspace,
@@ -79,6 +108,7 @@ export const bootstrap = async (
       matcher,
     },
     dispose: () => {
+      subscriptions.forEach(s => s.dispose());
       workspace.dispose();
       graph.dispose();
     },

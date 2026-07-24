@@ -1,6 +1,7 @@
 import { defineConfig } from 'vitest/config';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { PERF_CURRENT } from './src/perf-paths';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
@@ -13,11 +14,11 @@ const __dirname = fileURLToPath(new URL('.', import.meta.url));
  *
  * Benchmarks here must NOT depend on vscode (the mock's timing is not
  * representative). The alias is kept only so `@foam/core` resolves to source.
+ *
+ * The perf JSON paths live in src/perf-paths.ts so perf-regression.test.ts can
+ * import them without reaching across the tsc rootDir boundary into this config
+ * (foam-core keeps them inline because it excludes test files from tsc).
  */
-export const PERF_DIR = 'out/perf';
-export const PERF_CURRENT = `${PERF_DIR}/perf-current.json`;
-export const PERF_BASELINE = `${PERF_DIR}/perf-baseline.json`;
-
 export default defineConfig({
   resolve: {
     alias: {

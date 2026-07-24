@@ -1044,7 +1044,7 @@
     "test:unit": "yarn test-reset-workspace && vitest run",
     "test:unit-without-specs": "yarn test-reset-workspace && cross-env EXCLUDE_SPECS=true vitest run",
     "test:e2e": "yarn test-setup && node ./out/test/run-tests.js --e2e",
-    "bench": "vitest bench --run --config vitest.bench.config.mts",
+    "bench": "vitest bench --run --config vitest.bench.config.ts",
     "bench:compare": "vitest run src/perf-regression.test.ts",
     "bench:seed": "node ../../scripts/perf/seed-baseline.mjs",
     "lint": "oxlint src",

@@ -1,6 +1,9 @@
 /* @unit-ready */
 import { Config } from '@foam/core';
-import { withModifiedFoamConfiguration } from '../test/test-utils-vscode';
+import {
+  withModifiedConfiguration,
+  withModifiedFoamConfiguration,
+} from '../test/test-utils-vscode';
 
 describe('VsCodeFoamConfig — notes extensions', () => {
   it('defaults to .md', () => {
@@ -76,5 +79,21 @@ describe('VsCodeFoamConfig — files include', () => {
     await withModifiedFoamConfiguration('files.include', [], async () => {
       expect(Config.getFilesInclude()).toEqual([]);
     });
+  });
+});
+
+describe('VsCodeFoamConfig — files exclude', () => {
+  it('includes VS Code files.watcherExclude keys', async () => {
+    // If VS Code is not watching a folder, Foam should not process it either.
+    await withModifiedConfiguration(
+      'files.watcherExclude',
+      { '**/my-huge-tree/**': true, '**/scratch/**': false },
+      async () => {
+        const excludes = Config.getFilesExclude();
+        // Only truthy entries are excluded, matching VS Code's semantics.
+        expect(excludes).toContain('**/my-huge-tree/**');
+        expect(excludes).not.toContain('**/scratch/**');
+      }
+    );
   });
 });

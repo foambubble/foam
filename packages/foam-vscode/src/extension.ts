@@ -6,6 +6,7 @@ import {
   window,
   commands,
   TextEditor,
+  RelativePattern,
 } from 'vscode';
 import { MarkdownResourceProvider, Logger, Config } from '@foam/core';
 import { bootstrap } from './core/model/foam';
@@ -20,6 +21,7 @@ import { VsCodeWatcher } from './vscode/services/watcher';
 import { createMarkdownParser } from '@foam/core';
 import VsCodeBasedParserCache from './vscode/services/cache';
 import { createMatcherAndDataStore } from './vscode/services/editor';
+import { buildWatchGlob } from './vscode/utils/watch-glob';
 import { OllamaEmbeddingProvider } from './ai/providers/ollama/ollama-provider';
 import { initTelemetry } from './vscode/services/telemetry';
 
@@ -70,15 +72,24 @@ export async function activate(context: ExtensionContext) {
       Logger.info('  Exclude: ' + excludePatterns.get(folder.name).join(','));
     }
 
+    const notesExtensions = Config.getNotesExtensions();
+    const defaultExtension = Config.getDefaultNoteExtension();
+    const attachmentExtConfig = Config.getAttachmentExtensions();
+
+    const watchGlob = buildWatchGlob([
+      ...notesExtensions,
+      ...attachmentExtConfig,
+    ]);
     const watcher = new VsCodeWatcher(
-      workspace.createFileSystemWatcher('**/*'),
+      workspace.workspaceFolders.map(folder =>
+        workspace.createFileSystemWatcher(
+          new RelativePattern(folder.uri, watchGlob)
+        )
+      ),
       workspace.onDidSaveTextDocument
     );
     const parserCache = await VsCodeBasedParserCache.create(context);
     const parser = createMarkdownParser([], parserCache);
-
-    const notesExtensions = Config.getNotesExtensions();
-    const defaultExtension = Config.getDefaultNoteExtension();
 
     const workspaceRoots =
       workspace.workspaceFolders?.map(folder => fromVsCodeUri(folder.uri)) ??
@@ -92,7 +103,6 @@ export async function activate(context: ExtensionContext) {
       directoryMode
     );
 
-    const attachmentExtConfig = Config.getAttachmentExtensions();
     const attachmentProvider = new AttachmentResourceProvider(
       attachmentExtConfig
     );

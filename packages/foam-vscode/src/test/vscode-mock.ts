@@ -299,6 +299,13 @@ export class Location {
   constructor(public uri: Uri, public range: Range) {}
 }
 
+export class RelativePattern {
+  public baseUri: Uri;
+  constructor(base: Uri | { uri: Uri }, public pattern: string) {
+    this.baseUri = 'uri' in base ? base.uri : base;
+  }
+}
+
 // VS Code SymbolKind enum
 export enum SymbolKind {
   File = 0,
@@ -1379,7 +1386,17 @@ class MockFileSystemWatcher implements FileSystemWatcher {
   ignoreChangeEvents = false;
   ignoreDeleteEvents = false;
 
-  constructor(private pattern: string) {
+  private readonly pattern: string;
+  private readonly baseUri: Uri | undefined;
+
+  constructor(globPattern: string | RelativePattern) {
+    if (typeof globPattern === 'string') {
+      this.pattern = globPattern;
+      this.baseUri = undefined;
+    } else {
+      this.pattern = globPattern.pattern;
+      this.baseUri = globPattern.baseUri;
+    }
     // Register this watcher in mockState (will be added to mockState)
     if (mockState.fileWatchers) {
       mockState.fileWatchers.push(this);
@@ -1406,13 +1423,18 @@ class MockFileSystemWatcher implements FileSystemWatcher {
   }
 
   private matches(uri: Uri): boolean {
-    const workspaceFolder = mockState.workspaceFolders[0];
-    if (!workspaceFolder) return false;
+    // A RelativePattern scopes matching to its base folder; a plain string
+    // pattern is matched relative to the first workspace folder.
+    const baseFsPath =
+      this.baseUri?.fsPath ?? mockState.workspaceFolders[0]?.uri.fsPath;
+    if (!baseFsPath) return false;
 
     const relativePath = path
-      .relative(workspaceFolder.uri.fsPath, uri.fsPath)
+      .relative(baseFsPath, uri.fsPath)
       .split(path.sep)
       .join('/');
+    // A path outside the base folder (starts with '..') is not watched.
+    if (relativePath.startsWith('..')) return false;
     // Use micromatch (already imported) for glob matching
     return micromatch.isMatch(relativePath, this.pattern);
   }
@@ -1878,7 +1900,9 @@ export const workspace = {
     return mockState.fileSystem;
   },
 
-  createFileSystemWatcher(globPattern: string): FileSystemWatcher {
+  createFileSystemWatcher(
+    globPattern: string | RelativePattern
+  ): FileSystemWatcher {
     return new MockFileSystemWatcher(globPattern);
   },
 

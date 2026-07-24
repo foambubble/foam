@@ -16,6 +16,14 @@ export class VsCodeFoamConfig implements IFoamConfig {
       ...workspace.getConfiguration().get('foam.files.exclude', []),
       ...workspace.getConfiguration().get('foam.files.ignore', []),
       ...Object.keys(workspace.getConfiguration().get('files.exclude', {})),
+      // Mirror VS Code's own watcher
+      ...Object.entries(
+        workspace
+          .getConfiguration()
+          .get<Record<string, boolean>>('files.watcherExclude', {})
+      )
+        .filter(([, enabled]) => enabled)
+        .map(([pattern]) => pattern),
     ].flatMap(expandAlternateGroups);
   }
 

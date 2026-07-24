@@ -16,20 +16,27 @@ export class VsCodeWatcher implements IWatcher, IDisposable {
   onDidDelete = this.onDidDeleteEmitter.event;
 
   private changeTimers = new Map<string, ReturnType<typeof setTimeout>>();
+  private readonly vsCodeWatchers: FileSystemWatcher[];
 
   constructor(
-    private readonly vsCodeWatcher: FileSystemWatcher,
+    vsCodeWatcher: FileSystemWatcher | FileSystemWatcher[],
     onDidSaveTextDocument?: Event<TextDocument>
   ) {
-    vsCodeWatcher.onDidCreate(uri =>
-      this.onDidCreateEmitter.fire(fromVsCodeUri(uri))
-    );
-    vsCodeWatcher.onDidChange(uri =>
-      this.fireChange(fromVsCodeUri(uri))
-    );
-    vsCodeWatcher.onDidDelete(uri =>
-      this.onDidDeleteEmitter.fire(fromVsCodeUri(uri))
-    );
+    // Multiple watchers support multi-root workspaces, where each folder gets
+    // its own scoped RelativePattern watcher.
+    this.vsCodeWatchers = Array.isArray(vsCodeWatcher)
+      ? vsCodeWatcher
+      : [vsCodeWatcher];
+
+    for (const w of this.vsCodeWatchers) {
+      w.onDidCreate(uri =>
+        this.onDidCreateEmitter.fire(fromVsCodeUri(uri))
+      );
+      w.onDidChange(uri => this.fireChange(fromVsCodeUri(uri)));
+      w.onDidDelete(uri =>
+        this.onDidDeleteEmitter.fire(fromVsCodeUri(uri))
+      );
+    }
     onDidSaveTextDocument?.(doc => this.fireChange(fromVsCodeUri(doc.uri)));
   }
 
@@ -53,6 +60,8 @@ export class VsCodeWatcher implements IWatcher, IDisposable {
       clearTimeout(timer);
     }
     this.changeTimers.clear();
-    this.vsCodeWatcher.dispose();
+    for (const w of this.vsCodeWatchers) {
+      w.dispose();
+    }
   }
 }

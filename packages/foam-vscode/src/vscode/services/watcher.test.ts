@@ -143,4 +143,49 @@ describe('VsCodeWatcher', () => {
     expect(changed).toHaveLength(0);
     expect(fsWatcher.dispose).toHaveBeenCalled();
   });
+
+  describe('multiple underlying watchers (multi-root)', () => {
+    it('forwards create/delete events from every watcher', () => {
+      const w1 = makeFsWatcher();
+      const w2 = makeFsWatcher();
+      const watcher = new VsCodeWatcher([w1, w2] as any);
+
+      const created: URI[] = [];
+      watcher.onDidCreate(uri => created.push(uri));
+
+      w1.fire.create(makeUri('/root1/a.md'));
+      w2.fire.create(makeUri('/root2/b.md'));
+
+      expect(created.map(u => u.path).sort()).toEqual([
+        '/root1/a.md',
+        '/root2/b.md',
+      ]);
+    });
+
+    it('forwards change events from every watcher', () => {
+      const w1 = makeFsWatcher();
+      const w2 = makeFsWatcher();
+      const watcher = new VsCodeWatcher([w1, w2] as any);
+
+      const changed: URI[] = [];
+      watcher.onDidChange(uri => changed.push(uri));
+
+      w1.fire.change(makeUri('/root1/a.md'));
+      w2.fire.change(makeUri('/root2/b.md'));
+
+      vi.advanceTimersByTime(100);
+      expect(changed).toHaveLength(2);
+    });
+
+    it('disposes every underlying watcher', () => {
+      const w1 = makeFsWatcher();
+      const w2 = makeFsWatcher();
+      const watcher = new VsCodeWatcher([w1, w2] as any);
+
+      watcher.dispose();
+
+      expect(w1.dispose).toHaveBeenCalled();
+      expect(w2.dispose).toHaveBeenCalled();
+    });
+  });
 });

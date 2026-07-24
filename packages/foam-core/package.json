@@ -24,7 +24,7 @@
     "test:unit": "vitest run",
     "test:e2e": "yarn bench",
     "bench": "vitest bench --run --config vitest.bench.config.ts",
-    "bench:compare": "vitest run src/services/markdown-parser.bench-compare.test.ts",
+    "bench:compare": "vitest run src/perf-regression.test.ts",
     "bench:seed": "node scripts/seed-baseline.mjs",
     "lint": "oxlint src"
   },

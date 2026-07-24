@@ -1,13 +1,16 @@
 import { existsSync, readFileSync } from 'fs';
-import { PERF_BASELINE, PERF_CURRENT } from '../../vitest.bench.config';
+import { PERF_BASELINE, PERF_CURRENT } from '../vitest.bench.config';
 
 /**
- * Performance regression gate for the markdown parser (see #1375).
+ * Performance regression gate for ALL benchmarks (see #1375).
  *
- * This is deliberately a *pure* test: it does NOT run the benchmark. It reads
+ * This is deliberately a *pure* test: it does NOT run any benchmark. It reads
  * the JSON that `vitest bench` produced (`out/perf/perf-current.json`) and the
  * baseline that CI restores from the Actions cache
- * (`out/perf/perf-baseline.json`), and asserts one against the other.
+ * (`out/perf/perf-baseline.json`), and asserts one against the other. Every
+ * `*.bench.ts` writes into the same JSON, so a single generic gate covers them
+ * all — the markdown parser (`markdown-parser.bench.ts`) and the repo-size
+ * workspace/graph benchmarks (`workspace-graph.bench.ts`) alike.
  *
  * When either file is absent — e.g. a plain `yarn test:unit` where no benchmark
  * has run, or a first CI run before the baseline is seeded — the checks
@@ -46,7 +49,7 @@ function flattenMeans(path: string): Map<string, number> {
 
 const haveData = existsSync(PERF_CURRENT) && existsSync(PERF_BASELINE);
 
-describe('Markdown parser performance regression', () => {
+describe('Performance regression', () => {
   if (!haveData) {
     it.skip('no benchmark data to compare (run `yarn bench` first; CI seeds the baseline)', () => {
       // Skipped: PERF_CURRENT and/or PERF_BASELINE not present.

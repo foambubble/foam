@@ -79,8 +79,21 @@ for (const size of REPO_BENCHMARK_SIZES) {
     });
 
     const graph = FoamGraph.fromWorkspace(workspace);
-    bench('graph update (1 note changed)', () => {
+    bench('graph update: full rebuild', () => {
       graph.update();
+    });
+
+    // Incremental path: a single note change flows through the monitored graph's
+    // onDidUpdate handler, touching only that note's connections. Compare
+    // against 'full rebuild' above — same corpus, so vitest prints "N× faster".
+    const monitoredWs = buildWorkspace(size);
+    FoamGraph.fromWorkspace(monitoredWs, true);
+    let flip = 0;
+    bench('graph update: incremental (1 note changed)', () => {
+      // Re-set note 0 with slightly different links, firing onDidUpdate.
+      const alt = makeNote(0, size);
+      alt.links = alt.links.slice(0, 3 - (flip++ % 2)); // vary link count
+      monitoredWs.set(alt);
     });
   });
 }

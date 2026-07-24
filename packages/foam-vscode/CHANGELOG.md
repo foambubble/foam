@@ -1,5 +1,15 @@
 # Change Log
 
+## 0.44.3
+
+### Patch Changes
+
+- Fixed extra line breaks being inserted between generated link reference definitions ([#1687](https://github.com/foambubble/foam/pull/1687)).
+
+- Performance: wikilink pipes are now encoded once per render instead of once per table-rule invocation, speeding up preview rendering of notes with many wikilinks ([#1689](https://github.com/foambubble/foam/pull/1689)).
+
+- Performance: the file watcher now only tracks note and attachment file types, and honors VS Code's `files.watcherExclude` setting. Previously Foam watched every file in the workspace, so unrelated churn (e.g. `node_modules` on a large monorepo) generated a constant stream of events. This significantly reduces background CPU and battery usage on large workspaces ([#1668](https://github.com/foambubble/foam/issues/1668)).
+
 ## 0.44.2
 
 ### Patch Changes

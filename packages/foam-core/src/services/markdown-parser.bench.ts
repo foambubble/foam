@@ -122,7 +122,8 @@ if (isAB) {
 } else {
   // Single-candidate mode: flat group with baseline-compatible names
   // ("<size> lines"), which the regression gate and committed baseline expect.
-  describe('Markdown parser — single note parse', () => {
+  // [linear]: doubling the note size should ~double parse time.
+  describe('Markdown parser — single note parse [linear]', () => {
     for (const lines of PARSER_BENCHMARK_SIZES) {
       const doc = makeJournalNote(lines);
       bench(`${lines} lines`, benchParse(parserCandidates[0], doc));

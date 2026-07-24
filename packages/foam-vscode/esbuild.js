@@ -146,10 +146,7 @@ const config = {
   },
 };
 
-async function buildExtension() {
-  const targetConfig =
-    entry === 'extension' ? config.extension[platform] : config.cli;
-
+async function buildTarget(targetConfig) {
   const ctx = await esbuild.context({
     ...targetConfig,
     bundle: true,
@@ -169,6 +166,12 @@ async function buildExtension() {
     await ctx.rebuild();
     await ctx.dispose();
   }
+}
+
+async function buildExtension() {
+  const targetConfig =
+    entry === 'extension' ? config.extension[platform] : config.cli;
+  await buildTarget(targetConfig);
 }
 
 function copyGraphBundleForCli() {

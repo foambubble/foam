@@ -101,6 +101,9 @@ describe('VsCodeBasedParserCache', () => {
       expect(reloaded.has(uri)).toBe(true);
       expect(reloaded.get(uri).checksum).toEqual(entry.checksum);
       expect(reloaded.get(uri).resource.title).toEqual(entry.resource.title);
+      const reloadedUri = reloaded.get(uri).resource.uri;
+      expect(reloadedUri).toBeInstanceOf(URI);
+      expect(reloadedUri.isEqual(uri)).toBe(true);
     });
   });
 

@@ -1,10 +1,11 @@
 // Core models
 export { URI, asAbsoluteUri } from './model/uri';
+export type { URIComponents } from './model/uri';
 export { Range } from './model/range';
 export { Position } from './model/position';
 export { Location } from './model/location';
 export { Resource, ResourceLink, NoteLinkDefinition, Block, Footnote } from './model/note';
-export type { ResourceParser, Tag, Section } from './model/note';
+export type { ResourceParser, ResourceJson, Tag, Section } from './model/note';
 export { FoamWorkspace } from './model/workspace';
 export { FoamGraph } from './model/graph';
 export type { Connection } from './model/graph';

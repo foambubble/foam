@@ -1,4 +1,4 @@
-import { URI } from './uri';
+import { URI, URIComponents } from './uri';
 import { Range } from './range';
 import { Position } from './position';
 
@@ -158,7 +158,21 @@ export interface ResourceParser {
   parse: (uri: URI, text: string) => Resource;
 }
 
+/**
+ * The plain-data (JSON-safe) form of a {@link Resource}. Identical to Resource
+ * except `uri` is a {@link URIComponents} bag rather than a URI instance.
+ */
+export type ResourceJson = Omit<Resource, 'uri'> & { uri: URIComponents };
+
 export abstract class Resource {
+  public static toJSON(resource: Resource): ResourceJson {
+    return { ...resource, uri: resource.uri.toJSON() };
+  }
+
+  public static fromJSON(data: ResourceJson): Resource {
+    return { ...data, uri: URI.fromJSON(data.uri) };
+  }
+
   public static sortByTitle(a: Resource, b: Resource) {
     return a.title.localeCompare(b.title);
   }

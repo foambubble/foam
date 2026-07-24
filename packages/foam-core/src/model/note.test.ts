@@ -128,4 +128,70 @@ describe('Block', () => {
       expect(ids.size).toBeGreaterThan(1);
     });
   });
+
+  describe('toJSON / fromJSON', () => {
+    // A rich note exercising every Resource field: title, frontmatter
+    // properties, tags (yaml + inline), aliases, sections, a wikilink, a
+    // placeholder wikilink, a reference-style link, and a footnote.
+    const richMarkdown = `---
+title: My Note
+tags: [alpha, beta]
+alias: Nickname
+---
+
+# My Note #inline-tag
+
+Some text linking to [[existing]] and a [[ghost placeholder]].
+
+A [ref link][r1] and a footnote.[^fn]
+
+## Methods
+
+Content here ^block-id
+
+[r1]: https://example.com
+[^fn]: footnote text
+`;
+
+    it('produces a plain-data form whose uri is a component bag, not a URI instance', () => {
+      const note = createNoteFromMarkdown('/notes/my-note.md', richMarkdown);
+      const json = Resource.toJSON(note);
+      expect(json.uri).not.toBeInstanceOf(URI);
+      expect(json.uri).toEqual({
+        scheme: 'file',
+        authority: '',
+        path: '/notes/my-note.md',
+        query: '',
+        fragment: '',
+      });
+    });
+
+    it('round-trips a resource through toJSON/fromJSON losslessly', () => {
+      const note = createNoteFromMarkdown('/notes/my-note.md', richMarkdown);
+      const restored = Resource.fromJSON(Resource.toJSON(note));
+      expect(restored).toEqual(note);
+      expect(restored.uri).toBeInstanceOf(URI);
+      expect(restored.uri.isEqual(note.uri)).toBe(true);
+    });
+
+    it('round-trips through an actual JSON string (the real serialization boundary)', () => {
+      const note = createNoteFromMarkdown('/notes/my-note.md', richMarkdown);
+      const wire = JSON.stringify(Resource.toJSON(note));
+      const restored = Resource.fromJSON(JSON.parse(wire));
+      expect(restored).toEqual(note);
+      expect(restored.uri).toBeInstanceOf(URI);
+    });
+
+    it('preserves uri fragment and query on round-trip', () => {
+      const note = createNoteFromMarkdown('/notes/my-note.md', richMarkdown);
+      const withFragment: Resource = {
+        ...note,
+        uri: note.uri.with({ fragment: 'section', query: 'q=1' }),
+      };
+      const restored = Resource.fromJSON(Resource.toJSON(withFragment));
+      expect(restored.uri.fragment).toBe('section');
+      expect(restored.uri.query).toBe('q=1');
+      expect(restored.uri.isEqual(withFragment.uri)).toBe(true);
+    });
+  });
 });

@@ -3,6 +3,7 @@ import { LRUCache } from 'lru-cache';
 import { ExtensionContext } from 'vscode';
 import { URI } from '@foam/core';
 import { ParserCache, ParserCacheEntry } from '@foam/core';
+import { Resource, ResourceJson } from '@foam/core';
 import { Logger } from '@foam/core';
 import { deleteFile, dirExists, readFile, writeFile } from './editor';
 import { fromVsCodeUri } from '../utils/vsc-utils';
@@ -200,17 +201,9 @@ export default class VsCodeBasedParserCache implements ParserCache {
   get(uri: URI): ParserCacheEntry {
     const result = this._cache.get(uri.toString());
     if (result) {
-      // The cache returns a plain object, but we need an actual
-      // instance of URI in the resource (we check instanceof in the code),
-      // so to be sure we convert it here.
-      const { checksum, resource } = result;
-      const rehydrated = {
-        ...resource,
-        uri: new URI(resource.uri),
-      };
       return {
-        checksum,
-        resource: rehydrated,
+        checksum: result.checksum,
+        resource: Resource.fromJSON(result.resource as ResourceJson),
       };
     }
     return undefined;

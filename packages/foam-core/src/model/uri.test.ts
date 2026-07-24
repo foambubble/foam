@@ -138,4 +138,26 @@ describe('asAbsoluteUri', () => {
     expect(result.path).toBe('/journal/file.md');
     expect(result.scheme).toBe('file');
   });
+
+  describe('toJSON / fromJSON', () => {
+    it('round-trips all components through toJSON/fromJSON', () => {
+      const uri = URI.parse('https://user@host:1/a/b?x=1#frag', 'file');
+      const restored = URI.fromJSON(uri.toJSON());
+      expect(restored).toBeInstanceOf(URI);
+      expect(restored.isEqual(uri)).toBe(true);
+    });
+
+    it('round-trips a placeholder uri', () => {
+      const uri = URI.placeholder('ghost note');
+      const restored = URI.fromJSON(uri.toJSON());
+      expect(restored.scheme).toBe('placeholder');
+      expect(restored.isEqual(uri)).toBe(true);
+    });
+
+    it('is used automatically by JSON.stringify', () => {
+      const uri = URI.file('/a/b.md').with({ fragment: 'sec' });
+      const restored = URI.fromJSON(JSON.parse(JSON.stringify(uri)));
+      expect(restored.isEqual(uri)).toBe(true);
+    });
+  });
 });

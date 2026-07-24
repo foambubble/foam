@@ -13,11 +13,7 @@ import { Logger } from '@foam/core';
 import { TextEdit as FoamTextEdit } from '@foam/core';
 import { Foam, bootstrap } from '@foam/core';
 import { createMarkdownParser } from '@foam/core';
-import {
-  GenericDataStore,
-  AlwaysIncludeMatcher,
-  IWatcher,
-} from '@foam/core';
+import { GenericDataStore, AlwaysIncludeMatcher, IWatcher } from '@foam/core';
 import { MarkdownResourceProvider } from '@foam/core';
 import { randomString } from './test-utils';
 import micromatch from 'micromatch';
@@ -77,9 +73,9 @@ export class Position implements FoamPosition {
   }
 
   translate(lineDelta?: number, characterDelta?: number): Position;
-   
+
   translate(change: { lineDelta?: number; characterDelta?: number }): Position;
-   
+
   translate(
     lineDeltaOrChange?:
       | number
@@ -101,9 +97,9 @@ export class Position implements FoamPosition {
   }
 
   with(line?: number, character?: number): Position;
-   
+
   with(change: { line?: number; character?: number }): Position;
-   
+
   with(
     lineOrChange?: number | { line?: number; character?: number },
     character?: number
@@ -266,7 +262,7 @@ export function fromVsCodeUri(vsCodeUri: Uri): URI {
 }
 
 // VS Code Uri static methods
- 
+
 export const Uri = {
   file(path: string): Uri {
     return createVSCodeUri(URI.file(path));
@@ -1733,7 +1729,13 @@ export const window = {
 
   createTreeView(viewId: string, options: any): any {
     const noop = () => ({ dispose: () => {} });
-    return { dispose: () => {}, onDidChangeSelection: noop, onDidChangeVisibility: noop, onDidExpandElement: noop, onDidCollapseElement: noop };
+    return {
+      dispose: () => {},
+      onDidChangeSelection: noop,
+      onDidChangeVisibility: noop,
+      onDidExpandElement: noop,
+      onDidCollapseElement: noop,
+    };
   },
 
   registerTreeDataProvider(_viewId: string, _provider: any): Disposable {
@@ -2015,6 +2017,10 @@ export const workspace = {
     return { dispose: () => {} };
   },
 
+  onDidCloseTextDocument(listener: (e: any) => void): Disposable {
+    return { dispose: () => {} };
+  },
+
   async openTextDocument(
     uriOrFileNameOrOptions:
       | Uri
@@ -2230,7 +2236,11 @@ export const languages = {
     };
   },
 
-  registerCompletionItemProvider(selector: any, provider: any, ...triggerChars: string[]): Disposable {
+  registerCompletionItemProvider(
+    selector: any,
+    provider: any,
+    ...triggerChars: string[]
+  ): Disposable {
     return { dispose: () => {} };
   },
 
@@ -2254,7 +2264,11 @@ export const languages = {
     return { dispose: () => {} };
   },
 
-  registerCodeActionsProvider(selector: any, provider: any, metadata?: any): Disposable {
+  registerCodeActionsProvider(
+    selector: any,
+    provider: any,
+    metadata?: any
+  ): Disposable {
     return { dispose: () => {} };
   },
 
@@ -2301,7 +2315,13 @@ export const extensions = {
 };
 
 // Env namespace
+export enum UIKind {
+  Desktop = 1,
+  Web = 2,
+}
+
 export const env = {
+  uiKind: UIKind.Desktop,
   __mockClipboard: '',
   clipboard: {
     async writeText(value: string): Promise<void> {

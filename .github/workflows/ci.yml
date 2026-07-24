@@ -82,7 +82,8 @@ jobs:
       # new numbers (after an intentional perf change or a runner-image upgrade)
       # — the next run finds no baseline and reseeds. Mirrors the CACHE_VERSION
       # convention used for the dependency cache.
-      PERF_CACHE_VERSION: v1
+      # v2: workspace bench regrouped by operation (benchmark keys changed)
+      PERF_CACHE_VERSION: v2
     steps:
       - uses: actions/checkout@v6
       - name: Setup Node
@@ -99,30 +100,41 @@ jobs:
           key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock', 'packages/foam-vscode/src/test/run-tests.ts') }}-${{ secrets.CACHE_VERSION }}
       - name: Install Dependencies
         run: yarn
-      - name: Build @foam/core
-        run: yarn workspace @foam/core build
-      - name: Restore performance baseline
-        # Restored AFTER the build: the baseline lives under out/perf/, which the
-        # build step wipes. actions/cache only re-saves on a cache MISS at
-        # restore time, so once this key exists the baseline is frozen — it is
-        # not overwritten on a hit. Bump PERF_CACHE_VERSION to force a reseed.
+      - name: Build
+        # foam-vscode's bench renders the real preview pipeline; both packages'
+        # benches resolve @foam/core to source under vitest, but building keeps
+        # consumers consistent.
+        run: yarn build
+      - name: Restore performance baselines
+        # Restored AFTER the build: baselines live under out/perf/, which the
+        # build wipes. actions/cache only re-saves on a cache MISS, so once a key
+        # exists its baseline is frozen (not overwritten on a hit). Bump
+        # PERF_CACHE_VERSION to force a reseed. One shared cache entry holds both
+        # packages' baselines.
         uses: actions/cache@v5
         with:
-          path: packages/foam-core/out/perf/perf-baseline.json
+          path: |
+            packages/foam-core/out/perf/perf-baseline.json
+            packages/foam-vscode/out/perf/perf-baseline.json
           key: perf-baseline-${{ runner.os }}-${{ env.PERF_CACHE_VERSION }}
-      - name: Run benchmark
+      # Each package: run the bench once, then compare (scaling shape always +
+      # baseline if present) and seed the baseline on a cache miss. bench:compare
+      # fails the job on a >2x regression or a worse-than-expected scaling shape.
+      - name: Benchmark @foam/core
         run: yarn workspace @foam/core bench
-      - name: Compare against baseline
-        # Pure read-and-assert. Skips silently if the baseline is absent (first
-        # run before it is seeded); fails on a >2x regression.
+      - name: Compare @foam/core
         run: yarn workspace @foam/core bench:compare
-      - name: Seed baseline if missing
-        # On a cache miss this writes out/perf/perf-baseline.json; the post-job
-        # cache save then persists it under the (new) key. A present baseline is
-        # left frozen. Runs even if the comparison failed, so a first run always
-        # establishes a baseline.
+      - name: Benchmark foam-vscode
+        run: yarn workspace foam-vscode bench
+      - name: Compare foam-vscode
+        run: yarn workspace foam-vscode bench:compare
+      - name: Seed baselines if missing
+        # Runs even if a comparison failed, so a first run always establishes
+        # both baselines; the post-job cache save then persists them.
         if: always()
-        run: yarn workspace @foam/core bench:seed
+        run: |
+          yarn workspace @foam/core bench:seed
+          yarn workspace foam-vscode bench:seed
 
   docs-site-verify:
     name: Docs Site Verify

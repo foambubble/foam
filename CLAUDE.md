@@ -6,6 +6,22 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Be honest and objective**: Evaluate all suggestions, ideas, and feedback on their technical merits. Don't be overly complimentary or sycophantic. If something doesn't make sense, doesn't align with best practices, or could be improved, say so directly and constructively. Technical accuracy and project quality take precedence over being agreeable.
 
+**Prefer simple commands over complex ones**: Each compound/chained/piped command may require manual approval, so default to simple, single-purpose commands that match existing allowlist patterns. Don't staple on "bonus" steps the user didn't ask for, and don't wrap things in `bash -c`, `eval`, or defensive `|| true` without reason. Compound commands are fine when genuinely needed: atomic operations (`git add X && git commit`), pipelines where the pipe IS the interface (`find | xargs`, `cmd | jq`), heredocs for multi-line input, and loops over many items (one approval beats N).
+
+**Working in a different directory (worktrees, packages)**: The Bash tool's CWD is always the main checkout — not wherever you last "cd'd". To run commands elsewhere without a prompt for each call, match the existing allowlist patterns:
+
+- Prefer `git -C <path> <subcommand>` for git operations (matches `Bash(git -C *)`)
+- For yarn commands, prefer, in order:
+  - `yarn workspace <package> <subcommand>`
+  - `yarn --cwd <path> <command>`
+  - `cd <path> && yarn <subcommand>`
+- Use `cd <path> && npm <subcommand>` for npm
+- Do NOT constantly use `nvm use ...` (e.g. `nvm use <version> && yarn <subcommand>`)
+- Do NOT mix `git -C` with `cd &&` in the same command
+- If you're about to introduce a new pattern (e.g. `cd && python`, `cd && cargo`), pause and either use a simpler equivalent or add the pattern to `.claude/settings.local.json` first
+
+The point is autonomy: implement runs, agents, and skills should not stop for permission prompts on the same shape of command that already works elsewhere.
+
 ## Project overview
 
 Foam is a personal knowledge management and sharing system, built on Visual Studio Code and GitHub. It allows users to organize research, keep re-discoverable notes, write long-form content, and optionally publish it to the web. The main goals are to help users create relationships between thoughts and information, supporting practices like building a "Second Brain" or a "Zettelkasten". Foam is free, open-source, and extensible, giving users ownership and control over their information. The target audience includes individuals interested in personal knowledge management, note-taking, and content creation, particularly those familiar with VS Code and GitHub.
@@ -91,16 +107,22 @@ Test files follow `*.test.ts` for unit tests and `*.spec.ts` for integration tes
 
 Code in `packages/foam-vscode/src/core/` MUST NOT depend on the `vscode` library or any files outside the core directory. This maintains platform independence.
 
+### Changesets: a `@foam/core` change must also bump `foam-vscode` and `@foam/cli`
+
+`foam-vscode` and `@foam/cli` **bundle** `@foam/core` at build time (esbuild inlines it) and declare it as a `devDependency`, not a runtime `dependency`. Because of that, Changesets' automatic internal-dependency bumping does **not** cascade a `@foam/core` bump to them.
+
+So when a change touches `packages/foam-core`, its changeset fragment must **also** list `foam-vscode` and `@foam/cli` (usually `patch`) — otherwise their republished bundles ship updated code under a stale version number with no changelog entry. Rule of thumb: if `@foam/core` is in the fragment, `foam-vscode` and `@foam/cli` almost always belong there too. See `docs/dev/releasing-foam.md`.
+
 ### URIs throughout, paths only at the edges
 
 Domain code (everything in `@foam/core` and the platform-agnostic layers of `foam-cli`, `foam-mcp`, `foam-vscode`) takes and returns `URI` objects, not path strings. This is consistent with the existing core API: `FoamWorkspace.find(uri: URI)`, `FoamGraph.getLinks(uri: URI)`, `Resource.uri: URI`.
 
 ```typescript
 // ✅ Good
-function listOrphans(workspace, graph, rootUri: URI): NoteItem[]
+function listOrphans(workspace, graph, rootUri: URI): NoteItem[];
 
 // ❌ Avoid
-function listOrphans(workspace, graph, rootDir: string): NoteItem[]
+function listOrphans(workspace, graph, rootDir: string): NoteItem[];
 ```
 
 Path strings only appear at:

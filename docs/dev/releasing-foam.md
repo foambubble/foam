@@ -16,6 +16,14 @@ One changeset per PR is the norm. If a PR touches multiple packages, declare the
 
 If a fragment was missed, the `/update-changelog` slash command can draft one retroactively for commits already on `main`.
 
+### ⚠️ Changes to `@foam/core` must also bump its dependents
+
+`foam-vscode` and `@foam/cli` both **bundle** `@foam/core` at build time (esbuild inlines it), and both declare it as a `devDependency` — not a runtime `dependency`. Because of that, Changesets' automatic internal-dependency bumping (`updateInternalDependencies`) does **not** cascade a `@foam/core` bump to them. It won't add the fragments for you.
+
+So whenever a change touches `packages/foam-core`, the changeset must **also** include `foam-vscode` and `@foam/cli` (each usually `patch`), so their republished bundles ship with a correct version and a changelog entry. If you only bump `@foam/core`, the extension and CLI will silently publish updated code under a stale version number.
+
+Rule of thumb: **if `@foam/core` is in the fragment, `foam-vscode` and `@foam/cli` almost always belong there too** — unless the core change is genuinely internal-only and reaches neither the extension nor the CLI.
+
 ## Cutting a release
 
 1. Get to the latest code
@@ -25,6 +33,7 @@ If a fragment was missed, the `/update-changelog` slash command can draft one re
    - `yarn test`
 3. Make sure every shipped change since the last release has a fragment in `.changeset/`
    - If not, run `yarn changeset` (or `/update-changelog`) and commit the missing fragments before continuing
+   - **If any change touched `@foam/core`, confirm `foam-vscode` and `@foam/cli` are also covered by a fragment** (see the warning above). Their bundles pick up core changes at build time, but Changesets will not bump their versions automatically.
 4. Apply the fragments — bumps versions in each affected `package.json`, regenerates `CHANGELOG.md`, and deletes the consumed fragments
    - `yarn version-packages`
 5. Review and commit the result

@@ -1,9 +1,26 @@
 /* @unit-ready */
 import MarkdownIt from 'markdown-it';
+import markdownItRegex from 'markdown-it-regex';
 import {
   default as escapeWikilinkPipes,
   PIPE_PLACEHOLDER,
 } from './escape-wikilink-pipes';
+
+/**
+ * A stand-in for the other Foam inline plugins (wikilink embed/navigation),
+ * which run as markdown-it-regex INLINE rules and split wikilink content on `|`
+ * to extract the alias. If encode/decode leaves a placeholder in the content
+ * these inline rules see, the alias is lost — so this composition guards that.
+ */
+const aliasRenderingPlugin = (md: MarkdownIt) =>
+  md.use(markdownItRegex, {
+    name: 'render-alias',
+    regex: /\[\[([^[\]]+?)\]\]/,
+    replace: (content: string) => {
+      const alias = content.includes('|') ? content.split('|')[1] : content;
+      return `<a>${alias}</a>`;
+    },
+  });
 
 describe('escape-wikilink-pipes plugin', () => {
   it('should render table with wikilink alias correctly', () => {
@@ -213,5 +230,85 @@ Another [[note2|alias2]] paragraph.
 
     // Should not throw when table rule doesn't exist
     expect(() => escapeWikilinkPipes(md)).not.toThrow();
+  });
+
+  it('lets downstream inline plugins see real pipes (alias survives) inside tables', () => {
+    // Composition guard: encode must not leave a placeholder visible to the
+    // other Foam inline plugins, or wikilink aliases break.
+    const md = MarkdownIt();
+    escapeWikilinkPipes(md);
+    aliasRenderingPlugin(md);
+
+    const html = md.render(`| Col |
+| --- |
+| [[note|Alias]] |`);
+
+    expect(html).toContain('<a>Alias</a>');
+    expect(html).not.toContain(PIPE_PLACEHOLDER);
+    // Table stays a single cell (the pipe wasn't treated as a column divider).
+    expect((html.match(/<td>/g) || []).length).toBe(1);
+  });
+
+  it('lets downstream inline plugins see real pipes (alias survives) outside tables', () => {
+    const md = MarkdownIt();
+    escapeWikilinkPipes(md);
+    aliasRenderingPlugin(md);
+
+    const html = md.render('A paragraph with [[note|Alias]] inline.');
+
+    expect(html).toContain('<a>Alias</a>');
+    expect(html).not.toContain(PIPE_PLACEHOLDER);
+  });
+
+  it('renders a large list-heavy document in linear time (no O(n^2) rescan)', () => {
+    // Regression guard for the freeze in #1689. markdown-it invokes the table
+    // block rule as a candidate on EVERY list-item line; the plugin used to
+    // re-scan the whole (~MB) document source on each invocation, giving
+    // O(lines * docSize) — a multi-second freeze on a large daily note. The
+    // content below mirrors the profile that surfaced this: thousands of list
+    // items with wikilinks, in a large document.
+    const md = MarkdownIt();
+    escapeWikilinkPipes(md);
+
+    const para =
+      'Name his fixed returning little [[vessel dtitle]] to. Of [[grand]] and ' +
+      'could opened. From there as nearly which [[hopes imagidne]]. The ' +
+      '[[relation ddressed]] at her plainly. Of him by disposition ' +
+      '[[addition Spain]] called and much more prose to add length to the line.';
+    const big = Array.from({ length: 4500 }, (_, i) => `- ${i} ${para}`).join(
+      '\n'
+    );
+
+    const start = Date.now();
+    const html = md.render(big);
+    const elapsed = Date.now() - start;
+
+    // O(n) finishes in well under a second; the old O(lines*docSize) took
+    // several seconds on this exact shape. Generous ceiling for CI noise while
+    // still catching the quadratic.
+    expect(elapsed).toBeLessThan(1500);
+    expect(html).toContain('[[vessel dtitle]]');
+    expect(html).not.toContain(PIPE_PLACEHOLDER);
+  });
+
+  it('renders a large table with piped wikilinks in linear time', () => {
+    // The other axis: a big table full of piped wikilinks. Each row invokes the
+    // table rule; the old code re-scanned the whole doc per invocation.
+    const md = MarkdownIt();
+    escapeWikilinkPipes(md);
+
+    const rows = Array.from(
+      { length: 2000 },
+      (_, i) => `| [[note-${i}|alias ${i}]] | [[b-${i}|B ${i}]] |`
+    );
+    const big = ['| A | B |', '| --- | --- |', ...rows].join('\n');
+
+    const start = Date.now();
+    const html = md.render(big);
+    const elapsed = Date.now() - start;
+
+    expect(elapsed).toBeLessThan(1500);
+    expect(html).toContain('[[note-0|alias 0]]');
+    expect(html).not.toContain(PIPE_PLACEHOLDER);
   });
 });

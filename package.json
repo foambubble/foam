@@ -25,6 +25,7 @@
     "test": "lerna run test",
     "test:unit": "lerna run test:unit",
     "test:e2e": "lerna run test:e2e",
+    "bench": "yarn workspaces run bench",
     "lint": "lerna run lint",
     "format": "prettier --write \"**/*.ts\"",
     "watch": "lerna run watch --concurrency 20",

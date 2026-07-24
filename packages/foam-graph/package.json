@@ -30,6 +30,7 @@
     "test": "yarn test:unit && yarn test:e2e",
     "test:unit": "vitest run",
     "test:e2e": "echo 'No e2e tests for @foam/graph-view'",
+    "bench": "echo 'No benchmarks for @foam/graph-view'",
     "lint": "oxlint src"
   },
   "peerDependencies": {

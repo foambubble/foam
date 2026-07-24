@@ -17,6 +17,7 @@
     "clean": "rimraf out",
     "test": "yarn test:unit",
     "test:unit": "vitest run",
+    "bench": "echo 'No benchmarks for @foam/mcp'",
     "lint": "oxlint src"
   },
   "devDependencies": {

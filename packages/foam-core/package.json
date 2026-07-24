@@ -22,7 +22,10 @@
     "clean": "rimraf out",
     "test": "yarn test:unit && yarn test:e2e",
     "test:unit": "vitest run",
-    "test:e2e": "echo 'No e2e tests for @foam/core'",
+    "test:e2e": "yarn bench",
+    "bench": "vitest bench --run --config vitest.bench.config.ts",
+    "bench:compare": "vitest run src/services/markdown-parser.bench-compare.test.ts",
+    "bench:seed": "node scripts/seed-baseline.mjs",
     "lint": "oxlint src"
   },
   "devDependencies": {

@@ -69,6 +69,61 @@ jobs:
       - name: Test foam-vscode
         run: xvfb-run --auto-servernum yarn workspace foam-vscode test
 
+  performance:
+    name: Performance Benchmark
+    # Pinned image on purpose: the perf baseline is machine-specific, so it is
+    # only valid when compared on the same runner class. A runner-image upgrade
+    # is a deliberate change — bump PERF_CACHE_VERSION below to reseed the
+    # baseline when you change it.
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    env:
+      # Manual version token for the perf baseline cache. Bump this to accept
+      # new numbers (after an intentional perf change or a runner-image upgrade)
+      # — the next run finds no baseline and reseeds. Mirrors the CACHE_VERSION
+      # convention used for the dependency cache.
+      PERF_CACHE_VERSION: v1
+    steps:
+      - uses: actions/checkout@v6
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      - name: Restore Dependencies and VS Code test instance
+        uses: actions/cache@v5
+        with:
+          path: |
+            node_modules
+            */*/node_modules
+            packages/foam-vscode/.vscode-test
+          key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock', 'packages/foam-vscode/src/test/run-tests.ts') }}-${{ secrets.CACHE_VERSION }}
+      - name: Install Dependencies
+        run: yarn
+      - name: Build @foam/core
+        run: yarn workspace @foam/core build
+      - name: Restore performance baseline
+        # Restored AFTER the build: the baseline lives under out/perf/, which the
+        # build step wipes. actions/cache only re-saves on a cache MISS at
+        # restore time, so once this key exists the baseline is frozen — it is
+        # not overwritten on a hit. Bump PERF_CACHE_VERSION to force a reseed.
+        uses: actions/cache@v5
+        with:
+          path: packages/foam-core/out/perf/perf-baseline.json
+          key: perf-baseline-${{ runner.os }}-${{ env.PERF_CACHE_VERSION }}
+      - name: Run benchmark
+        run: yarn workspace @foam/core bench
+      - name: Compare against baseline
+        # Pure read-and-assert. Skips silently if the baseline is absent (first
+        # run before it is seeded); fails on a >2x regression.
+        run: yarn workspace @foam/core bench:compare
+      - name: Seed baseline if missing
+        # On a cache miss this writes out/perf/perf-baseline.json; the post-job
+        # cache save then persists it under the (new) key. A present baseline is
+        # left frozen. Runs even if the comparison failed, so a first run always
+        # establishes a baseline.
+        if: always()
+        run: yarn workspace @foam/core bench:seed
+
   docs-site-verify:
     name: Docs Site Verify
     runs-on: ubuntu-22.04

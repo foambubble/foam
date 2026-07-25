@@ -159,13 +159,19 @@ export class ConnectionsTreeDataProvider extends BaseTreeProvider<vscode.TreeIte
       return item.getChildren();
     }
 
-    const byResource = this.connectionItems.reduce((acc, item) => {
+    const byResource = new Map<string, ResourceRangeTreeItem[]>();
+    for (const item of this.connectionItems) {
       const connection = item.value as Connection;
       const isBacklink = connection.target.asPlain().isEqual(this.target);
       const uri = isBacklink ? connection.source : connection.target;
-      acc.set(uri.toString(), [...(acc.get(uri.toString()) ?? []), item]);
-      return acc;
-    }, new Map() as Map<string, ResourceRangeTreeItem[]>);
+      const key = uri.toString();
+      const group = byResource.get(key);
+      if (group) {
+        group.push(item);
+      } else {
+        byResource.set(key, [item]);
+      }
+    }
 
     const resourceItems = [];
     for (const [uriString, items] of byResource.entries()) {

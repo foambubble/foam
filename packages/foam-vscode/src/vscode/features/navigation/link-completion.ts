@@ -7,6 +7,7 @@ import { FoamWorkspace } from '@foam/core';
 import { getFoamVsCodeConfig } from '../../config';
 import { fromVsCodeUri, toVsCodeUri } from '../../utils/vsc-utils';
 import { getNoteTooltip, getFoamDocSelectors } from '../../services/editor';
+import { getContentCacheFor } from '../../services/content-cache';
 import { CONVERT_WIKILINK_TO_MDLINK } from '../editing/convert-links';
 import { Config } from '@foam/core';
 
@@ -164,10 +165,12 @@ export class SectionCompletionProvider
     item: ResourceCompletionItem | vscode.CompletionItem
   ): vscode.ProviderResult<vscode.CompletionItem> {
     if (item instanceof ResourceCompletionItem) {
-      return this.ws.readAsMarkdown(item.resourceUri).then(text => {
-        item.documentation = getNoteTooltip(text);
-        return item;
-      });
+      return getContentCacheFor(this.ws)
+        .readAsMarkdown(item.resourceUri)
+        .then(text => {
+          item.documentation = getNoteTooltip(text);
+          return item;
+        });
     }
     return item;
   }
@@ -318,10 +321,12 @@ export class WikilinkCompletionProvider
     item: ResourceCompletionItem | vscode.CompletionItem
   ): vscode.ProviderResult<vscode.CompletionItem> {
     if (item instanceof ResourceCompletionItem) {
-      return this.ws.readAsMarkdown(item.resourceUri).then(text => {
-        item.documentation = getNoteTooltip(text);
-        return item;
-      });
+      return getContentCacheFor(this.ws)
+        .readAsMarkdown(item.resourceUri)
+        .then(text => {
+          item.documentation = getNoteTooltip(text);
+          return item;
+        });
     }
     return item;
   }

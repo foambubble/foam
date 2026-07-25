@@ -11,6 +11,7 @@ import { FoamWorkspace } from '@foam/core';
 import { Range } from '@foam/core';
 import { FoamGraph } from '@foam/core';
 import { OPEN_COMMAND } from './open-resource';
+import { getContentCacheFor } from '../../services/content-cache';
 import { CREATE_NOTE_COMMAND } from '../notes/create-note';
 import { commandAsURI } from '../../utils/commands';
 import { Location } from '@foam/core';
@@ -101,7 +102,9 @@ export class HoverProvider implements vscode.HoverProvider {
 
     let mdContent = null;
     if (!targetUri.isPlaceholder()) {
-      const content: string = await this.workspace.readAsMarkdown(targetUri);
+      const content: string = await getContentCacheFor(
+        this.workspace
+      ).readAsMarkdown(targetUri);
 
       mdContent = isSome(content)
         ? getNoteTooltip(content)

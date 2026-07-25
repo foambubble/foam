@@ -10,6 +10,7 @@ import { getBlockFor } from '@foam/core';
 import { Connection, FoamGraph } from '@foam/core';
 import { Logger } from '@foam/core';
 import { getNoteTooltip } from '../../services/editor';
+import { getContentCacheFor } from '../../services/content-cache';
 
 export class BaseTreeItem extends vscode.TreeItem {
   resolveTreeItem(): Promise<vscode.TreeItem> {
@@ -69,7 +70,9 @@ export class ResourceTreeItem extends UriTreeItem {
 
   async resolveTreeItem(): Promise<ResourceTreeItem> {
     if (this instanceof ResourceTreeItem) {
-      const content = await this.workspace.readAsMarkdown(this.resource.uri);
+      const content = await getContentCacheFor(this.workspace).readAsMarkdown(
+        this.resource.uri
+      );
       this.tooltip = isSome(content)
         ? getNoteTooltip(content)
         : this.resource.title;
@@ -97,7 +100,9 @@ export class ResourceRangeTreeItem extends BaseTreeItem {
 
   async resolveTreeItem(): Promise<ResourceRangeTreeItem> {
     const markdown =
-      (await this.workspace.readAsMarkdown(this.resource.uri)) ?? '';
+      (await getContentCacheFor(this.workspace).readAsMarkdown(
+        this.resource.uri
+      )) ?? '';
     const blockInfo = getBlockFor(markdown, this.range.start);
     const { nLines } = blockInfo;
     let { block } = blockInfo;
@@ -133,8 +138,8 @@ export class ResourceRangeTreeItem extends BaseTreeItem {
     range: Range,
     variant: 'backlink' | 'tag' | 'link'
   ): Promise<ResourceRangeTreeItem> {
-    const markdown = (await workspace.readAsMarkdown(resource.uri)) ?? '';
-    const lines = markdown.split('\n');
+    const lines =
+      (await getContentCacheFor(workspace).readLines(resource.uri)) ?? [];
 
     const line = lines[range.start.line];
     const start = Math.max(0, range.start.character - 15);

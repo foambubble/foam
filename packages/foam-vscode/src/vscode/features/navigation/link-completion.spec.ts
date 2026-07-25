@@ -3,7 +3,12 @@
 import * as vscode from 'vscode';
 import { createMarkdownParser } from '@foam/core';
 import { FoamGraph } from '@foam/core';
-import { createTestNote, createTestWorkspace } from '../../../test/test-utils';
+import { URI } from '@foam/core';
+import {
+  createTestNote,
+  createTestWorkspace,
+  InMemoryDataStore,
+} from '../../../test/test-utils';
 import {
   cleanWorkspace,
   closeEditors,
@@ -637,5 +642,45 @@ alias: test-alias
         expect(placeholderItem.insertText).toBe('placeholder text');
       }
     );
+  });
+});
+
+describe('Completion item preview resolution', () => {
+  class CountingDataStore extends InMemoryDataStore {
+    public readCount = 0;
+
+    async read(uri: URI): Promise<string | null> {
+      this.readCount++;
+      return super.read(uri);
+    }
+  }
+
+  it('reads the note content only once when resolving the same item repeatedly', async () => {
+    const root = fromVsCodeUri(vscode.workspace.workspaceFolders[0].uri);
+    const { uri } = await createFile('[[');
+    const { doc } = await showInEditor(uri);
+
+    const dataStore = new CountingDataStore();
+    const workspace = createTestWorkspace([root], dataStore);
+    const target = createTestNote({ root, uri: 'target-note.md' });
+    dataStore.set(target.uri, '# Target note content');
+    workspace.set(target);
+    const graph = FoamGraph.fromWorkspace(workspace);
+    const provider = new WikilinkCompletionProvider(workspace, graph);
+
+    const links = await provider.provideCompletionItems(
+      doc,
+      new vscode.Position(0, 2)
+    );
+    const item = links.items.find(i => i.insertText === 'target-note');
+    expect(item).not.toBeUndefined();
+
+    // VS Code calls resolveCompletionItem every time an item is highlighted,
+    // which happens repeatedly while the user types
+    await provider.resolveCompletionItem(item);
+    await provider.resolveCompletionItem(item);
+    await provider.resolveCompletionItem(item);
+
+    expect(dataStore.readCount).toEqual(1);
   });
 });

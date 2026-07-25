@@ -185,7 +185,7 @@ export const groupRangesByResource = async (
     const resourceItem = new ResourceTreeItem(items[0].resource, workspace, {
       collapsibleState,
     });
-    const children = items.sort((a, b) => Range.isBefore(a.range, b.range));
+    const children = items.sort((a, b) => Range.compareTo(a.range, b.range));
     resourceItem.getChildren = () => Promise.resolve(children);
     resourceItem.description = `(${items.length}) ${resourceItem.description}`;
     resourceItem.command = children[0].command;

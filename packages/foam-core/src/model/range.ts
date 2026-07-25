@@ -66,8 +66,16 @@ export abstract class Range {
     );
   }
 
-  static isBefore(a: Range, b: Range): number {
-    return a.start.line - b.start.line || a.start.character - b.start.character;
+  /**
+   * Compares two ranges by their start position, e.g. for use as a sort
+   * comparator.
+   */
+  static compareTo(a: Range, b: Range): number {
+    return Position.compareTo(a.start, b.start);
+  }
+
+  static isBefore(a: Range, b: Range): boolean {
+    return Range.compareTo(a, b) < 0;
   }
 
   static toString(range: Range): string {

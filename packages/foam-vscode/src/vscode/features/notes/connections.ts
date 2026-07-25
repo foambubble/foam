@@ -184,7 +184,7 @@ export class ConnectionsTreeDataProvider extends BaseTreeProvider<vscode.TreeIte
             collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
           });
       const children = items.sort((a, b) => {
-        return a.variant.localeCompare(b.variant) || Range.isBefore(a.range, b.range);
+        return a.variant.localeCompare(b.variant) || Range.compareTo(a.range, b.range);
       });
       item.getChildren = () => Promise.resolve(children);
       item.description = `(${items.length}) ${item.description}`;

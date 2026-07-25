@@ -1,5 +1,23 @@
 # Change Log
 
+## 0.44.4
+
+### Patch Changes
+
+- perf(vscode): cache markdown content reads in tree views, hovers, and link completion
+
+  Tree views (connections, notes explorer, tags explorer, placeholders) were
+  reading the entire file once per connection — not per file — on every
+  refresh, with each read paying a filesystem RPC round-trip to the VS Code
+  main process. Content is now served from a workspace-event-invalidated LRU
+  cache shared by all tree views, so a refresh reads each unique file at most
+  once and unchanged files are not re-read on subsequent refreshes (e.g. when
+  switching tabs).
+
+  The same cache now also serves the link hover preview and the completion
+  item preview, which used to re-read the target note on every hover and
+  every completion resolve.
+
 ## 0.44.3
 
 ### Patch Changes

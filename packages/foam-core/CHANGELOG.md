@@ -1,5 +1,18 @@
 # Change Log
 
+## 0.46.0
+
+### Minor Changes
+
+- `Range.isBefore` now returns a boolean, as its name promises; the numeric
+  comparator behavior it previously had moved to the new `Range.compareTo`,
+  mirroring the `Position.isBefore` / `Position.compareTo` convention.
+
+  BREAKING (`@foam/core`): callers using `Range.isBefore` as a sort comparator
+  must switch to `Range.compareTo` — with the boolean return, such sorts would
+  silently mis-order. `foam-vscode` and `@foam/cli` are bumped because they
+  bundle `@foam/core`.
+
 ## 0.45.1
 
 ### Patch Changes

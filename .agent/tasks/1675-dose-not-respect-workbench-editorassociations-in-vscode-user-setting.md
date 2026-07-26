@@ -108,6 +108,27 @@ For `o.link.type === 'link'` (regular markdown links, non-reference), **emit no 
 - **Windows**: reporter is on win10 — check drive-letter casing in the URI round-trip if the command-URI approach misbehaves there.
 - **No `@foam/core` changes needed** — this is entirely in the VS Code layer, so no multi-package changeset cascade; a `foam-vscode` patch changeset suffices.
 
+## Implementation status (2026-07-26)
+
+Approach 1 implemented on `claude/research-issue-1675-5vtovd`:
+
+- `navigation-provider.ts`: attachment/image DocumentLinks now target
+  `commandAsURI({name: 'vscode.open', params: [uri]})`; reference-style links to
+  attachments are routed through the same mechanism (excluded from
+  `resolvedReferenceLinks`).
+- Verified VS Code's `CommandOpener` revives `$mid`-marshalled `Uri` command
+  arguments via `parse()` from `vs/base/common/marshalling`, so the Uri
+  round-trips correctly at runtime.
+- `navigation-provider.spec.ts`: 3 tests updated + 1 added (reference-style
+  link); marked `/* @unit-ready */` (required adding a `DocumentLink` class to
+  `vscode-mock.ts`). Tests confirmed failing pre-fix, passing post-fix.
+- E2E-in-real-VS-Code could not run in this environment (VS Code download
+  blocked by the proxy); the spec runs under the mock and will run in real
+  VS Code in CI.
+- Remaining pre-existing failures in `cache.spec.ts` (2) are environmental
+  (chmod-based readonly simulation is a no-op when running as root) and
+  reproduce on a clean checkout.
+
 ## References
 
 - Fix commit: `0c2594157cdbd84e98ecd2f699586217af74727c`

@@ -1,3 +1,4 @@
+/* @unit-ready */
 import * as vscode from 'vscode';
 import { createTestWorkspace } from '../../../test/test-utils';
 import {
@@ -372,10 +373,19 @@ describe('Document navigation', () => {
   });
 
   // Attachments (PDFs, docs, etc.) and images must be surfaced as DocumentLinks
-  // and NOT as definitions, so clicks route through VS Code's URI-opening
-  // pipeline (which honors `workbench.editorAssociations`) rather than the
-  // text-editor pipeline. See: https://github.com/foambubble/foam/issues/1675
+  // targeting the `vscode.open` command, and NOT as definitions. Both the
+  // text-editor (definition) pipeline and plain-URI DocumentLinks bypass the
+  // editor resolution that honors user-level `workbench.editorAssociations`;
+  // only the `vscode.open` command (the same mechanism used by the built-in
+  // Markdown extension) resolves the editor correctly at every settings scope.
+  // See: https://github.com/foambubble/foam/issues/1675
   describe('attachment and image navigation', () => {
+    const openCommandURI = (uri: URI) =>
+      commandAsURI({
+        name: 'vscode.open',
+        params: [toVsCodeUri(uri)],
+      });
+
     const makeAttachment = (uri: URI, type: 'attachment' | 'image') => ({
       uri,
       type,
@@ -403,7 +413,7 @@ describe('Document navigation', () => {
 
       const links = await provider.provideDocumentLinks(doc);
       expect(links.length).toEqual(1);
-      expect(links[0].target).toEqual(toVsCodeUri(pdf.uri));
+      expect(links[0].target).toEqual(openCommandURI(pdf.uri));
 
       const definitions = await provider.provideDefinition(
         doc,
@@ -426,7 +436,7 @@ describe('Document navigation', () => {
 
       const links = await provider.provideDocumentLinks(doc);
       expect(links.length).toEqual(1);
-      expect(links[0].target).toEqual(toVsCodeUri(pdf.uri));
+      expect(links[0].target).toEqual(openCommandURI(pdf.uri));
 
       const definitions = await provider.provideDefinition(
         doc,
@@ -449,13 +459,32 @@ describe('Document navigation', () => {
 
       const links = await provider.provideDocumentLinks(doc);
       expect(links.length).toEqual(1);
-      expect(links[0].target).toEqual(toVsCodeUri(img.uri));
+      expect(links[0].target).toEqual(openCommandURI(img.uri));
 
       const definitions = await provider.provideDefinition(
         doc,
         new vscode.Position(0, 8)
       );
       expect(definitions).toBeUndefined();
+    });
+
+    it('surfaces a reference-style link resolving to an attachment as a vscode.open document link', async () => {
+      const pdf = await createFile('%PDF-1.4 fake', ['report.pdf']);
+      const noteA = await createFile(
+        `see [the report][report].\n\n[report]: ./${pdf.base}\n`
+      );
+      const ws = createTestWorkspace()
+        .set(makeAttachment(pdf.uri, 'attachment'))
+        .set(parser.parse(noteA.uri, noteA.content));
+      const graph = FoamGraph.fromWorkspace(ws);
+      const tags = FoamTags.fromWorkspace(ws);
+
+      const { doc } = await showInEditor(noteA.uri);
+      const provider = new NavigationProvider(ws, graph, parser, tags);
+
+      const links = await provider.provideDocumentLinks(doc);
+      expect(links.length).toEqual(1);
+      expect(links[0].target).toEqual(openCommandURI(pdf.uri));
     });
   });
 

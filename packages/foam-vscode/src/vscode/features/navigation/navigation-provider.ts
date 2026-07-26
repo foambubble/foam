@@ -262,11 +262,17 @@ export class NavigationProvider
     // built-in Markdown provider intercepts cmd+click and navigates to the definition
     // line ([ref]: url) instead of the target file. We override this by emitting an
     // explicit DocumentLink pointing directly at the resolved target.
+    const isAttachment = (target: URI) => {
+      const resource = this.workspace.get(target);
+      return resource?.type === 'attachment' || resource?.type === 'image';
+    };
+
     const resolvedReferenceLinks: vscode.DocumentLink[] = targets
       .filter(
         o =>
           ResourceLink.isResolvedReference(o.link) &&
-          !o.target.isPlaceholder()
+          !o.target.isPlaceholder() &&
+          !isAttachment(o.target)
       )
       .map(o => {
         const dl = new vscode.DocumentLink(
@@ -277,21 +283,26 @@ export class NavigationProvider
         return dl;
       });
 
-    // Resolved links to attachments (PDFs, docs, etc.) and images are surfaced as
-    // DocumentLinks.
+    // Resolved links to attachments (PDFs, docs, etc.) and images are surfaced
+    // as DocumentLinks that invoke the `vscode.open` command. A DocumentLink
+    // with a plain file URI target is opened via the openerService, which does
+    // not honor user-level `workbench.editorAssociations`; the `vscode.open`
+    // command (the same mechanism used by the built-in Markdown extension)
+    // resolves the editor correctly at every settings scope.
     // See: https://github.com/foambubble/foam/issues/1675
     const attachmentLinks: vscode.DocumentLink[] = targets
       .filter(o => {
         if (o.target.isPlaceholder()) return false;
         if (o.link.type === 'external') return false;
-        if (ResourceLink.isResolvedReference(o.link)) return false;
-        const resource = this.workspace.get(o.target);
-        return resource?.type === 'attachment' || resource?.type === 'image';
+        return isAttachment(o.target);
       })
       .map(o => {
         const dl = new vscode.DocumentLink(
           toVsCodeRange(o.link.range),
-          toVsCodeUri(o.target.asPlain())
+          commandAsURI({
+            name: 'vscode.open',
+            params: [toVsCodeUri(o.target.asPlain())],
+          })
         );
         dl.tooltip = o.target.getBasename();
         return dl;

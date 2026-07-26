@@ -299,6 +299,12 @@ export class Location {
   constructor(public uri: Uri, public range: Range) {}
 }
 
+// VS Code DocumentLink class
+export class DocumentLink {
+  public tooltip?: string;
+  constructor(public range: Range, public target?: Uri) {}
+}
+
 export class RelativePattern {
   public baseUri: Uri;
   constructor(base: Uri | { uri: Uri }, public pattern: string) {

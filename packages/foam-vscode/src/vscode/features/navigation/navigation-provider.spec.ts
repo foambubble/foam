@@ -504,6 +504,49 @@ describe('Document navigation', () => {
       const links = await provider.provideDocumentLinks(doc);
       expect(links.length).toEqual(1);
       expect(links[0].target).toEqual(openCommandURI(pdf.uri));
+      // For [text][ref] the link covers only the reference label, matching
+      // the built-in Markdown extension's styling
+      expect(links[0].range).toEqual(new vscode.Range(0, 17, 0, 23));
+    });
+
+    it('covers only the text of a collapsed reference link ([text][]) resolving to an attachment', async () => {
+      const pdf = await createFile('%PDF-1.4 fake', ['report.pdf']);
+      const noteA = await createFile(
+        `see [report][].\n\n[report]: ./${pdf.base}\n`
+      );
+      const ws = createTestWorkspace()
+        .set(makeAttachment(pdf.uri, 'attachment'))
+        .set(parser.parse(noteA.uri, noteA.content));
+      const graph = FoamGraph.fromWorkspace(ws);
+      const tags = FoamTags.fromWorkspace(ws);
+
+      const { doc } = await showInEditor(noteA.uri);
+      const provider = new NavigationProvider(ws, graph, parser, tags);
+
+      const links = await provider.provideDocumentLinks(doc);
+      expect(links.length).toEqual(1);
+      expect(links[0].target).toEqual(openCommandURI(pdf.uri));
+      expect(links[0].range).toEqual(new vscode.Range(0, 5, 0, 11));
+    });
+
+    it('covers only the text of a shortcut reference link ([text]) resolving to an attachment', async () => {
+      const pdf = await createFile('%PDF-1.4 fake', ['report.pdf']);
+      const noteA = await createFile(
+        `see [report].\n\n[report]: ./${pdf.base}\n`
+      );
+      const ws = createTestWorkspace()
+        .set(makeAttachment(pdf.uri, 'attachment'))
+        .set(parser.parse(noteA.uri, noteA.content));
+      const graph = FoamGraph.fromWorkspace(ws);
+      const tags = FoamTags.fromWorkspace(ws);
+
+      const { doc } = await showInEditor(noteA.uri);
+      const provider = new NavigationProvider(ws, graph, parser, tags);
+
+      const links = await provider.provideDocumentLinks(doc);
+      expect(links.length).toEqual(1);
+      expect(links[0].target).toEqual(openCommandURI(pdf.uri));
+      expect(links[0].range).toEqual(new vscode.Range(0, 5, 0, 11));
     });
   });
 

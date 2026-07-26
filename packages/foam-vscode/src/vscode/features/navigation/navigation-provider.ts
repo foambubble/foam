@@ -267,17 +267,42 @@ export class NavigationProvider
       return resource?.type === 'attachment' || resource?.type === 'image';
     };
 
-    // For wikilinks the clickable range excludes the surrounding brackets,
-    // consistent with how VS Code styles markdown links
-    const linkRange = (link: ResourceLink) =>
-      link.type === 'wikilink'
-        ? new vscode.Range(
-            link.range.start.line,
-            link.range.start.character + 2,
+    // The clickable range mirrors the built-in Markdown extension's styling:
+    // for wikilinks the content without the surrounding brackets, for full
+    // reference links ([text][ref]) the reference label, and for collapsed
+    // ([text][]) and shortcut ([text]) reference links the text itself.
+    const linkRange = (link: ResourceLink) => {
+      if (link.type === 'wikilink') {
+        return new vscode.Range(
+          link.range.start.line,
+          link.range.start.character + 2,
+          link.range.end.line,
+          link.range.end.character - 2
+        );
+      }
+      if (ResourceLink.isReferenceStyleLink(link)) {
+        const fullForm = /^\[.*\]\[(.+)\]$/.exec(link.rawText);
+        if (fullForm) {
+          // the reference label sits right before the closing bracket
+          return new vscode.Range(
             link.range.end.line,
-            link.range.end.character - 2
-          )
-        : toVsCodeRange(link.range);
+            link.range.end.character - 1 - fullForm[1].length,
+            link.range.end.line,
+            link.range.end.character - 1
+          );
+        }
+        const textForm = /^\[(.*?)\](\[\])?$/.exec(link.rawText);
+        if (textForm) {
+          return new vscode.Range(
+            link.range.start.line,
+            link.range.start.character + 1,
+            link.range.start.line,
+            link.range.start.character + 1 + textForm[1].length
+          );
+        }
+      }
+      return toVsCodeRange(link.range);
+    };
 
     const resolvedReferenceLinks: vscode.DocumentLink[] = targets
       .filter(

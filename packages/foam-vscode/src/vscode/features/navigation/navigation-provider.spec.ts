@@ -378,11 +378,8 @@ describe('Document navigation', () => {
   });
 
   // Attachments (PDFs, docs, etc.) and images must be surfaced as DocumentLinks
-  // targeting the `vscode.open` command, and NOT as definitions. Both the
-  // text-editor (definition) pipeline and plain-URI DocumentLinks bypass the
-  // editor resolution that honors user-level `workbench.editorAssociations`;
-  // only the `vscode.open` command (the same mechanism used by the built-in
-  // Markdown extension) resolves the editor correctly at every settings scope.
+  // targeting the `vscode.open` command, and NOT as definitions, to honor 
+  // user-level `workbench.editorAssociations`.
   // See: https://github.com/foambubble/foam/issues/1675
   describe('attachment and image navigation', () => {
     const openCommandURI = (uri: URI) =>
@@ -445,8 +442,6 @@ describe('Document navigation', () => {
       const provider = new NavigationProvider(ws, graph, parser, tags);
 
       // No Foam DocumentLink: it would shadow the built-in Markdown link,
-      // which already opens via `vscode.open` and honors
-      // `markdown.links.openLocation`.
       const links = await provider.provideDocumentLinks(doc);
       expect(links.length).toEqual(0);
 
@@ -474,8 +469,6 @@ describe('Document navigation', () => {
       const links = await provider.provideDocumentLinks(doc);
       expect(links.length).toEqual(1);
       expect(links[0].target).toEqual(openCommandURI(img.uri));
-      // The link range excludes the surrounding brackets, consistent with
-      // how VS Code styles markdown links
       expect(links[0].range).toEqual(
         new vscode.Range(0, 6, 0, 6 + img.base.length)
       );

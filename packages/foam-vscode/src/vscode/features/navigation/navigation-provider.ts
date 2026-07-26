@@ -267,6 +267,18 @@ export class NavigationProvider
       return resource?.type === 'attachment' || resource?.type === 'image';
     };
 
+    // For wikilinks the clickable range excludes the surrounding brackets,
+    // consistent with how VS Code styles markdown links
+    const linkRange = (link: ResourceLink) =>
+      link.type === 'wikilink'
+        ? new vscode.Range(
+            link.range.start.line,
+            link.range.start.character + 2,
+            link.range.end.line,
+            link.range.end.character - 2
+          )
+        : toVsCodeRange(link.range);
+
     const resolvedReferenceLinks: vscode.DocumentLink[] = targets
       .filter(
         o =>
@@ -276,7 +288,7 @@ export class NavigationProvider
       )
       .map(o => {
         const dl = new vscode.DocumentLink(
-          toVsCodeRange(o.link.range),
+          linkRange(o.link),
           toVsCodeUri(o.target.asPlain())
         );
         dl.tooltip = o.target.getBasename();
@@ -308,7 +320,7 @@ export class NavigationProvider
       })
       .map(o => {
         const dl = new vscode.DocumentLink(
-          toVsCodeRange(o.link.range),
+          linkRange(o.link),
           commandAsURI({
             name: 'vscode.open',
             params: [toVsCodeUri(o.target.asPlain())],

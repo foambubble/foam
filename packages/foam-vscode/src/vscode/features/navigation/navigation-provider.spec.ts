@@ -93,6 +93,11 @@ describe('Document navigation', () => {
 
       expect(links.length).toEqual(1);
       expect(links[0].target).toEqual(toVsCodeUri(fileA.uri));
+      // The link range excludes the surrounding brackets, consistent with
+      // how VS Code styles markdown links
+      expect(links[0].range).toEqual(
+        new vscode.Range(0, 20, 0, 20 + fileA.name.length)
+      );
     });
 
     it('should create links for placeholders', async () => {
@@ -414,6 +419,11 @@ describe('Document navigation', () => {
       const links = await provider.provideDocumentLinks(doc);
       expect(links.length).toEqual(1);
       expect(links[0].target).toEqual(openCommandURI(pdf.uri));
+      // The link range excludes the surrounding brackets, consistent with
+      // how VS Code styles markdown links
+      expect(links[0].range).toEqual(
+        new vscode.Range(0, 6, 0, 6 + pdf.base.length)
+      );
 
       const definitions = await provider.provideDefinition(
         doc,
@@ -464,6 +474,11 @@ describe('Document navigation', () => {
       const links = await provider.provideDocumentLinks(doc);
       expect(links.length).toEqual(1);
       expect(links[0].target).toEqual(openCommandURI(img.uri));
+      // The link range excludes the surrounding brackets, consistent with
+      // how VS Code styles markdown links
+      expect(links[0].range).toEqual(
+        new vscode.Range(0, 6, 0, 6 + img.base.length)
+      );
 
       const definitions = await provider.provideDefinition(
         doc,

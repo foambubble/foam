@@ -110,7 +110,11 @@ For `o.link.type === 'link'` (regular markdown links, non-reference), **emit no 
 
 ## Implementation status (2026-07-26)
 
-Approach 1 implemented on `claude/research-issue-1675-5vtovd`:
+Approach 1 + Approach 2 implemented on `claude/research-issue-1675-5vtovd`:
+
+- Direct markdown links (`[text](file.pdf)`) emit **no** Foam DocumentLink at
+  all — the built-in Markdown extension's link (which opens via `vscode.open`
+  and honors `markdown.links.openLocation`) is no longer shadowed.
 
 - `navigation-provider.ts`: attachment/image DocumentLinks now target
   `commandAsURI({name: 'vscode.open', params: [uri]})`; reference-style links to

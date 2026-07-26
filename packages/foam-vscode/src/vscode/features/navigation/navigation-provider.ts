@@ -283,17 +283,27 @@ export class NavigationProvider
         return dl;
       });
 
-    // Resolved links to attachments (PDFs, docs, etc.) and images are surfaced
-    // as DocumentLinks that invoke the `vscode.open` command. A DocumentLink
-    // with a plain file URI target is opened via the openerService, which does
-    // not honor user-level `workbench.editorAssociations`; the `vscode.open`
-    // command (the same mechanism used by the built-in Markdown extension)
-    // resolves the editor correctly at every settings scope.
+    // Wikilinks and reference-style links to attachments (PDFs, docs, etc.)
+    // and images are surfaced as DocumentLinks that invoke the `vscode.open`
+    // command. A DocumentLink with a plain file URI target is opened via the
+    // openerService, which does not honor user-level
+    // `workbench.editorAssociations`; the `vscode.open` command (the same
+    // mechanism used by the built-in Markdown extension) resolves the editor
+    // correctly at every settings scope.
+    // Direct markdown links ([text](file.pdf)) are not covered here: the
+    // built-in Markdown extension already provides a working link for them,
+    // and a Foam link over the same range would shadow it.
     // See: https://github.com/foambubble/foam/issues/1675
     const attachmentLinks: vscode.DocumentLink[] = targets
       .filter(o => {
         if (o.target.isPlaceholder()) return false;
         if (o.link.type === 'external') return false;
+        if (
+          o.link.type === 'link' &&
+          !ResourceLink.isResolvedReference(o.link)
+        ) {
+          return false;
+        }
         return isAttachment(o.target);
       })
       .map(o => {

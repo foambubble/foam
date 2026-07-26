@@ -422,7 +422,7 @@ describe('Document navigation', () => {
       expect(definitions).toBeUndefined();
     });
 
-    it('surfaces a markdown link resolving to an attachment as a document link, not a definition', async () => {
+    it('defers a direct markdown link resolving to an attachment to the built-in Markdown extension', async () => {
       const pdf = await createFile('%PDF-1.4 fake', ['report.pdf']);
       const noteA = await createFile(`see [the report](./${pdf.base}).`);
       const ws = createTestWorkspace()
@@ -434,10 +434,14 @@ describe('Document navigation', () => {
       const { doc } = await showInEditor(noteA.uri);
       const provider = new NavigationProvider(ws, graph, parser, tags);
 
+      // No Foam DocumentLink: it would shadow the built-in Markdown link,
+      // which already opens via `vscode.open` and honors
+      // `markdown.links.openLocation`.
       const links = await provider.provideDocumentLinks(doc);
-      expect(links.length).toEqual(1);
-      expect(links[0].target).toEqual(openCommandURI(pdf.uri));
+      expect(links.length).toEqual(0);
 
+      // No definition either, or ctrl+click would route through the
+      // text-editor pipeline instead of the built-in link.
       const definitions = await provider.provideDefinition(
         doc,
         new vscode.Position(0, 8)

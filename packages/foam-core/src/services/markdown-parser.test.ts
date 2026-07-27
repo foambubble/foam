@@ -1,6 +1,8 @@
 import {
   createMarkdownParser,
   getBlockFor,
+  ParserCache,
+  ParserCacheEntry,
   ParserPlugin,
 } from './markdown-parser';
 import { NoteLinkDefinition, Resource, ResourceLink } from '../model/note';
@@ -719,6 +721,65 @@ and some content`
       expect(note2.properties.hasHeading).toBeTruthy();
     });
   });
+  describe('Parse observer', () => {
+    const createCache = (): ParserCache => {
+      const entries = new Map<string, ParserCacheEntry>();
+      return {
+        get: uri => entries.get(uri.toString()),
+        has: uri => entries.has(uri.toString()),
+        set: (uri, entry) => void entries.set(uri.toString(), entry),
+        del: uri => void entries.delete(uri.toString()),
+        clear: () => entries.clear(),
+      };
+    };
+
+    it('reports the size of every parsed note', () => {
+      const samples = [];
+      const parser = createMarkdownParser([], undefined, s => samples.push(s));
+      const content = '# Title\nsome content';
+
+      parser.parse(URI.file('/path/to/a.md'), content);
+
+      expect(samples).toHaveLength(1);
+      expect(samples[0].uri.path).toEqual('/path/to/a.md');
+      expect(samples[0].chars).toEqual(content.length);
+      expect(samples[0].cacheHit).toBeFalsy();
+    });
+
+    it('reports a single sample per parse when a cache is in use', () => {
+      const samples = [];
+      const parser = createMarkdownParser([], createCache(), s =>
+        samples.push(s)
+      );
+
+      parser.parse(URI.file('/path/to/a.md'), '# Title');
+
+      expect(samples).toHaveLength(1);
+    });
+
+    it('distinguishes a cache hit from a re-parse', () => {
+      const samples = [];
+      const uri = URI.file('/path/to/a.md');
+      const parser = createMarkdownParser([], createCache(), s =>
+        samples.push(s)
+      );
+
+      parser.parse(uri, '# Title');
+      parser.parse(uri, '# Title');
+      // changing the content invalidates the entry for that URI
+      parser.parse(uri, '# Another title');
+
+      expect(samples.map(s => s.cacheHit)).toEqual([false, true, false]);
+    });
+
+    it('is optional', () => {
+      const parser = createMarkdownParser([]);
+      expect(parser.parse(URI.file('/path/to/a.md'), '# Title').title).toEqual(
+        'Title'
+      );
+    });
+  });
+
   describe('Alias', () => {
     it('can find tags in comma separated string', () => {
       const note = parser.parse(

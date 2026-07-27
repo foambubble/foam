@@ -47,6 +47,19 @@ export interface ParserCacheEntry {
  */
 export type ParserCache = ICache<URI, ParserCacheEntry>;
 
+/**
+ * Called after every `parse`, with the cost of that parse.
+ *
+ * Used by `LoadProfiler` to attribute workspace load time. Reported from the
+ * outermost parser only, so a cache miss produces exactly one sample.
+ */
+export type ParseObserver = (sample: {
+  uri: URI;
+  chars: number;
+  ms: number;
+  cacheHit: boolean;
+}) => void;
+
 const parser = unified()
   .use(markdownParse, { gfm: true })
   .use(frontmatterPlugin, ['yaml'])
@@ -74,7 +87,8 @@ export function getLinkDefinitions(markdown: string): NoteLinkDefinition[] {
 
 export function createMarkdownParser(
   extraPlugins: ParserPlugin[] = [],
-  cache?: ParserCache
+  cache?: ParserCache,
+  onParse?: ParseObserver
 ): ResourceParser {
   const plugins = [
     titlePlugin,
@@ -260,20 +274,53 @@ export function createMarkdownParser(
 
   const cachedParser: ResourceParser = {
     parse: (uri: URI, markdown: string): Resource => {
+      const start = performance.now();
       const actualChecksum = hash(markdown);
       if (cache.has(uri)) {
         const { checksum, resource } = cache.get(uri);
         if (actualChecksum === checksum) {
+          onParse?.({
+            uri,
+            chars: markdown.length,
+            ms: performance.now() - start,
+            cacheHit: true,
+          });
           return resource;
         }
       }
       const resource = foamParser.parse(uri, markdown);
       cache.set(uri, { checksum: actualChecksum, resource });
+      onParse?.({
+        uri,
+        chars: markdown.length,
+        ms: performance.now() - start,
+        cacheHit: false,
+      });
       return resource;
     },
   };
 
-  return isSome(cache) ? cachedParser : foamParser;
+  if (isSome(cache)) {
+    return cachedParser;
+  }
+  if (!onParse) {
+    return foamParser;
+  }
+  // `foamParser` stays uninstrumented so the cached parser above reports
+  // exactly one sample per parse rather than one per layer
+  return {
+    parse: (uri: URI, markdown: string): Resource => {
+      const start = performance.now();
+      const resource = foamParser.parse(uri, markdown);
+      onParse({
+        uri,
+        chars: markdown.length,
+        ms: performance.now() - start,
+        cacheHit: false,
+      });
+      return resource;
+    },
+  };
 }
 
 /**

@@ -8,7 +8,7 @@ import {
   TextEditor,
   RelativePattern,
 } from 'vscode';
-import { MarkdownResourceProvider, Logger, Config } from '@foam/core';
+import { MarkdownResourceProvider, Logger, Config, LoadProfiler } from '@foam/core';
 import { bootstrap } from './core/model/foam';
 import { fromVsCodeUri } from './vscode/utils/vsc-utils';
 
@@ -22,6 +22,10 @@ import { createMarkdownParser } from '@foam/core';
 import VsCodeBasedParserCache from './vscode/services/cache';
 import { createMatcherAndDataStore } from './vscode/services/editor';
 import { buildWatchGlob } from './vscode/utils/watch-glob';
+import {
+  EventLoopMonitor,
+  formatMemoryUsage,
+} from './vscode/services/host-metrics';
 import { OllamaEmbeddingProvider } from './ai/providers/ollama/ollama-provider';
 import { initTelemetry } from './vscode/services/telemetry';
 
@@ -62,8 +66,12 @@ export async function activate(context: ExtensionContext) {
     // Prepare Foam
     const includes = Config.getFilesInclude();
     const excludes = Config.getFilesExclude();
-    const { matcher, dataStore, includePatterns, excludePatterns } =
-      await createMatcherAndDataStore(includes, excludes);
+    const {
+      matcher,
+      dataStore: rawDataStore,
+      includePatterns,
+      excludePatterns,
+    } = await createMatcherAndDataStore(includes, excludes);
 
     Logger.info('Loading from directories:');
     for (const folder of workspace.workspaceFolders) {
@@ -88,8 +96,16 @@ export async function activate(context: ExtensionContext) {
       ),
       workspace.onDidSaveTextDocument
     );
+    // Attributes the workspace load time to reading vs parsing vs neither, so
+    // that a slow startup reported by a user can be diagnosed from the log
+    // alone. See issue #1689.
+    const profiler = new LoadProfiler();
+    const eventLoopMonitor = new EventLoopMonitor();
+
+    const dataStore = profiler.instrumentDataStore(rawDataStore);
+
     const parserCache = await VsCodeBasedParserCache.create(context);
-    const parser = createMarkdownParser([], parserCache);
+    const parser = createMarkdownParser([], parserCache, profiler.onParse);
 
     const workspaceRoots =
       workspace.workspaceFolders?.map(folder => fromVsCodeUri(folder.uri)) ??
@@ -115,6 +131,9 @@ export async function activate(context: ExtensionContext) {
       ? new OllamaEmbeddingProvider()
       : undefined;
 
+    profiler.start();
+    eventLoopMonitor.start();
+
     const foamPromise = bootstrap(
       workspaceRoots,
       matcher,
@@ -132,12 +151,22 @@ export async function activate(context: ExtensionContext) {
     );
 
     const foam = await foamPromise;
+    profiler.stop();
+    eventLoopMonitor.stop();
+
     const resources = foam.workspace.list();
     const noteCount = resources.filter(r => r.type === 'note').length;
     const attachmentCount = resources.filter(
       r => r.type === 'image' || r.type === 'attachment'
     ).length;
     Logger.info(`Loaded ${resources.length} resources`);
+    Logger.info(
+      profiler.formatReport({
+        resources: `${resources.length} (${noteCount} notes, ${attachmentCount} attachments) from ${workspace.workspaceFolders.length} folder(s)`,
+        'event loop': eventLoopMonitor.format(),
+        memory: formatMemoryUsage(),
+      })
+    );
 
     const feats = (await Promise.all(featuresPromises)).filter(
       (r): r is FoamFeatureResult => r != null

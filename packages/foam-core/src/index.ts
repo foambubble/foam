@@ -23,7 +23,14 @@ export {
   SubstringExcludeMatcher,
 } from './services/datastore';
 export { createMarkdownParser, getLinkDefinitions, getBlockFor } from './services/markdown-parser';
-export type { ParserPlugin, ParserCache, ParserCacheEntry } from './services/markdown-parser';
+export type {
+  ParserPlugin,
+  ParserCache,
+  ParserCacheEntry,
+  ParseObserver,
+} from './services/markdown-parser';
+export { LoadProfiler } from './services/load-profiler';
+export type { LoadProfileStats, ParseSample } from './services/load-profiler';
 export { MarkdownResourceProvider, createMarkdownReferences } from './services/markdown-provider';
 export {
   AttachmentResourceProvider,

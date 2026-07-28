@@ -1,5 +1,6 @@
 import { bench } from 'vitest';
 import { createMarkdownParser } from './markdown-parser';
+import { createLezerMarkdownParser } from './lezer-parser';
 import { ResourceParser } from '../model/note';
 import { URI } from '../model/uri';
 import { Logger } from '../utils/log';
@@ -61,7 +62,10 @@ export const PARSER_BENCHMARK_SIZES = [250, 500, 1000, 2000, 4000];
  * remark on this shape: 3.76x at 2000, 4.80x at 8000, 6.64x at 16000, and 25x
  * at 72000. Stopping at 8000 would have made a 25x win look like a 5x one.
  */
-export const OUTLINE_BENCHMARK_SIZES = [2000, 4000, 8000];
+// Branch-only, per the note above: benchmarking a second parser is exactly the
+// case where the 16000 data point earns its ~14s, because the gap keeps widening
+// with size. Revert to [2000, 4000, 8000] before merging.
+export const OUTLINE_BENCHMARK_SIZES = [2000, 4000, 8000, 16000];
 
 const shapes = {
   journal: { generate: makeJournalNote, sizes: PARSER_BENCHMARK_SIZES },
@@ -94,6 +98,10 @@ const parserCandidates: ParserCandidate[] = [
   // An uncached parser on purpose: it models the edit-time case where the cache
   // never hits for the note being typed.
   { name: 'current', parser: createMarkdownParser([]) },
+  // Branch-only: this is what makes `yarn bench` print the remark/lezer
+  // comparison. Drop this line (and the import) before merging, or main
+  // switches to A/B mode and stops producing baseline-compatible output.
+  { name: 'lezer', parser: createLezerMarkdownParser() },
 ];
 
 const isAB = parserCandidates.length > 1;

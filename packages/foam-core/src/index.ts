@@ -31,6 +31,7 @@ export type {
   ParserCacheEntry,
   ParseObserver,
 } from './services/markdown-parser';
+export { createLezerMarkdownParser } from './services/lezer-parser';
 export { LoadProfiler } from './services/load-profiler';
 export type { LoadProfileStats, ParseSample } from './services/load-profiler';
 export { EventLoopMonitor, formatMemoryUsage } from './services/host-metrics';

@@ -19,6 +19,10 @@ import { extractHashtags, extractTagsFromProp, hash, isSome } from '../utils';
 import { Logger } from '../utils/log';
 import { URI } from '../model/uri';
 import { ICache } from '../utils/cache';
+import {
+  findTagColumnInLine,
+  getPropertiesInfoFromYAML,
+} from './frontmatter-tags';
 
 export interface ParserPlugin {
   name?: string;
@@ -261,7 +265,11 @@ export function createMarkdownParser(
           if (entry) {
             entry.references.push(ref);
           } else {
-            footnoteMap.set(id, { id, definitionRange: null, references: [ref] });
+            footnoteMap.set(id, {
+              id,
+              definitionRange: null,
+              references: [ref],
+            });
           }
         }
       }
@@ -339,59 +347,6 @@ const getTextFromChildren = (root: Node): string => {
   return text;
 };
 
-// Matches a top-level YAML key: starts at column 0 with a non-hyphen, non-space,
-// non-comment character, and contains a colon (e.g. "tags:", "date-created:").
-const YAML_KEY_LINE_RE = /^([^-\s#][^:]*?):\s*(.*)/;
-
-function getPropertiesInfoFromYAML(yamlText: string): {
-  [key: string]: { key: string; value: string; text: string; line: number };
-} {
-  const lines = yamlText.split('\n');
-  const result: {
-    [key: string]: { key: string; value: string; text: string; line: number };
-  } = {};
-  for (let lineIdx = 0; lineIdx < lines.length; lineIdx++) {
-    const match = lines[lineIdx].match(YAML_KEY_LINE_RE);
-    if (!match) {
-      continue;
-    }
-    // YAML allows quoted keys ("tags": ...) — normalize to the plain name
-    const key = match[1].replace(/^(["'])(.*)\1$/, '$2');
-    let text = lines[lineIdx];
-    let j = lineIdx + 1;
-    // Collect continuation lines: everything that isn't the start of a new key
-    while (j < lines.length && !YAML_KEY_LINE_RE.test(lines[j])) {
-      text += '\n' + lines[j];
-      j++;
-    }
-    const value = text.slice(key.length + 1).trim();
-    result[key] = { key, value, text, line: lineIdx };
-  }
-  return result;
-}
-
-/** Characters that can be part of a tag label (see HASHTAG_REGEX) */
-const TAG_LABEL_CHAR = /[\p{L}\p{Extended_Pictographic}\p{N}/_-]/u;
-
-/**
- * Finds the column of `tag` in `line`, matching only occurrences that are not
- * part of a longer tag-like word (so tag `foo` does not match inside `foobar`)
- */
-const findTagColumnInLine = (line: string, tag: string): number => {
-  for (
-    let idx = line.indexOf(tag);
-    idx >= 0;
-    idx = line.indexOf(tag, idx + 1)
-  ) {
-    const before = idx > 0 ? line[idx - 1] : '';
-    const after = idx + tag.length < line.length ? line[idx + tag.length] : '';
-    if (!TAG_LABEL_CHAR.test(before) && !TAG_LABEL_CHAR.test(after)) {
-      return idx;
-    }
-  }
-  return -1;
-};
-
 const tagsPlugin: ParserPlugin = {
   name: 'tags',
   onDidFindProperties: (props, note, node) => {
@@ -437,8 +392,7 @@ const tagsPlugin: ParserPlugin = {
         const nodeStart = astPointToFoamPosition(node.position!.start);
         const preceding = text.slice(0, tag.offset);
         const lastBreak = preceding.lastIndexOf('\n');
-        const lineBreaks =
-          lastBreak < 0 ? 0 : preceding.split('\n').length - 1;
+        const lineBreaks = lastBreak < 0 ? 0 : preceding.split('\n').length - 1;
         const start: Position = {
           line: nodeStart.line + lineBreaks,
           character:

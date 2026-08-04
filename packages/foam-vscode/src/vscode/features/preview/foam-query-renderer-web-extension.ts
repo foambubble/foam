@@ -4,7 +4,7 @@ import { FoamWorkspace } from '@foam/core';
 import { FoamGraph } from '@foam/core';
 import { Logger } from '@foam/core';
 import { renderDqlQuery } from '@foam/core';
-import { renderJsQuery } from '@foam/core';
+import { renderJsQuery } from '@foam/core/scripting';
 import { escapeHtml } from '@foam/core';
 import { requiresSource } from '@foam/core';
 import type { FoamQueryOptions } from './foam-query-options';

@@ -45,6 +45,10 @@ export default defineConfig({
       // to source — two instances of URI etc., breaking `instanceof`.
       // Order matters: longer prefix first.
       '@foam/core/test': path.join(__dirname, '../foam-core/test/test-utils.ts'),
+      '@foam/core/scripting': path.join(
+        __dirname,
+        '../foam-core/src/scripting/index.ts'
+      ),
       '@foam/core': path.join(__dirname, '../foam-core/src/index.ts'),
       '@vscode/extension-telemetry': path.join(
         __dirname,

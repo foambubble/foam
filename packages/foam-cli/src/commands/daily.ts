@@ -4,8 +4,8 @@ import {
   URI,
   getDailyNoteTemplateCandidateUris,
   getTemplatesDir,
-  resolveDailyNote,
 } from '@foam/core';
+import { resolveDailyNote } from '@foam/core/scripting';
 import { loadWorkspaceFromDirectory } from '../support/filesystem';
 import {
   parseArgs,

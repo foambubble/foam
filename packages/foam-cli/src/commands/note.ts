@@ -9,12 +9,12 @@ import {
   URI,
   noteShowData,
   noteIdData,
-  noteCreate,
   noteMove,
   noteDelete,
   resolveNote,
   uriToWorkspacePath,
 } from '@foam/core';
+import { noteCreate } from '@foam/core/scripting';
 import { loadWorkspaceFromDirectory } from '../support/filesystem';
 import { serializeNoteDetail } from '../support/serializers';
 import type { CommandRunResult } from '../support/with-telemetry';
@@ -32,10 +32,10 @@ import { bold, dim, path as pathColor } from '../support/colors';
 export {
   noteShowData,
   noteIdData,
-  noteCreate,
   noteMove,
   noteDelete,
 } from '@foam/core';
+export { noteCreate } from '@foam/core/scripting';
 
 // ─── Help ────────────────────────────────────────────────────────────────────
 

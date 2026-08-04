@@ -11,7 +11,7 @@ import {
   focusNote,
   readFile,
 } from '../../services/editor';
-import { resolveDailyNote } from '@foam/core';
+import { resolveDailyNote } from '@foam/core/scripting';
 import { Resolver } from '@foam/core';
 
 // ─── Format conversion ────────────────────────────────────────────────────────

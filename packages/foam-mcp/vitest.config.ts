@@ -12,6 +12,10 @@ export default defineConfig({
         __dirname,
         '../foam-core/test/test-utils.ts'
       ),
+      '@foam/core/scripting': path.join(
+        __dirname,
+        '../foam-core/src/scripting/index.ts'
+      ),
       '@foam/core': path.join(__dirname, '../foam-core/src/index.ts'),
     },
   },

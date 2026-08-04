@@ -1,5 +1,3 @@
-import matter from 'gray-matter';
-
 export function getExcerpt(
   markdown: string,
   maxLines: number
@@ -19,8 +17,16 @@ export function getExcerpt(
   return { excerpt: excerpt.join('\n\n'), lines };
 }
 
+// A frontmatter block: `---` on the first line, then anything up to the
+// first closing `---` or `...` line. Implemented without gray-matter:
+// gray-matter requires Node's Buffer at call time, which crashes non-Node
+// runtimes (React Native / Hermes), and this function is on the mobile
+// render path. Unlike gray-matter, an unclosed opening delimiter is NOT
+// treated as frontmatter (gray-matter would swallow the whole document).
+const FRONTMATTER_BLOCK_REGEX = /^---[ \t]*\r?\n(?:[\s\S]*?\r?\n)?(?:---|\.\.\.)[ \t]*(?:\r?\n|$)/;
+
 export function stripFrontMatter(markdown: string): string {
-  return matter(markdown).content.trim();
+  return markdown.replace(FRONTMATTER_BLOCK_REGEX, '').trim();
 }
 
 export function stripImages(markdown: string): string {

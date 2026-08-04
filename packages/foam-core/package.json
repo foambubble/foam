@@ -10,13 +10,18 @@
       "types": "./out/src/index.d.ts",
       "default": "./out/src/index.js"
     },
+    "./scripting": {
+      "types": "./out/src/scripting/index.d.ts",
+      "default": "./out/src/scripting/index.js"
+    },
     "./test": {
       "types": "./out/test/test-utils.d.ts",
       "default": "./out/test/test-utils.js"
     }
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json && yarn check:portability",
+    "check:portability": "tsc -p tsconfig.portability.json",
     "release": "node release.js",
     "tag-release": "node ../../scripts/tag-release.js core",
     "clean": "rimraf out",

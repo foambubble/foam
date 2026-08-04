@@ -6,12 +6,12 @@ import {
   URI,
   listNotes,
   noteShowData,
-  noteCreate,
   noteDelete,
   noteMove,
   resolveNote,
   mergeFrontmatter,
 } from '@foam/core';
+import { noteCreate } from '@foam/core/scripting';
 import {
   parseUriInput,
   uriToOutputString,

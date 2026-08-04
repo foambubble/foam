@@ -1,0 +1,13 @@
+{
+  // Portability gate: proves the public barrel type-checks in a non-Node
+  // runtime (e.g. browser). No Node types, no DOM lib — only
+  // ES2022 plus the minimal host globals every target runtime provides.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": [],
+    "lib": ["ES2022"],
+    "noEmit": true
+  },
+  "files": ["src/index.ts", "types/host-globals.d.ts"],
+  "include": []
+}

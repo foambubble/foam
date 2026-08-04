@@ -1,4 +1,4 @@
-import { isInFrontMatter, isOnYAMLKeywordLine } from './md';
+import { isInFrontMatter, isOnYAMLKeywordLine, stripFrontMatter } from './md';
 
 describe('isInFrontMatter', () => {
   it('is true for started front matter', () => {
@@ -66,5 +66,51 @@ describe('isInFrontMatter', () => {
       const actual = isOnYAMLKeywordLine(content, 'tags');
       expect(actual).toBeFalsy();
     });
+  });
+});
+
+describe('stripFrontMatter', () => {
+  // Must not rely on gray-matter: it needs Node's Buffer at call time,
+  // which crashes non-Node runtimes (React Native / Hermes).
+  it('removes a frontmatter block from the start of the document', () => {
+    const md = `---
+title: My Note
+tags: [a, b]
+---
+
+# Heading
+
+Body text.`;
+    expect(stripFrontMatter(md)).toBe('# Heading\n\nBody text.');
+  });
+
+  it('returns trimmed content when there is no frontmatter', () => {
+    expect(stripFrontMatter('# Heading\n\nText\n')).toBe('# Heading\n\nText');
+  });
+
+  it('handles an empty frontmatter block', () => {
+    expect(stripFrontMatter('---\n---\n# Title')).toBe('# Title');
+  });
+
+  it('leaves a thematic break that is not at the start alone', () => {
+    const md = 'Intro\n\n---\n\nMore text';
+    expect(stripFrontMatter(md)).toBe(md);
+  });
+
+  it('does not treat an unclosed opening delimiter as frontmatter', () => {
+    const md = '---\ntitle: Unclosed\n\n# Heading';
+    expect(stripFrontMatter(md)).toBe(md);
+  });
+
+  it('keeps a second --- line in the body (only the first block is frontmatter)', () => {
+    const md = `---
+title: T
+---
+Body
+
+---
+
+After break`;
+    expect(stripFrontMatter(md)).toBe('Body\n\n---\n\nAfter break');
   });
 });

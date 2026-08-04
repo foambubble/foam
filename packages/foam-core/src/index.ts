@@ -51,13 +51,14 @@ export {
 } from './services/link-integrity';
 
 // Templates / note creation
+// NOTE: functionality that executes user-supplied JavaScript via Node's `vm`
+// (TemplateLoader, resolveDailyNote, noteCreate, renderJsQuery) lives in the
+// `@foam/core/scripting` subpath so this barrel stays bundler-safe for
+// non-Node runtimes (browsers, React Native).
 export { NoteCreationEngine } from './templates/note-creation-engine';
 export type { NoteCreationResult } from './templates/note-creation-types';
 export type { Template, TemplateContext } from './templates/note-creation-types';
 export { TriggerFactory } from './templates/note-creation-triggers';
-export { resolveDailyNote } from './templates/daily-note-resolver';
-export type { ResolveDailyNoteOptions } from './templates/daily-note-resolver';
-export { TemplateLoader } from './templates/template-loader';
 export {
   getDailyNoteTemplateCandidateUris,
   getNewNoteTemplateCandidateUris,
@@ -87,8 +88,6 @@ export {
 } from './query/index';
 export { renderDqlQuery } from './query/dql';
 export type { RenderDqlQueryOptions } from './query/dql';
-export { renderJsQuery } from './query/js';
-export type { RenderJsQueryOptions } from './query/js';
 export type { Query, ParseQueryResult } from './query/saved';
 export {
   parseQuery,
@@ -156,7 +155,14 @@ export {
   relativeTo,
   fromFsPath,
 } from './utils/path';
-export { isWindows, isMacintosh, isLinux } from './common/platform';
+export {
+  isWindows,
+  isMacintosh,
+  isLinux,
+  isReactNative,
+  detectPlatform,
+} from './common/platform';
+export type { PlatformEnv, PlatformInfo } from './common/platform';
 export { TaskDeduplicator } from './utils/task-deduplicator';
 export type { Progress, ProgressCallback } from './services/progress';
 export { CancellationError } from './services/progress';
@@ -288,12 +294,20 @@ export type {
 export { outlineData } from './commands/outline';
 export type { OutlineSection, OutlineResult } from './commands/outline';
 export { searchWorkspace } from './commands/search';
-export type { SearchMatch, PropertyFilter, SearchOptions } from './commands/search';
-export { noteShowData, noteIdData, noteCreate, noteMove, noteDelete } from './commands/note';
+export type {
+  SearchMatch,
+  PropertyFilter,
+  SearchOptions,
+} from './commands/search';
+export {
+  noteShowData,
+  noteIdData,
+  noteMove,
+  noteDelete,
+} from './commands/note';
 export type {
   NoteDetail,
   NoteIdResult,
-  NoteCreateResult,
   NoteMoveResult,
   NoteDeleteResult,
 } from './commands/note';

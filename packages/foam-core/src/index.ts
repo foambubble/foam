@@ -31,6 +31,7 @@ export type {
 } from './services/markdown-parser';
 export { LoadProfiler } from './services/load-profiler';
 export type { LoadProfileStats, ParseSample } from './services/load-profiler';
+export { EventLoopMonitor, formatMemoryUsage } from './services/host-metrics';
 export { MarkdownResourceProvider, createMarkdownReferences } from './services/markdown-provider';
 export {
   AttachmentResourceProvider,

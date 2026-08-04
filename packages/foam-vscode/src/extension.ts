@@ -8,7 +8,14 @@ import {
   TextEditor,
   RelativePattern,
 } from 'vscode';
-import { MarkdownResourceProvider, Logger, Config, LoadProfiler } from '@foam/core';
+import {
+  MarkdownResourceProvider,
+  Logger,
+  Config,
+  LoadProfiler,
+  EventLoopMonitor,
+  formatMemoryUsage,
+} from '@foam/core';
 import { bootstrap } from './core/model/foam';
 import { fromVsCodeUri } from './vscode/utils/vsc-utils';
 
@@ -22,10 +29,6 @@ import { createMarkdownParser } from '@foam/core';
 import VsCodeBasedParserCache from './vscode/services/cache';
 import { createMatcherAndDataStore } from './vscode/services/editor';
 import { buildWatchGlob } from './vscode/utils/watch-glob';
-import {
-  EventLoopMonitor,
-  formatMemoryUsage,
-} from './vscode/services/host-metrics';
 import { OllamaEmbeddingProvider } from './ai/providers/ollama/ollama-provider';
 import { initTelemetry } from './vscode/services/telemetry';
 

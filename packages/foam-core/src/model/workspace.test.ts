@@ -542,3 +542,74 @@ describe('Workspace lifecycle', () => {
     expect(disposed).toBe(true);
   });
 });
+
+describe('Case-variant filenames in the same directory (case-sensitive filesystems)', () => {
+  it('stores files differing only by case as distinct resources', () => {
+    const ws = createTestWorkspace();
+    ws.set(createTestNote({ uri: '/a/Note.md' }));
+    ws.set(createTestNote({ uri: '/a/note.md' }));
+
+    expect(
+      ws
+        .list()
+        .map(r => r.uri.path)
+        .sort()
+    ).toEqual(['/a/Note.md', '/a/note.md']);
+  });
+
+  it('fires onDidAdd, not onDidUpdate, when adding a case-variant sibling', () => {
+    const ws = createTestWorkspace();
+    ws.set(createTestNote({ uri: '/a/note.md' }));
+
+    let added = 0;
+    let updated = 0;
+    ws.onDidAdd(() => added++);
+    ws.onDidUpdate(() => updated++);
+
+    ws.set(createTestNote({ uri: '/a/Note.md' }));
+
+    expect(added).toEqual(1);
+    expect(updated).toEqual(0);
+  });
+
+  it('finds each case variant by its exact URI', () => {
+    const ws = createTestWorkspace();
+    ws.set(createTestNote({ uri: '/a/Note.md', title: 'Upper' }));
+    ws.set(createTestNote({ uri: '/a/note.md', title: 'Lower' }));
+
+    expect(ws.find(URI.file('/a/Note.md')).title).toEqual('Upper');
+    expect(ws.find(URI.file('/a/note.md')).title).toEqual('Lower');
+  });
+
+  it('deletes only the exact-case match when variants coexist', () => {
+    const ws = createTestWorkspace();
+    ws.set(createTestNote({ uri: '/a/Note.md' }));
+    ws.set(createTestNote({ uri: '/a/note.md' }));
+
+    const deleted = ws.delete(URI.file('/a/note.md'));
+
+    expect(deleted.uri.path).toEqual('/a/note.md');
+    expect(ws.list().map(r => r.uri.path)).toEqual(['/a/Note.md']);
+  });
+
+  it('still finds a resource via a case-insensitive reference when unambiguous', () => {
+    const ws = createTestWorkspace();
+    ws.set(createTestNote({ uri: '/a/page.md' }));
+
+    expect(ws.find(URI.file('/a/PAGE.md')).uri.path).toEqual('/a/page.md');
+  });
+
+  it('lists both case variants under the shared identifier', () => {
+    const ws = createTestWorkspace();
+    ws.set(createTestNote({ uri: '/a/Note.md' }));
+    ws.set(createTestNote({ uri: '/a/note.md' }));
+
+    // The exact-case filter then narrows to the exact basename
+    expect(ws.listByIdentifier('note').map(r => r.uri.path)).toEqual([
+      '/a/note.md',
+    ]);
+    expect(ws.listByIdentifier('Note').map(r => r.uri.path)).toEqual([
+      '/a/Note.md',
+    ]);
+  });
+});

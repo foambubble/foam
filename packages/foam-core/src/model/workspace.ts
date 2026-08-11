@@ -25,9 +25,12 @@ export class FoamWorkspace implements IDisposable {
   private providers: ResourceProvider[] = [];
 
   /**
-   * Resources by path
+   * Resources by case-normalized path.
+   * Each entry is a bucket: resources whose paths differ only by case are
+   * distinct files on case-sensitive filesystems and must coexist, so they
+   * share a trie key but keep their own slot in the bucket.
    */
-  private _resources: TrieMap<string, Resource> = new TrieMap();
+  private _resources: TrieMap<string, Resource[]> = new TrieMap();
 
   /**
    * Maps a normalized directory path to the URI of its directory index file owner.
@@ -125,10 +128,18 @@ export class FoamWorkspace implements IDisposable {
   }
 
   set(resource: Resource) {
-    const old = this.find(resource.uri);
-
-    // store resource
-    this._resources.set(this.getTrieIdentifier(resource.uri.path), resource);
+    const key = this.getTrieIdentifier(resource.uri.path);
+    const bucket = this._resources.get(key) ?? [];
+    // Only an exact-case path match is an update: a resource whose path
+    // differs only by case is a different file and must be added alongside
+    const index = bucket.findIndex(r => r.uri.path === resource.uri.path);
+    const old = index >= 0 ? bucket[index] : null;
+    if (index >= 0) {
+      bucket[index] = resource;
+    } else {
+      bucket.push(resource);
+    }
+    this._resources.set(key, bucket);
     this._registerDirectoryIndex(resource);
 
     isSome(old)
@@ -138,8 +149,20 @@ export class FoamWorkspace implements IDisposable {
   }
 
   delete(uri: URI) {
-    const deleted = this._resources.get(this.getTrieIdentifier(uri));
-    this._resources.delete(this.getTrieIdentifier(uri));
+    const key = this.getTrieIdentifier(uri);
+    const bucket = this._resources.get(key) ?? [];
+    let index = bucket.findIndex(r => r.uri.path === uri.path);
+    if (index < 0 && bucket.length === 1) {
+      // a single case-insensitive match keeps the historical lenient lookup
+      index = 0;
+    }
+    const deleted = index >= 0 ? bucket[index] : null;
+    if (index >= 0) {
+      bucket.splice(index, 1);
+      bucket.length > 0
+        ? this._resources.set(key, bucket)
+        : this._resources.delete(key);
+    }
     this._unregisterDirectoryIndex(uri);
 
     isSome(deleted) && this.onDidDeleteEmitter.fire(deleted);
@@ -147,7 +170,7 @@ export class FoamWorkspace implements IDisposable {
   }
 
   clear() {
-    const resources = Array.from(this._resources.values());
+    const resources = Array.from(this._resources.values()).flat();
     this._resources.clear();
     this._directoryIndex.clear();
 
@@ -218,7 +241,7 @@ export class FoamWorkspace implements IDisposable {
   public findByDirectory(dirPath: string): Resource | null {
     const ownerUri = this._directoryIndex.get(normalize(dirPath));
     if (!ownerUri) return null;
-    return this._resources.get(this.getTrieIdentifier(ownerUri)) ?? null;
+    return this.getResourceByPath(ownerUri);
   }
 
   /**
@@ -231,7 +254,7 @@ export class FoamWorkspace implements IDisposable {
     const results: Resource[] = [];
     for (const [dirPath, uri] of this._directoryIndex.entries()) {
       if (dirPath === normalizedId || dirPath.endsWith('/' + normalizedId)) {
-        const resource = this._resources.get(this.getTrieIdentifier(uri));
+        const resource = this.getResourceByPath(uri);
         if (resource) results.push(resource);
       }
     }
@@ -243,13 +266,13 @@ export class FoamWorkspace implements IDisposable {
   }
 
   public list(): Resource[] {
-    return Array.from(this._resources.values());
+    return Array.from(this._resources.values()).flat();
   }
 
   public resources(): IterableIterator<Resource> {
-    const resources: Array<Resource> = Array.from(
-      this._resources.values()
-    ).sort(Resource.sortByPath);
+    const resources: Array<Resource> = Array.from(this._resources.values())
+      .flat()
+      .sort(Resource.sortByPath);
 
     return resources.values();
   }
@@ -272,10 +295,10 @@ export class FoamWorkspace implements IDisposable {
 
     let resources: Resource[] = [];
 
-    this._resources.find(needle).forEach(elm => resources.push(elm[1]));
+    this._resources.find(needle).forEach(elm => resources.push(...elm[1]));
 
     if (mdNeedle) {
-      this._resources.find(mdNeedle).forEach(elm => resources.push(elm[1]));
+      this._resources.find(mdNeedle).forEach(elm => resources.push(...elm[1]));
     }
 
     // if multiple resources found, try to filter exact case matches
@@ -364,9 +387,23 @@ export class FoamWorkspace implements IDisposable {
     return reversedPath;
   }
 
+  /**
+   * Returns the resource stored at the given URI/path.
+   * Lookup is case-insensitive; when several resources share a
+   * case-normalized path, only an exact-case match is returned.
+   */
+  private getResourceByPath(reference: URI | string): Resource | null {
+    const path = reference instanceof URI ? reference.path : reference;
+    const bucket = this._resources.get(this.getTrieIdentifier(path)) ?? [];
+    return (
+      bucket.find(r => r.uri.path === path) ??
+      (bucket.length === 1 ? bucket[0] : null)
+    );
+  }
+
   public find(reference: URI | string, baseUri?: URI): Resource | null {
     if (reference instanceof URI) {
-      return this._resources.get(this.getTrieIdentifier(reference)) ?? null;
+      return this.getResourceByPath(reference);
     }
     let resource: Resource | null = null;
     const [path, fragment] = (reference as string).split('#');
@@ -378,15 +415,13 @@ export class FoamWorkspace implements IDisposable {
         if (isAbsolute(candidate)) {
           // Try roots[0] first (via resolveUri which handles already-under-root paths)
           const resolvedUri = this.resolveUri(candidate, baseUri);
-          resource =
-            this._resources.get(this.getTrieIdentifier(resolvedUri)) ?? null;
+          resource = this.getResourceByPath(resolvedUri);
           // For workspace-relative absolute paths in multi-root workspaces,
           // also search remaining roots in case the resource lives in a different root
           if (!resource && this.roots.length > 1) {
             for (let i = 1; i < this.roots.length; i++) {
               const altUri = this.roots[i].joinPath(candidate);
-              resource =
-                this._resources.get(this.getTrieIdentifier(altUri)) ?? null;
+              resource = this.getResourceByPath(altUri);
               if (resource) {
                 break;
               }
@@ -396,9 +431,7 @@ export class FoamWorkspace implements IDisposable {
           const resolvedUri = isSome(baseUri)
             ? baseUri.resolve(candidate)
             : null;
-          resource = resolvedUri
-            ? this._resources.get(this.getTrieIdentifier(resolvedUri))
-            : null;
+          resource = resolvedUri ? this.getResourceByPath(resolvedUri) : null;
         }
         if (resource) {
           break;

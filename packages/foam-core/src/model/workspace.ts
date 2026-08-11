@@ -40,7 +40,7 @@ export class FoamWorkspace implements IDisposable {
   private _directoryIndex: Map<string, URI> = new Map();
 
   /** Basenames (without extension, lowercase) that qualify as directory index files, in priority order */
-  private static readonly DIRECTORY_INDEX_NAMES = ['index', 'readme'];
+  public static readonly DIRECTORY_INDEX_NAMES = ['index', 'readme'];
 
   /**
    * The root URIs of this workspace, in priority order.
@@ -189,6 +189,11 @@ export class FoamWorkspace implements IDisposable {
     if (!ext) return -1;
     const name = uri.getBasename().slice(0, -ext.length).toLowerCase();
     return FoamWorkspace.DIRECTORY_INDEX_NAMES.indexOf(name);
+  }
+
+  /** Whether the URI qualifies as a directory index file (e.g. index.md, README.md) */
+  public isDirectoryIndexFile(uri: URI): boolean {
+    return this._directoryIndexPriority(uri) !== -1;
   }
 
   private _registerDirectoryIndex(resource: Resource): void {

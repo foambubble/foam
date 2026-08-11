@@ -1,5 +1,40 @@
 {
   "ignorePatterns": ["**/*.js", "out/**"],
+  "rules": {
+    "no-restricted-imports": [
+      "error",
+      {
+        "paths": [
+          {
+            "name": "fs",
+            "message": "@foam/core must run in the browser too: do file I/O through IDataStore (services/datastore.ts)."
+          },
+          {
+            "name": "fs/promises",
+            "message": "@foam/core must run in the browser too: do file I/O through IDataStore (services/datastore.ts)."
+          },
+          {
+            "name": "path",
+            "message": "@foam/core must run in the browser too: use the POSIX-safe helpers in utils/path.ts."
+          },
+          {
+            "name": "os",
+            "message": "@foam/core must run in the browser too: no Node-only modules."
+          },
+          {
+            "name": "child_process",
+            "message": "@foam/core must run in the browser too: no Node-only modules."
+          }
+        ],
+        "patterns": [
+          {
+            "group": ["node:*"],
+            "message": "@foam/core must run in the browser too: no Node-only modules."
+          }
+        ]
+      }
+    ]
+  },
   "overrides": [
     {
       "files": ["src/**/*.test.ts"],

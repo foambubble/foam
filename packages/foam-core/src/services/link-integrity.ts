@@ -71,27 +71,34 @@ function computeRenameEditsForPairs(
       if (connection.link.type !== 'wikilink') {
         continue;
       }
-      const { target: linkTarget } = MarkdownLink.analyzeLink(connection.link);
-      let identifier: string;
-      if (
-        oldDirIdentifier &&
-        linkTarget.toLocaleLowerCase() === oldDirIdentifier
-      ) {
-        // Link uses a directory-style identifier (e.g. [[folderA]]). Compute the
-        // new directory identifier and restore its correct casing from the URI.
-        const newDirUri = newUri.getDirectory();
-        const lowerId = futureWorkspace.getDirectoryIdentifier(newUri);
-        identifier = lowerId
-          ? toCorrectCase(lowerId, newDirUri)
-          : futureWorkspace.getIdentifier(newUri);
-      } else {
-        identifier = futureWorkspace.getIdentifier(newUri);
-      }
+      // A single unparsable link must not abort the whole rename
+      try {
+        const { target: linkTarget } = MarkdownLink.analyzeLink(
+          connection.link
+        );
+        let identifier: string;
+        if (
+          oldDirIdentifier &&
+          linkTarget.toLocaleLowerCase() === oldDirIdentifier
+        ) {
+          // Link uses a directory-style identifier (e.g. [[folderA]]). Compute the
+          // new directory identifier and restore its correct casing from the URI.
+          const newDirUri = newUri.getDirectory();
+          const lowerId = futureWorkspace.getDirectoryIdentifier(newUri);
+          identifier = lowerId
+            ? toCorrectCase(lowerId, newDirUri)
+            : futureWorkspace.getIdentifier(newUri);
+        } else {
+          identifier = futureWorkspace.getIdentifier(newUri);
+        }
 
-      const edit = MarkdownLink.createUpdateLinkEdit(connection.link, {
-        target: identifier,
-      });
-      allEdits.push({ uri: connection.source, edit });
+        const edit = MarkdownLink.createUpdateLinkEdit(connection.link, {
+          target: identifier,
+        });
+        allEdits.push({ uri: connection.source, edit });
+      } catch {
+        continue;
+      }
     }
   }
 

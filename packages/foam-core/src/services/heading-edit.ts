@@ -120,17 +120,20 @@ export abstract class HeadingEdit {
         if (blockId !== oldId) {
           continue;
         }
-        totalOccurrences++;
-        edits.push({
-          uri: connection.source,
-          edit: MarkdownLink.createUpdateLinkEdit(link, {
+        let edit: WorkspaceTextEdit['edit'];
+        try {
+          edit = MarkdownLink.createUpdateLinkEdit(link, {
             section: '^' + newId,
-          }),
-        });
+          });
+        } catch {
+          continue;
+        }
+        totalOccurrences++;
+        edits.push({ uri: connection.source, edit });
       }
     }
 
-    return { edits, totalOccurrences };
+    return { edits: WorkspaceTextEdit.dedupe(edits), totalOccurrences };
   }
 
   /**
@@ -250,14 +253,19 @@ export abstract class HeadingEdit {
         if (section !== oldLabel) {
           continue;
         }
+        let textEdit: WorkspaceTextEdit['edit'];
+        try {
+          textEdit = MarkdownLink.createUpdateLinkEdit(link, {
+            section: newLabel,
+          });
+        } catch {
+          continue;
+        }
         totalOccurrences++;
-        const textEdit = MarkdownLink.createUpdateLinkEdit(link, {
-          section: newLabel,
-        });
         edits.push({ uri: connection.source, edit: textEdit });
       }
     }
 
-    return { edits, totalOccurrences };
+    return { edits: WorkspaceTextEdit.dedupe(edits), totalOccurrences };
   }
 }

@@ -121,7 +121,7 @@ export abstract class MarkdownLink {
         return `${newTarget}${sectionDivider}${newSection}`;
       };
       const useAngles =
-        newTarget.indexOf(' ') > 0 || newSection.indexOf(' ') > 0;
+        newTarget.includes(' ') || newSection.includes(' ');
       return {
         newText: `${embed}[${newAlias ? newAlias : defaultAlias()}](${
           useAngles ? '<' : ''

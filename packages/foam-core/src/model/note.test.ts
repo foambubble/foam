@@ -1,7 +1,7 @@
 import { createNoteFromMarkdown } from '../../test/test-utils';
 import { Position } from './position';
 import { URI } from './uri';
-import { Resource, Block } from './note';
+import { Resource, Block, NoteLinkDefinition } from './note';
 
 describe('Resource', () => {
   describe('getSectionAtPosition', () => {
@@ -193,5 +193,16 @@ Content here ^block-id
       expect(restored.uri.query).toBe('q=1');
       expect(restored.uri.isEqual(withFragment.uri)).toBe(true);
     });
+  });
+});
+
+describe('NoteLinkDefinition.format', () => {
+  it('wraps any url containing a space in angle brackets, including at position 0', () => {
+    expect(NoteLinkDefinition.format({ label: 'x', url: 'my note.md' })).toBe(
+      '[x]: <my note.md>'
+    );
+    expect(NoteLinkDefinition.format({ label: 'x', url: ' note.md' })).toBe(
+      '[x]: < note.md>'
+    );
   });
 });

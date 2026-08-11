@@ -1309,3 +1309,14 @@ describe('block anchor extraction', () => {
     });
   });
 });
+
+describe('Frontmatter tags with quoted keys', () => {
+  it('parses tags when the tags key is quoted in frontmatter', () => {
+    const note = createNoteFromMarkdown(`---
+"tags": [alpha]
+---
+content`);
+    expect(note.tags.map(t => t.label)).toEqual(['alpha']);
+    expect(note.tags[0].range.start.line).toEqual(1);
+  });
+});

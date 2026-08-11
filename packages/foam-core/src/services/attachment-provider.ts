@@ -36,7 +36,7 @@ export const defaultAttachmentExtensions = [
 ];
 
 const asResource = (uri: URI): Resource => {
-  const type = imageExtensions.includes(uri.getExtension())
+  const type = imageExtensions.includes(uri.getExtension().toLocaleLowerCase())
     ? 'image'
     : 'attachment';
   return {
@@ -68,7 +68,7 @@ export class AttachmentResourceProvider implements ResourceProvider {
   }
 
   async readAsMarkdown(uri: URI): Promise<string | null> {
-    if (imageExtensions.includes(uri.getExtension())) {
+    if (imageExtensions.includes(uri.getExtension().toLocaleLowerCase())) {
       return `![${''}](${uri.toString()}|height=200)`;
     }
     return `### ${uri.getBasename()}`;

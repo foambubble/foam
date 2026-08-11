@@ -355,7 +355,8 @@ function getPropertiesInfoFromYAML(yamlText: string): {
     if (!match) {
       continue;
     }
-    const key = match[1];
+    // YAML allows quoted keys ("tags": ...) — normalize to the plain name
+    const key = match[1].replace(/^(["'])(.*)\1$/, '$2');
     let text = lines[lineIdx];
     let j = lineIdx + 1;
     // Collect continuation lines: everything that isn't the start of a new key
@@ -398,6 +399,11 @@ const tagsPlugin: ParserPlugin = {
       const tagPropertyInfo = getPropertiesInfoFromYAML((node as any).value)[
         'tags'
       ];
+      // e.g. a quoted "tags": key is captured with its quotes and misses
+      // the plain lookup — skip the ranges rather than dropping all tags
+      if (!isSome(tagPropertyInfo)) {
+        return;
+      }
       const tagPropertyStartLine =
         node.position!.start.line + tagPropertyInfo.line;
       const tagPropertyLines = tagPropertyInfo.text.split('\n');

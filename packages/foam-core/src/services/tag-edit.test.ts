@@ -609,3 +609,26 @@ describe('TagEdit', () => {
     });
   });
 });
+
+describe('hierarchical rename with special characters', () => {
+  it('does not interpret $-patterns in the new parent tag name', () => {
+    const ws = createTestWorkspace();
+    ws.set(
+      createTestNote({
+        uri: '/page.md',
+        tags: ['a', 'a/child'],
+      })
+    );
+    const foamTags = FoamTags.fromWorkspace(ws);
+
+    const result = TagEdit.createHierarchicalRenameEdits(
+      foamTags,
+      'a',
+      'b$&x'
+    );
+
+    const editedTags = result.edits.map(edit => edit.edit.newText);
+    expect(editedTags).toContain('b$&x');
+    expect(editedTags).toContain('b$&x/child');
+  });
+});

@@ -1102,3 +1102,12 @@ describe('readAsMarkdown with block fragments', () => {
     expect(result).toEqual(content);
   });
 });
+
+describe('createMarkdownReferences edge cases', () => {
+  it('returns no definitions for a URI not in the workspace', () => {
+    const ws = createTestWorkspace();
+    expect(
+      createMarkdownReferences(ws, URI.file('/missing.md'), true)
+    ).toEqual([]);
+  });
+});

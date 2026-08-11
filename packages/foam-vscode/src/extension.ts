@@ -99,6 +99,7 @@ export async function activate(context: ExtensionContext) {
       ),
       workspace.onDidSaveTextDocument
     );
+    context.subscriptions.push(watcher);
     // Attributes the workspace load time to reading vs parsing vs neither, so
     // that a slow startup reported by a user can be diagnosed from the log
     // alone. See issue #1689.
@@ -108,6 +109,7 @@ export async function activate(context: ExtensionContext) {
     const dataStore = profiler.instrumentDataStore(rawDataStore);
 
     const parserCache = await VsCodeBasedParserCache.create(context);
+    context.subscriptions.push(parserCache);
     const parser = createMarkdownParser([], parserCache, profiler.onParse);
 
     const workspaceRoots =
@@ -125,6 +127,7 @@ export async function activate(context: ExtensionContext) {
     const attachmentProvider = new AttachmentResourceProvider(
       attachmentExtConfig
     );
+    context.subscriptions.push(markdownProvider, attachmentProvider);
 
     // Initialize embedding provider
     const experimentalEnabled = workspace
@@ -154,6 +157,9 @@ export async function activate(context: ExtensionContext) {
     );
 
     const foam = await foamPromise;
+    // Register for disposal right away: a feature failing to load further
+    // down must not leave the workspace/graph/watchers alive and untracked
+    context.subscriptions.push(foam);
     profiler.stop();
     eventLoopMonitor.stop();
 
@@ -171,9 +177,24 @@ export async function activate(context: ExtensionContext) {
       })
     );
 
-    const feats = (await Promise.all(featuresPromises)).filter(
-      (r): r is FoamFeatureResult => r != null
-    );
+    // One broken feature must degrade that feature only, not abort the whole
+    // activation (which would also skip extendMarkdownIt for every feature)
+    const settled = await Promise.allSettled(featuresPromises);
+    settled.forEach((result, i) => {
+      if (result.status === 'rejected') {
+        Logger.error(
+          `Feature #${i} (${features[i].name || 'anonymous'}) failed to activate`,
+          result.reason
+        );
+      }
+    });
+    const feats = settled
+      .filter(
+        (r): r is PromiseFulfilledResult<FoamFeatureResult | void> =>
+          r.status === 'fulfilled'
+      )
+      .map(r => r.value)
+      .filter((r): r is FoamFeatureResult => r != null);
 
     const featureTelemetry = feats.reduce(
       (acc, r) => ({ ...acc, ...r.telemetry }),
@@ -183,11 +204,6 @@ export async function activate(context: ExtensionContext) {
     telemetry.trackWorkspaceStats(noteCount, attachmentCount, featureTelemetry);
 
     context.subscriptions.push(
-      foam,
-      watcher,
-      parserCache,
-      markdownProvider,
-      attachmentProvider,
       commands.registerCommand('foam-vscode.clear-cache', () =>
         parserCache.clear()
       ),

@@ -150,3 +150,18 @@ describe('bootstrap file-watching', () => {
     expect(matcher.refreshCount).toBe(0);
   });
 });
+
+describe('bootstrap lifecycle', () => {
+  it('disposing foam also disposes tags', async () => {
+    const matcher = new CountingMatcher();
+    const { foam } = await bootstrapWithWatcher(matcher);
+
+    let notified = false;
+    foam.tags.onDidUpdate(() => (notified = true));
+
+    foam.dispose();
+    foam.tags.update();
+
+    expect(notified).toBe(false);
+  });
+});

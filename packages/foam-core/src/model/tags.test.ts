@@ -186,4 +186,19 @@ describe('FoamTags', () => {
 
     expect(tags.tags.size).toEqual(0);
   });
+
+  it('Stops notifying listeners once disposed', () => {
+    const ws = createTestWorkspace();
+    ws.set(createTestNote({ uri: '/page-a.md', tags: ['primary'] }));
+    const tags = FoamTags.fromWorkspace(ws, true);
+
+    let notified = false;
+    tags.onDidUpdate(() => (notified = true));
+
+    tags.dispose();
+    ws.set(createTestNote({ uri: '/page-b.md', tags: ['secondary'] }));
+    tags.update();
+
+    expect(notified).toBe(false);
+  });
 });

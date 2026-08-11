@@ -63,5 +63,6 @@ export class FoamTags implements IDisposable {
   dispose(): void {
     this.disposables.forEach(d => d.dispose());
     this.disposables = [];
+    this.onDidUpdateEmitter.dispose();
   }
 }

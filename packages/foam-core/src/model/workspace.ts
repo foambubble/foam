@@ -458,6 +458,8 @@ export class FoamWorkspace implements IDisposable {
   }
 
   public dispose(): void {
+    this.providers.forEach(p => p.dispose());
+    this.providers = [];
     this.onDidAddEmitter.dispose();
     this.onDidDeleteEmitter.dispose();
     this.onDidUpdateEmitter.dispose();

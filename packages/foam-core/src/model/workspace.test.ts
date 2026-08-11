@@ -520,3 +520,25 @@ describe('Directory index', () => {
     });
   });
 });
+
+describe('Workspace lifecycle', () => {
+  it('disposes registered providers when the workspace is disposed', () => {
+    const ws = new FoamWorkspace();
+    let disposed = false;
+    ws.registerProvider({
+      supports: () => false,
+      readAsMarkdown: async () => null,
+      fetch: async () => null,
+      resolveLink: () => {
+        throw new Error('not used');
+      },
+      dispose: () => {
+        disposed = true;
+      },
+    });
+
+    ws.dispose();
+
+    expect(disposed).toBe(true);
+  });
+});

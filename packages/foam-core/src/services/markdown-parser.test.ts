@@ -518,6 +518,27 @@ tags: hello, world
       ]);
     });
 
+    it('can find tags on the continuation lines of a multi-line paragraph', () => {
+      const noteA = createNoteFromMarkdown(
+        `first line with #one\nsecond line with #two`
+      );
+      expect(noteA.tags).toEqual([
+        { label: 'one', range: Range.create(0, 16, 0, 20) },
+        { label: 'two', range: Range.create(1, 17, 1, 21) },
+      ]);
+    });
+
+    it('computes the range of a frontmatter tag that is a substring of another tag', () => {
+      const noteA = createNoteFromMarkdown(`---
+tags: [foobar, foo]
+---
+content`);
+      expect(noteA.tags.map(t => t.label).sort()).toEqual(['foo', 'foobar']);
+      const foo = noteA.tags.find(t => t.label === 'foo');
+      // must point at the standalone 'foo', not the prefix of 'foobar'
+      expect(foo.range).toEqual(Range.create(1, 15, 1, 18));
+    });
+
     it('will skip tags in codeblocks', () => {
       const noteA = createNoteFromMarkdown(`
 this is some #text that includes #tags we #care-about.

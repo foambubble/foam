@@ -369,6 +369,28 @@ function getPropertiesInfoFromYAML(yamlText: string): {
   return result;
 }
 
+/** Characters that can be part of a tag label (see HASHTAG_REGEX) */
+const TAG_LABEL_CHAR = /[\p{L}\p{Extended_Pictographic}\p{N}/_-]/u;
+
+/**
+ * Finds the column of `tag` in `line`, matching only occurrences that are not
+ * part of a longer tag-like word (so tag `foo` does not match inside `foobar`)
+ */
+const findTagColumnInLine = (line: string, tag: string): number => {
+  for (
+    let idx = line.indexOf(tag);
+    idx >= 0;
+    idx = line.indexOf(tag, idx + 1)
+  ) {
+    const before = idx > 0 ? line[idx - 1] : '';
+    const after = idx + tag.length < line.length ? line[idx + tag.length] : '';
+    if (!TAG_LABEL_CHAR.test(before) && !TAG_LABEL_CHAR.test(after)) {
+      return idx;
+    }
+  }
+  return -1;
+};
+
 const tagsPlugin: ParserPlugin = {
   name: 'tags',
   onDidFindProperties: (props, note, node) => {
@@ -381,9 +403,14 @@ const tagsPlugin: ParserPlugin = {
       const tagPropertyLines = tagPropertyInfo.text.split('\n');
       const yamlTags = extractTagsFromProp(props.tags);
       for (const tag of yamlTags) {
-        const tagLine = tagPropertyLines.findIndex(l => l.includes(tag));
+        const tagLine = tagPropertyLines.findIndex(
+          l => findTagColumnInLine(l, tag) >= 0
+        );
+        if (tagLine < 0) {
+          continue;
+        }
         const line = tagPropertyStartLine + tagLine;
-        const charStart = tagPropertyLines[tagLine].indexOf(tag);
+        const charStart = findTagColumnInLine(tagPropertyLines[tagLine], tag);
         note.tags.push({
           label: tag,
           range: Range.createFromPosition(
@@ -396,10 +423,23 @@ const tagsPlugin: ParserPlugin = {
   },
   visit: (node, note) => {
     if (node.type === 'text') {
-      const tags = extractHashtags((node as any).value);
+      const text = (node as any).value as string;
+      const tags = extractHashtags(text);
       for (const tag of tags) {
-        const start = astPointToFoamPosition(node.position!.start);
-        start.character = start.character + tag.offset;
+        // The node's value can span multiple lines (soft breaks), so the
+        // tag's position is derived by counting newlines up to its offset
+        const nodeStart = astPointToFoamPosition(node.position!.start);
+        const preceding = text.slice(0, tag.offset);
+        const lastBreak = preceding.lastIndexOf('\n');
+        const lineBreaks =
+          lastBreak < 0 ? 0 : preceding.split('\n').length - 1;
+        const start: Position = {
+          line: nodeStart.line + lineBreaks,
+          character:
+            lastBreak < 0
+              ? nodeStart.character + tag.offset
+              : tag.offset - lastBreak - 1,
+        };
         const end: Position = {
           line: start.line,
           character: start.character + tag.label.length + 1,

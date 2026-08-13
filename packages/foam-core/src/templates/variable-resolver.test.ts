@@ -51,6 +51,28 @@ describe('variable-resolver, text substitution', () => {
     const resolver = new Resolver(givenValues, new Date());
     expect(await resolver.resolveText(input)).toEqual(expected);
   });
+
+  it('should substitute a Foam variable once when its placeholder is mirrored', async () => {
+    const input = `\${1:$FOAM_TITLE} :: $1 :: $1`;
+    const expected = `\${1:Invalid "Characters"} :: $1 :: $1`;
+
+    const givenValues = new Map<string, string>();
+    givenValues.set('FOAM_TITLE', 'Invalid "Characters"');
+    const resolver = new Resolver(givenValues, new Date());
+
+    expect(await resolver.resolveText(input)).toEqual(expected);
+  });
+
+  it('should substitute variables in source order when a mirror precedes its default', async () => {
+    const input = `$1 :: $FOAM_SLUG :: \${1:$FOAM_TITLE}`;
+    const expected = `$1 :: my-note :: \${1:My Note}`;
+
+    const givenValues = new Map<string, string>();
+    givenValues.set('FOAM_TITLE', 'My Note');
+    const resolver = new Resolver(givenValues, new Date());
+
+    expect(await resolver.resolveText(input)).toEqual(expected);
+  });
 });
 
 describe('variable-resolver, variable resolution', () => {

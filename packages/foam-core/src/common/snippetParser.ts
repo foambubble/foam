@@ -557,21 +557,44 @@ export class TextmateSnippet extends Marker {
 	}
 
 	snippetTextWithVariablesSubstituted(variableNames?: Set<string>): string {
-		const resolvedVariables: Variable[] = [];
+		const substitutions: { variable: Variable; start: number; end: number }[] = [];
+		const substitutedRanges = new Set<string>();
 		this.walk(marker => {
-			if (marker instanceof Variable && (!variableNames || variableNames.has(marker.name))) {
-				resolvedVariables.push(marker as Variable);
+			if (
+				marker instanceof Variable
+				&& marker.pos !== undefined
+				&& marker.endPos !== undefined
+				&& (!variableNames || variableNames.has(marker.name))
+			) {
+				// Mirrored placeholders clone their children, including the source
+				// range of nested variables. Substitute each source range only once.
+				const sourceRange = `${marker.pos}:${marker.endPos}`;
+				if (!substitutedRanges.has(sourceRange)) {
+					substitutedRanges.add(sourceRange);
+					substitutions.push({
+						variable: marker,
+						start: marker.pos,
+						end: marker.endPos,
+					});
+				}
 			}
 			return true;
 		});
+		substitutions.sort((a, b) =>
+			a.start - b.start || b.end - a.end
+		);
 
 		let result = '';
 
 		let i = 0;
-		resolvedVariables.forEach(variable => {
-			result += this.value.substring(i, variable.pos);
+		substitutions.forEach(({ variable, start, end }) => {
+			// A resolved outer variable already replaces any nested source span.
+			if (start < i) {
+				return;
+			}
+			result += this.value.substring(i, start);
 			result += variable.toString();
-			i = variable.endPos;
+			i = end;
 		});
 		result += this.value.substring(i);
 

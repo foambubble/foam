@@ -528,7 +528,7 @@ export class CompletionList {
 
 export class MarkdownString {
   public value: string;
-  public isTrusted?: boolean;
+  public isTrusted?: boolean | { readonly enabledCommands: readonly string[] };
 
   constructor(value?: string) {
     this.value = value || '';

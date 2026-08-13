@@ -15,7 +15,11 @@ import { getContentCacheFor } from '../../services/content-cache';
 import { CREATE_NOTE_COMMAND } from '../notes/create-note';
 import { commandAsURI } from '../../utils/commands';
 import { Location } from '@foam/core';
-import { getNoteTooltip, getFoamDocSelectors } from '../../services/editor';
+import {
+  getNoteTooltip,
+  getFoamDocSelectors,
+  FOAM_TOOLTIP_TRUSTED_COMMANDS,
+} from '../../services/editor';
 import { isSome } from '@foam/core';
 
 export const CONFIG_KEY = 'links.hover.enable';
@@ -124,7 +128,9 @@ export class HoverProvider implements vscode.HoverProvider {
         command
       ).toString()})`
     );
-    newNoteFromTemplate.isTrusted = true;
+    newNoteFromTemplate.isTrusted = {
+      enabledCommands: FOAM_TOOLTIP_TRUSTED_COMMANDS,
+    };
 
     const hover: vscode.Hover = {
       contents: [

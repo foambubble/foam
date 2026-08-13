@@ -1,7 +1,27 @@
 import { Uri } from 'vscode';
 import { fromVsCodeUri } from '../utils/vsc-utils';
-import { pickTabUri } from './editor';
+import { formatMarkdownTooltip, pickTabUri } from './editor';
 import { createTestNote, createTestWorkspace } from '../../test/test-utils';
+
+describe('formatMarkdownTooltip', () => {
+  it('does not blanket-trust markdown tooltips built from note content', () => {
+    const md = formatMarkdownTooltip('some note content');
+    expect(md.isTrusted).not.toBe(true);
+    expect((md.isTrusted as any).enabledCommands).toEqual(
+      expect.arrayContaining([
+        'foam-vscode.open-resource',
+        'foam-vscode.create-note',
+      ])
+    );
+  });
+
+  it('does not enable dangerous built-in commands in tooltips', () => {
+    const md = formatMarkdownTooltip('some note content');
+    const enabled = (md.isTrusted as any).enabledCommands as string[];
+    expect(enabled).not.toContain('workbench.action.terminal.sendSequence');
+    expect(enabled).not.toContain('workbench.action.tasks.runTask');
+  });
+});
 
 describe('pickTabUri', () => {
   const uri = Uri.file('/workspace/note.md');

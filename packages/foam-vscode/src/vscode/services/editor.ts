@@ -35,6 +35,18 @@ interface SelectionInfo {
 }
 
 /**
+ * Commands allowed to run from `command:` links inside Foam's hover tooltips.
+ *
+ * Tooltips are built from note content, so a blanket `isTrusted = true` would
+ * make *every* `command:` link clickable. Allow Foam's own tooltip links and
+ * block every other `command:` link.
+ */
+export const FOAM_TOOLTIP_TRUSTED_COMMANDS = [
+  'foam-vscode.open-resource',
+  'foam-vscode.create-note',
+];
+
+/**
  * Returns a MarkdownString of the note content
  * @param note A Foam Note
  */
@@ -50,7 +62,7 @@ export function formatMarkdownTooltip(content: string): MarkdownString {
   const diffLines = totalLines - lines;
   const ellipsis = diffLines > 0 ? `\n\n[...] *(+ ${diffLines} lines)*` : '';
   const md = new MarkdownString(`${excerpt}${ellipsis}`);
-  md.isTrusted = true;
+  md.isTrusted = { enabledCommands: FOAM_TOOLTIP_TRUSTED_COMMANDS };
   return md;
 }
 

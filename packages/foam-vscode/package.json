@@ -23,7 +23,7 @@
   "capabilities": {
     "untrustedWorkspaces": {
       "supported": "limited",
-      "description": "No expressions are allowed in filters."
+      "description": "JavaScript queries and templates are disabled."
     }
   },
   "contributes": {

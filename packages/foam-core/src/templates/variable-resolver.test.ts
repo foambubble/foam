@@ -73,6 +73,31 @@ describe('variable-resolver, text substitution', () => {
 
     expect(await resolver.resolveText(input)).toEqual(expected);
   });
+
+  it('should substitute every variable of a mirrored placeholder default only once', async () => {
+    const input = `\${1:$FOAM_TITLE - $FOAM_SLUG} :: $1`;
+    const expected = `\${1:My Note - my-note} :: $1`;
+
+    const givenValues = new Map<string, string>();
+    givenValues.set('FOAM_TITLE', 'My Note');
+    const resolver = new Resolver(givenValues, new Date());
+
+    expect(await resolver.resolveText(input)).toEqual(expected);
+  });
+
+  it('should not substitute a nested variable separately from the variable enclosing it', async () => {
+    // An unresolved variable falls back to its default, so the nested
+    // FOAM_DATE_YEAR is already part of what replaces the outer source span.
+    const input = `\${FOAM_TITLE:$FOAM_DATE_YEAR} :: $FOAM_DATE_YEAR`;
+    const expected = `2020 :: 2020`;
+
+    const resolver = new Resolver(
+      new Map<string, string>(),
+      new Date(2020, 0, 1)
+    );
+
+    expect(await resolver.resolveText(input)).toEqual(expected);
+  });
 });
 
 describe('variable-resolver, variable resolution', () => {

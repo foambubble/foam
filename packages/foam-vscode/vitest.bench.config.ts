@@ -22,7 +22,13 @@ const __dirname = fileURLToPath(new URL('.', import.meta.url));
 export default defineConfig({
   resolve: {
     alias: {
+      // Order matters: longer prefixes first, otherwise `@foam/core/scripting`
+      // matches the `@foam/core` alias and resolves to `src/index.ts/scripting`.
       '@foam/core/test': path.join(__dirname, '../foam-core/test/test-utils.ts'),
+      '@foam/core/scripting': path.join(
+        __dirname,
+        '../foam-core/src/scripting/index.ts'
+      ),
       '@foam/core': path.join(__dirname, '../foam-core/src/index.ts'),
     },
   },

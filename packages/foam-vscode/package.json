@@ -23,7 +23,7 @@
   "capabilities": {
     "untrustedWorkspaces": {
       "supported": "limited",
-      "description": "JavaScript queries and templates are disabled."
+      "description": "JavaScript queries and templates are disabled, and new notes must be created inside the workspace."
     }
   },
   "contributes": {

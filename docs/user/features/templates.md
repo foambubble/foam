@@ -318,6 +318,8 @@ Foam-specific variables (e.g. `$FOAM_TITLE`) can be used within template metadat
 
 #### `filepath` attribute
 
+> In a [restricted workspace](https://code.visualstudio.com/docs/editor/workspace-trust), notes must be created inside the workspace: a `filepath` that points outside it is refused. Trust the workspace to allow it.
+
 It is possible to vary the `filepath` value based on the current date using the `FOAM_DATE_*` variables. This is especially useful for the [[daily-notes]] template if you wish to organize by years, months, etc. Below is an example of a daily-note template metadata section that will create new daily notes under the `journal/YEAR/MONTH-MONTH_NAME/` filepath. For example, when a note is created on November 15, 2022, a new file will be created at `C:\Users\foam_user\foam_notes\journal\2022\11-Nov\2022-11-15-daily-note.md`. This method also respects the creation of daily notes relative to the current date (i.e. `/+1d`).
 
 ```markdown

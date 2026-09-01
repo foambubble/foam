@@ -489,17 +489,20 @@ function generateImageStyles(params: ImageParameters, md: markdownit): string {
   // Build CSS styles for the image
   const styles: string[] = [];
 
-  if (width) {
-    styles.push(`width: ${addDefaultUnit(width)}`);
+  const cssWidth = toCssDimension(width);
+  const cssHeight = toCssDimension(height);
+
+  if (cssWidth) {
+    styles.push(`width: ${cssWidth}`);
 
     // If only width is specified, set height to auto to maintain aspect ratio
-    if (!height) {
+    if (!cssHeight) {
       styles.push('height: auto');
     }
   }
 
-  if (height) {
-    styles.push(`height: ${addDefaultUnit(height)}`);
+  if (cssHeight) {
+    styles.push(`height: ${cssHeight}`);
   }
 
   const styleAttr = styles.length > 0 ? ` style="${styles.join('; ')}"` : '';
@@ -518,12 +521,26 @@ function generateImageStyles(params: ImageParameters, md: markdownit): string {
   return imageHtml;
 }
 
-function addDefaultUnit(value: string): string {
-  // If no unit is specified and it's a pure number, add 'px'
-  if (/^\d+(\.\d+)?$/.test(value)) {
-    return value + 'px';
+/**
+ * Validates a size parameter and returns it as a CSS dimension, or
+ * `undefined` when it isn't one.
+ *
+ * These values are interpolated into a `style="..."` attribute, so anything
+ * that isn't a plain dimension is dropped rather than emitted: a value
+ * carrying a quote (`100" onload="alert(1)`) would otherwise close the
+ * attribute and inject an event handler, and a value carrying a `;` could
+ * append further declarations. The accepted forms mirror the width x height
+ * parser above.
+ */
+function toCssDimension(value: string | undefined): string | undefined {
+  if (!value) {
+    return undefined;
   }
-  return value;
+  if (!/^\d+(?:\.\d+)?(?:px|%|em|rem|vw|vh)?$/i.test(value)) {
+    return undefined;
+  }
+  // If no unit is specified and it's a pure number, add 'px'
+  return /^\d+(?:\.\d+)?$/.test(value) ? value + 'px' : value;
 }
 
 function escapeHtml(text: string): string {

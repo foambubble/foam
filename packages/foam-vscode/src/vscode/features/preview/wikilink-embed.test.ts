@@ -383,6 +383,45 @@ describe('Wikilink Note Embedding', () => {
         '<img src="image.png" style="width: 300.5px; height: auto" alt="">'
       );
     });
+
+    // Size parameters are written into a `style="..."` attribute, so a value
+    // carrying a quote can break out of the attribute and inject an event
+    // handler. Only values that look like a CSS dimension are emitted.
+    it('should drop a width that breaks out of the style attribute', () => {
+      const params = { filename: 'image.png', width: '100" onload="alert(1)' };
+      const result = generateImageStyles(params, mockMd);
+      expect(result).not.toContain('onload');
+      expect(result).toEqual('<img src="image.png" alt="">');
+    });
+
+    it('should drop a height that breaks out of the style attribute', () => {
+      const params = {
+        filename: 'image.png',
+        width: '300',
+        height: '100" onload="alert(1)',
+      };
+      const result = generateImageStyles(params, mockMd);
+      expect(result).not.toContain('onload');
+      expect(result).toEqual(
+        '<img src="image.png" style="width: 300px; height: auto" alt="">'
+      );
+    });
+
+    it('should drop a width carrying extra css declarations', () => {
+      const params = {
+        filename: 'image.png',
+        width: '10px; background: url(http://evil.test)',
+      };
+      const result = generateImageStyles(params, mockMd);
+      expect(result).not.toContain('evil.test');
+      expect(result).toEqual('<img src="image.png" alt="">');
+    });
+
+    it('should drop a non-dimension width keyword', () => {
+      const params = { filename: 'image.png', width: 'auto' };
+      const result = generateImageStyles(params, mockMd);
+      expect(result).toEqual('<img src="image.png" alt="">');
+    });
   });
 
   describe('extractBlockContent', () => {

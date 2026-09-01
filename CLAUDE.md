@@ -1,327 +1,115 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidance for Claude Code working in this repository.
 
-## Collaboration Principles
+## How we work together
 
-**Be honest and objective**: Evaluate all suggestions, ideas, and feedback on their technical merits. Don't be overly complimentary or sycophantic. If something doesn't make sense, doesn't align with best practices, or could be improved, say so directly and constructively. Technical accuracy and project quality take precedence over being agreeable.
+**Be honest and objective.** Evaluate suggestions on their technical merits. Don't be complimentary by reflex. If something doesn't make sense or could be better, say so directly. Challenge my assumptions — that's more useful to me than agreement.
 
-**Prefer simple commands over complex ones**: Each compound/chained/piped command may require manual approval, so default to simple, single-purpose commands that match existing allowlist patterns. Don't staple on "bonus" steps the user didn't ask for, and don't wrap things in `bash -c`, `eval`, or defensive `|| true` without reason. Compound commands are fine when genuinely needed: atomic operations (`git add X && git commit`), pipelines where the pipe IS the interface (`find | xargs`, `cmd | jq`), heredocs for multi-line input, and loops over many items (one approval beats N).
+**Build the smallest thing that covers today's behavior.** Don't add UI affordances I didn't ask for. Don't parameterize or scope for cases the runtime never exercises (per-workspace state in a single-workspace extension, per-folder watchers with an identical glob). Don't add machinery for hypothetical futures. If you think generality will be needed later, say so and leave it out — we can add it when something actually requires it.
 
-**Working in a different directory (worktrees, packages)**: The Bash tool's CWD is always the main checkout — not wherever you last "cd'd". To run commands elsewhere without a prompt for each call, match the existing allowlist patterns:
+**Verify before you recommend, not just before you implement.** "We should add X" is a claim about the current code. Go read the code first: grep for the thing, check whether it already exists, confirm the bug is real. This applies to analysis and recommendations, not only to features.
 
-- Prefer `git -C <path> <subcommand>` for git operations (matches `Bash(git -C *)`)
-- For yarn commands, prefer, in order:
-  - `yarn workspace <package> <subcommand>`
-  - `yarn --cwd <path> <command>`
-  - `cd <path> && yarn <subcommand>`
-- Use `cd <path> && npm <subcommand>` for npm
-- Do NOT constantly use `nvm use ...` (e.g. `nvm use <version> && yarn <subcommand>`)
-- Do NOT mix `git -C` with `cd &&` in the same command
-- If you're about to introduce a new pattern (e.g. `cd && python`, `cd && cargo`), pause and either use a simpler equivalent or add the pattern to `.claude/settings.local.json` first
+**Plan before code on anything non-trivial.** Propose the approach and save it to `.agent/current-plan.md` before making changes; keep it updated as work progresses. I want to see the plan itself, not a narration of you producing one. For issues, check whether `.agent/tasks/<issue-id>-<sanitized-title>.md` exists — if not, suggest `/research-issue <issue-id>`.
 
-The point is autonomy: implement runs, agents, and skills should not stop for permission prompts on the same shape of command that already works elsewhere.
+**Answer the question I asked.** If I'm asking rather than instructing, answer it and stop. Don't start editing because a question implies work.
 
-## Project overview
+**Keep output short.** Terminal output and files you write for me both. No preamble, no restating what you just did, no summary table of a three-line change. Same standard as the user docs below: every sentence must earn its place.
 
-Foam is a personal knowledge management and sharing system, built on Visual Studio Code and GitHub. It allows users to organize research, keep re-discoverable notes, write long-form content, and optionally publish it to the web. The main goals are to help users create relationships between thoughts and information, supporting practices like building a "Second Brain" or a "Zettelkasten". Foam is free, open-source, and extensible, giving users ownership and control over their information. The target audience includes individuals interested in personal knowledge management, note-taking, and content creation, particularly those familiar with VS Code and GitHub.
+**Prefer doing over delegating.** The test suite runs as one command and the codebase is small enough to read. Spawn subagents only when the work genuinely fans out across independent areas.
 
-## Quick Commands
+**Never lose existing content.** Through rewrites, reverts, or unrelated changes — if you're replacing a document or backing something out, preserve what was there and confirm what you dropped.
 
-All the following commands are to be executed from the `packages/foam-vscode` directory
+**Ask before any GitHub write.** Issues, PRs, comments, pushes. Read operations are fine.
 
-### Development
+## Environment
 
-- `yarn install` - Install dependencies
-- `yarn build` - Build all packages
-- `yarn watch` - Watch mode for development
-- `yarn clean` - Clean build outputs
-- `yarn reset` - Full clean, install, and build
+Yarn v1 workspaces + Lerna. Node via plain `nvm use` from the repo root — don't source `nvm.sh`, export `NVM_DIR`, or pin a version.
 
-### Testing
+**Prefer simple commands.** Each compound/chained/piped command may need manual approval, which breaks autonomous runs. Default to single-purpose commands matching the existing allowlist. Don't wrap things in `bash -c`, `eval`, or defensive `|| true`. Compound is fine where genuinely needed: atomic operations (`git add X && git commit`), pipes that are the interface (`find | xargs`, `cmd | jq`), heredocs, and loops over many items.
 
-- `yarn test` - Run all tests (unit + integration)
-- `yarn test:unit` - Run unit tests (\*.test.ts files and the .spec.ts files marked as vscode-mock friendly)
-- `yarn test:unit-without-specs` - Run only \*.test.ts files, skipping all \*.spec.ts files
-- `yarn test:e2e` - Run only integration tests (all \*.spec.ts files, including `@unit-ready` ones)
-- `yarn lint` - Run linting
-- `yarn test-reset-workspace` to clean test workspace
+**Working outside the main checkout.** The Bash tool's CWD is always the main checkout, not wherever you last `cd`'d. To avoid a prompt per call:
 
-Unit tests run in Node.js environment using Vitest
-Integration tests require VS Code extension host
-When running tests, do not provide additional parameters, they are ignored by the custom runner script. You cannot run just a test, you have to run the whole suite.
+- `git -C <path> <subcommand>` for git
+- For yarn, in order of preference: `yarn workspace <package> <cmd>`, `yarn --cwd <path> <cmd>`, `cd <path> && yarn <cmd>`
+- `cd <path> && npm <cmd>` for npm
+- Don't mix `git -C` with `cd &&` in one command
+- Introducing a new shape (`cd && python`, `cd && cargo`)? Add it to `.claude/settings.local.json` first
 
-Unit tests are named `*.test.ts` and integration tests are `*.spec.ts`. These test files live alongside the code in the `src` directory. An integration test is one that has a direct or indirect dependency on `vscode` module.
-There is a mock `vscode` module that can be used to run most integration tests without starting VS Code. Tests that can use this mock start with the line `/* @unit-ready */`. Note that `@unit-ready` specs run in both `yarn test:unit` (with the mock) and `yarn test:e2e` (in real VS Code) — this is intentional.
+## Commands
 
-- If you are interested in a test inside a `*.test.ts` file, run `yarn test:unit` or inside a `*.spec.ts` file that starts with `/* @unit-ready */` run `yarn test:unit`
-- If you are interested in a test inside a `*.spec.ts` file that does not include `/* @unit-ready */` run `yarn test`
+From `packages/foam-vscode`:
 
-While in development we mostly want to use `yarn test:unit`.
-When multiple tests are failing, look at all of them, but only focus on fixing the first one. Once that is fixed, run the test suite again and repeat the process.
+|                                            |                                                             |
+| ------------------------------------------ | ----------------------------------------------------------- |
+| `yarn build` / `yarn watch` / `yarn clean` | build                                                       |
+| `yarn reset`                               | clean, install, build                                       |
+| `yarn test:unit`                           | `*.test.ts` + `@unit-ready` specs — **use this by default** |
+| `yarn test:e2e`                            | all `*.spec.ts` in a real VS Code host                      |
+| `yarn test`                                | both                                                        |
+| `yarn lint`                                | lint                                                        |
+| `yarn test-reset-workspace`                | clean test workspace                                        |
 
-When writing tests keep mocking to a bare minimum. Code should be written in a way that is easily testable and if I/O is necessary, it should be done in appropriate temporary directories.
-Never mock anything that is inside `packages/foam-vscode/src/core/`.
+The runner ignores extra arguments — you cannot run a single test, only the whole suite.
 
-Do not use dynamic imports (`await import(...)` or `import(...)`) anywhere — neither in source code nor in tests. Use static top-level imports instead. If a module needs lazy initialization, refactor to make it explicit rather than reaching for a dynamic import.
+Graph webview: `yarn workspace @foam/graph-view build` (also `build:vscode`, `watch`, `test`).
 
-Use the utility functions from `test-utils.ts` and `test-utils-vscode.ts` and `test-datastore.ts`.
+## Testing
 
-To improve readability of the tests, set up the test and tear it down within the test case (as opposed to use other functions like `beforeEach` unless it's much better to do it that way)
+**Fixing a bug — including PR review comments — starts with a failing test.** Write the test (include the issue number if present), run the suite, confirm it fails for the right reason, then implement the fix. Never write fix and test together.
 
-Never fix a test by adjusting the expectation if the expectation is correct, test must be fixed by addressing the issue with the code.
+**Never fix a test by weakening a correct expectation.** If the expectation is right, the code is wrong.
 
-## Repository Structure
+`*.test.ts` are unit tests (Vitest, Node). `*.spec.ts` are integration tests needing the VS Code extension host. Both live alongside the code in `src/`. A test is integration if it depends on `vscode`, directly or transitively. A `*.spec.ts` starting with `/* @unit-ready */` can run against the mock `vscode` module — those run in both `test:unit` and `test:e2e`, intentionally.
 
-This is a monorepo using Yarn workspaces with the main VS Code extension in `packages/foam-vscode/`.
+- Keep mocking minimal. Never mock anything in `packages/foam-core`. Write code that's testable without mocks; use real I/O in temp directories when needed.
+- Use the helpers in `test-utils.ts`, `test-utils-vscode.ts`, `test-datastore.ts`.
+- Set up and tear down inside the test case rather than `beforeEach`, unless that's genuinely clearer.
+- Name test cases after the behavior being verified — they document expected behavior. Cover happy paths and edge cases.
+- When several tests fail, read them all, then fix only the first. Re-run and repeat.
 
-### Key Directories
+## Conventions with teeth
 
-- `packages/foam-vscode/src/core/` - Platform-agnostic business logic (NO vscode dependencies)
-- `packages/foam-vscode/src/features/` - VS Code-specific features and UI
-- `packages/foam-vscode/src/services/` - service implementations, might have VS Code dependency, but we try keep that to a minimum
-- `packages/foam-vscode/src/test/` - Test utilities and mocks
-- `packages/foam-graph/` - Graph visualization web component (`@foam/graph-view`)
-- `docs/` - Documentation and user guides
+**`packages/foam-core` is the platform-agnostic core.** No `vscode` import. No Node `path` — it runs in browser and React Native too, so use the POSIX-safe helpers in `src/utils/path.ts` (`relativeTo`, `joinPath`, `getBasename`, `getExtension`, `getDirectory`). vm-dependent scripting exports (`TemplateLoader`, `resolveDailyNote`, `noteCreate`, `renderJsQuery`) live behind the `@foam/core/scripting` subpath to keep the main barrel bundler-safe.
 
-### Graph Webview (`@foam/graph-view`)
+`packages/foam-vscode/src/core/` is a legacy shim holding only `model/foam.ts` (extends core's `Foam` with `embeddings`). Don't add to it.
 
-The graph webview is a standalone Yarn workspace built with Lit, bundled for use inside the VS Code extension.
+**A `@foam/core` change needs a changeset that also lists `foam-vscode` and `@foam/cli`** (usually `patch`). They bundle core at build time via esbuild and declare it a `devDependency`, so Changesets won't cascade the bump — without this their republished bundles ship new code under a stale version with no changelog. See `docs/dev/releasing-foam.md`.
 
-- Source lives in `packages/foam-graph/src/`; `packages/foam-vscode/static/dataviz/` is **build output** (gitignored), not source
-- `src/protocol.ts` owns the message contract between extension host and webview — the extension imports from `@foam/graph-view/protocol`
-- The extension's `tsconfig.json` uses `paths` to resolve `@foam/graph-view/*` to TypeScript source for type checking; esbuild resolves via package exports at bundle time
-
-Commands (run from repo root or `packages/foam-vscode`):
-
-- `yarn workspace @foam/graph-view build` - Build VS Code bundle
-- `yarn workspace @foam/graph-view build:vscode` - Build VS Code bundle only
-- `yarn workspace @foam/graph-view watch` - Watch mode for webview development
-- `yarn workspace @foam/graph-view test` - Run webview tests (Vitest)
-
-### File Naming Patterns
-
-Test files follow `*.test.ts` for unit tests and `*.spec.ts` for integration tests, living alongside the code in `src`. An integration test is one that has a direct or indirect dependency on `vscode` package.
-
-### Important Constraint
-
-Code in `packages/foam-vscode/src/core/` MUST NOT depend on the `vscode` library or any files outside the core directory. This maintains platform independence.
-
-### Changesets: a `@foam/core` change must also bump `foam-vscode` and `@foam/cli`
-
-`foam-vscode` and `@foam/cli` **bundle** `@foam/core` at build time (esbuild inlines it) and declare it as a `devDependency`, not a runtime `dependency`. Because of that, Changesets' automatic internal-dependency bumping does **not** cascade a `@foam/core` bump to them.
-
-So when a change touches `packages/foam-core`, its changeset fragment must **also** list `foam-vscode` and `@foam/cli` (usually `patch`) — otherwise their republished bundles ship updated code under a stale version number with no changelog entry. Rule of thumb: if `@foam/core` is in the fragment, `foam-vscode` and `@foam/cli` almost always belong there too. See `docs/dev/releasing-foam.md`.
-
-### URIs throughout, paths only at the edges
-
-Domain code (everything in `@foam/core` and the platform-agnostic layers of `foam-cli`, `foam-mcp`, `foam-vscode`) takes and returns `URI` objects, not path strings. This is consistent with the existing core API: `FoamWorkspace.find(uri: URI)`, `FoamGraph.getLinks(uri: URI)`, `Resource.uri: URI`.
+**URIs throughout, paths only at the edges.** Domain code takes and returns `URI`, not path strings — consistent with `FoamWorkspace.find(uri)`, `FoamGraph.getLinks(uri)`, `Resource.uri`.
 
 ```typescript
-// ✅ Good
-function listOrphans(workspace, graph, rootUri: URI): NoteItem[];
-
-// ❌ Avoid
-function listOrphans(workspace, graph, rootDir: string): NoteItem[];
+function listOrphans(workspace, graph, rootUri: URI): NoteItem[]; // ✅
+function listOrphans(workspace, graph, rootDir: string): NoteItem[]; // ❌
 ```
 
-Path strings only appear at:
+Path strings appear only at I/O boundaries (`IDataStore` converting URI ↔ fs path), external wire formats (CLI args, MCP inputs, JSON), and human-readable display fields alongside the URI.
 
-1. **I/O boundaries** — `IDataStore` implementations convert URI ↔ filesystem path (`URI.file(...)`, `uri.toFsPath()`).
-2. **External wire formats** — CLI argument parsing, MCP tool inputs/outputs, JSON serialization.
-3. **Display fields in return values** — e.g. `NoteItem.path` for human-readable workspace-relative paths, alongside the `URI`.
+**Use the project's vocabulary.** "Workspace", never "vault" (that's Obsidian's term). Avoid "gated" framing for access levels — prefer "accessible to X". Name a method after what it wraps rather than inventing a new term.
 
-For path manipulation inside `@foam/core`, use the POSIX-safe utilities in `packages/foam-core/src/utils/path.ts` (`relativeTo`, `joinPath`, `getBasename`, `getExtension`, `getDirectory`) — never import Node's `path` module, since `@foam/core` runs in both Node and browser contexts.
+**Put files in their proper home.** Test-only fixtures in a test folder. Generated artifacts in build output — gitignoring them inside source isn't enough. Deliverables in the project, not `/tmp`. `.agent/` specs only in the main checkout.
 
-## Architecture Overview
+Prefer pure functions where practical. Reuse existing helpers and constants instead of adding parallel ones.
 
-### Core Abstractions
+## Non-obvious architecture
 
-**FoamWorkspace** - Central repository managing all resources (notes, attachments)
+Monorepo: `packages/{foam-core,foam-vscode,foam-graph,foam-cli,foam-mcp}`.
 
-- Uses reversed trie for efficient resource lookup
-- Event-driven updates (onDidAdd, onDidUpdate, onDidDelete)
-- Handles identifier resolution for short-form linking
+Things you won't infer quickly from reading:
 
-**FoamGraph** - Manages relationship graph between resources
+- **FoamWorkspace** uses a reversed trie for resource lookup, which is what makes short-form identifier resolution work.
+- **FoamGraph** creates placeholder resources for broken links — they're real graph nodes, not absences.
+- **ResourceProvider** is the extension point per file type (`MarkdownProvider`, `AttachmentProvider`).
+- **Features** are registered as `(context: ExtensionContext, foamPromise: Promise<Foam>) => void` in `src/features/index.ts`.
+- **The graph webview** is a Lit web component in `packages/foam-graph/`. `packages/foam-vscode/static/dataviz/` is gitignored build output, not source. `src/protocol.ts` owns the extension↔webview message contract. The extension's `tsconfig.json` `paths` resolve `@foam/graph-view/*` to TS source for typechecking; esbuild resolves via package exports at bundle time.
+- **`foam-extension-test-host.ts`** does not activate AI features — the mock Foam has no embeddings.
 
-- Tracks links and backlinks between resources
-- Real-time updates when workspace changes
-- Handles placeholder resources for broken links
+## User documentation (`docs/user/`)
 
-**ResourceProvider Pattern** - Pluggable architecture for different file types
+Written for people new to Foam who may not be technical. Show how to use a feature, not how it works internally. Lead with the most common use case, use concrete examples, and keep it short — users won't read verbose docs, and every sentence must convey something new.
 
-- `MarkdownProvider` for .md files
-- `AttachmentProvider` for other file types
-- Extensible for future resource types
+## Pointers
 
-**DataStore Interface** - Abstract file system operations
-
-- Platform-agnostic file access with configurable filtering
-- Supports both local and remote file systems
-
-### Feature Integration Pattern
-
-Features are registered as functions receiving:
-
-```typescript
-(context: ExtensionContext, foamPromise: Promise<Foam>) => void
-```
-
-This allows features to:
-
-- Register VS Code commands, providers, and event handlers
-- Access the Foam workspace when ready
-- Extend markdown-it for preview rendering
-
-### Testing Conventions
-
-- `*.test.ts` - Unit tests using Vitest
-- `*.spec.ts` - Integration tests requiring VS Code extension host
-- Tests live alongside source code in `src/`
-- Test cases should be phrased in terms of aspects of the feature being tested (expected behaviors), as they serve both as validation of the code as well as documentation of what the expected behavior for the code is in different situations. They should include the happy paths and edge cases.
-
-## Development Workflow
-
-We build production code together. I handle implementation details while you guide architecture and catch complexity early.
-When working on an issue, check if a `.agent/tasks/<issue-id>-<sanitized-title>.md` exists. If not, suggest whether we should start by doing a research on it (using the `/research-issue <issue-id>`) command.
-Whenever we work together on a task, feel free to challenge my assumptions and ideas and be critical if useful.
-
-## Core Workflow: Research → Plan → Implement → Validate
-
-**Start every feature with:** "Let me research the codebase and create a plan before implementing."
-
-1. **Research** - Understand existing patterns and architecture
-2. **Plan** - Propose approach and verify with you
-3. **Implement** - Build with tests and error handling
-4. **Validate** - ALWAYS run formatters, linters, and tests after implementation
-
-- Whenever working on a feature or issue, let's always come up with a plan first, then save it to a file called `/.agent/current-plan.md`, before getting started with code changes. Update this file as the work progresses.
-- Let's use pure functions where possible to improve readability and testing.
-
-### Adding New Features
-
-1. Create feature in `src/features/` directory
-2. Register feature in `src/features/index.ts`
-3. Add tests (both unit and integration as needed)
-4. Update configuration in `package.json` if needed
-
-### Working on an issue
-
-1. Get the issue information from github
-2. Define a step by step plan for addressing the issue
-3. Create tests for the feature
-4. **IMPORTANT**: Run the tests to ensure they FAIL before implementing the fix (this validates the test is actually testing what we think it is)
-5. Implement the fix to make the test pass
-6. Run the tests again to verify the fix works
-
-### Core Logic Changes
-
-1. Modify code in `src/core/` (ensure no vscode dependencies)
-2. Add comprehensive unit tests
-3. Update integration tests in features that use the core logic
-
-## Configuration
-
-The extension uses VS Code's configuration system with the `foam.*` namespace.
-You can find all the settings in `/packages/foam-vscode/package.json`
-
-## Common Development Tasks
-
-### Extending Core Functionality
-
-When adding to `src/core/`:
-
-- Keep platform-agnostic (no vscode imports)
-- Add comprehensive unit tests
-- Consider impact on graph and workspace state
-- Update relevant providers if needed
-
-## Dependencies
-
-- **Runtime**: VS Code API, markdown parsing, file watching
-- **Development**: TypeScript, Vitest, ESLint, esbuild
-- **Key Libraries**: remark (markdown parsing), lru-cache, lodash
-- **Graph webview**: Lit (web components), force-graph, d3-force/scale/color, Vitest, happy-dom
-
-The extension supports both Node.js and browser environments via separate build targets.
-
-## Documentation Guidelines
-
-### User Documentation (`docs/user/`)
-
-Documentation in `docs/user/` must be written for non-technical users. The goal is to help novice users quickly start using features, not to explain technical implementation details.
-
-**Writing Guidelines:**
-
-- **Target audience**: Assume users are new to Foam and may not be technical
-- **Be concise**: Keep it short and to the point - every sentence must convey useful information
-- **Avoid repetition**: Don't repeat the same concept in different words
-- **Focus on "how to use"**: Show users what they can do and how to do it, not how it works internally
-- **Balance brevity with clarity**: Users won't read verbose documentation, but they need enough information to succeed
-- **Use examples**: Show practical use cases rather than abstract descriptions
-- **Start with the most common use case**: Lead with what most users will want to do first
-
-# GitHub CLI Integration
-
-To interact with the github repo we will be using the `gh` command.
-ALWAYS ask before performing a write operation on Github.
-
-## Common Commands for Claude Code Integration
-
-### Issues
-
-```bash
-# List all issues
-gh issue list
-
-# Filter issues by milestone
-gh issue list --milestone "v1.0.0"
-
-# Filter issues by assignee
-gh issue list --assignee @me
-gh issue list --assignee username
-
-# Filter issues by label
-gh issue list --label "bug"
-gh issue list --label "enhancement,priority-high"
-
-# Filter issues by state
-gh issue list --state open
-gh issue list --state closed
-gh issue list --state all
-
-# Combine filters
-gh issue list --milestone "v1.0.0" --label "bug" --assignee @me
-
-# View specific issue
-gh issue view 123
-
-# Create issue
-gh issue create --title "Bug fix" --body "Description"
-
-# Add comment to issue
-gh issue comment 123 --body "Update comment"
-```
-
-### Pull Requests
-
-```bash
-# List all PRs
-gh pr list
-
-# Filter PRs the same way as for filters (for example, here is by milestone)
-gh pr list --milestone "v1.0.0"
-
-# View PR details
-gh pr view 456
-
-# Create PR
-gh pr create --title "Feature" --body "Description"
-
-# Check out PR locally
-gh pr checkout 456
-
-# Add review comment
-gh pr comment 456 --body "LGTM"
-```
+- Extension settings (`foam.*` namespace): `packages/foam-vscode/package.json`
+- Release process: `docs/dev/releasing-foam.md`
+- GitHub: use `gh`. Reads freely; **ask before any write**.

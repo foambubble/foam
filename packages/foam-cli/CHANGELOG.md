@@ -1,5 +1,44 @@
 # Change Log
 
+## 0.46.2
+
+### Patch Changes
+
+- bb903f9: Make the `@foam/core` barrel bundler-safe for non-Node runtimes (browsers,
+  React Native):
+
+  - The exports that execute user-supplied JavaScript via Node's `vm` —
+    `TemplateLoader`, `resolveDailyNote`, `noteCreate`, `renderJsQuery` — moved
+    out of the main barrel to the new **`@foam/core/scripting`** subpath
+    (published as `foam-core/scripting`). Migration: change the import
+    specifier; the APIs are unchanged.
+  - Platform detection rewritten as a pure, tested `detectPlatform()`
+    (exported, along with `isReactNative`). Fixes Node ≥ 21 being misclassified
+    as web (Node now ships a global `navigator`). The previously exported but
+    unused `isIOS`, `locale`, `Platform`, `Language`, `translationsConfigFile`,
+    `isElectronSandboxed` and `globals` are removed.
+  - `stripFrontMatter` no longer uses gray-matter, which requires Node's
+    `Buffer` at call time. Behavior change: an unclosed opening `---` delimiter
+    is no longer treated as frontmatter (gray-matter would swallow the whole
+    document).
+  - New portability gate in the build: the public barrel must type-check with
+    no Node and no DOM types (`tsconfig.portability.json`).
+
+  `foam-vscode` and `@foam/cli` are bumped because they bundle `@foam/core`.
+
+- Moved `EventLoopMonitor` and `formatMemoryUsage` from foam-vscode into
+  `@foam/core` (exported from the barrel). They were host-agnostic by
+  construction — `process` feature-detected, `unref` optional-chained — and
+  belong next to `LoadProfiler` so the CLI can produce the same load report as
+  the extension. No behavior change. `foam-vscode` and `@foam/cli` are bumped
+  because they bundle `@foam/core`.
+- 7b50c54: Added a workspace load report to help diagnose slow startups (#1689). The Foam
+  output log now breaks the load time down into file reads, markdown parsing and
+  unaccounted time, along with parser cache hit rate, extension host event loop
+  lag, and the slowest notes to parse.
+- be76f9e: Fixed Foam variables being duplicated when used as defaults for mirrored
+  snippet tabstops (#1215).
+
 ## 0.46.1
 
 ### Patch Changes

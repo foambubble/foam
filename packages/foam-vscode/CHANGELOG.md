@@ -1,5 +1,75 @@
 # Change Log
 
+## 0.44.6
+
+### Patch Changes
+
+- Keep note creation inside the workspace in Restricted Mode. A template
+  `filepath` that resolves outside the workspace roots (e.g. via `../`) is now
+  refused when the workspace is untrusted, so opening an unfamiliar workspace
+  can't turn note creation into a write — or, via the `overwrite` strategy, a
+  delete — anywhere on disk. Trusted workspaces are unchanged: templates are the
+  user's own there, and filing a note into a sibling directory keeps working.
+  This mirrors the containment `@foam/core`'s `noteCreate` already applies to the
+  CLI and MCP.
+- bb903f9: Make the `@foam/core` barrel bundler-safe for non-Node runtimes (browsers,
+  React Native):
+
+  - The exports that execute user-supplied JavaScript via Node's `vm` —
+    `TemplateLoader`, `resolveDailyNote`, `noteCreate`, `renderJsQuery` — moved
+    out of the main barrel to the new **`@foam/core/scripting`** subpath
+    (published as `foam-core/scripting`). Migration: change the import
+    specifier; the APIs are unchanged.
+  - Platform detection rewritten as a pure, tested `detectPlatform()`
+    (exported, along with `isReactNative`). Fixes Node ≥ 21 being misclassified
+    as web (Node now ships a global `navigator`). The previously exported but
+    unused `isIOS`, `locale`, `Platform`, `Language`, `translationsConfigFile`,
+    `isElectronSandboxed` and `globals` are removed.
+  - `stripFrontMatter` no longer uses gray-matter, which requires Node's
+    `Buffer` at call time. Behavior change: an unclosed opening `---` delimiter
+    is no longer treated as frontmatter (gray-matter would swallow the whole
+    document).
+  - New portability gate in the build: the public barrel must type-check with
+    no Node and no DOM types (`tsconfig.portability.json`).
+
+  `foam-vscode` and `@foam/cli` are bumped because they bundle `@foam/core`.
+
+- The exported HTML report now carries a Content Security Policy that allows
+  only its own nonce'd script. Note content is rendered with raw-HTML
+  passthrough, so previously a `<script>` or inline `on*=` handler written into
+  a note would run in the browser of whoever opened the shared report. Styling,
+  images and links are unaffected — the policy restricts scripts only.
+- Correct the Restricted Mode capability description. It previously claimed "No
+  expressions are allowed in filters", but `jexl` filter expressions are in fact
+  evaluated in untrusted workspaces — Jexl is sandboxed by design (no file
+  system, network, or host access), so this is intended and safe. The
+  description now accurately states that JavaScript queries (`foam-query-js`) and
+  JavaScript templates are disabled while sandboxed Jexl filters still run.
+- Moved `EventLoopMonitor` and `formatMemoryUsage` from foam-vscode into
+  `@foam/core` (exported from the barrel). They were host-agnostic by
+  construction — `process` feature-detected, `unref` optional-chained — and
+  belong next to `LoadProfiler` so the CLI can produce the same load report as
+  the extension. No behavior change. `foam-vscode` and `@foam/cli` are bumped
+  because they bundle `@foam/core`.
+- 7b50c54: Added a workspace load report to help diagnose slow startups (#1689). The Foam
+  output log now breaks the load time down into file reads, markdown parsing and
+  unaccounted time, along with parser cache hit rate, extension host event loop
+  lag, and the slowest notes to parse.
+- Scope hover-tooltip trust to Foam's own commands. Tooltips built from note
+  content previously set `MarkdownString.isTrusted = true`, which makes every
+  `command:` link in the rendered markdown clickable — including dangerous
+  built-ins such as `workbench.action.terminal.sendSequence`. A note in a shared
+  or cloned workspace could disguise a one-click arbitrary-command link. Trust is
+  now restricted to an allowlist (`foam-vscode.open-resource`,
+  `foam-vscode.create-note`); every other `command:` link renders inert.
+- be76f9e: Fixed Foam variables being duplicated when used as defaults for mirrored
+  snippet tabstops (#1215).
+- Image size parameters in embeds are now validated before being written into
+  the image's `style` attribute. Only plain CSS dimensions are accepted, so a
+  value carrying a quote can no longer break out of the attribute. All
+  documented forms (`300`, `50%`, `300x200`, `400px`, `2em`) are unchanged;
+  undocumented keywords such as `auto` are dropped.
+
 ## 0.44.5
 
 ### Patch Changes

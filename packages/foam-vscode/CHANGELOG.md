@@ -2,6 +2,8 @@
 
 ## 0.44.6
 
+Thank you to @rfreytag for reporting the security issues resolved in this release.
+
 ### Patch Changes
 
 - Keep note creation inside the workspace in Restricted Mode. A template

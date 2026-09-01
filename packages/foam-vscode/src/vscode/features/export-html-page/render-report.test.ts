@@ -1011,4 +1011,74 @@ describe('renderReport', () => {
     const h1Count = (html.match(/<h1[^>]*>Alpha<\/h1>/g) ?? []).length;
     expect(h1Count).toBe(0);
   });
+
+  describe('content security policy', () => {
+    async function renderWithBody(body: string) {
+      const { ws, graph, parser } = buildScenario();
+      return renderReport({
+        workspace: ws,
+        graph,
+        parser,
+        noteUris: [ws.find('alpha')!.uri],
+        noteContent: new Map([[ws.find('alpha')!.uri.toString(), body]]),
+        title: 'Test report',
+        generatedAt: new Date('2026-06-24T00:00:00Z'),
+        readAttachment: async () => null,
+      });
+    }
+
+    function nonceOf(html: string): string {
+      const match = html.match(
+        /content="[^"]*script-src 'nonce-([A-Za-z0-9+/=]+)'/
+      );
+      expect(match).not.toBeNull();
+      return match![1];
+    }
+
+    it('gates scripts with a nonce so injected scripts cannot execute', async () => {
+      const html = await renderWithBody('# Alpha\n\nBody.\n');
+      expect(html).toContain('http-equiv="Content-Security-Policy"');
+      const nonce = nonceOf(html);
+      expect(nonce.length).toBeGreaterThan(0);
+      // A nonce is only meaningful if inline scripts are not blanket-allowed.
+      expect(html).not.toContain("'unsafe-inline' 'nonce-");
+      expect(html).not.toMatch(/script-src[^"]*'unsafe-inline'/);
+    });
+
+    it("carries the nonce on the report's own script so it still runs", async () => {
+      const html = await renderWithBody('# Alpha\n\nBody.\n');
+      const nonce = nonceOf(html);
+      expect(html).toContain(`<script nonce="${nonce}">`);
+    });
+
+    it('does not put the nonce on a script injected through note content', async () => {
+      const html = await renderWithBody(
+        '# Alpha\n\n<script>window.pwned = true;</script>\n'
+      );
+      const nonce = nonceOf(html);
+      // The markup survives (CSP blocks execution, it does not sanitize),
+      // but it must not carry the nonce that would let it run.
+      expect(html).toContain('window.pwned');
+      expect(html).not.toContain(`<script nonce="${nonce}">window.pwned`);
+      expect(html).toContain('<script>window.pwned');
+    });
+
+    it('uses a different nonce for each export', async () => {
+      const first = await renderWithBody('# Alpha\n\nBody.\n');
+      const second = await renderWithBody('# Alpha\n\nBody.\n');
+      expect(nonceOf(first)).not.toEqual(nonceOf(second));
+    });
+
+    it('locks object-src and base-uri without restricting styles or images', async () => {
+      const html = await renderWithBody('# Alpha\n\nBody.\n');
+      expect(html).toMatch(/object-src 'none'/);
+      expect(html).toMatch(/base-uri 'none'/);
+      // The report relies on an inline <style> block, inline style attributes
+      // and data: URIs, so those must stay unrestricted.
+      expect(html).not.toContain('default-src');
+      expect(html).not.toContain('style-src');
+      expect(html).not.toContain('img-src');
+    });
+  });
+
 });

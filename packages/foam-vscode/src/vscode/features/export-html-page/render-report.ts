@@ -476,14 +476,33 @@ const FAVICON_DATA_URI =
       '</svg>'
   );
 
+/**
+ * A fresh nonce per export, used to gate script execution in the report.
+ *
+ * The report is a standalone file meant to be shared, and note content is
+ * rendered with raw-HTML passthrough, so without this a `<script>` (or an
+ * inline `on*=` handler) written into a note would run in the browser of
+ * whoever opens the report. The CSP below allows only the report's own
+ * nonce'd script; the injected markup survives but is inert.
+ *
+ * Uses Web Crypto rather than `node:crypto` so the web build still bundles.
+ */
+function createNonce(): string {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+}
+
 function wrapDocument(args: WrapDocumentArgs): string {
   const { title, generatedAt, noteCount, tocHtml, sectionsHtml, previewsHtml } = args;
+  const nonce = createNonce();
   const timestamp = generatedAt.toISOString();
   const humanDate = generatedAt.toISOString().slice(0, 10);
   return `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="script-src 'nonce-${nonce}'; object-src 'none'; base-uri 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${escapeText(title)}</title>
 <meta name="generator" content="Foam">
@@ -544,7 +563,7 @@ ${previewsHtml}
   </svg>
   Published with <strong>Foam</strong>
 </a>
-<script>${REPORT_SCRIPT}</script>
+<script nonce="${nonce}">${REPORT_SCRIPT}</script>
 </body>
 </html>`;
 }

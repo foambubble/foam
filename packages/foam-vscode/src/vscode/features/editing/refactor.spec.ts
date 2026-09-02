@@ -10,6 +10,7 @@ import {
   showInEditor,
   runCommand,
   deleteFile,
+  getFoamFromVSCode,
 } from '../../../test/test-utils-vscode';
 import { UPDATE_GRAPH_COMMAND_NAME } from '../notes/update-graph';
 
@@ -149,6 +150,78 @@ describe('Note rename sync', () => {
 
       await deleteFile(outside.uri);
       await deleteFile(folderBUri);
+    });
+
+    it('should keep the moved notes in the workspace index under the new path', async () => {
+      const noteA = await createFile('Content of A', [
+        'dir-move-index',
+        'idx-folderA',
+        'indexed-note.md',
+      ]);
+
+      await wait(1000);
+      await runCommand(UPDATE_GRAPH_COMMAND_NAME);
+
+      const folderAUri = noteA.uri.getDirectory();
+      const folderBUri = folderAUri.getDirectory().joinPath('idx-folderB');
+      const movedNoteUri = folderBUri.joinPath('indexed-note.md');
+      const foam = await getFoamFromVSCode();
+
+      await renameFile(folderAUri, folderBUri);
+
+      // Asserted immediately, with no wait: the rename must leave the index
+      // consistent by itself. Waiting here would let the debounced watcher
+      // create events re-add the note and mask the bug.
+      expect(foam.workspace.find(movedNoteUri)).toBeTruthy();
+      expect(foam.workspace.find(noteA.uri)).toBeFalsy();
+
+      await deleteFile(folderBUri);
+    });
+
+    it('should still sync wikilinks when the same folder is moved twice', async () => {
+      // The first move must leave the notes indexed, otherwise the second move
+      // has nothing to compute renames from and silently updates no links.
+      const noteA = await createFile('Content of A', [
+        'dir-move-twice',
+        'twice-folderA',
+        'twice-note.md',
+      ]);
+      const conflict = await createFile('Conflicting note', [
+        'dir-move-twice',
+        'twice-other',
+        'twice-note.md',
+      ]);
+      const outside = await createFile('Link to [[twice-folderA/twice-note]]', [
+        'dir-move-twice',
+        'outside.md',
+      ]);
+
+      await wait(1000);
+      await runCommand(UPDATE_GRAPH_COMMAND_NAME);
+
+      const folderAUri = noteA.uri.getDirectory();
+      const parentUri = folderAUri.getDirectory();
+      const folderBUri = parentUri.joinPath('twice-folderB');
+      await renameFile(folderAUri, folderBUri);
+
+      await waitForExpect(async () => {
+        expect((await readFile(outside.uri)).trim()).toEqual(
+          'Link to [[twice-folderB/twice-note]]'
+        );
+      }, 2000);
+
+      const folderCUri = parentUri.joinPath('twice-folderC');
+      await renameFile(folderBUri, folderCUri);
+
+      await waitForExpect(async () => {
+        expect((await readFile(outside.uri)).trim()).toEqual(
+          'Link to [[twice-folderC/twice-note]]'
+        );
+      }, 2000);
+
+      await deleteFile(outside.uri);
+      await deleteFile(folderCUri);
+      await deleteFile(conflict.uri);
     });
   });
 

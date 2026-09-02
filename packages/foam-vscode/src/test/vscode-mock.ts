@@ -919,6 +919,11 @@ class MockTextDocument implements TextDocument {
   async save(): Promise<boolean> {
     try {
       await fs.promises.writeFile(this.uri.fsPath, this._content);
+      // Saving changes the file on disk, so the file watcher fires — same as
+      // every other write path in this mock, and as VS Code does for real.
+      for (const watcher of mockState.fileWatchers) {
+        watcher._fireChange(this.uri);
+      }
       return true;
     } catch {
       return false;

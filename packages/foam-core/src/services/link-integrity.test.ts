@@ -1,6 +1,7 @@
 import {
   computeWikilinkRenameEdits,
   computeDirectoryWikilinkRenameEdits,
+  listDirectoryRenamePairs,
 } from './link-integrity';
 import {
   createNoteFromMarkdown,
@@ -403,5 +404,75 @@ describe('computeDirectoryWikilinkRenameEdits', () => {
     );
 
     expect(edits[0].edit.newText).toEqual('[[folderB/note-a#Section]]');
+  });
+});
+
+describe('listDirectoryRenamePairs', () => {
+  it('maps every resource under the directory to its path after the move', () => {
+    const noteA = createNoteFromMarkdown('folderA/note-a.md', 'A', root);
+    const noteB = createNoteFromMarkdown('folderA/note-b.md', 'B', root);
+    const outside = createNoteFromMarkdown('elsewhere/note-c.md', 'C', root);
+    const { workspace } = createWorkspaceAndGraph(noteA, noteB, outside);
+
+    const pairs = listDirectoryRenamePairs(
+      workspace,
+      URI.file('/folderA'),
+      URI.file('/folderB')
+    );
+
+    expect(pairs.map(p => p.newUri.path).sort()).toEqual([
+      '/folderB/note-a.md',
+      '/folderB/note-b.md',
+    ]);
+    expect(pairs.map(p => p.oldResource.uri.path).sort()).toEqual([
+      '/folderA/note-a.md',
+      '/folderA/note-b.md',
+    ]);
+  });
+
+  it('preserves nested sub-directory structure under the new path', () => {
+    const nested = createNoteFromMarkdown(
+      'folderA/sub/deep/note.md',
+      'nested',
+      root
+    );
+    const { workspace } = createWorkspaceAndGraph(nested);
+
+    const pairs = listDirectoryRenamePairs(
+      workspace,
+      URI.file('/folderA'),
+      URI.file('/parent/folderB')
+    );
+
+    expect(pairs).toHaveLength(1);
+    expect(pairs[0].newUri.path).toEqual('/parent/folderB/sub/deep/note.md');
+  });
+
+  it('does not match sibling directories that share a name prefix', () => {
+    const inside = createNoteFromMarkdown('notes/a.md', 'inside', root);
+    const sibling = createNoteFromMarkdown('notes-archive/b.md', 'sibling', root);
+    const { workspace } = createWorkspaceAndGraph(inside, sibling);
+
+    const pairs = listDirectoryRenamePairs(
+      workspace,
+      URI.file('/notes'),
+      URI.file('/journal')
+    );
+
+    expect(pairs).toHaveLength(1);
+    expect(pairs[0].newUri.path).toEqual('/journal/a.md');
+  });
+
+  it('returns an empty list for a directory with no indexed resources', () => {
+    const outside = createNoteFromMarkdown('outside.md', 'Content', root);
+    const { workspace } = createWorkspaceAndGraph(outside);
+
+    const pairs = listDirectoryRenamePairs(
+      workspace,
+      URI.file('/empty-folder'),
+      URI.file('/renamed-folder')
+    );
+
+    expect(pairs).toEqual([]);
   });
 });

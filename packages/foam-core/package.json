@@ -35,6 +35,7 @@
   },
   "devDependencies": {
     "@types/jexl": "^2.3.4",
+    "@types/micromatch": "^4.0.10",
     "oxlint": "^1.57.0",
     "rimraf": "^3.0.2",
     "typescript": "^5.8.0",
@@ -50,6 +51,7 @@
     "js-sha1": "^0.7.0",
     "lodash": "^4.17.21",
     "lru-cache": "^11.0.0",
+    "micromatch": "^4.0.8",
     "mnemonist": "^0.39.8",
     "remark-frontmatter": "^2.0.0",
     "remark-parse": "^8.0.2",

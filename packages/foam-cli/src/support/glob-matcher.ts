@@ -1,32 +1,15 @@
-import micromatch from 'micromatch';
-import { URI, IMatcher } from '@foam/core';
+import { GlobMatcher as CoreGlobMatcher, URI } from '@foam/core';
 
-export class GlobMatcher implements IMatcher {
-  private readonly rootPath: string;
-
+/**
+ * Single-root convenience wrapper over the shared {@link CoreGlobMatcher}, so
+ * the CLI and the VS Code extension answer include/exclude the same way.
+ */
+export class GlobMatcher extends CoreGlobMatcher {
   constructor(
-    public readonly include: string[] = ['**/*'],
-    public readonly exclude: string[] = [],
+    include: string[] = ['**/*'],
+    exclude: string[] = [],
     rootDir: URI
   ) {
-    this.rootPath = rootDir.path.endsWith('/') ? rootDir.path : rootDir.path + '/';
-  }
-
-  match(files: URI[]): URI[] {
-    return files.filter(f => this.isMatch(f));
-  }
-
-  isMatch(uri: URI): boolean {
-    const rel = uri.path.startsWith(this.rootPath)
-      ? uri.path.slice(this.rootPath.length)
-      : uri.path;
-    return (
-      micromatch.isMatch(rel, this.include) &&
-      (this.exclude.length === 0 || !micromatch.isMatch(rel, this.exclude))
-    );
-  }
-
-  refresh(): Promise<void> {
-    return Promise.resolve();
+    super([{ uri: rootDir, include, exclude }]);
   }
 }

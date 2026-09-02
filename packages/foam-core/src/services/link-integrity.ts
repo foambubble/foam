@@ -113,19 +113,39 @@ export function computeWikilinkRenameEdits(
   ]);
 }
 
+/**
+ * Lists every resource indexed under `oldDirUri`, paired with the URI it will
+ * live at once the directory has been moved to `newDirUri`.
+ *
+ * Used both to rewrite the links pointing into the directory and to migrate the
+ * workspace entries themselves, so the two always agree on what is moving.
+ */
+export function listDirectoryRenamePairs(
+  workspace: FoamWorkspace,
+  oldDirUri: URI,
+  newDirUri: URI
+): Array<{ oldResource: Resource; newUri: URI }> {
+  // The trailing slash keeps a sibling that merely shares a name prefix
+  // (`notes-archive` next to `notes`) out of the list.
+  const oldDirPrefix = oldDirUri.path + '/';
+  return workspace
+    .list()
+    .filter(r => r.uri.path.startsWith(oldDirPrefix))
+    .map(r => ({
+      oldResource: r,
+      newUri: newDirUri.joinPath(r.uri.path.slice(oldDirPrefix.length)),
+    }));
+}
+
 export function computeDirectoryWikilinkRenameEdits(
   workspace: FoamWorkspace,
   graph: FoamGraph,
   oldDirUri: URI,
   newDirUri: URI
 ): WorkspaceTextEdit[] {
-  const oldDirPath = oldDirUri.path;
-  const renames = workspace
-    .list()
-    .filter(r => r.uri.path.startsWith(oldDirPath + '/'))
-    .map(r => ({
-      oldResource: r,
-      newUri: newDirUri.joinPath(r.uri.path.slice(oldDirPath.length + 1)),
-    }));
-  return computeRenameEditsForPairs(workspace, graph, renames);
+  return computeRenameEditsForPairs(
+    workspace,
+    graph,
+    listDirectoryRenamePairs(workspace, oldDirUri, newDirUri)
+  );
 }

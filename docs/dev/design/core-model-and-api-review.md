@@ -332,7 +332,7 @@ It imports `fs/promises` directly (`export-html-page/index.ts:2,85,91`) and is r
 
 ### 6.3 Path-string discipline cleanup
 
-Per the repo's own URI convention: `grouped-resources-tree-data-provider.ts:1,85-89` runs Node `path.parse` on a URI component; `export/types.ts:72` accepts `contentRoot?: string | URI` (the one both-typed field in core's config surface — a `vscode-vfs://` workspace will mis-resolve); `foam-cli/src/support/filesystem.ts:28-34` reimplements core's `isWithinPath` under the same name with a different signature. Also export `getBasename`/`getExtension`/`getDirectory` from core's barrel — CLAUDE.md tells contributors to use them, but they aren't currently exported (`index.ts:151-158`), which is part of why reimplementations happen.
+Per the repo's own URI convention: `grouped-resources-tree-data-provider.ts:1,85-89` runs Node `path.parse` on a URI component; `export/types.ts:72` accepts `contentRoot?: string | URI` (the one both-typed field in core's config surface — a `vscode-vfs://` workspace will resolve incorrectly); `foam-cli/src/support/filesystem.ts:28-34` reimplements core's `isWithinPath` under the same name with a different signature. Also export `getBasename`/`getExtension`/`getDirectory` from core's barrel — CLAUDE.md tells contributors to use them, but they aren't currently exported (`index.ts:151-158`), which is part of why reimplementations happen.
 
 **Effort:** S · **Breaking:** `contentRoot: URI` only (2 in-repo call sites) · **Impact:** Low-Medium each; collectively keeps the convention honest.
 

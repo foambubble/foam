@@ -278,6 +278,41 @@ Content.
       expect(edit.edit.newText).not.toContain('see more');
     });
 
+    it('should emit a single definition edit when several reference links share one definition', () => {
+      const ws = createTestWorkspace();
+      const noteA = createNoteFromMarkdown(
+        '/note-a.md',
+        `# OldSection
+
+Content.
+`
+      );
+      const noteB = createNoteFromMarkdown(
+        '/note-b.md',
+        `[first][ref1] and [second][ref1]
+
+[ref1]: note-a#OldSection
+`
+      );
+      ws.set(noteA).set(noteB);
+      const graph = FoamGraph.fromWorkspace(ws);
+
+      const result = HeadingEdit.createRenameSectionEdits(
+        graph,
+        ws,
+        noteA.uri,
+        'OldSection',
+        'NewSection'
+      );
+
+      // Both links resolve through the definition, but the definition line
+      // must be rewritten exactly once — a duplicate edit corrupts the file
+      expect(result.edits).toHaveLength(1);
+      expect(result.edits[0].edit.newText).toBe('[ref1]: note-a#NewSection');
+      // Both links are covered by the rename
+      expect(result.totalOccurrences).toBe(2);
+    });
+
     it('should not update links that reference a different section', () => {
       const ws = createTestWorkspace();
       const noteA = createNoteFromMarkdown(

@@ -234,11 +234,11 @@ export abstract class TagEdit {
     // Find and rename all child tags
     const childTags = this.findChildTags(foamTags, oldParentTag);
     for (const childTag of childTags) {
-      // Replace the parent portion with the new parent name
-      const newChildTag = childTag.replace(
-        oldParentTag + '/',
-        newParentTag + '/'
-      );
+      // Replace the parent portion with the new parent name. Built with
+      // slice rather than String.replace so that `$`-patterns in the new
+      // name are not interpreted as replacement directives
+      const newChildTag =
+        newParentTag + '/' + childTag.slice(oldParentTag.length + 1);
       const childResult = this.createRenameTagEdits(
         foamTags,
         childTag,

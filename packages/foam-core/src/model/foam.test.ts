@@ -150,3 +150,70 @@ describe('bootstrap file-watching', () => {
     expect(matcher.refreshCount).toBe(0);
   });
 });
+
+describe('bootstrap lifecycle', () => {
+  it('disposing foam also disposes tags', async () => {
+    const matcher = new CountingMatcher();
+    const { foam } = await bootstrapWithWatcher(matcher);
+
+    let notified = false;
+    foam.tags.onDidUpdate(() => (notified = true));
+
+    foam.dispose();
+    foam.tags.update();
+
+    expect(notified).toBe(false);
+  });
+});
+
+describe('bootstrap change-event handling', () => {
+  it('keeps the latest content when two change events race on the same file', async () => {
+    const matcher = new CountingMatcher();
+    const watcher = new FakeWatcher();
+    const dataStore = new GenericDataStore(
+      async () => [],
+      async () => null
+    );
+
+    // The first fetch is slow, the second fast: without per-URI
+    // serialization the slow first read finishes last and wins
+    let fetchCount = 0;
+    const racingProvider: ResourceProvider = {
+      supports: () => true,
+      readAsMarkdown: async () => null,
+      fetch: async uri => {
+        fetchCount++;
+        const version = fetchCount;
+        if (version === 1) {
+          await flush(100);
+        }
+        return createTestNote({ uri: uri.path, title: `v${version}` });
+      },
+      resolveLink: () => {
+        throw new Error('resolveLink should not be called in these tests');
+      },
+      dispose: () => {},
+    };
+
+    const foam = await bootstrap(
+      [URI.file('/workspace')],
+      matcher,
+      watcher,
+      dataStore,
+      noopParser,
+      [racingProvider],
+      '.md'
+    );
+
+    try {
+      const uri = URI.file('/workspace/racy.md');
+      watcher.fireChange(uri);
+      watcher.fireChange(uri);
+      await flush(DEBOUNCE_SETTLE_MS);
+
+      expect(foam.workspace.find(uri).title).toEqual('v2');
+    } finally {
+      foam.dispose();
+    }
+  });
+});

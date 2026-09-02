@@ -133,12 +133,15 @@ export class FoamGraph implements IDisposable {
   /**
    * A new note appeared. Connect its outgoing links, then handle the fan-out:
    * notes that were linking to a PLACEHOLDER which this note now fills must be
-   * recomputed (their link resolves to the real note instead). We can't cheaply
-   * invert resolution, so we re-resolve the sources of each existing placeholder
-   * and reconnect those whose target changed.
+   * recomputed (their link resolves to the real note instead), and notes whose
+   * link resolved to another REAL note the new one now out-competes must be
+   * recomputed too. We can't cheaply invert resolution, so we re-resolve the
+   * sources of each existing placeholder and of each competing target, and
+   * reconnect those whose target changed.
    */
   private onResourceAdded(resource: Resource) {
     this.reconnectAffectedPlaceholderSources();
+    this.reconnectCompetingTargetSources(resource);
     this.connectResource(resource);
     this.onDidUpdateEmitter.fire();
   }
@@ -178,6 +181,58 @@ export class FoamGraph implements IDisposable {
         affected.set(source.path, source);
       }
     }
+    this.reconnectSources(Array.from(affected.values()));
+  }
+
+  /**
+   * Adding a resource can also change how links to EXISTING notes resolve:
+   * identifier ambiguity is broken deterministically (path order,
+   * directory-index priority), so the new resource may win a resolution that
+   * another note used to own (e.g. `[[page]]` re-pointing to a
+   * shorter-path `page.md`, or a new `index.md` taking over a directory
+   * link from `README.md`). Re-resolve the sources of every target the new
+   * resource competes with. Bounded by the backlinks of same-identifier
+   * resources (plus, for directory-index files only, a scan of backlink
+   * targets), not by workspace size; reconnecting is idempotent.
+   */
+  private reconnectCompetingTargetSources(resource: Resource) {
+    const affected = new Map<string, URI>();
+    const collect = (target: URI) => {
+      for (const source of this.sourcesLinkingTo(target)) {
+        affected.set(source.path, source);
+      }
+    };
+
+    // Targets sharing the new resource's basename identifier
+    for (const competitor of this.workspace.listByIdentifier(
+      resource.uri.getBasename()
+    )) {
+      if (!competitor.uri.isEqual(resource.uri)) {
+        collect(competitor.uri);
+      }
+    }
+
+    // A new directory-index file competes for `[[dir-name]]`-style links
+    // with index files of any name inside directories with the same name
+    if (this.workspace.isDirectoryIndexFile(resource.uri)) {
+      const dirName = resource.uri.getDirectory().getBasename().toLowerCase();
+      for (const connections of this.backlinks.values()) {
+        const target = connections[0]?.target;
+        if (!target || target.isPlaceholder() || target.isEqual(resource.uri)) {
+          continue;
+        }
+        const segments = target.path.toLowerCase().split('/');
+        const basename = segments[segments.length - 1] ?? '';
+        const parentDir = segments[segments.length - 2] ?? '';
+        const isIndexCandidate = FoamWorkspace.DIRECTORY_INDEX_NAMES.some(
+          name => basename.startsWith(name + '.')
+        );
+        if (parentDir === dirName && isIndexCandidate) {
+          collect(target);
+        }
+      }
+    }
+
     this.reconnectSources(Array.from(affected.values()));
   }
 

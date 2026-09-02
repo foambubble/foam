@@ -52,7 +52,7 @@ export class MarkdownResourceProvider implements ResourceProvider {
               content = rows
                 .slice(range.start.line, range.end.line)
                 .join('\n')
-                .replace(/\s\^[a-zA-Z0-9-]+$/m, '');
+                .replace(/\s\^[a-zA-Z0-9-]+$/gm, '');
             } else {
               // Fallback: just the heading line
               content = rows[block.range.start.line].replace(
@@ -203,6 +203,9 @@ export function createMarkdownReferences(
   includeExtension: boolean
 ): NoteLinkDefinition[] {
   const resource = source instanceof URI ? workspace.find(source) : source;
+  if (!resource) {
+    return [];
+  }
 
   const definitions = resource.links
     .filter(link => ResourceLink.isReferenceStyleLink(link))
@@ -276,7 +279,6 @@ export function createMarkdownReferences(
         title: target.title,
       };
     })
-    .filter(isSome)
-    .sort();
+    .filter(isSome);
   return uniqBy(definitions, def => NoteLinkDefinition.format(def));
 }

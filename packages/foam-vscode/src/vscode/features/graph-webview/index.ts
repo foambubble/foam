@@ -18,17 +18,19 @@ export default async function activate(
   foamPromise: Promise<Foam>
 ) {
   let panel: vscode.WebviewPanel | undefined = undefined;
-  vscode.workspace.onDidChangeConfiguration(event => {
-    if (panel) {
-      if (event.affectsConfiguration('foam.graph.style')) {
-        const style = getGraphStyle();
-        panel.webview.postMessage({
-          type: 'didUpdateStyle',
-          payload: style,
-        });
+  context.subscriptions.push(
+    vscode.workspace.onDidChangeConfiguration(event => {
+      if (panel) {
+        if (event.affectsConfiguration('foam.graph.style')) {
+          const style = getGraphStyle();
+          panel.webview.postMessage({
+            type: 'didUpdateStyle',
+            payload: style,
+          });
+        }
       }
-    }
-  });
+    })
+  );
 
   const attachPanelListeners = (p: vscode.WebviewPanel, foam: Foam) => {
     const onFoamChanged = _ => {
@@ -59,24 +61,26 @@ export default async function activate(
     })
   );
 
-  vscode.commands.registerCommand(
-    'foam-vscode.show-graph',
-    async (args?: ShowGraphArgs) => {
-      getTelemetry()?.trackCommand('foam-vscode.show-graph');
-      const { style, view } = resolveViewStyle(args);
-      if (panel) {
-        panel.title = view ? `Foam Graph: ${view}` : 'Foam Graph';
-        panel.webview.postMessage({ type: 'didUpdateStyle', payload: style });
-        panel.reveal();
-      } else {
-        const foam = await foamPromise;
-        panel = await createGraphPanel(foam, context, {
-          initialStyle: style,
-          view,
-        });
-        attachPanelListeners(panel, foam);
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      'foam-vscode.show-graph',
+      async (args?: ShowGraphArgs) => {
+        getTelemetry()?.trackCommand('foam-vscode.show-graph');
+        const { style, view } = resolveViewStyle(args);
+        if (panel) {
+          panel.title = view ? `Foam Graph: ${view}` : 'Foam Graph';
+          panel.webview.postMessage({ type: 'didUpdateStyle', payload: style });
+          panel.reveal();
+        } else {
+          const foam = await foamPromise;
+          panel = await createGraphPanel(foam, context, {
+            initialStyle: style,
+            view,
+          });
+          attachPanelListeners(panel, foam);
+        }
       }
-    }
+    )
   );
   const shouldOpenGraphOnStartup = getFoamVsCodeConfig('graph.onStartup');
   if (shouldOpenGraphOnStartup) {

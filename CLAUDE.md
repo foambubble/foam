@@ -100,8 +100,8 @@ Things you won't infer quickly from reading:
 - **FoamWorkspace** uses a reversed trie for resource lookup, which is what makes short-form identifier resolution work.
 - **FoamGraph** creates placeholder resources for broken links — they're real graph nodes, not absences.
 - **ResourceProvider** is the extension point per file type (`MarkdownProvider`, `AttachmentProvider`).
-- **Features** are registered as `(context: ExtensionContext, foamPromise: Promise<Foam>) => void` in `src/features/index.ts`.
-- **The graph webview** is a Lit web component in `packages/foam-graph/`. `packages/foam-vscode/static/dataviz/` is gitignored build output, not source. `src/protocol.ts` owns the extension↔webview message contract. The extension's `tsconfig.json` `paths` resolve `@foam/graph-view/*` to TS source for typechecking; esbuild resolves via package exports at bundle time.
+- **Features** are registered as `(context: ExtensionContext, foamPromise: Promise<Foam>) => void` in `packages/foam-vscode/src/vscode/features/index.ts`.
+- **The graph webview** is a Lit web component in `packages/foam-graph/`. `packages/foam-vscode/static/dataviz/` is gitignored build output, not source. `src/protocol.ts` owns the extension↔webview message contract. The extension resolves `@foam/graph-view/*` via the package `exports` map for typechecking; esbuild resolves the same way at bundle time.
 - **`foam-extension-test-host.ts`** does not activate AI features — the mock Foam has no embeddings.
 
 ## User documentation (`docs/user/`)

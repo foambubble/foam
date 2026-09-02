@@ -37,6 +37,19 @@ export interface GraphBuilderOptions {
    */
   transformTitle?: (title: string, resource: Resource) => string;
   /**
+   * Optional transform for the frontmatter properties stored on each node.
+   * Defaults to passing the resource's properties through unchanged (the
+   * local graph view groups/colors nodes by arbitrary frontmatter keys).
+   *
+   * Anything that PUBLISHES the graph data must restrict this to an
+   * allowlist: raw frontmatter can contain private fields that must not
+   * ship in published graph JSON.
+   */
+  transformProperties?: (
+    properties: Record<string, unknown>,
+    resource: Resource
+  ) => GraphNodeData['properties'];
+  /**
    * Whether to include placeholder nodes — synthetic nodes created for link
    * targets that don't correspond to any real resource (i.e. broken links).
    *
@@ -53,7 +66,12 @@ export function buildGraphData(
   connections: Connection[],
   options: GraphBuilderOptions
 ): BuiltGraphData {
-  const { resourceToId, transformTitle, includePlaceholders = false } = options;
+  const {
+    resourceToId,
+    transformTitle,
+    transformProperties,
+    includePlaceholders = false,
+  } = options;
   const nodeInfo: Record<string, GraphNodeData> = {};
   const links = new Map<string, { source: string; target: string }>();
 
@@ -72,7 +90,9 @@ export function buildGraphData(
           ? resource.properties.type ?? 'note'
           : resource.type,
       title,
-      properties: resource.properties ?? {},
+      properties: transformProperties
+        ? transformProperties(resource.properties ?? {}, resource)
+        : resource.properties ?? {},
       tags: resource.tags.map(tag => ({ label: tag.label })),
     };
   }

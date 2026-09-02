@@ -37,7 +37,7 @@ export class FoamTags implements IDisposable {
     if (keepMonitoring) {
       const updateTags =
         debounceFor > 0
-          ? debounce(tags.update.bind(tags), 500)
+          ? debounce(tags.update.bind(tags), debounceFor)
           : tags.update.bind(tags);
       tags.disposables.push(
         workspace.onDidAdd(updateTags),
@@ -63,5 +63,6 @@ export class FoamTags implements IDisposable {
   dispose(): void {
     this.disposables.forEach(d => d.dispose());
     this.disposables = [];
+    this.onDidUpdateEmitter.dispose();
   }
 }

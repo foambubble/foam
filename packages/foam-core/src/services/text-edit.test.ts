@@ -133,3 +133,55 @@ describe('WorkspaceTextEdit.groupByUri', () => {
     expect(groups[1].edits).toEqual([thirdEdit]);
   });
 });
+
+describe('applying multiple TextEdits', () => {
+  it('applies an identical duplicated edit only once', () => {
+    // Two reference links sharing one definition produce the same edit twice;
+    // applying both would insert the text twice
+    const edit = { newText: 'X', range: Range.create(0, 3, 0, 3) };
+    const actual = TextEdit.apply('abc', [edit, { ...edit }]);
+    expect(actual).toBe('abcX');
+  });
+
+  it('throws on overlapping edits instead of corrupting the text', () => {
+    const edits = [
+      { newText: 'X', range: Range.create(0, 0, 0, 7) },
+      { newText: 'Y', range: Range.create(0, 4, 0, 13) },
+    ];
+    expect(() => TextEdit.apply('one two three', edits)).toThrow(/overlap/);
+  });
+
+  it('lets an edit that rewrites a whole region supersede edits contained in it', () => {
+    // e.g. generateLinkReferences: deleting a stale definition line inside
+    // the region that the "append definitions" edit replaces wholesale
+    const text = 'keep\nstale\nold-tail';
+    const edits = [
+      { newText: '', range: Range.create(1, 0, 2, 0) },
+      { newText: '\nnew-tail', range: Range.create(0, 4, 2, 8) },
+    ];
+    expect(TextEdit.apply(text, edits)).toBe('keep\nnew-tail');
+  });
+
+  it('allows adjacent edits that touch at a boundary', () => {
+    const edits = [
+      { newText: 'X', range: Range.create(0, 0, 0, 3) },
+      { newText: 'Y', range: Range.create(0, 3, 0, 6) },
+    ];
+    expect(TextEdit.apply('abcdef', edits)).toBe('XY');
+  });
+});
+
+describe('WorkspaceTextEdit.dedupe', () => {
+  it('drops edits with the same uri, range and text, keeping distinct ones', () => {
+    const uri = URI.file('/note.md');
+    const edit = { newText: 'X', range: Range.create(0, 0, 0, 1) };
+    const other = { newText: 'Y', range: Range.create(1, 0, 1, 1) };
+    const deduped = WorkspaceTextEdit.dedupe([
+      { uri, edit },
+      { uri, edit: { ...edit } },
+      { uri, edit: other },
+    ]);
+    expect(deduped).toHaveLength(2);
+    expect(deduped.map(e => e.edit.newText)).toEqual(['X', 'Y']);
+  });
+});

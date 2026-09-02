@@ -147,6 +147,70 @@ describe('Incremental graph update equivalence', () => {
     graph.dispose();
   });
 
+  it('matches a rebuild after adding a note that steals an already-resolved identifier target', () => {
+    const workspace = createTestWorkspace();
+    workspace
+      .set(createTestNote({ uri: '/a.md', links: [{ slug: 'page' }] }))
+      .set(createTestNote({ uri: '/z/page.md' }));
+
+    const graph = FoamGraph.fromWorkspace(workspace, true);
+    const aUri = createTestNote({ uri: '/a.md' }).uri;
+    expect(graph.getLinks(aUri).map(c => c.target.path)).toEqual([
+      '/z/page.md',
+    ]);
+
+    // '/b/page.md' sorts before '/z/page.md', so it now wins the
+    // identifier ambiguity for [[page]] — A's link must re-point to it.
+    workspace.set(createTestNote({ uri: '/b/page.md' }));
+
+    expectEquivalentToRebuild(graph, workspace);
+    expect(graph.getLinks(aUri).map(c => c.target.path)).toEqual([
+      '/b/page.md',
+    ]);
+    graph.dispose();
+  });
+
+  it('matches a rebuild after adding a directory index that steals a directory link from another directory', () => {
+    const workspace = createTestWorkspace();
+    workspace
+      .set(createTestNote({ uri: '/a.md', links: [{ slug: 'bar' }] }))
+      .set(createTestNote({ uri: '/zoo/bar/index.md' }));
+
+    const graph = FoamGraph.fromWorkspace(workspace, true);
+    const aUri = createTestNote({ uri: '/a.md' }).uri;
+    expect(graph.getLinks(aUri).map(c => c.target.path)).toEqual([
+      '/zoo/bar/index.md',
+    ]);
+
+    // '/foo/bar' sorts before '/zoo/bar', so its index now wins [[bar]].
+    workspace.set(createTestNote({ uri: '/foo/bar/index.md' }));
+
+    expectEquivalentToRebuild(graph, workspace);
+    graph.dispose();
+  });
+
+  it('matches a rebuild after an index file takes over a directory link from a README in the same directory', () => {
+    const workspace = createTestWorkspace();
+    workspace
+      .set(createTestNote({ uri: '/a.md', links: [{ slug: 'bar' }] }))
+      .set(createTestNote({ uri: '/zoo/bar/README.md' }));
+
+    const graph = FoamGraph.fromWorkspace(workspace, true);
+    const aUri = createTestNote({ uri: '/a.md' }).uri;
+    expect(graph.getLinks(aUri).map(c => c.target.path)).toEqual([
+      '/zoo/bar/README.md',
+    ]);
+
+    // index beats README as directory owner: [[bar]] must re-point.
+    workspace.set(createTestNote({ uri: '/zoo/bar/index.md' }));
+
+    expectEquivalentToRebuild(graph, workspace);
+    expect(graph.getLinks(aUri).map(c => c.target.path)).toEqual([
+      '/zoo/bar/index.md',
+    ]);
+    graph.dispose();
+  });
+
   it('matches a rebuild after a rename (delete old + add new), preserving outgoing links', () => {
     // Foam has no rename event: a rename arrives as delete(old) + add(new).
     // The renamed note keeps its own outgoing links (they travel with it), but

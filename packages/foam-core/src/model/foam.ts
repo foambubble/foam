@@ -65,10 +65,23 @@ export const bootstrap = async (
   const subscriptions: IDisposable[] = [];
 
   if (watcher) {
+    // Serialize change handling per URI: two rapid changes to the same file
+    // would otherwise race on their reads, and the workspace would keep
+    // whichever read completed LAST, not the latest content
+    const pendingChanges = new Map<string, Promise<unknown>>();
     subscriptions.push(
-      watcher.onDidChange(async uri => {
+      watcher.onDidChange(uri => {
         if (matcher.isMatch(uri)) {
-          await workspace.fetchAndSet(uri);
+          const key = uri.toString();
+          const next = (pendingChanges.get(key) ?? Promise.resolve()).then(
+            () => workspace.fetchAndSet(uri)
+          );
+          pendingChanges.set(key, next);
+          next.finally(() => {
+            if (pendingChanges.get(key) === next) {
+              pendingChanges.delete(key);
+            }
+          });
         }
       })
     );
@@ -109,8 +122,9 @@ export const bootstrap = async (
     },
     dispose: () => {
       subscriptions.forEach(s => s.dispose());
-      workspace.dispose();
+      tags.dispose();
       graph.dispose();
+      workspace.dispose();
     },
   };
 

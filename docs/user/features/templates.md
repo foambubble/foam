@@ -281,7 +281,7 @@ For example, `FOAM_DATE_YEAR` has the same behaviour as VS Code's `CURRENT_YEAR`
 
 By default, prefer using the `FOAM_DATE_` versions. The datetime used to compute the values will be the same for both `FOAM_DATE_` and VS Code's variables, with the exception of the creation notes using the daily note template.
 
-For more nitty-gritty details about the supported date formats, [see here](https://github.com/foambubble/foam/blob/main/packages/foam-vscode/src/services/variable-resolver.ts).
+For more nitty-gritty details about the supported date formats, [see here](https://github.com/foambubble/foam/blob/main/packages/foam-core/src/templates/variable-resolver.ts).
 
 #### Relative daily notes
 

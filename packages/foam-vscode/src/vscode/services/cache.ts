@@ -34,7 +34,9 @@ import { fromVsCodeUri } from '../utils/vsc-utils';
  * discarded automatically on the next startup.
  */
 export default class VsCodeBasedParserCache implements ParserCache {
-  static CACHE_VERSION = 5;
+  // v6: tag range computation fixed (substring frontmatter matches,
+  // multi-line paragraph hashtags) — cached ranges must be recomputed
+  static CACHE_VERSION = 6;
   static CACHE_VERSION_KEY = 'foam-cache-version';
   static CACHE_DIR_NAME = 'parser-cache';
   static BUCKET_COUNT = 64;

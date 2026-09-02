@@ -67,4 +67,36 @@ describe('export buildSite graph data', () => {
       },
     ]);
   });
+
+  it('does not leak private frontmatter fields into the published graph data', async () => {
+    const root = URI.file('/');
+    const dataStore = new InMemoryDataStore();
+    const workspace = createTestWorkspace([root], dataStore);
+
+    const noteUri = root.joinPath('user', 'index.md');
+    const noteContent = [
+      '---',
+      'title: Home',
+      'color: red',
+      'client: ACME Corp',
+      'salary-notes: private info',
+      '---',
+      '# Home',
+    ].join('\n');
+
+    dataStore.set(noteUri, noteContent);
+    workspace.set(createNoteFromMarkdown('user/index.md', noteContent, root));
+
+    const result = await buildSite(
+      {
+        workspace,
+        graph: FoamGraph.fromWorkspace(workspace),
+        contentRoot: 'user',
+      },
+      testExportTarget()
+    );
+
+    // Only allowlisted presentation keys survive publishing
+    expect(result.graph.nodeInfo['/'].properties).toEqual({ color: 'red' });
+  });
 });

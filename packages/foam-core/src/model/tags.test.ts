@@ -186,4 +186,35 @@ describe('FoamTags', () => {
 
     expect(tags.tags.size).toEqual(0);
   });
+
+  it('Honors the debounceFor parameter when monitoring', async () => {
+    const ws = createTestWorkspace();
+    const tags = FoamTags.fromWorkspace(ws, true, 50);
+
+    ws.set(createTestNote({ uri: '/page-a.md', tags: ['primary'] }));
+    // The update is debounced, so it must not have been applied yet
+    expect(tags.tags.size).toEqual(0);
+
+    // 150ms is comfortably past the requested 50ms debounce, and well below
+    // the 500ms the implementation used to hardcode regardless of the parameter
+    await new Promise(resolve => setTimeout(resolve, 150));
+    expect(tags.tags.has('primary')).toBe(true);
+
+    tags.dispose();
+  });
+
+  it('Stops notifying listeners once disposed', () => {
+    const ws = createTestWorkspace();
+    ws.set(createTestNote({ uri: '/page-a.md', tags: ['primary'] }));
+    const tags = FoamTags.fromWorkspace(ws, true);
+
+    let notified = false;
+    tags.onDidUpdate(() => (notified = true));
+
+    tags.dispose();
+    ws.set(createTestNote({ uri: '/page-b.md', tags: ['secondary'] }));
+    tags.update();
+
+    expect(notified).toBe(false);
+  });
 });

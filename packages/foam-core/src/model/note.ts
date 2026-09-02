@@ -53,8 +53,9 @@ export interface NoteLinkDefinition {
 
 export abstract class NoteLinkDefinition {
   static format(definition: NoteLinkDefinition) {
-    const url =
-      definition.url.indexOf(' ') > 0 ? `<${definition.url}>` : definition.url;
+    const url = definition.url.includes(' ')
+      ? `<${definition.url}>`
+      : definition.url;
     let text = `[${definition.label}]: ${url}`;
     if (definition.title) {
       text = `${text} "${definition.title}"`;

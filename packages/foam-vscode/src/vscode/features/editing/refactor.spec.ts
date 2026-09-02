@@ -210,13 +210,6 @@ describe('Note rename sync', () => {
         );
       }, 2000);
 
-      // The mock does not re-index a file whose content was changed through
-      // applyEdit; in the real editor the save in the rename handler triggers
-      // that via onDidSaveTextDocument. Re-read it so the graph sees the
-      // rewritten link before the second move.
-      const foam = await getFoamFromVSCode();
-      await foam.workspace.fetchAndSet(outside.uri);
-
       const folderCUri = parentUri.joinPath('twice-folderC');
       await renameFile(folderBUri, folderCUri);
 

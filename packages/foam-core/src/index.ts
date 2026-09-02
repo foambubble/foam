@@ -22,6 +22,8 @@ export {
   AlwaysIncludeMatcher,
   SubstringExcludeMatcher,
 } from './services/datastore';
+export { GlobMatcher } from './services/glob-matcher';
+export type { GlobMatcherRoot } from './services/glob-matcher';
 export { createMarkdownParser, getLinkDefinitions, getBlockFor } from './services/markdown-parser';
 export type {
   ParserPlugin,
@@ -48,6 +50,7 @@ export type { TagEditResult } from './services/tag-edit';
 export {
   computeWikilinkRenameEdits,
   computeDirectoryWikilinkRenameEdits,
+  listDirectoryRenamePairs,
 } from './services/link-integrity';
 
 // Templates / note creation

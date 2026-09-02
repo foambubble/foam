@@ -10,6 +10,7 @@ import {
 import {
   computeWikilinkRenameEdits,
   computeDirectoryWikilinkRenameEdits,
+  listDirectoryRenamePairs,
 } from '@foam/core';
 
 const MARKDOWN_LINK_NOTIFICATION_KEY =
@@ -21,11 +22,22 @@ export default async function activate(
 ) {
   const foam = await foamPromise;
 
+  /**
+   * Resources that a directory rename is about to move, collected while the old
+   * paths are still indexed and consumed once the rename has happened. Keyed by
+   * the old directory URI.
+   */
+  const pendingDirectoryRenames = new Map<
+    string,
+    ReturnType<typeof listDirectoryRenamePairs>
+  >();
+
   context.subscriptions.push(
     vscode.workspace.onWillRenameFiles(async e => {
-      if (!getFoamVsCodeConfig<boolean>('links.sync.enable', true)) {
-        return;
-      }
+      const syncLinks = getFoamVsCodeConfig<boolean>('links.sync.enable', true);
+      // Anything still pending belongs to an earlier rename that was cancelled
+      // before it completed, so it can never be consumed.
+      pendingDirectoryRenames.clear();
       const renameEdits = new vscode.WorkspaceEdit();
       let hasMarkdownBacklinks = false;
       for (const { oldUri, newUri } of e.files) {
@@ -35,6 +47,19 @@ export default async function activate(
         const isDirectory =
           (await vscode.workspace.fs.stat(oldUri)).type ===
           vscode.FileType.Directory;
+
+        // Collected before the links.sync check: rewriting links is optional,
+        // keeping the workspace index consistent is not.
+        if (isDirectory) {
+          pendingDirectoryRenames.set(
+            oldUri.toString(),
+            listDirectoryRenamePairs(foam.workspace, foamOldUri, foamNewUri)
+          );
+        }
+
+        if (!syncLinks) {
+          continue;
+        }
 
         const wikilinkEdits = isDirectory
           ? computeDirectoryWikilinkRenameEdits(
@@ -58,20 +83,6 @@ export default async function activate(
           );
         }
 
-        // For directory renames, remove stale workspace entries for files under
-        // the old directory path. On macOS (FSEvents), the file watcher fires
-        // directory-level events rather than per-file events, so Foam never
-        // receives individual delete events for those files. We clean up here,
-        // synchronously, inside the awaited onWillRenameFiles handler, before
-        // VS Code performs the actual rename.
-        if (isDirectory) {
-          const oldDirPath = foamOldUri.path;
-          foam.workspace
-            .list()
-            .filter(r => r.uri.path.startsWith(oldDirPath + '/'))
-            .forEach(resource => foam.workspace.delete(resource.uri));
-        }
-
         if (!isDirectory) {
           if (
             foam.graph
@@ -81,6 +92,10 @@ export default async function activate(
             hasMarkdownBacklinks = true;
           }
         }
+      }
+
+      if (!syncLinks) {
+        return;
       }
 
       try {
@@ -151,6 +166,30 @@ export default async function activate(
                   );
               }
             });
+        }
+      }
+    }),
+
+    /**
+     * Completes a directory rename: the entries collected before the move are
+     * removed from their old paths and re-indexed under the new ones.
+     *
+     * Foam cannot rely on file watcher events here. The watcher is scoped to
+     * note and attachment extensions, and a directory rename is reported at
+     * directory granularity on several platforms, so the per-file creates that
+     * would otherwise re-index these files may never arrive. Doing it here
+     * makes the rename self-contained and platform-independent (issue #1696).
+     */
+    vscode.workspace.onDidRenameFiles(async e => {
+      for (const { oldUri } of e.files) {
+        const pairs = pendingDirectoryRenames.get(oldUri.toString());
+        if (!pairs) {
+          continue;
+        }
+        pendingDirectoryRenames.delete(oldUri.toString());
+        for (const { oldResource, newUri } of pairs) {
+          foam.workspace.delete(oldResource.uri);
+          await foam.workspace.fetchAndSet(newUri);
         }
       }
     }),

@@ -1,4 +1,3 @@
-import { isEmpty } from 'lodash';
 import {
   Disposable,
   EndOfLine,
@@ -21,9 +20,8 @@ import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
 import { asAbsoluteUri, FoamWorkspace, URI } from '@foam/core';
 import { getFoamVsCodeConfig } from '../config';
 import {
-  AlwaysIncludeMatcher,
-  FileListBasedMatcher,
   GenericDataStore,
+  GlobMatcher,
   IDataStore,
   IMatcher,
 } from '@foam/core';
@@ -492,14 +490,16 @@ export async function createMatcherAndDataStore(
     moveFile,
     fileExists
   );
-  const matcher =
-    isEmpty(excludes) && includes.length === 1 && includes[0] === '**/*'
-      ? new AlwaysIncludeMatcher()
-      : await FileListBasedMatcher.createFromListFn(
-          listFiles,
-          includes,
-          excludes
-        );
+  // Matching is answered from the globs directly, so a file can be tested
+  // before it has ever been listed — which is what lets a just-moved file be
+  // re-indexed without waiting for a workspace rescan. See issue #1696.
+  const matcher = new GlobMatcher(
+    workspace.workspaceFolders.map(folder => ({
+      uri: fromVsCodeUri(folder.uri),
+      include: includePatterns.get(folder.name),
+      exclude: excludePatterns.get(folder.name),
+    }))
+  );
 
   return { matcher, dataStore, includePatterns, excludePatterns };
 }

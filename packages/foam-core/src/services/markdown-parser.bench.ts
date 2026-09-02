@@ -3,6 +3,7 @@ import { createMarkdownParser } from './markdown-parser';
 import { ResourceParser } from '../model/note';
 import { URI } from '../model/uri';
 import { Logger } from '../utils/log';
+import { makeJournalNote, makeOutlineNote } from '../../test/parser-fixtures';
 
 /**
  * Performance benchmark for the "big single note" bottleneck (see #1375 / #1689).
@@ -21,59 +22,54 @@ import { Logger } from '../utils/log';
  * These run in `test:e2e` (through `yarn bench`), not `test:unit`, to keep the
  * fast inner dev loop free of timing noise.
  *
+ * ## Two shapes
+ *
+ * Both matter, and they behave differently. `journal` puts a heading every 25
+ * lines, which ends the current list; `outline` is one unbroken nested list. The
+ * current parser is near-linear on the first and quadratic on the second, so a
+ * benchmark that only measured `journal` would not see the #1689 regression
+ * class at all.
+ *
  * ## A/B-ing a candidate parser
  *
  * To answer "is X ms OK?" the baseline alone is not enough — it only guards
  * against relative regression. The stronger move is to measure a *candidate*
- * parser against the current one on the identical corpus. Register the
- * candidate in {@link parserCandidates}: each note size then becomes its own
- * benchmark group containing one entry per candidate, so `vitest bench` prints
- * an "N.NNx faster than" comparison of the candidates *at that size*.
+ * parser against the current one on the identical corpus. Add one entry to
+ * {@link parserCandidates} and run `yarn bench`: every shape/size becomes its own
+ * group with one entry per candidate, so vitest prints an "N.NNx faster than"
+ * comparison at that shape and size. Nothing else needs adding.
  */
 
 Logger.setLevel('error');
 
 const uri = URI.file('/perf/daily-note.md');
 
-/**
- * Builds a note that resembles a real daily/journal note: mostly bullet lines,
- * peppered with wikilinks, reference-style links, tags and headings — the exact
- * shape reported as slow in #1375.
- */
-export function makeJournalNote(lines: number): string {
-  const out = ['# Daily Note', ''];
-  for (let i = 0; i < lines; i++) {
-    if (i % 25 === 0) {
-      out.push(`## Section ${i / 25}`);
-    }
-    if (i % 7 === 0) {
-      out.push(
-        `- [${i}] worked on [[project-${i % 50}]] and [[person-${
-          i % 30
-        }]] #work #log`
-      );
-    } else if (i % 5 === 0) {
-      out.push(
-        `- note about [some ref][ref-${i % 40}] and https://example.com/${i}`
-      );
-    } else {
-      out.push(
-        `- line ${i}: some ordinary text content that is reasonably long to be realistic`
-      );
-    }
-  }
-  out.push('');
-  for (let i = 0; i < 40; i++) {
-    out.push(`[ref-${i}]: https://example.com/ref/${i}`);
-  }
-  return out.join('\n');
-}
-
 /** The note sizes we track, in lines. */
 export const PARSER_BENCHMARK_SIZES = [250, 500, 1000, 2000, 4000];
 
+/**
+ * Sizes for the outline shape. Larger than {@link PARSER_BENCHMARK_SIZES}
+ * because the divergence between a linear and a quadratic parser only starts to
+ * show past ~4000 lines.
+ *
+ * Capped at 8000 to keep `yarn bench` cheap — 16000 alone costs ~14s, most of
+ * the run. 8000 is enough to *detect* the regression class, but not to see how
+ * bad it gets.
+ *
+ * **When benchmarking a second parser, add 16000 back.** The gap keeps widening
+ * with size, so a comparison capped at 8000 understates it. Measured lezer vs
+ * remark on this shape: 3.76x at 2000, 4.80x at 8000, 6.64x at 16000, and 25x
+ * at 72000. Stopping at 8000 would have made a 25x win look like a 5x one.
+ */
+export const OUTLINE_BENCHMARK_SIZES = [2000, 4000, 8000];
+
+const shapes = {
+  journal: { generate: makeJournalNote, sizes: PARSER_BENCHMARK_SIZES },
+  outline: { generate: makeOutlineNote, sizes: OUTLINE_BENCHMARK_SIZES },
+};
+
 interface ParserCandidate {
-  /** Short label shown in the benchmark name, e.g. "current" or "wasm". */
+  /** Short label shown in the benchmark name, e.g. "current" or "lezer". */
   name: string;
   parser: ResourceParser;
 }
@@ -83,14 +79,14 @@ interface ParserCandidate {
  * parser — a single candidate, so the committed baseline stays stable and the
  * regression gate keeps working unchanged.
  *
- * To A/B a candidate (e.g. markdown-wasm, an incremental parser, or an
- * edit-time cache), add it here:
+ * To A/B a candidate (an alternative parser, an incremental parser, an edit-time
+ * cache), add it here:
  *
- *   { name: 'wasm', parser: createWasmParser() }
+ *   { name: 'lezer', parser: createLezerMarkdownParser() }
  *
- * With two+ candidates the benchmark switches to per-size groups so vitest
- * compares candidates against each other at each size. Run the A/B on its own
- * (`yarn workspace @foam/core bench`) — do NOT seed the baseline from a
+ * With two+ candidates the benchmark switches to per-shape/per-size groups so
+ * vitest compares candidates against each other at each point. Run the A/B on
+ * its own (`yarn workspace @foam/core bench`) — do NOT seed the baseline from a
  * multi-candidate run: its group/benchmark names differ from the single-parser
  * baseline the regression gate expects.
  */
@@ -109,23 +105,39 @@ function benchParse(candidate: ParserCandidate, doc: string) {
 }
 
 if (isAB) {
-  // A/B mode: one group per size so vitest's "N.NNx faster than" compares
-  // candidates *against each other at the same size*, not across sizes.
-  for (const lines of PARSER_BENCHMARK_SIZES) {
-    const doc = makeJournalNote(lines);
-    describe(`Markdown parser — ${lines} lines`, () => {
-      for (const candidate of parserCandidates) {
-        bench(candidate.name, benchParse(candidate, doc));
-      }
-    });
+  // A/B mode: one group per shape and size, so vitest's "N.NNx faster than"
+  // compares candidates *against each other at the same point*, not across
+  // sizes.
+  for (const [shape, { generate, sizes }] of Object.entries(shapes)) {
+    for (const lines of sizes) {
+      const doc = generate(lines);
+      describe(`Markdown parser — ${shape}, ${lines} lines`, () => {
+        for (const candidate of parserCandidates) {
+          bench(candidate.name, benchParse(candidate, doc));
+        }
+      });
+    }
   }
 } else {
-  // Single-candidate mode: flat group with baseline-compatible names
+  // Single-candidate mode: flat groups with baseline-compatible names
   // ("<size> lines"), which the regression gate and committed baseline expect.
   // [linear]: doubling the note size should ~double parse time.
   describe('Markdown parser — single note parse [linear]', () => {
     for (const lines of PARSER_BENCHMARK_SIZES) {
       const doc = makeJournalNote(lines);
+      bench(`${lines} lines`, benchParse(parserCandidates[0], doc));
+    }
+  });
+
+  // Deliberately NOT tagged [linear]. The scaling gate asserts that time growth
+  // normalized by size growth stays under a ceiling, and remark-parse really is
+  // superlinear per list — it grows ~2.3-2.8x per doubling on this shape, so the
+  // gate would fail on a fact we already know rather than on a regression.
+  // Cross-run baseline comparison still applies. Tag it [linear] once a parser
+  // that actually is linear on this shape becomes the default.
+  describe('Markdown parser — unbroken outline', () => {
+    for (const lines of OUTLINE_BENCHMARK_SIZES) {
+      const doc = makeOutlineNote(lines);
       bench(`${lines} lines`, benchParse(parserCandidates[0], doc));
     }
   });

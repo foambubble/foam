@@ -190,7 +190,7 @@ async function createNote({ trigger, foam, resolver }) {
 
 JavaScript templates must return an object with:
 
-- `content` (required): The note content as a string
+- `content` (required): The note content as a string. Foam variables in it (e.g. `${FOAM_TITLE}`) are resolved like in a Markdown template
 - `filepath` (required): Custom file path for the note
   - NOTE: the path must be within the workspace.
     - A relative path will be resolved based on the `onRelativePath` command configuration.

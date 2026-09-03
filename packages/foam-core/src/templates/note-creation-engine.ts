@@ -100,6 +100,9 @@ export class NoteCreationEngine {
           ? this.foam.workspace.resolveUri(fp)
           : new URI({ scheme: 'file', path: fp.replace(/\\/g, '/') });
       }
+      // Foam variables in the returned content are resolved like in a
+      // markdown template; other snippet syntax is left for the editor.
+      result.content = await resolver.resolveText(result.content);
       return result;
     } catch (error) {
       const errorMessage =

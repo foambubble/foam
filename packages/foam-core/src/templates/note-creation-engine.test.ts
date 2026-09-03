@@ -222,6 +222,25 @@ Content without filepath metadata.`,
       expect(result.filepath.path).toBe('js-generated-note.md');
     });
 
+    it('resolves Foam variables in the content returned by a JS template', async () => {
+      const { engine } = await setupFoamEngine();
+      const template: Template = {
+        type: 'javascript',
+        createNote: async () => ({
+          filepath: URI.parse('note.md', 'file'),
+          content: '# ${FOAM_TITLE}\n\n${1:foo} $2',
+        }),
+      };
+      const resolver = new Resolver(new Map(), new Date(), 'JS Title');
+      const result = await engine.processTemplate(
+        TriggerFactory.createCommandTrigger('foam-vscode.create-note'),
+        template,
+        resolver
+      );
+      // Snippet syntax that isn't a Foam variable is left for the editor.
+      expect(result.content).toBe('# JS Title\n\n${1:foo} $2');
+    });
+
     it('should preserve relative filepath from JS template so NoteFactory can apply onRelativePath strategy', async () => {
       const { engine } = await setupFoamEngine();
       const template: Template = {

@@ -268,18 +268,14 @@ describe('create-note command', () => {
       await deleteFile(target);
     });
 
-    it('appends FOAM_SELECTED_TEXT given as a variable twice (double resolution)', async () => {
-      // Characterization: the text is resolved twice (engine, then
-      // NoteFactory), and each pass appends the given selected text.
+    it('appends FOAM_SELECTED_TEXT given as a variable once', async () => {
       const target = getUriInWorkspace();
       await commands.executeCommand('foam-vscode.create-note', {
         notePath: target,
         text: 'Hello',
         variables: { FOAM_SELECTED_TEXT: 'sel' },
       });
-      expect(window.activeTextEditor.document.getText()).toEqual(
-        'Hello\nsel\nsel'
-      );
+      expect(window.activeTextEditor.document.getText()).toEqual('Hello\nsel');
       await deleteFile(target);
     });
 

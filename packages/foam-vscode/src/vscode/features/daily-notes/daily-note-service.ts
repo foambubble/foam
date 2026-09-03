@@ -12,7 +12,6 @@ import {
   readFile,
 } from '../../services/editor';
 import { resolveDailyNote } from '@foam/core/scripting';
-import { Resolver } from '@foam/core';
 
 // ─── Format conversion ────────────────────────────────────────────────────────
 
@@ -215,7 +214,6 @@ export async function createDailyNoteIfNotExists(targetDate: Date, foam: Foam) {
   const locale = getFoamVsCodeConfig<string>('dateLocale', 'default');
   const formattedDate = dayjs(targetDate).format('YYYY-MM-DD');
   const variables = new Map([['FOAM_TITLE', formattedDate]]);
-  const resolver = new Resolver(variables, targetDate, undefined, locale);
 
   if (!templateUri) {
     // Legacy fallback: derive filepath and content from deprecated config
@@ -227,7 +225,7 @@ export async function createDailyNoteIfNotExists(targetDate: Date, foam: Foam) {
       convertDateformatToDayjs(titleFormat)
     )}\n`;
     const dailyNoteUri = getDailyNoteUri(targetDate);
-    return NoteFactory.createNote(dailyNoteUri, fallbackText, resolver, 'open');
+    return NoteFactory.createNote(dailyNoteUri, fallbackText, 'open');
   }
 
   const result = await resolveDailyNote(
@@ -243,12 +241,5 @@ export async function createDailyNoteIfNotExists(targetDate: Date, foam: Foam) {
     }
   );
 
-  // Foam variables are already resolved; pass a date-only Resolver so that
-  // any remaining VS Code snippet syntax in the content is preserved as-is.
-  return NoteFactory.createNote(
-    result.filepath,
-    result.content,
-    resolver,
-    'open'
-  );
+  return NoteFactory.createNote(result.filepath, result.content, 'open');
 }

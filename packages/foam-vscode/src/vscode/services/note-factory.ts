@@ -1,6 +1,6 @@
 import { SnippetString, ViewColumn, commands, window, workspace } from 'vscode';
 import { URI } from '@foam/core';
-import { Resolver, isWithinPath } from '@foam/core';
+import { isWithinPath } from '@foam/core';
 import { UserCancelledOperation } from './errors';
 import {
   asAbsoluteWorkspaceUri,
@@ -138,13 +138,13 @@ async function askUserForFilepathConfirmation(
 export const NoteFactory = {
   createNote: async (
     newFilePath: URI,
-    text: string,
-    resolver: Resolver,
+    content: string,
     onFileExistsStrategy?: OnFileExistStrategy,
     onRelativePathStrategy?: OnRelativePathStrategy,
     replaceSelectionWithLink = true
   ): Promise<{ didCreateFile: boolean; uri: URI | undefined }> => {
     try {
+      const selectedContent = findSelectionContent();
       const onRelativePath = createFnForOnRelativePathStrategy(
         onRelativePathStrategy
       );
@@ -194,10 +194,8 @@ export const NoteFactory = {
         }
       }
 
-      const expandedText = await resolver.resolveText(text);
-      const selectedContent = findSelectionContent();
       await createDocAndFocus(
-        new SnippetString(expandedText),
+        new SnippetString(content),
         resolvedNewFilePath,
         selectedContent ? ViewColumn.Beside : ViewColumn.Active
       );

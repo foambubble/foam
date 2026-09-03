@@ -8,8 +8,6 @@ import {
   getUriInWorkspace,
   showInEditor,
 } from '../../test/test-utils-vscode';
-import { Resolver } from '@foam/core';
-import { VsCodeVariableProvider } from './vscode-variable-provider';
 import { fileExists } from './editor';
 
 describe('NoteFactory.createNote', () => {
@@ -19,7 +17,7 @@ describe('NoteFactory.createNote', () => {
 
   it('should create a new note', async () => {
     const target = getUriInWorkspace();
-    await NoteFactory.createNote(target, 'Hello World', new Resolver(new Map(), new Date()));
+    await NoteFactory.createNote(target, 'Hello World');
     expect(await fileExists(target)).toBeTruthy();
     expect(window.activeTextEditor.document.getText()).toEqual('Hello World');
     await deleteFile(target);
@@ -32,8 +30,7 @@ describe('NoteFactory.createNote', () => {
     const target = getUriInWorkspace();
     await NoteFactory.createNote(
       target,
-      'Hello ${FOAM_SELECTED_TEXT} ${FOAM_SELECTED_TEXT}',
-      new Resolver(new Map(), new Date(), undefined, 'default', new VsCodeVariableProvider()),
+      'Hello World World',
       undefined,
       undefined,
       false
@@ -53,8 +50,7 @@ describe('NoteFactory.createNote', () => {
     const target = getUriInWorkspace();
     await NoteFactory.createNote(
       target,
-      'Hello ${FOAM_SELECTED_TEXT} ${FOAM_SELECTED_TEXT}',
-      new Resolver(new Map(), new Date(), undefined, 'default', new VsCodeVariableProvider()),
+      'Hello World World',
       undefined,
       undefined,
       true

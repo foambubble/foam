@@ -195,11 +195,9 @@ export async function createNote(args: CreateNoteArgs, foam: Foam) {
   const engine = new NoteCreationEngine(foam);
   const result = await engine.processTemplate(trigger, template, resolver);
 
-  // Create the note using NoteFactory with the same resolver
   const createdNote = await NoteFactory.createNote(
     result.filepath,
     result.content,
-    resolver,
     args.onFileExists,
     args.onRelativeNotePath
   );

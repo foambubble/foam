@@ -59,6 +59,16 @@ export {
 // `@foam/core/scripting` subpath so this barrel stays bundler-safe for
 // non-Node runtimes (browsers, React Native).
 export { NoteCreationEngine } from './templates/note-creation-engine';
+export {
+  createNote,
+  isNoteTargetAllowed,
+  DEFAULT_NEW_NOTE_TEXT,
+} from './services/note-creation-flow';
+export type {
+  NoteCreationHooks,
+  NoteCreationRequest,
+  NoteCreationOutcome,
+} from './services/note-creation-flow';
 export type { NoteCreationResult } from './templates/note-creation-types';
 export type { Template, TemplateContext } from './templates/note-creation-types';
 export { TriggerFactory } from './templates/note-creation-triggers';

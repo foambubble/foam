@@ -1,6 +1,5 @@
 import { SnippetString, ViewColumn, commands, window, workspace } from 'vscode';
-import { URI } from '@foam/core';
-import { isWithinPath } from '@foam/core';
+import { URI, isNoteTargetAllowed } from '@foam/core';
 import { UserCancelledOperation } from './errors';
 import {
   asAbsoluteWorkspaceUri,
@@ -15,30 +14,6 @@ import {
 import { getFoamVsCodeConfig } from '../config';
 import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
 import { isNone } from '@foam/core';
-
-/**
- * Whether a note may be created at `target`.
- *
- * In an untrusted workspace the note must land inside one of the workspace
- * roots. Templates are workspace content like any other, and a `filepath`
- * that escapes the root (e.g. `../../.zshrc`) would turn note creation into
- * an arbitrary-write primitive without the user ever opting in.
- *
- * Trusting the workspace lifts the restriction: templates are then the user's
- * own, and filing a note into a sibling directory is a legitimate thing to
- * want. Workspace trust is the deliberate, persistent opt-in VS Code already
- * provides, which is why there's no per-note prompt here.
- *
- * The CLI and MCP have the same guard applied unconditionally in `@foam/core`'s
- * `noteCreate` — they're non-interactive, so there is no trust to grant.
- */
-export function isNoteTargetAllowed(
-  target: URI,
-  roots: URI[],
-  isTrusted: boolean
-): boolean {
-  return isTrusted || roots.some(root => isWithinPath(target, root));
-}
 
 export type OnFileExistStrategy =
   | 'open'

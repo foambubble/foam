@@ -90,24 +90,36 @@ describe('createNote', () => {
     it('uses fallbackFilepath only when the template has no filepath', async () => {
       const fallback = root.joinPath('fallback.md');
       const withPath = makeHooks(markdown('x', '/own.md'));
-      await createNote(request('T', { fallbackFilepath: fallback }), withPath.hooks);
+      await createNote(
+        request('T', { fallbackFilepath: fallback }),
+        withPath.hooks
+      );
       expect(withPath.writes[0][0]).toEqual(root.joinPath('own.md'));
 
       const withoutPath = makeHooks(markdown('x'));
-      await createNote(request('T', { fallbackFilepath: fallback }), withoutPath.hooks);
+      await createNote(
+        request('T', { fallbackFilepath: fallback }),
+        withoutPath.hooks
+      );
       expect(withoutPath.writes[0][0]).toEqual(fallback);
     });
 
     it('does not ask for a title when fallbackFilepath decides the target', async () => {
       let titleRequests = 0;
-      const resolver = new Resolver(new Map(), new Date(), undefined, 'default', {
-        resolveTitle: async () => {
-          titleRequests++;
-          return 'Prompted';
-        },
-        resolveSelectedText: () => '',
-        resolveCurrentDir: () => '/ws',
-      });
+      const resolver = new Resolver(
+        new Map(),
+        new Date(),
+        undefined,
+        'default',
+        {
+          resolveTitle: async () => {
+            titleRequests++;
+            return 'Prompted';
+          },
+          resolveSelectedText: () => '',
+          resolveCurrentDir: () => '/ws',
+        }
+      );
       const { hooks, writes } = makeHooks(markdown('body'));
       await createNote(
         request('', { resolver, fallbackFilepath: root.joinPath('known.md') }),

@@ -225,14 +225,20 @@ Content without filepath metadata.`,
     it('uses the given default filepath when the template has none, without resolving a title', async () => {
       const { engine } = await setupFoamEngine();
       let titleRequests = 0;
-      const resolver = new Resolver(new Map(), new Date(), undefined, 'default', {
-        resolveTitle: async () => {
-          titleRequests++;
-          return 'Prompted';
-        },
-        resolveSelectedText: () => '',
-        resolveCurrentDir: () => '/',
-      });
+      const resolver = new Resolver(
+        new Map(),
+        new Date(),
+        undefined,
+        'default',
+        {
+          resolveTitle: async () => {
+            titleRequests++;
+            return 'Prompted';
+          },
+          resolveSelectedText: () => '',
+          resolveCurrentDir: () => '/',
+        }
+      );
       const defaultFilepath = URI.file('/notes/known.md');
       const result = await engine.processTemplate(
         TriggerFactory.createCommandTrigger('foam-vscode.create-note'),

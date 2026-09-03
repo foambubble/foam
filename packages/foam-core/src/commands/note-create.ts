@@ -7,10 +7,7 @@ import { Resolver } from '../templates/variable-resolver';
 import { type Foam } from '../model/foam';
 import { URI } from '../model/uri';
 import { IDataStore } from '../services/datastore';
-import {
-  NoteCreationHooks,
-  createNote,
-} from '../services/note-creation-flow';
+import { NoteCreationHooks, createNote } from '../services/note-creation-flow';
 import { FoamError } from '../common/errors';
 import { getBasename, isAbsolute } from '../utils/path';
 
@@ -104,13 +101,20 @@ export async function noteCreate(
     // `properties` become frontmatter of the fallback body only: a template
     // owns its content, frontmatter included.
     writeNote: (uri, content) =>
-      dataStore.write(uri, appliedTemplateFormat ? content : frontmatter + content),
+      dataStore.write(
+        uri,
+        appliedTemplateFormat ? content : frontmatter + content
+      ),
   };
 
   const outcome = await createNote(
     {
       foam,
-      trigger: { type: 'command', command: 'foam.create-note', params: { title } },
+      trigger: {
+        type: 'command',
+        command: 'foam.create-note',
+        params: { title },
+      },
       resolver: new Resolver(new Map(), new Date(), title),
       fallbackFilepath: targetDirUri.joinPath(`${stem}.md`),
     },

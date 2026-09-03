@@ -230,7 +230,11 @@ export async function createDailyNoteIfNotExists(targetDate: Date, foam: Foam) {
         const title = dayjs(targetDate).format(
           convertDateformatToDayjs(titleFormat)
         );
-        return { type: 'markdown', metadata: new Map(), content: `# ${title}\n` };
+        return {
+          type: 'markdown',
+          metadata: new Map(),
+          content: `# ${title}\n`,
+        };
       };
 
   return NoteFactory.createNote(foam, {

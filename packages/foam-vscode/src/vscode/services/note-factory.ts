@@ -148,9 +148,7 @@ export const NoteFactory = {
       loadTemplate: options.loadTemplate,
       fileExists,
       onFileExists: createFnForOnFileExistsStrategy(options.onFileExists),
-      onRelativePath: createFnForOnRelativePathStrategy(
-        options.onRelativePath
-      ),
+      onRelativePath: createFnForOnRelativePathStrategy(options.onRelativePath),
       writeNote: (uri, content) =>
         createDocAndFocus(
           new SnippetString(content),

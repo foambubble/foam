@@ -51,7 +51,9 @@ describe('NoteFactory.createNote', () => {
       ...options('Hello World World', target),
       replaceSelectionWithLink: false,
     });
-    expect(window.activeTextEditor.document.getText()).toEqual('Hello World World');
+    expect(window.activeTextEditor.document.getText()).toEqual(
+      'Hello World World'
+    );
     expect(window.visibleTextEditors[0].document.getText()).toEqual(
       `This is my first file: World`
     );
@@ -68,7 +70,9 @@ describe('NoteFactory.createNote', () => {
       ...options('Hello World World', target),
       replaceSelectionWithLink: true,
     });
-    expect(window.activeTextEditor.document.getText()).toEqual('Hello World World');
+    expect(window.activeTextEditor.document.getText()).toEqual(
+      'Hello World World'
+    );
     expect(window.visibleTextEditors[0].document.getText()).toEqual(
       `This is my first file: [[${target.getName()}]]`
     );

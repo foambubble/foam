@@ -1,5 +1,5 @@
 /* @unit-ready */
-import { commands, window, workspace } from 'vscode';
+import { Selection, commands, window, workspace } from 'vscode';
 import { URI } from '@foam/core';
 import { asAbsoluteWorkspaceUri, readFile } from '../../services/editor';
 import {
@@ -229,6 +229,77 @@ describe('create-note command', () => {
     } catch (error) {
       expect(error.message).toContain(`Failed to load template`); // eslint-disable-line jest/no-conditional-expect
     }
+  });
+
+  describe('content resolution', () => {
+    it('resolves Foam variables and leaves VS Code snippet syntax untouched', async () => {
+      const template = await createFile(
+        '# ${FOAM_TITLE}\n\n${1:foo} $2 ${TM_FILENAME_BASE}',
+        ['.foam', 'templates', 'snippet-syntax-template.md']
+      );
+      const target = getUriInWorkspace();
+      await commands.executeCommand('foam-vscode.create-note', {
+        notePath: target,
+        templatePath: template.uri.path,
+        title: 'world',
+      });
+      expect(window.activeTextEditor.document.getText()).toEqual(
+        '# world\n\n${1:foo} $2 ${TM_FILENAME_BASE}'
+      );
+      await deleteFile(target);
+      await deleteFile(template.uri);
+    });
+
+    it('fills FOAM_SELECTED_TEXT from the selection and replaces it with a link', async () => {
+      const source = await createFile('This is my first file: World');
+      const { editor } = await showInEditor(source.uri);
+      editor.selection = new Selection(0, 23, 0, 28);
+      const target = getUriInWorkspace();
+      await commands.executeCommand('foam-vscode.create-note', {
+        notePath: target,
+        text: 'Hello ${FOAM_SELECTED_TEXT}',
+      });
+      expect(window.activeTextEditor.document.getText()).toEqual('Hello World');
+      const { doc } = await showInEditor(source.uri);
+      expect(doc.getText()).toEqual(
+        `This is my first file: [[${target.getName()}]]`
+      );
+      await deleteFile(source.uri);
+      await deleteFile(target);
+    });
+
+    it('appends FOAM_SELECTED_TEXT given as a variable twice (double resolution)', async () => {
+      // Characterization: the text is resolved twice (engine, then
+      // NoteFactory), and each pass appends the given selected text.
+      const target = getUriInWorkspace();
+      await commands.executeCommand('foam-vscode.create-note', {
+        notePath: target,
+        text: 'Hello',
+        variables: { FOAM_SELECTED_TEXT: 'sel' },
+      });
+      expect(window.activeTextEditor.document.getText()).toEqual(
+        'Hello\nsel\nsel'
+      );
+      await deleteFile(target);
+    });
+
+    it('resolves Foam variables in the content returned by a JS template', async () => {
+      const template = await createFile(
+        `async function createNote() {
+  return { filepath: 'js-template-note.md', content: '# \${FOAM_TITLE}' };
+}`,
+        ['.foam', 'templates', 'js-content-template.js']
+      );
+      const result: Awaited<ReturnType<typeof createNote>> =
+        await commands.executeCommand('foam-vscode.create-note', {
+          templatePath: template.uri.path,
+          title: 'JS Title',
+        });
+      expect(result.uri.path).toMatch(/js-template-note.md$/);
+      expect(window.activeTextEditor.document.getText()).toEqual('# JS Title');
+      await deleteFile(result.uri);
+      await deleteFile(template.uri);
+    });
   });
 
   it('creates a note with absolute path within the workspace', async () => {

@@ -9,8 +9,13 @@ Logger.setLevel('error');
 
 // Helper: build a workspace + graph from a list of notes.
 // Notes are added in order — links are resolved against whatever is in the workspace.
-function makeWorkspaceAndGraph(notes: ReturnType<typeof createTestNote>[]) {
-  const workspace = createTestWorkspace();
+// `roots` defaults to the standard `/` test root; pass a non-`/` root to exercise
+// workspace-relative path projection (see the Windows-drive tests below).
+function makeWorkspaceAndGraph(
+  notes: ReturnType<typeof createTestNote>[],
+  roots?: URI[]
+) {
+  const workspace = createTestWorkspace(roots);
   notes.forEach(n => workspace.set(n));
   const graph = FoamGraph.fromWorkspace(workspace, false);
   return { workspace, graph };
@@ -667,6 +672,118 @@ describe('executeQuery — projection', () => {
     );
     expect(results[0].title).toBe('Completely Different Title');
     expect(results[0].filename).toBe('alpha');
+  });
+
+  // Regression for #1698: path/folder are documented as workspace-relative, but
+  // were projected from the absolute `r.uri.path`. On a workspace rooted anywhere
+  // other than `/` (every real workspace — a Windows drive `/C:/Docs`, a Linux
+  // `/home/me/notes`) that exposed the whole root prefix.
+  it('#1698 projects path/folder relative to the workspace root', () => {
+    const root = URI.file('/C:/Docs');
+    const note = createTestNote({
+      uri: '/C:/Docs/test/file.md',
+      title: 'File',
+    });
+    const { workspace, graph } = makeWorkspaceAndGraph([note], [root]);
+
+    const { results } = executeQuery(
+      { select: ['path', 'filename', 'folder'] },
+      workspace,
+      graph,
+      { trusted: false }
+    );
+    expect(results[0].path).toBe('/test/file.md');
+    expect(results[0].folder).toBe('/test');
+    expect(results[0].filename).toBe('file');
+  });
+
+  it('#1698 a note at the workspace root has folder "/"', () => {
+    const root = URI.file('/home/me/notes');
+    const note = createTestNote({ uri: '/home/me/notes/top.md', title: 'Top' });
+    const { workspace, graph } = makeWorkspaceAndGraph([note], [root]);
+
+    const { results } = executeQuery(
+      { select: ['path', 'folder'] },
+      workspace,
+      graph,
+      { trusted: false }
+    );
+    expect(results[0].path).toBe('/top.md');
+    expect(results[0].folder).toBe('/');
+  });
+
+  it('#1698 falls back to the absolute path for a note under no root', () => {
+    const root = URI.file('/C:/Docs');
+    const note = createTestNote({ uri: '/D:/Other/stray.md', title: 'Stray' });
+    const { workspace, graph } = makeWorkspaceAndGraph([note], [root]);
+
+    const { results } = executeQuery(
+      { select: ['path', 'folder'] },
+      workspace,
+      graph,
+      { trusted: false }
+    );
+    expect(results[0].path).toBe('/D:/Other/stray.md');
+    expect(results[0].folder).toBe('/D:/Other');
+  });
+
+  it('#1698 relativizes despite drive-letter case mismatch', () => {
+    // Windows drive case isn't trusted; `resolveUri` compares case-insensitively.
+    const root = URI.file('/C:/Docs');
+    const note = createTestNote({ uri: '/c:/Docs/test/file.md', title: 'File' });
+    const { workspace, graph } = makeWorkspaceAndGraph([note], [root]);
+
+    const { results } = executeQuery(
+      { select: ['path', 'folder'] },
+      workspace,
+      graph,
+      { trusted: false }
+    );
+    expect(results[0].path).toBe('/test/file.md');
+    expect(results[0].folder).toBe('/test');
+  });
+
+  it('#1698 path/regex/jexl filters match the workspace-relative path', () => {
+    const root = URI.file('/C:/Docs');
+    const inside = createTestNote({
+      uri: '/C:/Docs/test/file.md',
+      title: 'Inside',
+    });
+    const outside = createTestNote({
+      uri: '/C:/Docs/other/file.md',
+      title: 'Outside',
+    });
+    const { workspace, graph } = makeWorkspaceAndGraph(
+      [inside, outside],
+      [root]
+    );
+
+    // Anchored regex on the relative path — the form the docs use.
+    const anchored = executeQuery(
+      { filter: { path: '^/test/' }, select: ['path'] },
+      workspace,
+      graph,
+      { trusted: false }
+    );
+    expect(anchored.results.map(r => r.path)).toEqual(['/test/file.md']);
+
+    // Shorthand "/regex/".
+    const shorthand = executeQuery(
+      { filter: '/^\\/test\\//', select: ['path'] },
+      workspace,
+      graph,
+      { trusted: false }
+    );
+    expect(shorthand.results.map(r => r.path)).toEqual(['/test/file.md']);
+
+    // jexl `resource.path` sees the relative path too.
+    const jexl = executeQuery(
+      { filter: { jexl: 'resource.path == "/test/file.md"' }, select: ['path'] },
+      workspace,
+      graph,
+      { trusted: true }
+    );
+    expect(jexl.results.map(r => r.path)).toEqual(['/test/file.md']);
   });
 
   it('computed field backlink-count reflects graph state', () => {

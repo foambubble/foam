@@ -5,6 +5,7 @@ import {
   getExtension,
   changeExtension,
   fromFsPath,
+  relativeTo,
 } from '../utils/path';
 import { isSome } from '../utils';
 import { mapWithConcurrency } from '../utils/core';
@@ -96,18 +97,7 @@ export class FoamWorkspace implements IDisposable {
           'Cannot resolve absolute path without workspace roots or a relativeTo URI'
         );
       }
-      // Drive paths require case-insensitive comparison against root.path
-      // (Windows filesystems are case-insensitive); POSIX paths use exact
-      // comparison.
-      const isDrivePath = normalized.length >= 3 && normalized[2] === ':';
-      const isUnderRoot = this.roots.some(root =>
-        isDrivePath
-          ? normalized.toLowerCase().startsWith(root.path.toLowerCase() + '/') ||
-            normalized.toLowerCase() === root.path.toLowerCase()
-          : normalized.startsWith(root.path + '/') ||
-            normalized === root.path
-      );
-      if (isUnderRoot) {
+      if (this.findContainingRoot(normalized)) {
         return this.roots[0].forPath(normalized); // case 1: already absolute under root
       }
       return this.roots[0].joinPath(normalized); // case 2: workspace-relative absolute
@@ -125,6 +115,36 @@ export class FoamWorkspace implements IDisposable {
     }
     // roots[0] is a directory — join directly
     return this.roots[0].joinPath(normalized);
+  }
+
+  /**
+   * Returns the workspace root that contains `path` (a POSIX path string), or
+   * `undefined` if it lies under no root. Drive paths compare case-insensitively
+   * (Windows filesystems ignore case, and drive-letter case isn't trusted);
+   * POSIX paths compare exactly.
+   */
+  private findContainingRoot(path: string): URI | undefined {
+    const isDrivePath = path.length >= 3 && path[2] === ':';
+    const matches = (root: URI): boolean =>
+      isDrivePath
+        ? path.toLowerCase().startsWith(root.path.toLowerCase() + '/') ||
+          path.toLowerCase() === root.path.toLowerCase()
+        : path.startsWith(root.path + '/') || path === root.path;
+    return this.roots.find(matches);
+  }
+
+  /**
+   * Turns an absolute resource URI into a workspace-relative path with a leading
+   * slash (e.g. `/projects/note.md`, or `/` for a note at the root). Falls back
+   * to the URI's absolute path when it lies under no workspace root. This is the
+   * form documented for query `path`/`folder` fields and matched by `path:`
+   * filters — see docs/user/features/foam-queries.md.
+   */
+  relativePath(uri: URI): string {
+    const root = this.findContainingRoot(uri.path);
+    if (!root) return uri.path;
+    const rel = relativeTo(uri.path, root.path);
+    return rel === '' ? '/' : '/' + rel;
   }
 
   set(resource: Resource) {

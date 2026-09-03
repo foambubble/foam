@@ -153,10 +153,14 @@ export interface QueryExecutionResult {
  * Augments the raw Resource with graph-derived fields so users can write
  * `resource.backlinks.length > 3` in expressions.
  */
-function makeExpressionContext(r: Resource, graph: FoamGraph) {
+function makeExpressionContext(
+  r: Resource,
+  graph: FoamGraph,
+  workspace: FoamWorkspace
+) {
   return {
     ...r,
-    path: r.uri.path,
+    path: workspace.relativePath(r.uri),
     tags: r.tags.map(t => t.label),
     backlinks: graph.getBacklinks(r.uri),
     outlinks: graph.getLinks(r.uri),
@@ -202,7 +206,7 @@ export function parseFilter(
     const built = tryBuildUserRegex(filter.path, 'path filter');
     if ('regex' in built) {
       const re = built.regex;
-      predicates.push(r => re.test(r.uri.path));
+      predicates.push(r => re.test(workspace.relativePath(r.uri)));
     } else {
       warnings.push(warn(built.warning));
       predicates.push(() => false);
@@ -264,7 +268,9 @@ export function parseFilter(
       predicates.push(r => {
         try {
           return Boolean(
-            expr.evalSync({ resource: makeExpressionContext(r, graph) })
+            expr.evalSync({
+              resource: makeExpressionContext(r, graph, workspace),
+            })
           );
         } catch (e) {
           // Runtime errors fire per-resource and would be noisy if surfaced
@@ -354,7 +360,10 @@ function parseShorthand(
     const built = tryBuildUserRegex(filter.slice(1, -1), 'shorthand /regex/');
     if ('regex' in built) {
       const re = built.regex;
-      return { predicate: r => re.test(r.uri.path), warnings: [] };
+      return {
+        predicate: r => re.test(workspace.relativePath(r.uri)),
+        warnings: [],
+      };
     }
     return {
       predicate: () => false,
@@ -414,12 +423,18 @@ function getSectionContent(r: Resource, source: string, label: string): string |
   return lines.slice(section.range.start.line + 1, section.range.end.line).join('\n');
 }
 
-function buildFullView(r: Resource, graph: FoamGraph): Record<string, unknown> {
+function buildFullView(
+  r: Resource,
+  graph: FoamGraph,
+  workspace: FoamWorkspace
+): Record<string, unknown> {
+  // `path`/`folder` are documented as workspace-relative — see foam-queries.md.
+  const relPath = workspace.relativePath(r.uri);
   return {
     title: r.title,
-    path: r.uri.path,
+    path: relPath,
     filename: getName(r.uri.path),
-    folder: getDirectory(r.uri.path),
+    folder: getDirectory(relPath),
     extension: getExtension(r.uri.path),
     type: r.type,
     tags: r.tags.map(t => t.label),
@@ -463,10 +478,11 @@ function resolveField(
 function projectResource(
   r: Resource,
   graph: FoamGraph,
+  workspace: FoamWorkspace,
   fields: string[],
   readSource?: SourceReader
 ): ResourceView {
-  const full = buildFullView(r, graph);
+  const full = buildFullView(r, graph, workspace);
   const needsSource = fields.some(requiresSource);
   let cached: string | undefined;
   let cacheLoaded = false;
@@ -706,7 +722,7 @@ export function executeQuery(
   const matched = workspace.list().filter(predicate);
 
   let slice = matched.map(r =>
-    projectResource(r, graph, cheapFields, undefined)
+    projectResource(r, graph, workspace, cheapFields, undefined)
   );
 
   if (query.sort) {
@@ -740,6 +756,7 @@ export function executeQuery(
     const sourceProjection = projectResource(
       resource,
       graph,
+      workspace,
       sourceFields,
       options.readSource
     );

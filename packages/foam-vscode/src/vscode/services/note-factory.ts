@@ -1,6 +1,16 @@
 import { SnippetString, ViewColumn, commands, window, workspace } from 'vscode';
-import { URI, isNoteTargetAllowed } from '@foam/core';
-import { UserCancelledOperation } from './errors';
+import {
+  Foam,
+  FoamError,
+  NoteCreationHooks,
+  NoteCreationOutcome,
+  NoteCreationTrigger,
+  Resolver,
+  Template,
+  URI,
+  createNote,
+  isNone,
+} from '@foam/core';
 import {
   asAbsoluteWorkspaceUri,
   createDocAndFocus,
@@ -10,10 +20,8 @@ import {
   getCurrentEditorDirectory,
   replaceSelection,
 } from './editor';
-
 import { getFoamVsCodeConfig } from '../config';
-import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
-import { isNone } from '@foam/core';
+import { toVsCodeUri } from '../utils/vsc-utils';
 
 export type OnFileExistStrategy =
   | 'open'
@@ -110,86 +118,84 @@ async function askUserForFilepathConfirmation(
   });
 }
 
-export const NoteFactory = {
-  createNote: async (
-    newFilePath: URI,
-    content: string,
-    onFileExistsStrategy?: OnFileExistStrategy,
-    onRelativePathStrategy?: OnRelativePathStrategy,
-    replaceSelectionWithLink = true
-  ): Promise<{ didCreateFile: boolean; uri: URI | undefined }> => {
-    try {
-      const selectedContent = findSelectionContent();
-      const onRelativePath = createFnForOnRelativePathStrategy(
-        onRelativePathStrategy
-      );
-      const onFileExists =
-        createFnForOnFileExistsStrategy(onFileExistsStrategy);
+export interface CreateNoteOptions {
+  trigger: NoteCreationTrigger;
+  /** Resolver with all variables pre-configured. */
+  resolver: Resolver;
+  /** Loads the template; `undefined` uses the default new-note text. */
+  loadTemplate: () => Promise<Template | undefined>;
+  /** Target when the template does not set a `filepath`. */
+  fallbackFilepath?: URI;
+  onFileExists?: OnFileExistStrategy;
+  onRelativePath?: OnRelativePathStrategy;
+  /** Replace the editor selection with a link to the new note. Default true. */
+  replaceSelectionWithLink?: boolean;
+}
 
-      // Every candidate path is checked as soon as it resolves, not just the
-      // final one: the `overwrite` strategy below deletes an existing file
-      // inside the loop, so a check placed only before the write would let an
-      // escaping path destroy a file outside the workspace first.
-      const roots =
-        workspace.workspaceFolders?.map(folder => fromVsCodeUri(folder.uri)) ??
-        [];
-      const resolveInWorkspace = (uri: URI): URI => {
-        const resolved = asAbsoluteWorkspaceUri(uri);
-        if (!isNoteTargetAllowed(resolved, roots, workspace.isTrusted)) {
-          throw new Error(
-            `Cannot create a note outside the workspace while in Restricted Mode: ${resolved.toFsPath()}. Trust this workspace to allow it.`
+export const NoteFactory = {
+  /**
+   * Runs the core note creation flow with VS Code behavior: the strategies
+   * above for existing and relative targets, the note opened in an editor
+   * as a snippet, and the selection (if any) replaced with a link to it.
+   */
+  createNote: async (
+    foam: Foam,
+    options: CreateNoteOptions
+  ): Promise<{ didCreateFile: boolean; uri: URI | undefined }> => {
+    const { replaceSelectionWithLink = true } = options;
+    const selectedContent = findSelectionContent();
+    const hooks: NoteCreationHooks = {
+      loadTemplate: options.loadTemplate,
+      fileExists,
+      onFileExists: createFnForOnFileExistsStrategy(options.onFileExists),
+      onRelativePath: createFnForOnRelativePathStrategy(
+        options.onRelativePath
+      ),
+      writeNote: (uri, content) =>
+        createDocAndFocus(
+          new SnippetString(content),
+          uri,
+          selectedContent ? ViewColumn.Beside : ViewColumn.Active
+        ),
+      onDidCreate: async uri => {
+        if (replaceSelectionWithLink && selectedContent !== undefined) {
+          await replaceSelection(
+            selectedContent.document,
+            selectedContent.selection,
+            `[[${uri.getName()}]]`
           );
         }
-        return resolved;
-      };
+      },
+    };
 
-      let resolvedNewFilePath = resolveInWorkspace(newFilePath);
-      while (
-        (await fileExists(resolvedNewFilePath)) ||
-        !newFilePath.isAbsolute()
-      ) {
-        while (!newFilePath.isAbsolute()) {
-          const proposedNewFilepath = await onRelativePath(newFilePath);
-          if (proposedNewFilepath === undefined) {
-            return { didCreateFile: false, uri: resolvedNewFilePath };
-          }
-          newFilePath = proposedNewFilepath;
-        }
-        resolvedNewFilePath = resolveInWorkspace(newFilePath);
-        while (
-          newFilePath.isAbsolute() &&
-          (await fileExists(resolvedNewFilePath))
-        ) {
-          const proposedNewFilepath = await onFileExists(resolvedNewFilePath);
-          if (proposedNewFilepath === undefined) {
-            return { didCreateFile: false, uri: resolvedNewFilePath };
-          }
-          newFilePath = proposedNewFilepath;
-          resolvedNewFilePath = resolveInWorkspace(newFilePath);
-        }
-      }
-
-      await createDocAndFocus(
-        new SnippetString(content),
-        resolvedNewFilePath,
-        selectedContent ? ViewColumn.Beside : ViewColumn.Active
+    let outcome: NoteCreationOutcome;
+    try {
+      outcome = await createNote(
+        {
+          foam,
+          trigger: options.trigger,
+          resolver: options.resolver,
+          fallbackFilepath: options.fallbackFilepath,
+          isTrusted: workspace.isTrusted,
+        },
+        hooks
       );
-
-      if (replaceSelectionWithLink && selectedContent !== undefined) {
-        const newNoteTitle = resolvedNewFilePath.getName();
-        await replaceSelection(
-          selectedContent.document,
-          selectedContent.selection,
-          `[[${newNoteTitle}]]`
+    } catch (err) {
+      if (err instanceof FoamError && err.code === 'invalid_input') {
+        throw new Error(
+          `${err.message}. The workspace is in Restricted Mode: trust it to allow this.`
         );
       }
-
-      return { didCreateFile: true, uri: resolvedNewFilePath };
-    } catch (err) {
-      if (err instanceof UserCancelledOperation) {
-        return;
-      }
       throw err;
+    }
+
+    switch (outcome.status) {
+      case 'created':
+        return { didCreateFile: true, uri: outcome.uri };
+      case 'exists':
+        return { didCreateFile: false, uri: outcome.uri };
+      case 'cancelled':
+        return { didCreateFile: false, uri: undefined };
     }
   },
 };

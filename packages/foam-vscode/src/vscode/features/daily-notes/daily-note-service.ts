@@ -1,6 +1,6 @@
 import dayjs from 'dayjs';
 import { Uri, window, workspace } from 'vscode';
-import { joinPath } from '@foam/core';
+import { joinPath, Resolver, Template, TriggerFactory } from '@foam/core';
 import { URI } from '@foam/core';
 import { Foam } from '@foam/core';
 import { getDailyNoteTemplateUri } from '../../../vscode/services/template-service';
@@ -11,7 +11,7 @@ import {
   focusNote,
   readFile,
 } from '../../services/editor';
-import { resolveDailyNote } from '@foam/core/scripting';
+import { TemplateLoader } from '@foam/core/scripting';
 
 // ─── Format conversion ────────────────────────────────────────────────────────
 
@@ -214,32 +214,30 @@ export async function createDailyNoteIfNotExists(targetDate: Date, foam: Foam) {
   const locale = getFoamVsCodeConfig<string>('dateLocale', 'default');
   const formattedDate = dayjs(targetDate).format('YYYY-MM-DD');
   const variables = new Map([['FOAM_TITLE', formattedDate]]);
+  const resolver = new Resolver(variables, targetDate, undefined, locale);
 
-  if (!templateUri) {
-    // Legacy fallback: derive filepath and content from deprecated config
-    const titleFormat: string =
-      getFoamVsCodeConfig('openDailyNote.titleFormat') ??
-      getFoamVsCodeConfig('openDailyNote.filenameFormat') ??
-      'isoDate';
-    const fallbackText = `# ${dayjs(targetDate).format(
-      convertDateformatToDayjs(titleFormat)
-    )}\n`;
-    const dailyNoteUri = getDailyNoteUri(targetDate);
-    return NoteFactory.createNote(dailyNoteUri, fallbackText, 'open');
-  }
+  const loadTemplate = templateUri
+    ? () =>
+        new TemplateLoader(readFile, workspace.isTrusted).loadTemplate(
+          templateUri
+        )
+    : async (): Promise<Template> => {
+        // Legacy fallback: title from the deprecated config
+        const titleFormat: string =
+          getFoamVsCodeConfig('openDailyNote.titleFormat') ??
+          getFoamVsCodeConfig('openDailyNote.filenameFormat') ??
+          'isoDate';
+        const title = dayjs(targetDate).format(
+          convertDateformatToDayjs(titleFormat)
+        );
+        return { type: 'markdown', metadata: new Map(), content: `# ${title}\n` };
+      };
 
-  const result = await resolveDailyNote(
-    targetDate,
-    templateUri,
-    foam,
-    readFile,
-    {
-      locale,
-      isTrusted: workspace.isTrusted,
-      fallbackFilepath: getDailyNoteUri(targetDate),
-      variables,
-    }
-  );
-
-  return NoteFactory.createNote(result.filepath, result.content, 'open');
+  return NoteFactory.createNote(foam, {
+    trigger: TriggerFactory.createCommandTrigger('foam.open-daily-note'),
+    resolver,
+    loadTemplate,
+    fallbackFilepath: getDailyNoteUri(targetDate),
+    onFileExists: 'open',
+  });
 }

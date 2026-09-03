@@ -69,7 +69,10 @@ export type {
   NoteCreationRequest,
   NoteCreationOutcome,
 } from './services/note-creation-flow';
-export type { NoteCreationResult } from './templates/note-creation-types';
+export type {
+  NoteCreationResult,
+  NoteCreationTrigger,
+} from './templates/note-creation-types';
 export type { Template, TemplateContext } from './templates/note-creation-types';
 export { TriggerFactory } from './templates/note-creation-triggers';
 export {

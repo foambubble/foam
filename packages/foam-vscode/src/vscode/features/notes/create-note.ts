@@ -5,7 +5,6 @@ import {
   getDefaultTemplateUri,
 } from '../../../vscode/services/template-service';
 import { NoteFactory } from '../../../vscode/services/note-factory';
-import { NoteCreationEngine } from '@foam/core';
 import { TriggerFactory } from '@foam/core';
 import { TemplateLoader } from '@foam/core/scripting';
 import { Template } from '@foam/core';
@@ -89,10 +88,6 @@ interface CreateNoteArgs {
     | 'cancel';
 }
 
-const DEFAULT_NEW_NOTE_TEXT = `# \${FOAM_TITLE}
-
-\${FOAM_SELECTED_TEXT}`;
-
 /**
  * Related to #1505.
  * This function forces the date to be local by removing any time information and
@@ -142,15 +137,13 @@ export async function createNote(args: CreateNoteArgs, foam: Foam) {
 
   // Load template using the new system
   const templateLoader = new TemplateLoader(readFile, workspace.isTrusted);
-  let template: Template;
+  let template: Template | undefined;
 
   try {
     if (!templateUri) {
-      template = {
-        type: 'markdown',
-        metadata: new Map(),
-        content: args.text || DEFAULT_NEW_NOTE_TEXT,
-      };
+      template = args.text
+        ? { type: 'markdown', metadata: new Map(), content: args.text }
+        : undefined;
     } else if (await fileExists(templateUri)) {
       template = await templateLoader.loadTemplate(templateUri);
     } else {
@@ -162,15 +155,17 @@ export async function createNote(args: CreateNoteArgs, foam: Foam) {
     );
   }
 
-  // If notePath is provided, add it to template metadata to avoid unnecessary title resolution
-  if (args.notePath && template.type === 'markdown') {
-    template.metadata.set(
-      'filepath',
-      typeof args.notePath === 'string'
-        ? args.notePath
-        : args.notePath.toFsPath()
-    );
-  }
+  // `notePath` follows the template `filepath` convention: a relative path
+  // goes through `onRelativeNotePath`, an absolute one is taken as is when
+  // under a workspace root and as workspace-relative otherwise.
+  const fallbackFilepath =
+    args.notePath === undefined
+      ? undefined
+      : typeof args.notePath !== 'string'
+      ? args.notePath
+      : URI.file(args.notePath).isAbsolute()
+      ? foam.workspace.resolveUri(args.notePath)
+      : URI.file(args.notePath);
 
   // Create resolver with all variables upfront
   const locale = getFoamVsCodeConfig<string>('dateLocale', 'default');
@@ -191,16 +186,14 @@ export async function createNote(args: CreateNoteArgs, foam: Foam) {
     );
   }
 
-  // Process template using the new engine with unified resolver
-  const engine = new NoteCreationEngine(foam);
-  const result = await engine.processTemplate(trigger, template, resolver);
-
-  const createdNote = await NoteFactory.createNote(
-    result.filepath,
-    result.content,
-    args.onFileExists,
-    args.onRelativeNotePath
-  );
+  const createdNote = await NoteFactory.createNote(foam, {
+    trigger,
+    resolver,
+    loadTemplate: async () => template,
+    fallbackFilepath,
+    onFileExists: args.onFileExists,
+    onRelativePath: args.onRelativeNotePath,
+  });
 
   // Handle source link updates for placeholders
   if (args.sourceLink && createdNote.uri) {

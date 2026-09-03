@@ -47,15 +47,7 @@ export async function resolveDailyNote(
 
   const template = await templateLoader.loadTemplate(templateUri);
 
-  // If a fallback filepath is provided and the template doesn't define one,
-  // inject it so we don't fall through to interactive title resolution.
-  if (
-    fallbackFilepath &&
-    template.type === 'markdown' &&
-    !template.metadata.get('filepath')
-  ) {
-    template.metadata.set('filepath', fallbackFilepath.toFsPath());
-  }
-
-  return engine.processTemplate(trigger, template, resolver);
+  return engine.processTemplate(trigger, template, resolver, {
+    defaultFilepath: fallbackFilepath,
+  });
 }

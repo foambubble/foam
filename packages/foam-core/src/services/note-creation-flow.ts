@@ -52,8 +52,10 @@ export interface NoteCreationRequest {
   resolver: Resolver;
   /**
    * Target to use when the template (markdown or the default text) does not
-   * define a `filepath`. Ignored for JavaScript templates, which must return
-   * their own.
+   * define a `filepath`. Goes through the same resolution and checks as a
+   * template-derived target: a relative URI is passed to `onRelativePath`,
+   * an absolute one is used as is. Ignored for JavaScript templates, which
+   * must return their own.
    */
   fallbackFilepath?: URI;
   /**
@@ -116,18 +118,12 @@ export async function createNote(
     content: DEFAULT_NEW_NOTE_TEXT,
     metadata: new Map(),
   };
-  if (
-    fallbackFilepath &&
-    template.type === 'markdown' &&
-    !template.metadata.get('filepath')
-  ) {
-    template.metadata.set('filepath', fallbackFilepath.toFsPath());
-  }
 
   const result = await new NoteCreationEngine(foam).processTemplate(
     trigger,
     template,
-    resolver
+    resolver,
+    { defaultFilepath: fallbackFilepath }
   );
 
   const onRelativePath =

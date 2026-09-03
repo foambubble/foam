@@ -30,6 +30,16 @@ function sanitizeFilepath(filepath: string): string {
   return filepath.replace(regex, '-');
 }
 
+export interface ProcessTemplateOptions {
+  /**
+   * Target for a markdown template that does not set a `filepath`. Used as
+   * given — a relative URI stays relative — instead of deriving a name from
+   * `FOAM_TITLE`, so the title is not requested when the target is already
+   * known. JavaScript templates return their own filepath.
+   */
+  defaultFilepath?: URI;
+}
+
 /**
  * Unified engine for creating notes from both Markdown and JavaScript templates
  */
@@ -43,12 +53,14 @@ export class NoteCreationEngine {
    * @param trigger The trigger that initiated the note creation
    * @param template The template object containing content or function
    * @param resolver Resolver instance with all variables pre-configured
+   * @param options See {@link ProcessTemplateOptions}
    * @returns Promise resolving to the generated content and filepath
    */
   async processTemplate(
     trigger: NoteCreationTrigger,
     template: Template,
-    resolver: Resolver
+    resolver: Resolver,
+    options: ProcessTemplateOptions = {}
   ): Promise<NoteCreationResult> {
     Logger.info(`Processing ${template.type} template`);
     this.logTriggerInfo(trigger);
@@ -60,9 +72,9 @@ export class NoteCreationEngine {
         break;
       case 'markdown':
         result = await this.executeMarkdownTemplate(
-          trigger,
           template,
-          resolver
+          resolver,
+          options
         );
         break;
       default:
@@ -116,9 +128,9 @@ export class NoteCreationEngine {
    * Executes a Markdown template using variable resolution
    */
   private async executeMarkdownTemplate(
-    trigger: NoteCreationTrigger,
     template: Template & { type: 'markdown' },
-    resolver: Resolver
+    resolver: Resolver,
+    options: ProcessTemplateOptions
   ): Promise<NoteCreationResult> {
     // Use the provided resolver directly for variable resolution
     const resolvedContent = await resolver.resolveText(template.content);
@@ -133,10 +145,14 @@ export class NoteCreationEngine {
       ...frontmatterMetadata,
     ]);
 
+    const templateFilepath = metadata.get('filepath');
+    if (!templateFilepath && options.defaultFilepath) {
+      return { filepath: options.defaultFilepath, content: cleanContent };
+    }
+
     // Determine filepath - get variables from resolver for default generation
     let filepath =
-      metadata.get('filepath') ??
-      (await this.generateDefaultFilepath(resolver));
+      templateFilepath ?? (await this.generateDefaultFilepath(resolver));
 
     // Sanitize the filepath to remove invalid characters
     filepath = sanitizeFilepath(filepath);

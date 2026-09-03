@@ -222,6 +222,44 @@ Content without filepath metadata.`,
       expect(result.filepath.path).toBe('js-generated-note.md');
     });
 
+    it('uses the given default filepath when the template has none, without resolving a title', async () => {
+      const { engine } = await setupFoamEngine();
+      let titleRequests = 0;
+      const resolver = new Resolver(new Map(), new Date(), undefined, 'default', {
+        resolveTitle: async () => {
+          titleRequests++;
+          return 'Prompted';
+        },
+        resolveSelectedText: () => '',
+        resolveCurrentDir: () => '/',
+      });
+      const defaultFilepath = URI.file('/notes/known.md');
+      const result = await engine.processTemplate(
+        TriggerFactory.createCommandTrigger('foam-vscode.create-note'),
+        { type: 'markdown', content: 'body', metadata: new Map() },
+        resolver,
+        { defaultFilepath }
+      );
+      expect(result.filepath).toEqual(defaultFilepath);
+      expect(result.content).toBe('body');
+      expect(titleRequests).toBe(0);
+    });
+
+    it('prefers the template filepath over the given default filepath', async () => {
+      const { engine } = await setupFoamEngine();
+      const result = await engine.processTemplate(
+        TriggerFactory.createCommandTrigger('foam-vscode.create-note'),
+        {
+          type: 'markdown',
+          content: 'body',
+          metadata: new Map([['filepath', 'own.md']]),
+        },
+        new Resolver(new Map(), new Date()),
+        { defaultFilepath: URI.file('/notes/known.md') }
+      );
+      expect(result.filepath.path).toBe('own.md');
+    });
+
     it('resolves Foam variables in the content returned by a JS template', async () => {
       const { engine } = await setupFoamEngine();
       const template: Template = {

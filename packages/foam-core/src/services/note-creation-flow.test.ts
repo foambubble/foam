@@ -98,6 +98,25 @@ describe('createNote', () => {
       expect(withoutPath.writes[0][0]).toEqual(fallback);
     });
 
+    it('does not ask for a title when fallbackFilepath decides the target', async () => {
+      let titleRequests = 0;
+      const resolver = new Resolver(new Map(), new Date(), undefined, 'default', {
+        resolveTitle: async () => {
+          titleRequests++;
+          return 'Prompted';
+        },
+        resolveSelectedText: () => '',
+        resolveCurrentDir: () => '/ws',
+      });
+      const { hooks, writes } = makeHooks(markdown('body'));
+      await createNote(
+        request('', { resolver, fallbackFilepath: root.joinPath('known.md') }),
+        hooks
+      );
+      expect(writes).toEqual([[root.joinPath('known.md'), 'body']]);
+      expect(titleRequests).toBe(0);
+    });
+
     it('resolves Foam variables in JavaScript template content', async () => {
       const template: Template = {
         type: 'javascript',
@@ -202,6 +221,31 @@ describe('createNote', () => {
       await expect(createNote(request(), hooks)).rejects.toMatchObject({
         code: 'invalid_input',
       });
+    });
+
+    it('rejects an absolute fallbackFilepath outside the workspace', async () => {
+      const { hooks, writes } = makeHooks(undefined);
+      await expect(
+        createNote(
+          request('shell', {
+            fallbackFilepath: URI.file('/etc/cron.hourly/shell.md'),
+          }),
+          hooks
+        )
+      ).rejects.toMatchObject({ code: 'invalid_input' });
+      expect(writes).toEqual([]);
+    });
+
+    it('rejects a relative fallbackFilepath that escapes the workspace', async () => {
+      const { hooks } = makeHooks(undefined);
+      await expect(
+        createNote(
+          request('shell', {
+            fallbackFilepath: URI.parse('../../etc/shell.md', 'file'),
+          }),
+          hooks
+        )
+      ).rejects.toMatchObject({ code: 'invalid_input' });
     });
 
     it('rejects an escaping retry target before checking whether it exists', async () => {

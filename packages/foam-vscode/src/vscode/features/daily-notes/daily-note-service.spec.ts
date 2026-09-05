@@ -343,6 +343,41 @@ Unix: \${FOAM_DATE_SECONDS_UNIX}`,
       showWarningMessageSpy.mockRestore();
     });
 
+    // The scaffold has to land where getDailyNoteTemplateUri looks, otherwise
+    // the warning returns forever and the file appears somewhere the user
+    // never configured.
+    it('creates the daily note template in the configured templates folder', async () => {
+      await withModifiedFoamConfiguration(
+        'templates.folder',
+        'my-templates',
+        async () => {
+          const foam = makeFoamMock();
+          expect(await getDailyNoteTemplateUri()).not.toBeDefined();
+
+          const showWarningMessageSpy = vi
+            .spyOn(window, 'showWarningMessage')
+            .mockResolvedValue(CREATE_DAILY_NOTE_WARNING_RESPONSE as any);
+          try {
+            await createDailyNoteIfNotExists(new Date(2021, 8, 24), foam);
+
+            let templateUri: URI;
+            const deadline = Date.now() + 2000;
+            while (Date.now() < deadline) {
+              templateUri = await getDailyNoteTemplateUri();
+              if (templateUri) break;
+              await new Promise(r => setTimeout(r, 50));
+            }
+
+            expect(templateUri).toBeDefined();
+            expect(templateUri.path).toContain('my-templates/daily-note.md');
+            await deleteFile(templateUri);
+          } finally {
+            showWarningMessageSpy.mockRestore();
+          }
+        }
+      );
+    });
+
     it('Processes template frontmatter metadata correctly', async () => {
       const targetDate = new Date(2021, 8, 22);
 

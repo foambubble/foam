@@ -1,15 +1,19 @@
 import dayjs from 'dayjs';
-import { Uri, window, workspace } from 'vscode';
+import { window, workspace } from 'vscode';
 import { joinPath, Resolver, Template, TriggerFactory } from '@foam/core';
 import { URI } from '@foam/core';
 import { Foam } from '@foam/core';
-import { getDailyNoteTemplateUri } from '../../../vscode/services/template-service';
+import {
+  getDailyNoteTemplateUri,
+  getTemplatesDir,
+} from '../../../vscode/services/template-service';
 import { NoteFactory } from '../../../vscode/services/note-factory';
 import { getFoamVsCodeConfig } from '../../../vscode/config';
 import {
   asAbsoluteWorkspaceUri,
   focusNote,
   readFile,
+  writeFile,
 } from '../../services/editor';
 import { TemplateLoader } from '@foam/core/scripting';
 
@@ -167,7 +171,7 @@ foam_template:
 > you probably want to delete these instructions as you customize your template
 
 Welcome to your new daily note template.
-The file is located in \`.foam/templates/daily-note.md\`.
+The file is located in your Foam templates folder (\`.foam/templates\` by default).
 The text in this file will be used as the content of your daily note.
 You can customize it as you like, and you can use the following variables in the template:
 - \`\${FOAM_DATE_YEAR}\`: The year of the date
@@ -197,15 +201,12 @@ export async function createDailyNoteIfNotExists(targetDate: Date, foam: Foam) {
       )
       .then(async action => {
         if (action === CREATE_DAILY_NOTE_WARNING_RESPONSE) {
-          const newTemplateUri = Uri.joinPath(
-            workspace.workspaceFolders[0].uri,
-            '.foam',
-            'templates',
-            'daily-note.md'
-          );
-          await workspace.fs.writeFile(
-            newTemplateUri,
-            new TextEncoder().encode(DEFAULT_DAILY_NOTE_TEMPLATE)
+          // Must match where getDailyNoteTemplateUri looks, which follows
+          // `foam.templates.folder` — otherwise the file lands somewhere Foam
+          // never reads and this warning comes back every time.
+          await writeFile(
+            getTemplatesDir().joinPath('daily-note.md'),
+            DEFAULT_DAILY_NOTE_TEMPLATE
           );
         }
       });

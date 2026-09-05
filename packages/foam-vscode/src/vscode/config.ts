@@ -16,14 +16,6 @@ export class VsCodeFoamConfig implements IFoamConfig {
       ...workspace.getConfiguration().get('foam.files.exclude', []),
       ...workspace.getConfiguration().get('foam.files.ignore', []),
       ...Object.keys(workspace.getConfiguration().get('files.exclude', {})),
-      // Mirror VS Code's own watcher
-      ...Object.entries(
-        workspace
-          .getConfiguration()
-          .get<Record<string, boolean>>('files.watcherExclude', {})
-      )
-        .filter(([, enabled]) => enabled)
-        .map(([pattern]) => pattern),
     ].flatMap(expandAlternateGroups);
   }
 
@@ -114,10 +106,10 @@ export class VsCodeFoamConfig implements IFoamConfig {
   getDateSnippetsAfterCompletion(): 'noop' | 'createNote' | 'navigateToNote' {
     return workspace
       .getConfiguration('foam')
-      .get(
-        'dateSnippets.afterCompletion',
-        'createNote'
-      ) as 'noop' | 'createNote' | 'navigateToNote';
+      .get('dateSnippets.afterCompletion', 'createNote') as
+      | 'noop'
+      | 'createNote'
+      | 'navigateToNote';
   }
 
   getLinksDirectoryMode(): 'resolve' | 'disabled' {
@@ -127,24 +119,23 @@ export class VsCodeFoamConfig implements IFoamConfig {
   }
 
   getLinksSyncEnable(): boolean {
-    return workspace
-      .getConfiguration('foam')
-      .get('links.sync.enable', true);
+    return workspace.getConfiguration('foam').get('links.sync.enable', true);
   }
 
   getLinksHoverEnable(): boolean {
-    return workspace
-      .getConfiguration('foam')
-      .get('links.hover.enable', true);
+    return workspace.getConfiguration('foam').get('links.hover.enable', true);
   }
 
-  getEditLinkReferenceDefinitions(): 'withExtensions' | 'withoutExtensions' | 'off' {
+  getEditLinkReferenceDefinitions():
+    | 'withExtensions'
+    | 'withoutExtensions'
+    | 'off' {
     return workspace
       .getConfiguration('foam')
-      .get(
-        'edit.linkReferenceDefinitions',
-        'off'
-      ) as 'withExtensions' | 'withoutExtensions' | 'off';
+      .get('edit.linkReferenceDefinitions', 'off') as
+      | 'withExtensions'
+      | 'withoutExtensions'
+      | 'off';
   }
 
   getCompletionLabel(): 'path' | 'title' | 'identifier' {
@@ -156,10 +147,9 @@ export class VsCodeFoamConfig implements IFoamConfig {
   getCompletionUseAlias(): 'never' | 'whenPathDiffersFromTitle' {
     return workspace
       .getConfiguration('foam')
-      .get(
-        'completion.useAlias',
-        'never'
-      ) as 'never' | 'whenPathDiffersFromTitle';
+      .get('completion.useAlias', 'never') as
+      | 'never'
+      | 'whenPathDiffersFromTitle';
   }
 
   getCompletionLinkFormat(): 'wikilink' | 'link' {
@@ -168,19 +158,22 @@ export class VsCodeFoamConfig implements IFoamConfig {
       .get('completion.linkFormat', 'wikilink') as 'wikilink' | 'link';
   }
 
-  getPreviewEmbedNoteType(): 'full-inline' | 'full-card' | 'content-inline' | 'content-card' {
+  getPreviewEmbedNoteType():
+    | 'full-inline'
+    | 'full-card'
+    | 'content-inline'
+    | 'content-card' {
     return workspace
       .getConfiguration('foam')
-      .get(
-        'preview.embedNoteType',
-        'full-card'
-      ) as 'full-inline' | 'full-card' | 'content-inline' | 'content-card';
+      .get('preview.embedNoteType', 'full-card') as
+      | 'full-inline'
+      | 'full-card'
+      | 'content-inline'
+      | 'content-card';
   }
 
   getGraphOnStartup(): boolean {
-    return workspace
-      .getConfiguration('foam')
-      .get('graph.onStartup', false);
+    return workspace.getConfiguration('foam').get('graph.onStartup', false);
   }
 
   getGraphNavigateToPreview(): boolean {
@@ -190,9 +183,7 @@ export class VsCodeFoamConfig implements IFoamConfig {
   }
 
   getGraphTitleMaxLength(): number {
-    return workspace
-      .getConfiguration('foam')
-      .get('graph.titleMaxLength', 24);
+    return workspace.getConfiguration('foam').get('graph.titleMaxLength', 24);
   }
 
   getGraphStyle(): object {

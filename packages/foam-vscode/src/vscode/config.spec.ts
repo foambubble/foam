@@ -83,16 +83,37 @@ describe('VsCodeFoamConfig — files include', () => {
 });
 
 describe('VsCodeFoamConfig — files exclude', () => {
-  it('includes VS Code files.watcherExclude keys', async () => {
-    // If VS Code is not watching a folder, Foam should not process it either.
+  it('ignores VS Code files.watcherExclude', async () => {
+    // `files.watcherExclude` means "don't spend CPU watching this", not "this
+    // is not part of my workspace" — VS Code applies it to recursive watchers
+    // itself, so honouring it here only shrank the initial scan and silently
+    // dropped those notes from the index. Use `foam.files.exclude` to keep a
+    // folder out of Foam.
     await withModifiedConfiguration(
       'files.watcherExclude',
-      { '**/my-huge-tree/**': true, '**/scratch/**': false },
+      { '**/my-huge-tree/**': true },
       async () => {
-        const excludes = Config.getFilesExclude();
-        // Only truthy entries are excluded, matching VS Code's semantics.
-        expect(excludes).toContain('**/my-huge-tree/**');
-        expect(excludes).not.toContain('**/scratch/**');
+        expect(Config.getFilesExclude()).not.toContain('**/my-huge-tree/**');
+      }
+    );
+  });
+
+  it('excludes VS Code files.exclude keys', async () => {
+    await withModifiedConfiguration(
+      'files.exclude',
+      { '**/hidden-tree/**': true },
+      async () => {
+        expect(Config.getFilesExclude()).toContain('**/hidden-tree/**');
+      }
+    );
+  });
+
+  it('excludes foam.files.exclude patterns', async () => {
+    await withModifiedFoamConfiguration(
+      'files.exclude',
+      ['**/archive/**'],
+      async () => {
+        expect(Config.getFilesExclude()).toContain('**/archive/**');
       }
     );
   });

@@ -68,7 +68,7 @@ describe('create-note command', () => {
     const target = getUriInWorkspace();
     await commands.executeCommand('foam-vscode.create-note', {
       notePath: target,
-      text: 'hello ${FOAM_TITLE}',  
+      text: 'hello ${FOAM_TITLE}',
       variables: { FOAM_TITLE: 'world' },
     });
     expect(window.activeTextEditor.document.getText()).toEqual('hello world');
@@ -80,7 +80,7 @@ describe('create-note command', () => {
     const target = getUriInWorkspace();
     await commands.executeCommand('foam-vscode.create-note', {
       notePath: target,
-      text: 'hello ${FOAM_DATE_YEAR}',  
+      text: 'hello ${FOAM_DATE_YEAR}',
       date: '2021-10-01',
     });
     expect(window.activeTextEditor.document.getText()).toEqual('hello 2021');
@@ -339,6 +339,41 @@ describe('factories', () => {
       const doc = window.activeTextEditor.document;
       expect(doc.uri.path).toMatch(/my-placeholder.md$/);
       expect(doc.getText()).toMatch(/^# my-placeholder/);
+    });
+
+    // A `new-note.md` template with a `filepath` is how a workspace directs new
+    // notes into a subfolder — the documented alternative to a dedicated
+    // setting for it. See issues #106 and #1701.
+    it('honours the filepath of the default new-note template', async () => {
+      await closeEditors();
+      const template = await createFile(
+        `---
+foam_template:
+  filepath: 'knowledge-base/\${FOAM_TITLE}.md'
+---
+# \${FOAM_TITLE}`,
+        ['.foam', 'templates', 'new-note.md']
+      );
+      const link: ResourceLink = {
+        type: 'wikilink',
+        rawText: '[[subfolder-note]]',
+        range: Range.create(0, 0, 0, 0),
+        isEmbed: false,
+      };
+      try {
+        const command = CREATE_NOTE_COMMAND.forPlaceholder(
+          Location.forObjectWithRange(URI.file(''), link),
+          '.md'
+        );
+        const res: Awaited<ReturnType<typeof createNote>> =
+          await commands.executeCommand(command.name, command.params);
+
+        expect(res.didCreateFile).toBeTruthy();
+        expect(res.uri.path).toMatch(/knowledge-base\/subfolder-note\.md$/);
+        await deleteFile(res.uri);
+      } finally {
+        await deleteFile(template.uri);
+      }
     });
 
     it('replaces the original placeholder based on the new note identifier (#1327)', async () => {

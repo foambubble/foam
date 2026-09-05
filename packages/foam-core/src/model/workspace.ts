@@ -5,6 +5,7 @@ import {
   getExtension,
   changeExtension,
   fromFsPath,
+  isPathWithin,
   relativeTo,
 } from '../utils/path';
 import { isSome } from '../utils';
@@ -124,13 +125,7 @@ export class FoamWorkspace implements IDisposable {
    * POSIX paths compare exactly.
    */
   private findContainingRoot(path: string): URI | undefined {
-    const isDrivePath = path.length >= 3 && path[2] === ':';
-    const matches = (root: URI): boolean =>
-      isDrivePath
-        ? path.toLowerCase().startsWith(root.path.toLowerCase() + '/') ||
-          path.toLowerCase() === root.path.toLowerCase()
-        : path.startsWith(root.path + '/') || path === root.path;
-    return this.roots.find(matches);
+    return this.roots.find(root => isPathWithin(path, root.path));
   }
 
   /**

@@ -10,6 +10,7 @@ import {
   getName,
   isAbsolute,
   isWithinPath,
+  isPathWithin,
   joinPath,
   relativeTo,
   toFsPath,
@@ -122,25 +123,25 @@ describe('path utils', () => {
     ];
 
     describe('isAbsolute', () => {
-      it.each(SINGLE_ARG_INPUTS)('matches node for %p', (p) => {
+      it.each(SINGLE_ARG_INPUTS)('matches node for %p', p => {
         expect(isAbsolute(p)).toBe(nodePosix.isAbsolute(p));
       });
     });
 
     describe('getDirectory (posix.dirname)', () => {
-      it.each(SINGLE_ARG_INPUTS)('matches node for %p', (p) => {
+      it.each(SINGLE_ARG_INPUTS)('matches node for %p', p => {
         expect(getDirectory(p)).toBe(nodePosix.dirname(p));
       });
     });
 
     describe('getBasename (posix.basename)', () => {
-      it.each(SINGLE_ARG_INPUTS)('matches node for %p', (p) => {
+      it.each(SINGLE_ARG_INPUTS)('matches node for %p', p => {
         expect(getBasename(p)).toBe(nodePosix.basename(p));
       });
     });
 
     describe('getExtension (posix.extname)', () => {
-      it.each(SINGLE_ARG_INPUTS)('matches node for %p', (p) => {
+      it.each(SINGLE_ARG_INPUTS)('matches node for %p', p => {
         expect(getExtension(p)).toBe(nodePosix.extname(p));
       });
     });
@@ -196,6 +197,28 @@ describe('path utils', () => {
     });
     it('returns false for a path that prefix-matches but is not nested', () => {
       expect(isWithinPath(URI.file('/a/bb'), root)).toBe(false);
+    });
+  });
+
+  describe('isPathWithin', () => {
+    it('matches the same path and nested paths', () => {
+      expect(isPathWithin('/a/b', '/a/b')).toBe(true);
+      expect(isPathWithin('/a/b/c.md', '/a/b')).toBe(true);
+    });
+
+    it('does not match a sibling or a mere prefix', () => {
+      expect(isPathWithin('/a/c', '/a/b')).toBe(false);
+      expect(isPathWithin('/a/bb', '/a/b')).toBe(false);
+    });
+
+    it('compares drive paths case-insensitively, since Windows does', () => {
+      expect(isPathWithin('/c:/work/note.md', '/C:/work')).toBe(true);
+      expect(isPathWithin('/C:/Work/note.md', '/c:/work')).toBe(true);
+      expect(isPathWithin('/C:/work', '/c:/work')).toBe(true);
+    });
+
+    it('keeps POSIX paths case-sensitive', () => {
+      expect(isPathWithin('/A/b/c.md', '/a/b')).toBe(false);
     });
   });
 

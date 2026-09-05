@@ -167,6 +167,7 @@ export {
   joinPath,
   changeExtension,
   isWithinPath,
+  isPathWithin,
   asAbsolutePaths,
   relativeTo,
   fromFsPath,

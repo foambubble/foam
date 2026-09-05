@@ -337,7 +337,23 @@ export function relativeTo(path: string, basePath: string): string {
  * Returns true when `path` is equal to or nested under `parent`.
  */
 export function isWithinPath(path: URI, parent: URI): boolean {
-  return path.path === parent.path || path.path.startsWith(parent.path + '/');
+  return isPathWithin(path.path, parent.path);
+}
+
+/**
+ * Returns true when the POSIX path `path` is equal to or nested under `parent`.
+ *
+ * Drive paths compare case-insensitively (Windows filesystems ignore case, and
+ * the drive letter's case isn't trusted); POSIX paths compare exactly.
+ */
+export function isPathWithin(path: string, parent: string): boolean {
+  const isDrivePath = path.length >= 3 && path[2] === ':';
+  if (isDrivePath) {
+    const lower = path.toLowerCase();
+    const parentLower = parent.toLowerCase();
+    return lower === parentLower || lower.startsWith(parentLower + '/');
+  }
+  return path === parent || path.startsWith(parent + '/');
 }
 
 function hasDrive(path: string, idx = 0): boolean {

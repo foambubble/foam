@@ -1,3 +1,4 @@
+/* @unit-ready */
 import { Selection, workspace } from 'vscode';
 import { fromVsCodeUri } from '../utils/vsc-utils';
 import {

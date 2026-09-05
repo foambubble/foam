@@ -28,7 +28,7 @@ import { VsCodeWatcher } from './vscode/services/watcher';
 import { createMarkdownParser } from '@foam/core';
 import VsCodeBasedParserCache from './vscode/services/cache';
 import { createMatcherAndDataStore } from './vscode/services/editor';
-import { buildWatchGlob } from './vscode/utils/watch-glob';
+import { buildWorkspaceWatchGlob } from './vscode/utils/watch-glob';
 import { OllamaEmbeddingProvider } from './ai/providers/ollama/ollama-provider';
 import { initTelemetry } from './vscode/services/telemetry';
 
@@ -85,12 +85,14 @@ export async function activate(context: ExtensionContext) {
 
     const notesExtensions = Config.getNotesExtensions();
     const defaultExtension = Config.getDefaultNoteExtension();
-    const attachmentExtConfig = Config.getAttachmentExtensions();
+    const attachmentProvider = new AttachmentResourceProvider(
+      Config.getAttachmentExtensions()
+    );
 
-    const watchGlob = buildWatchGlob([
-      ...notesExtensions,
-      ...attachmentExtConfig,
-    ]);
+    const watchGlob = buildWorkspaceWatchGlob(
+      notesExtensions,
+      attachmentProvider
+    );
     const watcher = new VsCodeWatcher(
       workspace.workspaceFolders.map(folder =>
         workspace.createFileSystemWatcher(
@@ -124,9 +126,6 @@ export async function activate(context: ExtensionContext) {
       directoryMode
     );
 
-    const attachmentProvider = new AttachmentResourceProvider(
-      attachmentExtConfig
-    );
     context.subscriptions.push(markdownProvider, attachmentProvider);
 
     // Initialize embedding provider
@@ -183,7 +182,9 @@ export async function activate(context: ExtensionContext) {
     settled.forEach((result, i) => {
       if (result.status === 'rejected') {
         Logger.error(
-          `Feature #${i} (${features[i].name || 'anonymous'}) failed to activate`,
+          `Feature #${i} (${
+            features[i].name || 'anonymous'
+          }) failed to activate`,
           result.reason
         );
       }

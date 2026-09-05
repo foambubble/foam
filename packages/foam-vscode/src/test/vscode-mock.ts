@@ -307,8 +307,13 @@ export class DocumentLink {
 
 export class RelativePattern {
   public baseUri: Uri;
-  constructor(base: Uri | { uri: Uri }, public pattern: string) {
-    this.baseUri = 'uri' in base ? base.uri : base;
+  constructor(base: Uri | { uri: Uri } | string, public pattern: string) {
+    this.baseUri =
+      typeof base === 'string'
+        ? createVSCodeUri(URI.file(base))
+        : 'uri' in base
+        ? base.uri
+        : base;
   }
 }
 
@@ -1934,14 +1939,25 @@ export const workspace = {
   },
 
   async findFiles(
-    include: string,
-    exclude?: string,
+    include: string | RelativePattern,
+    exclude?: string | RelativePattern,
     maxResults?: number
   ): Promise<Uri[]> {
-    // Simple implementation that recursively finds files
-    const workspaceFolder = mockState.workspaceFolders[0];
+    // Simple implementation that recursively finds files. As in VS Code, a
+    // RelativePattern searches under its own base rather than the workspace
+    // folder, and its pattern is relative to that base. The exclude pattern is
+    // matched against the include's base: every caller passes the same base for
+    // both, so the two-base case isn't modelled.
+    const includePattern =
+      include instanceof RelativePattern ? include.pattern : include;
+    const excludePattern =
+      exclude instanceof RelativePattern ? exclude.pattern : exclude;
+    const base =
+      include instanceof RelativePattern
+        ? include.baseUri
+        : mockState.workspaceFolders[0]?.uri;
 
-    if (!workspaceFolder) {
+    if (!base) {
       return [];
     }
 
@@ -1953,7 +1969,7 @@ export const workspace = {
         for (const entry of entries) {
           const fullPath = path.join(dir, entry.name);
           const relativePath = path
-            .relative(workspaceFolder.uri.fsPath, fullPath)
+            .relative(base.fsPath, fullPath)
             .split(path.sep)
             .join('/');
 
@@ -1962,9 +1978,12 @@ export const workspace = {
             files.push(...subFiles);
           } else if (entry.isFile()) {
             // Check if file matches include pattern
-            if (micromatch.isMatch(relativePath, include)) {
+            if (micromatch.isMatch(relativePath, includePattern)) {
               // Check if file matches exclude pattern
-              if (!exclude || !micromatch.isMatch(relativePath, exclude)) {
+              if (
+                !excludePattern ||
+                !micromatch.isMatch(relativePath, excludePattern)
+              ) {
                 files.push(fullPath);
               }
             }
@@ -1978,7 +1997,7 @@ export const workspace = {
     };
 
     try {
-      const files = await findFilesRecursive(workspaceFolder.uri.fsPath);
+      const files = await findFilesRecursive(base.fsPath);
 
       let result = files.map(file => createVSCodeUri(URI.file(file)));
 

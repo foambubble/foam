@@ -79,8 +79,9 @@ describe('Embedded note content', () => {
         expect(html).not.toContain('<hr');
         expect(html).not.toContain('aliases:');
         expect(html).not.toContain('id: 1');
-        if (source.includes('First body line'))
-          expect(html).toContain('First body line');
+        expect(html.includes('First body line')).toBe(
+          source.includes('First body line')
+        );
       });
     });
   }
@@ -92,8 +93,10 @@ describe('Embedded note content', () => {
     it(`keeps titleless content ${JSON.stringify(source)}`, () => {
       withNote(source, render => {
         const html = render('content-inline![[Child]]');
-        if (source) expect(html).toContain('First body line');
-        if (source.includes('Tail')) expect(html).toContain('Tail');
+        expect(html.includes('First body line')).toBe(
+          source.includes('First body line')
+        );
+        expect(html.includes('Tail')).toBe(source.includes('Tail'));
       });
     });
   }

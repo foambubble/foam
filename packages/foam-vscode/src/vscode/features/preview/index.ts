@@ -1,7 +1,7 @@
 /*global markdownit:readonly*/
 
 import * as vscode from 'vscode';
-import { Foam, URI, createRenderContext } from '@foam/core';
+import { Foam, URI, Logger, createRenderContext } from '@foam/core';
 import { fromVsCodeUri, toVsCodeUri } from '../../utils/vsc-utils';
 import { createFoamMarkdownIt } from './foam-markdown-it';
 import { createVsCodeLinkResolver } from './link-resolvers';
@@ -14,6 +14,7 @@ export default async function activate(
   foamPromise: Promise<Foam>
 ) {
   const foam = await foamPromise;
+  const math = await loadMarkdownMath();
 
   // Refresh the markdown preview whenever the workspace changes so that
   // foam-query embed blocks show up-to-date results in real time.
@@ -72,9 +73,49 @@ export default async function activate(
           getEmbedNoteType: () =>
             getFoamVsCodeConfig<string>(CONFIG_EMBED_NOTE_TYPE),
           renderContext,
+          // The host installs math on the outer renderer. Fresh renderers for
+          // embeds and query cells need their own installation, without
+          // re-entering the outer pipeline or sharing render-local macros.
+          extensions: [
+            inner => {
+              if (inner !== md) math?.extendMarkdownIt(inner);
+            },
+          ],
         },
         md
       );
     },
   };
+}
+
+interface MarkdownMathExtension {
+  extendMarkdownIt(md: markdownit): markdownit;
+}
+
+async function loadMarkdownMath(): Promise<MarkdownMathExtension | undefined> {
+  try {
+    const extension = vscode.extensions.getExtension<MarkdownMathExtension>(
+      'vscode.markdown-math'
+    );
+    if (!extension) {
+      Logger.warn(
+        'Markdown math extension unavailable; embedded math is disabled'
+      );
+      return undefined;
+    }
+    const api = await extension.activate();
+    if (typeof api?.extendMarkdownIt !== 'function') {
+      Logger.warn(
+        'Markdown math extension has no extendMarkdownIt API; embedded math is disabled'
+      );
+      return undefined;
+    }
+    return api;
+  } catch (error) {
+    Logger.warn(
+      'Could not activate Markdown math; embedded math is disabled',
+      error
+    );
+    return undefined;
+  }
 }

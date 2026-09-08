@@ -3,6 +3,8 @@
 // eslint-disable-next-line no-restricted-imports
 import { readFileSync } from 'fs';
 import markdownItRegex from 'markdown-it-regex';
+import MarkdownIt from 'markdown-it';
+import { isMap, parseDocument } from 'yaml';
 import { FoamWorkspace } from '@foam/core';
 import { Logger } from '@foam/core';
 import { Resource, ResourceParser, Block } from '@foam/core';
@@ -306,6 +308,37 @@ export type EmbedNoteExtractor = (
   workspace: FoamWorkspace
 ) => string;
 
+// Parse headings without the host's plugins: extracting a title must not
+// recursively render embeds or execute queries.
+const headingParser = MarkdownIt();
+
+function stripLeadingTitle(source: string): string {
+  const first = headingParser.parse(source, {})[0];
+  if (first?.type !== 'heading_open' || !first.map) {
+    return source;
+  }
+  return source.split('\n').slice(first.map[1]).join('\n');
+}
+
+function stripLeadingFrontmatter(source: string): string {
+  const opening = /^\uFEFF?---[ \t]*\r?\n/.exec(source);
+  if (!opening) return source;
+  const remaining = source.slice(opening[0].length);
+  const closing = /^(?:---|\.\.\.)[ \t]*(?:\r?\n|$)/m.exec(remaining);
+  if (!closing) return source;
+
+  // Only mappings (or empty metadata) are frontmatter. Keep malformed YAML
+  // and prose between thematic breaks intact instead of losing note content.
+  const document = parseDocument(remaining.slice(0, closing.index));
+  if (
+    document.errors.length > 0 ||
+    (document.contents !== null && !isMap(document.contents))
+  ) {
+    return source;
+  }
+  return remaining.slice(closing.index + closing[0].length);
+}
+
 function fullExtractor(
   note: Resource,
   parser: ResourceParser,
@@ -318,7 +351,7 @@ function fullExtractor(
     if (isSome(block)) {
       noteText = extractBlockContent(noteText, note, block);
     }
-  } else {
+  } else if (note.uri.fragment) {
     const section = Resource.findSection(note, note.uri.fragment);
     if (isSome(section)) {
       const rows = noteText.split('\n');
@@ -326,14 +359,17 @@ function fullExtractor(
         .slice(section.range.start.line, section.range.end.line)
         .join('\n');
     }
+  } else {
+    // Section and block ranges refer to the original source, including YAML.
+    // Strip metadata only when embedding the whole note.
+    noteText = stripLeadingFrontmatter(noteText);
   }
-  noteText = withLinksRelativeToWorkspaceRoot(
+  return withLinksRelativeToWorkspaceRoot(
     note.uri,
     noteText,
     parser,
     workspace
   );
-  return noteText;
 }
 
 function contentExtractor(
@@ -341,38 +377,14 @@ function contentExtractor(
   parser: ResourceParser,
   workspace: FoamWorkspace
 ): string {
-  let noteText = readFileSync(note.uri.toFsPath()).toString();
-  if (note.uri.fragment.startsWith('^')) {
-    const blockId = note.uri.fragment.slice(1);
-    const block = Resource.findBlock(note, blockId);
-    if (isSome(block)) {
-      noteText = extractBlockContent(noteText, note, block);
-    }
-  } else {
-    let section = Resource.findSection(note, note.uri.fragment);
-    if (!note.uri.fragment) {
-      // if there's no fragment(section), the wikilink is linking to the entire note,
-      // in which case we need to remove the title. We could just use rows.shift()
-      // but should the note start with blank lines, it will only remove the first blank line
-      // leaving the title
-      // A better way is to find where the actual title starts by assuming it's at section[0]
-      // then we treat it as the same case as link to a section
-      section = note.sections.length ? note.sections[0] : null;
-    }
-    let rows = noteText.split('\n');
-    if (isSome(section)) {
-      rows = rows.slice(section.range.start.line, section.range.end.line);
-    }
-    rows.shift();
-    noteText = rows.join('\n');
-  }
-  noteText = withLinksRelativeToWorkspaceRoot(
-    note.uri,
-    noteText,
-    parser,
-    workspace
-  );
-  return noteText;
+  const noteText = fullExtractor(note, parser, workspace);
+  if (note.uri.fragment.startsWith('^')) return noteText;
+  // Whole-note embeds keep all sections, not just the first section's range.
+  // A missing section must not cause an arbitrary first line to be removed.
+  return !note.uri.fragment ||
+    isSome(Resource.findSection(note, note.uri.fragment))
+    ? stripLeadingTitle(noteText)
+    : noteText;
 }
 
 /**

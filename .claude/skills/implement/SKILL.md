@@ -55,7 +55,11 @@ order of work.
    built, the test output, which tests stand for which criteria, anything in
    the spec you could not satisfy and why, and this block verbatim:
 
-   > **Next:** review the diff, or reply here with changes. Mark the PR ready
-   > for review when it should get a full review pass.
+   > **Next:** review the diff, or reply here with changes.
+
+7. **Mark the PR ready** — `gh pr ready <n>` — once the criteria are covered
+   and the suite is green. Leaving draft is what says the implementation is
+   done, and it triggers the review. If you could not satisfy a criterion,
+   leave it as a draft and say what is missing instead.
 
    Locally, stop after the commit and say the branch is ready to push.

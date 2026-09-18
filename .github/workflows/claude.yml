@@ -28,6 +28,24 @@ jobs:
         with:
           fetch-depth: 1
 
+      # This job holds the subscription token and a write-capable App token,
+      # and below it builds and runs the branch's own code. On a fork's PR
+      # that would hand both to code we don't control — an `issue_comment`
+      # runs in the base repo's context, so secrets are present. Maintainers
+      # can still review a fork PR by reading it; nothing here may build it.
+      - name: Refuse to build a fork's branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.issue.number || github.event.pull_request.number }}
+        run: |
+          if [ -z "$PR" ]; then
+            exit 0
+          fi
+          if [ "$(gh pr view "$PR" --json isCrossRepository --jq .isCrossRepository)" = "true" ]; then
+            echo "Refusing: #$PR comes from a fork, and this job builds and runs branch code with credentials." >&2
+            exit 1
+          fi
+
       # A stage that writes code has to be able to run the suite. Mirrors the
       # setup in ci.yml, including its cache key, so a warm cache makes this
       # cheap; a steering comment that touches no code just pays the cache
@@ -58,4 +76,4 @@ jobs:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           claude_args: |
             --model claude-opus-5
-            --allowedTools "Bash(yarn:*),Bash(git:*),Bash(gh:*),Bash(node:*),Read,Write,Edit,Glob,Grep"
+            --allowedTools "Bash(yarn:*),Bash(git:*),Bash(gh:*),Read,Write,Edit,Glob,Grep"

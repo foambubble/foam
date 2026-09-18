@@ -2,6 +2,28 @@ import { Disposable, workspace } from 'vscode';
 import { IFoamConfig } from '@foam/core';
 import { expandAlternateGroups } from './utils/glob-expand';
 
+/**
+ * Paths that are never knowledge base content, excluded regardless of
+ * configuration.
+ *
+ * `foam.files.exclude` is an array setting, so a user value replaces the
+ * default instead of extending it — anything left to that default disappears
+ * the moment someone adds a single pattern of their own.
+ *
+ * The VCS entries are spelled `/**` rather than VS Code's bare `**\/.git`
+ * because these patterns are also matched with micromatch (see `GlobMatcher`),
+ * where a bare directory name matches the directory itself and nothing under
+ * it. VS Code's own search engine prunes the folder either way.
+ */
+const ALWAYS_EXCLUDED = [
+  '**/.foam/**',
+  '**/.git/**',
+  '**/.hg/**',
+  '**/.svn/**',
+  '**/.DS_Store',
+  '**/Thumbs.db',
+];
+
 export class VsCodeFoamConfig implements IFoamConfig {
   getFilesInclude(): string[] {
     return workspace
@@ -12,7 +34,7 @@ export class VsCodeFoamConfig implements IFoamConfig {
 
   getFilesExclude(): string[] {
     return [
-      '**/.foam/**',
+      ...ALWAYS_EXCLUDED,
       ...workspace.getConfiguration().get('foam.files.exclude', []),
       ...workspace.getConfiguration().get('foam.files.ignore', []),
       ...Object.keys(workspace.getConfiguration().get('files.exclude', {})),

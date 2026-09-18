@@ -98,6 +98,27 @@ describe('VsCodeFoamConfig — files exclude', () => {
     );
   });
 
+  it('always excludes VCS and OS internals, whatever the user configures', async () => {
+    // `foam.files.exclude` is an array setting, so a user value replaces the
+    // default wholesale rather than adding to it. These patterns can never be
+    // knowledge base content, so they are not left to configuration.
+    await withModifiedFoamConfiguration(
+      'files.exclude',
+      ['**/only-this/**'],
+      async () => {
+        expect(Config.getFilesExclude()).toEqual(
+          expect.arrayContaining([
+            '**/.git/**',
+            '**/.hg/**',
+            '**/.svn/**',
+            '**/.DS_Store',
+            '**/Thumbs.db',
+          ])
+        );
+      }
+    );
+  });
+
   it('excludes VS Code files.exclude keys', async () => {
     await withModifiedConfiguration(
       'files.exclude',

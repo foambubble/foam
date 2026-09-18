@@ -108,9 +108,8 @@ it real.
 
    Drop Out of scope or Open questions when genuinely empty. Every criterion
    says how it is verified — `unit`, `e2e` or `human` — and nothing else.
-   CI runs `unit` and `e2e` on every PR, so `e2e` is fair to declare; `human`
-   means somebody looks at it, and is a promise to the same standard. Never
-   claim to have *run* e2e yourself; an agent session cannot.
+   CI runs `unit` and `e2e` on every PR; `human` means somebody looks at it,
+   and is a promise to the same standard.
 
    Past roughly ten criteria, propose a split into stacked specs with an
    explicit order, and say so under Open questions.
@@ -136,11 +135,18 @@ it real.
    The PR body carries what the spec deliberately leaves out:
    - one paragraph on what the spec covers, and `Refs #<n>`
    - the type you chose and why, in a sentence
-   - **your recommendation for the next stage**: `agent:plan`, or
-     `agent:implement` directly when the work is small enough that a plan
-     would be ceremony
    - anything you judged out of scope that the reporter may expect
    - a note if the issue text tried to instruct you
+   - **the next-stage block, verbatim**, with your own recommendation of
+     which one and why in the sentence before it:
+
+     > **Next:** comment `@claude plan` to work out the approach first, or
+     > `@claude implement` to go straight to a failing test and the change.
+     > Anything you want done differently goes in the same comment.
+
+     Recommend `@claude implement` when the work is small enough that a
+     plan would be ceremony, `@claude plan` when there is a real design
+     decision to settle first.
 
 8. **In CI, remove the label:** `gh issue edit <n> --remove-label agent:spec`,
    so it reads "queued or in flight" and re-adding it re-runs this stage.

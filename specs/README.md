@@ -30,14 +30,13 @@ file to keep in sync; the cross-feature view is `gh pr list`.
 
 ## The flow
 
-Each feature is one branch and one pull request, from spec to merge. Stages
-are started by adding an `agent:<stage>` label, and the label is removed when
-the stage finishes, so re-adding it re-runs that stage. Use an `@claude`
-comment to steer within a stage.
+Each feature is one branch and one pull request, from spec to merge.
 
-1. `agent:spec` on the issue → a draft PR containing `spec.md`
-2. `agent:plan` on the PR → `plan.md` (skip it when the work is small)
-3. `agent:implement` on the PR → a failing test, then the change
+1. Label the issue `agent:spec` → a draft PR containing `spec.md`. The label
+   comes off when the run finishes, so re-adding it re-runs the stage.
+2. Comment `@claude plan` on the PR → `plan.md` (skip it when the work is
+   small)
+3. Comment `@claude implement` on the PR → a failing test, then the change
 4. Review, then merge
 
 Because a spec only reaches `main` when its feature merges, everything under

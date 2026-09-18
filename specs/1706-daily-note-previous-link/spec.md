@@ -24,50 +24,70 @@ etc., see [[templates]]) now makes it possible to offer this as a variable
 rather than a snippet or a scripting feature.
 
 This spec covers a new Foam template variable, `FOAM_PREVIOUS_DAILY_NOTE`,
-resolved when a daily note is created. It expands to a wikilink to the most
-recent daily note that exists in the workspace before the note being
-created — skipping any gaps — or to nothing if none exists yet.
+resolved when a daily note is created. It expands to the identifier of the
+most recent daily note that exists in the workspace before the note being
+created — skipping any gaps — so a template writes
+`[[$FOAM_PREVIOUS_DAILY_NOTE]]` to get a link, or uses the bare value for
+anything else. When no earlier daily note exists the variable does not
+resolve, which lets a template supply its own fallback with the standard
+`${FOAM_PREVIOUS_DAILY_NOTE:...}` syntax.
 
 ## Acceptance criteria
 
 - **AC-1**: Given daily notes exist for Monday and last Friday, but not for
   the Saturday, Sunday or Tuesday in between, when a daily note is created
   for Wednesday and its template contains `$FOAM_PREVIOUS_DAILY_NOTE`, then
-  the resolved content links to Monday's note (the most recent one), not
-  Friday's or Tuesday's (which does not exist).
+  the variable resolves to the identifier of Monday's note (the most recent
+  one), not Friday's or Tuesday's (which does not exist).
   _verify: unit_
 
 - **AC-2**: Given no daily note exists anywhere in the workspace yet, when
-  the first daily note is created with `$FOAM_PREVIOUS_DAILY_NOTE` in its
-  template, then the variable resolves to an empty string rather than a
-  broken or placeholder link.
+  the first daily note is created from a template containing
+  `${FOAM_PREVIOUS_DAILY_NOTE:no previous note}`, then the template's
+  fallback text is used — i.e. the variable resolves to `undefined` rather
+  than to an empty string, so the existing snippet default mechanism
+  applies.
   _verify: unit_
 
-- **AC-3**: Given a daily note is created for a relative date (e.g. via the
+- **AC-3**: Given the same empty workspace, when the template writes
+  `$FOAM_PREVIOUS_DAILY_NOTE` with no fallback, then the variable expands
+  to nothing rather than being left in the note as literal `$FOAM_...`
+  text.
+  _verify: unit_
+
+- **AC-4**: Given a daily note is created for a relative date (e.g. via the
   `/tomorrow` or `/-friday` snippet, so the target date is not the current
   real-world date), when its template resolves
   `$FOAM_PREVIOUS_DAILY_NOTE`, then the search for the previous note starts
   from that target date, not from today.
   _verify: unit_
 
-- **AC-4**: Given a previous daily note exists, when
-  `$FOAM_PREVIOUS_DAILY_NOTE` resolves, then the result is a standard Foam
-  wikilink using that note's identifier, so it participates in the graph
-  and backlinks like any other link (as opposed to a raw path or a link
-  that only resolves via the daily-note snippets).
+- **AC-5**: Given a previous daily note exists, when
+  `$FOAM_PREVIOUS_DAILY_NOTE` resolves, then the value is that note's
+  workspace identifier — the same one Foam uses elsewhere for wikilinks —
+  and not a raw or absolute path, so a template that wraps it in `[[...]]`
+  produces a link that participates in the graph and backlinks. The
+  variable itself contributes no brackets, no link syntax and no
+  surrounding whitespace.
   _verify: unit_
 
-- **AC-5**: Given a daily note template that does not reference
+- **AC-6**: Given a daily note template that does not reference
   `$FOAM_PREVIOUS_DAILY_NOTE`, when a daily note is created, then behaviour
   is unchanged — no automatic lookup or content is added on the caller's
   behalf.
+  _verify: unit_
+
+- **AC-7**: Given the most recent daily note is years older than the note
+  being created, when `$FOAM_PREVIOUS_DAILY_NOTE` resolves, then it is
+  still found — the search is bounded by the daily notes present in the
+  workspace, not by a fixed time window.
   _verify: unit_
 
 ## Out of scope
 
 - Copying or summarizing content (e.g. an open-tasks section) from the
   previous note into the new one — that's the JavaScript-template use case
-  from #931, and this variable only produces a link.
+  from #931, and this variable only produces a link target.
 - Changing `/yesterday`, `/-friday`, or the other day-of-week snippets —
   they keep resolving calendar-relative dates regardless of which notes
   exist.
@@ -80,16 +100,16 @@ created — skipping any gaps — or to nothing if none exists yet.
 
 ## Open questions
 
-- How far back should the search look before giving up on a workspace that
-  has no earlier daily note at all (AC-2 covers the empty-workspace case,
-  but a workspace with a daily note from years ago and a large gap needs a
-  bound so the lookup doesn't scan indefinitely)? I'd default to a fixed,
-  generous lookback (e.g. a year) rather than exposing a new setting,
-  since nothing in the issue asks for tuning this. Left for `plan.md`.
-- Exact wikilink format when the previous note lives in a differently
-  named or nested path (per the `filepath` template metadata in
-  [[templates]]) — assumed to use the same identifier resolution as other
-  Foam-generated links (e.g. `/yesterday`), so no special-casing is needed,
-  but not verified against a nested-path example.
+- With the variable expanding to an identifier, a template that writes
+  `[[$FOAM_PREVIOUS_DAILY_NOTE]]` renders `[[]]` in the very first daily
+  note of a workspace (AC-3). A fallback can't help there, because the
+  brackets sit outside the variable. Options: accept the wart, or document
+  usage patterns that degrade cleanly. Not a blocker for AC-1..AC-7.
+- How a daily note is recognized when the template's `filepath` metadata
+  puts notes somewhere other than `openDailyNote.directory` — the search
+  has to identify candidates either by enumerating workspace resources and
+  matching the filename format, or by computing the expected path per
+  date. This determines whether AC-7 is naturally satisfied. Left for
+  `plan.md`.
 
 [templates]: ../../docs/user/features/templates.md 'Note Templates'

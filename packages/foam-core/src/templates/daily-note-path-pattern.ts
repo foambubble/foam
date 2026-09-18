@@ -159,7 +159,10 @@ export function partsFromDailyNoteSettings(
   if (!nameParts) {
     return undefined;
   }
-  const dir = directory.replace(/\\/g, '/').replace(/\/+$/, '');
+  let dir = directory.replace(/\\/g, '/');
+  while (dir.endsWith('/')) {
+    dir = dir.slice(0, -1);
+  }
   const prefix =
     dir === '' || dir === '.'
       ? '/'

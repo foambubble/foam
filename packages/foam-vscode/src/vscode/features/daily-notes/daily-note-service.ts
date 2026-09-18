@@ -163,10 +163,6 @@ export async function createDailyNoteIfNotExists(targetDate: Date, foam: Foam) {
   const formattedDate = dayjs(targetDate).format('YYYY-MM-DD');
   const variables = new Map([['FOAM_TITLE', formattedDate]]);
 
-  // FOAM_PREVIOUS_DAILY_NOTE recognizes daily notes by inverting the pattern
-  // that writes one, so the template has to be loaded before the resolver.
-  // `createNote` calls `loadTemplate` once, before anything else, so this is
-  // the same single load moved a few lines earlier.
   const template = templateUri
     ? await new TemplateLoader(readFile, workspace.isTrusted).loadTemplate(
         templateUri

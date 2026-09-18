@@ -141,8 +141,6 @@ Unix: \${FOAM_DATE_SECONDS_UNIX}`,
       await deleteFile(result.uri);
     });
 
-    // Asserts the flow is wired to the lookup; which note is "previous" is
-    // covered by previous-daily-note.test.ts in the core package.
     it('Resolves FOAM_PREVIOUS_DAILY_NOTE to the previous daily note', async () => {
       const targetDate = new Date(2021, 8, 26);
       const root = fromVsCodeUri(workspace.workspaceFolders[0].uri);

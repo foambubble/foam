@@ -15,8 +15,8 @@ on:
 jobs:
   claude:
     if: contains(github.event.comment.body, '@claude') || contains(github.event.review.body, '@claude')
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
     permissions:
       contents: write
       pull-requests: write
@@ -27,8 +27,35 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 1
+
+      # A stage that writes code has to be able to run the suite. Mirrors the
+      # setup in ci.yml, including its cache key, so a warm cache makes this
+      # cheap; a steering comment that touches no code just pays the cache
+      # restore.
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      - uses: actions/cache@v5
+        with:
+          path: |
+            node_modules
+            */*/node_modules
+            packages/foam-vscode/.vscode-test
+          key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock', 'packages/foam-vscode/src/test/run-tests.ts') }}-${{ secrets.CACHE_VERSION }}
+      - run: yarn
+      - run: yarn build
+
+      # `yarn test` runs the VS Code integration suite, which needs a display.
+      # Providing one here keeps the instructions in the skills the same as
+      # the ones a contributor follows locally.
+      - name: Start a virtual display
+        run: |
+          Xvfb :99 -screen 0 1280x1024x24 &
+          echo "DISPLAY=:99" >> "$GITHUB_ENV"
+
       - uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           claude_args: |
             --model claude-opus-5
+            --allowedTools "Bash(yarn:*),Bash(git:*),Bash(gh:*),Bash(node:*),Read,Write,Edit,Glob,Grep"

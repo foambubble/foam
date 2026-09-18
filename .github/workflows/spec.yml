@@ -1,0 +1,60 @@
+name: Spec
+
+# Label an issue `agent:spec` and Claude drafts specs/<slug>/spec.md, opening
+# it as a draft PR. See specs/README.md for the flow, .claude/skills/write-spec
+# for what it writes.
+
+on:
+  issues:
+    types: [labeled]
+  workflow_dispatch:
+    inputs:
+      issue:
+        description: Issue number to write a spec for
+        required: true
+        type: string
+
+jobs:
+  spec:
+    if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'agent:spec'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      # Never interpolate the raw input into the prompt: workflow_dispatch
+      # takes free text. Everything downstream uses this validated number.
+      - name: Resolve issue number
+        id: resolve
+        env:
+          RAW: ${{ github.event.issue.number || inputs.issue }}
+        run: |
+          case "$RAW" in
+            '' | *[!0-9]*)
+              echo "Not an issue number: $RAW" >&2
+              exit 1
+              ;;
+          esac
+          echo "issue=$RAW" >> "$GITHUB_OUTPUT"
+
+      - name: Set commit identity
+        run: |
+          git config user.name "claude[bot]"
+          git config user.email "claude[bot]@users.noreply.github.com"
+
+      - uses: anthropics/claude-code-action@v1
+        env:
+          GH_TOKEN: ${{ github.token }}
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: /write-spec ${{ steps.resolve.outputs.issue }}
+          claude_args: |
+            --allowedTools "Bash(gh:*),Bash(git:*),Read,Write,Edit,Glob,Grep"
+            --max-turns 40

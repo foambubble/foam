@@ -14,6 +14,6 @@ docs/_site
 docs/.sass-cache
 docs/.jekyll-metadata
 .test-workspace
-.agent/current-plan.md
+.agent
 .tmp
-.agent/tasks
+specs.local

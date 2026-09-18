@@ -22,6 +22,14 @@ Guidance for coding agents working in this repository — Claude Code, Codex, Cu
 
 **Nothing leaves the machine unless the contributor says so.** No pushes, PRs, issues, comments, or releases unless explicitly asked for in that same exchange. Cut branches from `origin/main` (fetch first — a local `main` may carry unpushed work), commit locally, and hand over a ready-to-paste PR title and description. Reading GitHub with `gh` is fine.
 
+## Specs
+
+Work that warrants acceptance criteria before code gets a spec in `specs/<slug>/`. `spec.md` is what and why and is reviewer-visible; `plan.md` is how, and a code reviewer must not read it — a reviewer who knows the intended approach checks the code against the plan instead of checking whether it's right. `specs.local/` is the same layout, gitignored, for exploration that hasn't graduated.
+
+`<slug>` is the branch name minus its type prefix (`feature/`, `fix/`, `spike/`), so the active spec is the one matching the current branch. One branch and one PR carry a feature from spec to merge; stages are started by adding an `agent:<stage>` label to the issue or PR, and steered with `@claude` comments. Not everything needs a spec — a bug whose failing test says it all doesn't. See [specs/README.md](specs/README.md) for the layout and the acceptance-criteria format.
+
+**Writing one is a procedure, not a blank page**: [.claude/skills/write-spec/SKILL.md](.claude/skills/write-spec/SKILL.md) has it — classify the work, research before claiming, keep solutions out of the spec, be honest about how each criterion gets verified. Read it whichever agent you are; Claude Code loads it as `/write-spec`.
+
 ## Environment
 
 Yarn v1 workspaces + Lerna. Node 22 (`.nvmrc`): `nvm use` from the repo root is enough — don't source `nvm.sh`, export `NVM_DIR`, or pin another version. Run `yarn` then `yarn build` from the root before anything else.

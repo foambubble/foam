@@ -107,6 +107,7 @@ Claude Code, Codex, Cursor, and similar tools pick up [AGENTS.md](AGENTS.md) aut
 - You are responsible for what your agent produces. Read the diff, run the tests, and make sure the change is the smallest one that covers the behavior.
 - The guidance tells agents not to push, open PRs, or comment on GitHub. Pushing and opening the PR is your job.
 - `.agent/current-plan.md` and `.agent/tasks/` are gitignored scratch space where agents keep plans and issue research.
+- Larger changes start from a spec: a short document in `specs/<slug>/` saying what the change is and how we will know it works, reviewed before the code is written. See [specs/README.md](specs/README.md).
 
 ### What reviewers look for
 

@@ -13,6 +13,14 @@ Defined in `.claude/commands/`:
 - `/update-changelog [package]` — drafts the changeset fragments missing for commits since the last release.
 - `/review-docs [user|dev]` — audits the docs tree for stubs, stale content, and dangling references.
 
+## Skills
+
+Defined in `.claude/skills/`:
+
+- `/write-spec <issue-number|problem statement>` — the spec procedure AGENTS.md points at. Given an issue it commits the spec on `<type>/<slug>`; given an idea it writes to `specs.local/` instead. It never pushes or opens a PR locally.
+
+`.github/workflows/spec.yml` runs the same skill unattended when an issue is labelled `agent:spec` — there, and only there, it pushes the branch, opens a draft PR, and removes the label.
+
 ## Permissions
 
 Bash calls are matched against the contributor's allowlist in `.claude/settings.local.json` (untracked). Simple single-purpose commands match; compound ones prompt — that's why AGENTS.md asks for simple commands. Introducing a new command shape (`cd && python`, `cd && cargo`)? Add it to the allowlist first.
@@ -26,7 +34,7 @@ The Bash tool's CWD is always the main checkout, not wherever you last `cd`'d. T
 - `cd <path> && npm <cmd>` for npm
 - Don't mix `git -C` with `cd &&` in one command
 
-`.agent/` plans and specs live only in the main checkout, never in a worktree.
+`.agent/` scratch — plans and issue research — lives only in the main checkout, never in a worktree. Tracked specs under `specs/` are ordinary repo files and belong on the branch like any other change.
 
 ## Known quirk
 

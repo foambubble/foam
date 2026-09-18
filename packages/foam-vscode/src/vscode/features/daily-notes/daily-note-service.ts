@@ -1,6 +1,15 @@
 import dayjs from 'dayjs';
 import { window, workspace } from 'vscode';
-import { joinPath, Resolver, Template, TriggerFactory } from '@foam/core';
+import {
+  convertDateformatToDayjs,
+  findPreviousDailyNote,
+  joinPath,
+  partsFromDailyNoteSettings,
+  partsFromTemplateFilepath,
+  Resolver,
+  Template,
+  TriggerFactory,
+} from '@foam/core';
 import { URI } from '@foam/core';
 import { Foam } from '@foam/core';
 import {
@@ -18,68 +27,6 @@ import {
 import { TemplateLoader } from '@foam/core/scripting';
 
 // ─── Format conversion ────────────────────────────────────────────────────────
-
-// User-facing configuration uses dateformat-library syntax. Internally we use
-// dayjs. This map handles the named masks; the regex below handles patterns.
-const DATEFORMAT_NAMED_MASKS: Record<string, string> = {
-  default: 'ddd MMM DD YYYY HH:mm:ss',
-  isoDate: 'YYYY-MM-DD',
-  shortDate: 'M/D/YY',
-  paddedShortDate: 'MM/DD/YYYY',
-  mediumDate: 'MMM D, YYYY',
-  longDate: 'MMMM D, YYYY',
-  fullDate: 'dddd, MMMM D, YYYY',
-};
-
-/**
- * Converts a dateformat-library format string (or named mask) to a dayjs
- * format string. Handles the most common date-only tokens used in Foam configs.
- * (this is to keep compatibility with users' existing filenameFormat configs,
- * which use dateformat syntax)
- *
- * Token mapping (dateformat → dayjs):
- *   yyyy → YYYY, yy → YY
- *   mmmm → MMMM, mmm → MMM, mm → MM, m → M
- *   dddd → dddd, ddd → ddd (day names — same in both)
- *   dd → DD, d → D  (day-of-month; dateformat's 'd' ≠ dayjs 'd' which is dow)
- *   WW → WW, W → W  (ISO week number — same token in both; requires isoWeek +
- *                     advancedFormat plugins loaded above)
- */
-function convertDateformatToDayjs(format: string): string {
-  if (DATEFORMAT_NAMED_MASKS[format]) {
-    return DATEFORMAT_NAMED_MASKS[format];
-  }
-  return format.replace(/yyyy|yy|mmmm|mmm|mm|m|dddd|ddd|dd|d|WW|W/g, token => {
-    switch (token) {
-      case 'yyyy':
-        return 'YYYY';
-      case 'yy':
-        return 'YY';
-      case 'mmmm':
-        return 'MMMM';
-      case 'mmm':
-        return 'MMM';
-      case 'mm':
-        return 'MM';
-      case 'm':
-        return 'M';
-      case 'dddd':
-        return 'dddd';
-      case 'ddd':
-        return 'ddd';
-      case 'dd':
-        return 'DD';
-      case 'd':
-        return 'D';
-      case 'WW':
-        return 'WW'; // ISO week number, zero-padded (requires isoWeek + advancedFormat plugins)
-      case 'W':
-        return 'W'; // ISO week number, unpadded (requires isoWeek + advancedFormat plugins)
-      default:
-        return token;
-    }
-  });
-}
 
 function formatDailyNoteFileName(
   date: Date,
@@ -215,34 +162,71 @@ export async function createDailyNoteIfNotExists(targetDate: Date, foam: Foam) {
   const locale = getFoamVsCodeConfig<string>('dateLocale', 'default');
   const formattedDate = dayjs(targetDate).format('YYYY-MM-DD');
   const variables = new Map([['FOAM_TITLE', formattedDate]]);
-  const resolver = new Resolver(variables, targetDate, undefined, locale);
 
-  const loadTemplate = templateUri
-    ? () =>
-        new TemplateLoader(readFile, workspace.isTrusted).loadTemplate(
-          templateUri
-        )
-    : async (): Promise<Template> => {
-        // Legacy fallback: title from the deprecated config
-        const titleFormat: string =
-          getFoamVsCodeConfig('openDailyNote.titleFormat') ??
-          getFoamVsCodeConfig('openDailyNote.filenameFormat') ??
-          'isoDate';
-        const title = dayjs(targetDate).format(
-          convertDateformatToDayjs(titleFormat)
-        );
-        return {
-          type: 'markdown',
-          metadata: new Map(),
-          content: `# ${title}\n`,
-        };
-      };
+  // FOAM_PREVIOUS_DAILY_NOTE recognizes daily notes by inverting the pattern
+  // that writes one, so the template has to be loaded before the resolver.
+  // `createNote` calls `loadTemplate` once, before anything else, so this is
+  // the same single load moved a few lines earlier.
+  const template = templateUri
+    ? await new TemplateLoader(readFile, workspace.isTrusted).loadTemplate(
+        templateUri
+      )
+    : legacyDailyNoteTemplate(targetDate);
+
+  const resolver = new Resolver(
+    variables,
+    targetDate,
+    undefined,
+    locale,
+    undefined,
+    before => {
+      const uri = findPreviousDailyNote(
+        foam.workspace,
+        dailyNotePathPattern(template),
+        before
+      );
+      return uri && foam.workspace.getIdentifier(uri);
+    }
+  );
 
   return NoteFactory.createNote(foam, {
     trigger: TriggerFactory.createCommandTrigger('foam.open-daily-note'),
     resolver,
-    loadTemplate,
+    loadTemplate: async () => template,
     fallbackFilepath: getDailyNoteUri(targetDate),
     onFileExists: 'open',
   });
+}
+
+/**
+ * Where daily notes live, as a pattern that can be read backwards. The
+ * template's `filepath` wins outright over the deprecated `openDailyNote.*`
+ * settings — it is what actually writes the note.
+ */
+function dailyNotePathPattern(template: Template) {
+  const templateFilepath =
+    template.type === 'markdown'
+      ? template.metadata.get('filepath')
+      : undefined;
+  return templateFilepath
+    ? partsFromTemplateFilepath(templateFilepath)
+    : partsFromDailyNoteSettings(
+        getFoamVsCodeConfig<string>('openDailyNote.directory') ?? '.',
+        getFoamVsCodeConfig('openDailyNote.filenameFormat', 'yyyy-mm-dd'),
+        getFoamVsCodeConfig('openDailyNote.fileExtension', 'md')
+      );
+}
+
+/** Daily note content from the deprecated config, when no template exists. */
+function legacyDailyNoteTemplate(targetDate: Date): Template {
+  const titleFormat: string =
+    getFoamVsCodeConfig('openDailyNote.titleFormat') ??
+    getFoamVsCodeConfig('openDailyNote.filenameFormat') ??
+    'isoDate';
+  const title = dayjs(targetDate).format(convertDateformatToDayjs(titleFormat));
+  return {
+    type: 'markdown',
+    metadata: new Map(),
+    content: `# ${title}\n`,
+  };
 }

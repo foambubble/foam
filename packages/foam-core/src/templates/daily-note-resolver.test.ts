@@ -1,7 +1,7 @@
 import { URI } from '../model/uri';
 import { FoamGraph } from '../model/graph';
 import { resolveDailyNote } from './daily-note-resolver';
-import { createTestWorkspace } from '../../test/test-utils';
+import { createTestNote, createTestWorkspace } from '../../test/test-utils';
 
 function makeReadFile(files: Record<string, string>) {
   return async (uri: URI): Promise<string> => {
@@ -112,5 +112,42 @@ Month: \${FOAM_DATE_MONTH_NAME}`;
 
     expect(enResult.content).toContain('Month: January');
     expect(jaResult.content).toContain('Month: 1月');
+  });
+
+  // The lookup is wired here, not in the resolver: without this the variable
+  // would resolve to nothing in every host that goes through resolveDailyNote.
+  it('resolves FOAM_PREVIOUS_DAILY_NOTE against the workspace', async () => {
+    const templateUri = URI.file('/workspace/.foam/templates/daily-note.md');
+    const templateContent = `---
+foam_template:
+  filepath: "/journal/\${FOAM_DATE_YEAR}-\${FOAM_DATE_MONTH}-\${FOAM_DATE_DATE}.md"
+---
+Previous: [[\${FOAM_PREVIOUS_DAILY_NOTE}]]`;
+
+    const foam = makeFoam();
+    foam.workspace.set(
+      createTestNote({ uri: '/workspace/journal/2024-01-15.md' })
+    );
+    const readFile = makeReadFile({ [templateUri.toFsPath()]: templateContent });
+
+    const result = await resolveDailyNote(date, templateUri, foam, readFile);
+
+    expect(result.content).toContain('Previous: [[2024-01-15]]');
+  });
+
+  it('leaves FOAM_PREVIOUS_DAILY_NOTE to its fallback when no earlier note exists', async () => {
+    const templateUri = URI.file('/workspace/.foam/templates/daily-note.md');
+    const templateContent = `---
+foam_template:
+  filepath: "/journal/\${FOAM_DATE_YEAR}-\${FOAM_DATE_MONTH}-\${FOAM_DATE_DATE}.md"
+---
+Previous: \${FOAM_PREVIOUS_DAILY_NOTE:none yet}`;
+
+    const foam = makeFoam();
+    const readFile = makeReadFile({ [templateUri.toFsPath()]: templateContent });
+
+    const result = await resolveDailyNote(date, templateUri, foam, readFile);
+
+    expect(result.content).toContain('Previous: none yet');
   });
 });

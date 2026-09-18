@@ -16,6 +16,7 @@ import {
   showInEditor,
   withModifiedFoamConfiguration,
 } from '../../../test/test-utils-vscode';
+import { createTestNote } from '../../../test/test-utils';
 import { fromVsCodeUri } from '../../utils/vsc-utils';
 import { fileExists, readFile } from '../../services/editor';
 import { getDailyNoteTemplateCandidateUris } from '@foam/core';
@@ -135,6 +136,37 @@ Unix: \${FOAM_DATE_SECONDS_UNIX}`,
       expect(content).toContain('Day: Sunday (short: Sun)');
       expect(content).toContain('Week: 36');
       expect(content).toContain('Week Year: 2021');
+
+      await deleteFile(template.uri);
+      await deleteFile(result.uri);
+    });
+
+    // Asserts the flow is wired to the lookup; which note is "previous" is
+    // covered by previous-daily-note.test.ts in the core package.
+    it('Resolves FOAM_PREVIOUS_DAILY_NOTE to the previous daily note', async () => {
+      const targetDate = new Date(2021, 8, 26);
+      const root = fromVsCodeUri(workspace.workspaceFolders[0].uri);
+
+      const template = await createFile(
+        `---
+foam_template:
+  filepath: '/journal/\${FOAM_DATE_YEAR}-\${FOAM_DATE_MONTH}-\${FOAM_DATE_DATE}.md'
+---
+Previous: [[\${FOAM_PREVIOUS_DAILY_NOTE}]]`,
+        DAILY_NOTE_TEMPLATE
+      );
+
+      const foam = makeFoamMock();
+      foam.workspace.set(
+        createTestNote({ uri: root.joinPath('journal', '2021-09-20.md').path })
+      );
+
+      const result = await createDailyNoteIfNotExists(targetDate, foam);
+
+      const doc = await showInEditor(result.uri);
+      expect(doc.editor.document.getText()).toContain(
+        'Previous: [[2021-09-20]]'
+      );
 
       await deleteFile(template.uri);
       await deleteFile(result.uri);

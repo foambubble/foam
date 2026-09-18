@@ -97,6 +97,12 @@ holds without a guard.
      escape. Known y/m/d tokens become date parts; `MMMM`, `MMM`, `dddd`,
      `ddd`, `W`, `WW` and any other letter run return `undefined`;
      non-letters are literals.
+   - `partsFromDailyNoteSettings(directory, filenameFormat, fileExtension)`
+     is the settings front-end: it converts the format with
+     `convertDateformatToDayjs`, parses it with `partsFromDayjsFormat`, and
+     wraps the result in the directory and extension literals. It lives here
+     rather than inline in the VS Code flow so the settings branch is tested
+     directly alongside the template branch.
 
 3. **Invert the parts.** In the same file,
    `dailyNotePathMatcher(parts: PatternPart[]): ((path: string) => Date | undefined) | undefined`.
@@ -147,9 +153,16 @@ holds without a guard.
      same single load, with load errors still thrown out of
      `createDailyNoteIfNotExists`.
 
-   Each then builds the pattern — `template.metadata?.get('filepath')` if
+   Each then builds the pattern — `template.metadata.get('filepath')` if
    present, otherwise the settings triple — and passes
    `date => { const uri = findPreviousDailyNote(foam.workspace, pattern, date); return uri && foam.workspace.getIdentifier(uri); }`.
+   Only `daily-note-service.ts` has the "otherwise": the settings are a VS Code
+   concern, so `daily-note-resolver.ts` has the template branch alone and a
+   template that sets no `filepath` leaves the variable unresolved under
+   `foam daily`. Its fallback path (`journals/YYYY-MM-DD.md`) is the CLI's own
+   default, which core cannot see. The VS Code flow builds the pattern inside
+   the callback, so the deprecated settings are read only when a template
+   actually names the variable.
    `getIdentifier` (`workspace.ts:341`) is what AC-5 asks for — the same
    minimal identifier wikilink completion produces, extension stripped.
    `template.metadata` comes from `TemplateLoader` (`template-loader.ts:73`),

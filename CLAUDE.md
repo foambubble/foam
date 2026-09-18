@@ -35,7 +35,3 @@ The Bash tool's CWD is always the main checkout, not wherever you last `cd`'d. T
 - Don't mix `git -C` with `cd &&` in one command
 
 `.agent/` scratch — plans and issue research — lives only in the main checkout, never in a worktree. Tracked specs under `specs/` are ordinary repo files and belong on the branch like any other change.
-
-## Known quirk
-
-`yarn test:e2e` launched from a Claude Code terminal can fail with `Cannot find module .../.test-workspace`: the extension host leaks `ELECTRON_RUN_AS_NODE=1`, so the spawned test VS Code runs as plain Node. Prefix the command with `env -u ELECTRON_RUN_AS_NODE`, or let the contributor run it from their own shell.

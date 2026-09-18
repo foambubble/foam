@@ -56,5 +56,6 @@ jobs:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           prompt: /write-spec ${{ steps.resolve.outputs.issue }}
           claude_args: |
+            --model claude-opus-5
             --allowedTools "Bash(gh:*),Bash(git:*),Read,Write,Edit,Glob,Grep"
             --max-turns 40

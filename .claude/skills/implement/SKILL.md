@@ -50,12 +50,28 @@ order of work.
 5. **Add a changeset** if a published package changed. A `@foam/core` change
    also lists `foam-vscode` and `@foam/cli`.
 
-6. **Commit and push to the branch, then comment on the PR** so the work is
+6. **Consolidate before anyone else reads it.** Re-read the whole diff
+   (`git diff origin/main...HEAD`) as one change rather than as the sequence
+   you wrote it in, and tidy: drop scaffolding and debug leftovers, make
+   naming match the code around it, collapse anything you wrote twice, and
+   check the comments explain why rather than restating what. Confirm each
+   criterion has a test that stands for it, a user-visible change has its
+   `docs/user/` update, and a published package has its changeset.
+
+   This pass catches sloppiness, not bugs — you are the one who wrote the
+   code, so you are the worst placed to find its logic errors. That is the
+   reviewer's job, on a different model with the spec and no plan.
+
+7. **Commit and push to the branch, then comment on the PR** so the work is
    reviewable without reading the diff cold. The comment carries: what you
    built, the test output, which tests stand for which criteria, anything in
    the spec you could not satisfy and why, and this block verbatim:
 
-   > **Next:** review the diff, or reply here with changes. Mark the PR ready
-   > for review when it should get a full review pass.
+   > **Next:** review the diff, or reply here with changes.
+
+8. **Mark the PR ready** — `gh pr ready <n>` — once the criteria are covered
+   and the suite is green. Leaving draft is what says the implementation is
+   done, and it triggers the review. If you could not satisfy a criterion,
+   leave it as a draft and say what is missing instead.
 
    Locally, stop after the commit and say the branch is ready to push.

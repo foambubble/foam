@@ -1,0 +1,60 @@
+name: Review
+
+# Marking a spec PR ready for review is the statement that the implementation
+# is done — that is what triggers the review. Drafts carry specs and plans and
+# are deliberately left alone.
+#
+# Only PRs from this flow (opened by the Claude app, branch in this repo) are
+# reviewed automatically. To review anyone else's PR, ask in a comment and
+# claude.yml handles it.
+
+on:
+  pull_request:
+    types: [ready_for_review]
+
+jobs:
+  review:
+    if: github.event.pull_request.user.login == 'claude[bot]' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          plugin_marketplaces: "https://github.com/anthropics/claude-code.git"
+          plugins: "code-review@claude-code-plugins"
+          prompt: |
+            /code-review:code-review --comment ${{ github.repository }}/pull/${{ github.event.pull_request.number }}
+
+            This PR implements the spec committed in the same branch under
+            specs/<slug>/spec.md, where <slug> is the branch name minus its
+            type prefix. Read that spec first and review the diff against its
+            acceptance criteria as well as for correctness: a criterion with
+            no test that proves it is a finding, and so is a test that asserts
+            something weaker than its criterion.
+
+            Do not read specs/**/plan.md. Knowing the intended approach makes
+            you check whether the code matches the plan, when the job is to
+            check whether the code is right.
+
+            A user-visible feature or behaviour change with nothing added
+            under docs/user/ is a finding, and so is documentation that
+            explains the implementation rather than showing someone how to
+            use the feature — AGENTS.md sets the standard those pages are
+            held to. A published package changed without a changeset is a
+            finding too.
+
+            Report findings only. Do not push commits, and do not approve or
+            request changes — the maintainer decides.
+          settings: '{"permissions":{"deny":["Read(./specs/**/plan.md)"]}}'
+          claude_args: |
+            --model claude-fable-5-1
+            --allowedTools "mcp__github_inline_comment__create_inline_comment"

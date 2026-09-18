@@ -1,4 +1,9 @@
+import MarkdownIt from 'markdown-it';
+import { mkdtempSync, writeFileSync, rmSync } from 'fs';
+import { tmpdir } from 'os';
+import path from 'path';
 import {
+  default as markdownItWikilinkEmbed,
   WIKILINK_EMBED_REGEX,
   WIKILINK_EMBED_REGEX_GROUPS,
   retrieveNoteConfig,
@@ -7,7 +12,12 @@ import {
   extractBlockContent,
   withLinksRelativeToWorkspaceRoot,
 } from './wikilink-embed';
-import { createMarkdownParser } from '@foam/core';
+import {
+  FoamWorkspace,
+  URI,
+  createMarkdownParser,
+  createRenderContext,
+} from '@foam/core';
 import {
   createTestNote,
   createTestWorkspace,
@@ -546,6 +556,102 @@ describe('Wikilink Note Embedding', () => {
       const out = withLinksRelativeToWorkspaceRoot(noteUri, text, parser, ws);
       expect(out).toContain('/ws/notes/beta.md');
       expect(out).not.toContain('#');
+    });
+  });
+
+  describe('content mode strips the title using the parsed sections', () => {
+    // Writes `source` to a temp file as `Child.md` and renders `input`
+    // through the embed plugin in content-inline mode.
+    function renderContentEmbed(source: string, input: string): string {
+      const dir = mkdtempSync(path.join(tmpdir(), 'foam-embed-'));
+      const uri = URI.file(path.join(dir, 'Child.md'));
+      writeFileSync(uri.toFsPath(), source);
+      const parser = createMarkdownParser();
+      const ws = new FoamWorkspace([URI.file(dir)]).set(
+        parser.parse(uri, source)
+      );
+      try {
+        const md = markdownItWikilinkEmbed(
+          MarkdownIt({ html: true }),
+          ws,
+          parser,
+          {
+            renderContext: createRenderContext(),
+            getEmbedNoteType: () => 'content-inline',
+          }
+        );
+        return md.render(input);
+      } finally {
+        rmSync(dir, { recursive: true, force: true });
+      }
+    }
+
+    it('removes the title when an HTML comment precedes it', () => {
+      const html = renderContentEmbed(
+        '<!-- note -->\n# Title\n\nBody',
+        '![[Child]]'
+      );
+      expect(html).toContain('Body');
+      expect(html).not.toContain('Title');
+    });
+
+    it('removes the title when a badge image precedes it', () => {
+      const html = renderContentEmbed(
+        '![Badge](badge.png)\n\n# Title\n\nBody',
+        '![[Child]]'
+      );
+      expect(html).toContain('Body');
+      expect(html).not.toContain('Title');
+    });
+
+    it('hides frontmatter the YAML parser rejects', () => {
+      for (const frontmatter of [
+        '---\ntags:\n\t- a\n---',
+        '---\nid: 1\nid: 2\n---',
+      ]) {
+        const html = renderContentEmbed(
+          `${frontmatter}\n# Title\n\nBody`,
+          '![[Child]]'
+        );
+        expect(html).toContain('Body');
+        expect(html).not.toContain('<hr');
+        expect(html).not.toContain('tags');
+        expect(html).not.toContain('id:');
+        expect(html).not.toContain('Title');
+      }
+    });
+
+    it('hides frontmatter that is not a YAML mapping', () => {
+      for (const frontmatter of [
+        '---\n- a\n---',
+        '---\nordinary prose\n---',
+      ]) {
+        const html = renderContentEmbed(
+          `${frontmatter}\n# Title\n\nBody`,
+          '![[Child]]'
+        );
+        expect(html).toContain('Body');
+        expect(html).not.toContain('<hr');
+        expect(html).not.toContain('<li>');
+        expect(html).not.toContain('ordinary prose');
+        expect(html).not.toContain('Title');
+      }
+    });
+
+    it('removes a section heading nested in a blockquote', () => {
+      const html = renderContentEmbed(
+        '> # Quoted heading\n> body text\n\n# Next\n\nTail',
+        '![[Child#Quoted heading]]'
+      );
+      expect(html).toContain('body text');
+      expect(html).not.toContain('Quoted heading');
+      expect(html).not.toContain('Tail');
+    });
+
+    it('removes the title of a note that starts with a byte order mark', () => {
+      const html = renderContentEmbed('﻿# Title\n\nBody', '![[Child]]');
+      expect(html).toContain('Body');
+      expect(html).not.toContain('Title');
     });
   });
 });

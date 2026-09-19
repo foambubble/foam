@@ -1,7 +1,8 @@
 name: Review
 
-# Marking a spec PR ready for review is the statement that the implementation
-# is done — that is what triggers the review. Drafts carry specs and plans and
+# Every push of code gets reviewed, not just the first: the PR leaving draft
+# says the implementation is done, and each push after that — a fix round, a
+# follow-up — is code nobody has read yet. Drafts carry specs and plans and
 # are deliberately left alone.
 #
 # Only PRs from this flow (opened by the Claude app, branch in this repo) are
@@ -10,11 +11,22 @@ name: Review
 
 on:
   pull_request:
-    types: [ready_for_review]
+    types: [ready_for_review, synchronize]
+
+# A newer push makes an in-flight review of the older code pointless.
+concurrency:
+  group: review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
 jobs:
   review:
-    if: github.event.pull_request.user.login == 'claude[bot]' && github.event.pull_request.head.repo.full_name == github.repository
+    # Draft is the line between work in progress and code to review: specs and
+    # plans land while the PR is a draft, so only pushes after it leaves draft
+    # get reviewed — including the fix rounds, which is the point.
+    if: >-
+      github.event.pull_request.draft == false &&
+      github.event.pull_request.user.login == 'claude[bot]' &&
+      github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:

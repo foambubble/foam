@@ -54,9 +54,14 @@ export const closeEditors = async () => {
 export const deleteFile = async (file: URI | { uri: URI }) => {
   const uri = 'uri' in file ? file.uri : file;
   try {
-    await vscode.workspace.fs.delete(toVsCodeUri(uri), {
+    // Deleted through a WorkspaceEdit rather than `fs.delete` so that VS Code
+    // fires its file-operation events, the way the explorer does.
+    const edit = new vscode.WorkspaceEdit();
+    edit.deleteFile(toVsCodeUri(uri), {
       recursive: true,
+      ignoreIfNotExists: true,
     });
+    await vscode.workspace.applyEdit(edit);
   } catch (e) {
     // ignore
   }
@@ -136,10 +141,11 @@ export const waitForEmptyFoamWorkspace = async (timeout = 5000) => {
     }
     await wait(100);
   }
+  const remaining = workspace.list().map(r => r.uri.path);
   throw new Error(
     `Timeout waiting for Foam workspace to be empty (${
-      workspace.list().length
-    } resources remaining)`
+      remaining.length
+    } resources remaining): ${remaining.join(', ')}`
   );
 };
 

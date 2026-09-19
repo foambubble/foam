@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
 import { buildWatchGlob } from '../utils/watch-glob';
 import { getUriInWorkspace } from '../../test/test-utils-vscode';
+import { waitForExpect } from '../../test/test-utils';
 
 /**
  * End-to-end check that an extension-scoped watcher (buildWatchGlob +
@@ -36,8 +37,15 @@ describe('#1668 - Scoped file-system watcher', () => {
         encoder.encode('module.exports = {}')
       );
 
+      // Watcher events arrive asynchronously, so the .md has to be waited for.
+      // Asserting straight after the write would only prove the event had not
+      // arrived yet — and would make the negative assertion below pass for the
+      // same reason, whatever the glob did.
+      await waitForExpect(() => {
+        expect(created).toContain(mdUri.path);
+      }, 2000);
+
       // The .md is watched; the node_modules .js is not.
-      expect(created).toContain(mdUri.path);
       expect(created).not.toContain(jsUri.path);
     } finally {
       sub.dispose();

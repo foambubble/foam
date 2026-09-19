@@ -21,7 +21,7 @@ export interface E2eRunState {
   unhandledErrors: unknown[];
 }
 
-function countTests(task: E2eRunTask): number {
+export function countTests(task: E2eRunTask): number {
   if (task.type === 'test') {
     return 1;
   }

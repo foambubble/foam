@@ -28,7 +28,7 @@ import { rmSync, readdirSync, existsSync } from 'fs';
 import { Config } from '@foam/core';
 import { VsCodeFoamConfig } from '../vscode/config';
 import { cleanWorkspace } from './test-utils-vscode';
-import { getE2eRunFailure } from './support/e2e-run-result';
+import { countTests, getE2eRunFailure } from './support/e2e-run-result';
 import path from 'path';
 
 const rootDir = path.join(__dirname, '../..');
@@ -100,8 +100,19 @@ export async function run(): Promise<void> {
       throw new Error('Failed to start Vitest');
     }
 
+    const files = vitest.state.getFiles();
+    // Printed unconditionally: the suite spent ten weeks reporting success
+    // while running nothing, and a line saying what actually ran is the
+    // cheapest way to notice that from a CI log.
+    console.log(
+      `Foam e2e: ran ${files.reduce(
+        (sum, f) => sum + countTests(f),
+        0
+      )} tests across ${files.length} spec files`
+    );
+
     const failure = getE2eRunFailure({
-      files: vitest.state.getFiles(),
+      files,
       unhandledErrors: vitest.state.getUnhandledErrors(),
     });
 

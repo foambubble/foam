@@ -232,7 +232,7 @@ describe('create-note command', () => {
   });
 
   describe('content resolution', () => {
-    it('resolves Foam variables and leaves VS Code snippet syntax untouched', async () => {
+    it('resolves Foam variables and lets VS Code expand the snippet syntax', async () => {
       const template = await createFile(
         '# ${FOAM_TITLE}\n\n${1:foo} $2 ${TM_FILENAME_BASE}',
         ['.foam', 'templates', 'snippet-syntax-template.md']
@@ -243,8 +243,13 @@ describe('create-note command', () => {
         templatePath: template.uri.path,
         title: 'world',
       });
+      // The note is inserted through `insertSnippet`, so VS Code resolves the
+      // snippet syntax itself: a tabstop becomes its placeholder text, an empty
+      // one becomes nothing, and TM_FILENAME_BASE becomes the note's name.
+      // Templates are documented as supporting VS Code's snippet variables
+      // (docs/user/features/templates.md).
       expect(window.activeTextEditor.document.getText()).toEqual(
-        '# world\n\n${1:foo} $2 ${TM_FILENAME_BASE}'
+        `# world\n\nfoo  ${target.getName()}`
       );
       await deleteFile(target);
       await deleteFile(template.uri);

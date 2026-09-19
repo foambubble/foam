@@ -54,7 +54,7 @@ jobs:
 
             Report findings only. Do not push commits, and do not approve or
             request changes — the maintainer decides.
-          settings: '{"permissions":{"deny":["Read(./specs/**/plan.md)"]}}'
+          settings: '{"permissions":{"deny":["Read(./specs/**/plan.md)","Bash(git push:*)","Bash(git remote:*)","Bash(gh api:*)","Bash(gh pr merge:*)","Bash(gh pr close:*)","Bash(gh workflow:*)","Bash(gh secret:*)","Bash(gh release:*)"]}}'
           claude_args: |
             --model claude-fable-5-1
-            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(git:*),Bash(gh:*),Read,Grep,Glob"
+            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(gh pr view:*),Bash(gh pr diff:*),Read,Grep,Glob"

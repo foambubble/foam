@@ -391,12 +391,7 @@ export class FoamWorkspace implements IDisposable {
    * @param reference the URI path to reverse
    */
   private getTrieIdentifier(reference: URI | string): string {
-    let path: string;
-    if (reference instanceof URI) {
-      path = (reference as URI).path;
-    } else {
-      path = reference as string;
-    }
+    const path = typeof reference === 'string' ? reference : reference.path;
 
     let reversedPath = normalize(path).split('/').reverse().join('/');
 
@@ -413,7 +408,7 @@ export class FoamWorkspace implements IDisposable {
    * case-normalized path, only an exact-case match is returned.
    */
   private getResourceByPath(reference: URI | string): Resource | null {
-    const path = reference instanceof URI ? reference.path : reference;
+    const path = typeof reference === 'string' ? reference : reference.path;
     const bucket = this._resources.get(this.getTrieIdentifier(path)) ?? [];
     return (
       bucket.find(r => r.uri.path === path) ??
@@ -422,11 +417,13 @@ export class FoamWorkspace implements IDisposable {
   }
 
   public find(reference: URI | string, baseUri?: URI): Resource | null {
-    if (reference instanceof URI) {
+    // Narrowed on the string so a URI from another copy of this module does
+    // not fall through to the identifier branch below.
+    if (typeof reference !== 'string') {
       return this.getResourceByPath(reference);
     }
     let resource: Resource | null = null;
-    const [path, fragment] = (reference as string).split('#');
+    const [path, fragment] = reference.split('#');
     if (FoamWorkspace.isIdentifier(path)) {
       resource = this.listByIdentifier(path)[0];
     } else {

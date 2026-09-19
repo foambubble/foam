@@ -19,9 +19,16 @@ export interface E2eRunState {
   unhandledErrors: unknown[];
 }
 
+/**
+ * Counts the test cases that actually executed. A skipped test is not evidence
+ * that the suite ran, so a run where everything was skipped reads as zero — the
+ * same verdict as a run that collected nothing.
+ */
 export function countTests(task: E2eRunTask): number {
   if (task.type === 'test') {
-    return 1;
+    return task.result?.state === 'pass' || task.result?.state === 'fail'
+      ? 1
+      : 0;
   }
   return (task.tasks ?? []).reduce((sum, t) => sum + countTests(t), 0);
 }
@@ -32,29 +39,37 @@ export function countTests(task: E2eRunTask): number {
  */
 export function getE2eRunFailure(state: E2eRunState): string | undefined {
   const { files, unhandledErrors } = state;
+  const reasons: string[] = [];
 
   // Reported first: it explains an empty or partial file list.
   if (unhandledErrors.length > 0) {
     const details = unhandledErrors
       .map(e => (e instanceof Error ? e.message : String(e)))
       .join('\n  ');
-    return `Vitest reported ${unhandledErrors.length} unhandled error(s) during the e2e run:\n  ${details}`;
+    reasons.push(
+      `Vitest reported ${unhandledErrors.length} unhandled error(s) during the e2e run:\n  ${details}`
+    );
   }
 
   if (files.length === 0) {
-    return 'No test files were collected — the e2e suite did not run. Check the Vitest include patterns and the pool configuration.';
+    reasons.push(
+      'No test files were collected — the e2e suite did not run. Check the Vitest include patterns and the pool configuration.'
+    );
+  } else if (files.reduce((sum, f) => sum + countTests(f), 0) === 0) {
+    reasons.push(
+      `No tests ran: ${files.length} test file(s) were collected but contained no executed test cases.`
+    );
   }
 
-  const testCount = files.reduce((sum, f) => sum + countTests(f), 0);
-  if (testCount === 0) {
-    return `No tests ran: ${files.length} test file(s) were collected but contained no executed test cases.`;
-  }
-
+  // Named even when an unhandled error already explains the run: which files
+  // failed is what a reader needs to act on.
   const failures = files.filter(f => f.result?.state === 'fail');
   if (failures.length > 0) {
     const names = failures.map(f => f.name ?? '<unknown>').join(', ');
-    return `${failures.length} of ${files.length} test files failed: ${names}`;
+    reasons.push(
+      `${failures.length} of ${files.length} test files failed: ${names}`
+    );
   }
 
-  return undefined;
+  return reasons.length > 0 ? reasons.join('\n') : undefined;
 }

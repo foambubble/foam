@@ -50,6 +50,22 @@ describe('getE2eRunFailure', () => {
     expect(failure).toMatch(/unhandled error/i);
   });
 
+  it('names the failed files even when an unhandled error is also reported', () => {
+    const failure = getE2eRunFailure({
+      files: [
+        passingFile('a.spec.ts'),
+        {
+          name: 'b.spec.ts',
+          result: { state: 'fail' },
+          tasks: [{ type: 'test', name: 'broken', result: { state: 'fail' } }],
+        },
+      ],
+      unhandledErrors: [new Error('collection blew up')],
+    });
+    expect(failure).toMatch(/unhandled error/i);
+    expect(failure).toContain('b.spec.ts');
+  });
+
   it('fails when a collected file failed', () => {
     const failure = getE2eRunFailure({
       files: [
@@ -86,6 +102,23 @@ describe('getE2eRunFailure', () => {
         unhandledErrors: [],
       })
     ).toBeUndefined();
+  });
+
+  it('does not count skipped tests as having run', () => {
+    const failure = getE2eRunFailure({
+      files: [
+        {
+          name: 'a.spec.ts',
+          result: { state: 'pass' },
+          tasks: [
+            { type: 'test', name: 'skipped', result: { state: 'skip' } },
+            { type: 'test', name: 'never started' },
+          ],
+        },
+      ],
+      unhandledErrors: [],
+    });
+    expect(failure).toMatch(/no tests ran/i);
   });
 
   it('does not count a file whose suites are all empty as having run tests', () => {

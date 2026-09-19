@@ -101,7 +101,9 @@ export class URI {
   }
 
   resolve(value: string | URI, isDirectory = false): URI {
-    const uri = value instanceof URI ? value : URI.parse(value, 'file');
+    // Narrowed on the string, as in `asAbsoluteUri`: `instanceof URI` rejects a
+    // structurally valid URI that came from another copy of this module.
+    const uri = typeof value === 'string' ? URI.parse(value, 'file') : value;
     if (!uri.isAbsolute()) {
       if (uri.scheme === 'file' || uri.scheme === 'placeholder') {
         let newUri = this.with({ fragment: uri.fragment });

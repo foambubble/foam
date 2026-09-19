@@ -19,5 +19,9 @@ integration suite:
   The files rewritten by the first rename are re-indexed, and the work is
   registered as a rename participant so it completes before the rename lands
   rather than racing whatever comes next
+- A note inside a renamed folder that linked to a sibling by a path-qualified
+  wikilink kept its old link in the index: the rename re-keyed a copy of the
+  note taken before its links were rewritten, so the backlink disappeared until
+  the file was next read. The file on disk was always correct
 - Deleting a path that is already gone no longer brings down the extension host
-  with an unhandled `EntryNotFound` rejection
+  with an unhandled `EntryNotFound` rejection, and neither does renaming one

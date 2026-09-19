@@ -64,6 +64,24 @@ describe('Foam URI', () => {
     });
   });
 
+  it('resolves a URI that is not an instance of this copy of the module', () => {
+    // Same shape and behavior, different class identity — what a URI built by a
+    // second copy of this module looks like.
+    const prototype = Object.create(Object.getPrototypeOf(URI.prototype));
+    Object.defineProperties(
+      prototype,
+      Object.getOwnPropertyDescriptors(URI.prototype)
+    );
+    const fromAnotherCopy = Object.assign(
+      Object.create(prototype),
+      new URI({ scheme: 'file', path: 'relative/note.md' })
+    ) as URI;
+
+    expect(URI.file('/my/file.md').resolve(fromAnotherCopy)).toEqual(
+      URI.file('/my/relative/note.md')
+    );
+  });
+
   it('supports computing relative paths', () => {
     expect(URI.file('/my/file.md').resolve('../hello.md')).toEqual(
       URI.file('/hello.md')

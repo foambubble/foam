@@ -1934,6 +1934,9 @@ export const window = {
 /**
  * Fires a `will` file-operation event the way VS Code does: a listener's own
  * promise is not awaited, only the thenables it hands to `waitUntil`.
+ *
+ * A participant that rejects is reported and the operation carries on, as VS
+ * Code does — a misbehaving listener must not cancel the edit.
  */
 async function fireWillEvent(
   listeners: ((e: any) => any)[],
@@ -1947,7 +1950,12 @@ async function fireWillEvent(
   for (const listener of listeners) {
     listener(event);
   }
-  await Promise.all(participants);
+  const outcomes = await Promise.allSettled(participants);
+  for (const outcome of outcomes) {
+    if (outcome.status === 'rejected') {
+      Logger.error('waitUntil participant failed', outcome.reason);
+    }
+  }
 }
 
 export const workspace = {

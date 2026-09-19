@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { Foam } from '@foam/core';
 import { Logger } from '@foam/core';
+import { URI } from '@foam/core';
 import { getFoamVsCodeConfig } from '../../config';
 import {
   fromVsCodeUri,
@@ -44,23 +45,32 @@ export default async function activate(
     // Anything still pending belongs to an earlier rename that was cancelled
     // before it completed, so it can never be consumed.
     pendingDirectoryRenames.clear();
+    const directoryRenames: Array<{ key: string; oldUri: URI; newUri: URI }> =
+      [];
     const renameEdits = new vscode.WorkspaceEdit();
     let hasMarkdownBacklinks = false;
     for (const { oldUri, newUri } of e.files) {
       const foamOldUri = fromVsCodeUri(oldUri);
       const foamNewUri = fromVsCodeUri(newUri);
 
-      const isDirectory =
-        (await vscode.workspace.fs.stat(oldUri)).type ===
-        vscode.FileType.Directory;
+      // As for deletes, VS Code can announce a rename for a path Foam cannot
+      // stat; there is nothing to rewrite or move in that case.
+      let stat: vscode.FileStat;
+      try {
+        stat = await vscode.workspace.fs.stat(oldUri);
+      } catch {
+        continue;
+      }
+      const isDirectory = stat.type === vscode.FileType.Directory;
 
-      // Collected before the links.sync check: rewriting links is optional,
+      // Noted before the links.sync check: rewriting links is optional,
       // keeping the workspace index consistent is not.
       if (isDirectory) {
-        pendingDirectoryRenames.set(
-          oldUri.toString(),
-          listDirectoryRenamePairs(foam.workspace, foamOldUri, foamNewUri)
-        );
+        directoryRenames.push({
+          key: oldUri.toString(),
+          oldUri: foamOldUri,
+          newUri: foamNewUri,
+        });
       }
 
       if (!syncLinks) {
@@ -100,10 +110,7 @@ export default async function activate(
       }
     }
 
-    if (!syncLinks) {
-      return;
-    }
-
+    // Nothing to apply when link sync is off — no edit was computed above.
     try {
       if (renameEdits.size > 0) {
         // We break the update by file because applying it at once was causing
@@ -144,6 +151,17 @@ export default async function activate(
         `Foam couldn't update the links to ${vscode.workspace.asRelativePath(
           e.newUri
         )}. Check the logs for error details.`
+      );
+    }
+
+    // Listed after the rewrite, not before: the rewrite re-indexes every file
+    // whose links it changed, and a note inside the directory being renamed can
+    // be one of them. Pairs collected earlier would carry a pre-rewrite copy of
+    // that note back into the index once the rename lands.
+    for (const { key, oldUri, newUri } of directoryRenames) {
+      pendingDirectoryRenames.set(
+        key,
+        listDirectoryRenamePairs(foam.workspace, oldUri, newUri)
       );
     }
 

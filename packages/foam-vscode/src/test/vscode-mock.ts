@@ -1060,6 +1060,30 @@ export interface TextEditor {
   hide(): void;
 }
 
+/**
+ * Resolves what VS Code resolves when a snippet is inserted: tabstops, with or
+ * without placeholder text, and the TM_ file variables. Anything else is left
+ * as written.
+ */
+function resolveSnippet(text: string, uri: Uri): string {
+  const basename = path.basename(uri.fsPath);
+  const variables: Record<string, string> = {
+    TM_FILENAME: basename,
+    TM_FILENAME_BASE: basename.replace(/\.[^.]+$/, ''),
+    TM_DIRECTORY: path.dirname(uri.fsPath),
+    TM_FILEPATH: uri.fsPath,
+  };
+  return text
+    .replace(/\$\{\d+:([^}]*)\}/g, (_, placeholder) => placeholder)
+    .replace(/\$\{\d+\}/g, '')
+    .replace(/\$\d+/g, '')
+    .replace(
+      /\$\{(TM_[A-Z_]+)(?::([^}]*))?\}/g,
+      (match, name, fallback) => variables[name] ?? fallback ?? match
+    )
+    .replace(/\$(TM_[A-Z_]+)/g, (match, name) => variables[name] ?? match);
+}
+
 class MockTextEditor implements TextEditor {
   public readonly document: TextDocument;
   public selection: Selection;
@@ -1108,8 +1132,8 @@ class MockTextEditor implements TextEditor {
   async insertSnippet(snippet: any): Promise<boolean> {
     // Insert snippet at current selection
     if (snippet && typeof snippet === 'object' && snippet.value) {
-      const text = snippet.value;
       const document = this.document as MockTextDocument;
+      const text = resolveSnippet(snippet.value, document.uri);
 
       // Replace selection with snippet text
       const startOffset = document.offsetAt(this.selection.start);
@@ -1192,6 +1216,17 @@ export class WorkspaceEdit {
       this._edits.set(key, []);
     }
     this._edits.get(key)!.push(new TextEdit(range, ''));
+  }
+
+  deleteFile(
+    uri: Uri,
+    options?: { recursive?: boolean; ignoreIfNotExists?: boolean }
+  ): void {
+    const key = uri.toString();
+    if (!this._edits.has(key)) {
+      this._edits.set(key, []);
+    }
+    this._edits.get(key)!.push({ type: 'delete', uri, options });
   }
 
   renameFile(
@@ -1299,17 +1334,8 @@ class MockFileSystem implements FileSystem {
   }
 
   async delete(uri: Uri, options?: { recursive?: boolean }): Promise<void> {
-    // Fire onWillDeleteFiles listeners before deleting, so handlers can
-    // clean up workspace state synchronously (mirrors VS Code's behaviour).
-    if (mockState.onWillDeleteFilesListeners.length > 0) {
-      const event = { files: [uri] };
-      for (const listener of mockState.onWillDeleteFilesListeners) {
-        const result = listener(event);
-        if (result && typeof result.then === 'function') {
-          await result;
-        }
-      }
-    }
+    // No file-operation event here: `workspace.fs` is a plain filesystem API,
+    // and VS Code reports it only through the file watcher.
 
     if (options?.recursive) {
       // Use rmdir with recursive option for older Node.js versions
@@ -1905,6 +1931,25 @@ export const window = {
 };
 
 // Workspace namespace
+/**
+ * Fires a `will` file-operation event the way VS Code does: a listener's own
+ * promise is not awaited, only the thenables it hands to `waitUntil`.
+ */
+async function fireWillEvent(
+  listeners: ((e: any) => any)[],
+  payload: { files: any[] }
+): Promise<void> {
+  const participants: Thenable<unknown>[] = [];
+  const event = {
+    ...payload,
+    waitUntil: (thenable: Thenable<unknown>) => participants.push(thenable),
+  };
+  for (const listener of listeners) {
+    listener(event);
+  }
+  await Promise.all(participants);
+}
+
 export const workspace = {
   get workspaceFolders(): WorkspaceFolder[] | undefined {
     return mockState.workspaceFolders.length > 0
@@ -2119,17 +2164,30 @@ export const workspace = {
           }
         }
       }
+      const deletions: { uri: Uri; options?: any }[] = [];
+      for (const [, edits] of edit._getEdits()) {
+        for (const e of edits) {
+          if (e.type === 'delete') {
+            deletions.push(e);
+          }
+        }
+      }
+
       if (
         renames.length > 0 &&
         mockState.onWillRenameFilesListeners.length > 0
       ) {
-        const event = { files: renames };
-        for (const listener of mockState.onWillRenameFilesListeners) {
-          const result = listener(event);
-          if (result && typeof result.then === 'function') {
-            await result;
-          }
-        }
+        await fireWillEvent(mockState.onWillRenameFilesListeners, {
+          files: renames,
+        });
+      }
+      if (
+        deletions.length > 0 &&
+        mockState.onWillDeleteFilesListeners.length > 0
+      ) {
+        await fireWillEvent(mockState.onWillDeleteFilesListeners, {
+          files: deletions.map(d => d.uri),
+        });
       }
 
       for (const [uriString, edits] of edit._getEdits()) {
@@ -2194,6 +2252,35 @@ export const workspace = {
               }
             }
           }
+          if (e.type === 'delete') {
+            let deletedFiles: string[] = [];
+            try {
+              const stat = await fs.promises.stat(e.uri.fsPath);
+              deletedFiles = stat.isDirectory()
+                ? await collectFilesRecursively(e.uri.fsPath)
+                : [e.uri.fsPath];
+            } catch {
+              // already gone: VS Code still reports the operation
+            }
+            try {
+              await fs.promises.rm(e.uri.fsPath, {
+                recursive: e.options?.recursive ?? false,
+                force: e.options?.ignoreIfNotExists ?? false,
+              });
+            } catch (err) {
+              if (!e.options?.ignoreIfNotExists) {
+                throw err;
+              }
+            }
+            mockState.openDocuments.delete(e.uri.toString());
+            for (const deleted of deletedFiles) {
+              const deletedUri = createVSCodeUri(URI.file(deleted));
+              mockState.openDocuments.delete(deletedUri.toString());
+              for (const watcher of mockState.fileWatchers) {
+                watcher._fireDelete(deletedUri);
+              }
+            }
+          }
         }
       }
 
@@ -2204,10 +2291,7 @@ export const workspace = {
       ) {
         const event = { files: renames };
         for (const listener of mockState.onDidRenameFilesListeners) {
-          const result = listener(event);
-          if (result && typeof result.then === 'function') {
-            await result;
-          }
+          listener(event);
         }
       }
 

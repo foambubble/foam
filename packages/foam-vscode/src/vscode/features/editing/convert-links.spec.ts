@@ -19,7 +19,7 @@ Logger.setLevel('error');
 
 describe('Link Conversion Commands', () => {
   beforeEach(async () => {
-    await cleanWorkspace(5000);
+    await cleanWorkspace();
     await closeEditors();
   });
 

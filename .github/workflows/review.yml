@@ -46,6 +46,16 @@ jobs:
           prompt: |
             /code-review:code-review --comment ${{ github.repository }}/pull/${{ github.event.pull_request.number }}
 
+            Proceed with the review even though this pull request was opened
+            by the Claude app and already carries comments from it. Those are
+            stage reports from this repo's spec, plan and implement stages —
+            not a code review. Treat a review as already done only if you
+            posted findings against the current head commit. This PR being
+            agent-authored is the normal case here, not a reason to skip.
+
+            If you find nothing worth reporting, say so in one summary
+            comment. Silence is indistinguishable from not having run.
+
             This PR implements the spec committed in the same branch under
             specs/<slug>/spec.md, where <slug> is the branch name minus its
             type prefix. Read that spec first and review the diff against its

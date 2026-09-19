@@ -434,3 +434,61 @@ describe('variable-resolver, resolveText', () => {
     expect(await resolver.resolveText(input)).toEqual(expected);
   });
 });
+
+describe('variable-resolver, FOAM_PREVIOUS_DAILY_NOTE', () => {
+  const resolverWithLookup = (
+    lookup: (before: Date) => string | undefined,
+    foamDate = new Date(2026, 8, 16)
+  ) =>
+    new Resolver(new Map(), foamDate, undefined, 'default', undefined, lookup);
+
+  it('resolves to the identifier alone, adding no link syntax (AC-5)', async () => {
+    const resolver = resolverWithLookup(() => '2026-09-14');
+
+    expect(
+      await resolver.resolveText('Previous: [[$FOAM_PREVIOUS_DAILY_NOTE]]')
+    ).toEqual('Previous: [[2026-09-14]]');
+  });
+
+  it('uses the template fallback when there is no previous daily note (AC-2)', async () => {
+    const resolver = resolverWithLookup(() => undefined);
+
+    expect(
+      await resolver.resolveText('${FOAM_PREVIOUS_DAILY_NOTE:no previous note}')
+    ).toEqual('no previous note');
+  });
+
+  it('expands to nothing when there is no previous note and no fallback (AC-3)', async () => {
+    const resolver = resolverWithLookup(() => undefined);
+
+    expect(
+      await resolver.resolveText('Previous: $FOAM_PREVIOUS_DAILY_NOTE.')
+    ).toEqual('Previous: .');
+  });
+
+  it('looks back from the Foam date, not from today (AC-4)', async () => {
+    const foamDate = new Date(2026, 8, 16);
+    const lookup = vi.fn().mockReturnValue('2026-09-14');
+    const resolver = resolverWithLookup(lookup, foamDate);
+
+    await resolver.resolveText('$FOAM_PREVIOUS_DAILY_NOTE');
+
+    expect(lookup).toHaveBeenCalledWith(foamDate);
+  });
+
+  it('is not looked up when the template does not use it (AC-6)', async () => {
+    const lookup = vi.fn();
+    const resolver = resolverWithLookup(lookup);
+
+    expect(await resolver.resolveText('# ${FOAM_DATE_YEAR}')).toEqual('# 2026');
+    expect(lookup).not.toHaveBeenCalled();
+  });
+
+  it('stays unresolved outside the daily note flows, so a fallback applies', async () => {
+    const resolver = new Resolver(new Map(), new Date());
+
+    expect(
+      await resolver.resolveText('${FOAM_PREVIOUS_DAILY_NOTE:no previous note}')
+    ).toEqual('no previous note');
+  });
+});

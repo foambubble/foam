@@ -5,13 +5,17 @@ name: Review
 # follow-up — is code nobody has read yet. Drafts carry specs and plans and
 # are deliberately left alone.
 #
+# Scope: PRs opened by the flow (claude[bot]) or by the maintainer, from a
+# branch in this repo. A contributor's PR gets a review by asking for one in
+# a comment, which claude.yml handles.
+#
 # Only PRs from this flow (opened by the Claude app, branch in this repo) are
 # reviewed automatically. To review anyone else's PR, ask in a comment and
 # claude.yml handles it.
 
 on:
   pull_request:
-    types: [ready_for_review, synchronize]
+    types: [opened, ready_for_review, synchronize]
 
 # A newer push makes an in-flight review of the older code pointless.
 concurrency:
@@ -25,7 +29,8 @@ jobs:
     # get reviewed — including the fix rounds, which is the point.
     if: >-
       github.event.pull_request.draft == false &&
-      github.event.pull_request.user.login == 'claude[bot]' &&
+      (github.event.pull_request.user.login == 'claude[bot]' ||
+       github.event.pull_request.user.login == 'riccardoferretti') &&
       github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 30

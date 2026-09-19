@@ -469,7 +469,10 @@ export function asAbsoluteUri(
   if (baseFolders.length === 0) {
     throw new Error('At least one base folder needed to compute URI');
   }
-  const path = uriOrPath instanceof URI ? uriOrPath.path : uriOrPath;
+  // Narrow on the string rather than `instanceof URI`: the VS Code extension
+  // bundle inlines its own copy of @foam/core, so a URI crossing that boundary
+  // is structurally identical but fails the instance check.
+  const path = typeof uriOrPath === 'string' ? uriOrPath : uriOrPath.path;
 
   // Check if this is already a POSIX absolute path or Windows drive path
   if (path.startsWith('/') || /^[a-zA-Z]:/.test(path)) {

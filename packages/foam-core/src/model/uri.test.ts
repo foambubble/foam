@@ -128,6 +128,24 @@ describe('asAbsoluteUri', () => {
     ).toEqual(workspaceFolder2.joinPath('file'));
   });
 
+  it('should accept a URI that is not an instance of this copy of the module', () => {
+    // The VS Code extension bundle inlines its own copy of @foam/core, and the
+    // CLI/MCP flows resolve it separately, so a URI can arrive structurally
+    // identical but failing `instanceof`. The signature is `URI | string`, so
+    // the narrowing belongs on the string, not on class identity.
+    const uri = URI.file('/absolute/path');
+    const fromAnotherCopy = { ...uri } as URI;
+    expect(asAbsoluteUri(fromAnotherCopy, [URI.file('/base')])).toEqual(uri);
+  });
+
+  it('should resolve a relative URI that is not an instance of this copy of the module', () => {
+    const workspaceFolder = URI.file('/workspace/folder');
+    const fromAnotherCopy = { ...URI.file('relative/path') } as URI;
+    expect(asAbsoluteUri(fromAnotherCopy, [workspaceFolder])).toEqual(
+      workspaceFolder.joinPath('relative/path')
+    );
+  });
+
   it('should return absolute path as-is via forPath when path does not start from base folder', () => {
     // Documents the INTENTIONAL behavior after forceSubfolder removal:
     // An absolute path like '/journal/file.md' that does NOT start with the

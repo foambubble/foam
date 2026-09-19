@@ -57,4 +57,4 @@ jobs:
           settings: '{"permissions":{"deny":["Read(./specs/**/plan.md)"]}}'
           claude_args: |
             --model claude-fable-5-1
-            --allowedTools "mcp__github_inline_comment__create_inline_comment"
+            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(git:*),Bash(gh:*),Read,Grep,Glob"

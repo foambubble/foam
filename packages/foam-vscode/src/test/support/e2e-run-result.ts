@@ -2,11 +2,9 @@
  * Verdict for an e2e run, kept separate from the runner so it can be unit
  * tested without an extension host.
  *
- * Checking only for files in a `fail` state is not enough: when the run breaks
- * before any test executes — an incompatible pool, a collection error — Vitest
- * records an unhandled error and leaves the file list empty, so a `fail` filter
- * finds nothing and the runner exits 0. A suite that ran no tests is a failure,
- * not a pass.
+ * A run that executed no tests is a failure, not a pass: when it breaks before
+ * any test runs, Vitest records an unhandled error and leaves the file list
+ * empty, so looking only for files in a `fail` state finds nothing.
  */
 
 export interface E2eRunTask {
@@ -35,8 +33,7 @@ export function countTests(task: E2eRunTask): number {
 export function getE2eRunFailure(state: E2eRunState): string | undefined {
   const { files, unhandledErrors } = state;
 
-  // Reported first: an unhandled error explains an empty or partial file list,
-  // so it is the more useful message when both conditions hold.
+  // Reported first: it explains an empty or partial file list.
   if (unhandledErrors.length > 0) {
     const details = unhandledErrors
       .map(e => (e instanceof Error ? e.message : String(e)))

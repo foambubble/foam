@@ -36,11 +36,8 @@ export default async function activate(
    * Rewrites the wikilinks that point at what is being renamed, and records
    * what a directory rename is about to move.
    *
-   * Registered through `waitUntil` so that the rename waits for it. VS Code
-   * does not await a listener's own promise, so without it the rename lands
-   * first and this work races whatever the user does next — renaming the same
-   * folder twice in a row would compute the second set of edits from links
-   * that had not been re-indexed yet.
+   * Registered through `waitUntil`: VS Code does not await a listener's own
+   * promise, so otherwise this would not finish before the rename lands.
    */
   const syncBeforeRename = async (e: vscode.FileWillRenameEvent) => {
     const syncLinks = getFoamVsCodeConfig<boolean>('links.sync.enable', true);
@@ -119,11 +116,8 @@ export default async function activate(
           const editor = await vscode.workspace.openTextDocument(uri);
           // Because the save happens within 50ms of opening the doc, it will be then closed
           await editor.save();
-          // Re-index the file we just rewrote. The watcher is debounced and,
-          // for the files a directory rename touches, may not fire at all
-          // (issue #1696), so the in-memory resource would keep the old link
-          // text — and a second rename of the same folder would then find no
-          // backlinks left to update.
+          // Re-index what we just rewrote: the watcher is scoped to note
+          // extensions and may not report these files.
           await foam.workspace.fetchAndSet(fromVsCodeUri(uri));
         }
 
@@ -186,22 +180,15 @@ export default async function activate(
   };
 
   /**
-   * Drops the notes under a directory that is about to be deleted.
+   * Drops the notes under a directory that is about to be deleted. The watcher
+   * is scoped to note extensions, so it never sees the directory go, and on
+   * macOS and Linux it receives no per-file event either.
    *
-   * On platforms where the file watcher fires directory-level events (e.g.
-   * macOS FSEvents, Linux inotify), Foam never receives individual delete
-   * events for the files inside a deleted directory, and the watcher is scoped
-   * to note extensions so it never sees the directory itself. The delete events
-   * fired here let downstream clients (graph, tags, etc.) update their state.
-   *
-   * Registered through `waitUntil` so the delete waits for it, which is what
-   * makes the workspace consistent by the time the delete is observable.
+   * Registered through `waitUntil` for the same reason as the rename above.
    */
   const cleanUpBeforeDelete = async (e: vscode.FileWillDeleteEvent) => {
     for (const uri of e.files) {
-      // VS Code also announces a delete for a path that is already gone (an
-      // `ignoreIfNotExists` edit, or a racing delete). Statting it throws, and
-      // an unhandled rejection here takes the extension host down with it.
+      // VS Code also announces a delete for a path that is already gone.
       let stat: vscode.FileStat;
       try {
         stat = await vscode.workspace.fs.stat(uri);
@@ -240,12 +227,9 @@ export default async function activate(
         }
         pendingDirectoryRenames.delete(oldUri.toString());
         for (const { oldResource, newUri } of pairs) {
-          // Re-keyed rather than re-read from disk: a directory move leaves the
-          // file contents, and so the parsed resource, untouched — only the URI
-          // changes, and the basename (which a title can fall back to) moves
-          // with it. Re-reading would be async, and awaiting it here leaves a
-          // window in which the note is under neither path — which is the way
-          // notes went missing from the index in the first place (issue #1699).
+          // A directory move leaves the contents, and so the parsed resource,
+          // untouched. Re-reading from disk is async, and awaiting it here
+          // leaves a window in which the note is indexed under neither path.
           foam.workspace.delete(oldResource.uri);
           foam.workspace.set({ ...oldResource, uri: newUri });
         }

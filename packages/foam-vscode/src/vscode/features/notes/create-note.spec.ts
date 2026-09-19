@@ -243,11 +243,7 @@ describe('create-note command', () => {
         templatePath: template.uri.path,
         title: 'world',
       });
-      // The note is inserted through `insertSnippet`, so VS Code resolves the
-      // snippet syntax itself: a tabstop becomes its placeholder text, an empty
-      // one becomes nothing, and TM_FILENAME_BASE becomes the note's name.
-      // Templates are documented as supporting VS Code's snippet variables
-      // (docs/user/features/templates.md).
+      // Inserted with `insertSnippet`, so VS Code resolves the snippet syntax.
       expect(window.activeTextEditor.document.getText()).toEqual(
         `# world\n\nfoo  ${target.getName()}`
       );

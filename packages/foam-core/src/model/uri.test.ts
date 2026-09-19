@@ -129,10 +129,6 @@ describe('asAbsoluteUri', () => {
   });
 
   it('should accept a URI that is not an instance of this copy of the module', () => {
-    // The VS Code extension bundle inlines its own copy of @foam/core, and the
-    // CLI/MCP flows resolve it separately, so a URI can arrive structurally
-    // identical but failing `instanceof`. The signature is `URI | string`, so
-    // the narrowing belongs on the string, not on class identity.
     const uri = URI.file('/absolute/path');
     const fromAnotherCopy = { ...uri } as URI;
     expect(asAbsoluteUri(fromAnotherCopy, [URI.file('/base')])).toEqual(uri);

@@ -97,11 +97,6 @@ describe('Workspace resources', () => {
 });
 
 describe('URIs from another copy of the module', () => {
-  // The VS Code extension bundle inlines its own copy of @foam/core, and the
-  // CLI/MCP flows resolve it separately, so a URI can reach the workspace
-  // structurally identical but failing `instanceof`. Narrowing on class
-  // identity sends it down the string branch, where `.split` blows up.
-
   it('should find a resource by a URI that is not an instance of this copy', () => {
     const ws = createTestWorkspace();
     const note = createTestNote({ uri: '/path/to/page-a.md' });

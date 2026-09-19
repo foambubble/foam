@@ -1,9 +1,5 @@
 import { getE2eRunFailure } from './e2e-run-result';
 
-/**
- * Regression guard for the ten weeks in which `test:e2e` exited 0 while the
- * Vitest 4 / custom-pool incompatibility stopped all 38 specs from running.
- */
 describe('getE2eRunFailure', () => {
   const passingFile = (name: string) => ({
     name,

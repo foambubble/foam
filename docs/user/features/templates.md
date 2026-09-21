@@ -203,6 +203,21 @@ return {
 };
 ```
 
+### Tab stops
+
+[VS Code tab stops](https://code.visualstudio.com/docs/editor/userdefinedsnippets#_snippet-syntax) work in `content`, but `${...}` is also JavaScript template literal syntax. Escape the `$` so the tab stop reaches the note:
+
+```javascript
+const content = `# ${title}
+
+## Mood
+\${1:great}
+
+## To-dos
+- [ ] \${2}
+`;
+```
+
 ### Security and limitations
 
 JavaScript templates execute real JavaScript. Foam guards where and when
@@ -248,6 +263,20 @@ In addition, you can also use variables provided by Foam:
 | `FOAM_CURRENT_DIR`   | The current editor's directory path. Resolves to the directory of the currently active file, or falls back to workspace root if no editor is active. Useful for creating notes in the current directory context.                                                                           |
 | `FOAM_DATE_FORMAT`   | The Foam date formatted using a [dayjs format string](https://day.js.org/docs/en/display/format). Defaults to ISO 8601 with local timezone offset (e.g. `2026-03-12T22:06:55+01:00`). Use as `$FOAM_DATE_FORMAT` for the default, or `${FOAM_DATE_FORMAT:YYYY-MM-DD}` for a custom format. |
 | `FOAM_DATE_*`        | `FOAM_DATE_YEAR`, `FOAM_DATE_MONTH`, `FOAM_DATE_WEEK`, `FOAM_DATE_DAY_ISO` etc. Foam-specific versions of [VS Code's datetime snippet variables](https://code.visualstudio.com/docs/editor/userdefinedsnippets#_variables). Prefer these versions over VS Code's.                          |
+
+### Tab stops
+
+Use [VS Code tab stops](https://code.visualstudio.com/docs/editor/userdefinedsnippets#_snippet-syntax) to jump the cursor through the new note with `Tab`:
+
+```markdown
+# $FOAM_TITLE
+
+## Mood
+${1:great}
+
+## To-dos
+- [ ] ${2}
+```
 
 ### `FOAM_DATE_FORMAT` variable
 

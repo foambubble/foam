@@ -36,9 +36,6 @@ export default async function activate(
   /**
    * Rewrites the wikilinks that point at what is being renamed, and records
    * what a directory rename is about to move.
-   *
-   * Registered through `waitUntil`: VS Code does not await a listener's own
-   * promise, so otherwise this would not finish before the rename lands.
    */
   const syncBeforeRename = async (e: vscode.FileWillRenameEvent) => {
     const syncLinks = getFoamVsCodeConfig<boolean>('links.sync.enable', true);
@@ -66,6 +63,12 @@ export default async function activate(
       // Noted before the links.sync check: rewriting links is optional,
       // keeping the workspace index consistent is not.
       if (isDirectory) {
+        // Refreshed after the rewrite below. Set here too, so that a rename
+        // that never gets there still re-keys the index.
+        pendingDirectoryRenames.set(
+          oldUri.toString(),
+          listDirectoryRenamePairs(foam.workspace, foamOldUri, foamNewUri)
+        );
         directoryRenames.push({
           key: oldUri.toString(),
           oldUri: foamOldUri,
@@ -144,19 +147,20 @@ export default async function activate(
           `Updated ${nUpdates} ${links} across ${nFiles} ${files}.`
         );
       }
-    } catch (e) {
-      Logger.error('Error while updating references to file', e);
+    } catch (err) {
+      Logger.error('Error while updating references to file', err);
+      const renamed = e.files
+        .map(f => vscode.workspace.asRelativePath(f.newUri))
+        .join(', ');
       vscode.window.showErrorMessage(
-        `Foam couldn't update the links to ${vscode.workspace.asRelativePath(
-          e.newUri
-        )}. Check the logs for error details.`
+        `Foam couldn't update the links to ${renamed}. Check the logs for error details.`
       );
     }
 
-    // Listed after the rewrite, not before: the rewrite re-indexes every file
-    // whose links it changed, and a note inside the directory being renamed can
-    // be one of them. Pairs collected earlier would carry a pre-rewrite copy of
-    // that note back into the index once the rename lands.
+    // Re-listed after the rewrite: it re-indexes every file whose links it
+    // changed, and a note inside the directory being renamed can be one of
+    // them. The pairs collected above would carry a pre-rewrite copy of that
+    // note back into the index once the rename lands.
     for (const { key, oldUri, newUri } of directoryRenames) {
       pendingDirectoryRenames.set(
         key,
@@ -200,8 +204,6 @@ export default async function activate(
    * Drops the notes under a directory that is about to be deleted. The watcher
    * is scoped to note extensions, so it never sees the directory go, and on
    * macOS and Linux it receives no per-file event either.
-   *
-   * Registered through `waitUntil` for the same reason as the rename above.
    */
   const cleanUpBeforeDelete = async (e: vscode.FileWillDeleteEvent) => {
     for (const uri of e.files) {

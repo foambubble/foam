@@ -64,27 +64,26 @@ describe('Foam URI', () => {
     });
   });
 
-  it('resolves a URI that is not an instance of this copy of the module', () => {
-    // Same shape and behavior, different class identity — what a URI built by a
-    // second copy of this module looks like.
+  it('resolves a URI-like object that is not an instance of URI', () => {
     const prototype = Object.create(Object.getPrototypeOf(URI.prototype));
     Object.defineProperties(
       prototype,
       Object.getOwnPropertyDescriptors(URI.prototype)
     );
-    const fromAnotherCopy = Object.assign(
+    const uriLike = Object.assign(
       Object.create(prototype),
       new URI({ scheme: 'file', path: 'relative/note.md' })
     ) as URI;
+    expect(uriLike instanceof URI).toBeFalsy();
 
-    expect(URI.file('/my/file.md').resolve(fromAnotherCopy)).toEqual(
+    expect(URI.file('/my/file.md').resolve(uriLike)).toEqual(
       URI.file('/my/relative/note.md')
     );
   });
 
-  it('uses the scheme of a default URI that is not an instance of this copy of the module', () => {
-    const fromAnotherCopy = { ...URI.file('/my/file.md') } as URI;
-    expect(URI.parse('/my/note.md', fromAnotherCopy).scheme).toEqual('file');
+  it('uses the scheme of a URI-like object given as default scheme', () => {
+    const uriLike = { ...URI.file('/my/file.md') } as URI;
+    expect(URI.parse('/my/note.md', uriLike).scheme).toEqual('file');
   });
 
   it('supports computing relative paths', () => {
@@ -151,16 +150,16 @@ describe('asAbsoluteUri', () => {
     ).toEqual(workspaceFolder2.joinPath('file'));
   });
 
-  it('should accept a URI that is not an instance of this copy of the module', () => {
+  it('should accept a URI-like object that is not an instance of URI', () => {
     const uri = URI.file('/absolute/path');
-    const fromAnotherCopy = { ...uri } as URI;
-    expect(asAbsoluteUri(fromAnotherCopy, [URI.file('/base')])).toEqual(uri);
+    const uriLike = { ...uri } as URI;
+    expect(asAbsoluteUri(uriLike, [URI.file('/base')])).toEqual(uri);
   });
 
-  it('should resolve a relative URI that is not an instance of this copy of the module', () => {
+  it('should resolve a relative URI-like object', () => {
     const workspaceFolder = URI.file('/workspace/folder');
-    const fromAnotherCopy = { ...URI.file('relative/path') } as URI;
-    expect(asAbsoluteUri(fromAnotherCopy, [workspaceFolder])).toEqual(
+    const uriLike = { ...URI.file('relative/path') } as URI;
+    expect(asAbsoluteUri(uriLike, [workspaceFolder])).toEqual(
       workspaceFolder.joinPath('relative/path')
     );
   });

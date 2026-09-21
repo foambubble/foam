@@ -417,8 +417,6 @@ export class FoamWorkspace implements IDisposable {
   }
 
   public find(reference: URI | string, baseUri?: URI): Resource | null {
-    // Narrowed on the string so a URI from another copy of this module does
-    // not fall through to the identifier branch below.
     if (typeof reference !== 'string') {
       return this.getResourceByPath(reference);
     }

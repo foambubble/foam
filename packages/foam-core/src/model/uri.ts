@@ -69,8 +69,6 @@ export class URI {
     if (!match) {
       return new URI();
     }
-    // Narrowed on the string, as in `resolve`: `instanceof URI` rejects a
-    // structurally valid URI that came from another copy of this module.
     const fallbackScheme =
       typeof defaultScheme === 'string' || isNone(defaultScheme)
         ? defaultScheme
@@ -103,8 +101,6 @@ export class URI {
   }
 
   resolve(value: string | URI, isDirectory = false): URI {
-    // Narrowed on the string, as in `asAbsoluteUri`: `instanceof URI` rejects a
-    // structurally valid URI that came from another copy of this module.
     const uri = typeof value === 'string' ? URI.parse(value, 'file') : value;
     if (!uri.isAbsolute()) {
       if (uri.scheme === 'file' || uri.scheme === 'placeholder') {
@@ -473,8 +469,6 @@ export function asAbsoluteUri(
   if (baseFolders.length === 0) {
     throw new Error('At least one base folder needed to compute URI');
   }
-  // Narrowed on the string: `instanceof URI` rejects a structurally valid URI
-  // that came from another copy of this module.
   const path = typeof uriOrPath === 'string' ? uriOrPath : uriOrPath.path;
 
   // Check if this is already a POSIX absolute path or Windows drive path

@@ -2277,7 +2277,10 @@ export const workspace = {
               }
               // Nothing was removed: announcing the deletion would tell the
               // watchers that files still on disk are gone.
-              Logger.warn(`vscode-mock: could not delete ${e.uri.fsPath}`, err);
+              Logger.error(
+                `vscode-mock: could not delete ${e.uri.fsPath}`,
+                err
+              );
               continue;
             }
             mockState.openDocuments.delete(e.uri.toString());

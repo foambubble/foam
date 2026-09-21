@@ -96,23 +96,24 @@ describe('Workspace resources', () => {
   });
 });
 
-describe('URIs from another copy of the module', () => {
-  it('should find a resource by a URI that is not an instance of this copy', () => {
+describe('URI-like objects', () => {
+  it('should find a resource by a URI-like object that is not an instance of URI', () => {
     const ws = createTestWorkspace();
     const note = createTestNote({ uri: '/path/to/page-a.md' });
     ws.set(note);
 
-    const fromAnotherCopy = { ...note.uri } as URI;
-    expect(ws.find(fromAnotherCopy)?.uri.path).toEqual('/path/to/page-a.md');
+    const uriLike = { ...note.uri } as URI;
+    expect(uriLike instanceof URI).toBeFalsy();
+    expect(ws.find(uriLike)?.uri.path).toEqual('/path/to/page-a.md');
   });
 
-  it('should not treat a URI from another copy as an identifier string', () => {
+  it('should not treat a URI-like object as an identifier string', () => {
     const ws = createTestWorkspace();
     const note = createTestNote({ uri: '/path/to/page-a.md' });
     ws.set(note);
 
-    const fromAnotherCopy = { ...note.uri } as URI;
-    expect(() => ws.find(fromAnotherCopy)).not.toThrow();
+    const uriLike = { ...note.uri } as URI;
+    expect(() => ws.find(uriLike)).not.toThrow();
   });
 });
 

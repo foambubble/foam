@@ -101,19 +101,19 @@ export async function run(): Promise<void> {
     }
 
     const files = vitest.state.getFiles();
+    const testCount = files.reduce((sum, f) => sum + countTests(f), 0);
     console.log(
-      `Foam e2e: ran ${files.reduce(
-        (sum, f) => sum + countTests(f),
-        0
-      )} tests across ${files.length} spec files`
+      `Foam e2e: ran ${testCount} tests across ${files.length} spec files`
     );
+
+    // After the teardown, so that a rejection landing during it is part of the
+    // verdict. Vitest only clears collected errors when a run starts.
+    await vitest.close();
 
     const failure = getE2eRunFailure({
       files,
       unhandledErrors: vitest.state.getUnhandledErrors(),
     });
-
-    await vitest.close();
 
     if (failure) {
       throw new Error(failure);

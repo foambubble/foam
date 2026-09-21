@@ -28,6 +28,7 @@ import { rmSync, readdirSync, existsSync } from 'fs';
 import { Config } from '@foam/core';
 import { VsCodeFoamConfig } from '../vscode/config';
 import { cleanWorkspace } from './test-utils-vscode';
+import { countTests, getE2eRunFailure } from './support/e2e-run-result';
 import path from 'path';
 
 const rootDir = path.join(__dirname, '../..');
@@ -99,14 +100,23 @@ export async function run(): Promise<void> {
       throw new Error('Failed to start Vitest');
     }
 
-    const failures = vitest.state.getFiles().filter(
-      (f: any) => f.result?.state === 'fail'
+    const files = vitest.state.getFiles();
+    const testCount = files.reduce((sum, f) => sum + countTests(f), 0);
+    console.log(
+      `Foam e2e: ran ${testCount} tests across ${files.length} spec files`
     );
 
+    // After the teardown, so that a rejection landing during it is part of the
+    // verdict. Vitest only clears collected errors when a run starts.
     await vitest.close();
 
-    if (failures.length > 0) {
-      throw new Error(`Some Foam tests failed: ${failures.length}`);
+    const failure = getE2eRunFailure({
+      files,
+      unhandledErrors: vitest.state.getUnhandledErrors(),
+    });
+
+    if (failure) {
+      throw new Error(failure);
     }
   } catch (error) {
     console.log('There was an error while running the Foam e2e suite', error);

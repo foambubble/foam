@@ -69,11 +69,11 @@ export class URI {
     if (!match) {
       return new URI();
     }
-    defaultScheme =
-      defaultScheme instanceof URI
-        ? defaultScheme.scheme
-        : (defaultScheme as string | null);
-    const scheme = match[2] || defaultScheme;
+    const fallbackScheme =
+      typeof defaultScheme === 'string' || isNone(defaultScheme)
+        ? defaultScheme
+        : defaultScheme.scheme;
+    const scheme = match[2] || fallbackScheme;
     if (isNone(scheme)) {
       throw new Error(`Invalid URI: The URI scheme is missing: ${value}`);
     }
@@ -101,7 +101,7 @@ export class URI {
   }
 
   resolve(value: string | URI, isDirectory = false): URI {
-    const uri = value instanceof URI ? value : URI.parse(value, 'file');
+    const uri = typeof value === 'string' ? URI.parse(value, 'file') : value;
     if (!uri.isAbsolute()) {
       if (uri.scheme === 'file' || uri.scheme === 'placeholder') {
         let newUri = this.with({ fragment: uri.fragment });
@@ -469,7 +469,7 @@ export function asAbsoluteUri(
   if (baseFolders.length === 0) {
     throw new Error('At least one base folder needed to compute URI');
   }
-  const path = uriOrPath instanceof URI ? uriOrPath.path : uriOrPath;
+  const path = typeof uriOrPath === 'string' ? uriOrPath : uriOrPath.path;
 
   // Check if this is already a POSIX absolute path or Windows drive path
   if (path.startsWith('/') || /^[a-zA-Z]:/.test(path)) {

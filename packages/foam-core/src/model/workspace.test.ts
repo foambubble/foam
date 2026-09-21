@@ -96,6 +96,27 @@ describe('Workspace resources', () => {
   });
 });
 
+describe('URI-like objects', () => {
+  it('should find a resource by a URI-like object that is not an instance of URI', () => {
+    const ws = createTestWorkspace();
+    const note = createTestNote({ uri: '/path/to/page-a.md' });
+    ws.set(note);
+
+    const uriLike = { ...note.uri } as URI;
+    expect(uriLike instanceof URI).toBeFalsy();
+    expect(ws.find(uriLike)?.uri.path).toEqual('/path/to/page-a.md');
+  });
+
+  it('should not treat a URI-like object as an identifier string', () => {
+    const ws = createTestWorkspace();
+    const note = createTestNote({ uri: '/path/to/page-a.md' });
+    ws.set(note);
+
+    const uriLike = { ...note.uri } as URI;
+    expect(() => ws.find(uriLike)).not.toThrow();
+  });
+});
+
 describe('Identifier computation', () => {
   it('should compute the minimum identifier to resolve a name clash', () => {
     const first = createTestNote({

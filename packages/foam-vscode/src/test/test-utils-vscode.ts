@@ -53,12 +53,18 @@ export const closeEditors = async () => {
 
 export const deleteFile = async (file: URI | { uri: URI }) => {
   const uri = 'uri' in file ? file.uri : file;
-  try {
-    await vscode.workspace.fs.delete(toVsCodeUri(uri), {
-      recursive: true,
-    });
-  } catch (e) {
-    // ignore
+  // Deleted through a WorkspaceEdit rather than `fs.delete` so that VS Code
+  // fires its file-operation events, the way the explorer does.
+  const edit = new vscode.WorkspaceEdit();
+  edit.deleteFile(toVsCodeUri(uri), {
+    recursive: true,
+    ignoreIfNotExists: true,
+  });
+  // A refused edit resolves `false` rather than throwing, so a delete that did
+  // not happen is otherwise only noticed by whatever trips over the leftover.
+  const applied = await vscode.workspace.applyEdit(edit);
+  if (!applied) {
+    Logger.error(`deleteFile: VS Code refused to delete ${uri.path}`);
   }
 };
 
@@ -136,10 +142,11 @@ export const waitForEmptyFoamWorkspace = async (timeout = 5000) => {
     }
     await wait(100);
   }
+  const remaining = workspace.list().map(r => r.uri.path);
   throw new Error(
     `Timeout waiting for Foam workspace to be empty (${
-      workspace.list().length
-    } resources remaining)`
+      remaining.length
+    } resources remaining): ${remaining.join(', ')}`
   );
 };
 

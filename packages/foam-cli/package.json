@@ -28,7 +28,7 @@
     "oxlint": "^1.57.0",
     "rimraf": "^3.0.2",
     "typescript": "^5.8.0",
-    "vitest": "^3.0.0"
+    "vitest": "^3.2.6"
   },
   "dependencies": {
     "chokidar": "^3.5.3",

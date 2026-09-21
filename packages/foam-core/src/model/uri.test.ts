@@ -82,6 +82,11 @@ describe('Foam URI', () => {
     );
   });
 
+  it('uses the scheme of a default URI that is not an instance of this copy of the module', () => {
+    const fromAnotherCopy = { ...URI.file('/my/file.md') } as URI;
+    expect(URI.parse('/my/note.md', fromAnotherCopy).scheme).toEqual('file');
+  });
+
   it('supports computing relative paths', () => {
     expect(URI.file('/my/file.md').resolve('../hello.md')).toEqual(
       URI.file('/hello.md')

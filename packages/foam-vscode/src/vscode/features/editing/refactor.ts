@@ -1,18 +1,18 @@
 import * as vscode from 'vscode';
-import { Foam } from '@foam/core';
-import { Logger } from '@foam/core';
-import { URI } from '@foam/core';
+import {
+  computeDirectoryWikilinkRenameEdits,
+  computeWikilinkRenameEdits,
+  Foam,
+  listDirectoryRenamePairs,
+  Logger,
+  type URI,
+} from '@foam/core';
 import { getFoamVsCodeConfig } from '../../config';
 import {
   fromVsCodeUri,
   toVsCodeRange,
   toVsCodeUri,
 } from '../../utils/vsc-utils';
-import {
-  computeWikilinkRenameEdits,
-  computeDirectoryWikilinkRenameEdits,
-  listDirectoryRenamePairs,
-} from '@foam/core';
 
 const MARKDOWN_LINK_NOTIFICATION_KEY =
   'foam.links.sync.markdownLinkNotificationShown';
@@ -110,7 +110,6 @@ export default async function activate(
       }
     }
 
-    // Nothing to apply when link sync is off — no edit was computed above.
     try {
       if (renameEdits.size > 0) {
         // We break the update by file because applying it at once was causing

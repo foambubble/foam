@@ -11,7 +11,8 @@ integration suite:
   given a URI, and the workspace no longer throws `reference.split is not a
   function` when looked up by one. Both narrowed on `instanceof URI`, which does
   not hold for a URI that crosses into the extension bundle's inlined copy of
-  `@foam/core`
+  `@foam/core`. The other `string | URI` narrowings in `URI` itself now use the
+  same discriminator
 - Renaming a folder keeps its notes in the index without a gap: they are re-keyed
   under the new path as the rename completes, instead of being removed and
   re-read asynchronously, which briefly left them indexed under neither path

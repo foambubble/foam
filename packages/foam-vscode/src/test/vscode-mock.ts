@@ -2163,18 +2163,14 @@ export const workspace = {
 
   async applyEdit(edit: WorkspaceEdit): Promise<boolean> {
     try {
-      // Collect rename operations and fire onWillRenameFiles before processing
+      // Collect the file operations, to announce them before processing
       const renames: { oldUri: Uri; newUri: Uri }[] = [];
+      const deletions: { uri: Uri; options?: any }[] = [];
       for (const [, edits] of edit._getEdits()) {
         for (const e of edits) {
           if (e.type === 'rename') {
             renames.push(e);
           }
-        }
-      }
-      const deletions: { uri: Uri; options?: any }[] = [];
-      for (const [, edits] of edit._getEdits()) {
-        for (const e of edits) {
           if (e.type === 'delete') {
             deletions.push(e);
           }
@@ -2279,6 +2275,10 @@ export const workspace = {
               if (!e.options?.ignoreIfNotExists) {
                 throw err;
               }
+              // Nothing was removed: announcing the deletion would tell the
+              // watchers that files still on disk are gone.
+              Logger.warn(`vscode-mock: could not delete ${e.uri.fsPath}`, err);
+              continue;
             }
             mockState.openDocuments.delete(e.uri.toString());
             for (const deleted of deletedFiles) {

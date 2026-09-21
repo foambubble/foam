@@ -69,11 +69,13 @@ export class URI {
     if (!match) {
       return new URI();
     }
-    defaultScheme =
-      defaultScheme instanceof URI
-        ? defaultScheme.scheme
-        : (defaultScheme as string | null);
-    const scheme = match[2] || defaultScheme;
+    // Narrowed on the string, as in `resolve`: `instanceof URI` rejects a
+    // structurally valid URI that came from another copy of this module.
+    const fallbackScheme =
+      typeof defaultScheme === 'string' || isNone(defaultScheme)
+        ? defaultScheme
+        : defaultScheme.scheme;
+    const scheme = match[2] || fallbackScheme;
     if (isNone(scheme)) {
       throw new Error(`Invalid URI: The URI scheme is missing: ${value}`);
     }

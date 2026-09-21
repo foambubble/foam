@@ -53,17 +53,18 @@ export const closeEditors = async () => {
 
 export const deleteFile = async (file: URI | { uri: URI }) => {
   const uri = 'uri' in file ? file.uri : file;
-  try {
-    // Deleted through a WorkspaceEdit rather than `fs.delete` so that VS Code
-    // fires its file-operation events, the way the explorer does.
-    const edit = new vscode.WorkspaceEdit();
-    edit.deleteFile(toVsCodeUri(uri), {
-      recursive: true,
-      ignoreIfNotExists: true,
-    });
-    await vscode.workspace.applyEdit(edit);
-  } catch (e) {
-    // ignore
+  // Deleted through a WorkspaceEdit rather than `fs.delete` so that VS Code
+  // fires its file-operation events, the way the explorer does.
+  const edit = new vscode.WorkspaceEdit();
+  edit.deleteFile(toVsCodeUri(uri), {
+    recursive: true,
+    ignoreIfNotExists: true,
+  });
+  // A refused edit resolves `false` rather than throwing, so a delete that did
+  // not happen is otherwise only noticed by whatever trips over the leftover.
+  const applied = await vscode.workspace.applyEdit(edit);
+  if (!applied) {
+    Logger.error(`deleteFile: VS Code refused to delete ${uri.path}`);
   }
 };
 

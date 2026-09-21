@@ -64,6 +64,28 @@ describe('Foam URI', () => {
     });
   });
 
+  it('resolves a URI-like object that is not an instance of URI', () => {
+    const prototype = Object.create(Object.getPrototypeOf(URI.prototype));
+    Object.defineProperties(
+      prototype,
+      Object.getOwnPropertyDescriptors(URI.prototype)
+    );
+    const uriLike = Object.assign(
+      Object.create(prototype),
+      new URI({ scheme: 'file', path: 'relative/note.md' })
+    ) as URI;
+    expect(uriLike instanceof URI).toBeFalsy();
+
+    expect(URI.file('/my/file.md').resolve(uriLike)).toEqual(
+      URI.file('/my/relative/note.md')
+    );
+  });
+
+  it('uses the scheme of a URI-like object given as default scheme', () => {
+    const uriLike = { ...URI.file('/my/file.md') } as URI;
+    expect(URI.parse('/my/note.md', uriLike).scheme).toEqual('file');
+  });
+
   it('supports computing relative paths', () => {
     expect(URI.file('/my/file.md').resolve('../hello.md')).toEqual(
       URI.file('/hello.md')
@@ -126,6 +148,20 @@ describe('asAbsoluteUri', () => {
     expect(
       asAbsoluteUri(uri, [workspaceFolder1, workspaceFolder2, workspaceFolder3])
     ).toEqual(workspaceFolder2.joinPath('file'));
+  });
+
+  it('should accept a URI-like object that is not an instance of URI', () => {
+    const uri = URI.file('/absolute/path');
+    const uriLike = { ...uri } as URI;
+    expect(asAbsoluteUri(uriLike, [URI.file('/base')])).toEqual(uri);
+  });
+
+  it('should resolve a relative URI-like object', () => {
+    const workspaceFolder = URI.file('/workspace/folder');
+    const uriLike = { ...URI.file('relative/path') } as URI;
+    expect(asAbsoluteUri(uriLike, [workspaceFolder])).toEqual(
+      workspaceFolder.joinPath('relative/path')
+    );
   });
 
   it('should return absolute path as-is via forPath when path does not start from base folder', () => {

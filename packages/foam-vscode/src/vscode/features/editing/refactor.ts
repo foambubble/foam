@@ -1,17 +1,18 @@
 import * as vscode from 'vscode';
-import { Foam } from '@foam/core';
-import { Logger } from '@foam/core';
+import {
+  computeDirectoryWikilinkRenameEdits,
+  computeWikilinkRenameEdits,
+  Foam,
+  listDirectoryRenamePairs,
+  Logger,
+  type URI,
+} from '@foam/core';
 import { getFoamVsCodeConfig } from '../../config';
 import {
   fromVsCodeUri,
   toVsCodeRange,
   toVsCodeUri,
 } from '../../utils/vsc-utils';
-import {
-  computeWikilinkRenameEdits,
-  computeDirectoryWikilinkRenameEdits,
-  listDirectoryRenamePairs,
-} from '@foam/core';
 
 const MARKDOWN_LINK_NOTIFICATION_KEY =
   'foam.links.sync.markdownLinkNotificationShown';
@@ -32,143 +33,200 @@ export default async function activate(
     ReturnType<typeof listDirectoryRenamePairs>
   >();
 
-  context.subscriptions.push(
-    vscode.workspace.onWillRenameFiles(async e => {
-      const syncLinks = getFoamVsCodeConfig<boolean>('links.sync.enable', true);
-      // Anything still pending belongs to an earlier rename that was cancelled
-      // before it completed, so it can never be consumed.
-      pendingDirectoryRenames.clear();
-      const renameEdits = new vscode.WorkspaceEdit();
-      let hasMarkdownBacklinks = false;
-      for (const { oldUri, newUri } of e.files) {
-        const foamOldUri = fromVsCodeUri(oldUri);
-        const foamNewUri = fromVsCodeUri(newUri);
+  /**
+   * Rewrites the wikilinks that point at what is being renamed, and records
+   * what a directory rename is about to move.
+   */
+  const syncBeforeRename = async (e: vscode.FileWillRenameEvent) => {
+    const syncLinks = getFoamVsCodeConfig<boolean>('links.sync.enable', true);
+    // Anything still pending belongs to an earlier rename that was cancelled
+    // before it completed, so it can never be consumed.
+    pendingDirectoryRenames.clear();
+    const directoryRenames: Array<{ key: string; oldUri: URI; newUri: URI }> =
+      [];
+    const renameEdits = new vscode.WorkspaceEdit();
+    let hasMarkdownBacklinks = false;
+    for (const { oldUri, newUri } of e.files) {
+      const foamOldUri = fromVsCodeUri(oldUri);
+      const foamNewUri = fromVsCodeUri(newUri);
 
-        const isDirectory =
-          (await vscode.workspace.fs.stat(oldUri)).type ===
-          vscode.FileType.Directory;
+      // As for deletes, VS Code can announce a rename for a path Foam cannot
+      // stat; there is nothing to rewrite or move in that case.
+      let stat: vscode.FileStat;
+      try {
+        stat = await vscode.workspace.fs.stat(oldUri);
+      } catch {
+        continue;
+      }
+      const isDirectory = stat.type === vscode.FileType.Directory;
 
-        // Collected before the links.sync check: rewriting links is optional,
-        // keeping the workspace index consistent is not.
-        if (isDirectory) {
-          pendingDirectoryRenames.set(
-            oldUri.toString(),
-            listDirectoryRenamePairs(foam.workspace, foamOldUri, foamNewUri)
-          );
-        }
-
-        if (!syncLinks) {
-          continue;
-        }
-
-        const wikilinkEdits = isDirectory
-          ? computeDirectoryWikilinkRenameEdits(
-              foam.workspace,
-              foam.graph,
-              foamOldUri,
-              foamNewUri
-            )
-          : computeWikilinkRenameEdits(
-              foam.workspace,
-              foam.graph,
-              foamOldUri,
-              foamNewUri
-            );
-
-        for (const { uri, edit } of wikilinkEdits) {
-          renameEdits.replace(
-            toVsCodeUri(uri),
-            toVsCodeRange(edit.range),
-            edit.newText
-          );
-        }
-
-        if (!isDirectory) {
-          if (
-            foam.graph
-              .getBacklinks(foamOldUri)
-              .some(c => c.link.type === 'link')
-          ) {
-            hasMarkdownBacklinks = true;
-          }
-        }
+      // Noted before the links.sync check: rewriting links is optional,
+      // keeping the workspace index consistent is not.
+      if (isDirectory) {
+        // Refreshed after the rewrite below. Set here too, so that a rename
+        // that never gets there still re-keys the index.
+        pendingDirectoryRenames.set(
+          oldUri.toString(),
+          listDirectoryRenamePairs(foam.workspace, foamOldUri, foamNewUri)
+        );
+        directoryRenames.push({
+          key: oldUri.toString(),
+          oldUri: foamOldUri,
+          newUri: foamNewUri,
+        });
       }
 
       if (!syncLinks) {
-        return;
+        continue;
       }
 
-      try {
-        if (renameEdits.size > 0) {
-          // We break the update by file because applying it at once was causing
-          // dirty state and editors not always saving or closing
-          for (const renameEditForUri of renameEdits.entries()) {
-            const [uri, edits] = renameEditForUri;
-            const fileEdits = new vscode.WorkspaceEdit();
-            fileEdits.set(uri, edits);
-            await vscode.workspace.applyEdit(fileEdits);
-            const editor = await vscode.workspace.openTextDocument(uri);
-            // Because the save happens within 50ms of opening the doc, it will be then closed
-            editor.save();
-          }
+      const wikilinkEdits = isDirectory
+        ? computeDirectoryWikilinkRenameEdits(
+            foam.workspace,
+            foam.graph,
+            foamOldUri,
+            foamNewUri
+          )
+        : computeWikilinkRenameEdits(
+            foam.workspace,
+            foam.graph,
+            foamOldUri,
+            foamNewUri
+          );
 
-          // Reporting
-          const nUpdates = renameEdits.entries().reduce((acc, entry) => {
-            return (acc += entry[1].length);
-          }, 0);
-          const links = nUpdates > 1 ? 'links' : 'link';
-          const nFiles = renameEdits.size;
-          const files = nFiles > 1 ? 'files' : 'file';
-          Logger.info(
-            `Updated links in the following files:`,
-            ...renameEdits
-              .entries()
-              .map(e => vscode.workspace.asRelativePath(e[0]))
-          );
-          vscode.window.showInformationMessage(
-            `Updated ${nUpdates} ${links} across ${nFiles} ${files}.`
-          );
-        }
-      } catch (e) {
-        Logger.error('Error while updating references to file', e);
-        vscode.window.showErrorMessage(
-          `Foam couldn't update the links to ${vscode.workspace.asRelativePath(
-            e.newUri
-          )}. Check the logs for error details.`
+      for (const { uri, edit } of wikilinkEdits) {
+        renameEdits.replace(
+          toVsCodeUri(uri),
+          toVsCodeRange(edit.range),
+          edit.newText
         );
       }
 
-      // On the first rename where there are markdown backlinks, nudge the user
-      // to enable VS Code's built-in markdown link update setting if they haven't already.
-      if (
-        hasMarkdownBacklinks &&
-        !context.globalState.get(MARKDOWN_LINK_NOTIFICATION_KEY)
-      ) {
-        const vsCodeMarkdownSetting = vscode.workspace
-          .getConfiguration('markdown')
-          .get<string>('updateLinksOnFileMove.enabled', 'never');
-        void context.globalState.update(MARKDOWN_LINK_NOTIFICATION_KEY, true);
-        if (vsCodeMarkdownSetting === 'never') {
-          void vscode.window
-            .showInformationMessage(
-              "Foam updated your wikilinks. To also update standard markdown links on rename, enable VS Code's built-in setting.",
-              'Enable',
-              'Dismiss'
-            )
-            .then(choice => {
-              if (choice === 'Enable') {
-                return vscode.workspace
-                  .getConfiguration('markdown')
-                  .update(
-                    'updateLinksOnFileMove.enabled',
-                    'always',
-                    vscode.ConfigurationTarget.Global
-                  );
-              }
-            });
+      if (!isDirectory) {
+        if (
+          foam.graph
+            .getBacklinks(foamOldUri)
+            .some(c => c.link.type === 'link')
+        ) {
+          hasMarkdownBacklinks = true;
         }
       }
-    }),
+    }
+
+    try {
+      if (renameEdits.size > 0) {
+        // We break the update by file because applying it at once was causing
+        // dirty state and editors not always saving or closing
+        for (const renameEditForUri of renameEdits.entries()) {
+          const [uri, edits] = renameEditForUri;
+          const fileEdits = new vscode.WorkspaceEdit();
+          fileEdits.set(uri, edits);
+          await vscode.workspace.applyEdit(fileEdits);
+          const editor = await vscode.workspace.openTextDocument(uri);
+          // Because the save happens within 50ms of opening the doc, it will be then closed
+          await editor.save();
+          // Re-index what we just rewrote: the watcher is scoped to note
+          // extensions and may not report these files.
+          await foam.workspace.fetchAndSet(fromVsCodeUri(uri));
+        }
+
+        // Reporting
+        const nUpdates = renameEdits.entries().reduce((acc, entry) => {
+          return (acc += entry[1].length);
+        }, 0);
+        const links = nUpdates > 1 ? 'links' : 'link';
+        const nFiles = renameEdits.size;
+        const files = nFiles > 1 ? 'files' : 'file';
+        Logger.info(
+          `Updated links in the following files:`,
+          ...renameEdits
+            .entries()
+            .map(e => vscode.workspace.asRelativePath(e[0]))
+        );
+        vscode.window.showInformationMessage(
+          `Updated ${nUpdates} ${links} across ${nFiles} ${files}.`
+        );
+      }
+    } catch (err) {
+      Logger.error('Error while updating references to file', err);
+      const renamed = e.files
+        .map(f => vscode.workspace.asRelativePath(f.newUri))
+        .join(', ');
+      vscode.window.showErrorMessage(
+        `Foam couldn't update the links to ${renamed}. Check the logs for error details.`
+      );
+    }
+
+    // Re-listed after the rewrite: it re-indexes every file whose links it
+    // changed, and a note inside the directory being renamed can be one of
+    // them. The pairs collected above would carry a pre-rewrite copy of that
+    // note back into the index once the rename lands.
+    for (const { key, oldUri, newUri } of directoryRenames) {
+      pendingDirectoryRenames.set(
+        key,
+        listDirectoryRenamePairs(foam.workspace, oldUri, newUri)
+      );
+    }
+
+    // On the first rename where there are markdown backlinks, nudge the user
+    // to enable VS Code's built-in markdown link update setting if they haven't already.
+    if (
+      hasMarkdownBacklinks &&
+      !context.globalState.get(MARKDOWN_LINK_NOTIFICATION_KEY)
+    ) {
+      const vsCodeMarkdownSetting = vscode.workspace
+        .getConfiguration('markdown')
+        .get<string>('updateLinksOnFileMove.enabled', 'never');
+      void context.globalState.update(MARKDOWN_LINK_NOTIFICATION_KEY, true);
+      if (vsCodeMarkdownSetting === 'never') {
+        void vscode.window
+          .showInformationMessage(
+            "Foam updated your wikilinks. To also update standard markdown links on rename, enable VS Code's built-in setting.",
+            'Enable',
+            'Dismiss'
+          )
+          .then(choice => {
+            if (choice === 'Enable') {
+              return vscode.workspace
+                .getConfiguration('markdown')
+                .update(
+                  'updateLinksOnFileMove.enabled',
+                  'always',
+                  vscode.ConfigurationTarget.Global
+                );
+            }
+          });
+      }
+    }
+  };
+
+  /**
+   * Drops the notes under a directory that is about to be deleted. The watcher
+   * is scoped to note extensions, so it never sees the directory go, and on
+   * macOS and Linux it receives no per-file event either.
+   */
+  const cleanUpBeforeDelete = async (e: vscode.FileWillDeleteEvent) => {
+    for (const uri of e.files) {
+      // VS Code also announces a delete for a path that is already gone.
+      let stat: vscode.FileStat;
+      try {
+        stat = await vscode.workspace.fs.stat(uri);
+      } catch {
+        continue;
+      }
+      if (stat.type !== vscode.FileType.Directory) {
+        continue;
+      }
+      const foamUri = fromVsCodeUri(uri);
+      foam.workspace
+        .list()
+        .filter(r => r.uri.path.startsWith(foamUri.path + '/'))
+        .forEach(resource => foam.workspace.delete(resource.uri));
+    }
+  };
+
+  context.subscriptions.push(
+    vscode.workspace.onWillRenameFiles(e => e.waitUntil(syncBeforeRename(e))),
 
     /**
      * Completes a directory rename: the entries collected before the move are
@@ -180,7 +238,7 @@ export default async function activate(
      * would otherwise re-index these files may never arrive. Doing it here
      * makes the rename self-contained and platform-independent (issue #1696).
      */
-    vscode.workspace.onDidRenameFiles(async e => {
+    vscode.workspace.onDidRenameFiles(e => {
       for (const { oldUri } of e.files) {
         const pairs = pendingDirectoryRenames.get(oldUri.toString());
         if (!pairs) {
@@ -188,30 +246,15 @@ export default async function activate(
         }
         pendingDirectoryRenames.delete(oldUri.toString());
         for (const { oldResource, newUri } of pairs) {
+          // A directory move leaves the contents, and so the parsed resource,
+          // untouched. Re-reading from disk is async, and awaiting it here
+          // leaves a window in which the note is indexed under neither path.
           foam.workspace.delete(oldResource.uri);
-          await foam.workspace.fetchAndSet(newUri);
+          foam.workspace.set({ ...oldResource, uri: newUri });
         }
       }
     }),
 
-    vscode.workspace.onWillDeleteFiles(async e => {
-      for (const uri of e.files) {
-        const stat = await vscode.workspace.fs.stat(uri);
-        if (stat.type !== vscode.FileType.Directory) {
-          continue;
-        }
-        // On platforms where the file watcher fires directory-level events
-        // (e.g. macOS FSEvents, Linux inotify), Foam never receives individual
-        // delete events for files inside a deleted directory. We clean up here,
-        // synchronously, inside the awaited onWillDeleteFiles handler, so that
-        // the workspace stays consistent. The delete events fired here allow
-        // downstream clients (graph, tags, etc.) to update their state.
-        const foamUri = fromVsCodeUri(uri);
-        foam.workspace
-          .list()
-          .filter(r => r.uri.path.startsWith(foamUri.path + '/'))
-          .forEach(resource => foam.workspace.delete(resource.uri));
-      }
-    })
+    vscode.workspace.onWillDeleteFiles(e => e.waitUntil(cleanUpBeforeDelete(e)))
   );
 }

@@ -178,6 +178,50 @@ describe('Note rename sync', () => {
       await deleteFile(folderBUri);
     });
 
+    it('should index the rewritten links of notes inside the renamed folder', async () => {
+      // int-note-b's basename is ambiguous, so int-note-a links to it
+      // path-qualified — making int-note-a both a file the rename rewrites and
+      // a file the rename moves.
+      await createFile('Content of B', [
+        'dir-internal',
+        'int-folderA',
+        'int-note-b.md',
+      ]);
+      const noteA = await createFile('Link to [[int-folderA/int-note-b]]', [
+        'dir-internal',
+        'int-folderA',
+        'int-note-a.md',
+      ]);
+      const conflict = await createFile('Conflicting note', [
+        'dir-internal',
+        'int-other',
+        'int-note-b.md',
+      ]);
+
+      await wait(1000);
+      await runCommand(UPDATE_GRAPH_COMMAND_NAME);
+
+      const folderAUri = noteA.uri.getDirectory();
+      const folderBUri = folderAUri.getDirectory().joinPath('int-folderB');
+      const movedNoteA = folderBUri.joinPath('int-note-a.md');
+      const movedNoteB = folderBUri.joinPath('int-note-b.md');
+      const foam = await getFoamFromVSCode();
+
+      await renameFile(folderAUri, folderBUri);
+
+      expect((await readFile(movedNoteA)).trim()).toEqual(
+        'Link to [[int-folderB/int-note-b]]'
+      );
+      // Asserted with no wait, as above: the index must match what was written
+      // to disk without the watcher having to re-read the file.
+      expect(
+        foam.graph.getBacklinks(movedNoteB).map(c => c.source.path)
+      ).toEqual([movedNoteA.path]);
+
+      await deleteFile(folderBUri);
+      await deleteFile(conflict.uri);
+    });
+
     it('should still sync wikilinks when the same folder is moved twice', async () => {
       // The first move must leave the notes indexed, otherwise the second move
       // has nothing to compute renames from and silently updates no links.

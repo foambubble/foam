@@ -90,6 +90,19 @@ describe('inverting a daily note template filepath', () => {
     ).toBeUndefined();
   });
 
+  it('is unavailable for a variable that names a property of Object', () => {
+    expect(
+      partsFromTemplateFilepath(
+        '/journal/${constructor}-${FOAM_DATE_MONTH}-${FOAM_DATE_DATE}.md'
+      )
+    ).toBeUndefined();
+    expect(
+      partsFromTemplateFilepath(
+        '/journal/${toString}${FOAM_DATE_YEAR}-${FOAM_DATE_MONTH}-${FOAM_DATE_DATE}.md'
+      )
+    ).toBeUndefined();
+  });
+
   it('is unavailable for a path that names a month but not a day', () => {
     const parts = partsFromTemplateFilepath(
       '/journal/${FOAM_DATE_YEAR}-${FOAM_DATE_MONTH}.md'

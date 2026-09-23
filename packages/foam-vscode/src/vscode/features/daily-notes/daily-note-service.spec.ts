@@ -64,7 +64,10 @@ describe('dailyNotePathPattern', () => {
   it('is unavailable for a JavaScript daily note template', async () => {
     const template: Template = {
       type: 'javascript',
-      createNote: async () => ({ filepath: URI.file('/journal/note.md') }),
+      createNote: async () => ({
+        filepath: URI.file('/journal/note.md'),
+        content: '# Daily note',
+      }),
     };
 
     await withModifiedFoamConfiguration(

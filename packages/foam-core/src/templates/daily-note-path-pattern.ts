@@ -47,13 +47,13 @@ const TOKEN_REGEX: Record<DateToken, string> = {
  * one stands for. `FOAM_TITLE` counts as a date part because both daily-note
  * flows set it to the formatted date before resolving.
  */
-const VARIABLE_FORMAT: Record<string, string> = {
-  FOAM_TITLE: 'YYYY-MM-DD',
-  FOAM_DATE_YEAR: 'YYYY',
-  FOAM_DATE_YEAR_SHORT: 'YY',
-  FOAM_DATE_MONTH: 'MM',
-  FOAM_DATE_DATE: 'DD',
-};
+const VARIABLE_FORMAT = new Map<string, string>([
+  ['FOAM_TITLE', 'YYYY-MM-DD'],
+  ['FOAM_DATE_YEAR', 'YYYY'],
+  ['FOAM_DATE_YEAR_SHORT', 'YY'],
+  ['FOAM_DATE_MONTH', 'MM'],
+  ['FOAM_DATE_DATE', 'DD'],
+]);
 
 /**
  * Parses a dayjs format string into pattern parts, honouring dayjs's own
@@ -140,7 +140,7 @@ function expandVariable(variable: Variable): PatternPart[] | undefined {
     const format = variable.children.map(child => child.toString()).join('');
     return partsFromDayjsFormat(format || DEFAULT_FOAM_DATE_FORMAT);
   }
-  const format = VARIABLE_FORMAT[variable.name];
+  const format = VARIABLE_FORMAT.get(variable.name);
   return format ? partsFromDayjsFormat(format) : undefined;
 }
 

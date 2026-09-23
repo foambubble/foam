@@ -5,6 +5,8 @@ import { NoteCreationEngine } from './note-creation-engine';
 import { TriggerFactory } from './note-creation-triggers';
 import { Resolver } from './variable-resolver';
 import { NoteCreationResult } from './note-creation-types';
+import { partsFromTemplateFilepath } from './daily-note-path-pattern';
+import { findPreviousDailyNote } from './previous-daily-note';
 
 export interface ResolveDailyNoteOptions {
   locale?: string;
@@ -41,11 +43,32 @@ export async function resolveDailyNote(
   const { locale = 'default', isTrusted = false, fallbackFilepath, variables } = options;
 
   const templateLoader = new TemplateLoader(readFile, isTrusted);
-  const resolver = new Resolver(variables ?? new Map(), date, undefined, locale);
+  // The template is loaded before the resolver because FOAM_PREVIOUS_DAILY_NOTE
+  // recognizes daily notes by inverting the template's `filepath`. A template
+  // without one leaves the variable unresolved: the fallback path belongs to
+  // the host (`foam daily`, VS Code settings), not to core.
+  const template = await templateLoader.loadTemplate(templateUri);
+  const templateFilepath =
+    template.type === 'markdown'
+      ? template.metadata.get('filepath')
+      : undefined;
+  const pathPattern = templateFilepath
+    ? partsFromTemplateFilepath(templateFilepath)
+    : undefined;
+
+  const resolver = new Resolver(
+    variables ?? new Map(),
+    date,
+    undefined,
+    locale,
+    undefined,
+    before => {
+      const uri = findPreviousDailyNote(foam.workspace, pathPattern, before);
+      return uri && foam.workspace.getIdentifier(uri);
+    }
+  );
   const trigger = TriggerFactory.createCommandTrigger('foam.open-daily-note');
   const engine = new NoteCreationEngine(foam);
-
-  const template = await templateLoader.loadTemplate(templateUri);
 
   return engine.processTemplate(trigger, template, resolver, {
     defaultFilepath: fallbackFilepath,

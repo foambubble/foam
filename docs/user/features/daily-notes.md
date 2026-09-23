@@ -36,6 +36,28 @@ type: daily-note
 ## Notes
 ```
 
+## Linking to the Previous Daily Note
+
+`$FOAM_PREVIOUS_DAILY_NOTE` expands to the most recent daily note that exists before the one being created. It skips gaps, so after a weekend or a holiday it points at the last note you actually wrote — unlike `/yesterday`, which is always the calendar day before.
+
+```markdown
+---
+type: daily-note
+---
+
+# $FOAM_DATE_YEAR-$FOAM_DATE_MONTH-$FOAM_DATE_DATE
+
+Previously: [[$FOAM_PREVIOUS_DAILY_NOTE]]
+```
+
+In your very first daily note there is no previous one, and the variable expands to nothing. To write something else instead, give it a fallback:
+
+```markdown
+Previously: ${FOAM_PREVIOUS_DAILY_NOTE:nothing yet}
+```
+
+The variable is only available in the daily note template, and it finds daily notes by matching the path your template creates them at. That path has to spell out the year, month and day in numbers — `/journal/$FOAM_DATE_YEAR-$FOAM_DATE_MONTH-$FOAM_DATE_DATE.md` works, and so does `$FOAM_TITLE`. A path built from a month name or a week number (`$FOAM_DATE_MONTH_NAME`, `$FOAM_DATE_WEEK`) cannot be read back, so the variable stays empty and its fallback shows instead. Daily notes written before you last changed that path are not found either. A JavaScript daily note template picks its path as it runs, so the variable is empty there too — a JavaScript template can find the previous note itself.
+
 ## Date Snippets
 
 Create links to recent daily notes using snippets:

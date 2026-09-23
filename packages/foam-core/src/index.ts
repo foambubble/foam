@@ -80,8 +80,22 @@ export {
   getNewNoteTemplateCandidateUris,
   getTemplatesDir,
 } from './templates/template-discovery';
-export { Resolver } from './templates/variable-resolver';
+export {
+  Resolver,
+  DEFAULT_FOAM_DATE_FORMAT,
+} from './templates/variable-resolver';
 export type { VariableProvider } from './templates/variable-resolver';
+export {
+  partsFromDailyNoteSettings,
+  partsFromDayjsFormat,
+  partsFromTemplateFilepath,
+  dailyNotePathMatcher,
+} from './templates/daily-note-path-pattern';
+export type {
+  PatternPart,
+  DateToken,
+} from './templates/daily-note-path-pattern';
+export { findPreviousDailyNote } from './templates/previous-daily-note';
 
 // Query
 export type {
@@ -147,6 +161,7 @@ export { Config, DefaultFoamConfig, cascadeFoamConfig } from './config';
 export { Logger, BaseLogger, ConsoleLogger, NoOpLogger } from './utils/log';
 export type { ILogger, LogLevel, LogLevelThreshold } from './utils/log';
 export { toSlug } from './utils/slug';
+export { convertDateformatToDayjs } from './utils/date-format';
 export { isSubsequence } from './utils/string';
 export { extractHashtags, extractTagsFromProp, HASHTAG_REGEX } from './utils/hashtags';
 export {

@@ -214,6 +214,12 @@ Core tests stub config with `Config.setDefaultConfig(…)`, as
   start with a date. Inverting the pattern makes the definition that writes a
   daily note the one that reads it back, and confines false positives to notes
   that sit in the daily note's own folder *and* carry its exact filename shape.
+- **A JavaScript daily note template makes the feature unavailable.** It builds
+  its path as it runs, so there is nothing to invert, and falling back to the
+  deprecated `openDailyNote.*` settings would search paths that template never
+  writes to — worse than an empty variable, because it can link an unrelated
+  note. A JavaScript template has the workspace in hand and can find the
+  previous note itself.
 - **Unsupported pattern → `undefined`, not a looser match.** A day name or a
   locale month name could be matched loosely (`[^/]+`) and the result verified
   by re-rendering the pattern forward for the parsed date. That is a real

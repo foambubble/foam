@@ -1,5 +1,6 @@
 import { SnippetParser, Text, Variable } from '../common/snippetParser';
 import { convertDateformatToDayjs } from '../utils/date-format';
+import { joinPath } from '../utils/path';
 import { DEFAULT_FOAM_DATE_FORMAT } from './variable-resolver';
 
 /**
@@ -159,12 +160,14 @@ export function partsFromDailyNoteSettings(
   if (!nameParts) {
     return undefined;
   }
-  let dir = directory.replace(/\\/g, '/');
-  while (dir.endsWith('/')) {
+  // Normalized the way `joinPath` normalizes it when a daily note is written,
+  // so `journal`, `./journal` and `notes/../journal` all name the same folder.
+  let dir = joinPath(directory.replace(/\\/g, '/'));
+  while (dir.length > 1 && dir.endsWith('/')) {
     dir = dir.slice(0, -1);
   }
   const prefix =
-    dir === '' || dir === '.'
+    dir === '.' || dir === '/'
       ? '/'
       : dir.startsWith('/')
       ? `${dir}/`

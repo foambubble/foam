@@ -198,12 +198,16 @@ export async function createDailyNoteIfNotExists(targetDate: Date, foam: Foam) {
  * Where daily notes live, as a pattern that can be read backwards. The
  * template's `filepath` wins outright over the deprecated `openDailyNote.*`
  * settings — it is what actually writes the note.
+ *
+ * A JavaScript template computes its path at creation time, so there is no
+ * pattern to invert and the feature is unavailable: reading the settings
+ * instead would point the search at paths that template never writes to.
  */
-function dailyNotePathPattern(template: Template) {
-  const templateFilepath =
-    template.type === 'markdown'
-      ? template.metadata.get('filepath')
-      : undefined;
+export function dailyNotePathPattern(template: Template) {
+  if (template.type !== 'markdown') {
+    return undefined;
+  }
+  const templateFilepath = template.metadata.get('filepath');
   return templateFilepath
     ? partsFromTemplateFilepath(templateFilepath)
     : partsFromDailyNoteSettings(

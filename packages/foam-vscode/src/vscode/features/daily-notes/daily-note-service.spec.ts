@@ -3,10 +3,11 @@ import { workspace, window } from 'vscode';
 import {
   CREATE_DAILY_NOTE_WARNING_RESPONSE,
   createDailyNoteIfNotExists,
+  dailyNotePathPattern,
   getDailyNoteFileName,
   getDailyNoteUri,
 } from './daily-note-service';
-import { isWindows } from '@foam/core';
+import { dailyNotePathMatcher, isWindows, Template } from '@foam/core';
 import {
   cleanWorkspace,
   closeEditors,
@@ -55,6 +56,38 @@ describe('getDailyNoteUri', () => {
 
     await withModifiedFoamConfiguration('openDailyNote.directory', config, () =>
       expect(getDailyNoteUri(date).toFsPath()).toMatch(expectedPath)
+    );
+  });
+});
+
+describe('dailyNotePathPattern', () => {
+  it('is unavailable for a JavaScript daily note template', async () => {
+    const template: Template = {
+      type: 'javascript',
+      createNote: async () => ({ filepath: URI.file('/journal/note.md') }),
+    };
+
+    await withModifiedFoamConfiguration(
+      'openDailyNote.directory',
+      'journal',
+      () => expect(dailyNotePathPattern(template)).toBeUndefined()
+    );
+  });
+
+  it('falls back to the deprecated settings for a template with no filepath', async () => {
+    const template: Template = {
+      type: 'markdown',
+      metadata: new Map(),
+      content: '# Daily note',
+    };
+
+    await withModifiedFoamConfiguration(
+      'openDailyNote.directory',
+      'journal',
+      () => {
+        const match = dailyNotePathMatcher(dailyNotePathPattern(template));
+        expect(match('/journal/2026-09-18.md')).toEqual(new Date(2026, 8, 18));
+      }
     );
   });
 });

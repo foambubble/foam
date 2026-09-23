@@ -107,6 +107,20 @@ describe('inverting the deprecated openDailyNote settings', () => {
     expect(match('/other/2026-09-18.md')).toBeUndefined();
   });
 
+  it('normalizes a directory written relative to the workspace root', () => {
+    const match = dailyNotePathMatcher(
+      partsFromDailyNoteSettings('./journal', 'isoDate', 'md')
+    );
+    expect(match('/journal/2026-09-18.md')).toEqual(new Date(2026, 8, 18));
+  });
+
+  it('normalizes a directory that navigates through its own parent', () => {
+    const match = dailyNotePathMatcher(
+      partsFromDailyNoteSettings('notes/../journal/', 'isoDate', 'md')
+    );
+    expect(match('/journal/2026-09-18.md')).toEqual(new Date(2026, 8, 18));
+  });
+
   it('anchors a "." directory at the workspace root', () => {
     const match = dailyNotePathMatcher(
       partsFromDailyNoteSettings('.', 'yyyy-mm-dd', 'md')

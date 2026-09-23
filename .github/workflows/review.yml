@@ -68,9 +68,14 @@ jobs:
             no test that proves it is a finding, and so is a test that asserts
             something weaker than its criterion.
 
-            Do not read specs/**/plan.md. Knowing the intended approach makes
-            you check whether the code matches the plan, when the job is to
-            check whether the code is right.
+            Read the diff with:
+
+              git diff origin/main...HEAD -- . ':!specs/**/plan.md'
+
+            rather than `gh pr diff`, which would include specs/**/plan.md.
+            Do not read that file by any route. Knowing the intended approach
+            makes you check whether the code matches the plan, when the job is
+            to check whether the code is right.
 
             A user-visible feature or behaviour change with nothing added
             under docs/user/ is a finding, and so is documentation that

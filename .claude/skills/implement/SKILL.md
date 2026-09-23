@@ -47,8 +47,10 @@ order of work.
    you broke. While iterating, `yarn workspace <name> test:unit` is the fast
    loop, but it is not what you report.
 
-5. **Add a changeset** if a published package changed. A `@foam/core` change
-   also lists `foam-vscode` and `@foam/cli`.
+5. **Add a changeset** if a published package changed, following the
+   fragment rules in `docs/dev/releasing-foam.md` — they say what a fragment
+   is for and how it reads. A `@foam/core` change also lists `foam-vscode`
+   and `@foam/cli`.
 
 6. **Consolidate before anyone else reads it.** Re-read the whole diff
    (`git diff origin/main...HEAD`) as one change rather than as the sequence
@@ -62,14 +64,21 @@ order of work.
    code, so you are the worst placed to find its logic errors. That is the
    reviewer's job, on a different model with the spec and no plan.
 
-7. **Commit and push to the branch, then comment on the PR** so the work is
+7. **Rewrite the PR description to describe the change**, not the spec that
+   started it: what it does, how someone uses it, `Refs #<n>`, and anything
+   left out. The body still written for the spec stage is stale the moment
+   code lands, and it is the first thing a reviewer reads. Fix the title too
+   if it names a stage rather than the feature — this repo squash-merges, so
+   the title becomes the commit subject on `main`.
+
+8. **Commit and push to the branch, then comment on the PR** so the work is
    reviewable without reading the diff cold. The comment carries: what you
    built, the test output, which tests stand for which criteria, anything in
    the spec you could not satisfy and why, and this block verbatim:
 
    > **Next:** review the diff, or reply here with changes.
 
-8. **Mark the PR ready** — `gh pr ready <n>` — once the criteria are covered
+9. **Mark the PR ready** — `gh pr ready <n>` — once the criteria are covered
    and the suite is green. Leaving draft is what says the implementation is
    done, and it triggers the review. If you could not satisfy a criterion,
    leave it as a draft and say what is missing instead.

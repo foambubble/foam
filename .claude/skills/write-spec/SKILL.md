@@ -80,7 +80,6 @@ it real.
    ---
    issue: 1712
    type: feature
-   status: draft
    created: 2026-09-18
    ---
 
@@ -106,6 +105,11 @@ it real.
      have asked, and what you assumed in the meantime.
    ```
 
+   There is no status field: a spec on a branch is in flight, one in `main`
+   has shipped, so its location already says it. The PR title is the feature's
+   own name — the squash commit on `main` inherits it, and "Spec: ..." would
+   be a poor name for a commit that carries the implementation.
+
    Drop Out of scope or Open questions when genuinely empty. Every criterion
    says how it is verified — `unit`, `e2e` or `human` — and nothing else.
    CI runs `unit` and `e2e` on every PR; `human` means somebody looks at it,
@@ -127,7 +131,7 @@ it real.
 
    ```
    git push -u origin <type>/<slug>
-   gh pr create --draft --title "Spec: <title>" --body-file <body>
+   gh pr create --draft --title "<title>" --body-file <body>
    ```
 
    Locally, stop after the commit and say the branch is ready to push.

@@ -81,8 +81,7 @@ jobs:
             under docs/user/ is a finding, and so is documentation that
             explains the implementation rather than showing someone how to
             use the feature — AGENTS.md sets the standard those pages are
-            held to. A published package changed without a changeset is a
-            finding too.
+            held to.
 
             Report findings only. Do not push commits, and do not approve or
             request changes — the maintainer decides.

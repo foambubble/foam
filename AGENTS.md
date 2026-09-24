@@ -40,7 +40,7 @@ Yarn v1 workspaces + Lerna. Node 22 (`.nvmrc`): `nvm use` from the repo root is 
 
 From the repo root, each runs across every package via Lerna: `yarn build`, `yarn watch`, `yarn clean`, `yarn reset` (clean, install, build), `yarn test:unit`, `yarn test:e2e`, `yarn test`, `yarn lint`, `yarn bench`, `yarn format`.
 
-Per package: `yarn workspace <name> <script>`, where `<name>` is `@foam/core`, `foam-vscode`, `@foam/cli`, `@foam/graph-view`, or `@foam/mcp`.
+Per package: `yarn workspace <name> <script>`, where `<name>` is `@foam/core`, `foam-vscode`, `@foam/cli`, `@foam/graph-view`, `@foam/mcp`, or `@foam/agent-loop`.
 
 In `foam-vscode`:
 
@@ -78,7 +78,7 @@ Lint is oxlint (`yarn lint`; the pre-push hook runs it too). Formatting is Prett
 
 `packages/foam-vscode/src/core/` is a legacy shim holding only `model/foam.ts` (extends core's `Foam` with `embeddings`). Don't add to it.
 
-**A `@foam/core` change needs a changeset that also lists `foam-vscode` and `@foam/cli`** (usually `patch`). They bundle core at build time via esbuild and declare it a `devDependency`, so Changesets won't cascade the bump — without this their republished bundles ship new code under a stale version with no changelog. See `docs/dev/releasing-foam.md`.
+**Changes don't carry changeset fragments.** Leave `.changeset/` alone: fragments are written at release time from the history on `main`, following `docs/dev/releasing-foam.md`. That includes its rule that a `@foam/core` bump also lists `foam-vscode` and `@foam/cli`, which bundle core and so aren't cascaded by Changesets.
 
 **URIs throughout, paths only at the edges.** Domain code takes and returns `URI`, not path strings — consistent with `FoamWorkspace.find(uri)`, `FoamGraph.getLinks(uri)`, `Resource.uri`.
 
@@ -101,7 +101,7 @@ Prefer pure functions where practical. Reuse existing helpers and constants inst
 
 ## Non-obvious architecture
 
-Monorepo: `packages/{foam-core,foam-vscode,foam-graph,foam-cli,foam-mcp}`.
+Monorepo: `packages/{foam-core,foam-vscode,foam-graph,foam-cli,foam-mcp,agent-loop}`. `agent-loop` is development tooling, not part of Foam: the implement and review loop, run as `yarn agent-loop`.
 
 Things you won't infer quickly from reading:
 

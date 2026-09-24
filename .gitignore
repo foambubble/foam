@@ -17,3 +17,4 @@ docs/.jekyll-metadata
 .agent
 .tmp
 specs.local
+.agent-loop

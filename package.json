@@ -30,6 +30,7 @@
     "format": "prettier --write \"**/*.ts\"",
     "watch": "lerna run watch --concurrency 20",
     "foam": "yarn workspace @foam/cli foam",
+    "agent-loop": "yarn workspace @foam/agent-loop start",
     "prepare": "husky"
   },
   "devDependencies": {

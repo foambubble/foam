@@ -21,7 +21,7 @@ and the things you had to decide.
 - **Read before claiming.** Every file you name must exist and say what you
   think it says. A plan built on a guess costs more than no plan.
 - **The conventions are in `AGENTS.md`** — reuse over parallel helpers, the
-  domain/adapter split, URIs over path strings, changesets. The plan is where
+  domain/adapter split, URIs over path strings. The plan is where
   you show you've read them; don't restate them here.
 - **Answer the spec's Open questions**, or say plainly which ones need the
   maintainer and stop. Don't quietly assume one and build on it.

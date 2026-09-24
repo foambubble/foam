@@ -66,6 +66,8 @@ jobs:
         run: yarn workspace @foam/graph-view test
       - name: Test @foam/cli
         run: yarn workspace @foam/cli test
+      - name: Test @foam/agent-loop
+        run: yarn workspace @foam/agent-loop test
       - name: Test foam-vscode
         run: xvfb-run --auto-servernum yarn workspace foam-vscode test
 

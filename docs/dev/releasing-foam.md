@@ -4,17 +4,7 @@ Foam uses [Changesets](https://github.com/changesets/changesets) to manage versi
 
 ## Writing changesets
 
-A fragment can be written two ways, both fine:
-
-- **With the change**, as part of the PR:
-
-  ```
-  yarn changeset
-  ```
-
-  Pick the affected package(s) and bump type (`patch` / `minor` / `major`), then write the user-facing entry.
-
-- **At release time**, reconstructed from `git log` since the last release — Changesets bumps each independently.
+Fragments are written at release time, reconstructed from the history on `main` since the last release: see [Generating fragments from git history](#generating-fragments-from-git-history). Changes don't carry them, so a pull request leaves `.changeset/` alone.
 
 ### ⚠️ Changes to `@foam/core` must also bump its dependents
 
@@ -28,7 +18,7 @@ Rule of thumb: **if `@foam/core` is in the fragment, `foam-vscode` and `@foam/cl
 
 ### Does the change need a fragment?
 
-Yes, if it changes behavior that users of a published package can observe: `foam-vscode`, `@foam/cli`, `@foam/core`. (`@foam/graph-view` and `@foam/mcp` are listed under `ignore` in `.changeset/config.json` and never get fragments.)
+Yes, if it changes behavior that users of a published package can observe: `foam-vscode`, `@foam/cli`, `@foam/core`. (`@foam/graph-view`, `@foam/mcp` and `@foam/agent-loop` are listed under `ignore` in `.changeset/config.json` and never get fragments.)
 
 No, for:
 

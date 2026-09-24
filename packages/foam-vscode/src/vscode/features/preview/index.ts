@@ -8,6 +8,7 @@ import { createVsCodeLinkResolver } from './link-resolvers';
 import { getFoamVsCodeConfig } from '../../config';
 import { isVirtualWorkspace } from '../../services/editor';
 import { CONFIG_EMBED_NOTE_TYPE } from './wikilink-embed';
+import { CONFIG_FOOTNOTES_ENABLE } from '../navigation/navigation-provider';
 
 export default async function activate(
   context: vscode.ExtensionContext,
@@ -71,6 +72,12 @@ export default async function activate(
           isVirtualWorkspace: () => isVirtualWorkspace(),
           getEmbedNoteType: () =>
             getFoamVsCodeConfig<string>(CONFIG_EMBED_NOTE_TYPE),
+          // VS Code builds the preview engine once, so this is read once:
+          // a change takes effect after a window reload.
+          footnotes: getFoamVsCodeConfig<boolean>(
+            CONFIG_FOOTNOTES_ENABLE,
+            true
+          ),
           renderContext,
         },
         md

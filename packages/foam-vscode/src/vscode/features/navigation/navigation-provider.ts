@@ -19,21 +19,29 @@ import { commandAsURI } from '../../utils/commands';
 import { Location } from '@foam/core';
 import { fileExists, getFoamDocSelectors } from '../../services/editor';
 import { FoamTags } from '@foam/core';
+import { monitorFoamVsCodeConfig } from '../../config';
+
+export const CONFIG_FOOTNOTES_ENABLE = 'footnotes.enable';
 
 export default async function activate(
   context: vscode.ExtensionContext,
   foamPromise: Promise<Foam>
 ) {
+  const isFootnotesEnabled = monitorFoamVsCodeConfig<boolean>(
+    CONFIG_FOOTNOTES_ENABLE
+  );
   const foam = await foamPromise;
 
   const navigationProvider = new NavigationProvider(
     foam.workspace,
     foam.graph,
     foam.services.parser,
-    foam.tags
+    foam.tags,
+    isFootnotesEnabled
   );
 
   context.subscriptions.push(
+    isFootnotesEnabled,
     vscode.languages.registerDefinitionProvider(
       getFoamDocSelectors(),
       navigationProvider
@@ -76,7 +84,8 @@ export class NavigationProvider
     private workspace: FoamWorkspace,
     private graph: FoamGraph,
     private parser: ResourceParser,
-    private tags: FoamTags
+    private tags: FoamTags,
+    private isFootnotesEnabled: () => boolean = () => true
   ) {}
 
   /**
@@ -151,6 +160,9 @@ export class NavigationProvider
       Range.containsPosition(link.range, position)
     );
     if (!targetLink) {
+      if (!this.isFootnotesEnabled()) {
+        return;
+      }
       const footnote = Footnote.findByPosition(resource, position);
       if (footnote?.definitionRange) {
         return [
@@ -419,6 +431,9 @@ export class NavigationProvider
     document: vscode.TextDocument,
     position: vscode.Position
   ): vscode.ProviderResult<vscode.Hover> {
+    if (!this.isFootnotesEnabled()) {
+      return;
+    }
     const resource = this.parser.parse(
       fromVsCodeUri(document.uri),
       document.getText()

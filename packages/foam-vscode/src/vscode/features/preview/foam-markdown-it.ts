@@ -45,6 +45,8 @@ export interface FoamMarkdownItOptions {
   toHref?: ToHref;
   /** Whether the host is a virtual workspace (no local FS). Defaults to false. */
   isVirtualWorkspace?: () => boolean;
+  /** Whether to render `[^id]` footnotes. Defaults to true. */
+  footnotes?: boolean;
   /** Default embed note type, e.g. `full-card`. */
   getEmbedNoteType?: () => string;
   /** Initial markdown-it options for fresh inner instances. */
@@ -88,6 +90,7 @@ export function createFoamMarkdownIt(
     toHref = (uri: URI) => uri.path,
     isVirtualWorkspace,
     getEmbedNoteType,
+    footnotes = true,
     innerMdOptions = { html: true },
     renderContext = createRenderContext(),
     onDidRender,
@@ -110,7 +113,9 @@ export function createFoamMarkdownIt(
     );
 
   let r = escapeWikilinkPipes(md);
-  r = r.use(markdownItFootnote);
+  if (footnotes) {
+    r = r.use(markdownItFootnote);
+  }
   r = markdownItWikilinkEmbed(r, workspace, parser, {
     getCurrentResource,
     createInnerMd: buildInner,

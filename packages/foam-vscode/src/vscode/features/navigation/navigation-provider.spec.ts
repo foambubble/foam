@@ -186,7 +186,6 @@ describe('Document navigation', () => {
       // The link should not be treated as a "create note" placeholder
       expect(links.length).toEqual(0);
     });
-
   });
 
   describe('definition provider', () => {
@@ -378,7 +377,7 @@ describe('Document navigation', () => {
   });
 
   // Attachments (PDFs, docs, etc.) and images must be surfaced as DocumentLinks
-  // targeting the `vscode.open` command, and NOT as definitions, to honor 
+  // targeting the `vscode.open` command, and NOT as definitions, to honor
   // user-level `workbench.editorAssociations`.
   // See: https://github.com/foambubble/foam/issues/1675
   describe('attachment and image navigation', () => {
@@ -727,5 +726,51 @@ describe('Document navigation', () => {
     });
 
     it.todo('should provide references for placeholders');
+  });
+
+  describe('Footnotes', () => {
+    const content = 'Some text[^1].\n\n[^1]: The footnote.';
+    // Inside "[^1]" on the first line
+    const onReference = new vscode.Position(0, 11);
+
+    it('shows the footnote definition on hover and jumps to it', async () => {
+      const file = await createFile(content);
+      const ws = createTestWorkspace().set(parser.parse(file.uri, content));
+      const graph = FoamGraph.fromWorkspace(ws);
+      const tags = FoamTags.fromWorkspace(ws);
+
+      const { doc } = await showInEditor(file.uri);
+      const provider = new NavigationProvider(ws, graph, parser, tags);
+
+      const hover = await provider.provideHover(doc, onReference);
+      expect((hover.contents[0] as vscode.MarkdownString).value).toContain(
+        'The footnote.'
+      );
+
+      const definitions = await provider.provideDefinition(doc, onReference);
+      expect(definitions.length).toEqual(1);
+      expect(definitions[0].targetRange.start.line).toEqual(2);
+    });
+
+    it('provides no hover or definition when footnotes are disabled (#1705)', async () => {
+      const file = await createFile(content);
+      const ws = createTestWorkspace().set(parser.parse(file.uri, content));
+      const graph = FoamGraph.fromWorkspace(ws);
+      const tags = FoamTags.fromWorkspace(ws);
+
+      const { doc } = await showInEditor(file.uri);
+      const provider = new NavigationProvider(
+        ws,
+        graph,
+        parser,
+        tags,
+        () => false
+      );
+
+      expect(await provider.provideHover(doc, onReference)).toBeUndefined();
+      expect(
+        await provider.provideDefinition(doc, onReference)
+      ).toBeUndefined();
+    });
   });
 });

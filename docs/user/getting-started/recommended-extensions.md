@@ -20,5 +20,4 @@ These extensions are not defined in `.vscode/extensions.json`, but have been use
 - [Project Manager](https://marketplace.visualstudio.com/items?itemName=alefragnani.project-manager) (easily switch between multiple projects and workspaces)
 - [Markdown Extended](https://marketplace.visualstudio.com/items?itemName=jebbs.markdown-extended) (extended markdown syntax support with additional formatting options - use with `kbd` option disabled as it conflicts with wikilinks)
 - [GitDoc](https://marketplace.visualstudio.com/items?itemName=vsls-contrib.gitdoc) (automatic git commits for easy version management and backup of your notes)
-- [Markdown Footnotes](https://marketplace.visualstudio.com/items?itemName=bierner.markdown-footnotes) (adds footnote syntax support `[^footnote]` to VS Code's built-in markdown preview)
 - [Todo Tree](https://marketplace.visualstudio.com/items?itemName=Gruntfuggly.todo-tree) (scans workspace for TODO, FIXME, and other comment tags, displaying them in a tree view and editor gutter)

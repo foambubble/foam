@@ -5,6 +5,8 @@ import { FoamWorkspace } from '@foam/core';
 import { Foam } from '@foam/core';
 import { Range } from '@foam/core';
 import { fromVsCodeUri, toVsCodeRange } from '../../utils/vsc-utils';
+import { monitorFoamVsCodeConfig } from '../../config';
+import { CONFIG_FOOTNOTES_ENABLE } from '../navigation/navigation-provider';
 
 const placeholderDecoration = vscode.window.createTextEditorDecorationType({
   rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
@@ -25,7 +27,11 @@ const footnoteDecoration = vscode.window.createTextEditorDecorationType({
 });
 
 const updateDecorations =
-  (parser: ResourceParser, workspace: FoamWorkspace) =>
+  (
+    parser: ResourceParser,
+    workspace: FoamWorkspace,
+    isFootnotesEnabled: () => boolean
+  ) =>
   (editor: vscode.TextEditor) => {
     if (!editor || editor.document.languageId !== 'markdown') {
       return;
@@ -52,9 +58,11 @@ const updateDecorations =
 
     editor.setDecorations(
       footnoteDecoration,
-      note.footnotes
-        .filter(f => f.definitionRange !== null)
-        .flatMap(f => f.references.map(r => toVsCodeRange(r)))
+      isFootnotesEnabled()
+        ? note.footnotes
+            .filter(f => f.definitionRange !== null)
+            .flatMap(f => f.references.map(r => toVsCodeRange(r)))
+        : []
     );
 
     editor.setDecorations(
@@ -75,12 +83,16 @@ export default async function activate(
   context: vscode.ExtensionContext,
   foamPromise: Promise<Foam>
 ) {
+  const isFootnotesEnabled = monitorFoamVsCodeConfig<boolean>(
+    CONFIG_FOOTNOTES_ENABLE
+  );
   const foam = await foamPromise;
   let activeEditor = vscode.window.activeTextEditor;
 
   const immediatelyUpdateDecorations = updateDecorations(
     foam.services.parser,
-    foam.workspace
+    foam.workspace,
+    isFootnotesEnabled
   );
 
   const debouncedUpdateDecorations = debounce(
@@ -91,6 +103,7 @@ export default async function activate(
   immediatelyUpdateDecorations(activeEditor);
 
   context.subscriptions.push(
+    isFootnotesEnabled,
     placeholderDecoration,
     blockAnchorDecoration,
     footnoteDecoration,

@@ -870,6 +870,11 @@
           "type": "boolean",
           "default": true
         },
+        "foam.footnotes.enable": {
+          "description": "Enable Foam's footnote support: preview rendering, hover, go to definition and highlighting of `[^id]` references. Turn off if another extension handles footnotes. The preview picks up a change after reloading the window.",
+          "type": "boolean",
+          "default": true
+        },
         "foam.dateLocale": {
           "type": "string",
           "default": "default",

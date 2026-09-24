@@ -23,7 +23,7 @@ Press `F12` (or `Ctrl+Click` / `Cmd+Click`) on a reference to jump to its defini
 
 ## Appearance
 
-Footnote references are styled to match wikilinks — the `^id` text is colored and the brackets are hidden. In Preview, VS Code renders footnotes natively.
+Footnote references are styled to match wikilinks — the `^id` text is colored. In Preview, footnotes are rendered at the bottom of the note.
 
 ## Multiple References
 

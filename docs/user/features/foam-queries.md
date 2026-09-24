@@ -104,12 +104,12 @@ sort: title ASC
 Supported filter keys:
 
 - `tag`: notes that have this tag (e.g. `tag: "#research"`)
-- `type`: notes of this type (e.g. `type: "daily-note"`)
+- `type`: the kind of file Foam detected — `note` for markdown files, `image` or `attachment` for everything else (e.g. `type: "attachment"`). This is _not_ the `type` you write in a note's frontmatter — to filter on that, use `jexl`
 - `path`: notes whose path matches this regex (e.g. `path: "^/projects/"`)
 - `title`: notes whose title matches this regex
 - `links_to`: notes that link to the given note identifier. Use `"$current"` to refer to the note containing the query
 - `links_from`: notes that are linked from the given note identifier. Use `"$current"` to refer to the note containing the query
-- `jexl`: a [Jexl](https://github.com/TomFrost/Jexl) expression evaluated against each note, e.g. `"resource.tags|length > 2"`. The expression has access to `resource` (with fields `title`, `path`, `type`, `tags`, `properties`, `backlinks`, `outlinks`) and the built-in transforms `length`, `lower`, `upper`. Note: Jexl uses `==` (not `===`) and `|length` (not `.length`). The previous `expression` field is deprecated and no longer evaluated.
+- `jexl`: a [Jexl](https://github.com/TomFrost/Jexl) expression evaluated against each note, e.g. `"resource.tags|length > 2"`, or `"resource.properties.type == 'daily-note'"` to match notes by their frontmatter `type`. The expression has access to `resource` (with fields `title`, `path`, `type`, `tags`, `properties`, `backlinks`, `outlinks`) and the built-in transforms `length`, `lower`, `upper`. Note: Jexl uses `==` (not `===`) and `|length` (not `.length`). The previous `expression` field is deprecated and no longer evaluated.
 - `and`, `or`, `not`: combine filters logically
 - _`expression`: REMOVED. A JavaScript expression that used to be evaluated against each note. Replaced by jexl for security reasons; legacy queries match nothing_
 - Use `"$current"` in `links_to` or `links_from` to query relative to the note containing the query block:

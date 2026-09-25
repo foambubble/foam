@@ -1,5 +1,6 @@
 /* @unit-ready */
 
+import { URI } from '@foam/core';
 import { wait, waitForExpect } from '../../../test/test-utils';
 import {
   closeEditors,
@@ -11,8 +12,17 @@ import {
   runCommand,
   deleteFile,
   getFoamFromVSCode,
+  waitForNoteInFoamWorkspace,
 } from '../../../test/test-utils-vscode';
 import { UPDATE_GRAPH_COMMAND_NAME } from '../notes/update-graph';
+
+/**
+ * A rename only syncs what Foam has indexed, and a file created on disk is
+ * indexed asynchronously, once the watcher reports it. A fixed sleep is not
+ * enough for that on a loaded CI runner.
+ */
+const waitForNotesIndexed = (...notes: Array<{ uri: URI }>) =>
+  Promise.all(notes.map(n => waitForNoteInFoamWorkspace(n.uri)));
 
 describe('Note rename sync', () => {
   beforeAll(async () => {
@@ -42,8 +52,7 @@ describe('Note rename sync', () => {
       const newName = 'renamed-note-a';
       const newUri = noteA.uri.resolve(newName);
 
-      // wait for the rename events to be propagated
-      await wait(1000);
+      await waitForNotesIndexed(noteA, noteB, noteC);
       await runCommand(UPDATE_GRAPH_COMMAND_NAME);
       await renameFile(noteA.uri, newUri);
 
@@ -72,8 +81,7 @@ describe('Note rename sync', () => {
       const noteC = await createFile(`Link to [[note-a]] from note C.`);
 
       const newUri = noteA.uri.resolve('../note-a.md');
-      // wait for the rename events to be propagated
-      await wait(1000);
+      await waitForNotesIndexed(noteA, noteC);
       await runCommand(UPDATE_GRAPH_COMMAND_NAME);
 
       await renameFile(noteA.uri, newUri);
@@ -105,7 +113,7 @@ describe('Note rename sync', () => {
         'outside.md',
       ]);
 
-      await wait(1000);
+      await waitForNotesIndexed(noteA, otherNote, outside);
       await runCommand(UPDATE_GRAPH_COMMAND_NAME);
 
       const folderAUri = noteA.uri.getDirectory();
@@ -135,7 +143,7 @@ describe('Note rename sync', () => {
         'outside.md',
       ]);
 
-      await wait(1000);
+      await waitForNotesIndexed(noteA, outside);
       await runCommand(UPDATE_GRAPH_COMMAND_NAME);
 
       const folderAUri = noteA.uri.getDirectory();
@@ -159,7 +167,7 @@ describe('Note rename sync', () => {
         'indexed-note.md',
       ]);
 
-      await wait(1000);
+      await waitForNotesIndexed(noteA);
       await runCommand(UPDATE_GRAPH_COMMAND_NAME);
 
       const folderAUri = noteA.uri.getDirectory();
@@ -182,7 +190,7 @@ describe('Note rename sync', () => {
       // int-note-b's basename is ambiguous, so int-note-a links to it
       // path-qualified — making int-note-a both a file the rename rewrites and
       // a file the rename moves.
-      await createFile('Content of B', [
+      const noteB = await createFile('Content of B', [
         'dir-internal',
         'int-folderA',
         'int-note-b.md',
@@ -198,7 +206,7 @@ describe('Note rename sync', () => {
         'int-note-b.md',
       ]);
 
-      await wait(1000);
+      await waitForNotesIndexed(noteA, noteB, conflict);
       await runCommand(UPDATE_GRAPH_COMMAND_NAME);
 
       const folderAUri = noteA.uri.getDirectory();
@@ -240,7 +248,7 @@ describe('Note rename sync', () => {
         'outside.md',
       ]);
 
-      await wait(1000);
+      await waitForNotesIndexed(noteA, conflict, outside);
       await runCommand(UPDATE_GRAPH_COMMAND_NAME);
 
       const folderAUri = noteA.uri.getDirectory();
@@ -291,8 +299,7 @@ describe('Note rename sync', () => {
       const { doc } = await showInEditor(noteB.uri);
 
       const newUri = noteA.uri.resolve('../note-a.md');
-      // wait for the rename events to be propagated
-      await wait(1000);
+      await waitForNotesIndexed(noteA, noteB);
       await runCommand(UPDATE_GRAPH_COMMAND_NAME);
       await renameFile(noteA.uri, newUri);
 

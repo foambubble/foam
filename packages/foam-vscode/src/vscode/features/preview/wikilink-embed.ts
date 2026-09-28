@@ -11,6 +11,7 @@ import { URI } from '@foam/core';
 import { Position } from '@foam/core';
 import { TextEdit } from '@foam/core';
 import { isNone, isSome } from '@foam/core';
+import { stripFrontMatter } from '@foam/core';
 import { RenderContext } from '@foam/core';
 
 export const WIKILINK_EMBED_REGEX =
@@ -197,13 +198,6 @@ function getNoteContent(
         getEmbedNoteType
       );
 
-      const extractor: EmbedNoteExtractor =
-        noteScope === 'full'
-          ? fullExtractor
-          : noteScope === 'content'
-          ? contentExtractor
-          : fullExtractor;
-
       const formatter: EmbedNoteFormatter =
         noteStyle === 'card'
           ? cardFormatter
@@ -211,7 +205,12 @@ function getNoteContent(
           ? inlineFormatter
           : cardFormatter;
 
-      content = extractor(includedNote, parser, workspace);
+      content = withLinksRelativeToWorkspaceRoot(
+        includedNote.uri,
+        extractNoteText(includedNote, noteScope === 'content'),
+        parser,
+        workspace
+      );
       toRender = formatter(content, md);
       break;
     }
@@ -298,81 +297,36 @@ export function retrieveNoteConfig(
 }
 
 /**
- * A type of function that gets the desired content of the note
+ * Returns the part of the note the embed points at. Slicing happens on the
+ * source as read, so the parsed section and block ranges line up with it.
+ * A fragment that resolves to nothing falls back to the whole note, which is
+ * shown without its frontmatter.
  */
-export type EmbedNoteExtractor = (
-  note: Resource,
-  parser: ResourceParser,
-  workspace: FoamWorkspace
-) => string;
-
-function fullExtractor(
-  note: Resource,
-  parser: ResourceParser,
-  workspace: FoamWorkspace
-): string {
-  let noteText = readFileSync(note.uri.toFsPath()).toString();
-  if (note.uri.fragment.startsWith('^')) {
-    const blockId = note.uri.fragment.slice(1);
-    const block = Resource.findBlock(note, blockId);
+function extractNoteText(note: Resource, withoutTitle: boolean): string {
+  const noteText = readFileSync(note.uri.toFsPath()).toString();
+  const rows = noteText.split('\n');
+  const fragment = note.uri.fragment;
+  if (fragment.startsWith('^')) {
+    const block = Resource.findBlock(note, fragment.slice(1));
     if (isSome(block)) {
-      noteText = extractBlockContent(noteText, note, block);
+      return extractBlockContent(noteText, note, block);
     }
-  } else {
-    const section = Resource.findSection(note, note.uri.fragment);
+  } else if (fragment) {
+    const section = Resource.findSection(note, fragment);
     if (isSome(section)) {
-      const rows = noteText.split('\n');
-      noteText = rows
-        .slice(section.range.start.line, section.range.end.line)
-        .join('\n');
+      const start = withoutTitle
+        ? section.headingRange.end.line + 1
+        : section.range.start.line;
+      return rows.slice(start, section.range.end.line).join('\n');
     }
   }
-  noteText = withLinksRelativeToWorkspaceRoot(
-    note.uri,
-    noteText,
-    parser,
-    workspace
-  );
-  return noteText;
-}
-
-function contentExtractor(
-  note: Resource,
-  parser: ResourceParser,
-  workspace: FoamWorkspace
-): string {
-  let noteText = readFileSync(note.uri.toFsPath()).toString();
-  if (note.uri.fragment.startsWith('^')) {
-    const blockId = note.uri.fragment.slice(1);
-    const block = Resource.findBlock(note, blockId);
-    if (isSome(block)) {
-      noteText = extractBlockContent(noteText, note, block);
-    }
-  } else {
-    let section = Resource.findSection(note, note.uri.fragment);
-    if (!note.uri.fragment) {
-      // if there's no fragment(section), the wikilink is linking to the entire note,
-      // in which case we need to remove the title. We could just use rows.shift()
-      // but should the note start with blank lines, it will only remove the first blank line
-      // leaving the title
-      // A better way is to find where the actual title starts by assuming it's at section[0]
-      // then we treat it as the same case as link to a section
-      section = note.sections.length ? note.sections[0] : null;
-    }
-    let rows = noteText.split('\n');
-    if (isSome(section)) {
-      rows = rows.slice(section.range.start.line, section.range.end.line);
-    }
-    rows.shift();
-    noteText = rows.join('\n');
+  // The first heading is taken as the note's title
+  const title = note.sections[0];
+  if (withoutTitle && isSome(title)) {
+    const { start, end } = title.headingRange;
+    rows.splice(start.line, end.line - start.line + 1);
   }
-  noteText = withLinksRelativeToWorkspaceRoot(
-    note.uri,
-    noteText,
-    parser,
-    workspace
-  );
-  return noteText;
+  return stripFrontMatter(rows.join('\n'));
 }
 
 /**

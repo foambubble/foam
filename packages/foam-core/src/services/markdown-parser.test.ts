@@ -711,6 +711,14 @@ This is the content of section with url`);
       expect(note.sections[4].level).toEqual(5);
       expect(note.sections[5].level).toEqual(6);
     });
+
+    it('records the range of the heading itself', () => {
+      const note = createNoteFromMarkdown(
+        '# ATX heading\n\nBody\n\nSetext heading\n==============\n\nTail'
+      );
+      expect(note.sections[0].headingRange).toEqual(Range.create(0, 0, 0, 13));
+      expect(note.sections[1].headingRange).toEqual(Range.create(4, 0, 5, 14));
+    });
   });
 
   describe('Parser plugins', () => {

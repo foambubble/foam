@@ -86,7 +86,10 @@ export interface Alias {
 export interface Section {
   label: string;
   level: number;
+  /** From the heading to the start of the next section at the same or a higher level */
   range: Range;
+  /** The heading alone — one line for ATX, two or more for setext */
+  headingRange: Range;
 }
 
 export type BlockType =

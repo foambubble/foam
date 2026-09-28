@@ -559,35 +559,139 @@ describe('Wikilink Note Embedding', () => {
     });
   });
 
-  describe('content mode strips the title using the parsed sections', () => {
-    // Writes `source` to a temp file as `Child.md` and renders `input`
-    // through the embed plugin in content-inline mode.
-    function renderContentEmbed(source: string, input: string): string {
-      const dir = mkdtempSync(path.join(tmpdir(), 'foam-embed-'));
-      const uri = URI.file(path.join(dir, 'Child.md'));
-      writeFileSync(uri.toFsPath(), source);
-      const parser = createMarkdownParser();
-      const ws = new FoamWorkspace([URI.file(dir)]).set(
-        parser.parse(uri, source)
+  // Writes `source` to a temp file as `Child.md` and renders `input` through
+  // the embed plugin. The default embed type is content-inline; an explicit
+  // modifier in `input` (e.g. `full-inline![[Child]]`) overrides it.
+  function renderChildEmbed(source: string, input: string): string {
+    const dir = mkdtempSync(path.join(tmpdir(), 'foam-embed-'));
+    const uri = URI.file(path.join(dir, 'Child.md'));
+    writeFileSync(uri.toFsPath(), source);
+    const parser = createMarkdownParser();
+    const ws = new FoamWorkspace([URI.file(dir)]).set(
+      parser.parse(uri, source)
+    );
+    try {
+      const md = markdownItWikilinkEmbed(
+        MarkdownIt({ html: true }),
+        ws,
+        parser,
+        {
+          renderContext: createRenderContext(),
+          getEmbedNoteType: () => 'content-inline',
+        }
       );
-      try {
-        const md = markdownItWikilinkEmbed(
-          MarkdownIt({ html: true }),
-          ws,
-          parser,
-          {
-            renderContext: createRenderContext(),
-            getEmbedNoteType: () => 'content-inline',
-          }
-        );
-        return md.render(input);
-      } finally {
-        rmSync(dir, { recursive: true, force: true });
-      }
+      return md.render(input);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
     }
+  }
 
+  describe('frontmatter in embedded notes', () => {
+    it('is hidden when embedding the whole note', () => {
+      for (const type of ['full-inline', 'full-card']) {
+        const html = renderChildEmbed(
+          '---\naliases: [example]\n---\n# Title\n\nBody',
+          `${type}![[Child]]`
+        );
+        expect(html).toContain('<h1>Title</h1>');
+        expect(html).toContain('Body');
+        expect(html).not.toContain('<hr');
+        expect(html).not.toContain('aliases');
+      }
+    });
+
+    it('is hidden when the section fragment does not resolve', () => {
+      const html = renderChildEmbed(
+        '---\nid: 1\n---\n# Title\n\nBody',
+        'full-inline![[Child#Missing]]'
+      );
+      expect(html).toContain('Body');
+      expect(html).not.toContain('<hr');
+      expect(html).not.toContain('id: 1');
+    });
+
+    it('is hidden when the block fragment does not resolve', () => {
+      const html = renderChildEmbed(
+        '---\nid: 1\n---\n# Title\n\nBody',
+        'full-inline![[Child#^deleted]]'
+      );
+      expect(html).toContain('Body');
+      expect(html).not.toContain('<hr');
+      expect(html).not.toContain('id: 1');
+    });
+
+    it('is hidden in content mode when the note has no title', () => {
+      const html = renderChildEmbed('---\nid: 1\n---\nBody', '![[Child]]');
+      expect(html).toContain('<p>Body</p>');
+      expect(html).not.toContain('<hr');
+      expect(html).not.toContain('id: 1');
+    });
+
+    it('does not shift section and block ranges', () => {
+      const source =
+        '---\nid: 1\n---\n# Title\n\nIntro\n\n## Section\n\nSelected ^sel\n\n## Other\n\nTail';
+      for (const input of [
+        'full-inline![[Child#Section]]',
+        'full-inline![[Child#^sel]]',
+      ]) {
+        const html = renderChildEmbed(source, input);
+        expect(html).toContain('Selected');
+        expect(html).not.toContain('Intro');
+        expect(html).not.toContain('Tail');
+      }
+    });
+  });
+
+  describe('content mode keeps everything but the title', () => {
+    it('keeps the sections that follow the title', () => {
+      const html = renderChildEmbed(
+        '# Title\n\nFirst\n\n# Second\n\nLast',
+        '![[Child]]'
+      );
+      expect(html).not.toContain('Title');
+      expect(html).toContain('<p>First</p>');
+      expect(html).toContain('<h1>Second</h1>');
+      expect(html).toContain('<p>Last</p>');
+    });
+
+    it('keeps the first line of a note without headings', () => {
+      const html = renderChildEmbed('First line\n\nSecond line', '![[Child]]');
+      expect(html).toContain('<p>First line</p>');
+      expect(html).toContain('<p>Second line</p>');
+    });
+
+    it('keeps the text before the first heading', () => {
+      const html = renderChildEmbed(
+        'First line\n\n## Later heading\n\nTail',
+        '![[Child]]'
+      );
+      expect(html).toContain('<p>First line</p>');
+      expect(html).toContain('<p>Tail</p>');
+    });
+
+    it('removes a setext title together with its underline', () => {
+      const html = renderChildEmbed('Title\n=====\n\nBody', '![[Child]]');
+      expect(html).toContain('<p>Body</p>');
+      expect(html).not.toContain('Title');
+      expect(html).not.toContain('===');
+      expect(html).not.toContain('<hr');
+    });
+
+    it('removes a setext section heading together with its underline', () => {
+      const html = renderChildEmbed(
+        '# Title\n\nSection\n-------\n\nBody\n\n# Tail',
+        '![[Child#Section]]'
+      );
+      expect(html).toContain('<p>Body</p>');
+      expect(html).not.toContain('Section');
+      expect(html).not.toContain('<hr');
+      expect(html).not.toContain('Tail');
+    });
+  });
+
+  describe('content mode strips the title using the parsed sections', () => {
     it('removes the title when an HTML comment precedes it', () => {
-      const html = renderContentEmbed(
+      const html = renderChildEmbed(
         '<!-- note -->\n# Title\n\nBody',
         '![[Child]]'
       );
@@ -596,7 +700,7 @@ describe('Wikilink Note Embedding', () => {
     });
 
     it('removes the title when a badge image precedes it', () => {
-      const html = renderContentEmbed(
+      const html = renderChildEmbed(
         '![Badge](badge.png)\n\n# Title\n\nBody',
         '![[Child]]'
       );
@@ -609,7 +713,7 @@ describe('Wikilink Note Embedding', () => {
         '---\ntags:\n\t- a\n---',
         '---\nid: 1\nid: 2\n---',
       ]) {
-        const html = renderContentEmbed(
+        const html = renderChildEmbed(
           `${frontmatter}\n# Title\n\nBody`,
           '![[Child]]'
         );
@@ -626,7 +730,7 @@ describe('Wikilink Note Embedding', () => {
         '---\n- a\n---',
         '---\nordinary prose\n---',
       ]) {
-        const html = renderContentEmbed(
+        const html = renderChildEmbed(
           `${frontmatter}\n# Title\n\nBody`,
           '![[Child]]'
         );
@@ -639,7 +743,7 @@ describe('Wikilink Note Embedding', () => {
     });
 
     it('removes a section heading nested in a blockquote', () => {
-      const html = renderContentEmbed(
+      const html = renderChildEmbed(
         '> # Quoted heading\n> body text\n\n# Next\n\nTail',
         '![[Child#Quoted heading]]'
       );
@@ -649,7 +753,7 @@ describe('Wikilink Note Embedding', () => {
     });
 
     it('removes the title of a note that starts with a byte order mark', () => {
-      const html = renderContentEmbed('﻿# Title\n\nBody', '![[Child]]');
+      const html = renderChildEmbed('﻿# Title\n\nBody', '![[Child]]');
       expect(html).toContain('Body');
       expect(html).not.toContain('Title');
     });

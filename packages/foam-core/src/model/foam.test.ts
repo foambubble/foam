@@ -245,3 +245,73 @@ describe('bootstrap change-event handling', () => {
     }
   });
 });
+
+describe('bootstrap deletes during a watcher read', () => {
+  async function bootstrapWithHeldFetch() {
+    const watcher = new FakeWatcher();
+    const dataStore = new GenericDataStore(
+      async () => [],
+      async () => null
+    );
+    let releaseFetch: () => void;
+    const fetchHeld = new Promise<void>(resolve => (releaseFetch = resolve));
+    const heldProvider: ResourceProvider = {
+      supports: () => true,
+      readAsMarkdown: async () => null,
+      fetch: async uri => {
+        await fetchHeld;
+        return createTestNote({ uri: uri.path });
+      },
+      resolveLink: () => {
+        throw new Error('resolveLink should not be called in these tests');
+      },
+      dispose: () => {},
+    };
+    const foam = await bootstrap(
+      [URI.file('/workspace')],
+      new CountingMatcher(),
+      watcher,
+      dataStore,
+      noopParser,
+      [heldProvider],
+      '.md'
+    );
+    return { watcher, foam, releaseFetch };
+  }
+
+  it('does not re-add a note deleted while its change event was being read', async () => {
+    const { watcher, foam, releaseFetch } = await bootstrapWithHeldFetch();
+    const uri = URI.file('/workspace/moved-away.md');
+    foam.workspace.set(createTestNote({ uri: uri.path }));
+
+    try {
+      watcher.fireChange(uri);
+      await flush(0);
+      foam.workspace.delete(uri);
+      releaseFetch();
+      await flush(0);
+
+      expect(foam.workspace.find(uri)).toBeNull();
+    } finally {
+      foam.dispose();
+    }
+  });
+
+  it('does not re-add a note deleted while its create event was being read', async () => {
+    const { watcher, foam, releaseFetch } = await bootstrapWithHeldFetch();
+    const uri = URI.file('/workspace/moved-away.md');
+    foam.workspace.set(createTestNote({ uri: uri.path }));
+
+    try {
+      watcher.fireCreate(uri);
+      await flush(DEBOUNCE_SETTLE_MS);
+      foam.workspace.delete(uri);
+      releaseFetch();
+      await flush(0);
+
+      expect(foam.workspace.find(uri)).toBeNull();
+    } finally {
+      foam.dispose();
+    }
+  });
+});

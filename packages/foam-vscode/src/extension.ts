@@ -7,6 +7,8 @@ import {
   commands,
   TextEditor,
   RelativePattern,
+  FileType,
+  Uri,
 } from 'vscode';
 import {
   MarkdownResourceProvider,
@@ -99,7 +101,28 @@ export async function activate(context: ExtensionContext) {
           new RelativePattern(folder.uri, watchGlob)
         )
       ),
-      workspace.onDidSaveTextDocument
+      workspace.onDidSaveTextDocument,
+      {
+        watchers: workspace.workspaceFolders.map(folder =>
+          workspace.createFileSystemWatcher(
+            new RelativePattern(folder.uri, '**/*'),
+            false,
+            true,
+            false
+          )
+        ),
+        listFilesInFolder: async (uri: Uri) => {
+          try {
+            const stat = await workspace.fs.stat(uri);
+            return stat.type & FileType.Directory
+              ? await workspace.findFiles(new RelativePattern(uri, watchGlob))
+              : [];
+          } catch {
+            // Already gone again
+            return [];
+          }
+        },
+      }
     );
     context.subscriptions.push(watcher);
     // Attributes the workspace load time to reading vs parsing vs neither, so

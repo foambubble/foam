@@ -50,7 +50,9 @@ export interface IDataStore {
 
 export interface IWatcher {
   onDidChange: Event<URI>;
+  /** Fires for each created file, including those inside a created folder */
   onDidCreate: Event<URI>;
+  /** Fires for a deleted file, or for a deleted folder without its files */
   onDidDelete: Event<URI>;
 }
 

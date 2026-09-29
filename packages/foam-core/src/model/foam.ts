@@ -106,7 +106,17 @@ export const bootstrap = async (
 
     subscriptions.push(
       watcher.onDidDelete(uri => {
-        workspace.delete(uri);
+        if (workspace.delete(uri)) {
+          return;
+        }
+        // Not a resource, so possibly a folder: a watcher may report a folder
+        // deleted, moved or renamed as one event, without its files
+        const folderPrefix = uri.path.endsWith('/') ? uri.path : uri.path + '/';
+        for (const resource of workspace.list()) {
+          if (resource.uri.path.startsWith(folderPrefix)) {
+            workspace.delete(resource.uri);
+          }
+        }
       })
     );
   }

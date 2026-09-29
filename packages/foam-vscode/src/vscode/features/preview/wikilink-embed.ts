@@ -320,11 +320,13 @@ function extractNoteText(note: Resource, withoutTitle: boolean): string {
       return rows.slice(start, section.range.end.line).join('\n');
     }
   }
-  // The first heading is taken as the note's title
+  // The first heading is taken as the note's title. Its lines are blanked
+  // rather than removed so the rest stays where the parser saw it: a `---`
+  // rule under the title must not become a frontmatter opener on line 0.
   const title = note.sections[0];
   if (withoutTitle && isSome(title)) {
     const { start, end } = title.headingRange;
-    rows.splice(start.line, end.line - start.line + 1);
+    rows.fill('', start.line, end.line + 1);
   }
   return stripFrontMatter(rows.join('\n'));
 }

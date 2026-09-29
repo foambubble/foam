@@ -669,6 +669,17 @@ describe('Wikilink Note Embedding', () => {
       expect(html).toContain('<p>Tail</p>');
     });
 
+    it('keeps a thematic break that directly follows the title', () => {
+      const html = renderChildEmbed(
+        '# Title\n---\nText paragraph\n\n---\nFooter',
+        '![[Child]]'
+      );
+      expect(html).not.toContain('Title');
+      expect(html).toContain('<p>Text paragraph</p>');
+      expect(html).toContain('<p>Footer</p>');
+      expect(html.match(/<hr>/g)).toHaveLength(2);
+    });
+
     it('removes a setext title together with its underline', () => {
       const html = renderChildEmbed('Title\n=====\n\nBody', '![[Child]]');
       expect(html).toContain('<p>Body</p>');

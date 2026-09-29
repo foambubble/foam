@@ -45,26 +45,7 @@ Each new fragment is a separate file in `.changeset/`. Use a short kebab-case fi
 Fix symlink support by augmenting file watcher with `onDidSaveTextDocument` (#1630)
 ```
 
-Bump type rules:
-
-- `patch` — bug fixes, performance, internal/refactor
-- `minor` — new user-facing features
-- `major` — breaking changes (rare; flag to the developer before writing)
-
-If a commit affects multiple packages (e.g. a `@foam/core` change consumed by CLI and extension), list each package with its appropriate bump in the same frontmatter. The `updateInternalDependencies: patch` config will already auto-patch downstream packages on a `@foam/core` bump, so usually you only need to declare the originating package.
-
-## Style rules for the body
-
-Match the existing changelog style exactly (see `packages/foam-vscode/CHANGELOG.md` for reference):
-
-- One bullet, one line, active voice, no file names
-- Format: `Description of change (#issue - thanks @contributor)`
-- Omit issue number if there is none; omit contributor credit if it's the maintainer
-- User-facing changes get a normal entry. Internal/refactor/tooling: prefix the body with `Internal: ` so the eventual CHANGELOG groups it correctly. Example:
-  ```
-  Internal: Extracted `@foam/core` and `@foam/graph-view` as standalone Yarn workspace packages (#1634)
-  ```
-- If a commit message is ambiguous, look at the diff or linked PR for intent
+Whether a commit needs a fragment, which bump, the `@foam/core` cascade, and how to write the entry all follow the [changelog rules](../../docs/dev/releasing-foam.md#changelog-rules). Keep entries short: what changed for the user, not why or how. If a commit message is ambiguous, look at the diff or linked PR for intent.
 
 ## Constraints
 

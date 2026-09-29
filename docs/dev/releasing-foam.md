@@ -41,13 +41,22 @@ When several commits fold into one fragment, use the highest bump any of them wa
 
 ### Writing the entry
 
-The entry is read by users, not by developers.
+The entry is read by users, not by developers. Make it as short as it can be while still telling them what changed: usually one line, rarely more than two sentences.
 
-- Lead with the observable outcome, not the implementation.
-- Say what someone should now expect. If behavior narrowed, say so explicitly.
+- Say what changed, not why it was broken or how it was fixed. Causes, mechanisms and internal names belong in the commit message.
+- If behavior narrowed, say so, and say what to do instead.
+- Name a changed API only in a `@foam/core` entry, and only name it.
+- Several related fixes can share one entry as a list, one line per item.
 - Reference the issue number when there is one, as `(#1215)`.
-- Keep it to one or a couple sentences. The reasoning belongs in the commit message.
 - Don't reuse the commit subject verbatim — commit subjects are written for developers.
+
+For example:
+
+```markdown
+Notes in folders listed in `files.watcherExclude` are no longer left out of the workspace. To exclude a folder, use `foam.files.exclude`.
+```
+
+not a paragraph on what `files.watcherExclude` is for, why honouring it saved no CPU, and how the CLI differed.
 
 ## Generating fragments from git history
 

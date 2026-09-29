@@ -9,6 +9,7 @@ import {
   ResourceParser,
   URI,
   createRenderContext,
+  stripFrontMatter,
   toSlug,
 } from '@foam/core';
 import { createFoamMarkdownIt } from '../preview/foam-markdown-it';
@@ -176,7 +177,9 @@ export async function renderReport(options: RenderReportOptions): Promise<string
     if (!resource) continue;
     currentResource = resource;
     const raw = noteContent.get(uri.toString()) ?? '';
-    const bodyHtml = md.render(stripTitleHeading(raw, resource));
+    const bodyHtml = md.render(
+      stripTitleHeading(stripFrontMatter(raw), resource)
+    );
     const previewHtml = bodyHtml;
     rendered.push({
       uri,

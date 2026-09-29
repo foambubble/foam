@@ -459,7 +459,11 @@ const tagsPlugin: ParserPlugin = {
   },
 };
 
-let sectionStack: Array<{ label: string; level: number; start: Position }> = [];
+let sectionStack: Array<{
+  label: string;
+  level: number;
+  headingRange: Range;
+}> = [];
 const sectionsPlugin: ParserPlugin = {
   name: 'section',
   onWillVisitTree: () => {
@@ -474,7 +478,8 @@ const sectionsPlugin: ParserPlugin = {
       if (!label || !level) {
         return;
       }
-      const start = astPositionToFoamRange(node.position!).start;
+      const headingRange = astPositionToFoamRange(node.position!);
+      const start = headingRange.start;
 
       // Close all the sections that are not parents of the current section
       while (
@@ -485,12 +490,13 @@ const sectionsPlugin: ParserPlugin = {
         note.sections.push({
           label: section.label,
           level: section.level,
-          range: Range.createFromPosition(section.start, start),
+          range: Range.createFromPosition(section.headingRange.start, start),
+          headingRange: section.headingRange,
         });
       }
 
       // Add the new section to the stack
-      sectionStack.push({ label, level, start });
+      sectionStack.push({ label, level, headingRange });
     }
   },
   onDidVisitTree: (tree, note) => {
@@ -504,7 +510,8 @@ const sectionsPlugin: ParserPlugin = {
       note.sections.push({
         label: section.label,
         level: section.level,
-        range: { start: section.start, end },
+        range: { start: section.headingRange.start, end },
+        headingRange: section.headingRange,
       });
     }
     note.sections.sort((a, b) =>

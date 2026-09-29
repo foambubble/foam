@@ -1012,6 +1012,31 @@ describe('renderReport', () => {
     expect(h1Count).toBe(0);
   });
 
+  it('does not render the frontmatter of a note', async () => {
+    const parser = createMarkdownParser();
+    const ws = createTestWorkspace();
+    ws.set(createTestNote({ uri: '/alpha.md', title: 'Alpha' }));
+    const graph = FoamGraph.fromWorkspace(ws);
+    const html = await renderReport({
+      workspace: ws,
+      graph,
+      parser,
+      noteUris: [ws.find('alpha')!.uri],
+      noteContent: new Map([
+        [
+          ws.find('alpha')!.uri.toString(),
+          '---\nstatus: draft\n---\n# Alpha\n\nBody text.\n',
+        ],
+      ]),
+      title: 'Test report',
+      generatedAt: new Date('2026-06-24T00:00:00Z'),
+      readAttachment: async () => null,
+    });
+    expect(html).toContain('Body text.');
+    expect(html).not.toContain('status: draft');
+    expect(html).not.toMatch(/<h1[^>]*>Alpha<\/h1>/);
+  });
+
   describe('content security policy', () => {
     async function renderWithBody(body: string) {
       const { ws, graph, parser } = buildScenario();

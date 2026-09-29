@@ -39,7 +39,7 @@ Foam supports different embedding scopes and styles that can be configured globa
 ### Scope Modifiers
 
 - **`full`** - Include the entire note or section, including the title/heading
-- **`content`** - Include everything except the title/heading
+- **`content`** - Include everything except the title: the note's first `#` heading, or the section's own heading
 
 Examples:
 

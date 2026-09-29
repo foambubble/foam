@@ -5,7 +5,7 @@ import { FoamWorkspace } from '../model/workspace';
 import { FoamGraph } from '../model/graph';
 import { Logger } from '../utils/log';
 import { URI } from '../model/uri';
-import { stripFrontMatter } from '../utils/md';
+import { stripFrontMatter, stripFrontMatterAndTitle } from '../utils/md';
 import { getDirectory, getExtension, getName } from '../utils/path';
 
 const queryJexl = new jexl.Jexl();
@@ -400,27 +400,17 @@ export function requiresSource(field: string): boolean {
   );
 }
 
-function stripH1Title(source: string): string {
-  const lines = source.split(/\r?\n/);
-  let i = 0;
-  while (i < lines.length && lines[i].trim() === '') i++;
-  if (i < lines.length && /^#\s+/.test(lines[i])) {
-    let next = i + 1;
-    if (next < lines.length && lines[next].trim() === '') next++;
-    return lines.slice(next).join('\n');
-  }
-  return source;
-}
-
 function getSectionContent(r: Resource, source: string, label: string): string | undefined {
   // Case-sensitive: matches `Resource.findSection` so labels work the same way
   // in `section[Foo]` selects as in `![[note#Foo]]` embeds.
   const section = r.sections.find(s => s.label === label);
   if (!section) return undefined;
-  // Section range is half-open at end.line; start.line is the heading row, so
-  // skip it.
+  // Section range is half-open at end.line; skip the heading, which spans two
+  // lines for setext headings.
   const lines = source.split(/\r?\n/);
-  return lines.slice(section.range.start.line + 1, section.range.end.line).join('\n');
+  return lines
+    .slice(section.headingRange.end.line + 1, section.range.end.line)
+    .join('\n');
 }
 
 function buildFullView(
@@ -460,7 +450,9 @@ function resolveField(
   }
   if (field === 'content') {
     const src = getSource();
-    return src === undefined ? undefined : stripH1Title(stripFrontMatter(src));
+    return src === undefined
+      ? undefined
+      : stripFrontMatterAndTitle(src, r.sections);
   }
   const sectionMatch = SECTION_FIELD_RE.exec(field);
   if (sectionMatch) {

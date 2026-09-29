@@ -1037,6 +1037,56 @@ describe('executeQuery — source-derived fields', () => {
     expect(results[0].content).not.toContain('status: to_ask');
   });
 
+  it('`content` strips the H1 title when a comment precedes it', () => {
+    const markdown = `<!-- note -->\n# Question\n\nWhat is X?\n`;
+    const note = parseNote('/q.md', markdown);
+    const workspace = createTestWorkspace();
+    workspace.set(note);
+    const graph = FoamGraph.fromWorkspace(workspace, false);
+
+    const { results } = executeQuery(
+      { select: ['content'] },
+      workspace,
+      graph,
+      { trusted: false, readSource: () => markdown }
+    );
+    expect(results[0].content).toContain('<!-- note -->');
+    expect(results[0].content).toContain('What is X?');
+    expect(results[0].content).not.toContain('Question');
+  });
+
+  it('`content` strips a setext H1 title with its underline', () => {
+    const markdown = `Question\n========\n\nWhat is X?\n`;
+    const note = parseNote('/q.md', markdown);
+    const workspace = createTestWorkspace();
+    workspace.set(note);
+    const graph = FoamGraph.fromWorkspace(workspace, false);
+
+    const { results } = executeQuery(
+      { select: ['content'] },
+      workspace,
+      graph,
+      { trusted: false, readSource: () => markdown }
+    );
+    expect(results[0].content).toBe('What is X?');
+  });
+
+  it('`content` keeps a leading H2 when the note has no H1', () => {
+    const markdown = `## Intro\n\nText\n`;
+    const note = parseNote('/q.md', markdown);
+    const workspace = createTestWorkspace();
+    workspace.set(note);
+    const graph = FoamGraph.fromWorkspace(workspace, false);
+
+    const { results } = executeQuery(
+      { select: ['content'] },
+      workspace,
+      graph,
+      { trusted: false, readSource: () => markdown }
+    );
+    expect(results[0].content).toBe('## Intro\n\nText');
+  });
+
   it('strips a CRLF-delimited frontmatter block (Windows-authored notes)', () => {
     // Use \r\n line endings everywhere — gray-matter handles them, the
     // previous hand-rolled splitter did not, so this catches the regression.
@@ -1106,6 +1156,25 @@ describe('executeQuery — source-derived fields', () => {
     expect(value).not.toContain('## Question');
     expect(value).not.toContain('## Other');
     expect(value).not.toContain('Else.');
+  });
+
+  it('`section[Label]` strips a setext heading with its underline', () => {
+    const markdown = `# Top\n\nQuestion\n--------\n\nWhat is X?\n`;
+    const note = parseNote('/q.md', markdown);
+    const workspace = createTestWorkspace();
+    workspace.set(note);
+    const graph = FoamGraph.fromWorkspace(workspace, false);
+
+    const { results } = executeQuery(
+      { select: ['section[Question]'] },
+      workspace,
+      graph,
+      { trusted: false, readSource: () => markdown }
+    );
+    const value = results[0]['section[Question]'] as string;
+    expect(value).toContain('What is X?');
+    expect(value).not.toContain('Question');
+    expect(value).not.toContain('---');
   });
 
   it('`section[Label]` supports labels with spaces', () => {

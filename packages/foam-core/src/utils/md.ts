@@ -1,3 +1,5 @@
+import { Section } from '../model/note';
+
 export function getExcerpt(
   markdown: string,
   maxLines: number
@@ -27,6 +29,26 @@ const FRONTMATTER_BLOCK_REGEX = /^---[ \t]*\r?\n(?:[\s\S]*?\r?\n)?(?:---|\.\.\.)
 
 export function stripFrontMatter(markdown: string): string {
   return markdown.replace(FRONTMATTER_BLOCK_REGEX, '').trim();
+}
+
+/**
+ * Strips the frontmatter and the title heading: the first H1, the heading the
+ * parser takes the title from. `sections` must come from parsing `markdown`.
+ * The title's lines are blanked rather than removed, so a `---` rule under
+ * the title can't become a frontmatter opener on the first line.
+ */
+export function stripFrontMatterAndTitle(
+  markdown: string,
+  sections: Section[]
+): string {
+  const title = sections.find(s => s.level === 1);
+  if (!title) {
+    return stripFrontMatter(markdown);
+  }
+  const { start, end } = title.headingRange;
+  const lines = markdown.split('\n');
+  lines.fill('', start.line, end.line + 1);
+  return stripFrontMatter(lines.join('\n'));
 }
 
 export function stripImages(markdown: string): string {

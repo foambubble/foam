@@ -167,6 +167,7 @@ export { extractHashtags, extractTagsFromProp, HASHTAG_REGEX } from './utils/has
 export {
   getExcerpt,
   stripFrontMatter,
+  stripFrontMatterAndTitle,
   stripImages,
   isInFrontMatter,
   isOnYAMLKeywordLine,

@@ -7,37 +7,27 @@ import { URI, ExportArtifactSet } from '@foam/core';
 import { writeStarlightSite } from './index';
 
 describe('export starlight target', () => {
-  it('strips leading h1 from note markdown to avoid duplicate title', async () => {
-    const tmpDir = mkdtempSync(path.join(tmpdir(), 'foam-starlight-strip-h1-'));
+  it('writes the body, not the full source, for a note and the homepage', async () => {
+    const tmpDir = mkdtempSync(path.join(tmpdir(), 'foam-starlight-body-'));
+    const guideUri = URI.file(path.join(tmpDir, 'guide.md'));
 
     const artifactSet: ExportArtifactSet = {
-      site: { title: 'Site', description: '', homepageRoute: null },
+      site: { title: 'Site', description: '', homepageRoute: '/guide' },
       graph: { nodeInfo: {}, links: [] },
       notes: [
         {
-          sourceUri: URI.file(path.join(tmpDir, 'note.md')),
-          route: '/note',
-          title: 'My Note',
+          sourceUri: guideUri,
+          route: '/guide',
+          title: 'Guide',
           description: '',
           properties: {},
-          markdown: '# My Note\n\nSome content here.',
-          backlinks: [],
-        },
-        {
-          sourceUri: URI.file(path.join(tmpDir, 'other.md')),
-          route: '/other',
-          title: 'Other',
-          description: '',
-          properties: {},
-          markdown: '## Not a top-level h1\n\nContent.',
+          markdown: '---\nstatus: draft\n---\n# Guide\n\nBody text.',
+          body: 'Body text.',
           backlinks: [],
         },
       ],
       assets: [],
-      routes: [
-        { sourceUri: URI.file(path.join(tmpDir, 'note.md')), route: '/note' },
-        { sourceUri: URI.file(path.join(tmpDir, 'other.md')), route: '/other' },
-      ],
+      routes: [{ sourceUri: guideUri, route: '/guide' }],
       diagnostics: [],
     };
 
@@ -46,20 +36,13 @@ describe('export starlight target', () => {
       outputDir: path.join(tmpDir, 'site'),
     });
 
-    const noteContent = fs.readFileSync(
-      path.join(tmpDir, 'site', 'src', 'content', 'docs', 'note.md'),
-      'utf8'
-    );
-    // H1 should be stripped; body content should remain
-    expect(noteContent).not.toContain('# My Note');
-    expect(noteContent).toContain('Some content here.');
-
-    const otherContent = fs.readFileSync(
-      path.join(tmpDir, 'site', 'src', 'content', 'docs', 'other.md'),
-      'utf8'
-    );
-    // H2 should not be stripped
-    expect(otherContent).toContain('## Not a top-level h1');
+    const docsDir = path.join(tmpDir, 'site', 'src', 'content', 'docs');
+    for (const file of ['guide.md', 'index.md']) {
+      const content = fs.readFileSync(path.join(docsDir, file), 'utf8');
+      expect(content).toContain('Body text.');
+      expect(content).not.toContain('status: draft');
+      expect(content).not.toContain('# Guide');
+    }
   });
 
   it('does not strip lines that start with # but are not headings', async () => {
@@ -76,6 +59,7 @@ describe('export starlight target', () => {
           description: '',
           properties: {},
           markdown: '#!/usr/bin/env bash\n\necho "hello"',
+          body: '#!/usr/bin/env bash\n\necho "hello"',
           backlinks: [],
         },
         {
@@ -85,6 +69,7 @@ describe('export starlight target', () => {
           description: '',
           properties: {},
           markdown: '#include <stdio.h>\n\nint main() {}',
+          body: '#include <stdio.h>\n\nint main() {}',
           backlinks: [],
         },
       ],
@@ -120,89 +105,6 @@ describe('export starlight target', () => {
     expect(includeContent).toContain('#include <stdio.h>');
   });
 
-  it('strips H1 preceded by HTML comments', async () => {
-    const tmpDir = mkdtempSync(path.join(tmpdir(), 'foam-starlight-comment-h1-'));
-
-    const artifactSet: ExportArtifactSet = {
-      site: { title: 'Site', description: '', homepageRoute: null },
-      graph: { nodeInfo: {}, links: [] },
-      notes: [
-        {
-          sourceUri: URI.file(path.join(tmpDir, 'recipes.md')),
-          route: '/recipes',
-          title: 'Recipes',
-          description: '',
-          properties: {},
-          markdown:
-            '<!-- omit in toc -->\n\n# Recipes\n\nA #recipe is a guide.',
-          backlinks: [],
-        },
-      ],
-      assets: [],
-      routes: [
-        {
-          sourceUri: URI.file(path.join(tmpDir, 'recipes.md')),
-          route: '/recipes',
-        },
-      ],
-      diagnostics: [],
-    };
-
-    await writeStarlightSite({
-      artifactSet,
-      outputDir: path.join(tmpDir, 'site'),
-    });
-
-    const content = fs.readFileSync(
-      path.join(tmpDir, 'site', 'src', 'content', 'docs', 'recipes.md'),
-      'utf8'
-    );
-    expect(content).not.toContain('# Recipes');
-    expect(content).toContain('A #recipe is a guide.');
-  });
-
-  it('preserves H1 that appears after real content', async () => {
-    const tmpDir = mkdtempSync(
-      path.join(tmpdir(), 'foam-starlight-content-before-h1-')
-    );
-
-    const artifactSet: ExportArtifactSet = {
-      site: { title: 'Site', description: '', homepageRoute: null },
-      graph: { nodeInfo: {}, links: [] },
-      notes: [
-        {
-          sourceUri: URI.file(path.join(tmpDir, 'note.md')),
-          route: '/note',
-          title: 'Note',
-          description: '',
-          properties: {},
-          markdown: 'Some intro text\n\n# Heading\n\nBody content.',
-          backlinks: [],
-        },
-      ],
-      assets: [],
-      routes: [
-        {
-          sourceUri: URI.file(path.join(tmpDir, 'note.md')),
-          route: '/note',
-        },
-      ],
-      diagnostics: [],
-    };
-
-    await writeStarlightSite({
-      artifactSet,
-      outputDir: path.join(tmpDir, 'site'),
-    });
-
-    const content = fs.readFileSync(
-      path.join(tmpDir, 'site', 'src', 'content', 'docs', 'note.md'),
-      'utf8'
-    );
-    expect(content).toContain('# Heading');
-    expect(content).toContain('Some intro text');
-  });
-
   it('writes nested notes into correct folder structure', async () => {
     const tmpDir = mkdtempSync(path.join(tmpdir(), 'foam-starlight-nested-'));
 
@@ -217,6 +119,7 @@ describe('export starlight target', () => {
           description: '',
           properties: {},
           markdown: 'Content.',
+          body: 'Content.',
           backlinks: [],
         },
         {
@@ -228,6 +131,7 @@ describe('export starlight target', () => {
           description: '',
           properties: {},
           markdown: 'Content.',
+          body: 'Content.',
           backlinks: [],
         },
       ],
@@ -281,47 +185,6 @@ describe('export starlight target', () => {
     ).toBe(true);
   });
 
-  it('strips YAML frontmatter from note markdown to avoid double rendering', async () => {
-    const tmpDir = mkdtempSync(
-      path.join(tmpdir(), 'foam-starlight-frontmatter-')
-    );
-
-    const artifactSet: ExportArtifactSet = {
-      site: { title: 'Site', description: '', homepageRoute: null },
-      graph: { nodeInfo: {}, links: [] },
-      notes: [
-        {
-          sourceUri: URI.file(path.join(tmpDir, 'note.md')),
-          route: '/note',
-          title: 'My Note',
-          description: '',
-          properties: { author: 'Alice', status: 'draft' },
-          markdown:
-            '---\ntitle: My Note\nauthor: Alice\nstatus: draft\n---\n\n# My Note\n\nBody content.',
-          backlinks: [],
-        },
-      ],
-      assets: [],
-      routes: [
-        { sourceUri: URI.file(path.join(tmpDir, 'note.md')), route: '/note' },
-      ],
-      diagnostics: [],
-    };
-
-    await writeStarlightSite({
-      artifactSet,
-      outputDir: path.join(tmpDir, 'site'),
-    });
-
-    const content = fs.readFileSync(
-      path.join(tmpDir, 'site', 'src', 'content', 'docs', 'note.md'),
-      'utf8'
-    );
-    // The original YAML block must not appear in the body
-    expect(content).not.toMatch(/^---[\s\S]*?author: Alice[\s\S]*?---/m);
-    expect(content).toContain('Body content.');
-  });
-
   it('renders note properties after the title, skipping title and description', async () => {
     const tmpDir = mkdtempSync(path.join(tmpdir(), 'foam-starlight-props-'));
 
@@ -342,6 +205,7 @@ describe('export starlight target', () => {
             status: 'draft',
           },
           markdown: '# My Note\n\nSome content here.',
+          body: 'Some content here.',
           backlinks: [],
         },
         {
@@ -351,6 +215,7 @@ describe('export starlight target', () => {
           description: '',
           properties: {},
           markdown: 'No properties.',
+          body: 'No properties.',
           backlinks: [],
         },
       ],
@@ -440,6 +305,7 @@ describe('export starlight target', () => {
           description: 'Start here',
           properties: {},
           markdown: '![Image](../assets/image.png)',
+          body: '![Image](../assets/image.png)',
           backlinks: [],
         },
         {
@@ -449,6 +315,7 @@ describe('export starlight target', () => {
           description: 'Ignored',
           properties: {},
           markdown: '# Missing',
+          body: '',
           backlinks: [],
         },
         {
@@ -458,6 +325,7 @@ describe('export starlight target', () => {
           description: 'Has backlinks',
           properties: {},
           markdown: '# Linked',
+          body: '',
           backlinks: [
             {
               route: '/guide',

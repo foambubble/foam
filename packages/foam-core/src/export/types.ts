@@ -96,7 +96,13 @@ export interface ExportedNote {
   title: string;
   description?: string;
   properties: Record<string, unknown>;
+  /** The note's source with links rewritten, line for line. */
   markdown: string;
+  /**
+   * `markdown` without the frontmatter and, when the title comes from it,
+   * the first H1: what a target that shows the title on its own renders.
+   */
+  body: string;
   backlinks: ExportedBacklink[];
 }
 

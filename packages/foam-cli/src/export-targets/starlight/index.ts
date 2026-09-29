@@ -35,33 +35,6 @@ function routeToDocPath(route: string) {
   return `${route.replace(/^\/+/, '')}.md`;
 }
 
-function stripFrontmatter(markdown: string) {
-  return markdown.replace(/^---\n[\s\S]*?\n---\n?/, '').replace(/^\n+/, '');
-}
-
-function stripLeadingH1(markdown: string) {
-  const lines = markdown.split('\n');
-  let inComment = false;
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    if (inComment) {
-      if (line.includes('-->')) inComment = false;
-      continue;
-    }
-    if (line.includes('<!--')) {
-      if (!line.includes('-->')) inComment = true;
-      continue;
-    }
-    if (line.trim() === '') continue;
-    if (/^# /.test(line)) {
-      lines.splice(i, 1);
-      return lines.join('\n').replace(/^\n+/, '');
-    }
-    break;
-  }
-  return markdown;
-}
-
 function escapeFrontmatter(value: string) {
   return value.replace(/"/g, '\\"');
 }
@@ -177,9 +150,11 @@ async function writeDocs(outputDir: string, artifactSet: ExportArtifactSet) {
     await fs.mkdir(path.dirname(outputPath), { recursive: true });
     await fs.writeFile(
       outputPath,
-      `${renderFrontmatter(note)}${renderProperties(note.properties)}${rewriteStaticAssetPaths(
-        stripLeadingH1(stripFrontmatter(note.markdown))
-      )}${renderBacklinks(note.backlinks)}`,
+      `${renderFrontmatter(note)}${renderProperties(
+        note.properties
+      )}${rewriteStaticAssetPaths(note.body)}${renderBacklinks(
+        note.backlinks
+      )}`,
       'utf8'
     );
   }
@@ -197,9 +172,11 @@ async function writeDocs(outputDir: string, artifactSet: ExportArtifactSet) {
       await fs.mkdir(path.dirname(outputPath), { recursive: true });
       await fs.writeFile(
         outputPath,
-        `${renderFrontmatter(homepageNote)}${renderProperties(homepageNote.properties)}${rewriteStaticAssetPaths(
-          stripLeadingH1(homepageNote.markdown)
-        )}${renderBacklinks(homepageNote.backlinks)}`,
+        `${renderFrontmatter(homepageNote)}${renderProperties(
+          homepageNote.properties
+        )}${rewriteStaticAssetPaths(homepageNote.body)}${renderBacklinks(
+          homepageNote.backlinks
+        )}`,
         'utf8'
       );
     }

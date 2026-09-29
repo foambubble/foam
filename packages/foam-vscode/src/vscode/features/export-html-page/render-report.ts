@@ -9,7 +9,6 @@ import {
   ResourceParser,
   URI,
   createRenderContext,
-  stripFrontMatter,
   toSlug,
 } from '@foam/core';
 import { createFoamMarkdownIt } from '../preview/foam-markdown-it';
@@ -51,7 +50,7 @@ export interface RenderReportOptions {
   parser: ResourceParser;
   /** URIs of the notes to include, in document order. */
   noteUris: URI[];
-  /** Map from URI to the note's raw markdown text. */
+  /** Map from URI to the note's exported body (`ExportedNote.body`). */
   noteContent: Map<string, string>;
   /** Title shown at the top of the report. */
   title: string;
@@ -176,10 +175,8 @@ export async function renderReport(options: RenderReportOptions): Promise<string
     const resource = workspace.find(uri);
     if (!resource) continue;
     currentResource = resource;
-    const raw = noteContent.get(uri.toString()) ?? '';
-    const bodyHtml = md.render(
-      stripTitleHeading(stripFrontMatter(raw), resource)
-    );
+    const markdown = noteContent.get(uri.toString()) ?? '';
+    const bodyHtml = md.render(markdown);
     const previewHtml = bodyHtml;
     rendered.push({
       uri,
@@ -204,28 +201,6 @@ export async function renderReport(options: RenderReportOptions): Promise<string
     sectionsHtml,
     previewsHtml,
   });
-}
-
-/**
- * Removes a leading H1 that matches the resource title — the report renders
- * the title as the section header, so keeping it in the body would duplicate
- * it. Heuristic: only the very first non-blank line, only if it's `# Title`.
- */
-function stripTitleHeading(raw: string, resource: Resource): string {
-  const lines = raw.split(/\r?\n/);
-  let i = 0;
-  while (i < lines.length && lines[i].trim() === '') i++;
-  if (i >= lines.length) return raw;
-  const match = lines[i].match(/^#\s+(.+?)\s*$/);
-  if (match && match[1].trim() === resource.title.trim()) {
-    lines.splice(i, 1);
-    // Drop the immediately following blank line if any so spacing stays tight.
-    if (lines[i]?.trim() === '') {
-      lines.splice(i, 1);
-    }
-    return lines.join('\n');
-  }
-  return raw;
 }
 
 interface InlineAttachmentsArgs {

@@ -24,6 +24,11 @@ describe('buildRules', () => {
     expect(rules.map(r => r.id)).toEqual(['missing-heading']);
   });
 
+  it('omits stale-definitions when asked for explicitly but off (#1722)', () => {
+    const rules = buildRules(['stale-definitions'], 'off');
+    expect(rules).toEqual([]);
+  });
+
   it('returns only stale-definitions when filtered', () => {
     const rules = buildRules(['stale-definitions'], 'withoutExtensions');
     expect(rules.map(r => r.id)).toEqual(['stale-definitions']);

@@ -139,6 +139,34 @@ describe('bootstrap file-watching', () => {
     }
   });
 
+  it('removes the notes under a deleted folder', async () => {
+    // VS Code reports a folder deleted, or moved or renamed away, as one event
+    // for the folder, with no events for the files it contained
+    const { watcher, foam } = await bootstrapWithWatcher(new CountingMatcher());
+
+    try {
+      for (const path of [
+        '/workspace/folder/a.md',
+        '/workspace/folder/nested/b.md',
+        '/workspace/folder.md',
+        '/workspace/folder-sibling/c.md',
+      ]) {
+        watcher.fireCreate(URI.file(path));
+      }
+      await flush(DEBOUNCE_SETTLE_MS);
+
+      watcher.fireDelete(URI.file('/workspace/folder'));
+
+      const remaining = foam.workspace.list().map(r => r.uri.path);
+      expect(remaining.sort()).toEqual([
+        '/workspace/folder-sibling/c.md',
+        '/workspace/folder.md',
+      ]);
+    } finally {
+      foam.dispose();
+    }
+  });
+
   it('does not refresh the matcher for creates after dispose', async () => {
     const matcher = new CountingMatcher();
     const { watcher, foam } = await bootstrapWithWatcher(matcher);

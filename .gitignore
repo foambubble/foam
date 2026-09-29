@@ -18,3 +18,4 @@ docs/.jekyll-metadata
 .tmp
 specs.local
 .agent-loop
+.nx

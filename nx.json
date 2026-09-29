@@ -1,0 +1,5 @@
+{
+  // Marks this folder as the Nx workspace root. Without it, Nx (which Lerna
+  // runs tasks through) walks up to the outermost folder with Nx installed,
+  // so a git worktree nested inside another checkout builds that checkout.
+}

@@ -96,6 +96,7 @@ export interface ExportedNote {
   title: string;
   description?: string;
   properties: Record<string, unknown>;
+  /** The body with links rewritten, without frontmatter or the title's H1. */
   markdown: string;
   backlinks: ExportedBacklink[];
 }

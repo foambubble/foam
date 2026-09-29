@@ -7,61 +7,6 @@ import { URI, ExportArtifactSet } from '@foam/core';
 import { writeStarlightSite } from './index';
 
 describe('export starlight target', () => {
-  it('strips leading h1 from note markdown to avoid duplicate title', async () => {
-    const tmpDir = mkdtempSync(path.join(tmpdir(), 'foam-starlight-strip-h1-'));
-
-    const artifactSet: ExportArtifactSet = {
-      site: { title: 'Site', description: '', homepageRoute: null },
-      graph: { nodeInfo: {}, links: [] },
-      notes: [
-        {
-          sourceUri: URI.file(path.join(tmpDir, 'note.md')),
-          route: '/note',
-          title: 'My Note',
-          description: '',
-          properties: {},
-          markdown: '# My Note\n\nSome content here.',
-          backlinks: [],
-        },
-        {
-          sourceUri: URI.file(path.join(tmpDir, 'other.md')),
-          route: '/other',
-          title: 'Other',
-          description: '',
-          properties: {},
-          markdown: '## Not a top-level h1\n\nContent.',
-          backlinks: [],
-        },
-      ],
-      assets: [],
-      routes: [
-        { sourceUri: URI.file(path.join(tmpDir, 'note.md')), route: '/note' },
-        { sourceUri: URI.file(path.join(tmpDir, 'other.md')), route: '/other' },
-      ],
-      diagnostics: [],
-    };
-
-    await writeStarlightSite({
-      artifactSet,
-      outputDir: path.join(tmpDir, 'site'),
-    });
-
-    const noteContent = fs.readFileSync(
-      path.join(tmpDir, 'site', 'src', 'content', 'docs', 'note.md'),
-      'utf8'
-    );
-    // H1 should be stripped; body content should remain
-    expect(noteContent).not.toContain('# My Note');
-    expect(noteContent).toContain('Some content here.');
-
-    const otherContent = fs.readFileSync(
-      path.join(tmpDir, 'site', 'src', 'content', 'docs', 'other.md'),
-      'utf8'
-    );
-    // H2 should not be stripped
-    expect(otherContent).toContain('## Not a top-level h1');
-  });
-
   it('does not strip lines that start with # but are not headings', async () => {
     const tmpDir = mkdtempSync(path.join(tmpdir(), 'foam-starlight-non-h1-'));
 
@@ -118,89 +63,6 @@ describe('export starlight target', () => {
       'utf8'
     );
     expect(includeContent).toContain('#include <stdio.h>');
-  });
-
-  it('strips H1 preceded by HTML comments', async () => {
-    const tmpDir = mkdtempSync(path.join(tmpdir(), 'foam-starlight-comment-h1-'));
-
-    const artifactSet: ExportArtifactSet = {
-      site: { title: 'Site', description: '', homepageRoute: null },
-      graph: { nodeInfo: {}, links: [] },
-      notes: [
-        {
-          sourceUri: URI.file(path.join(tmpDir, 'recipes.md')),
-          route: '/recipes',
-          title: 'Recipes',
-          description: '',
-          properties: {},
-          markdown:
-            '<!-- omit in toc -->\n\n# Recipes\n\nA #recipe is a guide.',
-          backlinks: [],
-        },
-      ],
-      assets: [],
-      routes: [
-        {
-          sourceUri: URI.file(path.join(tmpDir, 'recipes.md')),
-          route: '/recipes',
-        },
-      ],
-      diagnostics: [],
-    };
-
-    await writeStarlightSite({
-      artifactSet,
-      outputDir: path.join(tmpDir, 'site'),
-    });
-
-    const content = fs.readFileSync(
-      path.join(tmpDir, 'site', 'src', 'content', 'docs', 'recipes.md'),
-      'utf8'
-    );
-    expect(content).not.toContain('# Recipes');
-    expect(content).toContain('A #recipe is a guide.');
-  });
-
-  it('preserves H1 that appears after real content', async () => {
-    const tmpDir = mkdtempSync(
-      path.join(tmpdir(), 'foam-starlight-content-before-h1-')
-    );
-
-    const artifactSet: ExportArtifactSet = {
-      site: { title: 'Site', description: '', homepageRoute: null },
-      graph: { nodeInfo: {}, links: [] },
-      notes: [
-        {
-          sourceUri: URI.file(path.join(tmpDir, 'note.md')),
-          route: '/note',
-          title: 'Note',
-          description: '',
-          properties: {},
-          markdown: 'Some intro text\n\n# Heading\n\nBody content.',
-          backlinks: [],
-        },
-      ],
-      assets: [],
-      routes: [
-        {
-          sourceUri: URI.file(path.join(tmpDir, 'note.md')),
-          route: '/note',
-        },
-      ],
-      diagnostics: [],
-    };
-
-    await writeStarlightSite({
-      artifactSet,
-      outputDir: path.join(tmpDir, 'site'),
-    });
-
-    const content = fs.readFileSync(
-      path.join(tmpDir, 'site', 'src', 'content', 'docs', 'note.md'),
-      'utf8'
-    );
-    expect(content).toContain('# Heading');
-    expect(content).toContain('Some intro text');
   });
 
   it('writes nested notes into correct folder structure', async () => {
@@ -279,47 +141,6 @@ describe('export starlight target', () => {
         )
       )
     ).toBe(true);
-  });
-
-  it('strips YAML frontmatter from note markdown to avoid double rendering', async () => {
-    const tmpDir = mkdtempSync(
-      path.join(tmpdir(), 'foam-starlight-frontmatter-')
-    );
-
-    const artifactSet: ExportArtifactSet = {
-      site: { title: 'Site', description: '', homepageRoute: null },
-      graph: { nodeInfo: {}, links: [] },
-      notes: [
-        {
-          sourceUri: URI.file(path.join(tmpDir, 'note.md')),
-          route: '/note',
-          title: 'My Note',
-          description: '',
-          properties: { author: 'Alice', status: 'draft' },
-          markdown:
-            '---\ntitle: My Note\nauthor: Alice\nstatus: draft\n---\n\n# My Note\n\nBody content.',
-          backlinks: [],
-        },
-      ],
-      assets: [],
-      routes: [
-        { sourceUri: URI.file(path.join(tmpDir, 'note.md')), route: '/note' },
-      ],
-      diagnostics: [],
-    };
-
-    await writeStarlightSite({
-      artifactSet,
-      outputDir: path.join(tmpDir, 'site'),
-    });
-
-    const content = fs.readFileSync(
-      path.join(tmpDir, 'site', 'src', 'content', 'docs', 'note.md'),
-      'utf8'
-    );
-    // The original YAML block must not appear in the body
-    expect(content).not.toMatch(/^---[\s\S]*?author: Alice[\s\S]*?---/m);
-    expect(content).toContain('Body content.');
   });
 
   it('renders note properties after the title, skipping title and description', async () => {

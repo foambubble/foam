@@ -1,5 +1,6 @@
 import { Resource } from '../../model/note';
 import { TextEdit } from '../../services/text-edit';
+import { stripFrontMatter, stripFrontMatterAndTitle } from '../../utils/md';
 import { buildBacklinks } from '../derive/build-backlink-index';
 import type { SourceLinkRewriter } from '../target';
 import { ExportContext, ExportedDiagnostic, ExportedNote } from '../types';
@@ -51,6 +52,14 @@ export const transformNote = async (
 
   const rewrittenMarkdown =
     edits.length === 0 ? markdown : TextEdit.apply(markdown, edits);
+  // Targets show the title on their own, so drop the frontmatter and the H1
+  // the title comes from. Link edits don't add or remove lines, so the
+  // parsed heading lines still apply.
+  const titleHeading = note.sections.find(s => s.level === 1);
+  const body =
+    titleHeading?.label === note.title
+      ? stripFrontMatterAndTitle(rewrittenMarkdown, note.sections)
+      : stripFrontMatter(rewrittenMarkdown);
 
   return {
     note: {
@@ -59,7 +68,7 @@ export const transformNote = async (
       title: note.title,
       description,
       properties,
-      markdown: rewrittenMarkdown,
+      markdown: body,
       backlinks: buildBacklinks(note, context),
     },
     diagnostics,

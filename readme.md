@@ -5,7 +5,7 @@
 # Foam
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-134-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-135-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 [![Version](https://vsmarketplacebadges.dev/version/foam.foam-vscode.svg)](https://marketplace.visualstudio.com/items?itemName=foam.foam-vscode)
@@ -386,6 +386,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     </tr>
     <tr>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/alloutflo"><img src="https://avatars.githubusercontent.com/u/33363574?v=4?s=60" width="60px;" alt="Florian Meyer"/><br /><sub><b>Florian Meyer</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=alloutflo" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Sherlock290"><img src="https://avatars.githubusercontent.com/u/73990305?v=4?s=60" width="60px;" alt="Sherlock290"/><br /><sub><b>Sherlock290</b></sub></a><br /><a href="https://github.com/foambubble/foam/commits?author=Sherlock290" title="Code">💻</a></td>
     </tr>
   </tbody>
 </table>

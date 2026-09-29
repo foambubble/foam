@@ -19,15 +19,15 @@ foam list <what> [options]
 
 ## Options
 
-| Option                 | Description                                                                  |
-| ---------------------- | ---------------------------------------------------------------------------- |
-| `--type <type>`        | (notes) Filter by resource type: `note`, `daily-note`, `attachment`, `image` |
-| `--tag <tag>`          | (notes) Filter by tag — repeat for multiple tags (AND logic)                 |
-| `--limit <n>`          | (notes, tags) Maximum number of results                                      |
-| `--prefix <str>`       | (tags) Filter by tag prefix                                                  |
-| `--sort <count\|name>` | (tags) Sort order (default: `name`)                                          |
-| `--workspace <dir>`    | Workspace root (default: `FOAM_WORKSPACE` env var, then current directory)   |
-| `--format <fmt>`       | Output format: `text` (default) or `json`                                    |
+| Option                 | Description                                                                        |
+| ---------------------- | ---------------------------------------------------------------------------------- |
+| `--type <type>`        | (notes) Filter by resource type: `note` (any markdown file), `attachment`, `image` |
+| `--tag <tag>`          | (notes) Filter by tag — repeat for multiple tags (AND logic)                       |
+| `--limit <n>`          | (notes, tags) Maximum number of results                                            |
+| `--prefix <str>`       | (tags) Filter by tag prefix                                                        |
+| `--sort <count\|name>` | (tags) Sort order (default: `name`)                                                |
+| `--workspace <dir>`    | Workspace root (default: `FOAM_WORKSPACE` env var, then current directory)         |
+| `--format <fmt>`       | Output format: `text` (default) or `json`                                          |
 
 ## Examples
 

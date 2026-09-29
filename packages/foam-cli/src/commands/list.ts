@@ -46,7 +46,7 @@ export const LIST_HELP = `Usage: foam list <what> [options]
 <what>: notes | tags | orphans | deadends | placeholders | templates
 
 Options:
-  --type <type>        (notes) Filter by type: note, daily-note, attachment, image
+  --type <type>        (notes) Filter by type: note, attachment, image
   --tag <tag>          (notes) Filter by tag (repeatable via multiple --tag flags)
   --limit <n>          (notes/tags) Max results
   --prefix <str>       (tags) Filter by prefix

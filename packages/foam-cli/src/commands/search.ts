@@ -37,7 +37,7 @@ Options:
   --tag <tag>           Filter by tag (repeatable for AND)
   --property <key=val>  Filter by frontmatter property
                         (omit =val to match any note that has the property)
-  --type <type>         Filter by resource type: note, daily-note, attachment, image
+  --type <type>         Filter by resource type: note, attachment, image
   --context <n>         Show n lines of surrounding context around each match
   --no-line-number      Omit line numbers from output
   --limit <n>           Max results (default: 20)

@@ -17,7 +17,7 @@ For full-text content search, use [[cli-grep|foam grep]] instead.
 | `<query>`              | Substring to match against note titles and aliases                             |
 | `--tag <tag>`          | Filter by tag (repeat for AND logic)                                           |
 | `--property <key=val>` | Filter by frontmatter property; omit `=val` to match any note that has the key |
-| `--type <type>`        | Filter by resource type: `note`, `daily-note`, `attachment`, `image`           |
+| `--type <type>`        | Filter by resource type: `note` (any markdown file), `attachment`, `image`     |
 | `--limit <n>`          | Maximum number of results (default: 20)                                        |
 | `--workspace <dir>`    | Workspace root (default: `FOAM_WORKSPACE` env var, then current directory)     |
 | `--format <fmt>`       | Output format: `text` (default) or `json`                                      |
@@ -56,8 +56,8 @@ Find all notes that have a `due` property (any value):
 foam search --property due
 ```
 
-List only daily notes:
+List only daily notes (matches the `type` set in the note's frontmatter):
 
 ```bash
-foam search --type daily-note
+foam search --property type=daily-note
 ```

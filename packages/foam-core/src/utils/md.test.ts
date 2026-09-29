@@ -88,6 +88,12 @@ Body text.`;
     expect(stripFrontMatter('# Heading\n\nText\n')).toBe('# Heading\n\nText');
   });
 
+  it('keeps the indentation of the first line after dropping blank lines', () => {
+    expect(stripFrontMatter('---\na: 1\n---\n\n    code\n\nText')).toBe(
+      '    code\n\nText'
+    );
+  });
+
   it('handles an empty frontmatter block', () => {
     expect(stripFrontMatter('---\n---\n# Title')).toBe('# Title');
   });

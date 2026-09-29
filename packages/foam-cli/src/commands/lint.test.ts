@@ -183,6 +183,22 @@ describe('runLintCommand', () => {
       }
     ));
 
+  it('errors when --rule stale-definitions is requested but foam.edit.linkReferenceDefinitions is off (#1722)', () =>
+    withTmpWorkspace(
+      {
+        '.vscode/settings.json': JSON.stringify({ 'foam.edit.linkReferenceDefinitions': 'off' }),
+        'a.md': '# A\n\nSee [[b]].\n',
+        'b.md': '# B\n',
+      },
+      async ({ rootDir }) => {
+        const logger = new TestLogger();
+        const code = await runLintCommand(['--rule', 'stale-definitions', '--fix', '--workspace', rootDir], logger);
+        expect(code).toBe(1);
+        expect(logger.errors[0]).toContain('foam.edit.linkReferenceDefinitions');
+        expect(fs.readFileSync(path.join(rootDir, 'a.md'), 'utf8')).toBe('# A\n\nSee [[b]].\n');
+      }
+    ));
+
   it('uses the configured foam.edit.linkReferenceDefinitions value when fixing (#1722)', () =>
     withTmpWorkspace(
       {

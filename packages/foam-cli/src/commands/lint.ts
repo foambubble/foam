@@ -137,7 +137,14 @@ export async function runLintCommand(
 
   try {
     const { rootDir, workspace } = await loadWorkspaceFromDirectory(workspaceDir);
-    const rules = buildRules(ruleFilter, Config.getEditLinkReferenceDefinitions());
+    const linkReferenceDefinitions = Config.getEditLinkReferenceDefinitions();
+    if (ruleFilter.includes('stale-definitions') && linkReferenceDefinitions === 'off') {
+      logger.error(
+        'Rule stale-definitions is disabled: foam.edit.linkReferenceDefinitions is "off" in this workspace'
+      );
+      return 1;
+    }
+    const rules = buildRules(ruleFilter, linkReferenceDefinitions);
     const lintResult = await lintWorkspace(workspace, rules);
 
     const results: LintResult[] = lintResult.entries.map(({ uri, issues }) => ({

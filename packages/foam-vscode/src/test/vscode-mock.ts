@@ -17,6 +17,7 @@ import { GenericDataStore, AlwaysIncludeMatcher, IWatcher } from '@foam/core';
 import { MarkdownResourceProvider } from '@foam/core';
 import { randomString } from './test-utils';
 import micromatch from 'micromatch';
+import markdownItKatex from '@vscode/markdown-it-katex';
 import { Emitter } from '@foam/core';
 
 interface Thenable<T> {
@@ -2433,8 +2434,37 @@ export const languages = {
 };
 
 // Extensions namespace
+/**
+ * Exports of VS Code's built-in `vscode.markdown-math` extension, mirroring
+ * extensions/markdown-math/src/extension.ts in the VS Code repository.
+ */
+const markdownMath = {
+  extendMarkdownIt(md: any) {
+    const config = workspace.getConfiguration('markdown');
+    if (!config.get<boolean>('math.enabled', true)) {
+      return md;
+    }
+    const settingsMacros = config.get<Record<string, string>>(
+      'math.macros',
+      {}
+    );
+    const options = {
+      enableFencedBlocks: true,
+      globalGroup: true,
+      macros: { ...settingsMacros },
+    };
+    md.core.ruler.push('reset-katex-macros', () => {
+      options.macros = { ...settingsMacros };
+    });
+    return md.use(markdownItKatex, options);
+  },
+};
+
 export const extensions = {
   getExtension<T = any>(extensionId: string): Extension<T> | undefined {
+    if (extensionId === 'vscode.markdown-math') {
+      return new MockExtension<any>(extensionId, markdownMath) as Extension<T>;
+    }
     if (extensionId === 'foam.foam-vscode') {
       return new MockExtension<any>(
         extensionId,

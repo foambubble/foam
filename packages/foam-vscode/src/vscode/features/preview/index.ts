@@ -79,6 +79,21 @@ export default async function activate(
             true
           ),
           renderContext,
+          // VS Code applies its math plugin to the preview's own instance only,
+          // so install it on the ones Foam builds for embeds and query cells.
+          // Installing it again on the preview's instance is harmless. Looked
+          // up at render time: by then the preview has activated every
+          // markdown-it plugin extension.
+          extensions: [
+            inner => {
+              const math = vscode.extensions.getExtension(
+                'vscode.markdown-math'
+              );
+              if (math?.isActive) {
+                math.exports?.extendMarkdownIt?.(inner);
+              }
+            },
+          ],
         },
         md
       );

@@ -1074,6 +1074,7 @@
     "@types/picomatch": "^2.2.1",
     "@types/remove-markdown": "^0.3.4",
     "@types/vscode": "^1.110.0",
+    "@vscode/markdown-it-katex": "^1.1.2",
     "@vscode/test-web": "^0.0.80",
     "cross-env": "^10.1.0",
     "esbuild": "^0.28.1",

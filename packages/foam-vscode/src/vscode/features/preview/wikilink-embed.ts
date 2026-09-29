@@ -11,7 +11,7 @@ import { URI } from '@foam/core';
 import { Position } from '@foam/core';
 import { TextEdit } from '@foam/core';
 import { isNone, isSome } from '@foam/core';
-import { stripFrontMatter } from '@foam/core';
+import { stripFrontMatter, stripFrontMatterAndTitle } from '@foam/core';
 import { RenderContext } from '@foam/core';
 
 export const WIKILINK_EMBED_REGEX =
@@ -320,15 +320,9 @@ function extractNoteText(note: Resource, withoutTitle: boolean): string {
       return rows.slice(start, section.range.end.line).join('\n');
     }
   }
-  // The first heading is taken as the note's title. Its lines are blanked
-  // rather than removed so the rest stays where the parser saw it: a `---`
-  // rule under the title must not become a frontmatter opener on line 0.
-  const title = note.sections[0];
-  if (withoutTitle && isSome(title)) {
-    const { start, end } = title.headingRange;
-    rows.fill('', start.line, end.line + 1);
-  }
-  return stripFrontMatter(rows.join('\n'));
+  return withoutTitle
+    ? stripFrontMatterAndTitle(noteText, note.sections)
+    : stripFrontMatter(noteText);
 }
 
 /**

@@ -669,6 +669,23 @@ describe('Wikilink Note Embedding', () => {
       expect(html).toContain('<p>Tail</p>');
     });
 
+    it('keeps a leading H2 when the note has no H1', () => {
+      const html = renderChildEmbed('## Intro\n\nText', '![[Child]]');
+      expect(html).toContain('<h2>Intro</h2>');
+      expect(html).toContain('<p>Text</p>');
+    });
+
+    it('removes the H1 title when an H2 precedes it', () => {
+      const html = renderChildEmbed(
+        '## Intro\n\nText\n\n# Title\n\nBody',
+        '![[Child]]'
+      );
+      expect(html).toContain('<h2>Intro</h2>');
+      expect(html).toContain('<p>Text</p>');
+      expect(html).toContain('<p>Body</p>');
+      expect(html).not.toContain('Title');
+    });
+
     it('keeps a thematic break that directly follows the title', () => {
       const html = renderChildEmbed(
         '# Title\n---\nText paragraph\n\n---\nFooter',

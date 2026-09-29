@@ -7,6 +7,44 @@ import { URI, ExportArtifactSet } from '@foam/core';
 import { writeStarlightSite } from './index';
 
 describe('export starlight target', () => {
+  it('writes the body, not the full source, for a note and the homepage', async () => {
+    const tmpDir = mkdtempSync(path.join(tmpdir(), 'foam-starlight-body-'));
+    const guideUri = URI.file(path.join(tmpDir, 'guide.md'));
+
+    const artifactSet: ExportArtifactSet = {
+      site: { title: 'Site', description: '', homepageRoute: '/guide' },
+      graph: { nodeInfo: {}, links: [] },
+      notes: [
+        {
+          sourceUri: guideUri,
+          route: '/guide',
+          title: 'Guide',
+          description: '',
+          properties: {},
+          markdown: '---\nstatus: draft\n---\n# Guide\n\nBody text.',
+          body: 'Body text.',
+          backlinks: [],
+        },
+      ],
+      assets: [],
+      routes: [{ sourceUri: guideUri, route: '/guide' }],
+      diagnostics: [],
+    };
+
+    await writeStarlightSite({
+      artifactSet,
+      outputDir: path.join(tmpDir, 'site'),
+    });
+
+    const docsDir = path.join(tmpDir, 'site', 'src', 'content', 'docs');
+    for (const file of ['guide.md', 'index.md']) {
+      const content = fs.readFileSync(path.join(docsDir, file), 'utf8');
+      expect(content).toContain('Body text.');
+      expect(content).not.toContain('status: draft');
+      expect(content).not.toContain('# Guide');
+    }
+  });
+
   it('does not strip lines that start with # but are not headings', async () => {
     const tmpDir = mkdtempSync(path.join(tmpdir(), 'foam-starlight-non-h1-'));
 
@@ -21,6 +59,7 @@ describe('export starlight target', () => {
           description: '',
           properties: {},
           markdown: '#!/usr/bin/env bash\n\necho "hello"',
+          body: '#!/usr/bin/env bash\n\necho "hello"',
           backlinks: [],
         },
         {
@@ -30,6 +69,7 @@ describe('export starlight target', () => {
           description: '',
           properties: {},
           markdown: '#include <stdio.h>\n\nint main() {}',
+          body: '#include <stdio.h>\n\nint main() {}',
           backlinks: [],
         },
       ],
@@ -79,6 +119,7 @@ describe('export starlight target', () => {
           description: '',
           properties: {},
           markdown: 'Content.',
+          body: 'Content.',
           backlinks: [],
         },
         {
@@ -90,6 +131,7 @@ describe('export starlight target', () => {
           description: '',
           properties: {},
           markdown: 'Content.',
+          body: 'Content.',
           backlinks: [],
         },
       ],
@@ -163,6 +205,7 @@ describe('export starlight target', () => {
             status: 'draft',
           },
           markdown: '# My Note\n\nSome content here.',
+          body: 'Some content here.',
           backlinks: [],
         },
         {
@@ -172,6 +215,7 @@ describe('export starlight target', () => {
           description: '',
           properties: {},
           markdown: 'No properties.',
+          body: 'No properties.',
           backlinks: [],
         },
       ],
@@ -261,6 +305,7 @@ describe('export starlight target', () => {
           description: 'Start here',
           properties: {},
           markdown: '![Image](../assets/image.png)',
+          body: '![Image](../assets/image.png)',
           backlinks: [],
         },
         {
@@ -270,6 +315,7 @@ describe('export starlight target', () => {
           description: 'Ignored',
           properties: {},
           markdown: '# Missing',
+          body: '',
           backlinks: [],
         },
         {
@@ -279,6 +325,7 @@ describe('export starlight target', () => {
           description: 'Has backlinks',
           properties: {},
           markdown: '# Linked',
+          body: '',
           backlinks: [
             {
               route: '/guide',

@@ -50,7 +50,7 @@ export interface RenderReportOptions {
   parser: ResourceParser;
   /** URIs of the notes to include, in document order. */
   noteUris: URI[];
-  /** Map from URI to the note's exported markdown: no frontmatter or title H1. */
+  /** Map from URI to the note's exported body (`ExportedNote.body`). */
   noteContent: Map<string, string>;
   /** Title shown at the top of the report. */
   title: string;

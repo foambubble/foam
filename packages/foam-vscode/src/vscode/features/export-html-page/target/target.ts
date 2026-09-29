@@ -73,7 +73,7 @@ export class HtmlPageTarget implements PublishTarget {
     // per-URI markdown map renderReport expects.
     const noteContent = new Map<string, string>();
     for (const note of artifactSet.notes) {
-      noteContent.set(note.sourceUri.toString(), note.markdown);
+      noteContent.set(note.sourceUri.toString(), note.body);
     }
 
     const noteUris = artifactSet.notes.map(n => n.sourceUri);

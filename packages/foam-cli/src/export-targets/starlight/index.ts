@@ -152,7 +152,7 @@ async function writeDocs(outputDir: string, artifactSet: ExportArtifactSet) {
       outputPath,
       `${renderFrontmatter(note)}${renderProperties(
         note.properties
-      )}${rewriteStaticAssetPaths(note.markdown)}${renderBacklinks(
+      )}${rewriteStaticAssetPaths(note.body)}${renderBacklinks(
         note.backlinks
       )}`,
       'utf8'
@@ -174,7 +174,7 @@ async function writeDocs(outputDir: string, artifactSet: ExportArtifactSet) {
         outputPath,
         `${renderFrontmatter(homepageNote)}${renderProperties(
           homepageNote.properties
-        )}${rewriteStaticAssetPaths(homepageNote.markdown)}${renderBacklinks(
+        )}${rewriteStaticAssetPaths(homepageNote.body)}${renderBacklinks(
           homepageNote.backlinks
         )}`,
         'utf8'

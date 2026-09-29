@@ -16,6 +16,7 @@ import {
   staleDefinitionsRule,
   type LintIssue,
   type LintRule,
+  type WikilinkDefinitionSetting,
 } from '@foam/core';
 import { bold, dim, path as pathColor, warning } from '../support/colors';
 
@@ -59,7 +60,7 @@ const ALL_RULES = ['missing-heading', 'stale-definitions'] as const;
 
 export function buildRules(
   ruleFilter: string[],
-  linkReferenceDefinitions: 'withExtensions' | 'withoutExtensions' | 'off'
+  linkReferenceDefinitions: WikilinkDefinitionSetting
 ): LintRule[] {
   const active = ruleFilter.length === 0 ? [...ALL_RULES] : ruleFilter;
   const rules: LintRule[] = [];

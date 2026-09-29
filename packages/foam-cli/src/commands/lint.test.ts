@@ -204,6 +204,24 @@ describe('runLintCommand', () => {
       }
     ));
 
+  it('errors without running the other rules when --rule names stale-definitions alongside a runnable rule but it is off (#1722)', () =>
+    withTmpWorkspace(
+      {
+        '.vscode/settings.json': JSON.stringify({ 'foam.edit.linkReferenceDefinitions': 'off' }),
+        'no-heading.md': 'Content without a heading.\n',
+      },
+      async ({ rootDir }) => {
+        const logger = new TestLogger();
+        const code = await runLintCommand(
+          ['--rule', 'missing-heading', '--rule', 'stale-definitions', '--workspace', rootDir],
+          logger
+        );
+        expect(code).toBe(1);
+        expect(logger.errors[0]).toContain('foam.edit.linkReferenceDefinitions');
+        expect(logger.logs.join('\n')).not.toContain('missing-heading');
+      }
+    ));
+
   it('uses the configured foam.edit.linkReferenceDefinitions value when fixing (#1722)', () =>
     withTmpWorkspace(
       {

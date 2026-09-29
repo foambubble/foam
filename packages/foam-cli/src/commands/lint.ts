@@ -1,6 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { TextEdit, uriToWorkspacePath } from '@foam/core';
+import { Config, TextEdit, uriToWorkspacePath } from '@foam/core';
 import {
   parseArgs,
   getString,
@@ -57,11 +57,16 @@ export interface LintResult {
 
 const ALL_RULES = ['missing-heading', 'stale-definitions'] as const;
 
-export function buildRules(ruleFilter: string[]): LintRule[] {
+export function buildRules(
+  ruleFilter: string[],
+  linkReferenceDefinitions: 'withExtensions' | 'withoutExtensions' | 'off'
+): LintRule[] {
   const active = ruleFilter.length === 0 ? [...ALL_RULES] : ruleFilter;
   const rules: LintRule[] = [];
   if (active.includes('missing-heading')) rules.push(missingHeadingRule());
-  if (active.includes('stale-definitions')) rules.push(staleDefinitionsRule('withoutExtensions'));
+  if (active.includes('stale-definitions') && linkReferenceDefinitions !== 'off') {
+    rules.push(staleDefinitionsRule(linkReferenceDefinitions));
+  }
   return rules;
 }
 
@@ -132,7 +137,7 @@ export async function runLintCommand(
 
   try {
     const { rootDir, workspace } = await loadWorkspaceFromDirectory(workspaceDir);
-    const rules = buildRules(ruleFilter);
+    const rules = buildRules(ruleFilter, Config.getEditLinkReferenceDefinitions());
     const lintResult = await lintWorkspace(workspace, rules);
 
     const results: LintResult[] = lintResult.entries.map(({ uri, issues }) => ({

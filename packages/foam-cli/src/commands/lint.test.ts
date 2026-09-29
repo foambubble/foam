@@ -10,17 +10,22 @@ setColorsEnabled(false);
 
 describe('buildRules', () => {
   it('returns both rules when no filter given', () => {
-    const rules = buildRules([]);
+    const rules = buildRules([], 'withoutExtensions');
     expect(rules.map(r => r.id)).toEqual(['missing-heading', 'stale-definitions']);
   });
 
   it('returns only missing-heading when filtered', () => {
-    const rules = buildRules(['missing-heading']);
+    const rules = buildRules(['missing-heading'], 'withoutExtensions');
+    expect(rules.map(r => r.id)).toEqual(['missing-heading']);
+  });
+
+  it('omits stale-definitions when link reference definitions are off (#1722)', () => {
+    const rules = buildRules([], 'off');
     expect(rules.map(r => r.id)).toEqual(['missing-heading']);
   });
 
   it('returns only stale-definitions when filtered', () => {
-    const rules = buildRules(['stale-definitions']);
+    const rules = buildRules(['stale-definitions'], 'withoutExtensions');
     expect(rules.map(r => r.id)).toEqual(['stale-definitions']);
   });
 });
@@ -159,6 +164,38 @@ describe('runLintCommand', () => {
       expect(code).toBe(0);
       expect(logger.logs.join('')).toContain('No fixable');
     }));
+
+  it('does not report or fix stale-definitions when foam.edit.linkReferenceDefinitions is off (#1722)', () =>
+    withTmpWorkspace(
+      {
+        '.vscode/settings.json': JSON.stringify({ 'foam.edit.linkReferenceDefinitions': 'off' }),
+        'a.md': '# A\n\nSee [[b]].\n',
+        'b.md': '# B\n',
+      },
+      async ({ rootDir }) => {
+        const logger = new TestLogger();
+        const code = await runLintCommand(['--workspace', rootDir], logger);
+        expect(code).toBe(0);
+        expect(logger.logs.join('\n')).not.toContain('stale-definitions');
+
+        await runLintCommand(['--fix', '--workspace', rootDir], new TestLogger());
+        expect(fs.readFileSync(path.join(rootDir, 'a.md'), 'utf8')).toBe('# A\n\nSee [[b]].\n');
+      }
+    ));
+
+  it('uses the configured foam.edit.linkReferenceDefinitions value when fixing (#1722)', () =>
+    withTmpWorkspace(
+      {
+        '.vscode/settings.json': JSON.stringify({ 'foam.edit.linkReferenceDefinitions': 'withExtensions' }),
+        'a.md': '# A\n\nSee [[b]].\n',
+        'b.md': '# B\n',
+      },
+      async ({ rootDir }) => {
+        const code = await runLintCommand(['--fix', '--workspace', rootDir], new TestLogger());
+        expect(code).toBe(0);
+        expect(fs.readFileSync(path.join(rootDir, 'a.md'), 'utf8')).toContain('[b]: b.md "B"');
+      }
+    ));
 
   it('--fix with --format json returns fixed count', () =>
     withTmpWorkspace({ 'no-heading.md': 'Content without a heading.\n' }, async ({ rootDir }) => {

@@ -28,7 +28,12 @@ export function getExcerpt(
 const FRONTMATTER_BLOCK_REGEX = /^---[ \t]*\r?\n(?:[\s\S]*?\r?\n)?(?:---|\.\.\.)[ \t]*(?:\r?\n|$)/;
 
 export function stripFrontMatter(markdown: string): string {
-  return markdown.replace(FRONTMATTER_BLOCK_REGEX, '').trim();
+  // Drop leading blank lines but not the first line's indentation, which
+  // would turn an indented code block into a paragraph.
+  return markdown
+    .replace(FRONTMATTER_BLOCK_REGEX, '')
+    .replace(/^\s*\n/, '')
+    .trimEnd();
 }
 
 /**

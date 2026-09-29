@@ -1087,6 +1087,36 @@ describe('executeQuery — source-derived fields', () => {
     expect(results[0].content).toBe('## Intro\n\nText');
   });
 
+  it('`content` keeps an indented code block that follows the title', () => {
+    const markdown = `# Note\n\n    code line\n\nText\n`;
+    const note = parseNote('/q.md', markdown);
+    const workspace = createTestWorkspace();
+    workspace.set(note);
+    const graph = FoamGraph.fromWorkspace(workspace, false);
+
+    const { results } = executeQuery(
+      { select: ['content'] },
+      workspace,
+      graph,
+      { trusted: false, readSource: () => markdown }
+    );
+    expect(results[0].content).toBe('    code line\n\nText');
+  });
+
+  it('`body` keeps an indented code block that follows the frontmatter', () => {
+    const markdown = `---\nstatus: x\n---\n    code line\n\nText\n`;
+    const note = parseNote('/q.md', markdown);
+    const workspace = createTestWorkspace();
+    workspace.set(note);
+    const graph = FoamGraph.fromWorkspace(workspace, false);
+
+    const { results } = executeQuery({ select: ['body'] }, workspace, graph, {
+      trusted: false,
+      readSource: () => markdown,
+    });
+    expect(results[0].body).toBe('    code line\n\nText');
+  });
+
   it('strips a CRLF-delimited frontmatter block (Windows-authored notes)', () => {
     // Use \r\n line endings everywhere — gray-matter handles them, the
     // previous hand-rolled splitter did not, so this catches the regression.
@@ -1286,7 +1316,8 @@ describe('executeQuery — source-derived fields', () => {
       graph,
       { trusted: false, readSource: () => markdown }
     );
-    // `stripFrontMatter` trims whitespace at the ends; the body stays intact.
+    // `stripFrontMatter` drops leading blank lines and trailing whitespace;
+    // the body stays intact.
     expect(results[0].content).toBe(markdown.trim());
   });
 

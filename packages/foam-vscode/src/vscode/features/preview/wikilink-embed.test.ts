@@ -600,6 +600,14 @@ describe('Wikilink Note Embedding', () => {
       }
     });
 
+    it('keeps an indented code block at the start of the note', () => {
+      const html = renderChildEmbed(
+        '    code line\n\nText',
+        'full-inline![[Child]]'
+      );
+      expect(html).toContain('<pre><code>code line');
+    });
+
     it('is hidden when the section fragment does not resolve', () => {
       const html = renderChildEmbed(
         '---\nid: 1\n---\n# Title\n\nBody',
@@ -667,6 +675,15 @@ describe('Wikilink Note Embedding', () => {
       );
       expect(html).toContain('<p>First line</p>');
       expect(html).toContain('<p>Tail</p>');
+    });
+
+    it('keeps an indented code block that follows the title', () => {
+      const html = renderChildEmbed(
+        '# Title\n\n    code line\n\nText',
+        '![[Child]]'
+      );
+      expect(html).toContain('<pre><code>code line');
+      expect(html).not.toContain('Title');
     });
 
     it('keeps a leading H2 when the note has no H1', () => {

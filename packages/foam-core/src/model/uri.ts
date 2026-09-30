@@ -475,19 +475,34 @@ export function asAbsoluteUri(
   if (path.startsWith('/') || /^[a-zA-Z]:/.test(path)) {
     return baseFolders[0].forPath(path);
   }
-  let tokens = path.split('/');
+  const tokens = path.split('/');
   while (tokens[0].trim() === '') {
     tokens.shift();
   }
-  const firstDir = tokens[0];
-  if (baseFolders.length > 1) {
-    for (const folder of baseFolders) {
-      const lastDir = folder.path.split('/').pop();
-      if (lastDir === firstDir) {
-        tokens = tokens.slice(1);
-        return folder.joinPath(...tokens);
-      }
-    }
+  return (
+    resolveInRootByName(path, baseFolders) ?? baseFolders[0].joinPath(...tokens)
+  );
+}
+
+/**
+ * In a multi-root workspace, resolves `path` into the root whose folder name
+ * is its first segment: `notes/inbox/x.md`, or `/notes/inbox/x.md`, becomes
+ * `<notes root>/inbox/x.md`. The first root with that name wins. Returns
+ * `undefined` in a single-root workspace or when no root has that name.
+ */
+export function resolveInRootByName(
+  path: string,
+  roots: URI[]
+): URI | undefined {
+  if (roots.length < 2) {
+    return undefined;
   }
-  return baseFolders[0].joinPath(...tokens);
+  const tokens = path.split('/');
+  while (tokens.length > 0 && tokens[0].trim() === '') {
+    tokens.shift();
+  }
+  const root = roots.find(
+    candidate => candidate.path.split('/').pop() === tokens[0]
+  );
+  return root?.joinPath(...tokens.slice(1));
 }

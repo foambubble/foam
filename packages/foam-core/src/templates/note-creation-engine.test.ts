@@ -810,6 +810,64 @@ foam_template:
       expect(result.filepath.path).toBe(`${root1.path}/journal/2025-10-20.md`);
     });
 
+    describe('leading-slash filepath naming a root of a multi-root workspace (#1711)', () => {
+      const setupTwoRoots = async () => {
+        const dirs = [
+          mkdtempSync(`${tmpdir()}/foam-project-`),
+          mkdtempSync(`${tmpdir()}/foam-notes-`),
+        ];
+        const roots = dirs.map(strToUri);
+        const dataStore = new FileDataStore(readFileFromFs, dirs[0]);
+        const parser = createMarkdownParser();
+        const foam = await bootstrap(
+          roots,
+          new Matcher(roots, ['**/*.md']),
+          undefined,
+          dataStore,
+          parser,
+          [new MarkdownResourceProvider(dataStore, parser, ['.md'])]
+        );
+        return { engine: new NoteCreationEngine(foam), notesRoot: roots[1] };
+      };
+      const trigger = TriggerFactory.createCommandTrigger(
+        'foam-vscode.create-note'
+      );
+
+      it('creates a markdown template note in the named root', async () => {
+        const { engine, notesRoot } = await setupTwoRoots();
+        const template: Template = {
+          type: 'markdown',
+          content: '# Idea',
+          metadata: new Map([
+            ['filepath', `/${notesRoot.getBasename()}/inbox/idea.md`],
+          ]),
+        };
+        const result = await engine.processTemplate(
+          trigger,
+          template,
+          new Resolver(new Map(), new Date())
+        );
+        expect(result.filepath.path).toBe(`${notesRoot.path}/inbox/idea.md`);
+      });
+
+      it('creates a JavaScript template note in the named root', async () => {
+        const { engine, notesRoot } = await setupTwoRoots();
+        const template: Template = {
+          type: 'javascript',
+          createNote: async () => ({
+            filepath: `/${notesRoot.getBasename()}/inbox/idea.md`,
+            content: '# Idea',
+          }),
+        };
+        const result = await engine.processTemplate(
+          trigger,
+          template,
+          new Resolver(new Map(), new Date())
+        );
+        expect(result.filepath.path).toBe(`${notesRoot.path}/inbox/idea.md`);
+      });
+    });
+
     it('should resolve a workspace-relative absolute filepath under the workspace root (#1537)', async () => {
       const { engine, tmpDir } = await setupFoamEngine();
       const root = strToUri(tmpDir);

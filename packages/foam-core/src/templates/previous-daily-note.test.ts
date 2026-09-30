@@ -106,6 +106,27 @@ describe('findPreviousDailyNote', () => {
     ).toBeUndefined();
   });
 
+  it('finds daily notes in the root that a leading-slash path names, in a multi-root workspace (#1711)', () => {
+    const workspace = createTestWorkspace([
+      URI.file('/work/my-project'),
+      URI.file('/home/me/notes'),
+    ]);
+    workspace.set(
+      createTestNote({ uri: '/home/me/notes/journal/2026-09-14.md' })
+    );
+    const inNotesRoot = partsFromTemplateFilepath(
+      '/notes/journal/${FOAM_DATE_YEAR}-${FOAM_DATE_MONTH}-${FOAM_DATE_DATE}.md'
+    );
+
+    const previous = findPreviousDailyNote(
+      workspace,
+      inNotesRoot,
+      new Date(2026, 8, 16)
+    );
+
+    expect(previous?.path).toEqual('/home/me/notes/journal/2026-09-14.md');
+  });
+
   it('returns undefined when the daily note path cannot name a day', () => {
     const workspace = workspaceWith(['/workspace/journal/2026-09-14.md']);
     const monthNamePattern = partsFromTemplateFilepath(

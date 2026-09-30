@@ -109,7 +109,7 @@ export class NoteCreationEngine {
         const fp = result.filepath as string;
         const isAbsolutePath = fp.startsWith('/') || /^[a-zA-Z]:/.test(fp);
         result.filepath = isAbsolutePath
-          ? this.foam.workspace.resolveUri(fp)
+          ? this.foam.workspace.resolveNoteUri(fp)
           : new URI({ scheme: 'file', path: fp.replace(/\\/g, '/') });
       }
       // Foam variables in the returned content are resolved like in a
@@ -164,7 +164,7 @@ export class NoteCreationEngine {
       filepath.startsWith('/') || /^[a-zA-Z]:/.test(filepath);
     return {
       filepath: isAbsolutePath
-        ? this.foam.workspace.resolveUri(filepath)
+        ? this.foam.workspace.resolveNoteUri(filepath)
         : new URI({ scheme: 'file', path: filepath.replace(/\\/g, '/') }),
       content: cleanContent,
     };

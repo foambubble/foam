@@ -24,13 +24,13 @@ Foam looks for [[templates]] in the templates folder (`.foam/templates` by defau
 
 ## Create notes in your notes folder
 
-Start the template's `filepath` with the name of the folder the note should go in. Save this as `notes/.foam/templates/global-note.md`:
+Start the template's `filepath` with `/` and the name of the folder the note should go in. Save this as `notes/.foam/templates/global-note.md`:
 
 ```markdown
 ---
 foam_template:
   name: Global Note
-  filepath: 'notes/inbox/$FOAM_SLUG.md'
+  filepath: '/notes/inbox/$FOAM_SLUG.md'
 ---
 
 # $FOAM_TITLE
@@ -43,7 +43,7 @@ In any workspace you add `notes` to, **Foam: Create New Note From Template** off
 ```markdown
 ---
 foam_template:
-  filepath: 'notes/journal/$FOAM_DATE_YEAR-$FOAM_DATE_MONTH-$FOAM_DATE_DATE.md'
+  filepath: '/notes/journal/$FOAM_DATE_YEAR-$FOAM_DATE_MONTH-$FOAM_DATE_DATE.md'
 ---
 
 # $FOAM_DATE_YEAR-$FOAM_DATE_MONTH-$FOAM_DATE_DATE
@@ -52,8 +52,8 @@ foam_template:
 A few things to know:
 
 - Use the folder's name on disk, not a different name you gave it in the `.code-workspace` file.
-- Don't start the path with `/`: a leading slash always means the first folder.
-- This works with the default `foam.files.newNotePath` setting. With `currentDir`, the path is resolved from the folder of the file you're editing instead.
+- If no folder has that name, the path starts from the first folder: `/journal/today.md` goes in `my-project/journal/`.
+- This is about where new notes go. In a link, a leading slash doesn't name a folder: `[[/notes/idea]]` looks for `notes/idea.md` inside each folder, so link to `[[idea]]` instead.
 
 With the default settings, notes created without a `filepath`, such as with **Foam: Create New Note** when there's no `new-note` template, go in the first folder: your project.
 

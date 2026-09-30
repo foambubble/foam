@@ -1,5 +1,5 @@
 import { Resource, ResourceLink } from './note';
-import { URI } from './uri';
+import { URI, resolveInRootByName } from './uri';
 import {
   isAbsolute,
   getExtension,
@@ -116,6 +116,25 @@ export class FoamWorkspace implements IDisposable {
     }
     // roots[0] is a directory — join directly
     return this.roots[0].joinPath(normalized);
+  }
+
+  /**
+   * Resolves where a new note goes. Like {@link resolveUri}, except that in a
+   * multi-root workspace a workspace-relative absolute path whose first
+   * segment is a root's folder name resolves into that root:
+   * `/notes/inbox/x.md` lands in the `notes` root rather than in
+   * `roots[0]/notes/`. Links keep using `resolveUri`, where a leading slash
+   * means "under any root, roots[0] first".
+   */
+  resolveNoteUri(filepath: string): URI {
+    const [normalized] = fromFsPath(filepath);
+    if (isAbsolute(normalized) && !this.findContainingRoot(normalized)) {
+      const inNamedRoot = resolveInRootByName(normalized, this.roots);
+      if (inNamedRoot) {
+        return inNamedRoot;
+      }
+    }
+    return this.resolveUri(filepath);
   }
 
   /**

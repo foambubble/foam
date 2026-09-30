@@ -305,8 +305,12 @@ describe('create-note command', () => {
     });
   });
 
-  describe('template filepath in a multi-root workspace', () => {
-    const createWithFilepath = async (root: URI, filepath: string) => {
+  describe('note paths in a multi-root workspace', () => {
+    const createWithFilepath = async (
+      root: URI,
+      filepath: string,
+      newNotePath: 'root' | 'currentDir' = 'root'
+    ) => {
       const template = root.joinPath('.foam', 'templates', 'global.md');
       await writeFile(
         template,
@@ -315,7 +319,7 @@ describe('create-note command', () => {
       let created: URI;
       await withModifiedFoamConfiguration(
         'files.newNotePath',
-        'root',
+        newNotePath,
         async () => {
           created = (
             await createNote({ templatePath: template }, makeFoamMock())
@@ -325,7 +329,50 @@ describe('create-note command', () => {
       return created;
     };
 
-    it('creates the note in the root whose folder name starts the filepath (#1711)', async () => {
+    it('creates the note in the root named after the leading slash of the filepath (#1711)', async () => {
+      await withSecondRoot(async root => {
+        const uri = await createWithFilepath(
+          root,
+          `/${root.getBasename()}/inbox/global-note.md`
+        );
+        expectSameUri(uri, root.joinPath('inbox', 'global-note.md'));
+      });
+    });
+
+    it('creates the note in the named root even when new notes go to the current directory', async () => {
+      await withSecondRoot(async root => {
+        const current = await createFile('# Current', [
+          'current-dir',
+          'current.md',
+        ]);
+        await showInEditor(current.uri);
+        try {
+          const uri = await createWithFilepath(
+            root,
+            `/${root.getBasename()}/inbox/global-note.md`,
+            'currentDir'
+          );
+          expectSameUri(uri, root.joinPath('inbox', 'global-note.md'));
+        } finally {
+          await closeEditors();
+          await deleteFile(current.uri);
+        }
+      });
+    });
+
+    it('creates the note in the first root when the leading-slash path names no folder', async () => {
+      await withSecondRoot(async root => {
+        const uri = await createWithFilepath(root, '/slash-note.md');
+        const first = getUriInWorkspace('slash-note.md');
+        try {
+          expectSameUri(uri, first);
+        } finally {
+          await deleteFile(first);
+        }
+      });
+    });
+
+    it('still creates the note in the named root when the filepath has no leading slash', async () => {
       await withSecondRoot(async root => {
         const uri = await createWithFilepath(
           root,
@@ -335,15 +382,13 @@ describe('create-note command', () => {
       });
     });
 
-    it('creates the note in the first root when the filepath starts with a slash', async () => {
+    it('creates a note from a leading-slash notePath in the named root', async () => {
       await withSecondRoot(async root => {
-        const uri = await createWithFilepath(root, '/slash-note.md');
-        const first = getUriInWorkspace('slash-note.md');
-        try {
-          expectSameUri(uri, first);
-        } finally {
-          await deleteFile(first);
-        }
+        const { uri } = await createNote(
+          { notePath: `/${root.getBasename()}/from-note-path.md`, text: 'x' },
+          makeFoamMock()
+        );
+        expectSameUri(uri, root.joinPath('from-note-path.md'));
       });
     });
   });

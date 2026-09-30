@@ -1,6 +1,7 @@
 import { Resource } from '../model/note';
 import { URI } from '../model/uri';
 import { FoamWorkspace } from '../model/workspace';
+import { isPathWithin } from '../utils/path';
 import { PatternPart, dailyNotePathMatcher } from './daily-note-path-pattern';
 
 /**
@@ -31,10 +32,25 @@ export function findPreviousDailyNote(
     before.getDate()
   ).getTime();
 
+  // In a multi-root workspace the path can name the root daily notes go in
+  // (`/notes/journal/...`, see `FoamWorkspace.resolveNoteUri`), so a note is
+  // also matched with its root's folder name in front of its path.
+  const rootNameOf = (uri: URI) =>
+    workspace.roots.length > 1
+      ? workspace.roots
+          .find(root => isPathWithin(uri.path, root.path))
+          ?.path.split('/')
+          .pop()
+      : undefined;
+
   let found: { time: number; uri: URI } | undefined;
   // Sorted so that two notes claiming the same date resolve deterministically
   for (const resource of workspace.list().sort(Resource.sortByPath)) {
-    const date = match(workspace.relativePath(resource.uri));
+    const path = workspace.relativePath(resource.uri);
+    const rootName = rootNameOf(resource.uri);
+    const date =
+      match(path) ??
+      (rootName === undefined ? undefined : match(`/${rootName}${path}`));
     if (!date) {
       continue;
     }

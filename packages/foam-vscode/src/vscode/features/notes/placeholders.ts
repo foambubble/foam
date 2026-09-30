@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { Foam, listPlaceholders } from '@foam/core';
+import { Foam, listPlaceholders, PlaceholderMatcher } from '@foam/core';
 import {
   createMatcherAndDataStore,
   getActiveTabUri,
@@ -16,12 +16,11 @@ import {
   groupRangesByResource,
 } from '../../utils/tree-views/tree-view-utils';
 import { IMatcher } from '@foam/core';
-import { ContextMemento } from '../../utils/vsc-utils';
+import { ContextMemento, fromVsCodeUri } from '../../utils/vsc-utils';
 import { FoamGraph } from '@foam/core';
 import { URI } from '@foam/core';
 import { FoamWorkspace } from '@foam/core';
 import { FolderTreeItem } from '../../utils/tree-views/folder-tree-provider';
-import { Config } from '@foam/core';
 import { instrumentTreeView } from '../../services/telemetry';
 
 /** Retrieve the placeholders configuration */
@@ -31,20 +30,34 @@ export function getPlaceholdersConfig(): GroupedResourcesConfig {
   return { exclude };
 }
 
+/**
+ * Decides which placeholders the panel shows: `foam.placeholders.exclude`
+ * applies, `foam.files.include` doesn't — see {@link PlaceholderMatcher}.
+ */
+export async function createPlaceholderMatcher(): Promise<IMatcher> {
+  // Only used to split the excludes by workspace folder
+  const { excludePatterns } = await createMatcherAndDataStore(
+    [],
+    getPlaceholdersConfig().exclude
+  );
+  return new PlaceholderMatcher(
+    vscode.workspace.workspaceFolders.map(folder => ({
+      uri: fromVsCodeUri(folder.uri),
+      exclude: excludePatterns.get(folder.name),
+    }))
+  );
+}
+
 export default async function activate(
   context: vscode.ExtensionContext,
   foamPromise: Promise<Foam>
 ) {
   const foam = await foamPromise;
-  const { matcher } = await createMatcherAndDataStore(
-    Config.getFilesInclude(),
-    getPlaceholdersConfig().exclude
-  );
   const provider = new PlaceholderTreeView(
     context.globalState,
     foam.workspace,
     foam.graph,
-    matcher
+    await createPlaceholderMatcher()
   );
 
   const treeView = vscode.window.createTreeView('foam-vscode.placeholders', {

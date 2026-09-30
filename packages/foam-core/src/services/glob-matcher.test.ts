@@ -1,4 +1,4 @@
-import { GlobMatcher } from './glob-matcher';
+import { GlobMatcher, PlaceholderMatcher } from './glob-matcher';
 import { URI } from '../model/uri';
 
 const root = URI.file('/workspace');
@@ -140,5 +140,49 @@ describe('GlobMatcher', () => {
     expect(matcher.isMatch(root.joinPath('brand/new/note.md'))).toBeTruthy();
     await matcher.refresh();
     expect(matcher.isMatch(root.joinPath('brand/new/note.md'))).toBeTruthy();
+  });
+});
+
+describe('PlaceholderMatcher', () => {
+  it('keeps a wikilink placeholder, which lies under no root', () => {
+    const matcher = new PlaceholderMatcher([{ uri: root, exclude: [] }]);
+
+    expect(matcher.isMatch(URI.placeholder('missing-note'))).toBeTruthy();
+  });
+
+  it('hides a placeholder under an excluded folder, relative to its root', () => {
+    const matcher = new PlaceholderMatcher([
+      { uri: root, exclude: ['journal/**'] },
+    ]);
+
+    expect(
+      matcher.isMatch(URI.placeholder('/workspace/journal/2024-01-01.md'))
+    ).toBeFalsy();
+    expect(
+      matcher.isMatch(URI.placeholder('/workspace/Journal/2024-01-01.md'))
+    ).toBeFalsy();
+    expect(
+      matcher.isMatch(URI.placeholder('/workspace/notes/missing.md'))
+    ).toBeTruthy();
+  });
+
+  it('matches a wikilink placeholder on its own path', () => {
+    const matcher = new PlaceholderMatcher([
+      { uri: root, exclude: ['journal/**'] },
+    ]);
+
+    expect(matcher.isMatch(URI.placeholder('journal/2024-01-01'))).toBeFalsy();
+    // A leading slash in a wikilink means the workspace root
+    expect(matcher.isMatch(URI.placeholder('/journal/2024-01-01'))).toBeFalsy();
+    expect(matcher.isMatch(URI.placeholder('notes/missing'))).toBeTruthy();
+  });
+
+  it("applies every root's excludes to a wikilink placeholder", () => {
+    const matcher = new PlaceholderMatcher([
+      { uri: URI.file('/notes-root'), exclude: [] },
+      { uri: URI.file('/journal-root'), exclude: ['journal/**'] },
+    ]);
+
+    expect(matcher.isMatch(URI.placeholder('journal/2024-01-01'))).toBeFalsy();
   });
 });

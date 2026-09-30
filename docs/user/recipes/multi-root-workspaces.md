@@ -52,6 +52,7 @@ foam_template:
 A few things to know:
 
 - Use the folder's name on disk, not a different name you gave it in the `.code-workspace` file.
+- You can also write the full path on disk, like `/Users/me/notes/inbox/$FOAM_SLUG.md`. Foam uses it as is, but the template then only works where the folder is at that exact path.
 - If no folder has that name, the path starts from the first folder: `/journal/today.md` goes in `my-project/journal/`.
 - This is about where new notes go. In a link, a leading slash doesn't name a folder: `[[/notes/idea]]` looks for `notes/idea.md` inside each folder, so link to `[[idea]]` instead.
 

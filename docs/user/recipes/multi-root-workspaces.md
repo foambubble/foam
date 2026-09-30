@@ -1,11 +1,11 @@
 # Multi-root workspaces
 
-A VS Code [multi-root workspace](https://code.visualstudio.com/docs/editor/multi-root-workspaces) has several folders side by side. A common setup is a notes folder you add to each of your projects, so both your global notes and the project's notes are at hand:
+A VS Code [multi-root workspace](https://code.visualstudio.com/docs/editor/multi-root-workspaces) has several folders side by side. A common setup is a knowledge base you add to each of your projects, so both your own notes and the project's notes are at hand:
 
 ```
 my-project.code-workspace
-├── my-project/   ← first folder
-└── notes/        ← your notes, added to every workspace
+├── my-project/       ← first folder
+└── knowledge-base/   ← your knowledge base, added to every workspace
 ```
 
 Foam indexes every folder, so links and the graph work across them. What needs care is where new notes go: by default, Foam creates them in the first folder.
@@ -22,28 +22,27 @@ Foam looks for [[templates]] in the templates folder (`.foam/templates` by defau
 - For the special `new-note` and `daily-note` templates, Foam checks each folder in the order they're listed and uses the first one it finds.
 - New templates are created in the first folder.
 
-## Create notes in your notes folder
+## Create notes in a specific folder
 
-Start the template's `filepath` with `/` and the name of the folder the note should go in. Save this as `notes/.foam/templates/global-note.md`:
+A template's `filepath` can name the folder a note goes in: start it with `/` and the folder's name. For example, if you want all new notes to go in `knowledge-base/inbox/`, your `new-note` template, `knowledge-base/.foam/templates/new-note.md`, would look like this:
 
 ```markdown
 ---
 foam_template:
-  name: Global Note
-  filepath: '/notes/inbox/$FOAM_SLUG.md'
+  filepath: '/knowledge-base/inbox/$FOAM_SLUG.md'
 ---
 
 # $FOAM_TITLE
 ```
 
-In any workspace you add `notes` to, **Foam: Create New Note From Template** offers "Global Note" and creates the note in `notes/inbox/`, wherever `notes` is in the folder list.
+**Foam: Create New Note**, and Ctrl+clicking a `[[placeholder]]`, then create the note in `knowledge-base/inbox/`, in every workspace you add `knowledge-base` to, as long as the project has no `new-note` template of its own. To choose for each note instead, give the template another name, such as `global-note.md`, and pick it with **Foam: Create New Note From Template**.
 
-[[daily-notes]] work the same way, with `notes/.foam/templates/daily-note.md`:
+[[daily-notes]] work the same way, with `knowledge-base/.foam/templates/daily-note.md`:
 
 ```markdown
 ---
 foam_template:
-  filepath: '/notes/journal/$FOAM_DATE_YEAR-$FOAM_DATE_MONTH-$FOAM_DATE_DATE.md'
+  filepath: '/knowledge-base/journal/$FOAM_DATE_YEAR-$FOAM_DATE_MONTH-$FOAM_DATE_DATE.md'
 ---
 
 # $FOAM_DATE_YEAR-$FOAM_DATE_MONTH-$FOAM_DATE_DATE
@@ -52,12 +51,10 @@ foam_template:
 A few things to know:
 
 - Use the folder's name on disk, with the same capitalization, not a different name you gave it in the `.code-workspace` file.
-- You can also write the full path on disk, like `/Users/me/notes/inbox/$FOAM_SLUG.md`. Foam uses it as is, but the template then only works where the folder is at that exact path.
 - If no folder has that name, the path starts from the first folder: `/journal/today.md` goes in `my-project/journal/`.
-- The same template works when you open the notes folder on its own: `/notes/inbox/` is then its own `inbox/` folder.
-- This is about where new notes go. In a link, a leading slash doesn't name a folder: `[[/notes/idea]]` looks for `notes/idea.md` inside each folder, so link to `[[idea]]` instead.
+- The same template works when you open the knowledge base on its own: `/knowledge-base/inbox/` is then its own `inbox/` folder.
 
-With the default settings, notes created without a `filepath`, such as with **Foam: Create New Note** when there's no `new-note` template, go in the first folder: your project.
+With the default settings, notes created without a `filepath`, such as with **Foam: Create New Note** when there's no `new-note` template, go in the first folder.
 
 ## Related
 

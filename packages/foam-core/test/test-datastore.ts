@@ -1,4 +1,4 @@
-import micromatch from 'micromatch';
+import picomatch from 'picomatch';
 import { Logger } from '../src/utils/log';
 import { IDataStore, IMatcher } from '../src/services/datastore';
 import { URI } from '../src/model/uri';
@@ -35,8 +35,8 @@ export class FileDataStore implements IDataStore {
       return res.map(URI.file);
     }
     const absoluteGlob = path.posix.join(this.basedir, pattern);
-    const matches = micromatch(res, [absoluteGlob]);
-    return matches.map(URI.file);
+    const isMatch = picomatch(absoluteGlob, { windows: isWindows });
+    return res.filter(file => isMatch(file)).map(URI.file);
   }
 
   async read(uri: URI) {
@@ -88,6 +88,8 @@ export class Matcher implements IMatcher {
   public readonly include: string[] = [];
   public readonly exclude: string[] = [];
 
+  private readonly isIncluded: picomatch.Matcher;
+
   constructor(
     baseFolders: URI[],
     includeGlobs: string[] = ['**/*'],
@@ -107,19 +109,17 @@ export class Matcher implements IMatcher {
       includeGlobs: this.include,
       ignoreGlobs: this.exclude,
     });
+
+    this.isIncluded = picomatch(this.include, {
+      ignore: this.exclude,
+      nocase: true,
+      format: toFsPath,
+      windows: isWindows,
+    });
   }
 
   match(files: URI[]) {
-    const matches = micromatch(
-      files.map(f => f.toFsPath()),
-      this.include,
-      {
-        ignore: this.exclude,
-        nocase: true,
-        format: toFsPath,
-      }
-    );
-    return matches.map(URI.file);
+    return files.filter(f => this.isIncluded(f.toFsPath()));
   }
 
   isMatch(uri: URI) {

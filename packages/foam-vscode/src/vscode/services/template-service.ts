@@ -1,6 +1,16 @@
-import { QuickPickItem, commands, window, workspace } from 'vscode';
+import {
+  QuickPickItem,
+  WorkspaceFolder,
+  commands,
+  window,
+  workspace,
+} from 'vscode';
 import { URI } from '@foam/core';
-import { getDailyNoteTemplateCandidateUris } from '@foam/core';
+import {
+  findFirstTemplate,
+  getDailyNoteTemplateCandidateUris,
+  getNewNoteTemplateCandidateUris,
+} from '@foam/core';
 import { extractFoamTemplateFrontmatterMetadata } from '@foam/core';
 import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
 import { fileExists, focusNote, readFile } from './editor';
@@ -25,35 +35,36 @@ For a full list of features see [the VS Code snippets page](https://code.visuals
 2. create a note from this template by running the \`Foam: Create New Note From Template\` command
 `;
 
-export const getTemplatesDir = () => {
-  const folder = getFoamVsCodeConfig('templates.folder', '.foam/templates');
-  return fromVsCodeUri(workspace.workspaceFolders[0].uri).joinPath(
-    ...folder.split('/')
+const getTemplatesDirOf = (folder: WorkspaceFolder) => {
+  const templatesFolder = getFoamVsCodeConfig(
+    'templates.folder',
+    '.foam/templates'
   );
+  return fromVsCodeUri(folder.uri).joinPath(...templatesFolder.split('/'));
 };
 
-export const getDefaultNoteTemplateCandidateUris = () => [
-  getTemplatesDir().joinPath('new-note.js'),
-  getTemplatesDir().joinPath('new-note.md'),
-];
+/** Where new templates are created: the first workspace root's folder. */
+export const getTemplatesDir = () =>
+  getTemplatesDirOf(workspace.workspaceFolders[0]);
 
-export const getDefaultTemplateUri = async () => {
-  for (const uri of getDefaultNoteTemplateCandidateUris()) {
-    if (await fileExists(uri)) {
-      return uri;
-    }
-  }
-  return undefined;
-};
+// Default templates are looked up in every root, so one kept in a notes
+// folder added as a secondary root works in every workspace (#1711).
+const getAllTemplatesDirs = () =>
+  workspace.workspaceFolders.map(getTemplatesDirOf);
 
-export const getDailyNoteTemplateUri = async () => {
-  for (const uri of getDailyNoteTemplateCandidateUris(getTemplatesDir())) {
-    if (await fileExists(uri)) {
-      return uri;
-    }
-  }
-  return undefined;
-};
+export const getDefaultTemplateUri = () =>
+  findFirstTemplate(
+    getAllTemplatesDirs(),
+    getNewNoteTemplateCandidateUris,
+    fileExists
+  );
+
+export const getDailyNoteTemplateUri = () =>
+  findFirstTemplate(
+    getAllTemplatesDirs(),
+    getDailyNoteTemplateCandidateUris,
+    fileExists
+  );
 
 export async function getTemplates(): Promise<URI[]> {
   const folder = getFoamVsCodeConfig('templates.folder', '.foam/templates');

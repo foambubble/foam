@@ -35,6 +35,8 @@ To create a note from a template:
 
 ## Special templates
 
+If your VS Code workspace has several folders (a [multi-root workspace](https://code.visualstudio.com/docs/editor/multi-root-workspaces)), Foam looks for the special templates in each folder, in the order they're listed, and uses the first one it finds. Your notes folder doesn't need to come first for its templates to be used.
+
 ### Default template
 
 The default template is used by the `Foam: Create New Note` command. Foam will look for these templates in order:

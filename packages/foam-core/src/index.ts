@@ -76,6 +76,7 @@ export type {
 export type { Template, TemplateContext } from './templates/note-creation-types';
 export { TriggerFactory } from './templates/note-creation-triggers';
 export {
+  findFirstTemplate,
   getDailyNoteTemplateCandidateUris,
   getNewNoteTemplateCandidateUris,
   getTemplatesDir,

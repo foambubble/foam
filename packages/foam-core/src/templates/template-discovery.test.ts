@@ -1,4 +1,5 @@
 import {
+  findFirstTemplate,
   getDailyNoteTemplateCandidateUris,
   getNewNoteTemplateCandidateUris,
   getTemplatesDir,
@@ -85,5 +86,56 @@ describe('getNewNoteTemplateCandidateUris', () => {
       '/workspace/.foam/templates/new-note.js',
       '/workspace/.foam/templates/new-note.md',
     ]);
+  });
+});
+
+describe('findFirstTemplate', () => {
+  const projectDir = URI.file('/project/.foam/templates');
+  const notesDir = URI.file('/notes/.foam/templates');
+  const existing =
+    (...paths: string[]) =>
+    async (uri: URI) =>
+      paths.includes(uri.path);
+
+  it('uses the template of a later root when the first root has none (#1711)', async () => {
+    const found = await findFirstTemplate(
+      [projectDir, notesDir],
+      getNewNoteTemplateCandidateUris,
+      existing('/notes/.foam/templates/new-note.md')
+    );
+    expect(found?.path).toBe('/notes/.foam/templates/new-note.md');
+  });
+
+  it("prefers an earlier root's template over any template of a later root", async () => {
+    const found = await findFirstTemplate(
+      [projectDir, notesDir],
+      getNewNoteTemplateCandidateUris,
+      existing(
+        '/project/.foam/templates/new-note.md',
+        '/notes/.foam/templates/new-note.js'
+      )
+    );
+    expect(found?.path).toBe('/project/.foam/templates/new-note.md');
+  });
+
+  it('follows the candidate order within a root', async () => {
+    const found = await findFirstTemplate(
+      [projectDir],
+      getDailyNoteTemplateCandidateUris,
+      existing(
+        '/project/.foam/templates/daily-note.md',
+        '/project/.foam/templates/daily-note.js'
+      )
+    );
+    expect(found?.path).toBe('/project/.foam/templates/daily-note.js');
+  });
+
+  it('returns undefined when no root has the template', async () => {
+    const found = await findFirstTemplate(
+      [projectDir, notesDir],
+      getNewNoteTemplateCandidateUris,
+      existing('/notes/.foam/templates/daily-note.md')
+    );
+    expect(found).toBeUndefined();
   });
 });

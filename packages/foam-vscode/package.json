@@ -807,7 +807,7 @@
         "foam.templates.folder": {
           "type": "string",
           "default": ".foam/templates",
-          "description": "The folder where Foam looks for note templates, relative to the workspace root."
+          "description": "The folder where Foam looks for note templates, relative to each workspace folder."
         },
         "foam.files.newNotePath": {
           "type": "string",

@@ -1,5 +1,19 @@
 # Change Log
 
+## 0.46.4
+
+### Patch Changes
+
+- `foam lint` now follows the workspace's `foam.edit.linkReferenceDefinitions` setting, like **Foam: Lint Workspace** in VS Code (#1722). With the setting `off`, the default, it no longer reports `stale-definitions` and `--fix` no longer writes reference definitions: set it to `withExtensions` or `withoutExtensions` to keep them. `--rule stale-definitions` with the setting `off` now exits with an error.
+- Templates and new notes work across the folders of a multi-root workspace (#1711):
+
+  - A template `filepath` that starts with `/` and a folder's name creates the note in that folder: `/knowledge-base/inbox/idea.md` goes in `inbox/` inside `knowledge-base`. The same template works when that folder is opened on its own.
+  - The `new-note` and `daily-note` templates are found in any workspace folder, checked in order.
+  - **Foam: Create New Note From Template** uses the exact template you picked, and shows its folder when two templates share a name.
+  - `$FOAM_PREVIOUS_DAILY_NOTE` looks for daily notes in the folder the template path names.
+
+  In `@foam/core`, `findFirstTemplate` is exported and `FoamWorkspace` gains `resolveNoteUri`.
+
 ## 0.46.3
 
 ### Patch Changes

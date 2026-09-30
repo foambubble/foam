@@ -1,5 +1,25 @@
 # Change Log
 
+## 0.46.0
+
+### Minor Changes
+
+- Templates and new notes work across the folders of a multi-root workspace (#1711):
+
+  - A template `filepath` that starts with `/` and a folder's name creates the note in that folder: `/knowledge-base/inbox/idea.md` goes in `inbox/` inside `knowledge-base`. The same template works when that folder is opened on its own.
+  - The `new-note` and `daily-note` templates are found in any workspace folder, checked in order.
+  - **Foam: Create New Note From Template** uses the exact template you picked, and shows its folder when two templates share a name.
+  - `$FOAM_PREVIOUS_DAILY_NOTE` looks for daily notes in the folder the template path names.
+
+  In `@foam/core`, `findFirstTemplate` is exported and `FoamWorkspace` gains `resolveNoteUri`.
+
+### Patch Changes
+
+- Notes in a folder created, moved or renamed outside VS Code — by git, a sync tool or a file manager — are now picked up, and notes under a folder's old name no longer linger in the workspace.
+- The Placeholders panel lists wikilink placeholders again, and no longer hides placeholders outside `foam.files.include` (#1702). `foam.placeholders.exclude` still applies.
+
+  In `@foam/core`, `PlaceholderMatcher` is exported.
+
 ## 0.45.0
 
 Thank you to @Sherlock290 for the embed fixes in this release, including math rendering in embedded notes.

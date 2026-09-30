@@ -46,6 +46,10 @@ jobs:
       - uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # The action refuses a run whose actor is a bot unless it is named
+          # here, and the actor of a synchronize event is whoever pushed.
+          # claude.yml pushes as the Claude app.
+          allowed_bots: claude
           plugin_marketplaces: "https://github.com/anthropics/claude-code.git"
           plugins: "code-review@claude-code-plugins"
           prompt: |

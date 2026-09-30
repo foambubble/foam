@@ -100,6 +100,48 @@ describe('default templates in a multi-root workspace', () => {
 });
 
 describe('askUserForTemplate', () => {
+  it('shows the folder of a template only when another folder has one with the same label', async () => {
+    await withSecondRoot(async root => {
+      const firstFolder = workspace.workspaceFolders[0].name;
+      const inFirst = await createFile('# First', [
+        '.foam',
+        'templates',
+        'meeting.md',
+      ]);
+      const unique = await createFile('# Unique', [
+        '.foam',
+        'templates',
+        'unique.md',
+      ]);
+      const inSecond = root.joinPath('.foam', 'templates', 'meeting.md');
+      await writeFile(inSecond, '# Second');
+      const findFiles = vi
+        .spyOn(workspace, 'findFiles')
+        .mockResolvedValueOnce(
+          [inFirst.uri, inSecond, unique.uri].map(toVsCodeUri)
+        );
+      const pick = vi
+        .spyOn(window, 'showQuickPick')
+        .mockImplementationOnce((async () => undefined) as any);
+      try {
+        await askUserForTemplate();
+        const items = pick.mock.calls[0][0] as (QuickPickItem & {
+          templateUri: URI;
+        })[];
+        const itemFor = (uri: URI) =>
+          items.find(item => item.templateUri.toFsPath() === uri.toFsPath());
+        expect(itemFor(inFirst.uri).description).toEqual(firstFolder);
+        expect(itemFor(inSecond).description).toEqual('notes');
+        expect(itemFor(unique.uri).description).toBeUndefined();
+      } finally {
+        findFiles.mockRestore();
+        pick.mockRestore();
+        await deleteFile(inFirst.uri);
+        await deleteFile(unique.uri);
+      }
+    });
+  });
+
   it('returns the template the user picked from another workspace root (#1711)', async () => {
     await withSecondRoot(async root => {
       const template = root.joinPath('.foam', 'templates', 'other-root.md');

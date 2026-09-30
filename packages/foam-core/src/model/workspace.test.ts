@@ -417,11 +417,24 @@ describe('resolveNoteUri', () => {
     );
   });
 
-  it('does not match root names in a single-root workspace', () => {
+  it("matches the root's own name in a single-root workspace too, so the same template works either way", () => {
     const ws = new FoamWorkspace([notes]);
     expect(ws.resolveNoteUri('/notes/idea.md').path).toBe(
-      '/home/me/notes/notes/idea.md'
+      '/home/me/notes/idea.md'
     );
+  });
+
+  it('prefers the named root over a same-named subfolder of the first root', () => {
+    const ws = new FoamWorkspace([project, notes]);
+    // `/work/my-project/notes/` may exist: the root named `notes` still wins
+    expect(ws.resolveNoteUri('/notes/idea.md').path).toBe(
+      '/home/me/notes/idea.md'
+    );
+  });
+
+  it('does not turn a bare folder name into the root folder itself', () => {
+    const ws = new FoamWorkspace([project, notes]);
+    expect(ws.resolveNoteUri('/notes').path).toBe('/work/my-project/notes');
   });
 
   it('leaves resolveUri, used for links, unchanged', () => {

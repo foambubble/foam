@@ -119,12 +119,14 @@ export class FoamWorkspace implements IDisposable {
   }
 
   /**
-   * Resolves where a new note goes. Like {@link resolveUri}, except that in a
-   * multi-root workspace a workspace-relative absolute path whose first
-   * segment is a root's folder name resolves into that root:
-   * `/notes/inbox/x.md` lands in the `notes` root rather than in
-   * `roots[0]/notes/`. Links keep using `resolveUri`, where a leading slash
-   * means "under any root, roots[0] first".
+   * Resolves where a new note goes. Like {@link resolveUri}, except that a
+   * workspace-relative absolute path whose first segment is a root's folder
+   * name resolves into that root: `/notes/inbox/x.md` lands in the `notes`
+   * root rather than in `roots[0]/notes/`. This holds with a single root too,
+   * so a template kept in a notes folder works the same whether that folder
+   * is opened on its own or as part of a multi-root workspace. Links keep
+   * using `resolveUri`, where a leading slash means "under any root, roots[0]
+   * first".
    */
   resolveNoteUri(filepath: string): URI {
     const [normalized] = fromFsPath(filepath);

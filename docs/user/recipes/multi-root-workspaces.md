@@ -18,7 +18,7 @@ Put Foam settings in the `.code-workspace` file or in your user settings. In a m
 
 Foam looks for [[templates]] in the templates folder (`.foam/templates` by default) of every folder in the workspace:
 
-- **Foam: Create New Note From Template** lists the templates of all folders.
+- **Foam: Create New Note From Template** lists the templates of all folders. When two folders have a template with the same name, it shows which folder each one is in.
 - For the special `new-note` and `daily-note` templates, Foam checks each folder in the order they're listed and uses the first one it finds.
 - New templates are created in the first folder.
 
@@ -51,9 +51,10 @@ foam_template:
 
 A few things to know:
 
-- Use the folder's name on disk, not a different name you gave it in the `.code-workspace` file.
+- Use the folder's name on disk, with the same capitalization, not a different name you gave it in the `.code-workspace` file.
 - You can also write the full path on disk, like `/Users/me/notes/inbox/$FOAM_SLUG.md`. Foam uses it as is, but the template then only works where the folder is at that exact path.
 - If no folder has that name, the path starts from the first folder: `/journal/today.md` goes in `my-project/journal/`.
+- The same template works when you open the notes folder on its own: `/notes/inbox/` is then its own `inbox/` folder.
 - This is about where new notes go. In a link, a leading slash doesn't name a folder: `[[/notes/idea]]` looks for `notes/idea.md` inside each folder, so link to `[[idea]]` instead.
 
 With the default settings, notes created without a `filepath`, such as with **Foam: Create New Note** when there's no `new-note` template, go in the first folder: your project.

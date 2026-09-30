@@ -360,18 +360,6 @@ describe('create-note command', () => {
       });
     });
 
-    it('creates the note in the first root when the leading-slash path names no folder', async () => {
-      await withSecondRoot(async root => {
-        const uri = await createWithFilepath(root, '/slash-note.md');
-        const first = getUriInWorkspace('slash-note.md');
-        try {
-          expectSameUri(uri, first);
-        } finally {
-          await deleteFile(first);
-        }
-      });
-    });
-
     it('still creates the note in the named root when the filepath has no leading slash', async () => {
       await withSecondRoot(async root => {
         const uri = await createWithFilepath(
@@ -379,6 +367,29 @@ describe('create-note command', () => {
           `${root.getBasename()}/inbox/global-note.md`
         );
         expectSameUri(uri, root.joinPath('inbox', 'global-note.md'));
+      });
+    });
+
+    it('creates the note for a leading-slash placeholder where the link points, not in the named root', async () => {
+      await withSecondRoot(async root => {
+        const name = root.getBasename();
+        const source = await createFile(`see [[/${name}/idea]]`);
+        const link = createMarkdownParser().parse(source.uri, source.content)
+          .links[0];
+        const command = CREATE_NOTE_COMMAND.forPlaceholder(
+          Location.forObjectWithRange(source.uri, link),
+          '.md',
+          { text: 'x' }
+        );
+        const expected = getUriInWorkspace(name, 'idea.md');
+        try {
+          const { uri } = await createNote(command.params, makeFoamMock());
+          expectSameUri(uri, expected);
+        } finally {
+          await closeEditors();
+          await deleteFile(expected);
+          await deleteFile(source.uri);
+        }
       });
     });
 

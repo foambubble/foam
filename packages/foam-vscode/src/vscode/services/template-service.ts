@@ -1,15 +1,11 @@
-import {
-  QuickPickItem,
-  WorkspaceFolder,
-  commands,
-  window,
-  workspace,
-} from 'vscode';
+import { QuickPickItem, commands, window, workspace } from 'vscode';
 import { URI } from '@foam/core';
 import {
   findFirstTemplate,
   getDailyNoteTemplateCandidateUris,
   getNewNoteTemplateCandidateUris,
+  getTemplatesDir as getTemplatesDirIn,
+  isPathWithin,
 } from '@foam/core';
 import { extractFoamTemplateFrontmatterMetadata } from '@foam/core';
 import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
@@ -35,22 +31,16 @@ For a full list of features see [the VS Code snippets page](https://code.visuals
 2. create a note from this template by running the \`Foam: Create New Note From Template\` command
 `;
 
-const getTemplatesDirOf = (folder: WorkspaceFolder) => {
-  const templatesFolder = getFoamVsCodeConfig(
-    'templates.folder',
-    '.foam/templates'
-  );
-  return fromVsCodeUri(folder.uri).joinPath(...templatesFolder.split('/'));
-};
-
 /** Where new templates are created: the first workspace root's folder. */
 export const getTemplatesDir = () =>
-  getTemplatesDirOf(workspace.workspaceFolders[0]);
+  getTemplatesDirIn(fromVsCodeUri(workspace.workspaceFolders[0].uri));
 
 // Default templates are looked up in every root, so one kept in a notes
 // folder added as a secondary root works in every workspace (#1711).
 const getAllTemplatesDirs = () =>
-  workspace.workspaceFolders.map(getTemplatesDirOf);
+  workspace.workspaceFolders.map(folder =>
+    getTemplatesDirIn(fromVsCodeUri(folder.uri))
+  );
 
 export const getDefaultTemplateUri = () =>
   findFirstTemplate(
@@ -93,17 +83,33 @@ export async function askUserForTemplate() {
       templates.map(async templateUri => {
         const metadata = await getTemplateMetadata(templateUri);
         metadata.set('templatePath', templateUri.getBasename());
-        return { templateUri, metadata };
+        const folder = workspace.workspaceFolders.find(candidate =>
+          isPathWithin(templateUri.path, fromVsCodeUri(candidate.uri).path)
+        )?.name;
+        const label = metadata.get('name') || metadata.get('templatePath');
+        return { templateUri, metadata, folder, label };
       })
     )
   ).sort((t1, t2) => sortTemplatesMetadata(t1.metadata, t2.metadata));
 
+  // Templates in different workspace folders can share a label, e.g. a
+  // `meeting.md` in each: only then is the folder shown, to tell them apart.
+  const foldersByLabel = new Map<string, Set<string>>();
+  for (const { label, folder } of templatesMetadata) {
+    foldersByLabel.set(
+      label,
+      (foldersByLabel.get(label) ?? new Set()).add(folder)
+    );
+  }
+
   const items: (QuickPickItem & { templateUri: URI })[] = await Promise.all(
-    templatesMetadata.map(({ templateUri, metadata }) => {
-      const label = metadata.get('name') || metadata.get('templatePath');
-      const description = metadata.get('name')
-        ? metadata.get('templatePath')
-        : null;
+    templatesMetadata.map(({ templateUri, metadata, folder, label }) => {
+      const description = [
+        metadata.get('name') ? metadata.get('templatePath') : undefined,
+        foldersByLabel.get(label).size > 1 ? folder : undefined,
+      ]
+        .filter(Boolean)
+        .join(' · ');
       const detail = metadata.get('description');
       const item = {
         label: label,

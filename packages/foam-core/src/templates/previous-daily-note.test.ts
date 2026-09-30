@@ -127,6 +127,48 @@ describe('findPreviousDailyNote', () => {
     expect(previous?.path).toEqual('/home/me/notes/journal/2026-09-14.md');
   });
 
+  it('ignores notes at the same path in a root the path does not name', () => {
+    const workspace = createTestWorkspace([
+      URI.file('/work/my-project'),
+      URI.file('/home/me/notes'),
+    ]);
+    workspace.set(
+      createTestNote({ uri: '/work/my-project/notes/journal/2026-09-20.md' })
+    );
+    workspace.set(
+      createTestNote({ uri: '/home/me/notes/journal/2026-09-14.md' })
+    );
+    const inNotesRoot = partsFromTemplateFilepath(
+      '/notes/journal/${FOAM_DATE_YEAR}-${FOAM_DATE_MONTH}-${FOAM_DATE_DATE}.md'
+    );
+
+    const previous = findPreviousDailyNote(
+      workspace,
+      inNotesRoot,
+      new Date(2026, 8, 22)
+    );
+
+    expect(previous?.path).toEqual('/home/me/notes/journal/2026-09-14.md');
+  });
+
+  it('finds daily notes in a root the path names when that root is opened on its own', () => {
+    const workspace = createTestWorkspace([URI.file('/home/me/notes')]);
+    workspace.set(
+      createTestNote({ uri: '/home/me/notes/journal/2026-09-14.md' })
+    );
+    const inNotesRoot = partsFromTemplateFilepath(
+      '/notes/journal/${FOAM_DATE_YEAR}-${FOAM_DATE_MONTH}-${FOAM_DATE_DATE}.md'
+    );
+
+    const previous = findPreviousDailyNote(
+      workspace,
+      inNotesRoot,
+      new Date(2026, 8, 16)
+    );
+
+    expect(previous?.path).toEqual('/home/me/notes/journal/2026-09-14.md');
+  });
+
   it('returns undefined when the daily note path cannot name a day', () => {
     const workspace = workspaceWith(['/workspace/journal/2026-09-14.md']);
     const monthNamePattern = partsFromTemplateFilepath(

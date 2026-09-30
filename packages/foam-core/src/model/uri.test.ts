@@ -132,6 +132,23 @@ describe('asAbsoluteUri', () => {
       );
     });
   });
+  it('resolves an empty path to the first folder instead of throwing', () => {
+    const workspaceFolder = URI.file('/workspace/folder');
+    expect(asAbsoluteUri('', [workspaceFolder]).path).toBe('/workspace/folder');
+  });
+  it('does not resolve a bare folder name to that folder itself', () => {
+    const workspaceFolder1 = URI.file('/absolute/path/folder1');
+    const workspaceFolder2 = URI.file('/absolute/path/folder2');
+    expect(
+      asAbsoluteUri('folder2', [workspaceFolder1, workspaceFolder2]).path
+    ).toBe('/absolute/path/folder1/folder2');
+  });
+  it('matches folder names only in a multi-root workspace', () => {
+    const workspaceFolder = URI.file('/absolute/path/folder');
+    expect(asAbsoluteUri('folder/file', [workspaceFolder]).path).toBe(
+      '/absolute/path/folder/folder/file'
+    );
+  });
   it('should use the first folder if no matching folder is found', () => {
     const uri = URI.file('folder3/file');
     const workspaceFolder1 = URI.file('/absolute/path/folder1');

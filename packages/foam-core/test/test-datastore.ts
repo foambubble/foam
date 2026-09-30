@@ -123,7 +123,7 @@ export class Matcher implements IMatcher {
   }
 
   isMatch(uri: URI) {
-    return this.match([uri]).length > 0;
+    return this.isIncluded(uri.toFsPath());
   }
 
   refresh(): Promise<void> {

@@ -33,6 +33,12 @@ describe('GlobMatcher', () => {
     expect(matcher.isMatch(root.joinPath('other/a.md'))).toBeFalsy();
   });
 
+  it('matches nothing in a root that has no include globs', () => {
+    const matcher = new GlobMatcher([{ uri: root, include: [], exclude: [] }]);
+
+    expect(matcher.isMatch(root.joinPath('notes/a.md'))).toBeFalsy();
+  });
+
   /**
    * VS Code's `findFiles` returns files inside dot-directories, which is why
    * Foam has to exclude `**\/.foam/**` explicitly. A matcher that silently

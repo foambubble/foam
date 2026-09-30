@@ -21,7 +21,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json && yarn check:portability",
-    "check:portability": "tsc -p tsconfig.portability.json",
+    "check:portability": "tsc -p tsconfig.portability.json && node check-bundle.js",
     "release": "node release.js",
     "tag-release": "node ../../scripts/tag-release.js core",
     "clean": "rimraf out",
@@ -36,6 +36,8 @@
   "devDependencies": {
     "@types/jexl": "^2.3.4",
     "@types/micromatch": "^4.0.10",
+    "@types/picomatch": "^4.0.3",
+    "esbuild": "^0.28.1",
     "oxlint": "^1.57.0",
     "rimraf": "^3.0.2",
     "typescript": "^5.8.0",
@@ -53,6 +55,7 @@
     "lru-cache": "^11.0.0",
     "micromatch": "^4.0.8",
     "mnemonist": "^0.39.8",
+    "picomatch": "^4.0.4",
     "remark-frontmatter": "^2.0.0",
     "remark-parse": "^8.0.2",
     "remark-wiki-link": "^0.0.4",

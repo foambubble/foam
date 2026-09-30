@@ -26,6 +26,23 @@ const MATCH_OPTIONS: micromatch.Options = { dot: true, nocase: true };
 
 const asPrefix = (path: string) => (path.endsWith('/') ? path : path + '/');
 
+/** With nested roots, the innermost one owns the path. */
+function findOwner<R extends { prefix: string }>(
+  roots: R[],
+  path: string
+): R | undefined {
+  let owner: R | undefined;
+  for (const root of roots) {
+    if (
+      path.startsWith(root.prefix) &&
+      (!owner || root.prefix.length > owner.prefix.length)
+    ) {
+      owner = root;
+    }
+  }
+  return owner;
+}
+
 /**
  * An {@link IMatcher} that answers from the include/exclude globs directly.
  *
@@ -55,16 +72,7 @@ export class GlobMatcher implements IMatcher {
   }
 
   isMatch(uri: URI): boolean {
-    // With nested roots, the innermost one owns the file.
-    let owner: (typeof this.roots)[number] | undefined;
-    for (const root of this.roots) {
-      if (
-        uri.path.startsWith(root.prefix) &&
-        (!owner || root.prefix.length > owner.prefix.length)
-      ) {
-        owner = root;
-      }
-    }
+    const owner = findOwner(this.roots, uri.path);
     if (!owner || owner.include.length === 0) {
       return false;
     }
@@ -73,6 +81,56 @@ export class GlobMatcher implements IMatcher {
       micromatch.isMatch(relativePath, owner.include, MATCH_OPTIONS) &&
       !micromatch.isMatch(relativePath, owner.exclude, MATCH_OPTIONS)
     );
+  }
+
+  refresh(): Promise<void> {
+    return Promise.resolve();
+  }
+}
+
+/**
+ * An {@link IMatcher} for placeholders, which are link targets rather than
+ * files.
+ *
+ * Only exclude globs apply: the include globs already selected the notes the
+ * links come from, and say nothing about where a missing note would live. A
+ * placeholder from a path link lies under a workspace root and is tested
+ * relative to it, like a file. One from a wikilink keeps the link text as its
+ * path (`missing-note`, `journal/2024-01-01`) and lies under no root, so that
+ * path is tested as is — a leading slash meaning the workspace root — against
+ * every root's excludes.
+ */
+export class PlaceholderMatcher implements IMatcher {
+  public readonly include = ['**/*'];
+  public readonly exclude: string[];
+
+  private readonly roots: { prefix: string; exclude: string[] }[];
+
+  constructor(roots: Omit<GlobMatcherRoot, 'include'>[]) {
+    this.roots = roots.map(r => ({
+      prefix: asPrefix(r.uri.path),
+      exclude: r.exclude,
+    }));
+    this.exclude = roots.flatMap(r => r.exclude);
+  }
+
+  match(uris: URI[]): URI[] {
+    return uris.filter(u => this.isMatch(u));
+  }
+
+  isMatch(uri: URI): boolean {
+    const owner = findOwner(this.roots, uri.path);
+    return owner
+      ? !micromatch.isMatch(
+          uri.path.slice(owner.prefix.length),
+          owner.exclude,
+          MATCH_OPTIONS
+        )
+      : !micromatch.isMatch(
+          uri.path.replace(/^\//, ''),
+          this.exclude,
+          MATCH_OPTIONS
+        );
   }
 
   refresh(): Promise<void> {

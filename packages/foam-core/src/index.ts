@@ -22,7 +22,7 @@ export {
   AlwaysIncludeMatcher,
   SubstringExcludeMatcher,
 } from './services/datastore';
-export { GlobMatcher } from './services/glob-matcher';
+export { GlobMatcher, PlaceholderMatcher } from './services/glob-matcher';
 export type { GlobMatcherRoot } from './services/glob-matcher';
 export { createMarkdownParser, getLinkDefinitions, getBlockFor } from './services/markdown-parser';
 export type {

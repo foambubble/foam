@@ -82,13 +82,13 @@ export async function askUserForTemplate() {
       templates.map(async templateUri => {
         const metadata = await getTemplateMetadata(templateUri);
         metadata.set('templatePath', templateUri.getBasename());
-        return metadata;
+        return { templateUri, metadata };
       })
     )
-  ).sort(sortTemplatesMetadata);
+  ).sort((t1, t2) => sortTemplatesMetadata(t1.metadata, t2.metadata));
 
-  const items: QuickPickItem[] = await Promise.all(
-    templatesMetadata.map(metadata => {
+  const items: (QuickPickItem & { templateUri: URI })[] = await Promise.all(
+    templatesMetadata.map(({ templateUri, metadata }) => {
       const label = metadata.get('name') || metadata.get('templatePath');
       const description = metadata.get('name')
         ? metadata.get('templatePath')
@@ -104,7 +104,10 @@ export async function askUserForTemplate() {
           delete item[key];
         }
       });
-      return item;
+      // The label only shows the basename, so keep the listed file itself:
+      // it may be in a subfolder, or in another root of a multi-root
+      // workspace (#1711).
+      return { ...item, templateUri };
     })
   );
 
@@ -112,14 +115,7 @@ export async function askUserForTemplate() {
     placeHolder: 'Select a template to use.',
   });
 
-  if (selectedTemplate === undefined) {
-    return undefined;
-  }
-  const templateFilename =
-    (selectedTemplate as QuickPickItem).description ||
-    (selectedTemplate as QuickPickItem).label;
-  const templateUri = getTemplatesDir().joinPath(templateFilename);
-  return templateUri;
+  return selectedTemplate?.templateUri;
 }
 
 async function offerToCreateTemplate(): Promise<void> {

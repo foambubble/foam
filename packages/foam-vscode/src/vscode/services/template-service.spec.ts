@@ -1,5 +1,11 @@
 /* @unit-ready */
-import { getTemplatesDir, getTemplates } from './template-service';
+import { QuickPickItem, window } from 'vscode';
+import { URI } from '@foam/core';
+import {
+  askUserForTemplate,
+  getTemplatesDir,
+  getTemplates,
+} from './template-service';
 import {
   createFile,
   deleteFile,
@@ -33,5 +39,27 @@ describe('getTemplates', () => {
         await deleteFile(template.uri);
       }
     });
+  });
+});
+
+describe('askUserForTemplate', () => {
+  it('returns the template the user picked, even from a subfolder of the templates folder (#1711)', async () => {
+    const template = await createFile('# Nested template', [
+      '.foam',
+      'templates',
+      'sub',
+      'nested.md',
+    ]);
+    const spy = vi
+      .spyOn(window, 'showQuickPick')
+      .mockImplementationOnce((async (items: QuickPickItem[]) =>
+        items.find(item => item.label === 'nested.md')) as any);
+    try {
+      const picked = (await askUserForTemplate()) as URI;
+      expect(picked.toFsPath()).toEqual(template.uri.toFsPath());
+    } finally {
+      spy.mockRestore();
+      await deleteFile(template.uri);
+    }
   });
 });

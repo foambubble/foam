@@ -9,6 +9,8 @@ Currently, Foam Lint helps you to:
 - Ensure your [[link-reference-definitions]] are up to date
 - Ensure every document has a well-formatted title (required for Markdown Links, Markdown Notes, and Foam Gatsby Template compatibility)
 
+The link reference definition check only runs when `foam.edit.linkReferenceDefinitions` is set to `withExtensions` or `withoutExtensions` in your workspace settings. It is `off` by default, so if you want Lint to keep definitions up to date — from VS Code, a git hook, or a GitHub action — turn it on first. See [[link-reference-definitions]].
+
 In the future, Foam Lint can help you with
 
 - Lint, format and structure notes
@@ -26,7 +28,7 @@ Foam Lint can be installed from [NPM](https://www.npmjs.com/) and executed as a 
 
 ```sh
 > npm install -g foam-cli
-> foam lint path/to/workspace
+> foam lint --workspace path/to/workspace
 ```
 
 You can run Foam Lint as a git hook on every commit to ensure your workspace links are up to date. This can be especially helpful if you edit your markdown documents from other apps.

@@ -1,6 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { TextEdit, uriToWorkspacePath } from '@foam/core';
+import { Config, TextEdit, uriToWorkspacePath } from '@foam/core';
 import {
   parseArgs,
   getString,
@@ -16,6 +16,7 @@ import {
   staleDefinitionsRule,
   type LintIssue,
   type LintRule,
+  type WikilinkDefinitionSetting,
 } from '@foam/core';
 import { bold, dim, path as pathColor, warning } from '../support/colors';
 
@@ -57,11 +58,16 @@ export interface LintResult {
 
 const ALL_RULES = ['missing-heading', 'stale-definitions'] as const;
 
-export function buildRules(ruleFilter: string[]): LintRule[] {
+export function buildRules(
+  ruleFilter: string[],
+  linkReferenceDefinitions: WikilinkDefinitionSetting
+): LintRule[] {
   const active = ruleFilter.length === 0 ? [...ALL_RULES] : ruleFilter;
   const rules: LintRule[] = [];
   if (active.includes('missing-heading')) rules.push(missingHeadingRule());
-  if (active.includes('stale-definitions')) rules.push(staleDefinitionsRule('withoutExtensions'));
+  if (active.includes('stale-definitions') && linkReferenceDefinitions !== 'off') {
+    rules.push(staleDefinitionsRule(linkReferenceDefinitions));
+  }
   return rules;
 }
 
@@ -132,7 +138,14 @@ export async function runLintCommand(
 
   try {
     const { rootDir, workspace } = await loadWorkspaceFromDirectory(workspaceDir);
-    const rules = buildRules(ruleFilter);
+    const linkReferenceDefinitions = Config.getEditLinkReferenceDefinitions();
+    if (ruleFilter.includes('stale-definitions') && linkReferenceDefinitions === 'off') {
+      logger.error(
+        'Rule stale-definitions is disabled: foam.edit.linkReferenceDefinitions is "off" in this workspace'
+      );
+      return 1;
+    }
+    const rules = buildRules(ruleFilter, linkReferenceDefinitions);
     const lintResult = await lintWorkspace(workspace, rules);
 
     const results: LintResult[] = lintResult.entries.map(({ uri, issues }) => ({

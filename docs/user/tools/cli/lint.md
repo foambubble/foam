@@ -8,6 +8,8 @@ foam lint [options]
 
 Scans all notes in the workspace and reports problems such as missing headings or stale link reference definitions. With `--fix`, auto-fixable issues are corrected in place.
 
+Which rules run depends on your workspace settings — see [Rules](#rules).
+
 Exits with code `2` when issues are found (and no `--fix`), making it easy to use in CI pipelines.
 
 ## Options
@@ -25,6 +27,16 @@ Exits with code `2` when issues are found (and no `--fix`), making it easy to us
 | ------------------- | ------------------------------------------------------ | :----------: |
 | `missing-heading`   | Notes without a top-level heading                      |     Yes      |
 | `stale-definitions` | Link reference definitions that are outdated or unused |     Yes      |
+
+`stale-definitions` only runs when [[link-reference-definitions]] are enabled for the workspace, the same as the "Foam: Lint Workspace" command in VS Code. The `foam.edit.linkReferenceDefinitions` setting is `off` by default, so turn it on in your workspace's `.vscode/settings.json` to have the rule report and fix definitions:
+
+```json
+{
+  "foam.edit.linkReferenceDefinitions": "withExtensions"
+}
+```
+
+Asking for the rule with `--rule stale-definitions` while the setting is `off` is a command error (exit `1`).
 
 ## Exit codes
 
@@ -73,3 +85,4 @@ foam lint --format json
 See also [[workspace-lint]] for running lint from VS Code.
 
 [workspace-lint]: ../workspace-lint.md 'Workspace Lint'
+[link-reference-definitions]: ../../features/link-reference-definitions.md 'Link Reference Definitions'

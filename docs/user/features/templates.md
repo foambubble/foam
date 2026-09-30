@@ -35,7 +35,7 @@ To create a note from a template:
 
 ## Special templates
 
-If your VS Code workspace has several folders (a [multi-root workspace](https://code.visualstudio.com/docs/editor/multi-root-workspaces)), Foam looks for the special templates in each folder, in the order they're listed, and uses the first one it finds. Your notes folder doesn't need to come first for its templates to be used. New templates are created in the first folder, so move the file into your notes folder if you want it there.
+If your VS Code workspace has several folders (a [multi-root workspace](https://code.visualstudio.com/docs/editor/multi-root-workspaces)), Foam looks for the special templates in each folder, in the order they're listed, and uses the first one it finds. Your notes folder doesn't need to come first for its templates to be used. New templates are created in the first folder, so move the file into your notes folder if you want it there. To create notes in a particular folder, see [Creating notes in a specific workspace folder](#creating-notes-in-a-specific-workspace-folder).
 
 ### Default template
 
@@ -384,10 +384,30 @@ $FOAM_SELECTED_TEXT
 **Best practices for filepath patterns:**
 
 - **Explicit current directory:** `$FOAM_CURRENT_DIR/$FOAM_SLUG.md` - Creates notes in the current editor's directory
-- **Workspace root:** `/$FOAM_SLUG.md` - Always creates notes in workspace root
+- **Workspace root:** `/$FOAM_SLUG.md` - Always creates notes in workspace root (the first folder, in a multi-root workspace)
 - **Subdirectories:** `$FOAM_CURRENT_DIR/meetings/$FOAM_SLUG.md` - Creates notes in subdirectories relative to current location
 
 The `FOAM_CURRENT_DIR` approach is recommended over relative paths (like `./file.md`) because it makes the template's behavior explicit and doesn't depend on configuration settings.
+
+##### Creating notes in a specific workspace folder
+
+In a [multi-root workspace](https://code.visualstudio.com/docs/editor/multi-root-workspaces), start the `filepath` with the name of the folder the note should go in. For a workspace with the folders `my-project` and `notes`:
+
+```markdown
+---
+foam_template:
+  name: Global Note
+  filepath: 'notes/inbox/$FOAM_SLUG.md'
+---
+
+# $FOAM_TITLE
+```
+
+This creates the note in `notes/inbox/`, wherever `notes` is in the folder list. Save the template in `notes/.foam/templates/`, and **Foam: Create New Note From Template** offers it in every workspace you add that folder to.
+
+- Use the folder's name on disk, not a different name you gave it in the `.code-workspace` file.
+- Don't start the path with `/`: a leading slash always means the first folder.
+- This works with the default `foam.files.newNotePath` setting. With `currentDir`, the path is resolved from the folder of the file you're editing instead.
 
 #### `name` and `description` attributes
 

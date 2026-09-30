@@ -1,7 +1,4 @@
 /* @unit-ready */
-import * as fs from 'fs';
-import * as os from 'os';
-import * as path from 'path';
 import { QuickPickItem, window, workspace } from 'vscode';
 import { URI } from '@foam/core';
 import {
@@ -17,34 +14,20 @@ import {
   createFile,
   deleteFile,
   withModifiedFoamConfiguration,
+  withSecondRoot,
 } from '../../test/test-utils-vscode';
-
-/**
- * Runs `fn` as if a fresh temporary directory were a second workspace root,
- * after the real one: both the unit mock and the e2e host open one folder.
- */
-async function withSecondRoot(fn: (root: URI) => Promise<void>) {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'foam-second-root-'));
-  const root = URI.file(dir);
-  const [first] = workspace.workspaceFolders;
-  const folders = vi
-    .spyOn(workspace, 'workspaceFolders', 'get')
-    .mockReturnValue([
-      first,
-      { uri: toVsCodeUri(root), name: 'notes', index: 1 },
-    ]);
-  try {
-    await fn(root);
-  } finally {
-    folders.mockRestore();
-    fs.rmSync(dir, { recursive: true, force: true });
-  }
-}
 
 describe('getTemplatesDir', () => {
   it('should return the default .foam/templates directory', () => {
     const dir = getTemplatesDir();
     expect(dir.path).toContain('.foam/templates');
+  });
+
+  it('stays in the first workspace root, where new templates are created, when there are several', async () => {
+    const firstRootDir = getTemplatesDir();
+    await withSecondRoot(async () => {
+      expect(getTemplatesDir().toFsPath()).toEqual(firstRootDir.toFsPath());
+    });
   });
 
   it('should return the custom templates directory when foam.templates.folder is set', async () => {

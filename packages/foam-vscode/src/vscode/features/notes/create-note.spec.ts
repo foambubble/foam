@@ -1,7 +1,11 @@
 /* @unit-ready */
 import { Selection, commands, window, workspace } from 'vscode';
 import { URI } from '@foam/core';
-import { asAbsoluteWorkspaceUri, readFile } from '../../services/editor';
+import {
+  asAbsoluteWorkspaceUri,
+  readFile,
+  writeFile,
+} from '../../services/editor';
 import {
   closeEditors,
   createFile,
@@ -10,6 +14,8 @@ import {
   getUriInWorkspace,
   makeFoamMock,
   showInEditor,
+  withModifiedFoamConfiguration,
+  withSecondRoot,
 } from '../../../test/test-utils-vscode';
 import { fromVsCodeUri } from '../../utils/vsc-utils';
 import { CREATE_NOTE_COMMAND, createNote } from './create-note';
@@ -296,6 +302,49 @@ describe('create-note command', () => {
       expect(window.activeTextEditor.document.getText()).toEqual('# JS Title');
       await deleteFile(result.uri);
       await deleteFile(template.uri);
+    });
+  });
+
+  describe('template filepath in a multi-root workspace', () => {
+    const createWithFilepath = async (root: URI, filepath: string) => {
+      const template = root.joinPath('.foam', 'templates', 'global.md');
+      await writeFile(
+        template,
+        `---\nfoam_template:\n  filepath: '${filepath}'\n---\n# Global note`
+      );
+      let created: URI;
+      await withModifiedFoamConfiguration(
+        'files.newNotePath',
+        'root',
+        async () => {
+          created = (
+            await createNote({ templatePath: template }, makeFoamMock())
+          ).uri;
+        }
+      );
+      return created;
+    };
+
+    it('creates the note in the root whose folder name starts the filepath (#1711)', async () => {
+      await withSecondRoot(async root => {
+        const uri = await createWithFilepath(
+          root,
+          `${root.getBasename()}/inbox/global-note.md`
+        );
+        expectSameUri(uri, root.joinPath('inbox', 'global-note.md'));
+      });
+    });
+
+    it('creates the note in the first root when the filepath starts with a slash', async () => {
+      await withSecondRoot(async root => {
+        const uri = await createWithFilepath(root, '/slash-note.md');
+        const first = getUriInWorkspace('slash-note.md');
+        try {
+          expectSameUri(uri, first);
+        } finally {
+          await deleteFile(first);
+        }
+      });
     });
   });
 

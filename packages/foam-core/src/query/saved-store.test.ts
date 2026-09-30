@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import micromatch from 'micromatch';
+import picomatch from 'picomatch';
 import { InMemoryDataStore } from '../../test/test-utils';
 import { URI } from '../model/uri';
 import {
@@ -219,8 +219,10 @@ describe('createQueryDataStore', () => {
     const store = createQueryDataStore({
       // Workspace-relative pattern → match anywhere under the workspace.
       list: async pattern => {
-        const matched = micromatch(Array.from(files.keys()), [`**/${pattern}`]);
-        return matched.map(p => URI.parse(p, 'file'));
+        const isMatch = picomatch(`**/${pattern}`);
+        return Array.from(files.keys())
+          .filter(p => isMatch(p))
+          .map(p => URI.parse(p, 'file'));
       },
       read: async uri => files.get(uri.path) ?? '',
       write: async (uri, content) => {

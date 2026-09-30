@@ -1,5 +1,5 @@
 import fs from 'fs';
-import micromatch from 'micromatch';
+import picomatch from 'picomatch';
 import { Logger } from '../src/utils/log';
 import { Range } from '../src/model/range';
 import { URI } from '../src/model/uri';
@@ -39,9 +39,9 @@ export class InMemoryDataStore implements IDataStore {
       return paths.map(p => URI.parse(p, 'file'));
     }
     // Workspace-relative pattern → match any file whose path ends with a
-    // segment matching the pattern. `**/<pattern>` does that via micromatch.
-    const matched = micromatch(paths, [`**/${pattern}`]);
-    return matched.map(p => URI.parse(p, 'file'));
+    // segment matching the pattern, which is what `**/<pattern>` selects.
+    const isMatch = picomatch(`**/${pattern}`);
+    return paths.filter(p => isMatch(p)).map(p => URI.parse(p, 'file'));
   }
 
   async read(uri: URI): Promise<string | null> {

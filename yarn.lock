@@ -2028,6 +2028,11 @@
   resolved "https://registry.yarnpkg.com/@types/picomatch/-/picomatch-2.3.4.tgz#00c5b3eee51cd690f76b8213c625adc9bc4b9aa6"
   integrity sha512-0so8lU8O5zatZS/2Fi4zrwks+vZv7e0dygrgEZXljODXBig97l4cPQD+9LabXfGJOWwoRkTVz6Q4edZvD12UOA==
 
+"@types/picomatch@^4.0.3":
+  version "4.0.3"
+  resolved "https://registry.yarnpkg.com/@types/picomatch/-/picomatch-4.0.3.tgz#d92bbf24166478c5457c8bb9ba41a7f49d55e094"
+  integrity sha512-iG0T6+nYJ9FAPmx9SsUlnwcq1ZVRuCXcVEvWnntoPlrOpwtSTKNDC9uVAxTsC3PUvJ+99n4RpAcNgBbHX3JSnQ==
+
 "@types/remove-markdown@^0.3.4":
   version "0.3.4"
   resolved "https://registry.yarnpkg.com/@types/remove-markdown/-/remove-markdown-0.3.4.tgz#b90c2e7117fbb30e51d5d849afac744715db4f91"

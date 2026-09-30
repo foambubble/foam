@@ -1,4 +1,4 @@
-import micromatch from 'micromatch';
+import picomatch from 'picomatch';
 import { URI } from '../model/uri';
 import { IMatcher } from './datastore';
 
@@ -13,7 +13,7 @@ export interface GlobMatcherRoot {
 }
 
 /**
- * micromatch options chosen to mirror how `workspace.findFiles` behaves today:
+ * Match options chosen to mirror how `workspace.findFiles` behaves today:
  *
  * - `dot`: findFiles returns files inside dot-directories — which is precisely
  *   why Foam has to exclude `.foam` explicitly. Without this, `**\/*` would
@@ -22,7 +22,7 @@ export interface GlobMatcherRoot {
  * - `nocase`: findFiles follows the filesystem, so on Windows and default macOS
  *   an exclude of `**\/Archive/**` also excludes a folder named `archive`.
  */
-const MATCH_OPTIONS: micromatch.Options = { dot: true, nocase: true };
+const MATCH_OPTIONS: picomatch.PicomatchOptions = { dot: true, nocase: true };
 
 const asPrefix = (path: string) => (path.endsWith('/') ? path : path + '/');
 
@@ -55,13 +55,17 @@ export class GlobMatcher implements IMatcher {
   public readonly include: string[];
   public readonly exclude: string[];
 
-  private readonly roots: { prefix: string; include: string[]; exclude: string[] }[];
+  private readonly roots: {
+    prefix: string;
+    isIncluded: picomatch.Matcher;
+    isExcluded: picomatch.Matcher;
+  }[];
 
   constructor(roots: GlobMatcherRoot[]) {
     this.roots = roots.map(r => ({
       prefix: asPrefix(r.uri.path),
-      include: r.include,
-      exclude: r.exclude,
+      isIncluded: picomatch(r.include, MATCH_OPTIONS),
+      isExcluded: picomatch(r.exclude, MATCH_OPTIONS),
     }));
     this.include = roots.flatMap(r => r.include);
     this.exclude = roots.flatMap(r => r.exclude);
@@ -73,14 +77,11 @@ export class GlobMatcher implements IMatcher {
 
   isMatch(uri: URI): boolean {
     const owner = findOwner(this.roots, uri.path);
-    if (!owner || owner.include.length === 0) {
+    if (!owner) {
       return false;
     }
     const relativePath = uri.path.slice(owner.prefix.length);
-    return (
-      micromatch.isMatch(relativePath, owner.include, MATCH_OPTIONS) &&
-      !micromatch.isMatch(relativePath, owner.exclude, MATCH_OPTIONS)
-    );
+    return owner.isIncluded(relativePath) && !owner.isExcluded(relativePath);
   }
 
   refresh(): Promise<void> {
@@ -104,14 +105,16 @@ export class PlaceholderMatcher implements IMatcher {
   public readonly include = ['**/*'];
   public readonly exclude: string[];
 
-  private readonly roots: { prefix: string; exclude: string[] }[];
+  private readonly roots: { prefix: string; isExcluded: picomatch.Matcher }[];
+  private readonly isExcludedByAnyRoot: picomatch.Matcher;
 
   constructor(roots: Omit<GlobMatcherRoot, 'include'>[]) {
     this.roots = roots.map(r => ({
       prefix: asPrefix(r.uri.path),
-      exclude: r.exclude,
+      isExcluded: picomatch(r.exclude, MATCH_OPTIONS),
     }));
     this.exclude = roots.flatMap(r => r.exclude);
+    this.isExcludedByAnyRoot = picomatch(this.exclude, MATCH_OPTIONS);
   }
 
   match(uris: URI[]): URI[] {
@@ -121,16 +124,8 @@ export class PlaceholderMatcher implements IMatcher {
   isMatch(uri: URI): boolean {
     const owner = findOwner(this.roots, uri.path);
     return owner
-      ? !micromatch.isMatch(
-          uri.path.slice(owner.prefix.length),
-          owner.exclude,
-          MATCH_OPTIONS
-        )
-      : !micromatch.isMatch(
-          uri.path.replace(/^\//, ''),
-          this.exclude,
-          MATCH_OPTIONS
-        );
+      ? !owner.isExcluded(uri.path.slice(owner.prefix.length))
+      : !this.isExcludedByAnyRoot(uri.path.replace(/^\//, ''));
   }
 
   refresh(): Promise<void> {

@@ -19,8 +19,8 @@ Put Foam settings in the `.code-workspace` file or in your user settings. In a m
 Foam looks for [[templates]] in the templates folder (`.foam/templates` by default) of every folder in the workspace:
 
 - **Foam: Create New Note From Template** lists the templates of all folders.
-- For the special `new-note` and `daily-note` templates, Foam checks each folder in the order they're listed and uses the first one it finds. The templates in your notes folder are used in every workspace whose project has none of its own.
-- New templates are created in the first folder, both by **Foam: Create New Template** and when Foam offers to create a daily note template. Move the file into your notes folder to have it in every workspace.
+- For the special `new-note` and `daily-note` templates, Foam checks each folder in the order they're listed and uses the first one it finds.
+- New templates are created in the first folder.
 
 ## Create notes in your notes folder
 

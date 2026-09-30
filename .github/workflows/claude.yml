@@ -24,9 +24,15 @@ jobs:
       id-token: write
       actions: read
     steps:
+      # Without persist-credentials: false, checkout leaves the workflow token
+      # in git config through an includeIf entry, which the action below does
+      # not remove and which wins over the App token it puts in the remote
+      # URL. Pushes then go out as github-actions[bot]: the runs they trigger
+      # wait for approval, and review.yml refuses the actor.
       - uses: actions/checkout@v6
         with:
           fetch-depth: 1
+          persist-credentials: false
 
       # This job holds the subscription token and a write-capable App token,
       # and below it builds and runs the branch's own code. On a fork's PR

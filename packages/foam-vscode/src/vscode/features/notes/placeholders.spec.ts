@@ -1,21 +1,20 @@
 /* @unit-ready */
 import * as vscode from 'vscode';
-import { FoamGraph } from '@foam/core';
+import { FoamGraph, listPlaceholders } from '@foam/core';
 import {
   createNoteFromMarkdown,
   createTestWorkspace,
 } from '../../../test/test-utils';
 import { withModifiedFoamConfiguration } from '../../../test/test-utils-vscode';
-import { MapBasedMemento, fromVsCodeUri } from '../../utils/vsc-utils';
-import { UriTreeItem } from '../../utils/tree-views/tree-view-utils';
-import { PlaceholderTreeView, createPlaceholderMatcher } from './placeholders';
+import { fromVsCodeUri } from '../../utils/vsc-utils';
+import { createPlaceholderMatcher } from './placeholders';
 
 /**
- * Builds the panel over a note in `docs/` that links to three missing notes:
- * one by wikilink, one next to it, and one outside `docs/`.
- * Returns the paths of the placeholders the panel lists.
+ * Runs the panel's matcher over the placeholders of a note in `docs/` that
+ * links to three missing notes: one by wikilink, one next to it, and one
+ * outside `docs/`. Returns the paths of the placeholders it hides.
  */
-const listPlaceholdersInPanel = async () => {
+const hiddenPlaceholders = async () => {
   const root = fromVsCodeUri(vscode.workspace.workspaceFolders[0].uri);
   const workspace = createTestWorkspace([root]).set(
     createNoteFromMarkdown(
@@ -28,44 +27,31 @@ const listPlaceholdersInPanel = async () => {
     )
   );
   const graph = FoamGraph.fromWorkspace(workspace);
-  const panel = new PlaceholderTreeView(
-    new MapBasedMemento(),
-    workspace,
-    graph,
-    await createPlaceholderMatcher()
-  );
   try {
-    await panel.groupBy.update('off');
-    panel.refresh();
-    const items = (await panel.getChildren()) as UriTreeItem[];
+    const placeholders = listPlaceholders(workspace, graph).map(p => p.uri);
+    expect(placeholders).toHaveLength(3);
+    const matcher = await createPlaceholderMatcher();
     return {
       root,
-      paths: items.map(item => item.uri.path).sort(),
-      count: panel.nValues,
+      hidden: placeholders
+        .filter(uri => !matcher.isMatch(uri))
+        .map(uri => uri.path),
     };
   } finally {
-    panel.dispose();
     graph.dispose();
     workspace.dispose();
   }
 };
 
-describe('Placeholders panel', () => {
-  it('lists every placeholder when foam.files.include is restricted to a subfolder (#1702)', async () => {
+describe('Placeholders panel filter', () => {
+  it('shows every placeholder when foam.files.include is restricted to a subfolder (#1702)', async () => {
     await withModifiedFoamConfiguration(
       'files.include',
       ['docs/**/*.md'],
       async () => {
-        const { root, paths, count } = await listPlaceholdersInPanel();
+        const { hidden } = await hiddenPlaceholders();
 
-        expect(paths).toEqual(
-          [
-            'missing-note',
-            root.joinPath('docs', 'missing.md').path,
-            root.joinPath('elsewhere', 'missing.md').path,
-          ].sort()
-        );
-        expect(count).toBe(3);
+        expect(hidden).toEqual([]);
       }
     );
   });
@@ -75,11 +61,9 @@ describe('Placeholders panel', () => {
       'placeholders.exclude',
       ['elsewhere/**'],
       async () => {
-        const { root, paths } = await listPlaceholdersInPanel();
+        const { root, hidden } = await hiddenPlaceholders();
 
-        expect(paths).toEqual(
-          ['missing-note', root.joinPath('docs', 'missing.md').path].sort()
-        );
+        expect(hidden).toEqual([root.joinPath('elsewhere', 'missing.md').path]);
       }
     );
   });

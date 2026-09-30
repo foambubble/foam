@@ -24,6 +24,14 @@ export function findPreviousDailyNote(
   if (!match) {
     return undefined;
   }
+  // A single root the path names can also hold daily notes inside a folder of
+  // that name: the deprecated `openDailyNote.directory` writes them there (its
+  // writer matches root names only in a multi-root workspace), and so did
+  // templates before root names were matched. Both forms count.
+  const matchUnnamed =
+    target && workspace.roots.length === 1
+      ? dailyNotePathMatcher(pattern)
+      : undefined;
 
   // `before` carries a wall-clock time, so the comparison is by day: a note
   // for the same date is not a previous note.
@@ -39,7 +47,8 @@ export function findPreviousDailyNote(
     if (target && !isPathWithin(resource.uri.path, target.root.path)) {
       continue;
     }
-    const date = match(workspace.relativePath(resource.uri));
+    const path = workspace.relativePath(resource.uri);
+    const date = match(path) ?? matchUnnamed?.(path);
     if (!date) {
       continue;
     }

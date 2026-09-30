@@ -1,6 +1,9 @@
 import { URI } from '../model/uri';
 import { createTestNote, createTestWorkspace } from '../../test/test-utils';
-import { partsFromTemplateFilepath } from './daily-note-path-pattern';
+import {
+  partsFromDailyNoteSettings,
+  partsFromTemplateFilepath,
+} from './daily-note-path-pattern';
 import { findPreviousDailyNote } from './previous-daily-note';
 
 const pattern = partsFromTemplateFilepath(
@@ -167,6 +170,26 @@ describe('findPreviousDailyNote', () => {
     );
 
     expect(previous?.path).toEqual('/home/me/notes/journal/2026-09-14.md');
+  });
+
+  it('still finds daily notes inside a folder named like the single root, as the openDailyNote settings write them', () => {
+    const workspace = createTestWorkspace([URI.file('/home/me/journal')]);
+    workspace.set(
+      createTestNote({ uri: '/home/me/journal/journal/2026-09-14.md' })
+    );
+    const fromSettings = partsFromDailyNoteSettings(
+      'journal',
+      'yyyy-mm-dd',
+      'md'
+    );
+
+    const previous = findPreviousDailyNote(
+      workspace,
+      fromSettings,
+      new Date(2026, 8, 16)
+    );
+
+    expect(previous?.path).toEqual('/home/me/journal/journal/2026-09-14.md');
   });
 
   it('returns undefined when the daily note path cannot name a day', () => {

@@ -1,6 +1,12 @@
 import { QuickPickItem, commands, window, workspace } from 'vscode';
 import { URI } from '@foam/core';
-import { getDailyNoteTemplateCandidateUris } from '@foam/core';
+import {
+  findFirstTemplate,
+  getDailyNoteTemplateCandidateUris,
+  getNewNoteTemplateCandidateUris,
+  getTemplatesDir as getTemplatesDirIn,
+  isPathWithin,
+} from '@foam/core';
 import { extractFoamTemplateFrontmatterMetadata } from '@foam/core';
 import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
 import { fileExists, focusNote, readFile } from './editor';
@@ -25,35 +31,30 @@ For a full list of features see [the VS Code snippets page](https://code.visuals
 2. create a note from this template by running the \`Foam: Create New Note From Template\` command
 `;
 
-export const getTemplatesDir = () => {
-  const folder = getFoamVsCodeConfig('templates.folder', '.foam/templates');
-  return fromVsCodeUri(workspace.workspaceFolders[0].uri).joinPath(
-    ...folder.split('/')
+/** Where new templates are created: the first workspace root's folder. */
+export const getTemplatesDir = () =>
+  getTemplatesDirIn(fromVsCodeUri(workspace.workspaceFolders[0].uri));
+
+// Default templates are looked up in every root, so one kept in a notes
+// folder added as a secondary root works in every workspace (#1711).
+const getAllTemplatesDirs = () =>
+  workspace.workspaceFolders.map(folder =>
+    getTemplatesDirIn(fromVsCodeUri(folder.uri))
   );
-};
 
-export const getDefaultNoteTemplateCandidateUris = () => [
-  getTemplatesDir().joinPath('new-note.js'),
-  getTemplatesDir().joinPath('new-note.md'),
-];
+export const getDefaultTemplateUri = () =>
+  findFirstTemplate(
+    getAllTemplatesDirs(),
+    getNewNoteTemplateCandidateUris,
+    fileExists
+  );
 
-export const getDefaultTemplateUri = async () => {
-  for (const uri of getDefaultNoteTemplateCandidateUris()) {
-    if (await fileExists(uri)) {
-      return uri;
-    }
-  }
-  return undefined;
-};
-
-export const getDailyNoteTemplateUri = async () => {
-  for (const uri of getDailyNoteTemplateCandidateUris(getTemplatesDir())) {
-    if (await fileExists(uri)) {
-      return uri;
-    }
-  }
-  return undefined;
-};
+export const getDailyNoteTemplateUri = () =>
+  findFirstTemplate(
+    getAllTemplatesDirs(),
+    getDailyNoteTemplateCandidateUris,
+    fileExists
+  );
 
 export async function getTemplates(): Promise<URI[]> {
   const folder = getFoamVsCodeConfig('templates.folder', '.foam/templates');
@@ -82,17 +83,33 @@ export async function askUserForTemplate() {
       templates.map(async templateUri => {
         const metadata = await getTemplateMetadata(templateUri);
         metadata.set('templatePath', templateUri.getBasename());
-        return metadata;
+        const folder = workspace.workspaceFolders.find(candidate =>
+          isPathWithin(templateUri.path, fromVsCodeUri(candidate.uri).path)
+        )?.name;
+        const label = metadata.get('name') || metadata.get('templatePath');
+        return { templateUri, metadata, folder, label };
       })
     )
-  ).sort(sortTemplatesMetadata);
+  ).sort((t1, t2) => sortTemplatesMetadata(t1.metadata, t2.metadata));
 
-  const items: QuickPickItem[] = await Promise.all(
-    templatesMetadata.map(metadata => {
-      const label = metadata.get('name') || metadata.get('templatePath');
-      const description = metadata.get('name')
-        ? metadata.get('templatePath')
-        : null;
+  // Templates in different workspace folders can share a label, e.g. a
+  // `meeting.md` in each: only then is the folder shown, to tell them apart.
+  const foldersByLabel = new Map<string, Set<string>>();
+  for (const { label, folder } of templatesMetadata) {
+    foldersByLabel.set(
+      label,
+      (foldersByLabel.get(label) ?? new Set()).add(folder)
+    );
+  }
+
+  const items: (QuickPickItem & { templateUri: URI })[] = await Promise.all(
+    templatesMetadata.map(({ templateUri, metadata, folder, label }) => {
+      const description = [
+        metadata.get('name') ? metadata.get('templatePath') : undefined,
+        foldersByLabel.get(label).size > 1 ? folder : undefined,
+      ]
+        .filter(Boolean)
+        .join(' · ');
       const detail = metadata.get('description');
       const item = {
         label: label,
@@ -104,7 +121,10 @@ export async function askUserForTemplate() {
           delete item[key];
         }
       });
-      return item;
+      // The label only shows the basename, so keep the listed file itself:
+      // it may be in a subfolder, or in another root of a multi-root
+      // workspace (#1711).
+      return { ...item, templateUri };
     })
   );
 
@@ -112,14 +132,7 @@ export async function askUserForTemplate() {
     placeHolder: 'Select a template to use.',
   });
 
-  if (selectedTemplate === undefined) {
-    return undefined;
-  }
-  const templateFilename =
-    (selectedTemplate as QuickPickItem).description ||
-    (selectedTemplate as QuickPickItem).label;
-  const templateUri = getTemplatesDir().joinPath(templateFilename);
-  return templateUri;
+  return selectedTemplate?.templateUri;
 }
 
 async function offerToCreateTemplate(): Promise<void> {

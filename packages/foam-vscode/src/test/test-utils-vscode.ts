@@ -2,6 +2,8 @@
  * This file depends on VS Code as it's used for integration/e2e tests
  */
 import * as vscode from 'vscode';
+import * as fs from 'fs';
+import * as os from 'os';
 import path from 'path';
 import { TextDecoder, TextEncoder } from 'util';
 import { fromVsCodeUri, toVsCodeUri } from '../vscode/utils/vsc-utils';
@@ -231,6 +233,28 @@ export const withModifiedFoamConfiguration = (
   value,
   fn: () => void | Promise<void>
 ) => withModifiedConfiguration(`foam.${key}`, value, fn);
+
+/**
+ * Runs `fn` as if a fresh temporary directory were a second workspace root,
+ * after the real one: both the unit mock and the e2e host open one folder.
+ */
+export async function withSecondRoot(fn: (root: URI) => Promise<void>) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'foam-second-root-'));
+  const root = URI.file(dir);
+  const [first] = vscode.workspace.workspaceFolders;
+  const folders = vi
+    .spyOn(vscode.workspace, 'workspaceFolders', 'get')
+    .mockReturnValue([
+      first,
+      { uri: toVsCodeUri(root), name: 'notes', index: 1 },
+    ]);
+  try {
+    await fn(root);
+  } finally {
+    folders.mockRestore();
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+}
 
 /**
  * Utility function to check if two URIs are the same.

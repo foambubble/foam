@@ -475,19 +475,41 @@ export function asAbsoluteUri(
   if (path.startsWith('/') || /^[a-zA-Z]:/.test(path)) {
     return baseFolders[0].forPath(path);
   }
-  let tokens = path.split('/');
-  while (tokens[0].trim() === '') {
-    tokens.shift();
+  const inNamedRoot =
+    baseFolders.length > 1 ? resolveInRootByName(path, baseFolders) : undefined;
+  return inNamedRoot ?? baseFolders[0].joinPath(...pathSegments(path));
+}
+
+/** The segments of `path`, without the empty ones a leading `/` produces. */
+function pathSegments(path: string): string[] {
+  const segments = path.split('/');
+  while (segments.length > 0 && segments[0].trim() === '') {
+    segments.shift();
   }
-  const firstDir = tokens[0];
-  if (baseFolders.length > 1) {
-    for (const folder of baseFolders) {
-      const lastDir = folder.path.split('/').pop();
-      if (lastDir === firstDir) {
-        tokens = tokens.slice(1);
-        return folder.joinPath(...tokens);
-      }
-    }
-  }
-  return baseFolders[0].joinPath(...tokens);
+  return segments;
+}
+
+/**
+ * The root whose folder name is `name`, e.g. `notes` for `/home/me/notes`.
+ * The first one wins when several roots share a name.
+ */
+export function findRootByName(name: string, roots: URI[]): URI | undefined {
+  return roots.find(root => root.path.split('/').pop() === name);
+}
+
+/**
+ * Resolves `path` into the root whose folder name is its first segment:
+ * `notes/inbox/x.md`, or `/notes/inbox/x.md`, becomes `<notes root>/inbox/x.md`.
+ * Returns `undefined` when no root has that name, or when nothing follows the
+ * name — a bare `notes` would otherwise resolve to the root folder itself.
+ */
+export function resolveInRootByName(
+  path: string,
+  roots: URI[]
+): URI | undefined {
+  const [name, ...rest] = pathSegments(path);
+  const root = name === undefined ? undefined : findRootByName(name, roots);
+  return root && rest.some(segment => segment !== '')
+    ? root.joinPath(...rest)
+    : undefined;
 }

@@ -33,6 +33,10 @@ To create a note from a template:
 
 ![Create new note from template GIF](../../assets/images/create-new-note-from-template.gif)
 
+## Multi-root workspaces
+
+If your VS Code workspace has several folders, see [[multi-root-workspaces]] for where Foam looks for templates and how to create notes in a specific folder.
+
 ## Special templates
 
 ### Default template
@@ -443,3 +447,4 @@ This is the rest of the template
 ```
 
 [daily-notes]: daily-notes.md 'Daily Notes'
+[multi-root-workspaces]: ../recipes/multi-root-workspaces.md 'Multi-root workspaces'

@@ -385,6 +385,66 @@ describe('resolveUri', () => {
   });
 });
 
+describe('resolveNoteUri', () => {
+  const project = URI.file('/work/my-project');
+  const notes = URI.file('/home/me/notes');
+
+  it('resolves a leading-slash path into the root named by its first segment (#1711)', () => {
+    const ws = new FoamWorkspace([project, notes]);
+    expect(ws.resolveNoteUri('/notes/inbox/idea.md').path).toBe(
+      '/home/me/notes/inbox/idea.md'
+    );
+  });
+
+  it('matches the first root by name too', () => {
+    const ws = new FoamWorkspace([project, notes]);
+    expect(ws.resolveNoteUri('/my-project/idea.md').path).toBe(
+      '/work/my-project/idea.md'
+    );
+  });
+
+  it('resolves a leading-slash path that names no root from the first root', () => {
+    const ws = new FoamWorkspace([project, notes]);
+    expect(ws.resolveNoteUri('/journal/idea.md').path).toBe(
+      '/work/my-project/journal/idea.md'
+    );
+  });
+
+  it('keeps a path that is already under a root as is', () => {
+    const ws = new FoamWorkspace([project, notes]);
+    expect(ws.resolveNoteUri('/home/me/notes/idea.md').path).toBe(
+      '/home/me/notes/idea.md'
+    );
+  });
+
+  it("matches the root's own name in a single-root workspace too, so the same template works either way", () => {
+    const ws = new FoamWorkspace([notes]);
+    expect(ws.resolveNoteUri('/notes/idea.md').path).toBe(
+      '/home/me/notes/idea.md'
+    );
+  });
+
+  it('prefers the named root over a same-named subfolder of the first root', () => {
+    const ws = new FoamWorkspace([project, notes]);
+    // `/work/my-project/notes/` may exist: the root named `notes` still wins
+    expect(ws.resolveNoteUri('/notes/idea.md').path).toBe(
+      '/home/me/notes/idea.md'
+    );
+  });
+
+  it('does not turn a bare folder name into the root folder itself', () => {
+    const ws = new FoamWorkspace([project, notes]);
+    expect(ws.resolveNoteUri('/notes').path).toBe('/work/my-project/notes');
+  });
+
+  it('leaves resolveUri, used for links, unchanged', () => {
+    const ws = new FoamWorkspace([project, notes]);
+    expect(ws.resolveUri('/notes/inbox/idea.md').path).toBe(
+      '/work/my-project/notes/inbox/idea.md'
+    );
+  });
+});
+
 describe('find with workspace-relative absolute paths', () => {
   it('should find a resource stored at a real absolute path via a workspace-relative path', () => {
     const root = URI.file('/workspace');

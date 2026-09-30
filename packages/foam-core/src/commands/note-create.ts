@@ -1,4 +1,5 @@
 import {
+  findFirstTemplate,
   getNewNoteTemplateCandidateUris,
   getTemplatesDir,
 } from '../templates/template-discovery';
@@ -83,18 +84,19 @@ export async function noteCreate(
   let appliedTemplateFormat: 'md' | 'js' | undefined;
   const hooks: NoteCreationHooks = {
     loadTemplate: async () => {
-      const templatesDir = getTemplatesDir(rootUri);
-      for (const templateUri of getNewNoteTemplateCandidateUris(templatesDir)) {
-        if (!(await dataStore.exists(templateUri))) continue;
-        const loader = new TemplateLoader(
-          async uri => (await dataStore.read(uri)) ?? '',
-          isTrusted
-        );
-        const template = await loader.loadTemplate(templateUri);
-        appliedTemplateFormat = templateUri.path.endsWith('.js') ? 'js' : 'md';
-        return template;
-      }
-      return undefined;
+      const templateUri = await findFirstTemplate(
+        [getTemplatesDir(rootUri)],
+        getNewNoteTemplateCandidateUris,
+        uri => dataStore.exists(uri)
+      );
+      if (!templateUri) return undefined;
+      const loader = new TemplateLoader(
+        async uri => (await dataStore.read(uri)) ?? '',
+        isTrusted
+      );
+      const template = await loader.loadTemplate(templateUri);
+      appliedTemplateFormat = templateUri.path.endsWith('.js') ? 'js' : 'md';
+      return template;
     },
     fileExists: uri => dataStore.exists(uri),
     onFileExists: async () => undefined,

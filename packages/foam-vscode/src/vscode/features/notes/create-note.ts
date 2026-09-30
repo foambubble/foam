@@ -157,15 +157,19 @@ export async function createNote(args: CreateNoteArgs, foam: Foam) {
 
   // `notePath` follows the template `filepath` convention: a relative path
   // goes through `onRelativeNotePath`, an absolute one is taken as is when
-  // under a workspace root and as workspace-relative otherwise.
+  // under a workspace root and as workspace-relative otherwise (into the root
+  // its first segment names). A placeholder's note goes where its link points
+  // instead, so it is resolved the way links are.
   const fallbackFilepath =
     args.notePath === undefined
       ? undefined
       : typeof args.notePath !== 'string'
       ? args.notePath
-      : URI.file(args.notePath).isAbsolute()
+      : !URI.file(args.notePath).isAbsolute()
+      ? URI.file(args.notePath)
+      : args.sourceLink
       ? foam.workspace.resolveUri(args.notePath)
-      : URI.file(args.notePath);
+      : foam.workspace.resolveNoteUri(args.notePath);
 
   // Create resolver with all variables upfront
   const locale = getFoamVsCodeConfig<string>('dateLocale', 'default');

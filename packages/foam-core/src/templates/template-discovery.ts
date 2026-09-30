@@ -36,3 +36,24 @@ export function getNewNoteTemplateCandidateUris(templatesDir: URI): URI[] {
     templatesDir.joinPath('new-note.md'),
   ];
 }
+
+/**
+ * Finds a default template (new-note, daily-note...) across several templates
+ * directories — one per workspace root, in root order. The first directory
+ * that has any candidate wins, so a root earlier in the list always takes
+ * precedence over a later one, whatever the candidates' extensions.
+ */
+export async function findFirstTemplate(
+  templatesDirs: URI[],
+  candidatesFor: (templatesDir: URI) => URI[],
+  exists: (uri: URI) => Promise<boolean>
+): Promise<URI | undefined> {
+  for (const templatesDir of templatesDirs) {
+    for (const candidate of candidatesFor(templatesDir)) {
+      if (await exists(candidate)) {
+        return candidate;
+      }
+    }
+  }
+  return undefined;
+}

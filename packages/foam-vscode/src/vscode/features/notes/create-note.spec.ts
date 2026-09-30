@@ -1,7 +1,11 @@
 /* @unit-ready */
 import { Selection, commands, window, workspace } from 'vscode';
 import { URI } from '@foam/core';
-import { asAbsoluteWorkspaceUri, readFile } from '../../services/editor';
+import {
+  asAbsoluteWorkspaceUri,
+  readFile,
+  writeFile,
+} from '../../services/editor';
 import {
   closeEditors,
   createFile,
@@ -10,6 +14,8 @@ import {
   getUriInWorkspace,
   makeFoamMock,
   showInEditor,
+  withModifiedFoamConfiguration,
+  withSecondRoot,
 } from '../../../test/test-utils-vscode';
 import { fromVsCodeUri } from '../../utils/vsc-utils';
 import { CREATE_NOTE_COMMAND, createNote } from './create-note';
@@ -296,6 +302,105 @@ describe('create-note command', () => {
       expect(window.activeTextEditor.document.getText()).toEqual('# JS Title');
       await deleteFile(result.uri);
       await deleteFile(template.uri);
+    });
+  });
+
+  describe('note paths in a multi-root workspace', () => {
+    const createWithFilepath = async (
+      root: URI,
+      filepath: string,
+      newNotePath: 'root' | 'currentDir' = 'root'
+    ) => {
+      const template = root.joinPath('.foam', 'templates', 'global.md');
+      await writeFile(
+        template,
+        `---\nfoam_template:\n  filepath: '${filepath}'\n---\n# Global note`
+      );
+      let created: URI;
+      await withModifiedFoamConfiguration(
+        'files.newNotePath',
+        newNotePath,
+        async () => {
+          created = (
+            await createNote({ templatePath: template }, makeFoamMock())
+          ).uri;
+        }
+      );
+      return created;
+    };
+
+    it('creates the note in the root named after the leading slash of the filepath (#1711)', async () => {
+      await withSecondRoot(async root => {
+        const uri = await createWithFilepath(
+          root,
+          `/${root.getBasename()}/inbox/global-note.md`
+        );
+        expectSameUri(uri, root.joinPath('inbox', 'global-note.md'));
+      });
+    });
+
+    it('creates the note in the named root even when new notes go to the current directory', async () => {
+      await withSecondRoot(async root => {
+        const current = await createFile('# Current', [
+          'current-dir',
+          'current.md',
+        ]);
+        await showInEditor(current.uri);
+        try {
+          const uri = await createWithFilepath(
+            root,
+            `/${root.getBasename()}/inbox/global-note.md`,
+            'currentDir'
+          );
+          expectSameUri(uri, root.joinPath('inbox', 'global-note.md'));
+        } finally {
+          await closeEditors();
+          await deleteFile(current.uri);
+        }
+      });
+    });
+
+    it('still creates the note in the named root when the filepath has no leading slash', async () => {
+      await withSecondRoot(async root => {
+        const uri = await createWithFilepath(
+          root,
+          `${root.getBasename()}/inbox/global-note.md`
+        );
+        expectSameUri(uri, root.joinPath('inbox', 'global-note.md'));
+      });
+    });
+
+    it('creates the note for a leading-slash placeholder where the link points, not in the named root', async () => {
+      await withSecondRoot(async root => {
+        const name = root.getBasename();
+        const source = await createFile(`see [[/${name}/idea]]`);
+        const link = createMarkdownParser().parse(source.uri, source.content)
+          .links[0];
+        const command = CREATE_NOTE_COMMAND.forPlaceholder(
+          Location.forObjectWithRange(source.uri, link),
+          '.md',
+          { text: 'x' }
+        );
+        const expected = getUriInWorkspace(name, 'idea.md');
+        try {
+          const { uri } = await createNote(command.params, makeFoamMock());
+          expectSameUri(uri, expected);
+        } finally {
+          await closeEditors();
+          await deleteFile(expected);
+          await deleteFile(source.uri);
+        }
+      });
+    });
+
+    it('creates a note from a leading-slash notePath in the named root', async () => {
+      await withSecondRoot(async root => {
+        const { uri } = await createNote(
+          { notePath: `/${root.getBasename()}/from-note-path.md`, text: 'x' },
+          makeFoamMock()
+        );
+        expectSameUri(uri, root.joinPath('from-note-path.md'));
+      });
     });
   });
 

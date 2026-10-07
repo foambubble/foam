@@ -73,3 +73,24 @@ export function getE2eRunFailure(state: E2eRunState): string | undefined {
 
   return reasons.length > 0 ? reasons.join('\n') : undefined;
 }
+
+/** Environment variable holding the path the suite records its result at. */
+export const E2E_RESULT_FILE_ENV = 'FOAM_E2E_RESULT_FILE';
+
+/** What the suite records once its own verdict is a pass. */
+export const E2E_PASSED = 'passed';
+
+/**
+ * Verdict for the process that launched VS Code, from what the suite recorded
+ * (`undefined` when it recorded nothing). VS Code exiting with code 0 does not
+ * prove the suite passed: the extension host can exit before `run()` returns —
+ * Vitest answers an unhandled rejection with `process.exit()`, which VS Code
+ * turns into exit code 0.
+ */
+export function getE2eCompletionFailure(
+  recorded: string | undefined
+): string | undefined {
+  return recorded === E2E_PASSED
+    ? undefined
+    : 'The e2e suite did not finish: VS Code exited without the suite recording a result. Look above for an "Unhandled Rejection", such as the extension failing to activate.';
+}

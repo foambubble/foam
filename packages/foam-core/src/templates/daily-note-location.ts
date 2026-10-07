@@ -42,12 +42,14 @@ For more complex templates, including Javascript dynamic templates, see https://
 
 /**
  * The deprecated `foam.openDailyNote.*` settings. `directory` is `null` when
- * the setting is absent, which is what selects the default directory.
+ * the setting is absent, which is what selects the default directory;
+ * `titleFormat` is `null` when absent, which titles notes by `filenameFormat`.
  */
 export interface DailyNoteSettings {
   directory: string | null;
   filenameFormat: string;
   fileExtension: string;
+  titleFormat: string | null;
 }
 
 export function dailyNoteSettings(config: IFoamConfig): DailyNoteSettings {
@@ -55,6 +57,7 @@ export function dailyNoteSettings(config: IFoamConfig): DailyNoteSettings {
     directory: config.getDailyNoteDirectory(),
     filenameFormat: config.getDailyNoteFilenameFormat(),
     fileExtension: config.getDailyNoteFileExtension(),
+    titleFormat: config.getDailyNoteTitleFormat(),
   };
 }
 

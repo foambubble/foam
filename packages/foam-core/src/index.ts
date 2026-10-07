@@ -109,6 +109,8 @@ export type {
   DailyNoteRule,
   DailyNoteSettings,
 } from './templates/daily-note-location';
+export { prepareDailyNote } from './templates/daily-note-creation';
+export type { DailyNoteCreation } from './templates/daily-note-creation';
 
 // Query
 export type {

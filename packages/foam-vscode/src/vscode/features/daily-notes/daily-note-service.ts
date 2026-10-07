@@ -1,15 +1,12 @@
 import dayjs from 'dayjs';
 import { window, workspace } from 'vscode';
 import {
+  Config,
   convertDateformatToDayjs,
-  DailyNoteSettings,
-  dailyNotePattern,
+  dailyNoteSettings,
   dailyNoteSettingsPath,
   DEFAULT_DAILY_NOTE_TEMPLATE,
-  findPreviousDailyNote,
-  Resolver,
-  Template,
-  TriggerFactory,
+  prepareDailyNote,
 } from '@foam/core';
 import { URI } from '@foam/core';
 import { Foam } from '@foam/core';
@@ -69,19 +66,8 @@ export function getDailyNoteLink(date: Date): string {
  */
 export function getDailyNoteUri(date: Date): URI {
   return asAbsoluteWorkspaceUri(
-    dailyNoteSettingsPath(date, getDailyNoteSettings())
+    dailyNoteSettingsPath(date, dailyNoteSettings(Config))
   );
-}
-
-function getDailyNoteSettings(): DailyNoteSettings {
-  return {
-    directory: getFoamVsCodeConfig<string>('openDailyNote.directory') ?? null,
-    filenameFormat: getFoamVsCodeConfig(
-      'openDailyNote.filenameFormat',
-      'yyyy-mm-dd'
-    ),
-    fileExtension: getFoamVsCodeConfig('openDailyNote.fileExtension', 'md'),
-  };
 }
 
 /**
@@ -132,56 +118,24 @@ export async function createDailyNoteIfNotExists(targetDate: Date, foam: Foam) {
       });
   }
 
-  const locale = getFoamVsCodeConfig<string>('dateLocale', 'default');
-  const formattedDate = dayjs(targetDate).format('YYYY-MM-DD');
-  const variables = new Map([['FOAM_TITLE', formattedDate]]);
-
-  const template = templateUri
-    ? await new TemplateLoader(readFile, workspace.isTrusted).loadTemplate(
-        templateUri
-      )
-    : legacyDailyNoteTemplate(targetDate);
-
-  const resolver = new Resolver(
-    variables,
+  const template =
+    templateUri &&
+    (await new TemplateLoader(readFile, workspace.isTrusted).loadTemplate(
+      templateUri
+    ));
+  const daily = prepareDailyNote(
     targetDate,
-    undefined,
-    locale,
-    undefined,
-    before => {
-      const uri = findPreviousDailyNote(
-        foam.workspace,
-        dailyNotePathPattern(template),
-        before
-      );
-      return uri && foam.workspace.getIdentifier(uri);
-    }
+    template,
+    dailyNoteSettings(Config),
+    foam.workspace,
+    Config.getDateLocale()
   );
 
   return NoteFactory.createNote(foam, {
-    trigger: TriggerFactory.createCommandTrigger('foam.open-daily-note'),
-    resolver,
-    loadTemplate: async () => template,
-    fallbackFilepath: getDailyNoteUri(targetDate),
+    trigger: daily.trigger,
+    resolver: daily.resolver,
+    loadTemplate: async () => daily.template,
+    fallbackFilepath: daily.fallbackFilepath,
     onFileExists: 'open',
   });
-}
-
-/** Where daily notes live, as a pattern that can be read backwards. */
-export function dailyNotePathPattern(template: Template) {
-  return dailyNotePattern(template, getDailyNoteSettings());
-}
-
-/** Daily note content from the deprecated config, when no template exists. */
-function legacyDailyNoteTemplate(targetDate: Date): Template {
-  const titleFormat: string =
-    getFoamVsCodeConfig('openDailyNote.titleFormat') ??
-    getFoamVsCodeConfig('openDailyNote.filenameFormat') ??
-    'isoDate';
-  const title = dayjs(targetDate).format(convertDateformatToDayjs(titleFormat));
-  return {
-    type: 'markdown',
-    metadata: new Map(),
-    content: `# ${title}\n`,
-  };
 }

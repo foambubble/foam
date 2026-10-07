@@ -3,10 +3,10 @@ import path from 'node:path';
 
 import {
   Config,
-  DailyNoteSettings,
+  IFoamConfig,
   URI,
+  asAbsoluteUri,
   dailyNoteSettings,
-  dailyNoteSettingsPath,
   getDailyNoteTemplateCandidateUris,
   getTemplatesDir,
   isWithinPath,
@@ -54,38 +54,44 @@ export function parseDateArg(dateStr: string | undefined): Date {
   return d;
 }
 
+export interface DailyNote {
+  uri: URI;
+  /** What a new note would contain. */
+  content: string;
+  /** The daily-note template; `undefined` when the workspace has none. */
+  templateUri?: URI;
+}
+
 /**
- * Resolve the daily note URI the way desktop Foam does: the template's
+ * Resolve the daily note the way desktop Foam does: the template's
  * `filepath` when it has one, otherwise the `openDailyNote.*` settings,
- * otherwise `journal/YYYY-MM-DD.md`. Throws when it lies outside the
+ * otherwise `journal/YYYY-MM-DD.md`. Throws when that is outside the
  * workspace.
  */
-export async function resolveDailyNoteUri(
+export async function resolveDailyNoteFile(
   date: Date,
   rootUri: URI,
   foam: Awaited<ReturnType<typeof loadWorkspaceFromDirectory>>['foam'],
   dataStore: Awaited<ReturnType<typeof loadWorkspaceFromDirectory>>['dataStore'],
-  settings: DailyNoteSettings
-): Promise<URI> {
-  const templatesDir = getTemplatesDir(rootUri);
-  const candidates = getDailyNoteTemplateCandidateUris(templatesDir);
-
-  const fallbackUri = rootUri.joinPath(dailyNoteSettingsPath(date, settings));
-
-  let noteUri = fallbackUri;
-  for (const templateUri of candidates) {
-    const content = await dataStore.read(templateUri);
-    if (content === null) continue;
-
-    // Template exists — use it to derive the filepath
-    const result = await resolveDailyNote(date, templateUri, foam, async uri => {
-      const text = await dataStore.read(uri);
-      return text ?? '';
-    }, { fallbackFilepath: fallbackUri });
-
-    noteUri = foam.workspace.resolveUri(result.filepath.path);
-    break;
+  config: IFoamConfig
+): Promise<DailyNote> {
+  let templateUri: URI | undefined;
+  for (const candidate of getDailyNoteTemplateCandidateUris(getTemplatesDir(rootUri))) {
+    if ((await dataStore.read(candidate)) !== null) {
+      templateUri = candidate;
+      break;
+    }
   }
+
+  const note = await resolveDailyNote(
+    date,
+    templateUri,
+    foam,
+    async uri => (await dataStore.read(uri)) ?? '',
+    dailyNoteSettings(config),
+    { locale: config.getDateLocale() }
+  );
+  const noteUri = asAbsoluteUri(note.filepath, foam.workspace.roots);
 
   // Both the template and the settings come from the workspace's own files.
   if (!(await isInsideWorkspace(noteUri.toFsPath(), rootUri.toFsPath()))) {
@@ -94,7 +100,7 @@ export async function resolveDailyNoteUri(
         `Check foam.openDailyNote.directory and the daily note template's filepath.`
     );
   }
-  return noteUri;
+  return { uri: noteUri, content: note.content, templateUri };
 }
 
 // ─── Command runner ───────────────────────────────────────────────────────────
@@ -120,13 +126,8 @@ export async function runDailyCommand(
   const { rootDir, rootUri, foam, dataStore, workspace } =
     await loadWorkspaceFromDirectory(workspaceDir);
 
-  const noteUri = await resolveDailyNoteUri(
-    date,
-    rootUri,
-    foam,
-    dataStore,
-    dailyNoteSettings(Config)
-  );
+  const note = await resolveDailyNoteFile(date, rootUri, foam, dataStore, Config);
+  const noteUri = note.uri;
   const notePath = noteUri.toFsPath();
 
   let exists = await dataStore.exists(noteUri);
@@ -139,27 +140,9 @@ export async function runDailyCommand(
   // not the user's intent — `--create` against an existing note resolves
   // to `open` because nothing was written.
   let wroteFile = false;
-  let appliedTemplate: URI | undefined;
 
   if (shouldCreate && !exists) {
-    // Find the template to get content, then write
-    const templatesDir = getTemplatesDir(rootUri);
-    const candidates = getDailyNoteTemplateCandidateUris(templatesDir);
-    let content = `# ${formatDateTitle(date)}\n`;
-
-    for (const templateUri of candidates) {
-      const templateContent = await dataStore.read(templateUri);
-      if (templateContent === null) continue;
-      const result = await resolveDailyNote(date, templateUri, foam, async uri => {
-        const text = await dataStore.read(uri);
-        return text ?? '';
-      }, { fallbackFilepath: noteUri });
-      content = result.content;
-      appliedTemplate = templateUri;
-      break;
-    }
-
-    await dataStore.write(noteUri, content);
+    await dataStore.write(noteUri, note.content);
     exists = true;
     wroteFile = true;
   }
@@ -174,7 +157,7 @@ export async function runDailyCommand(
 
   if (pathOnly) {
     logger.info(notePath);
-    return { exitCode: 0, telemetryProperties: buildTelemetryProperties(wroteFile, appliedTemplate) };
+    return { exitCode: 0, telemetryProperties: buildTelemetryProperties(wroteFile, note.templateUri) };
   }
 
   if (format === 'json') {
@@ -184,7 +167,7 @@ export async function runDailyCommand(
     logger.info(`${pathColor(relPath)}  ${status}`);
   }
 
-  return { exitCode: 0, telemetryProperties: buildTelemetryProperties(wroteFile, appliedTemplate) };
+  return { exitCode: 0, telemetryProperties: buildTelemetryProperties(wroteFile, note.templateUri) };
 }
 
 /**
@@ -246,9 +229,4 @@ async function isInsideWorkspace(
     URI.file(path.join(realExisting, ...missing)),
     URI.file(await fs.promises.realpath(rootDir))
   );
-}
-
-function formatDateTitle(date: Date): string {
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }

@@ -72,6 +72,104 @@ describe('where foam daily puts the note without a template', () => {
     ));
 });
 
+// ─── What the new note contains ───────────────────────────────────────────────
+
+describe('what foam daily writes into a new note', () => {
+  const createNote = async (rootDir: string, date: string) => {
+    const code = await runDailyCommand(
+      ['--date', date, '--create', '--workspace', rootDir],
+      new TestLogger()
+    );
+    expect(exitCodeOf(code)).toBe(0);
+  };
+
+  it('links the previous daily note in journal/ from a template without a filepath', () =>
+    withTmpWorkspace(
+      {
+        '.foam/templates/daily-note.md': 'Previous: [[${FOAM_PREVIOUS_DAILY_NOTE}]]\n',
+        'journal/2026-10-06.md': '# 2026-10-06\n',
+      },
+      async ({ rootDir }) => {
+        await createNote(rootDir, '2026-10-07');
+        expect(
+          fs.readFileSync(path.join(rootDir, 'journal', '2026-10-07.md'), 'utf8')
+        ).toBe('Previous: [[2026-10-06]]\n');
+      }
+    ));
+
+  it('links the previous daily note in the openDailyNote directory from a template without a filepath', () =>
+    withTmpWorkspace(
+      {
+        '.vscode/settings.json': JSON.stringify({
+          'foam.openDailyNote.directory': 'diary',
+        }),
+        '.foam/templates/daily-note.md': 'Previous: [[${FOAM_PREVIOUS_DAILY_NOTE}]]\n',
+        'diary/2026-10-06.md': '# 2026-10-06\n',
+      },
+      async ({ rootDir }) => {
+        await createNote(rootDir, '2026-10-07');
+        expect(
+          fs.readFileSync(path.join(rootDir, 'diary', '2026-10-07.md'), 'utf8')
+        ).toBe('Previous: [[2026-10-06]]\n');
+      }
+    ));
+
+  it('resolves FOAM_TITLE in the template to the date', () =>
+    withTmpWorkspace(
+      { '.foam/templates/daily-note.md': '# ${FOAM_TITLE}\n' },
+      async ({ rootDir }) => {
+        await createNote(rootDir, '2026-10-07');
+        expect(
+          fs.readFileSync(path.join(rootDir, 'journal', '2026-10-07.md'), 'utf8')
+        ).toBe('# 2026-10-07\n');
+      }
+    ));
+
+  it('names months in the foam.dateLocale language', () =>
+    withTmpWorkspace(
+      {
+        '.vscode/settings.json': JSON.stringify({ 'foam.dateLocale': 'it-IT' }),
+        '.foam/templates/daily-note.md': '${FOAM_DATE_MONTH_NAME}\n',
+      },
+      async ({ rootDir }) => {
+        await createNote(rootDir, '2026-10-07');
+        expect(
+          fs.readFileSync(path.join(rootDir, 'journal', '2026-10-07.md'), 'utf8')
+        ).toBe('ottobre\n');
+      }
+    ));
+
+  it('titles a note without a template by openDailyNote.titleFormat', () =>
+    withTmpWorkspace(
+      {
+        '.vscode/settings.json': JSON.stringify({
+          'foam.openDailyNote.titleFormat': 'fullDate',
+        }),
+      },
+      async ({ rootDir }) => {
+        await createNote(rootDir, '2026-10-07');
+        expect(
+          fs.readFileSync(path.join(rootDir, 'journal', '2026-10-07.md'), 'utf8')
+        ).toBe('# Wednesday, October 7, 2026\n');
+      }
+    ));
+
+  it('titles a note without a template by the filename format when no title format is set', () =>
+    withTmpWorkspace(
+      {
+        '.vscode/settings.json': JSON.stringify({
+          'foam.openDailyNote.filenameFormat': 'dd-mm-yyyy',
+        }),
+      },
+      async ({ rootDir }) => {
+        await createNote(rootDir, '2026-10-07');
+        expect(
+          fs.readFileSync(path.join(rootDir, 'journal', '07-10-2026.md'), 'utf8')
+        ).toBe('# 07-10-2026\n');
+      }
+    ));
+});
+
 describe('keeping the daily note inside the workspace', () => {
   // The escape target is named after the temp workspace, so a run that does
   // escape can't leave a folder that a later run would trip over.

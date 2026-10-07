@@ -17,6 +17,7 @@ const NO_SETTINGS: DailyNoteSettings = {
   directory: null,
   filenameFormat: 'isoDate',
   fileExtension: 'md',
+  titleFormat: null,
 };
 
 const markdownTemplate = (content: string): Template => {
@@ -84,6 +85,7 @@ describe('where the daily note lives', () => {
 
   it('formats the filename with the dateformat-style filenameFormat and the extension', () => {
     const settings = {
+      ...NO_SETTINGS,
       directory: 'diary',
       filenameFormat: 'dd-mm-yyyy',
       fileExtension: 'markdown',
@@ -124,6 +126,7 @@ describe('reading the daily note settings from a Foam config', () => {
           getDailyNoteDirectory: () => 'daily',
           getDailyNoteFilenameFormat: () => 'yyyy-mm-dd',
           getDailyNoteFileExtension: () => 'markdown',
+          getDailyNoteTitleFormat: () => 'fullDate',
         },
       ],
       new DefaultFoamConfig()
@@ -133,11 +136,15 @@ describe('reading the daily note settings from a Foam config', () => {
       directory: 'daily',
       filenameFormat: 'yyyy-mm-dd',
       fileExtension: 'markdown',
+      titleFormat: 'fullDate',
     });
   });
 
-  it('leaves the directory null when it is not set', () => {
-    expect(dailyNoteSettings(new DefaultFoamConfig()).directory).toBeNull();
+  it('leaves the directory and the title format null when they are not set', () => {
+    const settings = dailyNoteSettings(new DefaultFoamConfig());
+
+    expect(settings.directory).toBeNull();
+    expect(settings.titleFormat).toBeNull();
   });
 });
 

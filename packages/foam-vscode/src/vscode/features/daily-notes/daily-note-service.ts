@@ -2,10 +2,11 @@ import dayjs from 'dayjs';
 import { window, workspace } from 'vscode';
 import {
   convertDateformatToDayjs,
+  DailyNoteSettings,
+  dailyNotePattern,
+  dailyNoteSettingsPath,
+  DEFAULT_DAILY_NOTE_TEMPLATE,
   findPreviousDailyNote,
-  joinPath,
-  partsFromDailyNoteSettings,
-  partsFromTemplateFilepath,
   Resolver,
   Template,
   TriggerFactory,
@@ -64,29 +65,23 @@ export function getDailyNoteLink(date: Date): string {
 }
 
 /**
- * Returns the daily note filename (basename).
- * Reads filenameFormat and fileExtension from VS Code configuration.
- */
-export function getDailyNoteFileName(date: Date): string {
-  const format: string = getFoamVsCodeConfig(
-    'openDailyNote.filenameFormat',
-    'yyyy-mm-dd'
-  );
-  const extension: string = getFoamVsCodeConfig(
-    'openDailyNote.fileExtension',
-    'md'
-  );
-  return formatDailyNoteFileName(date, format, extension);
-}
-
-/**
- * Returns the URI for a daily note file.
- * Reads openDailyNote.directory from VS Code configuration.
+ * Returns the URI for a daily note file, from the `openDailyNote.*` settings.
  */
 export function getDailyNoteUri(date: Date): URI {
-  const folder = getFoamVsCodeConfig<string>('openDailyNote.directory') ?? '.';
-  const filename = getDailyNoteFileName(date);
-  return asAbsoluteWorkspaceUri(joinPath(folder, filename));
+  return asAbsoluteWorkspaceUri(
+    dailyNoteSettingsPath(date, getDailyNoteSettings())
+  );
+}
+
+function getDailyNoteSettings(): DailyNoteSettings {
+  return {
+    directory: getFoamVsCodeConfig<string>('openDailyNote.directory') ?? null,
+    filenameFormat: getFoamVsCodeConfig(
+      'openDailyNote.filenameFormat',
+      'yyyy-mm-dd'
+    ),
+    fileExtension: getFoamVsCodeConfig('openDailyNote.fileExtension', 'md'),
+  };
 }
 
 /**
@@ -107,28 +102,6 @@ export async function openDailyNoteFor(date?: Date, foam?: Foam) {
 }
 
 // ─── Note creation ────────────────────────────────────────────────────────────
-
-const DEFAULT_DAILY_NOTE_TEMPLATE = `---
-foam_template:
-  filepath: "/journal/\${FOAM_DATE_YEAR}-\${FOAM_DATE_MONTH}-\${FOAM_DATE_DATE}.md"
-  description: "Daily note template"
----
-# \${FOAM_DATE_YEAR}-\${FOAM_DATE_MONTH}-\${FOAM_DATE_DATE}
-
-> you probably want to delete these instructions as you customize your template
-
-Welcome to your new daily note template.
-The file is located in your Foam templates folder (\`.foam/templates\` by default).
-The text in this file will be used as the content of your daily note.
-You can customize it as you like, and you can use the following variables in the template:
-- \`\${FOAM_DATE_YEAR}\`: The year of the date
-- \`\${FOAM_DATE_MONTH}\`: The month of the date
-- \`\${FOAM_DATE_DATE}\`: The day of the date
-- \`\${FOAM_TITLE}\`: The title of the note
-
-Go to https://github.com/foambubble/foam/blob/main/docs/user/features/daily-notes.md for more details.
-For more complex templates, including Javascript dynamic templates, see https://github.com/foambubble/foam/blob/main/docs/user/features/templates.md.
-`;
 
 export const CREATE_DAILY_NOTE_WARNING_RESPONSE = 'Create daily note template';
 
@@ -194,27 +167,9 @@ export async function createDailyNoteIfNotExists(targetDate: Date, foam: Foam) {
   });
 }
 
-/**
- * Where daily notes live, as a pattern that can be read backwards. The
- * template's `filepath` wins outright over the deprecated `openDailyNote.*`
- * settings — it is what actually writes the note.
- *
- * A JavaScript template computes its path at creation time, so there is no
- * pattern to invert and the feature is unavailable: reading the settings
- * instead would point the search at paths that template never writes to.
- */
+/** Where daily notes live, as a pattern that can be read backwards. */
 export function dailyNotePathPattern(template: Template) {
-  if (template.type !== 'markdown') {
-    return undefined;
-  }
-  const templateFilepath = template.metadata.get('filepath');
-  return templateFilepath
-    ? partsFromTemplateFilepath(templateFilepath)
-    : partsFromDailyNoteSettings(
-        getFoamVsCodeConfig<string>('openDailyNote.directory') ?? '.',
-        getFoamVsCodeConfig('openDailyNote.filenameFormat', 'yyyy-mm-dd'),
-        getFoamVsCodeConfig('openDailyNote.fileExtension', 'md')
-      );
+  return dailyNotePattern(template, getDailyNoteSettings());
 }
 
 /** Daily note content from the deprecated config, when no template exists. */

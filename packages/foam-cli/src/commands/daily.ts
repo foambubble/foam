@@ -2,7 +2,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import {
+  Config,
+  DailyNoteSettings,
   URI,
+  dailyNoteSettings,
+  dailyNoteSettingsPath,
   getDailyNoteTemplateCandidateUris,
   getTemplatesDir,
   isWithinPath,
@@ -34,9 +38,6 @@ Options:
   --help               Show this help
 `;
 
-// Default path pattern when no template: journals/YYYY-MM-DD.md
-const DEFAULT_JOURNALS_DIR = 'journals';
-
 // ─── Domain ───────────────────────────────────────────────────────────────────
 
 export function parseDateArg(dateStr: string | undefined): Date {
@@ -53,30 +54,23 @@ export function parseDateArg(dateStr: string | undefined): Date {
   return d;
 }
 
-export function defaultDailyNoteUri(date: Date, rootUri: URI): URI {
-  const pad = (n: number) => String(n).padStart(2, '0');
-  const y = date.getFullYear();
-  const m = pad(date.getMonth() + 1);
-  const d = pad(date.getDate());
-  const filename = `${y}-${m}-${d}.md`;
-  return rootUri.joinPath(DEFAULT_JOURNALS_DIR, filename);
-}
-
 /**
- * Resolve the daily note URI using the template if one exists,
- * otherwise fall back to journals/YYYY-MM-DD.md. Throws when it lies
- * outside the workspace.
+ * Resolve the daily note URI the way desktop Foam does: the template's
+ * `filepath` when it has one, otherwise the `openDailyNote.*` settings,
+ * otherwise `journal/YYYY-MM-DD.md`. Throws when it lies outside the
+ * workspace.
  */
 export async function resolveDailyNoteUri(
   date: Date,
   rootUri: URI,
   foam: Awaited<ReturnType<typeof loadWorkspaceFromDirectory>>['foam'],
-  dataStore: Awaited<ReturnType<typeof loadWorkspaceFromDirectory>>['dataStore']
+  dataStore: Awaited<ReturnType<typeof loadWorkspaceFromDirectory>>['dataStore'],
+  settings: DailyNoteSettings
 ): Promise<URI> {
   const templatesDir = getTemplatesDir(rootUri);
   const candidates = getDailyNoteTemplateCandidateUris(templatesDir);
 
-  const fallbackUri = defaultDailyNoteUri(date, rootUri);
+  const fallbackUri = rootUri.joinPath(dailyNoteSettingsPath(date, settings));
 
   let noteUri = fallbackUri;
   for (const templateUri of candidates) {
@@ -126,7 +120,13 @@ export async function runDailyCommand(
   const { rootDir, rootUri, foam, dataStore, workspace } =
     await loadWorkspaceFromDirectory(workspaceDir);
 
-  const noteUri = await resolveDailyNoteUri(date, rootUri, foam, dataStore);
+  const noteUri = await resolveDailyNoteUri(
+    date,
+    rootUri,
+    foam,
+    dataStore,
+    dailyNoteSettings(Config)
+  );
   const notePath = noteUri.toFsPath();
 
   let exists = await dataStore.exists(noteUri);

@@ -125,6 +125,9 @@ const config = {
     },
     node: {
       platform: 'node',
+      // Prefer the ESM build of packages that ship both UMD and ESM (e.g. jsonc-parser):
+      // esbuild can't trace the relative requires inside a UMD factory.
+      mainFields: ['module', 'main'],
       format: 'cjs',
       outfile: `out/bundles/extension-node.js`,
       define: versionDefines,

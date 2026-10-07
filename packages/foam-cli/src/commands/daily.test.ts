@@ -1,7 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { URI } from '@foam/core';
-import { defaultDailyNoteUri, parseDateArg, runDailyCommand } from './daily';
+import { parseDateArg, runDailyCommand } from './daily';
 import type { CommandRunResult } from '../support/with-telemetry';
 import { withTmpWorkspace, TestLogger } from '../test/test-utils';
 import { setColorsEnabled } from '../support/colors';
@@ -45,20 +44,32 @@ describe('parseDateArg', () => {
   });
 });
 
-// ─── defaultDailyNoteUri ──────────────────────────────────────────────────────
+// ─── Where the note goes ──────────────────────────────────────────────────────
 
-describe('defaultDailyNoteUri', () => {
-  it('returns journals/YYYY-MM-DD.md', () => {
-    const date = new Date('2026-05-01T00:00:00');
-    const result = defaultDailyNoteUri(date, URI.file('/workspace'));
-    expect(result.path).toBe('/workspace/journals/2026-05-01.md');
-  });
+describe('where foam daily puts the note without a template', () => {
+  it('prints journal/YYYY-MM-DD.md when neither a template nor the settings place it', () =>
+    withTmpWorkspace({}, async ({ rootDir }) => {
+      const logger = new TestLogger();
+      const code = await runDailyCommand(['--date', '2026-05-01', '--path-only', '--workspace', rootDir], logger);
+      expect(exitCodeOf(code)).toBe(0);
+      expect(logger.logs[0]).toBe(path.join(rootDir, 'journal', '2026-05-01.md'));
+    }));
 
-  it('zero-pads month and day', () => {
-    const date = new Date('2026-03-07T00:00:00');
-    const result = defaultDailyNoteUri(date, URI.file('/workspace'));
-    expect(result.path).toContain('2026-03-07.md');
-  });
+  it('follows the openDailyNote settings when they are set', () =>
+    withTmpWorkspace(
+      {
+        '.vscode/settings.json': JSON.stringify({
+          'foam.openDailyNote.directory': 'diary',
+          'foam.openDailyNote.filenameFormat': 'dd-mm-yyyy',
+        }),
+      },
+      async ({ rootDir }) => {
+        const logger = new TestLogger();
+        const code = await runDailyCommand(['--date', '2026-05-01', '--path-only', '--workspace', rootDir], logger);
+        expect(exitCodeOf(code)).toBe(0);
+        expect(logger.logs[0]).toBe(path.join(rootDir, 'diary', '01-05-2026.md'));
+      }
+    ));
 });
 
 describe('keeping the daily note inside the workspace', () => {
@@ -91,7 +102,7 @@ describe('keeping the daily note inside the workspace', () => {
       const outside = path.join(rootDir, '..', escapeTarget(rootDir));
       fs.mkdirSync(outside);
       try {
-        fs.symlinkSync(outside, path.join(rootDir, 'journals'));
+        fs.symlinkSync(outside, path.join(rootDir, 'journal'));
 
         await expect(
           runDailyCommand(['--date', '2026-05-01', '--create', '--workspace', rootDir], new TestLogger())
@@ -107,10 +118,10 @@ describe('keeping the daily note inside the workspace', () => {
       const outside = path.join(rootDir, '..', escapeTarget(rootDir));
       fs.mkdirSync(outside);
       try {
-        fs.mkdirSync(path.join(rootDir, 'journals'));
+        fs.mkdirSync(path.join(rootDir, 'journal'));
         fs.symlinkSync(
           path.join(outside, 'planted.md'),
-          path.join(rootDir, 'journals', '2026-05-01.md')
+          path.join(rootDir, 'journal', '2026-05-01.md')
         );
 
         await expect(
@@ -158,7 +169,7 @@ describe('keeping the daily note inside the workspace', () => {
   it('still creates the note through a symlink that stays inside the workspace', () =>
     withTmpWorkspace({}, async ({ rootDir }) => {
       fs.mkdirSync(path.join(rootDir, 'diary'));
-      fs.symlinkSync(path.join(rootDir, 'diary'), path.join(rootDir, 'journals'));
+      fs.symlinkSync(path.join(rootDir, 'diary'), path.join(rootDir, 'journal'));
 
       const code = await runDailyCommand(
         ['--date', '2026-05-01', '--create', '--workspace', rootDir],
@@ -190,7 +201,7 @@ describe('runDailyCommand', () => {
     }));
 
   it('shows [exists] when the daily note already exists', () =>
-    withTmpWorkspace({ 'journals/2026-05-01.md': '# 2026-05-01\n' }, async ({ rootDir }) => {
+    withTmpWorkspace({ 'journal/2026-05-01.md': '# 2026-05-01\n' }, async ({ rootDir }) => {
       const logger = new TestLogger();
       const code = await runDailyCommand(['--date', '2026-05-01', '--workspace', rootDir], logger);
       expect(exitCodeOf(code)).toBe(0);
@@ -202,7 +213,7 @@ describe('runDailyCommand', () => {
       const logger = new TestLogger();
       const code = await runDailyCommand(['--date', '2099-12-31', '--create', '--workspace', rootDir], logger);
       expect(exitCodeOf(code)).toBe(0);
-      expect(fs.existsSync(path.join(rootDir, 'journals', '2099-12-31.md'))).toBe(true);
+      expect(fs.existsSync(path.join(rootDir, 'journal', '2099-12-31.md'))).toBe(true);
       expect(logger.logs[0]).toContain('2099-12-31');
     }));
 

@@ -1,4 +1,22 @@
-import { getE2eRunFailure } from './e2e-run-result';
+import {
+  E2E_PASSED,
+  getE2eCompletionFailure,
+  getE2eRunFailure,
+} from './e2e-run-result';
+
+describe('getE2eCompletionFailure', () => {
+  it('fails when the suite never recorded a result', () => {
+    expect(getE2eCompletionFailure(undefined)).toMatch(/did not finish/i);
+  });
+
+  it('fails when the recorded result is not a pass', () => {
+    expect(getE2eCompletionFailure('')).toMatch(/did not finish/i);
+  });
+
+  it('reports no failure when the suite recorded a pass', () => {
+    expect(getE2eCompletionFailure(E2E_PASSED)).toBeUndefined();
+  });
+});
 
 describe('getE2eRunFailure', () => {
   const passingFile = (name: string) => ({

@@ -24,11 +24,16 @@ process.env.NODE_ENV = 'test';
 (process.stdout as any).isTTY = false;
 (process.stderr as any).isTTY = false;
 
-import { rmSync, readdirSync, existsSync } from 'fs';
+import { rmSync, readdirSync, existsSync, writeFileSync } from 'fs';
 import { Config } from '@foam/core';
 import { VsCodeFoamConfig } from '../vscode/config';
 import { cleanWorkspace } from './test-utils-vscode';
-import { countTests, getE2eRunFailure } from './support/e2e-run-result';
+import {
+  E2E_PASSED,
+  E2E_RESULT_FILE_ENV,
+  countTests,
+  getE2eRunFailure,
+} from './support/e2e-run-result';
 import path from 'path';
 
 const rootDir = path.join(__dirname, '../..');
@@ -117,6 +122,11 @@ export async function run(): Promise<void> {
 
     if (failure) {
       throw new Error(failure);
+    }
+
+    const resultFile = process.env[E2E_RESULT_FILE_ENV];
+    if (resultFile) {
+      writeFileSync(resultFile, E2E_PASSED);
     }
   } catch (error) {
     console.log('There was an error while running the Foam e2e suite', error);

@@ -1,6 +1,10 @@
 import path from 'path';
-import { mkdirSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import { runTests } from 'vscode-test';
+import {
+  E2E_RESULT_FILE_ENV,
+  getE2eCompletionFailure,
+} from './support/e2e-run-result';
 
 function getVSCodePlatform(): string {
   switch (process.platform) {
@@ -39,10 +43,14 @@ async function main() {
       JSON.stringify({ 'workbench.localHistory.enabled': false })
     );
 
+    const resultFile = path.join(userDataDir, 'foam-e2e-result');
+    rmSync(resultFile, { force: true });
+
     // Download VS Code, unzip it and run the integration test
     await runTests({
       extensionDevelopmentPath,
       extensionTestsPath,
+      extensionTestsEnv: { [E2E_RESULT_FILE_ENV]: resultFile },
       launchArgs: [
         testWorkspace,
         `--user-data-dir=${userDataDir}`,
@@ -54,6 +62,13 @@ async function main() {
       platform: getVSCodePlatform(),
       version: '1.110.0',
     });
+
+    const failure = getE2eCompletionFailure(
+      existsSync(resultFile) ? readFileSync(resultFile, 'utf8') : undefined
+    );
+    if (failure) {
+      throw new Error(failure);
+    }
   } catch (err) {
     console.log('Error occurred while running Foam e2e tests:', err);
     process.exit(1);

@@ -74,6 +74,22 @@ describe('applyTextEdit', () => {
     expect(actual).toBe(expected);
   });
 
+  it('applies an edit after lines that end differently from each other', () => {
+    const text = '- [ ] a\r\n  - [x] b\n> - [ ] c\r\n';
+    const textEdit = { newText: 'x', range: Range.create(2, 5, 2, 6) };
+
+    expect(TextEdit.apply(text, textEdit)).toBe(
+      '- [ ] a\r\n  - [x] b\n> - [x] c\r\n'
+    );
+  });
+
+  it("keeps a line's CRLF ending when an edit runs past the end of that line", () => {
+    const text = 'one\r\ntwo\nthree\n';
+    const textEdit = { newText: 'ONE', range: Range.create(0, 0, 0, 100) };
+
+    expect(TextEdit.apply(text, textEdit)).toBe('ONE\r\ntwo\nthree\n');
+  });
+
   it('should apply multiple TextEdits in reverse order (VS Code behavior)', () => {
     // This test shows why reverse order is important for range stability
     const textEdits = [

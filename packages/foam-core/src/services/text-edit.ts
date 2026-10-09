@@ -1,4 +1,3 @@
-import detectNewline from 'detect-newline';
 import { Position } from '../model/position';
 import { Range } from '../model/range';
 import { URI } from '../model/uri';
@@ -77,11 +76,9 @@ export abstract class TextEdit {
     }
 
     const textEdit = textEditOrEdits;
-    const eol = detectNewline.graceful(text);
-    const lines = text.split(eol);
     const characters = text.split('');
-    const startOffset = getOffset(lines, textEdit.range.start, eol);
-    const endOffset = getOffset(lines, textEdit.range.end, eol);
+    const startOffset = getOffset(text, textEdit.range.start);
+    const endOffset = getOffset(text, textEdit.range.end);
     const deleteCount = endOffset - startOffset;
 
     const textToAppend = `${textEdit.newText}`;
@@ -90,19 +87,25 @@ export abstract class TextEdit {
   }
 }
 
-const getOffset = (
-  lines: string[],
-  position: Position,
-  eol: string
-): number => {
-  const eolLen = eol.length;
-  let offset = 0;
-  let i = 0;
-  while (i < position.line && i < lines.length) {
-    offset = offset + lines[i].length + eolLen;
-    i++;
+// Each line keeps its own ending: '\n' breaks a line, and a '\r' right before
+// it belongs to the ending, so a character past the end of a line clamps to
+// before its '\r\n' or '\n'
+const getOffset = (text: string, position: Position): number => {
+  let lineStart = 0;
+  for (let line = 0; line < position.line; line++) {
+    const lineBreak = text.indexOf('\n', lineStart);
+    if (lineBreak === -1) {
+      return text.length;
+    }
+    lineStart = lineBreak + 1;
   }
-  return offset + Math.min(position.character, lines[i]?.length ?? 0);
+  let lineEnd = text.indexOf('\n', lineStart);
+  if (lineEnd === -1) {
+    lineEnd = text.length;
+  } else if (text[lineEnd - 1] === '\r') {
+    lineEnd--;
+  }
+  return Math.min(lineStart + position.character, lineEnd);
 };
 
 /**

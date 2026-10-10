@@ -6,6 +6,7 @@ export { Position } from './model/position';
 export { Location } from './model/location';
 export { Resource, ResourceLink, NoteLinkDefinition, Block, Footnote } from './model/note';
 export type { ResourceParser, ResourceJson, Tag, Section } from './model/note';
+export { Task, TaskStatus } from './model/task';
 export { FoamWorkspace } from './model/workspace';
 export { FoamGraph } from './model/graph';
 export type { Connection } from './model/graph';

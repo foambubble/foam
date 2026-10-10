@@ -15,6 +15,7 @@ import {
 } from '../model/note';
 import { Position } from '../model/position';
 import { Range } from '../model/range';
+import { TaskStatus } from '../model/task';
 import { extractHashtags, extractTagsFromProp, hash, isSome } from '../utils';
 import { Logger } from '../utils/log';
 import { URI } from '../model/uri';
@@ -94,6 +95,7 @@ export function createMarkdownParser(
     titlePlugin,
     wikilinkPlugin,
     tagsPlugin,
+    tasksPlugin,
     aliasesPlugin,
     sectionsPlugin,
     blocksPlugin,
@@ -131,6 +133,7 @@ export function createMarkdownParser(
         aliases: [],
         links: [],
         footnotes: [],
+        tasks: [],
       };
 
       const localDefinitions: NoteLinkDefinition[] = [];
@@ -456,6 +459,43 @@ const tagsPlugin: ParserPlugin = {
         });
       }
     }
+  },
+};
+
+const tasksPlugin: ParserPlugin = {
+  name: 'tasks',
+  visit: (node, note, noteSource) => {
+    const item = node as any;
+    const content = item.children?.[0];
+    // A checkbox counts only with text after it on its own line
+    if (
+      node.type !== 'listItem' ||
+      typeof item.checked !== 'boolean' ||
+      content?.position.start.line !== node.position!.start.line
+    ) {
+      return;
+    }
+    // From the item's start to its text: the bullet, then the checkbox and
+    // the space or tab after it
+    const opening = noteSource.slice(
+      node.position!.start.offset,
+      content.position.start.offset
+    );
+    const lineEnd = noteSource.indexOf('\n', content.position.start.offset);
+    const text = noteSource
+      .slice(content.position.start.offset, lineEnd < 0 ? undefined : lineEnd)
+      .replace(/\r$/, '');
+    const start = astPointToFoamPosition(content.position.start);
+    note.tasks.push({
+      range: Range.create(
+        start.line,
+        start.character - (opening.length - opening.lastIndexOf('[')),
+        start.line,
+        start.character + text.length
+      ),
+      status: item.checked ? TaskStatus.Done : TaskStatus.Open,
+      text,
+    });
   },
 };
 

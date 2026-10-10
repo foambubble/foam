@@ -1,6 +1,7 @@
 import { URI, URIComponents } from './uri';
 import { Range } from './range';
 import { Position } from './position';
+import type { Task } from './task';
 
 export interface ResourceLink {
   type: 'wikilink' | 'link' | 'external';
@@ -156,6 +157,7 @@ export interface Resource {
   aliases: Alias[];
   links: ResourceLink[];
   footnotes: Footnote[];
+  tasks: Task[];
 }
 
 export interface ResourceParser {

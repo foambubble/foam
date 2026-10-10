@@ -176,6 +176,7 @@ export const createTestNote = (params: {
         })
       : [],
     footnotes: [],
+    tasks: [],
   };
 };
 

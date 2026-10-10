@@ -6,6 +6,7 @@ export { Position } from './model/position';
 export { Location } from './model/location';
 export { Resource, ResourceLink, NoteLinkDefinition, Block, Footnote } from './model/note';
 export type { ResourceParser, ResourceJson, Tag, Section } from './model/note';
+export { Task, TaskStatus } from './model/task';
 export { FoamWorkspace } from './model/workspace';
 export { FoamGraph } from './model/graph';
 export type { Connection } from './model/graph';
@@ -294,26 +295,6 @@ export {
   LINK_REFERENCE_DEFINITION_HEADER,
   LINK_REFERENCE_DEFINITION_FOOTER,
 } from './lint/generate-link-references';
-
-// Tasks
-export type { CodeFence, DayLink, ListItem, Task, TaskLine } from './tasks';
-export {
-  fenceAfter,
-  dayLinksIn,
-  isDay,
-  withoutDayLinks,
-  bodyStart,
-  taskDays,
-  tasksOf,
-  editShownLine,
-  removeTaskDay,
-  scheduleTask,
-  shownLineIn,
-  toggleTask,
-  LIST_ITEM_OPENING,
-  listItemAt,
-  taskLinesOf,
-} from './tasks';
 
 // Common
 export type { IDisposable } from './common/lifecycle';

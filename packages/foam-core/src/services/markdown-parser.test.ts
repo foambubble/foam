@@ -9,6 +9,7 @@ import { NoteLinkDefinition, Resource, ResourceLink } from '../model/note';
 import { Logger } from '../utils/log';
 import { URI } from '../model/uri';
 import { Range } from '../model/range';
+import { TaskStatus } from '../model/task';
 import { getRandomURI } from '../../test/test-utils';
 import { Position } from '../model/position';
 
@@ -650,6 +651,109 @@ this is some text
         label: 'this_is_good',
         range: Range.create(6, 2, 6, 14),
       });
+    });
+  });
+
+  describe('Tasks', () => {
+    const tasksOf = (...lines: string[]) =>
+      createNoteFromMarkdown(lines.join('\n')).tasks.map(task => [
+        task.range.start.line,
+        task.status,
+      ]);
+
+    it('finds bullet, numbered, quoted, nested and starred tasks', () => {
+      expect(
+        tasksOf(
+          '- [ ] bullet task',
+          '1. [ ] numbered task',
+          '> - [ ] quoted task',
+          '  - [x] nested done',
+          '* [X] star upper'
+        )
+      ).toEqual([
+        [0, TaskStatus.Open],
+        [1, TaskStatus.Open],
+        [2, TaskStatus.Open],
+        [3, TaskStatus.Done],
+        [4, TaskStatus.Done],
+      ]);
+    });
+
+    it('gives the range from the checkbox to the end of its line, and the text after it', () => {
+      const note = createNoteFromMarkdown(
+        '# Day\r\n> 1. [x]  Call [[Anna]] \r\n'
+      );
+
+      expect(note.tasks).toEqual([
+        {
+          range: Range.create(1, 5, 1, 24),
+          status: TaskStatus.Done,
+          text: ' Call [[Anna]] ',
+        },
+      ]);
+    });
+
+    it('takes only the line of the checkbox as the text', () => {
+      const note = createNoteFromMarkdown('- [ ] first\n  second');
+
+      expect(note.tasks.map(task => task.text)).toEqual(['first']);
+    });
+
+    it('takes a space, an x or a tab between the brackets, then a space or a tab, then text', () => {
+      expect(
+        tasksOf(
+          '- [\t] tab',
+          '- [x]\tx',
+          '- [x]x',
+          '- [y] y',
+          '- [ ]',
+          '- [ ]  '
+        )
+      ).toEqual([
+        [0, TaskStatus.Open],
+        [1, TaskStatus.Done],
+      ]);
+    });
+
+    it('needs a list marker followed by a space or a tab', () => {
+      expect(
+        tasksOf(
+          '-[ ] a',
+          '1.[ ] b',
+          '1) [ ] c',
+          '\\- [ ] d',
+          '+\t[ ] e',
+          '10. [ ] f'
+        )
+      ).toEqual([
+        [4, TaskStatus.Open],
+        [5, TaskStatus.Open],
+      ]);
+    });
+
+    it('finds no tasks in frontmatter or code', () => {
+      expect(
+        tasksOf(
+          '---',
+          'todo: "- [ ] not a task"',
+          '---',
+          '```',
+          '- [ ] not a task either',
+          '```',
+          '',
+          '    - [ ] indented code',
+          '',
+          '- [ ] a task'
+        )
+      ).toEqual([[9, TaskStatus.Open]]);
+    });
+
+    it('counts the innermost of items nested on one line', () => {
+      const note = createNoteFromMarkdown('- - [ ] nested');
+
+      expect(note.tasks.map(task => task.range)).toEqual([
+        Range.create(0, 4, 0, 14),
+      ]);
     });
   });
 

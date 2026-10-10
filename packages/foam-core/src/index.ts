@@ -295,6 +295,26 @@ export {
   LINK_REFERENCE_DEFINITION_FOOTER,
 } from './lint/generate-link-references';
 
+// Tasks
+export type { CodeFence, DayLink, ListItem, Task, TaskLine } from './tasks';
+export {
+  fenceAfter,
+  dayLinksIn,
+  isDay,
+  withoutDayLinks,
+  bodyStart,
+  taskDays,
+  tasksOf,
+  editShownLine,
+  removeTaskDay,
+  scheduleTask,
+  shownLineIn,
+  toggleTask,
+  LIST_ITEM_OPENING,
+  listItemAt,
+  taskLinesOf,
+} from './tasks';
+
 // Common
 export type { IDisposable } from './common/lifecycle';
 export { Emitter } from './common/event';

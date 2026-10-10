@@ -33,6 +33,19 @@ describe('dayLinksIn', () => {
     ).toEqual(['2026-10-09']);
   });
 
+  it('ends inline code only at a run of as many backticks as opened it', () => {
+    expect(dayLinksIn('`` [[2026-10-09]] ```').map(l => l.day)).toEqual([
+      '2026-10-09',
+    ]);
+    expect(dayLinksIn('```a`` [[2026-10-09]] `` b').map(l => l.day)).toEqual([
+      '2026-10-09',
+    ]);
+  });
+
+  it('opens inline code from the next backtick of a run that nothing closes', () => {
+    expect(dayLinksIn('``` [[2026-10-09]] `')).toEqual([]);
+  });
+
   it('finds a day link after an unclosed [[', () => {
     expect(dayLinksIn('see [[ syntax [[2026-10-09]]').map(l => l.day)).toEqual([
       '2026-10-09',
@@ -189,5 +202,33 @@ describe('withoutDayLinks', () => {
     expect(withoutDayLinks('Book [[2026-10-09]] [[2026-10-12]] now')).toBe(
       'Book now'
     );
+  });
+});
+
+describe('long lines', () => {
+  const tabs = '\t'.repeat(100_000);
+
+  it.each([
+    [
+      'finding day links after a run of backticks',
+      () => dayLinksIn('`'.repeat(100_000)),
+    ],
+    [
+      'scheduling a task ending in a run of tabs and a word',
+      () => scheduleLine(`- [ ] ${tabs}x`, null, '2026-10-09'),
+    ],
+    [
+      'removing a day link after a run of tabs and a word',
+      () => removeDayLink(`- [ ] ${tabs}x [[2026-10-09]]`, '2026-10-09'),
+    ],
+    [
+      'removing a day link before a run of tabs and a word',
+      () => removeDayLink(`- [ ] [[2026-10-09]]${tabs}x`, '2026-10-09'),
+    ],
+  ])('take a time in proportion to their length: %s', (_, read) => {
+    const start = performance.now();
+    read();
+
+    expect(performance.now() - start).toBeLessThan(500);
   });
 });

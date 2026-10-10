@@ -6,7 +6,7 @@ export interface DayLink {
 }
 
 const WIKILINK = /(!?)\[\[([^[\]]+)\]\]/g;
-const CODE_SPAN = /(`+)[\s\S]*?\1/g;
+const BACKTICKS = /`+/g;
 const DAY = /^(\d{4})-(\d{2})-(\d{2})$/;
 
 /**
@@ -16,9 +16,7 @@ const DAY = /^(\d{4})-(\d{2})-(\d{2})$/;
  */
 export function dayLinksIn(text: string): DayLink[] {
   const links: DayLink[] = [];
-  // Inline code holds no links; blanking it keeps every offset.
-  const scanned = text.replace(CODE_SPAN, span => ' '.repeat(span.length));
-  for (const match of scanned.matchAll(WIKILINK)) {
+  for (const match of withoutInlineCode(text).matchAll(WIKILINK)) {
     if (match[1] === '!') {
       continue;
     }
@@ -33,6 +31,53 @@ export function dayLinksIn(text: string): DayLink[] {
     }
   }
   return links;
+}
+
+/**
+ * `text` with its inline code blanked, keeping every offset. As remark-parse 8
+ * reads it, a run of backticks opens code that the next run of exactly as
+ * many closes; a run that none closes is read again from its next backtick.
+ */
+function withoutInlineCode(text: string): string {
+  const runs = [...text.matchAll(BACKTICKS)].map(match => ({
+    start: match.index,
+    length: match[0].length,
+  }));
+  // The runs of each length, and how many of them are behind the reading.
+  const byLength = new Map<number, number[]>();
+  runs.forEach(({ length }, i) => {
+    const same = byLength.get(length) ?? [];
+    same.push(i);
+    byLength.set(length, same);
+  });
+  const behind = new Map<number, number>();
+  /** The first run after the run at `after` that is `length` long; -1 with none. */
+  const closing = (after: number, length: number): number => {
+    const same = byLength.get(length) ?? [];
+    let next = behind.get(length) ?? 0;
+    while (next < same.length && same[next] <= after) {
+      next++;
+    }
+    behind.set(length, next);
+    return next < same.length ? same[next] : -1;
+  };
+  let blanked = '';
+  let copied = 0;
+  for (let i = 0; i < runs.length; i++) {
+    const { start, length } = runs[i];
+    for (let open = length; open > 0; open--) {
+      const close = closing(i, open);
+      if (close !== -1) {
+        const from = start + length - open;
+        const to = runs[close].start + open;
+        blanked += text.slice(copied, from) + ' '.repeat(to - from);
+        copied = to;
+        i = close;
+        break;
+      }
+    }
+  }
+  return blanked + text.slice(copied);
 }
 
 /** Whether `text` is a date that exists, as `YYYY-MM-DD`. */
@@ -51,7 +96,16 @@ export function isDay(text: string): boolean {
 }
 
 /** Whitespace after the last character of a line's text, `\r` included. */
-const TRAILING = /[ \t\r]*$/;
+const TRAILING = ' \t\r';
+
+/** Where the run of `chars` that `text` ends with starts. */
+function trailingStart(text: string, chars: string): number {
+  let start = text.length;
+  while (start > 0 && chars.includes(text[start - 1])) {
+    start--;
+  }
+  return start;
+}
 
 /**
  * `line` scheduled for `to`, having been shown under `from` (null when it was
@@ -74,7 +128,7 @@ export function scheduleLine(
     return linksFrom ? removeDayLink(line, from) : line;
   }
   if (!linksFrom) {
-    const end = line.length - TRAILING.exec(line)![0].length;
+    const end = trailingStart(line, TRAILING);
     return `${line.slice(0, end)} [[${to}]]${line.slice(end)}`;
   }
   let moved = line;
@@ -116,9 +170,9 @@ export function withoutDayLinks(text: string): string {
 
 function withoutRange(text: string, start: number, end: number): string {
   const after = text.slice(end);
-  if (TRAILING.exec(after)![0].length === after.length) {
-    const before = text.slice(0, start).replace(/[ \t]+$/, '');
-    return before + after;
+  if (trailingStart(after, TRAILING) === 0) {
+    const before = text.slice(0, start);
+    return before.slice(0, trailingStart(before, ' \t')) + after;
   }
   return text.slice(0, start) + after.replace(/^ /, '');
 }

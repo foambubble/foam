@@ -16,6 +16,20 @@ describe('parseFrontmatter', () => {
     expect(result.body.trim()).toBe('# Body');
   });
 
+  it('reads frontmatter that follows blank lines', () => {
+    const result = parseFrontmatter('\n---\ntitle: A\n---\n# Body');
+    expect(result.hasFrontmatter).toBe(true);
+    expect(result.properties).toEqual({ title: 'A' });
+    expect(result.body.trim()).toBe('# Body');
+  });
+
+  it('does not take a --- that is never closed for frontmatter', () => {
+    const result = parseFrontmatter('---\nSome text\n');
+    expect(result.hasFrontmatter).toBe(false);
+    expect(result.properties).toEqual({});
+    expect(result.body).toBe('---\nSome text\n');
+  });
+
   it('returns hasFrontmatter=false for plain markdown', () => {
     const result = parseFrontmatter('# Just a heading\n\nNo frontmatter.');
     expect(result.hasFrontmatter).toBe(false);
@@ -42,6 +56,12 @@ describe('addTagsToFrontmatter / removeTagsFromFrontmatter', () => {
   it('appends new tags without duplicates', () => {
     const result = addTagsToFrontmatter(seed, ['project', 'new']);
     expect(result.tags.sort()).toEqual(['new', 'project', 'urgent']);
+  });
+
+  it('keeps the text of a note that starts with a --- never closed', () => {
+    const result = addTagsToFrontmatter('---\nSome text\n', ['new']);
+    expect(result.tags).toEqual(['new']);
+    expect(result.content).toContain('---\nSome text\n');
   });
 
   it('removes specified tags', () => {

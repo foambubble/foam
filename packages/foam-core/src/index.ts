@@ -168,6 +168,7 @@ export { isSubsequence } from './utils/string';
 export { extractHashtags, extractTagsFromProp, HASHTAG_REGEX } from './utils/hashtags';
 export {
   getExcerpt,
+  getFrontMatterRange,
   stripFrontMatter,
   stripFrontMatterAndTitle,
   stripImages,

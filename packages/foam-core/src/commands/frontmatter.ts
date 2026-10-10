@@ -1,4 +1,7 @@
 import matter from 'gray-matter';
+import { Range } from '../model/range';
+import { TextEdit } from '../services/text-edit';
+import { getFrontMatterRange } from '../utils/md';
 
 export interface FrontmatterResult {
   /** Parsed frontmatter properties (empty object if no frontmatter present) */
@@ -13,21 +16,26 @@ export interface FrontmatterResult {
  * Parses the YAML frontmatter from a markdown string.
  */
 export function parseFrontmatter(content: string): FrontmatterResult {
-  const parsed = matter(content);
-  // gray-matter exposes the raw frontmatter block as `parsed.matter` — but
-  // it's a non-enumerable property, and gray-matter's internal cache returns
-  // an Object.assign copy on hits, which strips non-enumerable fields. So
-  // `parsed.matter` is undefined on cache hits even when frontmatter exists.
-  // Fall back to inferring presence from `parsed.data`, which is always
-  // populated when frontmatter parsed successfully.
-  const matterText = (parsed as { matter?: string }).matter ?? '';
-  const hasFrontmatter =
-    matterText.trim().length > 0 ||
-    (parsed.data !== undefined && Object.keys(parsed.data).length > 0);
+  const frontMatter = getFrontMatterRange(content);
+  if (frontMatter === null) {
+    return { properties: {}, body: content, hasFrontmatter: false };
+  }
+  // From its opening line, gray-matter closes the block where the parser does
+  const parsed = matter(
+    TextEdit.apply(content, {
+      range: Range.create(
+        0,
+        0,
+        frontMatter.start.line,
+        frontMatter.start.character
+      ),
+      newText: '',
+    })
+  );
   return {
     properties: parsed.data ?? {},
     body: parsed.content,
-    hasFrontmatter,
+    hasFrontmatter: true,
   };
 }
 
@@ -43,7 +51,8 @@ export function stringifyFrontmatter(
   if (Object.keys(properties).length === 0) {
     return body;
   }
-  return matter.stringify(body, properties);
+  // As a string, gray-matter would read `body` for frontmatter by its own rule
+  return matter.stringify({ content: body }, properties);
 }
 
 /**

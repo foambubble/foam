@@ -150,9 +150,13 @@ export async function noteMove(
   }
 
   const edits = computeWikilinkRenameEdits(workspace, graph, oldUri, newUri);
-  await applyEditsToFiles(edits, dataStore);
-
+  // Before any link is rewritten, so a refused move leaves every note as it was
   await dataStore.move(oldUri, newUri);
+  await applyEditsToFiles(
+    // The note's links to itself are now in the file at `newUri`
+    edits.map(e => (e.uri.isEqual(oldUri) ? { ...e, uri: newUri } : e)),
+    dataStore
+  );
 
   const oldId = workspace.getIdentifier(oldUri);
 

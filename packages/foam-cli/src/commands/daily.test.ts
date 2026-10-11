@@ -77,6 +77,22 @@ describe('keeping the daily note inside the workspace', () => {
   // escape can't leave a folder that a later run would trip over.
   const escapeTarget = (rootDir: string) => `${path.basename(rootDir)}-escaped`;
 
+  it('refuses an openDailyNote directory that leads out of the workspace', () =>
+    withTmpWorkspace({}, async ({ rootDir }) => {
+      fs.mkdirSync(path.join(rootDir, '.vscode'));
+      fs.writeFileSync(
+        path.join(rootDir, '.vscode', 'settings.json'),
+        JSON.stringify({
+          'foam.openDailyNote.directory': `../${escapeTarget(rootDir)}`,
+        })
+      );
+
+      await expect(
+        runDailyCommand(['--date', '2026-05-01', '--create', '--workspace', rootDir], new TestLogger())
+      ).rejects.toThrow('outside the workspace');
+      expect(fs.existsSync(path.join(rootDir, '..', escapeTarget(rootDir)))).toBe(false);
+    }));
+
   it('refuses a template filepath that leads out of the workspace', () =>
     withTmpWorkspace({}, async ({ rootDir }) => {
       fs.mkdirSync(path.join(rootDir, '.foam', 'templates'), { recursive: true });

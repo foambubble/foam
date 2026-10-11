@@ -87,11 +87,11 @@ export async function resolveDailyNoteUri(
     break;
   }
 
-  // The template comes from the workspace's own files.
+  // Both the template and the settings come from the workspace's own files.
   if (!(await isInsideWorkspace(noteUri.toFsPath(), rootUri.toFsPath()))) {
     throw new Error(
       `The daily note path ${noteUri.toFsPath()} is outside the workspace. ` +
-        `Check the daily note template's filepath.`
+        `Check foam.openDailyNote.directory and the daily note template's filepath.`
     );
   }
   return noteUri;

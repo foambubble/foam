@@ -210,6 +210,25 @@ describe('NodeFileDataStore keeps writes inside the workspace', () => {
       }
     }));
 
+  it.skipIf(process.platform === 'win32')(
+    'refuses a name with a backslash that a symlink places next to the workspace',
+    () =>
+      withTmpWorkspace({}, async ({ rootDir, dataStore }) => {
+        const name = `${path.basename(rootDir)}\\planted.md`;
+        const planted = path.join(rootDir, '..', name);
+        try {
+          fs.symlinkSync('..', path.join(rootDir, 'up'));
+
+          await expect(
+            dataStore.write(URI.file(rootDir).joinPath('up', name), '# Planted')
+          ).rejects.toThrow('outside the workspace');
+          expect(fs.existsSync(planted)).toBe(false);
+        } finally {
+          fs.rmSync(planted, { force: true });
+        }
+      })
+  );
+
   it('writes a path with .. after a symlink where its path says, inside the workspace', () =>
     withTmpWorkspace({}, async ({ rootDir, dataStore }) => {
       const outside = escapeTarget(rootDir);

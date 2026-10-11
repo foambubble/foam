@@ -1,6 +1,6 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import { FoamError, URI, isWithinPath } from '@foam/core';
+import { FoamError, URI } from '@foam/core';
 
 /**
  * Throws an `invalid_input` FoamError unless `uri` lies inside one of `roots`
@@ -26,9 +26,7 @@ export async function assertInsideWorkspace(
     const realPath = await realPathOf(reading);
     const isInside =
       realPath !== undefined &&
-      realRoots.some(
-        root => root !== undefined && isWithinPath(realPath, URI.file(root))
-      );
+      realRoots.some(root => root !== undefined && isWithin(realPath, root));
     if (!isInside) {
       throw new FoamError(
         'invalid_input',
@@ -45,7 +43,7 @@ export async function assertInsideWorkspace(
  * so far, and a part that doesn't exist yet kept as a folder created there.
  * Undefined through a dangling symlink.
  */
-async function realPathOf(fsPath: string): Promise<URI | undefined> {
+async function realPathOf(fsPath: string): Promise<string | undefined> {
   const { root } = path.parse(fsPath);
   let real = root;
   for (const part of fsPath.slice(root.length).split(path.sep)) {
@@ -67,7 +65,20 @@ async function realPathOf(fsPath: string): Promise<URI | undefined> {
     }
     real = resolved;
   }
-  return URI.file(real);
+  return real;
+}
+
+/**
+ * Whether `fsPath` is `parent` or under it, by the OS's path rules: a
+ * backslash separates only on Windows, so it isn't read through a URI.
+ */
+function isWithin(fsPath: string, parent: string): boolean {
+  const relative = path.relative(parent, fsPath);
+  return (
+    relative !== '..' &&
+    !relative.startsWith(`..${path.sep}`) &&
+    !path.isAbsolute(relative)
+  );
 }
 
 const isPresent = (fsPath: string) =>

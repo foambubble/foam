@@ -5,7 +5,6 @@ import micromatch from 'micromatch';
 import {
   URI,
   FoamError,
-  isWithinPath as isUriWithinPath,
   AttachmentResourceProvider,
   IDataStore,
   IMatcher,
@@ -123,10 +122,7 @@ export class NodeFileDataStore implements IDataStore {
       () => undefined
     );
     const realRoot = await fs.realpath(this.rootDir);
-    if (
-      realPath === undefined ||
-      !isUriWithinPath(URI.file(realPath), URI.file(realRoot))
-    ) {
+    if (realPath === undefined || !isWithinPath(realPath, realRoot)) {
       throw new FoamError(
         'invalid_input',
         `Cannot write outside the workspace: ${fsPath}`,

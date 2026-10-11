@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import path from 'node:path';
 
 import {
@@ -93,7 +94,7 @@ export async function resolveDailyNoteUri(
   }
 
   // The template comes from the workspace's own files.
-  if (!isWithinPath(noteUri, rootUri)) {
+  if (!(await isInsideWorkspace(noteUri.toFsPath(), rootUri.toFsPath()))) {
     throw new Error(
       `The daily note path ${noteUri.toFsPath()} is outside the workspace. ` +
         `Check the daily note template's filepath.`
@@ -214,6 +215,38 @@ function buildTelemetryProperties(
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+/**
+ * Whether `notePath` lies inside `rootDir` once `..` segments and symlinks are
+ * resolved. A dangling symlink on the way counts as outside, since writing
+ * through it would create its target wherever it points.
+ */
+async function isInsideWorkspace(
+  notePath: string,
+  rootDir: string
+): Promise<boolean> {
+  const isPresent = (p: string) =>
+    fs.promises.lstat(p).then(
+      () => true,
+      () => false
+    );
+  let existing = path.resolve(notePath);
+  const missing: string[] = [];
+  while (!(await isPresent(existing))) {
+    missing.unshift(path.basename(existing));
+    existing = path.dirname(existing);
+  }
+  let realExisting: string;
+  try {
+    realExisting = await fs.promises.realpath(existing);
+  } catch {
+    return false;
+  }
+  return isWithinPath(
+    URI.file(path.join(realExisting, ...missing)),
+    URI.file(await fs.promises.realpath(rootDir))
+  );
+}
 
 function formatDateTitle(date: Date): string {
   const pad = (n: number) => String(n).padStart(2, '0');

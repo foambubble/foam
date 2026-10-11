@@ -85,6 +85,89 @@ describe('keeping the daily note inside the workspace', () => {
       ).rejects.toThrow('outside the workspace');
       expect(fs.existsSync(path.join(rootDir, '..', escapeTarget(rootDir)))).toBe(false);
     }));
+
+  it('refuses a daily note folder that is a symlink out of the workspace', () =>
+    withTmpWorkspace({}, async ({ rootDir }) => {
+      const outside = path.join(rootDir, '..', escapeTarget(rootDir));
+      fs.mkdirSync(outside);
+      try {
+        fs.symlinkSync(outside, path.join(rootDir, 'journals'));
+
+        await expect(
+          runDailyCommand(['--date', '2026-05-01', '--create', '--workspace', rootDir], new TestLogger())
+        ).rejects.toThrow('outside the workspace');
+        expect(fs.readdirSync(outside)).toEqual([]);
+      } finally {
+        fs.rmSync(outside, { recursive: true, force: true });
+      }
+    }));
+
+  it('refuses a daily note that is a dangling symlink out of the workspace', () =>
+    withTmpWorkspace({}, async ({ rootDir }) => {
+      const outside = path.join(rootDir, '..', escapeTarget(rootDir));
+      fs.mkdirSync(outside);
+      try {
+        fs.mkdirSync(path.join(rootDir, 'journals'));
+        fs.symlinkSync(
+          path.join(outside, 'planted.md'),
+          path.join(rootDir, 'journals', '2026-05-01.md')
+        );
+
+        await expect(
+          runDailyCommand(['--date', '2026-05-01', '--create', '--workspace', rootDir], new TestLogger())
+        ).rejects.toThrow('outside the workspace');
+        expect(fs.readdirSync(outside)).toEqual([]);
+      } finally {
+        fs.rmSync(outside, { recursive: true, force: true });
+      }
+    }));
+
+  it('writes a template filepath through a symlink and .. where its path says, inside the workspace', () =>
+    withTmpWorkspace({}, async ({ rootDir }) => {
+      const outside = path.join(rootDir, '..', escapeTarget(rootDir));
+      fs.mkdirSync(path.join(outside, 'inner'), { recursive: true });
+      try {
+        fs.mkdirSync(path.join(rootDir, 'journals'));
+        fs.symlinkSync(path.join(outside, 'inner'), path.join(rootDir, 'journals', 'link'));
+        fs.mkdirSync(path.join(rootDir, '.foam', 'templates'), { recursive: true });
+        fs.writeFileSync(
+          path.join(rootDir, '.foam', 'templates', 'daily-note.md'),
+          [
+            '---',
+            'foam_template:',
+            '  filepath: "journals/link/../planted.md"',
+            '---',
+            '# Day',
+          ].join('\n')
+        );
+
+        const code = await runDailyCommand(
+          ['--date', '2026-05-01', '--create', '--workspace', rootDir],
+          new TestLogger()
+        );
+
+        expect(exitCodeOf(code)).toBe(0);
+        expect(fs.existsSync(path.join(rootDir, 'journals', 'planted.md'))).toBe(true);
+        expect(fs.readdirSync(outside)).toEqual(['inner']);
+        expect(fs.readdirSync(path.join(outside, 'inner'))).toEqual([]);
+      } finally {
+        fs.rmSync(outside, { recursive: true, force: true });
+      }
+    }));
+
+  it('still creates the note through a symlink that stays inside the workspace', () =>
+    withTmpWorkspace({}, async ({ rootDir }) => {
+      fs.mkdirSync(path.join(rootDir, 'diary'));
+      fs.symlinkSync(path.join(rootDir, 'diary'), path.join(rootDir, 'journals'));
+
+      const code = await runDailyCommand(
+        ['--date', '2026-05-01', '--create', '--workspace', rootDir],
+        new TestLogger()
+      );
+
+      expect(exitCodeOf(code)).toBe(0);
+      expect(fs.existsSync(path.join(rootDir, 'diary', '2026-05-01.md'))).toBe(true);
+    }));
 });
 
 // ─── runDailyCommand ──────────────────────────────────────────────────────────

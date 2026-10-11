@@ -1,4 +1,3 @@
-import { parse as parseJsonc } from 'jsonc-parser';
 import { IFoamConfig } from './config';
 
 interface FoamConfigData {
@@ -123,16 +122,17 @@ class StaticFoamConfig implements IFoamConfig {
 
 /**
  * Foam's settings as a workspace's `.vscode/settings.json` declares them, with
- * Foam's defaults for anything absent. `text` is the file's contents, or
- * `null` when the workspace has no such file. The file is JSONC (comments,
- * trailing commas), and a malformed one yields the defaults rather than an
- * error, the way VS Code itself tolerates it.
+ * Foam's defaults for anything absent. `settings` is that file's contents,
+ * already parsed (the file is JSONC: comments, trailing commas); anything but
+ * an object reads as no settings. Only the workspace's settings are seen:
+ * VS Code also merges in the user's own, which this doesn't get.
  */
-export function foamConfigFromVsCodeSettings(text: string | null): IFoamConfig {
-  const parsed: unknown = text === null ? {} : parseJsonc(text);
+export function foamConfigFromVsCodeSettings(settings: unknown): IFoamConfig {
   const raw: Record<string, unknown> =
-    parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed)
-      ? (parsed as Record<string, unknown>)
+    settings !== null &&
+    typeof settings === 'object' &&
+    !Array.isArray(settings)
+      ? (settings as Record<string, unknown>)
       : {};
 
   const defaultNoteExtension =

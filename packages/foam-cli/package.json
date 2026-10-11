@@ -32,6 +32,7 @@
   },
   "dependencies": {
     "chokidar": "^3.5.3",
+    "jsonc-parser": "^3.3.1",
     "micromatch": "^4.0.8"
   }
 }

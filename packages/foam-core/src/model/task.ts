@@ -1,5 +1,6 @@
 import { MarkdownLink } from '../services/markdown-link';
 import { TextEdit } from '../services/text-edit';
+import { formatIsoDate, parseIsoDate } from '../utils/date';
 import type { Resource, ResourceLink } from './note';
 import { Range } from './range';
 
@@ -26,8 +27,6 @@ const MARKS: Record<TaskStatus, string> = {
   [TaskStatus.Open]: ' ',
   [TaskStatus.Done]: 'x',
 };
-
-const DAY = /^(\d{4})-(\d{2})-(\d{2})$/;
 
 export abstract class Task {
   /**
@@ -64,7 +63,7 @@ export abstract class Task {
    */
   static getDays(resource: Resource, task: Task): Date[] {
     const days = new Set(dayLinks(resource, task).map(({ day }) => day));
-    return [...days].map(day => parseDay(day)!);
+    return [...days].map(day => parseIsoDate(day)!);
   }
 
   /**
@@ -83,8 +82,8 @@ export abstract class Task {
     from: Date | null,
     to: Date | null
   ): TextEdit[] {
-    const fromDay = from === null ? null : dayKey(from);
-    const toDay = to === null ? null : dayKey(to);
+    const fromDay = from === null ? null : formatIsoDate(from);
+    const toDay = to === null ? null : formatIsoDate(to);
     if (fromDay === toDay) {
       return [];
     }
@@ -174,33 +173,8 @@ function dayLinks(
     }
     const { target } = MarkdownLink.analyzeLink(link);
     const day = target.slice(target.lastIndexOf('/') + 1);
-    return parseDay(day) === null ? [] : [{ link, day }];
+    return parseIsoDate(day) === undefined ? [] : [{ link, day }];
   });
-}
-
-/** The date `text` names as `YYYY-MM-DD`, at local midnight; null when none exists. */
-function parseDay(text: string): Date | null {
-  const parts = DAY.exec(text);
-  if (!parts) {
-    return null;
-  }
-  const [year, month, day] = parts.slice(1).map(Number);
-  const date = new Date(year, month - 1, day);
-  return date.getFullYear() === year &&
-    date.getMonth() === month - 1 &&
-    date.getDate() === day
-    ? date
-    : null;
-}
-
-/** `date`'s day in local time, as `YYYY-MM-DD`. */
-function dayKey(date: Date): string {
-  const pad = (value: number, width: number) =>
-    String(value).padStart(width, '0');
-  return `${pad(date.getFullYear(), 4)}-${pad(date.getMonth() + 1, 2)}-${pad(
-    date.getDate(),
-    2
-  )}`;
 }
 
 /** Where the spaces and tabs that `text` ends with start. */

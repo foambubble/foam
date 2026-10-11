@@ -1,15 +1,13 @@
 import { createNoteFromMarkdown } from '../../test/test-utils';
 import { TextEdit } from '../services/text-edit';
+import { parseIsoDate } from '../utils/date';
 import { Range } from './range';
 import { Task, TaskStatus } from './task';
 
 const parse = (content: string) => createNoteFromMarkdown('/note.md', content);
 
 /** The day `text`, as `YYYY-MM-DD`, at local midnight. */
-const day = (text: string) => {
-  const [year, month, date] = text.split('-').map(Number);
-  return new Date(year, month - 1, date);
-};
+const day = (text: string) => parseIsoDate(text)!;
 
 /**
  * `content` moved from day `from` to day `to`, as `YYYY-MM-DD` or null, by the

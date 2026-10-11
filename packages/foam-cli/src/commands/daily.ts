@@ -4,6 +4,7 @@ import {
   URI,
   getDailyNoteTemplateCandidateUris,
   getTemplatesDir,
+  isWithinPath,
 } from '@foam/core';
 import { resolveDailyNote } from '@foam/core/scripting';
 import { loadWorkspaceFromDirectory } from '../support/filesystem';
@@ -62,7 +63,8 @@ export function defaultDailyNoteUri(date: Date, rootUri: URI): URI {
 
 /**
  * Resolve the daily note URI using the template if one exists,
- * otherwise fall back to journals/YYYY-MM-DD.md.
+ * otherwise fall back to journals/YYYY-MM-DD.md. Throws when it lies
+ * outside the workspace.
  */
 export async function resolveDailyNoteUri(
   date: Date,
@@ -75,6 +77,7 @@ export async function resolveDailyNoteUri(
 
   const fallbackUri = defaultDailyNoteUri(date, rootUri);
 
+  let noteUri = fallbackUri;
   for (const templateUri of candidates) {
     const content = await dataStore.read(templateUri);
     if (content === null) continue;
@@ -85,11 +88,18 @@ export async function resolveDailyNoteUri(
       return text ?? '';
     }, { fallbackFilepath: fallbackUri });
 
-    return foam.workspace.resolveUri(result.filepath.path);
+    noteUri = foam.workspace.resolveUri(result.filepath.path);
+    break;
   }
 
-  // No template found — use default path
-  return fallbackUri;
+  // The template comes from the workspace's own files.
+  if (!isWithinPath(noteUri, rootUri)) {
+    throw new Error(
+      `The daily note path ${noteUri.toFsPath()} is outside the workspace. ` +
+        `Check the daily note template's filepath.`
+    );
+  }
+  return noteUri;
 }
 
 // ─── Command runner ───────────────────────────────────────────────────────────

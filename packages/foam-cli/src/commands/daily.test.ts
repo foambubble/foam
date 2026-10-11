@@ -61,6 +61,32 @@ describe('defaultDailyNoteUri', () => {
   });
 });
 
+describe('keeping the daily note inside the workspace', () => {
+  // The escape target is named after the temp workspace, so a run that does
+  // escape can't leave a folder that a later run would trip over.
+  const escapeTarget = (rootDir: string) => `${path.basename(rootDir)}-escaped`;
+
+  it('refuses a template filepath that leads out of the workspace', () =>
+    withTmpWorkspace({}, async ({ rootDir }) => {
+      fs.mkdirSync(path.join(rootDir, '.foam', 'templates'), { recursive: true });
+      fs.writeFileSync(
+        path.join(rootDir, '.foam', 'templates', 'daily-note.md'),
+        [
+          '---',
+          'foam_template:',
+          `  filepath: "../${escapeTarget(rootDir)}/\${FOAM_DATE_YEAR}.md"`,
+          '---',
+          '# Day',
+        ].join('\n')
+      );
+
+      await expect(
+        runDailyCommand(['--date', '2026-05-01', '--create', '--workspace', rootDir], new TestLogger())
+      ).rejects.toThrow('outside the workspace');
+      expect(fs.existsSync(path.join(rootDir, '..', escapeTarget(rootDir)))).toBe(false);
+    }));
+});
+
 // ─── runDailyCommand ──────────────────────────────────────────────────────────
 
 describe('runDailyCommand', () => {

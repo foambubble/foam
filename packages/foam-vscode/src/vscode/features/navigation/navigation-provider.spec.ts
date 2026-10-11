@@ -398,6 +398,7 @@ describe('Document navigation', () => {
       links: [],
       tags: [],
       footnotes: [],
+      tasks: [],
     });
 
     it('surfaces a wikilink resolving to an attachment as a document link, not a definition', async () => {

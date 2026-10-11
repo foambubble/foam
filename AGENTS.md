@@ -97,6 +97,8 @@ Path strings appear only at I/O boundaries (`IDataStore` converting URI ↔ fs p
 
 **Put files in their proper home.** Test-only fixtures in a test folder. Generated artifacts in build output — gitignoring them inside source isn't enough. Deliverables in the project, not `/tmp`. `.agent/` is local scratch for plans and issue research.
 
+**Utility functions live in the module for their subject.** Before writing one, look for the module dedicated to what it's about — `utils/md.ts` for frontmatter, `utils/date.ts` for dates, `utils/path.ts` for paths — and add it there, following that module's approach, API and dependencies. If there is none, consider creating one rather than adding the helper privately to its first caller: private copies are how parallel helpers appear. A rule that belongs to its caller stays with it. If a module's dependency doesn't suit the new caller, fix that in the module instead of copying around it. Test helpers go in the package's test helpers the same way.
+
 Prefer pure functions where practical. Reuse existing helpers and constants instead of adding parallel ones.
 
 ## Non-obvious architecture

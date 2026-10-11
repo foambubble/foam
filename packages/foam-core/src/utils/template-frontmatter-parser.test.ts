@@ -89,6 +89,22 @@ foam_template:
     expect(result).toEqual(expected);
   });
 
+  test('Returns the `foam_template` metadata when its frontmatter block follows a blank line', () => {
+    const input = `
+---
+foam_template:
+  name: My Note Template
+---
+
+# $FOAM_TITLE
+`;
+
+    const expectedMetadata = new Map<string, string>();
+    expectedMetadata.set('name', 'My Note Template');
+    const result = extractFoamTemplateFrontmatterMetadata(input);
+    expect(result).toEqual([expectedMetadata, '\n# $FOAM_TITLE\n']);
+  });
+
   test('Returns the `foam_template` metadata when it is used in its own frontmatter block (and there is another frontmatter block after)', () => {
     const input = `---
 foam_template:

@@ -1,18 +1,32 @@
 import matter from 'gray-matter';
+import { Range } from '../model/range';
+import { TextEdit } from '../services/text-edit';
+import { getFrontMatterRange } from './md';
 
 export function extractFoamTemplateFrontmatterMetadata(
   contents: string
 ): [Map<string, string>, string] {
-  // Need to pass in empty options object, in order to bust a cache
-  // See https://github.com/jonschlinkert/gray-matter/issues/124
-  const parsed = matter(contents, {});
   let metadata = new Map<string, string>();
-
-  if (parsed.language !== 'yaml') {
-    // We might allow this in the future, once it has been tested adequately.
-    // But for now we'll be safe and prevent people from using anything else.
+  // Frontmatter opens with `---` alone, so it is never in another language
+  const frontMatterRange = getFrontMatterRange(contents);
+  if (frontMatterRange === null) {
     return [metadata, contents];
   }
+  // From its opening line, gray-matter closes the block where the parser
+  // does. The empty options object busts its cache:
+  // https://github.com/jonschlinkert/gray-matter/issues/124
+  const parsed = matter(
+    TextEdit.apply(contents, {
+      range: Range.create(
+        0,
+        0,
+        frontMatterRange.start.line,
+        frontMatterRange.start.character
+      ),
+      newText: '',
+    }),
+    {}
+  );
 
   const frontmatter = parsed.data;
   const frontmatterKeys = Object.keys(frontmatter);
@@ -36,7 +50,7 @@ export function extractFoamTemplateFrontmatterMetadata(
 
       // If there is another frontmatter block, we need to remove
       // the leading space left behind.
-      const anotherFrontmatter = matter(newContents.trimStart()).matter !== '';
+      const anotherFrontmatter = getFrontMatterRange(newContents) !== null;
       if (anotherFrontmatter) {
         newContents = newContents.trimStart();
       }

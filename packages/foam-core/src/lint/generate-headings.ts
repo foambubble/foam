@@ -1,8 +1,8 @@
-import matter from 'gray-matter';
 import { Resource } from '../model/note';
 import { Range } from '../model/range';
 import { TextEdit } from '../services/text-edit';
 import { getHeadingFromFileName } from '../utils/index';
+import { getFrontMatterRange } from '../utils/md';
 
 export const generateHeading = (
   note: Resource,
@@ -13,11 +13,9 @@ export const generateHeading = (
     return null;
   }
 
-  const fm = matter(noteText);
-  // fm.matter is the raw content between the --- delimiters (excludes both delimiters),
-  // so add 1 to skip the opening --- and land after the closing ---.
-  const contentStartLine = fm.matter ? fm.matter.split(eol).length + 1 : 0;
-  const frontmatterExists = contentStartLine > 0;
+  const frontMatter = getFrontMatterRange(noteText);
+  const contentStartLine = frontMatter ? frontMatter.end.line + 1 : 0;
+  const frontmatterExists = frontMatter !== null;
 
   let newLineExistsAfterFrontmatter = false;
   if (frontmatterExists) {

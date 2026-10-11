@@ -50,6 +50,7 @@ const asResource = (uri: URI): Resource => {
     links: [],
     tags: [],
     footnotes: [],
+    tasks: [],
   };
 };
 

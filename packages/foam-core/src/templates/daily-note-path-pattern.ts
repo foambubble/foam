@@ -1,4 +1,5 @@
 import { SnippetParser, Text, Variable } from '../common/snippetParser';
+import { calendarDate } from '../utils/date';
 import { convertDateformatToDayjs } from '../utils/date-format';
 import { joinPath } from '../utils/path';
 import { DEFAULT_FOAM_DATE_FORMAT } from './variable-resolver';
@@ -229,13 +230,8 @@ export function dailyNotePathMatcher(
     const year = values.get('year');
     const month = values.get('month');
     const day = values.get('day');
-    const date = new Date(year, month - 1, day);
     // A pattern matches dates the calendar does not have, e.g. 2026-02-31
-    return date.getFullYear() === year &&
-      date.getMonth() === month - 1 &&
-      date.getDate() === day
-      ? date
-      : undefined;
+    return calendarDate(year, month, day);
   };
 }
 

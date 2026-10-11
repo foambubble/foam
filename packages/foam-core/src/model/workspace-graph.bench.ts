@@ -54,6 +54,7 @@ function makeNote(i: number, total: number): Resource {
       definition: `note-${t}`,
     })),
     footnotes: [],
+    tasks: [],
   };
 }
 

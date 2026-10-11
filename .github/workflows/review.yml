@@ -47,6 +47,9 @@ jobs:
         id: review
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # TEMPORARY, never merge: a provided token skips the app-token
+          # exchange, which refuses a run whose review.yml differs from main's.
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           # The action refuses a run whose actor is a bot unless it is named
           # here, and the actor of a synchronize event is whoever pushed.
           # claude.yml pushes as the Claude app.

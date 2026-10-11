@@ -92,4 +92,4 @@ jobs:
           settings: '{"permissions":{"deny":["Read(./specs/**/plan.md)","Bash(git push:*)","Bash(git remote:*)","Bash(gh api:*)","Bash(gh pr merge:*)","Bash(gh pr close:*)","Bash(gh workflow:*)","Bash(gh secret:*)","Bash(gh release:*)"]}}'
           claude_args: |
             --model claude-fable-5-1
-            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(gh pr view:*),Bash(gh pr diff:*),Read,Grep,Glob"
+            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(git diff:*),Bash(git log:*),Bash(git show:*),Read,Grep,Glob"

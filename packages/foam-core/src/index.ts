@@ -171,7 +171,10 @@ export { createRenderContext } from './query/render-context';
 // Config
 export type { IFoamConfig, IFoamConfigSource } from './config';
 export { Config, DefaultFoamConfig, cascadeFoamConfig } from './config';
-export { foamConfigFromVsCodeSettings } from './vscode-settings';
+export {
+  ALWAYS_EXCLUDED,
+  foamConfigFromVsCodeSettings,
+} from './vscode-settings';
 
 // Utilities
 export { Logger, BaseLogger, ConsoleLogger, NoOpLogger } from './utils/log';

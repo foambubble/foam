@@ -132,6 +132,20 @@ describe('loadWorkspaceFromDirectory', () => {
     );
   });
 
+  it('does not index templates as notes', async () => {
+    await withTmpWorkspace(
+      {
+        'note.md': '# Note',
+        '.foam/templates/new-note.md': '# ${FOAM_TITLE}',
+      },
+      async ({ workspace }) => {
+        const uris = workspace.list().map(r => r.uri.toFsPath());
+        expect(uris.some(u => u.endsWith('note.md'))).toBe(true);
+        expect(uris.every(u => !u.includes('.foam'))).toBe(true);
+      }
+    );
+  });
+
   it('reads foam configuration from .vscode/settings.json and applies it', async () => {
     await withTmpWorkspace(
       {

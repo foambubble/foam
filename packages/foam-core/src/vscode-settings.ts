@@ -120,6 +120,28 @@ class StaticFoamConfig implements IFoamConfig {
   }
 }
 
+/** What `foam.files.exclude` excludes when the workspace doesn't set it. */
+const DEFAULT_FILES_EXCLUDE = [
+  '**/.vscode/**/*',
+  '**/_layouts/**/*',
+  '**/_site/**/*',
+  '**/node_modules/**/*',
+  '**/.venv/**/*',
+  '**/venv/**/*',
+  '**/env/**/*',
+  '**/.env/**/*',
+  '**/target/**/*',
+  '**/dist/**/*',
+  '**/build/**/*',
+  '**/.next/**/*',
+  '**/.nuxt/**/*',
+  '**/.terraform/**/*',
+  '**/.gradle/**/*',
+  '**/.idea/**/*',
+  '**/.cache/**/*',
+  '**/__pycache__/**/*',
+];
+
 /**
  * Foam's settings as a workspace's `.vscode/settings.json` declares them, with
  * Foam's defaults for anything absent. `settings` is that file's contents,
@@ -147,7 +169,7 @@ export function foamConfigFromVsCodeSettings(settings: unknown): IFoamConfig {
   const notesExtensions = uniq([...extraExtensions, defaultNoteExtension]);
 
   const filesExclude: string[] = [
-    ...getStringArray(raw, 'foam.files.exclude'),
+    ...getStringArray(raw, 'foam.files.exclude', DEFAULT_FILES_EXCLUDE),
     ...getStringArray(raw, 'foam.files.ignore'),
     ...Object.keys(getObject(raw, 'files.exclude')),
   ];

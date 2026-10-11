@@ -1,4 +1,7 @@
 /* @unit-ready */
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import { Selection, window, workspace } from 'vscode';
 import { Resolver, Template, TriggerFactory, URI } from '@foam/core';
 import { NoteFactory } from './note-factory';
@@ -111,5 +114,94 @@ describe('NoteFactory.createNote', () => {
     } finally {
       trusted.mockRestore();
     }
+  });
+
+  describe('in Restricted Mode', () => {
+    /** Runs `test` untrusted, with a fresh folder outside the workspace. */
+    async function untrusted(test: (outside: string) => Promise<void>) {
+      const outside = fs.mkdtempSync(path.join(os.tmpdir(), 'foam-outside-'));
+      const trusted = vi.spyOn(workspace, 'isTrusted', 'get');
+      trusted.mockReturnValue(false);
+      try {
+        await test(outside);
+      } finally {
+        trusted.mockRestore();
+        fs.rmSync(outside, { recursive: true, force: true });
+      }
+    }
+
+    it('refuses a note in a folder that symlinks out of the workspace', () =>
+      untrusted(async outside => {
+        const link = getUriInWorkspace(path.basename(outside));
+        fs.symlinkSync(outside, link.toFsPath());
+        try {
+          await expect(
+            NoteFactory.createNote(
+              makeFoamMock(),
+              options('x', link.joinPath('note.md'))
+            )
+          ).rejects.toThrow(/Restricted Mode/);
+          expect(fs.readdirSync(outside)).toEqual([]);
+        } finally {
+          fs.unlinkSync(link.toFsPath());
+        }
+      }));
+
+    it('leaves a file outside the workspace alone when asked to overwrite it through a symlink', () =>
+      untrusted(async outside => {
+        fs.writeFileSync(path.join(outside, 'note.md'), 'keep');
+        const link = getUriInWorkspace(path.basename(outside));
+        fs.symlinkSync(outside, link.toFsPath());
+        try {
+          await expect(
+            NoteFactory.createNote(makeFoamMock(), {
+              ...options('x', link.joinPath('note.md')),
+              onFileExists: 'overwrite',
+            })
+          ).rejects.toThrow(/Restricted Mode/);
+          expect(fs.readFileSync(path.join(outside, 'note.md'), 'utf8')).toBe(
+            'keep'
+          );
+        } finally {
+          fs.unlinkSync(link.toFsPath());
+        }
+      }));
+
+    it('refuses a note that is a dangling symlink out of the workspace', () =>
+      untrusted(async outside => {
+        const note = getUriInWorkspace();
+        fs.symlinkSync(path.join(outside, 'planted.md'), note.toFsPath());
+        try {
+          await expect(
+            NoteFactory.createNote(makeFoamMock(), options('x', note))
+          ).rejects.toThrow(/Restricted Mode/);
+          expect(fs.readdirSync(outside)).toEqual([]);
+        } finally {
+          fs.unlinkSync(note.toFsPath());
+        }
+      }));
+
+    it('creates a note through a symlink that stays inside the workspace', () =>
+      untrusted(async outside => {
+        const folder = getUriInWorkspace(`${path.basename(outside)}-real`);
+        const link = getUriInWorkspace(`${path.basename(outside)}-link`);
+        fs.mkdirSync(folder.toFsPath());
+        fs.symlinkSync(folder.toFsPath(), link.toFsPath());
+        try {
+          const result = await NoteFactory.createNote(
+            makeFoamMock(),
+            options('x', link.joinPath('note.md'))
+          );
+
+          expect(result.didCreateFile).toBe(true);
+          expect(fs.existsSync(path.join(folder.toFsPath(), 'note.md'))).toBe(
+            true
+          );
+        } finally {
+          await closeEditors();
+          fs.unlinkSync(link.toFsPath());
+          fs.rmSync(folder.toFsPath(), { recursive: true, force: true });
+        }
+      }));
   });
 });

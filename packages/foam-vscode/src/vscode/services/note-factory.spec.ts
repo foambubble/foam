@@ -167,6 +167,30 @@ describe('NoteFactory.createNote', () => {
         }
       }));
 
+    it('leaves a file outside the workspace alone when asked to overwrite it through a symlink and ..', () =>
+      untrusted(async outside => {
+        const name = `${path.basename(outside)}.md`;
+        fs.mkdirSync(path.join(outside, 'inner'));
+        fs.writeFileSync(path.join(outside, name), 'keep');
+        const link = getUriInWorkspace(path.basename(outside));
+        fs.symlinkSync(path.join(outside, 'inner'), link.toFsPath());
+        try {
+          await expect(
+            NoteFactory.createNote(makeFoamMock(), {
+              ...options('x', URI.file(`${link.toFsPath()}/../${name}`)),
+              onFileExists: 'overwrite',
+            })
+          ).rejects.toThrow(/Restricted Mode/);
+          expect(fs.readFileSync(path.join(outside, name), 'utf8')).toBe(
+            'keep'
+          );
+        } finally {
+          await closeEditors();
+          fs.unlinkSync(link.toFsPath());
+          await deleteFile(getUriInWorkspace(name));
+        }
+      }));
+
     it('refuses a note that is a dangling symlink out of the workspace', () =>
       untrusted(async outside => {
         const note = getUriInWorkspace();

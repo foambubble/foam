@@ -22,7 +22,7 @@ import {
 } from './editor';
 import { getFoamVsCodeConfig } from '../config';
 import { toVsCodeUri } from '../utils/vsc-utils';
-import { untrustedWriteTarget } from './untrusted-write';
+import { assertInsideWorkspace } from './untrusted-write';
 
 export type OnFileExistStrategy =
   | 'open'
@@ -150,20 +150,22 @@ export const NoteFactory = {
       fileExists: async uri => {
         // Every candidate, before `onFileExists` may delete a file there.
         if (!workspace.isTrusted) {
-          await untrustedWriteTarget(uri, foam.workspace.roots);
+          await assertInsideWorkspace(uri, foam.workspace.roots);
         }
         return fileExists(uri);
       },
       onFileExists: createFnForOnFileExistsStrategy(options.onFileExists),
       onRelativePath: createFnForOnRelativePathStrategy(options.onRelativePath),
-      writeNote: async (uri, content) =>
-        createDocAndFocus(
+      writeNote: async (uri, content) => {
+        if (!workspace.isTrusted) {
+          await assertInsideWorkspace(uri, foam.workspace.roots);
+        }
+        return createDocAndFocus(
           new SnippetString(content),
-          workspace.isTrusted
-            ? uri
-            : await untrustedWriteTarget(uri, foam.workspace.roots),
+          uri,
           selectedContent ? ViewColumn.Beside : ViewColumn.Active
-        ),
+        );
+      },
       onDidCreate: async uri => {
         if (replaceSelectionWithLink && selectedContent !== undefined) {
           await replaceSelection(

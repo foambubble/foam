@@ -72,7 +72,7 @@ describe('Task.createStatusEdits', () => {
 });
 
 describe('Task.getLinks', () => {
-  it("gives the links on the task's line, of every kind, in the order written", () => {
+  it("gives the links in the task's text, of every kind, on every line, in the order written", () => {
     const note = parse(
       '- [ ] Call [[Anna]] about [the plan](plan.md), ![[photo.png]] [[2026-10-09]]\n  [[next line]]\n- [ ] Other [[Bob]]'
     );
@@ -82,7 +82,13 @@ describe('Task.getLinks', () => {
         Task.getLinks(note, task).map(link => link.rawText)
       )
     ).toEqual([
-      ['[[Anna]]', '[the plan](plan.md)', '![[photo.png]]', '[[2026-10-09]]'],
+      [
+        '[[Anna]]',
+        '[the plan](plan.md)',
+        '![[photo.png]]',
+        '[[2026-10-09]]',
+        '[[next line]]',
+      ],
       ['[[Bob]]'],
     ]);
   });
@@ -110,13 +116,13 @@ describe('Task.getDays', () => {
     expect(Task.getDays(note, note.tasks[0])).toEqual([]);
   });
 
-  it("reads only the links on the task's own line", () => {
+  it('reads the links on every line of the task, and not those of the next task', () => {
     const note = parse(
       '- [ ] a [[2026-10-08]]\n  [[2026-10-09]]\n- [ ] b [[2026-10-10]]'
     );
 
     expect(note.tasks.map(task => Task.getDays(note, task))).toEqual([
-      [day('2026-10-08')],
+      [day('2026-10-08'), day('2026-10-09')],
       [day('2026-10-10')],
     ]);
   });
@@ -242,6 +248,24 @@ describe('Task.createScheduleEdits', () => {
     ).toBe('- [ ] Call [[2026-10-08]]');
   });
 
+  it('sees a day linked on a line the task continues on', () => {
+    const content = '- [ ] a\n  b [[2026-10-09]]';
+    const note = parse(content);
+
+    expect(
+      Task.createScheduleEdits(note, note.tasks[0], null, day('2026-10-09'))
+    ).toEqual([]);
+    expect(schedule(content, '2026-10-09', '2026-10-12')).toBe(
+      '- [ ] a\n  b [[2026-10-12]]'
+    );
+  });
+
+  it('appends after the last line of the task, before its trailing whitespace', () => {
+    expect(schedule('- [ ] a\r\n  b  \r\n- [ ] c', null, '2026-10-09')).toBe(
+      '- [ ] a\r\n  b [[2026-10-09]]  \r\n- [ ] c'
+    );
+  });
+
   it('round-trips a rescheduled task back to its first day', () => {
     const content = '- [ ] Call [[2026-10-07]] about it';
     const moved = schedule(content, '2026-10-07', '2026-10-09');
@@ -259,6 +283,8 @@ describe('Task.createScheduleEdits with no day to move to', () => {
     '- [ ] Already [[2026-10-12]] linked',
     '- [ ] Unicode — ünïcode 🧠',
     '1. [ ] Send notes  \r\n',
+    '- [ ] Two\r\n  lines',
+    '> - [ ] Quoted\n> lazy',
   ])('gives back %j as it was before scheduling', content => {
     const scheduled = schedule(content, null, '2026-10-09');
 
@@ -286,6 +312,21 @@ describe('Task.createScheduleEdits with no day to move to', () => {
         null
       )
     ).toBe('- [ ] a b [[2026-10-08]]');
+  });
+
+  it('removes a link that ends a line with the whitespace before it', () => {
+    expect(
+      schedule('- [ ] a [[2026-10-07]]\r\n  b\r\n', '2026-10-07', null)
+    ).toBe('- [ ] a\r\n  b\r\n');
+  });
+
+  it('removes a line that held only the link, with its line break', () => {
+    expect(schedule('- [ ] a\n  [[2026-10-07]]\n  b', '2026-10-07', null)).toBe(
+      '- [ ] a\n  b'
+    );
+    expect(schedule('- [ ] a\n  [[2026-10-07]]', '2026-10-07', null)).toBe(
+      '- [ ] a'
+    );
   });
 
   it('changes nothing when the task links no such day', () => {

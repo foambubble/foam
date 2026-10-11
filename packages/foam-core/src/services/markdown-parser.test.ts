@@ -252,7 +252,9 @@ I link to an [interesting topic][1] and an [[internal-note]]
       `);
 
       // external reference-style link
-      const externalLink = note.links.find(l => l.rawText === '[interesting topic][1]');
+      const externalLink = note.links.find(
+        l => l.rawText === '[interesting topic][1]'
+      );
       expect(externalLink).toBeDefined();
       expect(externalLink.type).toEqual('external');
       expect(ResourceLink.isResolvedReference(externalLink)).toBe(true);
@@ -693,10 +695,32 @@ this is some text
       ]);
     });
 
-    it('takes only the line of the checkbox as the text', () => {
+    it('takes the first paragraph of the item as the text, over every line it takes', () => {
       const note = createNoteFromMarkdown('- [ ] first\n  second');
 
-      expect(note.tasks.map(task => task.text)).toEqual(['first']);
+      expect(note.tasks).toEqual([
+        {
+          range: Range.create(0, 2, 1, 8),
+          status: TaskStatus.Open,
+          text: 'first\n  second',
+        },
+      ]);
+    });
+
+    it('takes a lazy line into the text, each line break as \\n', () => {
+      const note = createNoteFromMarkdown('- [ ] call\r\nlazy line\r\n');
+
+      expect(note.tasks.map(task => [task.text, task.range])).toEqual([
+        ['call\nlazy line', Range.create(0, 2, 1, 9)],
+      ]);
+    });
+
+    it('leaves nested items and later paragraphs out of the text', () => {
+      const note = createNoteFromMarkdown(
+        '- [ ] a\n\n  second paragraph\n  - [ ] child'
+      );
+
+      expect(note.tasks.map(task => task.text)).toEqual(['a', 'child']);
     });
 
     it('takes a space, an x or a tab between the brackets, then a space or a tab, then text', () => {

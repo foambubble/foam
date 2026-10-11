@@ -2,6 +2,7 @@ import { MarkdownLink } from '../services/markdown-link';
 import { TextEdit } from '../services/text-edit';
 import { formatIsoDate, parseIsoDate } from '../utils/date';
 import type { Resource, ResourceLink } from './note';
+import { Position } from './position';
 import { Range } from './range';
 
 /** Where a task stands, as its checkbox says. */
@@ -12,13 +13,18 @@ export enum TaskStatus {
 
 /**
  * A GFM task: a list item whose checkbox has text after it on the same line,
- * as core's parser reads it.
+ * as core's parser reads it. The item's first paragraph is the task's text,
+ * on as many lines as it takes; nested items are tasks of their own.
  */
 export interface Task {
-  /** From its checkbox to the end of the checkbox's line. */
+  /** From its checkbox to the end of its text. */
   range: Range;
   status: TaskStatus;
-  /** What follows the checkbox and the space or tab after it, on that line. */
+  /**
+   * What follows the checkbox and the space or tab after it, as written:
+   * line breaks are `\n`, and later lines keep what starts them, such as
+   * indentation or a block quote's `>`.
+   */
   text: string;
 }
 
@@ -47,8 +53,8 @@ export abstract class Task {
   }
 
   /**
-   * The links on `task`'s line, of every kind, in the order written.
-   * `resource` is the note the task is in.
+   * The links in `task`'s text, on every line it takes, of every kind, in the
+   * order written. `resource` is the note the task is in.
    */
   static getLinks(resource: Resource, task: Task): ResourceLink[] {
     return resource.links.filter(link =>
@@ -72,12 +78,11 @@ export abstract class Task {
    * `to`, an alias that is the day itself with them; when it links no `from`,
    * a `[[to]]` link is appended after its text, as `YYYY-MM-DD`. When it
    * already links `to`, or `to` is null, its links to `from` go instead: one
-   * that ends the text with the whitespace before it, any other with the
-   * space after it, so that taking off a day just added gives back the task
-   * as it was. None when the task stays as it is, or when removing would
-   * leave it no text and so no task. As with {@link Task.getDays}, only the
-   * checkbox's line counts: a day linked on a line the task wraps onto is not
-   * seen. `resource` is the note the task is in.
+   * that ends its line with the spaces before it, and with its line when
+   * nothing else is left on it, any other with the space after it, so that
+   * taking off a day just added gives back the task as it was. None when the
+   * task stays as it is, or when removing would leave it no text and so no
+   * task. `resource` is the note the task is in.
    */
   static createScheduleEdits(
     resource: Resource,
@@ -99,10 +104,10 @@ export abstract class Task {
       );
     }
     if (linksFrom.length === 0) {
-      const { line } = task.range.start;
-      const end =
-        task.range.end.character - task.text.length + trailingStart(task.text);
-      return [{ range: Range.create(line, end), newText: ` [[${toDay}]]` }];
+      const end = positionIn(task, trailingStart(task.text));
+      return [
+        { range: Range.createFromPosition(end), newText: ` [[${toDay}]]` },
+      ];
     }
     return linksFrom.map(({ link }) => {
       const { target, alias } = MarkdownLink.analyzeLink(link);
@@ -115,7 +120,7 @@ export abstract class Task {
 }
 
 /**
- * The edit that removes `links` from `task`'s line, each by the rule of
+ * The edit that removes `links` from `task`'s text, each by the rule of
  * {@link Task.createScheduleEdits}; none without links, or when the task
  * would be left with no text.
  */
@@ -123,18 +128,17 @@ function removeLinks(task: Task, links: ResourceLink[]): TextEdit[] {
   if (links.length === 0) {
     return [];
   }
-  const textStart = task.range.end.character - task.text.length;
   const before = task.text;
   let after = before;
   for (const link of [...links].reverse()) {
     after = withoutRange(
       after,
-      link.range.start.character - textStart,
-      link.range.end.character - textStart
+      offsetIn(task, link.range.start),
+      offsetIn(task, link.range.end)
     );
   }
   // A checkbox with nothing after it is no longer a task
-  if (!/[^ \t]/.test(after)) {
+  if (!/[^ \t\n]/.test(after)) {
     return [];
   }
   // Only what differs is replaced.
@@ -149,18 +153,50 @@ function removeLinks(task: Task, links: ResourceLink[]): TextEdit[] {
   ) {
     end++;
   }
-  const { line } = task.range.start;
   return [
     {
-      range: Range.create(
-        line,
-        textStart + start,
-        line,
-        textStart + before.length - end
+      range: Range.createFromPosition(
+        positionIn(task, start),
+        positionIn(task, before.length - end)
       ),
       newText: after.slice(start, after.length - end),
     },
   ];
+}
+
+/** Where `task`'s text starts: after its checkbox and the space or tab. */
+function textStart(task: Task): Position {
+  return Position.create(task.range.start.line, task.range.start.character + 4);
+}
+
+/** The offset in `task`'s text of `position`, a position within it. */
+function offsetIn(task: Task, position: Position): number {
+  const lines = task.text.split('\n');
+  const first = textStart(task);
+  let offset = 0;
+  for (let line = first.line; line < position.line; line++) {
+    offset += lines[line - first.line].length + 1;
+  }
+  return (
+    offset +
+    position.character -
+    (position.line === first.line ? first.character : 0)
+  );
+}
+
+/** The position in the note of `offset` in `task`'s text. */
+function positionIn(task: Task, offset: number): Position {
+  const lines = task.text.split('\n');
+  const first = textStart(task);
+  let line = 0;
+  while (line < lines.length - 1 && offset > lines[line].length) {
+    offset -= lines[line].length + 1;
+    line++;
+  }
+  return Position.create(
+    first.line + line,
+    (line === 0 ? first.character : 0) + offset
+  );
 }
 
 /**
@@ -195,14 +231,20 @@ function trailingStart(text: string): number {
 }
 
 /**
- * `text` without what is between `start` and `end`: with the whitespace
- * before it when only whitespace follows, else with the space after it.
+ * `text` without what is between `start` and `end`. What ends its line goes
+ * with the spaces and tabs before it, and with its line when nothing else is
+ * left on it; anything else goes with the space after it.
  */
 function withoutRange(text: string, start: number, end: number): string {
   const after = text.slice(end);
-  if (trailingStart(after) === 0) {
-    const before = text.slice(0, start);
-    return before.slice(0, trailingStart(before)) + after;
+  const lineBreak = after.indexOf('\n');
+  const restOfLine = lineBreak === -1 ? after : after.slice(0, lineBreak);
+  if (trailingStart(restOfLine) !== 0) {
+    return text.slice(0, start) + after.replace(/^ /, '');
   }
-  return text.slice(0, start) + after.replace(/^ /, '');
+  const before = text.slice(0, start);
+  const kept = before.slice(0, trailingStart(before));
+  return kept.endsWith('\n')
+    ? kept.slice(0, -1) + after.slice(restOfLine.length)
+    : kept + after;
 }

@@ -481,17 +481,19 @@ const tasksPlugin: ParserPlugin = {
       node.position!.start.offset,
       content.position.start.offset
     );
-    const lineEnd = noteSource.indexOf('\n', content.position.start.offset);
+    // The paragraph's source holds no `\r` after its last line
     const text = noteSource
-      .slice(content.position.start.offset, lineEnd < 0 ? undefined : lineEnd)
-      .replace(/\r$/, '');
+      .slice(content.position.start.offset, content.position.end.offset)
+      .split('\r\n')
+      .join('\n');
     const start = astPointToFoamPosition(content.position.start);
+    const end = astPointToFoamPosition(content.position.end);
     note.tasks.push({
       range: Range.create(
         start.line,
         start.character - (opening.length - opening.lastIndexOf('[')),
-        start.line,
-        start.character + text.length
+        end.line,
+        end.character
       ),
       status: item.checked ? TaskStatus.Done : TaskStatus.Open,
       text,

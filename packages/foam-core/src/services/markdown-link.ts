@@ -2,10 +2,29 @@ import { ResourceLink } from '../model/note';
 import { URI } from '../model/uri';
 import { TextEdit } from './text-edit';
 
+/**
+ * Splits `[[target#section|alias]]`. The wikilink runs from the first `[[` to
+ * the last `]]`; the target stops at the first `#` or `|`, the section at the
+ * first `|`.
+ */
+function parseWikilink(text: string) {
+  const open = text.indexOf('[[');
+  const close = text.lastIndexOf(']]');
+  if (open < 0 || close < open + 2) {
+    return undefined;
+  }
+  const inner = text.slice(open + 2, close);
+  const pipe = inner.indexOf('|');
+  const reference = pipe < 0 ? inner : inner.slice(0, pipe);
+  const hash = reference.indexOf('#');
+  return {
+    target: hash < 0 ? reference : reference.slice(0, hash),
+    section: hash < 0 ? '' : reference.slice(hash + 1),
+    alias: pipe < 0 ? '' : inner.slice(pipe + 1),
+  };
+}
+
 export abstract class MarkdownLink {
-  private static wikilinkRegex = new RegExp(
-    /\[\[([^#|]+)?#?([^|]+)?\|?(.*)?\]\]/
-  );
   private static directLinkRegex = new RegExp(
     /\[(.*)\]\((?:<([^#>]*)(?:#([^>]*))?>\s*|([^#>]*?)(?:#([^)>"']*))?(?:\s+(?:"[^"]*"|'[^']*'))?)\)/
   );
@@ -16,16 +35,18 @@ export abstract class MarkdownLink {
         // Wikilinks are always parsed from rawText. Any resolved definition is a
         // Foam-generated rendering artifact, not authoritative content — the user's
         // intent is expressed by the wikilink identifier itself.
-        const [, target, section, alias] = this.wikilinkRegex.exec(
-          link.rawText
-        );
+        const wikilink = parseWikilink(link.rawText);
+        if (!wikilink) {
+          throw new Error('No wikilink found');
+        }
+        const { target, section, alias } = wikilink;
         // A fragment starting with ^ is a block anchor (e.g. #^myblock), not a section
-        const blockMatch = section?.match(/^\^([a-zA-Z0-9-]+)$/);
+        const blockMatch = section.match(/^\^([a-zA-Z0-9-]+)$/);
         return {
-          target: target?.replace(/\\/g, '') ?? '',
-          section: blockMatch ? '' : section ?? '',
+          target: target.replace(/\\/g, ''),
+          section: blockMatch ? '' : section,
           blockId: blockMatch?.[1] ?? '',
-          alias: alias ?? '',
+          alias,
         };
       }
       if (link.type === 'external') {

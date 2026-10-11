@@ -116,6 +116,68 @@ describe('MarkdownLink', () => {
       expect(parsed.section).toEqual('foo^bar');
       expect(parsed.blockId).toEqual('');
     });
+    it('should parse an embed', () => {
+      const link = parser.parse(
+        getRandomURI(),
+        `this is a ![[note#section|alias]]`
+      ).links[0];
+      expect(link.isEmbed).toBe(true);
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.target).toEqual('note');
+      expect(parsed.section).toEqual('section');
+      expect(parsed.alias).toEqual('alias');
+    });
+    it('should parse a block anchor in an embed', () => {
+      const link = parser.parse(getRandomURI(), `this is a ![[note#^myblock]]`)
+        .links[0];
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.target).toEqual('note');
+      expect(parsed.section).toEqual('');
+      expect(parsed.blockId).toEqual('myblock');
+    });
+    it('should keep further # in the section', () => {
+      const link = parser.parse(getRandomURI(), `this is a [[note#a#b]]`)
+        .links[0];
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.target).toEqual('note');
+      expect(parsed.section).toEqual('a#b');
+      expect(parsed.alias).toEqual('');
+    });
+    it('should keep further | and # in the alias', () => {
+      const link = parser.parse(getRandomURI(), `this is a [[note|a|b#c]]`)
+        .links[0];
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.target).toEqual('note');
+      expect(parsed.section).toEqual('');
+      expect(parsed.alias).toEqual('a|b#c');
+    });
+    it('should parse an empty section followed by an alias', () => {
+      const link = parser.parse(getRandomURI(), `this is a [[note#|alias]]`)
+        .links[0];
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.target).toEqual('note');
+      expect(parsed.section).toEqual('');
+      expect(parsed.alias).toEqual('alias');
+    });
+    it('should parse section and alias without a target', () => {
+      const link = parser.parse(getRandomURI(), `this is a [[#section|alias]]`)
+        .links[0];
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.target).toEqual('');
+      expect(parsed.section).toEqual('section');
+      expect(parsed.alias).toEqual('alias');
+    });
+    it('should reject a long unclosed wikilink quickly', () => {
+      const link: ResourceLink = {
+        type: 'wikilink',
+        rawText: '[[' + '[["'.repeat(133),
+        range: Range.create(0, 0),
+        isEmbed: false,
+      };
+      const start = performance.now();
+      expect(() => MarkdownLink.analyzeLink(link)).toThrow();
+      expect(performance.now() - start).toBeLessThan(100);
+    });
   });
 
   describe('parse direct link', () => {
@@ -264,6 +326,49 @@ describe('MarkdownLink', () => {
       const parsed = MarkdownLink.analyzeLink(link);
       expect(parsed.section).toEqual('section');
       expect(parsed.blockId).toEqual('');
+    });
+    it('should parse an angle-bracket target followed by whitespace', () => {
+      const link = parser.parse(
+        getRandomURI(),
+        `this is a [link](<path with spaces.md#My Section>  )`
+      ).links[0];
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.target).toEqual('path with spaces.md');
+      expect(parsed.section).toEqual('My Section');
+      expect(parsed.alias).toEqual('link');
+    });
+    it('should parse a section followed by a single-quoted title', () => {
+      const link = parser.parse(
+        getRandomURI(),
+        `this is a [link](to/path.md#section 'title')`
+      ).links[0];
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.target).toEqual('to/path.md');
+      expect(parsed.section).toEqual('section');
+      expect(parsed.alias).toEqual('link');
+    });
+    it('should parse an image whose alt text contains a link', () => {
+      const link = parser.parse(
+        getRandomURI(),
+        `![see [other](other.md)](image.png)`
+      ).links[0];
+      expect(link.isEmbed).toBe(true);
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.target).toEqual('image.png');
+      expect(parsed.alias).toEqual('see [other](other.md)');
+    });
+    it('should take the alias of an unresolved reference-style link', () => {
+      const link: ResourceLink = {
+        type: 'link',
+        rawText: '[text][ref]',
+        range: Range.create(0, 0),
+        isEmbed: false,
+        definition: 'ref',
+      };
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.target).toEqual('');
+      expect(parsed.section).toEqual('');
+      expect(parsed.alias).toEqual('text');
     });
   });
 

@@ -295,6 +295,58 @@ describe('keeping the daily note inside the workspace', () => {
     }));
 });
 
+// ─── JavaScript daily-note templates ──────────────────────────────────────────
+
+describe('running a JavaScript daily-note template', () => {
+  const jsTemplate = `
+    async function createNote() {
+      return { filepath: 'days/from-js.md', content: '# From JS\\n' };
+    }
+  `;
+
+  it('refuses without --trust, with a hint, and writes nothing', () =>
+    withTmpWorkspace(
+      { '.foam/templates/daily-note.js': jsTemplate },
+      async ({ rootDir }) => {
+        const logger = new TestLogger();
+        const code = await runDailyCommand(
+          ['--date', '2026-05-01', '--create', '--workspace', rootDir],
+          logger
+        );
+
+        expect(exitCodeOf(code)).toBe(1);
+        expect(logger.errors.join('\n')).toContain(
+          'Re-run with --trust if you authored the template yourself.'
+        );
+        expect(fs.existsSync(path.join(rootDir, 'days'))).toBe(false);
+        expect(fs.existsSync(path.join(rootDir, 'journal'))).toBe(false);
+      }
+    ));
+
+  it('creates the note where the template says, with its content, under --trust', () =>
+    withTmpWorkspace(
+      { '.foam/templates/daily-note.js': jsTemplate },
+      async ({ rootDir }) => {
+        const code = await runDailyCommand(
+          [
+            '--date',
+            '2026-05-01',
+            '--trust',
+            '--create',
+            '--workspace',
+            rootDir,
+          ],
+          new TestLogger()
+        );
+
+        expect(exitCodeOf(code)).toBe(0);
+        expect(
+          fs.readFileSync(path.join(rootDir, 'days', 'from-js.md'), 'utf8')
+        ).toBe('# From JS\n');
+      }
+    ));
+});
+
 // ─── runDailyCommand ──────────────────────────────────────────────────────────
 
 describe('runDailyCommand', () => {

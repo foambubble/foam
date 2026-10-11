@@ -3,6 +3,7 @@ import path from 'node:path';
 
 import {
   Config,
+  FoamError,
   IFoamConfig,
   URI,
   asAbsoluteUri,
@@ -33,6 +34,9 @@ Options:
   --date <YYYY-MM-DD>  Date (default: today)
   --create             Create the note if it doesn't exist
   --path-only          Print only the resolved path (for scripting)
+  --trust              Allow a JavaScript template (daily-note.js) to execute.
+                       Off by default — only opt in when you authored the
+                       templates in this workspace yourself.
   --workspace <dir>    Workspace root (default: FOAM_WORKSPACE env var, then cwd)
   --format <fmt>       text (default) or json
   --help               Show this help
@@ -73,7 +77,8 @@ export async function resolveDailyNoteFile(
   rootUri: URI,
   foam: Awaited<ReturnType<typeof loadWorkspaceFromDirectory>>['foam'],
   dataStore: Awaited<ReturnType<typeof loadWorkspaceFromDirectory>>['dataStore'],
-  config: IFoamConfig
+  config: IFoamConfig,
+  isTrusted: boolean
 ): Promise<DailyNote> {
   let templateUri: URI | undefined;
   for (const candidate of getDailyNoteTemplateCandidateUris(getTemplatesDir(rootUri))) {
@@ -89,7 +94,7 @@ export async function resolveDailyNoteFile(
     foam,
     async uri => (await dataStore.read(uri)) ?? '',
     dailyNoteSettings(config),
-    { locale: config.getDateLocale() }
+    { locale: config.getDateLocale(), isTrusted }
   );
   const noteUri = asAbsoluteUri(note.filepath, foam.workspace.roots);
 
@@ -121,12 +126,31 @@ export async function runDailyCommand(
   const dateStr = getString(parsed, 'date');
   const shouldCreate = getFlag(parsed, 'create');
   const pathOnly = getFlag(parsed, 'path-only');
+  const isTrusted = getFlag(parsed, 'trust');
 
   const date = parseDateArg(dateStr);
   const { rootDir, rootUri, foam, dataStore, workspace } =
     await loadWorkspaceFromDirectory(workspaceDir);
 
-  const note = await resolveDailyNoteFile(date, rootUri, foam, dataStore, Config);
+  let note: DailyNote;
+  try {
+    note = await resolveDailyNoteFile(
+      date,
+      rootUri,
+      foam,
+      dataStore,
+      Config,
+      isTrusted
+    );
+  } catch (err) {
+    if (err instanceof FoamError && err.code === 'untrusted_workspace') {
+      logger.error(
+        `${err.message}\n\nRe-run with --trust if you authored the template yourself.`
+      );
+      return 1;
+    }
+    throw err;
+  }
   const noteUri = note.uri;
   const notePath = noteUri.toFsPath();
 

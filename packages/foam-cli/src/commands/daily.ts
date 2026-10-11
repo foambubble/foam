@@ -1,4 +1,3 @@
-import fs from 'node:fs';
 import path from 'node:path';
 
 import {
@@ -10,7 +9,6 @@ import {
   dailyNoteSettings,
   getDailyNoteTemplateCandidateUris,
   getTemplatesDir,
-  isWithinPath,
 } from '@foam/core';
 import { resolveDailyNote } from '@foam/core/scripting';
 import { loadWorkspaceFromDirectory } from '../support/filesystem';
@@ -69,8 +67,7 @@ export interface DailyNote {
 /**
  * Resolve the daily note the way desktop Foam does: the template's
  * `filepath` when it has one, otherwise the `openDailyNote.*` settings,
- * otherwise `journal/YYYY-MM-DD.md`. Throws when that is outside the
- * workspace.
+ * otherwise `journal/YYYY-MM-DD.md`.
  */
 export async function resolveDailyNoteFile(
   date: Date,
@@ -97,14 +94,6 @@ export async function resolveDailyNoteFile(
     { locale: config.getDateLocale(), isTrusted }
   );
   const noteUri = asAbsoluteUri(note.filepath, foam.workspace.roots);
-
-  // Both the template and the settings come from the workspace's own files.
-  if (!(await isInsideWorkspace(noteUri.toFsPath(), rootUri.toFsPath()))) {
-    throw new Error(
-      `The daily note path ${noteUri.toFsPath()} is outside the workspace. ` +
-        `Check foam.openDailyNote.directory and the daily note template's filepath.`
-    );
-  }
   return { uri: noteUri, content: note.content, templateUri };
 }
 
@@ -166,7 +155,17 @@ export async function runDailyCommand(
   let wroteFile = false;
 
   if (shouldCreate && !exists) {
-    await dataStore.write(noteUri, note.content);
+    try {
+      await dataStore.write(noteUri, note.content);
+    } catch (err) {
+      // The note's path comes from the template's filepath or the settings.
+      if (err instanceof FoamError && err.code === 'invalid_input') {
+        throw new Error(
+          `${err.message}. Check foam.openDailyNote.directory and the daily note template's filepath.`
+        );
+      }
+      throw err;
+    }
     exists = true;
     wroteFile = true;
   }
@@ -219,38 +218,4 @@ function buildTelemetryProperties(
     props['template-format'] = fsPath.endsWith('.js') ? 'js' : 'md';
   }
   return props;
-}
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-/**
- * Whether `notePath` lies inside `rootDir` once `..` segments and symlinks are
- * resolved. A dangling symlink on the way counts as outside, since writing
- * through it would create its target wherever it points.
- */
-async function isInsideWorkspace(
-  notePath: string,
-  rootDir: string
-): Promise<boolean> {
-  const isPresent = (p: string) =>
-    fs.promises.lstat(p).then(
-      () => true,
-      () => false
-    );
-  let existing = path.resolve(notePath);
-  const missing: string[] = [];
-  while (!(await isPresent(existing))) {
-    missing.unshift(path.basename(existing));
-    existing = path.dirname(existing);
-  }
-  let realExisting: string;
-  try {
-    realExisting = await fs.promises.realpath(existing);
-  } catch {
-    return false;
-  }
-  return isWithinPath(
-    URI.file(path.join(realExisting, ...missing)),
-    URI.file(await fs.promises.realpath(rootDir))
-  );
 }

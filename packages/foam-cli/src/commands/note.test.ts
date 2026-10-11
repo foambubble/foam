@@ -149,6 +149,51 @@ describe('noteCreate', () => {
     }, 'foam-note-test-'));
 });
 
+describe('note create keeps the note inside the workspace', () => {
+  // The escape target is named after the temp workspace, so a run that does
+  // escape can't leave a folder that a later run would trip over.
+  const escapeTarget = (rootDir: string) =>
+    path.join(rootDir, '..', `${path.basename(rootDir)}-escaped`);
+
+  it('refuses a folder that is a symlink out of the workspace', () =>
+    withTmpWorkspace({}, async ({ rootDir }) => {
+      const outside = escapeTarget(rootDir);
+      fs.mkdirSync(outside);
+      try {
+        fs.symlinkSync(outside, path.join(rootDir, 'linked'));
+
+        await expect(
+          runNoteCommand(
+            ['create', '--title', 'Planted', '--dir', 'linked', '--workspace', rootDir],
+            new TestLogger()
+          )
+        ).rejects.toThrow('outside the workspace');
+        expect(fs.readdirSync(outside)).toEqual([]);
+      } finally {
+        fs.rmSync(outside, { recursive: true, force: true });
+      }
+    }, 'foam-note-test-'));
+
+  it('refuses a note path that is a dangling symlink out of the workspace', () =>
+    withTmpWorkspace({}, async ({ rootDir }) => {
+      const outside = escapeTarget(rootDir);
+      fs.mkdirSync(outside);
+      try {
+        fs.symlinkSync(path.join(outside, 'planted.md'), path.join(rootDir, 'planted.md'));
+
+        await expect(
+          runNoteCommand(
+            ['create', '--title', 'Planted', '--workspace', rootDir],
+            new TestLogger()
+          )
+        ).rejects.toThrow('outside the workspace');
+        expect(fs.readdirSync(outside)).toEqual([]);
+      } finally {
+        fs.rmSync(outside, { recursive: true, force: true });
+      }
+    }, 'foam-note-test-'));
+});
+
 // ─── noteMove ─────────────────────────────────────────────────────────────────
 
 describe('noteMove', () => {

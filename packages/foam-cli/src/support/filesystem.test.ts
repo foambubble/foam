@@ -113,6 +113,76 @@ describe('NodeFileDataStore', () => {
   });
 });
 
+describe('NodeFileDataStore keeps writes inside the workspace', () => {
+  // The escape target is named after the temp workspace, so a run that does
+  // escape can't leave a folder that a later run would trip over.
+  const escapeTarget = (rootDir: string) =>
+    path.join(rootDir, '..', `${path.basename(rootDir)}-escaped`);
+
+  it('refuses to overwrite a note that is a symlink to a file outside the workspace', () =>
+    withTmpWorkspace({}, async ({ rootDir, dataStore }) => {
+      const outside = escapeTarget(rootDir);
+      fs.mkdirSync(outside);
+      try {
+        fs.writeFileSync(path.join(outside, 'target.md'), '# Outside');
+        fs.symlinkSync(path.join(outside, 'target.md'), path.join(rootDir, 'note.md'));
+
+        await expect(
+          dataStore.write(URI.file(path.join(rootDir, 'note.md')), '# Changed')
+        ).rejects.toThrow('outside the workspace');
+        expect(fs.readFileSync(path.join(outside, 'target.md'), 'utf8')).toBe('# Outside');
+      } finally {
+        fs.rmSync(outside, { recursive: true, force: true });
+      }
+    }));
+
+  it('refuses to move a note into a folder that is a symlink out of the workspace', () =>
+    withTmpWorkspace({ 'note.md': '# Note' }, async ({ rootDir, dataStore }) => {
+      const outside = escapeTarget(rootDir);
+      fs.mkdirSync(outside);
+      try {
+        fs.symlinkSync(outside, path.join(rootDir, 'linked'));
+
+        await expect(
+          dataStore.move(
+            URI.file(path.join(rootDir, 'note.md')),
+            URI.file(path.join(rootDir, 'linked', 'note.md'))
+          )
+        ).rejects.toThrow('outside the workspace');
+        expect(fs.readdirSync(outside)).toEqual([]);
+        expect(fs.existsSync(path.join(rootDir, 'note.md'))).toBe(true);
+      } finally {
+        fs.rmSync(outside, { recursive: true, force: true });
+      }
+    }));
+
+  it('writes a path with .. after a symlink where its path says, inside the workspace', () =>
+    withTmpWorkspace({}, async ({ rootDir, dataStore }) => {
+      const outside = escapeTarget(rootDir);
+      fs.mkdirSync(path.join(outside, 'inner'), { recursive: true });
+      try {
+        fs.symlinkSync(path.join(outside, 'inner'), path.join(rootDir, 'linked'));
+
+        await dataStore.write(URI.file(`${rootDir}/linked/../planted.md`), '# Planted');
+
+        expect(fs.existsSync(path.join(rootDir, 'planted.md'))).toBe(true);
+        expect(fs.readdirSync(outside)).toEqual(['inner']);
+      } finally {
+        fs.rmSync(outside, { recursive: true, force: true });
+      }
+    }));
+
+  it('writes through a symlink that stays inside the workspace', () =>
+    withTmpWorkspace({}, async ({ rootDir, dataStore }) => {
+      fs.mkdirSync(path.join(rootDir, 'diary'));
+      fs.symlinkSync(path.join(rootDir, 'diary'), path.join(rootDir, 'journals'));
+
+      await dataStore.write(URI.file(path.join(rootDir, 'journals', 'new', 'day.md')), '# Day');
+
+      expect(fs.readFileSync(path.join(rootDir, 'diary', 'new', 'day.md'), 'utf8')).toBe('# Day');
+    }));
+});
+
 describe('loadWorkspaceFromDirectory', () => {
   it('excludes .git, node_modules, and other default excluded directories', async () => {
     await withTmpWorkspace(

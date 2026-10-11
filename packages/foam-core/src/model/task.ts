@@ -58,102 +58,102 @@ export abstract class Task {
   }
 
   /**
-   * The days `task` links, as `YYYY-MM-DD`, each once, in the order written:
-   * its wikilinks, not embeds, whose target's last segment is a date that
-   * exists. `resource` is the note the task is in.
+   * The days `task` links, at local midnight, each once, in the order
+   * written: its wikilinks, not embeds, whose target's last segment is a date
+   * that exists, as `YYYY-MM-DD`. `resource` is the note the task is in.
    */
-  static getDays(resource: Resource, task: Task): string[] {
-    return [...new Set(dayLinks(resource, task).map(({ day }) => day))];
+  static getDays(resource: Resource, task: Task): Date[] {
+    const days = new Set(dayLinks(resource, task).map(({ day }) => day));
+    return [...days].map(day => parseDay(day)!);
   }
 
   /**
-   * The edits that schedule `task` for `to`, having been shown under `from`
-   * (null when it was shown under no day). Its links to `from` move to `to`;
-   * when it links no `from`, a `[[to]]` link is appended after its text. A
-   * task that already links `to` loses its links to `from` instead. None when
-   * the task stays as it is.
+   * The edits that move `task` from day `from` to day `to`, either null for
+   * no day; days compare by date, in local time. Its links to `from` move to
+   * `to`; when it links no `from`, a `[[to]]` link is appended after its
+   * text, as `YYYY-MM-DD`. When it already links `to`, or `to` is null, its
+   * links to `from` go instead: one that ends the text with the whitespace
+   * before it, any other with the space after it, so that taking off a day
+   * just added gives back the task as it was. None when the task stays as it
+   * is. `resource` is the note the task is in.
    */
   static createScheduleEdits(
     resource: Resource,
     task: Task,
-    from: string | null,
-    to: string
+    from: Date | null,
+    to: Date | null
   ): TextEdit[] {
-    if (from === to) {
+    const fromDay = from === null ? null : dayKey(from);
+    const toDay = to === null ? null : dayKey(to);
+    if (fromDay === toDay) {
       return [];
     }
     const links = dayLinks(resource, task);
-    if (links.some(({ day }) => day === to)) {
-      return from === null
-        ? []
-        : Task.createRemoveDayEdits(resource, task, from);
+    const linksFrom = links.filter(({ day }) => day === fromDay);
+    if (toDay === null || links.some(({ day }) => day === toDay)) {
+      return removeLinks(
+        task,
+        linksFrom.map(({ link }) => link)
+      );
     }
-    const linksFrom = links.filter(({ day }) => day === from);
     if (linksFrom.length === 0) {
       const { line } = task.range.start;
       const end =
         task.range.end.character - task.text.length + trailingStart(task.text);
-      return [{ range: Range.create(line, end), newText: ` [[${to}]]` }];
+      return [{ range: Range.create(line, end), newText: ` [[${toDay}]]` }];
     }
     return linksFrom.map(({ link }) => {
       const { target, alias } = MarkdownLink.analyzeLink(link);
       return MarkdownLink.createUpdateLinkEdit(link, {
-        target: target.slice(0, target.length - from.length) + to,
-        alias: alias.split(from).join(to),
+        target: target.slice(0, target.length - fromDay.length) + toDay,
+        alias: alias.split(fromDay).join(toDay),
       });
     });
   }
+}
 
-  /**
-   * The edit that removes `task`'s links to `day`; none when it links no such
-   * day. A link that ends the text goes with the whitespace before it, any
-   * other with the space after it, so that removing what
-   * {@link Task.createScheduleEdits} appended gives back the task as it was.
-   */
-  static createRemoveDayEdits(
-    resource: Resource,
-    task: Task,
-    day: string
-  ): TextEdit[] {
-    const links = dayLinks(resource, task).filter(link => link.day === day);
-    if (links.length === 0) {
-      return [];
-    }
-    const textStart = task.range.end.character - task.text.length;
-    const before = task.text;
-    let after = before;
-    for (const { link } of links.reverse()) {
-      after = withoutRange(
-        after,
-        link.range.start.character - textStart,
-        link.range.end.character - textStart
-      );
-    }
-    // Only what differs is replaced.
-    let start = 0;
-    while (start < after.length && before[start] === after[start]) {
-      start++;
-    }
-    let end = 0;
-    while (
-      end < after.length - start &&
-      before[before.length - 1 - end] === after[after.length - 1 - end]
-    ) {
-      end++;
-    }
-    const { line } = task.range.start;
-    return [
-      {
-        range: Range.create(
-          line,
-          textStart + start,
-          line,
-          textStart + before.length - end
-        ),
-        newText: after.slice(start, after.length - end),
-      },
-    ];
+/**
+ * The edit that removes `links` from `task`'s line, each by the rule of
+ * {@link Task.createScheduleEdits}; none without links.
+ */
+function removeLinks(task: Task, links: ResourceLink[]): TextEdit[] {
+  if (links.length === 0) {
+    return [];
   }
+  const textStart = task.range.end.character - task.text.length;
+  const before = task.text;
+  let after = before;
+  for (const link of [...links].reverse()) {
+    after = withoutRange(
+      after,
+      link.range.start.character - textStart,
+      link.range.end.character - textStart
+    );
+  }
+  // Only what differs is replaced.
+  let start = 0;
+  while (start < after.length && before[start] === after[start]) {
+    start++;
+  }
+  let end = 0;
+  while (
+    end < after.length - start &&
+    before[before.length - 1 - end] === after[after.length - 1 - end]
+  ) {
+    end++;
+  }
+  const { line } = task.range.start;
+  return [
+    {
+      range: Range.create(
+        line,
+        textStart + start,
+        line,
+        textStart + before.length - end
+      ),
+      newText: after.slice(start, after.length - end),
+    },
+  ];
 }
 
 /**
@@ -174,23 +174,33 @@ function dayLinks(
     }
     const { target } = MarkdownLink.analyzeLink(link);
     const day = target.slice(target.lastIndexOf('/') + 1);
-    return isDay(day) ? [{ link, day }] : [];
+    return parseDay(day) === null ? [] : [{ link, day }];
   });
 }
 
-/** Whether `text` is a date that exists, as `YYYY-MM-DD`. */
-function isDay(text: string): boolean {
+/** The date `text` names as `YYYY-MM-DD`, at local midnight; null when none exists. */
+function parseDay(text: string): Date | null {
   const parts = DAY.exec(text);
   if (!parts) {
-    return false;
+    return null;
   }
   const [year, month, day] = parts.slice(1).map(Number);
   const date = new Date(year, month - 1, day);
-  return (
-    date.getFullYear() === year &&
+  return date.getFullYear() === year &&
     date.getMonth() === month - 1 &&
     date.getDate() === day
-  );
+    ? date
+    : null;
+}
+
+/** `date`'s day in local time, as `YYYY-MM-DD`. */
+function dayKey(date: Date): string {
+  const pad = (value: number, width: number) =>
+    String(value).padStart(width, '0');
+  return `${pad(date.getFullYear(), 4)}-${pad(date.getMonth() + 1, 2)}-${pad(
+    date.getDate(),
+    2
+  )}`;
 }
 
 /** Where the spaces and tabs that `text` ends with start. */

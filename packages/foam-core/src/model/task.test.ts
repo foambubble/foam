@@ -5,21 +5,26 @@ import { Task, TaskStatus } from './task';
 
 const parse = (content: string) => createNoteFromMarkdown('/note.md', content);
 
-/** `content` scheduled from `from` to `to`, by the edits for its first task. */
-const schedule = (content: string, from: string | null, to: string) => {
-  const note = parse(content);
-  return TextEdit.apply(
-    content,
-    Task.createScheduleEdits(note, note.tasks[0], from, to)
-  );
+/** The day `text`, as `YYYY-MM-DD`, at local midnight. */
+const day = (text: string) => {
+  const [year, month, date] = text.split('-').map(Number);
+  return new Date(year, month - 1, date);
 };
 
-/** `content` without its first task's links to `day`. */
-const removeDay = (content: string, day: string) => {
+/**
+ * `content` moved from day `from` to day `to`, as `YYYY-MM-DD` or null, by the
+ * edits for its first task.
+ */
+const schedule = (content: string, from: string | null, to: string | null) => {
   const note = parse(content);
   return TextEdit.apply(
     content,
-    Task.createRemoveDayEdits(note, note.tasks[0], day)
+    Task.createScheduleEdits(
+      note,
+      note.tasks[0],
+      from === null ? null : day(from),
+      to === null ? null : day(to)
+    )
   );
 };
 
@@ -92,10 +97,10 @@ describe('Task.getDays', () => {
     );
 
     expect(Task.getDays(note, note.tasks[0])).toEqual([
-      '2026-10-08',
-      '2026-10-09',
-      '2026-10-10',
-      '2026-10-11',
+      day('2026-10-08'),
+      day('2026-10-09'),
+      day('2026-10-10'),
+      day('2026-10-11'),
     ]);
   });
 
@@ -113,8 +118,8 @@ describe('Task.getDays', () => {
     );
 
     expect(note.tasks.map(task => Task.getDays(note, task))).toEqual([
-      ['2026-10-08'],
-      ['2026-10-10'],
+      [day('2026-10-08')],
+      [day('2026-10-10')],
     ]);
   });
 
@@ -148,8 +153,8 @@ describe('Task.createScheduleEdits', () => {
 
     expect(
       TextEdit.apply(content, [
-        ...Task.createScheduleEdits(note, numbered, null, '2026-10-09'),
-        ...Task.createScheduleEdits(note, quoted, null, '2026-10-12'),
+        ...Task.createScheduleEdits(note, numbered, null, day('2026-10-09')),
+        ...Task.createScheduleEdits(note, quoted, null, day('2026-10-12')),
       ])
     ).toBe(
       '1. [ ] Send notes [[2026-10-09]]  \r\n> - [ ] Call Anna [[2026-10-12]]\n'
@@ -191,14 +196,42 @@ describe('Task.createScheduleEdits', () => {
     const [linked, undated] = note.tasks;
 
     expect(
-      Task.createScheduleEdits(note, linked, '2026-10-07', '2026-10-07')
+      Task.createScheduleEdits(
+        note,
+        linked,
+        day('2026-10-07'),
+        day('2026-10-07')
+      )
     ).toEqual([]);
-    expect(Task.createScheduleEdits(note, linked, null, '2026-10-07')).toEqual(
-      []
-    );
     expect(
-      Task.createScheduleEdits(note, undated, '2026-10-07', '2026-10-07')
+      Task.createScheduleEdits(note, linked, null, day('2026-10-07'))
     ).toEqual([]);
+    expect(
+      Task.createScheduleEdits(
+        note,
+        undated,
+        day('2026-10-07'),
+        day('2026-10-07')
+      )
+    ).toEqual([]);
+    expect(Task.createScheduleEdits(note, undated, null, null)).toEqual([]);
+  });
+
+  it('compares days by date, whatever their time of day', () => {
+    const content = '- [ ] Call [[2026-10-07]]';
+    const note = parse(content);
+
+    expect(
+      TextEdit.apply(
+        content,
+        Task.createScheduleEdits(
+          note,
+          note.tasks[0],
+          new Date(2026, 9, 7, 18, 30),
+          new Date(2026, 9, 8, 23, 59)
+        )
+      )
+    ).toBe('- [ ] Call [[2026-10-08]]');
   });
 
   it('round-trips a rescheduled task back to its first day', () => {
@@ -209,7 +242,7 @@ describe('Task.createScheduleEdits', () => {
   });
 });
 
-describe('Task.createRemoveDayEdits', () => {
+describe('Task.createScheduleEdits with no day to move to', () => {
   it.each([
     '- [ ] Send review notes',
     '- [ ] Hard break  ',
@@ -222,26 +255,27 @@ describe('Task.createRemoveDayEdits', () => {
     const scheduled = schedule(content, null, '2026-10-09');
 
     expect(scheduled).not.toBe(content);
-    expect(removeDay(scheduled, '2026-10-09')).toBe(content);
+    expect(schedule(scheduled, '2026-10-09', null)).toBe(content);
   });
 
   it('removes a link in the middle with the space after it', () => {
-    expect(removeDay('- [ ] Call [[2026-10-07]] about it', '2026-10-07')).toBe(
-      '- [ ] Call about it'
-    );
+    expect(
+      schedule('- [ ] Call [[2026-10-07]] about it', '2026-10-07', null)
+    ).toBe('- [ ] Call about it');
   });
 
   it('removes a link right after the checkbox with the space after it', () => {
-    expect(removeDay('- [ ] [[2026-10-07]] Call', '2026-10-07')).toBe(
+    expect(schedule('- [ ] [[2026-10-07]] Call', '2026-10-07', null)).toBe(
       '- [ ] Call'
     );
   });
 
   it('removes every link to that day and leaves the others', () => {
     expect(
-      removeDay(
+      schedule(
         '- [ ] a [[2026-10-07]] b [[2026-10-08]] [[journal/2026-10-07]]',
-        '2026-10-07'
+        '2026-10-07',
+        null
       )
     ).toBe('- [ ] a b [[2026-10-08]]');
   });
@@ -250,7 +284,7 @@ describe('Task.createRemoveDayEdits', () => {
     const note = parse('- [ ] a [[2026-10-08]]');
 
     expect(
-      Task.createRemoveDayEdits(note, note.tasks[0], '2026-10-07')
+      Task.createScheduleEdits(note, note.tasks[0], day('2026-10-07'), null)
     ).toEqual([]);
   });
 });

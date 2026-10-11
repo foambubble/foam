@@ -28,7 +28,13 @@ describe('readFoamConfig', () => {
     try {
       const cfg = readFoamConfig(dir);
       expect(cfg.getFilesInclude()).toEqual(['**/*']);
-      expect(cfg.getFilesExclude()).toEqual([]);
+      expect(cfg.getFilesExclude()).toEqual(
+        expect.arrayContaining([
+          '**/node_modules/**/*',
+          '**/dist/**/*',
+          '**/.venv/**/*',
+        ])
+      );
       expect(cfg.getDefaultNoteExtension()).toBe('.md');
       expect(cfg.getNotesExtensions()).toEqual(['.md']);
       expect(cfg.getDailyNoteDirectory()).toBeNull();

@@ -98,6 +98,19 @@ export type {
   DateToken,
 } from './templates/daily-note-path-pattern';
 export { findPreviousDailyNote } from './templates/previous-daily-note';
+export {
+  DEFAULT_DAILY_NOTE_TEMPLATE,
+  dailyNotePattern,
+  dailyNoteRule,
+  dailyNoteSettings,
+  dailyNoteSettingsPath,
+} from './templates/daily-note-location';
+export type {
+  DailyNoteRule,
+  DailyNoteSettings,
+} from './templates/daily-note-location';
+export { prepareDailyNote } from './templates/daily-note-creation';
+export type { DailyNoteCreation } from './templates/daily-note-creation';
 
 // Query
 export type {
@@ -158,6 +171,7 @@ export { createRenderContext } from './query/render-context';
 // Config
 export type { IFoamConfig, IFoamConfigSource } from './config';
 export { Config, DefaultFoamConfig, cascadeFoamConfig } from './config';
+export { foamConfigFromVsCodeSettings } from './vscode-settings';
 
 // Utilities
 export { Logger, BaseLogger, ConsoleLogger, NoOpLogger } from './utils/log';

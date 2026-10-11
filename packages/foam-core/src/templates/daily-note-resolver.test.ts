@@ -1,7 +1,15 @@
 import { URI } from '../model/uri';
 import { FoamGraph } from '../model/graph';
 import { resolveDailyNote } from './daily-note-resolver';
+import { DailyNoteSettings } from './daily-note-location';
 import { createTestNote, createTestWorkspace } from '../../test/test-utils';
+
+const NO_SETTINGS: DailyNoteSettings = {
+  directory: null,
+  filenameFormat: 'isoDate',
+  fileExtension: 'md',
+  titleFormat: null,
+};
 
 function makeReadFile(files: Record<string, string>) {
   return async (uri: URI): Promise<string> => {
@@ -33,25 +41,50 @@ foam_template:
     const foam = makeFoam();
     const readFile = makeReadFile({ [templateUri.toFsPath()]: templateContent });
 
-    const result = await resolveDailyNote(date, templateUri, foam, readFile);
+    const result = await resolveDailyNote(
+      date,
+      templateUri,
+      foam,
+      readFile,
+      NO_SETTINGS
+    );
 
     expect(result.filepath.path).toContain('2024-01-17');
     expect(result.content).toContain('# 2024-01-17');
   });
 
-  it('uses fallbackFilepath when template has no filepath metadata', async () => {
+  it('places the note where the openDailyNote settings say when the template has no filepath', async () => {
     const templateUri = URI.file('/workspace/.foam/templates/daily-note.md');
     const templateContent = '# Daily Note\n\nContent here.';
-    const fallbackFilepath = URI.file('/workspace/journal/2024-01-17.md');
 
     const foam = makeFoam();
     const readFile = makeReadFile({ [templateUri.toFsPath()]: templateContent });
 
     const result = await resolveDailyNote(date, templateUri, foam, readFile, {
-      fallbackFilepath,
+      ...NO_SETTINGS,
+      directory: 'diary',
     });
 
-    expect(result.filepath.toFsPath()).toBe(fallbackFilepath.toFsPath());
+    expect(result.filepath.toFsPath()).toBe(
+      URI.file('/workspace/diary/2024-01-17.md').toFsPath()
+    );
+  });
+
+  it('creates a note titled by the openDailyNote settings when there is no template', async () => {
+    const foam = makeFoam();
+
+    const result = await resolveDailyNote(
+      date,
+      undefined,
+      foam,
+      makeReadFile({}),
+      { ...NO_SETTINGS, titleFormat: 'fullDate' }
+    );
+
+    expect(result.filepath.toFsPath()).toBe(
+      URI.file('/workspace/journal/2024-01-17.md').toFsPath()
+    );
+    expect(result.content).toBe('# Wednesday, January 17, 2024\n');
   });
 
   it('resolves FOAM_DATE_* variables in content', async () => {
@@ -67,14 +100,20 @@ Day: \${FOAM_DATE_DATE}`;
     const foam = makeFoam();
     const readFile = makeReadFile({ [templateUri.toFsPath()]: templateContent });
 
-    const result = await resolveDailyNote(date, templateUri, foam, readFile);
+    const result = await resolveDailyNote(
+      date,
+      templateUri,
+      foam,
+      readFile,
+      NO_SETTINGS
+    );
 
     expect(result.content).toContain('Year: 2024');
     expect(result.content).toContain('Month: 01');
     expect(result.content).toContain('Day: 17');
   });
 
-  it('injects pre-defined variables (e.g. FOAM_TITLE)', async () => {
+  it('resolves FOAM_TITLE to the date', async () => {
     const templateUri = URI.file('/workspace/.foam/templates/daily-note.md');
     const templateContent = `---
 foam_template:
@@ -85,9 +124,13 @@ Title: \${FOAM_TITLE}`;
     const foam = makeFoam();
     const readFile = makeReadFile({ [templateUri.toFsPath()]: templateContent });
 
-    const result = await resolveDailyNote(date, templateUri, foam, readFile, {
-      variables: new Map([['FOAM_TITLE', '2024-01-17']]),
-    });
+    const result = await resolveDailyNote(
+      date,
+      templateUri,
+      foam,
+      readFile,
+      NO_SETTINGS
+    );
 
     expect(result.content).toContain('Title: 2024-01-17');
   });
@@ -103,12 +146,22 @@ Month: \${FOAM_DATE_MONTH_NAME}`;
     const foam = makeFoam();
     const readFile = makeReadFile({ [templateUri.toFsPath()]: templateContent });
 
-    const enResult = await resolveDailyNote(date, templateUri, foam, readFile, {
-      locale: 'en-US',
-    });
-    const jaResult = await resolveDailyNote(date, templateUri, foam, readFile, {
-      locale: 'ja-JP',
-    });
+    const enResult = await resolveDailyNote(
+      date,
+      templateUri,
+      foam,
+      readFile,
+      NO_SETTINGS,
+      { locale: 'en-US' }
+    );
+    const jaResult = await resolveDailyNote(
+      date,
+      templateUri,
+      foam,
+      readFile,
+      NO_SETTINGS,
+      { locale: 'ja-JP' }
+    );
 
     expect(enResult.content).toContain('Month: January');
     expect(jaResult.content).toContain('Month: 1月');
@@ -130,9 +183,36 @@ Previous: [[\${FOAM_PREVIOUS_DAILY_NOTE}]]`;
     );
     const readFile = makeReadFile({ [templateUri.toFsPath()]: templateContent });
 
-    const result = await resolveDailyNote(date, templateUri, foam, readFile);
+    const result = await resolveDailyNote(
+      date,
+      templateUri,
+      foam,
+      readFile,
+      NO_SETTINGS
+    );
 
     expect(result.content).toContain('Previous: [[2024-01-15]]');
+  });
+
+  it('resolves FOAM_PREVIOUS_DAILY_NOTE where the settings put daily notes when the template has no filepath', async () => {
+    const templateUri = URI.file('/workspace/.foam/templates/daily-note.md');
+    const templateContent = 'Previous: [[${FOAM_PREVIOUS_DAILY_NOTE}]]';
+
+    const foam = makeFoam();
+    foam.workspace.set(
+      createTestNote({ uri: '/workspace/journal/2024-01-15.md' })
+    );
+    const readFile = makeReadFile({ [templateUri.toFsPath()]: templateContent });
+
+    const result = await resolveDailyNote(
+      date,
+      templateUri,
+      foam,
+      readFile,
+      NO_SETTINGS
+    );
+
+    expect(result.content).toBe('Previous: [[2024-01-15]]');
   });
 
   it('leaves FOAM_PREVIOUS_DAILY_NOTE to its fallback when no earlier note exists', async () => {
@@ -146,7 +226,13 @@ Previous: \${FOAM_PREVIOUS_DAILY_NOTE:none yet}`;
     const foam = makeFoam();
     const readFile = makeReadFile({ [templateUri.toFsPath()]: templateContent });
 
-    const result = await resolveDailyNote(date, templateUri, foam, readFile);
+    const result = await resolveDailyNote(
+      date,
+      templateUri,
+      foam,
+      readFile,
+      NO_SETTINGS
+    );
 
     expect(result.content).toContain('Previous: none yet');
   });

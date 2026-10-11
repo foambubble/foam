@@ -911,7 +911,7 @@
             "null"
           ],
           "default": null,
-          "description": "The directory into which daily notes should be created. Defaults to the workspace root."
+          "description": "The directory into which daily notes should be created. Defaults to the journal folder."
         },
         "foam.orphans.exclude": {
           "type": [

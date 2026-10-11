@@ -76,7 +76,7 @@ Create links to recent daily notes using snippets:
 
 ## Configuration
 
-By default, daily notes are created as `yyyy-mm-dd.md` in the workspace's `journals` folder.
+By default, daily notes are created as `yyyy-mm-dd.md` in the workspace's `journal` folder. The `foam daily` command uses the same location.
 
 To customize your daily note location and format you can create a `.foam/templates/daily-note.md` template. See [[templates]] for more information.
 

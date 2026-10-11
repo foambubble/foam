@@ -44,6 +44,7 @@ jobs:
         with:
           fetch-depth: 0
       - uses: anthropics/claude-code-action@v1
+        id: review
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           # The action refuses a run whose actor is a bot unless it is named
@@ -93,3 +94,12 @@ jobs:
           claude_args: |
             --model claude-fable-5-1
             --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(git diff:*),Bash(git log:*),Bash(git show:*),Read,Grep,Glob"
+      # The run log hides the agent's messages and tool calls; this file has
+      # them, including the permission_denials in its final result message.
+      # Anyone signed in to GitHub can download it while it is retained.
+      - uses: actions/upload-artifact@v7
+        if: always() && steps.review.outputs.execution_file != ''
+        with:
+          name: review-transcript
+          path: ${{ steps.review.outputs.execution_file }}
+          retention-days: 1

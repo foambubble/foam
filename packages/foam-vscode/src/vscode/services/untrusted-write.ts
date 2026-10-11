@@ -40,21 +40,34 @@ export async function assertInsideWorkspace(
 }
 
 /**
- * `fsPath` with symlinks resolved, the parts that don't exist yet appended to
- * the real path of the nearest part that does; undefined through a dangling
- * symlink.
+ * Where `fsPath` lands when resolved one part at a time, as the OS does: a
+ * symlink followed where it is met, a `..` taken from the real folder reached
+ * so far, and a part that doesn't exist yet kept as a folder created there.
+ * Undefined through a dangling symlink.
  */
 async function realPathOf(fsPath: string): Promise<URI | undefined> {
-  let existing = fsPath;
-  const missing: string[] = [];
-  while (!(await isPresent(existing))) {
-    missing.unshift(path.basename(existing));
-    existing = path.dirname(existing);
+  const { root } = path.parse(fsPath);
+  let real = root;
+  for (const part of fsPath.slice(root.length).split(path.sep)) {
+    if (part === '' || part === '.') {
+      continue;
+    }
+    if (part === '..') {
+      real = path.dirname(real);
+      continue;
+    }
+    const next = path.join(real, part);
+    if (!(await isPresent(next))) {
+      real = next;
+      continue;
+    }
+    const resolved = await fs.realpath(next).catch(() => undefined);
+    if (resolved === undefined) {
+      return undefined;
+    }
+    real = resolved;
   }
-  return fs.realpath(existing).then(
-    real => URI.file(path.join(real, ...missing)),
-    () => undefined
-  );
+  return URI.file(real);
 }
 
 const isPresent = (fsPath: string) =>

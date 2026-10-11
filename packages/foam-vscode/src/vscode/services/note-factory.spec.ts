@@ -191,6 +191,30 @@ describe('NoteFactory.createNote', () => {
         }
       }));
 
+    it('refuses a note whose path climbs out of a new folder onto a symlink out of the workspace', () =>
+      untrusted(async outside => {
+        const folder = getUriInWorkspace(`${path.basename(outside)}-real`);
+        const link = getUriInWorkspace(`${path.basename(outside)}-link`);
+        fs.mkdirSync(path.join(folder.toFsPath(), 'inner'), {
+          recursive: true,
+        });
+        fs.symlinkSync(path.join(folder.toFsPath(), 'inner'), link.toFsPath());
+        fs.symlinkSync(outside, path.join(folder.toFsPath(), 'out'));
+        try {
+          await expect(
+            NoteFactory.createNote(
+              makeFoamMock(),
+              options('x', URI.file(`${link.toFsPath()}/../new/../out/note.md`))
+            )
+          ).rejects.toThrow(/Restricted Mode/);
+          expect(fs.readdirSync(outside)).toEqual([]);
+        } finally {
+          await closeEditors();
+          fs.unlinkSync(link.toFsPath());
+          fs.rmSync(folder.toFsPath(), { recursive: true, force: true });
+        }
+      }));
+
     it('refuses a note that is a dangling symlink out of the workspace', () =>
       untrusted(async outside => {
         const note = getUriInWorkspace();

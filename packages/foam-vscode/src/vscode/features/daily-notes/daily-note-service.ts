@@ -4,11 +4,9 @@ import {
   Config,
   convertDateformatToDayjs,
   dailyNoteSettings,
-  dailyNoteSettingsPath,
   DEFAULT_DAILY_NOTE_TEMPLATE,
   prepareDailyNote,
 } from '@foam/core';
-import { URI } from '@foam/core';
 import { Foam } from '@foam/core';
 import {
   getDailyNoteTemplateUri,
@@ -16,12 +14,7 @@ import {
 } from '../../../vscode/services/template-service';
 import { NoteFactory } from '../../../vscode/services/note-factory';
 import { getFoamVsCodeConfig } from '../../../vscode/config';
-import {
-  asAbsoluteWorkspaceUri,
-  focusNote,
-  readFile,
-  writeFile,
-} from '../../services/editor';
+import { focusNote, readFile, writeFile } from '../../services/editor';
 import { TemplateLoader } from '@foam/core/scripting';
 
 // ─── Format conversion ────────────────────────────────────────────────────────
@@ -59,15 +52,6 @@ export function getDailyNoteLink(date: Date): string {
     'md'
   );
   return formatDailyNoteLink(date, format, extension);
-}
-
-/**
- * Returns the URI for a daily note file, from the `openDailyNote.*` settings.
- */
-export function getDailyNoteUri(date: Date): URI {
-  return asAbsoluteWorkspaceUri(
-    dailyNoteSettingsPath(date, dailyNoteSettings(Config))
-  );
 }
 
 /**

@@ -3,9 +3,7 @@ import { workspace, window } from 'vscode';
 import {
   CREATE_DAILY_NOTE_WARNING_RESPONSE,
   createDailyNoteIfNotExists,
-  getDailyNoteUri,
 } from './daily-note-service';
-import { isWindows } from '@foam/core';
 import {
   cleanWorkspace,
   closeEditors,
@@ -25,61 +23,6 @@ import {
 } from '../../../vscode/services/template-service';
 import { URI } from '@foam/core';
 
-describe('getDailyNoteUri', () => {
-  const date = new Date('2021-02-07T00:00:00Z');
-  const year = date.getFullYear();
-  const month = date.getMonth() + 1;
-  const day = date.getDate();
-  const isoDate = `${year}-0${month}-0${day}`;
-
-  test('Adds the root directory to relative directories', async () => {
-    const config = 'journal';
-
-    const expectedUri = fromVsCodeUri(
-      workspace.workspaceFolders[0].uri
-    ).joinPath(config, `${isoDate}.md`);
-
-    await withModifiedFoamConfiguration('openDailyNote.directory', config, () =>
-      expect(getDailyNoteUri(date)).toEqual(expectedUri)
-    );
-  });
-
-  test('defaults to the journal folder when no directory is set', async () => {
-    const expectedUri = fromVsCodeUri(
-      workspace.workspaceFolders[0].uri
-    ).joinPath('journal', `${isoDate}.md`);
-
-    await withModifiedFoamConfiguration('openDailyNote.directory', null, () =>
-      expect(getDailyNoteUri(date)).toEqual(expectedUri)
-    );
-  });
-
-  test('uses the configured directory when one is set', async () => {
-    const expectedUri = fromVsCodeUri(
-      workspace.workspaceFolders[0].uri
-    ).joinPath('diary', `${isoDate}.md`);
-
-    await withModifiedFoamConfiguration(
-      'openDailyNote.directory',
-      'diary',
-      () => expect(getDailyNoteUri(date)).toEqual(expectedUri)
-    );
-  });
-
-  test('Uses absolute directories without modification', async () => {
-    const config = isWindows
-      ? 'C:\\absolute_path\\journal'
-      : '/absolute_path/journal';
-    const expectedPath = isWindows
-      ? `${config}\\${isoDate}.md`
-      : `${config}/${isoDate}.md`;
-
-    await withModifiedFoamConfiguration('openDailyNote.directory', config, () =>
-      expect(getDailyNoteUri(date).toFsPath()).toMatch(expectedPath)
-    );
-  });
-});
-
 describe('Daily note creation and template processing', () => {
   const DAILY_NOTE_TEMPLATE = ['.foam', 'templates', 'daily-note.md'];
 
@@ -97,15 +40,13 @@ describe('Daily note creation and template processing', () => {
   describe('Basic daily note creation', () => {
     it('Creates a new daily note when it does not exist', async () => {
       const targetDate = new Date(2021, 8, 1);
-      const uri = getDailyNoteUri(targetDate);
       const foam = makeFoamMock();
 
       const result = await createDailyNoteIfNotExists(targetDate, foam);
 
       expect(result.didCreateFile).toBe(true);
-      expect(result.uri).toEqual(uri);
 
-      const doc = await showInEditor(uri);
+      const doc = await showInEditor(result.uri);
       expect(doc.editor.document.getText()).toContain('2021-09-01');
     });
 
@@ -127,15 +68,15 @@ describe('Daily note creation and template processing', () => {
 
     it('Opens existing daily note when it already exists', async () => {
       const targetDate = new Date(2021, 8, 2);
-      const uri = getDailyNoteUri(targetDate);
       const foam = makeFoamMock();
 
       // Create the file first, where the daily note for that date lives
       const root = fromVsCodeUri(workspace.workspaceFolders[0].uri);
-      await createFile(
-        '# Existing Note\n\nContent here',
-        uri.relativeTo(root).path.split('/')
-      );
+      const uri = root.joinPath('journal', '2021-09-02.md');
+      await createFile('# Existing Note\n\nContent here', [
+        'journal',
+        '2021-09-02.md',
+      ]);
 
       const result = await createDailyNoteIfNotExists(targetDate, foam);
 
@@ -226,7 +167,9 @@ Previous: [[\${FOAM_PREVIOUS_DAILY_NOTE}]]`,
         async () => {
           const foam = makeFoamMock();
           foam.workspace.set(
-            createTestNote({ uri: root.joinPath('diary', '2021-09-20.md').path })
+            createTestNote({
+              uri: root.joinPath('diary', '2021-09-20.md').path,
+            })
           );
 
           const result = await createDailyNoteIfNotExists(targetDate, foam);
@@ -251,11 +194,10 @@ Previous: [[\${FOAM_PREVIOUS_DAILY_NOTE}]]`,
         DAILY_NOTE_TEMPLATE
       );
 
-      const uri = getDailyNoteUri(targetDate);
       const foam = makeFoamMock();
       const result = await createDailyNoteIfNotExists(targetDate, foam);
 
-      const doc = await showInEditor(uri);
+      const doc = await showInEditor(result.uri);
       const content = doc.editor.document.getText();
       expect(content).toContain('Daily Note: 2021-09-13');
       expect(content).toContain('Today is 2021-09-13.');
@@ -273,8 +215,12 @@ Previous: [[\${FOAM_PREVIOUS_DAILY_NOTE}]]`,
         'openDailyNote.filenameFormat',
         customFormat,
         async () => {
-          const uri = getDailyNoteUri(targetDate);
-          expect(uri.getBasename()).toBe('2021-09-14.md');
+          const result = await createDailyNoteIfNotExists(
+            targetDate,
+            makeFoamMock()
+          );
+          expect(result.uri.getBasename()).toBe('2021-09-14.md');
+          await deleteFile(result.uri);
         }
       );
     });
@@ -286,8 +232,12 @@ Previous: [[\${FOAM_PREVIOUS_DAILY_NOTE}]]`,
         'openDailyNote.fileExtension',
         'txt',
         async () => {
-          const uri = getDailyNoteUri(targetDate);
-          expect(uri.getBasename()).toBe('2021-09-15.txt');
+          const result = await createDailyNoteIfNotExists(
+            targetDate,
+            makeFoamMock()
+          );
+          expect(result.uri.getBasename()).toBe('2021-09-15.txt');
+          await deleteFile(result.uri);
         }
       );
     });
@@ -300,8 +250,12 @@ Previous: [[\${FOAM_PREVIOUS_DAILY_NOTE}]]`,
         'openDailyNote.directory',
         customDir,
         async () => {
-          const uri = getDailyNoteUri(targetDate);
-          expect(uri.path).toContain('/journal/daily/');
+          const result = await createDailyNoteIfNotExists(
+            targetDate,
+            makeFoamMock()
+          );
+          expect(result.uri.path).toContain('/journal/daily/');
+          await deleteFile(result.uri);
         }
       );
     });
@@ -313,11 +267,10 @@ Previous: [[\${FOAM_PREVIOUS_DAILY_NOTE}]]`,
         'openDailyNote.titleFormat',
         'fullDate',
         async () => {
-          const uri = getDailyNoteUri(targetDate);
           const foam = makeFoamMock();
           const result = await createDailyNoteIfNotExists(targetDate, foam);
 
-          const doc = await showInEditor(uri);
+          const doc = await showInEditor(result.uri);
           const content = doc.editor.document.getText();
           expect(content).toContain('# Friday, September 17, 2021');
           await deleteFile(result.uri);
@@ -335,11 +288,10 @@ Previous: [[\${FOAM_PREVIOUS_DAILY_NOTE}]]`,
         DAILY_NOTE_TEMPLATE
       );
 
-      const uri = getDailyNoteUri(targetDate);
       const foam = makeFoamMock();
       const result = await createDailyNoteIfNotExists(targetDate, foam);
 
-      const doc = await showInEditor(uri);
+      const doc = await showInEditor(result.uri);
       const content = doc.editor.document.getText();
       expect(content).toEqual('hello September 19 hello');
       await deleteFile(result.uri);
@@ -468,11 +420,10 @@ Content here with \${FOAM_DATE_MONTH_NAME} \${FOAM_DATE_DATE}`,
         DAILY_NOTE_TEMPLATE
       );
 
-      const uri = getDailyNoteUri(targetDate);
       const foam = makeFoamMock();
       const result = await createDailyNoteIfNotExists(targetDate, foam);
 
-      const doc = await showInEditor(uri);
+      const doc = await showInEditor(result.uri);
       const content = doc.editor.document.getText();
 
       expect(content).toContain(`---

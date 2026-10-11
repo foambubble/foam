@@ -112,6 +112,19 @@ describe('where a daily note goes when the template sets no filepath', () => {
       ROOT.joinPath('diary', '07-10-2026.md')
     );
   });
+
+  it('uses an absolute openDailyNote directory as it is', () => {
+    const daily = prepareDailyNote(
+      OCT_7,
+      undefined,
+      { ...NO_SETTINGS, directory: '/absolute_path/journal' },
+      workspaceWith()
+    );
+
+    expect(daily.fallbackFilepath).toEqual(
+      URI.file('/absolute_path/journal/2026-10-07.md')
+    );
+  });
 });
 
 describe('the variables a daily note resolves', () => {

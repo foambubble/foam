@@ -23,21 +23,36 @@ const removeDay = (content: string, day: string) => {
   );
 };
 
-describe('Task.createStatusEdit', () => {
+describe('Task.createStatusEdits', () => {
   it('marks an open task done by replacing the space between its brackets', () => {
     const [task] = parse('# Day\n> 1. [ ] Call Anna\n').tasks;
 
-    expect(Task.createStatusEdit(task, TaskStatus.Done)).toEqual({
-      range: Range.create(1, 6, 1, 7),
-      newText: 'x',
-    });
+    expect(Task.createStatusEdits(task, TaskStatus.Done)).toEqual([
+      {
+        range: Range.create(1, 6, 1, 7),
+        newText: 'x',
+      },
+    ]);
   });
 
   it('marks a done task open, whichever case its x is', () => {
-    const [lower, upper] = parse('- [x] a\n- [X] b').tasks;
+    const content = '- [x] a\n- [X] b';
+    const [lower, upper] = parse(content).tasks;
 
-    expect(Task.createStatusEdit(lower, TaskStatus.Open).newText).toBe(' ');
-    expect(Task.createStatusEdit(upper, TaskStatus.Open).newText).toBe(' ');
+    expect(
+      TextEdit.apply(content, [
+        ...Task.createStatusEdits(lower, TaskStatus.Open),
+        ...Task.createStatusEdits(upper, TaskStatus.Open),
+      ])
+    ).toBe('- [ ] a\n- [ ] b');
+  });
+
+  it('makes no edit when the task already has the status', () => {
+    const [open, lower, upper] = parse('- [ ] a\n- [x] b\n- [X] c').tasks;
+
+    expect(Task.createStatusEdits(open, TaskStatus.Open)).toEqual([]);
+    expect(Task.createStatusEdits(lower, TaskStatus.Done)).toEqual([]);
+    expect(Task.createStatusEdits(upper, TaskStatus.Done)).toEqual([]);
   });
 
   it('changes only the mark, each line keeping its own ending', () => {
@@ -46,10 +61,27 @@ describe('Task.createStatusEdit', () => {
 
     expect(
       TextEdit.apply(content, [
-        Task.createStatusEdit(nested, TaskStatus.Done),
-        Task.createStatusEdit(quoted, TaskStatus.Done),
+        ...Task.createStatusEdits(nested, TaskStatus.Done),
+        ...Task.createStatusEdits(quoted, TaskStatus.Done),
       ])
     ).toBe('- [ ] a\r\n  - [x] b\n> - [x] c\r\n');
+  });
+});
+
+describe('Task.getLinks', () => {
+  it("gives the links on the task's line, of every kind, in the order written", () => {
+    const note = parse(
+      '- [ ] Call [[Anna]] about [the plan](plan.md), ![[photo.png]] [[2026-10-09]]\n  [[next line]]\n- [ ] Other [[Bob]]'
+    );
+
+    expect(
+      note.tasks.map(task =>
+        Task.getLinks(note, task).map(link => link.rawText)
+      )
+    ).toEqual([
+      ['[[Anna]]', '[the plan](plan.md)', '![[photo.png]]', '[[2026-10-09]]'],
+      ['[[Bob]]'],
+    ]);
   });
 });
 

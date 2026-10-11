@@ -30,13 +30,31 @@ const MARKS: Record<TaskStatus, string> = {
 const DAY = /^(\d{4})-(\d{2})-(\d{2})$/;
 
 export abstract class Task {
-  /** The edit that gives `task` the `status`: the mark in its checkbox. */
-  static createStatusEdit(task: Task, status: TaskStatus): TextEdit {
+  /**
+   * The edit that gives `task` the `status`: the mark in its checkbox. None
+   * when it already has it, whatever case its `x` is.
+   */
+  static createStatusEdits(task: Task, status: TaskStatus): TextEdit[] {
+    if (task.status === status) {
+      return [];
+    }
     const { line, character } = task.range.start;
-    return {
-      range: Range.create(line, character + 1, line, character + 2),
-      newText: MARKS[status],
-    };
+    return [
+      {
+        range: Range.create(line, character + 1, line, character + 2),
+        newText: MARKS[status],
+      },
+    ];
+  }
+
+  /**
+   * The links on `task`'s line, of every kind, in the order written.
+   * `resource` is the note the task is in.
+   */
+  static getLinks(resource: Resource, task: Task): ResourceLink[] {
+    return resource.links.filter(link =>
+      Range.containsRange(task.range, link.range)
+    );
   }
 
   /**
@@ -146,12 +164,11 @@ function dayLinks(
   resource: Resource,
   task: Task
 ): { link: ResourceLink; day: string }[] {
-  return resource.links.flatMap(link => {
+  return Task.getLinks(resource, task).flatMap(link => {
     if (
       link.type !== 'wikilink' ||
       link.isEmbed ||
-      link.rawText.indexOf('[[', 2) !== -1 ||
-      !Range.containsRange(task.range, link.range)
+      link.rawText.indexOf('[[', 2) !== -1
     ) {
       return [];
     }

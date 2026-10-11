@@ -69,12 +69,15 @@ export abstract class Task {
   /**
    * The edits that move `task` from day `from` to day `to`, either null for
    * no day; days compare by date, in local time. Its links to `from` move to
-   * `to`; when it links no `from`, a `[[to]]` link is appended after its
-   * text, as `YYYY-MM-DD`. When it already links `to`, or `to` is null, its
-   * links to `from` go instead: one that ends the text with the whitespace
-   * before it, any other with the space after it, so that taking off a day
-   * just added gives back the task as it was. None when the task stays as it
-   * is. `resource` is the note the task is in.
+   * `to`, an alias that is the day itself with them; when it links no `from`,
+   * a `[[to]]` link is appended after its text, as `YYYY-MM-DD`. When it
+   * already links `to`, or `to` is null, its links to `from` go instead: one
+   * that ends the text with the whitespace before it, any other with the
+   * space after it, so that taking off a day just added gives back the task
+   * as it was. None when the task stays as it is, or when removing would
+   * leave it no text and so no task. As with {@link Task.getDays}, only the
+   * checkbox's line counts: a day linked on a line the task wraps onto is not
+   * seen. `resource` is the note the task is in.
    */
   static createScheduleEdits(
     resource: Resource,
@@ -105,7 +108,7 @@ export abstract class Task {
       const { target, alias } = MarkdownLink.analyzeLink(link);
       return MarkdownLink.createUpdateLinkEdit(link, {
         target: target.slice(0, target.length - fromDay.length) + toDay,
-        alias: alias.split(fromDay).join(toDay),
+        alias: alias === fromDay ? toDay : alias,
       });
     });
   }
@@ -113,7 +116,8 @@ export abstract class Task {
 
 /**
  * The edit that removes `links` from `task`'s line, each by the rule of
- * {@link Task.createScheduleEdits}; none without links.
+ * {@link Task.createScheduleEdits}; none without links, or when the task
+ * would be left with no text.
  */
 function removeLinks(task: Task, links: ResourceLink[]): TextEdit[] {
   if (links.length === 0) {
@@ -128,6 +132,10 @@ function removeLinks(task: Task, links: ResourceLink[]): TextEdit[] {
       link.range.start.character - textStart,
       link.range.end.character - textStart
     );
+  }
+  // A checkbox with nothing after it is no longer a task
+  if (!/[^ \t]/.test(after)) {
+    return [];
   }
   // Only what differs is replaced.
   let start = 0;

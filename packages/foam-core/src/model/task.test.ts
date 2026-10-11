@@ -179,6 +179,16 @@ describe('Task.createScheduleEdits', () => {
     ).toBe('- [ ] Book [[journal/2026-10-08#Log|2026-10-08]] [[2026-10-12]]');
   });
 
+  it('leaves an alias that is more than the day as written', () => {
+    expect(
+      schedule(
+        '- [ ] Call [[2026-10-07|notes from 2026-10-07 meeting]]',
+        '2026-10-07',
+        '2026-10-08'
+      )
+    ).toBe('- [ ] Call [[2026-10-08|notes from 2026-10-07 meeting]]');
+  });
+
   it('removes the shown day instead when the task already links the new one', () => {
     expect(
       schedule(
@@ -284,5 +294,30 @@ describe('Task.createScheduleEdits with no day to move to', () => {
     expect(
       Task.createScheduleEdits(note, note.tasks[0], day('2026-10-07'), null)
     ).toEqual([]);
+  });
+
+  it('changes nothing when the links to the day are all the text there is', () => {
+    for (const content of [
+      '- [ ] [[2026-10-07]]',
+      '- [ ] [[2026-10-07]]  ',
+      '- [ ] [[2026-10-07]] [[journal/2026-10-07]]',
+    ]) {
+      const note = parse(content);
+
+      expect([
+        content,
+        Task.createScheduleEdits(note, note.tasks[0], day('2026-10-07'), null),
+      ]).toEqual([content, []]);
+    }
+  });
+
+  it('removes a day already moved to while other text is left', () => {
+    expect(
+      schedule(
+        '- [ ] [[2026-10-07]] [[2026-10-12]]',
+        '2026-10-07',
+        '2026-10-12'
+      )
+    ).toBe('- [ ] [[2026-10-12]]');
   });
 });

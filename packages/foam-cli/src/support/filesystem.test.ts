@@ -156,6 +156,60 @@ describe('NodeFileDataStore keeps writes inside the workspace', () => {
       }
     }));
 
+  it('refuses to delete a note in a folder that is a symlink out of the workspace', () =>
+    withTmpWorkspace({}, async ({ rootDir, dataStore }) => {
+      const outside = escapeTarget(rootDir);
+      fs.mkdirSync(outside);
+      try {
+        fs.writeFileSync(path.join(outside, 'note.md'), '# Outside');
+        fs.symlinkSync(outside, path.join(rootDir, 'linked'));
+
+        await expect(
+          dataStore.delete(URI.file(path.join(rootDir, 'linked', 'note.md')))
+        ).rejects.toThrow('outside the workspace');
+        expect(fs.readdirSync(outside)).toEqual(['note.md']);
+      } finally {
+        fs.rmSync(outside, { recursive: true, force: true });
+      }
+    }));
+
+  it('refuses to move a note out of a folder that is a symlink out of the workspace', () =>
+    withTmpWorkspace({}, async ({ rootDir, dataStore }) => {
+      const outside = escapeTarget(rootDir);
+      fs.mkdirSync(outside);
+      try {
+        fs.writeFileSync(path.join(outside, 'note.md'), '# Outside');
+        fs.symlinkSync(outside, path.join(rootDir, 'linked'));
+
+        await expect(
+          dataStore.move(
+            URI.file(path.join(rootDir, 'linked', 'note.md')),
+            URI.file(path.join(rootDir, '.foam', 'trash', 'note.md'))
+          )
+        ).rejects.toThrow('outside the workspace');
+        expect(fs.readdirSync(outside)).toEqual(['note.md']);
+      } finally {
+        fs.rmSync(outside, { recursive: true, force: true });
+      }
+    }));
+
+  it('deletes a note that is a symlink out of the workspace, leaving its target', () =>
+    withTmpWorkspace({}, async ({ rootDir, dataStore }) => {
+      const outside = escapeTarget(rootDir);
+      fs.mkdirSync(outside);
+      try {
+        fs.writeFileSync(path.join(outside, 'target.md'), '# Outside');
+        fs.symlinkSync(path.join(outside, 'target.md'), path.join(rootDir, 'note.md'));
+
+        await dataStore.delete(URI.file(path.join(rootDir, 'note.md')));
+
+        expect(fs.existsSync(path.join(rootDir, 'note.md'))).toBe(false);
+        expect(fs.readFileSync(path.join(outside, 'target.md'), 'utf8')).toBe('# Outside');
+      } finally {
+        fs.rmSync(outside, { recursive: true, force: true });
+      }
+    }));
+
   it('writes a path with .. after a symlink where its path says, inside the workspace', () =>
     withTmpWorkspace({}, async ({ rootDir, dataStore }) => {
       const outside = escapeTarget(rootDir);

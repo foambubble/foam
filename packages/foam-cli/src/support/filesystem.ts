@@ -70,17 +70,21 @@ export class NodeFileDataStore implements IDataStore {
   }
 
   async delete(uri: URI): Promise<void> {
+    const fsPath = await this.resolveInsideWorkspace(uri, { linkItself: true });
     try {
-      await fs.unlink(uri.toFsPath());
+      await fs.unlink(fsPath);
     } catch (err: any) {
       if (err.code !== 'ENOENT') throw err;
     }
   }
 
   async move(from: URI, to: URI): Promise<void> {
+    const fromFs = await this.resolveInsideWorkspace(from, {
+      linkItself: true,
+    });
     const toFs = await this.resolveInsideWorkspace(to);
     await fs.mkdir(path.dirname(toFs), { recursive: true });
-    await fs.rename(from.toFsPath(), toFs);
+    await fs.rename(fromFs, toFs);
   }
 
   async exists(uri: URI): Promise<boolean> {
@@ -96,15 +100,20 @@ export class NodeFileDataStore implements IDataStore {
    * Returns `uri`'s path with `..` segments resolved, and throws unless it
    * lies inside the workspace once symlinks are resolved as well. A dangling
    * symlink on the way counts as outside, since writing through it would
-   * create its target wherever it points.
+   * create its target wherever it points. With `linkItself`, a symlink at
+   * the path itself is checked where it is, not where it points: deleting or
+   * renaming it changes the link only.
    *
-   * Callers must write to the returned path: the OS would resolve a `..`
-   * after a symlink from the symlink's target.
+   * Callers must use the returned path: the OS would resolve a `..` after a
+   * symlink from the symlink's target.
    */
-  private async resolveInsideWorkspace(uri: URI): Promise<string> {
+  private async resolveInsideWorkspace(
+    uri: URI,
+    { linkItself = false } = {}
+  ): Promise<string> {
     const fsPath = path.resolve(uri.toFsPath());
-    let existing = fsPath;
-    const missing: string[] = [];
+    let existing = linkItself ? path.dirname(fsPath) : fsPath;
+    const missing = linkItself ? [path.basename(fsPath)] : [];
     while (!(await isPresent(existing))) {
       missing.unshift(path.basename(existing));
       existing = path.dirname(existing);

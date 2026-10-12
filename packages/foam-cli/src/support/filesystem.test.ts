@@ -229,6 +229,30 @@ describe('NodeFileDataStore keeps writes inside the workspace', () => {
       })
   );
 
+  it('moves a note that is a symlink out of the workspace, leaving its target', () =>
+    withTmpWorkspace({}, async ({ rootDir, dataStore }) => {
+      const outside = escapeTarget(rootDir);
+      fs.mkdirSync(outside);
+      try {
+        fs.writeFileSync(path.join(outside, 'target.md'), '# Outside');
+        fs.symlinkSync(path.join(outside, 'target.md'), path.join(rootDir, 'note.md'));
+
+        await dataStore.move(
+          URI.file(path.join(rootDir, 'note.md')),
+          URI.file(path.join(rootDir, '.foam', 'trash', 'note.md'))
+        );
+
+        expect(fs.existsSync(path.join(rootDir, 'note.md'))).toBe(false);
+        expect(fs.readlinkSync(path.join(rootDir, '.foam', 'trash', 'note.md'))).toBe(
+          path.join(outside, 'target.md')
+        );
+        expect(fs.readdirSync(outside)).toEqual(['target.md']);
+        expect(fs.readFileSync(path.join(outside, 'target.md'), 'utf8')).toBe('# Outside');
+      } finally {
+        fs.rmSync(outside, { recursive: true, force: true });
+      }
+    }));
+
   it('writes a path with .. after a symlink where its path says, inside the workspace', () =>
     withTmpWorkspace({}, async ({ rootDir, dataStore }) => {
       const outside = escapeTarget(rootDir);

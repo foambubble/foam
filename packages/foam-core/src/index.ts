@@ -181,6 +181,7 @@ export { Logger, BaseLogger, ConsoleLogger, NoOpLogger } from './utils/log';
 export type { ILogger, LogLevel, LogLevelThreshold } from './utils/log';
 export { toSlug } from './utils/slug';
 export { convertDateformatToDayjs } from './utils/date-format';
+export { calendarDate, parseIsoDate, formatIsoDate } from './utils/date';
 export { isSubsequence } from './utils/string';
 export { extractHashtags, extractTagsFromProp, HASHTAG_REGEX } from './utils/hashtags';
 export {

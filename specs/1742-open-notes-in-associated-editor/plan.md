@@ -163,6 +163,14 @@ shipped the same way.
   was ready to pay in full. Per `navigation-provider.ts:187-189`, the
   definition provider already steps aside for resolved reference-style links,
   so a link type opting out of definitions is an established shape here.
+  Worth being precise about what those users lose, because it is more than the
+  spec's open question says: the ctrl/cmd+hover preview of the target note
+  comes from the definition too — Foam's own hover provider only handles
+  footnotes (`navigation-provider.ts:430-453`) — so suppressing the definition
+  takes the preview with it, not just Peek Definition and the multi-target
+  picker. That is an argument for the gate rather than against it, and it is
+  what the AC-2 and AC-4 test pair in step 5 should read as: with an
+  association, no definition at all for that wikilink.
 - **Should the completion/hover half become a spike?** (spec open question) →
   Yes, separate issue, unchanged by this plan. The engine bump makes it
   answerable, which is an argument for filing it now rather than a reason to

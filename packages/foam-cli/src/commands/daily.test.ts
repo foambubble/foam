@@ -207,7 +207,7 @@ describe('keeping the daily note inside the workspace', () => {
 
       await expect(
         runDailyCommand(['--date', '2026-05-01', '--create', '--workspace', rootDir], new TestLogger())
-      ).rejects.toThrow('outside the workspace');
+      ).rejects.toThrow(/outside the workspace.*Check foam\.openDailyNote\.directory and the daily note template's filepath/);
       expect(fs.existsSync(path.join(rootDir, '..', escapeTarget(rootDir)))).toBe(false);
     }));
 

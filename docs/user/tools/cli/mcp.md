@@ -50,6 +50,8 @@ Write tools (only with `--allow-writes`):
 - Create, update, delete, and move notes (`create_resource`, `update_resource`, `delete_resource`, `move_resource`)
 - Add, remove, or rename tags (`add_tags`, `remove_tags`, `rename_tag`)
 
+Write tools only change files inside the workspace. A change that would land outside it, including through a symlinked folder, fails with `Cannot write outside the workspace`.
+
 ## Logs
 
 Foam writes its logs to stderr (stdout is reserved for MCP traffic). To increase verbosity for troubleshooting:

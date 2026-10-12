@@ -162,6 +162,29 @@ describe('runLintCommand', () => {
       expect(fs.readFileSync(path.join(rootDir, 'no-heading.md'), 'utf8')).toContain('# No Heading');
     }));
 
+  it('--fix refuses to change a note that is a symlink to a file outside the workspace', () =>
+    withTmpWorkspace({}, async ({ rootDir }) => {
+      // Named after the temp workspace, so a run that does escape can't leave
+      // a folder that a later run would trip over.
+      const outside = path.join(rootDir, '..', `${path.basename(rootDir)}-escaped`);
+      fs.mkdirSync(outside);
+      try {
+        fs.writeFileSync(path.join(outside, 'target.md'), 'Content without a heading.\n');
+        fs.symlinkSync(path.join(outside, 'target.md'), path.join(rootDir, 'no-heading.md'));
+
+        const logger = new TestLogger();
+        const code = await runLintCommand(['--fix', '--workspace', rootDir], logger);
+
+        expect(code).toBe(1);
+        expect(logger.errors.join('\n')).toContain('outside the workspace');
+        expect(fs.readFileSync(path.join(outside, 'target.md'), 'utf8')).toBe(
+          'Content without a heading.\n'
+        );
+      } finally {
+        fs.rmSync(outside, { recursive: true, force: true });
+      }
+    }));
+
   it('--fix with no fixable issues reports nothing to fix', () =>
     withTmpWorkspace({ 'clean.md': '# Clean\n\nFine.\n' }, async ({ rootDir }) => {
       const logger = new TestLogger();

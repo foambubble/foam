@@ -4,6 +4,7 @@ import micromatch from 'micromatch';
 
 import {
   URI,
+  FoamError,
   AttachmentResourceProvider,
   IDataStore,
   IMatcher,
@@ -62,23 +63,27 @@ export class NodeFileDataStore implements IDataStore {
   }
 
   async write(uri: URI, content: string): Promise<void> {
-    const fsPath = uri.toFsPath();
+    const fsPath = await this.resolveInsideWorkspace(uri);
     await fs.mkdir(path.dirname(fsPath), { recursive: true });
     await fs.writeFile(fsPath, content, 'utf8');
   }
 
   async delete(uri: URI): Promise<void> {
+    const fsPath = await this.resolveInsideWorkspace(uri, { linkItself: true });
     try {
-      await fs.unlink(uri.toFsPath());
+      await fs.unlink(fsPath);
     } catch (err: any) {
       if (err.code !== 'ENOENT') throw err;
     }
   }
 
   async move(from: URI, to: URI): Promise<void> {
-    const toFs = to.toFsPath();
+    const fromFs = await this.resolveInsideWorkspace(from, {
+      linkItself: true,
+    });
+    const toFs = await this.resolveInsideWorkspace(to);
     await fs.mkdir(path.dirname(toFs), { recursive: true });
-    await fs.rename(from.toFsPath(), toFs);
+    await fs.rename(fromFs, toFs);
   }
 
   async exists(uri: URI): Promise<boolean> {
@@ -89,7 +94,50 @@ export class NodeFileDataStore implements IDataStore {
       return false;
     }
   }
+
+  /**
+   * Returns `uri`'s path with `..` segments resolved, and throws unless it
+   * lies inside the workspace once symlinks are resolved as well. A dangling
+   * symlink on the way counts as outside, since writing through it would
+   * create its target wherever it points. With `linkItself`, a symlink at
+   * the path itself is checked where it is, not where it points: deleting or
+   * renaming it changes the link only.
+   *
+   * Callers must use the returned path: the OS would resolve a `..` after a
+   * symlink from the symlink's target.
+   */
+  private async resolveInsideWorkspace(
+    uri: URI,
+    { linkItself = false } = {}
+  ): Promise<string> {
+    const fsPath = path.resolve(uri.toFsPath());
+    let existing = linkItself ? path.dirname(fsPath) : fsPath;
+    const missing = linkItself ? [path.basename(fsPath)] : [];
+    while (!(await isPresent(existing))) {
+      missing.unshift(path.basename(existing));
+      existing = path.dirname(existing);
+    }
+    const realPath = await fs.realpath(existing).then(
+      real => path.join(real, ...missing),
+      () => undefined
+    );
+    const realRoot = await fs.realpath(this.rootDir);
+    if (realPath === undefined || !isWithinPath(realPath, realRoot)) {
+      throw new FoamError(
+        'invalid_input',
+        `Cannot write outside the workspace: ${fsPath}`,
+        { uri: fsPath }
+      );
+    }
+    return fsPath;
+  }
 }
+
+const isPresent = (fsPath: string) =>
+  fs.lstat(fsPath).then(
+    () => true,
+    () => false
+  );
 
 async function collectFiles(
   dir: string,

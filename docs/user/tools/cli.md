@@ -22,6 +22,10 @@ export FOAM_WORKSPACE=/path/to/your/notes
 
 All commands accept `--format json` for machine-readable output, useful for scripting.
 
+## Files outside the workspace
+
+Commands only change files inside the workspace. If a path leads outside it, for example through a folder that is a symlink to somewhere else, the command stops with `Cannot write outside the workspace: <path>` instead of writing there. To work with those files, run the command with `--workspace` pointing at the folder they live in.
+
 ## Commands
 
 | Command     | Description                                       |

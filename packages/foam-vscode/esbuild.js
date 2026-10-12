@@ -101,6 +101,18 @@ const config = {
           },
         },
         {
+          name: 'untrusted-write',
+          setup(build) {
+            build.onResolve({ filter: /untrusted-write/ }, args => {
+              return {
+                path: require.resolve(
+                  args.resolveDir + '/untrusted-write-web-extension.ts'
+                ),
+              };
+            });
+          },
+        },
+        {
           name: 'parse-entities-no-dom',
           setup(build) {
             // parse-entities maps ./decode-entity -> ./decode-entity.browser.js via

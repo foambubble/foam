@@ -41,6 +41,35 @@ describe('renameNote', () => {
       expect(result.updated_links).toBe(0);
     }));
 
+  it('rewrites a link the note has to itself', () =>
+    withTmpWorkspace({ 'alpha.md': '# Alpha\n\n[[alpha]]' }, async ({ rootDir, workspace, dataStore }) => {
+      const graph = FoamGraph.fromWorkspace(workspace);
+      const resource = resolveNote(workspace, { identifier: 'alpha' });
+      await renameNote(workspace, graph, dataStore, resource, 'renamed');
+
+      expect(fs.readFileSync(path.join(rootDir, 'renamed.md'), 'utf8')).toBe('# Alpha\n\n[[renamed]]');
+    }));
+
+  it('leaves the links to the note as they were when the move is refused', () =>
+    withTmpWorkspace({ 'alpha.md': '# Alpha', 'ref.md': '[[alpha]]' }, async ({ rootDir, workspace, dataStore }) => {
+      const outside = path.join(rootDir, '..', `${path.basename(rootDir)}-escaped`);
+      fs.mkdirSync(outside);
+      try {
+        fs.symlinkSync(outside, path.join(rootDir, 'linked'));
+        const graph = FoamGraph.fromWorkspace(workspace);
+        const resource = resolveNote(workspace, { identifier: 'alpha' });
+        const targetDir = URI.file(path.join(rootDir, 'linked'));
+
+        await expect(
+          renameNote(workspace, graph, dataStore, resource, 'renamed', targetDir)
+        ).rejects.toThrow('outside the workspace');
+        expect(fs.readFileSync(path.join(rootDir, 'ref.md'), 'utf8')).toBe('[[alpha]]');
+        expect(fs.readdirSync(outside)).toEqual([]);
+      } finally {
+        fs.rmSync(outside, { recursive: true, force: true });
+      }
+    }));
+
   it('errors when destination already exists', () =>
     withTmpWorkspace({ 'alpha.md': '# Alpha', 'beta.md': '# Beta' }, async ({ workspace, dataStore }) => {
       const graph = FoamGraph.fromWorkspace(workspace);

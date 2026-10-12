@@ -1,4 +1,3 @@
-import fs from 'node:fs/promises';
 import path from 'node:path';
 import { Config, TextEdit, uriToWorkspacePath } from '@foam/core';
 import {
@@ -137,7 +136,7 @@ export async function runLintCommand(
   }
 
   try {
-    const { rootDir, workspace } = await loadWorkspaceFromDirectory(workspaceDir);
+    const { rootDir, workspace, dataStore } = await loadWorkspaceFromDirectory(workspaceDir);
     const linkReferenceDefinitions = Config.getEditLinkReferenceDefinitions();
     if (ruleFilter.includes('stale-definitions') && linkReferenceDefinitions === 'off') {
       logger.error(
@@ -171,7 +170,7 @@ export async function runLintCommand(
 
         const edits = fixableIssues.flatMap(i => i.fix!.map(f => f.edit));
         const updatedText = TextEdit.apply(noteText, edits);
-        await fs.writeFile(uri.toFsPath(), updatedText, 'utf8');
+        await dataStore.write(uri, updatedText);
         fixedCount += fixableIssues.length;
       }
 

@@ -51,6 +51,8 @@ $EDITOR $(foam daily --create --path-only)
 
 If your daily note template (`.foam/templates/daily-note.md` or `.foam/templates/daily-note.js`) sets a file path, the note goes there. Otherwise the deprecated `foam.openDailyNote.*` settings in `.vscode/settings.json` decide, and without them notes go to `journal/YYYY-MM-DD.md` — the same place VS Code puts them. The template, when there is one, always provides the content.
 
+The path must stay inside the workspace, even through symlinks: otherwise `foam daily --create` stops with an error telling you to check the template's file path and the `foam.openDailyNote.directory` setting.
+
 See [[templates]] for how to configure daily note templates.
 
 ## JavaScript templates

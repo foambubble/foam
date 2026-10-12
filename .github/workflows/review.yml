@@ -66,6 +66,12 @@ jobs:
             If you find nothing worth reporting, say so in one summary
             comment. Silence is indistinguishable from not having run.
 
+            Post every `gh pr comment` from a file: write the body with the
+            Write tool to /tmp/review-comment.md, then run
+            `gh pr comment <number> --repo <repo> --body-file /tmp/review-comment.md`.
+            A `--body` argument is refused when it holds backticks or `$(...)`,
+            and the comment is lost.
+
             This PR implements the spec committed in the same branch under
             specs/<slug>/spec.md, where <slug> is the branch name minus its
             type prefix. Read that spec first and review the diff against its
@@ -93,7 +99,7 @@ jobs:
           settings: '{"permissions":{"deny":["Read(./specs/**/plan.md)","Bash(git push:*)","Bash(git remote:*)","Bash(gh api:*)","Bash(gh pr merge:*)","Bash(gh pr close:*)","Bash(gh workflow:*)","Bash(gh secret:*)","Bash(gh release:*)"]}}'
           claude_args: |
             --model claude-fable-5-1
-            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(git diff:*),Bash(git log:*),Bash(git show:*),Read,Grep,Glob"
+            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(git ls-tree:*),Edit(//tmp/review-comment.md),Read,Grep,Glob"
       # The run log hides the agent's messages and tool calls; this file has
       # them, including the permission_denials in its final result message.
       # Anyone signed in to GitHub can download it while it is retained.

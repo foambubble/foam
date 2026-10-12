@@ -18,6 +18,7 @@ import {
   noteDelete,
   runNoteCommand,
 } from './note';
+import { runListCommand } from './list';
 
 // ─── resolveNote ──────────────────────────────────────────────────────────────
 
@@ -389,5 +390,22 @@ describe('runNoteCommand', () => {
       expect(code).toBe(0);
       expect(logger.logs[0]).toContain('Trashed:');
       expect(fs.existsSync(path.join(rootDir, 'alpha.md'))).toBe(false);
+    }, 'foam-note-test-'));
+
+  it('delete: a trashed note is no longer listed', () =>
+    withTmpWorkspace({ 'alpha.md': '# Alpha', 'beta.md': '# Beta' }, async ({ rootDir }) => {
+      await runNoteCommand(
+        ['delete', 'alpha', '--force', '--workspace', rootDir],
+        new TestLogger()
+      );
+
+      const logger = new TestLogger();
+      const code = await runListCommand(
+        ['notes', '--format', 'json', '--workspace', rootDir],
+        logger
+      );
+      expect(code).toBe(0);
+      const ids = JSON.parse(logger.logs[0]).map((n: { id: string }) => n.id);
+      expect(ids).toEqual(['beta']);
     }, 'foam-note-test-'));
 });

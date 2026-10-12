@@ -1,3 +1,5 @@
+import { URI } from './model/uri';
+import { GlobMatcher } from './services/glob-matcher';
 import { foamConfigFromVsCodeSettings } from './vscode-settings';
 
 describe('reading Foam settings from .vscode/settings.json', () => {
@@ -36,6 +38,34 @@ describe('reading Foam settings from .vscode/settings.json', () => {
 
     expect(config.getDailyNoteFilenameFormat()).toBe('dd-mm-yyyy');
     expect(config.getDailyNoteFileExtension()).toBe('markdown');
+  });
+
+  it('excludes what is never workspace content, even when the workspace sets its own exclusions', () => {
+    const root = URI.file('/workspace');
+    const config = foamConfigFromVsCodeSettings({
+      'foam.files.exclude': ['drafts/**'],
+    });
+    const matcher = new GlobMatcher([
+      {
+        uri: root,
+        include: config.getFilesInclude(),
+        exclude: config.getFilesExclude(),
+      },
+    ]);
+
+    for (const path of [
+      '.foam/trash/note.md',
+      '.foam/templates/new-note.md',
+      '.git/note.md',
+      '.hg/note.md',
+      '.svn/note.md',
+      'notes/.DS_Store',
+      'notes/Thumbs.db',
+    ]) {
+      expect(matcher.isMatch(root.joinPath(...path.split('/')))).toBe(false);
+    }
+    expect(matcher.isMatch(root.joinPath('drafts', 'note.md'))).toBe(false);
+    expect(matcher.isMatch(root.joinPath('notes', 'note.md'))).toBe(true);
   });
 
   it('ignores values of the wrong type', () => {

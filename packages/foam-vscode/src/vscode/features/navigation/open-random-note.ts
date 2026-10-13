@@ -1,6 +1,7 @@
 import { ExtensionContext, commands, window } from 'vscode';
 import { Foam } from '@foam/core';
-import { focusNote, getActiveTabUri } from '../../services/editor';
+import { getActiveTabUri } from '../../services/editor';
+import { toVsCodeUri } from '../../utils/vsc-utils';
 import { getTelemetry } from '../../services/telemetry';
 
 export default async function activate(
@@ -25,7 +26,10 @@ export default async function activate(
         randomNoteIndex = (randomNoteIndex + 1) % notes.length;
       }
 
-      focusNote(notes[randomNoteIndex].uri, false);
+      await commands.executeCommand(
+        'vscode.open',
+        toVsCodeUri(notes[randomNoteIndex].uri)
+      );
     })
   );
 }

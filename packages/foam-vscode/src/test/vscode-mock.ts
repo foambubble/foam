@@ -2632,7 +2632,7 @@ export function resetMockState(): void {
     return Promise.resolve();
   });
 
-  commands.registerCommand('vscode.open', async uri => {
+  commands.registerCommand('vscode.open', async (uri, options) => {
     const viewType = matchingEditorAssociation(uri);
     if (viewType) {
       // VS Code opens the file in the associated editor, so there is no text
@@ -2641,7 +2641,7 @@ export function resetMockState(): void {
       setActiveTab({ uri, viewType });
       return undefined;
     }
-    return window.showTextDocument(uri);
+    return window.showTextDocument(uri, options);
   });
 
   commands.registerCommand('setContext', (key: string, value: any) => {

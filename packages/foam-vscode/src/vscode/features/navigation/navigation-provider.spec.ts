@@ -5,7 +5,10 @@ import {
   cleanWorkspace,
   closeEditors,
   createFile,
+  getActiveTabViewType,
+  MARKDOWN_EDITOR_VIEW_TYPE,
   showInEditor,
+  withMarkdownEditorAssociation,
 } from '../../../test/test-utils-vscode';
 import { NavigationProvider } from './navigation-provider';
 import { toVsCodeUri } from '../../utils/vsc-utils';
@@ -19,6 +22,14 @@ import { FoamTags } from '@foam/core';
 
 describe('Document navigation', () => {
   const parser = createMarkdownParser([]);
+
+  const openCommandURI = (uri: URI, selection?: unknown) =>
+    commandAsURI({
+      name: 'vscode.open',
+      params: selection
+        ? [toVsCodeUri(uri), { selection }]
+        : [toVsCodeUri(uri)],
+    });
 
   beforeAll(async () => {
     await cleanWorkspace();
@@ -60,12 +71,12 @@ describe('Document navigation', () => {
       expect(links.length).toEqual(0);
     });
 
-    it('should not create links for wikilinks without link reference definitions, as this is managed by the definition provider', async () => {
+    it('creates a vscode.open document link for a wikilink to an existing note, so editor associations are honored (#1742)', async () => {
       const fileA = await createFile('# File A', ['file-a.md']);
       const fileB = await createFile(`this is a link to [[${fileA.name}]].`);
       const ws = createTestWorkspace()
         .set(parser.parse(fileA.uri, fileA.content))
-        .set(parser.parse(fileA.uri, fileB.content));
+        .set(parser.parse(fileB.uri, fileB.content));
       const graph = FoamGraph.fromWorkspace(ws);
       const tags = FoamTags.fromWorkspace(ws);
 
@@ -73,7 +84,32 @@ describe('Document navigation', () => {
       const provider = new NavigationProvider(ws, graph, parser, tags);
       const links = await provider.provideDocumentLinks(doc);
 
-      expect(links.length).toEqual(0);
+      expect(links.length).toEqual(1);
+      expect(links[0].target).toEqual(openCommandURI(fileA.uri));
+      expect(links[0].range).toEqual(
+        new vscode.Range(0, 20, 0, 20 + fileA.name.length)
+      );
+    });
+
+    it('carries the section range of a [[note#Section]] wikilink as the open selection (#1742)', async () => {
+      const fileA = await createFile('# File A\n\n## Section B\n\nsome text', [
+        'file-a.md',
+      ]);
+      const fileB = await createFile(`see [[${fileA.name}#Section B]].`);
+      const noteA = parser.parse(fileA.uri, fileA.content);
+      const ws = createTestWorkspace()
+        .set(noteA)
+        .set(parser.parse(fileB.uri, fileB.content));
+      const graph = FoamGraph.fromWorkspace(ws);
+      const tags = FoamTags.fromWorkspace(ws);
+
+      const { doc } = await showInEditor(fileB.uri);
+      const provider = new NavigationProvider(ws, graph, parser, tags);
+      const links = await provider.provideDocumentLinks(doc);
+
+      const section = noteA.sections.find(s => s.label === 'Section B');
+      expect(links.length).toEqual(1);
+      expect(links[0].target).toEqual(openCommandURI(fileA.uri, section.range));
     });
 
     it('should create a document link for a wikilink that has a Foam-generated link reference definition (fix #1294)', async () => {
@@ -92,12 +128,53 @@ describe('Document navigation', () => {
       const links = await provider.provideDocumentLinks(doc);
 
       expect(links.length).toEqual(1);
-      expect(links[0].target).toEqual(toVsCodeUri(fileA.uri));
+      expect(links[0].target).toEqual(openCommandURI(fileA.uri));
       // The link range excludes the surrounding brackets, consistent with
       // how VS Code styles markdown links
       expect(links[0].range).toEqual(
         new vscode.Range(0, 20, 0, 20 + fileA.name.length)
       );
+    });
+
+    it('should support wikilinks that have an alias', async () => {
+      const fileA = await createFile("# File A that's aliased");
+      const fileB = await createFile(
+        `this is a link to [[${fileA.name}|alias]].`
+      );
+
+      const ws = createTestWorkspace()
+        .set(parser.parse(fileA.uri, fileA.content))
+        .set(parser.parse(fileB.uri, fileB.content));
+      const graph = FoamGraph.fromWorkspace(ws);
+      const tags = FoamTags.fromWorkspace(ws);
+
+      const { doc } = await showInEditor(fileB.uri);
+      const provider = new NavigationProvider(ws, graph, parser, tags);
+      const links = await provider.provideDocumentLinks(doc);
+
+      expect(links.length).toEqual(1);
+      expect(links[0].target).toEqual(openCommandURI(fileA.uri));
+    });
+
+    it('should support wikilink aliases in tables using escape character', async () => {
+      const fileA = await createFile('# File that has to be aliased');
+      const fileB = await createFile(`
+  | Col A | ColB |
+  | --- | --- |
+  | [[${fileA.name}\\|alias]] | test |
+    `);
+      const ws = createTestWorkspace()
+        .set(parser.parse(fileA.uri, fileA.content))
+        .set(parser.parse(fileB.uri, fileB.content));
+      const graph = FoamGraph.fromWorkspace(ws);
+      const tags = FoamTags.fromWorkspace(ws);
+
+      const { doc } = await showInEditor(fileB.uri);
+      const provider = new NavigationProvider(ws, graph, parser, tags);
+      const links = await provider.provideDocumentLinks(doc);
+
+      expect(links.length).toEqual(1);
+      expect(links[0].target).toEqual(openCommandURI(fileA.uri));
     });
 
     it('should create links for placeholders', async () => {
@@ -230,7 +307,7 @@ describe('Document navigation', () => {
 
       expect(definitions).toBeUndefined();
     });
-    it('should create a definition for a wikilink', async () => {
+    it('should not create a definition for a wikilink to an existing note, which navigates through its document link instead (#1742)', async () => {
       const fileA = await createFile('# File A');
       const fileB = await createFile(`this is a link to [[${fileA.name}]].`);
       const ws = createTestWorkspace()
@@ -246,14 +323,9 @@ describe('Document navigation', () => {
         new vscode.Position(0, 22)
       );
 
-      expect(definitions.length).toEqual(1);
-      expect(definitions[0].targetUri).toEqual(toVsCodeUri(fileA.uri));
-      // target the beginning of the file
-      expect(definitions[0].targetRange).toEqual(new vscode.Range(0, 0, 0, 0));
-      // select nothing
-      expect(definitions[0].targetSelectionRange).toEqual(
-        new vscode.Range(0, 0, 0, 0)
-      );
+      // A definition at the same range would override the document link and
+      // force a text editor, ignoring `workbench.editorAssociations`.
+      expect(definitions).toBeUndefined();
     });
 
     it('should create a definition for a regular link', async () => {
@@ -327,53 +399,6 @@ describe('Document navigation', () => {
       expect(definitions.length).toEqual(1);
       expect(definitions[0].targetUri).toEqual(toVsCodeUri(existingFile.uri));
     });
-
-    it('should support wikilinks that have an alias', async () => {
-      const fileA = await createFile("# File A that's aliased");
-      const fileB = await createFile(
-        `this is a link to [[${fileA.name}|alias]].`
-      );
-
-      const ws = createTestWorkspace()
-        .set(parser.parse(fileA.uri, fileA.content))
-        .set(parser.parse(fileB.uri, fileB.content));
-      const graph = FoamGraph.fromWorkspace(ws);
-      const tags = FoamTags.fromWorkspace(ws);
-
-      const { doc } = await showInEditor(fileB.uri);
-      const provider = new NavigationProvider(ws, graph, parser, tags);
-      const definitions = await provider.provideDefinition(
-        doc,
-        new vscode.Position(0, 22)
-      );
-
-      expect(definitions.length).toEqual(1);
-      expect(definitions[0].targetUri).toEqual(toVsCodeUri(fileA.uri));
-    });
-
-    it('should support wikilink aliases in tables using escape character', async () => {
-      const fileA = await createFile('# File that has to be aliased');
-      const fileB = await createFile(`
-  | Col A | ColB |
-  | --- | --- |
-  | [[${fileA.name}\\|alias]] | test |
-    `);
-      const ws = createTestWorkspace()
-        .set(parser.parse(fileA.uri, fileA.content))
-        .set(parser.parse(fileB.uri, fileB.content));
-      const graph = FoamGraph.fromWorkspace(ws);
-      const tags = FoamTags.fromWorkspace(ws);
-
-      const { doc } = await showInEditor(fileB.uri);
-      const provider = new NavigationProvider(ws, graph, parser, tags);
-      const definitions = await provider.provideDefinition(
-        doc,
-        new vscode.Position(3, 10)
-      );
-
-      expect(definitions.length).toEqual(1);
-      expect(definitions[0].targetUri).toEqual(toVsCodeUri(fileA.uri));
-    });
   });
 
   // Attachments (PDFs, docs, etc.) and images must be surfaced as DocumentLinks
@@ -381,12 +406,6 @@ describe('Document navigation', () => {
   // user-level `workbench.editorAssociations`.
   // See: https://github.com/foambubble/foam/issues/1675
   describe('attachment and image navigation', () => {
-    const openCommandURI = (uri: URI) =>
-      commandAsURI({
-        name: 'vscode.open',
-        params: [toVsCodeUri(uri)],
-      });
-
     const makeAttachment = (uri: URI, type: 'attachment' | 'image') => ({
       uri,
       type,
@@ -555,13 +574,10 @@ describe('Document navigation', () => {
 
       const { doc } = await showInEditor(note.uri);
       const provider = new NavigationProvider(ws, graph, parser, tags);
-      const definitions = await provider.provideDefinition(
-        doc,
-        new vscode.Position(0, 10)
-      );
+      const links = await provider.provideDocumentLinks(doc);
 
-      expect(definitions.length).toEqual(1);
-      expect(definitions[0].targetUri).toEqual(toVsCodeUri(index.uri));
+      expect(links.length).toEqual(1);
+      expect(links[0].target).toEqual(openCommandURI(index.uri));
     });
 
     it('should navigate [label](bar) to bar/index.md', async () => {
@@ -602,6 +618,80 @@ describe('Document navigation', () => {
 
       expect(definitions.length).toEqual(1);
       expect(definitions[0].targetUri).toEqual(toVsCodeUri(index.uri));
+    });
+  });
+
+  // Activating the link Foam emits, the way VS Code does on ctrl/cmd+click,
+  // and checking which editor the target lands in.
+  // See: https://github.com/foambubble/foam/issues/1742
+  describe('wikilink activation and editor associations', () => {
+    const activate = async (link: vscode.DocumentLink) => {
+      const [uri, ...rest] = JSON.parse(decodeURIComponent(link.target.query));
+      // VS Code revives the URI in a `command:` link's query before invoking
+      // the command; `executeCommand` takes a real Uri.
+      await vscode.commands.executeCommand(
+        'vscode.open',
+        vscode.Uri.from(uri),
+        ...rest
+      );
+    };
+
+    const linkToExistingNote = async () => {
+      const fileA = await createFile('# File A', ['file-a.md']);
+      const fileB = await createFile(`this is a link to [[${fileA.name}]].`);
+      const ws = createTestWorkspace()
+        .set(parser.parse(fileA.uri, fileA.content))
+        .set(parser.parse(fileB.uri, fileB.content));
+      const graph = FoamGraph.fromWorkspace(ws);
+      const tags = FoamTags.fromWorkspace(ws);
+
+      const { doc } = await showInEditor(fileB.uri);
+      const provider = new NavigationProvider(ws, graph, parser, tags);
+      const [link] = await provider.provideDocumentLinks(doc);
+      return { link, target: fileA.uri };
+    };
+
+    it('opens the target in the editor associated with Markdown', async () => {
+      const { link } = await linkToExistingNote();
+
+      await withMarkdownEditorAssociation(async () => {
+        await activate(link);
+
+        expect(getActiveTabViewType()).toEqual(MARKDOWN_EDITOR_VIEW_TYPE);
+      });
+    });
+
+    it('opens the target in the text editor when nothing is associated with Markdown', async () => {
+      const { link, target } = await linkToExistingNote();
+
+      await activate(link);
+
+      expect(getActiveTabViewType()).toBeUndefined();
+      expect(vscode.window.activeTextEditor.document.uri.path).toEqual(
+        target.path
+      );
+    });
+
+    it('lands on the section of a [[note#Section]] wikilink', async () => {
+      const fileA = await createFile('# File A\n\n## Section B\n\nsome text');
+      const fileB = await createFile(`see [[${fileA.name}#Section B]].`);
+      const noteA = parser.parse(fileA.uri, fileA.content);
+      const ws = createTestWorkspace()
+        .set(noteA)
+        .set(parser.parse(fileB.uri, fileB.content));
+      const graph = FoamGraph.fromWorkspace(ws);
+      const tags = FoamTags.fromWorkspace(ws);
+
+      const { doc } = await showInEditor(fileB.uri);
+      const provider = new NavigationProvider(ws, graph, parser, tags);
+      const [link] = await provider.provideDocumentLinks(doc);
+
+      await activate(link);
+
+      const section = noteA.sections.find(s => s.label === 'Section B');
+      expect(vscode.window.activeTextEditor.selection.start.line).toEqual(
+        section.range.start.line
+      );
     });
   });
 

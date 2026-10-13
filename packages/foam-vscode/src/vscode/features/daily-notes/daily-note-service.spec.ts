@@ -3,14 +3,18 @@ import { workspace, window } from 'vscode';
 import {
   CREATE_DAILY_NOTE_WARNING_RESPONSE,
   createDailyNoteIfNotExists,
+  openDailyNoteFor,
 } from './daily-note-service';
 import {
   cleanWorkspace,
   closeEditors,
   createFile,
   deleteFile,
+  getActiveTabViewType,
   makeFoamMock,
+  MARKDOWN_EDITOR_VIEW_TYPE,
   showInEditor,
+  withMarkdownEditorAssociation,
   withModifiedFoamConfiguration,
 } from '../../../test/test-utils-vscode';
 import { createTestNote } from '../../../test/test-utils';
@@ -492,6 +496,62 @@ Daily content here.`;
 
       await deleteFile(template.uri);
       await deleteFile(result1.uri);
+    });
+  });
+
+  describe('Editor associations (#1742)', () => {
+    it('opens an existing daily note in the editor associated with Markdown', async () => {
+      const targetDate = new Date(2021, 9, 4);
+      const foam = makeFoamMock();
+      const { uri } = await createFile('# Existing Note', [
+        'journal',
+        '2021-10-04.md',
+      ]);
+
+      await withMarkdownEditorAssociation(async () => {
+        await openDailyNoteFor(targetDate, foam);
+
+        expect(getActiveTabViewType()).toEqual(MARKDOWN_EDITOR_VIEW_TYPE);
+      });
+
+      await deleteFile(uri);
+    });
+
+    it('opens an existing daily note in the text editor when nothing is associated with Markdown', async () => {
+      const targetDate = new Date(2021, 9, 5);
+      const foam = makeFoamMock();
+      const { uri } = await createFile('# Existing Note', [
+        'journal',
+        '2021-10-05.md',
+      ]);
+
+      await openDailyNoteFor(targetDate, foam);
+
+      expect(getActiveTabViewType()).toBeUndefined();
+      expect(window.activeTextEditor.document.uri.path).toEqual(uri.path);
+
+      await deleteFile(uri);
+    });
+
+    it('creates a daily note in the text editor with the cursor at the end, association or not', async () => {
+      const targetDate = new Date(2021, 9, 6);
+      const foam = makeFoamMock();
+
+      await withMarkdownEditorAssociation(async () => {
+        const result = await createDailyNoteIfNotExists(targetDate, foam);
+
+        expect(result.didCreateFile).toBe(true);
+        // Creation goes through `createDocAndFocus`, which needs a TextEditor to
+        // insert the template snippet into — so it deliberately does not follow
+        // the association.
+        expect(getActiveTabViewType()).toBeUndefined();
+        const { document, selection } = window.activeTextEditor;
+        expect(selection.active).toEqual(
+          document.lineAt(document.lineCount - 1).range.end
+        );
+
+        await deleteFile(result.uri);
+      });
     });
   });
 

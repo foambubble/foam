@@ -138,14 +138,42 @@ the completion-and-hover half of the issue answerable at all.
   work with.** AC-9 covers using what is available and documenting what is
   not; building a Foam-side live-preview editor is a different piece of work.
 
+## AC-9 finding
+
+Settled on a 1.136.0 host (see Open questions for why 1.136): **extension
+completion and hover do not reach the built-in Markdown Editor, and VS Code
+offers no API that would let them.** The editor is a `CustomTextEditorProvider`
+(`vscode.markdown.editor`) that renders into a *webview*, so there is no
+`TextEditor` for it — `window.activeTextEditor` is `undefined` while it is
+focused, which `editor.spec.ts` asserts — and VS Code's completion and hover UI
+belongs to the text editor widget. The editor's own extension points
+(`linkPresentationProviders`, embedded code-block editors) sit behind proposed
+APIs the bundled extension enables for itself (`linkPresentation`,
+`customEditorDiffs`, `documentSyntaxHighlighting`); a Marketplace extension
+cannot enable those, so there is nothing available to build on.
+
+What does keep working, because the editor edits the same `TextDocument`:
+indexing, the graph, the Connections and Tags panels, backlinks, linting, link
+syncing on rename — everything that reads notes rather than typing into them.
+Foam's registration (`{ language: 'markdown', scheme: 'file' }`) was already
+correct for it, so nothing on Foam's side is missing. The limitation and the
+editing/reading split are written into
+`docs/user/features/wikilinks.md`.
+
 ## Open questions
 
-- Honoring the association for wikilink activation (AC-2) costs Peek
-  Definition on a wikilink, because it comes from the definition that AC-2 has
-  to give up. Settled in review: support
-  everything Foam can support itself, let users judge the rest. So the hover
-  preview is rebuilt as AC-8, the loss is documented, and if 1.135 offers a
-  way to keep peek without the definition it is taken.
-- The Markdown Editor's `viewType` for the AC-6 association, and whether it is
-  a custom editor at all, have to be read off a 1.135 build; neither is
-  derivable from this repository. AC-9's investigation reports both.
+- ~~Honoring the association for wikilink activation (AC-2) costs Peek
+  Definition on a wikilink~~ — settled in review: support everything Foam can
+  support itself, let users judge the rest. The cost turned out to be **`F12`
+  and Peek Definition**, not peek alone, since both come from the definition.
+  The hover preview AC-8 asks for needed no work: `HoverProvider`
+  (`foam.links.hover.enable`, on by default) already previews the target note
+  and never depended on the definition. The loss is documented, with the
+  built-in `editor.action.openLink` named as the keyboard route.
+- ~~The Markdown Editor's `viewType`, and whether it is a custom editor at
+  all~~ — `vscode.markdown.editor`, a custom text editor over the same
+  `TextDocument`. Read off the host, and now the association the e2e suite
+  runs AC-1, AC-2 and AC-6 against.
+- The version is **1.136.0**, not 1.135: `@types/vscode` has no 1.135.0
+  published, and `engines.vscode` should match the types the code compiles
+  against. AC-7 asks for "1.135 or later".

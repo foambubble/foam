@@ -94,6 +94,31 @@ describe('Task.getLinks', () => {
   });
 });
 
+describe('Task.getDayLinks', () => {
+  it('gives each link to a day with its day, in the order written, repeats included', () => {
+    const note = parse(
+      '- [ ] a [[2026-10-08]] b [[journal/2026-10-09|Fri]] [[zettelkasten]] [[2026-10-08#Log]]'
+    );
+
+    expect(
+      Task.getDayLinks(note, note.tasks[0]).map(({ link, day }) => [
+        link.rawText,
+        day,
+      ])
+    ).toEqual([
+      ['[[2026-10-08]]', day('2026-10-08')],
+      ['[[journal/2026-10-09|Fri]]', day('2026-10-09')],
+      ['[[2026-10-08#Log]]', day('2026-10-08')],
+    ]);
+  });
+
+  it('leaves out embeds and a link that runs over an unclosed [[', () => {
+    const note = parse('- [ ] ![[2026-10-08]] see [[ syntax [[2026-10-09]]');
+
+    expect(Task.getDayLinks(note, note.tasks[0])).toEqual([]);
+  });
+});
+
 describe('Task.getDays', () => {
   it('gives the days a task links, with a folder, a section or an alias, each once', () => {
     const note = parse(

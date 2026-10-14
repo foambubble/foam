@@ -63,13 +63,37 @@ export abstract class Task {
   }
 
   /**
-   * The days `task` links, at local midnight, each once, in the order
-   * written: its wikilinks, not embeds, whose target's last segment is a date
-   * that exists, as `YYYY-MM-DD`. `resource` is the note the task is in.
+   * The days of {@link Task.getDayLinks}, each once, in the order written.
+   * `resource` is the note the task is in.
    */
   static getDays(resource: Resource, task: Task): Date[] {
-    const days = new Set(dayLinks(resource, task).map(({ day }) => day));
-    return [...days].map(day => parseIsoDate(day)!);
+    const days = Task.getDayLinks(resource, task).map(({ day }) => day);
+    return [...new Map(days.map(day => [day.getTime(), day])).values()];
+  }
+
+  /**
+   * The links `task` has to a day, in the order written, each with its day
+   * at local midnight: wikilinks, not embeds, whose target's last segment is
+   * a date that exists, as `YYYY-MM-DD`. A link the parser reads over an
+   * unclosed `[[` is none: removing it would remove that text too.
+   * `resource` is the note the task is in.
+   */
+  static getDayLinks(
+    resource: Resource,
+    task: Task
+  ): { link: ResourceLink; day: Date }[] {
+    return Task.getLinks(resource, task).flatMap(link => {
+      if (
+        link.type !== 'wikilink' ||
+        link.isEmbed ||
+        link.rawText.indexOf('[[', 2) !== -1
+      ) {
+        return [];
+      }
+      const { target } = MarkdownLink.analyzeLink(link);
+      const day = parseIsoDate(target.slice(target.lastIndexOf('/') + 1));
+      return day === undefined ? [] : [{ link, day }];
+    });
   }
 
   /**
@@ -95,7 +119,10 @@ export abstract class Task {
     if (fromDay === toDay) {
       return [];
     }
-    const links = dayLinks(resource, task);
+    const links = Task.getDayLinks(resource, task).map(({ link, day }) => ({
+      link,
+      day: formatIsoDate(day),
+    }));
     const linksFrom = links.filter(({ day }) => day === fromDay);
     if (toDay === null || links.some(({ day }) => day === toDay)) {
       return removeLinks(
@@ -197,28 +224,6 @@ function positionIn(task: Task, offset: number): Position {
     first.line + line,
     (line === 0 ? first.character : 0) + offset
   );
-}
-
-/**
- * The wikilinks of `task` to a day, in the order written. A link the parser
- * reads over an unclosed `[[` is none: removing it would remove that text too.
- */
-function dayLinks(
-  resource: Resource,
-  task: Task
-): { link: ResourceLink; day: string }[] {
-  return Task.getLinks(resource, task).flatMap(link => {
-    if (
-      link.type !== 'wikilink' ||
-      link.isEmbed ||
-      link.rawText.indexOf('[[', 2) !== -1
-    ) {
-      return [];
-    }
-    const { target } = MarkdownLink.analyzeLink(link);
-    const day = target.slice(target.lastIndexOf('/') + 1);
-    return parseIsoDate(day) === undefined ? [] : [{ link, day }];
-  });
 }
 
 /** Where the spaces and tabs that `text` ends with start. */

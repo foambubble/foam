@@ -136,47 +136,6 @@ describe('Document navigation', () => {
       );
     });
 
-    it('should support wikilinks that have an alias', async () => {
-      const fileA = await createFile("# File A that's aliased");
-      const fileB = await createFile(
-        `this is a link to [[${fileA.name}|alias]].`
-      );
-
-      const ws = createTestWorkspace()
-        .set(parser.parse(fileA.uri, fileA.content))
-        .set(parser.parse(fileB.uri, fileB.content));
-      const graph = FoamGraph.fromWorkspace(ws);
-      const tags = FoamTags.fromWorkspace(ws);
-
-      const { doc } = await showInEditor(fileB.uri);
-      const provider = new NavigationProvider(ws, graph, parser, tags);
-      const links = await provider.provideDocumentLinks(doc);
-
-      expect(links.length).toEqual(1);
-      expect(links[0].target).toEqual(openCommandURI(fileA.uri));
-    });
-
-    it('should support wikilink aliases in tables using escape character', async () => {
-      const fileA = await createFile('# File that has to be aliased');
-      const fileB = await createFile(`
-  | Col A | ColB |
-  | --- | --- |
-  | [[${fileA.name}\\|alias]] | test |
-    `);
-      const ws = createTestWorkspace()
-        .set(parser.parse(fileA.uri, fileA.content))
-        .set(parser.parse(fileB.uri, fileB.content));
-      const graph = FoamGraph.fromWorkspace(ws);
-      const tags = FoamTags.fromWorkspace(ws);
-
-      const { doc } = await showInEditor(fileB.uri);
-      const provider = new NavigationProvider(ws, graph, parser, tags);
-      const links = await provider.provideDocumentLinks(doc);
-
-      expect(links.length).toEqual(1);
-      expect(links[0].target).toEqual(openCommandURI(fileA.uri));
-    });
-
     it('should create links for placeholders', async () => {
       const fileA = await createFile(`this is a link to [[a placeholder]].`);
       const noteA = parser.parse(fileA.uri, fileA.content);
@@ -307,7 +266,10 @@ describe('Document navigation', () => {
 
       expect(definitions).toBeUndefined();
     });
-    it('should not create a definition for a wikilink to an existing note, which navigates through its document link instead (#1742)', async () => {
+    // The wikilink also gets a `vscode.open` document link, so that the
+    // association can be honored; the definition is what keeps `F12` and Peek
+    // Definition working. See: https://github.com/foambubble/foam/issues/1742
+    it('should create a definition for a wikilink', async () => {
       const fileA = await createFile('# File A');
       const fileB = await createFile(`this is a link to [[${fileA.name}]].`);
       const ws = createTestWorkspace()
@@ -323,9 +285,14 @@ describe('Document navigation', () => {
         new vscode.Position(0, 22)
       );
 
-      // A definition at the same range would override the document link and
-      // force a text editor, ignoring `workbench.editorAssociations`.
-      expect(definitions).toBeUndefined();
+      expect(definitions.length).toEqual(1);
+      expect(definitions[0].targetUri).toEqual(toVsCodeUri(fileA.uri));
+      // target the beginning of the file
+      expect(definitions[0].targetRange).toEqual(new vscode.Range(0, 0, 0, 0));
+      // select nothing
+      expect(definitions[0].targetSelectionRange).toEqual(
+        new vscode.Range(0, 0, 0, 0)
+      );
     });
 
     it('should create a definition for a regular link', async () => {
@@ -398,6 +365,53 @@ describe('Document navigation', () => {
       expect(definitions).toBeDefined();
       expect(definitions.length).toEqual(1);
       expect(definitions[0].targetUri).toEqual(toVsCodeUri(existingFile.uri));
+    });
+
+    it('should support wikilinks that have an alias', async () => {
+      const fileA = await createFile("# File A that's aliased");
+      const fileB = await createFile(
+        `this is a link to [[${fileA.name}|alias]].`
+      );
+
+      const ws = createTestWorkspace()
+        .set(parser.parse(fileA.uri, fileA.content))
+        .set(parser.parse(fileB.uri, fileB.content));
+      const graph = FoamGraph.fromWorkspace(ws);
+      const tags = FoamTags.fromWorkspace(ws);
+
+      const { doc } = await showInEditor(fileB.uri);
+      const provider = new NavigationProvider(ws, graph, parser, tags);
+      const definitions = await provider.provideDefinition(
+        doc,
+        new vscode.Position(0, 22)
+      );
+
+      expect(definitions.length).toEqual(1);
+      expect(definitions[0].targetUri).toEqual(toVsCodeUri(fileA.uri));
+    });
+
+    it('should support wikilink aliases in tables using escape character', async () => {
+      const fileA = await createFile('# File that has to be aliased');
+      const fileB = await createFile(`
+  | Col A | ColB |
+  | --- | --- |
+  | [[${fileA.name}\\|alias]] | test |
+    `);
+      const ws = createTestWorkspace()
+        .set(parser.parse(fileA.uri, fileA.content))
+        .set(parser.parse(fileB.uri, fileB.content));
+      const graph = FoamGraph.fromWorkspace(ws);
+      const tags = FoamTags.fromWorkspace(ws);
+
+      const { doc } = await showInEditor(fileB.uri);
+      const provider = new NavigationProvider(ws, graph, parser, tags);
+      const definitions = await provider.provideDefinition(
+        doc,
+        new vscode.Position(3, 10)
+      );
+
+      expect(definitions.length).toEqual(1);
+      expect(definitions[0].targetUri).toEqual(toVsCodeUri(fileA.uri));
     });
   });
 
@@ -574,10 +588,13 @@ describe('Document navigation', () => {
 
       const { doc } = await showInEditor(note.uri);
       const provider = new NavigationProvider(ws, graph, parser, tags);
-      const links = await provider.provideDocumentLinks(doc);
+      const definitions = await provider.provideDefinition(
+        doc,
+        new vscode.Position(0, 10)
+      );
 
-      expect(links.length).toEqual(1);
-      expect(links[0].target).toEqual(openCommandURI(index.uri));
+      expect(definitions.length).toEqual(1);
+      expect(definitions[0].targetUri).toEqual(toVsCodeUri(index.uri));
     });
 
     it('should navigate [label](bar) to bar/index.md', async () => {
@@ -648,8 +665,24 @@ describe('Document navigation', () => {
       const { doc } = await showInEditor(fileB.uri);
       const provider = new NavigationProvider(ws, graph, parser, tags);
       const [link] = await provider.provideDocumentLinks(doc);
-      return { link, target: fileA.uri };
+      return { link, doc, provider, target: fileA.uri };
     };
+
+    it('offers both a definition and a vscode.open link on the same wikilink', async () => {
+      const { link, doc, provider, target } = await linkToExistingNote();
+
+      const definitions = await provider.provideDefinition(
+        doc,
+        new vscode.Position(0, 22)
+      );
+
+      // Both are offered, so `F12` and Peek Definition keep working while the
+      // link gives the workbench the chance to honor the association.
+      expect(link.target).toEqual(openCommandURI(target));
+      expect(definitions.length).toEqual(1);
+      expect(definitions[0].targetUri).toEqual(toVsCodeUri(target));
+      expect(definitions[0].originSelectionRange).toEqual(link.range);
+    });
 
     it('opens the target in the editor associated with Markdown', async () => {
       const { link } = await linkToExistingNote();

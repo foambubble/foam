@@ -38,11 +38,14 @@ Three paths do not, and they are the bug:
 
 That last one is why the fix is not purely mechanical: activating a wikilink
 and asking VS Code for a definition are the same gesture (ctrl/cmd+click), and
-the definition is also what gives a wikilink its hover preview and Peek
-Definition today. Honoring the association means giving up the definition for
-notes, so AC-8 holds the hover preview to account separately — the principle
-being that Foam supports every affordance it can support itself, and anything
-the platform makes impossible is written down rather than silently lost.
+the definition is also what `F12` and Peek Definition work from. So Foam offers
+**both** on a wikilink — the definition it offers today, and a document link
+invoking the platform's open command. Which of the two the workbench follows on
+a click is its own decision, not something an extension can observe or
+influence, so AC-2 is specified at what Foam controls and the gesture itself is
+a human check. The point of offering both is that nothing a user has today is
+taken away: if the workbench prefers the definition, the click lands in a text
+editor exactly as it always has.
 
 The machinery Foam uses to answer "which note am I on" already copes with tabs
 that are not text editors (custom editors and notebooks included), so the rest
@@ -67,9 +70,18 @@ the completion-and-hover half of the issue answerable at all.
   the AI features, so that one path is verified by AC-6's manual sweep)
 
 - **AC-2**: Given the same association, when a wikilink that resolves to an
-  existing note is activated from a note (ctrl/cmd+click or the keyboard
-  equivalent), then the target note opens in the associated editor.
+  existing note is activated through the document link Foam provides for it,
+  then the target note opens in the associated editor, and `[[note#Section]]`
+  lands on the section.
   _verify: e2e_
+
+- **AC-2b**: Given the same association, when the wikilink is ctrl/cmd+clicked
+  in the running editor, then the target opens in the associated editor if the
+  workbench follows the document link rather than the definition. Both are
+  offered at the same range and the choice is the workbench's, above any API a
+  test can call, so this is checked by hand once. A negative outcome is today's
+  behavior, not a regression — AC-4 is what guarantees that.
+  _verify: human_
 
 - **AC-3**: Given a note is open in an associated non-text editor and is the
   active tab, when Foam features that act on the current note run — the
@@ -104,12 +116,10 @@ the completion-and-hover half of the issue answerable at all.
   _verify: e2e_
 
 - **AC-8**: Given a wikilink to an existing note in the text editor, with or
-  without an editor association configured, when the link is hovered, then a
-  preview of the target note is shown — the affordance the definition
-  provided before the association was honored. Whatever the platform does not
-  let Foam keep — Peek Definition on a wikilink — is named in the user
-  documentation for wikilinks, so a user choosing an association knows what it
-  costs.
+  without an editor association configured, when the link is hovered, when
+  `F12` is pressed on it and when Peek Definition is invoked on it, then all
+  three behave as they do today: Foam still provides the definition those two
+  work from, alongside the new document link.
   _verify: e2e_
 
 - **AC-9**: Given a note open in the built-in Markdown Editor, when `[[` is
@@ -163,13 +173,15 @@ editing/reading split are written into
 ## Open questions
 
 - ~~Honoring the association for wikilink activation (AC-2) costs Peek
-  Definition on a wikilink~~ — settled in review: support everything Foam can
-  support itself, let users judge the rest. The cost turned out to be **`F12`
-  and Peek Definition**, not peek alone, since both come from the definition.
-  The hover preview AC-8 asks for needed no work: `HoverProvider`
-  (`foam.links.hover.enable`, on by default) already previews the target note
-  and never depended on the definition. The loss is documented, with the
-  built-in `editor.action.openLink` named as the keyboard route.
+  Definition on a wikilink~~ — settled on the PR: **nothing is given up**. The
+  first implementation dropped the wikilink definition, on the belief that a
+  definition and a document link cannot coexist at one range. That belief was a
+  generalisation of a comment about two *definition* providers colliding and was
+  never established, so it was not a cost worth paying blind. Foam now emits
+  both: `F12`, Peek Definition and the hover preview are untouched for every
+  user, and the document link gives the workbench the chance to honor the
+  association. Which it follows on a click is AC-2b, checked by hand — and a
+  negative answer costs nothing, because it is today's behavior.
 - ~~The Markdown Editor's `viewType`, and whether it is a custom editor at
   all~~ — `vscode.markdown.editor`, a custom text editor over the same
   `TextDocument`. Read off the host, and now the association the e2e suite

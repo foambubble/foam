@@ -6,14 +6,10 @@ Wikilinks are internal links that connect files in your knowledge base using `[[
 
 1. **Type `[[`** and start typing a note name
 2. **Select from autocomplete** and press `Tab`
-3. **Navigate** with `Ctrl+Click` (`Cmd+Click` on Mac)
+3. **Navigate** with `Ctrl+Click` (`Cmd+Click` on Mac) or `F12`
 4. **Create new notes** by clicking on non-existent wikilinks
 
 Example: [[graph-view]]
-
-`F12` and Peek Definition do not work on a wikilink. Hovering previews the
-target note, and to follow a link by keyboard you can bind a key to VS Code's
-built-in **Open Link** command (`editor.action.openLink`).
 
 ## Which Editor a Note Opens In
 
@@ -28,12 +24,9 @@ read your notes in VS Code's built-in Markdown Editor, for example:
 ```
 
 Worth knowing before you set that one: **`[[` autocomplete and hover previews
-do not work inside the Markdown Editor.** It renders into a webview rather than
-a text editor, and VS Code gives extensions no way to contribute completions or
-hovers there. Everything that reads your notes rather than types into them —
-the graph, the Connections and Tags panels, backlinks, link syncing on rename —
-keeps working, because the file is still an ordinary Markdown document. Write in
-the text editor, switch to the Markdown Editor to read.
+do not work inside the Markdown Editor.** Everything else — the graph, the
+Connections and Tags panels, backlinks, link syncing on rename — keeps working.
+Write in the text editor, switch to the Markdown Editor to read.
 
 Creating a note always opens the text editor, whatever the association, so that
 template placeholders and tab stops work.

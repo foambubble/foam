@@ -533,25 +533,35 @@ Daily content here.`;
       await deleteFile(uri);
     });
 
-    it('creates a daily note in the text editor with the cursor at the end, association or not', async () => {
-      const targetDate = new Date(2021, 9, 6);
-      const foam = makeFoamMock();
+    // Creation goes through `createDocAndFocus`, which needs a TextEditor to
+    // insert the template snippet into — so it deliberately does not follow the
+    // association.
+    const expectCreatedInTextEditorWithCursorAtEnd = async (
+      targetDate: Date
+    ) => {
+      const result = await createDailyNoteIfNotExists(
+        targetDate,
+        makeFoamMock()
+      );
 
-      await withMarkdownEditorAssociation(async () => {
-        const result = await createDailyNoteIfNotExists(targetDate, foam);
+      expect(result.didCreateFile).toBe(true);
+      expect(getActiveTabViewType()).toBeUndefined();
+      const { document, selection } = window.activeTextEditor;
+      expect(selection.active).toEqual(
+        document.lineAt(document.lineCount - 1).range.end
+      );
 
-        expect(result.didCreateFile).toBe(true);
-        // Creation goes through `createDocAndFocus`, which needs a TextEditor to
-        // insert the template snippet into — so it deliberately does not follow
-        // the association.
-        expect(getActiveTabViewType()).toBeUndefined();
-        const { document, selection } = window.activeTextEditor;
-        expect(selection.active).toEqual(
-          document.lineAt(document.lineCount - 1).range.end
-        );
+      await deleteFile(result.uri);
+    };
 
-        await deleteFile(result.uri);
-      });
+    it('creates a daily note in the text editor with the cursor at the end', async () => {
+      await expectCreatedInTextEditorWithCursorAtEnd(new Date(2021, 9, 6));
+    });
+
+    it('creates a daily note in the text editor with the cursor at the end, even with an association', async () => {
+      await withMarkdownEditorAssociation(() =>
+        expectCreatedInTextEditorWithCursorAtEnd(new Date(2021, 9, 7))
+      );
     });
   });
 

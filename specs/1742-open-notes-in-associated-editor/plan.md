@@ -15,11 +15,10 @@ and the spec now says so. Three paths actually bypass it:
   on an open path are Open Daily Note / Open Daily Note for Date
   (`daily-note-service.ts:70`) and Open Random Note (`open-random-note.ts:28`).
 - Show Similar Notes does the same inline (`show-similar-notes.ts:91-94`).
-- A wikilink to an existing note is surfaced as a **definition**
+- A wikilink to an existing note is surfaced **only** as a definition
   (`navigation-provider.ts:239-252`), and "go to definition" always lands in a
-  text editor. Attachments were moved out of the definition path and into a
-  `command:vscode.open` DocumentLink for exactly this reason
-  (`navigation-provider.ts:342-364`, `:224-229`).
+  text editor. Attachments got a `command:vscode.open` DocumentLink for exactly
+  this reason (`navigation-provider.ts:342-364`, `:224-229`); notes did not.
 
 For the first three, the fix is to use `vscode.open` like the paths that
 already work. The daily note case is smaller than it looks: when today's file
@@ -40,11 +39,21 @@ like an attachment link: the `attachmentLinks` filter at
 accept note targets, `provideDefinition` gets the matching early return next
 to the attachment check at `:224-229`, and no configuration is read anywhere.
 
-Keeping both the DocumentLink and the definition is not an option, which the
-file already records: the early return for resolved reference-style links at
-`navigation-provider.ts:183-189` exists because having both at one range gave
-a duplicate "2 definitions" picker on ctrl+click. So the definition goes, for
-everybody:
+**Both the DocumentLink and the definition, at the same range** (settled on the
+PR as "option A"). The first implementation dropped the wikilink definition,
+citing the early return for resolved reference-style links at
+`navigation-provider.ts:183-189` as proof that the two cannot coexist. That
+comment is about two *definition* providers colliding — Foam's and the built-in
+Markdown extension's, which also defines `[ref]:` links — into VS Code's "2
+definitions" picker. It says nothing about a definition competing with a
+document link, and nothing here proves one: click precedence is resolved in the
+workbench, above any API the extension host exposes, so no test in this repo can
+observe it. Paying `F12` and Peek for every user on an unverified belief is the
+wrong trade, so Foam emits both and lets the workbench choose. The risk is
+one-sided — if it follows the definition, clicks land in a text editor, which is
+what they do today.
+
+What that means per affordance:
 
 - **Hover preview** (AC-8) — **needs no code, and this plan was wrong about
   it.** It claimed the only hover Foam has is the footnote branch of
@@ -54,11 +63,12 @@ everybody:
   and never depended on the definition. `hover-provider.spec.ts`'s "wikilink
   content preview" cases already stand for AC-8's hover clause; what AC-8
   still needs is its docs clause.
-- **`F12` and Peek Definition** — lost, and it is `F12` too, not peek alone:
-  both come from the definition. The keyboard route is the built-in
-  `editor.action.openLink`, which acts on the DocumentLink under the cursor and
-  which the user docs now name. Foam adding its own command and default
-  keybinding for that is machinery nobody asked for, so this plan does not.
+- **`F12` and Peek Definition** — **kept.** The definition for a wikilink to an
+  existing note stays exactly as on `main`, bracket-trimmed
+  `originSelectionRange` included, and the restored
+  `should create a definition for a wikilink` test is what holds it there.
+  Resolved reference-style links still get no definition — that is `main`'s
+  behavior and untouched.
 - **`[[note#Section]]` and `[[note#^block]]`** — preserved, which this plan
   originally missed: the definition carried `resolveFragmentRange`, so moving
   to a DocumentLink would silently stop landing on the section. The link now
@@ -149,12 +159,12 @@ proves real resolution.
    `navigation-provider.spec.ts`, beside the `attachment and image navigation`
    block at `:383` and asserting the same way it does (`links[0].target`
    equals a `commandAsURI` for `vscode.open`): a wikilink to an existing note
-   is a document link, and `provideDefinition` returns nothing for it. Then
-   widen the `attachmentLinks` filter and add the `provideDefinition` early
-   return. Existing definition tests for note wikilinks will fail at this
-   point — they encode the behavior being replaced, so they move to asserting
-   the document link; that is the one place in this plan where a passing test
-   changes meaning, and the diff should make it obvious.
+   is a document link. Then widen the `attachmentLinks` filter.
+   **Changed for option A:** `provideDefinition` is not touched. Every existing
+   definition test for note wikilinks keeps passing unchanged, and
+   `offers both a definition and a vscode.open link on the same wikilink`
+   asserts the two sit at the same range, which is the contract option A rests
+   on. No passing test changes meaning.
 
 7. ~~**AC-8 hover.**~~ **Dropped: no code needed.** `HoverProvider` already
    does it — see Approach.
@@ -204,11 +214,10 @@ proves real resolution.
     `TabInputText`" is what makes the e2e run AC-6 and not just AC-1.
 
 11. **Docs.** `docs/user/features/wikilinks.md` gains a short paragraph: notes
-    open in whatever editor `workbench.editorAssociations` names, hovering a
-    wikilink previews the target, and Peek Definition on a wikilink is no
-    longer available. Plus step 9's note if it applies. AC-8's docs clause is
-    this step. **Done**, plus the `F12` correction in "Creating Wikilinks",
-    which was naming a gesture that no longer works.
+    open in whatever editor `workbench.editorAssociations` names, plus step 9's
+    finding about what the Markdown Editor does not support. **Done.** With
+    option A nothing is lost, so there is nothing to warn about: `F12` stays in
+    "Creating Wikilinks" and the paragraph about losing peek is gone.
 
 ## AC verification map
 
@@ -217,15 +226,21 @@ mock in `test:unit` and against VS Code 1.136.0 and the real Markdown Editor in
 `test:e2e`.
 
 - AC-1 → `daily-notes/daily-note-service.spec.ts` ("Editor associations"),
-  `navigation/open-random-note.spec.ts` (new). Open Resource and the tree views
-  are already covered by `open-resource.spec.ts` and
-  `grouped-resources-tree-data-provider.spec.ts:95` and pass unchanged. Show
-  Similar Notes is **not** covered by an automated test — see Risks.
-- AC-2 → `navigation/navigation-provider.spec.ts`: the document link exists and
-  `provideDefinition` returns nothing for the same wikilink
-  ("Document links provider", "definition provider"), and activating that link
-  lands in the Markdown Editor ("wikilink activation and editor
-  associations").
+  `navigation/open-random-note.spec.ts` (new),
+  `navigation/open-resource.spec.ts` (e2e only — that file is not
+  `@unit-ready`) and `utils/tree-views/tree-view-utils.spec.ts`
+  ("ResourceTreeItem activation"), which executes a tree item's command the way
+  a click does. The last two close the gap the review pass found: the code
+  already routed through `vscode.open`, but nothing asserted the outcome under
+  an association. Show Similar Notes is **not** covered by an automated test —
+  see Risks.
+- AC-2 → `navigation/navigation-provider.spec.ts`: the document link exists for
+  the wikilink and carries a `#fragment` as `vscode.open`'s `selection`
+  ("Document links provider"), and activating it lands in the Markdown Editor
+  and on the section ("wikilink activation and editor associations").
+- AC-2b → human. `offers both a definition and a vscode.open link on the same
+  wikilink` is as close as an automated test gets; the gesture itself is not
+  reachable from the extension host.
 - AC-3 → `services/editor.test.ts:40` (exists, pure) and
   `services/editor.spec.ts` ("getActiveTabUri"), which resolves a note open in
   the Markdown Editor through the real `window.tabGroups`.
@@ -241,9 +256,10 @@ mock in `test:unit` and against VS Code 1.136.0 and the real Markdown Editor in
   Similar Notes is the one path still swept by hand.
 - AC-7 → `engines.vscode`/`@types/vscode` at `^1.136.0`, host pin at
   `1.136.0`, both suites green on it.
-- AC-8 → `navigation/hover-provider.spec.ts` ("wikilink content preview",
-  exists and must keep passing — it is the preview AC-8 is about) and the docs
-  change in step 11.
+- AC-8 → `navigation/hover-provider.spec.ts` ("wikilink content preview") and
+  `navigation-provider.spec.ts`'s `should create a definition for a wikilink`
+  plus the two alias cases — all pre-existing, all passing unchanged, which is
+  exactly what AC-8 now asks for.
 - AC-9 → the finding in `spec.md`, the evidence asserted in
   `services/editor.spec.ts`, and the user docs; `human` by nature, since the
   thing under test is another editor's behavior.
@@ -251,13 +267,14 @@ mock in `test:unit` and against VS Code 1.136.0 and the real Markdown Editor in
 ## Decisions
 
 - **Why reimplement `editorAssociations` matching?** (review) → We don't. The
-  gate is gone; see Approach. Note what that costs and who pays: Peek
-  Definition on wikilinks goes for every user, not only those who set an
-  association, and `F12` with it. Review's instruction — support what we can,
-  document the rest, let users choose — is why that is acceptable; the hover
-  preview AC-8 names is the part Foam supports itself, and it already did. It
-  also drops a dependency on `micromatch` glob semantics matching VS Code's,
-  which was the weakest claim in the previous draft.
+  gate is gone; see Approach. It also drops a dependency on `micromatch` glob
+  semantics matching VS Code's, which was the weakest claim in that draft.
+- **Option A over the gate, and over dropping the definition** (review) →
+  Emitting both costs nothing in the base case, so no configuration has to be
+  read and no user loses an affordance. If the workbench turns out to prefer
+  definitions, the fallback is the gate (option B): emit the link and suppress
+  the definition only when an association matches the target. A is B with the
+  gate removed, so falling back is additive rather than a rewrite.
 - **Should the mock be fixed?** (review) → Yes, step 3, on its own commit.
   Without it every AC-1/AC-3 assertion is a check that we called a command,
   which is exactly the gap the previous draft listed as a risk and then lived
@@ -294,12 +311,12 @@ mock in `test:unit` and against VS Code 1.136.0 and the real Markdown Editor in
 
 ## Risks
 
-- **Removing the definition for note wikilinks is the one irreversible-feeling
-  change here.** Every user, association or not, loses `F12` and Peek
-  Definition on a wikilink; `Ctrl`/`Cmd+Click` and the hover preview are
-  unaffected. If that lands badly the retreat is the gate this plan rejected,
-  with its matching problems, so it is worth being explicit in the PR body
-  rather than discovering it in an issue.
+- **Whether ctrl/cmd+click follows the link or the definition is unknown and
+  unknowable from here.** It is the one thing the whole wikilink half turns on,
+  and no test in this repo can reach it, so AC-2b is a human check and the PR
+  body says so. The cost of being wrong is that wikilink clicks keep landing in
+  a text editor, which is today's behavior — nothing a user has is at risk
+  either way.
 - **Show Similar Notes cannot be verified automatically.** The test host does
   not activate the AI features (the mock Foam has no embeddings) and the one
   AI spec that exists is `describe.skip` (`build-embeddings.spec.ts:11`). The
@@ -323,6 +340,6 @@ mock in `test:unit` and against VS Code 1.136.0 and the real Markdown Editor in
   gone.
 - **`provideDocumentLinks` runs on every open Markdown document.** With the
   gate gone it no longer reads configuration per link, so the hot path is
-  cheaper than the previous draft's; the new cost is `provideHover` parsing
-  the target note on hover, which is per-gesture and bounded by reading one
-  file.
+  cheaper than the previous draft's. The one addition is `fragmentSelection`,
+  which resolves a section or block range per link that has a `#fragment` —
+  a workspace lookup over already-parsed resources, no I/O.

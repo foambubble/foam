@@ -64,17 +64,18 @@ export default async function activate(
 /**
  * Provides navigation and references for Foam links.
  * - We create links for wikilinks, reference-style links and placeholders
- * - We create definitions only for direct markdown links ([text](./note.md))
- *   that resolve to something VS Code would not navigate to itself
+ * - We create definitions for wikilinks and for direct markdown links that
+ *   resolve to something VS Code would not navigate to itself
  * - We create references for all of them
  *
- * Wikilinks are links rather than definitions so that `vscode.open` decides
- * which editor the target opens in, honoring `workbench.editorAssociations`
- * (see https://github.com/foambubble/foam/issues/1742). A definition and a link
- * at the same range cannot coexist: the definition wins on ctrl/cmd+click, and
- * VS Code shows a duplicate "2 definitions" picker. The cost is that Go to
- * Definition and Peek Definition are no longer offered on a wikilink; the
- * target's content is still previewed on hover, by `HoverProvider`.
+ * A wikilink to an existing note gets both. The definition is what Go to
+ * Definition (`F12`) and Peek Definition work from; the DocumentLink invokes
+ * `vscode.open`, which honors `workbench.editorAssociations` so the target can
+ * open in the editor the user chose (see
+ * https://github.com/foambubble/foam/issues/1742). Which of the two the
+ * workbench follows on ctrl/cmd+click is its own decision and not observable
+ * from an extension — if it follows the definition the click lands in a text
+ * editor, which is what it has always done.
  *
  * Placeholders are links so that clicking one creates a note. Definitions are
  * automatically invoked by VS Code on hover, whereas links require an explicit
@@ -228,14 +229,9 @@ export class NavigationProvider
 
     const targetResource = this.workspace.get(uri);
 
-    // Wikilinks, and attachments and images however they are linked, are
-    // surfaced as DocumentLinks invoking `vscode.open`, so that
-    // `workbench.editorAssociations` decides the editor. A definition at the
-    // same range would take precedence and force a text editor.
+    // Attachments (PDFs, docs, etc.) and images are surfaced as DocumentLinks.
     // See: https://github.com/foambubble/foam/issues/1675
-    //  and https://github.com/foambubble/foam/issues/1742
     if (
-      targetLink.type === 'wikilink' ||
       targetResource?.type === 'attachment' ||
       targetResource?.type === 'image'
     ) {
@@ -251,7 +247,14 @@ export class NavigationProvider
       fragmentRange ?? Range.createFromPosition(targetRange.start);
 
     const result: vscode.LocationLink = {
-      originSelectionRange: toVsCodeRange(targetLink.range),
+      originSelectionRange: new vscode.Range(
+        targetLink.range.start.line,
+        targetLink.range.start.character +
+          (targetLink.type === 'wikilink' ? 2 : 0),
+        targetLink.range.end.line,
+        targetLink.range.end.character -
+          (targetLink.type === 'wikilink' ? 2 : 0)
+      ),
       targetUri: toVsCodeUri(uri.asPlain()),
       targetRange: toVsCodeRange(targetRange),
       targetSelectionRange: toVsCodeRange(targetSelectionRange),
@@ -318,10 +321,12 @@ export class NavigationProvider
     // [ref]: definitions), are surfaced as DocumentLinks that invoke the
     // `vscode.open` command — the same mechanism the built-in Markdown
     // extension uses, which resolves `workbench.editorAssociations` at every
-    // settings scope. Reference-style links need the explicit link for a second
-    // reason: VS Code's built-in Markdown provider otherwise intercepts
-    // cmd+click and navigates to the definition line ([ref]: url) rather than
-    // to the target file.
+    // settings scope. Wikilinks also have a definition, which is what keeps
+    // `F12` and Peek Definition working on them; see the class comment.
+    // Reference-style links need the explicit link for a second reason: VS
+    // Code's built-in Markdown provider otherwise intercepts cmd+click and
+    // navigates to the definition line ([ref]: url) rather than to the target
+    // file.
     // Direct markdown links ([text](file.md)) are left to the built-in Markdown
     // extension.
     // See: https://github.com/foambubble/foam/issues/1675
@@ -409,10 +414,10 @@ export class NavigationProvider
 
   /**
    * The range a link's `#fragment` points at, for `vscode.open` to select, so
-   * that `[[note#Section]]` and `[[note#^block]]` still land on the section or
-   * block now that wikilinks navigate through the command rather than through a
-   * definition. Returns `undefined` when there is no fragment or it resolves to
-   * nothing, in which case the target opens at the top.
+   * that `[[note#Section]]` and `[[note#^block]]` land on the section or block
+   * when navigation goes through the command rather than through a definition.
+   * Returns `undefined` when there is no fragment or it resolves to nothing, in
+   * which case the target opens at the top.
    */
   private fragmentSelection(target: URI): Range | undefined {
     if (!target.fragment) {

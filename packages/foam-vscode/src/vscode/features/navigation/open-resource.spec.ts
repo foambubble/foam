@@ -5,7 +5,10 @@ import { URI } from '@foam/core';
 import {
   closeEditors,
   createFile,
+  getActiveTabViewType,
+  MARKDOWN_EDITOR_VIEW_TYPE,
   waitForNoteInFoamWorkspace,
+  withMarkdownEditorAssociation,
 } from '../../../test/test-utils-vscode';
 import { deleteFile } from '../../services/editor';
 import waitForExpect from 'wait-for-expect';
@@ -129,5 +132,37 @@ describe('open-resource command', () => {
 
     await deleteFile(noteA.uri);
     await deleteFile(noteB.uri);
+  });
+
+  // The command delegates to `vscode.open`, so the workbench resolves
+  // `workbench.editorAssociations` for the note.
+  // See: https://github.com/foambubble/foam/issues/1742
+  it('opens the note in the editor associated with Markdown', async () => {
+    const noteA = await createFile('Note A for the association test');
+    await waitForNoteInFoamWorkspace(noteA.uri);
+
+    await withMarkdownEditorAssociation(async () => {
+      await commands.executeCommand(OPEN_COMMAND.command, { uri: noteA.uri });
+
+      await waitForExpect(() => {
+        expect(getActiveTabViewType()).toEqual(MARKDOWN_EDITOR_VIEW_TYPE);
+      });
+    });
+
+    await deleteFile(noteA.uri);
+  });
+
+  it('opens the note in the text editor when nothing is associated with Markdown', async () => {
+    const noteA = await createFile('Note A for the no-association test');
+    await waitForNoteInFoamWorkspace(noteA.uri);
+
+    await commands.executeCommand(OPEN_COMMAND.command, { uri: noteA.uri });
+
+    await waitForExpect(() => {
+      expect(getActiveTabViewType()).toBeUndefined();
+      expect(window.activeTextEditor.document.uri.path).toEqual(noteA.uri.path);
+    });
+
+    await deleteFile(noteA.uri);
   });
 });

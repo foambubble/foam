@@ -11,9 +11,11 @@ import {
   createFile,
   deleteFile,
   expectSameUri,
+  getActiveTabViewType,
   getUriInWorkspace,
   makeFoamMock,
   showInEditor,
+  withMarkdownEditorAssociation,
   withModifiedFoamConfiguration,
   withSecondRoot,
 } from '../../../test/test-utils-vscode';
@@ -253,6 +255,32 @@ describe('create-note command', () => {
       expect(window.activeTextEditor.document.getText()).toEqual(
         `# world\n\nfoo  ${target.getName()}`
       );
+      await deleteFile(target);
+      await deleteFile(template.uri);
+    });
+
+    it('expands the snippet in a text editor even when Markdown is associated with another editor (#1742)', async () => {
+      const template = await createFile(
+        '# ${FOAM_TITLE}\n\n${1:foo} $2 ${TM_FILENAME_BASE}',
+        ['.foam', 'templates', 'associated-editor-template.md']
+      );
+      const target = getUriInWorkspace();
+
+      await withMarkdownEditorAssociation(async () => {
+        await commands.executeCommand('foam-vscode.create-note', {
+          notePath: target,
+          templatePath: template.uri.path,
+          title: 'world',
+        });
+
+        // `insertSnippet` needs a TextEditor and has no equivalent outside one,
+        // so creation deliberately does not follow the association.
+        expect(getActiveTabViewType()).toBeUndefined();
+        expect(window.activeTextEditor.document.getText()).toEqual(
+          `# world\n\nfoo  ${target.getName()}`
+        );
+      });
+
       await deleteFile(target);
       await deleteFile(template.uri);
     });

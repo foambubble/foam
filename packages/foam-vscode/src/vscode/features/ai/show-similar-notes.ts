@@ -88,9 +88,9 @@ async function showSimilarNotes(foam: Foam): Promise<void> {
 
   if (selected) {
     const selectedUri = (selected as any).uri as URI;
-    const doc = await vscode.workspace.openTextDocument(
+    await vscode.commands.executeCommand(
+      'vscode.open',
       toVsCodeUri(selectedUri)
     );
-    await vscode.window.showTextDocument(doc);
   }
 }

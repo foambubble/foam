@@ -106,16 +106,23 @@ Each host keeps only its UI:
      `completionAt`, `OPEN_LINK`, `OPEN_TAG` and `Completion`.
      `applyCompletion` takes core's result and keeps swallowing a
      following `]]` for a link.
-   - Add the pure suggestions function next to `suggestNotes`:
+   - Add the pure `suggestionsFor` next to `suggestNotes`, taking the
+     `Suggestion` type and `VISIBLE_SUGGESTIONS` with it from
+     `Toolbar.tsx`:
      - a link gets notes plus the placeholder link;
      - a tag gets `#tag`, or a bare `tag` in frontmatter;
      - a section or block gets nothing.
-   - `Toolbar.tsx`'s `useSuggestions` calls it.
-   - `EditorToolbar` computes the completion once per render; today it
-     computes it twice, at line 51 and inside `useSuggestions`. In Live
-     mode it passes `editor.text` with the offset
-     `offsetOfLine(text, editing.current.start) + cursor`, and subtracts
-     the same base from `start` before `applyCompletion`.
+   - `applyCompletion` adds no space after a frontmatter tag, where a `,`
+     or `]` follows rather than prose.
+   - `Toolbar.tsx`'s `useSuggestions` takes the completion and calls
+     `suggestionsFor`. Each caller computes the completion once per render;
+     `EditorToolbar` used to compute it twice, at line 51 and inside
+     `useSuggestions`.
+   - In Live mode, `EditorToolbar` calls `completionInField(editor.text,
+     offsetOfLine(text, editing.current.start), cursor)`, a small helper in
+     `completion.ts` that reads the field within the whole note and
+     returns `start` relative to the field. Being pure, it is unit-tested
+     with a list item nested two deep.
    - Move the "what is being completed at the cursor" cases out of the
      app's `completion.test.ts`; step 1 already holds them. Add AC-10's
      cases to the same file.
@@ -196,8 +203,8 @@ Each host keeps only its UI:
   - `link-completion.spec.ts` runs in `test:unit`.
   - `tag-completion.spec.ts` runs only in e2e, so a broken tag adapter
     shows up only there (CI runs it).
-  - In the app, the pure suggestions function and `applyCompletion` are
-    tested, but the hooks and the Live-mode offset mapping are not. Check
-    by hand in the simulator before calling AC-10 done: in Live mode, put
-    the cursor in a list item nested three deep, type `[[`, and see note
-    suggestions.
+  - In the app, `suggestionsFor`, `applyCompletion` and
+    `completionInField` are tested, but the hooks and `EditorToolbar`'s
+    choice between Live and Source are not. Check by hand in the simulator
+    before calling AC-10 done: in Live mode, put the cursor in a list item
+    nested three deep, type `[[`, and see note suggestions.

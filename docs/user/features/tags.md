@@ -39,7 +39,7 @@ Create tag hierarchies using forward slashes:
 
 ## Autocompletion
 
-Typing `#` shows existing tags. In front matter, use `Ctrl+Space` for tag suggestions.
+Typing `#` shows existing tags. In front matter, use `Ctrl+Space` for tag suggestions in `tags:`. No suggestions appear in code, where Foam doesn't read tags.
 
 ## Tag Explorer
 

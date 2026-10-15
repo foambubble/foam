@@ -47,6 +47,8 @@ Foam provides intelligent autocomplete when creating links:
 3. **Use arrow keys** to navigate suggestions
 4. **Press Enter** to insert the selected link
 
+No suggestions appear in code or in front matter, where Foam doesn't read links.
+
 ## The Foam Graph
 
 For a visual overview of your knowledge base, Foam offers a [[graph-view]]. This feature renders your notes as nodes and the links between them as connections, creating an interactive map of your thoughts.

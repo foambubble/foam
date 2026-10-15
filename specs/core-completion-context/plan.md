@@ -4,13 +4,11 @@
 
 A new `packages/foam-core/src/services/completion.ts` exports
 `completionAt(text, offset)`, which returns what is being typed at `offset`
-or null. It does not match patterns of its own. Instead it closes what is
-being typed and asks core's parser whether it reads a link or tag there.
-Every disagreement in the spec comes from a host pattern drifting from the
-parser: code spans, indented code, HTML blocks, escapes, emoji and nested
-brackets. Asking the parser removes that whole class of drift. A scratch
-script ran this approach against the built core over every example in AC-1
-to AC-8, and every answer matched.
+or null. It reads only the cursor's line and the frontmatter before it, and
+applies core's own rules for what a wikilink, a tag and frontmatter are.
+Every rule comes from an existing core helper or from how core's parser
+reads a link, so the hosts stop drifting from each other and from the
+model.
 
 How it works, in order:
 
@@ -18,37 +16,21 @@ How it works, in order:
    `md.ts:130`, which counts a block that is not yet closed), only a
    `tags` value can complete (`isOnYAMLKeywordLine`, `md.ts:141`). The word
    being typed counts as a tag when `extractTagsFromProp` (`hashtags.ts`)
-   reads it back whole once one more character is added. Frontmatter is
-   the one place handled by rules rather than by asking the parser: YAML
-   that is still being typed does not parse until its brackets close, and
-   a `#` typed there is a YAML comment the parser never reads.
-2. **Pre-check, no parse.** On the cursor's line, look for an `[[` after
-   the last `]]`, or a `#` with no whitespace between it and the cursor.
-   If there is neither, return null. Most keystrokes stop here.
-3. **Probe.** Take the text before the cursor, append `x]]` and a
-   backtick, and parse it.
-   - The `x` stands in for a character not yet typed, so an empty `[[` or
-     `#` still reads as a link or tag.
-   - The backtick closes any inline code still open at the cursor, so it
-     reads as code.
-   - Look for the wikilink in `links` that ends at the added `]]`; failing
-     that, the tag in `tags` that ends at the added `x`.
+   reads it back whole once one more character is added.
+2. **Wikilink.** The link being typed opens at the first `[[` after the
+   last `]]` on the line that no backslash escapes. That is where core's
+   parser starts one: it reads `[[a [[b]]` and `[[foo] bar]]` as single
+   links, and skips an escaped `\[[` for the next `[[`.
    - Split the text typed since the `[[` the way `parseWikilink`
      (`markdown-link.ts:10`) splits a link. A `|` means nothing is completed
      (AC-4); a `#` means a section, or a block anchor when `^` follows.
-     Otherwise it is a plain link. Once the `|` case has returned null, the
-     split is a single `indexOf('#')`, so `parseWikilink` stays private.
-
-Only the text before the cursor is parsed. Block context depends only on
-preceding lines, and the added backtick covers inline code that is closed
-after the cursor. So text after the cursor never matters (AC-1), and the
-cost depends on where the cursor is, not on the note's length.
-
-The parser is a module-level `createMarkdownParser()`, not
-`foam.services.parser`. VS Code's parser caches by URI and reports every
-parse to the load profiler (`extension.ts:138`), and probe parses would
-pollute both. No host registers extra plugins (`extension.ts:138` passes
-`[]`), so a default parser reads notes exactly as the workspace does.
+     Otherwise it is a plain link.
+   - Once the `|` case has returned null, the split is a single
+     `indexOf('#')`, so `parseWikilink` stays private.
+3. **Tag.** `extractHashtags` (`hashtags.ts`), core's tag rule, runs on the
+   line with one character added. The tag it finds ending at that
+   character is the one being typed. That covers which characters a tag
+   holds, emoji included, and that a `#` must start a word.
 
 The result is one of four kinds, `link`, `section`, `block` or `tag`,
 with these fields:
@@ -69,12 +51,44 @@ Each host keeps only its UI:
   the 50-line frontmatter window go. `grep` finds no other users.
 - **App:** `completionAt` and its patterns leave `completion.ts`. The
   mapping from a completion to suggestions moves out of the
-  `useSuggestions` hook into a pure function, so AC-10 can be unit-tested.
+  `useSuggestions` hook into a pure function, so AC-9 can be unit-tested.
+
+### Tried and dropped: asking the parser
+
+The first version also told code and HTML from text. It closed what was
+being typed (appending `x]]` and a backtick to the text before the cursor),
+parsed that with a module-level `createMarkdownParser()`, and looked for
+the link or tag ending at the cursor. That matched the parser exactly, but
+it cost a parse of everything before the cursor on each call while a `[[`
+or `#` was open. Against the old host code on a journal note, cursor at
+the end:
+
+| Note | Old app | Old VS Code tag | Parse-based |
+| --- | --- | --- | --- |
+| 250 lines | 6 to 20 µs | 9 µs | 7 ms |
+| 1000 lines | 20 to 70 µs | 20 µs | 24 ms |
+| 4000 lines | 0.1 to 0.3 ms | 80 µs | 100 ms |
+
+The app asks on every keystroke while a link or tag is open, so the parse
+went, and code and HTML moved out of scope. The rule-based version costs
+about what the old app code did: one pass over the text before the cursor,
+in `isInFrontMatter`.
+
+On text with no code or HTML, a fuzz of the two versions over random
+strings of `[[`, `]]`, `#`, brackets, escapes and emoji agreed except
+where core's own reading has quirks:
+- a `#` right after `[`, `]` or an escape counts as starting a word, since
+  the parser splits text there;
+- an empty `[[]]` closes no link.
+
+The old host code did not complete those either. The parse-based version
+is commit `fb56d1f4` on this branch, for the follow-up that parses only the
+cursor's block.
 
 ## Work breakdown
 
 1. **Core tests first.** `packages/foam-core/src/services/completion.test.ts`
-   gets AC-1 to AC-8, one `describe` per criterion, with the spec's examples
+   gets AC-1 to AC-7, one `describe` per criterion, with the spec's examples
    as cases. It also gets the cases `completion.test.ts` in the app covers
    today, and the domain cases from VS Code's `tag-completion.spec.ts`:
    frontmatter `tags:` inline, flow list, list item, `tags:‸`, `  -‸`,
@@ -83,15 +97,7 @@ Each host keeps only its UI:
 2. **Core implementation.** Write `services/completion.ts` as described
    above, and export `completionAt` and its result type from
    `src/index.ts` next to `MarkdownLink`.
-3. **Bench.** Add `packages/foam-core/src/services/completion.bench.ts`.
-   It times `completionAt` with the cursor after an `[[` at the end of
-   `makeJournalNote` at 250, 1000 and 4000 lines, reusing the fixtures in
-   `packages/foam-core/test/parser-fixtures.ts`. The sizes are its own:
-   importing `PARSER_BENCHMARK_SIZES` from a `*.bench.ts` would register
-   that file's benches a second time. `vitest.bench.config.ts` already
-   picks up `src/**/*.bench.ts`, and `perf-regression.test.ts` gates it once
-   the baseline is reseeded.
-4. **VS Code (`link-completion.ts`, `tag-completion.ts`).**
+3. **VS Code (`link-completion.ts`, `tag-completion.ts`).**
    - `WikilinkCompletionProvider` handles `link`, with its range running
      from `start + 2` to the cursor.
    - `SectionCompletionProvider` handles `section` and `block`. An empty
@@ -101,7 +107,7 @@ Each host keeps only its UI:
      at a typed `#`, `additionalTextEdits` deletes that `#`, as today.
    - Add two cases to the specs: `[[a [[b` replaces `a [[b`, and
      frontmatter `tags: #` carries the edit that deletes the `#`.
-5. **App, on the mobile stack (see Decisions).**
+4. **App, on the mobile stack (see Decisions).**
    - `completion.ts` imports `completionAt` from `@foam/core` and drops
      `completionAt`, `OPEN_LINK`, `OPEN_TAG` and `Completion`.
      `applyCompletion` takes core's result and keeps swallowing a
@@ -117,59 +123,51 @@ Each host keeps only its UI:
    - `Toolbar.tsx`'s `useSuggestions` takes the completion and calls
      `suggestionsFor`. Each caller computes the completion once per render;
      `EditorToolbar` used to compute it twice, at line 51 and inside
-     `useSuggestions`.
-   - In Live mode, `EditorToolbar` calls `completionInField(editor.text,
-     offsetOfLine(text, editing.current.start), cursor)`, a small helper in
-     `completion.ts` that reads the field within the whole note and
-     returns `start` relative to the field. Being pure, it is unit-tested
-     with a list item nested two deep.
+     `useSuggestions`. `EditorToolbar` passes the field, as before.
    - Move the "what is being completed at the cursor" cases out of the
-     app's `completion.test.ts`; step 1 already holds them. Add AC-10's
+     app's `completion.test.ts`; step 1 already holds them. Add AC-9's
      cases to the same file.
-6. **Check.** Run `yarn lint`, `yarn test:unit` and
+5. **Check.** Run `yarn lint`, `yarn test:unit` and
    `env -u ELECTRON_RUN_AS_NODE yarn test:e2e`, which runs
-   `tag-completion.spec.ts` and the bench.
+   `tag-completion.spec.ts`.
 
 ## AC verification map
 
-- AC-1 to AC-8 → `packages/foam-core/src/services/completion.test.ts`
-- AC-9 → `packages/foam-vscode/src/vscode/features/navigation/link-completion.spec.ts`
+- AC-1 to AC-7 → `packages/foam-core/src/services/completion.test.ts`
+- AC-8 → `packages/foam-vscode/src/vscode/features/navigation/link-completion.spec.ts`
   and `packages/foam-vscode/src/vscode/features/tags/tag-completion.spec.ts`
-- AC-10 → `packages/foam-mobile/src/capture/completion.test.ts` (on the
+- AC-9 → `packages/foam-mobile/src/capture/completion.test.ts` (on the
   mobile stack)
-- AC-11 → review:
+- AC-10 → review:
   - a search for `WIKILINK_REGEX|SECTION_REGEX|HASH_REGEX|OPEN_LINK|OPEN_TAG`
     finds nothing;
   - the app's cursor cases now live in core's test.
 
 ## Decisions
 
-- **Spec open question, what the app passes in Live mode** → the whole
-  note, mapped by offset. The spec's assumption does not hold:
-  - `buildNoteUnits` (`packages/foam-mobile/src/reader/note-document.ts`)
-    makes each list item a unit of its own, without the lists nested in it.
-  - An item nested two levels deep starts with at least four spaces, and
-    read on its own it parses as an indented code block. Completion would
-    go silent there.
-  - Frontmatter and code blocks are whole units and would have been fine.
-  - `offsetOfLine` (`packages/foam-mobile/src/editor/line-range.ts:18`)
-    gives the base offset.
+- **What the app passes in Live mode** → the field, as before.
+  - The rules read only the cursor's line and the frontmatter before it.
+  - The frontmatter is a unit of its own in Live mode, with both of its
+    `---` lines (`buildNoteUnits`,
+    `packages/foam-mobile/src/reader/note-document.ts`).
+  - The parse-based version needed the whole note, because a list item
+    nested two deep, read on its own, parses as indented code.
 - **Branches.** Core and VS Code go on `feature/core-completion-context`,
   cut from `origin/main`, with the spec and plan copied into `specs/`.
-  The app is not on `main`, so its part (step 5) goes on
-  `feature/mobile-core-completion`, cut from the tip of the mobile stack,
-  with this branch's core commit cherry-picked under it. Rebasing the
-  whole stack onto this branch was the first idea, but it would rewrite
-  its 15 branch labels while other sessions use them. When the stack is
-  rebased onto `main` after this merges, the cherry-pick drops out as
-  already applied.
+  - The app is not on `main`, so its part (step 4) goes on
+    `feature/mobile-core-completion`, cut from the tip of the mobile stack,
+    with this branch's core commits cherry-picked under it.
+  - Rebasing the whole stack onto this branch would have rewritten its 15
+    branch labels while other sessions use them.
+  - This repo squash-merges, so when the stack is rebased onto `main` after
+    this merges, the cherry-picked core commits won't match the squash.
+    Skip them during that rebase (`git rebase --skip`), since `main` then
+    holds their result.
 - **Spec changes from the research.** These are already applied to the
   spec.
-  - AC-2 and AC-9 now follow the parser: core reads `[[a [[b]]` and
+  - AC-2 and AC-8 follow the parser: core reads `[[a [[b]]` and
     `[[foo] bar]]` as single links from the first `[[`.
-  - The unclosed-backtick case in AC-8 is kept. A construct opened before
-    the cursor counts as open, the rule `isInFrontMatter` already applies.
-    The added backtick is how the probe applies that rule.
+  - Code and HTML moved to Out of scope, for the cost above.
 - **Quoted frontmatter tags.** `tags: ["pkm", "me‸` completes `me`, because
   core reads it as a tag. This is not in the spec; it is assumed and
   tested in step 1.
@@ -178,24 +176,6 @@ Each host keeps only its UI:
 
 ## Risks
 
-- **Cost on the typing path.** Each call that passes the pre-check parses
-  the text before the cursor. Measured here with a full parse:
-  - 250 lines: 5.5 ms
-  - 1000 lines: 21 ms
-  - 4000 lines: 87 ms
-
-  The bare tree parse is about 80% of that. A phone is slower.
-  - VS Code calls per trigger character (`[`, `#`, `^`). A `#` reaches
-    both the section and the tag provider, so it costs two parses; this is
-    accepted.
-  - The app calls on every keystroke while a link or tag is open, hence
-    the one-call-per-render change in step 5.
-  - The bench catches regressions, not absolute slowness. If large notes
-    lag, the follow-up is for each host to pass the start of the cursor's
-    top-level block from its last parse. That is out of scope here.
-- **Probe artefacts.** The parse of the probe text runs every built-in
-  plugin. Its result is thrown away and no cache is involved, so nothing
-  leaks. `Logger.debug` logs one "Parsing:" line per probe.
 - **Unclosed `---`.** A note that opens with `---` as a horizontal rule and
   never closes it counts as frontmatter throughout, so only `tags` lines
   complete. VS Code already behaves this way within its 50-line window.
@@ -203,8 +183,7 @@ Each host keeps only its UI:
   - `link-completion.spec.ts` runs in `test:unit`.
   - `tag-completion.spec.ts` runs only in e2e, so a broken tag adapter
     shows up only there (CI runs it).
-  - In the app, `suggestionsFor`, `applyCompletion` and
-    `completionInField` are tested, but the hooks and `EditorToolbar`'s
-    choice between Live and Source are not. Check by hand in the simulator
-    before calling AC-10 done: in Live mode, put the cursor in a list item
-    nested three deep, type `[[`, and see note suggestions.
+  - In the app, `suggestionsFor` and `applyCompletion` are tested, but the
+    hooks are not. Check by hand in the simulator before calling AC-9
+    done: type `[[` and `#` in capture and in the editor's Live and Source
+    modes, and `tags: #` in Source mode's frontmatter.

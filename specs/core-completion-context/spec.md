@@ -20,12 +20,11 @@ answers.
 
 This spec asks for one answer in core, which the three hosts call, keeping
 only their UI: which suggestions to show, how they are ranked, and what
-picking one writes. The answer is also consistent with core's own reading
-of a note: completion offers a link or a tag only where core's parser reads
-one, so nothing is suggested that Foam will then ignore. A construct opened
-before the cursor and not yet closed — the `[[` being typed, frontmatter, a
-code fence, a backtick — counts as open, as `isInFrontMatter` already
-treats frontmatter that "may stop where a note is being written".
+picking one writes. The answer follows core's own rules for what a
+wikilink, a tag and frontmatter are, so nothing is suggested that Foam will
+then ignore, with one exception for now: code and HTML (see Out of scope).
+Frontmatter opened and not yet closed counts as open, as `isInFrontMatter`
+already treats frontmatter that "may stop where a note is being written".
 
 ### Where the hosts disagree today
 
@@ -115,29 +114,20 @@ lines; `![[` completes like `[[`.
   closing `---`, then nothing; `tags: #pk‸` there is an ordinary tag.
   _verify: unit_
 
-- **AC-8**: Given the cursor inside inline code — closed on the same line
-  (`` `see [[fo‸` ``), closed further on in the paragraph, or not yet closed
-  (`` `see [[fo‸ ``) — or inside a fenced code block (closed or not), an
-  indented code block or an HTML block, then nothing, whatever follows `[[`
-  or `#`. Given inline code closed earlier on the line
-  (`` `x` and [[fo‸ ``), or a list item's continuation indented four spaces,
-  the link or tag is found.
-  _verify: unit_
-
-- **AC-9**: In VS Code, link, section, block-anchor and tag completion
+- **AC-8**: In VS Code, link, section, block-anchor and tag completion
   (frontmatter included, with a typed `#` removed on accept) are offered
-  exactly where AC-1 to AC-8 find something, and replace only what was
+  exactly where AC-1 to AC-7 find something, and replace only what was
   typed: `[[a [[b‸` replaces `a [[b`. `link-completion.spec.ts` and
   `tag-completion.spec.ts` keep passing unchanged.
   _verify: e2e_
 
-- **AC-10**: In the mobile app, capture and the editor suggest notes for a
-  link and tags for a tag, exactly where AC-1 to AC-8 find one; while a
+- **AC-9**: In the mobile app, capture and the editor suggest notes for a
+  link and tags for a tag, exactly where AC-1 to AC-7 find one; while a
   section or block anchor is typed they suggest nothing. In Source mode,
   given `tags: #pk‸` in frontmatter, picking `pkm` writes `tags: pkm`.
   _verify: unit_
 
-- **AC-11**: No host keeps a pattern of its own for what is being typed at
+- **AC-10**: No host keeps a pattern of its own for what is being typed at
   the cursor; the cases the hosts test today for it are covered by core's
   tests.
   _verify: human_
@@ -148,14 +138,15 @@ lines; `![[` completes like `[[`.
   filtering to the editor and inserts inside the brackets; the app ranks with
   `suggestNotes`/`suggestTags` and swallows a following `]]`. Those are UI
   and stay with each host.
-- **Section and block suggestions on mobile.** The app gains none here (AC-10
+- **Section and block suggestions on mobile.** The app gains none here (AC-9
   only stops it suggesting notes for a section).
+- **Code and HTML.** Completion still works inside inline code, code blocks
+  and HTML blocks, where core reads no link or tag, as both hosts do today.
+  Telling those apart needs block context from before the cursor's line: a
+  fence opened earlier, indented code against a list item's continuation.
+  Getting it from core's parser meant parsing everything before the cursor
+  on each call, 7, 24 and 100 ms at 250, 1000 and 4000 lines against well
+  under a millisecond for the rules, measured on a laptop. A follow-up can
+  parse only the cursor's block.
 - **Markdown links** (`[text](‸`), and completion triggers — which keystrokes
   open the list is each editor's business.
-
-## Open questions
-
-- **What the app passes in Live mode.** The editor's field there holds only
-  the lines being edited, so frontmatter and fences opened above them are not
-  in the text. Assumed: an edited unit holds its own opening `---` or fence.
-  If not, the app has to pass more of the note.

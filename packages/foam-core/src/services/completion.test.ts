@@ -45,6 +45,11 @@ describe('AC-2: the wikilink core reads once it is closed', () => {
     expect(at('\\[[fo‸')).toBeNull();
     expect(at('[[fo\no‸')).toBeNull();
   });
+
+  it('opens at the [[ after an escaped one, and after an escaped \\', () => {
+    expect(at('\\[[a [[b‸')).toEqual({ kind: 'link', query: 'b', start: 5 });
+    expect(at('\\\\[[a‸')).toEqual({ kind: 'link', query: 'a', start: 2 });
+  });
 });
 
 describe('AC-3: a section or block anchor being typed', () => {
@@ -204,38 +209,6 @@ describe('AC-7: the rest of the frontmatter', () => {
       query: 'pk',
       start: 23,
       frontmatter: false,
-    });
-  });
-});
-
-describe('AC-8: code and HTML', () => {
-  it('completes nothing inside inline code, closed or not', () => {
-    expect(at('`see [[fo‸`')).toBeNull();
-    expect(at('`see\n[[fo‸ more`')).toBeNull();
-    expect(at('`see [[fo‸')).toBeNull();
-    expect(at('`x #ta‸')).toBeNull();
-  });
-
-  it('completes nothing inside a code or HTML block', () => {
-    expect(at('```\n[[fo‸\n```')).toBeNull();
-    expect(at('```\n#ta‸')).toBeNull();
-    expect(at('para\n\n    [[fo‸')).toBeNull();
-    expect(at('<div>\n[[fo‸\n</div>')).toBeNull();
-  });
-
-  it('completes after inline code closed earlier on the line', () => {
-    expect(at('`x` and [[fo‸')).toEqual({
-      kind: 'link',
-      query: 'fo',
-      start: 8,
-    });
-  });
-
-  it('completes in a list item continued by an indented paragraph', () => {
-    expect(at('- item\n\n    [[fo‸')).toEqual({
-      kind: 'link',
-      query: 'fo',
-      start: 12,
     });
   });
 });

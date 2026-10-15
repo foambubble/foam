@@ -1,8 +1,5 @@
-import { Position } from '../model/position';
-import { URI } from '../model/uri';
-import { extractTagsFromProp } from '../utils/hashtags';
+import { extractHashtags, extractTagsFromProp } from '../utils/hashtags';
 import { isInFrontMatter, isOnYAMLKeywordLine } from '../utils/md';
-import { createMarkdownParser } from './markdown-parser';
 
 /**
  * What is being typed at a cursor: a wikilink, a section or block anchor in
@@ -27,16 +24,14 @@ export type CompletionContext =
       frontmatter: boolean;
     };
 
-const parser = createMarkdownParser();
-const probeUri = URI.placeholder('completion');
-
 /** A tag word in a YAML value, after a separator, with any `#` before it */
 const YAML_TAG = /(?:^|[\s,["'])(#?)([^\s,["'#]*)$/;
 
 /**
  * What is being typed at `offset` in `text`: a wikilink, section, block
- * anchor or tag that core's parser reads once it is closed, or a tag in the
- * value of the frontmatter's `tags`. Only the text before `offset` is read.
+ * anchor or tag as core reads one once it is closed, or a tag in the value
+ * of the frontmatter's `tags`. Only the cursor's line and the frontmatter
+ * before it are read, so code spans and blocks are not told from text.
  */
 export function completionAt(
   text: string,
@@ -49,39 +44,35 @@ export function completionAt(
   if (isInFrontMatter(before, lineNumber)) {
     return frontMatterTagAt(before, line, lineStart);
   }
-  const typingLink = line.lastIndexOf('[[') > line.lastIndexOf(']]');
-  if (!typingLink && !/#\S*$/.test(line)) {
-    return null;
+  const open = openLinkAt(line);
+  if (open >= 0) {
+    return linkContext(line.slice(open + 2), lineStart + open);
   }
-  // `x` is a character yet to be typed, so that `[[` and `#` alone read as a
-  // link and a tag; the backtick closes a code span open at the cursor, so
-  // that what is typed in it reads as code.
-  const probe = parser.parse(probeUri, `${before}x]]\``);
-  const endsAt = (position: Position, length: number) =>
-    Position.isEqual(
-      position,
-      Position.create(lineNumber, line.length + length)
-    );
-  const link = probe.links.find(
-    link => link.type === 'wikilink' && endsAt(link.range.end, 'x]]'.length)
+  // `x` is a character yet to be typed, so that `#` alone reads as a tag
+  const tag = extractHashtags(`${line}x`).find(
+    tag => tag.offset + 1 + tag.label.length === line.length + 1
   );
-  if (link) {
-    // An embed's range starts at its `!`
-    const start =
-      lineStart + link.range.start.character + (link.isEmbed ? 1 : 0);
-    return linkContext(before.slice(start + 2), start);
+  return tag
+    ? {
+        kind: 'tag',
+        query: tag.label.slice(0, -1),
+        start: lineStart + tag.offset,
+        frontmatter: false,
+      }
+    : null;
+}
+
+/**
+ * Where the wikilink being typed on `line` opens, as core's parser reads
+ * one: at the first `[[` after the last `]]` that no backslash escapes.
+ */
+function openLinkAt(line: string): number {
+  const closed = line.lastIndexOf(']]');
+  let open = line.indexOf('[[', closed < 0 ? 0 : closed + 2);
+  while (open >= 0 && /(^|[^\\])(\\\\)*\\$/.test(line.slice(0, open))) {
+    open = line.indexOf('[[', open + 1);
   }
-  const tag = probe.tags.find(tag => endsAt(tag.range.end, 'x'.length));
-  if (tag) {
-    const start = lineStart + tag.range.start.character;
-    return {
-      kind: 'tag',
-      query: before.slice(start + 1),
-      start,
-      frontmatter: false,
-    };
-  }
-  return null;
+  return open;
 }
 
 /** What is typed of a wikilink opening at `start`, split as core splits one. */

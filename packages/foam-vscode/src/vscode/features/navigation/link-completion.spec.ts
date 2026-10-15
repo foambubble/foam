@@ -119,6 +119,22 @@ describe('Link Completion', () => {
     }
   });
 
+  it('replaces everything typed since the [[ that opens the link', async () => {
+    const text = '[[a [[b';
+    const { uri } = await createFile(text);
+    const { doc } = await showInEditor(uri);
+    const provider = new WikilinkCompletionProvider(ws, graph);
+
+    const links = await provider.provideCompletionItems(
+      doc,
+      new vscode.Position(0, text.length)
+    );
+
+    expect(links.items[0].range).toEqual(
+      new vscode.Range(0, 2, 0, text.length)
+    );
+  });
+
   it('should support label setting', async () => {
     const { uri: noteUri, content } = await createFile(`# My Note Title`);
     const workspace = createTestWorkspace();

@@ -257,6 +257,9 @@ tags: prim`);
 
       expect(foamTags.tags.get('primary')).toBeTruthy();
       expect(tags.items.length).toEqual(3);
+      expect(tags.items[0].additionalTextEdits).toEqual([
+        vscode.TextEdit.delete(new vscode.Range(1, 6, 1, 7)),
+      ]);
     });
 
     it('should provide suggestions when on `tags:` in the front-matter when tags are comma separated', async () => {

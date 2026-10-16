@@ -63,7 +63,10 @@ async function convertWikilinkToMarkdown(foam: Foam): Promise<void> {
     }
 
     const linkInfo = MarkdownLink.analyzeLink(targetLink);
-    const targetResource = foam.workspace.find(linkInfo.target);
+    // Resolve the link the way navigation does. resolveLink may embed the
+    // section as a URI fragment; strip it to get the resource URI.
+    const targetUri = foam.workspace.resolveLink(resource, targetLink).asPlain();
+    const targetResource = foam.workspace.find(targetUri);
     if (!targetResource) {
       throw new Error(`Resource "${linkInfo.target}" not found`);
     }

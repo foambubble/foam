@@ -473,6 +473,42 @@ describe('Link resolution', () => {
         // Default provider without workspace roots should work as before
         expect(ws.resolveLink(noteA, noteA.links[0])).toEqual(noteB.uri);
       });
+
+      it('should resolve workspace-relative paths with percent-encoded spaces', () => {
+        const linker = createNoteFromMarkdown(
+          'Link to [page](/dir2/page%20b.md)',
+          '/workspace/dir1/page-a.md'
+        );
+        const target = createNoteFromMarkdown(
+          'Content of page b',
+          '/workspace/dir2/page b.md'
+        );
+
+        const ws = createTestWorkspace([URI.file('/workspace')]);
+        ws.set(linker).set(target);
+
+        expect(ws.resolveLink(linker, linker.links[0])).toEqual(target.uri);
+      });
+
+      it('should resolve workspace-relative paths with percent-encoded spaces across roots in both directions', () => {
+        const noteA = createNoteFromMarkdown(
+          'Link to [b](/shared/page%20b.md)',
+          '/workspace1/notes/page a.md'
+        );
+        const noteB = createNoteFromMarkdown(
+          'Link to [a](/notes/page%20a.md)',
+          '/workspace2/shared/page b.md'
+        );
+
+        const ws = createTestWorkspace([
+          URI.file('/workspace1'),
+          URI.file('/workspace2'),
+        ]);
+        ws.set(noteA).set(noteB);
+
+        expect(ws.resolveLink(noteA, noteA.links[0])).toEqual(noteB.uri);
+        expect(ws.resolveLink(noteB, noteB.links[0])).toEqual(noteA.uri);
+      });
     });
   });
 });

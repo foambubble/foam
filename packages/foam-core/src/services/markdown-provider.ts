@@ -141,12 +141,15 @@ export class MarkdownResourceProvider implements ResourceProvider {
         let path: string;
 
         if (targetPath.startsWith('/')) {
-          const resolvedUri = workspace.resolveUri(targetPath, resource.uri);
+          // Link targets are URLs: decode them (e.g. %20) the way relative
+          // targets are decoded when find() resolves them through URI.parse
+          const decodedPath = URI.parse(targetPath, 'tmp').path;
+          const resolvedUri = workspace.resolveUri(decodedPath, resource.uri);
           targetUri =
-            workspace.find(targetPath, resource.uri)?.uri ??
+            workspace.find(decodedPath, resource.uri)?.uri ??
             workspace.roots
               .map(root =>
-                this._resolveAsDirectory(workspace, root.joinPath(targetPath))
+                this._resolveAsDirectory(workspace, root.joinPath(decodedPath))
               )
               .find(Boolean)?.uri ??
             URI.placeholder(resolvedUri.path);

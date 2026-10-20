@@ -87,6 +87,28 @@ describe('Link Conversion Commands', () => {
       await deleteFile(uri);
     });
 
+    it('should convert a directory wikilink to its resolved index file', async () => {
+      const readme = await createFile('# My Folder Index', [
+        'my-folder',
+        'README.md',
+      ]);
+      const { uri } = await createFile('Text before [[my-folder]] text after');
+      const { editor } = await showInEditor(uri);
+      await waitForNoteInFoamWorkspace(readme.uri);
+
+      editor.selection = new vscode.Selection(0, 15, 0, 15);
+
+      await vscode.commands.executeCommand(CONVERT_WIKILINK_TO_MDLINK.command);
+
+      const result = editor.document.getText();
+      expect(result).toBe(
+        'Text before [My Folder Index](my-folder/README.md) text after'
+      );
+
+      await deleteFile(readme.uri);
+      await deleteFile(uri);
+    });
+
     it('should show info message when no wikilink at cursor', async () => {
       const { uri } = await createFile('Text with no wikilinks');
       const { editor } = await showInEditor(uri);

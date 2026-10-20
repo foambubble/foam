@@ -1238,6 +1238,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "Morikko",
+      "name": "Eric Masseran",
+      "avatar_url": "https://avatars.githubusercontent.com/u/7831572?v=4",
+      "profile": "https://www.linkedin.com/in/ericmasseran/",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,

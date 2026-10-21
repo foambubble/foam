@@ -125,8 +125,16 @@ function createVsCodeQueryOps(workspaceRoot: URI) {
 
   return {
     list: async (pattern: string): Promise<URI[]> => {
+      // Root the search at the pattern's literal directory prefix: from the
+      // workspace root, ripgrep walks the whole workspace (#1747).
+      const segments = pattern.split('/');
+      const literal = segments.findIndex(s => /[*?{[]/.test(s));
+      const base = workspaceRoot.joinPath(...segments.slice(0, literal));
       const uris = await vscode.workspace.findFiles(
-        new vscode.RelativePattern(toVsCodeUri(workspaceRoot), pattern)
+        new vscode.RelativePattern(
+          toVsCodeUri(base),
+          segments.slice(literal).join('/')
+        )
       );
       return uris.map(fromVsCodeUri);
     },

@@ -1,5 +1,5 @@
 /* @unit-ready */
-import { QuickPickItem, window, workspace } from 'vscode';
+import { QuickPickItem, RelativePattern, window, workspace } from 'vscode';
 import { URI } from '@foam/core';
 import {
   askUserForTemplate,
@@ -31,24 +31,55 @@ describe('getTemplatesDir', () => {
   });
 
   it('should return the custom templates directory when foam.templates.folder is set', async () => {
-    await withModifiedFoamConfiguration('templates.folder', 'custom/templates', async () => {
-      const dir = getTemplatesDir();
-      expect(dir.path).toContain('custom/templates');
-      expect(dir.path).not.toContain('.foam/templates');
-    });
+    await withModifiedFoamConfiguration(
+      'templates.folder',
+      'custom/templates',
+      async () => {
+        const dir = getTemplatesDir();
+        expect(dir.path).toContain('custom/templates');
+        expect(dir.path).not.toContain('.foam/templates');
+      }
+    );
   });
 });
 
 describe('getTemplates', () => {
   it('should find templates in a custom folder when foam.templates.folder is set', async () => {
-    await withModifiedFoamConfiguration('templates.folder', 'custom-tpl', async () => {
-      const template = await createFile('# Custom template', ['custom-tpl', 'my-template.md']);
+    await withModifiedFoamConfiguration(
+      'templates.folder',
+      'custom-tpl',
+      async () => {
+        const template = await createFile('# Custom template', [
+          'custom-tpl',
+          'my-template.md',
+        ]);
+        try {
+          const templates = await getTemplates();
+          const paths = templates.map(t => t.path);
+          expect(paths.some(p => p.includes('custom-tpl/my-template.md'))).toBe(
+            true
+          );
+        } finally {
+          await deleteFile(template.uri);
+        }
+      }
+    );
+  });
+
+  it('searches only inside the templates folder of each root, not the whole workspace (#1747)', async () => {
+    await withSecondRoot(async root => {
+      const findFiles = vi.spyOn(workspace, 'findFiles');
       try {
-        const templates = await getTemplates();
-        const paths = templates.map(t => t.path);
-        expect(paths.some(p => p.includes('custom-tpl/my-template.md'))).toBe(true);
+        await getTemplates();
+        const bases = findFiles.mock.calls.map(([include]) =>
+          include instanceof RelativePattern ? include.baseUri.fsPath : include
+        );
+        expect(bases).toEqual([
+          toVsCodeUri(getTemplatesDir()).fsPath,
+          toVsCodeUri(root.joinPath('.foam', 'templates')).fsPath,
+        ]);
       } finally {
-        await deleteFile(template.uri);
+        findFiles.mockRestore();
       }
     });
   });
@@ -115,11 +146,6 @@ describe('askUserForTemplate', () => {
       ]);
       const inSecond = root.joinPath('.foam', 'templates', 'meeting.md');
       await writeFile(inSecond, '# Second');
-      const findFiles = vi
-        .spyOn(workspace, 'findFiles')
-        .mockResolvedValueOnce(
-          [inFirst.uri, inSecond, unique.uri].map(toVsCodeUri)
-        );
       const pick = vi
         .spyOn(window, 'showQuickPick')
         .mockImplementationOnce((async () => undefined) as any);
@@ -134,7 +160,6 @@ describe('askUserForTemplate', () => {
         expect(itemFor(inSecond).description).toEqual('notes');
         expect(itemFor(unique.uri).description).toBeUndefined();
       } finally {
-        findFiles.mockRestore();
         pick.mockRestore();
         await deleteFile(inFirst.uri);
         await deleteFile(unique.uri);
@@ -146,10 +171,6 @@ describe('askUserForTemplate', () => {
     await withSecondRoot(async root => {
       const template = root.joinPath('.foam', 'templates', 'other-root.md');
       await writeFile(template, '# Other root');
-      // VS Code lists the templates of every root; stand in for that listing.
-      const findFiles = vi
-        .spyOn(workspace, 'findFiles')
-        .mockResolvedValueOnce([toVsCodeUri(template)]);
       const pick = vi
         .spyOn(window, 'showQuickPick')
         .mockImplementationOnce(
@@ -159,7 +180,6 @@ describe('askUserForTemplate', () => {
         const picked = (await askUserForTemplate()) as URI;
         expect(picked.toFsPath()).toEqual(template.toFsPath());
       } finally {
-        findFiles.mockRestore();
         pick.mockRestore();
       }
     });

@@ -63,11 +63,13 @@ export const getDailyNoteTemplateUri = () =>
 
 // Each search is rooted at a templates folder: a workspace-relative glob
 // makes ripgrep walk the whole workspace, node_modules included (#1747).
+// Only the files directly in the folder are templates, as in `foam list
+// templates`, so the pattern stays non-recursive.
 export async function getTemplates(): Promise<URI[]> {
   const found = await Promise.all(
     getAllTemplatesDirs().map(dir =>
       workspace.findFiles(
-        new RelativePattern(toVsCodeUri(dir), '**/*.{md,js}'),
+        new RelativePattern(toVsCodeUri(dir), '*.{md,js}'),
         null
       )
     )

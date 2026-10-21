@@ -45,6 +45,10 @@ export class SmartFolderStorage implements IDisposable {
     // The watcher tracks the same set of files the QueryStore enumerates.
     // We have to repeat the glob here because vscode requires it as a
     // RelativePattern up front; the matching definition stays in core.
+    // Unlike the listing in createVsCodeQueryOps, this stays rooted at the
+    // workspace root on purpose: a watcher based on the queries folder would
+    // not fire when that folder is created, which is when the first query is
+    // saved.
     this.watcher = vscode.workspace.createFileSystemWatcher(
       new vscode.RelativePattern(toVsCodeUri(this.workspaceRoot), QUERIES_GLOB)
     );
@@ -128,12 +132,16 @@ function createVsCodeQueryOps(workspaceRoot: URI) {
       // Root the search at the pattern's literal directory prefix: from the
       // workspace root, ripgrep walks the whole workspace (#1747).
       const segments = pattern.split('/');
-      const literal = segments.findIndex(s => /[*?{[]/.test(s));
-      const base = workspaceRoot.joinPath(...segments.slice(0, literal));
+      const firstGlobSegment = segments.findIndex(s => /[*?{[]/.test(s));
+      // No glob characters at all means the pattern names a single file: its
+      // last segment is the filename, the rest the folder to search in.
+      const splitAt =
+        firstGlobSegment === -1 ? segments.length - 1 : firstGlobSegment;
+      const base = workspaceRoot.joinPath(...segments.slice(0, splitAt));
       const uris = await vscode.workspace.findFiles(
         new vscode.RelativePattern(
           toVsCodeUri(base),
-          segments.slice(literal).join('/')
+          segments.slice(splitAt).join('/')
         )
       );
       return uris.map(fromVsCodeUri);

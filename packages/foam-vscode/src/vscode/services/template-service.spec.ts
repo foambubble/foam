@@ -9,7 +9,7 @@ import {
   getTemplates,
 } from './template-service';
 import { writeFile } from './editor';
-import { toVsCodeUri } from '../utils/vsc-utils';
+import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
 import {
   createFile,
   deleteFile,
@@ -66,18 +66,43 @@ describe('getTemplates', () => {
     );
   });
 
+  it('lists only the files directly in the templates folder, as `foam list templates` does', async () => {
+    await withModifiedFoamConfiguration(
+      'templates.folder',
+      'nested-tpl',
+      async () => {
+        const direct = await createFile('# Direct', ['nested-tpl', 'top.md']);
+        const nested = await createFile('# Nested', [
+          'nested-tpl',
+          'archive',
+          'old.md',
+        ]);
+        try {
+          const paths = (await getTemplates()).map(t => t.path);
+          expect(paths).toContain(direct.uri.path);
+          expect(paths).not.toContain(nested.uri.path);
+        } finally {
+          await deleteFile(direct.uri);
+          await deleteFile(nested.uri);
+        }
+      }
+    );
+  });
+
   it('searches only inside the templates folder of each root, not the whole workspace (#1747)', async () => {
     await withSecondRoot(async root => {
+      const firstRoot = fromVsCodeUri(workspace.workspaceFolders[0].uri);
       const findFiles = vi.spyOn(workspace, 'findFiles');
       try {
         await getTemplates();
         const bases = findFiles.mock.calls.map(([include]) =>
           include instanceof RelativePattern ? include.baseUri.fsPath : include
         );
-        expect(bases).toEqual([
-          toVsCodeUri(getTemplatesDir()).fsPath,
-          toVsCodeUri(root.joinPath('.foam', 'templates')).fsPath,
-        ]);
+        expect(bases).toEqual(
+          [firstRoot, root].map(
+            r => toVsCodeUri(r.joinPath('.foam', 'templates')).fsPath
+          )
+        );
       } finally {
         findFiles.mockRestore();
       }

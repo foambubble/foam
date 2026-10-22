@@ -1,5 +1,5 @@
 /* @unit-ready */
-import { QuickPickItem, RelativePattern, window, workspace } from 'vscode';
+import { QuickPickItem, window, workspace } from 'vscode';
 import { URI } from '@foam/core';
 import {
   askUserForTemplate,
@@ -13,6 +13,7 @@ import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
 import {
   createFile,
   deleteFile,
+  foldersSearchedFor,
   withModifiedFoamConfiguration,
   withSecondRoot,
 } from '../../test/test-utils-vscode';
@@ -92,20 +93,12 @@ describe('getTemplates', () => {
   it('searches only inside the templates folder of each root, not the whole workspace (#1747)', async () => {
     await withSecondRoot(async root => {
       const firstRoot = fromVsCodeUri(workspace.workspaceFolders[0].uri);
-      const findFiles = vi.spyOn(workspace, 'findFiles');
-      try {
-        await getTemplates();
-        const bases = findFiles.mock.calls.map(([include]) =>
-          include instanceof RelativePattern ? include.baseUri.fsPath : include
-        );
-        expect(bases).toEqual(
-          [firstRoot, root].map(
-            r => toVsCodeUri(r.joinPath('.foam', 'templates')).fsPath
-          )
-        );
-      } finally {
-        findFiles.mockRestore();
-      }
+      const folders = await foldersSearchedFor('*.{md,js}', getTemplates);
+      expect(folders).toEqual(
+        [firstRoot, root].map(
+          r => toVsCodeUri(r.joinPath('.foam', 'templates')).fsPath
+        )
+      );
     });
   });
 });

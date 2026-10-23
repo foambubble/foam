@@ -260,7 +260,7 @@ function decodeURIComponentGraceful(str: string): string {
 
 const _rEncodedAsHex = /(%[0-9A-Za-z][0-9A-Za-z])+/g;
 
-function percentDecode(str: string): string {
+export function percentDecode(str: string): string {
   if (!str.match(_rEncodedAsHex)) {
     return str;
   }

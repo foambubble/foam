@@ -473,6 +473,124 @@ describe('Link resolution', () => {
         // Default provider without workspace roots should work as before
         expect(ws.resolveLink(noteA, noteA.links[0])).toEqual(noteB.uri);
       });
+
+      describe('with percent-encoded targets (#1745)', () => {
+        it('should decode the target', () => {
+          const linker = createTestNote({
+            uri: '/workspace/dir1/page-a.md',
+            links: [{ to: '/dir2/page%20b.md' }],
+          });
+          const target = createNoteFromMarkdown(
+            '',
+            '/workspace/dir2/page b.md'
+          );
+
+          const ws = createTestWorkspace([URI.file('/workspace')]);
+          ws.set(linker).set(target);
+
+          expect(ws.resolveLink(linker, linker.links[0])).toEqual(target.uri);
+        });
+
+        it('should decode the target when it lives in another root', () => {
+          const linker = createTestNote({
+            uri: '/workspace1/dir1/page-a.md',
+            links: [{ to: '/shared/page%20b.md' }],
+          });
+          const target = createNoteFromMarkdown(
+            '',
+            '/workspace2/shared/page b.md'
+          );
+
+          const ws = createTestWorkspace([
+            URI.file('/workspace1'),
+            URI.file('/workspace2'),
+          ]);
+          ws.set(linker).set(target);
+
+          expect(ws.resolveLink(linker, linker.links[0])).toEqual(target.uri);
+        });
+
+        it('should decode a directory target', () => {
+          const linker = createTestNote({
+            uri: '/workspace/page-a.md',
+            links: [{ to: '/my%20folder' }],
+          });
+          const index = createNoteFromMarkdown(
+            '',
+            '/workspace/my folder/index.md'
+          );
+
+          const ws = createTestWorkspace([URI.file('/workspace')]);
+          ws.set(linker).set(index);
+
+          expect(ws.resolveLink(linker, linker.links[0])).toEqual(index.uri);
+        });
+
+        it('should keep the block anchor of a reference-style link', () => {
+          const linker = createNoteFromMarkdown(
+            '[b][ref]\n\n[ref]: /dir2/page%20b.md#^block1',
+            '/workspace/dir1/page-a.md'
+          );
+          const target = createNoteFromMarkdown(
+            '',
+            '/workspace/dir2/page b.md'
+          );
+
+          const ws = createTestWorkspace([URI.file('/workspace')]);
+          ws.set(linker).set(target);
+
+          expect(ws.resolveLink(linker, linker.links[0])).toEqual(
+            target.uri.with({ fragment: '^block1' })
+          );
+        });
+
+        it('should resolve a file whose name contains a literal percent sequence', () => {
+          const linker = createTestNote({
+            uri: '/workspace/page-a.md',
+            links: [{ to: '/attachments/shot%202024.png' }],
+          });
+          const attachment = createNoteFromMarkdown(
+            '',
+            '/workspace/attachments/shot%202024.png'
+          );
+
+          const ws = createTestWorkspace([URI.file('/workspace')]);
+          ws.set(linker).set(attachment);
+
+          expect(ws.resolveLink(linker, linker.links[0])).toEqual(
+            attachment.uri
+          );
+        });
+
+        it('should not treat ? in the target as a query', () => {
+          const linker = createTestNote({
+            uri: '/workspace/page-a.md',
+            links: [{ to: '/notes/why?.md' }],
+          });
+          const target = createNoteFromMarkdown('', '/workspace/notes/why?.md');
+
+          const ws = createTestWorkspace([URI.file('/workspace')]);
+          ws.set(linker).set(target);
+
+          expect(ws.resolveLink(linker, linker.links[0])).toEqual(target.uri);
+        });
+
+        it('should not resolve an encoded # to the note named before it', () => {
+          const linker = createTestNote({
+            uri: '/workspace/page-a.md',
+            links: [{ to: '/notes/c%23.md' }],
+          });
+          const c = createNoteFromMarkdown('', '/workspace/notes/c.md');
+          const cSharp = createNoteFromMarkdown('', '/workspace/notes/c#.md');
+
+          const ws = createTestWorkspace([URI.file('/workspace')]);
+          ws.set(linker).set(c).set(cSharp);
+
+          expect(ws.resolveLink(linker, linker.links[0]).path).not.toEqual(
+            c.uri.path
+          );
+        });
+      });
     });
   });
 });

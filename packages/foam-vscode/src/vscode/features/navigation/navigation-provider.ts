@@ -63,13 +63,23 @@ export default async function activate(
 
 /**
  * Provides navigation and references for Foam links.
- * - We create definintions for existing wikilinks but not placeholders
- * - We create links for both
- * - We create references for both
+ * - We create links for wikilinks, reference-style links and placeholders
+ * - We create definitions for wikilinks and for direct markdown links that
+ *   resolve to something VS Code would not navigate to itself
+ * - We create references for all of them
  *
- * Placeholders are created as links so that when clicking on them a new note will be created.
- * Definitions are automatically invoked by VS Code on hover, whereas links require
- * the user to explicitly clicking - and we want the note creation to be explicit.
+ * A wikilink to an existing note gets both. The definition is what Go to
+ * Definition (`F12`) and Peek Definition work from; the DocumentLink invokes
+ * `vscode.open`, which honors `workbench.editorAssociations` so the target can
+ * open in the editor the user chose (see
+ * https://github.com/foambubble/foam/issues/1742). Which of the two the
+ * workbench follows on ctrl/cmd+click is its own decision and not observable
+ * from an extension — if it follows the definition the click lands in a text
+ * editor, which is what it has always done.
+ *
+ * Placeholders are links so that clicking one creates a note. Definitions are
+ * automatically invoked by VS Code on hover, whereas links require an explicit
+ * click — and we want the note creation to be explicit.
  *
  * Also see https://github.com/foambubble/foam/pull/724
  */
@@ -268,16 +278,7 @@ export class NavigationProvider
       })
     );
 
-    const placeholders = targets.filter(o => o.target.isPlaceholder()); // links to resources are managed by the definition provider
-
-    // For resolved reference-style links (wikilinks and markdown links), VS Code's
-    // built-in Markdown provider intercepts cmd+click and navigates to the definition
-    // line ([ref]: url) instead of the target file. We override this by emitting an
-    // explicit DocumentLink pointing directly at the resolved target.
-    const isAttachment = (target: URI) => {
-      const resource = this.workspace.get(target);
-      return resource?.type === 'attachment' || resource?.type === 'image';
-    };
+    const placeholders = targets.filter(o => o.target.isPlaceholder()); // handled below, as "create note" links
 
     // The clickable range mirrors the built-in Markdown extension's styling:
     // for wikilinks the content without the surrounding brackets, for full
@@ -316,47 +317,37 @@ export class NavigationProvider
       return toVsCodeRange(link.range);
     };
 
-    const resolvedReferenceLinks: vscode.DocumentLink[] = targets
-      .filter(
-        o =>
-          ResourceLink.isResolvedReference(o.link) &&
-          !o.target.isPlaceholder() &&
-          !isAttachment(o.target)
-      )
-      .map(o => {
-        const dl = new vscode.DocumentLink(
-          linkRange(o.link),
-          toVsCodeUri(o.target.asPlain())
-        );
-        dl.tooltip = o.target.getBasename();
-        return dl;
-      });
-
-    // Wikilinks and reference-style links to attachments (PDFs, docs, etc.)
-    // and images are surfaced as DocumentLinks that invoke the `vscode.open`
-    // command (the same mechanism used by the built-in Markdown extension) 
-    // resolves the editor correctly at every settings scope.
-    // Direct markdown links ([text](file.pdf)) are handled by the built-in Markdown 
-    // extension
+    // Wikilinks, and reference-style links (wikilinks and markdown links with
+    // [ref]: definitions), are surfaced as DocumentLinks that invoke the
+    // `vscode.open` command — the same mechanism the built-in Markdown
+    // extension uses, which resolves `workbench.editorAssociations` at every
+    // settings scope. Wikilinks also have a definition, which is what keeps
+    // `F12` and Peek Definition working on them; see the class comment.
+    // Reference-style links need the explicit link for a second reason: VS
+    // Code's built-in Markdown provider otherwise intercepts cmd+click and
+    // navigates to the definition line ([ref]: url) rather than to the target
+    // file.
+    // Direct markdown links ([text](file.md)) are left to the built-in Markdown
+    // extension.
     // See: https://github.com/foambubble/foam/issues/1675
-    const attachmentLinks: vscode.DocumentLink[] = targets
+    //  and https://github.com/foambubble/foam/issues/1742
+    const openLinks: vscode.DocumentLink[] = targets
       .filter(o => {
         if (o.target.isPlaceholder()) return false;
         if (o.link.type === 'external') return false;
-        if (
-          o.link.type === 'link' &&
-          !ResourceLink.isResolvedReference(o.link)
-        ) {
-          return false;
-        }
-        return isAttachment(o.target);
+        return (
+          o.link.type === 'wikilink' || ResourceLink.isResolvedReference(o.link)
+        );
       })
       .map(o => {
+        const selection = this.fragmentSelection(o.target);
         const dl = new vscode.DocumentLink(
           linkRange(o.link),
           commandAsURI({
             name: 'vscode.open',
-            params: [toVsCodeUri(o.target.asPlain())],
+            params: selection
+              ? [toVsCodeUri(o.target.asPlain()), { selection }]
+              : [toVsCodeUri(o.target.asPlain())],
           })
         );
         dl.tooltip = o.target.getBasename();
@@ -418,10 +409,24 @@ export class NavigationProvider
       return documentLink;
     });
 
-    return links
-      .concat(resolvedReferenceLinks)
-      .concat(attachmentLinks)
-      .concat(tags);
+    return links.concat(openLinks).concat(tags);
+  }
+
+  /**
+   * The range a link's `#fragment` points at, for `vscode.open` to select, so
+   * that `[[note#Section]]` and `[[note#^block]]` land on the section or block
+   * when navigation goes through the command rather than through a definition.
+   * Returns `undefined` when there is no fragment or it resolves to nothing, in
+   * which case the target opens at the top.
+   */
+  private fragmentSelection(target: URI): Range | undefined {
+    if (!target.fragment) {
+      return undefined;
+    }
+    const resource = this.workspace.find(target);
+    return (
+      (resource && resolveFragmentRange(resource, target.fragment)) ?? undefined
+    );
   }
 
   /**

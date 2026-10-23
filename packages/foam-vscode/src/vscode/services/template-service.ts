@@ -1,4 +1,10 @@
-import { QuickPickItem, commands, window, workspace } from 'vscode';
+import {
+  QuickPickItem,
+  RelativePattern,
+  commands,
+  window,
+  workspace,
+} from 'vscode';
 import { URI } from '@foam/core';
 import {
   findFirstTemplate,
@@ -10,7 +16,6 @@ import {
 import { extractFoamTemplateFrontmatterMetadata } from '@foam/core';
 import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
 import { fileExists, focusNote, readFile } from './editor';
-import { getFoamVsCodeConfig } from '../config';
 
 const DEFAULT_NEW_NOTE_TEMPLATE = `# \${1:$TM_FILENAME_BASE}
 
@@ -56,12 +61,20 @@ export const getDailyNoteTemplateUri = () =>
     fileExists
   );
 
+// Each search is rooted at a templates folder: a workspace-relative glob
+// makes ripgrep walk the whole workspace, node_modules included (#1747).
+// Only the files directly in the folder are templates, as in `foam list
+// templates`, so the pattern stays non-recursive.
 export async function getTemplates(): Promise<URI[]> {
-  const folder = getFoamVsCodeConfig('templates.folder', '.foam/templates');
-  const templates = await workspace
-    .findFiles(`${folder}/**{.md,.js}`, null)
-    .then(v => v.map(uri => fromVsCodeUri(uri)));
-  return templates;
+  const found = await Promise.all(
+    getAllTemplatesDirs().map(dir =>
+      workspace.findFiles(
+        new RelativePattern(toVsCodeUri(dir), '*.{md,js}'),
+        null
+      )
+    )
+  );
+  return found.flat().map(uri => fromVsCodeUri(uri));
 }
 
 async function getTemplateMetadata(

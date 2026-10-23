@@ -9,10 +9,11 @@ import {
   getTemplates,
 } from './template-service';
 import { writeFile } from './editor';
-import { toVsCodeUri } from '../utils/vsc-utils';
+import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
 import {
   createFile,
   deleteFile,
+  foldersSearchedFor,
   withModifiedFoamConfiguration,
   withSecondRoot,
 } from '../../test/test-utils-vscode';
@@ -31,25 +32,73 @@ describe('getTemplatesDir', () => {
   });
 
   it('should return the custom templates directory when foam.templates.folder is set', async () => {
-    await withModifiedFoamConfiguration('templates.folder', 'custom/templates', async () => {
-      const dir = getTemplatesDir();
-      expect(dir.path).toContain('custom/templates');
-      expect(dir.path).not.toContain('.foam/templates');
-    });
+    await withModifiedFoamConfiguration(
+      'templates.folder',
+      'custom/templates',
+      async () => {
+        const dir = getTemplatesDir();
+        expect(dir.path).toContain('custom/templates');
+        expect(dir.path).not.toContain('.foam/templates');
+      }
+    );
   });
 });
 
 describe('getTemplates', () => {
   it('should find templates in a custom folder when foam.templates.folder is set', async () => {
-    await withModifiedFoamConfiguration('templates.folder', 'custom-tpl', async () => {
-      const template = await createFile('# Custom template', ['custom-tpl', 'my-template.md']);
-      try {
-        const templates = await getTemplates();
-        const paths = templates.map(t => t.path);
-        expect(paths.some(p => p.includes('custom-tpl/my-template.md'))).toBe(true);
-      } finally {
-        await deleteFile(template.uri);
+    await withModifiedFoamConfiguration(
+      'templates.folder',
+      'custom-tpl',
+      async () => {
+        const template = await createFile('# Custom template', [
+          'custom-tpl',
+          'my-template.md',
+        ]);
+        try {
+          const templates = await getTemplates();
+          const paths = templates.map(t => t.path);
+          expect(paths.some(p => p.includes('custom-tpl/my-template.md'))).toBe(
+            true
+          );
+        } finally {
+          await deleteFile(template.uri);
+        }
       }
+    );
+  });
+
+  it('lists only the files directly in the templates folder, as `foam list templates` does', async () => {
+    await withModifiedFoamConfiguration(
+      'templates.folder',
+      'nested-tpl',
+      async () => {
+        const direct = await createFile('# Direct', ['nested-tpl', 'top.md']);
+        const nested = await createFile('# Nested', [
+          'nested-tpl',
+          'archive',
+          'old.md',
+        ]);
+        try {
+          const paths = (await getTemplates()).map(t => t.path);
+          expect(paths).toContain(direct.uri.path);
+          expect(paths).not.toContain(nested.uri.path);
+        } finally {
+          await deleteFile(direct.uri);
+          await deleteFile(nested.uri);
+        }
+      }
+    );
+  });
+
+  it('searches only inside the templates folder of each root, not the whole workspace (#1747)', async () => {
+    await withSecondRoot(async root => {
+      const firstRoot = fromVsCodeUri(workspace.workspaceFolders[0].uri);
+      const folders = await foldersSearchedFor('*.{md,js}', getTemplates);
+      expect(folders).toEqual(
+        [firstRoot, root].map(
+          r => toVsCodeUri(r.joinPath('.foam', 'templates')).fsPath
+        )
+      );
     });
   });
 });
@@ -115,11 +164,6 @@ describe('askUserForTemplate', () => {
       ]);
       const inSecond = root.joinPath('.foam', 'templates', 'meeting.md');
       await writeFile(inSecond, '# Second');
-      const findFiles = vi
-        .spyOn(workspace, 'findFiles')
-        .mockResolvedValueOnce(
-          [inFirst.uri, inSecond, unique.uri].map(toVsCodeUri)
-        );
       const pick = vi
         .spyOn(window, 'showQuickPick')
         .mockImplementationOnce((async () => undefined) as any);
@@ -134,7 +178,6 @@ describe('askUserForTemplate', () => {
         expect(itemFor(inSecond).description).toEqual('notes');
         expect(itemFor(unique.uri).description).toBeUndefined();
       } finally {
-        findFiles.mockRestore();
         pick.mockRestore();
         await deleteFile(inFirst.uri);
         await deleteFile(unique.uri);
@@ -146,10 +189,6 @@ describe('askUserForTemplate', () => {
     await withSecondRoot(async root => {
       const template = root.joinPath('.foam', 'templates', 'other-root.md');
       await writeFile(template, '# Other root');
-      // VS Code lists the templates of every root; stand in for that listing.
-      const findFiles = vi
-        .spyOn(workspace, 'findFiles')
-        .mockResolvedValueOnce([toVsCodeUri(template)]);
       const pick = vi
         .spyOn(window, 'showQuickPick')
         .mockImplementationOnce(
@@ -159,7 +198,6 @@ describe('askUserForTemplate', () => {
         const picked = (await askUserForTemplate()) as URI;
         expect(picked.toFsPath()).toEqual(template.toFsPath());
       } finally {
-        findFiles.mockRestore();
         pick.mockRestore();
       }
     });

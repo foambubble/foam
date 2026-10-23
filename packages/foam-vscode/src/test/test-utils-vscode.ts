@@ -257,6 +257,35 @@ export async function withSecondRoot(fn: (root: URI) => Promise<void>) {
 }
 
 /**
+ * Runs `fn` and returns the folders that `workspace.findFiles` was asked to
+ * search for `pattern`, as file system paths.
+ *
+ * Only the calls using that glob are reported: the spy is on the `workspace`
+ * object the running extension shares, and the extension lists folders with
+ * `findFiles` of its own whenever one appears (`listFilesInFolder` in
+ * extension.ts), so its calls land in the same recording.
+ */
+export async function foldersSearchedFor(
+  pattern: string,
+  fn: () => Promise<unknown>
+): Promise<string[]> {
+  const findFiles = vi.spyOn(vscode.workspace, 'findFiles');
+  try {
+    await fn();
+    return findFiles.mock.calls
+      .map(([include]) => include)
+      .filter(
+        (include): include is vscode.RelativePattern =>
+          include instanceof vscode.RelativePattern &&
+          include.pattern === pattern
+      )
+      .map(include => include.baseUri.fsPath);
+  } finally {
+    findFiles.mockRestore();
+  }
+}
+
+/**
  * Utility function to check if two URIs are the same.
  * It has the goal of supporting Uri and URI, and dealing with
  * inconsistencies in the way they are represented (especially the

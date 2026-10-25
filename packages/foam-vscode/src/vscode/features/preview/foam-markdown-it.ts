@@ -47,6 +47,8 @@ export interface FoamMarkdownItOptions {
   isVirtualWorkspace?: () => boolean;
   /** Whether to render `[^id]` footnotes. Defaults to true. */
   footnotes?: boolean;
+  /** Forwarded to `markdownItWikilinkNavigation`. Defaults to `resolve`. */
+  directoryMode?: 'resolve' | 'disabled';
   /** Default embed note type, e.g. `full-card`. */
   getEmbedNoteType?: () => string;
   /** Initial markdown-it options for fresh inner instances. */
@@ -85,6 +87,7 @@ export function createFoamMarkdownIt(
     graph,
     parser,
     linkResolver,
+    directoryMode,
     getCurrentResource,
     isTrusted = () => false,
     toHref = (uri: URI) => uri.path,
@@ -124,7 +127,10 @@ export function createFoamMarkdownIt(
     getEmbedNoteType,
   });
   r = markdownItFoamTags(r, workspace);
-  r = markdownItWikilinkNavigation(r, workspace, { linkResolver });
+  r = markdownItWikilinkNavigation(r, workspace, {
+    linkResolver,
+    directoryMode,
+  });
   r = markdownItRemoveLinkReferences(r, workspace);
   r = markdownItBlockAnchorIds(r);
   r = markdownItFoamQuery(r, workspace, graph, {

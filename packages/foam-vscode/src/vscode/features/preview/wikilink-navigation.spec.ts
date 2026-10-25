@@ -187,6 +187,34 @@ describe('Link generation in preview', () => {
     });
   });
 
+  describe('wikilinks to directory index files (#1749)', () => {
+    const indexNote = createTestNote({
+      uri: './Directory/index.md',
+      root: getUriInWorkspace('just-a-ref.md'),
+      title: 'Directory index',
+    });
+    const dirWs = new FoamWorkspace().set(indexNote);
+
+    it('links [[Directory]] to Directory/index.md', () => {
+      const dirMd = MarkdownIt();
+      markdownItWikilinkNavigation(dirMd, dirWs, { linkResolver });
+      expect(dirMd.render(`[[Directory]]`)).toEqual(
+        `<p><a class="foam-note-link" title="Directory index" href="/Directory/index.md" data-href="/Directory/index.md">Directory index</a></p>\n`
+      );
+    });
+
+    it('renders [[Directory]] as a placeholder when directory mode is disabled', () => {
+      const dirMd = MarkdownIt();
+      markdownItWikilinkNavigation(dirMd, dirWs, {
+        linkResolver,
+        directoryMode: 'disabled',
+      });
+      expect(dirMd.render(`[[Directory]]`)).toEqual(
+        `<p><a class="foam-placeholder-link" title="Link to non-existing resource" href="javascript:void(0);">Directory</a></p>\n`
+      );
+    });
+  });
+
   describe('attribute-boundary escaping (BUG-4)', () => {
     // Custom resolver that returns intentionally-unsafe values for every host
     // string. Without escaping at the seam, the `"` would close the

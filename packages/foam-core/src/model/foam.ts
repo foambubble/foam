@@ -132,12 +132,20 @@ export const bootstrap = async (
 
     subscriptions.push(
       watcher.onDidDelete(uri => {
+        // A watcher may report a folder deleted, moved or renamed as one
+        // event, without its files
+        const folderPrefix = uri.path.endsWith('/') ? uri.path : uri.path + '/';
+        // A read of a file not indexed yet has no resource for the workspace
+        // to delete, so nothing else marks it
+        for (const [path, reads] of readsInFlight) {
+          if (path === uri.path || path.startsWith(folderPrefix)) {
+            reads.forEach(r => (r.deleted = true));
+          }
+        }
         if (workspace.delete(uri)) {
           return;
         }
-        // Not a resource, so possibly a folder: a watcher may report a folder
-        // deleted, moved or renamed as one event, without its files
-        const folderPrefix = uri.path.endsWith('/') ? uri.path : uri.path + '/';
+        // Not a resource, so possibly a folder
         for (const resource of workspace.list()) {
           if (resource.uri.path.startsWith(folderPrefix)) {
             workspace.delete(resource.uri);

@@ -314,4 +314,38 @@ describe('bootstrap deletes during a watcher read', () => {
       foam.dispose();
     }
   });
+
+  it('does not add a new note whose file is deleted while its create event is being read', async () => {
+    const { watcher, foam, releaseFetch } = await bootstrapWithHeldFetch();
+    const uri = URI.file('/workspace/created-then-deleted.md');
+
+    try {
+      watcher.fireCreate(uri);
+      await flush(DEBOUNCE_SETTLE_MS);
+      watcher.fireDelete(uri);
+      releaseFetch();
+      await flush(0);
+
+      expect(foam.workspace.find(uri)).toBeNull();
+    } finally {
+      foam.dispose();
+    }
+  });
+
+  it('does not add a new note whose folder is deleted while its create event is being read', async () => {
+    const { watcher, foam, releaseFetch } = await bootstrapWithHeldFetch();
+    const uri = URI.file('/workspace/moved-folder/new-note.md');
+
+    try {
+      watcher.fireCreate(uri);
+      await flush(DEBOUNCE_SETTLE_MS);
+      watcher.fireDelete(URI.file('/workspace/moved-folder'));
+      releaseFetch();
+      await flush(0);
+
+      expect(foam.workspace.find(uri)).toBeNull();
+    } finally {
+      foam.dispose();
+    }
+  });
 });

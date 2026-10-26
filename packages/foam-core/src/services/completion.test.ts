@@ -181,6 +181,10 @@ describe('AC-6: a tag being typed in the frontmatter tags', () => {
     expect(at('---\ntags: #pk‸')).toEqual(tag('pk', 10));
   });
 
+  it('is in the value of a quoted tags key', () => {
+    expect(at('---\n"tags": pk‸')).toEqual(tag('pk', 12));
+  });
+
   it('is nothing right after the colon or a list marker', () => {
     expect(at('---\ntags:‸')).toBeNull();
     expect(at('---\ntags:\n  -‸')).toBeNull();
@@ -200,6 +204,11 @@ describe('AC-7: the rest of the frontmatter', () => {
     expect(at('---\ntags: prim\ntitle: prim‸')).toBeNull();
     expect(at('---\nrelated: [[zet‸')).toBeNull();
     expect(at('---\nrelated: "[[zet‸')).toBeNull();
+  });
+
+  it('ends the value of tags at the next top-level key', () => {
+    expect(at('---\ntags: pkm\ndate-created: 2020‸')).toBeNull();
+    expect(at('---\nmeta:\n  tags: pk‸')).toBeNull();
   });
 
   it('is body text again below the closing ---', () => {

@@ -83,6 +83,13 @@ describe('isInFrontMatter', () => {
       const actual = isOnYAMLKeywordLine(content, 'tags');
       expect(actual).toBeFalsy();
     });
+    it('reads keys as core reads frontmatter: top-level, any name, unquoted', () => {
+      expect(isOnYAMLKeywordLine('tags: a\ndate-created: 2020', 'tags')).toBe(
+        false
+      );
+      expect(isOnYAMLKeywordLine('meta:\n  tags: a', 'tags')).toBe(false);
+      expect(isOnYAMLKeywordLine('"tags": a', 'tags')).toBe(true);
+    });
   });
 });
 

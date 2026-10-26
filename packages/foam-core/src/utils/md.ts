@@ -1,6 +1,7 @@
 import { Section } from '../model/note';
 import { Range } from '../model/range';
 import { TextEdit } from '../services/text-edit';
+import { isSome } from './core';
 
 export function getExcerpt(
   markdown: string,
@@ -138,14 +139,17 @@ export function isInFrontMatter(content: string, lineNumber: number): boolean {
   );
 }
 
+/**
+ * The top-level key a line of frontmatter YAML starts, unquoted: at column 0,
+ * not a list item or a comment, up to its colon. Undefined for a line that
+ * continues the value of the key above it.
+ */
+export function getYAMLKey(line: string): string | undefined {
+  return /^([^-\s#][^:]*?):/.exec(line)?.[1].replace(/^(["'])(.*)\1$/, '$2');
+}
+
+/** Whether the last key `content` starts, by {@link getYAMLKey}, is `keyword`. */
 export function isOnYAMLKeywordLine(content: string, keyword: string): boolean {
-  const keywordMatch = /^\s*(\w+):/gm;
-
-  if (content.match(keywordMatch) === null) {
-    return false;
-  }
-
-  const matches = Array.from(content.matchAll(keywordMatch));
-  const lastMatch = matches[matches.length - 1];
-  return lastMatch[1] === keyword;
+  const keys = content.split('\n').map(getYAMLKey).filter(isSome);
+  return keys[keys.length - 1] === keyword;
 }

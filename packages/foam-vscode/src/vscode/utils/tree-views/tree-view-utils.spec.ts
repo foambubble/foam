@@ -1,11 +1,23 @@
 /* @unit-ready */
-import { FoamGraph, URI } from '@foam/core';
+import { commands } from 'vscode';
+import { createMarkdownParser, FoamGraph, URI } from '@foam/core';
 import {
   createTestWorkspace,
   createNoteFromMarkdown,
   InMemoryDataStore,
 } from '../../../test/test-utils';
-import { createConnectionItemsForResource } from './tree-view-utils';
+import {
+  closeEditors,
+  createFile,
+  getActiveTabViewType,
+  MARKDOWN_EDITOR_VIEW_TYPE,
+  withMarkdownEditorAssociation,
+} from '../../../test/test-utils-vscode';
+import { deleteFile } from '../../services/editor';
+import {
+  createConnectionItemsForResource,
+  ResourceTreeItem,
+} from './tree-view-utils';
 
 class CountingDataStore extends InMemoryDataStore {
   public readCount = 0;
@@ -109,5 +121,44 @@ describe('createConnectionItemsForResource', () => {
 
     // only the changed file is re-read, the other one is still fresh
     expect(dataStore.readCount).toEqual(readsAfterFirstRefresh + 1);
+  });
+});
+
+describe('ResourceTreeItem activation', () => {
+  // What VS Code does when the item is clicked.
+  const activate = (item: ResourceTreeItem) =>
+    commands.executeCommand(item.command.command, ...item.command.arguments);
+
+  const treeItemFor = async (path: string[]) => {
+    const file = await createFile('# A note', path);
+    const resource = createMarkdownParser([]).parse(file.uri, file.content);
+    const workspace = createTestWorkspace().set(resource);
+    return { item: new ResourceTreeItem(resource, workspace), uri: file.uri };
+  };
+
+  it('opens the note in the editor associated with Markdown (#1742)', async () => {
+    await closeEditors();
+    const { item, uri } = await treeItemFor(['tree-view', 'associated.md']);
+
+    await withMarkdownEditorAssociation(async () => {
+      await activate(item);
+
+      expect(getActiveTabViewType()).toEqual(MARKDOWN_EDITOR_VIEW_TYPE);
+    });
+
+    await closeEditors();
+    await deleteFile(uri);
+  });
+
+  it('opens the note in the text editor when nothing is associated with Markdown (#1742)', async () => {
+    await closeEditors();
+    const { item, uri } = await treeItemFor(['tree-view', 'plain.md']);
+
+    await activate(item);
+
+    expect(getActiveTabViewType()).toBeUndefined();
+
+    await closeEditors();
+    await deleteFile(uri);
   });
 });

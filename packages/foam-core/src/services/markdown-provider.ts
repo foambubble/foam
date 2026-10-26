@@ -6,7 +6,7 @@ import {
 } from '../model/note';
 import { isNone, isSome } from '../utils';
 import { Logger } from '../utils/log';
-import { URI } from '../model/uri';
+import { URI, percentDecode } from '../model/uri';
 import { FoamWorkspace } from '../model/workspace';
 import { IDisposable } from '../common/lifecycle';
 import { ResourceProvider } from '../model/provider';
@@ -141,15 +141,25 @@ export class MarkdownResourceProvider implements ResourceProvider {
         let path: string;
 
         if (targetPath.startsWith('/')) {
+          // Link targets are URLs, so `/My%20Note.md` points to `My Note.md`.
+          // The literal target comes second, for file names containing `%`.
+          // Decoding `%23` would give `find` a `#`, which it splits off as a
+          // section (`/C%23.md` would open `C.md`), so those targets are only
+          // looked up literally.
+          const decodedPath = targetPath.includes('%23')
+            ? targetPath
+            : percentDecode(targetPath);
           const resolvedUri = workspace.resolveUri(targetPath, resource.uri);
-          targetUri =
-            workspace.find(targetPath, resource.uri)?.uri ??
-            workspace.roots
-              .map(root =>
-                this._resolveAsDirectory(workspace, root.joinPath(targetPath))
-              )
-              .find(Boolean)?.uri ??
-            URI.placeholder(resolvedUri.path);
+          for (const candidate of new Set([decodedPath, targetPath])) {
+            targetUri ??=
+              workspace.find(candidate, resource.uri)?.uri ??
+              workspace.roots
+                .map(root =>
+                  this._resolveAsDirectory(workspace, root.joinPath(candidate))
+                )
+                .find(Boolean)?.uri;
+          }
+          targetUri ??= URI.placeholder(resolvedUri.path);
         } else {
           // Handle relative paths and non-root paths
           path =

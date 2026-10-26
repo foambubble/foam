@@ -1,6 +1,6 @@
 /* @unit-ready */
 import * as vscode from 'vscode';
-import { FoamGraph, listPlaceholders } from '@foam/core';
+import { FoamGraph } from '@foam/core';
 import {
   createNoteFromMarkdown,
   createTestWorkspace,
@@ -28,7 +28,7 @@ const hiddenPlaceholders = async () => {
   );
   const graph = FoamGraph.fromWorkspace(workspace);
   try {
-    const placeholders = listPlaceholders(workspace, graph).map(p => p.uri);
+    const placeholders = Array.from(graph.placeholders.values());
     expect(placeholders).toHaveLength(3);
     const matcher = await createPlaceholderMatcher();
     return {

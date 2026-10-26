@@ -3,12 +3,12 @@ import {
   Foam,
   URI,
   linksData,
+  getOrphans,
   listOrphans,
   listDeadends,
   listPlaceholders,
   resolveNote,
   traverseGraph,
-  listNotes,
 } from '@foam/core';
 import {
   parseUriInput,
@@ -149,8 +149,7 @@ export function registerGraphTools(
       const noteCount = allResources.filter(r => r.type === 'note').length;
       const attachmentCount = allResources.length - noteCount;
       const allConnections = foam.graph.getAllConnections();
-      const orphans = listOrphans(foam.workspace, foam.graph);
-      const placeholders = listPlaceholders(foam.workspace, foam.graph);
+      const orphans = getOrphans(foam.workspace, foam.graph);
 
       const linkCounts = new Map<string, number>();
       for (const c of allConnections) {
@@ -181,7 +180,7 @@ export function registerGraphTools(
         attachment_count: attachmentCount,
         connection_count: allConnections.length,
         orphan_count: orphans.length,
-        placeholder_count: placeholders.length,
+        placeholder_count: foam.graph.placeholders.size,
         tag_count: foam.tags.tags.size,
         most_connected: mostConnected,
         most_used_tags: mostUsedTags,
@@ -204,11 +203,11 @@ export function registerGraphTools(
         note_count: noteCount,
         attachment_count: all.length - noteCount,
         tag_count: foam.tags.tags.size,
-        orphan_count: listOrphans(foam.workspace, foam.graph).length,
+        orphan_count: getOrphans(foam.workspace, foam.graph).length,
         placeholder_count: foam.graph.placeholders.size,
         connection_count: foam.graph.getAllConnections().length,
         // total resource count (notes + attachments)
-        resource_count: listNotes(foam.workspace, {}).length,
+        resource_count: all.length,
         read_only: readOnly,
       });
     }

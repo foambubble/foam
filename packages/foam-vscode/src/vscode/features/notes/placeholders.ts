@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { Foam, listPlaceholders, PlaceholderMatcher } from '@foam/core';
+import { Foam, PlaceholderMatcher } from '@foam/core';
 import {
   createMatcherAndDataStore,
   getActiveTabUri,
@@ -160,6 +160,6 @@ export class PlaceholderTreeView extends GroupedResourcesTreeDataProvider {
             .filter(uri => uri.isPlaceholder())
         : [];
     }
-    return listPlaceholders(this.workspace, this.graph).map(p => p.uri);
+    return Array.from(this.graph.placeholders.values());
   }
 }

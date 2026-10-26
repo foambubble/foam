@@ -241,6 +241,57 @@ describe('Identifier computation', () => {
     expect(workspace.getIdentifier(noteUppercase.uri)).toEqual('Note');
     expect(workspace.getIdentifier(noteLowercase.uri)).toEqual('note');
   });
+
+  describe('getIdentifiers', () => {
+    it('computes the same identifier as getIdentifier for each URI, in order', () => {
+      const workspace = new FoamWorkspace([], '.md');
+      [
+        '/path/to/page-a.md',
+        '/another/way/for/page-a.md',
+        '/another/path/for/page-a.md',
+        '/a/Note.md',
+        '/b/note.md',
+        '/x/a/README.md',
+        '/a/README.md',
+        '/y/README.md',
+        '/notes/report.pdf.md',
+        '/unique.md',
+      ].forEach(uri => workspace.set(createTestNote({ uri })));
+      workspace.set(
+        createTestNote({ uri: '/docs/report.pdf', type: 'attachment' })
+      );
+      const uris = [
+        ...workspace.list().map(r => r.uri),
+        URI.file('/elsewhere/to/page-a.md'),
+        URI.file('/m/missing.md'),
+        URI.file('/n/missing.md'),
+        URI.file('/path/to/page-a.md').with({ fragment: 'section name' }),
+        URI.file('/a/README.md'),
+      ];
+
+      expect(workspace.getIdentifiers(uris)).toEqual(
+        uris.map(uri => workspace.getIdentifier(uri))
+      );
+    });
+
+    it('computes the same identifier as getIdentifier for many notes sharing a basename', () => {
+      const workspace = new FoamWorkspace([], '.md');
+      const segments = ['a', 'b', 'A'];
+      let dirs = [''];
+      for (let depth = 0; depth < 3; depth++) {
+        dirs = dirs.flatMap(dir => segments.map(s => `${dir}/${s}`));
+        dirs.forEach(dir => {
+          workspace.set(createTestNote({ uri: `${dir}/README.md` }));
+          workspace.set(createTestNote({ uri: `${dir}/readme.md` }));
+        });
+      }
+      const uris = workspace.list().map(r => r.uri);
+
+      expect(workspace.getIdentifiers(uris)).toEqual(
+        uris.map(uri => workspace.getIdentifier(uri))
+      );
+    });
+  });
 });
 
 describe('find in multi-root workspaces', () => {

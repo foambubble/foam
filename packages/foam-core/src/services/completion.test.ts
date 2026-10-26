@@ -163,6 +163,7 @@ describe('AC-6: a tag being typed in the frontmatter tags', () => {
     expect(at('---\ntags: pkm, me‸')).toEqual(tag('me', 15));
     expect(at('---\ntags: [pkm, me‸')).toEqual(tag('me', 16));
     expect(at('---\ntags:\n  - me‸')).toEqual(tag('me', 14));
+    expect(at('---\ntags:\n- me‸')).toEqual(tag('me', 12));
     expect(at('---\ntags: second‸, prim\n---\n')).toEqual(tag('second', 10));
   });
 
@@ -209,6 +210,13 @@ describe('AC-7: the rest of the frontmatter', () => {
   it('ends the value of tags at the next top-level key', () => {
     expect(at('---\ntags: pkm\ndate-created: 2020‸')).toBeNull();
     expect(at('---\nmeta:\n  tags: pk‸')).toBeNull();
+  });
+
+  it('is nothing on a line below tags that is not indented or a list item', () => {
+    expect(at('---\ntags: pkm\n‸')).toBeNull();
+    expect(at('---\ntags: pkm\n--‸')).toBeNull();
+    expect(at('---\ntags: pkm\n#‸')).toBeNull();
+    expect(at('---\ntags: pkm\ndat‸')).toBeNull();
   });
 
   it('is body text again below the closing ---', () => {

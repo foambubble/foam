@@ -1,5 +1,5 @@
 import { extractHashtags, extractTagsFromProp } from '../utils/hashtags';
-import { isInFrontMatter, isOnYAMLKeywordLine } from '../utils/md';
+import { getYAMLKey, isInFrontMatter, isOnYAMLKeywordLine } from '../utils/md';
 
 /**
  * What is being typed at a cursor: a wikilink, a section or block anchor in
@@ -97,8 +97,10 @@ function frontMatterTagAt(
   line: string,
   lineStart: number
 ): CompletionContext | null {
-  // A `-` alone opens a list item, whose value starts after its space
-  if (!isOnYAMLKeywordLine(before, 'tags') || /^\s*-$/.test(line)) {
+  // Below its key, a value goes on indented lines and list items; a `-`
+  // alone opens a list item, whose value starts after its space
+  const inValue = getYAMLKey(line) !== undefined || /^(\s|-\s)/.test(line);
+  if (!inValue || /^\s*-$/.test(line) || !isOnYAMLKeywordLine(before, 'tags')) {
     return null;
   }
   const match = YAML_TAG.exec(line);

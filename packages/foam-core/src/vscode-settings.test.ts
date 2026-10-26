@@ -68,6 +68,29 @@ describe('reading Foam settings from .vscode/settings.json', () => {
     expect(matcher.isMatch(root.joinPath('notes', 'note.md'))).toBe(true);
   });
 
+  it('excludes installed packages by default', () => {
+    const root = URI.file('/workspace');
+    const config = foamConfigFromVsCodeSettings({});
+    const matcher = new GlobMatcher([
+      {
+        uri: root,
+        include: config.getFilesInclude(),
+        exclude: config.getFilesExclude(),
+      },
+    ]);
+
+    for (const path of [
+      '.direnv/python-3.10/lib/python3.10/site-packages/pkg/README.md',
+      'python-3.14/lib64/python3.14/site-packages/pkg/README.md',
+      'vendor/bundle/ruby/3.3.0/gems/rake-13.2.1/README.md',
+      '.yarn/sdks/typescript/README.md',
+    ]) {
+      expect(matcher.isMatch(root.joinPath(...path.split('/')))).toBe(false);
+    }
+    expect(matcher.isMatch(root.joinPath('notes', 'python.md'))).toBe(true);
+    expect(matcher.isMatch(root.joinPath('vendor', 'acme.md'))).toBe(true);
+  });
+
   it('ignores values of the wrong type', () => {
     const config = foamConfigFromVsCodeSettings({
       'foam.openDailyNote.directory': 42,

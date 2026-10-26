@@ -1,6 +1,6 @@
 import path from 'path';
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'fs';
-import { runTests } from 'vscode-test';
+import { runTests } from '@vscode/test-electron';
 import {
   E2E_RESULT_FILE_ENV,
   getE2eCompletionFailure,

@@ -63,7 +63,9 @@ export class LoadProfiler {
   private slowest: ParseSample[] = [];
 
   /**
-   * @param now the clock every timestamp is taken from, in ms
+   * @param now the clock, in ms, for the recording window and for reads. Parse
+   * durations arrive already measured in {@link ParseSample}, and must be on
+   * the same clock.
    */
   constructor(private readonly now: () => number = () => performance.now()) {}
 
@@ -180,9 +182,14 @@ export class LoadProfiler {
       list: pattern => dataStore.list(pattern),
       read: async uri => {
         const start = this.readStarted();
-        const content = await dataStore.read(uri);
-        this.readSettled(start, content?.length ?? 0);
-        return content;
+        let content: string | null = null;
+        try {
+          content = await dataStore.read(uri);
+          return content;
+        } finally {
+          // a read that rejects must settle too, or it stays in flight for good
+          this.readSettled(start, content?.length ?? 0);
+        }
       },
       write: (uri, content) => dataStore.write(uri, content),
       delete: uri => dataStore.delete(uri),

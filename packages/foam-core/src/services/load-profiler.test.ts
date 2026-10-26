@@ -15,14 +15,21 @@ const sample = (path: string, ms: number, chars = 100, cacheHit = false) => ({
  * test says so, to lay them out on the profiler's clock.
  */
 const deferredReads = (profiler: LoadProfiler) => {
-  const pending = new Map<string, (content: string) => void>();
+  const pending = new Map<
+    string,
+    { resolve: (content: string) => void; reject: (error: Error) => void }
+  >();
   const dataStore = new InMemoryDataStore();
   dataStore.read = uri =>
-    new Promise(resolve => pending.set(uri.path, resolve));
+    new Promise((resolve, reject) =>
+      pending.set(uri.path, { resolve, reject })
+    );
   const instrumented = profiler.instrumentDataStore(dataStore);
   return {
     start: (path: string) => instrumented.read(URI.file(path)),
-    settle: (path: string, content: string) => pending.get(path)(content),
+    settle: (path: string, content: string) =>
+      pending.get(path).resolve(content),
+    fail: (path: string, error: Error) => pending.get(path).reject(error),
   };
 };
 
@@ -97,6 +104,27 @@ describe('LoadProfiler', () => {
     await read;
 
     expect(profiler.getStats().read.totalMs).toEqual(40);
+  });
+
+  it('keeps accounting for reads after one rejects', async () => {
+    let t = 0;
+    const profiler = new LoadProfiler(() => t);
+    const reads = deferredReads(profiler);
+    profiler.start();
+
+    const a = reads.start('/a.md');
+    t = 10;
+    reads.fail('/a.md', new Error('EIO'));
+    await expect(a).rejects.toThrow('EIO');
+    t = 20;
+    const b = reads.start('/b.md');
+    t = 30;
+    reads.settle('/b.md', 'b');
+    await b;
+    t = 100;
+    profiler.stop();
+
+    expect(profiler.getStats().read.totalMs).toEqual(20);
   });
 
   it('counts cache hits and misses separately', () => {

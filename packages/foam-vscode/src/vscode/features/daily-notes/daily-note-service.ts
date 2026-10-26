@@ -62,8 +62,7 @@ export async function openDailyNoteFor(date?: Date, foam?: Foam) {
     return;
   }
 
-  // This already opens the note: an existing one through `vscode.open`, so it
-  // lands in the editor associated with Markdown.
+  // This will also open the note
   await createDailyNoteIfNotExists(date, foam);
 }
 

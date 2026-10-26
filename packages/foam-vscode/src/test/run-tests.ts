@@ -60,7 +60,7 @@ async function main() {
         '--disable-updates',
       ],
       platform: getVSCodePlatform(),
-      version: '1.110.0',
+      version: '1.136.0',
     });
 
     const failure = getE2eCompletionFailure(

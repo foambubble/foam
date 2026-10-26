@@ -1772,7 +1772,64 @@ const mockState = {
   onDidRenameFilesListeners: [] as ((e: any) => any)[],
   onWillDeleteFilesListeners: [] as ((e: any) => any)[],
   openDocuments: new Map<string, MockTextDocument>(),
+  tabs: [] as MockTab[],
+  activeTab: undefined as MockTab | undefined,
 };
+
+interface MockTab {
+  input: { uri: Uri; viewType?: string };
+  label: string;
+}
+
+/**
+ * The `workbench.editorAssociations` entry that applies to `uri`, if any.
+ *
+ * Matching is deliberately literal — the file name, `*.ext`, or the full path —
+ * rather than VS Code's glob and priority resolution. The mock only has to make
+ * the "opened in an associated editor" branch observable; the e2e suite is what
+ * asserts against the real resolver.
+ */
+function matchingEditorAssociation(uri: Uri): string | undefined {
+  const associations =
+    workspace
+      .getConfiguration()
+      .get<Record<string, string>>('workbench.editorAssociations') ?? {};
+  const name = path.basename(uri.fsPath);
+  const extension = path.extname(name);
+  for (const [pattern, viewType] of Object.entries(associations)) {
+    if (viewType === 'default') {
+      continue;
+    }
+    if (
+      pattern === name ||
+      pattern === `*${extension}` ||
+      pattern === uri.fsPath
+    ) {
+      return viewType;
+    }
+  }
+  return undefined;
+}
+
+/**
+ * Records a tab as the active one, replacing any tab already open for the same
+ * URI and view type. `window.tabGroups` is what `getActiveTabUri()` reads, so a
+ * feature acting on "the current note" only sees what is recorded here.
+ */
+function setActiveTab(input: { uri: Uri; viewType?: string }): void {
+  const tab: MockTab = { input, label: path.basename(input.uri.fsPath) };
+  const existing = mockState.tabs.findIndex(
+    t =>
+      t.input.uri.toString() === input.uri.toString() &&
+      t.input.viewType === input.viewType
+  );
+  if (existing >= 0) {
+    mockState.tabs[existing] = tab;
+  } else {
+    mockState.tabs.push(tab);
+  }
+  mockState.activeTab = tab;
+}
 
 // Window namespace
 export const window = {
@@ -1816,8 +1873,12 @@ export const window = {
   },
 
   tabGroups: {
-    activeTabGroup: { activeTab: undefined as any, tabs: [] as any[] },
-    all: [] as any[],
+    get activeTabGroup() {
+      return { activeTab: mockState.activeTab, tabs: mockState.tabs };
+    },
+    get all() {
+      return [this.activeTabGroup];
+    },
     onDidChangeTabs(_listener: (e: any) => any): Disposable {
       return { dispose: () => {} };
     },
@@ -1875,6 +1936,7 @@ export const window = {
     if (!mockState.visibleTextEditors.includes(editor)) {
       mockState.visibleTextEditors.push(editor);
     }
+    setActiveTab({ uri: document.uri });
 
     return editor;
   },
@@ -2547,6 +2609,8 @@ export function resetMockState(): void {
   mockState.onDidRenameFilesListeners = [];
   mockState.onWillDeleteFilesListeners = [];
   mockState.openDocuments.clear();
+  mockState.tabs = [];
+  mockState.activeTab = undefined;
   mockState.configuration = new MockWorkspaceConfiguration();
 
   // Create a default workspace folder for tests
@@ -2563,11 +2627,20 @@ export function resetMockState(): void {
     mockState.activeTextEditor = undefined;
     mockState.visibleTextEditors = [];
     mockState.openDocuments.clear();
+    mockState.tabs = [];
+    mockState.activeTab = undefined;
     return Promise.resolve();
   });
 
   commands.registerCommand('vscode.open', async uri => {
-    // Mock opening a file - just show it in editor
+    const viewType = matchingEditorAssociation(uri);
+    if (viewType) {
+      // VS Code opens the file in the associated editor, so there is no text
+      // editor for it — only a custom-editor tab.
+      mockState.activeTextEditor = undefined;
+      setActiveTab({ uri, viewType });
+      return undefined;
+    }
     return window.showTextDocument(uri);
   });
 
@@ -2589,6 +2662,8 @@ export async function forceCleanup(): Promise<void> {
   // Clear all event listeners by resetting emitters
   mockState.activeTextEditor = undefined;
   mockState.visibleTextEditors = [];
+  mockState.tabs = [];
+  mockState.activeTab = undefined;
 
   // Close any open file handles by clearing the file system
   mockState.fileSystem = new MockFileSystem();

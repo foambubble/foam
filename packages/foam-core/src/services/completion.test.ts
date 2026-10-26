@@ -38,6 +38,11 @@ describe('AC-2: the wikilink core reads once it is closed', () => {
 
   it('opens after a link already closed on the line', () => {
     expect(at('[[a]] [[b‸')).toEqual({ kind: 'link', query: 'b', start: 6 });
+    expect(at('[[file]] #tag [[‸')).toEqual({
+      kind: 'link',
+      query: '',
+      start: 14,
+    });
   });
 
   it('is nothing once closed, escaped or opened on an earlier line', () => {
@@ -128,6 +133,21 @@ describe('AC-5: a tag being typed', () => {
     });
   });
 
+  it('is the last # on the line, whatever follows the cursor', () => {
+    expect(at('Here is #my-tag and #‸')).toEqual({
+      kind: 'tag',
+      query: '',
+      start: 20,
+      frontmatter: false,
+    });
+    expect(at('#‸\nmore text')).toEqual({
+      kind: 'tag',
+      query: '',
+      start: 0,
+      frontmatter: false,
+    });
+  });
+
   it('holds the characters core accepts in a tag', () => {
     for (const query of ['🚀', '❤️', '👍🏽', '123']) {
       expect(at(`#${query}‸`)).toEqual({
@@ -142,10 +162,19 @@ describe('AC-5: a tag being typed', () => {
   it('ends at a character a tag cannot hold', () => {
     expect(at('Idea #pkm and‸')).toBeNull();
     expect(at('#pkm.‸')).toBeNull();
+    expect(at('#$‸')).toBeNull();
   });
 
   it('is nothing for a # that does not start a word', () => {
-    for (const marked of ['C#‸', '##‸', '# ‸', '(#ta‸', '\\#ta‸']) {
+    for (const marked of [
+      'C#‸',
+      '##‸',
+      '# ‸',
+      '# prima‸',
+      'here is #primary and now # ‸',
+      '(#ta‸',
+      '\\#ta‸',
+    ]) {
       expect(at(marked)).toBeNull();
     }
   });

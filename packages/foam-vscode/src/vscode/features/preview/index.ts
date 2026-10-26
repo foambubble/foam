@@ -1,7 +1,7 @@
 /*global markdownit:readonly*/
 
 import * as vscode from 'vscode';
-import { Foam, URI, createRenderContext } from '@foam/core';
+import { Config, Foam, URI, createRenderContext } from '@foam/core';
 import { fromVsCodeUri, toVsCodeUri } from '../../utils/vsc-utils';
 import { createFoamMarkdownIt } from './foam-markdown-it';
 import { createVsCodeLinkResolver } from './link-resolvers';
@@ -58,6 +58,8 @@ export default async function activate(
           graph,
           parser,
           linkResolver: createVsCodeLinkResolver(),
+          // Read once, like the markdown provider's copy in extension.ts.
+          directoryMode: Config.getLinksDirectoryMode(),
           getCurrentResource,
           isTrusted: () => vscode.workspace.isTrusted,
           // Build the full href shape the preview webview expects:

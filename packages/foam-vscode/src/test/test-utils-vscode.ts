@@ -234,6 +234,31 @@ export const withModifiedFoamConfiguration = (
   fn: () => void | Promise<void>
 ) => withModifiedConfiguration(`foam.${key}`, value, fn);
 
+/** The view type of VS Code's built-in Markdown Editor. */
+export const MARKDOWN_EDITOR_VIEW_TYPE = 'vscode.markdown.editor';
+
+/**
+ * Runs `fn` with `*.md` associated with the built-in Markdown Editor, and
+ * restores the original associations afterwards.
+ */
+export const withMarkdownEditorAssociation = (fn: () => void | Promise<void>) =>
+  withModifiedConfiguration(
+    'workbench.editorAssociations',
+    { '*.md': MARKDOWN_EDITOR_VIEW_TYPE },
+    fn
+  );
+
+/**
+ * The view type of the editor showing the active tab, or `undefined` when it
+ * is a text editor.
+ */
+export const getActiveTabViewType = (): string | undefined =>
+  (
+    vscode.window.tabGroups.activeTabGroup.activeTab?.input as {
+      viewType?: string;
+    }
+  )?.viewType;
+
 /**
  * Runs `fn` as if a fresh temporary directory were a second workspace root,
  * after the real one: both the unit mock and the e2e host open one folder.

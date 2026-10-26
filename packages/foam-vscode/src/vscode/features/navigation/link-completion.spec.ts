@@ -253,6 +253,22 @@ describe('Link Completion', () => {
     }
   });
 
+  it('replaces the section typed since the # that follows the target', async () => {
+    const text = 'See [[file-name#Sec';
+    const { uri } = await createFile(text);
+    const { doc } = await showInEditor(uri);
+    const provider = new SectionCompletionProvider(ws);
+
+    const links = await provider.provideCompletionItems(
+      doc,
+      new vscode.Position(0, text.length)
+    );
+
+    expect(links.items[0].range).toEqual(
+      new vscode.Range(0, 'See [[file-name#'.length, 0, text.length)
+    );
+  });
+
   it('should return sections within the note', async () => {
     const { uri, content } = await createFile(`
 # Section 1

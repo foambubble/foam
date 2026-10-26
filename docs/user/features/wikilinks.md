@@ -11,31 +11,6 @@ Wikilinks are internal links that connect files in your knowledge base using `[[
 
 Example: [[graph-view]]
 
-## Which Editor a Note Opens In
-
-Following a wikilink — like every other way Foam opens a note — uses whichever
-editor you have associated with Markdown in `workbench.editorAssociations`. To
-read your notes in VS Code's built-in Markdown Editor, for example:
-
-```json
-"workbench.editorAssociations": {
-  "*.md": "vscode.markdown.editor"
-}
-```
-
-That includes links to a heading in the same note: following `[[#Section]]`
-from the text editor opens the note in the Markdown Editor.
-
-Worth knowing before you set that one: **inside the Markdown Editor, wikilinks
-can't be clicked, embedded notes don't show, and `[[` autocomplete and hover
-previews don't work.** Everything else — the graph, the Connections and Tags
-panels, backlinks, link syncing on rename — keeps working. Write and follow
-links in the text editor, and switch to the Markdown Editor to read
-(**Reopen Editor With…** in the Command Palette).
-
-Creating a note always opens the text editor, whatever the association, so that
-template placeholders and tab stops work.
-
 ## Placeholders
 
 Wikilinks to non-existent files create placeholder links, styled differently to show they need files created. They're useful for planning your knowledge structure.

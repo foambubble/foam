@@ -27,6 +27,10 @@ export interface ParseSample {
 }
 
 export interface LoadProfileStats {
+  /**
+   * `totalMs` is the wall clock attributed to reading, as defined in
+   * {@link LoadProfiler.formatReport}; `maxMs` is the slowest single read
+   */
   read: { count: number; totalMs: number; maxMs: number; totalBytes: number };
   parse: { count: number; totalMs: number; maxMs: number; totalChars: number };
   cache: { hits: number; misses: number };
@@ -34,17 +38,20 @@ export interface LoadProfileStats {
   slowest: ParseSample[];
 }
 
-const now = () => performance.now();
-
 export class LoadProfiler {
   private startedAt: number | undefined;
   private stoppedAt: number | undefined;
   private recording = false;
 
   private readCount = 0;
-  private readTotalMs = 0;
   private readMaxMs = 0;
   private readTotalBytes = 0;
+  /** Reads started and not yet settled, kept up to date outside recording too */
+  private readsInFlight = 0;
+  /** Start of the read time not yet in {@link readMs}, while a read is in flight */
+  private readingSince = 0;
+  /** Time with a read in flight and no parse running */
+  private readMs = 0;
 
   private parseCount = 0;
   private parseTotalMs = 0;
@@ -56,18 +63,28 @@ export class LoadProfiler {
   private slowest: ParseSample[] = [];
 
   /**
+   * @param now the clock every timestamp is taken from, in ms
+   */
+  constructor(private readonly now: () => number = () => performance.now()) {}
+
+  /**
    * Begins recording. Samples taken outside a start/stop window are ignored, so
    * the instrumentation the parser and data store keep for the rest of the
    * session costs one boolean check per call rather than accumulating forever.
    */
   start(): void {
-    this.startedAt = now();
+    this.startedAt = this.now();
     this.stoppedAt = undefined;
     this.recording = true;
+    // a read already in flight counts from here
+    this.readingSince = this.startedAt;
   }
 
   stop(): void {
-    this.stoppedAt = now();
+    this.stoppedAt = this.now();
+    if (this.recording && this.readsInFlight > 0) {
+      this.readMs += this.stoppedAt - this.readingSince;
+    }
     this.recording = false;
   }
 
@@ -79,22 +96,42 @@ export class LoadProfiler {
     if (this.startedAt === undefined) {
       return 0;
     }
-    return (this.stoppedAt ?? now()) - this.startedAt;
+    return (this.stoppedAt ?? this.now()) - this.startedAt;
   }
 
-  recordRead(ms: number, bytes: number): void {
+  /** @returns when the read started, to pass to {@link readSettled} */
+  private readStarted(): number {
+    const t = this.now();
+    if (this.readsInFlight++ === 0) {
+      this.readingSince = t;
+    }
+    return t;
+  }
+
+  private readSettled(readStart: number, bytes: number): void {
+    this.readsInFlight -= 1;
     if (!this.recording) {
       return;
     }
+    const t = this.now();
+    if (this.readsInFlight === 0) {
+      this.readMs += t - this.readingSince;
+    }
     this.readCount += 1;
-    this.readTotalMs += ms;
-    this.readMaxMs = Math.max(this.readMaxMs, ms);
+    this.readMaxMs = Math.max(this.readMaxMs, t - readStart);
     this.readTotalBytes += bytes;
   }
 
   recordParse(sample: ParseSample): void {
     if (!this.recording) {
       return;
+    }
+    // a parse is synchronous, so a read in flight now was in flight all through
+    // it: read time stops where the parse began and resumes from here
+    if (this.readsInFlight > 0) {
+      const t = this.now();
+      this.readMs += t - sample.ms - this.readingSince;
+      this.readingSince = t;
     }
     this.parseCount += 1;
     this.parseTotalMs += sample.ms;
@@ -119,7 +156,7 @@ export class LoadProfiler {
     return {
       read: {
         count: this.readCount,
-        totalMs: this.readTotalMs,
+        totalMs: this.readMs,
         maxMs: this.readMaxMs,
         totalBytes: this.readTotalBytes,
       },
@@ -142,9 +179,9 @@ export class LoadProfiler {
     return {
       list: pattern => dataStore.list(pattern),
       read: async uri => {
-        const start = now();
+        const start = this.readStarted();
         const content = await dataStore.read(uri);
-        this.recordRead(now() - start, content?.length ?? 0);
+        this.readSettled(start, content?.length ?? 0);
         return content;
       },
       write: (uri, content) => dataStore.write(uri, content),
@@ -161,6 +198,20 @@ export class LoadProfiler {
 
   /**
    * A copy-pasteable block for issue reports.
+   *
+   * Reads overlap one another and the parses, so their latencies are not
+   * summed. Instead each instant between {@link start} and {@link stop} goes to
+   * exactly one of three lines, which add up to the wall clock:
+   *
+   * - `markdown parse`: a parse is running. Parses are synchronous, so they
+   *   never overlap one another and nothing else on the thread runs meanwhile.
+   * - `file read`: no parse is running and at least one read is in flight. A
+   *   read is in flight until its result is back on the thread, so this
+   *   includes waiting for a thread kept busy by something else.
+   * - `unaccounted`: neither — Foam's other load work, such as listing files and
+   *   building the graph, or the thread busy elsewhere with no read pending.
+   *
+   * The `slowest` read is the latency of a single read.
    *
    * @param extra additional lines to append, e.g. host-specific measurements
    * that `@foam/core` cannot take itself (heap usage, event loop lag)

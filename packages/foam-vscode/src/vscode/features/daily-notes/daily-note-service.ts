@@ -14,7 +14,7 @@ import {
 } from '../../../vscode/services/template-service';
 import { NoteFactory } from '../../../vscode/services/note-factory';
 import { getFoamVsCodeConfig } from '../../../vscode/config';
-import { focusNote, readFile, writeFile } from '../../services/editor';
+import { readFile, writeFile } from '../../services/editor';
 import { TemplateLoader } from '@foam/core/scripting';
 
 // ─── Format conversion ────────────────────────────────────────────────────────
@@ -62,13 +62,9 @@ export async function openDailyNoteFor(date?: Date, foam?: Foam) {
     return;
   }
 
-  const { didCreateFile, uri } = await createDailyNoteIfNotExists(date, foam);
-  // if a new file is created, the editor is automatically opened,
-  // but forcing focus will block template placeholders from working —
-  // so we only explicitly focus when the file already existed
-  if (!didCreateFile) {
-    await focusNote(uri, didCreateFile);
-  }
+  // This already opens the note: an existing one through `vscode.open`, so it
+  // lands in the editor associated with Markdown.
+  await createDailyNoteIfNotExists(date, foam);
 }
 
 // ─── Note creation ────────────────────────────────────────────────────────────

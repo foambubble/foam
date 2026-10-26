@@ -586,9 +586,9 @@ describe('Link resolution', () => {
           const ws = createTestWorkspace([URI.file('/workspace')]);
           ws.set(linker).set(c).set(cSharp);
 
-          expect(ws.resolveLink(linker, linker.links[0]).path).not.toEqual(
-            c.uri.path
-          );
+          const resolved = ws.resolveLink(linker, linker.links[0]);
+          expect(resolved.isPlaceholder()).toBe(true);
+          expect(resolved.path).toEqual('/workspace/notes/c%23.md');
         });
       });
     });

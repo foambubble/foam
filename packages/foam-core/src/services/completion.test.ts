@@ -47,8 +47,8 @@ describe('AC-2: the wikilink core reads once it is closed', () => {
 
   it('is nothing once closed, escaped or opened on an earlier line', () => {
     expect(at('[[zettelkasten]] now‸')).toBeNull();
-    expect(at('\\[[fo‸')).toBeNull();
-    expect(at('[[fo\no‸')).toBeNull();
+    expect(at('\\[[zet‸')).toBeNull();
+    expect(at('[[zet\no‸')).toBeNull();
   });
 
   it('opens at the [[ after an escaped one, and after an escaped \\', () => {
@@ -267,15 +267,15 @@ describe('completionAt', () => {
       start: 8,
       frontmatter: false,
     });
-    expect(at('| a | b |\n| - | - |\n| [[fo‸ | x |')).toEqual({
+    expect(at('| a | b |\n| - | - |\n| [[zet‸ | x |')).toEqual({
       kind: 'link',
-      query: 'fo',
+      query: 'zet',
       start: 22,
     });
   });
 
   it('reads lines ended by \\r\\n', () => {
-    expect(at('a\r\n[[fo‸')).toEqual({ kind: 'link', query: 'fo', start: 3 });
+    expect(at('a\r\n[[zet‸')).toEqual({ kind: 'link', query: 'zet', start: 3 });
     expect(at('---\r\ntags: pk‸')).toEqual({
       kind: 'tag',
       query: 'pk',

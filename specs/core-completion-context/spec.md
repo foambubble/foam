@@ -42,8 +42,8 @@ for the last column:
 | `[[foo] bar‸` | link, query `foo`, replacement range over `bar` | nothing | one link, target `foo] bar` |
 | `[[note\|Al‸` | link, query `note\|Al` | link, query `note\|Al` | link to `note`, alias `Al` |
 | `[[note#a#b‸` | section of `note#a` | link | link to `note`, section `a#b` |
-| `\[[fo‸` | link | link | nothing |
-| `` `see [[fo‸` ``, `` `x #ta‸` `` | completes | completes | nothing |
+| `\[[zet‸` | link | link | nothing |
+| `` `see [[zet‸` ``, `` `x #ta‸` `` | completes | completes | nothing |
 | fenced, indented or HTML block | completes | completes | nothing |
 | `#🚀‸`, `#👍🏽‸` | tag | nothing | tag |
 | `#❤️‸` | nothing | nothing | tag |
@@ -73,7 +73,7 @@ lines; `![[` completes like `[[`.
 - **AC-2**: The link being typed is the wikilink core reads once it is
   closed: `[[a [[b‸` gives query `a [[b` and `[[foo] bar‸` gives
   `foo] bar`, both opening at the first `[[`; `[[a]] [[b‸` gives `b`. Given
-  `[[zettelkasten]] now‸`, an escaped `\[[fo‸`, or a `[[` only on an earlier
+  `[[zettelkasten]] now‸`, an escaped `\[[zet‸`, or a `[[` only on an earlier
   line, then nothing.
   _verify: unit_
 

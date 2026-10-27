@@ -60,7 +60,7 @@ The variable is only available in the daily note template, and it finds daily no
 
 ## Date Snippets
 
-Create links to recent daily notes using snippets:
+Create links to recent daily notes using snippets. The link uses the file name your daily note template gives the note:
 
 | Snippet      | Date          |
 | ------------ | ------------- |
@@ -80,7 +80,7 @@ By default, daily notes are created as `yyyy-mm-dd.md` in the workspace's `journ
 
 To customize your daily note location and format you can create a `.foam/templates/daily-note.md` template. See [[templates]] for more information.
 
-There are also some settings to customize the behavior of daily notes, but they are deprecated and will be removed. Please use the `daily-note.md` template.
+The `foam.openDailyNote.directory`, `filenameFormat`, `fileExtension` and `titleFormat` settings are no longer used. If you still have them, Foam asks the next time you open a daily note: it can create a daily note template that keeps your notes where they were, or you can remove the settings.
 
 To work with daily notes from the terminal, see [[daily|CLI daily command]].
 

@@ -376,9 +376,58 @@ export class FoamWorkspace implements IDisposable {
       amongst.push(res.uri);
     });
 
+    return this.getIdentifierAmongst(
+      forResource,
+      amongst.map(uri => uri.path)
+    );
+  }
+
+  /**
+   * Returns the minimal identifier for each of the given resources, in order,
+   * as {@link getIdentifier} computes it for one.
+   *
+   * @param forResources the resources to compute the identifiers for
+   */
+  public getIdentifiers(forResources: URI[]): string[] {
+    // Ordered by reversed segments, the paths sharing the longest suffix with
+    // a path are adjacent to it, so only those can lengthen its identifier.
+    const adjacentPaths = new Map<string, Map<string, string[]>>();
+    for (const uri of forResources) {
+      const basename = uri.getBasename();
+      if (adjacentPaths.has(basename)) {
+        continue;
+      }
+      const sorted = this.listByIdentifier(basename)
+        .map(r => ({
+          path: r.uri.path,
+          key: r.uri.path.split('/').reverse().join('\0'),
+        }))
+        .sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0))
+        .map(({ path }) => path);
+      adjacentPaths.set(
+        basename,
+        new Map(
+          sorted.map((path, i) => [
+            path,
+            [sorted[i - 1], sorted[i + 1]].filter(isSome),
+          ])
+        )
+      );
+    }
+
+    return forResources.map(uri => {
+      const amongst = adjacentPaths.get(uri.getBasename()).get(uri.path);
+      // A URI outside the workspace has no place in the order
+      return amongst
+        ? this.getIdentifierAmongst(uri, amongst)
+        : this.getIdentifier(uri);
+    });
+  }
+
+  private getIdentifierAmongst(forResource: URI, amongst: string[]): string {
     let identifier = FoamWorkspace.getShortestIdentifier(
       forResource.path,
-      amongst.map(uri => uri.path)
+      amongst
     );
     identifier = changeExtension(identifier, this.defaultExtension, '');
     if (forResource.fragment) {

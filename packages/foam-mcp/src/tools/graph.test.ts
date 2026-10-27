@@ -71,9 +71,23 @@ describe('graph tools', () => {
         note_count: number;
         connection_count: number;
         placeholder_count: number;
+        orphan_count: number;
+        resource_count: number;
       }>('get_workspace_info');
       expect(info.note_count).toBe(5);
       expect(info.placeholder_count).toBe(1);
+      expect(info.orphan_count).toBe(1);
+      expect(info.resource_count).toBe(5);
       expect(info.connection_count).toBeGreaterThan(0);
+    }));
+
+  it('get_graph_summary counts orphans and placeholders', () =>
+    withMcpServer(SEED, async ctx => {
+      const summary = await ctx.callToolJson<{
+        orphan_count: number;
+        placeholder_count: number;
+      }>('get_graph_summary');
+      expect(summary.orphan_count).toBe(1);
+      expect(summary.placeholder_count).toBe(1);
     }));
 });

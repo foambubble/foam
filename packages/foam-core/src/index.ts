@@ -328,7 +328,14 @@ export type { FoamErrorCode } from './common/errors';
 // Commands (high-level workspace operations, used by CLI / MCP / VS Code)
 export { uriToWorkspacePath, getRootUriFor, resolveNote } from './commands/workspace';
 export type { NoteRef } from './commands/workspace';
-export { listNotes, listTags, listOrphans, listDeadends, listPlaceholders } from './commands/list';
+export {
+  listNotes,
+  listTags,
+  getOrphans,
+  listOrphans,
+  listDeadends,
+  listPlaceholders,
+} from './commands/list';
 export type {
   NoteItem,
   NoteSummary,

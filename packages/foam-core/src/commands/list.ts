@@ -1,6 +1,7 @@
 import { FoamGraph } from '../model/graph';
 import { FoamTags } from '../model/tags';
 import { FoamWorkspace } from '../model/workspace';
+import { Resource } from '../model/note';
 import { URI } from '../model/uri';
 
 // ─── Return types ─────────────────────────────────────────────────────────────
@@ -52,8 +53,9 @@ export function listNotes(
     resources = resources.slice(0, opts.limit);
   }
 
-  return resources.map(r => ({
-    id: workspace.getIdentifier(r.uri),
+  const ids = workspace.getIdentifiers(resources.map(r => r.uri));
+  return resources.map((r, i) => ({
+    id: ids[i],
     uri: r.uri,
     title: r.title,
     type: r.type,
@@ -102,31 +104,34 @@ export interface OrphansOptions {
 
 const DEFAULT_EXCLUDE_TYPES = ['attachment', 'image'];
 
+export function getOrphans(
+  workspace: FoamWorkspace,
+  graph: FoamGraph,
+  opts: OrphansOptions = {}
+): Resource[] {
+  const excludeTypes = opts.excludeTypes ?? DEFAULT_EXCLUDE_TYPES;
+  const ignoreOutgoingExcluded = opts.ignoreOutgoingExcludedTypes ?? false;
+
+  return workspace.list().filter(r => {
+    if (excludeTypes.includes(r.type)) return false;
+    const outgoing = ignoreOutgoingExcluded
+      ? graph
+          .getLinks(r.uri)
+          .filter(c => !excludeTypes.includes(workspace.find(c.target)?.type))
+      : graph.getLinks(r.uri);
+    const incoming = graph.getBacklinks(r.uri);
+    return outgoing.length === 0 && incoming.length === 0;
+  });
+}
+
 export function listOrphans(
   workspace: FoamWorkspace,
   graph: FoamGraph,
   opts: OrphansOptions = {}
 ): NoteSummary[] {
-  const excludeTypes = opts.excludeTypes ?? DEFAULT_EXCLUDE_TYPES;
-  const ignoreOutgoingExcluded = opts.ignoreOutgoingExcludedTypes ?? false;
-
-  return workspace
-    .list()
-    .filter(r => {
-      if (excludeTypes.includes(r.type)) return false;
-      const outgoing = ignoreOutgoingExcluded
-        ? graph
-            .getLinks(r.uri)
-            .filter(c => !excludeTypes.includes(workspace.find(c.target)?.type))
-        : graph.getLinks(r.uri);
-      const incoming = graph.getBacklinks(r.uri);
-      return outgoing.length === 0 && incoming.length === 0;
-    })
-    .map(r => ({
-      id: workspace.getIdentifier(r.uri),
-      uri: r.uri,
-      title: r.title,
-    }));
+  const orphans = getOrphans(workspace, graph, opts);
+  const ids = workspace.getIdentifiers(orphans.map(r => r.uri));
+  return orphans.map((r, i) => ({ id: ids[i], uri: r.uri, title: r.title }));
 }
 
 export function listDeadends(
@@ -137,41 +142,40 @@ export function listDeadends(
   const excludeTypes = opts.excludeTypes ?? DEFAULT_EXCLUDE_TYPES;
   const ignoreOutgoingExcluded = opts.ignoreOutgoingExcludedTypes ?? false;
 
-  return workspace
-    .list()
-    .filter(r => {
-      if (excludeTypes.includes(r.type)) return false;
-      const outgoing = ignoreOutgoingExcluded
-        ? graph
-            .getLinks(r.uri)
-            .filter(c => !excludeTypes.includes(workspace.find(c.target)?.type))
-        : graph.getLinks(r.uri);
-      return outgoing.length === 0;
-    })
-    .map(r => ({
-      id: workspace.getIdentifier(r.uri),
-      uri: r.uri,
-      title: r.title,
-    }));
+  const deadends = workspace.list().filter(r => {
+    if (excludeTypes.includes(r.type)) return false;
+    const outgoing = ignoreOutgoingExcluded
+      ? graph
+          .getLinks(r.uri)
+          .filter(c => !excludeTypes.includes(workspace.find(c.target)?.type))
+      : graph.getLinks(r.uri);
+    return outgoing.length === 0;
+  });
+  const ids = workspace.getIdentifiers(deadends.map(r => r.uri));
+  return deadends.map((r, i) => ({ id: ids[i], uri: r.uri, title: r.title }));
 }
 
 export function listPlaceholders(
   workspace: FoamWorkspace,
   graph: FoamGraph
 ): PlaceholderItem[] {
-  return Array.from(graph.placeholders.values()).map(placeholderUri => {
-    const backlinks = graph.getBacklinks(placeholderUri);
-    return {
-      placeholder_id: placeholderUri.path.split('/').pop()!,
-      uri: placeholderUri,
-      referenced_by: backlinks.map(conn => {
-        const src = workspace.find(conn.source);
-        return {
-          id: workspace.getIdentifier(conn.source),
-          uri: conn.source,
-          title: src?.title ?? '',
-        };
-      }),
-    };
-  });
+  const placeholders = Array.from(graph.placeholders.values()).map(uri => ({
+    uri,
+    sources: graph.getBacklinks(uri).map(conn => conn.source),
+  }));
+  const sources = placeholders.flatMap(p => p.sources);
+  const ids = workspace.getIdentifiers(sources);
+  const idBySource = new Map(
+    sources.map((source, i) => [source.toString(), ids[i]])
+  );
+
+  return placeholders.map(({ uri, sources }) => ({
+    placeholder_id: uri.path.split('/').pop()!,
+    uri,
+    referenced_by: sources.map(source => ({
+      id: idBySource.get(source.toString()),
+      uri: source,
+      title: workspace.find(source)?.title ?? '',
+    })),
+  }));
 }

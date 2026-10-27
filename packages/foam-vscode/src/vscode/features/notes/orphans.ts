@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { Foam, listOrphans } from '@foam/core';
+import { Foam, getOrphans } from '@foam/core';
 import { createMatcherAndDataStore } from '../../services/editor';
 import { Config } from '@foam/core';
 import {
@@ -72,7 +72,7 @@ export class OrphanTreeView extends GroupedResourcesTreeDataProvider {
   };
 
   getUris = () =>
-    listOrphans(this.workspace, this.graph, {
+    getOrphans(this.workspace, this.graph, {
       ignoreOutgoingExcludedTypes: true,
-    }).map(item => item.uri);
+    }).map(r => r.uri);
 }

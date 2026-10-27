@@ -1,3 +1,5 @@
+/* @unit-ready */
+
 import * as vscode from 'vscode';
 import { FoamTags } from '@foam/core';
 import { FoamWorkspace } from '@foam/core';
@@ -257,6 +259,23 @@ tags: prim`);
 
       expect(foamTags.tags.get('primary')).toBeTruthy();
       expect(tags.items.length).toEqual(3);
+      expect(tags.items[0].additionalTextEdits).toEqual([
+        vscode.TextEdit.delete(new vscode.Range(1, 6, 1, 7)),
+      ]);
+    });
+
+    it('should not remove a `#` after the cursor in the front-matter', async () => {
+      const { uri } = await createFile('---\ntags: #pkm');
+      const { doc } = await showInEditor(uri);
+      const provider = new TagCompletionProvider(foamTags);
+
+      const tags = await provider.provideCompletionItems(
+        doc,
+        new vscode.Position(1, 6)
+      );
+
+      expect(tags.items.length).toEqual(3);
+      expect(tags.items[0].additionalTextEdits).toBeUndefined();
     });
 
     it('should provide suggestions when on `tags:` in the front-matter when tags are comma separated', async () => {

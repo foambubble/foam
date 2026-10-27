@@ -18,6 +18,7 @@ import { Range } from '../model/range';
 import { TaskStatus } from '../model/task';
 import { extractHashtags, extractTagsFromProp, hash, isSome } from '../utils';
 import { Logger } from '../utils/log';
+import { getYAMLKey } from '../utils/md';
 import { URI } from '../model/uri';
 import { ICache } from '../utils/cache';
 
@@ -342,10 +343,6 @@ const getTextFromChildren = (root: Node): string => {
   return text;
 };
 
-// Matches a top-level YAML key: starts at column 0 with a non-hyphen, non-space,
-// non-comment character, and contains a colon (e.g. "tags:", "date-created:").
-const YAML_KEY_LINE_RE = /^([^-\s#][^:]*?):\s*(.*)/;
-
 function getPropertiesInfoFromYAML(yamlText: string): {
   [key: string]: { key: string; value: string; text: string; line: number };
 } {
@@ -354,16 +351,14 @@ function getPropertiesInfoFromYAML(yamlText: string): {
     [key: string]: { key: string; value: string; text: string; line: number };
   } = {};
   for (let lineIdx = 0; lineIdx < lines.length; lineIdx++) {
-    const match = lines[lineIdx].match(YAML_KEY_LINE_RE);
-    if (!match) {
+    const key = getYAMLKey(lines[lineIdx]);
+    if (key === undefined) {
       continue;
     }
-    // YAML allows quoted keys ("tags": ...) — normalize to the plain name
-    const key = match[1].replace(/^(["'])(.*)\1$/, '$2');
     let text = lines[lineIdx];
     let j = lineIdx + 1;
     // Collect continuation lines: everything that isn't the start of a new key
-    while (j < lines.length && !YAML_KEY_LINE_RE.test(lines[j])) {
+    while (j < lines.length && getYAMLKey(lines[j]) === undefined) {
       text += '\n' + lines[j];
       j++;
     }

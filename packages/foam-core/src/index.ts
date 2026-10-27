@@ -44,6 +44,8 @@ export {
 export { TextEdit, WorkspaceTextEdit } from './services/text-edit';
 export type { WorkspaceTextEditGroup } from './services/text-edit';
 export { MarkdownLink } from './services/markdown-link';
+export { completionAt } from './services/completion';
+export type { CompletionContext } from './services/completion';
 export { HeadingEdit } from './services/heading-edit';
 export type { HeadingEditResult } from './services/heading-edit';
 export { TagEdit } from './services/tag-edit';

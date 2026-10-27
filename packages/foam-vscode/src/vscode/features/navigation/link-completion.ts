@@ -9,7 +9,7 @@ import { fromVsCodeUri, toVsCodeUri } from '../../utils/vsc-utils';
 import { getNoteTooltip, getFoamDocSelectors } from '../../services/editor';
 import { getContentCacheFor } from '../../services/content-cache';
 import { CONVERT_WIKILINK_TO_MDLINK } from '../editing/convert-links';
-import { Config } from '@foam/core';
+import { Config, completionAt } from '@foam/core';
 
 export const aliasCommitCharacters = ['#'];
 export const linkCommitCharacters = ['#', '|'];
@@ -19,9 +19,6 @@ const COMPLETION_CURSOR_MOVE = {
   command: 'foam-vscode.completion-move-cursor',
   title: 'Foam: Move cursor after completion',
 };
-
-export const WIKILINK_REGEX = /\[\[[^[\]]*(?!.*\]\])/;
-export const SECTION_REGEX = /\[\[([^[\]]*#(?!.*\]\]))/;
 
 export default async function activate(
   context: vscode.ExtensionContext,
@@ -100,33 +97,24 @@ export class SectionCompletionProvider
     document: vscode.TextDocument,
     position: vscode.Position
   ): vscode.ProviderResult<vscode.CompletionList<vscode.CompletionItem>> {
-    const cursorPrefix = document
-      .lineAt(position)
-      .text.substr(0, position.character);
-
-    // Requires autocomplete only if cursorPrefix matches `[[` that NOT ended by `]]`.
-    // See https://github.com/foambubble/foam/pull/596#issuecomment-825748205 for details.
-    const match = cursorPrefix.match(SECTION_REGEX);
-
-    if (!match) {
+    const context = completionAt(
+      document.getText(),
+      document.offsetAt(position)
+    );
+    if (context?.kind !== 'section' && context?.kind !== 'block') {
       return null;
     }
 
-    const resourceId =
-      match[1] === '#' ? fromVsCodeUri(document.uri) : match[1].slice(0, -1);
-
-    const resource = this.ws.find(resourceId);
+    const resource = this.ws.find(
+      context.target === '' ? fromVsCodeUri(document.uri) : context.target
+    );
+    // From after the `#` that follows `[[` and the target
     const replacementRange = new vscode.Range(
-      position.line,
-      cursorPrefix.lastIndexOf('#') + 1,
-      position.line,
-      position.character
+      document.positionAt(context.start + 2 + context.target.length + 1),
+      position
     );
     if (resource) {
-      const fragmentSoFar = cursorPrefix.slice(
-        cursorPrefix.lastIndexOf('#') + 1
-      );
-      if (fragmentSoFar.startsWith('^')) {
+      if (context.kind === 'block') {
         // Block anchor completions
         const items = resource.blocks.map(b => {
           const label = `^${b.id}`;
@@ -185,28 +173,22 @@ export class WikilinkCompletionProvider
     document: vscode.TextDocument,
     position: vscode.Position
   ): vscode.ProviderResult<vscode.CompletionList<vscode.CompletionItem>> {
-    const cursorPrefix = document
-      .lineAt(position)
-      .text.substr(0, position.character);
-
-    // Requires autocomplete only if cursorPrefix matches `[[` that NOT ended by `]]`.
-    // See https://github.com/foambubble/foam/pull/596#issuecomment-825748205 for details.
-    const requiresAutocomplete = cursorPrefix.match(WIKILINK_REGEX);
-    if (!requiresAutocomplete || requiresAutocomplete[0].indexOf('#') >= 0) {
+    const context = completionAt(
+      document.getText(),
+      document.offsetAt(position)
+    );
+    if (context?.kind !== 'link') {
       return null;
     }
 
-    const text = requiresAutocomplete[0];
     const labelStyle = getCompletionLabelSetting();
     const aliasSetting = getCompletionAliasSetting();
     const linkFormat = getCompletionLinkFormatSetting();
 
     // Use safe range that VS Code accepts - replace content inside brackets only
     const replacementRange = new vscode.Range(
-      position.line,
-      position.character - (text.length - 2),
-      position.line,
-      position.character
+      document.positionAt(context.start + 2),
+      position
     );
 
     const directoryMode = Config.getLinksDirectoryMode();

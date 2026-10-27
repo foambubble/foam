@@ -1,3 +1,5 @@
+/* @unit-ready */
+
 import * as vscode from 'vscode';
 import { FoamTags } from '@foam/core';
 import { FoamWorkspace } from '@foam/core';

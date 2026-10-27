@@ -1669,14 +1669,9 @@ class TestFoam {
       return findMarkdownFiles(workspaceFolder.uri.fsPath);
     };
 
-    const readFile = async (uri: URI): Promise<string> => {
-      try {
-        return await fs.promises.readFile(uri.toFsPath(), 'utf8');
-      } catch (error) {
-        Logger.debug(`Failed to read file ${uri.toString()}: ${error}`);
-        return '';
-      }
-    };
+    // Fails on a missing file, as `workspace.fs.readFile` does
+    const readFile = (uri: URI): Promise<string> =>
+      fs.promises.readFile(uri.toFsPath(), 'utf8');
 
     // Create services
     const dataStore = new GenericDataStore(listFiles, readFile);

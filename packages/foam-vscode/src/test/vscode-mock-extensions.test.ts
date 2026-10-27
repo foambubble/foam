@@ -38,4 +38,13 @@ describe('vscode-mock extensions API', () => {
     expect(exports).toBeDefined();
     expect(exports.foam).toBeDefined();
   });
+
+  it('should not index a note whose file is missing, as VS Code does not', async () => {
+    const foam = await vscode.extensions.getExtension('foam.foam-vscode')
+      ?.exports.foam;
+    const uri = foam.workspace.roots[0].joinPath('missing-note.md');
+
+    expect(await foam.workspace.fetchAndSet(uri)).toBeNull();
+    expect(foam.workspace.find(uri)).toBeNull();
+  });
 });

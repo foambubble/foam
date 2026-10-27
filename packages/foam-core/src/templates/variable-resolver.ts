@@ -137,9 +137,15 @@ export class Resolver implements VariableResolver {
 
   async resolve(variable: Variable): Promise<string | undefined> {
     const name = variable.name;
+    // What FOAM_DATE_FORMAT resolves to depends on its format, so each format
+    // is cached on its own
+    const key =
+      name === 'FOAM_DATE_FORMAT'
+        ? `${name}:${variable.children.map(c => c.toString()).join('')}`
+        : name;
     if (this.givenValues.has(name)) {
-      this.promises.set(name, Promise.resolve(this.givenValues.get(name)));
-    } else if (!this.promises.has(name)) {
+      this.promises.set(key, Promise.resolve(this.givenValues.get(name)));
+    } else if (!this.promises.has(key)) {
       let value: Promise<string | undefined> = Promise.resolve(undefined);
       switch (name) {
         case 'FOAM_TITLE':
@@ -262,9 +268,9 @@ export class Resolver implements VariableResolver {
           value = Promise.resolve(undefined);
           break;
       }
-      this.promises.set(name, value);
+      this.promises.set(key, value);
     }
-    return this.promises.get(name);
+    return this.promises.get(key);
   }
 }
 

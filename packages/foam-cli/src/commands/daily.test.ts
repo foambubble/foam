@@ -77,6 +77,22 @@ describe('where foam daily puts the note without a template', () => {
       }
     ));
 
+  it('prints journal/YYYY-MM-DD.md when the openDailyNote settings spell out what Foam does without them', () =>
+    withTmpWorkspace(
+      {
+        '.vscode/settings.json': JSON.stringify({
+          'foam.openDailyNote.directory': 'journal',
+          'foam.openDailyNote.filenameFormat': 'yyyy-mm-dd',
+        }),
+      },
+      async ({ rootDir }) => {
+        const logger = new TestLogger();
+        const code = await runDailyCommand(['--date', '2026-05-01', '--path-only', '--workspace', rootDir], logger);
+        expect(exitCodeOf(code)).toBe(0);
+        expect(logger.logs[0]).toBe(path.join(rootDir, 'journal', '2026-05-01.md'));
+      }
+    ));
+
   it('puts it where the openDailyNote settings did once the template they print is saved', () =>
     withTmpWorkspace(
       {

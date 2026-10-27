@@ -103,14 +103,15 @@ export {
   dailyNotePattern,
   dailyNoteRule,
   defaultDailyNotePath,
-  ignoredDailyNoteSettings,
-  ignoredDailyNoteSettingsMessage,
-  legacyDailyNoteFilepath,
+  ignoredDailyNoteSettingsNotice,
   legacyDailyNoteFrontmatter,
   legacyDailyNoteTemplate,
-  OUTSIDE_THE_WORKSPACE,
 } from './templates/daily-note-location';
-export type { DailyNoteRule } from './templates/daily-note-location';
+export type {
+  DailyNoteRule,
+  IgnoredDailyNoteSettingsFix,
+  IgnoredDailyNoteSettingsNotice,
+} from './templates/daily-note-location';
 export { prepareDailyNote } from './templates/daily-note-creation';
 export type { DailyNoteCreation } from './templates/daily-note-creation';
 

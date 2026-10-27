@@ -3,12 +3,8 @@ import {
   Config,
   dailyNoteName,
   DEFAULT_DAILY_NOTE_TEMPLATE,
-  ignoredDailyNoteSettings,
-  ignoredDailyNoteSettingsMessage,
-  LegacyDailyNoteSettings,
-  legacyDailyNoteFrontmatter,
-  legacyDailyNoteTemplate,
-  OUTSIDE_THE_WORKSPACE,
+  IgnoredDailyNoteSettingsNotice,
+  ignoredDailyNoteSettingsNotice,
   prepareDailyNote,
   URI,
 } from '@foam/core';
@@ -71,15 +67,13 @@ export async function createDailyNoteIfNotExists(targetDate: Date, foam: Foam) {
   const loader = new TemplateLoader(readFile, workspace.isTrusted);
   let template = templateUri && (await loader.loadTemplate(templateUri));
 
-  const legacySettings = Config.getLegacyDailyNoteSettings();
-  const ignored = ignoredDailyNoteSettings(template, legacySettings);
-  if (ignored.length > 0) {
-    const keepingTemplate = await askToKeepLegacySettings(
-      templateUri,
-      legacySettings,
-      ignored,
-      foam.workspace.roots
-    );
+  const notice = ignoredDailyNoteSettingsNotice(
+    template,
+    Config.getLegacyDailyNoteSettings(),
+    foam.workspace.roots
+  );
+  if (notice) {
+    const keepingTemplate = await askToKeepLegacySettings(templateUri, notice);
     if (!keepingTemplate) {
       return undefined;
     }
@@ -127,58 +121,43 @@ const dailyNoteTemplateTarget = () =>
   getTemplatesDir().joinPath('daily-note.md');
 
 /**
- * Says the settings are ignored and offers to keep what they did: with no
- * template, by writing one that does; with a template that sets no
- * `filepath`, by showing the one to add. Nothing is offered when they put
- * daily notes outside the workspace, where no template can. Returns the
- * template to create the note from, or `undefined` when no note should be
- * created.
+ * Says the settings are ignored and offers what keeps what they did: writing
+ * the template the notice holds, or opening the template to add a filepath.
+ * Returns the template to create the note from, or `undefined` when no note
+ * should be created.
  */
 async function askToKeepLegacySettings(
   templateUri: URI | undefined,
-  settings: LegacyDailyNoteSettings,
-  ignored: string[],
-  roots: URI[]
+  notice: IgnoredDailyNoteSettingsNotice
 ): Promise<URI | undefined> {
-  const those = ignored.length > 1 ? 'these settings' : 'this setting';
-  const useDefault = `remove ${those} to create daily notes in journal/ as YYYY-MM-DD.md.`;
-  const frontmatter = legacyDailyNoteFrontmatter(settings, roots);
-
-  if (!frontmatter) {
-    await window.showWarningMessage(ignoredDailyNoteSettingsMessage(ignored), {
-      modal: true,
-      detail: `${OUTSIDE_THE_WORKSPACE} Move them into the workspace and set the daily note template's filepath, or ${useDefault}`,
-    });
-    return undefined;
-  }
-
-  if (!templateUri) {
-    const action = await window.showWarningMessage(
-      ignoredDailyNoteSettingsMessage(ignored),
-      {
-        modal: true,
-        detail: `Create a daily note template that keeps creating daily notes as before. Or ${useDefault}`,
-      },
-      CREATE_DAILY_NOTE_WARNING_RESPONSE
-    );
-    if (action !== CREATE_DAILY_NOTE_WARNING_RESPONSE) {
+  const options = { modal: true, detail: notice.detail };
+  switch (notice.fix.kind) {
+    case 'create-template': {
+      const action = await window.showWarningMessage(
+        notice.message,
+        options,
+        CREATE_DAILY_NOTE_WARNING_RESPONSE
+      );
+      if (action !== CREATE_DAILY_NOTE_WARNING_RESPONSE) {
+        return undefined;
+      }
+      const target = dailyNoteTemplateTarget();
+      await writeFile(target, notice.fix.template);
+      return target;
+    }
+    case 'add-filepath': {
+      const action = await window.showWarningMessage(
+        notice.message,
+        options,
+        OPEN_DAILY_NOTE_TEMPLATE_RESPONSE
+      );
+      if (action === OPEN_DAILY_NOTE_TEMPLATE_RESPONSE && templateUri) {
+        await focusNote(templateUri, false);
+      }
       return undefined;
     }
-    const target = dailyNoteTemplateTarget();
-    await writeFile(target, legacyDailyNoteTemplate(settings, roots));
-    return target;
+    case 'none':
+      await window.showWarningMessage(notice.message, options);
+      return undefined;
   }
-
-  const action = await window.showWarningMessage(
-    ignoredDailyNoteSettingsMessage(ignored),
-    {
-      modal: true,
-      detail: `To keep daily notes where they were, add this to the daily note template's frontmatter:\n\n${frontmatter}\n\nOr ${useDefault}`,
-    },
-    OPEN_DAILY_NOTE_TEMPLATE_RESPONSE
-  );
-  if (action === OPEN_DAILY_NOTE_TEMPLATE_RESPONSE) {
-    await focusNote(templateUri, false);
-  }
-  return undefined;
 }

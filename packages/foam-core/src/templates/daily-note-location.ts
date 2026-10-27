@@ -128,37 +128,123 @@ const LEGACY_SETTING_NAMES: Record<keyof LegacyDailyNoteSettings, string> = {
 };
 
 /**
- * The `foam.openDailyNote.*` settings that are set and would have changed
- * where daily notes go or what a new one holds, now that Foam ignores them.
- * Empty when ignoring them changes nothing: the template's `filepath` (or a
- * JavaScript template's own) placed the note, and the template its content.
+ * The `foam.openDailyNote.*` settings that would have put a daily note
+ * somewhere else, or titled it differently, than Foam now does without them.
+ * Empty when ignoring them changes nothing: they spell out what Foam does
+ * anyway, or the template's `filepath` (or a JavaScript template's own)
+ * places the note and the template gives its content.
  */
 export function ignoredDailyNoteSettings(
   template: Template | undefined,
-  settings: LegacyDailyNoteSettings
+  settings: LegacyDailyNoteSettings,
+  roots: URI[]
 ): string[] {
   if (template?.type === 'javascript' || template?.metadata.get('filepath')) {
     return [];
   }
+  const changesNote: Record<
+    keyof LegacyDailyNoteSettings,
+    (value: string) => boolean
+  > = {
+    directory: value =>
+      legacyDailyNoteFolder(value, roots).path !==
+      legacyDailyNoteFolder(DEFAULT_DAILY_NOTE_DIRECTORY, roots).path,
+    filenameFormat: value =>
+      convertDateformatToDayjs(value) !== DEFAULT_DAILY_NOTE_NAME_FORMAT,
+    fileExtension: value => value !== 'md',
+    // A template gives the content, title included
+    titleFormat: value =>
+      !template &&
+      convertDateformatToDayjs(value) !== DEFAULT_DAILY_NOTE_NAME_FORMAT,
+  };
   return (
     Object.keys(LEGACY_SETTING_NAMES) as (keyof LegacyDailyNoteSettings)[]
   )
-    .filter(key => settings[key] !== undefined)
-    .filter(key => !template || key !== 'titleFormat')
+    .filter(
+      key => settings[key] !== undefined && changesNote[key](settings[key])
+    )
     .map(key => LEGACY_SETTING_NAMES[key]);
 }
 
-/** Why the settings cannot be kept when they put daily notes outside the workspace. */
-export const OUTSIDE_THE_WORKSPACE =
-  'A daily note template cannot keep daily notes outside the workspace, where foam.openDailyNote.directory puts them.';
+/** What Foam can do to keep what the ignored settings did. */
+export type IgnoredDailyNoteSettingsFix =
+  /** The workspace has no daily-note template, and writing this one keeps it */
+  | { kind: 'create-template'; template: string }
+  /** The template sets no `filepath`, and adding the one the detail shows keeps it */
+  | { kind: 'add-filepath' }
+  /** The settings put daily notes outside the workspace, where no template can */
+  | { kind: 'none' };
 
-/** E.g. "foam.openDailyNote.directory and foam.openDailyNote.titleFormat are no longer used." */
-export function ignoredDailyNoteSettingsMessage(names: string[]): string {
-  const list =
-    names.length > 1
-      ? `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`
-      : names[0];
-  return `${list} ${names.length > 1 ? 'are' : 'is'} no longer used.`;
+/** What to tell the user about the `foam.openDailyNote.*` settings Foam ignores. */
+export interface IgnoredDailyNoteSettingsNotice {
+  /** The settings that would have changed the note. */
+  settings: string[];
+  /** E.g. "foam.openDailyNote.directory is no longer used." */
+  message: string;
+  /** How to keep what they did, or why no template can, then how to do without them. */
+  detail: string;
+  fix: IgnoredDailyNoteSettingsFix;
+}
+
+/**
+ * What to tell the user before creating a daily note while settings Foam
+ * ignores would have placed or titled it differently, or `undefined` when
+ * ignoring them changes nothing (see {@link ignoredDailyNoteSettings}).
+ */
+export function ignoredDailyNoteSettingsNotice(
+  template: Template | undefined,
+  settings: LegacyDailyNoteSettings,
+  roots: URI[]
+): IgnoredDailyNoteSettingsNotice | undefined {
+  const ignored = ignoredDailyNoteSettings(template, settings, roots);
+  if (ignored.length === 0) {
+    return undefined;
+  }
+  const several = ignored.length > 1;
+  const list = several
+    ? `${ignored.slice(0, -1).join(', ')} and ${ignored[ignored.length - 1]}`
+    : ignored[0];
+  const message = `${list} ${several ? 'are' : 'is'} no longer used.`;
+  const useDefault = `remove ${
+    several ? 'these settings' : 'this setting'
+  } to create daily notes in journal/ as YYYY-MM-DD.md.`;
+
+  const frontmatter = legacyDailyNoteFrontmatter(settings, roots);
+  if (!frontmatter) {
+    return {
+      settings: ignored,
+      message,
+      detail: `A daily note template cannot keep daily notes outside the workspace, where foam.openDailyNote.directory puts them. Move them into the workspace and set the daily note template's filepath, or ${useDefault}`,
+      fix: { kind: 'none' },
+    };
+  }
+  if (template) {
+    return {
+      settings: ignored,
+      message,
+      detail: `To keep daily notes where they were, add this to the daily note template's frontmatter:\n\n${frontmatter}\n\nOr ${useDefault}`,
+      fix: { kind: 'add-filepath' },
+    };
+  }
+  const keeping = templateWith(frontmatter, settings);
+  return {
+    settings: ignored,
+    message,
+    detail: `Saved as daily-note.md in the templates folder, this daily note template keeps creating daily notes as before:\n\n${keeping}\nOr ${useDefault}`,
+    fix: { kind: 'create-template', template: keeping },
+  };
+}
+
+/**
+ * The folder the settings put daily notes in, by the rule that wrote them. A
+ * file in it is resolved rather than the folder, which on its own would name
+ * a root instead of a folder inside it.
+ */
+function legacyDailyNoteFolder(directory: string, roots: URI[]): URI {
+  return asAbsoluteUri(
+    joinPath(directory.replace(/\\/g, '/'), 'note'),
+    roots
+  ).getDirectory();
 }
 
 /**
@@ -171,16 +257,10 @@ export function legacyDailyNoteFilepath(
   settings: LegacyDailyNoteSettings,
   roots: URI[]
 ): string | undefined {
-  // The folder the settings put daily notes in, by the rule that wrote them.
-  // A file in it is resolved rather than the folder, which on its own would
-  // name a root instead of a folder inside it.
-  const directory = (
-    settings.directory ?? DEFAULT_DAILY_NOTE_DIRECTORY
-  ).replace(/\\/g, '/');
-  const folder = asAbsoluteUri(
-    joinPath(directory, 'note'),
+  const folder = legacyDailyNoteFolder(
+    settings.directory ?? DEFAULT_DAILY_NOTE_DIRECTORY,
     roots
-  ).getDirectory();
+  );
   const root = roots.find(root => isPathWithin(folder.path, root.path));
   if (!root) {
     return undefined;
@@ -227,11 +307,16 @@ export function legacyDailyNoteTemplate(
   roots: URI[]
 ): string | undefined {
   const frontmatter = legacyDailyNoteFrontmatter(settings, roots);
+  return frontmatter && templateWith(frontmatter, settings);
+}
+
+function templateWith(
+  frontmatter: string,
+  settings: LegacyDailyNoteSettings
+): string {
   const titleFormat =
     settings.titleFormat ?? settings.filenameFormat ?? 'isoDate';
-  return (
-    frontmatter && `---\n${frontmatter}\n---\n# ${dateVariable(titleFormat)}\n`
-  );
+  return `---\n${frontmatter}\n---\n# ${dateVariable(titleFormat)}\n`;
 }
 
 /**

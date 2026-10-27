@@ -24,9 +24,9 @@ import { fromVsCodeUri } from '../../utils/vsc-utils';
 import { fileExists, readFile } from '../../services/editor';
 import {
   getDailyNoteTemplateCandidateUris,
+  ignoredDailyNoteSettingsNotice,
   legacyDailyNoteFrontmatter,
   legacyDailyNoteTemplate,
-  OUTSIDE_THE_WORKSPACE,
 } from '@foam/core';
 import {
   getDailyNoteTemplateUri,
@@ -295,21 +295,44 @@ Previous: [[\${FOAM_PREVIOUS_DAILY_NOTE}]]`,
     });
 
     it('says a directory outside the workspace cannot be kept, offers nothing, and creates nothing', async () => {
+      const settings = { directory: '/outside-the-workspace/diary' };
+      const notice = ignoredDailyNoteSettingsNotice(
+        undefined,
+        settings,
+        roots()
+      );
+
+      await withLegacySettings(settings, () =>
+        answeringWarning(undefined, async spy => {
+          const result = await createDailyNoteIfNotExists(
+            new Date(2021, 8, 20),
+            makeFoamMock()
+          );
+
+          expect(result).toBeUndefined();
+          expect(spy.mock.calls).toEqual([
+            [notice.message, { modal: true, detail: notice.detail }],
+          ]);
+          expect(await getDailyNoteTemplateUri()).toBeUndefined();
+        })
+      );
+    });
+
+    it('does not ask when the settings spell out what Foam does without them', async () => {
       await withLegacySettings(
-        { directory: '/outside-the-workspace/diary' },
+        { directory: 'journal', fileExtension: 'md' },
         () =>
           answeringWarning(undefined, async spy => {
             const result = await createDailyNoteIfNotExists(
-              new Date(2021, 8, 20),
+              new Date(2021, 7, 30),
               makeFoamMock()
             );
 
-            expect(result).toBeUndefined();
-            expect((spy.mock.calls[0][1] as any).detail).toContain(
-              OUTSIDE_THE_WORKSPACE
-            );
-            expect(spy.mock.calls[0]).toHaveLength(2);
-            expect(await getDailyNoteTemplateUri()).toBeUndefined();
+            expect(result.uri.path).toMatch(/\/journal\/2021-08-30\.md$/);
+            expect(spy.mock.calls.map(([message]) => message)).toEqual([
+              expect.stringMatching(/^No daily note template found/),
+            ]);
+            await deleteFile(result.uri);
           })
       );
     });

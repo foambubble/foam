@@ -9,6 +9,7 @@ import {
   dailyNoteRule,
   defaultDailyNotePath,
   ignoredDailyNoteSettings,
+  ignoredDailyNoteSettingsNotice,
   legacyDailyNoteFilepath,
   legacyDailyNoteFrontmatter,
   legacyDailyNoteTemplate,
@@ -106,13 +107,16 @@ describe('the openDailyNote settings Foam no longer uses', () => {
     expect(
       ignoredDailyNoteSettings(
         undefined,
-        new DefaultFoamConfig().getLegacyDailyNoteSettings()
+        new DefaultFoamConfig().getLegacyDailyNoteSettings(),
+        ROOTS
       )
     ).toEqual([]);
   });
 
   it('names every setting that is set when there is no template', () => {
-    expect(ignoredDailyNoteSettings(undefined, ALL_LEGACY_SETTINGS)).toEqual([
+    expect(
+      ignoredDailyNoteSettings(undefined, ALL_LEGACY_SETTINGS, ROOTS)
+    ).toEqual([
       'foam.openDailyNote.directory',
       'foam.openDailyNote.filenameFormat',
       'foam.openDailyNote.fileExtension',
@@ -120,18 +124,49 @@ describe('the openDailyNote settings Foam no longer uses', () => {
     ]);
   });
 
+  it('names none that spells out what Foam does without them', () => {
+    for (const settings of [
+      {
+        directory: 'journal',
+        filenameFormat: 'isoDate',
+        fileExtension: 'md',
+        titleFormat: 'yyyy-mm-dd',
+      },
+      { directory: './journal/', filenameFormat: 'yyyy-mm-dd' },
+      { directory: '/workspace/journal' },
+    ]) {
+      expect(ignoredDailyNoteSettings(undefined, settings, ROOTS)).toEqual([]);
+    }
+  });
+
+  it('names only the settings that differ from what Foam does without them', () => {
+    expect(
+      ignoredDailyNoteSettings(
+        undefined,
+        { directory: 'journal', fileExtension: 'txt', titleFormat: 'isoDate' },
+        ROOTS
+      )
+    ).toEqual(['foam.openDailyNote.fileExtension']);
+  });
+
   it('names only the settings that placed the note when the template sets no filepath, since the template gives the content', () => {
     expect(
-      ignoredDailyNoteSettings(markdownTemplate('# Day\n'), ALL_LEGACY_SETTINGS)
+      ignoredDailyNoteSettings(
+        markdownTemplate('# Day\n'),
+        ALL_LEGACY_SETTINGS,
+        ROOTS
+      )
     ).toEqual([
       'foam.openDailyNote.directory',
       'foam.openDailyNote.filenameFormat',
       'foam.openDailyNote.fileExtension',
     ]);
     expect(
-      ignoredDailyNoteSettings(markdownTemplate('# Day\n'), {
-        titleFormat: 'fullDate',
-      })
+      ignoredDailyNoteSettings(
+        markdownTemplate('# Day\n'),
+        { titleFormat: 'fullDate' },
+        ROOTS
+      )
     ).toEqual([]);
   });
 
@@ -139,15 +174,76 @@ describe('the openDailyNote settings Foam no longer uses', () => {
     expect(
       ignoredDailyNoteSettings(
         markdownTemplate(DEFAULT_DAILY_NOTE_TEMPLATE),
-        ALL_LEGACY_SETTINGS
+        ALL_LEGACY_SETTINGS,
+        ROOTS
       )
     ).toEqual([]);
   });
 
   it('names none for a JavaScript template, which returns its own filepath', () => {
     expect(
-      ignoredDailyNoteSettings(javascriptTemplate, ALL_LEGACY_SETTINGS)
+      ignoredDailyNoteSettings(javascriptTemplate, ALL_LEGACY_SETTINGS, ROOTS)
     ).toEqual([]);
+  });
+});
+
+describe('what Foam says about the openDailyNote settings it ignores', () => {
+  it('says nothing when ignoring them changes nothing', () => {
+    expect(
+      ignoredDailyNoteSettingsNotice(undefined, { directory: 'journal' }, ROOTS)
+    ).toBeUndefined();
+  });
+
+  it('offers the template that keeps them when the workspace has none', () => {
+    const settings = { directory: 'diary', titleFormat: 'fullDate' };
+    const template = legacyDailyNoteTemplate(settings, ROOTS);
+
+    expect(ignoredDailyNoteSettingsNotice(undefined, settings, ROOTS)).toEqual({
+      settings: [
+        'foam.openDailyNote.directory',
+        'foam.openDailyNote.titleFormat',
+      ],
+      message:
+        'foam.openDailyNote.directory and foam.openDailyNote.titleFormat are no longer used.',
+      detail: `Saved as daily-note.md in the templates folder, this daily note template keeps creating daily notes as before:\n\n${template}\nOr remove these settings to create daily notes in journal/ as YYYY-MM-DD.md.`,
+      fix: { kind: 'create-template', template },
+    });
+  });
+
+  it('shows the filepath to add when the template has none', () => {
+    const settings = { fileExtension: 'txt' };
+
+    expect(
+      ignoredDailyNoteSettingsNotice(
+        markdownTemplate('# Day\n'),
+        settings,
+        ROOTS
+      )
+    ).toEqual({
+      settings: ['foam.openDailyNote.fileExtension'],
+      message: 'foam.openDailyNote.fileExtension is no longer used.',
+      detail: `To keep daily notes where they were, add this to the daily note template's frontmatter:\n\n${legacyDailyNoteFrontmatter(
+        settings,
+        ROOTS
+      )}\n\nOr remove this setting to create daily notes in journal/ as YYYY-MM-DD.md.`,
+      fix: { kind: 'add-filepath' },
+    });
+  });
+
+  it('offers nothing when the settings put daily notes outside the workspace', () => {
+    expect(
+      ignoredDailyNoteSettingsNotice(
+        undefined,
+        { directory: '/home/me/diary' },
+        ROOTS
+      )
+    ).toEqual({
+      settings: ['foam.openDailyNote.directory'],
+      message: 'foam.openDailyNote.directory is no longer used.',
+      detail:
+        "A daily note template cannot keep daily notes outside the workspace, where foam.openDailyNote.directory puts them. Move them into the workspace and set the daily note template's filepath, or remove this setting to create daily notes in journal/ as YYYY-MM-DD.md.",
+      fix: { kind: 'none' },
+    });
   });
 });
 

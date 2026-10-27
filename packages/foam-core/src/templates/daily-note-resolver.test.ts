@@ -110,6 +110,21 @@ foam_template:
     );
   });
 
+  it('creates the note as usual when the openDailyNote settings spell out what Foam does without them', async () => {
+    const result = await resolveDailyNote(
+      date,
+      undefined,
+      makeFoam(),
+      makeReadFile({}),
+      { directory: 'journal', filenameFormat: 'yyyy-mm-dd', fileExtension: 'md' }
+    );
+
+    expect(result.filepath.toFsPath()).toBe(
+      URI.file('/workspace/journal/2024-01-17.md').toFsPath()
+    );
+    expect(result.content).toBe('# 2024-01-17\n');
+  });
+
   it('refuses without offering a template while the openDailyNote settings put daily notes outside the workspace, which a template cannot reach', async () => {
     const result = resolveDailyNote(
       date,

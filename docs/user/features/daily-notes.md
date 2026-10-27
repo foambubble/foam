@@ -80,7 +80,7 @@ By default, daily notes are created as `yyyy-mm-dd.md` in the workspace's `journ
 
 To customize your daily note location and format you can create a `.foam/templates/daily-note.md` template. See [[templates]] for more information.
 
-The `foam.openDailyNote.directory`, `filenameFormat`, `fileExtension` and `titleFormat` settings are no longer used. If you still have them, Foam asks the next time you open a daily note: it can create a daily note template that keeps your notes where they were, or you can remove the settings. A template can't put notes outside the workspace, so if the settings did, move those notes into the workspace first.
+The `foam.openDailyNote.directory`, `filenameFormat`, `fileExtension` and `titleFormat` settings are no longer used. If you still have them and they would change where a daily note goes or how it's titled, Foam asks the next time you open one: it can create a daily note template that keeps your notes where they were, or you can remove the settings. A template can't put notes outside the workspace, so if the settings did, move those notes into the workspace first.
 
 To work with daily notes from the terminal, see [[daily|CLI daily command]].
 

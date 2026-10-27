@@ -8,6 +8,7 @@ import {
   LegacyDailyNoteSettings,
   legacyDailyNoteFrontmatter,
   legacyDailyNoteTemplate,
+  OUTSIDE_THE_WORKSPACE,
   prepareDailyNote,
   URI,
 } from '@foam/core';
@@ -76,7 +77,8 @@ export async function createDailyNoteIfNotExists(targetDate: Date, foam: Foam) {
     const keepingTemplate = await askToKeepLegacySettings(
       templateUri,
       legacySettings,
-      ignored
+      ignored,
+      foam.workspace.roots
     );
     if (!keepingTemplate) {
       return undefined;
@@ -127,23 +129,35 @@ const dailyNoteTemplateTarget = () =>
 /**
  * Says the settings are ignored and offers to keep what they did: with no
  * template, by writing one that does; with a template that sets no
- * `filepath`, by showing the one to add. Returns the template to create the
- * note from, or `undefined` when no note should be created.
+ * `filepath`, by showing the one to add. Nothing is offered when they put
+ * daily notes outside the workspace, where no template can. Returns the
+ * template to create the note from, or `undefined` when no note should be
+ * created.
  */
 async function askToKeepLegacySettings(
   templateUri: URI | undefined,
   settings: LegacyDailyNoteSettings,
-  ignored: string[]
+  ignored: string[],
+  roots: URI[]
 ): Promise<URI | undefined> {
   const those = ignored.length > 1 ? 'these settings' : 'this setting';
-  const useDefault = `Or remove ${those} to create daily notes in journal/ as YYYY-MM-DD.md.`;
+  const useDefault = `remove ${those} to create daily notes in journal/ as YYYY-MM-DD.md.`;
+  const frontmatter = legacyDailyNoteFrontmatter(settings, roots);
+
+  if (!frontmatter) {
+    await window.showWarningMessage(ignoredDailyNoteSettingsMessage(ignored), {
+      modal: true,
+      detail: `${OUTSIDE_THE_WORKSPACE} Move them into the workspace and set the daily note template's filepath, or ${useDefault}`,
+    });
+    return undefined;
+  }
 
   if (!templateUri) {
     const action = await window.showWarningMessage(
       ignoredDailyNoteSettingsMessage(ignored),
       {
         modal: true,
-        detail: `Create a daily note template that keeps creating daily notes as before. ${useDefault}`,
+        detail: `Create a daily note template that keeps creating daily notes as before. Or ${useDefault}`,
       },
       CREATE_DAILY_NOTE_WARNING_RESPONSE
     );
@@ -151,7 +165,7 @@ async function askToKeepLegacySettings(
       return undefined;
     }
     const target = dailyNoteTemplateTarget();
-    await writeFile(target, legacyDailyNoteTemplate(settings));
+    await writeFile(target, legacyDailyNoteTemplate(settings, roots));
     return target;
   }
 
@@ -159,9 +173,7 @@ async function askToKeepLegacySettings(
     ignoredDailyNoteSettingsMessage(ignored),
     {
       modal: true,
-      detail: `To keep daily notes where they were, add this to the daily note template's frontmatter:\n\n${legacyDailyNoteFrontmatter(
-        settings
-      )}\n\n${useDefault}`,
+      detail: `To keep daily notes where they were, add this to the daily note template's frontmatter:\n\n${frontmatter}\n\nOr ${useDefault}`,
     },
     OPEN_DAILY_NOTE_TEMPLATE_RESPONSE
   );

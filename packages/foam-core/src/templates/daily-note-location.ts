@@ -1,7 +1,14 @@
 import dayjs from 'dayjs';
 import { LegacyDailyNoteSettings } from '../config';
+import { URI, asAbsoluteUri, findRootByName } from '../model/uri';
 import { convertDateformatToDayjs } from '../utils/date-format';
-import { getName, joinPath } from '../utils/path';
+import {
+  getBasename,
+  getName,
+  isPathWithin,
+  joinPath,
+  relativeTo,
+} from '../utils/path';
 import {
   PatternPart,
   partsFromTemplateFilepath,
@@ -141,6 +148,10 @@ export function ignoredDailyNoteSettings(
     .map(key => LEGACY_SETTING_NAMES[key]);
 }
 
+/** Why the settings cannot be kept when they put daily notes outside the workspace. */
+export const OUTSIDE_THE_WORKSPACE =
+  'A daily note template cannot keep daily notes outside the workspace, where foam.openDailyNote.directory puts them.';
+
 /** E.g. "foam.openDailyNote.directory and foam.openDailyNote.titleFormat are no longer used." */
 export function ignoredDailyNoteSettingsMessage(names: string[]): string {
   const list =
@@ -153,53 +164,74 @@ export function ignoredDailyNoteSettingsMessage(names: string[]): string {
 /**
  * The daily-note template `filepath` that places daily notes where the
  * settings did, with the old defaults for the settings that are not set.
+ * `undefined` when the settings put them outside every workspace root: a
+ * template `filepath` always resolves inside the workspace.
  */
 export function legacyDailyNoteFilepath(
-  settings: LegacyDailyNoteSettings
-): string {
-  // Normalized the way `joinPath` normalized it when the settings placed a
-  // note, so `diary`, `./diary` and `notes/../diary` all name the same folder.
-  let dir = joinPath(
-    (settings.directory ?? DEFAULT_DAILY_NOTE_DIRECTORY).replace(/\\/g, '/')
-  );
-  while (dir.length > 1 && dir.endsWith('/')) {
-    dir = dir.slice(0, -1);
+  settings: LegacyDailyNoteSettings,
+  roots: URI[]
+): string | undefined {
+  // The folder the settings put daily notes in, by the rule that wrote them.
+  // A file in it is resolved rather than the folder, which on its own would
+  // name a root instead of a folder inside it.
+  const directory = (
+    settings.directory ?? DEFAULT_DAILY_NOTE_DIRECTORY
+  ).replace(/\\/g, '/');
+  const folder = asAbsoluteUri(
+    joinPath(directory, 'note'),
+    roots
+  ).getDirectory();
+  const root = roots.find(root => isPathWithin(folder.path, root.path));
+  if (!root) {
+    return undefined;
   }
-  // A relative directory was resolved against the workspace root, which is
-  // what a leading `/` means in a template filepath
-  const prefix =
-    dir === '.' || dir === '/'
-      ? '/'
-      : dir.startsWith('/') || /^[a-zA-Z]:/.test(dir)
-      ? `${dir}/`
-      : `/${dir}/`;
-  return `${prefix}${dateVariable(settings.filenameFormat ?? 'isoDate')}.${
-    settings.fileExtension ?? 'md'
-  }`;
+  // A template filepath starting with `/` resolves into the root its first
+  // segment names, else into the first root, so the root is named unless
+  // that already lands in it
+  const relative = relativeTo(folder.path, root.path);
+  const namesRoot =
+    root !== roots[0] ||
+    findRootByName(relative.split('/')[0], roots) !== undefined;
+  const segments = [namesRoot ? getBasename(root.path) : '', relative].filter(
+    segment => segment !== ''
+  );
+  return `/${segments.map(segment => `${segment}/`).join('')}${dateVariable(
+    settings.filenameFormat ?? 'isoDate'
+  )}.${settings.fileExtension ?? 'md'}`;
 }
 
-/** The `foam_template` frontmatter that places daily notes where the settings did. */
+/**
+ * The `foam_template` frontmatter that places daily notes where the settings
+ * did, or `undefined` when no template can (see {@link legacyDailyNoteFilepath}).
+ */
 export function legacyDailyNoteFrontmatter(
-  settings: LegacyDailyNoteSettings
-): string {
+  settings: LegacyDailyNoteSettings,
+  roots: URI[]
+): string | undefined {
   // Single-quoted, so YAML leaves the backslashes of escapes in the format alone
-  const filepath = legacyDailyNoteFilepath(settings).replace(/'/g, "''");
-  return `foam_template:\n  filepath: '${filepath}'`;
+  const filepath = legacyDailyNoteFilepath(settings, roots)?.replace(
+    /'/g,
+    "''"
+  );
+  return filepath && `foam_template:\n  filepath: '${filepath}'`;
 }
 
 /**
  * A daily-note template that creates daily notes where and as the settings
  * did: placed by them, holding only a heading with the date formatted by
- * `titleFormat`, else `filenameFormat`.
+ * `titleFormat`, else `filenameFormat`. `undefined` when no template can
+ * place them there (see {@link legacyDailyNoteFilepath}).
  */
 export function legacyDailyNoteTemplate(
-  settings: LegacyDailyNoteSettings
-): string {
+  settings: LegacyDailyNoteSettings,
+  roots: URI[]
+): string | undefined {
+  const frontmatter = legacyDailyNoteFrontmatter(settings, roots);
   const titleFormat =
     settings.titleFormat ?? settings.filenameFormat ?? 'isoDate';
-  return `---\n${legacyDailyNoteFrontmatter(settings)}\n---\n# ${dateVariable(
-    titleFormat
-  )}\n`;
+  return (
+    frontmatter && `---\n${frontmatter}\n---\n# ${dateVariable(titleFormat)}\n`
+  );
 }
 
 /**

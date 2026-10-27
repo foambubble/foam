@@ -26,6 +26,7 @@ import {
   getDailyNoteTemplateCandidateUris,
   legacyDailyNoteFrontmatter,
   legacyDailyNoteTemplate,
+  OUTSIDE_THE_WORKSPACE,
 } from '@foam/core';
 import {
   getDailyNoteTemplateUri,
@@ -35,6 +36,7 @@ import { URI } from '@foam/core';
 
 describe('Daily note creation and template processing', () => {
   const DAILY_NOTE_TEMPLATE = ['.foam', 'templates', 'daily-note.md'];
+  const roots = () => [fromVsCodeUri(workspace.workspaceFolders[0].uri)];
 
   beforeEach(async () => {
     // Ensure daily note templates are removed before each test
@@ -251,7 +253,7 @@ Previous: [[\${FOAM_PREVIOUS_DAILY_NOTE}]]`,
           );
           const templateUri = await getDailyNoteTemplateUri();
           expect(await readFile(templateUri)).toBe(
-            legacyDailyNoteTemplate(settings)
+            legacyDailyNoteTemplate(settings, roots())
           );
 
           await deleteFile(templateUri);
@@ -278,10 +280,10 @@ Previous: [[\${FOAM_PREVIOUS_DAILY_NOTE}]]`,
               'foam.openDailyNote.directory and foam.openDailyNote.fileExtension are no longer used.'
             );
             expect((spy.mock.calls[0][1] as any).detail).toContain(
-              legacyDailyNoteFrontmatter({
-                directory: 'diary',
-                fileExtension: 'txt',
-              })
+              legacyDailyNoteFrontmatter(
+                { directory: 'diary', fileExtension: 'txt' },
+                roots()
+              )
             );
             expect(window.activeTextEditor.document.uri.path).toEqual(
               template.uri.path
@@ -292,9 +294,29 @@ Previous: [[\${FOAM_PREVIOUS_DAILY_NOTE}]]`,
       await deleteFile(template.uri);
     });
 
+    it('says a directory outside the workspace cannot be kept, offers nothing, and creates nothing', async () => {
+      await withLegacySettings(
+        { directory: '/outside-the-workspace/diary' },
+        () =>
+          answeringWarning(undefined, async spy => {
+            const result = await createDailyNoteIfNotExists(
+              new Date(2021, 8, 20),
+              makeFoamMock()
+            );
+
+            expect(result).toBeUndefined();
+            expect((spy.mock.calls[0][1] as any).detail).toContain(
+              OUTSIDE_THE_WORKSPACE
+            );
+            expect(spy.mock.calls[0]).toHaveLength(2);
+            expect(await getDailyNoteTemplateUri()).toBeUndefined();
+          })
+      );
+    });
+
     it("does not ask once the template's filepath places daily notes", async () => {
       const template = await createFile(
-        legacyDailyNoteTemplate({ directory: 'diary' }),
+        legacyDailyNoteTemplate({ directory: 'diary' }, roots()),
         DAILY_NOTE_TEMPLATE
       );
       const root = fromVsCodeUri(workspace.workspaceFolders[0].uri);
@@ -325,10 +347,10 @@ Previous: [[\${FOAM_PREVIOUS_DAILY_NOTE}]]`,
 
     it("name the daily note the way the template's filepath does", async () => {
       const template = await createFile(
-        legacyDailyNoteTemplate({
-          directory: 'diary',
-          filenameFormat: 'dd-mm-yyyy',
-        }),
+        legacyDailyNoteTemplate(
+          { directory: 'diary', filenameFormat: 'dd-mm-yyyy' },
+          roots()
+        ),
         DAILY_NOTE_TEMPLATE
       );
 

@@ -10,6 +10,7 @@ import {
   ignoredDailyNoteSettingsMessage,
   legacyDailyNoteFrontmatter,
   legacyDailyNoteTemplate,
+  OUTSIDE_THE_WORKSPACE,
 } from './daily-note-location';
 import { prepareDailyNote } from './daily-note-creation';
 
@@ -53,7 +54,12 @@ export async function resolveDailyNote(
   if (ignored.length > 0) {
     throw new FoamError(
       'invalid_input',
-      ignoredSettingsGuidance(template, legacySettings, ignored),
+      ignoredSettingsGuidance(
+        template,
+        legacySettings,
+        ignored,
+        foam.workspace.roots
+      ),
       { settings: ignored }
     );
   }
@@ -69,17 +75,24 @@ export async function resolveDailyNote(
 function ignoredSettingsGuidance(
   template: Template | undefined,
   settings: LegacyDailyNoteSettings,
-  ignored: string[]
+  ignored: string[],
+  roots: URI[]
 ): string {
   const those = ignored.length > 1 ? 'those settings' : 'that setting';
+  const useDefault = `remove ${those} to create daily notes in journal/ as YYYY-MM-DD.md.`;
+  const frontmatter = legacyDailyNoteFrontmatter(settings, roots);
+  if (!frontmatter) {
+    return `${ignoredDailyNoteSettingsMessage(
+      ignored
+    )} ${OUTSIDE_THE_WORKSPACE} Move them into the workspace and set the daily note template's filepath, or ${useDefault}`;
+  }
   const keep = template
-    ? `To keep daily notes where they were, add this to the daily note template's frontmatter:\n\n${legacyDailyNoteFrontmatter(
-        settings
-      )}\n`
+    ? `To keep daily notes where they were, add this to the daily note template's frontmatter:\n\n${frontmatter}\n`
     : `To keep creating daily notes as before, save this as daily-note.md in the templates folder:\n\n${legacyDailyNoteTemplate(
-        settings
+        settings,
+        roots
       )}`;
   return `${ignoredDailyNoteSettingsMessage(
     ignored
-  )} ${keep}\nOr remove ${those} to create daily notes in journal/ as YYYY-MM-DD.md.`;
+  )} ${keep}\nOr ${useDefault}`;
 }

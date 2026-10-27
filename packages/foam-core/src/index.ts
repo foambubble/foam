@@ -108,6 +108,7 @@ export {
   legacyDailyNoteFilepath,
   legacyDailyNoteFrontmatter,
   legacyDailyNoteTemplate,
+  OUTSIDE_THE_WORKSPACE,
 } from './templates/daily-note-location';
 export type { DailyNoteRule } from './templates/daily-note-location';
 export { prepareDailyNote } from './templates/daily-note-creation';

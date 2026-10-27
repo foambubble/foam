@@ -1,4 +1,5 @@
 import { DefaultFoamConfig, LegacyDailyNoteSettings } from '../config';
+import { URI } from '../model/uri';
 import { extractFoamTemplateFrontmatterMetadata } from '../utils/template-frontmatter-parser';
 import { dailyNotePathMatcher } from './daily-note-path-pattern';
 import {
@@ -9,12 +10,14 @@ import {
   defaultDailyNotePath,
   ignoredDailyNoteSettings,
   legacyDailyNoteFilepath,
+  legacyDailyNoteFrontmatter,
   legacyDailyNoteTemplate,
 } from './daily-note-location';
 import { Template } from './note-creation-types';
 import { Resolver } from './variable-resolver';
 
 const OCT_7 = new Date(2026, 9, 7);
+const ROOTS = [URI.file('/workspace')];
 
 const ALL_LEGACY_SETTINGS: LegacyDailyNoteSettings = {
   directory: 'diary',
@@ -150,49 +153,74 @@ describe('the openDailyNote settings Foam no longer uses', () => {
 
 describe('a template that keeps daily notes where the openDailyNote settings put them', () => {
   it('builds the filepath from the directory, the filename format and the extension', () => {
-    expect(legacyDailyNoteFilepath(ALL_LEGACY_SETTINGS)).toBe(
+    expect(legacyDailyNoteFilepath(ALL_LEGACY_SETTINGS, ROOTS)).toBe(
       '/diary/${FOAM_DATE_FORMAT:DD-MM-YYYY}.markdown'
     );
   });
 
   it('uses the old defaults for the settings that are not set', () => {
-    expect(legacyDailyNoteFilepath({ directory: 'diary' })).toBe(
+    expect(legacyDailyNoteFilepath({ directory: 'diary' }, ROOTS)).toBe(
       '/diary/${FOAM_DATE_FORMAT:YYYY-MM-DD}.md'
     );
-    expect(legacyDailyNoteFilepath({ fileExtension: 'txt' })).toBe(
+    expect(legacyDailyNoteFilepath({ fileExtension: 'txt' }, ROOTS)).toBe(
       '/journal/${FOAM_DATE_FORMAT:YYYY-MM-DD}.txt'
     );
   });
 
   it('puts daily notes at the workspace root when the directory is "."', () => {
-    expect(legacyDailyNoteFilepath({ directory: '.' })).toBe(
+    expect(legacyDailyNoteFilepath({ directory: '.' }, ROOTS)).toBe(
       '/${FOAM_DATE_FORMAT:YYYY-MM-DD}.md'
     );
-    expect(legacyDailyNoteFilepath({ directory: './' })).toBe(
+    expect(legacyDailyNoteFilepath({ directory: './' }, ROOTS)).toBe(
       '/${FOAM_DATE_FORMAT:YYYY-MM-DD}.md'
     );
   });
 
   it('normalizes the directory the way the settings resolved it', () => {
-    expect(legacyDailyNoteFilepath({ directory: 'notes/../diary/' })).toBe(
-      '/diary/${FOAM_DATE_FORMAT:YYYY-MM-DD}.md'
-    );
-    expect(legacyDailyNoteFilepath({ directory: 'notes\\diary' })).toBe(
+    expect(
+      legacyDailyNoteFilepath({ directory: 'notes/../diary/' }, ROOTS)
+    ).toBe('/diary/${FOAM_DATE_FORMAT:YYYY-MM-DD}.md');
+    expect(legacyDailyNoteFilepath({ directory: 'notes\\diary' }, ROOTS)).toBe(
       '/notes/diary/${FOAM_DATE_FORMAT:YYYY-MM-DD}.md'
     );
   });
 
-  it('keeps an absolute directory as it is', () => {
-    expect(legacyDailyNoteFilepath({ directory: '/home/me/diary' })).toBe(
-      '/home/me/diary/${FOAM_DATE_FORMAT:YYYY-MM-DD}.md'
-    );
-    expect(legacyDailyNoteFilepath({ directory: 'C:\\notes\\diary' })).toBe(
-      'C:/notes/diary/${FOAM_DATE_FORMAT:YYYY-MM-DD}.md'
-    );
+  it('writes an absolute directory inside the workspace relative to its root', () => {
+    expect(
+      legacyDailyNoteFilepath({ directory: '/workspace/diary' }, ROOTS)
+    ).toBe('/diary/${FOAM_DATE_FORMAT:YYYY-MM-DD}.md');
+  });
+
+  it('has none for a directory outside the workspace, which a template filepath cannot reach', () => {
+    for (const directory of ['/home/me/diary', '../diary', 'D:\\diary']) {
+      expect(legacyDailyNoteFilepath({ directory }, ROOTS)).toBeUndefined();
+      expect(legacyDailyNoteFrontmatter({ directory }, ROOTS)).toBeUndefined();
+      expect(legacyDailyNoteTemplate({ directory }, ROOTS)).toBeUndefined();
+    }
+  });
+
+  it('names the root when the directory starts with the name of a root', () => {
+    expect(
+      legacyDailyNoteFilepath({ directory: 'journal' }, [
+        URI.file('/home/me/journal'),
+      ])
+    ).toBe('/journal/journal/${FOAM_DATE_FORMAT:YYYY-MM-DD}.md');
+  });
+
+  it('names the root when the settings put daily notes in a root other than the first', () => {
+    expect(
+      legacyDailyNoteFilepath({ directory: 'diary/daily' }, [
+        URI.file('/ws/notes'),
+        URI.file('/ws/diary'),
+      ])
+    ).toBe('/diary/daily/${FOAM_DATE_FORMAT:YYYY-MM-DD}.md');
   });
 
   it('keeps a directory whose name looks like template syntax', async () => {
-    const filepath = legacyDailyNoteFilepath({ directory: 'cost $1 {x}' });
+    const filepath = legacyDailyNoteFilepath(
+      { directory: 'cost $1 {x}' },
+      ROOTS
+    );
 
     expect(await new Resolver(new Map(), OCT_7).resolveText(filepath)).toBe(
       '/cost $1 {x}/2026-10-07.md'
@@ -201,17 +229,17 @@ describe('a template that keeps daily notes where the openDailyNote settings put
 
   it('is a template whose filepath is the one built from the settings', () => {
     const [metadata] = extractFoamTemplateFrontmatterMetadata(
-      legacyDailyNoteTemplate(ALL_LEGACY_SETTINGS)
+      legacyDailyNoteTemplate(ALL_LEGACY_SETTINGS, ROOTS)
     );
 
     expect(metadata.get('filepath')).toBe(
-      legacyDailyNoteFilepath(ALL_LEGACY_SETTINGS)
+      legacyDailyNoteFilepath(ALL_LEGACY_SETTINGS, ROOTS)
     );
   });
 
   it('keeps the previous daily note findable where the settings put daily notes', () => {
     const template = markdownTemplate(
-      legacyDailyNoteTemplate(ALL_LEGACY_SETTINGS)
+      legacyDailyNoteTemplate(ALL_LEGACY_SETTINGS, ROOTS)
     );
 
     expect(matches(template, '/diary/07-10-2026.markdown')).toEqual(OCT_7);

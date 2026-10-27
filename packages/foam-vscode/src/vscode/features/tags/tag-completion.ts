@@ -28,14 +28,16 @@ export class TagCompletionProvider
     position: vscode.Position
   ): vscode.ProviderResult<vscode.CompletionList<vscode.CompletionItem>> {
     const text = document.getText();
-    const context = completionAt(text, document.offsetAt(position));
+    const offset = document.offsetAt(position);
+    const context = completionAt(text, offset);
     if (context?.kind !== 'tag') {
       return null;
     }
 
     const completionTags = this.createCompletionTagItems();
     // In the front matter a `#` starts a YAML comment, so a typed one goes
-    if (context.frontmatter && text[context.start] === '#') {
+    const typed = text.slice(context.start, offset);
+    if (context.frontmatter && typed.startsWith('#')) {
       const hash = new vscode.Range(
         document.positionAt(context.start),
         document.positionAt(context.start + 1)

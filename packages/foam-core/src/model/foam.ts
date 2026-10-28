@@ -65,6 +65,32 @@ export const bootstrap = async (
   const subscriptions: IDisposable[] = [];
 
   if (watcher) {
+    // A read that is still in flight when its resource is deleted must not put
+    // the resource back: the file it read may have moved or gone since.
+    const readsInFlight = new Map<string, Set<{ deleted: boolean }>>();
+    subscriptions.push(
+      workspace.onDidDelete(resource => {
+        readsInFlight.get(resource.uri.path)?.forEach(r => (r.deleted = true));
+      })
+    );
+    const fetchAndSetUnlessDeleted = async (uri: URI) => {
+      const read = { deleted: false };
+      const reads = readsInFlight.get(uri.path) ?? new Set();
+      reads.add(read);
+      readsInFlight.set(uri.path, reads);
+      try {
+        const resource = await workspace.fetch(uri);
+        if (resource && !read.deleted) {
+          workspace.set(resource);
+        }
+      } finally {
+        reads.delete(read);
+        if (reads.size === 0) {
+          readsInFlight.delete(uri.path);
+        }
+      }
+    };
+
     // Serialize change handling per URI: two rapid changes to the same file
     // would otherwise race on their reads, and the workspace would keep
     // whichever read completed LAST, not the latest content
@@ -74,7 +100,7 @@ export const bootstrap = async (
         if (matcher.isMatch(uri)) {
           const key = uri.toString();
           const next = (pendingChanges.get(key) ?? Promise.resolve()).then(
-            () => workspace.fetchAndSet(uri)
+            () => fetchAndSetUnlessDeleted(uri)
           );
           pendingChanges.set(key, next);
           next.finally(() => {
@@ -98,7 +124,7 @@ export const bootstrap = async (
         await matcher.refresh();
         for (const uri of uris) {
           if (matcher.isMatch(uri)) {
-            await workspace.fetchAndSet(uri);
+            await fetchAndSetUnlessDeleted(uri);
           }
         }
       })
@@ -106,12 +132,20 @@ export const bootstrap = async (
 
     subscriptions.push(
       watcher.onDidDelete(uri => {
+        // A watcher may report a folder deleted, moved or renamed as one
+        // event, without its files
+        const folderPrefix = uri.path.endsWith('/') ? uri.path : uri.path + '/';
+        // A read of a file not indexed yet has no resource for the workspace
+        // to delete, so nothing else marks it
+        for (const [path, reads] of readsInFlight) {
+          if (path === uri.path || path.startsWith(folderPrefix)) {
+            reads.forEach(r => (r.deleted = true));
+          }
+        }
         if (workspace.delete(uri)) {
           return;
         }
-        // Not a resource, so possibly a folder: a watcher may report a folder
-        // deleted, moved or renamed as one event, without its files
-        const folderPrefix = uri.path.endsWith('/') ? uri.path : uri.path + '/';
+        // Not a resource, so possibly a folder
         for (const resource of workspace.list()) {
           if (resource.uri.path.startsWith(folderPrefix)) {
             workspace.delete(resource.uri);

@@ -1,6 +1,6 @@
 {
   "name": "@foam/cli",
-  "version": "0.46.4",
+  "version": "0.47.0",
   "description": "Foam CLI for publishing knowledge bases",
   "license": "MIT",
   "bin": {

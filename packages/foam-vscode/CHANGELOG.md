@@ -1,5 +1,52 @@
 # Change Log
 
+## 0.47.0
+
+### Minor Changes
+
+- Daily notes go where the daily note template's `filepath` puts them, and otherwise to `journal/YYYY-MM-DD.md`, in VS Code and `foam daily` alike (#1759):
+
+  - The deprecated `foam.openDailyNote.directory`, `filenameFormat`, `fileExtension` and `titleFormat` settings are no longer used. If yours would place or title a note differently, VS Code asks before creating it and offers to write a template that does what they did; `foam daily` stops with the same advice. `foam.openDailyNote.onStartup` is unchanged.
+  - Without a template or those settings, VS Code now creates daily notes in `journal/` instead of the workspace root, and `foam daily` in `journal/` instead of `journals/`. Existing notes stay where they are, but `$FOAM_PREVIOUS_DAILY_NOTE` only looks in `journal/`.
+  - Date snippets link to the file name the template gives the note, and a template using `${FOAM_DATE_FORMAT:...}` more than once gets each format.
+  - `foam daily` now fills in `$FOAM_TITLE` and `$FOAM_PREVIOUS_DAILY_NOTE`, honours `foam.dateLocale`, and needs `--trust` to run a JavaScript template (`daily-note.js`).
+
+  In `@foam/core`, `prepareDailyNote` and `dailyNoteRule` are exported. `getLegacyDailyNoteSettings` replaces `partsFromDailyNoteSettings` and the `getDailyNote*` config getters, and `resolveDailyNote` takes those settings as an argument.
+
+- Notes open in the editor you associated with Markdown in `workbench.editorAssociations`, such as VS Code's Markdown Editor (#1742). Open Daily Note, Open Random Note and Show Similar Notes used to open the text editor regardless.
+
+  Foam now requires VS Code 1.136 or later.
+
+### Patch Changes
+
+- Link, section and tag completion follow the rules Foam uses to read notes (#1757):
+
+  - No link suggestions in frontmatter, after the `|` of a wikilink, or after an escaped `\[[`
+  - `[[note #ta` completes a section, not a tag
+  - Emoji tags such as `#❤️` complete
+  - Frontmatter tags complete on any line of the `tags` value, not only within the first 50 lines
+  - Picking a suggestion after `[[a [[b` replaces the right text
+
+  In `@foam/core`, `completionAt` is exported.
+
+- "Convert Wikilink to Markdown Link" handles links to a folder's index note, relative wikilinks and `[[#Section]]` links. With `foam.completion.linkFormat` set to `link`, picking a folder from completion no longer ends in a "Resource not found" error (#1744 - thanks @Morikko)
+- A note deleted or moved while Foam was reading it no longer comes back under its old path, along with backlinks from a file that is gone (#1758).
+- `foam.files.exclude` leaves out installed packages by default: `**/site-packages/**/*`, `**/.direnv/**/*`, `**/vendor/bundle/**/*` and `**/.yarn/**/*` (#1689). Python environments and similar folders were being indexed as thousands of notes since Foam stopped reading `files.watcherExclude`.
+- Adding a missing heading, adding tags through the MCP server and reading template metadata now find frontmatter that follows blank lines, and no longer take a `---` that is never closed for frontmatter.
+- The workspace load timings in Foam's log add up to the load time: reads running in parallel were counted many times over (#1689)
+- Updating links on rename no longer corrupts notes that mix Windows and Unix line endings (#1733)
+- The Orphans and Placeholders panels no longer freeze VS Code on every save in workspaces with many notes sharing a file name, such as `README.md` (#1689). `foam list orphans` and `foam list placeholders` are faster for the same reason.
+
+  In `@foam/core`, `getOrphans` is exported and `FoamWorkspace` gains `getIdentifiers`.
+
+- Markdown links that start with `/` and contain percent-encoded characters, such as `[Plan](/Planning%20System.md)`, resolve to the note instead of a placeholder (#1752 - thanks @tompscanlan)
+- `[[folder]]` wikilinks in the Markdown preview link to the folder's index note, as Ctrl/Cmd+Click already did, instead of showing as a placeholder (#1749)
+- Finding templates and saved queries searches only `.foam/templates` and `.foam/queries`, not the whole workspace (#1748)
+- A long `[[` with no closing `]]` no longer stalls Foam for seconds while it reads the note (#1736)
+- Foam no longer writes outside the workspace through symlinks or `..` (#1739). The CLI and MCP server refuse to create, overwrite, move or delete a file that lies outside the workspace once symlinks are resolved, with "Cannot write outside the workspace"; `foam daily` and `foam lint --fix` included. A note that is itself a symlink can still be moved or deleted. In VS Code, new notes follow the same rule in Restricted Mode.
+
+  Moving or renaming a note now moves the file before updating the links to it, so a refused move leaves every note untouched.
+
 ## 0.46.0
 
 ### Minor Changes

@@ -60,7 +60,7 @@ The variable is only available in the daily note template, and it finds daily no
 
 ## Date Snippets
 
-Create links to recent daily notes using snippets:
+Create links to recent daily notes using snippets. The link uses the file name your daily note template gives the note:
 
 | Snippet      | Date          |
 | ------------ | ------------- |
@@ -79,8 +79,6 @@ Create links to recent daily notes using snippets:
 By default, daily notes are created as `yyyy-mm-dd.md` in the workspace's `journal` folder. The `foam daily` command uses the same location.
 
 To customize your daily note location and format you can create a `.foam/templates/daily-note.md` template. See [[templates]] for more information.
-
-There are also some settings to customize the behavior of daily notes, but they are deprecated and will be removed. Please use the `daily-note.md` template.
 
 To work with daily notes from the terminal, see [[daily|CLI daily command]].
 

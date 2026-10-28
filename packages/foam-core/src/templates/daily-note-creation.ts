@@ -1,12 +1,7 @@
 import dayjs from 'dayjs';
 import { URI, asAbsoluteUri } from '../model/uri';
 import { FoamWorkspace } from '../model/workspace';
-import { convertDateformatToDayjs } from '../utils/date-format';
-import {
-  DailyNoteSettings,
-  dailyNotePattern,
-  dailyNoteSettingsPath,
-} from './daily-note-location';
+import { dailyNotePattern, defaultDailyNotePath } from './daily-note-location';
 import { TriggerFactory } from './note-creation-triggers';
 import { NoteCreationTrigger, Template } from './note-creation-types';
 import { findPreviousDailyNote } from './previous-daily-note';
@@ -17,8 +12,7 @@ export interface DailyNoteCreation {
   trigger: NoteCreationTrigger;
   /**
    * The daily-note template, or, when there is none, a note holding only a
-   * heading with the date formatted by `openDailyNote.titleFormat` (else
-   * `filenameFormat`).
+   * heading with the date as `YYYY-MM-DD`.
    */
   template: Template;
   /**
@@ -27,7 +21,7 @@ export interface DailyNoteCreation {
    * daily note before it, among the notes that follow the daily-note pattern.
    */
   resolver: Resolver;
-  /** Where the settings place the note, for a template without a `filepath`. */
+  /** Where the note goes when the template does not set a `filepath`. */
   fallbackFilepath: URI;
 }
 
@@ -44,13 +38,13 @@ export interface DailyNoteCreation {
 export function prepareDailyNote(
   date: Date,
   template: Template | undefined,
-  settings: DailyNoteSettings,
   workspace: FoamWorkspace,
   locale = 'default'
 ): DailyNoteCreation {
-  const pattern = dailyNotePattern(template, settings);
+  const title = dayjs(date).format('YYYY-MM-DD');
+  const pattern = dailyNotePattern(template);
   const resolver = new Resolver(
-    new Map([['FOAM_TITLE', dayjs(date).format('YYYY-MM-DD')]]),
+    new Map([['FOAM_TITLE', title]]),
     date,
     undefined,
     locale,
@@ -62,17 +56,15 @@ export function prepareDailyNote(
   );
   return {
     trigger: TriggerFactory.createCommandTrigger('foam.open-daily-note'),
-    template: template ?? titleOnlyTemplate(date, settings),
+    template: template ?? {
+      type: 'markdown',
+      metadata: new Map(),
+      content: `# ${title}\n`,
+    },
     resolver,
     fallbackFilepath: asAbsoluteUri(
-      dailyNoteSettingsPath(date, settings),
+      defaultDailyNotePath(date),
       workspace.roots
     ),
   };
-}
-
-function titleOnlyTemplate(date: Date, settings: DailyNoteSettings): Template {
-  const titleFormat = settings.titleFormat ?? settings.filenameFormat;
-  const title = dayjs(date).format(convertDateformatToDayjs(titleFormat));
-  return { type: 'markdown', metadata: new Map(), content: `# ${title}\n` };
 }

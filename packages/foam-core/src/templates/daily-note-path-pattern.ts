@@ -1,7 +1,5 @@
 import { SnippetParser, Text, Variable } from '../common/snippetParser';
 import { calendarDate } from '../utils/date';
-import { convertDateformatToDayjs } from '../utils/date-format';
-import { joinPath } from '../utils/path';
 import { DEFAULT_FOAM_DATE_FORMAT } from './variable-resolver';
 
 /**
@@ -143,41 +141,6 @@ function expandVariable(variable: Variable): PatternPart[] | undefined {
   }
   const format = VARIABLE_FORMAT.get(variable.name);
   return format ? partsFromDayjsFormat(format) : undefined;
-}
-
-/**
- * Parses the deprecated `openDailyNote.*` settings into pattern parts. The
- * directory is resolved against the workspace root, matching how the settings
- * build a daily note's URI.
- */
-export function partsFromDailyNoteSettings(
-  directory: string,
-  filenameFormat: string,
-  fileExtension: string
-): PatternPart[] | undefined {
-  const nameParts = partsFromDayjsFormat(
-    convertDateformatToDayjs(filenameFormat)
-  );
-  if (!nameParts) {
-    return undefined;
-  }
-  // Normalized the way `joinPath` normalizes it when a daily note is written,
-  // so `journal`, `./journal` and `notes/../journal` all name the same folder.
-  let dir = joinPath(directory.replace(/\\/g, '/'));
-  while (dir.length > 1 && dir.endsWith('/')) {
-    dir = dir.slice(0, -1);
-  }
-  const prefix =
-    dir === '.' || dir === '/'
-      ? '/'
-      : dir.startsWith('/')
-      ? `${dir}/`
-      : `/${dir}/`;
-  return [
-    { kind: 'literal', text: prefix },
-    ...nameParts,
-    { kind: 'literal', text: `.${fileExtension}` },
-  ];
 }
 
 /**

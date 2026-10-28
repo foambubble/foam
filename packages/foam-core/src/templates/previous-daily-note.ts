@@ -25,9 +25,9 @@ export function findPreviousDailyNote(
     return undefined;
   }
   // A single root the path names can also hold daily notes inside a folder of
-  // that name: the deprecated `openDailyNote.directory` writes them there (its
-  // writer matches root names only in a multi-root workspace), and so did
-  // templates before root names were matched. Both forms count.
+  // that name: a daily note whose template sets no filepath is written there
+  // (its writer matches root names only in a multi-root workspace), and so
+  // were template ones before root names were matched. Both forms count.
   const matchUnnamed =
     target && workspace.roots.length === 1
       ? dailyNotePathMatcher(pattern)

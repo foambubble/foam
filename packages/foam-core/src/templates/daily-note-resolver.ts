@@ -1,9 +1,11 @@
+import { FoamError } from '../common/errors';
+import { LegacyDailyNoteSettings } from '../config';
 import { URI } from '../model/uri';
 import { Foam } from '../model/foam';
 import { TemplateLoader } from './template-loader';
 import { NoteCreationEngine } from './note-creation-engine';
 import { NoteCreationResult } from './note-creation-types';
-import { DailyNoteSettings } from './daily-note-location';
+import { ignoredDailyNoteSettingsNotice } from './daily-note-location';
 import { prepareDailyNote } from './daily-note-creation';
 
 export interface ResolveDailyNoteOptions {
@@ -17,11 +19,15 @@ export interface ResolveDailyNoteOptions {
  * JavaScript template means running it in Node's `vm`.
  * No VS Code dependency — suitable for CLI and other non-VS Code contexts.
  *
+ * Refuses, with a message saying how to keep them, while `foam.openDailyNote.*`
+ * settings Foam no longer reads would have placed or titled the note:
+ * resolving it anyway would quietly put it somewhere else.
+ *
  * @param date The date for the daily note
  * @param templateUri The daily note template, or `undefined` when there is none
  * @param foam The Foam workspace instance
  * @param readFile Function to read file contents by URI
- * @param settings The `openDailyNote.*` settings
+ * @param legacySettings The `foam.openDailyNote.*` settings the user set
  * @param options Optional locale and trust flag
  * @returns The resolved filepath and content for the daily note
  */
@@ -30,7 +36,7 @@ export async function resolveDailyNote(
   templateUri: URI | undefined,
   foam: Foam,
   readFile: (uri: URI) => Promise<string>,
-  settings: DailyNoteSettings,
+  legacySettings: LegacyDailyNoteSettings,
   options: ResolveDailyNoteOptions = {}
 ): Promise<NoteCreationResult> {
   const { locale = 'default', isTrusted = false } = options;
@@ -38,13 +44,17 @@ export async function resolveDailyNote(
   const template =
     templateUri &&
     (await new TemplateLoader(readFile, isTrusted).loadTemplate(templateUri));
-  const daily = prepareDailyNote(
-    date,
+  const notice = ignoredDailyNoteSettingsNotice(
     template,
-    settings,
-    foam.workspace,
-    locale
+    legacySettings,
+    foam.workspace.roots
   );
+  if (notice) {
+    throw new FoamError('invalid_input', `${notice.message} ${notice.detail}`, {
+      settings: notice.settings,
+    });
+  }
+  const daily = prepareDailyNote(date, template, foam.workspace, locale);
   return new NoteCreationEngine(foam).processTemplate(
     daily.trigger,
     daily.template,

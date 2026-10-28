@@ -7,9 +7,7 @@ describe('reading Foam settings from .vscode/settings.json', () => {
     const config = foamConfigFromVsCodeSettings({});
 
     expect(config.getTemplatesFolder()).toBe('.foam/templates');
-    expect(config.getDailyNoteDirectory()).toBeNull();
-    expect(config.getDailyNoteFilenameFormat()).toBe('isoDate');
-    expect(config.getDailyNoteFileExtension()).toBe('md');
+    expect(config.getLegacyDailyNoteSettings()).toEqual({});
   });
 
   it('reads anything but an object as no settings', () => {
@@ -20,24 +18,28 @@ describe('reading Foam settings from .vscode/settings.json', () => {
     }
   });
 
-  it('reads the daily-note directory and the templates folder', () => {
+  it('reads the templates folder', () => {
     const config = foamConfigFromVsCodeSettings({
-      'foam.openDailyNote.directory': 'diary',
       'foam.templates.folder': 'templates',
     });
 
-    expect(config.getDailyNoteDirectory()).toBe('diary');
     expect(config.getTemplatesFolder()).toBe('templates');
   });
 
-  it('reads the daily-note filename format and extension', () => {
+  it('reads the openDailyNote settings Foam no longer uses, so it can say they are ignored', () => {
     const config = foamConfigFromVsCodeSettings({
+      'foam.openDailyNote.directory': 'diary',
       'foam.openDailyNote.filenameFormat': 'dd-mm-yyyy',
       'foam.openDailyNote.fileExtension': 'markdown',
+      'foam.openDailyNote.titleFormat': 'fullDate',
     });
 
-    expect(config.getDailyNoteFilenameFormat()).toBe('dd-mm-yyyy');
-    expect(config.getDailyNoteFileExtension()).toBe('markdown');
+    expect(config.getLegacyDailyNoteSettings()).toEqual({
+      directory: 'diary',
+      filenameFormat: 'dd-mm-yyyy',
+      fileExtension: 'markdown',
+      titleFormat: 'fullDate',
+    });
   });
 
   it('excludes what is never workspace content, even when the workspace sets its own exclusions', () => {
@@ -96,6 +98,6 @@ describe('reading Foam settings from .vscode/settings.json', () => {
       'foam.openDailyNote.directory': 42,
     });
 
-    expect(config.getDailyNoteDirectory()).toBeNull();
+    expect(config.getLegacyDailyNoteSettings()).toEqual({});
   });
 });

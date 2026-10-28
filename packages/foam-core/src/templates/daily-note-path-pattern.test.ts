@@ -1,6 +1,5 @@
 import {
   dailyNotePathMatcher,
-  partsFromDailyNoteSettings,
   partsFromTemplateFilepath,
 } from './daily-note-path-pattern';
 
@@ -108,51 +107,5 @@ describe('inverting a daily note template filepath', () => {
       '/journal/${FOAM_DATE_YEAR}-${FOAM_DATE_MONTH}.md'
     );
     expect(dailyNotePathMatcher(parts)).toBeUndefined();
-  });
-});
-
-describe('inverting the deprecated openDailyNote settings', () => {
-  it('reads the date back out of a directory and filename format', () => {
-    const match = dailyNotePathMatcher(
-      partsFromDailyNoteSettings('journal', 'isoDate', 'md')
-    );
-    expect(match('/journal/2026-09-18.md')).toEqual(new Date(2026, 8, 18));
-    expect(match('/other/2026-09-18.md')).toBeUndefined();
-  });
-
-  it('normalizes a directory written relative to the workspace root', () => {
-    const match = dailyNotePathMatcher(
-      partsFromDailyNoteSettings('./journal', 'isoDate', 'md')
-    );
-    expect(match('/journal/2026-09-18.md')).toEqual(new Date(2026, 8, 18));
-  });
-
-  it('normalizes a directory that navigates through its own parent', () => {
-    const match = dailyNotePathMatcher(
-      partsFromDailyNoteSettings('notes/../journal/', 'isoDate', 'md')
-    );
-    expect(match('/journal/2026-09-18.md')).toEqual(new Date(2026, 8, 18));
-  });
-
-  it('anchors a "." directory at the workspace root', () => {
-    const match = dailyNotePathMatcher(
-      partsFromDailyNoteSettings('.', 'yyyy-mm-dd', 'md')
-    );
-    expect(match('/2026-09-18.md')).toEqual(new Date(2026, 8, 18));
-    expect(match('/journal/2026-09-18.md')).toBeUndefined();
-  });
-
-  it('respects the configured file extension', () => {
-    const match = dailyNotePathMatcher(
-      partsFromDailyNoteSettings('journal', 'yyyy-mm-dd', 'txt')
-    );
-    expect(match('/journal/2026-09-18.txt')).toEqual(new Date(2026, 8, 18));
-    expect(match('/journal/2026-09-18.md')).toBeUndefined();
-  });
-
-  it('is unavailable for a filename format built from a week number', () => {
-    expect(
-      partsFromDailyNoteSettings('journal', 'yyyy-WW', 'md')
-    ).toBeUndefined();
   });
 });

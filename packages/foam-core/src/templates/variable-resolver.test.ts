@@ -392,6 +392,14 @@ describe('FOAM_DATE_FORMAT', () => {
     const result = await resolver.resolveText('${FOAM_DATE_FORMAT:HH:mm:ss}');
     expect(result).toBe('01:02:03');
   });
+
+  it('resolves each occurrence with its own format', async () => {
+    const resolver = new Resolver(new Map(), targetDate);
+    const result = await resolver.resolveText(
+      '${FOAM_DATE_FORMAT:DD-MM-YYYY} ${FOAM_DATE_FORMAT:YYYY} $FOAM_DATE_FORMAT'
+    );
+    expect(result).toMatch(/^15-10-2021 2021 2021-10-15T01:02:03/);
+  });
 });
 
 describe('variable-resolver, resolveText', () => {

@@ -6,7 +6,6 @@ import {
   IFoamConfig,
   URI,
   asAbsoluteUri,
-  dailyNoteSettings,
   getDailyNoteTemplateCandidateUris,
   getTemplatesDir,
 } from '@foam/core';
@@ -66,8 +65,8 @@ export interface DailyNote {
 
 /**
  * Resolve the daily note the way desktop Foam does: the template's
- * `filepath` when it has one, otherwise the `openDailyNote.*` settings,
- * otherwise `journal/YYYY-MM-DD.md`.
+ * `filepath` when it has one, otherwise `journal/YYYY-MM-DD.md`. Refuses while
+ * `foam.openDailyNote.*` settings Foam no longer reads would have placed it.
  */
 export async function resolveDailyNoteFile(
   date: Date,
@@ -90,7 +89,7 @@ export async function resolveDailyNoteFile(
     templateUri,
     foam,
     async uri => (await dataStore.read(uri)) ?? '',
-    dailyNoteSettings(config),
+    config.getLegacyDailyNoteSettings(),
     { locale: config.getDateLocale(), isTrusted }
   );
   const noteUri = asAbsoluteUri(note.filepath, foam.workspace.roots);
@@ -158,10 +157,10 @@ export async function runDailyCommand(
     try {
       await dataStore.write(noteUri, note.content);
     } catch (err) {
-      // The note's path comes from the template's filepath or the settings.
+      // The note's path comes from the template's filepath, or the default.
       if (err instanceof FoamError && err.code === 'invalid_input') {
         throw new Error(
-          `${err.message}. Check foam.openDailyNote.directory and the daily note template's filepath.`
+          `${err.message}. Check the daily note template's filepath.`
         );
       }
       throw err;

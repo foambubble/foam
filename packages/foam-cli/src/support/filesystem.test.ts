@@ -327,7 +327,7 @@ describe('loadWorkspaceFromDirectory', () => {
         const uris = workspace.list().map(r => r.uri.toFsPath());
         expect(uris.some(u => u.endsWith('note.mdx'))).toBe(true);
         expect(Config.getDefaultNoteExtension()).toBe('.mdx');
-        expect(Config.getDailyNoteDirectory()).toBe('journals');
+        expect(Config.getLegacyDailyNoteSettings().directory).toBe('journals');
         expect(Config.getTemplatesFolder()).toBe('my-templates');
       }
     );
@@ -338,7 +338,7 @@ describe('loadWorkspaceFromDirectory', () => {
       const uris = workspace.list().map(r => r.uri.toFsPath());
       expect(uris.some(u => u.endsWith('note.md'))).toBe(true);
       expect(Config.getDefaultNoteExtension()).toBe('.md');
-      expect(Config.getDailyNoteDirectory()).toBeNull();
+      expect(Config.getLegacyDailyNoteSettings()).toEqual({});
       expect(Config.getTemplatesFolder()).toBe('.foam/templates');
     });
   });

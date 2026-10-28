@@ -90,7 +90,6 @@ export {
 } from './templates/variable-resolver';
 export type { VariableProvider } from './templates/variable-resolver';
 export {
-  partsFromDailyNoteSettings,
   partsFromDayjsFormat,
   partsFromTemplateFilepath,
   dailyNotePathMatcher,
@@ -102,14 +101,18 @@ export type {
 export { findPreviousDailyNote } from './templates/previous-daily-note';
 export {
   DEFAULT_DAILY_NOTE_TEMPLATE,
+  dailyNoteName,
   dailyNotePattern,
   dailyNoteRule,
-  dailyNoteSettings,
-  dailyNoteSettingsPath,
+  defaultDailyNotePath,
+  ignoredDailyNoteSettingsNotice,
+  legacyDailyNoteFrontmatter,
+  legacyDailyNoteTemplate,
 } from './templates/daily-note-location';
 export type {
   DailyNoteRule,
-  DailyNoteSettings,
+  IgnoredDailyNoteSettingsFix,
+  IgnoredDailyNoteSettingsNotice,
 } from './templates/daily-note-location';
 export { prepareDailyNote } from './templates/daily-note-creation';
 export type { DailyNoteCreation } from './templates/daily-note-creation';
@@ -171,7 +174,11 @@ export type { RenderContext } from './query/render-context';
 export { createRenderContext } from './query/render-context';
 
 // Config
-export type { IFoamConfig, IFoamConfigSource } from './config';
+export type {
+  IFoamConfig,
+  IFoamConfigSource,
+  LegacyDailyNoteSettings,
+} from './config';
 export { Config, DefaultFoamConfig, cascadeFoamConfig } from './config';
 export {
   ALWAYS_EXCLUDED,

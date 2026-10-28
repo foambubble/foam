@@ -74,12 +74,12 @@ import * as vscode from 'vscode';
 
 ```typescript
 // Before
-const format = getFoamVsCodeConfig('openDailyNote.filenameFormat');
+const afterCompletion = getFoamVsCodeConfig('dateSnippets.afterCompletion');
 
 // After (defensive)
-const format = getFoamVsCodeConfig(
-  'openDailyNote.filenameFormat',
-  'yyyy-mm-dd'
+const afterCompletion = getFoamVsCodeConfig(
+  'dateSnippets.afterCompletion',
+  'createNote'
 );
 ```
 

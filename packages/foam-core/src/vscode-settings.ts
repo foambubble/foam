@@ -1,4 +1,4 @@
-import { IFoamConfig } from './config';
+import { IFoamConfig, LegacyDailyNoteSettings } from './config';
 
 interface FoamConfigData {
   filesInclude: string[];
@@ -8,10 +8,7 @@ interface FoamConfigData {
   attachmentExtensions: string[];
   newNotePath: 'root' | 'currentDir';
   templatesFolder: string;
-  dailyNoteDirectory: string | null;
-  dailyNoteFilenameFormat: string;
-  dailyNoteFileExtension: string;
-  dailyNoteTitleFormat: string | null;
+  legacyDailyNoteSettings: LegacyDailyNoteSettings;
   openDailyNoteOnStartup: boolean;
   dateLocale: string;
   dateSnippetsAfterCompletion: 'noop' | 'createNote' | 'navigateToNote';
@@ -58,17 +55,8 @@ class StaticFoamConfig implements IFoamConfig {
   getTemplatesFolder() {
     return this.data.templatesFolder;
   }
-  getDailyNoteDirectory() {
-    return this.data.dailyNoteDirectory;
-  }
-  getDailyNoteFilenameFormat() {
-    return this.data.dailyNoteFilenameFormat;
-  }
-  getDailyNoteFileExtension() {
-    return this.data.dailyNoteFileExtension;
-  }
-  getDailyNoteTitleFormat() {
-    return this.data.dailyNoteTitleFormat;
+  getLegacyDailyNoteSettings() {
+    return this.data.legacyDailyNoteSettings;
   }
   getOpenDailyNoteOnStartup() {
     return this.data.openDailyNoteOnStartup;
@@ -217,13 +205,12 @@ export function foamConfigFromVsCodeSettings(settings: unknown): IFoamConfig {
       | 'currentDir',
     templatesFolder:
       getString(raw, 'foam.templates.folder') ?? '.foam/templates',
-    dailyNoteDirectory: getString(raw, 'foam.openDailyNote.directory') ?? null,
-    dailyNoteFilenameFormat:
-      getString(raw, 'foam.openDailyNote.filenameFormat') ?? 'isoDate',
-    dailyNoteFileExtension:
-      getString(raw, 'foam.openDailyNote.fileExtension') ?? 'md',
-    dailyNoteTitleFormat:
-      getString(raw, 'foam.openDailyNote.titleFormat') ?? null,
+    legacyDailyNoteSettings: {
+      directory: getString(raw, 'foam.openDailyNote.directory'),
+      filenameFormat: getString(raw, 'foam.openDailyNote.filenameFormat'),
+      fileExtension: getString(raw, 'foam.openDailyNote.fileExtension'),
+      titleFormat: getString(raw, 'foam.openDailyNote.titleFormat'),
+    },
     openDailyNoteOnStartup: getBoolean(
       raw,
       'foam.openDailyNote.onStartup',

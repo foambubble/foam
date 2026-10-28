@@ -12,15 +12,25 @@ import {
   getFixedSnippets,
   getRelativeSnippet,
 } from '../../../daily-note/daily-note-snippets';
-import { getDailyNoteLink } from './daily-note-service';
+import { getDailyNoteLinks } from './daily-note-service';
 
 const RELATIVE_UNITS: Array<'d' | 'w' | 'm' | 'y'> = ['d', 'w', 'm', 'y'];
 
+async function makeCompletionItems(
+  snippets: DailyNoteSnippet[],
+  afterCompletion: string
+): Promise<CompletionItem[]> {
+  const links = await getDailyNoteLinks(snippets.map(s => s.date));
+  return snippets.map((snippet, i) =>
+    makeCompletionItem(snippet, links[i], afterCompletion)
+  );
+}
+
 function makeCompletionItem(
   snippet: DailyNoteSnippet,
+  link: string,
   afterCompletion: string
 ): CompletionItem {
-  const link = getDailyNoteLink(snippet.date);
   const item = new CompletionItem(snippet.trigger, CompletionItemKind.Snippet);
   item.insertText = link;
   item.detail = `${link} - ${snippet.description}`;
@@ -35,7 +45,7 @@ function makeCompletionItem(
 }
 
 export const fixedSnippetsProvider: CompletionItemProvider = {
-  provideCompletionItems: (document, position, _token, context) => {
+  provideCompletionItems: async (document, position, _token, context) => {
     if (context.triggerKind === CompletionTriggerKind.Invoke) {
       // Return [] to fall back to VS Code's word-based suggestions when
       // completion is triggered without the trigger character.
@@ -52,16 +62,16 @@ export const fixedSnippetsProvider: CompletionItemProvider = {
       ...getFixedSnippets(today),
       ...getDayOfWeekSnippets(today),
     ];
-    return snippets.map(s => {
-      const item = makeCompletionItem(s, afterCompletion);
+    const items = await makeCompletionItems(snippets, afterCompletion);
+    for (const item of items) {
       item.range = range;
-      return item;
-    });
+    }
+    return items;
   },
 };
 
 export const relativeSnippetsProvider: CompletionItemProvider = {
-  provideCompletionItems: (document, position, _token, context) => {
+  provideCompletionItems: async (document, position, _token, context) => {
     if (context.triggerKind === CompletionTriggerKind.Invoke) {
       return [];
     }
@@ -74,14 +84,13 @@ export const relativeSnippetsProvider: CompletionItemProvider = {
     const snippetString = document.getText(range);
     const matches = snippetString.match(/(\d+)/);
     const n = matches ? parseInt(matches[0]) : 1;
-    const items = RELATIVE_UNITS.map(unit => {
-      const item = makeCompletionItem(
-        getRelativeSnippet(today, unit, n),
-        afterCompletion
-      );
+    const items = await makeCompletionItems(
+      RELATIVE_UNITS.map(unit => getRelativeSnippet(today, unit, n)),
+      afterCompletion
+    );
+    for (const item of items) {
       item.range = range;
-      return item;
-    });
+    }
     // Keep the list incomplete so the user can refine the number
     return new CompletionList(items, true);
   },

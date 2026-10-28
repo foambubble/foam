@@ -37,7 +37,6 @@ describe('readFoamConfig', () => {
       );
       expect(cfg.getDefaultNoteExtension()).toBe('.md');
       expect(cfg.getNotesExtensions()).toEqual(['.md']);
-      expect(cfg.getLegacyDailyNoteSettings()).toEqual({});
       expect(cfg.getTemplatesFolder()).toBe('.foam/templates');
     } finally {
       fs.rmSync(dir, { recursive: true, force: true });
@@ -53,14 +52,14 @@ describe('readFoamConfig', () => {
         fs.writeFileSync(
           path.join(dir, '.vscode', 'settings.json'),
           `{
-  // daily notes go here
-  "foam.openDailyNote.directory": "journals", // trailing comma below
+  // templates go here
+  "foam.templates.folder": "my-templates", // trailing comma below
   "foam.files.defaultNoteExtension": "mdx",
 }`,
           'utf8'
         );
         const cfg = readFoamConfig(dir);
-        expect(cfg.getLegacyDailyNoteSettings().directory).toBe('journals');
+        expect(cfg.getTemplatesFolder()).toBe('my-templates');
         expect(cfg.getDefaultNoteExtension()).toBe('.mdx');
       }
     );
@@ -137,21 +136,6 @@ describe('readFoamConfig', () => {
         'journal/**',
       ]);
     });
-  });
-
-  it('reads the openDailyNote settings Foam no longer uses', () => {
-    withTmpConfig(
-      {
-        'foam.openDailyNote.directory': 'journals',
-        'foam.openDailyNote.filenameFormat': 'YYYY-MM-DD',
-      },
-      dir => {
-        expect(readFoamConfig(dir).getLegacyDailyNoteSettings()).toEqual({
-          directory: 'journals',
-          filenameFormat: 'YYYY-MM-DD',
-        });
-      }
-    );
   });
 
   it('reads templates folder', () => {

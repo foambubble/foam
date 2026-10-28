@@ -1,4 +1,4 @@
-import { IFoamConfig, LegacyDailyNoteSettings } from './config';
+import { IFoamConfig } from './config';
 
 interface FoamConfigData {
   filesInclude: string[];
@@ -8,7 +8,6 @@ interface FoamConfigData {
   attachmentExtensions: string[];
   newNotePath: 'root' | 'currentDir';
   templatesFolder: string;
-  legacyDailyNoteSettings: LegacyDailyNoteSettings;
   openDailyNoteOnStartup: boolean;
   dateLocale: string;
   dateSnippetsAfterCompletion: 'noop' | 'createNote' | 'navigateToNote';
@@ -54,9 +53,6 @@ class StaticFoamConfig implements IFoamConfig {
   }
   getTemplatesFolder() {
     return this.data.templatesFolder;
-  }
-  getLegacyDailyNoteSettings() {
-    return this.data.legacyDailyNoteSettings;
   }
   getOpenDailyNoteOnStartup() {
     return this.data.openDailyNoteOnStartup;
@@ -205,12 +201,6 @@ export function foamConfigFromVsCodeSettings(settings: unknown): IFoamConfig {
       | 'currentDir',
     templatesFolder:
       getString(raw, 'foam.templates.folder') ?? '.foam/templates',
-    legacyDailyNoteSettings: {
-      directory: getString(raw, 'foam.openDailyNote.directory'),
-      filenameFormat: getString(raw, 'foam.openDailyNote.filenameFormat'),
-      fileExtension: getString(raw, 'foam.openDailyNote.fileExtension'),
-      titleFormat: getString(raw, 'foam.openDailyNote.titleFormat'),
-    },
     openDailyNoteOnStartup: getBoolean(
       raw,
       'foam.openDailyNote.onStartup',

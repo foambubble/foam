@@ -1,9 +1,5 @@
 import { Disposable, workspace } from 'vscode';
-import {
-  ALWAYS_EXCLUDED,
-  IFoamConfig,
-  LegacyDailyNoteSettings,
-} from '@foam/core';
+import { ALWAYS_EXCLUDED, IFoamConfig } from '@foam/core';
 import { expandAlternateGroups } from './utils/glob-expand';
 
 export class VsCodeFoamConfig implements IFoamConfig {
@@ -67,27 +63,6 @@ export class VsCodeFoamConfig implements IFoamConfig {
     return workspace
       .getConfiguration('foam')
       .get('templates.folder', '.foam/templates');
-  }
-
-  getLegacyDailyNoteSettings(): LegacyDailyNoteSettings {
-    const config = workspace.getConfiguration('foam');
-    // Only what the user set: these settings are declared so VS Code can say
-    // they are no longer used, not to give them a default
-    const userValue = (key: string) => {
-      const value = config.inspect<string | null>(`openDailyNote.${key}`);
-      return (
-        value?.workspaceFolderValue ??
-        value?.workspaceValue ??
-        value?.globalValue ??
-        undefined
-      );
-    };
-    return {
-      directory: userValue('directory'),
-      filenameFormat: userValue('filenameFormat'),
-      fileExtension: userValue('fileExtension'),
-      titleFormat: userValue('titleFormat'),
-    };
   }
 
   getOpenDailyNoteOnStartup(): boolean {

@@ -20,8 +20,9 @@ const MATH_NOTE = '# Formulas\n\nInline $x+1$.\n\n$$\nx^2\n$$\n\n#embed-math\n';
 
 /**
  * Renders `source` through Foam's preview plugin, with `MATH_NOTE` in the
- * workspace. `source` itself holds no math, so any KaTeX output comes from
- * the renderers Foam builds for embedded content.
+ * workspace, on an instance that VS Code's math extension also extends, as
+ * the preview's is. `source` itself holds no math, so any KaTeX output comes
+ * from embedded content.
  */
 async function renderPreview(source: string): Promise<string> {
   const note = await createFile(MATH_NOTE, ['embed-math', 'formulas.md']);
@@ -40,9 +41,11 @@ async function renderPreview(source: string): Promise<string> {
       CONFIG_EMBED_NOTE_TYPE,
       'full-inline',
       () => {
-        html = preview
-          .extendMarkdownIt(MarkdownIt({ html: true }))
-          .render(source);
+        const md = preview.extendMarkdownIt(MarkdownIt({ html: true }));
+        vscode.extensions
+          .getExtension('vscode.markdown-math')
+          .exports.extendMarkdownIt(md);
+        html = md.render(source);
       }
     );
     return html;
@@ -74,18 +77,5 @@ describe('Math in embedded notes', () => {
     );
     expect(html).toContain('class="katex"');
     expect(html).not.toContain('$x+1$');
-  });
-
-  it('renders the embed with math as source when the math extension is unavailable', async () => {
-    const spy = vi
-      .spyOn(vscode.extensions, 'getExtension')
-      .mockReturnValue(undefined);
-    try {
-      const html = await renderPreview('![[formulas]]');
-      expect(html).toContain('$x+1$');
-      expect(html).not.toContain('class="katex"');
-    } finally {
-      spy.mockRestore();
-    }
   });
 });

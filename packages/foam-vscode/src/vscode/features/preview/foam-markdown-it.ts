@@ -59,12 +59,19 @@ export interface FoamMarkdownItOptions {
   /** Forwarded to `markdownItFoamQuery`. See its docstring. */
   onDidRender?: (event: FoamQueryRenderEvent) => string;
   /**
+   * Returns the instance that renders note embeds and foam-query
+   * source-derived cells. It is called during a render, so it must be safe
+   * to re-enter. Defaults to a fresh instance built by this factory from the
+   * same options.
+   */
+  createInnerMd?: () => markdownit;
+  /**
    * Host-supplied installers that run on every markdown-it instance produced
-   * by this factory — including inner instances built by `createInnerMd` for
-   * note embeds and foam-query source-derived cells. Use this for plugins
-   * that must apply uniformly across the pipeline (e.g. the report's image
-   * inliner, id-scoping, link rewriting), not for one-shot extensions that
-   * should only run on the outer instance.
+   * by this factory — including the inner instances it builds when
+   * `createInnerMd` is not given. Use this for plugins that must apply
+   * uniformly across the pipeline (e.g. the report's image inliner,
+   * id-scoping, link rewriting), not for one-shot extensions that should only
+   * run on the outer instance.
    */
   extensions?: ((md: markdownit) => void)[];
 }
@@ -75,8 +82,8 @@ export interface FoamMarkdownItOptions {
  * → block anchors → foam-query.
  *
  * The caller can either pass in an existing `md` to extend or omit it to get
- * a fresh one. Inner renders (for embeds and queries) get fresh instances
- * built from the same options.
+ * a fresh one. Inner renders (for embeds and queries) go through
+ * `createInnerMd`, by default fresh instances built from the same options.
  */
 export function createFoamMarkdownIt(
   options: FoamMarkdownItOptions,
@@ -109,11 +116,13 @@ export function createFoamMarkdownIt(
     innerMdOptions.html ??
     true;
 
-  const buildInner = (): markdownit =>
-    createFoamMarkdownIt(
-      { ...options, renderContext },
-      MarkdownIt({ html: outerHtmlOption })
-    );
+  const createInnerMd =
+    options.createInnerMd ??
+    ((): markdownit =>
+      createFoamMarkdownIt(
+        { ...options, renderContext },
+        MarkdownIt({ html: outerHtmlOption })
+      ));
 
   let r = escapeWikilinkPipes(md);
   if (footnotes) {
@@ -121,7 +130,7 @@ export function createFoamMarkdownIt(
   }
   r = markdownItWikilinkEmbed(r, workspace, parser, {
     getCurrentResource,
-    createInnerMd: buildInner,
+    createInnerMd,
     renderContext,
     isVirtualWorkspace,
     getEmbedNoteType,
@@ -137,16 +146,16 @@ export function createFoamMarkdownIt(
     isTrusted,
     toHref,
     getCurrentResource,
-    createInnerMd: buildInner,
+    createInnerMd,
     parser,
     renderContext,
     onDidRender,
   });
   // Run host extensions LAST so they can override or wrap behaviour from the
-  // base Foam plugins. Inner instances pick these up via the recursive call
-  // in `buildInner` (the spread carries `extensions` along) — important for
-  // the report renderer's image inliner, id-scoping, and link rewriting,
-  // which must apply inside embedded notes too.
+  // base Foam plugins. Default inner instances pick these up via the
+  // recursive call in `createInnerMd` (the spread carries `extensions` along)
+  // — important for the report renderer's image inliner, id-scoping, and link
+  // rewriting, which must apply inside embedded notes too.
   if (extensions) {
     for (const ext of extensions) ext(r);
   }

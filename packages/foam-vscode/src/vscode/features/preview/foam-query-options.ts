@@ -23,8 +23,8 @@ export interface FoamQueryOptions {
   getCurrentResource?: () => Resource | null;
 
   /**
-   * Fresh markdown-it carrying the full Foam pipeline, used to render
-   * source-derived cells without re-entering the outer `md`.
+   * Returns the instance that renders source-derived cells; it is called
+   * mid-render, so it may be the outer `md` itself.
    */
   createInnerMd?: () => markdownit;
 

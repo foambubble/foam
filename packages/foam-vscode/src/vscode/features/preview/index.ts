@@ -81,24 +81,39 @@ export default async function activate(
             true
           ),
           renderContext,
-          // VS Code applies its math plugin to the preview's own instance only,
-          // so install it on the ones Foam builds for embeds and query cells.
-          // Installing it again on the preview's instance is harmless. Looked
-          // up at render time: by then the preview has activated every
-          // markdown-it plugin extension.
-          extensions: [
-            inner => {
-              const math = vscode.extensions.getExtension(
-                'vscode.markdown-math'
-              );
-              if (math?.isActive) {
-                math.exports?.extendMarkdownIt?.(inner);
-              }
-            },
-          ],
+          // By render time `md` carries every extension's plugins and VS
+          // Code's own, so embedded content renders with all of them.
+          createInnerMd: () => withoutSourceMap(md),
         },
         md
       );
     },
   };
+}
+
+/**
+ * `md`, rendering without the `data-line` attribute and `code-line` class
+ * that VS Code's preview puts on block tokens to sync scrolling with the
+ * editor. Line numbers from embedded content index another note, so the
+ * preview would map them onto the wrong lines of the open document.
+ */
+function withoutSourceMap(md: markdownit): markdownit {
+  const inner: markdownit = Object.create(md);
+  inner.render = (src: string, env: any = {}) => {
+    const tokens = md.parse(src, env);
+    for (const token of tokens) {
+      token.attrs = token.attrs?.filter(([name]) => name !== 'data-line');
+      const classes = token
+        .attrGet('class')
+        ?.split(' ')
+        .filter(c => c !== 'code-line');
+      if (classes?.length) {
+        token.attrSet('class', classes.join(' '));
+      } else if (classes) {
+        token.attrs = token.attrs.filter(([name]) => name !== 'class');
+      }
+    }
+    return md.renderer.render(tokens, md.options, env);
+  };
+  return inner;
 }

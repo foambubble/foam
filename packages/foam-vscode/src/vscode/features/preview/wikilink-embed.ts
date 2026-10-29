@@ -31,8 +31,8 @@ export interface WikilinkEmbedOptions {
   /** Fallback for resolving `![[#section]]` / `$current`, used when the
    * render context stack is empty (i.e. top-level render). */
   getCurrentResource?: (env?: any) => Resource | null;
-  /** Fresh markdown-it carrying the full Foam pipeline (issue #1642 — avoids
-   * re-entering the outer `md` while it's mid-render). */
+  /** Returns the instance that renders the embedded note; it is called
+   * mid-render, so it may be `md` itself. Defaults to `md`. */
   createInnerMd?: () => markdownit;
   renderContext: RenderContext;
   /**

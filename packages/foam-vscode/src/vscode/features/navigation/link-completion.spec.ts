@@ -13,10 +13,13 @@ import {
   cleanWorkspace,
   closeEditors,
   createFile,
+  deleteFile,
+  getFoamFromVSCode,
   showInEditor,
+  waitForNoteInFoamWorkspace,
   withModifiedFoamConfiguration,
 } from '../../../test/test-utils-vscode';
-import { fromVsCodeUri } from '../../utils/vsc-utils';
+import { fromVsCodeUri, toVsCodeUri } from '../../utils/vsc-utils';
 import {
   WikilinkCompletionProvider,
   SectionCompletionProvider,
@@ -714,5 +717,142 @@ describe('Completion item preview resolution', () => {
     await provider.resolveCompletionItem(item);
 
     expect(dataStore.readCount).toEqual(1);
+  });
+});
+
+describe('Accepting a completion with linkFormat set to link', () => {
+  // Inserts the item through a WorkspaceEdit and then runs its command, as
+  // editors that are not text editors do.
+  const accept = async (
+    item: vscode.CompletionItem,
+    doc: vscode.TextDocument
+  ) => {
+    const edit = new vscode.WorkspaceEdit();
+    edit.replace(doc.uri, item.range as vscode.Range, String(item.insertText));
+    await vscode.workspace.applyEdit(edit);
+    await vscode.commands.executeCommand(
+      item.command.command,
+      ...(item.command.arguments ?? [])
+    );
+  };
+
+  const completeAt = async (
+    doc: vscode.TextDocument,
+    position: vscode.Position,
+    insertText: string
+  ) => {
+    const foam = await getFoamFromVSCode();
+    const provider = new WikilinkCompletionProvider(foam.workspace, foam.graph);
+    const links = await provider.provideCompletionItems(doc, position);
+    return links.items.find(i => i.insertText === insertText);
+  };
+
+  it('converts a note completion to a markdown link when no text editor is open', async () => {
+    await closeEditors();
+    const target = await createFile('# Completion Target', [
+      'completion-target.md',
+    ]);
+    const source = await createFile('See [[]] here');
+    await waitForNoteInFoamWorkspace(target.uri);
+    const doc = await vscode.workspace.openTextDocument(
+      toVsCodeUri(source.uri)
+    );
+
+    await withModifiedFoamConfiguration(
+      'completion.linkFormat',
+      'link',
+      async () => {
+        const item = await completeAt(
+          doc,
+          new vscode.Position(0, 'See [['.length),
+          'completion-target'
+        );
+        await accept(item, doc);
+      }
+    );
+
+    expect(vscode.window.activeTextEditor).toBeUndefined();
+    expect(doc.getText()).toBe(
+      'See [Completion Target](completion-target.md) here'
+    );
+
+    await deleteFile(target);
+    await deleteFile(source);
+  });
+
+  it('converts an alias completion to a markdown link when no text editor is open', async () => {
+    await closeEditors();
+    const target = await createFile(
+      '---\nalias: Nickname\n---\n# Aliased Target',
+      ['aliased-target.md']
+    );
+    const source = await createFile('See [[]] here');
+    await waitForNoteInFoamWorkspace(target.uri);
+    const doc = await vscode.workspace.openTextDocument(
+      toVsCodeUri(source.uri)
+    );
+
+    await withModifiedFoamConfiguration(
+      'completion.linkFormat',
+      'link',
+      async () => {
+        const item = await completeAt(
+          doc,
+          new vscode.Position(0, 'See [['.length),
+          'aliased-target|Nickname'
+        );
+        await accept(item, doc);
+      }
+    );
+
+    expect(doc.getText()).toBe('See [Nickname](aliased-target.md) here');
+
+    await deleteFile(target);
+    await deleteFile(source);
+  });
+
+  it('converts the link and puts the cursor after it in a text editor', async () => {
+    await closeEditors();
+    const target = await createFile('# Completion Target', [
+      'completion-target-in-editor.md',
+    ]);
+    const source = await createFile('See [[]] here');
+    await waitForNoteInFoamWorkspace(target.uri);
+    const { doc, editor } = await showInEditor(source.uri);
+
+    await withModifiedFoamConfiguration(
+      'completion.linkFormat',
+      'link',
+      async () => {
+        const item = await completeAt(
+          doc,
+          new vscode.Position(0, 'See [['.length),
+          'completion-target-in-editor'
+        );
+        const edit = new vscode.WorkspaceEdit();
+        edit.replace(
+          doc.uri,
+          item.range as vscode.Range,
+          String(item.insertText)
+        );
+        await vscode.workspace.applyEdit(edit);
+        // A text editor leaves the cursor at the end of the inserted text
+        const afterInsert = 'See [[completion-target-in-editor'.length;
+        editor.selection = new vscode.Selection(0, afterInsert, 0, afterInsert);
+        await vscode.commands.executeCommand(
+          item.command.command,
+          ...(item.command.arguments ?? [])
+        );
+      }
+    );
+
+    const converted = 'See [Completion Target](completion-target-in-editor.md)';
+    expect(doc.getText()).toBe(`${converted} here`);
+    expect(editor.selection.active).toEqual(
+      new vscode.Position(0, converted.length)
+    );
+
+    await deleteFile(target);
+    await deleteFile(source);
   });
 });

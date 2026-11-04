@@ -3,6 +3,11 @@
   "version": "0.50.0",
   "description": "Platform-agnostic core logic for Foam",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/foambubble/foam.git",
+    "directory": "packages/foam-core"
+  },
   "main": "out/src/index.js",
   "types": "out/src/index.d.ts",
   "exports": {

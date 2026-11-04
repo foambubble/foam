@@ -1,5 +1,12 @@
 # Change Log
 
+## 0.47.1
+
+### Patch Changes
+
+- Embedded notes (`![[note]]`) and `foam-query` results in the preview render with the rest of the preview's features again, such as syntax highlighting and other extensions' Markdown support (Mermaid diagrams, for example).
+- Foam runs on VS Code 1.110 or later again, so it installs on Cursor and other editors based on older VS Code versions. Notes open in VS Code's Markdown Editor only where your editor has it.
+
 ## 0.47.0
 
 ### Minor Changes

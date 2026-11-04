@@ -33,10 +33,11 @@ hides it, because opening the link in the same group cancels the definition
 jump, but ctrl/cmd+alt+click opens two editors beside the current one. A link
 next to the definition buys nothing and costs that.
 
-The reporter's editor needs VS Code 1.135, newer than the `^1.110.0` this
-extension declares. Moving to 1.136 (`@types/vscode` has no 1.135) lets the
-e2e suite run against the real Markdown Editor, and makes the completion half
-of the issue answerable.
+The reporter's editor needs VS Code 1.135. Running the e2e suite on a 1.136
+host (`@types/vscode` has no 1.135) tests against the real Markdown Editor,
+and makes the completion half of the issue answerable. `engines.vscode` still
+accepts hosts older than 1.135, which have no Markdown Editor to associate;
+there, notes open in the text editor.
 
 ## Acceptance criteria
 
@@ -73,9 +74,11 @@ of the issue answerable.
   a text editor.
   _verify: e2e_
 
-- **AC-6**: Given this change ships, then `engines.vscode` and `@types/vscode`
-  declare 1.136, and the e2e suite runs on a 1.136 host on Linux and macOS.
-  _verify: e2e_
+- **AC-6**: Given this change ships, then the e2e suite runs on a 1.136 host
+  on Linux and macOS, and `engines.vscode` still accepts hosts older than
+  1.135, where notes open in the text editor.
+  _verify: e2e_ on 1.136; _human_ for older hosts, by running the suite once
+  on a host at the engine floor
 
 - **AC-7**: Given a note open in the built-in Markdown Editor, when `[[` is
   typed and when a wikilink is hovered, then Foam's completion and hover
@@ -98,6 +101,16 @@ of the issue answerable.
   VS Code's own link and Foam's definition both open to the side. It is not
   caused by this change, and dropping Foam's definition for direct links
   would cost `F12` and folder links.
+
+## Engine floor
+
+`engines.vscode` stays at `^1.110.0` rather than the 1.136 the e2e host runs.
+Raising it, as 0.47.0 did, locks out Cursor (extension API 1.128) and other
+forks below 1.136, and nothing at runtime needs it: apart from doc comments,
+the stable API in `@types/vscode` is the same from 1.110 to 1.140, and this
+change only moves notes to `vscode.open`, which opens the text editor on hosts
+without the Markdown Editor. `@types/vscode` is pinned to `~1.110.0` so the
+compiler rejects API newer than the floor.
 
 ## AC-7 finding
 

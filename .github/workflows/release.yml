@@ -5,10 +5,11 @@ name: Release
 #   cli@<version>    → npm, as foam-cli
 #   core@<version>   → npm, as foam-core
 #
-# Every registry trusts this workflow by its file name through OIDC (trusted
-# publishing), so no publishing token is stored in the repository. Renaming
-# this file breaks publishing until each registry's trusted publisher is
-# updated. See docs/dev/releasing-foam.md.
+# Every registry trusts this workflow by its file name and the `release`
+# environment through OIDC (trusted publishing), so no publishing token is
+# stored in the repository. Renaming this file or the environment breaks
+# publishing until each registry's trusted publisher is updated. See
+# docs/dev/releasing-foam.md.
 
 on:
   push:
@@ -24,6 +25,9 @@ permissions:
 jobs:
   publish:
     name: Publish ${{ github.ref_name }}
+    # Only release tags may deploy to this environment. The registries require
+    # it, so a run of an edited copy of this file from a branch can't publish.
+    environment: release
     runs-on: ubuntu-22.04
     timeout-minutes: 20
     steps:

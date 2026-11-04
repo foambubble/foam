@@ -122,10 +122,13 @@ Nothing in CI enforces any of this; it's a review-time and release-time responsi
 
 ## Publishing setup
 
-The Release workflow stores no tokens. Each registry trusts `.github/workflows/release.yml` in `foambubble/foam` through OIDC (trusted publishing), so renaming the workflow file breaks publishing until every entry below is updated. Each entry takes owner `foambubble`, repository `foam`, workflow `release.yml` and no environment:
+The Release workflow stores no tokens. Each registry trusts `.github/workflows/release.yml` in `foambubble/foam`, running in the `release` environment, through OIDC (trusted publishing). Renaming the workflow file or the environment breaks publishing until every entry below is updated. Each entry takes owner `foambubble`, repository `foam`, workflow `release.yml` and environment `release`:
 
-- **VS Code Marketplace:** on the publisher management page, publisher `foam` → Trusted Publishing.
+- **VS Code Marketplace:** on the [publisher management page](https://marketplace.visualstudio.com/manage), publisher `foam` → Trusted Publishing.
 - **Open VSX:** [Trusted Publishers](https://open-vsx.org/user-settings/trusted-publishers), namespace `foam`.
 - **npm:** on `foam-cli` and on `foam-core`, Settings → Trusted publisher → GitHub Actions. A new entry expires unless it publishes within two days, so add it just before that package's next release.
 
-A tag push runs the workflow as it is in the tagged commit, so anyone who can push a release tag can publish. A tag ruleset (Settings → Rules → Rulesets) restricts creating, updating and deleting `vscode@*`, `cli@*` and `core@*` tags to the maintainers.
+Two GitHub settings decide who can publish:
+
+- **The `release` environment** (Settings → Environments) lets only tags matching `vscode@*`, `cli@*` and `core@*` deploy to it, with no required reviewers. The registries trust a run by its workflow file name, not by what triggered it. Without the environment, anyone with write access could publish from a branch that runs an edited `release.yml`.
+- **A tag ruleset** (Settings → Rules → Rulesets) restricts creating, updating and deleting those tags to the maintainers. A tag push runs the workflow as it is in the tagged commit, so whoever can push a release tag can publish.

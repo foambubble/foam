@@ -23,10 +23,13 @@ export default async function activate(
   const foam = await foamPromise;
 
   context.subscriptions.push(
-    vscode.commands.registerCommand(CONVERT_WIKILINK_TO_MDLINK.command, () => {
-      getTelemetry()?.trackCommand(CONVERT_WIKILINK_TO_MDLINK.command);
-      return convertWikilinkToMarkdown(foam);
-    }),
+    vscode.commands.registerCommand(
+      CONVERT_WIKILINK_TO_MDLINK.command,
+      (uri?: vscode.Uri, position?: vscode.Position) => {
+        getTelemetry()?.trackCommand(CONVERT_WIKILINK_TO_MDLINK.command);
+        return convertWikilinkToMarkdown(foam, uri, position);
+      }
+    ),
 
     vscode.commands.registerCommand(CONVERT_MDLINK_TO_WIKILINK.command, () => {
       getTelemetry()?.trackCommand(CONVERT_MDLINK_TO_WIKILINK.command);
@@ -35,17 +38,34 @@ export default async function activate(
   );
 }
 
-async function convertWikilinkToMarkdown(foam: Foam): Promise<void> {
+/**
+ * Converts the wikilink at `position` in the document at `uri`, or, when
+ * either is missing, the wikilink at the cursor of the active text editor.
+ */
+async function convertWikilinkToMarkdown(
+  foam: Foam,
+  uri?: vscode.Uri,
+  position?: vscode.Position
+): Promise<void> {
   const activeEditor = vscode.window.activeTextEditor;
-  if (!activeEditor) {
+  const location =
+    uri && position
+      ? { uri, position }
+      : activeEditor && {
+          uri: activeEditor.document.uri,
+          position: activeEditor.selection.active,
+        };
+  if (!location) {
     return;
   }
 
-  const document = activeEditor.document;
-  const position = activeEditor.selection.active;
-  const foamPosition = { line: position.line, character: position.character };
+  const foamPosition = {
+    line: location.position.line,
+    character: location.position.character,
+  };
 
   try {
+    const document = await vscode.workspace.openTextDocument(location.uri);
     const documentUri = fromVsCodeUri(document.uri);
     // Re-parse from current text to handle dirty editor state
     const resource = foam.services.parser.parse(documentUri, document.getText());
@@ -85,11 +105,14 @@ async function convertWikilinkToMarkdown(foam: Foam): Promise<void> {
     });
 
     const range = toVsCodeRange(edit.range);
-    const success = await activeEditor.edit(editBuilder => {
-      editBuilder.replace(range, edit.newText);
-    });
+    const workspaceEdit = new vscode.WorkspaceEdit();
+    workspaceEdit.replace(document.uri, range, edit.newText);
+    const success = await vscode.workspace.applyEdit(workspaceEdit);
 
-    if (success) {
+    if (
+      success &&
+      activeEditor?.document.uri.toString() === document.uri.toString()
+    ) {
       const newEndPosition = new vscode.Position(
         range.start.line,
         range.start.character + edit.newText.length

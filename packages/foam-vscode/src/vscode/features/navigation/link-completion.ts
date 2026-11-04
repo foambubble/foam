@@ -191,6 +191,13 @@ export class WikilinkCompletionProvider
       position
     );
 
+    // The inserted text never moves the start of the replacement range, so
+    // the link is still there when the command runs.
+    const convertToMarkdownLink: vscode.Command = {
+      ...CONVERT_WIKILINK_TO_MDLINK,
+      arguments: [document.uri, replacementRange.start],
+    };
+
     const directoryMode = Config.getLinksDirectoryMode();
 
     const resources = this.ws.list().map(resource => {
@@ -243,9 +250,7 @@ export class WikilinkCompletionProvider
         useAlias || linkFormat === 'link' ? [] : linkCommitCharacters;
       item.range = replacementRange;
       item.command =
-        linkFormat === 'link'
-          ? CONVERT_WIKILINK_TO_MDLINK
-          : COMPLETION_CURSOR_MOVE;
+        linkFormat === 'link' ? convertToMarkdownLink : COMPLETION_CURSOR_MOVE;
       return item;
     });
     const aliases = this.ws.list().flatMap(resource =>
@@ -267,10 +272,7 @@ export class WikilinkCompletionProvider
         // If link format is enabled, convert after completion
         item.command =
           linkFormat === 'link'
-            ? {
-                command: CONVERT_WIKILINK_TO_MDLINK.command,
-                title: CONVERT_WIKILINK_TO_MDLINK.title,
-              }
+            ? convertToMarkdownLink
             : COMPLETION_CURSOR_MOVE;
 
         item.detail = `Alias of ${vscode.workspace.asRelativePath(

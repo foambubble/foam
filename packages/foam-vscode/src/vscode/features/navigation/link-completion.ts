@@ -47,6 +47,10 @@ export default async function activate(
       COMPLETION_CURSOR_MOVE.command,
       async () => {
         const activeEditor = vscode.window.activeTextEditor;
+        // Without a text editor there is no cursor to move
+        if (!activeEditor) {
+          return;
+        }
         const document = activeEditor.document;
         const currentPosition = activeEditor.selection.active;
         const cursorChange = vscode.window.onDidChangeTextEditorSelection(
@@ -234,6 +238,12 @@ export class WikilinkCompletionProvider
       item.sortText = resourceIsDocument
         ? `0-${item.label}`
         : `1-${item.label}`;
+      // A path label starts with its folders, so a filter that only matches
+      // from the start could not find the note by the identifier it links
+      // with. The path follows for filters that match anywhere.
+      if (resourceIsDocument && labelStyle === 'path') {
+        item.filterText = `${identifier} ${label}`;
+      }
 
       const useAlias =
         resourceIsDocument &&

@@ -20,10 +20,11 @@ the native Save As dialog.
 That resolves the tension the bug exposed. The title prompt stays strictly
 tied to the title variables, as the docs promise; no placeholder file (such
 as `untitled.md`) is invented; and the user still names the note — just at
-save time instead of up front. PR
-[#1767](https://github.com/foambubble/foam/pull/1767) shipped an interim
-`untitled.md` fallback for the same case; this feature supersedes that
-behavior.
+save time instead of up front. An interim `untitled.md` fallback was
+explored on [#1767](https://github.com/foambubble/foam/pull/1767) and
+abandoned before merge in favor of this feature; the prompt-once regression
+tests and the docs sentence stating today's behavior (no `filepath` → the
+prompt names the note) are already on `main` (208e4e0, ec8cc58).
 
 The maintainer's constraints: this must not become the out-of-box behavior.
 With no `new-note.md` template, the built-in default note text keeps
@@ -63,13 +64,17 @@ with no `filepath` and no title variable.
   location, never an unsaved editor.
   _verify: unit_
 - **AC-7**: Given `Create New Template` generates its scaffold, then the
-  scaffold declares a `filepath` in its template metadata, and creating a
-  note from the unmodified scaffold creates a file.
+  scaffold declares a `filepath` in its template metadata that names the
+  note from the title prompt (the path uses a title variable), so creating
+  a note from the unmodified scaffold prompts for a title and creates a
+  file, and a second note from the same scaffold does not collide with the
+  first.
   _verify: unit_
-- **AC-8**: Given text is selected in the active editor, when a note is
-  created into an unsaved editor, then the selected text is included in the
-  buffer content and the original selection is left as it was — it is not
-  replaced with a wikilink, since no link target exists yet.
+- **AC-8**: Given a template that uses `FOAM_SELECTED_TEXT` and text is
+  selected in the active editor, when a note is created into an unsaved
+  editor, then the selected text is included in the buffer content and the
+  original selection is left as it was — it is not replaced with a
+  wikilink, since no link target exists yet.
   _verify: unit_
 - **AC-9**: Given the templates documentation, then it states when creating
   from a template opens an unsaved editor instead of a file, and that the
@@ -91,9 +96,5 @@ with no `filepath` and no title variable.
 
 ## Open questions
 
-- What lands on PR #1767 in the meantime: keep the interim `untitled.md`
-  fallback until this ships, or revert that PR to docs-plus-regression-test
-  so the prompt stays until this feature replaces it. Assumed here only that
-  this spec supersedes the fallback; the call belongs on that PR.
 - The unsaved editor's identity is whatever VS Code assigns (e.g.
   `Untitled-1`); assumed acceptable since the user names the note on save.

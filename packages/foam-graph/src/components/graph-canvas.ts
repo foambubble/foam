@@ -10,6 +10,7 @@ import {
 } from 'd3-force';
 import { scaleLinear } from 'd3-scale';
 import { Painter } from '../lib/painter';
+import { DEFAULT_TITLE_MAX_LENGTH, truncateLabel } from '../lib/labels';
 import {
   getNodeFillAndBorder,
   getLinkColor,
@@ -145,6 +146,7 @@ export class GraphCanvas extends LitElement {
   @property({ type: Number }) nodeFontSizeMultiplier: number = 1;
   @property({ type: Number }) nodeSizeMultiplier: number = 1;
   @property({ type: Number }) linkWidthMultiplier: number = 2;
+  @property({ type: Number }) titleMaxLength: number = DEFAULT_TITLE_MAX_LENGTH;
   @property({ type: String }) animateLinks: LinkAnimation = 'forward';
   @property({ type: Array }) groups: GroupRule[] = [];
   @property({ type: Number }) maxFitZoom: number | null = null;
@@ -159,6 +161,7 @@ export class GraphCanvas extends LitElement {
     nodeFontSizeMultiplier: 1,
     nodeSizeMultiplier: 1,
     linkWidthMultiplier: 2,
+    titleMaxLength: DEFAULT_TITLE_MAX_LENGTH,
     animateLinks: 'forward' as LinkAnimation,
     colorMode: 'type' as 'none' | 'directory' | 'type',
     groups: [] as GroupRule[],
@@ -269,7 +272,7 @@ export class GraphCanvas extends LitElement {
           painter
             .circle(node.x, node.y, size, fill, border)
             .screenText(
-              info.title,
+              truncateLabel(info.title, this.rs.titleMaxLength),
               labelPosition.x,
               labelPosition.y,
               fontSize,
@@ -394,6 +397,10 @@ export class GraphCanvas extends LitElement {
       this.graphInstance?.linkWidth(
         () => this.rs.style.lineWidth * this.rs.linkWidthMultiplier
       );
+    }
+
+    if (changed.has('titleMaxLength')) {
+      this.rs.titleMaxLength = this.titleMaxLength;
     }
 
     if (changed.has('animateLinks')) {

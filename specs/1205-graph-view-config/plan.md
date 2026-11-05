@@ -61,9 +61,10 @@ functional caller besides `cutTitle`.
 3. `packages/foam-vscode/src/vscode/features/graph-webview/`: a small
    view-state store module over a `Memento` (per-view bucket merge that
    spreads unknown top-level buckets and unknown fields through untouched);
-   in `index.ts`, track the current view name next to `panel`, handle
-   `webviewDidChangeViewState`, send `didRestoreViewState` on
-   `webviewDidLoad`.
+   in `index.ts`, handle `webviewDidChangeViewState` and send
+   `didRestoreViewState` on `webviewDidLoad` and on a view switch over a
+   live panel, resolving the view name from the panel title in both
+   directions.
 4. Remove the setting and plumbing (work item above); drop `cutTitle` and
    the `transformTitle` argument in `generateGraphData`.
 5. Tests per the map below; update `docs/user/features/graph-view.md` with a
@@ -80,9 +81,11 @@ functional caller besides `cutTitle`.
   `<= 0` disable; the paint path is type-agnostic, see Risks)
 - AC-4 → `packages/foam-graph/src/foam-graph.test.ts` (apply a view state
   with a new `titleMaxLength`, assert it reaches the canvas binding)
-- AC-5 → `packages/foam-vscode/.../graph-webview.test.ts` (store write via
-  `webviewDidChangeViewState` with a `MapBasedMemento`, new panel setup
-  replays it for the same view name only)
+- AC-5 → `packages/foam-vscode/.../graph-webview.test.ts` (the exported
+  message handler with a `MapBasedMemento`: `webviewDidChangeViewState`
+  writes, a fresh handler's `webviewDidLoad` replays for the same view name
+  only — handler-level rather than through `setupGraphPanel`, whose
+  `getWebviewContent` reads build output from disk)
 - AC-6 → human (reload window, reopen graph)
 - AC-7 → `packages/foam-vscode/.../graph-webview.test.ts` (store round-trip
   preserves unknown buckets and unknown fields)

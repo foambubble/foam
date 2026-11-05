@@ -179,10 +179,6 @@ export class VsCodeFoamConfig implements IFoamConfig {
       .get('graph.navigateToPreview', false);
   }
 
-  getGraphTitleMaxLength(): number {
-    return workspace.getConfiguration('foam').get('graph.titleMaxLength', 24);
-  }
-
   getGraphStyle(): object {
     return workspace.getConfiguration('foam').get('graph.style', {});
   }

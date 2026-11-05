@@ -48,7 +48,6 @@ export interface IFoamConfig {
   // Graph
   getGraphOnStartup(): boolean;
   getGraphNavigateToPreview(): boolean;
-  getGraphTitleMaxLength(): number;
   getGraphStyle(): object;
 
   // Languages
@@ -114,7 +113,6 @@ export function cascadeFoamConfig(
     getPreviewEmbedNoteType: () => get('getPreviewEmbedNoteType'),
     getGraphOnStartup: () => get('getGraphOnStartup'),
     getGraphNavigateToPreview: () => get('getGraphNavigateToPreview'),
-    getGraphTitleMaxLength: () => get('getGraphTitleMaxLength'),
     getGraphStyle: () => get('getGraphStyle'),
     getSupportedLanguages: () => get('getSupportedLanguages'),
   };
@@ -145,7 +143,6 @@ export class DefaultFoamConfig implements IFoamConfig {
   getPreviewEmbedNoteType(): 'full-inline' | 'full-card' | 'content-inline' | 'content-card' { return 'full-card'; }
   getGraphOnStartup() { return false; }
   getGraphNavigateToPreview() { return false; }
-  getGraphTitleMaxLength() { return 24; }
   getGraphStyle() { return {}; }
   getSupportedLanguages() { return ['markdown']; }
 }
@@ -192,7 +189,6 @@ export class Config {
   static getPreviewEmbedNoteType(): 'full-inline' | 'full-card' | 'content-inline' | 'content-card' { return Config.defaultConfig.getPreviewEmbedNoteType(); }
   static getGraphOnStartup(): boolean { return Config.defaultConfig.getGraphOnStartup(); }
   static getGraphNavigateToPreview(): boolean { return Config.defaultConfig.getGraphNavigateToPreview(); }
-  static getGraphTitleMaxLength(): number { return Config.defaultConfig.getGraphTitleMaxLength(); }
   static getGraphStyle(): object { return Config.defaultConfig.getGraphStyle(); }
   static getSupportedLanguages(): string[] { return Config.defaultConfig.getSupportedLanguages(); }
 }

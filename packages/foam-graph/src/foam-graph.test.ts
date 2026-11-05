@@ -205,4 +205,89 @@ describe('foam-graph', () => {
     expect(t.strings.join('')).toContain('.labels=');
     expect(t.values).toContain('always');
   });
+
+  // AC-4: a changed truncation length reaches the canvas binding
+  it('passes an applied titleMaxLength to the canvas', () => {
+    const element = new FoamGraph();
+    element.showControls = false;
+
+    element.applyViewState({ titleMaxLength: 7 });
+
+    const t = element.render() as TemplateResult;
+    expect(t.strings.join('')).toContain('.titleMaxLength=');
+    expect(t.values).toContain(7);
+  });
+
+  it('round-trips the view state through apply and get', () => {
+    const element = new FoamGraph();
+
+    element.applyViewState({
+      titleMaxLength: 10,
+      showNodesOfType: { placeholder: false, note: true },
+      nodeSizeMultiplier: 3,
+      animateLinks: 'off',
+    });
+
+    const state = element.getViewState();
+    expect(state.titleMaxLength).toBe(10);
+    expect(state.showNodesOfType?.placeholder).toBe(false);
+    expect(state.nodeSizeMultiplier).toBe(3);
+    expect(state.animateLinks).toBe('off');
+  });
+
+  // AC-9: restored filters survive graph data arrival (which derives
+  // filters for types it discovers) instead of being reset
+  it('keeps restored type filters when graph data arrives', () => {
+    const element = new FoamGraph();
+
+    element.applyViewState({
+      showNodesOfType: { placeholder: false, 'daily-note': false },
+    });
+
+    element.graphData = makeGraph({
+      nodeInfo: {
+        note: {
+          id: 'note',
+          type: 'note',
+          title: 'Note',
+          properties: {},
+          tags: [],
+        },
+        daily: {
+          id: 'daily',
+          type: 'daily-note',
+          title: 'Daily',
+          properties: {},
+          tags: [],
+        },
+        project: {
+          id: 'project',
+          type: 'project',
+          title: 'Project',
+          properties: {},
+          tags: [],
+        },
+      },
+    });
+    (element as any).updated(new Map([['graphData', null]]));
+
+    const filters = element.getViewState().showNodesOfType!;
+    expect(filters.placeholder).toBe(false);
+    expect(filters['daily-note']).toBe(false);
+    // a type the saved state does not know still gets its default
+    expect(filters.project).toBe(true);
+  });
+
+  it('emits view-state-change when the user changes a display option', () => {
+    const element = new FoamGraph();
+    let detail: any;
+    element.addEventListener('view-state-change', (event: Event) => {
+      detail = (event as CustomEvent).detail;
+    });
+
+    (element as any)._onToggleNodeType({ type: 'tag', visible: false });
+
+    expect(detail).toBeDefined();
+    expect(detail.showNodesOfType.tag).toBe(false);
+  });
 });

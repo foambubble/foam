@@ -30,6 +30,9 @@ window.addEventListener('message', (event: MessageEvent) => {
     case 'didUpdateStyle':
       element.graphStyle = message.payload;
       break;
+    case 'didRestoreViewState':
+      element.applyViewState(message.payload);
+      break;
     case 'didSelectNote':
       element.selectNote(message.payload);
       break;
@@ -41,6 +44,16 @@ element.addEventListener('node-click', (e: Event) => {
     type: 'webviewDidSelectNode',
     payload: (e as CustomEvent).detail,
   });
+});
+
+// Debounced so slider drags produce one persisted update, not one per tick.
+let viewStateTimer: ReturnType<typeof setTimeout> | undefined;
+element.addEventListener('view-state-change', (e: Event) => {
+  const payload = (e as CustomEvent).detail;
+  clearTimeout(viewStateTimer);
+  viewStateTimer = setTimeout(() => {
+    vscode.postMessage({ type: 'webviewDidChangeViewState', payload });
+  }, 250);
 });
 
 window.addEventListener('error', (error: ErrorEvent) => {

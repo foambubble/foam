@@ -1,15 +1,22 @@
+import * as fs from 'fs';
+import * as path from 'path';
 import * as vscode from 'vscode';
 import { URI } from '@foam/core';
 import { FoamWorkspace } from '@foam/core';
 import { createTestNote, createTestWorkspace } from '../../../test/test-utils';
+import { MapBasedMemento } from '../../utils/vsc-utils';
 import {
+  createWebviewMessageHandler,
   getGraphStyle,
   getNodeNavigationCommand,
   handleActiveResourceChange,
   mergeStyles,
+  updateGraph,
   viewConfigToStyle,
+  viewNameFromPanelTitle,
   resolveViewStyle,
 } from '.';
+import { saveViewState, VIEW_STATE_KEY } from './view-state-store';
 
 describe('handleActiveResourceChange', () => {
   const makePanel = () =>
@@ -265,5 +272,152 @@ describe('resolveViewStyle', () => {
     const { style } = resolveViewStyle({ view: 'Clean' });
     expect(style.showNodesOfType?.tag).toBe(false);
     expect(style.showNodesOfType?.placeholder).toBe(false);
+  });
+});
+
+// AC-1: the setting is gone and has no effect
+describe('foam.graph.titleMaxLength removal (#1205)', () => {
+  beforeEach(() => {
+    // earlier tests in this file replace getConfiguration with a stub
+    vi.restoreAllMocks();
+  });
+
+  it('is no longer a contributed setting', () => {
+    const pkg = JSON.parse(
+      fs.readFileSync(path.join(__dirname, '../../../../package.json'), 'utf-8')
+    );
+    expect(
+      pkg.contributes.configuration.properties['foam.graph.titleMaxLength']
+    ).toBeUndefined();
+  });
+
+  // AC-2: titles cross the extension → webview boundary untruncated,
+  // for notes and placeholders alike, whatever settings.json says
+  it('sends untruncated titles for every node type', async () => {
+    await vscode.workspace
+      .getConfiguration()
+      .update('foam.graph.titleMaxLength', 4);
+    try {
+      const longTitle = 'A note title well over twenty-four characters long';
+      const placeholderPath =
+        '/some/very/long/path/to/an/html/placeholder-file.html';
+      const note = createTestNote({
+        uri: '/notes/note-a.md',
+        title: longTitle,
+      });
+      const foam = {
+        workspace: { list: () => [note] },
+        graph: {
+          getAllConnections: () => [
+            { source: note.uri, target: URI.placeholder(placeholderPath) },
+          ],
+        },
+      } as any;
+      const panel = {
+        webview: { postMessage: vi.fn() },
+      } as unknown as vscode.WebviewPanel;
+
+      updateGraph(panel, foam);
+
+      const message = (panel.webview.postMessage as any).mock.calls[0][0];
+      expect(message.type).toBe('didUpdateGraphData');
+      expect(message.payload.nodeInfo[note.uri.path].title).toBe(longTitle);
+      expect(message.payload.nodeInfo[placeholderPath].title).toBe(
+        placeholderPath
+      );
+    } finally {
+      await vscode.workspace
+        .getConfiguration()
+        .update('foam.graph.titleMaxLength', undefined);
+    }
+  });
+});
+
+describe('viewNameFromPanelTitle', () => {
+  it('extracts the view name from a named panel title', () => {
+    expect(viewNameFromPanelTitle('Foam Graph: Journal')).toBe('Journal');
+  });
+
+  it('maps the nameless panel title to the Default bucket', () => {
+    expect(viewNameFromPanelTitle('Foam Graph')).toBe('Default');
+  });
+});
+
+describe('graph view state persistence', () => {
+  const makeFoam = () =>
+    ({
+      workspace: { list: () => [] },
+      graph: { getAllConnections: () => [] },
+    } as any);
+  const makeStatePanel = (title: string) =>
+    ({
+      title,
+      webview: { postMessage: vi.fn() },
+    } as unknown as vscode.WebviewPanel);
+
+  // AC-5: a changed preference is restored for the same view only
+  it('restores saved state for the same view on load, and only that view', async () => {
+    const memento = new MapBasedMemento();
+    const journal = makeStatePanel('Foam Graph: Journal');
+    await createWebviewMessageHandler(journal, makeFoam(), memento, undefined)({
+      type: 'webviewDidChangeViewState',
+      payload: { titleMaxLength: 10 },
+    });
+
+    const reopened = makeStatePanel('Foam Graph: Journal');
+    await createWebviewMessageHandler(
+      reopened,
+      makeFoam(),
+      memento,
+      undefined
+    )({ type: 'webviewDidLoad' });
+    expect(reopened.webview.postMessage).toHaveBeenCalledWith({
+      type: 'didRestoreViewState',
+      payload: { titleMaxLength: 10 },
+    });
+
+    const other = makeStatePanel('Foam Graph: Other');
+    await createWebviewMessageHandler(other, makeFoam(), memento, undefined)({
+      type: 'webviewDidLoad',
+    });
+    const types = (other.webview.postMessage as any).mock.calls.map(
+      (call: any[]) => call[0].type
+    );
+    expect(types).not.toContain('didRestoreViewState');
+  });
+
+  it('restores state after the style and before the graph data', async () => {
+    const memento = new MapBasedMemento();
+    await saveViewState(memento, 'Default', { titleMaxLength: 10 });
+
+    const panel = makeStatePanel('Foam Graph');
+    await createWebviewMessageHandler(panel, makeFoam(), memento, undefined)({
+      type: 'webviewDidLoad',
+    });
+
+    const types = (panel.webview.postMessage as any).mock.calls.map(
+      (call: any[]) => call[0].type
+    );
+    expect(types).toEqual([
+      'didUpdateStyle',
+      'didRestoreViewState',
+      'didUpdateGraphData',
+    ]);
+  });
+
+  // AC-7: unknown buckets and unknown fields survive a save
+  it('preserves unknown buckets and fields through a save', async () => {
+    const memento = new MapBasedMemento();
+    await memento.update(VIEW_STATE_KEY, {
+      Future: { someNewThing: true },
+      Default: { titleMaxLength: 12, unknownField: 'kept' },
+    });
+
+    await saveViewState(memento, 'Default', { titleMaxLength: 5 });
+
+    const all = memento.get<any>(VIEW_STATE_KEY);
+    expect(all.Future).toEqual({ someNewThing: true });
+    expect(all.Default.unknownField).toBe('kept');
+    expect(all.Default.titleMaxLength).toBe(5);
   });
 });

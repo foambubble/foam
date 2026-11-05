@@ -11,7 +11,28 @@ import type {
   GraphStyle,
   GraphViewConfig,
   ShowGraphArgs,
+  WebviewMessage,
 } from '@foam/graph-view/protocol' with { 'resolution-mode': 'import' };
+import { getViewState, saveViewState } from './view-state-store';
+
+const GRAPH_PANEL_TITLE = 'Foam Graph';
+const GRAPH_PANEL_TITLE_PREFIX = `${GRAPH_PANEL_TITLE}: `;
+
+export function graphPanelTitle(view?: string): string {
+  return view ? `${GRAPH_PANEL_TITLE_PREFIX}${view}` : GRAPH_PANEL_TITLE;
+}
+
+/**
+ * The view a panel is showing, recovered from its title — the serializer
+ * restores the title across window reloads but passes no view argument.
+ * A nameless panel maps to the `Default` bucket, the same named view
+ * `resolveViewStyle` falls back to.
+ */
+export function viewNameFromPanelTitle(title: string): string {
+  return title.startsWith(GRAPH_PANEL_TITLE_PREFIX)
+    ? title.slice(GRAPH_PANEL_TITLE_PREFIX.length)
+    : 'Default';
+}
 
 export default async function activate(
   context: vscode.ExtensionContext,
@@ -68,8 +89,18 @@ export default async function activate(
         getTelemetry()?.trackCommand('foam-vscode.show-graph');
         const { style, view } = resolveViewStyle(args);
         if (panel) {
-          panel.title = view ? `Foam Graph: ${view}` : 'Foam Graph';
+          panel.title = graphPanelTitle(view);
           panel.webview.postMessage({ type: 'didUpdateStyle', payload: style });
+          const saved = getViewState(
+            context.workspaceState,
+            viewNameFromPanelTitle(panel.title)
+          );
+          if (saved) {
+            panel.webview.postMessage({
+              type: 'didRestoreViewState',
+              payload: saved,
+            });
+          }
           panel.reveal();
         } else {
           const foam = await foamPromise;
@@ -88,7 +119,7 @@ export default async function activate(
   }
 }
 
-function updateGraph(panel: vscode.WebviewPanel, foam: Foam) {
+export function updateGraph(panel: vscode.WebviewPanel, foam: Foam) {
   const graph = generateGraphData(foam);
   panel.webview.postMessage({
     type: 'didUpdateGraphData',
@@ -97,21 +128,11 @@ function updateGraph(panel: vscode.WebviewPanel, foam: Foam) {
 }
 
 function generateGraphData(foam: Foam) {
+  // Titles are sent in full; the webview truncates labels at render time.
   return buildGraphData(foam.workspace.list(), foam.graph.getAllConnections(), {
     resourceToId: uri => uri.path,
-    transformTitle: title => cutTitle(title),
     includePlaceholders: true,
   });
-}
-
-function cutTitle(title: string): string {
-  const maxLen = vscode.workspace
-    .getConfiguration('foam.graph')
-    .get('titleMaxLength', 24);
-  if (maxLen > 0 && title.length > maxLen) {
-    return title.substring(0, maxLen).concat('...');
-  }
-  return title;
 }
 
 async function createGraphPanel(
@@ -119,10 +140,9 @@ async function createGraphPanel(
   context: vscode.ExtensionContext,
   options: { initialStyle?: GraphStyle; view?: string } = {}
 ) {
-  const title = options.view ? `Foam Graph: ${options.view}` : 'Foam Graph';
   const panel = vscode.window.createWebviewPanel(
     'foam-graph',
-    title,
+    graphPanelTitle(options.view),
     vscode.ViewColumn.Beside,
     {
       enableScripts: true,
@@ -143,52 +163,85 @@ async function setupGraphPanel(
   panel.webview.html = await getWebviewContent(context, panel);
 
   panel.webview.onDidReceiveMessage(
-    async message => {
-      switch (message.type) {
-        case 'webviewDidLoad': {
-          const style = initialStyle ?? getGraphStyle();
-          panel.webview.postMessage({
-            type: 'didUpdateStyle',
-            payload: style,
-          });
-
-          updateGraph(panel, foam);
-          break;
-        }
-        case 'webviewDidSelectNode': {
-          const noteUri = vscode.Uri.parse(message.payload);
-          const selectedNote = foam.workspace.get(fromVsCodeUri(noteUri));
-
-          if (isSome(selectedNote)) {
-            const navigateToPreview = getFoamVsCodeConfig(
-              'graph.navigateToPreview',
-              false
-            );
-            const command = getNodeNavigationCommand(
-              noteUri.path,
-              navigateToPreview
-            );
-            if (command === 'markdown.showPreview') {
-              vscode.commands.executeCommand(command, noteUri);
-            } else {
-              vscode.commands.executeCommand(
-                command,
-                noteUri,
-                vscode.ViewColumn.One
-              );
-            }
-          }
-          break;
-        }
-        case 'error': {
-          Logger.error('An error occurred in the graph view', message.payload);
-          break;
-        }
-      }
-    },
+    createWebviewMessageHandler(
+      panel,
+      foam,
+      context.workspaceState,
+      initialStyle
+    ),
     undefined,
     context.subscriptions
   );
+}
+
+export function createWebviewMessageHandler(
+  panel: vscode.WebviewPanel,
+  foam: Foam,
+  memento: vscode.Memento,
+  initialStyle?: GraphStyle
+) {
+  return async (message: WebviewMessage) => {
+    switch (message.type) {
+      case 'webviewDidLoad': {
+        const style = initialStyle ?? getGraphStyle();
+        panel.webview.postMessage({
+          type: 'didUpdateStyle',
+          payload: style,
+        });
+
+        const saved = getViewState(
+          memento,
+          viewNameFromPanelTitle(panel.title)
+        );
+        if (saved) {
+          panel.webview.postMessage({
+            type: 'didRestoreViewState',
+            payload: saved,
+          });
+        }
+
+        updateGraph(panel, foam);
+        break;
+      }
+      case 'webviewDidChangeViewState': {
+        await saveViewState(
+          memento,
+          viewNameFromPanelTitle(panel.title),
+          message.payload
+        );
+        break;
+      }
+      case 'webviewDidSelectNode': {
+        const noteUri = vscode.Uri.parse(message.payload);
+        const selectedNote = foam.workspace.get(fromVsCodeUri(noteUri));
+
+        if (isSome(selectedNote)) {
+          const navigateToPreview = getFoamVsCodeConfig(
+            'graph.navigateToPreview',
+            false
+          );
+          const command = getNodeNavigationCommand(
+            noteUri.path,
+            navigateToPreview
+          );
+          if (command === 'markdown.showPreview') {
+            vscode.commands.executeCommand(command, noteUri);
+          } else {
+            vscode.commands.executeCommand(
+              command,
+              noteUri,
+              vscode.ViewColumn.One
+            );
+          }
+        }
+        break;
+      }
+      case 'error': {
+        Logger.error('An error occurred in the graph view', message.payload);
+        break;
+      }
+    }
+  };
 }
 
 async function getWebviewContent(

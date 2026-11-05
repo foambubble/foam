@@ -257,6 +257,80 @@ Content without filepath metadata.`,
       expect(result.content).toBe('# Prompted Title');
     });
 
+    it('still prompts and returns a filepath for a FOAM_TITLE_SAFE-only template when unsaved notes are possible', async () => {
+      const { engine } = await setupFoamEngine();
+      let titleRequests = 0;
+      const resolver = new Resolver(
+        new Map(),
+        new Date(),
+        undefined,
+        'default',
+        {
+          resolveTitle: async () => {
+            titleRequests++;
+            return 'Prompted Title';
+          },
+          resolveSelectedText: () => '',
+          resolveCurrentDir: () => '/',
+        }
+      );
+      const result = await engine.processTemplate(
+        TriggerFactory.createCommandTrigger(
+          'foam-vscode.create-note-from-template'
+        ),
+        {
+          type: 'markdown',
+          content: '# ${FOAM_TITLE_SAFE}',
+          metadata: new Map(),
+        },
+        resolver,
+        { canOpenUnsaved: true }
+      );
+      expect(titleRequests).toBe(1);
+      if ('unsaved' in result) {
+        throw new Error('expected a file result');
+      }
+      expect(result.filepath.path).toBe('Prompted Title.md');
+      expect(result.content).toBe('# Prompted Title');
+    });
+
+    it('still prompts and returns a filepath for a FOAM_SLUG-only template when unsaved notes are possible', async () => {
+      const { engine } = await setupFoamEngine();
+      let titleRequests = 0;
+      const resolver = new Resolver(
+        new Map(),
+        new Date(),
+        undefined,
+        'default',
+        {
+          resolveTitle: async () => {
+            titleRequests++;
+            return 'Prompted Title';
+          },
+          resolveSelectedText: () => '',
+          resolveCurrentDir: () => '/',
+        }
+      );
+      const result = await engine.processTemplate(
+        TriggerFactory.createCommandTrigger(
+          'foam-vscode.create-note-from-template'
+        ),
+        {
+          type: 'markdown',
+          content: '# ${FOAM_SLUG}',
+          metadata: new Map(),
+        },
+        resolver,
+        { canOpenUnsaved: true }
+      );
+      expect(titleRequests).toBe(1);
+      if ('unsaved' in result) {
+        throw new Error('expected a file result');
+      }
+      expect(result.filepath.path).toBe('Prompted Title.md');
+      expect(result.content).toBe('# prompted-title');
+    });
+
     it('prefers the given default filepath over an unsaved note', async () => {
       const { engine } = await setupFoamEngine();
       const defaultFilepath = URI.file('/notes/known.md');

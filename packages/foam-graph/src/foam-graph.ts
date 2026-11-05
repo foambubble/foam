@@ -278,10 +278,8 @@ export class FoamGraph extends LitElement {
               this.linkWidthMultiplier = e.detail;
               this._emitViewStateChange();
             }}
-            @title-max-length-change=${(e: CustomEvent) => {
-              this.titleMaxLength = e.detail;
-              this._emitViewStateChange();
-            }}
+            @title-max-length-change=${(e: CustomEvent) =>
+              this._onTitleMaxLengthChange(e.detail)}
             @animate-links-change=${(e: CustomEvent) => {
               this.animateLinks = e.detail;
               this._emitViewStateChange();
@@ -437,6 +435,11 @@ export class FoamGraph extends LitElement {
     this.selectedNodeIds = next;
     this._recomputeGraphStates();
     this._recomputeVisibleGraphIfSelectionAffectsScope();
+  }
+
+  private _onTitleMaxLengthChange(value: number) {
+    this.titleMaxLength = value;
+    this._emitViewStateChange();
   }
 
   private _onToggleNodeType(detail: { type: string; visible: boolean }) {

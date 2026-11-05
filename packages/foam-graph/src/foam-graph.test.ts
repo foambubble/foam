@@ -291,6 +291,21 @@ describe('foam-graph', () => {
     expect(element.getViewState().showNodesOfType!.tag).toBe(false);
   });
 
+  // AC-4, control-panel path: the panel's change event updates the state
+  // the canvas is bound to, and announces it for persistence
+  it('updates the truncation length from the control panel', () => {
+    const element = new FoamGraph();
+    let emitted = false;
+    element.addEventListener('view-state-change', () => {
+      emitted = true;
+    });
+
+    (element as any)._onTitleMaxLengthChange(7);
+
+    expect(element.getViewState().titleMaxLength).toBe(7);
+    expect(emitted).toBe(true);
+  });
+
   // replace semantics: restoring a view must not inherit another view's
   // interactive tweaks
   it('resets to defaults before applying a restored state', () => {

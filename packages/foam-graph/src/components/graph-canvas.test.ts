@@ -6,6 +6,7 @@ import {
   computeLabelFontSize,
   graphPointToViewport,
   measureGraphViewport,
+  GraphCanvas,
 } from './graph-canvas';
 
 describe('measureGraphViewport', () => {
@@ -17,12 +18,12 @@ describe('measureGraphViewport', () => {
         height: 180,
       } as DOMRect);
 
-    expect(
-      measureGraphViewport(element, { width: 1200, height: 900 })
-    ).toEqual({
-      width: 320,
-      height: 180,
-    });
+    expect(measureGraphViewport(element, { width: 1200, height: 900 })).toEqual(
+      {
+        width: 320,
+        height: 180,
+      }
+    );
   });
 
   it('falls back to the parent element size before the browser viewport', () => {
@@ -40,12 +41,12 @@ describe('measureGraphViewport', () => {
         height: 160,
       } as DOMRect);
 
-    expect(
-      measureGraphViewport(element, { width: 1200, height: 900 })
-    ).toEqual({
-      width: 240,
-      height: 160,
-    });
+    expect(measureGraphViewport(element, { width: 1200, height: 900 })).toEqual(
+      {
+        width: 240,
+        height: 160,
+      }
+    );
   });
 });
 
@@ -65,13 +66,15 @@ describe('computeLabelOpacity', () => {
   });
 
   it('preserves regular zoom-dependent label fading by default', () => {
-    expect(computeLabelOpacity('regular', 0.5, 0.4, () => 0.25, { fade: 0 })).toBe(
-      0.25
-    );
+    expect(
+      computeLabelOpacity('regular', 0.5, 0.4, () => 0.25, { fade: 0 })
+    ).toBe(0.25);
   });
 
   it('keeps highlighted labels fully visible by default', () => {
-    expect(computeLabelOpacity('highlighted', 0.5, 0.4, () => 0, { fade: 0 })).toBe(1);
+    expect(
+      computeLabelOpacity('highlighted', 0.5, 0.4, () => 0, { fade: 0 })
+    ).toBe(1);
   });
 });
 
@@ -112,7 +115,11 @@ describe('graphPointToViewport', () => {
 describe('computeFitZoom', () => {
   it('computes the zoom needed to fit bounds into the viewport', () => {
     expect(
-      computeFitZoom({ x: [0, 100], y: [0, 50] }, { width: 220, height: 120 }, 10)
+      computeFitZoom(
+        { x: [0, 100], y: [0, 50] },
+        { width: 220, height: 120 },
+        10
+      )
     ).toBe(2);
   });
 
@@ -136,5 +143,56 @@ describe('computeFitZoom', () => {
         1.4
       )
     ).toBe(1);
+  });
+});
+
+// AC-4, canvas path: labels reflect a changed truncation length because the
+// cache the paint loop reads is rebuilt on titleMaxLength changes
+describe('label cache', () => {
+  const longTitle = 'a'.repeat(30);
+  const makeVisibleGraph = () =>
+    ({
+      nodeInfo: {
+        n1: {
+          id: 'n1',
+          type: 'note',
+          title: longTitle,
+          properties: {},
+          tags: [],
+          neighbors: [],
+          links: [],
+        },
+      },
+      nodes: [{ id: 'n1' }],
+      links: [],
+    } as any);
+
+  it('truncates labels when graph data arrives', () => {
+    const canvas = new GraphCanvas();
+    canvas.visibleGraph = makeVisibleGraph();
+
+    (canvas as any).updated(new Map([['visibleGraph', null]]));
+
+    expect((canvas as any).rs.labelByNodeId.n1).toBe('a'.repeat(24) + '...');
+  });
+
+  it('rebuilds labels when only the truncation length changes', () => {
+    const canvas = new GraphCanvas();
+    canvas.visibleGraph = makeVisibleGraph();
+    (canvas as any).updated(new Map([['visibleGraph', null]]));
+
+    canvas.titleMaxLength = 10;
+    (canvas as any).updated(new Map([['titleMaxLength', null]]));
+
+    expect((canvas as any).rs.labelByNodeId.n1).toBe('a'.repeat(10) + '...');
+  });
+
+  it('keeps the full title in the graph model', () => {
+    const canvas = new GraphCanvas();
+    canvas.visibleGraph = makeVisibleGraph();
+
+    (canvas as any).updated(new Map([['visibleGraph', null]]));
+
+    expect((canvas as any).rs.nodeInfo.n1.title).toBe(longTitle);
   });
 });

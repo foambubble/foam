@@ -18,6 +18,7 @@ import {
   fileExists,
   findSelectionContent,
   getCurrentEditorDirectory,
+  openUnsavedDocAndFocus,
   replaceSelection,
 } from './editor';
 import { getFoamVsCodeConfig } from '../config';
@@ -175,6 +176,11 @@ export const NoteFactory = {
           );
         }
       },
+      openUnsaved: async content =>
+        openUnsavedDocAndFocus(
+          new SnippetString(content),
+          selectedContent ? ViewColumn.Beside : ViewColumn.Active
+        ),
     };
 
     let outcome: NoteCreationOutcome;
@@ -204,6 +210,7 @@ export const NoteFactory = {
       case 'exists':
         return { didCreateFile: false, uri: outcome.uri };
       case 'cancelled':
+      case 'opened-unsaved':
         return { didCreateFile: false, uri: undefined };
     }
   },

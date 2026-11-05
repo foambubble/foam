@@ -302,6 +302,72 @@ describe('create-note command', () => {
       await deleteFile(target);
     });
 
+    it('opens an untitled editor without asking for a title when the template has no filepath and no title variable (#1243)', async () => {
+      const template = await createFile('Plain ${1:tabstop} body', [
+        '.foam',
+        'templates',
+        'no-target-template.md',
+      ]);
+      const spy = vi.spyOn(window, 'showInputBox');
+      await commands.executeCommand('foam-vscode.create-note', {
+        templatePath: template.uri.path,
+      });
+      expect(spy).not.toHaveBeenCalled();
+      expect(window.activeTextEditor.document.uri.scheme).toEqual('untitled');
+      // Inserted with `insertSnippet`, so the tabstop default is expanded.
+      expect(window.activeTextEditor.document.getText()).toEqual(
+        'Plain tabstop body'
+      );
+      await closeEditors();
+      await deleteFile(template.uri);
+    });
+
+    it('fills FOAM_SELECTED_TEXT into the unsaved note and leaves the selection as it was (#1243)', async () => {
+      const source = await createFile('This is my first file: World');
+      const { editor } = await showInEditor(source.uri);
+      editor.selection = new Selection(0, 23, 0, 28);
+      const template = await createFile('Hello ${FOAM_SELECTED_TEXT}', [
+        '.foam',
+        'templates',
+        'selection-unsaved-template.md',
+      ]);
+      await commands.executeCommand('foam-vscode.create-note', {
+        templatePath: template.uri.path,
+      });
+      expect(window.activeTextEditor.document.uri.scheme).toEqual('untitled');
+      expect(window.activeTextEditor.document.getText()).toEqual('Hello World');
+      const { doc } = await showInEditor(source.uri);
+      expect(doc.getText()).toEqual('This is my first file: World');
+      await closeEditors();
+      await deleteFile(source.uri);
+      await deleteFile(template.uri);
+    });
+
+    it('creates a file named from the title prompt from the unmodified Create New Template scaffold (#1243)', async () => {
+      const spy = vi
+        .spyOn(window, 'showInputBox')
+        .mockImplementationOnce((options: any) =>
+          Promise.resolve(options.value)
+        )
+        .mockImplementationOnce(() => Promise.resolve('Scaffold Note'));
+      await commands.executeCommand('foam-vscode.create-new-template');
+      const scaffoldUri = asAbsoluteWorkspaceUri(
+        URI.file('.foam/templates/new-template.md')
+      );
+
+      await commands.executeCommand('foam-vscode.create-note', {
+        templatePath: scaffoldUri.path,
+        onRelativeNotePath: 'resolve-from-root',
+      });
+      expect(spy).toHaveBeenCalledTimes(2);
+      const target = asAbsoluteWorkspaceUri(URI.file('Scaffold Note.md'));
+      expect(window.activeTextEditor.document.uri.scheme).toEqual('file');
+      expectSameUri(target, window.activeTextEditor?.document.uri);
+      await closeEditors();
+      await deleteFile(target);
+      await deleteFile(scaffoldUri);
+    });
+
     it('appends FOAM_SELECTED_TEXT given as a variable once', async () => {
       const target = getUriInWorkspace();
       await commands.executeCommand('foam-vscode.create-note', {

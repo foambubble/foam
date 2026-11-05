@@ -12,7 +12,8 @@ const vscode = (() => {
   } catch {
     // Not in VS Code — provide a mock for browser-based development
     return {
-      postMessage: (msg: unknown) => console.log('[mock vscode] postMessage', msg),
+      postMessage: (msg: unknown) =>
+        console.log('[mock vscode] postMessage', msg),
     };
   }
 })();
@@ -20,6 +21,26 @@ const vscode = (() => {
 const element = document.createElement('foam-graph') as FoamGraph;
 element.showControls = true;
 document.getElementById('app')!.appendChild(element);
+
+// The view the current display state belongs to; set by every restore and
+// echoed with saves, so a save debounced across a view switch still lands
+// in the bucket it was made in.
+let currentViewName: string | undefined;
+let viewStateTimer: ReturnType<typeof setTimeout> | undefined;
+
+const postViewState = () => {
+  vscode.postMessage({
+    type: 'webviewDidChangeViewState',
+    payload: { viewName: currentViewName, state: element.getViewState() },
+  });
+};
+
+const flushPendingViewState = () => {
+  if (viewStateTimer === undefined) return;
+  clearTimeout(viewStateTimer);
+  viewStateTimer = undefined;
+  postViewState();
+};
 
 window.addEventListener('message', (event: MessageEvent) => {
   const message = event.data as ExtensionMessage;
@@ -31,7 +52,11 @@ window.addEventListener('message', (event: MessageEvent) => {
       element.graphStyle = message.payload;
       break;
     case 'didRestoreViewState':
-      element.applyViewState(message.payload);
+      // save any in-flight change under the view it was made in before
+      // the incoming state replaces it
+      flushPendingViewState();
+      currentViewName = message.payload.viewName;
+      element.applyViewState(message.payload.state);
       break;
     case 'didSelectNote':
       element.selectNote(message.payload);
@@ -46,15 +71,18 @@ element.addEventListener('node-click', (e: Event) => {
   });
 });
 
-// Debounced so slider drags produce one persisted update, not one per tick.
-let viewStateTimer: ReturnType<typeof setTimeout> | undefined;
-element.addEventListener('view-state-change', (e: Event) => {
-  const payload = (e as CustomEvent).detail;
+// Debounced so slider drags produce one persisted update, not one per
+// tick; the snapshot is taken when the timer fires, not per event.
+element.addEventListener('view-state-change', () => {
   clearTimeout(viewStateTimer);
   viewStateTimer = setTimeout(() => {
-    vscode.postMessage({ type: 'webviewDidChangeViewState', payload });
+    viewStateTimer = undefined;
+    postViewState();
   }, 250);
 });
+
+// Best effort: don't lose a change made just before the panel is closed.
+window.addEventListener('pagehide', flushPendingViewState);
 
 window.addEventListener('error', (error: ErrorEvent) => {
   vscode.postMessage({

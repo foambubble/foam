@@ -89,18 +89,7 @@ export default async function activate(
         getTelemetry()?.trackCommand('foam-vscode.show-graph');
         const { style, view } = resolveViewStyle(args);
         if (panel) {
-          panel.title = graphPanelTitle(view);
-          panel.webview.postMessage({ type: 'didUpdateStyle', payload: style });
-          const saved = getViewState(
-            context.workspaceState,
-            viewNameFromPanelTitle(panel.title)
-          );
-          if (saved) {
-            panel.webview.postMessage({
-              type: 'didRestoreViewState',
-              payload: saved,
-            });
-          }
+          retargetGraphPanel(panel, context.workspaceState, style, view);
           panel.reveal();
         } else {
           const foam = await foamPromise;
@@ -116,6 +105,33 @@ export default async function activate(
   const shouldOpenGraphOnStartup = getFoamVsCodeConfig('graph.onStartup');
   if (shouldOpenGraphOnStartup) {
     vscode.commands.executeCommand('foam-vscode.show-graph');
+  }
+}
+
+/**
+ * Points a live panel at a (possibly different) view: title, declared
+ * style, and — only when the view actually changed — that view's saved
+ * state. Re-invoking the same view sends no restore, so an in-flight
+ * interaction is not snapped back to stale saved state.
+ */
+export function retargetGraphPanel(
+  panel: vscode.WebviewPanel,
+  memento: vscode.Memento,
+  style: GraphStyle,
+  view: string | undefined
+) {
+  const previousView = viewNameFromPanelTitle(panel.title);
+  const nextView = view ?? 'Default';
+  panel.title = graphPanelTitle(view);
+  panel.webview.postMessage({ type: 'didUpdateStyle', payload: style });
+  if (nextView !== previousView) {
+    panel.webview.postMessage({
+      type: 'didRestoreViewState',
+      payload: {
+        viewName: nextView,
+        state: getViewState(memento, nextView) ?? {},
+      },
+    });
   }
 }
 
@@ -183,22 +199,23 @@ export function createWebviewMessageHandler(
   return async (message: WebviewMessage) => {
     switch (message.type) {
       case 'webviewDidLoad': {
-        const style = initialStyle ?? getGraphStyle();
+        const viewName = viewNameFromPanelTitle(panel.title);
+        // a deserialized panel has no initialStyle; resolve the view it
+        // was showing (from the title) so its declared config survives a
+        // window reload like its saved state does
+        const style =
+          initialStyle ?? resolveViewStyle({ view: viewName }).style;
         panel.webview.postMessage({
           type: 'didUpdateStyle',
           payload: style,
         });
 
-        const saved = getViewState(
-          memento,
-          viewNameFromPanelTitle(panel.title)
-        );
-        if (saved) {
-          panel.webview.postMessage({
-            type: 'didRestoreViewState',
-            payload: saved,
-          });
-        }
+        // always sent: it also tells the webview which view later
+        // changes belong to
+        panel.webview.postMessage({
+          type: 'didRestoreViewState',
+          payload: { viewName, state: getViewState(memento, viewName) ?? {} },
+        });
 
         updateGraph(panel, foam);
         break;
@@ -206,8 +223,8 @@ export function createWebviewMessageHandler(
       case 'webviewDidChangeViewState': {
         await saveViewState(
           memento,
-          viewNameFromPanelTitle(panel.title),
-          message.payload
+          message.payload.viewName ?? viewNameFromPanelTitle(panel.title),
+          message.payload.state
         );
         break;
       }

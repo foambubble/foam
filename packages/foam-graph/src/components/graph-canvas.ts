@@ -162,10 +162,21 @@ export class GraphCanvas extends LitElement {
     nodeSizeMultiplier: 1,
     linkWidthMultiplier: 2,
     titleMaxLength: DEFAULT_TITLE_MAX_LENGTH,
+    // Truncated labels, cached per node: the paint loop runs per node per
+    // frame, so truncating there would allocate a string every frame.
+    labelByNodeId: {} as Record<string, string>,
     animateLinks: 'forward' as LinkAnimation,
     colorMode: 'type' as 'none' | 'directory' | 'type',
     groups: [] as GroupRule[],
   };
+
+  private _rebuildLabelCache() {
+    const labels: Record<string, string> = {};
+    for (const info of Object.values(this.rs.nodeInfo)) {
+      labels[info.id] = truncateLabel(info.title, this.rs.titleMaxLength);
+    }
+    this.rs.labelByNodeId = labels;
+  }
 
   private readonly getNodeSize = scaleLinear()
     .domain([0, 30])
@@ -272,7 +283,7 @@ export class GraphCanvas extends LitElement {
           painter
             .circle(node.x, node.y, size, fill, border)
             .screenText(
-              truncateLabel(info.title, this.rs.titleMaxLength),
+              this.rs.labelByNodeId[node.id] ?? info.title,
               labelPosition.x,
               labelPosition.y,
               fontSize,
@@ -418,16 +429,25 @@ export class GraphCanvas extends LitElement {
       };
       this.rs.nodeInfo = nextGraph.nodeInfo;
       this._updateGraphData(nextGraph);
+    }
 
-      if (this.visibleGraph && this.firstGraphLoad && this.graphInstance) {
-        this.firstGraphLoad = false;
-        this.graphInstance.zoom(this.graphInstance.zoom() * 1.5);
-        this.graphInstance.cooldownTicks(100);
-        this.graphInstance.onEngineStop(() => {
-          this.graphInstance!.onEngineStop(() => {});
-          this.zoomToFit(500);
-        });
-      }
+    if (changed.has('visibleGraph') || changed.has('titleMaxLength')) {
+      this._rebuildLabelCache();
+    }
+
+    if (
+      changed.has('visibleGraph') &&
+      this.visibleGraph &&
+      this.firstGraphLoad &&
+      this.graphInstance
+    ) {
+      this.firstGraphLoad = false;
+      this.graphInstance.zoom(this.graphInstance.zoom() * 1.5);
+      this.graphInstance.cooldownTicks(100);
+      this.graphInstance.onEngineStop(() => {
+        this.graphInstance!.onEngineStop(() => {});
+        this.zoomToFit(500);
+      });
     }
   }
 

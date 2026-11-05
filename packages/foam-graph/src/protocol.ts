@@ -134,14 +134,25 @@ export interface ShowGraphArgs {
 export type ExtensionMessage =
   | { type: 'didUpdateStyle'; payload: GraphStyle }
   | { type: 'didUpdateGraphData'; payload: GraphData }
-  | { type: 'didRestoreViewState'; payload: GraphViewState }
+  // Always sent when a view is (re)opened, even with an empty state: it
+  // resets the interactive state, so one view's tweaks cannot leak into
+  // another. viewName tells the webview which bucket later changes belong
+  // to, so a save debounced across a view switch cannot land in the wrong
+  // bucket.
+  | {
+      type: 'didRestoreViewState';
+      payload: { viewName: string; state: GraphViewState };
+    }
   | { type: 'didSelectNote'; payload: string };
 
 // Webview → Extension
 export type WebviewMessage =
   | { type: 'webviewDidLoad' }
   | { type: 'webviewDidSelectNode'; payload: string }
-  | { type: 'webviewDidChangeViewState'; payload: GraphViewState }
+  | {
+      type: 'webviewDidChangeViewState';
+      payload: { viewName?: string; state: GraphViewState };
+    }
   | {
       type: 'error';
       payload: {

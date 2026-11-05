@@ -98,12 +98,31 @@ functional caller besides `cutTitle`.
 
 The spec has no open questions left; these are the calls made while planning:
 
-- **Current view name tracking** → parsed back from the panel title
-  (`"Foam Graph: <view>"`, set in the same file at
-  `graph-webview/index.ts:71,122`), because the serializer restores the
-  title across window reloads but `deserializeWebviewPanel` gets no view
-  argument. Keeping a closure variable alone would silently save a named
-  view's fiddling into the `Default` bucket after a reload.
+- **Current view name tracking** → the view name travels with the
+  messages: every `didRestoreViewState` carries it (sent on every load and
+  on every actual view switch, even with an empty state), and the webview
+  echoes it back with each save, so a save debounced across a view switch
+  still lands in the bucket it was made in. The panel title
+  (`"Foam Graph: <view>"`) is parsed only to recover the view after
+  `deserializeWebviewPanel` (which gets no view argument) and as the save
+  fallback before any restore has been delivered.
+- **Restores use replace semantics** → `applyViewState` resets to built-in
+  defaults, re-applies the declared style, then the saved state; and a
+  restore is sent even when nothing is saved. Otherwise one view's
+  interactive tweaks leak into the next view shown and get persisted
+  there. Re-invoking `show-graph` for the already-open view sends no
+  restore, so stale saved state cannot snap back mid-interaction.
+- **Save-loss windows are flushed** → the webview flushes a pending
+  debounced save before applying an incoming restore (preserving the old
+  view's last gesture) and on `pagehide` (best effort for "change one
+  thing and close the panel").
+- **`showNodesOfType` merges key-wise in the store** → the webview's
+  filter derivation drops entries for types currently absent from the
+  graph; a plain overwrite on save would turn that into permanent loss of
+  a saved preference once the type reappears.
+- **Labels are truncated into a cache**, rebuilt when `visibleGraph` or
+  `titleMaxLength` changes — the paint loop runs per node per frame, so
+  truncating there would allocate per frame.
 - **Default bucket name** → `"Default"`, the same name `resolveViewStyle`
   already falls back to (`graph-webview/index.ts:287`), so a nameless open
   and the `Default` named view share state by construction, matching the

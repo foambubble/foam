@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { URI } from '@foam/core';
-import { FoamWorkspace } from '@foam/core';
+import { FoamGraph, FoamWorkspace } from '@foam/core';
 import { createTestNote, createTestWorkspace } from '../../../test/test-utils';
 import { MapBasedMemento } from '../../utils/vsc-utils';
 import {
@@ -11,12 +11,19 @@ import {
   getNodeNavigationCommand,
   handleActiveResourceChange,
   mergeStyles,
+  retargetGraphPanel,
   updateGraph,
   viewConfigToStyle,
   viewNameFromPanelTitle,
   resolveViewStyle,
 } from '.';
 import { saveViewState, VIEW_STATE_KEY } from './view-state-store';
+
+// several describes below stub vscode.workspace.getConfiguration; clean up
+// so no test depends on execution order
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 describe('handleActiveResourceChange', () => {
   const makePanel = () =>
@@ -150,17 +157,29 @@ describe('mergeStyles', () => {
   });
 
   it('patch overrides colorMode', () => {
-    const merged = mergeStyles({ colorMode: 'none' }, { colorMode: 'directory' });
+    const merged = mergeStyles(
+      { colorMode: 'none' },
+      { colorMode: 'directory' }
+    );
     expect(merged.colorMode).toBe('directory');
   });
 
   it('base colorMode is kept when patch does not specify one', () => {
-    const merged = mergeStyles({ colorMode: 'type' }, { style: { background: '#ff0000' } });
+    const merged = mergeStyles(
+      { colorMode: 'type' },
+      { style: { background: '#ff0000' } }
+    );
     expect(merged.colorMode).toBe('type');
   });
 
   it('patch overrides groups', () => {
-    const group = { id: 'g1', label: 'G1', color: '#ff0000', enabled: true, match: { property: 'type', value: 'note' } };
+    const group = {
+      id: 'g1',
+      label: 'G1',
+      color: '#ff0000',
+      enabled: true,
+      match: { property: 'type', value: 'note' },
+    };
     const merged = mergeStyles({ groups: [] }, { groups: [group] });
     expect(merged.groups).toEqual([group]);
   });
@@ -181,7 +200,9 @@ describe('viewConfigToStyle', () => {
   });
 
   it('maps show.enabled to showNodesOfType', () => {
-    const style = viewConfigToStyle({ show: { tag: { enabled: false }, placeholder: { enabled: true } } });
+    const style = viewConfigToStyle({
+      show: { tag: { enabled: false }, placeholder: { enabled: true } },
+    });
     expect(style.showNodesOfType).toEqual({ tag: false, placeholder: true });
   });
 
@@ -201,13 +222,24 @@ describe('viewConfigToStyle', () => {
   });
 
   it('passes groups through', () => {
-    const group = { id: 'g1', label: 'G1', color: '#ff0000', enabled: true, match: { property: 'type', value: 'note' } };
+    const group = {
+      id: 'g1',
+      label: 'G1',
+      color: '#ff0000',
+      enabled: true,
+      match: { property: 'type', value: 'note' },
+    };
     const style = viewConfigToStyle({ groups: [group] });
     expect(style.groups).toEqual([group]);
   });
 
   it('maps visual overrides to style', () => {
-    const style = viewConfigToStyle({ background: '#123456', fontSize: 14, fontFamily: 'Mono', lineColor: '#aabbcc' });
+    const style = viewConfigToStyle({
+      background: '#123456',
+      fontSize: 14,
+      fontFamily: 'Mono',
+      lineColor: '#aabbcc',
+    });
     expect(style.style?.background).toBe('#123456');
     expect(style.style?.fontSize).toBe(14);
     expect(style.style?.fontFamily).toBe('Mono');
@@ -254,8 +286,13 @@ describe('resolveViewStyle', () => {
   });
 
   it('inline config is applied on top of named view', () => {
-    mockViews([{ name: 'Journal', colorBy: 'directory', background: '#111111' }]);
-    const { style } = resolveViewStyle({ view: 'Journal', config: { colorBy: 'type' } });
+    mockViews([
+      { name: 'Journal', colorBy: 'directory', background: '#111111' },
+    ]);
+    const { style } = resolveViewStyle({
+      view: 'Journal',
+      config: { colorBy: 'type' },
+    });
     expect(style.colorMode).toBe('type');
     expect(style.style?.background).toBe('#111111');
   });
@@ -268,7 +305,12 @@ describe('resolveViewStyle', () => {
   });
 
   it('named view show.enabled is applied to showNodesOfType', () => {
-    mockViews([{ name: 'Clean', show: { tag: { enabled: false }, placeholder: { enabled: false } } }]);
+    mockViews([
+      {
+        name: 'Clean',
+        show: { tag: { enabled: false }, placeholder: { enabled: false } },
+      },
+    ]);
     const { style } = resolveViewStyle({ view: 'Clean' });
     expect(style.showNodesOfType?.tag).toBe(false);
     expect(style.showNodesOfType?.placeholder).toBe(false);
@@ -277,11 +319,6 @@ describe('resolveViewStyle', () => {
 
 // AC-1: the setting is gone and has no effect
 describe('foam.graph.titleMaxLength removal (#1205)', () => {
-  beforeEach(() => {
-    // earlier tests in this file replace getConfiguration with a stub
-    vi.restoreAllMocks();
-  });
-
   it('is no longer a contributed setting', () => {
     const pkg = JSON.parse(
       fs.readFileSync(path.join(__dirname, '../../../../package.json'), 'utf-8')
@@ -299,20 +336,16 @@ describe('foam.graph.titleMaxLength removal (#1205)', () => {
       .update('foam.graph.titleMaxLength', 4);
     try {
       const longTitle = 'A note title well over twenty-four characters long';
-      const placeholderPath =
-        '/some/very/long/path/to/an/html/placeholder-file.html';
+      const longTarget = 'a-placeholder-target-well-over-24-characters-long';
+      const workspace = createTestWorkspace();
       const note = createTestNote({
         uri: '/notes/note-a.md',
         title: longTitle,
+        links: [{ slug: longTarget }],
       });
-      const foam = {
-        workspace: { list: () => [note] },
-        graph: {
-          getAllConnections: () => [
-            { source: note.uri, target: URI.placeholder(placeholderPath) },
-          ],
-        },
-      } as any;
+      workspace.set(note);
+      const graph = FoamGraph.fromWorkspace(workspace);
+      const foam = { workspace, graph } as any;
       const panel = {
         webview: { postMessage: vi.fn() },
       } as unknown as vscode.WebviewPanel;
@@ -322,9 +355,12 @@ describe('foam.graph.titleMaxLength removal (#1205)', () => {
       const message = (panel.webview.postMessage as any).mock.calls[0][0];
       expect(message.type).toBe('didUpdateGraphData');
       expect(message.payload.nodeInfo[note.uri.path].title).toBe(longTitle);
-      expect(message.payload.nodeInfo[placeholderPath].title).toBe(
-        placeholderPath
+      const placeholder = Object.values<any>(message.payload.nodeInfo).find(
+        node => node.type === 'placeholder'
       );
+      expect(placeholder).toBeDefined();
+      expect(placeholder.title).toContain(longTarget);
+      expect(placeholder.title).not.toContain('...');
     } finally {
       await vscode.workspace
         .getConfiguration()
@@ -344,24 +380,29 @@ describe('viewNameFromPanelTitle', () => {
 });
 
 describe('graph view state persistence', () => {
-  const makeFoam = () =>
-    ({
-      workspace: { list: () => [] },
-      graph: { getAllConnections: () => [] },
-    } as any);
+  const makeFoam = () => {
+    const workspace = createTestWorkspace();
+    return { workspace, graph: FoamGraph.fromWorkspace(workspace) } as any;
+  };
   const makeStatePanel = (title: string) =>
     ({
       title,
       webview: { postMessage: vi.fn() },
     } as unknown as vscode.WebviewPanel);
 
-  // AC-5: a changed preference is restored for the same view only
-  it('restores saved state for the same view on load, and only that view', async () => {
+  // AC-5: a changed preference is restored for the same view; another view
+  // gets its own (empty) state, not this one's
+  it('restores saved state for the view it was saved under', async () => {
     const memento = new MapBasedMemento();
     const journal = makeStatePanel('Foam Graph: Journal');
-    await createWebviewMessageHandler(journal, makeFoam(), memento, undefined)({
+    await createWebviewMessageHandler(
+      journal,
+      makeFoam(),
+      memento,
+      undefined
+    )({
       type: 'webviewDidChangeViewState',
-      payload: { titleMaxLength: 10 },
+      payload: { viewName: 'Journal', state: { titleMaxLength: 10 } },
     });
 
     const reopened = makeStatePanel('Foam Graph: Journal');
@@ -373,17 +414,42 @@ describe('graph view state persistence', () => {
     )({ type: 'webviewDidLoad' });
     expect(reopened.webview.postMessage).toHaveBeenCalledWith({
       type: 'didRestoreViewState',
-      payload: { titleMaxLength: 10 },
+      payload: { viewName: 'Journal', state: { titleMaxLength: 10 } },
     });
 
     const other = makeStatePanel('Foam Graph: Other');
-    await createWebviewMessageHandler(other, makeFoam(), memento, undefined)({
+    await createWebviewMessageHandler(
+      other,
+      makeFoam(),
+      memento,
+      undefined
+    )({
       type: 'webviewDidLoad',
     });
-    const types = (other.webview.postMessage as any).mock.calls.map(
-      (call: any[]) => call[0].type
-    );
-    expect(types).not.toContain('didRestoreViewState');
+    expect(other.webview.postMessage).toHaveBeenCalledWith({
+      type: 'didRestoreViewState',
+      payload: { viewName: 'Other', state: {} },
+    });
+  });
+
+  it('saves under the view name echoed by the webview, not the panel title', async () => {
+    const memento = new MapBasedMemento();
+    // the panel was already switched to Default while this save, made in
+    // Journal, was still debounced in the webview
+    const panel = makeStatePanel('Foam Graph');
+    await createWebviewMessageHandler(
+      panel,
+      makeFoam(),
+      memento,
+      undefined
+    )({
+      type: 'webviewDidChangeViewState',
+      payload: { viewName: 'Journal', state: { titleMaxLength: 10 } },
+    });
+
+    const all = memento.get<any>(VIEW_STATE_KEY);
+    expect(all.Journal.titleMaxLength).toBe(10);
+    expect(all.Default).toBeUndefined();
   });
 
   it('restores state after the style and before the graph data', async () => {
@@ -391,7 +457,12 @@ describe('graph view state persistence', () => {
     await saveViewState(memento, 'Default', { titleMaxLength: 10 });
 
     const panel = makeStatePanel('Foam Graph');
-    await createWebviewMessageHandler(panel, makeFoam(), memento, undefined)({
+    await createWebviewMessageHandler(
+      panel,
+      makeFoam(),
+      memento,
+      undefined
+    )({
       type: 'webviewDidLoad',
     });
 
@@ -419,5 +490,68 @@ describe('graph view state persistence', () => {
     expect(all.Future).toEqual({ someNewThing: true });
     expect(all.Default.unknownField).toBe('kept');
     expect(all.Default.titleMaxLength).toBe(5);
+  });
+
+  it('merges type filters key-wise on save instead of overwriting them', async () => {
+    const memento = new MapBasedMemento();
+    await saveViewState(memento, 'Default', {
+      showNodesOfType: { 'daily-note': false },
+    });
+
+    // a later snapshot taken while no daily note exists lacks the key
+    await saveViewState(memento, 'Default', {
+      showNodesOfType: { note: true },
+      titleMaxLength: 10,
+    });
+
+    const all = memento.get<any>(VIEW_STATE_KEY);
+    expect(all.Default.showNodesOfType['daily-note']).toBe(false);
+    expect(all.Default.showNodesOfType.note).toBe(true);
+  });
+});
+
+describe('retargetGraphPanel', () => {
+  const makeStatePanel = (title: string) =>
+    ({
+      title,
+      webview: { postMessage: vi.fn() },
+    } as unknown as vscode.WebviewPanel);
+
+  it('restores the target view state when the view changes', async () => {
+    const memento = new MapBasedMemento();
+    await saveViewState(memento, 'Journal', { titleMaxLength: 10 });
+    const panel = makeStatePanel('Foam Graph');
+
+    retargetGraphPanel(panel, memento, {}, 'Journal');
+
+    expect(panel.title).toBe('Foam Graph: Journal');
+    expect(panel.webview.postMessage).toHaveBeenCalledWith({
+      type: 'didRestoreViewState',
+      payload: { viewName: 'Journal', state: { titleMaxLength: 10 } },
+    });
+  });
+
+  it('sends an empty state when the target view has none saved', () => {
+    const memento = new MapBasedMemento();
+    const panel = makeStatePanel('Foam Graph: Journal');
+
+    retargetGraphPanel(panel, memento, {}, undefined);
+
+    expect(panel.webview.postMessage).toHaveBeenCalledWith({
+      type: 'didRestoreViewState',
+      payload: { viewName: 'Default', state: {} },
+    });
+  });
+
+  it('does not restore when re-invoked for the already-open view', () => {
+    const memento = new MapBasedMemento();
+    const panel = makeStatePanel('Foam Graph: Journal');
+
+    retargetGraphPanel(panel, memento, {}, 'Journal');
+
+    const types = (panel.webview.postMessage as any).mock.calls.map(
+      (call: any[]) => call[0].type
+    );
+    expect(types).toEqual(['didUpdateStyle']);
   });
 });

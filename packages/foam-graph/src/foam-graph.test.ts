@@ -190,9 +190,9 @@ describe('foam-graph', () => {
 
     (element as any).updated(new Map([['graphStyle', null]]));
 
-    expect((element as any).groups.map((group: { id: string }) => group.id)).toEqual([
-      'configured',
-    ]);
+    expect(
+      (element as any).groups.map((group: { id: string }) => group.id)
+    ).toEqual(['configured']);
   });
 
   it('passes labels setting to the canvas', () => {
@@ -280,14 +280,36 @@ describe('foam-graph', () => {
 
   it('emits view-state-change when the user changes a display option', () => {
     const element = new FoamGraph();
-    let detail: any;
-    element.addEventListener('view-state-change', (event: Event) => {
-      detail = (event as CustomEvent).detail;
+    let emitted = false;
+    element.addEventListener('view-state-change', () => {
+      emitted = true;
     });
 
     (element as any)._onToggleNodeType({ type: 'tag', visible: false });
 
-    expect(detail).toBeDefined();
-    expect(detail.showNodesOfType.tag).toBe(false);
+    expect(emitted).toBe(true);
+    expect(element.getViewState().showNodesOfType!.tag).toBe(false);
+  });
+
+  // replace semantics: restoring a view must not inherit another view's
+  // interactive tweaks
+  it('resets to defaults before applying a restored state', () => {
+    const element = new FoamGraph();
+
+    (element as any)._onToggleNodeType({ type: 'placeholder', visible: false });
+    element.applyViewState({ titleMaxLength: 10 });
+
+    const state = element.getViewState();
+    expect(state.titleMaxLength).toBe(10);
+    expect(state.showNodesOfType?.placeholder).toBe(true);
+  });
+
+  it('keeps the declared style layer when restoring a view state', () => {
+    const element = new FoamGraph();
+    element.graphStyle = { showNodesOfType: { tag: false } };
+
+    element.applyViewState({});
+
+    expect(element.getViewState().showNodesOfType?.tag).toBe(false);
   });
 });

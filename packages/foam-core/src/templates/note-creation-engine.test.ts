@@ -184,6 +184,72 @@ Content without filepath metadata.`,
       expect(result.filepath.path).toBe('My New Note.md'); // Should generate from title
     });
 
+    it('prompts for the title at most once when the template uses FOAM_TITLE and has no filepath (#1243)', async () => {
+      const { engine } = await setupFoamEngine();
+      let titleRequests = 0;
+      const resolver = new Resolver(
+        new Map(),
+        new Date(),
+        undefined,
+        'default',
+        {
+          resolveTitle: async () => {
+            titleRequests++;
+            return 'Prompted Title';
+          },
+          resolveSelectedText: () => '',
+          resolveCurrentDir: () => '/',
+        }
+      );
+      const result = await engine.processTemplate(
+        TriggerFactory.createCommandTrigger(
+          'foam-vscode.create-note-from-template'
+        ),
+        {
+          type: 'markdown',
+          content: '# ${FOAM_TITLE}',
+          metadata: new Map(),
+        },
+        resolver
+      );
+      expect(titleRequests).toBe(1);
+      expect(result.filepath.path).toBe('Prompted Title.md');
+      expect(result.content).toBe('# Prompted Title');
+    });
+
+    it('prompts for the title at most once when the template uses only FOAM_SLUG and has no filepath (#1243)', async () => {
+      const { engine } = await setupFoamEngine();
+      let titleRequests = 0;
+      const resolver = new Resolver(
+        new Map(),
+        new Date(),
+        undefined,
+        'default',
+        {
+          resolveTitle: async () => {
+            titleRequests++;
+            return 'Prompted Title';
+          },
+          resolveSelectedText: () => '',
+          resolveCurrentDir: () => '/',
+        }
+      );
+      const result = await engine.processTemplate(
+        TriggerFactory.createCommandTrigger(
+          'foam-vscode.create-note-from-template'
+        ),
+        {
+          type: 'markdown',
+          content: '# ${FOAM_SLUG}',
+          metadata: new Map(),
+        },
+        resolver
+      );
+      expect(titleRequests).toBe(1);
+      expect(result.filepath.path).toBe('Prompted Title.md');
+      expect(result.content).toBe('# prompted-title');
+    });
+
     it('should handle JavaScript templates correctly', async () => {
       const { engine } = await setupFoamEngine();
       // Create JavaScript template

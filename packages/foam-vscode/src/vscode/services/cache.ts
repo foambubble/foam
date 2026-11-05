@@ -42,8 +42,6 @@ export default class VsCodeBasedParserCache implements ParserCache {
   static CACHE_VERSION_KEY = 'foam-cache-version';
   static CACHE_DIR_NAME = 'parser-cache';
   static BUCKET_COUNT = 64;
-  /** workspaceState key used by earlier versions, migrated on load */
-  static LEGACY_STATE_KEY = 'foam-cache';
 
   private _cache: LRUCache<string, ParserCacheEntry>;
   private _cacheDir: URI | undefined;
@@ -104,52 +102,8 @@ export default class VsCodeBasedParserCache implements ParserCache {
       return;
     }
 
-    const imported = await this.importLegacyWorkspaceState();
-    if (!imported) {
-      await this.loadBuckets();
-    }
+    await this.loadBuckets();
     Logger.debug('Cache size: ' + this._cache.size);
-  }
-
-  /**
-   * Imports the cache blob that earlier versions kept in workspaceState,
-   * re-shards it to bucket files, and removes the old key — keeping the
-   * blob would defeat the purpose of file-based storage, as it gets
-   * serialized with the rest of the workspace state (see #1677).
-   * Returns whether any entries were imported.
-   */
-  private async importLegacyWorkspaceState(): Promise<boolean> {
-    const source = this.context.workspaceState.get<any[]>(
-      VsCodeBasedParserCache.LEGACY_STATE_KEY
-    );
-    if (source === undefined) {
-      return false;
-    }
-    let imported = false;
-    if (Array.isArray(source) && source.length > 0) {
-      try {
-        this._cache.load(source);
-        for (const key of this._cache.keys()) {
-          this._dirty.add(bucketOf(key));
-        }
-        // persist the re-sharded entries before the legacy blob is removed
-        // below, so a crash in between cannot lose the whole cache
-        await this.performSync();
-        imported = true;
-        Logger.info(
-          `Migrated parser cache from workspace state (${this._cache.size} entries)`
-        );
-      } catch (e) {
-        Logger.warn(
-          `Failed to migrate parser cache from workspace state: ${e}`
-        );
-      }
-    }
-    await this.context.workspaceState.update(
-      VsCodeBasedParserCache.LEGACY_STATE_KEY,
-      undefined
-    );
-    return imported;
   }
 
   private bucketUri(index: number): URI {
@@ -196,10 +150,6 @@ export default class VsCodeBasedParserCache implements ParserCache {
     if (this._cacheDir) {
       await deleteQuietly(this._cacheDir);
     }
-    await this.context.workspaceState.update(
-      VsCodeBasedParserCache.LEGACY_STATE_KEY,
-      undefined
-    );
   }
 
   get(uri: URI): ParserCacheEntry {

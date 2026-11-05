@@ -5,7 +5,6 @@ import { getTemplates } from '../../services/template-service';
 import createNote from './create-note';
 import createFromTemplateCommand from './create-note-from-template';
 import createNewTemplate from './create-new-template';
-import updateGraphCommand from './update-graph';
 import notesExplorer from './notes-explorer';
 import orphans from './orphans';
 import placeholders from './placeholders';
@@ -18,7 +17,6 @@ export default async function activate(
   await createNote(context, foamPromise);
   await createFromTemplateCommand(context, foamPromise);
   await createNewTemplate(context);
-  await updateGraphCommand(context, foamPromise);
   await notesExplorer(context, foamPromise);
   await orphans(context, foamPromise);
   await placeholders(context, foamPromise);

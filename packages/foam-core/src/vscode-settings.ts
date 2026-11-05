@@ -185,7 +185,6 @@ export function foamConfigFromVsCodeSettings(settings: unknown): IFoamConfig {
   const filesExclude: string[] = [
     ...ALWAYS_EXCLUDED,
     ...getStringArray(raw, 'foam.files.exclude', DEFAULT_FILES_EXCLUDE),
-    ...getStringArray(raw, 'foam.files.ignore'),
     ...Object.keys(getObject(raw, 'files.exclude')),
   ];
 

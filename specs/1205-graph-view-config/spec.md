@@ -22,13 +22,21 @@ size/force sliders, custom groups — all in memory, all lost when the panel
 closes. [#1574](https://github.com/foambubble/foam/issues/1574) asks for type
 filters to persist across reloads and proposes a `settings.json` key; the
 maintainer's comment there asks instead for a consolidated way to expose graph
-settings. This spec defines that mechanism, with title truncation as its first
-entry and type filters as the documented next consumer.
+settings. This spec defines that mechanism. The persisted object is the
+control panel's whole interactive state, so #1574's reset-on-reload complaint
+is addressed here rather than in a follow-up; title truncation joins that
+state as a new entry.
 
 Scope decision: removing the setting alone would either hard-code a truncation
 length nobody can change or stop truncating every label, and a mechanism with
 no implemented entry cannot be verified. So v1 removes the setting **and**
-introduces the preferences mechanism with truncation as its first entry.
+introduces the preferences mechanism, persisting the control panel's whole
+interactive display state — type filters, sliders, forces, link animation,
+local style tweaks, custom groups — rather than truncation alone: the work
+is the same, and since this is internal state today, the worst a future
+shape change can cause is the loss of saved view settings. Transient
+interaction state (node selection, hover, an in-progress group draft) is
+not part of it.
 
 Removing a user-visible setting is worth a release-notes callout when this
 ships (fragments are written at release time; `.changeset/` is untouched
@@ -63,19 +71,23 @@ The mechanism, at the level a reviewer of this spec should weigh in on:
 3. **How a new entry is added later.** One typed preferences object, owned by
    the protocol definition in `@foam/graph-view`; defaults live with the view.
    Unknown keys in stored preferences are preserved on load and save, so an
-   older extension never destroys a newer one's entries. Adding an entry —
-   `showNodesOfType` for #1574 is the worked example — means: add the field
-   and its default, bind the existing control-panel control to it. No new
-   VS Code setting, no new message types, no storage migration.
+   older extension never destroys a newer one's entries. Adding an entry
+   means: add the field and its default, bind the control-panel control to
+   it. No new VS Code setting, no new message types, no storage migration —
+   and none owed: if the stored shape ever changes incompatibly, the
+   acceptable worst case is losing saved view state.
 
 4. **Relationship to `foam.graph.*` settings.** Named views stay what they
    are: declarative, shareable starting points in `settings.json` —
    hand-written, never auto-written. Preferences record the user's last
    interactive choices. The webview keeps receiving a single resolved
    view-config object; what that object is merged from can grow to span the
-   various `foam.graph.*` settings as well as the preferences (whether those
-   settings stay individual or consolidate into one blob is an open question
-   below). Settings passed to the `show-graph` command — a named view or an
+   various `foam.graph.*` settings as well as the preferences. Whether those
+   settings stay individual or consolidate into one blob needs no answer
+   now: the user-facing settings surface is not expected to mirror the
+   webview's internal config shape, so a translation between the two is
+   assumed either way (one already exists in kind for named views).
+   Settings passed to the `show-graph` command — a named view or an
    inline config — always prevail over the defaults when the graph opens.
    Interactive changes made while a named view is open are saved for that
    view alone: views are identified by name, and preferences are recorded
@@ -123,11 +135,13 @@ The mechanism, at the level a reviewer of this spec should weigh in on:
   then it describes the truncation preference and that control-panel
   preferences persist per workspace.
   _verify: human_
+- **AC-9**: Given node type filters changed in the control panel, when the
+  graph is reopened with the same view, then the filters are restored (the
+  #1574 scenario).
+  _verify: unit_
 
 ## Out of scope
 
-- Persisting type filters (#1574). It is the next consumer of this mechanism
-  and the forward-compatibility benchmark, but it ships on its own branch.
 - Smarter placeholder labels — middle truncation or basename-only display,
   raised in #1205's discussion. Orthogonal display refinement; can become a
   preference later without touching the mechanism.
@@ -140,14 +154,3 @@ The mechanism, at the level a reviewer of this spec should weigh in on:
   deliberate settings write that would bridge preferences back into
   `foam.graph.views`, giving sync and shareability on demand. A possible
   later complement to ambient persistence; not needed for v1.
-
-## Open questions
-
-- Whether the `foam.graph.*` settings that feed the resolved view config
-  remain individual settings or consolidate into a single object. The
-  mechanism is indifferent: the webview consumes one merged object either
-  way.
-- Whether the rest of the in-memory control-panel state (sliders, forces,
-  link animation) should become persisted preferences immediately. Assumed
-  no: v1 persists only truncation to prove the mechanism; the rest migrates
-  as each one is wanted.

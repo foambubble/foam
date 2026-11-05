@@ -886,8 +886,13 @@ class MockTextDocument implements TextDocument {
 
     if (content !== undefined) {
       this._content = content;
-      // Write the content to file if provided
+      // Write the content to file if provided. An untitled document lives
+      // only in memory until it is saved, as in VS Code.
       try {
+        if (uri.scheme === 'untitled') {
+          this._lines = this._content.split(/\r?\n/);
+          return;
+        }
         const existed = fs.existsSync(uri.fsPath);
         const dir = path.dirname(uri.fsPath);
         if (!fs.existsSync(dir)) {
@@ -1032,6 +1037,10 @@ class MockTextDocument implements TextDocument {
   _updateContent(content: string): void {
     this._content = content;
     this._lines = content.split(/\r?\n/);
+    // An untitled document lives only in memory until it is saved.
+    if (this.uri.scheme === 'untitled') {
+      return;
+    }
     // Write the content to file immediately so it persists
     try {
       const dir = path.dirname(this.uri.fsPath);

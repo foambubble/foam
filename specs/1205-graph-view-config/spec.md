@@ -77,9 +77,13 @@ The mechanism, at the level a reviewer of this spec should weigh in on:
    settings stay individual or consolidate into one blob is an open question
    below). Settings passed to the `show-graph` command — a named view or an
    inline config — always prevail over the defaults when the graph opens.
-   In v1 views and preferences cannot conflict (no view field controls
-   truncation); where interactive changes are saved once they can overlap is
-   an open question below, to be settled when #1574 is specced.
+   Interactive changes made while a named view is open are saved for that
+   view alone: views are identified by name, and preferences are recorded
+   under that name; anything a view's preferences don't cover falls back to
+   the default view settings. An invocation without a view name belongs to
+   the default bucket (which is where today's nameless open already lands,
+   via the `Default` view fallback). This shapes the stored object from v1 —
+   preferences keyed by view name — even while truncation is the only entry.
 
 5. **Truncation becomes a display concern.** Full titles cross the
    extension→webview boundary; the view truncates labels at render time,
@@ -105,8 +109,8 @@ The mechanism, at the level a reviewer of this spec should weigh in on:
   panel, when the graph re-renders, then labels reflect the new value.
   _verify: unit_
 - **AC-5**: Given a preference changed in the control panel, when the graph
-  panel is closed and reopened in the same workspace, then the preference is
-  restored.
+  panel is closed and reopened in the same workspace with the same view,
+  then the preference is restored; a different named view is unaffected.
   _verify: unit_
 - **AC-6**: Given a changed preference, when VS Code is reloaded and the
   graph opened again, then the preference is intact.
@@ -139,11 +143,6 @@ The mechanism, at the level a reviewer of this spec should weigh in on:
 
 ## Open questions
 
-- When the user changes display options while a named view is open, whether
-  those changes are saved for that view, for everything, or not at all.
-  (That command-provided settings prevail over the defaults at open is
-  decided — see Decision 4.) First real case: #1574's filters vs a view's
-  `show`. Nothing in v1 depends on the answer.
 - Whether the `foam.graph.*` settings that feed the resolved view config
   remain individual settings or consolidate into a single object. The
   mechanism is indifferent: the webview consumes one merged object either

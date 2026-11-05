@@ -41,9 +41,17 @@ The mechanism, at the level a reviewer of this spec should weigh in on:
 
 1. **Where preferences persist.** Per workspace, in extension-side storage
    (`ExtensionContext.workspaceState`), as one object under one key. Filters
-   and display choices depend on the vault's content, so per-workspace is the
-   right scope; `settings.json` is explicitly not the direction; webview
-   `setState` does not survive closing the panel.
+   and display choices depend on the vault's content, so per-workspace is
+   the right scope, and webview `setState` does not survive closing the
+   panel. `settings.json` is the wrong home because these values are the
+   write target of UI gestures: persisting them through configuration would
+   edit the user's settings file on every toggle (churn in a possibly
+   committed `.vscode/settings.json`), let transient state clobber
+   hand-written config, and make every new entry a contributed setting —
+   public API with docs and a deprecation path, which is exactly the
+   coupling this work removes. Declared, shareable, syncable configuration
+   remains `foam.graph.views`; preferences are state, like VS Code's own
+   panel layout.
 
 2. **How they reach the webview.** Through the existing message protocol:
    the extension sends the whole preferences object alongside the style after
@@ -60,11 +68,18 @@ The mechanism, at the level a reviewer of this spec should weigh in on:
    and its default, bind the existing control-panel control to it. No new
    VS Code setting, no new message types, no storage migration.
 
-4. **Relationship to `foam.graph.views`.** Named views stay what they are:
-   declarative starting points in `settings.json`. Preferences record the
-   user's last interactive choices. In v1 the two cannot conflict (no view
-   field controls truncation); precedence once they overlap is an open
-   question below, to be settled when #1574 is specced.
+4. **Relationship to `foam.graph.*` settings.** Named views stay what they
+   are: declarative, shareable starting points in `settings.json` —
+   hand-written, never auto-written. Preferences record the user's last
+   interactive choices. The webview keeps receiving a single resolved
+   view-config object; what that object is merged from can grow to span the
+   various `foam.graph.*` settings as well as the preferences (whether those
+   settings stay individual or consolidate into one blob is an open question
+   below). Settings passed to the `show-graph` command — a named view or an
+   inline config — always prevail over the defaults when the graph opens.
+   In v1 views and preferences cannot conflict (no view field controls
+   truncation); where interactive changes are saved once they can overlap is
+   an open question below, to be settled when #1574 is specced.
 
 5. **Truncation becomes a display concern.** Full titles cross the
    extension→webview boundary; the view truncates labels at render time,
@@ -117,14 +132,22 @@ The mechanism, at the level a reviewer of this spec should weigh in on:
 - Carrying over a user's customized `titleMaxLength` value from
   `settings.json`. The value is dropped; the preference's default preserves
   today's default behavior.
+- An explicit "save current view as a named view" control-panel action — a
+  deliberate settings write that would bridge preferences back into
+  `foam.graph.views`, giving sync and shareability on demand. A possible
+  later complement to ambient persistence; not needed for v1.
 
 ## Open questions
 
-- Precedence between a named view's config and persisted preferences once
-  they overlap (first real case: #1574's filters vs a view's `show`).
-  Proposed: an explicit view invocation wins when the graph opens; interactive
-  changes made afterwards are recorded as preferences. Nothing in v1 depends
-  on the answer.
+- When the user changes display options while a named view is open, whether
+  those changes are saved for that view, for everything, or not at all.
+  (That command-provided settings prevail over the defaults at open is
+  decided — see Decision 4.) First real case: #1574's filters vs a view's
+  `show`. Nothing in v1 depends on the answer.
+- Whether the `foam.graph.*` settings that feed the resolved view config
+  remain individual settings or consolidate into a single object. The
+  mechanism is indifferent: the webview consumes one merged object either
+  way.
 - Whether the rest of the in-memory control-panel state (sliders, forces,
   link animation) should become persisted preferences immediately. Assumed
   no: v1 persists only truncation to prove the mechanism; the rest migrates

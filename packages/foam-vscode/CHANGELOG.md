@@ -1,5 +1,23 @@
 # Change Log
 
+## 0.48.0
+
+### Minor Changes
+
+- `foam.files.ignore` is no longer read, in VS Code or the CLI. Move its globs to `foam.files.exclude`.
+
+  In `@foam/core`, `foamConfigFromVsCodeSettings` no longer reads `foam.files.ignore`.
+
+- The "Foam: Clear Cache", "Foam: Update Graph" and "Foam: Copy To Clipboard Without Brackets" commands are removed.
+
+### Patch Changes
+
+- Link completion works in VS Code's Markdown Editor (#1763, #1765):
+
+  - Picking a note, section or block no longer ends with "The completion was inserted, but its follow-up command failed"
+  - Notes in folders stay in the list as you type their name
+  - With `foam.completion.linkFormat` set to `link`, the completed wikilink becomes a Markdown link
+
 ## 0.47.1
 
 ### Patch Changes
